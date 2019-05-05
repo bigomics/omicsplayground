@@ -20,7 +20,7 @@ source("../R/gset-meta.r")
 source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 
-FILES="../files/"
+FILES="../lib/"
 RDIR="../R/"
 
 PROCESS.DATA=1
@@ -35,9 +35,9 @@ COMPARE="pheno"
 ##DOWNSAMPLE=0
 DOWNSAMPLE=100
 
-SMALL=8000
+SMALL=4000
 FAST=TRUE
-EXT="8k"
+EXT="4k"
 
 rda.file="../pgx/GSE72056-melanoma-scRNA.pgx"
 rda.file = sub(".pgx$",paste0("-vs",COMPARE,".pgx"),rda.file)
@@ -66,7 +66,10 @@ if(PROCESS.DATA) {
     ## Read SC counts
     ##--------------------------------------------------------------
     ##counts = fread("~/Downloads/GSE72056_melanoma_single_cell_revised_v2.txt.gz",nrow=-1000)
-    counts = fread("~/Projects/Data/GSE/GSE72056_melanoma_single_cell_revised_v2.txt.gz",nrow=-1000)
+    if(0) {
+        system("wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE72nnn/GSE72056/suppl/GSE72056_melanoma_single_cell_revised_v2.txt.gz -P /tmp")
+    }
+    counts = fread("/tmp/GSE72056_melanoma_single_cell_revised_v2.txt.gz",nrow=-1000)
     dim(counts)
     head(counts)[,1:4]
     annot  <- data.frame(counts[1:3,2:ncol(counts)], check.names=FALSE)
@@ -173,7 +176,6 @@ if(PROCESS.DATA) {
     rownames(sampleTable) = colnames(counts)
     apply(sampleTable, 2, table)
 
-
     ##-------------------------------------------------------------------
     ## subsampling to decrease number of samples
     ##-------------------------------------------------------------------
@@ -248,7 +250,6 @@ if(PROCESS.DATA) {
     ngs$counts <- ngs$counts[keep,]
     ngs$genes  <- ngs$genes[keep,]
     dim(ngs$genes)
-
     
     ##-------------------------------------------------------------------
     ## Pre-calculate t-SNE for and get clusters early so we can use it
@@ -256,7 +257,6 @@ if(PROCESS.DATA) {
     ##-------------------------------------------------------------------
     ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, prefix="C")
     head(ngs$samples)
-
     
     dim(ngs$counts)
     ngs$timings <- c()

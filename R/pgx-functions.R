@@ -82,33 +82,30 @@ pgx.getGeneCorrelation <- function(gene, xref) {
     return(R)
 }
 
-ngs.save <- function(ngs, file, update.date=TRUE) {
+ngs.save <- function(ngs, file, update.date=TRUE, light=TRUE) {
 
     if(update.date||is.null(ngs$date)) ngs$date <- Sys.Date()
 
-    cat(">>> output file is:",file,"\n")
-    save(ngs, file=file)
-
-    ## ------- make a light version
-    load(file=file, verbose=1)
-
-    ngs$gx.meta$outputs <- NULL
-    ngs$gset.meta$outputs <- NULL
-
-    ngs$model.parameters$efit <- NULL
-    ngs$gmt.all <- NULL
-    ngs$omicsnet <- NULL
-    ngs$omicsnet.reduced <- NULL
-    ngs$families <- NULL
-    ngs$collections <- NULL
-    ## ngs$counts <- NULL
-    ngs$gset.meta$matrices <- NULL
+    if(light) {
+        ## ------- make a light version
+        ngs$gx.meta$outputs <- NULL
+        ngs$gset.meta$outputs <- NULL
+        ngs$model.parameters$efit <- NULL
+        ngs$gmt.all <- NULL
+        ngs$families <- NULL
+        ngs$collections <- NULL
+        ## ngs$counts <- NULL
+        ngs$gset.meta$matrices <- NULL
+        
+        ngs$omicsnet <- NULL
+        ngs$omicsnet.reduced <- NULL
+    }
+    
     sort(sapply(ngs, object.size)) / 1e9
-    sum(sapply(ngs, object.size)) / 1e9
-
-    file2 <- sub(".pgx$","-LT.pgx",file)
-    cat(">>> output file (light object) is:",file2,"\n")
-    save(ngs, file=file2)
+    sum(sapply(ngs, object.size)) / 1e9        
+    
+    cat(">>> saving PGX file to",file,"\n")
+    save(ngs, file=file)
 }
 
 ##comp=1;level="geneset";probe=rownames(ngs$gsetX)[1]
