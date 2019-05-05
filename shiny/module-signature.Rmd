@@ -1,0 +1,1139 @@
+Signature
+================================================================================
+
+
+Input {.sidebar data-width=250}
+--------------------------------------------------------------------------------
+
+<br> **Custom signature**. Test a gene signature by calculating its
+enrichment score. Upload your own list of genes, or choose a predefined
+gene set.
+
+<br>
+
+```{r}
+
+selectizeInput("sig_feature","Contrast:", choices="<custom>")
+
+IMMCHECK.GENES = "ADORA2A ARHGEF5 BTLA CD160 CD244 CD27 CD274 CD276 CD47 CD80 CEACAM1 CTLA4 GEM HAVCR2 ICOS IDO1 LAG3 PDCD1 TNFSF4 VISTA VTCN1 TIGIT PVR CD28 CD40 CD40LG ICOSLG TNFRSF9 TNFSF9 CD70 TNFRSF4 TNFRSF18 TNFSF18 SIRPA LGALS9 ARG1 CD86 IDO2 PDCD1LG2 KIR2DL3"
+APOPTOSIS.GENES = "BAD CRADD AGT FAS BCL2 PPIF S100A9 S100A8 BBC3 BCL2L11 FADD CTSH MLLT11 TRAF7 BCL2L1 HTRA2 BNIP3 BAK1 PMAIP1 LGALS9 BID"
+CELL.CYCLE.GENES = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP
+5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA"
+
+br();
+
+textAreaInput("sig_genelistUP", "Custom signature:", value = IMMCHECK.GENES,
+              rows=10, placeholder="Paste your gene list")
+## textAreaInput("sig_genelistDN", "Signature (down):", rows=6, placeholder="Paste your gene list")
+
+actionButton("sig_example2","[apoptosis] ", style="font-size: 0.9em; color: #24A; background-color:
+ transparent; border-style: none; padding:0")
+actionButton("sig_example1","[immune_chkpt] ", style="font-size: 0.9em; color: #24A; background-color: transparent; border-style: none; padding:0")
+actionButton("sig_example3","[cell_cycle] ", style="font-size: 0.9em; color: #24A; background-color: transparent; border-style: none; padding:0")
+
+
+
+br();br();br();
+if(PRO.VERSION) radioButtons("sig_type",NULL,c("contrast","hallmark"),inline=TRUE)
+if(PRO.VERSION) radioButtons('sig_rankmethod','Enrichment method:',c("rcor","fgsea"),inline=TRUE)
+##if(PRO.VERSION) radioButtons('sig_clustmethod','Cluster method:',c("tsne","pca"),inline=TRUE)
+##if(PRO.VERSION) checkboxInput('sig_invert','invert', FALSE)
+##if(PRO.VERSION) radioButtons('sig_top','top:',c(50,100,500),inline=TRUE,selected=100)
+
+
+
+if(DEV.VERSION) radioButtons('sig_ssstats','ss-stats:',c("rho","gsva","grp.gsva","rho+gsva","rho+grp.gsva"), inline=TRUE)
+```
+
+
+```{r}
+
+##------------------------ observe/reactive function  -----------------------------
+require(visNetwork)
+require(igraph)
+require(parallel)
+require(fgsea)
+require(GSVA)
+
+observeEvent(input$sig_example1, { 
+    updateTextAreaInput(session,"sig_genelistUP", value=IMMCHECK.GENES)
+})
+observeEvent(input$sig_example2, { 
+    updateTextAreaInput(session,"sig_genelistUP", value=APOPTOSIS.GENES)
+})
+observeEvent(input$sig_example3, { 
+    updateTextAreaInput(session,"sig_genelistUP", value=CELL.CYCLE.GENES)
+})
+
+observe({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    sig_type="contrast"
+    if(PRO.VERSION) sig_type <- input$sig_type
+    if(is.null(sig_type)) return(NULL)
+    if(sig_type=="contrast") {
+        contr <- c("<custom>",names(ngs$gx.meta$meta))
+        updateSelectizeInput(session, "sig_feature", choices=sort(contr))
+    } else {
+        gsets <- sort(grep("HALLMARK",names(GSETS),value=TRUE))
+        gsets <- c("<custom>",gsets)
+        updateSelectizeInput(session, "sig_feature", choices=gsets)
+    }
+})
+
+
+```
+
+
+Col {.tabset data-width=625 data-height=800}
+----------------------------------------------------------------------------------------
+
+```{r}
+
+getCurrentMarkers <- reactive({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    ##if(is.null(input$sig_contrast)) return(NULL)
+    if(is.null(input$sig_feature)) return(NULL)
+
+    sig_type="contrast"
+    if(PRO.VERSION) sig_type <- input$sig_type
+    if(is.null(sig_type)) return(NULL)
+
+    level = "gene"
+    features = toupper(ngs$genes$gene_name)
+
+    if(input$sig_feature=="<custom>") {
+        gset <- input$sig_genelistUP
+        if(is.null(input$sig_genelistUP)) return(NULL)    
+        if(is.null(gset) || length(gset)==0 || gset=="") return(NULL)
+        ##gset <- toupper(gset)
+        gset <- strsplit(gset, split="[, \n\t]")[[1]]
+        if(length(gset)==1) {
+            gene <- sub("^[@#]","",gset[1])
+            if(grepl("^@",gset[1]) && gene %in% rownames(ngs$X)) {
+                ## most correlated with this gen
+                rho <- cor(t(ngs$X), ngs$X[gene,])[,1]
+                gset <- head(names(sort(abs(rho),decreasing=TRUE)),36)  ## how many?
+            } else {
+                ##rx <- paste0("^",toupper(gset[1]))
+                rx <- toupper(gset[1])
+                gset <- grep(rx, features, value=TRUE)
+            }
+        }
+    } else if(sig_type=="contrast" &&
+              input$sig_feature %in% names(ngs$gx.meta$meta) ) {
+        contr=1
+        contr <- input$sig_feature
+        fx <- ngs$gx.meta$meta[[contr]]$meta.fx
+        probes <- rownames(ngs$gx.meta$meta[[contr]])
+        genes <- toupper(ngs$genes[probes,"gene_name"])
+        top.genes <- genes[order(-fx)]
+        top.genes <- intersect( top.genes, rownames(PROFILES$FC))
+        top.genes <- head(top.genes,100)
+        top.genes0 <- paste(top.genes,collapse=" ")
+        updateTextAreaInput(session,"sig_genelistUP", value=top.genes0)
+        gset <- top.genes
+    } else if(input$sig_feature %in% names(GSETS)) {
+        gset <- toupper(GSETS[[input$sig_feature]])
+        gset <- intersect(gset, rownames(PROFILES$FC))
+        gset0 <- paste(gset, collapse=" ")
+        updateTextAreaInput(session,"sig_genelistUP", value=gset0)
+    } else {
+        return(NULL)
+    }
+    
+    return(gset)
+})
+
+##X=gX;method=c("rho","gsva") 
+calcSingleSampleValues <- function(X, y, method=c("rho","gsva") ) {
+    ##
+    ## Calculates single-sample enrichment values for given matrix and
+    ## binarized signature vector.
+    ##
+    ##
+    ## very fast rank difference
+
+    if(is.null(names(y)) && length(y)!=nrow(X) ) {
+        cat("FATAL ERROR:: calcSingleSampleValues: y must have names if not matched")
+        return(NULL)
+    }
+    
+    if(!is.null(names(y)) && length(y)!=nrow(X) ) {
+        y <- y[match(rownames(X),names(y))]
+    }
+    names(y) <- rownames(X)
+    jj <- which(!is.na(y))
+    X <- X[jj,]
+    y <- y[jj]
+
+    if(sum(y!=0)==0) {
+        cat("calcSingleSampleValues:: warning: y is all zero!\n")
+        matzero <- matrix(0, nrow=ncol(X), ncol=length(method))
+        colnames(matzero) <- method
+        rownames(matzero) <- colnames(X)
+        return(matzero)
+    }
+
+    ss.rank <- function(x) scale(sign(x)*rank(abs(x)),center=FALSE)[,1]
+    
+    S = list()
+    if("rho" %in% method) {
+        S[["rho"]] <- cor(apply(X, 2, ss.rank), y, use="pairwise")[,1]
+        ##S$rho <- scale(S$rho)[,1]  ## should we scale??
+    }
+    
+    ## calculate GSVA
+    if("gsva" %in% method) {
+        require(GSVA)
+        require(parallel)
+        gset = names(y)[which(y!=0)]
+        res.gsva <- GSVA::gsva( X, list("gmt"=gset), method="gsva", parallel.sz=0)
+        res.colnames = colnames(res.gsva)
+        fc = as.vector(res.gsva[1,])
+        names(fc) = res.colnames
+        S[["gsva"]] = fc[colnames(X)]
+    }    
+    s.names = names(S)
+    if(length(S)>1) {
+        S1 = do.call(cbind, S)
+    } else {
+        S1 <- S[[1]]
+    }
+    S1 = as.matrix(S1)
+    rownames(S1) = colnames(X)
+    colnames(S1) = s.names
+    ##S1 <- S1[order(-S1[,"gsva"]),]
+    return(S1)
+}
+
+getSingleSampleEnrichment <- reactive({
+    ##
+    ## Calls calcSingleSampleValues() and calculates single-sample
+    ## enrichment values for complete data matrix and reduced data by
+    ## group.
+    ##
+    ##
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    ## select samples
+    X = ngs$X
+    sel = colnames(X)
+    X <- X[,sel]
+    ## get the signature
+    gset <- strsplit(IMMCHECK.GENES,split=" ")[[1]]
+    gset <- ngs$families[[10]]
+    gset <- getCurrentMarkers()
+    if(is.null(gset)) return(NULL)
+    ##y = 1*(rownames(X) %in% gset)
+    ##rownames(X)=toupper(rownames(X)); gset=toupper(gset)
+    xgene <- ngs$genes[rownames(X),"gene_name"]
+    y = 1*(toupper(xgene) %in% toupper(gset))
+    names(y) <- rownames(X)
+    table(y)
+    
+    ## expression by group
+    grp = ngs$samples[colnames(X),"group"]
+    groups = unique(grp)
+    gX <- sapply( groups, function(g) rowMeans(X[,which(grp==g),drop=FALSE]))
+    colnames(gX) = groups
+    dim(gX)
+    dim(ngs$X)
+
+    cat("getSingleSampleEnrichment:: dim.X=",dim(X),"\n")
+    cat("getSingleSampleEnrichment:: dim.gX=",dim(gX),"\n")
+    cat("getSingleSampleEnrichment:: len.y=",length(y),"\n")
+    
+    ## for large datasets pre-grouping is faster
+    ss.bygroup  <- calcSingleSampleValues(gX, y, method=c("rho","gsva"))
+    do.rho   = TRUE
+    do.gsva  = FALSE
+    do.exact = FALSE
+    if(DEV.VERSION) {
+        if(input$sig_ssstats=="rho") { do.rho=TRUE; do.gsva = FALSE; do.exact=TRUE }
+        if(input$sig_ssstats=="gsva") { do.rho=FALSE; do.gsva = TRUE; do.exact=TRUE }
+        if(input$sig_ssstats=="grp.gsva") { do.rho=FALSE; do.gsva=TRUE; do.exact=FALSE }
+        if(input$sig_ssstats=="rho+gsva") { do.rho=TRUE; do.gsva=TRUE; do.exact=TRUE }
+        if(input$sig_ssstats=="rho+grp.gsva") { do.rho=TRUE; do.gsva=TRUE; do.exact=FALSE }
+    }
+    ss.bysample <- c()
+    if(do.rho) {
+        ss1 <- calcSingleSampleValues(X[,], y, method=c("rho"))
+        ss.bysample <- cbind(ss.bysample, rho=ss1)
+    }
+    if(do.gsva) {
+        if(do.exact) {
+            ##ss.bysample <- calcSingleSampleValues(X[,1:250], y, method=c("rho","gsva"))
+            ss1 <- calcSingleSampleValues(X[,], y, method=c("gsva"))
+            ss.bysample <- cbind(ss.bysample, gsva=ss1)
+        } else {
+            ss.bysample <- calcSingleSampleValues(X, y, method=c("rho"))
+            ss1 <- ss.bygroup[,"gsva"][grp]
+            ss.bysample <- cbind(ss.bysample, gsva=ss1)
+        }
+    }
+
+    res <- list( by.sample=ss.bysample, by.group=ss.bygroup)
+    return(res)
+})
+
+
+sigCalculateGSEA <- reactive({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    require(fgsea)
+    
+    ## observe input list
+    gset = head(rownames(ngs$gsetX))
+    gset = head(rownames(ngs$X),100)
+    gset <- getCurrentMarkers()
+    if(is.null(gset)) return(NULL)
+    ##if(is.null(input$sig_enplotsdb)) return(NULL)
+    
+    ## get all logFC of this dataset
+    F <- NULL   
+    ##F <- sapply(ngs$gx.meta$meta,function(x) unclass(x$fc)[,"trend.limma"])
+    F <- sapply(ngs$gx.meta$meta,function(x) x$meta.fx)
+    rownames(F) <- rownames(ngs$gx.meta$meta[[1]])    
+    ext.db <- input$cmp_cmapsets1
+    if(is.null(ext.db)) return(NULL)
+    if(1 && ext.db!="" && ext.db!="<this>") {
+        if(ext.db=="<all>") {
+            F <- PROFILES[["FC"]]
+        } else {
+            ext.db0 <- gsub("\\[|\\]","",ext.db)
+            jj <- grep(ext.db0, colnames(PROFILES[["FC"]]))
+            F <- PROFILES[["FC"]][,jj,drop=FALSE]
+        }
+    }
+
+    ## cleanup matrix
+    F = as.matrix(F)
+    dim(F)
+    F =  F[,which(!duplicated(colnames(F))),drop=FALSE]
+    
+    ## cleanup names and uppercase for mouse genes
+    rownames(F) <- toupper(sub(".*:","",rownames(F)))
+    gset <- toupper(sub(".*:","",gset))
+    gset <- intersect(toupper(gset), rownames(F))
+    length(gset)
+
+    if(length(gset)==0) {
+        cat("FATAL:: sigCalculateGSEA : gset empty!\n")
+        return(NULL)
+    }
+    
+    ## restrict to top 100 (fgsea is otherwise to slow)
+    ntop=100
+    ##if(PRO.VERSION && !is.null(input$sig_top) ) ntop <- as.integer(input$sig_top)
+
+    ## prioritize with quick correlation
+    ##require(wCorr)
+    y = 1*(toupper(rownames(F)) %in% toupper(gset))
+    ss.rank <- function(x) scale(sign(x)*rank(abs(x)),center=FALSE)[,1]
+    rho = cor(apply(F,2,ss.rank), y, use="pairwise")[,1]
+    ##wt = c(mean(y==0),mean(y==1))[1+y]
+    ##wt.rho = apply(F,2, function(x) weightedCorr((x), y, weights=wt, method="Pearson"))
+    rho[is.na(rho)] <- 0
+    jj <- head(order(-abs(rho)), ntop )
+    F <- F[,jj,drop=FALSE]
+    F <- F[!duplicated(rownames(F)),,drop=FALSE]
+    F <- F + 1e-4*matrix(rnorm(length(F)),nrow(F),ncol(F))
+    dim(F)
+    
+    ## do fast GSEA
+    require(parallel)
+    require(fgsea)
+    gmt = list("gset"=unique(gset))
+    res <- NULL
+    enrich_method="rcor"
+    if(PRO.VERSION) enrich_method <- input$sig_rankmethod
+    
+    if(enrich_method=="fgsea") {
+        i=1
+        withProgress(message="computing GSEA ...", value=0.8, {
+            res <- lapply(1:ncol(F), function(i) {
+                res = fgsea(gmt, stats=F[,i], nperm=1000)[,c(2:5)]
+                res = as.data.frame(res)
+                rownames(res)[1] = colnames(F)[i]
+                return(res)
+            })
+        })
+        cat("sigCalculateGSEA:: fgsea done!\n")
+        res1 <- data.frame(do.call(rbind, res))
+        res1$ES <- NULL
+    } else {
+        i=1
+        fx <- 1*(rownames(F) %in% gmt[[1]])
+        rho <- cor(apply(F,2,rank,na.last="keep"), fx, use="pairwise")[,1]
+        pv <- cor.pvalue(rho, nrow(F))
+        qv <- p.adjust(pv,method="fdr")
+        res1 <- data.frame(pval=pv, padj=qv, rho=rho, NES=NA)
+        rownames(res1) <- names(pv)
+    }
+
+    ## columns are: NES, pval, fdr, contrast
+    res1 <- as.matrix(res1)
+    res1 <- res1[match(colnames(F),rownames(res1)),,drop=FALSE]
+    
+    if( nrow(res1) != ncol(F)) {
+        cat("!!! WARNING:: fgsea results are corrupted?\n")
+        cat("got contrasts: ",res$contrast,"\n")
+        cat("colnames.F= ",colnames(F),"\n")
+    }
+    
+    ## make nice table
+    ##nes   <- unlist(sapply(res, function(x) x$NES))
+    ##pval  <- unlist(sapply(res, function(x) x$pval))
+    nes <- res1[,"NES"]
+    pval <- res1[,"pval"]
+    qval <- p.adjust( pval, method="fdr")
+    rho <- rho[colnames(F)]
+    
+    output <- as.matrix(cbind(rho=rho, NES=nes, p=pval, q=qval))
+    rownames(output) <- colnames(F)    
+    output <- output[order(-abs(output[,"NES"])),,drop=FALSE]
+    F <- F[,rownames(output),drop=FALSE]    
+    gsea <- list(F=as.matrix(F), gset=gset, output=output)
+    cat("sigCalculateGSEA:: done!\n")
+    return(gsea)
+})
+```
+
+### Markers {data-height=800}
+
+```{r}
+renderPlot({
+    ##if(!input$tsne.all) return(NULL)
+    require(RColorBrewer)
+    require(gplots)
+    
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    markers <- ngs$families[[10]]
+    markers <- COLLECTIONS[[10]]
+    markers <- getCurrentMarkers()
+    if(is.null(markers)) return(NULL)
+
+    level = "gene"
+    ##markers <- intersect(markers,ngs$genes$gene_name)
+    ##jj <- match(markers,ngs$genes$gene_name)
+    xgene <- ngs$genes[rownames(ngs$X),]$gene_name
+    jj <- match(toupper(markers), toupper(xgene))
+    jj <- setdiff(jj,NA)
+    gx <- ngs$X[jj,,drop=FALSE]
+    
+    if(nrow(gx)==0) {
+        cat("WARNING:: Markers:: markers do not match!!\n")
+        return(NULL)
+    }
+    
+    ## get t-SNE positions of samples
+    pos = ngs$tsne2d[colnames(gx),]
+    gx = gx - min(gx,na.rm=TRUE) + 0.001 ## subtract background
+    dim(gx)
+    grp <- ngs$samples[colnames(gx),"group"]
+    zx <- t(apply(gx,1,function(x) tapply(x,as.character(grp),mean)))
+    gx <- gx[order(-apply(zx,1,sd)),,drop=FALSE]
+    rownames(gx) = sub(".*:","",rownames(gx))
+
+
+    ## ---------------- get GSVA values
+    res <- getSingleSampleEnrichment()
+    if(is.null(res)) return(NULL)
+    S <- res$by.sample
+    if(NCOL(S)==1) {
+        fc = S[,1]
+    } else {
+        fc = colMeans( t(S) / (1e-8+sqrt(colSums(S**2))) ) ## scaled mean
+    }
+    fc <- scale(fc)[,1]  ## scale??
+    names(fc) = rownames(S)
+    ##fc1 = sign(fc) * (fc/(1e-8+max(abs(fc))))**2
+    fc1 = tanh(1.0*fc / (1e-4+sd(fc)))
+    fc1 = fc1[rownames(pos)]
+    
+    cex1 = 1.1
+    if(nrow(pos) < 30) cex1 = 1.8
+    if(nrow(pos) > 200) cex1 = 0.5
+
+    cex1 = 1.2
+    cex1 <- 0.85*c(1.6,1.2,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
+    cex2 <- ifelse(level=="gene",1,0.8)
+    klrpal = colorRampPalette(c("grey90", "grey60", "red3"))(16)
+
+    nmax = 35
+    par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2), oma=c(2,1,2,1)*0.8 )
+    top.gx = head(gx,nmax)
+    top.gx = top.gx[order(rownames(top.gx)),,drop=FALSE]
+    
+    i=1    
+    for(i in 0:min(nmax,nrow(top.gx))) {
+        jj <- 1:ncol(top.gx)
+        if(i==0) {
+            klr1 = BLUERED(16)[8 + round(7*fc1)]
+            tt = "INPUT SIGNATURE"
+            jj <- order(abs(fc1))
+        } else {
+            colvar = pmax(top.gx[i,],0) 
+            colvar = 1+round(15*(colvar/(0.7*max(colvar)+0.3*max(top.gx))))
+            klr1 = klrpal[colvar]
+            gene <- substring(sub(".*:","",rownames(top.gx)[i]),1,80)
+            tt <- breakstring(gene, n=20, force=TRUE)
+            jj <- order(abs(top.gx[i,]))
+        }
+        klr1 = paste0(col2hex(klr1),"99")
+        
+        plot( pos[jj,], pch=19, cex=cex1, col=klr1[jj],
+             xlim=1.2*range(pos[,1]), ylim=1.2*range(pos[,2]),
+             fg = gray(ifelse(i==0,0.1,0.8)), bty = "o",
+             xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
+        legend("topleft", tt, cex=cex2, col="grey30", text.font=ifelse(i==0,2,1),
+               inset=c(-0.1,-0.05), bty="n")
+
+    }
+
+}, res=100)
+```
+
+
+### Enrichment {data-height=800}
+
+```{r warnings=FALSE, message=FALSE}
+
+fillCol(flex = c(NA,1), 
+        inputPanel(
+            selectInput('cmp_cmapsets1',NULL, choices=NULL, multiple=FALSE),
+            ##radioButtons('sig_enplotsdb',NULL,c("this dataset","other datasets"),inline=FALSE),
+            cellArgs=list(width='40%')
+        ),
+        plotOutput("sig_enplots", height = "100%", width = "100%")
+        )
+
+
+
+output$sig_enplots <- renderPlot({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    ##require(shinycssloaders)
+    gsea <- sigCalculateGSEA()
+    if(is.null(gsea)) return(NULL)
+    
+    F <- as.matrix(gsea$F)
+    gset <- gsea$gset
+    qv <- gsea$output[,"q"]
+    
+    require(gplots)
+    cex.main=1.1
+    par(mfrow=c(5,3), mar=c(0.3,4,3,1), mgp=c(2.2,0.8,0) )
+    if(ncol(F)>15) {
+        par(mfrow=c(6,5), mar=c(0.2,2,3,0.6))
+        cex.main=0.9
+    }
+    ## if(ncol(F)>24) par(mfrow=c(7,5), mar=c(1,2,2.5,0.6))
+    for(i in 1:min(30,ncol(F))) {
+        f <- colnames(F)[i]
+        tt <- sub(".*\\]","",f)
+        tt <- breakstring(substring(tt,1,50),28,force=TRUE)
+        gsea.enplot(F[,i], gset, main=tt, cex.main=cex.main)
+        qv1 <- paste("q=",round(qv[i],digits=4))
+        legend("topright",qv1, cex=0.85, bty="n", adj=0)
+        if(grepl("^\\[",f)) {
+            db <- sub("\\].*","]",colnames(F)[i])
+            legend("topleft",db, cex=0.85, bty="n", adj=0)
+        }
+    }
+
+}, res=90)
+```
+
+
+### Signature C-Map (beta)
+    
+```{r message=FALSE, warning=FALSE, fig.width=4}
+
+##================================================================================
+## CONNECTIVITY MAP
+##================================================================================
+
+fillCol(flex = c(NA,1), 
+        inputPanel(
+            selectInput('cmp_cmapsets2',NULL, choices=NULL, multiple=TRUE),
+            radioButtons('cmp_cmapclust',"Layout:",c("tsne","pca"),inline=TRUE),
+            radioButtons('cmp_topgenes','Top genes:',c(50,200,1000),inline=TRUE,selected=200),
+            ##checkboxGroupInput('fc_cmap_options',NULL,c('show names','add negative'),
+            ##                   selected=c('show names'),inline=TRUE),
+            radioButtons('cmp_neighbours','Neighbours:',c(100,500,2000),inline=TRUE,selected=500),
+            cellArgs=list(width='100%')
+        ),
+        scatterD3Output('cmp_cmapplotD3')
+        )
+
+
+observe({
+    cmapsets <- c(sort(unique(gsub("\\].*","]",colnames(PROFILES$FC)))))
+    cmapsets <- c("<this>",cmapsets,"<all>")
+    updateSelectInput(session, "cmp_cmapsets1", choices=cmapsets, selected="<this>")
+    updateSelectInput(session, "cmp_cmapsets2", choices=cmapsets, selected="<this>")
+})
+
+
+##ntop=1000;nb=100
+pgx.getExternalSignaturesFC <- function(fc, nb, sets="<all>", ntop=-1)
+{
+    ## 
+    ## requires: PROFILES (from global env)
+    ##
+    if(0) {
+        fc <- cbind(ngs$gx.meta$meta[[1]]$meta.fx)
+        rownames(fc) <- rownames(ngs$gx.meta$meta[[1]])
+    }
+    if(is.null(fc)) return(NULL)
+    
+    fc0 <- fc
+    rownames(fc0) <- toupper(sub(".*:","",rownames(fc0)))
+    allFC <- PROFILES$FC
+    allFC <- allFC[match(rownames(fc0), rownames(allFC)),]
+    rownames(allFC) <- rownames(fc0)
+    dim(allFC)
+    
+    ##sets=c("<all>");ntop=100
+    extFC <- allFC
+    if(sets[1]!="<all>") {
+        db <- gsub("\\].*","]",colnames(extFC))
+        table(db)
+        kk <- which(db %in% sets)
+        extFC <- extFC[,kk,drop=FALSE]
+    }
+    
+    ## get top SD fold-changing genes
+    if(ntop > 0) {
+        sd0=sd1=1
+        sd0 <- Matrix::rowMeans(extFC**2, na.rm=TRUE)
+        sd1 <- Matrix::rowMeans(fc0**2, na.rm=TRUE)
+        sd0[which(is.na(sd0))] <- 0.0
+        sd1[which(is.na(sd1))] <- 0.0
+        sd2 <- sd0 * sd1
+        table(sd2!=0)
+        jj <- order(-abs(sd2))
+        jj <- head(jj[which(sd2[jj]!=0)],ntop)
+        fc0 <- fc0[jj,,drop=FALSE]
+        extFC <- extFC[jj,,drop=FALSE]
+    }
+    dim(extFC)
+    dim(fc0)
+    
+    ## determine most similar experiment by fold-change correlation
+    suppressWarnings(
+        xrho <- cor( apply(fc0,2,rank,na.last="keep"),
+                    apply(extFC,2,rank,na.last="keep"),
+                    use="pairwise")
+    )
+    dim(xrho)
+    
+    nn <-  ceiling( nb / nrow(xrho) )
+    ii <- as.vector(apply(xrho,1,function(x) head(order(-x),nn)))
+    bb <- colnames(extFC)[sort(unique(ii))]
+    length(bb)
+    
+    ## add to original FC/Q
+    gg <- toupper(sub(".*:","",rownames(fc0)))
+    jj <- match(gg, rownames(allFC))
+    fcx <- as.matrix(allFC)[jj,bb,drop=FALSE]
+    return(fcx)
+}
+
+getNeighbourhoodFoldChangeMatrix <- reactive({
+
+    ngs <- inputData()
+    res = pgx.getMetaFoldChangeMatrix(ngs, what="trend.limma")
+    ##fc0 = sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
+    fc0 <- res$fc
+    rownames(fc0) <- toupper(gsub(".*:","",rownames(fc0)))
+
+    others <- input$cmp_cmapsets2
+    others <- setdiff(others,c("<this>",""))
+    if("<all>" %in% others) others <- "<all>"
+
+    cat("getNeighbourhoodFoldChangeMatrix:: others=",others,"\n")
+    cat("getNeighbourhoodFoldChangeMatrix:: len.others=",length(others),"\n")
+    
+    if(TRUE && length(others)>0) {
+        fc1 <- res$fc[,,drop=FALSE]
+        ntop <- 200
+        if(!is.null(input$cmp_topgenes)) ntop <- as.integer(input$cmp_topgenes)
+        nnb = 500
+        if(!is.null(input$cmp_neighbours)) nnb <- as.integer(input$cmp_neighbours)
+        fcx <- pgx.getExternalSignaturesFC(fc1, nb=nnb, ntop=ntop, sets=others)
+        gg <- intersect(rownames(fc0),rownames(fcx))
+        length(gg)
+        fc0 <- cbind( fc0[gg,], fcx[gg,] )        
+    }
+    if(NCOL(fc0)<2) return(NULL)
+
+    ## normalize???
+    fc0 <- scale(fc0, center=TRUE)
+
+    ## set missing values are set to nearly zero
+    fc0[is.na(fc0)] <- 1e-4 * rnorm(sum(is.na(fc0)))
+
+    ngenes = 200
+    ngenes = as.integer(input$cmp_topgenes)
+    fc0 = head(fc0[order(-apply(fc0,1,sd,na.rm=TRUE)),,drop=FALSE],ngenes)
+    
+    ## --------- compute correlation distance 
+    fc0 <- apply(fc0,2,rank,na.last="keep")  ## rank correlation??
+    rho <- cor(fc0, use="pairwise")
+
+    res <- list(fc=fc0, rho=rho)
+    return(res)
+})
+
+
+output$cmp_cmapplotD3 <- renderScatterD3({
+
+    ##======================================================================
+    ## Fold-change t-SNE
+    ##======================================================================
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    ## get the fold-changes of selected comparison and neighbourhood
+    res <- getNeighbourhoodFoldChangeMatrix()
+    fc  <- res$fc
+    fc[is.na(fc)] <- 0
+    
+    add.negative=FALSE
+    ##add.negative <- ("add negative" %in% input$fc_cmap_options)
+    if(add.negative) {
+        comparisons=1
+        comparisons = input$cmp_comparisons
+        if(is.null(comparisons)) return(NULL)
+        ## add NEGATIVE phenotype node
+        kk <- which(colnames(fc) %in% comparisons)
+        neg.fc <- -fc[,kk]
+        colnames(neg.fc) <- paste0("NEG:",colnames(neg.fc))
+        fc <- cbind(fc, neg.fc)
+        ##k <- which(rownames(pos)==comparison)
+        ##rho <- cor(fc[,], fc[,k])[,1]  ## correlation to QUERY node
+    }
+    
+    ## -------- compute t-SNE
+    if(input$cmp_cmapclust=="tsne") {
+        ##require(Rtsne.multicore)
+        require(Rtsne)
+        perplexity <- pmax(min(ncol(fc)/5,30),2)
+        perplexity
+
+        cat("cmp_cmapplotD3:: dim.fc=",dim(fc),"\n")
+        cat("cmp_cmapplotD3:: perplexity=",perplexity,"\n")
+
+        sfc <- scale(fc)
+        if(ncol(sfc)<=6) sfc <- cbind(sfc,sfc,sfc,sfc)
+        sfc <- sfc + 1e-2*matrix(rnorm(length(sfc)),nrow(sfc),ncol(sfc))
+        pos <- Rtsne( t(sfc), is_distance=FALSE, check_duplicates=FALSE,
+                     perplexity=perplexity, num_threads=4)$Y
+        pos <- pos[1:ncol(fc),]
+        xlab="tSNE-x"
+        ylab="tSNE-y"
+    } else {
+        require(irlba)
+        sfc <- scale(fc)
+        if(ncol(sfc)<=3) sfc <- cbind(sfc,sfc,sfc)
+        pos <- irlba(sfc, nv=2)$v
+        pos <- pos[1:ncol(fc),]
+        xlab="PC1"
+        ylab="PC2"
+    }
+    rownames(pos) = colnames(fc)
+    dim(pos)
+    pos = scale(pos) ## scale 
+    
+    ## prepare plotting
+    lab <- rownames(pos)
+    ##if(input$fc_cmapshownames) lab <- rownames(pos)
+    ##if(!("show names" %in% input$fc_cmap_options)) lab <- rep("",nrow(pos))
+    jj <- grep("\\]",rownames(pos))
+    grp <- rep("[this_data]",nrow(pos))
+    grp[jj] <- sub("].*","]",rownames(pos)[jj])
+    table(grp)
+    ##rr <- abs(rho)**2
+    ##sign<- c("-","+")[1 + 1*(sign(rho)>0)]
+    ##sign[k] <- "*"
+    ##tt <- paste0(rownames(pos)," (",sign,")")
+    tt <- rownames(pos)
+    stype <- (1 + 1*(grp=="[this_data]"))
+    labels_size <- ifelse( nrow(pos) < 20, 20, 15)
+    labels_size <- ifelse( nrow(pos) > 400, 12, labels_size)
+        
+    require(scatterD3)
+    scatterD3( pos[,1], pos[,2], transitions=TRUE,
+              xlab=xlab, ylab=ylab,
+              legend_width=0, tooltip_text=tt,
+              lab=lab, labels_size=labels_size, point_opacity = 0.8,
+              size_var=stype, size_range = c(50,200), size_lab="type",
+              ## size_var=rr, size_range = c(20,200)*2.2,
+              ## size_lab="connectivity score",
+              ## symbol_var=sign, symbol_lab="type",
+              col_var=grp, col_lab="data set")
+
+})
+
+```
+
+### Overlap/similarity
+
+<br>
+
+```{r warnings=FALSE, message=FALSE}
+DT::renderDataTable({
+    ##if(!input$tsne.all) return(NULL)
+
+    ##
+    ##
+    ##
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+
+    markers <- ngs$families[["CD family"]]
+    ##markers <- ngs$gmt.all[["H:HALLMARK_TNFA_SIGNALING_VIA_NFKB"]]
+    ##markers <- names(which(ngs$GMT[,"H:HALLMARK_TNFA_SIGNALING_VIA_NFKB"]!=0))
+    markers <- getCurrentMarkers()
+    if(is.null(markers)) return(NULL)
+
+    ## fold change just for ranking of genes
+    F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
+    fx <- rowMeans(F**2)
+    
+    require(qlcMatrix)
+    y <- 1*(colnames(GSETxGENE) %in% toupper(markers))
+    names(y) <- colnames(GSETxGENE)
+    cat("computing cosine distances...")    
+    rho <- cosSparse( t(GSETxGENE), matrix(y,ncol=1))[,1]
+    cat("done!\n")
+    
+    ## fisher test
+    ##ii <- setdiff(match(markers, colnames(GSETxGENE)),NA)
+    ii <- setdiff(match(toupper(markers), colnames(GSETxGENE)),NA)
+    N <- cbind( k1=Matrix::rowSums(GSETxGENE!=0), n1=ncol(GSETxGENE),
+               k2=Matrix::rowSums(GSETxGENE[,ii]!=0), n2=length(ii) )
+    N <- N[which(N[,1]!=0 | N[,3]!=0), ]
+
+    require(corpora) 
+    cat("computing Fisher-test p values...")
+    pv <- corpora::fisher.pval( N[,1], N[,2], N[,3], N[,4], log.p=FALSE)
+    cat("done!\n")
+    head(pv)
+    names(pv) <- rownames(N)
+    pv = pv[match(names(rho),names(pv))]
+    qv = p.adjust(pv, method="fdr")
+    A = data.frame( similarity=rho, p.fisher=pv, q.fisher=qv)
+    dim(A)
+
+    ## limit the list??
+    table( qv < 0.05)
+    table( qv < 0.2)
+    A <- A[which(qv < 0.05),]
+    dim(A)
+    
+    ## get shared genes
+    cat("determining shared genes...\n")
+    aa = rownames(A)
+    ncommon <- Matrix::colSums(t(GSETxGENE[aa,])*as.vector(y)!=0)
+    ntotal <- Matrix::rowSums(GSETxGENE[aa,]!=0)
+    ratio <- paste0(ncommon,"/",ntotal)
+    gg <- colnames(GSETxGENE)
+    gset <- names(y)[which(y!=0)]
+    G1 = GSETxGENE[aa,which(y!=0)]
+    commongenes <- apply(G1, 1, function(x) colnames(G1)[which(x!=0)])
+    ##commongenes <- lapply(commongenes, function(x) x[order(-fx[x])])
+    ##commongenes <- mclapply(commongenes, function(x) x[order(-fx[x])])
+    for(i in 1:length(commongenes)) {
+        gg <- commongenes[[i]]
+        gg <- gg[order(-abs(fx[gg]))]
+        if(length(gg)>10) {
+            others <- paste0("(+",length(gg)-10," others)")
+            gg <- c(head(gg,10),others)
+        }
+        commongenes[[i]] <- paste(gg,collapse=",")        
+    }
+    ##commongenes <- sapply(commongenes,paste,collapse=",")        
+    commongenes <- unlist(commongenes)
+
+    ## construct results dataframe
+    gset.names <- substring(rownames(A),1,72)    
+    ##aa <- apply(A, 2, formatC, format="e", digits=3)
+    aa <- round(A, digits=3)
+    db = sub(":.*","",gset.names)
+    df <- cbind(db=db, geneset=gset.names, "k/K"=ratio, aa, common.genes=commongenes)
+
+    df <- df[order(-df$similarity),]
+    numeric.cols <- which(sapply(df, is.numeric))
+    numeric.cols
+    
+    DT::datatable(df, class='compact cell-border stripe',
+                  rownames=FALSE,
+                  extensions = c('Buttons','Scroller'),
+                  selection='none',
+                  fillContainer=TRUE,
+                  options=list(
+                      dom = 'Blfrtip',
+                      ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
+                      scrollX = TRUE, scrollY = '700', scroller=TRUE, ## deferRender=TRUE,
+                      buttons = list('copy','csv',
+                                     list(extend='pdf',
+                                          pageSize="A3", orientation='landscape',
+                                          filename="signature-similarity", title=""))
+                      )  ## end of options.list 
+                  ) %>%
+        formatSignif(numeric.cols,4) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
+            DT::formatStyle("similarity",
+                            background = color_from_middle(rho, 'lightblue', '#f5aeae'),
+                            backgroundSize = '98% 88%',
+                            backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center')
+
+})
+```
+
+
+Col  {.tabset data-width=375}
+----------------------------------------------------------------------------------------
+
+### Phenotypes {data-height=800}
+
+```{r}
+fillCol(flex = c(NA,1), 
+        inputPanel(
+            radioButtons('sig_labelmode',NULL,c("label","legend"),inline=TRUE),
+            cellArgs=list(width='40%')
+        ),
+        plotOutput("sig_phenoplot", height = "100%", width = "100%")
+        )
+
+output$sig_phenoplot <- renderPlot({
+    ##if(!input$tsne.all) return(NULL)
+    require(RColorBrewer)
+   
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    ## get t-SNE positions
+    pos = ngs$tsne2d
+    
+    ## get GSVA values
+    res <- getSingleSampleEnrichment()
+    if(is.null(res)) return(NULL)
+    S <- res$by.sample
+    dim(S)
+    
+    ##fc = S[,"rho"]
+    ##fc = S[,"gsva"]
+    if(NCOL(S)==1) {
+        fc = S[,1]
+    } else {
+        fc = colMeans( t(S) / (1e-8+sqrt(colSums(S**2))) ) ## scaled mean
+    }
+
+    fc <- scale(fc)[,1]  ## scale??
+    names(fc) = rownames(S)
+    ##fc1 = sign(fc) * (fc/(1e-8+max(abs(fc))))**2 ## normalize
+    fc1 = tanh(1.0*fc/(1e-4+sd(fc)))
+    fc1 = fc1[rownames(pos)]
+
+    summary(fc)
+    summary(fc1)
+    
+    Y <- ngs$Y[rownames(pos),,drop=FALSE]
+    pheno = colnames(Y)    
+    ##pheno <- grep("batch|sample|donor|repl|group",pheno,
+    ##              invert=TRUE, ignore.case=TRUE,value=TRUE)
+    pheno <- grep("batch|sample|donor|repl",pheno,
+                  invert=TRUE, ignore.case=TRUE,value=TRUE)
+        
+    ## layout
+    par(mfrow = c(3,2), mar=c(0.3,0.7,2.8,0.7))
+    if(length(pheno)>=6) par(mfrow = c(4,3), mar=c(0.3,0.4,2.8,0.4)*0.8)
+    if(length(pheno)>=12) par(mfrow = c(5,4), mar=c(0.2,0.2,2.5,0.2)*0.8)
+    i=1    
+
+    cex1 <- 1.6*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
+    cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
+    cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
+    
+    require(RColorBrewer)
+    for(i in 0:min(19,length(pheno))) {
+        if(i==0) {
+            qfc <- quantile(fc1,probs=c(0.25,0.75),na.rm=TRUE)
+            if(length(fc1)>100) qfc <- quantile(fc1,probs=c(0.05,0.95),na.rm=TRUE)
+            colvar = factor(c(NA,"low","high")[1 + 1*(fc1<qfc[1]) + 2*(fc1>qfc[2])])
+            klrpal = c("red3","blue2")  ## matches factor high/low resp..
+            klr1 = BLUERED(16)[8 + round(7*fc1)]
+            klr1 = paste0(col2hex(klr1),"99")
+            tt = "INPUT SIGNATURE"
+        } else {
+            colvar = factor(Y[,1])
+            colvar = factor(Y[,pheno[i]])
+            colvar[which(colvar %in% c(NA,""," ","NA","na"))] <- NA
+            colvar = factor(as.character(colvar))
+            klrpal = COLORS  
+            klr1 = klrpal[colvar]
+            klr1 = paste0(col2hex(klr1),"99")
+            jj = which(is.na(klr1))
+            if(length(jj)) klr1[jj] <- "#AAAAAA22"
+            tt = tolower(pheno[i])
+        }
+        ii = order(abs(fc1))
+        plot( pos[ii,], pch=19, cex=cex1, col=klr1[ii],
+             fg = gray(0.5), bty = "o", xaxt='n', yaxt='n',
+             xlab="tSNE1", ylab="tSNE2")
+        title( tt, cex.main=1.3, line=0.5, col="grey40")
+        if(input$sig_labelmode=="legend") {
+            legend("bottomright", legend=levels(colvar), fill=klrpal,
+                   cex=0.95, y.intersp=0.8, bg="white")
+        } else {
+            grp.pos <- apply(pos,2,function(x) tapply(x,colvar,mean,na.rm=TRUE))
+            grp.pos <- apply(pos,2,function(x) tapply(x,colvar,median,na.rm=TRUE))
+            nvar <- length(setdiff(colvar,NA))
+            if(nvar==1) {
+                grp.pos <- matrix(grp.pos,nrow=1)
+                rownames(grp.pos) <- setdiff(colvar,NA)[1]
+            }
+            labels = rownames(grp.pos)
+            boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
+            cex2 = 0.99*cex1**0.33
+            text( grp.pos, labels=boxes, cex=cex2*0.95, col="#CCCCCC99")
+            text( grp.pos, labels=labels, font=2, cex=cex2)
+        }
+    }    
+}, res=90)
+```
+
+### Enrichment {data-height=800}
+
+```{r warnings=FALSE, message=FALSE}
+fillCol(
+    flex = c(NA,1.2,NA,1), ## width = 600,
+    h4("by contrasts"), dataTableOutput('sig_table1'),
+    h4("genes"), dataTableOutput('sig_genes1')
+)
+
+output$sig_table1 <- DT::renderDataTable({
+    
+    gsea <- sigCalculateGSEA()
+    if(is.null(gsea)) return(NULL)
+    
+    output <- as.matrix(gsea$output)
+    output <- round(output, digits=4)
+    output <- data.frame( contrast=rownames(output), output)
+    ##output <- output[order(-output[,"NES"]),]    
+    output$p <- NULL
+    
+    color_fx = as.numeric(output[,"rho"])
+    color_fx[is.na(color_fx)] <- 0  ## yikes...
+    
+    numeric.cols <- which(sapply(output, is.numeric))
+    numeric.cols
+
+    DT::datatable(output, class='compact cell-border stripe',
+                  rownames=FALSE,
+                  ##extensions = c('Buttons','Scroller'),
+                  extensions = c('Scroller'),
+                  ##selection='none',
+                  selection=list(mode='single', target='row', selected=c(1)),
+                  options=list(
+                      ##dom = 'Blfrtip',
+                      dom = 'lfrtip',
+                      ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
+                      scrollX = TRUE, scrollY = 320, scroller=TRUE, deferRender=FALSE,
+                      buttons = c('copy','csv','pdf')
+                  )) %>%  ## end of options.list 
+        formatSignif(numeric.cols,4) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
+            DT::formatStyle("rho",
+                            background = color_from_middle(color_fx, 'lightblue', '#f5aeae'),
+                            backgroundSize = '98% 88%',
+                            backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center')
+
+})
+
+output$sig_genes1 <- DT::renderDataTable({
+    
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+
+    gsea <- sigCalculateGSEA()
+    if(is.null(gsea)) return(NULL)
+    
+    i=1
+    i <- input$sig_table1_rows_selected
+    if(is.null(i) || length(i)==0) return(NULL)
+    contr <- rownames(gsea$output)[i]
+
+    ext.db <- input$cmp_cmapsets1
+    if(is.null(ext.db)) return(NULL)
+
+    ##if(input$sig_enplotsdb=="this dataset") {
+    if(ext.db=="<this>") {
+        fc <- ngs$gx.meta$meta[[contr]]$meta.fx
+        qv <- ngs$gx.meta$meta[[contr]]$meta.q
+        names(fc) <- rownames(ngs$gx.meta$meta[[contr]])
+        names(qv) <- rownames(ngs$gx.meta$meta[[contr]])
+        names(fc) <- toupper(names(fc))
+        names(qv) <- toupper(names(qv))
+    } else {
+        ##load(file.path(FILES,"allFoldChanges-pub.rda"))
+        fc <- PROFILES[["FC"]][,contr]
+        qv <- rep(NA,length(fc))
+        names(qv) <- names(fc)
+    }
+
+    gset <- getCurrentMarkers()
+    if(is.null(gset)) return(NULL)
+    
+    gset <- setdiff(toupper(gset),c("",NA))
+    genes <- intersect(gset,names(fc))    
+    fc <- fc[genes]
+    fc <- round(fc[order(-abs(fc))],digits=3)
+    qv <- qv[names(fc)]
+    gene.tt <- substring(GENE.TITLE[toupper(names(fc))],1,40)
+    names(gene.tt) <- names(qv) <- names(fc)    
+    output <- data.frame(gene=names(fc), title=gene.tt, FC=fc, q=qv)
+    
+    color_fx = as.numeric(output[,"FC"])
+    color_fx[is.na(color_fx)] <- 0  ## yikes...
+
+    numeric.cols <- which(sapply(output, is.numeric))
+    numeric.cols
+    
+    DT::datatable(output, class='compact cell-border stripe',
+                  rownames=FALSE,
+                  ##extensions = c('Buttons','Scroller'),
+                  extensions = c('Scroller'), selection='none',
+                  options=list(
+                      ##dom = 'Blfrtip',
+                      dom = 'lrftip',
+                      ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
+                      scrollX = TRUE, scrollY = 240, scroller=TRUE, deferRender=FALSE,
+                      buttons = c('copy','csv','pdf')
+                  )) %>%  ## end of options.list 
+        formatSignif(numeric.cols,4) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
+            DT::formatStyle("FC",
+                            background = color_from_middle(color_fx, 'lightblue', '#f5aeae'),
+                            backgroundSize = '98% 88%',
+                            backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center')
+
+    
+})
+
+```
+
+

@@ -1,0 +1,64 @@
+---
+title: "Chart Stack (Scrolling)"
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: scroll
+---
+    
+Page 1
+=====================================
+
+Inputs {.sidebar}
+-------------------------------------
+
+```{r}
+# shiny inputs defined here
+```
+
+Column
+-------------------------------------
+
+### Chart 1
+
+```{r}
+plot(exp)
+```
+    
+### Chart 2
+
+```{r}
+plot(exp)
+```
+
+### Chart 3
+
+```{r}
+plot(exp)
+```
+
+### Chart 4
+
+```{r}
+plot(exp)
+```
+
+Page 2
+=====================================
+
+Inputs {.sidebar}
+-------------------------------------
+
+```{r}
+# shiny inputs defined here
+```
+
+
+Column
+-------------------------------------
+
+### Chart 3
+
+```{r}
+plot(exp)
+```
+

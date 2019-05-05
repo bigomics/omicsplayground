@@ -1,0 +1,252 @@
+<?xml version="1.0"?>
+<!DOCTYPE pathway SYSTEM "http://www.kegg.jp/kegg/xml/KGML_v0.7.2_.dtd">
+<!-- Creation date: Aug 3, 2018 10:21:12 +0900 (GMT+9) -->
+<pathway name="path:hsa00534" org="hsa" number="00534"
+         title="Glycosaminoglycan biosynthesis - heparan sulfate / heparin"
+         image="http://www.kegg.jp/kegg/pathway/hsa/hsa00534.png"
+         link="http://www.kegg.jp/kegg-bin/show_pathway?hsa00534">
+    <entry id="2" name="path:hsa00532" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa00532">
+        <graphics name="Glycosaminoglycan biosynthesis - chondroitin sulfate / dermatan sulfate" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="1310" y="159" width="116" height="34"/>
+    </entry>
+    <entry id="3" name="gl:G00164" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?G00164">
+        <graphics name="G00164" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="1311" y="463" width="8" height="8"/>
+    </entry>
+    <entry id="4" name="gl:G00163" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?G00163">
+        <graphics name="G00163" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="1311" y="392" width="8" height="8"/>
+    </entry>
+    <entry id="5" name="gl:G00162" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?G00162">
+        <graphics name="G00162" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="1311" y="323" width="8" height="8"/>
+    </entry>
+    <entry id="6" name="gl:G00157" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?G00157">
+        <graphics name="G00157" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="1311" y="254" width="8" height="8"/>
+    </entry>
+    <entry id="7" name="hsa:2135 hsa:2137" type="gene" reaction="rn:R05930"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:2135+hsa:2137">
+        <graphics name="EXTL2, EXTR2..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="1311" y="281" width="46" height="17"/>
+    </entry>
+    <entry id="8" name="hsa:64131 hsa:64132" type="gene" reaction="rn:R05925"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:64131+hsa:64132">
+        <graphics name="XYLT1, DBQD2, PXYLT1, XT-I, XT1, XTI, XYLTI, xylT-I..." fgcolor="#66CC66" bgcolor="#FFFFFF"
+             type="line" coords="1021,296,1064,296"/>
+    </entry>
+    <entry id="9" name="hsa:2131 hsa:2132" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:2131+hsa:2132">
+        <graphics name="EXT1, EXT, LGCR, LGS, TRPS2, TTV..." fgcolor="#66CC66" bgcolor="#FFFFFF"
+             type="line" coords="128,296,178,296"/>
+    </entry>
+    <entry id="10" name="path:hsa00534" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa00534">
+        <graphics name="TITLE:Glycosaminoglycan biosynthesis - heparan sulfate / heparin" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="298" y="58" width="516" height="25"/>
+    </entry>
+    <entry id="12" name="hsa:3340 hsa:64579 hsa:8509 hsa:9348" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:3340+hsa:64579+hsa:8509+hsa:9348">
+        <graphics name="NDST1, HSST, MRT46, NST1..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="379" y="462" width="46" height="17"/>
+    </entry>
+    <entry id="13" name="hsa:9956" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:9956">
+        <graphics name="HS3ST2, 30ST2, 3OST2" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="545" y="762" width="46" height="17"/>
+    </entry>
+    <entry id="14" name="hsa:9957" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:9957">
+        <graphics name="HS3ST1, 3OST, 3OST1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="379" y="762" width="46" height="17"/>
+    </entry>
+    <entry id="15" name="hsa:90161" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:90161">
+        <graphics name="HS6ST2" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="186" y="610" width="46" height="17"/>
+    </entry>
+    <entry id="16" name="hsa:9957" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:9957">
+        <graphics name="HS3ST1, 3OST, 3OST1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="186" y="762" width="46" height="17"/>
+    </entry>
+    <entry id="18" name="hsa:9953 hsa:9955" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:9953+hsa:9955">
+        <graphics name="HS3ST3B1, 3-OST-3B, 3OST3B1, h3-OST-3B..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="786" y="941" width="46" height="17"/>
+    </entry>
+    <entry id="19" name="hsa:9956" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:9956">
+        <graphics name="HS3ST2, 30ST2, 3OST2" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="939" y="941" width="46" height="17"/>
+    </entry>
+    <entry id="20" name="hsa:9394" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:9394">
+        <graphics name="HS6ST1, HH15, HS6ST" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="1105" y="799" width="46" height="17"/>
+    </entry>
+    <entry id="21" name="hsa:26035" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:26035">
+        <graphics name="GLCE, HSEPI" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="610" y="511" width="46" height="17"/>
+    </entry>
+    <entry id="22" name="cpd:C00054" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C00054">
+        <graphics name="C00054" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="1343" y="660" width="8" height="8"/>
+    </entry>
+    <entry id="23" name="cpd:C00053" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C00053">
+        <graphics name="C00053" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="1282" y="623" width="8" height="8"/>
+    </entry>
+    <entry id="24" name="cpd:C00033" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C00033">
+        <graphics name="C00033" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="1283" y="660" width="8" height="8"/>
+    </entry>
+    <entry id="27" name="hsa:11285" type="gene" reaction="rn:R05926"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:11285">
+        <graphics name="B4GALT7, EDSP1, EDSSLA, EDSSPD1, XGALT1, XGPT1" fgcolor="#66CC66" bgcolor="#FFFFFF"
+             type="line" coords="937,296,980,296"/>
+    </entry>
+    <entry id="28" name="hsa:9653" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:9653">
+        <graphics name="HS2ST1, dJ604K5.2" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="964" y="610" width="46" height="17"/>
+    </entry>
+    <entry id="30" name="hsa:2131 hsa:2132" type="gene" reaction="rn:R05935"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:2131+hsa:2132">
+        <graphics name="EXT1, EXT, LGCR, LGS, TRPS2, TTV..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="1311" y="352" width="46" height="17"/>
+    </entry>
+    <entry id="32" name="hsa:2134 hsa:2137" type="gene" reaction="rn:R05936"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:2134+hsa:2137">
+        <graphics name="EXTL1, EXTL..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="1312" y="422" width="46" height="17"/>
+    </entry>
+    <entry id="37" name="hsa:26035" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:26035">
+        <graphics name="GLCE, HSEPI" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="1312" y="718" width="46" height="17"/>
+    </entry>
+    <entry id="38" name="hsa:126792" type="gene" reaction="rn:R05927"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:126792">
+        <graphics name="B3GALT6, EDSP2, EDSSPD2, SEMDJL1, beta3GalT6" fgcolor="#66CC66" bgcolor="#FFFFFF"
+             type="line" coords="851,296,894,296"/>
+    </entry>
+    <entry id="39" name="hsa:26229" type="gene" reaction="rn:R05928"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:26229">
+        <graphics name="B3GAT3, GLCATI, JDSCD, glcUAT-I" fgcolor="#66CC66" bgcolor="#FFFFFF"
+             type="line" coords="761,296,804,296"/>
+    </entry>
+    <entry id="40" name="hsa:2135 hsa:2137" type="gene" reaction="rn:R05930"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:2135+hsa:2137">
+        <graphics name="EXTL2, EXTR2..." fgcolor="#66CC66" bgcolor="#FFFFFF"
+             type="line" coords="671,296,714,296"/>
+    </entry>
+    <entry id="41" name="hsa:2131 hsa:2132" type="gene" reaction="rn:R05935"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:2131+hsa:2132">
+        <graphics name="EXT1, EXT, LGCR, LGS, TRPS2, TTV..." fgcolor="#66CC66" bgcolor="#FFFFFF"
+             type="line" coords="567,296,610,296"/>
+    </entry>
+    <entry id="42" name="hsa:2134 hsa:2137" type="gene" reaction="rn:R05936"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:2134+hsa:2137">
+        <graphics name="EXTL1, EXTL..." fgcolor="#66CC66" bgcolor="#FFFFFF"
+             type="line" coords="479,296,522,296"/>
+    </entry>
+    <entry id="43" name="hsa:2131 hsa:2132" type="gene" reaction="rn:R10138"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:2131+hsa:2132">
+        <graphics name="EXT1, EXT, LGCR, LGS, TRPS2, TTV..." fgcolor="#66CC66" bgcolor="#FFFFFF"
+             type="line" coords="375,296,418,296"/>
+    </entry>
+    <entry id="44" name="hsa:2131 hsa:2132" type="gene" reaction="rn:R10139"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:2131+hsa:2132">
+        <graphics name="EXT1, EXT, LGCR, LGS, TRPS2, TTV..." fgcolor="#66CC66" bgcolor="#FFFFFF"
+             type="line" coords="285,296,328,296"/>
+    </entry>
+    <entry id="45" name="hsa:2131 hsa:2132" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:2131+hsa:2132">
+        <graphics name="EXT1, EXT, LGCR, LGS, TRPS2, TTV..." fgcolor="#66CC66" bgcolor="#FFFFFF"
+             type="line" coords="182,296,225,296"/>
+    </entry>
+    <entry id="46" name="hsa:9653" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:9653">
+        <graphics name="HS2ST1, dJ604K5.2" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="545" y="610" width="46" height="17"/>
+    </entry>
+    <entry id="47" name="hsa:9394" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:9394">
+        <graphics name="HS6ST1, HH15, HS6ST" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="698" y="610" width="46" height="17"/>
+    </entry>
+    <entry id="48" name="hsa:266722" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:266722">
+        <graphics name="HS6ST3, HS6ST-3" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="238" y="610" width="46" height="17"/>
+    </entry>
+    <entry id="49" name="hsa:266722" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:266722">
+        <graphics name="HS6ST3, HS6ST-3" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="750" y="610" width="46" height="17"/>
+    </entry>
+    <entry id="50" name="hsa:266722" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:266722">
+        <graphics name="HS6ST3, HS6ST-3" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="1155" y="799" width="46" height="17"/>
+    </entry>
+    <entry id="51" name="path:hsa00531" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa00531">
+        <graphics name="Glycosaminoglycan degradation" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="1319" y="988" width="116" height="34"/>
+    </entry>
+    <entry id="52" name="hsa:3340 hsa:64579 hsa:8509 hsa:9348" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:3340+hsa:64579+hsa:8509+hsa:9348">
+        <graphics name="NDST1, HSST, MRT46, NST1..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="1312" y="640" width="46" height="17"/>
+    </entry>
+    <entry id="53" name="hsa:222537" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:222537">
+        <graphics name="HS3ST5, 3-OST-5, 3OST5, HS3OST5, NBLA04021" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="238" y="762" width="46" height="17"/>
+    </entry>
+    <entry id="54" name="hsa:9953 hsa:9955" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:9953+hsa:9955">
+        <graphics name="HS3ST3B1, 3-OST-3B, 3OST3B1, h3-OST-3B..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="989" y="941" width="46" height="17"/>
+    </entry>
+    <entry id="55" name="hsa:9953 hsa:9955" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:9953+hsa:9955">
+        <graphics name="HS3ST3B1, 3-OST-3B, 3OST3B1, h3-OST-3B..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="1130" y="942" width="46" height="17"/>
+    </entry>
+    <reaction id="7" name="rn:R05930" type="irreversible">
+        <substrate id="6" name="gl:G00157"/>
+        <product id="5" name="gl:G00162"/>
+    </reaction>
+    <reaction id="32" name="rn:R05936" type="irreversible">
+        <substrate id="4" name="gl:G00163"/>
+        <product id="3" name="gl:G00164"/>
+    </reaction>
+    <reaction id="30" name="rn:R05935" type="irreversible">
+        <substrate id="5" name="gl:G00162"/>
+        <product id="4" name="gl:G00163"/>
+    </reaction>
+    <reaction id="40" name="rn:R05930" type="irreversible">
+        <substrate id="6" name="gl:G00157"/>
+        <product id="5" name="gl:G00162"/>
+    </reaction>
+    <reaction id="41" name="rn:R05935" type="irreversible">
+        <substrate id="5" name="gl:G00162"/>
+        <product id="4" name="gl:G00163"/>
+    </reaction>
+    <reaction id="42" name="rn:R05936" type="irreversible">
+        <substrate id="4" name="gl:G00163"/>
+        <product id="3" name="gl:G00164"/>
+    </reaction>
+</pathway>

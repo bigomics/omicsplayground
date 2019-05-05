@@ -1,0 +1,998 @@
+Clustering {data-orientation=cols}
+==========================================================================================
+
+
+Inputs {.sidebar data-width=250}
+------------------------------------------------------------------------------------------
+
+<br>
+**Cluster Analysis**
+
+<br>
+
+```{r}
+useShinyjs()
+selectInput("hm_level","Level:", choices=c("gene","geneset"))
+selectInput("hm_features","Features:", choices=NULL, multiple=FALSE)
+selectInput("hm_samplefilter","Filter samples:", choices=NULL, multiple=TRUE)
+##selectInput("hm_splitx","Split by:", choices=NULL, multiple=FALSE)
+
+radioButtons('hm_top','top:',c(50,500),inline=TRUE,selected=50)
+##radioButtons('hm_topmode','top.mode',c("sd","biomarker","pca"),inline=TRUE)
+checkboxInput('hm_group','grouped',FALSE)
+
+br();br();br();
+##if(PRO.VERSION) textAreaInput("hm_customlist","Custom gene list", rows=4)
+code.textInput
+if(PRO.VERSION) myTextInput("hm_customlist","Custom gene list")            
+if(PRO.VERSION) radioButtons('hm_gsetmatrix','Gene set matrix:', choices=c("meta"), inline=TRUE)
+##if(PRO.VERSION) radioButtons('hm_updown','Up/down:', choices=c("all","up","down"), inline=TRUE)
+##if(PRO.VERSION) checkboxGroupInput('hm_filter','Filter:', choices=c("up","down"), inline=TRUE)
+    
+## update filter choices upon change of data set 
+observe({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+
+    levels = getLevels(ngs$Y)
+    updateSelectInput(session, "hm_samplefilter", choices=levels)
+    
+    split0 = colnames(ngs$Y)[grep("sample|patient|donor",colnames(ngs$Y),invert=TRUE)]
+    ny <- apply(ngs$Y[,split0],2,function(x) length(unique(x)))
+    split0 <- split0[which(ny>1)]
+    sel <- grep("tissue.type|cell.type|cluster|treat",split0,value=TRUE)[1]
+    sel <- "<none>"
+    ##updateSelectInput(session, "hm_splitx", choices=c("<none>",split0), selected=sel)
+    
+    if(PRO.VERSION && !is.null(ngs$gset.meta$matrices) ) {
+        jj = which(!sapply(ngs$gset.meta$matrices,is.null))
+        mat.names = names(ngs$gset.meta$matrices)[jj]
+        updateRadioButtons(session, "hm_gsetmatrix", choices=mat.names, selected="meta", inline=TRUE)    
+    } else {
+        updateRadioButtons(session, "hm_gsetmatrix", choices=c("meta"), inline=TRUE)    
+    }
+
+})
+
+input_hm_samplefilter <- reactive({
+    input$hm_samplefilter
+}) %>% debounce(2000)
+
+
+## update choices upon change of level
+##observeEvent(input$hm_level, {
+observe({
+    ngs = inputData()
+    if(is.null(ngs)) return(NULL)
+    if(is.null(input$hm_level)) return(NULL)
+    choices = names(ngs$families)
+    if(input$hm_level=="geneset") {
+        choices = names(COLLECTIONS)
+    }
+    updateSelectInput(session, "hm_features", choices=choices)
+})
+```
+
+```{r}
+hm_filtered_matrix <- reactive({
+    ngs <- inputData()
+    genes = as.character(ngs$genes$gene_name)
+    genesets = rownames(ngs$gsetX)
+
+    if(input$hm_level=="geneset") {
+        gsets = rownames(ngs$gsetX)
+        gsets = unique(unlist(COLLECTIONS[input$hm_features]))
+        zx = ngs$gsetX
+        if(PRO.VERSION && !is.null(ngs$gset.meta$matrices) ) {
+            ##zx = ngs$gset.meta$matrices[["meta"]]
+            jj = which(!sapply(ngs$gset.meta$matrices,is.null))
+            mat.names = names(ngs$gset.meta$matrices)[jj]
+            if(is.null(mat.names)) stop("error:: no geneset matrices!")
+            k = input$hm_gsetmatrix
+            if(k %in% mat.names)  zx <- ngs$gset.meta$matrices[[k]]
+        }
+        if(PRO.VERSION && input$hm_customlist!="") {
+            gsets1 = genesets[grep(input$hm_customlist, genesets,ignore.case=TRUE)]
+            if(length(gsets1)>2) gsets = gsets1
+        }        
+        if(0 && PRO.VERSION) {
+            filt = input$hm_filter
+            if("up" %in% filt) gsets = gsets[grep("up$|up)$", gsets,ignore.case=TRUE, invert=TRUE)]
+            if("down" %in% filt) gsets = gsets[grep("dn$|down$|dn)$|down)$", gsets,ignore.case=TRUE, invert=TRUE)]
+        }
+        zx = zx[intersect(gsets,rownames(zx)),]
+    } else {
+        pp = head(rownames(ngs$X),400)
+        gg = ngs$families[[1]]
+        gg = ngs$families[[input$hm_features]]
+        if(PRO.VERSION && input$hm_customlist!="") {
+            ##if(input$hm_customlist!="") {
+            cat("hm_filtered_matrix:: custom.list=",input$hm_customlist,"\n")
+            gg1 = strsplit(input$hm_customlist,split="[, ;\n\t]")[[1]]
+            if(length(gg1)==1) gg1 <- paste0(gg1,"*")
+            gg1 = gsub("[ \n\t]","",gg1)
+            starred = grep("[*]",gg1)
+            if(length(starred)>0) {
+                gg2 = lapply(gg1[starred], function(a)
+                    genes[grep(paste0("^",sub("[*]","",a)),genes,ignore.case=TRUE)])
+                gg1 = unique(c(gg1,unlist(gg2)))
+            }
+            gg1 = intersect(gg1,ngs$genes$gene_name)            
+            cat("hm_filtered_matrix:: head.gg=",head(gg1),"\n")
+            if(length(gg1)>1) gg = gg1
+        }
+        jj <- match(toupper(gg), toupper(ngs$genes$gene_name))
+        pp = rownames(ngs$genes)[setdiff(jj,NA)]
+        zx = ngs$X[intersect(pp,rownames(ngs$X)),]
+    }
+    if(nrow(zx)==0) return(NULL)
+    dim(zx)
+    kk <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
+    zx <- zx[,kk,drop=FALSE]    
+
+    if(input$hm_level=="gene" && "chr" %in% names(ngs$genes)) {
+        ## Filter out X/Y chromosomes before clustering
+        chr <- ngs$genes[rownames(zx),]$chr
+        not.xy <- !(chr %in% c("X","Y",23,24))
+        table(not.xy)
+        zx <- zx[which(not.xy), ]
+        dim(zx)
+    }
+    
+    nmax=4000
+    nmax = as.integer(input$hm_top)
+    idx <- NULL
+    splitx <- input$hm_splitx
+    topmode="sd"
+    topmode <- input$hm_topmode
+    if(PRO.VERSION) topmode <- input$hm_topmode
+    
+    if(topmode=="pca") {
+        require(irlba)
+        NPCA=5
+        ntop = 12
+        ntop <- as.integer(input$hm_top) / NPCA
+        svdres <- irlba(zx - rowMeans(zx), nv=NPCA)
+        gg <- rownames(zx)
+        sv.top <- lapply(1:NPCA,function(i) gg[head(order(-abs(svdres$u[,i])),ntop)] )
+        gg.top <- unlist(sv.top)
+        for(i in 1:length(sv.top)) {
+            sv.top[[i]] <- paste0("PC",i,":",sv.top[[i]])
+        }
+        sv.top1 <- unlist(sv.top)
+        zx <- zx[gg.top,]
+        rownames(zx) <- sv.top1
+        dim(zx)
+        ##idx <- paste0("PC",sub(":.*","",sv.top1))
+        idx <- sub(":.*","",sv.top1)
+        table(idx)
+    } else if(topmode=="biomarker" && splitx!="<none>") {
+        ##clust <- ngs$samples[colnames(zx),"cluster"]
+        clust <- ngs$samples[colnames(zx),splitx]
+        table(clust)
+        clust.zx <- t(apply(zx, 1, function(x) tapply(x, clust, mean)))
+        clust.dx <- clust.zx*0
+        nc <- ncol(clust.dx)
+        for(i in 1:nc) {
+            clust.dx[,i] <- clust.zx[,i] - rowMeans(clust.zx[,-i,drop=FALSE])
+        }
+        gg <- rownames(zx)
+        ntop = 12
+        ntop <- ceiling( as.integer(input$hm_top) / ncol(clust.dx) )
+        clust.top <- lapply(1:nc,function(i) gg[head(order(-clust.dx[,i]),ntop)] )
+        ##idx <- unlist(sapply(1:nc,function(i) rep(i,length(clust.top[[i]]))))
+        idx <- unlist(mapply(rep,1:nc,sapply(clust.top,length)))
+        idx <- paste0("M",idx)
+        table(idx)        
+        gg.top <- unlist(clust.top)
+        zx <- zx[gg.top,]
+        dim(zx)
+    } else {
+        zx = zx[order(-apply(zx,1,sd,na.rm=TRUE)),,drop=FALSE] ## order
+        zx = head(zx,nmax)
+    }
+    ##zx = zx / apply(zx,1,sd,na.rm=TRUE)  ## scale??
+
+    ## cluster the genes???
+    if(is.null(idx)) {
+        hc = hclust( as.dist(1 - cor(t(zx))), method="ward.D2" )
+        idx = paste0("S",cutree(hc, 5))
+    }
+    
+    ##input$top_terms
+    filt <- list(mat=zx, clust=idx)
+    return(filt)
+})
+
+```
+
+
+Col {.tabset data-width=600}
+-----------------------------------------------------------------------------------------
+
+### Heatmap {data-height=800}
+	
+```{r}
+require(plotly)
+require(scatterD3)
+fillCol(height = "100%", flex = c(NA, 1), 
+        ##fillRow( flex=c(1,1,1),
+        inputPanel(
+        ##flowLayout( 
+            selectInput("hm_splitx", "split by:", choices=NULL, width='80%'),
+            selectInput('hm_topmode','top mode',c("sd","biomarker","pca"), width='80%'),
+            checkboxGroupInput('hm_options',NULL,choices=c('rowscale','softmax'),
+                               selected=c('rowscale','softmax'),inline=FALSE),
+            cellArgs=list(width='80px')
+        ),
+        plotOutput("hm_splitmap", height = "100%")
+        )
+
+observe({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    split0 = colnames(ngs$Y)[grep("sample|patient|donor",colnames(ngs$Y),invert=TRUE)]
+    ny <- apply(ngs$Y[,split0],2,function(x) length(unique(x)))
+    split0 <- split0[which(ny>1)]
+    sel <- grep("tissue.type|cell.type|cluster|treat",split0,value=TRUE)[1]
+    sel <- "<none>"
+    updateSelectInput(session, "hm_splitx", choices=c("<none>",split0), selected=sel)
+})
+
+output$hm_splitmap <- renderPlot({
+    ##genes = families[[input$filter]]
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    filt<- hm_filtered_matrix()
+    if(is.null(filt)) return(NULL)
+    
+    zx <- filt$mat    
+    zx.clust <- filt$clust    
+    col.annot = ngs$Y[colnames(zx),,drop=FALSE]
+    kk = grep("sample|patient",colnames(col.annot),invert=TRUE)
+    col.annot = col.annot[,kk,drop=FALSE]  ## no group??
+    
+    if(input$hm_group) {
+        grp = ngs$Y[colnames(zx),"group"]
+        zx = t(apply( zx, 1, function(x) tapply(x, grp, mean)))
+        col.annot = col.annot[match(colnames(zx),grp),,drop=FALSE]
+        rownames(col.annot) = colnames(zx)
+    }
+    
+    show_rownames = TRUE
+    ##if(nrow(zx) > 100) rownames(zx) = rep("",nrow(zx))
+    if(nrow(zx) > 100) show_rownames = FALSE   
+
+    main = ""
+    main = input$hm_features
+    
+    cex1 = ifelse(ncol(zx)>50,0.75,1)
+    cex1 = ifelse(ncol(zx)>100,0.5,cex1)
+    cex1 = ifelse(ncol(zx)>200,0,cex1)
+    
+    ##cat("heatmap:: plotting: dim.zx=",dim(zx),"\n")
+    scale.mode = "row"
+    scale.mode = ifelse("rowscale" %in% input$hm_options,"row","none")
+
+    ## split genes dimension in 5 groups
+    splity = 5 
+    if(!is.null(zx.clust)) splity = zx.clust
+    
+    ## split samples
+    splitx = NULL    
+    splitx = input$hm_splitx
+    if( splitx %in% colnames(col.annot) ) {
+        splitx = col.annot[,splitx]
+    } else {
+        splitx = NULL
+    }
+
+    show_legend = TRUE
+    if(input$hm_level=="geneset" || !is.null(splitx)) show_legend = FALSE
+    col.annot$group = NULL  ## no group in annotation
+    show_colnames <- ifelse(ncol(zx) < 200, TRUE, FALSE)
+
+    if(input$hm_level=="gene") {
+        rownames(zx) = sub(".*:","",rownames(zx))
+    }
+    rownames(zx) <- sub("HALLMARK:HALLMARK_","HALLMARK:",rownames(zx))
+    rownames(zx) = gsub(GSET.PREFIX.REGEX,"",rownames(zx))
+    rownames(zx) = substring(rownames(zx),1,50)  ## cut long names...
+    if(input$hm_level=="geneset")  rownames(zx) <- tolower(rownames(zx))
+    
+    cex2 <- ifelse( nrow(zx) > 60, 0.7, 0.8)
+    softmax = 0
+    crot <- 0
+    totnchar <- nchar(paste0(unique(splitx),collapse=""))
+    totnchar
+    if(!is.null(splitx) & totnchar > 44) crot=90
+    ##if(PRO.VERSION && input$hm_softmax)  softmax = 1
+    if("softmax" %in% input$hm_options)  softmax = 1
+    if(main=="<all>") main <- ""
+
+    jj = which(apply(col.annot,2,function(x)length(setdiff(unique(x),NA))>1))
+    col.annot = col.annot[,jj,drop=FALSE]    
+    if(ncol(col.annot)==0) col.annot <- NULL
+    
+    withProgress(
+        message='rendering heatmap...', value=0.90,
+        gx.splitmap( zx, 
+                    split=splity, splitx=splitx,
+                    mar=c(5,20), scale=scale.mode, show_legend=show_legend,
+                    show_colnames = show_colnames, column_title_rot=crot,
+                    show_rownames = 80, softmax=softmax,
+                    ## side.height.fraction=0.03+0.055*NCOL(col.annot), 
+                    labRow=NULL, cexCol=cex1, cexRow=cex2, 
+                    col.annot=col.annot, row.annot=NULL, annot.ht=2.6,
+                    main=main, nmax=-1)
+    )
+
+}, res=90)
+```
+
+
+### PCA/tSNE {data-height=800}
+
+```{r warnings=FALSE, message=FALSE, fig.width=12, fig.height=8}
+require(plotly)
+require(scatterD3)
+fillCol(height = "100%", flex = c(NA, 1), 
+        inputPanel(
+            selectInput("hmpca.colvar", "color:", choices=NULL, width='80%'),
+            selectInput("hmpca.shapevar", "shape:", choices=NULL, width='80%'),
+            ## selectInput("hmpca.text", "text:", choices=NULL, width='80%'),
+            ## selectInput("hmpca.line", "line:", choices=NULL, width='80%'),
+            br(),
+            radioButtons('hm_clustmethod',label=NULL,c("tsne","pca"),inline=TRUE),
+            checkboxGroupInput("hmpca.options", label=NULL, choices=c("label","3D"), inline=TRUE),
+            cellArgs=list(width='120px')
+        ),
+        plotlyOutput("hm_PCAplot", width = "80%", height = "80%")
+        )
+
+observe({
+    ngs <- inputData()
+    var.types = colnames(ngs$Y)
+    var.types = var.types[grep("sample|patient",var.types,invert=TRUE)]
+    vv = c(var.types,rep("<none>",10))
+    var.types0 = c("<none>","<cluster>",var.types)
+    var.types0 = c("<none>",var.types)
+    var.types1 = c("<none>",var.types)
+    updateSelectInput(session, "hmpca.colvar", choices=var.types0, selected=vv[1])
+    updateSelectInput(session, "hmpca.shapevar", choices=var.types1, selected="<none>")
+    ##updateSelectInput(session, "hmpca.line", choices=var.types1, selected="<none>")
+    ##updateSelectInput(session, "hmpca.text", choices=var.types0, selected="group")
+})
+
+
+hm_GetClusterPositions <- reactive({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    ##zx <- hm_filtered_matrix()
+    zx = ngs$X
+    kk <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
+    zx <- zx[,kk,drop=FALSE]    
+
+    ## apply feature filter
+    gg = ngs$families[[input$hm_features]]
+    jj <- match(toupper(gg), toupper(ngs$genes$gene_name))
+    gg = ngs$genes$gene_name[setdiff(jj,NA)]
+    pp = filterProbes(ngs$genes, gg)
+    zx = zx[intersect(pp,rownames(zx)),]
+    zx = head(zx[order(-apply(zx,1,sd)),],1000)
+    if(!PRO.VERSION || "rowscale" %in% input$hm_options)  zx = t(scale(t(zx)))  ## scale??
+
+    pos = NULL
+    if(input$hm_clustmethod=="tsne") {
+        require(Rtsne)
+        tsne.dim = 3
+        do3d <- ("3D" %in% input$hmpca.options)
+        tsne.dim = c(2,3)[ 1 + 1*do3d]
+        force.compute = FALSE
+        ## force.compute = TRUE        
+        if(!force.compute && tsne.dim==2 && !is.null(ngs$tsne2d) ) {
+            cat("getClusterPositions:: 2D tSNE from object\n")
+            pos <- ngs$tsne2d[colnames(zx),]
+        } else if(!force.compute && tsne.dim==3 && !is.null(ngs$tsne3d) ) {
+            cat("getClusterPositions:: 3D tSNE from object\n")
+            pos <- ngs$tsne3d[colnames(zx),]
+        } else {
+            cat("getClusterPositions:: computing tSNE...\n")
+            showNotification("computing tSNE...\n")
+            perplexity = max(min(30,ncol(zx)/4),1)
+            perplexity = min((ncol(zx)-1)/3, 30)
+            perplexity
+            pos <- Rtsne( t(zx), dim=tsne.dim, check_duplicated=FALSE,
+                         num_threads=100, ##Y_init=Y_init, 
+                         perplexity=perplexity )$Y
+        }
+    } else {
+        cat("getClusterPositions:: computing PCA/SVD...\n")
+        showNotification("computing PCA...\n")
+        require(irlba)
+        ##pos <- cmdscale(dist(t(zx)), k=3)
+        ##pos = svd(zx,nv=3)$v
+        pos = irlba(zx,nv=3)$v        
+    }
+    
+    pos = scale(pos) ## scale 
+    colnames(pos) = paste0("dim",1:ncol(pos))
+    rownames(pos) = colnames(zx)    
+
+    clust <- NULL
+    if(FALSE) {
+        ## should be relatively fast in sample space...
+        cat("getClusterPositions:: louvain clustering...\n")
+        require(igraph)
+        dist = as.dist(dist(pos))
+        gr = graph_from_adjacency_matrix(
+            1.0/dist, diag=FALSE, mode="undirected")
+        clust <- cluster_louvain(gr)$membership
+    }
+    
+    ##cat("getClusterPositions:: done!\n")
+    return( list(pos=pos, clust=clust) )
+})
+
+output$hm_PCAplot <- renderPlotly({
+
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    do3d = ("3D" %in% input$hmpca.options) 
+
+    clust <- hm_GetClusterPositions()
+    pos <- clust$pos
+    sel <- rownames(pos)
+    df <- cbind(pos, ngs$Y[sel,])    
+    if(!is.null(clust$clust)) df[["<cluster>"]] <- clust$clust    
+        
+    colvar = shapevar = linevar = textvar = NULL
+    if(input$hmpca.colvar %in% colnames(df)) colvar <- factor(df[,input$hmpca.colvar])
+    if(input$hmpca.shapevar %in% colnames(df)) shapevar <- factor(df[,input$hmpca.shapevar])
+    ##if(input$hmpca.line %in% colnames(df)) linevar = factor(df[,input$hmpca.line])
+    ##if(input$hmpca.text %in% colnames(df)) textvar = factor(df[,input$hmpca.text])
+    mode = "markers"
+    ann.text = rep(" ",nrow(df))
+    if(!do3d && "label" %in% input$hmpca.options) ann.text = rownames(df)
+    if(!is.null(colvar)) {
+        colvar = factor(colvar)
+        textvar <- factor(df[,input$hmpca.colvar])
+    }
+    symbols = c('circle','square','star','triangle-up','triangle-down','pentagon',
+                'bowtie','hexagon', 'asterisk','hash','cross','triangle-left',
+                'triangle-right','+',c(15:0))
+
+    require(plotly)
+    tt.info <- paste('Sample:', rownames(df),'</br>Group:', df$group)
+    cex1 = c(1.0,0.8,0.6)[1 + 1*(nrow(pos)>30) + 1*(nrow(pos)>200)]
+    
+    if(do3d ) {
+        ## 3D plot
+        j0 = 1:nrow(df)
+        j1 = NULL
+        if(!is.null(linevar)) {
+            linevar = factor(linevar)
+            j0 = which(linevar==levels(linevar)[1])
+            j1 = which(linevar!=levels(linevar)[1])
+        }
+        plt <- plot_ly(df, mode=mode) %>%
+            add_markers(x = df[j0,1], y = df[j0,2], z = df[j0,3], type="scatter3d",
+                        color = colvar[j0], ## size = sizevar, sizes=c(80,140),
+                        ##marker = list(size = 5*cex1),
+                        marker = list(size=5*cex1, line=list(color="grey10", width=0.1)),
+                        symbol = shapevar[j0], symbols=symbols,
+                        text = tt.info[j0] ) %>%
+            add_annotations(x = pos[,1], y = pos[,2], z = pos[,3],
+                            text = ann.text,
+                            ##xref = "x", yref = "y",
+                            showarrow = FALSE)
+        if(!is.null(j1) & length(j1)>0) {
+            plt <- plt %>%  add_markers(
+                                x = df[j1,1], y = df[j1,2], z = df[j1,3], type="scatter3d",
+                                color = colvar[j1], ## size = sizevar, sizes=c(80,140),
+                                ##marker = list(size=5*cex1, line=list(color="grey10", width=2)),
+                                symbol = shapevar[j1], symbols=symbols,
+                                text=tt.info[j1])
+        }
+        ## add cluster annotation labels
+        if(0 && length(unique(colvar))>1) { 
+            ## add cluster annotation labels
+            grp.pos <- apply(pos,2,function(x) tapply(x,colvar,median))
+            ##grp.pos <- matrix(grp.pos, ncol=3)
+            cex2 <- ifelse(length(grp.pos)>20,0.8,1)
+            plt <- plt %>% add_annotations(
+                               x = grp.pos[,1], y = grp.pos[,2], z = grp.pos[,3],
+                               text = rownames(grp.pos),
+                               font=list(size=24*cex2, color='#555'),
+                               showarrow = FALSE)
+        }
+        
+    } else {
+        ## 2D plot
+        j0 = 1:nrow(df)
+        j1 = NULL
+        if(!is.null(linevar)) {
+            linevar = factor(linevar)
+            j0 = which(linevar==levels(linevar)[1])
+            j1 = which(linevar!=levels(linevar)[1])
+        }
+        plt <- plot_ly(df, mode=mode) %>%
+            add_markers(x = df[j0,1], y = df[j0,2], type="scatter",
+                        color = colvar[j0], ## size = sizevar, sizes=c(80,140),
+                        marker = list(size=16*cex1, line=list(color="grey20", width=0.6)),
+                        symbol = shapevar[j0], symbols=symbols,
+                        text = tt.info[j0] ) %>%
+            add_annotations(x = pos[,1], y = pos[,2],
+                            text = ann.text,
+                            ##xref = "x", yref = "y",
+                            showarrow = FALSE)
+
+        ## add node labels
+        if(!is.null(j1) & length(j1)>0 ) {
+            plt <- plt %>%  add_markers(
+                                x = df[j1,1], y = df[j1,2], type="scatter",
+                                color = colvar[j1], ## size = sizevar, sizes=c(80,140),
+                                marker = list(size=16*cex1, line=list(color="grey20", width=1.8)),
+                                symbol = shapevar[j1], symbols=symbols,
+                                text=tt.info[j1])
+        }
+
+        ## add group/cluster annotation labels
+        if(!is.null(textvar) && length(unique(textvar))>1) { 
+            grp.pos <- apply(pos,2,function(x) tapply(x,as.character(textvar),median))
+            cex2 <- 1
+            if(length(grp.pos)>20) cex2 <- 0.8
+            if(length(grp.pos)>50) cex2 <- 0.6
+            plt <- plt %>% add_annotations(
+                               x = grp.pos[,1], y = grp.pos[,2],
+                               text = paste0("<b>",rownames(grp.pos),"</b>"),
+                               font = list(size=24*cex2, color='#555'),
+                               showarrow = FALSE)
+        }
+        if(FALSE && length(table(colvar)) <= 20) {
+            plt <- plt %>% layout(legend = list(x = 0.98, y = 0.98,
+                                                font=list(size=11),
+                                                bgcolor="#EEEEEE"))
+        } else {
+            plt <- plt %>% layout(showlegend = FALSE)
+        }
+        
+    }         
+    title = paste0("<b>PCA</b>  (",nrow(pos)," samples)") 
+    if(input$hm_clustmethod=="tsne") title = paste0("<b>tSNE</b>  (",nrow(pos)," samples)") 
+    ## plt <- plt %>% layout(title=title)
+    ## plt <- plt %>% config(displayModeBar = FALSE) 
+    ##print(plt)
+    return(plt)
+})
+```
+
+
+<!---------------------------------------------
+
+### Coldmap {data-height=800}
+
+```{r warnings=FALSE, message=FALSE, fig.width=4, fig.height=4}
+
+getFullFCmatrix <- reactive({
+    fc0 = NULL
+    qv0 = NULL
+    ##dt <- getSignificanceCalls()
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    if(input$hm_level=="geneset") {
+        ##fc0 = sapply(ngs$gset.meta$outputs, function(x) x[["gsva"]][,"score"])
+        ##qv0 = sapply(ngs$gset.meta$outputs, function(x) x[["gsva"]][,"q.value"])
+        fc0 = sapply(ngs$gset.meta$meta, function(x) unclass(x$fc)[,"gsva"])
+        qv0 = sapply(ngs$gset.meta$meta, function(x) unclass(x$q)[,"gsva"])
+    } else {
+        ##fc0 = sapply(ngs$gx.meta$outputs[["trend.limma"]]$tables,function(x) x$logFC)
+        ##qv0 = sapply(ngs$gx.meta$outputs[["trend.limma"]]$tables,function(x) x$adj.P.Val)
+        ##rownames(fc0) = rownames(qv0) = rownames(ngs$gx.meta$outputs[["trend.limma"]]$tables[[1]])
+        fc0 = sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
+        qv0 = sapply(ngs$gx.meta$meta, function(x) unclass(x$q)[,"trend.limma"])
+    }
+    res = list(fc=fc0, qv=qv0)
+    return(res) 
+})
+
+getFCmatrix <- reactive({
+    fc0 = NULL
+    qv0 = NULL
+    ##dt <- getSignificanceCalls()
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    if(input$hm_level=="geneset") {
+        fc0 = sapply(ngs$gset.meta$meta, function(x) unclass(x$fc)[,"gsva"])
+        qv0 = sapply(ngs$gset.meta$meta, function(x) unclass(x$q)[,"gsva"])
+        gsets = unique(unlist(COLLECTIONS[input$hm_features]))
+        gsets = intersect(gsets, rownames(fc0))
+        fc0 = fc0[gsets,,drop=FALSE]
+        qv0 = qv0[gsets,,drop=FALSE]
+    } else {
+        fc0 = sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
+        qv0 = sapply(ngs$gx.meta$meta, function(x) unclass(x$q)[,"trend.limma"])
+        sel.probes = rownames(fc0) 
+        gg = ngs$families[[1]]
+        gg = ngs$families[[input$hm_features]]
+        jj <- match(toupper(gg), toupper(ngs$genes$gene_name))
+        gg1 = ngs$genes$gene_name[setdiff(jj,NA)]
+        sel.probes = filterProbes(ngs$genes, gg1)
+        sel.probes = intersect(sel.probes, rownames(fc0))
+        fc0 = fc0[sel.probes,,drop=FALSE]
+        qv0 = qv0[sel.probes,,drop=FALSE]
+    }
+    res = list(fc=fc0, qv=qv0)
+    return(res) 
+})
+
+fillCol(height = "100%", ## flex = c(NA, 1), 
+        ##inputPanel(
+        ##sliderInput("coldmap_range", "Range:", min=1, max=4000, value=c(0,4000), width='100%')
+        ##),
+        plotOutput("coldmap_plot", height='100%')
+        )
+
+output$coldmap_plot <- renderPlot({
+
+    ##res = getFCmatrix()
+    res = getFullFCmatrix()
+    if(is.null(res)) return(NULL)
+
+    fc0 = res$fc
+    if(nrow(fc0)<2 || ncol(fc0)<2) return(NULL)
+
+    ##require(nclust)
+    require(nclust1)
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    if(input$hm_level=="geneset") {
+        X = scale(t(ngs$gsetX[rownames(fc0),]))
+    } else {
+        X = scale(t(ngs$X[rownames(fc0),]))
+    }
+    prm = input$hm_splitx
+    if(prm %in% colnames(ngs$Y)) {
+        idx = tapply(1:nrow(ngs$Y), ngs$Y[,prm], list)
+        xx = lapply(idx, function(ii) X[ii,,drop=FALSE])    
+        xx = xx[ which(sapply(xx,nrow) >= 2) ]
+        xx.list = paste(paste0("xx[[",1:length(xx),"]]"),collapse=",")
+    } else {
+        xx = list("samples"=X)
+        xx.list = "xx[[1]]"
+    }
+
+    require(nclust1)
+    ##require(nclust)
+    clust = eval(parse(text = paste0("nclust2(",xx.list,")") ))
+    
+    ## additional top panel genes statistics
+    jj = clust[[1]]$labels[clust[[1]]$order]
+    FC  <- t(fc0[jj,,drop=FALSE])
+
+    ##z = svd(FC)
+    ##sv1 = rowMeans( z$v[,1:10] %*% diag(z$d[1:10]))
+    fc.sd = sqrt(colSums(FC**2))
+    FC = rbind( sd.FC = fc.sd, FC)
+
+    cplot.func <- function(x, y) {
+        points(x, y, cex=0.1, col=rgb(0,0,0,0.2))
+        lines(lowess(x, y, f=30/length(x)), lwd=1, col="red")
+    }
+    cpht = min(11/nrow(FC),1.8) ## height of FC plot tracks
+    zoom.start = 1
+    zoom.end = ncol(FC)
+    ##zoom.start = input$coldmap_range[1]
+    ##zoom.end   = input$coldmap_range[2]
+
+    filt <- hm_filtered_matrix()
+    zx <- filt$mat
+    idx = filt$clust
+    bcmodules <- tapply(rownames(zx),idx,list)
+    bcmodules <- lapply(bcmodules, function(s) head(s[order(-fc.sd[s])],5)) ## highest sd(FC)
+    modulecolor <-  brewer.pal(8,"Set2")[1:length(bcmodules)]
+    genecolor <- unlist(mapply(function(u,v)rep(v,length(u)),bcmodules,modulecolor))
+     
+    coldmap.cmd = "nclust1::coldmap( XX, clust = clust, dlab=DLAB, rdw=5, cdw=2.5, cplot.height=CPHT, cplot.gutter = 0.2, cplot=FC, cplot.band=c(), cplot.panel=cplot.func, saturation=0.33, wa=WA, wb=WB, clab = unlist(bcmodules), col.clab=genecolor, cex.clab=1.2, clab.height=2 )"
+    coldmap.cmd = sub("XX",xx.list, coldmap.cmd)
+    xx.names = paste0("c('",paste(names(xx),collapse="','"),"')")
+    coldmap.cmd = sub("DLAB", xx.names, coldmap.cmd)
+    coldmap.cmd = sub("CPHT", cpht, coldmap.cmd)
+    coldmap.cmd = sub("WA", zoom.start, coldmap.cmd)
+    coldmap.cmd = sub("WB", zoom.end, coldmap.cmd)
+    eval(parse(text = coldmap.cmd))
+     
+}, res=90)
+```
+
+-------------------------------------->
+
+
+
+Col {.tabset data-width=450}
+--------------------------------------------------------------------------------------
+
+### Annotate clusters
+
+```{r warnings=FALSE, message=FALSE, fig.width=8, fig.height=4}
+fillCol(flex = c(NA,1.6,1), ## height="800px",
+        inputPanel( height="100px",
+                   selectInput("xann.level", "Reference level:",
+                               choices=c("gene","geneset","phenotype"),
+                               selected="geneset", width='80%'),
+            selectInput("xann.refset", "Reference set:", choices="", width='80%')
+            ),
+        plotOutput('clustannot_plots'),
+        dataTableOutput('clustannot_table')
+        )
+
+observe({
+    ngs <- inputData()    
+    if(is.null(input$xann.level)) return(NULL)
+    ann.types=sel=NULL
+    if(input$xann.level!="phenotype") {
+        if(input$xann.level=="geneset") ann.types <- names(COLLECTIONS)
+        if(input$xann.level=="gene") ann.types <- names(ngs$families)
+        ann.types <- setdiff(ann.types,"<all>")  ## avoid slow...
+        ann.types <- grep("^<",ann.types,invert=TRUE,value=TRUE)  ## remove special groups
+        sel = ann.types[1]
+        if("H" %in% ann.types) sel = "H"
+        j <- grep("^transcription",ann.types,ignore.case=TRUE)
+        if(input$xann.level=="geneset") j <- grep("hallmark",ann.types,ignore.case=TRUE)
+        if(length(j)>0) sel = ann.types[j[1]]
+        ann.types <- sort(ann.types)
+    } else {
+        ann.types=sel=""
+    }
+    updateSelectInput(session, "xann.refset", choices=ann.types, selected=sel)    
+})
+
+
+clustannot_correlation <- reactive({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    ##zx = head(ngs$X,1000)
+
+    filt <- hm_filtered_matrix()
+    if(is.null(filt)) return(NULL)
+    zx <- filt$mat
+    idx <- filt$clust
+
+    ann.level="geneset"
+    ann.refset="Hallmark collection"
+    ann.level = input$xann.level
+    if(is.null(ann.level)) return(NULL)
+
+    ann.refset = input$xann.refset
+    ##if(is.null(ann.refset)) return(NULL)
+    
+    refset = NULL
+    refset = ngs$gsetX[,]    
+    refset = ngs$X[,]    
+    if(ann.level=="gene" && ann.refset %in% names(ngs$families) ) {
+        gg = ngs$families[[ann.refset]]
+        jj = match(toupper(gg), toupper(ngs$genes$gene_name))
+        jj <- setdiff(jj,NA)
+        pp = rownames(ngs$genes)[jj]
+        refset = ngs$X[intersect(pp,rownames(ngs$X)),]    
+    }
+    if(ann.level=="geneset" && ann.refset %in% names(COLLECTIONS)) {
+        ss = COLLECTIONS[[ann.refset]]
+        ss = intersect(ss, rownames(ngs$gsetX))
+        length(ss)
+        refset = ngs$gsetX[ss,]    
+    }
+    if(ann.level=="phenotype") {
+        refset = t(expandAnnotationMatrix(ngs$Y))
+    }
+    if(is.null(refset)) {
+        cat("<clustering:clustannot_plots> WARNING:: refset error\n")
+        return(NULL)
+    }
+
+    ## restrict to top??
+    dim(refset)
+    refset = head(refset[order(-apply(refset,1,sd)),],1000)
+    
+    ## for each cluster compute average correlation
+    ##zx=ngs$X
+    i=idx[1]
+    rho = sapply(unique(idx), function(i) {
+        gg = rownames(zx)[which(idx==i)]
+        aa <- t(zx[gg,,drop=FALSE])
+        bb <- t(refset[,colnames(zx)])
+        ##rr = cor(aa , bb, use="pairwise", method="spearman")
+        rr = cor(apply(aa,2,rank), apply(bb,2,rank), use="pairwise")
+        if(PRO.VERSION && input$hm_topmode=="pca") rr <- abs(rr)
+        colMeans(rr,na.rm=TRUE)
+    })
+    rho = round(rho, digits=3)
+
+    ##cat("<clustering:clustannot_plots> done! : dim(rho)=",dim(rho),"\n")
+
+    return(rho)
+})
+
+output$clustannot_plots <- renderPlot({
+    require(RColorBrewer)
+    rho = clustannot_correlation()
+    if(is.null(rho)) return(NULL)
+
+    par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
+    NTERMS = 7
+    NTERMS = 10
+    if(ncol(rho)>6) {
+        par(mfrow=c(3,3), mar=c(3,2,1.5,1) )
+        NTERMS = 6
+    }
+    i=1
+    klrpal = brewer.pal(8,"Set2")
+    for(i in 1:min(9,ncol(rho))) {
+        x = rev(head(sort(rho[,i],decreasing=TRUE),NTERMS))
+        ##names(x) = sub("HALLMARK_","",names(x))
+        names(x) = sub(".*:","",names(x))
+        names(x) = gsub(GSET.PREFIX.REGEX,"",names(x))
+        ##names(x) = tolower(names(x))
+        klr = klrpal[i]
+        ##klr <- rgb(t(pmin(1.33*col2rgb(klr),255)), maxColorValue=255) ## make color lighter
+        klr = paste0(klr,"66")
+        is.bottom <- ifelse(i>=4,TRUE,FALSE)
+        if(ncol(rho)>6)  is.bottom <- ifelse(i>=7,TRUE,FALSE)
+        barplot(x, horiz=TRUE, las=1, names.arg=NA, xlim=c(0,1),
+                width=5/6, space=0.2, border=NA, col=klr, ##col="grey80",
+                xlab=ifelse(is.bottom, "correlation (rho)",""),
+                cex.axis=1.1, cex.lab=1.1)
+        title(main=colnames(rho)[i], cex.main=1.3 )
+        text(0, 1:length(x)-0.45, labels=names(x), cex=1.1, pos=4, adj=0)
+    }            
+}, height=400, res=90)
+    
+output$clustannot_table <- renderDataTable({
+    rho = clustannot_correlation()
+    if(is.null(rho)) return(NULL)
+    ##rownames(rho) = shortstring(rownames(rho),50)
+    rho.name = shortstring(sub(".*:","",rownames(rho)),60)
+    ##rho = data.frame(cbind( name=rho.name, rho))
+    rho = as.matrix(rho)
+    rownames(rho) = rho.name
+    DT::datatable(
+            rho,
+            class = 'compact cell-border stripe hover',
+            rownames=TRUE,
+            extensions = c('Buttons','Scroller'),
+            selection=list(mode='single', target='row', selected=c(1)),
+            options=list(
+                dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
+                ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                scrollX = TRUE, ##scrollY = TRUE,
+                scrollY = 200, scroller=TRUE, deferRender=TRUE
+            )  ## end of options.list 
+        ) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
+})
+```
+
+
+### Bi-plot {data-height=800}
+
+```{r warnings=FALSE, message=FALSE, fig.width=6, fig.height=6}
+renderPlot({
+    require(RColorBrewer)
+    require(irlba)
+    
+    zx <- hm_filtered_matrix()$mat
+    if(is.null(zx) || nrow(zx)==0) return(NULL)
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    group = ngs$Y[colnames(zx),"group"]
+    klr = rep(brewer.pal(8,"Set2"),10)[as.integer(factor(group))]
+    mx = zx
+    if(input$hm_group) {
+        mx = t(apply(zx,1,function(x) tapply(x,group,mean)))
+    }
+    mx = head(mx[order(-apply(mx,1,sd)),],50)
+    ##if(input$hm_rowscale) mx = t(scale(t(mx)))
+    mx = t(scale(t(mx)))
+    rownames(mx) = sub(".*:","",rownames(mx))
+    colnames(mx) = sub(".*:","",colnames(mx))    
+    par(mfrow=c(1,1), mar=c(4,4,2,2)*1, oma=c(1,1,1,1)*0 )
+    ##sv <- svd(mx,nv=2)  ## this one!
+    sv <- irlba(mx - rowMeans(mx),nv=2)  ## this one!
+    ##biplot( sv$v, sv$u)
+    rownames(sv$u) <- rownames(mx)
+    rownames(sv$v) <- colnames(mx)
+    biplot( sv$u, sv$v, cex=c(0.85, 0.8), expand=0.75,
+           ##xaxt='n', yaxt='n',
+           ##xlabs = c("PC1 (gene)","PC2 (gene)"),
+           ##ylabs = c("PC1 (sample)","PC2 (sample)"),
+           xlab = "PC1", ylab = "PC2")
+    title("PCA biplot",cex=1.1, line=4)
+}, res=85)
+```
+
+`r if(!PRO.VERSION) {"<!---------------------------------"}`
+
+
+### Feature score {data-height=800}
+
+```{r warnings=FALSE, message=FALSE, fig.width=6, fig.height=6}
+require(plotly)
+renderPlot({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    features=X=NULL
+    if(input$hm_level=="geneset") {
+        features = COLLECTIONS
+        X = ngs$gsetX
+    } else {
+        features = ngs$families
+        X = ngs$X
+    }
+    
+    ##zx = X[,]
+    zx = hm_filtered_matrix()$mat
+    if(is.null(zx)) return(NULL)
+    
+    X = X[,colnames(zx)]
+    jj = grep("group|sample|patient",colnames(ngs$Y),invert=TRUE)
+    Y = ngs$Y[colnames(X),jj,drop=FALSE]
+    kk = which(apply(Y,2,function(y) length(unique(y))>1))
+    Y = Y[,kk,drop=FALSE]
+    
+    ## Note: this takes a while. Maybe better precompute off-line...
+    sdx = apply(X,1,sd)
+    names(sdx) = rownames(X)
+    S = matrix(NA, nrow=length(features), ncol=ncol(Y))
+    rownames(S) = names(features)
+    colnames(S) = colnames(Y)
+    
+    gene.level = TRUE
+    gene.level = (input$hm_level=="gene")
+    i=1
+    for(i in 1:ncol(Y)) {
+        grp = Y[,i]
+        grp = as.character(grp)
+        score = rep(NA, length(features))
+        names(score) = names(features)
+        j=1
+        for(j in 1:length(features)) {
+            pp = features[[j]]
+            if(gene.level)
+                pp = filterProbes(ngs$genes, features[[j]])
+            pp = head(pp[order(-sdx[pp])],1000)  ## how many top SD??
+            pp = intersect(pp, rownames(X))
+            mx = t(apply(X[pp,,drop=FALSE], 1, function(x) tapply(x,grp,mean)))
+            ##D = as.matrix(dist(t(mx)))
+            if(nrow(mx)==0 || ncol(mx)==0) next
+            D = 1 - cor(mx, use="pairwise")
+            diag(D) = NA
+            f = 1
+            f <- (1 - exp(-(length(pp)/20)**2)) ## penalize smaller sets
+            score[j] = f * mean(D,na.rm=TRUE)
+        }
+        S[,i] = score
+    }
+    if(is.null(S) || nrow(S)==0 || ncol(S)==0 ) return(NULL)
+    
+    par(mfrow=c(2,1), mar=c(1,5,3,3) )
+    par(mfrow=c(1,2), mar=c(10,5,10,2) ); frame()
+    ## par(mfrow=c(1,1), mar=c(10,5,3,3) )
+    S = tail( S[order(rowSums(S)),,drop=FALSE], 35)  ## top scoring
+    rownames(S) = substring(rownames(S),1,80)
+    bpos = barplot( t(S), beside=FALSE, las=1,
+                   cex.names=0.9, horiz=TRUE,
+                   ## names.arg = rep("",nrow(S)),
+                   xlab="cumulative score" )
+    ##text( bpos, -0.05, labels=rownames(S), cex=0.8, 
+    ##     adj=1, srt=60, xpd=TRUE)
+    title("feature-set score", cex=1.3)
+    cc1 = grey.colors(ncol(Y))
+    legend("bottomright",legend=colnames(Y), fill=cc1,
+           cex=0.9, y.intersp=0.85)
+    
+}, res=80, height=800)
+```
+
+
+`r if(!PRO.VERSION) {"-------------------------------------->"}`

@@ -1,0 +1,253 @@
+<?xml version="1.0"?>
+<!DOCTYPE pathway SYSTEM "http://www.kegg.jp/kegg/xml/KGML_v0.7.2_.dtd">
+<!-- Creation date: Mar 25, 2011 17:54:42 +0900 (GMT+09:00) -->
+<pathway name="path:hsa03020" org="hsa" number="03020"
+         title="RNA polymerase"
+         image="http://www.kegg.jp/kegg/pathway/hsa/hsa03020.png"
+         link="http://www.kegg.jp/kegg-bin/show_pathway?hsa03020">
+    <entry id="1" name="path:hsa03020" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa03020">
+        <graphics name="TITLE:RNA polymerase" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="113" y="59" width="146" height="27"/>
+    </entry>
+    <entry id="2" name="ko:K03043 ko:K13797" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03043+K13797">
+        <graphics name="K03043..." fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="68" y="375" width="46" height="17"/>
+    </entry>
+    <entry id="3" name="ko:K03046 ko:K13797" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03046+K13797">
+        <graphics name="K03046..." fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="68" y="392" width="46" height="17"/>
+    </entry>
+    <entry id="4" name="ko:K03040" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03040">
+        <graphics name="K03040" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="114" y="385" width="46" height="17"/>
+    </entry>
+    <entry id="5" name="ko:K03060" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03060">
+        <graphics name="K03060" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="160" y="385" width="46" height="17"/>
+    </entry>
+    <entry id="6" name="ko:K03044 ko:K03045 ko:K13798" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03044+K03045+K13798">
+        <graphics name="K03044..." fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="68" y="475" width="46" height="17"/>
+    </entry>
+    <entry id="7" name="ko:K03047" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03047">
+        <graphics name="K03047" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="114" y="484" width="46" height="17"/>
+    </entry>
+    <entry id="8" name="ko:K03041 ko:K03042" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03041+K03042">
+        <graphics name="K03041..." fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="68" y="492" width="46" height="17"/>
+    </entry>
+    <entry id="9" name="ko:K03052" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03052">
+        <graphics name="K03052" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="114" y="501" width="46" height="17"/>
+    </entry>
+    <entry id="10" name="ko:K03051" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03051">
+        <graphics name="K03051" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="160" y="484" width="46" height="17"/>
+    </entry>
+    <entry id="11" name="ko:K03053" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03053">
+        <graphics name="K03053" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="206" y="484" width="46" height="17"/>
+    </entry>
+    <entry id="12" name="ko:K03055" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03055">
+        <graphics name="K03055" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="252" y="484" width="46" height="17"/>
+    </entry>
+    <entry id="13" name="ko:K03049 ko:K03050" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03049+K03050">
+        <graphics name="K03049..." fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="298" y="484" width="46" height="17"/>
+    </entry>
+    <entry id="14" name="ko:K03058" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03058">
+        <graphics name="K03058" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="206" y="501" width="46" height="17"/>
+    </entry>
+    <entry id="15" name="ko:K03056" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03056">
+        <graphics name="K03056" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="252" y="501" width="46" height="17"/>
+    </entry>
+    <entry id="16" name="hsa:5431" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:5431">
+        <graphics name="POLR2B, POL2RB, RPB2, hRPB140" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="390" y="389" width="46" height="17"/>
+    </entry>
+    <entry id="17" name="hsa:5430" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:5430">
+        <graphics name="POLR2A, POLR2, POLRA, RPB1, RPBh1, RPO2, RPOL2, RpIILS, hRPB220, hsRPB1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="390" y="406" width="46" height="17"/>
+    </entry>
+    <entry id="18" name="hsa:5432" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:5432">
+        <graphics name="POLR2C, RPB3, RPB31, hRPB33, hsRPB3" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="436" y="389" width="46" height="17"/>
+    </entry>
+    <entry id="19" name="hsa:5433" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:5433">
+        <graphics name="POLR2D, HSRBP4, HSRPB4, RBP4, RPB16" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="500" y="389" width="46" height="17"/>
+    </entry>
+    <entry id="20" name="hsa:5434" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:5434">
+        <graphics name="POLR2E, RPABC1, RPB5, XAP4, hRPB25, hsRPB5" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="657" y="389" width="46" height="17"/>
+    </entry>
+    <entry id="21" name="hsa:5435" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:5435">
+        <graphics name="POLR2F, HRBP14.4, POLRF, RPABC14.4, RPABC2, RPB14.4, RPB6, RPC15" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="703" y="389" width="46" height="17"/>
+    </entry>
+    <entry id="22" name="hsa:5436" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:5436">
+        <graphics name="POLR2G, RPB19, RPB7, hRPB19, hsRPB7" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="546" y="389" width="46" height="17"/>
+    </entry>
+    <entry id="23" name="hsa:5437" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:5437">
+        <graphics name="POLR2H, RPABC3, RPB17, RPB8" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="749" y="389" width="46" height="17"/>
+    </entry>
+    <entry id="24" name="hsa:5438" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:5438">
+        <graphics name="POLR2I, RPB9, hRPB14.5" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="592" y="389" width="46" height="17"/>
+    </entry>
+    <entry id="25" name="hsa:5441" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:5441">
+        <graphics name="POLR2L, RBP10, RPABC5, RPB10, RPB10beta, RPB7.6, hRPB7.6" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="730" y="406" width="46" height="17"/>
+    </entry>
+    <entry id="26" name="hsa:246721 hsa:5439 hsa:548644" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:246721+hsa:5439+hsa:548644">
+        <graphics name="POLR2J2, HRPB11B, RPB11b1..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="436" y="406" width="46" height="17"/>
+    </entry>
+    <entry id="27" name="hsa:5440" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:5440">
+        <graphics name="POLR2K, ABC10-alpha, RPABC4, RPB10alpha, RPB12, RPB7.0, hRPB7.0, hsRPB10a" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="684" y="406" width="46" height="17"/>
+    </entry>
+    <entry id="28" name="hsa:55703" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:55703">
+        <graphics name="POLR3B, C128, HLD8, INMAP, RPC2" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="390" y="484" width="46" height="17"/>
+    </entry>
+    <entry id="29" name="hsa:11128" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:11128">
+        <graphics name="POLR3A, ADDH, HLD7, RPC1, RPC155, hRPC155" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="390" y="501" width="46" height="17"/>
+    </entry>
+    <entry id="30" name="hsa:10623" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:10623">
+        <graphics name="POLR3C, RPC3, RPC62" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="500" y="484" width="46" height="17"/>
+    </entry>
+    <entry id="31" name="hsa:661" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:661">
+        <graphics name="POLR3D, BN51T, RPC4, RPC53, TSBN51" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="546" y="484" width="46" height="17"/>
+    </entry>
+    <entry id="32" name="hsa:9533" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:9533">
+        <graphics name="POLR1C, AC40, HLD11, RPA39, RPA40, RPA5, RPAC1, RPC40, TCS3" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="436" y="501" width="46" height="17"/>
+    </entry>
+    <entry id="33" name="hsa:51728" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:51728">
+        <graphics name="POLR3K, C11, C11-RNP3, My010, RPC10, RPC11, RPC12.5" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="592" y="484" width="46" height="17"/>
+    </entry>
+    <entry id="34" name="hsa:51082" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:51082">
+        <graphics name="POLR1D, AC19, POLR1C, RPA16, RPA9, RPAC2, RPC16, RPO1-3, TCS2" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="436" y="484" width="46" height="17"/>
+    </entry>
+    <entry id="35" name="hsa:171568" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:171568">
+        <graphics name="POLR3H, RPC22.9, RPC8" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="500" y="501" width="46" height="17"/>
+    </entry>
+    <entry id="36" name="hsa:10622 hsa:84265" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:10622+hsa:84265">
+        <graphics name="POLR3G, RPC32, RPC7..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="546" y="501" width="46" height="17"/>
+    </entry>
+    <entry id="37" name="hsa:10621" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:10621">
+        <graphics name="POLR3F, RPC39, RPC6" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="592" y="501" width="46" height="17"/>
+    </entry>
+    <entry id="38" name="hsa:84172" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:84172">
+        <graphics name="POLR1B, RPA135, RPA2, Rpo1-2" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="390" y="571" width="46" height="17"/>
+    </entry>
+    <entry id="39" name="hsa:25885" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:25885">
+        <graphics name="POLR1A, A190, AFDCIN, RPA1, RPA194, RPO1-4, RPO14" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="390" y="588" width="46" height="17"/>
+    </entry>
+    <entry id="40" name="hsa:30834" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:30834">
+        <graphics name="ZNRD1, HTEX-6, HTEX6, Rpa12, TCTEX6, TEX6, ZR14, hZR14, tctex-6" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="500" y="571" width="46" height="17"/>
+    </entry>
+    <entry id="41" name="ko:K03001" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03001">
+        <graphics name="K03001" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="546" y="571" width="46" height="17"/>
+    </entry>
+    <entry id="42" name="ko:K03003" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03003">
+        <graphics name="K03003" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="592" y="571" width="46" height="17"/>
+    </entry>
+    <entry id="43" name="hsa:221830" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:221830">
+        <graphics name="TWISTNB" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="565" y="588" width="46" height="17"/>
+    </entry>
+    <entry id="44" name="hsa:64425" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:64425">
+        <graphics name="POLR1E, PAF53, PRAF1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="519" y="588" width="46" height="17"/>
+    </entry>
+    <entry id="45" name="ko:K03048" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03048">
+        <graphics name="K03048" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="206" y="385" width="46" height="17"/>
+    </entry>
+    <entry id="46" name="ko:K03059" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K03059">
+        <graphics name="K03059" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="298" y="501" width="46" height="17"/>
+    </entry>
+    <entry id="47" name="hsa:55718" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:55718">
+        <graphics name="POLR3E, RPC5, SIN" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="638" y="501" width="46" height="17"/>
+    </entry>
+    <entry id="48" name="hsa:9533" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:9533">
+        <graphics name="POLR1C, AC40, HLD11, RPA39, RPA40, RPA5, RPAC1, RPC40, TCS3" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="436" y="588" width="46" height="17"/>
+    </entry>
+    <entry id="49" name="hsa:51082" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?hsa:51082">
+        <graphics name="POLR1D, AC19, POLR1C, RPA16, RPA9, RPAC2, RPC16, RPO1-3, TCS2" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="436" y="571" width="46" height="17"/>
+    </entry>
+</pathway>

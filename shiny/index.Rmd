@@ -1,0 +1,102 @@
+---
+title: "Omics Playground"
+output: 
+  flexdashboard::flex_dashboard:
+    theme: default
+    orientation: col
+##    logo: resources/irb-small.png
+##    favicon: resources/irb-small.png
+    logo: resources/bigomics-logo-white-48px.png
+    favicon: resources/bigomics-logo-white-48px.png
+    css: resources/custom.css
+runtime: shiny
+---
+
+
+```{r global=TRUE, echo=FALSE, message=FALSE, include=FALSE}
+###```{r global, include=FALSE} 
+## load data in 'global' chunk so it can be shared by all users of the dashboard
+library(shiny)
+library(rmarkdown)
+
+##setwd("~/Projects/Immunomics/shiny-dev/")
+PRO.VERSION=FALSE
+PRO.VERSION=TRUE
+
+## set global folders
+all.dir = c("R","lib","pgx")
+ROOT=NULL
+if(all(dir.exists(paste0("/playground",all.dir)))==TRUE) ROOT="/playground"
+if(all(dir.exists(paste0("../",all.dir)))==TRUE) ROOT=".."
+if(all(dir.exists(all.dir))==TRUE) ROOT="."
+ROOT
+if(is.null(ROOT)) stop("FATAL ERROR: could not fine R/lib/pgx directories")
+RDIR = paste0(ROOT,"/R")
+FILES = paste0(ROOT,"/lib/")
+PGX.DIR = paste0(ROOT,"/pgx/")
+##RDIR="./R.local"
+##FILES="./lib.local"
+##PGX.DIR="./pgx.local/"
+RDIR
+FILES
+PGX.DIR
+
+source("./pgx-init.R", local=TRUE)
+DEV.VERSION = (TRUE && PRO.VERSION)  ## disable/enable DEV options
+
+if(0) {
+    load("../pgx/GSE10846-dlbcl-mRNA-8k-LT.pgx")    
+    load("../pgx/GSE72056-melanoma-scRNA-vsclusters-s200-8k-LT.pgx")
+    load("../pgx/GSE72056-melanoma-scRNA-vspheno-s100-8k-LT.pgx")   
+    load("../pgx/rieckmann2017-immprot-8k-LT.pgx")    
+    load("../pgx/GSE98638-liver-scRNA-8k-LT.pgx")
+    load("../pgx/GSE22886-immune-mRNA-8k.pgx")    
+    ngs <- pgx.initialize(ngs)    
+}
+```
+
+```{r child = 'module-intro.Rmd'}
+```
+
+```{r child = 'module-datatable.Rmd'}
+```
+
+```{r child = 'module-clustering.Rmd'}
+```
+
+```{r child = 'module-expression.Rmd'}
+```
+
+```{r child = 'module-enrichment.Rmd'}
+```
+
+```{r child = 'module-functional.Rmd'}
+```
+
+```{r child = 'module-intersect.Rmd'}
+```
+
+```{r child = 'module-signature.Rmd'}
+```
+
+```{r child = 'module-profiling.Rmd'}
+```
+
+```{r child = 'module-predict.Rmd'}
+```
+
+
+`r if(!PRO.VERSION) {"<!-------------------------------------------"}`
+
+```{r child = 'module-batchcorrection.Rmd'}
+```
+
+`r if(!PRO.VERSION) {"--------------------------------------------->"}`
+
+
+`r if(!DEV.VERSION) {"<!-------------------------------------------"}`
+
+```{r child = 'module-system.Rmd'}
+```
+
+`r if(!DEV.VERSION) {"--------------------------------------------->"}`

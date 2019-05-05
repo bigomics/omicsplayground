@@ -1,0 +1,787 @@
+Batch effects {data-orientation=cols}
+==========================================================================================
+
+Inputs {.sidebar data-width=250}
+------------------------------------------------------------------------------------------
+
+<br>
+**Batch Effects Analysis**. Examine your data for batch effects or
+unwanted variation. 
+
+<br>
+
+```{r}
+NORMALIZATION.METHODS=c("none","scale","CPM","TMM","RLE","quantile","log-quantile","upperquartile")
+NORMALIZATION.METHODS=c("none","CPM","TMM","RLE","quantile")
+selectInput('bc_normalization','Pre-normalization:', NORMALIZATION.METHODS, multiple=FALSE)
+selectInput('bc_remove','Remove batch:',choices=NULL,multiple=TRUE)
+##selectInput('bc_retain','Retain:',choices=NULL,multiple=TRUE)
+selectInput('bc_postnormalization','Post-normalization:', NORMALIZATION.METHODS, multiple=FALSE)
+selectInput("bc_level","Level:", choices=c("gene","geneset"))
+
+br();br();
+radioButtons('bc_method','Correction method:',
+             c("ComBat","limma","BMC","MNN","fastMNN"),inline=TRUE)
+radioButtons('bc_top','Show top:',c(10,100,250),inline=TRUE)
+checkboxInput('bc_removeXY','Remove XY', value=FALSE )
+radioButtons('bc_tsnepca','Plot type:',c("tsne","pca"),inline=TRUE)
+##checkboxInput('bc_absrho','abs.rho', value=TRUE )
+br();br();
+
+##radioButtons('bc_method','Batch correct:',choices=c("no","yes"),inline=TRUE)
+##checkboxInput('bc_showlabels','show labels',FALSE)
+
+## update filter choices upon change of data set 
+observe({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    ##vars <- c("<PC1>","<PC2>","<PC3>","<XY>",colnames(ngs$Y))
+    vars <- c("<mean>","<libsize>","<PC1>","<PC2>","<PC3>",colnames(ngs$samples))
+    vars <- c("<SVA>","<NNM>","<NNM2>","<PC1>","<PC2>","<PC3>","<XY>",colnames(ngs$samples))
+    ##vars <- setdiff(vars,c("group","sample","donor","replicate"))
+    ##vars <- grep("donor|sample|patient", vars, invert=TRUE, value=TRUE)
+    vars.retain <- grep("group|sample", vars, value=TRUE)
+    vars.remove <- setdiff(vars, vars.retain)
+    updateSelectInput(session, 'bc_remove', choices=vars.remove)
+
+})
+```
+
+```{r}
+
+bc_getBatchCorrectedMatrix <- reactive({
+
+    require(irlba)    
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    if(is.null(input$bc_level)) return(NULL)
+    
+    if(input$bc_level=="geneset") {
+        zx <- ngs$gsetX
+    } else {
+        ##zx <- ngs$X[,]
+        zx <- log2(1+ngs$counts)  ## full raw matrix 
+    }
+    
+    if(input$bc_removeXY && input$bc_level=="gene") {
+        if("chr" %in% colnames(ngs$genes)) {
+            is.autosome <- !(ngs$genes$chr %in% c("X","Y",23,24))
+            ft <- rownames(ngs$genes)[which(is.autosome)]
+            zx <- zx[intersect(rownames(zx),ft),]
+            ##ngs$genes <- ngs$genes[rownames(zx),]
+        }
+    }
+
+    ##-------------- pre-normalization
+    method1="CPM"
+    method1 <- input$bc_normalization
+    zx <- pgx.performNormalization(zx, method1)
+    
+    ##------------- tidy up annotation table
+    Y <- tidy.dataframe(ngs$samples)
+    head(Y)
+    Y <- Y[,which(colMeans(is.na(Y))<1),drop=FALSE]
+
+    ##------------- perform batch correction
+    batchparams=c("time","sample")
+    bmethod="limma"
+    batchparams <- input$bc_remove
+    bmethod <- input$bc_method
+    ##source(file.path(RDIR,"gx-combat.r"))
+    if(length(batchparams)>0 && batchparams[1]!="") {
+        zx <- pgx.performBatchCorrection(
+            ngs, zx, batchparams, method=bmethod) 
+    }
+    
+    ##-------------- post-normalization
+    method2="quantile"
+    method2 <- input$bc_postnormalization
+    zx <- pgx.performNormalization(zx, method2)
+
+    ## Take top varying features
+    zx <- zx[grep("^<PC",rownames(zx),invert=TRUE),,drop=FALSE]  ## omit pca vectors...
+    if(0) {
+        nmax=4000
+        jj <- order(-apply(zx,1,sd))
+        zx = head(zx[jj,],nmax)  ## sort, take nmax
+    }
+    if(nrow(zx)==0) return(NULL)
+    if(ncol(zx)==0) return(NULL)
+    
+    ## contruct matrix with top PC components with annotation
+    require(irlba)
+    require(qlcMatrix)
+    zx <- as.matrix(zx)
+    NPCA = min(5,ncol(zx))
+    ntop = 12
+    ntop <- as.integer(input$bc_top)
+    ##svd <- svd(zx - rowMeans(zx))
+    svd <- irlba(zx - Matrix::rowMeans(zx, na.rm=TRUE), nv=NPCA)            
+    gg <- rownames(zx)
+    sv.top <- lapply(1:NPCA,function(i) gg[head(order(-abs(svd$u[,i])),ntop)] )
+    gg.top <- unlist(sv.top)
+    for(i in 1:length(sv.top)) {
+        sv.top[[i]] <- paste0("PC",i,":",sv.top[[i]])
+    }
+    sv.top1 <- unlist(sv.top)
+    zx1 <- zx[gg.top,]
+    dim(zx1)
+    idx1 = sub(":.*","",sv.top1)
+    table(idx1)
+
+    ##input$top_terms
+    res <- list( pc.mat=zx1, pc.idx=idx1, corrected=zx,
+                u=svd$u, v=svd$v)
+    return(res)
+})
+
+```
+
+
+Col {.tabset data-width=600}
+-----------------------------------------------------------------------------------------
+
+### Heatmap {data-height=800}
+	
+```{r}
+require(plotly)
+require(scatterD3)
+fillCol(height = "100%", flex = c(NA, 1), 
+        inputPanel(
+            selectInput("bc_splitx", "split by:", choices=NULL, width='80%'),
+            ##checkboxGroupInput('bc_options',NULL,choices=c('rowscale'),
+            ##                   selected=c('rowscale'),inline=TRUE),
+            cellArgs=list(width='120px')
+        ),
+        plotOutput("bc_splitmap", height = "100%")
+        )
+
+observe({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    split0 = colnames(ngs$samples)[grep("sample|patient|donor",colnames(ngs$samples),invert=TRUE)]
+    ny <- apply(ngs$samples[,split0],2,function(x) length(unique(x)))
+    split0 <- split0[which(ny>1)]
+    sel <- grep("tissue.type|cell.type|cluster|treat",split0,value=TRUE)[1]
+    sel <- "<none>"
+    updateSelectInput(session, "bc_splitx", choices=c("<none>",split0), selected=sel)
+})
+
+output$bc_splitmap <- renderPlot({
+    ##genes = families[[input$filter]]
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    res <- bc_getBatchCorrectedMatrix()
+    if(is.null(res)) return(NULL)
+    
+    zx <- res$pc.mat
+    splity <- res$pc.idx
+    col.annot <- ngs$samples
+    col.annot <- col.annot[,grep("group|sample",colnames(col.annot),invert=TRUE),drop=FALSE]
+    table(splity)
+    
+    splitx = NULL    
+    splitx <- input$bc_splitx
+    ##if(is.null(splitx)) return(NULL)
+    if(1 && !is.null(splitx) && splitx %in% colnames(ngs$samples) ) {
+        splitx = ngs$samples[,splitx]
+    } else {
+        splitx = NULL
+    }
+    
+    sdx <- apply(zx,1,sd)
+    zx <- tanh(0.5*(zx - Matrix::rowMeans(zx))/ sdx)
+    cex1 <- ifelse( ncol(zx) > 20, 0.8, 0.95)
+    cex1 <- ifelse( ncol(zx) > 50, 0.7, cex1)
+    cex2 <- ifelse( nrow(zx) > 50, 0.7, 0.9)    
+    
+    rownames(zx) <- sub("HALLMARK:HALLMARK_","HALLMARK:",rownames(zx))
+    rownames(zx) <- substring(rownames(zx),1,45)
+    gx.splitmap( zx, split=splity, splitx=splitx,
+                ##mar=mar, scale=scale.mode, show_legend=show_legend,
+                show_colnames = ifelse(ncol(zx) <= 100,TRUE, FALSE),
+                show_rownames = 61, mar=c(5,20),
+                labRow=NULL, cexCol=cex1, cexRow=cex2, 
+                col.annot=col.annot, row.annot=NULL, annot.ht=2.6,
+                main="", nmax=-1)
+
+}, res=90)
+```
+
+### Phenotype correlation
+
+```{r}
+fillCol(flex = c(NA,1), height="100%",
+        inputPanel(
+            ##selectInput("bcBA_plottype", "plot type:", choices=c("heatmap","tsne","barplot")),
+            checkboxInput('bc_phenocor_includegroup',"include group"),
+            cellArgs=list(width='120px')
+        ),
+        plotOutput('bc_phenocorplot')
+        )
+
+output$bc_phenocorplot <- renderPlot({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    Y <- ngs$samples
+    kk <- grep("sample|donor|patient",colnames(Y),invert=TRUE)
+    Y <- Y[,kk]
+    if(!input$bc_phenocor_includegroup) {
+        kk <- grep("group",colnames(Y),invert=TRUE)
+        Y <- Y[,kk]
+    }
+    M <- expandPhenoMatrix(Y)
+    rho <- cor(M, use="pairwise")
+    rho1 <- sign(rho)*abs(rho)**0.5
+    par(oma=c(2,1,1,5))
+    gx.heatmap(rho1, scale="none", mar=c(1,1)*15,
+               dist.method="euclidean",
+               col.dist.method="euclidean",
+               key=FALSE, keysize=0.5)
+
+}, res=100)
+```
+
+
+
+### PCA/tSNE
+
+```{r}
+
+pgx.plotPhenoMultiPCA <- function(X, Y, type="pca", add.sv=0,layout=TRUE )
+{
+    require(irlba)
+    require(Rtsne)
+
+    ## center?
+    X <- (X - Matrix::rowMeans(X))
+
+    if(add.sv>0) {
+        svd <- irlba(X - Matrix::rowMeans(X), nv=add.sv)
+        sv <- svd$v
+        colnames(sv) <- paste0("PC",1:ncol(sv))
+        Y <- cbind(Y, sv)
+    }
+
+    pos=NULL
+    if(type=="pca") {
+        require(irlba)
+        pos <- irlba(X - Matrix::rowMeans(X), nv=2)$v            
+    } else {
+        require(Rtsne)
+        px <- pmax(pmin(ncol(X)/5, 20),3)
+        pos <- Rtsne(as.matrix(t(X)), check_duplicates=FALSE,
+                     perplexity=px, num_threads=0 )$Y
+    }
+
+    ## set point size
+    cex1 <- ifelse(nrow(pos)<40,2.3,1.5)
+    cex1 <- ifelse(nrow(pos)>150,1,cex1)
+    cex1 <- ifelse(nrow(pos)>500,0.8,cex1)
+
+    if(layout) {
+        par(mfrow=c(4,4), mar=c(1,1,1,1)*0.3)
+        if(ncol(Y)>16) par(mfrow=c(5,5), mar=c(1,1,1,1)*0.2)
+        if(ncol(Y)>25) par(mfrow=c(6,6), mar=c(1,1,1,1)*0.1)
+        if(ncol(Y)>36) par(mfrow=c(10,10), mar=c(1,1,1,1)*0.05)
+    }
+    
+    i=1
+    for(i in 1:min(100,ncol(Y))) {
+        y <- Y[,i]
+        if(is.num(y)) {
+            klrpal = colorRampPalette(c("grey90", "grey50", "red3"))(16)
+            klrpal = BLUERED(16)
+            y = rank(as.numeric(y))
+            ny <- round(1 + 15*(y - min(y))/(max(y)-min(y)))
+            klr0 = klrpal[ny]
+        } else {
+            y <- factor(as.character(Y[,i]))
+            klr0 <- COLORS[as.integer(y)]
+        }
+        plot(pos, col=klr0, pch=19, cex=cex1,
+             fg = gray(0.6), bty = "o", xaxt="n", yaxt="n")
+        ##legend("topleft", colnames(Y)[i], cex=0.8)
+        legend("topleft", toupper(colnames(Y)[i]), cex=0.9, text.font=2)
+        if(!is.num(y) && length(levels(y))<8) {
+            legend("bottomright", levels(y), fill=COLORS, cex=0.85, y.intersp=0.8)
+        }
+    }    
+}
+
+
+renderPlot({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    zx <- ngs$X
+    res <- bc_getBatchCorrectedMatrix()
+    if(is.null(res)) return(NULL)
+
+    zx <- res$corrected
+    Y <- ngs$samples
+    
+    if(1) {
+        xx <- ngs$X - Matrix::rowMeans(ngs$X)
+        svd <- irlba(xx, nv=5)
+        sv <- svd$v
+        colnames(sv) <- paste0("PC",1:ncol(sv))
+        Y <- cbind(Y, sv)
+    }
+
+    if(input$bc_tsnepca=="pca") {
+        require(irlba)
+        pos <- irlba(zx - Matrix::rowMeans(zx), nv=2)$v            
+        ##pos <- ngs$tsne2d[,1:2]
+    } else {
+        require(Rtsne)
+        ##pos <- ngs$tsne2d[colnames(zx),1:2]
+        px <- pmax(pmin(ncol(zx)/5, 20),3)
+        pos <- Rtsne( as.matrix(t(zx)), check_duplicates=FALSE,
+                     perplexity=px, num_threads=0 )$Y
+    }
+    
+    cex1 <- ifelse(nrow(pos)<40,1.8,1)
+    cex1 <- ifelse(nrow(pos)>200,0.5,cex1)
+    
+    par(mfrow=c(4,4), mar=c(1,1,1,1)*0.3)
+    if(ncol(Y)>16) par(mfrow=c(5,5), mar=c(1,1,1,1)*0.2)
+    if(ncol(Y)>25) par(mfrow=c(6,6), mar=c(1,1,1,1)*0.1)
+    if(ncol(Y)>36) par(mfrow=c(10,10), mar=c(1,1,1,1)*0.05)
+    i=1
+    for(i in 1:min(100,ncol(Y))) {
+        y <- Y[,i]
+        if(is.num(y)) {
+            klrpal = colorRampPalette(c("grey90", "grey50", "red3"))(16)
+            y = rank(as.numeric(y))
+            ny <- round(1 + 15*(y - min(y))/(max(y)-min(y)))
+            klr0 = klrpal[ny]
+        } else {
+            y <- factor(as.character(Y[,i]))
+            klr0 <- COLORS[as.integer(y)]
+        }
+        plot(pos, col=klr0, pch=20, cex=cex1,
+             fg = gray(0.6), bty = "o",
+             xaxt="n", yaxt="n")
+        ##legend("topleft", colnames(Y)[i], cex=0.8)
+        legend("topleft", toupper(colnames(Y)[i]), cex=0.8, bty="n")
+        if(!is.num(y) && length(levels(y))<8) {
+            legend("bottomright", levels(y), fill=COLORS,
+                   cex=0.7, y.intersp=0.75)
+        }
+    }
+}, res=120)
+```
+
+
+### Before/after
+
+```{r}
+fillCol(flex = c(NA,1), height="100%",
+        inputPanel(
+            ##selectInput("bcBA_plottype", "plot type:", choices=c("heatmap","tsne","barplot")),
+            radioButtons("bcBA_plottype",NULL, choices=c("heatmap","pca/tsne"),
+                         inline=TRUE),
+            ##checkboxGroupInput('bc_options',NULL,choices=c('rowscale'),
+            ##                   selected=c('rowscale'),inline=TRUE),
+            cellArgs=list(width='120px')
+        ),
+        fillRow(flex = c(1,1), height="100%",
+                plotOutput('bc_before'),
+                plotOutput('bc_after')
+                )
+        )
+
+
+
+plotFigure <- function(X, Y, plottype) {
+    
+    if(plottype=="heatmap") {
+        par(oma=c(1,1,2,0)*2, xpd=TRUE)
+        gx.heatmap(X, col.annot=Y, annot.ht=1,
+                   nmax=500, softmax=TRUE,
+                   key=FALSE, keysize=0.9, mar=c(12,5) )
+
+    } else if(plottype=="pca/tsne") {
+        ny = ncol(Y)+3
+        par(oma=c(1,1,4,1)*1, xpd=TRUE)
+        par(mfrow=c(3,2), mar=c(1,1,1,1)*0.5)
+        if(ny>6) par(mfrow=c(5,3), mar=c(1,1,1,1)*0.2)
+        if(ny>15) par(mfrow=c(7,4), mar=c(1,1,1,1)*0.1)
+        if(ny>28) par(mfrow=c(8,6), mar=c(1,1,1,1)*0.05)
+        plottype <- input$bc_tsnepca
+        pgx.plotPhenoMultiPCA(X, Y, type=plottype, add.sv=3, layout=FALSE)
+
+    } else if(plottype=="barplot") {
+        par(oma=c(1,1,4,1)*1, xpd=TRUE)
+        par(mfrow=c(2,1), mar=c(1,1,1,1)*0.5)
+    }
+
+}
+
+output$bc_before <- renderPlot({
+    ## Show correlation between PC and annotation by a heatmap
+
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    res <- bc_getBatchCorrectedMatrix()
+    if(is.null(res)) return(NULL)
+
+    bx <- res$corrected  ## just for selected rows
+    col.annot <- ngs$samples
+    col.annot <- col.annot[,grep("group|sample",colnames(col.annot),invert=TRUE),drop=FALSE]
+
+    if(input$bc_level=="geneset") {
+        zx <- ngs$gsetX[rownames(bx),]
+    } else {
+        ##zx <- ngs$X[rownames(bx),]
+        zx <- log2(1 + ngs$counts[rownames(bx),])
+    }
+    if(nrow(zx)>100) rownames(zx) <- NULL
+    
+    plotFigure(zx, col.annot, plottype=input$bcBA_plottype) 
+    title(sub="before", cex.sub=1.2, line=4)
+    
+}, res=80)
+
+output$bc_after <- renderPlot({
+    ## Show correlation between PC and annotation by a heatmap
+
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    res <- bc_getBatchCorrectedMatrix()
+    if(is.null(res)) return(NULL)
+    col.annot <- ngs$samples
+    col.annot <- col.annot[,grep("group|sample",colnames(col.annot),invert=TRUE),drop=FALSE]
+    
+    plotFigure(res$corrected, col.annot, plottype=input$bcBA_plottype) 
+    title(sub="after", cex.sub=1.2, line=4)
+    
+}, res=80)
+```
+
+```{r, eval=FALSE}
+####################################################################
+############### DISABLED ###########################################
+####################################################################
+
+### Deconvolution
+fillCol(flex = c(NA, 1), height = "100%", 
+        inputPanel(
+            selectInput('bc_purifyvars','contaminant',choices=NULL, multiple=TRUE),
+            selectInput('bc_purifyrank','rank',choices=c(3,5,10,25,100), selected=3),
+            radioButtons('bc_purifymethod','method:',c(1,2),inline=TRUE, selected=2),
+            checkboxInput('bc_purifylog','log', value=FALSE )
+        ),
+        plotOutput('bc_purify')
+        )
+
+observe({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    choices = colnames(ngs$X)
+    choices = unique(ngs$samples$group)
+    updateSelectInput(session, "bc_purifyvars", choices=choices)
+
+})
+
+calcPurifyResults <- reactive({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+
+    ref=ngs$samples$group[1]
+    ref <- input$bc_purifyvars
+    if(is.null(ref) || ref[1]=="") ref <- ""
+
+    if(input$bc_purifylog) {
+        X <- ngs$X  ## original profiles (linear scale)
+    } else {
+        X <- 2**ngs$X  ## original profiles (linear scale)
+    }
+    X <- head(X[order(-apply(ngs$X,1,sd)),],1000)
+    
+    require(NNLM)
+    k=3
+    k <- as.integer(input$bc_purifyrank)
+    k <- min(k, ncol(X))
+    k
+    ## ------------ compute deconvolution
+    ##X=2**ngs$X;ref="";k=3;method=2    
+    method <- as.integer(input$bc_purifymethod)
+    ref.idx <- which(ngs$samples$group == ref)
+    res <- pgx.purify(X, ref.idx, k=k, method=method)
+    alpha = res$alpha
+    library(sva)
+    library(limma)
+    res$X <- X
+    return(res)
+})
+
+output$bc_purify <- renderPlot({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+   
+    res <- calcPurifyResults()    
+    if(is.null(res)) return(NULL)
+    alpha = res$alpha
+    X = res$X
+    library(sva)
+    library(limma)
+    cX <- removeBatchEffect( log2(1+X), covariates=scale(res$alpha))
+    
+    ## --------------- plot results
+    par(mfrow=c(3,2), mar=c(6,4,3,1)*1, oma=c(1,1,1,1))
+    if(length(alpha)>50) names(alpha) = rep("",length(alpha))
+    barplot( sort(alpha*100),
+            ylim = c(0, 100), col = 'grey70',
+            xlab = "", ylab = "purified fraction (%)",
+            cex.names=0.85, las=3, main="sample purity");
+
+    hist( sort(alpha*100), breaks=20,
+         xlim = c(0, 100), col = 'grey70',
+         xlab = "purified fraction (%)",
+         main="purity distribution");
+
+    gg <- head(rownames(X)[order(-apply(log2(1+X),1,sd))],500)    
+    gg <- gg[hclust(dist(X[gg,]))$order]
+    xx <- list( uncorrected = log2(1+X[gg,]),
+               purified = log2(1+res$purified[gg,]),
+               contaminant = log2(1+res$contaminant[gg,]),
+               batch.corrected=cX[gg,] )
+
+    par(mar=c(6,1,2,1.4)*1)
+    for(i in 1:length(xx)) {
+        x <- xx[[i]]
+        ##x <- x - Matrix::rowMeans(x)
+        if(nrow(x)>50) rownames(x) <- rep("",nrow(x))
+        if(ncol(x)>50) colnames(x) <- rep("",ncol(x))
+        gx.imagemap(x, cex=0.8, main=names(xx)[i], clust=FALSE)
+    }    
+    
+}, res=100)
+```
+
+
+Col {.tabset data-width=350}
+--------------------------------------------------------------------------------------
+
+### PCA heatmap
+
+```{r}
+fillCol(flex = c(1.4,1), height="800px",
+        plotOutput('bc_pcaheatmap'),
+        dataTableOutput('bc_pcatable')
+        )
+
+getPCACorMatrix <- reactive({
+
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    res <- bc_getBatchCorrectedMatrix()
+    if(is.null(res)) return(NULL)
+    colnames(res$v) <- paste0("PC",1:ncol(res$v))
+    
+    ## get expanded annotation matrix
+    ##pheno <- ngs$Y[,grep("group|sample",colnames(ngs$Y),invert=TRUE),drop=FALSE]
+    kk <- grep("group|sample",colnames(ngs$samples),invert=TRUE)
+    pheno <- ngs$samples[,kk,drop=FALSE]
+    m1 <- expandPhenoMatrix(pheno, collapse=FALSE)
+    
+    ## compute correlation
+    NPCA = min(8,ncol(res$v))
+    avg.rho <- sapply(m1, function(x) rowMeans(abs(cor(res$v[,1:NPCA], x))))
+    ##heatmap( t(rho), scale="none", mar=c(10,10))
+    rho <- lapply(m1, function(x) cor(res$v[,1:NPCA], x))
+    for(i in 1:length(rho)) {
+        if(NCOL(rho[[i]])>1) {
+            colnames(rho[[i]]) <- paste0(names(rho)[i],"=",colnames(rho[[i]]))
+        }
+    }
+    rho <- do.call(cbind, rho)
+    pcor <- list(rho=rho, avg.rho=avg.rho)
+
+    return(pcor)
+})
+
+output$bc_pcaheatmap <- renderPlot({
+    ## Show correlation between PC and annotation by a heatmap
+
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    res <- bc_getBatchCorrectedMatrix()
+    if(is.null(res)) return(NULL)
+    
+    pcor <- getPCACorMatrix()
+    ##rho  <- pcor$avg.rho
+    jj <- head( order(-colMeans(pcor$rho**2)), 35)        
+    rho1 <- t(pcor$rho[,jj,drop=FALSE])
+      
+    ##heatmap( t(rho1), scale="none", mar=c(10,10))
+    par(oma=c(1,1,4,1))
+    mar0 <- max(15 - 0.5*nrow(rho1),4)
+    ##mar0 <- 4
+    cex <- 1.15
+    if(nrow(rho1) < 6) cex <- 1.30
+    if(nrow(rho1) >= 15) cex <- 1
+    if(nrow(rho1) >= 25) cex <- 0.85
+    ##if(input$bc_absrho) rho1 <- abs(rho1)
+    rho1 <- abs(rho1)
+    gx.heatmap( rho1, scale="none", mar=c(mar0,10+0.8*mar0),
+               main=NULL, cex.main=0.9, keysize=0.35, key=FALSE,
+               col=heat.colors(16), cexCol=1.1, cexRow=cex)
+    title("PCA vs phenotype                 ",
+          cex.main=1.2, line=6.5, xpd=NA)
+    
+}, res=85)
+
+output$bc_pcatable <- DT::renderDataTable({
+    ## get current view of raw_counts
+    ngs = inputData()
+    if(is.null(ngs)) return(NULL)
+    pcor <- getPCACorMatrix()
+    if(is.null(pcor)) return(NULL)
+    ##rho  <- pcor$avg.rho
+    rho1 <- t(round(pcor$rho, digits=3))
+    rho1 <- data.frame( phenotype=rownames(rho1), rho1)
+    DT::datatable( rho1, rownames=FALSE,
+                  class = 'compact cell-border stripe hover',                  
+                  extensions = c('Buttons','Scroller'),
+                  selection = list(mode='single', target='column', selected=c(1)),
+                  options=list(
+                      dom = 'Blfrtip', 
+                      buttons = list('copy','csv',
+                                     list(extend='pdf', pageSize="A4", ## orientation='landscape', 
+                                          filename="datatable-pcacorrelation",
+                                          title="PCA vs phenotype")),
+                      ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                      scrollX = TRUE, scrollY = 265, scroller=TRUE, deferRender=TRUE
+                  )  ## end of options.list
+                  ) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='85%')
+})
+
+```
+
+### PCA barplots {data-height=800}
+
+```{r}
+renderPlot({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    res <- bc_getBatchCorrectedMatrix()
+    if(is.null(res)) return(NULL)
+    
+    ## -------- show correlation between PC and annotation
+    pcor <- getPCACorMatrix()
+    rho  <- pcor$avg.rho
+    rho1 <- pcor$rho
+
+    klr1 = grey.colors(5)
+    klr1 = COLORS
+    layout(matrix(c(1,2), 2,1), heights=c(2.2,3))
+    
+    par(mar=c(3,6,5,2))
+    xxlim1 = 0.7*nrow(rho)
+    if( max(nchar(colnames(rho)))>20) {
+        par(mar=c(3,4,5,2))
+        xxlim1 = 1.3*nrow(rho)
+    }
+    barplot( t(abs(rho)), col=klr1, las=3, main="",
+            ylab="cumulative correlation",
+            xlim=c(0,nrow(rho)+xxlim1))
+    title("PCA vs phenotype             ",cex.main=1.1)
+    legend("topright", legend=colnames(rho), cex=0.8, y.intersp=0.8,fill=klr1)
+    
+    par(mar=c(12,6,3,2))
+    cx1=1
+    xxlim2 = 0.4*ncol(rho1)
+    if(ncol(rho1)>20) {
+        par(mar=c(12,4,3,1))
+        cx1=0.8
+        xxlim2 = 0.2*ncol(rho1)
+    }
+    jj <- order(-colSums(abs(rho1)))
+    barplot( abs(rho1)[,jj,drop=FALSE], las=3, col=klr1,
+            xlim=c(0,ncol(rho1)+xxlim2),
+            ylab="cumulative correlation",
+            cex.names=cx1)
+    legend("topright", legend=rownames(rho1), cex=0.8,
+           y.intersp=0.8, fill=klr1)
+    
+}, res=90)
+```
+
+### Histograms
+
+```{r}
+
+gx.histogram <- function(gx, col=NULL, main="",ylim=NULL) {
+
+    h0 <- hist(as.vector(gx), breaks=120, plot=FALSE)
+    hh <- apply(gx,2,function(x) hist(x, breaks=h0$breaks, plot=FALSE))
+    ylim <- c(0, max(sapply(hh, function(x) x$counts)))
+    plot( h0$mids, h0$density, type="n",
+         main=main, ylim=ylim,
+         xlab="signal", ylab="counts")
+    i = 1
+    for(i in 1:ncol(gx)) {
+        col1 = ifelse( is.null(col), i+1, col)
+        lines( h0$mids, hh[[i]]$counts, col=col1 )
+    }
+    lines( h0$mids, h0$counts/ncol(gx), col="grey20", lwd=2 )
+}
+
+renderPlot({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    res <- bc_getBatchCorrectedMatrix()
+    if(is.null(res)) return(NULL)
+
+    cx <- ngs$X
+    cx <- res$corrected
+    cx[which(cx < 1)] <- NA  ## take out zeros 
+    
+    par(mfrow=c(2,1))
+    layout(matrix(c(1:3), 3,1), heights=c(1,0.5,1.5))
+
+    par(mar=c(4,4,2,1), mgp=c(2.4,0.9,0) )    
+    if(ncol(cx)>200) {
+        kk <- sample(ncol(cx),200)
+        cx <- cx[,kk]
+    }
+    grp <- ngs$samples[colnames(cx),"group"]
+    gx.histogram(cx, col="grey70") 
+    title("count histogram", cex=1)
+    
+    grp <- ngs$samples[colnames(cx),"group"]
+    igrp <- factor(as.character(grp))
+    klr <- rep( brewer.pal(8, "Set2"),99)[igrp] 
+    cx.names <- colnames(cx)
+    if(ncol(cx)>200) cx.names <- rep("",ncol(cx))
+    jj <- 1:nrow(cx)
+    if(nrow(cx)>2000) jj <- sample(nrow(cx),2000)
+
+    par(mar=c(0,4,3,1))
+    libsize <- Matrix::colSums(ngs$counts,na.rm=TRUE)
+    ##libsize <- ngs$samples[colnames(cx),".libsize"]
+    barplot( log10(1+libsize), ##col="grey80",
+            axisnames=FALSE,
+            ylab="libsize (log10)", xlab="")
+    
+    par(mar=c(12,4,0,1))
+    cex1 <- ifelse(ncol(cx)>20, 0.85, 0.95)
+    cex1 <- ifelse(ncol(cx)>40, 0.75, cex1)
+    cex1 <- ifelse(ncol(cx)>80, 0.6, cex1)
+    boxplot( cx[jj,], cex.axis=cex1, las=3, names=cx.names,
+            col="grey80", outpch=".", ylab="signal", xlab="")
+
+    
+}, res=100)
+```
+

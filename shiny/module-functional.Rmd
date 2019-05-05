@@ -1,0 +1,1340 @@
+Functional
+================================================================================
+
+Inputs {.sidebar data-width=240}
+--------------------------------------------------------------------------------
+
+<br> The **<a href="kegg pathway">KEGG</a>** collection represents
+functions of the cell as pathway maps. <i class="fa fa-info"></i>
+
+<br> **<a href="http://www.geneontology.org">Gene Ontology</a>**
+defines functional concepts/classes and their relationships as a
+hierarchical graph.
+
+<br> The **<a href="https://portals.broadinstitute.org/cmap/">Drug
+Connectivity Map</a>** correlates your signature with more than 5000
+known drug profiles.
+
+<br><br>
+
+```{r}
+selectInput("fa_contrast","Comparison:", choices=NULL)
+checkboxInput('fa_normalize','normalize',TRUE)
+br();br();br();
+if(PRO.VERSION) checkboxInput('fa_filtertable','filter tables',FALSE)
+if(PRO.VERSION) radioButtons('dsea_label','C-map label',c("name","moa","target"),inline=TRUE)
+if(PRO.VERSION) checkboxInput('dsea_showall','C-map show all',FALSE)
+
+observe({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    ct <- colnames(ngs$model.parameters$contr.matrix)
+    ##ct <- c(ct,"<sd>")
+    updateSelectInput(session, "fa_contrast", choices=ct )
+})
+
+```
+
+Col {.tabset data-width=650}
+----------------------------------------------------------------------------------------
+
+### KEGG graph
+    
+```{r message=FALSE, warning=FALSE, fig.width=4}
+
+##================================================================================
+## KEGG graph
+##================================================================================
+
+fillRow(flex = c(1.3,1), 
+        fillCol(flex = c(2.1,0.06,1),
+                imageOutput("kegg_graph", width="100%", height="100%"),
+                br(),
+                dataTableOutput('fa_keggtable')
+                ),
+        plotOutput('kegg_cormap')
+        )
+
+getKeggTable <- reactive({
+    ngs = inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    ## ----- get comparison
+    comparison=2
+    comparison <- input$fa_contrast
+    if(is.null(comparison)) return(NULL)
+    if(!(comparison %in% names(ngs$gset.meta$meta))) return(NULL)
+
+    ## ----- get KEGG id
+    xml.dir <- file.path(FILES,"kegg-xml")
+    kegg.available <- gsub("hsa|.xml","",dir(xml.dir, pattern="*.xml"))
+    kegg.available
+    kegg.ids <- getKeggID(rownames(ngs$gsetX))
+    jj <- which(!is.na(kegg.ids) &
+                !duplicated(kegg.ids) &
+                kegg.ids %in% kegg.available )
+    kegg.gsets <- rownames(ngs$gsetX)[jj]
+    kegg.ids <- kegg.ids[jj]
+
+    ## get gene set FC and q-value
+    names(ngs$gset.meta$meta)
+    meta <- ngs$gset.meta$meta[[comparison]]
+    fx <- meta$meta.fx
+    qv <- meta$meta.q
+    names(fx) <- names(qv) <- rownames(meta)
+    fx <- round(fx[kegg.gsets], digits=3)
+    qv <- round(qv[kegg.gsets], digits=5)
+
+    ## get gene set FC and q-value
+    gene.meta <- ngs$gx.meta$meta[[comparison]]
+    gene.fc <- gene.meta$meta.fx
+    ##gene.qv <- gene.meta$meta.q
+    gene.qv <- unclass(gene.meta$q)
+    gene.qv <- apply( gene.qv[,setdiff(colnames(gene.qv),c("ttest","t.test"))],1,max)  ## no t-test...
+    genesUPPERCASE <- toupper(sub(".*:","",rownames(gene.meta)))
+    names(gene.fc) <- names(gene.qv) <- genesUPPERCASE
+    
+    ## calculate set size
+    sig.genes <- names(gene.fc)
+    sig.genes <- names(which(abs(gene.fc) >= 1))
+    sig.genes <- names(which(gene.qv < 0.25 & abs(gene.fc) >= 1))
+    pw.genes <- lapply(GSETS[kegg.gsets], intersect, names(gene.fc))
+    ngene0 <- sapply(pw.genes, length)
+    ngene1 <- sapply(lapply(pw.genes, intersect, sig.genes), length)
+
+    sig.genes <- sig.genes[order(-abs(gene.fc[sig.genes]))]
+    top.genes <- sapply(GSETS[kegg.gsets], function(x)
+        paste0(head(intersect(sig.genes,x),6),collapse=","))
+    top.genes <- paste0(top.genes, c("",",...")[1 + 1*(ngene1>6)])
+    top.genes    
+    
+    sig.up <- names(which(gene.qv < 0.25 & gene.fc >= 1))
+    sig.dn <- names(which(gene.qv < 0.25 & gene.fc <= -1))
+    delta <- sapply( pw.genes, function(gg) mean(gg %in% sig.up) - mean(gg %in% sig.dn) )
+    delta <- round(100*delta, digits=2)
+    
+    ## fast Fisher test
+    require(corpora)
+    ft.pv <- rep(1, length(ngene1))
+    jj <- which(ngene0>0)  ## error for ngene0==0
+    ft.jj <- fisher.pval( k1=ngene1[jj], n1=ngene0[jj],
+                         k2=length(sig.genes), n2=length(gene.fc),
+                         alternative="greater")
+    ft.pv[jj] <- ft.jj
+    ft.r <- round(ngene1/ngene0,digits=2)
+    ft.qv <- round(p.adjust(ft.pv, method="fdr"),digits=4)
+    ft.res <- data.frame( ratio=ft.r, "k/n"=paste0(ngene1,"/",ngene0), q=ft.qv, check.names=FALSE)
+
+    ##
+    kegg.ids2 <- paste0("KEGG:",kegg.ids)
+    df <- data.frame( kegg.id=kegg.ids, pathway=kegg.gsets,
+                     "delta.pct" = delta,
+                     ##fx=fx, ## meta.q=qv,
+                     ##n0=ngene0, n1=ngene1,
+                     ft.res, 
+                     top.genes=top.genes, check.names=FALSE)
+    ##df <- df[order(-fx),]
+    df <- df[order(-df$ratio),]    
+    df <- df[!duplicated(df$kegg.id), ]  ## take out duplicated gene sets...
+    return(df)
+})
+
+getFilteredKeggTable <- reactive({
+    df <- getKeggTable()
+    do.filter=FALSE
+    if(PRO.VERSION) do.filter <- input$fa_filtertable
+    if(do.filter) df <- df[which(df$q < 0.999),]
+    return(df)
+})
+
+## There is a bug in pathview::geneannot.map so we have to override
+##
+my.geneannot.map <- function(in.ids, in.type, out.type, org = "Hs", pkg.name = NULL, 
+                             unique.map = TRUE, na.rm = TRUE, keep.order = TRUE) 
+{
+    if (is.null(pkg.name)) {
+        data(bods)
+        ridx = grep(tolower(paste0(org, "[.]")), tolower(bods[, 
+            1]))
+        if (length(ridx) == 0) {
+            ridx = grep(tolower(org), tolower(bods[, 2:3]))%%nrow(bods)
+            if (length(ridx) == 0) 
+                stop("Wrong org value!")
+            if (any(ridx == 0)) 
+                ridx[ridx == 0] = nrow(bods)
+        }
+        pkg.name = bods[ridx, 1]
+    }
+    pkg.on = try(requireNamespace(pkg.name), silent = TRUE)
+    if (!pkg.on) {
+        if (!requireNamespace("BiocManager", quietly = TRUE)) 
+            install.packages("BiocManager")
+        BiocManager::install(pkg.name, suppressUpdates = TRUE)
+        pkg.on = try(requireNamespace(pkg.name), silent = TRUE)
+        if (!pkg.on) 
+            stop(paste("Fail to install/load gene annotation package ", 
+                pkg.name, "!", sep = ""))
+    }
+    db.obj <- eval(parse(text = paste0(pkg.name, "::", pkg.name)))
+    id.types <- columns(db.obj)
+    in.type = toupper(in.type)
+    out.type = toupper(out.type)
+    eii = in.type == toupper("entrez") | in.type == toupper("eg")
+    if (any(eii)) 
+        in.type[eii] = "ENTREZID"
+    eio = out.type == toupper("entrez") | out.type == toupper("eg")
+    if (any(eio)) 
+        out.type[eio] = "ENTREZID"
+    if (in.type == out.type) 
+        stop("in.type and out.type are the same, no need to map!")
+    nin = length(in.type)
+    if (nin != 1) 
+        stop("in.type must be of length 1!")
+    out.type = out.type[!out.type %in% in.type]
+    nout = length(out.type)
+    msg <- paste0("must from: ", paste(id.types, collapse = ", "), 
+        "!")
+    if (!in.type %in% id.types) 
+        stop("'in.type' ", msg)
+    if (!all(out.type %in% id.types)) 
+        stop("'out.type' ", msg)
+    in.ids0 = in.ids
+    in.ids <- unique(as.character(in.ids))
+    out.ids = character(length(in.ids))
+    ###res <- try(suppressWarnings( select(db.obj, keys = in.ids, 
+    res <- try(suppressWarnings( AnnotationDbi::select(db.obj, keys = in.ids, 
+        keytype = in.type, columns = c(in.type, out.type))))
+    if (class(res) == "data.frame") {
+        res <- res[, c(in.type, out.type)]
+        if (nout == 1) 
+            na.idx <- is.na(res[, 2])
+        else na.idx <- apply(res[, -1], 1, function(x) all(is.na(x)))
+        if (sum(na.idx) > 0) {
+            n.na <- length(unique(res[na.idx, 1]))
+            if (n.na > 0) {
+                print(paste("Note:", n.na, "of", length(in.ids), 
+                  "unique input IDs unmapped."))
+            }
+            if (na.rm) 
+                res <- res[!na.idx, ]
+        }
+        cns = colnames(res)
+        if (unique.map) {
+            if (length(out.type) == 1) 
+                umaps = tapply(res[, out.type], res[, in.type], 
+                  paste, sep = "", collapse = "; ")
+            else umaps = apply(res[, out.type], 2, function(x) tapply(x, 
+                res[, in.type], function(y) paste(unique(y), 
+                  sep = "", collapse = "; ")))
+            umaps = cbind(umaps)
+            res.uniq = cbind(rownames(umaps), umaps)
+            res = res.uniq
+            colnames(res) = cns
+        }
+        res = as.matrix(res)
+        if (!keep.order) {
+            rownames(res) = NULL
+            return(res)
+        }
+        else {
+            res1 = matrix(NA, ncol = length(cns), nrow = length(in.ids0))
+            res1[, 1] = in.ids0
+            rns = match(in.ids0, res[, 1])
+            res1[, -1] = res[rns, -1]
+            colnames(res1) = cns
+            return(res1)
+        }
+    }
+    else {
+        res = cbind(in.ids, out.ids)
+        colnames(res) = c(in.type, out.type)
+        return(res)
+    }
+}
+
+if(1) {
+    library(pathview)
+    unlockBinding("geneannot.map", as.environment("package:pathview"))
+    assignInNamespace("geneannot.map", my.geneannot.map, ns="pathview", as.environment("package:pathview"))
+    assign("geneannot.map", my.geneannot.map, as.environment("package:pathview"))
+    lockBinding("geneannot.map", as.environment("package:pathview"))
+}
+
+output$kegg_graph <- renderImage({
+
+    ngs <- inputData()
+    ##NULL.IMG <- list(src=NULL, contentType = 'image/png')
+    ##NULL.IMG <- list(src=NA, contentType = 'image/png')
+    NULL.IMG <- list(src="", contentType = 'image/png')
+    if(is.null(ngs)) return(NULL.IMG)
+
+    require(KEGGgraph)
+    require(KEGG.db)
+    require(pathview)
+
+    comparison=1
+    comparison = input$fa_contrast
+    if(is.null(comparison) || length(comparison)==0) return(NULL.IMG)
+    if(comparison=="") return(NULL.IMG)
+    
+    ## get fold-change vector
+    fc <- ngs$gx.meta$meta[[comparison]]$meta.fx
+    pp <- rownames(ngs$gx.meta$meta[[comparison]])
+
+    if("hgnc_symbol" %in% colnames(ngs$genes)) {
+        names(fc) <- ngs$genes[pp,"hgnc_symbol"]
+    } else {
+        names(fc) <- toupper(ngs$genes[pp,"gene_name"])
+    }
+    fc <- fc[order(-abs(fc))]
+    fc <- fc[which(!duplicated(names(fc)) & names(fc)!="")]
+
+    ## get selected KEGG id
+    df <- getFilteredKeggTable()
+    if(is.null(df)) return(NULL.IMG)
+    
+    sel.row=1
+    sel.row <- input$fa_keggtable_rows_selected
+    ##if(is.null(sel.row) || length(sel.row)==0) return(NULL)
+    if(is.null(sel.row) || length(sel.row)==0) return(NULL.IMG)
+    sel.row <- as.integer(sel.row)
+    
+    pathway.id = "05213" 
+    pathway.id = "04110" ## CELL CYCLE
+    pathway.name = pw.genes = "x"
+    if(is.null(sel.row) || length(sel.row)==0) return(NULL.IMG)
+
+    if(!is.null(sel.row) && length(sel.row)>0) {
+        pathway.id <- df[sel.row,"kegg.id"]
+        pathway.name <- df[sel.row,"pathway"]
+        pw.genes <- GSETS[[as.character(pathway.name)]]
+    }
+    
+    xml.dir <- file.path(FILES,"kegg-xml")
+
+    pv.out <- pathview(
+        gene.data = fc, pathway.id=pathway.id, gene.idtype="SYMBOL",
+        gene.annotpkg = "org.Hs.eg.db", species = "hsa",
+        out.suffix="pathview", limit = list(gene=2, cpd=1),
+        low = list(gene = "dodgerblue2", cpd = "purple"),
+        high = list(gene = "firebrick2", cpd = "yellow"), 
+        kegg.dir=xml.dir, kegg.native=TRUE, same.layer=FALSE )
+    Sys.sleep(0.2) ## wait for graph
+    
+    ##width  <- session$clientData$output_kegg_graph_width
+    ##height <- session$clientData$output_kegg_graph_height    
+    outfile = paste0("hsa",pathway.id,".pathview.png")
+    cat("kegg_graph: outfile=",outfile,"\n")
+    if(!file.exists(outfile)) return(NULL.IMG)
+    
+    list(src = outfile,
+         contentType = 'image/png',
+         ##width = 1040*0.8, height = 800*0.9, ## actual size: 1040x800
+         ##width = 900, height = 600, ## actual size: 1040x800
+         width = "100%", height = "100%", ## actual size: 1040x800         
+         alt = "pathview image")
+    
+}, deleteFile = TRUE)        
+
+
+output$fa_keggtable <- renderDataTable({
+    
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    if(is.null(ngs$meta.go)) return(NULL)
+    
+    comparison=1
+    comparison = input$fa_contrast
+
+    if(is.null(comparison)) return(NULL)
+    df <- getFilteredKeggTable()
+    if(is.null(df)) return(NULL)
+    
+    numeric.cols <- which(sapply(df, is.numeric))
+    numeric.cols
+    
+    DT::datatable( df, rownames=FALSE,
+                  class = 'compact cell-border stripe hover',                  
+                  extensions = c('Buttons','Scroller'),
+                  selection=list(mode='single', target='row', selected=1),
+                  options=list(
+                      dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
+                      ##dom = 'lfrtip', 
+                      scrollX = TRUE, ##scrollY = TRUE,
+                      scrollY = 220, scroller=TRUE, deferRender=TRUE
+                  )  ## end of options.list 
+                  ) %>%
+        formatSignif(numeric.cols,4) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>% 
+            DT::formatStyle( "delta.pct",
+                            ##background = styleColorBar(c(0,3), 'lightblue'),
+                            background = color_from_middle( df[,"delta.pct"], 'lightblue', '#f5aeae'),
+                            backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center') 
+})
+
+output$kegg_cormap <- renderPlot({
+    require(igraph)
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+
+    df <- getKeggTable()
+    if(is.null(df)) return(NULL)
+    
+    meta <- ngs$gset.meta$meta
+    fx <- sapply(meta, function(x) x$meta.fx)
+    qv <- sapply(meta, function(x) x$meta.q)    
+    rownames(fx) <- rownames(qv) <- rownames(meta[[1]])
+    
+    kk <- as.character(df$pathway)
+    ##if(is.na(kk) || kk=="" || !(kk %in% rownames(fx))) return(NULL)
+    if(length(kk) < 3) return(NULL)
+
+    if(mean(is.na(qv))<0.01) {
+        score <- fx[kk,,drop=FALSE] * (1 - qv[kk,,drop=FALSE])**2
+    } else {
+        score <- fx[kk,,drop=FALSE] 
+    }
+    dim(score)
+    if(NCOL(score)==1) score <- cbind(score,score)
+    
+    score <- score[head(order(-rowSums(score**2)),50),,drop=FALSE]  ## maximum nr of gene sets
+    score <- score[,head(order(-colSums(score**2)),25),drop=FALSE] ## max comparisons/FC    
+    score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
+    d1 <- as.dist(1-cor(t(score),use="pairwise"))
+    d2 <- as.dist(1-cor(score,use="pairwise"))
+    d1[is.na(d1)] <- 1
+    d2[is.na(d2)] <- 1
+    ii=1:nrow(score);jj=1
+    jj <- hclust(d2)$order
+    ii <- hclust(d1)$order
+    score <- score[ii,jj,drop=FALSE]
+    
+    cex2=1
+    rownames(score) = substring(rownames(score),1,50)
+    if(ncol(score)>15) {
+        rownames(score) = substring(rownames(score),1,40)
+        cex2=0.85
+    }
+    if(ncol(score)>25) {
+        rownames(score) = substring(rownames(score),1,30)
+        colnames(score) <- rep("",ncol(score))
+        cex2=0.7
+    }
+    
+    par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,2,0,1) )
+    require(corrplot)
+    score2 <- score
+    if(input$fa_normalize) score2 <- t(t(score2) / apply(abs(score2),2,max))
+    score2 <- sign(score2) * abs(score2/max(abs(score2)))**3   ## fudging
+    rownames(score2) <- tolower(gsub(".*:|kegg_|_Homo.*$","",
+                                     rownames(score2),ignore.case=TRUE))
+    rownames(score2) <- substring(rownames(score2), 1, 40)
+    ## heatmap(score2, scale="none", mar=c(8,20))
+    bmar <- 1 + pmax(50 - nrow(score2),0)*0.3
+    bmar=1
+    corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
+             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,2,0) )
+    
+}, res=70)    
+
+```
+
+### GO graph
+    
+```{r message=FALSE, warning=FALSE, fig.width=4}
+
+##================================================================================
+## GO graph
+##================================================================================
+
+require(visNetwork)
+fillRow(flex = c(1.2,1), 
+        fillCol(flex = c(NA,2,1),
+                inputPanel(
+                    checkboxGroupInput("faGO_options", NULL, inline=TRUE,
+                                       choices=c("prune",'color clusters'),
+                                       selected=c("prune")),
+                    cellArgs=list(width='100%')
+                ),                
+                visNetworkOutput("faGO_visgraph", height = "100%"),
+                dataTableOutput('faGO_scoretable')
+                ),
+        plotOutput('faGO_cormap')
+        )
+
+output$faGO_visgraph <- renderVisNetwork({
+
+    require(igraph)
+    require(RColorBrewer)
+    require(visNetwork)
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+
+    comparison=1;methods=c("fisher","gsva","camera")
+    comparison = input$fa_contrast
+    if(is.null(comparison)) return(NULL)
+    
+    ##sub2 <- getSigGO(comparison, methods, nterms=250, ntop=25, ngs=ngs)
+    sub2 <- go <- ngs$meta.go$graph
+    score = ngs$meta.go$pathscore[,comparison]        
+    score = (score/max(abs(score),na.rm=TRUE))
+    score[is.na(score)] = 0
+    V(sub2)$value <- score
+    V(sub2)$color <- bluered(32)[16 + round(15*score)]
+    V(sub2)$label <- V(sub2)$Term
+    V(sub2)$label[which(is.na(score)|score==0)] = ""
+    pos = sub2$layout
+        
+    if("prune" %in% input$faGO_options) {
+        ##cat("pruning GO graph\n")
+        vv = V(sub2)[which(!is.na(score) & score!=0)]
+        sp = shortest_paths(sub2, from="all", to=vv, mode="all", output="vpath")
+        sp.vv = unique(unlist(sp$vpath))
+        sub2 = induced.subgraph(sub2, sp.vv)
+        pos = layout_with_fr(sub2)
+        score = score[V(sub2)$name]
+    }
+
+    ## remove root?
+    removeroot=TRUE
+    ##if(PRO.VERSION) removeroot <-input$faGO_removeroot
+    if(removeroot) {
+        sub2 <- induced_subgraph(sub2, which(V(sub2)$name!="all"))
+        if("prune" %in% input$faGO_options) pos = layout_with_fr(sub2)
+        score <- score[V(sub2)$name]
+        ##pos <- pos[V(sub2)$name,]        
+    }
+    roots <- c("all",neighbors(go, V(go)["all"], mode="all" )$name)
+    roots <- intersect(roots, V(sub2)$name)
+    
+    astree = TRUE
+    ##if(PRO.VERSION) astree <- input$faGO_astree
+    if(astree) {
+        if("all" %in% V(sub2)$name) {
+            pos = layout_as_tree(sub2, root="all", mode="all")
+        } else {
+            pos = layout_as_tree(sub2, root=roots, mode="all")
+        }
+        ##pos = pos[,c(2,1)]
+        pos[,2] = -pos[,2]
+        ##pos <- pos[,c(2,1)] ## flip horizontal
+    }
+
+    if("color clusters" %in% input$faGO_options) {
+        ##clust = cluster_louvain(as.undirected(sub2))$membership
+        clust = cluster_louvain(as.undirected(go))$membership
+        names(clust) = V(go)$name
+        cc = c(brewer.pal(12,"Set3"),brewer.pal(8,"Set2"),brewer.pal(8,"Set1"))
+        V(sub2)$color = rep(cc,99)[clust[V(sub2)$name]]
+        jj = which(is.na(score) | score==0)
+        if(length(jj)>0) V(sub2)$color[jj] = NA
+    }
+    
+    require(visNetwork)
+    ##pos <- pos[V(sub2)$name,]
+    gr = toVisNetworkData(sub2)
+    gr$nodes$color[is.na(gr$nodes$color)] = "#F9F9F9"
+    gr$nodes$value = pmax(abs(gr$nodes$value),0.001)
+    gr$nodes$x = pos[,1]*60
+    gr$nodes$y = pos[,2]*90
+    gr$nodes$label = gr$nodes$Term
+    no.score <- (is.na(score)|score==0)
+    gr$nodes$label[which(no.score)] = NA
+
+    ##if(input$fa_boxnode) {
+    gr$nodes$shape <- c("box","circle")[1 + 1*no.score]
+    gr$nodes$label <- sapply(gr$nodes$label,breakstring,n=25,nmax=95,force=TRUE,brk="\n")
+    
+    ##gr.def <- breakstring(gr$nodes$Definition,80)
+    gr.def <- sapply(gr$nodes$Definition,breakstring,n=50,brk="<br>")
+    gr$nodes$title = paste0(gr$nodes$Term,"  (",gr$nodes$id,")<br>",
+                            "<small>",gr.def,"</small>")
+    ##gr$edges$title = edge.info   
+
+    ## rendering
+    font.size=20; cex=1
+    if("prune" %in% input$faGO_options) {
+        font.size=20; cex=0.6
+    }
+
+    visNetwork(gr$nodes, gr$edges) %>%
+        visEdges(smooth = FALSE, hidden=FALSE, arrows=list(enabled=TRUE),
+                 scaling=list(min=10*cex, max=30*cex), width=5*cex )  %>%
+        visNodes(font = list( size=font.size*cex, vadjust=0),
+                 scaling=list(min=1*cex, max=80*cex))  %>%
+        visPhysics(stabilization = FALSE)  %>%
+        ##visInteraction(hideEdgesOnDrag = TRUE) %>%
+        ##visInteraction(navigationButtons = TRUE) %>%
+        ##visOptions(nodesIdSelection = TRUE) %>%
+        ##visOptions(selectedBy="component") %>%
+        visOptions(highlightNearest = list(enabled=T, degree=1, hover=TRUE)) %>%
+        ##visEvents(select="function(nodes){Shiny.onInputChange('current_node_id',nodes.nodes);;}") %>%
+        visPhysics(enabled=FALSE) 
+})    
+
+output$faGO_scoretable <- renderDataTable({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    if(is.null(ngs$meta.go)) return(NULL)
+
+    comparison=1
+    comparison = input$fa_contrast
+    if(is.null(comparison)) return(NULL)
+
+    go = ngs$meta.go$graph
+    scores <- ngs$meta.go$pathscore[,comparison]        
+    scores <- scores[which(!is.na(scores))]
+    scores <- round(scores, digits=3)
+    scores <- sort(scores, decreasing=TRUE)
+    go.term = V(go)[names(scores)]$Term
+    qv=fx=NULL
+    if("qvalue" %in% names(ngs$meta.go)) qv = ngs$meta.go$qvalue[names(scores),comparison]
+    if("foldchange" %in% names(ngs$meta.go)) fx = ngs$meta.go$foldchange[names(scores),comparison]
+    
+    go.term = substring(go.term, 1, 80)
+    dt1 = round( cbind(score=scores, meta.fx=fx, meta.q=qv), digits=4)
+    
+    dt = data.frame( id=names(scores), term=go.term, dt1)    
+
+    numeric.cols <- which(sapply(dt, is.numeric))
+    numeric.cols
+
+    DT::datatable( dt, rownames=FALSE,
+                  class = 'compact cell-border stripe hover',                  
+                  extensions = c('Buttons','Scroller'),
+                  selection=list(mode='single', target='row', selected=1),
+                  options=list(
+                      dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
+                      ##dom = 'lfrtip', 
+                      scrollX = TRUE, ##scrollY = TRUE,
+                      scrollY = 220, scroller=TRUE, deferRender=TRUE
+                  )  ## end of options.list 
+                  ) %>%
+        formatSignif(numeric.cols,4) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>% 
+            DT::formatStyle( "score",
+                            ##background = styleColorBar(c(0,3), 'lightblue'),
+                            background = color_from_middle( dt1[,"score"], 'lightblue', '#f5aeae'),
+                            backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center') 
+})
+
+
+output$faGO_cormap <- renderPlot({
+    require(igraph)
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+
+    score = ngs$meta.go$pathscore
+    if(is.null(score)) return(NULL)
+    go = ngs$meta.go$graph
+    score[is.na(score)] = 0
+    rownames(score) = V(go)[rownames(score)]$Term
+    cat("faGO_cormap:: dim(score)=",dim(score),"\n")
+    
+    ## reduce score matrix
+    ##score = head(score[order(-rowSums(abs(score))),],40)
+    score = score[head(order(-rowSums(score**2)),50),,drop=FALSE] ## max number of terms    
+    score = score[,head(order(-colSums(score**2)),25),drop=FALSE] ## max comparisons/FC
+    if(NCOL(score)==1) score <- cbind(score,score)   
+    cat("faGO_cormap:: dim(score)=",dim(score),"\n")
+
+    score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
+    d1 <- as.dist(1-cor(t(score),use="pairwise"))
+    d2 <- as.dist(1-cor(score,use="pairwise"))
+    d1[is.na(d1)] <- 1
+    d2[is.na(d2)] <- 1
+    jj=1;ii=1:nrow(score)
+    jj <- hclust(d2)$order
+    ii <- hclust(d1)$order
+    score <- score[ii,jj,drop=FALSE]
+    
+    cex2=1
+    colnames(score) = substring(colnames(score),1,30)
+    rownames(score) = substring(rownames(score),1,50)
+    if(ncol(score)>15) {
+        rownames(score) = substring(rownames(score),1,40)
+        cex2=0.85
+    }
+    if(ncol(score)>25) {
+        rownames(score) = substring(rownames(score),1,30)
+        colnames(score) <- rep("",ncol(score))
+        cex2=0.7
+    }
+
+    ##pdf("module-functional.pdf",w=8,h=12)
+    par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,2,0,1))
+    require(corrplot)
+    score2 <- score
+    if(input$fa_normalize) score2 <- t( t(score2) / apply(abs(score2),2,max)) ## column scale???
+    ##score2 <- abs(score2)**0.8 * sign(score2)  ## fudging
+    score2 <- sign(score2) * abs(score2/max(abs(score2)))**0.8   ## fudging
+    ## heatmap(score2, scale="none", mar=c(8,20))
+    bmar <- 1 + pmax((50 - nrow(score2))*0.25,0)
+    corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
+             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,2,0) )
+    ##dev.off()
+    
+}, res=70)    
+
+```
+
+
+### Drug C-Map
+    
+```{r message=FALSE, warning=FALSE, fig.width=4}
+
+##================================================================================
+## Drug signature enrichment analysis L1000
+##================================================================================
+
+fillRow(flex = c(1.5,1), 
+        fillCol(flex = c(NA,1.8,1),
+                inputPanel(
+                    ##radioButtons('dsea_plottype',NULL,c("enplot","tsne","cor"),inline=TRUE),
+                    radioButtons('dsea_plottype',NULL,c("enplot","bar","tsne"),inline=TRUE),
+                    radioButtons('dsea_monocombo',NULL,c("mono","combo"),inline=TRUE),
+                    cellArgs=list(width='100%')
+                ),                
+                ##plotOutput("dsea_enplots"),
+                uiOutput("dsea_ui"),
+                dataTableOutput('dsea_scoretable')
+                ),
+        plotOutput('dsea_cormap')
+        )
+
+output$dsea_ui <- renderUI({
+    if(input$dsea_plottype=="tsne") {
+        output <- scatterD3Output('dsea_tsne')
+    } else if(input$dsea_plottype=="bar") {
+        output <- plotOutput("dsea_barplot", height = "100%")
+    } else {
+        output <- plotOutput("dsea_enplots", height = "100%")
+    }
+    output
+})
+
+getDseaTable <- reactive({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    comparison=3
+    names(ngs$gx.meta$meta)
+    comparison = input$fa_contrast
+    if(is.null(comparison)) return(NULL)
+    
+    dmethod="combo"
+    dmethod="mono"
+    dmethod <- input$dsea_monocombo
+    
+    fc <- ngs$gx.meta$meta[[comparison]]$meta.fx
+    names(fc) <- rownames(ngs$gx.meta$meta[[1]])
+    nes <- round(ngs$drugs[[dmethod]]$X[,comparison],4)
+    pv  <- round(ngs$drugs[[dmethod]]$P[,comparison],4)
+    qv  <- round(ngs$drugs[[dmethod]]$Q[,comparison],4)
+    drug <- rownames(ngs$drugs[[dmethod]]$X)
+    stats <- ngs$drugs[[dmethod]]$stats
+    nes[is.na(nes)] <- 0
+    qv[is.na(qv)] <- 1
+    pv[is.na(pv)] <- 1
+    
+    ## SHOULD MAYBE BE DONE IN PREPROCESSING....
+    descr0 <- read.csv(file.path(FILES,"L1000_repurposing_drugs.txt"),
+                  sep="\t", comment.char="#")
+
+    if(dmethod=="combo") {
+        drugs <- strsplit(names(nes),split="[+]")
+        drug1 <- sapply(drugs,"[",1)
+        drug2 <- sapply(drugs,"[",2)
+        j1 <- match( drug1, descr0$pert_iname)
+        j2 <- match( drug2, descr0$pert_iname)
+        cmoa <- paste( descr0[j1,"moa"],"+",descr0[j2,"moa"])
+        ctarget <- paste( descr0[j1,"target"],"+",descr0[j2,"target"])
+        descr <- data.frame( moa=cmoa, target=ctarget)
+    } else {
+        jj <- match( drug, descr0$pert_iname)
+        descr <- descr0[jj,c("moa","target")]
+    }
+    
+    res <- data.frame( drug=drug, NES=nes, pval=pv, padj=qv, descr)
+    res <- res[order(-abs(res$NES)),]
+    
+    return(res)
+})
+
+
+output$dsea_enplots <- renderPlot({
+    ngs <- inputData()
+    if(is.null(ngs$drugs)) return(NULL)
+    shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
+    if(input$dsea_plottype=="tsne") return(NULL)
+    
+    comparison=1
+    comparison = input$fa_contrast
+    if(is.null(comparison)) return(NULL)
+
+    res <- getDseaTable()
+
+    dmethod="mono"
+    dmethod="combo"
+    dmethod <- input$dsea_monocombo
+
+    ## rank vector for enrichment plots
+    rnk <- ngs$drugs[[dmethod]]$stats[,comparison]
+    dctype <- sub("_.*$","",names(rnk))
+    ##table(rownames(res) %in% dctype)
+    ##table(sapply(rownames(res), function(g) sum(grepl(g,names(rnk),fixed=TRUE))))
+
+    plottype="enplot"
+    plottype <- input$dsea_plottype
+
+    if(plottype=="cor") {        
+        avgX <- readRDS(file=file.path(FILES,"l1000_es_5685drugsAVG.rds"))
+        fx <- ngs$gx.meta$meta[[comparison]]$meta.fx
+        names(fx) <- rownames(ngs$gx.meta$meta[[1]])
+        names(fx) <- toupper(sub(".*:","",names(fx)))
+        gg <- intersect(rownames(avgX), names(fx))
+        length(gg)
+        
+        itop <- c( head(order(-res$NES),12), tail(order(-res$NES),12))
+        itop <- c( head(order(-res$NES),12), head(order(res$NES),12))
+
+        par(mfrow=c(4,6), mar=c(1,1,1,1)*0.2, oma=c(2,3,1,3),
+            mgp=c(2.0,0.8,0), xpd=FALSE )
+        i=1
+        for(i in itop) {
+            dx <- rownames(res)[i]
+            dx
+            dx <- strsplit(dx, split="[+]")[[1]]
+            x1 <- fx[gg]
+            y1 <- rowMeans(avgX[gg,dx,drop=FALSE])
+            plot( x1, y1, pch=19, cex=0.4,
+                 tck=0.03, mgp=c(1.2,-1.4,0),
+                 xlab="exp FC", ylab="drug FC" )
+            abline(v=0, h=0, lwd=1, lty=3)
+            abline( lm( y1 ~ x1), col="red", lwd=1.5)
+            ##nes <- round(res$NES[i],2)
+            ##qv  <- round(res$padj[i],3)
+            ##tt <- c( paste("NES=",nes), paste("q=",qv) )
+            ##out <- cor.test( x, y[,1])
+            out <- cor.test(x1, y1)
+            r1 <- round(out$estimate,digits=3)
+            pv <- round(out$p.value,digits=4)
+            tt <- c( paste("rho=",r1), paste("p=",pv),"")
+            legend("topleft", legend=dx, cex=1.05)
+            legend("bottomright", legend=tt, cex=0.95,
+                   y.intersp=0.85, bty="n", text.col="darkgreen")
+        }
+
+    } else if(plottype=="enplot") {
+
+        ## ENPLOT TYPE
+        itop <- c( head(order(-res$NES),10), tail(order(-res$NES),10))
+        par(oma=c(0,3,0,0))
+        par(mfrow=c(4,5), mar=c(1,1.5,1.8,1))
+        i=1
+        for(i in itop) {
+            dx <- rownames(res)[i]
+            dx
+            gmtdx <- grep(dx,names(rnk),fixed=TRUE,value=TRUE)  ## L1000 naming allows this...
+            length(gmtdx)
+            ##if(length(gmtdx) < 3) { frame(); next }
+            gsea.enplot( rnk, gmtdx, main=dx, cex.main=1.25)
+            nes <- round(res$NES[i],2)
+            qv  <- round(res$padj[i],3)
+            tt <- c( paste("NES=",nes), paste("q=",qv) )
+            legend("topright", legend=tt, cex=0.9)
+        }
+    } else {
+        return(NULL)
+    }
+    
+})    
+
+output$dsea_barplot <- renderPlot({
+    ngs <- inputData()
+    if(is.null(ngs$drugs)) return(NULL)
+    shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
+    if(input$dsea_plottype=="tsne") return(NULL)
+    
+    comparison=1
+    comparison = input$fa_contrast
+    if(is.null(comparison)) return(NULL)
+
+    res <- getDseaTable()
+
+    dmethod="mono"
+    dmethod="combo"
+    dmethod <- input$dsea_monocombo
+    
+    j1 <- which( res$padj < 0.2 & res$NES > 0)
+    j2 <- which( res$padj < 0.2 & res$NES < 0)
+    moa.pos <- strsplit(as.character(res$moa[j1]), split="\\|")
+    moa.neg <- strsplit(as.character(res$moa[j2]), split="\\|")
+    moa <- strsplit(as.character(res$moa), split="\\|")
+    fx <- mapply(function(x,n) rep(x,n), res$NES, sapply(moa,length))
+    moa.avg <- sort(tapply( unlist(fx), unlist(moa), mean))
+    moa.sum <- sort(tapply( unlist(fx), unlist(moa), sum))
+    head(moa.pos)
+    head(moa.neg)
+    moa.pos <- sort(table(unlist(moa.pos)),decreasing=TRUE)
+    moa.neg <- sort(table(unlist(moa.neg)),decreasing=TRUE)
+    
+    dtg.pos <- strsplit(as.character(res$target[j1]), split="\\|")
+    dtg.neg <- strsplit(as.character(res$target[j2]), split="\\|")
+    dtg <- strsplit(as.character(res$target), split="\\|")
+    dx <- mapply(function(x,n) rep(x,n), res$NES, sapply(dtg,length))
+    dtg.avg <- sort(tapply( unlist(dx), unlist(dtg), mean))
+    dtg.sum <- sort(tapply( unlist(dx), unlist(dtg), sum))    
+    dtg.pos <- sort(table(unlist(dtg.pos)),decreasing=TRUE)
+    dtg.neg <- sort(table(unlist(dtg.neg)),decreasing=TRUE)
+    head(dtg.pos)
+    head(dtg.neg)
+
+    NTOP=15
+    if(1) {
+        moa.top <- sort(c( head(moa.pos,NTOP), -head(moa.neg,NTOP)))
+        dtg.top <- sort(c( head(dtg.pos,NTOP), -head(dtg.neg,NTOP)))
+        layout(matrix(1:2,nrow=1),widths=c(1.4,1))
+        par(mar=c(5,20,5,1), mgp=c(2,0.7,0))
+        barplot(moa.top, horiz=TRUE, las=1, xlab="drugs (n)")
+        title(main="MOA", line=1 )
+        par(mar=c(5,12,5,1), mgp=c(2,0.7,0))
+        barplot(dtg.top, horiz=TRUE, las=1, xlab="drugs (n)")
+        title(main="target", line=1 )
+    } else {
+        moa.top <- c(head(moa.sum,NTOP), tail(moa.sum,NTOP))
+        dtg.top <- c(head(dtg.sum,NTOP), tail(dtg.sum,NTOP))
+        moa.top <- c(head(moa.avg,NTOP), tail(moa.avg,NTOP))
+        dtg.top <- c(head(dtg.avg,NTOP), tail(dtg.avg,NTOP))
+
+        par(mfrow=c(1,2), mar=c(5,16,5,0), mgp=c(2,0.7,0))
+        barplot(moa.top, horiz=TRUE, las=1, xlab="average NES")
+        title(main="MOA", line=1 )
+        barplot(dtg.top, horiz=TRUE, las=1, xlab="average NES")
+        title(main="target", line=1 )
+    }
+
+
+})    
+
+
+output$dsea_scoretable <- renderDataTable({
+    ngs <- inputData()
+    if(is.null(ngs$drugs)) return(NULL)
+  
+    res <- getDseaTable()
+    res$moa <- shortstring(res$moa,50)
+    res$target <- shortstring(res$target,50)
+    
+    ## limit number of results??
+    ##jj <- unique(c( head(order(-res$NES),250), tail(order(-res$NES),250)))
+    jj <- unique(c( head(order(-res$NES),1000), tail(order(-res$NES),1000)))
+    jj <- jj[order(-abs(res$NES[jj]))]
+    res <- res[jj,]
+    
+    DT::datatable( res, rownames=FALSE,
+                  class = 'compact cell-border stripe hover',                  
+                  extensions = c('Buttons','Scroller'),
+                  selection=list(mode='single', target='row', selected=1),
+                  options=list(
+                      dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
+                      ##dom = 'lfrtip', 
+                      scrollX = TRUE, ##scrollY = TRUE,
+                      scrollY = 230, scroller=TRUE, deferRender=TRUE
+                  )  ## end of options.list 
+                  ) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>% 
+            DT::formatStyle( "NES",
+                            background = color_from_middle( res[,"NES"], 'lightblue', '#f5aeae'),
+                            backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center') 
+}, server=FALSE)
+
+output$dsea_cormap <- renderPlot({
+    require(igraph)
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+
+    shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
+    if(is.null(ngs$drugs)) return(NULL)
+    
+    dmethod="mono"
+    dmethod <- input$dsea_monocombo
+    comparison=1
+    comparison = input$fa_contrast
+    if(is.null(comparison)) return(NULL)
+    
+    nes <- ngs$drugs[[dmethod]]$X
+    qv <- ngs$drugs[[dmethod]]$Q
+    score <- nes * (1 - qv)**2
+    score[is.na(score)] <- 0
+    if(NCOL(score)==1) score <- cbind(score,score)
+    
+    ## reduce score matrix
+    ##score = head(score[order(-rowSums(abs(score))),],40)
+    ##score = score[head(order(-rowSums(score**2)),50),] ## max number of terms
+    score = score[head(order(-score[,comparison]**2),50),,drop=FALSE] ## max number of terms    
+    score = score[,head(order(-colSums(score**2)),25),drop=FALSE] ## max comparisons/FC
+
+    cat("dsea_cormap:: dim(score)=",dim(score),"\n")
+    score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
+    d1 <- as.dist(1-cor(t(score),use="pairwise"))
+    d2 <- as.dist(1-cor(score,use="pairwise"))
+    d1[is.na(d1)] <- 1
+    d2[is.na(d2)] <- 1
+    jj=1;ii=1:nrow(score)
+    ii <- hclust(d1)$order
+    jj <- hclust(d2)$order
+    score <- score[ii,jj,drop=FALSE]
+    
+    cex2=1
+    colnames(score) = substring(colnames(score),1,30)
+    rownames(score) = substring(rownames(score),1,50)
+    if(ncol(score)>15) {
+        rownames(score) = substring(rownames(score),1,40)
+        cex2=0.85
+    }
+    if(ncol(score)>25) {
+        rownames(score) = substring(rownames(score),1,30)
+        colnames(score) <- rep("",ncol(score))
+        cex2=0.7
+    }
+
+    par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,2,0,1))
+    require(corrplot)
+    score2 <- score
+    if(input$fa_normalize) score2 <- t( t(score2) / apply(abs(score2),2,max)) 
+    score2 <- sign(score2) * abs(score2/max(abs(score2)))**3   ## fudging
+    bmar <- 1 + pmax((50 - nrow(score2))*0.25,0)
+    corrplot( score2, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
+             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,2,0) )
+    
+}, res=70)    
+
+
+require(scatterD3)
+output$dsea_tsne <- renderScatterD3({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    if(input$dsea_plottype!="tsne") return(NULL)
+    
+    comparison=1
+    comparison = input$fa_contrast
+    if(is.null(comparison)) return(NULL)
+    if(is.null(ngs$drugs)) return(NULL)
+
+    monocombo <- input$dsea_monocombo
+    if(monocombo=="mono") {
+        rho <- ngs$drugs[["mono"]]$X
+        stats <- ngs$drugs[["mono"]]$stats
+        colnames(rho)
+    } else {
+        ## NOT YET IMPLEMENTED. Too large....
+        ##
+        return(NULL)
+    }
+
+    ## get pre-computed t-SNE positions
+    drugs <- read.csv(file.path(FILES,"l1000-drugs-tsne-px30d2.csv"),
+                           row.names=1)
+    pos <- drugs[,1:2]
+    colnames(pos)[1:2] <- c("x","y")
+    dim(pos)
+
+    ##dt <- getDseaTable()
+    if(!("membership" %in% colnames(drugs))) {
+        require(igraph)
+        require(scran)
+        snn <- buildSNNGraph(t(pos[,1:2]), k=10)
+        clust <- cluster_louvain(snn)
+        table(clust$membership)
+        drugs$membership <- clust$membership
+    }
+
+    dd <- intersect(rownames(pos),rownames(rho))
+    pos <- pos[dd,]
+    rho <- rho[dd,comparison]
+    dim(pos)
+    
+    ## add query node
+    nbtop <- head(order(-rho),10)
+    ##pos1 <- colMeans(pos[nbtop,],na.rm=TRUE)
+    pos1 <- apply(pos[nbtop,],2,median,na.rm=TRUE)
+    pos <- rbind(pos, QUERY=pos1 )
+    rho <- c(rho, QUERY=1.8*max(rho,na.rm=TRUE))
+    rho[is.na(rho)] <- 0
+    rho.sq = rho**2
+    
+    rho.sign = c("negative","positive")[1 + 1*(rho>=0)]
+    rho.sign[is.na(rho.sign)] <- "positive"
+    rho.sign[which(names(rho)=="QUERY")] = "QUERY"    
+    lab <- rownames(pos)
+    labeltype="name"
+    if(PRO.VERSION) labeltype <- input$dsea_label
+    if(labeltype=="moa") lab <- drugs[rownames(pos),"moa"]
+    if(labeltype=="target") lab <- drugs[rownames(pos),"target"]
+    labels_size=10
+    genes <- toupper(ngs$genes$gene_name)
+    genes <- names(GENE.TITLE)
+    is.gene <- (toupper(names(rho)) %in% genes)
+    rho.type <- c("drug","gene")[1+1*(is.gene)]
+    opacity_var <- NULL
+
+    showall=FALSE
+    if(PRO.VERSION) showall <- (input$dsea_showall)
+    if(!showall) {
+        j1 <- head(order(rho.sq,decreasing=TRUE),100)
+        j0 <- setdiff(1:length(rho),j1)
+        lab[j0] <- rep("",length(j0))
+        opacity_var <- rep(1.0, length(rho))
+        opacity_var[j0] <- 0.7
+        if(labeltype=="name") labels_size=14
+    }
+
+    BLUERED(8)
+    lab[which(names(rho)=="QUERY")] <- toupper(comparison)
+
+    col_var=rho.sign
+    col_lab="sign"
+    if(showall) {
+        ii <- match(rownames(pos),rownames(drugs))
+        membership <- drugs$membership[ii]
+        col_var = factor(membership)
+        col_lab = "cluster"
+    }
+    rho.sq <- round(rho.sq,4)
+    scatterD3( pos[,1], pos[,2],
+              xlab="tSNE-x", ylab="tSNE-y",
+              col_var=col_var, col_lab=col_lab,
+              point_opacity=0.85, opacity_var=opacity_var,
+              ##colors = c("negative"="#2F79B5","positive"="#C13639","QUERY"="#000000"),
+              symbol_var=rho.type, symbol_lab="pert type",
+              size_var=rho.sq, size_range = c(15,300), size_lab="score",
+              lab = lab, labels_size=labels_size,
+              transitions=TRUE )
+
+})    
+
+```
+
+`r if(!PRO.VERSION) {"<!---------------------"}`
+
+### Fire plot
+    
+```{r message=FALSE, warning=FALSE, fig.width=4}
+fillRow(flex = c(2,1),
+        fillCol(height = "100%", flex = c(NA,1), 
+                inputPanel(
+                    selectInput("fire_xpcollection",NULL,
+                                choices=setdiff(names(COLLECTIONS),"<all>") ),
+                    checkboxInput('fire_shownames','shownames',TRUE),            
+                    cellArgs=list(width='100%')
+                ),
+                plotOutput('fa_fireplot')
+                ),
+        br()
+        )
+
+pgx.firePlot <- function(ngs, cmp, gsets, shownames=TRUE) {
+    k0 <- which(ngs$model.parameters$exp.matrix[,cmp] <0)
+    gx <- rowMeans(ngs$X[,k0])
+    fx <- ngs$gx.meta$meta[[cmp]]$meta.fx
+    names(fx) <- rownames(ngs$gx.meta$meta[[1]])
+    names(gx) <- toupper(sub(".*:","",names(gx)))
+    names(fx) <- toupper(sub(".*:","",names(fx)))
+    
+    ## gene set expression as mean of members
+    gsets0 <- gsets
+    gsets <- lapply(gsets, intersect, names(fx))    
+    zx <- sapply( gsets, function(gg) mean(fx[gg],na.rm=TRUE))
+    zx <- zx * (1 - exp( -(sapply(gsets,length)/10)**1 ))  ## moderate by set size
+    
+    gsets <- head(gsets[order(-abs(zx[names(gsets)]))],60)
+    gsets <- gsets[order(zx[names(gsets)])] ## order by gset expression
+    
+    yy  <- lapply(gsets, function(g) gx[g])
+    dx <- unlist(lapply(gsets, function(g) fx[g]))
+    dx <- sign(dx) * abs(dx/max(abs(dx)))**0.66
+    xx <- mapply(rep, 1:length(yy), sapply(yy,length))
+    
+    BLUERED1 <- colorRampPalette(
+        rev(c("#67001F", "#B2182B", "#D6604D", "#F4A582", "#FDDBC7", "#DDDDDD",
+              "#D1E5F0", "#92C5DE", "#4393C3", "#2166AC", "#053061")))    
+    klr <- paste0(BLUERED1(15)[8 + 7*dx],"88")
+    
+    xx0 <- unlist(xx)
+    yy0 <- unlist(yy)
+    gg0 <- as.vector(unlist(gsets))
+    
+    ## plot the genesets with gene members
+    ii <- order(abs(dx))
+    par(mfrow=c(2,1), mar=c(0,3.5,2,2), mgp=c(2.1,0.8,0))
+    dy <- 0.02*diff(range(yy0))
+    plot( xx0[ii], yy0[ii] + dy, col=klr[ii],
+         xaxs="i", xlim=c(-2, max(xx0)+3), 
+         xaxt="n", xlab="", ylab="expression (log2.CPM)", 
+         pch=19, cex=1.66*abs(dx)[ii], ylim=c(-4,max(yy0)*1.05) )
+    title(cmp, cex.main=1.0, line=0.9)
+    abline(h=0, lty=2)
+    
+    gset.name <- names(gsets)
+    if(0 && shownames) {    
+        n0 <- sapply(gsets0[names(gsets)], length)
+        n1 <- sapply(gsets, length)
+        gset.name <- paste0( gset.name," (",n1,"/",n0,")")
+    }
+    gset.name <- sapply(gset.name, function(s) shortstring(s,48,dots=0.5))
+    mtext( gset.name, side=1, at=1:length(gsets), 
+          las=3, cex=0.75, line=0.8, col="grey35", xpd=TRUE)
+    
+    ## label some top FC genes
+    if(shownames) {
+        top.genes <- head(names(sort(-abs(fx[unique(gg0)]))),25)
+        idx <- 1:length(gsets)
+        ii <- order(-abs(fx[gg0]))
+        g <- top.genes[1]
+        jj <- c()
+        for(g in top.genes) {
+            i0 <- ii[match(g, gg0[ii])]
+            jj <- c(jj, i0)
+            idx <- setdiff(idx, xx0[i0])
+            ii <- ii[ which(xx0[ii] %in% idx)]
+        }
+
+        jj <- setdiff(jj,NA)
+        boxes = sapply(nchar(gg0[jj]),function(n) paste(rep("█",n),collapse=""))
+        text( xx0[jj], yy0[jj], labels=boxes, cex=0.8, pos=3, offset=0.4, col="#FFFFFF99")        
+        text( xx0[jj], yy0[jj], gg0[jj], cex=0.75, pos=3, offset=0.4 )
+        for(i in 1:2) {
+            points( xx0[jj], yy0[jj], col=klr[jj], pch=19, cex=1.66*abs(dx)[jj] )
+        }
+    }
+    
+    ## plot the "missing" genes
+    gsets1 <- mapply( setdiff, gsets0[names(gsets)], gsets)
+    tt <- sort(table(unlist(gsets1)),decreasing=TRUE)
+    tt <- tt / max(tt)
+    head(tt,10)
+    top.missing <- head(names(tt),10)
+    m = top.missing[1]
+    for(i in 1:length(top.missing)) {
+        m <- top.missing[i]
+        jj <- which(sapply(gsets1, function(gs) (m %in% gs)))
+        y0 <- -0.2 - 0.40*i
+        points( jj, rep(y0,length(jj)), col="grey60", pch=21, cex=0.7 )
+        if(shownames) {
+            mtext(m, side=4, at=y0, las=1, cex=0.55,
+                  col="grey35", line=0.2)
+        }
+        ##text(sample(jj,1), y0, m, pos=4, cex=0.5)    }
+    }
+} ## end of firePlot()
+
+
+output$fa_fireplot <- renderPlot({
+    require(igraph)
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    ##df <- getFilteredKeggTable()
+    
+    cmp=1
+    cmp <- input$fa_contrast
+
+    sel="B-cell related"
+    sel="KEGG metabolic pathways"
+    sel="Hallmark collection"
+    sel=5
+    sel <- input$fire_xpcollection    
+    if(is.null(sel)) return(NULL)
+
+    gsets <- GSETS[ COLLECTIONS[[sel]] ]
+    ##gsets0 <- gsets0[ intersect( names(gsets0), names(zx)) ]
+    shownames <- input$fire_shownames
+    pgx.firePlot(ngs, cmp, gsets, shownames=shownames)     
+    
+}, res=85)
+```
+
+`r if(!PRO.VERSION) {"----------------------->"}`
+
+
+`r if(!DEV.VERSION) {"<!---------------------"}`
+
+
+### iTALK
+    
+```{r message=FALSE, warning=FALSE, fig.width=4}
+fillCol(height = "100%", flex = c(NA,1), 
+        inputPanel(
+            ##selectInput("italk_pheno",NULL, choices=""),
+            selectInput("italk_category",NULL,
+                        choices=c('cytokine','growth factor','checkpoint','other')),
+            cellArgs=list(width='100%')
+        ),
+        plotOutput('fa_italk')
+        )
+
+output$fa_italk <- renderPlot({
+
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    require(iTALK)
+    db <- iTALK::database
+    genes <- unique(c(db$Ligand.ApprovedSymbol,db$Receptor.ApprovedSymbol))
+    length(genes)
+    ##genes <- intersect(genes, rownames(ngs$counts))
+    genes <- intersect(genes, rownames(ngs$X))
+    ct <- "cell.type"
+    if("cell.type" %in% colnames(ngs$samples)) {
+        ct <- as.character(ngs$samples$cell.type)
+    } else {
+        ct <- rep("cell.type",nrow(ngs$samples))
+    }
+    ##data <- data.frame(cell_type=ct, t(log2(1 + ngs$counts[genes,])))
+    data <- data.frame(cell_type=ct, t(ngs$X[genes,]))
+    highly_exprs_genes <- rawParse(data, top_genes=50, stats='mean')
+
+    ## find the ligand-receptor pairs from highly expressed genes
+    cell_col <- structure(c('#4a84ad','#4a1dc6','#e874bf','#b79eed', '#ff636b', '#52c63b','#9ef49a'),
+                          names=unique(as.character(data$cell_type)))
+
+    par(mfcol=c(1,3),mar=c(1,1,1,1))
+    comm_type='cytokine'
+    comm_type <- input$italk_category
+    res_cat <- FindLR(highly_exprs_genes, datatype='mean count', comm_type=comm_type)
+    res_cat <- res_cat[order(res_cat$cell_from_mean_exprs*res_cat$cell_to_mean_exprs,decreasing=T),]
+    
+    NetView(res_cat, col=cell_col, vertex.label.cex=1, arrow.width=1, edge.max.width=5)
+    ntop=25
+    res_top <- head(res_cat,ntop)
+    LRPlot(res_top, datatype='mean count', cell_col=cell_col,
+           link.arr.lwd = head(res_cat$cell_from_mean_exprs,ntop),
+           link.arr.width = head(res_cat$cell_to_mean_exprs,ntop))
+    title(comm_type, line=-0.5)
+    
+    genes_top <- sort(unique(c(res_top$ligand,res_top$receptor)))
+    gx <- ngs$X[genes_top,]
+    gx0 <- t(apply(gx,1,function(x) tapply(x,ct,mean)))
+    gx0 <- head(gx0[order(-apply(gx0,1,sd)),,drop=FALSE],8)
+    
+    par(mar=c(8,4,4,1))
+    klr <- rep(rainbow(min(16,ncol(gx0))),3)
+    klr <- rep(brewer.pal(8,"Set2"),9)
+    ##barplot( t(gx0), las=3, col=klr)
+    ##legend("topright",legend=colnames(gx0), fill=klr)
+    ##barplot( (gx0), las=3, col=klr)
+    barplot( t(gx0), las=3, col=klr, beside=TRUE)
+    legend("topright",legend=colnames(gx0), fill=klr)
+
+    
+}, res=90)
+```
+
+`r if(!DEV.VERSION) {"----------------------->"}`
+
+
+
+

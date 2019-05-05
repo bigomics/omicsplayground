@@ -1,0 +1,221 @@
+
+
+
+library(survival)
+library(knitr)
+library(shiny)
+library(shinyjs)
+library(rmarkdown)
+library(scatterD3)
+library(fastcluster)
+library(ComplexHeatmap)
+ht_global_opt(fast_hclust = TRUE)
+library(plotly)
+library(Matrix)
+library(igraph)
+library(DT)
+
+##library(shinycssloaders)
+useShinyjs(rmd=TRUE)  ## to use click()
+
+source(file.path(RDIR,"gx-heatmap.r"))
+source(file.path(RDIR,"gx-plot.r"))
+source(file.path(RDIR,"gx-limma.r"))
+source(file.path(RDIR,"gx-volcano.r"))
+source(file.path(RDIR,"gset-gsea.r"))
+source(file.path(RDIR,"gset-fisher.r"))
+source(file.path(RDIR,"pgx-functions.R"))
+source(file.path(RDIR,"pgx-graph.R"))
+source(file.path(RDIR,"pgx-deconv.R"))
+source(file.path(RDIR,"pgx-cna.R"))
+source(file.path(RDIR,"pgx-plotting.R"))
+source(file.path(RDIR,"xcr-graph.r"))
+source(file.path(RDIR,"ui-code.R"))
+source(file.path(RDIR,"gx-combat.r"))
+source(file.path(RDIR,"pgx-correct.R"))
+source(file.path(RDIR,"pgx-predict.R"))
+
+## you need to override this!!!
+DEV.VERSION=FALSE
+
+##-----------------------------------------------------------------------------
+## Added GLOBAL info
+##-----------------------------------------------------------------------------
+require(org.Hs.eg.db)
+GENE.TITLE = unlist(as.list(org.Hs.egGENENAME))
+GENE.SYMBOL = unlist(as.list(org.Hs.egSYMBOL))
+names(GENE.TITLE) = GENE.SYMBOL
+##GSET.PREFIX.REGEX = paste(paste0("^",GSET.PREFIXES,"_"),collapse="|")
+GSET.PREFIX.REGEX="^BIOCARTA_|^C2_|^C3_|^C7_|^CHEA_|^GOBP_|^GOCC_|^GOMF_|^HALLMARK_|^KEA_|^KEGG_|^PID_|^REACTOME_|^ST_"
+
+xGENExGENE <- readRDS(file=file.path(FILES,"GENExGENE-cosSparseKNN500-XL.rds"))
+GSETxGENE <- readRDS(file.path(FILES,"gset-sparseG-XL.rds"))
+load(file.path(FILES,"gmt-all.rda"),verbose=1)
+GSETS = gmt.all;remove(gmt.all)
+##saveRDS(gmt.all, file.path(FILES,"gmt-all.rds"))
+##GSETS <- readRDS(file.path(FILES,"gmt-all.rds"))
+
+cat("<init> parsing gene families...\n")
+FAMILIES <- getGeneFamilies(GENE.SYMBOL, FILES=FILES, min.size=10, max.size=9999)
+##FAMILIES <- c(FAMILIES, list( "<LM22 markers>"=LM22_MARKERS,"<ImmProt markers>"=IMMPROT_MARKERS))
+custom.gmt = read.gmt(file.path(FILES,"custom-IRB.gmt"),add.source=TRUE)
+names(custom.gmt)
+FAMILIES= c(FAMILIES, custom.gmt)
+FAMILIES[["<all>"]] <- GENE.SYMBOL
+f1 <- FAMILIES
+names(f1) <- paste0("FAMILY:",names(f1))
+names(f1) <- sub("FAMILY:<all>","<all>",names(f1))
+GSETS <- c(GSETS,f1)
+
+cat("<init> parsing collections...\n")
+COLLECTIONS <- getGeneSetCollections(names(GSETS), min.size=10, max.size=99999)
+COLLECTIONS <- COLLECTIONS[order(names(COLLECTIONS))]
+
+remove(list=c("custom.gmt","f1"))
+
+##nmin=10
+table(sub(":.*","",names(GSETS)))
+pgx.getExtendedFamilies <- function(ngs, nmin=10) {
+    fam <- grep("^[<].*|^FAMILY|^TISSUE|^COMPARTMENT|^CELLTYPE|^GOCC|^DISEASE|^CUSTOM",
+                names(GSETS),value=TRUE)
+    jj <- which(sapply(GSETS[fam],function(x) sum(x %in% rownames(ngs$X))) >= nmin)
+    sort(fam[jj])
+}
+
+##-----------------------------------------------------------------------------
+## TISSUE/REFERENCE data sets
+##-----------------------------------------------------------------------------
+
+load(file.path(FILES,"rna_tissue.rda"))  ## TISSUE and TISSUE.grp
+IMMPROT <- read.csv(file.path(FILES,"ImmProt-signature.csv"),row.names=1)
+
+##-----------------------------------------------------------------------------
+## Immune cell markers
+##-----------------------------------------------------------------------------
+
+require(FARDEEP)
+IMMPROT_MARKERS <- rownames(read.csv(file.path(FILES,"immprot-signature1000.csv"),row.names=1))
+DICE_MARKERS <- rownames(read.csv(file.path(FILES,"DICE-signature1000.csv"),row.names=1))
+LM22_MARKERS <- rownames(LM22)
+
+##-----------------------------------------------------------------------------
+## Meta MA-profiles (fold changes) of all experiments
+##-----------------------------------------------------------------------------
+##load( file.path(FILES,"allMA-pub.rda"), verbose=1)
+load(file.path(FILES,"allFoldChanges-pub-8k.rda"))
+##PROFILES <- list(M=allM, A=allA, FC=allFC)
+PROFILES <- list(FC=allFC)
+
+##remove(allA)
+##remove(allM)
+remove(allFC)
+
+##-----------------------------------------------------------------------------
+## Colors
+##-----------------------------------------------------------------------------
+library(ggsci)
+library(RColorBrewer)
+COLORS = rep(brewer.pal(8,"Set2"),99)
+COLORS = rep(c(pal_npg("nrc", alpha = 0.7)(10),
+               pal_aaas("default", alpha = 0.7)(10),
+               pal_d3("category10", alpha = 0.7)(10)),99)
+BLUERED <- colorRampPalette(
+    rev(c("#67001F", "#B2182B", "#D6604D", "#F4A582", "#FDDBC7", "#EEEEEE",
+          "#D1E5F0", "#92C5DE", "#4393C3", "#2166AC", "#053061")))
+PURPLEYELLOW <- colorRampPalette(c("purple","purple3","black","yellow3","yellow"))
+PURPLEYELLOW <- colorRampPalette(c("purple","purple4","black","yellow4","yellow"))
+
+
+pgx.initialize <- function(ngs) {
+    cat("<init:initialize> initializing ngs object for platform...\n")
+
+    ##----------------- check object
+    obj.needed <- c("deconv","genes", ## "collections", "families", "counts",
+                    "GMT","gset.meta","gsetX","gx.meta","model.parameters",
+                    "samples","tsne2d","X")
+    all(obj.needed %in% names(ngs))
+    if(!all(obj.needed %in% names(ngs))) {
+        obj.missing <- setdiff(obj.needed, names(ngs))
+        msg <- paste("invalid ngs object. missing parts in object: ",obj.missing)
+        showNotification(msg,duration=NULL,type="error")
+        stop(msg)
+        return(NULL)
+    }
+
+    ## for COMPATIBILITY: if no counts, estimate from X
+    if(is.null(ngs$counts)) {
+        cat("WARNING:: no counts table. estimating from X\n")
+        ##ngs$counts <- (2**ngs$X-1) ##
+        ngs$counts = pmax(2**ngs$X - 1,0)
+        k = grep("lib.size|libsize",colnames(ngs$samples))[1]
+        if(length(k)>0) {
+            libsize = ngs$samples[colnames(ngs$counts),k]
+            libsize
+            ngs$counts = t(t(ngs$counts) * libsize)
+        }
+    }
+
+    ##----------------------------------------------------------------
+    ## Tidy up phenotype matrix (important!!!): get numbers/integers
+    ## into numeric, categorical into factors....
+    ##----------------------------------------------------------------
+    ngs$samples <- tidy.dataframe(ngs$samples)  ## warning!! this converts all to CHR!!
+
+    ## clean up: ngs$Y is a cleaned up ngs$samples
+    ngs$samples$barcode <- NULL
+    ngs$samples <- ngs$samples[,which(colMeans(is.na(ngs$samples))<1),drop=FALSE]
+    kk = grep("group|batch|lib.size|norm.factor|repl|donor|clone|sample|barcode",
+              colnames(ngs$samples),invert=TRUE)
+    kk <- unique( c(grep("^group$",colnames(ngs$samples)),kk))
+    ngs$Y = ngs$samples[colnames(ngs$X),kk,drop=FALSE]
+    ngs$Y <- tidy.dataframe(ngs$Y) ## NEED CHECK!!!
+    ngs$genes = ngs$genes[rownames(ngs$counts),,drop=FALSE]
+    ngs$genes$gene_name = as.character(ngs$genes$gene_name)
+    ngs$genes$gene_title = as.character(ngs$genes$gene_title)
+
+    ##-----------------------------------------------------------------------------
+    ## Add chromosome anntation if not
+    ##-----------------------------------------------------------------------------
+    if(!("chr" %in% names(ngs$genes))) {
+        symbol = sapply(as.list(org.Hs.egSYMBOL),"[",1)  ## some have multiple chroms..
+        CHR = sapply(as.list(org.Hs.egCHR),"[",1)  ## some have multiple chroms..
+        MAP <- sapply(as.list(org.Hs.egMAP),"[",1)  ## some have multiple chroms..
+        names(CHR) = names(MAP) = symbol
+        ngs$genes$chr <- CHR[ngs$genes$gene_name]
+        ngs$genes$map <- MAP[ngs$genes$gene_name]
+    }
+
+    ##-----------------------------------------------------------------------------
+    ## intersect and filter gene families (convert species to human gene sets)
+    ##-----------------------------------------------------------------------------
+    if("hgnc_symbol" %in% colnames(ngs$genes) ) {
+        hgenes <- toupper(ngs$genes$hgnc_symbol)
+        genes  <- ngs$genes$gene_name
+        ngs$families <- lapply(FAMILIES, function(x) setdiff(genes[match(x,hgenes)],NA))
+    } else {
+        genes <- toupper(ngs$genes$gene_name)
+        ngs$families <- lapply(FAMILIES, function(x) intersect(x,genes))
+    }
+    famsize <- sapply(ngs$families, length)
+    ngs$families <- ngs$families[which(famsize>=10)]
+
+    ##-----------------------------------------------------------------------------
+    ## Recode survival
+    ##-----------------------------------------------------------------------------
+    pheno <- colnames(ngs$Y)
+    if(("OS.years" %in% pheno && "OS.status" %in% pheno)) {
+        cat("found OS survival data\n")
+        event <- ( ngs$Y$OS.status %in% c("DEAD","1","yes","YES","dead"))
+        ngs$Y$OS.survival <- ifelse(event, ngs$Y$OS.years, -ngs$Y$OS.years)            
+        ##ngs$Y$OS.years <- NULL
+        ##ngs$Y$OS.status <- NULL
+    }
+    
+    ##-----------------------------------------------------------------------------
+    ## remove large deprecated outputs from objects
+    ##-----------------------------------------------------------------------------
+    ngs$gx.meta$outputs <- NULL
+    ngs$gset.meta$outputs <- NULL
+    ngs$gmt.all <- NULL
+    return(ngs)
+}
