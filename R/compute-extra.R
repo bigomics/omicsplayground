@@ -50,24 +50,6 @@ if(1) {
     ngs$meta.go <- pgx.computeCoreGOgraph(ngs, fdr=0.05)
 }
 
-## ------------------ Omics graphs --------------------------------
-if(1){
-    cat(">>> computing OmicsGraphs for",rda.file,"\n")
-
-    source(file.path(RDIR,"xcr-graph.r"))
-    source(file.path(RDIR,"pgx-graph.R"))
-
-    ## gr1$layout <- gr1$layout[V(gr1)$name,]  ## uncomment to keep entire layout
-    ngs$omicsnet <- pgx.createOmicsGraph(ngs)
-    ngs$pathscores <- pgx.computePathscores(ngs$omicsnet, strict.pos=FALSE)
-
-    ## compute reduced graph
-    ngs$omicsnet.reduced <- pgx.reduceOmicsGraph(ngs)
-    ngs$pathscores.reduced <- pgx.computePathscores(ngs$omicsnet.reduced, strict.pos=FALSE)
-    ##save(ngs, file=rda.file)
-
-}
-
 ## -------------- deconvolution analysis --------------------------------
 if(1) {
     
@@ -181,6 +163,24 @@ if(1) {
     
     remove(X)
     remove(x.drugs)
+
+}
+
+## ------------------ Omics graphs --------------------------------
+if(1){
+    cat(">>> computing OmicsGraphs for",rda.file,"\n")
+
+    source(file.path(RDIR,"xcr-graph.r"))
+    source(file.path(RDIR,"pgx-graph.R"))
+
+    ## gr1$layout <- gr1$layout[V(gr1)$name,]  ## uncomment to keep entire layout
+    ngs$omicsnet <- pgx.createOmicsGraph(ngs)
+    ngs$pathscores <- pgx.computePathscores(ngs$omicsnet, strict.pos=FALSE)
+
+    ## compute reduced graph
+    ngs$omicsnet.reduced <- pgx.reduceOmicsGraph(ngs)
+    ngs$pathscores.reduced <- pgx.computePathscores(ngs$omicsnet.reduced, strict.pos=FALSE)
+    ##save(ngs, file=rda.file)
 
 }
 
