@@ -48,7 +48,7 @@ names(GENE.TITLE) = GENE.SYMBOL
 ##GSET.PREFIX.REGEX = paste(paste0("^",GSET.PREFIXES,"_"),collapse="|")
 GSET.PREFIX.REGEX="^BIOCARTA_|^C2_|^C3_|^C7_|^CHEA_|^GOBP_|^GOCC_|^GOMF_|^HALLMARK_|^KEA_|^KEGG_|^PID_|^REACTOME_|^ST_"
 
-xGENExGENE <- readRDS(file=file.path(FILES,"GENExGENE-cosSparseKNN500-XL.rds"))
+##xGENExGENE <- readRDS(file=file.path(FILES,"GENExGENE-cosSparseKNN500-XL.rds"))
 GSETxGENE <- readRDS(file.path(FILES,"gset-sparseG-XL.rds"))
 load(file.path(FILES,"gmt-all.rda"),verbose=1)
 GSETS = gmt.all;remove(gmt.all)
