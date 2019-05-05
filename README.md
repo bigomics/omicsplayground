@@ -1,7 +1,8 @@
 # Omics Playground
 
 This is the source code for the Omics Playground, an R/Shiny analysis
-and visualization platform for multi-omics data.
+and visualization platform for multi-omics data. You can either run
+the app from the prepared Docker file, or by cloning this repository.
 
 
 ## Using the Docker file
@@ -12,7 +13,7 @@ the command `docker pull bigomics/playground`. Then run the docker as
 browser.
 
 
-## How to use
+## From source code
 
 1. Download or clone this repository. 
 2. Be sure you you have installed all necessary R packges by running
