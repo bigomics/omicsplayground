@@ -1,0 +1,10 @@
+
+2019-04-10	Ivo Kwee
+	* pgx-plotting.R : Correct expmat. Changed plotting of
+	multi-contrasts. Changed ordering of group factors.
+	* pgx-init.R (pgx.initialize) : Removed ordering of samples.
+
+2019-04-09	Ivo Kwee
+	* module-signature.Rmd : Selectable contrasts.
+	* module-intersect.Rmd : Added connectivity graph.
+

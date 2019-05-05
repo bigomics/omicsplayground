@@ -1,0 +1,14 @@
+# ignore everything except
+*
+!CHANGELOG
+!Dockerfile
+!docker/*
+!docs/*
+!ext-pkg/*
+!lib/*
+!pgx/*
+!R/*
+!require.R
+!scripts/*
+!shiny/*
+

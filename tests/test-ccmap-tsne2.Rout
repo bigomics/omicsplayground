@@ -1,0 +1,54 @@
+
+R version 3.4.4 (2018-03-15) -- "Someone to Lean On"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[Previously saved workspace restored]
+
+> setwd("~/Projects/Immunomics/tests/")
+> source("../R/pgx-drugs.R")
+> source("../R/pgx-functions.R")
+> 
+> FILES="../files"
+> X <- readRDS(file=file.path(FILES,"l1000_es_5685drugs.rds"))
+> x.drugs <- gsub("_.*$","",colnames(X))
+> length(table(x.drugs))
+[1] 5685
+> dim(X)
+[1]   1001 136557
+> 
+> avgX <- readRDS(file=file.path(FILES,"l1000_es_5685drugsAVG.rds"))
+> ## jj <- c(grep("torin",colnames(avgX)),1:100)
+> ## avgX <- avgX[,jj]
+> dim(avgX)
+[1] 1001 5685
+> 
+> out <- pgx.computeDrugEnrichment(
++     obj=X[,], X, x.drugs, methods="cor", contrast=NULL)
+Loading required package: fgsea
+Loading required package: Rcpp
+Calculating first level correlation ...
+
+ *** caught segfault ***
+address 0x7f613c626ef8, cause 'memory not mapped'
+
+Traceback:
+ 1: cor(rnk1, rnk2, use = "pairwise")
+ 2: system.time(R1 <- cor(rnk1, rnk2, use = "pairwise"))
+ 3: pgx.computeDrugEnrichment(obj = X[, ], X, x.drugs, methods = "cor",     contrast = NULL)
+An irrecoverable exception occurred. R is aborting now ...
+Segmentation fault (core dumped)

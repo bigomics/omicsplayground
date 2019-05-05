@@ -1,0 +1,884 @@
+Expression {data-orientation=rows}
+================================================================================
+
+Inputs {.sidebar data-width=250}
+--------------------------------------------------------------------------------
+
+<br>
+**Differential Expression Analysis**
+
+<br><br>
+
+```{r}
+selectizeInput("gx_contrast", "Contrast:", choices=NULL)
+selectInput("gx_features","Gene family:", choices=NULL, multiple=FALSE)
+FDR.VALUES = c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
+fillRow( flex=c(1,1),
+        selectInput("gx_fdr","FDR", choices=FDR.VALUES, selected=0.2),
+        selectInput("gx_lfc","logFC threshold", choices=c(0,0.2,0.5,1,2,5), selected=0.5)
+        )
+
+br();br();br();br();br();
+checkboxInput('gx_top10','top 10',FALSE)
+checkboxInput('gx_logscale','log scale',TRUE)
+checkboxInput('gx_ungroup','ungroup',FALSE)
+
+br();br();br();
+GX.DEFAULTTEST="trend.limma"
+GX.DEFAULTTEST=c("trend.limma","edger.qlf","deseq2.wald","edger.lrt")
+br();br();br();
+if(PRO.VERSION) checkboxGroupInput('gx_testmethod','Test methods:', choices=NULL, inline=TRUE)
+
+## update choices upon change of data set 
+observe({
+    ngs <- inputData()
+    contr <- colnames(ngs$model.parameters$contr.matrix)
+    updateSelectizeInput(session, "gx_contrast", choices=sort(contr))
+
+    ##fam <- names(ngs$families)
+    ##fam <- grep("^TISSUE|^COMPARTMENT|^CELLTYPE|^GOCC|^DISEASE|^CUSTOM",names(GSETS),value=TRUE)
+    fam <- pgx.getExtendedFamilies(ngs,10)
+    updateSelectInput(session, "gx_features",choices=fam)
+
+    gx.methods = colnames(ngs$gx.meta$meta[[1]]$fc) ## available
+    sel1 = head(intersect(GX.DEFAULTTEST,gx.methods),3) ## maximum three!!
+    if(PRO.VERSION) updateCheckboxGroupInput(session, 'gx_testmethod',
+                                             choices = sort(gx.methods),
+                                             selected = sel1)
+})
+
+selected_gxmethods <- reactive({
+    ngs <- inputData()
+    gx.methods0 = colnames(ngs$gx.meta$meta[[1]]$fc)
+    test = head(intersect(GX.DEFAULTTEST,gx.methods0),3) ## maximum three
+    if(PRO.VERSION) test = input$gx_testmethod
+    test = intersect(test,gx.methods0) ## maximum three
+    test
+})
+
+```
+
+```{r message=FALSE, warning=FALSE}
+comparison=1;testmethods=c("trend.limma")
+
+getDEGtable <- function(ngs, testmethods, comparison, add.pq) {
+    ##ngs = inputData()
+    if(is.null(ngs)) return(NULL)
+    if(is.null(testmethods)) return(NULL)
+    if(is.null(comparison)) return(NULL)
+    if(length(testmethods)==0 || testmethods=="") return(NULL)
+    if(length(comparison)==0  || comparison=="") return(NULL)
+    
+    ## build meta table
+    mx = ngs$gx.meta$meta[[comparison]]
+    if(is.null(mx)) return(NULL)
+    mm  = colnames(unclass(mx$p))
+    testmethods = intersect(mm, testmethods)
+    
+    mx.p  = unclass(mx$p[,testmethods,drop=FALSE]) ## get rid of AsIs
+    mx.q  = unclass(mx$q[,testmethods,drop=FALSE])
+    mx.fc = unclass(mx$fc[,testmethods,drop=FALSE])
+    ##mx$score = mx$fc * (-log10(1e-100+mx$q) )    
+
+    ## must recompute meta parameters (maxQ method)
+    mx$meta.p = apply(mx.p,1,max,na.rm=TRUE)
+    mx$meta.q = apply(mx.q,1,max,na.rm=TRUE)
+    mx$meta.fx = rowMeans(mx.fc,na.rm=TRUE)  
+    ##mx$meta.score = rowMeans(mx$score,na.rm=TRUE)  
+
+    fdr = 0.05
+    ##fdr = as.numeric(input$gx_fdr)
+    star.symbols = sapply(1:20,function(i) paste(rep("★",i),collapse=""))
+    stars = c("",star.symbols)[ 1 + rowSums(mx.q <= fdr, na.rm=TRUE)]        
+    
+    ## recalculate group averages???
+    y0 <- ngs$model.parameters$exp.matrix[,comparison]
+    AveExpr1 <- rowMeans(ngs$X[rownames(mx),names(which(y0>0)),drop=FALSE])
+    AveExpr0 <- rowMeans(ngs$X[rownames(mx),names(which(y0<0)),drop=FALSE])
+    
+    ##logFC <- unclass(ngs$gx.meta$meta[[comparison]][,"fc"])[,"trend.limma"]
+    logFC <- ngs$gx.meta$meta[[comparison]][,"meta.fx"]
+    ##logFC <- (AveExpr1 - AveExpr0)  ## override ??? yes: see "contrast in R" Rose Maier 2015...
+    ## [hack] adjust averages to match logFC...
+    mean0 <- (AveExpr0+AveExpr1)/2
+    AveExpr1 <- mean0 + logFC/2
+    AveExpr0 <- mean0 - logFC/2
+
+    ##gene.annot = mx[,grep("^gene|^chr",colnames(mx)),drop=FALSE]
+    aa <- intersect(c("gene_name","gene_title","chr"), colnames(ngs$genes))
+    gene.annot <- ngs$genes[rownames(mx),aa]
+    metaq <- mx[,c("meta.q"),drop=FALSE]    
+    res = data.frame( gene.annot, logFC=logFC, stars, metaq, AveExpr0, AveExpr1, check.names=FALSE )
+    
+    if(add.pq) {
+        ## add extra columns
+        ##res <- cbind( res, q=mx$q, p=mx$p)
+        colnames(mx.q) <- paste0("q.",colnames(mx.q))
+        res <- cbind( res, mx.q)
+    }
+    rownames(res) = rownames(mx)
+    return(res)
+}
+
+diffExprTable <- reactive({
+    ## return the full DE table 
+    ngs = inputData()
+    if(is.null(ngs)) return(NULL)
+    comp=1;test="trend.limma"
+    comp = input$gx_contrast
+    gx.methods = colnames(ngs$gx.meta$meta[[1]]$fc)
+    test = head(intersect(GX.DEFAULTTEST,gx.methods),3) ## maximum three
+    if(PRO.VERSION) test = input$gx_testmethod
+    if(is.null(comp)) return(NULL)
+    if(is.null(test)) return(NULL)
+    res = getDEGtable(ngs, testmethods=test, comparison=comp, add.pq=PRO.VERSION)
+    return(res)
+})
+
+sigDiffExprTable <- reactive({
+    ##
+    ## DE table filtered by FDR and gene family
+    ##
+    ##
+    ngs = inputData()
+    if(is.null(ngs)) return(NULL)
+
+    gx_features=1
+    gx_features = input$gx_features
+    if(is.null(gx_features)) return(NULL)
+    ##res = getDEGtable(ngs, testmethods="trend.limma", comparison=1,add.pq=FALSE)
+    res = diffExprTable()
+    if(is.null(res)) return(NULL)
+
+    fdr=1
+    fdr = as.numeric(input$gx_fdr)    
+    qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
+    fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]        
+    pval = res[,qv.col]
+    if(is.null(ngs$families)) stop("FATAL:: no families in object")
+    ##psel = filterProbes(ngs$genes, ngs$families[[gx_features]] )
+    psel = filterProbes(ngs$genes, GSETS[[gx_features]] )
+    res = res[which(pval <= fdr & rownames(res) %in% psel),,drop=FALSE]
+    dim(res)
+
+    ## filter on fold-change    
+    fx.col = grep("fx|fc|sign|NES|logFC",colnames(res))[1]
+    lfc = 1
+    lfc = as.numeric(input$gx_lfc)
+    fx  = as.numeric(res[,fx.col])
+    names(fx) = rownames(res)
+    res = res[which(abs(fx) >= lfc),,drop=FALSE]
+
+    if(nrow(res)==0) {
+        validate(need(nrow(res) > 0, "warning. no genes passed current filters."))
+        return(NULL)
+    }
+    res = res[order(-abs(res[,fx.col])),]
+
+    ## just show top 10
+    if(input$gx_top10) {
+        fx  = as.numeric(res[,fx.col])
+        names(fx) = rownames(res)
+        pp <- unique(c(head(names(sort(-fx[which(fx>0)])),10),
+                       head(names(sort(fx[which(fx<0)])),10)))
+        res = res[pp,,drop=FALSE]
+        res = res[order(-res[,fx.col]),,drop=FALSE]
+    }
+
+    ## limit number of rows
+    res <- head(res, 1000)
+
+    return(res)
+})
+```
+
+Row {.tabset data-height=400}
+--------------------------------------------------------------------------
+
+### Plots 
+
+```{r message=FALSE, warning=FALSE}
+fillRow( flex = c(1,1,1,1), height = 370,
+    ##scatterD3Output('expr_volcano1'),
+    ##scatterD3Output('expr_maplot')
+    plotOutput('expr_volcano1'),
+    plotOutput('expr_maplot'),
+    plotOutput('expr_topgenesbarplot'),
+    plotOutput('expr_topfoldchange')    
+    ##plotOutput('expr_boxplot')
+)
+
+##output$expr_volcano1 <- renderScatterD3({
+output$expr_volcano1 <- renderPlot({
+    comp1=1;fdr=0.10
+
+    comp1 = input$gx_contrast
+    if(length(comp1)==0) return(NULL)
+    if(is.null(input$gx_features)) return(NULL)
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    fdr = 1
+    fdr = as.numeric(input$gx_fdr)
+    
+    res = diffExprTable()
+    if(is.null(res)) return(NULL)
+    lfc=1
+    lfc = as.numeric(input$gx_lfc)
+
+    fam.genes = unique(unlist(GSETS[8]))
+    ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
+    fam.genes = unique(unlist(GSETS[input$gx_features]))
+    jj <- match(toupper(fam.genes),toupper(res$gene_name))
+    sel.genes <- res$gene_name[setdiff(jj,NA)]
+    
+    fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
+    qval = res[,grep("adj.P.Val|meta.q|qval|padj",colnames(res))[1]]
+    qval = pmax(qval, 1e-100)
+    fx = res[,grep("logFC|meta.fx|fc",colnames(res))[1]]
+    sig.genes = fc.genes[which(qval <= fdr & abs(fx) > lfc )]
+    sel.genes = intersect(sig.genes, sel.genes)    
+    xlim = c(-1,1)*max(abs(fx),na.rm=TRUE)
+    ylim = c(0, max(12, 1.1*max(-log10(qval),na.rm=TRUE)))
+    par(mfrow=c(1,1), mar=c(4,3,2,1.5), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
+    gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.genes,
+                      render="canvas", n=5000, nlab=10, 
+                      xlim=xlim, ylim=ylim, ## hi.col="#222222",
+                      use.fdr=TRUE, p.sig=fdr, lfc=lfc,
+                      cex=0.9, lab.cex=1.4, cex.main=1.0,
+                      xlab="effect size (log2.FC)",
+                      ylab="significance (log10.q)",
+                      highlight=sel.genes,
+                      main="Volcano plot")
+
+}, res=80)
+
+##output$expr_maplot <- renderScatterD3({
+output$expr_maplot <- renderPlot({
+    comp1 = input$gx_contrast
+    if(length(comp1)==0) return(NULL)
+
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    fdr=1;lfc=1
+    fdr = as.numeric(input$gx_fdr)    
+    lfc = as.numeric(input$gx_lfc)
+    
+    res = diffExprTable()
+    if(is.null(res)) return(NULL)
+    fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
+    ##pval = res$P.Value
+    ##pval = res[,grep("P.Value|meta.p|pval|p.val",colnames(res))[1]]
+
+    ## filter genes by gene family or gene set
+    fam.genes = unique(unlist(ngs$families[10]))
+    ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
+    fam.genes = unique(unlist(GSETS[input$gx_features]))
+    jj <- match(toupper(fam.genes),toupper(res$gene_name))
+    sel.genes <- res$gene_name[setdiff(jj,NA)]
+
+    qval = res[,grep("adj.P.Val|meta.q|qval|padj",colnames(res))[1]]
+    fx = res[,grep("logFC|meta.fx|fc",colnames(res))[1]]
+    sig.genes = fc.genes[which(qval <= fdr & abs(fx) > lfc )]
+    sel.genes = intersect(sig.genes, sel.genes)    
+    xlim = c(-1,1)*max(abs(fx),na.rm=TRUE)
+    ma = rowMeans( ngs$X[rownames(res),], na.rm=TRUE)
+
+    par(mfrow=c(1,1), mar=c(4,3,2,1.5), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
+    gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.genes, lfc=lfc,
+                      render="canvas", n=5000, nlab=10, 
+                      xlim=xlim, ylim=c(0,15),
+                      xlab="average expression (log2.CPM)",
+                      ylab="effect size (log2.FC)",
+                      ma_plot=TRUE, ma = ma, ## hi.col="#222222",
+                      use.fdr=TRUE, p.sig=fdr, ##main=comp1,
+                      main="MA plot",
+                      cex=0.9, lab.cex=1.4, cex.main=1.0,
+                      highlight=sel.genes)
+}, res=80)
+
+output$expr_topgenesbarplot <- renderPlot({
+    require(RColorBrewer)
+    ngs = inputData()
+    if(is.null(ngs)) return(NULL)
+    comp1 = input$gx_contrast
+    if(length(comp1)==0) return(NULL)
+    
+    ## get table
+    ##sel.row=1;pp=rownames(ngs$X)[1]
+    ##sel.row = input$gx_genetable_rows_selected
+    
+    res = sigDiffExprTable()
+    if(is.null(res)) return(NULL)
+
+    ##fc <- res$meta.fx
+    fc <- res$logFC
+    names(fc) <- rownames(res)
+    top.up <- head(names(sort(fc[which(fc>0)],decreasing=TRUE)),12)
+    top.dn <- head(names(sort(fc[which(fc<0)],decreasing=FALSE)),12)
+    fc.top <- c(fc[top.up], fc[top.dn])
+    klr.pal <- brewer.pal(4,"Paired")
+    klr <- c( rep(klr.pal[1],length(top.up)), rep(klr.pal[2],length(top.dn)) )
+    names(fc.top) <- sub(".*:","",names(fc.top))
+    
+    ii <- order(fc.top)
+    par(mfrow=c(1,1), mar=c(4,4,2,2)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
+    par(mfrow=c(1,1), mar=c(4,3,2,1), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
+    barplot(fc.top[ii], las=3, cex.names=0.8, ylab="fold change",
+            col=klr[ii], ylim=c(-1.1,1.2)*max(abs(fc.top),na.rm=TRUE) )
+
+    groups <- strsplit(comp1,split="_vs_")[[1]]
+    tt <- c( paste("up in",groups[1]), paste("up in",groups[2]) )
+    ##tt <- c( paste("up in",groups[1]), paste("down in",groups[1]) )
+    legend("topleft", legend=tt, fill=klr.pal,cex=0.9, y.intersp=0.85, bty="n")
+    title("top DE genes",cex.main=1)
+    
+}, res=80)
+
+output$expr_topfoldchange <- renderPlot({
+    require(RColorBrewer)
+    ngs = inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    ## get table
+    ##sel=1;pp=rownames(ngs$X)[1]
+    sel = input$gx_genetable_rows_selected
+    if(is.null(sel)) return(NULL)    
+
+    res = sigDiffExprTable()
+    if(is.null(res) || is.null(sel)) return(NULL)
+    gene = rownames(ngs$X)[1]
+    psel <- rownames(res)[sel]
+    gene <- ngs$genes[psel,"gene_name"]
+    
+    ##fc <- res$meta.fx
+    comp=1
+    comp = input$gx_contrast
+    if(is.null(comp) || length(comp)==0) return(NULL)
+    fc <- sapply( ngs$gx.meta$meta, function(x) x[psel,"meta.fx"])
+
+    top.up <- head(names(sort(fc[which(fc>0)],decreasing=TRUE)),10)
+    top.dn <- head(names(sort(fc[which(fc<0)],decreasing=FALSE)),10)
+    fc.top <- c(fc[top.up], fc[top.dn])
+    ii <- order(fc.top)
+    fc.top <- head(c(fc.top[ii], rep(NA,99)),20)
+    klr.pal <- brewer.pal(4,"Paired")
+    ##klr.pal <- BLUERED(16)[c(3,14)]
+    klr <- klr.pal[1 + 1*(sign(fc.top)>0)]
+    
+    par(mfrow=c(1,1), mar=c(4,4,2,2)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
+    par(mfrow=c(1,1), mar=c(8,3,2,1), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
+    nch <- max(nchar(names(fc.top)))
+    m1 <- ifelse(nch > 12, 15, 10)
+    m1 <- ifelse(nch > 30, 20, m1)
+
+    par( mar=c(4,m1,2,0.5) )
+    cex1 <- 1.0
+    nn <- sum(!is.na(fc.top))
+    if(nn>15) cex1 <- 0.92
+    barplot(fc.top, col=klr, horiz=TRUE, las=1,
+            xlim=c(-1,1)*max(abs(fc.top),na.rm=TRUE),
+            cex.names=cex1, xlab="fold change (log2)")
+    title(gene, cex.main=1)
+    
+}, res=75)
+
+output$expr_boxplot <- renderPlot({
+    require(RColorBrewer)
+    ngs = inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    ## get table
+    ##sel=1;pp=rownames(ngs$X)[1]
+    sel = input$gx_genetable_rows_selected
+    if(is.null(sel)) return(NULL)    
+
+    res = sigDiffExprTable()
+    if(is.null(res) || is.null(sel)) return(NULL)
+
+    psel <- rownames(res)[sel]
+    ##gene = sub(".*:","",rownames(res)[sel])
+    gene = ngs$genes[psel,"gene_name"]
+    comp = 1
+    comp = input$gx_contrast
+    grouped <- !input$gx_ungroup
+    logscale <- input$gx_logscale
+    srt <- ifelse(grouped, 0, 30)
+
+    par(mfrow=c(1,1), mar=c(6,4,3,0)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
+    par(mfrow=c(1,1), mar=c(4,3,2,1.5), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
+    pgx.plotGeneExpression(ngs, gene, comp=comp, grouped=grouped,
+                           max.points=2000, names=TRUE,
+                           logscale=logscale, srt=srt)
+
+    
+}, res=80)
+
+```    
+
+### Top genes
+
+```{r message=FALSE, warning=FALSE}
+renderPlot({
+
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    ##res=getDEGtable(ngs, testmethods="trend.limma", comparison=6,add.pq=FALSE)
+    res <- sigDiffExprTable()
+    if(is.null(res) || nrow(res)==0) return(NULL)
+
+    fx.col = grep("fc|fx|mean.diff|logfc|foldchange",tolower(colnames(res)))[1]
+    fx.col
+    fx = res[,fx.col]
+    names(fx) <- rownames(res)
+    top.up=top.down=rownames(ngs$X)
+    top.up   <- names(sort(fx[fx>0],decreasing=TRUE))
+    top.down <- names(sort(fx[fx<0]))
+    head(top.up)
+    head(top.down)
+    
+    y <- ngs$samples$group
+    ngrp = length(unique(y))
+    las = ifelse(ngrp>3, 3, 0)
+    mar1 = ifelse(las==3, 4, 3)
+
+    comp=1;grouped=0;logscale=1
+    comp = input$gx_contrast
+    grouped <- !input$gx_ungroup
+    logscale <- input$gx_logscale
+    
+    srt=30
+    ylab = ifelse(logscale, "log2CPM", "CPM")
+    show.names <- ifelse(!grouped & ngrp>25, FALSE, TRUE)
+    ##nx = ifelse(grouped, ngrp, length(y))
+    nx = ifelse(grouped, 3, length(y))
+    nc = 4
+    nc = 8
+    if( nx <= 3) nc <- 10
+    if( nx > 10) nc <- 5
+    if( nx > 25) nc <- 4
+
+    ##nc <- 10
+    par(mfrow=c(2,nc), mar=c(mar1,3.5,1,1), mgp=c(2,0.8,0), oma=c(0.1,0.6,0,0.6) )
+    i=1
+    for(i in 1:nc) {
+
+        if(i > length(top.up)) break
+        gene = sub(".*:","",top.up[i])
+        pgx.plotGeneExpression(
+            ngs, gene, comp=comp, grouped=grouped, max.points=1000,
+            collapse.others=1, ylab = ylab, xlab="",
+            logscale=logscale, names=show.names, srt=srt, main="")
+        title( gene, cex.main=1, line=-0.6)
+
+    }
+
+    for(i in 1:nc) {
+
+        if(i > length(top.down)) break
+        gene = sub(".*:","",top.down[i])
+        pgx.plotGeneExpression(
+            ngs, gene, comp=comp, grouped=grouped,  max.points=1000,
+            collapse.others=TRUE, ylab = ylab, xlab="",
+            logscale=logscale, names=show.names, srt=srt, main="")
+        title( gene, cex.main=1, line=-0.6)
+        ##qv1 = formatC(qv[gs],format="e", digits=2)
+        ##legend("topright", paste("q=",qv1), bty="n",cex=1)
+    }
+    
+}, res=100)
+```   
+
+
+### Volcano (all)
+	
+```{r message=FALSE, warning=FALSE, fig.width=12, fig.height=12}
+graphics.off()
+renderPlot({
+##rmarkdown::render_delayed({
+        
+    ##comp = names(all.limma)
+    ngs = inputData()
+    if( is.null(ngs)) return(NULL)
+    
+    comp = names(ngs$gx.meta$meta)
+    if(length(comp)==0) return(NULL)
+    if(is.null(input$gx_features)) return(NULL)
+    
+    fdr = 1
+    fdr = as.numeric(input$gx_fdr)
+    lfc = as.numeric(input$gx_lfc)
+
+    sel.genes = GSETS[["<all>"]]
+    ##sel.genes = unique(unlist(ngs$families[input$gx_features]))
+    sel.genes = unique(unlist(GSETS[input$gx_features]))
+
+    ncomp <- length(comp)
+    nr <- ceiling(sqrt(ncomp/3))
+    NC <- 3*nr
+    if(ncomp <= (nr-1)*NC) nr <- (nr-1)
+    par(mfrow=c(nr,NC), mar=c(4,4,2,2)*0)
+
+    ng = length(comp)
+    nn = c(2, max(ceiling(ng/2),5))
+    ##if(ng>12) nn = c(3,8)
+    par(mfrow=nn, mar=c(2,4,2.3,2)*0, mgp=c(2.6,1,0))
+    n = ceiling(sqrt(ng))
+    if(ng>24) {
+        n = max(ceiling(ng/3),6)
+        par(mfrow=c(3,n), mar=c(4,4,2,2)*0)
+    } else if(FALSE && ng <= 3) {
+        par(mfrow=c(1,3), mar=c(4,4,2,2)*0)
+    } else {
+        n = max(ceiling(ng/2),6)
+        par(mfrow=c(2,n), mar=c(4,4,2,2)*0)
+    }
+
+    
+    ##comp <- head(comp,75)  ## maximum 75!!!
+    withProgress(message="computing volcano plots ...", value=0, {
+        i=1
+        for(i in 1:length(comp)) {
+            
+            test = GX.DEFAULTTEST
+            if(PRO.VERSION) test = input$gx_testmethod
+            if(is.null(test)) return(NULL)
+            res = getDEGtable(ngs, testmethods=test, comparison=i, add.pq=PRO.VERSION)
+            
+            fc.gene = res[,grep("^gene$|^gene_name$",colnames(res))]
+            ##pv.col = grep("p.val|pval|meta.p",colnames(res),ignore.case=TRUE)[1]
+            qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
+            fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]
+            qval = res[,qv.col]
+            fx = res[,fx.col]
+            
+            sig.genes = fc.gene[which(qval <= fdr & abs(fx) >= lfc)]
+            ##genes1 = intersect(sig.genes, sel.genes)
+            genes1 = sig.genes[which(toupper(sig.genes) %in% toupper(sel.genes))]
+            gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.gene,
+                              render="canvas", n=1000, nlab=5, 
+                              xlim=NULL, ylim=c(0,15), axes=FALSE, 
+                              use.fdr=TRUE, p.sig=fdr, lfc=lfc,
+                              ##main=comp[i], 
+                              ## ma.plot=TRUE, use.rpkm=TRUE,
+                              cex=0.6, lab.cex=1.5, highlight=genes1)
+
+            is.first = (i%%NC==1)
+            last.row = ( (i-1)%/%NC == (length(comp)-1)%/%NC )
+            if(is.first) axis(2, tcl=0.5, mgp=c(-2,-1.5,0))
+            if(last.row) axis(1, tcl=0.5, mgp=c(-2,-1.5,0))
+            box()
+            legend("topright", legend=comp[i], cex=1.0,bg="white")
+
+            incProgress( 1/length(comp) )
+        }
+    })  ## progress
+
+})
+```
+
+`r if(!PRO.VERSION) {"<!---------------------------------------------"}`
+
+
+### Volcano (methods)
+	
+```{r message=FALSE, warning=FALSE, fig.width=12, fig.height=12}
+##renderScatterD3({
+renderPlot({
+    comp = input$gx_contrast
+    if(is.null(comp)) return(NULL)
+    ngs = inputData()
+    if(is.null(ngs)) return(NULL)
+    if(is.null(input$gx_features)) return(NULL)
+    
+    fdr = 1
+    fdr = as.numeric(input$gx_fdr)
+    lfc = as.numeric(input$gx_lfc)
+    genes = NULL
+    sel.genes = head(ngs$genes$gene_name,100)
+    ##sel.genes = unique(unlist(ngs$families[input$gx_features]))
+    sel.genes = unique(unlist(GSETS[input$gx_features]))
+    
+    ##methods = names(ngs$gx.meta$output)
+    methods = colnames(ngs$gx.meta$meta[[1]]$fc)
+    par(mfrow=c(2,6), mar=c(4,4,2,2)*0)
+    if(length(methods)>12) {
+        par(mfrow=c(3,8), mar=c(4,4,2,2)*0)
+    }
+    
+    ## meta tables
+    mx = ngs$gx.meta$meta[[comp]]
+    fc = unclass(mx$fc)
+    ##pv = unclass(mx$p)
+    qv = unclass(mx$q)
+    ## fc = cbind( meta=mx[,"meta.fx"], fc)
+    ## qv = cbind( meta=mx[,"meta.q"], qv)
+
+    xlim = c(-1.1,1.1)*max(abs(fc))
+    xlim = 1.3*c(-1,1) * quantile(abs(fc),probs=0.999)
+    fc.genes = ngs$genes[rownames(mx),"gene_name"]
+    i=1
+    for(i in 1:min(24,ncol(qv))) {
+        fx = fc[,i]
+        ## pval = pv[,i]
+        qval = qv[,i]
+        sig.genes = fc.genes[which(qval <= fdr & abs(fx) >= lfc)]
+        ##genes1 = intersect(sig.genes, sel.genes)
+        genes1 = sig.genes[which(toupper(sig.genes) %in% toupper(sel.genes))]
+        gx.volcanoPlot.XY(
+            x=fx, pv=qval, gene=fc.genes,
+            render="canvas", n=5000, nlab=5, 
+            xlim=xlim, ylim=c(0,15), axes=FALSE, 
+            use.fdr=TRUE, p.sig=fdr, lfc=lfc,
+            ##main=comp[i], 
+            ## ma.plot=TRUE, use.rpkm=TRUE,
+            cex=0.6, lab.cex=1.5, highlight=genes1)
+        axis(2, tcl=0.5, mgp=c(-2,-1.5,0))
+        axis(1, tcl=0.5, mgp=c(-2,-1.5,0))
+        box()
+        legend("topright", legend=colnames(fc)[i], cex=1.2, bg="white")
+    }
+
+})
+```
+
+
+`r if(!PRO.VERSION) {"------------------------------------------->"}`
+
+
+Row {.tabset data-height=400}
+-------------------------------------------------------------------------------------
+
+### Table
+
+```{r echo=FALSE, warning=FALSE, fig.height=5, fig.width=8}
+fillRow(height = 600, flex = c(2,0.1,1), 
+        dataTableOutput('gx_genetable'), br(),
+        dataTableOutput('gx_gsettable')
+        )
+
+output$gx_genetable <- renderDataTable({
+    res <- sigDiffExprTable()
+    if(is.null(res) || nrow(res)==0) return(NULL)
+    
+    fx.col = grep("fc|fx|mean.diff|logfc|foldchange",tolower(colnames(res)))[1]
+    fx.col
+    fx = res[,fx.col]
+    ##cat("dim.rpt=",dim(rpt),"\n")
+    ##cat("colnames.rpt=",colnames(rpt),"\n")
+    if("gene_title" %in% colnames(res)) res$gene_title = shortstring(res$gene_title,50)
+    rownames(res) = sub(".*:","",rownames(res))
+
+    if(!PRO.VERSION) {
+        kk = grep("meta.fx|meta.fc|meta.p",colnames(res),invert=TRUE)
+        res <- res[,kk,drop=FALSE]
+    }
+
+    numeric.cols <- which(sapply(res, is.numeric))
+    numeric.cols
+   
+    DT::datatable( res, rownames=FALSE,
+                  class = 'compact cell-border stripe hover',                  
+                  extensions = c('Buttons','Scroller'),
+                  selection=list(mode='single', target='row', selected=1),
+                  options=list(
+                      dom = 'Blfrtip',
+                      pageLength = 400,
+                      buttons = list('copy','csv',
+                                     list(extend='pdf',
+                                          pageSize="A3", orientation='landscape', 
+                                          filename="diffexpr-table", title="")),
+                      ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                      scrollX = TRUE, scrollY = 300, scroller=TRUE, deferRender=TRUE
+                  )  ## end of options.list 
+                  ) %>%
+        formatSignif(numeric.cols,4) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
+            DT::formatStyle(colnames(res)[fx.col],
+                            ##background = styleColorBar(c(0,3), 'lightblue'),
+                            background = color_from_middle(fx, 'lightblue', '#f5aeae'),
+                            backgroundSize = '98% 88%',
+                            backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center')
+
+}, server=FALSE)
+
+gx_related_genesets <- reactive({
+    ngs <- inputData()
+    res <- sigDiffExprTable()
+    if(is.null(res) || nrow(res)==0) return(NULL)
+    contr <- input$gx_contrast
+    if(is.null(contr)) return(NULL)
+        
+    ## get table
+    sel.row=1;
+    sel.row = input$gx_genetable_rows_selected
+    if(is.null(sel.row)) return(NULL)
+    gene0 <- rownames(res)[sel.row]
+    gene1 <- sub(".*:","",gene0)
+
+    gset <- names(which(ngs$GMT[gene1,] != 0))
+    if(length(gset)==0) return(NULL)
+    
+    fx <- ngs$gset.meta$meta[[contr]]$meta.fx 
+    names(fx) <- rownames(ngs$gset.meta$meta[[contr]])
+    fx  <- round(fx[gset],digits=4)
+    rho <- cor(t(ngs$gsetX[gset,]), ngs$X[gene0,])[,1]
+    rho <- round(rho, digits=3)
+    gset1 <- substring(gset,1,60)
+    df <- data.frame(geneset=gset1, rho=rho, fx=fx, check.names=FALSE)
+    df <- df[order(-abs(df$fx)),]
+    return(df)
+})
+
+output$gx_gsettable <- DT::renderDataTable({
+    df <- gx_related_genesets()        
+    if(is.null(df)) return(NULL)
+    DT::datatable(df,
+                  class = 'compact cell-border stripe',
+                  rownames=FALSE,
+                  extensions = c('Buttons','Scroller'),
+                  options=list(
+                      dom = 'Blfrtip', 
+                      buttons = list('copy','csv',
+                                     list(extend='pdf', orientation='landscape', pageSize="A3",
+                                          filename="gsea-genes", title="")),
+                      ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                      scrollX = TRUE, ##scrollY = TRUE,
+                      scrollY = 300, scroller=TRUE, deferRender=TRUE
+                  ),  ## end of options.list 
+                  selection=list(mode='single', target='row', selected=1)) %>%
+        ##formatSignif(1:ncol(df),4) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
+            DT::formatStyle("fx", background = color_from_middle( df$fx, 'lightblue', '#f5aeae'))
+}, server=FALSE)
+
+```
+
+### Foldchange (all)
+
+```{r echo=FALSE, warning=FALSE, fig.height=5, fig.width=8}
+fillCol(flex = c(NA), width = "100%", 
+        dataTableOutput('gx_fctable')
+        )
+
+output$gx_fctable <- renderDataTable({
+    ngs <- inputData()
+    res <- sigDiffExprTable()
+    if(is.null(res) || nrow(res)==0) return(NULL)
+
+    ##F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
+    F <- sapply(ngs$gx.meta$meta, function(x) x$meta.fx)
+    dim(F)
+    fc.var = F[,1]**2
+    if(NCOL(F)>1) {
+        fc.var <- round( apply(F,1,var), digits=4)
+    }
+
+    F1 <- data.frame( gene=rownames(F), fc.var=fc.var, round(F,digits=3), check.names=FALSE)
+    F1 <- F1[order(-F1$fc.var),]
+    F1 <- F1[intersect(rownames(F1),rownames(res)),]  ## take intersection of current comparison
+    
+    DT::datatable( F1, rownames=FALSE,
+                  class = 'compact cell-border stripe hover',
+                  ##rownames=FALSE,
+                  extensions = c('Buttons','Scroller'),
+                  selection=list(mode='single', target='row', selected=c(1)),
+                  options=list(
+                      dom = 'Blfrtip', 
+                      buttons = list('copy','csv',
+                                     list(extend='pdf',
+                                          pageSize="A3", orientation='landscape', 
+                                          filename="diffexpr-table", title="")),
+                      ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                      scrollX = TRUE, scrollY = 280, scroller=TRUE, deferRender=TRUE
+                  )  ## end of options.list 
+                  ) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
+            DT::formatStyle( "fc.var",
+                            ##background = styleColorBar(c(0,3), 'lightblue'),
+                            background = color_from_middle( fc.var, 'lightblue', '#f5aeae'),
+                            backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center')  %>%
+            DT::formatStyle( colnames(F),
+                            ##background = styleColorBar(c(0,3), 'lightblue'),
+                            background = color_from_middle(F, 'lightblue', '#f5aeae'),
+                            backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center')
+
+}, server=FALSE)
+```
+
+
+`r if(!PRO.VERSION) {"<!---------------------------------------------"}`
+
+### FDR table
+
+#### Number of significant genes
+
+```{r message=FALSE, warning=FALSE}
+renderDataTable({
+    methods = GX.DEFAULTTEST
+    if(PRO.VERSION) methods = input$gx_testmethod
+    ##methods = input$gx_testmethod
+    if(is.null(methods)) return(NULL)
+
+    ##comp <- input$gx_contrast
+    ngs = inputData()
+
+    kk = rownames(ngs$gx.meta$sig.counts[[1]][[1]])
+    kk = intersect(methods, rownames(ngs$gx.meta$sig.counts[[1]][[1]]))
+    counts.up <- ngs$gx.meta$sig.counts$up
+    counts.down <- ngs$gx.meta$sig.counts$down
+    counts.up <- lapply(counts.up, function(x) x[kk,,drop=FALSE])
+    counts.down <- lapply(counts.down, function(x) x[kk,,drop=FALSE])
+    for(i in 1:length(counts.up)) {
+        rownames(counts.up[[i]]) = paste0(names(counts.up)[i],"::",rownames(counts.up[[i]]))
+        rownames(counts.down[[i]]) = paste0(names(counts.down)[i],"::",rownames(counts.down[[i]]))
+    }
+    sig.up = do.call(rbind, counts.up)
+    sig.down = do.call(rbind, counts.down)
+    
+    sig.up   <- sig.up[order(rownames(sig.up)),,drop=FALSE]
+    sig.down <- sig.down[order(rownames(sig.down)),,drop=FALSE]    
+    colnames(sig.up)[1] = paste("UP   FDR = ",colnames(sig.up)[1])
+    colnames(sig.down)[1] = paste("DOWN   FDR = ",colnames(sig.down)[1])
+    colnames(sig.down) = paste0("  ",colnames(sig.down))
+    sigcount = cbind( sig.down, sig.up[rownames(sig.down),,drop=FALSE] )
+    dim(sigcount)    
+    maxsig = 0.99 * max(sigcount,na.rm=TRUE)
+
+    contr = sub("::.*","",rownames(sigcount))
+    ##contr = rownames(sigcount)
+    metd  = sub(".*::","",rownames(sigcount))
+    D = data.frame( method=metd, contrast=contr, sigcount, check.names=FALSE)
+    
+    DT::datatable( D, rownames=FALSE,
+                  class = 'compact cell-border stripe hover',
+                  options=list(
+                      extensions = c('Buttons','Scroller'),                      
+                      dom = 't',
+                      pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                      scrollX = TRUE, scrollY = 280, scroller=TRUE, deferRender=TRUE
+                  )  ## end of options.list 
+                  ) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
+            DT::formatStyle(colnames(sig.up),
+                            background = styleColorBar(c(0,maxsig), '#f5aeae'),
+                            backgroundSize = '98% 88%',
+                            backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center')  %>%
+            DT::formatStyle(colnames(sig.down),
+                            background = styleColorBar(c(0,maxsig), 'lightblue'),
+                            backgroundSize = '98% 88%',
+                            backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center')
+}, server=FALSE)
+```
+
+
+`r if(!PRO.VERSION) {"------------------------------------------->"}`
+
+

@@ -1,0 +1,892 @@
+Intersect
+================================================================================
+
+Input {.sidebar data-width=250}
+--------------------------------------------------------------------------------
+
+<br> **Intersect analysis**. Compare experiments by intersecting their
+genes. Find similar experiments that show similar signatures.
+
+<br> The **Signature Map** maps your signature and connects them to
+similar experiments.
+
+<br><br>
+
+
+```{r}
+##
+## External calls: selected_gsetmethods(), selected_gxmethods()
+##
+##
+
+selectInput('cmp_comparisons','Comparisons', choices=NULL, multiple=TRUE)
+selectInput("cmp_level","Level", choices=c("gene","geneset"))
+selectInput("cmp_filter","Filter:", choices=NULL, multiple=FALSE)
+FDR.VALUES2 <- c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
+fillRow( flex=c(1,1),        
+        selectInput("cmp_fdr","FDR", choices=FDR.VALUES2, selected=0.2),
+        selectInput("cmp_lfc","logFC threshold", choices=c(0,0.2,0.5,1,2,5), selected=0.2)
+        )
+
+br();br();br();br();br();
+
+## update choices upon change of data set 
+observe({
+    ngs <- inputData()    
+    comparisons <- colnames(ngs$model.parameters$contr.matrix)
+    comparisons <- sort(comparisons)
+    updateSelectInput(session, "cmp_comparisons", choices=comparisons,
+                      selected=head(comparisons,3))
+    ##fam <- pgx.getExtendedFamilies(ngs,10)
+    ##updateSelectInput(session, "cmp_filter", choices=fam)
+
+})
+
+observeEvent(input$cmp_level, {
+    ngs <- inputData()
+    ##flt.choices = names(ngs$families)
+    fam <- pgx.getExtendedFamilies(ngs,10)    
+    if(input$cmp_level=="geneset") {
+        fam = names(COLLECTIONS)
+    }
+    updateSelectInput(session, "cmp_filter", choices=fam)
+})
+
+```
+
+
+```{r warnings=FALSE, message=FALSE}
+
+cmpGetFoldChangeMatrix <- reactive({
+    fc0 = NULL
+    qv0 = NULL
+    ngs <- inputData()
+
+    sel = names(ngs$gset.meta$meta)
+    ##sel = input$cmp_comparisons
+    ##sel = intersect(sel, names(ngs$gset.meta$meta))
+    ##if(length(sel)==0) return(NULL)
+        
+    if(input$cmp_level=="geneset") {
+        gsetmethods <- c("gsva","camera","fgsea")
+        gsetmethods <- selected_gsetmethods()
+        if(length(gsetmethods)<1 || gsetmethods[1]=="") return(NULL)
+
+        ##fc0 = sapply(ngs$gset.meta$meta[sel], function(x)
+        ##    rowMeans(unclass(x$fc)[,gsetmethods,drop=FALSE]))
+        fc0 = sapply(ngs$gset.meta$meta[sel], function(x) x$meta.fx)
+        rownames(fc0) <- rownames(ngs$gset.meta$meta[[1]])
+        qv0 = sapply(ngs$gset.meta$meta[sel], function(x)
+            apply(unclass(x$q)[,gsetmethods,drop=FALSE],1,max))        
+        ##fc0 = sapply(ngs$gset.meta$meta[sel], function(x) unclass(x$fc)[,"gsva"])
+        ##qv0 = sapply(ngs$gset.meta$meta[sel], function(x) unclass(x$q)[,"gsva"])        
+        gsets = unique(unlist(COLLECTIONS[input$cmp_filter]))
+        gsets = intersect(gsets, rownames(fc0))
+        fc0 = fc0[gsets,,drop=FALSE]
+        qv0 = qv0[gsets,,drop=FALSE]
+    } else {
+        gxmethods <- "trend.limma"
+        gxmethods <- c("trend.limma","edger.qlf","deseq2.wald")
+        gxmethods <- selected_gxmethods()  ## reactive object
+        if(length(gxmethods)<1 || gxmethods[1]=="") return(NULL)
+        
+        fc0 = sapply(ngs$gx.meta$meta[sel], function(x) x$meta.fx)
+        rownames(fc0) <- rownames(ngs$gx.meta$meta[[1]])
+        qv0 = sapply(ngs$gx.meta$meta[sel], function(x)
+            apply(unclass(x$q)[,gxmethods,drop=FALSE],1,max))        
+        dim(fc0)
+        dim(qv0)
+        sel.probes = rownames(fc0) 
+        ##sel.probes = filterFamily(ngs$genes, input$cmp_filter, ngs=ngs)
+        sel.probes = filterProbes(ngs$genes, GSETS[[input$cmp_filter]])
+        sel.probes = intersect(sel.probes, rownames(fc0))
+        fc0 = fc0[sel.probes,,drop=FALSE]
+        qv0 = qv0[sel.probes,,drop=FALSE]
+    }    
+    fc0 <- fc0[,!duplicated(colnames(fc0)),drop=FALSE]
+    qv0 <- qv0[,!duplicated(colnames(qv0)),drop=FALSE]
+
+    res = list(fc=fc0, qv=qv0)
+    return(res) 
+})
+
+getSignificanceCalls <- reactive({
+##     getSignificanceCalls <- eventReactive({
+##     input$cmp_comparisons
+##     input$cmp_fdr
+##     input$cmp_lfc
+## }, {
+    ## Gets the matrix of significance calls.
+    ##
+    ngs <- inputData()
+    contr.matrix <- ngs$model.parameters$contr.matrix
+    sel = names(ngs$gset.meta$meta)
+    sel = input$cmp_comparisons
+    sel = intersect(sel, names(ngs$gset.meta$meta))
+    if(length(sel)==0) return(NULL)
+    fdr=0.05;lfc=0.2
+    fdr = as.numeric(input$cmp_fdr)
+    lfc = as.numeric(input$cmp_lfc)
+    
+    res <- cmpGetFoldChangeMatrix()    
+    fc <- res$fc[,sel,drop=FALSE]
+    qv <- res$qv[,sel,drop=FALSE]
+
+    dt = sign(fc) * (qv <= fdr & abs(fc) >= lfc)
+    dt[is.na(dt)] = 0
+    ## add label of venn intersection region
+    dt.labels = LETTERS[1:ncol(dt)]
+    venn.intersection = apply( 1*(dt!=0), 1, function(x)
+        paste(dt.labels[which(x==1)],collapse=""))
+    dt = data.frame( intersection=venn.intersection, dt, check.names=FALSE )
+    return(dt)
+})
+
+getSignificantFoldChangeMatrix <- reactive({
+    ##
+    ## Filters FC matrix with significance and user-defined
+    ## intersection region.
+    ##
+    ##
+    fc0 = NULL
+    dt <- getSignificanceCalls()
+    if(is.null(dt) || nrow(dt)==0) return(NULL)
+    ##if(is.null(input$intersection)) return(NULL)
+    
+    ## only gene at least significant in one group
+    jj = which(rowSums(dt[,2:ncol(dt),drop=FALSE]!=0)>0)
+    if(length(jj)==0) return(NULL)
+    dt = dt[jj,,drop=FALSE]
+    
+    ## check same sign 
+    kk = 1 + match(c("B","C"),LETTERS[1:10])
+    kk = 1 + match(input$intersection,LETTERS[1:10])
+    kk <- intersect(kk, 1:ncol(dt))
+
+    dt1 = dt[,kk,drop=FALSE]    
+    jj = which( rowMeans(sign(dt1)== +1)==1 |
+                (rowMeans(sign(dt1)== -1)==1) )
+    
+    dt = dt[jj,,drop=FALSE]    
+    remove(dt1)
+    
+    ## only genes in the selected intersection
+    intersection="ABC"
+    intersection = paste0(input$intersection,collapse="")
+    dt = dt[which(dt$intersection == intersection),,drop=FALSE]
+    
+    ## filtered by family/collection
+    fc0 = cmpGetFoldChangeMatrix()$fc  
+    fc1 = fc0[intersect(rownames(dt),rownames(fc0)),,drop=FALSE]
+    if(nrow(dt)==1) {
+        fc1 = matrix(fc1,nrow=1)
+        rownames(fc1) <- rownames(dt)
+        colnames(fc1) <- colnames(fc0)
+    }
+    
+    ## only active/selected comparisons
+    sel = colnames(dt)[-1]
+    kk = match(sel,gsub(" \\(-\\)","",colnames(fc1)))
+    fc1 = fc1[,kk,drop=FALSE]
+    
+    return(fc1)
+})
+```
+
+Col {.tabset data-width=600}
+----------------------------------------------------------------------------------------
+
+### Pairs
+
+```{r warnings=FALSE, message=FALSE}
+renderPlot({
+
+    res = cmpGetFoldChangeMatrix()
+    if(is.null(res)) return(NULL)
+    fc0 = res$fc
+    qv0 = res$qv
+    
+    ## match with selection filter
+    ##comp = head(colnames(fc0),2)
+    comp = input$cmp_comparisons
+    if(length(comp)<2) return(NULL)
+    kk = match(comp, colnames(fc0))
+    fc0 = fc0[,kk,drop=FALSE]
+    qv0 = qv0[,kk,drop=FALSE]
+    rownames(fc0) = sub(".*:","",rownames(fc0))
+    rownames(qv0) = sub(".*:","",rownames(qv0))
+    fdr = as.numeric(input$cmp_fdr)
+    lfc = as.numeric(input$cmp_lfc)
+    if(is.null(fdr)) return(NULL)
+    if(is.null(lfc)) return(NULL)
+
+    ##cat("module-compare:: pairs: fdr=",fdr,"\n")
+    ##cat("module-compare:: pairs: lfc=",lfc,"\n")
+    
+    ##plot(0,0)
+    cex=1.2
+    panel.function = function(i, j, ...) {
+        x = fc0[,i]
+        y = fc0[,j]
+        plot(x, y, pch='.', cex=1.5);
+        abline(h=0, v=0, lty=1, lwd=0.5)
+        rho = cor.test(y,x,use="pairwise")
+        abline(a=0, b=1, lty=2)
+        legend("topleft", bty="n", cex=cex, y.intersp=0.8, inset=c(-0.02,0),
+               legend=c(paste("R=",round(rho$estimate,digits=3))))
+    }
+
+    diagpanel.function = function(i, fdr, lfc, ...) {
+        x = fc0[,i]
+        qval = qv0[,i]
+        xlim = c(-1,1)*max(abs(x),na.rm=TRUE)
+        ylim = c(0,12)
+        ylim = c(0, max(12, 1.1*max(-log10(qval),na.rm=TRUE)))
+        ##fdr = 0.05
+        ##lfc = 0.1
+        fc.genes = rownames(fc0)
+        sel.genes = NULL
+        comp1 = colnames(fc0)[i]
+        ##par(mfrow=c(1,1), mar=c(3.2,4,2,2), mgp=c(2,0.8,0) )    
+        gx.volcanoPlot.XY( x=x, pv=qval, gene=fc.genes,
+                          render="canvas", n=5000, nlab=0, 
+                          xlim=xlim, ylim=ylim, ## hi.col="#222222",
+                          use.fdr=TRUE, p.sig=fdr, lfc=lfc,
+                          cex=0.2, lab.cex=1.0, cex.main=1.5,
+                          xlab="fold change (log2)",
+                          ylab="significance (log10q)",
+                          highlight=sel.genes)
+        title(main=comp1, line=-1.5, cex=1.8)
+    }
+
+    fcmax = 1.05*max(abs(fc0))
+    par(mfrow=c(ncol(fc0),ncol(fc0)), mar=c(1.5,1.5,0.5,0.5)*1.3)
+    par( oma=c(1,1,1,1)*1)
+    for(i in 1:ncol(fc0)) {
+        for(j in 1:ncol(fc0)) {
+            if(i==j) {
+                diagpanel.function(i, fdr=fdr, lfc=lfc)
+            } else {
+                panel.function(i, j)
+            }
+        }
+    }
+
+}, res=85)
+```
+
+### Two-pairs
+
+```{r warnings=FALSE, message=FALSE}
+
+require(scatterD3)
+
+fillCol(flex = c(1), height = "100%", 
+        ##inputPanel(
+        ## fillRow(flex = c(0.15, 1, 1), br(),
+        ##     selectInput('cmp_scattervar1',NULL, choices=NULL ),
+        ##     selectInput('cmp_scattervar2',NULL, choices=NULL )
+        ## ),
+        scatterD3Output("cmp_scatter")
+        )
+
+## observe({
+##     ngs <- inputData()
+##     if(is.null(ngs)) return(NULL)
+##     var1 <- var2 <- names(ngs$gx.meta$meta)
+##     other <- ""
+##     ##other <- input$cmp_othersets
+##     if(!is.null(other) && other!="") {
+##         var2 <- colnames(PROFILES$FC)
+##     }
+##     updateSelectInput(session, "cmp_scattervar1",
+##                       choices=var1, selected=var1[1] )
+##     updateSelectInput(session, "cmp_scattervar2",
+##                       choices=var2, selected=var2[2] )
+## })
+
+output$cmp_scatter <- renderScatterD3({
+
+    ##comp = colnames(fc0)[1:2]
+    comp <- as.character(input$cmp_comparisons)
+    if(length(comp) < 2) return(NULL)
+
+    ##fc0 = getSignificantFoldChangeMatrix()
+    res = cmpGetFoldChangeMatrix()
+    fc0 = res$fc
+    qv0 = res$qv
+    if(is.null(fc0)) return(NULL)
+
+    ## match with current selection
+    kk = match(comp, colnames(fc0))
+    if(length(kk)<2) return(NULL)
+    kk = head(kk,2)
+    jj = which(rowSums(is.na(qv0))==0)
+    fc1 = fc0[jj,kk,drop=FALSE]
+    qv1 = qv0[jj,kk,drop=FALSE]
+    ##rownames(fc1) = sub(".*:","",rownames(fc1))
+    
+    ## get significance calls
+    dt <- getSignificanceCalls()
+    if(is.null(dt) || nrow(dt)==0) return(NULL)
+    dt1 = dt[rownames(fc1),colnames(fc1)]
+    ##klr = c("s0","s1","s2")[1 + rowSums(abs(dt1))]
+    klrvar = dt1[rownames(fc1),"intersection"]
+    nsig = rowSums(dt1!=0)
+    klrvar = nsig
+    table(klrvar)
+
+    ## plot
+    df = apply(fc1,1,diff)
+    mf = rowMeans(fc1)
+    abs.fc = rowMeans(fc1**2)
+    jj = head(order(-abs(mf*df)),50)  ## number of labels
+    jj = head(order(-abs.fc),50) ## number of labels
+    rownames(fc1) = sub(".*:","",rownames(fc1))
+    label_text = rep(NA, nrow(fc1))
+    label_text[jj] = rownames(fc1)[jj]
+    tt_sig = apply( abs(dt1), 1, function(x)
+        paste(paste0("sig.",c("A","B"),"= ",c("FALSE","TRUE")[1+x],collapse="<br>")) )
+    tt_text = paste0("<b>",rownames(fc1),"</b><br>",tt_sig)
+
+    hex.klrs = list( "s0"="#AAAAAA", "s1"="#666666", "s2"="#222222")
+    fc0 <- as.numeric(input$cmp_lfc)
+    ablines <- data.frame(
+        slope = c(0,0,Inf,Inf),
+        intercept = c(-fc0, +fc0, -fc0, +fc0),
+        stroke = "#000",
+        stroke_width = 0.8,
+        stroke_dasharray = c(5,5,5,5) )
+
+    xlim = ylim = c(-1,1)*max(abs(fc1))*1.1
+    ii <-  c( head(sample(which(nsig==0)),1000), which(nsig!=0) )
+    scatterD3( fc1[ii,1], fc1[ii,2],
+              col_var=klrvar[ii], ## colors=hex.klrs, 
+              point_size=30, legend_width=0,
+              lab=label_text[ii], labels_size = 15,
+              tooltip_text=tt_text[ii],
+              xlim=xlim, ylim=ylim,
+              lines = ablines,
+              xlab=colnames(fc1)[1], ylab=colnames(fc1)[2] )
+    
+})
+
+```
+
+
+### Correlation
+
+```{r warnings=FALSE, message=FALSE}
+
+fillCol(flex = c(NA,1), 
+        inputPanel(
+            checkboxGroupInput('cmp_corplot_options', NULL,
+                               choices=c('all','fixed'),
+                               selected=c('all'), inline=FALSE ),
+            radioButtons('cmp_corplot_ntop', "top", c("100","1000","all"),
+                         selected="all", inline=TRUE),
+            cellArgs=list(width='80%')
+        ),
+        plotOutput('cmp_corplot')
+        )
+
+output$cmp_corplot <- renderPlot({
+
+    ngs <- inputData()
+    
+    res <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
+    res = cmpGetFoldChangeMatrix()
+    if(is.null(res)) return(NULL)
+    fc0 = res$fc
+    qv0 = res$qv
+
+    ntop <- input$cmp_corplot_ntop
+    if(ntop=="all") ntop <- 999999
+    ntop <- as.integer(ntop)
+    
+    allfc <- ("all" %in% input$cmp_corplot_options)
+    if(!allfc) {
+        comp = input$cmp_comparisons
+        if(length(comp)<2) return(NULL)
+        kk = match(comp, colnames(fc0))
+        fc0 <- fc0[,kk,drop=FALSE]
+    }
+
+    ##R.full <- cor(fc0[,], use="pairwise", method="spearman")
+    R.full <- cor(apply(fc0,2,rank), use="pairwise")
+    jj <- head(order(-rowMeans(fc0**2)),ntop)
+    ##R <- cor(fc0[jj,], use="pairwise", method="spearman")
+    R <- cor(apply(fc0[jj,],2,rank), use="pairwise")
+    R <- round(R,digits=2)
+    
+    notecex=0.001
+    notecex=1.2; cex=1.4
+    if( nrow(R) > 8)  {notecex=1; cex=1.2}
+    if( nrow(R) > 20) {notecex=0.8; cex=1.05}
+    if( nrow(R) > 50) {notecex=0.65; cex=0.9}
+    if( nrow(R) > 80) {notecex=0.0001; cex=0.6}
+
+    mar1 <- c(16,20)*1.2
+    if(nrow(R) <= 8) { mar1=c(16,20)*2 }
+    if(nrow(R) > 30) { mar1=c(16,20)*0.9 }
+    if(nrow(R) > 80) { mar1=c(16,20)*0.6 }    
+    
+    fixed=TRUE
+    fixed <- ("fixed" %in% input$cmp_corplot_options)
+    
+    col <- BLUERED(16)
+    col <- colorpanel(64,"royalblue3","grey90","indianred3")
+    ##col <- tail(BLUERED(16),8)
+    if(min(R,na.rm=TRUE)>=0) col <- tail(col,32)
+    if(max(R,na.rm=TRUE)<=0) col <- head(col,32)
+    
+    if(fixed) {
+        gx.heatmap(R.full, values=R, col=col,
+                   scale="none", mar=mar1, cexRow=cex, cexCol=cex,
+                   cellnote=R, notecex=notecex, notecol="black",
+                   dist.method="euclidean", col.dist.method="euclidean",
+                   keysize=0.4, key=FALSE, zlim=c(-1,1) )
+        
+    } else {
+        gx.heatmap(R, values=NULL, col=col,
+                   scale="none", mar=mar1, cexRow=cex, cexCol=cex,
+                   cellnote=R, notecex=notecex, notecol="black",
+                   dist.method="euclidean", col.dist.method="euclidean",
+                   keysize=0.4, key=FALSE, zlim=c(-1,1) )
+        
+    }
+    
+})
+```
+
+### Connectivity graph
+
+```{r warnings=FALSE, message=FALSE}
+
+fillCol(flex = c(NA,1), 
+        inputPanel(
+            selectInput('cmp_cgraph_gene','Color by:', choices=NULL),
+            sliderInput('cmp_cgraph_threshold','rho:', 0, 1, 0.5),
+            checkboxGroupInput('cmp_cgraph_options', NULL,
+                               choices=c("all","pos.edge"),
+                               selected=c("all"), inline=FALSE ),
+            cellArgs=list(width='80%')
+        ),
+        visNetworkOutput('cmp_cgraph')
+        )
+
+input_cmp_cgraph_threshold <- reactive({
+    input$cmp_cgraph_threshold
+}) %>% debounce(1000)
+
+observe({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    res = cmpGetFoldChangeMatrix()
+    if(is.null(res)) return(NULL)
+    ##genes <- sort(rownames(res$fc))
+    genes <- rownames(res$fc)[order(-rowMeans(res$fc**2))]
+    updateSelectInput(session, "cmp_cgraph_gene", choices=genes)
+})
+
+contrastCmapGraph <- reactive({
+
+    ngs <- inputData()    
+    res <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
+    res = cmpGetFoldChangeMatrix()
+    if(is.null(res)) return(NULL)
+    fc0 = res$fc
+    ##qv0 = res$qv
+    fc0 <- fc0[,!duplicated(colnames(fc0))]
+    
+    allfc <- ("all" %in% input$cmp_cgraph_options)
+    if(!allfc) {
+        comp = input$cmp_comparisons
+        if(length(comp)<2) return(NULL)
+        kk = match(comp, colnames(fc0))
+        fc0 <- fc0[,kk,drop=FALSE]
+    }
+
+    ##R <- cor(fc0, use="pairwise", method="spearman")
+    R <- cor(apply(fc0,2,rank), use="pairwise", method="pearson")
+    dim(R)
+    require(igraph)
+    
+    if("pos.edge" %in% input$cmp_cgraph_options) {
+        R0 <- R*(R > input_cmp_cgraph_threshold())
+    } else {
+        ##R0 <- R*(abs(R) > 0.2)
+        R0 <- R*(abs(R) > input_cmp_cgraph_threshold())
+    }
+    g <- graph_from_adjacency_matrix(
+        R0, weighted=TRUE, diag=FALSE, mode="undirected")
+
+    if(0) {
+        cat("cmp_cgraph:: dim.fc0=",dim(fc0),"\n")
+        fc1 <- cbind(fc0,fc0)
+        fc1 <- fc1 + 1e-3*matrix(rnorm(length(fc1)),nrow(fc1),ncol(fc1))    
+        pos <- Rtsne( t(scale(fc1)), perplexity=3, check_duplicates=FALSE)$Y
+        ##pos <- svd(fc0)$v[,1:2]
+        pos <- pos[1:ncol(fc0),]
+    }
+    g$layout <- layout_with_fr(g, weights=abs(E(g)$weight) )
+    return(g)
+})
+
+
+output$cmp_cgraph <- renderVisNetwork({
+
+    g <- contrastCmapGraph()  ## reactive object
+    res = cmpGetFoldChangeMatrix()
+    if(is.null(res)) return(NULL)
+    
+    E(g)$weight
+    E(g)$color <- c("blue","red")[ 1 + sign(E(g)$weight>0)]
+    E(g)$color <- "grey"
+    E(g)$dashes <- (E(g)$weight<0)
+    wt <- E(g)$weight / max(abs(E(g)$weight))
+    E(g)$width <- 7*abs(wt)
+
+    fc0 = res$fc
+    gene <- rownames(fc0)[1]
+    gene <- input$cmp_cgraph_gene
+    fx <- fc0[gene,V(g)$name]
+    fx <- tanh(2*fx/max(abs(fc0)))
+    V(g)$color = BLUERED(15)[round(8+7*fx)]
+
+    ##visIgraph(g)
+    visIgraph(g, layout="layout.norm", layoutMatrix=g$layout) %>%
+        visNodes( size=18, font=list(size=22) )
+
+})
+```
+
+
+`r if(!PRO.VERSION) {"<!-------------------------------------------------------"}`
+
+
+`r if(!PRO.VERSION) {"--------------------------------------------------------->"}`
+
+
+
+Col  {.tabset data-width=375}
+----------------------------------------------------------------------------------------
+
+### Venn diagram
+
+```{r warnings=FALSE, message=FALSE}
+fillCol(height = "100%", flex = c(1, NA, 0.66), 
+        plotOutput("cmp_venndiagram"),
+        inputPanel(
+            ##selectInput("intersection", "Intersection:", choices=c("A","B","C"), width='150px')
+            checkboxGroupInput('intersection',NULL, choices=c("A","B","C"), inline=TRUE )
+        ),
+        dataTableOutput("intersection_table")
+        )
+
+observeEvent(input$cmp_comparisons, {
+    cmp <- input$cmp_comparisons
+    if(is.null(cmp)) return(NULL)
+    dt.labels = LETTERS[1:length(cmp)]
+    updateCheckboxGroupInput(session, "intersection", choices=dt.labels,
+                             selected=dt.labels, inline=TRUE )    
+})
+
+output$cmp_venndiagram <- renderPlot({
+    
+    dt = getSignificanceCalls()
+    if(is.null(dt) || nrow(dt)==0) return(NULL)
+    
+    dt1 = dt[,2:ncol(dt),drop=FALSE]
+    label = LETTERS[1:ncol(dt1)]
+    colnames(dt1) = label
+    if(ncol(dt1)==1) {
+        dt1 <- cbind(dt1, dt1)
+    }
+    include.mode = "both"
+    include.mode = "up/down"
+    dt1 = dt1[,1:min(5,ncol(dt1))]
+    
+    par(mfrow=c(1,1), mar=c(1,1,3,1)*0, bty="n")
+    par(oma=c(0.1,0,0,0))
+    limma::vennDiagram(
+               dt1,  main="", cex.main=1.2, cex=1.3, mar=c(0,0,2,0),
+               include=c("up","down"), bty="n", fg=grey(0.7),
+               circle.col=c("turquoise", "salmon","lightgreen","orange") )
+    tt = paste(label,"=",colnames(dt)[-1])
+    legend("topleft", legend=tt, bty='n', cex=1.0, y.intersp=0.95,
+           inset=c(0.04,-0.01), xpd=TRUE)
+
+
+})
+
+output$intersection_table <- DT::renderDataTable({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    ## get foldchanges
+    fc0 = getSignificantFoldChangeMatrix()  ## isolate??
+    if(is.null(fc0) || nrow(fc0)==0) return(NULL)
+    fc0 <- fc0[order(-rowMeans(fc0)),,drop=FALSE]
+    
+    fc0 = round(fc0, digits=3)
+    colnames(fc0) = paste0("fc.",LETTERS[1:ncol(fc0)])
+    ##fc0 = data.frame(fc0)
+    
+    ## add gene name/title
+    if(input$cmp_level=="gene") {
+        gene = as.character(ngs$genes[rownames(fc0),"gene_name"])
+        gene.tt = substring( GENE.TITLE[gene],1,50)
+        gene.tt = as.character(gene.tt)
+        ##fc0 = data.frame( name=name, title=gene.tt, fc0)
+        fc0 = data.frame( name=gene, fc0, check.names=FALSE)
+    } else {
+        name = substring(rownames(fc0),1,50)
+        name[is.na(name)] = "NA"
+        fc0 = data.frame(name=name, fc0, check.names=FALSE)
+    }
+
+    D = data.frame( fc0, check.names=FALSE)
+    ##dt <- dt[rownames(fc0),]    
+    ##D <- cbind(intersection=dt$intersection, D)
+    DT::datatable(D, class='compact cell-border stripe',
+                  rownames=FALSE,
+                  extensions = c('Buttons','Scroller'), selection='none',
+                  options=list(
+                      ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
+                      scrollX = TRUE, ## scrollY = TRUE,
+                      scrollY = 230, scroller=TRUE, deferRender=TRUE,
+                      dom = 'Blfrtip',                      
+                      buttons = c('copy','csv')
+                  )  ## end of options.list 
+                  ) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  
+}, server=FALSE)
+
+output$intersection_table.SAVE <- DT::renderDataTable({
+
+    dt <- getSignificanceCalls()
+    if(is.null(dt) || nrow(dt)==0) return(NULL)
+    ##if(is.null(input$region)) return(NULL)
+    ##jj = which(rowMeans(dt!=0)==1)
+    
+    jj = which(rowSums(dt[,2:ncol(dt),drop=FALSE]!=0)>0)
+    if(length(jj)==0) return(NULL)
+    dt = dt[jj,,drop=FALSE]
+    intersection = paste0(input$intersection,collapse="")
+    dt = dt[which(dt$intersection == intersection),,drop=FALSE]
+    if(is.null(dt) || nrow(dt)==0 || ncol(dt) <= 2) return(NULL)
+    
+    ## check same sign 
+    kk = match(c("B","C"),LETTERS[1:10])
+    kk = match(input$intersection,LETTERS[1:10])
+    dt1 = dt[,1+kk,drop=FALSE]    
+    jj = which( rowMeans(sign(dt1)== +1)==1 |
+                (rowMeans(sign(dt1)== -1)==1) ) 
+    dt = dt[jj,,drop=FALSE]    
+    remove(dt1)
+    
+    ## get foldchanges
+    fc0 = getSignificantFoldChangeMatrix()  ## isolate??
+    if(is.null(fc0) || nrow(fc0)==0) return(NULL)
+    jj <- intersect(rownames(dt),rownames(fc0))
+    fc0 = fc0[jj,,drop=FALSE]
+    fc0 <- fc0[order(-rowMeans(fc0)),,drop=FALSE]
+
+    ## take selected only
+    sel = colnames(dt)[-1]
+    kk = match(sel,gsub(" \\(-\\)","",colnames(fc0)))
+    fc0 = fc0[,kk,drop=FALSE]
+    fc0 = round(fc0, digits=3)
+    colnames(fc0) = paste0("fc.",LETTERS[1:ncol(fc0)])
+    ##fc0 = data.frame(fc0)
+    
+    ## add gene name/title
+    genes <- inputData()$genes
+    if(input$cmp_level=="gene") {
+        gene = as.character(genes[rownames(fc0),"gene_name"])
+        gene.tt = substring( GENE.TITLE[gene],1,50)
+        gene.tt = as.character(gene.tt)
+        ##fc0 = data.frame( name=name, title=gene.tt, fc0)
+        fc0 = data.frame( name=gene, fc0, check.names=FALSE)
+    } else {
+        name = substring(rownames(fc0),1,50)
+        name[is.na(name)] = "NA"
+        fc0 = data.frame(name=name, fc0, check.names=FALSE)
+    }
+
+    dt <- dt[rownames(fc0),]    
+    D = data.frame( intersection=dt$intersection, fc0, check.names=FALSE)
+    DT::datatable(D, class='compact cell-border stripe',
+                  rownames=FALSE,
+                  extensions = c('Buttons','Scroller'),
+                  selection='none',
+                  ##filter = list(position = "top"),
+                  options=list(
+                      ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
+                      scrollX = TRUE, ## scrollY = TRUE,
+                      scrollY = 230, scroller=TRUE, deferRender=TRUE,
+                      ##dom = 'Blfrtip',
+                      dom = 'Blfrtip',                      
+                      buttons = c('copy','csv')
+                  )  ## end of options.list 
+                  ) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  
+}, server=FALSE)
+
+```
+
+
+### Volcano
+
+```{r warnings=FALSE, message=FALSE}
+fillCol(height = "100%", flex = c(1, 1), 
+        plotOutput("cmp_volcano1"),
+        ##plotOutput("cmp_volcano2")
+        plotOutput("cmp_fcbarplot")        
+        )
+
+output$cmp_volcano1 <- renderPlot({
+    
+    ngs <- inputData()
+    sel = names(ngs$gx.meta$meta)
+    sel = input$cmp_comparisons
+    if(is.null(sel) || sel[1]=="") return(NULL)
+    sel = intersect(sel, names(ngs$gx.meta$meta))
+    
+    ## GENE LEVEL
+    gxmethods <- "trend.limma"
+    gxmethods <- c("trend.limma","edger.qlf","deseq2.wald")
+    gxmethods <- selected_gxmethods()
+    if(length(gxmethods)<1 || gxmethods[1]=="") return(NULL)
+    
+    ##fc0 = sapply(ngs$gx.meta$meta[sel], function(x) unclass(x$fc)[,"trend.limma"])
+    ##qv0 = sapply(ngs$gx.meta$meta[sel], function(x) unclass(x$q)[,"trend.limma"])
+    fc0 = sapply(ngs$gx.meta$meta[sel], function(x)
+        rowMeans(unclass(x$fc)[,gxmethods,drop=FALSE]))
+    qv0 = sapply(ngs$gx.meta$meta[sel], function(x)
+        apply(unclass(x$q)[,gxmethods,drop=FALSE],1,max))        
+        
+    if(input$cmp_level=="gene") {
+        sel.probes = rownames(fc0) 
+        ##sel.probes = filterFamily(ngs$genes, input$cmp_filter, ngs=ngs)
+        sel.probes = filterProbes(ngs$genes, GSETS[[input$cmp_filter]])
+        sel.probes = intersect(sel.probes, rownames(fc0))
+        fc0 = fc0[sel.probes,,drop=FALSE]
+        qv0 = qv0[sel.probes,,drop=FALSE]
+    }
+    rownames(fc0) = sub(".*:","",rownames(fc0))
+    rownames(qv0) = sub(".*:","",rownames(qv0))
+    fdr=0.001;lfc=2
+    fdr = as.numeric(input$cmp_fdr)
+    lfc = as.numeric(input$cmp_lfc)
+    if(is.null(fdr)) return(NULL)
+    if(is.null(lfc)) return(NULL)
+
+    ## check signs, thresholds
+    sign.fc <- sign(rowMeans(fc0))
+    min.fc <- apply(abs(fc0),1,min) * sign.fc
+    same.sign <- (rowMeans(sign(fc0)==sign.fc)==1)
+    max.qv <- apply(qv0,1,max)
+    fc.genes <- rownames(fc0)
+    in.common <- which( abs(min.fc) >= lfc & max.qv <= fdr & same.sign) 
+    sel.genes <- fc.genes[in.common]
+    ##max.qv[which(!same.sign)] <- 1
+    
+    par(mfrow=c(1,1), mar=c(5,5,3,3), mgp=c(2.4,1,0) )
+    gx.volcanoPlot.XY( x= min.fc, pv= max.qv, gene=fc.genes,
+                      render="canvas", n=5000, nlab=25, 
+                      ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
+                      use.fdr=TRUE, p.sig=fdr, lfc=lfc,
+                      cex=0.5, lab.cex=1.2, cex.main=1.5,
+                      xlab="meta fold change (log2)",
+                      ylab="meta significance (log10q)",
+                      highlight=sel.genes)
+    title(main="common genes", line=1, cex=1.4)
+    
+}, res=80)
+
+output$cmp_fcbarplot <- renderPlot({
+
+    ngs <- inputData()
+    sel = names(ngs$gx.meta$meta)
+    sel = input$cmp_comparisons
+    if(sel[1]=="") return(NULL)
+    sel = intersect(sel, names(ngs$gx.meta$meta))
+
+        
+    ##fc = sapply(ngs$gx.meta$meta[1:3], function(x) x$meta.fx)
+    ##rownames(fc) <- rownames(ngs$gx.meta$meta[[1]])    
+    fc = getSignificantFoldChangeMatrix()  ## isolate??
+    fc <- fc[,sel,drop=FALSE]
+    fc <- fc[order(-rowMeans(fc**2)),,drop=FALSE]
+    fc <- head(fc,30)
+    fc <- fc[order(-rowMeans(fc)),,drop=FALSE]
+    
+    ## add some empty rows (keeps barplot bar-widths equal)
+    fc.na <- matrix(0,nrow=100,ncol=ncol(fc))
+    fc <- rbind(fc,fc.na)
+    fc.top <- head(fc,30)
+    
+    par(mar=c(8,4,2,2))
+    par(mfrow=c(1,1), mar=c(8,5,3,3), mgp=c(2.4,1,0) )
+    fc.sum <- rowSums(fc.top,na.rm=TRUE)
+    ylim <- c( min(c(0,fc.sum)), 1.3*max(fc.sum))
+    barplot(t(fc.top), las=3, ylim=ylim, ylab="cumulative logFC")
+    legend("topright", legend=colnames(fc.top),
+           fill=c("grey20","grey50","grey80"),
+           y.intersp=0.8)
+    
+})
+
+output$cmp_volcano2 <- renderPlot({
+
+    ngs <- inputData()
+    sel = names(ngs$gx.meta$meta)
+    sel = input$cmp_comparisons
+    if(sel[1]=="") return(NULL)
+    sel = intersect(sel, names(ngs$gx.meta$meta))
+    
+    ## GENESET LEVEL
+    fc0 = sapply(ngs$gset.meta$meta[sel], function(x) unclass(x$fc)[,"gsva"])
+    qv0 = sapply(ngs$gset.meta$meta[sel], function(x) unclass(x$q)[,"gsva"])        
+    if(input$cmp_level=="geneset") {
+        gsets = unique(unlist(COLLECTIONS[input$cmp_filter]))
+        gsets = intersect(gsets, rownames(fc0))
+        fc0 = fc0[gsets,,drop=FALSE]
+        qv0 = qv0[gsets,,drop=FALSE]
+    }
+    
+    rownames(fc0) = sub(".*:","",rownames(fc0))
+    rownames(qv0) = sub(".*:","",rownames(qv0))
+    fdr=0.001;lfc=2
+    fdr = as.numeric(input$cmp_fdr)
+    lfc = as.numeric(input$cmp_lfc)
+    if(is.null(fdr)) return(NULL)
+    if(is.null(lfc)) return(NULL)
+
+    ## check signs, thresholds
+    sign.fc <- sign(rowMeans(fc0))
+    min.fc <- apply(abs(fc0),1,min) * sign.fc
+    same.sign <- (rowMeans(sign(fc0)==sign.fc)==1)
+    max.qv <- apply(qv0,1,max)
+    fc.genes <- rownames(fc0)
+    in.common <- which( abs(min.fc) >= lfc & max.qv <= fdr & same.sign) 
+    sel.genes <- fc.genes[in.common]
+    ##max.qv[which(!same.sign)] <- 1
+    
+    par(mfrow=c(1,1), mar=c(4,5,4,3), mgp=c(2.4,1,0) )
+    gx.volcanoPlot.XY( x= min.fc, pv= max.qv, gene=fc.genes,
+                      render="canvas", n=5000, nlab=25, 
+                      ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
+                      use.fdr=TRUE, p.sig=fdr, lfc=lfc,
+                      cex=0.5, lab.cex=1.2, cex.main=1.5,
+                      xlab="meta fold change (log2)",
+                      ylab="meta significance (log10q)",
+                      highlight=sel.genes)
+    title(main="common gene sets", line=1, cex=1.4)
+
+    
+}, res=80)
+
+```

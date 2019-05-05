@@ -1,0 +1,75 @@
+body {
+    // font-family: Arial;
+    font-size: 14px;
+}
+
+.sidebar {
+    font-size: 12px;
+}
+
+.shiny-output-error-validation {
+        color: red;
+}
+
+.form-control {
+    font-size: 12px;
+    padding: 3px 3px;
+    line-height: '70%';
+}
+
+.gene-info-output {
+    font-size: 0.9em;
+    background-color: #dde6f0BB;
+    padding: 10px 10px 10px 10px;    
+}
+
+.action-text #sig_example1 #sig_example2 #sig_example3 {
+    font-size: 0.9em;
+    color: #24A;
+    background-color: transparent;
+    border-style: none;
+    padding: 0
+}
+
+.datatables { font-size: 12px; line-height: '70%'; }
+
+.shiny-input-panel {
+//    margin: -5px 0px -10px 0px;
+//    padding: -10px -10px -10px -10px;
+    font-color: #888;
+    font-size: 0.8em;
+}
+
+.shiny-flow-layout {
+    margin: 0px 0px -17px 0px;
+    font-color: #888;
+    font-size: 0.9em;
+}
+
+.bg-cover-image {
+    background-color: #dde6f0;
+    background-color: #fff;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  padding: 3rem 1rem;
+  text-align: center;
+  font-size: 0.8em;
+}
+
+#loading-content {
+  position: absolute;
+  background: #000000;
+  opacity: 0.9;
+  z-index: 100;
+  left: 0;
+  right: 0;
+  height: 100%;
+  text-align: center;
+  color: #FFFFFF;
+}
+
