@@ -27,8 +27,8 @@ COPY ext-pkg/nclust1_1.9.4.tar.gz \
      ext-pkg/
 
 # Install R packages that are required
-COPY require.R /playground/
-RUN R -e "source('/playground/require.R')"
+COPY requirements.R /playground/
+RUN R -e "source('/playground/requirements.R')"
 
 # Some packages didn't install correctly...
 RUN R -e "install.packages(c('fpc'))"

@@ -100,6 +100,8 @@ getCurrentMarkers <- reactive({
     if(PRO.VERSION) sig_type <- input$sig_type
     if(is.null(sig_type)) return(NULL)
 
+    cat("<signature:getCurrentMarkers> called\n")
+    
     level = "gene"
     features = toupper(ngs$genes$gene_name)
 
@@ -155,8 +157,10 @@ calcSingleSampleValues <- function(X, y, method=c("rho","gsva") ) {
     ##
     ## very fast rank difference
 
+    cat("<signature:calcSingleSampleValues> called\n")
+    
     if(is.null(names(y)) && length(y)!=nrow(X) ) {
-        cat("FATAL ERROR:: calcSingleSampleValues: y must have names if not matched")
+        cat("<signature:calcSingleSampleValues> FATAL ERROR: y must be named if not matched\n")
         return(NULL)
     }
     
@@ -168,14 +172,15 @@ calcSingleSampleValues <- function(X, y, method=c("rho","gsva") ) {
     X <- X[jj,]
     y <- y[jj]
 
+    cat("<signature:calcSingleSampleValues> 1\n")
+    
     if(sum(y!=0)==0) {
-        cat("calcSingleSampleValues:: warning: y is all zero!\n")
+        cat("<signature:calcSingleSampleValues> WARNING: y is all zero!\n")        
         matzero <- matrix(0, nrow=ncol(X), ncol=length(method))
         colnames(matzero) <- method
         rownames(matzero) <- colnames(X)
         return(matzero)
     }
-
     ss.rank <- function(x) scale(sign(x)*rank(abs(x)),center=FALSE)[,1]
     
     S = list()
@@ -183,13 +188,16 @@ calcSingleSampleValues <- function(X, y, method=c("rho","gsva") ) {
         S[["rho"]] <- cor(apply(X, 2, ss.rank), y, use="pairwise")[,1]
         ##S$rho <- scale(S$rho)[,1]  ## should we scale??
     }
+
+    cat("<signature:calcSingleSampleValues> 2\n")
     
     ## calculate GSVA
     if("gsva" %in% method) {
         require(GSVA)
         require(parallel)
         gset = names(y)[which(y!=0)]
-        res.gsva <- GSVA::gsva( X, list("gmt"=gset), method="gsva", parallel.sz=0)
+        gmt <- list("gmt"=gset)
+        res.gsva <- GSVA::gsva( X, gmt, method="gsva", parallel.sz=1) ## parallel=buggy
         res.colnames = colnames(res.gsva)
         fc = as.vector(res.gsva[1,])
         names(fc) = res.colnames
@@ -201,6 +209,9 @@ calcSingleSampleValues <- function(X, y, method=c("rho","gsva") ) {
     } else {
         S1 <- S[[1]]
     }
+
+    cat("<signature:calcSingleSampleValues> done!\n")
+
     S1 = as.matrix(S1)
     rownames(S1) = colnames(X)
     colnames(S1) = s.names
@@ -222,6 +233,9 @@ getSingleSampleEnrichment <- reactive({
     X = ngs$X
     sel = colnames(X)
     X <- X[,sel]
+
+    cat("getSingleSampleEnrichment:: dim.X=",dim(X),"\n")
+    
     ## get the signature
     gset <- strsplit(IMMCHECK.GENES,split=" ")[[1]]
     gset <- ngs$families[[10]]
@@ -242,7 +256,6 @@ getSingleSampleEnrichment <- reactive({
     dim(gX)
     dim(ngs$X)
 
-    cat("getSingleSampleEnrichment:: dim.X=",dim(X),"\n")
     cat("getSingleSampleEnrichment:: dim.gX=",dim(gX),"\n")
     cat("getSingleSampleEnrichment:: len.y=",length(y),"\n")
     
@@ -275,6 +288,8 @@ getSingleSampleEnrichment <- reactive({
         }
     }
 
+    cat("getSingleSampleEnrichment:: done!\n")
+    
     res <- list( by.sample=ss.bysample, by.group=ss.bygroup)
     return(res)
 })
@@ -412,12 +427,16 @@ renderPlot({
     
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
+
+    cat("<signature:Markers> called\n")        
     
     markers <- ngs$families[[10]]
     markers <- COLLECTIONS[[10]]
     markers <- getCurrentMarkers()
     if(is.null(markers)) return(NULL)
 
+    cat("<signature:Markers> 1\n")        
+    
     level = "gene"
     ##markers <- intersect(markers,ngs$genes$gene_name)
     ##jj <- match(markers,ngs$genes$gene_name)
@@ -431,6 +450,8 @@ renderPlot({
         return(NULL)
     }
     
+    cat("<signature:Markers> 2\n")        
+
     ## get t-SNE positions of samples
     pos = ngs$tsne2d[colnames(gx),]
     gx = gx - min(gx,na.rm=TRUE) + 0.001 ## subtract background
@@ -440,10 +461,14 @@ renderPlot({
     gx <- gx[order(-apply(zx,1,sd)),,drop=FALSE]
     rownames(gx) = sub(".*:","",rownames(gx))
 
-
+    cat("<signature:Markers> 3\n")
+    
     ## ---------------- get GSVA values
     res <- getSingleSampleEnrichment()
     if(is.null(res)) return(NULL)
+
+    cat("<signature:Markers> 4\n")
+    
     S <- res$by.sample
     if(NCOL(S)==1) {
         fc = S[,1]
@@ -456,6 +481,8 @@ renderPlot({
     fc1 = tanh(1.0*fc / (1e-4+sd(fc)))
     fc1 = fc1[rownames(pos)]
     
+    cat("<signature:Markers> 5\n")
+
     cex1 = 1.1
     if(nrow(pos) < 30) cex1 = 1.8
     if(nrow(pos) > 200) cex1 = 0.5
@@ -498,7 +525,6 @@ renderPlot({
 
 }, res=100)
 ```
-
 
 ### Enrichment {data-height=800}
 

@@ -611,7 +611,8 @@ mix_computeDiablo <- reactive({
     
     ##if(!is.contrast) return(NULL) ## only contrast for now...    
     if(is.contrast && grepl("_vs_|_VS_",comparison)) {
-        vv <- strsplit(comparison,split="_vs_|_VS_")[[1]]
+        cmp1 <- sub(".*:","",comparison)  ## strip prefix
+        vv <- strsplit(cmp1,split="_vs_|_VS_")[[1]]
         vv
         cat("<mix_computeDiablo> 1:vv=",vv,"\n")
         Y[which(Y=='-1')] <- vv[2]

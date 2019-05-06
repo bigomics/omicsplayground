@@ -143,7 +143,7 @@ pgx.computeComboEnrichment <- function(obj, X, x.drugs,
 {
     require(fgsea)
     if(0) {
-        X <- readRDS(file=file.path(FILES,"l1000_es_5685drugs.rds"))
+        X <- readRDS(file=file.path(FILES,"l1000_es.rds"))
         x.drugs <- gsub("_.*$","",colnames(X))
         length(table(x.drugs))
         dim(X)

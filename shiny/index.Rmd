@@ -21,7 +21,7 @@ library(rmarkdown)
 
 ##setwd("~/Projects/Immunomics/shiny-dev/")
 PRO.VERSION=FALSE
-PRO.VERSION=TRUE
+##PRO.VERSION=TRUE
 
 ## set global folders
 all.dir = c("R","lib","pgx")
@@ -31,6 +31,8 @@ if(all(dir.exists(paste0("../",all.dir)))==TRUE) ROOT=".."
 if(all(dir.exists(all.dir))==TRUE) ROOT="."
 ROOT
 if(is.null(ROOT)) stop("FATAL ERROR: could not fine R/lib/pgx directories")
+cat("setting ROOT to",ROOT,"\n")
+
 RDIR = paste0(ROOT,"/R")
 FILES = paste0(ROOT,"/lib/")
 PGX.DIR = paste0(ROOT,"/pgx/")
@@ -42,15 +44,11 @@ FILES
 PGX.DIR
 
 source("./pgx-init.R", local=TRUE)
-DEV.VERSION = (TRUE && PRO.VERSION)  ## disable/enable DEV options
+##DEV.VERSION = (TRUE && PRO.VERSION)  ## disable/enable DEV options
+DEV.VERSION
 
 if(0) {
-    load("../pgx/GSE10846-dlbcl-mRNA-8k-LT.pgx")    
-    load("../pgx/GSE72056-melanoma-scRNA-vsclusters-s200-8k-LT.pgx")
-    load("../pgx/GSE72056-melanoma-scRNA-vspheno-s100-8k-LT.pgx")   
-    load("../pgx/rieckmann2017-immprot-8k-LT.pgx")    
-    load("../pgx/GSE98638-liver-scRNA-8k-LT.pgx")
-    load("../pgx/GSE22886-immune-mRNA-8k.pgx")    
+    load("../pgx/GSE10846-dlbcl-BC.pgx")    
     ngs <- pgx.initialize(ngs)    
 }
 ```

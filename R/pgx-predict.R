@@ -199,7 +199,8 @@ mixHivePlot <- function(res, ngs, ct, showloops=FALSE, numlab=6, cex=1)
 
 }
 
-mixPlotLoadings <- function(res, showloops=FALSE, cex=1) {
+mixPlotLoadings <- function(res, showloops=FALSE, cex=1)
+{
 
     cat("<mixPlotLoadings> called\n")
     levels <- levels(res$Y)

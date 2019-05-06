@@ -82,7 +82,7 @@ pgx.getGeneCorrelation <- function(gene, xref) {
     return(R)
 }
 
-ngs.save <- function(ngs, file, update.date=TRUE, light=TRUE) {
+ngs.save <- function(ngs, file, update.date=TRUE, light=TRUE, system=FALSE) {
 
     if(update.date||is.null(ngs$date)) ngs$date <- Sys.Date()
 
@@ -96,11 +96,12 @@ ngs.save <- function(ngs, file, update.date=TRUE, light=TRUE) {
         ngs$collections <- NULL
         ## ngs$counts <- NULL
         ngs$gset.meta$matrices <- NULL
-        
+    }
+    if(system==FALSE) {
+        ## remove system (is big...)
         ngs$omicsnet <- NULL
         ngs$omicsnet.reduced <- NULL
     }
-    
     sort(sapply(ngs, object.size)) / 1e9
     sum(sapply(ngs, object.size)) / 1e9        
     
@@ -648,35 +649,39 @@ makeContrastsFromPairs <- function(main.group, ref.group, groups=NULL, compariso
     contr.matrix
 }
 
-makeDirectContrasts <- function(Y, ref) {
+makeDirectContrasts <- function(Y, ref, na.rm=TRUE) {
     contr.matrix <- c()
     i=2
     for(i in 1:ncol(Y)) {
         if(!is.na(ref[i]) && ref[i]!="all" ) {
             x <- as.character(Y[,i])
-            x[is.na(x)] <- "_"
+            x[is.na(x)|x=="NA"] <- "_"
             m1 <- model.matrix( ~ 0 + x)
             colnames(m1) <- sub("^x","",colnames(m1))
             m1 <- m1 - m1[,ref[i]]  ## +1/-1 encoding
             m1 <- m1[,which(colnames(m1)!=ref[i]),drop=FALSE]  ## remove refvsref...
+            m1 <- m1[,!colnames(m1) %in% c("NA","_"),drop=FALSE]
             colnames(m1) <- paste0(colnames(m1),"_vs_",ref[i])
         } else if(!is.na(ref[i]) && ref[i]=="all" ) {
             x <- as.character(Y[,i])
-            x[is.na(x)] <- "_"
+            x[is.na(x)|x=="NA"] <- "_"            
             m1 <- model.matrix( ~ 0 + x)
             colnames(m1) <- sub("^x","",colnames(m1))
             ##m1 <- m1 - m1[,ref[i]]  ## +1/-1 encoding
             m1 <- t(t(m1==1) / colSums(m1==1) - t(m1==0) / colSums(m1==0))
             ##m1 <- m1[,which(colnames(m1)!=ref[i]),drop=FALSE]
+            m1 <- m1[,!colnames(m1) %in% c("NA","_"),drop=FALSE]            
             colnames(m1) <- paste0(colnames(m1),"_vs_all")
         } else {
             levels <- names(table(Y[,i]))
+            levels <- setdiff(levels, c(NA,"NA"))
+            levels
             cc <- makeFullContrasts(levels)
             x <- as.character(Y[,i])
             x[is.na(x)] <- "_"
             mm <- model.matrix( ~ 0 + x)
             colnames(mm) <- sub("^x","",colnames(mm))
-            m1 <- mm %*% cc
+            m1 <- mm[,rownames(cc)] %*% cc
         }
         colnames(m1) <- paste0(colnames(Y)[i],":",colnames(m1))
         contr.matrix <- cbind(contr.matrix, m1)

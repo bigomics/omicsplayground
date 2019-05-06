@@ -3,6 +3,7 @@
 ######################
 .RData
 .Rhistory
+.Rout
 
 # Backup files
 ######################
@@ -12,6 +13,8 @@
 *.SAVE
 *.DEPRECATED
 *.save
+*.out
+*.log
 
 
 # OS generated files #

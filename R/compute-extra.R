@@ -68,15 +68,17 @@ if(1) {
     refmat[["Tissue (HPA)"]] <- readSIG("rna_tissue_matrix.csv")
     refmat[["Tissue (GTEx)"]] <- readSIG("GTEx_rna_tissue_tpm.csv")
     refmat[["Cell line (HPA)"]] <- readSIG("HPA_rna_celline.csv")
-    refmat[["Cell line (CCLE)"]] <- readSIG("CCLE_rna_celline.csv")
+    ## refmat[["Cell line (CCLE)"]] <- readSIG("CCLE_rna_celline.csv")
     refmat[["Cancer type (CCLE)"]] <- readSIG("CCLE_rna_cancertype.csv")
     
     ## list of methods to compute
     methods = DECONV.METHODS
     methods = c("DCQ","DeconRNAseq","I-NNLS","NNLM","cor","CIBERSORT","EPIC","FARDEEP")
     ##methods <- c("DCQ","DeconRNAseq","I-NNLS","NNLM","cor")
-    methods <- c("DCQ","DeconRNAseq","NNLM","cor")    
+    methods <- c("DCQ","DeconRNAseq","I-NNLS","NNLM","cor")
+    ##methods <- c("DCQ","I-NNLS","NNLM","cor")
     ## methods <- c("NNLM","cor")
+    ##if(ncol(ngs$counts)>100) methods <- setdiff(methods,"CIBERSORT")  ## too slow...
     
     counts <- ngs$counts
     rownames(counts) <- toupper(ngs$genes[rownames(counts),"gene_name"])
@@ -130,8 +132,7 @@ if(1) {
     ##source(file.path(RDIR,"pgx-graph.R", local=TRUE)
     cat(">>> Computing drug enrichment...\n")
 
-    X <- readRDS(file=file.path(FILES,"l1000_es_5685drugs.rds"))
-    ## X <- readRDS(file=file.path(FILES,"l1000_es_8221drugs.rds"))
+    X <- readRDS(file=file.path(FILES,"l1000_es.rds"))
     x.drugs <- gsub("_.*$","",colnames(X))
     length(table(x.drugs))
     dim(X)
@@ -167,9 +168,8 @@ if(1) {
 }
 
 ## ------------------ Omics graphs --------------------------------
-if(1){
+if(FALSE){
     cat(">>> computing OmicsGraphs for",rda.file,"\n")
-
     source(file.path(RDIR,"xcr-graph.r"))
     source(file.path(RDIR,"pgx-graph.R"))
 
@@ -181,9 +181,7 @@ if(1){
     ngs$omicsnet.reduced <- pgx.reduceOmicsGraph(ngs)
     ngs$pathscores.reduced <- pgx.computePathscores(ngs$omicsnet.reduced, strict.pos=FALSE)
     ##save(ngs, file=rda.file)
-
 }
-
 
 
 ##-------------------- cleanup -------------------------------------
