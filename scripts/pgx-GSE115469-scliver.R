@@ -289,20 +289,3 @@ rda.file
 cat(">>> output file is:",rda.file,"\n")
 save(ngs, file=rda.file)
 
-## make a light version
-ngs$model.parameters$efit <- NULL
-ngs$gmt.all <- NULL
-ngs$omicsnet <- NULL
-ngs$omicsnet.reduced <- NULL
-ngs$families <- NULL
-ngs$collections <- NULL
-ngs$counts <- NULL
-ngs$gset.meta$matrices <- NULL
-
-rda.file2 <- sub(".pgx$","-LT.pgx",rda.file)
-cat(">>> output file is:",rda.file2,"\n")
-save(ngs, file=rda.file2)
-
-sort(sapply(ngs, object.size)) / 1e9
-sum(sapply(ngs, object.size)) / 1e9
-
