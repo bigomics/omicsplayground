@@ -19,32 +19,17 @@ source("../R/gset-meta.r")
 source("../R/pgx-functions.R")
 source("../R/ngs-cook.r")
 
-FILES="../lib/"
-RDIR="../R/"
+source("options.r")
 
-##FAST=TRUE
-SMALL=8000
-FAST=FALSE
-EXT="8x"
-if(1) {
-    SMALL=8000
-    FAST=TRUE
-    EXT="8k"
-}
-rda.file="../pgx/tenx-pbmc1k.pgx"
-##rda.file="./sallusto2019-th1star.pgx"
-if(SMALL>0) rda.file = sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
 
-PROCESS.DATA=1
-DIFF.EXPRESSION=1
-COMPUTE.EXTRA=1
-
-SAMPLECORRECT=FALSE
+SAMPLECORRECT = FALSE
 EXCLUDE.SAMPLES = NULL
 DOWNSAMPLE = 2000
 ##EXCLUDE.SAMPLES = c("20-Th1star-ut-r3")
 
+rda.file="../pgx/tenx-pbmc1k.pgx"
 rda.file
+
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
 ngs$datatype = "scRNA-seq"
@@ -186,7 +171,6 @@ if(DIFF.EXPRESSION) {
     contr.matrix
 
     ## -------- test genes
-    FAST
     source("../R/pgx-testgenes.R")
     source("../R/pgx-testgenesets.R")
     save(ngs, file=rda.file)
@@ -195,10 +179,8 @@ if(DIFF.EXPRESSION) {
 if(COMPUTE.EXTRA) {
     ## -------- extra stuff
     load(file=rda.file, verbose=1)
-    FILES = "../files/"
     source("../R/pgx-extra.R")
-    save(ngs, file=rda.file)
-    
+    save(ngs, file=rda.file)    
 }
 
 rda.file

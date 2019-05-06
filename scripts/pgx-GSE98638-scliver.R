@@ -20,31 +20,16 @@ source("../R/pgx-graph.R")
 source("../R/xcr-graph.r")
 source("../R/pgx-functions.R")
 
-FILES="../lib/"
-RDIR="../R/"
+source("options.R")
 
-PROCESS.DATA=1
-DIFF.EXPRESSION=1
-TEST.GENESETS=1
-EXTRA.STUFF=1
 COMPARE.CLUSTERS=FALSE
 ##COMPARE.CLUSTERS=TRUE
 DOWNSAMPLE=100
 
-SMALL=8000
-FAST=TRUE
-EXT="8k"
-
-if(0) {
-    SMALL=2000
-    FAST=TRUE
-    EXT="2k"
-}
-
 rda.file="../pgx/GSE98638-liver-scRNA.pgx"
-if(COMPARE.CLUSTERS) rda.file <- sub(".pgx$",paste0("-vsCLUST.pgx"),rda.file)
-if(DOWNSAMPLE>0) rda.file <- sub(".pgx$",paste0("-s",DOWNSAMPLE,".pgx"),rda.file)
-if(SMALL>0) rda.file <- sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
+##if(COMPARE.CLUSTERS) rda.file <- sub(".pgx$",paste0("-vsCLUST.pgx"),rda.file)
+##if(DOWNSAMPLE>0) rda.file <- sub(".pgx$",paste0("-s",DOWNSAMPLE,".pgx"),rda.file)
+##if(SMALL>0) rda.file <- sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -244,8 +229,8 @@ if(DIFF.EXPRESSION) {
 
     ## USER.GENETEST.METHODS=c("trend.limma","deseq2","edger.qlf")
     USER.GENESETTEST.METHODS=c("fisher","gsva","camera","fgsea")
-    source("../R/compute-testgenes.R")
-    source("../R/compute-testgenesets.R")
+    source("../R/compute-genes.R")
+    source("../R/compute-genesets.R")
     source("../R/compute-extra.R")
 
 }

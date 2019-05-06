@@ -20,32 +20,17 @@ source("../R/pgx-graph.R")
 source("../R/xcr-graph.r")
 source("../R/pgx-functions.R")
 
-FILES="../lib/"
-RDIR="../R/"
+source("options.R")
 
-PROCESS.DATA=1
-DIFF.EXPRESSION=1
-TEST.GENESETS=1
-EXTRA.STUFF=1
 COMPARE.CLUSTERS=FALSE
 DOWNSAMPLE=100
 DOWNSAMPLE=-1
 ##COMPARE.CLUSTERS=TRUE
 ##DOWNSAMPLE=100
 
-SMALL=8000
-FAST=TRUE
-EXT="8k"
-if(1) {
-    SMALL=2000
-    FAST=TRUE
-    EXT="2k"
-}
-
 rda.file="../pgx/GSE98638-liver-scRNA.pgx"
 if(COMPARE.CLUSTERS) rda.file <- sub(".pgx$",paste0("-vsCLUST.pgx"),rda.file)
 if(DOWNSAMPLE>0) rda.file <- sub(".pgx$",paste0("-s",DOWNSAMPLE,".pgx"),rda.file)
-if(SMALL>0) rda.file <- sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
 rda.file
 
 ##load(file=rda.file, verbose=1)

@@ -1,4 +1,3 @@
-##rm(list=setdiff(ls(),run.param))
 library(knitr)
 library(limma)
 library(edgeR)
@@ -19,23 +18,10 @@ source("../R/gset-meta.r")
 source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 
-FILES="../lib/"
-RDIR="../R/"
+source("options.R")
+SMALL
 
-PROCESS.DATA=1
-DIFF.EXPRESSION=1
-COMPUTE.EXTRA=1
-
-SMALL=8000
-FAST=TRUE
-EXT="8k"
-if(0) {
-    SMALL=8000
-    FAST=FALSE
-    EXT="8x"
-}
 rda.file="../pgx/rieckmann2017-immprot.pgx"
-if(SMALL>0) rda.file = sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -43,7 +29,7 @@ ngs <- list()  ## empty object
 ngs$name = gsub("^.*pgx/|[.]pgx$","",rda.file)
 ngs$date = date()
 ngs$datatype = "LC-MS proteomics"
-ngs$description = "Proteomics data from 'Social network architecture of human immune cells unveiled by quantitative proteomics' (Rieckmann et al, Nat Immunol. 2017). High-resolution mass-spectrometry-based proteomics to characterize 28 primary human hematopoietic cell populations in steady and activated states."
+ngs$description = "Mass-spectrometry-based proteomics of 28 primary human hematopoietic cell populations in steady and activated states (Rieckmann et al, Nat Immunol. 2017). "
 
 ## READ/PARSE DATA
 if(PROCESS.DATA) {
@@ -193,8 +179,7 @@ if(PROCESS.DATA) {
     ##-------------------------------------------------------------------
     ## take top varying
     ##-------------------------------------------------------------------
-
-    if(0 && SMALL>0) {
+    if(1 && SMALL>0) {
         cat("shrinking data matrices: n=",SMALL,"\n")
         logcpm = edgeR::cpm(ngs$counts, log=TRUE)
         jj <- head( order(-apply(logcpm,1,sd)), SMALL )  ## how many genes?
@@ -288,19 +273,9 @@ if(DIFF.EXPRESSION) {
     t(contr.matrix)
     
     ##contr.matrix = contr.matrix[,1:3]
-    source("../R/compute-testgenes.R")
-    ngs$timings
-
-    source("../R/compute-testgenesets.R")
-    save(ngs, file=rda.file)
-
-}
-
-if(COMPUTE.EXTRA) {
-
-    load(file=rda.file, verbose=1)
+    source("../R/compute-genes.R")
+    source("../R/compute-genesets.R")
     source("../R/compute-extra.R")
-    save(ngs, file=rda.file)
 
 }
 
