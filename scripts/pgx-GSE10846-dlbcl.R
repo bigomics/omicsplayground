@@ -20,7 +20,7 @@ source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 source("../R/ngs-functions.R")
 
-FILES="../files/"
+FILES="../lib/"
 RDIR="../R/"
 
 PROCESS.DATA=1
@@ -50,15 +50,15 @@ if(PROCESS.DATA) {
 
     ## ##############################################################
     ##   Differential expression analysis with limma
+    if(0) {
+        BiocManager::install("hgu133plus2.db")
+        BiocManager::install("GEOquery")
+    }
     library(Biobase)
     library(GEOquery)
     library(limma)
-    if(0) {
-        source("https://bioconductor.org/biocLite.R")
-        biocLite("hgu133plus2.db")
-    }
     library(hgu133plus2.db)
-
+    
     ## load series and platform data from GEO
     gset <- getGEO("GSE10846", GSEMatrix =TRUE, AnnotGPL=TRUE)
     length(gset)

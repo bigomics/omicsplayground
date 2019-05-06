@@ -20,7 +20,7 @@ source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 source("../R/ngs-functions.R")
 
-FILES="../files/"
+FILES="../lib/"
 RDIR="../R/"
 
 PROCESS.DATA=1

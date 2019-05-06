@@ -19,7 +19,7 @@ source("../R/gset-meta.r")
 source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 
-FILES="../files/"
+FILES="../lib/"
 RDIR="../R/"
 
 PROCESS.DATA=1
