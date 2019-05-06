@@ -19,24 +19,8 @@ source("../R/gset-meta.r")
 source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 
-FILES="../lib/"
-RDIR="../R/"
-
-PROCESS.DATA=1
-DIFF.EXPRESSION=1
-COMPUTE.EXTRA=1
-
-SMALL=8000
-FAST=TRUE
-EXT="8k"
-
-if(0) {
-    SMALL=2000
-    FAST=TRUE
-    EXT="2k"
-}
-rda.file="../pgx/GSE22886-immune-mRNA.pgx"
-if(SMALL>0) rda.file = sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
+source("options.R")
+rda.file="../pgx/GSE22886-immune.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -267,8 +251,8 @@ if(DIFF.EXPRESSION) {
     USER.GENESETTEST.METHODS=c("gsva","fisher","camera","fgsea")
 
     ##contr.matrix = contr.matrix[,1:3]
-    source("../R/compute-testgenes.R")
-    source("../R/compute-testgenesets.R")
+    source("../R/compute-genes.R")
+    source("../R/compute-genesets.R")
     source("../R/compute-extra.R")
 
 }

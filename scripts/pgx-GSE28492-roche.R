@@ -19,23 +19,10 @@ source("../R/gset-meta.r")
 source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 
-FILES="../lib/"
-RDIR="../R/"
+source("options.R")
 
-PROCESS.DATA=1
-DIFF.EXPRESSION=1
-PROCESS.DATA=1
-DIFF.EXPRESSION=1
-
-if(0) {
-    SMALL=4000
-    FAST=TRUE
-    EXT="4k"
-}
-
-##rda.file="../files/rieckmann2017-immprot.pgx"
 rda.file="../pgx/GSE28492-roche-miRmRNA.pgx"
-if(SMALL>0) rda.file = sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
+##if(SMALL>0) rda.file = sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -43,7 +30,7 @@ ngs <- list()  ## empty object
 ngs$name = gsub("^.*pgx/|[.]pgx$","",rda.file)
 ngs$date = date()
 ngs$datatype = "mRNA + miRNA (microarray)"
-ngs$description = "GSE28492 combined mRNA+microRNA expression data set from the paper 'Expression profiling of human immune cell subsets identifies miRNA-mRNA regulatory relationships correlated with cell type specific expression' (Allantaz et al., PLoS One 2012). Blood consists of different cell populations with distinct functions and correspondingly, distinct gene expression profiles. Global mRNA expression profiling was performed across a panel of nine human immune cell subsets (neutrophils, eosinophils, monocytes, B cells, NK cells, CD4 T cells, CD8 T cells, mDCs and pDCs) to identify cell-type specific microRNA expression. mRNA expression profiling was performed on the same samples, to determine if miRNAs specific to certain cell types down-regulated expression levels of their target genes."
+ngs$description = "GSE28492 combined mRNA+microRNA expression profiling across a panel of nine human immune cell subsets: neutrophils, eosinophils, monocytes, B cells, NK cells, CD4 T cells, CD8 T cells, mDCs and pDCs (Allantaz et al., PLoS One 2012)."
 
 ## READ/PARSE DATA
 if(PROCESS.DATA) {
@@ -343,15 +330,13 @@ if(DIFF.EXPRESSION) {
 
     ##contr.matrix = contr.matrix[,1:3]
     source("../R/pgx-testgenes.R")
-
     source("../R/pgx-testgenesets.R")
-
     source("../R/pgx-extra.R")
 
 }
 
 cat("Finished! Writing final object to file: ",rda.file,"\n")
-save(ngs, file=rda.file)
+ngs.save(ngs, file=rda.file)
 
 
 

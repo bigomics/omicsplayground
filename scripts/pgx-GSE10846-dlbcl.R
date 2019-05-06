@@ -228,21 +228,14 @@ if(DIFF.EXPRESSION) {
     dim(contr.matrix)
     head(contr.matrix)
 
-    FAST
-    USER.GENETEST.METHODS=c("trend.limma","deseq2.wald","edger.qlf")
-    USER.GENESETTEST.METHODS=c("gsva","fisher","camera","fgsea")
-    ##USER.GENESETTEST.METHODS=c("gsva","fisher","camera","fgsea","fry","spearman")
+    ##USER.GENETEST.METHODS=c("trend.limma","deseq2.wald","edger.qlf")
+    ##USER.GENESETTEST.METHODS=c("gsva","fisher","camera","fgsea")
+    USER.GENESETTEST.METHODS = "*"
+    USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
 
     ##contr.matrix = contr.matrix[,1:3]
-    source("../R/compute-testgenes.R")
-    source("../R/compute-testgenesets.R")
-
-    save(ngs, file=rda.file)
-}
-
-if(COMPUTE.EXTRA) {        
-
-    load(file=rda.file, verbose=1)
+    source("../R/compute-genes.R")
+    source("../R/compute-genesets.R")
     source("../R/compute-extra.R")
     save(ngs, file=rda.file)
 }

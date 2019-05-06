@@ -20,22 +20,11 @@ source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 source("../R/ngs-functions.R")
 
-FILES="../lib/"
-RDIR="../R/"
-
-PROCESS.DATA=1
-DIFF.EXPRESSION=1
-COMPUTE.EXTRA=1
+source("options.R")
 
 BATCH.CORRECT=1
-SMALL=8000
-FAST=TRUE
-EXT="8k"
-
 rda.file="../pgx/GSE32591-lupusnephritis.pgx"
-##rda.file="../pgx/GSE10846-dlbcl-mRNAxc.pgx"
 if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
-if(SMALL>0) rda.file = sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -197,15 +186,14 @@ if(DIFF.EXPRESSION) {
     ##    ref=c("GCB","male",NA))
     contr.matrix
 
-    FAST
     USER.GENETEST.METHODS=c("trend.limma","deseq2.wald","edger.qlf")
     USER.GENESETTEST.METHODS=c("gsva","fisher","camera","fgsea")
     ##USER.GENETEST.METHODS="*"
     ##USER.GENESETTEST.METHODS=c("gsva","fisher","camera","fgsea","fry","spearman")
 
     ##contr.matrix = contr.matrix[,1:3]
-    source("../R/compute-testgenes.R")
-    source("../R/compute-testgenesets.R")
+    source("../R/compute-genes.R")
+    source("../R/compute-genesets.R")
     source("../R/compute-extra.R")
 }
 

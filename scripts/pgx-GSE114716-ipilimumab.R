@@ -1,13 +1,3 @@
-##rm(list=setdiff(ls(),run.param))
-library(knitr)
-library(limma)
-library(edgeR)
-library(RColorBrewer)
-library(gplots)
-library(matrixTests)
-library(kableExtra)
-library(knitr)
-
 source("../R/gx-heatmap.r")
 source("../R/gx-limma.r")
 source("../R/gx-util.r")
@@ -20,22 +10,11 @@ source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 source("../R/ngs-functions.R")
 
-FILES="../lib/"
-RDIR="../R/"
-
-PROCESS.DATA=1
-DIFF.EXPRESSION=1
-COMPUTE.EXTRA=1
+source("options.R")
 
 BATCH.CORRECT=1
-SMALL=8000
-FAST=TRUE
-EXT="8k"
-
 rda.file="../pgx/GSE114716-ipilimumab.pgx"
-##rda.file="../pgx/GSE10846-dlbcl-mRNAxc.pgx"
 if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
-if(SMALL>0) rda.file = sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -73,7 +52,7 @@ if(PROCESS.DATA) {
     
     ## merge data sets
     ##X = exprs(gset)
-    counts <- read.csv("../data/GSE/GSE114716_raw.counts.hs.csv")
+    counts <- read.csv("../ext-data/GSE114716_raw.counts.hs.csv")
     genes <- counts[,1]
     X = apply(counts[,-1], 2, function(x) tapply(x, genes, sum))
     dim(X)
@@ -171,15 +150,8 @@ if(DIFF.EXPRESSION) {
         levels = levels)
     contr.matrix
 
-    FAST
-    USER.GENETEST.METHODS=c("trend.limma","deseq2.wald","edger.qlf")
-    USER.GENESETTEST.METHODS=c("gsva","fisher","camera","fgsea")
-    ##USER.GENETEST.METHODS="*"
-    ##USER.GENESETTEST.METHODS=c("gsva","fisher","camera","fgsea","fry","spearman")
-
-    ##contr.matrix = contr.matrix[,1:3]
-    source("../R/compute-testgenes.R")
-    source("../R/compute-testgenesets.R")
+    source("../R/compute-genes.R")
+    source("../R/compute-genesets.R")
     source("../R/compute-extra.R")
 }
 

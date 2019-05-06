@@ -20,21 +20,8 @@ source("../R/pgx-graph.R")
 source("../R/xcr-graph.r")
 source("../R/pgx-functions.R")
 
-FILES="../lib/"
-RDIR="../R/"
-
-PROCESS.DATA=1
-DIFF.EXPRESSION=1
-TEST.GENESETS=1
-EXTRA.STUFF=1
-##DOWNSAMPLE=100
-
-SMALL=8000
-FAST=TRUE
-EXT="8k"
-
+source("options.R")
 rda.file="../pgx/GSE88808-prostate.pgx"
-if(SMALL>0) rda.file <- sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -47,9 +34,9 @@ ngs$description = "GSE88808 data set. Gleason-score matched tumor and adjacent n
 ## READ/PARSE DATA
 if(PROCESS.DATA) {
 
-    ## ##############################################################
-    ##   Differential expression analysis with limma
-    ##BiocManager::install("GEOquery", version = "3.8")
+    ################################################################
+    ## Differential expression analysis with limma
+    ## BiocManager::install("GEOquery", version = "3.8")
     library(Biobase)
     library(GEOquery)
     library(data.table)
@@ -135,8 +122,8 @@ if(DIFF.EXPRESSION) {
     USER.GENETEST.METHODS=c("trend.limma","deseq2.wald","edger.qlf")
     ## USER.GENETEST.METHODS=c("trend.limma","deseq2","edger.qlf")
     USER.GENESETTEST.METHODS=c("fisher","gsva","camera","fgsea")
-    source("../R/compute-testgenes.R")
-    source("../R/compute-testgenesets.R")
+    source("../R/compute-genes.R")
+    source("../R/compute-genesets.R")
     source("../R/compute-extra.R")
    
 }

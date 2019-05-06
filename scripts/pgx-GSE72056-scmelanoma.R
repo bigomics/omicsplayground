@@ -1,4 +1,3 @@
-##rm(list=setdiff(ls(),run.param))
 library(knitr)
 library(limma)
 library(edgeR)
@@ -21,7 +20,9 @@ source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 
 source("options.R")
-SMALL
+MAX.GENES
+MAX.SAMPLES
+
 COMPARE="group"
 COMPARE="clusters"
 COMPARE="pheno"
@@ -52,10 +53,11 @@ if(PROCESS.DATA) {
     ##--------------------------------------------------------------
     ## Read SC counts
     ##--------------------------------------------------------------
-    if(0) {
+    datafile <- "/tmp/GSE72056_melanoma_single_cell_revised_v2.txt.gz"
+    if(!file.exists(datafile)) {
         system("wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE72nnn/GSE72056/suppl/GSE72056_melanoma_single_cell_revised_v2.txt.gz -P /tmp")
     }
-    counts = fread("/tmp/GSE72056_melanoma_single_cell_revised_v2.txt.gz",nrow=-1000)
+    counts = fread(datafile,nrow=-1000)
     dim(counts)
     head(counts)[,1:4]
     annot  <- data.frame(counts[1:3,2:ncol(counts)], check.names=FALSE)
@@ -96,7 +98,7 @@ if(PROCESS.DATA) {
     x1[1:3,1:3]
     counts = x1
     remove(x1)
-
+    
     ##--------------------------------------------------------------
     ## gene annotation
     ##--------------------------------------------------------------
@@ -181,7 +183,7 @@ if(PROCESS.DATA) {
         sel <- list()
         for(u in unique(sampleTable$group)) {
             ii <- which(sampleTable$group == u)
-            if(length(ii) <= 5) next
+            if(length(ii) <= 10) next
             sel[[u]] <- head(sample(ii, prob=wt[ii]),DOWNSAMPLE)
         }
         sel <- as.vector(unlist(sel))
@@ -190,6 +192,7 @@ if(PROCESS.DATA) {
         
         counts <- counts[,sel]
         sampleTable <- sampleTable[colnames(counts),]
+        sampleTable$group <- as.character(sampleTable$group)
         table(sampleTable$group)
         dim(counts)
     }
@@ -299,8 +302,7 @@ if(DIFF.EXPRESSION) {
     }
     
     head(contr.matrix)
-    FAST
-    USER.GENETEST.METHODS=c("trend.limma","edger.qlf","deseq2.wald")
+    ##USER.GENETEST.METHODS=c("trend.limma","edger.qlf","deseq2.wald")
     USER.GENETEST.METHODS=c("trend.limma","edger.qlf","edger.lrt")
     USER.GENESETTEST.METHODS=c("gsva","camera","fgsea")
     ##USER.GENETEST.METHODS="*"
@@ -310,7 +312,6 @@ if(DIFF.EXPRESSION) {
     source("../R/compute-genes.R")
     source("../R/compute-genesets.R")
     source("../R/compute-extra.R")
-
 }
 
 rda.file
