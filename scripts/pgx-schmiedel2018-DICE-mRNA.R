@@ -19,6 +19,9 @@ source("../R/gset-meta.r")
 source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 
+FILES="../lib/"
+RDIR="../R/"
+
 PROCESS.DATA=1
 DIFF.EXPRESSION=1
 COMPUTE.EXTRA=1

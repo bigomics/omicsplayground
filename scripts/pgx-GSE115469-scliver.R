@@ -20,6 +20,9 @@ source("../R/pgx-graph.R")
 source("../R/xcr-graph.r")
 source("../R/pgx-functions.R")
 
+FILES="../lib/"
+RDIR="../R/"
+
 PROCESS.DATA=1
 DIFF.EXPRESSION=1
 TEST.GENESETS=1
@@ -278,7 +281,6 @@ if(DIFF.EXPRESSION) {
     save(ngs, file=rda.file)
     
     ## -------------- extra analysis ------------------------------------------
-    FILES = "../files/"
     source("../R/pgx-extra.R")
 
 }

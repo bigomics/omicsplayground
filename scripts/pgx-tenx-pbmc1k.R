@@ -19,6 +19,9 @@ source("../R/gset-meta.r")
 source("../R/pgx-functions.R")
 source("../R/ngs-cook.r")
 
+FILES="../lib/"
+RDIR="../R/"
+
 ##FAST=TRUE
 SMALL=8000
 FAST=FALSE
