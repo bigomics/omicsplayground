@@ -20,24 +20,13 @@ source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 source("../R/ngs-functions.R")
 
-FILES="../lib/"
-RDIR="../R/"
-
-PROCESS.DATA=1
-DIFF.EXPRESSION=1
-COMPUTE.EXTRA=1
-
-BATCH.CORRECT=0
-SMALL=8000
-FAST=TRUE
-EXT="8k"
+source("options.R")
 
 BATCH.CORRECT=TRUE
 
-rda.file="../pgx/GSE10846-dlbcl-mRNA.pgx"
+rda.file="../pgx/GSE10846-dlbcl.pgx"
 ##rda.file="../pgx/GSE10846-dlbcl-mRNAxc.pgx"
-if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BCdc.pgx"),rda.file)
-if(SMALL>0) rda.file = sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
+if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -247,7 +236,15 @@ if(DIFF.EXPRESSION) {
     ##contr.matrix = contr.matrix[,1:3]
     source("../R/compute-testgenes.R")
     source("../R/compute-testgenesets.R")
+
+    save(ngs, file=rda.file)
+}
+
+if(COMPUTE.EXTRA) {        
+
+    load(file=rda.file, verbose=1)
     source("../R/compute-extra.R")
+    save(ngs, file=rda.file)
 }
 
 ## save
