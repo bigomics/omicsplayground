@@ -159,17 +159,6 @@ pgx.inferGender <- function(X, gene_name=NULL) {
 ##counts=ngs$counts
 pgx.multiDeconvolution <- function(counts, refmat, methods=DECONV.METHODS)
 {
-    ##dconvmethods = DECONV.METHODS
-    ##dconvmethods = setdiff(DECONV.METHODS,c("EPIC","FARDEEP"))
-    ##dconvmethods
-    
-    ## refmat <- list()
-    ## require(FARDEEP)
-    ## refmat[["LM22"]] <- LM22
-    ## refmat[["ImmProt"]] <- read.csv(file.path(FILES,"immprot-signature1000.csv"),row.names=1)
-    ## refmat[["DICE"]] <- read.csv(file.path(FILES,"DICE-signature1000.csv"),row.names=1)
-    ## refmat[["ImmunoStates"]] <- read.csv(file.path(FILES,"ImmunoStates_matrix.csv"),row.names=1)
-
     methods
     timings <- c()
     results <- list()
@@ -239,11 +228,13 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
             try( ciber.out <- CIBERSORT(ref, mat, perm=0, QN=TRUE) )
         )
         if(!is.null(ciber.out)) {
+            timings[["CIBERSORT"]] <- stime
+            cat("deconvolution using CIBERSORT took",stime[3],"s\n")
             ciber.out <- ciber.out[,!(colnames(ciber.out) %in% c("P-value","Correlation","RMSE"))]
             results[["CIBERSORT"]] <- ciber.out
+        } else {
+            cat("WARNING:: CIBERSORT failed\n")            
         }
-        timings[["CIBERSORT"]] <- stime
-        cat("deconvolution using CIBERSORT took",stime[3],"s\n")
     }
 
     if(FALSE && "FARDEEP" %in% methods) {
@@ -255,9 +246,13 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
                                  low=1, nn=TRUE, intercept=TRUE, lognorm=TRUE,
                                  permn=100, QN=TRUE)
         ))
-        if(!is.null(fd.result)) results[["FARDEEP"]] = fd.result$abs.beta
-        timings[["FARDEEP"]] <- stime
-        cat("deconvolution using FARDEEP took",stime[3],"s\n")
+        if(!is.null(fd.result)) {
+            timings[["FARDEEP"]] <- stime
+            cat("deconvolution using FARDEEP took",stime[3],"s\n")
+            results[["FARDEEP"]] = fd.result$abs.beta
+        } else {
+            cat("WARNING:: FARDEEP failed\n")            
+        }
     }
 
     if("EPIC" %in% methods) {
@@ -273,12 +268,14 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
             out <- EPIC(bulk = mat1[,], reference = ref.list)
         ))
         remove(mat1)
-        cat("deconvolution using EPIC took",stime[3],"s\n")
-        timings[["EPIC"]] <- stime
         if(!is.null(out)) {
+            cat("deconvolution using EPIC took",stime[3],"s\n")
+            timings[["EPIC"]] <- stime
             out.mat <- out[["cellFractions"]]
             rownames(out.mat) <- colnames(mat)
             results[["EPIC"]] <- out.mat
+        } else {
+            cat("WARNING:: EPIC failed\n")
         }
     }
 
@@ -288,18 +285,21 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
         ##BiocManager::install("DeconRNASeq")
         if("package:Seurat" %in% search()) detach("package:Seurat", unload=TRUE)
         library(DeconRNASeq)
+        ## uses pca() from pcaMethods        
         drs <- NULL
         stime <- system.time(
             drs <- try(DeconRNASeq(data.frame(mat, check.names=FALSE),
                                    data.frame(ref, check.names=FALSE))$out.all)
         )
         timings[["DeconRNAseq"]] <- stime
-        cat("deconvolution using DeconRNAseq took",stime[3],"s\n")
         class(drs)
         if(!is.null(drs) && class(drs)!="try-error") {
+            cat("deconvolution using DeconRNAseq took",stime[3],"s\n")
             rownames(drs) <- colnames(mat)
             ##colnames(drs) <- colnames(ref)
             results[["DeconRNAseq"]] <- drs
+        } else {
+            cat("WARNING:: DeconRNAseq failed\n")
         }
     }
 
@@ -316,10 +316,12 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
                     alpha_used=0.05, lambda_min=0.2, number_of_repeats=3,
                     precent_of_data=1.0)
             ))
-        timings[["DCQ"]] <- stime
-        cat("deconvolution using DCQ took",stime[3],"s\n")
         if(!is.null(res.dcq) && class(res.dcq)!="try-error") {
+            timings[["DCQ"]] <- stime
+            cat("deconvolution using DCQ took",stime[3],"s\n")
             results[["DCQ"]] <- res.dcq$average
+        } else {
+            cat("WARNING:: DCQ failed\n")
         }
     }
 

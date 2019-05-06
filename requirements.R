@@ -1,7 +1,7 @@
 ##source("http://bioconductor.org/biocLite.R")
 
-install.packages("devtools")
-install.packages("BiocManager")
+if(!require(devtools)) install.packages("devtools")
+if(!require(BiocManager)) install.packages("BiocManager")
 install.pkg <- function(pkg) {
     if(!pkg %in% installed.packages()) {
         require(BiocManager)
@@ -65,6 +65,7 @@ install.pkg("BiocGenerics")
 install.pkg("org.Hs.eg.db")
 install.pkg("org.Mm.eg.db")
 install.pkg("EnsDb.Hsapiens.v86")
+##install.pkg("EnsDb.Mmusculus.v79")
 install.pkg("hgu133plus2.db")
 
 install.pkg("GSVA")
@@ -89,6 +90,7 @@ install.pkg("SummarizedExperiment")
 install.pkg("diffusionMap")
 install.pkg("topGO")
 install.pkg("mixOmics")
+install.pkg("mygene")
 
 ##---------------------------------------------------------------------
 ## from GITHUB

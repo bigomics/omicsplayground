@@ -16,17 +16,8 @@ cat("<br><br><br><br><br><br>")
 ##-----------------------------------------------------------------------------
 
 ## what files to use, heavy or light objects
-if(DEV.VERSION) {
-    INPUT_FILES = dir(PGX.DIR, pattern=".pgx$")
-    LT_FILES <- grep("-LT.pgx$",INPUT_FILES,value=TRUE)
-    XL_FILES <- setdiff(INPUT_FILES,LT_FILES)
-    INPUT_FILES <- ifelse((sub("-LT","",LT_FILES) %in% INPUT_FILES), XL_FILES, LT_FILES)
-    ##INPUT_FILES <- grep("-LT.pgx$",INPUT_FILES,invert=TRUE,value=TRUE)
-} else {
-    INPUT_FILES = dir(PGX.DIR, pattern="-LT.pgx$")
-}
-##INPUT_FILES
-PGX.DEFAULT=INPUT_FILES[1]
+INPUT_FILES = dir(PGX.DIR, pattern=".pgx$")
+PGX.DEFAULT = INPUT_FILES[1]
 ##PGX.DEFAULT="irb2018-rorc-SC-8k.pgx"
 INPUT_FILES = unique(c(PGX.DEFAULT,sort(INPUT_FILES)))  ## default on row1
 ##INPUT_FILES
@@ -41,7 +32,6 @@ if(file.exists("pgx-datasets-info.csv")) {
     PGXINFO$conditions = gsub("[,]"," ",PGXINFO$conditions)
     colnames(PGXINFO)[1] = "nr"
 }
-
 
 ## select data set
 selectInput("input_data","", choices=INPUT_FILES, selected=PGX.DEFAULT)
@@ -84,24 +74,11 @@ inputData <- eventReactive( input$loadbutton, {
 
     ##----------------- update input
     ##if(PRO.VERSION) {
-    if(DEV.VERSION) {
-        INPUT_FILES1 = dir(PGX.DIR, pattern=".pgx$")
-        LT_FILES <- grep("-LT.pgx$",INPUT_FILES1,value=TRUE)
-        XL_FILES <- setdiff(INPUT_FILES1,LT_FILES)
-        has.xl <- (sub("-LT","",LT_FILES) %in% INPUT_FILES1)
-        INPUT_FILES1 <- ifelse(has.xl, XL_FILES, LT_FILES)
-        ##INPUT_FILES <- grep("-LT.pgx$",INPUT_FILES,invert=TRUE,value=TRUE)
-    } else {
-        INPUT_FILES1 = dir(PGX.DIR, pattern="-LT.pgx$")
-    }
+    INPUT_FILES1 = dir(PGX.DIR, pattern=".pgx$")
     updateSelectInput(session,"input_data", choices=INPUT_FILES1, selected=fn)  ## update?
-
-    
-    ## initialize object
-    ngs <- pgx.initialize(ngs)
+    ngs <- pgx.initialize(ngs) 
     ##shinyjs::hide(id="splash-content")
-    ##shinyjs::show(id="table-content")
-    
+    ##shinyjs::show(id="table-content")    
     cat("inputData:: done!\n")
     return(ngs)
 }, ignoreNULL=FALSE )
@@ -173,6 +150,8 @@ andothers <- function(s, split=" ", n=8) {
 }
 
 output$pgxfiles <- DT::renderDataTable({
+    
+    if(is.null(PGXINFO)) return(NULL)
     ## get current view of raw_counts
     pgx.file = sub("[.]pgx$","",input$input_data)
     sel = match( pgx.file, PGXINFO$dataset)
@@ -205,7 +184,8 @@ output$pgxfiles <- DT::renderDataTable({
 ### Splash
 
 ```{r intro-cover2, fig.align="center", echo=FALSE, out.width = '600px', out.height = '400px'}
-knitr::include_graphics("resources/pgx-bigdata-immunology.png")
+##knitr::include_graphics("resources/pgx-bigdata-immunology.png")
+knitr::include_graphics("resources/pgx-bigdata-biology-wt.png")
 ```
 
 

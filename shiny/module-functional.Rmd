@@ -704,6 +704,17 @@ fillRow(flex = c(1.5,1),
         plotOutput('dsea_cormap')
         )
 
+observe({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    ct <- c("mono","combo")
+    if(is.null(ngs$drugs$combo)) {
+        ct <- c("mono")
+    }
+    updateSelectInput(session, "dsea_monocombo", choices=ct )
+})
+
+
 output$dsea_ui <- renderUI({
     if(input$dsea_plottype=="tsne") {
         output <- scatterD3Output('dsea_tsne')
@@ -727,6 +738,7 @@ getDseaTable <- reactive({
     dmethod="combo"
     dmethod="mono"
     dmethod <- input$dsea_monocombo
+    if(is.null(dmethod)) return(NULL)
     
     fc <- ngs$gx.meta$meta[[comparison]]$meta.fx
     names(fc) <- rownames(ngs$gx.meta$meta[[1]])
@@ -789,7 +801,7 @@ output$dsea_enplots <- renderPlot({
     plottype="enplot"
     plottype <- input$dsea_plottype
 
-    if(plottype=="cor") {        
+    if(FALSE && plottype=="cor") {        
         avgX <- readRDS(file=file.path(FILES,"l1000_es_5685drugsAVG.rds"))
         fx <- ngs$gx.meta$meta[[comparison]]$meta.fx
         names(fx) <- rownames(ngs$gx.meta$meta[[1]])
