@@ -4,6 +4,7 @@
 .RData
 .Rhistory
 .Rout
+*/.Rout
 
 # Backup files
 ######################
