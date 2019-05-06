@@ -1,0 +1,454 @@
+
+R version 3.5.1 (2018-07-02) -- "Feather Spray"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(knitr)
+> library(limma)
+> library(edgeR)
+> library(RColorBrewer)
+> library(gplots)
+
+Attaching package: ‘gplots’
+
+The following object is masked from ‘package:stats’:
+
+    lowess
+
+> library(matrixTests)
+> library(kableExtra)
+> library(knitr)
+> 
+> source("../R/gx-heatmap.r")
+> source("../R/gx-limma.r")
+> source("../R/gx-util.r")
+> source("../R/ngs-cook.r")
+> source("../R/ngs-fit.r")
+> source("../R/ngs-functions.R")
+> source("../R/gset-fisher.r")
+> source("../R/gset-gsea.r")
+> source("../R/gset-meta.r")
+> source("../R/pgx-graph.R")
+Loading required package: BiocParallel
+Loading required package: SingleCellExperiment
+Loading required package: SummarizedExperiment
+Loading required package: GenomicRanges
+Loading required package: stats4
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following object is masked from ‘package:limma’:
+
+    plotMA
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+
+Attaching package: ‘S4Vectors’
+
+The following object is masked from ‘package:gplots’:
+
+    space
+
+The following object is masked from ‘package:base’:
+
+    expand.grid
+
+Loading required package: IRanges
+Loading required package: GenomeInfoDb
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+Loading required package: DelayedArray
+Loading required package: matrixStats
+
+Attaching package: ‘matrixStats’
+
+The following objects are masked from ‘package:Biobase’:
+
+    anyMissing, rowMedians
+
+
+Attaching package: ‘DelayedArray’
+
+The following objects are masked from ‘package:matrixStats’:
+
+    colMaxs, colMins, colRanges, rowMaxs, rowMins, rowRanges
+
+The following objects are masked from ‘package:base’:
+
+    aperm, apply
+
+
+Attaching package: ‘SingleCellExperiment’
+
+The following object is masked from ‘package:edgeR’:
+
+    cpm
+
+
+Attaching package: ‘igraph’
+
+The following objects are masked from ‘package:DelayedArray’:
+
+    path, simplify
+
+The following object is masked from ‘package:GenomicRanges’:
+
+    union
+
+The following object is masked from ‘package:IRanges’:
+
+    union
+
+The following object is masked from ‘package:S4Vectors’:
+
+    union
+
+The following objects are masked from ‘package:BiocGenerics’:
+
+    normalize, path, union
+
+The following objects are masked from ‘package:stats’:
+
+    decompose, spectrum
+
+The following object is masked from ‘package:base’:
+
+    union
+
+> source("../R/xcr-graph.r")
+> source("../R/pgx-functions.R")
+> 
+> source("options.R")
+> 
+> COMPARE.CLUSTERS=FALSE
+> ##COMPARE.CLUSTERS=TRUE
+> DOWNSAMPLE=50
+> 
+> rda.file="../pgx/GSE98638-liver-scRNA.pgx"
+> if(COMPARE.CLUSTERS) rda.file <- sub(".pgx$",paste0("-vsCLUST.pgx"),rda.file)
+> if(DOWNSAMPLE>0) rda.file <- sub(".pgx$",paste0("-s",DOWNSAMPLE,".pgx"),rda.file)
+> rda.file
+[1] "../pgx/GSE98638-liver-scRNA-s50.pgx"
+> 
+> ##load(file=rda.file, verbose=1)
+> ngs <- list()  ## empty object
+> ngs$name = gsub("^.*pgx/|[.]pgx$","",rda.file)
+> ngs$date = date()
+> ngs$datatype = "scRNA-seq"
+> ngs$description = "GSE98638 data set (Zheng et al., 2017). Single cell RNA sequencing of different subtypes from HCC patients, including CD8+ T cells (CD3+ and CD8+), T helper cells (CD3+, CD4+ and CD25-), and regulatory T cells (CD3+, CD4+ and CD25high). Ref: Landscape of Infiltrating T Cells in Liver Cancer Revealed by Single-Cell Sequencing. Cell 2017."
+> 
+> ## READ/PARSE DATA
+> if(PROCESS.DATA) {
++ 
++     ## ##############################################################
++     ##   Differential expression analysis with limma
++     ##BiocManager::install("GEOquery", version = "3.8")
++     library(Biobase)
++     library(GEOquery)
++     library(data.table)
++ 
++     ##--------------------------------------------------------------
++     ## Read SC counts
++     ##--------------------------------------------------------------
++     ## load series and platform data from GEO
++     ##geo <- getGEO("GSE98638", GSEMatrix =TRUE, AnnotGPL=TRUE)
++     tmpfile = "/tmp/GSE98638_HCC.TCell.S5063.count.txt.gz"
++     if(!file.exists(tmpfile)) {
++         system("wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE98nnn/GSE98638/suppl/GSE98638_HCC.TCell.S5063.count.txt.gz -P /tmp")
++     }
++     counts = fread("/tmp/GSE98638_HCC.TCell.S5063.count.txt.gz",nrow=-1000)
++     ##counts = fread("../downloads/GSE98638_HCC.TCell.S5063.count.txt.gz",nrow=-1000)
++     dim(counts)
++     head(counts)[,1:10]
++     counts = counts[!is.na(counts[["symbol"]]),]
++     gene = counts[["symbol"]]
++     counts = as.matrix(counts[,3:ncol(counts)])
++     rownames(counts) = gene
++     head(counts)[,1:10]
++     summary(colSums(counts))
++ 
++     DOWNSAMPLE
++     if(DOWNSAMPLE>0) {
++         ## sample each category
++         code <- substring(colnames(counts),1,3)
++         table(code)
++         jj <- order(-colSums(counts))
++         jj <- tapply(jj, code[jj], function(x) head(x,DOWNSAMPLE))
++         ##jj <- tapply(jj, code[jj], function(x) head(x,20))
++         jj <- unlist(jj)
++         table(code[jj])
++         counts <- counts[,jj]
++         dim(counts)
++         summary(colSums(counts))
++     }
++ 
++     ##--------------------------------------------------------------
++     ## gene annotation
++     ##--------------------------------------------------------------
++     require(org.Hs.eg.db)
++     GENE.TITLE = unlist(as.list(org.Hs.egGENENAME))
++     gene.symbol = unlist(as.list(org.Hs.egSYMBOL))
++     names(GENE.TITLE) = gene.symbol
++     head(GENE.TITLE)
++     genes = data.frame( gene_name = rownames(counts),
++                        gene_title = GENE.TITLE[rownames(counts)],
++                        stringsAsFactors=FALSE)
++     rownames(genes) = rownames(counts)
++     head(genes)
++ 
++     ##--------------------------------------------------------------
++     ## Prepare sample table
++     ##--------------------------------------------------------------
++     sample = colnames(counts)
++     group = substring(colnames(counts),1,3)
++     cell.type = c("C"="CD8.T","H"="CD4.Th","R"="CD4.Treg",
++                   "S"="unkown")[substring(group,3,3)]
++     tissue.type = c("P"="blood","N"="normal.liver","T"="tumor",
++                     "J"="joint")[substring(group,1,1)]
++     sampleTable = data.frame(
++         ##sample = sample,
++         group = group,
++         cell.type = cell.type,
++         tissue.type = tissue.type
++     )
++     rownames(sampleTable) = colnames(counts)
++     table(group)
++ 
++     ##-------------------------------------------------------------------
++     ## Now create an PGX object
++     ##-------------------------------------------------------------------
++     if(is.null(sampleTable$group)) stop("samples need group")
++     table(sampleTable$group)
++     ngs$counts <- round(counts)
++     ngs$samples <- sampleTable
++     ngs$genes = genes
++     ##lib.size <- colSums(data$counts / 1e6)  ## get original summed intensity as lib.size
++     ngs$samples$batch <- NULL
++     ##ngs$samples$batch <- as.integer(lib.size2)
++ 
++     ## tagged rownames???
++     row.id = paste0("tag",1:nrow(ngs$genes),":",ngs$genes[,"gene_name"])
++     rownames(ngs$genes) = rownames(ngs$counts) = row.id
++     names(ngs)
++ 
++     ##-------------------------------------------------------------------
++     ## sample QC filtering
++     ##-------------------------------------------------------------------
++     ##
++ 
++     ##-------------------------------------------------------------------
++     ## collapse multiple row for genes by summing up counts
++     ##-------------------------------------------------------------------
++     sum(duplicated(ngs$genes$gene_name))
++     ##ngs <- ngs.collapseByGene(ngs)
++     ngs <- ngs.collapseByGene(ngs)
++     
++     ##-------------------------------------------------------------------
++     ## gene filtering
++     ##-------------------------------------------------------------------
++     ##keep <- rep(TRUE,nrow(ngs$counts))
++     ##keep <- filterByExpr(ngs)  ## default edgeR filter
++     ##keep <- (rowSums(cpm(ngs$counts, log=TRUE) > 1) >= 0.01)
++     if(0) {
++         summary(colSums(ngs$counts))
++         logcpm = edgeR::cpm(ngs$counts, log=TRUE)
++         ##hist(logcpm, breaks=100)
++         keep <- (rowMeans(logcpm >= 3) >= 0.01)
++         table(keep)
++         ngs$counts <- ngs$counts[keep,]
++         ngs$genes  <- ngs$genes[keep,]
++     }
++ 
++     ##-------------------------------------------------------------------
++     ## Pre-calculate t-SNE for and get clusters early so we can use it
++     ## for doing differential analysis.
++     ##-------------------------------------------------------------------
++     ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE)
++     head(ngs$samples)
++ 
++     ##-------------------------------------------------------------------
++     ## take top varying
++     ##-------------------------------------------------------------------
++     SMALL
++     if(0 && SMALL>0) {
++         cat("shrinking data matrices: n=",SMALL,"\n")
++         logcpm = edgeR::cpm(ngs$counts, log=TRUE, prior.count=10)
++         summary(colMeans(logcpm))
++         jj <- head( order(-apply(logcpm,1,sd)), SMALL )  ## how many genes?
++         head(jj)
++         ngs$counts <- ngs$counts[jj,]
++         ngs$genes  <- ngs$genes[jj,]
++     }
++     dim(ngs$counts)
++     ngs$timings <- c()
++ 
++     rda.file
++     save(ngs, file=rda.file)
++ }
+Setting options('download.file.method.GEOquery'='auto')
+Setting options('GEOquery.inmemory.gpl'=FALSE)
+
+Attaching package: ‘data.table’
+
+The following object is masked from ‘package:SummarizedExperiment’:
+
+    shift
+
+The following object is masked from ‘package:GenomicRanges’:
+
+    shift
+
+The following object is masked from ‘package:IRanges’:
+
+    shift
+
+The following objects are masked from ‘package:S4Vectors’:
+
+    first, second
+
+Loading required package: org.Hs.eg.db
+Loading required package: AnnotationDbi
+
+>>> Computing t-SNE on samples...
+Loading required package: Rtsne
+Loading required package: irlba
+Loading required package: Matrix
+
+Attaching package: ‘Matrix’
+
+The following object is masked from ‘package:S4Vectors’:
+
+    expand
+
+performing tSNE on full matrix...
+determining clusters...
+Found 6 clusters...
+> 
+> 
+> if(DIFF.EXPRESSION) {
++     load(file=rda.file, verbose=1)
++ 
++     ## ----------------- test genes ------------------------------------------
++     COMPARE.CLUSTERS
++     if(COMPARE.CLUSTERS) {
++         ## make model matrix for group vs. rest
++         clusters <- ngs$samples$cluster
++         table(clusters)
++         contr.matrix <- makeClusterContrasts(clusters)
++         contr.matrix
++ 
++     } else {
++         table(ngs$samples$group)
++         levels = levels(ngs$samples$group)
++         levels
++         contr.matrix <- makeContrasts(
++             ## tumor_vs_blood = (TTC + TTH + TTR + TTS)/4 - (PTC + PTH + PTR + PTS)/4,
++             ## tumor_vs_normal = (TTC + TTH + TTR + TTS)/4 - (NTC + NTH + NTR)/3,
++             ## tumor_vs_joint  = (TTC + TTH + TTR + TTS)/4 - (JTC + JTH + JTS)/3,
++             ## joint_vs_normal = (JTC + JTH + JTS)/3 - (NTC + NTH + NTR)/3,
++             ## normal_vs_blood = (NTC + NTH + NTR)/3 - (PTC + PTH + PTR + PTS)/4,
++             CD8_tumor_vs_normal = TTC - NTC,
++             Th_tumor_vs_normal = TTH - NTH,
++             Treg_tumor_vs_normal = TTR - NTR,
++             CD8_tumor_vs_joint = TTC - JTC,
++             Th_tumor_vs_joint = TTH - JTH,
++             ##Treg_tumor_vs_joint = TTR - JTR,
++             ##Ts_tumor_vs_joint = TTS - JTS,
++             CD8_tumor_vs_blood = TTC - PTC,
++             Th_tumor_vs_blood = TTH - PTH,
++             Treg_tumor_vs_blood = TTR - PTR,
++             CD8_joint_vs_normal = JTC - NTC,
++             Th_joint_vs_normal = JTH - NTH,
++             ##Treg_joint_vs_normal = JTR - NTR,
++             levels = levels)
++         dim(contr.matrix)
++         contr.matrix
++ 
++         ##contr.matrix = contr.matrix[,1:3]
++     }
++ 
++     ## USER.GENETEST.METHODS=c("trend.limma","deseq2","edger.qlf")
++     ## USER.GENESETTEST.METHODS=c("fisher","gsva","camera","fgsea")
++     source("../R/compute-genes.R")
++     source("../R/compute-genesets.R")
++     source("../R/compute-extra.R")
++ 
++ }
+Loading objects:
+  ngs
+testing on groups...
+filtering for low-expressed genes: > 1 CPM in >= 7 samples
+filtering out 9775 low-expressed genes
+keeping 13614 expressed genes
+shrinking data matrices: n= 4000 
+>>> Testing differential expressed genes (DEG) with methods: trend.limma edger.qlf deseq2.wald 
+calculating methods: trend.limma edger.qlf deseq2.wald 
+prior CPM counts = 1 
+CPM scale = 1e+06 
+quantile normalizing logCPM values
+fitting using LIMMA trend (1.657s)
+fitting edgeR using QL F-test  (61.726s)
+fitting using DESeq2 (Wald test)Loading required package: DESeq2
+using model design:  ~ 0 + group 
+converting counts to integer mode
+estimating size factors
+estimating dispersions
+gene-wise dispersion estimates
+mean-dispersion relationship
+final dispersion estimates
+fitting model and testing
+-- replacing outliers and refitting for 773 genes
+-- DESeq argument 'minReplicatesForReplace' = 7 
+-- original counts are preserved in counts(dds)
+estimating dispersions
+fitting model and testing
+ (44460.722s)
+Loading required package: metap
+            user.self   sys.self  elapsed user.child sys.child
+trend.limma     1.657      6.109    0.500          0         0
+edger.qlf      61.726     91.021   39.137          0         0
+deseq2.wald 44460.722 115044.598 3383.110          0         0
+Loading human gene sets...
+Filtering gene sets...
+Building gene set matrix...

@@ -20,29 +20,16 @@ source("../R/gset-meta.r")
 source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 
-FILES="../lib/"
-RDIR="../R/"
-
-PROCESS.DATA=1
-DIFF.EXPRESSION=1
-EXTRA.STUFF=1
-##SMALL=8000
+source("options.R")
+SMALL
 COMPARE="group"
 COMPARE="clusters"
 COMPARE="pheno"
-##COMPARE="phenotype"
-##FAST=TRUE
-##DOWNSAMPLE=0
+DOWNSAMPLE=0
 DOWNSAMPLE=100
 
-SMALL=4000
-FAST=TRUE
-EXT="4k"
-
-rda.file="../pgx/GSE72056-melanoma-scRNA.pgx"
+rda.file="../pgx/GSE72056-scmelanoma.pgx"
 rda.file = sub(".pgx$",paste0("-vs",COMPARE,".pgx"),rda.file)
-if(DOWNSAMPLE>0) rda.file <- sub(".pgx$",paste0("-s",DOWNSAMPLE,".pgx"),rda.file)
-if(SMALL>0) rda.file <- sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -65,7 +52,6 @@ if(PROCESS.DATA) {
     ##--------------------------------------------------------------
     ## Read SC counts
     ##--------------------------------------------------------------
-    ##counts = fread("~/Downloads/GSE72056_melanoma_single_cell_revised_v2.txt.gz",nrow=-1000)
     if(0) {
         system("wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE72nnn/GSE72056/suppl/GSE72056_melanoma_single_cell_revised_v2.txt.gz -P /tmp")
     }
@@ -244,7 +230,7 @@ if(PROCESS.DATA) {
     ##-------------------------------------------------------------------
     ##keep <- rep(TRUE,nrow(ngs$counts))
     ##keep <- filterByExpr(ngs)  ## default edgeR filter
-    keep <- (rowMeans( edgeR::cpm(ngs$counts) > 1) >= 0.01)
+    keep <- (rowMeans( edgeR::cpm(ngs$counts) > 1) >= 0.05)
     ##keep <- (rowMeans( ngs$counts >= 3) >= 0.01)
     table(keep)
     ngs$counts <- ngs$counts[keep,]
@@ -321,8 +307,8 @@ if(DIFF.EXPRESSION) {
     ##USER.GENESETTEST.METHODS="*"
     
     ngs$timings <- c()
-    source("../R/compute-testgenes.R")
-    source("../R/compute-testgenesets.R")
+    source("../R/compute-genes.R")
+    source("../R/compute-genesets.R")
     source("../R/compute-extra.R")
 
 }
