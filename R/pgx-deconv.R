@@ -273,7 +273,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
             rownames(out.mat) <- colnames(mat)
             results[["EPIC"]] <- out.mat
         } else {
-            cat("WARNING:: EPIC failed\n")
+            cat("WARNING:: EPIC fail (no pun intended...)\n")
         }
     }
 

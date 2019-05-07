@@ -52,15 +52,16 @@ if(1) {
 
 ## -------------- deconvolution analysis --------------------------------
 if(1) {
-    
+
     cat(">>> computing deconvolution for",rda.file,"\n")
     source(file.path(RDIR,"pgx-deconv.R"))
     ##load(file=rda.file,verbose=1)
-    
+
     ## list of reference matrices
     refmat <- list()
-    require(FARDEEP)
-    readSIG <- function(f) read.csv(file.path(FILES,f), row.names=1, check.names=FALSE)   
+    ##require(FARDEEP)
+    readSIG <- function(f) read.csv(file.path(FILES,f), row.names=1, check.names=FALSE)
+    LM22 <- read.csv(file.path(FILES,"LM22.txt"),sep="\t",row.names=1)
     refmat[["Immune cell (LM22)"]] <- LM22
     refmat[["Immune cell (ImmProt)"]] <- readSIG("immprot-signature1000.csv")
     refmat[["Immune cell (DICE)"]] <- readSIG("DICE-signature1000.csv")
@@ -70,7 +71,7 @@ if(1) {
     refmat[["Cell line (HPA)"]] <- readSIG("HPA_rna_celline.csv")
     ## refmat[["Cell line (CCLE)"]] <- readSIG("CCLE_rna_celline.csv")
     refmat[["Cancer type (CCLE)"]] <- readSIG("CCLE_rna_cancertype.csv")
-    
+
     ## list of methods to compute
     methods = DECONV.METHODS
     methods = c("DCQ","DeconRNAseq","I-NNLS","NNLM","cor","CIBERSORT","EPIC","FARDEEP")
@@ -79,7 +80,7 @@ if(1) {
     ##methods <- c("DCQ","I-NNLS","NNLM","cor")
     ## methods <- c("NNLM","cor")
     ##if(ncol(ngs$counts)>100) methods <- setdiff(methods,"CIBERSORT")  ## too slow...
-    
+
     counts <- ngs$counts
     rownames(counts) <- toupper(ngs$genes[rownames(counts),"gene_name"])
     res <- pgx.multiDeconvolution( counts, refmat=refmat, method=methods)
@@ -127,7 +128,7 @@ if(1){
 
 ## -------------- drug enrichment
 if(1) {
-    
+
     source(file.path(RDIR,"pgx-drugs.R"))
     ##source(file.path(RDIR,"pgx-graph.R", local=TRUE)
     cat(">>> Computing drug enrichment...\n")
@@ -136,7 +137,7 @@ if(1) {
     x.drugs <- gsub("_.*$","",colnames(X))
     length(table(x.drugs))
     dim(X)
-    
+
     NPRUNE=-1
     NPRUNE=250
     res.mono <- pgx.computeDrugEnrichment(
@@ -157,11 +158,11 @@ if(1) {
 
     ## SHOULD MAYBE BE DONE IN PREPROCESSING....
     annot0 <- read.csv(file.path(FILES,"L1000_repurposing_drugs.txt"),
-                  sep="\t", comment.char="#")   
+                  sep="\t", comment.char="#")
     rownames(annot0) <- annot0$pert_iname
     ##annot0$pert_iname <- NULL
     ngs$drugs$annot <- annot0
-    
+
     remove(X)
     remove(x.drugs)
 

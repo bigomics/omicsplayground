@@ -1,4 +1,3 @@
-rm(list=setdiff(ls(),run.param))
 library(knitr)
 library(limma)
 library(edgeR)
