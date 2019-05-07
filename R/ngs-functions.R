@@ -20,7 +20,12 @@ ngs.collapseByGene <- function(ngs) {
     p1 <- names(which(table(gene)==1))
     p2 <- names(which(table(gene)>1))
     length(p2)
-    if(length(p2)==0) return(ngs)
+    if(length(p2)==0) {
+        gene <- as.character(ngs$genes$gene_name)
+        rownames(ngs$genes)  <- gene
+        rownames(ngs$counts) <- gene
+        return(ngs)
+    }
     j1 <- which(gene %in% p1)
     j2 <- which(gene %in% p2)
     x1 <- ngs$counts[j1,,drop=FALSE]

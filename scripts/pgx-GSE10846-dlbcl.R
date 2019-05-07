@@ -233,7 +233,7 @@ if(DIFF.EXPRESSION) {
     
     ##USER.GENETEST.METHODS=c("trend.limma","deseq2.wald","edger.qlf")
     ##USER.GENESETTEST.METHODS=c("gsva","fisher","camera","fgsea")
-    USER.GENESETTEST.METHODS = "*"
+    USER.GENETEST.METHODS = "*"
     USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
 
     ##contr.matrix = contr.matrix[,1:3]

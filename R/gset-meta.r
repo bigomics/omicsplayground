@@ -1,5 +1,3 @@
-
-
 ALL.GENESET.METHODS=c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
                   ##"plage", "cuda.gsea", "enricher",
                   "gsea.permPH","gsea.permGS","gseaPR","fgsea")
@@ -41,8 +39,7 @@ gmt2mat.nocheck <- function(gmt, bg=NULL, use.multicore=TRUE)
     D
 }
 
-##X=ngs$X;Y=ngs$Y;design=ngs$model.parameters$design;contr.matrix=ngs$model.parameters$contr.matrix
-##mc.cores=4;mc.threads=1;batch.correct=TRUE;gmt=ngs$gmt.all
+##X=ngs$X;Y=ngs$Y;design=ngs$model.parameters$design;contr.matrix=ngs$model.parameters$contr.matrix;mc.cores=4;mc.threads=1;batch.correct=TRUE;gmt=ngs$gmt.all
 gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, methods,
                                             mc.threads=1, mc.cores=NULL, batch.correct=TRUE)
 {
@@ -93,8 +90,11 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
     normalize <- function(zx, Y) {
         if("batch" %in% colnames(Y) && batch.correct) {
             ##design0 = model.matrix( ~ Y$group )
-            design0 = design
-            zx <- removeBatchEffect( zx, batch=Y$batch, design=design0)
+            if(!is.null(design)) {
+                zx <- removeBatchEffect( zx, batch=Y$batch, design=design)
+            } else {
+                zx <- removeBatchEffect( zx, batch=Y$batch)
+            }
         }
         if("nnm" %in% colnames(Y) && batch.correct) {
             yy = Y$nnm
@@ -148,7 +148,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
         timings <- rbind(timings, c("spearman", tt))
         sum(is.na(zx.rnkcorr))
     }
-
+    
     if("gsva" %in% methods) {
         cat("fitting contrasts using GSVA/limma... \n")
         tt <- system.time({
@@ -165,7 +165,6 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
             }
             zx.gsva <- normalize(zx.gsva, Y)
             zx.gsva <- zx.gsva[names(gmt),colnames(X)] ## make sure..
-
             all.results[["gsva"]] <- gset.fitContrastsWithLIMMA(
                 zx.gsva, contr.matrix,  design=design, trend=TRUE, conform.output=TRUE)
         })
@@ -450,7 +449,6 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
     names(all.results)
     methods2 = setdiff(methods, names(all.results))
     methods2
-
     m="camera"
     m="fgsea"
     m="fisher"
@@ -459,7 +457,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
         all.results[[m]] <- res$results
         timings <- rbind( timings, res$timings)
     }
-
+    
     ##--------------------------------------------------------------
     ## Reshape matrices by comparison
     ##--------------------------------------------------------------
@@ -565,15 +563,11 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
     return(res)
 }
 
-
-##X=ngs$X;Y=ngs$Y;design=ngs$model.parameters$design;contr.matrix=ngs$model.parameters$contr.matrix
-##mc.cores=4;batch.correct=TRUE;mc.cores=4
-##trend=TRUE;gsetX=zx.gsva
-##trend=TRUE;gsetX=zx.rnkcorr
+##trend=TRUE;gsetX=zx.gsva;conform.output=TRUE
+##trend=TRUE;gsetX=zx.rnkcorr;conform.output=TRUE
 gset.fitContrastsWithLIMMA <- function( gsetX, contr.matrix, design,
                                        trend=TRUE,conform.output=FALSE)
 {
-
     if(!is.null(design)) {
         ##xfit = normalizeQuantiles(xfit)
         vfit <- lmFit(gsetX, design)
@@ -620,7 +614,6 @@ gset.fitContrastsWithLIMMA <- function( gsetX, contr.matrix, design,
             tables[[i]] = top
         }
         names(tables) <- colnames(contr.matrix)
-
     }
 
     if(conform.output==TRUE) {
