@@ -14,7 +14,7 @@ source("options.R")
 
 BATCH.CORRECT=1
 rda.file="../pgx/GSE114716-ipilimumab.pgx"
-if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
+##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 
 ##load(file=rda.file, verbose=1)
