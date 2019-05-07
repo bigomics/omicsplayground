@@ -34,7 +34,7 @@ observe({
     ngs <- inputData()
     contr <- colnames(ngs$model.parameters$contr.matrix)
     updateSelectizeInput(session, "gx_contrast", choices=sort(contr))
-
+    
     ##fam <- names(ngs$families)
     ##fam <- grep("^TISSUE|^COMPARTMENT|^CELLTYPE|^GOCC|^DISEASE|^CUSTOM",names(GSETS),value=TRUE)
     fam <- pgx.getExtendedFamilies(ngs,10)
@@ -348,7 +348,6 @@ output$expr_topfoldchange <- renderPlot({
 
     res = sigDiffExprTable()
     if(is.null(res) || is.null(sel)) return(NULL)
-    gene = rownames(ngs$X)[1]
     psel <- rownames(res)[sel]
     gene <- ngs$genes[psel,"gene_name"]
     
@@ -465,7 +464,7 @@ renderPlot({
     i=1
     for(i in 1:nc) {
 
-        if(i > length(top.up)) break
+        if(i > length(top.up)) { frame() }
         gene = sub(".*:","",top.up[i])
         pgx.plotGeneExpression(
             ngs, gene, comp=comp, grouped=grouped, max.points=1000,
@@ -477,7 +476,7 @@ renderPlot({
 
     for(i in 1:nc) {
 
-        if(i > length(top.down)) break
+        if(i > length(top.down)) { frame() }
         gene = sub(".*:","",top.down[i])
         pgx.plotGeneExpression(
             ngs, gene, comp=comp, grouped=grouped,  max.points=1000,

@@ -271,7 +271,7 @@ if(DIFF.EXPRESSION) {
 
         levels = group.levels )
     t(contr.matrix)
-    
+
     ##contr.matrix = contr.matrix[,1:3]
     source("../R/compute-genes.R")
     source("../R/compute-genesets.R")

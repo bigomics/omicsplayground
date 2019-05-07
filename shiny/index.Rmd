@@ -77,12 +77,11 @@ if(0) {
 ```{r child = 'module-signature.Rmd'}
 ```
 
-```{r child = 'module-profiling.Rmd'}
-```
-
 ```{r child = 'module-predict.Rmd'}
 ```
 
+```{r child = 'module-profiling.Rmd'}
+```
 
 `r if(!PRO.VERSION) {"<!-------------------------------------------"}`
 

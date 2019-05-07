@@ -1,4 +1,4 @@
-Predict
+Biomarker
 ================================================================================
 
 Inputs {.sidebar data-width=250}
@@ -311,8 +311,6 @@ calcVariableImportance <- reactive({
     y <- y[rownames(tx)]
     res <- list(P=P, R=R, y=y, X=t(tx), rf=rf)
 
-
-
     return(res)
 })
 
@@ -508,6 +506,8 @@ output$pdx_heatmap <- renderPlot({
 
 
 ```
+
+`r if(!DEV.VERSION) {"<!---------------------"}`
 
 ### Multi-level
     
@@ -858,8 +858,5 @@ output$mix_cimDiablo <- renderPlot({
 })
 
 ```
-
-
-`r if(!DEV.VERSION) {"<!---------------------"}`
 
 `r if(!DEV.VERSION) {"--------------------->"}`

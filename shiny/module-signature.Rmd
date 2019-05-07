@@ -65,6 +65,14 @@ observeEvent(input$sig_example3, {
     updateTextAreaInput(session,"sig_genelistUP", value=CELL.CYCLE.GENES)
 })
 
+input_sig_genelistUP <- reactive({
+    gg <- input$sig_genelistUP
+    if(is.null(gg)) return(NULL)
+    gg <- strsplit(as.character(gg), split="[, \n\t]")[[1]]
+    if(length(gg)==1 && gg[1]!="") gg <- c(gg,gg)  ## hack to allow single gene....
+    return(gg)
+}) %>% debounce(1000)
+
 observe({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
@@ -80,7 +88,6 @@ observe({
         updateSelectizeInput(session, "sig_feature", choices=gsets)
     }
 })
-
 
 ```
 
@@ -104,23 +111,24 @@ getCurrentMarkers <- reactive({
     
     level = "gene"
     features = toupper(ngs$genes$gene_name)
-
+    xfeatures = toupper(ngs$genes[rownames(ngs$X),"gene_name"])
+    gset <- NULL
     if(input$sig_feature=="<custom>") {
-        gset <- input$sig_genelistUP
-        if(is.null(input$sig_genelistUP)) return(NULL)    
-        if(is.null(gset) || length(gset)==0 || gset=="") return(NULL)
-        ##gset <- toupper(gset)
-        gset <- strsplit(gset, split="[, \n\t]")[[1]]
+        gset <- input_sig_genelistUP()
+        if(is.null(gset) || length(gset)==0 || gset[1]=="") return(NULL)
+        ##gset <- toupper(gset)        
         if(length(gset)==1) {
             gene <- sub("^[@#]","",gset[1])
-            if(grepl("^@",gset[1]) && gene %in% rownames(ngs$X)) {
-                ## most correlated with this gen
-                rho <- cor(t(ngs$X), ngs$X[gene,])[,1]
+            if(grepl("^@",gset[1]) && gene %in% xfeatures) {
+                ## most correlated with this genes
+                jj <- match(gene, xfeatures)  ## single gene
+                rho <- cor(t(ngs$X), ngs$X[jj,])[,1]
                 gset <- head(names(sort(abs(rho),decreasing=TRUE)),36)  ## how many?
             } else {
-                ##rx <- paste0("^",toupper(gset[1]))
+                ## grep-like match
                 rx <- toupper(gset[1])
-                gset <- grep(rx, features, value=TRUE)
+                rx <- grep(rx, xfeatures, value=TRUE)
+                gset <- rownames(ngs$X)[which(xfeatures %in% rx)]  ## all probes matching gene
             }
         }
     } else if(sig_type=="contrast" &&
@@ -229,12 +237,12 @@ getSingleSampleEnrichment <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
     
+    cat("getSingleSampleEnrichment:: called\n")
+
     ## select samples
     X = ngs$X
     sel = colnames(X)
     X <- X[,sel]
-
-    cat("getSingleSampleEnrichment:: dim.X=",dim(X),"\n")
     
     ## get the signature
     gset <- strsplit(IMMCHECK.GENES,split=" ")[[1]]
@@ -255,9 +263,6 @@ getSingleSampleEnrichment <- reactive({
     colnames(gX) = groups
     dim(gX)
     dim(ngs$X)
-
-    cat("getSingleSampleEnrichment:: dim.gX=",dim(gX),"\n")
-    cat("getSingleSampleEnrichment:: len.y=",length(y),"\n")
     
     ## for large datasets pre-grouping is faster
     ss.bygroup  <- calcSingleSampleValues(gX, y, method=c("rho","gsva"))
@@ -434,8 +439,6 @@ renderPlot({
     markers <- COLLECTIONS[[10]]
     markers <- getCurrentMarkers()
     if(is.null(markers)) return(NULL)
-
-    cat("<signature:Markers> 1\n")        
     
     level = "gene"
     ##markers <- intersect(markers,ngs$genes$gene_name)
@@ -450,8 +453,6 @@ renderPlot({
         return(NULL)
     }
     
-    cat("<signature:Markers> 2\n")        
-
     ## get t-SNE positions of samples
     pos = ngs$tsne2d[colnames(gx),]
     gx = gx - min(gx,na.rm=TRUE) + 0.001 ## subtract background
@@ -460,14 +461,10 @@ renderPlot({
     zx <- t(apply(gx,1,function(x) tapply(x,as.character(grp),mean)))
     gx <- gx[order(-apply(zx,1,sd)),,drop=FALSE]
     rownames(gx) = sub(".*:","",rownames(gx))
-
-    cat("<signature:Markers> 3\n")
     
     ## ---------------- get GSVA values
     res <- getSingleSampleEnrichment()
     if(is.null(res)) return(NULL)
-
-    cat("<signature:Markers> 4\n")
     
     S <- res$by.sample
     if(NCOL(S)==1) {
@@ -481,8 +478,6 @@ renderPlot({
     fc1 = tanh(1.0*fc / (1e-4+sd(fc)))
     fc1 = fc1[rownames(pos)]
     
-    cat("<signature:Markers> 5\n")
-
     cex1 = 1.1
     if(nrow(pos) < 30) cex1 = 1.8
     if(nrow(pos) > 200) cex1 = 0.5
@@ -965,16 +960,21 @@ output$sig_phenoplot <- renderPlot({
     } else {
         fc = colMeans( t(S) / (1e-8+sqrt(colSums(S**2))) ) ## scaled mean
     }
-
     fc <- scale(fc)[,1]  ## scale??
     names(fc) = rownames(S)
     ##fc1 = sign(fc) * (fc/(1e-8+max(abs(fc))))**2 ## normalize
     fc1 = tanh(1.0*fc/(1e-4+sd(fc)))
     fc1 = fc1[rownames(pos)]
-
     summary(fc)
     summary(fc1)
     
+    cat("sig_phenoplot: length.fc1=",length(fc1),"\n")
+    cat("sig_phenoplot: head.fc1=",head(fc1),"\n")
+    ## NEED CHECK! sometimes all are NaN (e.g. if signature is single gene)
+    if(sum(!is.na(fc1))==0) {
+        return(NULL)
+    }
+        
     Y <- ngs$Y[rownames(pos),,drop=FALSE]
     pheno = colnames(Y)    
     ##pheno <- grep("batch|sample|donor|repl|group",pheno,

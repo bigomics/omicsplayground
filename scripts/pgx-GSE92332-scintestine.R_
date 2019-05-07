@@ -12,6 +12,7 @@ source("../R/gx-limma.r")
 source("../R/gx-util.r")
 source("../R/ngs-cook.r")
 source("../R/ngs-fit.r")
+source("../R/ngs-functions.R")
 source("../R/gset-fisher.r")
 source("../R/gset-gsea.r")
 source("../R/gset-meta.r")
@@ -53,20 +54,23 @@ if(PROCESS.DATA) {
     ## Read SC counts
     ##--------------------------------------------------------------
     ## load series and platform data from GEO
-    ##system("wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE99nnn/GSE99795/suppl/GSE99795_raw.txt.gz; mv GSE99795* ../data/GSE")
-    gse = fread("../data/GSE/GSE92332_atlas_UMIcounts.txt.gz",nrow=-1000)
-    ##counts = fread("../downloads/GSE98638_HCC.TCell.S5063.count.txt.gz",nrow=-1000)
+    gse.file = "/tmp/GSE92332_atlas_UMIcounts.txt.gz"   ## 10x data???
+    if(!file.exists(gse.file)) {
+        system("wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE92nnn/GSE92332/suppl/GSE92332_atlas_UMIcounts.txt.gz -P /tmp")
+    }
+    gse = fread(gse.file,nrow=-1000)
     dim(gse)
     head(gse)[,1:10]
     head(colnames(gse),10)
     counts = as.matrix(gse[,2:ncol(gse)])
+    rownames(counts) = as.character(gse[[1]])
     head(counts)[,1:10]
     summary(colSums(counts))
 
     ##-------------------------------------------------------------------
     ## Dowsample samples
     ##-------------------------------------------------------------------
-
+    DOWNSAMPLE
     if(DOWNSAMPLE>0) {
         ## sample each category
         tissue <- sub(".*_","",colnames(counts))
@@ -140,18 +144,12 @@ if(PROCESS.DATA) {
     rownames(ngs$genes) = rownames(ngs$counts) = row.id
     names(ngs)
 
-
     ##-------------------------------------------------------------------
     ## collapse multiple row for genes by summing up counts
     ##-------------------------------------------------------------------
     sum(duplicated(ngs$genes$gene_name))
     dim(ngs$counts)
-    x1 = apply(ngs$counts, 2, function(x) tapply(x, ngs$genes$gene_name, sum))
-    dim(x1)
-    ngs$genes = ngs$genes[match(rownames(x1),ngs$genes$gene_name),]
-    ngs$counts = x1
-    rownames(ngs$genes) = rownames(ngs$counts) = rownames(x1)
-    remove(x1)
+    ngs <- ngs.collapseByGene(ngs)
 
     ##-------------------------------------------------------------------
     ## gene filtering

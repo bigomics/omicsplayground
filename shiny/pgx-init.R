@@ -75,7 +75,9 @@ table(sub(":.*","",names(GSETS)))
 pgx.getExtendedFamilies <- function(ngs, nmin=10) {
     fam <- grep("^[<].*|^FAMILY|^TISSUE|^COMPARTMENT|^CELLTYPE|^GOCC|^DISEASE|^CUSTOM",
                 names(GSETS),value=TRUE)
-    jj <- which(sapply(GSETS[fam],function(x) sum(x %in% rownames(ngs$X))) >= nmin)
+    xgenes <- toupper(rownames(ngs$X))
+    xgenes <- toupper(ngs$genes$gene_name)
+    jj <- which(sapply(GSETS[fam],function(x) sum(x %in% xgenes)) >= nmin)
     sort(fam[jj])
 }
 
@@ -124,7 +126,7 @@ PURPLEYELLOW <- colorRampPalette(c("purple","purple4","black","yellow4","yellow"
 
 
 pgx.initialize <- function(ngs) {
-    cat("<init:initialize> initializing ngs object for platform...\n")
+    cat("<init:initialize> initializing ngs object for the Playground\n")
 
     ##----------------- check object
     obj.needed <- c("deconv","genes", ## "collections", "families", "counts",

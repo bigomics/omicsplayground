@@ -25,7 +25,7 @@ COMPARE.CLUSTERS=FALSE
 ##COMPARE.CLUSTERS=TRUE
 DOWNSAMPLE=100
 
-rda.file="../pgx/GSE98638-liver-scRNA.pgx"
+rda.file="../pgx/GSE98638-scliver.pgx"
 ##if(COMPARE.CLUSTERS) rda.file <- sub(".pgx$",paste0("-vsCLUST.pgx"),rda.file)
 ##if(DOWNSAMPLE>0) rda.file <- sub(".pgx$",paste0("-s",DOWNSAMPLE,".pgx"),rda.file)
 ##if(SMALL>0) rda.file <- sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
@@ -226,7 +226,7 @@ if(DIFF.EXPRESSION) {
     }
 
 
-    ## USER.GENETEST.METHODS=c("trend.limma","deseq2","edger.qlf")
+    USER.GENETEST.METHODS=c("trend.limma","edger.qlf","edger.lrt")
     USER.GENESETTEST.METHODS=c("fisher","gsva","camera","fgsea")
     source("../R/compute-genes.R")
     source("../R/compute-genesets.R")

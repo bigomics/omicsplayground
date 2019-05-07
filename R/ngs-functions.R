@@ -1,3 +1,7 @@
+ngs.matchFeatures <- function(ngs, genes) {
+    jj <- match(toupper(genes), toupper(ngs$genes$gene_name))
+    rownames(ngs$genes)[jj]
+}
 
 ngs.collapseByGeneSLOW <- function(ngs) {
     ##sum(duplicated(ngs$genes$gene_name))

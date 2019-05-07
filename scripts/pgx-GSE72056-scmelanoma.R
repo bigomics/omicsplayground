@@ -272,8 +272,10 @@ if(DIFF.EXPRESSION) {
         ##    ngs$samples[,c("malignant","cluster","P2RX7","PDCD1","CD274","CD8A")],
         ##    ref=c("no","cl1","neg","neg","neg","neg") )
         contr.matrix <- makeDirectContrasts(
-            Y = ngs$samples[,c("malignant","cluster","BRAF","BRAF.BT")],
+            Y = ngs$samples[,c("malignant","cluster","BRAF")],
             ref = c("no","all","neg","neg") )
+        head(contr.matrix)
+        colnames(contr.matrix) <- sub(".*:","",colnames(contr.matrix))  ## strip prefix
         head(contr.matrix)
         ##apply(contr.matrix,2,table)
 

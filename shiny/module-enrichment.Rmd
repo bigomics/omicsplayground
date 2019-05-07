@@ -894,15 +894,13 @@ renderPlot({
 }, res=95)
 ```   
 
-
 `r if(!PRO.VERSION) {"----------------------------------------------------->"}`
-
 
 
 Row {.tabset data-height=450}
 --------------------------------------------------------------------------
    
-### GSEA table
+### Enrichment table
 
 ```{r message=FALSE, warning=FALSE}
 
