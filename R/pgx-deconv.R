@@ -182,7 +182,7 @@ pgx.multiDeconvolution <- function(counts, refmat, methods=DECONV.METHODS)
 ##X=as.matrix(2**ngs$X);ref="LM22";methods=DECONV.METHODS
 pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
 {
-    
+
     if(max(X)<100 || min(X)<0) {
         cat("WARNING:: pgx.deconvolution: is X really counts? (not logarithmic)\n")
     }
@@ -216,13 +216,11 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
     timings <- list()
     results <- list()
     methods
-    if("CIBERSORT" %in% methods) {
+    CIBERSORT.code <- "../opt/CIBERSORT/CIBERSORTmat.R"
+    if("CIBERSORT" %in% methods && file.exists(CIBERSORT.code)) {
         ## CIBERSORT
-        source(file.path(FILES,"../opt/CIBERSORT/CIBERSORTmat.R"))
+        source(file.path(FILES,CIBERSORT.code))
         cat("starting deconvolution using CIBERSORT...\n")
-        ##write.table(mat, file="~/Downloads/mat.txt",sep="\t",quote=FALSE)
-        ##system.time( ciber <- CIBERSORT(ref[gg,], mat[gg,], perm=100, QN=TRUE) )
-        ##system.time( ciber <- CIBERSORT(ref[gg,], mat[gg,], perm=0, QN=TRUE) )
         ciber.out <- NULL
         stime <- system.time(
             try( ciber.out <- CIBERSORT(ref, mat, perm=0, QN=TRUE) )
@@ -233,7 +231,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
             ciber.out <- ciber.out[,!(colnames(ciber.out) %in% c("P-value","Correlation","RMSE"))]
             results[["CIBERSORT"]] <- ciber.out
         } else {
-            cat("WARNING:: CIBERSORT failed\n")            
+            cat("WARNING:: CIBERSORT failed\n")
         }
     }
 
@@ -251,7 +249,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
             cat("deconvolution using FARDEEP took",stime[3],"s\n")
             results[["FARDEEP"]] = fd.result$abs.beta
         } else {
-            cat("WARNING:: FARDEEP failed\n")            
+            cat("WARNING:: FARDEEP failed\n")
         }
     }
 
@@ -285,7 +283,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
         ##BiocManager::install("DeconRNASeq")
         if("package:Seurat" %in% search()) detach("package:Seurat", unload=TRUE)
         library(DeconRNASeq)
-        ## uses pca() from pcaMethods        
+        ## uses pca() from pcaMethods
         drs <- NULL
         stime <- system.time(
             drs <- try(DeconRNASeq(data.frame(mat, check.names=FALSE),
