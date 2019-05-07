@@ -55,9 +55,12 @@ GSETS = gmt.all;remove(gmt.all)
 cat("<init> parsing gene families...\n")
 FAMILIES <- getGeneFamilies(GENE.SYMBOL, FILES=FILES, min.size=10, max.size=9999)
 ##FAMILIES <- c(FAMILIES, list( "<LM22 markers>"=LM22_MARKERS,"<ImmProt markers>"=IMMPROT_MARKERS))
-custom.gmt = read.gmt(file.path(FILES,"custom-IRB.gmt"),add.source=TRUE)
-names(custom.gmt)
-FAMILIES= c(FAMILIES, custom.gmt)
+fam.file <- file.path(FILES,"custom-families.gmt")
+if(file.exists(fam.file)) {
+    custom.gmt = read.gmt(file.path(FILES,"custom-families.gmt"),add.source=TRUE)
+    names(custom.gmt)
+    FAMILIES= c(FAMILIES, custom.gmt)
+}
 FAMILIES[["<all>"]] <- GENE.SYMBOL
 f1 <- FAMILIES
 names(f1) <- paste0("FAMILY:",names(f1))

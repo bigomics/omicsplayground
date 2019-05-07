@@ -20,10 +20,11 @@ source("../R/xcr-graph.r")
 source("../R/pgx-functions.R")
 
 source("options.R")
+MAX.GENES=2000
 
 COMPARE.CLUSTERS=FALSE
 ##COMPARE.CLUSTERS=TRUE
-DOWNSAMPLE=100
+DOWNSAMPLE=50
 
 rda.file="../pgx/GSE98638-scliver.pgx"
 ##if(COMPARE.CLUSTERS) rda.file <- sub(".pgx$",paste0("-vsCLUST.pgx"),rda.file)
@@ -53,9 +54,11 @@ if(PROCESS.DATA) {
     ##--------------------------------------------------------------
     ## load series and platform data from GEO
     ##geo <- getGEO("GSE98638", GSEMatrix =TRUE, AnnotGPL=TRUE)
-    ##system("wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE98nnn/GSE98638/suppl/GSE98638_HCC.TCell.S5063.count.txt.gz; mv GSE98638* ../downloads/")
-    counts = fread("~/Projects/Data/GSE/GSE98638_HCC.TCell.S5063.count.txt.gz",nrow=-1000)
-    ##counts = fread("../downloads/GSE98638_HCC.TCell.S5063.count.txt.gz",nrow=-1000)
+    datafile <- "/tmp/GSE98638_HCC.TCell.S5063.count.txt.gz"
+    if(!file.exists(datafile)) {
+        system("wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE98nnn/GSE98638/suppl/GSE98638_HCC.TCell.S5063.count.txt.gz -P /tmp")
+    }
+    counts = fread(datafile,nrow=-1000)
     dim(counts)
     head(counts)[,1:10]
     counts = counts[!is.na(counts[["symbol"]]),]
@@ -65,6 +68,11 @@ if(PROCESS.DATA) {
     head(counts)[,1:10]
     summary(colSums(counts))
 
+    ##--------------------------------------------------------------
+    ## DOWNSAMPLE
+    ##--------------------------------------------------------------
+
+    DOWNSAMPLE
     if(DOWNSAMPLE>0) {
         ## sample each category
         code <- substring(colnames(counts),1,3)
@@ -166,10 +174,10 @@ if(PROCESS.DATA) {
     ## take top varying
     ##-------------------------------------------------------------------
 
-    if(FALSE && SMALL>0) {
-        cat("shrinking data matrices: n=",SMALL,"\n")
+    if(TRUE && MAX.GENES>0) {
+        cat("shrinking data matrices: n=",MAX.GENES,"\n")
         logcpm = edgeR::cpm(ngs$counts, log=TRUE)
-        jj <- head( order(-apply(logcpm,1,sd)), SMALL )  ## how many genes?
+        jj <- head( order(-apply(logcpm,1,sd)), MAX.GENES )  ## how many genes?
         head(jj)
         ##bX <- bX[jj,]
         ngs$counts <- ngs$counts[jj,]
@@ -227,14 +235,14 @@ if(DIFF.EXPRESSION) {
 
 
     USER.GENETEST.METHODS=c("trend.limma","edger.qlf","edger.lrt")
-    USER.GENESETTEST.METHODS=c("fisher","gsva","camera","fgsea")
+    USER.GENESETTEST.METHODS=c("gsva","camera","fgsea")
     source("../R/compute-genes.R")
     source("../R/compute-genesets.R")
     source("../R/compute-extra.R")
-
 }
 
 rda.file
+ngs$drugs$combo <- NULL  ## save space??
 ngs.save(ngs, file=rda.file)
 
 

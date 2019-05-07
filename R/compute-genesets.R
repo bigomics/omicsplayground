@@ -83,8 +83,12 @@ dim(GMT)
 ##-----------------------------------------------------------
 ## Prioritize gene sets by fast rank-correlation
 ##-----------------------------------------------------------
-SMALL
-if(SMALL>0) {
+
+if(!exists("MAX.GENES")) MAX.GENES <- 20000
+if(MAX.GENES < 0) MAX.GENES <- 20000
+MAX.GENES
+
+if(MAX.GENES > 0) {
     require(limma)
     ## Reduce gene sets by selecting top varying genesets. We use the
     ## very fast sparse rank-correlation for approximate single sample
@@ -95,8 +99,7 @@ if(SMALL>0) {
     gsetX.bygroup <- t(apply(gsetX,1,function(x) tapply(x,grp,mean)))
     sdx <- apply(gsetX.bygroup,1,sd)
     names(sdx) <- colnames(GMT)
-    ##jj = head(order(-sdx),SMALL)
-    jj = head(order(-sdx), min(SMALL,20000)) ## maximum 20k..
+    jj = head(order(-sdx), MAX.GENES) 
     must.include <- "hallmark|kegg|^go|^celltype"
     jj = unique( c(jj, grep(must.include,colnames(GMT),ignore.case=TRUE)))
     jj = jj[order(colnames(GMT)[jj])]
