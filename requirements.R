@@ -105,14 +105,14 @@ devtools::install_github("Coolgenome/iTALK", build_vignettes = TRUE)
 ##---------------------------------------------------------------------
 ## from local folder
 ##---------------------------------------------------------------------
-install.packages("ext-pkg/nclust1_1.9.4.tar.gz",repos=NULL,type="source")
-install.packages("ext-pkg/nclust_2.1.1.tar.gz",repos=NULL,type="source")
-install.packages("ext-pkg/pathview_1.16.7.tar.gz",repos=NULL,type="source")  ## old version
-install.packages("ext-pkg/FARDEEP_1.0.1.tar.gz",repos=NULL,type="source")  ## old version
-##install.packages("ext-pkg/gputools_1.1.tar.gz",repos=NULL,type="source")  ## old version
+install.packages("ext/nclust1_1.9.4.tar.gz",repos=NULL,type="source")
+install.packages("ext/nclust_2.1.1.tar.gz",repos=NULL,type="source")
+install.packages("ext/pathview_1.16.7.tar.gz",repos=NULL,type="source")  ## old version
+install.packages("ext/FARDEEP_1.0.1.tar.gz",repos=NULL,type="source")  ## old version
+##install.packages("ext/gputools_1.1.tar.gz",repos=NULL,type="source")  ## old version
 
 install.pkgs(c("ROCR", "mixtools", "lars", "ica", "tsne", "ape", "dtw", "SDMTools", "ggridges", "fitdistrplus", "doSNOW","diffusionMap","fpc","hdf5r"))
-install.packages("ext-pkg/Seurat_v2.3.3.tar.gz",repos=NULL,type="source",dependencies=TRUE)  ## old version
+install.packages("ext/Seurat_v2.3.3.tar.gz",repos=NULL,type="source",dependencies=TRUE)  ## old version
 
 ##---------------------------------------------------------------------
 ## remove unneccessary Big Shit...
