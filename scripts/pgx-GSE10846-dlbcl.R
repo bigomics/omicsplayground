@@ -25,8 +25,6 @@ SMALL
 BATCH.CORRECT=TRUE
 
 rda.file="../pgx/GSE10846-dlbcl.pgx"
-##rda.file="../pgx/GSE10846-dlbcl-mRNAxc.pgx"
-if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 
 ##load(file=rda.file, verbose=1)

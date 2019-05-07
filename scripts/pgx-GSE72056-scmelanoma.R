@@ -30,7 +30,7 @@ DOWNSAMPLE=0
 DOWNSAMPLE=100
 
 rda.file="../pgx/GSE72056-scmelanoma.pgx"
-rda.file = sub(".pgx$",paste0("-vs",COMPARE,".pgx"),rda.file)
+##rda.file = sub(".pgx$",paste0("-vs",COMPARE,".pgx"),rda.file)
 rda.file
 
 ##load(file=rda.file, verbose=1)
