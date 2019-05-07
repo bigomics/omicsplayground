@@ -711,7 +711,7 @@ observe({
     if(is.null(ngs$drugs$combo)) {
         ct <- c("mono")
     }
-    updateSelectInput(session, "dsea_monocombo", choices=ct )
+    updateRadioButtons(session, "dsea_monocombo", choices=ct, inline=TRUE)
 })
 
 
