@@ -27,12 +27,12 @@ COPY ext/nclust1_1.9.4.tar.gz \
      ext/
 
 # Install R packages that are required
-COPY requirements.R /playground/
-RUN R -e "source('/playground/requirements.R')"
+COPY R/requirements.R /tmp
+RUN R -e "source('/tmp/requirements.R')"
 
 # Some extra packages so we can use docker cache
-COPY requirements2.R /playground/
-RUN R -e "source('/playground/requirements2.R')"
+COPY R/requirements2.R /tmp
+RUN R -e "source('/tmp/requirements2.R')"
 
 #------------------------------------------------------------
 # Install all Playground files under /playground

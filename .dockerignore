@@ -9,8 +9,6 @@
 !lib/*
 !pgx/*
 !R/*
-!requirements.R
-!requirements2.R
 !scripts/*
 !shiny/*
 
