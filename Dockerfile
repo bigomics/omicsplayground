@@ -15,16 +15,16 @@ RUN apt-get update && apt-get install -y apt-utils \
 
 ## ???
 RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
-RUN mkdir -p /playground/ext-pkg/
+RUN mkdir -p /playground/ext/
 WORKDIR /playground
 
 ## Upload some packages/files that are needed to the image
-COPY ext-pkg/nclust1_1.9.4.tar.gz \
-     ext-pkg/nclust_2.1.1.tar.gz \
-     ext-pkg/pathview_1.16.7.tar.gz \
-     ext-pkg/FARDEEP_1.0.1.tar.gz \
-     ext-pkg/Seurat_v2.3.3.tar.gz \
-     ext-pkg/
+COPY ext/nclust1_1.9.4.tar.gz \
+     ext/nclust_2.1.1.tar.gz \
+     ext/pathview_1.16.7.tar.gz \
+     ext/FARDEEP_1.0.1.tar.gz \
+     ext/Seurat_v2.3.3.tar.gz \
+     ext/
 
 # Install R packages that are required
 COPY requirements.R /playground/
