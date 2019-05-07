@@ -66,7 +66,6 @@ dim(X)
 ## create the GENESETxGENE matrix
 ##-----------------------------------------------------------
 cat("Building gene set matrix...\n")
-
 ##GMT = sapply( gmt.all, function(s) 1*(rownames(X) %in% s))
 ##GMT = Matrix(GMT, sparse=TRUE)
 GMT <- gmt2mat.nocheck(gmt.all[], bg=rownames(X))  ## in gset-gsea.r
