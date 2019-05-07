@@ -1,4 +1,3 @@
-##rm(list=setdiff(ls(),run.param))
 library(knitr)
 library(limma)
 library(edgeR)
@@ -63,7 +62,7 @@ if(PROCESS.DATA) {
     gene_title <- GENE.TITLE[rownames(counts)]
     genes = data.frame( gene_name=rownames(counts), gene_title=gene_title)
     rownames(genes) <- rownames(counts)
-    
+
     ##--------------------------------------------------------------
     ## Prepare sample table
     ##--------------------------------------------------------------
@@ -76,7 +75,7 @@ if(PROCESS.DATA) {
 
     age <- as.numeric(sampleTable$age)
     summary(age)
-    sampleTable$age.group <- c("young","old")[ 1 + 1*(age >= median(age)) ]    
+    sampleTable$age.group <- c("young","old")[ 1 + 1*(age >= median(age)) ]
     head(sampleTable)
 
     ##-------------------------------------------------------------------
@@ -86,7 +85,7 @@ if(PROCESS.DATA) {
     ngs$samples <- sampleTable
     ngs$genes = data.frame(genes)
     rownames(ngs$genes) <- genes$gene_name
-        
+
     ##-------------------------------------------------------------------
     ## Pre-calculate t-SNE for and get clusters early so we can use it
     ## for doing differential analysis.
@@ -108,24 +107,24 @@ if(DIFF.EXPRESSION) {
     table(ngs$samples$group)
     levels = unique(ngs$samples$group)
     levels
-    
+
     contr.matrix <- makeContrasts(
         old_tumor_vs_old_normal = old_tumor - old_normal,
         young_tumor_vs_young_normal = young_tumor - young_normal,
         old_normal_vs_young_normal = old_normal - young_normal,
         old_tumor_vs_young_tumor = old_tumor - young_tumor,
         levels = levels)
-    
+
     dim(contr.matrix)
     contr.matrix
-    
+
     USER.GENETEST.METHODS=c("trend.limma","deseq2.wald","edger.qlf")
     ## USER.GENETEST.METHODS=c("trend.limma","deseq2","edger.qlf")
     USER.GENESETTEST.METHODS=c("fisher","gsva","camera","fgsea")
     source("../R/compute-genes.R")
     source("../R/compute-genesets.R")
     source("../R/compute-extra.R")
-   
+
 }
 
 rda.file

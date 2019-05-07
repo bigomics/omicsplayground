@@ -12,6 +12,9 @@ install.pkg <- function(pkg) {
 install.pkgs <- function(pkgs) {
     for(pkg in pkgs) install.pkg(pkg)
 }
+remove.pkg <- function(pkg) {
+    if(pkg %in% installed.packages()) remove.packages(pkg)
+}
 
 ##---------------------------------------------------------------------
 ## CRAN packages
@@ -117,12 +120,12 @@ install.packages("ext/Seurat_v2.3.3.tar.gz",repos=NULL,type="source",dependencie
 ##---------------------------------------------------------------------
 ## remove unneccessary Big Shit...
 ##---------------------------------------------------------------------
-remove.packages("reactome.db")  ## >2GB!!
-remove.packages("BH")  ## boost header files
-remove.packages("RNAseqData.HNRNPC.bam.chr14")
-remove.packages("EnsDb.Hsapiens.v86")
-remove.packages("org.Mm.eg.db")
-remove.packages("tximportData")
-remove.packages("TxDb.Hsapiens.UCSC.hg19.knownGene")
+remove.pkg("reactome.db")  ## >2GB!!
+remove.pkg("BH")  ## boost header files
+remove.pkg("RNAseqData.HNRNPC.bam.chr14")
+remove.pkg("EnsDb.Hsapiens.v86")
+remove.pkg("org.Mm.eg.db")
+remove.pkg("tximportData")
+remove.pkg("TxDb.Hsapiens.UCSC.hg19.knownGene")
 
 

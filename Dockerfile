@@ -30,8 +30,9 @@ COPY ext/nclust1_1.9.4.tar.gz \
 COPY requirements.R /playground/
 RUN R -e "source('/playground/requirements.R')"
 
-# Some packages didn't install correctly...
-RUN R -e "install.packages(c('fpc'))"
+# Some extra packages so we can use docker cache
+COPY requirements2.R /playground/
+RUN R -e "source('/playground/requirements2.R')"
 
 #------------------------------------------------------------
 # Install all Playground files under /playground
