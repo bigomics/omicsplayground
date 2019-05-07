@@ -12,6 +12,7 @@ source("../R/gx-limma.r")
 source("../R/gx-util.r")
 source("../R/ngs-cook.r")
 source("../R/ngs-fit.r")
+source("../R/ngs-functions.R")
 source("../R/gset-fisher.r")
 source("../R/gset-gsea.r")
 source("../R/gset-meta.r")
@@ -25,7 +26,7 @@ COMPARE.CLUSTERS=FALSE
 COMPARE.CLUSTERS=TRUE
 ##DOWNSAMPLE=100
 
-rda.file="../pgx/GSE99795-prostateSC.pgx"
+rda.file="../pgx/GSE99795-scprostate.pgx"
 if(COMPARE.CLUSTERS) rda.file <- sub(".pgx$",paste0("-vsCLUST.pgx"),rda.file)
 ##if(DOWNSAMPLE>0) rda.file <- sub(".pgx$",paste0("-s",DOWNSAMPLE,".pgx"),rda.file)
 ##if(SMALL>0) rda.file <- sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
@@ -52,8 +53,11 @@ if(PROCESS.DATA) {
     ## Read SC counts
     ##--------------------------------------------------------------
     ## load series and platform data from GEO
-    ##system("wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE99nnn/GSE99795/suppl/GSE99795_raw.txt.gz; mv GSE99795* ../data/GSE")
-    gse = fread("../data/GSE/GSE99795_raw.txt.gz",nrow=-1000)
+    gse.file = "/tmp/GSE99795_raw.txt.gz"
+    if(!file.exists(gse.file)) {
+        system("wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE99nnn/GSE99795/suppl/GSE99795_raw.txt.gz -P /tmp")
+    }
+    gse = fread(gse.file,nrow=-1000)
     ##counts = fread("../downloads/GSE98638_HCC.TCell.S5063.count.txt.gz",nrow=-1000)
     dim(gse)
     head(gse)[,1:10]
@@ -143,21 +147,17 @@ if(PROCESS.DATA) {
     ##-------------------------------------------------------------------
     ## collapse multiple row for genes by summing up counts
     ##-------------------------------------------------------------------
+    dim(ngs$counts)
     sum(duplicated(ngs$genes$gene_name))
-    x1 = apply(ngs$counts, 2, function(x) tapply(x, ngs$genes$gene_name, sum))
-    dim(x1)
-    ngs$genes = ngs$genes[match(rownames(x1),ngs$genes$gene_name),]
-    ngs$counts = x1
-    rownames(ngs$genes) = rownames(ngs$counts) = rownames(x1)
-    remove(x1)
+    ngs <- ngs.collapseByGene(ngs)
+    dim(ngs$counts)
 
     ##-------------------------------------------------------------------
     ## gene filtering
     ##-------------------------------------------------------------------
     sort(table(ngs$genes$gene_biotype))
-
+    FILTER.GENES
     if(FILTER.GENES) {
-
         is.sex <- (ngs$genes$chr %in% c("chrX","chrY","X","Y",23,24))
         prot.coding <- (ngs$genes$gene_biotype == "protein_coding" &
                         !is.na(ngs$genes$gene_biotype) )
@@ -178,17 +178,16 @@ if(PROCESS.DATA) {
     ## Pre-calculate t-SNE for and get clusters early so we can use it
     ## for doing differential analysis.
     ##-------------------------------------------------------------------
-    ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE,
-                              perplexity=30, kclust=2)
+    ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, perplexity=30, kclust=2)
     head(ngs$samples)
 
     ##-------------------------------------------------------------------
     ## take top varying
     ##-------------------------------------------------------------------
 
-    if(FALSE && SMALL>0) {
+    if(TRUE && SMALL>0) {
         cat("shrinking data matrices: n=",SMALL,"\n")
-        logcpm = edgeR::cpm(ngs$counts, log=TRUE)
+        logcpm = edgeR::cpm(ngs$counts, log=TRUE, prior.count=3)
         jj <- head( order(-apply(logcpm,1,sd)), SMALL )  ## how many genes?
         head(jj)
         ##bX <- bX[jj,]
@@ -237,8 +236,8 @@ if(DIFF.EXPRESSION) {
         ##contr.matrix = contr.matrix[,1:3]
     }
 
-    ## USER.GENETEST.METHODS=c("trend.limma","deseq2","edger.qlf")
-    USER.GENESETTEST.METHODS=c("fisher","gsva","camera","fgsea")
+    ## USER.GENETEST.METHODS=c("trend.limma","edger.qlf","deseq2.wald")
+    ## USER.GENESETTEST.METHODS=c("fisher","gsva","camera","fgsea")
     source("../R/compute-genes.R")
     source("../R/compute-genesets.R")
     source("../R/compute-extra.R")

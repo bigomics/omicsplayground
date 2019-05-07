@@ -1,10 +1,10 @@
-Intersect
+Intersection
 ================================================================================
 
 Input {.sidebar data-width=250}
 --------------------------------------------------------------------------------
 
-<br> **Intersect analysis**. Compare experiments by intersecting their
+<br> **Intersection analysis**. Compare experiments by intersecting their
 genes. Find similar experiments that show similar signatures.
 
 <br> The **Signature Map** maps your signature and connects them to

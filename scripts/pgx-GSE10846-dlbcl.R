@@ -21,7 +21,7 @@ source("../R/pgx-functions.R")
 source("../R/ngs-functions.R")
 
 source("options.R")
-
+SMALL
 BATCH.CORRECT=TRUE
 
 rda.file="../pgx/GSE10846-dlbcl.pgx"
@@ -167,7 +167,7 @@ if(PROCESS.DATA) {
     ##-------------------------------------------------------------------
     ## Now create an DGEList object  (see tximport Vignette)
     ##-------------------------------------------------------------------
-    ngs$counts <- (2**X)  ## treat as counts
+    ngs$counts <- as.matrix(2**X)  ## treat as counts
     ngs$samples <- sampleTable
     ngs$genes = genes
     ##lib.size <- colSums(data$counts / 1e6)  ## get original summed intensity as lib.size
@@ -175,7 +175,8 @@ if(PROCESS.DATA) {
     ##ngs$samples$batch <- as.integer(lib.size2)
 
     ## tagged rownames
-    row.id = paste0("tag",1:nrow(ngs$genes),":",ngs$genes[,"gene_name"])
+    ##row.id = paste0("tag",1:nrow(ngs$genes),":",ngs$genes[,"gene_name"])  
+    row.id = ngs$genes[,"gene_name"]
     rownames(ngs$genes) = rownames(ngs$counts) = row.id
     names(ngs)
 
@@ -227,7 +228,9 @@ if(DIFF.EXPRESSION) {
         ref=c("GCB","male"))
     dim(contr.matrix)
     head(contr.matrix)
-
+    colnames(contr.matrix) <- sub(".*:","",colnames(contr.matrix))  ## strip prefix 
+    head(contr.matrix)
+    
     ##USER.GENETEST.METHODS=c("trend.limma","deseq2.wald","edger.qlf")
     ##USER.GENESETTEST.METHODS=c("gsva","fisher","camera","fgsea")
     USER.GENESETTEST.METHODS = "*"
@@ -237,12 +240,12 @@ if(DIFF.EXPRESSION) {
     source("../R/compute-genes.R")
     source("../R/compute-genesets.R")
     source("../R/compute-extra.R")
-    save(ngs, file=rda.file)
 }
 
 ## save
 rda.file
 ngs.save(ngs, file=rda.file)
+
 
 
 

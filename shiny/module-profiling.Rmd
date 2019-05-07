@@ -377,7 +377,7 @@ output$pr_markersplot <- renderPlot({
 ```
 
 
-### CNV (alpha)
+### CNV
 
 ```{r}
 
@@ -842,7 +842,7 @@ output$statsplot <- renderPlot({
     grp.score1 <- getProportionsTable(pheno, is.gene=FALSE)
     
     grp.score2 <- NULL
-    gene = rownames(ngs$X)[1]
+    gene = ngs$genes$gene_name[1]
     gene = input$pr_statgene
     if(gene != "<none>") {
         grp.score2 <- getProportionsTable(pheno=gene, is.gene=TRUE)
@@ -899,7 +899,7 @@ output$statsplot <- renderPlot({
 }, res=120)
 ```
 
-### CytoPlot (alpha)
+### CytoPlot
 
 ```{r}
 fillCol(flex = c(NA, 1), 

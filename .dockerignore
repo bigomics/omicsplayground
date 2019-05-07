@@ -4,11 +4,13 @@
 !Dockerfile
 !docker/*
 !docs/*
-!ext-pkg/*
+!ext/*
+!opt/*
 !lib/*
 !pgx/*
 !R/*
 !requirements.R
+!requirements2.R
 !scripts/*
 !shiny/*
 

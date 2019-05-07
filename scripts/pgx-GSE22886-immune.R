@@ -257,6 +257,7 @@ if(DIFF.EXPRESSION) {
 }
 
 rda.file
+ngs$drugs$combo <- NULL  ## save space!!
 ngs.save(ngs, file=rda.file)
 
 
