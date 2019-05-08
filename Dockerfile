@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y apt-utils \
 RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
 RUN mkdir -p /playground/ext/
 WORKDIR /playground
+WORKDIR /playground
 
 ## Upload some packages/files that are needed to the image
 COPY ext/nclust1_1.9.4.tar.gz \
@@ -34,7 +35,6 @@ RUN R -e "source('/tmp/requirements.R')"
 
 # Some extra packages so we can use docker cache
 COPY R/requirements2.R /tmp
-COPY R/requirements2.R /tmp 
 RUN R -e "source('/tmp/requirements2.R')"  
 
 #------------------------------------------------------------
