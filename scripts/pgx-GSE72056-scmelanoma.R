@@ -21,7 +21,7 @@ source("../R/pgx-functions.R")
 
 source("options.R")
 MAX.GENES
-MAX.GENES=2000
+##MAX.GENES=2000
 MAX.SAMPLES
 
 COMPARE="group"
@@ -30,7 +30,7 @@ COMPARE="pheno"
 DOWNSAMPLE=0
 DOWNSAMPLE=100
 
-rda.file="../pgx/GSE72056-scmelanoma-n2k.pgx"
+rda.file="../pgx/GSE72056-scmelanoma.pgx"
 ##rda.file = sub(".pgx$",paste0("-vs",COMPARE,".pgx"),rda.file)
 rda.file
 
