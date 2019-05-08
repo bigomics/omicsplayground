@@ -25,8 +25,6 @@ SMALL
 BATCH.CORRECT=TRUE
 
 rda.file="../pgx/GSE10846-dlbcl.pgx"
-##rda.file="../pgx/GSE10846-dlbcl-mRNAxc.pgx"
-if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -233,7 +231,7 @@ if(DIFF.EXPRESSION) {
     
     ##USER.GENETEST.METHODS=c("trend.limma","deseq2.wald","edger.qlf")
     ##USER.GENESETTEST.METHODS=c("gsva","fisher","camera","fgsea")
-    USER.GENESETTEST.METHODS = "*"
+    USER.GENETEST.METHODS = "*"
     USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
 
     ##contr.matrix = contr.matrix[,1:3]

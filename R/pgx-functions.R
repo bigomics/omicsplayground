@@ -388,7 +388,7 @@ getGeneFamilies <- function(genes, FILES="../files", min.size=10, max.size=500)
     families[["IFN/IFIT family"]] = genes[grep("^IFN|^IFIT",genes)]
     families[["Nuclear receptors"]] = genes[grep("^NR[0-9]|^RXR|^ESR|^PGR$|^AR$|^HNF4|^ROR|^PPAR|^THR|^VDR", genes)]
     families[["Cytochrome family"]] = genes[grep("^CYP|^CYB|^CYC|^COX|^COA",genes)]
-    families[["Micro RNA"]] = genes[grep("^MIR|",genes)]
+    families[["Micro RNA"]] = genes[grep("^MIR",genes)]
 
     ## add pathways?
     ##kk = grep("^BIOCARTA_",names(ngs$gmt.all))
