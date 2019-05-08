@@ -21,10 +21,12 @@ source("../R/xcr-graph.r")
 source("../R/pgx-functions.R")
 
 source("options.R")
+MAX.GENES
+MAX.GENES=4000
+DOWNSAMPLE=50
 
 COMPARE.CLUSTERS=FALSE
 ##COMPARE.CLUSTERS=TRUE
-DOWNSAMPLE=100
 FILTER.GENES=TRUE
 
 rda.file="../pgx/GSE92332-scintestine.pgx"
@@ -88,6 +90,9 @@ if(PROCESS.DATA) {
     ##--------------------------------------------------------------
     ## gene annotation
     ##--------------------------------------------------------------
+    if(!require("org.Mm.eg.db")) {
+        BiocManager::install("org.Mm.eg.db", update=FALSE,ask=FALSE)
+    }
     require(org.Mm.eg.db)
     gene <- as.character(gse[[1]])
     genes <- select(org.Mm.eg.db, gene, c("ENTREZID","GENENAME","CHR"), "SYMBOL")
@@ -102,6 +107,9 @@ if(PROCESS.DATA) {
 
     ## add gene type information
     ##require("EnsDb.Hsapiens.v86")
+    if(!require("EnsDb.Mmusculus.v79"))  {
+        BiocManager::install("EnsDb.Mmusculus.v79", update=FALSE,ask=FALSE)
+    }
     require("EnsDb.Mmusculus.v79")
     daf <- transcripts(EnsDb.Mmusculus.v79,
                        columns = c("gene_name", "gene_biotype"),
@@ -122,7 +130,6 @@ if(PROCESS.DATA) {
     ## table(pdata$source_name_ch1)
     ## table(pdata$"tissue:ch1")
     ## table(pdata$"treatment:ch1")
-
     tissue <- sub(".*_","",colnames(counts))
     batch  <- sub("_.*","",colnames(counts))
     sampleTable <- data.frame(batch=batch, tissue=tissue)
@@ -150,7 +157,9 @@ if(PROCESS.DATA) {
     sum(duplicated(ngs$genes$gene_name))
     dim(ngs$counts)
     ngs <- ngs.collapseByGene(ngs)
-
+    head(rownames(ngs$counts))
+    head(rownames(ngs$genes))
+    
     ##-------------------------------------------------------------------
     ## gene filtering
     ##-------------------------------------------------------------------
@@ -184,11 +193,12 @@ if(PROCESS.DATA) {
     ##-------------------------------------------------------------------
     ## take top varying
     ##-------------------------------------------------------------------
-
-    if(FALSE && SMALL>0) {
-        cat("shrinking data matrices: n=",SMALL,"\n")
+    MAX.GENES
+    dim(ngs$counts)
+    if(TRUE && MAX.GENES>0) {
+        cat("shrinking data matrices: n=",MAX.GENES,"\n")
         logcpm = edgeR::cpm(ngs$counts, log=TRUE)
-        jj <- head( order(-apply(logcpm,1,sd)), SMALL )  ## how many genes?
+        jj <- head( order(-apply(logcpm,1,sd)), MAX.GENES )  ## how many genes?
         head(jj)
         ##bX <- bX[jj,]
         ngs$counts <- ngs$counts[jj,]
@@ -220,13 +230,15 @@ if(DIFF.EXPRESSION) {
     ## contr.matrix
     ## ##contr.matrix = contr.matrix[,1:3]
 
-    tissue.contr <- makeClusterContrasts(ngs$samples$tissue, full=FALSE, by.sample=TRUE)
+    ## combine TISSUE and CLUSTER contrast in single matrix
+    tissue.contr  <- makeClusterContrasts(ngs$samples$tissue, full=FALSE, by.sample=TRUE)
     cluster.contr <- makeClusterContrasts(ngs$samples$cluster, full=FALSE, by.sample=TRUE)
     contr.matrix <- cbind(tissue.contr, cluster.contr)
     rownames(contr.matrix) <- rownames(ngs$samples)
     contr.matrix <- normalizeContrasts(contr.matrix)
-
-    ## USER.GENETEST.METHODS=c("trend.limma","deseq2","edger.qlf")
+    head(contr.matrix)
+    
+    USER.GENETEST.METHODS=c("trend.limma","edger.qlf","edger.lrt")
     USER.GENESETTEST.METHODS=c("fisher","gsva","camera","fgsea")
     source("../R/compute-genes.R")
     source("../R/compute-genesets.R")
@@ -235,6 +247,7 @@ if(DIFF.EXPRESSION) {
 }
 
 rda.file
+ngs$drugs$combo <- NULL  ## save space??
 ngs.save(ngs, file=rda.file)
 
 

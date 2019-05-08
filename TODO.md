@@ -1,6 +1,7 @@
 ## Debugging
-- 'Disappearing errors' when loading pages.
-- ...
+- 'Disappearing errors' when loading pages. NULL objects?
+- Initial canvas size in plots too small, giving warnings.
+- 
 
 ## Enhancement
 - Add more deconv methods e.g. from https://grst.github.io/immunedeconv/

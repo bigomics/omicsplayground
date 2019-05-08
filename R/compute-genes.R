@@ -144,17 +144,18 @@ cat("keeping",sum(keep),"expressed genes\n")
 ##-----------------------------------------------------------------------------
 ## Shrink number of genes before testing
 ##-----------------------------------------------------------------------------
-
-if(SMALL>0 && nrow(counts)>SMALL) {
-    cat("shrinking data matrices: n=",SMALL,"\n")
+if(!exists("MAX.GENES")) MAX.GENES <- -1
+if(MAX.GENES > 0 && nrow(counts) > MAX.GENES) {
+    cat("shrinking data matrices: n=",MAX.GENES,"\n")
     ##avg.prior.count <- mean(PRIOR.CPM * Matrix::colSums(counts) / 1e6)  ##
     ##logcpm = edgeR::cpm(counts, log=TRUE, prior.count=avg.prior.count)
     logcpm <- log2( PRIOR.CPM + edgeR::cpm(counts, log=FALSE))
-    jj <- head( order(-apply(logcpm,1,sd)), SMALL )  ## how many genes?
-
+    sdx <- apply(logcpm,1,sd)
+    jj <- head( order(-sdx), MAX.GENES )  ## how many genes?
     ## always add immune genes??
     if("gene_biotype" %in% colnames(genes)) {
         imm.gene <- grep("^TR_|^IG_",genes$gene_biotype)
+        imm.gene <- imm.gene[which(sdx[imm.gene] > 0.001)]
         jj <- unique(c(jj,imm.gene))
     }
     jj0 <- setdiff(1:nrow(counts),jj)
