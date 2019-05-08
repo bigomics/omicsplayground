@@ -6,13 +6,13 @@
 # Prepare R/Shiny with all packages
 #------------------------------------------------------------
 
-FROM rocker/shiny:3.5.1 
+FROM rocker/shiny:3.5.2
 
 RUN apt-get update && apt-get install -y apt-utils \
-    # libcurl4-openssl-dev libv8-3.14-dev \
+    libcurl4-gnutls-dev libv8-3.14-dev \
     libssl-dev libxml2-dev  libjpeg-dev \
     libgl-dev libglu-dev tk-dev libhdf5-dev \
-    libcurl4-gnutls-dev libgit2-dev libssh2-1-dev
+    libgit2-dev libssh2-1-dev
 
 ## ???
 RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
