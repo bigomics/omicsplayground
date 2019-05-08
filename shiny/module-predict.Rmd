@@ -504,10 +504,9 @@ output$pdx_heatmap <- renderPlot({
 
 })    
 
-
 ```
 
-`r if(!DEV.VERSION) {"<!---------------------"}`
+`r if(!PRO.VERSION) {"<!---------------------"}`
 
 ### Multi-level
     
@@ -859,4 +858,4 @@ output$mix_cimDiablo <- renderPlot({
 
 ```
 
-`r if(!DEV.VERSION) {"--------------------->"}`
+`r if(!PRO.VERSION) {"--------------------->"}`

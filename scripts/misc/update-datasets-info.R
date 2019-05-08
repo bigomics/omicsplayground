@@ -2,6 +2,7 @@
 ##
 ##
 
+source("../R/pgx-functions.R")
 PGX.DIR="../pgx"
 
 cat("scanning PGX file info...\n")
