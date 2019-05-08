@@ -23,8 +23,9 @@ INPUT_FILES = unique(c(PGX.DEFAULT,sort(INPUT_FILES)))  ## default on row1
 ##INPUT_FILES
 
 PGXINFO=NULL
-if(file.exists("pgx-datasets-info.csv")) {
-    PGXINFO = read.csv("pgx-datasets-info.csv")
+PGXINFO.FILE <- file.path(PGX.DIR,"datasets-info.csv")
+if(file.exists(PGXINFO.FILE)) {
+    PGXINFO = read.csv(PGXINFO.FILE)
     PGXINFO = PGXINFO[match(INPUT_FILES,PGXINFO$dataset),]
     PGXINFO$dataset <- INPUT_FILES
     PGXINFO$description = shortstring(PGXINFO$description,800)
@@ -90,10 +91,10 @@ observeEvent( input$data_scanfiles, {
         PGXINFO <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=TRUE)
     })
     cat("dim.PGXINFO=",dim(PGXINFO),"\n")
-    INFO.FILE <- "pgx-datasets-info.csv"
+    ##PGXINFO.FILE <- "pgx-datasets-info.csv"
     ##Sys.chmod("../shiny-dev", mode="0777")
-    Sys.chmod(INFO.FILE, mode="0666")
-    write.csv(PGXINFO, file=INFO.FILE)
+    Sys.chmod(PGXINFO.FILE, mode="0666")
+    write.csv(PGXINFO, file=PGXINFO.FILE)
 })
 ```
 
