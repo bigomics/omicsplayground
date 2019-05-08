@@ -40,15 +40,19 @@ devtools::install_github("Coolgenome/iTALK", build_vignettes = TRUE)
 ##---------------------------------------------------------------------
 ## from local folder
 ##---------------------------------------------------------------------
-if("fpc" %in% installed.packages()) remove.packages("fpc")
+
+remove.pkg("fpc")
+install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
 install.packages("ext/fpc_2.1-10.tar.gz",repos=NULL,type="source")
 install.packages("ext/nclust1_1.9.4.tar.gz",repos=NULL,type="source")
 install.packages("ext/nclust_2.1.1.tar.gz",repos=NULL,type="source")
-install.pkgs(c("KEGGREST", "KEGGgraph"))
 install.packages("ext/pathview_1.16.7.tar.gz",repos=NULL,type="source")  ## old version
 install.packages("ext/FARDEEP_1.0.1.tar.gz",repos=NULL,type="source")  ## old version
 ##install.packages("ext/gputools_1.1.tar.gz",repos=NULL,type="source")  ## old version
+
+## Seurat needs to be downgraded and dependencies to installed...
 install.pkgs(c("ROCR", "mixtools", "lars", "ica", "tsne", "ape", "dtw", "SDMTools", "ggridges", "fitdistrplus", "doSNOW","diffusionMap","fpc","hdf5r"))
+install.pkgs(c('cowplot', 'Rtsne', 'pbapply', 'RANN', 'dplyr', 'irlba', 'plotly', 'Hmisc', 'tidyr', 'metap', 'lmtest', 'png', 'reticulate', 'RcppEigen', 'RcppProgress') 
 install.packages("ext/Seurat_v2.3.3.tar.gz",repos=NULL,type="source",dependencies=TRUE)  ## old version
 
 ##---------------------------------------------------------------------

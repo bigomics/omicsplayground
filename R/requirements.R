@@ -5,7 +5,7 @@ if(!require(BiocManager)) install.packages("BiocManager")
 install.pkg <- function(pkg) {
     if(!pkg %in% installed.packages()) {
         require(BiocManager)
-        BiocManager::install(pkg, dependencies=TRUE,
+        BiocManager::install(pkg, dependencies=NA,
                              ask=FALSE, update=FALSE)
     }
 }
@@ -15,6 +15,7 @@ install.pkgs <- function(pkgs) {
 remove.pkg <- function(pkg) {
     if(pkg %in% installed.packages()) remove.packages(pkg)
 }
+
 
 ##---------------------------------------------------------------------
 ## CRAN packages
@@ -85,6 +86,7 @@ install.pkg("GenomicRanges")
 install.pkg("IRanges")
 install.pkg("KEGG.db")
 install.pkg("KEGGREST")
+install.pkg("KEGGgraph")
 install.pkg("GO.db")
 ##install.pkg("pathview")
 install.pkg("ComICS")
@@ -95,6 +97,5 @@ install.pkg("diffusionMap")
 install.pkg("topGO")
 install.pkg("mixOmics")
 install.pkg("mygene")
-
 
 

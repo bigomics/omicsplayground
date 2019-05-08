@@ -9,9 +9,10 @@
 FROM rocker/shiny:3.5.1 
 
 RUN apt-get update && apt-get install -y apt-utils \
-    libcurl4-openssl-dev libv8-3.14-dev \
+    # libcurl4-openssl-dev libv8-3.14-dev \
     libssl-dev libxml2-dev  libjpeg-dev \
-    libgl-dev libglu-dev tk-dev libhdf5-dev
+    libgl-dev libglu-dev tk-dev libhdf5-dev \
+    libcurl4-gnutls-dev libgit2-dev libssh2-1-dev
 
 ## ???
 RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
@@ -21,6 +22,7 @@ WORKDIR /playground
 ## Upload some packages/files that are needed to the image
 COPY ext/nclust1_1.9.4.tar.gz \
      ext/nclust_2.1.1.tar.gz \
+     ext/fpc_2.1-10.tar.gz \
      ext/pathview_1.16.7.tar.gz \
      ext/FARDEEP_1.0.1.tar.gz \
      ext/Seurat_v2.3.3.tar.gz \
