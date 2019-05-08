@@ -21,6 +21,7 @@ source("../R/pgx-functions.R")
 
 source("options.R")
 MAX.GENES
+MAX.GENES=2000
 MAX.SAMPLES
 
 COMPARE="group"
@@ -29,7 +30,7 @@ COMPARE="pheno"
 DOWNSAMPLE=0
 DOWNSAMPLE=100
 
-rda.file="../pgx/GSE72056-scmelanoma.pgx"
+rda.file="../pgx/GSE72056-scmelanoma-n2k.pgx"
 ##rda.file = sub(".pgx$",paste0("-vs",COMPARE,".pgx"),rda.file)
 rda.file
 
@@ -247,6 +248,19 @@ if(PROCESS.DATA) {
     ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, prefix="C")
     head(ngs$samples)
     
+    ##-------------------------------------------------------------------
+    ## take top varying
+    ##-------------------------------------------------------------------
+    MAX.GENES
+    if(TRUE && MAX.GENES>0) {
+        cat("shrinking data matrices: n=",MAX.GENES,"\n")
+        logcpm = edgeR::cpm(ngs$counts, log=TRUE)
+        jj <- head( order(-apply(logcpm,1,sd)), MAX.GENES )  ## how many genes?
+        head(jj)
+        ngs$counts <- ngs$counts[jj,]
+        ngs$genes  <- ngs$genes[jj,]
+    }
+
     dim(ngs$counts)
     ngs$timings <- c()
     rda.file
@@ -317,5 +331,6 @@ if(DIFF.EXPRESSION) {
 }
 
 rda.file
+ngs$drugs$combo <- NULL  ## save space??
 ngs.save(ngs, file=rda.file)
 

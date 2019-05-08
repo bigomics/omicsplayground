@@ -51,9 +51,11 @@ output$gx_downloadData <- downloadHandler(
     content = function(file) {
         ngs <- inputData()
         mx <- NULL
+        k=1
         for(k in names(ngs$gx.meta$meta)) {
-            ff <- ngs$gx.meta$meta[[k]][,c("meta.fx","meta.q")]
-            colnames(ff) <- paste(c("logFC","q"),k,sep=".")
+            colnames(ngs$gx.meta$meta[[k]])
+            ff <- ngs$gx.meta$meta[[k]][,c("meta.fx","meta.p","meta.q")]
+            colnames(ff) <- paste(c("logFC","p","q"),k,sep=".")
             if(!is.null(mx)) {
                 mx <- cbind(mx, ff)
             } else {
