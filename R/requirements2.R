@@ -2,15 +2,18 @@
 
 if(!require(devtools)) install.packages("devtools")
 if(!require(BiocManager)) install.packages("BiocManager")
-install.pkg <- function(pkg) {
+install.pkg <- function(pkg, force=FALSE) {
+    if(force && (pkg %in% installed.packages())) {
+        remove.packages(pkg)
+    }
     if(!pkg %in% installed.packages()) {
         require(BiocManager)
         BiocManager::install(pkg, dependencies=TRUE,
                              ask=FALSE, update=FALSE)
     }
 }
-install.pkgs <- function(pkgs) {
-    for(pkg in pkgs) install.pkg(pkg)
+install.pkgs <- function(pkgs, force=FALSE) {
+    for(pkg in pkgs) install.pkg(pkg, force=force)
 }
 remove.pkg <- function(pkg) {
     if(pkg %in% installed.packages()) remove.packages(pkg)
@@ -37,6 +40,7 @@ devtools::install_github("Coolgenome/iTALK", build_vignettes = TRUE)
 ##---------------------------------------------------------------------
 ## from local folder
 ##---------------------------------------------------------------------
+if("fpc" %in% installed.packages()) remove.packages("fpc")
 install.packages("ext/fpc_2.1-10.tar.gz",repos=NULL,type="source")
 install.packages("ext/nclust1_1.9.4.tar.gz",repos=NULL,type="source")
 install.packages("ext/nclust_2.1.1.tar.gz",repos=NULL,type="source")
