@@ -181,7 +181,7 @@ mixHivePlot <- function(res, ngs, ct, showloops=FALSE, numlab=6, cex=1)
 
         require(maptools)
         lab = sub(".*:","",hpd$nodes$lab[jj])
-        pt <- pointLabel(rx[,1],rx[,2],labels=lab,cex=cex*2,doPlot=FALSE)
+        pt <- maptools::pointLabel(rx[,1],rx[,2],labels=lab,cex=cex*2,doPlot=FALSE)
         px <- cbind(pt$x, pt$y)
         px[,1] <- px[,1] + 4
         grid.text( lab,
