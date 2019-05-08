@@ -492,6 +492,7 @@ pgx.scanInfo <- function(pgx.dir="./pgx/", inc.progress=FALSE) {
     cols <- NULL
     i=1
     for(i in 1:length(pgx.files)) {
+        cat("scanning info from",pgx.files[i],"\n")
         load( pgx.files[i] )
         cnd = colnames(ngs$samples)
         cnd = cnd[grep("group|batch|sample|patient|donor|repl|clone|cluster|lib.size|^[.]",cnd,invert=TRUE)]
