@@ -34,7 +34,8 @@ RUN R -e "source('/tmp/requirements.R')"
 
 # Some extra packages so we can use docker cache
 COPY R/requirements2.R /tmp
-RUN R -e "source('/tmp/requirements2.R')"
+COPY R/requirements2.R /tmp 
+RUN R -e "source('/tmp/requirements2.R')"  
 
 #------------------------------------------------------------
 # Install all Playground and some data under /playground
