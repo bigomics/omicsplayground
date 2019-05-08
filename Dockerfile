@@ -35,7 +35,7 @@ COPY R/requirements2.R /tmp
 RUN R -e "source('/tmp/requirements2.R')"
 
 #------------------------------------------------------------
-# Install all Playground files under /playground
+# Install all Playground and some data under /playground
 #------------------------------------------------------------
 
 RUN mkdir -p /playground/pgx

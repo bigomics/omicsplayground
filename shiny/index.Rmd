@@ -45,7 +45,7 @@ source("./pgx-init.R", local=TRUE)
 DEV.VERSION
 
 if(0) {
-    load("../pgx/GSE10846-dlbcl-BC.pgx")    
+    load("../pgx/GSE10846-dlbcl.pgx")    
     ngs <- pgx.initialize(ngs)    
 }
 ```
