@@ -37,7 +37,7 @@ devtools::install_github("Coolgenome/iTALK", build_vignettes = TRUE)
 ##---------------------------------------------------------------------
 ## from local folder
 ##---------------------------------------------------------------------
-install.packages("ext/fpc_2.1-11.tar.gz",repos=NULL,type="source")
+install.packages("ext/fpc_2.1-10.tar.gz",repos=NULL,type="source")
 install.packages("ext/nclust1_1.9.4.tar.gz",repos=NULL,type="source")
 install.packages("ext/nclust_2.1.1.tar.gz",repos=NULL,type="source")
 install.pkgs(c("KEGGREST", "KEGGgraph"))
