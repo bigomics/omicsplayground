@@ -4,12 +4,15 @@ if(!require(devtools)) install.packages("devtools")
 if(!require(BiocManager)) install.packages("BiocManager")
 install.pkg <- function(pkg, force=FALSE) {
     if(force && (pkg %in% installed.packages())) {
-        remove.packages(pkg)
+        ##remove.packages(pkg)
     }
-    if(!pkg %in% installed.packages()) {
+    if(force || !pkg %in% installed.packages()) {
         require(BiocManager)
-        BiocManager::install(pkg, dependencies=TRUE,
+        cat("installing",pkg,"\n")
+        BiocManager::install(pkg, dependencies=NA,
                              ask=FALSE, update=FALSE)
+    } else {
+        cat("package",pkg,"already installed\n")
     }
 }
 install.pkgs <- function(pkgs, force=FALSE) {
@@ -22,7 +25,7 @@ remove.pkg <- function(pkg) {
 ##---------------------------------------------------------------------
 ## CRAN packages
 ##---------------------------------------------------------------------
-install.pkg("Rgraphviz")
+install.pkg("Rgraphviz", force=TRUE)
 
 ##---------------------------------------------------------------------
 ## Bioconductor packages
@@ -54,7 +57,7 @@ install.packages("ext/FARDEEP_1.0.1.tar.gz",repos=NULL,type="source")  ## old ve
 ## Seurat needs to be downgraded and dependencies to installed...
 install.pkgs(c("ROCR", "mixtools", "lars", "ica", "tsne", "ape", "dtw", "SDMTools", "ggridges", "fitdistrplus", "doSNOW","diffusionMap","fpc","hdf5r"))
 install.pkgs(c('cowplot', 'Rtsne', 'pbapply', 'RANN', 'dplyr', 'irlba', 'plotly', 'Hmisc', 'tidyr', 'metap', 'lmtest', 'png', 'reticulate', 'RcppEigen', 'RcppProgress'))
-install.packages("ext/Seurat_v2.3.3.tar.gz",repos=NULL,type="source",dependencies=TRUE)  ## old version
+install.packages("ext/Seurat_v2.3.3.tar.gz",repos=NULL,type="source")  ## old version
 
 ##---------------------------------------------------------------------
 ## remove unneccessary Big Shit...
