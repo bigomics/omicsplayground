@@ -573,7 +573,7 @@ output$sig_enplots <- renderPlot({
 ```
 
 
-### Signature C-Map (beta)
+### Signature CMap
     
 ```{r message=FALSE, warning=FALSE, fig.width=4}
 

@@ -377,6 +377,8 @@ output$pr_markersplot <- renderPlot({
 ```
 
 
+
+
 ### CNV
 
 ```{r}
@@ -404,6 +406,7 @@ getCNAfromExpression <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
     ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
+    cat("<profiling:getCNAfromExpression> calculating CNV...\n")
     res <- pgx.CNAfromExpression(ngs, nsmooth=40, downsample=10) 
     return(res)
 })
