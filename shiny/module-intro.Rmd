@@ -185,29 +185,5 @@ output$pgxfiles <- DT::renderDataTable({
 ### Splash
 
 ```{r intro-cover2, fig.align="center", echo=FALSE, out.width = '600px', out.height = '400px'}
-##knitr::include_graphics("resources/pgx-bigdata-immunology.png")
 knitr::include_graphics("resources/pgx-bigdata-biology-wt.png")
 ```
-
-
-<!----
-
-### Tutorial
-
-```{r fig.align="center", echo=FALSE, out.width = '600px', out.height = '400px'}
-##knitr::include_graphics("resources/pgx-bigdata-immunology.png")
-```
-
-### FAQ
-
-```{r fig.align="center", echo=FALSE, out.width = '600px', out.height = '400px'}
-##knitr::include_graphics("resources/pgx-bigdata-immunology.png")
-```
-
---->
-
-
-
-
-
-
