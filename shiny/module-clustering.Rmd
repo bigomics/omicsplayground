@@ -69,6 +69,7 @@ observe({
     if(input$hm_level=="geneset") {
         choices = names(COLLECTIONS)
     }
+    choices <- sort(choices)
     updateSelectInput(session, "hm_features", choices=choices)
 })
 ```

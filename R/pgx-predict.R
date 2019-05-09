@@ -494,20 +494,20 @@ pgx.survivalVariableImportance <-
         require(glmnet)
         fam <- "cox"
         
-        nf=5
-        out0 <- cv.glmnet( t(X), y, alpha=0, family=fam,standardize=TRUE, nfold=nf)
+        NFOLD=5
+        out0 <- cv.glmnet( t(X), y, alpha=0, family=fam,standardize=TRUE, nfold=NFOLD)
         cf0 <- coef(out0, s="lambda.min")[,1]
         ##imp[["coxnet.s0"]] <- cf0 * sdx[names(cf0)]
         
-        out1 <- cv.glmnet( t(X), y, alpha=1, family=fam,standardize=TRUE, nfold=nf)
+        out1 <- cv.glmnet( t(X), y, alpha=1, family=fam,standardize=TRUE, nfold=NFOLD)
         cf1 <- coef(out1, s="lambda.min")[,1]
         ##imp[["coxnet.s1"]] <- cf1 * sdx[names(cf1)]
         
-        out0a <- cv.glmnet( t(X), y, alpha=0, family=fam, standardize=FALSE, nfold=nf)
+        out0a <- cv.glmnet( t(X), y, alpha=0, family=fam, standardize=FALSE, nfold=NFOLD)
         cf0a <- coef(out0a, s="lambda.min")[,1]
         ##imp[["coxnet.a0"]] <- cf0a * sdx[names(cf0a)]
         
-        out1a <- cv.glmnet( t(X), y, alpha=1, family=fam, standardize=FALSE, nfold=nf)
+        out1a <- cv.glmnet( t(X), y, alpha=1, family=fam, standardize=FALSE, nfold=NFOLD)
         cf1a <- coef(out1a, s="lambda.min")[,1]
         ##imp[["coxnet.a1"]] <- cf1a * sdx[names(cf1a)]
 
@@ -627,30 +627,47 @@ pgx.multiclassVariableImportance <-
     ## multi-class version
     ##
     ##
-
+    
     imp <- list()
     xnames <- rownames(X)
     if(nrow(X)==1) X <- rbind(X,X)
     sdx <- apply(X,1,sd)    
+
+    ## convert to factor
+    y <- factor(y)
+    table(y)
+    
+    ## resample to minimum size to balance groups
+    if(1) {
+        NFOLD=5
+        ##NSIZE = max(max(table(y)),20)
+        NSIZE = 20
+        jj <- unlist(tapply(1:length(y), y, function(ii) {
+            if(length(ii)<NSIZE) ii <- sample(ii,NSIZE,replace=TRUE)
+            return(ii)
+        }))
+        cat("pgx.multiclassVariableImportance:: augmenting data from",
+            length(y),"to",length(jj),"samples\n")
+        X <- X[,jj]
+        y <- y[jj]
+    }
     
     if("glmnet" %in% methods) {
-
+        
         require(glmnet)
         fam <- "multinomial"
         ##fam <- "binomial"
         ##if(length(unique(y))>2) fam="multinomial"
-
-        nf=5
-        out0 <- cv.glmnet( t(X), y, alpha=0, family=fam,standardize=TRUE, nfold=nf)
+        out0 <- cv.glmnet( t(X), y, alpha=0, family=fam,standardize=TRUE, nfold=NFOLD)
         cf0 <- Matrix::rowMeans(do.call(cbind, coef(out0, s="lambda.min"))[-1,]**2)
         
-        out1 <- cv.glmnet( t(X), y, alpha=1, family=fam,standardize=TRUE, nfold=nf)
+        out1 <- cv.glmnet( t(X), y, alpha=1, family=fam,standardize=TRUE, nfold=NFOLD)
         cf1 <- Matrix::rowMeans(do.call(cbind, coef(out1, s="lambda.min"))[-1,]**2)        
         
-        out0a <- cv.glmnet( t(X), y, alpha=0, family=fam, standardize=FALSE, nfold=nf)
+        out0a <- cv.glmnet( t(X), y, alpha=0, family=fam, standardize=FALSE, nfold=NFOLD)
         cf0a <- Matrix::rowMeans(do.call(cbind, coef(out0a, s="lambda.min"))[-1,]**2)
         
-        out1a <- cv.glmnet( t(X), y, alpha=1, family=fam, standardize=FALSE, nfold=nf)
+        out1a <- cv.glmnet( t(X), y, alpha=1, family=fam, standardize=FALSE, nfold=NFOLD)
         cf1a <- Matrix::rowMeans(do.call(cbind, coef(out1a, s="lambda.min"))[-1,]**2)
 
         imp[["glmnet.a0"]] <- (cf0/max(abs(cf0)) + cf0a/max(abs(cf0a))) * sdx[names(cf0)]
@@ -717,6 +734,7 @@ pgx.multiclassVariableImportance <-
     if("pls" %in% methods) {
         require(mixOmics)
         n <- min(25,nrow(X))
+        colnames(X) <- names(y) <- paste0("sample",1:length(y))
         res <- mixOmics::splsda( t(X), y, keepX = c(n,n))  
         impx <- rowMeans(res$loadings$X[rownames(X),]**2)
         imp[["spls.da"]] <- impx
@@ -745,6 +763,25 @@ pgx.variableImportance <-
     xnames <- rownames(X)
     if(nrow(X)==1) X <- rbind(X,X)
     sdx <- apply(X,1,sd)    
+
+    ## convert to factor
+    y <- factor(y)
+    table(y)
+
+    ## resample to minimum size to balance groups
+    if(1) {
+        NFOLD=5
+        ##NSIZE = max(max(table(y)),20)
+        NSIZE = 20
+        jj <- unlist(tapply(1:length(y), y, function(ii) {
+            if(length(ii)<NSIZE) ii <- sample(ii,NSIZE,replace=TRUE)
+            return(ii)
+        }))
+        cat("pgx.multiclassVariableImportance:: augmenting data from",
+            length(y),"to",length(jj),"\n")
+        X <- X[,jj]
+        y <- y[jj]
+    }    
     
     if("glmnet" %in% methods) {
         require(glmnet)
@@ -830,6 +867,7 @@ pgx.variableImportance <-
         ##library(caret)
         require(mixOmics)
         n <- min(25,nrow(X))
+        colnames(X) <- names(y) <- paste0("sample",1:length(y))
         res <- mixOmics::splsda( t(X), y, keepX = c(n,n))  
         ##impx <- res$loadings$X[rownames(X),1]
         impx <- rowMeans(res$loadings$X[rownames(X),]**2)
