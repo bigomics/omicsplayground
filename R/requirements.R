@@ -1,16 +1,25 @@
 ##source("http://bioconductor.org/biocLite.R")
 
-if(!require(devtools)) install.packages("devtools")
-if(!require(BiocManager)) install.packages("BiocManager")
-install.pkg <- function(pkg) {
-    if(!pkg %in% installed.packages()) {
+install.packages("devtools")
+install.packages("BiocManager")
+require(devtools)
+require(BiocManager)
+
+install.pkg <- function(pkg, force=FALSE) {
+    if(force && (pkg %in% installed.packages())) {
+        ##remove.packages(pkg)
+    }
+    if(force || !pkg %in% installed.packages()) {
         require(BiocManager)
+        cat("installing",pkg,"\n")
         BiocManager::install(pkg, dependencies=NA,
                              ask=FALSE, update=FALSE)
+    } else {
+        cat("package",pkg,"already installed\n")
     }
 }
-install.pkgs <- function(pkgs) {
-    for(pkg in pkgs) install.pkg(pkg)
+install.pkgs <- function(pkgs, force=FALSE) {
+    for(pkg in pkgs) install.pkg(pkg, force=force)
 }
 remove.pkg <- function(pkg) {
     if(pkg %in% installed.packages()) remove.packages(pkg)
@@ -33,7 +42,6 @@ install.pkg("htmltools")
 install.pkg("reticulate")
 install.pkg("tidyverse")
 install.pkg("qlcMatrix")
-##install.pkg("fpc")
 install.pkg("ComplexHeatmap")
 install.pkg("gmodels")
 install.pkg("matrixTests")
@@ -44,7 +52,6 @@ install.pkg("scatterD3")
 install.pkg("threejs")
 install.pkg("locfit")
 install.pkg("irlba")
-install.pkg("gridGraphics")
 install.pkg("ggpubr")
 install.pkg("corrplot")
 install.pkg("corpora")  ## for fisher.pval
@@ -55,10 +62,18 @@ install.pkg("rpart")
 install.pkg("rpart.plot")
 install.pkg("party")
 install.pkg("partykit")
-install.pkg("NNLM")
+##install.pkg("NNLM", force=TRUE)
+install_version("NNLM", version="0.4.1", repos="http://cran.us.r-project.org")
 install.pkg("nnls")
-##install.pkg("clusterProfiler", version = "3.8")
 install.pkg("HiveR")
+install.pkg("grid", force=TRUE)
+
+## problematics ones
+require(devtools)
+##install.pkg("fpc", force=TRUE)
+##install.packages("gridGraphics")
+install_version("gridGraphics", version="0.3-0", repos="http://cran.us.r-project.org")
+install.pkg("fastcluster", force=TRUE)
 
 ##---------------------------------------------------------------------
 ## Bioconductor packages
@@ -97,5 +112,6 @@ install.pkg("diffusionMap")
 install.pkg("topGO")
 install.pkg("mixOmics")
 install.pkg("mygene")
+install.pkg("Rgraphviz", force=TRUE)
 
 

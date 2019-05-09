@@ -23,9 +23,18 @@ remove.pkg <- function(pkg) {
 }
 
 ##---------------------------------------------------------------------
-## CRAN packages
+## CRAN packages (problematic ones...)
 ##---------------------------------------------------------------------
 install.pkg("Rgraphviz", force=TRUE)
+install.pkg("fastcluster", force=TRUE)
+install.pkg("mygene", force=TRUE)
+install.pkg("diptest", force=TRUE)
+
+remove.pkg("fpc")
+install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
+##install.packages("ext/fpc_2.1-10.tar.gz",repos=NULL,type="source")
+install_version("fpc", version="2.1-10", repos="http://cran.us.r-project.org")
+
 
 ##---------------------------------------------------------------------
 ## Bioconductor packages
@@ -46,9 +55,7 @@ devtools::install_github("Coolgenome/iTALK", build_vignettes = TRUE)
 ## from local folder
 ##---------------------------------------------------------------------
 
-remove.pkg("fpc")
-install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
-install.packages("ext/fpc_2.1-10.tar.gz",repos=NULL,type="source")
+library(devtools)
 install.packages("ext/nclust1_1.9.4.tar.gz",repos=NULL,type="source")
 install.packages("ext/nclust_2.1.1.tar.gz",repos=NULL,type="source")
 install.packages("ext/pathview_1.16.7.tar.gz",repos=NULL,type="source")  ## old version
