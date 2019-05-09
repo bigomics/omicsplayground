@@ -71,18 +71,3 @@ if(0) {
 
 ```{r child = 'module-profiling.Rmd'}
 ```
-
-`r if(!PRO.VERSION) {"<!-------------------------------------------"}`
-
-```{r child = 'module-batchcorrection.Rmd'}
-```
-
-`r if(!PRO.VERSION) {"--------------------------------------------->"}`
-
-
-`r if(!DEV.VERSION) {"<!-------------------------------------------"}`
-
-```{r child = 'module-system.Rmd'}
-```
-
-`r if(!DEV.VERSION) {"--------------------------------------------->"}`
