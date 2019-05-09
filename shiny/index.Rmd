@@ -4,8 +4,8 @@ output:
   flexdashboard::flex_dashboard:
     theme: default
     orientation: col
-    logo: resources/logo.png
-    favicon: resources/favicon.png
+    logo: resources/bigomics-logo-white-48px.png
+    favicon: resources/bigomics-logo-white-48px.png
     css: resources/custom.css
 runtime: shiny
 ---
