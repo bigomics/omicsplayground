@@ -26,3 +26,9 @@ docker load -i shinyapp.tar
 docker run shinyapp
 
 
+
+## publish to Docker Hub
+
+docker login
+docker tag playground:rc4 bigomics/playground:stable
+docker push bigomics/playground:stable
