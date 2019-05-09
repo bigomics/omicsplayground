@@ -4,10 +4,10 @@ output:
   flexdashboard::flex_dashboard:
     theme: default
     orientation: col
-##    logo: resources/irb-small.png
-##    favicon: resources/irb-small.png
-    logo: resources/bigomics-logo-white-48px.png
-    favicon: resources/bigomics-logo-white-48px.png
+    logo: resources/irb-small.png
+    favicon: resources/irb-small.png
+##logo: resources/bigomics-logo-white-48px.png
+##  favicon: resources/bigomics-logo-white-48px.png
     css: resources/custom.css
 runtime: shiny
 ---
@@ -18,10 +18,6 @@ runtime: shiny
 ## load data in 'global' chunk so it can be shared by all users of the dashboard
 library(shiny)
 library(rmarkdown)
-
-##setwd("~/Projects/Immunomics/shiny-dev/")
-PRO.VERSION=FALSE
-##PRO.VERSION=TRUE
 
 ## set global folders
 all.dir = c("R","lib","pgx")
@@ -41,8 +37,6 @@ cat("setting FILES =",FILES,"\n")
 cat("setting PGX.DIR =",PGX.DIR,"\n")
 
 source("./pgx-init.R", local=TRUE)
-##DEV.VERSION = (TRUE && PRO.VERSION)  ## disable/enable DEV options
-DEV.VERSION
 
 if(0) {
     load("../pgx/GSE10846-dlbcl.pgx")    

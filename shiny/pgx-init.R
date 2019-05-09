@@ -33,6 +33,7 @@ source(file.path(RDIR,"pgx-correct.R"))
 source(file.path(RDIR,"pgx-predict.R"))
 
 ## you need to override this!!!
+PRO.VERSION=FALSE
 DEV.VERSION=FALSE
 
 ##-----------------------------------------------------------------------------
