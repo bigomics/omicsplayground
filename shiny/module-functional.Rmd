@@ -22,8 +22,8 @@ selectInput("fa_contrast","Comparison:", choices=NULL)
 checkboxInput('fa_normalize','normalize',TRUE)
 br();br();br();
 if(PRO.VERSION) checkboxInput('fa_filtertable','filter tables',FALSE)
-if(PRO.VERSION) radioButtons('dsea_label','C-map label',c("name","moa","target"),inline=TRUE)
-if(PRO.VERSION) checkboxInput('dsea_showall','C-map show all',FALSE)
+if(PRO.VERSION) radioButtons('dsea_label','CMap label',c("name","moa","target"),inline=TRUE)
+if(PRO.VERSION) checkboxInput('dsea_showall','CMap show all',FALSE)
 
 observe({
     ngs <- inputData()
@@ -681,7 +681,7 @@ output$faGO_cormap <- renderPlot({
 ```
 
 
-### Drug C-Map
+### Drug CMap
     
 ```{r message=FALSE, warning=FALSE, fig.width=4}
 
@@ -1131,7 +1131,7 @@ output$dsea_tsne <- renderScatterD3({
 
 ```
 
-`r if(!PRO.VERSION) {"<!---------------------"}`
+`r if(!DEV.VERSION) {"<!---------------------"}`
 
 ### Fire plot
     
@@ -1268,12 +1268,6 @@ output$fa_fireplot <- renderPlot({
     
 }, res=85)
 ```
-
-`r if(!PRO.VERSION) {"----------------------->"}`
-
-
-`r if(!DEV.VERSION) {"<!---------------------"}`
-
 
 ### iTALK
     

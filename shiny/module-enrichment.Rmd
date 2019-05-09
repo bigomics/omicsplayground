@@ -675,7 +675,75 @@ renderPlot({
 })
 ``` 
 
-`r if(!PRO.VERSION) {"<!--------------------------------------------------------"}`
+### Volcano (methods)
+
+```{r message=FALSE, warning=FALSE}
+##renderScatterD3({
+renderPlot({
+    ##renderPlotly({
+    ngs <- inputData()    
+    if(is.null(ngs)) return(NULL)
+    if(is.null(input$gs_features)) return(NULL)
+    
+    cmp = 1
+    cmp = input$gs_contrast
+    mx = ngs$gset.meta$meta[[cmp]]
+    fx = unclass(mx$fc)
+    qv = unclass(mx$q)
+    pv = unclass(mx$p)    
+
+    fx[which(is.na(fx))] <- NA
+    fx[which(is.infinite(fx))] <- NA
+    qv[which(is.na(qv))] <- 1
+
+    fdr=1;lfc=0
+    fdr=0.05;lfc=1
+    fdr = as.numeric(input$gs_fdr)    
+    lfc = as.numeric(input$gs_lfc)
+    sel.gsets <- rownames(mx)
+    sel.gsets = COLLECTIONS[[1]]
+    sel.gsets = COLLECTIONS[[input$gs_features]]
+    
+    ng = ncol(fx)
+    nn = c(2, max(ng/2,5))
+    par(mfrow=nn, mar=c(2,4,2.3,2)*0, mgp=c(2.6,1,0))
+
+    i=1
+    for(i in 1:ng) {
+        
+        is.sig <- ( qv[,i] <= fdr & abs(fx[,i]) >= lfc)
+        sig.gs = rownames(mx)[which(is.sig)]
+        sig.gs <- intersect(sel.gsets, sig.gs)
+        
+        method = colnames(fx)[i]
+        gx.volcanoPlot.XY(
+            x = fx[,i], pv = qv[,i],
+            use.fdr=TRUE, p.sig=fdr, lfc=lfc,
+            ##gene = substring(rownames(mx),1,35),
+            gene = rownames(mx),
+            xlab = "effect size (NES)", ylim=c(0,10), 
+            lab.cex=1.5, nlab=3, axes=FALSE, 
+            render="canvas", n=1000, highlight=sig.gs,
+            cex=1, cex.axis=1.3, main="")
+
+        ##title(mt, line=-1.5, cex.main=1.4)
+        legend("topright",method,bg="white", cex=1.2)
+        
+        ##volcano_plot(limma, render="plotly", n=1000, cex=1, highlight=genes)
+        ## draw axis if first column or last row
+        n=nn[2]
+        is.first = (i%%n==1)
+        last.row = ( (i-1)%/%n == (ng-1)%/%n )
+        if(is.first) axis(2, tcl=0.5, mgp=c(-2,-1.5,0))
+        if(last.row) axis(1, tcl=0.5, mgp=c(-2,-1.5,0))
+        box()
+
+    }
+
+})
+``` 
+
+`r if(!DEV.VERSION) {"<!--------------------------------------------------------"}`
 
 ### Gene map
 
@@ -747,74 +815,6 @@ renderPlot({
     
 })
 ```
-
-### Volcano (methods)
-
-```{r message=FALSE, warning=FALSE}
-##renderScatterD3({
-renderPlot({
-    ##renderPlotly({
-    ngs <- inputData()    
-    if(is.null(ngs)) return(NULL)
-    if(is.null(input$gs_features)) return(NULL)
-    
-    cmp = 1
-    cmp = input$gs_contrast
-    mx = ngs$gset.meta$meta[[cmp]]
-    fx = unclass(mx$fc)
-    qv = unclass(mx$q)
-    pv = unclass(mx$p)    
-
-    fx[which(is.na(fx))] <- NA
-    fx[which(is.infinite(fx))] <- NA
-    qv[which(is.na(qv))] <- 1
-
-    fdr=1;lfc=0
-    fdr=0.05;lfc=1
-    fdr = as.numeric(input$gs_fdr)    
-    lfc = as.numeric(input$gs_lfc)
-    sel.gsets <- rownames(mx)
-    sel.gsets = COLLECTIONS[[1]]
-    sel.gsets = COLLECTIONS[[input$gs_features]]
-    
-    ng = ncol(fx)
-    nn = c(2, max(ng/2,5))
-    par(mfrow=nn, mar=c(2,4,2.3,2)*0, mgp=c(2.6,1,0))
-
-    i=1
-    for(i in 1:ng) {
-        
-        is.sig <- ( qv[,i] <= fdr & abs(fx[,i]) >= lfc)
-        sig.gs = rownames(mx)[which(is.sig)]
-        sig.gs <- intersect(sel.gsets, sig.gs)
-        
-        method = colnames(fx)[i]
-        gx.volcanoPlot.XY(
-            x = fx[,i], pv = qv[,i],
-            use.fdr=TRUE, p.sig=fdr, lfc=lfc,
-            ##gene = substring(rownames(mx),1,35),
-            gene = rownames(mx),
-            xlab = "effect size (NES)", ylim=c(0,10), 
-            lab.cex=1.5, nlab=3, axes=FALSE, 
-            render="canvas", n=1000, highlight=sig.gs,
-            cex=1, cex.axis=1.3, main="")
-
-        ##title(mt, line=-1.5, cex.main=1.4)
-        legend("topright",method,bg="white", cex=1.2)
-        
-        ##volcano_plot(limma, render="plotly", n=1000, cex=1, highlight=genes)
-        ## draw axis if first column or last row
-        n=nn[2]
-        is.first = (i%%n==1)
-        last.row = ( (i-1)%/%n == (ng-1)%/%n )
-        if(is.first) axis(2, tcl=0.5, mgp=c(-2,-1.5,0))
-        if(last.row) axis(1, tcl=0.5, mgp=c(-2,-1.5,0))
-        box()
-
-    }
-
-})
-``` 
 
 ### Concept enrichment
 
@@ -894,7 +894,7 @@ renderPlot({
 }, res=95)
 ```   
 
-`r if(!PRO.VERSION) {"----------------------------------------------------->"}`
+`r if(!DEV.VERSION) {"----------------------------------------------------->"}`
 
 
 Row {.tabset data-height=450}
