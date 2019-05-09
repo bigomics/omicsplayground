@@ -30,6 +30,7 @@ observe({
     ct <- colnames(ngs$model.parameters$contr.matrix)
     if(input$pdx_vartype=="phenotype") {
         ct <- colnames(ngs$Y)
+        ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
     }
     cat("<predict::observe1> updating pdx_contrast...\n")
     updateSelectInput(session, "pdx_contrast", choices=ct )
@@ -188,12 +189,17 @@ calcVariableImportance <- reactive({
             X <- ngs$X[,names(y)]
         }
     }
+    dim(X)
+    length(y)
     
     ## ----------- filter with selected features
+    cat("calcVariableImportance:: 3: filtering\n")
+
     ft="<all>"
     ft <- input$pdx_filter
     if(is.null(ft)) return(NULL)
 
+    pp <- rownames(X)
     if(input$pdx_level=="geneset") {
         if(!(ft %in% names(COLLECTIONS))) return(NULL)
         pp <- COLLECTIONS[[ft]]
@@ -218,7 +224,9 @@ calcVariableImportance <- reactive({
             X <- X[pp,,drop=FALSE]
         }
     }
-    
+
+    cat("calcVariableImportance:: 4: restrict top: dim.X=",dim(X),"\n")
+        
     ## ----------- restrict to top 100
     dim(X)
     X <- head(X[order(-apply(X,1,sd)),,drop=FALSE], 10*NFEATURES)  ## top 100
@@ -226,6 +234,9 @@ calcVariableImportance <- reactive({
     X <- X + 0.25*sdx*matrix(rnorm(length(X)),nrow(X),ncol(X))  ## add some noise
     dim(X)
 
+    cat("calcVariableImportance:: 4: compute importance...\n")
+    cat("calcVariableImportance:: 4: table.y=",table(y),"\n")
+    
     ##-------------------------------------------
     ## compute importance values
     ##-------------------------------------------
@@ -260,7 +271,9 @@ calcVariableImportance <- reactive({
         R <- R[order(-rowSums(R)),,drop=FALSE]
         head(R)
     }
-        
+
+    cat("calcVariableImportance:: 5: drawing tree\n")
+    
     ##------------------------------
     ## create partition tree
     ##------------------------------
@@ -269,8 +282,12 @@ calcVariableImportance <- reactive({
     sel <- head(rownames(R),NFEATURES)  ## top50 features
     sel <- intersect(sel,rownames(X))
     tx <- t(X[sel,,drop=FALSE])
+
+    ## formula wants clean names
     colnames(tx) <- gsub("[: +-.,]","_",colnames(tx))
     colnames(tx) <- gsub("[')(]","",colnames(tx))
+    orig.names <- sel
+    names(orig.names) <- colnames(tx)
     jj <- names(y)
     ##ny <- length(unique(y))
     ##if(length(jj) < ny*20) jj <- c(jj,jj,jj)
@@ -288,7 +305,8 @@ calcVariableImportance <- reactive({
     }
     table(rf$where)
     rf$cptable
-
+    rf$orig.names <- orig.names
+    
     rf.nsplit <- rf$cptable[,"nsplit"]
     max(rf.nsplit)
     length(unique(y)) 
@@ -304,8 +322,11 @@ calcVariableImportance <- reactive({
         rf <- prune(rf, cp=cp0)
     }
     table(rf$where)
+
     
-    cat("calcVariableImportance:: end\n")
+
+    
+    cat("calcVariableImportance:: done\n")
     ##y <- y[rownames(ngs$samples)]
     ##tx <- tx[names(y),]
     y <- y[rownames(tx)]
@@ -414,20 +435,22 @@ output$pdx_boxplots <- renderPlot({
 
     cat("pdx_boxplots:: called\n")    
     vars <- setdiff(res$rf$frame$var,"<leaf>")
-    vars
+    vars <- res$rf$orig.names[vars]
     if(length(vars)==0) return(NULL)
     
-    cat("pdx_boxplots:: vars=",vars,"\n")
-    vars0 <- setdiff(vars,rownames(res$X))
-    cat("pdx_boxplots:: vars0=",vars0,"\n")
-    vars <- intersect(vars, rownames(res$X))
-
+    cat("pdx_boxplots:: 1: vars=",vars,"\n")
+    ##vars0 <- setdiff(vars,rownames(res$X))
+    ##cat("pdx_boxplots:: vars0=",vars0,"\n")
+    vars <- intersect(vars,rownames(res$X))
+    cat("pdx_boxplots:: 2: vars=",vars,"\n")
+    
     ## add some other variables
     if(1 && length(vars)<8) {
         jj <- order(-rowSums(res$R,na.rm=TRUE))
-        top.vars <- rownames(res$R)[jj]
-        vars <- head(unique(c(vars,top.vars)),8)
+        other.vars <- rownames(res$R)[jj]
+        vars <- head(unique(c(vars,other.vars)),8)
     }
+    cat("pdx_boxplots:: 3: vars=",vars,"\n")
     
     y <- res$y
     is.surv <- grepl("Surv",res$rf$call)[2]
@@ -449,7 +472,6 @@ output$pdx_boxplots <- renderPlot({
         ##g <- rownames(res$R)[i]
         g <- vars[i]
         gx <- res$X[g,]
-
         boxplot( gx ~ y, col="grey85", ylim = range(gx),
                 ylab="expression", cex.axis=0.001)
         axis(2, cex.axis=0.9)
