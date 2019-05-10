@@ -20,7 +20,7 @@ source("../R/xcr-graph.r")
 source("../R/pgx-functions.R")
 
 source("options.R")
-MAX.GENES=2000
+##MAX.GENES=2000
 
 COMPARE.CLUSTERS=FALSE
 ##COMPARE.CLUSTERS=TRUE

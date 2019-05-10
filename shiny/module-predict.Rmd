@@ -283,7 +283,7 @@ calcVariableImportance <- reactive({
     sel <- intersect(sel,rownames(X))
     tx <- t(X[sel,,drop=FALSE])
 
-    ## formula wants clean names
+    ## formula wants clean names, so save original names
     colnames(tx) <- gsub("[: +-.,]","_",colnames(tx))
     colnames(tx) <- gsub("[')(]","",colnames(tx))
     orig.names <- sel
@@ -321,15 +321,13 @@ calcVariableImportance <- reactive({
         ##rf <- prune(rf, cp=0.05)
         rf <- prune(rf, cp=cp0)
     }
-    table(rf$where)
-
-    
-
+    table(rf$where) 
     
     cat("calcVariableImportance:: done\n")
     ##y <- y[rownames(ngs$samples)]
     ##tx <- tx[names(y),]
     y <- y[rownames(tx)]
+    colnames(tx) <- orig.names[colnames(tx)]
     res <- list(P=P, R=R, y=y, X=t(tx), rf=rf)
 
     return(res)
@@ -439,9 +437,15 @@ output$pdx_boxplots <- renderPlot({
     if(length(vars)==0) return(NULL)
     
     cat("pdx_boxplots:: 1: vars=",vars,"\n")
+    cat("pdx_boxplots:: 1: rn.res.X=",head(rownames(res$X)),"\n")
     ##vars0 <- setdiff(vars,rownames(res$X))
     ##cat("pdx_boxplots:: vars0=",vars0,"\n")
-    vars <- intersect(vars,rownames(res$X))
+    if(input$pdx_level=="geneset") {
+        ##xvars <- res$rf$orig.names[vars]
+        vars <- intersect(vars,rownames(res$X))
+    } else {
+        vars <- intersect(vars,rownames(res$X))
+    }
     cat("pdx_boxplots:: 2: vars=",vars,"\n")
     
     ## add some other variables

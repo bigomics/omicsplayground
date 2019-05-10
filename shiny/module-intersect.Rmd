@@ -491,13 +491,19 @@ observe({
 
 contrastCmapGraph <- reactive({
 
-    ngs <- inputData()    
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    cat("<intersect:contrastCmapGraph> called\n")
+    
     res <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
     res = cmpGetFoldChangeMatrix()
     if(is.null(res)) return(NULL)
     fc0 = res$fc
     ##qv0 = res$qv
     fc0 <- fc0[,!duplicated(colnames(fc0))]
+
+    cat("<intersect:contrastCmapGraph> dim(fc0)=",dim(fc0),"\n")
     
     allfc <- ("all" %in% input$cmp_cgraph_options)
     if(!allfc) {
@@ -518,18 +524,17 @@ contrastCmapGraph <- reactive({
         ##R0 <- R*(abs(R) > 0.2)
         R0 <- R*(abs(R) > input_cmp_cgraph_threshold())
     }
+
+    ## make graph
     g <- graph_from_adjacency_matrix(
         R0, weighted=TRUE, diag=FALSE, mode="undirected")
 
-    if(0) {
-        cat("cmp_cgraph:: dim.fc0=",dim(fc0),"\n")
-        fc1 <- cbind(fc0,fc0)
-        fc1 <- fc1 + 1e-3*matrix(rnorm(length(fc1)),nrow(fc1),ncol(fc1))    
-        pos <- Rtsne( t(scale(fc1)), perplexity=3, check_duplicates=FALSE)$Y
-        ##pos <- svd(fc0)$v[,1:2]
-        pos <- pos[1:ncol(fc0),]
+    ## fixed layout
+    if( length(E(g))>0 ) {
+        g$layout <- layout_with_fr(g, weights=1e-8+abs(E(g)$weight))
+    } else {
+        g$layout <- svd(R,nu=2)$u[,1:2]
     }
-    g$layout <- layout_with_fr(g, weights=abs(E(g)$weight) )
     return(g)
 })
 
@@ -537,16 +542,20 @@ contrastCmapGraph <- reactive({
 output$cmp_cgraph <- renderVisNetwork({
 
     g <- contrastCmapGraph()  ## reactive object
+    if(is.null(g)) return(NULL)    
     res = cmpGetFoldChangeMatrix()
     if(is.null(res)) return(NULL)
     
-    E(g)$weight
-    E(g)$color <- c("blue","red")[ 1 + sign(E(g)$weight>0)]
-    E(g)$color <- "grey"
-    E(g)$dashes <- (E(g)$weight<0)
-    wt <- E(g)$weight / max(abs(E(g)$weight))
-    E(g)$width <- 7*abs(wt)
-
+    cat("<intersect:cmp_cgraph> called\n")
+    if(length(E(g))>0) {
+        E(g)$weight
+        E(g)$color <- c("blue","red")[ 1 + sign(E(g)$weight>0)]
+        E(g)$color <- "grey"
+        E(g)$dashes <- (E(g)$weight<0)
+        wt <- E(g)$weight / max(abs(E(g)$weight))
+        E(g)$width <- 7*abs(wt)
+    }
+    
     fc0 = res$fc
     gene <- rownames(fc0)[1]
     gene <- input$cmp_cgraph_gene
@@ -554,6 +563,8 @@ output$cmp_cgraph <- renderVisNetwork({
     fx <- tanh(2*fx/max(abs(fc0)))
     V(g)$color = BLUERED(15)[round(8+7*fx)]
 
+    cat("<intersect:cmp_cgraph> dim(fx)=",dim(fx),"\n")
+    
     ##visIgraph(g)
     visIgraph(g, layout="layout.norm", layoutMatrix=g$layout) %>%
         visNodes( size=18, font=list(size=22) )
