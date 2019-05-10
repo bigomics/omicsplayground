@@ -5,7 +5,7 @@ This is the source code for the Omics Playground, a visualization and analytics 
 ## Run from source code
 
 1. Download or clone this repository. 
-2. Be sure you you have installed all necessary R packges by running the file `requirements.R` and `requirements2.R`
+2. Be sure you have installed all necessary R packges by running the file `requirements.R` and `requirements2.R`
 3. Change into the `shiny` folder and run `R -e "rmarkdown::run()"`
 
 ## Run using the Docker file
