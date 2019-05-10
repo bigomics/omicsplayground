@@ -22,7 +22,7 @@ source("../R/pgx-functions.R")
 
 source("options.R")
 MAX.GENES
-MAX.GENES=4000
+##MAX.GENES=4000
 DOWNSAMPLE=50
 
 COMPARE.CLUSTERS=FALSE
