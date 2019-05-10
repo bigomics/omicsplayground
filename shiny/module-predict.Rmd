@@ -13,7 +13,7 @@ radioButtons('pdx_vartype',NULL,c("contrast","phenotype"),inline=TRUE)
 selectInput("pdx_contrast",NULL, choices=NULL)
 selectInput("pdx_level","Level:", choices=c("gene","geneset"))
 selectInput("pdx_filter","Filter:", choices=NULL)
-selectizeInput("pdx_select","Custom select:", choices=NULL, multiple=TRUE)
+selectizeInput("pdx_select","Custom variables:", choices=NULL, multiple=TRUE)
 ##checkboxInput('pdx_normalize','normalize',TRUE)
 br();br();br();
 if(PRO.VERSION) checkboxInput('pdx_showloops','detect loops',FALSE)
