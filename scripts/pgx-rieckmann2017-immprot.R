@@ -35,7 +35,7 @@ ngs$description = "Mass-spectrometry-based proteomics of 28 primary human hemato
 if(PROCESS.DATA) {
 
     ## Split data file
-    D = read.csv("../ext-data/immprot/ni.3693-S5-copynumber.csv", check.names=FALSE)
+    D = read.csv("../ext/immprot/ni.3693-S5-copynumber.csv", check.names=FALSE)
     D = data.frame(D) ##
     colnames(D)
 
