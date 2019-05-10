@@ -1,6 +1,8 @@
 # ignore everything except
 *
 !CHANGELOG
+!VERSION
+!LICENSE.md
 !Dockerfile
 !docker/*
 !docs/*
