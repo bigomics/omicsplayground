@@ -33,11 +33,23 @@ if(PROCESS.DATA) {
     library(hgu133plus2.db)
 
     ## load series and platform data from GEO
-    gset <- getGEO("GSE114716", GSEMatrix =TRUE, getGPL=FALSE)
+    gset <- getGEO("GSE114716", GSEMatrix=TRUE, getGPL=FALSE)
     attr(gset, "names")
     gset <- gset[[1]]
     dim(exprs(gset))
-    
+
+    ## still need to get the matrix...
+    system("wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE114nnn/GSE114716/suppl/GSE114716_raw.counts.hs.xlsx -P /tmp")
+    if(!require(xlsx)) install.packages("xlsx")
+    library(xlsx)
+    counts <- read.xlsx2("/tmp/GSE114716_raw.counts.hs.xlsx", 1)  ## yikes.. xlsx...
+    genes  <- as.character(counts[,1])
+    counts <- apply(counts[,-1],2,function(x) as.integer(as.character(x)))
+    X = apply(counts[,], 2, function(x) tapply(x, genes, sum))
+    dim(X)
+    head(X)[,1:4]
+    colSums(X)    
+
     pdata = pData(gset)
     head(pdata)
     tt <- as.character(pdata$title)
@@ -49,16 +61,7 @@ if(PROCESS.DATA) {
     sampleTable <- data.frame(do.call(rbind,strsplit(tt, split=" ")))
     colnames(sampleTable) <- c("treatment","patient")
     sampleTable$patient <- paste0("pt",sampleTable$patient)
-    
-    ## merge data sets
-    ##X = exprs(gset)
-    counts <- read.csv("../ext-data/GSE114716_raw.counts.hs.csv")
-    genes <- counts[,1]
-    X = apply(counts[,-1], 2, function(x) tapply(x, genes, sum))
-    dim(X)
-    head(X)[,1:4]
-    colSums(X)
-    
+        
     ## convert affymetrix ID to GENE symbol
     symbol <- unlist(as.list(org.Hs.egSYMBOL))
     jj <- which(rownames(X) %in% symbol)

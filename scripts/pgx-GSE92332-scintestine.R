@@ -205,6 +205,7 @@ if(PROCESS.DATA) {
         ngs$genes  <- ngs$genes[jj,]
     }
     dim(ngs$counts)
+    dim(ngs$genes)
     ngs$timings <- c()
 
     rda.file
@@ -215,8 +216,8 @@ if(PROCESS.DATA) {
 if(DIFF.EXPRESSION) {
     load(file=rda.file, verbose=1)
 
-    table(ngs$samples$cluster, ngs$samples$group)
     ngs$samples$group <- as.character(ngs$samples$tissue)
+    table(ngs$samples$cluster, ngs$samples$group)
 
     ## ----------------- test genes ------------------------------------------
     ## COMPARE.CLUSTERS

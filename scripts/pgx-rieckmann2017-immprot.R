@@ -19,7 +19,7 @@ source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 
 source("options.R")
-SMALL
+MAX.GENES
 
 rda.file="../pgx/rieckmann2017-immprot.pgx"
 rda.file
@@ -179,10 +179,10 @@ if(PROCESS.DATA) {
     ##-------------------------------------------------------------------
     ## take top varying
     ##-------------------------------------------------------------------
-    if(1 && SMALL>0) {
-        cat("shrinking data matrices: n=",SMALL,"\n")
+    if(1 && MAX.GENES>0) {
+        cat("shrinking data matrices: n=",MAX.GENES,"\n")
         logcpm = edgeR::cpm(ngs$counts, log=TRUE)
-        jj <- head( order(-apply(logcpm,1,sd)), SMALL )  ## how many genes?
+        jj <- head( order(-apply(logcpm,1,sd)), MAX.GENES )  ## how many genes?
         head(jj)
         ##bX <- bX[jj,]
         ngs$counts <- ngs$counts[jj,]

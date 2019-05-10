@@ -21,8 +21,12 @@ source("../R/pgx-functions.R")
 source("../R/ngs-functions.R")
 
 source("options.R")
-SMALL
+MAX.GENES
 BATCH.CORRECT=TRUE
+
+## run all available methods 
+USER.GENETEST.METHODS = "*"
+USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
 
 rda.file="../pgx/GSE10846-dlbcl.pgx"
 rda.file
@@ -229,10 +233,6 @@ if(DIFF.EXPRESSION) {
     colnames(contr.matrix) <- sub(".*:","",colnames(contr.matrix))  ## strip prefix 
     head(contr.matrix)
     
-    ##USER.GENETEST.METHODS=c("trend.limma","deseq2.wald","edger.qlf")
-    ##USER.GENESETTEST.METHODS=c("gsva","fisher","camera","fgsea")
-    USER.GENETEST.METHODS = "*"
-    USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
 
     ##contr.matrix = contr.matrix[,1:3]
     source("../R/compute-genes.R")

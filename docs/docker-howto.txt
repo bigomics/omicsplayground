@@ -28,7 +28,8 @@ docker run shinyapp
 
 
 ## publish to Docker Hub
-
 docker login
-docker tag playground:rc4 bigomics/playground:stable
-docker push bigomics/playground:stable
+docker tag playground:v1 bigomics/playground:v1.0
+docker tag playground:v1 bigomics/playground:latest
+
+docker push bigomics/playground
