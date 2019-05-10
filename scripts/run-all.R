@@ -1,4 +1,6 @@
-
+## Build all examples data sets
+##
+##
 
 all.scripts <- dir(".", pattern="pgx-.*R$")
 ##all.scripts <- grep("dlbcl|ipi|melano|rieck",all.scripts,value=TRUE)
@@ -18,3 +20,7 @@ for(script in all.scripts) {
     ## clean up
     rm(list=setdiff(ls(),c("script","all.scripts")))
 }
+
+## scan and update datasets info
+source("update-datasets-info.R")
+
