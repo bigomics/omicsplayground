@@ -22,6 +22,9 @@ echo docker build -t $image .
 ## +run in background, remove contained after use, give nice name
 echo docker run --rm -d -p 4000:3838 --name=play1 $image
 
+echo docker exec -it play1 /bin/bash
+echo docker stop play1
+
 ## To save your Docker Image as a tar-archive, you simply type into your terminal:
 echo docker save -o ~/playground_$version.tar $image
 
