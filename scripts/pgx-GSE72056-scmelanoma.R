@@ -140,9 +140,6 @@ if(PROCESS.DATA) {
     braf.status <- c("neg","pos")[ 1 + 1*( xbraf > 10)]
     table(braf.status)   
     table(cell.type, braf.status)
-    braf.status.BT <- braf.status
-    braf.status.BT[!(cell.type %in% c("Bcell","Tcell"))] <- NA
-    table(cell.type, braf.status.BT)
     
     patient <- toupper(gsub("[-_ ]","",substring(nn,1,4)))
     table(patient)
@@ -155,8 +152,7 @@ if(PROCESS.DATA) {
         cell.type = cell.type,
         malignant = malignant,
         CD45 = cd45.status,
-        BRAF = braf.status,
-        BRAF.BT = braf.status.BT
+        BRAF = braf.status
         ##CD90 = cd90.status,
         ##PD1 = pd1.status,
         ##PD1L = pd1L.status,
@@ -199,7 +195,6 @@ if(PROCESS.DATA) {
     }
 
     table(sampleTable$cell.type, sampleTable$BRAF)
-    table(sampleTable$cell.type, sampleTable$BRAF.BT)
 
     ##--------------------------------------------------------------
     ## Pooling??
