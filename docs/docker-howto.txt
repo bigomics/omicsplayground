@@ -25,8 +25,6 @@ docker save -o ~/shinyapp.tar shinyapp
 docker load -i shinyapp.tar
 docker run shinyapp
 
-
-
 ## publish to Docker Hub
 docker login
 docker tag playground:v1 bigomics/playground:v1.0
