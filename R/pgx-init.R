@@ -54,7 +54,7 @@ GSETS = gmt.all;remove(gmt.all)
 ##GSETS <- readRDS(file.path(FILES,"gmt-all.rds"))
 
 cat("<init> parsing gene families...\n")
-FAMILIES <- getGeneFamilies(GENE.SYMBOL, FILES=FILES, min.size=10, max.size=9999)
+FAMILIES <- pgx.getGeneFamilies(GENE.SYMBOL, FILES=FILES, min.size=10, max.size=9999)
 ##FAMILIES <- c(FAMILIES, list( "<LM22 markers>"=LM22_MARKERS,"<ImmProt markers>"=IMMPROT_MARKERS))
 fam.file <- file.path(FILES,"custom-families.gmt")
 if(file.exists(fam.file)) {
@@ -69,7 +69,7 @@ names(f1) <- sub("FAMILY:<all>","<all>",names(f1))
 GSETS <- c(GSETS,f1)
 
 cat("<init> parsing collections...\n")
-COLLECTIONS <- getGeneSetCollections(names(GSETS), min.size=10, max.size=99999)
+COLLECTIONS <- pgx.getGeneSetCollections(names(GSETS), min.size=10, max.size=99999)
 COLLECTIONS <- COLLECTIONS[order(names(COLLECTIONS))]
 
 remove(list=c("custom.gmt","f1"))

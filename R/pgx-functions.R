@@ -314,11 +314,8 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=30,
     return(ngs)
 }
 
-
-
 ##levels="gene";contrast="Bmem_activation";layout=NULL;gene="IRF4";layout="layout_with_fr";hilight=NULL
-
-getGeneFamilies <- function(genes, FILES="../files", min.size=10, max.size=500)
+pgx.getGeneFamilies <- function(genes, FILES="../files", min.size=10, max.size=500)
 {
     ##-----------------------------------------------------------------------------
     ## Gene families
@@ -419,7 +416,7 @@ getGeneFamilies <- function(genes, FILES="../files", min.size=10, max.size=500)
     return(families)
 }
 
-getGeneSetCollections <- function(gsets, min.size=10, max.size=500)
+pgx.getGeneSetCollections <- function(gsets, min.size=10, max.size=500)
 {
     ##-----------------------------------------------------------------------------
     ## Gene set collections

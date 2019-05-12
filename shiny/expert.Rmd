@@ -34,7 +34,7 @@ cat("setting RDIR =",RDIR,"\n")
 cat("setting FILES =",FILES,"\n")
 cat("setting PGX.DIR =",PGX.DIR,"\n")
 
-source("./pgx-init.R", local=TRUE)
+source(file.path(RDIR,"pgx-init.R"), local=TRUE)
 PRO.VERSION=TRUE
 DEV.VERSION=FALSE
 
