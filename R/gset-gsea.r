@@ -81,7 +81,7 @@ write.cls <- function(y, file, name="") {
 }
 
 ##dir="/home/share/datasets/gmt/";nrows=-1
-read.gmt <- function(file, dir=".", add.source=FALSE, nrows=-1) {
+read.gmt <- function(file, dir=NULL, add.source=FALSE, nrows=-1) {
     f0 <- file
     if(strtrim(file,1)=="/") dir=NULL
     if(!is.null(dir)) f0 <- paste(sub("/$","",dir),"/",file,sep="")

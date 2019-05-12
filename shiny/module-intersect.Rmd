@@ -25,7 +25,7 @@ selectInput("cmp_filter","Filter:", choices=NULL, multiple=FALSE)
 FDR.VALUES2 <- c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
 fillRow( flex=c(1,1),        
         selectInput("cmp_fdr","FDR", choices=FDR.VALUES2, selected=0.2),
-        selectInput("cmp_lfc","logFC threshold", choices=c(0,0.2,0.5,1,2,5), selected=0.2)
+        selectInput("cmp_lfc","logFC threshold", choices=c(0,0.2,0.5,1,2,5), selected=0.5)
         )
 
 br();br();br();br();br();
