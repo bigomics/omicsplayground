@@ -26,7 +26,9 @@ if(PRO.VERSION) textInput("gs_filter","Filter:")
 GSET.DEFAULTMETHODS = c("fisher","gsva","camera","fgsea")
 GSET.DEFAULTMETHODS = c("fisher","gsva","camera")
 GSET.DEFAULTMETHODS = c("gsva","camera","fgsea","fisher")
+
 if(PRO.VERSION) checkboxGroupInput('gs_method','Test method:', choices=NULL)
+if(DEV.VERSION) radioButtons('gs_lfcmethod','LFC method:', choices=c("fc","gs"))
 
 selected_gsetmethods <- reactive({
     ngs <- inputData()
@@ -172,25 +174,40 @@ getGeneSetTable <- reactive({
         stars.symbols = sapply(1:20,function(i) paste(rep("★",i),collapse=""))
         ##stars.symbols = sapply(1:20,function(i) paste(rep("*",i),collapse=""))
         stars = c("",stars.symbols)[1+rowSums(qv < 0.05)]                
+
+        ##------------ calculate META parameters ----------------
         meta <- calculateMeta(comp, gsmethod, ngs=ngs)
         meta <- meta[rownames(mx),,drop=FALSE]        
         ##gset.size = sapply(ngs$gmt.all[rownames(mx)],length)
-        gset.size = Matrix::colSums( ngs$GMT[,rownames(mx),drop=FALSE]!=0 )
+        gset.size = Matrix::colSums(ngs$GMT[,rownames(mx),drop=FALSE]!=0)
         
-        ## report *average* group expression FOLD CHANGE
-        ## y1 <- abs(pmax(ngs$model.parameters$exp.matrix[,comp],0)) ## y=+1
-        ## y2 <- abs(pmin(ngs$model.parameters$exp.matrix[,comp],0)) ## y=-1
-        ## AveExpr1 <- (ngs$gsetX[rownames(mx),names(y1)] %*% y1/sum(y1!=0))[,1]
-        ## AveExpr0 <- (ngs$gsetX[rownames(mx),names(y2)] %*% y2/sum(y2!=0))[,1]
+        ## ---------- report *average* group expression FOLD CHANGE
+        ## THIS SHOULD BETTER GO DIRECTLY WHEN CALCULATING GSET TESTS
+        ##
+        
         s1 <- names(which(ngs$model.parameters$exp.matrix[,comp]>0))
         s0 <- names(which(ngs$model.parameters$exp.matrix[,comp]<0))
-        AveExpr1 <- rowMeans(ngs$gsetX[rownames(mx),s1])
-        AveExpr0 <- rowMeans(ngs$gsetX[rownames(mx),s0])
-        
-        ##meta.fc <- meta[,"fc"]
-        meta.fc <- AveExpr1 - AveExpr0
-        
-        ## adjust means to reflect foldchange
+        jj <- rownames(mx)
+
+        gsdiff.method <- "fc"  ## OLD default
+        if(DEV.VERSION) gsdiff.method <- input$gs_lfcmethod
+        if(gsdiff.method=="gs") {
+            AveExpr1 <- rowMeans(ngs$gsetX[jj,s1])
+            AveExpr0 <- rowMeans(ngs$gsetX[jj,s0])
+            meta.fc <- AveExpr1 - AveExpr0
+        } else {
+            fc <- ngs$gx.meta$meta[[comp]]$meta.fx  ## stable
+            names(fc) <- rownames(ngs$gx.meta$meta[[comp]])
+            pp <- intersect(rownames(ngs$GMT),names(fc))
+            ngenes <- Matrix::colSums(ngs$GMT[pp,jj])
+            G <- t(ngs$GMT[pp,jj])
+            meta.fc <- as.vector(G %*% fc[pp] / ngenes)
+            names(meta.fc) <- rownames(G)
+            AveExpr1 <- Matrix::rowMeans(G %*% ngs$X[pp,s1]) / ngenes
+            AveExpr0 <- Matrix::rowMeans(G %*% ngs$X[pp,s0]) / ngenes            
+        }
+                
+        ## TWIDDLE means to reflect foldchange... 
         mean0 <- (AveExpr0 + AveExpr1)/2
         AveExpr1 <- mean0 + meta.fc/2
         AveExpr0 <- mean0 - meta.fc/2

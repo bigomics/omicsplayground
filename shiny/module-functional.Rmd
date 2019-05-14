@@ -128,7 +128,7 @@ getKeggTable <- reactive({
     ##
     kegg.ids2 <- paste0("KEGG:",kegg.ids)
     df <- data.frame( kegg.id=kegg.ids, pathway=kegg.gsets,
-                     "delta.pct" = delta,
+                     ##"delta.pct" = delta,
                      ##fx=fx, ## meta.q=qv,
                      ##n0=ngene0, n1=ngene1,
                      ft.res, 
@@ -366,9 +366,9 @@ output$fa_keggtable <- renderDataTable({
                   ) %>%
         formatSignif(numeric.cols,4) %>%
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>% 
-            DT::formatStyle( "delta.pct",
+            DT::formatStyle( "ratio",
                             ##background = styleColorBar(c(0,3), 'lightblue'),
-                            background = color_from_middle( df[,"delta.pct"], 'lightblue', '#f5aeae'),
+                            background = color_from_middle( df[,"ratio"], 'lightblue', '#f5aeae'),
                             backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                             backgroundPosition = 'center') 
 })
