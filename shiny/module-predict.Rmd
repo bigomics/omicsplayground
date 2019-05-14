@@ -57,6 +57,10 @@ observe({
 observe({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
+
+    req(input$pdx_filter)
+    req(input$pdx_contrast)
+
     ft <- input$pdx_filter
     ct <- input$pdx_contrast
     if(is.null(ft)) return(NULL)
