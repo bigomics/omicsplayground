@@ -306,7 +306,8 @@ output$hm_splitmap <- renderPlot({
     crot <- 0
     totnchar <- nchar(paste0(unique(splitx),collapse=""))
     totnchar
-    if(!is.null(splitx) & totnchar > 44) crot=90
+    nx <- length(unique(splitx))
+    if(!is.null(splitx) & (totnchar > 44 || nx>=6) ) crot=90
     ##if(PRO.VERSION && input$hm_softmax)  softmax = 1
     if("softmax" %in% input$hm_options)  softmax = 1
     if(main=="<all>") main <- ""
