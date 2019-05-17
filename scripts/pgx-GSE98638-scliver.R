@@ -234,8 +234,8 @@ if(DIFF.EXPRESSION) {
     }
 
 
-    USER.GENETEST.METHODS=c("trend.limma","edger.qlf","edger.lrt")
-    USER.GENESETTEST.METHODS=c("gsva","camera","fgsea")
+    USER.GENETEST.METHODS=c("ttest.welch","trend.limma","edger.qlf","edger.lrt")
+    USER.GENESETTEST.METHODS=c("fisher","gsva","camera","fgsea")
     source("../R/compute-genes.R")
     source("../R/compute-genesets.R")
     source("../R/compute-extra.R")

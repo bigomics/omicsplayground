@@ -68,7 +68,7 @@ install.pkgs(c('cowplot', 'Rtsne', 'pbapply', 'RANN', 'dplyr', 'irlba', 'plotly'
 install.packages("ext/Seurat_v2.3.3.tar.gz",repos=NULL,type="source")  ## old version
 
 ##---------------------------------------------------------------------
-## remove unneccessary Big Shit...
+## remove unneccessary big packages...
 ##---------------------------------------------------------------------
 remove.pkg("reactome.db")  ## >2GB!!
 remove.pkg("BH")  ## boost header files

@@ -5,7 +5,6 @@
 all.scripts <- dir(".", pattern="pgx-.*R$")
 ##all.scripts <- grep("dlbcl|ipi|melano|rieck",all.scripts,value=TRUE)
 
-
 ## These are the example scripts
 all.scripts <- grep("GSE10846|GSE114716|GSE22886|GSE28492|GSE32591|GSE72056|GSE88808|GSE92332|GSE98638|rieckmann2017", all.scripts,value=TRUE)
 all.scripts

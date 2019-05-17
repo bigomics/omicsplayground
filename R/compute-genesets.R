@@ -121,11 +121,12 @@ design = ngs$model.parameters$design
 contr.matrix = ngs$model.parameters$contr.matrix
 ## exp.matrix = (design %*% contr.matrix)
 
-test.methods=c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
-               "fgsea","gsea.permPH","gsea.permGS","gseaPR")
+all.gset.methods=c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
+                   "fgsea","gsea.permPH","gsea.permGS","gseaPR")
 test.methods = c("fisher","fgsea")
 test.methods = c("fisher","gsva","ssgsea","spearman","camera","fry","fgsea") ## no GSEA
 if(!is.null(USER.GENESETTEST.METHODS)) test.methods = USER.GENESETTEST.METHODS
+##if(test.methods[1]=="*") test.methods = all.gset.methods
 
 ##-----------------------------------------------------------
 ## Run methods

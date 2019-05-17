@@ -10,10 +10,10 @@ if(0) {
 
 }
 
-ALL.GENETEST.METHODS=c("ttest","ttest.welch","voom.limma","trend.limma",
+ALL.GENETEST.METHODS=c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma",
                        "deseq2.wald","deseq2.lrt","edger.qlf","edger.lrt")
-ALL.GENETEST.METHODS=c("ttest","ttest.welch","voom.limma","trend.limma",
-                       "edger.qlf","edger.lrt","deseq2.wald")
+##ALL.GENETEST.METHODS=c("ttest","ttest.welch","voom.limma","trend.limma",
+##                       "edger.qlf","edger.lrt","deseq2.wald")
 methods=ALL.GENETEST.METHODS
 methods=c("ttest.welch","trend.limma","deseq2.wald","edger.qlf")
 methods

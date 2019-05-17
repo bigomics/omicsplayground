@@ -30,6 +30,7 @@ cat("setting ROOT to",ROOT,"\n")
 RDIR = paste0(ROOT,"/R")
 FILES = paste0(ROOT,"/lib/")
 PGX.DIR = paste0(ROOT,"/pgx/")
+##PGX.DIR = "../pgx-10k"
 
 cat("setting RDIR =",RDIR,"\n")
 cat("setting FILES =",FILES,"\n")

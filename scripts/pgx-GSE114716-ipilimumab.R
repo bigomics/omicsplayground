@@ -12,6 +12,10 @@ source("../R/ngs-functions.R")
 
 source("options.R")
 
+USER.GENETEST.METHODS=c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma",
+                        "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
+USER.GENESETTEST.METHODS = c("fisher","gsva","ssgsea","spearman","camera","fry","fgsea") ## no GSEA
+
 BATCH.CORRECT=1
 rda.file="../pgx/GSE114716-ipilimumab.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
@@ -152,7 +156,7 @@ if(DIFF.EXPRESSION) {
         baseline_vs_Ipi = baseline - Ipi,
         levels = levels)
     contr.matrix
-
+    
     source("../R/compute-genes.R")
     source("../R/compute-genesets.R")
     source("../R/compute-extra.R")
@@ -161,6 +165,7 @@ if(DIFF.EXPRESSION) {
 ## save
 rda.file
 ngs.save(ngs, file=rda.file)
+
 
 
 
