@@ -141,7 +141,7 @@ getGeneSetTable <- reactive({
         jj <- NULL
         if(length(ii)>0) jj <- which(Matrix::colSums(ngs$GMT[c(ii,ii),,drop=FALSE]!=0)>0)
         if(substring(gsfilt,1,1)=="#" && nchar(gsfilt.gene)>=2 && length(jj)>0 ) {
-            ## search for gene sets that includes this
+            ## search for gene sets that includes this gene
             nmatch <- Matrix::colSums(ngs$GMT[ii,jj,drop=FALSE]!=0)
             jj <- jj[order(-nmatch)]
             gs.matched <- colnames(ngs$GMT)[jj]
