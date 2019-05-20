@@ -2,15 +2,17 @@
 ## Pre-calculate geneset expression with different methods
 ##-------------------------------------------------------------------
 
-pgx.computeGeneSetExpression <- function(X, gmt, method=NULL, center=TRUE) {
-    
+pgx.computeGeneSetExpression <- function(X, gmt, method=NULL,
+                                         min.size=10, center=TRUE)
+{    
     library(GSVA)
     ALL.METHODS <- c("gsva","spearman","average")
     ALL.METHODS <- c("gsva","ssgsea","spearman","average")
     if(is.null(method))
         method <- ALL.METHODS
-
-    ##X=ngs$X;gmt=GSETS[grep("HALLMARK",names(GSETS))]
+    if(0){
+        X=ngs$X;gmt=GSETS[grep("HALLMARK",names(GSETS))]
+    }
     ## this is important!!! centering on genes (GSVA does)
     if(center) {
         X <- X - rowMeans(X,na.rm=TRUE)
@@ -18,7 +20,7 @@ pgx.computeGeneSetExpression <- function(X, gmt, method=NULL, center=TRUE) {
     dim(X)
     
     gmt.size <- sapply(gmt, function(x) sum(x %in% rownames(X)))
-    gmt <- gmt[ gmt.size>=1 ]
+    gmt <- gmt[ gmt.size >= min.size ]
     length(gmt)
     
     S <- list()
@@ -46,14 +48,17 @@ pgx.computeGeneSetExpression <- function(X, gmt, method=NULL, center=TRUE) {
     }
 
     ## compute meta score
-    S1 <- lapply(S,function(x) apply(x,2,rank))
+    S1 <- lapply(S,function(x) apply(x,2,rank)) ## rank by sample
     S[["meta"]] <- scale(Reduce('+',S1)/length(S1))   
     gs <- Reduce(intersect, lapply(S,rownames)) 
     S <- lapply(S, function(x) x[gs,])
     
     if(0) {
+        ## show pairs
         names(S)
-        pairs(sapply(S,function(x) x[,1]))
+        dim(S[[1]])
+        pairs(sapply(S,function(x) x[,1])) ## corr by genesets
+        pairs(sapply(S,function(x) x[1,])) ## corr by sample       
     }
             
     return(S)
