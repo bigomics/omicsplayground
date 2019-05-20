@@ -9,6 +9,7 @@
 # Backup files
 ######################
 *~
+*#
 *.BAK
 *.bak
 *.SAVE
