@@ -1,7 +1,7 @@
 # Site settings
-title: BigOmics Analytics
-tag_text: BigOmics Analytics
-description: Empowering life scientists with Big Data analytics on the desktop
+title: Omics Playground
+tag_text: Omics Playground
+description: World's first self-service analytics platform for Big Omics data
 url: "http://127.0.0.1:4000"
 baseurl: ""
 
@@ -12,4 +12,5 @@ markdown: kramdown
 
 exclude: ["README.md"]
 
-theme: jekyll-theme-cayman
+# theme: good-clean-read
+
