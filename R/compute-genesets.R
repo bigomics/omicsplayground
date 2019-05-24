@@ -53,8 +53,8 @@ table(sub(":.*","",names(gmt.all)))
 ## create the full GENE matrix (always collapsed by gene)
 ##-----------------------------------------------------------
 
-genes = as.character(ngs$genes$gene_name)
-X <- apply(ngs$counts, 2, function(x) tapply(x, genes, sum))
+xgenes = as.character(ngs$genes$gene_name)
+X <- apply(ngs$counts, 2, function(x) tapply(x, xgenes, sum))
 dim(X)
 X <- edgeR::cpm(X, log=TRUE )
 X <- X[which(apply(X,1,sd)>0),,drop=FALSE]
@@ -68,14 +68,16 @@ dim(X)
 cat("Building gene set matrix...\n")
 ##GMT = sapply( gmt.all, function(s) 1*(rownames(X) %in% s))
 ##GMT = Matrix(GMT, sparse=TRUE)
-GMT <- gmt2mat.nocheck(gmt.all[], bg=rownames(X))  ## in gset-gsea.r
+genes <- sort(unique(xgenes))
+GMT <- gmt2mat.nocheck(gmt.all[], bg=genes)  ## in gset-gsea.r
 dim(GMT)
 dim(X)
-table(rownames(X) %in% rownames(GMT))
+table(xgenes %in% rownames(GMT))
 table(names(gmt.all) %in% colnames(GMT))
 GMT[1:4,1:4]
-GMT <- GMT[rownames(X),names(gmt.all)]
 
+## align GMT to X (or ngs$X??)
+GMT <- GMT[rownames(X),names(gmt.all)]
 summary(Matrix::colSums(GMT))
 dim(GMT)
 

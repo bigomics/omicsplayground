@@ -3,12 +3,12 @@
 ######################
 .RData
 .Rhistory
-.Rout
-*/.Rout
+*.Rout
 
 # Backup files
 ######################
 *~
+*#
 *.BAK
 *.bak
 *.SAVE

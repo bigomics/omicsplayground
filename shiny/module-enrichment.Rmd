@@ -141,7 +141,7 @@ getGeneSetTable <- reactive({
         jj <- NULL
         if(length(ii)>0) jj <- which(Matrix::colSums(ngs$GMT[c(ii,ii),,drop=FALSE]!=0)>0)
         if(substring(gsfilt,1,1)=="#" && nchar(gsfilt.gene)>=2 && length(jj)>0 ) {
-            ## search for gene sets that includes this
+            ## search for gene sets that includes this gene
             nmatch <- Matrix::colSums(ngs$GMT[ii,jj,drop=FALSE]!=0)
             jj <- jj[order(-nmatch)]
             gs.matched <- colnames(ngs$GMT)[jj]
@@ -196,6 +196,7 @@ getGeneSetTable <- reactive({
             AveExpr0 <- rowMeans(ngs$gsetX[jj,s0])
             meta.fc <- AveExpr1 - AveExpr0
         } else {
+            ## WARNING!!! THIS STILL ASSUMES GENES AS rownames(ngs$X) and rownames(GMT)
             fc <- ngs$gx.meta$meta[[comp]]$meta.fx  ## stable
             names(fc) <- rownames(ngs$gx.meta$meta[[comp]])
             pp <- intersect(rownames(ngs$GMT),names(fc))
