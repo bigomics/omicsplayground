@@ -65,6 +65,7 @@ install.pkg("partykit")
 ##install.pkg("NNLM", force=TRUE)
 install_version("NNLM", version="0.4.1", repos="http://cran.us.r-project.org")
 install.pkg("nnls")
+install.pkg("glmnet")
 install.pkg("HiveR")
 install.pkg("grid", force=TRUE)
 
