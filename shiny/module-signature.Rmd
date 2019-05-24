@@ -822,7 +822,6 @@ DT::renderDataTable({
 
     markers <- ngs$families[["CD family"]]
     ##markers <- ngs$gmt.all[["H:HALLMARK_TNFA_SIGNALING_VIA_NFKB"]]
-    ##markers <- names(which(ngs$GMT[,"H:HALLMARK_TNFA_SIGNALING_VIA_NFKB"]!=0))
     markers <- getCurrentMarkers()
     if(is.null(markers)) return(NULL)
 
