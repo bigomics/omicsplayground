@@ -28,6 +28,7 @@ source("../R/pgx-deconv.R")
 source("../R/pgx-proteomics.R")
 
 source("options.R")
+MAX.GENES
 
 PROCESS.DATA=1
 DIFF.EXPRESSION=1
@@ -158,7 +159,7 @@ if(DIFF.EXPRESSION) {
         test.methods = c("trend.limma","ttest.welch","ttest")
         test.methods = USER.GENETEST.METHODS
         ngs <- compute.testGenes(
-            ngs, contr.matrix, max.features=1000,
+            ngs, contr.matrix, max.features=MAX.GENES,
             test.methods=test.methods)
         head(ngs$gx.meta$meta[[1]])        
         
@@ -166,7 +167,7 @@ if(DIFF.EXPRESSION) {
         test.methods = c("gsva","camera","fgsea")
         test.methods = USER.GENESETTEST.METHODS
         ngs <- compute.testGenesets(
-            ngs, max.features=1000,
+            ngs, max.features=MAX.GENES,
             test.methods=test.methods)
         head(ngs$gset.meta$meta[[1]])
     }

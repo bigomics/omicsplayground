@@ -879,7 +879,7 @@ psort <- function(x,p.col=NULL) {
 
 color_from_middle <- function (data, color1,color2) {
     ## from https://stackoverflow.com/questions/33521828/
-    max_val=max(abs(data))
+    max_val=max(abs(data),na.rm=TRUE)
     JS(sprintf("isNaN(parseFloat(value)) || value < 0 ? 'linear-gradient(90deg, transparent, transparent ' + (50 + value/%s * 50) + '%%, %s ' + (50 + value/%s * 50) + '%%,%s  50%%,transparent 50%%)': 'linear-gradient(90deg, transparent, transparent 50%%, %s 50%%, %s ' + (50 + value/%s * 50) + '%%, transparent ' + (50 + value/%s * 50) + '%%)'",max_val,color1,max_val,color1,color2,color2,max_val,max_val))
 }
 

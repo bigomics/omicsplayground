@@ -68,6 +68,7 @@ compute.testGenesets <- function(ngs, max.features=1000,
             stop("FATAL. could not find gx/mrna values.")
         }
         X <- ngs$counts[jj,]
+        
     }
     xgenes = as.character(ngs$genes[rownames(X),"gene_name"])
     X <- apply(X, 2, function(x) tapply(x, xgenes, sum))

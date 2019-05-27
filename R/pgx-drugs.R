@@ -15,7 +15,7 @@ pgx.computeDrugEnrichment <- function(obj, X, x.drugs, methods=c("GSEA","cor"),
         F <- sapply(obj$gx.meta$meta,function(x) x$meta.fx)
         rownames(F) <- rownames(obj$gx.meta$meta[[1]])
         ## check if multi-omics
-        is.multiomics <- any(grep("\\[gx\\]|\\[mrna\\]",rownames(F)))
+        is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]",rownames(F)))
         is.multiomics
         if(is.multiomics) {
             jj <- grep("\\[gx\\]|\\[mrna\\]",rownames(F))
@@ -164,7 +164,7 @@ pgx.computeComboEnrichment <- function(obj, X, x.drugs,
         F <- sapply(obj$gx.meta$meta,function(x) x$meta.fx)
         rownames(F) <- rownames(obj$gx.meta$meta[[1]])
         ## check if multi-omics
-        is.multiomics <- any(grep("\\[gx\\]|\\[mrna\\]",rownames(F)))
+        is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]",rownames(F)))
         is.multiomics
         if(is.multiomics) {
             jj <- grep("\\[gx\\]|\\[mrna\\]",rownames(F))
