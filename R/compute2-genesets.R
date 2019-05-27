@@ -58,6 +58,7 @@ compute.testGenesets <- function(ngs, max.features=1000,
     single.omics <- !any(grepl("\\[",rownames(ngs$counts)))
     single.omics
     if(single.omics) {
+        ## full matrix
         X <- ngs$counts
     } else {
         data.type <- gsub("\\[|\\].*","",rownames(ngs$counts))
