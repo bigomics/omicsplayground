@@ -47,8 +47,10 @@ ngs$collections <- NULL
 single.omics <- !any(grepl("\\[",rownames(ngs$counts)))
 single.omics
 if(single.omics) {
+    cat(">>> computing extra for SINGLE-OMICS\n")
     rna.counts <- ngs$counts
 } else {
+    cat(">>> computing extra for MULTI-OMICS\n")
     data.type <- gsub("\\[|\\].*","",rownames(ngs$counts))
     jj <- which(data.type %in% c("gx","mrna"))
     length(jj)
