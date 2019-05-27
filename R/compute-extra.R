@@ -43,6 +43,23 @@ ngs$genes_tsne_graph <- NULL
 ngs$families <- NULL
 ngs$collections <- NULL
 
+## detect if it is single or multi-omics
+single.omics <- !any(grepl("\\[",rownames(ngs$counts)))
+single.omics
+if(single.omics) {
+    rna.counts <- ngs$counts
+} else {
+    data.type <- gsub("\\[|\\].*","",rownames(ngs$counts))
+    jj <- which(data.type %in% c("gx","mrna"))
+    length(jj)
+    if(length(jj)==0) {
+        stop("FATAL. could not find gx/mrna values.")
+    }
+    rna.counts <- ngs$counts[jj,]
+    ##rownames(rna.counts) <- gsub(".*:|.*\\]","",rownames(rna.counts))
+}
+
+
 ## -------------------GO union core graph ----------------------------------------
 if(1) {
     ##source(file.path(RDIR,"pgx-graph.R", local=TRUE)
@@ -56,7 +73,7 @@ if(1) {
     cat(">>> computing deconvolution for",rda.file,"\n")
     source(file.path(RDIR,"pgx-deconv.R"))
     ##load(file=rda.file,verbose=1)
-
+    
     ## list of reference matrices
     refmat <- list()
     ##require(FARDEEP)
@@ -81,9 +98,10 @@ if(1) {
     ## methods <- c("NNLM","cor")
     ##if(ncol(ngs$counts)>100) methods <- setdiff(methods,"CIBERSORT")  ## too slow...
 
-    counts <- ngs$counts
+    ##counts <- ngs$counts
+    counts <- rna.counts
     rownames(counts) <- toupper(ngs$genes[rownames(counts),"gene_name"])
-    res <- pgx.multiDeconvolution( counts, refmat=refmat, method=methods)
+    res <- pgx.multiDeconvolution(counts, refmat=refmat, method=methods)
     ngs$deconv <- res$results
     rownames(res$timings) <- paste0("[deconvolution]",rownames(res$timings))
     res$timings
@@ -96,8 +114,8 @@ if(1) {
 if(1){
     cat(">>> adding characteristics for",rda.file,"\n")
 
-    pp <- rownames(ngs$counts)
-    is.mouse = (mean(grepl("[a-z]",sub(".*:","",pp))) > 0.8)
+    pp <- rownames(rna.counts)
+    is.mouse = (mean(grepl("[a-z]",gsub(".*:|.*\\]","",pp))) > 0.8)
     is.mouse
     if(!is.mouse) {
 
@@ -105,7 +123,8 @@ if(1){
             cat("estimating cell cycle...\n")
             ngs$samples$cell.cycle <- NULL
             ngs$samples$.cell.cycle <- NULL
-            counts <- ngs$counts
+            ##counts <- ngs$counts
+            counts <- rna.counts
             rownames(counts) <- toupper(ngs$genes[rownames(counts),"gene_name"])
             ngs$samples$.cell_cycle <- pgx.inferCellCyclePhase(counts)
             table(ngs$samples$.cell_cycle)
@@ -113,15 +132,14 @@ if(1){
         if(!(".gender" %in% colnames(ngs$samples) )) {
             cat("estimating gender...\n")
             ngs$samples$.gender <- NULL
-            X <- log2(1+ngs$counts)
-            gene_name <- ngs$genes[rownames(ngs$counts),"gene_name"]
+            X <- log2(1+rna.counts)
+            gene_name <- ngs$genes[rownames(X),"gene_name"]
             ngs$samples$.gender <- pgx.inferGender( X, gene_name )
             table(ngs$samples$.gender)
         } else {
             cat("gender already estimated. skipping...\n")
         }
         head(ngs$samples)
-
     }
 
 }
@@ -129,7 +147,7 @@ if(1){
 ## -------------- drug enrichment
 if(1) {
 
-    source(file.path(RDIR,"pgx-drugs.R"))
+    ##source(file.path(RDIR,"pgx-drugs.R"))
     ##source(file.path(RDIR,"pgx-graph.R", local=TRUE)
     cat(">>> Computing drug enrichment...\n")
 

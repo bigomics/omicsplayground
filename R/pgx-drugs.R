@@ -6,12 +6,22 @@
 pgx.computeDrugEnrichment <- function(obj, X, x.drugs, methods=c("GSEA","cor"),
                                       nprune=250, contrast=NULL )
 {
+    ## obj can be ngs object or fold-change matrix
+    ##
+    ##
     require(fgsea)
     names(obj)
     if("gx.meta" %in% names(obj)) {
         F <- sapply(obj$gx.meta$meta,function(x) x$meta.fx)
         rownames(F) <- rownames(obj$gx.meta$meta[[1]])
-        rownames(F) <- toupper(sub(".*:","",rownames(F)))
+        ## check if multi-omics
+        is.multiomics <- any(grep("\\[gx\\]|\\[mrna\\]",rownames(F)))
+        is.multiomics
+        if(is.multiomics) {
+            jj <- grep("\\[gx\\]|\\[mrna\\]",rownames(F))
+            F <- F[jj,]
+        }
+        rownames(F) <- toupper(sub(".*:|.*\\]","",rownames(F)))
         ##colnames(F) <- names(obj$gx.meta$meta)
         F <- F[order(-rowMeans(F**2)),,drop=FALSE]
         F <- F[!duplicated(rownames(F)),,drop=FALSE]
@@ -153,7 +163,14 @@ pgx.computeComboEnrichment <- function(obj, X, x.drugs,
     if("gx.meta" %in% names(obj)) {
         F <- sapply(obj$gx.meta$meta,function(x) x$meta.fx)
         rownames(F) <- rownames(obj$gx.meta$meta[[1]])
-        rownames(F) <- toupper(sub(".*:","",rownames(F)))
+        ## check if multi-omics
+        is.multiomics <- any(grep("\\[gx\\]|\\[mrna\\]",rownames(F)))
+        is.multiomics
+        if(is.multiomics) {
+            jj <- grep("\\[gx\\]|\\[mrna\\]",rownames(F))
+            F <- F[jj,]
+        }
+        rownames(F) <- toupper(sub(".*:|.*\\]","",rownames(F)))
         F <- F[order(-rowMeans(F**2)),,drop=FALSE]
         F <- F[!duplicated(rownames(F)),,drop=FALSE]
         dim(F)
