@@ -16,9 +16,9 @@ selectInput("pdx_filter","Filter:", choices=NULL)
 selectizeInput("pdx_select","Custom variables:", choices=NULL, multiple=TRUE)
 ##checkboxInput('pdx_normalize','normalize',TRUE)
 br();br();br();
-if(PRO.VERSION) checkboxInput('pdx_showloops','detect loops',FALSE)
-if(PRO.VERSION) checkboxInput('pdx_posonly','pos.only',FALSE)
-##if(DEV.VERSION) checkboxInput('pdx_multiomics','multi-omics',FALSE)
+if(DEV.VERSION) checkboxInput('pdx_showloops','detect loops',FALSE)
+if(DEV.VERSION) checkboxInput('pdx_posonly','pos.only',FALSE)
+if(DEV.VERSION) checkboxInput('pdx_multiomics','multi-omics weighting',FALSE)
 
 input_pdx_select <- reactive({
     input$pdx_select
@@ -134,7 +134,7 @@ calcVariableImportance <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
     
-    ct=2
+    ct=5
     ct=1
     colnames(ngs$Y)
     ct <- input$pdx_contrast
@@ -268,7 +268,7 @@ calcVariableImportance <- reactive({
     ##P <- pmax(P,0.1)
     P <- P[order(-rowSums(P,na.rm=TRUE)),,drop=FALSE]
     head(P)
-
+    
     R <- P
     if(nrow(R)>1) {
         R <- (apply(P,2,rank)/nrow(P))**4
@@ -276,6 +276,17 @@ calcVariableImportance <- reactive({
         head(R)
     }
 
+    is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]",rownames(R)))
+    if(DEV.VERSION) is.multiomics <- (is.multiomics && input$pdx_multiomics)
+    is.multiomics    
+    if(is.multiomics) {
+        ## EXPERIMENTAL: multi-omics weighting 
+        gene <- ngs$genes[rownames(R),"gene_name"]
+        ##R.gene <- exp(apply(log(R), 2, function(x) tapply(x,gene,sum)))
+        R.gene <- apply(R, 2, function(x) tapply(x,gene,sum))
+        R <- R * R.gene[match(gene,rownames(R.gene)),]
+    }
+    
     cat("calcVariableImportance:: 5: drawing tree\n")
     
     ##------------------------------
@@ -290,6 +301,7 @@ calcVariableImportance <- reactive({
     ## formula wants clean names, so save original names
     colnames(tx) <- gsub("[: +-.,]","_",colnames(tx))
     colnames(tx) <- gsub("[')(]","",colnames(tx))
+    colnames(tx) <- gsub("\\[|\\]","",colnames(tx))
     orig.names <- sel
     names(orig.names) <- colnames(tx)
     jj <- names(y)
@@ -332,8 +344,8 @@ calcVariableImportance <- reactive({
     ##tx <- tx[names(y),]
     y <- y[rownames(tx)]
     colnames(tx) <- orig.names[colnames(tx)]
-    res <- list(P=P, R=R, y=y, X=t(tx), rf=rf)
-
+    ##res <- list(P=P, R=R, y=y, X=t(tx), rf=rf)
+    res <- list(R=R, y=y, X=t(tx), rf=rf)
     return(res)
 })
 
@@ -342,34 +354,33 @@ output$pdx_importanceplot <- renderPlot({
     
     res <- calcVariableImportance()
     if(is.null(res)) return(NULL)
-    P <- res$P    
-    P <- res$R
-    P <- P[order(-rowSums(P,na.rm=TRUE)),,drop=FALSE]
-    P <- pmax(P,0.05)
+    R <- res$R
+    R <- R[order(-rowSums(R,na.rm=TRUE)),,drop=FALSE]
+    R <- pmax(R,0.05)
 
     if(input$pdx_level=="geneset") {
         par(mfrow=c(1,2), oma=c(1,1,1,1)*0.5, mgp=c(2.2,0.8,0))
         par(mar=c(4,8,2,4))
         frame()
-        P.top <- head(P,20)
-        rownames(P.top) <- tolower(rownames(P.top))
-        rownames(P.top) <- substring(rownames(P.top),1,60)
-        barplot( t(P.top), las=1, horiz=TRUE,
+        R.top <- head(R,20)
+        rownames(R.top) <- tolower(rownames(R.top))
+        rownames(R.top) <- substring(rownames(R.top),1,60)
+        barplot( t(R.top), las=1, horiz=TRUE,
                 cex.names=0.95, xlab="cumulative importance" )
-        klr <- grey.colors(ncol(P))
+        klr <- grey.colors(ncol(R))
         legend("topright",
-               legend = colnames(P), fill=klr,
+               legend = colnames(R), fill=klr,
                cex=0.8, y.intersp=0.85, inset=c(-0.25,0), xpd=NA )
 
     } else {
         par(mfrow=c(1,1), oma=c(1,1,1,1)*0.5)
         par(mar=c(7,4,2,4))
-        P.top <- head(P,50)
-        barplot( t(P.top), las=3, horiz=FALSE,
+        R.top <- head(R,50)
+        barplot( t(R.top), las=3, horiz=FALSE,
                 cex.names=0.9, ylab="cumulative importance" )
-        klr <- grey.colors(ncol(P))
+        klr <- grey.colors(ncol(R))
         legend("topright",
-               legend=rev(colnames(P)), fill=rev(klr),
+               legend=rev(colnames(R)), fill=rev(klr),
                cex=0.9, y.intersp=0.85 )
     }
     title("Variable importance", cex.main=1.2, line=1.2, adj=0.3)
