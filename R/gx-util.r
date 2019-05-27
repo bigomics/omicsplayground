@@ -1,3 +1,11 @@
+imputeMedian <- function(X) {
+    mx <- apply(X,1,median,na.rm=TRUE)
+    mx[is.na(mx)] <- median(mx,na.rm=TRUE)
+    impX <- X
+    impX[is.na(impX)] <- 0
+    impX <- impX + is.na(X) * mx
+    return(impX)
+}
 
 ##X=ngs$count;y=ngs$samples$group
 averageByGroup <- function(X, y) {

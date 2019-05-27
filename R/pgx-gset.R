@@ -2,6 +2,40 @@
 ## Pre-calculate geneset expression with different methods
 ##-------------------------------------------------------------------
 
+
+pgx.computeMultiOmicsGSE <- function(X, gmt, omx.type, 
+                                     method=NULL, center=TRUE)
+{
+    if(0) {
+        omx.type <- c("MRNA","MIR")[1+grepl("^MIR",rownames(X))]
+        table(omx.type)
+        omx.type <- sample(c("MRNA","CNV"),nrow(X),replace=TRUE)
+    }
+    if(is.null(omx.type))
+        omx.type <- gsub("[:=].*","",rownames(X))
+    omx.types <- setdiff(unique(omx.type),c("MIR",""))
+    omx.types
+
+    sx <- list()
+    for(tp in omx.types) {
+        x1 <- X[which(omx.type==tp),]
+        rownames(x1) <- sub(":.*","",rownames(x1))
+        sx[[tp]] <- pgx.computeGeneSetExpression(x1, gmt, method=method, center=center)
+        sx[[tp]] <- lapply(sx[[tp]],function(x) {
+            rownames(x)=paste0(tp,"=",rownames(x))
+            x
+        })
+    }
+
+    ## concatenate all omx-types
+    cx <- sx[[1]]
+    for(j in 1:length(sx[[1]])) {
+        cx[[j]] <- do.call(rbind, lapply(sx,"[[",j))
+    }
+    
+    return(cx)
+}
+
 pgx.computeGeneSetExpression <- function(X, gmt, method=NULL,
                                          min.size=10, center=TRUE)
 {    
@@ -62,40 +96,6 @@ pgx.computeGeneSetExpression <- function(X, gmt, method=NULL,
     }
             
     return(S)
-}
-
-
-pgx.computeMultiOmicsGSE <- function(X, gmt, omx.type, 
-                                     method=NULL, center=TRUE)
-{
-    if(0) {
-        omx.type <- c("MRNA","MIR")[1+grepl("^MIR",rownames(X))]
-        table(omx.type)
-        omx.type <- sample(c("MRNA","CNV"),nrow(X),replace=TRUE)
-    }
-    if(is.null(omx.type))
-        omx.type <- gsub("[:=].*","",rownames(X))
-    omx.types <- setdiff(unique(omx.type),c("MIR",""))
-    omx.types
-
-    sx <- list()
-    for(tp in omx.types) {
-        x1 <- X[which(omx.type==tp),]
-        rownames(x1) <- sub(":.*","",rownames(x1))
-        sx[[tp]] <- pgx.computeGeneSetExpression(x1, gmt, method=method, center=center)
-        sx[[tp]] <- lapply(sx[[tp]],function(x) {
-            rownames(x)=paste0(tp,"=",rownames(x))
-            x
-        })
-    }
-
-    ## concatenate all omx-types
-    cx <- sx[[1]]
-    for(j in 1:length(sx[[1]])) {
-        cx[[j]] <- do.call(rbind, lapply(sx,"[[",j))
-    }
-    
-    return(cx)
 }
 
 
