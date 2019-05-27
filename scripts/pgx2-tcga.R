@@ -71,7 +71,9 @@ if(PROCESS.DATA) {
     dim(X)
     
     samples <- sort(intersect(samples,rownames(omx$pheno)))
-    sampleTable <- omx$pheno[samples,]
+    sampleTable <- omx$pheno[samples,c("PR_STATUS","ER_STATUS","HER2_STATUS")]
+    sampleTable <- cbind(sampleTable, PAM50=omx$clin[samples,"PAM50_SUBTYPE"])
+    head(sampleTable)
     X <- X[,samples]
     
     ##-------------------------------------------------------------------
