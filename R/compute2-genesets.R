@@ -19,10 +19,10 @@ compute.testGenesets <- function(ngs, max.features=1000,
     is.mouse = (mean(grepl("[a-z]",gsub(".*:|.*\\]","",pp))) > 0.8)
     is.mouse
     if(is.mouse) {
-        cat("Loading mouse gene sets...\n")
+        cat("Loading MOUSE gene sets...\n")
         load(file=file.path(FILES,"gmt-all-mouse.rda"))
     } else {
-        cat("Loading human gene sets...\n")
+        cat("Loading HUMAN gene sets...\n")
         load(file=file.path(FILES,"gmt-all.rda"))
     }
     table(sub(":.*","",names(gmt.all)))

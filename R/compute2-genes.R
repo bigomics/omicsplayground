@@ -18,14 +18,14 @@ compute.testGenes <- function(ngs, contr.matrix, max.features=1000,
     data.types
     if(single.omics || length(data.types)==1) {
         ## single-omics, no missing values
-        cat(">>> computing gene tests for single-omics\n")
+        cat(">>> computing gene tests for SINGLE-OMICS\n")
         ngs <- compute.testGenes1(
             ngs=ngs, contr.matrix=contr.matrix,
             max.features=max.features,
             test.methods=test.methods)
     } else {
         ## multi-omics, missing values allowed
-        cat(">>> computing gene tests for multi-omics\n")
+        cat(">>> computing gene tests for MULTI-OMICS\n")
         ngs <- compute.testGenes2(
             ngs=ngs, contr.matrix=contr.matrix,
             max.features=max.features,

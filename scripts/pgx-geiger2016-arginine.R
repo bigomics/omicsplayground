@@ -157,11 +157,11 @@ if(DIFF.EXPRESSION) {
         source("../R/compute2-genes.R")
         test.methods = c("trend.limma","ttest.welch","ttest")
         test.methods = USER.GENETEST.METHODS
-        ngs <- compute.testGenes2(
+        ngs <- compute.testGenes(
             ngs, contr.matrix, max.features=1000,
             test.methods=test.methods)
         head(ngs$gx.meta$meta[[1]])        
-
+        
         source("../R/compute2-genesets.R")
         test.methods = c("gsva","camera","fgsea")
         test.methods = USER.GENESETTEST.METHODS
