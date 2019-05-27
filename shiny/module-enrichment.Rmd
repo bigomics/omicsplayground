@@ -524,18 +524,22 @@ output$gs_subplot3 <- renderPlot({
 
     require(RColorBrewer)
     sel  = gene_selected()
-
     if(is.null(sel) || is.na(sel) || length(sel)==0) {
         frame()
     } else {
+        ##gene = sel$gene
+        probe = sel$probe
         gene = sel$gene
+        if(length(probe)>1) {
+            probe <- grep("\\[gx|\\[mrna",probe,value=TRUE)
+        }
         ngrp <- length(unique(ngs$samples$group))
         grouped=TRUE
         grouped <- !input$gs_ungroup
         srt <- ifelse(!grouped || ngrp>4, 30, 0)
         if(!grouped && ncol(ngs$X) > 15) srt <- 60
         pgx.plotGeneExpression(
-            ngs, gene, comp=comp0, logscale=TRUE, level="gene",
+            ngs, probe, comp=comp0, logscale=TRUE, level="gene",
             collapse.others=collapse.others, grouped=grouped,
             srt=srt, main="")
         title(gene, cex.main=0.9)
