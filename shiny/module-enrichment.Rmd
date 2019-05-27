@@ -364,19 +364,25 @@ renderPlot({
 ### Plots
 
 ```{r message=FALSE, warning=FALSE, fig.width=1, fig.height=1}
-## get colors (what a mess...)
-##comp0=colnames(ngs$model.parameters$contr.matrix)[1]
 
+##comp0=colnames(ngs$model.parameters$contr.matrix)[1]
 getcolors <- function(ngs, comp0) {   
-    ## get colors
+    ## get colors (what a mess...)
     contr.matrix <- ngs$model.parameters$contr.matrix
     require(RColorBrewer)
     exp.matrix <- ngs$model.parameters$exp.matrix        
     xgroup = as.character(ngs$Y$group)
+
+    grp.name <- strsplit(comp0,split="_vs_|_VS_")[[1]]
+    grp.name <- c(grp.name, "other")
+    xsign <- sign(exp.matrix[,comp0])
+    xgroup = grp.name[1*(xsign>0) + 2*(xsign<0) + 1*(xsign==0)]
+    table(xgroup)
+    
     names(xgroup) = rownames(ngs$Y)
     table(xgroup)
     samples = names(which(exp.matrix[,comp0]!=0))
-
+    
     xgroup1 <- xgroup[samples]
     table(xgroup1)
     ngrp <- length(unique(xgroup1))
@@ -975,9 +981,8 @@ output$gs_gseatable <- DT::renderDataTable({
     jj = which( sapply(rpt,is.character) |  sapply(rpt,is.factor) )
     if(length(jj)>0) rpt[,jj] = apply(rpt[,jj,drop=FALSE],2,shortstring,100)
 
-    selectmode <- ifelse(TRUE, "multiple", "single")
     selectmode = "single"
-    ##if(PRO.VERSION) selectmode <- ifelse(input$gs_multimode==TRUE, "multiple", "single")
+    ##if(PRO.VERSION) selectmode <- "multiple"
     selectmode
    
     numeric.cols <- which(sapply(rpt, is.numeric))
