@@ -189,7 +189,14 @@ rda.file
 ngs.save(ngs, file=rda.file)
 
 
+if(0) {
+    load(file=rda.file, verbose=1)
+    table(ngs$genes[rownames(ngs$X),]$data_type)
+    jj <- match(rownames(ngs$X),rownames(ngs$genes))
+    table(ngs$genes[jj,]$data_type)
 
+    
+}
 
 
 

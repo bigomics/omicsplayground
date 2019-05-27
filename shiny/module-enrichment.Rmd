@@ -116,11 +116,11 @@ getGeneSetTable <- reactive({
     dim(mx)
     
     outputs = NULL
-    gsmethod0 = colnames(unclass(mx$fc))
+    gsmethod = gsmethod0 = colnames(unclass(mx$fc))
     gsmethod = intersect(gsmethod0, GSET.DEFAULTMETHODS)
     if(PRO.VERSION) gsmethod <- input$gs_method   
     if(is.null(gsmethod) || length(gsmethod)==0) return(NULL)
-
+    
     ## filter gene sets for table
     gsfeatures="<all>"
     gsfeatures = input$gs_features
@@ -174,12 +174,15 @@ getGeneSetTable <- reactive({
         stars.symbols = sapply(1:20,function(i) paste(rep("★",i),collapse=""))
         ##stars.symbols = sapply(1:20,function(i) paste(rep("*",i),collapse=""))
         stars = c("",stars.symbols)[1+rowSums(qv < 0.05)]                
-
+        names(stars) <- rownames(mx)
+        
         ##------------ calculate META parameters ----------------
         meta <- calculateMeta(comp, gsmethod, ngs=ngs)
         meta <- meta[rownames(mx),,drop=FALSE]        
+        dim(meta)
         ##gset.size = sapply(ngs$gmt.all[rownames(mx)],length)
         gset.size = Matrix::colSums(ngs$GMT[,rownames(mx),drop=FALSE]!=0)
+        names(gset.size) <- rownames(mx)
         
         ## ---------- report *average* group expression FOLD CHANGE
         ## THIS SHOULD BETTER GO DIRECTLY WHEN CALCULATING GSET TESTS
@@ -187,8 +190,9 @@ getGeneSetTable <- reactive({
         
         s1 <- names(which(ngs$model.parameters$exp.matrix[,comp]>0))
         s0 <- names(which(ngs$model.parameters$exp.matrix[,comp]<0))
+        jj <- colnames(ngs$GMT)
         jj <- rownames(mx)
-
+        
         gsdiff.method <- "fc"  ## OLD default
         if(DEV.VERSION) gsdiff.method <- input$gs_lfcmethod
         if(gsdiff.method=="gs") {
@@ -196,31 +200,55 @@ getGeneSetTable <- reactive({
             AveExpr0 <- rowMeans(ngs$gsetX[jj,s0])
             meta.fc <- AveExpr1 - AveExpr0
         } else {
-            ## WARNING!!! THIS STILL ASSUMES GENES AS rownames(ngs$X) and rownames(GMT)
+            ## WARNING!!! THIS STILL ASSUMES GENES AS rownames(ngs$X)
+            ## and rownames(GMT)
             fc <- ngs$gx.meta$meta[[comp]]$meta.fx  ## stable
             names(fc) <- rownames(ngs$gx.meta$meta[[comp]])
             pp <- intersect(rownames(ngs$GMT),names(fc))
+            rnaX <- ngs$X
+            
+            ## check if multi-omics
+            is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]",names(fc)))
+            is.multiomics
+            if(is.multiomics) {
+                ii <- grep("\\[gx\\]|\\[mrna\\]",names(fc))
+                fc <- fc[ii]
+                rnaX <- ngs$X[names(fc),]
+                names(fc) <- sub(".*:|.*\\]","",names(fc))
+                rownames(rnaX) <- sub(".*:|.*\\]","",rownames(rnaX))
+                pp <- intersect(rownames(ngs$GMT),names(fc))
+                length(pp)
+            }            
             ngenes <- Matrix::colSums(ngs$GMT[pp,jj])
             G <- t(ngs$GMT[pp,jj])
             meta.fc <- as.vector(G %*% fc[pp] / ngenes)
             names(meta.fc) <- rownames(G)
-            AveExpr1 <- Matrix::rowMeans(G %*% ngs$X[pp,s1]) / ngenes
-            AveExpr0 <- Matrix::rowMeans(G %*% ngs$X[pp,s0]) / ngenes            
+            AveExpr1 <- Matrix::rowMeans(G %*% rnaX[pp,s1]) / ngenes
+            AveExpr0 <- Matrix::rowMeans(G %*% rnaX[pp,s0]) / ngenes
+            remove(rnaX)
         }
-                
+        
         ## TWIDDLE means to reflect foldchange... 
         mean0 <- (AveExpr0 + AveExpr1)/2
         AveExpr1 <- mean0 + meta.fc/2
         AveExpr0 <- mean0 - meta.fc/2
-
-        rpt = data.frame( size=gset.size, logFC=meta.fc, meta.q=meta[,"qv"],
-                         stars, AveExpr0=AveExpr0, AveExpr1=AveExpr1)
+        
+        ##
+        gs <- intersect(names(meta.fc),rownames(meta))
+        length(gs)
+        
+        rpt = data.frame( size = gset.size[gs],
+                         logFC = meta.fc[gs],
+                         meta.q = meta[gs,"qv"],
+                         stars = stars[gs],
+                         AveExpr0=AveExpr0[gs],
+                         AveExpr1=AveExpr1[gs])
         if(PRO.VERSION) {
             ## add extra p/q value columns
             colnames(qv) <- paste0("q.",colnames(qv))
-            rpt <- cbind( rpt, qv)
+            rpt <- cbind( rpt, qv[gs,])
         }
-        rownames(rpt) = rownames(mx)
+        ##rownames(rpt) = gs
     }  else {
         ## show original table (single method)
         rpt = outputs[[gsmethod]]
@@ -1046,14 +1074,31 @@ geneDetails <- reactive({
     if(is.null(gs) || length(gs)==0) return(NULL)
     
     ##limma = ngs$gx.meta$outputs[["trend.limma"]]$tables[[comp]]
-    limma1 = sapply(ngs$gx.meta$meta[[comp]][,c("fc","p","q")],function(x) x[,"trend.limma"])
+    mx <- ngs$gx.meta$meta[[comp]]
+    is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]",rownames(mx)))
+    is.multiomics
+    if(is.multiomics) {
+        ii <- grep("\\[gx\\]|\\[mrna\\]",rownames(mx))
+        mx <- mx[ii,]
+        ##rownames(mx) <- sub(".*:|.*\\]","",rownames(mx))
+    }            
+    
+    gxmethods <- c("trend.limma","ttest.welch")
+    gxmethods <- selected_gxmethods() ## from module-expression
+    req(gxmethods)
+    ##limma1 = sapply(mx[,c("fc","p","q")], function(x) x[,"trend.limma"])
+    limma1.fc <- rowMeans(mx$fc[,gxmethods,drop=FALSE],na.rm=TRUE)
+    limma1.pq = sapply(mx[,c("p","q")], function(x) {
+        apply(x[,gxmethods,drop=FALSE],1,max,na.rm=TRUE)
+    })
+    limma1 <- cbind( fc=limma1.fc, limma1.pq)
     ##limma  = cbind( ngs$gx.meta$meta[[comp]][,c("gene_name","gene_title")], limma1)
     
     ## in multi-mode we select *common* genes
     ns <- length(gs)
     gmt1 <- ngs$GMT[,gs,drop=FALSE]
     genes = rownames(gmt1)[which(Matrix::rowSums(gmt1!=0)==ns)]
-    genes = intersect(genes, ngs$genes[rownames(ngs$X),"gene_name"])
+    genes = intersect(genes, ngs$genes[rownames(mx),"gene_name"])
     genes = setdiff(genes, c("",NA,"NA"," "))
 
     title = as.character(GENE.TITLE[genes])
@@ -1133,7 +1178,7 @@ output$gs_fctable <- renderDataTable({
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
             DT::formatStyle( "fc.var",
                             ##background = styleColorBar(c(0,3), 'lightblue'),
-                            background = color_from_middle( fc.var, 'lightblue', '#f5aeae'),
+                            background = color_from_middle(fc.var, 'lightblue', '#f5aeae'),
                             backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                             backgroundPosition = 'center')  %>%
             DT::formatStyle( colnames(F),
