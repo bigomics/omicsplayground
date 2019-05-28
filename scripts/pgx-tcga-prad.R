@@ -30,7 +30,7 @@ BATCH.CORRECT=TRUE
 USER.GENETEST.METHODS = c("trend.limma","edger.qlf","deseq2.wald")
 USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
 
-rda.file="../pgx/tcga-prad-GX.pgx"
+rda.file="../pgx/tcga-prad-gx.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)

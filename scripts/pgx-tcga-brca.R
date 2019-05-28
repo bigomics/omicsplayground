@@ -30,15 +30,14 @@ BATCH.CORRECT=TRUE
 USER.GENETEST.METHODS = c("trend.limma","edger.qlf","deseq2.wald")
 USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
 
-rda.file="../pgx/tcga-brca_pub-GX.pgx"
+rda.file="../pgx/tcga-brca_pub-gx.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
 ngs$datatype = "RNA-seq"
-ngs$datatype = "multi-omics"
-ngs$description = "BRCA-TCGA public data set (from cBioPortal)."
-
+##ngs$datatype = "multi-omics"
+ngs$description = "TCGA breast cancer data set. Gene expression from 526 patients annotated with PAM50 classification. Data from cBioPortal."
 
 ## READ/PARSE DATA
 if(PROCESS.DATA) {
@@ -47,8 +46,8 @@ if(PROCESS.DATA) {
     ## Old OMX data
     ##
 
-    ##load("~/OMX/shiny-omx/omxdata/tcga/brca_tcga_pub-omx.rda",verbose=1)
-    load("~/Projects/Data/tcga-omx/brca_tcga_pub-omx.rda",verbose=1)
+    load("~/OMX/shiny-omx/omxdata/tcga/brca_tcga_pub-omx.rda",verbose=1)
+    ##load("~/Projects/Data/tcga-omx/brca_tcga_pub-omx.rda",verbose=1)
     names(omx)
     names(omx$level[[1]]$mat)
     lapply(omx$level[[1]]$mat,dim)
