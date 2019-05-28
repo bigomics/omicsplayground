@@ -30,7 +30,7 @@ BATCH.CORRECT=TRUE
 USER.GENETEST.METHODS = "*"
 USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
 
-rda.file="../pgx/tcga-brca_pub-MX.pgx"
+rda.file="../pgx/tcga-brca_pub-mx.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
