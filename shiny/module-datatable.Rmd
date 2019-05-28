@@ -450,7 +450,7 @@ output$data_tissueplot <- renderPlot({
         grp = TISSUE.grp[names(tx)]
         tissue.klr = COLORS[grp]
         ylab="expression (TPM)"
-        if(input$data_type!="counts") {
+        if(input$data_type=="logCPM") {
             ylab = "expression (log2TPM)"
             tx = log(1 + tx)
         }
@@ -684,6 +684,25 @@ output$data_rawdataTable <- DT::renderDataTable({
     samples <- intersect(colnames(x),samples)
     x <- x[,samples,drop=FALSE]
     
+    gene = "CD"
+    gene = "CCR6"
+    gene = input$search_gene
+    ##xgene = sub(".*:","",rownames(x))
+
+    rho = NULL
+    if(1) {
+        k=1
+        ##k <- which(xgene==gene)
+        ##logx <- log2(1 + edgeR::cpm(ngs$counts))
+        ##logx <- logx[rownames(x),]
+        logx <- ngs$X[rownames(x),]
+        xgenes <- ngs$genes[rownames(x),"gene_name"]
+        k <- which(xgenes==gene)
+        rho = cor( t(logx[,samples]), logx[k,samples], use="pairwise")[,1]
+        rho = round(rho[rownames(x)], digits=3)
+        sdx = round(apply(logx[,samples],1,sd),digits=3)
+    }
+    
     ##if(input$data_sampling=="grouped") {
     do.grouped <- input$data_grouped
     if(length(samples)>500) do.grouped <- TRUE
@@ -696,28 +715,10 @@ output$data_rawdataTable <- DT::renderDataTable({
             newx = cbind(newx, mx)
         }
         rownames(newx) = rownames(x)
-        colnames(newx) = paste("[",allgroups,"]")
+        colnames(newx) = paste0("[",allgroups,"]")
         x = newx
     }
 
-    gene = "CD"
-    gene = "CCR6"
-    gene = input$search_gene
-    xgene = sub(".*:","",rownames(x))
-
-    rho = NULL
-    if(1) {
-        k=1
-        ##k <- which(xgene==gene)
-        logx <- log2(1 + edgeR::cpm(ngs$counts))
-        logx <- logx[rownames(x),]
-        xgenes <- ngs$genes[rownames(x),"gene_name"]
-        k <- which(xgenes==gene)
-        rho = cor( t(logx[,samples]), logx[k,samples], use="pairwise")[,1]
-        rho = round(rho[rownames(x)], digits=3)
-        sdx = round(apply(logx[,samples],1,sd),digits=3)
-    }
-    
     x = round( as.matrix(x), digits=3)
     x95 = quantile(as.vector(x0[which(x0>0)]),probs=0.95)
     x99 = quantile(as.vector(x0[which(x0>0)]),probs=0.99)

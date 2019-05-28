@@ -147,14 +147,20 @@ if(DIFF.EXPRESSION) {
     rda.file
     ngs$timings <- c()
     
-    USER.GENETEST.METHODS=c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma",
+    USER.GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank")
+    USER.GENESETTEST.METHODS = c("fisher","gsva","camera")
+    USER.GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank",
+                            "voom.limma","trend.limma","notrend.limma",
                             "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
-    USER.GENESETTEST.METHODS = c("fisher","gsva","ssgsea","spearman","camera","fry","fgsea") ## no GSEA
+    USER.GENESETTEST.METHODS = c("fisher","gsva","ssgsea","spearman",
+                                 "camera", "fry","fgsea") ## no GSEA, too slow...
 
     if(1) {
         source("../R/compute-genes.R")
         source("../R/compute-genesets.R")
     } else {
+
+        ## new callling methods
         source("../R/compute2-genes.R")
         test.methods = c("trend.limma","ttest.welch","ttest")
         test.methods = USER.GENETEST.METHODS

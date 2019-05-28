@@ -39,7 +39,8 @@ cat("setting PGX.DIR =",PGX.DIR,"\n")
 source(file.path(RDIR,"pgx-init.R"), local=TRUE)
 
 if(0) {
-    load("../pgx/GSE10846-dlbcl.pgx")    
+    load("../pgx/GSE10846-dlbcl.pgx")
+    load("../pgx/TCGA-brca_pub.pgx")    
     ngs <- pgx.initialize(ngs)    
 }
 ```

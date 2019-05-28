@@ -239,7 +239,13 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=30,
     ##set.seed(0)
 
     sX = ngs$X
-    if(!is.null(ngs$counts)) sX <- log2(10 + ngs$counts)
+    if(is.null(sX) && !is.null(ngs$counts)) {
+        cat("assuming counts taking logarithm\n")
+        sX <- log2(10 + ngs$counts)
+    }
+    if(is.null(sX)) {
+        stop("FATAL error. cannot set sX.")
+    }
     ##sX = t(irlba(sX, nv=1000)$v)
     sX = head( sX[order(-apply(sX,1,sd)),], 4000)
     ## sX = t(scale(t(sX),scale=TRUE))  ## really? or just centering?
