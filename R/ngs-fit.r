@@ -43,8 +43,8 @@ methods
 ##-------------------- FIT ALL CONTRASTS --------------------------------------
 ##-----------------------------------------------------------------------------
 
-ngs.fitContrastsWithAllMethods <- function(counts, samples, genes, design, contr.matrix,
-                                           prior.cpm=1, quantile.normalize=FALSE,
+ngs.fitContrastsWithAllMethods <- function(X, samples, genes, design, contr.matrix,
+                                           type="counts", prior.cpm=1, quantile.normalize=FALSE,
                                            conform.output=TRUE, do.filter=TRUE, cpm.scale=1e6,
                                            remove.batch=TRUE, methods=ALL.GENETEST.METHODS,
                                            custom=NULL, custom.name=NULL )
@@ -66,37 +66,38 @@ ngs.fitContrastsWithAllMethods <- function(counts, samples, genes, design, contr
         methods <- ALL.GENETEST.METHODS
     }
     cat("calculating methods:",methods,"\n")
-        
-    ## ##prior.cpm = 1  ## MAGIC NUMBER .... FIDDLE....
-    ## cat("setting prior counts at PRIOR.CPM=",prior.cpm,"\n")
-    ## X <- log2(prior.cpm + edgeR::cpm(counts, log=FALSE, prior.count=0.00001))
+                    
+    ##------------------------------------------------------------------
+    ## define transformation methods: log2CPM for counts
+    ##------------------------------------------------------------------        
+
+    ## cat("prior CPM counts =",prior.cpm,"\n")
+    ## cat("CPM scale =",cpm.scale,"\n")
+    ## X <- log2(t(t(counts) / colSums(counts)) * cpm.scale + prior.cpm)  ## CPM
     ## if(quantile.normalize)  {
-    ##     X <- normalizeQuantiles(X)  ## in linear space
+    ##     cat("quantile normalizing logCPM values\n")
+    ##     X <- limma::normalizeQuantiles(X)  ## in linear space
     ## }
-    ## new.counts <- pmax(2**X,0)
-    ## ##new.counts <- t(t(new.counts) / colSums(new.counts) * colSums(counts))
-    ## counts <- new.counts
-            
+    counts <- NULL
+    if(type=="counts") {
+        cat("assuming counts data\n")
+        cat("  prior CPM counts =",prior.cpm,"\n")
+        cat("  CPM scale =",cpm.scale,"\n")
+        counts <- X  ## input was counts
+        X <- log2(t(t(counts) / colSums(counts)) * cpm.scale + prior.cpm)  ## CPM
+    } else {
+        ## do nothing (assume inpute is linear gaussian)
+        cat("no parameter transformation\n")
+        ## X <- X
+    }
     
     ##------------------------------------------------------------------
-    ## define log2CPM for linear methods
-    ##------------------------------------------------------------------    
-    ##X <- log2(1e-9 + counts)
-    if(FALSE && is.null(prior.cpm)) {
-        cat("setting prior CPM to 1% quantile\n")
-        cpm <- t(t(counts) / colSums(counts, na.rm=TRUE)) * cpm.scale
-        jj <- which(!is.na(counts) & counts>0)
-        prior.cpm <- quantile(cpm[jj], probs=0.01, na.rm=TRUE)
-    }
-
-    cat("prior CPM counts =",prior.cpm,"\n")
-    cat("CPM scale =",cpm.scale,"\n")
-    X <- log2(t(t(counts) / colSums(counts)) * cpm.scale + prior.cpm)  ## CPM
+    ## Quantile normalize if needed
+    ##------------------------------------------------------------------        
     if(quantile.normalize)  {
-        cat("quantile normalizing logCPM values\n")
+        cat("applying quantile normalization\n")
         X <- limma::normalizeQuantiles(X)  ## in linear space
     }
-        
     ##------------------------------------------------------------------    
     ## main grouping variable for modeling
     ##------------------------------------------------------------------
@@ -115,6 +116,17 @@ ngs.fitContrastsWithAllMethods <- function(counts, samples, genes, design, contr
         timings[["ttest"]] <- system.time(
             outputs[["ttest"]] <- ngs.fitContrastsWithTTEST(
                 X, contr.matrix, design, method="equalvar",
+                conform.output=conform.output)
+        )
+        cat(paste0(" (",timings[["ttest"]][1],"s)\n"))
+    }
+
+    if("ttest.rank" %in% methods) {
+        cat("fitting using t-test on ranks")
+        rX <- scale(apply(X, 2, rank, na.last="keep"))
+        timings[["ttest.rank"]] <- system.time(
+            outputs[["ttest.rank"]] <- ngs.fitContrastsWithTTEST(
+                rX, contr.matrix, design, method="equalvar",
                 conform.output=conform.output)
         )
         cat(paste0(" (",timings[["ttest"]][1],"s)\n"))

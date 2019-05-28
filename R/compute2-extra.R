@@ -6,82 +6,67 @@
 ##
 ##
 
-SAVED.PARAM <- c("ngs",ls())
+##extra <- c("meta.go","deconv","infer","drugs")
+compute.extra <- function(ngs, extra) {
 
-##rm(list=ls())
-library(knitr)
-library(limma)
-library(edgeR)
-library(RColorBrewer)
-library(gplots)
-library(matrixTests)
-library(kableExtra)
-library(knitr)
-
-source(file.path(RDIR,"gx-limma.r"))
-source(file.path(RDIR,"gx-util.r"))
-source(file.path(RDIR,"gset-fisher.r"))
-source(file.path(RDIR,"gset-gsea.r"))
-source(file.path(RDIR,"gset-meta.r"))
-source(file.path(RDIR,"pgx-graph.R"))
-source(file.path(RDIR,"pgx-functions.R"))
-source(file.path(RDIR,"pgx-deconv.R"))
-source(file.path(RDIR,"pgx-drugs.R"))
-
-##FILES = "../files"
-##EXTRA.STUFF=1
-##rda.file="../files/geiger2018-liver-fltBC.pgx"
-##rda.file="../files/rieckmann2017-immprot.pgx"
-
-##--------------------  cleanup deprecated objects --------------------
-ngs$tsne2d.genes <- NULL
-ngs$tsne3d.genes <- NULL
-ngs$tsne2d.gset <- NULL
-ngs$tsne3d.gset <- NULL
-ngs$gset_tsne_graph <- NULL
-ngs$genes_tsne_graph <- NULL
-ngs$families <- NULL
-ngs$collections <- NULL
-
-## detect if it is single or multi-omics
-single.omics <- !any(grepl("\\[",rownames(ngs$counts)))
-single.omics
-if(single.omics) {
-    cat(">>> computing extra for SINGLE-OMICS\n")
-    rna.counts <- ngs$counts
-} else {
-    cat(">>> computing extra for MULTI-OMICS\n")
-    data.type <- gsub("\\[|\\].*","",rownames(ngs$counts))
-    jj <- which(data.type %in% c("gx","mrna"))
-    length(jj)
-    if(length(jj)==0) {
-        stop("FATAL. could not find gx/mrna values.")
-    }
-    rna.counts <- ngs$counts[jj,]
-    ##rownames(rna.counts) <- gsub(".*:|.*\\]","",rownames(rna.counts))
-    is.logged <- ( min(rna.counts, na.rm=TRUE) < 0 ||
-                   max(rna.counts, na.rm=TRUE) < 50 )
-    if(is.logged) {
-        cat("expression data seems log. undoing logarithm\n")
-        rna.counts <- 2**rna.counts
+    ## detect if it is single or multi-omics
+    single.omics <- !any(grepl("\\[",rownames(ngs$counts)))
+    single.omics
+    if(single.omics) {
+        cat(">>> computing extra for SINGLE-OMICS\n")
+        rna.counts <- ngs$counts
+    } else {
+        cat(">>> computing extra for MULTI-OMICS\n")
+        data.type <- gsub("\\[|\\].*","",rownames(ngs$counts))
+        jj <- which(data.type %in% c("gx","mrna"))
+        length(jj)
+        if(length(jj)==0) {
+            stop("FATAL. could not find gx/mrna values.")
+        }
+        rna.counts <- ngs$counts[jj,]
+        ##rownames(rna.counts) <- gsub(".*:|.*\\]","",rownames(rna.counts))
+        is.logged <- ( min(rna.counts, na.rm=TRUE) < 0 ||
+                       max(rna.counts, na.rm=TRUE) < 50 )
+        if(is.logged) {
+            cat("expression data seems log. undoing logarithm\n")
+            rna.counts <- 2**rna.counts
+        }
     }
 
-}
+
+    if("meta.go" %in% extra) {
+        cat(">>> Computing GO core graph...\n")
+        ngs$meta.go <- pgx.computeCoreGOgraph(ngs, fdr=0.05)
+    }
+
+    if("deconv" %in% extra) {
+        cat(">>> computing deconvolution\n")
+        ngs <- compute.deconvolution(ngs, FILES=FILES, rna.counts=rna.counts) 
+    }
+
+    if("infer" %in% extra) {
+        cat(">>> inferring extra phenotypes...\n")
+        ngs <- compute.cellcycle.gender(ngs, rna.counts=rna.counts)
+    }
+
+    if("drugs" %in% extra) {
+        cat(">>> Computing drug enrichment...\n")
+        ngs <- compute.drugEnrichment(ngs, FILES=FILES) 
+    }
+    
+    if("graph" %in% extra) {
+        cat(">>> computing OmicsGraphs for",rda.file,"\n")
+        ngs <- compute.omicsGraphs(ngs) 
+    }
 
 
-## -------------------GO union core graph ----------------------------------------
-if(1) {
-    ##source(file.path(RDIR,"pgx-graph.R", local=TRUE)
-    cat(">>> Computing GO core graph...\n")
-    ngs$meta.go <- pgx.computeCoreGOgraph(ngs, fdr=0.05)
+    
+    return(ngs)
 }
+
 
 ## -------------- deconvolution analysis --------------------------------
-if(1) {
-
-    cat(">>> computing deconvolution for",rda.file,"\n")
-    source(file.path(RDIR,"pgx-deconv.R"))
-    ##load(file=rda.file,verbose=1)
+compute.deconvolution <- function(ngs, FILES, rna.counts) {
     
     ## list of reference matrices
     refmat <- list()
@@ -117,22 +102,19 @@ if(1) {
     ngs$timings <- rbind(ngs$timings, res$timings)
 
     remove(refmat)
+    remove(res)
+
+    return(ngs)
 }
 
 ## -------------- infer sample characteristics --------------------------------
-if(1){
-    cat(">>> adding characteristics for",rda.file,"\n")
-
+compute.cellcycle.gender <- function(ngs, rna.counts) {
     pp <- rownames(rna.counts)
     is.mouse = (mean(grepl("[a-z]",gsub(".*:|.*\\]","",pp))) > 0.8)
     is.mouse
     if(!is.mouse) {
-
         if(1) {
-            ## 
-            ##
-            ##
-            cat("estimating cell cycle...\n")
+            cat("estimating cell cycle (using Seurat)...\n")
             ngs$samples$cell.cycle <- NULL
             ngs$samples$.cell.cycle <- NULL
             ##counts <- ngs$counts
@@ -156,16 +138,13 @@ if(1){
         }
         head(ngs$samples)
     }
-
+    return(ngs)
 }
 
-## -------------- drug enrichment
-if(1) {
-
+compute.drugEnrichment <- function(ngs, FILES) {
+    ## -------------- drug enrichment
     ##source(file.path(RDIR,"pgx-drugs.R"))
     ##source(file.path(RDIR,"pgx-graph.R", local=TRUE)
-    cat(">>> Computing drug enrichment...\n")
-
     X <- readRDS(file=file.path(FILES,"l1000_es.rds"))
     x.drugs <- gsub("_.*$","",colnames(X))
     length(table(x.drugs))
@@ -189,24 +168,20 @@ if(1) {
     ngs$drugs[["combo"]] <- res.combo
     names(ngs$drugs)
 
-    ## SHOULD MAYBE BE DONE IN PREPROCESSING....
+    ## attach annotation
     annot0 <- read.csv(file.path(FILES,"L1000_repurposing_drugs.txt"),
-                  sep="\t", comment.char="#")
+                       sep="\t", comment.char="#")
     rownames(annot0) <- annot0$pert_iname
     ##annot0$pert_iname <- NULL
     ngs$drugs$annot <- annot0
 
     remove(X)
     remove(x.drugs)
-
+    return(ngs)
 }
 
 ## ------------------ Omics graphs --------------------------------
-if(FALSE){
-    cat(">>> computing OmicsGraphs for",rda.file,"\n")
-    source(file.path(RDIR,"xcr-graph.r"))
-    source(file.path(RDIR,"pgx-graph.R"))
-
+compute.omicsGraphs <- function(ngs) {
     ## gr1$layout <- gr1$layout[V(gr1)$name,]  ## uncomment to keep entire layout
     ngs$omicsnet <- pgx.createOmicsGraph(ngs)
     ngs$pathscores <- pgx.computePathscores(ngs$omicsnet, strict.pos=FALSE)
@@ -215,9 +190,6 @@ if(FALSE){
     ngs$omicsnet.reduced <- pgx.reduceOmicsGraph(ngs)
     ngs$pathscores.reduced <- pgx.computePathscores(ngs$omicsnet.reduced, strict.pos=FALSE)
     ##save(ngs, file=rda.file)
+    return(ngs)
 }
-
-
-##-------------------- cleanup -------------------------------------
-rm( list=setdiff( ls(), c("ngs",SAVED.PARAM)))
 

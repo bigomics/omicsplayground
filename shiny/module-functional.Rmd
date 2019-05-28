@@ -1269,6 +1269,11 @@ output$fa_fireplot <- renderPlot({
 }, res=85)
 ```
 
+`r if(!DEV.VERSION) {"----------------------->"}`
+
+
+`r if(1) {"<!---------------------"}`
+
 ### iTALK
     
 ```{r message=FALSE, warning=FALSE, fig.width=4}
@@ -1346,7 +1351,7 @@ output$fa_italk <- renderPlot({
 }, res=90)
 ```
 
-`r if(!DEV.VERSION) {"----------------------->"}`
+`r if(1) {"----------------------->"}`
 
 
 

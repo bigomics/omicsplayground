@@ -117,7 +117,7 @@ Col {.tabset data-width=650}
 ```{r message=FALSE, warning=FALSE, fig.width=4}
 
 fillRow(flex = c(1.2,0.1,1), 
-        fillCol(flex = c(0.7,1), 
+        fillCol(flex = c(0.6,1), 
                 plotOutput('pdx_importanceplot'),
                 plotOutput('pdx_heatmap')
                 ),
@@ -139,8 +139,9 @@ calcVariableImportance <- reactive({
     colnames(ngs$Y)
     ct <- input$pdx_contrast
     if(is.null(ct)) return(NULL)
-
+    
     NFEATURES=50
+    NFEATURES=60
     
     cat("calcVariableImportance:: 1\n")
     
@@ -194,6 +195,7 @@ calcVariableImportance <- reactive({
         }
     }
     dim(X)
+    X0 <- X
     length(y)
     
     ## ----------- filter with selected features
@@ -280,11 +282,56 @@ calcVariableImportance <- reactive({
     if(DEV.VERSION) is.multiomics <- (is.multiomics && input$pdx_multiomics)
     is.multiomics    
     if(is.multiomics) {
+
         ## EXPERIMENTAL: multi-omics weighting 
-        gene <- ngs$genes[rownames(R),"gene_name"]
-        ##R.gene <- exp(apply(log(R), 2, function(x) tapply(x,gene,sum)))
-        R.gene <- apply(R, 2, function(x) tapply(x,gene,sum))
-        R <- R * R.gene[match(gene,rownames(R.gene)),]
+        if(0) {
+            gene <- ngs$genes[rownames(R),"gene_name"]
+            ##R.gene <- exp(apply(log(R), 2, function(x) tapply(x,gene,sum)))
+            gene.wt <- apply(R, 2, function(x) tapply(x,gene,sum))
+            
+            ## mean intertype correlation
+            jj <- match(rownames(X0),rownames(ngs$genes))
+            g0 <- ngs$genes[jj,"gene_name"]
+            X1 <- X0[which(g0 %in% gene),]
+            dim(X1)
+            g1 <- ngs$genes[match(rownames(X1),rownames(ngs$genes)),"gene_name"]
+            
+            cor.wt <- tapply( 1:nrow(X1), g1, function(ii) {
+                rho <- cor(t(X1[ii,]), use="pairwise")
+                diag(rho) <- NA
+                mean(abs(rho[upper.tri(rho)]),na.rm=TRUE)
+            })
+            
+            ## weighting with 
+            cor.wt <- cor.wt[match(gene,names(cor.wt))]
+            gene.wt <- gene.wt[match(gene,rownames(gene.wt)),]
+            R <- R * gene.wt * as.vector(cor.wt)
+        } else {
+            rr <- rowMeans(R)
+            dtype <- ngs$genes[rownames(R),"data_type"]
+            gene  <- ngs$genes[rownames(R),"gene_name"]            
+            gg <- sort(unique(gene))
+            dtypes <- unique(dtype)
+            dt <- "gx"
+            rho <- c()
+            for(dt in dtypes) {
+                r1 <- rr[which(dtype == dt)]
+                g1 <- gene[which(dtype == dt)]
+                r1 <- r1[match(gg,g1)]
+                rho <- cbind(rho, r1)
+            }
+            rownames(rho) <- gg
+            colnames(rho) <- dtypes
+            rho[is.na(rho)] <- 0
+            rho <- rho[order(-rowSums(rho,na.rm=TRUE)),]
+            dim(rho)            
+            barplot(t(head(rho,50)), las=3)
+            jj <- match(gene, rownames(rho))
+            rname <- rownames(R)
+            R <- rho[jj,]
+            rownames(R) <- rname
+        }
+
     }
     
     cat("calcVariableImportance:: 5: drawing tree\n")
@@ -293,11 +340,12 @@ calcVariableImportance <- reactive({
     ## create partition tree
     ##------------------------------
     require(rpart)
+    R <- R[order(-rowSums(R)),,drop=FALSE]
     sel <- head(rownames(R),100)
     sel <- head(rownames(R),NFEATURES)  ## top50 features
     sel <- intersect(sel,rownames(X))
     tx <- t(X[sel,,drop=FALSE])
-
+    
     ## formula wants clean names, so save original names
     colnames(tx) <- gsub("[: +-.,]","_",colnames(tx))
     colnames(tx) <- gsub("[')(]","",colnames(tx))

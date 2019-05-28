@@ -186,7 +186,7 @@ cat(">>> Testing differential expressed genes (DEG) with methods:",methods,"\n")
 ## Run all test methods
 ##
 gx.meta <- ngs.fitContrastsWithAllMethods(
-    counts=counts, samples=samples, genes=NULL, ##genes=genes,
+    X=counts, samples=samples, genes=NULL, ##genes=genes,
     methods=methods, design=design,
     contr.matrix=contr.matrix,
     prior.cpm=PRIOR.CPM,  ## prior count regularization

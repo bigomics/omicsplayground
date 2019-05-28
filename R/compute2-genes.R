@@ -9,7 +9,7 @@
 
 ##SAVE.PARAMS <- ls()
 
-compute.testGenes <- function(ngs, contr.matrix, max.features=1000,
+compute.testGenes <- function(ngs, contr.matrix, max.features=1000, type="counts",
                               test.methods=c("trend.limma","deseq2.wald","edger.qlf"))
 {
     single.omics <- !any(grepl("\\[",rownames(ngs$counts)))
@@ -19,33 +19,29 @@ compute.testGenes <- function(ngs, contr.matrix, max.features=1000,
     if(single.omics || length(data.types)==1) {
         ## single-omics, no missing values
         cat(">>> computing gene tests for SINGLE-OMICS\n")
-        ngs <- compute.testGenes1(
-            ngs=ngs, contr.matrix=contr.matrix,
+        ngs <- compute.testGenesSX(
+            ngs=ngs, type=type,
+            contr.matrix=contr.matrix,
             max.features=max.features,
             test.methods=test.methods)
     } else {
         ## multi-omics, missing values allowed
         cat(">>> computing gene tests for MULTI-OMICS\n")
-        ngs <- compute.testGenes2(
-            ngs=ngs, contr.matrix=contr.matrix,
+        ngs <- compute.testGenesMX(
+            ngs=ngs,  ## type is inferred
+            contr.matrix=contr.matrix,
             max.features=max.features,
             test.methods=test.methods)
     }
     return(ngs)
 }
 
-
 test.methods=c("trend.limma","deseq2.wald","edger.qlf")
 test.methods=c("trend.limma","ttest.welch","ttest")
 max.features=1000
-compute.testGenes2 <- function(ngs, contr.matrix, max.features=1000,
+compute.testGenesMX <- function(ngs, contr.matrix, max.features=1000, 
                                test.methods=c("trend.limma","deseq2.wald","edger.qlf"))
 {
-    data.type <- gsub("\\[|\\].*","",rownames(ngs$counts))
-    data.types <- unique(data.type)
-    data.types
-    dt <- data.types[1]
-    dt
     ngs$gx.meta <- NULL
     ngs$model.parameters <- NULL
     ngs$gx.meta$meta <- vector("list",ncol(contr.matrix))
@@ -55,15 +51,39 @@ compute.testGenes2 <- function(ngs, contr.matrix, max.features=1000,
         nk <- ncol(contr.matrix)
         ngs$gx.meta$sig.counts[[j]] <- vector("list",nk)
     }
+
+    data.type <- gsub("\\[|\\].*","",rownames(ngs$counts))
+    data.types <- unique(data.type)
+    data.types
+    dt = "cn"
+    dt = "gx"
+    dt <- data.types[1]
+    dt
     for(dt in data.types) {
+        
+        ## get data block
         ngs1 <- ngs
         jj <- which(data.type == dt)
         ngs1$counts <- ngs1$counts[jj,]
         ngs1$genes  <- ngs1$genes[jj,]
-        ngs1 <- compute.testGenes1(
-            ngs=ngs1, contr.matrix=contr.matrix,
+        
+        ## determine if datatype are counts or not
+        type = "not.counts"
+        if(min(ngs1$counts,na.rm=TRUE) >= 0 &&
+           max(ngs1$counts,na.rm=TRUE) >= 50 ) {
+            type <- "counts"
+        }
+        dt
+        type
+        
+        ## do test
+        ngs1 <- compute.testGenesSX(
+            ngs=ngs1, type=type,
+            contr.matrix=contr.matrix,
             max.features=max.features,
             test.methods=test.methods)
+        
+        ## copy results
         ngs$model.parameters <- ngs1$model.parameters
         names(ngs1$gx.meta)
         for(k in 1:ncol(contr.matrix)) {
@@ -93,8 +113,9 @@ compute.testGenes2 <- function(ngs, contr.matrix, max.features=1000,
     return(ngs)
 }
 
-compute.testGenes1 <- function(ngs, contr.matrix, max.features=1000,
-                               test.methods = c("trend.limma","deseq2.wald","edger.qlf"))
+compute.testGenesSX <- function(ngs, contr.matrix, max.features=1000,
+                                type="counts", filter.low = TRUE,
+                                test.methods = c("trend.limma","deseq2.wald","edger.qlf"))
 {
 
     ##-----------------------------------------------------------------------------
@@ -174,47 +195,38 @@ compute.testGenes1 <- function(ngs, contr.matrix, max.features=1000,
         exp.matrix = (design %*% contr.matrix)
     }
 
-    ##xfit = cpm$counts  ## gets used later!!!
-    ##xfit = normalizeQuantiles(xfit)
-    ##vfit <- lmFit( log2(1 + ngs$counts), design)
-    ##efit <- eBayes(contrasts.fit(vfit, contrasts=contr.matrix), trend=TRUE)
-    model.parameters <- list(design=design, contr.matrix=contr.matrix, ## efit=efit,
-                             exp.matrix=exp.matrix)
+    model.parameters <- list(design = design,
+                             contr.matrix = contr.matrix, 
+                             exp.matrix = exp.matrix)
     
     ##-----------------------------------------------------------------------------
     ## Filter genes
-    ##-----------------------------------------------------------------------------
-    
+    ##-----------------------------------------------------------------------------    
     ## get *RAW* counts but use filtered probes from cooked
     counts = ngs$counts  ##??
     genes  = ngs$genes
     samples = ngs$samples
     
     ## prefiltering for low-expressed genes (recommended for edgeR and
-    ## DEseq2). Require at least in 2 or 1% of total
-    if(0) {
-        x <- edgeR::cpm(counts[counts>0])
-        hist(log2(1e-8+x), breaks=100)
-        q0 <- quantile(x, probs=c(0.01,0.10))
-        q0
-        abline(v=log2(q0),col="red",lty=2)
-        hist(log2(x/q0[1]+1), breaks=100)
+    ## DEseq2). Require at least in 2 or 1% of total. Specify the
+    ## PRIOR CPM amount to regularize the counts and filter genes
+    if(type=="counts" && filter.low) {
+        PRIOR.CPM = 0.25
+        PRIOR.CPM = 1
+        AT.LEAST = ceiling(pmax(2,0.01*ncol(counts)))    
+        cat("filtering for low-expressed genes: >",PRIOR.CPM,"CPM in >=",
+            AT.LEAST,"samples\n")
+        keep <- (rowSums( edgeR::cpm(counts) > PRIOR.CPM, na.rm=TRUE) >= AT.LEAST)
+        ##keep <- edgeR::filterByExpr(counts)  ## default edgeR filter
+        ngs$filtered <- NULL
+        ngs$filtered[["low.expressed"]] <-
+            paste(rownames(counts)[which(!keep)],collapse=";")
+        table(keep)
+        counts <- counts[which(keep),,drop=FALSE]
+        genes <- genes[which(keep),,drop=FALSE]
+        cat("filtering out",sum(!keep),"low-expressed genes\n")
+        cat("keeping",sum(keep),"expressed genes\n")
     }
-    
-    ## Specify the PRIOR CPM amount to regularize the counts and filter genes
-    PRIOR.CPM = 0.25
-    PRIOR.CPM = 1
-    AT.LEAST = ceiling(pmax(2,0.01*ncol(counts)))    
-    cat("filtering for low-expressed genes: >",PRIOR.CPM,"CPM in >=",AT.LEAST,"samples\n")
-    keep <- (rowSums( edgeR::cpm(counts) > PRIOR.CPM, na.rm=TRUE) >= AT.LEAST)
-    ##keep <- edgeR::filterByExpr(counts)  ## default edgeR filter
-    ngs$filtered <- NULL
-    ngs$filtered[["low.expressed"]] <- paste(rownames(counts)[which(!keep)],collapse=";")
-    table(keep)
-    counts <- counts[which(keep),,drop=FALSE]
-    genes <- genes[which(keep),,drop=FALSE]
-    cat("filtering out",sum(!keep),"low-expressed genes\n")
-    cat("keeping",sum(keep),"expressed genes\n")
     
     ##-----------------------------------------------------------------------------
     ## Shrink number of genes before testing
@@ -224,8 +236,12 @@ compute.testGenes1 <- function(ngs, contr.matrix, max.features=1000,
         cat("shrinking data matrices: n=",max.features,"\n")
         ##avg.prior.count <- mean(PRIOR.CPM * Matrix::colSums(counts) / 1e6)  ##
         ##logcpm = edgeR::cpm(counts, log=TRUE, prior.count=avg.prior.count)
-        logcpm <- log2( PRIOR.CPM + edgeR::cpm(counts, log=FALSE))
-        sdx <- apply(logcpm,1,sd)
+        if(type=="counts") {
+            logcpm <- log2(PRIOR.CPM + edgeR::cpm(counts, log=FALSE))
+            sdx <- apply(logcpm,1,sd)
+        } else {
+            sdx <- apply(counts,1,sd)
+        }
         jj <- head( order(-sdx), max.features )  ## how many genes?
         ## always add immune genes??
         if("gene_biotype" %in% colnames(genes)) {
@@ -258,15 +274,15 @@ compute.testGenes1 <- function(ngs, contr.matrix, max.features=1000,
     methods <- test.methods
     
     cat(">>> Testing differential expressed genes (DEG) with methods:",methods,"\n")
-    
+
     ## Run all test methods
     ##
     gx.meta <- ngs.fitContrastsWithAllMethods(
-        counts=counts, samples=samples, genes=NULL, ##genes=genes,
+        X=counts, type=type,
+        samples=samples, genes=NULL, ##genes=genes,
         methods=methods, design=design,
         contr.matrix=contr.matrix,
         prior.cpm=PRIOR.CPM,  ## prior count regularization
-        ##quantile.normalize=FALSE,  ## really? please compare
         quantile.normalize=TRUE,  ## only for logCPM
         remove.batch=FALSE,  ## we do explicit batch correction instead
         conform.output=TRUE, do.filter=FALSE,

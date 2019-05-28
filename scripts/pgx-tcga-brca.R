@@ -13,13 +13,13 @@ source("../R/gx-limma.r")
 source("../R/gx-util.r")
 source("../R/ngs-cook.r")
 source("../R/ngs-fit.r")
+source("../R/ngs-functions.R")
 source("../R/gset-fisher.r")
 source("../R/gset-gsea.r")
 source("../R/gset-meta.r")
+source("../R/pgx-drugs.R")
 source("../R/pgx-graph.R")
-source("../R/pgx-deconv.R")
 source("../R/pgx-functions.R")
-source("../R/ngs-functions.R")
 
 source("options.R")
 MAX.GENES
@@ -27,10 +27,10 @@ MAX.GENES = 2000
 BATCH.CORRECT=TRUE
 
 ## run all available methods 
-USER.GENETEST.METHODS = "*"
+USER.GENETEST.METHODS = c("trend.limma","edger.qlf","deseq2.wald")
 USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
 
-rda.file="../pgx/tcga-brca_pub-MX.pgx"
+rda.file="../pgx/tcga-brca_pub-GX.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -52,8 +52,8 @@ if(PROCESS.DATA) {
     names(omx)
     names(omx$level[[1]]$mat)
     lapply(omx$level[[1]]$mat,dim)
-    ##mat <- omx$level[[1]]$mat[1]
-    mat <- omx$level[[1]]$mat[1:5]
+    mat <- omx$level[[1]]$mat[1]
+    ##mat <- omx$level[[1]]$mat[1:5]
     names(mat)
 
     ## impute missing values
@@ -95,7 +95,6 @@ if(PROCESS.DATA) {
     pam50 <- omx$pheno[samples,grep("PAM50",colnames(omx$pheno))]
     pam50 <- sub("PAM50_SUBTYPE:","",colnames(pam50)[max.col(pam50)])
     pam50 <- gsub("[-]|enriched|like","",pam50)
-    table(pam50)
     sampleTable <- cbind(sampleTable, PAM50=pam50)
     head(sampleTable)
     X <- X[,samples]
@@ -110,7 +109,7 @@ if(PROCESS.DATA) {
     head(GENE.TITLE)
     gene <- sub("\\[.*\\]","",rownames(X))
     gene_title <- GENE.TITLE[gene]
-    
+
     ## get chromosome locations
     chrloc = as.list(org.Hs.egCHRLOC)
     names(chrloc) = gene.symbol
@@ -165,7 +164,7 @@ if(PROCESS.DATA) {
     ## for doing differential analysis.
     ##-------------------------------------------------------------------
     ngs$X <- as.matrix(X) ## cluster will skip log
-    ##ngs$X <- NULL
+    ngs$X <- NULL
     ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, prefix="C",
                               perplexity=5)
     head(ngs$samples)
@@ -183,20 +182,19 @@ if(DIFF.EXPRESSION) {
     load(file=rda.file, verbose=1)
     
     head(ngs$samples)
-    ##ngs$samples$group <- as.character(ngs$samples$HER2_STATUS)
+    ngs$samples$group <- as.character(ngs$samples$HER2_STATUS)
     ngs$samples$group <- as.character(ngs$samples$PAM50)
     table(ngs$samples$group)
     levels = unique(ngs$samples$group)
     levels
     colnames(ngs$samples)
-
+    
     contr.matrix <- makeContrasts(
-        LuminalA_vs_Basal = LuminalA - Basal,
-        LuminalB_vs_Basal = LuminalB - Basal,
+        LuminalA_vs_normal = LuminalA - Normal,
+        LuminalB_vs_normal = LuminalB - Normal,
         LuminalB_vs_LuminalA = LuminalB - LuminalA,
-        HER2_vs_Basal = HER2 - Basal,
-        HER2_vs_LuminalA = HER2 - LuminalA,
-        HER2_vs_LuminalB = HER2 - LuminalB,
+        Basal_vs_normal = Basal - Normal,
+        HER2_vs_normal = HER2 - Normal,
         levels=levels)
     dim(contr.matrix)
     head(contr.matrix)
@@ -209,25 +207,9 @@ if(DIFF.EXPRESSION) {
     ## head(contr.matrix)
     ##contr.matrix = contr.matrix[,1:3]
     
-    source("../R/compute2-genes.R")
-    ##test.methods = c("trend.limma","edger.qlf","deseq2.wald")
-    ## test.methods = c("trend.limma","deseq2.wald")
-    test.methods = c("trend.limma","ttest.welch","ttest","ttest.rank")
-    ngs <- compute.testGenes(
-        ngs, contr.matrix, max.features=MAX.GENES,
-        test.methods=test.methods)
-    head(ngs$gx.meta$meta[[1]])
-    
-    source("../R/compute2-genesets.R")
-    test.methods = c("gsva","camera","fgsea","spearman")
-    ngs <- compute.testGenesets(
-        ngs, max.features=MAX.GENES,
-        test.methods=test.methods)
-    head(ngs$gset.meta$meta[[1]])
-    
-    source("../R/compute2-extra.R")
-    extra <- c("meta.go","deconv","infer","drugs")
-    ngs <- compute.extra(ngs, extra) 
+    source("../R/compute-genes.R")
+    source("../R/compute-genesets.R")    
+    source("../R/compute-extra.R")
     
 }
 

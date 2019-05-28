@@ -67,18 +67,23 @@ compute.testGenesets <- function(ngs, max.features=1000,
         if(length(jj)==0) {
             stop("FATAL. could not find gx/mrna values.")
         }
-        X <- ngs$counts[jj,]
-        
+        X <- ngs$counts[jj,]        
     }
+
+    ## is gene matrix counts or not counts??
+    is.counts <- ( min(X,na.rm=TRUE) >= 0 && max(X,na.rm=TRUE) >= 50 )
     xgenes = as.character(ngs$genes[rownames(X),"gene_name"])
-    X <- apply(X, 2, function(x) tapply(x, xgenes, sum))
-    dim(X)
-    X <- edgeR::cpm(X, log=TRUE )
+    if(is.counts) {
+        X <- apply(X, 2, function(x) tapply(x, xgenes, sum, na.rm=TRUE))
+        X <- edgeR::cpm(X, log=TRUE )
+    } else {
+        X <- apply(X, 2, function(x) tapply(x, xgenes, max, na.rm=TRUE))
+    }
     X <- X[which(apply(X,1,sd)>0),,drop=FALSE]
     X <- X[!(rownames(X) %in% c(NA,""," ") ),,drop=FALSE]
     X <- limma::normalizeQuantiles(X)
     dim(X)
-    
+
     ##-----------------------------------------------------------
     ## create the GENESETxGENE matrix
     ##-----------------------------------------------------------
@@ -100,8 +105,7 @@ compute.testGenesets <- function(ngs, max.features=1000,
     
     ##-----------------------------------------------------------
     ## Prioritize gene sets by fast rank-correlation
-    ##-----------------------------------------------------------
-    
+    ##-----------------------------------------------------------    
     if(is.null(max.features)) max.features <- 20000
     if(max.features < 0) max.features <- 20000
     max.features
@@ -111,7 +115,7 @@ compute.testGenesets <- function(ngs, max.features=1000,
         ## Reduce gene sets by selecting top varying genesets. We use the
         ## very fast sparse rank-correlation for approximate single sample
         ## geneset activation.
-        cX <- X - rowMeans(X, na.rm=TRUE)
+        cX <- X - rowMeans(X, na.rm=TRUE)  ## center!
         gsetX = qlcMatrix::corSparse( GMT[,], apply( cX[,],2,rank) )
         gsetX = limma::normalizeQuantiles(gsetX) ##???
         grp <- ngs$samples$group

@@ -28,7 +28,7 @@ GSET.DEFAULTMETHODS = c("fisher","gsva","camera")
 GSET.DEFAULTMETHODS = c("gsva","camera","fgsea","fisher")
 
 if(PRO.VERSION) checkboxGroupInput('gs_method','Test method:', choices=NULL)
-if(DEV.VERSION) radioButtons('gs_lfcmethod','LFC method:', choices=c("fc","gs"))
+if(DEV.VERSION) radioButtons('gs_lfcmethod','Score method:', choices=c("fc","gs"))
 
 selected_gsetmethods <- reactive({
     ngs <- inputData()
