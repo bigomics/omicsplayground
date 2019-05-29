@@ -28,7 +28,7 @@ BATCH.CORRECT=TRUE
 
 ## run all available methods 
 USER.GENETEST.METHODS = c("trend.limma","edger.qlf","deseq2.wald")
-USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
+USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","spearman")
 
 rda.file="../pgx/tcga-prad-gx.pgx"
 rda.file
