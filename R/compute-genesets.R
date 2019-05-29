@@ -69,32 +69,40 @@ cat("Building gene set matrix...\n")
 ##GMT = sapply( gmt.all, function(s) 1*(rownames(X) %in% s))
 ##GMT = Matrix(GMT, sparse=TRUE)
 genes <- sort(unique(xgenes))
+##GMT <- gmt2mat(gmt.all[], bg=genes)  ## in gset-gsea.r
 GMT <- gmt2mat.nocheck(gmt.all[], bg=genes)  ## in gset-gsea.r
+##GMT <- Matrix(GMT, sparse=TRUE)
 dim(GMT)
 dim(X)
 table(xgenes %in% rownames(GMT))
 table(names(gmt.all) %in% colnames(GMT))
-GMT[1:4,1:4]
+##GMT[1:4,1:4]
 
 ## align GMT to X (or ngs$X??)
 GMT <- GMT[rownames(X),names(gmt.all)]
 summary(Matrix::colSums(GMT))
 dim(GMT)
+class(GMT)
 
 ##-----------------------------------------------------------
 ## Prioritize gene sets by fast rank-correlation
 ##-----------------------------------------------------------
 
-if(!exists("MAX.GENES")) MAX.GENES <- 20000
-if(MAX.GENES < 0) MAX.GENES <- 20000
+if(!exists("MAX.GENES")) MAX.GENES <- 10000
+if(MAX.GENES < 0) MAX.GENES <- 10000
 MAX.GENES
 
 if(MAX.GENES > 0) {
+    cat("Reducing gene set matrix. MAX.GENES=",MAX.GENES,"\n")
     require(limma)
     ## Reduce gene sets by selecting top varying genesets. We use the
     ## very fast sparse rank-correlation for approximate single sample
     ## geneset activation.
-    gsetX = qlcMatrix::corSparse( GMT[,], apply(X[,],2,rank) )
+    rX <- apply(X - rowMeans(X,na.rm=TRUE),2,rank)  ## centered X!
+    gsetX = qlcMatrix::corSparse( GMT[,], rX )
+    ##gsetX = qlcMatrix::corSparse( as(GMT, "dgCMatrix"), rX)
+    ##gsetX = cor( as.matrix(GMT[,]), rX )
+    ##gsetX = tcosine.similarity( GMT[,], rX )
     gsetX = limma::normalizeQuantiles(gsetX) ##???
     grp <- ngs$samples$group
     gsetX.bygroup <- t(apply(gsetX,1,function(x) tapply(x,grp,mean)))

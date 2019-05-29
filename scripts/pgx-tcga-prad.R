@@ -28,7 +28,7 @@ BATCH.CORRECT=TRUE
 
 ## run all available methods 
 USER.GENETEST.METHODS = c("trend.limma","edger.qlf","deseq2.wald")
-USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","spearman")
+USER.GENESETTEST.METHODS = c("gsva","camera","fgsea")
 
 rda.file="../pgx/tcga-prad-gx.pgx"
 rda.file
@@ -43,19 +43,20 @@ if(PROCESS.DATA) {
 
     ## ##############################################################
     ## get data
-
-    ##system("mkdir -p /tmp/prad/")
-    ##system("wget http://download.cbioportal.org/prad_tcga.tar.gz -P /tmp/prad/")
-    ##system("tar xvfz /tmp/prad/prad_tcga.tar.gz")
-    ##cbio.dir = "/tmp/prad_tcga"
-    cbio.dir = "../../pub/cbio/prad_tcga"
-    dir(cbio.dir)
+    if(0) {
+        system("mkdir -p ../downloads/prad/")
+        system("wget http://download.cbioportal.org/prad_tcga.tar.gz -P ../downloads/prad")
+        system("(cd ../downloads/prad/ && tar xvfz prad_tcga.tar.gz)")
+    }
+    download.dir = "../downloads/prad"
+    ##download.dir = "../../pub/cbio/prad_tcga"
+    dir(download.dir)
     
-    clin <- read.csv(file.path(cbio.dir,"data_bcr_clinical_data_patient.txt"),
+    clin <- read.csv(file.path(download.dir,"data_bcr_clinical_data_patient.txt"),
                      skip=4, sep="\t")
     rownames(clin) <- clin$PATIENT_ID
     sel1 <- c(
-        "GLEASON_PATTERN_PRIMARY","GLEASON_PATTERN_SECONDARY",
+        ##"GLEASON_PATTERN_PRIMARY","GLEASON_PATTERN_SECONDARY",
         "GLEASON_SCORE",
         "TUMOR_STATUS",
         "BIOCHEMICAL_RECURRENCE_INDICATOR",
@@ -64,10 +65,12 @@ if(PROCESS.DATA) {
         "CLIN_T_STAGE")
     sel2 <- c("OS_MONTHS","OS_STATUS")
     clin1 <- apply(clin[,sel1], 2, function(x) {x[grep("^\\[",x)]=NA;x})
-    clin <- cbind(clin1, clin[,sel2])
+    ##clin <- data.frame(cbind(clin1, clin[,sel2]))
+    clin <- data.frame(clin1)
     clin$CLIN_T_STAGE <- sub("[abc]","",clin$CLIN_T_STAGE)  ## simplify
+    clin$GLEASON_SCORE <- gsub("[ ]","",paste0("G",clin$GLEASON_SCORE))  ## simplify
     
-    X.data   <- read.csv(file.path(cbio.dir,"data_RNA_Seq_v2_expression_median.txt"),
+    X.data   <- read.csv(file.path(download.dir,"data_RNA_Seq_v2_expression_median.txt"),
                          sep="\t", check.names=FALSE)
     X <- X.data[,3:ncol(X.data)]
     gene <- X.data$Hugo_Symbol
@@ -162,25 +165,39 @@ if(DIFF.EXPRESSION) {
     load(file=rda.file, verbose=1)
     
     head(ngs$samples)
-    ngs$samples$group <- as.character(ngs$samples$GLEASON_SCORE)
-    ngs$samples$group <- as.character(ngs$samples$CLIN_T_STAGE)
+    ##score <- paste0("G",as.character(ngs$samples$GLEASON_SCORE))
+    score <- as.character(ngs$samples$GLEASON_SCORE)
+    ##score <- as.character(ngs$samples$CLIN_T_STAGE)
+    score <- gsub("[ ]","",score)
+    score[is.na(score)] <- "NA"
+    table(score)
+    ngs$samples$group <- score
 
-    ngs$samples$group[is.na(ngs$samples$group)] <- "NA"
-    table(ngs$samples$group)
     levels = setdiff(unique(ngs$samples$group),NA)
     levels
     colnames(ngs$samples)
     
+    ## contr.matrix <- makeContrasts(
+    ##     T2_vs_T1 = T2 - T1,
+    ##     T3_vs_T1 = T3 - T1,
+    ##     T4_vs_T1 = T4 - T1,
+    ##     T3_vs_T2 = T3 - T2,
+    ##     T4_vs_T3 = T4 - T3,
+    ##     levels = levels)
+
     contr.matrix <- makeContrasts(
-        T2_vs_T1 = T2 - T1,
-        T3_vs_T1 = T3 - T1,
-        T4_vs_T1 = T4 - T1,
-        T3_vs_T2 = T3 - T2,
-        T4_vs_T3 = T4 - T3,
+        G10_vs_G9 = G10 - G9,
+        G9_vs_G8 = G9 - G8,
+        G8_vs_G7 = G8 - G7,
+        G7_vs_G6 = G7 - G6,
+        G10_vs_G6 = G10 - G6,
+        G9_vs_G6 = G9 - G6,
+        G8_vs_G6 = G8 - G6,
         levels = levels)
+    
     dim(contr.matrix)
     head(contr.matrix)
-
+    
     ## some methods (yet) cannot handle direct contrasts!!!
     ## contr.matrix <- makeDirectContrasts(
     ##     ngs$samples[,c("PR_STATUS","ER_STATUS","HER2_STATUS")],
@@ -189,6 +206,8 @@ if(DIFF.EXPRESSION) {
     ## head(contr.matrix)
     ##contr.matrix = contr.matrix[,1:3]
     
+    ##USER.GENETEST.METHODS = c("trend.limma","ttest.welch")
+    ##USER.GENESETTEST.METHODS = c("gsva","camera")
     source("../R/compute-genes.R")
     source("../R/compute-genesets.R")    
     source("../R/compute-extra.R")

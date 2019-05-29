@@ -5,22 +5,24 @@ methods=ALL.GENESET.METHODS
 methods=c("fisher","ssgsea","gsva","fgsea","gseaPR")
 methods=c("gsva","camera")
 methods=c("fisher","gsva","camera")
-
+use.multicore=TRUE
 gmt2mat.nocheck <- function(gmt, bg=NULL, use.multicore=TRUE)
 {
     ##max.genes=-1;ntop=-1;sparse=TRUE;bg=NULL;normalize=FALSE;r=0.01;use.multicore=TRUE
     require(Matrix)
     require(parallel)
+    ##gmt <- gmt[!duplicated(names(gmt))]
     if(is.null(bg)) {
         bg <- names(sort(table(unlist(gmt)),decreasing=TRUE))
     }
     gmt <- lapply(gmt, function(s) intersect(bg,s))
-    kk <- unique(names(gmt))
-    D <- Matrix(0, nrow=length(bg),ncol=length(kk), sparse=TRUE)
-    dim(D)
-    rownames(D) <- bg
-    colnames(D) <- kk
+    ##kk <- unique(names(gmt))
+    ## D <- Matrix(0, nrow=length(bg),ncol=length(kk), sparse=TRUE)
+    ##D <- sparseMatrix(1, 1, x=0, dims=c(length(bg),ncol=length(kk)))
+    ##rownames(D) <- bg
+    ##colnames(D) <- kk
     j=1
+    idx <- c()
     if(use.multicore) {
         idx <- mclapply(gmt, function(s) match(s,bg))
         idx[sapply(idx,length)==0] <- 0
@@ -28,14 +30,23 @@ gmt2mat.nocheck <- function(gmt, bg=NULL, use.multicore=TRUE)
         idx <- matrix(unlist(idx[]),byrow=TRUE,ncol=2)
         idx <- idx[!is.na(idx[,1]),]
         idx <- idx[idx[,1]>0,]
-        D[idx] <- 1
+        ##D[idx] <- 1
     } else {
-        for(j in 1:ncol(D)) {
-            k0 <- match(kk[j], names(gmt))
-            ii0 <- which(bg %in% gmt[[k0]])
-            if(length(ii0)>0) D[ii0,j] <- +1
+        idx <- c()
+        for(j in 1:length(gmt)) {
+            ii0 <- which(bg %in% gmt[[j]])
+            if(length(ii0)>0) {
+                ##D[ii0,j] <- +1
+                idx <- rbind(idx, cbind(ii0,j))
+            }
         }
     }
+    D <- sparseMatrix(idx[,1], idx[,2], x=rep(1,nrow(idx)),
+                      dims=c(length(bg),ncol=length(gmt)))
+    dim(D)
+    rownames(D) <- bg
+    colnames(D) <- names(gmt)
+    ##D <- Matrix(D, sparse=TRUE)
     D
 }
 
