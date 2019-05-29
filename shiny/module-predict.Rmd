@@ -543,17 +543,19 @@ output$pdx_boxplots <- renderPlot({
                 ylab="expression", cex.axis=0.001)
         axis(2, cex.axis=0.9)
         ##axis(1, at=1:ny, labels=levels(factor(y)), cex.axis=0.6)
-        cex1 <- ifelse( ny >= 8, 0.7, 0.85)
+        cex1 <- ifelse( ny >= 8, 0.65, 0.8)
         title(g, cex.main=ifelse(nchar(g)>20,0.85,1))
         nchar(y)
-        too.big = (max(nchar(y)>6) && ny==2) || (max(nchar(y)>4) && ny>2)
+        too.big = (max(nchar(y))>=6 && ny==2) ||
+            (max(nchar(y))>=4 && ny>2 || ny>=6 )
         if(too.big) {
-            dy <- min(gx) - 0.16*diff(range(gx))        
+            dy <- min(gx) - 0.16*diff(range(gx))
+            nn <- max(nchar(y))
             text(1:ny, dy, levels(factor(y)), xpd=NA,
                  cex=cex1, srt=30, adj=1)
         } else {
             mtext(levels(factor(y)), side=1, line=0.7,
-                  cex=cex1*0.9, las=1, at=1:ny)
+                  cex=cex1*0.85, las=1, at=1:ny)
         }
 
     }
