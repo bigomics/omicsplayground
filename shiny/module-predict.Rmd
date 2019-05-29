@@ -9,7 +9,7 @@ Inputs {.sidebar data-width=250}
 <br><br>
 
 ```{r}
-radioButtons('pdx_vartype',NULL,c("contrast","phenotype"),inline=TRUE)
+radioButtons('pdx_vartype',NULL,c("phenotype","contrast"),inline=TRUE)
 selectInput("pdx_contrast",NULL, choices=NULL)
 selectInput("pdx_level","Level:", choices=c("gene","geneset"))
 selectInput("pdx_filter","Filter:", choices=NULL)
@@ -204,7 +204,7 @@ calcVariableImportance <- reactive({
     ft="<all>"
     ft <- input$pdx_filter
     if(is.null(ft)) return(NULL)
-
+    
     pp <- rownames(X)
     if(input$pdx_level=="geneset") {
         if(!(ft %in% names(COLLECTIONS))) return(NULL)
@@ -410,7 +410,7 @@ output$pdx_importanceplot <- renderPlot({
         par(mfrow=c(1,2), oma=c(1,1,1,1)*0.5, mgp=c(2.2,0.8,0))
         par(mar=c(4,8,2,4))
         frame()
-        R.top <- head(R,20)
+        R.top <- head(R,15)
         rownames(R.top) <- tolower(rownames(R.top))
         rownames(R.top) <- substring(rownames(R.top),1,60)
         barplot( t(R.top), las=1, horiz=TRUE,
@@ -418,18 +418,18 @@ output$pdx_importanceplot <- renderPlot({
         klr <- grey.colors(ncol(R))
         legend("topright",
                legend = colnames(R), fill=klr,
-               cex=0.8, y.intersp=0.85, inset=c(-0.25,0), xpd=NA )
+               cex=0.75, y.intersp=0.8, inset=c(-0.25,0), xpd=NA )
 
     } else {
         par(mfrow=c(1,1), oma=c(1,1,1,1)*0.5)
         par(mar=c(7,4,2,4))
-        R.top <- head(R,50)
+        R.top <- head(R,40)
         barplot( t(R.top), las=3, horiz=FALSE,
                 cex.names=0.9, ylab="cumulative importance" )
         klr <- grey.colors(ncol(R))
         legend("topright",
                legend=rev(colnames(R)), fill=rev(klr),
-               cex=0.9, y.intersp=0.85 )
+               cex=0.8, y.intersp=0.8 )
     }
     title("Variable importance", cex.main=1.2, line=1.2, adj=0.3)
     
@@ -584,12 +584,26 @@ output$pdx_heatmap <- renderPlot({
     }
 
     cat("<predict:pdx_heatmap> dim(X)=",dim(X),"\n")
+    X <- head(X[order(-apply(X,1,sd)),],40)  ## top50
+
+    splitx <- NULL
+    if(FALSE && input$pdx_vartype=="contrast") {
+        ct <- input$pdx_contrast
+        exp.matrix <- ngs$model.parameters$exp.matrix
+        splitx <- exp.matrix[colnames(X),ct]
+    }
+    if(input$pdx_vartype=="phenotype") {
+        ct <- input$pdx_contrast
+        splitx <- ngs$Y[colnames(X),ct]
+    }
     
     rownames(X) <- substring(rownames(X),1,40)    
     annot <- ngs$Y[colnames(X),]
-    gx.splitmap( X, split=NULL, lab.len=50,
+    gx.splitmap( X, split=NULL, splitx=splitx,
+                show_colnames = FALSE,  ## save space, no sample names
+                show_legend = ifelse(is.null(splitx),TRUE,FALSE),
                 col.annot=annot, annot.ht=2.5, 
-                cexRow=0.85, mar=c(2,8))
+                lab.len=50, cexRow=0.85, mar=c(2,8))
 
 })    
 
