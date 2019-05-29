@@ -23,7 +23,7 @@ source("../R/pgx-functions.R")
 
 source("options.R")
 MAX.GENES
-MAX.GENES = 2000
+MAX.GENES = 4000
 BATCH.CORRECT=TRUE
 
 ## run all available methods 
@@ -36,7 +36,7 @@ rda.file
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
 ngs$datatype = "RNA-seq"
-ngs$description = "TCGA prostate cancer data set (from cBioPortal)."
+ngs$description = "TCGA prostate cancer data set. Gene expression from patients with Gleason score. Data from cBioPortal."
 
 ## READ/PARSE DATA
 if(PROCESS.DATA) {
@@ -44,11 +44,11 @@ if(PROCESS.DATA) {
     ## ##############################################################
     ## get data
     if(0) {
-        system("mkdir -p ../downloads/prad/")
-        system("wget http://download.cbioportal.org/prad_tcga.tar.gz -P ../downloads/prad")
-        system("(cd ../downloads/prad/ && tar xvfz prad_tcga.tar.gz)")
+        system("mkdir -p ../downloads/prad_tcga/")
+        system("wget http://download.cbioportal.org/prad_tcga.tar.gz -P ../downloads/prad_tcga")
+        system("(cd ../downloads/prad_tcga && tar xvfz prad_tcga.tar.gz)")
     }
-    download.dir = "../downloads/prad"
+    download.dir = "../downloads/prad_tcga"
     ##download.dir = "../../pub/cbio/prad_tcga"
     dir(download.dir)
     
