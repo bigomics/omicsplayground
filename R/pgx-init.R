@@ -206,12 +206,18 @@ pgx.initialize <- function(ngs) {
     ## Recode survival
     ##-----------------------------------------------------------------------------
     pheno <- colnames(ngs$Y)
+    ## DLBCL coding
     if(("OS.years" %in% pheno && "OS.status" %in% pheno)) {
         cat("found OS survival data\n")
-        event <- ( ngs$Y$OS.status %in% c("DEAD","1","yes","YES","dead"))
+        event <- ( ngs$Y$OS.status %in% c("DECEASED","DEAD","1","yes","YES","dead"))
         ngs$Y$OS.survival <- ifelse(event, ngs$Y$OS.years, -ngs$Y$OS.years)            
-        ##ngs$Y$OS.years <- NULL
-        ##ngs$Y$OS.status <- NULL
+    }
+
+    ## cBioportal coding
+    if(("OS_MONTHS" %in% pheno && "OS_STATUS" %in% pheno)) {
+        cat("found OS survival data\n")
+        event <- ( ngs$Y$OS_STATUS %in% c("DECEASED","DEAD","1","yes","YES","dead"))
+        ngs$Y$OS.survival <- ifelse(event, ngs$Y$OS_MONTHS, -ngs$Y$OS_MONTHS)            
     }
     
     ##-----------------------------------------------------------------------------

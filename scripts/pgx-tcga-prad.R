@@ -42,64 +42,44 @@ ngs$description = "TCGA prostate cancer data set (from cBioPortal)."
 if(PROCESS.DATA) {
 
     ## ##############################################################
-    ## Old OMX data
-    ##
+    ## get data
 
-    ##load("~/OMX/shiny-omx/omxdata/tcga/brca_tcga_pub-omx.rda",verbose=1)
-    load("~/Projects/Data/tcga-omx/prad_tcga-omx.rda",verbose=1)
-    names(omx)
-    names(omx$level[[1]]$mat)
-    lapply(omx$level[[1]]$mat,dim)
-    mat <- omx$level[[1]]$mat[1]
-    ##mat <- omx$level[[1]]$mat[1:5]
-    names(mat)
-
-    ## impute missing values
-    sapply(mat,function(x) sum(is.na(x)))
-    mat <- lapply(mat, imputeMedian)
-    sapply(mat,function(x) sum(is.na(x)))
+    ##system("mkdir -p /tmp/prad/")
+    ##system("wget http://download.cbioportal.org/prad_tcga.tar.gz -P /tmp/prad/")
+    ##system("tar xvfz /tmp/prad/prad_tcga.tar.gz")
+    ##cbio.dir = "/tmp/prad_tcga"
+    cbio.dir = "../../pub/cbio/prad_tcga"
+    dir(cbio.dir)
     
-    if(length(mat)==1) {
-        X <- 2**mat[["gx"]]
-        samples <- colnames(mat[["gx"]])
-    } else {
-        ## decide necessary transformation
-        ##mat[["gx"]] <- 2**mat[["gx"]]  ## assume counts
-        ##mat[["px"]] <- 2**mat[["px"]]  ## assume counts
-        ##mat[["cn"]] <- (mat[["cn"]])  ## ?
-        ##mat[["me"]] <- (mat[["me"]])  ## ?
-        ##mat[["mt"]] <- (mat[["mt"]])  ## ?
-                
-        samples <- Reduce(intersect, sapply(mat,colnames))
-        ##samples <- Reduce(union, sapply(mat[1:5],colnames))
-        samples
-        names(mat)
-        lapply(mat,dim)
-        for(i in 1:length(mat)) {
-            mat[[i]] <- mat[[i]][,match(samples,colnames(mat[[i]]))]
-            colnames(mat[[i]]) <- samples
-            prefix <- paste0("[",names(mat)[i],"]")
-            rownames(mat[[i]]) <- paste0(prefix,rownames(mat[[i]]))
-        }
-        head(rownames(mat[[2]]))        
-        X <- do.call(rbind, mat)
-        dim(X)
-    }
+    clin <- read.csv(file.path(cbio.dir,"data_bcr_clinical_data_patient.txt"),
+                     skip=4, sep="\t")
+    rownames(clin) <- clin$PATIENT_ID
+    sel1 <- c(
+        "GLEASON_PATTERN_PRIMARY","GLEASON_PATTERN_SECONDARY",
+        "GLEASON_SCORE",
+        "TUMOR_STATUS",
+        "BIOCHEMICAL_RECURRENCE_INDICATOR",
+        "RADIATION_TREATMENT_ADJUVANT",
+        "TREATMENT_OUTCOME_FIRST_COURSE",
+        "CLIN_T_STAGE")
+    sel2 <- c("OS_MONTHS","OS_STATUS")
+    clin1 <- apply(clin[,sel1], 2, function(x) {x[grep("^\\[",x)]=NA;x})
+    clin <- cbind(clin1, clin[,sel2])
+    clin$CLIN_T_STAGE <- sub("[abc]","",clin$CLIN_T_STAGE)  ## simplify
     
-    samples <- sort(intersect(samples,rownames(omx$pheno)))
-    colnames(omx$pheno)
-    is.binary <- apply(omx$pheno, 2, function(x)all(x %in% c(0,1,NA))  )
-    table(is.binary)
-    sampleTable <- omx$pheno[samples, is.binary]
-    colnames(sampleTable)
+    X.data   <- read.csv(file.path(cbio.dir,"data_RNA_Seq_v2_expression_median.txt"),
+                         sep="\t", check.names=FALSE)
+    X <- X.data[,3:ncol(X.data)]
+    gene <- X.data$Hugo_Symbol
+    sum(duplicated(X.data$Hugo_Symbol))
+    X <- apply(X, 2, function(x) tapply(x,gene,sum))
+    dim(X)
+    colnames(X) <- sub("-01$","",colnames(X))
     
-    site <- omx$pheno[samples,grep("PRIMARY_SITE",colnames(omx$pheno))]
-    site <- sub("PRIMARY_SITE:","",colnames(site)[max.col(site)])
-    site <- sub("Overlapping/MultipleZones","MultipleZones",site)
-    sampleTable <- cbind(sampleTable, primary.site=site)
-    head(sampleTable)
+    samples <- sort(intersect(colnames(X),rownames(clin)))
     X <- X[,samples]
-    
+    sampleTable <- clin[samples,]        
+            
     ##-------------------------------------------------------------------
     ## gene annotation
     ##-------------------------------------------------------------------
@@ -123,7 +103,7 @@ if(PROCESS.DATA) {
     dtype <- gsub("\\[|\\].*","",rownames(X))
     table(dtype)
     genes = data.frame(
-        data_type = dtype,
+        ##data_type = "mrna",
         gene_name=gene,
         gene_title=gene_title,
         chr=chrom)
@@ -164,10 +144,9 @@ if(PROCESS.DATA) {
     ## Pre-calculate t-SNE for and get clusters early so we can use it
     ## for doing differential analysis.
     ##-------------------------------------------------------------------
-    ngs$X <- as.matrix(X) ## cluster will skip log
-    ngs$X <- NULL
+    ngs$tsne2d=ngs$tsne3d=NULL
     ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, prefix="C",
-                              perplexity=5)
+                              perplexity=30)
     head(ngs$samples)
     
     ##-------------------------------------------------------------------
@@ -183,17 +162,22 @@ if(DIFF.EXPRESSION) {
     load(file=rda.file, verbose=1)
     
     head(ngs$samples)
-    ngs$samples$group <- as.character(ngs$samples$primary.site)
+    ngs$samples$group <- as.character(ngs$samples$GLEASON_SCORE)
+    ngs$samples$group <- as.character(ngs$samples$CLIN_T_STAGE)
+
+    ngs$samples$group[is.na(ngs$samples$group)] <- "NA"
     table(ngs$samples$group)
-    levels = unique(ngs$samples$group)
+    levels = setdiff(unique(ngs$samples$group),NA)
     levels
     colnames(ngs$samples)
     
     contr.matrix <- makeContrasts(
-        Multiple_vs_Peripheral = MultipleZones - PeripheralZone,
-        Transition_vs_Peripheral = TransitionZone - PeripheralZone,
-        Transition_vs_Multiple = TransitionZone - MultipleZones,
-        levels=levels)
+        T2_vs_T1 = T2 - T1,
+        T3_vs_T1 = T3 - T1,
+        T4_vs_T1 = T4 - T1,
+        T3_vs_T2 = T3 - T2,
+        T4_vs_T3 = T4 - T3,
+        levels = levels)
     dim(contr.matrix)
     head(contr.matrix)
 
