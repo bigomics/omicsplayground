@@ -23,14 +23,14 @@ source("../R/pgx-functions.R")
 
 source("options.R")
 MAX.GENES
-MAX.GENES = 2000
+MAX.GENES = 8000
 BATCH.CORRECT=TRUE
 
 ## run all available methods 
 USER.GENETEST.METHODS = c("trend.limma","edger.qlf","deseq2.wald")
 USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
 
-rda.file="../pgx/tcga-brca_pub-gx.pgx"
+rda.file="../pgx/tcga-brca_pub-gx-8k.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -43,60 +43,93 @@ ngs$description = "TCGA breast cancer data set. Gene expression from 526 patient
 if(PROCESS.DATA) {
 
     ## ##############################################################
-    ## Old OMX data
-    ##
 
-    load("~/OMX/shiny-omx/omxdata/tcga/brca_tcga_pub-omx.rda",verbose=1)
-    ##load("~/Projects/Data/tcga-omx/brca_tcga_pub-omx.rda",verbose=1)
-    names(omx)
-    names(omx$level[[1]]$mat)
-    lapply(omx$level[[1]]$mat,dim)
-    mat <- omx$level[[1]]$mat[1]
-    ##mat <- omx$level[[1]]$mat[1:5]
-    names(mat)
-
-    ## impute missing values
-    sapply(mat,function(x) sum(is.na(x)))
-    mat <- lapply(mat, imputeMedian)
-    sapply(mat,function(x) sum(is.na(x)))
-    
-    if(length(mat)==1) {
-        X <- 2**mat[["gx"]]
-        samples <- colnames(mat[["gx"]])
-    } else {
-        ## decide necessary transformation
-        ##mat[["gx"]] <- 2**mat[["gx"]]  ## assume counts
-        ##mat[["px"]] <- 2**mat[["px"]]  ## assume counts
-        ##mat[["cn"]] <- (mat[["cn"]])  ## ?
-        ##mat[["me"]] <- (mat[["me"]])  ## ?
-        ##mat[["mt"]] <- (mat[["mt"]])  ## ?
-                
-        samples <- Reduce(intersect, sapply(mat,colnames))
-        ##samples <- Reduce(union, sapply(mat[1:5],colnames))
-        samples
+    if(1) {
+        ## Old OMX data
+        ##load("~/OMX/shiny-omx/omxdata/tcga/brca_tcga_pub-omx.rda",verbose=1)
+        load("~/Projects/Data/tcga-omx/brca_tcga_pub-omx.rda",verbose=1)
+        names(omx)
+        names(omx$level[[1]]$mat)
+        lapply(omx$level[[1]]$mat,dim)
+        mat <- omx$level[[1]]$mat[1]
+        ##mat <- omx$level[[1]]$mat[1:5]
         names(mat)
-        lapply(mat,dim)
-        for(i in 1:length(mat)) {
-            mat[[i]] <- mat[[i]][,match(samples,colnames(mat[[i]]))]
-            colnames(mat[[i]]) <- samples
-            prefix <- paste0("[",names(mat)[i],"]")
-            rownames(mat[[i]]) <- paste0(prefix,rownames(mat[[i]]))
-        }
-        head(rownames(mat[[2]]))        
-        X <- do.call(rbind, mat)
-        dim(X)
+        
+        ## impute missing values
+        sapply(mat,function(x) sum(is.na(x)))
+        mat <- lapply(mat, imputeMedian)
+        sapply(mat,function(x) sum(is.na(x)))
+        
+        X <- 2**mat[["gx"]]
+        samples <- colnames(mat[["gx"]])    
+        samples <- sort(intersect(samples,rownames(omx$pheno)))
+        colnames(omx$pheno) <- sub("HER2_FINAL_STATUS","HER2_STATUS",colnames(omx$pheno))
+        sampleTable <- omx$pheno[samples,c("PR_STATUS","ER_STATUS","HER2_STATUS")]
+        
+        pam50 <- omx$pheno[samples,grep("PAM50",colnames(omx$pheno))]
+        pam50 <- sub("PAM50_SUBTYPE:","",colnames(pam50)[max.col(pam50)])
+        pam50 <- gsub("[-]|enriched|like","",pam50)
+        sampleTable <- cbind(sampleTable, PAM50=pam50)
+        head(sampleTable)
+        X <- X[,samples]
     }
-    
-    samples <- sort(intersect(samples,rownames(omx$pheno)))
-    colnames(omx$pheno) <- sub("HER2_FINAL_STATUS","HER2_STATUS",colnames(omx$pheno))
-    sampleTable <- omx$pheno[samples,c("PR_STATUS","ER_STATUS","HER2_STATUS")]
-    
-    pam50 <- omx$pheno[samples,grep("PAM50",colnames(omx$pheno))]
-    pam50 <- sub("PAM50_SUBTYPE:","",colnames(pam50)[max.col(pam50)])
-    pam50 <- gsub("[-]|enriched|like","",pam50)
-    sampleTable <- cbind(sampleTable, PAM50=pam50)
-    head(sampleTable)
-    X <- X[,samples]
+
+    ## ##############################################################
+    ## get data
+    if(0) {
+        system("mkdir -p ../downloads/brca_tcga_pub")
+        system("wget http://download.cbioportal.org/brca_tcga_pub.tar.gz -P ../downloads/brca_tcga_pub/")
+        system("(cd ../downloads/brca_tcga_pub/ && tar xvfz brca_tcga_pub.tar.gz)")
+
+        download.dir = "../downloads/brca"
+        download.dir = "/data/PublicData/TCGA/brca_tcga_pub"
+        dir(download.dir)
+        
+        clin1 <- read.csv(file.path(download.dir,"data_clinical_sample.txt"), skip=4, sep="\t")
+        clin2 <- read.csv(file.path(download.dir,"data_clinical_patient.txt"), skip=4, sep="\t")
+        colnames(clin1)
+        colnames(clin2)
+        table(clin1$PATIENT_ID == clin2$PATIENT_ID)
+        clin <- cbind(clin1, clin2[,-1])
+        rownames(clin) <- clin1$PATIENT_ID
+        sel <- c(
+            ##"GLEASON_PATTERN_PRIMARY","GLEASON_PATTERN_SECONDARY",
+            "PAM50_SUBTYPE","TUMOR_STAGE","NODES", 
+            "ER_STATUS","PR_STATUS", "HER2_STATUS",
+            "METASTASIS","OS_STATUS", "OS_MONTHS"
+        )
+        clin <- clin[,sel]
+        clin$PAM50_SUBTYPE <- gsub("[- ]|like|enriched","",clin$PAM50_SUBTYPE)
+        table(clin$PAM50_SUBTYPE)
+        clin$ER_STATUS[!grepl("Pos|Neg",clin$ER_STATUS)] <- NA
+        clin$PR_STATUS[!grepl("Pos|Neg",clin$PR_STATUS)] <- NA
+        clin$HER2_STATUS[!grepl("Pos|Neg",clin$HER2_STATUS)] <- NA
+        
+        
+        X.data   <- read.csv(file.path(download.dir,"data_mRNA_median_Zscores.txt"),
+                             sep="\t", check.names=FALSE)
+        head(colnames(X.data))
+        X <- as.matrix(X.data[,3:ncol(X.data)])
+        gene <- X.data$Hugo_Symbol
+        rownames(X) <- gene
+        sum(duplicated(X.data$Hugo_Symbol))
+        ##X <- apply(X, 2, function(x) tapply(x,gene,sum))
+        X <- X[rowMeans(is.na(X))<0.5, ]
+        dim(X)
+        X <- imputeMedian(X)
+        sum(is.na(X))
+        
+        ##colnames(X) <- sub("-01$","",colnames(X))        
+        samples <- sort(intersect(colnames(X),rownames(clin)))
+        length(samples)
+        X <- X[,samples]
+        sampleTable <- clin[samples,]        
+        
+        ## scale back to counts...
+        counts <- 10*edgeR::cpm(2**X, log=FALSE)  ## 10 million
+        summary(colSums(counts))
+    }
+
     
     ##-------------------------------------------------------------------
     ## gene annotation
@@ -121,18 +154,18 @@ if(PROCESS.DATA) {
     dtype <- gsub("\\[|\\].*","",rownames(X))
     table(dtype)
     genes = data.frame(
-        data_type = dtype,
+        ##data_type = dtype,
         gene_name=gene,
         gene_title=gene_title,
         chr=chrom)
     ##genes = apply(genes,2,as.character)
-    head(genes)
     rownames(genes) = rownames(X)
+    head(genes)
     
     ##-------------------------------------------------------------------
     ## Now create an DGEList object  (see tximport Vignette)
     ##-------------------------------------------------------------------
-    ngs$counts  <- as.matrix(X)  ## treat as is
+    ngs$counts  <- as.matrix(counts)  ## treat as is
     ngs$samples <- sampleTable
     ngs$genes   <- genes
     ##lib.size <- colSums(data$counts / 1e6)  ## get original summed intensity as lib.size
@@ -182,9 +215,9 @@ if(DIFF.EXPRESSION) {
     
     head(ngs$samples)
     ngs$samples$group <- as.character(ngs$samples$HER2_STATUS)
-    ngs$samples$group <- as.character(ngs$samples$PAM50)
+    ngs$samples$group <- as.character(ngs$samples$PAM50_SUBTYPE)
     table(ngs$samples$group)
-    levels = unique(ngs$samples$group)
+    levels = setdiff(unique(ngs$samples$group),c("",NA))
     levels
     colnames(ngs$samples)
     
