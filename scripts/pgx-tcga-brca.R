@@ -23,14 +23,15 @@ source("../R/pgx-functions.R")
 
 source("options.R")
 MAX.GENES
-MAX.GENES = 8000
+MAX.GENES = 4000
 BATCH.CORRECT=TRUE
 
 ## run all available methods 
 USER.GENETEST.METHODS = c("trend.limma","edger.qlf","deseq2.wald")
 USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
+USER.GENESETTEST.METHODS = c("gsva","camera","fgsea")
 
-rda.file="../pgx/tcga-brca_pub-gx-8k.pgx"
+rda.file="../pgx/tcga-brca_pub-gx.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -43,93 +44,64 @@ ngs$description = "TCGA breast cancer data set. Gene expression from 526 patient
 if(PROCESS.DATA) {
 
     ## ##############################################################
-
-    if(1) {
-        ## Old OMX data
-        ##load("~/OMX/shiny-omx/omxdata/tcga/brca_tcga_pub-omx.rda",verbose=1)
-        load("~/Projects/Data/tcga-omx/brca_tcga_pub-omx.rda",verbose=1)
-        names(omx)
-        names(omx$level[[1]]$mat)
-        lapply(omx$level[[1]]$mat,dim)
-        mat <- omx$level[[1]]$mat[1]
-        ##mat <- omx$level[[1]]$mat[1:5]
-        names(mat)
-        
-        ## impute missing values
-        sapply(mat,function(x) sum(is.na(x)))
-        mat <- lapply(mat, imputeMedian)
-        sapply(mat,function(x) sum(is.na(x)))
-        
-        X <- 2**mat[["gx"]]
-        samples <- colnames(mat[["gx"]])    
-        samples <- sort(intersect(samples,rownames(omx$pheno)))
-        colnames(omx$pheno) <- sub("HER2_FINAL_STATUS","HER2_STATUS",colnames(omx$pheno))
-        sampleTable <- omx$pheno[samples,c("PR_STATUS","ER_STATUS","HER2_STATUS")]
-        
-        pam50 <- omx$pheno[samples,grep("PAM50",colnames(omx$pheno))]
-        pam50 <- sub("PAM50_SUBTYPE:","",colnames(pam50)[max.col(pam50)])
-        pam50 <- gsub("[-]|enriched|like","",pam50)
-        sampleTable <- cbind(sampleTable, PAM50=pam50)
-        head(sampleTable)
-        X <- X[,samples]
-    }
-
-    ## ##############################################################
     ## get data
-    if(0) {
-        system("mkdir -p ../downloads/brca_tcga_pub")
-        system("wget http://download.cbioportal.org/brca_tcga_pub.tar.gz -P ../downloads/brca_tcga_pub/")
-        system("(cd ../downloads/brca_tcga_pub/ && tar xvfz brca_tcga_pub.tar.gz)")
 
-        download.dir = "../downloads/brca"
-        download.dir = "/data/PublicData/TCGA/brca_tcga_pub"
-        dir(download.dir)
-        
-        clin1 <- read.csv(file.path(download.dir,"data_clinical_sample.txt"), skip=4, sep="\t")
-        clin2 <- read.csv(file.path(download.dir,"data_clinical_patient.txt"), skip=4, sep="\t")
-        colnames(clin1)
-        colnames(clin2)
-        table(clin1$PATIENT_ID == clin2$PATIENT_ID)
-        clin <- cbind(clin1, clin2[,-1])
-        rownames(clin) <- clin1$PATIENT_ID
-        sel <- c(
-            ##"GLEASON_PATTERN_PRIMARY","GLEASON_PATTERN_SECONDARY",
-            "PAM50_SUBTYPE","TUMOR_STAGE","NODES", 
-            "ER_STATUS","PR_STATUS", "HER2_STATUS",
-            "METASTASIS","OS_STATUS", "OS_MONTHS"
-        )
-        clin <- clin[,sel]
-        clin$PAM50_SUBTYPE <- gsub("[- ]|like|enriched","",clin$PAM50_SUBTYPE)
-        table(clin$PAM50_SUBTYPE)
-        clin$ER_STATUS[!grepl("Pos|Neg",clin$ER_STATUS)] <- NA
-        clin$PR_STATUS[!grepl("Pos|Neg",clin$PR_STATUS)] <- NA
-        clin$HER2_STATUS[!grepl("Pos|Neg",clin$HER2_STATUS)] <- NA
-        
-        
-        X.data   <- read.csv(file.path(download.dir,"data_mRNA_median_Zscores.txt"),
-                             sep="\t", check.names=FALSE)
-        head(colnames(X.data))
-        X <- as.matrix(X.data[,3:ncol(X.data)])
-        gene <- X.data$Hugo_Symbol
-        rownames(X) <- gene
-        sum(duplicated(X.data$Hugo_Symbol))
-        ##X <- apply(X, 2, function(x) tapply(x,gene,sum))
-        X <- X[rowMeans(is.na(X))<0.5, ]
-        dim(X)
-        X <- imputeMedian(X)
-        sum(is.na(X))
-        
-        ##colnames(X) <- sub("-01$","",colnames(X))        
-        samples <- sort(intersect(colnames(X),rownames(clin)))
-        length(samples)
-        X <- X[,samples]
-        sampleTable <- clin[samples,]        
-        
-        ## scale back to counts...
-        counts <- 10*edgeR::cpm(2**X, log=FALSE)  ## 10 million
-        summary(colSums(counts))
-    }
-
+    ## Uncomment to download data from cBioPortal
+    ## system("mkdir -p ../downloads/brca_tcga_pub")
+    ## system("wget http://download.cbioportal.org/brca_tcga_pub.tar.gz -P ../downloads/brca_tcga_pub/")
+    ## system("(cd ../downloads/brca_tcga_pub/ && tar xvfz brca_tcga_pub.tar.gz)")
+    download.dir = "../downloads/brca_tcga_pub"
+    dir(download.dir)
+    
+    clin1 <- read.csv(file.path(download.dir,"data_clinical_sample.txt"),
+                      skip=4, sep="\t", stringsAsFactors=FALSE)
+    clin2 <- read.csv(file.path(download.dir,"data_clinical_patient.txt"), 
+                      skip=4, sep="\t", stringsAsFactors=FALSE)
+    dim(clin1)
+    dim(clin2)
+    colnames(clin1)
+    colnames(clin2)
+    pat.id1 <- sub("-01$","",clin1$PATIENT_ID)
+    clin2 <- clin2[match(pat.id1, clin2$PATIENT_ID),]
+    table( pat.id1 == clin2$PATIENT_ID)
+    clin <- cbind(clin1, clin2[,-1])
+    rownames(clin) <- clin1$PATIENT_ID
+    sel <- c(
+        ##"GLEASON_PATTERN_PRIMARY","GLEASON_PATTERN_SECONDARY",
+        "PAM50_SUBTYPE","TUMOR_STAGE","NODES", 
+        "ER_STATUS","PR_STATUS", "HER2_STATUS",
+        "METASTASIS","OS_STATUS", "OS_MONTHS"
+    )
+    clin <- clin[,sel]
+    clin$PAM50_SUBTYPE <- gsub("[- ]|like|enriched","",clin$PAM50_SUBTYPE)
+    table(clin$PAM50_SUBTYPE)
+    clin$ER_STATUS[!grepl("Pos|Neg",clin$ER_STATUS)] <- NA
+    clin$PR_STATUS[!grepl("Pos|Neg",clin$PR_STATUS)] <- NA
+    clin$HER2_STATUS[!grepl("Pos|Neg",clin$HER2_STATUS)] <- NA        
+    
+    X.data   <- read.csv(file.path(download.dir,"data_mRNA_median_Zscores.txt"),
+                         sep="\t", check.names=FALSE)
+    head(colnames(X.data))
+    X <- as.matrix(X.data[,3:ncol(X.data)])
+    gene <- X.data$Hugo_Symbol
+    rownames(X) <- gene
+    sum(duplicated(X.data$Hugo_Symbol))
+    ##X <- apply(X, 2, function(x) tapply(x,gene,sum))
+    X <- X[rowMeans(is.na(X))<0.5, ]
+    dim(X)
+    X <- imputeMedian(X)
+    sum(is.na(X))
+    
+    ##colnames(X) <- sub("-01$","",colnames(X))        
+    samples <- sort(intersect(colnames(X),rownames(clin)))
+    samples <- samples[!is.na(clin[samples,"PAM50_SUBTYPE"])]
+    length(samples)
+    X <- X[,samples]
+    sampleTable <- clin[samples,]        
+    
+    ## scale back to counts...
+    counts <- 10*edgeR::cpm(2**X, log=FALSE)  ## 10 million
+    summary(colSums(counts))
     
     ##-------------------------------------------------------------------
     ## gene annotation
@@ -151,8 +123,8 @@ if(PROCESS.DATA) {
     chrom[sapply(chrom,is.null)] <- NA
     chrom <- as.vector(unlist(chrom))
     
-    dtype <- gsub("\\[|\\].*","",rownames(X))
-    table(dtype)
+    ##dtype <- gsub("\\[|\\].*","",rownames(X))
+    ##table(dtype)
     genes = data.frame(
         ##data_type = dtype,
         gene_name=gene,
@@ -198,7 +170,7 @@ if(PROCESS.DATA) {
     ngs$X <- as.matrix(X) ## cluster will skip log
     ngs$X <- NULL
     ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, prefix="C",
-                              perplexity=5)
+                              perplexity=30)
     head(ngs$samples)
     
     ##-------------------------------------------------------------------
@@ -214,8 +186,9 @@ if(DIFF.EXPRESSION) {
     load(file=rda.file, verbose=1)
     
     head(ngs$samples)
-    ngs$samples$group <- as.character(ngs$samples$HER2_STATUS)
-    ngs$samples$group <- as.character(ngs$samples$PAM50_SUBTYPE)
+    ##ngs$samples$group <- as.character(ngs$samples$HER2_STATUS)
+    pam50 <- as.character(ngs$samples$PAM50_SUBTYPE)
+    ngs$samples$group <- pam50
     table(ngs$samples$group)
     levels = setdiff(unique(ngs$samples$group),c("",NA))
     levels
@@ -249,15 +222,6 @@ if(DIFF.EXPRESSION) {
 rda.file
 ngs.save(ngs, file=rda.file)
 
-
-if(0) {
-    load(file=rda.file, verbose=1)
-    table(ngs$genes[rownames(ngs$X),]$data_type)
-    jj <- match(rownames(ngs$X),rownames(ngs$genes))
-    table(ngs$genes[jj,]$data_type)
-
-    
-}
 
 
 
