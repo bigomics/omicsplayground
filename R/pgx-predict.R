@@ -28,7 +28,7 @@ if(0) {
 ## Partial correlation functions
 ##----------------------------------------------------------------------
 
-rho.min=0.5;nmax=100;nsize=20
+##rho.min=0.5;nmax=100;nsize=20
 
 pgx.computePartialCorrelationAroundGene <- function(X, gene, method=PCOR.METHODS,
                                                     nmax=100)
@@ -38,7 +38,7 @@ pgx.computePartialCorrelationAroundGene <- function(X, gene, method=PCOR.METHODS
     jj <- head(order(-rowMeans(rho**2)),nmax)
     topX <- t(X[jj,])
     dim(topX)
-    rho <- pgx.computeFullPartialCorrelation(topX, method=PCOR.METHODS) 
+    rho <- pgx.computePartialCorrelationMatrix(topX, method=PCOR.METHODS) 
     lapply(rho,dim)
 
     flat.rho <- sapply(rho, as.vector)
@@ -52,8 +52,7 @@ pgx.computePartialCorrelationAroundGene <- function(X, gene, method=PCOR.METHODS
 
 pgx.plotPartialCorrelationAroundGene <- function(res, gene, rho.min=0.7,
                                                  nsize=20, main="")
-{
-    
+{    
     rho <- res$rho    
     j <- which(colnames(res$rho[[1]]) %in% gene)
     j
@@ -108,8 +107,8 @@ pgx.plotPartialCorrelationAroundGene <- function(res, gene, rho.min=0.7,
     gr2 <- subgraph.edges(gr1, which(abs(E(gr1)$rho) >= rho.min))           
     V(gr2)$name
     E(gr2)$width <- 10*abs(E(gr2)$rho)
-    E(gr2)$color <- c("blue","red")[1 + (E(gr2)$rho>0)]
-    ly <- layout_with_graphopt(gr2)
+    ##E(gr2)$color <- c("blue","red")[1 + (E(gr2)$rho>0)]
+    ##ly <- layout_with_graphopt(gr2)
     ##ly <- layout_with_kk(gr2)
     ly <- layout_with_fr(gr2)
     
@@ -117,29 +116,27 @@ pgx.plotPartialCorrelationAroundGene <- function(res, gene, rho.min=0.7,
         apply(cbind(t(col2rgb(klr)),alpha),1, function(x)
             rgb(x[1], x[2], x[3], alpha=x[4], maxColorValue=255))  
     }    
-    p1 <- (abs(E(gr2)$pcor) / max(abs(E(gr2)$pcor)))**0.2
-    klr <- rev(grey.colors(64))[1 + 63*p1]
-    ##E(gr2)$width <- 10*(col.rank / max(col.rank))
-    E(gr2)$color <- add.alpha(klr, 255*p1)
+    p1 <- sign(E(gr2)$pcor) * (abs(E(gr2)$pcor) / max(abs(E(gr2)$pcor)))**0.2
+    klrpal <- colorRampPalette(c("red4", "grey90","grey20"))(64)
+    ##klrpal <- rev(grey.colors(64))
+    klr <- klrpal[32 + 31*p1]
+    E(gr2)$color <- add.alpha(klr, 255*abs(p1))
     plot(gr2, layout=ly)
-
     
     ##P1 <- P * (abs(P)>0.1)
     ##P1 <- 0.5*(P1 + t(P1))
     ##qgraph(P1, labels=rownames(P1), directed=FALSE)    
 
-
     ##out <- list(graph=gr2)
     ##return(out)
 }
-
 
 ##X=topX
 PCOR.METHODS=c("cor","ppcor::pcor","corpcor::spcor",
                "psych::partial.r","QUIC","BigQuic","glasso","huge",
                "SILGGM::D-S_NW_SL","SILGGM::D-S_GL","SILGGM::B_NW_SL")
 
-pgx.computeFullPartialCorrelation <- function(X, method=PCOR.METHODS)
+pgx.computePartialCorrelationMatrix <- function(X, method=PCOR.METHODS)
 {
     
     require(ppcor)
@@ -153,7 +150,7 @@ pgx.computeFullPartialCorrelation <- function(X, method=PCOR.METHODS)
     require(qgraph)
     require(glasso)
     require(psych)
-    require(clime)
+    ##require(clime)
     require(fastclime)
     
     rho <- list()
@@ -195,8 +192,9 @@ pgx.computeFullPartialCorrelation <- function(X, method=PCOR.METHODS)
         }
     }
 
+    ## these are quite fast
     rho[["SILGGM::D-S_NW_SL"]] <- SILGGM(X)$partialCor     
-    ##rho[["SILGGM::D-S_GL"]]    <- SILGGM(X, method = "D-S_GL", global = TRUE)$partialCor     
+    ##rho[["SILGGM::D-S_GL"]]    <- SILGGM(X, method = "D-S_GL", global = TRUE)$partialCor
     rho[["SILGGM::B_NW_SL"]]   <- SILGGM(X, method = "B_NW_SL")$partialCor     
     ##rho[["SILGGM::GFC_SL"]] <- SILGGM(X, method = "GFC_SL")$partialCor     
     ##rho[["SILGGM::GFC_L"]] <- SILGGM(X, method = "GFC_L")$partialCor     
