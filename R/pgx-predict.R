@@ -30,28 +30,31 @@ if(0) {
 
 ##rho.min=0.5;nmax=100;nsize=20
 
-pgx.computePartialCorrelationAroundGene <- function(X, gene, method=PCOR.METHODS,
-                                                    nmax=100)
+##X=topX
+PCOR.FAST=c("cor","pcor","pcor.shrink", "huge","SILGGM")
+PCOR.METHODS=c("cor","pcor","pcor.shrink", "QUIC", "glasso","huge",
+               ## "clime", "BigQuic",
+               "fastclime", "SILGGM")
+method=PCOR.FAST
+##gene="CD3E";X=ngs$X;nmax=1001
+
+pgx.computePartialCorrelationAroundGene <-
+    function(X, gene, method=PCOR.METHODS, nmax=100, fast=TRUE)
 {
     rho <- cor(t(X), t(X[gene,,drop=FALSE]))
     dim(rho)
     jj <- head(order(-rowMeans(rho**2)),nmax)
     topX <- t(X[jj,])
     dim(topX)
-    rho <- pgx.computePartialCorrelationMatrix(topX, method=PCOR.METHODS) 
-    lapply(rho,dim)
-
-    flat.rho <- sapply(rho, as.vector)
-    nx <- ncol(topX)
-    meta.pcor <- matrix(apply(flat.rho[,-1],1,mean,na.rm=TRUE),nx,nx)
-    
-    rownames(meta.pcor)=colnames(meta.pcor)=colnames(topX)    
-    res <- list(rho=rho, meta.pcor=meta.pcor, cor=rho[["cor"]])
+    res <- pgx.computePartialCorrelationMatrix(
+        topX, method=method, fast=fast) 
+    lapply(res$rho,dim)
+    names(res)
     return(res)
 }
 
-pgx.plotPartialCorrelationAroundGene <- function(res, gene, rho.min=0.7,
-                                                 nsize=20, main="")
+pgx.plotPartialCorrelationAroundGene <-
+    function(res, gene, rho.min=0.7, nsize=20, main="", what=c("cor","pcor","graph"))
 {    
     rho <- res$rho    
     j <- which(colnames(res$rho[[1]]) %in% gene)
@@ -67,78 +70,82 @@ pgx.plotPartialCorrelationAroundGene <- function(res, gene, rho.min=0.7,
     ## Correlation barplots
     ##------------------------------------------------------------
     ##par(mfrow=c(2,2))
-    par(mar=c(10,4,4,2))
-    r1 <- M[,"cor"] ## / ncol(M)
-    r1 <- head(r1[order(-abs(r1))],20)
-    barplot( sort(r1,decreasing=TRUE) ,beside=FALSE, las=3, ylab="marginal correlation")
-    title(main, cex.main=1.2)
+    if("cor" %in% what) {
+        par(mar=c(10,4,4,2))
+        r1 <- M[,"cor"] ## / ncol(M)
+        r1 <- head(r1[order(-abs(r1))],nsize)
+        barplot( sort(r1,decreasing=TRUE), beside=FALSE, las=3,
+                ylab="marginal correlation")
+        title(main, cex.main=1.2)
+    }
 
-    r2 <- M[,-1] ## / ncol(M)
-    r2 <- head(r2[order(-rowMeans(r2**2)),],20)
-    r2 <- r2[order(-rowMeans(r2)),]
-    barplot( t(r2) ,beside=FALSE, las=3, ylab="partial correlation")
-    title(main, cex.main=1.2)
-    if(length(gene)==1) {
-        legend("topright", rev(colnames(r2)), fill=rev(grey.colors(ncol(r2))),
-               cex=0.85, y.intersp=0.85)
+    if("pcor" %in% what) {
+        r2 <- M[,which(colnames(M)!="cor")] ## / ncol(M)
+        r2 <- head(r2[order(-rowMeans(r2**2)),],nsize)
+        r2 <- r2[order(-rowMeans(r2)),]
+        r2 <- r2 / ncol(r2)
+        par(mar=c(10,4,4,2))
+        barplot( t(r2) ,beside=FALSE, las=3,
+                ylim = c(-1,1)*0.3, 
+                ylab="partial correlation (average)")
+        title(main, cex.main=1.2)
+        if(length(gene)==1) {
+            legend("topright", rev(colnames(r2)), fill=rev(grey.colors(ncol(r2))),
+                   cex=0.85, y.intersp=0.85)
+        }
     }
-    
-    ##------------------------------------------------------------
-    ## extract core graph
-    ##------------------------------------------------------------
-    top20 <- head(unique(c(gene, rownames(M))), nsize)
-    R <- res$rho[["cor"]][top20,top20]  ## marginal correlation
-    P <- res$meta.pcor[top20,top20]
-    gr1 <- graph_from_adjacency_matrix(
-        abs(R), mode="undirected", diag=FALSE,  weighted=TRUE)
-    ##gr2 <- graph_from_adjacency_matrix(
-    ##    P, mode="undirected", diag=FALSE,  weighted=TRUE)
-    ee <- get.edges(gr1, E(gr1))
-    E(gr1)$pcor <- P[ee]
-    E(gr1)$rho <- R[ee]
-    V(gr1)$name
-    
-    if(is.null(rho.min)) {
-        rho.min <- rev(head(sort(R[gene,],decreasing=TRUE),4))[1]
-        rho.min
-    }
+
+    if("graph" %in% what) {
+        ##------------------------------------------------------------
+        ## extract core graph
+        ##------------------------------------------------------------
+        top20 <- head(unique(c(gene, rownames(M))), nsize)
+        R <- res$rho[["cor"]][top20,top20]  ## marginal correlation
+        P <- res$meta.pcor[top20,top20]
+        gr1 <- graph_from_adjacency_matrix(
+            abs(R), mode="undirected", diag=FALSE,  weighted=TRUE)
+        ##gr2 <- graph_from_adjacency_matrix(
+        ##    P, mode="undirected", diag=FALSE,  weighted=TRUE)
+        ee <- get.edges(gr1, E(gr1))
+        E(gr1)$pcor <- P[ee]
+        E(gr1)$rho <- R[ee]
+        V(gr1)$name
         
-    par(mar=c(0,0,0,0))
-    gr2 <- subgraph.edges(gr1, which(abs(E(gr1)$rho) >= rho.min))           
-    V(gr2)$name
-    E(gr2)$width <- 10*abs(E(gr2)$rho)
-    ##E(gr2)$color <- c("blue","red")[1 + (E(gr2)$rho>0)]
-    ##ly <- layout_with_graphopt(gr2)
-    ##ly <- layout_with_kk(gr2)
-    ly <- layout_with_fr(gr2)
-    
-    add.alpha <- function(col, alpha){
-        apply(cbind(t(col2rgb(klr)),alpha),1, function(x)
-            rgb(x[1], x[2], x[3], alpha=x[4], maxColorValue=255))  
-    }    
-    p1 <- sign(E(gr2)$pcor) * (abs(E(gr2)$pcor) / max(abs(E(gr2)$pcor)))**0.2
-    klrpal <- colorRampPalette(c("red4", "grey90","grey20"))(64)
-    ##klrpal <- rev(grey.colors(64))
-    klr <- klrpal[32 + 31*p1]
-    E(gr2)$color <- add.alpha(klr, 255*abs(p1))
-    plot(gr2, layout=ly)
-    
+        if(is.null(rho.min)) {
+            rho.min <- rev(head(sort(R[gene,],decreasing=TRUE),4))[1]
+            rho.min
+        }
+        
+        par(mar=c(0,0,0,0))
+        gr2 <- subgraph.edges(gr1, which(abs(E(gr1)$rho) >= rho.min))           
+        V(gr2)$name
+        E(gr2)$width <- 10*abs(E(gr2)$rho)
+        ##E(gr2)$color <- c("blue","red")[1 + (E(gr2)$rho>0)]
+        ##ly <- layout_with_graphopt(gr2)
+        ##ly <- layout_with_kk(gr2)
+        ly <- layout_with_fr(gr2)
+        
+        add.alpha <- function(col, alpha){
+            apply(cbind(t(col2rgb(klr)),alpha),1, function(x)
+                rgb(x[1], x[2], x[3], alpha=x[4], maxColorValue=255))  
+        }    
+        p1 <- sign(E(gr2)$pcor) * (abs(E(gr2)$pcor) / max(abs(E(gr2)$pcor)))**0.2
+        klrpal <- colorRampPalette(c("red4", "grey90","grey20"))(64)
+        ##klrpal <- rev(grey.colors(64))
+        klr <- klrpal[32 + 31*p1]
+        E(gr2)$color <- add.alpha(klr, 255*abs(p1))
+        plot(gr2, layout=ly)
+    }
+
     ##P1 <- P * (abs(P)>0.1)
     ##P1 <- 0.5*(P1 + t(P1))
     ##qgraph(P1, labels=rownames(P1), directed=FALSE)    
-
     ##out <- list(graph=gr2)
     ##return(out)
 }
 
-##X=topX
-PCOR.METHODS=c("cor","ppcor::pcor","corpcor::spcor",
-               "psych::partial.r","QUIC","BigQuic","glasso","huge",
-               "SILGGM::D-S_NW_SL","SILGGM::D-S_GL","SILGGM::B_NW_SL")
-
-pgx.computePartialCorrelationMatrix <- function(X, method=PCOR.METHODS)
-{
-    
+pgx.computePartialCorrelationMatrix <- function(X, method=PCOR.METHODS, fast=FALSE)
+{    
     require(ppcor)
     require(ggm)
     require(huge)
@@ -152,53 +159,108 @@ pgx.computePartialCorrelationMatrix <- function(X, method=PCOR.METHODS)
     require(psych)
     ##require(clime)
     require(fastclime)
-    
-    rho <- list()
-    
-    rho[["cor"]] <- cor(X)
-    rho[["ppcor::pcor"]] <- ppcor::pcor(X)$estimate
-    ##rho[["ppcor::spcor"]] <- ppcor::spcor(X)$estimate
-    rho[["corpcor::pcor.shrink"]] <- corpcor::pcor.shrink(X, 1e-3)
-    ##rho[["psych::partial.r"]] <- partial.r(X) 
-    rho[["QUIC"]] <- {r=-QUIC(cov(X), 1e-1)$X;diag(r)=-diag(r);r}        
-    rho[["glasso"]] <- {r=-cov2cor(glasso(cov(X), 1e-3)$wi);diag(r)=-diag(r);r}
-    rho[["huge"]] <- {
-        res=huge.select(huge(X))
-        which.opt=min(which(res$lambda <= res$opt.lambda))
-        which.opt
-        res$path[[which.opt]]
-    }
-    rho[["fastclime"]] <-  {
-        out1 = fastclime(X,0.1)
-        out2 = fastclime.selector(out1$lambdamtx, out1$icovlist,0.1)
-        out2$adaj
-    }
+
     if(0) {
-        ## SLOW methods
-        ##
-        rho[["clime"]] <- {
-            re.cv <- cv.clime(clime(X))
-            clime(X, standardize=FALSE, re.cv$lambdaopt)
-        }
-        rho[["BigQuic"]] <- {
-            lambda <- seq(from = 0.1, to = 1, by = 0.1) - 0.01
-            res <- BigQuic(as.matrix(X), lambda = lambda, 
-                           numthreads = 10, memory_size = 512*8, ## seed = 1, 
-                           use_ram = TRUE)
-            res <- BigQuic.select(res)
-            which.opt <- max(which(res$lambda <= res$opt.lambda))
-            which.opt
-            res$precision_matrices[[which.opt]]
-        }
+        X <- t(head(ngs$X,500))
     }
 
-    ## these are quite fast
-    rho[["SILGGM::D-S_NW_SL"]] <- SILGGM(X)$partialCor     
-    ##rho[["SILGGM::D-S_GL"]]    <- SILGGM(X, method = "D-S_GL", global = TRUE)$partialCor
-    rho[["SILGGM::B_NW_SL"]]   <- SILGGM(X, method = "B_NW_SL")$partialCor     
-    ##rho[["SILGGM::GFC_SL"]] <- SILGGM(X, method = "GFC_SL")$partialCor     
-    ##rho[["SILGGM::GFC_L"]] <- SILGGM(X, method = "GFC_L")$partialCor     
+    if(fast || ncol(X)>1000) {
+        method <- intersect(method, PCOR.FAST)
+        method
+    }
+    
+    timings <- list()
+    rho <- list()
+    timings
+    
+    if("cor" %in% method) {
+        timings[["cor"]] <- system.time(
+            rho[["cor"]] <- cor(X)
+        )
+    }
 
+    if("pcor" %in% method) {
+        timings[["pcor"]] <- system.time(
+            suppressWarnings( rho[["pcor"]] <- ppcor::pcor(X)$estimate )
+        )
+    }
+
+    ##rho[["ppcor::spcor"]] <- ppcor::spcor(X)$estimate
+    if("pcor.shrink" %in% method) {
+        timings[["pcor.shrink"]] <- system.time(
+            suppressWarnings( rho[["pcor.shrink"]] <- corpcor::pcor.shrink(X, 1e-3))
+        )
+    }
+    ##rho[["psych::partial.r"]] <- partial.r(X) 
+
+    if("huge" %in% method) {
+        timings[["huge"]] <- system.time(
+            rho[["huge"]] <- {
+                res=huge.select(huge(X))
+                which.opt=min(which(res$lambda <= res$opt.lambda))
+                which.opt
+                res$path[[which.opt]]
+            }
+        )
+    }
+
+    if("SILGGM" %in% method) {
+        timings[["SILGGM"]] <- system.time({
+            ## these are quite fast
+            rho[["SILGGM::D-S_NW_SL"]] <- SILGGM(X)$partialCor     
+            ##rho[["SILGGM::D-S_GL"]]    <- SILGGM(X, method = "D-S_GL", global = TRUE)$partialCor
+            rho[["SILGGM::B_NW_SL"]]   <- SILGGM(X, method = "B_NW_SL")$partialCor     
+            ##rho[["SILGGM::GFC_SL"]] <- SILGGM(X, method = "GFC_SL")$partialCor     
+            ##rho[["SILGGM::GFC_L"]] <- SILGGM(X, method = "GFC_L")$partialCor     
+        })
+    }
+
+    if("fastclime" %in% method) {
+        timings[["fastclime"]] <- system.time(
+            rho[["fastclime"]] <-  {
+                out1 = fastclime(X,0.1)
+                out2 = fastclime.selector(out1$lambdamtx, out1$icovlist,0.1)
+                out2$adaj
+            }
+        )
+    }
+
+    if("QUIC" %in% method) {
+        timings[["QUIC"]] <- system.time(
+            rho[["QUIC"]] <- {r=-QUIC(cov(X), 1e-1)$X;diag(r)=-diag(r);r}        
+        )
+    }
+
+    if("glasso" %in% method) {
+        timings[["glasso"]] <- system.time(
+            rho[["glasso"]] <- {r=-cov2cor(glasso(cov(X), 1e-3)$wi);diag(r)=-diag(r);r}
+        )
+    }
+    
+    if("clime" %in% method) {
+        timings[["clime"]] <- system.time(
+            rho[["clime"]] <- {
+                re.cv <- cv.clime(clime(X))
+                clime(X, standardize=FALSE, re.cv$lambdaopt)
+            }
+        )
+    }
+    
+    if("BigQuic" %in% method) {
+        timings[["BigQuic"]] <- system.time(
+            rho[["BigQuic"]] <- {
+                lambda <- seq(from = 0.1, to = 1, by = 0.1) - 0.01
+                res <- BigQuic(as.matrix(X), lambda = lambda, 
+                               numthreads = 10, memory_size = 512*8, ## seed = 1, 
+                               use_ram = TRUE)
+                res <- BigQuic.select(res)
+                which.opt <- max(which(res$lambda <= res$opt.lambda))
+                which.opt
+                res$precision_matrices[[which.opt]]
+            }
+        )
+    }
+    
     lapply(rho,dim)
     for(i in 1:length(rho)) {
         rownames(rho[[i]]) <- colnames(rho[[i]]) <- colnames(X)
@@ -207,7 +269,19 @@ pgx.computePartialCorrelationMatrix <- function(X, method=PCOR.METHODS)
         ##rho[[i]][is.nan(rho[[i]])] <- NA
     }
 
-    return(rho)
+    timings
+    names(rho)    
+    lapply(rho,dim)
+    flat.rho <- sapply(rho[which(names(rho)!="cor")], as.vector)
+    head(flat.rho)
+    nx <- ncol(X)
+    meta.pcor <- matrix(apply(flat.rho,1,mean,na.rm=TRUE),nx,nx)    
+    rownames(meta.pcor)=colnames(meta.pcor)=colnames(X)    
+        
+    res <- list(meta.pcor=meta.pcor, rho=rho)
+    if("cor" %in% names(rho)) res$cor <- rho[["cor"]]
+    names(res)
+    return(res)
 }
 
 
