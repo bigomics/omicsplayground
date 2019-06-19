@@ -472,6 +472,73 @@ output$data_tissueplot <- renderPlot({
 }, res=74)
 ```
 
+
+`r if(!PRO.VERSION) {"<!--------------------------------------------- "}`
+
+### Correlation
+
+```{r message=FALSE, warning=FALSE, fig.width=4}
+
+fillRow(flex = c(1,0.1,1), 
+        fillCol(flex = c(1,1), 
+                plotOutput('cor_barplot1'),
+                plotOutput('cor_barplot2')
+                ),
+        br(), ## spacer
+        plotOutput('cor_graph')
+        )
+
+getGenePartialCorrelation <- reactive({
+    ngs <- inputData()
+    req(ngs,input$search_gene)
+    X <- ngs$X    
+    gene <- "NLRC5"
+    gene <- input$search_gene
+    res <- pgx.computePartialCorrelationAroundGene(
+        X, gene, method=PCOR.METHODS, nmax=100, fast=TRUE)
+    res
+})
+
+output$cor_barplot1 <- renderPlot({
+    req(input$search_gene)
+    res <- getGenePartialCorrelation()
+    gene <- "NLRC5"
+    gene <- input$search_gene
+    par(mfrow=c(1,1))
+    gr <- pgx.plotPartialCorrelationAroundGene(
+        res, gene, what = "cor",
+        rho.min=NULL, nsize=40, 
+        main= "marginal correlation")
+})
+
+output$cor_barplot2 <- renderPlot({
+    req(input$search_gene)
+    res <- getGenePartialCorrelation()
+    gene <- "NLRC5"
+    gene <- input$search_gene
+    gr <- pgx.plotPartialCorrelationAroundGene(
+        res, gene, what = "pcor",
+        rho.min=NULL, nsize=40,
+        main= "partial correlation")
+})
+
+output$cor_graph <- renderPlot({
+    req(input$search_gene)
+    res <- getGenePartialCorrelation()
+    gene <- "NLRC5"
+    gene <- input$search_gene    
+    par(mfrow=c(1,1))
+    gr <- pgx.plotPartialCorrelationAroundGene(
+        res, gene, what = "graph",
+        rho.min=NULL, nsize=20, 
+        main= "correlation graph")
+})
+
+```
+
+`r if(!PRO.VERSION) {"----------------------------------------->"}`
+
+
 ### Counts 
 
 ```{r echo=FALSE, warning=FALSE, fig.height=5, fig.width=10}
@@ -666,14 +733,15 @@ output$data_rawdataTable <- DT::renderDataTable({
     ngs = inputData()
     if(is.null(ngs)) return(NULL)
 
+    pp <- rownames(ngs$X)
     if(input$data_type=="counts") {
-        x <- ngs$counts
+        x <- ngs$counts[pp,]
     } else if(input$data_type=="CPM") {
         ##x <- 2**ngs$X
-        x <- edgeR::cpm(ngs$counts)
+        x <- edgeR::cpm(ngs$counts[pp,])
     } else {
         ## log2CPM
-        x = ngs$X
+        x <- ngs$X[pp,]
     }
     x0=x
     
@@ -684,7 +752,7 @@ output$data_rawdataTable <- DT::renderDataTable({
     samples <- intersect(colnames(x),samples)
     x <- x[,samples,drop=FALSE]
     
-    gene = "CD"
+    gene = "CD3E"
     gene = "CCR6"
     gene = input$search_gene
     ##xgene = sub(".*:","",rownames(x))

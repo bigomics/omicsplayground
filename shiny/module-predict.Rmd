@@ -397,7 +397,6 @@ calcVariableImportance <- reactive({
     return(res)
 })
 
-
 output$pdx_importanceplot <- renderPlot({
     
     res <- calcVariableImportance()
@@ -610,3 +609,4 @@ output$pdx_heatmap <- renderPlot({
 })    
 
 ```
+
