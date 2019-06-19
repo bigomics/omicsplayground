@@ -23,6 +23,201 @@ if(0) {
 
 }
 
+
+##----------------------------------------------------------------------
+## Partial correlation functions
+##----------------------------------------------------------------------
+
+rho.min=0.5;nmax=100;nsize=20
+
+pgx.computePartialCorrelationAroundGene <- function(X, gene, method=PCOR.METHODS,
+                                                    nmax=100)
+{
+    rho <- cor(t(X), t(X[gene,,drop=FALSE]))
+    dim(rho)
+    jj <- head(order(-rowMeans(rho**2)),nmax)
+    topX <- t(X[jj,])
+    dim(topX)
+    rho <- pgx.computeFullPartialCorrelation(topX, method=PCOR.METHODS) 
+    lapply(rho,dim)
+
+    flat.rho <- sapply(rho, as.vector)
+    nx <- ncol(topX)
+    meta.pcor <- matrix(apply(flat.rho[,-1],1,mean,na.rm=TRUE),nx,nx)
+    
+    rownames(meta.pcor)=colnames(meta.pcor)=colnames(topX)    
+    res <- list(rho=rho, meta.pcor=meta.pcor, cor=rho[["cor"]])
+    return(res)
+}
+
+pgx.plotPartialCorrelationAroundGene <- function(res, gene, rho.min=0.7,
+                                                 nsize=20, main="")
+{
+    
+    rho <- res$rho    
+    j <- which(colnames(res$rho[[1]]) %in% gene)
+    j
+    rho2 <- lapply(res$rho, function(x) x[j,])
+    M <- t(as.matrix(do.call(rbind, rho2)))
+    M[is.infinite(M) | is.nan(M)] <- NA
+    M <- M[order(-rowMeans(M**2,na.rm=TRUE)),]
+    ##M <- M[order(-rowMeans(apply(M,2,rank))),] 
+    head(M)
+
+    ##------------------------------------------------------------
+    ## Correlation barplots
+    ##------------------------------------------------------------
+    ##par(mfrow=c(2,2))
+    par(mar=c(10,4,4,2))
+    r1 <- M[,"cor"] ## / ncol(M)
+    r1 <- head(r1[order(-abs(r1))],20)
+    barplot( sort(r1,decreasing=TRUE) ,beside=FALSE, las=3, ylab="marginal correlation")
+    title(main, cex.main=1.2)
+
+    r2 <- M[,-1] ## / ncol(M)
+    r2 <- head(r2[order(-rowMeans(r2**2)),],20)
+    r2 <- r2[order(-rowMeans(r2)),]
+    barplot( t(r2) ,beside=FALSE, las=3, ylab="partial correlation")
+    title(main, cex.main=1.2)
+    if(length(gene)==1) {
+        legend("topright", rev(colnames(r2)), fill=rev(grey.colors(ncol(r2))),
+               cex=0.85, y.intersp=0.85)
+    }
+    
+    ##------------------------------------------------------------
+    ## extract core graph
+    ##------------------------------------------------------------
+    top20 <- head(unique(c(gene, rownames(M))), nsize)
+    R <- res$rho[["cor"]][top20,top20]  ## marginal correlation
+    P <- res$meta.pcor[top20,top20]
+    gr1 <- graph_from_adjacency_matrix(
+        abs(R), mode="undirected", diag=FALSE,  weighted=TRUE)
+    ##gr2 <- graph_from_adjacency_matrix(
+    ##    P, mode="undirected", diag=FALSE,  weighted=TRUE)
+    ee <- get.edges(gr1, E(gr1))
+    E(gr1)$pcor <- P[ee]
+    E(gr1)$rho <- R[ee]
+    V(gr1)$name
+    
+    if(is.null(rho.min)) {
+        rho.min <- rev(head(sort(R[gene,],decreasing=TRUE),4))[1]
+        rho.min
+    }
+        
+    par(mar=c(0,0,0,0))
+    gr2 <- subgraph.edges(gr1, which(abs(E(gr1)$rho) >= rho.min))           
+    V(gr2)$name
+    E(gr2)$width <- 10*abs(E(gr2)$rho)
+    E(gr2)$color <- c("blue","red")[1 + (E(gr2)$rho>0)]
+    ly <- layout_with_graphopt(gr2)
+    ##ly <- layout_with_kk(gr2)
+    ly <- layout_with_fr(gr2)
+    
+    add.alpha <- function(col, alpha){
+        apply(cbind(t(col2rgb(klr)),alpha),1, function(x)
+            rgb(x[1], x[2], x[3], alpha=x[4], maxColorValue=255))  
+    }    
+    p1 <- (abs(E(gr2)$pcor) / max(abs(E(gr2)$pcor)))**0.2
+    klr <- rev(grey.colors(64))[1 + 63*p1]
+    ##E(gr2)$width <- 10*(col.rank / max(col.rank))
+    E(gr2)$color <- add.alpha(klr, 255*p1)
+    plot(gr2, layout=ly)
+
+    
+    ##P1 <- P * (abs(P)>0.1)
+    ##P1 <- 0.5*(P1 + t(P1))
+    ##qgraph(P1, labels=rownames(P1), directed=FALSE)    
+
+
+    ##out <- list(graph=gr2)
+    ##return(out)
+}
+
+
+##X=topX
+PCOR.METHODS=c("cor","ppcor::pcor","corpcor::spcor",
+               "psych::partial.r","QUIC","BigQuic","glasso","huge",
+               "SILGGM::D-S_NW_SL","SILGGM::D-S_GL","SILGGM::B_NW_SL")
+
+pgx.computeFullPartialCorrelation <- function(X, method=PCOR.METHODS)
+{
+    
+    require(ppcor)
+    require(ggm)
+    require(huge)
+    require(FastGGM)
+    require(SILGGM)
+    require(corpcor)
+    require(QUIC)
+    require(BigQuic)
+    require(qgraph)
+    require(glasso)
+    require(psych)
+    require(clime)
+    require(fastclime)
+    
+    rho <- list()
+    
+    rho[["cor"]] <- cor(X)
+    rho[["ppcor::pcor"]] <- ppcor::pcor(X)$estimate
+    ##rho[["ppcor::spcor"]] <- ppcor::spcor(X)$estimate
+    rho[["corpcor::pcor.shrink"]] <- corpcor::pcor.shrink(X, 1e-3)
+    ##rho[["psych::partial.r"]] <- partial.r(X) 
+    rho[["QUIC"]] <- {r=-QUIC(cov(X), 1e-1)$X;diag(r)=-diag(r);r}        
+    rho[["glasso"]] <- {r=-cov2cor(glasso(cov(X), 1e-3)$wi);diag(r)=-diag(r);r}
+    rho[["huge"]] <- {
+        res=huge.select(huge(X))
+        which.opt=min(which(res$lambda <= res$opt.lambda))
+        which.opt
+        res$path[[which.opt]]
+    }
+    rho[["fastclime"]] <-  {
+        out1 = fastclime(X,0.1)
+        out2 = fastclime.selector(out1$lambdamtx, out1$icovlist,0.1)
+        out2$adaj
+    }
+    if(0) {
+        ## SLOW methods
+        ##
+        rho[["clime"]] <- {
+            re.cv <- cv.clime(clime(X))
+            clime(X, standardize=FALSE, re.cv$lambdaopt)
+        }
+        rho[["BigQuic"]] <- {
+            lambda <- seq(from = 0.1, to = 1, by = 0.1) - 0.01
+            res <- BigQuic(as.matrix(X), lambda = lambda, 
+                           numthreads = 10, memory_size = 512*8, ## seed = 1, 
+                           use_ram = TRUE)
+            res <- BigQuic.select(res)
+            which.opt <- max(which(res$lambda <= res$opt.lambda))
+            which.opt
+            res$precision_matrices[[which.opt]]
+        }
+    }
+
+    rho[["SILGGM::D-S_NW_SL"]] <- SILGGM(X)$partialCor     
+    ##rho[["SILGGM::D-S_GL"]]    <- SILGGM(X, method = "D-S_GL", global = TRUE)$partialCor     
+    rho[["SILGGM::B_NW_SL"]]   <- SILGGM(X, method = "B_NW_SL")$partialCor     
+    ##rho[["SILGGM::GFC_SL"]] <- SILGGM(X, method = "GFC_SL")$partialCor     
+    ##rho[["SILGGM::GFC_L"]] <- SILGGM(X, method = "GFC_L")$partialCor     
+
+    lapply(rho,dim)
+    for(i in 1:length(rho)) {
+        rownames(rho[[i]]) <- colnames(rho[[i]]) <- colnames(X)
+        if(sum(diag(rho[[i]]))==0) diag(rho[[i]]) <- 1
+        rho[[i]] <- cov2cor(as.matrix(rho[[i]]))    
+        ##rho[[i]][is.nan(rho[[i]])] <- NA
+    }
+
+    return(rho)
+}
+
+
+##----------------------------------------------------------------------
+## mixOmics related functions
+##----------------------------------------------------------------------
+
+
 mixHivePlot <- function(res, ngs, ct, showloops=FALSE, numlab=6, cex=1)
 {
 
@@ -468,6 +663,10 @@ pgx.makeTriSystemGraph <- function(data, Y, nfeat=25, numedge=100, posonly=FALSE
 }
 
 
+##----------------------------------------------------------------------
+## Variable importance functions
+##----------------------------------------------------------------------
+
 pgx.survivalVariableImportance <-
     function(X, time, status,
              methods=c("glmnet","randomforest","boruta","xgboost","pls"))
@@ -883,11 +1082,10 @@ pgx.variableImportance <-
 }
 
 
-
-
 ##----------------------------------------------------------------------
 ## combine all importance values
 ##----------------------------------------------------------------------
+
 if(0) {
     require(glmnet)
     require(sva)

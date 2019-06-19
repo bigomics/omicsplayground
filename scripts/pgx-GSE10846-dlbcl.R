@@ -28,7 +28,7 @@ BATCH.CORRECT=TRUE
 USER.GENETEST.METHODS = "*"
 USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
 
-rda.file="../pgx/GSE10846-dlbcl.pgx"
+rda.file="../pgx/GSE10846-dlbcl-12k.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -101,7 +101,6 @@ if(PROCESS.DATA) {
 
     ## conform tables
     table(rownames(sampleTable) == colnames(X))
-
     ##-------------------------------------------------------------------
     ## sample QC filtering
     ##-------------------------------------------------------------------
@@ -233,7 +232,6 @@ if(DIFF.EXPRESSION) {
     colnames(contr.matrix) <- sub(".*:","",colnames(contr.matrix))  ## strip prefix 
     head(contr.matrix)
     
-
     ##contr.matrix = contr.matrix[,1:3]
     source("../R/compute-genes.R")
     source("../R/compute-genesets.R")
