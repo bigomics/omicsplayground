@@ -23,7 +23,7 @@ source("../R/pgx-functions.R")
 source("options.R")
 MAX.GENES
 ##MAX.GENES=4000
-DOWNSAMPLE=50
+DOWNSAMPLE=75
 
 COMPARE.CLUSTERS=FALSE
 ##COMPARE.CLUSTERS=TRUE
@@ -188,7 +188,7 @@ if(PROCESS.DATA) {
     ##-------------------------------------------------------------------
     ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE,
                               perplexity=30, kclust=1)
-    head(ngs$samples)
+    table(ngs$samples$cluster)
 
     ##-------------------------------------------------------------------
     ## take top varying

@@ -370,8 +370,8 @@ gx.heatmap2 <- function(gx,
             d1 <- dist(gx0, method=col.dist.method)
         }
         ##str(cx)
-        h1 <- hclust(d1, method=clust.method)
-        ##h1 <- nclust(d1, link=clust.method)
+        h1 <- hclust(d1, method=col.clust.method)
+        ##h1 <- nclust(d1, link=col.clust.method)
         ##h1 <- as.dendrogram(h1)
     }
 
@@ -537,7 +537,7 @@ gx.heatmap <- function(gx, values=NULL,
                        plot.method="heatmap.2",
                        col = bluered(), softmax=FALSE,
                        ##col = colorpanel(64,"blue","grey90","red"),
-                       scale="row", verbose=1,
+                       scale="row", verbose=1, symm=FALSE,
                        ## Rowv = NA, Colv = NA,
                        col.annot=NULL, row.annot=NULL, annot.ht=1,
                        nmax=1000, cmax=NULL,
@@ -555,7 +555,7 @@ gx.heatmap <- function(gx, values=NULL,
     }
 
     if(verbose>1) cat("input.dim.gx=",dim(gx),"\n")
-
+    
     par(xpd=FALSE)
     jj1 <- 1:nrow(gx)
     jj2 <- 1:ncol(gx)
@@ -567,8 +567,12 @@ gx.heatmap <- function(gx, values=NULL,
         ##cat("restricting to top",cmax,"maxSD samples\n")
         jj2 <- head(order(-apply(gx,2,sd,na.rm=TRUE)),cmax)
     }
-    gx <- gx[jj1,jj2]
-
+    if(symm && ncol(gx)==nrow(gx)) {
+        gx <- gx[jj1,jj1]
+    } else {
+        gx <- gx[jj1,jj2]
+    }
+    
     fillNA <- function(x) {
         nx <- x
         nx[is.na(nx)] <- 0
@@ -616,7 +620,11 @@ gx.heatmap <- function(gx, values=NULL,
         h2 <- hclust( d2 , method=clust.method)
         ##h2 <- as.dendrogram(h2)
     }
-
+    
+    if(symm && ncol(gx)==nrow(gx)) {
+        h2 <- h1
+    }
+    
     dd <- c("both","row","column","none")[1 + 1*is.null(h1) + 2*is.null(h2)]
     if(indent.names > 0) {
         nn.sp <- sapply(floor((1:nrow(gx))/indent.names),function(n) paste(rep(" ",n),collapse=""))

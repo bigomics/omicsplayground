@@ -28,7 +28,7 @@ COMPARE="group"
 COMPARE="clusters"
 COMPARE="pheno"
 DOWNSAMPLE=0
-DOWNSAMPLE=100
+DOWNSAMPLE=150
 
 rda.file="../pgx/GSE72056-scmelanoma.pgx"
 ##rda.file = sub(".pgx$",paste0("-vs",COMPARE,".pgx"),rda.file)

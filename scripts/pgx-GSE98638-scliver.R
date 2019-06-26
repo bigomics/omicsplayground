@@ -24,7 +24,7 @@ source("options.R")
 
 COMPARE.CLUSTERS=FALSE
 ##COMPARE.CLUSTERS=TRUE
-DOWNSAMPLE=50
+DOWNSAMPLE=75
 
 rda.file="../pgx/GSE98638-scliver.pgx"
 ##if(COMPARE.CLUSTERS) rda.file <- sub(".pgx$",paste0("-vsCLUST.pgx"),rda.file)
@@ -167,7 +167,7 @@ if(PROCESS.DATA) {
     ## Pre-calculate t-SNE for and get clusters early so we can use it
     ## for doing differential analysis.
     ##-------------------------------------------------------------------
-    ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE)
+    ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, perplexity=30 )
     head(ngs$samples)
 
     ##-------------------------------------------------------------------
@@ -234,7 +234,8 @@ if(DIFF.EXPRESSION) {
     }
 
 
-    USER.GENETEST.METHODS=c("ttest.welch","trend.limma","edger.qlf","edger.lrt")
+    ##USER.GENETEST.METHODS=c("ttest.welch","trend.limma","edger.qlf","edger.lrt")
+    USER.GENETEST.METHODS=c("trend.limma","edger.qlf","edger.lrt")
     USER.GENESETTEST.METHODS=c("fisher","gsva","camera","fgsea")
     source("../R/compute-genes.R")
     source("../R/compute-genesets.R")
