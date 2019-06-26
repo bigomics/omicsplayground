@@ -234,6 +234,106 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
     return(res)
 }
 
+pgx.plotPartialCorrelationAroundGene <-
+    function(res, gene, rho.min=0.7, nsize=20, main="",
+             what=c("cor","pcor","graph"), layout="fr")
+{    
+    rho <- res$rho    
+    j <- which(colnames(res$rho[[1]]) %in% gene)
+    j
+    rho2 <- lapply(res$rho, function(x) x[j,])
+    M <- t(as.matrix(do.call(rbind, rho2)))
+    M[is.infinite(M) | is.nan(M)] <- NA
+    M <- M[order(-rowMeans(M**2,na.rm=TRUE)),]
+    ##M <- M[order(-rowMeans(apply(M,2,rank))),] 
+    head(M)
+
+    ##------------------------------------------------------------
+    ## Correlation barplots
+    ##------------------------------------------------------------
+    ##par(mfrow=c(2,2))
+    if("cor" %in% what) {
+        par(mar=c(10,4,4,2))
+        r1 <- M[,"cor"] ## / ncol(M)
+        r1 <- head(r1[order(-abs(r1))],nsize)
+        barplot( sort(r1,decreasing=TRUE), beside=FALSE, las=3,
+                ylab="marginal correlation")
+        title(main, cex.main=1.2)
+    }
+
+    if("pcor" %in% what) {
+        r2 <- M[,which(colnames(M)!="cor")] ## / ncol(M)
+        r2 <- head(r2[order(-rowMeans(r2**2)),],nsize)
+        r2 <- r2[order(-rowMeans(r2)),]
+        r2 <- r2 / ncol(r2)
+        par(mar=c(10,4,4,2))
+        barplot( t(r2) ,beside=FALSE, las=3,
+                ylim = c(-1,1)*0.3, 
+                ylab="partial correlation (average)")
+        title(main, cex.main=1.2)
+        if(length(gene)==1) {
+            legend("topright", rev(colnames(r2)), fill=rev(grey.colors(ncol(r2))),
+                   cex=0.85, y.intersp=0.85)
+        }
+    }
+
+    if("graph" %in% what) {
+        ##------------------------------------------------------------
+        ## extract core graph
+        ##------------------------------------------------------------
+        top20 <- head(unique(c(gene, rownames(M))), nsize)
+        R <- res$rho[["cor"]][top20,top20]  ## marginal correlation
+        P <- res$meta.pcor[top20,top20]
+        gr1 <- graph_from_adjacency_matrix(
+            abs(R), mode="undirected", diag=FALSE,  weighted=TRUE)
+        ##gr2 <- graph_from_adjacency_matrix(
+        ##    P, mode="undirected", diag=FALSE,  weighted=TRUE)
+        ee <- get.edges(gr1, E(gr1))
+        E(gr1)$pcor <- P[ee]
+        E(gr1)$rho <- R[ee]
+        V(gr1)$name
+        
+        if(is.null(rho.min)) {
+            rho.min <- rev(head(sort(R[gene,],decreasing=TRUE),4))[1]
+            rho.min
+        }
+
+        ## calculate layout
+        gr2 <- subgraph.edges(gr1, which(abs(E(gr1)$rho) >= rho.min))           
+        V(gr2)$name
+        E(gr2)$width <- 10*abs(E(gr2)$rho)
+        ly = switch( layout,
+                    "fr" = layout_with_fr(gr2),
+                    "kk" = layout_with_kk(gr2, weights=1/E(gr2)$weight),
+                    "graphopt" = layout_with_graphopt(gr2),
+                    "tree" = layout_as_tree(gr2),
+                    layout_nicely(gr2)
+                    )
+        rownames(ly) <- V(gr2)$name
+        head(ly)
+        ly <- ly[V(gr2)$name,]
+        
+        add.alpha <- function(col, alpha){
+            apply(cbind(t(col2rgb(klr)),alpha),1, function(x)
+                rgb(x[1], x[2], x[3], alpha=x[4], maxColorValue=255))  
+        }    
+        p1 <- sign(E(gr2)$pcor) * (abs(E(gr2)$pcor) / max(abs(E(gr2)$pcor)))**0.2
+        klrpal <- colorRampPalette(c("red4", "grey90","grey20"))(64)
+        ##klrpal <- rev(grey.colors(64))
+        klr <- klrpal[32 + 31*p1]
+        E(gr2)$color <- add.alpha(klr, 255*abs(p1))
+
+        par(mar=c(0,0,0,0))
+        plot(gr2, layout=ly)
+    }
+
+    ##P1 <- P * (abs(P)>0.1)
+    ##P1 <- 0.5*(P1 + t(P1))
+    ##qgraph(P1, labels=rownames(P1), directed=FALSE)    
+    ##out <- list(graph=gr2)
+    ##return(out)
+}
+
 
 pgx.plotPartialCorrelationAroundGene <-
     function(res, gene, rho.min=0.7, nsize=20, main="", what=c("cor","pcor","graph"))
