@@ -38,7 +38,7 @@ ngs$description = "10x example data."
 if(PROCESS.DATA) {
 
     ## load 10x results
-    tenx <- readRDS(file="../../Sallusto_10x/pmbc1k_counts.rds")
+    tenx <- readRDS(file="../../../pmbc1k_counts.rds")
     names(tenx)
     rownames(tenx$samples) <- tenx$samples$barcode
     rownames(tenx$genes)   <- rownames(tenx$counts)
