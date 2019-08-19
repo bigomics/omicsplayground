@@ -36,16 +36,15 @@ if(file.exists(PGXINFO.FILE)) {
 
 ## select data set
 selectInput("input_data","", choices=INPUT_FILES, selected=PGX.DEFAULT)
-actionButton("loadbutton",label="Load dataset",
-             style="color: white; background-color: #0067c4AA; border-radius: 3px;")
+actionButton("loadbutton",label="Load dataset")
 
 br();br();br();br();br();br();
 br();br();br();br();br();br();
 br();br();br();br();br();br();
 ##if(PRO.VERSION) checkboxGroupInput('data_filter','Exclude:', choices=c("sex","ig"),
 ##                                   selected=c("sex","ig"), inline=TRUE)
-if(DEV.VERSION) actionButton("data_scanfiles",label="rescan file info",
-                             style="background-color: #800; border-radius: 3px;")
+if(DEV.VERSION) actionButton("data_scanfiles",label="rescan file info")
+
 ```	
 
 

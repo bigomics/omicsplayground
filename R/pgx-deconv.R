@@ -188,7 +188,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
     }
 
     mat <- as.matrix(X)
-    rownames(mat) <- toupper(gsub(".*:","",rownames(mat)))
+    rownames(mat) <- toupper(gsub(".*:","",rownames(mat))) ## handle mouse??
     mat <- mat[order(-rowMeans(mat)),]
     mat <- as.matrix(mat[!duplicated(rownames(mat)),])
     head(mat)[,1:4]
@@ -216,14 +216,16 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
     timings <- list()
     results <- list()
     methods
-    CIBERSORT.code <- "../opt/CIBERSORT/CIBERSORTmat.R"
+    CIBERSORT.code <- "/opt/CIBERSORT/CIBERSORTmat.R"
     if("CIBERSORT" %in% methods && file.exists(CIBERSORT.code)) {
         ## CIBERSORT
-        source(file.path(FILES,CIBERSORT.code))
+        ##source(file.path(FILES,CIBERSORT.code))
+        source(CIBERSORT.code)
         cat("starting deconvolution using CIBERSORT...\n")
         ciber.out <- NULL
         stime <- system.time(
-            try( ciber.out <- CIBERSORT(ref, mat, perm=0, QN=TRUE) )
+            ##try( ciber.out <- CIBERSORT(ref, mat, perm=0, QN=TRUE) )
+            try( ciber.out <- CIBERSORT(ref, mat, perm=0, QN=FALSE) )
         )
         if(!is.null(ciber.out)) {
             timings[["CIBERSORT"]] <- stime
@@ -310,7 +312,8 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
         stime <- system.time(
             res.dcq <- try(
                 dcq(reference_data=log2(1+ref), mix_data=log2(1+mat),  ## log data OK??
-                    marker_set = matrix(rownames(ref),ncol=1),
+                    ##marker_set = matrix(rownames(ref),ncol=1),
+                    marker_set = cbind(rownames(ref)),
                     alpha_used=0.05, lambda_min=0.2, number_of_repeats=3,
                     precent_of_data=1.0)
             ))

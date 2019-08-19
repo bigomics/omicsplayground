@@ -5,13 +5,46 @@ Signature
 Input {.sidebar data-width=250}
 --------------------------------------------------------------------------------
 
-<br> **Custom signature**. Test a gene signature by calculating its
+<br> **Signature Analysis**. Test a gene signature by calculating its
 enrichment score. Upload your own list of genes, or choose a predefined
 gene set.
 
-<br>
 
 ```{r}
+##----------------------------------------------------------------------
+## More Info (pop up window)
+##----------------------------------------------------------------------
+actionLink("sig_info", "Info", icon = icon("info-circle") )
+##actionLink("sig_info", "More details ...")
+
+sig_infotext =
+    "In the <strong>Signature Analysis module</strong>, users can test their gene signature by calculating an enrichment score. They can use a sample list provided on the platform or upload their own gene list. Instead of a short list, a profile can also be selected, which is a complete gene list resulted from one of the contrasts in the analysis.
+
+<br><br>After uploading a gene list, the <strong>Markers</strong> section produces a t-SNE plot of samples for each gene, where the samples are colored with respect to the upregulation (in red) or downregulation (in blue) of that particular gene.
+
+<br><br>The <strong>Enrichment tab</strong> performs the enrichment analysis of the gene list against all contrasts by running the GSEA algorithm and plots enrichment outputs. The enrichment statistics can be found in the corresponding table
+
+<br><br>The <strong>Signature Connectivity Map (CMap)</strong> associates the provided signature list or contrast profile with the similar profiles of the other experiments, in which we have taken ten datasets from the literature.
+
+<br><br>Under the <strong>Overlap/similarity tab</strong>, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, as well as the p and q values by the Fisher’s test for the overlap test.
+
+"
+
+observeEvent( input$sig_info, {
+    showModal(modalDialog(
+        title = HTML("<strong>Signature Analysis Module</strong>"),
+        HTML(sig_infotext),
+        easyClose = TRUE ))
+})
+```
+
+<br><br>
+
+
+```{r}
+##----------------------------------------------------------------------
+## General options
+##----------------------------------------------------------------------
 
 selectizeInput("sig_feature","Contrast:", choices="<custom>")
 
@@ -32,17 +65,45 @@ actionButton("sig_example1","[immune_chkpt] ", style="font-size: 0.9em; color: #
 actionButton("sig_example3","[cell_cycle] ", style="font-size: 0.9em; color: #24A; background-color: transparent; border-style: none; padding:0")
 
 
-
+##----------------------------------------------------------------------
+## Togglable options
+##----------------------------------------------------------------------
 br();br();br();
-if(PRO.VERSION) radioButtons("sig_type",NULL,c("contrast","hallmark"),inline=TRUE)
-if(PRO.VERSION) radioButtons('sig_rankmethod','Enrichment method:',c("rcor","fgsea"),inline=TRUE)
-##if(PRO.VERSION) radioButtons('sig_clustmethod','Cluster method:',c("tsne","pca"),inline=TRUE)
-##if(PRO.VERSION) checkboxInput('sig_invert','invert', FALSE)
-##if(PRO.VERSION) radioButtons('sig_top','top:',c(50,100,500),inline=TRUE,selected=100)
+if(PRO.VERSION || DEV.VERSION) {
+    ##actionLink("sig_options", "Show options ...")
+    actionLink("sig_options", "Options", icon=icon("cog", lib = "glyphicon"))
+}
 
+## br();br();
+## conditionalPanel(
+##     "input.sig_options % 2 == 1",
+##     tagList(
+##         ## radioButtons("sig_type",NULL,c("contrast","hallmark"),inline=TRUE),
+##         ## radioButtons('sig_rankmethod','Enrichment method:',c("rcor","fgsea"),inline=TRUE)
+##     )
+## )
 
+if(PRO.VERSION) {
+    br();br();
+    conditionalPanel(
+        "input.sig_options % 2 == 1",
+        tagList(
+            radioButtons("sig_type",NULL,c("contrast","hallmark"),inline=TRUE),
+            radioButtons('sig_rankmethod','Enrichment method:',c("rcor","fgsea"),inline=TRUE)
+        )
+    )
+}
 
-if(DEV.VERSION) radioButtons('sig_ssstats','ss-stats:',c("rho","gsva","grp.gsva","rho+gsva","rho+grp.gsva"), inline=TRUE)
+if(DEV.VERSION) {
+    br();br();
+    conditionalPanel(
+        "input.sig_options % 2 == 1",
+        tagList(
+            radioButtons('sig_ssstats','ss-stats:',c("rho","gsva","grp.gsva","rho+gsva","rho+grp.gsva"), inline=TRUE)
+        )
+    )
+}
+
 ```
 
 

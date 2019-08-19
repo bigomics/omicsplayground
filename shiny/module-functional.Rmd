@@ -5,26 +5,64 @@ Functional
 Inputs {.sidebar data-width=240}
 --------------------------------------------------------------------------------
 
-<br> The **<a href="kegg pathway">KEGG</a>** collection represents
-functions of the cell as pathway maps. <i class="fa fa-info"></i>
 
-<br> **<a href="http://www.geneontology.org">Gene Ontology</a>**
-defines functional concepts/classes and their relationships as a
-hierarchical graph.
+<br> **Functional Analysis**. Perform specialized functional analysis
+including GO, KEGG and Drug Connectivity Map.
 
-<br> The **<a href="https://portals.broadinstitute.org/cmap/">Drug
-Connectivity Map</a>** correlates your signature with more than 5000
-known drug profiles.
+```{r}
+actionLink("fa_info", "Info", icon = icon("info-circle") )
+##actionLink("fa_info", "More details ...")
+
+fa_infotext =
+    "This module performs specialized pathway and drug enrichment analysis.
+
+<br><br><a href='kegg pathway'>KEGG</a> is a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. Within the KEGG graph section, each pathway is scored for the selected contrast profile and reported in the table.  The scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap. The table is interactive; enabling user to sort on different variables. It is possible to visualize the pathway map by clicking on the pathway in the table, where genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Another important feature of the platform is that it provides an activation-heatmap including the comparison of activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities between profiles in certain pathways.
+
+
+<br><br><a href='http://www.geneontology.org'>Gene Ontology</a> (GO) defines functional concepts/classes and their relationships as a hierarchical graph. The GO database provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. All the features described under the KEGG graph tab, such as scoring the gene sets and drawing an activation-heatmap, can be performed for the GO database under the GO graph tab. Instead of pathway maps, an annotated graph structure provided by the GO database is potted for every selected gene set.
+
+<br><br> The <a href='https://portals.broadinstitute.org/cmap/'>Drug Connectivity Map</a> correlates your signature with more than 5000 known drug profiles from the L1000 database, and shows the top N=10 similar and opposite profiles by running the GSEA algorithm on the contrast-drug profile correlation space. The activation-heatmap compares drug activation profiles across multiple contrasts. This facilitates to quickly see and detect the similarities between contrasts for certain drugs.
+
+
+"
+
+observeEvent( input$fa_info, {
+    showModal(modalDialog(
+        title = HTML("<strong>Functional Analysis Module</strong>"),
+        HTML(fa_infotext),
+        easyClose = TRUE ))
+})
+
+##require(tippy)
+##tippy("Help/Info", tooltip=hm_infotext)
+```
 
 <br><br>
 
 ```{r}
 selectInput("fa_contrast","Comparison:", choices=NULL)
-checkboxInput('fa_normalize','normalize',TRUE)
-br();br();br();
-if(PRO.VERSION) checkboxInput('fa_filtertable','filter tables',FALSE)
-if(PRO.VERSION) radioButtons('dsea_label','CMap label',c("name","moa","target"),inline=TRUE)
-if(PRO.VERSION) checkboxInput('dsea_showall','CMap show all',FALSE)
+br();br();
+
+##actionLink("fa_options", "Show options ...")
+actionLink("fa_options", "Options", icon=icon("cog", lib = "glyphicon"))
+br();br();
+conditionalPanel(
+    "input.fa_options % 2 == 1",
+    tagList(
+        checkboxInput('fa_normalize','normalize activation maps',TRUE)
+    )
+)
+
+if(PRO.VERSION) {
+    conditionalPanel(
+        "input.fa_options % 2 == 1",
+        tagList(
+            checkboxInput('fa_filtertable','filter signficant (tables)',FALSE),
+            radioButtons('dsea_label','Label type (CMap)',c("name","moa","target"),inline=TRUE),
+            checkboxInput('dsea_showall','Show all (CMap)',FALSE)
+        )
+    )
+}
 
 observe({
     ngs <- inputData()

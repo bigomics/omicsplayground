@@ -104,9 +104,13 @@ if(MAX.GENES > 0) {
     ##gsetX = cor( as.matrix(GMT[,]), rX )
     ##gsetX = tcosine.similarity( GMT[,], rX )
     gsetX = limma::normalizeQuantiles(gsetX) ##???
-    grp <- ngs$samples$group
-    gsetX.bygroup <- t(apply(gsetX,1,function(x) tapply(x,grp,mean)))
-    sdx <- apply(gsetX.bygroup,1,sd)
+    if("group" %in% names(ngs$samples)) {
+        grp <- ngs$samples$group
+        gsetX.bygroup <- t(apply(gsetX,1,function(x) tapply(x,grp,mean)))
+        sdx <- apply(gsetX.bygroup,1,sd)
+    } else {
+        sdx <- apply(gsetX,1,sd)
+    }
     names(sdx) <- colnames(GMT)
     jj = head(order(-sdx), MAX.GENES) 
     must.include <- "hallmark|kegg|^go|^celltype"
@@ -142,7 +146,7 @@ if(!is.null(USER.GENESETTEST.METHODS)) test.methods = USER.GENESETTEST.METHODS
 ## Run methods
 ##-----------------------------------------------------------
 cat(">>> Testing gene sets with methods:",test.methods,"\n")
-test.methods
+methods=test.methods
 
 Y <- ngs$samples
 ##gmt=ngs$gmt.all[1:100]

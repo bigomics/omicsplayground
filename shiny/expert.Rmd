@@ -68,8 +68,18 @@ if(0) {
 ```{r child = 'module-signature.Rmd'}
 ```
 
+```{r child = 'module-profiling.Rmd'}
+```
+
 ```{r child = 'module-predict.Rmd'}
 ```
 
-```{r child = 'module-profiling.Rmd'}
+```{r child = 'module-batchcorrection.Rmd'}
 ```
+
+`r if(!DEV.VERSION) {"<!-------------------------------------------"}`
+
+```{r child = 'module-system.Rmd'}
+```
+
+`r if(!DEV.VERSION) {"--------------------------------------------->"}`

@@ -455,7 +455,7 @@ pgx.getGeneSetCollections <- function(gsets, min.size=10, max.size=500)
         ##"BIOCARTA pathways" = gsets[grep("^BIOCARTA_",gsets)],
         "Pathway related" = gsets[grep("pathway",gsets,ignore.case=TRUE)],
         ##"Kinase related" = gsets[grep("kinase",gsets,ignore.case=TRUE)],
-        "Metabolic related" = gsets[grep("metabol",gsets,ignore.case=TRUE)],
+        "Metabolism related" = gsets[grep("metaboli",gsets,ignore.case=TRUE)],
         "Signalling related" = gsets[grep("signal",gsets,ignore.case=TRUE)],
         "T-cell related" = gsets[grep("tcell|t-cell|t[ ]cell",gsets,ignore.case=TRUE)],
         "B-cell related" = gsets[grep("bcell]b-cell|b[ ]cell",gsets,ignore.case=TRUE)],

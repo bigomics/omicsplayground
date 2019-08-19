@@ -25,13 +25,44 @@ body {
 
 .action-text #sig_example1 #sig_example2 #sig_example3 {
     font-size: 0.9em;
-    color: #24A;
+    color: #2244AA;
     background-color: transparent;
     border-style: none;
     padding: 0
 }
 
-.datatables { font-size: 12px; line-height: '70%'; }
+
+@keyframes blinking {
+    0%{
+	background-color: #1967be;	
+        border: #2244AA;
+    }
+    50%{
+        background-color: #2244AA;
+	border: #1967be;		
+    }
+    100%{
+	background-color: #1967be;
+        border: #2244AA;	
+    }
+}
+
+.btn {
+    color: white;
+    background-color: #0067c4AA;
+    padding: 8px 15px;
+    border-radius: 3px;
+//    animation: blinking 3s infinite;
+}
+
+.btn:hover {
+    background-color: #0067c4FF;
+}
+
+    
+.datatables {
+    font-size: 12px; line-height: '70%';
+}
 
 .shiny-input-panel {
 //    margin: -5px 0px -10px 0px;
@@ -52,13 +83,13 @@ body {
 }
 
 .footer {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  left: 0;
-  padding: 3rem 1rem;
-  text-align: center;
-  font-size: 0.8em;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    padding: 3rem 1rem;
+    text-align: center;
+    font-size: 0.8em;
 }
 
 #loading-content {

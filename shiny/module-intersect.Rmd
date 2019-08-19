@@ -4,31 +4,63 @@ Intersection
 Input {.sidebar data-width=250}
 --------------------------------------------------------------------------------
 
-<br> **Intersection analysis**. Compare experiments by intersecting their
+<br>**Intersection analysis**. Compare experiments by intersecting their
 genes. Find similar experiments that show similar signatures.
 
-<br> The **Signature Map** maps your signature and connects them to
-similar experiments.
+```{r}
+actionLink("cmp_info", "Info", icon = icon("info-circle") )
+##actionLink("cmp_info", "More details ...")
+
+cmp_infotext =
+    "The <strong>Intersection analysis module</strong> enables users to compare multiple contrasts by intersecting the genes of profiles. The main goal is to identify contrasts showing similar profiles.
+
+<br><br>For the selected contrasts, the platform provides volcano plots and pairwise correlation plots between the profiles under the <strong>Pairs tab</strong>. Simultaneously, it plots a Venn diagram with the number of intersecting genes between the profiles in <strong>Venn diagram</strong> section. The list of intersecting genes with further details is also reported in an interactive table below, where users can select and remove a particular contrast from the intersection analysis.
+
+<br><br>It is possible to check a more detailed scatter plot of two profiles under the <strong>Two-pairs tab</strong>.
+
+<br><br>In addition, the user can check the correlation-heatmap of multiple profiles under the <strong>Correlation tab</strong>. 
+
+<br><br>The <strong>Connectivity graph</strong> tab constructs a network, in which nodes represent contrasts and edges are obtained from the pairwise-correlation of corresponding profiles. The correlation-heatmap in the previous tab and the network of contrasts in this tab facilitates to quickly highlight the similarities and differences between multiple comparisons.
+
+"
+
+observeEvent( input$cmp_info, {
+    showModal(modalDialog(
+        title = HTML("<strong>Intersection Analysis Module</strong>"),
+        HTML(cmp_infotext),
+        easyClose = TRUE ))
+})
+```
 
 <br><br>
 
 
 ```{r}
-##
-## External calls: selected_gsetmethods(), selected_gxmethods()
-##
-##
+##======================================================================
+## Left side-bar general options
+##======================================================================
 
 selectInput('cmp_comparisons','Comparisons', choices=NULL, multiple=TRUE)
-selectInput("cmp_level","Level", choices=c("gene","geneset"))
-selectInput("cmp_filter","Filter:", choices=NULL, multiple=FALSE)
 FDR.VALUES2 <- c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
 fillRow( flex=c(1,1),        
         selectInput("cmp_fdr","FDR", choices=FDR.VALUES2, selected=0.2),
         selectInput("cmp_lfc","logFC threshold", choices=c(0,0.2,0.5,1,2,5), selected=0.5)
         )
 
-br();br();br();br();br();
+
+br();br();br();br();br();br();
+##actionLink("cmp_options", "Show options ...")
+actionLink("cmp_options", "Options", icon=icon("cog", lib = "glyphicon"))
+br();br();
+conditionalPanel(
+    ##"input.gx_advanced",
+    "input.cmp_options % 2 == 1",
+    tagList(
+        selectInput("cmp_level","Level", choices=c("gene","geneset")),
+        selectInput("cmp_filter","Filter:", choices=NULL, multiple=FALSE)        
+    )
+)
+
 
 ## update choices upon change of data set 
 observe({
@@ -37,7 +69,7 @@ observe({
     comparisons <- sort(comparisons)
     updateSelectInput(session, "cmp_comparisons", choices=comparisons,
                       selected=head(comparisons,3))
-    ##fam <- pgx.getExtendedFamilies(ngs,10)
+    ##fam <- pgx.getFamilies(ngs,nmin=10,extended=TRUE)
     ##updateSelectInput(session, "cmp_filter", choices=fam)
 
 })
@@ -45,7 +77,7 @@ observe({
 observeEvent(input$cmp_level, {
     ngs <- inputData()
     ##flt.choices = names(ngs$families)
-    fam <- pgx.getExtendedFamilies(ngs,10)    
+    fam <- pgx.getFamilies(ngs,nmin=10,extended=TRUE)    
     if(input$cmp_level=="geneset") {
         fam = names(COLLECTIONS)
     }
