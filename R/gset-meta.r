@@ -50,6 +50,7 @@ gmt2mat.nocheck <- function(gmt, bg=NULL, use.multicore=TRUE)
     D
 }
 
+mc.threads=1
 ##X=ngs$X;Y=ngs$Y;design=ngs$model.parameters$design;contr.matrix=ngs$model.parameters$contr.matrix;mc.cores=4;mc.threads=1;batch.correct=TRUE;gmt=ngs$gmt.all
 gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, methods,
                                             mc.threads=1, mc.cores=NULL, batch.correct=TRUE)
@@ -82,7 +83,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
     table(keep)
     gmt <- gmt[which(keep)]
     length(gmt)
-
+    
     ## pre-compute the big GMT matrix (again??)
     if(!is.null(design)) {
         exp.matrix = (design %*% contr.matrix)[colnames(X),,drop=FALSE]

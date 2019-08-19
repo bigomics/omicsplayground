@@ -5,30 +5,71 @@ Clustering {data-orientation=cols}
 Inputs {.sidebar data-width=250}
 ------------------------------------------------------------------------------------------
 
-<br>
-**Cluster Analysis**
+<br>**Cluster Analysis.** Discover clusters of similar genes or
+samples using unsupervised machine learning.
 
+```{r}
+actionLink("hm_info", "Info", icon = icon("info-circle") )
+##actionLink("hm_info", "More details ...")
+
+hm_infotext =
+    "The <strong>Cluster Analysis Module</strong> performs unsupervised clustering analysis of the samples. The main output of this feature is twofold: i) It generates an interactive heatmap of samples and ii) It also provides a dimensionality reduction plot of samples obtained by PCA or tSNE algorithms.
+
+<br><br>In the <strong>Heatmap tab</strong> hierarchical clustering can be performed on gene level or gene set level expression in which for the latter, for each gene set (or pathway), an average expression is computed from the gene expression data using summary methods such as GSVA and ssGSEA. During the heatmap generation, users have various options that they can select, such as splitting the samples by a phenotype class (e.g., tissue, cell type, or gender). In addition, users can specify the top N = {50, 500} features to be used in the heatmap for hierarchical clustering. The criteria to select the top features are: 1) sd - features with the highest standard deviation across all the samples, 2) biomarker - features that are overexpressed in each phenotype class compared to the rest, or by 3) pca - principal components.
+
+<br><br>For each feature cluster, the platform provides a functional annotation under <strong> annotate cluster tab</strong>  using more than 42 reference databases from the literature, including but not limited to well-known databases such as MSigDB, KEGG and GO.
+
+<br><br>The <strong>PCA/tSNE tab</strong> shows the similarity between samples in 2D space as well as in 3D space for visual analytics. Similarity is visualized as proximity of the points. Samples that are 'similar' will be placed close to each other. Groups of similar samples will form 'clusters of points'. Users can color the samples or give different shape to the samples by a phenotype class provided in the data. By changing the color/shape of the points you can examine if the clustering corresponds to certain phenotypes.
+
+<br><br>The <strong>Bi-plot</strong> tab shows a bi-plot for the first two principal PCA components, highlighting the main principal directions and its features.
+
+"
+
+observeEvent( input$hm_info, {
+    showModal(modalDialog(
+        title = HTML("<strong>Cluster Analysis Module</strong>"),
+        HTML(hm_infotext),
+        easyClose = TRUE ))
+})
+
+##require(tippy)
+##tippy("Help/Info", tooltip=hm_infotext)
+```
+
+<br>
 <br>
 
 ```{r}
 useShinyjs()
 selectInput("hm_level","Level:", choices=c("gene","geneset"))
 selectInput("hm_features","Features:", choices=NULL, multiple=FALSE)
-selectInput("hm_samplefilter","Filter samples:", choices=NULL, multiple=TRUE)
-##selectInput("hm_splitx","Split by:", choices=NULL, multiple=FALSE)
 
-radioButtons('hm_top','top:',c(50,500),inline=TRUE,selected=50)
-##radioButtons('hm_topmode','top.mode',c("sd","biomarker","pca"),inline=TRUE)
-checkboxInput('hm_group','grouped',FALSE)
+br();br();
+##actionLink("hm_options", "Show options ...")
+actionLink("hm_options", "Options", icon=icon("cog", lib = "glyphicon"))
+br();br();
+conditionalPanel(
+    "input.hm_options % 2 == 1",
+    tagList(
+        selectInput("hm_samplefilter","Filter samples:", choices=NULL, multiple=TRUE),
+        radioButtons('hm_top','top:',c(50,500),inline=TRUE,selected=50),
+        checkboxInput('hm_group','grouped',FALSE)
+    )
+)
 
-br();br();br();
-##if(PRO.VERSION) textAreaInput("hm_customlist","Custom gene list", rows=4)
-code.textInput
-if(PRO.VERSION) myTextInput("hm_customlist","Custom gene list")            
-if(PRO.VERSION) radioButtons('hm_gsetmatrix','Gene set matrix:', choices=c("meta"), inline=TRUE)
-##if(PRO.VERSION) radioButtons('hm_updown','Up/down:', choices=c("all","up","down"), inline=TRUE)
-##if(PRO.VERSION) checkboxGroupInput('hm_filter','Filter:', choices=c("up","down"), inline=TRUE)
-    
+if(PRO.VERSION) {
+    br();br();br();
+    code.textInput
+    conditionalPanel(
+        "input.hm_options % 2 == 1",
+        tagList(
+            myTextInput("hm_customlist","Custom gene list"), br(),
+            radioButtons('hm_gsetmatrix','Gene set matrix:', choices=c("meta"), inline=TRUE)
+        )
+    )
+}
+
+
 ## update filter choices upon change of data set 
 observe({
     ngs <- inputData()
@@ -216,13 +257,14 @@ Col {.tabset data-width=600}
 ```{r}
 require(plotly)
 require(scatterD3)
+require(tippy)
 fillCol(height = "100%", flex = c(NA, 1), 
         ##fillRow( flex=c(1,1,1),
         inputPanel(
         ##flowLayout( 
             selectInput("hm_splitx", "split by:", choices=NULL, width='80%'),
             selectInput('hm_topmode','top mode',c("sd","biomarker","pca"), width='80%'),
-            checkboxGroupInput('hm_options',NULL,choices=c('rowscale','softmax'),
+            checkboxGroupInput('hm_options2',NULL,choices=c('rowscale','softmax'),
                                selected=c('rowscale','softmax'),inline=FALSE),
             cellArgs=list(width='80px')
         ),
@@ -273,7 +315,7 @@ output$hm_splitmap <- renderPlot({
     
     ##cat("heatmap:: plotting: dim.zx=",dim(zx),"\n")
     scale.mode = "row"
-    scale.mode = ifelse("rowscale" %in% input$hm_options,"row","none")
+    scale.mode = ifelse("rowscale" %in% input$hm_options2,"row","none")
 
     ## split genes dimension in 5 groups
     splity = 5 
@@ -382,7 +424,7 @@ hm_GetClusterPositions <- reactive({
     pp = filterProbes(ngs$genes, gg)
     zx = zx[intersect(pp,rownames(zx)),]
     zx = head(zx[order(-apply(zx,1,sd)),],1000)
-    if(!PRO.VERSION || "rowscale" %in% input$hm_options)  zx = t(scale(t(zx)))  ## scale??
+    if(!PRO.VERSION || "rowscale" %in% input$hm_options2)  zx = t(scale(t(zx)))  ## scale??
 
     pos = NULL
     if(input$hm_clustmethod=="tsne") {
@@ -708,6 +750,8 @@ output$coldmap_plot <- renderPlot({
 ```
 
 -------------------------------------->
+
+
 
 
 

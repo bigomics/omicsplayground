@@ -4,8 +4,33 @@ Enrichment {data-orientation=rows}
 Inputs {.sidebar data-width=250}
 --------------------------------------------------------------------------------
 
-<br>
-**Enrichment Analysis**.
+<br> **Enrichment Analysis**. Perform differential expression analysis
+on a geneset level, also called gene set enrichment (GSE) analysis.
+
+```{r}
+actionLink("gs_info", "Info", icon = icon("info-circle") )
+##actionLink("gs_info", "More details ...")
+
+gs_infotext =
+    "Similar to the differential gene expression analysis, users can perform differential expression analysis on a geneset level in this page, which is also referred as gene set enrichment (GSE) analysis. The platform has more than 50.000 genesets (or pathways) in total that are divided into 30 geneset collections such as Hallmark, MSigDB, KEGG and GO. Users have to specify which comparison they want to visually analyze employing a certain geneset collection. It is also possible to filter out some genesets by logFC and FDR thresholds. The platform performs enrichment analyses using up to seven different methods including Spearman rank correlation, GSVA, ssGSEA, Fisher's exact test, GSEA, camera and fry, and reports the combined result.
+
+<br><br>The combined result from the methods is displayed under <strong>Enrichment Table tab</strong> (bottom half), where for each geneset the meta.q corresponds to the highest q value provided by the methods and the number of stars indicate how many methods identified the geneset as significant (q < 0.05). The table is interactive; users can sort it by logFC, meta.q and starts. Additionally, the list of genes in that geneset are displayed in the second table on the right.
+
+<br><br>Under <strong>Top Enriched tab</strong>, for a selected comparison, the top 10 differentially enriched geneses (pathways) are displayed. Under the <strong>Plots tab</strong>, for each geneset in the enrichment table, when it is selected, a volcano plot of genes contained in that genesest and a barplot of expressions per sample group are displayed. Under the <strong>Compare tab</strong>, for a selected geneset from the enrichment table, users can compare the differential expression status of that geneset for all other comparisons. Finally, volcano plots of genesets for all comparisons are displayed under the <strong>Volcano (all) tab</strong>. This allows users to have an overall picture across comparisons at the same time.
+
+"
+
+observeEvent( input$gs_info, {
+    showModal(modalDialog(
+        title = HTML("<strong>Enrichment Analysis Module</strong>"),
+        HTML(gs_infotext),
+        easyClose = TRUE ))
+})
+
+##require(tippy)
+##tippy("Help/Info", tooltip=hm_infotext)
+```
+
 
 <br><br>
 
@@ -17,18 +42,44 @@ fillRow( flex=c(1,1),
         selectInput("gs_fdr","FDR", choices=FDR.VALUES2, selected=0.2),
         selectInput("gs_lfc","logFC threshold", choices=c(0,0.2,0.5,1,2,5), selected=0.2)
         )
-br();br();br();br();
-checkboxInput('gs_ungroup','ungroup',FALSE)
-checkboxInput('gs_top10','top 10',FALSE)
 
-br();br();br();br();
-if(PRO.VERSION) textInput("gs_filter","Filter:")
+
+br();br();br();br();br();br();
+actionLink("gs_options", "Options", icon=icon("cog", lib = "glyphicon"));br()
+br();br();
+conditionalPanel(
+    "input.gs_options % 2 == 1",
+    tagList(
+        checkboxInput('gs_ungroup','ungroup (Plots)',FALSE),
+        checkboxInput('gs_top10','top 10 (Table)',FALSE)
+    )
+)
+
+br();br()
+
 GSET.DEFAULTMETHODS = c("fisher","gsva","camera","fgsea")
 GSET.DEFAULTMETHODS = c("fisher","gsva","camera")
 GSET.DEFAULTMETHODS = c("gsva","camera","fgsea","fisher")
+if(PRO.VERSION) {
+    conditionalPanel(
+        "input.gs_options % 2 == 1",
+        tagList(
+            textInput("gs_filter","Filter:"), br(), 
+            checkboxGroupInput('gs_method','Test method:', choices=NULL)
+        )
+    )
+}
 
-if(PRO.VERSION) checkboxGroupInput('gs_method','Test method:', choices=NULL)
-if(DEV.VERSION) radioButtons('gs_lfcmethod','Score method:', choices=c("fc","gs"))
+if(DEV.VERSION) {
+    conditionalPanel(
+        "input.gs_options % 2 == 1",
+        tagList(
+            radioButtons('gs_lfcmethod','Score method:', choices=c("fc","gs"))
+        )
+    )
+}
+
+
 
 selected_gsetmethods <- reactive({
     ngs <- inputData()

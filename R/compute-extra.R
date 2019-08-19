@@ -111,6 +111,7 @@ if(1) {
     counts <- rna.counts
     rownames(counts) <- toupper(ngs$genes[rownames(counts),"gene_name"])
     res <- pgx.multiDeconvolution(counts, refmat=refmat, method=methods)
+
     ngs$deconv <- res$results
     rownames(res$timings) <- paste0("[deconvolution]",rownames(res$timings))
     res$timings

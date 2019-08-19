@@ -4,12 +4,48 @@ Expression {data-orientation=rows}
 Inputs {.sidebar data-width=250}
 --------------------------------------------------------------------------------
 
-<br>
-**Differential Expression Analysis**
+<br> **Differential Expression Analysis.** Compare expression between
+two conditions. Determine which genes are significantly downregulated
+or overexpressed in one of the groups.
+
+```{r}
+actionLink("hm_info", "Info", icon = icon("info-circle") )
+##actionLink("gx_info", "More details ...")
+
+gx_infotext =
+    "The Differential Expression (DE) analysis module compares expression between two conditions (i.e. tumor versus control), which is one of the fundamental analysis in the transcriptomics data analytics workflow. For each comparison of two conditions (also called 'contrast'), the analysis identifies which genes are significantly downregulated or overexpressed in one of the groups.
+
+<br><br>The analysis starts by selecting a comparison condition that user wants to check. There are further options to filter out some genes by functional families, logarithmic foldchange (logFC) and false discovery rate (FDR). The <strong>Plots</strong> tab shows the volcano plot and MA (an application of a Bland-Altman) plot for the chosen contrast. It also shows the so-called 'signature', i.e. the top downregulated and overexpressed genes, for that contrast. Also, the expression of the selected gene across all contrasts is summarized.
+
+<br><br>The <strong>Top genes</strong> tab shows the average expression plots across the samples for top 10 differentially expressed genes within the selected comparison. 
+
+<br><br>Another important feature of the platform is that it displays volcano plots for all comparison simultaneously under <strong>Volcano (all)</strong> tab. This provides users an overview of the statistics of all comparisons. By comparing the volcano plots, one can immediately see which comparison is statistically weak or strong.
+
+<br><br>The <strong>Table</strong> tab on the bottom shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, t-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results. For a selected comparison, the results of the selected methods are combined and reported under the table, where 'meta.q' for a gene represents the worst q value among the three methods and the number of stars for a gene indicate how many methods identified significant q values (q < 0.05). The table is interactive (scrollable, clickable); users can sort genes by logFC, meta.q, or average expression in either conditions. By clicking on a gene, it is possible to see which genesets contain that gene from the geneset table located on the right , and check the differential expression status in other comparisons from the plots section.
+
+<br><br>The <strong>Foldchange (all)</strong> tab on the bottom shows
+
+<br><br>The <strong>FDR table</strong> tab on the bottom shows
+
+"
+
+observeEvent( input$gx_info, {
+    showModal(modalDialog(
+        title = HTML("<strong>Differential Expression Analysis</strong>"),
+        HTML(gx_infotext),
+        easyClose = TRUE ))
+})
+
+##require(tippy)
+##tippy("Help/Info", tooltip=hm_infotext)
+```
 
 <br><br>
 
 ```{r}
+##======================================================================
+## Left-side main options
+##======================================================================
 selectizeInput("gx_contrast", "Contrast:", choices=NULL)
 selectInput("gx_features","Gene family:", choices=NULL, multiple=FALSE)
 FDR.VALUES = c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
@@ -18,16 +54,33 @@ fillRow( flex=c(1,1),
         selectInput("gx_lfc","logFC threshold", choices=c(0,0.2,0.5,1,2,5), selected=0.5)
         )
 
-br();br();br();br();br();
-checkboxInput('gx_top10','top 10',FALSE)
-checkboxInput('gx_logscale','log scale',TRUE)
-checkboxInput('gx_ungroup','ungroup',FALSE)
+
+br();br();br();br();br();br();
+##actionLink("gx_options", "Show options ...")
+actionLink("gx_options", "Options", icon=icon("cog", lib = "glyphicon"));br()
+br();br();
+conditionalPanel(
+    ##"input.gx_advanced",
+    "input.gx_options % 2 == 1",
+    tagList(
+        checkboxInput('gx_top10','top 10 (table)',FALSE),
+        checkboxInput('gx_logscale','log scale (top genes)',TRUE),
+        checkboxInput('gx_ungroup','ungroup (top genes)',FALSE)
+    )
+)
 
 br();br();br();
 GX.DEFAULTTEST="trend.limma"
 GX.DEFAULTTEST=c("trend.limma","edger.qlf","deseq2.wald","edger.lrt")
-br();br();br();
-if(PRO.VERSION) checkboxGroupInput('gx_testmethod','Test methods:', choices=NULL, inline=TRUE)
+if(PRO.VERSION) {
+    conditionalPanel(
+        "input.gs_advanced % 2 == 1",
+        tagList(
+            checkboxGroupInput('gx_testmethod','Test methods:', choices=NULL, inline=TRUE)
+        )
+    )
+}
+
 
 ## update choices upon change of data set 
 observe({
@@ -37,7 +90,7 @@ observe({
     
     ##fam <- names(ngs$families)
     ##fam <- grep("^TISSUE|^COMPARTMENT|^CELLTYPE|^GOCC|^DISEASE|^CUSTOM",names(GSETS),value=TRUE)
-    fam <- pgx.getExtendedFamilies(ngs,10)
+    fam <- pgx.getFamilies(ngs,nmin=10,extended=FALSE)
     updateSelectInput(session, "gx_features",choices=fam)
 
     gx.methods = colnames(ngs$gx.meta$meta[[1]]$fc) ## available
@@ -57,6 +110,7 @@ selected_gxmethods <- reactive({
 })
 
 ```
+
 
 ```{r message=FALSE, warning=FALSE}
 comparison=1;testmethods=c("trend.limma")

@@ -76,9 +76,14 @@ remove(list=c("custom.gmt","f1"))
 
 ##nmin=10
 table(sub(":.*","",names(GSETS)))
-pgx.getExtendedFamilies <- function(ngs, nmin=10) {
-    fam <- grep("^[<].*|^FAMILY|^TISSUE|^COMPARTMENT|^CELLTYPE|^GOCC|^DISEASE|^CUSTOM",
-                names(GSETS),value=TRUE)
+pgx.getFamilies <- function(ngs, nmin=10, extended=FALSE) {
+    if(extended) {
+        fam <- grep("^[<].*|^FAMILY|^TISSUE|^COMPARTMENT|^CELLTYPE|^GOCC|^DISEASE|^CUSTOM",
+                    names(GSETS),value=TRUE)
+        fam <- grep("^[<].*|^FAMILY|^COMPARTMENT|^CUSTOM",names(GSETS),value=TRUE)
+    } else {
+        fam <- grep("^[<].*|^FAMILY|^CUSTOM",names(GSETS),value=TRUE)
+    }
     xgenes <- toupper(rownames(ngs$X))
     xgenes <- toupper(ngs$genes$gene_name)
     jj <- which(sapply(GSETS[fam],function(x) sum(x %in% xgenes)) >= nmin)

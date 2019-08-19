@@ -5,24 +5,68 @@ Data table  {data-orientation=rows}
 Inputs {.sidebar data-width=250}
 --------------------------------------------------------------------------------
 <br>
-**Data Table** 
+**Data Table.** Descriptive statistical analysis on a gene level with visualisations. 
+
 
 ```{r}
+##actionLink("hm_info", " ", icon = icon("info") )
+##actionLink("data_info", "More details ...", icon=icon("info")); br()
+##actionLink("data_info2", "More details ...", icon=icon("info-circle")); br()
+actionLink("data_info", "Info", icon=icon("info-circle")); br()
+##actionLink("data_info3", "Help", icon=icon("question")); br()
+
+data_infotext =
+    "The <strong>Data Table module</strong> provides a descriptive statistical analysis on a gene level with visualisations. During the visual analysis, users can filter out some samples or collapse the samples by predetermined groups. It is also possible to visualize the information on a raw count level (CPM) rather than a logarithmic expression level (logCPM). 
+
+<br><br>The <strong>Plots tab</strong> displays figures related to the expression level of the selected gene, correlation to other genes, and average expression ranking within the dataset. To find out more information from the literature, hyperlinks are provide to connect the selected gene to OMIM, KEGG and GO databases. It also correlates the gene to the expressions of other genes across datasets such as ImmProt and HPA, and plots the cumulative correlation. Furthermore, it displays the tissue expression for a selected gene using the genotype-tissue expression (GTEx) dataset. 
+
+<br><br>In the <strong>Counts tab</strong>, the total number of counts (abundance) per sample and their distribution among the samples are displayed. For each sample, users can also see the percentage of counts in terms of major gene types such as CD molecules, kinanses or RNA binding motifs.
+
+<br><br>Under <strong>Gene Table tab</strong>, the exact expression values across the samples can be read, where genes are ordered by the correlation with respect to the first gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table.
+
+<br><br>In the <strong>Sample Table tab</strong>, more complete information about samples and their phenotype grouping can be found.
+
+"
+
+observeEvent( input$data_info, {
+    showModal(modalDialog(
+        title = HTML("<strong>Data Table Module</strong>"),
+        HTML(data_infotext),
+        easyClose = TRUE ))
+})
+
+##require(tippy)
+##tippy("Help/Info", tooltip=hm_infotext)
+```
+
+
+<br><br>
+
+```{r}
+require(htmltools)
 ## data set parameters
 ##textInput("search_gene","Filter genes", value="")
 selectInput("search_gene","Search gene", choices=NULL)
-selectInput("data_samplefilter","Filter samples", choices=NULL, multiple=TRUE)
 
-checkboxInput('data_grouped','grouped',TRUE)
-##radioButtons('data_sampling','samples:', inline=TRUE, choices=c("grouped","random","head"))
-checkboxInput('data_geneinfo','gene summary',FALSE)
+br();br();
+actionLink("dt_options", "Options", icon=icon("cog", lib = "glyphicon"));br()
+##actionLink("dt_options2a", "Options ...", icon=icon("cog", lib = "glyphicon"));br()
+##actionLink("dt_options2c", "Options ...", icon=icon("cogs", lib = "fontawesome"));br()
 
-br();br()
+## br();br()
 datatypes <- c("CPM","logCPM")
-if(PRO.VERSION) datatypes <- datatypes <- c("counts","CPM","logCPM")
-radioButtons('data_type','Data type:', choices=datatypes, selected="logCPM", inline=TRUE)
+if(PRO.VERSION) datatypes <- c("counts","CPM","logCPM")
+conditionalPanel(
+    "input.dt_options % 2 == 1",
+    tagList(
+        selectInput("data_samplefilter","Filter samples", choices=NULL, multiple=TRUE),
+        checkboxInput('data_grouped','grouped',TRUE),
+        checkboxInput('data_geneinfo','gene summary',FALSE),
+        radioButtons('data_type','Data type:', choices=datatypes, selected="logCPM", inline=TRUE)
+    )
+)
 
-br();HTML("Download: ")
+br();br();HTML("Download: ")
 downloadLink('data_downloadData', '[counts]')
 downloadLink('gx_downloadData', ' [comparisons]')
 downloadLink('gs_downloadData', ' [enrichment]')
