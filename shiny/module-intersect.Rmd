@@ -4,8 +4,9 @@ Intersection
 Input {.sidebar data-width=250}
 --------------------------------------------------------------------------------
 
-<br>**Intersection analysis**. Compare experiments by intersecting their
-genes. Find similar experiments that show similar signatures.
+<br>**Intersection analysis**. Compare experiments by intersecting
+their signature genes. Find genes that are commonly up/down regulated
+in two conditions.
 
 ```{r}
 actionLink("cmp_info", "Info", icon = icon("info-circle") )

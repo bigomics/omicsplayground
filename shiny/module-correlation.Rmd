@@ -1,0 +1,167 @@
+Correlation  {data-orientation=rows}
+================================================================================
+
+
+Inputs {.sidebar data-width=250}
+--------------------------------------------------------------------------------
+
+
+<br> **Correlation Analysis.** Statistical correlation analysis on a
+gene or gene set level with visualisations. Compute the correlation
+between genes and find coregulated modules.
+
+
+```{r}
+##actionLink("cor_info", "More details ...", icon=icon("info")); br()
+##actionLink("cor_info2", "More details ...", icon=icon("info-circle")); br()
+actionLink("cor_info", "Info", icon=icon("info-circle")); br()
+##actionLink("cor_info3", "Help", icon=icon("question")); br()
+
+cor_infotext =
+    "The <strong>Correlation Analysis Module</strong> provides statistical correlation analysis on gene level or gene set level with visualisations. During the visual analysis, users can filter out some samples or collapse the samples by predetermined groups. 
+
+<br><br>The <strong>Plots tab</strong> displays figures related to the expression level of the selected gene, correlation to other genes, and average expression ranking within the dataset. To find out more information from the literature, hyperlinks are provide to connect the selected gene to OMIM, KEGG and GO databases. It also correlates the gene to the expressions of other genes across datasets such as ImmProt and HPA, and plots the cumulative correlation. Furthermore, it displays the tissue expression for a selected gene using the genotype-tissue expression (GTEx) dataset. 
+
+"
+
+observeEvent( input$cor_info, {
+    showModal(modalDialog(
+        title = HTML("<strong>Correlation Analysis Module</strong>"),
+        HTML(cor_infotext),
+        easyClose = TRUE ))
+})
+
+##require(tippy)
+##tippy("Help/Info", tooltip=hm_infotext)
+```
+
+
+<br><br>
+
+```{r}
+require(htmltools)
+## data set parameters
+selectInput("cor_genes","Correlated genes", choices=NULL)
+selectInput("cor_samplefilter","Filter samples", choices=NULL, multiple=TRUE)
+
+
+br();br();
+actionLink("cor_options", "Options", icon=icon("cog", lib = "glyphicon"))
+##actionLink("cor_options2a", "Options ...", icon=icon("cog", lib = "glyphicon"));br()
+##actionLink("cor_options2c", "Options ...", icon=icon("cogs", lib = "fontawesome"));br()
+
+br();br()
+conditionalPanel(
+    "input.cor_options % 2 == 1",
+    tagList(
+        radioButtons('cor_corpcor','cor type:',c("cor","partial cor"),inline=TRUE)
+    )
+)
+
+## ------- observe functions -----------
+
+## update filter choices upon change of data set 
+observe({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+
+    ## levels for sample filter
+    levels = getLevels(ngs$Y)
+    updateSelectInput(session, "cor_samplefilter", choices=levels)
+    genes <- sort(ngs$genes[rownames(ngs$X),]$gene_name)
+    sel = genes[1]  ## most var gene
+    updateSelectInput(session,'cor_genes', choices=genes, selected=sel)
+})
+
+```
+
+
+Col {.tabset data-height=400}
+--------------------------------------------------------------------------------
+
+
+### Correlation
+
+```{r message=FALSE, warning=FALSE}
+
+LAYOUT = c("Kamada-Kawai"="kk","Fruchterman-Reingold"="fr",
+           "graphopt"="graphopt","tree layout"="tree")
+
+fillRow(flex = c(1,0.1,1.2), 
+        fillCol(flex = c(1,1), 
+                plotOutput('cor_barplot1'),
+                plotOutput('cor_barplot2')
+                ),
+        br(), ## spacer
+        fillCol(flex = c(NA,1), 
+                inputPanel(
+                    ##selectInput('cor_graph_gene','Color by:', choices=NULL),
+                    sliderInput('cor_graph_threshold','rho:', 0, 1, 0.6),
+                    selectInput('cor_graph_layout','layout:', choices=LAYOUT),
+                    ##sliderInput('cor_graph_nbdegree','degree:', 1, 4, 2, 1),
+                    ##checkboxInput('cor_graph_fixed','fixed',FALSE),
+                    cellArgs=list(width='80%')
+                ),
+                ##visNetworkOutput('cor_graph'),
+                plotOutput('cor_graph')
+                )
+        )
+
+getGenePartialCorrelation <- reactive({
+    ngs <- inputData()
+    req(ngs,input$cor_genes)
+    X <- ngs$X    
+    gene <- "XIST"
+    gene <- input$cor_genes
+    res <- pgx.computePartialCorrelationAroundGene(
+        X, gene, method=PCOR.METHODS, nmax=100, fast=TRUE)    
+    res
+})
+
+output$cor_barplot1 <- renderPlot({
+    req(input$cor_genes)
+    res <- getGenePartialCorrelation()
+    gene <- input$cor_genes
+    par(mfrow=c(1,1))
+    gr <- pgx.plotPartialCorrelationAroundGene(
+        res, gene, what = "cor",
+        rho.min=NULL, nsize=40, 
+        main= "marginal correlation")
+})
+
+output$cor_barplot2 <- renderPlot({
+    req(input$cor_genes)
+    res <- getGenePartialCorrelation()
+    gene <- "NLRC5"
+    gene <- input$cor_genes
+    gr <- pgx.plotPartialCorrelationAroundGene(
+        res, gene, what = "pcor",
+        rho.min=NULL, nsize=40,
+        main= "partial correlation")
+})
+
+output$cor_graph <- renderPlot({
+    req(input$cor_genes)
+    res <- getGenePartialCorrelation()
+    gene="XIST";rho.min=0.3;layout="kk"
+    gene <- input$cor_genes
+    rho.min <- input$cor_graph_threshold
+    layout <- input$cor_graph_layout
+    ##fixed <- input$cor_graph_fixed
+    par(mfrow=c(1,1))
+    gr <- pgx.plotPartialCorrelationAroundGene(
+        res, gene, what="graph", ## degree=deg,
+        rho.min=rho.min, nsize=20, layout=layout, 
+        main= "correlation graph")
+})
+
+```
+
+
+### WGCNA
+
+```{r message=FALSE, warning=FALSE}
+require(WGCNA)
+HTML("To be implemented...")
+
+```

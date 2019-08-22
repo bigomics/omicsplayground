@@ -823,6 +823,7 @@ output$gx_fctable <- renderDataTable({
 
     ##F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
     F <- sapply(ngs$gx.meta$meta, function(x) x$meta.fx)
+    rownames(F) <- rownames(ngs$gx.meta$meta[[1]])
     dim(F)
     fc.var = F[,1]**2
     if(NCOL(F)>1) {
