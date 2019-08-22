@@ -659,10 +659,11 @@ output$pr_phenoplot <- renderPlot({
     cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
     cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
 
-    is.num <- function(y) {
+    ## is it a float/number???
+    is.num <- function(y, fmin=0.1) {
         suppressWarnings(numy <- as.numeric(as.character(y)))
         t1 <- !all(is.na(numy)) && is.numeric(numy)
-        t2 <- length(unique(y)) > 0.33*length(y)
+        t2 <- (length(unique(y))/length(y)) > fmin
         (t1 && t2)
     }
     

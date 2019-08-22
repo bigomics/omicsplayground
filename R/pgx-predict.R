@@ -335,7 +335,7 @@ pgx.plotPartialCorrelationAroundGene <-
 }
 
 
-pgx.plotPartialCorrelationAroundGene <-
+pgx.plotPartialCorrelationAroundGene.SAVE <-
     function(res, gene, rho.min=0.7, nsize=20, main="", what=c("cor","pcor","graph"))
 {    
     rho <- res$rho    
