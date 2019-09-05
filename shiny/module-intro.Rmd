@@ -35,16 +35,20 @@ if(file.exists(PGXINFO.FILE)) {
 }
 
 ## select data set
-selectInput("input_data","", choices=INPUT_FILES, selected=PGX.DEFAULT)
-actionButton("loadbutton",label="Load dataset")
+tipify(selectInput("input_data","", choices=INPUT_FILES, selected=PGX.DEFAULT),
+       "Select a dataset for the analysis.", placement="top")
+tipify(actionButton("loadbutton",label="Load dataset"),
+       "Click to load the selected dataset.", placement="bottom")
+
 
 br();br();br();br();br();br();
 br();br();br();br();br();br();
 br();br();br();br();br();br();
 ##if(PRO.VERSION) checkboxGroupInput('data_filter','Exclude:', choices=c("sex","ig"),
 ##                                   selected=c("sex","ig"), inline=TRUE)
-if(DEV.VERSION) actionButton("data_scanfiles",label="rescan file info")
-
+if(DEV.VERSION) tipify(actionButton("data_scanfiles",label="rescan file info"), 
+                       "Click to rescan newly injected dataset into the platform.", placement="bottom")
+    
 ```	
 
 
@@ -134,7 +138,13 @@ fillCol(flex=c(1), uiOutput('splash') )
 output$splash <- renderUI({
     div(id="splash-content", plotOutput('splashplot'))
     ##hidden(div(id="table-content", dataTableOutput('pgxfiles')))
-    div(id="table-content", dataTableOutput('pgxfiles'))
+    #div(id="table-content", dataTableOutput('pgxfiles'))
+    fillCol(flex = c(NA, 0.01, 1),
+            pgxfiles_module$button,
+            br(),
+            dataTableOutput('pgxfiles')
+    )
+    
 })
 
 output$splashplot <- renderPlot({
@@ -149,7 +159,37 @@ andothers <- function(s, split=" ", n=8) {
     paste(paste(head(s1,n), collapse=" "),"(+",n2,"others)")
 }
 
-output$pgxfiles <- DT::renderDataTable({
+# output$pgxfiles <- DT::renderDataTable({
+#     
+#     if(is.null(PGXINFO)) return(NULL)
+#     ## get current view of raw_counts
+#     pgx.file = sub("[.]pgx$","",input$input_data)
+#     sel = match( pgx.file, PGXINFO$dataset)
+#     ##kk = unique(c("nr","dataset","datatype","organism","description",colnames(PGXINFO)))
+#     kk = unique(c("nr","dataset","datatype","organism","description",colnames(PGXINFO)))
+#     kk = intersect(kk,colnames(PGXINFO))
+#     PGXINFO = PGXINFO[,kk]
+#     PGXINFO = PGXINFO[order(PGXINFO$dataset),] 
+#     PGXINFO$nr <- 1:nrow(PGXINFO)
+#     PGXINFO$conditions <- sapply(PGXINFO$conditions, andothers, split=" ", n=6)
+#     DT::datatable( PGXINFO,
+#                   class = 'compact cell-border stripe hover',
+#                   rownames=FALSE,
+#                   extensions = c('Scroller'),
+#                   ##selection = list(mode='single', target='row', selected=sel ),
+#                   selection = list(mode='none'),
+#                   options=list(
+#                       ##dom = 'Blfrtip', 
+#                       pageLength = 100, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+#                       scrollX = FALSE, scrollY =580, ## scroller=TRUE,
+#                       deferRender=TRUE
+#                   )  ## end of options.list 
+#                   )  %>%
+#         DT::formatStyle(0, target='row', fontSize='12px', lineHeight='95%')
+# 
+# })
+
+pgxfilesFUNC <- reactive({
     
     if(is.null(PGXINFO)) return(NULL)
     ## get current view of raw_counts
@@ -178,8 +218,21 @@ output$pgxfiles <- DT::renderDataTable({
         DT::formatStyle(0, target='row', fontSize='12px', lineHeight='95%')
 
 })
+
+pgxfiles_text = "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the collection date."
+
+pgxfiles_module <- tableModule(
+    id = "pgxfiles", func = pgxfilesFUNC,
+    info.text = pgxfiles_text,
+    title="Available datasets"
+)
+
+output$pgxfiles     <- pgxfiles_module$render
+output$pgxfiles_csv <- pgxfiles_module$csv 
+
 ```
 
+> The list of available datasets within the platform for further analysis. 
 
 ### Splash
 

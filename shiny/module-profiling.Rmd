@@ -12,8 +12,10 @@ immune cell types, expressed genes and pathway activation.
 ##----------------------------------------------------------------------
 ## More Info (pop up window)
 ##----------------------------------------------------------------------
+
 ##actionLink("pr_info", "More details ...")
-actionLink("pr_info", "Info", icon=icon("info-circle")); br()
+tipify(actionLink("pr_info", "Info", icon=icon("info-circle")),
+       "Show more information about this module.")
 
 pr_infotext =
     "The <strong>Cell Profiling Module</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types.
@@ -24,9 +26,7 @@ pr_infotext =
 
 <br><br>The <strong>Markers</strong> section provides potential marker genes, which are the top N=36 genes with the highest standard deviation within the expression data across the samples. For every gene, it produces a t-SNE plot of samples, with samples colored in red when the gene is overexpressed in corresponding samples. Users can also restrict the marker analysis by selecting a particular functional group in which genes are divided into 89 groups, such as chemokines, transcription factors, genes involved in immune checkpoint inhibition, and so on.
 
-<br><br>It is also possible to perform a copy number variation analysis under the <strong>CNV tab</strong>. The copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. CNV generates a heatmap of samples versus chromosomes, where samples can be annotated further with a phenotype class provided in the data.
-
-"
+<br><br>It is also possible to perform a copy number variation analysis under the <strong>CNV tab</strong>. The copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. CNV generates a heatmap of samples versus chromosomes, where samples can be annotated further with a phenotype class provided in the data."
 
 observeEvent( input$pr_info, {
     showModal(modalDialog(
@@ -39,26 +39,35 @@ observeEvent( input$pr_info, {
 <br><br>
 
 ```{r}
-
-##source("../R/pgx-deconv.R")
 br();br();br();
-##actionLink("pr_options", "Show options ...")
-actionLink("pr_options", "Options", icon=icon("cog", lib = "glyphicon"))
+tipify( actionLink("pr_options", "Options", icon=icon("cog", lib = "glyphicon")),
+       "Toggle advanced options", placement="top")
+
 br();br();
 conditionalPanel(
-    ##"input.gx_advanced",
     "input.pr_options % 2 == 1",
     tagList(
         selectInput("pr_samplefilter","Filter samples:", choices=NULL, multiple=TRUE),
         radioButtons('pr_clustmethod',NULL,c("tsne","pca"), inline=TRUE, selected="tsne"),
         ##radioButtons('pr_labelmode',NULL,c("label","legend"), inline=TRUE),
+        ##checkboxInput("pr_toggleinfo", "toggle info", TRUE),
         checkboxInput("pr_rowscale", "scale rows", TRUE)
     )
 )
 
+## observeEvent(input$pr_showinfo, {
+##     if(input$pr_showinfo%%2) {
+##         toggleDropdownButton("pr_icpplot_info")
+##         toggleDropdownButton("pr_markersplot_info")
+##         toggleDropdownButton("pr_cytoplot_info")
+##         toggleDropdownButton("pr_cnaplot_info")
+##         toggleDropdownButton("pr_phenoplot_info")
+##         toggleDropdownButton("pr_xtabplot_info")
+##     }
+## })
+
 if(PRO.VERSION) {
     conditionalPanel(
-        ##"input.gx_advanced",
         "input.pr_options % 2 == 1",
         tagList(
             checkboxInput("pr_group", "group", FALSE)
@@ -88,12 +97,97 @@ observe({
     refsets <- sort(names(ngs$deconv))
     refsel <- grep("LM22",refsets,value=TRUE)
     updateSelectInput(session,"pr_refset",choices=refsets, selected=refsel)
+    ## updateSelectInput(session,"pr_refset2",choices=refsets, selected=refsel)
        
     dcmethods <- names(ngs$deconv[[1]])
     dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
     updateSelectInput(session, "pr_dcmethod", choices=dcmethods, selected=dcsel)
 })
 
+```
+
+```{r}
+pfGetClusterPositions <- reactive({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    ##zx <- filtered_matrix1()
+    zx = ngs$X
+    kk <- selectSamplesFromSelectedLevels(ngs$Y, input$pr_samplefilter)
+    if(length(kk)==0) return(NULL)
+    
+    zx <- zx[,kk,drop=FALSE]
+    zx = head(zx[order(-apply(zx,1,sd)),],1000)
+    zx = t(scale(t(zx)))  ## scale??
+
+    if(FALSE && input$pr_group) {
+        grp = ngs$Y[colnames(zx),"group"]
+        zx = t(apply( zx, 1, function(x) tapply(x, grp, mean)))
+    }
+
+    pos = NULL
+    if(input$pr_clustmethod=="tsne") {
+        require(Rtsne)
+        tsne.dim = 3
+        ##do3d <- grepl("3D", as.character(input$pr_clustmethod))
+        do3d <- ("3D" %in% input$pca.options)
+        tsne.dim = c(2,3)[ 1 + 1*do3d]
+        force.compute = FALSE
+        ## force.compute = TRUE        
+        if(!force.compute && tsne.dim==2 && !is.null(ngs$tsne2d) ) {
+            pos <- ngs$tsne2d[colnames(zx),]
+        } else if(!force.compute && tsne.dim==3 && !is.null(ngs$tsne3d) ) {
+            pos <- ngs$tsne3d[colnames(zx),]
+        } else {
+            perplexity = max(min(30,ncol(zx)/4),1)
+            perplexity = min((ncol(zx)-1)/3, 30)
+            perplexity
+            pos <- Rtsne( t(zx), dim=tsne.dim, check_duplicated=FALSE,
+                         num_threads=100, ##Y_init=Y_init, 
+                         perplexity=perplexity )$Y
+        }
+    } else {
+        ##cat("pfGetClusterPositions:: computing PCA/SVD...\n")
+        require(irlba)
+        ##pos <- cmdscale(dist(t(zx)), k=3)
+        ##pos = svd(zx,nv=3)$v
+        pos = irlba(zx,nv=3)$v        
+    }
+    
+    pos = scale(pos) ## scale 
+    colnames(pos) = paste0("dim",1:ncol(pos))
+    rownames(pos) = colnames(zx)    
+
+    if(0) {
+        tt = factor(ngs$sample$tissue.type)
+        ct = factor(ngs$sample$cell.type)
+        jj = which(tt %in% c("HCC","nonHCC"))
+        jj = which(tt %in% c("Blood","nonHCC"))
+        fc = gx.limma( zx[,jj], as.character(tt[jj]), fdr=1)        
+        fc = gx.limma( zx[,], 1*(tt=="Blood"), fdr=1)
+        gg = head(rownames(fc),100)
+        ## gg = tail(rownames(fc),20)
+
+        require(Rtsne.multicore)
+        pos = svd(zx[gg,],nv=3)$v
+        ##pos = Rtsne.multicore( t(zx[gg,]) )$Y
+        par(mfrow=c(2,2))
+        scatterD3(pos[,1], pos[,2], col_var=tt, symbol_var=ct,
+                  point_size=150 )
+
+        
+    }
+
+    ##if(input$pca.gx=="<cluster>")
+    require(igraph)
+    dist = as.dist(dist(pos))
+    gr = graph_from_adjacency_matrix(
+        1.0/dist, diag=FALSE, mode="undirected")
+    clust <- cluster_louvain(gr)$membership
+
+    ##cat("pfGetClusterPositions:: done!\n")
+    return( list(pos=pos, clust=clust) )
+})
 
 ```
 
@@ -104,16 +198,6 @@ Col {.tabset data-width=625}
 ### Cell type
 
 ```{r}
-fillCol(flex = c(NA,1), 
-        inputPanel(
-            ##radioButtons('pr_view',NULL,c("distribution","dotmap","heatmap"), inline=TRUE),
-            selectInput("pr_view","plot type:", choices=c("distribution","dotmap","heatmap")),
-            selectInput("pr_refset", "reference:", choices=NULL),
-            selectInput("pr_dcmethod","method:", choices=NULL),
-            cellArgs=list(width='40%')
-        ),
-        plotOutput("pr_icpplot", height = "100%", width = "100%")
-        )
 
 getDeconvResults <- reactive({
     ngs <- inputData()
@@ -133,7 +217,7 @@ getDeconvResults <- reactive({
     return(results)
 })
 
-output$pr_icpplot <- renderPlot({
+pr_icpplotFUNC <- reactive({
     require(RColorBrewer)
     
     ngs <- inputData()
@@ -252,7 +336,7 @@ output$pr_icpplot <- renderPlot({
         klrpal = paste0(col2hex(klrpal),"66")
         
         par(mfrow=c(5,5), mar=c(0.2,0.2,1.8,0.2), oma=c(1,1,1,1)*0.8 )
-        par(mfrow=c(5,5), mar=c(0,0.2,0.5,0.2), oma=c(1,1,1,1)*0.8)
+        par(mfrow=c(5,5), mar=c(0,0.2,0.5,0.2), oma=c(1,1,6,1)*0.5)
         if(ncol(score)>25) par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2)*0.6)
         i=1    
         
@@ -274,39 +358,48 @@ output$pr_icpplot <- renderPlot({
                    inset=c(-0.05,-0.0) )
         }
 
+        refset <- input$pr_refset
+        mtext( refset, outer=TRUE, line=0.5, cex=1.2)
+        
     }
+})
 
-}, res=90)
+pr_icp.opts = tagList(
+    ##radioButtons('pr_view',NULL,c("distribution","dotmap","heatmap"), inline=TRUE),
+    selectInput("pr_view","plot type:", choices=c("distribution","dotmap","heatmap")),
+    selectInput("pr_refset", "reference:", choices=NULL),
+    selectInput("pr_dcmethod","method:", choices=NULL)
+)
+
+pr_icp_module <- plotModule(
+    "pr_icpplot", pr_icpplotFUNC,
+    title = "Cell type profiling (deconvolution)",
+    info.text = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types.",
+    options = pr_icp.opts,
+    pdf.width=8, pdf.height=8, res=95
+)
+output$pr_icpplot     <- pr_icp_module$render
+output$pr_icpplot_pdf <- pr_icp_module$pdf
+
+fillCol(flex = c(NA,1), 
+        pr_icp_module$buttons,
+        ##inputPanel(
+        ##    tipify(selectInput("pr_refset2",NULL, choices=NULL),"Reference set for deconvolution")
+        ##),
+        plotOutput("pr_icpplot", height = "100%", width = "100%")
+        )
+
 ```
+
+> **Cell type profiling (deconvolution).** The cell type can be computationally inferred using so-called deconvolution methods by matching the (absolute) expression profile to a known reference set. This reference set can be a cell type reference database but also cancer types, tissue types or cell lines. Reference set: `r renderText(input$pr_refset)`. Deconvolution method: `r renderText(input$pr_dcmethod)`
+
 
 ### Markers
 
 ```{r}
 
-fillCol(height = "100%", flex = c(NA, 1), 
-        inputPanel(
-            selectInput("pr_level",NULL, choices=c("gene","geneset")),
-            selectInput("pr_features",NULL, choices=NULL, multiple=FALSE),
-            textInput("pr_search",NULL),
-            cellArgs=list(width='100%')
-        ),
-        ##scatterD3Output("pcaplot", height = "100%")
-        plotOutput("pr_markersplot", height = "100%")
-        )
-
-observe({
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    choices <- names(ngs$families)
-    selected = grep("^CD",choices,ignore.case=TRUE,value=TRUE)[1]
-    if(input$pr_level=="geneset") {
-        choices <- names(COLLECTIONS)
-        selected = grep("HALLMARK",names(COLLECTIONS),ignore.case=TRUE,value=TRUE)
-    }
-    updateSelectInput(session, "pr_features", choices=choices, selected=selected)
-})
-
-output$pr_markersplot <- renderPlot({
+##output$pr_markersplot <- renderPlot({
+pr_markersplotFUNC <- reactive({
     ##if(!input$tsne.all) return(NULL)
     require(RColorBrewer)
     
@@ -321,15 +414,18 @@ output$pr_markersplot <- renderPlot({
     ##markers <- ngs$families[["CD family"]]
     if(is.null(input$pr_features)) return(NULL)
     if(input$pr_features=="") return(NULL)
-    
+
+    term = ""
     if(input$pr_level=="gene") {
         markers <- ngs$families[["Transcription factors (ChEA)"]]
         if(input$pr_search!="") {
             term = input$pr_search
             jj <- grep(term, ngs$genes$gene_name, ignore.case=TRUE )
             markers <- ngs$genes$gene_name[jj]
+            term = paste("filter:",term)
         } else if(input$pr_features %in% names(ngs$families)) {
             markers <- ngs$families[[input$pr_features]]
+            term = input$pr_features
         } else {
             markers <- ngs$genes$gene_name
         }
@@ -346,10 +442,12 @@ output$pr_markersplot <- renderPlot({
         if(input$pr_search=="" && ft %in% names(COLLECTIONS)) {
             markers <- COLLECTIONS[[input$pr_features]]
             markers <- intersect(markers, rownames(ngs$gsetX))
+            term = input$pr_features
         } else if(input$pr_search!="") {
             term = input$pr_search
             jj <- grep(term, rownames(ngs$gsetX), ignore.case=TRUE )
             markers <- rownames(ngs$gsetX)[jj]
+            term = paste("filter:",term)
         } else {
             markers <- rownames(ngs$gsetX)
         }
@@ -385,6 +483,7 @@ output$pr_markersplot <- renderPlot({
     
     ## plot(0, type="n")  %>% withSpinner(color="#0dc5c1")  
     par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,1,1)*0.5)
+    par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,6,1)*0.5)
     ##par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2), oma=c(1,1,1,1)*0.5)
     i=1    
     for(i in 1:min(NP,nrow(top.gx))) {
@@ -404,7 +503,7 @@ output$pr_markersplot <- renderPlot({
             gene <- sub(".*:","",rownames(top.gx)[i])
             ##title( gene, cex.main=1.0, line=0.3, col="grey40", font.main=1)
             legend( "topleft", legend=gene, bg="#AAAAAA88",
-                   cex=1.1, text.font=1, y.intersp=0.8,
+                   cex=1.2, text.font=1, y.intersp=0.8,
                    bty="n", inset=c(-0.05,-0.0) )
         } else {
             gset <- sub(".*:","",rownames(top.gx)[i])
@@ -417,35 +516,53 @@ output$pr_markersplot <- renderPlot({
         }
     }
 
-    
-}, res=100)
-```
+    mtext(term, outer=TRUE, cex=1.2, line=0.6)
+   
+})
 
 
+pr_markersplot.opts = tagList(
+    selectInput("pr_level","Level:", choices=c("gene","geneset")),
+    selectInput("pr_features","Feature set:", choices=NULL, multiple=FALSE),
+    textInput("pr_search","Filter:")
+)
+pr_markersplot_module <- plotModule(
+    "pr_markersplot", pr_markersplotFUNC,
+    info.text = "The Markers section produces for the top marker genes, a t-SNE with samples colored in red when the gene is overexpressed in corresponding samples. The top genes (N=36) with the highest standard deviation are plotted. <p>In the plotting options, users can also restrict the marker analysis by selecting a particular functional group in which genes are divided into 89 groups, such as chemokines, transcription factors, genes involved in immune checkpoint inhibition, and so on.",
+    title = "Distribution of marker genes",
+    pdf.height = 10, pdf.width=10, res=95,
+    options = pr_markersplot.opts
+)
+##output$pr_markersplot <- pr_markersplot_module$render
+##output$pr_markersplot_pdf <- pr_markersplot_module$pdf
+output <- attachModule(output, pr_markersplot_module)
 
-
-### CNV
-
-```{r}
-
-fillCol(height = "100%", flex = c(NA, 1), 
-        inputPanel(
-            selectInput("pr_cna_annotvar",label="annotate with:", choices=NULL, multiple=FALSE),
-            ##checkboxGroupInput('pr_cnaoptions','',c("bin20"), inline=TRUE),
-            ##radioButtons('pr_cnaplottype',NULL,c("image","heatmap","splitmap"), inline=TRUE),
-            radioButtons('pr_cna_orderby',"order by",c("clust","pc1"), inline=TRUE),            
-            cellArgs=list(width='80px')
-        ),
-        plotOutput("pr_cnaplot", height = "100%")
+fillCol(height = "100%", flex = c(NA,1), 
+        pr_markersplot_module$buttons,
+        ##scatterD3Output("pcaplot", height = "100%")
+        plotOutput("pr_markersplot", height = "100%")
         )
 
 observe({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
-    ## levels for sample filter
-    annotvar <- c(colnames(ngs$Y),"<none>")
-    updateSelectInput(session, "pr_cna_annotvar", choices=annotvar)
+    choices <- names(ngs$families)
+    selected = grep("^CD",choices,ignore.case=TRUE,value=TRUE)[1]
+    if(input$pr_level=="geneset") {
+        choices <- names(COLLECTIONS)
+        selected = grep("HALLMARK",names(COLLECTIONS),ignore.case=TRUE,value=TRUE)
+    }
+    updateSelectInput(session, "pr_features", choices=choices, selected=selected)
 })
+
+```
+
+> **Distribution of marker genes.** T-SNE distribution plots of the top biomarkers for `r renderText(input$pr_features)` genes. Good biomarkers will show an expression pattern strongly correlated with some phenotype. The top genes with the highest standard deviation are shown. The red color shading is proportional to the (absolute) expression of the gene in corresponding samples. 
+
+
+### CNV
+
+```{r}
 
 getCNAfromExpression <- reactive({
     ngs <- inputData()
@@ -456,7 +573,8 @@ getCNAfromExpression <- reactive({
     return(res)
 })
 
-output$pr_cnaplot <- renderPlot({
+##output$pr_cnaplot <- renderPlot({
+pr_cnaplotFUNC <- reactive({
     require(RColorBrewer)
     ##return(NULL)    
     ngs <- inputData()
@@ -468,158 +586,42 @@ output$pr_cnaplot <- renderPlot({
     if(annotvar=="<none>") annotvar <- NULL
     order.by <- input$pr_cna_orderby
     pgx.plotCNAHeatmap(ngs, res, annot=annotvar, order.by=order.by)
+})
 
-}, res=110)
-```
+pr_cna.opts = tagList(
+    selectInput("pr_cna_annotvar",label="Annotate with:", choices=NULL, multiple=FALSE),
+    ##checkboxGroupInput('pr_cnaoptions','',c("bin20"), inline=TRUE),
+    ##radioButtons('pr_cnaplottype',NULL,c("image","heatmap","splitmap"), inline=TRUE),
+    radioButtons('pr_cna_orderby',"Order samples by:",c("clust","pc1"), inline=TRUE)            
+)
 
+pr_cnaModule <- plotModule(
+    "pr_cnaplot", pr_cnaplotFUNC,
+    info.text = "<strong>Copy number variation (CNV)</strong> analysis. The copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. CNV generates a heatmap of samples versus chromosomes, where samples can be annotated further with a phenotype class provided in the data.",
+    options = pr_cna.opts,
+    title = "Inferred copy number variation (CNV)",
+    pdf.width=10, pdf.height=8, res=110
+)
+##output$pr_cnaplot     <- pr_cnaModule$render
+##output$pr_cnaplot_pdf <- pr_cnaModule$pdf   ## name must be exactly same
+output <- attachModule(output, pr_cnaModule)
 
-```{r, eval=FALSE}
-####################################################################
-############### DISABLED ###########################################
-####################################################################
-
-### Correlate
-fillCol(height = "100%", flex = c(NA, 1), 
-        inputPanel(
-            selectInput("pr_corvar1",label="gene:", choices=NULL, multiple=FALSE),
-            selectInput("pr_corvar2",label="proportion:", choices=NULL, multiple=FALSE),
-            selectInput("pr_coravg",label="average by:", choices=NULL, multiple=FALSE),
-            ##br(),
-            cellArgs=list(width='80px')
-        ),
-        plotOutput("pr_corplot1", height = "100%")
+fillCol(height = "100%", flex = c(NA,1), 
+        pr_cnaModule$buttons,
+        plotOutput("pr_cnaplot", height = "100%")
         )
 
 observe({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
-    ##if(is.null(input$pr_statoptions)) return(NULL)
-    var1 <- sort(rownames(ngs$X))
-    var2 <- sort(colnames(ngs$Y))
-
-    sel2 = sel3 =  NULL
-    ##sel2 = "cell.type";sel3 = "patient"
-    ##var2 = getLevels(ngs$Y)
-    var2 = grep("group|sample|donor|group",colnames(ngs$Y),invert=TRUE,value=TRUE)
-    var2 = colnames(ngs$Y)
-    var2 = c("<cell type>",var2)
-    grpvar  <- sort(colnames(ngs$Y))
-    grpvar = grep("patient|sample|donor|group",colnames(ngs$sample),value=TRUE)
-    grpvar = c("<bin>",grpvar)
-    var2 = setdiff(var2, grpvar)
-    ##grpvar = intersect(colnames(ngs$sample),grpvar)
-    updateSelectInput(session, "pr_corvar1", choices=var1)
-    updateSelectInput(session, "pr_corvar2", choices=var2)
-    updateSelectInput(session, "pr_coravg",  choices=grpvar)
-    ##updateSelectInput(session, "pr_cory", choices=ypheno)
+    ## levels for sample filter
+    annotvar <- c(colnames(ngs$Y),"<none>")
+    updateSelectInput(session, "pr_cna_annotvar", choices=annotvar)
 })
 
-output$pr_corplot1 <- renderPlot({
-    ##if(!input$tsne.all) return(NULL)
-    require(RColorBrewer)
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    
-    if(is.null(input$pr_corvar1)) return(NULL)
-    if(is.null(input$pr_corvar2)) return(NULL)
-    if(is.null(input$pr_coravg)) return(NULL)
-
-    kk <- 1:nrow(ngs$Y)
-    kk <- selectSamplesFromSelectedLevels(ngs$Y, input$pr_samplefilter)
-    
-    grp <- ngs$sample[kk,"patient"]
-    grp <- NULL
-    if(input$pr_coravg!="<bin>") {
-        grp <- ngs$sample[kk,input$pr_coravg]
-    } else {
-        ##grp <- 1:kk
-    }
-    
-    xvar="P2RX7"
-    xvar="CD4"
-    xvar="CD8A"
-    yvar="<cell type>"
-    xvar <- input$pr_corvar1
-    yvar <- input$pr_corvar2
-
-    gx <- ngs$X[xvar,kk]
-    scores <- ngs$deconv[[1]][["meta"]]
-    scores <- getDeconvResults()
-    if(is.null(scores)) return(NULL)
-    scores <- pmax(scores,0) ## ??
-    maxscoring <- colnames(scores)[max.col(scores)]
-    names(maxscoring) <- rownames(scores)
-    
-    if(yvar=="<cell type>") {
-        yvalues <- unique(maxscoring[kk])
-        y1 <- maxscoring[kk]
-    } else {
-        yvalues <- unique(as.character(ngs$samples[kk,yvar]))
-        y1 <- as.character(ngs$sample[kk,yvar])
-    }
-
-    bin <- as.integer(input$pr_binoptions)
-    if(PRO.VERSION && !is.null(grp) && bin!=0) {
-        ## divide groups in smaller subgroups
-        subgrp <- tapply(as.character(grp), grp, function(a) paste0(a,".",1:(length(a)/bin)))
-        grp <- unlist(subgrp)
-    }
-    if(PRO.VERSION && is.null(grp) && bin!=0) {
-        ## divide groups in smaller subgroups
-        ##subgrp <- rep(1:bin,length(kk)/bin+1)[1:length(kk)]
-        subgrp <- as.vector(sapply(1:(1+length(gx)/bin),rep,bin))[1:length(gx)]
-        grp <- unlist(subgrp)
-    }
-
-    if(!is.null(grp)) {
-        ## check minimum group size
-        grp <- as.character(grp)
-        grp1 <- names(which(table(grp) >= 2))  ## at least 2?
-        if(length(kk)>500)  grp1 <- names(which(table(grp) >= 5))  ## at least 2?
-        jj <- which(grp %in% grp1)
-        ngrp <- length(unique(grp[jj]))
-        ngrp
-        if(ngrp < 3) {
-            validate(need(ngrp >= 3, "too few groups. cannot calculate proportions."))
-            cat("pr_corplot1:: warning: too few groups. bailing out.")
-            return(NULL)
-        }
-        gx <- tapply(gx[jj], grp[jj], mean)
-        Y = sapply(yvalues, function(a) 100*tapply( 1*(y1[jj]==a), grp[jj], mean, na.rm=TRUE))
-        Y <- as.matrix(Y)
-        colnames(Y) <- yvalues
-
-    } else {
-        ##Y = sapply(yvalues, function(a) 100*mean(y1==a))
-        y1[is.na(y1)] <- "_"
-        Y = 100*model.matrix( ~ 0 + y1)
-        Y <- as.matrix(Y)
-        colnames(Y) <- yvalues
-    }
-    
-    rho <- cor(Y, gx)[,1]
-    ##Y <- Y[,order(-apply(Y,2,max,na.rm=TRUE)),drop=FALSE]
-    Y <- Y[,order(-abs(rho))]
-        
-    ##par(mar = c(4,6,2,3))
-    ##layout(matrix(c(1,2,3), 3, 1), heights=c(1.4,3,2.5))
-    par(mfrow=c(4,4), mar = c(3,4,1.6,1), mgp=c(1.8,0.7,0) )
-    for(i in 1:min(16,ncol(Y))) {
-        plot(gx, Y[,i], pch=19, cex=1, xlab=xvar,
-             ylab="proportion (%)", ylim=c(0,100) )
-        abline( lm( Y[,i] ~ gx), col="red")
-        ##title(paste0(yvar,"=",colnames(Y)[i]),cex.main=1,line=0.5)
-        title(colnames(Y)[i],cex.main=1,line=0.5)
-        pv <- cor.test(Y[,i] , gx)$p.value
-        r <- cor.test(Y[,i] , gx)$estimate
-        tt <- c(paste("r=", round(r,digits=3)),
-                paste("p=", round(pv, digits=3)))
-        legend("topright", legend=tt, bty="n", cex=0.85, y.intersp=0.8)
-    }
-    ##x <- log10(1+grp.counts[colnames(grp.score)])
-    
-}, res=95)
 ```
+
+> **Inferred copy number variation (CNV)**. Genomic copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. The heatmap shows the inferred copy number of the samples versus chromosomes. The samples are annotated further with phenotype information on the right side of the figure.
 
 
 Col {.tabset data-width=375}
@@ -628,15 +630,8 @@ Col {.tabset data-width=375}
 ### Phenotypes 
 
 ```{r}
-fillCol(flex = c(NA,1), 
-        inputPanel(
-            radioButtons('pr_labelmode',NULL,c("label","legend"), inline=TRUE),
-            cellArgs=list(width='40%')
-        ),
-        plotOutput("pr_phenoplot", height = "100%", width = "100%")
-        )
-
-output$pr_phenoplot <- renderPlot({
+##output$pr_phenoplot <- renderPlot({
+pr_phenoplotFUNC <- reactive({
     ##if(!input$tsne.all) return(NULL)
     require(RColorBrewer)
     ngs <- inputData()
@@ -720,59 +715,57 @@ output$pr_phenoplot <- renderPlot({
         }
         title(tolower(pheno[i]), cex.main=1.3, line=0.5, col="grey40")
     }
-}, res=90)
+})
+
+
+pr_phenoplot.opts <- tagList(
+    tipify( radioButtons('pr_labelmode','Label:',c("groups","legend"), inline=TRUE),
+           "Select whether you want the group labels to be plotted inside the plots or in a seperate legend.")
+)
+
+pr_phenoModule <- plotModule(
+    "pr_phenoplot", pr_phenoplotFUNC,
+    info.text = "<strong>Phenotypes.</strong> This figure visualizes the distribution of
+    the phenotype information. In the plot options, you can select whether you want the group labels to be plotted inside the plots or in a seperate legend.",
+    options = pr_phenoplot.opts,
+    pdf.width=5, pdf.height=8, res=90
+)
+output$pr_phenoplot <- pr_phenoModule$render
+output$pr_phenoplot_pdf <- pr_phenoModule$pdf
+
+fillCol(flex = c(NA,1), 
+        pr_phenoModule$buttons,
+        plotOutput("pr_phenoplot")
+        )
+
 ```
+
+> **Phenotype plots.** The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects.
+
+
 
 ### Proportions
 
+
 ```{r}
-fillCol(height = "100%", flex = c(NA, 1), 
-        inputPanel(
-            ##fillRow( flex=c(1,1,NA,1),
-            selectInput("pr_statvar",label="x-axis:", choices=NULL, multiple=FALSE),
-            selectInput("pr_statpheno",label="y-axis:", choices=NULL, multiple=FALSE),
-            selectInput("pr_statgene",label="gene:", choices=NULL, multiple=FALSE)
-            ##checkboxGroupInput('pr_statoptions','',c("gene"), inline=TRUE, width='50px')
-            ##selectInput("pr_statgene",label=NULL, choices=NULL, multiple=FALSE),
-            ##br(), cellArgs=list(width='80px')
-        ),
-        plotOutput("statsplot", height = "100%")
-        )
 
-observe({
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    ##if(is.null(input$pr_statoptions)) return(NULL)
-    pheno0 <- grep("group|sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
-    kk <- selectSamplesFromSelectedLevels(ngs$Y, input$pr_samplefilter)
-    nphenolevel <- apply(ngs$samples[kk,pheno0],2,function(v) length(unique(v)))
-    pheno0 = pheno0[which(nphenolevel>1)]
-    genes <- sort(as.character(ngs$genes$gene_name))
-    pheno1 <- c("<cell type>",pheno0)
-    genes1 <- c("<none>",genes)
-    updateSelectInput(session, "pr_statvar", choices=pheno1)
-    updateSelectInput(session, "pr_statpheno", choices=pheno1)
-    updateSelectInput(session, "pr_statgene", choices=genes1)
-})
-
-output$statsplot <- renderPlot({
+##output$statsplot <- renderPlot({
+pr_xtabplotFUNC <- reactive({
     ##if(!input$tsne.all) return(NULL)
     require(RColorBrewer)
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    if(is.null(input$pr_statpheno)) return(NULL)
-    if(is.null(input$pr_statvar)) return(NULL)
-    ##if(is.null(input$pr_statoptions)) return(NULL)
-    if(is.null(input$pr_statgene)) return(NULL)
 
+    req(ngs)
+    req(input$pr_xtabpheno, input$pr_xtabvar, input$pr_xtabgene)
+    
     scores = ngs$deconv[[1]][[1]]  ## just an example...
-    if(input$pr_statvar == "<cell type>") {
+    if(input$pr_xtabvar == "<cell type>") {
         scores <- getDeconvResults()
         if(is.null(scores)) return(NULL)
         scores <- pmax(scores,0) ## ??
     } else {
         x <- as.character(ngs$Y[,1])
-        x <- as.character(ngs$Y[,input$pr_statvar])
+        x <- as.character(ngs$Y[,input$pr_xtabvar])
         x[is.na(x)] <- "_"
         scores <- model.matrix( ~ 0 + x )
         rownames(scores) <- rownames(ngs$Y)
@@ -796,7 +789,7 @@ output$statsplot <- renderPlot({
     
     getProportionsTable <- function(pheno, is.gene=FALSE) {    
         y <- NULL
-        ##if("gene" %in% input$pr_statoptions) {
+        ##if("gene" %in% input$pr_xtaboptions) {
         if( is.gene ) {
             xgene <- ngs$genes[rownames(ngs$X),]$gene_name
             gx <- ngs$X[which(xgene == pheno),kk,drop=FALSE]
@@ -884,15 +877,14 @@ output$statsplot <- renderPlot({
     pheno="activated"
     pheno="cell.type"
     pheno="<cell type>"
-    pheno <- input$pr_statpheno
+    pheno <- input$pr_xtabpheno
     if(is.null(pheno)) return(NULL)
 
     ##pheno="cluster"
-    grp.score1 <- getProportionsTable(pheno, is.gene=FALSE)
-    
+    grp.score1 <- getProportionsTable(pheno, is.gene=FALSE)    
     grp.score2 <- NULL
     gene = ngs$genes$gene_name[1]
-    gene = input$pr_statgene
+    gene = input$pr_xtabgene
     if(gene != "<none>") {
         grp.score2 <- getProportionsTable(pheno=gene, is.gene=TRUE)
         kk <- colnames(grp.score2)[order(grp.score2[1,])]
@@ -945,34 +937,59 @@ output$statsplot <- renderPlot({
            bg="white", bty="n")
     }
     
-}, res=120)
-```
+})
 
-### CytoPlot
 
-```{r}
-fillCol(flex = c(NA, 1), 
-        inputPanel(
-            ##fillRow( flex=c(1,1,NA,1),
-            selectInput("pr_cytovar1",label="x-axis:", choices=NULL, multiple=FALSE),
-            selectInput("pr_cytovar2",label="y-axis:", choices=NULL, multiple=FALSE)
-            ##br(), cellArgs=list(width='80px')
-        ),
-        plotOutput("pr_cytoplot", height = "100%")
+pr_xtab.opts <- tagList(
+    selectInput("pr_xtabvar",label="x-axis:", choices=NULL, multiple=FALSE),
+    selectInput("pr_xtabpheno",label="y-axis:", choices=NULL, multiple=FALSE),
+    selectInput("pr_xtabgene",label="gene:", choices=NULL, multiple=FALSE)
+    ##checkboxGroupInput('pr_xtaboptions','',c("gene"), inline=TRUE, width='50px')
+    ##selectInput("pr_xtabgene",label=NULL, choices=NULL, multiple=FALSE),
+    ##br(), cellArgs=list(width='80px')
+)
+
+pr_xtabModule <- plotModule(
+    "pr_xtabplot", pr_xtabplotFUNC,
+    info.text = "The <strong>Proportions tab</strong> visualizes the interrelationships between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method.",
+    options = pr_xtab.opts,
+    pdf.width=6, pdf.height=8, res=110
+)
+output$pr_xtabplot <- pr_xtabModule$render
+output$pr_xtabplot_pdf <- pr_xtabModule$pdf
+
+fillCol(flex = c(NA,1), 
+        pr_xtabModule$buttons,
+        plotOutput("pr_xtabplot")
         )
 
 observe({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
-    xgenes <- ngs$genes[rownames(ngs$X),]$gene_name
-    genes <- sort(as.character(xgenes))
-    g1 <- grep("^CD4|^CD8",genes,value=TRUE)[1]
-    g2 <- grep("^CD79|^CD3[DEG]|^CD37",genes,value=TRUE)[1]
-    updateSelectInput(session, "pr_cytovar1", choices=genes, selected=g1)
-    updateSelectInput(session, "pr_cytovar2", choices=genes, selected=g2)
+    ##if(is.null(input$pr_xtaboptions)) return(NULL)
+    pheno0 <- grep("group|sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
+    kk <- selectSamplesFromSelectedLevels(ngs$Y, input$pr_samplefilter)
+    nphenolevel <- apply(ngs$samples[kk,pheno0],2,function(v) length(unique(v)))
+    pheno0 = pheno0[which(nphenolevel>1)]
+    genes <- sort(as.character(ngs$genes$gene_name))
+    pheno1 <- c("<cell type>",pheno0)
+    genes1 <- c("<none>",genes)
+    updateSelectInput(session, "pr_xtabvar", choices=pheno1)
+    updateSelectInput(session, "pr_xtabpheno", choices=pheno1)
+    updateSelectInput(session, "pr_xtabgene", choices=genes1)
 })
 
-output$pr_cytoplot <- renderPlot({
+```
+
+> **Proportion plot.** visualizes the interrelationships between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method.
+
+
+### CytoPlot
+
+```{r}
+
+##output$pr_cytoplot <- renderPlot({
+pr_cytoplotFUNC <- reactive({
     ##if(!input$tsne.all) return(NULL)
     require(RColorBrewer)
     ngs <- inputData()
@@ -988,93 +1005,38 @@ output$pr_cytoplot <- renderPlot({
     pgx.cytoPlot( ngs, gene1, gene2, samples=kk, cex=0.8,
                  col="grey60", cex.names=1)
     
-}, res=80)
-```
+})
 
+pr_cyto.opts = tagList(
+    selectInput("pr_cytovar1",label="x-axis:", choices=NULL, multiple=FALSE),
+    selectInput("pr_cytovar2",label="y-axis:", choices=NULL, multiple=FALSE)
+)
 
-```{r}
-pfGetClusterPositions <- reactive({
+pr_cytoModule <- plotModule(
+    "pr_cytoplot", pr_cytoplotFUNC,
+    info.text = "For each combination of gene pairs, the platform can generate a cytometry-like plot of samples under the Cytoplot tab. The aim of this feature is to observe the distribution of samples in relation to the selected gene pairs. For instance, when applied to single-cell sequencing data from immunological cells, it can mimic flow cytometry analysis and distinguish T helper cells from the other T cells by selecting the CD4 and CD8 gene combination.",
+    options = pr_cyto.opts,
+    pdf.width=6, pdf.height=8, res=80
+)
+output$pr_cytoplot <- pr_cytoModule$render
+output$pr_cytoplot_pdf <- pr_cytoModule$pdf
+fillCol(flex = c(NA, 1), 
+        pr_cytoModule$buttons,
+        plotOutput("pr_cytoplot", height = "100%")
+        )
+
+observe({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
-    
-    ##zx <- filtered_matrix1()
-    zx = ngs$X
-    kk <- selectSamplesFromSelectedLevels(ngs$Y, input$pr_samplefilter)
-    if(length(kk)==0) return(NULL)
-    
-    zx <- zx[,kk,drop=FALSE]
-    zx = head(zx[order(-apply(zx,1,sd)),],1000)
-    zx = t(scale(t(zx)))  ## scale??
-
-    if(FALSE && input$pr_group) {
-        grp = ngs$Y[colnames(zx),"group"]
-        zx = t(apply( zx, 1, function(x) tapply(x, grp, mean)))
-    }
-
-    pos = NULL
-    if(input$pr_clustmethod=="tsne") {
-        require(Rtsne)
-        tsne.dim = 3
-        ##do3d <- grepl("3D", as.character(input$pr_clustmethod))
-        do3d <- ("3D" %in% input$pca.options)
-        tsne.dim = c(2,3)[ 1 + 1*do3d]
-        force.compute = FALSE
-        ## force.compute = TRUE        
-        if(!force.compute && tsne.dim==2 && !is.null(ngs$tsne2d) ) {
-            pos <- ngs$tsne2d[colnames(zx),]
-        } else if(!force.compute && tsne.dim==3 && !is.null(ngs$tsne3d) ) {
-            pos <- ngs$tsne3d[colnames(zx),]
-        } else {
-            perplexity = max(min(30,ncol(zx)/4),1)
-            perplexity = min((ncol(zx)-1)/3, 30)
-            perplexity
-            pos <- Rtsne( t(zx), dim=tsne.dim, check_duplicated=FALSE,
-                         num_threads=100, ##Y_init=Y_init, 
-                         perplexity=perplexity )$Y
-        }
-    } else {
-        ##cat("pfGetClusterPositions:: computing PCA/SVD...\n")
-        require(irlba)
-        ##pos <- cmdscale(dist(t(zx)), k=3)
-        ##pos = svd(zx,nv=3)$v
-        pos = irlba(zx,nv=3)$v        
-    }
-    
-    pos = scale(pos) ## scale 
-    colnames(pos) = paste0("dim",1:ncol(pos))
-    rownames(pos) = colnames(zx)    
-
-    if(0) {
-        tt = factor(ngs$sample$tissue.type)
-        ct = factor(ngs$sample$cell.type)
-        jj = which(tt %in% c("HCC","nonHCC"))
-        jj = which(tt %in% c("Blood","nonHCC"))
-        fc = gx.limma( zx[,jj], as.character(tt[jj]), fdr=1)        
-        fc = gx.limma( zx[,], 1*(tt=="Blood"), fdr=1)
-        gg = head(rownames(fc),100)
-        ## gg = tail(rownames(fc),20)
-
-        require(Rtsne.multicore)
-        pos = svd(zx[gg,],nv=3)$v
-        ##pos = Rtsne.multicore( t(zx[gg,]) )$Y
-        par(mfrow=c(2,2))
-        scatterD3(pos[,1], pos[,2], col_var=tt, symbol_var=ct,
-                  point_size=150 )
-
-        
-    }
-
-    ##if(input$pca.gx=="<cluster>")
-    require(igraph)
-    dist = as.dist(dist(pos))
-    gr = graph_from_adjacency_matrix(
-        1.0/dist, diag=FALSE, mode="undirected")
-    clust <- cluster_louvain(gr)$membership
-
-    ##cat("pfGetClusterPositions:: done!\n")
-    return( list(pos=pos, clust=clust) )
+    xgenes <- ngs$genes[rownames(ngs$X),]$gene_name
+    genes <- sort(as.character(xgenes))
+    g1 <- grep("^CD4|^CD8",genes,value=TRUE)[1]
+    g2 <- grep("^CD79|^CD3[DEG]|^CD37",genes,value=TRUE)[1]
+    updateSelectInput(session, "pr_cytovar1", choices=genes, selected=g1)
+    updateSelectInput(session, "pr_cytovar2", choices=genes, selected=g2)
 })
 
 ```
 
+> **Cyto plot.** This plot shows the distribution of samples in relation to the expression of selected gene pairs. It mimics the scatter plots used for gating in flow cytometry analysis.
 

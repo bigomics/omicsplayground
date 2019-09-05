@@ -1,10 +1,12 @@
 body {
     // font-family: Arial;
     font-size: 14px;
+    font-weight: 300;    
 }
 
 .sidebar {
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 300;
 }
 
 .shiny-output-error-validation {
@@ -102,5 +104,34 @@ body {
   height: 100%;
   text-align: center;
   color: #FFFFFF;
+}
+
+.fa-gear {
+    color: #DDDDDD;
+}
+
+.btn-circle-xs, .btn-circle-xs:hover {
+    background: #FFFFFF;
+    color: #DDDDDD;
+    border: 0px;
+}
+
+
+.dropdown-menu {
+    background: #EFEEEE;
+    font-size: 0.9em;
+}
+
+.module-label {
+    color: #AAA;
+    font-size: 17px;
+    font-weight: 500;
+    padding-right:8px;
+}
+
+.chart-wrapper .chart-notes {
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 1.3em;
 }
 

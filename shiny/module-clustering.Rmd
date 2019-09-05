@@ -9,51 +9,64 @@ Inputs {.sidebar data-width=250}
 samples using unsupervised machine learning.
 
 ```{r}
-actionLink("hm_info", "Info", icon = icon("info-circle") )
-##actionLink("hm_info", "More details ...")
+##----------------------------------------------------------------------
+## More Info (pop up window)
+##----------------------------------------------------------------------
+tipify( actionLink("clustering_info", "Info", icon = icon("info-circle")),
+       "Show more information about this module.")
 
-hm_infotext =
-    "The <strong>Cluster Analysis Module</strong> performs unsupervised clustering analysis of the samples. The main output of this feature is twofold: i) It generates an interactive heatmap of samples and ii) It also provides a dimensionality reduction plot of samples obtained by PCA or tSNE algorithms.
+dropdown_level='<code>Level</code>'
+dropdown_features='<code>Features</code>'
+menu_options='<code>Options</code>'
+opt_filter='<code>Filter samples</code>'
+opt_top='<code>top</code>'
+opt_grouped='<code>grouped</code>'
+opt_custom_genelist='<code>Custom gene list</code>'
 
-<br><br>In the <strong>Heatmap tab</strong> hierarchical clustering can be performed on gene level or gene set level expression in which for the latter, for each gene set (or pathway), an average expression is computed from the gene expression data using summary methods such as GSVA and ssGSEA. During the heatmap generation, users have various options that they can select, such as splitting the samples by a phenotype class (e.g., tissue, cell type, or gender). In addition, users can specify the top N = {50, 500} features to be used in the heatmap for hierarchical clustering. The criteria to select the top features are: 1) sd - features with the highest standard deviation across all the samples, 2) biomarker - features that are overexpressed in each phenotype class compared to the rest, or by 3) pca - principal components.
+GSVA="<a href='https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-14-7'> GSVA</a>"
+ssGSEA="<a href='https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-14-7'> ssGSEA</a>"
 
-<br><br>For each feature cluster, the platform provides a functional annotation under <strong> annotate cluster tab</strong>  using more than 42 reference databases from the literature, including but not limited to well-known databases such as MSigDB, KEGG and GO.
 
-<br><br>The <strong>PCA/tSNE tab</strong> shows the similarity between samples in 2D space as well as in 3D space for visual analytics. Similarity is visualized as proximity of the points. Samples that are 'similar' will be placed close to each other. Groups of similar samples will form 'clusters of points'. Users can color the samples or give different shape to the samples by a phenotype class provided in the data. By changing the color/shape of the points you can examine if the clustering corresponds to certain phenotypes.
+clustering_infotext = paste0('The <strong>cluster analysis</strong> module performs unsupervised clustering analysis of the samples. The main output of this feature is twofold: i) It generates an interactive heatmap of samples and ii) It also provides a dimensionality reduction plot of samples obtained by PCA or tSNE algorithms. 
+<br><br> A clustering analysis can be performed on gene level or gene set level, in which users can specify it in the ',dropdown_level,' dropdown list. For the gene set level analysis, an average expression is computed for each gene set (or pathway) from the gene expression data using summary methods such as ',GSVA,' and ',ssGSEA,'. Users can also select a specific gene family or gene set collection in the ',dropdown_features,'dropdown menu for the analysis.
+<br><br> During the visual analysis, users can choose multiple options from the ',menu_options,'. They can filter out some samples in the ',opt_filter,', choose top <em>N</em>={50,500} features in the ',opt_top,' collapse the samples by clicking ',menu_grouped,', and insert a custom gene list in ',opt_custom_genelist,'.')
 
-<br><br>The <strong>Bi-plot</strong> tab shows a bi-plot for the first two principal PCA components, highlighting the main principal directions and its features.
-
-"
-
-observeEvent( input$hm_info, {
+observeEvent( input$clustering_info, {
     showModal(modalDialog(
-        title = HTML("<strong>Cluster Analysis Module</strong>"),
-        HTML(hm_infotext),
+        title = HTML("<strong>Clustering Module</strong>"),
+        HTML(clustering_infotext),
         easyClose = TRUE ))
 })
-
-##require(tippy)
-##tippy("Help/Info", tooltip=hm_infotext)
 ```
 
-<br>
-<br>
 
 ```{r}
 useShinyjs()
-selectInput("hm_level","Level:", choices=c("gene","geneset"))
-selectInput("hm_features","Features:", choices=NULL, multiple=FALSE)
+
+
+br(); br();br();
+        
+tipify( selectInput("hm_level","Level:", choices=c("gene","geneset")),
+        "Specify the level analysis: gene or geneset level.", placement="top")
+tipify( selectInput("hm_features","Features:", choices=NULL, multiple=FALSE),
+        "Select a family of features.", placement="top")
+
 
 br();br();
 ##actionLink("hm_options", "Show options ...")
-actionLink("hm_options", "Options", icon=icon("cog", lib = "glyphicon"))
+tipify( actionLink("hm_options", "Options", icon=icon("cog", lib = "glyphicon")),
+       "Toggle advanced options.", placement="top");br()
+
 br();br();
 conditionalPanel(
     "input.hm_options % 2 == 1",
     tagList(
-        selectInput("hm_samplefilter","Filter samples:", choices=NULL, multiple=TRUE),
-        radioButtons('hm_top','top:',c(50,500),inline=TRUE,selected=50),
-        checkboxInput('hm_group','grouped',FALSE)
+        tipify( selectInput("hm_samplefilter","Filter samples:", choices=NULL, multiple=TRUE),
+                "Filter unwanted samples out of the analysis.", placement="top"),
+        tipify( radioButtons('hm_top','top:',c(50,500),inline=TRUE,selected=50),
+                "Select the number of top features to be used in the analysis.", placement="top"),
+        tipify( checkboxInput('hm_group','grouped',FALSE),
+                "Group the samples by a predefined phenotype class.", placement="top")
     )
 )
 
@@ -63,8 +76,22 @@ if(PRO.VERSION) {
     conditionalPanel(
         "input.hm_options % 2 == 1",
         tagList(
-            myTextInput("hm_customlist","Custom gene list"), br(),
-            radioButtons('hm_gsetmatrix','Gene set matrix:', choices=c("meta"), inline=TRUE)
+            #myTextInput("hm_customlist","Custom gene list")
+            tipify( textAreaInput("hm_customlist", "Custom feature list:", value = NULL,
+                                  rows=3, placeholder="Paste your gene list"),
+                    "Paste a custom list to be used as features.", placement="bottom")
+        )
+    )
+}
+
+if(DEV.VERSION) {
+    br();
+    code.textInput
+    conditionalPanel(
+        "input.hm_options % 2 == 1",
+        tagList(
+            tipify( radioButtons('hm_gsetmatrix','Gene set matrix:', choices=c("meta"), inline=TRUE),
+                    "Specify the geneset matrix type to be used in the analysis.", placement="bottom")
         )
     )
 }
@@ -85,7 +112,7 @@ observe({
     sel <- "<none>"
     ##updateSelectInput(session, "hm_splitx", choices=c("<none>",split0), selected=sel)
     
-    if(PRO.VERSION && !is.null(ngs$gset.meta$matrices) ) {
+    if(DEV.VERSION && !is.null(ngs$gset.meta$matrices) ) {
         jj = which(!sapply(ngs$gset.meta$matrices,is.null))
         mat.names = names(ngs$gset.meta$matrices)[jj]
         updateRadioButtons(session, "hm_gsetmatrix", choices=mat.names, selected="meta", inline=TRUE)    
@@ -125,7 +152,7 @@ hm_filtered_matrix <- reactive({
         gsets = rownames(ngs$gsetX)
         gsets = unique(unlist(COLLECTIONS[input$hm_features]))
         zx = ngs$gsetX
-        if(PRO.VERSION && !is.null(ngs$gset.meta$matrices) ) {
+        if(DEV.VERSION && !is.null(ngs$gset.meta$matrices) ) {
             ##zx = ngs$gset.meta$matrices[["meta"]]
             jj = which(!sapply(ngs$gset.meta$matrices,is.null))
             mat.names = names(ngs$gset.meta$matrices)[jj]
@@ -255,21 +282,19 @@ Col {.tabset data-width=600}
 ### Heatmap {data-height=800}
 	
 ```{r}
+
+
+##----------------------------------------------------------------------
+##                     Info messsages for Plots
+##----------------------------------------------------------------------
+
+hm_splitmap_text = paste0('In the <strong>heatmap</strong> tab, a hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the ',dropdown_level,' dropdown list. 
+<br><br>During the heatmap generation, users have various options that they can select in the <code>Options</code>, such as splitting the samples by a phenotype class (e.g., tissue, cell type, or gender) in the <code>split by</code>. In addition, users can specify the top N = {50, 500} features to be used in the heatmap for hierarchical clustering. The criteria to select the top features are: 1) sd - features with the highest standard deviation across all the samples, 2) biomarker - features that are overexpressed in each phenotype class compared to the rest, or by 3) pca - principal components. The top feature selection is specified under the <code>top mode</code> section. For more convenient visualisation of heatmap coloring, users can also scale the row values or normalize them between 0 and 1 by clicking the <code>rowscale</code> and <code>softmax</code>, respectively.')
+
+
 require(plotly)
 require(scatterD3)
 require(tippy)
-fillCol(height = "100%", flex = c(NA, 1), 
-        ##fillRow( flex=c(1,1,1),
-        inputPanel(
-        ##flowLayout( 
-            selectInput("hm_splitx", "split by:", choices=NULL, width='80%'),
-            selectInput('hm_topmode','top mode',c("sd","biomarker","pca"), width='80%'),
-            checkboxGroupInput('hm_options2',NULL,choices=c('rowscale','softmax'),
-                               selected=c('rowscale','softmax'),inline=FALSE),
-            cellArgs=list(width='80px')
-        ),
-        plotOutput("hm_splitmap", height = "100%")
-        )
 
 observe({
     ngs <- inputData()
@@ -282,7 +307,8 @@ observe({
     updateSelectInput(session, "hm_splitx", choices=c("<none>",split0), selected=sel)
 })
 
-output$hm_splitmap <- renderPlot({
+hm_splitmapFUNC <- reactive({
+
     ##genes = families[[input$filter]]
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
@@ -371,28 +397,57 @@ output$hm_splitmap <- renderPlot({
                     main=main, nmax=-1)
     )
 
-}, res=90)
+})
+
+hm_splitmap_opts = tagList(
+    tipify( selectInput("hm_splitx", "split by:", choices=NULL, width='100%'),
+            "Split the samples by a predetermined phenotype class (e.g. tissue or cell type).", placement="right",options = list(container = "body")),
+    tipify( selectInput('hm_topmode','top mode',c("sd","biomarker","pca"), width='100%'),
+            "Specify the criteria for selecting features to be used in the heatmap clustering analysis.", placement="right",options = list(container = "body")),
+    # fillRow( flex=c(1,1),
+    #          selectInput("hm_splitx", "split by:", choices=NULL, width='100%'),
+    #          selectInput('hm_topmode','top mode',c("sd","biomarker","pca"), width='100%')),
+    tipify( checkboxGroupInput('hm_options2',NULL,choices=c('rowscale','softmax'),
+                               selected=c('rowscale','softmax'),inline=TRUE),
+            "Scale the row values or normalize them between (0, 1) for more convenient coloring of the heatmap.", placement="bottom")
+    
+)
+
+hm_splitmap_module <- plotModule(
+    "hm_splitmapplot", hm_splitmapFUNC,
+    info.text = hm_splitmap_text,
+    options = hm_splitmap_opts,
+    pdf.width=10, pdf.height=20,
+    title="Heatmap"
+)
+
+output$hm_splitmapplot     <- hm_splitmap_module$render
+output$hm_splitmapplot_pdf <- hm_splitmap_module$pdf
+
+fillCol(flex = c(NA,1), 
+        ##actionLink("hm_splitmapplot", label="",icon = icon("gear")),
+        hm_splitmap_module$button,
+        plotOutput("hm_splitmapplot", height = "100%", width = "100%")
+        )
+
 ```
+
+> A heatmap of samples obtained by the hierarchical clustering using the top features specified by the user.
 
 
 ### PCA/tSNE {data-height=800}
 
 ```{r warnings=FALSE, message=FALSE, fig.width=12, fig.height=8}
+
+PCA="<a href='https://www.ncbi.nlm.nih.gov/pubmed/19377034'> PCA</a>"
+tSNE="<a href='http://jmlr.org/papers/volume15/vandermaaten14a/vandermaaten14a.pdf'> tSNE</a>"
+
+hm_PCAplot_text = paste0(' The <b>PCA/tSNE</b> tab provides the plot obtained by the principal components analysis (',PCA,') or t-distributed stochastic embedding (',tSNE,') algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other. 
+<br><br>Users can customise the PCA/tSNE plot in the <code>Options</code>, including the <code>color</code> and <code>shape</code> of points using a phenotype class provided in the data, choose the <code>tsne</code> or <code>pca</code> output type, specify the <code>lable</code> of the points or display 2D and <code>3D</code> visualisation of the PCA/tSNE plot.')
+
+
 require(plotly)
 require(scatterD3)
-fillCol(height = "100%", flex = c(NA, 1), 
-        inputPanel(
-            selectInput("hmpca.colvar", "color:", choices=NULL, width='80%'),
-            selectInput("hmpca.shapevar", "shape:", choices=NULL, width='80%'),
-            ## selectInput("hmpca.text", "text:", choices=NULL, width='80%'),
-            ## selectInput("hmpca.line", "line:", choices=NULL, width='80%'),
-            br(),
-            radioButtons('hm_clustmethod',label=NULL,c("tsne","pca"),inline=TRUE),
-            checkboxGroupInput("hmpca.options", label=NULL, choices=c("label","3D"), inline=TRUE),
-            cellArgs=list(width='120px')
-        ),
-        plotlyOutput("hm_PCAplot", width = "80%", height = "80%")
-        )
 
 observe({
     ngs <- inputData()
@@ -408,14 +463,13 @@ observe({
     ##updateSelectInput(session, "hmpca.text", choices=var.types0, selected="group")
 })
 
-
 hm_GetClusterPositions <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
     ##zx <- hm_filtered_matrix()
     zx = ngs$X
     kk <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
-    zx <- zx[,kk,drop=FALSE]    
+    zx <- zx[,kk,drop=FALSE]
 
     ## apply feature filter
     gg = ngs$families[[input$hm_features]]
@@ -430,10 +484,10 @@ hm_GetClusterPositions <- reactive({
     if(input$hm_clustmethod=="tsne") {
         require(Rtsne)
         tsne.dim = 3
-        do3d <- ("3D" %in% input$hmpca.options)
+        do3d <- ("3D" %in% input$hmpca_options)
         tsne.dim = c(2,3)[ 1 + 1*do3d]
         force.compute = FALSE
-        ## force.compute = TRUE        
+        ## force.compute = TRUE
         if(!force.compute && tsne.dim==2 && !is.null(ngs$tsne2d) ) {
             cat("getClusterPositions:: 2D tSNE from object\n")
             pos <- ngs$tsne2d[colnames(zx),]
@@ -447,7 +501,7 @@ hm_GetClusterPositions <- reactive({
             perplexity = min((ncol(zx)-1)/3, 30)
             perplexity
             pos <- Rtsne( t(zx), dim=tsne.dim, check_duplicated=FALSE,
-                         num_threads=100, ##Y_init=Y_init, 
+                         num_threads=100, ##Y_init=Y_init,
                          perplexity=perplexity )$Y
         }
     } else {
@@ -456,12 +510,12 @@ hm_GetClusterPositions <- reactive({
         require(irlba)
         ##pos <- cmdscale(dist(t(zx)), k=3)
         ##pos = svd(zx,nv=3)$v
-        pos = irlba(zx,nv=3)$v        
+        pos = irlba(zx,nv=3)$v
     }
-    
-    pos = scale(pos) ## scale 
+
+    pos = scale(pos) ## scale
     colnames(pos) = paste0("dim",1:ncol(pos))
-    rownames(pos) = colnames(zx)    
+    rownames(pos) = colnames(zx)
 
     clust <- NULL
     if(FALSE) {
@@ -473,23 +527,24 @@ hm_GetClusterPositions <- reactive({
             1.0/dist, diag=FALSE, mode="undirected")
         clust <- cluster_louvain(gr)$membership
     }
-    
+
     ##cat("getClusterPositions:: done!\n")
     return( list(pos=pos, clust=clust) )
 })
 
-output$hm_PCAplot <- renderPlotly({
+
+hm_PCAplotFUNC <- reactive({
 
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
-    do3d = ("3D" %in% input$hmpca.options) 
+    do3d = ("3D" %in% input$hmpca_options)
 
     clust <- hm_GetClusterPositions()
     pos <- clust$pos
     sel <- rownames(pos)
-    df <- cbind(pos, ngs$Y[sel,])    
-    if(!is.null(clust$clust)) df[["<cluster>"]] <- clust$clust    
-        
+    df <- cbind(pos, ngs$Y[sel,])
+    if(!is.null(clust$clust)) df[["<cluster>"]] <- clust$clust
+
     colvar = shapevar = linevar = textvar = NULL
     if(input$hmpca.colvar %in% colnames(df)) colvar <- factor(df[,input$hmpca.colvar])
     if(input$hmpca.shapevar %in% colnames(df)) shapevar <- factor(df[,input$hmpca.shapevar])
@@ -497,7 +552,7 @@ output$hm_PCAplot <- renderPlotly({
     ##if(input$hmpca.text %in% colnames(df)) textvar = factor(df[,input$hmpca.text])
     mode = "markers"
     ann.text = rep(" ",nrow(df))
-    if(!do3d && "label" %in% input$hmpca.options) ann.text = rownames(df)
+    if(!do3d && "label" %in% input$hmpca_options) ann.text = rownames(df)
     if(!is.null(colvar)) {
         colvar = factor(colvar)
         textvar <- factor(df[,input$hmpca.colvar])
@@ -509,7 +564,7 @@ output$hm_PCAplot <- renderPlotly({
     require(plotly)
     tt.info <- paste('Sample:', rownames(df),'</br>Group:', df$group)
     cex1 = c(1.0,0.8,0.6)[1 + 1*(nrow(pos)>30) + 1*(nrow(pos)>200)]
-    
+
     if(do3d ) {
         ## 3D plot
         j0 = 1:nrow(df)
@@ -539,7 +594,7 @@ output$hm_PCAplot <- renderPlotly({
                                 text=tt.info[j1])
         }
         ## add cluster annotation labels
-        if(0 && length(unique(colvar))>1) { 
+        if(0 && length(unique(colvar))>1) {
             ## add cluster annotation labels
             grp.pos <- apply(pos,2,function(x) tapply(x,colvar,median))
             ##grp.pos <- matrix(grp.pos, ncol=3)
@@ -550,7 +605,7 @@ output$hm_PCAplot <- renderPlotly({
                                font=list(size=24*cex2, color='#555'),
                                showarrow = FALSE)
         }
-        
+
     } else {
         ## 2D plot
         j0 = 1:nrow(df)
@@ -582,7 +637,7 @@ output$hm_PCAplot <- renderPlotly({
         }
 
         ## add group/cluster annotation labels
-        if(!is.null(textvar) && length(unique(textvar))>1) { 
+        if(!is.null(textvar) && length(unique(textvar))>1) {
             grp.pos <- apply(pos,2,function(x) tapply(x,as.character(textvar),median))
             cex2 <- 1
             if(length(grp.pos)>20) cex2 <- 0.8
@@ -600,16 +655,52 @@ output$hm_PCAplot <- renderPlotly({
         } else {
             plt <- plt %>% layout(showlegend = FALSE)
         }
-        
-    }         
-    title = paste0("<b>PCA</b>  (",nrow(pos)," samples)") 
-    if(input$hm_clustmethod=="tsne") title = paste0("<b>tSNE</b>  (",nrow(pos)," samples)") 
+
+    }
+    title = paste0("<b>PCA</b>  (",nrow(pos)," samples)")
+    if(input$hm_clustmethod=="tsne") title = paste0("<b>tSNE</b>  (",nrow(pos)," samples)")
     ## plt <- plt %>% layout(title=title)
-    ## plt <- plt %>% config(displayModeBar = FALSE) 
+    ## plt <- plt %>% config(displayModeBar = FALSE)
     ##print(plt)
     return(plt)
 })
+
+
+hm_PCAplot_opts = tagList(
+    tipify( selectInput("hmpca.colvar", "color:", choices=NULL, width='100%'),
+            "Set the colors of the samples according to a given phenotype class.", placement="right", options = list(container = "body")),
+    tipify( selectInput("hmpca.shapevar", "shape:", choices=NULL, width='100%'),
+            "Set the shapes of the samples according to a given phenotype class.", placement="right", options = list(container = "body")),
+    ## selectInput("hmpca.text", "text:", choices=NULL, width='80%'),
+    ## selectInput("hmpca.line", "line:", choices=NULL, width='80%'),
+    br(),
+    tipify( radioButtons('hm_clustmethod',label=NULL,c("tsne","pca"),inline=TRUE),
+            "Choose the output of the tSNE or PCA to visualise.", placement="top"),
+    tipify( checkboxGroupInput('hmpca_options',NULL, choices=c('label','3D'), inline=TRUE),
+            "Display the labels of the samples in the plot. Select the 2D or 3D visualisation of the plot.", placement="bottom")
+)
+
+hm_PCAplot_module <- plotModule(
+    id="hm_PCAplot", func=hm_PCAplotFUNC,
+    plotlib = "plotly", info.text = hm_PCAplot_text,
+    options = hm_PCAplot_opts,
+    pdf.width=10, pdf.height=10,
+    title="PCA/tSNE plot"
+)
+
+output$hm_PCAplot     <- hm_PCAplot_module$render
+output$hm_PCAplot_pdf <- hm_PCAplot_module$pdf
+
+fillCol(flex = c(NA,1),
+        ##actionLink("hm_PCAplot", label="",icon = icon("gear")),
+        hm_PCAplot_module$button,
+        plotlyOutput("hm_PCAplot", height = "100%", width = "100%")
+        )
+
 ```
+
+> The PCA/tSNE plot of samples using the top features specified by the user.
+
 
 
 <!---------------------------------------------
@@ -761,16 +852,11 @@ Col {.tabset data-width=450}
 ### Annotate clusters
 
 ```{r warnings=FALSE, message=FALSE, fig.width=8, fig.height=4}
-fillCol(flex = c(NA,1.6,1), ## height="800px",
-        inputPanel( height="100px",
-                   selectInput("xann.level", "Reference level:",
-                               choices=c("gene","geneset","phenotype"),
-                               selected="geneset", width='80%'),
-            selectInput("xann.refset", "Reference set:", choices="", width='80%')
-            ),
-        plotOutput('clustannot_plots'),
-        dataTableOutput('clustannot_table')
-        )
+KEGG="<a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC102409/'> KEGG</a>"
+GO="<a href='http://geneontology.org/'> GO</a>"
+MSigDB="<a href='http://software.broadinstitute.org/gsea/msigdb'> GO</a>"
+
+clustannot_plots_text = paste0('The top features of the heatmap under the <code>Heatmap</code> section are then divided into five clusters based on their expression profile patterns. For each cluster, the platform provides a functional annotation under the <code>Annotate cluster</code> section by correlating more than 42 published reference databases, including but not limited to well-known databases such as ',MSigDB,', ',KEGG,' and ',GO,'. In the <code>Options</code>, users can specify the level and collection of references to be used in the annotation under the <code>Reference level</code> and <code>Reference set</code>, respectively.')
 
 observe({
     ngs <- inputData()    
@@ -859,7 +945,7 @@ clustannot_correlation <- reactive({
     return(rho)
 })
 
-output$clustannot_plots <- renderPlot({
+clustannot_plotsFUNC <- reactive({
     require(RColorBrewer)
     rho = clustannot_correlation()
     if(is.null(rho)) return(NULL)
@@ -891,9 +977,29 @@ output$clustannot_plots <- renderPlot({
         title(main=colnames(rho)[i], cex.main=1.3 )
         text(0, 1:length(x)-0.45, labels=names(x), cex=1.1, pos=4, adj=0)
     }            
-}, height=400, res=90)
+})
+
+clustannot_plots_opts = tagList(
+    tipify( selectInput("xann.level", "Reference level:",
+                        choices=c("gene","geneset","phenotype"), selected="geneset", width='80%'),
+            "Select the level of an anotation analysis.", placement="left", options = list(container = "body")),
+    tipify( selectInput("xann.refset", "Reference set:", choices="", width='80%'),
+            "Specify a reference set to be used in the annotation.", placement="left",options = list(container = "body"))
+)
+
+clustannot_plots_module <- plotModule(
+    id="clustannot_plots", func=clustannot_plotsFUNC,
+    plotlib = "base", info.text = clustannot_plots_text,
+    options = clustannot_plots_opts,
+    pdf.width=15, pdf.height=10, res=80,
+    title="Functional annotation of clusters"
+)
+
+output$clustannot_plots     <- clustannot_plots_module$render
+output$clustannot_plots_pdf <- clustannot_plots_module$pdf
+
     
-output$clustannot_table <- renderDataTable({
+clustannot_tableFUNC <- reactive({
     rho = clustannot_correlation()
     if(is.null(rho)) return(NULL)
     ##rownames(rho) = shortstring(rownames(rho),50)
@@ -908,7 +1014,7 @@ output$clustannot_table <- renderDataTable({
             extensions = c('Buttons','Scroller'),
             selection=list(mode='single', target='row', selected=c(1)),
             options=list(
-                dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
+                dom = 'lfrtip', buttons = c('copy','csv','pdf'),
                 ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
                 scrollX = TRUE, ##scrollY = TRUE,
                 scrollY = 200, scroller=TRUE, deferRender=TRUE
@@ -916,13 +1022,42 @@ output$clustannot_table <- renderDataTable({
         ) %>%
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
 })
+
+clustannot_table_info_text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the <code>Options</code>."
+
+clustannot_table_module <- tableModule(
+    id = "clustannot_table", func = clustannot_tableFUNC,
+    info.text = clustannot_table_info_text,
+    title="Annotation scores"
+)
+
+output$clustannot_table <- clustannot_table_module$render
+output$clustannot_table_csv <- clustannot_table_module$csv
+
+
+
+fillCol(flex = c(1.5,0.15,1),
+        
+        fillCol(flex = c(NA,1),
+                clustannot_plots_module$button,
+                plotOutput("clustannot_plots", height = "100%", width = "100%")),
+        br(),
+        fillCol(flex = c(NA,0.01, 1),
+                clustannot_table_module$button,
+                br(),
+                dataTableOutput("clustannot_table", height = "100%", width = "100%"))
+        )
+
 ```
+
+> A functional annotation plot for the clusters of the heatmap. Users can check more detailed annotation scores in the table below.
 
 
 ### Bi-plot {data-height=800}
 
 ```{r warnings=FALSE, message=FALSE, fig.width=6, fig.height=6}
-renderPlot({
+clustering_biplotFUNC <- reactive({
+    
     require(RColorBrewer)
     require(irlba)
     
@@ -953,9 +1088,28 @@ renderPlot({
            ##xlabs = c("PC1 (gene)","PC2 (gene)"),
            ##ylabs = c("PC1 (sample)","PC2 (sample)"),
            xlab = "PC1", ylab = "PC2")
-    title("PCA biplot",cex=1.1, line=4)
-}, res=85)
+    ##title("PCA biplot",cex=1.1, line=4)
+})
+ 
+clustering_biplot_text="The <strong>bi-plot</strong> tab shows a bi-plot for the first two principal PCA components, highlighting the main principal directions and its features."
+ 
+clustering_biplot_module <- plotModule(
+    id="clustering_biplot", func=clustering_biplotFUNC,
+    plotlib = "base", info.text = clustering_biplot_text,
+    pdf.width=10, pdf.height=10, res=75, title="PCA bi-plot"
+)
+
+output$clustering_biplot     <- clustering_biplot_module$render
+output$clustering_biplot_pdf <- clustering_biplot_module$pdf
+
+fillCol(flex = c(NA,1),
+        clustering_biplot_module$button,
+        plotOutput("clustering_biplot", height = "100%", width = "100%")
+)
+
 ```
+
+> A bi-plot for the first two principal PCA components to highlight the main principal directions and its features.
 
 `r if(!PRO.VERSION) {"<!---------------------------------"}`
 
@@ -964,7 +1118,8 @@ renderPlot({
 
 ```{r warnings=FALSE, message=FALSE, fig.width=6, fig.height=6}
 require(plotly)
-renderPlot({
+
+clustering_feature_scoreFUNC <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
     features=X=NULL
@@ -1032,13 +1187,30 @@ renderPlot({
                    xlab="cumulative score" )
     ##text( bpos, -0.05, labels=rownames(S), cex=0.8, 
     ##     adj=1, srt=60, xpd=TRUE)
-    title("feature-set score", cex=1.3)
+    ##title("feature-set score", cex=1.3)
     cc1 = grey.colors(ncol(Y))
     legend("bottomright",legend=colnames(Y), fill=cc1,
            cex=0.9, y.intersp=0.85)
     
-}, res=80, height=800)
+})
+
+clustering_feature_score_module <- plotModule(
+    id="clustering_feature_score", func=clustering_feature_scoreFUNC,
+    plotlib = "base", info.text = "A feature score table",
+    pdf.width=6, pdf.height=10, res=75, title="Feature-set score"
+)
+
+output$clustering_feature_score     <- clustering_feature_score_module$render
+output$clustering_feature_score_pdf <- clustering_feature_score_module$pdf
+
+fillCol(flex = c(NA,1),
+        clustering_feature_score_module$button,
+        plotOutput("clustering_feature_score", height = "100%", width = "100%")
+)
+
+
 ```
 
+> A feature score table.
 
 `r if(!PRO.VERSION) {"-------------------------------------->"}`
