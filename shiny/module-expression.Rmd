@@ -9,8 +9,6 @@ two conditions. Determine which genes are significantly downregulated
 or overexpressed in one of the groups.
 
 ```{r}
-actionLink("hm_info", "Info", icon = icon("info-circle") )
-##actionLink("gx_info", "More details ...")
 
 gx_infotext =
     "The Differential Expression (DE) analysis module compares expression between two conditions (i.e. tumor versus control), which is one of the fundamental analysis in the transcriptomics data analytics workflow. For each comparison of two conditions (also called 'contrast'), the analysis identifies which genes are significantly downregulated or overexpressed in one of the groups.
@@ -21,7 +19,7 @@ gx_infotext =
 
 <br><br>Another important feature of the platform is that it displays volcano plots for all comparison simultaneously under <strong>Volcano (all)</strong> tab. This provides users an overview of the statistics of all comparisons. By comparing the volcano plots, one can immediately see which comparison is statistically weak or strong.
 
-<br><br>The <strong>Table</strong> tab on the bottom shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, t-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results. For a selected comparison, the results of the selected methods are combined and reported under the table, where 'meta.q' for a gene represents the worst q value among the three methods and the number of stars for a gene indicate how many methods identified significant q values (q < 0.05). The table is interactive (scrollable, clickable); users can sort genes by logFC, meta.q, or average expression in either conditions. By clicking on a gene, it is possible to see which genesets contain that gene from the geneset table located on the right , and check the differential expression status in other comparisons from the plots section.
+<br><br>The <strong>Table</strong> tab on the bottom shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, t-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results. For a selected comparison, the results of the selected methods are combined and reported under the table, where 'meta.q' for a gene represents the highest q value among the methods and the number of stars for a gene indicate how many methods identified significant q values (q < 0.05). The table is interactive (scrollable, clickable); users can sort genes by logFC, meta.q, or average expression in either conditions. By clicking on a gene, it is possible to see which genesets contain that gene from the geneset table located on the right , and check the differential expression status in other comparisons from the plots section.
 
 <br><br>The <strong>Foldchange (all)</strong> tab on the bottom shows
 
@@ -29,15 +27,6 @@ gx_infotext =
 
 "
 
-observeEvent( input$gx_info, {
-    showModal(modalDialog(
-        title = HTML("<strong>Differential Expression Analysis</strong>"),
-        HTML(gx_infotext),
-        easyClose = TRUE ))
-})
-
-##require(tippy)
-##tippy("Help/Info", tooltip=hm_infotext)
 ```
 
 <br><br>
@@ -46,41 +35,50 @@ observeEvent( input$gx_info, {
 ##======================================================================
 ## Left-side main options
 ##======================================================================
-selectizeInput("gx_contrast", "Contrast:", choices=NULL)
-selectInput("gx_features","Gene family:", choices=NULL, multiple=FALSE)
+tipify( selectizeInput("gx_contrast", "Contrast:", choices=NULL),
+        "Select a contrast of interest for the analysis.", placement="top")
+tipify( selectInput("gx_features","Gene family:", choices=NULL, multiple=FALSE),
+        "Choose a specific gene family for the analysis.", placement="top")
+
 FDR.VALUES = c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
 fillRow( flex=c(1,1),
-        selectInput("gx_fdr","FDR", choices=FDR.VALUES, selected=0.2),
-        selectInput("gx_lfc","logFC threshold", choices=c(0,0.2,0.5,1,2,5), selected=0.5)
+         tipify( selectInput("gx_fdr","FDR", choices=FDR.VALUES, selected=0.2),
+                 "Set the false discovery rate (FDR) threshold.", placement="top"),
+         tipify( selectInput("gx_lfc","logFC threshold", choices=c(0,0.2,0.5,1,2,5), selected=0.5),
+                 "Set the logarithmic fold change (logFC) threshold.", placement="top")
         )
 
 
 br();br();br();br();br();br();
 ##actionLink("gx_options", "Show options ...")
-actionLink("gx_options", "Options", icon=icon("cog", lib = "glyphicon"));br()
-br();br();
-conditionalPanel(
-    ##"input.gx_advanced",
-    "input.gx_options % 2 == 1",
-    tagList(
-        checkboxInput('gx_top10','top 10 (table)',FALSE),
-        checkboxInput('gx_logscale','log scale (top genes)',TRUE),
-        checkboxInput('gx_ungroup','ungroup (top genes)',FALSE)
-    )
-)
+tipify( actionLink("gx_options", "Options", icon=icon("cog", lib = "glyphicon")),
+       "Toggle advanced options.", placement="top")
+
+# br();br();br();
+# conditionalPanel(
+#     ##"input.gx_advanced",
+#     "input.gx_options % 2 == 1",
+#     tagList(
+#         tipify( checkboxInput('gx_top10','top 10 (table)',FALSE),
+#                 "Display only top 10 differntially (positively and negatively) expressed genes under the <b>Table</b> section.", placement="bottom")
+#         ##checkboxInput('gx_logscale','log scale (top genes)',TRUE),
+#         ##checkboxInput('gx_ungroup','ungroup (top genes)',FALSE)
+#     )
+# )
+
+gx_testmethod_text = "Select a method for the statistical test. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results."
 
 br();br();br();
 GX.DEFAULTTEST="trend.limma"
 GX.DEFAULTTEST=c("trend.limma","edger.qlf","deseq2.wald","edger.lrt")
 if(PRO.VERSION) {
     conditionalPanel(
-        "input.gs_advanced % 2 == 1",
-        tagList(
-            checkboxGroupInput('gx_testmethod','Test methods:', choices=NULL, inline=TRUE)
+        "input.gx_options % 2 == 1",
+        tagList( tipify( checkboxGroupInput('gx_testmethod','Statistical methods:', choices=NULL, inline=TRUE),
+                         gx_testmethod_text, placement="right", options = list(container = "body"))
         )
     )
 }
-
 
 ## update choices upon change of data set 
 observe({
@@ -221,12 +219,14 @@ sigDiffExprTable <- reactive({
     lfc = as.numeric(input$gx_lfc)
     fx  = as.numeric(res[,fx.col])
     names(fx) = rownames(res)
+    print("abs problem 1")
     res = res[which(abs(fx) >= lfc),,drop=FALSE]
 
     if(nrow(res)==0) {
         validate(need(nrow(res) > 0, "warning. no genes passed current filters."))
         return(NULL)
     }
+    print("abs problem 2")
     res = res[order(-abs(res[,fx.col])),]
 
     ## just show top 10
@@ -252,20 +252,24 @@ Row {.tabset data-height=400}
 ### Plots 
 
 ```{r message=FALSE, warning=FALSE}
-fillRow( flex = c(1,1,1,1), height = 370,
-    ##scatterD3Output('expr_volcano1'),
-    ##scatterD3Output('expr_maplot')
-    plotOutput('expr_volcano1'),
-    plotOutput('expr_maplot'),
-    plotOutput('expr_topgenesbarplot'),
-    plotOutput('expr_topfoldchange')    
-    ##plotOutput('expr_boxplot')
-)
 
-##output$expr_volcano1 <- renderScatterD3({
-output$expr_volcano1 <- renderPlot({
+##----------------------------------------------------------------------
+##                     Info messsages
+##----------------------------------------------------------------------
+
+expr_plots_volcano_text = "A volcano plot for the selected comparison under the <code>Contrast</code> section."
+expr_plots_maplot_text = "An application of a Bland-Altman (MA) plot for the selected comparison under the <code>Contrast</code> section."
+expr_plots_topgenesbarplot_text = "The top <em>N</em>={12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> section."
+expr_plots_topfoldchange_text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression table under the <code>Table</code> section."
+
+
+##----------------------------------------------------------------------
+##                     
+##----------------------------------------------------------------------
+
+expr_plots_volcanoFUNC <- reactive({
+    
     comp1=1;fdr=0.10
-
     comp1 = input$gx_contrast
     if(length(comp1)==0) return(NULL)
     if(is.null(input$gx_features)) return(NULL)
@@ -291,10 +295,11 @@ output$expr_volcano1 <- renderPlot({
     qval = pmax(qval, 1e-100)
     fx = res[,grep("logFC|meta.fx|fc",colnames(res))[1]]
     sig.genes = fc.genes[which(qval <= fdr & abs(fx) > lfc )]
-    sel.genes = intersect(sig.genes, sel.genes)    
+    sel.genes = intersect(sig.genes, sel.genes)
     xlim = c(-1,1)*max(abs(fx),na.rm=TRUE)
     ylim = c(0, max(12, 1.1*max(-log10(qval),na.rm=TRUE)))
     par(mfrow=c(1,1), mar=c(4,3,2,1.5), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
+    par(mfrow=c(1,1), mar=c(6,3,2,1.5), mgp=c(2,0.8,0), oma=c(0,0,0.5,0))
     gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.genes,
                       render="canvas", n=5000, nlab=10, 
                       xlim=xlim, ylim=ylim, ## hi.col="#222222",
@@ -302,13 +307,25 @@ output$expr_volcano1 <- renderPlot({
                       cex=0.9, lab.cex=1.4, cex.main=1.0,
                       xlab="effect size (log2.FC)",
                       ylab="significance (log10.q)",
-                      highlight=sel.genes,
-                      main="Volcano plot")
+                      ## main="Volcano plot",
+                      highlight=sel.genes )
 
-}, res=80)
 
-##output$expr_maplot <- renderScatterD3({
-output$expr_maplot <- renderPlot({
+})
+
+
+expr_plots_volcano_module <- plotModule(
+    id="expr_plots_volcano", func=expr_plots_volcanoFUNC,
+    info.text = expr_plots_volcano_text, label="a",
+    title = "Volcano plot",
+    pdf.width=10, pdf.height=10, res=75
+)
+
+output$expr_plots_volcano     <- expr_plots_volcano_module$render
+output$expr_plots_volcano_pdf <- expr_plots_volcano_module$pdf
+
+
+expr_plots_maplotFUNC <- reactive({
     comp1 = input$gx_contrast
     if(length(comp1)==0) return(NULL)
 
@@ -340,6 +357,7 @@ output$expr_maplot <- renderPlot({
     ma = rowMeans( ngs$X[rownames(res),], na.rm=TRUE)
 
     par(mfrow=c(1,1), mar=c(4,3,2,1.5), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
+    par(mfrow=c(1,1), mar=c(6,3,2,1.5), mgp=c(2,0.8,0), oma=c(0,0,0.5,0))
     gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.genes, lfc=lfc,
                       render="canvas", n=5000, nlab=10, 
                       xlim=xlim, ylim=c(0,15),
@@ -347,12 +365,23 @@ output$expr_maplot <- renderPlot({
                       ylab="effect size (log2.FC)",
                       ma_plot=TRUE, ma = ma, ## hi.col="#222222",
                       use.fdr=TRUE, p.sig=fdr, ##main=comp1,
-                      main="MA plot",
+                      ## main="MA plot",
                       cex=0.9, lab.cex=1.4, cex.main=1.0,
                       highlight=sel.genes)
-}, res=80)
+})
 
-output$expr_topgenesbarplot <- renderPlot({
+expr_plots_maplot_module <- plotModule(
+    id="expr_plots_maplot", func=expr_plots_maplotFUNC,
+    info.text = expr_plots_maplot_text, label="b",
+    title = "MA plot",
+    pdf.width=10, pdf.height=10, res=75
+)
+
+output$expr_plots_maplot     <- expr_plots_maplot_module$render
+output$expr_plots_maplot_pdf <- expr_plots_maplot_module$pdf
+
+
+expr_plots_topgenesbarplotFUNC <- reactive({
     require(RColorBrewer)
     ngs = inputData()
     if(is.null(ngs)) return(NULL)
@@ -361,7 +390,7 @@ output$expr_topgenesbarplot <- renderPlot({
     
     ## get table
     ##sel.row=1;pp=rownames(ngs$X)[1]
-    ##sel.row = input$gx_genetable_rows_selected
+    ##sel.row = input$expr_gx_genetable_rows_selected
     
     res = sigDiffExprTable()
     if(is.null(res)) return(NULL)
@@ -378,7 +407,7 @@ output$expr_topgenesbarplot <- renderPlot({
     
     ii <- order(fc.top)
     par(mfrow=c(1,1), mar=c(4,4,2,2)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
-    par(mfrow=c(1,1), mar=c(4,3,2,1), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
+    par(mfrow=c(1,1), mar=c(6,3,2,1), mgp=c(2,0.8,0), oma=c(0,0,0.5,0))
     barplot(fc.top[ii], las=3, cex.names=0.8, ylab="fold change",
             col=klr[ii], ylim=c(-1.1,1.2)*max(abs(fc.top),na.rm=TRUE) )
 
@@ -386,18 +415,30 @@ output$expr_topgenesbarplot <- renderPlot({
     tt <- c( paste("up in",groups[1]), paste("up in",groups[2]) )
     ##tt <- c( paste("up in",groups[1]), paste("down in",groups[1]) )
     legend("topleft", legend=tt, fill=klr.pal,cex=0.9, y.intersp=0.85, bty="n")
-    title("top DE genes",cex.main=1)
+    ##title("top DE genes",cex.main=1)
     
-}, res=80)
+})
 
-output$expr_topfoldchange <- renderPlot({
+expr_plots_topgenesbarplot_module <- plotModule(
+    id="expr_plots_topgenesbarplot", func=expr_plots_topgenesbarplotFUNC,
+    info.text = expr_plots_topgenesbarplot_text, label="c",
+    title = "top DE genes",
+    pdf.width=10, pdf.height=10, res=75
+)
+
+output$expr_plots_topgenesbarplot     <- expr_plots_topgenesbarplot_module$render
+output$expr_plots_topgenesbarplot_pdf <- expr_plots_topgenesbarplot_module$pdf
+
+
+
+expr_plots_topfoldchangeFUNC <- reactive({
     require(RColorBrewer)
     ngs = inputData()
     if(is.null(ngs)) return(NULL)
     
     ## get table
     ##sel=1;pp=rownames(ngs$X)[1]
-    sel = input$gx_genetable_rows_selected
+    sel = input$expr_gx_genetable_rows_selected
     if(is.null(sel)) return(NULL)    
 
     res = sigDiffExprTable()
@@ -421,30 +462,43 @@ output$expr_topfoldchange <- renderPlot({
     klr <- klr.pal[1 + 1*(sign(fc.top)>0)]
     
     par(mfrow=c(1,1), mar=c(4,4,2,2)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
-    par(mfrow=c(1,1), mar=c(8,3,2,1), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
+    par(mfrow=c(1,1), mar=c(8,3,3,1), mgp=c(2,0.8,0), oma=c(1,0,0,0))
     nch <- max(nchar(names(fc.top)))
     m1 <- ifelse(nch > 12, 15, 10)
     m1 <- ifelse(nch > 30, 20, m1)
 
-    par( mar=c(4,m1,2,0.5) )
+    #par( mar=c(4,m1,2,0.5) )
+    par( mar=c(4,m1-0.5,2,1) )
     cex1 <- 1.0
     nn <- sum(!is.na(fc.top))
     if(nn>15) cex1 <- 0.92
     barplot(fc.top, col=klr, horiz=TRUE, las=1,
             xlim=c(-1,1)*max(abs(fc.top),na.rm=TRUE),
             cex.names=cex1, xlab="fold change (log2)")
-    title(gene, cex.main=1)
+    title(gene, cex.main=1, line=-1)
     
-}, res=75)
+})
 
-output$expr_boxplot <- renderPlot({
+expr_plots_topfoldchange_module <- plotModule(
+    id="expr_plots_topfoldchange", func=expr_plots_topfoldchangeFUNC,
+    info.text = expr_plots_topfoldchange_text,
+    title = "Gene in contrasts", label = "d",
+    pdf.width=10, pdf.height=10, res=75
+)
+
+output$expr_plots_topfoldchange     <- expr_plots_topfoldchange_module$render
+output$expr_plots_topfoldchange_pdf <- expr_plots_topfoldchange_module$pdf
+
+
+
+expr_plots_boxplotFUNC <- reactive({
     require(RColorBrewer)
     ngs = inputData()
     if(is.null(ngs)) return(NULL)
     
     ## get table
     ##sel=1;pp=rownames(ngs$X)[1]
-    sel = input$gx_genetable_rows_selected
+    sel = input$expr_gx_genetable_rows_selected
     if(is.null(sel)) return(NULL)    
 
     res = sigDiffExprTable()
@@ -466,14 +520,52 @@ output$expr_boxplot <- renderPlot({
                            logscale=logscale, srt=srt)
 
     
-}, res=80)
+})
+
+expr_plots_boxplot_module <- plotModule(
+    id="expr_plots_boxplot", func=expr_plots_boxplotFUNC,
+    info.text = "This is an example", pdf.width=10, pdf.height=10, res=75
+)
+
+output$expr_plots_boxplot     <- expr_plots_boxplot_module$render
+output$expr_plots_boxplot_pdf <- expr_plots_boxplot_module$pdf
+
+
+
+fillRow( flex = c(1,1,1,1), #height = 370,
+
+         fillCol(flex = c(NA,1),
+                 expr_plots_volcano_module$button,
+                 plotOutput("expr_plots_volcano", height = "100%", width = "100%")),
+         
+         fillCol(flex = c(NA,1),
+                 expr_plots_maplot_module$button,
+                 plotOutput("expr_plots_maplot", height = "100%", width = "100%")),
+         
+         fillCol(flex = c(NA,1),
+                 expr_plots_topgenesbarplot_module$button,
+                 plotOutput("expr_plots_topgenesbarplot", height = "100%", width = "100%")),
+         
+         fillCol(flex = c(NA,1),
+                 expr_plots_topfoldchange_module$button,
+                 plotOutput("expr_plots_topfoldchange", height = "100%", width = "100%"))
+         ##plotOutput('expr_boxplot')
+)
 
 ```    
+
+> **Plots** associated with the selected comparison in the `Contrasts` section. 
+> **(a)** A volcano plot.
+> **(b)** An application of a Bland-Altman (MA) plot.
+> **(c)** The top DEGs barplot.
+> **(d)** The fold change summary barplot across all contrasts.
+
 
 ### Top genes
 
 ```{r message=FALSE, warning=FALSE}
-renderPlot({
+
+expr_topgenesFUNC <- reactive({
 
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
@@ -541,18 +633,42 @@ renderPlot({
         ##legend("topright", paste("q=",qv1), bty="n",cex=1)
     }
     
-}, res=100)
+})
+
+expr_topgenes_opts = tagList(
+    tipify( checkboxInput('gx_logscale','log scale',TRUE),
+            "Logarithmic scale the counts (abundance levels).", placement="top", options = list(container = "body")),
+    tipify( checkboxInput('gx_ungroup','ungroup',FALSE),
+            "Ungroup the samples", placement="bottom")
+)
+
+expr_topgenes_text = "The <strong>top genes</strong> section shows the average expression plots across the samples for the top 10 differentially (both positively and negatively) expressed genes for the selected comparison in the <code>Contrast</code> section."
+
+expr_topgenes_module <- plotModule(
+    id="expr_topgenes", func=expr_topgenesFUNC, options=expr_topgenes_opts,
+    info.text = expr_topgenes_text, pdf.width=22, pdf.height=5, res=95,
+    title="Expression barplot of top 10 DE genes"
+)
+
+output$expr_topgenes     <- expr_topgenes_module$render
+output$expr_topgenes_pdf <- expr_topgenes_module$pdf
+
+fillCol(flex = c(NA,1),
+                 expr_topgenes_module$button,
+                 plotOutput("expr_topgenes", height = "100%", width = "100%"))
+
 ```   
+
+> Expression barplot of the the top 10 differentially (both positively and negatively) expressed genes for the selected comparison.
 
 
 ### Volcano (all)
 	
 ```{r message=FALSE, warning=FALSE, fig.width=12, fig.height=12}
 graphics.off()
-renderPlot({
-##rmarkdown::render_delayed({
-        
-    ##comp = names(all.limma)
+
+expr_volcano_allFUNC <- reactive({
+
     ngs = inputData()
     if( is.null(ngs)) return(NULL)
     
@@ -630,7 +746,26 @@ renderPlot({
     })  ## progress
 
 })
+
+expr_volcano_all_text = "Under the <strong>Volcano (all)</strong> tab, the platform displays volcano plots for all contrasts simultaneously. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
+
+expr_volcano_all_module <- plotModule(
+    id="expr_volcano_all", func=expr_volcano_allFUNC,
+    info.text = expr_volcano_all_text, pdf.width=22, pdf.height=8, res=75,
+    title="Volcano plots for all contrasts"
+)
+
+output$expr_volcano_all     <- expr_volcano_all_module$render
+output$expr_volcano_all_pdf <- expr_volcano_all_module$pdf
+
+fillCol(flex = c(NA,1),
+                 expr_volcano_all_module$button,
+                 plotOutput("expr_volcano_all", height = "100%", width = "100%"))
+
 ```
+
+> Simultaneous visualisation of volcano plots for all contrasts.
+
 
 `r if(!PRO.VERSION) {"<!---------------------------------------------"}`
 
@@ -638,8 +773,8 @@ renderPlot({
 ### Volcano (methods)
 	
 ```{r message=FALSE, warning=FALSE, fig.width=12, fig.height=12}
-##renderScatterD3({
-renderPlot({
+
+expr_volcano_methodsFUNC <- reactive({
     comp = input$gx_contrast
     if(is.null(comp)) return(NULL)
     ngs = inputData()
@@ -695,7 +830,26 @@ renderPlot({
     }
 
 })
+
+expr_volcano_methods_text = "Under the <strong>Volcano (methods)</strong> tab, the platform displays the volcano plots of multiple methods for the selected comparison in the <code>Contrast</code> section. This provides users an overview of the statistics of all methods at the same time."
+
+expr_volcano_methods_module <- plotModule(
+    id="expr_volcano_methods", func=expr_volcano_methodsFUNC,
+    info.text = expr_volcano_methods_text, pdf.width=22, pdf.height=8, res=75,
+    title="Volcano plots for all methods"
+)
+
+output$expr_volcano_methods     <- expr_volcano_methods_module$render
+output$expr_volcano_methods_pdf <- expr_volcano_methods_module$pdf
+
+fillCol(flex = c(NA,1),
+                 expr_volcano_methods_module$button,
+                 plotOutput("expr_volcano_methods", height = "100%", width = "100%"))
+
 ```
+
+> Simultaneous visualisation of volcano plots provided by multiple methods for the selected contrast.
+
 
 `r if(!PRO.VERSION) {"------------------------------------------->"}`
 
@@ -706,12 +860,8 @@ Row {.tabset data-height=400}
 ### Table
 
 ```{r echo=FALSE, warning=FALSE, fig.height=5, fig.width=8}
-fillRow(height = 600, flex = c(2,0.1,1), 
-        dataTableOutput('gx_genetable'), br(),
-        dataTableOutput('gx_gsettable')
-        )
 
-output$gx_genetable <- renderDataTable({
+expr_gx_genetableFUNC <- reactive({
     res <- sigDiffExprTable()
     if(is.null(res) || nrow(res)==0) return(NULL)
     
@@ -736,7 +886,7 @@ output$gx_genetable <- renderDataTable({
                   extensions = c('Buttons','Scroller'),
                   selection=list(mode='single', target='row', selected=1),
                   options=list(
-                      dom = 'Blfrtip',
+                      dom = 'lfrtip',
                       pageLength = 400,
                       buttons = list('copy','csv',
                                      list(extend='pdf',
@@ -754,8 +904,21 @@ output$gx_genetable <- renderDataTable({
                             backgroundSize = '98% 88%',
                             backgroundRepeat = 'no-repeat',
                             backgroundPosition = 'center')
+#}, server=FALSE)
+})
 
-}, server=FALSE)
+expr_gx_genetable_text = "The table <strong>I</strong> shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, <a href='https://en.wikipedia.org/wiki/Student%27s_t-test'>t-test</a> (standard, Welch), <a href='https://www.ncbi.nlm.nih.gov/pubmed/25605792'> limma</a> (no trend, trend, voom), <a href='https://www.ncbi.nlm.nih.gov/pubmed/19910308'> edgeR</a> (QLF, LRT), and <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4302049'> DESeq2</a> (Wald, LRT), and merge the results. For a selected comparison under the <code>Contrast</code> section, the results of the selected methods are combined and reported under the table, where <code>meta.q</code> for a gene represents the highest <code>q</code> value among the methods and the number of stars for a gene indicate how many methods identified significant <code>q</code> values (<code>q < 0.05</code>). The table is interactive (scrollable, clickable); users can sort genes by <code>logFC</code>, <code>meta.q</code>, or average expression in either conditions."
+
+expr_gx_genetable_module <- tableModule(
+    id="expr_gx_genetable", func=expr_gx_genetableFUNC,
+    info.text = expr_gx_genetable_text, label="I", info.text.width="450px",
+    options = tipify( checkboxInput('gx_top10','top 10 genes',FALSE),
+    "Display only top 10 differntially (positively and negatively) expressed genes under the <b>Table</b> section.", 
+    placement="top", options = list(container = "body")),
+    title="Differential expression"
+)
+
+output$expr_gx_genetable <- expr_gx_genetable_module$render
 
 gx_related_genesets <- reactive({
     ngs <- inputData()
@@ -766,7 +929,7 @@ gx_related_genesets <- reactive({
         
     ## get table
     sel.row=1;
-    sel.row = input$gx_genetable_rows_selected
+    sel.row = input$expr_gx_genetable_rows_selected
     if(is.null(sel.row)) return(NULL)
     gene0 <- rownames(res)[sel.row]
     gene1 <- sub(".*:","",gene0)
@@ -785,7 +948,7 @@ gx_related_genesets <- reactive({
     return(df)
 })
 
-output$gx_gsettable <- DT::renderDataTable({
+expr_gx_gsettableFUNC <- reactive({
     df <- gx_related_genesets()        
     if(is.null(df)) return(NULL)
     DT::datatable(df,
@@ -793,7 +956,7 @@ output$gx_gsettable <- DT::renderDataTable({
                   rownames=FALSE,
                   extensions = c('Buttons','Scroller'),
                   options=list(
-                      dom = 'Blfrtip', 
+                      dom = 'lfrtip', 
                       buttons = list('copy','csv',
                                      list(extend='pdf', orientation='landscape', pageSize="A3",
                                           filename="gsea-genes", title="")),
@@ -805,18 +968,45 @@ output$gx_gsettable <- DT::renderDataTable({
         ##formatSignif(1:ncol(df),4) %>%
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
             DT::formatStyle("fx", background = color_from_middle( df$fx, 'lightblue', '#f5aeae'))
-}, server=FALSE)
+#}, server=FALSE)
+})
+
+expr_gx_gsettable_text = "By clicking on a gene in the table <code>I</code>, it is possible to see which genesets contain that gene in this table, and check the differential expression status in other comparisons from the <code>Gene in contrasts</code> plot under the <code>Plots</code> section."
+
+expr_gx_gsettable_module <- tableModule(
+    id="expr_gx_gsettable", func=expr_gx_gsettableFUNC,
+    info.text = expr_gx_gsettable_text, label="II",
+    title="Gene sets"
+    ## server=FALSE
+)
+
+output$expr_gx_gsettable <- expr_gx_gsettable_module$render
+
+
+fillRow(height = 600, flex = c(2,0.1,1), 
+        
+        fillCol(flex = c(NA,0.01, 1),
+                expr_gx_genetable_module$button,
+                br(),
+                dataTableOutput("expr_gx_genetable", height = "100%", width = "100%")),
+        br(),
+        fillCol(flex = c(NA,0.01, 1),
+                expr_gx_gsettable_module$button,
+                br(),
+                dataTableOutput("expr_gx_gsettable", height = "100%", width = "100%"))        
+        )
 
 ```
+
+> **Tables**. **(I)** Table I reports the differential expression analysis of genes. **(II)** Table II displays the list of gene sets and further statistics regarding a gene which is selected in Table I.
+
 
 ### Foldchange (all)
 
 ```{r echo=FALSE, warning=FALSE, fig.height=5, fig.width=8}
-fillCol(flex = c(NA), width = "100%", 
-        dataTableOutput('gx_fctable')
-        )
 
-output$gx_fctable <- renderDataTable({
+expr_gx_fctableFUNC <- reactive({
+    
     ngs <- inputData()
     res <- sigDiffExprTable()
     if(is.null(res) || nrow(res)==0) return(NULL)
@@ -840,7 +1030,7 @@ output$gx_fctable <- renderDataTable({
                   extensions = c('Buttons','Scroller'),
                   selection=list(mode='single', target='row', selected=c(1)),
                   options=list(
-                      dom = 'Blfrtip', 
+                      dom = 'lfrtip', 
                       buttons = list('copy','csv',
                                      list(extend='pdf',
                                           pageSize="A3", orientation='landscape', 
@@ -860,19 +1050,37 @@ output$gx_fctable <- renderDataTable({
                             background = color_from_middle(F, 'lightblue', '#f5aeae'),
                             backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                             backgroundPosition = 'center')
+})
 
-}, server=FALSE)
+expr_gx_fctable_text = "The <strong>Foldchange (all)</strong> tab reports the fold changes for all contrasts in the selected dataset."
+
+expr_gx_fctable_module <- tableModule(
+    id="expr_gx_fctable", func=expr_gx_fctableFUNC,
+    info.text = expr_gx_fctable_text,
+    title ="Fold changes for all contrasts"
+)
+
+output$expr_gx_fctable     <- expr_gx_fctable_module$render
+output$expr_gx_fctable_csv <- expr_gx_fctable_module$csv
+
+fillCol(flex = c(NA,0.01, 1),
+        expr_gx_fctable_module$button,
+        br(),
+        dataTableOutput("expr_gx_fctable", height = "100%", width = "100%")) 
+
 ```
 
+> This table reports the fold changes for all contrasts
 
 `r if(!PRO.VERSION) {"<!---------------------------------------------"}`
 
 ### FDR table
 
+```{r message=FALSE, warning=FALSE}
 #### Number of significant genes
 
-```{r message=FALSE, warning=FALSE}
-renderDataTable({
+expr_FDR_tableFUNC <- reactive({
+    
     methods = GX.DEFAULTTEST
     if(PRO.VERSION) methods = input$gx_testmethod
     ##methods = input$gx_testmethod
@@ -928,7 +1136,24 @@ renderDataTable({
                             backgroundSize = '98% 88%',
                             backgroundRepeat = 'no-repeat',
                             backgroundPosition = 'center')
-}, server=FALSE)
+})
+
+expr_FDR_table_text = "This is an example"
+
+expr_FDR_table_module <- plotModule(
+    id="expr_FDR_table", func=expr_FDR_tableFUNC,
+    plotlib = "datatable", info.text = expr_FDR_table_text,
+    options = NULL, no.download = TRUE, server=FALSE
+    ,title='Number of significant genes'
+)
+
+output$expr_FDR_table <- expr_FDR_table_module$render
+
+fillCol(flex = c(NA,0.01, 1),
+        expr_FDR_table_module$button,
+        br(),
+        dataTableOutput("expr_FDR_table", height = "100%", width = "100%")) 
+
 ```
 
 

@@ -5,17 +5,20 @@ Signature
 Input {.sidebar data-width=250}
 --------------------------------------------------------------------------------
 
-<br> **Signature Analysis**. Test a gene signature by calculating its
-enrichment score. Upload your own list of genes, or choose a predefined
-gene set.
+<br> **Signature Analysis**. Users can test their gene signature by
+calculating an enrichment score. You can use some example genes sets
+below or upload your own gene list. Instead of a list of genes, a
+contrast can be selected, which then takes the top differentially
+expressed genes as signature.
+
 
 
 ```{r}
 ##----------------------------------------------------------------------
 ## More Info (pop up window)
 ##----------------------------------------------------------------------
-actionLink("sig_info", "Info", icon = icon("info-circle") )
-##actionLink("sig_info", "More details ...")
+tipify( actionLink("sig_info", "Info", icon = icon("info-circle")),
+       "Show more information about this module")
 
 sig_infotext =
     "In the <strong>Signature Analysis module</strong>, users can test their gene signature by calculating an enrichment score. They can use a sample list provided on the platform or upload their own gene list. Instead of a short list, a profile can also be selected, which is a complete gene list resulted from one of the contrasts in the analysis.
@@ -46,16 +49,14 @@ observeEvent( input$sig_info, {
 ## General options
 ##----------------------------------------------------------------------
 
-selectizeInput("sig_feature","Contrast:", choices="<custom>")
-
 IMMCHECK.GENES = "ADORA2A ARHGEF5 BTLA CD160 CD244 CD27 CD274 CD276 CD47 CD80 CEACAM1 CTLA4 GEM HAVCR2 ICOS IDO1 LAG3 PDCD1 TNFSF4 VISTA VTCN1 TIGIT PVR CD28 CD40 CD40LG ICOSLG TNFRSF9 TNFSF9 CD70 TNFRSF4 TNFRSF18 TNFSF18 SIRPA LGALS9 ARG1 CD86 IDO2 PDCD1LG2 KIR2DL3"
 APOPTOSIS.GENES = "BAD CRADD AGT FAS BCL2 PPIF S100A9 S100A8 BBC3 BCL2L11 FADD CTSH MLLT11 TRAF7 BCL2L1 HTRA2 BNIP3 BAK1 PMAIP1 LGALS9 BID"
 CELL.CYCLE.GENES = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP
 5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA"
 
-br();
+selectizeInput("sig_feature","Contrast:", choices="<custom>")
 
-textAreaInput("sig_genelistUP", "Custom signature:", value = IMMCHECK.GENES,
+textAreaInput("sig_genelistUP", "Signature:", value = IMMCHECK.GENES,
               rows=10, placeholder="Paste your gene list")
 ## textAreaInput("sig_genelistDN", "Signature (down):", rows=6, placeholder="Paste your gene list")
 
@@ -65,13 +66,16 @@ actionButton("sig_example1","[immune_chkpt] ", style="font-size: 0.9em; color: #
 actionButton("sig_example3","[cell_cycle] ", style="font-size: 0.9em; color: #24A; background-color: transparent; border-style: none; padding:0")
 
 
+
+
 ##----------------------------------------------------------------------
 ## Togglable options
 ##----------------------------------------------------------------------
 br();br();br();
 if(PRO.VERSION || DEV.VERSION) {
     ##actionLink("sig_options", "Show options ...")
-    actionLink("sig_options", "Options", icon=icon("cog", lib = "glyphicon"))
+    tipify( actionLink("sig_options", "Options", icon=icon("cog", lib = "glyphicon")),
+           "Toggle advanced options", placement="top")
 }
 
 ## br();br();
@@ -483,10 +487,13 @@ sigCalculateGSEA <- reactive({
 })
 ```
 
+
+
 ### Markers {data-height=800}
 
 ```{r}
-renderPlot({
+
+sig_markersplotFUNC <- reactive({
     ##if(!input$tsne.all) return(NULL)
     require(RColorBrewer)
     require(gplots)
@@ -579,25 +586,36 @@ renderPlot({
 
     }
 
-}, res=100)
+})
+
+##sig_markers.opts = tagList()
+sig_markers.module <- plotModule(
+    "sig_markersplot", sig_markersplotFUNC, plotlib="base",
+    info.text = "After uploading a gene list, the <strong>Markers</strong> section produces a t-SNE plot of samples for each gene, where the samples are colored with respect to the upregulation (in red) or downregulation (in blue) of that particular gene.",
+    ##options = sig_markers.opts,
+    pdf.width=8, pdf.height=8, res=100
+)
+##output$sig_markersplot     <- sig_markers.module$render
+##output$sig_markersplot_pdf <- sig_markers.module$pdf
+output <- attachModule(output, sig_markers.module)
+
+fillCol(
+    flex = c(NA,1), 
+    sig_markers.module$buttons,
+    plotOutput("sig_markersplot", height = "100%", width = "100%")
+)
+
 ```
+
+> **Markers t-SNE plot**. This figure shows the t-SNE plot for each gene, where the dot (corresponding to samples) are colored depending on the upregulation (in red) or downregulation (in blue) of that particular gene.
+
+
 
 ### Enrichment {data-height=800}
 
 ```{r warnings=FALSE, message=FALSE}
 
-fillCol(flex = c(NA,1), 
-        inputPanel(
-            selectInput('cmp_cmapsets1',NULL, choices=NULL, multiple=FALSE),
-            ##radioButtons('sig_enplotsdb',NULL,c("this dataset","other datasets"),inline=FALSE),
-            cellArgs=list(width='40%')
-        ),
-        plotOutput("sig_enplots", height = "100%", width = "100%")
-        )
-
-
-
-output$sig_enplots <- renderPlot({
+sig_enplotsFUNC <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
     
@@ -629,9 +647,29 @@ output$sig_enplots <- renderPlot({
             legend("topleft",db, cex=0.85, bty="n", adj=0)
         }
     }
+})
 
-}, res=90)
+
+sig_enplots.opts = tagList(
+    selectInput('cmp_cmapsets1',"Test dataset:", choices=NULL, multiple=FALSE)
+)
+sig_enplots.module <- plotModule(
+    "sig_enplots", sig_enplotsFUNC, plotlib="base",
+    info.text = "The <strong>Enrichment</strong> tab performs the enrichment analysis of the gene list against all contrasts by running the GSEA algorithm and plots enrichment outputs. The enrichment statistics can be found in the corresponding table",
+    options = sig_enplots.opts,
+    pdf.width=8, pdf.height=8, res=90
+)
+output$sig_enplots     <- sig_enplots.module$render
+output$sig_enplots_pdf <- sig_enplots.module$pdf
+
+fillCol(flex = c(NA,1), 
+        sig_enplots.module$buttons,
+        plotOutput("sig_enplots", height = "100%", width = "100%")
+        )
+
 ```
+
+> **Enrichment plots.** This figure shows the enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature.
 
 
 ### Signature CMap
@@ -641,28 +679,6 @@ output$sig_enplots <- renderPlot({
 ##================================================================================
 ## CONNECTIVITY MAP
 ##================================================================================
-
-fillCol(flex = c(NA,1), 
-        inputPanel(
-            selectInput('cmp_cmapsets2',NULL, choices=NULL, multiple=TRUE),
-            radioButtons('cmp_cmapclust',"Layout:",c("tsne","pca"),inline=TRUE),
-            radioButtons('cmp_topgenes','Top genes:',c(50,200,1000),inline=TRUE,selected=200),
-            ##checkboxGroupInput('fc_cmap_options',NULL,c('show names','add negative'),
-            ##                   selected=c('show names'),inline=TRUE),
-            radioButtons('cmp_neighbours','Neighbours:',c(100,500,2000),inline=TRUE,selected=500),
-            cellArgs=list(width='100%')
-        ),
-        scatterD3Output('cmp_cmapplotD3')
-        )
-
-
-observe({
-    cmapsets <- c(sort(unique(gsub("\\].*","]",colnames(PROFILES$FC)))))
-    cmapsets <- c("<this>",cmapsets,"<all>")
-    updateSelectInput(session, "cmp_cmapsets1", choices=cmapsets, selected="<this>")
-    updateSelectInput(session, "cmp_cmapsets2", choices=cmapsets, selected="<this>")
-})
-
 
 ##ntop=1000;nb=100
 pgx.getExternalSignaturesFC <- function(fc, nb, sets="<all>", ntop=-1)
@@ -776,7 +792,7 @@ getNeighbourhoodFoldChangeMatrix <- reactive({
 })
 
 
-output$cmp_cmapplotD3 <- renderScatterD3({
+cmp_cmapplotD3_RENDER <- reactive({
 
     ##======================================================================
     ## Fold-change t-SNE
@@ -834,7 +850,7 @@ output$cmp_cmapplotD3 <- renderScatterD3({
     rownames(pos) = colnames(fc)
     dim(pos)
     pos = scale(pos) ## scale 
-    
+   
     ## prepare plotting
     lab <- rownames(pos)
     ##if(input$fc_cmapshownames) lab <- rownames(pos)
@@ -865,14 +881,49 @@ output$cmp_cmapplotD3 <- renderScatterD3({
 
 })
 
+## cmp_cmapplotD3_RENDER
+
+cmp_cmapplotD3.opts = tagList(
+    selectInput('cmp_cmapsets2',"Test dataset:", choices=NULL, multiple=TRUE),
+    radioButtons('cmp_cmapclust',"Layout:",c("tsne","pca"),inline=TRUE),
+    radioButtons('cmp_topgenes','Top genes:',c(50,200,1000),inline=TRUE,selected=200),
+    ##checkboxGroupInput('fc_cmap_options',NULL,c('show names','add negative'),
+    ##                   selected=c('show names'),inline=TRUE),
+    radioButtons('cmp_neighbours','Neighbours:',c(100,500,2000),inline=TRUE,selected=500)
+)
+
+cmp_cmapplotD3.module <- plotModule(
+    "cmp_cmapplotD3", cmp_cmapplotD3_RENDER, plotlib="scatterD3",
+    info.text = "The Signature Connectivity Map (CMap) associates the provided signature list or contrast profile with the similar profiles of the other experiments, in which we have taken ten datasets from the literature.",
+    options = cmp_cmapplotD3.opts,
+    pdf.width=8, pdf.height=8, res=90
+)
+output$cmp_cmapplotD3     <- cmp_cmapplotD3.module$render
+output$cmp_cmapplotD3_pdf <- cmp_cmapplotD3.module$pdf
+
+fillCol(flex = c(NA,1), 
+        cmp_cmapplotD3.module$buttons,
+        scatterD3Output('cmp_cmapplotD3')
+        )
+
+observe({
+    cmapsets <- c(sort(unique(gsub("\\].*","]",colnames(PROFILES$FC)))))
+    cmapsets <- c("<this>",cmapsets,"<all>")
+    updateSelectInput(session, "cmp_cmapsets1", choices=cmapsets, selected="<this>")
+    updateSelectInput(session, "cmp_cmapsets2", choices=cmapsets, selected="<this>")
+})
+
 ```
+
+> **Signature Connectivity Map.** This figure shows the enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature.
+
+
 
 ### Overlap/similarity
 
-<br>
-
 ```{r warnings=FALSE, message=FALSE}
-DT::renderDataTable({
+
+sig_overlaptable.RENDER <- reactive({
     ##if(!input$tsne.all) return(NULL)
 
     ##
@@ -964,7 +1015,7 @@ DT::renderDataTable({
                   options=list(
                       dom = 'Blfrtip',
                       ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
-                      scrollX = TRUE, scrollY = '700', scroller=TRUE, ## deferRender=TRUE,
+                      scrollX = TRUE, scrollY = '500', scroller=TRUE, ## deferRender=TRUE,
                       buttons = list('copy','csv',
                                      list(extend='pdf',
                                           pageSize="A3", orientation='landscape',
@@ -980,7 +1031,30 @@ DT::renderDataTable({
                             backgroundPosition = 'center')
 
 })
+
+
+sig_overlaptable.module <- plotModule(
+    "sig_overlaptable", sig_overlaptable.RENDER, plotlib="table", just.info=TRUE,
+    title = "Overlap with other signatures", no.download=TRUE,
+    info.text = "Under the <strong>Overlap/similarity tab</strong>, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, as well as the p and q values by the Fisher’s test for the overlap test.",
+    ##options = sig_overlaptable.opts,
+    pdf.width=10, pdf.height=8, 
+)
+
+##DT::renderDataTable
+output$sig_overlaptable <- sig_overlaptable.module$render
+##output$sig_overlaptable_pdf <- sig_overlaptable.module$pdf
+
+fillCol(flex = c(NA,NA,1), 
+        sig_overlaptable.module$buttons, br(),
+        dataTableOutput('sig_overlaptable')
+        )
+
 ```
+
+> **Overlap/Similarity table.** This table...
+
+
 
 
 Col  {.tabset data-width=375}
@@ -989,15 +1063,8 @@ Col  {.tabset data-width=375}
 ### Phenotypes {data-height=800}
 
 ```{r}
-fillCol(flex = c(NA,1), 
-        inputPanel(
-            radioButtons('sig_labelmode',NULL,c("label","legend"),inline=TRUE),
-            cellArgs=list(width='40%')
-        ),
-        plotOutput("sig_phenoplot", height = "100%", width = "100%")
-        )
 
-output$sig_phenoplot <- renderPlot({
+sig_phenoplot.RENDER <- reactive({
     ##if(!input$tsne.all) return(NULL)
     require(RColorBrewer)
    
@@ -1081,7 +1148,7 @@ output$sig_phenoplot <- renderPlot({
         title( tt, cex.main=1.3, line=0.5, col="grey40")
         if(input$sig_labelmode=="legend") {
             legend("bottomright", legend=levels(colvar), fill=klrpal,
-                   cex=0.95, y.intersp=0.8, bg="white")
+                   cex=0.95, y.intersp=0.85, bg="white")
         } else {
             grp.pos <- apply(pos,2,function(x) tapply(x,colvar,mean,na.rm=TRUE))
             grp.pos <- apply(pos,2,function(x) tapply(x,colvar,median,na.rm=TRUE))
@@ -1097,19 +1164,39 @@ output$sig_phenoplot <- renderPlot({
             text( grp.pos, labels=labels, font=2, cex=cex2)
         }
     }    
-}, res=90)
+})
+
+sig_phenoplot.opts = tagList(
+    radioButtons('sig_labelmode',"Label",c("groups","legend"),inline=TRUE)
+)
+
+sig_phenoplot.module <- plotModule(
+    "sig_phenoplot", sig_phenoplot.RENDER, ## plotlib="base",
+    info.text = "Phenotypes. This figure visualizes the distribution of the phenotype information.",
+    options = sig_phenoplot.opts,
+    pdf.width=6, pdf.height=9, res=85
+)
+output$sig_phenoplot     <- sig_phenoplot.module$render
+output$sig_phenoplot_pdf <- sig_phenoplot.module$pdf
+
+fillCol(flex = c(NA,1), 
+        sig_phenoplot.module$buttons,
+        plotOutput("sig_phenoplot", height = "100%", width = "100%")
+        )
+
+
+
 ```
+
+
+> **Phenotype distribution plots.** The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects.
+
 
 ### Enrichment {data-height=800}
 
 ```{r warnings=FALSE, message=FALSE}
-fillCol(
-    flex = c(NA,1.2,NA,1), ## width = 600,
-    h4("by contrasts"), dataTableOutput('sig_table1'),
-    h4("genes"), dataTableOutput('sig_genes1')
-)
 
-output$sig_table1 <- DT::renderDataTable({
+sig_table1.RENDER <- reactive({
     
     gsea <- sigCalculateGSEA()
     if(is.null(gsea)) return(NULL)
@@ -1134,7 +1221,7 @@ output$sig_table1 <- DT::renderDataTable({
                   selection=list(mode='single', target='row', selected=c(1)),
                   options=list(
                       ##dom = 'Blfrtip',
-                      dom = 'lfrtip',
+                      dom = 'lrtip',
                       ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
                       scrollX = TRUE, scrollY = 320, scroller=TRUE, deferRender=FALSE,
                       buttons = c('copy','csv','pdf')
@@ -1149,7 +1236,7 @@ output$sig_table1 <- DT::renderDataTable({
 
 })
 
-output$sig_genes1 <- DT::renderDataTable({
+sig_genes1.RENDER <- reactive({
     
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
@@ -1215,11 +1302,36 @@ output$sig_genes1 <- DT::renderDataTable({
                             background = color_from_middle(color_fx, 'lightblue', '#f5aeae'),
                             backgroundSize = '98% 88%',
                             backgroundRepeat = 'no-repeat',
-                            backgroundPosition = 'center')
-
-    
+                            backgroundPosition = 'center')    
 })
+
+
+info.text1 = "The table summarizes the enrichment statistics of the gene list against all contrasts by running the GSEA algorithm and plots enrichment outputs."
+sig_table1_module <- tableModule(
+    id = "sig_table1", func = sig_table1.RENDER,
+    info.text = info.text1,
+    title = "Enrichment by contrasts", label="a"
+)
+output <- attachModule(output, sig_table1_module)
+
+
+info.text2 = "This table shows the genes of the current signature."
+sig_table2_module <- tableModule(
+    id = "sig_table2", func = sig_genes1.RENDER,
+    info.text = info.text2,
+    title = "Genes in signature", label="b"
+)
+output <- attachModule(output, sig_table2_module)
+    
+fillCol(
+    flex = c(NA,1.2,NA,1), ## width = 600,
+    sig_table1_module$buttons,
+    dataTableOutput('sig_table1'),
+    sig_table2_module$buttons,
+    dataTableOutput('sig_table2')
+)
+
 
 ```
 
-
+> **Enrichment tables.** **(a)** Summary of correlation/enrichment of the query signature in all contrasts. **(b)** Summary of fold-changes of genes in the query signature.

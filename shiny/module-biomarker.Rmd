@@ -5,15 +5,16 @@ Inputs {.sidebar data-width=250}
 --------------------------------------------------------------------------------
 
 <br> **Biomarker Module.** Select biomarkers that can be used for
-classification or prediction purposes.
+classification or prediction purposes. The phenotype of interest can
+be multiple categories (classes) or patient survival data. 
 
 
 ```{r}
 ##----------------------------------------------------------------------
 ## More Info (pop up window)
 ##----------------------------------------------------------------------
-##actionLink("pdx_info", "More details ...")
-actionLink("pdx_info", "Info", icon = icon("info-circle") )
+tipify( actionLink("pdx_info", "Info", icon = icon("info-circle")),
+       "Show more information about this module.")
 
 pdx_infotext =
     "The <strong>Biomarker Module</strong> performs the biomarker selection that can be used for classification or prediction purposes.
@@ -37,20 +38,31 @@ observeEvent( input$pdx_info, {
 <br><br>
 
 ```{r}
-selectInput("pdx_contrast","Predicted variable", choices=NULL)
-actionButton("pdx_runbutton",label="Run")
+tipify(selectInput("pdx_predicted","Predicted target:", choices=NULL),
+       "Select the target variable for biomarker selection.",
+       placement="top")
+tipify(actionButton("pdx_runbutton",label="Run"),
+       "Click to start biomarker computation.", placement="right")
 
 br();br();br();
-actionLink("pdx_options", "Options", icon=icon("cog", lib = "glyphicon"))
+tipify( actionLink("pdx_options", "Options", icon=icon("cog", lib = "glyphicon")),
+       "Toggle advanced options", placement="top")
+
 br();br();
 conditionalPanel(
     "input.pdx_options % 2 == 1",
     tagList(
-        radioButtons('pdx_vartype',NULL,c("phenotype","contrast"),inline=TRUE),
+        ##radioButtons('pdx_vartype',NULL,c("phenotype","contrast"),inline=TRUE),
         ##checkboxInput('pdx_normalize','normalize',TRUE),
-        selectInput("pdx_level","Level:", choices=c("gene","geneset")),
-        selectInput("pdx_filter","Filter:", choices=NULL),
-        selectizeInput("pdx_select","Custom features:", choices=NULL, multiple=TRUE)
+        tipify( selectInput("pdx_level","Level:", choices=c("gene","geneset")),
+               "Select feature level: gene or geneset", placement="top"),
+        tipify( selectInput("pdx_filter","Filter:", choices=NULL),
+               "Select a filter for the gene features.", placement="top"),
+        tipify(
+            ##selectizeInput("pdx_select","Custom features:", choices=NULL, multiple=TRUE),
+            textAreaInput("pdx_select", "Custom features:", value = NULL,
+                          rows=10, placeholder="Paste your gene list"),
+            "Paste a custom gene list to be used as features.", placement="top")
     )
 )
 
@@ -59,27 +71,31 @@ if(DEV.VERSION) {
     conditionalPanel(
         "input.pdx_options % 2 == 1",
         tagList(
-            checkboxInput('pdx_showloops','detect loops',FALSE),
-            checkboxInput('pdx_posonly','pos.only',FALSE),
             checkboxInput('pdx_multiomics','multi-omics weighting',FALSE)
         )
     )
 }
 
+##input_pdx_select <- reactive({
+##    input$pdx_select
+##}) %>% debounce(3000)
+
 input_pdx_select <- reactive({
-    input$pdx_select
-}) %>% debounce(3000)
+    gg <- input$pdx_select
+    if(is.null(gg)) return(NULL)
+    gg <- strsplit(as.character(gg), split="[, \n\t]")[[1]]
+    if(length(gg)==0) return(NULL)
+    if(length(gg)==1 && gg[1]!="") gg <- c(gg,gg)  ## hack to allow single gene....
+    return(gg)
+}) %>% debounce(1000)
+
 
 observe({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
-    ct <- colnames(ngs$model.parameters$contr.matrix)
-    if(input$pdx_vartype=="phenotype") {
-        ct <- colnames(ngs$Y)
-        ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
-    }
-    cat("<predict::observe1> updating pdx_contrast...\n")
-    updateSelectInput(session, "pdx_contrast", choices=ct )
+    ct <- colnames(ngs$Y)
+    ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
+    updateSelectInput(session, "pdx_predicted", choices=ct )
     
 })
 
@@ -100,57 +116,6 @@ observe({
     updateSelectInput(session, "pdx_filter", choices=ft )    
 })
 
-observe({
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-
-    req(input$pdx_filter)
-    req(input$pdx_contrast)
-
-    ft <- input$pdx_filter
-    ct <- input$pdx_contrast
-    if(is.null(ft)) return(NULL)
-    if(is.null(ct)) return(NULL)    
-    
-    cat("<predict:observe3>\n")
-
-    if(ft=="") return(NULL)
-    if(ct=="") return(NULL)    
-    
-    if(input$pdx_level=="geneset") {
-        if(!ft %in% names(COLLECTIONS)) return(NULL)
-        pp <- COLLECTIONS[[ft]]              
-        pp <- intersect(pp, rownames(ngs$gsetX))
-        if(input$pdx_vartype=="contrast") {
-            if(!ct %in% names(ngs$gset.meta$meta)) return(NULL)    
-            ii <- which( ngs$gset.meta$meta[[ct]]$meta.p < 0.05 &
-                         abs(ngs$gset.meta$meta[[ct]]$meta.fx) > 0.5 )
-            sig <- rownames(ngs$gset.meta$meta[[ct]])[ii]
-            pp <- intersect(sig,pp)
-        }
-    } else {
-        xfam <- c(names(ngs$families),names(GSETS))
-        if(!ft %in% xfam) return(NULL)
-        sel <- ngs$genes$gene_name
-        sel <- NULL
-        if(ft %in% names(ngs$families)) sel <- ngs$families[[ft]]
-        if(ft %in% names(GSETS)) sel <- GSETS[[ft]]
-        xgene <- ngs$genes[rownames(ngs$X),"gene_name"]
-        sel <- intersect(sel, xgene)
-        pp = filterProbes(ngs$genes, sel)
-        length(pp)
-        if(input$pdx_vartype=="contrast") {
-            if(!ct %in% names(ngs$gx.meta$meta)) return(NULL)    
-            ii <- which( ngs$gx.meta$meta[[ct]]$meta.p < 0.05 &
-                         abs(ngs$gx.meta$meta[[ct]]$meta.fx) > 0.5 )
-            sig <- rownames(ngs$gx.meta$meta[[ct]])[ii]
-            pp <- intersect(sig,pp)
-        }
-    }
-    pp <- c("",pp)
-    updateSelectInput(session, "pdx_select", choices=pp, sel="")    
-
-})
 
 ```
 
@@ -161,19 +126,6 @@ Col {.tabset data-width=650}
 ### Importance
     
 ```{r message=FALSE, warning=FALSE, fig.width=4}
-
-fillRow(flex = c(1,0.1,1), 
-        fillCol(flex = c(0.7,1), 
-                plotOutput('pdx_importanceplot'),
-                plotOutput('pdx_heatmap')
-                ),
-        br(), ## spacer
-        fillCol(flex = c(1,0.8), 
-                ##plotOutput('pdx_decisiontree'),
-                uiOutput('pdx_decisiontree'),
-                plotOutput('pdx_boxplots')
-                )
-        )
 
 ##calcVariableImportance <- reactive({
 calcVariableImportance <- eventReactive( input$pdx_runbutton, {
@@ -188,7 +140,7 @@ calcVariableImportance <- eventReactive( input$pdx_runbutton, {
     ct=5
     ct=1
     colnames(ngs$Y)
-    ct <- input$pdx_contrast
+    ct <- input$pdx_predicted
     if(is.null(ct)) return(NULL)
     
     NFEATURES=50
@@ -202,25 +154,11 @@ calcVariableImportance <- eventReactive( input$pdx_runbutton, {
     cat("calcVariableImportance:: 1\n")
     progress$set(message = "Variable importance", value = 0)
     
-    if(input$pdx_vartype=="contrast") {
-        cts <- colnames(ngs$model.parameters$exp.matrix)
-        if(!(ct %in% cts)) return(NULL)
-        y0 <- ngs$model.parameters$exp.matrix[,ct]
-        y0 <- y0[which(y0!=0)]
-        y <- 1*(y0>0)
-        if(1 && grepl("_vs_|_VS_",ct)) {
-            cls <- strsplit(ct, split="_vs_|_VS_")[[1]]
-            y[which(y==1)] <- cls[1]
-            y[which(y==0)] <- cls[2]
-        }
+    if(!(ct %in% colnames(ngs$Y))) return(NULL)
+    y0 <- ngs$Y[,ct]
+    names(y0) <- rownames(ngs$Y)
+    y <- y0[!is.na(y0)]
 
-    }
-    if(input$pdx_vartype=="phenotype") {
-        if(!(ct %in% colnames(ngs$Y))) return(NULL)
-        y0 <- ngs$Y[,ct]
-        names(y0) <- rownames(ngs$Y)
-        y <- y0[!is.na(y0)]
-    }
     table(y)
     if(length(y)<40) y <- head(rep(y,10),100)  ## augment to 100 samples
     table(y)
@@ -230,27 +168,13 @@ calcVariableImportance <- eventReactive( input$pdx_runbutton, {
     ##-------------------------------------------
     ## select features
     ##-------------------------------------------
-    if(input$pdx_vartype=="contrast") {
-        ## contrast prediction
-        if(input$pdx_level=="geneset") {
-            ii <- which( ngs$gset.meta$meta[[ct]]$meta.p < 0.05 &
-                         abs(ngs$gset.meta$meta[[ct]]$meta.fx) > 0.5 )
-            sel <- rownames(ngs$gset.meta$meta[[ct]])[ii]
-            X <- ngs$gsetX[sel,names(y)]
-        } else {
-            ii <- which( ngs$gx.meta$meta[[ct]]$meta.p < 0.05 &
-                         abs(ngs$gx.meta$meta[[ct]]$meta.fx) > 0.5 )
-            sel <- rownames(ngs$gx.meta$meta[[ct]])[ii]
-            X <- ngs$X[sel,names(y)]
-        }
+    ## group prediction
+    if(input$pdx_level=="geneset") {
+        X <- ngs$gsetX[,names(y)]
     } else {
-        ## group prediction
-        if(input$pdx_level=="geneset") {
-            X <- ngs$gsetX[,names(y)]
-        } else {
-            X <- ngs$X[,names(y)]
-        }
+        X <- ngs$X[,names(y)]
     }
+
     dim(X)
     X0 <- X
     length(y)
@@ -341,7 +265,6 @@ calcVariableImportance <- eventReactive( input$pdx_runbutton, {
     if(DEV.VERSION) is.multiomics <- (is.multiomics && input$pdx_multiomics)
     is.multiomics    
     if(is.multiomics) {
-
         ## EXPERIMENTAL: multi-omics weighting 
         if(0) {
             gene <- ngs$genes[rownames(R),"gene_name"]
@@ -359,8 +282,7 @@ calcVariableImportance <- eventReactive( input$pdx_runbutton, {
                 rho <- cor(t(X1[ii,]), use="pairwise")
                 diag(rho) <- NA
                 mean(abs(rho[upper.tri(rho)]),na.rm=TRUE)
-            })
-            
+            })            
             ## weighting with 
             cor.wt <- cor.wt[match(gene,names(cor.wt))]
             gene.wt <- gene.wt[match(gene,rownames(gene.wt)),]
@@ -459,7 +381,8 @@ calcVariableImportance <- eventReactive( input$pdx_runbutton, {
     return(res)
 })
 
-output$pdx_importanceplot <- renderPlot({
+
+pdx_importance.RENDER <- reactive({
     
     res <- calcVariableImportance()
     if(is.null(res)) return(NULL)
@@ -492,62 +415,84 @@ output$pdx_importanceplot <- renderPlot({
                legend=rev(colnames(R)), fill=rev(klr),
                cex=0.8, y.intersp=0.8 )
     }
-    title("Variable importance", cex.main=1.2, line=1.2, adj=0.3)
-    
-}, res=70)
-
-output$pdx_decisiontree <- renderUI({
-
-    res <- calcVariableImportance()
-    if(is.null(res)) return(NULL)
-    is.surv <- grepl("Surv",res$rf$call)[2]
-    is.surv
-    if(is.surv) {
-        plotOutput("pdx_decisiontreeSurv")
-    } else {
-        ##visNetworkOutput("pdx_decisiontreeClass")
-        plotOutput("pdx_decisiontreeClass")
-    } 
+    ## title("Variable importance", cex.main=1.2, line=1.2, adj=0.3)    
 })
+
+
+pdx_heatmap.RENDER <- reactive({
+
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
     
-output$pdx_decisiontreeSurv <- renderPlot({    
     res <- calcVariableImportance()
     if(is.null(res)) return(NULL)
+
+    cat("<predict:pdx_heatmap> called\n")
     
-    ##install.packages("rpart.plot")
+    gg <- NULL
+    if(input$pdx_level=="geneset") {
+        gg <- rownames(res$X)
+        gg <- intersect(gg, rownames(ngs$gsetX))
+        X <- ngs$gsetX[gg,]
+        rownames(X) <- tolower(rownames(X))
+    } else {
+        gg <- rownames(res$X)
+        gg <- intersect(gg, rownames(ngs$X))
+        X <- ngs$X[gg,]
+    }
+
+    cat("<predict:pdx_heatmap> dim(X)=",dim(X),"\n")
+    X <- head(X[order(-apply(X,1,sd)),],40)  ## top50
+
+    splitx <- NULL
+    ct <- input$pdx_predicted
+    splitx <- ngs$Y[colnames(X),ct]
+    
+    rownames(X) <- substring(rownames(X),1,40)    
+    annot <- ngs$Y[colnames(X),]
+    gx.splitmap( X, split=NULL, splitx=splitx,
+                show_colnames = FALSE,  ## save space, no sample names
+                show_legend = ifelse(is.null(splitx),TRUE,FALSE),
+                col.annot=annot, annot.ht=2.5, 
+                lab.len=50, cexRow=0.85, mar=c(2,8))
+
+})    
+
+pdx_decisiontree.RENDER <- reactive({
+
+    res <- calcVariableImportance()
+    if(is.null(res)) return(NULL)
+
     require(rpart)
     require(rpart.plot)
     par(mfrow=c(1,1), mar=c(1,0,2,0))
-    
-    require(survival)
-    require("partykit")
-    (rf <- as.party(res$rf))
-    ##(rf <- as.party(prune(res$rf, cp=0.05)))
-    plot(rf)
-    title("Survival tree",cex=1.2,line=0.9,adj=0.35)
-    table(res$rf$where)
-})
 
-##output$pdx_decisiontreeClass <- renderVisNetwork({
-output$pdx_decisiontreeClass <- renderPlot({    
-    res <- calcVariableImportance()
-    if(is.null(res)) return(NULL)
-    
-    ##install.packages("rpart.plot")
-    require(rpart)
-    ##par(mfrow=c(1,1), mar=c(1,0,2,0))
-    require(visNetwork)
-    require(rpart.plot)
-    if(1) {
-        rpart.plot(res$rf)
-        title("Classification tree",cex=1.2,line=3,adj=0.35)
+    is.surv <- grepl("Surv",res$rf$call)[2]
+    is.surv
+    if(is.surv) {
+        require(survival)
+        require("partykit")
+        (rf <- as.party(res$rf))
+        ##(rf <- as.party(prune(res$rf, cp=0.05)))
+        plot(rf)
+        ##title("Survival tree",cex=1.2,line=0.9,adj=0.35)
+        ##table(res$rf$where)
     } else {
-        visTree(res$rf, main="Classification tree",width="100%",legend=FALSE) %>%
-            visInteraction(tooltipStyle='position:fixed;visibility:hidden;padding:5px;white-space:nowrap;font-family:helvetica;font-size:10px;background-color:lightgrey;')
-    }
-})    
+        ##visNetworkOutput("pdx_decisiontreeClass")
+        ##plotOutput("pdx_decisiontreeClass")
+        ##require(visNetwork)
+        if(1) {
+            rpart.plot(res$rf)
+            title("Classification tree",cex=1.2,line=3,adj=0.35)
+        } else {
+            visTree(res$rf, main="Classification tree",width="100%",legend=FALSE) %>%
+                visInteraction(tooltipStyle='position:fixed;visibility:hidden;padding:5px;white-space:nowrap;font-family:helvetica;font-size:10px;background-color:lightgrey;')
+        }
+    } 
+})
+    
 
-output$pdx_boxplots <- renderPlot({
+pdx_boxplots.RENDER <- reactive({
     res <- calcVariableImportance()
     if(is.null(res)) return(NULL)
 
@@ -617,116 +562,84 @@ output$pdx_boxplots <- renderPlot({
 
     }
 
-}, res=100)
+})
 
 
-output$pdx_heatmap <- renderPlot({
+pdx_importance.opts = tagList()
+pdx_importance_module <- plotModule(
+    "pdx_importance", pdx_importance.RENDER,
+    title = "Variable importance",
+    info.text = "A variable importance score for each feature is calculated using multiple machine learning algorithms, including LASSO, elastic nets, random forests, and extreme gradient boosting. By combining several methods, the platform aims to select the best possible biomarkers. The top features are plotted according to cumulative ranking by the algorithms.",
+    ##options = pdx_importance.opts,
+    label="a",
+    pdf.width=10, pdf.height=10, ## res=80
+)
+output$pdx_importance     <- pdx_importance_module$render
+output$pdx_importance_pdf <- pdx_importance_module$pdf
 
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    
-    res <- calcVariableImportance()
-    if(is.null(res)) return(NULL)
 
-    cat("<predict:pdx_heatmap> called\n")
-    
-    gg <- NULL
-    if(input$pdx_level=="geneset") {
-        gg <- rownames(res$X)
-        gg <- intersect(gg, rownames(ngs$gsetX))
-        X <- ngs$gsetX[gg,]
-        rownames(X) <- tolower(rownames(X))
-    } else {
-        gg <- rownames(res$X)
-        gg <- intersect(gg, rownames(ngs$X))
-        X <- ngs$X[gg,]
-    }
+pdx_heatmap.opts = tagList()
+pdx_heatmap_module <- plotModule(
+    "pdx_heatmap", pdx_heatmap.RENDER,
+    title = "Heatmap", label="b",
+    info.text = "The heatmap shows the expression of genes of the top most important features.",
+    ##options = pdx_heatmap.opts,
+    pdf.width=10, pdf.height=10, res=72
+)
+output$pdx_heatmap     <- pdx_heatmap_module$render
+output$pdx_heatmap_pdf <- pdx_heatmap_module$pdf
 
-    cat("<predict:pdx_heatmap> dim(X)=",dim(X),"\n")
-    X <- head(X[order(-apply(X,1,sd)),],40)  ## top50
 
-    splitx <- NULL
-    if(FALSE && input$pdx_vartype=="contrast") {
-        ct <- input$pdx_contrast
-        exp.matrix <- ngs$model.parameters$exp.matrix
-        splitx <- exp.matrix[colnames(X),ct]
-    }
-    if(input$pdx_vartype=="phenotype") {
-        ct <- input$pdx_contrast
-        splitx <- ngs$Y[colnames(X),ct]
-    }
-    
-    rownames(X) <- substring(rownames(X),1,40)    
-    annot <- ngs$Y[colnames(X),]
-    gx.splitmap( X, split=NULL, splitx=splitx,
-                show_colnames = FALSE,  ## save space, no sample names
-                show_legend = ifelse(is.null(splitx),TRUE,FALSE),
-                col.annot=annot, annot.ht=2.5, 
-                lab.len=50, cexRow=0.85, mar=c(2,8))
+pdx_decisiontree.opts = tagList()
+pdx_decisiontree_module <- plotModule(
+    "pdx_decisiontree", pdx_decisiontree.RENDER,
+    title = "Decision tree", label="c",
+    info.text = "The decision tree shows a tree solution for classification based on the top most important features.",
+    ##options = pdx_decisiontree.opts,
+    pdf.width=10, pdf.height=10, res=72
+)
+output$pdx_decisiontree     <- pdx_decisiontree_module$render
+output$pdx_decisiontree_pdf <- pdx_decisiontree_module$pdf
 
-})    
+pdx_boxplots.opts = tagList()
+pdx_boxplots_module <- plotModule(
+    "pdx_boxplots", pdx_boxplots.RENDER,
+    title = "Biomarker expression", label="d",
+    info.text = "These boxplots shows the expression of genes/samples of the identified features.",
+    ##options = pdx_boxplots.opts,
+    pdf.width=10, pdf.height=10, res=90
+)
+output$pdx_boxplots     <- pdx_boxplots_module$render
+output$pdx_boxplots_pdf <- pdx_boxplots_module$pdf
+
+
+fillRow(flex = c(1,0.1,1), 
+        fillCol(flex = c(NA,0.7,NA,1),
+                pdx_importance_module$buttons,
+                plotOutput('pdx_importance'),
+                pdx_heatmap_module$buttons,
+                plotOutput('pdx_heatmap')
+                ),
+        br(), ## spacer
+        fillCol(flex = c(NA,1,NA,0.8), 
+                ##plotOutput('pdx_decisiontree'),
+                pdx_decisiontree_module$buttons,
+                plotOutput('pdx_decisiontree'),
+                pdx_boxplots_module$buttons,
+                plotOutput('pdx_boxplots')
+                )
+        )
 
 ```
 
+> **Biomarker selection**. The expression of certain genes may be used as *markers* to predict a certain phenotype such as response to a therapy. Finding such *biomarkers* are of high importance in clinical applications. **(a)** An importance score for each feature is calculated using multiple machine learning algorithms, including LASSO, elastic nets, random forests, and extreme gradient boosting. The top features are plotted  according to cumulative ranking by the algorithms. **(b)** The heatmap shows the expression distribution for the top most important features. **(c)** The decision tree shows (one) tree solution for classification based on the top most important features. **(d)** Boxplots show the expression of biomarker genes across the groups.
 
-`r if(!PRO.VERSION) {"<!---------------------"}`
+
+`r if(!DEV.VERSION) {"<!---------------------"}`
 
 ### Multi-level
     
 ```{r message=FALSE, warning=FALSE, fig.width=4}
-
-fillCol(flex = c(NA,1),
-        inputPanel(
-            selectInput("mix_level1",NULL,choices=NULL),
-            selectInput("mix_level2",NULL,choices=NULL),
-            selectInput("mix_level3",NULL,choices=NULL),
-            cellArgs=list(width='350px')
-        ),                
-        fillRow(flex = c(1.8,0.07,1),
-                fillCol(flex = c(0.9,1),
-                        plotOutput('mix_plotLoadings'),
-                        fillRow(flex = c(1.2,1),
-                                ##plotOutput('mix_plotDiablo'),
-                                plotOutput('mix_hivePlot'),
-                                ##plotOutput('mix_plotVariates')
-                                plotOutput('mix_plotSNF')
-                                ##plotOutput('mix_circosPlot')
-                                )
-                        ),
-                br(),
-                plotOutput('mix_cimDiablo')
-                )
-        )
-
-observe({
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    ct1 <- c("COMPARTMENTS:Cell_surface", "COMPARTMENTS:Membrane_part",
-             "FAMILY:Endogenous ligands (HGNC)",
-             "C2:REACTOME_CHEMOKIoNE_RECEPTORS_BIND_CHEMOKINES")
-    ct2 <- c("COMPARTMENTS:Cytoplasm", "MSIGDB:PROTEIN_KINASES",
-             "C5:GO_KINASE_ACTIVITY","FAMILY:Kinases (KEA)",
-             "FAMILY:Micro RNA")
-    ct3 <- c("COMPARTMENTS:Nuclear_part","CUSTOM:Transcription factors",
-             "FAMILY:Nuclear receptors","MSIGDB:TRANSCRIPTION_FACTORS")
-    gs.size <- function(gs) {length(intersect(gs,rownames(ngs$X)))}
-    ct1 <- ct1[which(sapply(GSETS[ct1],gs.size)>=3)]
-    ct2 <- ct2[which(sapply(GSETS[ct2],gs.size)>=3)]
-    ct3 <- ct3[which(sapply(GSETS[ct3],gs.size)>=3)]
-    updateSelectInput(session, "mix_level1", choices=ct1)
-    updateSelectInput(session, "mix_level2", choices=ct2)
-    updateSelectInput(session, "mix_level3", choices=ct3)
-})
-
-output$mix_testPlot <- renderPlot({
-    require("grid")
-    require("HiveR")
-    require("igraph")
-    test3 <- ranHiveData(nx = 3)
-    ## plotHive(test3) # default plot
-    print(qplot(1:100,sin((1:100)/4)))
-    ##igraph::plot(sample_k_regular(10, 2))
-})
 
 mix_computeDiablo <- reactive({
     ngs <- inputData()
@@ -738,52 +651,18 @@ mix_computeDiablo <- reactive({
     comparison="ABC_vs_GCB"
     comparison="treatment"
     comparison="cell.type"
-    comparison <- input$pdx_contrast
+    comparison <- input$pdx_predicted
     if(is.null(comparison)) return(NULL)
     if(comparison=="") return(NULL)
     cat("<mix_computeDiablo> comparison=",comparison,"\n")
-
-    vartype="contrast"
-    vartype="phenotype"
-    vartype <- input$pdx_vartype
-    is.contrast <- (vartype == "contrast")
-    is.contrast
-
-    exp.matrix <- ngs$model.parameters$exp.matrix
-    if(is.contrast && is.numeric(comparison[1])) {
-        comparison <- colnames(exp.matrix)[comparison]
-    }
-    if(!is.contrast && is.numeric(comparison[1])) {
-        comparison <- colnames(ngs$Y)[comparison[1]]
-    }
     
-    ##is.contrast <- (comparison %in% colnames(exp.matrix))
-    is.contrast
-    valid.comparison <- comparison %in% colnames(exp.matrix)
-    if(is.contrast && valid.comparison) {
-        Y <- as.character(sign(exp.matrix[,comparison]))
-        Y[which(Y=='0')] <- NA
-    } else if(comparison %in% colnames(ngs$samples)) {
+    if(comparison %in% colnames(ngs$samples)) {
         Y <- ngs$samples[,comparison]
         Y[which(Y %in% c(NA,"","NA"))] <- NA
     } else {
         return(NULL)
     }
-    cat("<mix_computeDiablo> 1:table.Y=",table(Y),"\n")    
-    
-    ##if(!is.contrast) return(NULL) ## only contrast for now...    
-    if(is.contrast && grepl("_vs_|_VS_",comparison)) {
-        cmp1 <- sub(".*:","",comparison)  ## strip prefix
-        vv <- strsplit(cmp1,split="_vs_|_VS_")[[1]]
-        vv
-        cat("<mix_computeDiablo> 1:vv=",vv,"\n")
-        Y[which(Y=='-1')] <- vv[2]
-        Y[which(Y=='1')] <- vv[1]
-        Y <- relevel(factor(Y), ref=vv[2])
-    }
-    table(Y)
-    cat("<mix_computeDiablo> 2:Y=",table(as.character(Y)),"\n")
-    
+        
     ct1 <- "COMPARTMENTS:Cell_surface"
     ct2 <- "MSIGDB:PROTEIN_KINASES"
     ct3 <- "CUSTOM:Transcription factors"
@@ -815,7 +694,7 @@ mix_computeDiablo <- reactive({
 })
 
 
-output$mix_plotLoadings <- renderPlot({    
+mix_plotLoadings.RENDER <- reactive({    
 
     cat("<predict::mix_plotLoadings> called\n")    
     ngs <- inputData()
@@ -827,10 +706,11 @@ output$mix_plotLoadings <- renderPlot({
     if(is.null(res)) return(NULL)
 
     showloops=FALSE
-    if(PRO.VERSION) showloops <- input$pdx_showloops
+    if(PRO.VERSION) showloops <- input$mix_showloops
     mixPlotLoadings(res, showloops=showloops) 
     
-}, res=80)
+})
+
 
 output$mix_plotDiablo <- renderPlot({
     res <- mix_computeDiablo()
@@ -853,7 +733,8 @@ output$mix_plotDiablo <- renderPlot({
         colnames(vx1) <- substring(colnames(vx1),1,4)
         pairs(vx1,cex=1, cex.labels=1.1, pch=19, col=klr1)
     }    
-}, res=80)
+})
+
 
 output$mix_plotVariates <- renderPlot({
     res <- mix_computeDiablo()
@@ -887,7 +768,7 @@ output$mix_plotVariates <- renderPlot({
     
 })
 
-output$mix_plotSNF <- renderPlot({
+mix_plotSNF.RENDER <- reactive({
     res <- mix_computeDiablo()
     if(is.null(res)) return(NULL)
     
@@ -967,16 +848,16 @@ output$mix_circosPlot <- renderPlot({
                color.blocks= c('darkorchid', 'brown1', 'lightgreen'),
                color.cor = c("grey30","red3"), size.labels = 1.5)
 
-}, res=60)
+})
     
 
-output$mix_hivePlot <- renderPlot({
+mix_hivePlot.RENDER <- reactive({
 
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
 
     ct="group"
-    ct <- input$pdx_contrast
+    ct <- input$pdx_predicted
     if(is.null(ct)) return(NULL)
 
     ##-------------------------------------------------------------
@@ -986,13 +867,13 @@ output$mix_hivePlot <- renderPlot({
     if(is.null(res)) return(NULL)
 
     showloops = FALSE
-    if(PRO.VERSION) showloops = input$pdx_showloops
+    if(PRO.VERSION) showloops = input$mix_showloops
     mixHivePlot(res=res, ngs=ngs, ct=ct, showloops=showloops)
 
-}, res=72)
+})
 
 
-output$mix_cimDiablo <- renderPlot({
+mix_cimDiablo.RENDER <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
 
@@ -1019,6 +900,136 @@ output$mix_cimDiablo <- renderPlot({
                 col.dist.method="pearson")
 })
 
+
+mix_plotLoadings.opts = tagList()
+mix_plotLoadings_module <- plotModule(
+    "mix_plotLoadings", mix_plotLoadings.RENDER,
+    title = "Multi-level variable importance", label="a",
+    info.text = "A multi-level variable importance score for each feature is calculated using the DIABLO framework from the MixOmics package.",
+    ## options = mix_plotLoadings.opts,
+    pdf.width=10, pdf.height=10, res=80
+)
+output$mix_plotLoadings     <- mix_plotLoadings_module$render
+output$mix_plotLoadings_pdf <- mix_plotLoadings_module$pdf
+
+mix_hivePlot.opts = tagList()
+mix_hivePlot_module <- plotModule(
+    "mix_hivePlot", mix_hivePlot.RENDER,
+    title = "Hive plot ", label="b",
+    info.text = "The hive plot is a novel visualization method for drawing networks (see http://www.hiveplot.com). The purpose of the hive plot is to visually exploring the network structure. Here, size of the nodes represent the variable importance of the genes and are radially positioned based on the fold-change or F-stats. Edges are drawn as curved links and their thickness represent edge importance. By turning on 'detect loops' in the options, one can highlight possible autocrine signaling loops.",
+    ##options = mix_hivePlot.opts,
+    pdf.width=10, pdf.height=10, res=80
+)
+output$mix_hivePlot     <- mix_hivePlot_module$render
+output$mix_hivePlot_pdf <- mix_hivePlot_module$pdf
+
+
+mix_plotSNF.opts = tagList()
+mix_plotSNF_module <- plotModule(
+    "mix_plotSNF", mix_plotSNF.RENDER,
+    title = "SNF clustering", label="c",
+    info.text = "SNF is a novel computational method for genomic data integration. SNF constructs patient similarity networks for each of the data types and in a second step integrates iteratively these networks until it converges to a final fused network. SNF is able to deal with various data types and since the integration happens in the sample space one can combine various data type without worrying for different scales or noise among the different data. For more information see Wang et al., Nature methods, 2014.",
+    ##options = mix_plotSNF.opts,
+    pdf.width=10, pdf.height=10, res=80
+)
+output$mix_plotSNF     <- mix_plotSNF_module$render
+output$mix_plotSNF_pdf <- mix_plotSNF_module$pdf
+
+
+mix_cimDiablo.opts = tagList()
+mix_cimDiablo_module <- plotModule(
+    "mix_cimDiablo", mix_cimDiablo.RENDER,
+    title = "Expression heatmap", label="d",
+    info.text = "The heatmap shows the expression values of the most important features.",
+    ##options = mix_cimDiablo.opts,
+    pdf.width=10, pdf.height=10, res=72
+)
+output$mix_cimDiablo     <- mix_cimDiablo_module$render
+output$mix_cimDiablo_pdf <- mix_cimDiablo_module$pdf
+
+plotFill <- function(module, id) {
+    fillCol(flex = c(NA,1),
+            module$buttons,
+            plotOutput(id)
+            )
+}
+
+mix_options <- tagList(
+    tipify(checkboxInput('mix_showloops','detect signaling loops',FALSE),
+           "Check to enable signaling loops detection. Signaling loops are detected by finding highly correlated paths that connect all three levels and also show a feedback. These loops may suggest self-sustaining autocrine loops."),
+    tipify(checkboxInput('pdx_posonly','positive correlation only',FALSE),
+           "Restrict to only positive correlation.")
+)
+mix_buttons <- plotModuleButtons(
+    "mix_level", text="Multi-level variable selection. This module is based on the DIABLO framework of the MixOmics R/package.",
+    no.download=TRUE, options=mix_options)
+
+fillCol(flex = c(NA,1),
+        inputPanel(
+
+            tipify( selectInput("mix_level1",NULL,choices=NULL), placement="right",
+                   "Select first level of biomarkers. These are often signaling genes on the cell surface."),
+            
+            tipify( selectInput("mix_level2",NULL,choices=NULL), placement="right",
+                   "Select second level of biomarkers. These are often genes relaying the signals to the effector genes."),
+
+            tipify( selectInput("mix_level3",NULL,choices=NULL), placement="right",
+                   "Select third level of biomarkers. These are often effector genes such astranscription factors."),
+            mix_buttons,            
+            cellArgs=list(width='350px')
+        ),                
+        fillRow(flex = c(1.8,0.1,1),
+                fillCol(flex = c(0.9,0.06,1),
+                        fillCol(flex = c(NA,1),
+                                mix_plotLoadings_module$buttons,
+                                plotOutput('mix_plotLoadings')
+                                ),
+                        br(),
+                        fillRow(flex = c(1.2,1),
+                                ##plotOutput('mix_plotDiablo'),
+                                fillCol(flex = c(NA,1),
+                                        mix_hivePlot_module$buttons,
+                                        plotOutput('mix_hivePlot')
+                                        ),
+                                ##plotOutput('mix_plotVariates')
+                                fillCol(flex = c(NA,1),
+                                        mix_plotSNF_module$buttons,
+                                        plotOutput('mix_plotSNF')
+                                        )
+                                ##plotOutput('mix_circosPlot')
+                                )
+                        ),
+                br(),
+                fillCol(flex = c(NA,1),
+                        mix_cimDiablo_module$buttons,
+                        plotOutput('mix_cimDiablo')
+                        )
+                )
+        )
+
+observe({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    ct1 <- c("COMPARTMENTS:Cell_surface", "COMPARTMENTS:Membrane_part",
+             "FAMILY:Endogenous ligands (HGNC)",
+             "C2:REACTOME_CHEMOKIoNE_RECEPTORS_BIND_CHEMOKINES")
+    ct2 <- c("COMPARTMENTS:Cytoplasm", "MSIGDB:PROTEIN_KINASES",
+             "C5:GO_KINASE_ACTIVITY","FAMILY:Kinases (KEA)",
+             "FAMILY:Micro RNA")
+    ct3 <- c("COMPARTMENTS:Nuclear_part","CUSTOM:Transcription factors",
+             "FAMILY:Nuclear receptors","MSIGDB:TRANSCRIPTION_FACTORS")
+    gs.size <- function(gs) {length(intersect(gs,rownames(ngs$X)))}
+    ct1 <- ct1[which(sapply(GSETS[ct1],gs.size)>=3)]
+    ct2 <- ct2[which(sapply(GSETS[ct2],gs.size)>=3)]
+    ct3 <- ct3[which(sapply(GSETS[ct3],gs.size)>=3)]
+    updateSelectInput(session, "mix_level1", choices=ct1)
+    updateSelectInput(session, "mix_level2", choices=ct2)
+    updateSelectInput(session, "mix_level3", choices=ct3)
+})
+
 ```
 
-`r if(!PRO.VERSION) {"--------------------->"}`
+> **Multi-level feature selection.** **(a)** A multi-level importance score for each feature is calculated using the DIABLO framework from  the [MixOmics](http://mixomics.org/) package. The DIABLO method generalises PLS for multiple datasets, here applied to compartment gene sets. **(b)** The Hive plot visualized the connectivity of the network. **(c)** SNF constructs similarity networks for each of the levels and integrates these networks to a final fused network. **(d)** The heatmap shows the expression values of the most important features in each of the multiple levels.
+
+
+`r if(!DEV.VERSION) {"--------------------->"}`

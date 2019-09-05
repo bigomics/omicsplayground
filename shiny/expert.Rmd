@@ -56,7 +56,7 @@ basic_modules <- c('module-intro.Rmd','module-datatable.Rmd','module-clustering.
                    'module-expression.Rmd','module-enrichment.Rmd','module-functional.Rmd')
 
 expert_modules <- c('module-intersect.Rmd','module-signature.Rmd',
-                    'module-predict.Rmd','module-profiling.Rmd')
+                    'module-biomarker.Rmd','module-profiling.Rmd')
                     
 dev_modules <- c('module-correlation.Rmd','module-batchcorrection.Rmd','module-system.Rmd')
 

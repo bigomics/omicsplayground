@@ -1,3 +1,277 @@
+output <- attachModule <- function(output, module) {
+    ## Attach render functions to shiny output. Works for both
+    ## tableModule and plotModule.
+    ##
+    ##
+    if(!"id" %in% names(module)) stop("module must have id")
+    output[[module$id]] <- module$render
+    if("csv" %in% names(module)) output[[paste0(module$id,"_csv")]] <- module$csv
+    if("pdf" %in% names(module)) output[[paste0(module$id,"_pdf")]] <- module$pdf
+    if("svg" %in% names(module)) output[[paste0(module$id,"_svg")]] <- module$svg
+    return(output)
+}
+##attachModule(enrich_fctable_module, "enrich_fctable")
+
+tableModule <- function(id, func, info.text="Info text",
+                        title="", label="",
+                        ##inputs=NULL, 
+                        options = NULL, info.text.width="250px",
+                        ##no.download = FALSE, just.info=FALSE,
+                        server=TRUE)
+{
+    require(shinyWidgets)
+    require(shinyBS)
+    info_id <- paste0(id,"_info")
+    options_id <- paste0(id,"_options")
+    pdf_id <- paste0(id,"_pdf")
+    csv_id <- paste0(id,"_csv")
+    
+    label1 = HTML(paste0("<span class='module-label' style='font-size:18px;font-weight:normal;padding-right:8px;'>",label,"</span>"))
+    label1 = HTML(paste0("<span class='module-label'>",label,"</span>"))
+    
+    
+    options.button <- ""
+    
+    if(!is.null(options) && length(options)>0) {
+        options.button <- dropdownButton(
+            ##tags$h3("Options"),
+            options,
+            ##br(),
+            ##dload,
+            circle = TRUE, size = "xs", ## status = "danger",
+            icon = icon("gear"), width = "250px",
+            inputId = options_id,
+            tooltip = tooltipOptions(title = "Options", placement = "right")
+        )
+    }
+    
+    buttons <- fillRow(
+        flex=c(NA,NA,NA,NA,1),
+        ##actionLink(options_id, label=NULL, icon = icon("info")),
+        label1,
+        dropdownButton(
+            tags$p(HTML(info.text)),
+            br(),
+            circle = TRUE, size = "xs", ## status = "danger",
+            icon = icon("info"), width = info.text.width,
+            inputId = info_id,
+            tooltip = tooltipOptions(title = "Info", placement = "right")
+        ),
+        options.button,
+        dropdownButton(
+            downloadButton(csv_id, "CSV"),
+            circle = TRUE, size = "xs", ## status = "danger",
+            icon = icon("download"), width = "80px",
+            tooltip = tooltipOptions(title = "Download", placement = "right")
+        ),
+        ##HTML(paste("<center><strong>",title,"</strong></center>"))
+        HTML(paste("<center>",title,"</center>"))
+        ##inputs
+        ##selectInput("sel123","number",1:10)
+    )
+    
+    TMPFILE = paste0(gsub("file","data",tempfile()),".csv")
+    TMPFILE
+    
+    render <- renderDataTable({
+        dt <- func()
+        write.csv(dt$x$data, file=TMPFILE, row.names=FALSE)
+        dt
+    }, server=server)
+    
+    ## render2 <- renderPlot({plot_array[[3]]()}, res=res)
+    download.csv <- downloadHandler(
+        filename = "data.csv",
+        content = function(file) file.copy(TMPFILE,file)        
+    )
+    ##box <- fillCol(flex=c(NA,1), button, render)
+    
+    module <- list(
+        id = id,
+        .func = func,
+        render = render,
+        ##render2 = render2,
+        csv = download.csv,
+        buttons = buttons
+    )
+    ## attr(module, "class") <- "ShinyModule"
+    return(module)
+}
+
+
+plotModuleButtons <- function(id, text="Help text", title="",
+                              no.download = FALSE, just.info=FALSE,
+                              options=NULL, inputs=NULL, label="")
+{
+    require(shinyWidgets)
+    require(shinyBS)
+    info_id <- paste0(id,"_info")
+    options_id <- paste0(id,"_options")
+    pdf_id <- paste0(id,"_pdf")
+    csv_id <- paste0(id,"_csv")
+
+    if(is.null(inputs) || length(inputs)==0 ) inputs <- ""
+    options.button <- ""
+
+    if(!just.info && !is.null(options) && length(options)>0) {
+        options.button <- dropdownButton(
+            ##tags$h3("Options"),
+            options,
+            ##br(),
+            ##dload,
+            circle = TRUE, size = "xs", ## status = "danger",
+            icon = icon("gear"), width = "250px",
+            inputId = options_id,
+            tooltip = tooltipOptions(title = "Options", placement = "right")
+        )
+    }
+
+    dload.pdf <- downloadButton(pdf_id, "PDF")
+    dload.csv = NULL
+    ## dload.csv <- downloadButton(csv_id, "CSV")
+    
+    dload.button <- dropdownButton(
+        dload.pdf,
+        dload.csv,
+        circle = TRUE, size = "xs", ## status = "danger",
+        icon = icon("download"), width = "40px",
+        tooltip = tooltipOptions(title = "Download", placement = "right")
+    )
+    if(no.download) dload.button <- ""
+    ##label1 = label
+    label1 = HTML(paste0("<span style='font-size:18px;font-weight:normal;padding-right:8px;'>",label,"</span>"))
+    label1 = HTML(paste0("<span class='module-label'>",label,"</span>"))
+    
+    ## button layout
+    btn <- fillRow(
+        flex=c(NA,NA,NA,NA,1),
+        label1,
+        dropdownButton(
+            tags$p(HTML(text)),
+            br(),
+            circle = TRUE, size = "xs", ## status = "danger",
+            icon = icon("info"), width = "250px",
+            inputId = info_id,
+            tooltip = tooltipOptions(title = "Info", placement = "right")
+        ),
+        options.button,
+        dload.button,
+        ##HTML(paste("<center><strong>",title,"</strong></center>"))
+        HTML(paste("<center>",title,"</center>"))
+        ##br()
+        ##inputs
+        ##selectInput("sel123","number",1:10)
+    )
+    return(btn)
+}
+
+plotModule <- function(id, func, info.text="Info text", title="",
+                       inputs=NULL, options = NULL, plotlib = "base", label="",
+                       no.download = FALSE, just.info=FALSE, server=TRUE,
+                       pdf.width=8, pdf.height=6, pdf.pointsize=12, res=72)
+{
+    require(shinyWidgets)
+    require(shinyBS)
+    info_id <- paste0(id,"_info")
+    options_id <- paste0(id,"_options")
+    pdf_id <- paste0(id,"_pdf")
+    ##data_id <- paste0(id,"_data")
+    
+    buttons = plotModuleButtons(
+        id=id, text=info.text, title=title,
+        just.info=just.info, label = label,
+        inputs=inputs, options=options, no.download=no.download)
+    ##toggleDropdownButton(info_id)
+
+    TMPFILE = paste0(gsub("file","plot",tempfile()),".pdf")
+    TMPFILE
+
+    pdf(TMPFILE)
+    plot.new()
+    mtext("Error. Could not export PDF.", line=-8)
+    dev.off()
+    
+    if(plotlib == "plotly") {
+        render <- renderPlotly({
+            p <- func()
+            if(sum(!is.na(match(c("x","y","z"),names(p$x$attrs[[2]])))) < 3) {
+                export(p, TMPFILE)
+            }else{
+                pdf(TMPFILE)
+                plot.new()
+                mtext("Sorry, not possible to download 3D images as pdf yet...")
+                dev.off()
+            }
+            # save(p,file = "/data/Projects/playground/R/p.rda")
+            # print(names(p))
+            # print(str(p))
+            # #print(names(p$layoutAttrs[[1]]))
+            # export(p, TMPFILE)
+            p
+        })
+    } else if(plotlib == "scatterD3") {
+        render <- renderScatterD3({
+            p <- func()
+            ##dev.copy2pdf(file=TMPFILE, width=pdf.width, height=pdf.height)
+            pdf(TMPFILE)
+            plot.new()
+            mtext("Please use SVG download directly from plot", line=-8)
+            dev.off()
+            return(p)
+        })
+    } else if(plotlib == "visnetwork") {
+        render <- renderVisNetwork({
+            p <- func()
+            ## dev.copy2pdf(file=TMPFILE, width=pdf.width, height=pdf.height)
+            ## p <- p %>% visExport(type="pdf", name="network")
+            return(p)
+        })
+    } else if(plotlib %in% c("table","datatable")) {
+        render <- renderDataTable({
+            func()
+        }, server=server)
+    } else {
+        ## Base plotting
+        render <- renderPlot({
+            func()
+            ##function() func()
+            if(1 && !is.null(func)) {
+                mtext("Created with BigOmics Playground",
+                      outer=TRUE, 
+                      ##side=3,line=seq(0,-80,-5), cex=2.6,
+                      side=1,line=0, cex=0.5,
+                      col="#AAAAAA",
+                      ##col="#DDDDDD11",
+                      xpd=NA)
+            }
+            ## for base plots use dev.copy2pdf
+            suppressWarnings( suppressMessages(
+                ##dev.copy2pdf(file=TMPFILE)
+                dev.copy2pdf(file=TMPFILE, width=pdf.width, height=pdf.height)
+            ))
+        }, res=res)
+    }
+
+    ## render2 <- renderPlot({plot_array[[3]]()}, res=res)
+    download.pdf <- downloadHandler(
+        filename = "plot.pdf",
+        content = function(file) file.copy(TMPFILE,file)        
+    )
+    ##box <- fillCol(flex=c(NA,1), button, render)
+    
+    module <- list(
+        id = id,
+        .func = func,
+        render = render,
+        ##render2 = render2,
+        pdf = download.pdf,
+        buttons = buttons
+    )
+    ## attr(module, "class") <- "ShinyModule"
+    return(module)
+}
+
+
 pgx.plotGeneExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
                                    level="gene", grouped=FALSE, srt=0,
                                    collapse.others=TRUE, max.points=-1,

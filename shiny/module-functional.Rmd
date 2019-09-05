@@ -5,25 +5,24 @@ Functional
 Inputs {.sidebar data-width=240}
 --------------------------------------------------------------------------------
 
-
 <br> **Functional Analysis**. Perform specialized functional analysis
-including GO, KEGG and Drug Connectivity Map.
+to understand biological functions including GO, KEGG, drug
+connectivity mapping, and ligand-receptor interaction analysis.
+
 
 ```{r}
-actionLink("fa_info", "Info", icon = icon("info-circle") )
-##actionLink("fa_info", "More details ...")
+tipify( actionLink("fa_info", "Info", icon = icon("info-circle") ),
+       "Show more information about this module.")
 
 fa_infotext =
     "This module performs specialized pathway and drug enrichment analysis.
 
-<br><br><a href='kegg pathway'>KEGG</a> is a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. Within the KEGG graph section, each pathway is scored for the selected contrast profile and reported in the table.  The scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap. The table is interactive; enabling user to sort on different variables. It is possible to visualize the pathway map by clicking on the pathway in the table, where genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Another important feature of the platform is that it provides an activation-heatmap including the comparison of activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities between profiles in certain pathways.
+<br><br><a href='kegg pathway'>KEGG</a> is a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. Within the KEGG pathway section, each pathway is scored for the selected contrast profile and reported in the table.  The scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap. The table is interactive; enabling user to sort on different variables. It is possible to visualize the pathway map by clicking on the pathway in the table, where genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Another important feature of the platform is that it provides an activation-heatmap including the comparison of activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities between profiles in certain pathways.
 
 
-<br><br><a href='http://www.geneontology.org'>Gene Ontology</a> (GO) defines functional concepts/classes and their relationships as a hierarchical graph. The GO database provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. All the features described under the KEGG graph tab, such as scoring the gene sets and drawing an activation-heatmap, can be performed for the GO database under the GO graph tab. Instead of pathway maps, an annotated graph structure provided by the GO database is potted for every selected gene set.
+<br><br><a href='http://www.geneontology.org'>Gene Ontology</a> (GO) defines functional concepts/classes and their relationships as a hierarchical graph. The GO database provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. All the features described under the KEGG pathway tab, such as scoring the gene sets and drawing an activation-heatmap, can be performed for the GO database under the GO graph tab. Instead of pathway maps, an annotated graph structure provided by the GO database is potted for every selected gene set.
 
 <br><br> The <a href='https://portals.broadinstitute.org/cmap/'>Drug Connectivity Map</a> correlates your signature with more than 5000 known drug profiles from the L1000 database, and shows the top N=10 similar and opposite profiles by running the GSEA algorithm on the contrast-drug profile correlation space. The activation-heatmap compares drug activation profiles across multiple contrasts. This facilitates to quickly see and detect the similarities between contrasts for certain drugs.
-
-
 "
 
 observeEvent( input$fa_info, {
@@ -33,23 +32,24 @@ observeEvent( input$fa_info, {
         easyClose = TRUE ))
 })
 
-##require(tippy)
-##tippy("Help/Info", tooltip=hm_infotext)
 ```
 
 <br><br>
 
 ```{r}
-selectInput("fa_contrast","Comparison:", choices=NULL)
+tipify( selectInput("fa_contrast","Contrast:", choices=NULL),
+       "Select the contrast corresponding to the comparison of interest.",
+       placement="top")
 br();br();
 
 ##actionLink("fa_options", "Show options ...")
-actionLink("fa_options", "Options", icon=icon("cog", lib = "glyphicon"))
+tipify( actionLink("fa_options", "Options", icon=icon("cog", lib = "glyphicon")),
+       "Show/hide advanced options", placement="top")
 br();br();
 conditionalPanel(
     "input.fa_options % 2 == 1",
     tagList(
-        checkboxInput('fa_normalize','normalize activation maps',TRUE)
+        checkboxInput('fa_normalize','normalize activation matrix',TRUE)
     )
 )
 
@@ -57,9 +57,8 @@ if(PRO.VERSION) {
     conditionalPanel(
         "input.fa_options % 2 == 1",
         tagList(
-            checkboxInput('fa_filtertable','filter signficant (tables)',FALSE),
-            radioButtons('dsea_label','Label type (CMap)',c("name","moa","target"),inline=TRUE),
-            checkboxInput('dsea_showall','Show all (CMap)',FALSE)
+            checkboxInput('fa_filtertable','filter signficant (tables)',FALSE)
+            ##checkboxInput('dsea_showall','Show all (CMap)',FALSE)
         )
     )
 }
@@ -78,31 +77,22 @@ observe({
 Col {.tabset data-width=650}
 ----------------------------------------------------------------------------------------
 
-### KEGG graph
-    
+### KEGG pathways
+
 ```{r message=FALSE, warning=FALSE, fig.width=4}
 
 ##================================================================================
-## KEGG graph
+## KEGG pathways
 ##================================================================================
-
-fillRow(flex = c(1.3,1), 
-        fillCol(flex = c(2.1,0.06,1),
-                imageOutput("kegg_graph", width="100%", height="100%"),
-                br(),
-                dataTableOutput('fa_keggtable')
-                ),
-        plotOutput('kegg_cormap')
-        )
 
 getKeggTable <- reactive({
     ngs = inputData()
     if(is.null(ngs)) return(NULL)
+    req(input$fa_contrast)
     
     ## ----- get comparison
     comparison=2
     comparison <- input$fa_contrast
-    if(is.null(comparison)) return(NULL)
     if(!(comparison %in% names(ngs$gset.meta$meta))) return(NULL)
 
     ## ----- get KEGG id
@@ -157,10 +147,13 @@ getKeggTable <- reactive({
     require(corpora)
     ft.pv <- rep(1, length(ngene1))
     jj <- which(ngene0>0)  ## error for ngene0==0
-    ft.jj <- fisher.pval( k1=ngene1[jj], n1=ngene0[jj],
-                         k2=length(sig.genes), n2=length(gene.fc),
-                         alternative="greater")
-    ft.pv[jj] <- ft.jj
+    if(length(jj)>0 && length(sig.genes)>0) {
+        ft.jj <- corpora::fisher.pval(
+                              k1=ngene1[jj], n1=ngene0[jj],
+                              k2=length(sig.genes), n2=length(gene.fc),
+                              alternative="greater")
+        ft.pv[jj] <- ft.jj
+    }
     ft.r <- round(ngene1/ngene0,digits=2)
     ft.qv <- round(p.adjust(ft.pv, method="fdr"),digits=4)
     ft.res <- data.frame( ratio=ft.r, "k/n"=paste0(ngene1,"/",ngene0), q=ft.qv, check.names=FALSE)
@@ -181,7 +174,7 @@ getKeggTable <- reactive({
 
 getFilteredKeggTable <- reactive({
     df <- getKeggTable()
-    do.filter=FALSE
+    do.filter = FALSE
     if(PRO.VERSION) do.filter <- input$fa_filtertable
     if(do.filter) df <- df[which(df$q < 0.999),]
     return(df)
@@ -334,7 +327,7 @@ output$kegg_graph <- renderImage({
     if(is.null(df)) return(NULL.IMG)
     
     sel.row=1
-    sel.row <- input$fa_keggtable_rows_selected
+    sel.row <- input$kegg_table_rows_selected
     ##if(is.null(sel.row) || length(sel.row)==0) return(NULL)
     if(is.null(sel.row) || length(sel.row)==0) return(NULL.IMG)
     sel.row <- as.integer(sel.row)
@@ -377,7 +370,8 @@ output$kegg_graph <- renderImage({
 }, deleteFile = TRUE)        
 
 
-output$fa_keggtable <- renderDataTable({
+##output$kegg_table <- renderDataTable({
+kegg_table.RENDER <- reactive({
     
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
@@ -398,10 +392,10 @@ output$fa_keggtable <- renderDataTable({
                   extensions = c('Buttons','Scroller'),
                   selection=list(mode='single', target='row', selected=1),
                   options=list(
-                      dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
-                      ##dom = 'lfrtip', 
+                      ##dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
+                      dom = 'lfrtip', 
                       scrollX = TRUE, ##scrollY = TRUE,
-                      scrollY = 220, scroller=TRUE, deferRender=TRUE
+                      scrollY = 210, scroller=TRUE, deferRender=TRUE
                   )  ## end of options.list 
                   ) %>%
         formatSignif(numeric.cols,4) %>%
@@ -413,7 +407,7 @@ output$fa_keggtable <- renderDataTable({
                             backgroundPosition = 'center') 
 })
 
-output$kegg_cormap <- renderPlot({
+kegg_actmap.RENDER <- reactive({
     require(igraph)
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
@@ -474,11 +468,58 @@ output$kegg_cormap <- renderPlot({
     bmar <- 1 + pmax(50 - nrow(score2),0)*0.3
     bmar=1
     corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
-             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,2,0) )
+             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,3,0) )
     
-}, res=70)    
+})    
+
+
+kegg_info1 = "<strong>KEGG pathways</strong> are a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. In the pathway map, genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Each pathway is scored for the selected contrast profile and reported in the table below. "
+kegg_buttons1 = plotModuleButtons(
+    "kegg_graph", text=kegg_info1, just.info=TRUE, no.download=TRUE,
+    title = "KEGG pathway map", label="a"
+)
+
+kegg_actmap.opts = tagList()
+kegg_actmap_module <- plotModule(
+    "kegg_actmap", kegg_actmap.RENDER,
+    title = "Activation matrix", label="c",
+    info.text = "The KEGG activation matrix visualizes the activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
+    ##options = kegg_actmap.opts,
+    pdf.width=10, pdf.height=10, res=80
+)
+output$kegg_actmap     <- kegg_actmap_module$render
+output$kegg_actmap_pdf <- kegg_actmap_module$pdf
+    
+kegg_table_module <- tableModule(
+    id = "kegg_table", label="b",
+    func = kegg_table.RENDER,
+    info.text = "<strong>Enrichment table.</strong> The table is interactive; enabling user to sort on different variables and select a pathway by clicking on the row in the table. The scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap.", 
+    title = "Enrichment table"
+)
+##output$kegg_table     <- kegg_table_module$render
+##output$kegg_table_csv <- kegg_table_module$csv
+output <- attachModule(output, kegg_table_module)
+
+fillRow(flex = c(1.3,0.04,1), 
+        fillCol(flex = c(NA,1.8,0.06,NA,1),
+                kegg_buttons1,
+                imageOutput("kegg_graph", width="100%", height="100%"),
+                br(),
+                kegg_table_module$buttons,
+                dataTableOutput('kegg_table')
+                ),
+        br(),  ## horizontal space
+        fillCol(flex = c(NA,1),
+                kegg_actmap_module$buttons,
+                plotOutput('kegg_actmap')
+                )
+        )
+
 
 ```
+
+> **KEGG pathways** are a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. **(a)** In the pathway map, genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. **(b)** Each pathway is scored for the selected contrast profile and reported in the table. **(c)** The activation matrix visualizes the activation levels of pathways across multiple contrast profiles. 
+
 
 ### GO graph
     
@@ -489,21 +530,8 @@ output$kegg_cormap <- renderPlot({
 ##================================================================================
 
 require(visNetwork)
-fillRow(flex = c(1.2,1), 
-        fillCol(flex = c(NA,2,1),
-                inputPanel(
-                    checkboxGroupInput("faGO_options", NULL, inline=TRUE,
-                                       choices=c("prune",'color clusters'),
-                                       selected=c("prune")),
-                    cellArgs=list(width='100%')
-                ),                
-                visNetworkOutput("faGO_visgraph", height = "100%"),
-                dataTableOutput('faGO_scoretable')
-                ),
-        plotOutput('faGO_cormap')
-        )
 
-output$faGO_visgraph <- renderVisNetwork({
+GO_network.RENDER <- reactive({
 
     require(igraph)
     require(RColorBrewer)
@@ -526,7 +554,8 @@ output$faGO_visgraph <- renderVisNetwork({
     V(sub2)$label[which(is.na(score)|score==0)] = ""
     pos = sub2$layout
         
-    if("prune" %in% input$faGO_options) {
+    ##if("prune" %in% input$GO_options) {
+    if(input$GO_prunetree) {
         ##cat("pruning GO graph\n")
         vv = V(sub2)[which(!is.na(score) & score!=0)]
         sp = shortest_paths(sub2, from="all", to=vv, mode="all", output="vpath")
@@ -538,10 +567,11 @@ output$faGO_visgraph <- renderVisNetwork({
 
     ## remove root?
     removeroot=TRUE
-    ##if(PRO.VERSION) removeroot <-input$faGO_removeroot
+    ##if(PRO.VERSION) removeroot <-input$GO_removeroot
     if(removeroot) {
         sub2 <- induced_subgraph(sub2, which(V(sub2)$name!="all"))
-        if("prune" %in% input$faGO_options) pos = layout_with_fr(sub2)
+        ##if("prune" %in% input$GO_options) pos = layout_with_fr(sub2)
+        if(input$GO_prunetree) pos = layout_with_fr(sub2)
         score <- score[V(sub2)$name]
         ##pos <- pos[V(sub2)$name,]        
     }
@@ -549,7 +579,7 @@ output$faGO_visgraph <- renderVisNetwork({
     roots <- intersect(roots, V(sub2)$name)
     
     astree = TRUE
-    ##if(PRO.VERSION) astree <- input$faGO_astree
+    ##if(PRO.VERSION) astree <- input$GO_astree
     if(astree) {
         if("all" %in% V(sub2)$name) {
             pos = layout_as_tree(sub2, root="all", mode="all")
@@ -561,7 +591,8 @@ output$faGO_visgraph <- renderVisNetwork({
         ##pos <- pos[,c(2,1)] ## flip horizontal
     }
 
-    if("color clusters" %in% input$faGO_options) {
+    ##if("color clusters" %in% input$GO_options) {
+    if(input$GO_colorclusters) {
         ##clust = cluster_louvain(as.undirected(sub2))$membership
         clust = cluster_louvain(as.undirected(go))$membership
         names(clust) = V(go)$name
@@ -594,7 +625,8 @@ output$faGO_visgraph <- renderVisNetwork({
 
     ## rendering
     font.size=20; cex=1
-    if("prune" %in% input$faGO_options) {
+    ##if("prune" %in% input$GO_options) {
+    if(input$GO_prunetree) {
         font.size=20; cex=0.6
     }
 
@@ -613,7 +645,8 @@ output$faGO_visgraph <- renderVisNetwork({
         visPhysics(enabled=FALSE) 
 })    
 
-output$faGO_scoretable <- renderDataTable({
+
+GO_table.RENDER <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
     if(is.null(ngs$meta.go)) return(NULL)
@@ -645,8 +678,8 @@ output$faGO_scoretable <- renderDataTable({
                   extensions = c('Buttons','Scroller'),
                   selection=list(mode='single', target='row', selected=1),
                   options=list(
-                      dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
-                      ##dom = 'lfrtip', 
+                      ##dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
+                      dom = 'lfrtip', 
                       scrollX = TRUE, ##scrollY = TRUE,
                       scrollY = 220, scroller=TRUE, deferRender=TRUE
                   )  ## end of options.list 
@@ -660,8 +693,7 @@ output$faGO_scoretable <- renderDataTable({
                             backgroundPosition = 'center') 
 })
 
-
-output$faGO_cormap <- renderPlot({
+GO_actmap.RENDER <- reactive({
     require(igraph)
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
@@ -671,14 +703,14 @@ output$faGO_cormap <- renderPlot({
     go = ngs$meta.go$graph
     score[is.na(score)] = 0
     rownames(score) = V(go)[rownames(score)]$Term
-    cat("faGO_cormap:: dim(score)=",dim(score),"\n")
+    cat("GO_actmap:: dim(score)=",dim(score),"\n")
     
     ## reduce score matrix
     ##score = head(score[order(-rowSums(abs(score))),],40)
     score = score[head(order(-rowSums(score**2)),50),,drop=FALSE] ## max number of terms    
     score = score[,head(order(-colSums(score**2)),25),drop=FALSE] ## max comparisons/FC
     if(NCOL(score)==1) score <- cbind(score,score)   
-    cat("faGO_cormap:: dim(score)=",dim(score),"\n")
+    cat("GO_actmap:: dim(score)=",dim(score),"\n")
 
     score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
     d1 <- as.dist(1-cor(t(score),use="pairwise"))
@@ -713,58 +745,79 @@ output$faGO_cormap <- renderPlot({
     ## heatmap(score2, scale="none", mar=c(8,20))
     bmar <- 1 + pmax((50 - nrow(score2))*0.25,0)
     corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
-             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,2,0) )
+             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,3,0) )
     ##dev.off()
     
-}, res=70)    
+})    
+
+
+GO_info1 = "The <strong>Gene Ontology</strong> (GO) provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. The structure of GO can be described in terms of a graph, where each GO term is a node, and the relationships between the terms are edges between the nodes. GO is loosely hierarchical, with ‘child’ terms being more specialized than their ‘parent’ terms. The graph is interactive. You can move the graph and zoom in using the mouse."
+
+GO_network.opts = tagList(
+    tipify( checkboxInput("GO_prunetree", "Prune tree", TRUE),
+           "Prune the tree with only significant branches."),
+    tipify( checkboxInput("GO_colorclusters", "Color clusters"),
+           "Highlight clusters with different colors.")
+)
+GO_network_module <- plotModule(
+    "GO_network", GO_network.RENDER, plotlib="visnetwork",
+    title = "Gene Ontology graph", label="a",
+    info.text = GO_info1, no.download=TRUE,
+    options = GO_network.opts,
+    pdf.width=10, pdf.height=10, res=80
+)
+##output$GO_network     <- GO_network_module$render
+##output$GO_network_pdf <- GO_network_module$pdf
+output <- attachModule(output, GO_network_module)
+
+GO_actmap.opts = tagList()
+GO_actmap_module <- plotModule(
+    "GO_actmap", GO_actmap.RENDER,
+    title = "Activation matrix", label="c",
+    info.text = "The Gene Ontology (GO) activation matrix visualizes the activation of GO terms across conditions. From this figure, you can easily detect GO terms that are consistently up/down across conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
+    options = GO_actmap.opts,
+    pdf.width=10, pdf.height=10, res=80
+)
+##output$GO_actmap     <- GO_actmap_module$render
+##output$GO_actmap_pdf <- GO_actmap_module$pdf
+output <- attachModule(output, GO_actmap_module)
+
+GO_table_module <- tableModule(
+    id = "GO_table", label="b",
+    func = GO_table.RENDER,
+    info.text="<strong>GO score table.</strong> The scoring of a GO term is performed by considering the cumulative score of all terms from that term to the root node. That means that GO terms that are supported by higher level terms levels are preferentially scored.", 
+    title = "GO score table"
+)
+##output$GO_table     <- GO_table_module$render
+##output$GO_table_csv <- GO_table_module$csv
+output <- attachModule(output, GO_table_module)
+
+fillRow(flex = c(1.2,1), 
+        fillCol(flex = c(NA,2,NA,1),
+                GO_network_module$buttons,
+                visNetworkOutput("GO_network", height = "100%"),
+                GO_table_module$buttons,
+                dataTableOutput('GO_table')
+                ),
+        fillCol(flex = c(NA,1),
+                GO_actmap_module$buttons,                
+                plotOutput('GO_actmap')
+                )
+        )
 
 ```
 
+> The **Gene Ontology (GO)** describes our knowledge of the biological domain of genes with respect to three aspects: molecular function, cellular component and biological process. **(a)** Enrichment of the GO terms represented as a hierarchical graph. **(b)** GO scoring table. The score of a GO term is the cumulative score of all higher order terms. **(c)** The activation matrix visualizes the activation levels of GO terms across multiple contrast profiles.
+
 
 ### Drug CMap
-    
+
+
 ```{r message=FALSE, warning=FALSE, fig.width=4}
 
 ##================================================================================
 ## Drug signature enrichment analysis L1000
 ##================================================================================
-
-fillRow(flex = c(1.5,1), 
-        fillCol(flex = c(NA,1.8,1),
-                inputPanel(
-                    ##radioButtons('dsea_plottype',NULL,c("enplot","tsne","cor"),inline=TRUE),
-                    radioButtons('dsea_plottype',NULL,c("enplot","bar","tsne"),inline=TRUE),
-                    radioButtons('dsea_monocombo',NULL,c("mono","combo"),inline=TRUE),
-                    cellArgs=list(width='100%')
-                ),                
-                ##plotOutput("dsea_enplots"),
-                uiOutput("dsea_ui"),
-                dataTableOutput('dsea_scoretable')
-                ),
-        plotOutput('dsea_cormap')
-        )
-
-observe({
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    ct <- c("mono","combo")
-    if(is.null(ngs$drugs$combo)) {
-        ct <- c("mono")
-    }
-    updateRadioButtons(session, "dsea_monocombo", choices=ct, inline=TRUE)
-})
-
-
-output$dsea_ui <- renderUI({
-    if(input$dsea_plottype=="tsne") {
-        output <- scatterD3Output('dsea_tsne')
-    } else if(input$dsea_plottype=="bar") {
-        output <- plotOutput("dsea_barplot", height = "100%")
-    } else {
-        output <- plotOutput("dsea_enplots", height = "100%")
-    }
-    output
-})
 
 getDseaTable <- reactive({
     ngs <- inputData()
@@ -803,7 +856,7 @@ getDseaTable <- reactive({
         j2 <- match( drug2, descr0$pert_iname)
         cmoa <- paste( descr0[j1,"moa"],"+",descr0[j2,"moa"])
         ctarget <- paste( descr0[j1,"target"],"+",descr0[j2,"target"])
-        descr <- data.frame( moa=cmoa, target=ctarget)
+        descr <- data.frame( MOA=cmoa, target=ctarget)
     } else {
         jj <- match( drug, descr0$pert_iname)
         descr <- descr0[jj,c("moa","target")]
@@ -816,11 +869,10 @@ getDseaTable <- reactive({
 })
 
 
-output$dsea_enplots <- renderPlot({
+dsea_enplots.RENDER <- reactive({
     ngs <- inputData()
     if(is.null(ngs$drugs)) return(NULL)
     shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
-    if(input$dsea_plottype=="tsne") return(NULL)
     
     comparison=1
     comparison = input$fa_contrast
@@ -837,78 +889,31 @@ output$dsea_enplots <- renderPlot({
     dctype <- sub("_.*$","",names(rnk))
     ##table(rownames(res) %in% dctype)
     ##table(sapply(rownames(res), function(g) sum(grepl(g,names(rnk),fixed=TRUE))))
-
-    plottype="enplot"
-    plottype <- input$dsea_plottype
-
-    if(FALSE && plottype=="cor") {        
-        avgX <- readRDS(file=file.path(FILES,"l1000_es_5685drugsAVG.rds"))
-        fx <- ngs$gx.meta$meta[[comparison]]$meta.fx
-        names(fx) <- rownames(ngs$gx.meta$meta[[1]])
-        names(fx) <- toupper(sub(".*:","",names(fx)))
-        gg <- intersect(rownames(avgX), names(fx))
-        length(gg)
-        
-        itop <- c( head(order(-res$NES),12), tail(order(-res$NES),12))
-        itop <- c( head(order(-res$NES),12), head(order(res$NES),12))
-
-        par(mfrow=c(4,6), mar=c(1,1,1,1)*0.2, oma=c(2,3,1,3),
-            mgp=c(2.0,0.8,0), xpd=FALSE )
-        i=1
-        for(i in itop) {
-            dx <- rownames(res)[i]
-            dx
-            dx <- strsplit(dx, split="[+]")[[1]]
-            x1 <- fx[gg]
-            y1 <- rowMeans(avgX[gg,dx,drop=FALSE])
-            plot( x1, y1, pch=19, cex=0.4,
-                 tck=0.03, mgp=c(1.2,-1.4,0),
-                 xlab="exp FC", ylab="drug FC" )
-            abline(v=0, h=0, lwd=1, lty=3)
-            abline( lm( y1 ~ x1), col="red", lwd=1.5)
-            ##nes <- round(res$NES[i],2)
-            ##qv  <- round(res$padj[i],3)
-            ##tt <- c( paste("NES=",nes), paste("q=",qv) )
-            ##out <- cor.test( x, y[,1])
-            out <- cor.test(x1, y1)
-            r1 <- round(out$estimate,digits=3)
-            pv <- round(out$p.value,digits=4)
-            tt <- c( paste("rho=",r1), paste("p=",pv),"")
-            legend("topleft", legend=dx, cex=1.05)
-            legend("bottomright", legend=tt, cex=0.95,
-                   y.intersp=0.85, bty="n", text.col="darkgreen")
-        }
-
-    } else if(plottype=="enplot") {
-
-        ## ENPLOT TYPE
-        itop <- c( head(order(-res$NES),10), tail(order(-res$NES),10))
-        par(oma=c(0,3,0,0))
-        par(mfrow=c(4,5), mar=c(1,1.5,1.8,1))
-        i=1
-        for(i in itop) {
-            dx <- rownames(res)[i]
-            dx
-            gmtdx <- grep(dx,names(rnk),fixed=TRUE,value=TRUE)  ## L1000 naming allows this...
-            length(gmtdx)
-            ##if(length(gmtdx) < 3) { frame(); next }
-            gsea.enplot( rnk, gmtdx, main=dx, cex.main=1.25)
-            nes <- round(res$NES[i],2)
-            qv  <- round(res$padj[i],3)
-            tt <- c( paste("NES=",nes), paste("q=",qv) )
-            legend("topright", legend=tt, cex=0.9)
-        }
-    } else {
-        return(NULL)
+    
+    ## ENPLOT TYPE
+    itop <- c( head(order(-res$NES),10), tail(order(-res$NES),10))
+    par(oma=c(0,1,0,0))
+    par(mfrow=c(4,5), mar=c(1,1.5,1.8,1))
+    i=1
+    for(i in itop) {
+        dx <- rownames(res)[i]
+        dx
+        gmtdx <- grep(dx,names(rnk),fixed=TRUE,value=TRUE)  ## L1000 naming allows this...
+        length(gmtdx)
+        ##if(length(gmtdx) < 3) { frame(); next }
+        gsea.enplot( rnk, gmtdx, main=dx, cex.main=1.25)
+        nes <- round(res$NES[i],2)
+        qv  <- round(res$padj[i],3)
+        tt <- c( paste("NES=",nes), paste("q=",qv) )
+        legend("topright", legend=tt, cex=0.9)
     }
     
 })    
 
-output$dsea_barplot <- renderPlot({
+dsea_moaplot.RENDER <- reactive({
     ngs <- inputData()
     if(is.null(ngs$drugs)) return(NULL)
     shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
-    if(input$dsea_plottype=="tsne") return(NULL)
     
     comparison=1
     comparison = input$fa_contrast
@@ -944,35 +949,31 @@ output$dsea_barplot <- renderPlot({
     head(dtg.pos)
     head(dtg.neg)
 
-    NTOP=15
+    NTOP=10
     if(1) {
-        moa.top <- sort(c( head(moa.pos,NTOP), -head(moa.neg,NTOP)))
-        dtg.top <- sort(c( head(dtg.pos,NTOP), -head(dtg.neg,NTOP)))
-        layout(matrix(1:2,nrow=1),widths=c(1.4,1))
-        par(mar=c(5,20,5,1), mgp=c(2,0.7,0))
-        barplot(moa.top, horiz=TRUE, las=1, xlab="drugs (n)")
-        title(main="MOA", line=1 )
-        par(mar=c(5,12,5,1), mgp=c(2,0.7,0))
-        barplot(dtg.top, horiz=TRUE, las=1, xlab="drugs (n)")
-        title(main="target", line=1 )
-    } else {
-        moa.top <- c(head(moa.sum,NTOP), tail(moa.sum,NTOP))
-        dtg.top <- c(head(dtg.sum,NTOP), tail(dtg.sum,NTOP))
-        moa.top <- c(head(moa.avg,NTOP), tail(moa.avg,NTOP))
-        dtg.top <- c(head(dtg.avg,NTOP), tail(dtg.avg,NTOP))
+        moa.top <- sort(c( head(moa.pos,NTOP), -head(moa.neg,NTOP)),decreasing=TRUE)
+        dtg.top <- sort(c( head(dtg.pos,NTOP), -head(dtg.neg,NTOP)),decreasing=TRUE)
 
-        par(mfrow=c(1,2), mar=c(5,16,5,0), mgp=c(2,0.7,0))
-        barplot(moa.top, horiz=TRUE, las=1, xlab="average NES")
-        title(main="MOA", line=1 )
-        barplot(dtg.top, horiz=TRUE, las=1, xlab="average NES")
-        title(main="target", line=1 )
+        ##layout(matrix(1:2,nrow=1),widths=c(1.4,1))
+        ##par(mfrow=c(2,1))
+        par(mar=c(4,15,5,0.5), mgp=c(2,0.7,0))
+
+        par(mfrow=c(1,1))
+
+        if(input$dsea_moatype=="drug class") {
+            par(mar=c(15,4,3,0.5), mgp=c(2,0.7,0))
+            barplot(moa.top, horiz=FALSE, las=3, ylab="drugs (n)")
+            ##title(main="MOA", line=1 )
+        } else {
+            par(mar=c(15,4,3,0.5), mgp=c(2,0.7,0))
+            barplot(dtg.top, horiz=FALSE, las=3, ylab="drugs (n)")
+            ##title(main="target gene", line=1 )
+        }
     }
-
-
+    
 })    
 
-
-output$dsea_scoretable <- renderDataTable({
+dsea_table.RENDER <- reactive({
     ngs <- inputData()
     if(is.null(ngs$drugs)) return(NULL)
   
@@ -988,13 +989,13 @@ output$dsea_scoretable <- renderDataTable({
     
     DT::datatable( res, rownames=FALSE,
                   class = 'compact cell-border stripe hover',                  
-                  extensions = c('Buttons','Scroller'),
+                  extensions = c('Scroller'),
                   selection=list(mode='single', target='row', selected=1),
                   options=list(
-                      dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
-                      ##dom = 'lfrtip', 
+                      ##dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
+                      dom = 'lfrtip', 
                       scrollX = TRUE, ##scrollY = TRUE,
-                      scrollY = 230, scroller=TRUE, deferRender=TRUE
+                      scrollY = 350, scroller=TRUE, deferRender=TRUE
                   )  ## end of options.list 
                   ) %>%
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>% 
@@ -1002,9 +1003,9 @@ output$dsea_scoretable <- renderDataTable({
                             background = color_from_middle( res[,"NES"], 'lightblue', '#f5aeae'),
                             backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                             backgroundPosition = 'center') 
-}, server=FALSE)
+})
 
-output$dsea_cormap <- renderPlot({
+dsea_actmap.RENDER <- reactive({
     require(igraph)
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
@@ -1030,7 +1031,7 @@ output$dsea_cormap <- renderPlot({
     score = score[head(order(-score[,comparison]**2),50),,drop=FALSE] ## max number of terms    
     score = score[,head(order(-colSums(score**2)),25),drop=FALSE] ## max comparisons/FC
 
-    cat("dsea_cormap:: dim(score)=",dim(score),"\n")
+    cat("dsea_actmap:: dim(score)=",dim(score),"\n")
     score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
     d1 <- as.dist(1-cor(t(score),use="pairwise"))
     d2 <- as.dist(1-cor(score,use="pairwise"))
@@ -1061,115 +1062,332 @@ output$dsea_cormap <- renderPlot({
     score2 <- sign(score2) * abs(score2/max(abs(score2)))**3   ## fudging
     bmar <- 1 + pmax((50 - nrow(score2))*0.25,0)
     corrplot( score2, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
-             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,2,0) )
+             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,3,0) )
     
-}, res=70)    
-
-
-require(scatterD3)
-output$dsea_tsne <- renderScatterD3({
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    if(input$dsea_plottype!="tsne") return(NULL)
-    
-    comparison=1
-    comparison = input$fa_contrast
-    if(is.null(comparison)) return(NULL)
-    if(is.null(ngs$drugs)) return(NULL)
-
-    monocombo <- input$dsea_monocombo
-    if(monocombo=="mono") {
-        rho <- ngs$drugs[["mono"]]$X
-        stats <- ngs$drugs[["mono"]]$stats
-        colnames(rho)
-    } else {
-        ## NOT YET IMPLEMENTED. Too large....
-        ##
-        return(NULL)
-    }
-
-    ## get pre-computed t-SNE positions
-    drugs <- read.csv(file.path(FILES,"l1000-drugs-tsne-px30d2.csv"),
-                           row.names=1)
-    pos <- drugs[,1:2]
-    colnames(pos)[1:2] <- c("x","y")
-    dim(pos)
-
-    ##dt <- getDseaTable()
-    if(!("membership" %in% colnames(drugs))) {
-        require(igraph)
-        require(scran)
-        snn <- buildSNNGraph(t(pos[,1:2]), k=10)
-        clust <- cluster_louvain(snn)
-        table(clust$membership)
-        drugs$membership <- clust$membership
-    }
-
-    dd <- intersect(rownames(pos),rownames(rho))
-    pos <- pos[dd,]
-    rho <- rho[dd,comparison]
-    dim(pos)
-    
-    ## add query node
-    nbtop <- head(order(-rho),10)
-    ##pos1 <- colMeans(pos[nbtop,],na.rm=TRUE)
-    pos1 <- apply(pos[nbtop,],2,median,na.rm=TRUE)
-    pos <- rbind(pos, QUERY=pos1 )
-    rho <- c(rho, QUERY=1.8*max(rho,na.rm=TRUE))
-    rho[is.na(rho)] <- 0
-    rho.sq = rho**2
-    
-    rho.sign = c("negative","positive")[1 + 1*(rho>=0)]
-    rho.sign[is.na(rho.sign)] <- "positive"
-    rho.sign[which(names(rho)=="QUERY")] = "QUERY"    
-    lab <- rownames(pos)
-    labeltype="name"
-    if(PRO.VERSION) labeltype <- input$dsea_label
-    if(labeltype=="moa") lab <- drugs[rownames(pos),"moa"]
-    if(labeltype=="target") lab <- drugs[rownames(pos),"target"]
-    labels_size=10
-    genes <- toupper(ngs$genes$gene_name)
-    genes <- names(GENE.TITLE)
-    is.gene <- (toupper(names(rho)) %in% genes)
-    rho.type <- c("drug","gene")[1+1*(is.gene)]
-    opacity_var <- NULL
-
-    showall=FALSE
-    if(PRO.VERSION) showall <- (input$dsea_showall)
-    if(!showall) {
-        j1 <- head(order(rho.sq,decreasing=TRUE),100)
-        j0 <- setdiff(1:length(rho),j1)
-        lab[j0] <- rep("",length(j0))
-        opacity_var <- rep(1.0, length(rho))
-        opacity_var[j0] <- 0.7
-        if(labeltype=="name") labels_size=14
-    }
-
-    BLUERED(8)
-    lab[which(names(rho)=="QUERY")] <- toupper(comparison)
-
-    col_var=rho.sign
-    col_lab="sign"
-    if(showall) {
-        ii <- match(rownames(pos),rownames(drugs))
-        membership <- drugs$membership[ii]
-        col_var = factor(membership)
-        col_lab = "cluster"
-    }
-    rho.sq <- round(rho.sq,4)
-    scatterD3( pos[,1], pos[,2],
-              xlab="tSNE-x", ylab="tSNE-y",
-              col_var=col_var, col_lab=col_lab,
-              point_opacity=0.85, opacity_var=opacity_var,
-              ##colors = c("negative"="#2F79B5","positive"="#C13639","QUERY"="#000000"),
-              symbol_var=rho.type, symbol_lab="pert type",
-              size_var=rho.sq, size_range = c(15,300), size_lab="score",
-              lab = lab, labels_size=labels_size,
-              transitions=TRUE )
-
 })    
 
+
+
+##---------------------------------
+## PLOTTING MODULES
+##---------------------------------
+require(shinyBS)
+
+##--------- DSEA enplot plotting module
+dsea_enplots.opts = tagList(
+    tipify( radioButtons('dsea_monocombo',"Analysis type:",c("mono","combo"),inline=TRUE),
+           "Select type of drug enrichment analysis: mono or combo (if available). ")
+)
+dsea_enplots_module <- plotModule(
+    "dsea_enplots", dsea_enplots.RENDER,
+    title = "Drug profile enrichment", label="a",
+    info.text = "The <strong>Drug Connectivity Map</strong> correlates your signature with more than 5000 known drug profiles from the L1000 database, and shows the top N=10 similar and opposite profiles by running the GSEA algorithm on the contrast-drug profile correlation space.",
+    options = dsea_enplots.opts,
+    pdf.width=11, pdf.height=7, res=72
+)
+##output$dsea_enplots     <- dsea_enplots_module$render
+##output$dsea_enplots_pdf <- dsea_enplots_module$pdf
+output <- attachModule(output, dsea_enplots_module)
+
+
+##---------- DSEA Activation map plotting module
+dsea_moaplot.opts = tagList(
+    tipify( radioButtons('dsea_moatype','Plot type:',c("drug class","target gene"),inline=TRUE),
+           "Select plot type of MOA analysis: by class description or by target gene.")
+)
+dsea_moaplot_module <- plotModule(
+    "dsea_moaplot", dsea_moaplot.RENDER,
+    title = "Mechanism of action", label="c",
+    info.text = "This plot visualizes the <strong>mechanism of action</strong> (MOA) across the enriched drug profiles. On the vertical axis, the number of drugs with the same MOA are plotted. You can switch to visualize between MOA or target gene.",
+    options = dsea_moaplot.opts,
+    pdf.width=4, pdf.height=6, res=72
+)
+##output$dsea_moaplot     <- dsea_moaplot_module$render
+##output$dsea_moaplot_pdf <- dsea_moaplot_module$pdf
+output <- attachModule(output, dsea_moaplot_module)
+
+
+##-------- DSEA Activation map plotting module
+dsea_actmap.opts = tagList()
+dsea_actmap_module <- plotModule(
+    "dsea_actmap", dsea_actmap.RENDER,
+    title = "Activation matrix", label="d",
+    info.text = "The <strong>Activation Matrix</strong> visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
+    options = dsea_actmap.opts,
+    pdf.width=6, pdf.height=10, res=72
+)
+##output$dsea_actmap     <- dsea_actmap_module$render
+##output$dsea_actmap_pdf <- dsea_actmap_module$pdf
+output <- attachModule(output, dsea_actmap_module)
+
+##--------buttons for table
+dsea_table_module <- tableModule(
+    id = "dsea_table", label="b",
+    func = dsea_table.RENDER,
+    info.text="Drug profile enrichment table. Enrichment is calculated by correlating your signature with more than 5000 known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.", 
+    title = "Profile enrichment table"
+)
+##output$dsea_table     <- dsea_table_module$render
+##output$dsea_table_csv <- dsea_table_module$csv
+output <- attachModule(output, dsea_table_module)
+
+
+##-----------------------------------------
+## Page layout
+##-----------------------------------------
+fillRow(flex = c(2.6,1), 
+        fillCol(flex = c(1.4,0.07,NA,1),
+                fillRow(flex=c(2.2,1),
+                        fillCol(flex = c(NA,1),
+                                dsea_enplots_module$buttons,
+                                plotOutput("dsea_enplots")
+                                ),
+                        fillCol(flex = c(NA,1),
+                                dsea_moaplot_module$buttons,
+                                plotOutput("dsea_moaplot")
+                                )
+                        ),
+                br(),  ## vertical space
+                dsea_table_module$buttons,
+                dataTableOutput('dsea_table')
+                ),
+        fillCol(flex = c(NA,1),
+                dsea_actmap_module$buttons,
+                plotOutput('dsea_actmap')
+                )
+        )
+
+observe({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    ct <- c("mono","combo")
+    if(is.null(ngs$drugs$combo)) {
+        ct <- c("mono")
+    }
+    updateRadioButtons(session, "dsea_monocombo", choices=ct, inline=TRUE)
+})
+
 ```
+
+> The **Drug Connectivity Map** (Drug CMap) correlates your signature with more than 5000 known drug profiles from the L1000 database. **(a)** The figure shows the top N=10 similar and opposite profiles by running the GSEA algorithm on the contrast-drug profile correlation space. **(b)** The table summarizes the statistical results of the drug enrichment analysis. **(c)** The mechanism-of-action plot shows the top most frequent drug class (or target genes) having similar or opposite enrichment compared to the query signature. **(d)** The activation matrix visualizes the enrichment levels of drug signatures across multiple contrast profiles. 
+
+
+`r if(!PRO.VERSION) {"<!---------------------"}`
+
+### iTALK
+    
+```{r message=FALSE, warning=FALSE, fig.width=4}
+
+italk_getResults <- reactive({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    require(iTALK)
+    db <- iTALK::database
+    db.genes <- unique(c(db$Ligand.ApprovedSymbol,db$Receptor.ApprovedSymbol))
+    length(db.genes)
+    ##genes <- intersect(genes, rownames(ngs$X))
+    pp <- rownames(ngs$X)
+    db.genes <- intersect(db.genes, toupper(ngs$genes[pp,"gene_name"]))
+
+    ## make groups
+    ph <- "cell.type"
+    ph <- input$italk_groups
+    ct <- as.character(ngs$samples[,ph])    
+    table(ct)
+    
+    ##data <- data.frame(cell_type=ct, t(log2(1 + ngs$counts[genes,])))
+    pp1 <- rownames(ngs$genes)[match(db.genes, ngs$genes$gene_name)]
+    gx <- t(ngs$X[pp1,])
+    colnames(gx) <- db.genes
+    gx0 <- apply(gx,2,function(x) tapply(x,ct,mean))
+
+    top_genes <- 50
+    top_genes <- input$italk_netview_topgenes
+    
+    data1 <- data.frame(cell_type=ct, gx)
+    dim(data1)
+    
+    ## find the ligand-receptor pairs from highly expressed genes
+    cell_col <- rep(c('#4a84ad','#4a1dc6','#e874bf','#b79eed', '#ff636b', '#52c63b','#9ef49a'),99)
+    ct.names = unique(as.character(data1$cell_type))
+    cell_col <- cell_col[1:length(ct.names)]
+    names(cell_col) <- ct.names
+    
+    comm_type='cytokine'
+    comm_type <- input$italk_category
+    
+    mode = "absolute"
+    ##mode <- input$italk_mode
+
+    if(mode=="absolute") {
+        highly_exprs_genes <- rawParse(data1, top_genes=50, stats='mean')    
+        res_cat <- FindLR(highly_exprs_genes, datatype='mean count', comm_type=comm_type)
+        res_cat <- res_cat[order(res_cat$cell_from_mean_exprs*res_cat$cell_to_mean_exprs,decreasing=T),]
+    } else {
+
+        contrast <- input$fa_contrast
+        group <- ngs$model.parameters$exp.matrix[,contrast]
+        data1$compare_groups <- group
+
+        data1 <- data1[which(data1$compare_groups!=0),]
+        
+        ## find DEGenes of regulatory T cells and NK cells between these 2 groups
+        deg_t  <- DEG(data %>% filter(cell_type=='CD4Tcells'),method='Wilcox',contrast=c(2,1))
+        deg_nk <- DEG(data %>% filter(cell_type=='NKcells'),method='Wilcox',contrast=c(2,1))
+
+        ## find significant ligand-receptor pairs and do the plotting
+        res_cat <- FindLR(deg_t,deg_nk,datatype='DEG',comm_type=comm_type)
+        res_cat <- res_cat[order(res_cat$cell_from_logFC*res_cat$cell_to_logFC,decreasing=T),]        
+    }
+
+    is.ligand = (colnames(gx0) %in% db[,"Ligand.ApprovedSymbol"])
+    is.receptor = (colnames(gx0) %in% db[,"Receptor.ApprovedSymbol"])
+    lr.type = c("L","R","LR")[ 1*is.ligand + 2*is.receptor]
+    names(lr.type) <- colnames(gx0)
+    table(lr.type)
+    res <- list( table=res_cat, exprs=gx0, cell_col=cell_col, lr.type=lr.type)
+    return(res)
+})
+
+italk_netview.RENDER <- reactive({
+    res <- italk_getResults()
+    if(is.null(res)) return(NULL)
+    res_cat <- res$table
+    ## Communication graph
+    NetView(res_cat, col=res$cell_col, vertex.label.cex=1, arrow.width=1, edge.max.width=5)
+})
+
+italk_LRPlot.RENDER <- reactive({
+    ## Circos plot
+    res <- italk_getResults()
+    if(is.null(res)) return(NULL)
+    res_cat <- res$table
+    ntop=25
+    ntop = as.integer(input$italk_LRPlot_ntop)
+    res_top <- head(res_cat,ntop)
+    LRPlot(res_top, datatype='mean count', cell_col=res$cell_col,
+           link.arr.lwd = head(res_cat$cell_from_mean_exprs,ntop),
+           link.arr.width = head(res_cat$cell_to_mean_exprs,ntop))
+    comm_type <- isolate(input$italk_category)
+    title((paste(comm_type,"genes     ")), line=-2)
+})
+
+italk_heatmap.RENDER <- reactive({
+    ## Expression heatmap
+    ngs <- inputData()
+    req(ngs)
+    res <- italk_getResults()
+    if(is.null(res)) return(NULL)
+        
+    res_cat <- res$table
+    ntop=50
+    ntop = as.integer(input$italk_LRPlot_ntop)
+    res_top <- head(res_cat,ntop)
+    genes_top <- sort(unique(c(res_top$ligand,res_top$receptor)))
+    gx0  <- t(res$exprs[,genes_top])
+
+    rownames(gx0) <- paste0(rownames(gx0)," (",res$lr.type[rownames(gx0)],")")
+
+    par(oma=c(3,2,3,0))
+    gx.heatmap(gx0, scale="none", mar=c(15,8),
+               cexRow=1, cexCol=1.3,
+               key=FALSE, keysize=0.6)
+})
+
+
+require(shinyBS)
+italk_netview_module <- plotModule(
+    "italk_netview", italk_netview.RENDER,
+    title = "NetView", label="a",
+    info.text = "The NetView plot visualizes the communication structure of ligand-receptor genes as a graph. The colors represent different types of cells as a structure and the width of edges represent the strength of the communication. Labels on the edges show exactly how many interactions exist between two types of cells. For further information, see iTALK R package (Wang et al., BioRxiv 2019).",
+    options = tagList(
+        tipify( selectInput("italk_netview_topgenes","top genes",
+                            choices=c(10,25,50,75,100),selected=50),
+               "Select the number of topgenes to search for ligand-receptor pairs.",
+               placement="top" )
+    ),
+    pdf.width=5, pdf.height=8, res=80
+)
+##output$italk_netview     <- italk_netview_module$render
+##output$italk_netview_pdf <- italk_netview_module$pdf
+output <- attachModule(output, italk_netview_module)
+
+
+italk_LRPlot_module <- plotModule(
+    "italk_LRPlot", italk_LRPlot.RENDER,
+    title = "Ligand-Receptor plot", label="b",
+    info.text = "The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as
+a circle plot. The width of the arrow represents the expression level/log fold change of the ligand; while the width of arrow head represents the expression level/log fold change of the receptor. Different color and the type of the arrow stands for whether the ligand and/or receptor are upregulated or downregulated. For further information, see iTALK R package (Wang et al., BioRxiv 2019).",
+    options = tagList(
+        tipify( selectInput("italk_LRPlot_ntop","ntop pairs",
+                            choices=c(10,15,20,25,30,40,50),selected=25),
+               "Select the maximum number of LR pairs to include in the LR plot.",
+               placement="top")
+    ),
+    pdf.width=5, pdf.height=8, res=80
+)
+output$italk_LRPlot     <- italk_LRPlot_module$render
+output$italk_LRPlot_pdf <- italk_LRPlot_module$pdf
+
+italk_heatmap_module <- plotModule(
+    "italk_heatmap", italk_heatmap.RENDER,
+    title = "Expression heatmap", label="c",
+    info.text = "The heatmap visualizes the expression level/log fold change of the ligand/receptor genes. For further information, see iTALK R package (Wang et al., BioRxiv 2019).",
+    options = tagList(),
+    pdf.width=5, pdf.height=8, res=80
+)
+output$italk_heatmap     <- italk_heatmap_module$render
+output$italk_heatmap_pdf <- italk_heatmap_module$pdf
+
+fillCol(flex = c(NA,1), 
+        inputPanel(
+            tipify( selectInput("italk_groups","Group by:", choices=""),
+                   "Select the phenotype parameter to divide samples into groups.",
+                   placement="right"),
+            tipify( selectInput("italk_category","Gene category:",
+                        choices=c('cytokine','growth factor','checkpoint','other')),
+                   "Select the gene category for finding L/R pairs.",
+                   placement="right")
+            ##radioButtons("italk_mode","Mode", c("absolute","differential"))
+        ),
+        fillRow(flex = c(1,1,1),
+                fillCol(flex = c(NA,1),
+                        italk_netview_module$buttons,
+                        plotOutput('italk_netview')
+                        ),
+                fillCol(flex = c(NA,1),
+                        italk_LRPlot_module$buttons,
+                        plotOutput('italk_LRPlot')
+                        ),
+                fillCol(flex = c(NA,1),
+                        italk_heatmap_module$buttons,
+                        plotOutput('italk_heatmap')
+                        )
+        )
+        )
+
+
+##bsTooltip("italk_groups","Select the parameter to divide in groups.", placement="right")
+##bsTooltip("italk_category","Select the gene category for finding L/R pairs.", placement="right")
+
+require(tippy)
+##tippy_this("italk_groups","Select the parameter to divide in groups.")
+##tippy_this("italk_category","Select the gene category for finding L/R pairs.")
+
+observe({
+    ngs <- inputData()
+    req(ngs)
+    ph <- colnames(ngs$samples)
+    updateSelectInput(session, "italk_groups", choices=ph)
+})
+
+```
+
+> **Visualization of ligand-receptor interaction with iTALK.** The iTALK R package is designed to profile and visualize the ligand-receptor mediated intercellular cross-talk signals. iTALK uses a manually curated list of ligand-receptor gene pairs further classified into 4 categories based on the primary function of the ligand: cytokines/chemokines, immune checkpoint genes, growth factors, and others. It was originally designed for single-cell RNA sequencing data (scRNA-seq). For further information see this [iTALK paper](https://www.biorxiv.org/content/10.1101/507871v1). **(a)** The NetView plot visualizes the communication structure of ligand-receptor genes as a graph. **(b)** The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as a circle plot. **(c)** The heatmap visualizes the expression level/log fold change of the ligand/receptor genes. 
+
+`r if(!PRO.VERSION) {"----------------------->"}`
+
 
 `r if(!DEV.VERSION) {"<!---------------------"}`
 
@@ -1312,86 +1530,6 @@ output$fa_fireplot <- renderPlot({
 `r if(!DEV.VERSION) {"----------------------->"}`
 
 
-`r if(1) {"<!---------------------"}`
-
-### iTALK
-    
-```{r message=FALSE, warning=FALSE, fig.width=4}
-fillCol(height = "100%", flex = c(NA,1), 
-        inputPanel(
-            ##selectInput("italk_pheno",NULL, choices=""),
-            selectInput("italk_category",NULL,
-                        choices=c('cytokine','growth factor','checkpoint','other')),
-            cellArgs=list(width='100%')
-        ),
-        plotOutput('fa_italk')
-        )
-
-output$fa_italk <- renderPlot({
-
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    
-    require(iTALK)
-    db <- iTALK::database
-    genes <- unique(c(db$Ligand.ApprovedSymbol,db$Receptor.ApprovedSymbol))
-    length(genes)
-    ##genes <- intersect(genes, rownames(ngs$X))
-    pp <- rownames(ngs$X)
-    genes <- intersect(genes, toupper(ngs$genes[pp,"gene_name"]))
-    ct <- "cell.type"
-    if("cell.type" %in% colnames(ngs$samples)) {
-        ct <- as.character(ngs$samples$cell.type)
-    } else {
-        ct <- rep("cell.type",nrow(ngs$samples))
-    }
-    ##data <- data.frame(cell_type=ct, t(log2(1 + ngs$counts[genes,])))
-    pp1 <- rownames(ngs$genes)[match(genes, ngs$genes$gene_name)]
-    gx <- t(ngs$X[pp1,])
-    colnames(gx) <- genes
-    data1 <- data.frame(cell_type=ct, gx)
-    highly_exprs_genes <- rawParse(data1, top_genes=50, stats='mean')
-
-    ## find the ligand-receptor pairs from highly expressed genes
-    cell_col <- structure(c('#4a84ad','#4a1dc6','#e874bf','#b79eed', '#ff636b', '#52c63b','#9ef49a'),
-                          names=unique(as.character(data1$cell_type)))
-
-    par(mfcol=c(1,3),mar=c(1,1,1,1))
-    comm_type='cytokine'
-    comm_type <- input$italk_category
-    res_cat <- FindLR(highly_exprs_genes, datatype='mean count', comm_type=comm_type)
-    res_cat <- res_cat[order(res_cat$cell_from_mean_exprs*res_cat$cell_to_mean_exprs,decreasing=T),]
-    
-    NetView(res_cat, col=cell_col, vertex.label.cex=1, arrow.width=1, edge.max.width=5)
-    ntop=25
-    res_top <- head(res_cat,ntop)
-    LRPlot(res_top, datatype='mean count', cell_col=cell_col,
-           link.arr.lwd = head(res_cat$cell_from_mean_exprs,ntop),
-           link.arr.width = head(res_cat$cell_to_mean_exprs,ntop))
-    title(comm_type, line=-0.5)
-    
-    genes_top <- sort(unique(c(res_top$ligand,res_top$receptor)))
-    xgenes <- ngs$genes[rownames(ngs$X),"gene_name"]
-    probes_top <- rownames(ngs$X)[match(genes_top,xgenes)]
-    gx  <- ngs$X[probes_top,]
-    gx0 <- t(apply(gx,1,function(x) tapply(x,ct,mean)))
-    gx0 <- head(gx0[order(-apply(gx0,1,sd)),,drop=FALSE],8)
-    
-    par(mar=c(8,4,4,1))
-    klr <- rep(rainbow(min(16,ncol(gx0))),3)
-    klr <- rep(brewer.pal(8,"Set2"),9)
-    ##barplot( t(gx0), las=3, col=klr)
-    ##legend("topright",legend=colnames(gx0), fill=klr)
-    ##barplot( (gx0), las=3, col=klr)
-    barplot( t(gx0), las=3, col=klr, beside=TRUE)
-    gg0 <- sub(".*:","",colnames(gx0))
-    legend("topright",legend=gg0, fill=klr)
-
-    
-}, res=90)
-```
-
-`r if(1) {"----------------------->"}`
 
 
 

@@ -8,8 +8,6 @@ Inputs {.sidebar data-width=250}
 on a geneset level, also called gene set enrichment (GSE) analysis.
 
 ```{r}
-actionLink("gs_info", "Info", icon = icon("info-circle") )
-##actionLink("gs_info", "More details ...")
 
 gs_infotext =
     "Similar to the differential gene expression analysis, users can perform differential expression analysis on a geneset level in this page, which is also referred as gene set enrichment (GSE) analysis. The platform has more than 50.000 genesets (or pathways) in total that are divided into 30 geneset collections such as Hallmark, MSigDB, KEGG and GO. Users have to specify which comparison they want to visually analyze employing a certain geneset collection. It is also possible to filter out some genesets by logFC and FDR thresholds. The platform performs enrichment analyses using up to seven different methods including Spearman rank correlation, GSVA, ssGSEA, Fisher's exact test, GSEA, camera and fry, and reports the combined result.
@@ -20,15 +18,6 @@ gs_infotext =
 
 "
 
-observeEvent( input$gs_info, {
-    showModal(modalDialog(
-        title = HTML("<strong>Enrichment Analysis Module</strong>"),
-        HTML(gs_infotext),
-        easyClose = TRUE ))
-})
-
-##require(tippy)
-##tippy("Help/Info", tooltip=hm_infotext)
 ```
 
 
@@ -333,8 +322,8 @@ getGeneSetTable <- reactive({
         rpt = rpt[order(-fx),]
     }
 
-    ## limit to 1000 rows
-    rpt <- head(rpt, 1000)
+    ## limit to 1000 rows???
+    ## rpt <- head(rpt, 1000)
     rpt <- data.frame(rpt)
     
     return(rpt)
@@ -350,7 +339,8 @@ Row {.tabset data-height=500}
 ### Top enriched
 
 ```{r message=FALSE, warning=FALSE}
-renderPlot({
+
+enrich_top_enrichedFUNC <- reactive({
 
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
@@ -405,7 +395,23 @@ renderPlot({
         }
     }
     
-}, res=100)
+})
+
+
+enrich_top_enriched_module <- plotModule(
+    id="enrich_top_enriched", func=enrich_top_enrichedFUNC,
+    info.text = "This is an example", pdf.width=22, pdf.height=6, res=95
+)
+
+##output$enrich_top_enriched     <- enrich_top_enriched_module$render
+##output$enrich_top_enriched_pdf <- enrich_top_enriched_module$pdf
+output <- attachModule(output, enrich_top_enriched_module)
+
+fillCol(flex = c(NA,1),
+                 enrich_top_enriched_module$button,
+                 plotOutput("enrich_top_enriched", height = "100%", width = "100%"))
+
+
 ```   
 
 ### Plots
@@ -446,23 +452,16 @@ getcolors <- function(ngs, comp0) {
 }    
 
 
-fillRow(height = '100%', flex = c(1,1,1,1), 
-        plotOutput('gs_subplot1'),
-        plotOutput('gs_subplot2'),
-        plotOutput('gs_subplot3'),
-        plotOutput('gs_subplot4')
-        )
-
-output$gs_subplot1 <- renderPlot({
+##----------------------------------------------------------------------
+## 0: Volcano plot in gene space
+##----------------------------------------------------------------------
+enrich_subplot1FUNC <- reactive({
 
     par(mfrow=c(1,1), mgp=c(2.0,0.8,0), oma=c(0.5,0,0.5,0.2) )
     par(mar=c(5,3.5,3,0.5))
     
     ngs <- inputData()    
 
-    ##----------------------------------------------------------------------
-    ## 0: Volcano plot in gene space
-    ##----------------------------------------------------------------------
     comp=1;gs=1
     comp = input$gs_contrast
     ngs <- inputData()
@@ -511,19 +510,26 @@ output$gs_subplot1 <- renderPlot({
     gs = breakstring(gs,50)
     title(gs, cex.main=0.85)
     
-}, res=80)
+})
 
+enrich_subplot1_module <- plotModule(
+    id="enrich_subplot1", func=enrich_subplot1FUNC,
+    info.text = "This is an example", pdf.width=10, pdf.height=10, res=70
+)
+##output$enrich_subplot1     <- enrich_subplot1_module$render
+##output$enrich_subplot1_pdf <- enrich_subplot1_module$pdf
+output <- attachModule(output, enrich_subplot1_module)
 
-output$gs_subplot2 <- renderPlot({
+##----------------------------------------------------------------------
+## 1: Gene set activation {data-width=200}
+##----------------------------------------------------------------------
+enrich_subplot2FUNC <- reactive({
 
     par(mfrow=c(1,1), mgp=c(2.0,0.8,0), oma=c(0.5,0,0.5,0.2) )
     par(mar=c(5,3.5,3,0.5))
     
     ngs <- inputData()    
 
-    ##----------------------------------------------------------------------
-    ## 1: Gene set activation {data-width=200}
-    ##----------------------------------------------------------------------
     require(RColorBrewer)
     gset = rownames(ngs$gsetX)[1]
     gset = gset_selected()
@@ -549,13 +555,21 @@ output$gs_subplot2 <- renderPlot({
         srt=srt, main="", ylab="gene set activation")
     title(breakstring(gset,42,80), cex.main=0.85)
 
-}, res=80)
+})
 
+enrich_subplot2_module <- plotModule(
+    id="enrich_subplot2", func=enrich_subplot2FUNC,
+    info.text = "This is an example", pdf.width=10, pdf.height=10, res=70
+)
 
-output$gs_subplot3 <- renderPlot({
-    ##----------------------------------------------------------------------
-    ## 2: Gene expression {data-width=200}
-    ##----------------------------------------------------------------------
+##output$enrich_subplot2     <- enrich_subplot2_module$render
+##output$enrich_subplot2_pdf <- enrich_subplot2_module$pdf
+output <- attachModule(output, enrich_subplot2_module)
+
+##----------------------------------------------------------------------
+## 2: Gene expression {data-width=200}
+##----------------------------------------------------------------------
+enrich_subplot3FUNC <- reactive({
 
     par(mfrow=c(1,1), mgp=c(2.0,0.8,0), oma=c(0.5,0,0.5,0.2) )
     par(mar=c(5,3.5,3,0.5))
@@ -591,12 +605,20 @@ output$gs_subplot3 <- renderPlot({
             srt=srt, main="")
         title(gene, cex.main=0.9)
     }
-}, res=80)
+})
 
-output$gs_subplot4 <- renderPlot({
-    ##----------------------------------------------------------------------
-    ## 3: Gene - gene set correlation
-    ##----------------------------------------------------------------------
+enrich_subplot3_module <- plotModule(
+    id="enrich_subplot3", func=enrich_subplot3FUNC,
+    info.text = "This is an example", pdf.width=10, pdf.height=10, res=70
+)
+##output$enrich_subplot3     <- enrich_subplot3_module$render
+##output$enrich_subplot3_pdf <- enrich_subplot3_module$pdf
+output <- attachModule(output, enrich_subplot3_module)
+
+##----------------------------------------------------------------------
+## 3: Gene - gene set correlation
+##----------------------------------------------------------------------
+enrich_subplot4FUNC <- reactive({
 
     par(mfrow=c(1,1), mgp=c(2.0,0.8,0), oma=c(0.5,0,0.5,0.2) )
     par(mar=c(5,3.5,3,0.5))
@@ -638,13 +660,38 @@ output$gs_subplot4 <- renderPlot({
              cex.lab=1, pch=19, cex=1.0*cex1, cex.main=0.85)
         abline( lm(sx ~ gx), lty=2, lwd=0.7, col="black" )
     }    
-}, res=80)
+})
+
+enrich_subplot4_module <- plotModule(
+    id="enrich_subplot4", func=enrich_subplot4FUNC,
+    info.text = "This is an example", pdf.width=10, pdf.height=10, res=70
+)
+
+##output$enrich_subplot4     <- enrich_subplot4_module$render
+##output$enrich_subplot4_pdf <- enrich_subplot4_module$pdf
+output <- attachModule(output, enrich_subplot4_module)
+
+fillRow(height = '100%', flex = c(1,1,1,1), 
+        fillCol(flex = c(NA,1),
+                enrich_subplot1_module$button,
+                plotOutput("enrich_subplot1", height = "100%", width = "100%")),
+        fillCol(flex = c(NA,1),
+                enrich_subplot2_module$button,
+                plotOutput("enrich_subplot2", height = "100%", width = "100%")),
+        fillCol(flex = c(NA,1),
+                enrich_subplot3_module$button,
+                plotOutput("enrich_subplot3", height = "100%", width = "100%")),
+        fillCol(flex = c(NA,1),
+                enrich_subplot4_module$button,
+                plotOutput("enrich_subplot4", height = "100%", width = "100%"))
+)
 ```   
 
 ### Compare
 
 ```{r message=FALSE, warning=FALSE}
-renderPlot({
+
+enrich_cont_compareFUNC <- reactive({
 
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
@@ -705,14 +752,29 @@ renderPlot({
         }
     }
     
-}, res=95)
+})
+
+enrich_cont_compare_module <- plotModule(
+    id="enrich_cont_compare", func=enrich_cont_compareFUNC,
+    info.text = "This is an example", pdf.width=22, pdf.height=6, res=95
+)
+
+##output$enrich_cont_compare     <- enrich_cont_compare_module$render
+##output$enrich_cont_compare_pdf <- enrich_cont_compare_module$pdf
+output <- attachModule(output, enrich_cont_compare_module)
+
+fillCol(flex = c(NA,1),
+                 enrich_cont_compare_module$button,
+                 plotOutput("enrich_cont_compare", height = "100%", width = "100%"))
+
+
 ```   
 
 ### Volcano (all)
 
 ```{r message=FALSE, warning=FALSE, fig.width=12, fig.height=12}
-##renderScatterD3({
-renderPlot({
+
+enrich_volcano_allFUNC <- reactive({
     ##renderPlotly({
     require(metap)
     ngs = inputData()
@@ -776,6 +838,20 @@ renderPlot({
         }
     })
 })
+
+enrich_volcano_all_module <- plotModule(
+    id="enrich_volcano_all", func=enrich_volcano_allFUNC,
+    info.text = "This is an example", pdf.width=22, pdf.height=6, res=95
+)
+
+## output$enrich_volcano_all     <- enrich_volcano_all_module$render
+## output$enrich_volcano_all_pdf <- enrich_volcano_all_module$pdf
+output <- attachModule(output, enrich_volcano_all_module)
+
+fillCol(flex = c(NA,1),
+        enrich_volcano_all_module$button,
+        plotOutput("enrich_volcano_all", height = "100%", width = "100%"))
+
 ``` 
 
 `r if(!PRO.VERSION) {"<!---------------------------------------------"}`
@@ -784,7 +860,8 @@ renderPlot({
 
 ```{r message=FALSE, warning=FALSE}
 ##renderScatterD3({
-renderPlot({
+
+enrich_volcano_methodsFUNC <- reactive({
     ##renderPlotly({
     ngs <- inputData()    
     if(is.null(ngs)) return(NULL)
@@ -846,6 +923,20 @@ renderPlot({
     }
 
 })
+
+
+enrich_volcano_methods_module <- plotModule(
+    id="enrich_volcano_methods", func=enrich_volcano_methodsFUNC,
+    info.text = "This is an example", pdf.width=22, pdf.height=6, res=95
+)
+##output$enrich_volcano_methods     <- enrich_volcano_methods_module$render
+##output$enrich_volcano_methods_pdf <- enrich_volcano_methods_module$pdf
+output <- attachModule(output, enrich_volcano_methods_module)
+
+fillCol(flex = c(NA,1),
+                 enrich_volcano_methods_module$button,
+                 plotOutput("enrich_volcano_methods", height = "100%", width = "100%"))
+
 ``` 
 
 `r if(!PRO.VERSION) {"------------------------------------------->"}`
@@ -856,7 +947,9 @@ renderPlot({
 ### Gene map
 
 ```{r message=FALSE, warning=FALSE, fig.width=12, fig.height=12}
-renderPlot({
+
+enrich_genemapFUNC <- reactive({
+    
     require(Matrix)
 
     ## -------------- get the gene-centric fold-changes (default LIMMA)
@@ -922,12 +1015,27 @@ renderPlot({
                      scale='none', keysize=0.3, key=FALSE)
     
 })
+
+enrich_genemap_module <- plotModule(
+    id="enrich_genemap", func=enrich_genemapFUNC,
+    info.text = "This is an example", pdf.width=22, pdf.height=6, res=65
+)
+
+##output$enrich_genemap     <- enrich_genemap_module$render
+##output$enrich_genemap_pdf <- enrich_genemap_module$pdf
+output <- attachModule(output, enrich_genemap_module)
+
+fillCol(flex = c(NA,1),
+                 enrich_genemap_module$button,
+                 plotOutput("enrich_genemap", height = "100%", width = "100%"))
+
 ```
 
 ### Concept enrichment
 
 ```{r message=FALSE, warning=FALSE}
-renderPlot({
+
+enrich_conceptFUNC <- reactive({
 
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
@@ -999,7 +1107,22 @@ renderPlot({
         }
     }
     
-}, res=95)
+})
+
+enrich_concept_module <- plotModule(
+    id="enrich_concept", func=enrich_conceptFUNC,
+    info.text = "This is an example", pdf.width=22, pdf.height=6, res=95
+)
+
+##output$enrich_concept     <- enrich_concept_module$render
+##output$enrich_concept_pdf <- enrich_concept_module$pdf
+output <- attachModule(output, enrich_concept_module)
+
+fillCol(flex = c(NA,1),
+                 enrich_concept_module$button,
+                 plotOutput("enrich_concept", height = "100%", width = "100%"))
+
+
 ```   
 
 `r if(!DEV.VERSION) {"----------------------------------------------------->"}`
@@ -1012,109 +1135,8 @@ Row {.tabset data-height=450}
 
 ```{r message=FALSE, warning=FALSE}
 
-fillRow(height = 600, flex = c(2,0.10,1), 
-        dataTableOutput('gs_gseatable'), br(),
-        dataTableOutput('gs_genetable')
-        )
-
-output$gs_gseatable <- DT::renderDataTable({
-
-    rpt = getGeneSetTable()
-    if(is.null(rpt)) return(NULL)
-    if(nrow(rpt)==0) return(NULL)
-    ##cat("dim.rpt=",dim(rpt),"\n")
-    
-    if(!("GS" %in% colnames(rpt))) rpt = cbind(GS=rownames(rpt),rpt)
-    if("GS" %in% colnames(rpt)) rpt$GS = shortstring(rpt$GS,72)
-    if("size" %in% colnames(rpt)) rpt$size = as.integer(rpt$size)
-
-    fx = NULL
-    fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(rpt))[1]
-    if(length(fx.col)>0) fx = rpt[,fx.col]
-
-    jj = which(sapply(rpt,is.numeric))
-    if(length(jj)>0) rpt[,jj] = round(rpt[,jj],digits=4)    
-    jj = which( sapply(rpt,is.character) |  sapply(rpt,is.factor) )
-    if(length(jj)>0) rpt[,jj] = apply(rpt[,jj,drop=FALSE],2,shortstring,100)
-
-    selectmode = "single"
-    ##if(PRO.VERSION) selectmode <- "multiple"
-    selectmode
-   
-    numeric.cols <- which(sapply(rpt, is.numeric))
-    numeric.cols
-
-    ##rpt = format(rpt, digits=4)
-    DT::datatable(rpt,
-                  class = 'compact cell-border stripe hover',
-                  rownames=FALSE,
-                  extensions = c('Buttons','Scroller'),                  
-                  selection=list(mode=selectmode, target='row', selected=1),
-                  options=list(
-                      ##dom = 'Blfrtip',
-                      dom = 'Blrftip', 
-                      buttons = list('copy','csv',
-                                     list(extend='pdf',
-                                          pageSize="A3", orientation='landscape',
-                                          filename="gsea-toptable", title="")),
-                      ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                      scrollX = TRUE, scrollY = 290, scroller=TRUE, deferRender=TRUE
-                  )) %>%
-        formatSignif(numeric.cols,4) %>%
-        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
-            DT::formatStyle(fx.col, 
-                            background = color_from_middle( fx, 'lightblue', '#f5aeae'))
-}, server=FALSE)
-
-
-
-output$gs_genetable <- DT::renderDataTable({
-
-    rpt <- geneDetails()    
-    
-    rpt$gene_title <- NULL    
-    if(!is.null(rpt) && nrow(rpt)>0 ) {
-        jj = which(sapply(rpt,is.numeric))
-        rpt[,jj] = round(rpt[,jj],digits=4)
-        jj = which( sapply(rpt,is.character) |  sapply(rpt,is.factor) )
-        if(length(jj)>0) rpt[,jj] = apply(rpt[,jj,drop=FALSE],2,shortstring,60)
-    } else {
-        rpt <- data.frame(0,0,0,0,0)[0,]
-        colnames(rpt) <- c("gene_name","fc","p","q","gset.rho")
-    }
-    if(!PRO.VERSION) {
-        rpt <- rpt[,c("gene_name","fc","p","q","gset.rho"),drop=FALSE]
-    }
-    
-    numeric.cols <- which(sapply(rpt, is.numeric))
-    numeric.cols
-
-    tbl <- DT::datatable(rpt,
-                         class = 'compact cell-border stripe', rownames=FALSE,
-                         extensions = c('Buttons','Scroller'),
-                         selection=list(mode="single", target='row', selected=1),
-                         options=list(
-                             ##dom = 'Blfrtip',
-                             dom = 'Blrtip', 
-                             buttons = list('copy','csv',
-                                            list(extend='pdf', orientation='landscape', pageSize="A3",
-                                                 filename="gsea-genes", title="")),
-                             ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                             scrollX = TRUE, scrollY = 290, scroller=TRUE, deferRender=TRUE
-                         )) %>%
-    formatSignif(numeric.cols,4)
-    
-    if( nrow(rpt)>0 && ("fc" %in% colnames(rpt)) ) {
-        fx = rpt[,"fc"]
-        tbl <- tbl %>%
-            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
-            DT::formatStyle("fc", background = color_from_middle( fx, 'lightblue', '#f5aeae'))
-    }
-    tbl
-}, server=FALSE)
-
 gset_selected <- reactive({
-    i = as.integer(input$gs_gseatable_rows_selected)
+    i = as.integer(input$enrich_gseatable_rows_selected)
     if(is.null(i) || length(i)==0) return(NULL)
     rpt = getGeneSetTable()
     gs = rownames(rpt)[i]
@@ -1186,7 +1208,7 @@ gene_selected <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
     i = 1
-    i = as.integer(input$gs_genetable_rows_selected)
+    i = as.integer(input$enrich_genetable_rows_selected)
     if(is.null(i) || is.na(i) || length(i)==0) i=1
     rpt <- geneDetails()
     if(is.null(rpt) || nrow(rpt)==0) {
@@ -1197,6 +1219,128 @@ gene_selected <- reactive({
     probe = rownames(ngs$genes)[match(gene, ngs$genes$gene_name)]
     return(list(gene=gene, probe=probe))
 })
+
+
+enrich_gseatableFUNC <- reactive({
+
+    rpt = getGeneSetTable()
+    if(is.null(rpt)) return(NULL)
+    if(nrow(rpt)==0) return(NULL)
+    ##cat("dim.rpt=",dim(rpt),"\n")
+    
+    if(!("GS" %in% colnames(rpt))) rpt = cbind(GS=rownames(rpt),rpt)
+    if("GS" %in% colnames(rpt)) rpt$GS = shortstring(rpt$GS,72)
+    if("size" %in% colnames(rpt)) rpt$size = as.integer(rpt$size)
+
+    fx = NULL
+    fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(rpt))[1]
+    if(length(fx.col)>0) fx = rpt[,fx.col]
+
+    jj = which(sapply(rpt,is.numeric))
+    if(length(jj)>0) rpt[,jj] = round(rpt[,jj],digits=4)    
+    jj = which( sapply(rpt,is.character) |  sapply(rpt,is.factor) )
+    if(length(jj)>0) rpt[,jj] = apply(rpt[,jj,drop=FALSE],2,shortstring,100)
+
+    selectmode = "single"
+    ##if(PRO.VERSION) selectmode <- "multiple"
+    selectmode
+   
+    numeric.cols <- which(sapply(rpt, is.numeric))
+    numeric.cols
+
+    ##rpt = format(rpt, digits=4)
+    DT::datatable(rpt,
+                  class = 'compact cell-border stripe hover',
+                  rownames=FALSE,
+                  ##extensions = c('Buttons','Scroller'),
+                  extensions = c('Scroller'),                  
+                  selection=list(mode=selectmode, target='row', selected=1),
+                  options=list(
+                      dom = 'lfrtip',
+                      ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                      scrollX = TRUE, scrollY = 290, scroller=TRUE, deferRender=TRUE
+                  )) %>%
+        formatSignif(numeric.cols,4) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
+            DT::formatStyle(fx.col, 
+                            background = color_from_middle( fx, 'lightblue', '#f5aeae'))
+})
+
+
+enrich_genetableFUNC <- reactive({
+
+    rpt <- geneDetails()    
+    
+    rpt$gene_title <- NULL    
+    if(!is.null(rpt) && nrow(rpt)>0 ) {
+        jj = which(sapply(rpt,is.numeric))
+        rpt[,jj] = round(rpt[,jj],digits=4)
+        jj = which( sapply(rpt,is.character) |  sapply(rpt,is.factor) )
+        if(length(jj)>0) rpt[,jj] = apply(rpt[,jj,drop=FALSE],2,shortstring,60)
+    } else {
+        rpt <- data.frame(0,0,0,0,0)[0,]
+        colnames(rpt) <- c("gene_name","fc","p","q","gset.rho")
+    }
+    if(!PRO.VERSION) {
+        rpt <- rpt[,c("gene_name","fc","p","q","gset.rho"),drop=FALSE]
+    }
+    
+    numeric.cols <- which(sapply(rpt, is.numeric))
+    numeric.cols
+
+    tbl <- DT::datatable(rpt,
+                         class = 'compact cell-border stripe', rownames=FALSE,
+                         extensions = c('Scroller'),
+                         selection=list(mode="single", target='row', selected=1),
+                         options=list(
+                             dom = 'lfrtip',
+                             ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                             scrollX = TRUE, scrollY = 290, scroller=TRUE, deferRender=TRUE
+                         )) %>%
+    formatSignif(numeric.cols,4)
+    
+    if( nrow(rpt)>0 && ("fc" %in% colnames(rpt)) ) {
+        fx = rpt[,"fc"]
+        tbl <- tbl %>%
+            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
+            DT::formatStyle("fc", background = color_from_middle( fx, 'lightblue', '#f5aeae'))
+    }
+    tbl
+})
+
+
+enrich_gseatable_text = "This is an example"
+enrich_gseatable_module <- tableModule(
+    id="enrich_gseatable", func=enrich_gseatableFUNC,
+    info.text = enrich_gseatable_text
+)
+
+output$enrich_gseatable <- enrich_gseatable_module$render
+output$enrich_gseatable_csv <- enrich_gseatable_module$csv
+
+
+enrich_genetable_text = "This is an example"
+enrich_genetable_module <- tableModule(
+    id="enrich_genetable", func=enrich_genetableFUNC,
+    info.text = enrich_genetable_text,
+    server=FALSE
+)
+output$enrich_genetable <- enrich_genetable_module$render
+output$enrich_genetable_csv <- enrich_genetable_module$csv
+
+
+fillRow(flex = c(2,0.10,1),         
+        fillCol(flex = c(NA,0.01, 1),
+                enrich_gseatable_module$button,
+                br(),
+                dataTableOutput("enrich_gseatable", height = "100%", width = "100%")),
+        br(),
+        fillCol(flex = c(NA,0.01, 1),
+                enrich_genetable_module$button,
+                br(),
+                dataTableOutput("enrich_genetable", height = "100%", width = "100%"))
+)
+
 ```
 
 `r if(!PRO.VERSION) {"<!--------------------------------------------------------"}`
@@ -1204,11 +1348,9 @@ gene_selected <- reactive({
 ### Foldchange (all)
 
 ```{r echo=FALSE, warning=FALSE, fig.height=5, fig.width=8}
-fillRow(flex = c(1), width = "100%", 
-        dataTableOutput('gs_fctable')
-        )
 
-output$gs_fctable <- renderDataTable({
+enrich_fctableFUNC <- reactive({
+    
     ngs <- inputData()
     
     F <- sapply( ngs$gset.meta$meta, function(x) x[,"meta.fx"])
@@ -1224,14 +1366,10 @@ output$gs_fctable <- renderDataTable({
     
     DT::datatable( F1, rownames=FALSE,
                   class = 'compact cell-border stripe hover',                  
-                  extensions = c('Buttons','Scroller'),
+                  extensions = c('Scroller'),
                   selection=list(mode='single', target='row', selected=c(1)),
                   options=list(
-                      dom = 'Blfrtip', 
-                      buttons = list('copy','csv',
-                                     list(extend='pdf',
-                                          pageSize="A3", orientation='landscape', 
-                                          filename="diffexpr-table", title="")),
+                      dom = 'lfrtip', 
                       ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
                       scrollX = TRUE, scrollY = 290, scroller=TRUE, deferRender=TRUE
                   )  ## end of options.list 
@@ -1248,17 +1386,32 @@ output$gs_fctable <- renderDataTable({
                             backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                             backgroundPosition = 'center')
 
-}, server=FALSE)
+})
+
+enrich_fctable_module <- tableModule(
+    id="enrich_fctable", func=enrich_fctableFUNC,
+    info.text = "This is an example"
+)
+##output$enrich_fctable <- enrich_fctable_module$render
+##output$enrich_fctable_csv <- enrich_fctable_module$csv
+output <- attachModule(output, enrich_fctable_module)
+
+
+fillCol(flex = c(NA,1),
+        enrich_fctable_module$button,
+        dataTableOutput("enrich_fctable", height = "100%", width = "100%")) 
+
 ```
 
-### FDR table
 
-#### Number of significant gene sets
+### FDR table
 
 ```{r message=FALSE, warning=FALSE}
 ##renderPlot({
 require(kableExtra)
-renderDataTable({
+
+enrich_FDRtable.FUNC <- reactive({
+    
     ngs <- inputData()    
 
     meta <- ngs$gset.meta
@@ -1326,7 +1479,21 @@ renderDataTable({
                             background = styleColorBar(c(0,maxsig), 'lightblue'),
                             backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                             backgroundPosition = 'center')  
-}, server=FALSE)
+})
+
+enrich_FDRtable_text = "This is an example"
+
+enrich_FDRtable_module <- tableModule(
+    id="enrich_FDRtable", func=enrich_FDRtable.FUNC,
+    info.text = enrich_FDRtable_text,
+   ,title='Number of significant gene sets'
+)
+##output$enrich_FDRtable <- enrich_FDRtable_module$render
+output <- attachModule(output, enrich_FDRtable_module)
+
+fillCol(flex = c(NA,1),
+        enrich_FDRtable_module$button,
+        dataTableOutput("enrich_FDRtable", height = "100%", width = "100%")) 
 ```
 
 `r if(!PRO.VERSION) {"-------------------------------------------------------->"}`
