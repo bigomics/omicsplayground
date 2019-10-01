@@ -3,7 +3,7 @@
 ##x=gx;y=ngs$samples$group;bee=bar=TRUE;offx=3;sig.stars=FALSE;xoff=0;srt=60
 gx.b3plot <- function(x, y, width=1, bar=TRUE, bee=TRUE, sig.stars=FALSE,
                       ymax=NULL, bee.cex=0.3, max.stars=5, srt=NULL, xoff=0,
-                      names.cex=1, names=TRUE, max.points=1000, ...)
+                      names.cex=1, names=TRUE, max.points=1000, col="grey80", ...)
 {
     require(beeswarm)
     ##require(sinaplot)
@@ -57,7 +57,7 @@ gx.b3plot <- function(x, y, width=1, bar=TRUE, bee=TRUE, sig.stars=FALSE,
 
     ##par(mfrow=c(1,1));srt=60
     ##bx = barplot( mx-xoff, width=0.6666, space=0.5, ylim=ylim, offset=xoff, names.arg=NA)
-    bx = barplot( mx, width=0.6666, space=0.5, ylim=ylim, offset=xoff,  names.arg=NA, ... )
+    bx = barplot( mx, width=0.6666, space=0.5, ylim=ylim, offset=xoff,  names.arg=NA, col=col, ... )
     y0 = min(ylim) - diff(ylim)*0.08
     pos <- ifelse(srt==0, 1, 2)
 

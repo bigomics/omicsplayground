@@ -6,14 +6,13 @@ Input {.sidebar data-width=250}
 --------------------------------------------------------------------------------
 
 <br> **Signature Analysis**. Users can test their gene signature by
-calculating an enrichment score. You can use some example genes sets
-below or upload your own gene list. Instead of a list of genes, a
-contrast can be selected, which then takes the top differentially
-expressed genes as signature.
-
+calculating an enrichment score. Upload your own gene list, or select
+a contrast which then takes the top differentially expressed genes as
+signature.
 
 
 ```{r}
+htmlOutput("curdata8", class="current-data")
 ##----------------------------------------------------------------------
 ## More Info (pop up window)
 ##----------------------------------------------------------------------
@@ -27,8 +26,6 @@ sig_infotext =
 
 <br><br>The <strong>Enrichment tab</strong> performs the enrichment analysis of the gene list against all contrasts by running the GSEA algorithm and plots enrichment outputs. The enrichment statistics can be found in the corresponding table
 
-<br><br>The <strong>Signature Connectivity Map (CMap)</strong> associates the provided signature list or contrast profile with the similar profiles of the other experiments, in which we have taken ten datasets from the literature.
-
 <br><br>Under the <strong>Overlap/similarity tab</strong>, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, as well as the p and q values by the Fisher’s test for the overlap test.
 
 "
@@ -37,11 +34,11 @@ observeEvent( input$sig_info, {
     showModal(modalDialog(
         title = HTML("<strong>Signature Analysis Module</strong>"),
         HTML(sig_infotext),
-        easyClose = TRUE ))
+        easyClose = TRUE, size="m"))
 })
 ```
 
-<br><br>
+<br><hr>
 
 
 ```{r}
@@ -57,7 +54,7 @@ CELL.CYCLE.GENES = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL 
 selectizeInput("sig_feature","Contrast:", choices="<custom>")
 
 textAreaInput("sig_genelistUP", "Signature:", value = IMMCHECK.GENES,
-              rows=10, placeholder="Paste your gene list")
+              rows=6, placeholder="Paste your gene list")
 ## textAreaInput("sig_genelistDN", "Signature (down):", rows=6, placeholder="Paste your gene list")
 
 actionButton("sig_example2","[apoptosis] ", style="font-size: 0.9em; color: #24A; background-color:
@@ -66,29 +63,15 @@ actionButton("sig_example1","[immune_chkpt] ", style="font-size: 0.9em; color: #
 actionButton("sig_example3","[cell_cycle] ", style="font-size: 0.9em; color: #24A; background-color: transparent; border-style: none; padding:0")
 
 
-
-
 ##----------------------------------------------------------------------
 ## Togglable options
 ##----------------------------------------------------------------------
-br();br();br();
-if(PRO.VERSION || DEV.VERSION) {
-    ##actionLink("sig_options", "Show options ...")
+br();br();
+conditionalPanel(
+    "input.main_usermode == 'expert'",
     tipify( actionLink("sig_options", "Options", icon=icon("cog", lib = "glyphicon")),
-           "Toggle advanced options", placement="top")
-}
-
-## br();br();
-## conditionalPanel(
-##     "input.sig_options % 2 == 1",
-##     tagList(
-##         ## radioButtons("sig_type",NULL,c("contrast","hallmark"),inline=TRUE),
-##         ## radioButtons('sig_rankmethod','Enrichment method:',c("rcor","fgsea"),inline=TRUE)
-##     )
-## )
-
-if(PRO.VERSION) {
-    br();br();
+           "Toggle advanced options", placement="top"),
+    br(),
     conditionalPanel(
         "input.sig_options % 2 == 1",
         tagList(
@@ -96,10 +79,9 @@ if(PRO.VERSION) {
             radioButtons('sig_rankmethod','Enrichment method:',c("rcor","fgsea"),inline=TRUE)
         )
     )
-}
+)
 
 if(DEV.VERSION) {
-    br();br();
     conditionalPanel(
         "input.sig_options % 2 == 1",
         tagList(
@@ -142,7 +124,7 @@ observe({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
     sig_type="contrast"
-    if(PRO.VERSION) sig_type <- input$sig_type
+    sig_type <- input$sig_type
     if(is.null(sig_type)) return(NULL)
     if(sig_type=="contrast") {
         contr <- c("<custom>",names(ngs$gx.meta$meta))
@@ -169,10 +151,10 @@ getCurrentMarkers <- reactive({
     if(is.null(input$sig_feature)) return(NULL)
 
     sig_type="contrast"
-    if(PRO.VERSION) sig_type <- input$sig_type
+    sig_type <- input$sig_type
     if(is.null(sig_type)) return(NULL)
 
-    cat("<signature:getCurrentMarkers> called\n")
+    dbg("<signature:getCurrentMarkers> called\n")
     
     level = "gene"
     features = toupper(ngs$genes$gene_name)
@@ -230,7 +212,7 @@ calcSingleSampleValues <- function(X, y, method=c("rho","gsva") ) {
     ##
     ## very fast rank difference
 
-    cat("<signature:calcSingleSampleValues> called\n")
+    dbg("<signature:calcSingleSampleValues> called\n")
     
     if(is.null(names(y)) && length(y)!=nrow(X) ) {
         cat("<signature:calcSingleSampleValues> FATAL ERROR: y must be named if not matched\n")
@@ -245,7 +227,7 @@ calcSingleSampleValues <- function(X, y, method=c("rho","gsva") ) {
     X <- X[jj,]
     y <- y[jj]
 
-    cat("<signature:calcSingleSampleValues> 1\n")
+    dbg("<signature:calcSingleSampleValues> 1\n")
     
     if(sum(y!=0)==0) {
         cat("<signature:calcSingleSampleValues> WARNING: y is all zero!\n")        
@@ -262,7 +244,7 @@ calcSingleSampleValues <- function(X, y, method=c("rho","gsva") ) {
         ##S$rho <- scale(S$rho)[,1]  ## should we scale??
     }
 
-    cat("<signature:calcSingleSampleValues> 2\n")
+    dbg("<signature:calcSingleSampleValues> 2\n")
     
     ## calculate GSVA
     if("gsva" %in% method) {
@@ -283,7 +265,7 @@ calcSingleSampleValues <- function(X, y, method=c("rho","gsva") ) {
         S1 <- S[[1]]
     }
 
-    cat("<signature:calcSingleSampleValues> done!\n")
+    dbg("<signature:calcSingleSampleValues> done!\n")
 
     S1 = as.matrix(S1)
     rownames(S1) = colnames(X)
@@ -302,7 +284,7 @@ getSingleSampleEnrichment <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
     
-    cat("getSingleSampleEnrichment:: called\n")
+    dbg("getSingleSampleEnrichment:: called\n")
 
     ## select samples
     X = ngs$X
@@ -358,7 +340,7 @@ getSingleSampleEnrichment <- reactive({
         }
     }
 
-    cat("getSingleSampleEnrichment:: done!\n")
+    dbg("getSingleSampleEnrichment:: done!\n")
     
     res <- list( by.sample=ss.bysample, by.group=ss.bygroup)
     return(res)
@@ -412,7 +394,6 @@ sigCalculateGSEA <- reactive({
     
     ## restrict to top 100 (fgsea is otherwise to slow)
     ntop=100
-    ##if(PRO.VERSION && !is.null(input$sig_top) ) ntop <- as.integer(input$sig_top)
 
     ## prioritize with quick correlation
     ##require(wCorr)
@@ -434,7 +415,7 @@ sigCalculateGSEA <- reactive({
     gmt = list("gset"=unique(gset))
     res <- NULL
     enrich_method="rcor"
-    if(PRO.VERSION) enrich_method <- input$sig_rankmethod
+    enrich_method <- input$sig_rankmethod
     
     if(enrich_method=="fgsea") {
         i=1
@@ -446,7 +427,7 @@ sigCalculateGSEA <- reactive({
                 return(res)
             })
         })
-        cat("sigCalculateGSEA:: fgsea done!\n")
+        dbg("sigCalculateGSEA:: fgsea done!\n")
         res1 <- data.frame(do.call(rbind, res))
         res1$ES <- NULL
     } else {
@@ -482,7 +463,7 @@ sigCalculateGSEA <- reactive({
     output <- output[order(-abs(output[,"NES"])),,drop=FALSE]
     F <- F[,rownames(output),drop=FALSE]    
     gsea <- list(F=as.matrix(F), gset=gset, output=output)
-    cat("sigCalculateGSEA:: done!\n")
+    dbg("sigCalculateGSEA:: done!\n")
     return(gsea)
 })
 ```
@@ -501,7 +482,7 @@ sig_markersplotFUNC <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
 
-    cat("<signature:Markers> called\n")        
+    dbg("<signature:Markers> called\n")        
     
     markers <- ngs$families[[10]]
     markers <- COLLECTIONS[[10]]
@@ -595,8 +576,6 @@ sig_markers.module <- plotModule(
     ##options = sig_markers.opts,
     pdf.width=8, pdf.height=8, res=100
 )
-##output$sig_markersplot     <- sig_markers.module$render
-##output$sig_markersplot_pdf <- sig_markers.module$pdf
 output <- attachModule(output, sig_markers.module)
 
 fillCol(
@@ -659,9 +638,7 @@ sig_enplots.module <- plotModule(
     options = sig_enplots.opts,
     pdf.width=8, pdf.height=8, res=90
 )
-output$sig_enplots     <- sig_enplots.module$render
-output$sig_enplots_pdf <- sig_enplots.module$pdf
-
+output <- attachModule(output, sig_enplots.module)
 fillCol(flex = c(NA,1), 
         sig_enplots.module$buttons,
         plotOutput("sig_enplots", height = "100%", width = "100%")
@@ -671,251 +648,6 @@ fillCol(flex = c(NA,1),
 
 > **Enrichment plots.** This figure shows the enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature.
 
-
-### Signature CMap
-    
-```{r message=FALSE, warning=FALSE, fig.width=4}
-
-##================================================================================
-## CONNECTIVITY MAP
-##================================================================================
-
-##ntop=1000;nb=100
-pgx.getExternalSignaturesFC <- function(fc, nb, sets="<all>", ntop=-1)
-{
-    ## 
-    ## requires: PROFILES (from global env)
-    ##
-    if(0) {
-        fc <- cbind(ngs$gx.meta$meta[[1]]$meta.fx)
-        rownames(fc) <- rownames(ngs$gx.meta$meta[[1]])
-    }
-    if(is.null(fc)) return(NULL)
-    
-    fc0 <- fc
-    rownames(fc0) <- toupper(sub(".*:","",rownames(fc0)))
-    allFC <- PROFILES$FC
-    allFC <- allFC[match(rownames(fc0), rownames(allFC)),]
-    rownames(allFC) <- rownames(fc0)
-    dim(allFC)
-    
-    ##sets=c("<all>");ntop=100
-    extFC <- allFC
-    if(sets[1]!="<all>") {
-        db <- gsub("\\].*","]",colnames(extFC))
-        table(db)
-        kk <- which(db %in% sets)
-        extFC <- extFC[,kk,drop=FALSE]
-    }
-    
-    ## get top SD fold-changing genes
-    if(ntop > 0) {
-        sd0=sd1=1
-        sd0 <- Matrix::rowMeans(extFC**2, na.rm=TRUE)
-        sd1 <- Matrix::rowMeans(fc0**2, na.rm=TRUE)
-        sd0[which(is.na(sd0))] <- 0.0
-        sd1[which(is.na(sd1))] <- 0.0
-        sd2 <- sd0 * sd1
-        table(sd2!=0)
-        jj <- order(-abs(sd2))
-        jj <- head(jj[which(sd2[jj]!=0)],ntop)
-        fc0 <- fc0[jj,,drop=FALSE]
-        extFC <- extFC[jj,,drop=FALSE]
-    }
-    dim(extFC)
-    dim(fc0)
-    
-    ## determine most similar experiment by fold-change correlation
-    suppressWarnings(
-        xrho <- cor( apply(fc0,2,rank,na.last="keep"),
-                    apply(extFC,2,rank,na.last="keep"),
-                    use="pairwise")
-    )
-    dim(xrho)
-    
-    nn <-  ceiling( nb / nrow(xrho) )
-    ii <- as.vector(apply(xrho,1,function(x) head(order(-x),nn)))
-    bb <- colnames(extFC)[sort(unique(ii))]
-    length(bb)
-    
-    ## add to original FC/Q
-    gg <- toupper(sub(".*:","",rownames(fc0)))
-    jj <- match(gg, rownames(allFC))
-    fcx <- as.matrix(allFC)[jj,bb,drop=FALSE]
-    return(fcx)
-}
-
-getNeighbourhoodFoldChangeMatrix <- reactive({
-
-    ngs <- inputData()
-    res = pgx.getMetaFoldChangeMatrix(ngs, what="trend.limma")
-    ##fc0 = sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
-    fc0 <- res$fc
-    rownames(fc0) <- toupper(gsub(".*:","",rownames(fc0)))
-
-    others <- input$cmp_cmapsets2
-    others <- setdiff(others,c("<this>",""))
-    if("<all>" %in% others) others <- "<all>"
-
-    cat("getNeighbourhoodFoldChangeMatrix:: others=",others,"\n")
-    cat("getNeighbourhoodFoldChangeMatrix:: len.others=",length(others),"\n")
-    
-    if(TRUE && length(others)>0) {
-        fc1 <- res$fc[,,drop=FALSE]
-        ntop <- 200
-        if(!is.null(input$cmp_topgenes)) ntop <- as.integer(input$cmp_topgenes)
-        nnb = 500
-        if(!is.null(input$cmp_neighbours)) nnb <- as.integer(input$cmp_neighbours)
-        fcx <- pgx.getExternalSignaturesFC(fc1, nb=nnb, ntop=ntop, sets=others)
-        gg <- intersect(rownames(fc0),rownames(fcx))
-        length(gg)
-        fc0 <- cbind( fc0[gg,], fcx[gg,] )        
-    }
-    if(NCOL(fc0)<2) return(NULL)
-
-    ## normalize???
-    fc0 <- scale(fc0, center=TRUE)
-
-    ## set missing values are set to nearly zero
-    fc0[is.na(fc0)] <- 1e-4 * rnorm(sum(is.na(fc0)))
-
-    ngenes = 200
-    ngenes = as.integer(input$cmp_topgenes)
-    fc0 = head(fc0[order(-apply(fc0,1,sd,na.rm=TRUE)),,drop=FALSE],ngenes)
-    
-    ## --------- compute correlation distance 
-    fc0 <- apply(fc0,2,rank,na.last="keep")  ## rank correlation??
-    rho <- cor(fc0, use="pairwise")
-
-    res <- list(fc=fc0, rho=rho)
-    return(res)
-})
-
-
-cmp_cmapplotD3_RENDER <- reactive({
-
-    ##======================================================================
-    ## Fold-change t-SNE
-    ##======================================================================
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    
-    ## get the fold-changes of selected comparison and neighbourhood
-    res <- getNeighbourhoodFoldChangeMatrix()
-    fc  <- res$fc
-    fc[is.na(fc)] <- 0
-    
-    add.negative=FALSE
-    ##add.negative <- ("add negative" %in% input$fc_cmap_options)
-    if(add.negative) {
-        comparisons=1
-        comparisons = input$cmp_comparisons
-        if(is.null(comparisons)) return(NULL)
-        ## add NEGATIVE phenotype node
-        kk <- which(colnames(fc) %in% comparisons)
-        neg.fc <- -fc[,kk]
-        colnames(neg.fc) <- paste0("NEG:",colnames(neg.fc))
-        fc <- cbind(fc, neg.fc)
-        ##k <- which(rownames(pos)==comparison)
-        ##rho <- cor(fc[,], fc[,k])[,1]  ## correlation to QUERY node
-    }
-    
-    ## -------- compute t-SNE
-    if(input$cmp_cmapclust=="tsne") {
-        ##require(Rtsne.multicore)
-        require(Rtsne)
-        perplexity <- pmax(min(ncol(fc)/5,30),2)
-        perplexity
-
-        cat("cmp_cmapplotD3:: dim.fc=",dim(fc),"\n")
-        cat("cmp_cmapplotD3:: perplexity=",perplexity,"\n")
-
-        sfc <- scale(fc)
-        if(ncol(sfc)<=6) sfc <- cbind(sfc,sfc,sfc,sfc)
-        sfc <- sfc + 1e-2*matrix(rnorm(length(sfc)),nrow(sfc),ncol(sfc))
-        pos <- Rtsne( t(sfc), is_distance=FALSE, check_duplicates=FALSE,
-                     perplexity=perplexity, num_threads=4)$Y
-        pos <- pos[1:ncol(fc),]
-        xlab="tSNE-x"
-        ylab="tSNE-y"
-    } else {
-        require(irlba)
-        sfc <- scale(fc)
-        if(ncol(sfc)<=3) sfc <- cbind(sfc,sfc,sfc)
-        pos <- irlba(sfc, nv=2)$v
-        pos <- pos[1:ncol(fc),]
-        xlab="PC1"
-        ylab="PC2"
-    }
-    rownames(pos) = colnames(fc)
-    dim(pos)
-    pos = scale(pos) ## scale 
-   
-    ## prepare plotting
-    lab <- rownames(pos)
-    ##if(input$fc_cmapshownames) lab <- rownames(pos)
-    ##if(!("show names" %in% input$fc_cmap_options)) lab <- rep("",nrow(pos))
-    jj <- grep("\\]",rownames(pos))
-    grp <- rep("[this_data]",nrow(pos))
-    grp[jj] <- sub("].*","]",rownames(pos)[jj])
-    table(grp)
-    ##rr <- abs(rho)**2
-    ##sign<- c("-","+")[1 + 1*(sign(rho)>0)]
-    ##sign[k] <- "*"
-    ##tt <- paste0(rownames(pos)," (",sign,")")
-    tt <- rownames(pos)
-    stype <- (1 + 1*(grp=="[this_data]"))
-    labels_size <- ifelse( nrow(pos) < 20, 20, 15)
-    labels_size <- ifelse( nrow(pos) > 400, 12, labels_size)
-        
-    require(scatterD3)
-    scatterD3( pos[,1], pos[,2], transitions=TRUE,
-              xlab=xlab, ylab=ylab,
-              legend_width=0, tooltip_text=tt,
-              lab=lab, labels_size=labels_size, point_opacity = 0.8,
-              size_var=stype, size_range = c(50,200), size_lab="type",
-              ## size_var=rr, size_range = c(20,200)*2.2,
-              ## size_lab="connectivity score",
-              ## symbol_var=sign, symbol_lab="type",
-              col_var=grp, col_lab="data set")
-
-})
-
-## cmp_cmapplotD3_RENDER
-
-cmp_cmapplotD3.opts = tagList(
-    selectInput('cmp_cmapsets2',"Test dataset:", choices=NULL, multiple=TRUE),
-    radioButtons('cmp_cmapclust',"Layout:",c("tsne","pca"),inline=TRUE),
-    radioButtons('cmp_topgenes','Top genes:',c(50,200,1000),inline=TRUE,selected=200),
-    ##checkboxGroupInput('fc_cmap_options',NULL,c('show names','add negative'),
-    ##                   selected=c('show names'),inline=TRUE),
-    radioButtons('cmp_neighbours','Neighbours:',c(100,500,2000),inline=TRUE,selected=500)
-)
-
-cmp_cmapplotD3.module <- plotModule(
-    "cmp_cmapplotD3", cmp_cmapplotD3_RENDER, plotlib="scatterD3",
-    info.text = "The Signature Connectivity Map (CMap) associates the provided signature list or contrast profile with the similar profiles of the other experiments, in which we have taken ten datasets from the literature.",
-    options = cmp_cmapplotD3.opts,
-    pdf.width=8, pdf.height=8, res=90
-)
-output$cmp_cmapplotD3     <- cmp_cmapplotD3.module$render
-output$cmp_cmapplotD3_pdf <- cmp_cmapplotD3.module$pdf
-
-fillCol(flex = c(NA,1), 
-        cmp_cmapplotD3.module$buttons,
-        scatterD3Output('cmp_cmapplotD3')
-        )
-
-observe({
-    cmapsets <- c(sort(unique(gsub("\\].*","]",colnames(PROFILES$FC)))))
-    cmapsets <- c("<this>",cmapsets,"<all>")
-    updateSelectInput(session, "cmp_cmapsets1", choices=cmapsets, selected="<this>")
-    updateSelectInput(session, "cmp_cmapsets2", choices=cmapsets, selected="<this>")
-})
-
-```
-
-> **Signature Connectivity Map.** This figure shows the enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature.
 
 
 
@@ -944,9 +676,9 @@ sig_overlaptable.RENDER <- reactive({
     require(qlcMatrix)
     y <- 1*(colnames(GSETxGENE) %in% toupper(markers))
     names(y) <- colnames(GSETxGENE)
-    cat("computing cosine distances...")    
+    dbg("computing cosine distances...")    
     rho <- cosSparse( t(GSETxGENE), matrix(y,ncol=1))[,1]
-    cat("done!\n")
+    dbg("done!\n")
     
     ## fisher test
     ##ii <- setdiff(match(markers, colnames(GSETxGENE)),NA)
@@ -956,9 +688,9 @@ sig_overlaptable.RENDER <- reactive({
     N <- N[which(N[,1]!=0 | N[,3]!=0), ]
 
     require(corpora) 
-    cat("computing Fisher-test p values...")
+    dbg("computing Fisher-test p values...")
     pv <- corpora::fisher.pval( N[,1], N[,2], N[,3], N[,4], log.p=FALSE)
-    cat("done!\n")
+    dbg("done!\n")
     head(pv)
     names(pv) <- rownames(N)
     pv = pv[match(names(rho),names(pv))]
@@ -973,7 +705,7 @@ sig_overlaptable.RENDER <- reactive({
     dim(A)
     
     ## get shared genes
-    cat("determining shared genes...\n")
+    dbg("determining shared genes...\n")
     aa = rownames(A)
     ncommon <- Matrix::colSums(t(GSETxGENE[aa,])*as.vector(y)!=0)
     ntotal <- Matrix::rowSums(GSETxGENE[aa,]!=0)
@@ -1033,17 +765,14 @@ sig_overlaptable.RENDER <- reactive({
 })
 
 
-sig_overlaptable.module <- plotModule(
-    "sig_overlaptable", sig_overlaptable.RENDER, plotlib="table", just.info=TRUE,
-    title = "Overlap with other signatures", no.download=TRUE,
+sig_overlaptable.module <- tableModule(
+    "sig_overlaptable", sig_overlaptable.RENDER,
+    title = "Overlap with other signatures",
+    ## just.info=TRUE, no.download=TRUE,
     info.text = "Under the <strong>Overlap/similarity tab</strong>, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, as well as the p and q values by the Fisher’s test for the overlap test.",
     ##options = sig_overlaptable.opts,
-    pdf.width=10, pdf.height=8, 
 )
-
-##DT::renderDataTable
-output$sig_overlaptable <- sig_overlaptable.module$render
-##output$sig_overlaptable_pdf <- sig_overlaptable.module$pdf
+output <- attachModule(output, sig_overlaptable.module)
 
 fillCol(flex = c(NA,NA,1), 
         sig_overlaptable.module$buttons, br(),
@@ -1060,136 +789,6 @@ fillCol(flex = c(NA,NA,1),
 Col  {.tabset data-width=375}
 ----------------------------------------------------------------------------------------
 
-### Phenotypes {data-height=800}
-
-```{r}
-
-sig_phenoplot.RENDER <- reactive({
-    ##if(!input$tsne.all) return(NULL)
-    require(RColorBrewer)
-   
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    
-    ## get t-SNE positions
-    pos = ngs$tsne2d
-    
-    ## get GSVA values
-    res <- getSingleSampleEnrichment()
-    if(is.null(res)) return(NULL)
-    S <- res$by.sample
-    dim(S)
-    
-    ##fc = S[,"rho"]
-    ##fc = S[,"gsva"]
-    if(NCOL(S)==1) {
-        fc = S[,1]
-    } else {
-        fc = colMeans( t(S) / (1e-8+sqrt(colSums(S**2))) ) ## scaled mean
-    }
-    fc <- scale(fc)[,1]  ## scale??
-    names(fc) = rownames(S)
-    ##fc1 = sign(fc) * (fc/(1e-8+max(abs(fc))))**2 ## normalize
-    fc1 = tanh(1.0*fc/(1e-4+sd(fc)))
-    fc1 = fc1[rownames(pos)]
-    summary(fc)
-    summary(fc1)
-    
-    cat("sig_phenoplot: length.fc1=",length(fc1),"\n")
-    cat("sig_phenoplot: head.fc1=",head(fc1),"\n")
-    ## NEED CHECK! sometimes all are NaN (e.g. if signature is single gene)
-    if(sum(!is.na(fc1))==0) {
-        return(NULL)
-    }
-        
-    Y <- ngs$Y[rownames(pos),,drop=FALSE]
-    pheno = colnames(Y)    
-    ##pheno <- grep("batch|sample|donor|repl|group",pheno,
-    ##              invert=TRUE, ignore.case=TRUE,value=TRUE)
-    pheno <- grep("batch|sample|donor|repl",pheno,
-                  invert=TRUE, ignore.case=TRUE,value=TRUE)
-        
-    ## layout
-    par(mfrow = c(3,2), mar=c(0.3,0.7,2.8,0.7))
-    if(length(pheno)>=6) par(mfrow = c(4,3), mar=c(0.3,0.4,2.8,0.4)*0.8)
-    if(length(pheno)>=12) par(mfrow = c(5,4), mar=c(0.2,0.2,2.5,0.2)*0.8)
-    i=1    
-
-    cex1 <- 1.6*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
-    cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
-    cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
-    
-    require(RColorBrewer)
-    for(i in 0:min(19,length(pheno))) {
-        if(i==0) {
-            qfc <- quantile(fc1,probs=c(0.25,0.75),na.rm=TRUE)
-            if(length(fc1)>100) qfc <- quantile(fc1,probs=c(0.05,0.95),na.rm=TRUE)
-            colvar = factor(c(NA,"low","high")[1 + 1*(fc1<qfc[1]) + 2*(fc1>qfc[2])])
-            klrpal = c("red3","blue2")  ## matches factor high/low resp..
-            klr1 = BLUERED(16)[8 + round(7*fc1)]
-            klr1 = paste0(col2hex(klr1),"99")
-            tt = "INPUT SIGNATURE"
-        } else {
-            colvar = factor(Y[,1])
-            colvar = factor(Y[,pheno[i]])
-            colvar[which(colvar %in% c(NA,""," ","NA","na"))] <- NA
-            colvar = factor(as.character(colvar))
-            klrpal = COLORS  
-            klr1 = klrpal[colvar]
-            klr1 = paste0(col2hex(klr1),"99")
-            jj = which(is.na(klr1))
-            if(length(jj)) klr1[jj] <- "#AAAAAA22"
-            tt = tolower(pheno[i])
-        }
-        ii = order(abs(fc1))
-        plot( pos[ii,], pch=19, cex=cex1, col=klr1[ii],
-             fg = gray(0.5), bty = "o", xaxt='n', yaxt='n',
-             xlab="tSNE1", ylab="tSNE2")
-        title( tt, cex.main=1.3, line=0.5, col="grey40")
-        if(input$sig_labelmode=="legend") {
-            legend("bottomright", legend=levels(colvar), fill=klrpal,
-                   cex=0.95, y.intersp=0.85, bg="white")
-        } else {
-            grp.pos <- apply(pos,2,function(x) tapply(x,colvar,mean,na.rm=TRUE))
-            grp.pos <- apply(pos,2,function(x) tapply(x,colvar,median,na.rm=TRUE))
-            nvar <- length(setdiff(colvar,NA))
-            if(nvar==1) {
-                grp.pos <- matrix(grp.pos,nrow=1)
-                rownames(grp.pos) <- setdiff(colvar,NA)[1]
-            }
-            labels = rownames(grp.pos)
-            boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
-            cex2 = 0.99*cex1**0.33
-            text( grp.pos, labels=boxes, cex=cex2*0.95, col="#CCCCCC99")
-            text( grp.pos, labels=labels, font=2, cex=cex2)
-        }
-    }    
-})
-
-sig_phenoplot.opts = tagList(
-    radioButtons('sig_labelmode',"Label",c("groups","legend"),inline=TRUE)
-)
-
-sig_phenoplot.module <- plotModule(
-    "sig_phenoplot", sig_phenoplot.RENDER, ## plotlib="base",
-    info.text = "Phenotypes. This figure visualizes the distribution of the phenotype information.",
-    options = sig_phenoplot.opts,
-    pdf.width=6, pdf.height=9, res=85
-)
-output$sig_phenoplot     <- sig_phenoplot.module$render
-output$sig_phenoplot_pdf <- sig_phenoplot.module$pdf
-
-fillCol(flex = c(NA,1), 
-        sig_phenoplot.module$buttons,
-        plotOutput("sig_phenoplot", height = "100%", width = "100%")
-        )
-
-
-
-```
-
-
-> **Phenotype distribution plots.** The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects.
 
 
 ### Enrichment {data-height=800}

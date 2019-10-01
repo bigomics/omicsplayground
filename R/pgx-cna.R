@@ -9,6 +9,21 @@ if(0) {
 
 }
 
+##nsmooth=80;downsample=10
+pgx.inferCNV <- function(ngs, nsmooth=40, downsample=10) {
+
+    ## InferCNV: Inferring copy number alterations from tumor single
+    ## cell RNA-Seq data
+    ##
+    ## https://github.com/broadinstitute/inferCNV/wiki
+    ##
+    ## BiocManager::install("infercnv")
+    ##devtools::install_github("broadinstitute/infercnv", ref="RELEASE_3_9")
+    require(infercnv)
+
+    ## fill me...
+    
+}
 
 ##nsmooth=80;downsample=10
 pgx.CNAfromExpression <- function(ngs, nsmooth=40, downsample=10) {

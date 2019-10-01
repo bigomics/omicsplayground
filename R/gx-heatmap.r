@@ -30,7 +30,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                         col.annot=NULL, row.annot=NULL, annot.ht=3,
                         nmax=1000, cmax=NULL, main="", verbose=1,
                         cexRow=1, cexCol=1, mar=c(5,5), column_title_rot=0,
-                        show_legend=TRUE, show_rownames=100, lab.len=80,
+                        show_legend=TRUE, show_rownames=60, lab.len=80,
                         show_colnames=TRUE, use.nclust=FALSE,
                         ... )
 {
@@ -150,8 +150,8 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
             ##ap <- list(labels_gp=gpar(fontsize=6*cexRow))
             ap <- list( title_gp=gpar(fontsize=3.6*annot.ht),
                        labels_gp=gpar(fontsize=3.3*annot.ht),
-                       grid_width=unit(annot.ht, "mm"),
-                       grid_height=unit(annot.ht, "mm"))
+                       grid_width=unit(1*annot.ht, "mm"),
+                       grid_height=unit(1*annot.ht, "mm"))
             aa <- rep( list(ap), ncol(col.annot))
             names(aa) <- colnames(col.annot)
             col.ha[[i]] = HeatmapAnnotation(
@@ -192,18 +192,19 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         )
     }
 
-    ## draw heatmap
+    ## ------------- scaling options
     if("col" %in% scale || "both" %in% scale) gx = scale(gx)
     if("row" %in% scale || "both" %in% scale) gx = t(scale(t(gx)))
     if("cols" %in% scale || "both" %in% scale) gx = scale(gx)
     if("rows" %in% scale || "both" %in% scale) gx = t(scale(t(gx)))
-    if("colcenter" %in% scale) gx = scale(gx,center=TRUE,scale=FALSE)
-    if("rowcenter" %in% scale) gx = t(scale(t(gx),center=TRUE,scale=FALSE))
+    if("col.center" %in% scale) gx = scale(gx,center=TRUE,scale=FALSE)
+    if("row.center" %in% scale) gx = t(scale(t(gx),center=TRUE,scale=FALSE))
 
     if(softmax) {
         gx <- tanh(0.5 * gx / sd(gx))
     }
 
+    ## ------------- draw heatmap
     ##split.idx = NULL
     ##if(!is.null(split) && split>0) split.idx = row.annot[rownames(gx),split,drop=FALSE]
     hmap = NULL
@@ -282,7 +283,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     ##draw(hmap, annotation_legend_side="right")
     draw(hmap, annotation_legend_side="right",
          padding = unit( c(mar[1], 1, 2, mar[2])*0.5, "mm"),
-         gap = unit(1.2,"mm") )
+         gap = unit(1.0,"mm") )
     ##hmap
 
     ##res <- c()

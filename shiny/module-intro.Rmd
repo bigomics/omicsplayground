@@ -6,8 +6,51 @@ Inputs {.sidebar data-width=320}
 -------------------------------------------------------------------------------------------
 
 ```{r intro-title, results='asis', echo=FALSE}
-##cat("<h3><b>The Immuno-Omics Playground</b></h3>")
-cat("<br><br><br><br><br><br>")
+
+ENABLE_AUTHENTICATION = TRUE
+ENABLE_AUTHENTICATION = FALSE
+
+useShinyjs(rmd=TRUE)
+htmlOutput("curdata1")
+
+cat("<br><br><br><br><p>Dataset info:</p>")
+wellPanel( htmlOutput("dataset_info") )
+
+##-------------------------------------
+curDataSet <- reactive({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    ##HTML("<b>dataset :</b>",ngs$name,"")
+    ##HTML("<h3>",ngs$name,"</h3>")
+    HTML("<div class='current-data'>",ngs$name,"</div>")
+})
+
+## We need to make multiple output copies because shiny does not allow
+## using the same render function twice
+for (i in 1:20) {
+    ## Need local so that each item gets its own number. Without it, the value
+    ## of i in the renderPlot() will be the same across all instances, because
+    ## of when the expression is evaluated.
+    local({
+        my_i <- i
+        txtname <- paste0("curdata", my_i)
+        output[[txtname]] <- renderText({ curDataSet() })
+    })
+}
+
+##-------------------------------------
+
+output$dataset_info <- renderText({
+    inf <- selectedDataSetInfo()
+    ## cat("length.inf=",length(inf),"\n")
+    if(length(inf)==0) {
+        HTML(paste("<p>Please select a dataset<br>"))
+    } else {
+        inf <- inf[-1]
+        HTML(paste("<p><b>",names(inf),"</b>:", inf,"<br>"))
+    }
+})
+
 ```
 
 ```{r load-button, echo=FALSE, message=FALSE}
@@ -35,70 +78,363 @@ if(file.exists(PGXINFO.FILE)) {
 }
 
 ## select data set
-tipify(selectInput("input_data","", choices=INPUT_FILES, selected=PGX.DEFAULT),
-       "Select a dataset for the analysis.", placement="top")
+##tipify(selectInput("input_data","", choices=INPUT_FILES, selected=PGX.DEFAULT),
+##       "Select a dataset for analysis.", placement="top")
+
 tipify(actionButton("loadbutton",label="Load dataset"),
        "Click to load the selected dataset.", placement="bottom")
 
-
-br();br();br();br();br();br();
-br();br();br();br();br();br();
-br();br();br();br();br();br();
+## br();br();br();br();br();br();
 ##if(PRO.VERSION) checkboxGroupInput('data_filter','Exclude:', choices=c("sex","ig"),
 ##                                   selected=c("sex","ig"), inline=TRUE)
-if(DEV.VERSION) tipify(actionButton("data_scanfiles",label="rescan file info"), 
-                       "Click to rescan newly injected dataset into the platform.", placement="bottom")
-    
-```	
+if(DEV.VERSION) {
+    tipify(actionButton("data_scanfiles",label="rescan file info"), 
+           "Click to rescan newly injected dataset into the platform.",
+           placement="bottom")
+}
 
-
-```{r echo=FALSE, message=FALSE}
-inputData <- eventReactive( input$loadbutton, {
-    ##
-    ## This is the main loader function that loads the ngs object.
-    ##
-    ##
-    ##shinyjs::show(id="splash-content")
-    ##shinyjs::hide(id="table-content")
-    if(is.null(input$input_data)) return(NULL)
-    
-    fn = "rieckmann2017-immprot-4k.pgx"
-    fn = INPUT_FILES[13]
-    fn = INPUT_FILES[1]
-    fn = input$input_data  ## from data-module tab
-
-    if(is.null(fn)) return(NULL)                          
-    if(fn=="") return(NULL)
-    cat("inputData:: loading",fn,"\n")
-    withProgress(
-        message='loading...', value=0.8,
-        load(file.path(PGX.DIR,fn),verbose=0)
-    )
-    cat("inputData:: finished loading\n")
-
-    ##----------------- update input
-    ##if(PRO.VERSION) {
-    INPUT_FILES1 = dir(PGX.DIR, pattern=".pgx$")
-    updateSelectInput(session,"input_data", choices=INPUT_FILES1, selected=fn)  ## update?
-    ngs <- pgx.initialize(ngs) 
-    ##shinyjs::hide(id="splash-content")
-    ##shinyjs::show(id="table-content")    
-    cat("inputData:: done!\n")
-    return(ngs)
-}, ignoreNULL=FALSE )
 
 observeEvent( input$data_scanfiles, {
-    cat("module-data:: observeEvent (loadButton)\n")
     cat("scanning PGX file info...\n")
     withProgress(message=">>> scanning available data sets...", value=0, {
         PGXINFO <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=TRUE)
     })
-    cat("dim.PGXINFO=",dim(PGXINFO),"\n")
+    dbg("dim.PGXINFO=",dim(PGXINFO),"\n")
     ##PGXINFO.FILE <- "pgx-datasets-info.csv"
     ##Sys.chmod("../shiny-dev", mode="0777")
     Sys.chmod(PGXINFO.FILE, mode="0666")
     write.csv(PGXINFO, file=PGXINFO.FILE)
 })
+
+
+##=================================================================================
+##========================== MODAL DIALOGS ========================================
+##=================================================================================
+
+cartoon_list <- list(
+    list(slogan="Visual analytics. See and understand", img="data-graph-wisdom.jpg"),
+    list(slogan="Fasten your seat belts. Hi-speed analytics", img="cartoon-speedup.jpg"),
+    list(slogan="Analytics anywhere. Anytime.", img="cartoon-cloudservice.jpg"),
+    list(slogan="Do-it-yourself. Yes you can.", img="bigomics-rockstar3.jpg"),
+    list(slogan="Analyze with confidence. Be a rockstar", img="bigomics-rockstar3.jpg"),
+    list(slogan="Fast track your Bioinformatics", img="selfservice-checkout2.png"),
+    list(slogan="Big Data meets Biology", img="bigdata-meets.png")
+)
+
+randomCartoon <- reactive({
+    invalidateLater(12000)
+    cartoon <- sample(cartoon_list,1)[[1]]
+    cartoon$img2 = paste0("cartoons/",cartoon$img)
+    cartoon$img  = paste0("www/cartoons/",cartoon$img)
+    cartoon
+})
+
+wrapindex <- function(x,n=length(cartoon_list)) ifelse(x%%n==0,n,x%%n)
+img_index <- reactiveVal(1)
+observeEvent(input$img_previous, { img_index(wrapindex(img_index()-1)) })
+observeEvent(input$img_next, { img_index(wrapindex(img_index()+1)) })
+output$cartoon_image <- renderImage({
+    invalidateLater(12000)
+    isolate(img_index(wrapindex(img_index()+1)))
+    img = cartoon_list[[img_index()]]$img
+    img = paste0("www/cartoons/",img)
+    dbg(paste("cartoon_image::renderImage: img=",img,"\n"))
+    list(src = img, contentType = 'image/png', width="auto", height="350px")
+}, deleteFile = FALSE)
+output$cartoon_slogan <- renderText(
+    cartoon_list[[img_index()]]$slogan
+)
+
+
+showStartupModal.count=0
+VERSION='0.99 (always almost)'
+showStartupModal <- function(once=FALSE) {    
+
+    if(once && showStartupModal.count>0) return(NULL)
+    dbg("showStartupModal: showing!\n")
+    
+    showModal(modalDialog(
+        fluidRow(
+            column(1, br(),br(),br(),br(),br(),br(),br(),br(),br(),
+                   actionLink("img_previous","",icon=icon("chevron-left"))),
+            column(
+                10, align="center",
+                ##flex=c(1,NA), 
+                ##img(src="pgx-bigdata-biology-wt.png",width="750px",height="500px")
+                imageOutput("cartoon_image", width="auto", height="350px"),
+                ##img(src=randomCartoon()$img2,height="350px"),
+                h2(textOutput("cartoon_slogan"))
+            ),
+            column(1, br(),br(),br(),br(),br(),br(),br(),br(),br(),
+                   actionLink("img_next","",icon=icon("chevron-right")))
+        ),
+        ##title = HTML("<center><h2>",pgx.randomSlogan(),"</h2></center>"),
+        title = HTML("<center><h2>Omics Playground",VERSION,"</h2></center>"),
+        footer = tagList(
+            actionButton("action1","Read-the-docs", icon=icon("book"),
+                         onclick="window.open('https://omicsplayground.readthedocs.io','_blank')"),
+            actionButton("action2","Get the source", icon=icon("github"),
+                         onclick="window.open('https://github.com/bigomics','_blank')"),
+            actionButton("action3","Docker image", icon=icon("docker"),
+                         onclick="window.open('https://docker.com/bigomics','_blank')"),
+            actionButton("action4","User forum", icon=icon("users"),
+                         onclick="window.open('https://groups.google.com/forum/#!forum/omics-playground','_blank')"),
+            ##actionButton("action_beer","Buy me a beer", icon=icon("beer")),
+            actionButton("action5","Donate pizza", icon=icon("pizza-slice")),
+            ##modalButton("Let's start!")
+            actionButton("action_play", "Let's play!")
+        ),
+        size="l", easyClose=FALSE, fade=TRUE))
+    showStartupModal.count <<- showStartupModal.count + 1
+
+    dbg("showStartupModal done!\n")
+}
+
+observeEvent( input$action_play, {
+    dbg("play button action\n")
+    ##click("loadbutton")  ## loading default dataset
+    ## Sys.sleep(3)
+    if(ENABLE_AUTHENTICATION) showLogin()  ## 
+    removeModal()    
+})
+
+selectedDataSetInfo <- reactive({
+    sel <- input$pgxtable_rows_selected
+    if(is.null(sel) || length(sel)==0) return(NULL)
+    unlist(lapply(PGXINFO[sel,],as.character))
+})
+
+selectedDataSet <- reactive({
+    sel <- input$pgxtable_rows_selected
+    if(is.null(sel) || length(sel)==0) return(NULL)
+    as.character(PGXINFO$dataset[sel])
+})
+
+showLoadingModal <- function(pgx) {
+    showModal(modalDialog(
+        ##title = HTML("<center><h4>Omics Playground</h4></center>"),
+        HTML("<center><h2>",pgx.randomSlogan(),"</h2><h4>with Omics Playground</h4></center>"),
+        ##HTML("<center><h2>",pgx.randomSlogan(),"</h2></center>"),
+        footer = HTML("<center><p>Loading ",pgx,"data...  &nbsp; Please wait</p></center>"),
+        size="m", easyClose=TRUE, fade=TRUE))
+    Sys.sleep(2)
+    dbg("showLoadingModal done!\n")
+}
+
+curSection <- reactive({
+    cdata <- session$clientData
+    sub("section-","",cdata[["url_hash"]])
+})
+
+
+
+br();br();br();br();br();
+require(shinyWidgets)
+
+##=================================================================================
+##==================== USER AUTHENTICATION ========================================
+##=================================================================================
+
+## Add Javascript
+tags$head(
+         tags$link(rel="stylesheet", type="text/css",href="shinypass/style.css"),
+         tags$script(type="text/javascript", src = "shinypass/md5.js"),
+         tags$script(type="text/javascript", src = "shinypass/passwdInputBinding.js")
+     )
+##tags$style(HTML(".modal-backdrop.in { opacity: 0.9; }"))
+
+CREDENTIALS <- list("test" = "202cb962ac59075b964b07152d234b70")
+CREDENTIALS <- list("test"="123")
+
+USER <- reactiveValues(Logged = FALSE)
+
+observeEvent( input$logout, {
+    ##updateTextInput(session, ".username", value=NULL)
+    reset(".username")
+    reset(".password")
+    USER$Logged <- FALSE
+})
+
+showLogin <- function() {
+    showModal( modalDialog(
+        id = "login",
+        textInput(".username", "Username:"),
+        passwordInput(".password", "Password:"),
+        div(actionButton(".login", "Log in"), style="text-align: center;"),
+        footer = textOutput("message"),
+        size = "s"
+    ))
+}
+
+observeEvent( input$.login, {           
+
+    cat(".username=",input$.username,"\n")
+    cat(".password=",input$.password,"\n")
+    ##cat("credentials=",CREDENTIALS[[input$.username]],"\n")    
+    cat("Logged=",USER$Logged,"\n")
+    
+    if (isTRUE(CREDENTIALS[[input$.username]]==input$.password)) {
+        output$message = renderText("")
+        removeModal()
+        USER$Logged <- TRUE
+
+        ## Here you can perform some user-specific functions
+        showModal(modalDialog(paste("Welcome",input$.username), footer=NULL, size="s"))
+        Sys.sleep(3)
+        removeModal()
+
+    } else {
+        show("message")
+        output$message = renderText("Invalid user name or password")
+        delay(2000, hide("message", anim = TRUE, animType = "fade"))
+        ##Sys.sleep(3)
+        USER$Logged <- FALSE
+    }
+    hide("message")
+})
+
+
+##=================================================================================
+##======================== USER LEVEL =============================================
+##=================================================================================
+
+usermode_infotip = "Select BASIC or ADVANCED user mode. The basic mode should be sufficient for most users. The advanced mode presents extra visualization panels and enables more custom options. The advanced mode also has specialized analysis modules for single-cell RNA-seq, immune cell profiling and signature analysis."
+
+userlevels = c("basic","expert")
+## if(DEV.VERSION) userlevels = c("basic","expert","developer")
+
+tipify(radioGroupButtons(
+    inputId = "main_usermode",
+    label = "",
+    choices = userlevels,
+    ## selected = "expert",
+    status = "warning",
+    checkIcon = list(yes = icon("ok", lib = "glyphicon"))),
+    usermode_infotip, placement="top", options = list(container="body")
+    )
+
+BASIC_SECTIONS <- list(
+    c('#navbar','#section-dataview'),
+    c('#navbar','#section-clustering'),
+    c('#navbar','#section-expression'),
+    c('#navbar','#section-enrichment'),
+    c('#navbar','#section-intersection'),
+    c('#navbar','#section-functional')
+)
+
+EXPERT_SECTIONS <- list(
+    ## c('#navbar','#section-test'),
+    c('#navbar','#section-signature'),
+    c('#navbar','#section-biomarker'),
+    c('#navbar','#section-scprofiling'),
+    c('#section-clustering','#section-feature-ranking'),
+    c('#section-expression','#section-fdr-table'),
+    c('#section-expression','#section-volcano-methods'),
+    c('#section-enrichment','#section-fdr-table-1'),
+    c('#section-enrichment','#section-volcano-methods-1'),
+    c('#section-intersection','#section-connectivity-map'),
+    c('#section-intersection','#section-volcano'),
+    c('#section-functional','#section-drug-cmap')
+)
+
+
+USERMODE = factor("basic", levels=c("intruder","basic","expert","developer","jedi","god"))
+
+observeEvent(input$main_usermode,
+{
+    if(input$main_usermode == "basic") {
+        dbg("observeEvent::main_usermode : switching to BASIC mode")
+        lapply(c(EXPERT_SECTIONS), function(sec) {
+            sel = paste0(sec[1]," li a[href='",sec[2],"']")
+            dbg("observeEvent::main_usermode : hiding ",sel)
+            shinyjs::hide(selector = sel)
+        })
+        ##shinyjs::html("navbar-brand","Omics Playground (basic)")
+        USERMODE <<- "basic"
+    }
+    
+    if(input$main_usermode >= "expert") {
+        dbg("observeEvent::main_usermode : switchhing to EXPERT mode")
+        lapply(EXPERT_SECTIONS, function(sec) {
+            sel = paste0(sec[1]," li a[href='",sec[2],"']")
+            dbg("observeEvent::main_usermode : showing ",sel)
+            shinyjs::show(selector = sel)
+        })
+        USERMODE <<- "expert"        
+    }
+    
+    ##updateNavbarPage(session, "navbar", selected=1)
+})
+
+##================================================================================
+##====================== INPUT DATA REACTIVE OBJECT ==============================
+##================================================================================
+
+##inputData <- eventReactive( input$loadbutton, {
+inputData <- reactive({
+    ##-----------------------------------------------------------------
+    ## This is the main loader function that loads the ngs object.
+    ##-----------------------------------------------------------------
+
+    ## authenicate user
+    ##if(!USER$Logged) showLogin()
+    if(ENABLE_AUTHENTICATION && !USER$Logged) return(NULL)
+    
+    ## Sense button press
+    input$loadbutton   
+    btn <- isolate(input$loadbutton)
+    dbg("inputData:: input$loadbutton=",btn,"\n")
+    if(is.null(btn)) {
+        ##showStartupModal(once=TRUE)
+        return(NULL)
+    }
+        
+    pgx = isolate(selectedDataSet())
+    if(!is.null(btn) && btn!=0 && !is.null(pgx)) {
+        ## show loading pop-up
+        showLoadingModal(pgx)
+        ##showStartupModal(once=TRUE)
+    }
+    if(is.null(pgx) || pgx=="") {
+        ## Set to default data set if table is not ready yet.
+        ##
+        pgx <- sub("[.]pgx$","",PGXINFO$dataset[1])
+        section <- isolate(curSection())
+        dbg("<inputData:reactive>: default data set = ",pgx,"\n")
+        dbg("<inputData:reactive>: section = ",section,"\n")
+        if(!section %in% c("","home")) {
+            ## showLoadingModal("default")
+        }
+    }
+
+    pgx = paste0(pgx,".pgx")
+    dbg("inputData:: loading",pgx,"\n")
+    ##withProgress(message='loading...', value=0.8,
+    load(file.path(PGX.DIR,pgx),verbose=0)
+    ##)
+    dbg("inputData:: finished loading\n")
+
+    ##----------------- update input
+    ngs <- pgx.initialize(ngs) 
+    if(is.null(ngs$name)) ngs$name <- sub("[.]pgx$","",pgx)
+
+    ##----------------- remove modal??
+    ##Sys.sleep(2)
+    removeModal()
+    
+    dbg("inputData:: returning!\n")
+    return(ngs)
+
+})
+##}, ignoreNULL=FALSE )
+##}, ignoreNULL=TRUE )
+
+
+##=================================================================================
+##=================================================================================
+##=================================================================================
+
+
 ```
 
 
@@ -108,20 +444,19 @@ Row
 ### {.value-box}
 
 ```{r}
-library(flexdashboard)
-valueBox( value=nrow(PGXINFO), caption="data sets")
+flexdashboard::valueBox( value=nrow(PGXINFO), "data sets")
 ```
 
 ### {.value-box}
 
 ```{r}
-valueBox( value=sum(PGXINFO$nsamples,na.rm=TRUE), caption="samples")
+flexdashboard::valueBox( value=sum(PGXINFO$nsamples,na.rm=TRUE), "samples")
 ```
 
 ### {.value-box}
 
 ```{r}
-valueBox( value=nrow(GSETxGENE), caption="gene sets")
+flexdashboard::valueBox( value=nrow(GSETxGENE), "gene sets")
 ```
 
 
@@ -131,25 +466,6 @@ Row {.tabset data-height=800}
 ### Data sets
 
 ```{r}
-useShinyjs(rmd=TRUE)  ## to use click()
-
-fillCol(flex=c(1), uiOutput('splash') )
-
-output$splash <- renderUI({
-    div(id="splash-content", plotOutput('splashplot'))
-    ##hidden(div(id="table-content", dataTableOutput('pgxfiles')))
-    #div(id="table-content", dataTableOutput('pgxfiles'))
-    fillCol(flex = c(NA, 0.01, 1),
-            pgxfiles_module$button,
-            br(),
-            dataTableOutput('pgxfiles')
-    )
-    
-})
-
-output$splashplot <- renderPlot({
-    plot(exp)
-})
 
 ##split=" ";n=5
 andothers <- function(s, split=" ", n=8) {
@@ -159,42 +475,18 @@ andothers <- function(s, split=" ", n=8) {
     paste(paste(head(s1,n), collapse=" "),"(+",n2,"others)")
 }
 
-# output$pgxfiles <- DT::renderDataTable({
-#     
-#     if(is.null(PGXINFO)) return(NULL)
-#     ## get current view of raw_counts
-#     pgx.file = sub("[.]pgx$","",input$input_data)
-#     sel = match( pgx.file, PGXINFO$dataset)
-#     ##kk = unique(c("nr","dataset","datatype","organism","description",colnames(PGXINFO)))
-#     kk = unique(c("nr","dataset","datatype","organism","description",colnames(PGXINFO)))
-#     kk = intersect(kk,colnames(PGXINFO))
-#     PGXINFO = PGXINFO[,kk]
-#     PGXINFO = PGXINFO[order(PGXINFO$dataset),] 
-#     PGXINFO$nr <- 1:nrow(PGXINFO)
-#     PGXINFO$conditions <- sapply(PGXINFO$conditions, andothers, split=" ", n=6)
-#     DT::datatable( PGXINFO,
-#                   class = 'compact cell-border stripe hover',
-#                   rownames=FALSE,
-#                   extensions = c('Scroller'),
-#                   ##selection = list(mode='single', target='row', selected=sel ),
-#                   selection = list(mode='none'),
-#                   options=list(
-#                       ##dom = 'Blfrtip', 
-#                       pageLength = 100, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-#                       scrollX = FALSE, scrollY =580, ## scroller=TRUE,
-#                       deferRender=TRUE
-#                   )  ## end of options.list 
-#                   )  %>%
-#         DT::formatStyle(0, target='row', fontSize='12px', lineHeight='95%')
-# 
-# })
-
-pgxfilesFUNC <- reactive({
+pgxTableFUNC <- reactive({
+    ## get table of data sets
+    ##
+    ##
     
-    if(is.null(PGXINFO)) return(NULL)
-    ## get current view of raw_counts
-    pgx.file = sub("[.]pgx$","",input$input_data)
-    sel = match( pgx.file, PGXINFO$dataset)
+    if(is.null(PGXINFO)) return(NULL)    
+
+    showStartupModal(once=TRUE)
+            
+    ##pgx.file = sub("[.]pgx$","",input$input_data)
+    ##sel = match( pgx.file, PGXINFO$dataset)
+
     ##kk = unique(c("nr","dataset","datatype","organism","description",colnames(PGXINFO)))
     kk = unique(c("nr","dataset","datatype","organism","description",colnames(PGXINFO)))
     kk = intersect(kk,colnames(PGXINFO))
@@ -206,8 +498,9 @@ pgxfilesFUNC <- reactive({
                   class = 'compact cell-border stripe hover',
                   rownames=FALSE,
                   extensions = c('Scroller'),
-                  ##selection = list(mode='single', target='row', selected=sel ),
-                  selection = list(mode='none'),
+                  ##selection = list(mode='single', target='row'),
+                  selection = list(mode='single', target='row', selected=1 ),
+                  ##selection = list(mode='none'),
                   options=list(
                       ##dom = 'Blfrtip', 
                       pageLength = 100, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
@@ -219,23 +512,82 @@ pgxfilesFUNC <- reactive({
 
 })
 
-pgxfiles_text = "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the collection date."
+pgxtable_text = "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the collection date."
 
-pgxfiles_module <- tableModule(
-    id = "pgxfiles", func = pgxfilesFUNC,
-    info.text = pgxfiles_text,
-    title="Available datasets"
+pgxtable_module <- tableModule(
+    id = "pgxtable", func = pgxTableFUNC,
+    info.text = pgxtable_text,
+    title="Datasets"
+)
+output <- attachModule(output, pgxtable_module)
+
+fillCol(
+    moduleWidget(pgxtable_module, outputFunc="dataTableOutput")
 )
 
-output$pgxfiles     <- pgxfiles_module$render
-output$pgxfiles_csv <- pgxfiles_module$csv 
+```
+
+
+
+`r if(!DEV.VERSION) {"<!-----------------------------------------"}`
+
+### Upload data
+
+```{r data-upload, echo=FALSE}
+sidebarLayout(
+    sidebarPanel(
+        ## Input: Select a file ----
+        fileInput("upload_datafile", "Choose data file",
+                  multiple = FALSE,
+                  accept = c("text/csv",
+                             "text/comma-separated-values,text/plain",
+                             ".csv")),
+        radioButtons("upload_datatype","Data type:",c("RNAseq/micro-array","protein"),inline=TRUE),
+        br(),br(),
+        fileInput("upload_annotfile", "Choose sample information file",
+                  multiple = FALSE,
+                  accept = c("text/csv",
+                             "text/comma-separated-values,text/plain",
+                             ".csv")),
+        actionButton("upload_compute","Compute!",icon=icon("running"))
+    ),
+    ## Main panel for displaying outputs ----
+    mainPanel(
+        ##h1("Data table"),
+        tableOutput("upload_contents"),
+        ##h1("Sample annotation"),
+        tableOutput("upload_annot")
+    )    
+)
+output$upload_contents <- renderTable({
+    req(input$upload_datafile)
+
+    # when reading semicolon separated files,
+    # having a comma separator causes `read.csv` to error
+    tryCatch({
+        df <- read.csv(input$upload_datafile$datapath)
+    },
+    error = function(e) {
+        stop(safeError(e))
+    })
+    return(head(df))
+})
+
+output$upload_annot <- renderTable({
+    req(input$upload_annotfile)
+
+    # when reading semicolon separated files,
+    # having a comma separator causes `read.csv` to error
+    tryCatch({
+        df <- read.csv(input$upload_annotfile$datapath)
+    },
+    error = function(e) {
+        stop(safeError(e))
+    })
+    return(head(df))
+})
 
 ```
 
-> The list of available datasets within the platform for further analysis. 
+`r if(!DEV.VERSION) {"----------------------------------------->"}`
 
-### Splash
-
-```{r intro-cover2, fig.align="center", echo=FALSE, out.width = '600px', out.height = '400px'}
-knitr::include_graphics("resources/pgx-bigdata-biology-wt.png")
-```

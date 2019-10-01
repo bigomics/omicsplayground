@@ -1,13 +1,15 @@
-Data table  {data-orientation=rows}
+DataView  {data-orientation=rows}
 ================================================================================
 
 
 Inputs {.sidebar data-width=250}
 --------------------------------------------------------------------------------
-<br>
-**Data Table.** Descriptive statistical analysis on a gene level with visualisations. 
+
+<br> **Data View.** Information and descriptive statistics to quickly 
+lookup a gene, check the total counts, or view the data tables.
 
 ```{r}
+htmlOutput("curdata2")
 ##----------------------------------------------------------------------
 ## More Info (pop up window)
 ##----------------------------------------------------------------------
@@ -15,16 +17,20 @@ tipify( actionLink("data_info", "Info", icon = icon("info-circle")),
        "Show more information about this module.")
 
 dropdown_search_gene='<code>Search gene</code>'
-menu_grouped='<code>grouped</code>'
-menu_options='<code>Options</code>'
+menu_grouped='<code>Group by</code>'
 
-data_infotext = paste0('The <strong>data table</strong> module provides a descriptive statistical analysis on a gene level with visualisations. <br><br> Users can start the analysis by selecting a gene of interest in the dropdown menu ',dropdown_search_gene,'. <br><br> During the visual analysis, users can choose multiple options from the ',menu_options,'. They can filter out some samples or collapse the samples by predetermined groups by clicking ',menu_grouped,'. It is also possible to visualize the information on a raw count level, count per million (CPM), or rather on a logarithmic expression level (logCPM). <br><br> To download the raw counts or the results of differential gene expression and gene set enrichment analysis, please navigate to the <code>Download</code> links in the left-bottom.')
+data_infotext =paste0(
+'The <strong>DataView module</strong> provides information and visualisations of the dataset to quickly lookup a gene, check the counts, or view the data tables. 
+
+<br><br>The <strong>Plots</strong> panel displays figures related to the expression level of the selected gene, correlation, and average expression ranking within the dataset. More information about the gene and hyperlinks to external databases are provided. Furthermore, it displays the correlation and tissue expression for a selected gene in external reference datasets. In the <strong>Counts</strong> panel, the total number of counts (abundance) per sample and their distribution among the samples are displayed. This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes. In <strong>Gene Table</strong> panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the first gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table. In the <strong>Samples</strong> panel, more complete information about samples can be found. Finally, the <strong>Contrasts</strong> panel, shows information about the phenotype comparisons.
+
+')
 
 observeEvent( input$data_info, {
     showModal(modalDialog(
-        title = HTML("<strong>Data table Module</strong>"),
+        title = HTML("<strong>Data View Module</strong>"),
         HTML(data_infotext),
-        easyClose = TRUE ))
+        easyClose = TRUE, size="l" ))
 })
 ```
 
@@ -32,117 +38,29 @@ observeEvent( input$data_info, {
 ```{r}
 require(htmltools)
 ## data set parameters
-##textInput("search_gene","Filter genes", value="")
 
-br();br();br();br();
-tipify( selectInput("search_gene","Search gene", choices=NULL),
+br();br();hr();
+##textInput("search_gene","Filter genes", value="")
+tipify( selectInput("search_gene","Search gene:", choices=NULL),
        "Select a gene of interest for the analysis.", placement="top")
 
 br();br();
 tipify( actionLink("dt_options", "Options", icon=icon("cog", lib = "glyphicon")),
        "Toggle advanced options.", placement="top");br()
-##actionLink("dt_options2a", "Options ...", icon=icon("cog", lib = "glyphicon"));br()
-##actionLink("dt_options2c", "Options ...", icon=icon("cogs", lib = "fontawesome"));br()
 
 ## br();br()
 datatypes <- c("CPM","logCPM")
-if(PRO.VERSION) datatypes <- c("counts","CPM","logCPM")
+datatypes <- c("counts","CPM","logCPM")
 conditionalPanel(
     "input.dt_options % 2 == 1",
     tagList(
         tipify( selectInput("data_samplefilter","Filter samples:", choices=NULL, multiple=TRUE),
-                "Filter unwanted samples out of the analysis.", placement="top"),
-        tipify( checkboxInput('data_grouped','grouped',TRUE),
-                "Group the samples by predefined phenotype.", placement="top"),
+                "Filter the relevant samples for the analysis.", placement="top"),
+        tipify( selectInput('data_groupby','Group by:', choices=NULL),
+               "Select phenotype for grouping the samples.", placement="top"),
         tipify( radioButtons('data_type','Data type:', choices=datatypes, selected="logCPM", inline=TRUE),
-                "Choose an input data type for the analysis.", placement="bottom"),
-
-        br(),HTML("Download tables: "),br(),
-        tipify( downloadLink('data_downloadData', '[counts]'),
-                "Download the raw counts.", placement="bottom"),
-        tipify( downloadLink('gx_downloadData', ' [comparisons]'),
-                "Download the results of differential gene expression analysis.", placement="bottom"),
-        tipify( downloadLink('gs_downloadData', ' [enrichment]'),
-                "Download the results of enrichment analysis.", placement="bottom")
+                "Choose an input data type for the analysis.", placement="bottom")
     )
-)
-
-
-## dropdownButton(
-##     downloadLink('data_downloadData', '[counts]'),
-##     downloadLink('gx_downloadData', ' [comparisons]'),
-##     downloadLink('gs_downloadData', ' [enrichment]'),
-##     circle = TRUE, size = "xs", ## status = "danger",
-##     icon = icon("download"), width = "80px",
-##     tooltip = tooltipOptions(title = "Download", placement = "right")
-## )
-
-##br();br();br();br();br();br()
-
-## ------- download functions -----------
-output$data_downloadData <- downloadHandler(
-    filename = function() {
-        paste("playground-COUNTS.csv", sep="")
-    },
-    content = function(file) {
-        ngs <- inputData()
-	gg <- ngs$genes[rownames(ngs$counts),]
-	if(class(gg)=="DataFrame") gg <- do.call(cbind, gg@listData)
-        df <- data.frame(gg, round(ngs$counts,digits=5))
-        write.csv(df, file, row.names=FALSE)
-    }
-)
-
-output$gx_downloadData <- downloadHandler(
-    filename = function() {
-        ##ngs <- inputData()
-        paste("playground-COMPARISONS-all.csv", sep="")
-    },
-    content = function(file) {
-        ngs <- inputData()
-        mx <- NULL
-        k=1
-        for(k in names(ngs$gx.meta$meta)) {
-            colnames(ngs$gx.meta$meta[[k]])
-            ff <- ngs$gx.meta$meta[[k]][,c("meta.fx","meta.p","meta.q")]
-            colnames(ff) <- paste(c("logFC","p","q"),k,sep=".")
-            if(!is.null(mx)) {
-                mx <- cbind(mx, ff)
-            } else {
-                mx <- ff
-            }
-        }
-        mx <- mx[,order(colnames(mx))]
-        pp <- rownames(ngs$gx.meta$meta[[1]])
-	gg <- ngs$genes[pp,]
-	if(class(gg)=="DataFrame") gg <- do.call(cbind, gg@listData)
-        mx <- data.frame(gg, mx)
-        write.csv(mx, file, row.names=FALSE)
-    }
-)
-
-output$gs_downloadData <- downloadHandler(
-    filename = function() {
-        ##ngs <- inputData()
-        paste("playground-ENRICHMENT-all.csv", sep="")
-    },
-    content = function(file) {
-        ngs <- inputData()
-        mx <- NULL
-        for(k in names(ngs$gset.meta$meta)) {
-            ff <- ngs$gset.meta$meta[[k]][,c("meta.fx","meta.q")]
-            colnames(ff) <- paste(c("logFC","q"),k,sep=".")
-            if(!is.null(mx)) {
-                mx <- cbind(mx, ff)
-            } else {
-                mx <- ff
-            }
-        }
-        mx <- mx[,order(colnames(mx))]
-        aa <- ngs$gset.meta$meta[[1]][,c("gene.set")]
-        mx <- cbind( gene.set=aa, mx)
-        write.csv(mx, file, row.names=FALSE)
-    }
 )
 
 ## ------- observe functions -----------
@@ -158,7 +76,16 @@ observe({
     genes <- sort(ngs$genes[rownames(ngs$X),]$gene_name)
     sel = genes[1]  ## most var gene
     updateSelectInput(session,'search_gene', choices=genes, selected=sel)
+
+    grps <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=20)
+    grps <- c("<ungrouped>",sort(grps))
+    selgrp <- grps[1]
+    if("group" %in% grps) selgrp = "group"
+    if(nrow(ngs$samples)<=20) selgrp = "<ungrouped>"
+    updateSelectInput(session,'data_groupby', choices=grps, selected=selgrp)
+
 })
+
 
 ```
 
@@ -174,27 +101,20 @@ Col {.tabset data-height=400}
 ##                     Info messsages
 ##----------------------------------------------------------------------
 
-OMIM="<a href='https://www.ncbi.nlm.nih.gov/omim/'> OMIM</a>"
-KEGG="<a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC102409/'> KEGG</a>"
-GO="<a href='http://geneontology.org/'> GO</a>"
-ImmProt="<a href='https://www.ncbi.nlm.nih.gov/pubmed/28263321'> ImmProt</a>"
-HPA="<a href='https://www.nature.com/articles/nbt1210-1248'> HPA</a>"
-GTEx="<a href='https://www.ncbi.nlm.nih.gov/pubmed/23715323'> GTEx</a>"
-
-data_genePlots_tsne_text=paste0('A <b>t-SNE clustering</b> of samples (or cells) colored by an expression of a gene selected by users in the ',dropdown_search_gene, ' dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).')
-data_genePlots_barboxplot_text=paste0('An expression barplot of grouped samples (or cells) for a gene specified by the user in the ',dropdown_search_gene,'. The samles (or cells) in the barplot can be ungrouped by unclicking the ',menu_grouped, ' in the main ',menu_options, '.')
-data_genePlots_correlationplot_text=paste0('The top <em>N</em>={16} positively and negatively correlated genes barplot with a gene specified by the user in the ',dropdown_search_gene,' across samples (or cells). The expression levels of genes are colored in the barplot, where the low and high expressions range between the light grey and dark black colors, respectively.')
-data_genePlots_waterfallplot_text=paste0('An average expression ranking of a gene specified by the user in the ',dropdown_search_gene,' in  currently selected dataset.')
-data_geneInfo_text = paste0('To find out more information from the literature, hyperlinks are provide to connect the selected gene in the  ',dropdown_search_gene,' to public databases, including ', OMIM,', ', KEGG, ' and ',GO,'.')
-data_corplot_text = paste0('The top <em>N</em>={20} cumulative positively and negatively correlated genes barplot with a gene specified by the user in the ',dropdown_search_gene,' across samples (or cells) in currently selected dataset as well as in public datasets such as ',ImmProt,' and ',HPA,'. The correlations of genes for each dataset are respectively colored in the barplot.')
-data_tissueplot_text = paste0('A tissue expression barplot for a selected gene by the user in the ',dropdown_search_gene,' using the genotype-tissue expression (',GTEx,') dataset.')
+data_genePlots_tsne_text=paste0('<b>T-SNE clustering</b> of samples (or cells) colored by an expression of the gene selected in the ',dropdown_search_gene, ' dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).')
+data_genePlots_barplot_text=paste0('Expression barplot of grouped samples (or cells) for the gene selected in the ',dropdown_search_gene,'. Samples (or cells) in the barplot can be ungrouped by setting the ',menu_grouped, ' under the main <i>Options</i>.')
+data_genePlots_correlationplot_text=paste0('Barplot of the top positively and negatively correlated genes with the gene selected in the ',dropdown_search_gene,'. Absolute expression levels of genes are colored in the barplot, where the low and high expressions range between the light grey and dark black colors, respectively.')
+data_genePlots_averageRankPlot_text=paste0('Ranking of the average expression of the selected gene.')
+data_geneInfo_text = paste0('To find out more information from the literature, hyperlinks are provide to connect the selected gene in the  ',dropdown_search_gene,' to public databases, including ', a_OMIM,', ', a_KEGG, ' and ',a_GO,'.')
+data_corplot_text = paste0('Top cumulative positively and negatively correlated genes with the gene selected in the ',dropdown_search_gene,', across samples (or cells), in the current dataset as well as in public datasets such as ',a_ImmProt,' and ',a_HPA,'. The correlations of genes are colored by dataset.')
+data_tissueplot_text = paste0('Tissue expression for the selected gene in the tissue expression ',a_GTEx,' dataset. Colors corresponds to "tissue clusters" as computed by unsupervised clustering.')
 
 
 ##----------------------------------------------------------------------
-##                     Waterfall plot
+##                     Average Rank plot
 ##----------------------------------------------------------------------
 
-data_genePlots_waterfallplotFUNC <- reactive({
+data_genePlots_averageRankPlot.RENDER <- reactive({
     require(RColorBrewer)
     
     ngs <- inputData()
@@ -209,7 +129,7 @@ data_genePlots_waterfallplotFUNC <- reactive({
     }
     nsamples = length(samples)
 
-    par(mar=c(10,3.5,3,1), mgp=c(2.1,0.8,0))
+    par(mar=c(8,3.5,2,1), mgp=c(1.5,0.5,0)) #mgp=c(2.1,0.8,0))
 
     if(input$data_type=="counts") {
         mean.fc <- sort(rowMeans(ngs$counts[,samples,drop=FALSE]),decreasing=TRUE)
@@ -228,23 +148,19 @@ data_genePlots_waterfallplotFUNC <- reactive({
 
     j <- which(sub(".*:","",names(mean.fc))==gene)
     ##j <- which(ngs$genes$gene_name==gene)
-    plot( mean.fc, type="h", lwd=0.4, col="grey80",
-         #main="average rank", 
-         cex.main=1.2,
+    plot( mean.fc, type="h", lwd=0.4, col="#3380CC03", #col="grey80",
+         #main="average rank", cex.main=1.2,
          ylab=ylab, xlab="ordered genes", xaxt="n")
     points( j, mean.fc[j], type="h", lwd=2, col="black")
     text( j, mean.fc[j], gene, pos=3, cex=0.9)
 })
 
-data_genePlots_waterfallplot_module <- plotModule(
-    id="data_genePlots_waterfallplot", func=data_genePlots_waterfallplotFUNC,
-    info.text=data_genePlots_waterfallplot_text, pdf.width=10, pdf.height=10, 
+data_genePlots_averageRankPlot_module <- plotModule(
+    id="data_genePlots_averageRankPlot", func=data_genePlots_averageRankPlot.RENDER,
+    info.text=data_genePlots_averageRankPlot_text, pdf.width=6, pdf.height=6, 
     label="d", title="Average rank"
 )
-
-output$data_genePlots_waterfallplot     <- data_genePlots_waterfallplot_module$render
-output$data_genePlots_waterfallplot_pdf <- data_genePlots_waterfallplot_module$pdf
-
+output <- attachModule(output, data_genePlots_averageRankPlot_module) 
 
 ##----------------------------------------------------------------------
 ##                     Correlation plot
@@ -287,21 +203,25 @@ data_genePlots_correlationplotF <- reactive({
         ylab="expression (log2CPM)"
     }
 
-    par(mar=c(10,3.5,3,1), mgp=c(2.1,0.8,0))
+    par(mar=c(8,3.5,2,1), mgp=c(2.1,0.8,0))
 
     ## corr always in log.scale and restricted to selected samples subset
     ## should match exactly the rawtable!!
     rho = cor(t(ngs$X[,samples]), ngs$X[pp,samples], use="pairwise")[,1]
     rho[is.na(rho)] <- 0
     jj = head(order(-abs(rho)),30)
-    jj <- c( head(order(rho),16), head(order(-rho),16))
+    jj <- c( head(order(rho),12), head(order(-rho),12))
     jj <- jj[order(-rho[jj])]
     top.rho = rho[jj]
 
     gx1 <- sqrt(rowSums(ngs$X[names(top.rho),samples]**2,na.rm=TRUE))
     gx1 <- (gx1 / max(gx1))
-    klr1 <- rev(grey.colors(16,start=0.2,end=0.9,gamma=0.25))[1+round(15*gx1) ]
-    klr1[which(is.na(klr1))] <- "#DDDDDD"
+    # klr1 <- rev(grey.colors(16,start=0.2,end=0.9,gamma=0.25))[1+round(15*gx1) ]
+    # klr1[which(is.na(klr1))] <- "#DDDDDD"
+    ##------ Color test ------#
+    klr1 <- rev(colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)), alpha = TRUE)(16))[1+round(15*gx1) ]
+    klr1[which(is.na(klr1))] <- rgb(0.2,0.5,0.8,0.1)
+    ##------------------------#
     names(top.rho) = sub(".*:","",names(top.rho))
     offset = min(top.rho)*0.95
     offset = 0
@@ -309,7 +229,7 @@ data_genePlots_correlationplotF <- reactive({
     return(res)
 })
 
-data_genePlots_correlationplotFUNC <- reactive({
+data_genePlots_correlationplot.RENDER <- reactive({
     res = data_genePlots_correlationplotF()
     ngs <- inputData()
     if(is.null(ngs) | is.null(res)) return(NULL)
@@ -320,32 +240,32 @@ data_genePlots_correlationplotFUNC <- reactive({
             main=paste(gene),
             offset = res$offset, ylab="correlation (r)",
             ## names.arg=rep(NA,length(top.rho)),
-            cex.names=0.83, cex.main=1.2, border=NA)
+            cex.names=0.7, cex.main=1, col.main="#7f7f7f", border=NA)
     ##text( (1:length(top.rho) - 0.5)*1.2, offset, names(top.rho),
     ##col="black", cex=0.75, srt=90, pos=3, offset=0.4, font=1)
     legend("topright", legend=c("expr high","expr low"),
-           fill=c("grey30","grey80"), cex=0.85, y.intersp=0.85)
+           #fill=c("grey30","grey80"),
+           fill=c("#3380CCCC","#3380CC40"),
+           cex=0.85, y.intersp=0.85)
 })
 
 data_genePlots_correlationplot_module <- plotModule(
-    id="data_genePlots_correlationplot", func=data_genePlots_correlationplotFUNC,
-    info.text=data_genePlots_correlationplot_text, pdf.width=10, pdf.height=10,
+    id="data_genePlots_correlationplot", func=data_genePlots_correlationplot.RENDER,
+    info.text=data_genePlots_correlationplot_text, pdf.width=6, pdf.height=6,
     label="c", title="Top correlated genes"
 )
-
-output$data_genePlots_correlationplot     <- data_genePlots_correlationplot_module$render
-output$data_genePlots_correlationplot_pdf <- data_genePlots_correlationplot_module$pdf
-
+output <- attachModule(output, data_genePlots_correlationplot_module) 
 
 ##----------------------------------------------------------------------
 ##                     Bar/box plot
 ##---------------------------------------------------------------------- 
 
-data_genePlots_barboxplotFUNC <- reactive({
+data_genePlots_barplot.RENDER <- reactive({
     require(RColorBrewer)
     
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
+    req(input$data_groupby)
     
     gene = "KCNN4"
     gene = ngs$genes$gene_name[1]
@@ -355,12 +275,12 @@ data_genePlots_barboxplotFUNC <- reactive({
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
     }
     nsamples = length(samples)
-        
-    grp = factor(ngs$Y[samples,"group"])
-    klr0 = rep(brewer.pal(8,"Set2"),99)
-    klr0 = COLORS
-    klr = klr0[factor(ngs$Y[samples,"group"])]
 
+    grpvar <- input$data_groupby
+    grp = factor(ngs$Y[samples,grpvar])
+    klr0 = COLORS
+    klr = klr0[factor(ngs$Y[samples,grpvar])]
+        
     ## precompute
     pp=rownames(ngs$genes)[1]
     pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
@@ -379,53 +299,56 @@ data_genePlots_barboxplotFUNC <- reactive({
     }
 
     
-    par(mar=c(10,3.5,3,1), mgp=c(2.1,0.8,0))
-
+    par(mar=c(8,3.5,2,1), mgp=c(2.1,0.8,0))
+    BLUE = col=rgb(0.2,0.5,0.8,0.8)
     bee.cex = ifelse(length(gx)>500,0.1,0.2)
     bee.cex = c(0.3,0.1,0.05)[cut(length(gx),c(0,100,500,99999))]
-    ##if(input$data_sampling=="grouped") {
-    if(input$data_grouped) {
+
+    ##if(input$data_grouped) {
+    if(input$data_groupby != "<ungrouped>") {
         ngrp <- length(unique(grp))
         cx1 = ifelse( ngrp < 10, 1, 0.8)
         cx1 = ifelse( ngrp > 20, 0.6, cx1)
+        #cx1 = ifelse( ngrp > 10, 0.6, 0.9)
         gx.b3plot( gx, grp, las=3, main=gene, ylab=ylab, ## col=klr0[ii], 
-                  bar=TRUE, border=NA, ## bee = ifelse(length(gx) < 500,TRUE,FALSE), 
-                  bee.cex=bee.cex, ## sig.stars=TRUE, max.stars=5,
-                  xlab="", names.cex=cx1, srt=45, cex.main=1.2)
+                   cex.main=1, col.main="#7f7f7f",
+                   bar=TRUE, border=NA, ## bee = ifelse(length(gx) < 500,TRUE,FALSE), 
+                   bee.cex=bee.cex, ## sig.stars=TRUE, max.stars=5,
+                   xlab="", names.cex=cx1, srt=45, col=rgb(0.2,0.5,0.8,0.8)) #col=rgb(0.2,0.5,0.9,0.6)) 
     }  else {
         jj <- 1:length(gx)
+        
         sorting="no"
-        ##if(PRO.VERSION) sorting <- input$data_sorting
         if(sorting == "decr")  jj <- order(-gx)
         if(sorting == "inc")  jj <- order(gx)
         tt=""
-        barplot(gx[jj], col=klr[jj], las=3, cex.names=0.85,
+        barplot(gx[jj], col=BLUE, ##col=klr[jj],
+                las=3, cex.names=0.85,
                 ylab=ylab, xlab=tt,
-                main=gene, cex.main=1.2, border=NA,
+                main=gene, cex.main=1, col.main="#7f7f7f", border=NA,
                 names.arg=rep(NA,length(gx)) )
         if(length(gx)<100) {
-            cx1 = ifelse(length(gx) > 20, 0.85, 1)
-            cx1 = ifelse(length(gx) > 40, 0.7, cx1)
+            cx1 = ifelse(length(gx) > 20, 0.8, 0.9)
+            cx1 = ifelse(length(gx) > 40, 0.6, cx1)
+            cx1 = ifelse(length(gx) < 10, 1, cx1)
             text((1:length(gx)-0.5)*1.2, -0.04*max(gx), names(gx)[jj], 
                  las=3, cex=cx1, pos=2, adj=0, offset=0, srt=60, xpd=TRUE)
         }
     }
 })
 
-data_genePlots_barboxplot_module <- plotModule(
-    id="data_genePlots_barboxplot", func=data_genePlots_barboxplotFUNC,
-    info.text=data_genePlots_barboxplot_text, pdf.width=10, pdf.height=10,
+data_genePlots_barplot_module <- plotModule(
+    id="data_genePlots_barplot", func=data_genePlots_barplot.RENDER,
+    info.text=data_genePlots_barplot_text, pdf.width=6, pdf.height=6,
     label="b", title="Abundance/expression barplot"
 )
-
-output$data_genePlots_barboxplot     <- data_genePlots_barboxplot_module$render
-output$data_genePlots_barboxplot_pdf <- data_genePlots_barboxplot_module$pdf
+output <- attachModule(output, data_genePlots_barplot_module)
 
 ##----------------------------------------------------------------------
 ## t-SNE
 ##----------------------------------------------------------------------
 
-data_genePlots_tsneFUNC <- reactive({
+data_genePlots_tsne.RENDER <- reactive({
     require(RColorBrewer)
     
     ngs <- inputData()
@@ -462,12 +385,11 @@ data_genePlots_tsneFUNC <- reactive({
         ylab="expression (log2CPM)"
     }
 
-
     #par(mar=c(12,2,2,1), mgp=c(2.1,0.8,0), oma=c(3,0.5,1.5,0.3))
     require(RColorBrewer)
     pos <- ngs$tsne2d[samples,]
 
-    cex1 <- 2*c(1.8,1.2,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
+    cex1 <- 1.8*c(1.6,1.0,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
     klrpal = colorRampPalette(c("blue3", "aliceblue", "grey85", "lavenderblush", "red3"))(16)
     klrpal = colorRampPalette(c("grey80", "grey50", "red3"))(16)
 
@@ -479,7 +401,7 @@ data_genePlots_tsneFUNC <- reactive({
     klr1 = paste0(col2hex(klr1),"88")
     
     #par(mar=c(8,2,2.2,1), mgp=c(1,0.5,0))
-    par(mar=c(10,2,3,2), mgp=c(2.1,0.8,0))
+    par(mar=c(8,2.2,2,2.2), mgp=c(1,0.1,0))
     jj2 <- order(abs(fc1))
     plot( pos[jj2,], pch=20, cex=cex1, col=klr1[jj2], fg = gray(0.6), bty = "o",
          xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
@@ -511,22 +433,20 @@ data_genePlots_tsneFUNC <- reactive({
 })
 
 data_genePlots_tsne_module <- plotModule(
-    id="data_genePlots_tsne", func=data_genePlots_tsneFUNC,
-    info.text=data_genePlots_tsne_text, pdf.width=10, pdf.height=10,
+    id="data_genePlots_tsne", func=data_genePlots_tsne.RENDER,
+    info.text=data_genePlots_tsne_text, pdf.width=5, pdf.height=6,
     label="a", title="t-SNE clustering"
 )
-
-output$data_genePlots_tsne     <- data_genePlots_tsne_module$render
-output$data_genePlots_tsne_pdf <- data_genePlots_tsne_module$pdf
-
+output <- attachModule(output, data_genePlots_tsne_module)
 
 ##----------------------------------------------------------------------
 ##                    Tissue expression plot
 ##----------------------------------------------------------------------
 
-data_tissueplotFUNC <- reactive({
+data_tissueplot.RENDER <- reactive({
 
     ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
     if(is.null(input$data_type)) return(NULL)
     
     gene <- input$search_gene
@@ -534,7 +454,7 @@ data_tissueplotFUNC <- reactive({
     hgnc.gene = toupper(as.character(ngs$genes[pp,"gene_name"]))
     
     require(RColorBrewer)
-    par(mar=c(8,4,2,1), mgp=c(2.2,0.8,0))
+    par(mar=c(6,4,1,1), mgp=c(2.2,0.8,0))
     if( hgnc.gene %in% rownames(TISSUE)) {
         tx = TISSUE[hgnc.gene,]
         grp = TISSUE.grp[names(tx)]
@@ -546,29 +466,27 @@ data_tissueplotFUNC <- reactive({
         }
         jj <- 1:length(tx)
         sorting="no"
-        ##if(PRO.VERSION) sorting=input$data_sorting
         if(sorting=="decr") jj <- order(-tx)
         if(sorting=="inc") jj <- order(tx)
         
-        barplot(tx[jj], las=3, main=hgnc.gene, cex.main=1.2,
-                col = tissue.klr[jj], border=NA,ylab=ylab, cex.names=0.9, names.arg=rep(NA,length(tx)))
+        barplot(tx[jj], las=3, main=hgnc.gene, cex.main=1, col.main="#7f7f7f",
+                col = tissue.klr[jj], border=NA,ylab=ylab, cex.names=0.9,
+                names.arg=rep(NA,length(tx)))
         #title(main="tissue expression", line=-0.3, cex.main=1.1)
         text((1:length(tx)-0.5)*1.2, -0.04*max(tx), names(tx)[jj], las=3,
-             cex=0.95, pos=2, adj=0, offset=0, srt=55, xpd=TRUE)
+             cex=0.85, pos=2, adj=0, offset=0, srt=55, xpd=TRUE)
         
-    } else { frame()
+    } else {
+        frame()
     }
 })
 
 data_tissueplot_module <- plotModule(
-    id="data_tissueplot", func=data_tissueplotFUNC,
-    info.text=data_tissueplot_text, pdf.width=10, pdf.height=10,
+    id="data_tissueplot", func=data_tissueplot.RENDER,
+    info.text=data_tissueplot_text, pdf.width=9, pdf.height=6,
     label="g", title="Tissue expression"
 )
-
-output$data_tissueplot     <- data_tissueplot_module$render
-output$data_tissueplot_pdf <- data_tissueplot_module$pdf
- 
+output <- attachModule(output, data_tissueplot_module) 
   
 ##----------------------------------------------------------------------
 ##                     Correlation plot (stacked)
@@ -577,6 +495,7 @@ output$data_tissueplot_pdf <- data_tissueplot_module$pdf
 data_corplotF <- reactive({
     require(RColorBrewer)
     ngs <- inputData()
+    if(is.null(ngs)) return(NULL)	
     if(is.null(input$data_type)) return(NULL)
         
     ##samples=colnames(ngs$X);gene="CD4"
@@ -621,19 +540,24 @@ data_corplotF <- reactive({
     offset=0
     klr <- grey.colors(ncol(Rtop),start=0.3,end=0.7)
     
+    ## --- color test -----##
+    klr <- grey.colors(ncol(Rtop),start=0.3,end=0.7)
+    klr <- colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.2)), alpha = TRUE)(ncol(Rtop))
+    ## --- color test -----##
+    
     res = list(Rtop=Rtop, offset=offset, klr=klr)
     return(res)
 })
 
-data_corplotFUNC <- reactive({
+data_corplot.RENDER <- reactive({
 
     res <- data_corplotF()
     if(is.null(res)) return(NULL)
     
-    par(mar=c(8,4,2,1), mgp=c(2.2,0.8,0))
+    par(mar=c(6,4,2,1), mgp=c(2.2,0.8,0))
     barplot( t(res$Rtop) - res$offset, col=res$klr, border=NA, ##horiz=TRUE, 
-             las=3, cex.names=0.80, ##names.arg=rep(NA,nrow(R)),
-             offset = res$offset, ylab="cumulative correlation (r)",            
+             las=3, cex.names=0.73, ##names.arg=rep(NA,nrow(R)),
+             offset = res$offset, ylab="cumulative correlation (r)"            
              #cex.main=1.2, main="cumulative correlation\nwith other data sets"
              )
     if(!is.null(colnames(res$Rtop))) {
@@ -642,17 +566,14 @@ data_corplotFUNC <- reactive({
 })
 
 data_corplot_module <- plotModule(
-    id="data_corplot", func=data_corplotFUNC,
-    info.text = data_corplot_text, pdf.width=10, pdf.height=10,
+    id="data_corplot", func=data_corplot.RENDER,
+    info.text = data_corplot_text, pdf.width=9, pdf.height=6,
     label="f", title="Cumulative correlation"
 )
-
-output$data_corplot     <- data_corplot_module$render
-output$data_corplot_pdf <- data_corplot_module$pdf
-
+output <- attachModule(output, data_corplot_module) 
 
 ##----------------------------------------------------------------------
-##                     Gene information table
+##                     Gene expression table
 ##----------------------------------------------------------------------
 
 output$data_geneInfo  <- renderUI({
@@ -692,9 +613,11 @@ output$data_geneInfo  <- renderUI({
     HTML(output)
 })
 
-data_geneInfo_opt = plotModuleButtons("data_geneInfo_opt", just.info=FALSE, no.download=TRUE, label="e", text=data_geneInfo_text,
-                                      options=tagList( tipify( checkboxInput('data_geneinfo','gene summary',FALSE),
-                                                       "Provide a summary for the selected gene.", placement="top")), title="Gene info")
+data_geneInfo_buttons = plotModuleButtons(
+    "data_geneInfo_buttons", just.info=FALSE, no.download=TRUE, label="e", text=data_geneInfo_text,
+    options = tagList( tipify( checkboxInput('data_geneinfo','gene summary',FALSE),
+                            "Provide a summary for the selected gene.", placement="top")),
+    title = "Gene info")
 
 
 
@@ -702,32 +625,34 @@ data_geneInfo_opt = plotModuleButtons("data_geneInfo_opt", just.info=FALSE, no.d
 ##                     Interface
 ##----------------------------------------------------------------------
 
+
 fillCol( flex = c(1.3,1),
         
         fillRow(flex = c(1,1,1,1),
                 
                 fillCol(flex = c(NA,1),
                         data_genePlots_tsne_module$button,
-                        plotOutput("data_genePlots_tsne", height = "100%", width = "100%")),
+                        plotOutput("data_genePlots_tsne", height = "100%", width = "100%")
+                        ),
                 
                 fillCol(flex = c(NA,1),
-                        data_genePlots_barboxplot_module$button,
-                        plotOutput("data_genePlots_barboxplot", height = "100%", width = "100%")),
+                        data_genePlots_barplot_module$button,
+                        plotOutput("data_genePlots_barplot", height = "100%", width = "100%")),
                 
                 fillCol(flex = c(NA,1),
                         data_genePlots_correlationplot_module$button,
                         plotOutput("data_genePlots_correlationplot", height = "100%", width = "100%")),
                 
                 fillCol(flex = c(NA,1),
-                        data_genePlots_waterfallplot_module$button,
-                        plotOutput("data_genePlots_waterfallplot", height = "100%", width = "100%"))
+                        data_genePlots_averageRankPlot_module$button,
+                        plotOutput("data_genePlots_averageRankPlot", height = "100%", width = "100%"))
 
                 ),
         
-        fillRow(flex = c(1,1.3,1.6),
+        fillRow(flex = c(1,1.4,1.6),
                 
                 fillCol( flex = c(NA,0.01, 1),
-                         data_geneInfo_opt,
+                         data_geneInfo_buttons,
                          br(),
                          htmlOutput('data_geneInfo', class="gene-info-output")),
                 
@@ -747,14 +672,14 @@ fillCol( flex = c(1.3,1),
 
 ```
 
-> **Plots** associated with the selected gene in the `Search gene` section. 
-> **(a)** The t-SNE clustering of samples.
-> **(b)** An abundance or an expression barplot.
-> **(c)** The top correlated genes barplot.
-> **(d)** An average rank plot.
-> **(e)** The table with further information about the selected gene.
-> **(f)** A cumulative correlation barplot with other datasets.
-> **(g)** The tissue expression barplot.
+> **Gene plots.**
+> **(a)** t-SNE of samples colored by expression of selected gene.
+> **(b)** Abundance/expression of selected gene across groups.
+> **(c)** Top correlated genes. Level of grey corresponds to absolute expression of the gene.
+> **(d)** Average rank of the selected gene compared to other genes.
+> **(e)** Further information about the selected gene from public databases.
+> **(f)** Barplot showing cumulative correlation in other datasets.
+> **(g)** Tissue expression of selected gene.
 
 
 
@@ -766,86 +691,106 @@ fillCol( flex = c(1.3,1),
 ##                     Info messsages for Counts
 ##----------------------------------------------------------------------
 
-counts_tab_barplot_text=paste0('A barplot of the total number of counts (abundance) for each group. The samples (or cells) can be ungrouped by unclicking the ',menu_grouped, ' in the main ',menu_options, '.')
-counts_tab_boxplot_text=paste0('A boxplot of the total number of counts (abundance) for each group. The samples (or cells) can be ungrouped by unclicking the ',menu_grouped, ' in the main ',menu_options, '.')
-counts_tab_histplot_text=paste0('A histogram of the total number of counts (abundance) for each group. The samples (or cells) can be ungrouped by unclicking the ',menu_grouped, ' in the main ',menu_options, '.')
-counts_tab_abundanceplot_text=paste0('A barplot showing the percentage of counts in terms of major gene types such as CD molecules, kinanses or RNA binding motifs for each group. The samples (or cells) can be ungrouped by unclicking the ',menu_grouped, ' in the main ',menu_options, '.')
-counts_tab_average_countplot_text=paste0('A barplot showing the average count levels of major gene types such as CD molecules, kinanses or RNA binding motifs for each group. The samples (or cells) can be ungrouped by unclicking the ',menu_grouped, ' in the main ',menu_options, '.')
+counts_tab_barplot_text=paste0('Barplot of the total number of counts (abundance) for each group. The samples (or cells) can be grouped/ungrouped in the ',menu_grouped, ' setting uder the main <i>Options</i>.')
+counts_tab_boxplot_text=paste0('Boxplot of the total number of counts (abundance) for each group. The samples (or cells) can be grouped/ungrouped in the ',menu_grouped, ' setting uder the main <i>Options</i>.')
+counts_tab_histplot_text=paste0('Histogram of the total number of counts (abundance) for each group. The samples (or cells) can be grouped/ungrouped in the ',menu_grouped, ' setting uder the main <i>Options</i>.')
+counts_tab_abundanceplot_text=paste0('Barplot showing the percentage of counts in terms of major gene types such as CD molecules, kinanses or RNA binding motifs for each group. The samples (or cells) can be grouped/ungrouped in the ',menu_grouped, ' setting uder the main <i>Options</i>.')
+counts_tab_average_countplot_text=paste0('Barplot showing the average count levels of major gene types such as CD molecules, kinanses or RNA binding motifs for each group. The samples (or cells) can be grouped/ungrouped in the ',menu_grouped, ' setting uder the main <i>Options</i>.')
 
 
 ##----------------------------------------------------------------------
 ##                     Count information barplot
 ##----------------------------------------------------------------------
 
-counts_tab_barplotFUNC <- reactive({
-    res = counts_tabF()
+counts_tab_barplot.RENDER <- reactive({
+    res = getCountsTable()
     if(is.null(res)) return(NULL)
+    req(input$data_groupby)
     #par(mar=c(20,6,10,6), mgp=c(2.2,0.8,0))
-    par(mar=c(10,4,3,4), mgp=c(2.2,0.8,0))
+    par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
 
+    ylab = "counts (million)"
+    if(input$data_groupby!="<ungrouped>") {
+        ylab = "average group counts (million)"
+    }
     subtt0=""
     if(!is.null(res$subtt)) subtt0 <- paste0("\n(",paste(res$subtt,collapse=","),")")
-    barplot(res$total.counts/1e6, las=3,
-            #main=paste("total counts",subtt0), cex.main=1.7,
-            col="grey40", cex.names=res$cx1+0.5, cex.lab=1.5, ylab="counts (million)",
-            ylim=c(0,max(res$total.counts)/1e6)*1.1 )
+    ### ---- xlab ------ ###
+    names.arg = names(res$total.counts)
+    if( length(names.arg) > 20){ names.arg = "" }
+    cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
+    ### ---- xlab ------ ###
+    barplot(res$total.counts/1e6, las=3, border = NA,
+            ##main=paste("total counts",subtt0), cex.main=1.7,
+            col=rgb(0.2,0.5,0.8,0.8), #col="grey40", 
+            #cex.names=res$cx1+0.01, cex.lab=1, ylab=ylab,
+            cex.names=cex.names, cex.lab=1, ylab=ylab,
+            ylim=c(0,max(res$total.counts)/1e6)*1.1,
+            names.arg=names.arg)
 })
 
 counts_tab_barplot_module <- plotModule(
-    id="counts_tab_barplot", func=counts_tab_barplotFUNC,
-    info.text = counts_tab_barplot_text, pdf.width=13, pdf.height=10, res=45,
+    id="counts_tab_barplot", func=counts_tab_barplot.RENDER,
+    info.text = counts_tab_barplot_text, pdf.width=7, pdf.height=6, ## res=45,
     label="a",title='Total counts'
 )
-
-output$counts_tab_barplot     <- counts_tab_barplot_module$render
-output$counts_tab_barplot_pdf <- counts_tab_barplot_module$pdf
-
+output <- attachModule(output, counts_tab_barplot_module)
 
 ##----------------------------------------------------------------------
 ##                     Count information boxplot
 ##----------------------------------------------------------------------
 
-counts_tab_boxplotFUNC <- reactive({
-    res = counts_tabF()
+counts_tab_boxplot.RENDER <- reactive({
+    res = getCountsTable()
     if(is.null(res)) return(NULL)
     #par(mar=c(3,3,3,3), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )   
-    par(mar=c(10,4,3,4), mgp=c(2.2,0.8,0))
+    par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
+    
+    ### ---- xlab ------ ###
+    xaxt="l"
+    names.arg = colnames(res$log2counts[res$jj,])
+    if( length(names.arg) > 20){ names.arg = rep("",length(names.arg)); xaxt="n"}
+    cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
+    ### ---- xlab ------ ###
 
-    boxplot(res$log2counts[res$jj,], col="grey70", 
+    print("dim of log2counts")
+    print(dim(res$log2counts))
+    boxplot(res$log2counts[res$jj,], col=rgb(0.2,0.5,0.8,0.4), #col=rgb(0.2,0.5,0.8,0.3), #col="grey70", 
             #main="counts distribution", cex.main=1.6,
-            las=3, cex.names=res$cx1+0.6, cex.lab=1.5, ylab="counts (log2)")
+            ## cex.names=res$cx1+0.1,
+            names = names.arg, cex.axis=cex.names,#border=rgb(0.2,0.5,0.8,0.8),
+            border = 	rgb(0.824,0.824,0.824,0.9),xaxt=xaxt, 
+            las=3, cex.lab=1, ylab="counts (log2)", outline=FALSE, varwidth = FALSE)
 })
 
 counts_tab_boxplot_module <- plotModule(
-    id="counts_tab_boxplot", func=counts_tab_boxplotFUNC,
-    info.text = counts_tab_boxplot_text, pdf.width=13, pdf.height=10, res=50,
-    label="b",title='Counts distribution'
+    id="counts_tab_boxplot", func=counts_tab_boxplot.RENDER,
+    info.text = counts_tab_boxplot_text, pdf.width=7, pdf.height=6, ## res=50,
+    label="b", title='Counts distribution'
 )
-
-output$counts_tab_boxplot     <- counts_tab_boxplot_module$render
-output$counts_tab_boxplot_pdf <- counts_tab_boxplot_module$pdf
-
+output <- attachModule(output, counts_tab_boxplot_module)
 
 ##----------------------------------------------------------------------
 ##                     Count information histogram
 ##----------------------------------------------------------------------
 
-counts_tab_histplotFUNC <- reactive({
-    res = counts_tabF()
+counts_tab_histplot.RENDER <- reactive({
+    res = getCountsTable()
     if(is.null(res)) return(NULL)
     #par(mfrow=c(2,3), mar=c(9,4,3,1.5), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )  
-    par(mar=c(10,4,3,4), mgp=c(2.2,0.8,0))
-
+    par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
     n=1000
     gx.hist <- function(gx, n=1000, main="",ylim=NULL) {
         jj <- 1:nrow(gx)
         if(length(jj)>n) jj <- sample(jj,n)
         h0 <- hist(as.vector(c(gx[jj],min(gx),max(gx))),
                    breaks=120, main=main, border=FALSE,
-                   col="grey", freq=FALSE, ## ylim=ylim,
+                   #col=rgb(0.2,0.5,0.8,0.5), 
+                   col="grey", 
+                   freq=FALSE, ## ylim=ylim,
                    xlim=c(min(gx),max(gx)),
                    xlab="expression (log2)", 
-                   cex.names=res$cx1+0.5, cex.lab=1.5)
+                   cex.names=res$cx1+0.1, cex.lab=1)
         i = 1
         for(i in 1:ncol(gx)) {
             h1 <- hist(gx[jj,i], breaks=h0$breaks,plot=FALSE)
@@ -857,93 +802,107 @@ counts_tab_histplotFUNC <- reactive({
 })
 
 counts_tab_histplot_module <- plotModule(
-    id="counts_tab_histplot", func=counts_tab_histplotFUNC,
-    info.text = counts_tab_histplot_text, pdf.width=13, pdf.height=10, res=50,
-    label="c",title='Counts histogram'
+    id="counts_tab_histplot", func=counts_tab_histplot.RENDER,
+    info.text = counts_tab_histplot_text, pdf.width=7, pdf.height=6, ## res=50,
+    label="c", title='Counts histogram'
 )
-
-output$counts_tab_histplot     <- counts_tab_histplot_module$render
-output$counts_tab_histplot_pdf <- counts_tab_histplot_module$pdf
-
+output <- attachModule(output, counts_tab_histplot_module)
 
 ##----------------------------------------------------------------------
 ##                     Count information abundance of major gene types
 ##----------------------------------------------------------------------
 
-counts_tab_abundanceplotFUNC <- reactive({
-    res = counts_tabF()
+counts_tab_abundanceplot.RENDER <- reactive({
+    res = getCountsTable()
     if(is.null(res)) return(NULL)
     #par(mar=c(6,4,0,4), mgp=c(2.2,0.8,0))
     par(mar=c(6,4,0,4))
-        
+    par(mar=c(7,4,0,2))
+    
+    klr <- colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)), alpha = TRUE)(nrow(res$prop.counts))
+    
     ## ----------- gene type counts
     ymax = max(colSums(res$prop.counts, na.rm=TRUE))
+    ### ---- xlab ------ ###
+    names.arg = colnames(res$prop.counts)
+    if( length(names.arg) > 20){ names.arg = rep("",length(names.arg)) }
+    cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
+    ### ---- xlab ------ ###
     barplot(res$prop.counts, las=3, #main="abundance of major gene types", cex.main=1.6,
-            cex.names=res$cx1+0.4, cex.lab=1.4, 
-            ylim=c(0,ymax)*1.6, ylab="abundance (%)" )
+            #cex.names=res$cx1+0.04, 
+            cex.lab=1.0, border = NA,
+            ylim=c(0,ymax)*1.6, ylab="abundance (%)",
+            names.arg=names.arg, cex.names=cex.names,
+            col = klr)
     # legend("topleft", legend=rev(rownames(res$prop.counts)),
     #        fill=rev(grey.colors(nrow(res$prop.counts))),
     #        cex=1, y.intersp=0.4, bty="n")
     leg <- legend("topleft", legend=rev(rownames(res$prop.counts)),
-           fill=rev(grey.colors(nrow(res$prop.counts))),
-           cex=1, y.intersp=0.4, bty="n", plot = FALSE)
+           #fill=rev(grey.colors(nrow(res$prop.counts))),
+           fill=rev(klr),cex=1, y.intersp=0.75, bty="n", plot = FALSE)
     leftx <- leg$rect$left*0.9
     rightx <- leg$rect$right*0.9
     topy <- leg$rect$top
     bottomy <- leg$rect$bottom
     legend(x = c(leftx, rightx), y = c(topy, bottomy), 
            legend=rev(rownames(res$prop.counts)),
-           fill=rev(grey.colors(nrow(res$prop.counts))),
-           bty="n", cex=1, y.intersp=0.6)
+           #fill=rev(grey.colors(nrow(res$prop.counts))),
+           fill=rev(klr), bty="n", cex=0.9, y.intersp=0.75)
 
 })
 
 counts_tab_abundanceplot_module <- plotModule(
-    id="counts_tab_abundanceplot", func=counts_tab_abundanceplotFUNC,
-    info.text = counts_tab_abundanceplot_text, pdf.width=13, pdf.height=10, res=50,
+    id="counts_tab_abundanceplot", func=counts_tab_abundanceplot.RENDER,
+    info.text = counts_tab_abundanceplot_text, pdf.width=10, pdf.height=6, ## res=50,
     label="d",title='Abundance of major gene types'
 )
-
-output$counts_tab_abundanceplot     <- counts_tab_abundanceplot_module$render
-output$counts_tab_abundanceplot_pdf <- counts_tab_abundanceplot_module$pdf
-
+output <- attachModule(output, counts_tab_abundanceplot_module) 
 
 ##----------------------------------------------------------------------
 ##                     Count information average count by gene type
 ##----------------------------------------------------------------------
-counts_tab_average_countplotFUNC <- reactive({
-    res = counts_tabF()
+counts_tab_average_countplot.RENDER <- reactive({
+    res = getCountsTable()
     if(is.null(res)) return(NULL)
     #par(mar=c(6,4,0,4), mgp=c(2.2,0.8,0))
     par(mar=c(6,4,0,4))
+    par(mar=c(7,4,0,2))
 
+    klr <- colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)), alpha = TRUE)(nrow(res$avg.counts))
+    # klr <- grey.colors(nrow(res$avg.counts))
+    
+    ### ---- xlab ------ ###
+    names.arg = colnames(res$avg.counts)
+    if( length(names.arg) > 20){ names.arg = rep("",length(names.arg)) }
+    cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
+    ### ---- xlab ------ ###
     ymax = max(colSums(res$avg.counts, na.rm=TRUE))
-    barplot(res$avg.counts, las=3, #main="average count by gene type", cex.main=1.6,
-            cex.names=res$cx1+0.4, cex.lab=1.4,
-            ylim=c(0,ymax)*1.6, ylab="average count")
+    barplot(res$avg.counts, las=3, #main="average counts by gene type", cex.main=1.6,
+            #cex.names=res$cx1+0.04, 
+            border=NA, cex.lab=1.0, 
+            names.arg=names.arg, cex.names=cex.names,
+            ylim=c(0,ymax)*1.6, ylab="average count", col=klr)
     leg <- legend("topleft", legend=rev(rownames(res$avg.counts)),
-                  fill=rev(grey.colors(nrow(res$avg.counts))),
-                  cex=1, y.intersp=0.4, bty="n", plot = FALSE)
+                  #fill=rev(grey.colors(nrow(res$avg.counts))),
+                  fill=rev(klr), cex=1, y.intersp=0.75, bty="n", plot = FALSE)
     leftx <- leg$rect$left*0.9
     rightx <- leg$rect$right*0.9
     topy <- leg$rect$top
     bottomy <- leg$rect$bottom
     legend(x = c(leftx, rightx), y = c(topy, bottomy),
            legend=rev(rownames(res$avg.counts)),
-           fill=rev(grey.colors(nrow(res$avg.counts))),
-           cex=1, y.intersp=0.6, bty="n")
+           #fill=rev(grey.colors(nrow(res$avg.counts))),
+           fill=rev(klr), cex=0.9, y.intersp=0.75, bty="n")
 })
 
 counts_tab_average_countplot_module <- plotModule(
-    id="counts_tab_average_countplot", func=counts_tab_average_countplotFUNC,
-    info.text = counts_tab_average_countplot_text, pdf.width=13, pdf.height=10, res=50,
+    id="counts_tab_average_countplot", func=counts_tab_average_countplot.RENDER,
+    info.text = counts_tab_average_countplot_text, pdf.width=10, pdf.height=6, ##res=50,
     label="e",title='Average count by gene type'
 )
+output <- attachModule(output, counts_tab_average_countplot_module) 
 
-output$counts_tab_average_countplot     <- counts_tab_average_countplot_module$render
-output$counts_tab_average_countplot_pdf <- counts_tab_average_countplot_module$pdf
-
-counts_tabF <- reactive({
+getCountsTable <- reactive({
     ngs = inputData()
     if(is.null(ngs)) return(NULL)
     
@@ -971,12 +930,15 @@ counts_tabF <- reactive({
     }
 
     ##if(input$data_sampling=="grouped") {
-    gr = ngs$Y[samples,"group"]
+    grpvar <- input$data_groupby
+    gr = ngs$Y[samples,grpvar]
     grps = sort(unique(gr))
-    if(input$data_grouped && length(grps)>1 ) {
+    ##if(input$data_grouped && length(grps)>1 ) {
+    if(input$data_groupby != "<ungrouped>" && length(grps)>1) {        
         newx = c()
         for(g in grps) {
             mx = rowMeans(counts[,which(gr==g),drop=FALSE], na.rm=TRUE)
+            ## mx = rowSums(counts[,which(gr==g),drop=FALSE], na.rm=TRUE)  ## SUM or MEAN???
             newx = cbind(newx, mx)
         }
         if(NCOL(newx)==1) newx <- matrix(newx,ncol=1)
@@ -984,7 +946,8 @@ counts_tabF <- reactive({
         colnames(newx) = grps
         counts = newx
     }
-    
+
+    ## if too many samples (like scRNA-seq do subsampling...)
     if(ncol(counts) > 500) {
         kk <- sample( ncol(counts), 400)
         counts <- counts[,kk,drop=FALSE]
@@ -1022,12 +985,10 @@ counts_tabF <- reactive({
     ##jj <- order(-apply(avg.counts,1,sd,na.rm=TRUE))
 
     jj <- head(order(-rowSums(prop.counts,na.rm=TRUE)),6)
-    ##summed.counts <- summed.counts[jj,,drop=FALSE]
     prop.counts <- prop.counts[jj,,drop=FALSE]    
     jj <- head(order(-rowSums(avg.counts,na.rm=TRUE)),6)
     avg.counts  <- avg.counts[jj,,drop=FALSE]
     sorting="no"
-    ##if(PRO.VERSION) sorting <- input$data_sorting
     if(sorting=="decr") {
         total.counts <- sort(total.counts, decreasing=TRUE)
         prop.counts  <- prop.counts[,order(-colMeans(prop.counts))]
@@ -1105,12 +1066,7 @@ fillCol( flex = c(1,1),
 
 ```
 
-> Plots associated with the **counts**, abundance or expression levels across the samples. 
-> **(a)** A barplot of total counts per sample.
-> **(b)** A boxplot of total counts per sample.
-> **(c)** A histogram of total counts per sample.
-> **(d)** An abundance barplot of major gene types per sample.
-> **(e)** An average count barplot by gene type per sample.
+> **Counts distribution**. Plots associated with the counts, abundance or expression levels across the samples/groups.  **(a)** Total counts per sample or average per group.  **(b)** Distribution of total counts per sample/group. The center horizontal bar correspond to the median.  **(c)** Histograms of total counts distribution per sample/group. **(d)** Abundance of major gene types per sample/group. **(e)** Average count by gene type per sample/group.
 
 
 ### Gene table
@@ -1121,14 +1077,15 @@ dropdown_search_gene='<code>Search gene</code>'
 menu_grouped='<code>grouped</code>'
 menu_options='<code>Options</code>'
 
-data_rawdataTable_text = paste0('Under the <strong>gene table </strong>, the average expression values of genes across the groups can be read. The samples (or cells) can be ungrouped by unclicking the ',menu_grouped, ' in the main ',menu_options, ' to see the exact expression values per sample (or cell).', 'The genes in the table are ordered by the correlation (<b>rho</b> column) with respect to the gene selected by users from the dropdown menu ',dropdown_search_gene, '. <b>SD</b> column reports the standard deviation of expression across samples (or cells).')
+data_rawdataTable_text = paste0('Under the <strong>gene table </strong>, the average expression values of genes across the groups can be read. The samples (or cells) can be ungrouped by unclicking the ',menu_grouped, ' in the main <i>Options</i> to see the exact expression values per sample (or cell).', 'The genes in the table are ordered by the correlation (<b>rho</b> column) with respect to the gene selected by users from the ',dropdown_search_gene, ' setting. <b>SD</b> column reports the standard deviation of expression across samples (or cells).')
 
 
-data_rawdataTableFUNC <- reactive({
+data_rawdataTable.RENDER <- reactive({
     ## get current view of raw_counts
     ngs = inputData()
     if(is.null(ngs)) return(NULL)
-
+    req(input$data_groupby)
+    
     pp <- rownames(ngs$X)
     if(input$data_type=="counts") {
         x <- ngs$counts[pp,]
@@ -1169,10 +1126,12 @@ data_rawdataTableFUNC <- reactive({
     }
     
     ##if(input$data_sampling=="grouped") {
-    do.grouped <- input$data_grouped
+    ##do.grouped <- input$data_grouped
+    do.grouped <- (input$data_groupby != "<ungrouped>")
     if(length(samples)>500) do.grouped <- TRUE
     if(do.grouped) {
-        group = ngs$Y[colnames(x),"group"]
+        grpvar <- input$data_groupby
+        group = ngs$Y[colnames(x),grpvar]
         allgroups = sort(unique(group))
         newx = c()
         for(gr in allgroups) {
@@ -1180,7 +1139,8 @@ data_rawdataTableFUNC <- reactive({
             newx = cbind(newx, mx)
         }
         rownames(newx) = rownames(x)
-        colnames(newx) = paste0("[",allgroups,"]")
+        ##colnames(newx) = paste0("[",allgroups,"]")
+        colnames(newx) = paste0("avg.",allgroups,"")
         x = newx
     }
 
@@ -1211,12 +1171,8 @@ data_rawdataTableFUNC <- reactive({
                   selection = list(mode='single', target='row', selected=1),
                   options=list(
                       dom = 'lfrtip', 
-                      buttons = list('copy','csv',
-                                     list(extend='pdf',
-                                          pageSize="A3", orientation='landscape', 
-                                          filename="datatable", title="")),
                       ##pageLength = 60,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                      scroller=TRUE, scrollX = TRUE, scrollY = 800, 
+                      scroller=TRUE, scrollX = TRUE, scrollY = 720, 
                       deferRender=TRUE
                   )  ## end of options.list 
                   ) %>%
@@ -1229,13 +1185,11 @@ data_rawdataTableFUNC <- reactive({
 })
 
 data_rawdataTable_module <- tableModule(
-    id = "data_rawdataTable", func = data_rawdataTableFUNC,
+    id = "data_rawdataTable", func = data_rawdataTable.RENDER,
     info.text = data_rawdataTable_text,
-    title="Gene information table"
+    title="Gene expression table"
 )
-
-output$data_rawdataTable <- data_rawdataTable_module$render
-output$data_rawdataTable_csv <- data_rawdataTable_module$csv
+output <- attachModule(output, data_rawdataTable_module) 
 
 fillCol(flex = c(NA,0.01, 1),
         data_rawdataTable_module$button,
@@ -1244,32 +1198,22 @@ fillCol(flex = c(NA,0.01, 1),
         )
 ```
 
-> The gene table contains the average expression values of genes across the groups.
+> **Gene table.** The table shows the gene expression values per sample, or average expression values across the groups. The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar.
 
 
-### Sample table
+### Samples
 
 ```{r echo=FALSE}
-data_sampleTable_text = 'More detailed information about the samples and comparisons are reported under the <b>sample table</b> section.'
 
-data_sampleTableFUNC <- reactive({
+data_sampleTable.RENDER <- reactive({
     ## get current view of raw_counts
     ngs = inputData()
     if(is.null(ngs)) return(NULL)
 
     ##if(is.null(input$data_samplefilter)) return(NULL)    
     dt <- NULL
-    if(input$data_sampletabletype=="sample info") {
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        dt <- ngs$samples[samples,]
-    }
-    if(input$data_sampletabletype=="contrast info") {
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        names(ngs$model.parameters)
-        dt <- sign(ngs$model.parameters$exp.matrix[samples,])
-        colnames(dt) <- sub("_vs_","\nvs ",colnames(dt))
-    }
-    
+    samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+    dt <- ngs$samples[samples,]    
     DT::datatable( dt,
                   class = 'compact cell-border stripe hover',
                   rownames = TRUE,
@@ -1277,51 +1221,98 @@ data_sampleTableFUNC <- reactive({
                   selection = list(mode='single', target='row', selected=1),
                   options=list(
                       dom = 'lfrtip', 
-                      buttons = list('copy','csv',
-                                     list(extend='pdf',
-                                          ##pageSize="A3", orientation='landscape', 
-                                          filename="sampletable", title="")),
                       ##pageLength = 60, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                      scroller=TRUE, scrollX = TRUE, scrollY = 800,
+                      scroller=TRUE, scrollX = TRUE, scrollY = 700,
                       deferRender=TRUE
                   )) %>%
         DT::formatStyle(0, target='row', fontSize='12px', lineHeight='70%') 
 
 })
 
-data_sampleTable_opts = tagList(
-  tipify( radioButtons('data_sampletabletype','type', inline=TRUE, choices=c("sample info","contrast info")),
-          "Select the information table: sample info or contrast info", placement="bottom")
-)
-
 data_sampleTable_module <- tableModule(
-    id="data_sampleTable", func=data_sampleTableFUNC,
-    info.text = data_sampleTable_text,
-    options = data_sampleTable_opts,
-    title="The sample and contrast information table"
+    id="data_sampleTable", func=data_sampleTable.RENDER,
+    info.text = "Sample information table with information about phenotype of samples.",
+    ##options = data_sampleTable_opts,
+    title="Sample information"
 )
+output <- attachModule(output, data_sampleTable_module) 
 
-output$data_sampleTable     <- data_sampleTable_module$render
-output$data_sampleTable_csv <- data_sampleTable_module$csv
-
-
-fillCol(flex = c(NA,0.01, 1),
+fillCol(flex = c(NA,1),
         data_sampleTable_module$button,
-        br(),
         dataTableOutput("data_sampleTable", height = "100%", width = "100%")
         )
 
 ```
 
-> The sample and contrast table contain more detailed information about the samples and comparisons, respectively.
+> **Sample information table** with phenotype information of samples.
 
-`r if(!PRO.VERSION) {"<!--------------------------------------------- "}`
 
-### Resource info
+### Contrasts
+
+```{r echo=FALSE}
+
+data_contrastTable.RENDER <- reactive({
+    ## get current view of raw_counts
+    ngs = inputData()
+    if(is.null(ngs)) return(NULL)
+
+    ##if(is.null(input$data_samplefilter)) return(NULL)    
+    dt <- NULL
+    samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+    names(ngs$model.parameters)
+    dt <- sign(ngs$model.parameters$exp.matrix[samples,])
+    colnames(dt) <- sub("_vs_","\nvs ",colnames(dt))
+    dt[dt==0] <- NA
+
+    DT::datatable( dt,
+                  class = 'compact cell-border stripe hover',
+                  rownames = TRUE,
+                  extensions = c('Buttons','Scroller'),
+                  selection = list(mode='single', target='row', selected=1),
+                  options=list(
+                      dom = 'lfrtip', 
+                      ##pageLength = 60, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                      scroller=TRUE, scrollX = TRUE, scrollY = 700,
+                      deferRender=TRUE
+                  )) %>%
+        DT::formatStyle(0, target='row', fontSize='12px', lineHeight='70%') %>%
+            DT::formatStyle(colnames(dt),
+                            ##background = styleColorBar(c(0,3), 'lightblue'),
+                            background = color_from_middle(c(-1,1), 'lightblue', '#f5aeae'),
+                            backgroundSize = '98% 88%',
+                            backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center')
+
+
+})
+
+data_contrastTable_module <- tableModule(
+    id="data_contrastTable", func=data_contrastTable.RENDER,
+    info.text = "Table summarizing the contrasts of all comparisons. Here, you can check which samples belong to which groups for the different comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison.",
+    ##options = data_sampleTable_opts,
+    title="Contrast table"
+)
+output <- attachModule(output, data_contrastTable_module) 
+
+fillCol(flex = c(NA,1),
+        data_contrastTable_module$button,
+        dataTableOutput("data_contrastTable", height = "100%", width = "100%")
+        )
+
+
+
+```
+
+> **Contrast table** summarizing the contrasts of all comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison.
+
+
+`r if(!DEV.VERSION) {"<!--------------------------------------------- "}`
+
+### Resource info (dev)
 
 ```{r echo=FALSE, warning=FALSE}
 
-datatable_timingsFUNC <- reactive({
+datatable_timings.RENDER <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
     ##if(is.null(ngs$timings)) return(NULL)
@@ -1339,20 +1330,21 @@ datatable_timingsFUNC <- reactive({
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
 })
 
-datatable_timings_text = 'More detailed information about the execution times of the methods are reported under the <b>timings</b> table.'
-datatable_timings_module <- plotModule(
-    id="datatable_timings", func=datatable_timingsFUNC,
-    plotlib = "datatable", info.text = datatable_timings_text,
-    options = NULL, no.download = TRUE, title='Timings'
+datatable_timings_text = 'The <b>timings</b> table reports more detailed information about the object dimensions, object sizes and execution times of the methods.'
+datatable_timings_module <- tableModule(
+    id="datatable_timings", func=datatable_timings.RENDER,
+    info.text = datatable_timings_text,
+    options = NULL, title='Timings'
 )
-output$datatable_timings <- datatable_timings_module$render
+output <- attachModule(output, datatable_timings_module)
 
-datatable_objectdimsFUNC <- reactive({
+
+datatable_objectdims.RENDER <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
 
     dims1 <- lapply( ngs, dim)
-    lens <- lapply( ngs, length)
+    lens <- sapply( ngs, length)
     dims2 <- t(sapply( ngs[which(!sapply(dims1,is.null)) ], dim))
     kk <- which(sapply(dims1,is.null))
     dims2 <- rbind(dims2, cbind(lens[kk],0))
@@ -1364,16 +1356,16 @@ datatable_objectdimsFUNC <- reactive({
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
 })
 
-datatable_objectdims_text = 'More detailed information about the dimensions of objects are reported under the <b>object dimensions</b> table.'
-datatable_objectdims_module <- plotModule(
-    id="datatable_objectdims", func=datatable_objectdimsFUNC,
-    plotlib = "datatable", info.text = datatable_objectdims_text,
-    options = NULL, no.download = TRUE, title='Object dimensions'
+datatable_objectdims_text = 'This table provides details about the data dimensions of objects.'
+datatable_objectdims_module <- tableModule(
+    id="datatable_objectdims", func=datatable_objectdims.RENDER,
+    info.text = datatable_objectdims_text,
+    options = NULL, title='Object dimensions'
 )
-output$datatable_objectdims <- datatable_objectdims_module$render
+output <- attachModule(output, datatable_objectdims_module)
 
 
-datatable_objectsizeFUNC <- reactive({
+datatable_objectsize.RENDER <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
     objsize <- sapply(ngs,object.size)
@@ -1385,13 +1377,13 @@ datatable_objectsizeFUNC <- reactive({
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
 })
 
-datatable_objectsize_text = 'More detailed information about the sizes of objects are reported under the <b>object sizes</b> table.'
-datatable_objectsize_module <- plotModule(
-    id="datatable_objectsize", func=datatable_objectsizeFUNC,
-    plotlib = "datatable", info.text = datatable_objectsize_text,
-    options = NULL, no.download = TRUE, title='Object sizes'
+datatable_objectsize_text = 'The <b>object sizes</b> table provides information about the (memory) sizes of objects. '
+datatable_objectsize_module <- tableModule(
+    id="datatable_objectsize", func=datatable_objectsize.RENDER,
+    info.text = datatable_objectsize_text,
+    options = NULL, title='Object sizes'
 )
-output$datatable_objectsize <- datatable_objectsize_module$render
+output <- attachModule(output, datatable_objectsize_module)
 
 
 fillRow(
@@ -1413,7 +1405,8 @@ fillRow(
 
 ```
 
-> More detailed information about the execution times of the methods as well as the dimensions and sizes of objects are reported in these tables.
+> **Resource information.** Details about the execution times of the methods, dimensions and sizes of objects.
 
-`r if(!PRO.VERSION) {"----------------------------------------->"}`
+
+`r if(!DEV.VERSION) {"----------------------------------------->"}`
 

@@ -9,93 +9,84 @@ Inputs {.sidebar data-width=250}
 samples using unsupervised machine learning.
 
 ```{r}
+htmlOutput("curdata3", class="current-data")
 ##----------------------------------------------------------------------
 ## More Info (pop up window)
 ##----------------------------------------------------------------------
-tipify( actionLink("clustering_info", "Info", icon = icon("info-circle")),
+tipify( actionLink("clust_info", "Info", icon = icon("info-circle")),
        "Show more information about this module.")
 
-dropdown_level='<code>Level</code>'
-dropdown_features='<code>Features</code>'
-menu_options='<code>Options</code>'
-opt_filter='<code>Filter samples</code>'
-opt_top='<code>top</code>'
-opt_grouped='<code>grouped</code>'
-opt_custom_genelist='<code>Custom gene list</code>'
+clust_infotext = paste('
+The <strong>Cluster Analysis</strong> module performs unsupervised clustering analysis of the data. After having done the QC, it is probably the first way to explore your data. The main purpose is to discover patterns and subgroups in the data, show correlation with known phenotypes, detect outliers, or investigate batch effects.
 
-GSVA="<a href='https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-14-7'> GSVA</a>"
-ssGSEA="<a href='https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-14-7'> ssGSEA</a>"
+<br><br>In the <strong>Heatmap</strong> panel hierarchical clustering can be performed on gene level or gene set level (selected under the {Level} dropdown list). During the heatmap generation, the platform provides a functional annotation for each feature cluster in <strong>Annotate cluster</strong> panel. Users can select from a variety of annotation databases from the literature, such as ',a_MSigDB,', ',a_KEGG,' and ',a_GO,'. The <strong>PCA/tSNE</strong> panel shows unsupervised clustering of the samples in 2D/3D as obtained by ',a_PCA,' or ',a_tSNE,' algorithms. The <strong>Phenotypes</strong> panel on the right, shows the phenotype distribution as colors on the t-SNE plot. 
 
+<br><br>EXPERT MODE ONLY: The <strong>Feature ranking</strong> panel computes a discriminant score for gene (or geneset) families. This allows to investigate what family of genes (or gene sets) can best discriminate the groups. 
 
-clustering_infotext = paste0('The <strong>cluster analysis</strong> module performs unsupervised clustering analysis of the samples. The main output of this feature is twofold: i) It generates an interactive heatmap of samples and ii) It also provides a dimensionality reduction plot of samples obtained by PCA or tSNE algorithms. 
-<br><br> A clustering analysis can be performed on gene level or gene set level, in which users can specify it in the ',dropdown_level,' dropdown list. For the gene set level analysis, an average expression is computed for each gene set (or pathway) from the gene expression data using summary methods such as ',GSVA,' and ',ssGSEA,'. Users can also select a specific gene family or gene set collection in the ',dropdown_features,'dropdown menu for the analysis.
-<br><br> During the visual analysis, users can choose multiple options from the ',menu_options,'. They can filter out some samples in the ',opt_filter,', choose top <em>N</em>={50,500} features in the ',opt_top,' collapse the samples by clicking ',menu_grouped,', and insert a custom gene list in ',opt_custom_genelist,'.')
+<br><br>For a tutorial on Hierarchical Clustering, see the video below:<br><br>
+<center><iframe width="500" height="333" src="https://www.youtube.com/embed/7xHsRkOdVwo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
 
-observeEvent( input$clustering_info, {
+')
+
+observeEvent( input$clust_info, {
     showModal(modalDialog(
         title = HTML("<strong>Clustering Module</strong>"),
-        HTML(clustering_infotext),
-        easyClose = TRUE ))
+        HTML(clust_infotext),
+        easyClose = TRUE, size="l" ))
 })
-```
 
 
-```{r}
-useShinyjs()
+##----------------------------------------------------------
+##----------------- INPUT WIDGETS --------------------------
+##----------------------------------------------------------
 
+br();br();hr();
+##h5("Inputs:")
 
-br(); br();br();
-        
 tipify( selectInput("hm_level","Level:", choices=c("gene","geneset")),
         "Specify the level analysis: gene or geneset level.", placement="top")
 tipify( selectInput("hm_features","Features:", choices=NULL, multiple=FALSE),
         "Select a family of features.", placement="top")
-
-
-br();br();
-##actionLink("hm_options", "Show options ...")
-tipify( actionLink("hm_options", "Options", icon=icon("cog", lib = "glyphicon")),
-       "Toggle advanced options.", placement="top");br()
-
-br();br();
 conditionalPanel(
-    "input.hm_options % 2 == 1",
-    tagList(
-        tipify( selectInput("hm_samplefilter","Filter samples:", choices=NULL, multiple=TRUE),
-                "Filter unwanted samples out of the analysis.", placement="top"),
-        tipify( radioButtons('hm_top','top:',c(50,500),inline=TRUE,selected=50),
-                "Select the number of top features to be used in the analysis.", placement="top"),
-        tipify( checkboxInput('hm_group','grouped',FALSE),
-                "Group the samples by a predefined phenotype class.", placement="top")
+    "input.hm_features == '<custom>'",
+    tipify( textAreaInput("hm_customlist", NULL, value = NULL,
+                          rows=5, placeholder="Paste your custom gene list"),
+           "Paste a custom list of genes to be used as features.", placement="bottom")
+)
+tipify( selectInput("hm_samplefilter","Filter samples:", choices=NULL, multiple=TRUE),
+       "Filter the relevant samples for the analysis.", placement="top")
+
+
+conditionalPanel(
+    "input.main_usermode == 'expert'",
+    ##actionLink("hm_options", "Show options ...")
+    tipify( actionLink("hm_options", "Options", icon=icon("cog", lib = "glyphicon")),
+           "Toggle advanced options.", placement="top"),
+    br(),
+    conditionalPanel(
+        "input.hm_options % 2 == 1",
+        tagList(
+            tipify( checkboxInput('hm_group','grouped',FALSE),
+                   "Group the samples by a predefined phenotype class.", placement="bottom")
+        )
     )
 )
 
-if(PRO.VERSION) {
-    br();br();br();
-    code.textInput
-    conditionalPanel(
-        "input.hm_options % 2 == 1",
-        tagList(
-            #myTextInput("hm_customlist","Custom gene list")
-            tipify( textAreaInput("hm_customlist", "Custom feature list:", value = NULL,
-                                  rows=3, placeholder="Paste your gene list"),
-                    "Paste a custom list to be used as features.", placement="bottom")
-        )
-    )
-}
+br();hr()
 
 if(DEV.VERSION) {
-    br();
-    code.textInput
-    conditionalPanel(
-        "input.hm_options % 2 == 1",
-        tagList(
-            tipify( radioButtons('hm_gsetmatrix','Gene set matrix:', choices=c("meta"), inline=TRUE),
-                    "Specify the geneset matrix type to be used in the analysis.", placement="bottom")
-        )
+    tagList(
+        h5("Developer options:"),
+        tipify( radioButtons('hm_gsetmatrix','Gene set matrix (dev):',
+                             choices=c("meta"), inline=TRUE),
+               "Specify the geneset matrix type to be used in the analysis.",
+               placement="bottom")
     )
 }
 
+##================================================================================
+##======================= OBSERVE FUNCTIONS ======================================
+##================================================================================
 
 ## update filter choices upon change of data set 
 observe({
@@ -137,22 +128,30 @@ observe({
     if(input$hm_level=="geneset") {
         choices = names(COLLECTIONS)
     }
-    choices <- sort(choices)
+    choices <- c("<custom>",choices)
+    choices <- sort(unique(choices))
     updateSelectInput(session, "hm_features", choices=choices)
 })
-```
 
-```{r}
+
 hm_filtered_matrix <- reactive({
+    ## Returns filtered matrix ready for clustering. Filtering based
+    ## on user selected geneset/features or custom list of genes.
+    ##
+    ##
+    ##
     ngs <- inputData()
+    req(ngs)
     genes = as.character(ngs$genes$gene_name)
     genesets = rownames(ngs$gsetX)
 
+    cat("<module_clustering::hm_filtered_matrix> 1\n")
+    
     if(input$hm_level=="geneset") {
         gsets = rownames(ngs$gsetX)
         gsets = unique(unlist(COLLECTIONS[input$hm_features]))
         zx = ngs$gsetX
-        if(DEV.VERSION && !is.null(ngs$gset.meta$matrices) ) {
+        if(0 && DEV.VERSION && !is.null(ngs$gset.meta$matrices) ) {
             ##zx = ngs$gset.meta$matrices[["meta"]]
             jj = which(!sapply(ngs$gset.meta$matrices,is.null))
             mat.names = names(ngs$gset.meta$matrices)[jj]
@@ -160,23 +159,17 @@ hm_filtered_matrix <- reactive({
             k = input$hm_gsetmatrix
             if(k %in% mat.names)  zx <- ngs$gset.meta$matrices[[k]]
         }
-        if(PRO.VERSION && input$hm_customlist!="") {
+        if(input$hm_customlist!="") {
             gsets1 = genesets[grep(input$hm_customlist, genesets,ignore.case=TRUE)]
             if(length(gsets1)>2) gsets = gsets1
         }        
-        if(0 && PRO.VERSION) {
-            filt = input$hm_filter
-            if("up" %in% filt) gsets = gsets[grep("up$|up)$", gsets,ignore.case=TRUE, invert=TRUE)]
-            if("down" %in% filt) gsets = gsets[grep("dn$|down$|dn)$|down)$", gsets,ignore.case=TRUE, invert=TRUE)]
-        }
         zx = zx[intersect(gsets,rownames(zx)),]
     } else {
         pp = head(rownames(ngs$X),400)
         gg = ngs$families[[1]]
         gg = ngs$families[[input$hm_features]]
-        if(PRO.VERSION && input$hm_customlist!="") {
-            ##if(input$hm_customlist!="") {
-            cat("hm_filtered_matrix:: custom.list=",input$hm_customlist,"\n")
+        if(input$hm_customlist!="") {
+            ##cat("hm_filtered_matrix:: custom.list=",input$hm_customlist,"\n")
             gg1 = strsplit(input$hm_customlist,split="[, ;\n\t]")[[1]]
             if(length(gg1)==1) gg1 <- paste0(gg1,"*")
             gg1 = gsub("[ \n\t]","",gg1)
@@ -187,7 +180,7 @@ hm_filtered_matrix <- reactive({
                 gg1 = unique(c(gg1,unlist(gg2)))
             }
             gg1 = intersect(gg1,ngs$genes$gene_name)            
-            cat("hm_filtered_matrix:: head.gg=",head(gg1),"\n")
+            ##cat("hm_filtered_matrix:: head.gg=",head(gg1),"\n")
             if(length(gg1)>1) gg = gg1
         }
         jj <- match(toupper(gg), toupper(ngs$genes$gene_name))
@@ -199,6 +192,8 @@ hm_filtered_matrix <- reactive({
     kk <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
     zx <- zx[,kk,drop=FALSE]    
 
+    cat("<module_clustering::hm_filtered_matrix> 2\n")
+    
     if(input$hm_level=="gene" && "chr" %in% names(ngs$genes)) {
         ## Filter out X/Y chromosomes before clustering
         chr <- ngs$genes[rownames(zx),]$chr
@@ -208,19 +203,26 @@ hm_filtered_matrix <- reactive({
         dim(zx)
     }
     
+    cat("<module_clustering::hm_filtered_matrix> 3\n")
+
     nmax=4000
-    nmax = as.integer(input$hm_top)
+    nmax = as.integer(input$hm_ntop)
     idx <- NULL
     splitx <- input$hm_splitx
     topmode="sd"
     topmode <- input$hm_topmode
-    if(PRO.VERSION) topmode <- input$hm_topmode
+    cat("<module_clustering::hm_filtered_matrix> splitx=",splitx,"\n")
+    cat("<module_clustering::hm_filtered_matrix> topmode=",topmode,"\n")
+
+    if(splitx=="<none>" && topmode=="specific") topmode <- "sd"
+
+    cat("<module_clustering::hm_filtered_matrix> 4\n")
     
     if(topmode=="pca") {
         require(irlba)
         NPCA=5
         ntop = 12
-        ntop <- as.integer(input$hm_top) / NPCA
+        ntop <- as.integer(input$hm_ntop) / NPCA
         svdres <- irlba(zx - rowMeans(zx), nv=NPCA)
         gg <- rownames(zx)
         sv.top <- lapply(1:NPCA,function(i) gg[head(order(-abs(svdres$u[,i])),ntop)] )
@@ -230,30 +232,30 @@ hm_filtered_matrix <- reactive({
         }
         sv.top1 <- unlist(sv.top)
         zx <- zx[gg.top,]
-        rownames(zx) <- sv.top1
+        ##rownames(zx) <- sv.top1
         dim(zx)
         ##idx <- paste0("PC",sub(":.*","",sv.top1))
         idx <- sub(":.*","",sv.top1)
         table(idx)
-    } else if(topmode=="biomarker" && splitx!="<none>") {
-        ##clust <- ngs$samples[colnames(zx),"cluster"]
-        clust <- ngs$samples[colnames(zx),splitx]
-        table(clust)
-        clust.zx <- t(apply(zx, 1, function(x) tapply(x, clust, mean)))
-        clust.dx <- clust.zx*0
-        nc <- ncol(clust.dx)
+    } else if(topmode=="specific" && splitx!="<none>") {
+        ##grp <- ngs$samples[colnames(zx),"cluster"]
+        grp <- ngs$samples[colnames(zx),splitx]
+        table(grp)
+        grp.zx <- t(apply(zx, 1, function(x) tapply(x, grp, mean)))
+        grp.dx <- grp.zx*0
+        nc <- ncol(grp.dx)
         for(i in 1:nc) {
-            clust.dx[,i] <- clust.zx[,i] - rowMeans(clust.zx[,-i,drop=FALSE])
+            grp.dx[,i] <- grp.zx[,i] - rowMeans(grp.zx[,-i,drop=FALSE])
         }
         gg <- rownames(zx)
         ntop = 12
-        ntop <- ceiling( as.integer(input$hm_top) / ncol(clust.dx) )
-        clust.top <- lapply(1:nc,function(i) gg[head(order(-clust.dx[,i]),ntop)] )
-        ##idx <- unlist(sapply(1:nc,function(i) rep(i,length(clust.top[[i]]))))
-        idx <- unlist(mapply(rep,1:nc,sapply(clust.top,length)))
+        ntop <- ceiling( as.integer(input$hm_ntop) / ncol(grp.dx) )
+        grp.top <- lapply(1:nc,function(i) gg[head(order(-grp.dx[,i]),ntop)] )
+        ##idx <- unlist(sapply(1:nc,function(i) rep(i,length(grp.top[[i]]))))
+        idx <- unlist(mapply(rep,1:nc,sapply(grp.top,length)))
         idx <- paste0("M",idx)
         table(idx)        
-        gg.top <- unlist(clust.top)
+        gg.top <- unlist(grp.top)
         zx <- zx[gg.top,]
         dim(zx)
     } else {
@@ -262,14 +264,49 @@ hm_filtered_matrix <- reactive({
     }
     ##zx = zx / apply(zx,1,sd,na.rm=TRUE)  ## scale??
 
-    ## cluster the genes???
+    ## ------------- cluster the genes???
     if(is.null(idx)) {
         hc = hclust( as.dist(1 - cor(t(zx))), method="ward.D2" )
         idx = paste0("S",cutree(hc, 5))
     }
+
+    ## ------------- matched annotation
+    annot = ngs$Y[colnames(zx),,drop=FALSE]
+    kk = grep("sample|patient",colnames(annot),invert=TRUE)
+    annot = annot[,kk,drop=FALSE]  ## no group??    
+    samples = colnames(zx) ## original sample list
+
+    cat("<module_clustering::hm_filtered_matrix> 5\n")
+    
+    ## ------------- calculate group summarized
+    if(1) { 
+        grp = ngs$samples[colnames(zx),"group"]
+        if(0) {
+            grp.zx = t(apply( zx, 1, function(x) tapply(x, grp, mean)))
+            grp.annot = annot[match(colnames(zx),grp),,drop=FALSE] ## NEED RETHINK!!!
+            rownames(grp.annot) = colnames(zx)
+        } else {
+            grp.zx = tapply( colnames(zx), grp, function(k) rowMeans(zx[,k,drop=FALSE],na.rm=TRUE))
+            grp.zx = do.call( cbind, grp.zx)
+            ## take most frequent term as group annotation value
+            most.freq <- function(x) names(sort(-table(x)))[1]
+            grp.annot = tapply( rownames(annot), grp, function(k) {
+                f <- apply(annot[k,,drop=FALSE],2,function(x) most.freq(x))
+                w.null <- sapply(f,is.null)
+                if(any(w.null))  f[which(w.null)] <- NA
+                unlist(f)
+            })
+            grp.annot = data.frame(do.call( rbind, grp.annot))
+            grp.annot = grp.annot[colnames(grp.zx),]
+        }
+    }
+
+    cat("<module_clustering::hm_filtered_matrix> done\n")
     
     ##input$top_terms
-    filt <- list(mat=zx, clust=idx)
+    filt <- list(mat=zx, annot=annot,
+                 grp.mat = grp.zx, grp.annot = grp.annot,
+                 clust=idx, samples=samples)
     return(filt)
 })
 
@@ -279,54 +316,40 @@ hm_filtered_matrix <- reactive({
 Col {.tabset data-width=600}
 -----------------------------------------------------------------------------------------
 
-### Heatmap {data-height=800}
+
+### Heatmap
 	
 ```{r}
 
-
-##----------------------------------------------------------------------
-##                     Info messsages for Plots
-##----------------------------------------------------------------------
-
-hm_splitmap_text = paste0('In the <strong>heatmap</strong> tab, a hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the ',dropdown_level,' dropdown list. 
-<br><br>During the heatmap generation, users have various options that they can select in the <code>Options</code>, such as splitting the samples by a phenotype class (e.g., tissue, cell type, or gender) in the <code>split by</code>. In addition, users can specify the top N = {50, 500} features to be used in the heatmap for hierarchical clustering. The criteria to select the top features are: 1) sd - features with the highest standard deviation across all the samples, 2) biomarker - features that are overexpressed in each phenotype class compared to the rest, or by 3) pca - principal components. The top feature selection is specified under the <code>top mode</code> section. For more convenient visualisation of heatmap coloring, users can also scale the row values or normalize them between 0 and 1 by clicking the <code>rowscale</code> and <code>softmax</code>, respectively.')
+hm_splitmap_text = tagsub("Under the <strong>Heatmap</strong> tab, hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. <p>Under the plot configuration {{Settings}}, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: <ol><li>SD - features with the highest standard deviation across all the samples, </li><li>specific - features that are overexpressed in each phenotype class compared to the rest, or by </li><li>PCA - by principal components.<br></ol> <br><p>Users can also choose between 'relative' or 'absolute' expression scale. Under the {CexCol} and {CexRow} settings, it is also possible to adjust the cex for the column and row labels.")
 
 
 require(plotly)
 require(scatterD3)
-require(tippy)
+##require(tippy)
 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    split0 = colnames(ngs$Y)[grep("sample|patient|donor",colnames(ngs$Y),invert=TRUE)]
-    ny <- apply(ngs$Y[,split0],2,function(x) length(unique(x)))
-    split0 <- split0[which(ny>1)]
-    sel <- grep("tissue.type|cell.type|cluster|treat",split0,value=TRUE)[1]
+    req(ngs)    
+    cvar <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=20)
     sel <- "<none>"
-    updateSelectInput(session, "hm_splitx", choices=c("<none>",split0), selected=sel)
+    updateSelectInput(session, "hm_splitx", choices=c("<none>",cvar), selected=sel)
 })
 
-hm_splitmapFUNC <- reactive({
+hm1_splitmap.RENDER <- reactive({
 
-    ##genes = families[[input$filter]]
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    filt<- hm_filtered_matrix()
-    if(is.null(filt)) return(NULL)
-    
-    zx <- filt$mat    
-    zx.clust <- filt$clust    
-    col.annot = ngs$Y[colnames(zx),,drop=FALSE]
-    kk = grep("sample|patient",colnames(col.annot),invert=TRUE)
-    col.annot = col.annot[,kk,drop=FALSE]  ## no group??
+    filt <- hm_filtered_matrix()
+    req(ngs, filt)
     
     if(input$hm_group) {
-        grp = ngs$Y[colnames(zx),"group"]
-        zx = t(apply( zx, 1, function(x) tapply(x, grp, mean)))
-        col.annot = col.annot[match(colnames(zx),grp),,drop=FALSE]
-        rownames(col.annot) = colnames(zx)
+        zx <- filt$grp.mat    
+        annot = filt$grp.annot
+    } else {
+        zx <- filt$mat    
+        annot = filt$annot        
     }
+    zx.clust <- filt$clust    
     
     show_rownames = TRUE
     ##if(nrow(zx) > 100) rownames(zx) = rep("",nrow(zx))
@@ -339,10 +362,10 @@ hm_splitmapFUNC <- reactive({
     cex1 = ifelse(ncol(zx)>100,0.5,cex1)
     cex1 = ifelse(ncol(zx)>200,0,cex1)
     
-    ##cat("heatmap:: plotting: dim.zx=",dim(zx),"\n")
-    scale.mode = "row"
-    scale.mode = ifelse("rowscale" %in% input$hm_options2,"row","none")
-
+    scale.mode = "row.center"
+    scale.mode = ifelse(input$hm_scale=="relative","row.center","none")
+    scale.mode
+    
     ## split genes dimension in 5 groups
     splity = 5 
     if(!is.null(zx.clust)) splity = zx.clust
@@ -350,17 +373,18 @@ hm_splitmapFUNC <- reactive({
     ## split samples
     splitx = NULL    
     splitx = input$hm_splitx
-    if( splitx %in% colnames(col.annot) ) {
-        splitx = col.annot[,splitx]
+    if( splitx %in% colnames(annot) ) {
+        splitx = annot[,splitx]
     } else {
         splitx = NULL
     }
 
     show_legend = TRUE
     if(input$hm_level=="geneset" || !is.null(splitx)) show_legend = FALSE
-    col.annot$group = NULL  ## no group in annotation
-    show_colnames <- ifelse(ncol(zx) < 200, TRUE, FALSE)
-
+    annot$group = NULL  ## no group in annotation
+    show_colnames <- ifelse(ncol(zx) < 100, TRUE, FALSE)
+    show_colnames <- input$hm_collabel
+    
     if(input$hm_level=="gene") {
         rownames(zx) = sub(".*:","",rownames(zx))
     }
@@ -369,81 +393,211 @@ hm_splitmapFUNC <- reactive({
     rownames(zx) = substring(rownames(zx),1,50)  ## cut long names...
     if(input$hm_level=="geneset")  rownames(zx) <- tolower(rownames(zx))
     
-    cex2 <- ifelse( nrow(zx) > 60, 0.7, 0.8)
-    softmax = 0
+    cex2 <- ifelse( nrow(zx) > 60, 0.8, 0.9)    
+    cex1 <- as.numeric(input$hm_cexCol)*0.9
+    cex2 <- as.numeric(input$hm_cexRow)*0.85
+    
     crot <- 0
     totnchar <- nchar(paste0(unique(splitx),collapse=""))
     totnchar
     nx <- length(unique(splitx))
     if(!is.null(splitx) & (totnchar > 44 || nx>=6) ) crot=90
-    ##if(PRO.VERSION && input$hm_softmax)  softmax = 1
-    if("softmax" %in% input$hm_options)  softmax = 1
     if(main=="<all>") main <- ""
 
-    jj = which(apply(col.annot,2,function(x)length(setdiff(unique(x),NA))>1))
-    col.annot = col.annot[,jj,drop=FALSE]    
-    if(ncol(col.annot)==0) col.annot <- NULL
+    nrownames = ifelse(input$hm_rowlabel,80,0)
     
     withProgress(
-        message='rendering heatmap...', value=0.90,
+        message='rendering heatmap...', value=0.66,
         gx.splitmap( zx, 
                     split=splity, splitx=splitx,
-                    mar=c(5,20), scale=scale.mode, show_legend=show_legend,
+                    mar=c(5,25), scale=scale.mode, show_legend=show_legend,
                     show_colnames = show_colnames, column_title_rot=crot,
-                    show_rownames = 80, softmax=softmax,
-                    ## side.height.fraction=0.03+0.055*NCOL(col.annot), 
+                    show_rownames = nrownames, softmax=0,
+                    ## side.height.fraction=0.03+0.055*NCOL(annot), 
                     labRow=NULL, cexCol=cex1, cexRow=cex2, 
-                    col.annot=col.annot, row.annot=NULL, annot.ht=2.6,
+                    col.annot=annot, row.annot=NULL, annot.ht=2.6,
                     main=main, nmax=-1)
     )
 
 })
 
-hm_splitmap_opts = tagList(
-    tipify( selectInput("hm_splitx", "split by:", choices=NULL, width='100%'),
-            "Split the samples by a predetermined phenotype class (e.g. tissue or cell type).", placement="right",options = list(container = "body")),
-    tipify( selectInput('hm_topmode','top mode',c("sd","biomarker","pca"), width='100%'),
-            "Specify the criteria for selecting features to be used in the heatmap clustering analysis.", placement="right",options = list(container = "body")),
-    # fillRow( flex=c(1,1),
-    #          selectInput("hm_splitx", "split by:", choices=NULL, width='100%'),
-    #          selectInput('hm_topmode','top mode',c("sd","biomarker","pca"), width='100%')),
-    tipify( checkboxGroupInput('hm_options2',NULL,choices=c('rowscale','softmax'),
-                               selected=c('rowscale','softmax'),inline=TRUE),
-            "Scale the row values or normalize them between (0, 1) for more convenient coloring of the heatmap.", placement="bottom")
+hm2_splitmap.RENDER <- reactive({
+
+    ngs <- inputData()
+    req(ngs, input$hm_splitx)
+       
+    ## -------------- variable to split samples
+    split.var=NULL    
+    split.var="activated"
+    split.var = input$hm_splitx
+    if(split.var=="<none>") split.var = NULL
     
+    scale = ifelse(input$hm_scale=="relative","row.center","none")    
+    plt <- NULL
+    cat("<module-clustering:hm2_splitmap.RENDER> split.var=",split.var,"\n")
+    
+    withProgress(
+        message='rendering iHeatmap...', value=0.66,
+        {
+            filt <- hm_filtered_matrix()
+            ##if(is.null(filt)) return(NULL)
+            req(filt)        
+            if(input$hm_group) {
+                X <- filt$grp.mat    
+                annot = filt$grp.annot
+            } else {
+                X <- filt$mat    
+                annot = filt$annot        
+            }
+            idx <- filt$clust    
+            
+            cat("<module-clustering:hm2_splitmap.RENDER> idx=",idx,"\n")
+            
+            ## sample clustering index
+            splitx <- NULL
+            if(!is.null(split.var) && split.var %in% colnames(annot)) {
+                splitx <- annot[,split.var]
+            }
+            
+            cat("<module-clustering:hm2_splitmap.RENDER> head(splitx)=",head(splitx),"\n")
+            cat("<module-clustering:hm2_splitmap.RENDER> dim(annot)=",dim(annot),"\n")
+            
+            ## iheatmapr needs factors for sharing between groups
+            annotF <- data.frame(as.list(annot),stringsAsFactors=TRUE)
+            rownames(annotF) = rownames(annot)
+            cat("<module-clustering:hm2_splitmap.RENDER> dim(annotF)=",dim(annotF),"\n")
+            cat("<module-clustering:hm2_splitmap.RENDER> dim(X)=",dim(X),"\n")
+            
+            cex=10
+            cex = ifelse(input$hm_rowlabel,10,0)
+            
+            tooltips = NULL
+            if(input$hm_level=="gene") {
+                getInfo <- function(g) {
+                    aa = paste0("<b>",ngs$genes[g,"gene_name"],"</b>. ",
+                                ## ngs$genes[g,"map"],". ",
+                                ngs$genes[g,"gene_title"],".")
+                    breakstring2(aa, 50, brk="<br>")
+                }
+                tooltips = sapply(rownames(X), getInfo)
+            } else {
+                aa = gsub("_"," ",rownames(X)) ## just geneset names
+                tooltips = breakstring2(aa, 50, brk="<br>")
+            }
+            ##genetips = rownames(X)
+            
+            cat("<module-clustering:hm2_splitmap.RENDER> plotting\n")            
+            plt <- pgx.splitHeatmapX(
+                X=X, annot=annotF, ytips=tooltips,
+                idx=idx, splitx=splitx, scale=scale,
+                row_annot_width=0.03, label_size=cex )
+        }
+    )
+    cat("<module-clustering:hm2_splitmap.RENDER> done\n")
+    cat("<module-clustering:hm2_splitmap.RENDER> class(plt)=",class(plt),"\n")
+    return(plt)
+})
+
+
+hm_splitmap_opts = tagList(
+    tipify( radioButtons("hm_plottype", "Plot type:", choices=c("iHeatmap","ComplexHeatmap"),
+                         selected="iHeatmap", inline=TRUE, width='100%'),
+           "Choose plot type: iHeatmap (interactive) or ComplexHeatmap (static)",
+           placement="right",options = list(container = "body")),
+    tipify( selectInput("hm_splitx", "split by:", choices="group", width='100%'),
+           "Split the samples by a predetermined phenotype class (e.g. tissue or cell type).",
+           placement="right",options = list(container = "body")),
+    tipify( selectInput('hm_topmode','top mode:',c("specific","sd","pca"), width='100%'),
+           "Specify the criteria for selecting features to be used in the heatmap clustering analysis.",
+           placement="right", options = list(container = "body")),
+    tipify( radioButtons('hm_ntop','top N:',c(50,500),inline=TRUE,selected=50),
+           "Select the number of top features to be used in the analysis.", placement="top"),
+    tipify( radioButtons(
+        'hm_scale', 'scale:', choices=c('relative','absolute'), inline=TRUE),
+        "Show relative (i.e. mean-centered) or absolute expression values.",
+        placement="bottom"),
+    tipify( checkboxInput("hm_rowlabel","Show row labels",TRUE),
+           "Show or hide row names."),
+    tipify( checkboxInput("hm_collabel","Show column labels",TRUE),
+           "Show or hide column names."),
+    fillRow( flex=c(1,1),
+        tipify( selectInput("hm_cexCol", "CexCol:", choices=seq(0.1,1.2,0.1), selected=1, width='100%'),
+               "Specify the column label cex.", placement="right",options = list(container = "body")),
+        tipify( selectInput("hm_cexRow", "CexRow:", choices=seq(0.1,1.2,0.1), selected=1, width='100%'),
+               "Specify the row label cex.", placement="right",options = list(container = "body"))
+    ),
+    br(),br(),br(),br()
 )
+
+
+hm_splitmap_caption <- reactive({
+    text1 = "Heatmap showing gene expression sorted by 2-way hierarchical clustering. Red corresponds to overexpression, blue to underexpression of the gene. At the same time, gene clusters are functionally annotated in the 'Annotate clusters' tab on the right."
+    return(text1)
+})
+
+hm_splitmap.switchRENDER <- reactive({
+    cat("<module_intersect::hm_splitmap.switchRENDER\n")
+    ##req(input$hm_plottype)
+    p = NULL
+    if(input$hm_plottype %in% c("ComplexHeatmap","static") ) {
+        p = plotOutput("hm1_splitmap")  ## see below
+    } else {
+        p = iheatmaprOutput("hm2_splitmap") ## see below
+    }
+    return(p)
+})
 
 hm_splitmap_module <- plotModule(
-    "hm_splitmapplot", hm_splitmapFUNC,
+    "hm_splitmap", hm_splitmap.switchRENDER,
+    plotlib="generic", renderFunc="renderUI",
+    download.fmt = c("pdf","html"),
     info.text = hm_splitmap_text,
     options = hm_splitmap_opts,
-    pdf.width=10, pdf.height=20,
+    pdf.width=10, pdf.height=10, info.width="350px",
     title="Heatmap"
 )
+output <- attachModule(output, hm_splitmap_module)
 
-output$hm_splitmapplot     <- hm_splitmap_module$render
-output$hm_splitmapplot_pdf <- hm_splitmap_module$pdf
+output$hm1_splitmap  <- renderPlot({
+    PDFFILE  = hm_splitmap_module$.tmpfile["pdf"]  ## from above!
+    HTMLFILE = hm_splitmap_module$.tmpfile["html"]  ## from above!    
+    hm1_splitmap.RENDER()
+    ## plot(sin)
+    ## if(file.exists(PDFFILE)) unlink(PDFFILE)
+    ## dev.copy(pdf, file=PDFFILE, width=8, height=8)    
+    dev.print(pdf, file=PDFFILE, width=10, height=10)    
+    write("HTML export error",file=HTMLFILE)
+}, res=90)
 
-fillCol(flex = c(NA,1), 
-        ##actionLink("hm_splitmapplot", label="",icon = icon("gear")),
-        hm_splitmap_module$button,
-        plotOutput("hm_splitmapplot", height = "100%", width = "100%")
-        )
+output$hm2_splitmap <- renderIheatmap({
+    p <- hm2_splitmap.RENDER()
+    ## export(p, file=PDFFILE)
+    HTMLFILE = hm_splitmap_module$.tmpfile["html"]  ## from above!
+    PDFFILE  = hm_splitmap_module$.tmpfile["pdf"]   ## from above!
+    if(file.exists(HTMLFILE)) unlink(HTMLFILE)
+    if(file.exists(PDFFILE))  unlink(PDFFILE)
+    ##webshot::install_phantomjs()
+    ##if(do.png) save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PNGFILE,zoom=2)
+    if(!is.null(PDFFILE))  save_iheatmap(p, filename=PDFFILE,  vwidth=10*80, vheight=10*80)
+    if(!is.null(HTMLFILE)) save_iheatmap(p, filename=HTMLFILE)
+    p
+})
+
+fillCol(
+    moduleWidget(hm_splitmap_module, outputFunc="uiOutput")
+)
 
 ```
 
-> A heatmap of samples obtained by the hierarchical clustering using the top features specified by the user.
+> **Clustered heatmap.** `r renderUI(HTML(hm_splitmap_caption()))`
 
 
-### PCA/tSNE {data-height=800}
+### PCA/tSNE
 
 ```{r warnings=FALSE, message=FALSE, fig.width=12, fig.height=8}
 
-PCA="<a href='https://www.ncbi.nlm.nih.gov/pubmed/19377034'> PCA</a>"
-tSNE="<a href='http://jmlr.org/papers/volume15/vandermaaten14a/vandermaaten14a.pdf'> tSNE</a>"
-
-hm_PCAplot_text = paste0(' The <b>PCA/tSNE</b> tab provides the plot obtained by the principal components analysis (',PCA,') or t-distributed stochastic embedding (',tSNE,') algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other. 
-<br><br>Users can customise the PCA/tSNE plot in the <code>Options</code>, including the <code>color</code> and <code>shape</code> of points using a phenotype class provided in the data, choose the <code>tsne</code> or <code>pca</code> output type, specify the <code>lable</code> of the points or display 2D and <code>3D</code> visualisation of the PCA/tSNE plot.')
+hm_PCAplot_text = tagsub(paste0(' The <b>PCA/tSNE</b> panel visualizes unsupervised clustering obtained by the principal components analysis (',a_PCA,') or t-distributed stochastic embedding (',a_tSNE,') algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other. 
+<br><br>Users can customise the PCA/tSNE plot in the <i>Settings</i>, including the {color} and {shape} of points using a phenotype class, choose t-SNE or PCA layout, label the points, or display 2D and 3D visualisation of the PCA/tSNE plot.'))
 
 
 require(plotly)
@@ -478,7 +632,6 @@ hm_GetClusterPositions <- reactive({
     pp = filterProbes(ngs$genes, gg)
     zx = zx[intersect(pp,rownames(zx)),]
     zx = head(zx[order(-apply(zx,1,sd)),],1000)
-    if(!PRO.VERSION || "rowscale" %in% input$hm_options2)  zx = t(scale(t(zx)))  ## scale??
 
     pos = NULL
     if(input$hm_clustmethod=="tsne") {
@@ -648,14 +801,8 @@ hm_PCAplotFUNC <- reactive({
                                font = list(size=24*cex2, color='#555'),
                                showarrow = FALSE)
         }
-        if(FALSE && length(table(colvar)) <= 20) {
-            plt <- plt %>% layout(legend = list(x = 0.98, y = 0.98,
-                                                font=list(size=11),
-                                                bgcolor="#EEEEEE"))
-        } else {
-            plt <- plt %>% layout(showlegend = FALSE)
-        }
-
+        plt <- plt %>% layout(showlegend = FALSE)
+        
     }
     title = paste0("<b>PCA</b>  (",nrow(pos)," samples)")
     if(input$hm_clustmethod=="tsne") title = paste0("<b>tSNE</b>  (",nrow(pos)," samples)")
@@ -671,12 +818,9 @@ hm_PCAplot_opts = tagList(
             "Set the colors of the samples according to a given phenotype class.", placement="right", options = list(container = "body")),
     tipify( selectInput("hmpca.shapevar", "shape:", choices=NULL, width='100%'),
             "Set the shapes of the samples according to a given phenotype class.", placement="right", options = list(container = "body")),
-    ## selectInput("hmpca.text", "text:", choices=NULL, width='80%'),
-    ## selectInput("hmpca.line", "line:", choices=NULL, width='80%'),
-    br(),
-    tipify( radioButtons('hm_clustmethod',label=NULL,c("tsne","pca"),inline=TRUE),
+    tipify( radioButtons('hm_clustmethod',"layout:",c("tsne","pca"),inline=TRUE),
             "Choose the output of the tSNE or PCA to visualise.", placement="top"),
-    tipify( checkboxGroupInput('hmpca_options',NULL, choices=c('label','3D'), inline=TRUE),
+    tipify( checkboxGroupInput('hmpca_options',"Other:", choices=c('label','3D'), inline=TRUE),
             "Display the labels of the samples in the plot. Select the 2D or 3D visualisation of the plot.", placement="bottom")
 )
 
@@ -687,162 +831,27 @@ hm_PCAplot_module <- plotModule(
     pdf.width=10, pdf.height=10,
     title="PCA/tSNE plot"
 )
+output <- attachModule(output, hm_PCAplot_module)
 
-output$hm_PCAplot     <- hm_PCAplot_module$render
-output$hm_PCAplot_pdf <- hm_PCAplot_module$pdf
+fillCol(
+    moduleWidget(hm_PCAplot_module, outputFunc="plotlyOutput")
+)
 
-fillCol(flex = c(NA,1),
-        ##actionLink("hm_PCAplot", label="",icon = icon("gear")),
-        hm_PCAplot_module$button,
-        plotlyOutput("hm_PCAplot", height = "100%", width = "100%")
-        )
+
+hm_PCAplot_caption <- reactive({
+    text1 = "The plot visualizes the similarity in expression of samples as a scatterplot in reduced dimension (2D or 3D). Samples that are similar are clustered near to each other, while samples with different expression are positioned farther away. Groups of samples with similar profiles will appear as <i>clusters</i> in the plot."
+    if(input$hmpca.colvar!="<none>") {
+        text1 <- paste(text1, "Colors correspond to the <strong>",input$hmpca.colvar,"</strong>phenotype.")
+    }
+    if(input$hmpca.shapevar!="<none>") {
+        text1 <- paste(text1, "Shapes correspond to the <strong>",input$hmpca.shapevar,"</strong>phenotype.")
+    }
+    return(HTML(text1))
+})
 
 ```
 
-> The PCA/tSNE plot of samples using the top features specified by the user.
-
-
-
-<!---------------------------------------------
-
-### Coldmap {data-height=800}
-
-```{r warnings=FALSE, message=FALSE, fig.width=4, fig.height=4}
-
-getFullFCmatrix <- reactive({
-    fc0 = NULL
-    qv0 = NULL
-    ##dt <- getSignificanceCalls()
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    if(input$hm_level=="geneset") {
-        ##fc0 = sapply(ngs$gset.meta$outputs, function(x) x[["gsva"]][,"score"])
-        ##qv0 = sapply(ngs$gset.meta$outputs, function(x) x[["gsva"]][,"q.value"])
-        fc0 = sapply(ngs$gset.meta$meta, function(x) unclass(x$fc)[,"gsva"])
-        qv0 = sapply(ngs$gset.meta$meta, function(x) unclass(x$q)[,"gsva"])
-    } else {
-        ##fc0 = sapply(ngs$gx.meta$outputs[["trend.limma"]]$tables,function(x) x$logFC)
-        ##qv0 = sapply(ngs$gx.meta$outputs[["trend.limma"]]$tables,function(x) x$adj.P.Val)
-        ##rownames(fc0) = rownames(qv0) = rownames(ngs$gx.meta$outputs[["trend.limma"]]$tables[[1]])
-        fc0 = sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
-        qv0 = sapply(ngs$gx.meta$meta, function(x) unclass(x$q)[,"trend.limma"])
-    }
-    res = list(fc=fc0, qv=qv0)
-    return(res) 
-})
-
-getFCmatrix <- reactive({
-    fc0 = NULL
-    qv0 = NULL
-    ##dt <- getSignificanceCalls()
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    if(input$hm_level=="geneset") {
-        fc0 = sapply(ngs$gset.meta$meta, function(x) unclass(x$fc)[,"gsva"])
-        qv0 = sapply(ngs$gset.meta$meta, function(x) unclass(x$q)[,"gsva"])
-        gsets = unique(unlist(COLLECTIONS[input$hm_features]))
-        gsets = intersect(gsets, rownames(fc0))
-        fc0 = fc0[gsets,,drop=FALSE]
-        qv0 = qv0[gsets,,drop=FALSE]
-    } else {
-        fc0 = sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
-        qv0 = sapply(ngs$gx.meta$meta, function(x) unclass(x$q)[,"trend.limma"])
-        sel.probes = rownames(fc0) 
-        gg = ngs$families[[1]]
-        gg = ngs$families[[input$hm_features]]
-        jj <- match(toupper(gg), toupper(ngs$genes$gene_name))
-        gg1 = ngs$genes$gene_name[setdiff(jj,NA)]
-        sel.probes = filterProbes(ngs$genes, gg1)
-        sel.probes = intersect(sel.probes, rownames(fc0))
-        fc0 = fc0[sel.probes,,drop=FALSE]
-        qv0 = qv0[sel.probes,,drop=FALSE]
-    }
-    res = list(fc=fc0, qv=qv0)
-    return(res) 
-})
-
-fillCol(height = "100%", ## flex = c(NA, 1), 
-        ##inputPanel(
-        ##sliderInput("coldmap_range", "Range:", min=1, max=4000, value=c(0,4000), width='100%')
-        ##),
-        plotOutput("coldmap_plot", height='100%')
-        )
-
-output$coldmap_plot <- renderPlot({
-
-    ##res = getFCmatrix()
-    res = getFullFCmatrix()
-    if(is.null(res)) return(NULL)
-
-    fc0 = res$fc
-    if(nrow(fc0)<2 || ncol(fc0)<2) return(NULL)
-
-    ##require(nclust)
-    require(nclust1)
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    if(input$hm_level=="geneset") {
-        X = scale(t(ngs$gsetX[rownames(fc0),]))
-    } else {
-        X = scale(t(ngs$X[rownames(fc0),]))
-    }
-    prm = input$hm_splitx
-    if(prm %in% colnames(ngs$Y)) {
-        idx = tapply(1:nrow(ngs$Y), ngs$Y[,prm], list)
-        xx = lapply(idx, function(ii) X[ii,,drop=FALSE])    
-        xx = xx[ which(sapply(xx,nrow) >= 2) ]
-        xx.list = paste(paste0("xx[[",1:length(xx),"]]"),collapse=",")
-    } else {
-        xx = list("samples"=X)
-        xx.list = "xx[[1]]"
-    }
-
-    require(nclust1)
-    ##require(nclust)
-    clust = eval(parse(text = paste0("nclust2(",xx.list,")") ))
-    
-    ## additional top panel genes statistics
-    jj = clust[[1]]$labels[clust[[1]]$order]
-    FC  <- t(fc0[jj,,drop=FALSE])
-
-    ##z = svd(FC)
-    ##sv1 = rowMeans( z$v[,1:10] %*% diag(z$d[1:10]))
-    fc.sd = sqrt(colSums(FC**2))
-    FC = rbind( sd.FC = fc.sd, FC)
-
-    cplot.func <- function(x, y) {
-        points(x, y, cex=0.1, col=rgb(0,0,0,0.2))
-        lines(lowess(x, y, f=30/length(x)), lwd=1, col="red")
-    }
-    cpht = min(11/nrow(FC),1.8) ## height of FC plot tracks
-    zoom.start = 1
-    zoom.end = ncol(FC)
-    ##zoom.start = input$coldmap_range[1]
-    ##zoom.end   = input$coldmap_range[2]
-
-    filt <- hm_filtered_matrix()
-    zx <- filt$mat
-    idx = filt$clust
-    bcmodules <- tapply(rownames(zx),idx,list)
-    bcmodules <- lapply(bcmodules, function(s) head(s[order(-fc.sd[s])],5)) ## highest sd(FC)
-    modulecolor <-  brewer.pal(8,"Set2")[1:length(bcmodules)]
-    genecolor <- unlist(mapply(function(u,v)rep(v,length(u)),bcmodules,modulecolor))
-     
-    coldmap.cmd = "nclust1::coldmap( XX, clust = clust, dlab=DLAB, rdw=5, cdw=2.5, cplot.height=CPHT, cplot.gutter = 0.2, cplot=FC, cplot.band=c(), cplot.panel=cplot.func, saturation=0.33, wa=WA, wb=WB, clab = unlist(bcmodules), col.clab=genecolor, cex.clab=1.2, clab.height=2 )"
-    coldmap.cmd = sub("XX",xx.list, coldmap.cmd)
-    xx.names = paste0("c('",paste(names(xx),collapse="','"),"')")
-    coldmap.cmd = sub("DLAB", xx.names, coldmap.cmd)
-    coldmap.cmd = sub("CPHT", cpht, coldmap.cmd)
-    coldmap.cmd = sub("WA", zoom.start, coldmap.cmd)
-    coldmap.cmd = sub("WB", zoom.end, coldmap.cmd)
-    eval(parse(text = coldmap.cmd))
-     
-}, res=90)
-```
-
--------------------------------------->
-
-
+> **PCA/tSNE plot.** `r renderUI(hm_PCAplot_caption())`
 
 
 
@@ -852,11 +861,8 @@ Col {.tabset data-width=450}
 ### Annotate clusters
 
 ```{r warnings=FALSE, message=FALSE, fig.width=8, fig.height=4}
-KEGG="<a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC102409/'> KEGG</a>"
-GO="<a href='http://geneontology.org/'> GO</a>"
-MSigDB="<a href='http://software.broadinstitute.org/gsea/msigdb'> GO</a>"
 
-clustannot_plots_text = paste0('The top features of the heatmap under the <code>Heatmap</code> section are then divided into five clusters based on their expression profile patterns. For each cluster, the platform provides a functional annotation under the <code>Annotate cluster</code> section by correlating more than 42 published reference databases, including but not limited to well-known databases such as ',MSigDB,', ',KEGG,' and ',GO,'. In the <code>Options</code>, users can specify the level and collection of references to be used in the annotation under the <code>Reference level</code> and <code>Reference set</code>, respectively.')
+clustannot_plots_text = paste0('The top features of the heatmap in the <code>Heatmap</code> panel are divided into gene (or gene set) clusters based on their expression profile patterns. For each cluster, the platform provides a functional annotation in the <code>Annotate cluster</code> panel by correlating annotation features from more than 42 published reference databases, including well-known databases such as ',a_MSigDB,', ',a_KEGG,' and ',a_GO,'. In the plot <i>Settings</i>, users can specify the level and reference set to be used under the <code>Reference level</code> and <code>Reference set</code> settings, respectively.')
 
 observe({
     ngs <- inputData()    
@@ -881,90 +887,113 @@ observe({
 
 
 clustannot_correlation <- reactive({
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    ##zx = head(ngs$X,1000)
 
+    dbg("<clustering:clustannot_plots> reacted\n")
+    
+    ngs <- inputData()
+    req(ngs)
     filt <- hm_filtered_matrix()
-    if(is.null(filt)) return(NULL)
-    zx <- filt$mat
+    req(filt)
+
+    zx  <- filt$mat
     idx <- filt$clust
+    samples <- filt$samples
 
     ann.level="geneset"
     ann.refset="Hallmark collection"
     ann.level = input$xann.level
-    if(is.null(ann.level)) return(NULL)
-
+    ##if(is.null(ann.level)) return(NULL)
     ann.refset = input$xann.refset
     ##if(is.null(ann.refset)) return(NULL)
+    req(input$xann.level, input$xann.refset)
+
+    dbg("<clustering:clustannot_plots> 1\n")
     
-    refset = NULL
-    refset = ngs$gsetX[,]    
-    refset = ngs$X[,]    
+    ref = NULL
+    ref = ngs$gsetX[,]    
+    ref = ngs$X[,]    
     if(ann.level=="gene" && ann.refset %in% names(ngs$families) ) {
         gg = ngs$families[[ann.refset]]
         jj = match(toupper(gg), toupper(ngs$genes$gene_name))
         jj <- setdiff(jj,NA)
         pp = rownames(ngs$genes)[jj]
-        refset = ngs$X[intersect(pp,rownames(ngs$X)),]    
+        ref = ngs$X[intersect(pp,rownames(ngs$X)),]    
     }
     if(ann.level=="geneset" && ann.refset %in% names(COLLECTIONS)) {
         ss = COLLECTIONS[[ann.refset]]
         ss = intersect(ss, rownames(ngs$gsetX))
         length(ss)
-        refset = ngs$gsetX[ss,]    
+        ref = ngs$gsetX[ss,]    
     }
     if(ann.level=="phenotype") {
-        refset = t(expandAnnotationMatrix(ngs$Y))
+        ref = t(expandAnnotationMatrix(ngs$Y))
     }
-    if(is.null(refset)) {
-        cat("<clustering:clustannot_plots> WARNING:: refset error\n")
+    if(is.null(ref)) {
+        cat("<clustering:clustannot_plots> WARNING:: ref error\n")
         return(NULL)
     }
 
-    ## restrict to top??
-    dim(refset)
-    refset = head(refset[order(-apply(refset,1,sd)),],1000)
+    ##-----------  restrict to top??
+    dim(ref)
+    ref = head(ref[order(-apply(ref,1,sd)),],1000)
+
+    ##-----------  get original data level
+    X = ngs$X
+    if(input$hm_level=="geneset") X <- ngs$gsetX
     
-    ## for each cluster compute average correlation
-    ##zx=ngs$X
+    ##----------- for each gene cluster compute average correlation
+    dbg("<clustering:clustannot_plots> computing correlation\n")
     i=idx[1]
-    rho = sapply(unique(idx), function(i) {
-        gg = rownames(zx)[which(idx==i)]
-        aa <- t(zx[gg,,drop=FALSE])
-        bb <- t(refset[,colnames(zx)])
+    idxx = setdiff(idx, c(NA," ","   "))
+    cat("<clustering:clustannot_plots> idxx=",idxx,"\n")
+    cat("<clustering:clustannot_plots> dim(zx)=",dim(zx),"\n")
+    cat("<clustering:clustannot_plots> samples=",samples,"\n")
+    
+    rho <- matrix(NA, nrow(ref), length(idxx))
+    colnames(rho) <- idxx
+    rownames(rho) <- rownames(ref)
+    for(i in 1:length(idxx)) {
+        gg = rownames(zx)[which(idx==idxx[i])]
+
+        cat("<clustering:clustannot_plots> head(gg)=",head(gg),"\n")
+        
+        aa <- t(X[gg,samples,drop=FALSE])
+        bb <- t(ref[,samples,drop=FALSE])
         ##rr = cor(aa , bb, use="pairwise", method="spearman")
         rr = cor(apply(aa,2,rank), apply(bb,2,rank), use="pairwise")
-        if(PRO.VERSION && input$hm_topmode=="pca") rr <- abs(rr)
-        colMeans(rr,na.rm=TRUE)
-    })
+        if(input$hm_topmode=="pca") rr <- abs(rr)
+        rho[,i] <- colMeans(rr,na.rm=TRUE)
+    }
+
+    dbg("<clustering:clustannot_plots> done\n")
+    
+    ##cat("<clustering:clustannot_plots> done\n")
     rho = round(rho, digits=3)
-
-    ##cat("<clustering:clustannot_plots> done! : dim(rho)=",dim(rho),"\n")
-
+    dim(rho)
     return(rho)
 })
 
-clustannot_plotsFUNC <- reactive({
+
+clustannot_plots.RENDER <- reactive({
     require(RColorBrewer)
     rho = clustannot_correlation()
-    if(is.null(rho)) return(NULL)
-
-    par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
-    NTERMS = 7
-    NTERMS = 10
+    ##if(is.null(rho)) return(NULL)
+    req(rho)
+    
+    NTERMS = 5
+    NTERMS = 8
     if(ncol(rho)>6) {
-        par(mfrow=c(3,3), mar=c(3,2,1.5,1) )
-        NTERMS = 6
+        par( mfrow=c(3,3), mar=c(3,2,1.5,1)*0.5 )
+        NTERMS = 5
     }
     i=1
     klrpal = brewer.pal(8,"Set2")
+
+    par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
     for(i in 1:min(9,ncol(rho))) {
         x = rev(head(sort(rho[,i],decreasing=TRUE),NTERMS))
-        ##names(x) = sub("HALLMARK_","",names(x))
         names(x) = sub(".*:","",names(x))
         names(x) = gsub(GSET.PREFIX.REGEX,"",names(x))
-        ##names(x) = tolower(names(x))
         klr = klrpal[i]
         ##klr <- rgb(t(pmin(1.33*col2rgb(klr),255)), maxColorValue=255) ## make color lighter
         klr = paste0(klr,"66")
@@ -979,6 +1008,79 @@ clustannot_plotsFUNC <- reactive({
     }            
 })
 
+clustannot_plots.PLOTLY <- reactive({
+    require(RColorBrewer)
+    rho = clustannot_correlation()
+    ##if(is.null(rho)) return(NULL)
+    req(rho)
+    
+    ##par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
+    NTERMS = 7
+    NTERMS = 8
+    if(ncol(rho)>6) {
+        par( mfrow=c(3,3), mar=c(3,2,1.5,1)*0.5 )
+        NTERMS = 5
+    }
+
+    klrpal = rep(brewer.pal(8,"Set2"),2)
+    ##klrpal = paste0(klrpal,"88")
+    col.addalpha <- function(clr,a=100)
+        paste0("rgba(",paste(col2rgb(clr)[,1],collapse=","),",",a,")")
+    klrpal = as.character(sapply(klrpal, col.addalpha, a=50))
+    
+    plot_list <- list()
+    i=1    
+    for(i in 1:min(9,ncol(rho))) {
+        
+        x = rev(head(sort(rho[,i],decreasing=TRUE),NTERMS))
+        names(x) = sub(".*:","",names(x))
+        names(x) = gsub(GSET.PREFIX.REGEX,"",names(x))
+
+        y = names(x)
+        y = factor(y, levels=y)
+        anntitle <- function(tt) {
+            list(text=tt, font = list(size=14),
+                 xref="paper", yref="paper",
+                 yanchor = "bottom", xanchor = "center",
+                 align = "center", x=0.5, y=0.97 , showarrow = FALSE )
+        }
+        
+        plot_list[[i]] <- plot_ly(
+            x=x, y=y, type='bar',  orientation='h',
+            text=y, hoverinfo = 'text',
+            hovertemplate = paste0("%{y}<extra>",colnames(rho)[i],"</extra>"),
+            ##hovertemplate = "%{y}",
+            marker = list(color=klrpal[i])) %>%
+            layout(
+                showlegend = FALSE,
+                annotations = anntitle(colnames(rho)[i]),
+                ##annotations = list(text="TITLE"),
+                xaxis = list(range = c(0,1),
+                             titlefont = list(size=11),
+                             tickfont = list(size=10),
+                             showgrid=FALSE,
+                             title = "correlation (R)" ),
+                yaxis = list(title = "",
+                             showgrid = FALSE,
+                             showline = FALSE,
+                             showticklabels = FALSE,
+                             showgrid=FALSE,
+                             zeroline = FALSE)
+            ) %>%
+            ## labeling the y-axis inside bars
+            add_annotations(xref = 'paper', yref = 'y',
+                            x = 0.01, y = y, xanchor='left',
+                            text = shortstring(y,20), 
+                            font = list(size = 11),
+                            showarrow = FALSE, align = 'right') 
+    }
+
+    subplot( plot_list, nrows=2, shareX=TRUE,
+            ## template = "plotly_dark",
+            margin=c(0, 0.0, 0.05, 0.05) )
+    
+})
+
 clustannot_plots_opts = tagList(
     tipify( selectInput("xann.level", "Reference level:",
                         choices=c("gene","geneset","phenotype"), selected="geneset", width='80%'),
@@ -988,18 +1090,19 @@ clustannot_plots_opts = tagList(
 )
 
 clustannot_plots_module <- plotModule(
-    id="clustannot_plots", func=clustannot_plotsFUNC,
-    plotlib = "base", info.text = clustannot_plots_text,
+    id="clustannot_plots",
+    ##func=clustannot_plots.RENDER, plotlib = "base",
+    func=clustannot_plots.PLOTLY, plotlib="plotly",
+    download.fmt = c("pdf","html"),
+    info.text = clustannot_plots_text,
     options = clustannot_plots_opts,
-    pdf.width=15, pdf.height=10, res=80,
-    title="Functional annotation of clusters"
+    pdf.width=8, pdf.height=5, res=80,
+    title="Functional annotation of clusters", label="a"
 )
-
-output$clustannot_plots     <- clustannot_plots_module$render
-output$clustannot_plots_pdf <- clustannot_plots_module$pdf
+output <- attachModule(output, clustannot_plots_module)
 
     
-clustannot_tableFUNC <- reactive({
+clustannot_table.RENDER <- reactive({
     rho = clustannot_correlation()
     if(is.null(rho)) return(NULL)
     ##rownames(rho) = shortstring(rownames(rho),50)
@@ -1023,105 +1126,126 @@ clustannot_tableFUNC <- reactive({
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
 })
 
-clustannot_table_info_text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the <code>Options</code>."
+clustannot_table_info_text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the <i>Settings</i>."
 
 clustannot_table_module <- tableModule(
-    id = "clustannot_table", func = clustannot_tableFUNC,
+    id = "clustannot_table", func = clustannot_table.RENDER,
     info.text = clustannot_table_info_text,
-    title="Annotation scores"
+    title="Annotation scores", label="b"
 )
+output <- attachModule(output, clustannot_table_module)
 
-output$clustannot_table <- clustannot_table_module$render
-output$clustannot_table_csv <- clustannot_table_module$csv
-
-
-
-fillCol(flex = c(1.5,0.15,1),
-        
-        fillCol(flex = c(NA,1),
-                clustannot_plots_module$button,
-                plotOutput("clustannot_plots", height = "100%", width = "100%")),
-        br(),
-        fillCol(flex = c(NA,0.01, 1),
-                clustannot_table_module$button,
-                br(),
-                dataTableOutput("clustannot_table", height = "100%", width = "100%"))
-        )
+fillCol(
+    flex = c(1.5,0.05,1),
+    moduleWidget(clustannot_plots_module, outputFunc="plotlyOutput"),
+    br(),
+    moduleWidget(clustannot_table_module, outputFunc="dataTableOutput")
+)
 
 ```
 
-> A functional annotation plot for the clusters of the heatmap. Users can check more detailed annotation scores in the table below.
+> **Cluster annotation.** Functional annotation for the gene clusters using **`r renderText(input$xann.refset)`**. **(a)** Top ranked annotation features (by correlation) for each gene cluster. Length of the bar corresponds to its average correlation. **(b)** Table of average correlation values of annotation features, for each gene cluster.
 
 
-### Bi-plot {data-height=800}
+### Phenotypes {data-height=800}
 
-```{r warnings=FALSE, message=FALSE, fig.width=6, fig.height=6}
-clustering_biplotFUNC <- reactive({
+```{r}
+
+clust_phenoplot.RENDER <- reactive({
+    ##if(!input$tsne.all) return(NULL)
+    require(RColorBrewer)
+   
+    ngs <- inputData()
+    req(ngs)
+    
+    ## get t-SNE positions
+    pos = ngs$tsne2d
+    Y <- ngs$Y[rownames(pos),,drop=FALSE]
+    pheno = colnames(Y)    
+    pheno <- grep("batch|sample|donor|repl",pheno,
+                  invert=TRUE, ignore.case=TRUE,value=TRUE)
+        
+    ## layout
+    par(mfrow = c(3,2), mar=c(0.3,0.7,2.8,0.7))
+    if(length(pheno)>=6) par(mfrow = c(4,3), mar=c(0.3,0.4,2.8,0.4)*0.8)
+    if(length(pheno)>=12) par(mfrow = c(5,4), mar=c(0.2,0.2,2.5,0.2)*0.8)
+    i=1    
+
+    cex1 <- 1.3*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
+    cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
+    cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
     
     require(RColorBrewer)
-    require(irlba)
-    
-    zx <- hm_filtered_matrix()$mat
-    if(is.null(zx) || nrow(zx)==0) return(NULL)
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    
-    group = ngs$Y[colnames(zx),"group"]
-    klr = rep(brewer.pal(8,"Set2"),10)[as.integer(factor(group))]
-    mx = zx
-    if(input$hm_group) {
-        mx = t(apply(zx,1,function(x) tapply(x,group,mean)))
-    }
-    mx = head(mx[order(-apply(mx,1,sd)),],50)
-    ##if(input$hm_rowscale) mx = t(scale(t(mx)))
-    mx = t(scale(t(mx)))
-    rownames(mx) = sub(".*:","",rownames(mx))
-    colnames(mx) = sub(".*:","",colnames(mx))    
-    par(mfrow=c(1,1), mar=c(4,4,2,2)*1, oma=c(1,1,1,1)*0 )
-    ##sv <- svd(mx,nv=2)  ## this one!
-    sv <- irlba(mx - rowMeans(mx),nv=2)  ## this one!
-    ##biplot( sv$v, sv$u)
-    rownames(sv$u) <- rownames(mx)
-    rownames(sv$v) <- colnames(mx)
-    biplot( sv$u, sv$v, cex=c(0.85, 0.8), expand=0.75,
-           ##xaxt='n', yaxt='n',
-           ##xlabs = c("PC1 (gene)","PC2 (gene)"),
-           ##ylabs = c("PC1 (sample)","PC2 (sample)"),
-           xlab = "PC1", ylab = "PC2")
-    ##title("PCA biplot",cex=1.1, line=4)
+    for(i in 1:min(20,length(pheno))) {
+
+        ## ------- set colors
+        colvar = factor(Y[,1])
+        colvar = factor(Y[,pheno[i]])
+        colvar[which(colvar %in% c(NA,""," ","NA","na"))] <- NA
+        colvar = factor(as.character(colvar))
+        klrpal = COLORS  
+        klr1 = klrpal[colvar]
+        klr1 = paste0(col2hex(klr1),"99")
+        jj = which(is.na(klr1))
+        if(length(jj)) klr1[jj] <- "#AAAAAA22"
+        tt = tolower(pheno[i])
+
+        ## ------- start plot
+        plot( pos[,], pch=19, cex=cex1, col=klr1,
+             fg = gray(0.5), bty = "o", xaxt='n', yaxt='n',
+             xlab="tSNE1", ylab="tSNE2")
+        title( tt, cex.main=1.3, line=0.5, col="grey40")
+        if(input$clust_phenoplot_labelmode=="legend") {
+            legend("bottomright", legend=levels(colvar), fill=klrpal,
+                   cex=0.95, y.intersp=0.85, bg="white")
+        } else {
+            grp.pos <- apply(pos,2,function(x) tapply(x,colvar,mean,na.rm=TRUE))
+            grp.pos <- apply(pos,2,function(x) tapply(x,colvar,median,na.rm=TRUE))
+            nvar <- length(setdiff(colvar,NA))
+            if(nvar==1) {
+                grp.pos <- matrix(grp.pos,nrow=1)
+                rownames(grp.pos) <- setdiff(colvar,NA)[1]
+            }
+            labels = rownames(grp.pos)
+            boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
+            cex2 = 0.99*cex1**0.33
+            text( grp.pos, labels=boxes, cex=cex2*0.95, col="#CCCCCC99")
+            text( grp.pos, labels=labels, font=2, cex=cex2)
+        }
+    }    
 })
- 
-clustering_biplot_text="The <strong>bi-plot</strong> tab shows a bi-plot for the first two principal PCA components, highlighting the main principal directions and its features."
- 
-clustering_biplot_module <- plotModule(
-    id="clustering_biplot", func=clustering_biplotFUNC,
-    plotlib = "base", info.text = clustering_biplot_text,
-    pdf.width=10, pdf.height=10, res=75, title="PCA bi-plot"
+
+clust_phenoplot.opts = tagList(
+    radioButtons('clust_phenoplot_labelmode',"Label",c("groups","legend"),inline=TRUE)
 )
 
-output$clustering_biplot     <- clustering_biplot_module$render
-output$clustering_biplot_pdf <- clustering_biplot_module$pdf
+clust_phenoplot.module <- plotModule(
+    "clust_phenoplot", clust_phenoplot.RENDER, ## plotlib="base",
+    info.text = tagsub("<strong>Phenotype distribution.</strong> This figure visualizes the distribution of the available phenotype data. You can choose to put the group labels in the figure or as separate legend in the {Label} setting, in the plot {{settings}}"),
+    options = clust_phenoplot.opts,
+    pdf.width=6, pdf.height=9, res=85
+)
+output <- attachModule(output, clust_phenoplot.module)
 
-fillCol(flex = c(NA,1),
-        clustering_biplot_module$button,
-        plotOutput("clustering_biplot", height = "100%", width = "100%")
+fillCol(
+    moduleWidget(clust_phenoplot.module)
 )
 
 ```
 
-> A bi-plot for the first two principal PCA components to highlight the main principal directions and its features.
 
-`r if(!PRO.VERSION) {"<!---------------------------------"}`
+> **Phenotype distribution.** The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects.
 
 
-### Feature score {data-height=800}
+### Feature ranking
 
 ```{r warnings=FALSE, message=FALSE, fig.width=6, fig.height=6}
 require(plotly)
 
-clustering_feature_scoreFUNC <- reactive({
+clust_featureRank.RENDER <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
+
     features=X=NULL
     if(input$hm_level=="geneset") {
         features = COLLECTIONS
@@ -1130,28 +1254,42 @@ clustering_feature_scoreFUNC <- reactive({
         features = ngs$families
         X = ngs$X
     }
+
+    ## ------------ intersect features, set minimum set size
+    features <- lapply(features, function(f) intersect(f,rownames(X)))
+    features <- features[sapply(features,length) >=10 ]
     
-    ##zx = X[,]
-    zx = hm_filtered_matrix()$mat
-    if(is.null(zx)) return(NULL)
-    
-    X = X[,colnames(zx)]
-    jj = grep("group|sample|patient",colnames(ngs$Y),invert=TRUE)
-    Y = ngs$Y[colnames(X),jj,drop=FALSE]
+    ## ------------ Just to get current samples
+    samples = hm_filtered_matrix()$samples    
+    X = X[,samples]
+    cvar <- pgx.getCategoricalPhenotypes(ngs$Y)
+    cvar = grep("group|sample|patient|years|days|months|gender",
+              cvar,invert=TRUE,value=TRUE) ## no sample IDs
+    cvar
+    Y = ngs$Y[colnames(X),cvar,drop=FALSE]
     kk = which(apply(Y,2,function(y) length(unique(y))>1))
     Y = Y[,kk,drop=FALSE]
+    dim(Y)
     
-    ## Note: this takes a while. Maybe better precompute off-line...
+    ## ------------ Note: this takes a while. Maybe better precompute off-line...
     sdx = apply(X,1,sd)
     names(sdx) = rownames(X)
     S = matrix(NA, nrow=length(features), ncol=ncol(Y))
     rownames(S) = names(features)
     colnames(S) = colnames(Y)
+
+    ## ------------ Create a Progress object
+    progress <- shiny::Progress$new()
+    on.exit(progress$close())    
+    progress$set(message = "Calculating feature-set scores", value = 0)
     
     gene.level = TRUE
     gene.level = (input$hm_level=="gene")
     i=1
     for(i in 1:ncol(Y)) {
+
+        progress$inc(1/ncol(Y))
+
         grp = Y[,i]
         grp = as.character(grp)
         score = rep(NA, length(features))
@@ -1159,58 +1297,87 @@ clustering_feature_scoreFUNC <- reactive({
         j=1
         for(j in 1:length(features)) {
             pp = features[[j]]
-            if(gene.level)
+            if(gene.level) {
                 pp = filterProbes(ngs$genes, features[[j]])
+            }
             pp = head(pp[order(-sdx[pp])],1000)  ## how many top SD??
             pp = intersect(pp, rownames(X))
-            mx = t(apply(X[pp,,drop=FALSE], 1, function(x) tapply(x,grp,mean)))
-            ##D = as.matrix(dist(t(mx)))
-            if(nrow(mx)==0 || ncol(mx)==0) next
-            D = 1 - cor(mx, use="pairwise")
-            diag(D) = NA
+            X1 = X[pp,,drop=FALSE]
+            dim(X1)
+            ##cat("<clust_featureRank> dim(X1)=",dim(X1),"\n")
+            ##if( nrow(X1) 
+            
+            s1 = s2 = 1
+            method = input$clust_featureRank_method
+            if(method %in% c("correlation","meta")) {
+                mx = t(apply(X1, 1, function(x) tapply(x,grp,mean)))
+                if(nrow(mx)==0 || ncol(mx)==0) next
+                D = 1 - cor(mx, use="pairwise")
+                diag(D) = NA
+                s1 = mean(D,na.rm=TRUE)
+            }
+
+            if(method %in% c("p-value","meta")) {
+                jj  <- which(!is.na(grp))
+                design = model.matrix( ~ grp[jj])
+                suppressWarnings( fit <- eBayes(lmFit( X1[,jj], design)) )
+                suppressWarnings( suppressMessages( top <- topTable(fit) ))
+                ##s2 = mean(-log10(top$P.Value))  ## as score
+                s2 = mean(-log10(top$adj.P.Val),na.rm=TRUE)  ## as score
+            }
+            
             f = 1
             f <- (1 - exp(-(length(pp)/20)**2)) ## penalize smaller sets
-            score[j] = f * mean(D,na.rm=TRUE)
+            score[j] = f * (s1 * s2) ** ifelse(method=="meta",0.5,1)
+            
         }
         S[,i] = score
     }
+
     if(is.null(S) || nrow(S)==0 || ncol(S)==0 ) return(NULL)
-    
+
+    ## top scoring
+    S = tail( S[order(rowSums(S)),,drop=FALSE], 35)  
+
     par(mfrow=c(2,1), mar=c(1,5,3,3) )
-    par(mfrow=c(1,2), mar=c(10,5,10,2) ); frame()
+    par(mfrow=c(1,2), mar=c(5,5,3,2), oma=c(6,0,4,0)); frame()
     ## par(mfrow=c(1,1), mar=c(10,5,3,3) )
-    S = tail( S[order(rowSums(S)),,drop=FALSE], 35)  ## top scoring
     rownames(S) = substring(rownames(S),1,80)
     bpos = barplot( t(S), beside=FALSE, las=1,
                    cex.names=0.9, horiz=TRUE,
-                   ## names.arg = rep("",nrow(S)),
-                   xlab="cumulative score" )
-    ##text( bpos, -0.05, labels=rownames(S), cex=0.8, 
-    ##     adj=1, srt=60, xpd=TRUE)
+                   xlab="discriminant score" )
     ##title("feature-set score", cex=1.3)
     cc1 = grey.colors(ncol(Y))
     legend("bottomright",legend=colnames(Y), fill=cc1,
-           cex=0.9, y.intersp=0.85)
+           cex=0.8, y.intersp=0.8, inset=c(0,0.035), bg="white")
     
 })
 
-clustering_feature_score_module <- plotModule(
-    id="clustering_feature_score", func=clustering_feature_scoreFUNC,
-    plotlib = "base", info.text = "A feature score table",
-    pdf.width=6, pdf.height=10, res=75, title="Feature-set score"
+
+clust_featureRank_info = "Ranked discriminant score for top feature sets. The plot ranks the discriminitive power of the feature set (genes) as a cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family/set) can explain the variance in the data the best. <p>Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner."
+
+clust_featureRank.opts =  tagList(
+    tipify( radioButtons('clust_featureRank_method','Method:',
+                         choices=c("p-value","correlation","meta"),
+                         inline=TRUE),
+           "Choose ranking method: p-value based or correlation-based.",
+           placement="right", options = list(container = "body") )
 )
 
-output$clustering_feature_score     <- clustering_feature_score_module$render
-output$clustering_feature_score_pdf <- clustering_feature_score_module$pdf
-
-fillCol(flex = c(NA,1),
-        clustering_feature_score_module$button,
-        plotOutput("clustering_feature_score", height = "100%", width = "100%")
+clust_featureRank_module <- plotModule(
+    title="Feature-set ranking",
+    id="clust_featureRank", func=clust_featureRank.RENDER,
+    info.text = clust_featureRank_info,
+    options = clust_featureRank.opts,
+    pdf.width=8, pdf.height=10, res=72
 )
+output <- attachModule(output, clust_featureRank_module)
 
+require(shinycssloaders)
+fillCol(
+    moduleWidget(clust_featureRank_module)
+)
 
 ```
 
-> A feature score table.
-
-`r if(!PRO.VERSION) {"-------------------------------------->"}`
+> **Feature-set ranking.** Ranked discriminant score for top feature sets. The plot ranks the discriminative power of feature sets (or gene sets) as the cumulative discriminant score for all phenotype variables. 
