@@ -36,7 +36,7 @@ code {
 }
 
 .shiny-output-error-validation {
-        color: red;
+    color: red;
 }
 
 .form-control {
@@ -110,13 +110,13 @@ code {
 .shiny-input-panel {
 //    margin: -5px 0px -10px 0px;
 //    padding: -10px -10px -10px -10px;
-    font-color: #888;
+    font-color: #222;
     font-size: 0.8em;
 }
 
 .shiny-flow-layout {
     margin: 0px 0px -17px 0px;
-    font-color: #888;
+    font-color: #222;
     font-size: 0.9em;
 }
 
@@ -170,6 +170,7 @@ code {
 }
 
 .chart-wrapper .chart-notes {
+    color: #222;
     font-size: 13px;
     font-weight: 400;
     line-height: 1.3em;
