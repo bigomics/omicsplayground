@@ -1,14 +1,14 @@
-Profiling
+scProfiling
 ================================================================================
 
 Inputs {.sidebar data-width=250}
 --------------------------------------------------------------------------------
 
-<br> **Cell Profiling**. Visualize the distribution of (inferred)
+<br> **Single-Cell Profiling**. Visualize the distribution of (inferred)
 immune cell types, expressed genes and pathway activation.
 
-
 ```{r}
+htmlOutput("curdata9", class="current-data")
 ##----------------------------------------------------------------------
 ## More Info (pop up window)
 ##----------------------------------------------------------------------
@@ -36,52 +36,28 @@ observeEvent( input$pr_info, {
 })
 ```
 
-<br><br>
+<br><hr>
 
 ```{r}
-br();br();br();
 tipify( actionLink("pr_options", "Options", icon=icon("cog", lib = "glyphicon")),
        "Toggle advanced options", placement="top")
-
-br();br();
+br();
 conditionalPanel(
     "input.pr_options % 2 == 1",
     tagList(
         selectInput("pr_samplefilter","Filter samples:", choices=NULL, multiple=TRUE),
         radioButtons('pr_clustmethod',NULL,c("tsne","pca"), inline=TRUE, selected="tsne"),
+        checkboxInput("pr_group", "group", FALSE)
         ##radioButtons('pr_labelmode',NULL,c("label","legend"), inline=TRUE),
         ##checkboxInput("pr_toggleinfo", "toggle info", TRUE),
-        checkboxInput("pr_rowscale", "scale rows", TRUE)
+        ##checkboxInput("pr_rowscale", "scale rows", TRUE)
     )
 )
-
-## observeEvent(input$pr_showinfo, {
-##     if(input$pr_showinfo%%2) {
-##         toggleDropdownButton("pr_icpplot_info")
-##         toggleDropdownButton("pr_markersplot_info")
-##         toggleDropdownButton("pr_cytoplot_info")
-##         toggleDropdownButton("pr_cnaplot_info")
-##         toggleDropdownButton("pr_phenoplot_info")
-##         toggleDropdownButton("pr_xtabplot_info")
-##     }
-## })
-
-if(PRO.VERSION) {
-    conditionalPanel(
-        "input.pr_options % 2 == 1",
-        tagList(
-            checkboxInput("pr_group", "group", FALSE)
-            ##radioButtons('pr_binoptions','bin',c(0,10,20), inline=TRUE)
-            ##selectInput("pr_dcmethod","Method:", choices=NULL, multiple=FALSE)
-            ##selectInput("pr_refset", "Reference:", choices=NULL, width='80%')
-        )
-    )    
-}
 
 ## update filter choices upon change of data set 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     ## levels for sample filter
     levels <- getLevels(ngs$Y)
     updateSelectInput(session, "pr_samplefilter", choices=levels)
@@ -92,8 +68,6 @@ observe({
     if(is.null(ngs)) return(NULL)
 
     refsets = "LM22"
-    ##if(PRO.VERSION) refsets <- sort(names(ngs$deconv))
-    ##if(PRO.VERSION) updateSelectInput(session,"pr_refset",choices=refsets, selected="LM22")
     refsets <- sort(names(ngs$deconv))
     refsel <- grep("LM22",refsets,value=TRUE)
     updateSelectInput(session,"pr_refset",choices=refsets, selected=refsel)
@@ -104,9 +78,7 @@ observe({
     updateSelectInput(session, "pr_dcmethod", choices=dcmethods, selected=dcsel)
 })
 
-```
 
-```{r}
 pfGetClusterPositions <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
@@ -201,13 +173,14 @@ Col {.tabset data-width=625}
 
 getDeconvResults <- reactive({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
+    ##if(is.null(ngs)) return(NULL)
+
     method = "meta"
     method <- input$pr_dcmethod
     if(is.null(method)) return(NULL)
     
     refset = "LM22"
-    ##if(PRO.VERSION) refset <- input$pr_refset
     refset <- input$pr_refset
     if(!("deconv" %in% names(ngs))) return(NULL)
     results <- ngs$deconv[[refset]][[method]]
@@ -254,7 +227,7 @@ pr_icpplotFUNC <- reactive({
     score0 <- score
     pos <- pos[rownames(score),]
     
-    if(PRO.VERSION && input$pr_group && input$pr_view!="distribution") {
+    if(input$pr_group && input$pr_view!="distribution") {
         grp <- ngs$samples[rownames(score),"group"]
         pos <- apply(pos,2,function(x) tapply(x,grp,median))
         score <- apply(score,2,function(x) tapply(x,grp,mean))
@@ -281,8 +254,8 @@ pr_icpplotFUNC <- reactive({
 
     if(input$pr_view=="heatmap") {
 
-        if(PRO.VERSION) {            
-
+        ##if(PRO.VERSION) {
+        if(input$main_usermode >="expert") {            
             kk <- head(colnames(score)[order(-colMeans(score**2))],18)
             kk <- intersect(colnames(score),kk)
             all.scores <- ngs$deconv[["LM22"]]
@@ -359,7 +332,7 @@ pr_icpplotFUNC <- reactive({
         }
 
         refset <- input$pr_refset
-        mtext( refset, outer=TRUE, line=0.5, cex=1.2)
+        mtext(refset, outer=TRUE, line=0.5, cex=1.0)
         
     }
 })
@@ -376,18 +349,10 @@ pr_icp_module <- plotModule(
     title = "Cell type profiling (deconvolution)",
     info.text = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types.",
     options = pr_icp.opts,
-    pdf.width=8, pdf.height=8, res=95
+    pdf.width=8, pdf.height=8, res=85
 )
-output$pr_icpplot     <- pr_icp_module$render
-output$pr_icpplot_pdf <- pr_icp_module$pdf
-
-fillCol(flex = c(NA,1), 
-        pr_icp_module$buttons,
-        ##inputPanel(
-        ##    tipify(selectInput("pr_refset2",NULL, choices=NULL),"Reference set for deconvolution")
-        ##),
-        plotOutput("pr_icpplot", height = "100%", width = "100%")
-        )
+output <- attachModule(output, pr_icp_module)
+fillCol(moduleWidget(pr_icp_module))
 
 ```
 
@@ -481,7 +446,6 @@ pr_markersplotFUNC <- reactive({
     plevel="gene"
     plevel <- input$pr_level
     
-    ## plot(0, type="n")  %>% withSpinner(color="#0dc5c1")  
     par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,1,1)*0.5)
     par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,6,1)*0.5)
     ##par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2), oma=c(1,1,1,1)*0.5)
@@ -515,8 +479,7 @@ pr_markersplotFUNC <- reactive({
                    inset=c(-0.05,-0.0) )
         }
     }
-
-    mtext(term, outer=TRUE, cex=1.2, line=0.6)
+    mtext(term, outer=TRUE, cex=1.0, line=0.6)
    
 })
 
@@ -533,15 +496,7 @@ pr_markersplot_module <- plotModule(
     pdf.height = 10, pdf.width=10, res=95,
     options = pr_markersplot.opts
 )
-##output$pr_markersplot <- pr_markersplot_module$render
-##output$pr_markersplot_pdf <- pr_markersplot_module$pdf
 output <- attachModule(output, pr_markersplot_module)
-
-fillCol(height = "100%", flex = c(NA,1), 
-        pr_markersplot_module$buttons,
-        ##scatterD3Output("pcaplot", height = "100%")
-        plotOutput("pr_markersplot", height = "100%")
-        )
 
 observe({
     ngs <- inputData()
@@ -555,9 +510,12 @@ observe({
     updateSelectInput(session, "pr_features", choices=choices, selected=selected)
 })
 
+fillCol( moduleWidget(pr_markersplot_module))
+
 ```
 
-> **Distribution of marker genes.** T-SNE distribution plots of the top biomarkers for `r renderText(input$pr_features)` genes. Good biomarkers will show an expression pattern strongly correlated with some phenotype. The top genes with the highest standard deviation are shown. The red color shading is proportional to the (absolute) expression of the gene in corresponding samples. 
+> **T-SNE distribution of expression of marker genes.** Good biomarkers will show a distribution pattern strongly correlated with some phenotype. The top genes with the highest standard deviation are shown. The red color shading is proportional to the (absolute) expression of the gene in corresponding samples. 
+
 
 
 ### CNV
@@ -602,14 +560,9 @@ pr_cnaModule <- plotModule(
     title = "Inferred copy number variation (CNV)",
     pdf.width=10, pdf.height=8, res=110
 )
-##output$pr_cnaplot     <- pr_cnaModule$render
-##output$pr_cnaplot_pdf <- pr_cnaModule$pdf   ## name must be exactly same
 output <- attachModule(output, pr_cnaModule)
 
-fillCol(height = "100%", flex = c(NA,1), 
-        pr_cnaModule$buttons,
-        plotOutput("pr_cnaplot", height = "100%")
-        )
+fillCol(moduleWidget(pr_cnaModule))
 
 observe({
     ngs <- inputData()
@@ -622,6 +575,431 @@ observe({
 ```
 
 > **Inferred copy number variation (CNV)**. Genomic copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. The heatmap shows the inferred copy number of the samples versus chromosomes. The samples are annotated further with phenotype information on the right side of the figure.
+
+
+### iTALK
+    
+```{r message=FALSE, warning=FALSE, fig.width=4}
+
+italk_getResults <- reactive({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    require(iTALK)
+    db <- iTALK::database
+    db.genes <- unique(c(db$Ligand.ApprovedSymbol,db$Receptor.ApprovedSymbol))
+    length(db.genes)
+    ##genes <- intersect(genes, rownames(ngs$X))
+    pp <- rownames(ngs$X)
+    db.genes <- intersect(db.genes, toupper(ngs$genes[pp,"gene_name"]))
+
+    ## make groups
+    ph <- "cell.type"
+    ph <- input$italk_groups
+    ct <- as.character(ngs$samples[,ph])    
+    table(ct)
+    
+    ##data <- data.frame(cell_type=ct, t(log2(1 + ngs$counts[genes,])))
+    pp1 <- rownames(ngs$genes)[match(db.genes, ngs$genes$gene_name)]
+    gx <- t(ngs$X[pp1,])
+    colnames(gx) <- db.genes
+    gx0 <- apply(gx,2,function(x) tapply(x,ct,mean))
+
+    top_genes <- 50
+    top_genes <- input$italk_netview_topgenes
+    
+    data1 <- data.frame(cell_type=ct, gx)
+    dim(data1)
+    
+    ## find the ligand-receptor pairs from highly expressed genes
+    cell_col <- rep(c('#4a84ad','#4a1dc6','#e874bf','#b79eed', '#ff636b', '#52c63b','#9ef49a'),99)
+    ct.names = unique(as.character(data1$cell_type))
+    cell_col <- cell_col[1:length(ct.names)]
+    names(cell_col) <- ct.names
+    
+    comm_type='cytokine'
+    comm_type <- input$italk_category
+    
+    mode = "absolute"
+    ##mode <- input$italk_mode
+
+    if(mode=="absolute") {
+        highly_exprs_genes <- rawParse(data1, top_genes=50, stats='mean')    
+        res_cat <- FindLR(highly_exprs_genes, datatype='mean count', comm_type=comm_type)
+        res_cat <- res_cat[order(res_cat$cell_from_mean_exprs*res_cat$cell_to_mean_exprs,decreasing=T),]
+    } else {
+
+        contrast <- input$fa_contrast
+        group <- ngs$model.parameters$exp.matrix[,contrast]
+        data1$compare_groups <- group
+
+        data1 <- data1[which(data1$compare_groups!=0),]
+        
+        ## find DEGenes of regulatory T cells and NK cells between these 2 groups
+        deg_t  <- DEG(data %>% filter(cell_type=='CD4Tcells'),method='Wilcox',contrast=c(2,1))
+        deg_nk <- DEG(data %>% filter(cell_type=='NKcells'),method='Wilcox',contrast=c(2,1))
+
+        ## find significant ligand-receptor pairs and do the plotting
+        res_cat <- FindLR(deg_t,deg_nk,datatype='DEG',comm_type=comm_type)
+        res_cat <- res_cat[order(res_cat$cell_from_logFC*res_cat$cell_to_logFC,decreasing=T),]        
+    }
+
+    is.ligand = (colnames(gx0) %in% db[,"Ligand.ApprovedSymbol"])
+    is.receptor = (colnames(gx0) %in% db[,"Receptor.ApprovedSymbol"])
+    lr.type = c("L","R","LR")[ 1*is.ligand + 2*is.receptor]
+    names(lr.type) <- colnames(gx0)
+    table(lr.type)
+    res <- list( table=res_cat, exprs=gx0, cell_col=cell_col, lr.type=lr.type)
+    return(res)
+})
+
+italk_netview.RENDER <- reactive({
+    res <- italk_getResults()
+    if(is.null(res)) return(NULL)
+    res_cat <- res$table
+    ## Communication graph
+    NetView(res_cat, col=res$cell_col, vertex.label.cex=1, arrow.width=1, edge.max.width=5)
+})
+
+italk_LRPlot.RENDER <- reactive({
+    ## Circos plot
+    res <- italk_getResults()
+    if(is.null(res)) return(NULL)
+    res_cat <- res$table
+    ntop=25
+    ntop = as.integer(input$italk_LRPlot_ntop)
+    res_top <- head(res_cat,ntop)
+    LRPlot(res_top, datatype='mean count', cell_col=res$cell_col,
+           link.arr.lwd = head(res_cat$cell_from_mean_exprs,ntop),
+           link.arr.width = head(res_cat$cell_to_mean_exprs,ntop))
+    comm_type <- isolate(input$italk_category)
+    title((paste(comm_type,"genes     ")), line=-2)
+})
+
+italk_heatmap.RENDER <- reactive({
+    ## Expression heatmap
+    ngs <- inputData()
+    req(ngs)
+    res <- italk_getResults()
+    if(is.null(res)) return(NULL)
+        
+    res_cat <- res$table
+    ntop=50
+    ntop = as.integer(input$italk_LRPlot_ntop)
+    res_top <- head(res_cat,ntop)
+    genes_top <- sort(unique(c(res_top$ligand,res_top$receptor)))
+    gx0  <- t(res$exprs[,genes_top])
+
+    rownames(gx0) <- paste0(rownames(gx0)," (",res$lr.type[rownames(gx0)],")")
+
+    par(oma=c(3,2,3,0))
+    gx.heatmap(gx0, scale="none", mar=c(15,8),
+               cexRow=1, cexCol=1.3,
+               key=FALSE, keysize=0.6)
+})
+
+
+require(shinyBS)
+italk_netview_module <- plotModule(
+    "italk_netview", italk_netview.RENDER,
+    title = "NetView", label="a",
+    info.text = "The NetView plot visualizes the communication structure of ligand-receptor genes as a graph. The colors represent different types of cells as a structure and the width of edges represent the strength of the communication. Labels on the edges show exactly how many interactions exist between two types of cells. For further information, see iTALK R package (Wang et al., BioRxiv 2019).",
+    options = tagList(
+        tipify( selectInput("italk_netview_topgenes","top genes",
+                            choices=c(10,25,50,75,100),selected=50),
+               "Select the number of topgenes to search for ligand-receptor pairs.",
+               placement="top" )
+    ),
+    pdf.width=6, pdf.height=8, res=80
+)
+output <- attachModule(output, italk_netview_module)
+
+
+italk_LRPlot_module <- plotModule(
+    "italk_LRPlot", italk_LRPlot.RENDER,
+    title = "Ligand-Receptor plot", label="b",
+    info.text = "The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as
+a circle plot. The width of the arrow represents the expression level/log fold change of the ligand; while the width of arrow head represents the expression level/log fold change of the receptor. Different color and the type of the arrow stands for whether the ligand and/or receptor are upregulated or downregulated. For further information, see iTALK R package (Wang et al., BioRxiv 2019).",
+    options = tagList(
+        tipify( selectInput("italk_LRPlot_ntop","ntop pairs",
+                            choices=c(10,15,25,50,75,100),selected=50),
+               "Select the maximum number of LR pairs to include in the LR plot.",
+               placement="top")
+    ),
+    pdf.width=6, pdf.height=8, res=80
+)
+output <- attachModule(output, italk_LRPlot_module)
+
+
+italk_heatmap_module <- plotModule(
+    "italk_heatmap", italk_heatmap.RENDER,
+    title = "Expression heatmap", label="c",
+    info.text = "The heatmap visualizes the expression level/log fold change of the ligand/receptor genes. For further information, see iTALK R package (Wang et al., BioRxiv 2019).",
+    options = tagList(),
+    pdf.width=6, pdf.height=8, res=80
+)
+output <- attachModule(output, italk_heatmap_module)
+
+observe({
+    ngs <- inputData()
+    req(ngs)
+    ph <- colnames(ngs$samples)
+    updateSelectInput(session, "italk_groups", choices=ph)
+})
+
+fillCol(
+    flex = c(NA,1), 
+    inputPanel(
+        tipify( selectInput("italk_groups","Group by:", choices=""),
+               "Select the phenotype parameter to divide samples into groups.",
+               placement="right"),
+        tipify( selectInput("italk_category","Gene category:",
+                            choices=c('cytokine','growth factor','checkpoint','other')),
+               "Select the gene category for finding L/R pairs.",
+               placement="right")
+        ##radioButtons("italk_mode","Mode", c("absolute","differential"))
+    ),
+    fillRow(
+        flex = c(1,1,1),
+        moduleWidget(italk_netview_module),
+        moduleWidget(italk_LRPlot_module),
+        moduleWidget(italk_heatmap_module)
+    )
+)
+
+```
+
+> **Visualization of ligand-receptor interaction.** The iTALK R package is designed to profile and visualize the ligand-receptor mediated intercellular cross-talk signals from single-cell RNA sequencing data (scRNA-seq). iTALK uses a manually curated list of ligand-receptor gene pairs further classified into 4 categories based on the primary function of the ligand: cytokines/chemokines, immune checkpoint genes, growth factors, and others. See this [iTALK paper](https://www.biorxiv.org/content/10.1101/507871v1). **(a)** The NetView plot visualizes the communication structure of ligand-receptor genes as a graph. **(b)** The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as a circle plot. **(c)** The heatmap visualizes the expression level/log fold change of the ligand/receptor genes. 
+
+
+`r if(!DEV.VERSION) {"<!---------------------"}`
+
+### Trajectory (dev)
+
+```{r}
+
+monocle_getResults <- reactive({
+    require(monocle3)
+    
+    ngs <- inputData()
+    req(ngs)
+    ##if(is.null(ngs)) return(NULL)
+
+    # Create a Progress object
+    progress <- shiny::Progress$new()
+    on.exit(progress$close())    
+    progress$set(message = "Calculating trajectories", value = 0)
+    
+    ##------------------------------------------------------------
+    ## Step 0: Make Monocle object from ngs
+    ##------------------------------------------------------------
+    NGENES=2000
+    jj <- head(order(-apply(log(1+ngs$counts),1,sd)),NGENES)
+    ngs$counts <- ngs$counts[jj,]
+    ngs$genes  <- ngs$genes[rownames(ngs$counts),]
+    ngs$genes$gene_short_name <- ngs$genes$gene_name
+    ngs$samples$.cluster <- ngs$samples$cluster  ## save to avoid name clash
+    ngs$samples$cluster <- NULL
+    cds <- monocle3::new_cell_data_set(
+                         expression_data = ngs$counts,
+                         cell_metadata = ngs$samples,
+                         gene_metadata = ngs$genes)
+    
+    ##------------------------------------------------------------
+    ## Step 1: Normalize and pre-process the data
+    ##------------------------------------------------------------
+    progress$inc(0.1, detail = "preprocessing")
+    ##cds <- monocle3::preprocess_cds(cds, num_dim = 100, residual_model_formula_str = "~ batch")
+    cds <- monocle3::preprocess_cds(cds, num_dim = 40)
+    ##plot_pc_variance_explained(cds)
+    
+    ##------------------------------------------------------------
+    ## Step 2: Reduce the dimensions using UMAP
+    ##------------------------------------------------------------
+    progress$inc(0.1, detail = "reduce dimensions")
+    cds <- monocle3::reduce_dimension(cds)  ## default is UMAP
+    ##cds <- monocle3::reduce_dimension(cds, reduction_method="tSNE")
+
+    ##------------------------------------------------------------
+    ## Step 3: Cluster the cells
+    ##------------------------------------------------------------
+    progress$inc(0.2, detail = "clustering cells")
+    cds <- cluster_cells(cds, reduction_method="UMAP")
+    
+    ##------------------------------------------------------------
+    ## Step 4: Learn trajectory graph
+    ##------------------------------------------------------------
+    progress$inc(0.2, detail = "learning graph")
+    cds <- learn_graph(cds)
+
+    ##------------------------------------------------------------
+    ## Step 5: Order cells
+    ##------------------------------------------------------------
+    ##cds <- order_cells(cds)
+    ##plot_cells(cds)
+
+    ##------------------------------------------------------------
+    ## After: update selectors
+    ##------------------------------------------------------------
+    GENES = rownames(cds)
+    updateSelectInput(session, "monocle_plotgene", choices=GENES)
+    grps = setdiff(colnames(cds@colData),c("Size_Factor"))
+    updateSelectInput(session, "monocle_groupby", choices=grps,
+                      selected=".cluster" )
+
+    progress$inc(0.2, detail = "done")
+    
+    return(cds)
+})
+
+monocle_topMarkers <- reactive({
+
+
+})
+
+
+monocle_plotTopMarkers.RENDER <- reactive({
+
+    cds <- monocle_getResults()
+    require(monocle3)
+    req(cds,input$monocle_groupby)
+
+    ## Find marker genes expressed by each cluster
+    pheno1 = "cluster"
+    pheno1 = input$monocle_groupby
+    if(pheno1=="cluster") pheno1 <- ".cluster"
+    pheno1
+    marker_test_res = top_markers(cds, group_cells_by=pheno1, cores=4)
+
+    NTOP = 1
+    NTOP = 3
+    NTOP = as.integer(input$monocle_ntop)
+    top_specific_markers = marker_test_res %>%
+        filter(fraction_expressing >= 0.10) %>%
+        group_by(cell_group) %>%
+        top_n(NTOP, specificity)
+    ##top_n(1, marker_test_q_value)
+    ##top_n(1, pseudo_R2)
+
+    top_specific_marker_ids = unique(top_specific_markers %>% pull(gene_id))    
+    scale_max1 = 0.8 * log(max(assay(cds))+0.1)
+    ##par(mar=c(0,0,0,0))
+    g <- monocle3::plot_genes_by_group(cds,
+                                       top_specific_marker_ids,
+                                       group_cells_by = pheno1,
+                                       ##ordering_type="maximal_on_diag",
+                                       scale_max = scale_max1, max.size = 5)
+    ## g <- qplot(seq(0,4*pi,0.1), sin(seq(0,4*pi,0.1)))
+    g <- g + theme(plot.margin=unit(c(1,1,1,1)*0.5,"cm"))
+    return(g)
+})
+
+
+monocle_plotTrajectory.RENDER <- reactive({
+
+    require(monocle3)
+    cds <- monocle_getResults()
+    req(cds,input$monocle_groupby)    
+
+    pheno1 = ".cluster"
+    pheno1 = input$monocle_groupby
+    if(pheno1=="cluster") pheno1 <- ".cluster"    
+
+    if(pheno1=="pseudotime") {
+        root_cells <- input$monocle_rootcells
+        cds = order_cells(cds, root_cells=root_cells)
+    }
+    
+    size1 <- ifelse( ncol(cds) < 100, 2, 1)
+
+    g <- monocle3::plot_cells(cds,
+                              cell_size = size1,
+                              group_label_size = 3,
+                              color_cells_by = pheno1,
+                              label_groups_by_cluster=FALSE,
+                              label_leaves=FALSE,
+                              label_branch_points=FALSE)
+    g <- g + theme(plot.margin=unit(c(1,1,1,1)*0.5,"cm"))
+    return(g)
+})
+
+monocle_plotGene.RENDER <- reactive({
+
+    cds <- monocle_getResults()
+    req(cds, input$monocle_plotgene)   
+    require(monocle3)
+    genes = "CD14"
+    genes = input$monocle_plotgene
+    size1 <- ifelse( ncol(cds) < 100, 2, 1)
+    g <- monocle3::plot_cells(cds, genes=genes[1],
+                              cell_size=size1, 
+                              show_trajectory_graph=FALSE,
+                              label_cell_groups=FALSE)
+    g <- g + theme(plot.margin=unit(c(1,1,1,1)*0.5,"cm"))
+    return(g)
+})
+
+
+##------- plotTopMarkers module -------
+monocle_plotTopMarkers.MODULE <- plotModule(
+    "monocle_plotTopMarkers", monocle_plotTopMarkers.RENDER, 
+    title = "Top markers by group", label="a", 
+    info.text = "The heatmap visualizes the expression of group-specific markers.",
+    options = tagList(
+        selectInput("monocle_groupby","Group by:",choices=NULL),
+        selectInput("monocle_ntop","ntop:",choices=c(1,2,3,4,5,10,25),selected=5)
+    ),
+    pdf.width=5, pdf.height=8, res=80, plotlib="ggplot"
+)
+output <- attachModule(output, monocle_plotTopMarkers.MODULE)
+
+
+##------- plotTrajectory module -------
+monocle_plotTrajectory.opts = tagList()
+monocle_plotTrajectory.MODULE <- plotModule(
+    "monocle_plotTrajectory", monocle_plotTrajectory.RENDER,
+    title = "Single-cell trajectory", label="b",
+    info.text = "Single-cell trajectory analysis how cells choose between one of several possible end states. Reconstruction algorithms can robustly reveal branching trajectories, along with the genes that cells use to navigate these decisions.",
+    options = monocle_plotTrajectory.opts,
+    pdf.width=8, pdf.height=8, res=85, plotlib="ggplot"
+)
+output <- attachModule(output, monocle_plotTrajectory.MODULE)
+
+##------- plotGene module -------
+monocle_plotGene.opts = tagList(    
+    selectInput("monocle_plotgene","Gene:",choices=NULL)
+)
+monocle_plotGene.MODULE <- plotModule(
+    "monocle_plotGene", monocle_plotGene.RENDER,
+    title = "Gene expression", label="c",
+    info.text = ".",
+    options = monocle_plotGene.opts,
+    pdf.width=8, pdf.height=8, res=85, plotlib="ggplot"
+)
+output <- attachModule(output, monocle_plotGene.MODULE)
+
+
+##------- Page layout -------
+fillRow(flex = c(1.2,1),
+        fillCol(flex = c(NA,1),
+                monocle_plotTopMarkers.MODULE$buttons,
+                plotOutput('monocle_plotTopMarkers')
+                ),
+        fillCol(flex = c(NA,1,NA,1),
+                monocle_plotTrajectory.MODULE$buttons,
+                plotOutput('monocle_plotTrajectory'),
+                monocle_plotGene.MODULE$buttons,
+                plotOutput('monocle_plotGene')
+                )
+        )
+
+```
+
+> **Single-cell trajectory analysis**.  **(a)** Heatmap visualizing the expression of the group-specific top markers. **(b)** Single-cell trajectory analysis how cells choose between one of several possible end states. Reconstruction algorithms can robustly reveal branching trajectories, along with the genes that cells use to navigate these decisions. **(c)** Gene expression distribution for selected marker gene.
+
+
+`r if(!DEV.VERSION) {"----------------------->"}`
+
 
 
 Col {.tabset data-width=375}
@@ -730,8 +1108,7 @@ pr_phenoModule <- plotModule(
     options = pr_phenoplot.opts,
     pdf.width=5, pdf.height=8, res=90
 )
-output$pr_phenoplot <- pr_phenoModule$render
-output$pr_phenoplot_pdf <- pr_phenoModule$pdf
+output <- attachModule(output, pr_phenoModule)
 
 fillCol(flex = c(NA,1), 
         pr_phenoModule$buttons,
@@ -981,7 +1358,7 @@ observe({
 
 ```
 
-> **Proportion plot.** visualizes the interrelationships between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method.
+> **Proportion plot.** Plot visualizing the overlap between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method.
 
 
 ### CytoPlot

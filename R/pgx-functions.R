@@ -9,6 +9,32 @@ USER.GENETEST.METHODS <- NULL
 ##==========    Platform helper functions =====================================
 ##=============================================================================
 
+is.categorical <- function(x, max.ncat=20, min.ncat=2) {
+    is.factor <- any(class(x) %in% c("factor","character"))
+    is.factor
+    n.unique <- length(unique(setdiff(x,NA)))
+    n.notna  <- length(x[!is.na(x)])
+    is.id    <- (n.unique > 0.8*n.notna)
+    is.id
+    is.factor2 <- (is.factor & !is.id & n.unique>=min.ncat & n.unique<= max.ncat)
+    is.factor2
+}
+
+pgx.getCategoricalPhenotypes <-function(df, max.ncat=20, min.ncat=2) {
+    is.bad = 0
+    is.bad <- grepl("^sample|id$|replicate|ratio|year|month|day|age",tolower(colnames(df)))
+    ## is.factor <- sapply(sapply(data.frame(df), class), function(s) any(s %in% c("factor","character")))
+    is.factor <- apply(df, 2, is.categorical)
+    is.factor
+    n.unique <- apply(df,2,function(x) length(unique(setdiff(x,NA))))
+    n.notna  <- apply(df,2,function(x) length(x[!is.na(x)]))
+    is.id    <- (n.unique > 0.8*n.notna)
+    is.id
+    is.factor2 <- (!is.bad & is.factor & !is.id & n.unique>=min.ncat & n.unique<= max.ncat)
+    is.factor2
+    colnames(df)[which(is.factor2)]
+}
+
 pgx.getMetaFoldChangeMatrix <- function(ngs, what="meta")
 {
     fc0 = NULL
@@ -136,6 +162,7 @@ selectSamplesFromSelectedLevels <- function(Y, levels)
     rownames(Y)[which(sel==1)]
 }
 
+##fields=c("symbol","name","alias","map_location","summary")
 getMyGeneInfo <- function(eg, fields=c("symbol","name","alias","map_location","summary"))
 {
     require(mygene)
@@ -155,7 +182,7 @@ getMyGeneInfo <- function(eg, fields=c("symbol","name","alias","map_location","s
 }
 
 ## much faster and off-line
-getHSGeneInfo <- function(eg) {
+getHSGeneInfo <- function(eg, as.link=TRUE) {
     require(org.Hs.eg.db)
     require(KEGG.db)
     require(GO.db)
@@ -171,14 +198,19 @@ getHSGeneInfo <- function(eg) {
     info <- lapply(env.list, function(env) mget(eg, env=env, ifnotfound=NA)[[1]])
     names(info) <- names(env.list)
     gene.symbol <- toupper(mget(as.character(eg), env=org.Hs.egSYMBOL))[1]
-
+    info[["symbol"]] <- gene.symbol
+    
     ## create link to GeneCards
-    genecards.link = "<a href='https://www.genecards.org/cgi-bin/carddisp.pl?gene=GENE' target='_blank'>GENE</a>"
-    info[["symbol"]] <- gsub("GENE", gene.symbol, genecards.link)
+    if(as.link) {
+        genecards.link = "<a href='https://www.genecards.org/cgi-bin/carddisp.pl?gene=GENE' target='_blank'>GENE</a>"
+        info[["symbol"]] <- gsub("GENE", info[["symbol"]], genecards.link)
+    }
 
     ## create link to OMIM
-    omim.link = "<a href='https://www.omim.org/entry/OMIM' target='_blank'>OMIM</a>"
-    info[["OMIM"]] <- sapply(info[["OMIM"]], function(x) gsub("OMIM",x,omim.link))
+    if(as.link) {
+        omim.link = "<a href='https://www.omim.org/entry/OMIM' target='_blank'>OMIM</a>"
+        info[["OMIM"]] <- sapply(info[["OMIM"]], function(x) gsub("OMIM",x,omim.link))
+    }
 
     ## create link to KEGG
     kegg.link = "<a href='https://www.genome.jp/kegg-bin/show_pathway?map=hsaKEGGID&show_description=show' target='_blank'>KEGGNAME (KEGGID)</a>"
@@ -187,8 +219,10 @@ getHSGeneInfo <- function(eg) {
         kegg.id = setdiff(kegg.id,NA)
         if(length(kegg.id)>0) {
             kegg.name = mget(kegg.id, env=KEGGPATHID2NAME, ifnotfound=NA)[[1]]
-            if(!is.na(kegg.name)) {
+            if(!is.na(kegg.name) && as.link) {
                 info[["KEGG"]][[i]] <- gsub("KEGGNAME",kegg.name,gsub("KEGGID",kegg.id,kegg.link))
+            } else {
+                info[["KEGG"]][[i]] <- kegg.name
             }
         }
     }
@@ -210,7 +244,11 @@ getHSGeneInfo <- function(eg) {
             for(i in 1:length(info[["GO"]])) {
                 go_id = info[["GO"]][[i]][[1]]
                 go_term = Term(mget(go_id, env=GOTERM, ifnotfound=NA)[[1]])
-                info[["GO"]][[i]] = gsub("GOTERM",go_term,gsub("GOID",go_id,amigo.link))
+                if(as.link) {
+                    info[["GO"]][[i]] = gsub("GOTERM",go_term,gsub("GOID",go_id,amigo.link))
+                } else {
+                    info[["GO"]][[i]] = go_term
+                }
             }
         } else {
             info[["GO"]] <- NULL
@@ -860,9 +898,46 @@ breakstring <- function(s, n, nmax=999, force=FALSE, brk='\n') {
     return(b)
 }
 
+##s="breakstringBROKENbreakstringBROKENbreakstringBROKENbreakstringBROKEN";n=10
+##n=20;brk="\n"
+breakstring2 <- function(s, n, brk='\n', nmax=999) {
+    if(is.na(s)) return(NA)
+    s <- substring(as.character(s),1,nmax)
+    if(is.na(s)) return(NA)
+    if(nchar(s)<n) return(s)
+    a = ""
+    words <- paste0(strsplit(s, split=" ")[[1]]," ")
+    words
+    it =0
+    len1 = sum(sapply(words,nchar))
+    len1
+    while(len1>n && it<100 && length(words)>1) {
+        len = cumsum(sapply(words,nchar))
+        len
+        k = which(len>n)[1]
+        k
+        if(k==1) k=2
+        a <- paste0(a,paste0(words[1:(k-1)],collapse=""),brk)
+        a
+        words <- words[k:length(words)]
+        words
+        it = it+1
+        len1 = sum(sapply(words,nchar))
+        len1
+    }
+    a <- paste0(a,paste0(words,collapse=""),brk)
+    a <- sub(paste0(brk,"$"),"",gsub(paste0(" ",brk),brk,a))
+    return(a)
+}
+
 shortstring <- function(s, n, dots=1 ) {
+    sapply(s, shortstring0, n=n, dots=dots)
+}
+
+shortstring0 <- function(s, n, dots=1 ) {
     ##s0 = as.character(s)
     s0 <- iconv(as.character(s),to="UTF-8")
+    s0 <- gsub("[&].*[;]","",s0) ## HTML special garbage...
     jj <- which(nchar(s0)>n)
     if(length(jj)==0) return(s0)
     s <- s0[jj]
@@ -907,6 +982,7 @@ tidy.dataframe <- function(Y) {
     new.Y <- data.frame(new.Y)
     return(new.Y)
 }
+
 
 is.num <- function(y) {
     suppressWarnings(numy <- as.numeric(as.character(y)))

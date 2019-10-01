@@ -1,21 +1,28 @@
+cat("=========================== PGX INIT =====================\n")
+
 library(survival)
 library(knitr)
 library(shiny)
 library(shinyjs)
 library(shinyBS)
+library(shinyjqui)
 library(rmarkdown)
+library(shinycssloaders)
+library(dragulaR)
+
 library(scatterD3)
 library(fastcluster)
 library(ComplexHeatmap)
-ht_global_opt(fast_hclust = TRUE)
 library(plotly)
 library(Matrix)
 library(igraph)
 library(DT)
+library(ggplot2)
+## library(Cairo)
 
-##library(shinycssloaders)
-useShinyjs(rmd=TRUE)  ## to use click()
-
+useShinyjs(rmd=TRUE)  
+ht_global_opt(fast_hclust = TRUE)
+    
 source(file.path(RDIR,"gx-heatmap.r"))
 source(file.path(RDIR,"gx-plot.r"))
 source(file.path(RDIR,"gx-limma.r"))
@@ -33,10 +40,15 @@ source(file.path(RDIR,"ui-code.R"))
 source(file.path(RDIR,"gx-combat.r"))
 source(file.path(RDIR,"pgx-correct.R"))
 source(file.path(RDIR,"pgx-predict.R"))
+source(file.path(RDIR,"pgx-links.R"))
+source(file.path(RDIR,"pgx-modules.R"))
 
 ## you need to override this!!!
 PRO.VERSION=FALSE
 DEV.VERSION=FALSE
+
+## some custom code
+code.textInput
 
 ##-----------------------------------------------------------------------------
 ## Added GLOBAL info
@@ -234,4 +246,13 @@ pgx.initialize <- function(ngs) {
     ngs$gset.meta$outputs <- NULL
     ngs$gmt.all <- NULL
     return(ngs)
+}
+
+
+dbg <- function(... ) {
+    if(DEV.VERSION) {
+        ##msg = paste0(ifelse(is.null(module),"",paste0("<",module,"> ")),msg)
+        msg = sapply( list(...),paste,collapse=" ")
+        cat(paste0(sub("\n$","",paste(msg,collapse=" ")),"\n"))
+    }
 }

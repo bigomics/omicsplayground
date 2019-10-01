@@ -1,274 +1,305 @@
-output <- attachModule <- function(output, module) {
-    ## Attach render functions to shiny output. Works for both
-    ## tableModule and plotModule.
-    ##
-    ##
-    if(!"id" %in% names(module)) stop("module must have id")
-    output[[module$id]] <- module$render
-    if("csv" %in% names(module)) output[[paste0(module$id,"_csv")]] <- module$csv
-    if("pdf" %in% names(module)) output[[paste0(module$id,"_pdf")]] <- module$pdf
-    if("svg" %in% names(module)) output[[paste0(module$id,"_svg")]] <- module$svg
-    return(output)
-}
-##attachModule(enrich_fctable_module, "enrich_fctable")
-
-tableModule <- function(id, func, info.text="Info text",
-                        title="", label="",
-                        ##inputs=NULL, 
-                        options = NULL, info.text.width="250px",
-                        ##no.download = FALSE, just.info=FALSE,
-                        server=TRUE)
-{
-    require(shinyWidgets)
-    require(shinyBS)
-    info_id <- paste0(id,"_info")
-    options_id <- paste0(id,"_options")
-    pdf_id <- paste0(id,"_pdf")
-    csv_id <- paste0(id,"_csv")
-    
-    label1 = HTML(paste0("<span class='module-label' style='font-size:18px;font-weight:normal;padding-right:8px;'>",label,"</span>"))
-    label1 = HTML(paste0("<span class='module-label'>",label,"</span>"))
-    
-    
-    options.button <- ""
-    
-    if(!is.null(options) && length(options)>0) {
-        options.button <- dropdownButton(
-            ##tags$h3("Options"),
-            options,
-            ##br(),
-            ##dload,
-            circle = TRUE, size = "xs", ## status = "danger",
-            icon = icon("gear"), width = "250px",
-            inputId = options_id,
-            tooltip = tooltipOptions(title = "Options", placement = "right")
-        )
-    }
-    
-    buttons <- fillRow(
-        flex=c(NA,NA,NA,NA,1),
-        ##actionLink(options_id, label=NULL, icon = icon("info")),
-        label1,
-        dropdownButton(
-            tags$p(HTML(info.text)),
-            br(),
-            circle = TRUE, size = "xs", ## status = "danger",
-            icon = icon("info"), width = info.text.width,
-            inputId = info_id,
-            tooltip = tooltipOptions(title = "Info", placement = "right")
-        ),
-        options.button,
-        dropdownButton(
-            downloadButton(csv_id, "CSV"),
-            circle = TRUE, size = "xs", ## status = "danger",
-            icon = icon("download"), width = "80px",
-            tooltip = tooltipOptions(title = "Download", placement = "right")
-        ),
-        ##HTML(paste("<center><strong>",title,"</strong></center>"))
-        HTML(paste("<center>",title,"</center>"))
-        ##inputs
-        ##selectInput("sel123","number",1:10)
-    )
-    
-    TMPFILE = paste0(gsub("file","data",tempfile()),".csv")
-    TMPFILE
-    
-    render <- renderDataTable({
-        dt <- func()
-        write.csv(dt$x$data, file=TMPFILE, row.names=FALSE)
-        dt
-    }, server=server)
-    
-    ## render2 <- renderPlot({plot_array[[3]]()}, res=res)
-    download.csv <- downloadHandler(
-        filename = "data.csv",
-        content = function(file) file.copy(TMPFILE,file)        
-    )
-    ##box <- fillCol(flex=c(NA,1), button, render)
-    
-    module <- list(
-        id = id,
-        .func = func,
-        render = render,
-        ##render2 = render2,
-        csv = download.csv,
-        buttons = buttons
-    )
-    ## attr(module, "class") <- "ShinyModule"
-    return(module)
-}
+########################################################################
+## Plotting functions
+########################################################################
 
 
-plotModuleButtons <- function(id, text="Help text", title="",
-                              no.download = FALSE, just.info=FALSE,
-                              options=NULL, inputs=NULL, label="")
-{
-    require(shinyWidgets)
-    require(shinyBS)
-    info_id <- paste0(id,"_info")
-    options_id <- paste0(id,"_options")
-    pdf_id <- paste0(id,"_pdf")
-    csv_id <- paste0(id,"_csv")
-
-    if(is.null(inputs) || length(inputs)==0 ) inputs <- ""
-    options.button <- ""
-
-    if(!just.info && !is.null(options) && length(options)>0) {
-        options.button <- dropdownButton(
-            ##tags$h3("Options"),
-            options,
-            ##br(),
-            ##dload,
-            circle = TRUE, size = "xs", ## status = "danger",
-            icon = icon("gear"), width = "250px",
-            inputId = options_id,
-            tooltip = tooltipOptions(title = "Options", placement = "right")
-        )
-    }
-
-    dload.pdf <- downloadButton(pdf_id, "PDF")
-    dload.csv = NULL
-    ## dload.csv <- downloadButton(csv_id, "CSV")
-    
-    dload.button <- dropdownButton(
-        dload.pdf,
-        dload.csv,
-        circle = TRUE, size = "xs", ## status = "danger",
-        icon = icon("download"), width = "40px",
-        tooltip = tooltipOptions(title = "Download", placement = "right")
-    )
-    if(no.download) dload.button <- ""
-    ##label1 = label
-    label1 = HTML(paste0("<span style='font-size:18px;font-weight:normal;padding-right:8px;'>",label,"</span>"))
-    label1 = HTML(paste0("<span class='module-label'>",label,"</span>"))
-    
-    ## button layout
-    btn <- fillRow(
-        flex=c(NA,NA,NA,NA,1),
-        label1,
-        dropdownButton(
-            tags$p(HTML(text)),
-            br(),
-            circle = TRUE, size = "xs", ## status = "danger",
-            icon = icon("info"), width = "250px",
-            inputId = info_id,
-            tooltip = tooltipOptions(title = "Info", placement = "right")
-        ),
-        options.button,
-        dload.button,
-        ##HTML(paste("<center><strong>",title,"</strong></center>"))
-        HTML(paste("<center>",title,"</center>"))
-        ##br()
-        ##inputs
-        ##selectInput("sel123","number",1:10)
-    )
-    return(btn)
-}
-
-plotModule <- function(id, func, info.text="Info text", title="",
-                       inputs=NULL, options = NULL, plotlib = "base", label="",
-                       no.download = FALSE, just.info=FALSE, server=TRUE,
-                       pdf.width=8, pdf.height=6, pdf.pointsize=12, res=72)
-{
-    require(shinyWidgets)
-    require(shinyBS)
-    info_id <- paste0(id,"_info")
-    options_id <- paste0(id,"_options")
-    pdf_id <- paste0(id,"_pdf")
-    ##data_id <- paste0(id,"_data")
-    
-    buttons = plotModuleButtons(
-        id=id, text=info.text, title=title,
-        just.info=just.info, label = label,
-        inputs=inputs, options=options, no.download=no.download)
-    ##toggleDropdownButton(info_id)
-
-    TMPFILE = paste0(gsub("file","plot",tempfile()),".pdf")
-    TMPFILE
-
-    pdf(TMPFILE)
-    plot.new()
-    mtext("Error. Could not export PDF.", line=-8)
-    dev.off()
-    
-    if(plotlib == "plotly") {
-        render <- renderPlotly({
-            p <- func()
-            if(sum(!is.na(match(c("x","y","z"),names(p$x$attrs[[2]])))) < 3) {
-                export(p, TMPFILE)
-            }else{
-                pdf(TMPFILE)
-                plot.new()
-                mtext("Sorry, not possible to download 3D images as pdf yet...")
-                dev.off()
+## Override add_col_annotation to be able to suppress titles
+##
+##
+library(iheatmapr)
+setMethod(add_col_annotation,
+          c(p = "Iheatmap"),
+          function(p,
+                   annotation,
+                   colors = NULL,
+                   side = c("top","bottom"),
+                   size = 0.05,
+                   buffer = 0.015,
+                   inner_buffer = buffer / 2,
+                   show_title = TRUE,
+                   layout = list()){
+            
+            side <- match.arg(side)
+            # Convert to data.frame
+            x <- as.data.frame(annotation)
+            
+            for (i in seq_len(ncol(x))){
+              if (is.character(x[,i]) || is.factor(x[,i]) || is.logical(x[,i])){
+                if (!is.null(colors) && colnames(x)[i] %in% names(colors)){
+                  tmp_colors <- colors[[colnames(x)[i]]]
+                } else{
+                  tmp_colors <- pick_discrete_colors(as.factor(x[,i]), p)
+                }
+                p <- add_col_groups(p, 
+                                    x[,i],
+                                    name = colnames(x)[i],
+                                    title = colnames(x)[i],
+                                    colors = tmp_colors,
+                                    side = side,
+                                    size = size,
+                                    buffer = if (i == 1)
+                                      buffer else inner_buffer,
+                                    layout = layout,
+                                    show_title = show_title)
+              } else if (is.numeric(x[,i])){
+                if (!is.null(colors) && colnames(x)[i] %in% names(colors)){
+                  tmp_colors <- colors[[colnames(x)[i]]]
+                } else{
+                  tmp_colors <- pick_continuous_colors(zmid = 0, 
+                                                       zmin = min(x[,i]),
+                                                       zmax = max(x[,i]), p)
+                }
+                p <- add_col_signal(p, 
+                                    x[,i],
+                                    name = colnames(x)[i],
+                                    colors = tmp_colors,
+                                    side = side,
+                                    size = size,
+                                    buffer = if (i == 1)
+                                      buffer else inner_buffer,
+                                    layout = layout,
+                                    show_title = show_title)
+              } else{
+                stop("Input should be character, factor, logical, or numeric")
+              }
             }
-            # save(p,file = "/data/Projects/playground/R/p.rda")
-            # print(names(p))
-            # print(str(p))
-            # #print(names(p$layoutAttrs[[1]]))
-            # export(p, TMPFILE)
-            p
-        })
-    } else if(plotlib == "scatterD3") {
-        render <- renderScatterD3({
-            p <- func()
-            ##dev.copy2pdf(file=TMPFILE, width=pdf.width, height=pdf.height)
-            pdf(TMPFILE)
-            plot.new()
-            mtext("Please use SVG download directly from plot", line=-8)
-            dev.off()
             return(p)
-        })
-    } else if(plotlib == "visnetwork") {
-        render <- renderVisNetwork({
-            p <- func()
-            ## dev.copy2pdf(file=TMPFILE, width=pdf.width, height=pdf.height)
-            ## p <- p %>% visExport(type="pdf", name="network")
-            return(p)
-        })
-    } else if(plotlib %in% c("table","datatable")) {
-        render <- renderDataTable({
-            func()
-        }, server=server)
+          })
+
+
+##splitx="cell.family";top.mode="specific";row_annot_width=0.03;ntop=50
+pgx.splitHeatmap <- function(ngs, splitx=NULL, top.mode="specific",
+                             annot.pheno = NULL, row_annot_width=0.03,
+                             scale="row.center", ntop=50, colors=NULL )
+{    
+    require(iheatmapr)
+    
+    X <- log2(1+ngs$counts)    
+    X[is.na(X)] <- 0
+
+    splitx
+    if(!is.null(splitx) && splitx[1] %in% colnames(ngs$samples)) {
+        splitx <- ngs$samples[,splitx]
     } else {
-        ## Base plotting
-        render <- renderPlot({
-            func()
-            ##function() func()
-            if(1 && !is.null(func)) {
-                mtext("Created with BigOmics Playground",
-                      outer=TRUE, 
-                      ##side=3,line=seq(0,-80,-5), cex=2.6,
-                      side=1,line=0, cex=0.5,
-                      col="#AAAAAA",
-                      ##col="#DDDDDD11",
-                      xpd=NA)
-            }
-            ## for base plots use dev.copy2pdf
-            suppressWarnings( suppressMessages(
-                ##dev.copy2pdf(file=TMPFILE)
-                dev.copy2pdf(file=TMPFILE, width=pdf.width, height=pdf.height)
-            ))
-        }, res=res)
+        top.mode = "sd"
+        splitx <- NULL
     }
 
-    ## render2 <- renderPlot({plot_array[[3]]()}, res=res)
-    download.pdf <- downloadHandler(
-        filename = "plot.pdf",
-        content = function(file) file.copy(TMPFILE,file)        
-    )
-    ##box <- fillCol(flex=c(NA,1), button, render)
+    top.mode
+    if(top.mode == "pca") {
+        cX <- X - rowMeans(X,na.rm=TRUE)
+        dr = svd(cX, nu=5)$u
+        ntop1 = ceiling(ntop/ncol(dr))
+        jj = as.vector(apply(dr,2,function(x) head(order(-abs(x)),ntop1)))
+        ##jj = as.vector(apply(dr,2,function(x) head(order(-x),10)))
+        X1 <- X[jj,]
+        idx <- paste0("PC",as.vector(mapply(rep,1:ncol(dr),ntop1)))
+    } else if(top.mode == "specific") {
+        grpX <- tapply(colnames(X), splitx,function(k) rowMeans(X[,k,drop=FALSE],na.rm=TRUE))
+        grpX <- do.call(cbind, grpX)
+        cat("dim(grpX)=",dim(grpX),"\n")
+        cat("ntop=",ntop,"\n")
+        ntop1 = ceiling(ntop/ncol(grpX))
+        grpX <- grpX - rowMeans(grpX,na.rm=TRUE)  ## relative to others
+        jj = as.vector(apply(grpX,2,function(x) head(order(-x),ntop1)))
+        X1 <- X[jj,]
+        idx <- paste0("M",as.vector(mapply(rep,1:ncol(grpX),ntop1)))
+    } else {
+        X1 <- head(X[order(-apply(X,1,sd)),],ntop)
+        hc = fastcluster::hclust( as.dist(1 - cor(t(X1),use="pairwise")), method="ward.D2" )
+        idx = paste0("S",cutree(hc, 5))
+    }
+    table(idx)
+
+    ## ----- Get valid phenotype variables
+    if(is.null(annot.pheno)) {
+        annot.pheno <- grep("^sample|id$|replicate|ratio|year|month|day",
+                            tolower(colnames(ngs$samples)), invert=TRUE)
+        annot.pheno <- pgx.getCategoricalPhenotypes(ngs$samples, max.ncat=12, min.ncat=2)
+    }
+    annot.pheno <- intersect(annot.pheno, colnames(ngs$samples))
+    Y <- ngs$samples[,annot.pheno,drop=FALSE]
+    Y <- data.frame(apply(Y,2,as.character))
+    rownames(Y) <- rownames(ngs$samples)
+    colnames(Y)
+
+    sampletips = colnames(X1)
+    genetips   = rownames(X1)
     
-    module <- list(
-        id = id,
-        .func = func,
-        render = render,
-        ##render2 = render2,
-        pdf = download.pdf,
-        buttons = buttons
-    )
-    ## attr(module, "class") <- "ShinyModule"
-    return(module)
+    ## ----- call plotting function
+    plt <- pgx.splitHeatmapX(
+        X=X1, annot=Y,
+        xtips=genetips, ytips=sampletips,
+        idx=idx, splitx=splitx,
+        row_annot_width=row_annot_width,
+        scale=scale, colors=colors )
+
+    return(plt)
+}
+
+
+##X=head(ngs$gsetX,100);annot=ngs$samples
+pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL, 
+                              xtips=NULL, ytips=NULL,
+                              row_annot_width=0.03, scale="row.center",
+                              colors=NULL, label_size=11 )
+{
+    ## constants
+    col_annot_height = 0.021
+
+    ## --------- defaults
+    if(is.null(xtips)) xtips = colnames(X)
+    if(is.null(ytips)) ytips = rownames(X)
+    if(is.null(names(xtips))) names(xtips) = colnames(X)
+    if(is.null(names(ytips))) names(ytips) = rownames(X) 
+    
+    ## --------- scaling
+    if("row.center" %in% scale) X <- X - rowMeans(X, na.rm=TRUE)
+    if("row" %in% scale) X <- t(scale(t(X)))
+    if("col.center" %in% scale) X <- t(t(X) - colMeans(X, na.rm=TRUE))
+    if("col" %in% scale) X <- scale(X)
+    
+    ## ------ split Y-axis by factor
+    if(!is.null(idx)) {
+        hc.order <- function(x) {
+            hc <- fastcluster::hclust( as.dist(1 - cor(t(x),use="pairwise")), method="ward.D2" )
+            rownames(x)[hc$order]
+        }
+        kk  <- tapply(rownames(X),idx,function(k) c(hc.order(X[k,]),"   "))
+        idx <- tapply(idx,idx,function(k) c(k,NA))
+        idx = as.vector(unlist(idx))
+        kk <- unlist(kk)
+        kk  <- kk[1:(length(kk)-1)] ## remove trailing spacer
+        X <- rbind(X,"   " = 0)[kk,]
+    }
+    
+    ## ------ split X-axis by some group factor
+    if(!is.null(splitx)) {
+        xx <- tapply( colnames(X), splitx, function(i) X[,i,drop=FALSE] )
+    } else {
+        xx <- list("Samples"=X)
+    }
+    length(xx)
+    
+    ## ------- set colors
+    colors0 = rep("Set2",ncol(annot))
+    names(colors0) = colnames(annot)
+    if(!is.null(colors) && any(names(colors) %in% names(colors0))) {
+        for(v in intersect(names(colors), names(colors0))) colors0[[v]] <- colors[[v]]
+    }
+    
+    
+    grid_params <- setup_colorbar_grid(
+        nrows = 5, 
+        y_length = 0.16, 
+        y_spacing = 0.18, 
+        x_spacing = 0.2,
+        x_start = 1.1, 
+        y_start = 0.85)
+
+    ## maximize plot area
+    mar <- list(l = 50, r = 50, b = 100, t = 100, pad = 4)
+    mar <- list(l = 60, r = 0, b = 5, t = 0, pad = 3)
+
+    ex <- ncol(X)/ncol(xx[[1]])  ## expansion factor
+    hc <- hclust(as.dist(1 - cor(xx[[1]],use="pairwise")))
+    dd <- 0.08 * ex ## left dendrogram width
+
+    hovertemplate = "Row: %{y} <br>Column: %{x}<br>Value: %{z}<extra> </extra>"
+    tooltip = setup_tooltip_options(
+        prepend_row = "Row: ", prepend_col = "Column: ", 
+        prepend_value = "Value: ") 
+    
+    plt <- main_heatmap(
+        xx[[1]], name = "expression",
+        colorbar_grid = grid_params,
+        x = xtips[colnames(xx[[1]])],
+        y = ytips[rownames(xx[[1]])],
+        tooltip = tooltip,
+        ## hovertemplate = hovertemplate,
+        layout = list(margin = mar) ) %>%        
+        ##add_col_clustering() %>%
+        ##add_row_clustering() %>%
+        ##add_row_clustering(method="groups", groups=idx) %>%
+        add_col_dendro(hc, size = 0.06) %>%
+        ##add_row_dendro(hr, size = dd) %>%
+        add_row_title("Genes") %>%
+        add_col_title(names(xx)[1], side="top") %>%
+        add_col_annotation(
+            size = col_annot_height, buffer = 0.005, side="bottom",
+            colors = colors0, show_title=TRUE,
+            annot[colnames(xx[[1]]),,drop=FALSE])
+    
+    if(ncol(X)<40) {
+        plt <- plt %>% add_col_labels(side="bottom", size=0.15*ex) 
+    }
+
+    ##plt
+    length(xx)
+    dim(X)
+    
+    if(length(xx)>1) {
+        
+        sizes = sapply(xx, ncol) / ncol(xx[[1]])
+        sizes
+        i=5
+        i=2
+        for(i in 2:length(xx)) {
+            
+            x1 <- xx[[i]]
+            if(ncol(x1)==1) x1 <- cbind(x1,x1)
+            hc <- hclust(as.dist(1 - cor(x1,use="pairwise")))
+
+            plt <- plt %>%
+                add_main_heatmap(
+                    x1, , name = "expression",
+                    x = xtips[colnames(x1)],
+                    y = ytips[rownames(x1)],
+                    tooltip = tooltip,
+                    ## hovertemplate = hovertemplate,
+                    size=sizes[i], buffer = 0.007*ex) %>%
+                ##add_col_clustering() %>%
+                add_col_dendro(hc, size = 0.06) %>%
+                add_col_title(names(xx)[i], side="top") %>%
+                add_col_annotation(
+                    size = col_annot_height, buffer = 0.005, side="bottom",
+                    colors = colors0, show_title=FALSE,
+                    data.frame(annot[colnames(x1),,drop=FALSE]))
+            
+            if(ncol(X)<40) {
+                plt <- plt %>% add_col_labels(side="bottom", size=0.15*ex) 
+            }
+        }
+
+    }
+
+    ## ----------- row annotation (i.e. gene groups)
+    if(!is.null(idx) && !is.null(row_annot_width) && row_annot_width>0 ) {
+        plt <- add_row_annotation(
+            plt, data.frame("gene.group"=idx),
+            size = row_annot_width*ex)
+    }
+
+    ## ----------- add gene/geneset names
+    if(label_size > 0) {
+
+        gnames <- rownames(X)
+        gnames <- gsub("[&].*[;]","",gnames) ## HTML special garbage...
+        gnames <- gsub("^.*:","",gnames) ## strip prefix
+        gnames <- shortstring(gnames,25)  ## shorten
+        gnames <- sub("   ","-",gnames)  ## necessary otherwise strange error
+        ##gnames <- sub("   ","-------------",gnames)  ## necessary otherwise strange error
+        
+        maxlen <- max(sapply(gnames,nchar))
+        w = ifelse(maxlen >= 20, 0.45, 0.20)
+        s1 <- ifelse(maxlen >= 20, 9, 11)
+        
+        plt <- add_row_labels(
+            plt, side="right", ticktext = gnames,
+            size=w*ex, font=list(size=s1) ) 
+    }
+    
+    return(plt)
 }
 
 
@@ -378,11 +409,11 @@ pgx.plotGeneExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
         ylim <- c(gx.min,1.3*max(gx))
         bx = barplot( gx[], col=klr[], ylim=ylim,
                      ## offset = 0, ylim=c(gx.min,max(gx)),
-                     las=3, ylab=ylab, names.arg=NA)
-        if(nx<200 && names==TRUE) {
+                     las=3, ylab=ylab, names.arg=NA, border = NA)
+        if(nx<20 && names==TRUE) {
             y0 <- min(ylim) - 0.08*diff(ylim)
             text( bx[,1], y0, names(gx)[], adj=1, srt=srt,
-                 xpd=TRUE, cex=ifelse(nx>30,0.6,0.9) )
+                 xpd=TRUE, cex=ifelse(nx>10,0.6,0.9) )
         }
         title(main, cex.main=1.0)
 

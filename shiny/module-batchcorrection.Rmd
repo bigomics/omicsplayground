@@ -1,4 +1,4 @@
-Batch effects {data-orientation=cols}
+BatchCorrection {data-orientation=cols}
 ==========================================================================================
 
 Inputs {.sidebar data-width=250}

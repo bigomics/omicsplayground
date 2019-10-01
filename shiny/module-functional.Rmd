@@ -6,62 +6,63 @@ Inputs {.sidebar data-width=240}
 --------------------------------------------------------------------------------
 
 <br> **Functional Analysis**. Perform specialized functional analysis
-to understand biological functions including GO, KEGG, drug
-connectivity mapping, and ligand-receptor interaction analysis.
+to understand biological functions including GO, KEGG, and drug
+connectivity mapping.
 
 
 ```{r}
+htmlOutput("curdata6", class="current-data")
 tipify( actionLink("fa_info", "Info", icon = icon("info-circle") ),
        "Show more information about this module.")
 
-fa_infotext =
-    "This module performs specialized pathway and drug enrichment analysis.
+fa_infotext = paste("This module performs specialized pathway and drug enrichment analysis.
 
-<br><br><a href='kegg pathway'>KEGG</a> is a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. Within the KEGG pathway section, each pathway is scored for the selected contrast profile and reported in the table.  The scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap. The table is interactive; enabling user to sort on different variables. It is possible to visualize the pathway map by clicking on the pathway in the table, where genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Another important feature of the platform is that it provides an activation-heatmap including the comparison of activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities between profiles in certain pathways.
+<br><br>",a_KEGG," is a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. In the <strong>KEGG pathway</strong> panel, each pathway is scored for the selected contrast profile and reported in the table. A unique feature of the platform is that it provides an activation-heatmap comparing the activation levels of pathways across multiple contrast profiles. This facilitates to quickly see and detect the similarities between profiles in certain pathways.
 
+<br><br>In the <strong>GO</strong> panel, users can perform ",a_GO," (GO) analysis. GO defines functional concepts/classes and their relationships as a hierarchical graph. The GO database provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. All the features described under the KEGG pathway tab, such as scoring the gene sets and drawing an activation-heatmap, can be performed for the GO database under the GO graph tab. Instead of pathway maps, an annotated graph structure provided by the GO database is potted for every selected gene set.
 
-<br><br><a href='http://www.geneontology.org'>Gene Ontology</a> (GO) defines functional concepts/classes and their relationships as a hierarchical graph. The GO database provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. All the features described under the KEGG pathway tab, such as scoring the gene sets and drawing an activation-heatmap, can be performed for the GO database under the GO graph tab. Instead of pathway maps, an annotated graph structure provided by the GO database is potted for every selected gene set.
+<br><br> In the <a href='https://portals.broadinstitute.org/cmap/'>Drug Connectivity Map</a> panel, you can correlate your signature with more than 5000 known drug profiles from the L1000 database. An activation-heatmap compares drug activation profiles across multiple contrasts. This facilitates to quickly see and detect the similarities between contrasts for certain drugs.
 
-<br><br> The <a href='https://portals.broadinstitute.org/cmap/'>Drug Connectivity Map</a> correlates your signature with more than 5000 known drug profiles from the L1000 database, and shows the top N=10 similar and opposite profiles by running the GSEA algorithm on the contrast-drug profile correlation space. The activation-heatmap compares drug activation profiles across multiple contrasts. This facilitates to quickly see and detect the similarities between contrasts for certain drugs.
-"
+<br><br>For a tutorial on drug enrichment analysis, see the video below:<br><br>
+<center><iframe width='500' height='333' src='https://www.youtube.com/embed/WaBVz0a9AVg' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>
+")
 
 observeEvent( input$fa_info, {
     showModal(modalDialog(
         title = HTML("<strong>Functional Analysis Module</strong>"),
         HTML(fa_infotext),
-        easyClose = TRUE ))
+        easyClose = TRUE, size="l" ))
 })
 
 ```
 
-<br><br>
+<br><hr>
 
 ```{r}
+##---------------------------------------------------
+##--------- Default options panel -------------------
+##---------------------------------------------------
 tipify( selectInput("fa_contrast","Contrast:", choices=NULL),
        "Select the contrast corresponding to the comparison of interest.",
        placement="top")
 br();br();
 
-##actionLink("fa_options", "Show options ...")
-tipify( actionLink("fa_options", "Options", icon=icon("cog", lib = "glyphicon")),
-       "Show/hide advanced options", placement="top")
-br();br();
+##---------------------------------------------------
+##---------Advanced options panel -------------------
+##---------------------------------------------------
 conditionalPanel(
-    "input.fa_options % 2 == 1",
-    tagList(
-        checkboxInput('fa_normalize','normalize activation matrix',TRUE)
-    )
-)
-
-if(PRO.VERSION) {
+    "input.main_usermode == 'expert'",
+    tipify( actionLink("fa_options", "Options", icon=icon("cog", lib = "glyphicon")),
+           "Show/hide advanced options", placement="top"),
+    br(),
     conditionalPanel(
         "input.fa_options % 2 == 1",
         tagList(
+            checkboxInput('fa_normalize','normalize activation matrix',TRUE),
             checkboxInput('fa_filtertable','filter signficant (tables)',FALSE)
-            ##checkboxInput('dsea_showall','Show all (CMap)',FALSE)
         )
     )
-}
+)
 
 observe({
     ngs <- inputData()
@@ -175,7 +176,7 @@ getKeggTable <- reactive({
 getFilteredKeggTable <- reactive({
     df <- getKeggTable()
     do.filter = FALSE
-    if(PRO.VERSION) do.filter <- input$fa_filtertable
+    do.filter <- input$fa_filtertable
     if(do.filter) df <- df[which(df$q < 0.999),]
     return(df)
 })
@@ -433,7 +434,7 @@ kegg_actmap.RENDER <- reactive({
     if(NCOL(score)==1) score <- cbind(score,score)
     
     score <- score[head(order(-rowSums(score**2)),50),,drop=FALSE]  ## maximum nr of gene sets
-    score <- score[,head(order(-colSums(score**2)),25),drop=FALSE] ## max comparisons/FC    
+    score <- score[,head(order(-colSums(score**2)),25),drop=FALSE]  ## max comparisons/FC    
     score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
     d1 <- as.dist(1-cor(t(score),use="pairwise"))
     d2 <- as.dist(1-cor(score,use="pairwise"))
@@ -466,7 +467,6 @@ kegg_actmap.RENDER <- reactive({
     rownames(score2) <- substring(rownames(score2), 1, 40)
     ## heatmap(score2, scale="none", mar=c(8,20))
     bmar <- 1 + pmax(50 - nrow(score2),0)*0.3
-    bmar=1
     corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
              tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,3,0) )
     
@@ -483,27 +483,25 @@ kegg_actmap.opts = tagList()
 kegg_actmap_module <- plotModule(
     "kegg_actmap", kegg_actmap.RENDER,
     title = "Activation matrix", label="c",
-    info.text = "The KEGG activation matrix visualizes the activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
+    info.text = "The <strong>KEGG activation matrix</strong> visualizes the activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
     ##options = kegg_actmap.opts,
-    pdf.width=10, pdf.height=10, res=80
+    pdf.width=10, pdf.height=10, res=72
 )
-output$kegg_actmap     <- kegg_actmap_module$render
-output$kegg_actmap_pdf <- kegg_actmap_module$pdf
-    
+output <- attachModule(output, kegg_actmap_module)
+
 kegg_table_module <- tableModule(
     id = "kegg_table", label="b",
     func = kegg_table.RENDER,
     info.text = "<strong>Enrichment table.</strong> The table is interactive; enabling user to sort on different variables and select a pathway by clicking on the row in the table. The scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap.", 
+    info.width="350px",
     title = "Enrichment table"
 )
-##output$kegg_table     <- kegg_table_module$render
-##output$kegg_table_csv <- kegg_table_module$csv
 output <- attachModule(output, kegg_table_module)
 
-fillRow(flex = c(1.3,0.04,1), 
+fillRow(flex = c(1.3,0.04,1),
         fillCol(flex = c(NA,1.8,0.06,NA,1),
                 kegg_buttons1,
-                imageOutput("kegg_graph", width="100%", height="100%"),
+                imageOutput("kegg_graph", height="100%"),
                 br(),
                 kegg_table_module$buttons,
                 dataTableOutput('kegg_table')
@@ -511,14 +509,14 @@ fillRow(flex = c(1.3,0.04,1),
         br(),  ## horizontal space
         fillCol(flex = c(NA,1),
                 kegg_actmap_module$buttons,
-                plotOutput('kegg_actmap')
+                plotOutput('kegg_actmap', height = "100%")
                 )
         )
 
 
 ```
 
-> **KEGG pathways** are a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. **(a)** In the pathway map, genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. **(b)** Each pathway is scored for the selected contrast profile and reported in the table. **(c)** The activation matrix visualizes the activation levels of pathways across multiple contrast profiles. 
+> **KEGG pathway analysis.** KEGG pathways are a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. **(a)** Colored KEGG pathway map. Genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. **(b)** Table reporting (Fisher's exact) enrichment score for each pathway for the selected contrast profile. **(c)** Activation matrix visualizing activation levels of pathways across multiple contrast profiles. 
 
 
 ### GO graph
@@ -541,6 +539,7 @@ GO_network.RENDER <- reactive({
 
     comparison=1;methods=c("fisher","gsva","camera")
     comparison = input$fa_contrast
+    req(input$fa_contrast)
     if(is.null(comparison)) return(NULL)
     
     ##sub2 <- getSigGO(comparison, methods, nterms=250, ntop=25, ngs=ngs)
@@ -567,7 +566,6 @@ GO_network.RENDER <- reactive({
 
     ## remove root?
     removeroot=TRUE
-    ##if(PRO.VERSION) removeroot <-input$GO_removeroot
     if(removeroot) {
         sub2 <- induced_subgraph(sub2, which(V(sub2)$name!="all"))
         ##if("prune" %in% input$GO_options) pos = layout_with_fr(sub2)
@@ -579,19 +577,16 @@ GO_network.RENDER <- reactive({
     roots <- intersect(roots, V(sub2)$name)
     
     astree = TRUE
-    ##if(PRO.VERSION) astree <- input$GO_astree
     if(astree) {
         if("all" %in% V(sub2)$name) {
             pos = layout_as_tree(sub2, root="all", mode="all")
         } else {
             pos = layout_as_tree(sub2, root=roots, mode="all")
         }
-        ##pos = pos[,c(2,1)]
         pos[,2] = -pos[,2]
-        ##pos <- pos[,c(2,1)] ## flip horizontal
     }
 
-    ##if("color clusters" %in% input$GO_options) {
+    ## color clusters
     if(input$GO_colorclusters) {
         ##clust = cluster_louvain(as.undirected(sub2))$membership
         clust = cluster_louvain(as.undirected(go))$membership
@@ -648,11 +643,14 @@ GO_network.RENDER <- reactive({
 
 GO_table.RENDER <- reactive({
     ngs <- inputData()
+    req(ngs, input$fa_contrast)
+
     if(is.null(ngs)) return(NULL)
     if(is.null(ngs$meta.go)) return(NULL)
 
     comparison=1
     comparison = input$fa_contrast
+    ##req(input$fa_contrast)
     if(is.null(comparison)) return(NULL)
 
     go = ngs$meta.go$graph
@@ -696,10 +694,11 @@ GO_table.RENDER <- reactive({
 GO_actmap.RENDER <- reactive({
     require(igraph)
     ngs <- inputData()
+    req(ngs)
     if(is.null(ngs)) return(NULL)
 
     score = ngs$meta.go$pathscore
-    if(is.null(score)) return(NULL)
+    ##if(is.null(score)) return(NULL)
     go = ngs$meta.go$graph
     score[is.na(score)] = 0
     rownames(score) = V(go)[rownames(score)]$Term
@@ -762,12 +761,11 @@ GO_network.opts = tagList(
 GO_network_module <- plotModule(
     "GO_network", GO_network.RENDER, plotlib="visnetwork",
     title = "Gene Ontology graph", label="a",
-    info.text = GO_info1, no.download=TRUE,
+    info.text = GO_info1,
+    download.fmt = c("pdf","png"), ## no.download=TRUE,
     options = GO_network.opts,
     pdf.width=10, pdf.height=10, res=80
 )
-##output$GO_network     <- GO_network_module$render
-##output$GO_network_pdf <- GO_network_module$pdf
 output <- attachModule(output, GO_network_module)
 
 GO_actmap.opts = tagList()
@@ -776,10 +774,8 @@ GO_actmap_module <- plotModule(
     title = "Activation matrix", label="c",
     info.text = "The Gene Ontology (GO) activation matrix visualizes the activation of GO terms across conditions. From this figure, you can easily detect GO terms that are consistently up/down across conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
     options = GO_actmap.opts,
-    pdf.width=10, pdf.height=10, res=80
+    pdf.width=10, pdf.height=10, res=72
 )
-##output$GO_actmap     <- GO_actmap_module$render
-##output$GO_actmap_pdf <- GO_actmap_module$pdf
 output <- attachModule(output, GO_actmap_module)
 
 GO_table_module <- tableModule(
@@ -788,8 +784,6 @@ GO_table_module <- tableModule(
     info.text="<strong>GO score table.</strong> The scoring of a GO term is performed by considering the cumulative score of all terms from that term to the root node. That means that GO terms that are supported by higher level terms levels are preferentially scored.", 
     title = "GO score table"
 )
-##output$GO_table     <- GO_table_module$render
-##output$GO_table_csv <- GO_table_module$csv
 output <- attachModule(output, GO_table_module)
 
 fillRow(flex = c(1.2,1), 
@@ -801,13 +795,13 @@ fillRow(flex = c(1.2,1),
                 ),
         fillCol(flex = c(NA,1),
                 GO_actmap_module$buttons,                
-                plotOutput('GO_actmap')
+                plotOutput('GO_actmap', height = "100%")
                 )
         )
 
 ```
 
-> The **Gene Ontology (GO)** describes our knowledge of the biological domain of genes with respect to three aspects: molecular function, cellular component and biological process. **(a)** Enrichment of the GO terms represented as a hierarchical graph. **(b)** GO scoring table. The score of a GO term is the cumulative score of all higher order terms. **(c)** The activation matrix visualizes the activation levels of GO terms across multiple contrast profiles.
+> **Gene Ontology (GO) analysis.** GO describes our knowledge of the biological domain of genes with respect to three aspects: molecular function, cellular component and biological process. **(a)** Hierarchical graph representing the enrichment of the GO terms as a tree structure. **(b)** GO scoring table. The score of a GO term is the cumulative score of all higher order terms. **(c)** Activation matrix visualizing the enrichment of GO terms across multiple contrast profiles.
 
 
 ### Drug CMap
@@ -821,8 +815,11 @@ fillRow(flex = c(1.2,1),
 
 getDseaTable <- reactive({
     ngs <- inputData()
+    req(ngs)
     if(is.null(ngs)) return(NULL)
-    
+        
+    req(input$fa_contrast, input$dsea_monocombo)
+
     comparison=3
     names(ngs$gx.meta$meta)
     comparison = input$fa_contrast
@@ -870,10 +867,12 @@ getDseaTable <- reactive({
 
 
 dsea_enplots.RENDER <- reactive({
+
     ngs <- inputData()
     if(is.null(ngs$drugs)) return(NULL)
-    shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
-    
+    shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))        
+    req(input$fa_contrast, input$dsea_monocombo)
+
     comparison=1
     comparison = input$fa_contrast
     if(is.null(comparison)) return(NULL)
@@ -912,6 +911,9 @@ dsea_enplots.RENDER <- reactive({
 
 dsea_moaplot.RENDER <- reactive({
     ngs <- inputData()
+
+    req(ngs, input$fa_contrast, input$dsea_monocombo)
+    
     if(is.null(ngs$drugs)) return(NULL)
     shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
     
@@ -975,9 +977,11 @@ dsea_moaplot.RENDER <- reactive({
 
 dsea_table.RENDER <- reactive({
     ngs <- inputData()
+    req(ngs)
     if(is.null(ngs$drugs)) return(NULL)
   
     res <- getDseaTable()
+    req(res)
     res$moa <- shortstring(res$moa,50)
     res$target <- shortstring(res$target,50)
     
@@ -1008,6 +1012,7 @@ dsea_table.RENDER <- reactive({
 dsea_actmap.RENDER <- reactive({
     require(igraph)
     ngs <- inputData()
+    req(ngs, input$fa_contrast, input$dsea_monocombo)
     if(is.null(ngs)) return(NULL)
 
     shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
@@ -1085,8 +1090,6 @@ dsea_enplots_module <- plotModule(
     options = dsea_enplots.opts,
     pdf.width=11, pdf.height=7, res=72
 )
-##output$dsea_enplots     <- dsea_enplots_module$render
-##output$dsea_enplots_pdf <- dsea_enplots_module$pdf
 output <- attachModule(output, dsea_enplots_module)
 
 
@@ -1106,8 +1109,7 @@ dsea_moaplot_module <- plotModule(
 ##output$dsea_moaplot_pdf <- dsea_moaplot_module$pdf
 output <- attachModule(output, dsea_moaplot_module)
 
-
-##-------- DSEA Activation map plotting module
+##-------- Activation map plotting module
 dsea_actmap.opts = tagList()
 dsea_actmap_module <- plotModule(
     "dsea_actmap", dsea_actmap.RENDER,
@@ -1116,8 +1118,6 @@ dsea_actmap_module <- plotModule(
     options = dsea_actmap.opts,
     pdf.width=6, pdf.height=10, res=72
 )
-##output$dsea_actmap     <- dsea_actmap_module$render
-##output$dsea_actmap_pdf <- dsea_actmap_module$pdf
 output <- attachModule(output, dsea_actmap_module)
 
 ##--------buttons for table
@@ -1127,8 +1127,6 @@ dsea_table_module <- tableModule(
     info.text="Drug profile enrichment table. Enrichment is calculated by correlating your signature with more than 5000 known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.", 
     title = "Profile enrichment table"
 )
-##output$dsea_table     <- dsea_table_module$render
-##output$dsea_table_csv <- dsea_table_module$csv
 output <- attachModule(output, dsea_table_module)
 
 
@@ -1169,229 +1167,582 @@ observe({
 
 ```
 
-> The **Drug Connectivity Map** (Drug CMap) correlates your signature with more than 5000 known drug profiles from the L1000 database. **(a)** The figure shows the top N=10 similar and opposite profiles by running the GSEA algorithm on the contrast-drug profile correlation space. **(b)** The table summarizes the statistical results of the drug enrichment analysis. **(c)** The mechanism-of-action plot shows the top most frequent drug class (or target genes) having similar or opposite enrichment compared to the query signature. **(d)** The activation matrix visualizes the enrichment levels of drug signatures across multiple contrast profiles. 
-
-
-`r if(!PRO.VERSION) {"<!---------------------"}`
-
-### iTALK
-    
-```{r message=FALSE, warning=FALSE, fig.width=4}
-
-italk_getResults <- reactive({
-    ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
-    
-    require(iTALK)
-    db <- iTALK::database
-    db.genes <- unique(c(db$Ligand.ApprovedSymbol,db$Receptor.ApprovedSymbol))
-    length(db.genes)
-    ##genes <- intersect(genes, rownames(ngs$X))
-    pp <- rownames(ngs$X)
-    db.genes <- intersect(db.genes, toupper(ngs$genes[pp,"gene_name"]))
-
-    ## make groups
-    ph <- "cell.type"
-    ph <- input$italk_groups
-    ct <- as.character(ngs$samples[,ph])    
-    table(ct)
-    
-    ##data <- data.frame(cell_type=ct, t(log2(1 + ngs$counts[genes,])))
-    pp1 <- rownames(ngs$genes)[match(db.genes, ngs$genes$gene_name)]
-    gx <- t(ngs$X[pp1,])
-    colnames(gx) <- db.genes
-    gx0 <- apply(gx,2,function(x) tapply(x,ct,mean))
-
-    top_genes <- 50
-    top_genes <- input$italk_netview_topgenes
-    
-    data1 <- data.frame(cell_type=ct, gx)
-    dim(data1)
-    
-    ## find the ligand-receptor pairs from highly expressed genes
-    cell_col <- rep(c('#4a84ad','#4a1dc6','#e874bf','#b79eed', '#ff636b', '#52c63b','#9ef49a'),99)
-    ct.names = unique(as.character(data1$cell_type))
-    cell_col <- cell_col[1:length(ct.names)]
-    names(cell_col) <- ct.names
-    
-    comm_type='cytokine'
-    comm_type <- input$italk_category
-    
-    mode = "absolute"
-    ##mode <- input$italk_mode
-
-    if(mode=="absolute") {
-        highly_exprs_genes <- rawParse(data1, top_genes=50, stats='mean')    
-        res_cat <- FindLR(highly_exprs_genes, datatype='mean count', comm_type=comm_type)
-        res_cat <- res_cat[order(res_cat$cell_from_mean_exprs*res_cat$cell_to_mean_exprs,decreasing=T),]
-    } else {
-
-        contrast <- input$fa_contrast
-        group <- ngs$model.parameters$exp.matrix[,contrast]
-        data1$compare_groups <- group
-
-        data1 <- data1[which(data1$compare_groups!=0),]
-        
-        ## find DEGenes of regulatory T cells and NK cells between these 2 groups
-        deg_t  <- DEG(data %>% filter(cell_type=='CD4Tcells'),method='Wilcox',contrast=c(2,1))
-        deg_nk <- DEG(data %>% filter(cell_type=='NKcells'),method='Wilcox',contrast=c(2,1))
-
-        ## find significant ligand-receptor pairs and do the plotting
-        res_cat <- FindLR(deg_t,deg_nk,datatype='DEG',comm_type=comm_type)
-        res_cat <- res_cat[order(res_cat$cell_from_logFC*res_cat$cell_to_logFC,decreasing=T),]        
-    }
-
-    is.ligand = (colnames(gx0) %in% db[,"Ligand.ApprovedSymbol"])
-    is.receptor = (colnames(gx0) %in% db[,"Receptor.ApprovedSymbol"])
-    lr.type = c("L","R","LR")[ 1*is.ligand + 2*is.receptor]
-    names(lr.type) <- colnames(gx0)
-    table(lr.type)
-    res <- list( table=res_cat, exprs=gx0, cell_col=cell_col, lr.type=lr.type)
-    return(res)
-})
-
-italk_netview.RENDER <- reactive({
-    res <- italk_getResults()
-    if(is.null(res)) return(NULL)
-    res_cat <- res$table
-    ## Communication graph
-    NetView(res_cat, col=res$cell_col, vertex.label.cex=1, arrow.width=1, edge.max.width=5)
-})
-
-italk_LRPlot.RENDER <- reactive({
-    ## Circos plot
-    res <- italk_getResults()
-    if(is.null(res)) return(NULL)
-    res_cat <- res$table
-    ntop=25
-    ntop = as.integer(input$italk_LRPlot_ntop)
-    res_top <- head(res_cat,ntop)
-    LRPlot(res_top, datatype='mean count', cell_col=res$cell_col,
-           link.arr.lwd = head(res_cat$cell_from_mean_exprs,ntop),
-           link.arr.width = head(res_cat$cell_to_mean_exprs,ntop))
-    comm_type <- isolate(input$italk_category)
-    title((paste(comm_type,"genes     ")), line=-2)
-})
-
-italk_heatmap.RENDER <- reactive({
-    ## Expression heatmap
-    ngs <- inputData()
-    req(ngs)
-    res <- italk_getResults()
-    if(is.null(res)) return(NULL)
-        
-    res_cat <- res$table
-    ntop=50
-    ntop = as.integer(input$italk_LRPlot_ntop)
-    res_top <- head(res_cat,ntop)
-    genes_top <- sort(unique(c(res_top$ligand,res_top$receptor)))
-    gx0  <- t(res$exprs[,genes_top])
-
-    rownames(gx0) <- paste0(rownames(gx0)," (",res$lr.type[rownames(gx0)],")")
-
-    par(oma=c(3,2,3,0))
-    gx.heatmap(gx0, scale="none", mar=c(15,8),
-               cexRow=1, cexCol=1.3,
-               key=FALSE, keysize=0.6)
-})
-
-
-require(shinyBS)
-italk_netview_module <- plotModule(
-    "italk_netview", italk_netview.RENDER,
-    title = "NetView", label="a",
-    info.text = "The NetView plot visualizes the communication structure of ligand-receptor genes as a graph. The colors represent different types of cells as a structure and the width of edges represent the strength of the communication. Labels on the edges show exactly how many interactions exist between two types of cells. For further information, see iTALK R package (Wang et al., BioRxiv 2019).",
-    options = tagList(
-        tipify( selectInput("italk_netview_topgenes","top genes",
-                            choices=c(10,25,50,75,100),selected=50),
-               "Select the number of topgenes to search for ligand-receptor pairs.",
-               placement="top" )
-    ),
-    pdf.width=5, pdf.height=8, res=80
-)
-##output$italk_netview     <- italk_netview_module$render
-##output$italk_netview_pdf <- italk_netview_module$pdf
-output <- attachModule(output, italk_netview_module)
-
-
-italk_LRPlot_module <- plotModule(
-    "italk_LRPlot", italk_LRPlot.RENDER,
-    title = "Ligand-Receptor plot", label="b",
-    info.text = "The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as
-a circle plot. The width of the arrow represents the expression level/log fold change of the ligand; while the width of arrow head represents the expression level/log fold change of the receptor. Different color and the type of the arrow stands for whether the ligand and/or receptor are upregulated or downregulated. For further information, see iTALK R package (Wang et al., BioRxiv 2019).",
-    options = tagList(
-        tipify( selectInput("italk_LRPlot_ntop","ntop pairs",
-                            choices=c(10,15,20,25,30,40,50),selected=25),
-               "Select the maximum number of LR pairs to include in the LR plot.",
-               placement="top")
-    ),
-    pdf.width=5, pdf.height=8, res=80
-)
-output$italk_LRPlot     <- italk_LRPlot_module$render
-output$italk_LRPlot_pdf <- italk_LRPlot_module$pdf
-
-italk_heatmap_module <- plotModule(
-    "italk_heatmap", italk_heatmap.RENDER,
-    title = "Expression heatmap", label="c",
-    info.text = "The heatmap visualizes the expression level/log fold change of the ligand/receptor genes. For further information, see iTALK R package (Wang et al., BioRxiv 2019).",
-    options = tagList(),
-    pdf.width=5, pdf.height=8, res=80
-)
-output$italk_heatmap     <- italk_heatmap_module$render
-output$italk_heatmap_pdf <- italk_heatmap_module$pdf
-
-fillCol(flex = c(NA,1), 
-        inputPanel(
-            tipify( selectInput("italk_groups","Group by:", choices=""),
-                   "Select the phenotype parameter to divide samples into groups.",
-                   placement="right"),
-            tipify( selectInput("italk_category","Gene category:",
-                        choices=c('cytokine','growth factor','checkpoint','other')),
-                   "Select the gene category for finding L/R pairs.",
-                   placement="right")
-            ##radioButtons("italk_mode","Mode", c("absolute","differential"))
-        ),
-        fillRow(flex = c(1,1,1),
-                fillCol(flex = c(NA,1),
-                        italk_netview_module$buttons,
-                        plotOutput('italk_netview')
-                        ),
-                fillCol(flex = c(NA,1),
-                        italk_LRPlot_module$buttons,
-                        plotOutput('italk_LRPlot')
-                        ),
-                fillCol(flex = c(NA,1),
-                        italk_heatmap_module$buttons,
-                        plotOutput('italk_heatmap')
-                        )
-        )
-        )
-
-
-##bsTooltip("italk_groups","Select the parameter to divide in groups.", placement="right")
-##bsTooltip("italk_category","Select the gene category for finding L/R pairs.", placement="right")
-
-require(tippy)
-##tippy_this("italk_groups","Select the parameter to divide in groups.")
-##tippy_this("italk_category","Select the gene category for finding L/R pairs.")
-
-observe({
-    ngs <- inputData()
-    req(ngs)
-    ph <- colnames(ngs$samples)
-    updateSelectInput(session, "italk_groups", choices=ph)
-})
-
-```
-
-> **Visualization of ligand-receptor interaction with iTALK.** The iTALK R package is designed to profile and visualize the ligand-receptor mediated intercellular cross-talk signals. iTALK uses a manually curated list of ligand-receptor gene pairs further classified into 4 categories based on the primary function of the ligand: cytokines/chemokines, immune checkpoint genes, growth factors, and others. It was originally designed for single-cell RNA sequencing data (scRNA-seq). For further information see this [iTALK paper](https://www.biorxiv.org/content/10.1101/507871v1). **(a)** The NetView plot visualizes the communication structure of ligand-receptor genes as a graph. **(b)** The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as a circle plot. **(c)** The heatmap visualizes the expression level/log fold change of the ligand/receptor genes. 
-
-`r if(!PRO.VERSION) {"----------------------->"}`
+> **Drug Connectivity Map.** Drug CMap correlates your signature with more than 5000 known drug perturbation profiles from the L1000 database. **(a)** Figure showing the top N=10 similar and opposite profiles by running the GSEA algorithm on the contrast-drug profile correlation space. **(b)** Table summarizing the statistical results of the drug enrichment analysis. **(c)** Mechanism-of-action plot showing the top most frequent drug class (or target genes) having similar or opposite enrichment compared to the query signature. **(d)** Activation matrix visualizing enrichment levels of drug signatures across multiple contrast profiles. 
 
 
 `r if(!DEV.VERSION) {"<!---------------------"}`
 
-### Fire plot
+### WordCloud (dev)
+
+```{r message=FALSE, warning=FALSE}
+
+##---------------------------------------------------------------
+##------------- Functions for WordCloud ------------------------
+##---------------------------------------------------------------
+
+
+pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
+
+    if(!is.null(progress)) progress$set(message = "WordCloud", value = 0)
+    
+    ## get gset meta foldchange-matrix
+    S <- sapply( ngs$gset.meta$meta, function(x) x$meta.fx)
+    rownames(S) <- rownames(ngs$gset.meta$meta[[1]])
+    S <- S[order(-apply(S,1,sd)),]
+    S <- S[order(-rowMeans(S**2)),]
+
+    ## exclude down, GSE gene sets??????
+    S <- S[grep("dn|down|^gse",rownames(S),ignore.case=TRUE,invert=TRUE),]
+    
+    if(!is.null(progress)) progress$inc(0.2*pg.unit, detail="calculating word frequencies")
+    
+    ## Determine top most frequent terms
+    sname <- gsub(".*:","",tolower(rownames(S)))
+    sname <- gsub("b.cell","bcell",sname)
+    sname <- gsub("t.cell","tcell",sname)
+    words <- strsplit(sname,split="[-_ ]")    
+    names(words) <- rownames(S)
+    terms <- names(sort(-table(unlist(words))))
+    stopwords = strsplit(
+        "with int like strand tconv pid lee and or mouse dn small big human homo sapiens mus musculus drug early late hsa gse culture in the a g for line r up down events anti large targets tissue vitro process cells ctrl regulation processing common pathway months days white pre post process all mice from", split=" ")[[1]]
+    terms <- terms[which(!terms %in% stopwords)]
+    terms <- terms[sapply(terms,nchar)>2]
+    terms <- grep("[0-9]|^\\(",terms,invert=TRUE,value=TRUE)        
+    length(terms)
+    terms <- head(terms,1000)
+    
+    ## Calculate incidence matrix
+    words2 <- lapply(words, function(w) intersect(w, terms))
+    words2 <- words2[sapply(words2,length)>0]
+    idx <- lapply(1:length(words2), function(i) cbind(i,match(words2[[i]],terms)))
+    idx <- do.call(rbind, idx)
+    library(qlcMatrix)
+    W <- sparseMatrix(idx[,1], idx[,2], x=1)
+    dim(W)
+    rownames(W) = names(words2)
+    colnames(W) = terms
+    
+    ## filter on minimal size and maximum ratio
+    nn <- Matrix::colSums(W,na.rm=TRUE)
+    nr <- nn / nrow(W)
+    W <- W[,which(nn >= 10 & nr <= 0.10)]
+    dim(W)
+    
+    if(!is.null(progress)) progress$inc(0.3*pg.unit, detail="computing GSEA")        
+
+    ## compute for average contrast
+    require(fgsea)
+    rms.FC <- Matrix::rowMeans(S[rownames(W),]**2)**0.5
+    rms.FC <- rms.FC + 0.01*rnorm(length(rms.FC))
+    gmt <- apply(W,2,function(x) names(which(x!=0)))
+    res <- fgsea( gmt, rms.FC, nperm=1000 )
+    res$leadingEdge <- sapply(res$leadingEdge,paste,collapse="//")
+    ## res$leadingEdge <- NULL
+    colnames(res)[1] <- "word"
+    
+    ## --------- only significant and positive
+    ##res <- res[(res$padj < 0.20 & res$NES>0),]
+    res <- res[(res$padj < 1 & res$NES>0),]
+    res <- res[order(-abs(res$NES)),]
+    dim(res)
+
+    ## now compute significant terms for all contrasts
+    all.gsea <- list()
+    for(i in 1:ncol(S)) {
+        fc <- as.vector(S[rownames(W),i])
+        names(fc) <- rownames(W)
+        fc <- fc + 0.01*rnorm(length(fc))
+        gmt1 <- gmt[as.character(res$word)]
+        res1 <- fgsea( gmt1, fc, nperm=1000 )
+        res1$leadingEdge <- sapply(res1$leadingEdge,paste,collapse="//")
+        ## res$leadingEdge <- NULL
+        colnames(res1)[1] <- "word"
+        all.gsea[[colnames(S)[i]]] <- res1
+    }
+    all.gsea[["rms.FC"]] <- res
+    
+    if(!is.null(progress)) progress$inc(0.25*pg.unit, detail="clustering")
+
+    require(Rtsne)
+    library(umap)
+    pos1 = Rtsne(as.matrix(t(W)),perplexity=10,check_duplicates=FALSE)$Y
+    pos2 = umap(as.matrix(t(W)))$layout
+    rownames(pos1) = rownames(pos2) = colnames(W)
+    colnames(pos1) = colnames(pos2) = c("x","y")
+    pos1 = pos1[res$word,]
+    pos2 = pos2[res$word,]
+    
+    res = list(gsea=all.gsea, tsne=pos1, umap=pos2)
+    res
+}
+
+enrich_getWordFreqResults <- reactive({
+    ngs <- inputData()
+    req(ngs)
+    ##if(is.null(ngs)) return(NULL)
+    
+    ## ------------ Create a Progress object
+    progress <- shiny::Progress$new()
+    on.exit(progress$close())    
+
+    res <- pgx.calculateWordFreq(ngs, progress=progress, pg.unit=1)    
+    return(res)
+})
+
+
+enrich_getWordEnrichment <- reactive({
+
+    res <- enrich_getWordFreqResults()
+    req(res, input$fa_contrast)
+
+    contr=1
+    contr <- input$fa_contrast
+    gsea1 <- res$gsea[[ contr ]]
+    topFreq <- data.frame( gsea1, tsne=res$tsne, umap=res$umap)
+    
+    ## update selectors
+    words <- sort(res$word)
+    updateSelectInput(session, "enrich_wordcloud_exclude", choices=words)
+       
+    return(topFreq)
+})
+
+enrich_wordtsne.RENDER <- reactive({
+
+    topFreq <- enrich_getWordEnrichment()
+
+    df <- topFreq
+    klr = ifelse( df$padj<=0.05, "red", "grey")    
+    ps1 = 0.5 + 3*(1-df$padj)*(df$NES/max(df$NES))**3
+
+    ## label top 20 words
+    df$label <- rep(NA, nrow(df))
+    jj <- head(order(-abs(df$NES)),20)
+    df$label[jj] <- as.character(df$word[jj])
+    cex=1
+    ##cex=2.5
+    
+    require(ggrepel)
+    if(input$enrich_wordtsne_algo=="tsne") {
+        p <- ggplot(df, aes(tsne.x, tsne.y, label=label))
+    } else {
+        p <- ggplot(df, aes(umap.x, umap.y, label=label))
+    }
+    p <- p +
+        geom_point( size=cex*ps1, color=klr) +
+        geom_text_repel(size=4*cex) +
+        ##geom_text_repel(point.padding=NA, size=cex) +
+        ##scale_x_continuous( expand=c(0,0) ) +
+        ##scale_y_continuous( expand=c(0,0) ) +
+        ##coord_cartesian( xlim=c(0,1), ylim=c(0,1)) +
+        theme_bw() +
+        theme( axis.text.x=element_blank(),
+              axis.text.y=element_blank(),
+              axis.ticks=element_blank()) 
+
+    return(p)
+})
+
+enrich_wordtsne.PLOTLY <- reactive({
+
+    topFreq <- enrich_getWordEnrichment()
+    
+    df <- topFreq
+    klr = ifelse( df$padj<=0.05, "red", "grey")    
+    ps1 = 0.5 + 3*(1-df$padj)*(df$NES/max(df$NES))**3
+
+    ## label top 20 words
+    df$label <- rep("", nrow(df))
+    jj <- head(order(-abs(df$NES)),20)
+    df$label[jj] <- as.character(df$word[jj])
+    cex=1
+    ##cex=2.5
+    df$abs.NES <- abs(df$NES)**2
+    
+    require(ggrepel)
+    if(input$enrich_wordtsne_algo=="tsne") {
+        pos = cbind( x=df$tsne.x, y=df$tsne.y)
+    } else {
+        pos = cbind( x=df$umap.x, y=df$umap.y)
+    }
+    
+    plt <- plot_ly(df) %>%
+        add_markers(
+            type="scatter",
+            x = pos[,1], y = pos[,2], 
+            color = klr,
+            size = ~abs.NES,
+            ## sizes = c(5,100),
+            marker = list(
+                ##size = 16,
+                ##sizes=c(20,400),
+                line = list(color="grey20", width=0.6)
+            )) %>%
+        add_annotations(
+            x = pos[,1], y = pos[,2],
+            text = df$label,
+            font = list(size=12),
+            ##xref = "x", yref = "y",
+            showarrow = FALSE)
+
+    ax <- list(
+        title = "",
+        showticklabels = FALSE,
+        showgrid = FALSE
+    )
+
+    m <- list(
+        l = 0,
+        r = 0,
+        b = 0,
+        t = 0,
+        pad = 4
+    )
+
+    plt <- plt %>%
+        layout(
+            xaxis = ax,
+            yaxis = ax,
+            showlegend = FALSE,
+            margin = m
+        )
+    
+    return(plt)
+})
+
+enrich_wordcloud.RENDER <- reactive({
+
+    topFreq <- enrich_getWordEnrichment()
+    df <- topFreq
+    
+    excl.words <- ""
+    excl.words <- input$enrich_wordcloud_exclude
+    ##cat("<enrich_wordcloud> 0: excl.words=",excl.words,"\n")
+    ##cat("<enrich_wordcloud> 0: len.excl.words=",length(excl.words),"\n")
+    if(length(excl.words)>0) {
+        df <- df[ which(!df$word %in% excl.words), ]
+    }
+    
+    cex1 <- 1+round((5*rank(abs(df$NES))/nrow(df))**2)    
+    cex2 <- (-log10(df$padj))**1.0
+    size <- 10*sqrt(cex1 * cex2)
+    
+    library(wordcloud2)
+    library(rWordCloud)
+    ##wordcloud2( data.frame(word=df$word, size=size), size=1)
+    d3Cloud(text = df$word, size = size)    
+
+})
+
+enrich_keyword.RENDER <- reactive({
+
+    ngs <- inputData()
+    req(ngs)
+    ##if(is.null(ngs)) return(NULL)
+
+    topFreq <- enrich_getWordEnrichment()
+    
+    ## get gset meta foldchange-matrix
+    S <- sapply( ngs$gset.meta$meta, function(x) x$meta.fx)
+    S <- S + 0.0001*matrix(rnorm(length(S)),nrow(S),ncol(S))
+    rownames(S) <- rownames(ngs$gset.meta$meta[[1]])
+    
+    keyword = "lipid"
+    keyword = "apoptosis"
+    keyword = "cell.cycle"
+
+    ##keyword <- input$enrich_wordcloud_clicked_word ## wordcloud2
+    keyword <- input$d3word ## rWordcloud
+    sel.row <- input$wordcloud_enrichmentTable_rows_selected
+    keyword <- topFreq$word[sel.row]
+    
+    if( length(keyword)==0 || keyword[1] %in% c(NA,"") ) keyword <- "cell.cycle"
+    cat("<enrich_keyword> 3: keyword=",keyword,"\n")
+    
+    targets <- grep(keyword, rownames(S), ignore.case=TRUE, value=TRUE)
+    length(targets)
+    gmt <- list("set1"=targets)
+    names(gmt)[1] = keyword
+    
+    require(fgsea)
+    i=1
+    res <- c()
+    for(i in 1:ncol(S)) {
+        res1 <- fgsea( gmt, S[,i], nperm=400 )[,1:5]
+        res <- rbind(res, as.data.frame(res1)[1,])
+    }
+    rownames(res) <- colnames(S)
+    res$padj <- p.adjust( res$pval, method="fdr")
+    ##res <- res[order(-res$NES),]
+    
+    fx <- res$NES
+    pv <- res$pval
+    names(fx) <- names(pv) <- rownames(res)
+    top.up   <- names(sort(fx[which(fx>0)],decreasing=TRUE))
+    top.down <- names(sort(fx[which(fx<0)]))
+    top.q    <- names(pv)[order(pv,-abs(fx))]
+
+    par(mfrow=c(3,3), mar=c(0.2,3.2,3.2,0.2), mgp=c(1.8,0.7,0))
+    i=1
+    for(i in 1:9) {
+        if(i > length(top.q)) {
+            frame()
+        } else {
+            cmp <- top.q[i]
+            gsea.enplot(S[,cmp], targets, names=NULL, ##main=gs,
+                        main = paste0("#",toupper(keyword),"\n@",cmp),
+                        cex.main=0.9, len.main=80)
+            qv1 = formatC(res[cmp,"padj"],format="e", digits=2)
+            nes1 = formatC(res[cmp,"NES"],format="f", digits=2)
+            tt <- c(paste("NES=",nes1),paste("q=",qv1))
+            legend("topright", tt, bty="n",cex=0.85)
+        }
+    }
+    
+})
+
+wordcloud_enrichmentTable.RENDER <- reactive({    
+    df <- enrich_getWordEnrichment()
+    req(df)
+    df <- df[,c("word","pval","padj","ES","NES","size","tsne.x","tsne.y")]
+    cat("<wordcloud_enrichmentTable.RENDER> dim(df)=",dim(df),"\n")
+    
+    numeric.cols <- which(sapply(df, is.numeric))
+    numeric.cols
+    tbl <- DT::datatable( df, rownames=FALSE,
+                  class = 'compact cell-border stripe hover',                  
+                  extensions = c('Scroller'),
+                  selection=list(mode='single', target='row', selected=1),
+                  options=list(
+                      dom = 'lfrtip', 
+                      scrollX = TRUE, scrollY = 240,
+                      scroller=TRUE, deferRender=TRUE
+                  )  ## end of options.list 
+                  ) %>%
+        formatSignif(numeric.cols,4) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>% 
+            DT::formatStyle( "NES",
+                            background = color_from_middle( df[,"NES"], 'lightblue', '#f5aeae'),
+                            backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center') 
+    ##tbl <- DT::datatable(df)
+    return(tbl)
+})
+
+wordcloud_leadingEdgeTable.RENDER <- reactive({    
+
+    df <- enrich_getWordEnrichment()
+
+    sel.row=1
+    sel.row <- input$wordcloud_enrichmentTable_rows_selected
+    req(df, sel.row)
+    if(is.null(sel.row)) return(NULL)
+    
+    ee <- unlist(df$leadingEdge[sel.row])
+    ee <- strsplit(ee, split="//")[[1]]
+    
+    df <- data.frame("leading.edge"=ee, NES=0)    
+    numeric.cols <- which(sapply(df, is.numeric))
+    numeric.cols
+    
+    tbl <- DT::datatable( df, rownames=FALSE,
+                  class = 'compact cell-border stripe hover',                  
+                  extensions = c('Scroller'),
+                  selection=list(mode='single', target='row', selected=1),
+                  options=list(
+                      dom = 'lfrtip', 
+                      scrollX = TRUE, scrollY = 240,
+                      scroller=TRUE, deferRender=TRUE
+                  )  ## end of options.list 
+                  ) %>%
+        formatSignif(numeric.cols,4) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>% 
+            DT::formatStyle( "NES",
+                            background = color_from_middle( df[,"NES"], 'lightblue', '#f5aeae'),
+                            backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center') 
+    ##tbl <- DT::datatable(df)
+    return(tbl)
+})
+
+wordcloud_actmap.RENDER <- reactive({
+
+    cat("<wordcloud_actmap> called\n")
+    
+    ##df <- enrich_getWordEnrichment()
+    ##req(df)
+    res <- enrich_getWordFreqResults()   
+    score <- sapply(res$gsea, function(x) x$NES)
+    rownames(score) <- res$gsea[[1]]$word
+    
+    ## reduce score matrix
+    ##score = head(score[order(-rowSums(abs(score))),],40)
+    ##score = score[head(order(-rowSums(score**2)),50),] ## max number of terms
+    ##score = score[head(order(-score[,comparison]**2),50),,drop=FALSE] ## max terms
+    score = score[head(order(-rowMeans(score[,]**2)),50),,drop=FALSE] ## max terms    
+    score = score[,head(order(-colSums(score**2)),25),drop=FALSE] ## max comparisons/FC
+
+    cat("<wordcloud_actmap> dim(score)=",dim(score),"\n")
+    score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
+    d1 <- as.dist(1-cor(t(score),use="pairwise"))
+    d2 <- as.dist(1-cor(score,use="pairwise"))
+    d1[is.na(d1)] <- 1
+    d2[is.na(d2)] <- 1
+    jj=1;ii=1:nrow(score)
+    ii <- hclust(d1)$order
+    jj <- hclust(d2)$order
+    score <- score[ii,jj,drop=FALSE]
+    
+    cex2=1
+    colnames(score) = substring(colnames(score),1,30)
+    rownames(score) = substring(rownames(score),1,50)
+    if(ncol(score)>15) {
+        rownames(score) = substring(rownames(score),1,40)
+        cex2=0.85
+    }
+    if(ncol(score)>25) {
+        rownames(score) = substring(rownames(score),1,30)
+        colnames(score) <- rep("",ncol(score))
+        cex2=0.7
+    }
+
+    par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,2,0,1))
+    require(corrplot)
+    score2 <- score
+    score2 <- t( t(score2) / apply(abs(score2),2,max)) ## normalize rows???
+    score2 <- sign(score2) * abs(score2/max(abs(score2)))**3   ## fudging
+    bmar <- 0 + pmax((50 - nrow(score2))*0.25,0)
+    corrplot( score2, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
+             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,1,0) )
+    
+})    
+
+##---------------------------------------------------------------
+##------------- modules for WordCloud ---------------------------
+##---------------------------------------------------------------
+require(wordcloud2)
+require(rWordCloud)
+
+enrich_wordtsne_module <- plotModule(
+    id="enrich_wordtsne", label="c",
+    ##plotlib="ggplot", func=enrich_wordtsne.RENDER,
+    plotlib="plotly", func=enrich_wordtsne.PLOTLY, 
+    info.text = "<strong>Word t-SNE.</strong> T-SNE of keywords that were found in the title/description of gene sets. Keywords that are often found together in title/descriptions are placed close together in the t-SNE. For each keyword we computed enrichment using GSEA on the mean (absolute) enrichment profiles (averaged over all contrasts). Statistically significant gene sets (q<0.05) are colored in red. The sizes of the nodes are proportional to the normalized enrichment score (NES) of the keyword.",
+    options = tagList(
+        radioButtons("enrich_wordtsne_algo","Clustering algorithm:",
+                     choices=c("tsne","umap"),inline=TRUE)
+    ),
+    pdf.width=8, pdf.height=8, res=72, pdf.pointsize=13,
+    ##datacsv = enrich_getWordFreq,
+    title = "Word t-SNE"
+)
+output <- attachModule(output, enrich_wordtsne_module)
+
+enrich_wordcloud_opts = tagList(
+    selectInput("enrich_wordcloud_exclude","Exclude words:",
+                choices=NULL, multiple=TRUE)
+)
+
+enrich_wordcloud_module <- plotModule(
+    id="enrich_wordcloud", label="b",
+    func=enrich_wordcloud.RENDER, 
+    ##renderFunc="renderWordcloud2",
+    plotlib="htmlwidget", renderFunc="renderd3Cloud",
+    ##download.fmt = NULL,
+    info.text = "<strong>Word cloud.</strong> Word cloud of the most enriched keywords for the data set. Click on the figure to select a keyword for the 'Keyword enrichment analysis' chart. In the plot settings, users can exclude certain words from the figure.<br><br>Size of the words are relative to the normalized enrichment score (NES) from the GSEA computation. Keyword enrichment is computed by running GSEA on the mean (squared) enrichment profile (averaged over all contrasts). For each keyword, we defined the 'keyword set' as the collection of genesets that contain that keyword in the title/description.",
+    options = enrich_wordcloud_opts,
+    pdf.width=6, pdf.height=6, res=72,
+    title = "Word cloud"
+)
+output <- attachModule(output, enrich_wordcloud_module)
+
+enrich_keyword_info = "<strong>Keyword enrichment analysis.</strong> Computes enrichment of a selected keyword across all contrasts. Select a keyword by clicking a word in the 'Word cloud' plot.
+
+<br><br>Keyword enrichment is computed by running GSEA on the enrichment score profile for all contrasts. We defined the test set as the collection of genesets that contain the keyword in the title/description. Black vertical bars indicate the position of gene sets that contains the *keyword* in the ranked list of enrichment scores. The curve in green corresponds to the 'running statistic' of the keyword enrichment score. The more the green ES curve is shifted to the upper left of the graph, the more the keyword is enriched in the first group. Conversely, a shift of the green ES curve to the lower right, corresponds to keyword enrichment in the second group."
+
+enrich_keyword_opts = tagList( tipify(
+    ##textInput('enrich_keyword_keywords','Keyword:',"cell cycle"),
+    myTextInput('enrich_keyword_keywords','Keyword:',"cell cycle"),
+    "Paste a keyword such as `apoptosis`, `replication` or `cell cycle`.",
+    placement="top", options = list(container = "body"))
+    )
+
+## enrich_keyword_opts = textInput('enrich_keyword_keywords','Keyword:',"cell cycle")
+
+enrich_keyword_module <- plotModule(
+    id="enrich_keyword", label="a",
+    plotlib="base", func=enrich_keyword.RENDER,
+    info.text = enrich_keyword_info,
+    ## options = enrich_keyword_opts,
+    pdf.width=6, pdf.height=6, res=90,
+    title = "Enrichment plots"
+)
+output <- attachModule(output, enrich_keyword_module)
+
+##--------buttons for enrichment table
+wordcloud_enrichmentTable_module <- tableModule(
+    id = "wordcloud_enrichmentTable", label="e",
+    func = wordcloud_enrichmentTable.RENDER,
+    info.text="Keyword enrichment table.", 
+    title = "Enrichment table"
+)
+output <- attachModule(output, wordcloud_enrichmentTable_module)
+
+##--------buttons for leading edge table
+wordcloud_leadingEdgeTable_module <- tableModule(
+    id = "wordcloud_leadingEdgeTable", label="f",
+    func = wordcloud_leadingEdgeTable.RENDER,
+    info.text="Keyword leading edge table.", 
+    title = "Leading-edge table"
+)
+output <- attachModule(output, wordcloud_leadingEdgeTable_module)
+
+##-------- Activation map plotting module
+wordcloud_actmap.opts = tagList()
+wordcloud_actmap_module <- plotModule(
+    id="wordcloud_actmap", wordcloud_actmap.RENDER,
+    title = "Activation matrix", label="d",
+    info.text = "The <strong>Activation Matrix</strong> visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
+    options = wordcloud_actmap.opts,
+    pdf.width=6, pdf.height=10, res=72
+)
+output <- attachModule(output, wordcloud_actmap_module)
+
+##---------------------------------------------------------------
+##-------------- UI Layout for WordCloud ------------------------
+##---------------------------------------------------------------
+
+fillRow(
+    flex = c(3.6,1),
+    fillCol(
+        flex=c(1.1,0.08,1),
+        fillRow(
+            flex = c(1.2,0.05,1,0.05,1),
+            moduleWidget(enrich_keyword_module),
+            br(),
+            moduleWidget(enrich_wordcloud_module, outputFunc="d3CloudOutput"),
+            br(),
+            ##moduleWidget(enrich_wordtsne_module), 
+            moduleWidget(enrich_wordtsne_module, outputFunc="plotlyOutput")
+        ),
+        br(),
+        fillRow(
+            flex=c(1.3,0.08,1),
+            moduleWidget(wordcloud_enrichmentTable_module, outputFunc="dataTableOutput"),
+            br(),
+            moduleWidget(wordcloud_leadingEdgeTable_module, outputFunc="dataTableOutput")
+        )
+    ),
+    moduleWidget(wordcloud_actmap_module)
+)
+
+
+```   
+
+> **Keyword enrichment analysis.** **(c)** Enrichment plots for the top most significant contrasts. Black vertical bars indicate the position of gene sets, in the ranked enrichment scores, that contains the *keyword*. The green curve corresponds to 'running statistics' of the keyword enrichment score. **(b)** Colored word cloud. The size of the words are relative to the normalized enrichment score (NES) from the GSEA computation. **(c)** T-SNE plot of keywords extracted from the titles/descriptions of the genesets. **(d)** Activation matrix showing keyword enrichment across contrasts. **(e)** Keyword enrichment table for selected contrast. **(f)** Leading edge terms for selected keyword enrichment.
+
+
+### Fire plot (dev)
     
 ```{r message=FALSE, warning=FALSE, fig.width=4}
 fillRow(flex = c(2,1),
