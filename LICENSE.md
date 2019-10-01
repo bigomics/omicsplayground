@@ -1,28 +1,25 @@
-# License 
+# LICENSE 
 
-The Omics Playground is ....
+Omics Playground is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-# License of used third party packages/software/data
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+Affero General Public License for more details.
 
-Below we list used packages which require formal citation of their
-use.
+You should have received a copy of the GNU Affero General Public
+License along with this program.  If not,
+see <http://www.gnu.org/licenses/>.
 
-## Used R/Bioconductor packages 
-
-- Pathview (GPLv3). The pathview downloads and uses KEGG
-  data. Non-academic uses may require a KEGG
-  license agreement (details at http://www.kegg.jp/kegg/legal.html).
-
-  Luo, W. and Brouwer C., Pathview: an R/Bioconductor package for
-  pathway-based data integration and visualization. Bioinformatics,
-  2013, 29(14): 1830-1831, doi: 10.1093/bioinformatics/btt285
-
-
-## Used third party software
-
-- ...
+You can be released from the requirements of the license by purchasing
+a commercial license. Buying such a license is mandatory as soon as
+you develop commercial activities involving Omics Playground software
+without disclosing the source code of your own applications. These
+activities include: offering paid services to customers as an ASP,
+SaaS, professional consulting, or shipping Omics Playground with a
+closed source product.
 
 
-## Used databases
-
-- ...
