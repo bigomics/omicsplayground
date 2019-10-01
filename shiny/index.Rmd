@@ -57,13 +57,13 @@ if(0) {
 ## Define modules to include
 ##----------------------------------------------------------------------
 BASIC_MODULES <- c(
-    'module-intro.Rmd',
-    'module-datatable.Rmd',
+    'module-home.Rmd',
+    'module-dataview.Rmd',
     'module-clustering.Rmd',
     'module-expression.Rmd',
     'module-enrichment.Rmd',
     'module-functional.Rmd',
-    'module-intersect.Rmd')
+    'module-intersection.Rmd')
 
 EXPERT_MODULES <- c(
     'module-signature.Rmd',

@@ -537,8 +537,8 @@ cmp_scatterPlotMatrix_module <- plotModule(
     title = "Scatterplot matrix (pairs)",
     info.text = "For selected contrasts, the <strong>Pairs plot</strong> provides volcano plots and pairwise correlation plots between the profiles under the Pairs tab.",
     options = cmp_scatterPlotMatrix.opts,
-##    download.fmt = c("pdf","png","html"),  ## scatterGL does not work
-    download.fmt = c("pdf","html"),
+    ##  download.fmt = c("pdf","html"),  ## scatterGL does not work for PDF
+    download.fmt = c("html"),
     pdf.width=8, pdf.height=8, res=95
 )
 output <- attachModule(output, cmp_scatterPlotMatrix_module)
