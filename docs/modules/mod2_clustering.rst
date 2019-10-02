@@ -24,9 +24,9 @@ on the t-SNE plot.
     family of genes (or gene sets) can best discriminate the groups.
 
 
-Input slider
+Input panel
 --------------------------------------------------------------------------------
-Users can find more information by clicking ``Info`` in the input slider. 
+Users can find more information by clicking ``Info`` in the input panel. 
 It also contains settings for the analysis, where users can 
 specify the level analysis in the ``Level`` and select a family of features
 in the ``Features``. Furthermore, under the *Options*,
