@@ -17,22 +17,16 @@ obtained by PCA or tSNE algorithms.
 The **Phenotypes** panel on the right, shows the phenotype distribution as colors
 on the t-SNE plot.
 
-.. note::
-
-    EXPERT MODE ONLY: The **Feature ranking** panel computes a discriminant 
-    score for gene (or geneset) families. This allows to investigate what 
-    family of genes (or gene sets) can best discriminate the groups.
-
 
 Input panel
 --------------------------------------------------------------------------------
-Users can find more information by clicking ``Info`` in the input panel. 
-It also contains settings for the analysis, where users can 
-specify the level analysis in the ``Level`` and select a family of features
-in the ``Features``. Furthermore, under the *Options*,
-it is possible to filter the relevant 
-samples in the ``Filter samples`` and group the samples by a predefined 
-phenotype class in the ``grouped``.
+Users can find more information by clicking ``Info`` in the input
+panel. It also contains main settings for the analysis, where users
+can specify the feature level (gene or geneset) for the analysis in
+the ``Level`` and select a family of features in the
+``Features``. Furthermore, under the *Options*, it is possible to
+filter and select the samples in the ``Filter samples``, or group the
+samples by its predefined phenotype in the ``grouped``.
 
 .. figure:: figures/psc3.0.png
     :align: center
@@ -41,13 +35,15 @@ phenotype class in the ``grouped``.
 
 Heatmap
 --------------------------------------------------------------------------------
-In the **Heatmap** panel hierarchical clustering can be performed on gene level
-or gene set level expression in which for the latter, for each gene set (or pathway),
-an average expression is computed from the gene expression data using summary methods
-such as `GSVA <https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-14-7>`__
-and `ssGSEA <https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-14-7>`__. 
+In the **Heatmap** panel hierarchical clustering can be performed on
+gene level or gene set level expression. For the latter, for each gene
+set (or pathway), a single-sample enrichment value is computed from
+the gene expression data using summary methods such as `GSVA
+<https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-14-7>`__
+and `ssGSEA
+<https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-14-7>`__.
 
-Under the plot configuration *Settings*, users can split the samples by a phenotype
+Under the plot configuration settings, users can split the samples by a phenotype
 class (e.g., tissue, cell type, or gender) using the ``split`` by setting. 
 In addition, users can specify the top N = (50, 500) features to be used in the heatmap. 
 The ordering of top features is selected under ``top mode``. 
@@ -57,8 +53,10 @@ The criteria to select the top features are:
 * specific - features that are overexpressed in each phenotype class compared to the rest, or by
 * PCA - by principal components.
 
-Users can also choose between 'relative' or 'absolute' expression scale. 
-Under the ``CexCol`` and ``CexRow`` settings, it is also possible to adjust the cex 
+Users can also choose between 'relative' or 'absolute' expression
+scale.  Labels for row and columsn can be shown or hidden by selecting
+``Show row labels`` and ``Show column labels``. Under the ``CexCol``
+and ``CexRow`` settings, it is also possible to adjust the font sizes
 for the column and row labels.
 
 .. figure:: figures/psc3.1.0.png
@@ -75,13 +73,10 @@ panel on the right.
     :align: center
     :width: 100%
 
-
-iHeatmap
---------------------------------------------------------------------------------
-The **iHeatmap** is an interactive version of the **Heatmap** panel. 
-All figure configurations and settings are also controlled via 'Heatmap' panel.
-It has only one ``Show row labels`` local setting to display the row labels of 
-an interactive heatmap.
+The **iHeatmap** is an interactive version of the clustered heatmap
+and can be selected in the plot settings. Users are warned that for
+large datasets (such as single-cell RNA-seq data) this plot can become
+rather slow.
 
 .. figure:: figures/psc3.2.png
     :align: center
@@ -90,28 +85,27 @@ an interactive heatmap.
 
 Annotate clusters
 --------------------------------------------------------------------------------
-The top features in the heatmap are then divided 
-into five clusters based on their expression profiles. For each 
-cluster, the platform provides a functional annotation under the
-**Annotate cluster** section using more than 42 published reference 
-databases, including but not limited to well-known databases such as 
-`MSigDB <http://software.broadinstitute.org/gsea/msigdb/index.jsp>`__,
-`KEGG <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC102409/>`__, 
-and `GO <http://geneontology.org/>`__. 
-In the plot *Settings*, users can specify the level and reference 
-set to be used under the ``Reference level`` and ``Reference set``
-settings, respectively.
+The features in the heatmap are divided into clusters depending on the
+selected ``top mode`` in the heatmap panel settings. For each cluster,
+the **Annotate cluster** section provides a functional annotation
+using more than 42 published reference databases, including but not
+limited to well-known databases such as `MSigDB
+<http://software.broadinstitute.org/gsea/msigdb/index.jsp>`__, `KEGG
+<https://www.ncbi.nlm.nih.gov/pmc/articles/PMC102409/>`__, and `GO
+<http://geneontology.org/>`__.  In the plot settings, users can
+specify the level and reference set to be used under the ``Reference
+level`` and ``Reference set`` settings, respectively.
 
 .. figure:: figures/psc3.3.0.png
     :align: center
     :width: 30%
 
-The functional annotation for the clusters are displayed below, 
-with the highest ranking annotation features (by correlation) 
-displayed for each gene cluster. 
-Length of the bar corresponds to its average correlation.
-Furthermore, users can see the average correlation values of annotation
-features for each cluster.
+The functional annotation for the clusters are displayed below, with
+the highest ranking annotation features (by correlation) displayed for
+each gene cluster. Length of the bars corresponds to the average
+correlation of the cluster with the annotation term. In the table
+below the barplots, users can view the correlation values of
+annotation features for each cluster.
 
 .. figure:: figures/psc3.3.png
     :align: center
@@ -128,16 +122,17 @@ This plot shows the relationship (or similarity) between the samples for visual
 analytics, where similarity is visualized as proximity of the points. 
 Samples that are 'similar' will be placed close to each other.
 
-Users can customise the PCA/tSNE plot in the *Settings*, 
-including the ``color`` and ``shape`` of points using a phenotype class,
-choose t-SNE or PCA ``layout``, label the points, or display 2D and 3D
+Users can customise the PCA/tSNE plot in the plot settings, including
+the ``color`` and ``shape`` of points using a phenotype class, choose
+t-SNE or PCA ``layout``, label the points, or display 2D and 3D
 visualisation of the PCA/tSNE plot.
 
 .. figure:: figures/psc3.4.0.png
     :align: center
     :width: 30%
 
-Based on their configuration settings, users will obtain similar PCA/tSNE plots below.
+Based on their configuration settings, users will obtain a similar
+PCA/tSNE plot as below.
 
 .. figure:: figures/psc3.4.png
     :align: center
@@ -166,6 +161,13 @@ The output figure of the panel (phenotype distribution) is shown below.
 
 Feature ranking
 --------------------------------------------------------------------------------
+
+.. note::
+
+    EXPERT MODE ONLY: The **Feature ranking** panel computes a discriminant 
+    score for gene (or geneset) families. This allows to investigate what 
+    family of genes (or gene sets) can best discriminate the groups.
+
 The **Feature ranking** provides the ranked discriminant score for top feature sets.
 It ranks the discriminitive power of the feature set (genes or gene sets) as a 
 cumulative discriminant score for all phenotype variables. 
