@@ -405,13 +405,15 @@ cmp_scatterPlotMatrix.PLOT <- reactive({
     
         dimensions = lapply(colnames(df), function(a) list(label=a, values = df[,a]))
 
-        ## compute correlations and annotation positions
+        ## compute correlations 
         rho = cor(df)
         rho.text = paste("r=",as.vector(round(rho,digits=3)))
         n = ncol(df)
+
+        ## annotation positions (approximated by eye...)
         xann = 1.02*(as.vector(mapply(rep,seq(0,0.98,1/n),n)) + 0.05*1/n)
         ##xann = as.vector(mapply(rep,seq(0,1,1/(n-1)),n))
-        yann = 1.03*(as.vector(rep(seq(1,0.02,-1/n),n)) - 0.15*1/n)
+        yann = 1.06*(as.vector(rep(seq(1,0.02,-1/n),n)) - 0.15*1/n - 0.03)
         ##yann = as.vector(rep(seq(1,0.0,-1/(n-1)),n))
                 
         p <- plot_ly(df, source="splom", key=rownames(df) ) %>%
@@ -1025,11 +1027,13 @@ cmp_ctheatmap.PLOTLY <- reactive({
     dbg("cmp_ctheatmap.PLOTLY:: 5")
 
     bluered.pal <- colorRampPalette(colors = c("royalblue3","grey90","indianred3"))
-    
+    cellnote <- NULL
+    if(input$cmp_ctheatmap_showrho) cellnote <- R
+
     plt <- heatmaply(
-        R, margins = c(250, 250, NA, 0),
+        R, margins = c(250, 200, NA, 0),
         ## k_col = 5, k_row = 5,
-        cellnote = R, cellnote_size = 11,
+        cellnote = cellnote, cellnote_size = 11,
         cellnote_textposition = "middle center", 
         colors = bluered.pal,
         limits = c(-1,1))        
@@ -1040,6 +1044,8 @@ cmp_ctheatmap.PLOTLY <- reactive({
 
 
 cmp_ctheatmap.opts = tagList(
+    tipify( checkboxInput('cmp_ctheatmap_showrho', "show correlation", TRUE),
+           "Show correlation values in cells."),
     tipify( checkboxInput('cmp_ctheatmap_allfc', "show all contrasts", TRUE),
            "Show all contrasts or just the selected ones."),
     ##tipify( checkboxInput('cmp_ctheatmap_fixed', "fix heatmap", FALSE),

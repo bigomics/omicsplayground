@@ -10,7 +10,9 @@ if(0) {
 }
 
 ##nsmooth=80;downsample=10
-pgx.inferCNV <- function(ngs, nsmooth=40, downsample=10) {
+##load("../pgx/tcga-prad-gx.pgx")
+refgroup=NULL
+pgx.inferCNV <- function(ngs, refgroup=NULL, progress=NULL ) {
 
     ## InferCNV: Inferring copy number alterations from tumor single
     ## cell RNA-Seq data
@@ -20,13 +22,155 @@ pgx.inferCNV <- function(ngs, nsmooth=40, downsample=10) {
     ## BiocManager::install("infercnv")
     ##devtools::install_github("broadinstitute/infercnv", ref="RELEASE_3_9")
     require(infercnv)
-
-    ## fill me...
+    require(org.Hs.eg.db)
     
+    symbol <- as.vector(as.list(org.Hs.egSYMBOL))
+    chrloc <- as.list(org.Hs.egCHRLOC)
+    chr <- as.vector(sapply(chrloc,function(x) names(x)[1]))
+    pos <- abs(as.integer(as.vector(sapply(chrloc,function(x) x[1]))))
+    chr[sapply(chr,is.null)] <- NA
+    chr <- as.character(unlist(chr))
+    chr <- chr[match(ngs$genes$gene_name,symbol)]
+    pos <- pos[match(ngs$genes$gene_name,symbol)]
+    genes <- data.frame(chr = paste0("chr",chr),
+                        start=pos-1000,
+                        stop=pos-1000) ## fake start/stop
+    rownames(genes) <- ngs$genes$gene_name
+    head(genes)
+
+    ## filter known genes
+    jj <- which( genes$chr %in% paste0("chr",c(1:22,"X","Y")) &
+                 !is.na(genes$start) & !is.na(genes$stop) )
+    length(jj)
+    genes <- genes[jj,]
+    
+    ## prepare data objects
+    gg <- intersect(rownames(genes),rownames(ngs$counts))
+    length(gg)
+    data = ngs$counts[gg,]
+    genes = genes[gg,]
+    annots = ngs$samples[,"group",drop=FALSE]
+
+    if(FALSE && is.null(refgroup)) {
+        ## if no reference group is given, we create a reference by
+        ## random sampling of genes.
+        ##
+        ##        
+        ref = t(apply(data, 1, function(x) sample(x,50,replace=TRUE)))
+        dim(ref)
+        colnames(ref) <- paste0("random.",1:ncol(ref))
+        data = cbind(data, ref)
+        annots = matrix(c(annots[,1], rep("random",ncol(ref))),ncol=1)
+        rownames(annots) = colnames(data)
+        colnames(annots) = "group"
+        refgroup = c("random")
+    }
+
+    ## take out tiny groups
+    selgrp <- names(which(table(annots[,1]) >= 2))
+    kk <- which(annots[,1] %in% selgrp)
+    data <- data[,kk]
+    annots <- annots[colnames(data),,drop=FALSE]
+    
+    ## From inferCNV vignette
+    infercnv_obj <- infercnv::CreateInfercnvObject(
+                                  raw_counts_matrix = data, 
+                                  gene_order_file = genes,
+                                  annotations_file = annots,
+                                  ref_group_names = refgroup)
+    
+    outdir = "/tmp/Rtmpn8rPtL/file19b68b27f09/"
+    outdir = tempfile()
+    system(paste("mkdir -p",outdir))
+    ##unlink(outdir,recursive=TRUE)   
+    infercnv_obj <- infercnv::run(infercnv_obj,
+                                  cutoff = 1, ## 
+                                  out_dir = outdir, 
+                                  cluster_by_groups = TRUE, 
+                                  ##denoise = TRUE,
+                                  ##HMM = TRUE,  ## slow...
+                                  num_threads = 4,
+                                  no_plot = FALSE)
+
+    require(data.table)
+    ##dir(outdir)
+    img.file <- paste0(outdir,"/infercnv.png")
+    ##cnv <- read.table(file.path(outdir,"expr.infercnv.dat"),check.names=FALSE)
+    suppressWarnings(cnv <- fread(file.path(outdir,"expr.infercnv.dat"),check.names=FALSE))
+    symbol = cnv[[1]]
+    cnv <- as.data.frame(cnv, check.names=FALSE)[2:ncol(cnv)]
+    cnv <- as.matrix(cnv)
+    rownames(cnv) <- symbol
+
+    dim(cnv)
+    dim(genes)
+    
+    genes = genes[rownames(cnv),]
+    pos = (genes$start + genes$stop)/2
+    ichr <- as.integer(sub("X",23,sub("Y",24,sub("chr","",genes$chr))))
+    jj = order(ichr, pos)
+    pos = pos[jj]
+    chr = as.character(genes$chr)[jj]
+    logcnv = log2(cnv[jj,]/mean(cnv,na.rm=TRUE))  ## logarithmic
+
+
+    library(png)
+    img <- readPNG(img.file)
+
+    res <- list(cna=logcnv, chr=chr, pos=pos, png=img)
+
+    if(0) {
+        
+        par(mfrow=c(1,1))
+        grid::grid.raster(img)
+
+        x11()
+        pgx.plotCNAHeatmap(ngs, res, pca.filter=-1, clip=0, annot="group",
+                           lwd=2, lab.cex=1)
+        ##pgx.plotCNAHeatmap(ngs, res, pca.filter=10, clip=0)
+        pgx.plotCNAHeatmap(ngs, res, pca.filter=100, clip=0.15)
+        pgx.plotCNAHeatmap(ngs, res, pca.filter=40, clip=0.15)
+
+        grp = (ngs$samples$group)
+        annot = ngs$samples[,1:2]
+        jj = seq(1,nrow(res$cna),50)
+        
+        gx.splitmap(
+            res$cna[jj,],
+            split=res$chr[jj], splitx=grp,
+            scale="row.center", col.annot=annot,
+            cluster.rows=FALSE)
+        
+        X = res$cna[jj,]
+        annot = annot
+        idx = as.character(res$chr)[jj]
+        splitx=grp
+        xtips=ytips=NULL
+        scale="row.center"
+
+        source("../R/pgx-plotting.R")
+        pgx.splitHeatmapX(
+            X = res$cna[jj,], lmar=200, 
+            annot = annot, row_clust=FALSE,
+            idx=res$chr[jj], splitx=grp,
+            xtips=NULL, ytips=NULL,
+            row_annot_width=0.03, scale="row.center",
+            colors=NULL, label_size=11 )
+        
+
+        
+        
+    }
+
+    ## clean up folder??
+    unlink(outdir,recursive=TRUE)
+
+    return(res)    
 }
 
 ##nsmooth=80;downsample=10
-pgx.CNAfromExpression <- function(ngs, nsmooth=40, downsample=10) {
+pgx.CNAfromExpression <- function(ngs, nsmooth=40, downsample=10)
+{
 
     require(org.Hs.eg.db)
     head(ngs$genes)
@@ -41,10 +185,13 @@ pgx.CNAfromExpression <- function(ngs, nsmooth=40, downsample=10) {
     pos <- pos[match(ngs$genes$gene_name,symbol)]
     genes <- data.frame(chr=chr, pos=pos)
     rownames(genes) <- ngs$genes$gene_name
+
+    sel <- which(!is.na(genes$chr) & !is.na(genes$pos))
+    genes <- genes[sel,]
     head(genes)
 
     if(!is.null(ngs$counts)) {
-        cna <- log2(100 + ngs$counts)
+        cna <- log2(100 + ngs$counts)  ## moderated log2
     } else {
         cna <- ngs$X
     }
@@ -75,13 +222,6 @@ pgx.CNAfromExpression <- function(ngs, nsmooth=40, downsample=10) {
     cna <- cna - apply(cna,1,median,na.rm=TRUE)
     rownames(cna) <- rownames(cna0)
     dim(cna)
-
-    ##---------------------------------------------------------------------
-    ## Statistics
-    ##---------------------------------------------------------------------
-    cna.var <- apply(cna,1,var)
-    names(cna.var) <- rownames(cna)
-    head(sort(cna.var,decreasing=TRUE),40)
     
     ##---------------------------------------------------------------------
     ## Downsample if needed
@@ -109,20 +249,27 @@ pgx.CNAfromExpression <- function(ngs, nsmooth=40, downsample=10) {
     genes$chr <- as.character(genes$chr)
     table(genes$chr)
     
-    res <- list(cna=cna, chr=genes$chr, pos=genes$pos, cna.var=cna.var)
+    res <- list(cna=cna, chr=genes$chr, pos=genes$pos)
     return(res)
 }
 
 
-pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=20,
-                               order.by="clust" )
+pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=-1, lwd=1,
+                               order.by="clust", clip=0, lab.cex=0.6 )
 {
     require(irlba)
     ##source("../R/gx-heatmap.r")
     cna <- res$cna
     chr <- res$chr
+    chr <- as.character(chr)
     table(chr)
 
+    ## ensure order on chrpos
+    ichr <- as.integer(sub("X",23,sub("Y",24,sub("chr","",chr))))
+    jj <- order(ichr, res$pos)
+    cna <- cna[jj,]
+    chr <- chr[jj]
+    
     ## center/scale
     cna <- cna - rowMeans(cna,na.rm=TRUE)
     cna <- cna / max(abs(cna),na.rm=TRUE)
@@ -141,7 +288,7 @@ pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=20,
         rownames(cna2) <- rownames(cna)
         cna <- cna2
     }
-
+    
     ## sort/order
     hc <- NULL
     sv1 <- NULL
@@ -162,12 +309,13 @@ pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=20,
     ann.mat <- NULL
     if(!is.null(annot)) {
         if(is.na(annot)) {
-            k <- c(grep("cell.type|tissue|cluster",colnames(ngs$Y)),1)[1]
+            k <- c(grep("cell.type|tissue|cluster|group",
+                        colnames(ngs$samples),ignore.case=TRUE),1)[1]
         } else {
-            k <- match(annot, colnames(ngs$Y))
+            k <- match(annot, colnames(ngs$samples))
         }
         k
-        y <- as.character(ngs$Y[colnames(cna),k])
+        y <- as.character(ngs$samples[colnames(cna),k])
         table(y)
         ny <- length(setdiff(unique(y),NA))
         if(ny>=2) {
@@ -205,21 +353,22 @@ pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=20,
     ## main heatmap
     par(mar=c(8,0.2,12,0))
     cna0 <- cna
-    cna0[which(abs(cna0)<0.15)] <- NA
     cna0 <- tanh( 3*cna0 )
+    cna0[which(abs(cna0) < clip)] <- NA
     image( 1:nrow(cna), 1:ncol(cna), cna0[,], col=BLUERED2(16),
           ylab="samples", xlab="DNA copy number  (log2R)",
           yaxt="n", yaxs="i", xaxt="n", xaxs="i",
           zlim=c(-1,1)*1.0 )
-    nchr <- as.integer(sub("X",23,sub("Y",24,chr)))
-    chrbrk <- which(diff(nchr)!=0)
+
+    ichr <- as.integer(sub("X",23,sub("Y",24,sub("chr","",chr))))
+    chrbrk <- which(diff(ichr)!=0)
     chrmid <- c(0,chrbrk) + diff(c(0,chrbrk,nrow(cna)))/2
-    abline(v=chrbrk, col="grey50", lty=1, lwd=1)
+    abline(v=chrbrk, col="grey50", lty=1, lwd=lwd)
     chrlen <- length(unique(chr))
     j0 <- seq(1,chrlen,2)
     j1 <- seq(2,chrlen,2)
-    mtext(unique(chr)[j0], side=3, at=chrmid[j0], cex=0.55, line=0.25 )
-    mtext(unique(chr)[j1], side=3, at=chrmid[j1], cex=0.55, line=0.9 )
+    mtext(unique(chr)[j0], side=3, at=chrmid[j0], cex=lab.cex, line=0.25 )
+    mtext(unique(chr)[j1], side=3, at=chrmid[j1], cex=lab.cex, line=0.9 )
 
     if(!is.null(ann.mat)) {
         dim(ann.mat)
@@ -228,7 +377,7 @@ pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=20,
               col = rev(grey.colors(2)), xlab="", ylab="",
               yaxt="n", yaxs="i", xaxt="n", xaxs="i")
         mtext( colnames(ann.mat), side=3, at=1:ncol(ann.mat),
-              las=3, cex=0.5, line=0.25 )
+              las=3, cex=lab.cex, line=0.25 )
     } else {
         frame()
     }
