@@ -146,8 +146,12 @@ Meta-volcano
 
     This module is supported in the EXPERT MODE ONLY.
 
-The **Meta-volcano** panel provides the volcano plot visualizing the intersecting 
-genes between the profiles. In addition, it generates a sorted barplot of 
+The **Meta-volcano** panel provides the volcano plot visualizing the
+intersection between the profiles by highlighting the genes that are
+common/shared in all selected comparisons.  Genes ranked by
+cumulative fold-change across the selected comparisons.
+
+In addition, it generates a sorted barplot of 
 cumulative fold-change between the profiles.
 
 .. figure:: figures/psc7.6.png
