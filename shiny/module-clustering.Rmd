@@ -528,8 +528,8 @@ hm_splitmap_module <- plotModule(
     "hm_splitmap", hm_splitmap.switchRENDER,
     plotlib="generic", renderFunc="renderUI",
     ## download.fmt = NULL,
-    download.fmt = c("pdf"),
-    ##download.fmt = c("pdf","html"),
+    ##download.fmt = c("pdf"),
+    download.fmt = c("pdf","html"),
     info.text = hm_splitmap_text,
     options = hm_splitmap_opts,
     pdf.width=10, pdf.height=10, info.width="350px",
@@ -538,37 +538,49 @@ hm_splitmap_module <- plotModule(
 output <- attachModule(output, hm_splitmap_module)
 
 output$hm1_splitmap  <- renderPlot({
-    PDFFILE  = hm_splitmap_module$.tmpfile["pdf"]  ## from above!
-    HTMLFILE = hm_splitmap_module$.tmpfile["html"]  ## from above!    
     hm1_splitmap.RENDER()
     ## plot(sin)
-    ## if(file.exists(PDFFILE)) unlink(PDFFILE)
-    ## dev.copy(pdf, file=PDFFILE, width=8, height=8)    
-    dbg("renderIheatmap:: exporting hm1 to PDF...")
-    dev.print(pdf, file=PDFFILE, width=10, height=10)    
-    write("HTML export error",file=HTMLFILE)
-    dbg("renderIheatmap:: ... exporting done")
 }, res=90)
 
 output$hm2_splitmap <- renderIheatmap({
-    p <- hm2_splitmap.RENDER()
-    ## export(p, file=PDFFILE)
-    dbg("renderIheatmap:: exporting hm2 to PDF and HTML...")
-    HTMLFILE = hm_splitmap_module$.tmpfile["html"]  ## from above!
-    PDFFILE  = hm_splitmap_module$.tmpfile["pdf"]   ## from above!
-    if(file.exists(HTMLFILE)) unlink(HTMLFILE)
-    if(file.exists(PDFFILE))  unlink(PDFFILE)
-    ##webshot::install_phantomjs()
-    ##if(do.png) save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PNGFILE,zoom=2)
-    if(!is.null(PDFFILE) && !is.na(PDFFILE)) {
-        save_iheatmap(p, filename=PDFFILE,  vwidth=10*80, vheight=10*80)
-    }
-    if(!is.null(HTMLFILE) && !is.na(HTMLFILE)) {
-        save_iheatmap(p, filename=HTMLFILE)
-    }
-    dbg("renderIheatmap:: ... exporting done")
-    p
+    hm2_splitmap.RENDER()
 })
+
+output$hm_splitmap_pdf <- downloadHandler(
+    filename = "plot.pdf",
+    content = function(file) {
+        PDFFILE = hm_splitmap_module$.tmpfile["pdf"]  ## from above!
+        dbg("hm_splitmap_pdf:: exporting to PDF...")
+        withProgress({
+            if(input$hm_plottype %in% c("ComplexHeatmap","static")) {
+                pdf(PDFFILE, width=10, height=8)
+                print(hm1_splitmap.RENDER())  ## should be done inside render for base plot...
+                dev.off()
+            } else {
+                save_iheatmap(hm2_splitmap.RENDER(), filename=PDFFILE,  vwidth=1000, vheight=800)
+            }
+        }, message="exporting to PDF", value=0.5)
+        dbg("hm_splitmap_pdf:: exporting done...")
+        file.copy(PDFFILE,file)        
+    }
+)
+
+output$hm_splitmap_html <- downloadHandler(
+    filename = "plot.html",
+    content = function(file) {
+        HTMLFILE = hm_splitmap_module$.tmpfile["html"]  ## from above!
+        ##HTMLFILE = paste0(tempfile(),".html")
+        dbg("renderIheatmap:: exporting to HTML...")
+        withProgress({
+            ##write("<body>HTML export error</body>", file=HTMLFILE)    
+            p <- hm2_splitmap.RENDER()
+            incProgress(0.5)
+            save_iheatmap(p, filename=HTMLFILE)
+        }, message="exporting to HTML", value=0 )
+        dbg("renderIheatmap:: ... exporting done")
+        file.copy(HTMLFILE,file)        
+    }
+)
 
 fillCol(
     moduleWidget(hm_splitmap_module, outputFunc="uiOutput")

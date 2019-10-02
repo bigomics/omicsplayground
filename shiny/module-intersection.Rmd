@@ -18,7 +18,7 @@ tipify( actionLink("cmp_info", "Info", icon = icon("info-circle")),
 cmp_infotext =
     "The <strong>Intersection analysis module</strong> enables users to compare multiple contrasts by intersecting the genes of profiles. The main goal is to identify contrasts showing similar profiles.
 
-<br><br>For the selected contrasts, the platform provides volcano plots and pairwise correlation plots between the profiles in the <strong>Pairs</strong> panel. Simultaneously, a Venn diagram with the number of intersecting genes between the profiles is plotted in <strong>Venn diagram</strong> panel. Details of intersecting genes is also reported in an interactive table. A more detailed scatter plot of two profiles is possible under the <strong>Two-pairs</strong> panel. Users can check the contrast heatmap of pairwise correlations under the <strong>Correlation</strong> panel. Alternatively, the <strong>Connectivity Map (CMap)</strong> shows the similarity of the contrasts profiles as a t-SNE plot.
+<br><br>For the selected contrasts, the platform provides volcano plots and pairwise correlation plots between the profiles in the <strong>Pairs</strong> panel. Simultaneously, a Venn diagram with the number of intersecting genes between the profiles is plotted in <strong>Venn diagram</strong> panel. Details of intersecting genes are also reported in an interactive table. A more detailed scatter plot of two profiles is possible under the <strong>Two-pairs</strong> panel. Users can check the pairwise correlations of the contrasts under the <b>Contrast heatmap</b> panel. Alternatively, the <strong>Connectivity Map (CMap)</strong> shows the similarity of the contrasts profiles as a t-SNE plot.
 
 <br><br><center>
 <iframe width='500' height='333' src='https://www.youtube.com/embed/KoS1y8xridY' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>
@@ -61,18 +61,11 @@ input_cmp_comparisons <- reactive({
 }) %>% debounce(500)
 
 
-br();
 conditionalPanel(
     "input.main_usermode == 'expert'",
-    tipify( actionLink("cmp_options", "Options", icon=icon("cog", lib = "glyphicon")),
-           "Toggle advanced options", placement="top"),
-    br(),
-    conditionalPanel(
-        "input.cmp_options % 2 == 1",
-        tagList(
-            tipify( selectInput("cmp_level","Level:", choices=c("gene","geneset")),
+    tagList(
+        tipify( selectInput("cmp_level","Level:", choices=c("gene","geneset")),
                "Select feature level: gene or geneset", placement="top")
-        )
     )
 )
 
@@ -527,8 +520,6 @@ cmp_scatterPlotMatrix.PLOT <- reactive({
     dbg("cmp_scatterPlotMatrix:: done\n")
     p    
 })
-
-
 
 cmp_scatterPlotMatrix.opts = tagList(
     checkboxInput("cmp_splom_highlight","Highlight genes",TRUE),
@@ -1044,7 +1035,7 @@ cmp_ctheatmap.PLOTLY <- reactive({
 
 
 cmp_ctheatmap.opts = tagList(
-    tipify( checkboxInput('cmp_ctheatmap_showrho', "show correlation", TRUE),
+    tipify( checkboxInput('cmp_ctheatmap_showrho', "show correlation values", TRUE),
            "Show correlation values in cells."),
     tipify( checkboxInput('cmp_ctheatmap_allfc', "show all contrasts", TRUE),
            "Show all contrasts or just the selected ones."),
@@ -1462,7 +1453,7 @@ observeEvent(input$cmp_comparisons, {
 > **Venn diagram and intersection table.** **(a)** Venn diagram showing the number of overlapping (significant) genes for multiple contrasts. **(b)** Table reporting genes in the selected overlap region with their fold-changes.
 
 
-### Volcano
+### Meta-volcano
 
 ```{r warnings=FALSE, message=FALSE}
 

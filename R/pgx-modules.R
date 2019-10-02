@@ -305,6 +305,10 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
         ##------------------------------------------------------------
         render <- renderPlot({
             func()
+
+            ## NEEEDS FIX!! pdf generating should be done just in
+            ## renderPlot, not here. But cannot get it to work (IK
+            ## 19.10.02)
             suppressWarnings( suppressMessages(
                 if(1 && do.pdf) {
                     dev.print(pdf, file=PDFFILE, width=pdf.width, height=pdf.height)
@@ -327,80 +331,92 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
         download.pdf <- downloadHandler(
             filename = "plot.pdf",
             content = function(file) {
-                ## unlink(PDFFILE) ## do not remove!
-                if(plotlib=="plotly") {
-                    cat("downloadHandler:: exporting plotly to PDF\n")
-                    p <- func()
-                    p$width = pdf.width * 100
-                    p$height = pdf.height * 100
-                    ##is.plotly3d <- class(p)[1]=="plotly" && all( c("x","y","z") %in% names(p$x$attrs[[1]]))
-                    err <- try(export(p, PDFFILE))  ## deprecated but still works...
-                    if(class(err)=="try-error") {
-                        cat("downloadHandler:: export failed, trying webshot...\n")
-                        htmlwidgets::saveWidget(p, HTMLFILE) 
-                        webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
-                    }
-                } else if(plotlib=="iheatmapr") {
-                    cat("downloadHandler:: exporting iheatmapR to PDF\n")
-                    p <- func()
-                    save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PDFFILE)
-                } else if(plotlib=="visnetwork") {
-                    cat("downloadHandler:: exporting visnetwork to PDF\n")
-                    p <- func()
-                    visSave(p, HTMLFILE)
-                    webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
-                } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
-                    cat("downloadHandler:: exporting htmlwidget to PDF\n")
-                    p <- func()
-                    htmlwidgets::saveWidget(p, HTMLFILE)
-                    webshot(HTMLFILE, vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
-                } else if(plotlib %in% c("ggplot","ggplot2")) {
-                    cat("downloadHandler:: exporting ggplot to PDF\n")
-                    p <- func()
-                    ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
-                    pdf(PDFFILE, width=pdf.width, height=pdf.height)
-                    print(p) 
-                    dev.off() 
-                } else if(plotlib=="generic") {
-                    cat("downloadHandler:: generic to PDFFILE = ",PDFFILE,"\n")
-                    ## generic function should produce PDF inside plot func()
-                    ##
-                } else if(plotlib=="base") {
-                    ##cat("downloadHandler:: exporting to base plot to PDF\n")
-                    cat("downloadHandler:: copy base plot to PDF (devcopy)\n")
-                    if(0) {
-                        ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
-                        func()
-                        dev.print(pdf, file=PDFFILE, width=pdf.width, height=pdf.height)
-                        ##pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
-                        ##plot(func())
-                        ##frame()
-                        add.ADVERTISEMENT = TRUE
-                        add.ADVERTISEMENT = FALSE
-                        if(add.ADVERTISEMENT) {
-                            ##mtext( caption.fun(), outer=TRUE, side=1,line=-3.5, cex=1, xpd=NA)
-                            par(mfrow=c(1,1),par=c(1,1,1,1)*0.5); frame()
-                            ##mtext(ad.text1, outer=TRUE, side=1,line=-1.5, cex=0.5, col="#00000088", xpd=NA)
-                            motto <- pgx.randomSlogan(b=30)
-                            mex = min(pdf.width,pdf.height)/8.0
-                            text(0.5, 0.95, "Created with BigOmics Playground", cex=1.2*mex)
-                            text(0.5, 0.70, motto, cex=2*mex, font=4)
-                            text(0.5, 0.25, "BigOmics Analytics", cex=1.5*mex, font=2)
-                            text(0.5, 0.15, "Self-service bioinformatics solutions", cex=1.2*mex)
-                            text(0.5, 0.05, "www.bigomics.ch", cex=1.2*mex, font=3, xpd=NA)
+                withProgress({
+                    ## unlink(PDFFILE) ## do not remove!
+                    if(plotlib=="plotly") {
+                        cat("downloadHandler:: exporting plotly to PDF\n")
+                        p <- func()
+                        p$width = pdf.width * 100
+                        p$height = pdf.height * 100
+                        ##is.plotly3d <- class(p)[1]=="plotly" && all( c("x","y","z") %in% names(p$x$attrs[[1]]))
+                        err <- try(export(p, PDFFILE))  ## deprecated but still works...
+                        if(class(err)=="try-error") {
+                            cat("downloadHandler:: export failed, trying webshot...\n")
+                            htmlwidgets::saveWidget(p, HTMLFILE) 
+                            err2 <- try(webshot(HTMLFILE,vwidth=pdf.width*100,
+                                                vheight=pdf.height*100,PDFFILE))
+                            if(class(err2)=="try-error") {
+                                pdf(PDFFILE)
+                                text(0.5,0.5,"PDF export error (plotly)")
+                                dev.off()
+                            }
                         }
-                        dev.off()  ## important!!
+                    } else if(plotlib=="iheatmapr") {
+                        cat("downloadHandler:: exporting iheatmapR to PDF\n")
+                        p <- func()
+                        save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PDFFILE)
+                    } else if(plotlib=="visnetwork") {
+                        cat("downloadHandler:: exporting visnetwork to PDF\n")
+                        p <- func()
+                        visSave(p, HTMLFILE)
+                        webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
+                    } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
+                        cat("downloadHandler:: exporting htmlwidget to PDF\n")
+                        p <- func()
+                        htmlwidgets::saveWidget(p, HTMLFILE)
+                        webshot(HTMLFILE, vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
+                    } else if(plotlib %in% c("ggplot","ggplot2")) {
+                        cat("downloadHandler:: exporting ggplot to PDF\n")
+                        p <- func()
+                        ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
+                        pdf(PDFFILE, width=pdf.width, height=pdf.height)
+                        print(p) 
+                        dev.off() 
+                    } else if(plotlib=="generic") {
+                        cat("downloadHandler:: generic to PDFFILE = ",PDFFILE,"\n")
+                        ## generic function should produce PDF inside plot func()
+                        ##
+                    } else if(plotlib=="base") {
+                        ##cat("downloadHandler:: exporting to base plot to PDF\n")
+                        cat("downloadHandler:: exporting base plot to PDF\n")
+
+                        ## NEEEDS FIX!! pdf generating should be done
+                        ## just here, not anymore in the
+                        ## renderPlot. But cannot get it to work (IK 19.10.02)
+
+                        if(FALSE) {
+                            add.ADVERTISEMENT = TRUE
+                            add.ADVERTISEMENT = FALSE
+                            pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
+                            ##func()                        
+                            print(func())
+                            ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
+                            plot(sin)
+                            ## ##mtext( caption.fun(), outer=TRUE, side=1,line=-3.5, cex=1, xpd=NA)
+                            ## if(add.ADVERTISEMENT) {
+                            ##     par(mfrow=c(1,1),par=c(1,1,1,1)*0.5)
+                            ##     frame()
+                            ##     motto <- pgx.randomSlogan(b=30)
+                            ##     mex = min(pdf.width,pdf.height)/8.0
+                            ##     text(0.5, 0.95, "Created with BigOmics Playground", cex=1.2*mex)
+                            ##     text(0.5, 0.70, motto, cex=2*mex, font=4)
+                            ##     text(0.5, 0.25, "BigOmics Analytics", cex=1.5*mex, font=2)
+                            ##     text(0.5, 0.15, "Self-service bioinformatics solutions", cex=1.2*mex)
+                            ##     text(0.5, 0.05, "www.bigomics.ch", cex=1.2*mex, font=3, xpd=NA)
+                            ## }
+                            dev.off()  ## important!!
+                        }
+                    } else { ## end base                
+                        pdf(PDFFILE)
+                        plot.new()
+                        mtext("Error. PDF not available.",line=-8)
+                        dev.off()
                     }
-                } else { ## end base                
-                    pdf(PDFFILE)
-                    plot.new()
-                    mtext("Error. PDF not available.",line=-8)
-                    dev.off()
-                }
-                
-                ## finally copy to final exported file
-                file.copy(PDFFILE,file)
-            } 
+                    
+                    ## finally copy to final exported file
+                    file.copy(PDFFILE,file)
+                }, message="exporting to PDF", value=0.8)
+            } ## content 
         ) ## PDF downloadHandler
     } ## end if do.pdf
 
@@ -408,32 +424,34 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
         download.html <- downloadHandler(
             filename = "plot.html",
             content = function(file) {
-                ## unlink(HTMLFILE) ## do not remove!
-                if(plotlib %in% c("plotly","htmlwidget","pairsD3","scatterD3") ) {
-                    cat("downloadHandler:: exporting htmlwidget to HTML\n")
-                    p <- func()
-                    htmlwidgets::saveWidget(p, HTMLFILE) 
-                } else if(plotlib == "iheatmapr") {
-                    p <- func()
-                    save_iheatmap(p, HTMLFILE)
-                } else if(plotlib == "visnetwork") {
-                    p <- func()
-                    visSave(p, HTMLFILE)
-                } else if(plotlib %in% c("ggplot","ggplot2")) {
-                    p <- func()
-                    ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
-                    saveWidget( ggplotly(p), file = HTMLFILE);
-                } else if(plotlib=="generic") {
-                    cat("downloadHandler:: generic to HTMLFILE = ",HTMLFILE,"\n")
-                    ## generic function should produce PDF inside plot func()
-                    ##
-                } else if(plotlib=="base") {
-                    write("base plots cannot export to HTML",HTMLFILE)
-                } else { ## end base
-                    write("<body>HTML export error</body>",file=HTMLFILE)
-                }
-                ## finally copy to fina lexport file
-                file.copy(HTMLFILE,file)
+                withProgress({
+                    ## unlink(HTMLFILE) ## do not remove!
+                    if(plotlib %in% c("plotly","htmlwidget","pairsD3","scatterD3") ) {
+                        cat("downloadHandler:: exporting htmlwidget to HTML\n")
+                        p <- func()
+                        htmlwidgets::saveWidget(p, HTMLFILE) 
+                    } else if(plotlib == "iheatmapr") {
+                        p <- func()
+                        save_iheatmap(p, HTMLFILE)
+                    } else if(plotlib == "visnetwork") {
+                        p <- func()
+                        visSave(p, HTMLFILE)
+                    } else if(plotlib %in% c("ggplot","ggplot2")) {
+                        p <- func()
+                        ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
+                        saveWidget( ggplotly(p), file = HTMLFILE);
+                    } else if(plotlib=="generic") {
+                        cat("downloadHandler:: generic to HTMLFILE = ",HTMLFILE,"\n")
+                        ## generic function should produce PDF inside plot func()
+                        ##
+                    } else if(plotlib=="base") {
+                        write("base plots cannot export to HTML",HTMLFILE)
+                    } else { ## end base
+                        write("<body>HTML export error</body>",file=HTMLFILE)
+                    }
+                    ## finally copy to fina lexport file
+                    file.copy(HTMLFILE,file)
+                }, message="exporting to HTML", value=0.8)
             } ## end of content
         ) ## end of HTML downloadHandler
     } ## end of do HTML
