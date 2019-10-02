@@ -145,8 +145,6 @@ hm_filtered_matrix <- reactive({
     genes = as.character(ngs$genes$gene_name)
     genesets = rownames(ngs$gsetX)
 
-    cat("<module_clustering::hm_filtered_matrix> 1\n")
-    
     if(input$hm_level=="geneset") {
         gsets = rownames(ngs$gsetX)
         gsets = unique(unlist(COLLECTIONS[input$hm_features]))
@@ -169,7 +167,6 @@ hm_filtered_matrix <- reactive({
         gg = ngs$families[[1]]
         gg = ngs$families[[input$hm_features]]
         if(input$hm_customlist!="") {
-            ##cat("hm_filtered_matrix:: custom.list=",input$hm_customlist,"\n")
             gg1 = strsplit(input$hm_customlist,split="[, ;\n\t]")[[1]]
             if(length(gg1)==1) gg1 <- paste0(gg1,"*")
             gg1 = gsub("[ \n\t]","",gg1)
@@ -180,7 +177,6 @@ hm_filtered_matrix <- reactive({
                 gg1 = unique(c(gg1,unlist(gg2)))
             }
             gg1 = intersect(gg1,ngs$genes$gene_name)            
-            ##cat("hm_filtered_matrix:: head.gg=",head(gg1),"\n")
             if(length(gg1)>1) gg = gg1
         }
         jj <- match(toupper(gg), toupper(ngs$genes$gene_name))
@@ -192,8 +188,6 @@ hm_filtered_matrix <- reactive({
     kk <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
     zx <- zx[,kk,drop=FALSE]    
 
-    cat("<module_clustering::hm_filtered_matrix> 2\n")
-    
     if(input$hm_level=="gene" && "chr" %in% names(ngs$genes)) {
         ## Filter out X/Y chromosomes before clustering
         chr <- ngs$genes[rownames(zx),]$chr
@@ -203,21 +197,14 @@ hm_filtered_matrix <- reactive({
         dim(zx)
     }
     
-    cat("<module_clustering::hm_filtered_matrix> 3\n")
-
     nmax=4000
     nmax = as.integer(input$hm_ntop)
     idx <- NULL
     splitx <- input$hm_splitx
     topmode="sd"
     topmode <- input$hm_topmode
-    cat("<module_clustering::hm_filtered_matrix> splitx=",splitx,"\n")
-    cat("<module_clustering::hm_filtered_matrix> topmode=",topmode,"\n")
 
     if(splitx=="<none>" && topmode=="specific") topmode <- "sd"
-
-    cat("<module_clustering::hm_filtered_matrix> 4\n")
-    
     if(topmode=="pca") {
         require(irlba)
         NPCA=5
@@ -275,8 +262,6 @@ hm_filtered_matrix <- reactive({
     kk = grep("sample|patient",colnames(annot),invert=TRUE)
     annot = annot[,kk,drop=FALSE]  ## no group??    
     samples = colnames(zx) ## original sample list
-
-    cat("<module_clustering::hm_filtered_matrix> 5\n")
     
     ## ------------- calculate group summarized
     if(1) { 
@@ -300,8 +285,6 @@ hm_filtered_matrix <- reactive({
             grp.annot = grp.annot[colnames(grp.zx),]
         }
     }
-
-    cat("<module_clustering::hm_filtered_matrix> done\n")
     
     ##input$top_terms
     filt <- list(mat=zx, annot=annot,
@@ -382,8 +365,8 @@ hm1_splitmap.RENDER <- reactive({
     show_legend = TRUE
     if(input$hm_level=="geneset" || !is.null(splitx)) show_legend = FALSE
     annot$group = NULL  ## no group in annotation
-    show_colnames <- ifelse(ncol(zx) < 100, TRUE, FALSE)
     show_colnames <- input$hm_collabel
+    show_colnames <- ifelse(ncol(zx) < 100, show_colnames, FALSE)
     
     if(input$hm_level=="gene") {
         rownames(zx) = sub(".*:","",rownames(zx))
@@ -426,6 +409,8 @@ hm2_splitmap.RENDER <- reactive({
     ngs <- inputData()
     req(ngs, input$hm_splitx)
        
+    cat("<module-clustering:hm2_splitmap.RENDER> reacted\n")
+
     ## -------------- variable to split samples
     split.var=NULL    
     split.var="activated"
@@ -434,7 +419,6 @@ hm2_splitmap.RENDER <- reactive({
     
     scale = ifelse(input$hm_scale=="relative","row.center","none")    
     plt <- NULL
-    cat("<module-clustering:hm2_splitmap.RENDER> split.var=",split.var,"\n")
     
     withProgress(
         message='rendering iHeatmap...', value=0.66,
@@ -451,23 +435,16 @@ hm2_splitmap.RENDER <- reactive({
             }
             idx <- filt$clust    
             
-            cat("<module-clustering:hm2_splitmap.RENDER> idx=",idx,"\n")
-            
             ## sample clustering index
             splitx <- NULL
             if(!is.null(split.var) && split.var %in% colnames(annot)) {
                 splitx <- annot[,split.var]
             }
             
-            cat("<module-clustering:hm2_splitmap.RENDER> head(splitx)=",head(splitx),"\n")
-            cat("<module-clustering:hm2_splitmap.RENDER> dim(annot)=",dim(annot),"\n")
-            
             ## iheatmapr needs factors for sharing between groups
             annotF <- data.frame(as.list(annot),stringsAsFactors=TRUE)
             rownames(annotF) = rownames(annot)
-            cat("<module-clustering:hm2_splitmap.RENDER> dim(annotF)=",dim(annotF),"\n")
-            cat("<module-clustering:hm2_splitmap.RENDER> dim(X)=",dim(X),"\n")
-            
+
             cex=10
             cex = ifelse(input$hm_rowlabel,10,0)
             
@@ -494,15 +471,15 @@ hm2_splitmap.RENDER <- reactive({
         }
     )
     cat("<module-clustering:hm2_splitmap.RENDER> done\n")
-    cat("<module-clustering:hm2_splitmap.RENDER> class(plt)=",class(plt),"\n")
     return(plt)
 })
 
 
 hm_splitmap_opts = tagList(
-    tipify( radioButtons("hm_plottype", "Plot type:", choices=c("iHeatmap","ComplexHeatmap"),
-                         selected="iHeatmap", inline=TRUE, width='100%'),
-           "Choose plot type: iHeatmap (interactive) or ComplexHeatmap (static)",
+    tipify( radioButtons("hm_plottype", "Plot type:",
+                         choices=c("ComplexHeatmap","iHeatmap"),
+                         selected="ComplexHeatmap", inline=TRUE, width='100%'),
+           "Choose plot type: ComplexHeatmap (static) or iHeatmap (interactive)",
            placement="right",options = list(container = "body")),
     tipify( selectInput("hm_splitx", "split by:", choices="group", width='100%'),
            "Split the samples by a predetermined phenotype class (e.g. tissue or cell type).",
@@ -550,7 +527,9 @@ hm_splitmap.switchRENDER <- reactive({
 hm_splitmap_module <- plotModule(
     "hm_splitmap", hm_splitmap.switchRENDER,
     plotlib="generic", renderFunc="renderUI",
-    download.fmt = c("pdf","html"),
+    ## download.fmt = NULL,
+    download.fmt = c("pdf"),
+    ##download.fmt = c("pdf","html"),
     info.text = hm_splitmap_text,
     options = hm_splitmap_opts,
     pdf.width=10, pdf.height=10, info.width="350px",
@@ -565,21 +544,29 @@ output$hm1_splitmap  <- renderPlot({
     ## plot(sin)
     ## if(file.exists(PDFFILE)) unlink(PDFFILE)
     ## dev.copy(pdf, file=PDFFILE, width=8, height=8)    
+    dbg("renderIheatmap:: exporting hm1 to PDF...")
     dev.print(pdf, file=PDFFILE, width=10, height=10)    
     write("HTML export error",file=HTMLFILE)
+    dbg("renderIheatmap:: ... exporting done")
 }, res=90)
 
 output$hm2_splitmap <- renderIheatmap({
     p <- hm2_splitmap.RENDER()
     ## export(p, file=PDFFILE)
+    dbg("renderIheatmap:: exporting hm2 to PDF and HTML...")
     HTMLFILE = hm_splitmap_module$.tmpfile["html"]  ## from above!
     PDFFILE  = hm_splitmap_module$.tmpfile["pdf"]   ## from above!
     if(file.exists(HTMLFILE)) unlink(HTMLFILE)
     if(file.exists(PDFFILE))  unlink(PDFFILE)
     ##webshot::install_phantomjs()
     ##if(do.png) save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PNGFILE,zoom=2)
-    if(!is.null(PDFFILE))  save_iheatmap(p, filename=PDFFILE,  vwidth=10*80, vheight=10*80)
-    if(!is.null(HTMLFILE)) save_iheatmap(p, filename=HTMLFILE)
+    if(!is.null(PDFFILE) && !is.na(PDFFILE)) {
+        save_iheatmap(p, filename=PDFFILE,  vwidth=10*80, vheight=10*80)
+    }
+    if(!is.null(HTMLFILE) && !is.na(HTMLFILE)) {
+        save_iheatmap(p, filename=HTMLFILE)
+    }
+    dbg("renderIheatmap:: ... exporting done")
     p
 })
 
@@ -907,8 +894,6 @@ clustannot_correlation <- reactive({
     ##if(is.null(ann.refset)) return(NULL)
     req(input$xann.level, input$xann.refset)
 
-    dbg("<clustering:clustannot_plots> 1\n")
-    
     ref = NULL
     ref = ngs$gsetX[,]    
     ref = ngs$X[,]    
@@ -942,21 +927,14 @@ clustannot_correlation <- reactive({
     if(input$hm_level=="geneset") X <- ngs$gsetX
     
     ##----------- for each gene cluster compute average correlation
-    dbg("<clustering:clustannot_plots> computing correlation\n")
     i=idx[1]
     idxx = setdiff(idx, c(NA," ","   "))
-    cat("<clustering:clustannot_plots> idxx=",idxx,"\n")
-    cat("<clustering:clustannot_plots> dim(zx)=",dim(zx),"\n")
-    cat("<clustering:clustannot_plots> samples=",samples,"\n")
     
     rho <- matrix(NA, nrow(ref), length(idxx))
     colnames(rho) <- idxx
     rownames(rho) <- rownames(ref)
     for(i in 1:length(idxx)) {
-        gg = rownames(zx)[which(idx==idxx[i])]
-
-        cat("<clustering:clustannot_plots> head(gg)=",head(gg),"\n")
-        
+        gg = rownames(zx)[which(idx==idxx[i])]        
         aa <- t(X[gg,samples,drop=FALSE])
         bb <- t(ref[,samples,drop=FALSE])
         ##rr = cor(aa , bb, use="pairwise", method="spearman")
@@ -964,10 +942,6 @@ clustannot_correlation <- reactive({
         if(input$hm_topmode=="pca") rr <- abs(rr)
         rho[,i] <- colMeans(rr,na.rm=TRUE)
     }
-
-    dbg("<clustering:clustannot_plots> done\n")
-    
-    ##cat("<clustering:clustannot_plots> done\n")
     rho = round(rho, digits=3)
     dim(rho)
     return(rho)
@@ -980,11 +954,11 @@ clustannot_plots.RENDER <- reactive({
     ##if(is.null(rho)) return(NULL)
     req(rho)
     
-    NTERMS = 5
+    NTERMS = 6
     NTERMS = 8
     if(ncol(rho)>6) {
         par( mfrow=c(3,3), mar=c(3,2,1.5,1)*0.5 )
-        NTERMS = 5
+        NTERMS = 6
     }
     i=1
     klrpal = brewer.pal(8,"Set2")
@@ -1075,7 +1049,8 @@ clustannot_plots.PLOTLY <- reactive({
                             showarrow = FALSE, align = 'right') 
     }
 
-    subplot( plot_list, nrows=2, shareX=TRUE,
+    nrows = ceiling( length(plot_list)/3 )
+    subplot( plot_list, nrows=nrows, shareX=TRUE,
             ## template = "plotly_dark",
             margin=c(0, 0.0, 0.05, 0.05) )
     

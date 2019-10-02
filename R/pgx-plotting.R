@@ -139,14 +139,17 @@ pgx.splitHeatmap <- function(ngs, splitx=NULL, top.mode="specific",
 
 
 ##X=head(ngs$gsetX,100);annot=ngs$samples
+##row_annot_width=0.03;colors=NULL;label_size=11;scale="row.center"
 pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL, 
-                              xtips=NULL, ytips=NULL,
+                              xtips=NULL, ytips=NULL, row_clust=TRUE,
                               row_annot_width=0.03, scale="row.center",
-                              colors=NULL, label_size=11 )
+                              colors=NULL, label_size=11, lmar=60 )
 {
     ## constants
     col_annot_height = 0.021
-
+    if(!is.null(idx)) idx = as.character(idx)
+    if(!is.null(splitx)) splitx = as.character(splitx)
+    
     ## --------- defaults
     if(is.null(xtips)) xtips = colnames(X)
     if(is.null(ytips)) ytips = rownames(X)
@@ -159,18 +162,27 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
     if("col.center" %in% scale) X <- t(t(X) - colMeans(X, na.rm=TRUE))
     if("col" %in% scale) X <- scale(X)
     
-    ## ------ split Y-axis by factor
+    ## ------ split Y-axis (genes) by factor
     if(!is.null(idx)) {
         hc.order <- function(x) {
             hc <- fastcluster::hclust( as.dist(1 - cor(t(x),use="pairwise")), method="ward.D2" )
             rownames(x)[hc$order]
         }
-        kk  <- tapply(rownames(X),idx,function(k) c(hc.order(X[k,]),"   "))
+        if(row_clust) {
+            kk  <- tapply(rownames(X),idx,function(k) c(hc.order(X[k,]),"   "))
+        } else {
+            kk  <- tapply(rownames(X),idx,function(k) c(k,"   "))
+        }
         idx <- tapply(idx,idx,function(k) c(k,NA))
         idx = as.vector(unlist(idx))
         kk <- unlist(kk)
         kk  <- kk[1:(length(kk)-1)] ## remove trailing spacer
         X <- rbind(X,"   " = 0)[kk,]
+    } else {
+        if(row_clust) {
+            kk <- hc.order(X[,])
+            X <- X[kk,]
+        }
     }
     
     ## ------ split X-axis by some group factor
@@ -187,7 +199,10 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
     if(!is.null(colors) && any(names(colors) %in% names(colors0))) {
         for(v in intersect(names(colors), names(colors0))) colors0[[v]] <- colors[[v]]
     }
-    
+
+    ## ------- annot need to be factor
+    annotF <- data.frame(as.list(annot),stringsAsFactors=TRUE)
+    rownames(annotF) = rownames(annot)
     
     grid_params <- setup_colorbar_grid(
         nrows = 5, 
@@ -199,7 +214,7 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
 
     ## maximize plot area
     mar <- list(l = 50, r = 50, b = 100, t = 100, pad = 4)
-    mar <- list(l = 60, r = 0, b = 5, t = 0, pad = 3)
+    mar <- list(l = lmar, r = 0, b = 5, t = 0, pad = 3)
 
     ex <- ncol(X)/ncol(xx[[1]])  ## expansion factor
     hc <- hclust(as.dist(1 - cor(xx[[1]],use="pairwise")))
@@ -228,15 +243,14 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
         add_col_annotation(
             size = col_annot_height, buffer = 0.005, side="bottom",
             colors = colors0, show_title=TRUE,
-            annot[colnames(xx[[1]]),,drop=FALSE])
+            annotF[colnames(xx[[1]]),,drop=FALSE])
+    ##plt
+    length(xx)
+    dim(X)
     
     if(ncol(X)<40) {
         plt <- plt %>% add_col_labels(side="bottom", size=0.15*ex) 
     }
-
-    ##plt
-    length(xx)
-    dim(X)
     
     if(length(xx)>1) {
         
@@ -264,7 +278,7 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
                 add_col_annotation(
                     size = col_annot_height, buffer = 0.005, side="bottom",
                     colors = colors0, show_title=FALSE,
-                    data.frame(annot[colnames(x1),,drop=FALSE]))
+                    data.frame(annotF[colnames(x1),,drop=FALSE]))
             
             if(ncol(X)<40) {
                 plt <- plt %>% add_col_labels(side="bottom", size=0.15*ex) 
@@ -282,7 +296,7 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
 
     ## ----------- add gene/geneset names
     if(label_size > 0) {
-
+        
         gnames <- rownames(X)
         gnames <- gsub("[&].*[;]","",gnames) ## HTML special garbage...
         gnames <- gsub("^.*:","",gnames) ## strip prefix

@@ -6,7 +6,6 @@ Inputs {.sidebar data-width=320}
 -------------------------------------------------------------------------------------------
 
 ```{r intro-title, results='asis', echo=FALSE}
-
 ENABLE_AUTHENTICATION = TRUE
 ENABLE_AUTHENTICATION = FALSE
 
@@ -194,8 +193,11 @@ observeEvent( input$action_play, {
     dbg("play button action\n")
     ##click("loadbutton")  ## loading default dataset
     ## Sys.sleep(3)
-    if(ENABLE_AUTHENTICATION) showLogin()  ## 
-    removeModal()    
+    if(ENABLE_AUTHENTICATION) {
+        showLogin()  ## $
+    } else {
+        removeModal()
+    }
 })
 
 selectedDataSetInfo <- reactive({
@@ -229,19 +231,11 @@ curSection <- reactive({
 
 
 br();br();br();br();br();
-require(shinyWidgets)
+##require(shinyWidgets)
 
 ##=================================================================================
 ##==================== USER AUTHENTICATION ========================================
 ##=================================================================================
-
-## Add Javascript
-tags$head(
-         tags$link(rel="stylesheet", type="text/css",href="shinypass/style.css"),
-         tags$script(type="text/javascript", src = "shinypass/md5.js"),
-         tags$script(type="text/javascript", src = "shinypass/passwdInputBinding.js")
-     )
-##tags$style(HTML(".modal-backdrop.in { opacity: 0.9; }"))
 
 CREDENTIALS <- list("test" = "202cb962ac59075b964b07152d234b70")
 CREDENTIALS <- list("test"="123")
@@ -261,7 +255,7 @@ showLogin <- function() {
         textInput(".username", "Username:"),
         passwordInput(".password", "Password:"),
         div(actionButton(".login", "Log in"), style="text-align: center;"),
-        footer = textOutput("message"),
+        footer = textOutput("login.message"),
         size = "s"
     ))
 }
@@ -269,12 +263,16 @@ showLogin <- function() {
 observeEvent( input$.login, {           
 
     cat(".username=",input$.username,"\n")
+    cat("login.username=",input$login.username,"\n")
+    cat("str.username=",str(input$.username),"\n")
     cat(".password=",input$.password,"\n")
-    ##cat("credentials=",CREDENTIALS[[input$.username]],"\n")    
     cat("Logged=",USER$Logged,"\n")
+
+    if( is.null(input$.username) || is.null(input$.password)) return(NULL)
+    if( input$.username=="" || input$.password=="") return(NULL)    
     
     if (isTRUE(CREDENTIALS[[input$.username]]==input$.password)) {
-        output$message = renderText("")
+        output$login.message = renderText("")
         removeModal()
         USER$Logged <- TRUE
 
@@ -284,15 +282,14 @@ observeEvent( input$.login, {
         removeModal()
 
     } else {
-        show("message")
-        output$message = renderText("Invalid user name or password")
-        delay(2000, hide("message", anim = TRUE, animType = "fade"))
+        show("login.message")
+        ##output$login.message = renderText("Invalid user name or password")
+        delay(2000, hide("login.message", anim = TRUE, animType = "fade"))
         ##Sys.sleep(3)
         USER$Logged <- FALSE
     }
-    hide("message")
+    hide("login.message")
 })
-
 
 ##=================================================================================
 ##======================== USER LEVEL =============================================
@@ -483,6 +480,7 @@ pgxTableFUNC <- reactive({
     if(is.null(PGXINFO)) return(NULL)    
 
     showStartupModal(once=TRUE)
+    ##showLogin()
             
     ##pgx.file = sub("[.]pgx$","",input$input_data)
     ##sel = match( pgx.file, PGXINFO$dataset)

@@ -526,8 +526,21 @@ getCNAfromExpression <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
     ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
-    cat("<profiling:getCNAfromExpression> calculating CNV...\n")
-    res <- pgx.CNAfromExpression(ngs, nsmooth=40, downsample=10) 
+    cat("<profiling:getCNAfromExpression> calculating CNV using heuristic smoothing...\n")
+    withProgress( message='calculating CNV...', value=0.66, {
+        res <- pgx.CNAfromExpression(ngs, nsmooth=40, downsample=1)
+    })
+    return(res)
+})
+
+getCNAfromExpression.inferCNV <- reactive({
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
+    cat("<profiling:getCNAfromExpression> calculating CNV using inferCNV...\n")
+    withProgress( message='calculating inferCNV...', value=0.66, {
+        res <- pgx.inferCNV(ngs, refgroup=NULL)
+    })
     return(res)
 })
 
@@ -537,20 +550,32 @@ pr_cnaplotFUNC <- reactive({
     ##return(NULL)    
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
-    res <- getCNAfromExpression()
-    if(is.null(res)) return(NULL)
-    annotvar=NA
-    annotvar <- input$pr_cna_annotvar
-    if(annotvar=="<none>") annotvar <- NULL
-    order.by <- input$pr_cna_orderby
-    pgx.plotCNAHeatmap(ngs, res, annot=annotvar, order.by=order.by)
+
+    if(input$pr_cna_method=="inferCNV") {
+        res <- getCNAfromExpression.inferCNV()
+        par(mfrow=c(1,1))
+        grid::grid.raster(res$png)
+    } else {
+        res <- getCNAfromExpression()
+        annotvar=NA
+        annotvar <- input$pr_cna_annotvar
+        if(annotvar=="<none>") annotvar <- NULL
+        order.by <- input$pr_cna_orderby
+        pgx.plotCNAHeatmap(ngs, res, annot=annotvar, order.by=order.by)
+    }
+    
 })
 
 pr_cna.opts = tagList(
-    selectInput("pr_cna_annotvar",label="Annotate with:", choices=NULL, multiple=FALSE),
+    tipify(radioButtons("pr_cna_method",label="Method:", choices=c("sma40","inferCNV"),
+                        inline=TRUE),
+           "Select the computational method for CNV inference. The <tt>sma40</tt> method uses a fast moving average of the relative expression values with a window of 40 genes. <tt>inferCNV</tt> uses the method inferCNV of the Trinity CTAT Project (warning: this method is very slow!)."),
+    tipify(selectInput("pr_cna_annotvar",label="Annotate with:", choices=NULL, multiple=FALSE),
+           "Select what annotation variable to show together with the heatmap"),
     ##checkboxGroupInput('pr_cnaoptions','',c("bin20"), inline=TRUE),
     ##radioButtons('pr_cnaplottype',NULL,c("image","heatmap","splitmap"), inline=TRUE),
-    radioButtons('pr_cna_orderby',"Order samples by:",c("clust","pc1"), inline=TRUE)            
+    tipify(radioButtons("pr_cna_orderby","Order samples by:",c("clust","pc1"), inline=TRUE),
+           "Select how to order the vertical (sample) axis: clustering or according the loading of the first principal component.")
 )
 
 pr_cnaModule <- plotModule(

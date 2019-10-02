@@ -20,6 +20,16 @@ library(shiny)
 library(rmarkdown)
 
 ##----------------------------------------------------------------------
+## Add Javascript in header
+##----------------------------------------------------------------------
+tags$head(
+         tags$link(rel="stylesheet", type="text/css",href="shinypass/style.css"),
+         tags$script(type="text/javascript", src = "shinypass/md5.js"),
+         tags$script(type="text/javascript", src = "shinypass/passwdInputBinding.js")
+     )
+##tags$style(HTML(".modal-backdrop.in { opacity: 0.9; }"))
+
+##----------------------------------------------------------------------
 ## set folder path
 ##----------------------------------------------------------------------
 all.dir = c("R","lib","pgx")
@@ -56,16 +66,14 @@ if(0) {
 ##----------------------------------------------------------------------
 ## Define modules to include
 ##----------------------------------------------------------------------
-BASIC_MODULES <- c(
+MODULES <- c(
     'module-home.Rmd',
     'module-dataview.Rmd',
     'module-clustering.Rmd',
     'module-expression.Rmd',
     'module-enrichment.Rmd',
+    'module-intersection.Rmd',
     'module-functional.Rmd',
-    'module-intersection.Rmd')
-
-EXPERT_MODULES <- c(
     'module-signature.Rmd',
     'module-biomarker.Rmd',
     'module-profiling.Rmd')
@@ -75,8 +83,7 @@ DEV_MODULES <- c(
     'module-batchcorrection.Rmd',
     'module-system.Rmd')
 
-MODULES <- c(BASIC_MODULES, EXPERT_MODULES)
-if(DEV.VERSION) MODULES <- c(MODULES, DEV_MODULES)
+##if(DEV.VERSION) MODULES <- c(MODULES, DEV_MODULES)
 cat("setting MODULES =",MODULES,"\n")
 
 ```
