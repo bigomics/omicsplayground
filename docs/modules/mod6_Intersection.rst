@@ -122,7 +122,7 @@ the intersection analysis by selecting the desired overlap in
 
 .. figure:: figures/psc7.5.1.png
     :align: center
-    :width: 30%
+    :width: 20%
 
 In the plot settings, users can specify the false discovery rate (FDR)
 and the logarithmic fold-change (logFC) thresholds under ``FDR`` and
