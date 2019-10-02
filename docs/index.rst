@@ -18,7 +18,7 @@
     
 .. toctree::
     :maxdepth: 2
-    :caption: Functional Modules
+    :caption: Analysis Modules
 
     modules/outline
     modules/mod0_home
