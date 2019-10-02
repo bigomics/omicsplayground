@@ -48,15 +48,19 @@ matrix.
    
 When K<=2, The **Pairs** panel provides an interactive pairwise
 scatterplots for the differential expression profiles of the two
-selected contrasts.  Since the plot is interactive, it is possible to
-check the significance statistics of each gene in both contrasts with
-a mouse hover-over. Users can also select points by dragging the
-mouse.
+selected contrasts. 
 
 .. figure:: figures/psc7.2.png
     :align: center
     :width: 100%
-    
+
+The pairs plots (both single scatter and scatter matrix) are
+interactive and shows information of each gene with a mouse
+hover-over. Users can also select a number points by selecting points
+with the mouse, using the box selection or the lasso selection
+tool. Note that the selected genes will appear in input panel on the
+left sidebar as ``<custom>`` selection.
+	    
 
 Contrast heatmap
 --------------------------------------------------------------------------------
@@ -146,15 +150,24 @@ Meta-volcano
 
     This module is supported in the EXPERT MODE ONLY.
 
-The **Meta-volcano** panel provides the volcano plot visualizing the
-intersection between the profiles by highlighting the genes that are
-common/shared in all selected comparisons.  Genes ranked by
-cumulative fold-change across the selected comparisons.
-
-In addition, it generates a sorted barplot of 
-cumulative fold-change between the profiles.
+The **Meta-volcano** panel shows the genes that are commonly shared in
+all selected comparisons in a modified volcano plot. The meta p-value
+and meta logFC are taken as the maximum and minimum value across the
+selected contrasts, respectively.
 
 .. figure:: figures/psc7.6.png
+    :align: center
+    :width: 100%    
+
+In addition, this panel generates a sorted barplot of cumulative
+fold-changes. Genes are ranked by cumulative fold-change across the
+selected comparisons and genes that are consistently up (or down)
+across all contrasts will be ranked higher. In the plot settings the
+user can also select to use *absolute foldchange' as ranking
+measure. This is desirable if the contrasts are not defined with a
+common reference.
+	    
+.. figure:: figures/psc7.6.1.png
     :align: center
     :width: 100%    
 

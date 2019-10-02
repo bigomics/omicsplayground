@@ -1624,7 +1624,7 @@ output <- attachModule(output, cmp_volcano1_module)
 
 
 cmp_fcbarplot.opts = tagList(
-    checkboxInput('cmp_fcbarplot_abs','Absolute correlation')
+    checkboxInput('cmp_fcbarplot_abs','Absolute foldchange')
 )
 cmp_fcbarplot_module <- plotModule(
     "cmp_fcbarplot", cmp_fcbarplot.RENDER,
