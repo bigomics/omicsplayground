@@ -6,7 +6,7 @@ output:
     orientation: col
     logo: resources/bigomics-logo-white-48px.png
     favicon: resources/bigomics-logo-white-48px.png
-    css: resources/custom.css
+    css: resources/playground.css
     includes:
       in_header: resources/cssloaders_in_header.html
 runtime: shiny

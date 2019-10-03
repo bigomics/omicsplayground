@@ -93,13 +93,6 @@ observe({
     levels = getLevels(ngs$Y)
     updateSelectInput(session, "hm_samplefilter", choices=levels)
     
-    split0 = colnames(ngs$Y)[grep("sample|patient|donor",colnames(ngs$Y),invert=TRUE)]
-    ny <- apply(ngs$Y[,split0],2,function(x) length(unique(x)))
-    split0 <- split0[which(ny>1)]
-    sel <- grep("tissue.type|cell.type|cluster|treat",split0,value=TRUE)[1]
-    sel <- "<none>"
-    ##updateSelectInput(session, "hm_splitx", choices=c("<none>",split0), selected=sel)
-    
     if(DEV.VERSION && !is.null(ngs$gset.meta$matrices) ) {
         jj = which(!sapply(ngs$gset.meta$matrices,is.null))
         mat.names = names(ngs$gset.meta$matrices)[jj]
@@ -312,7 +305,7 @@ observe({
     ngs <- inputData()
     req(ngs)    
     cvar <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=20)
-    sel <- c(grep("cell.type|cell.family|type|family",cvar),"<none>")[1]
+    sel <- c(grep("cell.type|cell.family|type|family",cvar,value=TRUE),"<none>")[1]
     updateSelectInput(session, "hm_splitx", choices=c("<none>",cvar), selected=sel)
 })
 
@@ -362,7 +355,7 @@ hm1_splitmap.RENDER <- reactive({
     show_legend = TRUE
     if(input$hm_level=="geneset" || !is.null(splitx)) show_legend = FALSE
     annot$group = NULL  ## no group in annotation
-    show_colnames <- input$hm_collabel
+    show_colnames <- ("col" %in% input$hm_collabel)
     show_colnames <- ifelse(ncol(zx) < 100, show_colnames, FALSE)
     
     if(input$hm_level=="gene") {
@@ -384,7 +377,7 @@ hm1_splitmap.RENDER <- reactive({
     if(!is.null(splitx) & (totnchar > 44 || nx>=6) ) crot=90
     if(main=="<all>") main <- ""
 
-    nrownames = ifelse(input$hm_rowlabel,80,0)
+    nrownames = ifelse("row" %in% input$hm_showlabel,80,0)
     
     withProgress(
         message='rendering heatmap...', value=0.66,
@@ -443,7 +436,7 @@ hm2_splitmap.RENDER <- reactive({
             rownames(annotF) = rownames(annot)
 
             cex=10
-            cex = ifelse(input$hm_rowlabel,10,0)
+            cex = ifelse("row" %in% input$hm_showlabel,10,0)
             
             tooltips = NULL
             if(input$hm_level=="gene") {
@@ -481,19 +474,18 @@ hm_splitmap_opts = tagList(
     tipify( selectInput("hm_splitx", "split by:", choices="group", width='100%'),
            "Split the samples by a predetermined phenotype class (e.g. tissue or cell type).",
            placement="right",options = list(container = "body")),
-    tipify( selectInput('hm_topmode','top mode:',c("specific","sd","pca"), width='100%'),
+    tipify( selectInput('hm_topmode','Top mode:',c("specific","sd","pca"), width='100%'),
            "Specify the criteria for selecting features to be used in the heatmap clustering analysis.",
            placement="right", options = list(container = "body")),
-    tipify( radioButtons('hm_ntop','top N:',c(50,500),inline=TRUE,selected=50),
+    tipify( radioButtons('hm_ntop','Top N:',c(50,500),inline=TRUE,selected=50),
            "Select the number of top features to be used in the analysis.", placement="top"),
     tipify( radioButtons(
-        'hm_scale', 'scale:', choices=c('relative','absolute'), inline=TRUE),
+        'hm_scale', 'Scale:', choices=c('relative','absolute'), inline=TRUE),
         "Show relative (i.e. mean-centered) or absolute expression values.",
         placement="bottom"),
-    tipify( checkboxInput("hm_rowlabel","Show row labels",TRUE),
-           "Show or hide row names."),
-    tipify( checkboxInput("hm_collabel","Show column labels",TRUE),
-           "Show or hide column names."),
+    tipify( checkboxGroupInput('hm_showlabel', 'Show labels:', choices=c('row','column'),
+                               selected=c('row','column'), inline=TRUE),
+           "Show/hide row or column names.", placement="bottom"),
     fillRow( flex=c(1,1),
         tipify( selectInput("hm_cexCol", "CexCol:", choices=seq(0.1,1.2,0.1), selected=1, width='100%'),
                "Specify the column label cex.", placement="right",options = list(container = "body")),
@@ -1000,10 +992,8 @@ clustannot_plots.PLOTLY <- reactive({
     ##par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
     NTERMS = 6
     NTERMS = 8
-    if(ncol(rho)>6) {
-        ## par( mfrow=c(3,3), mar=c(3,2,1.5,1)*0.5 )
-        NTERMS = 6
-    }
+    if(ncol(rho)>6)  NTERMS=6
+    if(ncol(rho)<=3) NTERMS=20
 
     klrpal = rep(brewer.pal(8,"Set2"),2)
     ##klrpal = paste0(klrpal,"88")
@@ -1022,10 +1012,10 @@ clustannot_plots.PLOTLY <- reactive({
         y = names(x)
         y = factor(y, levels=y)
         anntitle <- function(tt) {
-            list(text=tt, font = list(size=14),
+            list(text=tt, font = list(size=13),
                  xref="paper", yref="paper",
                  yanchor = "bottom", xanchor = "center",
-                 align = "center", x=0.5, y=0.97 , showarrow = FALSE )
+                 align = "center", x=0.5, y=0.98 , showarrow = FALSE )
         }
         
         plot_list[[i]] <- plot_ly(
@@ -1120,7 +1110,7 @@ clustannot_table_module <- tableModule(
 output <- attachModule(output, clustannot_table_module)
 
 fillCol(
-    flex = c(1.5,0.05,1),
+    flex = c(1.7,0.05,1),
     moduleWidget(clustannot_plots_module, outputFunc="plotlyOutput"),
     br(),
     moduleWidget(clustannot_table_module, outputFunc="dataTableOutput")
@@ -1146,7 +1136,9 @@ clust_phenoplot.RENDER <- reactive({
     pos = ngs$tsne2d
     Y <- ngs$Y[rownames(pos),,drop=FALSE]
     pheno = colnames(Y)    
-    pheno <- grep("batch|sample|donor|repl",pheno,
+
+    ## don't show these...
+    pheno <- grep("batch|sample|donor|repl|surv",pheno,
                   invert=TRUE, ignore.case=TRUE,value=TRUE)
         
     ## layout

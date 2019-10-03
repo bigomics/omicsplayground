@@ -12,6 +12,7 @@ ENABLE_AUTHENTICATION = FALSE
 useShinyjs(rmd=TRUE)
 htmlOutput("curdata1")
 
+
 cat("<br><br><br><br><p>Dataset info:</p>")
 wellPanel( htmlOutput("dataset_info") )
 
@@ -144,12 +145,39 @@ output$cartoon_slogan <- renderText(
     cartoon_list[[img_index()]]$slogan
 )
 
+output$splash_image <- renderImage({
+    list(src = "www/splash/bigomics-splash1.png",
+         contentType='image/png', width="auto", height="500px")
+}, deleteFile = FALSE)
 
-showStartupModal.count=0
+splash_count=0
+showSplashModal <- function(once=FALSE) {
+    if(once && splash_count>0) {
+        delay(5000, click("button_go"))
+        return(NULL)
+    }
+    showModal(modalDialog(
+        div(imageOutput("splash_image", width="auto", height="auto"),
+            style="margin-left: -450px; margin-top: 100px;"),
+            ##style="position: fixed; right=0; left=0; width=100%;"),
+        title = NULL,
+        footer = div(actionButton("button_go","show me!"),
+                     style="margin-left: -50px; margin-top: -10px;"),
+        size="s", easyClose=TRUE, fade=TRUE))
+    splash_count <<- splash_count + 1
+    ##Sys.sleep(3)
+    ##delay(5000, click("button_go"))
+}
+
+observeEvent(input$button_go, {
+    showStartupModal(once=TRUE)
+})
+
+startup_count=0
 VERSION='0.99 (always almost)'
 showStartupModal <- function(once=FALSE) {    
 
-    if(once && showStartupModal.count>0) return(NULL)
+    if(once && startup_count>0) return(NULL)
     dbg("showStartupModal: showing!\n")
     
     showModal(modalDialog(
@@ -161,6 +189,7 @@ showStartupModal <- function(once=FALSE) {
                    ##img(src="pgx-bigdata-biology-wt.png",width="750px",height="500px")
                    imageOutput("cartoon_image", width="auto", height="350px"),
                    h2(textOutput("cartoon_slogan"))
+                   ##imageOutput("splash_image", width="auto", height="350px")
             ),
             column(1, br(),br(),br(),br(),br(),br(),br(),br(),br(),
                    actionLink("img_next","",icon=icon("chevron-right")))
@@ -177,13 +206,12 @@ showStartupModal <- function(once=FALSE) {
             actionButton("action4","User forum", icon=icon("users"),
                          onclick="window.open('https://groups.google.com/forum/#!forum/omics-playground','_blank')"),
             ##actionButton("action_beer","Buy me a beer", icon=icon("beer")),
-            actionButton("action5","Donate pizza", icon=icon("pizza-slice")),
+            ##actionButton("action5","Donate pizza", icon=icon("pizza-slice")),
             ##modalButton("Let's start!")
             actionButton("action_play", "Let's play!")
         ),
         size="l", easyClose=FALSE, fade=TRUE))
-    showStartupModal.count <<- showStartupModal.count + 1
-
+    startup_count <<- startup_count + 1    
     dbg("showStartupModal done!\n")
 }
 
@@ -394,16 +422,11 @@ inputData <- reactive({
     input$loadbutton   
     btn <- isolate(input$loadbutton)
     dbg("inputData:: input$loadbutton=",btn,"\n")
-    if(is.null(btn)) {
-        ##showStartupModal(once=TRUE)
-        return(NULL)
-    }
         
     pgx = isolate(selectedDataSet())
     if(!is.null(btn) && btn!=0 && !is.null(pgx)) {
         ## show loading pop-up
         showLoadingModal(pgx)
-        ##showStartupModal(once=TRUE)
     }
     if(is.null(pgx) || pgx=="") {
         ## Set to default data set if table is not ready yet.
@@ -492,8 +515,10 @@ pgxTableFUNC <- reactive({
     ##
     
     if(is.null(PGXINFO)) return(NULL)    
-
-    showStartupModal(once=TRUE)
+    dbg("<pgxTableFUNC> reacted")
+    
+    showSplashModal(once=TRUE)
+    ##showStartupModal(once=TRUE)
     ##showLogin()
             
     ##pgx.file = sub("[.]pgx$","",input$input_data)

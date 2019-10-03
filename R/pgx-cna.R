@@ -79,13 +79,15 @@ pgx.inferCNV <- function(ngs, refgroup=NULL, progress=NULL ) {
                                   annotations_file = annots,
                                   ref_group_names = refgroup)
     
-    outdir = "/tmp/Rtmpn8rPtL/file19b68b27f09/"
-    outdir = tempfile()
-    system(paste("mkdir -p",outdir))
-    ##unlink(outdir,recursive=TRUE)   
+    out_dir = "/tmp/Rtmpn8rPtL/file19b68b27f09/"
+    out_dir = tempfile()
+    ##system(paste("mkdir -p",outdir))
+    ##unlink(out_dir,recursive=TRUE)   
+    cat("DBG pgx.inferCNV:: setting out_dir=",out_dir,"\n")
+    
     infercnv_obj <- infercnv::run(infercnv_obj,
                                   cutoff = 1, ## 
-                                  out_dir = outdir, 
+                                  out_dir = out_dir, 
                                   cluster_by_groups = TRUE, 
                                   ##denoise = TRUE,
                                   ##HMM = TRUE,  ## slow...
@@ -93,10 +95,10 @@ pgx.inferCNV <- function(ngs, refgroup=NULL, progress=NULL ) {
                                   no_plot = FALSE)
 
     require(data.table)
-    ##dir(outdir)
-    img.file <- paste0(outdir,"/infercnv.png")
-    ##cnv <- read.table(file.path(outdir,"expr.infercnv.dat"),check.names=FALSE)
-    suppressWarnings(cnv <- fread(file.path(outdir,"expr.infercnv.dat"),check.names=FALSE))
+    ##dir(out_dir)
+    img.file <- paste0(out_dir,"/infercnv.png")
+    ##cnv <- read.table(file.path(out_dir,"expr.infercnv.dat"),check.names=FALSE)
+    suppressWarnings(cnv <- fread(file.path(out_dir,"expr.infercnv.dat"),check.names=FALSE))
     symbol = cnv[[1]]
     cnv <- as.data.frame(cnv, check.names=FALSE)[2:ncol(cnv)]
     cnv <- as.matrix(cnv)
@@ -163,7 +165,7 @@ pgx.inferCNV <- function(ngs, refgroup=NULL, progress=NULL ) {
     }
 
     ## clean up folder??
-    unlink(outdir,recursive=TRUE)
+    unlink(out_dir,recursive=TRUE)
 
     return(res)    
 }

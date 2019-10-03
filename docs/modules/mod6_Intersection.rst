@@ -129,8 +129,8 @@ and the logarithmic fold-change (logFC) thresholds under ``FDR`` and
 ``logFC threshold``, respectively. In addition, they can specify the
 counting mode for the intersection analysis: ``up/down`` for counting
 the differentially expressed genes (overexpressed and underexpressed)
-separately, or ``both`` for counting diffrentially expressed without
-making any distinction.
+separately, or ``both`` for counting shared differentially expressed
+without making any distinction.
 
 .. figure:: figures/psc7.5.0.png
     :align: center
