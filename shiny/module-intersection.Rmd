@@ -31,15 +31,16 @@ observeEvent( input$cmp_info, {
         HTML(cmp_infotext),
         easyClose = TRUE, size="l" ))
 })
-```
 
-<br><hr>
+
+```
 
 
 ```{r}
 ##======================================================================
 ## Left side-bar general options
 ##======================================================================
+br();hr();
 
 tipify( selectInput('cmp_comparisons','Contrasts:', choices=NULL, multiple=TRUE),
        "Select the contrasts that you want to compare. If you select N=2 contrast a single scatterplot will be drawn. For N>=3 a scatterplot matrix will be drawn.",
@@ -60,7 +61,6 @@ input_cmp_comparisons <- reactive({
     input$cmp_comparisons
 }) %>% debounce(500)
 
-
 conditionalPanel(
     "input.main_usermode == 'expert'",
     tagList(
@@ -69,11 +69,21 @@ conditionalPanel(
     )
 )
 
+
+if(DEV.VERSION) {
+    tagList(
+	hr(),
+        h5("Developer options:"),
+        radioButtons('cmp_featuretype','Feature type:',
+                     choices=c("logFC","logCPM"), inline=TRUE)
+    )
+}
+
+
 ## update choices upon change of data set 
 observe({
     ngs <- inputData()
-    req(ngs)
-    
+    req(ngs)    
     comparisons <- colnames(ngs$model.parameters$contr.matrix)
     comparisons <- sort(comparisons)
     updateSelectInput(session, "cmp_comparisons", choices=comparisons,
@@ -102,8 +112,6 @@ observe({
         updateTextAreaInput(session, "cmp_customlist", value=sel.keys)
     }
 })
-
-
 
 ```
 
@@ -189,6 +197,50 @@ cmpGetFoldChangeMatrix <- reactive({
     return(res) 
 })
 
+cmpGetCPMMatrix <- reactive({
+    ## 
+    ## Get full foldchange matrix from ngs object.
+    ##
+    ##
+    ##
+    cat("<module-intersect:cmpGetExpressionMatrix> reacted\n")
+
+    ngs <- inputData()
+    if(is.null(ngs)) return(NULL)
+    
+    if(input$cmp_level=="geneset") {
+        grp <- ngs$samples$group
+        mx = tapply(colnames(ngs$gsetX), grp, function(k) rowMeans(ngs$gsetX[,k,drop=FALSE]))
+        mx = do.call(cbind, mx)
+        mx0 = mx
+        gsets = rownames(mx)
+        if(input$cmp_filter != "<all>") {
+            gsets = unique(unlist(COLLECTIONS[input$cmp_filter]))
+        }
+        gsets = intersect(gsets, rownames(mx))
+        mx = mx[gsets,,drop=FALSE]
+    } else {
+        grp <- ngs$samples$group
+        mx = tapply(colnames(ngs$X), grp, function(k) rowMeans(ngs$X[,k,drop=FALSE]))
+        mx = do.call(cbind, mx)
+        mx0 = mx
+        sel.probes = rownames(mx) ## default to all probes
+        if(input$cmp_filter == "<custom>") {
+            genes = strsplit( input$cmp_customlist, split="[, ;]")[[1]]
+            if(length(genes)>0) {
+                sel.probes = filterProbes(ngs$genes, genes)
+            }
+        } else if(input$cmp_filter %in% names(GSETS)) {
+            sel.probes = filterProbes(ngs$genes, GSETS[[input$cmp_filter]])
+        }
+        sel.probes = intersect(sel.probes, rownames(mx))
+        mx = mx[sel.probes,,drop=FALSE]
+    }    
+    mx <- mx[,!duplicated(colnames(mx)),drop=FALSE]
+    res = list(mx=mx, mx.full=mx0)
+    return(res) 
+})
+
 
 getSignificanceCalls <- reactive({
     ## Gets the matrix of significance calls.
@@ -217,11 +269,11 @@ getSignificanceCalls <- reactive({
     return(dt)
 })
 
+
 getSignificantFoldChangeMatrix <- reactive({
     ####################################################################
     ## Filters FC matrix with significance and user-defined
     ## intersection region.
-    ##
     ####################################################################
     fc0 = NULL
     dt <- getSignificanceCalls()
@@ -288,33 +340,38 @@ cmp_scatterPlotMatrix.PLOT <- reactive({
     require(ggplot2)
     require(plotly)
     ##require(GGally)
+    
+    if(input$cmp_featuretype=="logCPM") {
+        ##res = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
+        res = cmpGetCPMMatrix()
+        ##if(is.null(res)) return(NULL)
+        req(res)    
+        fc0 = res$mx.full
+        fc1 = res$mx
+    } else if(input$cmp_featuretype=="logFC") {
+        ##res = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
+        res = cmpGetFoldChangeMatrix()
+        ##if(is.null(res)) return(NULL)
+        req(res)    
+        fc0 = res$fc.full
+        fc1 = res$fc
 
-    ##res = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
-    res = cmpGetFoldChangeMatrix()
-    ##if(is.null(res)) return(NULL)
-    req(res)
-    
-    fc0 = res$fc.full
-    fc1 = res$fc
+        ## match with selection filter
+        comp = head(colnames(fc0),3)
+        comp = input_cmp_comparisons()
+        ##comp = isolate(input$cmp_comparisons)  ## res is already reactive???
+        kk = match(comp, colnames(fc0))
+        if(length(kk)==0) return(NULL)
+        if(length(kk)==1) kk = c(kk,kk)
+        fc0 = fc0[,kk,drop=FALSE]
+        ##rownames(fc0) = sub(".*:","",rownames(fc0))
+
+    }
     dim(fc0)
-    
-    ## match with selection filter
-    comp = head(colnames(fc0),3)
-    comp = input_cmp_comparisons()
-    ##comp = isolate(input$cmp_comparisons)  ## res is already reactive???
-    kk = match(comp, colnames(fc0))
-    if(length(kk)==0) return(NULL)
-    if(length(kk)==1) kk = c(kk,kk)
-    fc0 = fc0[,kk,drop=FALSE]
-    ##rownames(fc0) = sub(".*:","",rownames(fc0))
-    dbg("cmp_scatterPlotMatrix:: dim(fc0) =",dim(fc0),"\n")
-    print("hello!")
-    
+        
     ##fc0 <- fc0[order(-rowSums(fc0**2)),]
     fc0 <- fc0[order(-apply(abs(fc0),1,max)),]
     fc0 <- fc0[order(-rowMeans(abs(fc0**2))),]
-    dbg("cmp_scatterPlotMatrix:: head(rownames((fc0)) =",head(rownames((fc0))),"\n")
-    dbg("cmp_scatterPlotMatrix:: head(rownames((fc1)) =",head(rownames((fc1))),"\n")
     
     ## selected genes
     sel.genes = grep("^CD",rownames(fc0),value=TRUE)
@@ -343,8 +400,6 @@ cmp_scatterPlotMatrix.PLOT <- reactive({
     }
     dim(df)
 
-    dbg("cmp_scatterPlotMatrix:: dim(df) =",dim(df),"\n")
-    
     ## resort selection so that selected genes are drawn last to avoid
     ## covering them up.
     is.sel = (rownames(df) %in% sel.genes)
@@ -361,9 +416,6 @@ cmp_scatterPlotMatrix.PLOT <- reactive({
     label.text <- sub("","",label.text)  ## strip prefix??
     label.text <- shortstring(label.text,30)
     if(sum(is.na(label.text))) label.text[is.na(label.text)] <- ""
-    dbg("cmp_scatterPlotMatrix:: sum(is.sel) =",sum(is.sel),"\n")
-    dbg("cmp_scatterPlotMatrix:: head(label.text) =",head(label.text),"\n")
-
     
     ## reorder so the selected genes don't get overlapped
     jj <- order(is.sel)
@@ -371,9 +423,6 @@ cmp_scatterPlotMatrix.PLOT <- reactive({
     df.color <- df.color[jj]
     sel1 <- match(label.text, rownames(df))  ## index for labeled
 
-    dbg("cmp_scatterPlotMatrix:: length(sel1) =",length(sel1),"\n")
-    dbg("cmp_scatterPlotMatrix:: head(sel1) = ",head(sel1),"\n")
-    
     ## Tooltip text for all 
     tt <- rownames(df)  ## strip prefix
     ## tt <- sub("","",tt)  ## strip prefix??
@@ -394,8 +443,6 @@ cmp_scatterPlotMatrix.PLOT <- reactive({
                 )
     
     if(ncol(df)>=3) {
-        dbg("cmp_scatterPlotMatrix:: plotting SPLOM (k=",ncol(df),")\n")
-    
         dimensions = lapply(colnames(df), function(a) list(label=a, values = df[,a]))
 
         ## compute correlations 
@@ -406,7 +453,7 @@ cmp_scatterPlotMatrix.PLOT <- reactive({
         ## annotation positions (approximated by eye...)
         xann = 1.02*(as.vector(mapply(rep,seq(0,0.98,1/n),n)) + 0.05*1/n)
         ##xann = as.vector(mapply(rep,seq(0,1,1/(n-1)),n))
-        yann = 1.06*(as.vector(rep(seq(1,0.02,-1/n),n)) - 0.15*1/n - 0.03)
+        yann = 1.08*(as.vector(rep(seq(1,0.02,-1/n),n)) - 0.15*1/n - 0.04)
         ##yann = as.vector(rep(seq(1,0.0,-1/(n-1)),n))
                 
         p <- plot_ly(df, source="splom", key=rownames(df) ) %>%
@@ -455,8 +502,6 @@ cmp_scatterPlotMatrix.PLOT <- reactive({
 
     } else {
 
-        dbg("cmp_scatterPlotMatrix:: plotting PAIRS (k=2)\n")
-        
         rho = cor(df[,1], df[,2])        
         annot.rho <- list(
             text = paste("r=",round(rho,4)),
@@ -1035,7 +1080,7 @@ cmp_ctheatmap.PLOTLY <- reactive({
 
 
 cmp_ctheatmap.opts = tagList(
-    tipify( checkboxInput('cmp_ctheatmap_showrho', "show correlation values", TRUE),
+    tipify( checkboxInput('cmp_ctheatmap_showrho', "show correlation values", FALSE),
            "Show correlation values in cells."),
     tipify( checkboxInput('cmp_ctheatmap_allfc', "show all contrasts", TRUE),
            "Show all contrasts or just the selected ones."),
@@ -1483,7 +1528,14 @@ cmp_volcano1.RENDER <- reactive({
     if(input$cmp_level=="gene") {
         sel.probes = rownames(fc0) 
         ##sel.probes = filterFamily(ngs$genes, input$cmp_filter, ngs=ngs)
-        sel.probes = filterProbes(ngs$genes, GSETS[[input$cmp_filter]])
+        if(input$cmp_filter %in% names(GSETS)) {
+            sel.probes = filterProbes(ngs$genes, GSETS[[input$cmp_filter]])
+        } else if(input$cmp_filter == "<custom>") {
+            genes = strsplit( input$cmp_customlist, split="[, ;]")[[1]]
+            if(length(genes)>0) {
+                sel.probes = filterProbes(ngs$genes, genes)
+            }
+        }
         sel.probes = intersect(sel.probes, rownames(fc0))
         fc0 = fc0[sel.probes,,drop=FALSE]
         qv0 = qv0[sel.probes,,drop=FALSE]
@@ -1496,6 +1548,8 @@ cmp_volcano1.RENDER <- reactive({
     if(is.null(fdr)) return(NULL)
     if(is.null(lfc)) return(NULL)
 
+    dbg("dim(fc0)=",dim(fc0))
+    
     ## check signs, thresholds
     sign.fc <- sign(rowMeans(fc0))
     min.fc <- apply(abs(fc0),1,min) * sign.fc
@@ -1506,6 +1560,11 @@ cmp_volcano1.RENDER <- reactive({
     sel.genes <- fc.genes[in.common]
     ##max.qv[which(!same.sign)] <- 1
     
+    dbg("min.min.fc=",min(min.fc))
+    dbg("max.min.fc=",max(min.fc))
+    dbg("min.max.qv=",min(max.qv))
+    dbg("max.max.qv=",max(max.qv))
+
     par(mfrow=c(1,1), mar=c(5,5,1,3), mgp=c(2.4,1,0) )
     gx.volcanoPlot.XY( x= min.fc, pv= max.qv, gene=fc.genes,
                       render="canvas", n=5000, nlab=25, 
@@ -1547,7 +1606,7 @@ cmp_fcbarplot.RENDER <- reactive({
     par(mar=c(8,4,2,2))
     par(mfrow=c(1,1), mar=c(8,5,3,3), mgp=c(2.4,1,0) )
     fc.sum <- rowSums(fc.top,na.rm=TRUE)
-    ylim <- c( min(c(0,fc.sum)), 1.3*max(fc.sum))
+    ylim <- c(min(c(0,fc.sum)), max(0,1.3*max(fc.sum)))
     barplot(t(fc.top), las=3, cex.names=0.9,
             ylim=ylim, ylab="cumulative logFC")
     legend("topright", legend=colnames(fc.top),

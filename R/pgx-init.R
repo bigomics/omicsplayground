@@ -254,6 +254,6 @@ dbg <- function(... ) {
     if(DEV.VERSION) {
         ##msg = paste0(ifelse(is.null(module),"",paste0("<",module,"> ")),msg)
         msg = sapply( list(...),paste,collapse=" ")
-        cat(paste0(sub("\n$","",paste(msg,collapse=" ")),"\n"))
+        cat(paste0("DBG ",sub("\n$","",paste(msg,collapse=" ")),"\n"))
     }
 }

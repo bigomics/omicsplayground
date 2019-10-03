@@ -915,12 +915,9 @@ expr_gsettable.RENDER <- reactive({
     DT::datatable(df,
                   class = 'compact cell-border stripe',
                   rownames=FALSE,
-                  extensions = c('Buttons','Scroller'),
+                  extensions = c('Scroller'),
                   options=list(
                       dom = 'lfrtip', 
-                      buttons = list('copy','csv',
-                                     list(extend='pdf', orientation='landscape', pageSize="A3",
-                                          filename="gsea-genes", title="")),
                       ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
                       scrollX = TRUE, scrollY = 260, scroller=TRUE, deferRender=TRUE
                   ),  ## end of options.list 

@@ -92,7 +92,6 @@ if(DEV.VERSION) {
            placement="bottom")
 }
 
-
 observeEvent( input$data_scanfiles, {
     cat("scanning PGX file info...\n")
     withProgress(message=">>> scanning available data sets...", value=0, {
@@ -120,20 +119,21 @@ cartoon_list <- list(
     list(slogan="Big Data meets Biology", img="bigdata-meets.png")
 )
 
-randomCartoon <- reactive({
-    invalidateLater(12000)
+randomCartoon <- function() {
+    ## invalidateLater(12000)
     cartoon <- sample(cartoon_list,1)[[1]]
     cartoon$img2 = paste0("cartoons/",cartoon$img)
     cartoon$img  = paste0("www/cartoons/",cartoon$img)
     cartoon
-})
+}
 
+## Poor man's slider...
 wrapindex <- function(x,n=length(cartoon_list)) ifelse(x%%n==0,n,x%%n)
 img_index <- reactiveVal(1)
 observeEvent(input$img_previous, { img_index(wrapindex(img_index()-1)) })
 observeEvent(input$img_next, { img_index(wrapindex(img_index()+1)) })
 output$cartoon_image <- renderImage({
-    invalidateLater(12000)
+    ##invalidateLater(12000)
     isolate(img_index(wrapindex(img_index()+1)))
     img = cartoon_list[[img_index()]]$img
     img = paste0("www/cartoons/",img)
@@ -156,13 +156,11 @@ showStartupModal <- function(once=FALSE) {
         fluidRow(
             column(1, br(),br(),br(),br(),br(),br(),br(),br(),br(),
                    actionLink("img_previous","",icon=icon("chevron-left"))),
-            column(
-                10, align="center",
-                ##flex=c(1,NA), 
-                ##img(src="pgx-bigdata-biology-wt.png",width="750px",height="500px")
-                imageOutput("cartoon_image", width="auto", height="350px"),
-                ##img(src=randomCartoon()$img2,height="350px"),
-                h2(textOutput("cartoon_slogan"))
+            column(10, align="center",
+                   ##flex=c(1,NA), 
+                   ##img(src="pgx-bigdata-biology-wt.png",width="750px",height="500px")
+                   imageOutput("cartoon_image", width="auto", height="350px"),
+                   h2(textOutput("cartoon_slogan"))
             ),
             column(1, br(),br(),br(),br(),br(),br(),br(),br(),br(),
                    actionLink("img_next","",icon=icon("chevron-right")))
@@ -212,14 +210,29 @@ selectedDataSet <- reactive({
     as.character(PGXINFO$dataset[sel])
 })
 
+toon <- randomCartoon()
+output$loading_image <- renderImage({
+    list(src = toon$img, contentType = 'image/png', width="auto", height="350px")
+    ##list(src = toon$img, contentType = 'image/png', width="auto", height="auto")
+}, deleteFile = FALSE)
+
 showLoadingModal <- function(pgx) {
+    toon <- randomCartoon()
+    output$loading_image <- renderImage({
+        list(src = toon$img, contentType = 'image/png', width="auto", height="250px")
+        ##list(src = toon$img, contentType = 'image/png', width="auto", height="auto")
+    }, deleteFile = FALSE)
     showModal(modalDialog(
         ##title = HTML("<center><h4>Omics Playground</h4></center>"),
-        HTML("<center><h2>",pgx.randomSlogan(),"</h2><h4>with Omics Playground</h4></center>"),
-        ##HTML("<center><h2>",pgx.randomSlogan(),"</h2></center>"),
-        footer = HTML("<center><p>Loading ",pgx,"data...  &nbsp; Please wait</p></center>"),
+        ##HTML("<center><h2>",pgx.randomSlogan(),"</h2><h4>with Omics Playground</h4></center>"),
+        title = HTML("<center><h2>",toon$slogan,"</h2></center>"),
+        fillRow(flex=c(1,NA,1), br(),
+                imageOutput("loading_image", width="auto", height="250px"),
+                br()),
+        footer = HTML("<center><h3>with Omics Playground</h3><p>Loading ",pgx,
+                      "data...  &nbsp; Please wait</p></center>"),
         size="m", easyClose=TRUE, fade=TRUE))
-    Sys.sleep(2)
+    Sys.sleep(8)
     dbg("showLoadingModal done!\n")
 }
 
@@ -412,14 +425,15 @@ inputData <- reactive({
     dbg("inputData:: finished loading\n")
 
     ##----------------- update input
-    ngs <- pgx.initialize(ngs) 
+    withProgress( {ngs <- pgx.initialize(ngs)},
+                 message="initializing data", value=0.66)
     if(is.null(ngs$name)) ngs$name <- sub("[.]pgx$","",pgx)
 
     ##----------------- remove modal??
     ##Sys.sleep(2)
     removeModal()
     
-    dbg("inputData:: returning!\n")
+    dbg("inputData:: ready!\n")
     return(ngs)
 
 })
@@ -492,6 +506,8 @@ pgxTableFUNC <- reactive({
     PGXINFO = PGXINFO[order(PGXINFO$dataset),] 
     PGXINFO$nr <- 1:nrow(PGXINFO)
     PGXINFO$conditions <- sapply(PGXINFO$conditions, andothers, split=" ", n=6)
+    PGXINFO$description <- shortstring(PGXINFO$description,200)
+
     DT::datatable( PGXINFO,
                   class = 'compact cell-border stripe hover',
                   rownames=FALSE,
