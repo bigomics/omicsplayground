@@ -853,8 +853,9 @@ sig_overlapTable.module <- tableModule(
 output <- attachModule(output, sig_overlapTable.module)
 
 fillCol(
-    flex = c(1,1), 
+    flex = c(1,0.04,1), 
     moduleWidget(sig_overlapScorePlot.module, outputFunc="plotlyOutput"),
+    br(),
     moduleWidget(sig_overlapTable.module, outputFunc="dataTableOutput")
 )
 
@@ -1007,8 +1008,9 @@ sig_table2_module <- tableModule(
 output <- attachModule(output, sig_table2_module)
     
 fillCol(
-    flex = c(1.2,1), ## width = 600,
+    flex = c(1.2,0.04,1), ## width = 600,
     moduleWidget(sig_table1_module, outputFunc="dataTableOutput"),
+    br(),
     moduleWidget(sig_table2_module, outputFunc="dataTableOutput")    
 )
 
