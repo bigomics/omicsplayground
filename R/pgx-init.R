@@ -150,7 +150,8 @@ PURPLEYELLOW <- colorRampPalette(c("purple","purple4","black","yellow4","yellow"
 
 
 pgx.initialize <- function(ngs) {
-    cat("<init:initialize> initializing ngs object for the Playground\n")
+
+    cat("INFO <init:initialize> initializing ngs object for the Playground\n")
 
     ##----------------- check object
     obj.needed <- c("deconv","genes", ## "collections", "families", "counts",
@@ -192,13 +193,15 @@ pgx.initialize <- function(ngs) {
     kk <- unique( c(grep("^group$",colnames(ngs$samples)),kk))
     ngs$Y = ngs$samples[colnames(ngs$X),kk,drop=FALSE]
     ngs$Y <- tidy.dataframe(ngs$Y) ## NEED CHECK!!!
+    
+    ##----------------------------------------------------------------
+    ## Tidy up genes matrix
+    ##----------------------------------------------------------------
     ngs$genes = ngs$genes[rownames(ngs$counts),,drop=FALSE]
     ngs$genes$gene_name = as.character(ngs$genes$gene_name)
     ngs$genes$gene_title = as.character(ngs$genes$gene_title)
 
-    ##-----------------------------------------------------------------------------
-    ## Add chromosome anntation if not
-    ##-----------------------------------------------------------------------------
+    ## Add chromosome annotation if not
     if(!("chr" %in% names(ngs$genes))) {
         symbol = sapply(as.list(org.Hs.egSYMBOL),"[",1)  ## some have multiple chroms..
         CHR = sapply(as.list(org.Hs.egCHR),"[",1)  ## some have multiple chroms..
@@ -239,6 +242,24 @@ pgx.initialize <- function(ngs) {
         event <- ( ngs$Y$OS_STATUS %in% c("DECEASED","DEAD","1","yes","YES","dead"))
         ngs$Y$OS.survival <- ifelse(event, ngs$Y$OS_MONTHS, -ngs$Y$OS_MONTHS)            
     }
+
+    ##-----------------------------------------------------------------------------
+    ## Remove redundant???
+    ##-----------------------------------------------------------------------------
+    if(".gender" %in% colnames(ngs$Y) &&
+        any(c("gender","sex") %in% tolower(colnames(ngs$Y)))) {
+        ngs$Y$.gender <- NULL
+    }
+    
+    ## *****************************************************************
+    ## ******************NEED RETHINK***********************************
+    ## *****************************************************************
+    ## ONLY categorical variables for the moment!!!
+    k1 = pgx.getCategoricalPhenotypes(ngs$Y)
+    k2 = grep("OS.survival",colnames(ngs$Y),value=TRUE)
+    ngs$Y <- ngs$Y[,c(k1,k2)]
+    colnames(ngs$Y)
+    ngs$samples <- ngs$Y    ## REALLY?
     
     ##-----------------------------------------------------------------------------
     ## remove large deprecated outputs from objects

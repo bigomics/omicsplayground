@@ -22,13 +22,14 @@ pdx_infotext =
 
 <br><br>To better understand which genes, mutations, or gene sets influence the final phenotype the most, Playground calculates a variable importance score for each feature using state-of-the-art machine learning algorithms, including LASSO, elastic nets, random forests, and extreme gradient boosting, and provides the top 50 features according to cumulative ranking by the algorithms. By combining several methods, the platform aims to select the best possible biomarkers.
 
-<br><br>The phenotype of interest can be multiple categories (classes) or patient survival data. Instead of choosing a phenotype, users can also specify a particular contrast from the analysis and perform biomarker selection. The platform also provides a heatmap of samples based on identified top features. 
+<br><br>The phenotype of interest can be multi-categorical classes or patient survival data. Instead of choosing a phenotype, users can also specify a particular contrast from the analysis and perform biomarker selection. The platform also provides a heatmap of samples based on identified top features. 
 
 <br><br>In addition, it generates a classification tree using top features and provides expression boxplots by phenotype classes for features present in the tree. The platform can also provide a survival tree analysis using top features and provides expression boxplots by phenotype classes for features present in the tree.
 
 "
 
 observeEvent( input$pdx_info, {
+    dbg("<module-biomarker::observe pdxinfo> reacted")
     showModal(modalDialog(
         title = HTML("<strong>Biomarker Module</strong>"),
         HTML(pdx_infotext),
@@ -42,36 +43,32 @@ observeEvent( input$pdx_info, {
 tipify(selectInput("pdx_predicted","Predicted target:", choices=NULL),
        "Select the target variable for biomarker selection.",
        placement="top")
+
+tipify( selectInput("pdx_level","Feature level:", choices=c("gene","geneset")),
+       "Select feature level: gene or geneset", placement="top")
+
+tipify( selectInput("pdx_filter","Feature filter:", choices=NULL),
+       "Select a filter for the features.", placement="top")
+
+conditionalPanel(
+    "input.pdx_filter == '<custom>'",
+    tipify(
+        ##selectizeInput("pdx_select","Custom features:", choices=NULL, multiple=TRUE),
+        textAreaInput("pdx_select", "Custom features:", value = NULL,
+                      rows=8, placeholder="Paste your gene list"),
+        "Paste a custom gene list to be used as features.", placement="top")
+)
+
 tipify(actionButton("pdx_runbutton", label="Run", class="blinking"),
        "Click to start biomarker computation.", placement="right")
 
-br();br();br();
-tipify( actionLink("pdx_options", "Options", icon=icon("cog", lib = "glyphicon")),
-       "Toggle advanced options", placement="top")
+br();hr()
 
-br();
-conditionalPanel(
-    "input.pdx_options % 2 == 1",
-    tagList(
-        ##radioButtons('pdx_vartype',NULL,c("phenotype","contrast"),inline=TRUE),
-        ##checkboxInput('pdx_normalize','normalize',TRUE),
-        tipify( selectInput("pdx_level","Level:", choices=c("gene","geneset")),
-               "Select feature level: gene or geneset", placement="top"),
-        tipify( selectInput("pdx_filter","Filter:", choices=NULL),
-               "Select a filter for the gene features.", placement="top"),
-        tipify(
-            ##selectizeInput("pdx_select","Custom features:", choices=NULL, multiple=TRUE),
-            textAreaInput("pdx_select", "Custom features:", value = NULL,
-                          rows=8, placeholder="Paste your gene list"),
-            "Paste a custom gene list to be used as features.", placement="top")
-    )
-)
-
-br();
 if(DEV.VERSION) {
     conditionalPanel(
         "input.pdx_options % 2 == 1",
         tagList(
+            h6("Developer options:"),
             checkboxInput('pdx_multiomics','multi-omics weighting',FALSE)
         )
     )
@@ -82,6 +79,7 @@ if(DEV.VERSION) {
 ##}) %>% debounce(3000)
 
 input_pdx_select <- reactive({
+    dbg("<input_pdx_select>  reacted")
     gg <- input$pdx_select
     if(is.null(gg)) return(NULL)
     gg <- strsplit(as.character(gg), split="[, \n\t]")[[1]]
@@ -93,26 +91,35 @@ input_pdx_select <- reactive({
 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
+    dbg("<module-biomarker::observe1> reacted")
+
     ct <- colnames(ngs$Y)
     ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
     updateSelectInput(session, "pdx_predicted", choices=ct )
-    
+    dbg("<module-biomarker::observe1> done!")    
 })
 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs, input$pdx_level)
+    dbg("<module-biomarker::observe2> reacted")
+
     if(input$pdx_level=="geneset") {
         ft <- names(COLLECTIONS)
         nn <- sapply(COLLECTIONS, function(x) sum(x %in% rownames(ngs$gsetX)))
         ft <- ft[nn >= 10]
     } else {
         ## gene level
-        ft <- pgx.getFamilies(ngs,nmin=10,extended=TRUE)
+        ft <- pgx.getFamilies(ngs,nmin=10,extended=FALSE)
     }
     ft <- sort(ft)
-    updateSelectInput(session, "pdx_filter", choices=ft )    
+    if(input$pdx_level == "gene") ft = sort(c("<custom>",ft))
+    updateSelectInput(session, "pdx_filter", choices=ft, selected="<all>")    
+
+    dbg("<module-biomarker::observe2> done!")
 })
 
 
@@ -413,7 +420,8 @@ pdx_importance.RENDER <- reactive({
 pdx_heatmap.RENDER <- reactive({
 
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     res <- calcVariableImportance()
     if(is.null(res)) return(NULL)
@@ -636,7 +644,8 @@ fillRow(flex = c(1,0.1,1),
 
 mix_computeDiablo <- reactive({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     cat("<mix_computeDiablo> called\n")
 
@@ -691,7 +700,8 @@ mix_plotLoadings.RENDER <- reactive({
 
     cat("<predict::mix_plotLoadings> called\n")    
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     res <- mix_computeDiablo()
     ##plotLoadings(res, comp = 2, contrib = 'max', method = 'median',
@@ -847,7 +857,8 @@ output$mix_circosPlot <- renderPlot({
 mix_hivePlot.RENDER <- reactive({
 
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
 
     ct="group"
     ct <- input$pdx_predicted
@@ -868,7 +879,8 @@ mix_hivePlot.RENDER <- reactive({
 
 mix_cimDiablo.RENDER <- reactive({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ## if(is.null(ngs)) return(NULL)
+    req(ngs)
 
     res <- mix_computeDiablo()
     if(is.null(res)) return(NULL)
@@ -998,7 +1010,8 @@ fillCol(flex = c(NA,1),
 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
     ct1 <- c("COMPARTMENTS:Cell_surface", "COMPARTMENTS:Membrane_part",
              "FAMILY:Endogenous ligands (HGNC)",
              "C2:REACTOME_CHEMOKIoNE_RECEPTORS_BIND_CHEMOKINES")

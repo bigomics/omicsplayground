@@ -2,10 +2,10 @@
 
 Single-Cell Profiling
 ================================================================================
-The **Single-Cell Profiling** module is specifically developed for the analysis
-and visualization of single-cell datasets. The main applications are 
-identification of immuner cell types and visualisations of markers, copy number 
-variations, phenotypes, and 
+The **Single-Cell Profiling** module is specifically developed for the
+analysis and visualization of single-cell datasets. The main
+applications are identification of immune cell types and
+visualisations of markers, copy number variations, phenotypes, and
 proportions across the cells.
 
 

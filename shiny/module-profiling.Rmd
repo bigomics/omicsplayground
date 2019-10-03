@@ -29,6 +29,7 @@ pr_infotext =
 <br><br>It is also possible to perform a copy number variation analysis under the <strong>CNV tab</strong>. The copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. CNV generates a heatmap of samples versus chromosomes, where samples can be annotated further with a phenotype class provided in the data."
 
 observeEvent( input$pr_info, {
+    dbg("<profiling:observe1> reacted")
     showModal(modalDialog(
         title = HTML("<strong>Cell Profiling Module</strong>"),
         HTML(pr_infotext),
@@ -40,7 +41,7 @@ observeEvent( input$pr_info, {
 
 ```{r}
 tipify( actionLink("pr_options", "Options", icon=icon("cog", lib = "glyphicon")),
-       "Toggle advanced options", placement="top")
+       "Toggle options", placement="top")
 br();
 conditionalPanel(
     "input.pr_options % 2 == 1",
@@ -58,14 +59,19 @@ conditionalPanel(
 observe({
     ngs <- inputData()
     req(ngs)
+    dbg("<profiling:observe2> reacted")
     ## levels for sample filter
     levels <- getLevels(ngs$Y)
     updateSelectInput(session, "pr_samplefilter", choices=levels)
+
+    dbg("<profiling:observe2> done!")
 })
 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
+    dbg("<profiling:observe3> reacted")
 
     refsets = "LM22"
     refsets <- sort(names(ngs$deconv))
@@ -76,12 +82,15 @@ observe({
     dcmethods <- names(ngs$deconv[[1]])
     dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
     updateSelectInput(session, "pr_dcmethod", choices=dcmethods, selected=dcsel)
+
+    dbg("<profiling:observe3> done!")
 })
 
 
 pfGetClusterPositions <- reactive({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     ##zx <- filtered_matrix1()
     zx = ngs$X
@@ -194,7 +203,8 @@ pr_icpplotFUNC <- reactive({
     require(RColorBrewer)
     
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     clust <- pfGetClusterPositions()
     if(is.null(clust)) return(NULL)
@@ -255,7 +265,7 @@ pr_icpplotFUNC <- reactive({
     if(input$pr_view=="heatmap") {
 
         ##if(PRO.VERSION) {
-        if(input$main_usermode >="expert") {            
+        if(!is.null(input$main_usermode) && input$main_usermode >="expert") {            
             kk <- head(colnames(score)[order(-colMeans(score**2))],18)
             kk <- intersect(colnames(score),kk)
             all.scores <- ngs$deconv[["LM22"]]
@@ -369,7 +379,8 @@ pr_markersplotFUNC <- reactive({
     require(RColorBrewer)
     
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     clust <- pfGetClusterPositions()
     if(is.null(clust)) return(NULL)
@@ -500,7 +511,10 @@ output <- attachModule(output, pr_markersplot_module)
 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs,input$pr_level)
+    dbg("<profiling:observe4> reacted")
+    
     choices <- names(ngs$families)
     selected = grep("^CD",choices,ignore.case=TRUE,value=TRUE)[1]
     if(input$pr_level=="geneset") {
@@ -508,6 +522,8 @@ observe({
         selected = grep("HALLMARK",names(COLLECTIONS),ignore.case=TRUE,value=TRUE)
     }
     updateSelectInput(session, "pr_features", choices=choices, selected=selected)
+
+    dbg("<profiling:observe4> done!")
 })
 
 fillCol( moduleWidget(pr_markersplot_module))
@@ -524,7 +540,9 @@ fillCol( moduleWidget(pr_markersplot_module))
 
 getCNAfromExpression <- reactive({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
+    
     ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
     cat("<profiling:getCNAfromExpression> calculating CNV using heuristic smoothing...\n")
     withProgress( message='calculating CNV...', value=0.66, {
@@ -535,7 +553,9 @@ getCNAfromExpression <- reactive({
 
 getCNAfromExpression.inferCNV <- reactive({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
+    
     ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
     cat("<profiling:getCNAfromExpression> calculating CNV using inferCNV...\n")
     withProgress( message='calculating inferCNV...', value=0.66, {
@@ -549,7 +569,8 @@ pr_cnaplotFUNC <- reactive({
     require(RColorBrewer)
     ##return(NULL)    
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
 
     if(input$pr_cna_method=="inferCNV") {
         res <- getCNAfromExpression.inferCNV()
@@ -591,10 +612,17 @@ fillCol(moduleWidget(pr_cnaModule))
 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
+
+    dbg("<profiling:observe5> reacted")
+    
     ## levels for sample filter
     annotvar <- c(colnames(ngs$Y),"<none>")
     updateSelectInput(session, "pr_cna_annotvar", choices=annotvar)
+
+    dbg("<profiling:observe5> done!")
+    
 })
 
 ```
@@ -608,7 +636,8 @@ observe({
 
 italk_getResults <- reactive({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ## if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     require(iTALK)
     db <- iTALK::database
@@ -725,24 +754,11 @@ italk_heatmap.RENDER <- reactive({
 
 
 require(shinyBS)
-italk_netview_module <- plotModule(
-    "italk_netview", italk_netview.RENDER,
-    title = "NetView", label="a",
-    info.text = "The NetView plot visualizes the communication structure of ligand-receptor genes as a graph. The colors represent different types of cells as a structure and the width of edges represent the strength of the communication. Labels on the edges show exactly how many interactions exist between two types of cells. For further information, see iTALK R package (Wang et al., BioRxiv 2019).",
-    options = tagList(
-        tipify( selectInput("italk_netview_topgenes","top genes",
-                            choices=c(10,25,50,75,100),selected=50),
-               "Select the number of topgenes to search for ligand-receptor pairs.",
-               placement="top" )
-    ),
-    pdf.width=6, pdf.height=8, res=80
-)
-output <- attachModule(output, italk_netview_module)
 
 
 italk_LRPlot_module <- plotModule(
     "italk_LRPlot", italk_LRPlot.RENDER,
-    title = "Ligand-Receptor plot", label="b",
+    title = "Ligand-Receptor plot", label="a",
     info.text = "The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as
 a circle plot. The width of the arrow represents the expression level/log fold change of the ligand; while the width of arrow head represents the expression level/log fold change of the receptor. Different color and the type of the arrow stands for whether the ligand and/or receptor are upregulated or downregulated. For further information, see iTALK R package (Wang et al., BioRxiv 2019).",
     options = tagList(
@@ -758,18 +774,34 @@ output <- attachModule(output, italk_LRPlot_module)
 
 italk_heatmap_module <- plotModule(
     "italk_heatmap", italk_heatmap.RENDER,
-    title = "Expression heatmap", label="c",
+    title = "Expression heatmap", label="b",
     info.text = "The heatmap visualizes the expression level/log fold change of the ligand/receptor genes. For further information, see iTALK R package (Wang et al., BioRxiv 2019).",
     options = tagList(),
     pdf.width=6, pdf.height=8, res=80
 )
 output <- attachModule(output, italk_heatmap_module)
 
+italk_netview_module <- plotModule(
+    "italk_netview", italk_netview.RENDER,
+    title = "NetView", label="c",
+    info.text = "The NetView plot visualizes the communication structure of ligand-receptor genes as a graph. The colors represent different types of cells as a structure and the width of edges represent the strength of the communication. Labels on the edges show exactly how many interactions exist between two types of cells. For further information, see iTALK R package (Wang et al., BioRxiv 2019).",
+    options = tagList(
+        tipify( selectInput("italk_netview_topgenes","top genes",
+                            choices=c(10,25,50,75,100),selected=50),
+               "Select the number of topgenes to search for ligand-receptor pairs.",
+               placement="top" )
+    ),
+    pdf.width=6, pdf.height=8, res=80
+)
+output <- attachModule(output, italk_netview_module)
+
 observe({
     ngs <- inputData()
     req(ngs)
+    dbg("<profiling:observe6> reacted")
     ph <- colnames(ngs$samples)
     updateSelectInput(session, "italk_groups", choices=ph)
+    dbg("<profiling:observe6> done!")
 })
 
 fillCol(
@@ -785,16 +817,17 @@ fillCol(
         ##radioButtons("italk_mode","Mode", c("absolute","differential"))
     ),
     fillRow(
-        flex = c(1,1,1),
-        moduleWidget(italk_netview_module),
+        ##flex = c(1,1,1),
+        flex = c(1,1),
         moduleWidget(italk_LRPlot_module),
         moduleWidget(italk_heatmap_module)
+        ##moduleWidget(italk_netview_module)
     )
 )
 
 ```
 
-> **Visualization of ligand-receptor interaction.** The iTALK R package is designed to profile and visualize the ligand-receptor mediated intercellular cross-talk signals from single-cell RNA sequencing data (scRNA-seq). iTALK uses a manually curated list of ligand-receptor gene pairs further classified into 4 categories based on the primary function of the ligand: cytokines/chemokines, immune checkpoint genes, growth factors, and others. See this [iTALK paper](https://www.biorxiv.org/content/10.1101/507871v1). **(a)** The NetView plot visualizes the communication structure of ligand-receptor genes as a graph. **(b)** The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as a circle plot. **(c)** The heatmap visualizes the expression level/log fold change of the ligand/receptor genes. 
+> **Visualization of ligand-receptor interaction.** The iTALK R package is designed to profile and visualize the ligand-receptor mediated intercellular cross-talk signals from single-cell RNA sequencing data (scRNA-seq). iTALK uses a manually curated list of ligand-receptor gene pairs further classified into 4 categories based on the primary function of the ligand: cytokines/chemokines, immune checkpoint genes, growth factors, and others. See this [iTALK paper](https://www.biorxiv.org/content/10.1101/507871v1). **(a)** The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as a circle plot. **(b)** The heatmap visualizes the expression level/log fold change of the ligand/receptor genes. 
 
 
 `r if(!DEV.VERSION) {"<!---------------------"}`
@@ -1038,7 +1071,8 @@ pr_phenoplotFUNC <- reactive({
     ##if(!input$tsne.all) return(NULL)
     require(RColorBrewer)
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     clust <- pfGetClusterPositions()
     if(is.null(clust)) return(NULL)
@@ -1367,7 +1401,11 @@ fillCol(flex = c(NA,1),
 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
+
+    dbg("<profiling:observe7> reacted")
+    
     ##if(is.null(input$pr_xtaboptions)) return(NULL)
     pheno0 <- grep("group|sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
     kk <- selectSamplesFromSelectedLevels(ngs$Y, input$pr_samplefilter)
@@ -1379,6 +1417,9 @@ observe({
     updateSelectInput(session, "pr_xtabvar", choices=pheno1)
     updateSelectInput(session, "pr_xtabpheno", choices=pheno1)
     updateSelectInput(session, "pr_xtabgene", choices=genes1)
+
+    dbg("<profiling:observe7> done!")
+
 })
 
 ```
@@ -1395,7 +1436,10 @@ pr_cytoplotFUNC <- reactive({
     ##if(!input$tsne.all) return(NULL)
     require(RColorBrewer)
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
+
+    
     if(is.null(input$pr_cytovar1)) return(NULL)
     if(is.null(input$pr_cytovar2)) return(NULL)
 
@@ -1429,13 +1473,19 @@ fillCol(flex = c(NA, 1),
 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
+
+    dbg("<profiling:observe8> reacted")
+    
     xgenes <- ngs$genes[rownames(ngs$X),]$gene_name
     genes <- sort(as.character(xgenes))
     g1 <- grep("^CD4|^CD8",genes,value=TRUE)[1]
     g2 <- grep("^CD79|^CD3[DEG]|^CD37",genes,value=TRUE)[1]
     updateSelectInput(session, "pr_cytovar1", choices=genes, selected=g1)
     updateSelectInput(session, "pr_cytovar2", choices=genes, selected=g2)
+
+    dbg("<profiling:observe8> done!")
 })
 
 ```
