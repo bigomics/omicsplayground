@@ -13,21 +13,23 @@ gene list, the **Enrichment** panel performs the enrichment analysis
 of the gene list against all contrasts by running the GSEA algorithm
 and plots enrichment outputs. Under the **Overlap/similarity** panel,
 users can find the similarity of their gene list with other gene sets
-and pathways in the platform. The **Markers** panel produces a t-SNE
-plot of samples for each gene.
+and pathways. The **Markers** panel produces a t-SNE plot of samples
+for the genes in the signature.
 
 
 
 Input panel
 --------------------------------------------------------------------------------
-To start the analysis, users need to specify the type of signature of
-their interest in the ``Signature type`` settings. You can choose
-between custom signature, a contrast profile, or some predefined gene
-sets (Hallmark and KEGG pathways). For the custom signature, users can
-upload their own gene list or use one of the example gene lists
-provided. Instead, a contrast profile can also be selected, which
-takes the top 100 most differentially expressed genes as the
-signature.
+To start the analysis, specify the type of signature of their interest
+in the ``Signature type`` settings. Users can choose between custom
+signature, a contrast profile, or some predefined gene sets (Hallmark
+and KEGG pathways). For a custom signature, users can upload their own
+gene list or use one of the example gene lists provided. Instead, a
+contrast profile can also be selected by selecting :option:`contrast`
+as ``Signature type``, which then takes the top 100 most
+differentially expressed genes as the signature. When
+:option:`Hallmark` or :option:`KEGG` is selected, the user is
+presented with a list of predefined gene sets to choose from.
 
 .. figure:: figures/psc8.0.png
     :align: center
