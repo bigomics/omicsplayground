@@ -95,6 +95,6 @@ to show, or users can select to hide/show the feature names in the plot.
 	    
 .. figure:: figures/psc8.3.0.png
     :align: center
-    :width: 100%
+    :width: 30%
 	   
 
