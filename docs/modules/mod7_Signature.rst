@@ -2,56 +2,48 @@
 
 Signature Analysis
 ================================================================================
-In the **Signature Analysis** module, users can test their gene signature by
-calculating an enrichment score. 
-
-After uploading a gene list, the **Markers** panel produces a t-SNE plot of 
-samples for each gene. The **Enrichment** panel performs the enrichment analysis
-of the gene list against all contrasts by running the GSEA algorithm and plots 
-enrichment outputs. Under the **Overlap/similarity** panel, users can find the 
-similarity of their gene list with all the gene sets and pathways in the platform.
 
 .. note::
 
-    This module is supported in the EXPERT MODE ONLY.
+    This module is supported in the EXPERT MODE only.
+
+In the **Signature Analysis** module, users can test their custom gene
+signature by uploading a custom list of genes. After uploading the
+gene list, the **Enrichment** panel performs the enrichment analysis
+of the gene list against all contrasts by running the GSEA algorithm
+and plots enrichment outputs. Under the **Overlap/similarity** panel,
+users can find the similarity of their gene list with other gene sets
+and pathways in the platform. The **Markers** panel produces a t-SNE
+plot of samples for each gene.
+
 
 
 Input panel
 --------------------------------------------------------------------------------
-Users need to specify the contrasts of their interest to start the analysis in 
-the ``Contrast`` settings. They can use a sample list provided on the platform
-or upload their own gene list. Instead of a short list, a contrast profile can 
-also be selected, which is a complete gene list resulted from one of the contrasts
-in the analysis.
-Under the main *Options*, users can set the ``Enrichment method``, where
-``rcor`` performs a correlation based computation while ``fgsea`` runs the
-fast implementation of `GSEA <https://www.biorxiv.org/content/10.1101/060012v1.full>`__ 
-algorithm.
+To start the analysis, users need to specify the type of signature of
+their interest in the ``Signature type`` settings. You can choose
+between custom signature, a contrast profile, or some predefined gene
+sets (Hallmark and KEGG pathways). For the custom signature, users can
+upload their own gene list or use one of the example gene lists
+provided. Instead, a contrast profile can also be selected, which
+takes the top 100 most differentially expressed genes as the
+signature.
 
 .. figure:: figures/psc8.0.png
     :align: center
     :width: 30%
 
 
-Markers
---------------------------------------------------------------------------------
-After uploading a gene list, the **Markers** panel produces a t-SNE plot of 
-samples for each gene, where the samples are colored with respect to the 
-upregulation (in red) or downregulation (in blue) of that particular gene.
-
-.. figure:: figures/psc8.1.png
-    :align: center
-    :width: 100%
-
-
 Enrichment
 --------------------------------------------------------------------------------
-The **Enrichment** panel performs the enrichment analysis of the gene list 
-against all contrasts by computing a correlation based enrichment or running the
-`GSEA <https://www.biorxiv.org/content/10.1101/060012v1.full>`__ 
-algorithm and plots enrichment outputs. Under the plot *Settings*, users can
-quickly check the enrichment of their gene list in other contrasts from 
-the relevant public datasets by setting the ``Test dataset``.
+After uploading a gene list, the **Enrichment** panel performs the
+enrichment analysis of the gene list against all contrasts by
+computing a correlation based enrichment or running the `GSEA
+<https://www.biorxiv.org/content/10.1101/060012v1.full>`__ algorithm
+and plots enrichment outputs. Under the plot *Settings*, users can
+quickly check the enrichment of their gene list in other contrasts
+from the relevant public datasets by selecting the ``Query
+dataset``.
 
 .. figure:: figures/psc8.2.0.png
     :align: center
@@ -97,4 +89,16 @@ to show, or users can select to hide/show the feature names in the plot.
     :align: center
     :width: 30%
 	   
+
+Markers
+--------------------------------------------------------------------------------
+The **Markers** panel produces a t-SNE plot of samples for each gene
+in the signature, where the samples are colored with respect to the
+upregulation (in red) or downregulation (in blue) of that particular
+gene. For space reasons, only the top most variable genes in the
+signature are given.
+
+.. figure:: figures/psc8.1.png
+    :align: center
+    :width: 100%
 
