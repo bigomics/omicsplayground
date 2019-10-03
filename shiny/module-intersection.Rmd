@@ -1198,8 +1198,8 @@ getNeighbourhoodFoldChangeMatrix <- reactive({
     fc0 <- res$fc
     rownames(fc0) <- toupper(gsub(".*:","",rownames(fc0)))
 
-    others <- input$cmp_cmapsets2
-    others <- setdiff(others,c("<this>",""))
+    others <- input$cmp_cmapsets
+    others <- setdiff(others,c("<this dataset>",""))
     if("<all>" %in% others) others <- "<all>"
 
     cat("getNeighbourhoodFoldChangeMatrix:: others=",others,"\n")
@@ -1323,7 +1323,7 @@ cmp_connectivitymap.RENDER <- reactive({
 })
 
 cmp_connectivitymap.opts = tagList(
-    selectInput('cmp_cmapsets2',"Dataset:", choices=NULL, multiple=TRUE),
+    selectInput('cmp_cmapsets',"Dataset:", choices=NULL, multiple=TRUE),
     radioButtons('cmp_cmapclust',"Layout:",c("tsne","pca"),inline=TRUE),
     radioButtons('cmp_topgenes','Top genes:',c(50,200,1000),inline=TRUE,selected=200),
     ##checkboxGroupInput('fc_cmap_options',NULL,c('show names','add negative'),
@@ -1341,9 +1341,8 @@ output$cmp_connectivitymap     <- cmp_connectivitymap.module$render
 output$cmp_connectivitymap_pdf <- cmp_connectivitymap.module$pdf
 observe({
     cmapsets <- c(sort(unique(gsub("\\].*","]",colnames(PROFILES$FC)))))
-    cmapsets <- c("<this>",cmapsets,"<all>")
-    updateSelectInput(session, "cmp_cmapsets1", choices=cmapsets, selected="<this>")
-    updateSelectInput(session, "cmp_cmapsets2", choices=cmapsets, selected="<this>")
+    cmapsets <- c("<this dataset>",cmapsets,"<all>")
+    updateSelectInput(session, "cmp_cmapsets", choices=cmapsets, selected="<this dataset>")
 })
 
 moduleWidget(cmp_connectivitymap.module, outputFunc="scatterD3Output")
