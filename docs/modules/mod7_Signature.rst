@@ -1,11 +1,11 @@
 .. _Signature:
 
-Signature Analysis
-================================================================================
-
 .. note::
 
     This module is supported in the EXPERT MODE only.
+
+Signature Analysis
+================================================================================
 
 In the **Signature Analysis** module, users can test their custom gene
 signature by uploading a custom list of genes. After uploading the
@@ -54,11 +54,14 @@ dataset``.
 The enrichment plots are shown below. They show the enrichment of the query 
 signature across all constrasts. Positive enrichment means that this particular
 contrast shows similar expression changes as the query signature.
-Furthermore, the enrichment statistics can be found in the right tables, where
+Furthermore, the enrichment statistics can be found in the right tables:
 
-:**a**: Reports the summary of correlation/enrichment of the query signature 
-        in all contrasts. 
-:**b**: Reports the summary of fold-changes of genes in the query signature.
+:**Table a**: Enrichment scores across all contrasts for the selected
+        query signature . The NES corresponds to the normalized
+        enrichment score of the GSEA analysis.
+:**Table b**: Genes in the query signature sorted by decreasing
+        (absolute) fold-change corresponding to the contrast selected
+        in Table (a).
 
 .. figure:: figures/psc8.2.png
     :align: center
@@ -96,11 +99,10 @@ Markers
 --------------------------------------------------------------------------------
 The **Markers** panel produces a t-SNE plot of samples for each gene
 in the signature, where the samples are colored with respect to the
-upregulation (in red) or downregulation (in blue) of that particular
-gene in the signature. For space reasons, for larger signatures, only
-the top most variable genes in the signature are given. If you want to
-check a particular gene not shown, you must reduce the number of genes
-in your list.
+upregulation (in red) or downregulation (in blue) of the gene. For
+larger signatures, only the top most variable genes in the signature
+are given. If you want to check a particular gene not shown, you must
+reduce the number of genes in your list.
 
 .. figure:: figures/psc8.1.png
     :align: center
