@@ -16,7 +16,7 @@ similarity of their gene list with all the gene sets and pathways in the platfor
     This module is supported in the EXPERT MODE ONLY.
 
 
-Input slider
+Input panel
 --------------------------------------------------------------------------------
 Users need to specify the contrasts of their interest to start the analysis in 
 the ``Contrast`` settings. They can use a sample list provided on the platform
@@ -73,15 +73,28 @@ Furthermore, the enrichment statistics can be found in the right tables, where
 
 Overlap/similarity
 --------------------------------------------------------------------------------
-Under the **Overlap/similarity** panel, users can compare
-their gene list with all the gene sets and pathways in the platform through statistics
-such as the total number of genes in the gene set (:option:`K`), the number of
-intersecting genes between the list and the gene set (:option:`k`), the overlapping
-ratio of :option:`k/K`, as well as the :option:`p`
-and :option:`q` values by the Fisher's test for the overlap test.
+Under the **Overlap/similarity** panel, users can compare their gene
+list with all the gene sets and pathways in the platform through
+overlap analysis, or also known as over-representation analysis. The
+significance of overlap is computed by the Fisher's exact test. A
+score is computed as the geometric mean of the absolute logarithm of
+the odds ratio and q-value of the Fisher's test.
 
-.. figure:: figures/ug.029.png
+The table reports the :option:`score`, total number of genes in the
+gene set (:option:`K`), the number of intersecting genes between the
+list and the gene set (:option:`k`), the overlapping ratio of
+:option:`k/K`, as well as the :option:`odds.ratio` and
+:option:`q.fisher` values by the Fisher's test for the overlap test.
+
+.. figure:: figures/psc8.3.png
     :align: center
     :width: 100%
 
+Under the plot settings, users can specify the number to top features
+to show, or users can select to hide/show the feature names in the plot.
+	    
+.. figure:: figures/psc8.3.0.png
+    :align: center
+    :width: 100%
+	   
 
