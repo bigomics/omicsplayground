@@ -97,8 +97,10 @@ Markers
 The **Markers** panel produces a t-SNE plot of samples for each gene
 in the signature, where the samples are colored with respect to the
 upregulation (in red) or downregulation (in blue) of that particular
-gene. For space reasons, only the top most variable genes in the
-signature are given.
+gene in the signature. For space reasons, for larger signatures, only
+the top most variable genes in the signature are given. If you want to
+check a particular gene not shown, you must reduce the number of genes
+in your list.
 
 .. figure:: figures/psc8.1.png
     :align: center
