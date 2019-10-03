@@ -577,12 +577,7 @@ sig_markers.module <- plotModule(
     pdf.width=8, pdf.height=8, res=100
 )
 output <- attachModule(output, sig_markers.module)
-
-fillCol(
-    flex = c(NA,1), 
-    sig_markers.module$buttons,
-    plotOutput("sig_markersplot", height = "100%", width = "100%")
-)
+fillCol( moduleWidget(sig_markers.module) )
 
 ```
 
@@ -639,10 +634,7 @@ sig_enplots.module <- plotModule(
     pdf.width=8, pdf.height=8, res=90
 )
 output <- attachModule(output, sig_enplots.module)
-fillCol(flex = c(NA,1), 
-        sig_enplots.module$buttons,
-        plotOutput("sig_enplots", height = "100%", width = "100%")
-        )
+fillCol( moduleWidget(sig_enplots.module))
 
 ```
 
@@ -655,8 +647,7 @@ fillCol(flex = c(NA,1),
 
 ```{r warnings=FALSE, message=FALSE}
 
-sig_overlaptable.RENDER <- reactive({
-    ##if(!input$tsne.all) return(NULL)
+sig_getOverlapTable <- reactive({
 
     ##
     ##
@@ -664,7 +655,7 @@ sig_overlaptable.RENDER <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
 
-    markers <- ngs$families[["CD family"]]
+    markers <- ngs$families[[10]]
     ##markers <- ngs$gmt.all[["H:HALLMARK_TNFA_SIGNALING_VIA_NFKB"]]
     markers <- getCurrentMarkers()
     if(is.null(markers)) return(NULL)
@@ -672,30 +663,26 @@ sig_overlaptable.RENDER <- reactive({
     ## fold change just for ranking of genes
     F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
     fx <- rowMeans(F**2)
-    
-    require(qlcMatrix)
-    y <- 1*(colnames(GSETxGENE) %in% toupper(markers))
-    names(y) <- colnames(GSETxGENE)
-    dbg("computing cosine distances...")    
-    rho <- cosSparse( t(GSETxGENE), matrix(y,ncol=1))[,1]
-    dbg("done!\n")
-    
+        
     ## fisher test
     ##ii <- setdiff(match(markers, colnames(GSETxGENE)),NA)
     ii <- setdiff(match(toupper(markers), colnames(GSETxGENE)),NA)
-    N <- cbind( k1=Matrix::rowSums(GSETxGENE!=0), n1=ncol(GSETxGENE),
-               k2=Matrix::rowSums(GSETxGENE[,ii]!=0), n2=length(ii) )
+    N <- cbind(
+        k1=Matrix::rowSums(GSETxGENE!=0), n1=ncol(GSETxGENE),
+        k2=Matrix::rowSums(GSETxGENE[,ii]!=0), n2=length(ii) )
+    rownames(N) = rownames(GSETxGENE)
     N <- N[which(N[,1]!=0 | N[,3]!=0), ]
-
+    odds.ratio = ( N[,3]/ N[,4]) / ( N[,1]/ N[,2]) 
+    
     require(corpora) 
     dbg("computing Fisher-test p values...")
     pv <- corpora::fisher.pval( N[,1], N[,2], N[,3], N[,4], log.p=FALSE)
     dbg("done!\n")
     head(pv)
     names(pv) <- rownames(N)
-    pv = pv[match(names(rho),names(pv))]
+    pv = pv[match(names(odds.ratio),names(pv))]
     qv = p.adjust(pv, method="fdr")
-    A = data.frame( similarity=rho, p.fisher=pv, q.fisher=qv)
+    A = data.frame( odds.ratio=odds.ratio, p.fisher=pv, q.fisher=qv)
     dim(A)
 
     ## limit the list??
@@ -707,9 +694,13 @@ sig_overlaptable.RENDER <- reactive({
     ## get shared genes
     dbg("determining shared genes...\n")
     aa = rownames(A)
+    y <- 1*(colnames(GSETxGENE) %in% toupper(markers))
+    names(y) <- colnames(GSETxGENE)
     ncommon <- Matrix::colSums(t(GSETxGENE[aa,])*as.vector(y)!=0)
-    ntotal <- Matrix::rowSums(GSETxGENE[aa,]!=0)
-    ratio <- paste0(ncommon,"/",ntotal)
+    ntotal  <- Matrix::rowSums(GSETxGENE[aa,]!=0)
+    A$ratio <- ncommon / ntotal
+    ratio.kk <- paste0(ncommon,"/",ntotal)    
+    
     gg <- colnames(GSETxGENE)
     gset <- names(y)[which(y!=0)]
     G1 = GSETxGENE[aa,which(y!=0)]
@@ -731,57 +722,150 @@ sig_overlaptable.RENDER <- reactive({
     ## construct results dataframe
     gset.names <- substring(rownames(A),1,72)    
     ##aa <- apply(A, 2, formatC, format="e", digits=3)
-    aa <- round(A, digits=3)
+    A$ratio <- round(A$ratio, digits=3)
+    A$log.OR <- round(log10(A$odds.ratio), digits=3)
+    A$odds.ratio <- round(A$odds.ratio, digits=3)
     db = sub(":.*","",gset.names)
-    df <- cbind(db=db, geneset=gset.names, "k/K"=ratio, aa, common.genes=commongenes)
+    score = (log10(A$odds.ratio) * -log10(A$q.fisher + 1e-40))**0.5
+    score = round(score, digits=3)
+    df <- cbind(db=db, geneset=gset.names, score=score, "k/K"=ratio.kk, A, common.genes=commongenes)
+    if(DEV.VERSION) {
+        df <- df[,c("db","geneset","score","k/K","ratio","odds.ratio","log.OR","q.fisher","common.genes")]
+    } else {
+        df <- df[,c("db","geneset","score","k/K","odds.ratio","q.fisher","common.genes")]
+    }
+    
+    ##df <- df[order(-df$odds.ratio),]
+    df <- df[order(-df$score),]
+    return(df)
+})
 
-    df <- df[order(-df$similarity),]
+sig_overlapScorePlot.RENDER <- reactive({
+    
+    df <- sig_getOverlapTable()
+    req(df)
+    req(input$sig_overlapTable_rows_all)
+
+    sel <- 1:nrow(df)
+    sel<- input$sig_overlapTable_rows_all
+    df1 <- df[sel,]
+    
+    ntop = 60
+    ntop = as.integer(input$sig_overlapScorePlot_ntop)
+    df1 = df1[head(order(-df1$score),ntop),]
+    df1$geneset = as.character(rownames(df1))
+    df1$db = factor(df1$db)
+    jj = order( df1$db, -df1$score)
+    df1 = df1[jj,]
+    df1$idx = factor(1:nrow(df1), levels=1:nrow(df1))
+    klr = rep(brewer.pal(8,"Set2"),10)[as.integer(df1$db)]
+    
+    plt <- plot_ly(
+        df1, x = ~idx, y = ~score,
+        type='bar',  ## orientation='v',
+        text = ~geneset, hoverinfo = 'text',
+        hovertemplate = paste0("%{text}<br>score: %{y}<extra>",df1$db,"</extra>"),
+        ##hovertemplate = "%{y}",
+        marker = list( color=klr ) ) %>%
+        layout(
+            showlegend = FALSE,
+            dragmode= 'select',
+            ##annotations = anntitle(colnames(rho)[i]),
+            ##annotations = list(text="TITLE"),
+            yaxis = list(##range = c(0,1),
+                titlefont = list(size=11),
+                tickfont = list(size=10),
+                showgrid = TRUE,
+                title = "overlap score" ),
+            xaxis = list(
+                title = "",
+                showgrid = FALSE,
+                showline = FALSE,
+                showticklabels = FALSE,
+                showgrid = FALSE,
+                zeroline = FALSE)) 
+
+    if(ntop < 100 && input$sig_overlapScorePlot_shownames) {
+        ## labeling the y-axis inside bars
+        plt <- plt %>%
+            add_annotations( yref='paper', xref = 'x',
+                            x = ~idx, y=0.005, yanchor='bottom',
+                            text = substring(df1$geneset,1,35),
+                            textangle = -90,
+                            font = list(size = 10),
+                            showarrow = FALSE, align='right')
+    }
+
+    plt    
+})
+
+sig_overlapTable.RENDER <- reactive({
+
+    df <- sig_getOverlapTable()
+    req(df)    
     numeric.cols <- which(sapply(df, is.numeric))
-    numeric.cols
+    numeric.cols <- intersect(c("p.fisher","q.fisher"),colnames(df))
     
     DT::datatable(df, class='compact cell-border stripe',
                   rownames=FALSE,
-                  extensions = c('Buttons','Scroller'),
+                  extensions = c('Scroller'),
                   selection='none',
                   fillContainer=TRUE,
                   options=list(
-                      dom = 'Blfrtip',
+                      dom = 'lfrtip',
                       ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
-                      scrollX = TRUE, scrollY = '500', scroller=TRUE, ## deferRender=TRUE,
-                      buttons = list('copy','csv',
-                                     list(extend='pdf',
-                                          pageSize="A3", orientation='landscape',
-                                          filename="signature-similarity", title=""))
-                      )  ## end of options.list 
+                      scrollX = TRUE, scrollY = '500', scroller=TRUE ## deferRender=TRUE,
+                  )  ## end of options.list 
                   ) %>%
         formatSignif(numeric.cols,4) %>%
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
-            DT::formatStyle("similarity",
-                            background = color_from_middle(rho, 'lightblue', '#f5aeae'),
+            DT::formatStyle("score",
+                            background = color_from_middle( df$score, 'lightblue', '#f5aeae'),
                             backgroundSize = '98% 88%',
                             backgroundRepeat = 'no-repeat',
                             backgroundPosition = 'center')
 
 })
 
-
-sig_overlaptable.module <- tableModule(
-    "sig_overlaptable", sig_overlaptable.RENDER,
-    title = "Overlap with other signatures",
-    ## just.info=TRUE, no.download=TRUE,
-    info.text = "Under the <strong>Overlap/similarity tab</strong>, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, as well as the p and q values by the Fisher’s test for the overlap test.",
-    ##options = sig_overlaptable.opts,
+sig_overlapScorePlot.opts = tagList(
+    radioButtons("sig_overlapScorePlot_ntop","Number of features",c(60,120,250),inline=TRUE),
+    checkboxInput("sig_overlapScorePlot_shownames","Show feature names",TRUE)
 )
-output <- attachModule(output, sig_overlaptable.module)
 
-fillCol(flex = c(NA,NA,1), 
-        sig_overlaptable.module$buttons, br(),
-        dataTableOutput('sig_overlaptable')
-        )
+
+sig_overlapScorePlot.module <- plotModule(
+    "sig_overlapScorePlot", sig_overlapScorePlot.RENDER, plotlib="plotly",
+    title = "Signature overlap scores", label="a",
+    info.text = "Top overlapping gene sets with selected signature. The vertical axis shows the overlap score of the gene set which combines the odds ratio and significance (q-value) of the Fisher's test.",
+    options = sig_overlapScorePlot.opts,
+    pdf.width=12, pdf.height=6, res=100
+)
+output <- attachModule(output, sig_overlapScorePlot.module)
+
+
+sig_overlapTable.module <- tableModule(
+    "sig_overlapTable", sig_overlapTable.RENDER,
+    title = "Overlap with other signatures", label="b",
+    ## just.info=TRUE, no.download=TRUE,
+    info.text = "Under the <strong>Overlap/similarity tab</strong>, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, logarithm of the  odds ratio (log.OR), as well as the p and q values by the Fisher’s test for the overlap test.",
+    ##options = sig_overlapTable.opts,
+)
+output <- attachModule(output, sig_overlapTable.module)
+
+fillCol(
+    flex = c(1,1), 
+    moduleWidget(sig_overlapScorePlot.module, outputFunc="plotlyOutput"),
+    moduleWidget(sig_overlapTable.module, outputFunc="dataTableOutput")
+)
 
 ```
 
-> **Overlap/Similarity table.** This table...
+> **Overlap/Similarity table.** **(a)** Top overlapping gene sets with
+> selected signature. The vertical axis shows the overlap score of the
+> gene set which combines the odds ratio and significance (q-value) of
+> the Fisher's test. **(b)** Table summarizing the results of the
+> Fishers's test for overlap. The column \'common genes\' reports the
+> shared gene in order of largest fold-change.
 
 
 
@@ -923,11 +1007,9 @@ sig_table2_module <- tableModule(
 output <- attachModule(output, sig_table2_module)
     
 fillCol(
-    flex = c(NA,1.2,NA,1), ## width = 600,
-    sig_table1_module$buttons,
-    dataTableOutput('sig_table1'),
-    sig_table2_module$buttons,
-    dataTableOutput('sig_table2')
+    flex = c(1.2,1), ## width = 600,
+    moduleWidget(sig_table1_module, outputFunc="dataTableOutput"),
+    moduleWidget(sig_table2_module, outputFunc="dataTableOutput")    
 )
 
 

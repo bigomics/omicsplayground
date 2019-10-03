@@ -72,15 +72,12 @@ conditionalPanel(
     )
 )
 
-br();hr()
-
 if(DEV.VERSION) {
     tagList(
+        br(),hr(),
         h5("Developer options:"),
-        tipify( radioButtons('hm_gsetmatrix','Gene set matrix (dev):',
-                             choices=c("meta"), inline=TRUE),
-               "Specify the geneset matrix type to be used in the analysis.",
-               placement="bottom")
+        radioButtons('hm_gsetmatrix','Gene set matrix (dev):',
+                     choices=c("meta"), inline=TRUE)
     )
 }
 
@@ -315,7 +312,7 @@ observe({
     ngs <- inputData()
     req(ngs)    
     cvar <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=20)
-    sel <- "<none>"
+    sel <- c(grep("cell.type|cell.family|type|family",cvar),"<none>")[1]
     updateSelectInput(session, "hm_splitx", choices=c("<none>",cvar), selected=sel)
 })
 
@@ -1001,11 +998,11 @@ clustannot_plots.PLOTLY <- reactive({
     req(rho)
     
     ##par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
-    NTERMS = 7
+    NTERMS = 6
     NTERMS = 8
     if(ncol(rho)>6) {
-        par( mfrow=c(3,3), mar=c(3,2,1.5,1)*0.5 )
-        NTERMS = 5
+        ## par( mfrow=c(3,3), mar=c(3,2,1.5,1)*0.5 )
+        NTERMS = 6
     }
 
     klrpal = rep(brewer.pal(8,"Set2"),2)
