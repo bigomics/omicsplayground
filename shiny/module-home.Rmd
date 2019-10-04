@@ -371,7 +371,7 @@ EXPERT_SECTIONS <- list(
     c('#section-enrichment','#section-fdr-table-1'),
     c('#section-enrichment','#section-volcano-methods-1'),
     c('#section-intersection','#section-connectivity-map'),
-    c('#section-intersection','#section-volcano'),
+    c('#section-intersection','#section-meta-volcano'),
     c('#section-functional','#section-drug-cmap')
 )
 
