@@ -3,6 +3,12 @@
 ########################################################################
 
 
+corclust <- function(x) {
+    dd <- as.dist(1 - cor(t(x),use="pairwise"))
+    hc <- fastcluster::hclust(dd, method="ward.D2" )
+    hc
+}
+
 ## Override add_col_annotation to be able to suppress titles
 ##
 ##
@@ -74,8 +80,8 @@ pgx.splitHeatmap <- function(ngs, splitx=NULL, top.mode="specific",
 {    
     require(iheatmapr)
     
-    X <- log2(1+ngs$counts)    
-    X[is.na(X)] <- 0
+    X0 <- log2(1+ngs$counts)    
+    X0[is.na(X0)] <- 0
 
     splitx
     if(!is.null(splitx) && splitx[1] %in% colnames(ngs$samples)) {
@@ -87,25 +93,25 @@ pgx.splitHeatmap <- function(ngs, splitx=NULL, top.mode="specific",
 
     top.mode
     if(top.mode == "pca") {
-        cX <- X - rowMeans(X,na.rm=TRUE)
+        cX <- X0 - rowMeans(X0,na.rm=TRUE)
         dr = svd(cX, nu=5)$u
         ntop1 = ceiling(ntop/ncol(dr))
         jj = as.vector(apply(dr,2,function(x) head(order(-abs(x)),ntop1)))
         ##jj = as.vector(apply(dr,2,function(x) head(order(-x),10)))
-        X1 <- X[jj,]
+        X1 <- X0[jj,]
         idx <- paste0("PC",as.vector(mapply(rep,1:ncol(dr),ntop1)))
     } else if(top.mode == "specific") {
-        grpX <- tapply(colnames(X), splitx,function(k) rowMeans(X[,k,drop=FALSE],na.rm=TRUE))
+        grpX <- tapply(colnames(X0), splitx,function(k) rowMeans(X0[,k,drop=FALSE],na.rm=TRUE))
         grpX <- do.call(cbind, grpX)
         cat("dim(grpX)=",dim(grpX),"\n")
         cat("ntop=",ntop,"\n")
         ntop1 = ceiling(ntop/ncol(grpX))
         grpX <- grpX - rowMeans(grpX,na.rm=TRUE)  ## relative to others
         jj = as.vector(apply(grpX,2,function(x) head(order(-x),ntop1)))
-        X1 <- X[jj,]
+        X1 <- X0[jj,]
         idx <- paste0("M",as.vector(mapply(rep,1:ncol(grpX),ntop1)))
     } else {
-        X1 <- head(X[order(-apply(X,1,sd)),],ntop)
+        X1 <- head(X0[order(-apply(X0,1,sd)),],ntop)
         hc = fastcluster::hclust( as.dist(1 - cor(t(X1),use="pairwise")), method="ward.D2" )
         idx = paste0("S",cutree(hc, 5))
     }
@@ -138,13 +144,18 @@ pgx.splitHeatmap <- function(ngs, splitx=NULL, top.mode="specific",
 }
 
 
-##X=head(ngs$gsetX,100);annot=ngs$samples
+##X=head(ngs$X,100);annot=ngs$samples
 ##row_annot_width=0.03;colors=NULL;label_size=11;scale="row.center"
+xtips=NULL;ytips=NULL;lmar=60
+
 pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL, 
                               xtips=NULL, ytips=NULL, row_clust=TRUE,
                               row_annot_width=0.03, scale="row.center",
                               colors=NULL, label_size=11, lmar=60 )
 {
+    
+    cat("DBG <pgx.splitHeatmapX> called 1\n")
+
     ## constants
     col_annot_height = 0.021
     if(!is.null(idx)) idx = as.character(idx)
@@ -163,9 +174,12 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
     if("col" %in% scale) X <- scale(X)
     
     ## ------ split Y-axis (genes) by factor
-    if(!is.null(idx)) {
+    if(!is.null(idx)) {        
         hc.order <- function(x) {
-            hc <- fastcluster::hclust( as.dist(1 - cor(t(x),use="pairwise")), method="ward.D2" )
+            suppressWarnings( dd <- as.dist(1 - cor(t(x),use="pairwise")) )
+            ## cat("DBG >pgx-plotting:pgx.splitHeatmapX> sum.is.na.dd=",sum(is.na(dd)),"\n")
+            if(sum(is.na(dd))) dd[is.na(dd)] <- 1
+            hc <- fastcluster::hclust(dd, method="ward.D2" )
             rownames(x)[hc$order]
         }
         if(row_clust) {
@@ -203,6 +217,8 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
     ## ------- annot need to be factor
     annotF <- data.frame(as.list(annot),stringsAsFactors=TRUE)
     rownames(annotF) = rownames(annot)
+
+    cat("DBG <pgx.splitHeatmapX> 2\n")
     
     grid_params <- setup_colorbar_grid(
         nrows = 5, 
@@ -224,6 +240,8 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
     tooltip = setup_tooltip_options(
         prepend_row = "Row: ", prepend_col = "Column: ", 
         prepend_value = "Value: ") 
+
+    cat("DBG <pgx.splitHeatmapX> 3\n")
     
     plt <- main_heatmap(
         xx[[1]], name = "expression",
@@ -248,9 +266,13 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
     length(xx)
     dim(X)
     
+
     if(ncol(X)<40) {
         plt <- plt %>% add_col_labels(side="bottom", size=0.15*ex) 
     }
+
+
+    cat("DBG <pgx.splitHeatmapX> 4\n")
     
     if(length(xx)>1) {
         
@@ -312,6 +334,8 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
             plt, side="right", ticktext = gnames,
             size=w*ex, font=list(size=s1) ) 
     }
+
+    cat("DBG <pgx.splitHeatmapX> done!\n")
     
     return(plt)
 }

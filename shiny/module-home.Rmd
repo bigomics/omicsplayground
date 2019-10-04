@@ -238,12 +238,6 @@ selectedDataSet <- reactive({
     as.character(PGXINFO$dataset[sel])
 })
 
-toon <- randomCartoon()
-output$loading_image <- renderImage({
-    list(src = toon$img, contentType = 'image/png', width="auto", height="350px")
-    ##list(src = toon$img, contentType = 'image/png', width="auto", height="auto")
-}, deleteFile = FALSE)
-
 showLoadingModal <- function(pgx) {
     toon <- randomCartoon()
     output$loading_image <- renderImage({
@@ -253,12 +247,11 @@ showLoadingModal <- function(pgx) {
     showModal(modalDialog(
         ##title = HTML("<center><h4>Omics Playground</h4></center>"),
         ##HTML("<center><h2>",pgx.randomSlogan(),"</h2><h4>with Omics Playground</h4></center>"),
-        title = HTML("<center><h2>",toon$slogan,"</h2></center>"),
+        title = HTML("<center><h2>",toon$slogan,"</h2><h4>with Omics Playground</h4></center>"),
         fillRow(flex=c(1,NA,1), br(),
                 imageOutput("loading_image", width="auto", height="250px"),
                 br()),
-        footer = HTML("<center><h3>with Omics Playground</h3><p>Loading ",pgx,
-                      "data...  &nbsp; Please wait</p></center>"),
+        footer = HTML("<center><p>Loading ",pgx,"data...  &nbsp; Please wait</p></center>"),
         size="m", easyClose=TRUE, fade=TRUE))
     Sys.sleep(8)
     dbg("showLoadingModal done!\n")
@@ -540,6 +533,7 @@ pgxTableFUNC <- reactive({
                   ##selection = list(mode='single', target='row'),
                   selection = list(mode='single', target='row', selected=1 ),
                   ##selection = list(mode='none'),
+                  ##filter = "top",
                   options=list(
                       ##dom = 'Blfrtip', 
                       pageLength = 100, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
