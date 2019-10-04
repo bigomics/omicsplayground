@@ -58,8 +58,10 @@ if(0) {
     load("../pgx/geiger2016-arginine.pgx")
     load("../pgx/GSE10846-dlbcl.pgx")
     load("../pgx/tcga-brca_pub-gx.pgx")
-    load("../pgx/GSE110496-dengue.pgx")
-    load("../pgx/GSE22886-immune.pgx")                
+    load("../pgx/rieckmann2017-immprot.pgx")
+    load("../pgx/GSE22886-immune.pgx")
+    load("../pgx/GSE32591-lupusnephritis.pgx")                
+    
     ngs <- pgx.initialize(ngs)    
 }
 

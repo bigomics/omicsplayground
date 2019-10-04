@@ -763,7 +763,7 @@ italk_LRPlot_module <- plotModule(
 a circle plot. The width of the arrow represents the expression level/log fold change of the ligand; while the width of arrow head represents the expression level/log fold change of the receptor. Different color and the type of the arrow stands for whether the ligand and/or receptor are upregulated or downregulated. For further information, see iTALK R package (Wang et al., BioRxiv 2019).",
     options = tagList(
         tipify( selectInput("italk_LRPlot_ntop","ntop pairs",
-                            choices=c(10,15,25,50,75,100),selected=50),
+                            choices=c(10,15,25,50,75,100),selected=25),
                "Select the maximum number of LR pairs to include in the LR plot.",
                placement="top")
     ),
