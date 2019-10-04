@@ -163,7 +163,7 @@ showSplashModal <- function(once=FALSE) {
         title = NULL,
         footer = div(actionButton("button_go","show me!"),
                      style="margin-left: -50px; margin-top: -10px;"),
-        size="s", easyClose=TRUE, fade=TRUE))
+        size="s", easyClose=TRUE, fade=FALSE))
     splash_count <<- splash_count + 1
     ##Sys.sleep(3)
     ##delay(5000, click("button_go"))
@@ -210,7 +210,7 @@ showStartupModal <- function(once=FALSE) {
             ##modalButton("Let's start!")
             actionButton("action_play", "Let's play!")
         ),
-        size="l", easyClose=FALSE, fade=TRUE))
+        size="l", easyClose=FALSE, fade=FALSE))
     startup_count <<- startup_count + 1    
     dbg("showStartupModal done!\n")
 }
