@@ -33,10 +33,14 @@ tSNE plot
     :align: center
     :width: 100%
 
-**Figure 1**. The t-SNE clustering with cell type annotation. 
-To reproduce the same figure on the platform, select and load ``GSE72056-scmelanoma`` dataset, 
-and go to the **PCA/tSNE** panel of the **Clustering** module. From the plot *Settings*, 
-set the ``color``: group and ``layout``: tsne.
+**Figure 1**. The t-SNE clustering with cell type annotation for the 
+:option:`GSE72056-scmelanoma` dataset. 
+To reproduce the figure on the platform, select and load 
+:option:`GSE72056-scmelanoma` dataset, 
+and go to the **PCA/tSNE** panel of the **Clustering** module. 
+From the plot *Settings*, 
+set the :option:`color: group`, :option:`layout: tsne`, and other settings as
+default.
 
 
 Volcano and MA plot
@@ -49,10 +53,9 @@ Volcano and MA plot
     :width: 100%    
 
 **Figure 2**. Volcano and MA plot for the malignant versus non-malignant contrast.
-To reproduce the same figure on the platform, select and load ``GSE72056-scmelanoma`` dataset, 
-and go to the **Plots** panel of the **Expression** module. From the input slider, 
-set the ``Contrast``: yes_vs_no, ``Gene family``: all, ``FDR``: 0.2, and 
-``logFC threshold``: 0.5.    
+To replicate the figure on the platform, go to the **Plots** panel of 
+the **Expression** module. From the input slider, 
+set the :option:`Contrast: yes_vs_no` and :option:`Gene family: all`.
 
 
 Differentially expressed genes
@@ -65,10 +68,9 @@ Differentially expressed genes
     :width: 100%     
 
 **Figure 3**. Barplot of corresponding differentially expressed genes.
-To reproduce the figure on the platform, select and load ``GSE72056-scmelanoma`` dataset, 
-and go to the **Top genes** panel of the **Expression** module. From the input slider, 
-set the ``Contrast``: yes_vs_no, ``Gene family``: all, ``FDR``: 0.2, and 
-``logFC threshold``: 0.5.
+To obtain the figure on the platform, 
+go to the **Top genes** panel of the **Expression** module. From the input slider, 
+set the :option:`Contrast: yes_vs_no` and :option:`Gene family: all`.
     
 
 Inferred copy number
@@ -81,9 +83,9 @@ Inferred copy number
     :width: 100% 
 
 **Figure 4**. Inferred copy number for sample Cy80.
-To reproduce the figure on the platform, select and load ``GSE72056-scmelanoma`` dataset, 
-and go to the **CNV** panel of the **scProfiling** module. From the plot *Settings*, 
-set the ``Annotate with``: malignant and ``Order samples by``: clust.
+To reproduce the figure on the platform, go to the **CNV** panel of the
+**scProfiling** module. From the plot *Settings*, 
+set the :option:`Annotate with: malignant` and :option:`Order samples by: clust`.
     
     
 Immune checkpoint signature
@@ -97,9 +99,10 @@ Immune checkpoint signature
 
 **Figure 5**. Enrichment distribution for an immune checkpoint signature showing high
 enrichment in T and B cells .
-To reproduce the figure on the platform, select and load ``GSE72056-scmelanoma`` dataset, 
-and go to the **Marker** panel in the **Signature** module. From the input slider, 
-set the ``Contrast``: custom and ``Signature``: immune_chkpt from the provided sample list.
+To regenerate the figure on the platform, go to the **Marker** panel in 
+the **Signature** module. From the input slider, 
+select :option:`Contrast: custom` and :option:`Signature: immune_chkpt` as it is
+provided in the sample list.
     
 
 Biomarker heatmap
@@ -112,13 +115,14 @@ Biomarker heatmap
     :width: 100% 
 
 **Figure 6**. Biomarker heatmap for non-malignant cells.
-To reproduce the figure on the platform, select and load ``GSE72056-scmelanoma`` dataset, 
-and go to the **Heatmap** panel in the **Clustering** module. From the input slider, 
-set the ``Level``: gene, ``Features``: all, and ``Filter samples``: {cell.type=Bcell,
-cell.type=CAF, cell.type=endothelial, cell.type=Macrophage, cell.type=NK, cell.type=Tcell}.
-In the plot *Settings*, set ``Plot type``: ComplexHeatmap, ``split by``: cell.type,
-``top mode``: specific, ``top N``: 50 and ``scale``: relative.
-    
+To reproduce the figure on the platform, go to the **Heatmap** panel in the 
+**Clustering** module. From the input slider, 
+set the :option:`Filter samples: {cell.type=Bcell,
+cell.type=CAF, cell.type=endothelial, cell.type=Macrophage, cell.type=NK, 
+cell.type=Tcell}`.
+In the plot *Settings*, set :option:`Plot type: ComplexHeatmap`, :option:`split by: 
+cell.type`, and :option:`top mode: specific`.
+
 
 Annotate heatmap clusters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -132,7 +136,7 @@ Annotate heatmap clusters
 **Figure 7**. Enrichment annotation of corresponding heatmap clusters from the `Figure 6`_.
 To reproduce the figure on the platform, generate the heatmap in `Figure 6`_ first, 
 then go to the **Annotate clusters** panel. From the plot *Settings*, 
-set the ``Reference level``: geneset and ``Reference set``: GOBP.
+set the :option:`Reference set: GOBP`.
 
 
 
@@ -150,8 +154,8 @@ to ipilimumab, a novel monoclonal antibody targeting CTLA-4 used in tumour thera
 The list contains several known anti-tumoral drugs, such as bortezomib and 
 palbociclib, but also highlights relationships with other compounds not normally
 used in tumor therapy, such as emetine, an anti-protozoal drug with anti-tumoral
-properties (`Foreman et al.<https://www.auajournals.org/doi/abs/10.1016/j.juro.2013.09.014>`__
-and `Sun et al.<https://www.spandidos-publications.com/ijo/46/1/389>`__43).
+properties (`Foreman et al. <https://www.auajournals.org/doi/abs/10.1016/j.juro.2013.09.014>`__
+and `Sun et al. <https://www.spandidos-publications.com/ijo/46/1/389>`__).
 
 Drug enrichment profiles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -164,9 +168,10 @@ Drug enrichment profiles
 
 **Figure 8**. Drug enrichment profiles for most similar and opposing drugs
 compared to ipilimumab treatment.
-To reproduce the figure on the platform, select and load ``GSE114716-ipilimumab``
-dataset, go to the **Drug CMap** panel under the **Functional** module,
-and set the ``Contrast``: Ipi_vs_baseline from the plot *Settings*.
+To reobtain the figure on the platform, select and load 
+:option:`GSE114716-ipilimumab` dataset, go to the **Drug CMap** panel 
+under the **Functional** module,
+and set the :option:`Contrast: Ipi_vs_baseline` from the plot *Settings*.
 
     
 Microarray Data
@@ -191,10 +196,11 @@ Hierarchical cluster heatmap
     :align: center
     :width: 100% 
 
-**Figure 9**. Hierarchical cluster heatmap of DLBCL patients.
-To replicate the figure, select and load ``GSE10846-dlbcl``
+**Figure 9**. Hierarchical cluster heatmap for :option:`GSE10846-dlbcl` dataset.
+To replicate the figure, select and load :option:`GSE10846-dlbcl`
 dataset on the platform. Go to the **Heatmap** panel of the **Clustering** module,
-and set the :option:`Level: gene` and :option:`Features: <all>` from the input panel.
+and set the :option:`Level: gene` and :option:`Features: all` from the input panel.
+In the plot *Settings*, set the :option:`split by: none` and :option:`Top mode: pca`.
 
 Variable importance plot
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -205,7 +211,10 @@ Variable importance plot
     :align: center
     :width: 100% 
 
-**Figure 10**. Variable importance plot of DLBCL patients.
+**Figure 10**. Variable importance plot.
+To replicate the figure, go to the **Biomarker** module,
+and set the :option:`Predicted target: dlbcl.type` and :option:`Feature level: gene`
+from the input panel.
 
 
 Survival tree
@@ -220,9 +229,10 @@ Survival tree
     :align: center
     :width: 100% 
     
-**Figure 11**. Survival tree analysis for the DLBCL dataset GSE10846.
-
-
+**Figure 11**. Survival tree analysis for :option:`GSE10846-dlbcl` dataset.
+To redproduce the figures, go to the **Biomarker** module,
+and set the :option:`Predicted target: OS.survival` and :option:`Feature level: gene`
+from the input panel.
 
 
 
@@ -258,10 +268,13 @@ Activation matrix
     :align: center
     :width: 100% 
 
-**Figure 12**. Survival tree analysis for the DLBCL dataset GSE10846.
+**Figure 12**. Gene Ontology activation matrix.
+To replicate the figure, select and load the :option:`rieckmann2017-immprot` dataset.
+Go to the **GO graph** panel of the **Functional** module,
+and set the :option:`Contrast: Bmem_activation`.
 
 
-Connectivity graph
+Contrast heatmap
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _`Figure 13`: 
@@ -270,8 +283,9 @@ Connectivity graph
     :align: center
     :width: 100% 
 
-**Figure 13**. Survival tree analysis for the DLBCL dataset GSE10846.
-
+**Figure 13**. Contrast heatmap for the :option:`rieckmann2017-immprot` dataset.
+To generate the figure on the platform, go to the **Contrast heatmap** panel of
+the **Intersection** module with default settings.
 
 Classification tree
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -285,7 +299,10 @@ Classification tree
     :align: center
     :width: 100%    
 
-**Figure 14**. Survival tree analysis for the DLBCL dataset GSE10846.
+**Figure 14**. Classification tree for the :option:`rieckmann2017-immprot` dataset.
+To reproduce similar figures, go to the **Biomarker** module, and set the 
+:option:`Predicted target: cell.type` and :option:`Feature level: gene`
+from the input panel.
 
 
 Volcano plots of methods
@@ -299,4 +316,6 @@ Volcano plots of methods
 
 **Figure 15**. Volcano plots corresponding to eight different statistical 
 methods comparing time-dependent expression of T cell activation at 48h vs. 12h.
-
+To regenerate the figure, select and load :option:`geiger2016-arginine` dataset.
+Go to the **Volcano (methods)** panel under the 
+**Expression** module, and set the :option:`Contrast: act48h_vs_act12h`.
