@@ -150,7 +150,8 @@ to ipilimumab, a novel monoclonal antibody targeting CTLA-4 used in tumour thera
 The list contains several known anti-tumoral drugs, such as bortezomib and 
 palbociclib, but also highlights relationships with other compounds not normally
 used in tumor therapy, such as emetine, an anti-protozoal drug with anti-tumoral
-properties (41, 43).
+properties (`Foreman et al.<https://www.auajournals.org/doi/abs/10.1016/j.juro.2013.09.014>`__
+and `Sun et al.<https://www.spandidos-publications.com/ijo/46/1/389>`__43).
 
 Drug enrichment profiles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -163,8 +164,9 @@ Drug enrichment profiles
 
 **Figure 8**. Drug enrichment profiles for most similar and opposing drugs
 compared to ipilimumab treatment.
-
-
+To reproduce the figure on the platform, select and load ``GSE114716-ipilimumab``
+dataset, go to the **Drug CMap** panel under the **Functional** module,
+and set the ``Contrast``: Ipi_vs_baseline from the plot *Settings*.
 
     
 Microarray Data
@@ -190,6 +192,9 @@ Hierarchical cluster heatmap
     :width: 100% 
 
 **Figure 9**. Hierarchical cluster heatmap of DLBCL patients.
+To replicate the figure, select and load ``GSE10846-dlbcl``
+dataset on the platform. Go to the **Heatmap** panel of the **Clustering** module,
+and set the :option:`Level: gene` and :option:`Features: <all>` from the input panel.
 
 Variable importance plot
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
