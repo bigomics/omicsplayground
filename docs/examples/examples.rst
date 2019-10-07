@@ -39,8 +39,8 @@ To reproduce the figure on the platform, select and load
 :option:`GSE72056-scmelanoma` dataset, 
 and go to the **PCA/tSNE** panel of the **Clustering** module. 
 From the plot *Settings*, 
-set the :option:`color: group`, :option:`layout: tsne`, and other settings as
-default.
+set the :option:`color: group`, :option:`layout: tsne`, and leave other settings
+as default.
 
 
 Volcano and MA plot
@@ -117,9 +117,8 @@ Biomarker heatmap
 **Figure 6**. Biomarker heatmap for non-malignant cells.
 To reproduce the figure on the platform, go to the **Heatmap** panel in the 
 **Clustering** module. From the input slider, 
-set the :option:`Filter samples: {cell.type=Bcell,
-cell.type=CAF, cell.type=endothelial, cell.type=Macrophage, cell.type=NK, 
-cell.type=Tcell}`.
+set the :option:`Filter samples: cell.type={Bcell,
+CAF, endothelial, Macrophage, NK, Tcell}`.
 In the plot *Settings*, set :option:`Plot type: ComplexHeatmap`, :option:`split by: 
 cell.type`, and :option:`top mode: specific`.
 
@@ -213,8 +212,7 @@ Variable importance plot
 
 **Figure 10**. Variable importance plot.
 To replicate the figure, go to the **Biomarker** module,
-and set the :option:`Predicted target: dlbcl.type` and :option:`Feature level: gene`
-from the input panel.
+and set the :option:`Predicted target: dlbcl.type` from the input panel.
 
 
 Survival tree
@@ -231,15 +229,13 @@ Survival tree
     
 **Figure 11**. Survival tree analysis for :option:`GSE10846-dlbcl` dataset.
 To redproduce the figures, go to the **Biomarker** module,
-and set the :option:`Predicted target: OS.survival` and :option:`Feature level: gene`
-from the input panel.
+and set the :option:`Predicted target: OS.survival` from the input panel.
 
 
 
 Proteomic Data
 --------------------------------------------------------------------------------
-
- With larger data sets, often the number of contrasts increases and complicates 
+With larger data sets, often the number of contrasts increases and complicates 
 the overall analysis. For example, the proteomics data set of 
 `Rieckmann et al. 2017 <https://www.ncbi.nlm.nih.gov/pubmed/28263321>`__
 comprises 26 populations of seven major immune cell types, measured during resting
@@ -250,10 +246,12 @@ Alternatively, similarities can be visualized as a connectivity graph (`Figure 1
 For the same data set, `Figure 14`_ shows a computed partition tree that classifies 
 the major cell types.
 
-Proteome profiles of activated vs resting human naive T cells at different 
-times (Geiger et al., Cell 2016).
+Another example dataset is from 
+`Geiger et al. <https://www.ncbi.nlm.nih.gov/pubmed/27745970>`__, 
+where the proteome profiles 
+of activated vs resting human naive T cells at different times were compared.
 `Figure 15`_ shows the volcano plots corresponding to eight different statistical tests
-comparing time-dependent activation of T cells at 48h vs. 12h (42). We see that 
+comparing time-dependent activation of T cells at 48h vs. 12h. We see that 
 both standard t-test and the Welch t-test show much less power to detect 
 significant genes compared to the other methods. The result from edgeR-QLF 
 is close to those of the two limma based methods, while edgeR-LRT is very 
@@ -269,9 +267,9 @@ Activation matrix
     :width: 100% 
 
 **Figure 12**. Gene Ontology activation matrix.
-To replicate the figure, select and load the :option:`rieckmann2017-immprot` dataset.
-Go to the **GO graph** panel of the **Functional** module,
-and set the :option:`Contrast: Bmem_activation`.
+To replicate the figure, select and load the :option:`rieckmann2017-immprot` 
+dataset, and go to the **GO graph** panel of the **Functional** module
+with default settings.
 
 
 Contrast heatmap
@@ -301,8 +299,7 @@ Classification tree
 
 **Figure 14**. Classification tree for the :option:`rieckmann2017-immprot` dataset.
 To reproduce similar figures, go to the **Biomarker** module, and set the 
-:option:`Predicted target: cell.type` and :option:`Feature level: gene`
-from the input panel.
+:option:`Predicted target: cell.type` from the input panel.
 
 
 Volcano plots of methods
