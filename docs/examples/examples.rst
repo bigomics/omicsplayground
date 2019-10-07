@@ -169,22 +169,50 @@ compared to ipilimumab treatment.
     
 Microarray Data
 --------------------------------------------------------------------------------
-In this section, we perform the biomarker selection and survival analysis using
+In this section, we perform the heatmap clustering, biomarker selection and 
+survival analysis using
 the `GSE10846 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE10846>`__
 from `Lenz et al. <https://www.ncbi.nlm.nih.gov/pubmed/19038878>`__,
 which is the microarray gene expression dataset of diffuse large B-cell 
 lymphoma (DLBCL) patients.
+`Figure 9`_ shows a hierarchical cluster heatmap of microarray gene
+expression data. `Figure 10`_ and `Figure 11`_ show the variable importance 
+plot and a survival tree on the overall survival of the DLBCL patients,
+respectively.
 
-Fig. 3b shows a microarray gene expression data set, GSE10846 (44), of diffuse
-large B-cell lymphoma (DLBCL). Fig. 3c and 3d show the variable importance 
-plot and a survival tree on the overall survival of the DLBCL patients, respectively.
-
-Biomarker
+Hierarchical cluster heatmap
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Survival analysis
+.. _`Figure 9`: 
+
+.. figure:: figures/fig3_b.png
+    :align: center
+    :width: 100% 
+
+**Figure 9**. Hierarchical cluster heatmap of DLBCL patients.
+
+Variable importance plot
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. _`Figure 10`: 
+
+.. figure:: figures/fig3_c.png
+    :align: center
+    :width: 100% 
+
+**Figure 10**. Variable importance plot of DLBCL patients.
+
+
+Survival tree
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. _`Figure 11`: 
+
+.. figure:: figures/fig3_d.png
+    :align: center
+    :width: 100% 
+
+**Figure 11**. Survival tree analysis for the DLBCL dataset GSE10846.
 
 
 
@@ -193,34 +221,42 @@ Survival analysis
 Proteomic Data
 --------------------------------------------------------------------------------
 
-Proteome profiles of activated vs resting human naive T cells at different 
-times (Geiger et al., Cell 2016).
-
-Fig. 3a shows the volcano plots corresponding to eight different statistical tests
-comparing time-dependent activation of T cells at 48h vs. 12h (42). We see that 
-both standard t-test and the Welch t-test show much less power to detect 
-significant genes compared to the other methods. The result from edgeR-QLF 
-is close to those of the two limma based methods, while edgeR-LRT is very 
-similar to the results of DESeq2-Wald. 
-
-
-With larger data sets, often the number of contrasts increases and complicates 
+ With larger data sets, often the number of contrasts increases and complicates 
 the overall analysis. For example, the proteomics data set of 
 `Rieckmann et al. 2017 <https://www.ncbi.nlm.nih.gov/pubmed/28263321>`__
 comprises 26 populations of seven major immune cell types, measured during resting
 and activated states. There are more than 300 possible comparisons to make.
-To gain a better overview, gene set connectivity heatmaps (Fig. 3e) help 
+To gain a better overview, gene set activation matrix (`Figure 12`_) help 
 visualize the similarities between multiple contrasts on a functional level. 
-Alternatively, similarities can be visualized as a connectivity graph (Fig. 3f). 
-For the same data set, Fig. 3g shows a computed partition tree that classifies 
+Alternatively, similarities can be visualized as a connectivity graph (`Figure 13`_). 
+For the same data set, `Figure 14`_ shows a computed partition tree that classifies 
 the major cell types.
 
+Proteome profiles of activated vs resting human naive T cells at different 
+times (Geiger et al., Cell 2016).
+`Figure 15`_ shows the volcano plots corresponding to eight different statistical tests
+comparing time-dependent activation of T cells at 48h vs. 12h (42). We see that 
+both standard t-test and the Welch t-test show much less power to detect 
+significant genes compared to the other methods. The result from edgeR-QLF 
+is close to those of the two limma based methods, while edgeR-LRT is very 
+similar to the results of DESeq2-Wald.
 
-Connectivity heatmap
+Activation matrix
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. _`Figure 12`: 
+
+.. figure:: figures/fig3_e.png
+    :align: center
+    :width: 100% 
+
+**Figure 12**. Survival tree analysis for the DLBCL dataset GSE10846.
+
+
 
 Connectivity graph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 Classification tree
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
