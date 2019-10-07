@@ -613,7 +613,7 @@ pdx_boxplots_module <- plotModule(
     title = "Biomarker expression", label="d",
     info.text = "These boxplots shows the expression of genes/samples of the identified features.",
     ##options = pdx_boxplots.opts,
-    pdf.width=10, pdf.height=8, res=90
+    pdf.width=10, pdf.height=5.5, res=90
 )
 output <- attachModule(output, pdx_boxplots_module)
 

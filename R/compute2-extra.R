@@ -58,8 +58,6 @@ compute.extra <- function(ngs, extra) {
         cat(">>> computing OmicsGraphs for",rda.file,"\n")
         ngs <- compute.omicsGraphs(ngs) 
     }
-
-
     
     return(ngs)
 }

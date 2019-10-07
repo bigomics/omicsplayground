@@ -69,7 +69,6 @@ observe({
 
 observe({
     ngs <- inputData()
-    ##if(is.null(ngs)) return(NULL)
     req(ngs)
     dbg("<profiling:observe3> reacted")
 
@@ -89,7 +88,6 @@ observe({
 
 pfGetClusterPositions <- reactive({
     ngs <- inputData()
-    ##if(is.null(ngs)) return(NULL)
     req(ngs)
     
     ##zx <- filtered_matrix1()
@@ -183,7 +181,6 @@ Col {.tabset data-width=625}
 getDeconvResults <- reactive({
     ngs <- inputData()
     req(ngs)
-    ##if(is.null(ngs)) return(NULL)
 
     method = "meta"
     method <- input$pr_dcmethod
@@ -203,7 +200,6 @@ pr_icpplotFUNC <- reactive({
     require(RColorBrewer)
     
     ngs <- inputData()
-    ##if(is.null(ngs)) return(NULL)
     req(ngs)
     
     clust <- pfGetClusterPositions()
@@ -379,7 +375,6 @@ pr_markersplotFUNC <- reactive({
     require(RColorBrewer)
     
     ngs <- inputData()
-    ##if(is.null(ngs)) return(NULL)
     req(ngs)
     
     clust <- pfGetClusterPositions()
@@ -511,7 +506,6 @@ output <- attachModule(output, pr_markersplot_module)
 
 observe({
     ngs <- inputData()
-    ##if(is.null(ngs)) return(NULL)
     req(ngs,input$pr_level)
     dbg("<profiling:observe4> reacted")
     
@@ -540,7 +534,6 @@ fillCol( moduleWidget(pr_markersplot_module))
 
 getCNAfromExpression <- reactive({
     ngs <- inputData()
-    ##if(is.null(ngs)) return(NULL)
     req(ngs)
     
     ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
@@ -553,7 +546,6 @@ getCNAfromExpression <- reactive({
 
 getCNAfromExpression.inferCNV <- reactive({
     ngs <- inputData()
-    ##if(is.null(ngs)) return(NULL)
     req(ngs)
     
     ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
@@ -569,7 +561,6 @@ pr_cnaplotFUNC <- reactive({
     require(RColorBrewer)
     ##return(NULL)    
     ngs <- inputData()
-    ##if(is.null(ngs)) return(NULL)
     req(ngs)
 
     if(input$pr_cna_method=="inferCNV") {
@@ -763,7 +754,7 @@ italk_LRPlot_module <- plotModule(
 a circle plot. The width of the arrow represents the expression level/log fold change of the ligand; while the width of arrow head represents the expression level/log fold change of the receptor. Different color and the type of the arrow stands for whether the ligand and/or receptor are upregulated or downregulated. For further information, see iTALK R package (Wang et al., BioRxiv 2019).",
     options = tagList(
         tipify( selectInput("italk_LRPlot_ntop","ntop pairs",
-                            choices=c(10,15,25,50,75,100),selected=50),
+                            choices=c(10,15,25,50,75,100),selected=25),
                "Select the maximum number of LR pairs to include in the LR plot.",
                placement="top")
     ),

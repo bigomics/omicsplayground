@@ -135,7 +135,7 @@ cmpGetFoldChangeMatrix <- reactive({
     fc0 = NULL
     qv0 = NULL
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     sel = names(ngs$gset.meta$meta)
     ##sel = input_cmp_comparisons()
@@ -220,7 +220,7 @@ cmpGetCPMMatrix <- reactive({
     dbg("<module-intersect:cmpGetCPMMatrix> reacted\n")
 
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     if(input$cmp_level=="geneset") {
         grp <- ngs$samples$group
@@ -943,7 +943,7 @@ fillCol(
 
 ## observe({
 ##     ngs <- inputData()
-##     if(is.null(ngs)) return(NULL)
+##     req(ngs)
 ##     var1 <- var2 <- names(ngs$gx.meta$meta)
 ##     other <- ""
 ##     ##other <- input$cmp_othersets
@@ -1273,7 +1273,7 @@ cmp_connectivitymap.RENDER <- reactive({
     ## Fold-change t-SNE
     ##======================================================================
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     ## get the fold-changes of selected comparison and neighbourhood
     res <- getNeighbourhoodFoldChangeMatrix()
@@ -1423,7 +1423,7 @@ cmp_venndiagram.RENDER <- reactive({
 ##output$intersection_table <- DT::renderDataTable({
 cmp_venntable.RENDER <- reactive({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     ## get foldchanges
     fc0 = getSignificantFoldChangeMatrix()  ## isolate??
@@ -1535,7 +1535,7 @@ observeEvent(input$cmp_comparisons, {
 cmp_volcano1.RENDER <- reactive({
     
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     sel = names(ngs$gx.meta$meta)
     sel = input_cmp_comparisons()

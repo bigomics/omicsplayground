@@ -88,7 +88,7 @@ if(DEV.VERSION) {
 ## update filter choices upon change of data set 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
 
     levels = getLevels(ngs$Y)
     updateSelectInput(session, "hm_samplefilter", choices=levels)
@@ -112,7 +112,7 @@ input_hm_samplefilter <- reactive({
 ##observeEvent(input$hm_level, {
 observe({
     ngs = inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     if(is.null(input$hm_level)) return(NULL)
     choices = names(ngs$families)
     if(input$hm_level=="geneset") {
@@ -236,15 +236,17 @@ hm_filtered_matrix <- reactive({
         zx <- zx[gg.top,]
         dim(zx)
     } else {
-        zx = zx[order(-apply(zx,1,sd,na.rm=TRUE)),,drop=FALSE] ## order
+        ii <- order(-apply(zx,1,sd,na.rm=TRUE))
+        zx = zx[ii,,drop=FALSE] ## order
         zx = head(zx,nmax)
     }
     ##zx = zx / apply(zx,1,sd,na.rm=TRUE)  ## scale??
 
     ## ------------- cluster the genes???
     if(is.null(idx)) {
-        hc = hclust( as.dist(1 - cor(t(zx))), method="ward.D2" )
-        idx = paste0("S",cutree(hc, 5))
+        hc  = fastcluster::hclust( as.dist(1 - cor(t(zx),use="pairwise")), method="ward.D2" )
+        ngrp = 4  ## how many default groups???
+        idx = paste0("S",cutree(hc, ngrp))
     }
 
     ## ------------- matched annotation
@@ -305,7 +307,7 @@ observe({
     ngs <- inputData()
     req(ngs)    
     cvar <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=20)
-    sel <- c(grep("cell.type|cell.family|type|family",cvar,value=TRUE),"<none>")[1]
+    sel <- c(grep("cell.type|cell.family|type|family|tissue|histo",cvar,value=TRUE),"<none>")[1]
     updateSelectInput(session, "hm_splitx", choices=c("<none>",cvar), selected=sel)
 })
 
@@ -340,7 +342,8 @@ hm1_splitmap.RENDER <- reactive({
     scale.mode
     
     ## split genes dimension in 5 groups
-    splity = 5 
+    splity = 5
+    splity = 6
     if(!is.null(zx.clust)) splity = zx.clust
     
     ## split samples
@@ -377,7 +380,7 @@ hm1_splitmap.RENDER <- reactive({
     if(!is.null(splitx) & (totnchar > 44 || nx>=6) ) crot=90
     if(main=="<all>") main <- ""
 
-    nrownames = ifelse("row" %in% input$hm_showlabel,80,0)
+    nrownames = ifelse("row" %in% input$hm_showlabel,60,0)
     
     withProgress(
         message='rendering heatmap...', value=0.66,
@@ -607,7 +610,7 @@ observe({
 
 hm_GetClusterPositions <- reactive({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     ##zx <- hm_filtered_matrix()
     zx = ngs$X
     kk <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
@@ -677,7 +680,7 @@ hm_GetClusterPositions <- reactive({
 hm_PCAplotFUNC <- reactive({
 
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     do3d = ("3D" %in% input$hmpca_options)
 
     clust <- hm_GetClusterPositions()
@@ -991,15 +994,24 @@ clustannot_plots.PLOTLY <- reactive({
     
     ##par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
     NTERMS = 6
-    NTERMS = 8
-    if(ncol(rho)>6)  NTERMS=6
-    if(ncol(rho)<=3) NTERMS=20
+    NTERMS = 12
+    slen=40
+    if(ncol(rho)>=5)  {
+        slen=20
+    }
+    if(ncol(rho)>6)  {
+        NTERMS=6
+    }
+    if(ncol(rho)<=2) {
+        NTERMS=20
+    }
 
     klrpal = rep(brewer.pal(8,"Set2"),2)
     ##klrpal = paste0(klrpal,"88")
     col.addalpha <- function(clr,a=100)
         paste0("rgba(",paste(col2rgb(clr)[,1],collapse=","),",",a,")")
-    klrpal = as.character(sapply(klrpal, col.addalpha, a=50))
+    ##klrpal = as.character(sapply(klrpal, col.addalpha, a=50))
+    klrpal <- paste0(klrpal,"55")
     
     plot_list <- list()
     i=1    
@@ -1015,7 +1027,7 @@ clustannot_plots.PLOTLY <- reactive({
             list(text=tt, font = list(size=13),
                  xref="paper", yref="paper",
                  yanchor = "bottom", xanchor = "center",
-                 align = "center", x=0.5, y=0.98 , showarrow = FALSE )
+                 align = "center", x=0.5, y=1.02 , showarrow = FALSE )
         }
         
         plot_list[[i]] <- plot_ly(
@@ -1043,12 +1055,17 @@ clustannot_plots.PLOTLY <- reactive({
             ## labeling the y-axis inside bars
             add_annotations(xref = 'paper', yref = 'y',
                             x = 0.01, y = y, xanchor='left',
-                            text = shortstring(y,20), 
+                            text = shortstring(y,slen), 
                             font = list(size = 11),
                             showarrow = FALSE, align = 'right') 
     }
 
-    nrows = ceiling( length(plot_list)/3 )
+    if(length(plot_list) <= 4) {
+        nrows = ceiling(length(plot_list)/2 )
+    } else {
+        nrows = ceiling(length(plot_list)/3 )
+    }
+    
     subplot( plot_list, nrows=nrows, shareX=TRUE,
             ## template = "plotly_dark",
             margin=c(0, 0.0, 0.05, 0.05) )
@@ -1220,7 +1237,7 @@ require(plotly)
 
 clust_featureRank.RENDER <- reactive({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
 
     features=X=NULL
     if(input$hm_level=="geneset") {

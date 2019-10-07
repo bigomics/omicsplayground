@@ -238,12 +238,6 @@ selectedDataSet <- reactive({
     as.character(PGXINFO$dataset[sel])
 })
 
-toon <- randomCartoon()
-output$loading_image <- renderImage({
-    list(src = toon$img, contentType = 'image/png', width="auto", height="350px")
-    ##list(src = toon$img, contentType = 'image/png', width="auto", height="auto")
-}, deleteFile = FALSE)
-
 showLoadingModal <- function(pgx) {
     toon <- randomCartoon()
     output$loading_image <- renderImage({
@@ -253,12 +247,11 @@ showLoadingModal <- function(pgx) {
     showModal(modalDialog(
         ##title = HTML("<center><h4>Omics Playground</h4></center>"),
         ##HTML("<center><h2>",pgx.randomSlogan(),"</h2><h4>with Omics Playground</h4></center>"),
-        title = HTML("<center><h2>",toon$slogan,"</h2></center>"),
+        title = HTML("<center><h2>",toon$slogan,"</h2><h4>with Omics Playground</h4></center>"),
         fillRow(flex=c(1,NA,1), br(),
                 imageOutput("loading_image", width="auto", height="250px"),
                 br()),
-        footer = HTML("<center><h3>with Omics Playground</h3><p>Loading ",pgx,
-                      "data...  &nbsp; Please wait</p></center>"),
+        footer = HTML("<center><p>Loading ",pgx,"data...  &nbsp; Please wait</p></center>"),
         size="m", easyClose=TRUE, fade=TRUE))
     Sys.sleep(8)
     dbg("showLoadingModal done!\n")
@@ -540,6 +533,7 @@ pgxTableFUNC <- reactive({
                   ##selection = list(mode='single', target='row'),
                   selection = list(mode='single', target='row', selected=1 ),
                   ##selection = list(mode='none'),
+                  ##filter = "top",
                   options=list(
                       ##dom = 'Blfrtip', 
                       pageLength = 100, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
@@ -557,9 +551,9 @@ pgxtable_module <- tableModule(
     id = "pgxtable", func = pgxTableFUNC,
     info.text = pgxtable_text,
     title="Datasets"
-)
+    )
 output <- attachModule(output, pgxtable_module)
-
+	
 fillCol(
     moduleWidget(pgxtable_module, outputFunc="dataTableOutput")
 )
@@ -567,64 +561,59 @@ fillCol(
 ```
 
 
-
 `r if(!DEV.VERSION) {"<!-----------------------------------------"}`
 
 ### Upload data
 
 ```{r data-upload, echo=FALSE}
-sidebarLayout(
-    sidebarPanel(
-        ## Input: Select a file ----
-        fileInput("upload_datafile", "Choose data file",
-                  multiple = FALSE,
-                  accept = c("text/csv",
-                             "text/comma-separated-values,text/plain",
-                             ".csv")),
-        radioButtons("upload_datatype","Data type:",c("RNAseq/micro-array","protein"),inline=TRUE),
-        br(),br(),
-        fileInput("upload_annotfile", "Choose sample information file",
-                  multiple = FALSE,
-                  accept = c("text/csv",
-                             "text/comma-separated-values,text/plain",
-                             ".csv")),
-        actionButton("upload_compute","Compute!",icon=icon("running"))
+upload_filetypes = c("text/csv","text/comma-separated-values,text/plain",
+                     ".csv")
+
+fillCol(
+    flex=c(1,NA),
+    fillRow(
+        column(
+            width=12,
+            fileInput("upload_files", "Choose files",
+                      multiple = TRUE, accept = upload_filetypes),
+            tableOutput("upload_contents")
+        )
     ),
-    ## Main panel for displaying outputs ----
-    mainPanel(
-        ##h1("Data table"),
-        tableOutput("upload_contents"),
-        ##h1("Sample annotation"),
-        tableOutput("upload_annot")
-    )    
+    actionButton("upload_compute","Compute!",icon=icon("running"))
 )
+
+
+uploaded_files <- reactiveValues()
+
 output$upload_contents <- renderTable({
-    req(input$upload_datafile)
 
-    # when reading semicolon separated files,
-    # having a comma separator causes `read.csv` to error
-    tryCatch({
-        df <- read.csv(input$upload_datafile$datapath)
-    },
-    error = function(e) {
-        stop(safeError(e))
-    })
-    return(head(df))
+    ## cat("<uploaded_files> names(input$upload_files)=",names(input$upload_files),"\n")
+    ## cat("<uploaded_files> datapath=",input$upload_files$datapath,"\n")
+    ## ff = lapply(input$upload_files$datapath, read.csv, row.names=1)
+    ## names(ff) <- input$upload_files$name    
+
+    ## ## store files in reactive value
+    ## files.needed = c("counts.csv","samples.csv","genes.csv","contrasts.csv")
+    ## ff = ff[ which(names(ff) %in% files.needed) ]
+    ## if(length(ff)) {
+    ##     for(i in 1:length(ff)) uploaded_files[[names(ff)[i]]] <- ff[[i]]
+    ## }
+
+    ## ## check files
+    ## files.uploaded <- uploaded_files()
+    ## files.uploaded <- files.uploaded[match(files.needed,names(files.uploaded))]
+    ## is.missing = files.needed %in% names(files.uploaded)
+    ## files.nrow = sapply(files.uploaded, nrow)
+    ## files.ncol = sapply(files.uploaded, ncol)
+    
+    ## status <- rep("OK",length(files))
+    ## df <- data.frame( file.name=names(files), nrow=files.nrow, ncol=files.ncol,
+    ##                  is.missing, status)
+
+    return(df)    
 })
 
-output$upload_annot <- renderTable({
-    req(input$upload_annotfile)
 
-    # when reading semicolon separated files,
-    # having a comma separator causes `read.csv` to error
-    tryCatch({
-        df <- read.csv(input$upload_annotfile$datapath)
-    },
-    error = function(e) {
-        stop(safeError(e))
-    })
-    return(head(df))
-})
 
 ```
 
