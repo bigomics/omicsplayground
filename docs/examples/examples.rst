@@ -256,12 +256,42 @@ Activation matrix
 **Figure 12**. Survival tree analysis for the DLBCL dataset GSE10846.
 
 
-
 Connectivity graph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. _`Figure 13`: 
+
+.. figure:: figures/fig3_f.png
+    :align: center
+    :width: 100% 
+
+**Figure 13**. Survival tree analysis for the DLBCL dataset GSE10846.
 
 
 Classification tree
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. _`Figure 14`: 
+
+.. figure:: figures/fig3_g1.png
+    :align: center
+    :width: 100% 
+.. figure:: figures/fig3_g2.png
+    :align: center
+    :width: 100%    
+
+**Figure 14**. Survival tree analysis for the DLBCL dataset GSE10846.
+
+
+Volcano plots of methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. _`Figure 15`: 
+
+.. figure:: figures/fig3_a.png
+    :align: center
+    :width: 100% 
+
+**Figure 15**. Volcano plots corresponding to eight different statistical 
+methods comparing time-dependent expression of T cell activation at 48h vs. 12h.
 
