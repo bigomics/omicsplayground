@@ -68,7 +68,7 @@ conditionalPanel(
 ## update filter choices upon change of data set 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
 
     ## levels for sample filter
     levels = getLevels(ngs$Y)
@@ -114,11 +114,13 @@ data_tissueplot_text = paste0('Tissue expression for the selected gene in the ti
 ##                     Average Rank plot
 ##----------------------------------------------------------------------
 
+MARGINS1 = c(7,3.5,2,1)
+
 data_genePlots_averageRankPlot.RENDER <- reactive({
     require(RColorBrewer)
     
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     gene = "KCNN4"
     gene = ngs$genes$gene_name[1]
@@ -128,8 +130,6 @@ data_genePlots_averageRankPlot.RENDER <- reactive({
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
     }
     nsamples = length(samples)
-
-    par(mar=c(8,3.5,2,1), mgp=c(1.5,0.5,0)) #mgp=c(2.1,0.8,0))
 
     if(input$data_type=="counts") {
         mean.fc <- sort(rowMeans(ngs$counts[,samples,drop=FALSE]),decreasing=TRUE)
@@ -148,7 +148,12 @@ data_genePlots_averageRankPlot.RENDER <- reactive({
 
     j <- which(sub(".*:","",names(mean.fc))==gene)
     ##j <- which(ngs$genes$gene_name==gene)
-    plot( mean.fc, type="h", lwd=0.4, col="#3380CC03", #col="grey80",
+
+    par(mar=MARGINS1, mgp=c(2.1,0.8,0))
+    ##MARGINS1
+    plot( mean.fc, type="h", lwd=0.4,
+         ## col="#3380CC11", 
+         col="#bbd4ee", 
          #main="average rank", cex.main=1.2,
          ylab=ylab, xlab="ordered genes", xaxt="n")
     points( j, mean.fc[j], type="h", lwd=2, col="black")
@@ -170,7 +175,7 @@ data_genePlots_correlationplot_data <- reactive({
     require(RColorBrewer)
     
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     gene = "KCNN4"
     gene = ngs$genes$gene_name[1]
@@ -203,7 +208,7 @@ data_genePlots_correlationplot_data <- reactive({
         ylab="expression (log2CPM)"
     }
 
-    par(mar=c(8,3.5,2,1), mgp=c(2.1,0.8,0))
+    par(mar=MARGINS1, mgp=c(2.1,0.8,0))
 
     ## corr always in log.scale and restricted to selected samples subset
     ## should match exactly the rawtable!!
@@ -264,7 +269,7 @@ data_genePlots_barplot.RENDER <- reactive({
     require(RColorBrewer)
     
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     req(input$data_groupby)
     
     gene = "KCNN4"
@@ -299,7 +304,7 @@ data_genePlots_barplot.RENDER <- reactive({
         ylab="expression (log2CPM)"
     }
 
-    par(mar=c(8,3.5,2,1), mgp=c(2.1,0.8,0))
+    par(mar=MARGINS1, mgp=c(2.1,0.8,0))
     BLUE = col=rgb(0.2,0.5,0.8,0.8)
     bee.cex = ifelse(length(gx)>500,0.1,0.2)
     bee.cex = c(0.3,0.1,0.05)[cut(length(gx),c(0,100,500,99999))]
@@ -354,7 +359,7 @@ data_genePlots_tsne.RENDER <- reactive({
     require(RColorBrewer)
     
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     gene = "KCNN4"
     gene = ngs$genes$gene_name[1]
@@ -408,10 +413,25 @@ data_genePlots_tsne.RENDER <- reactive({
     plot( pos[jj2,], pch=20, cex=cex1, col=klr1[jj2], fg = gray(0.6), bty = "o",
          xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
 
+    ## determine how to do grouping for group labels
     grp <- factor(ngs$samples[samples,]$group)
     ngrp <- length(unique(grp))
-    if("cell.type" %in% colnames(ngs$samples) && ngrp>20) grp <- ngs$samples[samples,]$cell.type
 
+    dbg("[DataView] grp=",grp)
+    dbg("[DataView] length.grp=",length(grp))
+    dbg("[DataView] head.grp=",head(grp))
+
+    if("cell.type" %in% colnames(ngs$samples) && ngrp>20) {
+        grp <- ngs$samples[samples,]$cell.type
+        dbg("[DataView] change to cell.type grp : head.grp=",head(grp))
+    }
+
+    dbg("[DataView] grp=",grp)
+    dbg("[DataView] length.grp=",length(grp))
+    dbg("[DataView] head.grp=",head(grp))
+    dbg("[DataView] length.samples=",length(samples))
+    dbg("[DataView] dim(pos)=",dim(pos))
+    
     cex2 = ifelse(nrow(pos) < 50, 1.5, 1.1)
     cex2 = ifelse(nrow(pos) > 200, 0.8, cex2)
     if(0 && input$pr_labelmode=="legend") {
@@ -448,7 +468,7 @@ output <- attachModule(output, data_genePlots_tsne_module)
 data_tissueplot.RENDER <- reactive({
 
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     if(is.null(input$data_type)) return(NULL)
     
     gene <- input$search_gene
@@ -457,6 +477,7 @@ data_tissueplot.RENDER <- reactive({
     
     require(RColorBrewer)
     par(mar=c(6,4,1,1), mgp=c(2.2,0.8,0))
+    par(mar=MARGINS1, mgp=c(1.5,0.5,0))
     if( hgnc.gene %in% rownames(TISSUE)) {
         tx = TISSUE[hgnc.gene,]
         grp = TISSUE.grp[names(tx)]
@@ -497,7 +518,7 @@ output <- attachModule(output, data_tissueplot_module)
 data_corplot_data <- reactive({
     require(RColorBrewer)
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)	
+    req(ngs)	
     if(is.null(input$data_type)) return(NULL)
         
     ##samples=colnames(ngs$X);gene="CD4"
@@ -557,6 +578,7 @@ data_corplot.RENDER <- reactive({
     if(is.null(res)) return(NULL)
     
     par(mar=c(6,4,2,1), mgp=c(2.2,0.8,0))
+    par(mar=MARGINS1, mgp=c(1.5,0.5,0))
     barplot( t(res$Rtop) - res$offset, col=res$klr, border=NA, ##horiz=TRUE, 
              las=3, cex.names=0.73, ##names.arg=rep(NA,nrow(R)),
              offset = res$offset, ylab="cumulative correlation (r)"            
@@ -621,54 +643,32 @@ data_geneInfo_buttons = plotModuleButtons(
                             "Provide a summary for the selected gene.", placement="top")),
     title = "Gene info")
 
-
-
 ##----------------------------------------------------------------------
 ##                     Interface
 ##----------------------------------------------------------------------
+fillCol(
+    flex = c(1,0.06,1),        
+    fillRow(
+        flex = c(1,1,1,1), id = "data_genePlots_row1",            
+        moduleWidget(data_genePlots_tsne_module),
+        moduleWidget(data_genePlots_barplot_module),
+        moduleWidget(data_genePlots_correlationplot_module),
+        moduleWidget(data_genePlots_averageRankPlot_module)
+    ),
+    br(),
+    fillRow(
+        flex = c(1,1.4,1.6), id = "data_genePlots_row2",
+        fillCol( flex = c(NA,0.01, 1),
+                data_geneInfo_buttons, br(),
+                htmlOutput('data_geneInfo', class="gene-info-output")),
+        moduleWidget(data_corplot_module),
+        moduleWidget(data_tissueplot_module)
+    )
+)
 
-
-fillCol( flex = c(1.3,1),
-        
-        fillRow(flex = c(1,1,1,1),
-                
-                fillCol(flex = c(NA,1),
-                        data_genePlots_tsne_module$button,
-                        plotOutput("data_genePlots_tsne", height = "100%", width = "100%")
-                        ),
-                
-                fillCol(flex = c(NA,1),
-                        data_genePlots_barplot_module$button,
-                        plotOutput("data_genePlots_barplot", height = "100%", width = "100%")),
-                
-                fillCol(flex = c(NA,1),
-                        data_genePlots_correlationplot_module$button,
-                        plotOutput("data_genePlots_correlationplot", height = "100%", width = "100%")),
-                
-                fillCol(flex = c(NA,1),
-                        data_genePlots_averageRankPlot_module$button,
-                        plotOutput("data_genePlots_averageRankPlot", height = "100%", width = "100%"))
-
-                ),
-        
-        fillRow(flex = c(1,1.4,1.6),
-                
-                fillCol( flex = c(NA,0.01, 1),
-                         data_geneInfo_buttons,
-                         br(),
-                         htmlOutput('data_geneInfo', class="gene-info-output")),
-                
-                fillCol(flex = c(NA,1),
-                        data_corplot_module$button,
-                        plotOutput("data_corplot", height = "100%", width = "100%")),
-                
-                fillCol(flex = c(NA,1),
-                        data_tissueplot_module$button,
-                        plotOutput("data_tissueplot", height = "100%", width = "100%"))
-                
-                )
-        )
-
+##dragula("data_genePlots_row1")
+##dragula("data_genePlots_row2")
+dragula(c("data_genePlots_row1","data_genePlots_row2"))
 
 
 
@@ -703,6 +703,8 @@ counts_tab_average_countplot_text=paste0('Barplot showing the average count leve
 ##----------------------------------------------------------------------
 ##                     Count information barplot
 ##----------------------------------------------------------------------
+MARGINS2 = c(9,3.5,2,1)
+MARGINS2 = c(8,3.5,2,1)
 
 counts_tab_barplot.RENDER <- reactive({
     res = getCountsTable()
@@ -710,6 +712,7 @@ counts_tab_barplot.RENDER <- reactive({
     req(input$data_groupby)
     #par(mar=c(20,6,10,6), mgp=c(2.2,0.8,0))
     par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
+    par(mar=MARGINS2, mgp=c(2.2,0.8,0))
 
     ylab = "counts (million)"
     if(input$data_groupby!="<ungrouped>") {
@@ -747,6 +750,7 @@ counts_tab_boxplot.RENDER <- reactive({
     if(is.null(res)) return(NULL)
     #par(mar=c(3,3,3,3), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )   
     par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
+    par(mar=MARGINS2, mgp=c(2.2,0.8,0))
     
     ### ---- xlab ------ ###
     xaxt="l"
@@ -781,6 +785,8 @@ counts_tab_histplot.RENDER <- reactive({
     if(is.null(res)) return(NULL)
     #par(mfrow=c(2,3), mar=c(9,4,3,1.5), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )  
     par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
+    par(mar=MARGINS2, mgp=c(2.2,0.8,0))
+    
     n=1000
     gx.hist <- function(gx, n=1000, main="",ylim=NULL) {
         jj <- 1:nrow(gx)
@@ -821,6 +827,7 @@ counts_tab_abundanceplot.RENDER <- reactive({
     #par(mar=c(6,4,0,4), mgp=c(2.2,0.8,0))
     par(mar=c(6,4,0,4))
     par(mar=c(7,4,0,2))
+    par(mar=MARGINS2, mgp=c(2.2,0.8,0))
     
     klr <- colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)), alpha = TRUE)(nrow(res$prop.counts))
     
@@ -870,7 +877,8 @@ counts_tab_average_countplot.RENDER <- reactive({
     #par(mar=c(6,4,0,4), mgp=c(2.2,0.8,0))
     par(mar=c(6,4,0,4))
     par(mar=c(7,4,0,2))
-
+    par(mar=MARGINS2, mgp=c(2.2,0.8,0))
+    
     klr <- colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)), alpha = TRUE)(nrow(res$avg.counts))
     # klr <- grey.colors(nrow(res$avg.counts))
     
@@ -907,7 +915,7 @@ output <- attachModule(output, counts_tab_average_countplot_module)
 
 getCountsTable <- reactive({
     ngs = inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     validate(need("counts" %in% names(ngs), "no 'counts' in object."))    
     subtt=NULL
@@ -1037,35 +1045,21 @@ getCountsTable <- reactive({
 })
 
 
-fillCol( flex = c(1,1),
-
-        fillRow(flex = c(1,1,1),
-
-                fillCol(flex = c(NA,1),
-                        counts_tab_barplot_module$button,
-                        plotOutput("counts_tab_barplot", height = "100%", width = "100%")),
-                
-                fillCol(flex = c(NA,1),
-                        counts_tab_boxplot_module$button,
-                        plotOutput("counts_tab_boxplot", height = "100%", width = "100%")),
-        
-                fillCol(flex = c(NA,1),
-                        counts_tab_histplot_module$button,
-                        plotOutput("counts_tab_histplot", height = "100%", width = "100%"))
-        ),
-
-        fillRow(flex = c(1,1),
-
-                fillCol(flex = c(NA,1),
-                        counts_tab_abundanceplot_module$button,
-                        plotOutput("counts_tab_abundanceplot", height = "100%", width = "100%")),
-                
-                fillCol(flex = c(NA,1),
-                        counts_tab_average_countplot_module$button,
-                        plotOutput("counts_tab_average_countplot", height = "100%", width = "100%"))
-                                
-                )
-        )
+fillCol(
+    flex = c(1,1),
+    fillRow(
+        flex = c(1,1,1), id = "counts_tab_row1",
+        moduleWidget(counts_tab_barplot_module),
+        moduleWidget(counts_tab_boxplot_module),
+        moduleWidget(counts_tab_histplot_module)
+    ),
+    fillRow(
+        flex = c(1,1), id = "counts_tab_row2",
+        moduleWidget(counts_tab_abundanceplot_module),
+        moduleWidget(counts_tab_average_countplot_module)
+    )
+)
+dragula(c("counts_tab_row1","counts_tab_row2"))
 
 ```
 
@@ -1086,7 +1080,7 @@ data_rawdataTable_text = paste0('Under the <strong>gene table </strong>, the ave
 data_rawdataTable.RENDER <- reactive({
     ## get current view of raw_counts
     ngs = inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     req(input$data_groupby)
     
     pp <- rownames(ngs$X)
@@ -1211,7 +1205,7 @@ fillCol(flex = c(NA,0.01, 1),
 data_sampleTable.RENDER <- reactive({
     ## get current view of raw_counts
     ngs = inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
 
     ##if(is.null(input$data_samplefilter)) return(NULL)    
     dt <- NULL
@@ -1257,7 +1251,7 @@ fillCol(flex = c(NA,1),
 data_contrastTable.RENDER <- reactive({
     ## get current view of raw_counts
     ngs = inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
 
     ##if(is.null(input$data_samplefilter)) return(NULL)    
     dt <- NULL
@@ -1317,7 +1311,7 @@ fillCol(flex = c(NA,1),
 
 datatable_timings.RENDER <- reactive({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     ##if(is.null(ngs$timings)) return(NULL)
     D <- data.frame()
     if(!is.null(ngs$timings)) {
@@ -1344,7 +1338,7 @@ output <- attachModule(output, datatable_timings_module)
 
 datatable_objectdims.RENDER <- reactive({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
 
     dims1 <- lapply( ngs, dim)
     lens <- sapply( ngs, length)
@@ -1370,7 +1364,7 @@ output <- attachModule(output, datatable_objectdims_module)
 
 datatable_objectsize.RENDER <- reactive({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     objsize <- sapply(ngs,object.size)
     objsize <- round( objsize/1e6, digits=2)
     D = data.frame( object=names(ngs), "size.Mb"=objsize, check.names=FALSE)

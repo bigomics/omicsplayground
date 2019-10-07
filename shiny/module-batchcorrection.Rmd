@@ -71,7 +71,7 @@ br();br();
 ## update filter choices upon change of data set 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     ##vars <- c("<PC1>","<PC2>","<PC3>","<XY>",colnames(ngs$Y))
     vars <- c("<mean>","<libsize>","<PC1>","<PC2>","<PC3>",colnames(ngs$samples))
     vars <- c("<SVA>","<NNM>","<NNM2>","<PC1>","<PC2>","<PC3>","<XY>",colnames(ngs$samples))
@@ -92,7 +92,7 @@ bc_getBatchCorrectedMatrix <- eventReactive(
         
     require(irlba)    
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     if(is.null(input$bc_level)) return(NULL)
     
     if(input$bc_level=="geneset") {
@@ -197,7 +197,7 @@ fillCol(height = "100%", flex = c(NA, 1),
 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     split0 = colnames(ngs$samples)[grep("sample|patient|donor",colnames(ngs$samples),invert=TRUE)]
     ny <- apply(ngs$samples[,split0],2,function(x) length(unique(x)))
     split0 <- split0[which(ny>1)]
@@ -209,7 +209,7 @@ observe({
 output$bc_splitmap <- renderPlot({
     ##genes = families[[input$filter]]
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     res <- bc_getBatchCorrectedMatrix()
     if(is.null(res)) return(NULL)
@@ -262,7 +262,7 @@ fillCol(flex = c(NA,1), height="100%",
 
 output$bc_phenocorplot <- renderPlot({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     Y <- ngs$samples
     kk <- grep("sample|donor|patient",colnames(Y),invert=TRUE)
     Y <- Y[,kk]
@@ -352,7 +352,7 @@ pgx.plotPhenoMultiPCA <- function(X, Y, type="pca", add.sv=0,layout=TRUE )
 
 renderPlot({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     zx <- ngs$X
     res <- bc_getBatchCorrectedMatrix()
@@ -463,7 +463,7 @@ output$bc_before <- renderPlot({
     ## Show correlation between PC and annotation by a heatmap
 
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     res <- bc_getBatchCorrectedMatrix()
     if(is.null(res)) return(NULL)
@@ -489,7 +489,7 @@ output$bc_after <- renderPlot({
     ## Show correlation between PC and annotation by a heatmap
 
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     res <- bc_getBatchCorrectedMatrix()
     if(is.null(res)) return(NULL)
@@ -520,7 +520,7 @@ fillCol(flex = c(NA, 1), height = "100%",
 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     choices = colnames(ngs$X)
     choices = unique(ngs$samples$group)
     updateSelectInput(session, "bc_purifyvars", choices=choices)
@@ -529,7 +529,7 @@ observe({
 
 calcPurifyResults <- reactive({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
 
     ref=ngs$samples$group[1]
     ref <- input$bc_purifyvars
@@ -561,7 +561,7 @@ calcPurifyResults <- reactive({
 
 output$bc_purify <- renderPlot({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
    
     res <- calcPurifyResults()    
     if(is.null(res)) return(NULL)
@@ -618,7 +618,7 @@ fillCol(flex = c(1.4,1), height="800px",
 getPCACorMatrix <- reactive({
 
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     res <- bc_getBatchCorrectedMatrix()
     if(is.null(res)) return(NULL)
     colnames(res$v) <- paste0("PC",1:ncol(res$v))
@@ -649,7 +649,7 @@ output$bc_pcaheatmap <- renderPlot({
     ## Show correlation between PC and annotation by a heatmap
 
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     res <- bc_getBatchCorrectedMatrix()
     if(is.null(res)) return(NULL)
@@ -680,7 +680,7 @@ output$bc_pcaheatmap <- renderPlot({
 output$bc_pcatable <- DT::renderDataTable({
     ## get current view of raw_counts
     ngs = inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     pcor <- getPCACorMatrix()
     if(is.null(pcor)) return(NULL)
     ##rho  <- pcor$avg.rho
@@ -710,7 +710,7 @@ output$bc_pcatable <- DT::renderDataTable({
 ```{r}
 renderPlot({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     res <- bc_getBatchCorrectedMatrix()
     if(is.null(res)) return(NULL)
@@ -777,7 +777,7 @@ gx.histogram <- function(gx, col=NULL, main="",ylim=NULL) {
 
 renderPlot({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     res <- bc_getBatchCorrectedMatrix()
     if(is.null(res)) return(NULL)

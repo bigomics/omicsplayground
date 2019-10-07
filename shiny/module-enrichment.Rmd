@@ -168,7 +168,7 @@ calculateMeta <- function(comparison, methods, ngs) {
 
 getGeneSetTable <- reactive({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     comp=1
     comp = input$gs_contrast
     if(is.null(comp)) return(NULL)
@@ -337,7 +337,7 @@ Row {.tabset data-height=450}
 enrich_topEnriched.RENDER <- reactive({
 
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     comp=1
     comp = input$gs_contrast
@@ -473,11 +473,12 @@ enrich_subplot1.RENDER <- reactive({
     par(mar=c(3,3.5,1.5,0.5))
     
     ngs <- inputData()    
-
+    req(ngs)
+    
     comp=1;gs=1
     comp = input$gs_contrast
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
 
     gx.meta <- ngs$gx.meta$meta[[comp]]
     limma1 = sapply(gx.meta[,c("fc","p","q")],function(x) x[,"trend.limma"])
@@ -533,12 +534,14 @@ enrich_subplot2.RENDER <- reactive({
     par(mar=c(3,3.5,1.5,0.5))
     
     ngs <- inputData()    
-
+    req(ngs)
+    
     require(RColorBrewer)
     gset = rownames(ngs$gsetX)[1]
     gset = gset_selected()
     if(is.null(gset) || length(gset)==0 ) return(NULL)
     gset <- gset[1]
+    if(!gset %in% rownames(ngs$gsetX)) return(NULL)
     
     comp0 = colnames(ngs$model.parameters$contr.matrix)[1]
     comp0 = input$gs_contrast
@@ -570,7 +573,8 @@ enrich_subplot3.RENDER <- reactive({
     par(mar=c(3,3.5,1.5,0.5))
     
     ngs <- inputData()    
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
+
     comp0 = colnames(ngs$model.parameters$contr.matrix)[1]
     comp0 = input$gs_contrast
 
@@ -612,7 +616,8 @@ enrich_subplot4.RENDER <- reactive({
     par(mar=c(3,3.5,1.5,0.5))
     
     ngs <- inputData()    
-
+    req(ngs)
+    
     require(RColorBrewer)
     gene = rownames(ngs$X)[1]
     sel  = gene_selected()
@@ -707,7 +712,7 @@ dragula("enrich_subplots")
 enrich_compare.RENDER <- reactive({
 
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     comp=1
     comp = input$gs_contrast
@@ -802,7 +807,7 @@ enrich_volcanoAll.RENDER <- reactive({
     ##renderPlotly({
     require(metap)
     ngs = inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     if(is.null(input$gs_features)) return(NULL)
     
     meta = ngs$gset.meta$meta
@@ -893,8 +898,8 @@ fillCol(
 enrich_volcanoMethods.RENDER <- reactive({
     ##renderPlotly({
     ngs <- inputData()    
-    if(is.null(ngs)) return(NULL)
-    if(is.null(input$gs_features)) return(NULL)
+    req(ngs, input$gs_features)
+    ##if(is.null(input$gs_features)) return(NULL)
     
     cmp = 1
     cmp = input$gs_contrast
@@ -986,10 +991,12 @@ enrich_genemap.RENDER <- reactive({
     
     require(Matrix)
 
+    ngs <- inputData()
+    req(ngs, input$gs_contrast)
+    
     ## -------------- get the gene-centric fold-changes (default LIMMA)
     comp1=1
     comp1 = input$gs_contrast
-    ngs <- inputData()
     gx.meta <- ngs$gx.meta$meta[[comp1]]
     limma1 = sapply(gx.meta[,c("fc","p","q")],function(x) x[,"trend.limma"])
     ##limma = cbind( ngs$gx.meta$meta[[comp1]][,c("gene_name","gene_title")], limma1)
@@ -1094,11 +1101,10 @@ geneDetails <- reactive({
     ##
     
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs,input$gs_contrast)
     gs=1;comp=1
 
     comp = input$gs_contrast
-    if(is.null(comp)) return(NULL)
     gs = gset_selected()
     if(is.null(gs) || length(gs)==0) return(NULL)
     
@@ -1151,8 +1157,10 @@ geneDetails <- reactive({
 })
 
 gene_selected <- reactive({
+
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
+
     i = 1
     i = as.integer(input$enrich_genetable_rows_selected)
     if(is.null(i) || is.na(i) || length(i)==0) i=1
@@ -1219,6 +1227,7 @@ enrich_gseatable.RENDER <- reactive({
 enrich_genetable.RENDER <- reactive({
 
     rpt <- geneDetails()    
+    if(is.null(rpt)) return(NULL)
     
     rpt$gene_title <- NULL    
     if(!is.null(rpt) && nrow(rpt)>0 ) {

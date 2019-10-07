@@ -66,7 +66,7 @@ conditionalPanel(
 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     ct <- colnames(ngs$model.parameters$contr.matrix)
     ##ct <- c(ct,"<sd>")
     updateSelectInput(session, "fa_contrast", choices=ct )
@@ -88,7 +88,7 @@ Col {.tabset data-width=650}
 
 getKeggTable <- reactive({
     ngs = inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     req(input$fa_contrast)
     
     ## ----- get comparison
@@ -375,7 +375,7 @@ output$kegg_graph <- renderImage({
 kegg_table.RENDER <- reactive({
     
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     if(is.null(ngs$meta.go)) return(NULL)
     
     comparison=1
@@ -411,7 +411,7 @@ kegg_table.RENDER <- reactive({
 kegg_actmap.RENDER <- reactive({
     require(igraph)
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
 
     df <- getKeggTable()
     if(is.null(df)) return(NULL)
@@ -535,7 +535,7 @@ GO_network.RENDER <- reactive({
     require(RColorBrewer)
     require(visNetwork)
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
 
     comparison=1;methods=c("fisher","gsva","camera")
     comparison = input$fa_contrast
@@ -644,8 +644,6 @@ GO_network.RENDER <- reactive({
 GO_table.RENDER <- reactive({
     ngs <- inputData()
     req(ngs, input$fa_contrast)
-
-    if(is.null(ngs)) return(NULL)
     if(is.null(ngs$meta.go)) return(NULL)
 
     comparison=1
@@ -695,7 +693,6 @@ GO_actmap.RENDER <- reactive({
     require(igraph)
     ngs <- inputData()
     req(ngs)
-    if(is.null(ngs)) return(NULL)
 
     score = ngs$meta.go$pathscore
     ##if(is.null(score)) return(NULL)
@@ -815,9 +812,7 @@ fillRow(flex = c(1.2,1),
 
 getDseaTable <- reactive({
     ngs <- inputData()
-    req(ngs)
-    if(is.null(ngs)) return(NULL)
-        
+    req(ngs)        
     req(input$fa_contrast, input$dsea_monocombo)
 
     comparison=3
@@ -1013,7 +1008,6 @@ dsea_actmap.RENDER <- reactive({
     require(igraph)
     ngs <- inputData()
     req(ngs, input$fa_contrast, input$dsea_monocombo)
-    if(is.null(ngs)) return(NULL)
 
     shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
     if(is.null(ngs$drugs)) return(NULL)
@@ -1157,7 +1151,7 @@ fillRow(flex = c(2.6,1),
 
 observe({
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     ct <- c("mono","combo")
     if(is.null(ngs$drugs$combo)) {
         ct <- c("mono")
@@ -1279,7 +1273,6 @@ pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
 enrich_getWordFreqResults <- reactive({
     ngs <- inputData()
     req(ngs)
-    ##if(is.null(ngs)) return(NULL)
     
     ## ------------ Create a Progress object
     progress <- shiny::Progress$new()
@@ -1438,7 +1431,6 @@ enrich_keyword.RENDER <- reactive({
 
     ngs <- inputData()
     req(ngs)
-    ##if(is.null(ngs)) return(NULL)
 
     topFreq <- enrich_getWordEnrichment()
     
@@ -1857,7 +1849,7 @@ pgx.firePlot <- function(ngs, cmp, gsets, shownames=TRUE) {
 output$fa_fireplot <- renderPlot({
     require(igraph)
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     ##df <- getFilteredKeggTable()
     
     cmp=1

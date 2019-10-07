@@ -214,10 +214,13 @@ code {
 }
 
 .modal-backdrop {
+    background-color: #000;
     background-color: #FFF;
 }
 
 .modal-backdrop.in {
-    opacity: 0.9;
+    opacity: 0.5;
+    opacity: 0.8;
+
 }
 

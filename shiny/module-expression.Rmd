@@ -105,7 +105,9 @@ comparison=1;testmethods=c("trend.limma")
 
 getDEGtable <- function(ngs, testmethods, comparison, add.pq) {
     ##ngs = inputData()
-    if(is.null(ngs)) return(NULL)
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
+    
     if(is.null(testmethods)) return(NULL)
     if(is.null(comparison)) return(NULL)
     if(length(testmethods)==0 || testmethods=="") return(NULL)
@@ -183,8 +185,9 @@ sigDiffExprTable <- reactive({
     ##
     ##
     ngs = inputData()
-    if(is.null(ngs)) return(NULL)
-
+    ##if(is.null(ngs)) return(NULL)
+    req(ngs)
+    
     gx_features=1
     gx_features = input$gx_features
     if(is.null(gx_features)) return(NULL)
@@ -262,7 +265,7 @@ expr_plots_volcano.RENDER <- reactive({
     if(length(comp1)==0) return(NULL)
     if(is.null(input$gx_features)) return(NULL)
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     fdr = 1
     fdr = as.numeric(input$gx_fdr)
@@ -316,7 +319,7 @@ expr_plots_maplot.RENDER <- reactive({
     if(length(comp1)==0) return(NULL)
 
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     fdr=1;lfc=1
     fdr = as.numeric(input$gx_fdr)    
@@ -367,7 +370,7 @@ output <- attachModule(output, expr_plots_maplot_module)
 expr_plots_topgenesbarplot.RENDER <- reactive({
     require(RColorBrewer)
     ngs = inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     comp1 = input$gx_contrast
     if(length(comp1)==0) return(NULL)
     
@@ -413,7 +416,7 @@ output <- attachModule(output, expr_plots_topgenesbarplot_module)
 expr_plots_topfoldchange.RENDER <- reactive({
     require(RColorBrewer)
     ngs = inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     ## get table
     ##sel=1;pp=rownames(ngs$X)[1]
@@ -470,7 +473,7 @@ output <- attachModule(output, expr_plots_topfoldchange_module)
 expr_plots_boxplot.RENDER <- reactive({
     require(RColorBrewer)
     ngs = inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     ## get table
     ##sel=1;pp=rownames(ngs$X)[1]
@@ -524,7 +527,7 @@ dragula("expr_plots")
 expr_topgenes.RENDER <- reactive({
 
     ngs <- inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     
     ##res=getDEGtable(ngs, testmethods="trend.limma", comparison=6,add.pq=FALSE)
     res <- sigDiffExprTable()
@@ -549,6 +552,7 @@ expr_topgenes.RENDER <- reactive({
     ngrp = length(unique(y))
     las = ifelse(ngrp>3, 3, 0)
     mar1 = ifelse(las==3, 4, 3)
+    mar1 = ifelse(las==3, 3.5, 2.5)
 
     comp=1;grouped=0;logscale=1
     comp = input$gx_contrast
@@ -732,7 +736,7 @@ expr_volcanoMethods.RENDER <- reactive({
     comp = input$gx_contrast
     if(is.null(comp)) return(NULL)
     ngs = inputData()
-    if(is.null(ngs)) return(NULL)
+    req(ngs)
     if(is.null(input$gx_features)) return(NULL)
     
     fdr = 1

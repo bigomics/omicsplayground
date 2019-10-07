@@ -255,9 +255,10 @@ pgx.initialize <- function(ngs) {
     ## ******************NEED RETHINK***********************************
     ## *****************************************************************
     ## ONLY categorical variables for the moment!!!
-    k1 = pgx.getCategoricalPhenotypes(ngs$Y)
+    k1 = pgx.getCategoricalPhenotypes(ngs$Y, min.ncat=2, max.ncat=20)
     k2 = grep("OS.survival",colnames(ngs$Y),value=TRUE)
-    ngs$Y <- ngs$Y[,c(k1,k2)]
+    kk = sort(unique(c("group",k1,k2)))
+    ngs$Y <- ngs$Y[,kk]
     colnames(ngs$Y)
     ngs$samples <- ngs$Y    ## REALLY?
     
