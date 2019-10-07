@@ -114,6 +114,7 @@ data_tissueplot_text = paste0('Tissue expression for the selected gene in the ti
 ##                     Average Rank plot
 ##----------------------------------------------------------------------
 
+
 MARGINS1 = c(7,3.5,2,1)
 
 data_genePlots_averageRankPlot.RENDER <- reactive({

@@ -273,10 +273,20 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
     ##plt
     length(xx)
     dim(X)
+<<<<<<< HEAD
     if(ncol(X)<50) {
         plt <- plt %>% add_col_labels(side="bottom", size=0.15*ex) 
     }
 
+=======
+    
+
+    if(ncol(X)<40) {
+        plt <- plt %>% add_col_labels(side="bottom", size=0.15*ex) 
+    }
+
+
+>>>>>>> 634d6fb9a45ae5c2b73c0ecbba927ee322142f6e
     cat("DBG <pgx.splitHeatmapX> 4\n")
     
     if(length(xx)>1) {
