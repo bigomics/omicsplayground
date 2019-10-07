@@ -208,10 +208,13 @@ Survival tree
 
 .. _`Figure 11`: 
 
-.. figure:: figures/fig3_d.png
+.. figure:: figures/fig3_d1.png
     :align: center
     :width: 100% 
-
+.. figure:: figures/fig3_d2.png
+    :align: center
+    :width: 100% 
+    
 **Figure 11**. Survival tree analysis for the DLBCL dataset GSE10846.
 
 
