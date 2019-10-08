@@ -228,9 +228,11 @@ Survival tree
     :width: 100% 
     
 **Figure 11**. Survival tree analysis for :option:`GSE10846-dlbcl` dataset.
-To redproduce the figures, go to the **Biomarker** module,
+To redproduce similar figures, go to the **Biomarker** module,
 and set the :option:`Predicted target: OS.survival` from the input panel.
-
+Note that the survival tree is stochastically built up with some of the top
+features shown in `Figure 8`_; Therefore, users can get a slightly different survival
+tree every time.
 
 
 Proteomic Data
@@ -300,6 +302,9 @@ Classification tree
 **Figure 14**. Classification tree for the :option:`rieckmann2017-immprot` dataset.
 To reproduce similar figures, go to the **Biomarker** module, and set the 
 :option:`Predicted target: cell.type` from the input panel.
+Note that the classification tree is stochastically built up with some of the top
+features shown in `Figure 8`_; Therefore, users can get a slightly different survival
+tree every time.
 
 
 Volcano plots of methods
