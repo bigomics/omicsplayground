@@ -2,7 +2,49 @@
 
 Data preparation examples
 ================================================================================
+The platform requires the transcriptomics and proteomics data to be in a 
+structured format as an input. Users can import their data to the platform by
+either `uploading through the interface`_ or 
+`preparing an input object using scripts`_.
 
+
+Data upload through the interface
+--------------------------------------------------------------------------------
+
+.. _`uploading through the interface`:
+
+Users can import their data from the **Upload data** panel located under the 
+:ref:`Home` module. The platform requires the list of files in CSV format as 
+listed below. 
+It is important to name the files exactly as shown. 
+The file format must be comma-separated-values (CSV) text. 
+Be sure the dimensions, rownames and column names match for all files. 
+On the left, provide a unique name and description for the data set.
+
+:**counts.csv**: 	  Count/expression file with gene on rows, samples as columns.
+:**samples.csv**: 	Samples file with samples on rows, phenotypes as columns.
+:**genes.csv**: 	  Gene information file with genes on rows, gene info as columns.
+:**contrasts.csv**: Contrast file with samples on rows, conditions as columns.
+
+.. figure:: modules/figures/psc1.3.png
+    :align: center
+    :width: 100%
+
+Users can provide their own counts or download the relevant data
+from repositories such as `GEO <https://www.ncbi.nlm.nih.gov/geo/>`__.
+
+
+Preparing an input object using scripts
+--------------------------------------------------------------------------------
+
+.. _`preparing an input object using scripts`:
+
+On the other hand, an input object can be prepared with more detailed data 
+cleaning, filtering, normalisation and preprocessing using scripts. 
+Users can prepare an input data from
+their own FASTQ files, gene counts tables, or from a dataset of interest stored 
+in public repositories such as `GEO <https://www.ncbi.nlm.nih.gov/geo/>`__.
+Similarly, they can also prepare an input from LC-MS/MS proteomics data.
 We provide four types of example cases to guide users for preparing their input 
 data and injecting it into the platform. Basically, the example cases 
 illustriate how to prepare an input data:

@@ -1,15 +1,16 @@
 .. _Dataprep:
 
-Data cleaning and preprocessing
+Data import and precomputation
 ================================================================================
 
-The data cleaning and preprocessing includes preparing the input data, filtering, 
-normalising, and precomputing statistics for some analyses. The data cleaning and 
-preprocessing is performed offline using scripts in order to support real-time 
-interaction and minimize user interface latency.
+The data import and precomputation involves preparing the input data through 
+filtering, normalising and precomputing statistics for some analyses and 
+importing it into the platform. The data cleaning and precomputation is 
+performed offline to support real-time interaction by minimizing user interface
+latency.
 
     
-Input data
+Data import
 --------------------------------------------------------------------------------
 The platform requires the transcriptomics and proteomics data to be in a 
 structured format as an input. Users can prepare an input data from
@@ -19,6 +20,22 @@ Similarly, they can also prepare an input from LC-MS/MS proteomics data.
 For all of these cases, the platform comes with the necessary scripts for data 
 cleaning and preprocessing under the ``/scripts`` folder.
 
+Users can import their data to the platform by either uploading under the 
+:ref:`Home` module of the interface or preparing an input object using scripts.
+To upload, the platform requires the tables of counts, samples info, genes info
+and contrasts in CSV format. Users can provide their own counts or download the
+relevant data from repositories such as `GEO <https://www.ncbi.nlm.nih.gov/geo/>`__. 
+On the other hand, an input object can be prepared with more detailed data 
+cleaning, filtering, normalisation and preprocessing using scripts. 
+The platform contains the required scripts and examples.
+
+.. seealso::
+
+    See :ref:`data preparation examples <Dataprep_example>` how
+    to prepare an input data for the platform. You can find more detailed 
+    information regarding the filtering and normalisation methods for preparing
+    an input from different sources of experiments.
+    
 
 Filtering
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,12 +60,6 @@ Statistics for the differentially expressed genes analysis and gene set enrichme
 analysis are precomputed to accelerate the visualisation on the interface.
 
 
-.. seealso::
-
-    See :ref:`data preparation examples <Dataprep_example>` how
-    to prepare an input data for the platform. You can find more detailed 
-    information regarding the filtering and normalisation methods for preparing
-    an input from different sources of experiments.
 
 
 
