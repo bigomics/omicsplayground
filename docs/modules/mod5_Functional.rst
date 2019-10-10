@@ -169,8 +169,11 @@ WordCloud
 
 The **WordCloud** panel performs "Keyword enrichment analysis". It
 computes enrichment of a selected keyword across all contrasts. Select
-a keyword by clicking a word in the 'Enrichment table'.
-
+a keyword by clicking a word in the 'Enrichment table'. Keyword
+enrichment is computed by running GSEA on the enrichment score profile
+for all contrasts. We defined the test set as the collection of
+genesets that contain the keyword in the title/description.
+		      
 
 .. figure:: figures/psc6.4.png
     :align: center
@@ -186,21 +189,18 @@ a keyword by clicking a word in the 'Enrichment table'.
 			 enrichment of the selected keyword.
 
 	    
-:**Enrichment plots**: Keyword enrichment is computed by running GSEA
-		       on the enrichment score profile for all
-		       contrasts. We defined the test set as the
-		       collection of genesets that contain the keyword
-		       in the title/description. Black vertical bars
-		       indicate the position of gene sets that
-		       contains the *keyword* in the ranked list of
-		       enrichment scores. The curve in green
-		       corresponds to the 'running statistic' of the
-		       keyword enrichment score. The more the green ES
-		       curve is shifted to the upper left of the
-		       graph, the more the keyword is enriched in the
-		       first group. Conversely, a shift of the green
-		       ES curve to the lower right, corresponds to
-		       keyword enrichment in the second group.
+:**Enrichment plots**: The enrichment plot visualize the enrichment of
+                       the selected keyword in the contrasts.  Black
+                       vertical bars indicate the position of gene
+                       sets that contains the *keyword* in the ranked
+                       list of enrichment scores. The curve in green
+                       corresponds to the 'running statistic' of the
+                       keyword enrichment score. The more the green ES
+                       curve is shifted to the upper left of the
+                       graph, the more the keyword is enriched in the
+                       first group. Conversely, a shift of the green
+                       ES curve to the lower right, corresponds to
+                       keyword enrichment in the second group.
 
 :**Word cloud**: Word cloud plot visualizes the frequency/enrichment
 		 of keywords for the data set. Select a keyword in the
