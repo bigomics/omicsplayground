@@ -3,7 +3,7 @@
 Data preparation examples
 ================================================================================
 The platform requires the transcriptomics and proteomics data to be in a 
-structured format as an input. Users can import their data to the platform by
+structured format as an input. Users can inject their data to the platform by
 either `uploading through the interface`_ or 
 `preparing an input object using scripts`_.
 

@@ -96,7 +96,7 @@ limited to well-known databases such as `MSigDB
 specify the level and reference set to be used under the ``Reference
 level`` and ``Reference set`` settings, respectively.
 
-.. figure:: figures/psc3.3.0.png
+.. figure:: figures/psc3.4.0.png
     :align: center
     :width: 30%
 
@@ -107,7 +107,7 @@ correlation of the cluster with the annotation term. In the table
 below the barplots, users can view the correlation values of
 annotation features for each cluster.
 
-.. figure:: figures/psc3.3.png
+.. figure:: figures/psc3.4.png
     :align: center
     :width: 100%
 
@@ -127,14 +127,14 @@ the ``color`` and ``shape`` of points using a phenotype class, choose
 t-SNE or PCA ``layout``, label the points, or display 2D and 3D
 visualisation of the PCA/tSNE plot.
 
-.. figure:: figures/psc3.4.0.png
+.. figure:: figures/psc3.3.0.png
     :align: center
     :width: 30%
 
 Based on their configuration settings, users will obtain a similar
 PCA/tSNE plot as below.
 
-.. figure:: figures/psc3.4.png
+.. figure:: figures/psc3.3.png
     :align: center
     :width: 100%
     
