@@ -602,7 +602,9 @@ observe({
     var.types0 = c("<none>","<cluster>",var.types)
     var.types0 = c("<none>",var.types)
     var.types1 = c("<none>",var.types)
-    updateSelectInput(session, "hmpca.colvar", choices=var.types0, selected=vv[1])
+    grp = vv[1]
+    if("group" %in% var.types) grp = "group"
+    updateSelectInput(session, "hmpca.colvar", choices=var.types0, selected=grp)
     updateSelectInput(session, "hmpca.shapevar", choices=var.types1, selected="<none>")
     ##updateSelectInput(session, "hmpca.line", choices=var.types1, selected="<none>")
     ##updateSelectInput(session, "hmpca.text", choices=var.types0, selected="group")
@@ -805,11 +807,11 @@ hm_PCAplotFUNC <- reactive({
 
 
 hm_PCAplot_opts = tagList(
-    tipify( selectInput("hmpca.colvar", "color:", choices=NULL, width='100%'),
+    tipify( selectInput("hmpca.colvar", "Color:", choices=NULL, width='100%'),
             "Set the colors of the samples according to a given phenotype class.", placement="right", options = list(container = "body")),
-    tipify( selectInput("hmpca.shapevar", "shape:", choices=NULL, width='100%'),
+    tipify( selectInput("hmpca.shapevar", "Shape:", choices=NULL, width='100%'),
             "Set the shapes of the samples according to a given phenotype class.", placement="right", options = list(container = "body")),
-    tipify( radioButtons('hm_clustmethod',"layout:",c("tsne","pca"),inline=TRUE),
+    tipify( radioButtons('hm_clustmethod',"Layout:",c("tsne","pca"),inline=TRUE),
             "Choose the output of the tSNE or PCA to visualise.", placement="top"),
     tipify( checkboxGroupInput('hmpca_options',"Other:", choices=c('label','3D'), inline=TRUE),
             "Display the labels of the samples in the plot. Select the 2D or 3D visualisation of the plot.", placement="bottom")

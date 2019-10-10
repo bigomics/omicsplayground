@@ -218,12 +218,7 @@ genesets that contain the keyword in the title/description.
 
 .. figure:: figures/psc6.4.1.png
     :align: center
-    :width: 30%
-
-.. figure:: figures/psc6.4.2.png
-    :align: center
-    :width: 30%
-
+    :width: 40%
 
 :**Word t-SNE**: The word t-SNE plot visualizes the similarity of the
 		 keywords that were found in the title/description of
@@ -234,8 +229,15 @@ genesets that contain the keyword in the title/description.
 		 (averaged over all contrasts). Statistically
 		 significant gene sets (q<0.05) are colored in
 		 red. The sizes of the nodes are proportional to the
-		 normalized enrichment score (NES) of the keyword.
+		 normalized enrichment score (NES) of the keyword. In
+		 the plot settings, the user can choose between t-SNE
+		 and "Uniform Manifold Approximation and Projection"
+		 (UMAP).
 
+.. figure:: figures/psc6.4.2.png
+    :align: center
+    :width: 40%
+		 
 :**Activation matrix**: The Activation Matrix visualizes the
 			activation of drug activation enrichment
 			across the conditions. The size of the circles
