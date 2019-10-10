@@ -1,6 +1,11 @@
 .. _Signature:
 
 
+.. note::
+
+    This module is supported in the EXPERT MODE only.
+
+
 Signature Analysis
 ================================================================================
 
@@ -12,10 +17,6 @@ and plots enrichment outputs. Under the **Overlap/similarity** panel,
 users can find the similarity of their gene list with other gene sets
 and pathways. The **Markers** panel produces a t-SNE plot of samples
 for the genes in the signature.
-
-.. note::
-
-    This module is supported in the EXPERT MODE only.
     
 
 Input panel
