@@ -179,70 +179,60 @@ genesets that contain the keyword in the title/description.
     :align: center
     :width: 100%
 
-:**Enrichment table**: The Enrichment table summarizes the results
-		       from the enrichment test for the tested
-		       keywords. The NES corresponds to the normalized
-		       enrichment score from the GSEA analysis.
-
-:**Leading-edge table**: The leading-edge table shows the geneset
-			 titles that have contributed to the
-			 enrichment of the selected keyword.
 
 	    
-:**Enrichment plots**: The enrichment plot visualize the enrichment of
-                       the selected keyword in the contrasts.  Black
-                       vertical bars indicate the position of gene
-                       sets that contains the *keyword* in the ranked
-                       list of enrichment scores. The curve in green
-                       corresponds to the 'running statistic' of the
-                       keyword enrichment score. The more the green ES
-                       curve is shifted to the upper left of the
-                       graph, the more the keyword is enriched in the
-                       first group. Conversely, a shift of the green
-                       ES curve to the lower right, corresponds to
-                       keyword enrichment in the second group.
+:**a**: The **Enrichment plots** visualize the enrichment of the
+	selected keyword in the contrasts.  Black vertical bars
+	indicate the position of gene sets that contains the *keyword*
+	in the ranked list of enrichment scores. The curve in green
+	corresponds to the 'running statistic' of the keyword
+	enrichment score. The more the green ES curve is shifted to
+	the upper left of the graph, the more the keyword is enriched
+	in the first group. Conversely, a shift of the green ES curve
+	to the lower right, corresponds to keyword enrichment in the
+	second group.
 
-:**Word cloud**: Word cloud plot visualizes the frequency/enrichment
-		 of keywords for the data set. Select a keyword in the
-		 'Enrichment table'. In the plot settings, users can
-		 exclude certain words from the figure, or choose the
-		 color palette. The sizes of the words are relative to
-		 the normalized enrichment score (NES) from the GSEA
-		 computation. Keyword enrichment is computed by
-		 running GSEA on the mean (squared) enrichment profile
-		 (averaged over all contrasts). For each keyword, we
-		 defined the 'keyword set' as the collection of
-		 genesets that contain that keyword in the
-		 title/description.
+:**b**: The **Word cloud plot** visualizes the frequency/enrichment of
+	keywords for the data set. Select a keyword in the 'Enrichment
+	table'. In the plot settings, users can exclude certain words
+	from the figure, or choose the color palette. The sizes of the
+	words are relative to the normalized enrichment score (NES)
+	from the GSEA computation. Keyword enrichment is computed by
+	running GSEA on the mean (squared) enrichment profile
+	(averaged over all contrasts). For each keyword, we defined
+	the 'keyword set' as the collection of genesets that contain
+	that keyword in the title/description.
 
 
 .. figure:: figures/psc6.4.1.png
     :align: center
     :width: 40%
 
-:**Word t-SNE**: The word t-SNE plot visualizes the similarity of the
-		 keywords that were found in the title/description of
-		 gene sets. Keywords that are often found together in
-		 title/descriptions are placed close together in the
-		 t-SNE. For each keyword we computed enrichment using
-		 GSEA on the mean (absolute) enrichment profiles
-		 (averaged over all contrasts). Statistically
-		 significant gene sets (q<0.05) are colored in
-		 red. The sizes of the nodes are proportional to the
-		 normalized enrichment score (NES) of the keyword. In
-		 the plot settings, the user can choose between t-SNE
-		 and "Uniform Manifold Approximation and Projection"
-		 (UMAP).
+:**c**: The **Word t-SNE** plot visualizes the similarity of the
+	keywords that were found in the title/description of gene
+	sets. Keywords that are often found together in
+	title/descriptions are placed close together in the t-SNE. For
+	each keyword we computed enrichment using GSEA on the mean
+	(absolute) enrichment profiles (averaged over all
+	contrasts). Statistically significant gene sets (q<0.05) are
+	colored in red. The sizes of the nodes are proportional to the
+	normalized enrichment score (NES) of the keyword. In the plot
+	settings, the user can choose between t-SNE and "Uniform
+	Manifold Approximation and Projection" (UMAP).
 
 .. figure:: figures/psc6.4.2.png
     :align: center
     :width: 40%
 		 
-:**Activation matrix**: The Activation Matrix visualizes the
-			activation of drug activation enrichment
-			across the conditions. The size of the circles
-			correspond to their relative activation, and
-			are colored according to their upregulation
-			(red) or downregulation (blue) in the contrast
-			profile.
+:**d**: The **Activation matrix** visualizes the activation of drug
+	activation enrichment across the conditions. The size of the
+	circles correspond to their relative activation, and are
+	colored according to their upregulation (red) or
+	downregulation (blue) in the contrast profile.
 
+:**e**: The **Enrichment table** summarizes the results from the
+	enrichment test for the tested keywords. The NES corresponds
+	to the normalized enrichment score from the GSEA analysis.
+
+:**f**: The **Leading-edge table** shows the geneset titles that have
+	contributed to the enrichment of the selected keyword.
