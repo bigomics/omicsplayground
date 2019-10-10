@@ -19,15 +19,11 @@ runtime: shiny
 library(shiny)
 library(rmarkdown)
 
-##----------------------------------------------------------------------
-## Add Javascript in header
-##----------------------------------------------------------------------
-tags$head(
-         tags$link(rel="stylesheet", type="text/css",href="shinypass/style.css"),
-         tags$script(type="text/javascript", src = "shinypass/md5.js"),
-         tags$script(type="text/javascript", src = "shinypass/passwdInputBinding.js")
-     )
-##tags$style(HTML(".modal-backdrop.in { opacity: 0.9; }"))
+LOGIN_AUTHENTICATION = "none"
+LOGIN_AUTHENTICATION = "register"
+##LOGIN_AUTHENTICATION = "password"
+CREDENTIALS <- list("test" = "202cb962ac59075b964b07152d234b70")
+CREDENTIALS <- list("test"="123")
 
 ##----------------------------------------------------------------------
 ## set folder path
@@ -51,7 +47,6 @@ cat("setting FILES =",FILES,"\n")
 cat("setting PGX.DIR =",PGX.DIR,"\n")
 
 source(file.path(RDIR,"pgx-init.R"), local=TRUE)
-##PRO.VERSION=TRUE
 ##DEV.VERSION=TRUE
 
 if(0) {
@@ -92,4 +87,5 @@ cat("setting MODULES =",MODULES,"\n")
 ```
 
 ```{r child = MODULES}
+
 ```

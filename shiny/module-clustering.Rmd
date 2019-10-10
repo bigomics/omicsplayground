@@ -524,7 +524,7 @@ hm_splitmap_module <- plotModule(
     download.fmt = c("pdf","html"),
     info.text = hm_splitmap_text,
     options = hm_splitmap_opts,
-    pdf.width=10, pdf.height=10, info.width="350px",
+    pdf.width=10, pdf.height=8, info.width="350px",
     title="Heatmap"
 )
 output <- attachModule(output, hm_splitmap_module)
@@ -819,7 +819,7 @@ hm_PCAplot_module <- plotModule(
     id="hm_PCAplot", func=hm_PCAplotFUNC,
     plotlib = "plotly", info.text = hm_PCAplot_text,
     options = hm_PCAplot_opts,
-    pdf.width=10, pdf.height=10,
+    pdf.width=8, pdf.height=8,
     title="PCA/tSNE plot"
 )
 output <- attachModule(output, hm_PCAplot_module)

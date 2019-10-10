@@ -51,6 +51,7 @@ table(group)
 ##-----------------------------------------------------------------------------
 ## normalize contrast matrix to zero mean and signed sums to one
 ##-----------------------------------------------------------------------------
+contr.matrix[is.na(contr.matrix)] <- 0
 contr.matrix0 <- contr.matrix  ## SAVE
 
 ## take out any empty comparisons

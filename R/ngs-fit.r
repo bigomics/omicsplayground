@@ -307,14 +307,19 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, genes, design, contr.matr
         pv = P[[i]]
         qv = Q[[i]]
         fc = logFC[[i]]
+
+        ## avoid strange values
+        fc[is.infinite(fc) | is.nan(fc)] <- NA
         pv <- pmax(pv, 1e-99)
         pv[is.na(pv)] <- 1
+        qv[is.na(qv)] <- 1
+
         ##meta.p = apply(pv, 1, max, na.rm=TRUE ) ## maximum statistic
         ##meta.p = apply(pv, 1, function(p) metap::allmetap(p, method="sumlog")$p[[1]]) ## Fisher's method
         ##meta.p = apply(pv, 1, function(p) metap::sumlog(p)$p) 
         meta.p = apply(pv, 1, function(p) exp(mean(log(p)))) ## geometric mean
         meta.q = p.adjust(meta.p, method="BH")
-        meta.fx = rowMeans(logFC[[i]], na.rm=TRUE)
+        meta.fx = rowMeans(fc, na.rm=TRUE)
         ##p.meta   = apply(pv, 1, function(p) metap::allmetap(p, method="sumlog")$p[[1]])
         ## q.meta = p.adjust(p.meta, method="BH")
         meta = data.frame(fx=meta.fx, p=meta.p, q=meta.q)

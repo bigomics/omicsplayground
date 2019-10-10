@@ -28,21 +28,32 @@ source(file.path(RDIR,"gx-heatmap.r"))
 source(file.path(RDIR,"gx-plot.r"))
 source(file.path(RDIR,"gx-limma.r"))
 source(file.path(RDIR,"gx-volcano.r"))
+source(file.path(RDIR,"gx-combat.r"))
+source(file.path(RDIR,"gx-util.r"))
+       
 source(file.path(RDIR,"gset-gsea.r"))
 source(file.path(RDIR,"gset-fisher.r"))
+source(file.path(RDIR,"gset-meta.r"))
+
+source(file.path(RDIR,"ngs-cook.r"))
+source(file.path(RDIR,"ngs-fit.r"))
+
 source(file.path(RDIR,"pgx-functions.R"))
 source(file.path(RDIR,"pgx-graph.R"))
 source(file.path(RDIR,"pgx-deconv.R"))
 source(file.path(RDIR,"pgx-cna.R"))
 source(file.path(RDIR,"pgx-plotting.R"))
-#source(file.path(RDIR,"pgx-plotting_MA.R"))
-source(file.path(RDIR,"xcr-graph.r"))
-source(file.path(RDIR,"ui-code.R"))
-source(file.path(RDIR,"gx-combat.r"))
 source(file.path(RDIR,"pgx-correct.R"))
 source(file.path(RDIR,"pgx-predict.R"))
 source(file.path(RDIR,"pgx-links.R"))
 source(file.path(RDIR,"pgx-modules.R"))
+source(file.path(RDIR,"pgx-upload.R"))
+source(file.path(RDIR,"pgx-proteomics.R"))
+source(file.path(RDIR,"pgx-drugs.R"))
+
+source(file.path(RDIR,"xcr-graph.r"))
+source(file.path(RDIR,"ui-code.R"))
+
 
 ## you need to override this!!!
 PRO.VERSION=FALSE
@@ -154,7 +165,7 @@ pgx.initialize <- function(ngs) {
     cat("INFO <init:initialize> initializing ngs object for the Playground\n")
 
     ##----------------- check object
-    obj.needed <- c("deconv","genes", ## "collections", "families", "counts",
+    obj.needed <- c("genes", ## "deconv","collections", "families", "counts",
                     "GMT","gset.meta","gsetX","gx.meta","model.parameters",
                     "samples","tsne2d","X")
     all(obj.needed %in% names(ngs))

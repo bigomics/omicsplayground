@@ -2,13 +2,18 @@
 ## PLOT/TABLE MODULES
 ########################################################################
 
+ADDSIGNATURE=TRUE
+ADDSIGNATURE=FALSE
 
 ## ----------------- create widget
-moduleWidget <- function(module, outputFunc="plotOutput", height="100%", width="100%") {
+moduleWidget <- function(module, outputFunc="plotOutput", height="100%", width="100%")
+{
     ##module.id = ns(module$id)
     module.id = module$id
+    if(!is.null(module$outputFunc)) outputFunc = module$outputFunc
     if(!is.character(outputFunc)) outputFunc = as.character(quote(outputFunc))
-    outputFunc2 <- paste0(outputFunc,"('",module.id,"', height='",height,"', width='",width,"')")
+    outputFunc2 <- paste0(outputFunc,"('",module.id,"', height='",
+                          height,"', width='",width,"')")
     p <- fillCol(flex = c(NA,1), module$button, eval(parse(text=outputFunc2)))
     ## p <- box(p)
     p
@@ -206,7 +211,7 @@ plotModuleButtons <- function(id, text="Help text", title="", ns=NULL,
 
 plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                        inputs=NULL, options = NULL, label="", caption="", 
-                       plotlib = "base", renderFunc=NULL, 
+                       plotlib = "base", renderFunc=NULL, outputFunc=NULL,
                        no.download = FALSE, download.fmt=c("pdf","html"), 
                        just.info=FALSE, server=TRUE, info.width="300px",
                        pdf.width=8, pdf.height=8, pdf.pointsize=12, res=72)
@@ -310,8 +315,13 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
             ## renderPlot, not here. But cannot get it to work (IK
             ## 19.10.02)
             suppressWarnings( suppressMessages(
-                if(1 && do.pdf) {
-                    dev.print(pdf, file=PDFFILE, width=pdf.width, height=pdf.height)
+                if(do.pdf) {
+                    if(ADDSIGNATURE) {
+                        mtext("created with Omics Playground",
+                              1,line=-1,outer=TRUE,adj=0.98,padj=0,cex=0.6,col="#44444444")
+                    }
+                    dev.print(pdf, file=PDFFILE, width=pdf.width, height=pdf.height,
+                              pointsize=pdf.pointsize)
                     ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
                     ##dev.off()  ## important!!
                 }
@@ -326,8 +336,20 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
     ##============================================================
     ##=============== Download Handlers ==========================
     ##============================================================
+    plotlyAddSignature <- function(p) {
+        add_annotations(
+            p,
+            x = 1, y=-0.05,
+            ##yshift = -100, 
+            xref="paper", yref="paper",
+            text = "created with Omics Playground",
+            xanchor = "right", showarrow=FALSE,
+            font = list(size=6, color="#44444444")
+        )
+    }
 
     if(do.pdf) {
+        
         download.pdf <- downloadHandler(
             filename = "plot.pdf",
             content = function(file) {
@@ -336,6 +358,7 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                     if(plotlib=="plotly") {
                         cat("downloadHandler:: exporting plotly to PDF\n")
                         p <- func()
+                        if(ADDSIGNATURE) p = plotlyAddSignature(p)                             
                         p$width = pdf.width * 100
                         p$height = pdf.height * 100
                         ##is.plotly3d <- class(p)[1]=="plotly" && all( c("x","y","z") %in% names(p$x$attrs[[1]]))
@@ -354,6 +377,7 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                     } else if(plotlib=="iheatmapr") {
                         cat("downloadHandler:: exporting iheatmapR to PDF\n")
                         p <- func()
+                        if(ADDSIGNATURE) p = plotlyAddSignature(p)                             
                         save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PDFFILE)
                     } else if(plotlib=="visnetwork") {
                         cat("downloadHandler:: exporting visnetwork to PDF\n")
@@ -368,8 +392,9 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
                         cat("downloadHandler:: exporting ggplot to PDF\n")
                         p <- func()
+                        ##p = addSignature(p)                             
                         ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
-                        pdf(PDFFILE, width=pdf.width, height=pdf.height)
+                        pdf(PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
                         print(p) 
                         dev.off() 
                     } else if(plotlib=="generic") {
@@ -379,17 +404,16 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                     } else if(plotlib=="base") {
                         ##cat("downloadHandler:: exporting to base plot to PDF\n")
                         cat("downloadHandler:: exporting base plot to PDF\n")
-
+                        
                         ## NEEEDS FIX!! pdf generating should be done
                         ## just here, not anymore in the
                         ## renderPlot. But cannot get it to work (IK 19.10.02)
-
-                        if(FALSE) {
+                        if(0) {
+                            cat("downloadHandler:: creating new PDF device\n")
                             add.ADVERTISEMENT = TRUE
                             add.ADVERTISEMENT = FALSE
-                            pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
-                            ##func()                        
-                            print(func())
+                            pdf(file=PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
+                            func()
                             ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
                             plot(sin)
                             ## ##mtext( caption.fun(), outer=TRUE, side=1,line=-3.5, cex=1, xpd=NA)
@@ -407,7 +431,7 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                             dev.off()  ## important!!
                         }
                     } else { ## end base                
-                        pdf(PDFFILE)
+                        pdf(PDFFILE, pointsize=pdf.pointsize)
                         plot.new()
                         mtext("Error. PDF not available.",line=-8)
                         dev.off()
@@ -426,7 +450,12 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
             content = function(file) {
                 withProgress({
                     ## unlink(HTMLFILE) ## do not remove!
-                    if(plotlib %in% c("plotly","htmlwidget","pairsD3","scatterD3") ) {
+                    if(plotlib == "plotly" ) {
+                        cat("downloadHandler:: exporting plotly to HTML\n")
+                        p <- func()
+                        if(ADDSIGNATURE) p <- plotlyAddSignature(p)
+                        htmlwidgets::saveWidget(p, HTMLFILE) 
+                    } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
                         cat("downloadHandler:: exporting htmlwidget to HTML\n")
                         p <- func()
                         htmlwidgets::saveWidget(p, HTMLFILE) 
@@ -445,7 +474,7 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                         ## generic function should produce PDF inside plot func()
                         ##
                     } else if(plotlib=="base") {
-                        write("base plots cannot export to HTML",HTMLFILE)
+                        write("<body>R base plots cannot export to HTML</body>",HTMLFILE)
                     } else { ## end base
                         write("<body>HTML export error</body>",file=HTMLFILE)
                     }
@@ -469,7 +498,8 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
         pdf = download.pdf,
         html = download.html,
         buttons = buttons,
-        getCaption = caption.fun
+        getCaption = caption.fun,
+        outputFunc = outputFunc
     )
     ## attr(module, "class") <- "ShinyModule"
     return(module)

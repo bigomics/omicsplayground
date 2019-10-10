@@ -19,7 +19,7 @@ compute.testGenes <- function(ngs, contr.matrix, max.features=1000, type="counts
     if(single.omics || length(data.types)==1) {
         ## single-omics, no missing values
         cat(">>> computing gene tests for SINGLE-OMICS\n")
-        ngs <- compute.testGenesSX(
+        ngs <- compute.testGenesSingleOmics(
             ngs=ngs, type=type,
             contr.matrix=contr.matrix,
             max.features=max.features,
@@ -27,7 +27,7 @@ compute.testGenes <- function(ngs, contr.matrix, max.features=1000, type="counts
     } else {
         ## multi-omics, missing values allowed
         cat(">>> computing gene tests for MULTI-OMICS\n")
-        ngs <- compute.testGenesMX(
+        ngs <- compute.testGenesMultiOmics(
             ngs=ngs,  ## type is inferred
             contr.matrix=contr.matrix,
             max.features=max.features,
@@ -39,7 +39,7 @@ compute.testGenes <- function(ngs, contr.matrix, max.features=1000, type="counts
 test.methods=c("trend.limma","deseq2.wald","edger.qlf")
 test.methods=c("trend.limma","ttest.welch","ttest")
 max.features=1000
-compute.testGenesMX <- function(ngs, contr.matrix, max.features=1000, 
+compute.testGenesMultiOmics <- function(ngs, contr.matrix, max.features=1000, 
                                test.methods=c("trend.limma","deseq2.wald","edger.qlf"))
 {
     ngs$gx.meta <- NULL
@@ -77,7 +77,7 @@ compute.testGenesMX <- function(ngs, contr.matrix, max.features=1000,
         type
         
         ## do test
-        ngs1 <- compute.testGenesSX(
+        ngs1 <- compute.testGenesSingleOmics(
             ngs=ngs1, type=type,
             contr.matrix=contr.matrix,
             max.features=max.features,
@@ -113,7 +113,7 @@ compute.testGenesMX <- function(ngs, contr.matrix, max.features=1000,
     return(ngs)
 }
 
-compute.testGenesSX <- function(ngs, contr.matrix, max.features=1000,
+compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
                                 type="counts", filter.low = TRUE,
                                 test.methods = c("trend.limma","deseq2.wald","edger.qlf"))
 {
@@ -149,10 +149,11 @@ compute.testGenesSX <- function(ngs, contr.matrix, max.features=1000,
     ##-----------------------------------------------------------------------------
     ## normalize contrast matrix to zero mean and signed sums to one
     ##-----------------------------------------------------------------------------
+    contr.matrix[is.na(contr.matrix)] <- 0
     contr.matrix0 <- contr.matrix  ## SAVE
     
     ## take out any empty comparisons
-    contr.matrix <- contr.matrix0[,which( colSums(contr.matrix0!=0)>0),drop=FALSE]
+    contr.matrix <- contr.matrix0[,which(colSums(contr.matrix0!=0)>0),drop=FALSE]
     for(i in 1:ncol(contr.matrix)) {
         m <- contr.matrix[,i]
         m[is.na(m)] <- 0

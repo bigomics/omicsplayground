@@ -565,14 +565,15 @@ sig_getOverlapTable <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
 
-    ##markers <- GSETS[[100]]
+    markers <- GSETS[[100]]
     markers <- getCurrentMarkers()
     if(is.null(markers)) return(NULL)
 
     ## fold change just for ranking of genes
     F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
     fx <- rowMeans(F**2)
-        
+    ##markers=head(names(sort(-abs(fx))),100)
+
     ## fisher test
     ##ii <- setdiff(match(markers, colnames(GSETxGENE)),NA)
     ii <- setdiff(match(toupper(markers), colnames(GSETxGENE)),NA)
@@ -599,7 +600,9 @@ sig_getOverlapTable <- reactive({
     ## limit the list??
     table( qv < 0.05)
     table( qv < 0.2)
-    A <- A[which(qv < 0.05),]
+    table( qv < 0.999)
+    A <- A[which( A$q.fisher < 0.999),]
+    ##A <- A[which( A$q.fisher < 0.05),]
     dim(A)
     
     if(0) {
@@ -610,9 +613,9 @@ sig_getOverlapTable <- reactive({
         require(nclust)
         G = GSETxGENE[rownames(A),]
         G = G[which(Matrix::rowSums(G!=0) > 10), ] ## at least 10 genes
-        G = G[, which(Matrix::colSums(G!=0) >= 10) ] ## at least 10 genesets
+        ###G = G[, which(Matrix::colSums(G!=0) >= 10) ] ## at least 10 genesets
         dim(G)        
-        hc <- hclust(as.dist(cosSparse(t(G))))
+        hc <- fastcluster::hclust(as.dist(cosSparse(t(G))))
         ##hc <- nclust(as.matrix(G))
         A <- A[rownames(G)[hc$order],]
     }
@@ -675,14 +678,15 @@ sig_overlapScorePlot.RENDER <- reactive({
     sel <- 1:nrow(df)
     sel<- input$sig_overlapTable_rows_all
     df1 <- df[sel,]
-    
-    ntop = 60
-    ntop = as.integer(input$sig_overlapScorePlot_ntop)
-    df1 = df1[head(order(-df1$score),ntop),]
     df1$geneset = as.character(rownames(df1))
     df1$db = factor(df1$db)
+    
+    ntop = 1000
+    ntop = as.integer(input$sig_overlapScorePlot_ntop)
+    df1 = df1[head(order(-df1$score),ntop),]
     jj = order(df1$db, -df1$score)
     df1 = df1[jj,]
+
     df1$idx = factor(1:nrow(df1), levels=1:nrow(df1))
     klr = rep(brewer.pal(8,"Set2"),10)[as.integer(df1$db)]
     

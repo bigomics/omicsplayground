@@ -1,50 +1,35 @@
-library(knitr)
-library(limma)
-library(edgeR)
-library(RColorBrewer)
-library(gplots)
-library(matrixTests)
-library(kableExtra)
-library(knitr)
 
-source("../R/gx-heatmap.r")
-source("../R/gx-limma.r")
-source("../R/gx-util.r")
-source("../R/ngs-cook.r")
-source("../R/ngs-fit.r")
-source("../R/gset-fisher.r")
-source("../R/gset-gsea.r")
-source("../R/gset-meta.r")
-source("../R/pgx-functions.R")
-source("../R/pgx-deconv.R")
-source("../R/pgx-proteomics.R")
-source("../R/pgx-drugs.R")
 
 source("../scripts/options.R")
 MAX.GENES
 
-name="uploaded"
-rda.file="../pgx/upload.pgx"
-rda.file
-
 if(0) {
-    counts  = read.csv("../exampledata/counts.csv", row.names=1)
-    samples = read.csv("../exampledata/samples.csv", row.names=1)
-    genes   = read.csv("../exampledata/genes.csv", row.names=1)
-    contrasts = read.csv("../exampledata/contrasts.csv", row.names=1)
+
+    counts  = as.matrix(read.csv("../exampledata/counts.csv", row.names=1))
+    samples = read.csv("../exampledata/samples.csv", row.names=1, stringsAsFactors=FALSE)
+    genes   = read.csv("../exampledata/genes.csv", row.names=1, stringsAsFactors=FALSE)
+    contrasts = as.matrix(read.csv("../exampledata/contrasts.csv", row.names=1))
+
 }
 
-pgx.upload <- function(counts, samples, genes, progress=NULL) {
-
+pgx.upload <- function(counts, samples, genes, contrasts,
+                       ##gx.methods = c("trend.limma","edger.qlf","deseq2.wald"),
+                       gx.methods = c("ttest.welch","trend.limma","edger.qlf"),
+                       gset.methods = c("fisher","gsva","fgsea"),
+                       extra.methods = c("meta.go","deconv","infer","drugs"),
+                       progress=NULL)
+{
 
     library(org.Hs.eg.db)
+
+    if(!is.null(progress)) progress$inc(0.01, detail = "creating object")
     
     ##load(file=rda.file, verbose=1)
     ngs <- list()  ## empty object
-    ngs$name = "uploaded"
+    ngs$name = "(uploaded)"
     ngs$date = date()
-    ngs$datatype = "uploaded datatype"
-    ngs$description = "uploaded description"
+    ngs$datatype = "unknown"
+    ngs$description = "uploaded data set"
 
     if(0) {
         colnames(counts) == rownames(samples)
@@ -58,31 +43,48 @@ pgx.upload <- function(counts, samples, genes, progress=NULL) {
     ngs$counts  = counts
     ngs$genes   = data.frame(genes)
     ngs$contrasts = contrasts
+
+    cat("DBG [pgx-upload] 1: dim(ngs$counts)=",dim(ngs$counts),"\n")
+    cat("DBG [pgx-upload] 1: sum.is.na(ngs$counts)=",sum(is.na(ngs$counts)),"\n")
+    cat("DBG [pgx-upload] 1: dim(ngs$genes)=",dim(ngs$genes),"\n")
     
-    require(org.Hs.eg.db)
-    GENE.TITLE  = unlist(as.list(org.Hs.egGENENAME))
-    gene.symbol = unlist(as.list(org.Hs.egSYMBOL))
-    names(GENE.TITLE) = gene.symbol
+    if(!"gene_title" %in% colnames(ngs$genes)) {
+        require(org.Hs.eg.db)
+        GENE.TITLE  = unlist(as.list(org.Hs.egGENENAME))
+        gene.symbol = unlist(as.list(org.Hs.egSYMBOL))
+        names(GENE.TITLE) = gene.symbol    
+        gene = rownames(genes)
+        ngs$genes$gene_title = gene_title = GENE.TITLE[gene]
+        ##ngs$genes$chr  = gene_title = GENE.CHR[gene]
+        ##ngs$genes$pos  = gene_title = GENE.POS[gene]
+    }
     
-    gene = rownames(genes)
-    ngs$genes$gene_title = gene_title = GENE.TITLE[gene]
-    ##ngs$genes$chr  = gene_title = GENE.CHR[gene]
-    ##ngs$genes$pos  = gene_title = GENE.POS[gene]
+    cat("DBG [pgx-upload] 2: dim(ngs$genes)=",dim(ngs$genes),"\n")
+    cat("DBG [pgx-upload] 2: dim(ngs$counts)=",dim(ngs$counts),"\n")
     
     ##-------------------------------------------------------------------
     ## collapse multiple row for genes by summing up counts
     ##-------------------------------------------------------------------
     sum(duplicated(ngs$genes$gene_name))
-    x1 = apply( ngs$counts, 2, function(x) tapply(x, ngs$genes$gene_name, sum))
+    gg = as.character(ngs$genes$gene_name)
+    x1 = apply( ngs$counts, 2, function(x) tapply(x, gg, sum))
+    cat("DBG [pgx-upload] 2: dim(x1)=",dim(x1),"\n")
+
     ngs$genes = ngs$genes[match(rownames(x1), ngs$genes$gene_name),]
     ngs$counts = x1
     rownames(ngs$genes) = rownames(ngs$counts) = rownames(x1)
     remove(x1)
 
+    cat("DBG [pgx-upload] 3: dim(ngs$genes)=",dim(ngs$genes),"\n")
+    cat("DBG [pgx-upload] 3: dim(ngs$counts)=",dim(ngs$counts),"\n")
+    cat("DBG [pgx-upload] 3: sum.is.na(ngs$counts)=",sum(is.na(ngs$counts)),"\n")
+    
     ##-------------------------------------------------------------------
     ## Pre-calculate t-SNE for and get clusters early so we can use it
     ## for doing differential analysis.
     ##-------------------------------------------------------------------
+    if(!is.null(progress)) progress$inc(0.01, detail = "clustering")
+    
     ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, perplexity=3)
     head(ngs$samples)
     table(ngs$samples$cluster)
@@ -96,8 +98,22 @@ pgx.upload <- function(counts, samples, genes, progress=NULL) {
     ## make model matrix for group vs. rest
     ##contr.matrix <- makeClusterContrasts(ngs$samples$cluster)
     contr.matrix <- ngs$contrasts
-    
-    rda.file
+    if(!"group" %in% colnames(ngs$samples)) {
+        ct = apply(ngs$samples,2,function(px) mean(px %in% rownames(ngs$contrasts),na.rm=TRUE))
+        group.col = which(ct > 0.95)
+        if(length(group.col)>0) {
+            grp.var = colnames(ngs$samples)[group.col[1]]
+            cat(paste0("INFO [pgx-upload] assigning '",grp.var,"' variable as 'group' column\n"))
+            colnames(ngs$samples)[group.col[1]] <- "group"
+        } else {
+            stop("sample annotation file must have 'group' column\n")
+        }
+    }
+
+    ##======================================================================
+    ##======================================================================
+    ##======================================================================
+
     ngs$timings <- c()
     
     USER.GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank",
@@ -105,8 +121,6 @@ pgx.upload <- function(counts, samples, genes, progress=NULL) {
                             "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
     USER.GENESETTEST.METHODS = c("fisher","gsva","ssgsea","spearman",
                                  "camera", "fry","fgsea") ## no GSEA, too slow...
-    USER.GENETEST.METHODS=c("ttest.welch","ttest.rank","trend.limma")
-    USER.GENESETTEST.METHODS = c("fisher","gsva","spearman")
 
     if(0) {
         source("../R/compute-genes.R")
@@ -120,25 +134,26 @@ pgx.upload <- function(counts, samples, genes, progress=NULL) {
         source("../R/compute2-extra.R")
 
         ## ------------------ gene level tests ---------------------
-        test.methods = c("trend.limma","ttest.welch","ttest")
-        test.methods = USER.GENETEST.METHODS
+        if(!is.null(progress)) progress$inc(0.1, detail = "testing genes")
+
         ngs <- compute.testGenes(
             ngs, contr.matrix, max.features=MAX.GENES,
-            test.methods=test.methods)
+            test.methods=gx.methods)
         head(ngs$gx.meta$meta[[1]])        
         
         ## ------------------ gene set tests -----------------------
-        test.methods = c("gsva","camera","fgsea")
-        test.methods = USER.GENESETTEST.METHODS
+        if(!is.null(progress)) progress$inc(0.2, detail = "testing gene sets")
+        
         ngs <- compute.testGenesets(
             ngs, max.features=MAX.GENES,
-            test.methods=test.methods)
+            test.methods=gset.methods)
         head(ngs$gset.meta$meta[[1]])
 
         ## ------------------ extra analyses ---------------------
-        extra <- c("meta.go","deconv","infer","drugs")
-        extra <- c("meta.go","infer","drugs")
-        ngs <- compute.extra(ngs, extra)
+        if(!is.null(progress)) progress$inc(0.3, detail = "computing extra modules")
+        ##extra <- c("meta.go","deconv","infer","drugs")
+        ##extra <- c("meta.go","infer","drugs")
+        ngs <- compute.extra(ngs, extra=extra.methods)
 
     }
 
@@ -146,8 +161,6 @@ pgx.upload <- function(counts, samples, genes, progress=NULL) {
     return(ngs)
 }
 
-rda.file
-ngs.save(ngs, file=rda.file)
 
 
 
