@@ -3,7 +3,7 @@
 Data import and precomputation
 ================================================================================
 
-The data import and precomputation involves preparing the input data through 
+The data import and precomputation involve preparing the input data through 
 filtering, normalising and precomputing statistics for some analyses and 
 importing it into the platform. The data cleaning and precomputation is 
 performed offline to support real-time interaction by minimizing user interface
@@ -12,22 +12,18 @@ latency.
     
 Data import
 --------------------------------------------------------------------------------
-The platform requires the transcriptomics and proteomics data to be in a 
-structured format as an input. Users can prepare an input data from
-their own FASTQ files, gene counts tables, or from a dataset of interest stored 
-in public repositories such as `GEO <https://www.ncbi.nlm.nih.gov/geo/>`__.
-Similarly, they can also prepare an input from LC-MS/MS proteomics data.
-For all of these cases, the platform comes with the necessary scripts for data 
-cleaning and preprocessing under the ``/scripts`` folder.
+Users can import their transcriptomics or proteomics data to the platform by 
+either uploading through
+the interface or preparing an input object using scripts.
+For uploading, the platform requires the counts, samples information, genes 
+information and contrasts tables in CSV format. 
+On the other hand, an input object can be prepared using scripts from different 
+types and formats of data, including counts and FASTQ.
+With scripts it is also possible to do more detailed data 
+cleaning, filtering, normalisation and preprocessing. 
+The platform contains the required example cases for the preparation of input 
+objects under the ``/scripts`` folder.
 
-Users can import their data to the platform by either uploading under the 
-:ref:`Home` module of the interface or preparing an input object using scripts.
-To upload, the platform requires the tables of counts, samples info, genes info
-and contrasts in CSV format. Users can provide their own counts or download the
-relevant data from repositories such as `GEO <https://www.ncbi.nlm.nih.gov/geo/>`__. 
-On the other hand, an input object can be prepared with more detailed data 
-cleaning, filtering, normalisation and preprocessing using scripts. 
-The platform contains the required scripts and examples.
 
 .. seealso::
 
