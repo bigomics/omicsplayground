@@ -14,14 +14,14 @@ drug profiles from the `L1000 <https://www.ncbi.nlm.nih.gov/pubmed/29195078>`__
 drug expression database under the **Drug Connectivity Map** panel.
 
 
-Input slider
+Input panel
 --------------------------------------------------------------------------------
-It is possible to more information about the module in the ``Info`` from the 
-input slider. Users can specify the contrast of their interest in 
-the ``Contrast`` settings. Under the main *Options*, users can select
-``normalize activation matrix`` to fine-tune the coloring of an activation 
-matrices and ``filter significant (tables)`` to filter the significant entries
-in the tables.
+It is possible to more information about the module in the ``Info``
+from the input panel. Users can specify the contrast of their interest
+in the ``Contrast`` settings. Under the main *Options*, users can
+select ``normalize activation matrix`` to fine-tune the coloring of an
+activation matrices and ``filter significant (tables)`` to filter the
+significant entries in the tables.
 
 .. figure:: figures/psc6.0.png
     :align: center
