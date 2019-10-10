@@ -13,7 +13,7 @@ latency.
 Data import
 --------------------------------------------------------------------------------
 Users can import their transcriptomics or proteomics data to the platform by 
-either uploading through
+either uploading the data through
 the interface or preparing an input object using scripts.
 For uploading, the platform requires the counts, samples information, genes 
 information and contrasts tables in CSV format. 
