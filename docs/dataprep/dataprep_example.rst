@@ -59,7 +59,7 @@ found under the ``/scripts`` folder.
 
 
 From FASTQ files
---------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Given FASTQ files, users can employ a ``counts_from_FASTQ.R`` script to obtain
 gene counts through quality control, trimming, quantification of gene abundance,
 and so on. Although the script' default choice is `Salmon 
@@ -71,7 +71,7 @@ section for preparing an input data from the gene counts.
 
 
 From gene counts table or GEO repository
---------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Users can prepare an input data from their own gene counts or download a
 relevant dataset from repositories such as `GEO <https://www.ncbi.nlm.nih.gov/geo/>`__.
 Some examples are provided in the following scripts:
@@ -88,7 +88,7 @@ Some examples are provided in the following scripts:
 
 
 From single-cell data
---------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Single-cell RNA sequencing experiments have been valuable to provide insights into 
 complex biological systems, reveal complex and rare cell populations, uncover 
 relationships between genes, and track the trajectories of cell lineages.
@@ -103,7 +103,7 @@ Below we provide some data preparation examples from single-cell experiments:
 
 
 From LC-MS/MS proteomics data
---------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Two examples are provided below for LC-MS/MS proteomics data preprocessing:
 
 * `Geiger et al. 2016 <https://www.ncbi.nlm.nih.gov/pubmed/27745970>`__: ``pgx-geiger2016-arginine.R``
