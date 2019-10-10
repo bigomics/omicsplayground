@@ -2,10 +2,52 @@
 
 Data preparation examples
 ================================================================================
+The platform requires the transcriptomics and proteomics data to be in a 
+structured format as an input. Users can inject their data to the platform by
+either `uploading through the interface`_ or 
+`preparing an input object using scripts`_.
 
+
+Uploading data through the interface
+--------------------------------------------------------------------------------
+
+.. _`uploading through the interface`:
+
+Users can import their data from the **Upload data** panel located under the 
+:ref:`Home` module. The platform requires the list of files as shown in the
+figure below. 
+The format of files must be comma-separated-values (CSV) text.
+It is important to name the files exactly as shown.
+Be sure the dimensions, rownames and column names match for all files. 
+It is required to provide a unique name and brief description for the data set
+while uploading.
+
+:**counts.csv**: 	  Count/expression file with gene on rows, samples as columns.
+:**samples.csv**: 	Samples file with samples on rows, phenotypes as columns.
+:**genes.csv**: 	  Gene information file with genes on rows, gene info as columns.
+:**contrasts.csv**: Contrast file with samples on rows, conditions as columns.
+
+.. figure:: ../modules/figures/psc1.3.png
+    :align: center
+    :width: 100%
+
+
+
+Preparing an input object using scripts
+--------------------------------------------------------------------------------
+
+.. _`preparing an input object using scripts`:
+
+Alternatively, an input object can be prepared by using scripts with more 
+detailed data cleaning, filtering, normalisation and preprocessing. 
+Users can prepare an input data from
+their own FASTQ files, gene counts tables, or from a dataset of interest stored 
+in public repositories such as `GEO <https://www.ncbi.nlm.nih.gov/geo/>`__.
+Similarly, they can also prepare an input from single-cell or LC-MS/MS proteomics
+datasets.
 We provide four types of example cases to guide users for preparing their input 
-data and injecting it into the platform. Basically, the example cases 
-illustriate how to prepare an input data:
+objects and injecting it into the platform. Basically, the example cases 
+illustrate how to prepare an input data:
 
 1. from FASTQ files, 
 2. from gene counts table or from the GEO repository,
@@ -17,7 +59,7 @@ found under the ``/scripts`` folder.
 
 
 From FASTQ files
---------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Given FASTQ files, users can employ a ``counts_from_FASTQ.R`` script to obtain
 gene counts through quality control, trimming, quantification of gene abundance,
 and so on. Although the script' default choice is `Salmon 
@@ -29,7 +71,7 @@ section for preparing an input data from the gene counts.
 
 
 From gene counts table or GEO repository
---------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Users can prepare an input data from their own gene counts or download a
 relevant dataset from repositories such as `GEO <https://www.ncbi.nlm.nih.gov/geo/>`__.
 Some examples are provided in the following scripts:
@@ -46,7 +88,7 @@ Some examples are provided in the following scripts:
 
 
 From single-cell data
---------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Single-cell RNA sequencing experiments have been valuable to provide insights into 
 complex biological systems, reveal complex and rare cell populations, uncover 
 relationships between genes, and track the trajectories of cell lineages.
@@ -61,7 +103,7 @@ Below we provide some data preparation examples from single-cell experiments:
 
 
 From LC-MS/MS proteomics data
---------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Two examples are provided below for LC-MS/MS proteomics data preprocessing:
 
 * `Geiger et al. 2016 <https://www.ncbi.nlm.nih.gov/pubmed/27745970>`__: ``pgx-geiger2016-arginine.R``

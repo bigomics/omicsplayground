@@ -1,24 +1,37 @@
 .. _Dataprep:
 
-Data cleaning and preprocessing
+Data import and precomputation
 ================================================================================
 
-The data cleaning and preprocessing includes preparing the input data, filtering, 
-normalising, and precomputing statistics for some analyses. The data cleaning and 
-preprocessing is performed offline using scripts in order to support real-time 
-interaction and minimize user interface latency.
+The data import and precomputation involve preparing the input data through 
+filtering, normalising and precomputing statistics for some analyses and 
+importing it into the platform. The data cleaning and precomputation is 
+performed offline to support real-time interaction by minimizing user interface
+latency.
 
     
-Input data
+Data import
 --------------------------------------------------------------------------------
-The platform requires the transcriptomics and proteomics data to be in a 
-structured format as an input. Users can prepare an input data from
-their own FASTQ files, gene counts tables, or from a dataset of interest stored 
-in public repositories such as `GEO <https://www.ncbi.nlm.nih.gov/geo/>`__.
-Similarly, they can also prepare an input from LC-MS/MS proteomics data.
-For all of these cases, the platform comes with the necessary scripts for data 
-cleaning and preprocessing under the ``/scripts`` folder.
+Users can import their transcriptomics or proteomics data to the platform by 
+either uploading the data through
+the interface or preparing an input object using scripts.
+For uploading, the platform requires the counts, samples information, genes 
+information and contrasts tables in CSV format. 
+On the other hand, an input object can be prepared using scripts from different 
+types and formats of data, including counts and FASTQ.
+With scripts it is also possible to do more detailed data 
+cleaning, filtering, normalisation and preprocessing. 
+The platform contains the required example cases for the preparation of input 
+objects under the ``/scripts`` folder.
 
+
+.. seealso::
+
+    See :ref:`data preparation examples <Dataprep_example>` how
+    to prepare an input data for the platform. You can find more detailed 
+    information regarding the filtering and normalisation methods for preparing
+    an input from different sources of experiments.
+    
 
 Filtering
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,12 +56,6 @@ Statistics for the differentially expressed genes analysis and gene set enrichme
 analysis are precomputed to accelerate the visualisation on the interface.
 
 
-.. seealso::
-
-    See :ref:`data preparation examples <Dataprep_example>` how
-    to prepare an input data for the platform. You can find more detailed 
-    information regarding the filtering and normalisation methods for preparing
-    an input from different sources of experiments.
 
 
 
