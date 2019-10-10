@@ -46,6 +46,11 @@ tipify( selectInput('cmp_comparisons','Contrasts:', choices=NULL, multiple=TRUE)
        "Select the contrasts that you want to compare. If you select N=2 contrast a single scatterplot will be drawn. For N>=3 a scatterplot matrix will be drawn.",
        placement="top")
 
+## delayed input
+input_cmp_comparisons <- reactive({
+    input$cmp_comparisons
+}) %>% debounce(500)
+
 tipify( selectInput("cmp_filter","Filter:", choices=NULL, multiple=FALSE),
        "Select feature filter", placement="top")
 
@@ -56,19 +61,13 @@ conditionalPanel(
            "Paste a custom list of genes to highlight.", placement="bottom")
 )
 
-## delayed input
-input_cmp_comparisons <- reactive({
-    input$cmp_comparisons
-}) %>% debounce(500)
-
-conditionalPanel(
-    "input.main_usermode == 'expert'",
+##conditionalPanel(
+##  "input.main_usermode == 'expert'",
     tagList(
         tipify( selectInput("cmp_level","Level:", choices=c("gene","geneset")),
                "Select feature level: gene or geneset", placement="top")
     )
-)
-
+##)
 
 if(DEV.VERSION) {
     tagList(
@@ -78,7 +77,6 @@ if(DEV.VERSION) {
                      choices=c("logFC","logCPM"), inline=TRUE)
     )
 }
-
 
 ## update choices upon change of data set 
 observe({
@@ -91,11 +89,12 @@ observe({
 })
 
 ## update choices upon change of feature level
-observeEvent(input$cmp_level, {
+##observeEvent( input$cmp_level, {
+observe({
     ngs <- inputData()
     req(ngs)
     ##flt.choices = names(ngs$families)
-    cat("<module-intersect:observeEvent> input.cmp_level=",input$cmp_level,"\n")
+    cat("[intersection:observeEvent] input.cmp_level=",input$cmp_level,"\n")
     if(input$cmp_level=="geneset") {
         ft <- names(COLLECTIONS)
         nn <- sapply(COLLECTIONS, function(x) sum(x %in% rownames(ngs$gsetX)))
@@ -105,8 +104,13 @@ observeEvent(input$cmp_level, {
         ft <- pgx.getFamilies(ngs,nmin=10,extended=FALSE)
     }
     ft <- sort(ft)
-    if(input$cmp_level == "gene") ft = sort(c("<custom>",ft))
-    updateSelectInput(session, "cmp_filter", choices=ft, selected="<all>")    
+    if(input$cmp_level=="gene") ft = sort(c("<custom>",ft))
+
+    cat("[intersection:observeEvent] head.ft=",head(ft),"\n")       
+    updateSelectInput(session, "cmp_filter", choices=ft, selected="<all>")
+
+    cat("[intersection:observeEvent] done!\n")       
+    
 })
 
 observe({

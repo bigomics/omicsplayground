@@ -1164,9 +1164,7 @@ observe({
 > **Drug Connectivity Map.** Drug CMap correlates your signature with more than 5000 known drug perturbation profiles from the L1000 database. **(a)** Figure showing the top N=10 similar and opposite profiles by running the GSEA algorithm on the contrast-drug profile correlation space. **(b)** Table summarizing the statistical results of the drug enrichment analysis. **(c)** Mechanism-of-action plot showing the top most frequent drug class (or target genes) having similar or opposite enrichment compared to the query signature. **(d)** Activation matrix visualizing enrichment levels of drug signatures across multiple contrast profiles. 
 
 
-`r if(!DEV.VERSION) {"<!---------------------"}`
-
-### WordCloud (dev)
+### WordCloud 
 
 ```{r message=FALSE, warning=FALSE}
 
@@ -1418,12 +1416,23 @@ enrich_wordcloud.RENDER <- reactive({
     
     cex1 <- 1+round((5*rank(abs(df$NES))/nrow(df))**2)    
     cex2 <- (-log10(df$padj))**1.0
-    size <- 10*sqrt(cex1 * cex2)
+    size <- 10*abs(cex1 * cex2)**1
+    minsize <- tail(sort(size),250)[1]
+
+    color.pal = input$enrich_wordcloud_colors
     
-    library(wordcloud2)
-    library(rWordCloud)
+    require(wordcloud2)
+    require(rWordCloud)
+    require(wordcloud)
     ##wordcloud2( data.frame(word=df$word, size=size), size=1)
-    d3Cloud(text = df$word, size = size)    
+    ##d3Cloud(text = df$word, size = size)
+    
+    par(mar=c(1,1,1,1)*0)
+    wordcloud(words = df$word, freq = size,
+              ##colors=brewer.pal(8, "Dark2"),
+              colors = brewer.pal(8, color.pal),
+              scale=c(2,0.1)*0.9, min.freq=minsize)
+    
 
 })
 
@@ -1449,7 +1458,7 @@ enrich_keyword.RENDER <- reactive({
     keyword <- topFreq$word[sel.row]
     
     if( length(keyword)==0 || keyword[1] %in% c(NA,"") ) keyword <- "cell.cycle"
-    cat("<enrich_keyword> 3: keyword=",keyword,"\n")
+    cat("<enrich_keyword> 3: selected keyword=",keyword,"\n")
     
     targets <- grep(keyword, rownames(S), ignore.case=TRUE, value=TRUE)
     length(targets)
@@ -1632,14 +1641,18 @@ output <- attachModule(output, enrich_wordtsne_module)
 
 enrich_wordcloud_opts = tagList(
     selectInput("enrich_wordcloud_exclude","Exclude words:",
-                choices=NULL, multiple=TRUE)
+                choices=NULL, multiple=TRUE),
+    selectInput("enrich_wordcloud_colors","Colors:",
+                choices=c("Blues","Greys","Accent","Dark2"), multiple=FALSE)
+    
 )
 
 enrich_wordcloud_module <- plotModule(
     id="enrich_wordcloud", label="b",
-    func=enrich_wordcloud.RENDER, 
-    ##renderFunc="renderWordcloud2",
-    plotlib="htmlwidget", renderFunc="renderd3Cloud",
+    func = enrich_wordcloud.RENDER,
+    plotlib="base", renderFunc="renderPlot", outputFunc="plotOutput",
+    ##plotlib="htmlwidget", renderFunc="renderWordcloud2", outputFunc="wordcloud2Output",
+    ##plotlib="htmlwidget", renderFunc="renderd3Cloud", outputFunc="d3CloudOutput",
     ##download.fmt = NULL,
     info.text = "<strong>Word cloud.</strong> Word cloud of the most enriched keywords for the data set. Click on the figure to select a keyword for the 'Keyword enrichment analysis' chart. In the plot settings, users can exclude certain words from the figure.<br><br>Size of the words are relative to the normalized enrichment score (NES) from the GSEA computation. Keyword enrichment is computed by running GSEA on the mean (squared) enrichment profile (averaged over all contrasts). For each keyword, we defined the 'keyword set' as the collection of genesets that contain that keyword in the title/description.",
     options = enrich_wordcloud_opts,
@@ -1712,7 +1725,7 @@ fillRow(
             flex = c(1.2,0.05,1,0.05,1),
             moduleWidget(enrich_keyword_module),
             br(),
-            moduleWidget(enrich_wordcloud_module, outputFunc="d3CloudOutput"),
+            moduleWidget(enrich_wordcloud_module),
             br(),
             ##moduleWidget(enrich_wordtsne_module), 
             moduleWidget(enrich_wordtsne_module, outputFunc="plotlyOutput")
@@ -1732,6 +1745,10 @@ fillRow(
 ```   
 
 > **Keyword enrichment analysis.** **(c)** Enrichment plots for the top most significant contrasts. Black vertical bars indicate the position of gene sets, in the ranked enrichment scores, that contains the *keyword*. The green curve corresponds to 'running statistics' of the keyword enrichment score. **(b)** Colored word cloud. The size of the words are relative to the normalized enrichment score (NES) from the GSEA computation. **(c)** T-SNE plot of keywords extracted from the titles/descriptions of the genesets. **(d)** Activation matrix showing keyword enrichment across contrasts. **(e)** Keyword enrichment table for selected contrast. **(f)** Leading edge terms for selected keyword enrichment.
+
+
+
+`r if(!DEV.VERSION) {"<!---------------------"}`
 
 
 ### Fire plot (dev)

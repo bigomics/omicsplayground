@@ -150,8 +150,10 @@ gsea.fitAllContrasts <- function( X, gmt, design, contr.matrix, output_dir,
         xx = X[,sel]
         yy = 1 * ( exp.matrix[sel,comp.name] > 0)
 
-        cls1 = paste(names(which(contr.matrix[,comp.name]>0)),sep="and")
-        cls0 = paste(names(which(contr.matrix[,comp.name]<0)),sep="and")
+        j1 = which(contr.matrix[,comp.name]>0)
+        j0 = which(contr.matrix[,comp.name]<0)
+        cls1 = paste( rownames(contr.matrix)[j1],sep="and")
+        cls0 = paste( rownames(contr.matrix)[j0],sep="and")
         c(cls0, cls1)
         yy = c(cls0,cls1)[1+yy]
         yy

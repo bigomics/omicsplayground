@@ -154,8 +154,6 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
                               colors=NULL, label_size=11, lmar=60 )
 {
     
-    cat("DBG <pgx.splitHeatmapX> called 1\n")
-
     ## constants
     col_annot_height = 0.021
     if(!is.null(idx)) idx = as.character(idx)
@@ -224,8 +222,6 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
     ## ------- annot need to be factor
     annotF <- data.frame(as.list(annot),stringsAsFactors=TRUE)
     rownames(annotF) = rownames(annot)
-
-    cat("DBG <pgx.splitHeatmapX> 2\n")
     
     grid_params <- setup_colorbar_grid(
         nrows = 5, 
@@ -248,7 +244,6 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
         prepend_row = "Row: ", prepend_col = "Column: ", 
         prepend_value = "Value: ") 
 
-    cat("DBG <pgx.splitHeatmapX> 3\n")
     x1 <- xx[[1]]
     ##x1 <- x1[nrow(x1):1,]
     plt <- main_heatmap(
@@ -276,7 +271,6 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
     if(ncol(X)<50) {
         plt <- plt %>% add_col_labels(side="bottom", size=0.15*ex) 
     }
-    cat("DBG <pgx.splitHeatmapX> 4\n")
     
     if(length(xx)>1) {
         
@@ -340,7 +334,6 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
             size=w*ex, font=list(size=s1) ) 
     }
 
-    cat("DBG <pgx.splitHeatmapX> done!\n")
     
     return(plt)
 }
@@ -353,16 +346,13 @@ pgx.plotGeneExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
                                    main=NULL, xlab=NULL, ylab=NULL, names=TRUE )
 {
     if(0) {
-        comp=NULL;logscale=TRUE;level="gene";grouped=TRUE;srt=90;collapse.others=1;
+        comp=NULL;
+        logscale=TRUE;level="gene";grouped=TRUE;srt=90;collapse.others=1;
         max.points=-1;main=NULL;xlab=NULL;ylab=NULL;names=TRUE;group.names=NULL
-        grouped=0;collapse.others=0;
-        comp=6;group.names=c("CTRL","treated")
-        probe="TOPORS"
-        probe="KCNN4"
+        comp=1;group.names=c("CTRL","treated")
+        probe=ngs$genes$gene_name[1]
     }
 
-    cat("DBG pgx-plotting: called level=",level,"\n")
-    cat("DBG pgx-plotting: 0: probe=",probe,"\n")
     if(is.null(probe)) return(NULL)
     if(is.na(probe)) return(NULL)
 
@@ -380,27 +370,25 @@ pgx.plotGeneExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
     cntrmat <- ngs$model.parameters$contr.matrix
     expmat <- expmat[rownames(ngs$samples),,drop=FALSE]
 
-    cat("DBG pgx-plotting: 1\n")
     
     if(class(comp)=="numeric") comp <- colnames(expmat)[comp]
     if(!is.null(group.names) && length(group.names)!=2) stop("group.names must be length=2")
     if(is.null(main)) main <- probe
-    comp
+    comp    
 
-    cat("DBG pgx-plotting: 2\n")
+    if(grepl("_vs_|_VS_",comp) && is.null(group.names) ) {
+        comp1 <- sub(".*:","",comp)  ## remove prefix
+        group.names = rev(strsplit(comp1,split="_vs_|_VS_")[[1]])  ## reversed!!
+    }
     
     if(!is.null(comp)) {
         ct <- expmat[,comp]
+        names(ct) <- rownames(expmat)
         ct
-        samples <- names(which(ct!=0))
+        samples <- rownames(expmat)[which(ct!=0)]
         samples
         grp0.name=grp1.name=NULL
-        if(grepl("_vs_|_VS_",comp) && is.null(group.names) ) {
-            comp1 <- sub(".*:","",comp)  ## remove prefix
-            comp1 <- strsplit(comp1,split="_vs_|_VS_")[[1]]
-            grp1.name <- comp1[1]
-            grp0.name <- comp1[2]
-        } else if(!is.null(group.names)) {
+        if(!is.null(group.names)) {
             grp0.name <- group.names[1]
             grp1.name <- group.names[2]
         } else {
@@ -412,8 +400,6 @@ pgx.plotGeneExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
         samples <- rownames(expmat)
         xgroup <- ngs$samples$group
     }
-
-    cat("DBG pgx-plotting: 3\n")
     
     ## currently cast to character... :(
     names(xgroup) <- rownames(ngs$samples)
@@ -434,7 +420,6 @@ pgx.plotGeneExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
         xgroup <- factor(xgroup, levels=levels0)
     }
 
-    cat("DBG pgx-plotting: 4\n")
     
     ## ------------- set color of samples
     require(RColorBrewer)
@@ -449,8 +434,6 @@ pgx.plotGeneExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
     }
     grp.klr
 
-    cat("DBG pgx-plotting: 4b: probe=",probe,"\n")
-    
     ## -------------- get expression value
     if(level=="geneset") {
         gx <- ngs$gsetX[probe,rownames(ngs$samples)]
@@ -459,15 +442,11 @@ pgx.plotGeneExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
     }
     if(!logscale) gx <- 2**(gx)
 
-    cat("DBG pgx-plotting: 5\n")
-    
     ## -------------- plot grouped or ungrouped
     if(is.null(main)) main <- probe
     ##if(ncol(X) <= 20) {
     if(!grouped) {
 
-        cat("DBG pgx-plotting: 6a\n")
-        
         nx = length(gx)
         if(is.null(ylab)) {
             ylab = "expression (log2CPM)"
@@ -489,8 +468,6 @@ pgx.plotGeneExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
         title(main, cex.main=1.0)
 
     } else {
-        cat("DBG pgx-plotting: 6b\n")
-        
         if(is.null(ylab)) {
             ylab = "expression (log2CPM)"
             if(!logscale) ylab = "expression (CPM)"
@@ -509,6 +486,7 @@ pgx.plotGeneExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
                   las=3, cex.names=0.75, srt=srt)
         title(main, cex.main=1.0)
     }
+
 }
 
 pgx.plotOmicsNetwork <- function(ngs, gene=NULL, reduced=NULL, levels=c("gene","geneset"),

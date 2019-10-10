@@ -110,7 +110,8 @@ observe({
     updateSelectizeInput(session, "gs_contrast", choices=comparisons)
     gset.methods = sort(colnames(meta[[1]]$fc))
 
-    sel2 = head(intersect(GSET.DEFAULTMETHODS,gset.methods),3)
+    sel2 = c(intersect(GSET.DEFAULTMETHODS,gset.methods),gset.methods)
+    sel2 = head(unique(sel2),3)
     updateCheckboxGroupInput(session, 'gs_method',
                              choices=gset.methods,
                              selected = sel2)

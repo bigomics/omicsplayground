@@ -4,6 +4,7 @@
 
 See separate license file.
 
+
 ## Source Code
 
 The project maintains the following source code repositories:
@@ -13,11 +14,12 @@ The project maintains the following source code repositories:
 
 ## Third-party Content
 
+
 Pathview (R/Bioconducotor package)
 
  * License: GPLv3 (academic).
  * The pathview downloads and uses KEGG data. Non-academic uses may
-  require a KEGG license agreement (details at
+  require a separate KEGG license agreement (details at
   http://www.kegg.jp/kegg/legal.html).
 
 

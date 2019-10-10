@@ -83,7 +83,8 @@ observe({
     updateSelectInput(session, "gx_features",choices=fam)
 
     gx.methods = colnames(ngs$gx.meta$meta[[1]]$fc) ## available
-    sel1 = head(intersect(GX.DEFAULTTEST,gx.methods),3) ## maximum three!!
+    sel1 = c(intersect(GX.DEFAULTTEST,gx.methods),gx.methods)
+    sel1 = head(unique(sel1),3) ## maximum three!!
     updateCheckboxGroupInput(session, 'gx_testmethod',
                              choices = sort(gx.methods),
                              selected = sel1)
@@ -124,6 +125,10 @@ getDEGtable <- function(ngs, testmethods, comparison, add.pq) {
     mx.fc = unclass(mx$fc[,testmethods,drop=FALSE])
     ##mx$score = mx$fc * (-log10(1e-100+mx$q) )    
 
+    mx.fc[ is.infinite(mx.fc) | is.nan(mx.fc) ] <- NA
+    mx.p[ is.infinite(mx.p) | is.nan(mx.p) ] <- NA
+    mx.q[ is.infinite(mx.q) | is.nan(mx.q) ] <- NA
+
     ## must recompute meta parameters (maxQ method)
     mx$meta.p = apply(mx.p,1,max,na.rm=TRUE)
     mx$meta.q = apply(mx.q,1,max,na.rm=TRUE)
@@ -137,11 +142,13 @@ getDEGtable <- function(ngs, testmethods, comparison, add.pq) {
     
     ## recalculate group averages???
     y0 <- ngs$model.parameters$exp.matrix[,comparison]
+    names(y0) <- rownames(ngs$model.parameters$exp.matrix)
     AveExpr1 <- rowMeans(ngs$X[rownames(mx),names(which(y0>0)),drop=FALSE])
     AveExpr0 <- rowMeans(ngs$X[rownames(mx),names(which(y0<0)),drop=FALSE])
     
     ##logFC <- unclass(ngs$gx.meta$meta[[comparison]][,"fc"])[,"trend.limma"]
-    logFC <- ngs$gx.meta$meta[[comparison]][,"meta.fx"]
+    ##logFC <- ngs$gx.meta$meta[[comparison]][,"meta.fx"]
+    logFC <- mx$meta.fx
     ##logFC <- (AveExpr1 - AveExpr0)  ## override ??? yes: see "contrast in R" Rose Maier 2015...
     ## [hack] adjust averages to match logFC...
     mean0 <- (AveExpr0+AveExpr1)/2
@@ -152,7 +159,8 @@ getDEGtable <- function(ngs, testmethods, comparison, add.pq) {
     aa <- intersect(c("gene_name","gene_title","chr"), colnames(ngs$genes))
     gene.annot <- ngs$genes[rownames(mx),aa]
     metaq <- mx[,c("meta.q"),drop=FALSE]    
-    res = data.frame( gene.annot, logFC=logFC, stars, metaq, AveExpr0, AveExpr1, check.names=FALSE )
+    res = data.frame( gene.annot, logFC=logFC, stars, metaq,
+                     AveExpr0, AveExpr1, check.names=FALSE )
     
     if(add.pq) {
         ## add extra columns
@@ -171,7 +179,7 @@ diffExprTable <- reactive({
     comp=1;test="trend.limma"
     comp = input$gx_contrast
     gx.methods = colnames(ngs$gx.meta$meta[[1]]$fc)
-    test = head(intersect(GX.DEFAULTTEST,gx.methods),3) ## maximum three
+    gx.methods
     test = input$gx_testmethod
     if(is.null(comp)) return(NULL)
     if(is.null(test)) return(NULL)
@@ -476,7 +484,7 @@ expr_plots_boxplot.RENDER <- reactive({
     req(ngs)
     
     ## get table
-    ##sel=1;pp=rownames(ngs$X)[1]
+    ##sel=1
     sel = input$expr_genetable_rows_selected
     if(is.null(sel)) return(NULL)    
 
@@ -485,8 +493,8 @@ expr_plots_boxplot.RENDER <- reactive({
 
     psel <- rownames(res)[sel]
     ##gene = sub(".*:","",rownames(res)[sel])
+    gene=ngs$genes[1,"gene_name"];comp=1;grouped=TRUE;logscale=TRUE;srt=45
     gene = ngs$genes[psel,"gene_name"]
-    comp = 1
     comp = input$gx_contrast
     grouped <- !input$gx_ungroup
     logscale <- input$gx_logscale
@@ -529,7 +537,7 @@ expr_topgenes.RENDER <- reactive({
     ngs <- inputData()
     req(ngs)
     
-    ##res=getDEGtable(ngs, testmethods="trend.limma", comparison=6,add.pq=FALSE)
+    ##res=getDEGtable(ngs, testmethods="trend.limma", comparison=6, add.pq=FALSE)
     res <- sigDiffExprTable()
     if(is.null(res) || nrow(res)==0) return(NULL)
 
@@ -817,12 +825,20 @@ Row {.tabset data-height=400}
 
 expr_genetable.RENDER <- reactive({
 
+
+    dbg("[expression] expr_genetable.RENDER: reacted")
+    
     res <- sigDiffExprTable()
     if(is.null(res) || nrow(res)==0) return(NULL)
     
     fx.col = grep("fc|fx|mean.diff|logfc|foldchange",tolower(colnames(res)))[1]
     fx.col
     fx = res[,fx.col]
+
+    dbg("[expression] expr_genetable.RENDER: fc.col=",fx.col)
+    dbg("[expression] expr_genetable.RENDER: fx=",head(fx))
+    dbg("[expression] expr_genetable.RENDER: class(fx)=",class(fx))
+        
     ##cat("dim.rpt=",dim(rpt),"\n")
     ##cat("colnames.rpt=",colnames(rpt),"\n")
     if("gene_title" %in% colnames(res)) res$gene_title = shortstring(res$gene_title,50)

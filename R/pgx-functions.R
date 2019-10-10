@@ -521,12 +521,26 @@ pgx.getGeneSetCollections <- function(gsets, min.size=10, max.size=500)
     return(collections)
 }
 
-##is.shiny=FALSE
-pgx.scanInfo <- function(pgx.dir="./pgx/", inc.progress=FALSE) {
+##inc.progress=FALSE;pgx=NULL
+pgx.scanInfo <- function(pgx.dir, inc.progress=FALSE,
+                         pgx=NULL )
+{
     require(shiny)
     ##cat(">>> scanning available data sets...\n")
+    pgx.dir <- sub("/$","",pgx.dir)
     pgx.files  <- dir(pgx.dir, pattern="[.]pgx$", full.names=TRUE)
     pgx.files0 <- dir(pgx.dir, pattern="[.]pgx$", full.names=FALSE)
+    if(!is.null(pgx)) {
+        jj <- which(!sub(".pgx$","",pgx.files0) %in% sub(".pgx$","",pgx$dataset))
+        jj
+        if(length(jj)==0) {
+            cat("[pgx.scanInfo] all up to date\n")
+            return(pgx)
+        }
+        pgx.files = pgx.files[jj]
+        pgx.files0 = pgx.files0[jj]
+    }
+
     ##pgx.files =head(pgx.files,3)
     f = pgx.files[1]
     pgx.info <- c()
@@ -549,7 +563,7 @@ pgx.scanInfo <- function(pgx.dir="./pgx/", inc.progress=FALSE) {
             nsamples = nrow(ngs$samples),
             ngenes = nrow(ngs$X),
             nsets = nrow(ngs$gsetX),
-            conditions = paste(cnd,collapse=","),
+            conditions = paste(cnd,collapse=" "),
             date = date
         )
 
@@ -564,11 +578,19 @@ pgx.scanInfo <- function(pgx.dir="./pgx/", inc.progress=FALSE) {
         pgx.info <- rbind( pgx.info, this.info)
         if(inc.progress) incProgress( 1/length(pgx.files) )
     }
-
-    cat(">>> found",nrow(pgx.info),"data sets\n")
     rownames(pgx.info) <- NULL
-    pgx.info <- data.frame(pgx.info)
-    rownames(pgx.info) <- NULL
+    
+    if(is.null(pgx)) {
+        cat(">>> found",nrow(pgx.info),"data sets\n")
+        pgx.info <- data.frame(pgx.info)
+        rownames(pgx.info) <- NULL
+    } else {
+        cat(">>> updated",nrow(pgx.info),"data sets\n")
+        pgx.info <- data.frame(pgx.info)
+        pgx.info <- pgx.info[,match(colnames(pgx),colnames(pgx.info))]
+        pgx.info = rbind(pgx, pgx.info)
+        rownames(pgx.info) <- NULL
+    }
     ##write.csv(pgx.info, file="../pgx/pgx-info.csv")
     return(pgx.info)
 }
@@ -961,7 +983,7 @@ psort <- function(x,p.col=NULL) {
 color_from_middle <- function (data, color1,color2) {
     ## from https://stackoverflow.com/questions/33521828/
     max_val=max(abs(data),na.rm=TRUE)
-    JS(sprintf("isNaN(parseFloat(value)) || value < 0 ? 'linear-gradient(90deg, transparent, transparent ' + (50 + value/%s * 50) + '%%, %s ' + (50 + value/%s * 50) + '%%,%s  50%%,transparent 50%%)': 'linear-gradient(90deg, transparent, transparent 50%%, %s 50%%, %s ' + (50 + value/%s * 50) + '%%, transparent ' + (50 + value/%s * 50) + '%%)'",max_val,color1,max_val,color1,color2,color2,max_val,max_val))
+    DT::JS(sprintf("isNaN(parseFloat(value)) || value < 0 ? 'linear-gradient(90deg, transparent, transparent ' + (50 + value/%s * 50) + '%%, %s ' + (50 + value/%s * 50) + '%%,%s  50%%,transparent 50%%)': 'linear-gradient(90deg, transparent, transparent 50%%, %s 50%%, %s ' + (50 + value/%s * 50) + '%%, transparent ' + (50 + value/%s * 50) + '%%)'",max_val,color1,max_val,color1,color2,color2,max_val,max_val))
 }
 
 tidy.dataframe <- function(Y) {

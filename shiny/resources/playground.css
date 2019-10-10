@@ -203,14 +203,12 @@ code {
   margin-right: auto;
 }
 
-.modal-sm {
-    width:0px;
-    height:0px;
+#modal-splash {
+    background-color: #2c81e2;
 }
 
 .modal-content {
     border:0;
-    box-shadow:0px;
 }
 
 .modal-backdrop {

@@ -207,7 +207,8 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
         xx <- X[,jj]
         dim(xx)
         table(yy)
-        ref = names(which(contr.matrix[,k] < 0))
+        ##ref = names(which(contr.matrix[,k] < 0))
+        ##ref = rownames(contr.matrix)[which(contr.matrix[,k] < 0)]
         ref = 0
         ref
 

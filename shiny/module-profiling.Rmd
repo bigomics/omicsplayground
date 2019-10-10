@@ -29,7 +29,6 @@ pr_infotext =
 <br><br>It is also possible to perform a copy number variation analysis under the <strong>CNV tab</strong>. The copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. CNV generates a heatmap of samples versus chromosomes, where samples can be annotated further with a phenotype class provided in the data."
 
 observeEvent( input$pr_info, {
-    dbg("<profiling:observe1> reacted")
     showModal(modalDialog(
         title = HTML("<strong>Cell Profiling Module</strong>"),
         HTML(pr_infotext),
@@ -59,19 +58,14 @@ conditionalPanel(
 observe({
     ngs <- inputData()
     req(ngs)
-    dbg("<profiling:observe2> reacted")
     ## levels for sample filter
     levels <- getLevels(ngs$Y)
     updateSelectInput(session, "pr_samplefilter", choices=levels)
-
-    dbg("<profiling:observe2> done!")
 })
 
 observe({
     ngs <- inputData()
     req(ngs)
-    dbg("<profiling:observe3> reacted")
-
     refsets = "LM22"
     refsets <- sort(names(ngs$deconv))
     refsel <- grep("LM22",refsets,value=TRUE)
@@ -82,7 +76,6 @@ observe({
     dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
     updateSelectInput(session, "pr_dcmethod", choices=dcmethods, selected=dcsel)
 
-    dbg("<profiling:observe3> done!")
 })
 
 
@@ -507,7 +500,6 @@ output <- attachModule(output, pr_markersplot_module)
 observe({
     ngs <- inputData()
     req(ngs,input$pr_level)
-    dbg("<profiling:observe4> reacted")
     
     choices <- names(ngs$families)
     selected = grep("^CD",choices,ignore.case=TRUE,value=TRUE)[1]
@@ -517,7 +509,6 @@ observe({
     }
     updateSelectInput(session, "pr_features", choices=choices, selected=selected)
 
-    dbg("<profiling:observe4> done!")
 })
 
 fillCol( moduleWidget(pr_markersplot_module))
@@ -606,14 +597,10 @@ observe({
     ##if(is.null(ngs)) return(NULL)
     req(ngs)
 
-    dbg("<profiling:observe5> reacted")
-    
     ## levels for sample filter
     annotvar <- c(colnames(ngs$Y),"<none>")
     updateSelectInput(session, "pr_cna_annotvar", choices=annotvar)
 
-    dbg("<profiling:observe5> done!")
-    
 })
 
 ```
@@ -789,10 +776,8 @@ output <- attachModule(output, italk_netview_module)
 observe({
     ngs <- inputData()
     req(ngs)
-    dbg("<profiling:observe6> reacted")
     ph <- colnames(ngs$samples)
     updateSelectInput(session, "italk_groups", choices=ph)
-    dbg("<profiling:observe6> done!")
 })
 
 fillCol(
@@ -1395,8 +1380,6 @@ observe({
     ##if(is.null(ngs)) return(NULL)
     req(ngs)
 
-    dbg("<profiling:observe7> reacted")
-    
     ##if(is.null(input$pr_xtaboptions)) return(NULL)
     pheno0 <- grep("group|sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
     kk <- selectSamplesFromSelectedLevels(ngs$Y, input$pr_samplefilter)
@@ -1408,8 +1391,6 @@ observe({
     updateSelectInput(session, "pr_xtabvar", choices=pheno1)
     updateSelectInput(session, "pr_xtabpheno", choices=pheno1)
     updateSelectInput(session, "pr_xtabgene", choices=genes1)
-
-    dbg("<profiling:observe7> done!")
 
 })
 
@@ -1467,16 +1448,12 @@ observe({
     ##if(is.null(ngs)) return(NULL)
     req(ngs)
 
-    dbg("<profiling:observe8> reacted")
-    
     xgenes <- ngs$genes[rownames(ngs$X),]$gene_name
     genes <- sort(as.character(xgenes))
     g1 <- grep("^CD4|^CD8",genes,value=TRUE)[1]
     g2 <- grep("^CD79|^CD3[DEG]|^CD37",genes,value=TRUE)[1]
     updateSelectInput(session, "pr_cytovar1", choices=genes, selected=g1)
     updateSelectInput(session, "pr_cytovar2", choices=genes, selected=g2)
-
-    dbg("<profiling:observe8> done!")
 })
 
 ```
