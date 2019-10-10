@@ -116,7 +116,7 @@ Drug C-Map
 
 .. note::
 
-    This module is supported in the EXPERT MODE ONLY.
+    This module is supported in the EXPERT MODE only.
 
 In the **Drug Connectivity Map** panel, users can correlate their signature with
 more than 5000 known drug profiles from the 
@@ -165,9 +165,9 @@ WordCloud
 
 .. note::
 
-    This module is supported in the EXPERT MODE ONLY.
+    This module is supported in the EXPERT MODE only.
 
-The **WordCloud** panel performs "Keyword enrichment analysis". It
+The **WordCloud** panel performs "keyword enrichment analysis". It
 computes enrichment of a selected keyword across all contrasts. Select
 a keyword by clicking a word in the 'Enrichment table'. Keyword
 enrichment is computed by running GSEA on the enrichment score profile
