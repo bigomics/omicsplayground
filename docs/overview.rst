@@ -11,10 +11,11 @@ data, as well as traditional gene expression experiments.
 
 The overview of the platform is shown in the figure below. It consists of
 two main components. The first component addresses the data
-cleaning and preprocessing, which includes preparing the input data, filtering,
+importing and preprocessing, which includes preparing the input data, filtering,
 normalising and precomputing of statistics for some analyses. The second part is
 composed of the online interface, which supports the real-time visualisation and
-interaction with users.
+interaction with users. The interface is subdivided into Basic and Expert modes
+in order to provide a customisable experience suited to each user’s background.
 
 .. figure:: figures/overview.png
     :align: center
