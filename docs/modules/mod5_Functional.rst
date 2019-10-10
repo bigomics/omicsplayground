@@ -13,10 +13,6 @@ Given a particular contrast profile, it also searches for the closest
 drug profiles from the `L1000 <https://www.ncbi.nlm.nih.gov/pubmed/29195078>`__
 drug expression database under the **Drug Connectivity Map** panel.
 
-.. note::
-
-    This module is supported in the EXPERT MODE ONLY.
-
 
 Input slider
 --------------------------------------------------------------------------------
@@ -117,6 +113,11 @@ Each output chart/table of the panel is describer below in detail.
     
 Drug C-Map
 --------------------------------------------------------------------------------
+
+.. note::
+
+    This module is supported in the EXPERT MODE ONLY.
+
 In the **Drug Connectivity Map** panel, users can correlate their signature with
 more than 5000 known drug profiles from the 
 `L1000 <https://www.ncbi.nlm.nih.gov/pubmed/29195078>`__ database. 
@@ -157,5 +158,19 @@ for certain drugs.
     :align: center
     :width: 100%
     
-    
-    
+
+
+WordCloud
+--------------------------------------------------------------------------------
+
+.. note::
+
+    This module is supported in the EXPERT MODE ONLY.
+
+
+In the **Drug Connectivity Map** panel, users can correlate their signature with
+more than 5000 known drug profiles from the 
+`L1000 <https://www.ncbi.nlm.nih.gov/pubmed/29195078>`__ database. 
+An activation-heatmap compares drug activation profiles across multiple contrasts. 
+This facilitates to quickly see and detect the similarities between contrasts
+for certain drugs.

@@ -1,5 +1,11 @@
 .. _scProfiling:
 
+
+.. note::
+
+    This module is supported in the EXPERT MODE only.
+
+
 Single-Cell Profiling
 ================================================================================
 The **Single-Cell Profiling** module is specifically developed for the
@@ -25,10 +31,6 @@ variables (so-called cross tabulation).
 Finally, for each combination of gene pairs, the platform can generate a 
 cytometry-like plot of samples under the **Cytoplot** panel.
 
-
-.. note::
-
-    This module is supported in the EXPERT MODE ONLY.
 
 
 Input slider
