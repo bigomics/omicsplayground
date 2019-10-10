@@ -358,8 +358,9 @@ hm1_splitmap.RENDER <- reactive({
     show_legend = TRUE
     if(input$hm_level=="geneset" || !is.null(splitx)) show_legend = FALSE
     annot$group = NULL  ## no group in annotation
-    show_colnames <- ("col" %in% input$hm_collabel)
-    show_colnames <- ifelse(ncol(zx) < 100, show_colnames, FALSE)
+    show_colnames <- ("col" %in% input$hm_showlabel)
+    if(ncol(zx) > 100) show_colnames <- FALSE
+    
     
     if(input$hm_level=="gene") {
         rownames(zx) = sub(".*:","",rownames(zx))
