@@ -1,11 +1,6 @@
 .. _Biomarker:
 
 
-.. note::
-
-    This module is supported in the EXPERT MODE only.
-
-
 Biomarker Analysis
 ================================================================================
 The **Biomarker** module performs the biomarker analysis that can be
@@ -33,6 +28,10 @@ classification (or survival) tree using top features and provides
 expression boxplots by phenotype classes for features present in the
 tree.
 
+.. note::
+
+    This module is supported in the EXPERT MODE only.
+    
 
 Input panel
 --------------------------------------------------------------------------------

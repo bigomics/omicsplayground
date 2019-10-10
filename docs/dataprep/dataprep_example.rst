@@ -26,7 +26,7 @@ On the left, provide a unique name and description for the data set.
 :**genes.csv**: 	  Gene information file with genes on rows, gene info as columns.
 :**contrasts.csv**: Contrast file with samples on rows, conditions as columns.
 
-.. figure:: modules/figures/psc1.3.png
+.. figure:: ../modules/figures/psc1.3.png
     :align: center
     :width: 100%
 
