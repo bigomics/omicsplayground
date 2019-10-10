@@ -2,16 +2,19 @@
 
 Functional Analysis
 ================================================================================
-This module performs specialized pathway and drug enrichment analysis. 
-It contains three panels where it provides higher level functional and 
-visual analysis of the contrast space using the 
-`KEGG <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC102409/>`__ graph structure
-in the **KEGG pathways** panel. Under the **GO** panel, very similar functional
-analysis is done using the Gene Ontology (`GO <http://geneontology.org/>`__) 
-graph structure. 
-Given a particular contrast profile, it also searches for the closest 
-drug profiles from the `L1000 <https://www.ncbi.nlm.nih.gov/pubmed/29195078>`__
-drug expression database under the **Drug Connectivity Map** panel.
+This module performs specialized pathway and enrichment analysis
+providing higher level functional and visual analysis
+
+The **KEGG pathways** panel maps the differential fold-changes onto
+the `KEGG <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC102409/>`
+pathway maps. Under the **GO** panel, a graph-based enrichment
+analysis is done using the Gene Ontology (`GO
+<http://geneontology.org/>`) graph structure. The **Drug Connectivity
+Map** panel, for a given contrast, searches for the closest drug
+profiles from the `L1000
+<https://www.ncbi.nlm.nih.gov/pubmed/29195078>` drug expression
+database. Finally, a **Word cloud** panel provide keyword enrichment
+analysis on keywords in the geneset titles.
 
 
 Input panel
