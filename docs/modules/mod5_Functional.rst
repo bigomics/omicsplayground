@@ -168,9 +168,66 @@ WordCloud
     This module is supported in the EXPERT MODE ONLY.
 
 
-In the **Drug Connectivity Map** panel, users can correlate their signature with
-more than 5000 known drug profiles from the 
-`L1000 <https://www.ncbi.nlm.nih.gov/pubmed/29195078>`__ database. 
-An activation-heatmap compares drug activation profiles across multiple contrasts. 
-This facilitates to quickly see and detect the similarities between contrasts
-for certain drugs.
+The **WordCloud** panel performs "Keyword enrichment analysis". It
+computes enrichment of a selected keyword across all contrasts. Select
+a keyword by clicking a word in the 'Enrichment table'.
+
+
+.. figure:: figures/psc6.4.png
+    :align: center
+    :width: 100%
+
+:**Enrichment table**: The Enrichment table summarizes the results
+from the enrichment test for the tested keywords. The NES corresponds
+to the normalized enrichment score from the GSEA analysis. 
+
+:**Leading-edge table**: The leading-edge table shows the geneset
+titles that have contributed to the enrichment of the selected keyword.
+
+	    
+:**Enrichment plots**: Keyword enrichment is computed by running GSEA
+on the enrichment score profile for all contrasts. We defined the test
+set as the collection of genesets that contain the keyword in the
+title/description. Black vertical bars indicate the position of gene
+sets that contains the *keyword* in the ranked list of enrichment
+scores. The curve in green corresponds to the 'running statistic' of
+the keyword enrichment score. The more the green ES curve is shifted
+to the upper left of the graph, the more the keyword is enriched in
+the first group. Conversely, a shift of the green ES curve to the
+lower right, corresponds to keyword enrichment in the second group.
+
+:**Word cloud**: Word cloud plot visualizes the frequency/enrichment
+of keywords for the data set. Select a keyword in the 'Enrichment
+table'. In the plot settings, users can exclude certain words from the
+figure, or choose the color palette. The sizes of the words are
+relative to the normalized enrichment score (NES) from the GSEA
+computation. Keyword enrichment is computed by running GSEA on the
+mean (squared) enrichment profile (averaged over all contrasts). For
+each keyword, we defined the 'keyword set' as the collection of
+genesets that contain that keyword in the title/description.
+
+
+.. figure:: figures/psc6.4.1.png
+    :align: center
+    :width: 30%
+
+.. figure:: figures/psc6.4.2.png
+    :align: center
+    :width: 30%
+
+
+:**Word t-SNE**: The word t-SNE plot visualizes the similarity of
+the keywords that were found in the title/description of gene
+sets. Keywords that are often found together in title/descriptions are
+placed close together in the t-SNE. For each keyword we computed
+enrichment using GSEA on the mean (absolute) enrichment profiles
+(averaged over all contrasts). Statistically significant gene sets
+(q<0.05) are colored in red. The sizes of the nodes are proportional
+to the normalized enrichment score (NES) of the keyword.
+
+:**Activation matrix**: The Activation Matrix visualizes the
+activation of drug activation enrichment across the conditions. The
+size of the circles correspond to their relative activation, and are
+colored according to their upregulation (red) or downregulation (blue)
+in the contrast profile.
+
