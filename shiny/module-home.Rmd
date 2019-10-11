@@ -685,12 +685,22 @@ fillCol(
 ### Upload data
 
 ```{r data-upload, echo=FALSE}
-upload_filetypes = c("text/csv","text/comma-separated-values,text/plain",
-                     ".csv")
+upload_filetypes = c("text/csv","text/comma-separated-values,text/plain",".csv")
 
-upload_info = "<h4>User file upload</h4><p>Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. On the left, provide a unique name and description for the data set.<br><br>"
+output$downloadExampleData <- downloadHandler(
+    filename = "exampledata.zip",
+    content = function(file) {
+        zip = paste0(PGX.DIR,"exampledata.zip")
+        file.copy(zip,file)
+    }
+)
 
-upload_info2 = "<br><h4>Uploaded datasets</h4><p>Below are your uploaded datasets.<br><br>"
+upload_info = "<h4>User file upload</h4><p>Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. You can download a zip file with example files here: EXAMPLEZIP. After that, in sidebar on the left, provide a unique name and description for your dataset. Finally, hit the compute button. The computations may take 10 to 30 minutes depending on the size of your dataset.<br><br>"
+DLlink = downloadLink("downloadExampleData","exampledata.zip")
+upload_info = sub("EXAMPLEZIP",DLlink,upload_info)
+
+upload_info2 =
+"<br><h4>Uploaded datasets</h4><p>Below are your uploaded datasets. As a free user, you can only have a maximum of one private dataset. If you want to analyze a new dataset, you must either delete your old dataset or make the dataset public.<br><br>"
 
 fillRow(
     flex=c(1,0.05,3),
@@ -708,12 +718,12 @@ fillRow(
         ##)
     ),br(),
     fillCol(
-        flex = c(NA,NA,NA,NA,1),
-        ##flex = c(NA,NA,1),
+        ##flex = c(NA,NA,NA,NA,1),
+        flex = c(NA,NA,1),
         p(HTML(upload_info)),
         tableOutput("upload_status"),
-        p(HTML(upload_info2)),
-        DT::dataTableOutput("upload_datasetsDT"),
+        ##p(HTML(upload_info2)),
+        ##DT::dataTableOutput("upload_datasetsDT"),
         ##tableOutput("upload_datasets")
         br()
     )
@@ -972,7 +982,7 @@ uploadStatusTable <- reactive({
         "Count/expression file with gene on rows, samples as columns.",
         "Samples file with samples on rows, phenotypes as columns.",
         "Gene information file with genes on rows, gene info as columns.",
-        "Contrast file with samples on rows, conditions as columns."        
+        "Contrast file with conditions on rows, contrasts as columns."        
     )
     df <- data.frame( status=status, filename=files.needed,
                      description=description,
