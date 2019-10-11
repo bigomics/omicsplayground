@@ -10,8 +10,8 @@ either non-commerical or commercial use.
 
 If you are a non-profit company, academic, or use our products for 
 personal use, you may enjoy our software for free under a 
-`Creative Commons (CC) Attribution-NonCommercial licence
-<https://creativecommons.org/>`__.
+[Creative Commons (CC) Attribution-NonCommercial licence]
+(https://creativecommons.org).
 
 
 ## Commercial/governmental
