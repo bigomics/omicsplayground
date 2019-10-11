@@ -1102,14 +1102,16 @@ clustannot_table.RENDER <- reactive({
     ##rownames(rho) = shortstring(rownames(rho),50)
     rho.name = shortstring(sub(".*:","",rownames(rho)),60)
     ##rho = data.frame(cbind( name=rho.name, rho))
-    rho = as.matrix(rho)
-    rownames(rho) = rho.name
+    df = data.frame( feature=rho.name, round(as.matrix(rho),digits=3))
+    rownames(df) = rownames(rho)
+    if(input$xann.level=="geneset") {
+        df$feature <- wrapHyperLink(df$feature, rownames(df))
+    }
     DT::datatable(
-            rho,
-            class = 'compact cell-border stripe hover',
-            rownames=TRUE,
+            df, rownames=FALSE, escape = c(-1,-2),
             extensions = c('Buttons','Scroller'),
             selection=list(mode='single', target='row', selected=c(1)),
+            class = 'compact cell-border stripe hover',
             options=list(
                 dom = 'lfrtip', buttons = c('copy','csv','pdf'),
                 ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),

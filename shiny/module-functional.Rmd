@@ -58,8 +58,10 @@ conditionalPanel(
     conditionalPanel(
         "input.fa_options % 2 == 1",
         tagList(
-            checkboxInput('fa_normalize','normalize activation matrix',TRUE),
-            checkboxInput('fa_filtertable','filter signficant (tables)',FALSE)
+          tipify(checkboxInput('fa_normalize','normalize activation matrix',TRUE),
+                 "Click to fine-tune the coloring of an activation matrices."),
+          tipify(checkboxInput('fa_filtertable','filter signficant (tables)',FALSE),
+                 "Click to filter the significant entries in the tables.")
         )
     )
 )
@@ -384,16 +386,20 @@ kegg_table.RENDER <- reactive({
     if(is.null(comparison)) return(NULL)
     df <- getFilteredKeggTable()
     if(is.null(df)) return(NULL)
+
+    ## add hyperlink
+    url = paste0("https://www.genome.jp/kegg-bin/show_pathway?map=hsa",df$kegg.id,"&show_description=show")
+    df$kegg.id <- paste0("<a href='",url,"' target='_blank'>",df$kegg.id,"</a>")    
+    df$pathway <- wrapHyperLink(df$pathway, df$pathway)
     
     numeric.cols <- which(sapply(df, is.numeric))
     numeric.cols
     
-    DT::datatable( df, rownames=FALSE,
+    DT::datatable( df, rownames=FALSE, escape = c(-1,-2),
                   class = 'compact cell-border stripe hover',                  
-                  extensions = c('Buttons','Scroller'),
+                  extensions = c('Scroller'),
                   selection=list(mode='single', target='row', selected=1),
                   options=list(
-                      ##dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
                       dom = 'lfrtip', 
                       scrollX = TRUE, ##scrollY = TRUE,
                       scrollY = 210, scroller=TRUE, deferRender=TRUE
@@ -662,19 +668,19 @@ GO_table.RENDER <- reactive({
     if("foldchange" %in% names(ngs$meta.go)) fx = ngs$meta.go$foldchange[names(scores),comparison]
     
     go.term = substring(go.term, 1, 80)
-    dt1 = round( cbind(score=scores, meta.fx=fx, meta.q=qv), digits=4)
+    dt1 = round( cbind(score=scores, meta.fx=fx, meta.q=qv), digits=4)    
+    dt = data.frame( id=names(scores), term=go.term, dt1, stringsAsFactors=FALSE)    
+    id2 = paste0("abc(",sub(":","_",dt$id),")")  ## to match with wrapHyperLink
+    dt$id <- wrapHyperLink(as.character(dt$id), id2)  ## add link
     
-    dt = data.frame( id=names(scores), term=go.term, dt1)    
-
     numeric.cols <- which(sapply(dt, is.numeric))
     numeric.cols
 
-    DT::datatable( dt, rownames=FALSE,
+    DT::datatable( dt, rownames=FALSE, escape = c(-1,-2),
                   class = 'compact cell-border stripe hover',                  
-                  extensions = c('Buttons','Scroller'),
+                  extensions = c('Scroller'),
                   selection=list(mode='single', target='row', selected=1),
                   options=list(
-                      ##dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
                       dom = 'lfrtip', 
                       scrollX = TRUE, ##scrollY = TRUE,
                       scrollY = 220, scroller=TRUE, deferRender=TRUE
@@ -752,7 +758,7 @@ GO_info1 = "The <strong>Gene Ontology</strong> (GO) provides a computational rep
 GO_network.opts = tagList(
     tipify( checkboxInput("GO_prunetree", "Prune tree", TRUE),
            "Prune the tree with only significant branches."),
-    tipify( checkboxInput("GO_colorclusters", "Color clusters"),
+    tipify( checkboxInput("GO_colorclusters", "Color clusters", TRUE),
            "Highlight clusters with different colors.")
 )
 GO_network_module <- plotModule(
@@ -1505,7 +1511,7 @@ enrich_keyword.RENDER <- reactive({
 wordcloud_enrichmentTable.RENDER <- reactive({    
     df <- enrich_getWordEnrichment()
     req(df)
-    df <- df[,c("word","pval","padj","ES","NES","size","tsne.x","tsne.y")]
+    df <- df[,c("word","pval","padj","ES","NES","size")]
     cat("<wordcloud_enrichmentTable.RENDER> dim(df)=",dim(df),"\n")
     
     numeric.cols <- which(sapply(df, is.numeric))
@@ -1532,6 +1538,9 @@ wordcloud_enrichmentTable.RENDER <- reactive({
 
 wordcloud_leadingEdgeTable.RENDER <- reactive({    
 
+    ngs <- inputData()
+    req(ngs, input$fa_contrast)
+
     df <- enrich_getWordEnrichment()
 
     sel.row=1
@@ -1541,12 +1550,20 @@ wordcloud_leadingEdgeTable.RENDER <- reactive({
     
     ee <- unlist(df$leadingEdge[sel.row])
     ee <- strsplit(ee, split="//")[[1]]
+
+    ##fx <- ngs$gset.meta$meta[[1]][ee,"meta.fx"]
+    ##fx <- ngs$gset.meta$meta[[1]][ee,"fc"][,"fgsea"]  ## real NES
+    fx <- ngs$gset.meta$meta[[input$fa_contrast]][ee,"meta.fx"]
+    names(fx) <- ee
+    df <- data.frame("leading.edge"=ee, fx=fx)
+    df <- df[order(-abs(df$fx)),]
     
-    df <- data.frame("leading.edge"=ee, NES=0)    
     numeric.cols <- which(sapply(df, is.numeric))
     numeric.cols
+
+    df$leading.edge <- wrapHyperLink(df$leading.edge, df$leading.edge)  ## add link
     
-    tbl <- DT::datatable( df, rownames=FALSE,
+    tbl <- DT::datatable( df, rownames=FALSE, escape = c(-1,-2),
                   class = 'compact cell-border stripe hover',                  
                   extensions = c('Scroller'),
                   selection=list(mode='single', target='row', selected=1),
@@ -1558,10 +1575,10 @@ wordcloud_leadingEdgeTable.RENDER <- reactive({
                   ) %>%
         formatSignif(numeric.cols,4) %>%
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>% 
-            DT::formatStyle( "NES",
-                            background = color_from_middle( df[,"NES"], 'lightblue', '#f5aeae'),
-                            backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
-                            backgroundPosition = 'center') 
+        DT::formatStyle( "fx",
+                        background = color_from_middle( df[,"fx"], 'lightblue', '#f5aeae'),
+                        backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
+                        backgroundPosition = 'center') 
     ##tbl <- DT::datatable(df)
     return(tbl)
 })
@@ -1640,8 +1657,8 @@ enrich_wordtsne_module <- plotModule(
 output <- attachModule(output, enrich_wordtsne_module)
 
 enrich_wordcloud_opts = tagList(
-    selectInput("enrich_wordcloud_exclude","Exclude words:",
-                choices=NULL, multiple=TRUE),
+  enrich_keyword_opts = tagList( selectInput("enrich_wordcloud_exclude","Exclude words:", choices=NULL, multiple=TRUE),
+     "Paste a keyword to exclude it from the plot.", placement="top", options = list(container = "body")),
     selectInput("enrich_wordcloud_colors","Colors:",
                 choices=c("Blues","Greys","Accent","Dark2"), multiple=FALSE)
     
@@ -1665,12 +1682,10 @@ enrich_keyword_info = "<strong>Keyword enrichment analysis.</strong> Computes en
 
 <br><br>Keyword enrichment is computed by running GSEA on the enrichment score profile for all contrasts. We defined the test set as the collection of genesets that contain the keyword in the title/description. Black vertical bars indicate the position of gene sets that contains the *keyword* in the ranked list of enrichment scores. The curve in green corresponds to the 'running statistic' of the keyword enrichment score. The more the green ES curve is shifted to the upper left of the graph, the more the keyword is enriched in the first group. Conversely, a shift of the green ES curve to the lower right, corresponds to keyword enrichment in the second group."
 
-enrich_keyword_opts = tagList( tipify(
-    ##textInput('enrich_keyword_keywords','Keyword:',"cell cycle"),
-    myTextInput('enrich_keyword_keywords','Keyword:',"cell cycle"),
-    "Paste a keyword such as `apoptosis`, `replication` or `cell cycle`.",
-    placement="top", options = list(container = "body"))
-    )
+##myTextInput('enrich_keyword_keywords','Keyword:',"cell cycle"),
+
+enrich_keyword_opts = tagList( tipify( textInput('enrich_keyword_keywords','Keyword:',"cell cycle"),
+     "Paste a keyword such as 'apoptosis', 'replication' or 'cell cycle'.", placement="top", options = list(container = "body")))
 
 ## enrich_keyword_opts = textInput('enrich_keyword_keywords','Keyword:',"cell cycle")
 
@@ -1732,7 +1747,7 @@ fillRow(
         ),
         br(),
         fillRow(
-            flex=c(1.3,0.08,1),
+            flex=c(1,0.08,1),
             moduleWidget(wordcloud_enrichmentTable_module, outputFunc="dataTableOutput"),
             br(),
             moduleWidget(wordcloud_leadingEdgeTable_module, outputFunc="dataTableOutput")

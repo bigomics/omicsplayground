@@ -1,18 +1,30 @@
 # LICENSE 
 
-Omics Playground is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+Open Source with Commercial Options
 
-This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-Affero General Public License for more details.
 
-You should have received a copy of the GNU Affero General Public
-License along with this program.  If not,
-see <http://www.gnu.org/licenses/>.
+Omics Playground is open source: you are allowed to download the
+source code and make your own edits. Although Omics Playground is open
+source, our software is not licensed as regular open source software
+and is unfortunately not compatible with any open source software
+license like Apache 2 or any GPL.
+
+Omics Playground is distributed under a dual license: for
+non-commerical and commercial use.
+
+## Non-commercial:
+
+If you are a non-profit company, or use our products for personal use,
+you may enjoy our software for free under a Creative Commons (CC)
+Attribution-NonCommercial licence
+
+Do you want to use Highcharts for a personal website, a school site or
+a non-profit organization? Just get yourself a free, non-commercial
+license. For commercial websites and projects, we offer flexible
+License and Pricing options, including special pricing for startups.
+
+
+## Commercial:
 
 You can be released from the requirements of the license by purchasing
 a commercial license. Buying such a license is mandatory as soon as

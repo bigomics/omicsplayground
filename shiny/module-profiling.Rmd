@@ -492,7 +492,7 @@ pr_markersplot_module <- plotModule(
     "pr_markersplot", pr_markersplotFUNC,
     info.text = "The Markers section produces for the top marker genes, a t-SNE with samples colored in red when the gene is overexpressed in corresponding samples. The top genes (N=36) with the highest standard deviation are plotted. <p>In the plotting options, users can also restrict the marker analysis by selecting a particular functional group in which genes are divided into 89 groups, such as chemokines, transcription factors, genes involved in immune checkpoint inhibition, and so on.",
     title = "Distribution of marker genes",
-    pdf.height = 10, pdf.width=10, res=95,
+    pdf.height = 10, pdf.width=10, res=85,
     options = pr_markersplot.opts
 )
 output <- attachModule(output, pr_markersplot_module)
@@ -654,28 +654,23 @@ italk_getResults <- reactive({
     
     mode = "absolute"
     ##mode <- input$italk_mode
-
     if(mode=="absolute") {
         highly_exprs_genes <- rawParse(data1, top_genes=50, stats='mean')    
         res_cat <- FindLR(highly_exprs_genes, datatype='mean count', comm_type=comm_type)
         res_cat <- res_cat[order(res_cat$cell_from_mean_exprs*res_cat$cell_to_mean_exprs,decreasing=T),]
     } else {
-
-        contrast <- input$fa_contrast
-        group <- ngs$model.parameters$exp.matrix[,contrast]
-        data1$compare_groups <- group
-
-        data1 <- data1[which(data1$compare_groups!=0),]
-        
-        ## find DEGenes of regulatory T cells and NK cells between these 2 groups
-        deg_t  <- DEG(data %>% filter(cell_type=='CD4Tcells'),method='Wilcox',contrast=c(2,1))
-        deg_nk <- DEG(data %>% filter(cell_type=='NKcells'),method='Wilcox',contrast=c(2,1))
-
-        ## find significant ligand-receptor pairs and do the plotting
-        res_cat <- FindLR(deg_t,deg_nk,datatype='DEG',comm_type=comm_type)
-        res_cat <- res_cat[order(res_cat$cell_from_logFC*res_cat$cell_to_logFC,decreasing=T),]        
+        ## contrast <- input$fa_contrast
+        ## group <- ngs$model.parameters$exp.matrix[,contrast]
+        ## data1$compare_groups <- group
+        ## data1 <- data1[which(data1$compare_groups!=0),]        
+        ## ## find DEGenes of regulatory T cells and NK cells between these 2 groups
+        ## deg_t  <- DEG(data %>% filter(cell_type=='CD4Tcells'),method='Wilcox',contrast=c(2,1))
+        ## deg_nk <- DEG(data %>% filter(cell_type=='NKcells'),method='Wilcox',contrast=c(2,1))
+        ## ## find significant ligand-receptor pairs and do the plotting
+        ## res_cat <- FindLR(deg_t,deg_nk,datatype='DEG',comm_type=comm_type)
+        ## res_cat <- res_cat[order(res_cat$cell_from_logFC*res_cat$cell_to_logFC,decreasing=T),]        
     }
-
+    
     is.ligand = (colnames(gx0) %in% db[,"Ligand.ApprovedSymbol"])
     is.receptor = (colnames(gx0) %in% db[,"Receptor.ApprovedSymbol"])
     lr.type = c("L","R","LR")[ 1*is.ligand + 2*is.receptor]
@@ -698,6 +693,8 @@ italk_LRPlot.RENDER <- reactive({
     res <- italk_getResults()
     if(is.null(res)) return(NULL)
     res_cat <- res$table
+    if(nrow(res_cat)<1) return(NULL) 
+
     ntop=25
     ntop = as.integer(input$italk_LRPlot_ntop)
     res_top <- head(res_cat,ntop)
@@ -705,7 +702,7 @@ italk_LRPlot.RENDER <- reactive({
            link.arr.lwd = head(res_cat$cell_from_mean_exprs,ntop),
            link.arr.width = head(res_cat$cell_to_mean_exprs,ntop))
     comm_type <- isolate(input$italk_category)
-    title((paste(comm_type,"genes     ")), line=-2)
+    title((paste(comm_type,"genes     ")), line=0.5)
 })
 
 italk_heatmap.RENDER <- reactive({
@@ -714,14 +711,14 @@ italk_heatmap.RENDER <- reactive({
     req(ngs)
     res <- italk_getResults()
     if(is.null(res)) return(NULL)
-        
+    
     res_cat <- res$table
     ntop=50
     ntop = as.integer(input$italk_LRPlot_ntop)
     res_top <- head(res_cat,ntop)
     genes_top <- sort(unique(c(res_top$ligand,res_top$receptor)))
-    gx0  <- t(res$exprs[,genes_top])
-
+    if(length(genes_top)==0) return(NULL)
+    gx0  <- t(res$exprs[,genes_top,drop=FALSE])
     rownames(gx0) <- paste0(rownames(gx0)," (",res$lr.type[rownames(gx0)],")")
 
     par(oma=c(3,2,3,0))
@@ -887,8 +884,6 @@ monocle_getResults <- reactive({
 })
 
 monocle_topMarkers <- reactive({
-
-
 })
 
 
@@ -983,7 +978,7 @@ monocle_plotTopMarkers.MODULE <- plotModule(
         selectInput("monocle_groupby","Group by:",choices=NULL),
         selectInput("monocle_ntop","ntop:",choices=c(1,2,3,4,5,10,25),selected=5)
     ),
-    pdf.width=5, pdf.height=8, res=80, plotlib="ggplot"
+    pdf.width=5, pdf.height=8, res=72, plotlib="ggplot"
 )
 output <- attachModule(output, monocle_plotTopMarkers.MODULE)
 

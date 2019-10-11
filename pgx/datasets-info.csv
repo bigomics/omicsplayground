@@ -18,3 +18,8 @@
 "17","tcga-prad-gx.pgx","RNA-seq","TCGA prostate cancer data set. Gene expression from patients with Gleason score. Data from cBioPortal.","human","497","4000","7041","GLEASON_SCORE,TUMOR_STATUS,BIOCHEMICAL_RECURRENCE_INDICATOR,RADIATION_TREATMENT_ADJUVANT,TREATMENT_OUTCOME_FIRST_COURSE,CLIN_T_STAGE","2019-05-29"
 "18","test1.pgx","RNA-seq","test1","human","18","7353","9815","time activated","Wed Oct  9 10:39:51 2019"
 "19","test3.pgx","RNA-seq","This is a test","human","18","7353","9815","time activated","Thu Oct 10 13:34:07 2019"
+"20","test4.pgx","RNA-seq","this is a test.","human","18","7353","9815","time activated","Thu Oct 10 20:07:17 2019"
+"21","test5.pgx","RNA-seq","test five","human","18","2000","8496","activated time","Thu Oct 10 20:15:02 2019"
+"22","ivo1.pgx","RNA-seq","User file upload
+Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. On the left, provide a unique name and description for the data set.
+","human","18","2000","8496","activated time","Fri Oct 11 12:00:27 2019"

@@ -92,7 +92,7 @@ observe({
 ##observeEvent( input$cmp_level, {
 observe({
     ngs <- inputData()
-    req(ngs)
+    req(ngs,input$cmp_level)
     ##flt.choices = names(ngs$families)
     cat("[intersection:observeEvent] input.cmp_level=",input$cmp_level,"\n")
     if(input$cmp_level=="geneset") {
@@ -104,7 +104,8 @@ observe({
         ft <- pgx.getFamilies(ngs,nmin=10,extended=FALSE)
     }
     ft <- sort(ft)
-    if(input$cmp_level=="gene") ft = sort(c("<custom>",ft))
+    ##if(input$cmp_level=="gene") ft = sort(c("<custom>",ft))
+    ft = sort(c("<custom>",ft))
 
     cat("[intersection:observeEvent] head.ft=",head(ft),"\n")       
     updateSelectInput(session, "cmp_filter", choices=ft, selected="<all>")
@@ -162,7 +163,12 @@ cmpGetFoldChangeMatrix <- reactive({
         rownames(qv0) <- rownames(ngs$gset.meta$meta[[1]])
 
         gsets = rownames(fc0)
-        if(input$cmp_filter != "<all>") {
+        if(input$cmp_filter == "<custom>") {
+            gsets = strsplit( input$cmp_customlist, split="[, ;]")[[1]]
+            if(length(gsets)>0) {
+                gsets = intersect(rownames(ngs$gsetX), gsets)
+            }
+        } else if(input$cmp_filter != "<all>") {
             gsets = unique(unlist(COLLECTIONS[input$cmp_filter]))
         }
         gsets = intersect(gsets, rownames(fc0))
@@ -418,10 +424,8 @@ cmp_scatterPlotMatrix.PLOT <- reactive({
     ## subsample for speed: take top1000 + 1000
     df <- data.frame(fc0)
     if(1) {
-        ntop = 1000
-        ntop = 100
-        ## ntop = 99999
-        ntop <- input$cmp_splom_ntop        
+        ntop = 99999
+        ##ntop <- input$cmp_splom_ntop        
         
         jj <- match(sel.genes, rownames(df))
         jj <- c(jj, 1:min(ntop,nrow(df)))
@@ -602,13 +606,16 @@ cmp_scatterPlotMatrix.PLOT <- reactive({
 })
 
 cmp_scatterPlotMatrix.opts = tagList(
-    checkboxInput("cmp_splom_highlight","Highlight genes",TRUE),
-    selectInput("cmp_splom_ntop","Number of top genes",c(100,500,1000,2500,999999),selected=1000)
+    tipify( checkboxInput("cmp_splom_highlight","Highlight genes",TRUE),
+            "Enable highlighting genes on the plots. Users can highlight points by selecting them with the mouse, using the box selection or the lasso selection tool.")
+    ##tipify( selectInput("cmp_splom_ntop","Number of top genes",c(100,500,1000,2500,999999),selected=1000),
+    ##        "Number of top genes ")
 )
 cmp_scatterPlotMatrix_module <- plotModule(
     "cmp_scatterPlotMatrix", cmp_scatterPlotMatrix.PLOT, plotlib="plotly",
     title = "Scatterplot matrix (pairs)",
-    info.text = "For selected contrasts, the <strong>Pairs plot</strong> provides volcano plots and pairwise correlation plots between the profiles under the Pairs tab.",
+    info.text = "For the selected contrasts, the <strong>Pairs</strong> panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, The Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as '<custom>' selection.
+    ",
     options = cmp_scatterPlotMatrix.opts,
     ##  download.fmt = c("pdf","html"),  ## scatterGL does not work for PDF
     download.fmt = c("html"),
@@ -1127,7 +1134,7 @@ cmp_ctheatmap.opts = tagList(
            "Number of top genes to compute correlation values.") 
 )
 
-cmp_ctheatmap_info = "**Constrast heatmap.** Similarity of the contrasts visualized as a clustered heatmap. Contrasts that are similar will be clustered close together. The numeric value in the cells correspond to the Pearson correlation coefficient between contrast signatures. Red corresponds to positive correlation and blue to negative correlation."
+cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the contrasts visualized as a clustered heatmap. Contrasts that are similar will be clustered close together. The numeric value in the cells correspond to the Pearson correlation coefficient between contrast signatures. Red corresponds to positive correlation and blue to negative correlation."
 
 cmp_ctheatmap_module <- plotModule(
     "cmp_ctheatmap", 
@@ -1358,12 +1365,16 @@ cmp_connectivitymap.RENDER <- reactive({
 })
 
 cmp_connectivitymap.opts = tagList(
-    selectInput('cmp_cmapsets',"Dataset:", choices=NULL, multiple=TRUE),
-    radioButtons('cmp_cmapclust',"Layout:",c("tsne","pca"),inline=TRUE),
-    radioButtons('cmp_topgenes','Top genes:',c(50,200,1000),inline=TRUE,selected=200),
+    tipify( selectInput('cmp_cmapsets',"Dataset:", choices=NULL, multiple=TRUE),
+           "Select datasets to compare with external contrast profiles."),
+    tipify(radioButtons('cmp_cmapclust',"Layout:",c("tsne","pca"),inline=TRUE),
+           "Choose the plot layout: t-SNE or PCA"),
+    tipify(radioButtons('cmp_topgenes','Top genes:',c(50,200,1000),inline=TRUE,selected=200),
+           "Specify the number of top genes for computations."),
+    tipify(radioButtons('cmp_neighbours','Neighbours:',c(100,500,2000),inline=TRUE,selected=500),
+           "Set the number of neighbours two show in the t-SNE or PCA.")    
     ##checkboxGroupInput('fc_cmap_options',NULL,c('show names','add negative'),
     ##                   selected=c('show names'),inline=TRUE),
-    radioButtons('cmp_neighbours','Neighbours:',c(100,500,2000),inline=TRUE,selected=500)
 )
 
 cmp_connectivitymap.module <- plotModule(
