@@ -91,7 +91,7 @@ survival tree analysis using top features. Furthermore, it provides
 expression boxplots by phenotype classes for features present in the
 tree.
 
-.. figure:: figures/ug.031.png
+.. figure:: figures/psc9.2.png
     :align: center
     :width: 100%
 

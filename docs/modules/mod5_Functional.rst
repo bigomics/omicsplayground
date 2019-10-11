@@ -6,13 +6,13 @@ This module performs specialized pathway and enrichment analysis
 providing higher level functional and visual analysis
 
 The **KEGG pathways** panel maps the differential fold-changes onto
-the `KEGG <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC102409/>`
+the `KEGG <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC102409/>`__
 pathway maps. Under the **GO** panel, a graph-based enrichment
 analysis is done using the Gene Ontology (`GO
-<http://geneontology.org/>`) graph structure. The **Drug Connectivity
+<http://geneontology.org/>`__) graph structure. The **Drug Connectivity
 Map** panel, for a given contrast, searches for the closest drug
 profiles from the `L1000
-<https://www.ncbi.nlm.nih.gov/pubmed/29195078>` drug expression
+<https://www.ncbi.nlm.nih.gov/pubmed/29195078>`__ drug expression
 database. Finally, a **Word cloud** panel provide keyword enrichment
 analysis on keywords in the geneset titles.
 

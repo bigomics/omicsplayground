@@ -25,9 +25,9 @@ reports the gene fold changes for all contrasts.
     the number of significant genes at different FDR thresholds for all contrasts.
 
 
-Input slider
+Input panle
 --------------------------------------------------------------------------------
-The input slider on the left contains the ``Info`` button for relevant information about
+The input panel on the left contains the ``Info`` button for relevant information about
 the module as well as some settings for the analysis. 
 Users can start the differntial expression (DE) analysis by selecting a contrats of their 
 interest in the ``Contrast`` and specifying a relevent gene family in the ``Gene family``.
