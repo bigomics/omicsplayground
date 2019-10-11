@@ -1,13 +1,12 @@
 .. _Signature:
 
 
+Signature Analysis
+================================================================================
+
 .. note::
 
     This module is supported in the EXPERT MODE only.
-
-
-Signature Analysis
-================================================================================
 
 In the **Signature Analysis** module, users can test their custom gene
 signature by uploading a custom list of genes. After uploading the

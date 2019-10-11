@@ -30,9 +30,9 @@ picture across comparisons at the same time.
     reports the number of significant gene sets at different FDR thresholds for all contrasts.
 
 
-Input slider
+Input panel
 --------------------------------------------------------------------------------
-Users can find relevant information about the module in the ``Info`` from the input slider.
+Users can find relevant information about the module in the ``Info`` from the input panel.
 The enrichment analysis can be started by selecting a contrats of interest in 
 the ``Contrast`` and specifying a relevent gene set family in the ``Gene set collection``.
 It is possible to set the false discovery rate (FDR) and the logarithmic fold change 

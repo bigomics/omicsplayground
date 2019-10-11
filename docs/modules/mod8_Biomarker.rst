@@ -1,12 +1,13 @@
 .. _Biomarker:
 
+
+Biomarker Analysis
+================================================================================
+
 .. note::
 
     This module is supported in the EXPERT MODE only.
     
-
-Biomarker Analysis
-================================================================================
 The **Biomarker** module performs the biomarker analysis that can be
 used for classification or prediction purposes. Biomarker analysis
 might also help to better understand which genes, mutations, or gene
@@ -31,8 +32,8 @@ based on identified top features. In addition, it generates a
 classification (or survival) tree using top features and provides
 expression boxplots by phenotype classes for features present in the
 tree.
-
-
+    
+    
 Input panel
 --------------------------------------------------------------------------------
 
@@ -91,7 +92,7 @@ survival tree analysis using top features. Furthermore, it provides
 expression boxplots by phenotype classes for features present in the
 tree.
 
-.. figure:: figures/ug.031.png
+.. figure:: figures/psc9.2.png
     :align: center
     :width: 100%
 
