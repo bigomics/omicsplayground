@@ -11,7 +11,7 @@ You can either run the platform from the source code, or download the docker ima
 Run from source code
 --------------------------------------------------------------------------------
 The source code of the platform is available on 
-`GitHub <https://github.com/IRB-Bioinformatics/OmicsPlayground>`__. You can 
+`GitHub <https://github.com/bigomics/playground>`__. You can 
 download the latest release of the software (includes more data files) by cloning
 the repository. Below, we explain the steps required to set up the platform from
 the source code:
@@ -38,7 +38,7 @@ the source code:
 Run using the Docker file
 --------------------------------------------------------------------------------
 The docker file of the platform is available on `Docker hub 
-<https://cloud.docker.com/u/bigomics/repository/docker/bigomics/playground>`__.
+<https://www.docker.com/bigomics>`__.
 Follow the steps below to set up a running platform from the docker file:
 
 1. Pull the docker image using the command::
