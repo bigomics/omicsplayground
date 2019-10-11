@@ -296,6 +296,7 @@ if(1) {
     lockBinding("geneannot.map", as.environment("package:pathview"))
 }
 
+KEGGIMG = paste0(tempfile(),".png")
 output$kegg_graph <- renderImage({
 
     ngs <- inputData()
@@ -362,6 +363,10 @@ output$kegg_graph <- renderImage({
     outfile = paste0("hsa",pathway.id,".pathview.png")
     cat("kegg_graph: outfile=",outfile,"\n")
     if(!file.exists(outfile)) return(NULL.IMG)
+
+    cat("kegg_graph: copy",outfile,"to",KEGGIMG,"\n")
+    unlink(KEGGIMG,force=TRUE)
+    file.copy(outfile,KEGGIMG)
     
     list(src = outfile,
          contentType = 'image/png',
@@ -481,8 +486,15 @@ kegg_actmap.RENDER <- reactive({
 
 kegg_info1 = "<strong>KEGG pathways</strong> are a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. In the pathway map, genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Each pathway is scored for the selected contrast profile and reported in the table below. "
 kegg_buttons1 = plotModuleButtons(
-    "kegg_graph", text=kegg_info1, just.info=TRUE, no.download=TRUE,
+    "kegg_graph", text=kegg_info1, just.info=TRUE, 
+    download.fmt="png", ##no.download=TRUE,
     title = "KEGG pathway map", label="a"
+)
+output$kegg_graph_png  <- downloadHandler(
+    filename = "plot.png",
+    content = function(file) {
+        file.copy(KEGGIMG,file)
+    }
 )
 
 kegg_actmap.opts = tagList()
@@ -504,20 +516,18 @@ kegg_table_module <- tableModule(
 )
 output <- attachModule(output, kegg_table_module)
 
-fillRow(flex = c(1.3,0.04,1),
-        fillCol(flex = c(NA,1.8,0.06,NA,1),
-                kegg_buttons1,
-                imageOutput("kegg_graph", height="100%"),
-                br(),
-                kegg_table_module$buttons,
-                dataTableOutput('kegg_table')
-                ),
-        br(),  ## horizontal space
-        fillCol(flex = c(NA,1),
-                kegg_actmap_module$buttons,
-                plotOutput('kegg_actmap', height = "100%")
-                )
-        )
+fillRow(
+    flex = c(1.3,0.04,1),
+    fillCol(
+        flex = c(NA,1.8,0.06,1),
+        kegg_buttons1,
+        imageOutput("kegg_graph", height="100%"),
+        br(),
+        moduleWidget(kegg_table_module, outputFunc="dataTableOutput")
+    ),
+    br(),  ## horizontal space
+    moduleWidget(kegg_actmap_module)
+)
 
 
 ```
@@ -789,18 +799,15 @@ GO_table_module <- tableModule(
 )
 output <- attachModule(output, GO_table_module)
 
-fillRow(flex = c(1.2,1), 
-        fillCol(flex = c(NA,2,NA,1),
-                GO_network_module$buttons,
-                visNetworkOutput("GO_network", height = "100%"),
-                GO_table_module$buttons,
-                dataTableOutput('GO_table')
-                ),
-        fillCol(flex = c(NA,1),
-                GO_actmap_module$buttons,                
-                plotOutput('GO_actmap', height = "100%")
-                )
-        )
+fillRow(
+    flex = c(1.2,1), 
+    fillCol(
+        flex = c(2,1),
+        moduleWidget(GO_network_module, outputFunc="visNetworkOutput"),
+        moduleWidget(GO_table_module, outputFunc="dataTableOutput")
+    ),
+    moduleWidget(GO_actmap_module)
+)
 
 ```
 
@@ -1133,27 +1140,20 @@ output <- attachModule(output, dsea_table_module)
 ##-----------------------------------------
 ## Page layout
 ##-----------------------------------------
-fillRow(flex = c(2.6,1), 
-        fillCol(flex = c(1.4,0.07,NA,1),
-                fillRow(flex=c(2.2,1),
-                        fillCol(flex = c(NA,1),
-                                dsea_enplots_module$buttons,
-                                plotOutput("dsea_enplots")
-                                ),
-                        fillCol(flex = c(NA,1),
-                                dsea_moaplot_module$buttons,
-                                plotOutput("dsea_moaplot")
-                                )
-                        ),
-                br(),  ## vertical space
-                dsea_table_module$buttons,
-                dataTableOutput('dsea_table')
-                ),
-        fillCol(flex = c(NA,1),
-                dsea_actmap_module$buttons,
-                plotOutput('dsea_actmap')
-                )
-        )
+fillRow(
+    flex = c(2.6,1), 
+    fillCol(
+        flex = c(1.4,0.07,1),
+        fillRow(
+            flex=c(2.2,1),
+            moduleWidget(dsea_enplots_module),
+            moduleWidget(dsea_moaplot_module)
+        ),
+        br(),  ## vertical space
+        moduleWidget(dsea_table_module, outputFunc="dataTableOutput")        
+    ),
+    moduleWidget(dsea_actmap_module)        
+)
 
 observe({
     ngs <- inputData()
@@ -1647,8 +1647,8 @@ enrich_wordtsne_module <- plotModule(
     plotlib="plotly", func=enrich_wordtsne.PLOTLY, 
     info.text = "<strong>Word t-SNE.</strong> T-SNE of keywords that were found in the title/description of gene sets. Keywords that are often found together in title/descriptions are placed close together in the t-SNE. For each keyword we computed enrichment using GSEA on the mean (absolute) enrichment profiles (averaged over all contrasts). Statistically significant gene sets (q<0.05) are colored in red. The sizes of the nodes are proportional to the normalized enrichment score (NES) of the keyword.",
     options = tagList(
-        radioButtons("enrich_wordtsne_algo","Clustering algorithm:",
-                     choices=c("tsne","umap"),inline=TRUE)
+        tipify(radioButtons("enrich_wordtsne_algo","Clustering algorithm:", choices=c("tsne","umap"),inline=TRUE),
+               "Choose a clustering algorithm: t-SNE or UMAP.")
     ),
     pdf.width=8, pdf.height=8, res=72, pdf.pointsize=13,
     ##datacsv = enrich_getWordFreq,
@@ -1657,11 +1657,10 @@ enrich_wordtsne_module <- plotModule(
 output <- attachModule(output, enrich_wordtsne_module)
 
 enrich_wordcloud_opts = tagList(
-  enrich_keyword_opts = tagList( selectInput("enrich_wordcloud_exclude","Exclude words:", choices=NULL, multiple=TRUE),
-     "Paste a keyword to exclude it from the plot.", placement="top", options = list(container = "body")),
-    selectInput("enrich_wordcloud_colors","Colors:",
-                choices=c("Blues","Greys","Accent","Dark2"), multiple=FALSE)
-    
+    tipify(selectInput("enrich_wordcloud_exclude","Exclude words:", choices=NULL, multiple=TRUE),
+           "Paste a keyword to exclude it from the plot.", placement="top", options = list(container = "body")),
+    tipify(selectInput("enrich_wordcloud_colors","Colors:", choices=c("Blues","Greys","Accent","Dark2"), multiple=FALSE),
+           "Choose a set of colors.", placement="top", options = list(container = "body"))
 )
 
 enrich_wordcloud_module <- plotModule(

@@ -23,3 +23,5 @@
 "22","ivo1.pgx","RNA-seq","User file upload
 Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. On the left, provide a unique name and description for the data set.
 ","human","18","2000","8496","activated time","Fri Oct 11 12:00:27 2019"
+"23","test2.pgx","RNA-seq","test2","human","18","2000","8496","activated time","Wed Oct  9 03:06:18 2019"
+"24","test10.pgx","RNA-seq","Proteome profiles of activated vs resting human naive T cells at different times (Geiger et al., Cell 2016). ","human","18","2000","8496","activated time","Fri Oct 11 20:42:26 2019"

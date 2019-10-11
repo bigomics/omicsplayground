@@ -42,20 +42,21 @@ immune cell profiling and signature analysis."
 Upload data
 --------------------------------------------------------------------------------
 
-Under the **Upload data** panel users can inject their transcriptomics and 
-proteomics data to the platform.
-The platform requires the data files in CSV format as listed below. 
-It is important to name the files exactly as shown. 
-The file format must be comma-separated-values (CSV) text. 
-Be sure the dimensions, rownames and column names match for all files. 
-On the left side of the panel, users need to provide a unique name and 
-brief description for the dataset while uploading.
+Under the **Upload data** panel users can upload their transcriptomics
+and proteomics data to the platform. The platform requires 4 data
+files as listed below: a data file containing counts/expression
+(counts.csv), a sample information file (samples.csv), a gene
+annotation file (genes.csv) and a file specifying the statistical
+comparisons as contrasts (contrasts.csv). It is important to name the
+files exactly as shown. The file format must be comma-separated-values
+(CSV) text.  Be sure the dimensions, rownames and column names match
+for all files.  On the left side of the panel, users need to provide a
+unique name and brief description for the dataset while uploading.
 
-
-:**counts.csv**: 	  Count/expression file with gene on rows, samples as columns.
-:**samples.csv**: 	Samples file with samples on rows, phenotypes as columns.
-:**genes.csv**: 	  Gene information file with genes on rows, gene info as columns.
-:**contrasts.csv**: Contrast file with samples on rows, conditions as columns.
+:**counts.csv**: Count/expression file with gene on rows, samples as columns.
+:**samples.csv**: Samples file with samples on rows, phenotypes as columns.
+:**genes.csv**: Gene information file with genes on rows, gene info as columns.
+:**contrasts.csv**: Contrast file with conditions on rows, contrasts as columns.
 
 .. figure:: ../modules/figures/psc1.3.png
     :align: center

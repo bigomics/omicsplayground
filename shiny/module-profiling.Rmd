@@ -943,7 +943,7 @@ monocle_plotTrajectory.RENDER <- reactive({
 
     g <- monocle3::plot_cells(cds,
                               cell_size = size1,
-                              group_label_size = 3,
+                              group_label_size = 5,
                               color_cells_by = pheno1,
                               label_groups_by_cluster=FALSE,
                               label_leaves=FALSE,
@@ -959,9 +959,10 @@ monocle_plotGene.RENDER <- reactive({
     require(monocle3)
     genes = "CD14"
     genes = input$monocle_plotgene
+    
     size1 <- ifelse( ncol(cds) < 100, 2, 1)
-    g <- monocle3::plot_cells(cds, genes=genes[1],
-                              cell_size=size1, 
+    g <- monocle3::plot_cells(cds, genes = genes[1],
+                              cell_size = size1, 
                               show_trajectory_graph=FALSE,
                               label_cell_groups=FALSE)
     g <- g + theme(plot.margin=unit(c(1,1,1,1)*0.5,"cm"))
@@ -990,7 +991,7 @@ monocle_plotTrajectory.MODULE <- plotModule(
     title = "Single-cell trajectory", label="b",
     info.text = "Single-cell trajectory analysis how cells choose between one of several possible end states. Reconstruction algorithms can robustly reveal branching trajectories, along with the genes that cells use to navigate these decisions.",
     options = monocle_plotTrajectory.opts,
-    pdf.width=8, pdf.height=8, res=85, plotlib="ggplot"
+    pdf.width=8, pdf.height=8, res=80, plotlib="ggplot"
 )
 output <- attachModule(output, monocle_plotTrajectory.MODULE)
 
@@ -1003,7 +1004,7 @@ monocle_plotGene.MODULE <- plotModule(
     title = "Gene expression", label="c",
     info.text = ".",
     options = monocle_plotGene.opts,
-    pdf.width=8, pdf.height=8, res=85, plotlib="ggplot"
+    pdf.width=8, pdf.height=8, res=80, plotlib="ggplot"
 )
 output <- attachModule(output, monocle_plotGene.MODULE)
 
