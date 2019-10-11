@@ -1,13 +1,13 @@
 .. _Home:
 
-Home
+Home Panel
 ================================================================================
 
 
 Selecting the dataset
 --------------------------------------------------------------------------------
 
-The platform starts running from the **Home** page. This module shows
+The platform starts running from the **Home** panel. This panel shows
 the available datasets within the platform. The table reports a brief
 description as well as the total number of samples, genes, gene sets
 (or pathways), corresponding phenotypes and the collection date.

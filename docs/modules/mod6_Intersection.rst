@@ -12,7 +12,7 @@ panel. Simultaneously, a Venn diagram with the number of intersecting
 genes between the profiles is plotted in **Venn diagram**
 panel. Details of intersecting genes are also reported in an
 interactive table. Users can check the pairwise correlations of the
-contrasts under the **contrast heatmap** panel. Alternatively, the
+contrasts under the **Contrast heatmap** panel. Alternatively, the
 **Connectivity Map (CMap)** shows the similarity of the contrasts
 profiles as a t-SNE plot.
 
@@ -24,14 +24,16 @@ in the input panel on the left. Users can set the ``Filter`` for
 filtering the features (i.e. genes). If ``<custom>`` is selected, an
 input area will show where the user can paste a custom list of genes.
 
-In EXPERT mode, users can also select the feature level for the
-analysis from the ``Level``: gene or geneset level.
-
 .. figure:: figures/psc7.0.png
     :align: center
     :width: 30%
 
+.. note::
 
+    EXPERT MODE ONLY:  users can also select the feature level for the
+    analysis from the ``Level``: gene or geneset level.
+    
+    
 Pairs
 --------------------------------------------------------------------------------
 For the selected contrasts, the **Pairs** panel provides pairwise
@@ -163,12 +165,12 @@ In addition, this panel generates a sorted barplot of cumulative
 fold-changes. Genes are ranked by cumulative fold-change across the
 selected comparisons and genes that are consistently up (or down)
 across all contrasts will be ranked higher. In the plot settings the
-user can also select to use *absolute foldchange' as ranking
+user can also select to use 'absolute foldchange' as ranking
 measure. This is desirable if the contrasts are not defined with a
 common reference.
 	    
 .. figure:: figures/psc7.6.1.png
     :align: center
-    :width: 100%    
+    :width: 75%    
 
 

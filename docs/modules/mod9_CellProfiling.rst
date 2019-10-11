@@ -1,13 +1,13 @@
 .. _scProfiling:
 
 
+Single-Cell Profiling
+================================================================================
+
 .. note::
 
     This module is supported in the EXPERT MODE only.
-
-
-Single-Cell Profiling
-================================================================================
+    
 The **Single-Cell Profiling** module is specifically developed for the
 analysis and visualization of single-cell datasets. The main
 applications are identification of immune cell types and
@@ -30,7 +30,6 @@ The Proportions panel visualizes the interrelationships between two categorical
 variables (so-called cross tabulation).
 Finally, for each combination of gene pairs, the platform can generate a 
 cytometry-like plot of samples under the **Cytoplot** panel.
-
 
 
 Input slider
