@@ -11,6 +11,7 @@ useShinyjs(rmd=TRUE)
 useSweetAlert()
 htmlOutput("curdata1")
 
+
 cat("<br><br><br><br><p>Dataset info:</p>")
 wellPanel( htmlOutput("dataset_info") )
 
@@ -105,7 +106,7 @@ cartoon_list <- list(
     ## list(slogan="Do-it-yourself. Yes you can.", img="bigomics-rockstar3.jpg"),
     list(slogan="Analyze with confidence. Be a rockstar", img="bigomics-rockstar3.jpg"),
     list(slogan="Fast track your Bioinformatics", img="selfservice-checkout2.png"),
-    list(slogan="Big Friendly Omics", img="big-friendly-omics.jpg"),
+    list(slogan="Big Friendly Omics", img="big-friendly-omics1.jpg"),
     list(slogan="Big Data meets Biology", img="bigdata-meets.png")
 )
 
@@ -167,7 +168,10 @@ observeEvent( input$action_beer, {
 
 
 observeEvent( input$action_play, {
-    dbg("play button action\n")
+
+    dbg("action_play:: play button action\n")
+    cat("action_play:: LOGIN_AUTHENTICATION=",LOGIN_AUTHENTICATION,"\n")
+
     startup_count <<- startup_count + 1    
     if(LOGIN_AUTHENTICATION!="none") {
         showLogin()  ## $
@@ -313,6 +317,8 @@ if(LOGIN_AUTHENTICATION=="password") {
             delay(2000, {output$register_warning <- renderText("")})
         }
     })
+} else {
+    showLogin <- function() {}
 }
 
 output$login_warning = renderText("")
@@ -569,6 +575,12 @@ andothers <- function(s, split=" ", n=8) {
     paste(paste(head(s1,n), collapse=" "),"(+",n2,"others)")
 }
 
+
+## Some 'global' reactive variables used in this file
+uploaded_files <- reactiveValues()
+uploadReady    <- reactiveVal(0)
+##shinyjs::disable("upload_compute")
+
 getPGXTable <- reactive({
     ## get table of data sets
     ##
@@ -678,8 +690,10 @@ upload_filetypes = c("text/csv","text/comma-separated-values,text/plain",
 
 upload_info = "<h4>User file upload</h4><p>Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. On the left, provide a unique name and description for the data set.<br><br>"
 
+upload_info2 = "<br><h4>Uploaded datasets</h4><p>Below are your uploaded datasets.<br><br>"
+
 fillRow(
-    flex=c(1,0.05,2.5),
+    flex=c(1,0.05,3),
     wellPanel(
         fileInput("upload_files", "Choose files",
                   multiple = TRUE, accept = upload_filetypes),
@@ -687,31 +701,35 @@ fillRow(
         selectInput("upload_datatype","Datatype:",
                     choices=c("RNA-seq","proteomics","scRNA-seq","multi-omics")),
         textAreaInput("upload_description", "Description:", value = NULL,
-                      rows=5, placeholder="Describe your data set"),
-        conditionalPanel(
-            "output.allFilesOK",
-            actionButton("upload_compute","Compute!",icon=icon("running"))
-        )
+                      rows=5, placeholder="Describe your data set (minimum 100 characters)"),
+        ##conditionalPanel(
+        ##"output.allFilesOK",
+        actionButton("upload_compute","Compute!",icon=icon("running"))
+        ##)
     ),br(),
     fillCol(
-        flex = c(NA,NA,1),
+        flex = c(NA,NA,NA,NA,1),
+        ##flex = c(NA,NA,1),
         p(HTML(upload_info)),
-        tableOutput("upload_contents"),
+        tableOutput("upload_status"),
+        p(HTML(upload_info2)),
+        DT::dataTableOutput("upload_datasetsDT"),
+        ##tableOutput("upload_datasets")
         br()
     )
 )
 
-uploaded_files <- reactiveValues()
-uploadReady    <- reactiveVal(0)
-
 output$allFilesOK <- reactive({    
     files.needed = c("counts.csv","samples.csv","genes.csv","contrasts.csv")
     all.there <- all(files.needed %in% names(uploaded_files))    
-    df <- uploadFileTable()
+    df <- uploadStatusTable()
     all.ok = all( df$status == "OK")
-    filled = ( input$upload_name!="" && input$upload_description!="")
+    filled = ( input$upload_name!="" && nchar(input$upload_description)>=100)
     ##all.ok    <- all(sapply(uploaded_files, function(x) x$status=="OK"))
-    (all.there && all.ok && filled)
+    ok <- (all.there && all.ok && filled)
+    if(ok) shinyjs::enable("upload_compute")
+    if(!ok) shinyjs::disable("upload_compute")
+    ok
 })
 outputOptions(output, "allFilesOK", suspendWhenHidden = FALSE) ## important!
 
@@ -766,7 +784,7 @@ observeEvent( input$upload_compute, {
     extra.methods = c("meta.go","deconv","infer","drugs")
     ##extra.methods = c("meta.go","infer")
 
-    if(1) {
+    if(0) {
         ## just for debugging...
         ##
         dbg("upload_compute :: dummy computation...")
@@ -860,7 +878,7 @@ observeEvent( input$upload_compute, {
 })
 
 
-uploadFileTable <- reactive({
+uploadStatusTable <- reactive({
     
     cat("<uploaded_files> name=",input$upload_files$name,"\n")
     cat("<uploaded_files> datapath=",input$upload_files$datapath,"\n")
@@ -966,9 +984,73 @@ uploadFileTable <- reactive({
     return(df)    
 })
 
+output$upload_status <- renderTable({
+    uploadStatusTable()
+})
 
-output$upload_contents <- renderTable({
-    uploadFileTable()
+
+uploadedDatasetsTable <- reactive({
+    df <- PGXINFO[1:2,]
+    df$description <- NULL
+    df$conditions <- NULL
+    df$organism <- NULL
+    df$nsets <- NULL
+    ##df$sharing <- "private/public"
+    
+    buttonInput <- function(FUN, len, id, ...) {
+        inputs <- character(len)
+        for (i in seq_len(len)) {
+            inputs[i] <- as.character(FUN(paste0(id, i), ...))
+        }
+        ##inputs = paste("<div style='vertical-align: bottom;'",inputs,"</div>")
+        ##inputs = paste("<div style='padding-top: 8px;'",inputs,"</div>")
+        inputs
+    }    
+    sharing <- buttonInput(
+        ##FUN = shinyWidgets::materialSwitch,
+        ##FUN = shinyWidgets::switchInput,
+        FUN = actionButton,
+        len = nrow(df),
+        id = 'uploaded_share_button_',
+        ##size = "mini",
+        width="80px",
+        inline=TRUE,
+        label = "publish",
+        icon = icon("universal-access"),
+        style='padding:4px; font-size:100%;'
+    )
+    delete <- buttonInput(
+        FUN = actionButton,
+        len = nrow(df),
+        id = 'uploaded_delete_button_',
+        label = "",
+        ##size = "mini",
+        width="50px",
+        inline=TRUE,
+        icon = icon("trash"),
+        style='padding:4px; font-size:100%; background-color: #B22222;'
+    )
+    df <- cbind(sharing, delete, df)
+    return(df)    
+})
+
+output$upload_datasetsDT <- DT::renderDataTable({
+    DT::datatable(
+            uploadedDatasetsTable(),
+            rownames=FALSE, escape = c(-1,-2),
+            options = list(
+                ## dom = 'T<"clear">lfrtip',
+                autoWidth = TRUE, ## scrollX=TRUE,
+                selection = 'none',
+                ordering = FALSE, paging=FALSE, searching=FALSE, info=FALSE,
+                columnDefs = list(list(width='5%', targets = list(0,1,4,5)))                
+            )
+        ) ##  %>%
+    ## DT::formatStyle(0, target='row', fontSize='12px', lineHeight='70%')
+})
+
+output$upload_datasets <- renderTable({
+    uploadedDatasetsTable()
 })
 
 

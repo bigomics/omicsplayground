@@ -1199,7 +1199,9 @@ enrich_gseatable.RENDER <- reactive({
     if(!input$gs_showqvalues) {
         rpt <- rpt[,grep("^q[.]",colnames(rpt),invert=TRUE)]
     }
-    
+
+    ## wrap with known links.
+    rpt$GS <- wrapHyperLink(rpt$GS, rownames(rpt))    
     selectmode = "single"
     selectmode
    
@@ -1209,7 +1211,7 @@ enrich_gseatable.RENDER <- reactive({
     ##rpt = format(rpt, digits=4)
     DT::datatable(rpt,
                   class = 'compact cell-border stripe hover',
-                  rownames=FALSE,
+                  rownames=FALSE, escape=-1,
                   ##extensions = c('Buttons','Scroller'),
                   extensions = c('Scroller'),                  
                   selection=list(mode=selectmode, target='row', selected=1),
@@ -1334,12 +1336,13 @@ enrich_fctable.RENDER <- reactive({
 
     ## get current filtered geneset and extract names of gene sets
     rpt = getGeneSetTable()
-    F1 <- F1[intersect(rownames(rpt),F1$geneset),,drop=FALSE]    
+    F1 <- F1[intersect(rownames(rpt),rownames(F1)),,drop=FALSE]    
+    F1$geneset <- wrapHyperLink(F1$geneset, rownames(F1))
     
-    DT::datatable( F1, rownames=FALSE,
+    DT::datatable( F1, rownames=FALSE, escape=-1,
                   class = 'compact cell-border stripe hover',                  
                   extensions = c('Scroller'),
-                  selection=list(mode='single', target='row', selected=c(1)),
+                  selection=list(mode='single', target='row', selected=1),
                   options=list(
                       dom = 'lfrtip', 
                       ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),

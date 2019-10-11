@@ -925,6 +925,7 @@ gx_related_genesets <- reactive({
     rho <- round(rho, digits=3)
     gset1 <- substring(gset,1,60)
     df <- data.frame(geneset=gset1, rho=rho, fx=fx, check.names=FALSE)
+    rownames(df) <- gset
     df <- df[order(-abs(df$fx)),]
     return(df)
 })
@@ -932,9 +933,12 @@ gx_related_genesets <- reactive({
 expr_gsettable.RENDER <- reactive({
     df <- gx_related_genesets()        
     if(is.null(df)) return(NULL)
+
+    df$geneset <- wrapHyperLink(df$geneset, rownames(df))
+    
     DT::datatable(df,
                   class = 'compact cell-border stripe',
-                  rownames=FALSE,
+                  rownames=FALSE, escape = c(-1,-2),
                   extensions = c('Scroller'),
                   options=list(
                       dom = 'lfrtip', 

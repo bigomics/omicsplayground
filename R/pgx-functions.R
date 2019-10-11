@@ -9,6 +9,55 @@ USER.GENETEST.METHODS <- NULL
 ##==========    Platform helper functions =====================================
 ##=============================================================================
 
+wrapHyperLink <- function(s, gs) {
+    
+    ## GEO/GSE accession
+    gs = as.character(gs)
+    s1 = s = as.character(s)
+    jj <- grep("GSE[0-9]",gs)
+    if(length(jj)) {
+        acc = sub("[-_ ].*","",gsub("^.*GSE","GSE",gs[jj]))
+        url = paste0("https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=",acc)
+        s1[jj] <- paste0("<a href='",url,"' target='_blank'>",s[jj],"</a>")
+    }
+
+    ## KEGG
+    jj <- grep("HSA-[0-9][0-9]|hsa[0-9][0-9]",gs)
+    if(length(jj)) {
+        id = sub("^.*HSA-|.*hsa","hsa",gs[jj])
+        id = sub("[-_ ].*","",id)
+        url = paste0("https://www.genome.jp/kegg-bin/show_pathway?map=",id,"&show_description=show")
+        s1[jj] <- paste0("<a href='",url,"' target='_blank'>",s[jj],"</a>")
+    }
+
+    ## Wikipathways
+    jj <- grep("_WP[0-9][0-9]",gs)
+    if(length(jj)) {
+        id = sub("^.*_WP","WP",gs[jj])
+        url = paste0("https://www.wikipathways.org/index.php/Pathway:",id)
+        s1[jj] <- paste0("<a href='",url,"' target='_blank'>",s[jj],"</a>")
+    }
+
+    ## MSigDB
+    jj <- grep("^H:|^C[1-8]:|HALLMARK",gs)
+    if(length(jj)) {
+        gs1 = sub("^.*:","",gs[jj])
+        url = paste0("http://software.broadinstitute.org/gsea/msigdb/cards/",gs1)
+        s1[jj] <- paste0("<a href='",url,"' target='_blank'>",s[jj],"</a>")
+    }
+    
+    ## GO reference
+    jj <- grep("\\(GO_.*\\)$",gs)
+    if(length(jj)) {
+        id = gsub("^.*\\(GO_|\\)$","",gs[jj])
+        url = paste0("http://amigo.geneontology.org/amigo/term/GO:",id)
+        s1[jj] <- paste0("<a href='",url,"' target='_blank'>",s[jj],"</a>")
+    }
+    
+    return(s1)
+}
+
+
 is.categorical <- function(x, max.ncat=20, min.ncat=2) {
     is.factor <- any(class(x) %in% c("factor","character"))
     is.factor

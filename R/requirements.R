@@ -68,6 +68,7 @@ install.pkg("nnls")
 install.pkg("glmnet")
 install.pkg("HiveR")
 install.pkg("grid", force=TRUE)
+install.pkg("wordcloud")
 
 ## problematics ones
 require(devtools)

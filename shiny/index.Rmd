@@ -20,10 +20,10 @@ library(shiny)
 library(rmarkdown)
 
 LOGIN_AUTHENTICATION = "none"
-LOGIN_AUTHENTICATION = "register"
+##LOGIN_AUTHENTICATION = "register"
 ##LOGIN_AUTHENTICATION = "password"
 CREDENTIALS <- list("test" = "202cb962ac59075b964b07152d234b70")
-CREDENTIALS <- list("test"="123")
+CREDENTIALS <- list("test" = "123")
 
 ##----------------------------------------------------------------------
 ## set folder path

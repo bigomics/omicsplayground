@@ -733,11 +733,14 @@ sig_overlapTable.RENDER <- reactive({
 
     df <- sig_getOverlapTable()
     req(df)    
+
+    df$geneset <- wrapHyperLink(df$geneset, df$geneset)
+
     numeric.cols <- which(sapply(df, is.numeric))
     numeric.cols <- intersect(c("p.fisher","q.fisher"),colnames(df))
     
     DT::datatable(df, class='compact cell-border stripe',
-                  rownames=FALSE,
+                  rownames=FALSE, escape = c(-1,-2),
                   extensions = c('Scroller'),
                   selection='none',
                   fillContainer=TRUE,
