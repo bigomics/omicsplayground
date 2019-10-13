@@ -40,7 +40,7 @@ RUN R -e "source('/tmp/requirements2.R')"
 # Install all Playground and some data under /omicsplayground
 #------------------------------------------------------------
 
-RUN mkdir -p /omicsplayground/datax
+RUN mkdir -p /omicsplayground/data
 COPY data /omicsplayground/data
 COPY shiny /omicsplayground/shiny
 COPY R /omicsplayground/R
