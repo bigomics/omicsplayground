@@ -1,4 +1,5 @@
-# Omics Playground: Explore Omics Data Freely
+Omics Playground: Explore Omics Data Freely
+================================================================================
 
 The Omics Playground is a user-friendly and interactive web-based platform 
 for the analysis and visualization of transcriptomics and proteomics data. 
@@ -15,18 +16,20 @@ composed of the online interface, which supports the real-time visualisation and
 interaction with users. The interface is subdivided into Basic and Expert modes
 in order to provide a customisable experience suited to each user???s background.
 
-.. figure:: figures/overview.png
+.. figure:: docs/figures/overview.png
     :align: center
     :width: 100%
 
 
 
-# Installation
+Installation
+================================================================================
 
 You can either run the platform from the source code, or download the docker image.
 
 
-## Run from source code
+Run from source code
+--------------------------------------------------------------------------------
 
 Download the latest release of the source code (includes more data files) by cloning
 the repository. Below, we explain the steps required to set up the platform from
@@ -51,7 +54,8 @@ the source code:
     R -e "rmarkdown::run()"
 
 
-## Run using the Docker file
+Run using the Docker file
+--------------------------------------------------------------------------------
 
 The docker file of the platform is available on `Docker hub 
 <https://www.docker.com/bigomics>`__.
