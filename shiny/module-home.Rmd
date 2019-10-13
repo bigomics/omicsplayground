@@ -127,7 +127,7 @@ if(file.exists(PGXINFO.FILE)) {
     rownames(info) <- NULL
     PGXINFO <- info  
 } else {
-    ## info file exists, check and update
+    ## no info file, scan and create
     cat("scanning PGX file info...\n")
     withProgress(message=">>> scanning available data sets...", value=0, {
         info <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=FALSE)
@@ -188,11 +188,11 @@ showStartupModal <- function(once=FALSE) {
             actionButton("action1","Read-the-docs", icon=icon("book"),
                          onclick="window.open('https://omicsplayground.readthedocs.io','_blank')"),
             actionButton("action2","Get the source", icon=icon("github"),
-                         onclick="window.open('https://github.com/bigomics/omicsplayground','_blank')"),
+                         onclick="window.open('https://github.com/bigomics','_blank')"),
             actionButton("action3","Docker image", icon=icon("docker"),
                          onclick="window.open('https://docker.com/bigomics','_blank')"),
             actionButton("action4","User forum", icon=icon("users"),
-                         onclick="window.open('https://groups.google.com/forum/#!forum/omicsplayground','_blank')"),
+                         onclick="window.open('https://groups.google.com/forum/#!forum/omics-playground','_blank')"),
             actionButton("action_beer","Buy us a beer!", icon=icon("beer")),
             ##actionButton("action5","Donate pizza", icon=icon("pizza-slice")),
             ##modalButton("Let's start!")
@@ -202,13 +202,6 @@ showStartupModal <- function(once=FALSE) {
     ##startup_count <<- startup_count + 1    
     dbg("showStartupModal done!\n")
 }
-
-##remotes::install_github("dreamRs/shinyparticles")
-##particles_json <- jsonlite::fromJSON(file="resources/particles.json")
-particles_json <- rjson::fromJSON(file="resources/particles.json")
-shinyparticles::particles(particles_json, target_id="modal-splash", element_id="particles")
-##shinyparticles::particles(particles_json)
-
 
 observeEvent( input$action_beer, {
     dbg("buy beer button action\n")
@@ -537,7 +530,7 @@ inputData <- reactive({
     
     pgx1 = file.path(PGX.DIR,pgx)
     if(file.exists(pgx1)) {
-        dbg("inputData:: loading",pgx,"\n")
+        dbg("inputData:: loading",pgx1,"\n")
         ##withProgress(message='loading...', value=0.8,
         load(pgx1,verbose=0)
         dbg("inputData:: finished loading\n")
