@@ -3,13 +3,14 @@
 !CHANGELOG
 !VERSION
 !LICENSE.md
+!NOTICE.md
+!README.rst
 !Dockerfile
 !docker/*
 !docs/*
 !ext/*
-!opt/*
 !lib/*
-!pgx/*
+!data/*
 !R/*
 !scripts/*
 !shiny/*

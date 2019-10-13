@@ -16,9 +16,8 @@ RUN apt-get update && apt-get install -y apt-utils \
 
 ## ???
 RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
-RUN mkdir -p /playground/ext/
-WORKDIR /playground
-WORKDIR /playground
+RUN mkdir -p /omicsplayground/ext/
+WORKDIR /omicsplayground
 
 ## Upload some packages/files that are needed to the image
 COPY ext/nclust1_1.9.4.tar.gz \
@@ -38,17 +37,17 @@ COPY R/requirements2.R /tmp
 RUN R -e "source('/tmp/requirements2.R')"  
 
 #------------------------------------------------------------
-# Install all Playground and some data under /playground
+# Install all Playground and some data under /omicsplayground
 #------------------------------------------------------------
 
-RUN mkdir -p /playground/pgx
-COPY pgx /playground/pgx
-COPY shiny /playground/shiny
-COPY R /playground/R
-COPY lib /playground/lib
-COPY scripts /playground/scripts
+RUN mkdir -p /omicsplayground/pgx
+COPY pgx /omicsplayground/pgx
+COPY shiny /omicsplayground/shiny
+COPY R /omicsplayground/R
+COPY lib /omicsplayground/lib
+COPY scripts /omicsplayground/scripts
 
-RUN chmod -R ugo+rwX /playground
+RUN chmod -R ugo+rwX /omicsplayground
 
 #------------------------------------------------------------
 # Copy further configuration files into the Docker image

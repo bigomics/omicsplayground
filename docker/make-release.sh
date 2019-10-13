@@ -2,7 +2,7 @@
 
 ## get version
 version=`cat VERSION`
-image=bigomics/playground
+image=bigomics/omicsplayground
 echo VERSION=$version
 
 ## update datasets info
