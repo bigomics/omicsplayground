@@ -187,6 +187,16 @@ code {
     z-index: 9999;
 }
 
+#social-buttons {
+    position: fixed;
+    font-weight: 300;
+    font-size: 32px;
+    color: #FFFFFF88;
+    bottom: 10px;
+    left: 10px;
+    z-index: 9999;
+}
+
 .radioGroupButtons {
     margin-top: -3px;
     margin-bottom: -3px;

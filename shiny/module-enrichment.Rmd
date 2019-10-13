@@ -10,7 +10,7 @@ on a geneset level, also called geneset enrichment analysis.
 
 
 ```{r}
-htmlOutput("curdata5", class="current-data")
+
 gs_infotext = paste("Similar to the differential gene expression analysis, users can perform differential expression analysis on a geneset level in this page, which is also referred as gene set enrichment (GSE) analysis. The platform has more than 50.000 genesets (or pathways) in total that are divided into 30 geneset collections such as ",a_Hallmark,", ",a_MSigDB,", ",a_KEGG," and ",a_GO,". Users have to specify which comparison they want to visually analyze employing a certain geneset collection. 
 
 <br><br>To ensure the statistical reliability, the platform performs Enrichment Analyses using multiple methods. The result from the statistical methods is displayed in <strong>Enrichment table</strong> panel. In the <strong>Top enriched</strong> panel, the top 10 differentially enriched geneses (pathways) are displayed. In the <strong>Plots</strong> panel, a volcano plot of genes contained in the selected geneset and a barplot of expressions per sample group are displayed. In the <strong>Compare</strong> panel, users can compare the differential expression status of that geneset for all other comparisons. Finally, volcano plots of genesets for all comparisons are displayed under the <strong>Volcano (all) </strong> tab. This allows users to have an overall picture across comparisons at the same time.
@@ -30,7 +30,6 @@ observeEvent( input$gs_info, {
         HTML(gs_infotext),
         easyClose = TRUE, size="l" ))
 })
-
 
 ## require(rintrojs)
 ## suppressMessages(introjsUI())

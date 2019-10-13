@@ -9,7 +9,6 @@ two conditions. Determine which genes are significantly downregulated
 or overexpressed in one of the groups.
 
 ```{r}
-htmlOutput("curdata4", class="current-data")
 tipify( actionLink("gx_info", "Info", icon = icon("info-circle")),
        "Show more information about this module.")
 
@@ -454,10 +453,10 @@ expr_plots_topfoldchange.RENDER <- reactive({
     par(mfrow=c(1,1), mar=c(4,4,2,2)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
     par(mfrow=c(1,1), mar=c(6,3,0,1), mgp=c(2,0.8,0), oma=c(1,0,0,0))
     nch <- max(nchar(names(fc.top)))
-    m1 <- ifelse(nch > 12, 15, 10)
-    m1 <- ifelse(nch > 30, 20, m1)
+    m1 <- ifelse(nch > 12, 10, 6)
+    m1 <- ifelse(nch > 30, 15, m1)
 
-    #par( mar=c(4,m1,2,0.5) )
+    ##par( mar=c(4,m1,2,0.5) )
     par( mar=c(3,m1-0.5,1,1) )
     cex1 <- 1.0
     nn <- sum(!is.na(fc.top))

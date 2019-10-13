@@ -12,7 +12,6 @@ signature.
 
 
 ```{r}
-htmlOutput("curdata8", class="current-data")
 ##----------------------------------------------------------------------
 ## More Info (pop up window)
 ##----------------------------------------------------------------------
@@ -34,7 +33,7 @@ observeEvent( input$sig_info, {
     showModal(modalDialog(
         title = HTML("<strong>Signature Analysis Module</strong>"),
         HTML(sig_infotext),
-        easyClose = TRUE, size="m"))
+        easyClose = TRUE, size="l"))
 })
 ```
 

@@ -9,7 +9,6 @@ Inputs {.sidebar data-width=250}
 lookup a gene, check the total counts, or view the data tables.
 
 ```{r}
-htmlOutput("curdata2")
 ##----------------------------------------------------------------------
 ## More Info (pop up window)
 ##----------------------------------------------------------------------
@@ -418,20 +417,10 @@ data_genePlots_tsne.RENDER <- reactive({
     grp <- factor(ngs$samples[samples,]$group)
     ngrp <- length(unique(grp))
 
-    dbg("[DataView] grp=",grp)
-    dbg("[DataView] length.grp=",length(grp))
-    dbg("[DataView] head.grp=",head(grp))
-
     if("cell.type" %in% colnames(ngs$samples) && ngrp>20) {
         grp <- ngs$samples[samples,]$cell.type
         dbg("[DataView] change to cell.type grp : head.grp=",head(grp))
     }
-
-    dbg("[DataView] grp=",grp)
-    dbg("[DataView] length.grp=",length(grp))
-    dbg("[DataView] head.grp=",head(grp))
-    dbg("[DataView] length.samples=",length(samples))
-    dbg("[DataView] dim(pos)=",dim(pos))
     
     cex2 = ifelse(nrow(pos) < 50, 1.5, 1.1)
     cex2 = ifelse(nrow(pos) > 200, 0.8, cex2)

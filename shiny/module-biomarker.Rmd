@@ -33,7 +33,7 @@ observeEvent( input$pdx_info, {
     showModal(modalDialog(
         title = HTML("<strong>Biomarker Module</strong>"),
         HTML(pdx_infotext),
-        easyClose = TRUE ))
+        easyClose = TRUE, size="l"))
 })
 ```
 

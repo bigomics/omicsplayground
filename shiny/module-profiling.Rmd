@@ -8,7 +8,6 @@ Inputs {.sidebar data-width=250}
 immune cell types, expressed genes and pathway activation.
 
 ```{r}
-htmlOutput("curdata9", class="current-data")
 ##----------------------------------------------------------------------
 ## More Info (pop up window)
 ##----------------------------------------------------------------------
@@ -32,7 +31,7 @@ observeEvent( input$pr_info, {
     showModal(modalDialog(
         title = HTML("<strong>Cell Profiling Module</strong>"),
         HTML(pr_infotext),
-        easyClose = TRUE ))
+        easyClose = TRUE, size="l" ))
 })
 ```
 

@@ -76,7 +76,8 @@ setMethod(add_col_annotation,
 ##splitx="cell.family";top.mode="specific";row_annot_width=0.03;ntop=50
 pgx.splitHeatmap <- function(ngs, splitx=NULL, top.mode="specific",
                              annot.pheno = NULL, row_annot_width=0.03,
-                             scale="row.center", ntop=50, colors=NULL )
+                             scale="row.center", ntop=50, colors=NULL,
+                             rowcex=rowcex, colcex=colcex)
 {    
     require(iheatmapr)
     
@@ -138,8 +139,8 @@ pgx.splitHeatmap <- function(ngs, splitx=NULL, top.mode="specific",
         xtips=genetips, ytips=sampletips,
         idx=idx, splitx=splitx,
         row_annot_width=row_annot_width,
-        scale=scale, colors=colors )
-
+        scale=scale, colors=colors,
+        rowcex=rowcex, colcex=colcex)
     return(plt)
 }
 
@@ -151,7 +152,8 @@ xtips=NULL;ytips=NULL;lmar=60
 pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL, 
                               xtips=NULL, ytips=NULL, row_clust=TRUE,
                               row_annot_width=0.03, scale="row.center",
-                              colors=NULL, label_size=11, lmar=60 )
+                              colors=NULL, lmar=60,
+                              rowcex=rowcex, colcex=colcex)
 {
     
     ## constants
@@ -268,8 +270,10 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
     ##plt
     length(xx)
     dim(X)
-    if(ncol(X)<50) {
-        plt <- plt %>% add_col_labels(side="bottom", size=0.15*ex) 
+    if(ncol(X)<100 && colcex>0) {
+        plt <- plt %>% add_col_labels(
+                           side="bottom", size=0.15*ex,
+                           font=list(size=11*colcex))
     }
     
     if(length(xx)>1) {
@@ -301,8 +305,11 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
                     colors = colors0, show_title=FALSE,
                     data.frame(annotF[colnames(x1),,drop=FALSE]))
             
-            if(ncol(X)<50) {
-                plt <- plt %>% add_col_labels(side="bottom", size=0.15*ex) 
+            if(ncol(X)<100 && colcex>0) {
+                plt <- plt %>%
+                    add_col_labels(side="bottom",
+                                   size=0.15*ex,
+                                   font=list(size=11*colcex))
             }
         }
 
@@ -316,7 +323,7 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
     }
 
     ## ----------- add gene/geneset names
-    if(label_size > 0) {
+    if(rowcex > 0) {
         
         gnames <- rownames(X)
         gnames <- gsub("[&].*[;]","",gnames) ## HTML special garbage...
@@ -327,7 +334,7 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
         
         maxlen <- max(sapply(gnames,nchar))
         w = ifelse(maxlen >= 20, 0.45, 0.20)
-        s1 <- ifelse(maxlen >= 20, 9, 11)
+        s1 <- ifelse(maxlen >= 20, 9, 11)*rowcex
         
         plt <- add_row_labels(
             plt, side="right", ticktext = gnames,

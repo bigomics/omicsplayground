@@ -270,6 +270,7 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
             p <- func()            
             p
         })
+        outputFunc = "plotly::plotlyOutput"
     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
         require(htmlwidgets)
         if(plotlib=="htmlwidget" && is.null(renderFunc)) {
@@ -278,10 +279,12 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
         if(plotlib=="scatterD3") {
             require(scatterD3)
             renderFunc="scatterD3::renderScatterD3"
+            outputFunc="scatterD3::scatterD3Output"
         }
         if(plotlib=="pairsD3") {
             require(pairsD3)
             renderFunc="pairsD3::renderPairsD3"
+            outputFunc="pairsD3::pairsD3Output"
         }
         renderFUN <- eval(parse(text=renderFunc))
         render <- renderFUN({
@@ -294,16 +297,19 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
             p <- func()
             return(p)
         })
+        outputFunc="visNetwork::visNetworkOutput"
     } else if(plotlib %in% c("ggplot","ggplot2")) {
         render <- renderPlot({
             plot(func())
         }, res=res)
+        outputFunc="plotOutput"
     } else if(plotlib == "iheatmapr") {
         require(iheatmapr)
         render <- renderIheatmap({
             p <- func()            
             p
         })
+        outputFunc="iheatmapr::iheatmaprOutput"
     } else {
         ##------------------------------------------------------------
         ## Base plotting
@@ -327,16 +333,16 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                 }
             ))
         }, res=res)
+        outputFunc="plotOutput"
     }
 
     ## render2 <- renderPlot({plot_array[[3]]()}, res=res)
     download.pdf = download.html = NULL
 
-
     ##============================================================
     ##=============== Download Handlers ==========================
     ##============================================================
-    plotlyAddSignature <- function(p) {
+    addSignaturePlotly <- function(p) {
         add_annotations(
             p,
             x = 1, y=-0.05,
@@ -358,7 +364,7 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                     if(plotlib=="plotly") {
                         cat("downloadHandler:: exporting plotly to PDF\n")
                         p <- func()
-                        if(ADDSIGNATURE) p = plotlyAddSignature(p)                             
+                        if(ADDSIGNATURE) p = addSignaturePlotly(p)                             
                         p$width = pdf.width * 100
                         p$height = pdf.height * 100
                         ##is.plotly3d <- class(p)[1]=="plotly" && all( c("x","y","z") %in% names(p$x$attrs[[1]]))
@@ -377,7 +383,7 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                     } else if(plotlib=="iheatmapr") {
                         cat("downloadHandler:: exporting iheatmapR to PDF\n")
                         p <- func()
-                        if(ADDSIGNATURE) p = plotlyAddSignature(p)                             
+                        if(ADDSIGNATURE) p = addSignaturePlotly(p)                             
                         save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PDFFILE)
                     } else if(plotlib=="visnetwork") {
                         cat("downloadHandler:: exporting visnetwork to PDF\n")
@@ -443,7 +449,40 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
             } ## content 
         ) ## PDF downloadHandler
     } ## end if do.pdf
-
+    
+    saveHTML <- function() {
+        ## unlink(HTMLFILE) ## do not remove!
+        if(plotlib == "plotly" ) {
+            cat("downloadHandler:: exporting plotly to HTML\n")
+            p <- func()
+            if(ADDSIGNATURE) p <- addSignaturePlotly(p)
+            htmlwidgets::saveWidget(p, HTMLFILE) 
+        } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
+            cat("downloadHandler:: exporting htmlwidget to HTML\n")
+            p <- func()
+            htmlwidgets::saveWidget(p, HTMLFILE) 
+        } else if(plotlib == "iheatmapr") {
+            p <- func()
+            save_iheatmap(p, HTMLFILE)
+        } else if(plotlib == "visnetwork") {
+            p <- func()
+            visSave(p, HTMLFILE)
+        } else if(plotlib %in% c("ggplot","ggplot2")) {
+            p <- func()
+            ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
+            saveWidget( ggplotly(p), file = HTMLFILE);
+        } else if(plotlib=="generic") {
+            cat("downloadHandler:: generic to HTMLFILE = ",HTMLFILE,"\n")
+            ## generic function should produce PDF inside plot func()
+            ##
+        } else if(plotlib=="base") {
+            write("<body>R base plots cannot export to HTML</body>",HTMLFILE)
+        } else { ## end base
+            write("<body>HTML export error</body>",file=HTMLFILE)
+        }
+        return(HTMLFILE)
+    }
+    
     if(do.html)  {
         download.html <- downloadHandler(
             filename = "plot.html",
@@ -453,7 +492,7 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                     if(plotlib == "plotly" ) {
                         cat("downloadHandler:: exporting plotly to HTML\n")
                         p <- func()
-                        if(ADDSIGNATURE) p <- plotlyAddSignature(p)
+                        if(ADDSIGNATURE) p <- addSignaturePlotly(p)
                         htmlwidgets::saveWidget(p, HTMLFILE) 
                     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
                         cat("downloadHandler:: exporting htmlwidget to HTML\n")
@@ -499,6 +538,7 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
         html = download.html,
         buttons = buttons,
         getCaption = caption.fun,
+        saveHTML = saveHTML,
         outputFunc = outputFunc
     )
     ## attr(module, "class") <- "ShinyModule"
