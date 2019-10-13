@@ -78,6 +78,7 @@ Follow the steps below to set up a running platform from the docker file:
     docker run --rm -p 80:3838 bigomics/playground. 
 3. Open ``localhost`` in your browser to run the platform.
 
+
 .. note::
 
     The docker image requires about 5GB hard disk space.
