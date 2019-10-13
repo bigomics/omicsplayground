@@ -15,7 +15,7 @@ for(script in all.scripts) {
 
     ## skip if already done
     pgx.file <- gsub("pgx-|[.]R$","",script)
-    if(any(grepl(pgx.file, dir("../pgx")))) next
+    if(any(grepl(pgx.file, dir("../data")))) next
 
     ## run script
     cat(">>>>>>>>>>>>>>>>>> processing",script,"<<<<<<<<<<<<<<<\n")

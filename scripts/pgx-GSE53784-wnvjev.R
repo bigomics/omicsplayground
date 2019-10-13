@@ -13,7 +13,7 @@ source("../R/ngs-functions.R")
 source("options.R")
 
 BATCH.CORRECT=1
-rda.file="../pgx/GSE53784-wnvjev.pgx"
+rda.file="../data/GSE53784-wnvjev.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 

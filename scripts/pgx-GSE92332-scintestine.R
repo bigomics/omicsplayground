@@ -29,7 +29,7 @@ COMPARE.CLUSTERS=FALSE
 ##COMPARE.CLUSTERS=TRUE
 FILTER.GENES=TRUE
 
-rda.file="../pgx/GSE92332-scintestine.pgx"
+rda.file="../data/GSE92332-scintestine.pgx"
 ##if(COMPARE.CLUSTERS) rda.file <- sub(".pgx$",paste0("-vsCLUST.pgx"),rda.file)
 ##if(DOWNSAMPLE>0) rda.file <- sub(".pgx$",paste0("-s",DOWNSAMPLE,".pgx"),rda.file)
 ##if(SMALL>0) rda.file <- sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)

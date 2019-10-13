@@ -28,7 +28,7 @@ COMPARE="group"
 COMPARE="clusters"
 COMPARE="pheno"
 
-rda.file="../pgx/GSE110496-dengue.pgx"
+rda.file="../data/GSE110496-dengue.pgx"
 ##rda.file = sub(".pgx$",paste0("-vs",COMPARE,".pgx"),rda.file)
 rda.file
 ##load(file=rda.file, verbose=1)

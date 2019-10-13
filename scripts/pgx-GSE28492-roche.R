@@ -21,7 +21,7 @@ source("../R/pgx-functions.R")
 
 source("options.R")
 
-rda.file="../pgx/GSE28492-roche.pgx"
+rda.file="../data/GSE28492-roche.pgx"
 ##if(SMALL>0) rda.file = sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
 rda.file
 

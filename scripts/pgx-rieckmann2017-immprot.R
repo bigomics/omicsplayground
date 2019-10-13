@@ -21,7 +21,7 @@ source("../R/pgx-functions.R")
 source("options.R")
 MAX.GENES
 
-rda.file="../pgx/rieckmann2017-immprot.pgx"
+rda.file="../data/rieckmann2017-immprot.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)

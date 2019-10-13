@@ -20,7 +20,7 @@ source("../R/xcr-graph.r")
 source("../R/pgx-functions.R")
 
 source("options.R")
-rda.file="../pgx/GSE88808-prostate.pgx"
+rda.file="../data/GSE88808-prostate.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
