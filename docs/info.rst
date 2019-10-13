@@ -4,7 +4,7 @@ If you have questions you can email `us <mailto:info@bigomics.ch>`__.
 
 If you've discovered a bug or have a feature request, you can create an issue
 on GitHub using the
-`Issue Tracker <https://github.com/IRB-Bioinformatics/OmicsPlayground/issues>`__.
+`Issue Tracker <https://github.com/bigomics/omicsplayground/issues>`__.
 
 Citation
 --------------------------------------------------------------------------------
