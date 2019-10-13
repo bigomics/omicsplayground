@@ -40,7 +40,7 @@ You can either run the platform from the source code, or download the docker ima
 Run from source code
 --------------------------------------------------------------------------------
 
-Download the latest release of the source code (includes more data files) by cloning
+Download the latest release of the source code by cloning
 the repository. Below, we explain the steps required to set up the platform from
 the source code:
 
