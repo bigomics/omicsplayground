@@ -20,23 +20,31 @@ the source code:
 1. Download or clone the GitHub repository to a location in your ``PATH``::
 
     git clone https://github.com/bigomics/omicsplayground.git
+    
 2. Be sure you have installed all necessary R packages by running the files in the ``/R`` folder::
 
-    R requirements.R
-    R requirements2.R
+    Rscript requirements.R
+    Rscript requirements2.R
+    
 3. Similarly, run the following command in the ``/scripts`` folder to build the datasets::
 
-    R run-all.R
+    Rscript run-all.R
 
 .. note::
 
     Building the datasets can vary from minutes to a couple of hours depending on their sizes.
+
 4. Change the current directory into the ``/shiny`` folder and execute the following command
    to run the platform::
 
-    R -e "rmarkdown::run()"
+     R -e "rmarkdown::run(shiny_args=list(launch.browser=TRUE))"
 
+   If you have Shiny Server installed you can create a link to the
+   shiny folder in the system-wide shiny-server apps folder or in your
+   ShinyApps user folder.
 
+   
+    
 Run using the Docker file
 --------------------------------------------------------------------------------
 The docker file of the platform is available on `Docker hub 
