@@ -33,9 +33,10 @@ personal use, you may enjoy our software for free under a
 Commercial/governmental
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can be released from the requirements of the license by purchasing
-a commercial license. Buying such a license is mandatory as soon as
-you develop commercial activities involving Omics Playground software. 
-These activities include: offering paid services to customers as an ASP,
-SaaS, professional consulting, or shipping Omics Playground with a
-closed source product.
+If you are not entitled to the non-commercial license, or you are a
+governmental agency, you must purchase a commercial license. Buying
+such a license is mandatory as soon as you develop commercial
+activities involving Omics Playground software. These activities
+include: offering paid services to customers as an ASP, SaaS,
+professional consulting, or shipping Omics Playground with a closed
+source product.

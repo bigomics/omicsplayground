@@ -3,17 +3,20 @@
 Installation
 ================================================================================
 
-The current version of the Omics Playground software is implemented in R 
-using the `Shiny <https://shiny.rstudio.com/>`__ web application framework. 
-You can either run the platform from the source code, or download the docker image.
+You can either run the platform from the source code, or download the
+docker image.
 
 
 Run from source code
 --------------------------------------------------------------------------------
 
+Omics Playground is implemented in R using the `Shiny Server
+<https://shiny.rstudio.com/>`__ web application framework. You will
+need R and Shiny Server installed to run Omics Playground.
+
 The source code of the platform is available on 
 `GitHub <https://github.com/bigomics/omicsplayground>`__. You can 
-download the latest release of the software (includes more data files) by cloning
+download the latest release of the software by cloning
 the repository. Below, we explain the steps required to set up the platform from
 the source code:
 
@@ -47,16 +50,18 @@ the source code:
     
 Run using the Docker file
 --------------------------------------------------------------------------------
-The docker file of the platform is available on `Docker hub 
-<https://www.docker.com/bigomics>`__.
+The docker file of the platform is available on `Docker Hub 
+<https://hub.docker.com/r/bigomics/omicsplayground>`__.
 Follow the steps below to set up a running platform from the docker file:
 
 1. Pull the docker image using the command::
 
     docker pull bigomics/omicsplayground
+    
 2. Then run the docker with::
 
-    docker run --rm -p 80:3838 bigomics/omicsplayground. 
+    docker run --rm -p 80:3838 bigomics/omicsplayground.
+    
 3. Open ``http://localhost`` in your browser to run the platform.
 
 .. note::
