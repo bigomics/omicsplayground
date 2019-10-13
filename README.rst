@@ -21,8 +21,8 @@ importing and preprocessing, which includes preparing the input data, filtering,
 normalising and precomputing of statistics for some analyses. The second part is
 composed of the online interface, which supports the real-time visualisation and
 interaction with users. The interface is subdivided into Basic and Expert modes
-in order to provide a customisable experience suited to each user's background.
-More detailed information and explanation of Omics Playground platform is 
+to provide a customisable experience suited to each user's background.
+More detailed information and feature explanation of Omics Playground is 
 available in the `online documentation <https://omicsplayground.readthedocs.io>`__.
 
 .. figure:: docs/figures/overview.png
