@@ -54,10 +54,41 @@ output$current_dataset <- renderText({ curDataSet() })
 
 
 ##-----------------------------------------------------------------------------
+## User interface
+##-----------------------------------------------------------------------------
+
+usermode_infotip = "Select BASIC or ADVANCED user mode. The basic mode should be sufficient for most users. The advanced mode presents extra visualization panels and enables more custom options. The advanced mode also has specialized analysis modules for single-cell RNA-seq, immune cell profiling and signature analysis."
+
+userlevels = c("basic","expert")
+## if(DEV.VERSION) userlevels = c("basic","expert","developer")
+br();
+##require(shinyWidgets)
+tipify(radioGroupButtons(
+    inputId = "main_usermode",
+    label = "User interface:",
+    choices = userlevels,
+    ## selected = "expert",
+    status = "warning",
+    checkIcon = list(yes = icon("ok", lib = "glyphicon"))),
+    usermode_infotip, placement="bottom", options = list(container="body")
+    )
+
+## br()
+## tipify(
+##     selectInput(
+##     "main_workflow","Workflow:",
+##     choices = c("Basic expression",
+##                 "Expert expression")
+##     ),
+##     usermode_infotip, placement="bottom", options = list(container="body")
+## )
+
+
+##-----------------------------------------------------------------------------
 ## Dataset info panel
 ##-----------------------------------------------------------------------------
 
-cat("<br><br><br><br><p>Dataset info:</p>")
+cat("<br><br><p>Dataset info:</p>")
 wellPanel( htmlOutput("dataset_info") )
 output$dataset_info <- renderText({
     inf <- selectedDataSetInfo()
@@ -146,10 +177,11 @@ showStartupModal <- function(once=FALSE) {
     dbg("showStartupModal: showing!\n")    
     showModal(modalDialog(
         id="modal-splash",
-        div(img(src = base64enc::dataURI(file="www/splash/bigomics-splash1.png"),
-                width="auto", height="500px"),
-            ##imageOutput("splash_image", width="auto", height="auto"),
+        div( 
+            img(src = base64enc::dataURI(file="www/splash/bigomics-splash1.png"), width="auto", height="500px"),
+            height="500px", 
             style="margin-left: -14px; margin-top: -4px;"),
+        ##br(),br(),br(),br(),br(),br(),br(),br(),
         ##title = HTML("<center><h2>",pgx.randomSlogan(),"</h2></center>"),
         ##title = HTML("<center><h2>Omics Playground",VERSION,"</h2></center>"),
         footer = tagList(
@@ -170,6 +202,13 @@ showStartupModal <- function(once=FALSE) {
     ##startup_count <<- startup_count + 1    
     dbg("showStartupModal done!\n")
 }
+
+##remotes::install_github("dreamRs/shinyparticles")
+##particles_json <- jsonlite::fromJSON(file="resources/particles.json")
+particles_json <- rjson::fromJSON(file="resources/particles.json")
+shinyparticles::particles(particles_json, target_id="modal-splash", element_id="particles")
+##shinyparticles::particles(particles_json)
+
 
 observeEvent( input$action_beer, {
     dbg("buy beer button action\n")
@@ -405,24 +444,6 @@ observeEvent( input$login_btn, {
 ##-----------------------------------------------------------------------------
 ## Select UI user level
 ##-----------------------------------------------------------------------------
-
-usermode_infotip = "Select BASIC or ADVANCED user mode. The basic mode should be sufficient for most users. The advanced mode presents extra visualization panels and enables more custom options. The advanced mode also has specialized analysis modules for single-cell RNA-seq, immune cell profiling and signature analysis."
-
-userlevels = c("basic","expert")
-## if(DEV.VERSION) userlevels = c("basic","expert","developer")
-br();br();br();
-##br();br();br();br();br();
-##require(shinyWidgets)
-tipify(radioGroupButtons(
-    inputId = "main_usermode",
-    label = "User interface:",
-    choices = userlevels,
-    ## selected = "expert",
-    status = "warning",
-    checkIcon = list(yes = icon("ok", lib = "glyphicon"))),
-    usermode_infotip, placement="top", options = list(container="body")
-    )
-
 
 BASIC_SECTIONS <- list(
     c('#navbar','#section-dataview'),
