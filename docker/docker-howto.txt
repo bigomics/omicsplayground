@@ -18,6 +18,9 @@ docker run -p 4000:3838 shinyapp
 ## +run in background, remove contained after use, give nice name
 docker run --rm -d -p 4000:3838 --name=app1 shinyapp
 
+## map local data folder to docker data folder
+docker run --rm -d -v /home/mydata:/omicsplayground/data -p 4000:3838 --name=app1 shinyapp
+
 ## To save your Docker Image as a tar-archive, you simply type into your terminal:
 docker save -o ~/shinyapp.tar shinyapp
 

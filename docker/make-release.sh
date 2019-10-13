@@ -22,15 +22,20 @@ echo docker build -t $image .
 ## +run in background, remove contained after use, give nice name
 echo docker run --rm -d -p 4000:3838 --name=play1 $image
 
+## enter bash in the container
 echo docker exec -it play1 /bin/bash
+
+## stop the container
 echo docker stop play1
 
-## To save your Docker Image as a tar-archive, you simply type into your terminal:
-echo docker save -o ~/playground_$version.tar $image
+## To save/load your Docker Image as a tar-archive
+echo docker save -o ~/omicsplayground_$version.tar $image
+echo docker load -i ~/omicsplayground_$version.tar
 
-## publish to Docker Hub
+## give version tag
 echo docker tag $image:latest $image:$version
 
+## publish to Docker Hub
 echo docker login
-echo docker push bigomics/playground:$version
-echo docker push bigomics/playground:latest
+echo docker push bigomics/omicsplayground:$version
+echo docker push bigomics/omicsplayground:latest
