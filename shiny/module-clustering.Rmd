@@ -296,7 +296,7 @@ Col {.tabset data-width=600}
 	
 ```{r}
 
-hm_splitmap_text = tagsub("Under the <strong>Heatmap</strong> tab, hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. <p>Under the plot configuration {{Settings}}, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: <ol><li>SD - features with the highest standard deviation across all the samples, </li><li>specific - features that are overexpressed in each phenotype class compared to the rest, or by </li><li>PCA - by principal components.<br></ol> <br><p>Users can also choose between 'relative' or 'absolute' expression scale. Under the {CexCol} and {CexRow} settings, it is also possible to adjust the cex for the column and row labels.")
+hm_splitmap_text = tagsub("Under the <strong>Heatmap</strong> panel, hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. <p>Under the plot configuration {{Settings}}, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: <ol><li>SD - features with the highest standard deviation across all the samples, </li><li>specific - features that are overexpressed in each phenotype class compared to the rest, or by </li><li>PCA - by principal components.<br></ol> <br><p>Users can also choose between 'relative' or 'absolute' expression scale. Under the {CexCol} and {CexRow} settings, it is also possible to adjust the cex for the column and row labels.")
 
 
 require(plotly)
@@ -358,9 +358,8 @@ hm1_splitmap.RENDER <- reactive({
     show_legend = TRUE
     if(input$hm_level=="geneset" || !is.null(splitx)) show_legend = FALSE
     annot$group = NULL  ## no group in annotation
-    show_colnames <- ("col" %in% input$hm_showlabel)
-    if(ncol(zx) > 100) show_colnames <- FALSE
-    
+    show_colnames <- ("column" %in% input$hm_showlabel)
+    if(ncol(zx) > 200) show_colnames <- FALSE ## never...    
     
     if(input$hm_level=="gene") {
         rownames(zx) = sub(".*:","",rownames(zx))
@@ -439,8 +438,10 @@ hm2_splitmap.RENDER <- reactive({
             annotF <- data.frame(as.list(annot),stringsAsFactors=TRUE)
             rownames(annotF) = rownames(annot)
 
-            cex=10
-            cex = ifelse("row" %in% input$hm_showlabel,10,0)
+            colcex <- as.numeric(input$hm_cexCol)
+            rowcex = as.numeric(input$hm_cexRow)
+            rowcex = ifelse("row" %in% input$hm_showlabel, rowcex, 0)
+            colcex = ifelse("column" %in% input$hm_showlabel, colcex, 0)
             
             tooltips = NULL
             if(input$hm_level=="gene") {
@@ -461,7 +462,8 @@ hm2_splitmap.RENDER <- reactive({
             plt <- pgx.splitHeatmapX(
                 X=X, annot=annotF, ytips=tooltips,
                 idx=idx, splitx=splitx, scale=scale,
-                row_annot_width=0.03, label_size=cex )
+                row_annot_width=0.03, rowcex=rowcex,
+                colcex=colcex )
         }
     )
     cat("<module-clustering:hm2_splitmap.RENDER> done\n")
@@ -479,10 +481,10 @@ hm_splitmap_opts = tagList(
            "Split the samples by a predetermined phenotype class (e.g. tissue or cell type).",
            placement="right",options = list(container = "body")),
     tipify( selectInput('hm_topmode','Top mode:',c("specific","sd","pca"), width='100%'),
-           "Specify the criteria for selecting features to be used in the heatmap clustering analysis.",
+           "Specify the criteria for selecting top features to be shown in the heatmap.",
            placement="right", options = list(container = "body")),
     tipify( radioButtons('hm_ntop','Top N:',c(50,500),inline=TRUE,selected=50),
-           "Select the number of top features to be used in the analysis.", placement="top"),
+           "Select the number of top features to be shown in the analysis.", placement="top"),
     tipify( radioButtons(
         'hm_scale', 'Scale:', choices=c('relative','absolute'), inline=TRUE),
         "Show relative (i.e. mean-centered) or absolute expression values.",
@@ -501,7 +503,7 @@ hm_splitmap_opts = tagList(
 
 
 hm_splitmap_caption <- reactive({
-    text1 = "Heatmap showing gene expression sorted by 2-way hierarchical clustering. Red corresponds to overexpression, blue to underexpression of the gene. At the same time, gene clusters are functionally annotated in the 'Annotate clusters' tab on the right."
+    text1 = "Heatmap showing gene expression sorted by 2-way hierarchical clustering. Red corresponds to overexpression, blue to underexpression of the gene. At the same time, gene clusters are functionally annotated in the 'Annotate clusters' panel on the right."
     return(text1)
 })
 
@@ -526,7 +528,7 @@ hm_splitmap_module <- plotModule(
     info.text = hm_splitmap_text,
     options = hm_splitmap_opts,
     pdf.width=10, pdf.height=8, info.width="350px",
-    title="Heatmap"
+    title="Clustered Heatmap"
 )
 output <- attachModule(output, hm_splitmap_module)
 
@@ -589,7 +591,7 @@ fillCol(
 ```{r warnings=FALSE, message=FALSE, fig.width=12, fig.height=8}
 
 hm_PCAplot_text = tagsub(paste0(' The <b>PCA/tSNE</b> panel visualizes unsupervised clustering obtained by the principal components analysis (',a_PCA,') or t-distributed stochastic embedding (',a_tSNE,') algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other. 
-<br><br>Users can customise the PCA/tSNE plot in the <i>Settings</i>, including the {color} and {shape} of points using a phenotype class, choose t-SNE or PCA layout, label the points, or display 2D and 3D visualisation of the PCA/tSNE plot.'))
+<br><br>Users can customise the PCA/tSNE plot in the plot settings, including the {color} and {shape} of points using a phenotype class, choose t-SNE or PCA layout, label the points, or display 2D and 3D visualisation of the PCA/tSNE plot.'))
 
 
 require(plotly)
@@ -611,7 +613,7 @@ observe({
     ##updateSelectInput(session, "hmpca.text", choices=var.types0, selected="group")
 })
 
-hm_GetClusterPositions <- reactive({
+hm_getClusterPositions <- reactive({
     ngs <- inputData()
     req(ngs)
     ##zx <- hm_filtered_matrix()
@@ -625,20 +627,24 @@ hm_GetClusterPositions <- reactive({
     gg = ngs$genes$gene_name[setdiff(jj,NA)]
     pp = filterProbes(ngs$genes, gg)
     zx = zx[intersect(pp,rownames(zx)),]
-    zx = head(zx[order(-apply(zx,1,sd)),],1000)
+    zx = head(zx[order(-apply(zx,1,sd)),],1000)  ## OK?
 
+    if("normalize" %in% input$hmpca_options) {
+        zx <- scale(t(scale(t(zx))))
+    }
+    pdim = 3
+    do3d <- ("3D" %in% input$hmpca_options)
+    pdim = c(2,3)[ 1 + 1*do3d]
+    
     pos = NULL
     if(input$hm_clustmethod=="tsne") {
         require(Rtsne)
-        tsne.dim = 3
-        do3d <- ("3D" %in% input$hmpca_options)
-        tsne.dim = c(2,3)[ 1 + 1*do3d]
         force.compute = FALSE
         ## force.compute = TRUE
-        if(!force.compute && tsne.dim==2 && !is.null(ngs$tsne2d) ) {
+        if(!force.compute && pdim==2 && !is.null(ngs$tsne2d) ) {
             cat("getClusterPositions:: 2D tSNE from object\n")
             pos <- ngs$tsne2d[colnames(zx),]
-        } else if(!force.compute && tsne.dim==3 && !is.null(ngs$tsne3d) ) {
+        } else if(!force.compute && pdim==3 && !is.null(ngs$tsne3d) ) {
             cat("getClusterPositions:: 3D tSNE from object\n")
             pos <- ngs$tsne3d[colnames(zx),]
         } else {
@@ -647,17 +653,30 @@ hm_GetClusterPositions <- reactive({
             perplexity = max(min(30,ncol(zx)/4),1)
             perplexity = min((ncol(zx)-1)/3, 30)
             perplexity
-            pos <- Rtsne( t(zx), dim=tsne.dim, check_duplicated=FALSE,
+            pos <- Rtsne( t(zx), dim=pdim, check_duplicated=FALSE,
                          num_threads=100, ##Y_init=Y_init,
                          perplexity=perplexity )$Y
         }
+    } else if(input$hm_clustmethod=="umap") {
+        ## install.packages("umap")
+        showNotification("computing UMAP...\n")
+        require(umap)
+        ngrp = length(unique(ngs$samples$group))
+        pos = umap(
+            t(zx),
+            ## n_neighbours = min(15,max(5,ncol(zx)/ngrp)),
+            n_components = pdim,
+            metric = "euclidean",
+            n_components = pdim
+        )$layout
+
     } else {
         cat("getClusterPositions:: computing PCA/SVD...\n")
         showNotification("computing PCA...\n")
         require(irlba)
         ##pos <- cmdscale(dist(t(zx)), k=3)
         ##pos = svd(zx,nv=3)$v
-        pos = irlba(zx,nv=3)$v
+        pos = irlba(zx, nv=pdim)$v
     }
 
     pos = scale(pos) ## scale
@@ -686,7 +705,7 @@ hm_PCAplotFUNC <- reactive({
     req(ngs)
     do3d = ("3D" %in% input$hmpca_options)
 
-    clust <- hm_GetClusterPositions()
+    clust <- hm_getClusterPositions()
     pos <- clust$pos
     sel <- rownames(pos)
     df <- cbind(pos, ngs$Y[sel,])
@@ -812,10 +831,10 @@ hm_PCAplot_opts = tagList(
             "Set the colors of the samples according to a given phenotype class.", placement="right", options = list(container = "body")),
     tipify( selectInput("hmpca.shapevar", "Shape:", choices=NULL, width='100%'),
             "Set the shapes of the samples according to a given phenotype class.", placement="right", options = list(container = "body")),
-    tipify( radioButtons('hm_clustmethod',"Layout:",c("tsne","pca"),inline=TRUE),
-            "Choose the output of the tSNE or PCA to visualise.", placement="top"),
-    tipify( checkboxGroupInput('hmpca_options',"Other:", choices=c('label','3D'), inline=TRUE),
-            "Display the labels of the samples in the plot. Select the 2D or 3D visualisation of the plot.", placement="bottom")
+    tipify( radioButtons('hm_clustmethod',"Layout:",c("tsne","pca","umap"),inline=TRUE),
+            "Choose the layout method for clustering to visualise.", placement="top"),
+    tipify( checkboxGroupInput('hmpca_options',"Other:", choices=c('label','3D','normalize'), inline=TRUE),
+            "Normalize matrix before calculating distances.", placement="bottom")
 )
 
 hm_PCAplot_module <- plotModule(
@@ -848,7 +867,6 @@ hm_PCAplot_caption <- reactive({
 > **PCA/tSNE plot.** `r renderUI(hm_PCAplot_caption())`
 
 
-
 Col {.tabset data-width=450}
 --------------------------------------------------------------------------------------
 
@@ -856,7 +874,7 @@ Col {.tabset data-width=450}
 
 ```{r warnings=FALSE, message=FALSE, fig.width=8, fig.height=4}
 
-clustannot_plots_text = paste0('The top features of the heatmap in the <code>Heatmap</code> panel are divided into gene (or gene set) clusters based on their expression profile patterns. For each cluster, the platform provides a functional annotation in the <code>Annotate cluster</code> panel by correlating annotation features from more than 42 published reference databases, including well-known databases such as ',a_MSigDB,', ',a_KEGG,' and ',a_GO,'. In the plot <i>Settings</i>, users can specify the level and reference set to be used under the <code>Reference level</code> and <code>Reference set</code> settings, respectively.')
+clustannot_plots_text = paste0('The top features of the heatmap in the <code>Heatmap</code> panel are divided into gene (or gene set) clusters based on their expression profile patterns. For each cluster, the platform provides a functional annotation in the <code>Annotate cluster</code> panel by correlating annotation features from more than 42 published reference databases, including well-known databases such as ',a_MSigDB,', ',a_KEGG,' and ',a_GO,'. In the plot settings, users can specify the level and reference set to be used under the <code>Reference level</code> and <code>Reference set</code> settings, respectively.')
 
 observe({
     ngs <- inputData()    
@@ -874,21 +892,23 @@ observe({
         if(length(j)>0) sel = ann.types[j[1]]
         ann.types <- sort(ann.types)
     } else {
-        ann.types=sel=""
+        ann.types =sel = "<all>"
     }
     updateSelectInput(session, "xann.refset", choices=ann.types, selected=sel)    
 })
 
 
-clustannot_correlation <- reactive({
+getClustannotCorrelation <- reactive({
 
-    dbg("<clustering:clustannot_plots> reacted\n")
+    dbg("<clustering:getClustannotCorrelation> reacted\n")
     
     ngs <- inputData()
     req(ngs)
     filt <- hm_filtered_matrix()
     req(filt)
 
+    dbg("<clustering:getClustannotCorrelation> 1\n")
+    
     zx  <- filt$mat
     idx <- filt$clust
     samples <- filt$samples
@@ -901,6 +921,8 @@ clustannot_correlation <- reactive({
     ##if(is.null(ann.refset)) return(NULL)
     req(input$xann.level, input$xann.refset)
 
+    dbg("<clustering:getClustannotCorrelation> 2\n")
+        
     ref = NULL
     ref = ngs$gsetX[,]    
     ref = ngs$X[,]    
@@ -921,13 +943,17 @@ clustannot_correlation <- reactive({
         ref = t(expandAnnotationMatrix(ngs$Y))
     }
     if(is.null(ref)) {
-        cat("<clustering:clustannot_plots> WARNING:: ref error\n")
+        cat("<clustering:getClustannotCorrelation> WARNING:: ref error\n")
         return(NULL)
     }
 
+    cat("<clustering:getClustannotCorrelation> dim(ref)=",dim(ref),"\n")
+    
     ##-----------  restrict to top??
     dim(ref)
-    ref = head(ref[order(-apply(ref,1,sd)),],1000)
+    if(nrow(ref)>1000) {
+        ref = head(ref[order(-apply(ref,1,sd)),],1000)
+    }
 
     ##-----------  get original data level
     X = ngs$X
@@ -935,8 +961,7 @@ clustannot_correlation <- reactive({
     
     ##----------- for each gene cluster compute average correlation
     i=idx[1]
-    idxx = setdiff(idx, c(NA," ","   "))
-    
+    idxx = setdiff(idx, c(NA," ","   "))    
     rho <- matrix(NA, nrow(ref), length(idxx))
     colnames(rho) <- idxx
     rownames(rho) <- rownames(ref)
@@ -949,15 +974,18 @@ clustannot_correlation <- reactive({
         if(input$hm_topmode=="pca") rr <- abs(rr)
         rho[,i] <- colMeans(rr,na.rm=TRUE)
     }
-    rho = round(rho, digits=3)
+
+    cat("<clustering:getClustannotCorrelation> dim(rho)=",dim(rho),"\n")
+    ##rho = round(rho, digits=3)
     dim(rho)
+
     return(rho)
 })
 
 
 clustannot_plots.RENDER <- reactive({
     require(RColorBrewer)
-    rho = clustannot_correlation()
+    rho = getClustannotCorrelation()
     ##if(is.null(rho)) return(NULL)
     req(rho)
     
@@ -991,7 +1019,7 @@ clustannot_plots.RENDER <- reactive({
 
 clustannot_plots.PLOTLY <- reactive({
     require(RColorBrewer)
-    rho = clustannot_correlation()
+    rho = getClustannotCorrelation()
     ##if(is.null(rho)) return(NULL)
     req(rho)
     
@@ -1078,9 +1106,11 @@ clustannot_plots.PLOTLY <- reactive({
 clustannot_plots_opts = tagList(
     tipify( selectInput("xann.level", "Reference level:",
                         choices=c("gene","geneset","phenotype"), selected="geneset", width='80%'),
-            "Select the level of an anotation analysis.", placement="left", options = list(container = "body")),
+           "Select the level of an anotation analysis.",
+           placement="left", options = list(container = "body")),
     tipify( selectInput("xann.refset", "Reference set:", choices="", width='80%'),
-            "Specify a reference set to be used in the annotation.", placement="left",options = list(container = "body"))
+            "Specify a reference set to be used in the annotation.",
+           placement="left",options = list(container = "body"))
 )
 
 clustannot_plots_module <- plotModule(
@@ -1097,8 +1127,14 @@ output <- attachModule(output, clustannot_plots_module)
 
     
 clustannot_table.RENDER <- reactive({
-    rho = clustannot_correlation()
+
+    cat("<clustering:clustannot_table.RENDER> called\n")
+    
+    rho = getClustannotCorrelation()
     if(is.null(rho)) return(NULL)
+
+    cat("<clustering:clustannot_table.RENDER> dim(rho)=",dim(rho),"\n")
+        
     ##rownames(rho) = shortstring(rownames(rho),50)
     rho.name = shortstring(sub(".*:","",rownames(rho)),60)
     ##rho = data.frame(cbind( name=rho.name, rho))
@@ -1107,6 +1143,9 @@ clustannot_table.RENDER <- reactive({
     if(input$xann.level=="geneset") {
         df$feature <- wrapHyperLink(df$feature, rownames(df))
     }
+
+    cat("<clustering:clustannot_table.RENDER> dim(df)=",dim(df),"\n")
+    
     DT::datatable(
             df, rownames=FALSE, escape = c(-1,-2),
             extensions = c('Buttons','Scroller'),
@@ -1122,7 +1161,7 @@ clustannot_table.RENDER <- reactive({
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
 })
 
-clustannot_table_info_text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the <i>Settings</i>."
+clustannot_table_info_text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
 
 clustannot_table_module <- tableModule(
     id = "clustannot_table", func = clustannot_table.RENDER,
@@ -1155,7 +1194,9 @@ clust_phenoplot.RENDER <- reactive({
     req(ngs)
     
     ## get t-SNE positions
-    pos = ngs$tsne2d
+    clust <- hm_getClusterPositions()
+    ##pos = ngs$tsne2d
+    pos = clust$pos
     Y <- ngs$Y[rownames(pos),,drop=FALSE]
     pheno = colnames(Y)    
 

@@ -1,3 +1,8 @@
+```{r}
+htmlOutput("current_dataset")
+```
+
+
 Home {data-orientation=rows}
 ===========================================================================================
 
@@ -9,13 +14,35 @@ Inputs {.sidebar data-width=320}
 
 useShinyjs(rmd=TRUE)
 useSweetAlert()
-htmlOutput("curdata1")
+##htmlOutput("curdata1")
 
+##-----------------------------------------------------------------------------
+## Row of social media buttons
+##-----------------------------------------------------------------------------
+social_buttons <- function() {
+    div(
+        id="social-buttons",
+        tagList(
+            ##actionButton("action1", "label", icon=icon("github")),
+            tipify( tags$a( href="https://omicsplayground.readthedocs.io", icon("book"), target="_blank"),
+                   "Read our online documentation at Read-the-docs", placement="top"),
+            tipify( tags$a( href="https://omicsplayground.readthedocs.io", icon("youtube"), target="_blank"),
+                   "Watch our tutorials on YouTube", placement="top"),
+            tipify( tags$a( href="https://github.com/bigomics", icon("github"), target="_blank"),
+                   "Get the source code or report a bug at GitHub", placement="top"),
+            tipify( tags$a( href="https://docker.com/bigomics", icon("docker"), target="_blank"),
+                   "Pull our docker from Docker", placement="top"),
+            tipify( tags$a( href="https://groups.google.com/forum/#!forum/omics-playground",
+                           icon("users"), target="_blank"),
+                   "Get help at our user forum", placement="top")            
+        )
+    )
+}
+social_buttons()
 
-cat("<br><br><br><br><p>Dataset info:</p>")
-wellPanel( htmlOutput("dataset_info") )
-
-##-------------------------------------
+##-----------------------------------------------------------------------------
+## Show current dataset on each page
+##-----------------------------------------------------------------------------
 curDataSet <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
@@ -23,22 +50,15 @@ curDataSet <- reactive({
     ##HTML("<h3>",ngs$name,"</h3>")
     HTML("<div class='current-data'>",ngs$name,"</div>")
 })
+output$current_dataset <- renderText({ curDataSet() })
 
-## We need to make multiple output copies because shiny does not allow
-## using the same render function twice
-for (i in 1:20) {
-    ## Need local so that each item gets its own number. Without it, the value
-    ## of i in the renderPlot() will be the same across all instances, because
-    ## of when the expression is evaluated.
-    local({
-        my_i <- i
-        txtname <- paste0("curdata", my_i)
-        output[[txtname]] <- renderText({ curDataSet() })
-    })
-}
 
-##-------------------------------------
+##-----------------------------------------------------------------------------
+## Dataset info panel
+##-----------------------------------------------------------------------------
 
+cat("<br><br><br><br><p>Dataset info:</p>")
+wellPanel( htmlOutput("dataset_info") )
 output$dataset_info <- renderText({
     inf <- selectedDataSetInfo()
     ## cat("length.inf=",length(inf),"\n")
@@ -50,9 +70,6 @@ output$dataset_info <- renderText({
     }
 })
 
-```
-
-```{r load-button, echo=FALSE, message=FALSE}
 
 ##-----------------------------------------------------------------------------
 ## UPDATING PGX FILE INFO
@@ -101,11 +118,12 @@ tipify(actionButton("loadbutton",label="Load dataset"),
 
 cartoon_list <- list(
     list(slogan="Visual analytics. See and understand", img="data-graph-wisdom.jpg"),
-    list(slogan="Fasten your seat belts. Hi-speed analytics", img="cartoon-speedup.jpg"),
+    list(slogan="Fasten your seat belts. Accelerated discovery", img="cartoon-speedup.jpg"),
     list(slogan="Analytics anywhere. Anytime.", img="cartoon-cloudservice.jpg"),
     ## list(slogan="Do-it-yourself. Yes you can.", img="bigomics-rockstar3.jpg"),
     list(slogan="Analyze with confidence. Be a rockstar", img="bigomics-rockstar3.jpg"),
     list(slogan="Fast track your Bioinformatics", img="selfservice-checkout2.png"),
+    list(slogan="Your analysis doesn't go for coffee breaks", img="gone-for-coffee.png"),
     list(slogan="Big Friendly Omics", img="big-friendly-omics1.jpg"),
     list(slogan="Big Data meets Biology", img="bigdata-meets.png")
 )
@@ -379,30 +397,32 @@ observeEvent( input$login_btn, {
     }
     ##hide("login_warning")
 })
-
-    
-
-
+   
 ##=================================================================================
 ##======================== USER LEVEL =============================================
 ##=================================================================================
+
+##-----------------------------------------------------------------------------
+## Select UI user level
+##-----------------------------------------------------------------------------
 
 usermode_infotip = "Select BASIC or ADVANCED user mode. The basic mode should be sufficient for most users. The advanced mode presents extra visualization panels and enables more custom options. The advanced mode also has specialized analysis modules for single-cell RNA-seq, immune cell profiling and signature analysis."
 
 userlevels = c("basic","expert")
 ## if(DEV.VERSION) userlevels = c("basic","expert","developer")
-
-br();br();br();br();br();
+br();br();br();
+##br();br();br();br();br();
 ##require(shinyWidgets)
 tipify(radioGroupButtons(
     inputId = "main_usermode",
-    label = "",
+    label = "User interface:",
     choices = userlevels,
     ## selected = "expert",
     status = "warning",
     checkIcon = list(yes = icon("ok", lib = "glyphicon"))),
     usermode_infotip, placement="top", options = list(container="body")
     )
+
 
 BASIC_SECTIONS <- list(
     c('#navbar','#section-dataview'),

@@ -11,7 +11,6 @@ connectivity mapping.
 
 
 ```{r}
-htmlOutput("curdata6", class="current-data")
 tipify( actionLink("fa_info", "Info", icon = icon("info-circle") ),
        "Show more information about this module.")
 
@@ -477,9 +476,9 @@ kegg_actmap.RENDER <- reactive({
                                      rownames(score2),ignore.case=TRUE))
     rownames(score2) <- substring(rownames(score2), 1, 40)
     ## heatmap(score2, scale="none", mar=c(8,20))
-    bmar <- 1 + pmax(50 - nrow(score2),0)*0.3
+    bmar <- 0 + pmax(50 - nrow(score2),0)*0.3
     corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
-             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,3,0) )
+             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,0,0) )
     
 })    
 
@@ -755,9 +754,9 @@ GO_actmap.RENDER <- reactive({
     ##score2 <- abs(score2)**0.8 * sign(score2)  ## fudging
     score2 <- sign(score2) * abs(score2/max(abs(score2)))**0.8   ## fudging
     ## heatmap(score2, scale="none", mar=c(8,20))
-    bmar <- 1 + pmax((50 - nrow(score2))*0.25,0)
+    bmar <- 0 + pmax((50 - nrow(score2))*0.25,0)
     corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
-             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,3,0) )
+             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,0,0) )
     ##dev.off()
     
 })    
@@ -1072,9 +1071,9 @@ dsea_actmap.RENDER <- reactive({
     score2 <- score
     if(input$fa_normalize) score2 <- t( t(score2) / apply(abs(score2),2,max)) 
     score2 <- sign(score2) * abs(score2/max(abs(score2)))**3   ## fudging
-    bmar <- 1 + pmax((50 - nrow(score2))*0.25,0)
+    bmar <- 0 + pmax((50 - nrow(score2))*0.25,0)
     corrplot( score2, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
-             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,3,0) )
+             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,0,0) )
     
 })    
 
@@ -1363,7 +1362,11 @@ enrich_wordtsne.PLOTLY <- reactive({
         pos = cbind( x=df$umap.x, y=df$umap.y)
     }
     
-    plt <- plot_ly(df) %>%
+    plt <- plot_ly(
+        df,
+        text = df$word, hoverinfo = 'text'
+        ## hovertemplate = paste0("%{text}<br>NES: %{NES}<extra> </extra>")
+        ) %>%
         add_markers(
             type="scatter",
             x = pos[,1], y = pos[,2], 
@@ -1631,7 +1634,7 @@ wordcloud_actmap.RENDER <- reactive({
     score2 <- sign(score2) * abs(score2/max(abs(score2)))**3   ## fudging
     bmar <- 0 + pmax((50 - nrow(score2))*0.25,0)
     corrplot( score2, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
-             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,1,0) )
+             tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,0,0) )
     
 })    
 

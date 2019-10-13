@@ -11,7 +11,6 @@ between two contrasts.
 
 
 ```{r}
-htmlOutput("curdata7", class="current-data")
 tipify( actionLink("cmp_info", "Info", icon = icon("info-circle")),
        "Show more information about this module")
 
