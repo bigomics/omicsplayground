@@ -1,6 +1,6 @@
 .. Omics Playground documentation master file
 
-.. include:: README.rst
+.. include:: general.rst
 
 .. toctree::
     :maxdepth: 2
