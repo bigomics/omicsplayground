@@ -1,7 +1,0 @@
-
-
-
-## replace strings in files
-sed 's/Examples/example/' file.txt
-for i in *.R; do sed 's/compute-test/compute-/' $i > out/$i; done
-
