@@ -27,7 +27,7 @@ available in the `online documentation <https://omicsplayground.readthedocs.io>`
 
 .. figure:: docs/figures/overview.png
     :align: center
-    :width: 100%
+    :width: 90%
 
 
 
