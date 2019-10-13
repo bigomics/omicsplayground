@@ -26,7 +26,7 @@ EXCLUDE.SAMPLES = NULL
 DOWNSAMPLE = 2000
 ##EXCLUDE.SAMPLES = c("20-Th1star-ut-r3")
 
-rda.file="../pgx/tenx-pbmc1k.pgx"
+rda.file="../data/tenx-pbmc1k.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)

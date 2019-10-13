@@ -28,7 +28,7 @@ BATCH.CORRECT=TRUE
 USER.GENETEST.METHODS = "*"
 USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
 
-rda.file="../pgx/GSE10846-dlbcl-12k.pgx"
+rda.file="../data/GSE10846-dlbcl-12k.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)

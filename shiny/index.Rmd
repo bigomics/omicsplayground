@@ -28,18 +28,18 @@ CREDENTIALS <- list("test" = "123")
 ##----------------------------------------------------------------------
 ## set folder path
 ##----------------------------------------------------------------------
-all.dir = c("R","lib","pgx")
+all.dir = c("R","lib","data")
 ROOT=NULL
 if(all(dir.exists(paste0("/playground",all.dir)))==TRUE) ROOT="/playground"
 if(all(dir.exists(paste0("../",all.dir)))==TRUE) ROOT=".."
 if(all(dir.exists(all.dir))==TRUE) ROOT="."
 ROOT
-if(is.null(ROOT)) stop("FATAL ERROR: could not fine R/lib/pgx directories")
+if(is.null(ROOT)) stop("FATAL ERROR: could not fine R/lib/data directories")
 cat("setting ROOT to",ROOT,"\n")
 
 RDIR = paste0(ROOT,"/R")
 FILES = paste0(ROOT,"/lib/")
-PGX.DIR = paste0(ROOT,"/pgx/")
+PGX.DIR = paste0(ROOT,"/data/")
 ##PGX.DIR = "../pgx-10k"
 
 cat("setting RDIR =",RDIR,"\n")
@@ -50,13 +50,13 @@ source(file.path(RDIR,"pgx-init.R"), local=TRUE)
 ##DEV.VERSION=TRUE
 
 if(0) {
-    load("../pgx/geiger2016-arginine.pgx")
-    load("../pgx/GSE10846-dlbcl.pgx")
-    load("../pgx/tcga-brca_pub-gx.pgx")
-    load("../pgx/rieckmann2017-immprot.pgx")
-    load("../pgx/GSE22886-immune.pgx")
-    load("../pgx/GSE28492-roche.pgx")    
-    load("../pgx/GSE32591-lupusnephritis.pgx")                
+    load("../data/geiger2016-arginine.pgx")
+    load("../data/GSE10846-dlbcl.pgx")
+    load("../data/tcga-brca_pub-gx.pgx")
+    load("../data/rieckmann2017-immprot.pgx")
+    load("../data/GSE22886-immune.pgx")
+    load("../data/GSE28492-roche.pgx")    
+    load("../data/GSE32591-lupusnephritis.pgx")                
     
     ngs <- pgx.initialize(ngs)    
 }

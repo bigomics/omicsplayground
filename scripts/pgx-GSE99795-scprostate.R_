@@ -26,7 +26,7 @@ COMPARE.CLUSTERS=FALSE
 COMPARE.CLUSTERS=TRUE
 ##DOWNSAMPLE=100
 
-rda.file="../pgx/GSE99795-scprostate.pgx"
+rda.file="../data/GSE99795-scprostate.pgx"
 if(COMPARE.CLUSTERS) rda.file <- sub(".pgx$",paste0("-vsCLUST.pgx"),rda.file)
 ##if(DOWNSAMPLE>0) rda.file <- sub(".pgx$",paste0("-s",DOWNSAMPLE,".pgx"),rda.file)
 ##if(SMALL>0) rda.file <- sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)

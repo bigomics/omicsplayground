@@ -19,7 +19,7 @@ source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 
 source("options.R")
-rda.file="../pgx/GSE22886-immune.pgx"
+rda.file="../data/GSE22886-immune.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)

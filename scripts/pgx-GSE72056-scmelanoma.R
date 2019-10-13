@@ -30,7 +30,7 @@ COMPARE="pheno"
 DOWNSAMPLE=0
 DOWNSAMPLE=150
 
-rda.file="../pgx/GSE72056-scmelanoma.pgx"
+rda.file="../data/GSE72056-scmelanoma.pgx"
 ##rda.file = sub(".pgx$",paste0("-vs",COMPARE,".pgx"),rda.file)
 rda.file
 

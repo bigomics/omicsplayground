@@ -23,7 +23,7 @@ source("../R/ngs-functions.R")
 source("options.R")
 
 BATCH.CORRECT=1
-rda.file="../pgx/GSE32591-lupusnephritis.pgx"
+rda.file="../data/GSE32591-lupusnephritis.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)

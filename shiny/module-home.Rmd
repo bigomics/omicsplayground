@@ -154,7 +154,7 @@ cartoon_list <- list(
     ## list(slogan="Do-it-yourself. Yes you can.", img="bigomics-rockstar3.jpg"),
     list(slogan="Analyze with confidence. Be a rockstar", img="bigomics-rockstar3.jpg"),
     list(slogan="Fast track your Bioinformatics", img="selfservice-checkout2.png"),
-    list(slogan="Your analysis doesn't go for coffee breaks", img="gone-for-coffee.png"),
+    list(slogan="Your analysis doesn't take coffee breaks", img="gone-for-coffee.png"),
     list(slogan="Big Friendly Omics", img="big-friendly-omics1.jpg"),
     list(slogan="Big Data meets Biology", img="bigdata-meets.png")
 )
@@ -839,7 +839,7 @@ observeEvent( input$upload_compute, {
         ## just for debugging...
         ##
         dbg("upload_compute :: dummy computation...")
-        load("../pgx/geiger2016-arginine.pgx")
+        load("../data/geiger2016-arginine.pgx")
     } else {
 
         dbg("upload_compute :: ***** real computation *****")
@@ -899,7 +899,7 @@ observeEvent( input$upload_compute, {
     ## -------------------- save PGX file/object
     ## ngs <- ngs.initizalize(ngs)
     ##uploaded_files[["ngs"]] <- ngs
-    fn = paste0("../pgx/",ngs.name,".pgx")
+    fn = paste0(PGX.DIR,ngs.name,".pgx")
     fn
     dbg("upload_compute :: saving PGX to",fn)
     save(ngs, file=fn)  ## would clash with multiple users...
