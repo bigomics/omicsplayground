@@ -188,11 +188,11 @@ showStartupModal <- function(once=FALSE) {
             actionButton("action1","Read-the-docs", icon=icon("book"),
                          onclick="window.open('https://omicsplayground.readthedocs.io','_blank')"),
             actionButton("action2","Get the source", icon=icon("github"),
-                         onclick="window.open('https://github.com/bigomics','_blank')"),
+                         onclick="window.open('https://github.com/bigomics/omicsplayground','_blank')"),
             actionButton("action3","Docker image", icon=icon("docker"),
                          onclick="window.open('https://docker.com/bigomics','_blank')"),
             actionButton("action4","User forum", icon=icon("users"),
-                         onclick="window.open('https://groups.google.com/forum/#!forum/omics-playground','_blank')"),
+                         onclick="window.open('https://groups.google.com/forum/#!forum/omicsplayground','_blank')"),
             actionButton("action_beer","Buy us a beer!", icon=icon("beer")),
             ##actionButton("action5","Donate pizza", icon=icon("pizza-slice")),
             ##modalButton("Let's start!")
