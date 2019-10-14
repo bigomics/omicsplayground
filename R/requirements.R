@@ -9,6 +9,7 @@ require(devtools)
 require(BiocManager)
 
 LOCAL.PKGS <- sub("_.*","",dir("../ext/packages"))
+LOCAL.PKGS
 
 install.pkg <- function(pkg, force=FALSE) {
     if(force || !pkg %in% installed.packages()) {
@@ -72,15 +73,6 @@ pkg.used <- sort(unique(pkg.used))
 
 install.pkgs( setdiff(pkg.used, c(PKG.MANUAL,BIG.NOTUSED)) )
 
-##---------------------------------------------------------------------
-## make sure local ones are preferred
-##---------------------------------------------------------------------
-
-install.packages("../ext/packages/nclust1_1.9.4.tar.gz",repos=NULL,type="source")
-install.packages("../ext/packages/nclust_2.1.1.tar.gz",repos=NULL,type="source")
-
-install.pkg("KEGGREST", force=TRUE)
-install.packages("../ext/packages/pathview_1.16.7.tar.gz",repos=NULL,type="source")  ## old version
 
 ##---------------------------------------------------------------------
 ## reinstall problematics ones
@@ -100,10 +92,6 @@ install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbas
 ##install.packages("../ext/packges/fpc_2.1-10.tar.gz",repos=NULL,type="source")
 install_version("fpc", version="2.1-10", repos="http://cran.us.r-project.org")
 
-
-install.pkgs(c("HiddenMarkov","coin","rjags","future","argsparse"))
-install.pkg("infercnv", force=TRUE)
-
 ##---------------------------------------------------------------------
 ## Install latest from GITHUB
 ##---------------------------------------------------------------------
@@ -122,6 +110,18 @@ devtools::install_github('adymimos/rWordCloud')
 install.pkgs(c("ROCR", "mixtools", "lars", "ica", "tsne", "ape", "dtw", "SDMTools", "ggridges", "fitdistrplus", "doSNOW","diffusionMap","fpc","hdf5r"))
 install.pkgs(c('cowplot', 'Rtsne', 'pbapply', 'RANN', 'dplyr', 'irlba', 'plotly', 'Hmisc', 'tidyr', 'metap', 'lmtest', 'png', 'reticulate', 'RcppEigen', 'RcppProgress'))
 install.packages("../ext/packages/Seurat_v2.3.3.tar.gz",repos=NULL,type="source")  ## old version
+
+##---------------------------------------------------------------------
+## make sure local ones are preferred
+##---------------------------------------------------------------------
+install.packages("../ext/packages/nclust1_1.9.4.tar.gz",repos=NULL,type="source")
+install.packages("../ext/packages/nclust_2.1.1.tar.gz",repos=NULL,type="source")
+
+install.pkgs(c("HiddenMarkov","coin","rjags","future","argsparse"))
+install.packages("../ext/packages/infercnv_1.1.3mod.tar.gz",repos=NULL,type="source")  ## old version
+
+install.pkg("KEGGREST", force=TRUE)
+install.packages("../ext/packages/pathview_1.16.7.tar.gz",repos=NULL,type="source")  ## old version
 
 ##---------------------------------------------------------------------
 ## remove unneccessary big packages...
