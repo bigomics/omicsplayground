@@ -854,13 +854,15 @@ observeEvent( input$upload_compute, {
     samples   <- data.frame(uploaded_files[["samples.csv"]],stringsAsFactors=FALSE)
     genes     <- data.frame(uploaded_files[["genes.csv"]],stringsAsFactors=FALSE)
     contrasts <- as.matrix(uploaded_files[["contrasts.csv"]])
-    
-    gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
-    gset.methods = c("fisher","gsva","fgsea")
 
-    gx.methods   = c("ttest.welch","ttest.rank","trend.limma")
-    gset.methods = c("fisher","gsva","fgsea")
-    ##gset.methods = c("fisher","gsva","spearman")
+    if(ncol(counts) > 1000) {
+        gx.methods   = c("ttest.welch","trend.limma","edger.qlf")
+        gset.methods = c("fisher","gsva","fgsea")
+    } else {     
+        gx.methods   = c("trend.limma","edger.qlf","deseq2.wald")
+        gset.methods = c("fisher","gsva","fgsea")
+        ##gset.methods = c("fisher","gsva","spearman")
+    }
 
     extra.methods = c("meta.go","deconv","infer","drugs")
     ##extra.methods = c("meta.go","infer")
