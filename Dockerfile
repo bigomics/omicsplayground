@@ -23,8 +23,8 @@ WORKDIR /omicsplayground
 COPY ext/packages/*.tar.gz ext/packages/
 
 # Install R packages that are required
-COPY R/requirements.R /tmp
-RUN R -e "source('/tmp/requirements.R')"
+COPY R /omicsplayground/R
+RUN R -e "setwd('R');source('requirements.R')"
 
 #------------------------------------------------------------
 # Install all Playground and some data under /omicsplayground
@@ -33,7 +33,6 @@ RUN R -e "source('/tmp/requirements.R')"
 RUN mkdir -p /omicsplayground/data
 COPY data /omicsplayground/data
 COPY shiny /omicsplayground/shiny
-COPY R /omicsplayground/R
 COPY lib /omicsplayground/lib
 COPY scripts /omicsplayground/scripts
 
