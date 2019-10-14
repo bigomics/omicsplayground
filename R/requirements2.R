@@ -25,6 +25,14 @@ remove.pkg <- function(pkg) {
 ##---------------------------------------------------------------------
 ## CRAN packages (problematic ones...)
 ##---------------------------------------------------------------------
+
+
+
+
+
+##---------------------------------------------------------------------
+## CRAN packages (problematic ones...)
+##---------------------------------------------------------------------
 install.pkg("Rgraphviz", force=TRUE)
 install.pkg("fastcluster", force=TRUE)
 install.pkg("mygene", force=TRUE)
@@ -34,7 +42,6 @@ remove.pkg("fpc")
 install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
 ##install.packages("ext/fpc_2.1-10.tar.gz",repos=NULL,type="source")
 install_version("fpc", version="2.1-10", repos="http://cran.us.r-project.org")
-
 
 ##---------------------------------------------------------------------
 ## Bioconductor packages
@@ -78,5 +85,5 @@ remove.pkg("EnsDb.Hsapiens.v86")
 remove.pkg("org.Mm.eg.db")
 remove.pkg("tximportData")
 remove.pkg("TxDb.Hsapiens.UCSC.hg19.knownGene")
-
+remove.pkg("TxDb.Mmusculus.UCSC.mm10.knownGene")
 

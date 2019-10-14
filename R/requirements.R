@@ -1,19 +1,25 @@
 ##source("http://bioconductor.org/biocLite.R")
 
-install.packages("devtools")
-install.packages("BiocManager")
+if(!require(devtools)) install.packages("devtools")
+if(!require(BiocManager)) install.packages("BiocManager")
 require(devtools)
 require(BiocManager)
 
+LOCAL.PKGS <- sub("_.*","",dir("../ext/packages"))
+
 install.pkg <- function(pkg, force=FALSE) {
-    if(force && (pkg %in% installed.packages())) {
-        ##remove.packages(pkg)
-    }
     if(force || !pkg %in% installed.packages()) {
-        require(BiocManager)
-        cat("installing",pkg,"\n")
-        BiocManager::install(pkg, dependencies=NA,
-                             ask=FALSE, update=FALSE)
+
+        if(pkg %in% LOCAL.PKGS) {
+            ## if available locally, we install local version
+            cat("installing",pkg,"from local folder...\n")
+            pkg1 = dir("../ext/packages",pattern=paste0(pkg,"_"),full.name=TRUE)
+            try( install.packages(pkg1,repos=NULL,type="source") )
+        } else {
+            cat("installing",pkg,"from CRAN/BioConductor...\n")
+            try( BiocManager::install(pkg, dependencies=NA,
+                                      ask=FALSE, update=FALSE))
+        }
     } else {
         cat("package",pkg,"already installed\n")
     }
@@ -27,93 +33,70 @@ remove.pkg <- function(pkg) {
 
 
 ##---------------------------------------------------------------------
-## CRAN packages
+## Automatically scan all used packages and install
+##---------------------------------------------------------------------
+pkg.used <- system("grep 'library(\\|require(' *R *r ../shiny/*Rmd", intern=TRUE)
+pkg.used <- gsub(".*require\\(|.*library\\(","",pkg.used)
+pkg.used <- gsub("\"|\\).*","",pkg.used)
+pkg.used <- grep("[ ]|quietly",pkg.used,value=TRUE,invert=TRUE)
+pkg.used <- sort(unique(pkg.used))
+
+pkg.notyet <- c("gputools","Seurat","EPIC","PCSF","NNLM","iTALK",
+                "fpc","grid","gridGraphics","Rgraphviz",
+                "fastcluster","mygene","diptest")
+
+install.pkgs( setdiff(pkg.used, pkg.notyet) )
+
+##---------------------------------------------------------------------
+## reinstall problematics ones
 ##---------------------------------------------------------------------
 
-install.pkg("Rcpp")
-install.pkg("XML")
-install.pkg("shinyjs")
-install.pkg("flexdashboard")
-install.pkg("shinyWidgets")
-install.pkg("kableExtra")
-
-install.pkg("DT")
-install.pkg("htmltools")
-install.pkg("reticulate")
-install.pkg("tidyverse")
-install.pkg("qlcMatrix")
-install.pkg("ComplexHeatmap")
-install.pkg("gmodels")
-install.pkg("matrixTests")
-install.pkg("metap")
-install.pkg("plotly")
-install.pkg("dplyr")
-install.pkg("scatterD3")
-install.pkg("threejs")
-install.pkg("locfit")
-install.pkg("irlba")
-install.pkg("ggpubr")
-install.pkg("corrplot")
-install.pkg("corpora")  ## for fisher.pval
-install.pkg("xgboost")
-install.pkg("randomForest")
-install.pkg("randomForestSRC")
-install.pkg("rpart")
-install.pkg("rpart.plot")
-install.pkg("party")
-install.pkg("partykit")
-##install.pkg("NNLM", force=TRUE)
-install_version("NNLM", version="0.4.1", repos="http://cran.us.r-project.org")
-install.pkg("nnls")
-install.pkg("glmnet")
-install.pkg("HiveR")
-install.pkg("grid", force=TRUE)
-install.pkg("wordcloud")
-
-## problematics ones
 require(devtools)
-##install.pkg("fpc", force=TRUE)
 ##install.packages("gridGraphics")
+install.pkg("grid", force=TRUE)
 install_version("gridGraphics", version="0.3-0", repos="http://cran.us.r-project.org")
 install.pkg("fastcluster", force=TRUE)
 
 ##---------------------------------------------------------------------
-## Bioconductor packages
+## CRAN packages (problematic ones...)
 ##---------------------------------------------------------------------
-install.pkg("preprocessCore")
-install.pkg("BiocParallel")
-install.pkg("BiocGenerics")
-install.pkg("org.Hs.eg.db")
-install.pkg("org.Mm.eg.db")
-install.pkg("EnsDb.Hsapiens.v86")
-##install.pkg("EnsDb.Mmusculus.v79")
-install.pkg("hgu133plus2.db")
-
-install.pkg("GSVA")
-install.pkg("fgsea")
-install.pkg("sva")
-install.pkg("tximport")
-install.pkg("limma")
-install.pkg("edgeR")
-install.pkg("DESeq2")
-install.pkg("ensembldb")
-install.pkg("pcaMethods")
-install.pkg("DeconRNASeq")
-install.pkg("GenomicRanges")
-install.pkg("IRanges")
-install.pkg("KEGG.db")
-install.pkg("KEGGREST")
-install.pkg("KEGGgraph")
-install.pkg("GO.db")
-##install.pkg("pathview")
-install.pkg("ComICS")
-install.pkg("scran")
-install.pkg("SingleCellExperiment")
-install.pkg("SummarizedExperiment")
-install.pkg("diffusionMap")
-install.pkg("topGO")
-install.pkg("mixOmics")
-install.pkg("mygene")
 install.pkg("Rgraphviz", force=TRUE)
+install.pkg("fastcluster", force=TRUE)
+install.pkg("mygene", force=TRUE)
+install.pkg("diptest", force=TRUE)
 
+remove.pkg("fpc")
+install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
+##install.packages("ext/fpc_2.1-10.tar.gz",repos=NULL,type="source")
+install_version("fpc", version="2.1-10", repos="http://cran.us.r-project.org")
+
+##---------------------------------------------------------------------
+## Install latest from GITHUB
+##---------------------------------------------------------------------
+devtools::install_github("GfellerLab/EPIC", build_vignettes=TRUE)
+devtools::install_github("IOR-Bioinformatics/PCSF",
+                         ## repos=BiocInstaller::biocinstallRepos(),
+                         dependencies=TRUE, type="source", force=TRUE)
+devtools::install_github('linxihui/NNLM')
+devtools::install_github("Coolgenome/iTALK", build_vignettes = TRUE)
+## devtools::install_github("broadinstitute/infercnv", ref="RELEASE_3_9")
+
+##---------------------------------------------------------------------
+## Seurat needs to be downgraded and dependencies to installed...
+##---------------------------------------------------------------------
+install.pkgs(c("ROCR", "mixtools", "lars", "ica", "tsne", "ape", "dtw", "SDMTools", "ggridges", "fitdistrplus", "doSNOW","diffusionMap","fpc","hdf5r"))
+install.pkgs(c('cowplot', 'Rtsne', 'pbapply', 'RANN', 'dplyr', 'irlba', 'plotly', 'Hmisc', 'tidyr', 'metap', 'lmtest', 'png', 'reticulate', 'RcppEigen', 'RcppProgress'))
+install.packages("ext/Seurat_v2.3.3.tar.gz",repos=NULL,type="source")  ## old version
+
+##---------------------------------------------------------------------
+## remove unneccessary big packages...
+##---------------------------------------------------------------------
+remove.pkg("reactome.db")  ## >2GB!!
+remove.pkg("BH")  ## boost header files
+remove.pkg("RNAseqData.HNRNPC.bam.chr14")
+remove.pkg("EnsDb.Hsapiens.v86")
+remove.pkg("org.Mm.eg.db")
+remove.pkg("tximportData")
+remove.pkg("TxDb.Hsapiens.UCSC.hg19.knownGene")
+remove.pkg("TxDb.Mmusculus.UCSC.mm10.knownGene")
 
