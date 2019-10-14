@@ -3,6 +3,19 @@
 Home Panel
 ================================================================================
 
+Selecting the user interface mode
+--------------------------------------------------------------------------------
+
+User can select BASIC or ADVANCED user mode. The basic mode should be
+sufficient for most users. The advanced mode presents extra
+visualization panels and enables more custom options. The advanced
+mode also has specialized analysis modules for single-cell RNA-seq,
+immune cell profiling and signature analysis."
+
+.. figure:: figures/psc1.1.png
+    :align: center
+    :width: 20%
+    
 
 Selecting the dataset
 --------------------------------------------------------------------------------
@@ -12,7 +25,7 @@ the available datasets within the platform. The table reports a brief
 description as well as the total number of samples, genes, gene sets
 (or pathways), corresponding phenotypes and the collection date.
 
-.. figure:: figures/psc1.1.png
+.. figure:: figures/psc1.2.png
     :align: center
     :width: 100%
 
@@ -24,19 +37,6 @@ by clicking the ``Load dataset`` button.
     :align: center
     :width: 40%
 
-
-Selecting the user mode
---------------------------------------------------------------------------------
-
-User can select BASIC or ADVANCED user mode. The basic mode should be
-sufficient for most users. The advanced mode presents extra
-visualization panels and enables more custom options. The advanced
-mode also has specialized analysis modules for single-cell RNA-seq,
-immune cell profiling and signature analysis."
-
-.. figure:: figures/psc1.2.png
-    :align: center
-    :width: 20%
 
 
 Upload data
@@ -63,8 +63,12 @@ unique name and brief description for the dataset while uploading.
     :width: 100%
 
 
-External links
+Useful links
 --------------------------------------------------------------------------------
+In the bottom-left corner of the **Home panel**, users can find some useful
+links about the Omics Playground, including the online documentation at 
+Read-the-docs, video tutorials on YouTube, the source code at GitHub, the docker 
+file at Docker hub, and the user forum to get some help.
 
 .. figure:: ../modules/figures/psc1.4.png
     :align: center
