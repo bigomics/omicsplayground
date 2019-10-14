@@ -53,13 +53,8 @@ install.pkgs( setdiff(pkg.used, pkg.notyet) )
 
 require(devtools)
 ##install.packages("gridGraphics")
-install.pkg("grid", force=TRUE)
+##install.pkg("grid", force=TRUE)
 install_version("gridGraphics", version="0.3-0", repos="http://cran.us.r-project.org")
-install.pkg("fastcluster", force=TRUE)
-
-##---------------------------------------------------------------------
-## CRAN packages (problematic ones...)
-##---------------------------------------------------------------------
 install.pkg("Rgraphviz", force=TRUE)
 install.pkg("fastcluster", force=TRUE)
 install.pkg("mygene", force=TRUE)

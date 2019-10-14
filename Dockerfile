@@ -16,25 +16,15 @@ RUN apt-get update && apt-get install -y apt-utils \
 
 ## ???
 RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
-RUN mkdir -p /omicsplayground/ext/
+RUN mkdir -p /omicsplayground/ext/packages/
 WORKDIR /omicsplayground
 
 ## Upload some packages/files that are needed to the image
-COPY ext/nclust1_1.9.4.tar.gz \
-     ext/nclust_2.1.1.tar.gz \
-     ext/fpc_2.1-10.tar.gz \
-     ext/pathview_1.16.7.tar.gz \
-     ext/FARDEEP_1.0.1.tar.gz \
-     ext/Seurat_v2.3.3.tar.gz \
-     ext/
+COPY ext/packages/*.tar.gz ext/packages/
 
 # Install R packages that are required
 COPY R/requirements.R /tmp
 RUN R -e "source('/tmp/requirements.R')"
-
-# Some extra packages so we can use docker cache
-COPY R/requirements2.R /tmp
-RUN R -e "source('/tmp/requirements2.R')"  
 
 #------------------------------------------------------------
 # Install all Playground and some data under /omicsplayground
