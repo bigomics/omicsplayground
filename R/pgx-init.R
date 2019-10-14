@@ -10,6 +10,7 @@ library(rmarkdown)
 library(shinycssloaders)
 library(dragulaR)
 library(shinyWidgets)
+library(shinydashboard)
 
 library(scatterD3)
 library(fastcluster)

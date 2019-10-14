@@ -307,7 +307,6 @@ getHSGeneInfo <- function(eg, as.link=TRUE) {
     return(info)
 }
 
-
 ##skipifexists=FALSE;perplexity=30;sv.rank=-1;prefix="C";gamma=1;numclust=-1
 ##perplexity=3
 pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=30,
@@ -320,7 +319,6 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=30,
         return(ngs)
     }
     cat(">>> Computing t-SNE on samples...\n")
-    ##require(Rtsne.multicore)
     require(Rtsne)
     require(irlba)
     ##set.seed(0)
