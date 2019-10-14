@@ -1,10 +1,16 @@
 Contact
 --------------------------------------------------------------------------------
-If you have questions you can email `us <mailto:info@bigomics.ch>`__.
 
-If you've discovered a bug or have a feature request, you can create an issue
-on GitHub using the
-`Issue Tracker <https://github.com/bigomics/omicsplayground/issues>`__.
+If you have further questions about how to use Omics Playground,
+please ask your question in our user forum at `Google Groups
+<https://groups.google.com/d/forum/omicsplayground>`__.
+
+If you've discovered a bug, have a feature request, or want to
+contribute to the code, please go to our  
+`GitHub repository <https://github.com/bigomics/omicsplayground>`__.
+
+If you have other questions you can email `us <mailto:info@bigomics.ch>`__.
+
 
 Citation
 --------------------------------------------------------------------------------
