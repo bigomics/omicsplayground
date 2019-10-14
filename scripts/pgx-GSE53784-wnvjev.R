@@ -33,13 +33,13 @@ if(PROCESS.DATA) {
     library(hgu133plus2.db)
 
     ## load series and platform data from GEO
-    gset <- getGEO("GSE53784", GSEMatrix=TRUE, getGPL=TRUE)
-    attr(gset, "names")
-    X <- exprs(gset[[1]])
+    geo <- getGEO("GSE53784", GSEMatrix=TRUE, getGPL=TRUE)
+    attr(geo, "names")
+    X <- exprs(geo[[1]])
     head(X)
     
     ## extract GENE symbol from featureData
-    gene.annot <- featureData(gset[[1]])@data$gene
+    gene.annot <- featureData(geo[[1]])@data$gene
     gene.symbol <- gsub("[ ]","",sapply(strsplit(gene.annot,split="//"),"[",2))
     gene.symbol[10000 + 1:10]    
     jj <- which( !gene.symbol %in% c(NA,"-",""))
@@ -47,7 +47,7 @@ if(PROCESS.DATA) {
     rownames(X) <- gene.symbol[jj]
     
     ## Get sample info
-    pdata = pData(gset)
+    pdata = pData(geo[[1]])
     head(pdata)
     tt <- as.character(pdata$title)
     treatment <- sub("_.*","",tt)
