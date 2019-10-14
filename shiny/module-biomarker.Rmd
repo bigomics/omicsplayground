@@ -10,7 +10,6 @@ be multiple categories (classes) or patient survival data.
 
 
 ```{r}
-htmlOutput("curdata10", class="current-data")
 ##----------------------------------------------------------------------
 ## More Info (pop up window)
 ##----------------------------------------------------------------------

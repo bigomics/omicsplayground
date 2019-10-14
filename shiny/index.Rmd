@@ -67,12 +67,8 @@ MODULES <- c(
     'module-biomarker.Rmd',
     'module-profiling.Rmd')
 
-DEV_MODULES <- c(
-    'module-correlation.Rmd',
-    'module-batchcorrection.Rmd',
-    'module-system.Rmd')
+##MODULES <- c('module-home.Rmd')
 
-##if(DEV.VERSION) MODULES <- c(MODULES, DEV_MODULES)
 cat("setting MODULES =",MODULES,"\n")
 
 ```
