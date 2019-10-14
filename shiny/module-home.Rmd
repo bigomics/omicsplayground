@@ -15,6 +15,15 @@ Inputs {.sidebar data-width=320}
 useShinyjs(rmd=TRUE)
 useSweetAlert()
 ##htmlOutput("curdata1")
+SHOWSPLASH=TRUE
+SHOWSPLASH=FALSE
+
+LOGIN_AUTHENTICATION = "none"
+##LOGIN_AUTHENTICATION = "register"
+##LOGIN_AUTHENTICATION = "password"
+CREDENTIALS <- list("test" = "202cb962ac59075b964b07152d234b70")
+CREDENTIALS <- list("test" = "123")
+
 
 ##-----------------------------------------------------------------------------
 ## Row of social media buttons
@@ -575,38 +584,51 @@ inputData <- reactive({
 
 ```
 
-Row {data-height=100}
+Row {data-height=120}
 -----------------------------------------------------------------------
 
 ```{r}
+require(shinydashboard)
 ## useShinydashboard()
-## fillRow(
-##     renderValueBox( valueBox(value=200,"subtitle")),
-##     renderPlot(plot(sin),height=200),
-##     renderPlot(plot(sin),height=200)
-## )
+fillRow(
+    height=115,
+    ##renderValueBox( div(valueBox(value=200, "subtitle", color="light-blue"), class="value-box")),
+    div( uiOutput("valuebox1"), style="height: 110px; background-color: rgba(39, 128, 227, 0.7); margin-right: 4px;"),
+    div( uiOutput("valuebox2"), style="height: 110px; background-color: rgba(39, 128, 227, 0.7); margin-left: 4px; margin-right: 4px;"),
+    div( uiOutput("valuebox3"), style="height: 110px; background-color: rgba(39, 128, 227, 0.7); margin-left: 4px; margin-right: 10px;")
+)
+
+vbox <- function(value, label) {
+    box(h1(value, style="font-weight: 800; color: white; padding-top: 15px; margin-top: 0px; margin-left: 20px;"),
+        h5(label, style="color: white; margin-left: 20px;"), width="100%")    
+}
+
+output$valuebox1 <- renderUI({
+    pgx <- getPGXTable()
+    req(pgx)
+    ndatasets <- nrow(pgx)
+    vbox( ndatasets, "data sets")     
+})
+output$valuebox2 <- renderUI({
+    pgx <- getPGXTable()
+    req(pgx)
+    nsamples <- sum(pgx$nsamples)
+    vbox( nsamples, "number of samples")     
+})
+output$valuebox3 <- renderUI({
+    pgx <- getPGXTable()
+    req(pgx)
+    nvalues <- sum(pgx$nsamples * (pgx$ngenes + pgx$nsets))
+    nvalues1 <- format(nvalues, nsmall=, big.mark=" ")  # 1,000.6
+    vbox( nvalues1, "data points") 
+})
+
+br();br();
+
 ```
 
-### {.value-box}
 
-```{r}
-flexdashboard::valueBox(value=nrow(PGXINFO), "data sets")
-```
-
-### {.value-box}
-
-```{r}
-flexdashboard::valueBox( value=sum(PGXINFO$nsamples,na.rm=TRUE), "samples")
-```
-
-### {.value-box}
-
-```{r}
-flexdashboard::valueBox( value=nrow(GSETxGENE), "gene sets")
-```
-
-
-Row {.tabset data-height=800}
+Row {.tabset data-height=850}
 -----------------------------------------------------------------------
 
 ### Data sets
@@ -648,7 +670,7 @@ getPGXTable <- reactive({
     
     ##kk = unique(c("dataset","datatype","organism","description",colnames(df)))
     kk = unique(c("dataset","datatype","organism","description","nsamples",
-                  "ngenes","conditions","date"))
+                  "ngenes","nsets","conditions","date"))
     kk = intersect(kk,colnames(df))
     df = df[,kk]
 
@@ -667,7 +689,7 @@ pgxTable.RENDER <- reactive({
     df <- getPGXTable()
     req(df)
     
-    showStartupModal(once=TRUE)
+    if(SHOWSPLASH) showStartupModal(once=TRUE)
 
     has.upload = uploadReady() ## reactive
     
@@ -676,6 +698,8 @@ pgxTable.RENDER <- reactive({
     df$conditions  <- gsub("[,]"," ",df$conditions)
     df$conditions  <- sapply(as.character(df$conditions), andothers, split=" ", n=5)
     df$description <- shortstring(as.character(df$description),200)
+    df$nsets <- NULL
+    df$date  <- NULL
     
     DT::datatable( df,
                   class = 'compact cell-border stripe hover',
