@@ -3,6 +3,9 @@
 Outline
 ================================================================================
 
+User interface
+--------------------------------------------------------------------------------
+
 We subdivided the platform interface into Basic and Expert modes. 
 Basic mode includes fundamental analysis modules such as :ref:`Home`, 
 :ref:`DataView`, :ref:`Clustering`, :ref:`DEGs`, :ref:`DESGs`,
@@ -18,13 +21,27 @@ experience suited to each user’s background.
     :width: 100%
 
 
+Figure & table tags
+--------------------------------------------------------------------------------
+
 Each figure or table on the platform is assigned the following interactive buttons, where:
 
-* Info: Provides detailed information about the figure or table.
-* Settings: Users can specify additional settings if applicable.
-* Download: Downloads the figure as PDF or the table in CSV format.
+* Info: provides detailed information about the figure or table.
+* Settings: users can specify additional settings if applicable.
+* Download: downloads the figure as PDF or the table in CSV format.
 
 
 .. figure:: figures/isd.png
     :align: center
     :width: 60%
+
+
+Glossary
+--------------------------------------------------------------------------------
+* Signature: a list of selected genes (e.g. by significance or fold change),
+* Condition: a specific phenotype group (e.g. tumor or control),
+* Contrast: a comparison between two conditions (e.g. tumor vs control),
+* Profile: a vector of fold changes corresponding to a certain comparison,
+* Hierarchical clustering: a method that groups similar samples into groups,
+* Q value: an FDR-adjusted p value,
+* Biomarker: a biological feature (gene, mutation or gene set) that characterises a specific physiological or pathological process.
