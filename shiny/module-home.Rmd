@@ -305,7 +305,7 @@ if(LOGIN_AUTHENTICATION=="password") {
             id = "login",
             title = "Login to Omics Playground",
             tagList( 
-                textInput("login_username", "E-mail:"),
+                textInput("login_username", "Username:"),
                 passwordInput("login_password", "Password:"),
                 div( actionButton("login_btn", "Login"),
                     style="text-align: center;")
@@ -436,7 +436,7 @@ observeEvent( input$login_btn, {
     } else {
         ##show("login_warning")
         if(LOGIN_AUTHENTICATION=="password") {
-            output$login_warning = renderText("Invalid user name or password")
+            output$login_warning = renderText("Invalid username or password")
         }
         if(LOGIN_AUTHENTICATION=="register") {
             output$login_warning = renderText("Email address not recognized")
