@@ -63,12 +63,12 @@ From FASTQ files
 
 .. _`from FASTQ files`:
 
-Provided FASTQ files, users can employ the script from 
-`GREP2 <https://www.rdocumentation.org/packages/GREP2/versions/1.0.2>`_ package
-to obtain gene counts through quality control, trimming, quantification of gene
-abundance, and so on.
-Afterwards, they can refer to the examples in the next 
-section for preparing an input data from the gene counts.
+Starting from FASTQ files, we recommend using the `GREP2
+<https://www.rdocumentation.org/packages/GREP2/versions/1.0.2>`_
+package to obtain gene counts through quality control, trimming,
+quantification of gene abundance, and so on.  Afterwards, the user can
+refer to the examples in the next section for preparing an input data
+from the gene counts.
 
 
 From gene counts table or GEO repository
