@@ -16,7 +16,7 @@ useShinyjs(rmd=TRUE)
 useSweetAlert()
 ##htmlOutput("curdata1")
 SHOWSPLASH=TRUE
-SHOWSPLASH=FALSE
+## SHOWSPLASH=FALSE
 
 LOGIN_AUTHENTICATION = "none"
 ##LOGIN_AUTHENTICATION = "register"
