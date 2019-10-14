@@ -26,7 +26,7 @@ social_buttons <- function() {
             ##actionButton("action1", "label", icon=icon("github")),
             tipify( tags$a( href="https://omicsplayground.readthedocs.io", icon("book"), target="_blank"),
                    "Read our online documentation at Read-the-docs", placement="top"),
-            tipify( tags$a( href="https://omicsplayground.readthedocs.io", icon("youtube"), target="_blank"),
+            tipify( tags$a( href="https://youtube.com", icon("youtube"), target="_blank"),
                    "Watch our tutorials on YouTube", placement="top"),
             tipify( tags$a( href="https://github.com/bigomics/omicsplayground",
                            icon("github"), target="_blank"),
@@ -191,21 +191,20 @@ showStartupModal <- function(once=FALSE) {
             style="height: 500px; width: 100%; background-color: #2c81e2;"
             ##height="500px", style="margin-left: -14px; margin-top: -4px;"
         ),
-        ##br(),br(),br(),br(),br(),br(),br(),br(),
-        ##title = HTML("<center><h2>",pgx.randomSlogan(),"</h2></center>"),
-        ##title = HTML("<center><h2>Omics Playground",VERSION,"</h2></center>"),
         footer = tagList(
             actionButton("action1","Read-the-docs", icon=icon("book"),
                          onclick="window.open('https://omicsplayground.readthedocs.io','_blank')"),
-            actionButton("action2","Get the source", icon=icon("github"),
-                         onclick="window.open('https://github.com/bigomics','_blank')"),
-            actionButton("action3","Docker image", icon=icon("docker"),
-                         onclick="window.open('https://docker.com/bigomics','_blank')"),
-            actionButton("action4","User forum", icon=icon("users"),
-                         onclick="window.open('https://groups.google.com/forum/#!forum/omics-playground','_blank')"),
-            actionButton("action_beer","Buy us a beer!", icon=icon("beer")),
-            ##actionButton("action5","Donate pizza", icon=icon("pizza-slice")),
-            ##modalButton("Let's start!")
+            actionButton("action2","Watch the tutorial", icon=icon("youtube"),
+                         onclick="window.open('https://youtube.com','_blank')"),
+            actionButton("action3","Get the source", icon=icon("github"),
+                         onclick="window.open('https://github.com/bigomics/omicsplayground','_blank')"),
+            actionButton("action4","Docker image", icon=icon("docker"),
+                         onclick="window.open('https://hub.docker.com/r/bigomics/omicsplayground','_blank')"),
+            actionButton("action5","User forum", icon=icon("users"),
+                         onclick="window.open('https://groups.google.com/d/forum/omicsplayground','_blank')"),
+            ## actionButton("action_beer","Buy us a beer!", icon=icon("beer")),
+            ## actionButton("action5","Donate pizza", icon=icon("pizza-slice")),
+            ## modalButton("Let's start!")
             actionButton("action_play", "Let's play!")
         ),
         shinyparticles::particles(config=particlesjs.conf, target_id = "particles-target", timeout = 1000),
@@ -581,26 +580,28 @@ inputData <- reactive({
 Row 
 -----------------------------------------------------------------------
 
-### {.value-box}
-
 ```{r}
-require(shinydashboard)
-##renderValueBox({
-flexdashboard::valueBox( value=nrow(PGXINFO), "data sets")
-##    valueBox( value=nrow(PGXINFO()), subtitle="data sets")
-##})
+useShinydashboard()
+### {.value-box}
+fillRow(
+    renderValueBox({
+        ##flexdashboard::valueBox(value=nrow(PGXINFO), "data sets")
+        valueBox(value=999, "data sets")
+        ## valueBox( value=nrow(PGXINFO()), subtitle="data sets")
+    })
+)
 ```
 
-### {.value-box}
 
 ```{r}
-flexdashboard::valueBox( value=sum(PGXINFO$nsamples,na.rm=TRUE), "samples")
+### {.value-box}
+##flexdashboard::valueBox( value=sum(PGXINFO$nsamples,na.rm=TRUE), "samples")
 ```
 
-### {.value-box}
 
 ```{r}
-flexdashboard::valueBox( value=nrow(GSETxGENE), "gene sets")
+### {.value-box}
+##flexdashboard::valueBox( value=nrow(GSETxGENE), "gene sets")
 ```
 
 
