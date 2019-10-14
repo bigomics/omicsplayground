@@ -52,7 +52,7 @@ BIG.NOTUSED <- c(
 
 PKG.MANUAL <- c("gputools","Seurat","EPIC","PCSF","NNLM","iTALK",
                 "fpc","grid","gridGraphics","Rgraphviz",
-                "shinyparticles",
+                "shinyparticles","FastGGM","monocle3","proteus",
                 "fastcluster","mygene","diptest","infercnv")
 
 ##---------------------------------------------------------------------
@@ -108,9 +108,9 @@ remotes::install_github("dreamRs/shinyparticles")
 remotes::install_github("trevorld/r-argparse")
 
 ## ---- monocle3
-BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats',
-                       'limma', 'S4Vectors', 'SingleCellExperiment',
-                       'SummarizedExperiment', 'batchelor'))
+## 'batchelor'
+install.pkgs(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats',
+               'S4Vectors', 'SingleCellExperiment','SummarizedExperiment'))
 devtools::install_github('cole-trapnell-lab/leidenbase')
 devtools::install_github('cole-trapnell-lab/monocle3')
 
