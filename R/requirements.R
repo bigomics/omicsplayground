@@ -40,7 +40,8 @@ remove.pkgs <- function(pkgs, force=FALSE) {
 
 BIG.NOTUSED <- c(
     "reactome.db", ## >2GB!!
-    "BH",
+    "BH","PCSF",
+    "DeMixT", ## purify
     "RNAseqData.HNRNPC.bam.chr14",
     "org.Mm.eg.db",
     "tximportData",
@@ -87,6 +88,9 @@ install.pkg("Rgraphviz", force=TRUE)
 install.pkg("fastcluster", force=TRUE)
 install.pkg("mygene", force=TRUE)
 install.pkg("diptest", force=TRUE)
+install.pkg("uwot", force=TRUE)
+BiocManager::install("batchelor", version="3.7")
+
 
 remove.pkg("fpc")
 install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
@@ -97,22 +101,24 @@ install_version("fpc", version="2.1-10", repos="http://cran.us.r-project.org")
 ## Install latest from GITHUB
 ##---------------------------------------------------------------------
 devtools::install_github("GfellerLab/EPIC", build_vignettes=TRUE)
-devtools::install_github("IOR-Bioinformatics/PCSF",
-                         ## repos=BiocInstaller::biocinstallRepos(),
-                         dependencies=TRUE, type="source", force=TRUE)
+##devtools::install_github("IOR-Bioinformatics/PCSF",
+##                         dependencies=TRUE, type="source", force=TRUE)
 devtools::install_github('linxihui/NNLM')
 devtools::install_github("Coolgenome/iTALK", build_vignettes = TRUE)
 ## devtools::install_github("broadinstitute/infercnv", ref="RELEASE_3_9")
 devtools::install_github('adymimos/rWordCloud')
 remotes::install_github("dreamRs/shinyparticles")
 remotes::install_github("trevorld/r-argparse")
+devtools::install_github("wwylab/DeMixT")
 
-## ---- monocle3
-## 'batchelor'
-install.pkgs(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats',
-               'S4Vectors', 'SingleCellExperiment','SummarizedExperiment'))
-devtools::install_github('cole-trapnell-lab/leidenbase')
-devtools::install_github('cole-trapnell-lab/monocle3')
+## ---- monocle3 (only DEV!)
+if(0) {
+    ## 'batchelor'
+    install.pkgs(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats',
+                   'S4Vectors', 'SingleCellExperiment','SummarizedExperiment'))
+    devtools::install_github('cole-trapnell-lab/leidenbase')
+    devtools::install_github('cole-trapnell-lab/monocle3')
+}
 
 ## ----- proteus
 devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data", "--no-manual"), build_vignettes=FALSE)
