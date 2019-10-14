@@ -62,3 +62,10 @@ unique name and brief description for the dataset while uploading.
     :align: center
     :width: 100%
 
+
+External links
+--------------------------------------------------------------------------------
+
+.. figure:: ../modules/figures/psc1.4.png
+    :align: center
+    :width: 30%
