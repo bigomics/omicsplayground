@@ -3,7 +3,11 @@
 ##
 
 #------------------------------------------------------------
+<<<<<<< HEAD:docker/Dockerfile2
 # (Re)Start from older image
+=======
+# Start from lastest OP image (should have most R packages)
+>>>>>>> a040e31903985d430fc9b51f337abf2219d82afb:Dockerfile2
 #------------------------------------------------------------
 
 FROM bigomics/omicsplayground:latest
