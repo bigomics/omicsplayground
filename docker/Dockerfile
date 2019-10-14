@@ -14,12 +14,13 @@ RUN apt-get update && apt-get install -y apt-utils \
     libgl-dev libglu-dev tk-dev libhdf5-dev \
     libgit2-dev libssh2-1-dev
 
-## ???
+## Remove old folder, create new
 RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
-RUN mkdir -p /omicsplayground/ext/packages/
+RUN rm -fr /omicsplayground/ && mkdir -p /omicsplayground/
 WORKDIR /omicsplayground
 
 ## Upload some packages/files that are needed to the image
+RUN mkdir -p /omicsplayground/ext/packages/
 COPY ext/packages/*.tar.gz ext/packages/
 
 # Install R packages that are required

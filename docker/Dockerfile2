@@ -3,7 +3,7 @@
 ##
 
 #------------------------------------------------------------
-# Start from older image
+# (Re)Start from older image
 #------------------------------------------------------------
 
 FROM bigomics/omicsplayground:latest
