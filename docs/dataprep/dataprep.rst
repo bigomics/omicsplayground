@@ -22,7 +22,7 @@ types and formats of data, including counts and FASTQ.
 With scripts it is also possible to do more detailed data 
 cleaning, filtering, normalisation and preprocessing. 
 The platform contains the required example cases for the preparation of input 
-objects under the ``/scripts`` folder.
+objects under the ``scripts/`` folder.
 
 
 .. seealso::
