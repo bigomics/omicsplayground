@@ -70,7 +70,7 @@ links regarding the Omics Playground, including the
 `online documentation <https://omicsplayground.readthedocs.io>`__ at Read-the-docs, 
 `video tutorials <https://www.youtube.com>`__ on YouTube, 
 the `source code <https://github.com/bigomics/omicsplayground>`__ at GitHub, 
-the `docker file <https://www.docker.com/bigomics/omicsplayground>`__ at Docker hub, 
+the `docker file <https://hub.docker.com/r/bigomics/omicsplayground>`__ at Docker hub, 
 and the `user forum <https://groups.google.com/forum/#!forum/omics-playground>`__ 
 at Google groups to get some help.
 
