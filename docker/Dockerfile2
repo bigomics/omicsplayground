@@ -2,17 +2,23 @@
 ## and https://www.bjoern-hartmann.de/post/learn-how-to-dockerize-a-shinyapp-in-7-steps/
 ##
 
-#------------------------------------------------------------
-<<<<<<< HEAD:docker/Dockerfile2
-# (Re)Start from older image
-=======
-# Start from lastest OP image (should have most R packages)
->>>>>>> a040e31903985d430fc9b51f337abf2219d82afb:Dockerfile2
-#------------------------------------------------------------
+##------------------------------------------------------------
+## (Re)Start from older image
+##------------------------------------------------------------
 
 FROM bigomics/omicsplayground:latest
 
+RUN apt-get update && apt-get install -y apt-utils \
+    libcurl4-gnutls-dev libv8-3.14-dev \
+    libssl-dev libxml2-dev  libjpeg-dev \
+    libgl-dev libglu-dev tk-dev libhdf5-dev \
+    libgit2-dev libssh2-1-dev libnetcdf-dev \    
+    jags
+
+##------------------------------------------------------------
 ## Remove old folder, create new
+##------------------------------------------------------------
+
 RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
 RUN rm -fr /omicsplayground/ && mkdir -p /omicsplayground/
 WORKDIR /omicsplayground
