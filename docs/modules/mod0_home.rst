@@ -12,11 +12,10 @@ visualization panels and enables more custom options. The advanced
 mode also has specialized analysis modules for single-cell RNA-seq,
 immune cell profiling and signature analysis."
 
-.. figure:: figures/psc1.2.png
+.. figure:: figures/psc1.1.png
     :align: center
     :width: 20%
     
-
 Selecting the dataset
 --------------------------------------------------------------------------------
 
@@ -25,7 +24,7 @@ the available datasets within the platform. The table reports a brief
 description as well as the total number of samples, genes, gene sets
 (or pathways), corresponding phenotypes and the collection date.
 
-.. figure:: figures/psc1.1.png
+.. figure:: figures/psc1.2.png
     :align: center
     :width: 100%
 
