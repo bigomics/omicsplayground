@@ -26,7 +26,7 @@ rda.file
 
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
-ngs$name = gsub("^.*pgx/|[.]pgx$","",rda.file)
+ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$date = date()
 ngs$datatype = "LC-MS proteomics"
 ngs$description = "Mass-spectrometry-based proteomics of 28 primary human hematopoietic cell populations in steady and activated states (Rieckmann et al, Nat Immunol. 2017). "

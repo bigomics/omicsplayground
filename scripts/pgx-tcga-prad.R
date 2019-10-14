@@ -35,6 +35,7 @@ rda.file
 
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
+ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$datatype = "RNA-seq"
 ngs$description = "TCGA prostate cancer data set. Gene expression from patients with Gleason score. Data from cBioPortal."
 

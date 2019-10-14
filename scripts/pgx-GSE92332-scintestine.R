@@ -37,7 +37,7 @@ rda.file
 
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
-ngs$name = gsub("^.*pgx/|[.]pgx$","",rda.file)
+ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$date = date()
 ngs$datatype = "scRNA-seq"
 ngs$description = "GSE92332 data set. A single-cell survey of the small intestinal epithelium (Haber et al., Cell 2017)."

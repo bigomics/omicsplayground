@@ -28,6 +28,7 @@ rda.file
 
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
+ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$datatype = "mRNA (microarray)"
 ngs$description = "GSE32591 data set (Berthier et al, 2011). transcriptome of microdissected renal biopsies from patients with lupus nephritis (LN)"
 

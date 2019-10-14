@@ -34,7 +34,7 @@ rda.file
 
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
-ngs$name = gsub("^.*pgx/|[.]pgx$","",rda.file)
+ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$date = date()
 ngs$datatype = "scRNA-seq"
 ngs$description = "GSE98638 data set (Zheng et al., 2017). Single cell RNA sequencing of different subtypes from HCC patients, including CD8+ T cells (CD3+ and CD8+), T helper cells (CD3+, CD4+ and CD25-), and regulatory T cells (CD3+, CD4+ and CD25high). Ref: Landscape of Infiltrating T Cells in Liver Cancer Revealed by Single-Cell Sequencing. Cell 2017."

@@ -27,7 +27,7 @@ rda.file
 
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
-ngs$name = gsub("^.*pgx/|[.]pgx$","",rda.file)
+ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$date = date()
 ngs$datatype = "mRNA + miRNA (microarray)"
 ngs$description = "GSE28492 combined mRNA+microRNA expression profiling across a panel of nine human immune cell subsets: neutrophils, eosinophils, monocytes, B cells, NK cells, CD4 T cells, CD8 T cells, mDCs and pDCs (Allantaz et al., PLoS One 2012)."

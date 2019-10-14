@@ -19,6 +19,7 @@ rda.file
 
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
+ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$datatype = "RNA-seq"
 ngs$description = "GSE53784 (Clarke et al., MBio 2014). Gene expression in the brain following WNV or JEV infection. WNV- or JEV-infected (N=3) vs. mock-infected (N=3) mouse brain."
 

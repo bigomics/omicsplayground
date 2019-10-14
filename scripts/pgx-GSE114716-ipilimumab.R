@@ -23,6 +23,7 @@ rda.file
 
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
+ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$datatype = "RNA-seq"
 ngs$description = "GSE114716 data set. CD4 t cell from patients with metastatic melanoma who received Ipilimumab at baseline and after 3 doses of therapy with ipilimumab."
 
