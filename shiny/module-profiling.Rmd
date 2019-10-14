@@ -132,26 +132,6 @@ pfGetClusterPositions <- reactive({
     colnames(pos) = paste0("dim",1:ncol(pos))
     rownames(pos) = colnames(zx)    
 
-    if(0) {
-        tt = factor(ngs$sample$tissue.type)
-        ct = factor(ngs$sample$cell.type)
-        jj = which(tt %in% c("HCC","nonHCC"))
-        jj = which(tt %in% c("Blood","nonHCC"))
-        fc = gx.limma( zx[,jj], as.character(tt[jj]), fdr=1)        
-        fc = gx.limma( zx[,], 1*(tt=="Blood"), fdr=1)
-        gg = head(rownames(fc),100)
-        ## gg = tail(rownames(fc),20)
-
-        require(Rtsne.multicore)
-        pos = svd(zx[gg,],nv=3)$v
-        ##pos = Rtsne.multicore( t(zx[gg,]) )$Y
-        par(mfrow=c(2,2))
-        scatterD3(pos[,1], pos[,2], col_var=tt, symbol_var=ct,
-                  point_size=150 )
-
-        
-    }
-
     ##if(input$pca.gx=="<cluster>")
     require(igraph)
     dist = as.dist(dist(pos))

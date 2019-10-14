@@ -1307,7 +1307,6 @@ cmp_connectivitymap.RENDER <- reactive({
     
     ## -------- compute t-SNE
     if(input$cmp_cmapclust=="tsne") {
-        ##require(Rtsne.multicore)
         require(Rtsne)
         perplexity <- pmax(min(ncol(fc)/5,30),2)
         perplexity
