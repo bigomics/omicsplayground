@@ -88,9 +88,6 @@ install.pkg("Rgraphviz", force=TRUE)
 install.pkg("fastcluster", force=TRUE)
 install.pkg("mygene", force=TRUE)
 install.pkg("diptest", force=TRUE)
-install.pkg("uwot", force=TRUE)
-BiocManager::install("batchelor", version="3.7")
-
 
 remove.pkg("fpc")
 install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
@@ -101,19 +98,23 @@ install_version("fpc", version="2.1-10", repos="http://cran.us.r-project.org")
 ## Install latest from GITHUB
 ##---------------------------------------------------------------------
 devtools::install_github("GfellerLab/EPIC", build_vignettes=TRUE)
-##devtools::install_github("IOR-Bioinformatics/PCSF",
-##                         dependencies=TRUE, type="source", force=TRUE)
+##devtools::install_github("IOR-Bioinformatics/PCSF", dependencies=TRUE, type="source")
 devtools::install_github('linxihui/NNLM')
 devtools::install_github("Coolgenome/iTALK", build_vignettes = TRUE)
-## devtools::install_github("broadinstitute/infercnv", ref="RELEASE_3_9")
 devtools::install_github('adymimos/rWordCloud')
 remotes::install_github("dreamRs/shinyparticles")
-remotes::install_github("trevorld/r-argparse")
-devtools::install_github("wwylab/DeMixT")
 
-## ---- monocle3 (only DEV!)
+##---------------------------------------------------------------------
+## ONLY DEV.VERSION
+##---------------------------------------------------------------------
 if(0) {
-    ## 'batchelor'
+
+    remotes::install_github("trevorld/r-argparse")
+    devtools::install_github("wwylab/DeMixT")
+    
+    ## ---- monocle3 (only DEV!!! many install problems in R 3.5.2!!!)
+    install.pkg("uwot", force=TRUE)
+    BiocManager::install("batchelor")
     install.pkgs(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats',
                    'S4Vectors', 'SingleCellExperiment','SummarizedExperiment'))
     devtools::install_github('cole-trapnell-lab/leidenbase')
@@ -121,7 +122,7 @@ if(0) {
 }
 
 ## ----- proteus
-devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data", "--no-manual"), build_vignettes=FALSE)
+## devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data", "--no-manual"), build_vignettes=FALSE)
 
 ##---------------------------------------------------------------------
 ## Seurat needs to be downgraded and dependencies to installed...
@@ -135,9 +136,10 @@ install.packages("../ext/packages/Seurat_v2.3.3.tar.gz",repos=NULL,type="source"
 ##---------------------------------------------------------------------
 install.packages("../ext/packages/nclust1_1.9.4.tar.gz",repos=NULL,type="source")
 install.packages("../ext/packages/nclust_2.1.1.tar.gz",repos=NULL,type="source")
-install.packages(pkgs = "FastGGM.tar.gz", repos = NULL, type = "source")
+install.packages("../ext/packages/FastGGM.tar.gz", repos = NULL, type = "source")
 
 install.pkgs(c("HiddenMarkov","coin","rjags","future","argparse"))
+install.pkg("coin", force=TRUE)
 install.packages("../ext/packages/infercnv_1.1.3mod.tar.gz",repos=NULL,type="source")  ## old version
 
 install.pkg("KEGGREST", force=TRUE)
