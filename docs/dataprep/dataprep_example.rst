@@ -97,9 +97,6 @@ Below we provide some data preparation examples from single-cell experiments:
 * `GSE72056 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE72056>`__: ``pgx-GSE72056-scmelanoma.R``
 * `GSE92332 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE92332>`__: ``pgx-GSE92332-scintestine.R``
 * `GSE98638 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE98638>`__: ``pgx-GSE98638-scliver.R``
-* `GSE99795 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE99795>`__: ``pgx-GSE99795-scprostate.R``
-* `pbmc1k_10X <https://support.10xgenomics.com/single-cell-gene-expression/datasets/3.0.0/pbmc_1k_v3>`__: ``pgx-tenx-pbmc1k.R``
-
 
 
 From LC-MS/MS proteomics data

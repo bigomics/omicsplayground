@@ -292,7 +292,8 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
         res.dcq=NULL
         stime <- system.time(
             res.dcq <- try(
-                dcq(reference_data=log2(1+ref), mix_data=log2(1+mat),  ## log data OK??
+                dcq(reference_data = log2(1+as.matrix(ref)),
+                    mix_data = log2(1 + as.matrix(mat)),  ## log data OK??
                     ##marker_set = matrix(rownames(ref),ncol=1),
                     marker_set = cbind(rownames(ref)),
                     alpha_used=0.05, lambda_min=0.2, number_of_repeats=3,

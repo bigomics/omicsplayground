@@ -6,6 +6,7 @@ methods=c("fisher","ssgsea","gsva","fgsea","gseaPR")
 methods=c("gsva","camera")
 methods=c("fisher","gsva","camera")
 use.multicore=TRUE
+
 gmt2mat.nocheck <- function(gmt, bg=NULL, use.multicore=TRUE)
 {
     ##max.genes=-1;ntop=-1;sparse=TRUE;bg=NULL;normalize=FALSE;r=0.01;use.multicore=TRUE
@@ -165,11 +166,13 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
         cat("fitting contrasts using GSVA/limma... \n")
         tt <- system.time({
             zx.gsva <- NULL
-            zx.gsva <- try(gsva(as.matrix(X), gmt[], method="gsva", parallel.sz=mc.cores))
+            zx.gsva <- try( gsva(as.matrix(X), gmt[], method="gsva",
+                                 parallel.sz=mc.cores, verbose=FALSE))
             if(is.null(zx.gsva) || class(zx.gsva)=="try-error") {
                 ## switch to single core...
                 cat("WARNING:: GSVA ERROR : retrying single core ... \n")
-                zx.gsva <- try(gsva(as.matrix(X), gmt[], method="gsva", parallel.sz=1))
+                zx.gsva <- try(gsva(as.matrix(X), gmt[], method="gsva",
+                                    parallel.sz=1, verbose=FALSE))
             }
             class(zx.gsva)
             if(class(zx.gsva)=="try-error") {
@@ -187,7 +190,8 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
     if("ssgsea" %in% methods) {
         cat("fitting contrasts using ssGSEA/limma... \n")
         tt <- system.time({
-            zx.ssgsea <- gsva(as.matrix(X), gmt[], method="ssgsea", parallel.sz=mc.cores )
+            zx.ssgsea <- gsva(as.matrix(X), gmt[], method="ssgsea",
+                              parallel.sz=mc.cores, verbose=FALSE)
             dim(zx.ssgsea)
             zx.ssgsea <- normalize(zx.ssgsea, Y)
             zx.ssgsea <- zx.ssgsea[names(gmt),colnames(X)] ## make sure..

@@ -489,9 +489,12 @@ pr_markersplotFUNC <- reactive({
 
 
 pr_markersplot.opts = tagList(
-    selectInput("pr_level","Level:", choices=c("gene","geneset")),
-    selectInput("pr_features","Feature set:", choices=NULL, multiple=FALSE),
-    textInput("pr_search","Filter:")
+    tipify(selectInput("pr_level","Level:", choices=c("gene","geneset")),
+           "Specify the level of the marker analysis: gene or gene set level.", placement="top", options = list(container = "body")),
+    tipify(selectInput("pr_features","Feature set:", choices=NULL, multiple=FALSE),
+           "Select a particular functional group for the analysis.", placement="top", options = list(container = "body")),
+    tipify(textInput("pr_search","Filter:"),
+          "Filter markers by a specific keywords.", placement="top", options = list(container = "body"))
 )
 pr_markersplot_module <- plotModule(
     "pr_markersplot", pr_markersplotFUNC,
@@ -579,7 +582,7 @@ pr_cna.opts = tagList(
                         inline=TRUE),
            "Select the computational method for CNV inference. The <tt>sma40</tt> method uses a fast moving average of the relative expression values with a window of 40 genes. <tt>inferCNV</tt> uses the method inferCNV of the Trinity CTAT Project (warning: this method is very slow!)."),
     tipify(selectInput("pr_cna_annotvar",label="Annotate with:", choices=NULL, multiple=FALSE),
-           "Select what annotation variable to show together with the heatmap"),
+           "Select what annotation variable to show together with the heatmap", placement = "top"),
     ##checkboxGroupInput('pr_cnaoptions','',c("bin20"), inline=TRUE),
     ##radioButtons('pr_cnaplottype',NULL,c("image","heatmap","splitmap"), inline=TRUE),
     tipify(radioButtons("pr_cna_orderby","Order samples by:",c("clust","pc1"), inline=TRUE),
@@ -1354,9 +1357,12 @@ pr_xtabplotFUNC <- reactive({
 
 
 pr_xtab.opts <- tagList(
-    selectInput("pr_xtabvar",label="x-axis:", choices=NULL, multiple=FALSE),
-    selectInput("pr_xtabpheno",label="y-axis:", choices=NULL, multiple=FALSE),
-    selectInput("pr_xtabgene",label="gene:", choices=NULL, multiple=FALSE)
+    tipify(selectInput("pr_xtabvar",label="x-axis:", choices=NULL, multiple=FALSE),
+           "Choose a predefined phenotype group on the x-axis.", placement="top", options = list(container = "body")),
+    tipify(selectInput("pr_xtabpheno",label="y-axis:", choices=NULL, multiple=FALSE),
+           "Choose a predefined phenotype group on the y-axis.", placement="top", options = list(container = "body")),
+    tipify(selectInput("pr_xtabgene",label="gene:", choices=NULL, multiple=FALSE),
+           "Visualize the expression barplot of a gene by specifying the gene name.", placement="top", options = list(container = "body"))
     ##checkboxGroupInput('pr_xtaboptions','',c("gene"), inline=TRUE, width='50px')
     ##selectInput("pr_xtabgene",label=NULL, choices=NULL, multiple=FALSE),
     ##br(), cellArgs=list(width='80px')
@@ -1427,8 +1433,10 @@ pr_cytoplotFUNC <- reactive({
 })
 
 pr_cyto.opts = tagList(
-    selectInput("pr_cytovar1",label="x-axis:", choices=NULL, multiple=FALSE),
-    selectInput("pr_cytovar2",label="y-axis:", choices=NULL, multiple=FALSE)
+    tipify(selectInput("pr_cytovar1",label="x-axis:", choices=NULL, multiple=FALSE),
+           "Select your prefered gene on the x-axis.", placement="top", options = list(container = "body")),
+    tipify(selectInput("pr_cytovar2",label="y-axis:", choices=NULL, multiple=FALSE),
+           "Choose your prefered gene on the y-axis.", placement="top", options = list(container = "body"))
 )
 
 pr_cytoModule <- plotModule(

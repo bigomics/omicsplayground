@@ -102,10 +102,10 @@ Col {.tabset data-height=400}
 
 data_genePlots_tsne_text=paste0('<b>T-SNE clustering</b> of samples (or cells) colored by an expression of the gene selected in the ',dropdown_search_gene, ' dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).')
 data_genePlots_barplot_text=paste0('Expression barplot of grouped samples (or cells) for the gene selected in the ',dropdown_search_gene,'. Samples (or cells) in the barplot can be ungrouped by setting the ',menu_grouped, ' under the main <i>Options</i>.')
-data_genePlots_correlationplot_text=paste0('Barplot of the top positively and negatively correlated genes with the gene selected in the ',dropdown_search_gene,'. Absolute expression levels of genes are colored in the barplot, where the low and high expressions range between the light grey and dark black colors, respectively.')
+data_genePlots_correlationplot_text=paste0('Barplot of the top positively and negatively correlated genes with the selected gene. Absolute expression levels of genes are colored in the barplot, where the low and high expressions range between the light and dark colors, respectively.')
 data_genePlots_averageRankPlot_text=paste0('Ranking of the average expression of the selected gene.')
-data_geneInfo_text = paste0('To find out more information from the literature, hyperlinks are provide to connect the selected gene in the  ',dropdown_search_gene,' to public databases, including ', a_OMIM,', ', a_KEGG, ' and ',a_GO,'.')
-data_corplot_text = paste0('Top cumulative positively and negatively correlated genes with the gene selected in the ',dropdown_search_gene,', across samples (or cells), in the current dataset as well as in public datasets such as ',a_ImmProt,' and ',a_HPA,'. The correlations of genes are colored by dataset.')
+data_geneInfo_text = paste0('To find out more information from the literature, hyperlinks are provide to connect the selected gene to public databases, including ', a_OMIM,', ', a_KEGG, ' and ',a_GO,'.')
+data_corplot_text = paste0('Top cumulative positively and negatively correlated genes with the selected gene in the current dataset as well as in public datasets such as ',a_ImmProt,' and ',a_HPA,'. The correlations of genes are colored by dataset.')
 data_tissueplot_text = paste0('Tissue expression for the selected gene in the tissue expression ',a_GTEx,' dataset. Colors corresponds to "tissue clusters" as computed by unsupervised clustering.')
 
 

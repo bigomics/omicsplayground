@@ -33,7 +33,6 @@ compute.extra <- function(ngs, extra) {
         }
     }
 
-
     if("meta.go" %in% extra) {
         cat(">>> Computing GO core graph...\n")
         ngs$meta.go <- pgx.computeCoreGOgraph(ngs, fdr=0.05)
@@ -41,7 +40,8 @@ compute.extra <- function(ngs, extra) {
 
     if("deconv" %in% extra) {
         cat(">>> computing deconvolution\n")
-        ngs <- compute.deconvolution(ngs, FILES=FILES, rna.counts=rna.counts) 
+        ngs <- compute.deconvolution(ngs, FILES=FILES, rna.counts=rna.counts,
+                                     full=FALSE) 
     }
 
     if("infer" %in% extra) {
@@ -64,7 +64,7 @@ compute.extra <- function(ngs, extra) {
 
 
 ## -------------- deconvolution analysis --------------------------------
-compute.deconvolution <- function(ngs, FILES, rna.counts) {
+compute.deconvolution <- function(ngs, FILES, rna.counts, full=FALSE) {
     
     ## list of reference matrices
     refmat <- list()
@@ -77,7 +77,7 @@ compute.deconvolution <- function(ngs, FILES, rna.counts) {
     refmat[["Tissue (HPA)"]] <- readSIG("rna_tissue_matrix.csv")
     refmat[["Tissue (GTEx)"]] <- readSIG("GTEx_rna_tissue_tpm.csv")
     refmat[["Cell line (HPA)"]] <- readSIG("HPA_rna_celline.csv")
-    ## refmat[["Cell line (CCLE)"]] <- readSIG("CCLE_rna_celline.csv")
+    refmat[["Cell line (CCLE)"]] <- readSIG("CCLE_rna_celline.csv")
     refmat[["Cancer type (CCLE)"]] <- readSIG("CCLE_rna_cancertype.csv")
 
     ## list of methods to compute
@@ -89,6 +89,33 @@ compute.deconvolution <- function(ngs, FILES, rna.counts) {
     ## methods <- c("NNLM","cor")
     ##if(ncol(ngs$counts)>100) methods <- setdiff(methods,"CIBERSORT")  ## too slow...
 
+    ## list of reference matrices
+    refmat <- list()
+    readSIG <- function(f) read.csv(file.path(FILES,f), row.names=1, check.names=FALSE)
+    LM22 <- read.csv(file.path(FILES,"LM22.txt"),sep="\t",row.names=1)
+    refmat[["Immune cell (LM22)"]] <- LM22
+    refmat[["Immune cell (ImmProt)"]] <- readSIG("immprot-signature1000.csv")
+    refmat[["Immune cell (DICE)"]] <- readSIG("DICE-signature1000.csv")
+    refmat[["Immune cell (ImmunoStates)"]] <- readSIG("ImmunoStates_matrix.csv")
+    refmat[["Tissue (HPA)"]]       <- readSIG("rna_tissue_matrix.csv")
+    refmat[["Tissue (GTEx)"]]      <- readSIG("GTEx_rna_tissue_tpm.csv")
+    refmat[["Cell line (HPA)"]]    <- readSIG("HPA_rna_celline.csv")
+    refmat[["Cell line (CCLE)"]] <- readSIG("CCLE_rna_celline.csv")
+    refmat[["Cancer type (CCLE)"]] <- readSIG("CCLE_rna_cancertype.csv")
+
+    ## list of methods to compute
+    ##methods = DECONV.METHODS
+    methods = c("DCQ","DeconRNAseq","I-NNLS","NNLM","cor","CIBERSORT","EPIC")
+    ## methods <- c("NNLM","cor")
+
+    if(full==FALSE) {
+        ## Fast methods, subset of references
+        sel = c("Immune cell (LM22)","Immune cell (ImmunoStates)",
+                "Tissue (GTEx)","Cell line (HPA)","Cancer type (CCLE)")
+        refmat <- refmat[intersect(sel,names(refmat))]
+        methods <- c("DCQ","DeconRNAseq","I-NNLS","NNLM","cor")        
+    }
+    
     ##counts <- ngs$counts
     counts <- rna.counts
     rownames(counts) <- toupper(ngs$genes[rownames(counts),"gene_name"])
