@@ -1,5 +1,6 @@
 .. _Installation:
 
+
 Installation
 ================================================================================
 
@@ -27,7 +28,6 @@ the source code:
 2. Be sure you have installed all necessary R packages by running the files in the ``/R`` folder::
 
     Rscript requirements.R
-    Rscript requirements2.R
     
 3. Similarly, run the following command in the ``/scripts`` folder to build the datasets::
 
@@ -40,7 +40,7 @@ the source code:
 4. Change the current directory into the ``/shiny`` folder and execute the following command
    to run the platform::
 
-     R -e "rmarkdown::run(shiny_args=list(launch.browser=TRUE))"
+    R -e "rmarkdown::run(shiny_args=list(launch.browser=TRUE))"
 
    If you have Shiny Server installed you can create a link to the
    shiny folder in the system-wide shiny-server apps folder or in your
