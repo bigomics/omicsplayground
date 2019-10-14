@@ -52,6 +52,7 @@ BIG.NOTUSED <- c(
 
 PKG.MANUAL <- c("gputools","Seurat","EPIC","PCSF","NNLM","iTALK",
                 "fpc","grid","gridGraphics","Rgraphviz",
+                "shinyparticles",
                 "fastcluster","mygene","diptest","infercnv")
 
 ##---------------------------------------------------------------------
@@ -103,6 +104,18 @@ devtools::install_github('linxihui/NNLM')
 devtools::install_github("Coolgenome/iTALK", build_vignettes = TRUE)
 ## devtools::install_github("broadinstitute/infercnv", ref="RELEASE_3_9")
 devtools::install_github('adymimos/rWordCloud')
+remotes::install_github("dreamRs/shinyparticles")
+remotes::install_github("trevorld/r-argparse")
+
+## ---- monocle3
+BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats',
+                       'limma', 'S4Vectors', 'SingleCellExperiment',
+                       'SummarizedExperiment', 'batchelor'))
+devtools::install_github('cole-trapnell-lab/leidenbase')
+devtools::install_github('cole-trapnell-lab/monocle3')
+
+## ----- proteus
+devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data", "--no-manual"), build_vignettes=FALSE)
 
 ##---------------------------------------------------------------------
 ## Seurat needs to be downgraded and dependencies to installed...
@@ -116,8 +129,9 @@ install.packages("../ext/packages/Seurat_v2.3.3.tar.gz",repos=NULL,type="source"
 ##---------------------------------------------------------------------
 install.packages("../ext/packages/nclust1_1.9.4.tar.gz",repos=NULL,type="source")
 install.packages("../ext/packages/nclust_2.1.1.tar.gz",repos=NULL,type="source")
+install.packages(pkgs = "FastGGM.tar.gz", repos = NULL, type = "source")
 
-install.pkgs(c("HiddenMarkov","coin","rjags","future","argsparse"))
+install.pkgs(c("HiddenMarkov","coin","rjags","future","argparse"))
 install.packages("../ext/packages/infercnv_1.1.3mod.tar.gz",repos=NULL,type="source")  ## old version
 
 install.pkg("KEGGREST", force=TRUE)
