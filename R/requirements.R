@@ -1,4 +1,7 @@
-##source("http://bioconductor.org/biocLite.R")
+##
+##
+## NOTE: This file is supposed to run in the folder .../R/
+##
 
 if(!require(devtools)) install.packages("devtools")
 if(!require(BiocManager)) install.packages("BiocManager")
@@ -31,6 +34,12 @@ remove.pkg <- function(pkg) {
     if(pkg %in% installed.packages()) remove.packages(pkg)
 }
 
+##---------------------------------------------------------------------
+## Install base packages
+##---------------------------------------------------------------------
+
+base.pkg = c("shiny","flexdashboard")
+install.pkgs(base.pkg)
 
 ##---------------------------------------------------------------------
 ## Automatically scan all used packages and install
@@ -48,6 +57,14 @@ pkg.notyet <- c("gputools","Seurat","EPIC","PCSF","NNLM","iTALK",
 install.pkgs( setdiff(pkg.used, pkg.notyet) )
 
 ##---------------------------------------------------------------------
+## make sure local ones are preferred
+##---------------------------------------------------------------------
+
+install.packages("../ext/packages/nclust1_1.9.4.tar.gz",repos=NULL,type="source")
+install.packages("../ext/packages/nclust_2.1.1.tar.gz",repos=NULL,type="source")
+install.packages("../ext/packages/pathview_1.16.7.tar.gz",repos=NULL,type="source")  ## old version
+
+##---------------------------------------------------------------------
 ## reinstall problematics ones
 ##---------------------------------------------------------------------
 
@@ -62,7 +79,7 @@ install.pkg("diptest", force=TRUE)
 
 remove.pkg("fpc")
 install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
-##install.packages("ext/fpc_2.1-10.tar.gz",repos=NULL,type="source")
+##install.packages("../ext/packges/fpc_2.1-10.tar.gz",repos=NULL,type="source")
 install_version("fpc", version="2.1-10", repos="http://cran.us.r-project.org")
 
 ##---------------------------------------------------------------------
@@ -81,7 +98,7 @@ devtools::install_github("Coolgenome/iTALK", build_vignettes = TRUE)
 ##---------------------------------------------------------------------
 install.pkgs(c("ROCR", "mixtools", "lars", "ica", "tsne", "ape", "dtw", "SDMTools", "ggridges", "fitdistrplus", "doSNOW","diffusionMap","fpc","hdf5r"))
 install.pkgs(c('cowplot', 'Rtsne', 'pbapply', 'RANN', 'dplyr', 'irlba', 'plotly', 'Hmisc', 'tidyr', 'metap', 'lmtest', 'png', 'reticulate', 'RcppEigen', 'RcppProgress'))
-install.packages("ext/Seurat_v2.3.3.tar.gz",repos=NULL,type="source")  ## old version
+install.packages("../ext/packges/Seurat_v2.3.3.tar.gz",repos=NULL,type="source")  ## old version
 
 ##---------------------------------------------------------------------
 ## remove unneccessary big packages...

@@ -127,9 +127,9 @@ IMMPROT <- read.csv(file.path(FILES,"ImmProt-signature.csv"),row.names=1)
 ## Immune cell markers
 ##-----------------------------------------------------------------------------
 
-require(FARDEEP)
 IMMPROT_MARKERS <- rownames(read.csv(file.path(FILES,"immprot-signature1000.csv"),row.names=1))
 DICE_MARKERS <- rownames(read.csv(file.path(FILES,"DICE-signature1000.csv"),row.names=1))
+LM22 <- read.csv(file.path(FILES,"LM22.txt"),sep="\t",row.names=1)
 LM22_MARKERS <- rownames(LM22)
 
 ##-----------------------------------------------------------------------------

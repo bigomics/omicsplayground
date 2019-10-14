@@ -68,7 +68,6 @@ compute.deconvolution <- function(ngs, FILES, rna.counts) {
     
     ## list of reference matrices
     refmat <- list()
-    ##require(FARDEEP)
     readSIG <- function(f) read.csv(file.path(FILES,f), row.names=1, check.names=FALSE)
     LM22 <- read.csv(file.path(FILES,"LM22.txt"),sep="\t",row.names=1)
     refmat[["Immune cell (LM22)"]] <- LM22

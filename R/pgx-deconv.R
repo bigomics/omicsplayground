@@ -1,5 +1,4 @@
-DECONV.METHODS = c("I-NNLS","CIBERSORT","DCQ","DeconRNAseq","EPIC","FARDEEP",
-                   "NNLM","cor")
+DECONV.METHODS = c("I-NNLS","CIBERSORT","DCQ","DeconRNAseq","EPIC","NNLM","cor")
 
 if(0) {
     ## WARNING: this snippet will overwrite your ngs object...
@@ -234,24 +233,6 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
             results[["CIBERSORT"]] <- ciber.out
         } else {
             cat("WARNING:: CIBERSORT failed\n")
-        }
-    }
-
-    if(FALSE && "FARDEEP" %in% methods) {
-        ## FARDEEP
-        require(FARDEEP)
-        fd.result <- NULL
-        stime <- system.time( try(
-            fd.result <- fardeep(ref[gg,], mat[gg,], alpha1=0.1, alpha2=1.5, up=10,
-                                 low=1, nn=TRUE, intercept=TRUE, lognorm=TRUE,
-                                 permn=100, QN=TRUE)
-        ))
-        if(!is.null(fd.result)) {
-            timings[["FARDEEP"]] <- stime
-            cat("deconvolution using FARDEEP took",stime[3],"s\n")
-            results[["FARDEEP"]] = fd.result$abs.beta
-        } else {
-            cat("WARNING:: FARDEEP failed\n")
         }
     }
 
