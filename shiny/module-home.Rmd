@@ -573,23 +573,20 @@ inputData <- reactive({
 ##=================================================================================
 ##=================================================================================
 
-
 ```
 
 
-Row 
+Row {data-height=200}
 -----------------------------------------------------------------------
 
 ```{r}
-useShinydashboard()
+renderPlot(plot(sin))
+```
+
+
+```{r}
 ### {.value-box}
-fillRow(
-    renderValueBox({
-        ##flexdashboard::valueBox(value=nrow(PGXINFO), "data sets")
-        valueBox(value=999, "data sets")
-        ## valueBox( value=nrow(PGXINFO()), subtitle="data sets")
-    })
-)
+##flexdashboard::valueBox(value=nrow(PGXINFO), "data sets")
 ```
 
 
