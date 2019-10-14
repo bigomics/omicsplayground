@@ -66,9 +66,13 @@ unique name and brief description for the dataset while uploading.
 Useful links
 --------------------------------------------------------------------------------
 In the bottom-left corner of the **Home panel**, users can find some useful
-links about the Omics Playground, including the online documentation at 
-Read-the-docs, video tutorials on YouTube, the source code at GitHub, the docker 
-file at Docker hub, and the user forum to get some help.
+links regarding the Omics Playground, including the 
+`online documentation <https://omicsplayground.readthedocs.io>`__ at Read-the-docs, 
+`video tutorials <https://www.youtube.com>`__ on YouTube, 
+the `source code <https://github.com/bigomics/omicsplayground>`__ at GitHub, 
+the `docker file <https://www.docker.com/bigomics/omicsplayground>`__ at Docker hub, 
+and the `user forum <https://groups.google.com/forum/#!forum/omics-playground>`__ 
+at Google groups to get some help.
 
 .. figure:: ../modules/figures/psc1.4.png
     :align: center
