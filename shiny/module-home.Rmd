@@ -599,7 +599,7 @@ fillRow(
 )
 
 vbox <- function(value, label) {
-    box(h1(value, style="font-weight: 800; color: white; padding-top: 15px; margin-top: 0px; margin-left: 20px;"),
+    box(h1(value, style="font-weight: 800; color: white; padding-top: 16px; margin-top: 0px; margin-left: 20px;"),
         h5(label, style="color: white; margin-left: 20px;"), width="100%")    
 }
 
