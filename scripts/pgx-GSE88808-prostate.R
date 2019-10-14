@@ -25,7 +25,7 @@ rda.file
 
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
-ngs$name = gsub("^.*pgx/|[.]pgx$","",rda.file)
+ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$date = date()
 ngs$datatype = "mRNA array"
 ngs$description = "GSE88808 data set. Gleason-score matched tumor and adjacent normal samples were collected to compare gene expression differences in early-onset versus late-onset prostate cancer patients (Ding, PLOS Genet 2016)."

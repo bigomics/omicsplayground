@@ -24,7 +24,7 @@ rda.file
 
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
-ngs$name = gsub("^.*pgx/|[.]pgx$","",rda.file)
+ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$date = date()
 ngs$datatype = "mRNA (microarray)"
 ngs$description = "GSE22886 data set (Abbas et al, 2005). Twelve different types of human leukocytes from peripheral blood and bone marrow, treated to induce activation and/or differentiation, and profiled their gene expression before and after treatment. The twelve cell types are: B cells, CD14+ cells, CD4+ CD45RO+ CD45RA- T cells, CD4+ T cells, CD8+ T cells, IgG/IgA memory B cells, IgM memory B cells, Monocytes, NK cells, Neutrophils, Plasma cells from bone marrow, and Plasma cells from PBMC."

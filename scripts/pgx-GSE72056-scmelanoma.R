@@ -36,7 +36,7 @@ rda.file
 
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
-ngs$name = gsub("^.*pgx/|[.]pgx$","",rda.file)
+ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$date = date()
 ngs$datatype = "scRNA-seq"
 ngs$description ="GSE72056 melanoma scRNA-seq data set. Single-cell RNA sequencing from 19 patients, profiling malignant, immune, stromal, and endothelial cells. Ref: 'Dissecting the multicellular ecosystem of metastatic melanoma by single-cell RNA-seq', Tirosh et al, Science 2016."

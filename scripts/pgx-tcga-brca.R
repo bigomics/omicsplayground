@@ -36,6 +36,7 @@ rda.file
 
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
+ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$datatype = "RNA-seq"
 ##ngs$datatype = "multi-omics"
 ngs$description = "TCGA breast cancer data set. Gene expression from 526 patients annotated with PAM50 classification. Data from cBioPortal."

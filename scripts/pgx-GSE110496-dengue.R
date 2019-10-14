@@ -34,7 +34,7 @@ rda.file
 ##load(file=rda.file, verbose=1)
 
 ngs <- list()  ## empty object
-ngs$name = gsub("^.*pgx/|[.]pgx$","",rda.file)
+ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$date = date()
 ngs$datatype = "scRNA-seq"
 ngs$description ="GSE110496 dengue/zika virus scRNA-seq data set."
