@@ -23,6 +23,7 @@ source("../R/ngs-functions.R")
 source("options.R")
 MAX.GENES
 BATCH.CORRECT=TRUE
+SUBSAMPLE=TRUE
 
 ## run all available methods 
 USER.GENETEST.METHODS = "*"
@@ -115,9 +116,11 @@ if(PROCESS.DATA) {
     ##-------------------------------------------------------------------
     ## subsample???
     ##-------------------------------------------------------------------
-    if(0) {
-        kk <- c( sample(which(sampleTable$dlbcl.type=="ABC"),80),
-                sample(which(sampleTable$dlbcl.type=="GCB"),80) )
+    if(SUBSAMPLE) {
+        ##kk <- c( sample(which(sampleTable$dlbcl.type=="ABC"),80),
+        ##        sample(which(sampleTable$dlbcl.type=="GCB"),80) )
+        kk <- c( head(which(sampleTable$dlbcl.type=="ABC"),80),
+                head(which(sampleTable$dlbcl.type=="GCB"),80) )
         length(kk)
         X  <- X[,kk]
         sampleTable <- sampleTable[colnames(X),]
