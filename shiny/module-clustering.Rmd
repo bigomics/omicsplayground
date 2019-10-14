@@ -9,7 +9,6 @@ Inputs {.sidebar data-width=250}
 samples using unsupervised machine learning.
 
 ```{r}
-htmlOutput("curdata3", class="current-data")
 ##----------------------------------------------------------------------
 ## More Info (pop up window)
 ##----------------------------------------------------------------------
