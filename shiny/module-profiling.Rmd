@@ -670,7 +670,7 @@ italk_getResults <- reactive({
 
 italk_netview.RENDER <- reactive({
     res <- italk_getResults()
-    req(res)xs
+    req(res)
     ##if(is.null(res)) return(NULL)
     res_cat <- res$table
     ## Communication graph
