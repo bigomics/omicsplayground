@@ -1,9 +1,5 @@
 # NOTICE
 
-## Declared Project Licenses
-
-See separate license file.
-
 
 ## Source Code
 
@@ -13,6 +9,8 @@ The project maintains the following source code repositories:
 
 
 ## Third-party Content
+
+The project uses the following third-party content:
 
 affy
  * Version: 1.60.0
