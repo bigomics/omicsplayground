@@ -28,7 +28,7 @@ BATCH.CORRECT=TRUE
 USER.GENETEST.METHODS = "*"
 USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
 
-rda.file="../data/GSE10846-dlbcl-12k.pgx"
+rda.file="../data/GSE10846-dlbcl.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -115,7 +115,7 @@ if(PROCESS.DATA) {
     ##-------------------------------------------------------------------
     ## subsample???
     ##-------------------------------------------------------------------
-    if(1) {
+    if(0) {
         kk <- c( sample(which(sampleTable$dlbcl.type=="ABC"),80),
                 sample(which(sampleTable$dlbcl.type=="GCB"),80) )
         length(kk)

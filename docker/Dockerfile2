@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y apt-utils \
     libssl-dev libxml2-dev  libjpeg-dev \
     libgl-dev libglu-dev tk-dev libhdf5-dev \
     libgit2-dev libssh2-1-dev libnetcdf-dev \    
-    jags
+    jags emacs
 
 ##------------------------------------------------------------
 ## Remove old folder, create new

@@ -57,12 +57,13 @@ PKG.MANUAL <- c("gputools","Seurat","EPIC","PCSF","NNLM","iTALK",
 ## Install base packages
 ##---------------------------------------------------------------------
 
-base.pkg = c("shiny","flexdashboard")
+base.pkg = c("shiny","flexdashboard","shinydashboard")
 install.pkgs(base.pkg)
 
 ##---------------------------------------------------------------------
 ## Automatically scan all used packages and install
 ##---------------------------------------------------------------------
+
 pkg.used <- system("grep 'library(\\|require(' *R *r ../shiny/*Rmd", intern=TRUE)
 pkg.used <- gsub(".*require\\(|.*library\\(","",pkg.used)
 pkg.used <- gsub("\"|\\).*","",pkg.used)
@@ -95,14 +96,12 @@ install.pkg("mygene", force=TRUE)
 install.pkg("diptest", force=TRUE)
 
 remove.pkg("fpc")
-install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'), force=TRUE)
+install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
 ##install.packages("../ext/packges/fpc_2.1-10.tar.gz",repos=NULL,type="source")
 install_version("fpc", version="2.1-10", repos="http://cran.us.r-project.org")
 
 
-install.pkgs(c("HiddenMarkov","coin","rjags","future","argsparse"),force=TRUE)
-install.pkg("rjags", force=TRUE)
-install.pkg("argparse", force=TRUE)
+install.pkgs(c("HiddenMarkov","coin","rjags","future","argsparse"))
 install.pkg("infercnv", force=TRUE)
 
 ##---------------------------------------------------------------------
@@ -115,6 +114,7 @@ devtools::install_github("IOR-Bioinformatics/PCSF",
 devtools::install_github('linxihui/NNLM')
 devtools::install_github("Coolgenome/iTALK", build_vignettes = TRUE)
 ## devtools::install_github("broadinstitute/infercnv", ref="RELEASE_3_9")
+devtools::install_github('adymimos/rWordCloud')
 
 ##---------------------------------------------------------------------
 ## Seurat needs to be downgraded and dependencies to installed...

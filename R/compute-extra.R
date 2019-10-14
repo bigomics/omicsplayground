@@ -91,21 +91,26 @@ if(1) {
     refmat[["Immune cell (ImmProt)"]] <- readSIG("immprot-signature1000.csv")
     refmat[["Immune cell (DICE)"]] <- readSIG("DICE-signature1000.csv")
     refmat[["Immune cell (ImmunoStates)"]] <- readSIG("ImmunoStates_matrix.csv")
-    refmat[["Tissue (HPA)"]] <- readSIG("rna_tissue_matrix.csv")
-    refmat[["Tissue (GTEx)"]] <- readSIG("GTEx_rna_tissue_tpm.csv")
-    refmat[["Cell line (HPA)"]] <- readSIG("HPA_rna_celline.csv")
-    ## refmat[["Cell line (CCLE)"]] <- readSIG("CCLE_rna_celline.csv")
+    refmat[["Tissue (HPA)"]]       <- readSIG("rna_tissue_matrix.csv")
+    refmat[["Tissue (GTEx)"]]      <- readSIG("GTEx_rna_tissue_tpm.csv")
+    refmat[["Cell line (HPA)"]]    <- readSIG("HPA_rna_celline.csv")
+    refmat[["Cell line (CCLE)"]] <- readSIG("CCLE_rna_celline.csv")
     refmat[["Cancer type (CCLE)"]] <- readSIG("CCLE_rna_cancertype.csv")
 
     ## list of methods to compute
     ##methods = DECONV.METHODS
-    methods = c("DCQ","DeconRNAseq","I-NNLS","NNLM","cor","CIBERSORT","EPIC","FARDEEP")
-    ##methods <- c("DCQ","DeconRNAseq","I-NNLS","NNLM","cor")
-    methods <- c("DCQ","DeconRNAseq","I-NNLS","NNLM","cor")
-    ##methods <- c("DCQ","I-NNLS","NNLM","cor")
+    methods = c("DCQ","DeconRNAseq","I-NNLS","NNLM","cor","CIBERSORT","EPIC")
     ## methods <- c("NNLM","cor")
-    ##if(ncol(ngs$counts)>100) methods <- setdiff(methods,"CIBERSORT")  ## too slow...
 
+    all.methods = FALSE
+    if(all.methods==FALSE) {
+        ## Fast methods, subset of references
+        sel = c("Immune cell (LM22)","Immune cell (ImmunoStates)",
+                "Tissue (GTEx)","Cell line (HPA)","Cancer type (CCLE)")
+        refmat <- refmat[intersect(sel,names(refmat))]
+        methods <- c("DCQ","DeconRNAseq","I-NNLS","NNLM","cor")        
+    }
+    
     ##counts <- ngs$counts
     counts <- rna.counts
     rownames(counts) <- toupper(ngs$genes[rownames(counts),"gene_name"])

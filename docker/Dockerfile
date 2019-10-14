@@ -12,7 +12,8 @@ RUN apt-get update && apt-get install -y apt-utils \
     libcurl4-gnutls-dev libv8-3.14-dev \
     libssl-dev libxml2-dev  libjpeg-dev \
     libgl-dev libglu-dev tk-dev libhdf5-dev \
-    libgit2-dev libssh2-1-dev libnetcdf-dev
+    libgit2-dev libssh2-1-dev libnetcdf-dev \
+    jags emacs
 
 ## Remove old folder, create new
 RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
@@ -42,6 +43,8 @@ RUN chmod -R ugo+rwX /omicsplayground
 #------------------------------------------------------------
 COPY docker/shiny-server.conf  /etc/shiny-server/shiny-server.conf
 COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
+COPY shiny/resources/rmd_loader.css /usr/local/lib/R/site-library/rmarkdown/rmd/h/rmarkdown/rmd_loader.css
+COPY shiny/resources/bigomics-rotating.gif /usr/local/lib/R/site-library/rmarkdown/rmd/h/rmarkdown/rmd_loader.gif 
 
 EXPOSE 3838
 

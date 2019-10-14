@@ -53,7 +53,7 @@ if(0) {
     load("../data/rieckmann2017-immprot.pgx")
     load("../data/GSE22886-immune.pgx")
     load("../data/GSE28492-roche.pgx")    
-    load("../data/GSE32591-lupusnephritis.pgx")                
+    load("../data/GSE92332-scintestine.pgx")                
     
     ngs <- pgx.initialize(ngs)    
 }

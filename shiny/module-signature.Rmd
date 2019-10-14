@@ -50,19 +50,24 @@ APOPTOSIS.GENES = "BAD CRADD AGT FAS BCL2 PPIF S100A9 S100A8 BBC3 BCL2L11 FADD C
 CELL.CYCLE.GENES = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP
 5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA"
 
-selectInput("sig_type",label="Signature type:",choices=c("<custom>","contrast","hallmark","KEGG"))
+tipify(selectInput("sig_type",label="Signature type:",choices=c("<custom>","contrast","hallmark","KEGG")),
+       "Specify the type of signature of an interest. Users can choose between custom signature, a contrast profile, or some predefined gene sets including Hallmark and KEGG pathways.", placement="top", options = list(container = "body"))
 conditionalPanel(
     "input.sig_type != '<custom>'",
-    selectizeInput("sig_feature","Signature:", choices="<custom>", selected="<custom>")
+    tipify(selectizeInput("sig_feature","Signature:", choices="<custom>", selected="<custom>"),
+           "Select a specific signature group.", placement="top", options = list(container = "body"))
 )
-textAreaInput("sig_genelistUP", "Genes:", value = IMMCHECK.GENES,
-              rows=10, placeholder="Paste your gene list")
+tipify(textAreaInput("sig_genelistUP", "Genes:", value = IMMCHECK.GENES,
+                     rows=10, placeholder="Paste your gene list"),
+       "Paste a list of signature genes.", placement="top", options = list(container = "body"))
 ## textAreaInput("sig_genelistDN", "Signature (down):", rows=6, placeholder="Paste your gene list")
 
-actionButton("sig_example2","[apoptosis] ", style="font-size: 0.9em; color: #24A; background-color:
- transparent; border-style: none; padding:0")
-actionButton("sig_example1","[immune_chkpt] ", style="font-size: 0.9em; color: #24A; background-color: transparent; border-style: none; padding:0")
-actionButton("sig_example3","[cell_cycle] ", style="font-size: 0.9em; color: #24A; background-color: transparent; border-style: none; padding:0")
+tipify(actionButton("sig_example2","[apoptosis] ", style="font-size: 0.9em; color: #24A; background-color:
+ transparent; border-style: none; padding:0"),
+ "Use the list of genes involved in apoptosis as a signature.")
+tipify(actionButton("sig_example1","[immune_chkpt] ", style="font-size: 0.9em; color: #24A; background-color: transparent; border-style: none; padding:0"),
+       "Use the list of genes involved in immune checkpoint as a signature.")
+tipify(actionButton("sig_example3","[cell_cycle] ", style="font-size: 0.9em; color: #24A; background-color: transparent; border-style: none; padding:0"),"Use the list of genes involved in cell cycle as a signature.")
 
 
 ##----------------------------------------------------------------------
@@ -536,7 +541,7 @@ observe({
 
 sig_enplots.opts = tagList(
     tipify( selectInput('cmp_querydataset',"Query dataset:", choices=NULL, multiple=FALSE),
-           "The query dataset to which the enrichment test should be applied. Enrichment of the selected signature will be calculated to all available contrast profiless in this query dataset.")
+           "The query dataset to which the enrichment test should be applied. Enrichment of the selected signature will be calculated to all available contrast profiless in this query dataset.", placement = "top")
 )
 sig_enplots.module <- plotModule(
     "sig_enplots", sig_enplotsFUNC, plotlib="base",
@@ -760,8 +765,10 @@ sig_overlapTable.RENDER <- reactive({
 })
 
 sig_overlapScorePlot.opts = tagList(
-    radioButtons("sig_overlapScorePlot_ntop","Number of features",c(60,120,250),inline=TRUE),
-    checkboxInput("sig_overlapScorePlot_shownames","Show feature names",TRUE)
+    tipify(radioButtons("sig_overlapScorePlot_ntop","Number of features",c(60,120,250),inline=TRUE),
+           "Specify the number to top features to show.", placement="top", options = list(container = "body")),
+    tipify(checkboxInput("sig_overlapScorePlot_shownames","Show feature names",TRUE),
+           "Select to show/hide the feature names in the plot.", placement="top", options = list(container = "body"))
 )
 
 
