@@ -3,7 +3,7 @@
 ##
 
 #------------------------------------------------------------
-# Start from older image
+# Start from lastest OP image (should have most R packages)
 #------------------------------------------------------------
 
 FROM bigomics/omicsplayground:latest
