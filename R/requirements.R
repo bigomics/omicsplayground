@@ -88,6 +88,7 @@ install.pkg("Rgraphviz", force=TRUE)
 install.pkg("fastcluster", force=TRUE)
 install.pkg("mygene", force=TRUE)
 install.pkg("diptest", force=TRUE)
+install.pkg("randomForest", force=TRUE)
 
 remove.pkg("fpc")
 install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))

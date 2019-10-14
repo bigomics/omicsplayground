@@ -540,8 +540,8 @@ pr_cnaplotFUNC <- reactive({
     require(RColorBrewer)
     ##return(NULL)    
     ngs <- inputData()
-    req(ngs)
-
+    req(ngs,input$pr_cna_method,input$pr_cna_annotvar,input$pr_cna_orderby)
+    
     if(input$pr_cna_method=="inferCNV") {
         res <- getCNAfromExpression.inferCNV()
         par(mfrow=c(1,1))
@@ -670,7 +670,8 @@ italk_getResults <- reactive({
 
 italk_netview.RENDER <- reactive({
     res <- italk_getResults()
-    if(is.null(res)) return(NULL)
+    req(res)xs
+    ##if(is.null(res)) return(NULL)
     res_cat <- res$table
     ## Communication graph
     NetView(res_cat, col=res$cell_col, vertex.label.cex=1, arrow.width=1, edge.max.width=5)
@@ -679,7 +680,8 @@ italk_netview.RENDER <- reactive({
 italk_LRPlot.RENDER <- reactive({
     ## Circos plot
     res <- italk_getResults()
-    if(is.null(res)) return(NULL)
+    req(res)
+    ##if(is.null(res)) return(NULL)
     res_cat <- res$table
     if(nrow(res_cat)<1) return(NULL) 
 
@@ -696,9 +698,9 @@ italk_LRPlot.RENDER <- reactive({
 italk_heatmap.RENDER <- reactive({
     ## Expression heatmap
     ngs <- inputData()
-    req(ngs)
     res <- italk_getResults()
-    if(is.null(res)) return(NULL)
+    req(ngs,res)
+    ##if(is.null(res)) return(NULL)
     
     res_cat <- res$table
     ntop=50
