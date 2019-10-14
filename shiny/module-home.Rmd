@@ -575,30 +575,34 @@ inputData <- reactive({
 
 ```
 
-
-Row {data-height=200}
+Row {data-height=100}
 -----------------------------------------------------------------------
 
 ```{r}
-renderPlot(plot(sin))
+## useShinydashboard()
+## fillRow(
+##     renderValueBox( valueBox(value=200,"subtitle")),
+##     renderPlot(plot(sin),height=200),
+##     renderPlot(plot(sin),height=200)
+## )
 ```
 
+### {.value-box}
 
 ```{r}
-### {.value-box}
-##flexdashboard::valueBox(value=nrow(PGXINFO), "data sets")
+flexdashboard::valueBox(value=nrow(PGXINFO), "data sets")
 ```
 
+### {.value-box}
 
 ```{r}
-### {.value-box}
-##flexdashboard::valueBox( value=sum(PGXINFO$nsamples,na.rm=TRUE), "samples")
+flexdashboard::valueBox( value=sum(PGXINFO$nsamples,na.rm=TRUE), "samples")
 ```
 
+### {.value-box}
 
 ```{r}
-### {.value-box}
-##flexdashboard::valueBox( value=nrow(GSETxGENE), "gene sets")
+flexdashboard::valueBox( value=nrow(GSETxGENE), "gene sets")
 ```
 
 
