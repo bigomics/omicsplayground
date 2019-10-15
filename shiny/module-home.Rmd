@@ -20,8 +20,11 @@ SHOWSPLASH=TRUE
 LOGIN_AUTHENTICATION = "none"
 ##LOGIN_AUTHENTICATION = "register"
 ##LOGIN_AUTHENTICATION = "password"
-CREDENTIALS <- list("test" = "202cb962ac59075b964b07152d234b70")
-CREDENTIALS <- list("test" = "123")
+CREDENTIALS <- list(
+    "omics" = "playground",
+    "big" = "OMICS",
+    "reviewer" = "NAR"
+    )
 
 
 ##-----------------------------------------------------------------------------
@@ -171,12 +174,13 @@ cartoon_list <- list(
 )
 
 randomCartoon <- function() {
-    ## invalidateLater(12000)
+##randomCartoon <- reactive({
+    ##invalidateLater(20000)
     cartoon <- sample(cartoon_list,1)[[1]]
     cartoon$img2 = paste0("cartoons/",cartoon$img)
     cartoon$img  = paste0("www/cartoons/",cartoon$img)
     cartoon
-}
+}##)
 
 startup_count=0
 VERSION='0.99 (always almost)'
@@ -262,19 +266,39 @@ selectedDataSet <- reactive({
     as.character(df$dataset[sel])
 })
 
+output$loading_image <- renderImage({
+    toon <- randomCartoon()
+    list(src = toon$img,
+         contentType = 'image/png',
+         width = "100%", height = "100%", ## actual size: 1040x800         
+         alt = "loading image")
+}, deleteFile=FALSE)        
+
+
+showloading_ntime=0
 showLoadingModal <- function(msg="Loading data...") {
     toon <- randomCartoon()
+    ##toon <- isolate(randomCartoon())
+    ## the first time renderImage gives no image, so for the firs image we give a base64enc
+    ##if(showloading_ntime==0) {
+        ##img0 = imageOutput("loading_image", width="auto", height="250px")
+        ##img0 = img(src = base64enc::dataURI(file=toon$img), width="auto", height="250px")
+    ##} else {
+        ##img0 = imageOutput("loading_image", width="auto", height="250px")
+    ##}
     showModal(modalDialog(
         ##title = HTML("<center><h4>Omics Playground</h4></center>"),
         ##HTML("<center><h2>",pgx.randomSlogan(),"</h2><h4>with Omics Playground</h4></center>"),
         title = HTML("<center><h2>",toon$slogan,"</h2><h4>with Omics Playground</h4></center>"),
         fillRow(flex=c(1,NA,1), br(),
+                ##img0,
                 ##imageOutput("loading_image", width="auto", height="250px"),
                 img(src = base64enc::dataURI(file=toon$img), width="auto", height="250px"),
                 br()),
         footer = HTML("<center><p>",msg,"  &nbsp; Please wait</p></center>"),
         size="m", easyClose=TRUE, fade=TRUE))
     ## Sys.sleep(5)
+    showloading_ntime <<- 1
     dbg("showLoadingModal done!\n")
 }
 
@@ -611,13 +635,16 @@ output$valuebox1 <- renderUI({
 output$valuebox2 <- renderUI({
     pgx <- getPGXTable()
     req(pgx)
-    nsamples <- sum(pgx$nsamples)
+    dbg("valuebox2:: pgx$nsamples=",pgx$nsamples)
+    nsamples <- sum(as.integer(pgx$nsamples),na.rm=TRUE)
     vbox( nsamples, "number of samples")     
 })
 output$valuebox3 <- renderUI({
     pgx <- getPGXTable()
     req(pgx)
-    nvalues <- sum(pgx$nsamples * (pgx$ngenes + pgx$nsets))
+    dbg("valuebox3:: pgx$nsamples=",pgx$nsamples)
+    nvalues <- sum(as.integer(pgx$nsamples) * (as.integer(pgx$ngenes)
+        + as.integer(pgx$nsets)),na.rm=TRUE)
     nvalues1 <- format(nvalues, nsmall=, big.mark=" ")  # 1,000.6
     vbox( nvalues1, "data points") 
 })
@@ -658,10 +685,7 @@ getPGXTable <- reactive({
     dbg("<getPGXTable> reacted")
     
     has.upload = uploadReady() ## reactive
-    ##has.upload <- ("ngs" %in% uploaded_files) ## reactive
-    dbg("<getPGXTable> has.upload=",has.upload)
-    dbg("<getPGXTable> 1")
-    
+    ##has.upload <- ("ngs" %in% uploaded_files) ## reactive    
     df <- PGXINFO
     pgx.files = dir(PGX.DIR, pattern=".pgx$")
     sel <- sub("[.]pgx$","",df$dataset) %in% sub("[.]pgx$","",pgx.files)
@@ -814,9 +838,22 @@ output$allFilesOK <- reactive({
 outputOptions(output, "allFilesOK", suspendWhenHidden = FALSE) ## important!
 
 observeEvent( input$upload_compute, {
+    ## are you sure?
+    confirmSweetAlert(
+        session = session,
+        inputId = "myconfirmation",
+        title = "Your data will be publicly shared. Are you sure?"
+    )
+})
+
+observeEvent( input$myconfirmation, {
+
+    if(isFALSE(input$myconfirmation)) {
+        dbg("INFO user cancelled upload")
+        return(NULL)
+    }
 
     if(0) {
-        
         files.needed = c("counts.csv","samples.csv","genes.csv","contrasts.csv")
         files.needed1 = paste0("../exampledata/",files.needed)
         uploaded_files = lapply(files.needed1, read.csv, row.names=1,
@@ -831,9 +868,9 @@ observeEvent( input$upload_compute, {
 
     }
 
+    
     ## check names and other things
     dbg("upload_compute :: checking filename")
-
     pgx.files = sub("[.]pgx$","",dir(PGX.DIR, pattern=".pgx$"))
     if(input$upload_name %in% pgx.files) {
         sendSweetAlert(
@@ -887,16 +924,7 @@ observeEvent( input$upload_compute, {
             counts <- counts[ii,,drop=FALSE]
             genes  <- genes[rownames(counts),,drop=FALSE]
         }
-        
-        dbg("upload_compute :: dim(counts)=",dim(counts))
-        dbg("upload_compute :: class(counts)=",class(counts))
-        dbg("upload_compute :: sum.is.na(counts)=",sum(is.na(counts)))
-
-        dbg("upload_compute :: dim(samples)=",dim(samples))
-        dbg("upload_compute :: dim(genes)=",dim(genes))
-        dbg("upload_compute :: dim(contrasts)=",dim(contrasts))
-        dbg("upload_compute :: class(contrasts)=",class(contrasts))
-        
+                
         start_time <- Sys.time()
         ## Create a Progress object
         progress <- shiny::Progress$new()
@@ -958,7 +986,6 @@ observeEvent( input$upload_compute, {
     )
     
 })
-
 
 uploadStatusTable <- reactive({
     
