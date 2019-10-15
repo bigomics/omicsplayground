@@ -183,7 +183,7 @@ getFilteredKeggTable <- reactive({
 })
 
 ## There is a bug in pathview::geneannot.map so we have to override
-##
+## "Error in mol.sum(gene.data, gene.idmap) : no ID can be mapped!"
 my.geneannot.map <- function(in.ids, in.type, out.type, org = "Hs", pkg.name = NULL, 
                              unique.map = TRUE, na.rm = TRUE, keep.order = TRUE) 
 {
@@ -345,9 +345,18 @@ output$kegg_graph <- renderImage({
         pathway.name <- df[sel.row,"pathway"]
         pw.genes <- GSETS[[as.character(pathway.name)]]
     }
-    
-    xml.dir <- file.path(FILES,"kegg-xml")
 
+    ## folder with predownloaded XML files
+    xml.dir <- file.path(FILES,"kegg-xml")
+    xml.dir <- normalizePath(xml.dir)  ## absolute path
+
+    ## We temporarily switch the working directory to always readable
+    ## TMP folder
+    curwd <- getwd()
+    curwd
+    tmpdir <- tempdir()
+    tmpdir
+    setwd(tmpdir)
     pv.out <- pathview(
         gene.data = fc, pathway.id=pathway.id, gene.idtype="SYMBOL",
         gene.annotpkg = "org.Hs.eg.db", species = "hsa",
@@ -356,14 +365,19 @@ output$kegg_graph <- renderImage({
         high = list(gene = "firebrick2", cpd = "yellow"), 
         kegg.dir=xml.dir, kegg.native=TRUE, same.layer=FALSE )
     Sys.sleep(0.2) ## wait for graph
+
+    ## back to previous working folder
+    setwd(curwd)   
+    dbg("kegg_graph: back to working folder=",getwd(),"\n")
     
     ##width  <- session$clientData$output_kegg_graph_width
     ##height <- session$clientData$output_kegg_graph_height    
-    outfile = paste0("hsa",pathway.id,".pathview.png")
-    cat("kegg_graph: outfile=",outfile,"\n")
+    outfile = file.path(tmpdir,paste0("hsa",pathway.id,".pathview.png"))
+    dbg("kegg_graph: outfile=",outfile,"\n")
+    file.exists(outfile)
     if(!file.exists(outfile)) return(NULL.IMG)
 
-    cat("kegg_graph: copy",outfile,"to",KEGGIMG,"\n")
+    dbg("kegg_graph: copy",outfile,"to",KEGGIMG,"\n")
     unlink(KEGGIMG,force=TRUE)
     file.copy(outfile,KEGGIMG)
     
