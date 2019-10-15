@@ -25,11 +25,11 @@ the source code:
 
     git clone https://github.com/bigomics/omicsplayground.git
     
-2. Be sure you have installed all necessary R packages by running the files in the ``/R`` folder::
+2. Be sure you have installed all necessary R packages by running the files in the ``R/`` folder::
 
     Rscript requirements.R
     
-3. Similarly, run the following command in the ``/scripts`` folder to build the datasets::
+3. Similarly, run the following command in the ``scripts/`` folder to build the datasets::
 
     Rscript run-all.R
 
@@ -37,7 +37,7 @@ the source code:
 
     Building the datasets can vary from minutes to a couple of hours depending on their sizes.
 
-4. Change the current directory into the ``/shiny`` folder and execute the following command
+4. Change the current directory into the ``shiny/`` folder and execute the following command
    to run the platform::
 
     R -e "rmarkdown::run(shiny_args=list(launch.browser=TRUE))"
