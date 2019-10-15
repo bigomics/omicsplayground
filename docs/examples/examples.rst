@@ -231,7 +231,7 @@ Survival tree
 To redproduce similar figures, go to the **Biomarker** module,
 and set the :option:`Predicted target: OS.survival` from the input panel.
 Note that the survival tree is stochastically built up with some of the top
-features shown in `Figure 8`_; Therefore, users can get a slightly different survival
+features shown in `Figure 10`_; Therefore, users can get a slightly different survival
 tree every time.
 
 
@@ -303,7 +303,7 @@ Classification tree
 To reproduce similar figures, go to the **Biomarker** module, and set the 
 :option:`Predicted target: cell.type` from the input panel.
 Note that the classification tree is stochastically built up with some of the top
-features shown in `Figure 8`_; Therefore, users can get a slightly different survival
+features shown in `Figure 10`_; Therefore, users can get a slightly different survival
 tree every time.
 
 
