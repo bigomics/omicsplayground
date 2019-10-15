@@ -198,7 +198,7 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, genes, design, contr.matr
         cat("fitting using DESeq2 (Wald test)")
         timings[["deseq2.wald"]] <- system.time(
             outputs[["deseq2.wald"]] <- ngs.fitConstrastsWithDESEQ2(
-                counts, group, contr.matrix, design, X=X, 
+                counts, group, contr.matrix, design, X=X, genes=genes,
                 test="Wald", conform.output=conform.output )
         )
         cat(paste0(" (",timings[["deseq2.wald"]][1],"s)\n"))
@@ -207,7 +207,7 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, genes, design, contr.matr
         cat("fitting using DESeq2 (LRT test)")
         timings[["deseq2.lrt"]] <- system.time(
             outputs[["deseq2.lrt"]] <- ngs.fitConstrastsWithDESEQ2(
-                counts, group, contr.matrix, design, X=X,
+                counts, group, contr.matrix, design, X=X, genes=genes,
                 test="LRT", conform.output=conform.output )
         )
         cat(paste0(" (",timings[["deseq2.lrt"]][1],"s)\n"))
@@ -627,8 +627,8 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
     return(res)
 }
 
-ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
-                                        X=NULL, test="Wald", conform.output=FALSE)
+ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design, 
+                                        X, genes, test="Wald", conform.output=FALSE)
 {
     if(is.null(design)) {
         out <- ngs.fitConstrastsWithDESEQ2.nodesign(
