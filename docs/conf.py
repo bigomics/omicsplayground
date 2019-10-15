@@ -72,7 +72,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Omics Playground'
-copyright = 'BigOmics Analytics, 2019'
+# copyright = 'BigOmics Analytics, 2019'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
