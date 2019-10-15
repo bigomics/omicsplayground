@@ -72,7 +72,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Omics Playground'
-copyright = 'BigOmics Analytics, 2019'
+# copyright = 'BigOmics Analytics, 2019'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -227,9 +227,10 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
+# 'BigOmics Analytics',
 latex_documents = [
   ('index', 'omicsplayground.tex', 'Omics Playground Documentation',
-   'BigOmics Analytics', 'manual'),
+    '', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
