@@ -230,7 +230,7 @@ latex_elements = {
 # 'BigOmics Analytics',
 latex_documents = [
   ('index', 'omicsplayground.tex', 'Omics Playground Documentation',
-    'manual'),
+    '', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
