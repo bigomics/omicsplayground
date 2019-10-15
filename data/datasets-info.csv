@@ -27,3 +27,6 @@ Please prepare the data files in CSV format as listed below. It is important to 
 "24","test10.pgx","RNA-seq","Proteome profiles of activated vs resting human naive T cells at different times (Geiger et al., Cell 2016). ","human","18","2000","8496","activated time","Fri Oct 11 20:42:26 2019"
 "25","test8.pgx","RNA-seq","Proteome profiles of activated vs resting human naive T cells at different times (Geiger et al., Cell 2016). ","human","18","2000","8496","activated time","Tue Oct 15 03:20:44 2019"
 "26","test9.pgx","RNA-seq","Proteome profiles of activated vs resting human naive T cells at different times (Geiger et al., Cell 2016). ","human","18","2000","8496","activated time","Tue Oct 15 03:29:08 2019"
+"27","test11.pgx","RNA-seq",": Proteome profiles of activated vs resting human naive T cells at different times (Geiger et al., Cell 2016).
+
+nsamples : 18 ","human","18","2000","8496","activated time","Tue Oct 15 03:52:38 2019"
