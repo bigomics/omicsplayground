@@ -32,6 +32,11 @@ WORKDIR /omicsplayground
 RUN R -e "setwd('R');source('requirements.R')"
 
 #------------------------------------------------------------
+# Copy data into Docker image
+#------------------------------------------------------------
+COPY data /omicsplayground/data
+
+#------------------------------------------------------------
 # Copy further configuration files into the Docker image
 #------------------------------------------------------------
 COPY docker/shiny-server.conf  /etc/shiny-server/shiny-server.conf
