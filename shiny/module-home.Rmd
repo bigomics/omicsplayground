@@ -168,7 +168,9 @@ cartoon_list <- list(
     ## list(slogan="Do-it-yourself. Yes you can.", img="bigomics-rockstar3.jpg"),
     list(slogan="Analyze with confidence. Be a rockstar", img="bigomics-rockstar3.jpg"),
     list(slogan="Fast track your Bioinformatics", img="selfservice-checkout2.png"),
+    list(slogan="Integrate more. Dig deeper", img="cartoon-integration.jpg"),
     list(slogan="Your analysis doesn't take coffee breaks", img="gone-for-coffee.png"),
+    list(slogan="Too much data? Help yourself", img="cartoon-datahelp2.jpg"),    
     list(slogan="Big Friendly Omics", img="big-friendly-omics1.jpg"),
     list(slogan="Big Data meets Biology", img="bigdata-meets.png")
 )
