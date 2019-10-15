@@ -99,7 +99,7 @@ The resulting top marker genes are displayed below.
 
 CNV
 --------------------------------------------------------------------------------
-The **CNV*8 panel performs the copy number variation (CNV) analysis. 
+The **CNV** panel performs the copy number variation (CNV) analysis. 
 The copy number is estimated from gene expression data by computing a moving
 average of the relative expression along the chromosomes. CNV generates a 
 heatmap of samples versus chromosomes, where samples can be annotated 
