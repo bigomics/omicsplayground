@@ -18,7 +18,8 @@ gx_infotext ="The <strong>Differential Expression Analysis</strong> module compa
 
 <br><br>EXPERT MODE ONLY: To compare the different statistical methods, the <strong>Volcano (methods)</strong> panel shows volcano plots of all methods. The <strong>FDR table</strong> panel reports the number of significant genes at different FDR thresholds for all contrasts.
 
-<br><br>For a recommended tutorial on Differential Expression analysis, see the video below:<br><br><center><iframe width='500' height='333' src='https://www.youtube.com/embed/dvozWzolVI8' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
+<br><br><br><br>
+<center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=3' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
 
 
 observeEvent( input$gx_info, {

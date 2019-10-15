@@ -42,15 +42,14 @@ ngs$description ="GSE110496 dengue/zika virus scRNA-seq data set."
 ## READ/PARSE DATA
 if(PROCESS.DATA) {
 
-    ## #############################################################
-    ##   Differential expression analysis with limma
-    ## BiocManager::install("GEOquery", version = "3.8")
     library(Biobase)
     library(GEOquery)
     library(data.table)
 
     
+    ###############################################################
     ## load series and platform data from GEO
+    ###############################################################
     geo <- getGEO("GSE110496", GSEMatrix=TRUE, AnnotGPL=TRUE)
     length(geo)
     attr(geo, "names")
@@ -59,21 +58,29 @@ if(PROCESS.DATA) {
     pdata = pData(geo[[1]])
     dim(pdata)
     head(pdata)
-        
+
     ##--------------------------------------------------------------
-    ## Read SC counts
+    ## Download from GEO
     ##--------------------------------------------------------------
-    datafile <- "../../Data/GSE/GSE110496/GSE110496_counts.csv"
-    if(!file.exists(datafile)) {
-        stop("could not load data file GSE110496_counts.csv")
-    }
-    counts = fread(datafile,nrow=-1000)
+    url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE110nnn/GSE110496/suppl/GSE110496_RAW.tar"
+    system("(mkdir -p /tmp/GSE110496)")
+    system("(cd /tmp/GSE110496 && rm -f GSE110496_RAW.tar && wget ",url,")")
+    system("(cd /tmp/GSE110496 && tar xvf GSE110496_RAW.tar)")
+
+    curwd <- getwd()
+    curwd
+    
+    ## concatenate file into one count matrix
+    library(parallel)
+    files <- dir("/tmp/GSE110496", pattern=".tsv.gz",full.names=TRUE)
+    head(files)
+    xx <- mclapply(files[], function(f) read.table(f,header=TRUE)[,2])
+    counts <- do.call(cbind, xx)
+    rownames(counts) <- read.table(files[1],header=TRUE)[,1]
+    colnames(counts) <- sub("_counts.*","",files[1:ncol(counts)])
+    colnames(counts) <- sub(".*/","",colnames(counts))
+
     dim(counts)
-    head(counts)[,1:4]
-    counts = counts[!is.na(counts[[1]]),]
-    gene = counts[[1]]
-    counts = as.matrix(counts[,2:ncol(counts)])
-    rownames(counts) = gene
     head(counts)[,1:5]
         
     ## convert ENSEMBLE to symbol

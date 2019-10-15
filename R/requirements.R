@@ -3,8 +3,8 @@
 ## NOTE: This file is supposed to run in the folder .../R/
 ##
 
-if(!require(devtools)) install.packages("devtools")
-if(!require(BiocManager)) install.packages("BiocManager")
+install.packages("devtools")
+install.packages("BiocManager")
 require(devtools)
 require(BiocManager)
 
@@ -51,10 +51,11 @@ BIG.NOTUSED <- c(
     "TxDb.Mmusculus.UCSC.mm10.knownGene"
 )    
 
-PKG.MANUAL <- c("gputools","Seurat","EPIC","PCSF","NNLM","iTALK",
-                "fpc","grid","gridGraphics","Rgraphviz",
-                "shinyparticles","FastGGM","monocle3","proteus",
-                "fastcluster","mygene","diptest","infercnv")
+PKG.MANUAL <- c(
+    "gputools","Seurat","EPIC","PCSF","NNLM","iTALK",
+    "fpc","grid","gridGraphics","Rgraphviz","rWordCloud",
+    "shinyparticles","FastGGM","monocle3","proteus",
+    "fastcluster","mygene","diptest","infercnv","pathview")
 
 ##---------------------------------------------------------------------
 ## Install base packages
@@ -102,7 +103,7 @@ devtools::install_github("GfellerLab/EPIC", build_vignettes=TRUE)
 ##devtools::install_github("IOR-Bioinformatics/PCSF", dependencies=TRUE, type="source")
 devtools::install_github('linxihui/NNLM')
 devtools::install_github("Coolgenome/iTALK", build_vignettes = TRUE)
-devtools::install_github('adymimos/rWordCloud')
+devtools::install_github('adymimos/rWordCloud', force=TRUE)
 remotes::install_github("dreamRs/shinyparticles")
 
 ##---------------------------------------------------------------------
@@ -137,6 +138,8 @@ install.packages("../ext/packages/Seurat_v2.3.3.tar.gz",repos=NULL,type="source"
 ##---------------------------------------------------------------------
 install.packages("../ext/packages/nclust1_1.9.4.tar.gz",repos=NULL,type="source")
 install.packages("../ext/packages/nclust_2.1.1.tar.gz",repos=NULL,type="source")
+
+install.pkgs(c("RcppParallel"))
 install.packages("../ext/packages/FastGGM.tar.gz", repos = NULL, type = "source")
 
 install.pkgs(c("HiddenMarkov","coin","rjags","future","argparse"))
@@ -149,4 +152,5 @@ install.packages("../ext/packages/pathview_1.16.7.tar.gz",repos=NULL,type="sourc
 ##---------------------------------------------------------------------
 ## remove unneccessary big packages...
 ##---------------------------------------------------------------------
+
 remove.pkgs(BIG.NOTUSED)

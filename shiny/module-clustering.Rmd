@@ -22,8 +22,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
 <br><br>EXPERT MODE ONLY: The <strong>Feature ranking</strong> panel computes a discriminant score for gene (or geneset) families. This allows to investigate what family of genes (or gene sets) can best discriminate the groups. 
 
-<br><br>For a tutorial on Hierarchical Clustering, see the video below:<br><br>
-<center><iframe width="500" height="333" src="https://www.youtube.com/embed/7xHsRkOdVwo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
+<br><br><br><br>
+<center><iframe width="500" height="333" src="https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=2" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
+
 
 ')
 
