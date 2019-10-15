@@ -10,7 +10,7 @@ User can select BASIC or ADVANCED user mode. The basic mode should be
 sufficient for most users. The advanced mode presents extra
 visualization panels and enables more custom options. The advanced
 mode also has specialized analysis modules for single-cell RNA-seq,
-immune cell profiling and signature analysis."
+immune cell profiling and signature analysis.
 
 .. figure:: figures/psc1.1.png
     :align: center
@@ -67,7 +67,7 @@ Useful links
 In the bottom-left corner of the **Home panel**, users can find some useful
 links regarding the Omics Playground, including the 
 `online documentation <https://omicsplayground.readthedocs.io>`__ at Read-the-docs, 
-`video tutorials <https://www.youtube.com>`__ on YouTube, 
+`video tutorials <https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ->`__ on YouTube, 
 the `source code <https://github.com/bigomics/omicsplayground>`__ at GitHub, 
 the `docker file <https://hub.docker.com/r/bigomics/omicsplayground>`__ at Docker hub, 
 and the `user forum <https://groups.google.com/forum/#!forum/omics-playground>`__ 
