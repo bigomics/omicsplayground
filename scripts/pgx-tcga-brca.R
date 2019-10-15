@@ -45,13 +45,17 @@ ngs$description = "TCGA breast cancer data set. Gene expression from 526 patient
 if(PROCESS.DATA) {
 
     ## ##############################################################
-    ## get data
-
-    ## Uncomment to download data from cBioPortal
-    ## system("mkdir -p ../downloads/brca_tcga_pub")
-    ## system("wget http://download.cbioportal.org/brca_tcga_pub.tar.gz -P ../downloads/brca_tcga_pub/")
-    ## system("(cd ../downloads/brca_tcga_pub/ && tar xvfz brca_tcga_pub.tar.gz)")
-    download.dir = "../downloads/brca_tcga_pub"
+    ## get data: download data from cBioPortal
+    ## 
+    download.dir = "/tmp/brca_tcga_pub"
+    if(!dir.exists(download.dir)) {
+        system(paste("mkdir -p ",download.dir))
+        system(paste("wget -c http://download.cbioportal.org/brca_tcga_pub.tar.gz -P ",download.dir))
+        system(paste("(cd ",download.dir," && tar xvfz brca_tcga_pub.tar.gz)"))
+    } else {
+        ## should exists..
+    }
+    getwd()
     dir(download.dir)
     
     clin1 <- read.csv(file.path(download.dir,"data_clinical_sample.txt"),
@@ -168,8 +172,6 @@ if(PROCESS.DATA) {
     ## Pre-calculate t-SNE for and get clusters early so we can use it
     ## for doing differential analysis.
     ##-------------------------------------------------------------------
-    ngs$X <- as.matrix(X) ## cluster will skip log
-    ngs$X <- NULL
     ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, prefix="C",
                               perplexity=30)
     head(ngs$samples)

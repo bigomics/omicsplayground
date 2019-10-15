@@ -26,7 +26,7 @@ MAX.GENES
 MAX.GENES = 4000
 BATCH.CORRECT=TRUE
 
-## run all available methods 
+## run these methods 
 USER.GENETEST.METHODS = c("trend.limma","edger.qlf","deseq2.wald")
 USER.GENESETTEST.METHODS = c("gsva","camera","fgsea")
 
@@ -43,14 +43,17 @@ ngs$description = "TCGA prostate cancer data set. Gene expression from patients 
 if(PROCESS.DATA) {
 
     ## ##############################################################
-    ## get data
-    if(0) {
-        system("mkdir -p ../downloads/prad_tcga/")
-        system("wget http://download.cbioportal.org/prad_tcga.tar.gz -P ../downloads/prad_tcga")
-        system("(cd ../downloads/prad_tcga && tar xvfz prad_tcga.tar.gz)")
+    ## get data from cBioportal
+    ##
+    download.dir = "/tmp/prad_tcga"
+    if(!dir.exists(download.dir)) {
+        system(paste("mkdir -p ",download.dir))
+        system(paste("wget -c http://download.cbioportal.org/prad_tcga.tar.gz -P ",download.dir))
+        system(paste("(cd ",download.dir," && tar xvfz prad_tcga.tar.gz)"))
+    } else {
+        ## should exists..
     }
-    download.dir = "../downloads/prad_tcga"
-    ##download.dir = "../../pub/cbio/prad_tcga"
+    getwd()
     dir(download.dir)
     
     clin <- read.csv(file.path(download.dir,"data_bcr_clinical_data_patient.txt"),
@@ -125,22 +128,10 @@ if(PROCESS.DATA) {
     ##ngs$samples$batch <- NULL  ##???
     ##ngs$samples$batch <- as.integer(lib.size2)
 
-    ## tagged rownames
-    ##row.id = paste0("tag",1:nrow(ngs$genes),":",ngs$genes[,"gene_name"])  
-    ##row.id = ngs$genes[,"gene_name"]
-    ##rownames(ngs$genes) = rownames(ngs$counts) = row.id
-    ##names(ngs)
-
     ##-------------------------------------------------------------------
     ## collapse multiple row for genes by summing up counts
     ##-------------------------------------------------------------------
     sum(duplicated(rownames(X)))
-    ## x1 = apply(ngs$counts, 2, function(x) tapply(x, ngs$genes$gene_name, sum))
-    ## ngs$genes = ngs$genes[match(rownames(x1),ngs$genes$gene_name),]
-    ## ngs$counts = x1
-    ## dim(x1)
-    ## rownames(ngs$genes) = rownames(ngs$counts) = rownames(x1)
-    ## remove(x1)
     ##ngs <- ngs.collapseByGene(ngs)
     ##dim(ngs$counts)
         
@@ -219,15 +210,6 @@ if(DIFF.EXPRESSION) {
 rda.file
 ngs.save(ngs, file=rda.file)
 
-
-if(0) {
-    load(file=rda.file, verbose=1)
-    table(ngs$genes[rownames(ngs$X),]$data_type)
-    jj <- match(rownames(ngs$X),rownames(ngs$genes))
-    table(ngs$genes[jj,]$data_type)
-
-    
-}
 
 
 
