@@ -23,6 +23,9 @@ data_infotext =paste0(
 
 <br><br>The <strong>Plots</strong> panel displays figures related to the expression level of the selected gene, correlation, and average expression ranking within the dataset. More information about the gene and hyperlinks to external databases are provided. Furthermore, it displays the correlation and tissue expression for a selected gene in external reference datasets. In the <strong>Counts</strong> panel, the total number of counts (abundance) per sample and their distribution among the samples are displayed. This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes. In <strong>Gene Table</strong> panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the first gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table. In the <strong>Samples</strong> panel, more complete information about samples can be found. Finally, the <strong>Contrasts</strong> panel, shows information about the phenotype comparisons.
 
+<br><br><br><br>
+<center><iframe width="500" height="333" src="https://www.youtube.com/embed/watch?v=IrqU-z9UDqc&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=1" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
+
 ')
 
 observeEvent( input$data_info, {

@@ -1444,8 +1444,8 @@ enrich_wordcloud.RENDER <- reactive({
 
     color.pal = input$enrich_wordcloud_colors
     
-    require(wordcloud2)
-    require(rWordCloud)
+    ##require(wordcloud2)
+    ##require(rWordCloud)
     require(wordcloud)
     ##wordcloud2( data.frame(word=df$word, size=size), size=1)
     ##d3Cloud(text = df$word, size = size)
