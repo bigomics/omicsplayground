@@ -1,10 +1,10 @@
 Omics Playground: Explore Omics Data Freely
 ================================================================================
 
-The Omics Playground is a comprehensive self-service platform platform 
-for visualization, analytics and exploration of Big Omics Data. 
-It allows users to apply a multitude of state-of-the-art analysis tools 
-to their own data to explore and discover underlying biology in a short time.
+Omics Playground is a comprehensive self-service platform platform for
+visualization, analytics and exploration of Big Omics Data.  It allows
+users to apply a multitude of state-of-the-art analysis tools to their
+own data to explore and discover underlying biology in a short time.
 
 The platform offers a unique combination of features that 
 distinguishes it from the other analytics platforms currently available. 
@@ -35,7 +35,7 @@ Installation
 ================================================================================
 
 You can either run the platform from the source code, or download the
-docker image. Running the Omics Playground from the docker file is the
+docker image. Running Omics Playground from the docker file is the
 easiest way.
 
 
