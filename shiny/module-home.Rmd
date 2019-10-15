@@ -22,8 +22,7 @@ LOGIN_AUTHENTICATION = "none"
 ##LOGIN_AUTHENTICATION = "password"
 CREDENTIALS <- list(
     "omics" = "playground",
-    "big" = "OMICS",
-    "reviewer" = "NAR"
+    "fred"  = "flinstone"
     )
 
 
