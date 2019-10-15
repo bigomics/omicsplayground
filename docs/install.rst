@@ -6,7 +6,7 @@ Installation
 ================================================================================
 
 You can either run the platform from the source code, or download the
-docker image. Running the Omics Playground from the docker file is the
+docker image. Running Omics Playground from the docker file is the
 easiest way.
 
 
