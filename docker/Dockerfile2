@@ -16,13 +16,13 @@ RUN apt-get update && apt-get install -y apt-utils \
     jags emacs git
 
 ## Remove old folder
-RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
-RUN rm -fr /omicsplayground/ &
+RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny 
+RUN rm -fr /omicsplayground
 
 #------------------------------------------------------------
 ## Pull from GitHub
 #------------------------------------------------------------
-RUN git pull bigomics/omicsplayground
+RUN git clone https://github.com/bigomics/omicsplayground.git 
 RUN chmod -R ugo+rwX /omicsplayground
 WORKDIR /omicsplayground
 
@@ -34,7 +34,7 @@ RUN R -e "setwd('R');source('requirements.R')"
 #------------------------------------------------------------
 # Copy data into Docker image
 #------------------------------------------------------------
-COPY data /omicsplayground/data
+COPY data/* /omicsplayground/data/
 
 #------------------------------------------------------------
 # Copy further configuration files into the Docker image
