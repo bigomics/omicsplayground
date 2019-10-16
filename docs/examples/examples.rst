@@ -152,7 +152,7 @@ which contains CD4 T cells following ipilimumab therapy.
 to ipilimumab, a novel monoclonal antibody targeting CTLA-4 used in tumour therapy
 to stimulate the immune system. The complete list contains several compounds that
 stimulate the immune system, such as alpha-tocopherol 
-(Morel et al. <https://www.sciencedirect.com/science/article/pii/S0264410X11000399>`__), 
+(`Morel et al. <https://www.sciencedirect.com/science/article/pii/S0264410X11000399>`__), 
 but also highlights compounds that are not commonly associated with the modulation
 of immune responses, such as strophanthidin, an intropic drug that has recently
 been shown to display pro-inflammatory activities  
