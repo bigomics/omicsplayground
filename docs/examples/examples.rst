@@ -149,12 +149,15 @@ This example is illustriated using the RNA-sequencing dataset
 `Goswami et al. <https://www.ncbi.nlm.nih.gov/pubmed/29905573>`__, 
 which contains CD4 T cells following ipilimumab therapy.
 `Figure 8`_ shows the top ranked drugs with most similar or most opposing signatures
-to ipilimumab, a novel monoclonal antibody targeting CTLA-4 used in tumour therapy.
-The list contains several known anti-tumoral drugs, such as bortezomib and 
-palbociclib, but also highlights relationships with other compounds not normally
-used in tumor therapy, such as emetine, an anti-protozoal drug with anti-tumoral
-properties (`Foreman et al. <https://www.auajournals.org/doi/abs/10.1016/j.juro.2013.09.014>`__
-and `Sun et al. <https://www.spandidos-publications.com/ijo/46/1/389>`__).
+to ipilimumab, a novel monoclonal antibody targeting CTLA-4 used in tumour therapy
+to stimulate the immune system. The complete list contains several compounds that
+stimulate the immune system, such as alpha-tocopherol 
+(`Morel et al. <https://www.sciencedirect.com/science/article/pii/S0264410X11000399>`__), 
+but also highlights compounds that are not commonly associated with the modulation
+of immune responses, such as strophanthidin, an intropic drug that has recently
+been shown to display pro-inflammatory activities  
+(`Karas et al. <https://www.sciencedirect.com/science/article/pii/S0378427418314863>`__).
+
 
 Drug enrichment profiles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
