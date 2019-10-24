@@ -15,7 +15,7 @@ options(warn=-1)
 library(GREP2)
 ## Sys.setenv(PATH="/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/opt/sratoolkit/bin")
 
-if(1) {
+if(0) {
     ##------------------------------------------------
     ## How to use
     ##------------------------------------------------
