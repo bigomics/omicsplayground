@@ -189,7 +189,9 @@ pgx.initialize <- function(ngs) {
             ngs$counts = t(t(ngs$counts) * libsize)
         }
     }
-
+    ngs$counts <- as.matrix(ngs$counts)
+    if(!is.null(ngs$X)) ngs$X <- as.matrix(ngs$X)
+    
     ##----------------------------------------------------------------
     ## Tidy up phenotype matrix (important!!!): get numbers/integers
     ## into numeric, categorical into factors....
