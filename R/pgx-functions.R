@@ -9,6 +9,45 @@ USER.GENETEST.METHODS <- NULL
 ##==========    Platform helper functions =====================================
 ##=============================================================================
 
+pgx.exportFiles <- function(ngs, outdir="export") {
+    
+    cwd <- getwd()
+    system(paste("mkdir -p ",outdir))
+    setwd(outdir)
+    write.csv(ngs$counts, file="counts.csv")
+    write.csv(ngs$samples, file="samples.csv")
+    write.csv(ngs$genes, file="genes.csv")
+    
+    write.csv(ngs$X, file="log2counts.csv")
+    write.csv(ngs$gsetX, file="geneset-activation.csv")
+    
+    for(i in 1:length(ngs$gx.meta$meta)) {
+        fn = paste0("diffexpr-", names(ngs$gx.meta$meta)[i],".csv")
+        write.csv( ngs$gx.meta$meta[[i]], file=fn)
+    }
+    for(i in 1:length(ngs$gset.meta$meta)) {
+        fn = paste0("enrichment-", names(ngs$gset.meta$meta)[i],".csv")
+        write.csv( ngs$gset.meta$meta[[i]], file=fn)
+    }
+    
+    if(!is.null(ngs$drugs$mono)) {
+        df <- data.frame( NES=ngs$drugs$mono$X,
+                         p=ngs$drugs$mono$P,
+                         q=ngs$drugs$mono$Q )
+        write.csv(df, file="drugs-mono-enrichment.csv")
+    }
+    
+    if(!is.null(ngs$drugs$combo)) {
+        df <- data.frame( NES=ngs$drugs$combo$X,
+                         p=ngs$drugs$combo$P,
+                         q=ngs$drugs$combo$Q )
+        write.csv(df, file="drugs-combo-enrichment.csv")
+    }
+    
+    setwd(cwd)
+}
+
+
 wrapHyperLink <- function(s, gs) {
     
     ## GEO/GSE accession
