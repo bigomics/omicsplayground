@@ -3,10 +3,10 @@
 ## NOTE: This file is supposed to run in the folder .../R/
 ##
 
-install.packages("devtools")
-install.packages("BiocManager")
-require(devtools)
-require(BiocManager)
+##install.packages("devtools")
+##install.packages("BiocManager")
+if(!require(devtools)) install.packages("devtools")
+if(!require(BiocManager)) install.packages("BiocManager")
 
 LOCAL.PKGS <- sub("_.*","",dir("../ext/packages"))
 LOCAL.PKGS
@@ -63,6 +63,9 @@ PKG.MANUAL <- c(
 
 base.pkg = c("shiny","flexdashboard","shinydashboard")
 install.pkgs(base.pkg)
+
+## priority
+install.pkgs("randomcoloR")
 
 ##---------------------------------------------------------------------
 ## Automatically scan all used packages and install
