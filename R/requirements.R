@@ -96,6 +96,9 @@ install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbas
 ##install.packages("../ext/packges/fpc_2.1-10.tar.gz",repos=NULL,type="source")
 install_version("fpc", version="2.1-10", repos="http://cran.us.r-project.org")
 
+install.pkg("webshot")
+webshot::install_phantomjs()
+
 ##---------------------------------------------------------------------
 ## Install latest from GITHUB
 ##---------------------------------------------------------------------
