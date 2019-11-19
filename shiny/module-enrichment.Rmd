@@ -1183,7 +1183,7 @@ enrich_gseatable.RENDER <- reactive({
     ##cat("dim.rpt=",dim(rpt),"\n")
     
     if(!("GS" %in% colnames(rpt))) rpt = cbind(GS=rownames(rpt),rpt)
-    if("GS" %in% colnames(rpt)) rpt$GS = shortstring(rpt$GS,72)
+    if("GS" %in% colnames(rpt)) rpt$GS = shortstring(rpt$GS,100)
     if("size" %in% colnames(rpt)) rpt$size = as.integer(rpt$size)
 
     fx = NULL
