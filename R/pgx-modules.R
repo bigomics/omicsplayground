@@ -214,6 +214,7 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                        plotlib = "base", renderFunc=NULL, outputFunc=NULL,
                        no.download = FALSE, download.fmt=c("pdf","html"), 
                        just.info=FALSE, server=TRUE, info.width="300px",
+                       width = "auto", height = "auto",  ## for renderPlot
                        pdf.width=8, pdf.height=8, pdf.pointsize=12, res=72)
 {
     require(shinyWidgets)
@@ -315,6 +316,7 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
         ## Base plotting
         ##------------------------------------------------------------
         render <- renderPlot({
+            par(mar=c(0,0,0,0),oma=c(0,0,0,0))
             func()
 
             ## NEEEDS FIX!! pdf generating should be done just in
@@ -332,7 +334,7 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                     ##dev.off()  ## important!!
                 }
             ))
-        }, res=res)
+        }, res=res, width=width, height=height )
         outputFunc="plotOutput"
     }
 
@@ -372,8 +374,11 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                         if(class(err)=="try-error") {
                             cat("downloadHandler:: export failed, trying webshot...\n")
                             htmlwidgets::saveWidget(p, HTMLFILE) 
-                            err2 <- try(webshot(HTMLFILE,vwidth=pdf.width*100,
-                                                vheight=pdf.height*100,PDFFILE))
+                            err2 <- try(webshot(
+                                url = sprintf("file://%s",HTMLFILE),
+                                file = PDFFILE,
+                                selector="#htmlwidget_container",
+                                vwidth=pdf.width*100, vheight=pdf.height*100))
                             if(class(err2)=="try-error") {
                                 pdf(PDFFILE)
                                 text(0.5,0.5,"PDF export error (plotly)")
@@ -389,12 +394,23 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                         cat("downloadHandler:: exporting visnetwork to PDF\n")
                         p <- func()
                         visSave(p, HTMLFILE)
-                        webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
+                        ##webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
+                        webshot(
+                            url = sprintf("file://%s",HTMLFILE),
+                            file = PDFFILE,
+                            selector="#htmlwidget_container",
+                            vwidth=pdf.width*100, vheight=pdf.height*100)
+                        
                     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
                         cat("downloadHandler:: exporting htmlwidget to PDF\n")
                         p <- func()
                         htmlwidgets::saveWidget(p, HTMLFILE)
-                        webshot(HTMLFILE, vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
+                        webshot(
+                            url = sprintf("file://%s",HTMLFILE),
+                            file = PDFFILE,
+                            selector="#htmlwidget_container",
+                            vwidth=pdf.width*100, vheight=pdf.height*100)
+
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
                         cat("downloadHandler:: exporting ggplot to PDF\n")
                         p <- func()
