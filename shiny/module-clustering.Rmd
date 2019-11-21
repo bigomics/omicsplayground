@@ -156,6 +156,7 @@ hm_filtered_matrix <- reactive({
         pp = head(rownames(ngs$X),400)
         gg = ngs$families[[1]]
         gg = ngs$families[[input$hm_features]]
+        dbg("[clustering] hm_filtered_matrix :: head.hm_customlist=",head(input$hm_customlist))
         if(input$hm_customlist!="") {
             gg1 = strsplit(input$hm_customlist,split="[, ;\n\t]")[[1]]
             if(length(gg1)==1) gg1 <- paste0(gg1,"*")
@@ -166,7 +167,8 @@ hm_filtered_matrix <- reactive({
                     genes[grep(paste0("^",sub("[*]","",a)),genes,ignore.case=TRUE)])
                 gg1 = unique(c(gg1,unlist(gg2)))
             }
-            gg1 = intersect(gg1,ngs$genes$gene_name)            
+            ##gg1 = intersect(gg1,ngs$genes$gene_name)  ## does not work with mouse!
+            gg1 = gg1[which(gg1 %in% toupper(ngs$genes$gene_name))]  ## ok with mouse!          
             if(length(gg1)>1) gg = gg1
         }
         jj <- match(toupper(gg), toupper(ngs$genes$gene_name))
@@ -241,10 +243,14 @@ hm_filtered_matrix <- reactive({
         zx = head(zx,nmax)
     }
     ##zx = zx / apply(zx,1,sd,na.rm=TRUE)  ## scale??
-
+    dbg("[clustering] hm_filtered_matrix :: dim(zx)=",dim(zx))
+    dbg("[clustering] hm_filtered_matrix :: sum.is.na(zx)=",sum(is.na(zx)))
+    
     ## ------------- cluster the genes???
     if(is.null(idx)) {
-        hc  = fastcluster::hclust( as.dist(1 - cor(t(zx),use="pairwise")), method="ward.D2" )
+        dd = as.dist(1 - cor(t(zx),use="pairwise"))
+        dd[is.na(dd)] = 1  ## 
+        hc  = fastcluster::hclust(dd, method="ward.D2" )
         ngrp = 4  ## how many default groups???
         idx = paste0("S",cutree(hc, ngrp))
     }

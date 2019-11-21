@@ -39,6 +39,7 @@ cat("setting FILES =",FILES,"\n")
 cat("setting PGX.DIR =",PGX.DIR,"\n")
 
 source(file.path(RDIR,"pgx-init.R"), local=TRUE)
+DEV.VERSION=TRUE
 
 if(0) {
     load("../data/geiger2016-arginine.pgx")
