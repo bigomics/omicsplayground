@@ -15,7 +15,7 @@ Inputs {.sidebar data-width=320}
 useShinyjs(rmd=TRUE)
 useSweetAlert()
 SHOWSPLASH=TRUE
-## SHOWSPLASH=FALSE
+SHOWSPLASH=FALSE
 
 LOGIN_AUTHENTICATION = "none"
 ##LOGIN_AUTHENTICATION = "register"
@@ -131,7 +131,7 @@ if(file.exists(PGXINFO.FILE)) {
     all(pgx.files %in% info$dataset)
     setdiff(pgx.files, info$dataset)
     if(!all(pgx.files %in% info$dataset)) {
-        cat("updating PGX file info...\n")
+        ##cat("updating PGX file info...\n")
         info <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=TRUE, pgx=info)
         rownames(info) <- NULL
         Sys.chmod(PGXINFO.FILE, mode="0666")
@@ -142,10 +142,10 @@ if(file.exists(PGXINFO.FILE)) {
     PGXINFO <- info  
 } else {
     ## no info file, scan and create
-    cat("scanning PGX file info...\n")
-    withProgress(message=">>> scanning available data sets...", value=0, {
-        info <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=FALSE)
-    })
+    ##cat("scanning PGX file info...\n")
+    ##withProgress(message=">>> scanning available data sets...", value=0, {
+    info <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=FALSE)
+    ##})
     ##info.FILE <- "pgx-datasets-info.csv"
     ##Sys.chmod("../shiny-dev", mode="0777")
     Sys.chmod(PGXINFO.FILE, mode="0666")

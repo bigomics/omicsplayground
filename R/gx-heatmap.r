@@ -197,11 +197,11 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     if("row" %in% scale || "both" %in% scale) gx = t(scale(t(gx)))
     if("cols" %in% scale || "both" %in% scale) gx = scale(gx)
     if("rows" %in% scale || "both" %in% scale) gx = t(scale(t(gx)))
-    if("col.center" %in% scale) gx = scale(gx,center=TRUE,scale=FALSE)
-    if("row.center" %in% scale) gx = t(scale(t(gx),center=TRUE,scale=FALSE))
+    if("col.center" %in% scale) gx = t(t(gx) - colMeans(gx, na.rm=TRUE))
+    if("row.center" %in% scale) gx = gx - rowMeans(gx, na.rm=TRUE)
 
     if(softmax) {
-        gx <- tanh(0.5 * gx / sd(gx))
+        gx <- tanh(0.5 * gx / sd(gx, na.rm=TRUE))
     }
 
     ## ------------- draw heatmap
@@ -215,8 +215,15 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         rowdistfun1 <- function(x, y) 1 - cor(x, y)
         gx0 <- gx[,jj,drop=FALSE]
 
+        ## set colors
+        colfun = circlize::colorRamp2(c(min(gx0), median(gx0), max(gx0)), c("royalblue3", "grey90", "indianred3"))
+        if(min(gx0,na.rm=TRUE)<0) {
+            colfun = circlize::colorRamp2(c(min(gx0), 0, max(gx0)), c("royalblue3", "grey90", "indianred3"))
+        }
+
         hmap = hmap + Heatmap( gx0,
-                              col = bluered(64),
+                              ##col = bluered(64),
+                              col = colfun,
                               cluster_rows=cluster_rows,
                               cluster_columns=cluster_columns,
                               ##cluster_columns = as.dendrogram(h1),
