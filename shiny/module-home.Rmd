@@ -15,7 +15,7 @@ Inputs {.sidebar data-width=320}
 useShinyjs(rmd=TRUE)
 useSweetAlert()
 SHOWSPLASH=TRUE
-SHOWSPLASH=FALSE
+#SHOWSPLASH=FALSE
 
 LOGIN_AUTHENTICATION = "none"
 ##LOGIN_AUTHENTICATION = "register"
