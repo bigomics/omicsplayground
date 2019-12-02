@@ -184,6 +184,7 @@ startup_count=0
 VERSION='0.99 (always almost)'
 
 require(shinyparticles)
+require(particlesjs)
 particlesjs.conf <- rjson::fromJSON(file="resources/particlesjs-config.json")
 
 showStartupModal <- function(once=FALSE) {    
@@ -217,7 +218,7 @@ showStartupModal <- function(once=FALSE) {
             ## modalButton("Let's start!")
             actionButton("action_play", "Let's play!")
         ),
-        shinyparticles::particles(config=particlesjs.conf, target_id = "particles-target", timeout = 1000),
+        particles(config=particlesjs.conf, target_id = "particles-target", timeout = 1000),
         size="l", easyClose=FALSE, fade=FALSE))
     ##startup_count <<- startup_count + 1    
     dbg("showStartupModal done!\n")
