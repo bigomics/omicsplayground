@@ -522,7 +522,7 @@ observeEvent(input$main_usermode,
     }
     
     if(input$main_usermode >= "expert") {
-        dbg("observeEvent::main_usermode : switchhing to EXPERT mode")
+        dbg("observeEvent::main_usermode : switching to EXPERT mode")
         lapply(EXPERT_SECTIONS, function(sec) {
             sel = paste0(sec[1]," li a[href='",sec[2],"']")
             dbg("observeEvent::main_usermode : showing ",sel)
@@ -901,7 +901,6 @@ observeEvent( input$myconfirmation, {
         dbg("upload_compute :: ***** dummy computation ******")
         load("../data/geiger2016-arginine.pgx")
     } else {
-
         dbg("upload_compute :: ***** real computation *****")
                 
         ##----------------------------------------------------------------------
@@ -984,7 +983,6 @@ uploadStatusTable <- reactive({
     ff = lapply(input$upload_files$datapath, read.csv, row.names=1,
                 check.names=FALSE, stringsAsFactors=FALSE )
     names(ff) <- input$upload_files$name    
-    cat("<uploaded_files> 1\n")
 
     ## store files in reactive value
     files.needed = c("counts.csv","samples.csv","contrasts.csv")
@@ -999,14 +997,9 @@ uploadStatusTable <- reactive({
             uploaded_files[[names(ff)[i]]] <- ff[[i]]
         }
     }
-
-    cat("<uploaded_files> 2\n")
     
     ## check dimensions
     files.uploaded <- names(uploaded_files)
-
-    cat("<uploaded_files> 2 : files.uploaded=",files.uploaded,"\n")
-    
     ##files.uploaded <- files.uploaded[match(files.needed,names(files.uploaded))]
     status = rep("please upload",3)
     names(status) = files.needed
@@ -1021,30 +1014,33 @@ uploadStatusTable <- reactive({
         }
     }
         
-    ## check files    
+    ## check files: matching dimensions
     if(status["counts.csv"]=="OK" && status["samples.csv"]=="OK") {
         if(!all( colnames(uploaded_files[["counts.csv"]]) ==
                  rownames(uploaded_files[["samples.csv"]]) )) {
-            status["counts.csv"] = "error: colnames do not match (with samples)"
-            status["samples.csv"]  = "error: rownames do not match (with counts)"
+            status["counts.csv"] = "ERROR: colnames do not match (with samples)"
+            status["samples.csv"]  = "ERROR: rownames do not match (with counts)"
         }
     }
 
+    ## check files: maximum contrasts allowed
     if(status["contrasts.csv"]=="OK") {
         if( ncol(uploaded_files[["contrasts.csv"]]) > 20 ) {
-            status["contrasts.csv"] = "error: maximum 20 contrasts allowed"
+            status["contrasts.csv"] = "ERROR: maximum 20 contrasts allowed"
         }
     }
 
+    ## check files: maximum samples allowed
     if(status["counts.csv"]=="OK" && status["samples.csv"]=="OK") {
         if( ncol(uploaded_files[["counts.csv"]]) > 100 ) {
-            status["counts.csv"]  = "error: maximum 100 samples allowed"
+            status["counts.csv"]  = "ERROR: max 100 samples allowed"
         }
         if( nrow(uploaded_files[["samples.csv"]]) > 100 ) {
-            status["samples.csv"] = "error: maximum 100 samples allowed"
+            status["samples.csv"] = "ERROR: max 100 samples allowed"
         }
     }
     
+    ## check files: must have group column defined
     if(status["samples.csv"]=="OK" && status["contrasts.csv"]=="OK") {
         samples1   = uploaded_files[["samples.csv"]]
         contrasts1 = uploaded_files[["contrasts.csv"]]
@@ -1055,14 +1051,12 @@ uploadStatusTable <- reactive({
         cat("<uploaded_files> 3c : has.group=",has.group,"\n")
         cat("<uploaded_files> 3c : matching.group=",matching.group,"\n")
         if(!has.group) {
-            status["samples.csv"] = "error: missing 'group' column"
+            status["samples.csv"] = "ERROR: missing 'group' column"
         }
         if(has.group && !matching.group) {
-            status["contrasts.csv"] = "error: contrasts do not match groups"
+            status["contrasts.csv"] = "ERROR: contrasts do not match groups"
         }
     }
-
-    cat("<uploaded_files> 4\n")
         
     ## check files
     description = c(
