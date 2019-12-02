@@ -939,7 +939,8 @@ observeEvent( input$myconfirmation, {
     ngs$date = date()
     
     ## -------------------- save PGX file/object
-    if(FALSE) {
+    ENABLE_SAVING = FALSE
+    if(ENABLE_SAVING) {
         ## ngs <- ngs.initizalize(ngs)
         ##uploaded_files[["ngs"]] <- ngs
         fn = paste0(PGX.DIR,ngs.name,".pgx")
@@ -973,6 +974,9 @@ observeEvent( input$myconfirmation, {
     )
     
 })
+
+
+
 
 uploadStatusTable <- reactive({
     
