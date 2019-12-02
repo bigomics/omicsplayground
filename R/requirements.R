@@ -4,7 +4,7 @@
 ##
 
 install.packages("devtools")
-install.packages("BiocManager")
+install.packages("BiocManager", version="3.10")
 require(devtools)
 require(BiocManager)
 
