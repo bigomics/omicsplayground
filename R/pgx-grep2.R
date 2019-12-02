@@ -25,8 +25,8 @@ if(0) {
     INDEX = "/data/Projects/Data/salmon_index"     ## existing or where to save Salmon index
 
     fastq_dir=FASTQ;destdir=OUTPUT;indexdir=INDEX;nthread=4;do.qc=FALSE
-    species="mouse";instrument="HiSeq";library_layout="SINGLE"
-    nthread=n_thread=24
+    instrument="HiSeq";library_layout="SINGLE"
+    nthread=24
     pgx.fastq2counts(fastq_dir=FASTQ, destdir=OUTPUT, indexdir=INDEX, nthread=4, do.qc=FALSE)
 
     dir(OUTPUT)
@@ -36,27 +36,23 @@ if(0) {
 
 
 pgx.fastq2counts <- function(fastq_dir, destdir, indexdir, nthread=4, do.qc=FALSE,
-                             species="human", instrument="HiSeq", library_layout="SINGLE")
+                             instrument="HiSeq", library_layout="SINGLE")
 {
     ## 
     ##
     ##
     require(GREP2)
 
-    indexdir <- paste0(sub("/$","",indexdir),"/")
-    indexdir
-    
-    run_fastqc2 <- function (destdir, fastq_dir, nthread) 
+    run_fastqc2 <- function (destdir, fastq_dir, n_thread) 
     {
         cat(paste("Running FastQC... ", Sys.time(), "\n", sep = ""))
-        if (dir.exists(paste0(destdir,"/fastqc"))) {
-            system(paste0("rm -fr ",destdir,"/fastqc"))
+        if (!dir.exists(paste0(destdir,"/fastqc"))) {
+            system(paste0("mkdir -p ", destdir, "/fastqc"))
         }
-        system(paste0("mkdir -p ", destdir, "/fastqc"))
         fastq_files = list.files(fastq_dir, pattern = "[.]fastq$", full.names = TRUE)
         length(fastq_files)
         cmd <- paste0("fastqc -o ", destdir, "/fastqc/ --threads ", 
-                      nthread, " ", paste(fastq_files,collapse=" "))
+                      n_thread, " ", paste(fastq_files,collapse=" "))
         system(cmd)
     }
     
@@ -72,16 +68,15 @@ pgx.fastq2counts <- function(fastq_dir, destdir, indexdir, nthread=4, do.qc=FALS
     
     ## ----------- Run FastQC on each fastq file to generate quality control (QC) reports.
     if(do.qc) {
-        destdir
-        fastq_dir
-        run_fastqc2(destdir=destdir, fastq_dir=fastq_dir, nthread=nthread)
+        if(dir.exists(paste0(fastq_dir,"/fastqc"))) system(paste0("rm -fr ", fastq_dir,"/fastqc"))
+        run_fastqc2(destdir=destdir, fastq_dir=fastq_dir, n_thread=nthread)
     }
     
     ## ----------- Before running Salmon, you will have to build index first.
     dir.exists(indexdir)
     if(!dir.exists(indexdir)) {
         system(paste("mkdir -p",indexdir))
-        build_index(species=species, kmer=31, ens_release=92, destdir=indexdir)
+        build_index(species="human", kmer=31, ens_release=92, destdir=indexdir)
     }
     
     file_id <- sub(".fastq$","",dir(fastq_dir, pattern="001.fastq$"))
@@ -97,10 +92,7 @@ pgx.fastq2counts <- function(fastq_dir, destdir, indexdir, nthread=4, do.qc=FALS
     }
     
     ## ----------- Run Salmon
-    dir(indexdir)
-    ##index2 = paste0(indexdir,species,"_transcripts_release92_index")
-    index2 = paste0(indexdir,grep(paste0(species,".*_index"),dir(indexdir),value=TRUE))
-    index2
+    index2 = file.path(indexdir,"human_transcripts_release92_index")
     i=1
     for(i in 1:length(file_id)) {
         run_salmon(srr_id=file_id[i], library_layout=library_layout,
@@ -111,11 +103,11 @@ pgx.fastq2counts <- function(fastq_dir, destdir, indexdir, nthread=4, do.qc=FALS
     
     ## ----------- Run MultiQC
     if(do.qc) {
-        run_multiqc(fastqc_dir=fastq_dir, salmon_dir=destdir, destdir=destdir)
+        run_multiqc(fastqc_dir=fastq_dir,salmon_dir=destdir, destdir=destdir)
     }
     
     ## ----------- Run tximport
-    txi <- run_tximport(srr_id=file_id, species=species,
+    txi <- run_tximport(srr_id=file_id, species="human",
                         salmon_dir=paste0(destdir,"/salmon"),
                         countsFromAbundance="lengthScaledTPM")
     names(txi)
@@ -139,7 +131,6 @@ pgx.fastq2counts <- function(fastq_dir, destdir, indexdir, nthread=4, do.qc=FALS
     write.csv(genes,  file=paste0(destdir,"/files_csv/genes.csv"))
     samples <- data.frame(sample=colnames(counts), group=NA, phenotype1=NA)  ## empty template
     write.csv(samples,  file=paste0(destdir,"/files_csv/samples.csv"), row.names=FALSE)
-
 }
 
 

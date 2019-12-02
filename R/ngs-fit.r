@@ -639,6 +639,7 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
     require(DESeq2)
     design.formula = formula(" ~ 0 + group")
     cat("using model design: ",as.character(design.formula),"\n")
+
     rownames.counts <- rownames(counts)
     ##rownames(counts) <- NULL
     counts <- round(counts)  ## WARNING!!!
@@ -652,12 +653,15 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
         countData=counts, design=design.formula, colData=data.frame(group))
     rownames(counts) <- rownames.counts
     ##Run DESeq : Modeling counts with generic 'group'
-    fitType = 'parametric'
-    fitType ='local'
+    fitType = 'parametric' ## sometime errors
+    ##fitType = 'local'
+    fitType = 'mean'
     if(test=="LRT") {
         dds <- DESeq(dds, fitType=fitType, test="LRT", reduced= ~ 1)
+        ##dds <- DESeq(dds, test="LRT", reduced= ~ 1)
     } else {
         dds <- DESeq(dds, fitType=fitType, test="Wald")
+        ##dds <- DESeq(dds, test="Wald")
     }
     ## we add the gene annotation here (not standard...)
     colnames(rowData(dds))
@@ -751,7 +755,7 @@ ngs.fitConstrastsWithDESEQ2.nodesign <- function(counts, contr.matrix, test="Wal
         dds <- DESeqDataSetFromMatrix(
             countData=counts1[,], design=design.formula, colData=data.frame(y))
         ##fitType = 'parametric'
-        fitType ='local'
+        fitType ='mean'
         if(test=="LRT") {
             suppressWarnings( dds <- DESeq(dds, fitType=fitType, test="LRT", reduced=~1) )
         } else {

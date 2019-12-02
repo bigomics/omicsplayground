@@ -80,7 +80,8 @@ if(DEV.VERSION) {
 input_pdx_select <- reactive({
     dbg("<input_pdx_select>  reacted")
     gg <- input$pdx_select
-    if(is.null(gg)) return(NULL)
+    ##if(is.null(gg)) return(NULL)
+    req(gg)
     gg <- strsplit(as.character(gg), split="[, \n\t]")[[1]]
     if(length(gg)==0) return(NULL)
     if(length(gg)==1 && gg[1]!="") gg <- c(gg,gg)  ## hack to allow single gene....

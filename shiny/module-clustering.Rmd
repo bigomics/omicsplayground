@@ -156,7 +156,6 @@ hm_filtered_matrix <- reactive({
         pp = head(rownames(ngs$X),400)
         gg = ngs$families[[1]]
         gg = ngs$families[[input$hm_features]]
-        dbg("[clustering] hm_filtered_matrix :: head.hm_customlist=",head(input$hm_customlist))
         if(input$hm_customlist!="") {
             gg1 = strsplit(input$hm_customlist,split="[, ;\n\t]")[[1]]
             if(length(gg1)==1) gg1 <- paste0(gg1,"*")
@@ -167,8 +166,7 @@ hm_filtered_matrix <- reactive({
                     genes[grep(paste0("^",sub("[*]","",a)),genes,ignore.case=TRUE)])
                 gg1 = unique(c(gg1,unlist(gg2)))
             }
-            ##gg1 = intersect(gg1,ngs$genes$gene_name)  ## does not work with mouse!
-            gg1 = gg1[which(gg1 %in% toupper(ngs$genes$gene_name))]  ## ok with mouse!          
+            gg1 = intersect(gg1,ngs$genes$gene_name)            
             if(length(gg1)>1) gg = gg1
         }
         jj <- match(toupper(gg), toupper(ngs$genes$gene_name))
@@ -243,14 +241,10 @@ hm_filtered_matrix <- reactive({
         zx = head(zx,nmax)
     }
     ##zx = zx / apply(zx,1,sd,na.rm=TRUE)  ## scale??
-    dbg("[clustering] hm_filtered_matrix :: dim(zx)=",dim(zx))
-    dbg("[clustering] hm_filtered_matrix :: sum.is.na(zx)=",sum(is.na(zx)))
-    
+
     ## ------------- cluster the genes???
     if(is.null(idx)) {
-        dd = as.dist(1 - cor(t(zx),use="pairwise"))
-        dd[is.na(dd)] = 1  ## 
-        hc  = fastcluster::hclust(dd, method="ward.D2" )
+        hc  = fastcluster::hclust( as.dist(1 - cor(t(zx),use="pairwise")), method="ward.D2" )
         ngrp = 4  ## how many default groups???
         idx = paste0("S",cutree(hc, ngrp))
     }
@@ -384,8 +378,9 @@ hm1_splitmap.RENDER <- reactive({
     totnchar
     nx <- length(unique(splitx))
     if(!is.null(splitx) & (totnchar > 44 || nx>=6) ) crot=90
-    if(main=="<all>") main <- ""
+    if(main=="<all>") main <- " "
 
+    nrownames = 60
     nrownames = ifelse("row" %in% input$hm_showlabel,60,0)
     
     withProgress(
@@ -583,13 +578,18 @@ output$hm_splitmap_html <- downloadHandler(
     }
 )
 
+## > **Clustered heatmap.** `r renderUI(HTML(hm_splitmap_caption()))`
+
 fillCol(
     moduleWidget(hm_splitmap_module, outputFunc="uiOutput")
 )
-
 ```
 
-> **Clustered heatmap.** `r renderUI(HTML(hm_splitmap_caption()))`
+> **Clustered heatmap.** Heatmap showing gene expression sorted by
+> 2-way hierarchical clustering. Red corresponds to overexpression,
+> blue to underexpression of the gene. At the same time, gene clusters
+> are functionally annotated in the 'Annotate clusters' panel on the
+> right.
 
 
 ### PCA/tSNE
@@ -668,9 +668,11 @@ hm_getClusterPositions <- reactive({
         showNotification("computing UMAP...\n")
         require(umap)
         ngrp = length(unique(ngs$samples$group))
+        nnb  = min(min(15,max(3,ncol(zx)/ngrp)),ncol(zx))
+        nnb
         pos = umap(
             t(zx),
-            ## n_neighbours = min(15,max(5,ncol(zx)/ngrp)),
+            n_neighbours = nnb,
             n_components = pdim,
             metric = "euclidean",
             n_components = pdim
@@ -856,7 +858,6 @@ fillCol(
     moduleWidget(hm_PCAplot_module, outputFunc="plotlyOutput")
 )
 
-
 hm_PCAplot_caption <- reactive({
     text1 = "The plot visualizes the similarity in expression of samples as a scatterplot in reduced dimension (2D or 3D). Samples that are similar are clustered near to each other, while samples with different expression are positioned farther away. Groups of samples with similar profiles will appear as <i>clusters</i> in the plot."
     if(input$hmpca.colvar!="<none>") {
@@ -867,11 +868,16 @@ hm_PCAplot_caption <- reactive({
     }
     return(HTML(text1))
 })
+## > **PCA/tSNE plot.** `r renderUI(hm_PCAplot_caption())`
 
 ```
 
-> **PCA/tSNE plot.** `r renderUI(hm_PCAplot_caption())`
-
+> **PCA/tSNE plot.** The plot visualizes the similarity in expression
+> of samples as a scatterplot in reduced dimension (2D or 3D). Samples
+> that are similar are clustered near to each other, while samples
+> with different expression are positioned farther away. Groups of
+> samples with similar profiles will appear as <i>clusters</i> in the
+> plot.
 
 Col {.tabset data-width=450}
 --------------------------------------------------------------------------------------

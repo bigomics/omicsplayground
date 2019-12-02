@@ -11,20 +11,20 @@ Inputs {.sidebar data-width=320}
 -------------------------------------------------------------------------------------------
 
 ```{r intro-title, results='asis', echo=FALSE}
-
 useShinyjs(rmd=TRUE)
 useSweetAlert()
 SHOWSPLASH=TRUE
-SHOWSPLASH=FALSE
+## SHOWSPLASH=FALSE
 
 LOGIN_AUTHENTICATION = "none"
 ##LOGIN_AUTHENTICATION = "register"
 ##LOGIN_AUTHENTICATION = "password"
-CREDENTIALS <- list(
-    "omics" = "playground",
-    "fred"  = "flinstone"
-    )
-
+CREDENTIALS = NULL
+if(file.exists("CREDENTIALS")) {
+    CREDENTIALS <- read.table("CREDENTIALS",row.names=1,
+                              header=TRUE, stringsAsFactors=FALSE)
+    LOGIN_AUTHENTICATION = "password"
+}
 
 ##-----------------------------------------------------------------------------
 ## Row of social media buttons
@@ -66,7 +66,6 @@ curDataSet <- reactive({
 })
 output$current_dataset <- renderText({ curDataSet() })
 
-
 ##-----------------------------------------------------------------------------
 ## User interface
 ##-----------------------------------------------------------------------------
@@ -105,10 +104,14 @@ tipify(radioGroupButtons(
 cat("<br><br><p>Dataset info:</p>")
 wellPanel( htmlOutput("dataset_info") )
 output$dataset_info <- renderText({
+    sec <- currentSection()
     inf <- selectedDataSetInfo()
-    ## cat("length.inf=",length(inf),"\n")
+    ## cat("[dataset_info] length.inf=",length(inf),"\n")
+    ## cat("[dataset_info] current.section=",sec,"\n")
     inf["conditions"] <- gsub("[,]"," ",inf["conditions"])
-    if(length(inf)==0) {
+    if(sec=="upload-data") {
+        HTML(paste("<p>Please upload dataset<br>"))
+    } else if(length(inf)==0) {
         HTML(paste("<p>Please select a dataset<br>"))
     } else {
         HTML(paste("<p><b>",names(inf),"</b>:", inf,"<br>"))
@@ -131,8 +134,7 @@ if(file.exists(PGXINFO.FILE)) {
     all(pgx.files %in% info$dataset)
     setdiff(pgx.files, info$dataset)
     if(!all(pgx.files %in% info$dataset)) {
-        ##cat("updating PGX file info...\n")
-        info <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=TRUE, pgx=info)
+        info <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=TRUE, pgx=info, verbose=FALSE)
         rownames(info) <- NULL
         Sys.chmod(PGXINFO.FILE, mode="0666")
         write.csv(info, file=PGXINFO.FILE)
@@ -142,12 +144,7 @@ if(file.exists(PGXINFO.FILE)) {
     PGXINFO <- info  
 } else {
     ## no info file, scan and create
-    ##cat("scanning PGX file info...\n")
-    ##withProgress(message=">>> scanning available data sets...", value=0, {
-    info <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=FALSE)
-    ##})
-    ##info.FILE <- "pgx-datasets-info.csv"
-    ##Sys.chmod("../shiny-dev", mode="0777")
+    info <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=FALSE, verbose=FALSE)
     Sys.chmod(PGXINFO.FILE, mode="0666")
     write.csv(info, file=PGXINFO.FILE)
     PGXINFO <- info
@@ -155,7 +152,6 @@ if(file.exists(PGXINFO.FILE)) {
 
 tipify(actionButton("loadbutton",label="Load dataset"),
        "Click to load the selected dataset.", placement="bottom")
-
 
 ##=================================================================================
 ##========================== MODAL DIALOGS ========================================
@@ -437,10 +433,14 @@ observeEvent( input$login_btn, {
         registered.users <- c(registered.users,"demo@bigomics.ch")
         login.OK = (input$login_username %in% registered.users)
     }
+    
     if(LOGIN_AUTHENTICATION=="password") {
         if( is.null(input$login_username) || is.null(input$login_password)) return(NULL)
         if( input$login_username=="" || input$login_password=="") return(NULL)    
-        login.OK = isTRUE(CREDENTIALS[[input$login_username]]==input$login_password)
+        username <- input$login_username
+        ok.user <- isTRUE(CREDENTIALS[username,"password"]==input$login_password)
+        ok.date <- isTRUE( Sys.Date() < as.Date(CREDENTIALS[username,"expiry"]) )
+        login.OK = (ok.user && ok.date)
     }
 
     if (login.OK) {
@@ -539,65 +539,74 @@ observeEvent(input$main_usermode,
 ##====================== INPUT DATA REACTIVE OBJECT ==============================
 ##================================================================================
 
-##inputData <- eventReactive( input$loadbutton, {
+currentPGX <- reactiveVal(NULL)
+
+##inputData <- eventReactive( reload(), {
 inputData <- reactive({
     ##-----------------------------------------------------------------
     ## This is the main loader function that loads the ngs object.
     ##-----------------------------------------------------------------
-    dbg("inputData:: reacted\n")
+    dbg("inputData:: ---------- reacted ---------------\n")
     dbg("inputData:: LOGIN_AUTHENTICATION=",LOGIN_AUTHENTICATION,"\n")
     dbg("inputData:: USER$Logged=",USER$logged,"\n")
     
     ## authenicate user
     ##if(!USER$logged) showLogin()
     if(LOGIN_AUTHENTICATION!="none" && !USER$logged) return(NULL)
-    
-    ## Sense button press
-    input$loadbutton   
+
+    pgx <- currentPGX()
+    if(is.null(pgx)) shinyjs::click("loadbutton")    
+    dbg("inputData:: pgx$name=",pgx$name,"\n")
+    dbg("inputData:: length(pgx)=",length(pgx),"\n")
+
+    return(pgx)
+})
+
+observeEvent( input$loadbutton, {
+
+    ## Observe button press
     btn <- isolate(input$loadbutton)
-    dbg("inputData:: input$loadbutton=",btn,"\n")
-    dbg("inputData:: length(btn)=",length(btn),"\n")
+    dbg("[observe:loadbutton] loadbutton=",btn,"\n")
 
     pgx = NULL
     pgx = isolate(selectedDataSet())
-    dbg("inputData:: 1: pgx.selected=",pgx)
+    dbg("[observe:loadbutton] 1: pgx.selected=",pgx)
+
     if(!is.null(btn) && btn!=0 && !is.null(pgx)) {
-        dbg("inputData:: showing LOADING")
         ## show loading pop-up
         showLoadingModal()
     }
     if(is.null(pgx) || pgx=="" || length(pgx)==0) {
         ## Set to default data set if table is not ready yet.
         pgx <- PGXINFO$dataset[1]
-        dbg("<inputData:reactive>: setting to default data set = ",pgx,"\n")
+        dbg("[observe:loadbutton] setting to default data set = ",pgx,"\n")
     }
     
     pgx1 = file.path(PGX.DIR,pgx)
     if(file.exists(pgx1)) {
-        dbg("inputData:: loading",pgx1,"\n")
+        dbg("[observe:loadbutton] LOADING",pgx1,"\n")
         ##withProgress(message='loading...', value=0.8,
         load(pgx1,verbose=0)
-        dbg("inputData:: finished loading\n")
     } else {
-        cat("inputData:: ERROR file not found : ",pgx1,"\n")
+        cat("[observe:loadbutton] ERROR file not found : ",pgx1,"\n")
         removeModal()
         return(NULL)
     }
     
     ##----------------- update input
+    dbg("[observe:loadbutton] head.names.PGX=",head(names(pgx)))
+    dbg("[observe:loadbutton] initializing PGX object")
     ngs <- pgx.initialize(ngs)
-
     if(is.null(ngs$name)) ngs$name <- sub("[.]pgx$","",pgx)
 
     ##----------------- remove modal??
     if(startup_count>0) {
-        dbg("inputData:: removing modaldialog\n")
         Sys.sleep(4)
         removeModal()
     }
-    dbg("inputData:: ready!\n")
-    return(ngs)
-
+    
+    currentPGX(ngs)
+    dbg("[observe:loadbutton] ready! \n")
 })
 ##}, ignoreNULL=FALSE )
 ##}, ignoreNULL=TRUE )
@@ -637,14 +646,14 @@ output$valuebox1 <- renderUI({
 output$valuebox2 <- renderUI({
     pgx <- getPGXTable()
     req(pgx)
-    dbg("valuebox2:: pgx$nsamples=",pgx$nsamples)
+    ##dbg("valuebox2:: pgx$nsamples=",pgx$nsamples)
     nsamples <- sum(as.integer(pgx$nsamples),na.rm=TRUE)
     vbox( nsamples, "number of samples")     
 })
 output$valuebox3 <- renderUI({
     pgx <- getPGXTable()
     req(pgx)
-    dbg("valuebox3:: pgx$nsamples=",pgx$nsamples)
+    ##dbg("valuebox3:: pgx$nsamples=",pgx$nsamples)
     nvalues <- sum(as.integer(pgx$nsamples) * (as.integer(pgx$ngenes)
         + as.integer(pgx$nsets)),na.rm=TRUE)
     nvalues1 <- format(nvalues, nsmall=, big.mark=" ")  # 1,000.6
@@ -662,7 +671,6 @@ Row {.tabset data-height=850}
 ### Data sets
 
 ```{r}
-
 ##split=" ";n=5
 andothers <- function(s, split=" ", n=8) {
     if(is.na(s)) return("")
@@ -675,7 +683,6 @@ andothers <- function(s, split=" ", n=8) {
 
 ## Some 'global' reactive variables used in this file
 uploaded_files <- reactiveValues()
-uploadReady    <- reactiveVal(0)
 ##shinyjs::disable("upload_compute")
 
 getPGXTable <- reactive({
@@ -686,8 +693,6 @@ getPGXTable <- reactive({
     if(is.null(PGXINFO)) return(NULL)    
     dbg("<getPGXTable> reacted")
     
-    has.upload = uploadReady() ## reactive
-    ##has.upload <- ("ngs" %in% uploaded_files) ## reactive    
     df <- PGXINFO
     pgx.files = dir(PGX.DIR, pattern=".pgx$")
     sel <- sub("[.]pgx$","",df$dataset) %in% sub("[.]pgx$","",pgx.files)
@@ -715,8 +720,6 @@ pgxTable.RENDER <- reactive({
     req(df)
     
     if(SHOWSPLASH) showStartupModal(once=TRUE)
-
-    has.upload = uploadReady() ## reactive
     
     dbg("<pgxTable.RENDER> head(df$dataset)=",head(df$dataset))
     
@@ -731,7 +734,7 @@ pgxTable.RENDER <- reactive({
                   rownames=TRUE,
                   extensions = c('Scroller'),
                   ##selection = list(mode='single', target='row'),
-                  selection = list(mode='single', target='row', selected=1 ),
+                  selection = list(mode='single', target='row', selected=NULL ),
                   ##selection = list(mode='none'),
                   ##filter = "top",
                   options=list(
@@ -781,6 +784,7 @@ fillCol(
 ### Upload data
 
 ```{r data-upload, echo=FALSE}
+
 upload_filetypes = c("text/csv","text/comma-separated-values,text/plain",".csv")
 
 output$downloadExampleData <- downloadHandler(
@@ -804,10 +808,10 @@ fillRow(
         fileInput("upload_files", "Choose files",
                   multiple = TRUE, accept = upload_filetypes),
         textInput("upload_name","Name of dataset:"),
-        selectInput("upload_datatype","Datatype:",
-                    choices=c("RNA-seq","proteomics","scRNA-seq","multi-omics")),
-        textAreaInput("upload_description", "Description:", value = NULL,
-                      rows=5, placeholder="Describe your data set (minimum 100 characters)"),
+        ##selectInput("upload_datatype","Datatype:",
+        ##            choices=c("RNA-seq","proteomics","scRNA-seq","multi-omics")),
+        ##textAreaInput("upload_description", "Description:", value = NULL,
+        ##              rows=5, placeholder="Describe your data set (minimum 100 characters)"),
         ##conditionalPanel(
         ##"output.allFilesOK",
         actionButton("upload_compute","Compute!",icon=icon("running"))
@@ -818,6 +822,7 @@ fillRow(
         flex = c(NA,NA,1),
         p(HTML(upload_info)),
         tableOutput("upload_status"),
+        ##----------- table with uploaded datasets
         ##p(HTML(upload_info2)),
         ##DT::dataTableOutput("upload_datasetsDT"),
         ##tableOutput("upload_datasets")
@@ -826,12 +831,14 @@ fillRow(
 )
 
 output$allFilesOK <- reactive({    
-    files.needed = c("counts.csv","samples.csv","genes.csv","contrasts.csv")
+    files.needed = c("counts.csv","samples.csv","contrasts.csv")
     all.there <- all(files.needed %in% names(uploaded_files))    
     df <- uploadStatusTable()
+    filled = all.ok = TRUE
     all.ok = all( df$status == "OK")
-    filled = ( input$upload_name!="" && nchar(input$upload_description)>=100)
-    ##all.ok    <- all(sapply(uploaded_files, function(x) x$status=="OK"))
+    filled = (input$upload_name!="")
+    ## filled = (input$upload_name!="" && nchar(input$upload_description)>=100)
+    ## all.ok    <- all(sapply(uploaded_files, function(x) x$status=="OK"))
     ok <- (all.there && all.ok && filled)
     if(ok) shinyjs::enable("upload_compute")
     if(!ok) shinyjs::disable("upload_compute")
@@ -840,11 +847,11 @@ output$allFilesOK <- reactive({
 outputOptions(output, "allFilesOK", suspendWhenHidden = FALSE) ## important!
 
 observeEvent( input$upload_compute, {
-    ## are you sure?
+    ## are you sure? Any message/warning before computation is done.
     confirmSweetAlert(
         session = session,
         inputId = "myconfirmation",
-        title = "Your data will be publicly shared. Are you sure?"
+        title = "Your data will be uploaded to the server for computation<br>Are you sure?"
     )
 })
 
@@ -854,27 +861,11 @@ observeEvent( input$myconfirmation, {
         dbg("INFO user cancelled upload")
         return(NULL)
     }
-
-    if(0) {
-        files.needed = c("counts.csv","samples.csv","genes.csv","contrasts.csv")
-        files.needed1 = paste0("../exampledata/",files.needed)
-        uploaded_files = lapply(files.needed1, read.csv, row.names=1,
-                                check.names=FALSE, stringsAsFactors=FALSE)
-        names(uploaded_files) <- files.needed
-        uploaded_files[["counts.csv"]] <- as.matrix(uploaded_files[["counts.csv"]])
-        uploaded_files[["contrasts.csv"]] <- as.matrix(uploaded_files[["contrasts.csv"]])
-        for(i in 1:length(uploaded_files)) {
-            colnames(uploaded_files[[i]]) <- gsub("[\n\t ]","_",colnames(uploaded_files[[i]]))
-            rownames(uploaded_files[[i]]) <- gsub("[\n\t ]","_",rownames(uploaded_files[[i]]))
-        }
-
-    }
-
     
     ## check names and other things
     dbg("upload_compute :: checking filename")
     pgx.files = sub("[.]pgx$","",dir(PGX.DIR, pattern=".pgx$"))
-    if(input$upload_name %in% pgx.files) {
+    if(FALSE && input$upload_name %in% pgx.files) {
         sendSweetAlert(
             session = session,
             title = "File exists!",
@@ -886,14 +877,15 @@ observeEvent( input$myconfirmation, {
 
     ## --------------------- OK start ---------------------------
     dbg("upload_compute :: showing coffee modal")
-    showLoadingModal("Calculating. It's a good time to get a coffee now...")
+    showLoadingModal("Calculating... it's a good time to get a coffee now.")
 
     counts    <- as.matrix(uploaded_files[["counts.csv"]])
     samples   <- data.frame(uploaded_files[["samples.csv"]],stringsAsFactors=FALSE)
-    genes     <- data.frame(uploaded_files[["genes.csv"]],stringsAsFactors=FALSE)
+    ## genes     <- data.frame(uploaded_files[["genes.csv"]],stringsAsFactors=FALSE)
     contrasts <- as.matrix(uploaded_files[["contrasts.csv"]])
 
     if(ncol(counts) > 1000) {
+        ## probably scRNA-seq
         gx.methods   = c("ttest.welch","trend.limma","edger.qlf")
         gset.methods = c("fisher","gsva","fgsea")
     } else {     
@@ -907,34 +899,23 @@ observeEvent( input$myconfirmation, {
 
     if(0) {
         ## just for debugging...
-        ##
-        dbg("upload_compute :: dummy computation...")
+        dbg("upload_compute :: ***** dummy computation ******")
         load("../data/geiger2016-arginine.pgx")
     } else {
 
         dbg("upload_compute :: ***** real computation *****")
-        ##----------------------------------------------------------------------
-        ## Limit the data dimensions
-        ##----------------------------------------------------------------------
-        if(1) {
-            contrasts <- contrasts[,1:min(3,ncol(contrasts))]   ## maximum nr of contrasts...
-            counts    <- counts[,1:min(100,ncol(counts))]       ## maximum nr of samples
-            samples   <- samples[colnames(counts),,drop=FALSE]
-            ##contrasts <- contrasts[colnames(counts),,drop=FALSE]
-            ii <- head(order(-apply(log(10+counts), 1, sd, na.rm=TRUE)),2000) ## maximum nr of genes
-            ##ii <- head(order(-apply(log(10+counts), 1, sd, na.rm=TRUE)),8000) ## maximum nr of genes
-            counts <- counts[ii,,drop=FALSE]
-            genes  <- genes[rownames(counts),,drop=FALSE]
-        }
                 
+        ##----------------------------------------------------------------------
+        ## Upload and do precomputation
+        ##----------------------------------------------------------------------
         start_time <- Sys.time()
         ## Create a Progress object
         progress <- shiny::Progress$new()
         on.exit(progress$close())    
-        progress$set(message = "Processing data set", value = 0)
+        progress$set(message = "Processing data", value = 0)
 
-        ngs <- pgx.upload(counts, samples, genes, contrasts,
-                          progress=progress,
+        ngs <- pgx.upload(counts, samples, contrasts,
+                          progress = progress,
                           gx.methods = gx.methods,
                           gset.methods = gset.methods,
                           extra.methods = extra.methods
@@ -948,42 +929,48 @@ observeEvent( input$myconfirmation, {
         names(ngs)
         head(ngs$samples)
     }
+    
+    ngs$name = "uploaded"
+    ngs$datatype = "generic"
+    ngs$description = "not available"
 
-    ngs.name = "testdata"
     ngs.name = gsub("[ ]","-",input$upload_name)
-    pgx.name = paste0(ngs.name,".pgx")
     ngs$name = ngs.name
-    ngs$datatype = input$upload_datatype
-    ngs$description = input$upload_description
+    ## ngs$datatype = input$upload_datatype
+    ## ngs$description = input$upload_description
     ngs$date = date()
-
+    
     ## -------------------- save PGX file/object
-    ## ngs <- ngs.initizalize(ngs)
-    ##uploaded_files[["ngs"]] <- ngs
-    fn = paste0(PGX.DIR,ngs.name,".pgx")
-    fn
-    dbg("upload_compute :: saving PGX to",fn)
-    save(ngs, file=fn)  ## would clash with multiple users...
+    if(FALSE) {
+        ## ngs <- ngs.initizalize(ngs)
+        ##uploaded_files[["ngs"]] <- ngs
+        fn = paste0(PGX.DIR,ngs.name,".pgx")
+        fn
+        dbg("upload_compute :: saving PGX to",fn)
+        save(ngs, file=fn)  ## would clash with multiple users...
+        
+        ## -------------------- update PGXINFO table
+        ##pgx.dir=PGX.DIR;inc.progress=FALSE;pgx=PGXINFO
+        pgx.name = paste0(sub("[.]pgx","",ngs$name),".pgx")        
+        old.info = PGXINFO[which(!PGXINFO$dataset %in% c(ngs.name,pgx.name)),,drop=FALSE]
+        new.info <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=FALSE, pgx=old.info, verbose=FALSE)
+        PGXINFO <<- new.info
+        Sys.chmod(PGXINFO.FILE, mode="0666")
+        write.csv(PGXINFO, file=PGXINFO.FILE)
+    }
 
-    ## -------------------- update PGXINFO table
-    ##pgx.dir=PGX.DIR;inc.progress=FALSE;pgx=PGXINFO
-    old.info = PGXINFO[which(!PGXINFO$dataset %in% c(ngs.name,pgx.name)),,drop=FALSE]
-    new.info <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=FALSE, pgx=old.info)
-    PGXINFO <<- new.info
-    Sys.chmod(PGXINFO.FILE, mode="0666")
-    write.csv(PGXINFO, file=PGXINFO.FILE)
-           
-    removeModal()
-
-    uploadReady(uploadReady() + 1)  ## notify reactive variable
-    ##selectRows(proxy = dataTableProxy("pgxtable"), selected=1)
+    ## initialize and update global PGX object
+    ngs <- pgx.initialize(ngs)
+    currentPGX(ngs)
+    selectRows(proxy = dataTableProxy("pgxtable"), selected=NULL)
     ##shinyjs::click("loadbutton")    
 
+    removeModal()
     ## showModal(modalDialog(p("Ready! Now go back and select your uploaded data set.")))
     sendSweetAlert(
         session = session,
-        title = "Ready !!",
-        text = "Now go to the previous tab and select your uploaded data set.",
+        title = "Ready! You can now analyze your uploaded data set.",
+        ##text = "Now go to the previous tab and select your uploaded data set.",
         type = "success"
     )
     
@@ -1001,7 +988,7 @@ uploadStatusTable <- reactive({
     cat("<uploaded_files> 1\n")
 
     ## store files in reactive value
-    files.needed = c("counts.csv","samples.csv","genes.csv","contrasts.csv")
+    files.needed = c("counts.csv","samples.csv","contrasts.csv")
     ff = ff[ which(names(ff) %in% files.needed) ]
     if(length(ff)>0) {
         for(i in 1:length(ff)) {
@@ -1022,11 +1009,11 @@ uploadStatusTable <- reactive({
     cat("<uploaded_files> 2 : files.uploaded=",files.uploaded,"\n")
     
     ##files.uploaded <- files.uploaded[match(files.needed,names(files.uploaded))]
-    status = rep("please upload",4)
+    status = rep("please upload",3)
     names(status) = files.needed
-    files.nrow = rep(NA, 4)
-    files.ncol = rep(NA, 4)
-    for(i in 1:4) {
+    files.nrow = rep(NA,3)
+    files.ncol = rep(NA,3)
+    for(i in 1:3) {
         fn = files.needed[i]
         if(fn %in% files.uploaded) {
             status[i] = "OK"
@@ -1034,20 +1021,8 @@ uploadStatusTable <- reactive({
             files.ncol[i] = ncol(uploaded_files[[fn]])
         }
     }
-
-    cat("<uploaded_files> 3 : status=",status,"\n")
         
-    ## check files
-    if(status["counts.csv"]=="OK" && status["genes.csv"]=="OK") {
-        if(!all( rownames(uploaded_files[["counts.csv"]]) ==
-                 rownames(uploaded_files[["genes.csv"]]) )) {
-            status["counts.csv"] = "error: rownames do not match (with genes)"
-            status["genes.csv"]  = "error: rownames do not match (with counts)"
-        }
-    }
-
-    cat("<uploaded_files> 3b\n")
-    
+    ## check files    
     if(status["counts.csv"]=="OK" && status["samples.csv"]=="OK") {
         if(!all( colnames(uploaded_files[["counts.csv"]]) ==
                  rownames(uploaded_files[["samples.csv"]]) )) {
@@ -1056,8 +1031,20 @@ uploadStatusTable <- reactive({
         }
     }
 
-    cat("<uploaded_files> 3c : names(status)=",names(status),"\n")
-    cat("<uploaded_files> 3c : names(uploaded_files)=",names(uploaded_files),"\n")
+    if(status["contrasts.csv"]=="OK") {
+        if( ncol(uploaded_files[["contrasts.csv"]]) > 20 ) {
+            status["contrasts.csv"] = "error: maximum 20 contrasts allowed"
+        }
+    }
+
+    if(status["counts.csv"]=="OK" && status["samples.csv"]=="OK") {
+        if( ncol(uploaded_files[["counts.csv"]]) > 100 ) {
+            status["counts.csv"]  = "error: maximum 100 samples allowed"
+        }
+        if( nrow(uploaded_files[["samples.csv"]]) > 100 ) {
+            status["samples.csv"] = "error: maximum 100 samples allowed"
+        }
+    }
     
     if(status["samples.csv"]=="OK" && status["contrasts.csv"]=="OK") {
         samples1   = uploaded_files[["samples.csv"]]
@@ -1082,7 +1069,7 @@ uploadStatusTable <- reactive({
     description = c(
         "Count/expression file with gene on rows, samples as columns.",
         "Samples file with samples on rows, phenotypes as columns.",
-        "Gene information file with genes on rows, gene info as columns.",
+        ## "Gene information file with genes on rows, gene info as columns.",
         "Contrast file with conditions on rows, contrasts as columns."        
     )
     df <- data.frame( status=status, filename=files.needed,
@@ -1099,9 +1086,9 @@ output$upload_status <- renderTable({
     uploadStatusTable()
 })
 
-
 uploadedDatasetsTable <- reactive({
-    df <- PGXINFO[1:2,]
+
+    df <- PGXINFO[1:2,] ## test-example
     df$description <- NULL
     df$conditions <- NULL
     df$organism <- NULL

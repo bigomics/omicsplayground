@@ -375,8 +375,7 @@ pgx.plotGeneExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
     ## ------------- determine groups
     expmat  <- ngs$model.parameters$exp.matrix
     cntrmat <- ngs$model.parameters$contr.matrix
-    expmat <- expmat[rownames(ngs$samples),,drop=FALSE]
-
+    expmat  <- expmat[rownames(ngs$samples),,drop=FALSE]
     
     if(class(comp)=="numeric") comp <- colnames(expmat)[comp]
     if(!is.null(group.names) && length(group.names)!=2) stop("group.names must be length=2")
@@ -385,7 +384,13 @@ pgx.plotGeneExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
 
     if(grepl("_vs_|_VS_",comp) && is.null(group.names) ) {
         comp1 <- sub(".*:","",comp)  ## remove prefix
-        group.names = rev(strsplit(comp1,split="_vs_|_VS_")[[1]])  ## reversed!!
+        group.names = strsplit(comp1,split="_vs_|_VS_")[[1]]
+        ## determine if notation is A_vs_B or B_vs_A 
+        if(is.POSvsNEG(ngs)) {
+            ## A_vs_B or B_vs_A notation !!!
+            group.names <- rev(group.names) ## reversed!!
+        } 
+
     }
     
     if(!is.null(comp)) {

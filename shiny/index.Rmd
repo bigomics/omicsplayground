@@ -41,8 +41,9 @@ cat("setting PGX.DIR =",PGX.DIR,"\n")
 source(file.path(RDIR,"pgx-init.R"), local=TRUE)
 DEV.VERSION=TRUE
 
-if(0) {
-    load("../data/geiger2016-arginine.pgx")
+if(0) {    
+    load("../data/aa2019-haenkenium.pgx")
+    load("../data/geiger2016-arginine.pgx")    
     load("../data/GSE10846-dlbcl.pgx")
     load("../data/tcga-brca_pub-gx.pgx")
     load("../data/rieckmann2017-immprot.pgx")
@@ -68,11 +69,9 @@ MODULES <- c(
     'module-profiling.Rmd')
 
 ##MODULES <- c('module-home.Rmd')
-
 cat("setting MODULES =",MODULES,"\n")
 
 ```
 
 ```{r child = MODULES}
-
 ```
