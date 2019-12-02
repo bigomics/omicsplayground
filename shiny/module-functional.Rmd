@@ -22,8 +22,8 @@ fa_infotext = paste("This module performs specialized pathway and drug enrichmen
 
 <br><br> In the <a href='https://portals.broadinstitute.org/cmap/'>Drug Connectivity Map</a> panel, you can correlate your signature with more than 5000 known drug profiles from the L1000 database. An activation-heatmap compares drug activation profiles across multiple contrasts. This facilitates to quickly see and detect the similarities between contrasts for certain drugs.
 
-<br><br>For a tutorial on drug enrichment analysis, see the video below:<br><br>
-<center><iframe width='500' height='333' src='https://www.youtube.com/embed/WaBVz0a9AVg' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>
+<br><br><br><br>
+<center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=6' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>
 ")
 
 observeEvent( input$fa_info, {

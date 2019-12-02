@@ -374,11 +374,8 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                         if(class(err)=="try-error") {
                             cat("downloadHandler:: export failed, trying webshot...\n")
                             htmlwidgets::saveWidget(p, HTMLFILE) 
-                            err2 <- try(webshot(
-                                url = sprintf("file://%s",HTMLFILE),
-                                file = PDFFILE,
-                                selector="#htmlwidget_container",
-                                vwidth=pdf.width*100, vheight=pdf.height*100))
+                            err2 <- try(webshot(HTMLFILE,vwidth=pdf.width*100,
+                                                vheight=pdf.height*100,PDFFILE))
                             if(class(err2)=="try-error") {
                                 pdf(PDFFILE)
                                 text(0.5,0.5,"PDF export error (plotly)")
@@ -394,23 +391,12 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                         cat("downloadHandler:: exporting visnetwork to PDF\n")
                         p <- func()
                         visSave(p, HTMLFILE)
-                        ##webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
-                        webshot(
-                            url = sprintf("file://%s",HTMLFILE),
-                            file = PDFFILE,
-                            selector="#htmlwidget_container",
-                            vwidth=pdf.width*100, vheight=pdf.height*100)
-                        
+                        webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
                     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
                         cat("downloadHandler:: exporting htmlwidget to PDF\n")
                         p <- func()
                         htmlwidgets::saveWidget(p, HTMLFILE)
-                        webshot(
-                            url = sprintf("file://%s",HTMLFILE),
-                            file = PDFFILE,
-                            selector="#htmlwidget_container",
-                            vwidth=pdf.width*100, vheight=pdf.height*100)
-
+                        webshot(HTMLFILE, vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
                         cat("downloadHandler:: exporting ggplot to PDF\n")
                         p <- func()

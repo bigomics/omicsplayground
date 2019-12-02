@@ -3,10 +3,10 @@
 ## NOTE: This file is supposed to run in the folder .../R/
 ##
 
-##install.packages("devtools")
-##install.packages("BiocManager")
-if(!require(devtools)) install.packages("devtools")
-if(!require(BiocManager)) install.packages("BiocManager")
+install.packages("devtools")
+install.packages("BiocManager")
+require(devtools)
+require(BiocManager)
 
 LOCAL.PKGS <- sub("_.*","",dir("../ext/packages"))
 LOCAL.PKGS
@@ -64,9 +64,6 @@ PKG.MANUAL <- c(
 base.pkg = c("shiny","flexdashboard","shinydashboard")
 install.pkgs(base.pkg)
 
-## priority
-install.pkgs("randomcoloR")
-
 ##---------------------------------------------------------------------
 ## Automatically scan all used packages and install
 ##---------------------------------------------------------------------
@@ -98,9 +95,6 @@ remove.pkg("fpc")
 install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
 ##install.packages("../ext/packges/fpc_2.1-10.tar.gz",repos=NULL,type="source")
 install_version("fpc", version="2.1-10", repos="http://cran.us.r-project.org")
-
-install.pkg("webshot")
-webshot::install_phantomjs()
 
 ##---------------------------------------------------------------------
 ## Install latest from GITHUB
@@ -137,7 +131,6 @@ if(0) {
 ##---------------------------------------------------------------------
 install.pkgs(c("ROCR", "mixtools", "lars", "ica", "tsne", "ape", "dtw", "SDMTools", "ggridges", "fitdistrplus", "doSNOW","diffusionMap","fpc","hdf5r"))
 install.pkgs(c('cowplot', 'Rtsne', 'pbapply', 'RANN', 'dplyr', 'irlba', 'plotly', 'Hmisc', 'tidyr', 'metap', 'lmtest', 'png', 'reticulate', 'RcppEigen', 'RcppProgress'))
-install.pkg("RcppEigen",force=TRUE)
 install.packages("../ext/packages/Seurat_v2.3.3.tar.gz",repos=NULL,type="source")  ## old version
 
 ##---------------------------------------------------------------------

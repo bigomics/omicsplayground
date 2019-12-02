@@ -52,7 +52,7 @@ tipify( selectInput("gs_features","Gene set collection:", choices=NULL, multiple
         "Choose a specific gene set collection for the analysis.", placement="top")
 FDR.VALUES2 = c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
 fillRow( flex=c(1,1),
-        tipify( selectInput("gs_fdr","FDR", choices=FDR.VALUES2, selected=0.2),
+        tipify( selectInput("gs_fdr","FDR", choices=FDR.VALUES2, selected=1),
                "Set the false discovery rate (FDR) threshold.", placement="top"),
         tipify( selectInput("gs_lfc","logFC threshold", choices=c(0,0.2,0.5,1,2,5), selected=0.2),
                "Set the logarithmic fold change (logFC) threshold.", placement="top")
@@ -1183,7 +1183,7 @@ enrich_gseatable.RENDER <- reactive({
     ##cat("dim.rpt=",dim(rpt),"\n")
     
     if(!("GS" %in% colnames(rpt))) rpt = cbind(GS=rownames(rpt),rpt)
-    if("GS" %in% colnames(rpt)) rpt$GS = shortstring(rpt$GS,120)
+    if("GS" %in% colnames(rpt)) rpt$GS = shortstring(rpt$GS,72)
     if("size" %in% colnames(rpt)) rpt$size = as.integer(rpt$size)
 
     fx = NULL
@@ -1193,7 +1193,7 @@ enrich_gseatable.RENDER <- reactive({
     jj = which(sapply(rpt,is.numeric))
     if(length(jj)>0) rpt[,jj] = round(rpt[,jj],digits=4)    
     jj = which( sapply(rpt,is.character) |  sapply(rpt,is.factor) )
-    if(length(jj)>0) rpt[,jj] = apply(rpt[,jj,drop=FALSE],2,shortstring,120)
+    if(length(jj)>0) rpt[,jj] = apply(rpt[,jj,drop=FALSE],2,shortstring,100)
 
     if(!input$gs_showqvalues) {
         rpt <- rpt[,grep("^q[.]",colnames(rpt),invert=TRUE)]
@@ -1236,7 +1236,7 @@ enrich_genetable.RENDER <- reactive({
         jj = which(sapply(rpt,is.numeric))
         rpt[,jj] = round(rpt[,jj],digits=4)
         jj = which( sapply(rpt,is.character) |  sapply(rpt,is.factor) )
-        if(length(jj)>0) rpt[,jj] = apply(rpt[,jj,drop=FALSE],2,shortstring,40)
+        if(length(jj)>0) rpt[,jj] = apply(rpt[,jj,drop=FALSE],2,shortstring,60)
     } else {
         rpt <- data.frame(0,0,0,0,0)[0,]
         colnames(rpt) <- c("gene_name","fc","p","q","gset.rho")
@@ -1330,7 +1330,7 @@ enrich_fctable.RENDER <- reactive({
     qv <- sapply( ngs$gset.meta$meta, function(x) x[,"meta.q"])
     rownames(qv) <- rownames(F) <- rownames(ngs$gset.meta$meta[[1]])
     fc.var <- round( rowMeans(F**2,na.rm=TRUE), digits=3)
-    gs <- shortstring(rownames(F),1,120)
+    gs <- substring(rownames(F),1,60)
     F1 <- data.frame( geneset=gs, fc.var=fc.var, round(F,digits=3), check.names=FALSE)
 
     ## get current filtered geneset and extract names of gene sets

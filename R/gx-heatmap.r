@@ -43,10 +43,10 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         clust.method="ward.D2"; dist.method="euclidean"; col.dist.method="euclidean";
         col=bluered(); scale="row"; verbose=1; annot.ht=3;
         col.annot=NULL; row.annot=NULL;split=5;splitx=5
-        nmax=1000; cmax=NULL; indent.names=FALSE;
+        nmax=1000; cmax=NULL; indent.names=FALSE;lab.len=80;softmax=0
         show_rownames=show_colnames=TRUE;cluster_rows=cluster_columns=TRUE
         show_legend=TRUE;cexRow=1;cexCol=1;mar=c(5,5);column_title_rot=0
-        gx=zx
+        gx = ngs$X
     }
 
     if(verbose>1) cat("input.dim.gx=",dim(gx),"\n")
@@ -89,6 +89,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     }
     if(!is.null(split.idx)) {
         row.annot = cbind(row.annot, cluster = split.idx)
+        row.annot = data.frame(row.annot)
         colnames(row.annot) = tolower(colnames(row.annot))
         rownames(row.annot) = rownames(gx)
     }
@@ -99,7 +100,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     do.splitx = !is.null(splitx)
     idx2 = NULL
     if(do.splitx && class(splitx)=="numeric" && length(splitx)==1 ) {
-        require(nclust)
+        ##require(nclust)
         require(fastcluster)
         system.time( hc <- fastcluster::hclust( as.dist(1 - cor(gx)), method="ward.D2" ))
         ##system.time( hc <- nclust( as.dist(1 - cor(gx)), link="ward" ))
@@ -148,14 +149,16 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         for(i in 1:ngrp) {
             jj = grp[[i]]
             ##ap <- list(labels_gp=gpar(fontsize=6*cexRow))
-            ap <- list( title_gp=gpar(fontsize=3.6*annot.ht),
-                       labels_gp=gpar(fontsize=3.3*annot.ht),
-                       grid_width=unit(1*annot.ht, "mm"),
-                       grid_height=unit(1*annot.ht, "mm"))
+            ap <- list( title_gp = gpar(fontsize=3.6*annot.ht),
+                       labels_gp = gpar(fontsize=3.3*annot.ht),
+                       grid_width = unit(1*annot.ht, "mm"),
+                       grid_height = unit(1*annot.ht, "mm"))
             aa <- rep( list(ap), ncol(col.annot))
             names(aa) <- colnames(col.annot)
             col.ha[[i]] = HeatmapAnnotation(
                 df = col.annot[jj,,drop=FALSE], col = col.colors,
+                ##annotation_height = unit(annot.ht, "mm"),
+                simple_anno_size = unit(annot.ht,"mm"),  ## BioC 3.8!!
                 show_annotation_name = (i==ngrp),
                 show_legend = show_legend & (npar <= 20),
                 annotation_name_gp = gpar(fontsize=3.3*annot.ht),
@@ -182,12 +185,14 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         ##row.ha = HeatmapAnnotation(
         ##row.ha = Heatmap(
         row.ha = rowAnnotation(
-            df = row.annot, col = row.colors,
+            df = row.annot,
+            col = row.colors,
             ##show_annotation_name = TRUE,
             show_annotation_name = show_colnames,
             show_legend = FALSE,
             ##annotation_name_gp = gpar(fontsize=9*cexRow),
             annotation_name_gp = gpar(fontsize=3.3*annot.ht),
+            simple_anno_size = unit(annot.ht,"mm"),  ## BioC 3.8!!
             width = unit(annot.ht*ncol(row.annot),"mm")
         )
     }
@@ -197,11 +202,11 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     if("row" %in% scale || "both" %in% scale) gx = t(scale(t(gx)))
     if("cols" %in% scale || "both" %in% scale) gx = scale(gx)
     if("rows" %in% scale || "both" %in% scale) gx = t(scale(t(gx)))
-    if("col.center" %in% scale) gx = t(t(gx) - colMeans(gx, na.rm=TRUE))
-    if("row.center" %in% scale) gx = gx - rowMeans(gx, na.rm=TRUE)
+    if("col.center" %in% scale) gx = scale(gx,center=TRUE,scale=FALSE)
+    if("row.center" %in% scale) gx = t(scale(t(gx),center=TRUE,scale=FALSE))
 
     if(softmax) {
-        gx <- tanh(0.5 * gx / sd(gx, na.rm=TRUE))
+        gx <- tanh(0.5 * gx / sd(gx))
     }
 
     ## ------------- draw heatmap
@@ -215,15 +220,8 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         rowdistfun1 <- function(x, y) 1 - cor(x, y)
         gx0 <- gx[,jj,drop=FALSE]
 
-        ## set colors
-        colfun = circlize::colorRamp2(c(min(gx0), median(gx0), max(gx0)), c("royalblue3", "grey90", "indianred3"))
-        if(min(gx0,na.rm=TRUE)<0) {
-            colfun = circlize::colorRamp2(c(min(gx0), 0, max(gx0)), c("royalblue3", "grey90", "indianred3"))
-        }
-
         hmap = hmap + Heatmap( gx0,
-                              ##col = bluered(64),
-                              col = colfun,
+                              col = bluered(64),
                               cluster_rows=cluster_rows,
                               cluster_columns=cluster_columns,
                               ##cluster_columns = as.dendrogram(h1),
@@ -241,7 +239,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                               row_names_gp = gpar(fontsize = 10*cexRow),
                               column_names_gp = gpar(fontsize = 11*cexCol),
                               top_annotation = col.ha[[i]],
-                              top_annotation_height = unit(annot.ht*ncol(col.annot), "mm"),
+                              ## top_annotation_height = unit(annot.ht*ncol(col.annot), "mm"),
                               column_title = names(grp)[i], name = names(grp)[i],
                               column_title_rot = column_title_rot,
                               column_title_gp = gpar(fontsize = 11, fontface='bold')
@@ -253,6 +251,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         if(1 && !is.null(split.idx) && length(unique(split.idx))>1) {
             nshow=10
             nshow <- show_rownames / length(unique(split.idx))
+            nshow <- max(nshow,10)
             subidx <- tapply(1:length(split.idx), split.idx, function(ii)
                 ii[head(order(-apply(gx[ii,],1,sd,na.rm=TRUE)),nshow)] )
             subset <- unlist(subidx)

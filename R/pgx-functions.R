@@ -9,45 +9,6 @@ USER.GENETEST.METHODS <- NULL
 ##==========    Platform helper functions =====================================
 ##=============================================================================
 
-pgx.exportFiles <- function(ngs, outdir="export") {
-    
-    cwd <- getwd()
-    system(paste("mkdir -p ",outdir))
-    setwd(outdir)
-    write.csv(ngs$counts, file="counts.csv")
-    write.csv(ngs$samples, file="samples.csv")
-    write.csv(ngs$genes, file="genes.csv")
-    
-    write.csv(ngs$X, file="log2counts.csv")
-    write.csv(ngs$gsetX, file="geneset-activation.csv")
-    
-    for(i in 1:length(ngs$gx.meta$meta)) {
-        fn = paste0("diffexpr-", names(ngs$gx.meta$meta)[i],".csv")
-        write.csv( ngs$gx.meta$meta[[i]], file=fn)
-    }
-    for(i in 1:length(ngs$gset.meta$meta)) {
-        fn = paste0("enrichment-", names(ngs$gset.meta$meta)[i],".csv")
-        write.csv( ngs$gset.meta$meta[[i]], file=fn)
-    }
-    
-    if(!is.null(ngs$drugs$mono)) {
-        df <- data.frame( NES=ngs$drugs$mono$X,
-                         p=ngs$drugs$mono$P,
-                         q=ngs$drugs$mono$Q )
-        write.csv(df, file="drugs-mono-enrichment.csv")
-    }
-    
-    if(!is.null(ngs$drugs$combo)) {
-        df <- data.frame( NES=ngs$drugs$combo$X,
-                         p=ngs$drugs$combo$P,
-                         q=ngs$drugs$combo$Q )
-        write.csv(df, file="drugs-combo-enrichment.csv")
-    }
-    
-    setwd(cwd)
-}
-
-
 wrapHyperLink <- function(s, gs) {
     
     ## GEO/GSE accession
@@ -96,6 +57,41 @@ wrapHyperLink <- function(s, gs) {
     return(s1)
 }
 
+reverse.AvsB.1 <- function(comp) {
+    paste(rev(strsplit(comp, split="_vs_|_VS_")[[1]]),collapse="_vs_")
+}
+reverse.AvsB <- function(comp) {
+    sapply(comp,reverse.AvsB.1)
+}
+
+is.POSvsNEG <- function(ngs) {
+
+    cntrmat <- ngs$model.parameters$contr.matrix
+    ## determine if notation is A_vs_B or B_vs_A 
+    ##ct0 <- cntrmat[,comp]        
+    grp1 <- sapply(strsplit(colnames(cntrmat),split="_vs_"),"[",1)
+    grp2 <- sapply(strsplit(colnames(cntrmat),split="_vs_"),"[",2)
+    grp1x <- intersect(grp1,rownames(cntrmat))
+    grp2x <- intersect(grp2,rownames(cntrmat))        
+    grp1.sign <- mean(cntrmat[intersect(grp1,rownames(cntrmat)),which(grp1 %in% grp1x)])
+    grp2.sign <- mean(cntrmat[intersect(grp2,rownames(cntrmat)),which(grp2 %in% grp2x)])
+    grp1.sign
+    grp2.sign
+    is.PosvsNeg1 <- (grp1.sign > 0 && grp2.sign < 0)
+    ##is.NegvsPos1 <- (grp2.sign > 0 && grp1.sign < 0)
+    is.PosvsNeg1
+    
+    grp1.neg2 <- mean(grepl("neg|untr|ref|wt|ctr|control",tolower(grp1)))
+    grp2.neg2 <- mean(grepl("neg|untr|ref|wt|ctr|control",tolower(grp2)))
+    grp1.neg2
+    grp2.neg2
+    is.PosvsNeg2 <- ( grp2.neg2 > grp1.neg2)
+    is.PosvsNeg2
+    
+    ok <- setdiff(c(is.PosvsNeg1,is.PosvsNeg2),NA)[1]
+    if(is.na(ok) || length(ok)==0) ok <- TRUE  ## DEFAULT if not known !!!!!
+    ok
+}
 
 is.categorical <- function(x, max.ncat=20, min.ncat=2) {
     is.factor <- any(class(x) %in% c("factor","character"))
@@ -607,9 +603,8 @@ pgx.getGeneSetCollections <- function(gsets, min.size=10, max.size=500)
     return(collections)
 }
 
-##inc.progress=FALSE;pgx=NULL
 pgx.scanInfo <- function(pgx.dir, inc.progress=FALSE,
-                         pgx=NULL )
+                         pgx=NULL, verbose=TRUE )
 {
     require(shiny)
     ##cat(">>> scanning available data sets...\n")
@@ -620,7 +615,7 @@ pgx.scanInfo <- function(pgx.dir, inc.progress=FALSE,
         jj <- which(!sub(".pgx$","",pgx.files0) %in% sub(".pgx$","",pgx$dataset))
         jj
         if(length(jj)==0) {
-            cat("[pgx.scanInfo] all up to date\n")
+            if(verbose) cat("[pgx.scanInfo] all up to date\n")
             return(pgx)
         }
         pgx.files = pgx.files[jj]
@@ -633,7 +628,7 @@ pgx.scanInfo <- function(pgx.dir, inc.progress=FALSE,
     cols <- NULL
     i=1
     for(i in 1:length(pgx.files)) {
-        cat("scanning info from",pgx.files[i],"\n")
+        if(verbose) cat("scanning info from",pgx.files[i],"\n")
         load( pgx.files[i] )
         cnd = colnames(ngs$samples)
         cnd = cnd[grep("group|batch|sample|patient|donor|repl|clone|cluster|lib.size|^[.]",cnd,invert=TRUE)]
@@ -667,11 +662,11 @@ pgx.scanInfo <- function(pgx.dir, inc.progress=FALSE,
     rownames(pgx.info) <- NULL
     
     if(is.null(pgx)) {
-        cat(">>> found",nrow(pgx.info),"data sets\n")
+        if(verbose) cat(">>> found",nrow(pgx.info),"data sets\n")
         pgx.info <- data.frame(pgx.info)
         rownames(pgx.info) <- NULL
     } else {
-        cat(">>> updated",nrow(pgx.info),"data sets\n")
+        if(verbose) cat(">>> updated",nrow(pgx.info),"data sets\n")
         pgx.info <- data.frame(pgx.info)
         pgx.info <- pgx.info[,match(colnames(pgx),colnames(pgx.info))]
         pgx.info = rbind(pgx, pgx.info)
