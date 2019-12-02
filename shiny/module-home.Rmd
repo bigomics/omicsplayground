@@ -181,9 +181,7 @@ randomCartoon <- function() {
 }##)
 
 startup_count=0
-VERSION='0.99 (always almost)'
-
-require(shinyparticles)
+##require(shinyparticles)
 require(particlesjs)
 particlesjs.conf <- rjson::fromJSON(file="resources/particlesjs-config.json")
 
