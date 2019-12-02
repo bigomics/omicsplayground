@@ -6,37 +6,36 @@
 # Prepare R/Shiny with all packages
 #------------------------------------------------------------
 
-FROM rocker/shiny:3.5.2
+FROM rocker/shiny:3.6.1
 
 RUN apt-get update && apt-get install -y apt-utils \
     libcurl4-gnutls-dev libv8-3.14-dev \
     libssl-dev libxml2-dev  libjpeg-dev \
     libgl-dev libglu-dev tk-dev libhdf5-dev \
     libgit2-dev libssh2-1-dev libnetcdf-dev \
-    jags emacs
+    jags emacs git
 
-## Remove old folder, create new
-RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
-RUN rm -fr /omicsplayground/ && mkdir -p /omicsplayground/
+## Remove old folder
+RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny 
+RUN rm -fr /omicsplayground
+
+#------------------------------------------------------------
+## Pull from GitHub
+#------------------------------------------------------------
+RUN git clone https://github.com/bigomics/omicsplayground.git 
+RUN chmod -R ugo+rwX /omicsplayground
 WORKDIR /omicsplayground
 
-## Upload some packages/files that are needed to the image
-RUN mkdir -p /omicsplayground/ext/packages/
-COPY ext/packages/*.tar.gz ext/packages/
-
-# Install R packages that are required
-COPY R /omicsplayground/R
-COPY shiny /omicsplayground/shiny
+#------------------------------------------------------------
+## Install R packages that are required
+#------------------------------------------------------------
 RUN R -e "setwd('R');source('requirements.R')"
 
 #------------------------------------------------------------
-# Install all Playground and some data under /omicsplayground
+# Copy data into Docker image
 #------------------------------------------------------------
-COPY data /omicsplayground/data
-COPY lib /omicsplayground/lib
-COPY scripts /omicsplayground/scripts
-
-RUN chmod -R ugo+rwX /omicsplayground
+COPY data/* /omicsplayground/data/
+RUN R -e "setwd('scripts');source('update-datasets-info.R')"
 
 #------------------------------------------------------------
 # Copy further configuration files into the Docker image
