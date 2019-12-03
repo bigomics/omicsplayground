@@ -51,6 +51,9 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
 
     if(verbose>1) cat("input.dim.gx=",dim(gx),"\n")
 
+    ## give unique name if duplicated
+    rownames(gx) <- tagDuplicates(rownames(gx))
+    
     par(xpd=FALSE)
     jj1 <- 1:nrow(gx)
     jj2 <- 1:ncol(gx)
@@ -64,6 +67,9 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     }
     gx <- gx[jj1,jj2]
 
+    if(!is.null(row.annot)) row.annot <- row.annot[jj1,,drop=FALSE]
+    if(!is.null(col.annot)) col.annot <- col.annot[jj2,,drop=FALSE]
+    
     fillNA <- function(x) {
         nx <- x
         nx[is.na(nx)] <- 0
@@ -91,7 +97,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         row.annot = cbind(row.annot, cluster = split.idx)
         row.annot = data.frame(row.annot)
         colnames(row.annot) = tolower(colnames(row.annot))
-        rownames(row.annot) = rownames(gx)
+        rownames(row.annot) = tagDuplicates(rownames(gx))
     }
 
     ##--------------------------------------------

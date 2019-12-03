@@ -330,7 +330,7 @@ hm1_splitmap.RENDER <- reactive({
     ##if(nrow(zx) > 100) rownames(zx) = rep("",nrow(zx))
     if(nrow(zx) > 100) show_rownames = FALSE   
 
-    main = ""
+    main = "  "
     main = input$hm_features
     
     cex1 = ifelse(ncol(zx)>50,0.75,1)
@@ -378,7 +378,7 @@ hm1_splitmap.RENDER <- reactive({
     totnchar
     nx <- length(unique(splitx))
     if(!is.null(splitx) & (totnchar > 44 || nx>=6) ) crot=90
-    if(main=="<all>") main <- " "
+    if(main=="<all>") main <- "  "
 
     nrownames = 60
     nrownames = ifelse("row" %in% input$hm_showlabel,60,0)
