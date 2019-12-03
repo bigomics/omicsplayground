@@ -14,12 +14,16 @@ moduleWidget <- function(module, outputFunc="plotOutput", height="100%", width="
     if(!is.character(outputFunc)) outputFunc = as.character(quote(outputFunc))
     outputFunc2 <- paste0(outputFunc,"('",module.id,"', height='",
                           height,"', width='",width,"')")
-    p <- fillCol(flex = c(NA,1), module$button, eval(parse(text=outputFunc2)))
+    p <- fillCol(
+        flex = c(NA,1),
+        module$button,
+        eval(parse(text=outputFunc2))
+    )
     ## p <- box(p)
     p
 }
 
-output <- attachModule <- function(output, module, ns=NULL) {
+attachModule <- function(output, module, ns=NULL) {
     ## Attach render functions to shiny output. Works for both
     ## tableModule and plotModule.
     ##
@@ -36,104 +40,8 @@ output <- attachModule <- function(output, module, ns=NULL) {
 }
 ##attachModule(enrich_fctable_module, "enrich_fctable")
 
-tableModule <- function(id, func, info.text="Info text",
-                        title="", label="", caption="", ns=NULL,
-                        ##inputs=NULL, 
-                        options = NULL, info.width="300px",
-                        ##no.download = FALSE, just.info=FALSE,
-                        server=TRUE)
-{
-    require(shinyWidgets)
-    require(shinyBS)
-
-    ## all callback ids
-    if(is.null(ns)) ns=function(x)x
-    info_id <- paste0(id,"_info") ## NS?
-    options_id <- paste0(id,"_options")  ## NS?
-    pdf_id <- ns(paste0(id,"_pdf"))
-    csv_id <- ns(paste0(id,"_csv"))    
-    label1 = HTML(paste0("<span class='module-label'>",label,"</span>"))
-
-    if(any(class(caption)=="reactive")) {
-        caption.fun <- caption
-    } else {
-        caption.fun <- function() { caption }
-    }
-    
-    options.button <- ""    
-    if(!is.null(options) && length(options)>0) {
-        options.button <- dropdownButton(
-            ##tags$h3("Options"),
-            options,
-            ##br(),
-            ##dload,
-            circle = TRUE, size = "xs", ## status = "danger",
-            ## icon = icon("gear"),
-            icon = icon("bars"),
-            width = "250px",
-            inputId = options_id,
-            tooltip = tooltipOptions(title = "Settings", placement = "right")
-        )
-    }
-    
-    buttons <- fillRow(
-        flex=c(NA,NA,NA,NA,1),
-        ##actionLink(options_id, label=NULL, icon = icon("info")),
-        label1,
-        dropdownButton(
-            tags$p(HTML(info.text)),
-            br(),
-            circle = TRUE, size = "xs", ## status = "danger",
-            icon = icon("info"), width = info.width,
-            inputId = info_id,
-            tooltip = tooltipOptions(title = "Info", placement = "right")
-        ),
-        options.button,
-        dropdownButton(
-            downloadButton(csv_id, "CSV"),
-            circle = TRUE, size = "xs", ## status = "danger",
-            icon = icon("download"), width = "80px",
-            tooltip = tooltipOptions(title = "Download", placement = "right")
-        ),
-        ##HTML(paste("<center><strong>",title,"</strong></center>"))
-        HTML(paste("<center>",title,"</center>"))
-        ##inputs
-        ##selectInput("sel123","number",1:10)
-    )
-    
-    CSVFILE = paste0(gsub("file","data",tempfile()),".csv")
-    CSVFILE
-    
-    render <- renderDataTable({
-        dt <- func()
-        write.csv(dt$x$data, file=CSVFILE, row.names=FALSE)
-        dt
-    }, server=server)
-    
-    ## render2 <- renderPlot({plot_array[[3]]()}, res=res)
-    download.csv <- downloadHandler(
-        filename = "data.csv",
-        content = function(file) file.copy(CSVFILE,file)        
-    )
-    ##box <- fillCol(flex=c(NA,1), button, render)
-    
-    module <- list(
-        id = id,
-        .func = func,
-        .tmpfiles = c(csv=CSVFILE),
-        getCaption = caption.fun,
-        render = render,
-        ##render2 = render2,
-        csv = download.csv,
-        buttons = buttons
-    )
-    ## attr(module, "class") <- "ShinyModule"
-    return(module)
-}
-
-
 plotModuleButtons <- function(id, text="Help text", title="", ns=NULL,
-                              download.fmt = c("pdf"), info.width="300px",
+                              download.fmt = c("png","pdf"), info.width="300px",
                               no.download = FALSE, just.info=FALSE, 
                               options=NULL, inputs=NULL, label="")
 {
@@ -169,9 +77,9 @@ plotModuleButtons <- function(id, text="Help text", title="", ns=NULL,
     }
 
     dload.csv = dload.pdf = dload.png = dload.html = NULL
-    if("pdf" %in% download.fmt) dload.pdf <- downloadButton(pdf_id, "PDF")
-    if("png" %in% download.fmt) dload.png <- downloadButton(png_id, "PNG")
-    if("csv" %in% download.fmt) dload.csv <- downloadButton(csv_id, "CSV")
+    if("pdf" %in% download.fmt)  dload.pdf  <- downloadButton(pdf_id, "PDF")
+    if("png" %in% download.fmt)  dload.png  <- downloadButton(png_id, "PNG")
+    if("csv" %in% download.fmt)  dload.csv  <- downloadButton(csv_id, "CSV")
     if("html" %in% download.fmt) dload.html <- downloadButton(html_id, "HTML")
     
     dload.button <- dropdownButton(
@@ -199,7 +107,7 @@ plotModuleButtons <- function(id, text="Help text", title="", ns=NULL,
             tooltip = tooltipOptions(title = "Info", placement = "right")
         ),
         options.button,
-        dload.button,
+        div(class='download-button', dload.button),
         ##HTML(paste("<center><strong>",title,"</strong></center>"))
         HTML(paste("<center>",title,"</center>"))
         ##br()
@@ -212,7 +120,7 @@ plotModuleButtons <- function(id, text="Help text", title="", ns=NULL,
 plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                        inputs=NULL, options = NULL, label="", caption="", 
                        plotlib = "base", renderFunc=NULL, outputFunc=NULL,
-                       no.download = FALSE, download.fmt=c("pdf","html"), 
+                       no.download = FALSE, download.fmt=c("png","pdf","html"), 
                        just.info=FALSE, server=TRUE, info.width="300px",
                        width = "auto", height = "auto",  ## for renderPlot
                        pdf.width=8, pdf.height=8, pdf.pointsize=12, res=72)
@@ -251,10 +159,12 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
     }
 
     do.pdf = "pdf" %in% download.fmt
+    do.png = "png" %in% download.fmt
     do.html = "html" %in% download.fmt
 
-    PDFFILE=HTMLFILE=NULL
+    PNGFILE=PDFFILE=HTMLFILE=NULL
     if(do.pdf) PDFFILE = paste0(gsub("file","plot",tempfile()),".pdf")
+    if(do.png) PNGFILE = paste0(gsub("file","plot",tempfile()),".png")
     HTMLFILE = paste0(gsub("file","plot",tempfile()),".html")  ## tempory for webshot
     ##HTMLFILE = "/tmp/plot.html"
     HTMLFILE
@@ -334,12 +244,26 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
                     ##dev.off()  ## important!!
                 }
             ))
+            
+            suppressWarnings( suppressMessages(
+                if(do.png) {
+                    if(ADDSIGNATURE) {
+                        mtext("created with Omics Playground",
+                              1,line=-1,outer=TRUE,adj=0.98,padj=0,cex=0.6,col="#44444444")
+                    }
+                    dev.print(png, file=PNGFILE, width=pdf.width*100, height=pdf.height*100,
+                              pointsize=pdf.pointsize)
+                    ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
+                    ##dev.off()  ## important!!
+                }
+            ))
+
         }, res=res, width=width, height=height )
         outputFunc="plotOutput"
     }
 
     ## render2 <- renderPlot({plot_array[[3]]()}, res=res)
-    download.pdf = download.html = NULL
+    download.pdf = download.png = download.html = NULL
 
     ##============================================================
     ##=============== Download Handlers ==========================
@@ -356,8 +280,102 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
         )
     }
 
-    if(do.pdf) {
-        
+    if(do.png) {
+        download.png <- downloadHandler(
+            filename = "plot.png",
+            content = function(file) {
+                withProgress({
+                    ## unlink(PNGFILE) ## do not remove!
+                    if(plotlib=="plotly") {
+                        cat("downloadHandler:: exporting plotly to PNG\n")
+                        p <- func()
+                        if(ADDSIGNATURE) p = addSignaturePlotly(p)                             
+                        p$width = pdf.width * 100
+                        p$height = pdf.height * 100
+                        ##is.plotly3d <- class(p)[1]=="plotly" && all( c("x","y","z") %in% names(p$x$attrs[[1]]))
+                        err <- try(export(p, PNGFILE))  ## deprecated but still works...
+                        if(class(err)=="try-error") {
+                            cat("downloadHandler:: export failed, trying webshot...\n")
+                            htmlwidgets::saveWidget(p, HTMLFILE) 
+                            err2 <- try(webshot(HTMLFILE,vwidth=pdf.width*100,
+                                                vheight=pdf.height*100,PNGFILE))
+                            if(class(err2)=="try-error") {
+                                png(PNGFILE)
+                                text(0.5,0.5,"PNG export error (plotly)")
+                                dev.off()
+                            }
+                        }
+                    } else if(plotlib=="iheatmapr") {
+                        cat("downloadHandler:: exporting iheatmapR to PNG\n")
+                        p <- func()
+                        if(ADDSIGNATURE) p = addSignaturePlotly(p)                             
+                        save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PNGFILE)
+                    } else if(plotlib=="visnetwork") {
+                        cat("downloadHandler:: exporting visnetwork to PNG\n")
+                        p <- func()
+                        visSave(p, HTMLFILE)
+                        webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PNGFILE)
+                    } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
+                        cat("downloadHandler:: exporting htmlwidget to PNG\n")
+                        p <- func()
+                        htmlwidgets::saveWidget(p, HTMLFILE)
+                        webshot(HTMLFILE, vwidth=pdf.width*100,vheight=pdf.height*100,PNGFILE)
+                    } else if(plotlib %in% c("ggplot","ggplot2")) {
+                        cat("downloadHandler:: exporting ggplot to PNG\n")
+                        p <- func()
+                        ##p = addSignature(p)                             
+                        ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
+                        png(PNGFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
+                        print(p) 
+                        dev.off() 
+                    } else if(plotlib=="generic") {
+                        cat("downloadHandler:: generic to PNGFILE = ",PNGFILE,"\n")
+                        ## generic function should produce PDF inside plot func()
+                        ##
+                    } else if(plotlib=="base") {
+                        ##cat("downloadHandler:: exporting to base plot to PDF\n")
+                        cat("downloadHandler:: exporting base plot to PNG\n")
+                        
+                        ## NEEEDS FIX!! pdf generating should be done
+                        ## just here, not anymore in the
+                        ## renderPlot. But cannot get it to work (IK 19.10.02)
+                        if(0) {
+                            cat("downloadHandler:: creating new PDF device\n")
+                            add.ADVERTISEMENT = TRUE
+                            add.ADVERTISEMENT = FALSE
+                            pdf(file=PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
+                            func()
+                            ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
+                            plot(sin)
+                            ## ##mtext( caption.fun(), outer=TRUE, side=1,line=-3.5, cex=1, xpd=NA)
+                            ## if(add.ADVERTISEMENT) {
+                            ##     par(mfrow=c(1,1),par=c(1,1,1,1)*0.5)
+                            ##     frame()
+                            ##     motto <- pgx.randomSlogan(b=30)
+                            ##     mex = min(pdf.width,pdf.height)/8.0
+                            ##     text(0.5, 0.95, "Created with BigOmics Playground", cex=1.2*mex)
+                            ##     text(0.5, 0.70, motto, cex=2*mex, font=4)
+                            ##     text(0.5, 0.25, "BigOmics Analytics", cex=1.5*mex, font=2)
+                            ##     text(0.5, 0.15, "Self-service bioinformatics solutions", cex=1.2*mex)
+                            ##     text(0.5, 0.05, "www.bigomics.ch", cex=1.2*mex, font=3, xpd=NA)
+                            ## }
+                            dev.off()  ## important!!
+                        }
+                    } else { ## end base                
+                        png(PNGFILE, pointsize=pdf.pointsize)
+                        plot.new()
+                        mtext("Error. PNG not available.",line=-8)
+                        dev.off()
+                    }
+                    
+                    ## finally copy to final exported file
+                    file.copy(PNGFILE,file)
+                }, message="exporting to PNG", value=0.8)
+            } ## content 
+        ) ## PNG downloadHandler
+    } ## end if do.png
+
+    if(do.pdf) {        
         download.pdf <- downloadHandler(
             filename = "plot.pdf",
             content = function(file) {
@@ -537,6 +555,7 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
         render = render,
         ##render2 = render2,
         pdf = download.pdf,
+        png = download.png,
         html = download.html,
         buttons = buttons,
         getCaption = caption.fun,
@@ -546,6 +565,103 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
     ## attr(module, "class") <- "ShinyModule"
     return(module)
 }
+
+
+tableModule <- function(id, func, info.text="Info text",
+                        title="", label="", caption="", ns=NULL,
+                        ##inputs=NULL, 
+                        options = NULL, info.width="300px",
+                        ##no.download = FALSE, just.info=FALSE,
+                        server=TRUE)
+{
+    require(shinyWidgets)
+    require(shinyBS)
+
+    ## all callback ids
+    if(is.null(ns)) ns=function(x)x
+    info_id <- paste0(id,"_info") ## NS?
+    options_id <- paste0(id,"_options")  ## NS?
+    pdf_id <- ns(paste0(id,"_pdf"))
+    csv_id <- ns(paste0(id,"_csv"))    
+    label1 = HTML(paste0("<span class='module-label'>",label,"</span>"))
+
+    if(any(class(caption)=="reactive")) {
+        caption.fun <- caption
+    } else {
+        caption.fun <- function() { caption }
+    }
+    
+    options.button <- ""    
+    if(!is.null(options) && length(options)>0) {
+        options.button <- dropdownButton(
+            ##tags$h3("Options"),
+            options,
+            ##br(),
+            ##dload,
+            circle = TRUE, size = "xs", ## status = "danger",
+            ## icon = icon("gear"),
+            icon = icon("bars"),
+            width = "250px",
+            inputId = options_id,
+            tooltip = tooltipOptions(title = "Settings", placement = "right")
+        )
+    }
+    
+    buttons <- fillRow(
+        flex=c(NA,NA,NA,NA,1),
+        ##actionLink(options_id, label=NULL, icon = icon("info")),
+        label1,
+        dropdownButton(
+            tags$p(HTML(info.text)),
+            br(),
+            circle = TRUE, size = "xs", ## status = "danger",
+            icon = icon("info"), width = info.width,
+            inputId = info_id,
+            tooltip = tooltipOptions(title = "Info", placement = "right")
+        ),
+        options.button,
+        div(class='download-button', dropdownButton(
+            downloadButton(csv_id, "CSV"),
+            circle = TRUE, size = "xs", ## status = "danger",
+            icon = icon("download"), width = "80px",
+            tooltip = tooltipOptions(title = "Download", placement = "right")
+        )),
+        ##HTML(paste("<center><strong>",title,"</strong></center>"))
+        HTML(paste("<center>",title,"</center>"))
+        ##inputs
+        ##selectInput("sel123","number",1:10)
+    )
+    
+    CSVFILE = paste0(gsub("file","data",tempfile()),".csv")
+    CSVFILE
+    
+    render <- renderDataTable({
+        dt <- func()
+        write.csv(dt$x$data, file=CSVFILE, row.names=FALSE)
+        dt
+    }, server=server)
+    
+    ## render2 <- renderPlot({plot_array[[3]]()}, res=res)
+    download.csv <- downloadHandler(
+        filename = "data.csv",
+        content = function(file) file.copy(CSVFILE,file)        
+    )
+    ##box <- fillCol(flex=c(NA,1), button, render)
+    
+    module <- list(
+        id = id,
+        .func = func,
+        .tmpfiles = c(csv=CSVFILE),
+        getCaption = caption.fun,
+        render = render,
+        ##render2 = render2,
+        csv = download.csv,
+        buttons = buttons
+    )
+    ## attr(module, "class") <- "ShinyModule"
+    return(module)
+}
+
 
 pgx.randomSlogan <- function(b=NULL) {
     motto.list <- c("Skip the queue. Take the fast lane",
