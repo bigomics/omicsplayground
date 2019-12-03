@@ -523,8 +523,6 @@ hm_splitmap.switchRENDER <- reactive({
 hm_splitmap_module <- plotModule(
     "hm_splitmap", hm_splitmap.switchRENDER,
     plotlib="generic", renderFunc="renderUI",
-    ## download.fmt = NULL,
-    ##download.fmt = c("pdf"),
     download.fmt = c("pdf","html"),
     info.text = hm_splitmap_text,
     options = hm_splitmap_opts,
@@ -1129,7 +1127,7 @@ clustannot_plots_module <- plotModule(
     id="clustannot_plots",
     ##func=clustannot_plots.RENDER, plotlib = "base",
     func=clustannot_plots.PLOTLY, plotlib="plotly",
-    download.fmt = c("pdf","html"),
+    download.fmt = c("png","pdf","html"),
     info.text = clustannot_plots_text,
     options = clustannot_plots_opts,
     pdf.width=8, pdf.height=5, res=80,

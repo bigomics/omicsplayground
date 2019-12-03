@@ -70,15 +70,15 @@ output$current_dataset <- renderText({ curDataSet() })
 ## User interface
 ##-----------------------------------------------------------------------------
 
-usermode_infotip = "Select BASIC or ADVANCED user mode. The basic mode should be sufficient for most users. The advanced mode presents extra visualization panels and enables more custom options. The advanced mode also has specialized analysis modules for single-cell RNA-seq, immune cell profiling and signature analysis."
+usermode_infotip = "Select BASIC or PREMIUM user mode. The BASIC mode should be sufficient for most users. The PREMIUM mode unlocks more algorithms, extra visualization panels and advanced analysis modules for single-cell RNA-seq, cell profiling and biomarker analysis."
 
-userlevels = c("basic","expert")
+userlevels = c("BASIC","PREMIUM")
 ## if(DEV.VERSION) userlevels = c("basic","expert","developer")
 br();
 ##require(shinyWidgets)
 tipify(radioGroupButtons(
     inputId = "main_usermode",
-    label = "User interface:",
+    label = "User mode:",
     choices = userlevels,
     ## selected = "expert",
     status = "warning",
@@ -187,7 +187,7 @@ particlesjs.conf <- rjson::fromJSON(file="resources/particlesjs-config.json")
 
 showStartupModal <- function(once=FALSE) {    
 
-    if(length(input$loadbutton)==0) return(NULL)  ## UI not ready
+    if(length(input$loadbutton)==0) return(NULL)  ## UI not ready???
     if(once && startup_count>0) return(NULL)
 
     dbg("showStartupModal: showing!\n")    
@@ -487,12 +487,12 @@ BASIC_SECTIONS <- list(
     c('#navbar','#section-expression'),
     c('#navbar','#section-enrichment'),
     c('#navbar','#section-intersection'),
-    c('#navbar','#section-functional')
+    c('#navbar','#section-functional'),
+    c('#navbar','#section-signature')    
 )
 
 EXPERT_SECTIONS <- list(
     ## c('#navbar','#section-test'),
-    c('#navbar','#section-signature'),
     c('#navbar','#section-biomarker'),
     c('#navbar','#section-scprofiling'),
     c('#section-clustering','#section-feature-ranking'),
@@ -510,7 +510,7 @@ USERMODE = factor("basic", levels=c("intruder","basic","expert","developer","jed
 
 observeEvent(input$main_usermode,
 {
-    if(input$main_usermode == "basic") {
+    if(input$main_usermode == "BASIC") {
         dbg("observeEvent::main_usermode : switching to BASIC mode")
         lapply(c(EXPERT_SECTIONS), function(sec) {
             sel = paste0(sec[1]," li a[href='",sec[2],"']")
@@ -518,16 +518,18 @@ observeEvent(input$main_usermode,
             shinyjs::hide(selector = sel)
         })
         ##shinyjs::html("navbar-brand","Omics Playground (basic)")
+        shinyjs::hide(selector = "div.download-button")
         USERMODE <<- "basic"
     }
     
-    if(input$main_usermode >= "expert") {
+    if(input$main_usermode == "PREMIUM") {
         dbg("observeEvent::main_usermode : switching to EXPERT mode")
         lapply(EXPERT_SECTIONS, function(sec) {
             sel = paste0(sec[1]," li a[href='",sec[2],"']")
             dbg("observeEvent::main_usermode : showing ",sel)
             shinyjs::show(selector = sel)
         })
+        shinyjs::show(selector = "div.download-button")
         USERMODE <<- "expert"        
     }
     
@@ -714,13 +716,11 @@ getPGXTable <- reactive({
 
 pgxTable.RENDER <- reactive({
 
+    if(SHOWSPLASH) showStartupModal(once=TRUE)
+    
     dbg("<pgxTable.RENDER> reacted")
     df <- getPGXTable()
     req(df)
-    
-    if(SHOWSPLASH) showStartupModal(once=TRUE)
-    
-    dbg("<pgxTable.RENDER> head(df$dataset)=",head(df$dataset))
     
     df$conditions  <- gsub("[,]"," ",df$conditions)
     df$conditions  <- sapply(as.character(df$conditions), andothers, split=" ", n=5)
@@ -728,11 +728,12 @@ pgxTable.RENDER <- reactive({
     df$nsets <- NULL
     df$date  <- NULL
     
+    if(SHOWSPLASH) showStartupModal(once=TRUE)
+    
     DT::datatable( df,
                   class = 'compact cell-border stripe hover',
                   rownames=TRUE,
                   extensions = c('Scroller'),
-                  ##selection = list(mode='single', target='row'),
                   selection = list(mode='single', target='row', selected=NULL ),
                   ##selection = list(mode='none'),
                   ##filter = "top",
@@ -859,7 +860,7 @@ observeEvent( input$upload_compute, {
         )
     } else {
         showModal( modalDialog(
-            HTML("Your data will be uploaded for computation. By uploading the data you accept our EULA and you confirm that the data has been anonymized. Research use only."),
+            HTML("Your data will be uploaded for computation. By uploading the data you accept our EULA and you confirm that the data has been anonymized. For research use only."),
             title = NULL,
             size = "s",
             footer = tagList(
@@ -951,7 +952,7 @@ observeEvent( c(input$myconfirmation,input$myconfirmation2), {
         ## ngs$description = input$upload_description
         ngs$date = date()
     }
-
+    
     ## initialize and update global PGX object
     ngs <- pgx.initialize(ngs)
     currentPGX(ngs)  ## copy to global reactive variable
@@ -960,21 +961,15 @@ observeEvent( c(input$myconfirmation,input$myconfirmation2), {
 
     removeModal()
     showModal( modalDialog(
-        p("Ready! You can now analyze your uploaded dataset."),
+        HTML("<center><b>Ready!</b><br>You can now start analyzing your data. Tip: to avoid computing again, download your results locally or save it to the cloud.</center>"),
         title = NULL,
         size = "m",
         footer = tagList(
             downloadButton("downloadPGX", "Download", icon=icon("download")),
             actionButton("savedata", "Save", icon=icon("save")),
             modalButton("Dismiss")
-        ),
-     ))
-     ##sendSweetAlert(
-     ##    session = session,
-     ##    title = "Ready! You can now analyze your uploaded dataset.",
-     ##    ##text = "Now go to the previous tab and select your uploaded data set.",
-     ##    type = "success"
-     ##)
+        )
+    ))
      
 })
 
@@ -992,7 +987,7 @@ observeEvent( input$savedata, {
     dbg("[home] observeEvent:savedata\n")
 
     showModal( modalDialog(
-        "Sorry. Saving not implemented yet",
+        HTML("<center><b>New feature!</b><br>Saving your data to the cloud will be soon available for Premium users!</center>"),
         title = NULL, size = "s", fade=FALSE
     ))
     return(NULL)
