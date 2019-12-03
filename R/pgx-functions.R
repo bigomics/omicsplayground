@@ -9,6 +9,17 @@ USER.GENETEST.METHODS <- NULL
 ##==========    Platform helper functions =====================================
 ##=============================================================================
 
+tagDuplicates <- function(s) {
+    jj <- which(duplicated(s))
+    t <- s[jj][1]
+    for(t in unique(s[jj])) {
+        ii <- which(s==t)
+        s[ii] <- paste(s[ii],1:length(ii),sep=".")
+    }
+    s <- gsub("[.]1$","",s)
+    s
+}
+
 wrapHyperLink <- function(s, gs) {
     
     ## GEO/GSE accession
