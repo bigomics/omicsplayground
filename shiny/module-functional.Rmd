@@ -50,7 +50,7 @@ br();br();
 ##---------Advanced options panel -------------------
 ##---------------------------------------------------
 conditionalPanel(
-    "input.main_usermode == 'expert'",
+    "input.main_usermode == 'PRO'",
     tipify( actionLink("fa_options", "Options", icon=icon("cog", lib = "glyphicon")),
            "Show/hide advanced options", placement="top"),
     br(),
