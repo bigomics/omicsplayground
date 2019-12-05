@@ -70,9 +70,9 @@ output$current_dataset <- renderText({ curDataSet() })
 ## User interface
 ##-----------------------------------------------------------------------------
 
-usermode_infotip = "Select BASIC or PREMIUM user mode. The BASIC mode should be sufficient for most users. The PREMIUM mode unlocks more algorithms, extra visualization panels and advanced analysis modules for single-cell RNA-seq, cell profiling and biomarker analysis."
+usermode_infotip = "Select BASIC or PRO user mode. The BASIC mode should be sufficient for most users. The PRO mode unlocks more algorithms, extra visualization panels and advanced analysis modules for single-cell RNA-seq, cell profiling and biomarker analysis."
 
-userlevels = c("BASIC","PREMIUM")
+userlevels = c("BASIC","PRO")
 ## if(DEV.VERSION) userlevels = c("basic","expert","developer")
 br();
 ##require(shinyWidgets)
@@ -80,7 +80,7 @@ tipify(radioGroupButtons(
     inputId = "main_usermode",
     label = "User mode:",
     choices = userlevels,
-    ## selected = "expert",
+    selected = "PRO",
     status = "warning",
     checkIcon = list(yes = icon("ok", lib = "glyphicon"))),
     usermode_infotip, placement="bottom", options = list(container="body")
@@ -187,7 +187,12 @@ particlesjs.conf <- rjson::fromJSON(file="resources/particlesjs-config.json")
 
 showStartupModal <- function(once=FALSE) {    
 
-    if(length(input$loadbutton)==0) return(NULL)  ## UI not ready???
+    if(length(input$loadbutton)==0) {
+        dbg("[showStartupModal] UI not ready. skipping")
+        ##delay(8000, selectRows(proxy = dataTableProxy("pgxtable"), selected=1))
+        ##delay(8000, shinyjs::click("loadbutton"))
+        return(NULL)  ## UI not ready???
+    }
     if(once && startup_count>0) return(NULL)
 
     dbg("showStartupModal: showing!\n")    
@@ -522,7 +527,7 @@ observeEvent(input$main_usermode,
         USERMODE <<- "basic"
     }
     
-    if(input$main_usermode == "PREMIUM") {
+    if(input$main_usermode == "PRO") {
         dbg("observeEvent::main_usermode : switching to EXPERT mode")
         lapply(EXPERT_SECTIONS, function(sec) {
             sel = paste0(sec[1]," li a[href='",sec[2],"']")
@@ -556,9 +561,6 @@ inputData <- reactive({
     if(LOGIN_AUTHENTICATION!="none" && !USER$logged) return(NULL)
 
     pgx <- currentPGX()
-    if(is.null(pgx)) shinyjs::click("loadbutton")    
-    dbg("inputData:: pgx$name=",pgx$name,"\n")
-    dbg("inputData:: length(pgx)=",length(pgx),"\n")
 
     return(pgx)
 })
@@ -567,20 +569,22 @@ observeEvent( input$loadbutton, {
 
     ## Observe button press
     btn <- isolate(input$loadbutton)
-    dbg("[observe:loadbutton] loadbutton=",btn,"\n")
-
     pgx = NULL
     pgx = isolate(selectedDataSet())
+
+    dbg("[observe:loadbutton] loadbutton=",btn,"\n")
     dbg("[observe:loadbutton] 1: pgx.selected=",pgx)
 
     if(!is.null(btn) && btn!=0 && !is.null(pgx)) {
         ## show loading pop-up
         showLoadingModal()
     }
+
     if(is.null(pgx) || pgx=="" || length(pgx)==0) {
         ## Set to default data set if table is not ready yet.
-        pgx <- PGXINFO$dataset[1]
-        dbg("[observe:loadbutton] setting to default data set = ",pgx,"\n")
+        ## pgx <- PGXINFO$dataset[1]
+        ## dbg("[observe:loadbutton] setting to default data set = ",pgx,"\n")
+        return(NULL)
     }
     
     pgx1 = file.path(PGX.DIR,pgx)
@@ -641,6 +645,7 @@ vbox <- function(value, label) {
 output$valuebox1 <- renderUI({
     pgx <- getPGXTable()
     req(pgx)
+    ndatasets = "..."
     ndatasets <- nrow(pgx)
     vbox( ndatasets, "data sets")     
 })
@@ -727,9 +732,7 @@ pgxTable.RENDER <- reactive({
     df$description <- shortstring(as.character(df$description),200)
     df$nsets <- NULL
     df$date  <- NULL
-    
-    if(SHOWSPLASH) showStartupModal(once=TRUE)
-    
+        
     DT::datatable( df,
                   class = 'compact cell-border stripe hover',
                   rownames=TRUE,
@@ -794,7 +797,7 @@ output$downloadExampleData <- downloadHandler(
     }
 )
 
-upload_info = "<h4>User file upload</h4><p>Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. You can download a zip file with example files here: EXAMPLEZIP. As BASIC user, you have a maximum of 20 samples and 5 comparisons. As PREMIUM user, you can go up to 100 samples and 20 comparisons. If you want to analyze larger datasets, please use the scripts. After that, in sidebar on the left, provide a name for your dataset. Finally, hit the compute button. The computations may take 10 to 30 minutes depending on the size of your dataset."
+upload_info = "<h4>User file upload</h4><p>Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. You can download a zip file with example files here: EXAMPLEZIP. As BASIC user, you have a maximum of 20 samples and 5 comparisons. As PRO user, you can go up to 100 samples and 20 comparisons. If you want to analyze larger datasets, please use the scripts. After that, in sidebar on the left, provide a name for your dataset. Finally, hit the compute button. The computations may take 10 to 30 minutes depending on the size of your dataset."
 DLlink = downloadLink("downloadExampleData","exampledata.zip")
 upload_info = sub("EXAMPLEZIP",DLlink,upload_info)
 
@@ -957,7 +960,7 @@ observeEvent( c(input$myconfirmation,input$myconfirmation2), {
     ngs <- pgx.initialize(ngs)
     currentPGX(ngs)  ## copy to global reactive variable
     selectRows(proxy = dataTableProxy("pgxtable"), selected=NULL)
-    ##shinyjs::click("loadbutton")    
+    ## shinyjs::click("loadbutton")    
 
     removeModal()
     showModal( modalDialog(
@@ -987,7 +990,7 @@ observeEvent( input$savedata, {
     dbg("[home] observeEvent:savedata\n")
 
     showModal( modalDialog(
-        HTML("<center><b>New feature!</b><br>Saving your data to the cloud will be soon available for Premium users!</center>"),
+        HTML("<center><b>New feature!</b><br>Saving your data to the cloud will be soon available for Pro users!</center>"),
         title = NULL, size = "s", fade=FALSE
     ))
     return(NULL)

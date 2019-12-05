@@ -80,7 +80,8 @@ if(DEV.VERSION) {
 ## update choices upon change of data set 
 observe({
     ngs <- inputData()
-    req(ngs)    
+    ##req(ngs)
+    if(is.null(ngs)) return(NULL)
     comparisons <- colnames(ngs$model.parameters$contr.matrix)
     comparisons <- sort(comparisons)
     updateSelectInput(session, "cmp_comparisons", choices=comparisons,
@@ -91,7 +92,9 @@ observe({
 ##observeEvent( input$cmp_level, {
 observe({
     ngs <- inputData()
-    req(ngs,input$cmp_level)
+    ## req(ngs,input$cmp_level)
+    if(is.null(ngs)) return(NULL)
+    req(input$cmp_level)
     ##flt.choices = names(ngs$families)
     cat("[intersection:observeEvent] input.cmp_level=",input$cmp_level,"\n")
     if(input$cmp_level=="geneset") {
