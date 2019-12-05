@@ -73,7 +73,9 @@ output$current_dataset <- renderText({ curDataSet() })
 usermode_infotip = "Select BASIC or PRO user mode. The BASIC mode should be sufficient for most users. The PRO mode unlocks more algorithms, extra visualization panels and advanced analysis modules for single-cell RNA-seq, cell profiling and biomarker analysis."
 
 userlevels = c("BASIC","PRO")
-## if(DEV.VERSION) userlevels = c("basic","expert","developer")
+USERMODE = factor("basic", levels=c("intruder","basic","pro","developer"))
+
+## if(DEV.VERSION) userlevels = c("basic","pro","developer")
 br();
 ##require(shinyWidgets)
 tipify(radioGroupButtons(
@@ -91,7 +93,7 @@ tipify(radioGroupButtons(
 ##     selectInput(
 ##     "main_workflow","Workflow:",
 ##     choices = c("Basic expression",
-##                 "Expert expression")
+##                 "Pro expression")
 ##     ),
 ##     usermode_infotip, placement="bottom", options = list(container="body")
 ## )
@@ -496,7 +498,7 @@ BASIC_SECTIONS <- list(
     c('#navbar','#section-signature')    
 )
 
-EXPERT_SECTIONS <- list(
+PRO_SECTIONS <- list(
     ## c('#navbar','#section-test'),
     c('#navbar','#section-biomarker'),
     c('#navbar','#section-scprofiling'),
@@ -511,13 +513,11 @@ EXPERT_SECTIONS <- list(
     c('#section-functional','#section-wordcloud')
 )
 
-USERMODE = factor("basic", levels=c("intruder","basic","expert","developer","jedi","god"))
-
 observeEvent(input$main_usermode,
 {
     if(input$main_usermode == "BASIC") {
         dbg("observeEvent::main_usermode : switching to BASIC mode")
-        lapply(c(EXPERT_SECTIONS), function(sec) {
+        lapply(c(PRO_SECTIONS), function(sec) {
             sel = paste0(sec[1]," li a[href='",sec[2],"']")
             dbg("observeEvent::main_usermode : hiding ",sel)
             shinyjs::hide(selector = sel)
@@ -528,14 +528,14 @@ observeEvent(input$main_usermode,
     }
     
     if(input$main_usermode == "PRO") {
-        dbg("observeEvent::main_usermode : switching to EXPERT mode")
-        lapply(EXPERT_SECTIONS, function(sec) {
+        dbg("observeEvent::main_usermode : switching to PRO mode")
+        lapply(PRO_SECTIONS, function(sec) {
             sel = paste0(sec[1]," li a[href='",sec[2],"']")
             dbg("observeEvent::main_usermode : showing ",sel)
             shinyjs::show(selector = sel)
         })
         shinyjs::show(selector = "div.download-button")
-        USERMODE <<- "expert"        
+        USERMODE <<- "pro"        
     }
     
     ##updateNavbarPage(session, "navbar", selected=1)
@@ -996,7 +996,7 @@ observeEvent( input$savedata, {
     return(NULL)
     
     ## -------------------- save PGX file/object
-    saving.ok = (USERMODE == "expert")
+    saving.ok = (USERMODE == "pro")
     if(saving.ok) {
 
         if(0) {
@@ -1020,7 +1020,7 @@ observeEvent( input$savedata, {
         
     } else {
         showModal( modalDialog(
-            "Sorry. Saving only possible in expert mode",
+            "Sorry. Saving only possible in Pro mode",
             title = NULL, size = "s", fade=FALSE
         ))
     }

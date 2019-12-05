@@ -61,7 +61,7 @@ conditionalPanel(
 )
 
 ##conditionalPanel(
-##  "input.main_usermode == 'expert'",
+##  "input.main_usermode == 'PRO'",
     tagList(
         tipify( selectInput("cmp_level","Level:", choices=c("gene","geneset")),
                "Select feature level: gene or geneset", placement="top")

@@ -58,7 +58,7 @@ GX.DEFAULTTEST="trend.limma"
 GX.DEFAULTTEST=c("trend.limma","edger.qlf","deseq2.wald","edger.lrt")
 
 conditionalPanel(
-    "input.main_usermode == 'expert'",
+    "input.main_usermode == 'PRO'",
     tipify( actionLink("gx_options", "Options", icon=icon("cog", lib = "glyphicon")),
        "Toggle advanced options.", placement="top"),
     conditionalPanel(

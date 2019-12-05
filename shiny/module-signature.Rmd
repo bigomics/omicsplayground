@@ -78,7 +78,7 @@ tipify(actionButton("sig_example3","[cell_cycle] ", style="font-size: 0.9em; col
 ##----------------------------------------------------------------------
 ## br();br();
 ## conditionalPanel(
-##     "input.main_usermode == 'expert'",
+##     "input.main_usermode == 'PRO'",
 ##     tipify( actionLink("sig_options", "Options", icon=icon("cog", lib = "glyphicon")),
 ##            "Toggle advanced options", placement="top"),
 ##     br(),
