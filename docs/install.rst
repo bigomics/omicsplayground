@@ -25,7 +25,7 @@ Follow the steps below to set up a running platform from the docker file:
 
     docker run --rm -p 4000:3838 bigomics/omicsplayground
     
-3. Open ``http://localhost:4000`` in your browser to run the platform.
+3. Open ``http://localhost:4000/index.Rmd`` in your browser to run the platform.
 
 .. note::
 
