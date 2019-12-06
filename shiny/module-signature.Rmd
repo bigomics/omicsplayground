@@ -74,22 +74,25 @@ tipify(actionButton("sig_example3","[cell_cycle] ", style="font-size: 0.9em; col
 
 
 ##----------------------------------------------------------------------
-## Togglable options
+## Advanced options
 ##----------------------------------------------------------------------
-## br();br();
-## conditionalPanel(
-##     "input.main_usermode == 'PRO'",
-##     tipify( actionLink("sig_options", "Options", icon=icon("cog", lib = "glyphicon")),
-##            "Toggle advanced options", placement="top"),
-##     br(),
-##     conditionalPanel(
-##         "input.sig_options % 2 == 1",
-##         tagList(
-##             ##radioButtons("sig_type",NULL,c("contrast","hallmark"),inline=TRUE)
-##             ##radioButtons('sig_rankmethod','Enrichment method:',c("rcor","fgsea"),inline=TRUE)
-##         )
-##     )
-## )
+
+br();br();
+
+conditionalPanel(
+    ##condition="input.main_usermode=='PRO'",
+    condition="output.main_usermode=='PRO'",
+    tipify( actionLink("sig_options", "Options", icon=icon("cog", lib = "glyphicon")),
+       "Toggle advanced options.", placement="top"),
+    conditionalPanel(
+        "input.sig_options%2 == 1",
+        tagList(
+            tipify( selectInput('cmp_querydataset',"Query dataset:", choices=NULL, multiple=FALSE),
+                   "The query dataset to which the enrichment test should be applied. Enrichment of the selected signature will be calculated to all available contrast profiless in this query dataset.", 
+            placement="top", options = list(container = "body"))
+        )
+    )
+)
 
 if(DEV.VERSION) {
     conditionalPanel(
@@ -541,11 +544,7 @@ observe({
     updateSelectInput(session, "cmp_querydataset", choices=cmapsets)
 })
 
-
-sig_enplots.opts = tagList(
-    tipify( selectInput('cmp_querydataset',"Query dataset:", choices=NULL, multiple=FALSE),
-           "The query dataset to which the enrichment test should be applied. Enrichment of the selected signature will be calculated to all available contrast profiless in this query dataset.", placement = "top")
-)
+sig_enplots.opts = NULL
 sig_enplots.module <- plotModule(
     "sig_enplots", sig_enplotsFUNC, plotlib="base",
     info.text = "The <strong>Enrichment</strong> tab performs the enrichment analysis of the gene list against all contrasts by running the GSEA algorithm and plots enrichment outputs. Enrichment statistics can be found in the corresponding table",

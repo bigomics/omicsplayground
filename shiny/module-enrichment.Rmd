@@ -69,7 +69,8 @@ GSET.DEFAULTMETHODS = c("fisher","gsva","camera")
 GSET.DEFAULTMETHODS = c("gsva","camera","fgsea","fisher")
 
 conditionalPanel(
-    "input.main_usermode == 'PRO'",
+    ##"input.main_usermode == 'PRO'",
+    "output.main_usermode == 'PRO'",
     tipify(actionLink("gs_options", "Options", icon=icon("cog", lib = "glyphicon")),
            "Toggle advanced options.", placement="top"),
     br(),

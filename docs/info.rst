@@ -16,9 +16,7 @@ Citation
 --------------------------------------------------------------------------------
 To cite Omics Playground in publications please use:
 
-**Akhmedov M, Martinelli A, Geiger R and Kwee I.**
-Omics Playground\: A comprehensive self-service platform forvisualization, analytics and exploration of Big Omics Data.
-*NAR 2019; doi\: ...*
+**Akhmedov M, Martinelli A, Geiger R and Kwee I.** Omics Playground\: A comprehensive self-service platform forvisualization, analytics and exploration of Big Omics Data. *NAR Genomics and Bioinformatics, Volume 2, Issue 1, March 2020, lqz019; doi:10.1093/nargab/lqz019*
 
 License
 --------------------------------------------------------------------------------
