@@ -236,7 +236,8 @@ pr_icpplotFUNC <- reactive({
     if(input$pr_view=="heatmap") {
 
         ##if(PRO.VERSION) {
-        if(!is.null(input$main_usermode) && input$main_usermode == "PRO") {            
+        usermode = USERMODE()
+        if(!is.null(usermode) && usermode=='PRO') {            
             kk <- head(colnames(score)[order(-colMeans(score**2))],18)
             kk <- intersect(colnames(score),kk)
             all.scores <- ngs$deconv[["LM22"]]

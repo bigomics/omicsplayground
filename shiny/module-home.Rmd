@@ -72,21 +72,31 @@ output$current_dataset <- renderText({ curDataSet() })
 
 usermode_infotip = "Select BASIC or PRO user mode. The BASIC mode should be sufficient for most users. The PRO mode unlocks more algorithms, extra visualization panels and advanced analysis modules for single-cell RNA-seq, cell profiling and biomarker analysis."
 
-userlevels = c("BASIC","PRO")
-USERMODE = factor("basic", levels=c("intruder","basic","pro","developer"))
+USERLEVELS = c("BASIC","PRO")
+if(DEV.VERSION) USERLEVELS = c("BASIC","PRO","DEV")
+USERMODE <- reactiveVal( factor("BASIC", levels=USERLEVELS) )
+output$main_usermode <- renderText({ as.character(USERMODE()) })
+outputOptions(output, "main_usermode", suspendWhenHidden=FALSE)
 
 ## if(DEV.VERSION) userlevels = c("basic","pro","developer")
 br();
 ##require(shinyWidgets)
-tipify(radioGroupButtons(
-    inputId = "main_usermode",
-    label = "User mode:",
-    choices = userlevels,
-    selected = "PRO",
-    status = "warning",
-    checkIcon = list(yes = icon("ok", lib = "glyphicon"))),
-    usermode_infotip, placement="bottom", options = list(container="body")
+div( class='usermode-button',
+    tipify(radioGroupButtons(
+        inputId = "main_usermode",
+        label = "User mode:",
+        choices = USERLEVELS,
+        ##choiceNames = toupper(USERLEVELS),
+        ##choiceValues = USERLEVELS,        
+        selected = "BASIC",
+        status = "warning",
+        checkIcon = list(yes = icon("ok", lib = "glyphicon"))),
+        usermode_infotip, placement="bottom", options = list(container="body")
+        )
     )
+
+##shinyjs::hide(selector = "div.usermode-button")
+
 
 ## br()
 ## tipify(
@@ -513,8 +523,11 @@ PRO_SECTIONS <- list(
     c('#section-functional','#section-wordcloud')
 )
 
-observeEvent(input$main_usermode,
+observeEvent( input$main_usermode,
 {
+    ## Observe the usermode button and switch levels
+    ##
+    ##
     if(input$main_usermode == "BASIC") {
         dbg("observeEvent::main_usermode : switching to BASIC mode")
         lapply(c(PRO_SECTIONS), function(sec) {
@@ -524,7 +537,7 @@ observeEvent(input$main_usermode,
         })
         ##shinyjs::html("navbar-brand","Omics Playground (basic)")
         shinyjs::hide(selector = "div.download-button")
-        USERMODE <<- "basic"
+        USERMODE("BASIC")
     }
     
     if(input$main_usermode == "PRO") {
@@ -535,7 +548,7 @@ observeEvent(input$main_usermode,
             shinyjs::show(selector = sel)
         })
         shinyjs::show(selector = "div.download-button")
-        USERMODE <<- "pro"        
+        USERMODE("PRO")
     }
     
     ##updateNavbarPage(session, "navbar", selected=1)
@@ -903,7 +916,7 @@ observeEvent( c(input$myconfirmation,input$myconfirmation2), {
         samples   <- data.frame(uploaded_files[["samples.csv"]],stringsAsFactors=FALSE)
         contrasts <- as.matrix(uploaded_files[["contrasts.csv"]])
         
-        if(USERMODE == "basic") {
+        if( USERMODE() == "basic") {
             gx.methods   = c("ttest.welch","ttest.rank","trend.limma") ## fastest 3
             gset.methods = c("fisher","gsva","camera")  ## fastest 3            
             ## gx.methods   = c("trend.limma","edger.qlf","edger.lrt")
@@ -996,7 +1009,7 @@ observeEvent( input$savedata, {
     return(NULL)
     
     ## -------------------- save PGX file/object
-    saving.ok = (USERMODE == "pro")
+    saving.ok = ( USERMODE() == "pro")
     if(saving.ok) {
 
         if(0) {
@@ -1099,7 +1112,7 @@ uploadStatusTable <- reactive({
         
         MAXCONTRASTS = 20
         MAXSAMPLES   = 100
-        if(USERMODE == "basic") {
+        if( USERMODE() == "basic") {
             MAXCONTRASTS = 5
             MAXSAMPLES   = 20
         }

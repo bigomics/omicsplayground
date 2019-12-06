@@ -58,11 +58,12 @@ GX.DEFAULTTEST="trend.limma"
 GX.DEFAULTTEST=c("trend.limma","edger.qlf","deseq2.wald","edger.lrt")
 
 conditionalPanel(
-    "input.main_usermode == 'PRO'",
+    ##condition="input.main_usermode=='PRO'",
+    condition="output.main_usermode=='PRO'",
     tipify( actionLink("gx_options", "Options", icon=icon("cog", lib = "glyphicon")),
        "Toggle advanced options.", placement="top"),
     conditionalPanel(
-        "input.gx_options % 2 == 1",
+        "input.gx_options%2 == 1",
         tagList(
             tipify( checkboxGroupInput('gx_testmethod','Statistical methods:',
                                        choices=NULL, inline=TRUE),
