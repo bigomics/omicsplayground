@@ -25,7 +25,7 @@ Follow the steps below to set up a running platform from the docker file:
     
    Warning. The docker image requires about 5GB-8GB hard disk space. Note: download
    version v1.0 if you want the exact version of the NAR/GAB publication, otherwise
-   docker will download the latest version.
+   docker will download the latest version by default.
     
 2. Now run the docker with::
 
@@ -42,8 +42,7 @@ Omics Playground is implemented in R using the `Shiny Server
 <https://shiny.rstudio.com/>`__ web application framework. You will
 need R and Shiny Server installed to run Omics Playground. The source code of the platform is available on 
 `GitHub <https://github.com/bigomics/omicsplayground>`__. You can 
-download the latest release of the software by cloning the repository. Note: download version v1.0
-if you want the exact version of the NAR/GAB publication, otherwise GitHub will download the latest version.
+download the latest release of the software by cloning the repository. 
 
 Below, we explain the steps required to set up the platform from
 the source code:
@@ -51,6 +50,9 @@ the source code:
 1. Clone the GitHub repository using::
 
     git clone https://github.com/bigomics/omicsplayground.git
+   
+   Note: download version v1.0 if you want the exact version of the NAR/GAB publication, 
+   otherwise GitHub will download the latest version by default.
     
 2. Installed all necessary R packages by running the script in the ``R/`` folder::
 
