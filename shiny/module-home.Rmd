@@ -549,10 +549,12 @@ observeEvent( input$main_usermode,
         })
         shinyjs::show(selector = "div.download-button")
         USERMODE("PRO")
-    }
-    
+    }    
     ##updateNavbarPage(session, "navbar", selected=1)
 })
+
+
+
 
 ##================================================================================
 ##====================== INPUT DATA REACTIVE OBJECT ==============================
