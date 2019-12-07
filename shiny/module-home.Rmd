@@ -523,6 +523,10 @@ PRO_SECTIONS <- list(
     c('#section-functional','#section-wordcloud')
 )
 
+
+DEV_SECTIONS <- list(
+)
+
 observeEvent( input$main_usermode,
 {
     ## Observe the usermode button and switch levels
@@ -540,7 +544,7 @@ observeEvent( input$main_usermode,
         USERMODE("BASIC")
     }
     
-    if(input$main_usermode == "PRO") {
+    if(input$main_usermode %in% c("PRO","DEV")) {
         dbg("observeEvent::main_usermode : switching to PRO mode")
         lapply(PRO_SECTIONS, function(sec) {
             sel = paste0(sec[1]," li a[href='",sec[2],"']")
@@ -549,7 +553,22 @@ observeEvent( input$main_usermode,
         })
         shinyjs::show(selector = "div.download-button")
         USERMODE("PRO")
-    }    
+    }
+
+    if(input$main_usermode %in% c("DEV")) {
+        dbg("observeEvent::main_usermode : switching to DEV mode")
+        lapply(DEV_SECTIONS, function(sec) {
+            sel = paste0(sec[1]," li a[href='",sec[2],"']")
+            dbg("observeEvent::main_usermode : showing ",sel)
+            shinyjs::show(selector = sel)
+        })
+        ##shinyjs::show(selector = "div.download-button")
+        USERMODE("DEV")
+    }
+    
+
+
+    
     ##updateNavbarPage(session, "navbar", selected=1)
 })
 
@@ -918,7 +937,7 @@ observeEvent( c(input$myconfirmation,input$myconfirmation2), {
         samples   <- data.frame(uploaded_files[["samples.csv"]],stringsAsFactors=FALSE)
         contrasts <- as.matrix(uploaded_files[["contrasts.csv"]])
         
-        if( USERMODE() == "basic") {
+        if( USERMODE() == "BASIC") {
             gx.methods   = c("ttest.welch","ttest.rank","trend.limma") ## fastest 3
             gset.methods = c("fisher","gsva","camera")  ## fastest 3            
             ## gx.methods   = c("trend.limma","edger.qlf","edger.lrt")
@@ -1011,7 +1030,7 @@ observeEvent( input$savedata, {
     return(NULL)
     
     ## -------------------- save PGX file/object
-    saving.ok = ( USERMODE() == "pro")
+    saving.ok = ( USERMODE() == "PRO")
     if(saving.ok) {
 
         if(0) {
@@ -1114,7 +1133,7 @@ uploadStatusTable <- reactive({
         
         MAXCONTRASTS = 20
         MAXSAMPLES   = 100
-        if( USERMODE() == "basic") {
+        if( USERMODE() == "BASIC") {
             MAXCONTRASTS = 5
             MAXSAMPLES   = 20
         }

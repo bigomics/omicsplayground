@@ -59,7 +59,7 @@ tipify( selectInput("hm_samplefilter","Filter samples:", choices=NULL, multiple=
 
 conditionalPanel(
     ## "input.main_usermode == 'PRO'",
-    condition = "output.main_usermode == 'PRO'",
+    condition = "output.main_usermode == 'PRO' || output.main_usermode == 'DEV'",
     tipify( actionLink("hm_options", "Options", icon=icon("cog", lib = "glyphicon")),
            "Toggle advanced options.", placement="top"),
     br(),

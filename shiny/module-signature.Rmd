@@ -44,9 +44,22 @@ observeEvent( input$sig_info, {
 
 
 ```{r}
-##----------------------------------------------------------------------
-## General options
-##----------------------------------------------------------------------
+
+conditionalPanel(
+    ##condition="input.main_usermode=='PRO'",
+    condition="output.main_usermode=='PRO' || output.main_usermode=='DEV'",
+    tagList(
+        tipify(selectInput("sig_type",label="Signature type:",choices=c("<custom>","contrast","hallmark","KEGG")),
+               "Specify the type of signature of an interest. Users can choose between custom signature, a contrast profile, or some predefined gene sets including Hallmark and KEGG pathways.", placement="top", options = list(container = "body")),
+        conditionalPanel(
+            "input.sig_type != '<custom>'",
+            tipify(selectizeInput("sig_feature","Signature:", choices="<custom>",
+                                  selected="<custom>"),
+                   "Select a specific signature group.", placement="top",
+                   options = list(container = "body"))
+        ))
+)
+
 
 IMMCHECK.GENES = "ADORA2A ARHGEF5 BTLA CD160 CD244 CD27 CD274 CD276 CD47 CD80 CEACAM1 CTLA4 GEM HAVCR2 ICOS IDO1 LAG3 PDCD1 TNFSF4 VISTA VTCN1 TIGIT PVR CD28 CD40 CD40LG ICOSLG TNFRSF9 TNFSF9 CD70 TNFRSF4 TNFRSF18 TNFSF18 SIRPA LGALS9 ARG1 CD86 IDO2 PDCD1LG2 KIR2DL3"
 APOPTOSIS.GENES = "BAD CRADD AGT FAS BCL2 PPIF S100A9 S100A8 BBC3 BCL2L11 FADD CTSH MLLT11 TRAF7 BCL2L1 HTRA2 BNIP3 BAK1 PMAIP1 LGALS9 BID"
@@ -54,13 +67,6 @@ CELL.CYCLE.GENES = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL 
 5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA"
 
 
-tipify(selectInput("sig_type",label="Signature type:",choices=c("<custom>","contrast","hallmark","KEGG")),
-       "Specify the type of signature of an interest. Users can choose between custom signature, a contrast profile, or some predefined gene sets including Hallmark and KEGG pathways.", placement="top", options = list(container = "body"))
-conditionalPanel(
-    "input.sig_type != '<custom>'",
-    tipify(selectizeInput("sig_feature","Signature:", choices="<custom>", selected="<custom>"),
-           "Select a specific signature group.", placement="top", options = list(container = "body"))
-)
 tipify(textAreaInput("sig_genelistUP", "Genes:", value = IMMCHECK.GENES,
                      rows=10, placeholder="Paste your gene list"),
        "Paste a list of signature genes.", placement="top", options = list(container = "body"))
@@ -82,28 +88,13 @@ br();br();
 
 conditionalPanel(
     ##condition="input.main_usermode=='PRO'",
-    condition="output.main_usermode=='PRO'",
+    condition="output.main_usermode=='PRO' || output.main_usermode=='DEV'",
     tagList(
         tipify( selectInput('cmp_querydataset',"Query dataset:", choices=NULL, multiple=FALSE),
                "The query dataset to which the enrichment test should be applied. Enrichment of the selected signature will be calculated to all available contrast profiless in this query dataset.", 
                placement="top", options = list(container = "body"))
     )
 )
-
-## conditionalPanel(
-##     ##condition="input.main_usermode=='PRO'",
-##     condition="output.main_usermode=='PRO'",
-##     tipify( actionLink("sig_options", "Options", icon=icon("cog", lib = "glyphicon")),
-##        "Toggle advanced options.", placement="top"),
-##     conditionalPanel(
-##         "input.sig_options%2 == 1",
-##         tagList(
-##             tipify( selectInput('cmp_querydataset',"Query dataset:", choices=NULL, multiple=FALSE),
-##                    "The query dataset to which the enrichment test should be applied. Enrichment of the selected signature will be calculated to all available contrast profiless in this query dataset.", 
-##             placement="top", options = list(container = "body"))
-##         )
-##     )
-## )
 
 
 if(DEV.VERSION) {
@@ -152,7 +143,7 @@ observe({
     if(is.null(ngs)) return(NULL)
     sig_type="contrast"
     sig_type <- input$sig_type
-    if(is.null(sig_type)) return(NULL)
+    if(is.null(sig_type)) sig_type <- "<custom>"
 
     if(sig_type=="contrast") {
         contr <- sort(names(ngs$gx.meta$meta))
@@ -186,13 +177,14 @@ Col {.tabset data-width=625 data-height=800}
 getCurrentMarkers <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
-    ##if(is.null(input$sig_contrast)) return(NULL)
-    if(is.null(input$sig_feature)) return(NULL)
 
     sig_type="contrast"
     sig_type <- input$sig_type
-    if(is.null(sig_type)) return(NULL)
-
+    ##if(is.null(sig_type)) return(NULL)
+    ##if(is.null(input$sig_contrast)) return(NULL)
+    ##if(is.null(input$sig_feature)) return(NULL)
+    req(input$sig_type, input$sig_feature)
+    
     dbg("<signature:getCurrentMarkers> called\n")
     
     level = "gene"

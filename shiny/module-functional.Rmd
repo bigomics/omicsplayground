@@ -51,7 +51,7 @@ br();br();
 ##---------------------------------------------------
 conditionalPanel(
     ## condition="input.main_usermode == 'PRO'",
-    condition="output.main_usermode=='pro'",
+    condition = "output.main_usermode == 'PRO' || output.main_usermode == 'DEV'",    
     tipify( actionLink("fa_options", "Options", icon=icon("cog", lib = "glyphicon")),
            "Show/hide advanced options", placement="top"),
     br(),
