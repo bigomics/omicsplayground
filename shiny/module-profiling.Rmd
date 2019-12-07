@@ -237,7 +237,7 @@ pr_icpplotFUNC <- reactive({
 
         ##if(PRO.VERSION) {
         usermode = USERMODE()
-        if(!is.null(usermode) && usermode=='PRO') {            
+        if(!is.null(usermode) && usermode >= 'PRO') {            
             kk <- head(colnames(score)[order(-colMeans(score**2))],18)
             kk <- intersect(colnames(score),kk)
             all.scores <- ngs$deconv[["LM22"]]
