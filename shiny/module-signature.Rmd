@@ -966,7 +966,7 @@ sig_enrichmentByContrastTable.RENDER <- reactive({
                       ##dom = 'Blfrtip',
                       dom = 'lrtip',
                       ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
-                      scrollX = TRUE, scrollY = 280, scroller=TRUE, deferRender=FALSE,
+                      scrollX = TRUE, scrollY = 240, scroller=TRUE, deferRender=FALSE,
                       buttons = c('copy','csv','pdf')
                   )) %>%  ## end of options.list 
         formatSignif(numeric.cols,4) %>%
