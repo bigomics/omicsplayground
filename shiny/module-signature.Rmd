@@ -966,7 +966,7 @@ sig_enrichmentByContrastTable.RENDER <- reactive({
                       ##dom = 'Blfrtip',
                       dom = 'lrtip',
                       ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
-                      scrollX = TRUE, scrollY = 220, scroller=TRUE, deferRender=FALSE,
+                      scrollX = TRUE, scrollY = 240, scroller=TRUE, deferRender=FALSE,
                       buttons = c('copy','csv','pdf')
                   )) %>%  ## end of options.list 
         formatSignif(numeric.cols,4) %>%
@@ -1067,7 +1067,7 @@ sig_enrichmentByContrastGenes_module <- tableModule(
 output <- attachModule(output, sig_enrichmentByContrastGenes_module)
     
 fillCol(
-    flex = c(1.2,0.04,1), ## width = 600,
+    flex = c(1.0,0.04,1.1), ## width = 600,
     moduleWidget(sig_enrichmentByContrastTable_module, outputFunc="dataTableOutput"),
     br(),
     moduleWidget(sig_enrichmentByContrastGenes_module, outputFunc="dataTableOutput")    
