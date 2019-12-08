@@ -117,7 +117,7 @@ is.categorical <- function(x, max.ncat=20, min.ncat=2) {
 
 pgx.getCategoricalPhenotypes <-function(df, max.ncat=20, min.ncat=2) {
     is.bad = 0
-    is.bad <- grepl("^sample|id$|replicate|ratio|year|month|day|age",tolower(colnames(df)))
+    is.bad <- grepl("^sample|id$|replicate|ratio|year|month|day|age|efs|dfs|surv",tolower(colnames(df)))
     ## is.factor <- sapply(sapply(data.frame(df), class), function(s) any(s %in% c("factor","character")))
     is.factor <- apply(df, 2, is.categorical)
     is.factor
@@ -1151,10 +1151,10 @@ expandPhenoMatrix <- function(pheno, collapse=TRUE) {
     ## get expanded annotation matrix
     ##a1 <- pheno[,grep("group|sample",colnames(pheno),invert=TRUE),drop=FALSE]
     ##m2 <- expandAnnotationMatrix(a1)
-    a1 <- pheno
+    a1 <- tidy.dataframe(pheno)
     nlevel <- apply(a1,2,function(x) length(setdiff(unique(x),NA)))
     nterms <- colSums(!is.na(a1))
-    y.class <- sapply(tidy.dataframe(pheno),class)
+    y.class <- sapply(a1,class)
     ##y.isnum <- apply(a1,2,is.num)
     y.isnum <- (y.class == "numeric")
     nlevel
@@ -1168,15 +1168,27 @@ expandPhenoMatrix <- function(pheno, collapse=TRUE) {
     m1 <- list()
     for(i in 1:ncol(a1)) {
         if( a1.isnum[i] ) {
-            m0 <- matrix(rank(a1[,i]), ncol=1)
-            colnames(m0) <- colnames(a1)[i]
+            ##m0 <- matrix(rank(a1[,i]), ncol=1)
+            suppressWarnings( x <- as.numeric(a1[,i]) )
+            m0 <- matrix( (x > median(x,na.rm=TRUE)), ncol=1)
+            colnames(m0) <- "high"
+        } else if(nlevel[i]==2) {
+            x <- as.character(a1[,i])
+            x1 <- tail(sort(x),1)
+            m0 <- matrix(x==x1, ncol=1)
+            colnames(m0) <- x1
         } else {
             x <- as.character(a1[,i])
-            x[is.na(x)] <- "_"
+            x[is.na(x) | x=="NA" | x==" "] <- "_"
             m0 <- model.matrix( ~ 0 + x)
             colnames(m0) <- sub("^x","",colnames(m0))
         }
         rownames(m0) <- rownames(a1)
+        ## remove "_"
+        if("_" %in% colnames(m0)) {
+            m0 <- m0[,-which(colnames(m0)=="_")]
+        }
+
         m1[[i]] <- m0
     }
     names(m1) <- colnames(a1)
