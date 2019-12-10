@@ -97,7 +97,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         row.annot = cbind(row.annot, cluster = split.idx)
         row.annot = data.frame(row.annot)
         colnames(row.annot) = tolower(colnames(row.annot))
-        rownames(row.annot) = tagDuplicates(rownames(gx))
+        rownames(row.annot) = rownames(gx)
     }
 
     ##--------------------------------------------
