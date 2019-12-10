@@ -8,13 +8,18 @@ USER.GENETEST.METHODS <- NULL
 ##=============================================================================
 ##==========    Platform helper functions =====================================
 ##=============================================================================
+s=c("abc","abc")
 
 tagDuplicates <- function(s) {
+    ## Tag duplicate with blanks
+    ##
     jj <- which(duplicated(s))
     t <- s[jj][1]
     for(t in unique(s[jj])) {
         ii <- which(s==t)
-        s[ii] <- paste(s[ii],1:length(ii),sep=".")
+        blanks <- substring("           ",0,0:(length(ii)-1))
+        ##s[ii] <- paste(s[ii],1:length(ii),sep=".")
+        s[ii] <- paste0(s[ii],blanks)
     }
     s <- gsub("[.]1$","",s)
     s
@@ -76,9 +81,10 @@ reverse.AvsB <- function(comp) {
 }
 
 is.POSvsNEG <- function(ngs) {
-
+    ## Determines from contrast matrix if notation is 'A_vs_B' or
+    ## 'B_vs_A'.
+    ##
     cntrmat <- ngs$model.parameters$contr.matrix
-    ## determine if notation is A_vs_B or B_vs_A 
     ##ct0 <- cntrmat[,comp]        
     grp1 <- sapply(strsplit(colnames(cntrmat),split="_vs_"),"[",1)
     grp2 <- sapply(strsplit(colnames(cntrmat),split="_vs_"),"[",2)
@@ -117,11 +123,11 @@ is.categorical <- function(x, max.ncat=20, min.ncat=2) {
 
 pgx.getCategoricalPhenotypes <-function(df, max.ncat=20, min.ncat=2) {
     is.bad = 0
-    is.bad <- grepl("^sample|id$|replicate|ratio|year|month|day|age|efs|dfs|surv",tolower(colnames(df)))
+    is.bad <- grepl("^sample|id$|replicate|ratio|year|month|day|age|efs|dfs|surv|follow",tolower(colnames(df)))
     ## is.factor <- sapply(sapply(data.frame(df), class), function(s) any(s %in% c("factor","character")))
     is.factor <- apply(df, 2, is.categorical)
     is.factor
-    n.unique <- apply(df,2,function(x) length(unique(setdiff(x,NA))))
+    n.unique <- apply(df,2,function(x) length(unique(setdiff(x,c(NA,"NA","")))))
     n.notna  <- apply(df,2,function(x) length(x[!is.na(x)]))
     is.id    <- (n.unique > 0.8*n.notna)
     is.id
@@ -809,6 +815,7 @@ makeDirectContrasts <- function(Y, ref, na.rm=TRUE) {
     contr.matrix <- c()
     i=2
     for(i in 1:ncol(Y)) {
+        m1 <- NULL
         if(!is.na(ref[i]) && ref[i]!="all" ) {
             x <- as.character(Y[,i])
             x[is.na(x)|x=="NA"] <- "_"
@@ -832,15 +839,19 @@ makeDirectContrasts <- function(Y, ref, na.rm=TRUE) {
             levels <- names(table(Y[,i]))
             levels <- setdiff(levels, c(NA,"NA"))
             levels
-            cc <- makeFullContrasts(levels)
-            x <- as.character(Y[,i])
-            x[is.na(x)] <- "_"
-            mm <- model.matrix( ~ 0 + x)
-            colnames(mm) <- sub("^x","",colnames(mm))
-            m1 <- mm[,rownames(cc)] %*% cc
+            if(length(levels)>1) {
+                cc <- makeFullContrasts(levels)
+                x <- as.character(Y[,i])
+                x[is.na(x)] <- "_"
+                mm <- model.matrix( ~ 0 + x)
+                colnames(mm) <- sub("^x","",colnames(mm))
+                m1 <- mm[,rownames(cc)] %*% cc
+            }
         }
-        colnames(m1) <- paste0(colnames(Y)[i],":",colnames(m1))
-        contr.matrix <- cbind(contr.matrix, m1)
+        if(!is.null(m1)) {
+            colnames(m1) <- paste0(colnames(Y)[i],":",colnames(m1))
+            contr.matrix <- cbind(contr.matrix, m1)
+        }
     }
     ##colnames(contr.matrix) <- colnames(Y)
     ##colnames(contr.matrix) <- paste0(colnames(Y),":",colnames(contr.matrix))
