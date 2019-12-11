@@ -470,16 +470,16 @@ kegg_actmap.RENDER <- reactive({
     ii <- hclust(d1)$order
     score <- score[ii,jj,drop=FALSE]
     
-    cex2=1
+    cex2=0.9
     rownames(score) = substring(rownames(score),1,50)
     if(ncol(score)>15) {
         rownames(score) = substring(rownames(score),1,40)
-        cex2=0.85
+        cex2=0.8
     }
     if(ncol(score)>25) {
         rownames(score) = substring(rownames(score),1,30)
         colnames(score) <- rep("",ncol(score))
-        cex2=0.7
+        cex2=0.65
     }
     
     par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,2,0,1) )
