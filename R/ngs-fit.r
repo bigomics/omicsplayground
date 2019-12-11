@@ -428,7 +428,7 @@ ngs.fitContrastsWithLIMMA <- function( X, contr.matrix, design, method=c("voom",
             ct <- contr.matrix[,i]
             y <- factor(c("neg","o","pos")[2+sign(ct)],levels=c("neg","o","pos"))
             y <- factor(c("neg","o","pos")[2+sign(ct)] )
-            design0 <- model.matrix( ~ 0+y)
+            design0 <- model.matrix( ~ 0 + y)
             if(method=="voom") {
                 ##cat("lmFit using voom\n")
                 v <- voom(2**X[,], design0, plot=FALSE)
