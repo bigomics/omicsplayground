@@ -524,7 +524,7 @@ hm_splitmap.switchRENDER <- reactive({
 hm_splitmap_module <- plotModule(
     "hm_splitmap", hm_splitmap.switchRENDER,
     plotlib="generic", renderFunc="renderUI",
-    download.fmt = c("pdf","html"),
+    ## download.fmt = c("pdf","html"),
     info.text = hm_splitmap_text,
     options = hm_splitmap_opts,
     pdf.width=10, pdf.height=8, info.width="350px",
@@ -657,8 +657,7 @@ hm_getClusterPositions <- reactive({
         } else {
             cat("getClusterPositions:: computing tSNE...\n")
             showNotification("computing tSNE...\n")
-            perplexity = max(min(30,ncol(zx)/4),1)
-            perplexity = min((ncol(zx)-1)/3, 30)
+            perplexity = max(1,min((ncol(zx)-1)/3, 30))
             perplexity
             pos <- Rtsne( t(zx), dim=pdim, check_duplicated=FALSE,
                          num_threads=100, ##Y_init=Y_init,
@@ -667,8 +666,7 @@ hm_getClusterPositions <- reactive({
     } else if(input$hm_clustmethod=="tsne") {
         cat("getClusterPositions:: computing tSNE...\n")
         showNotification("computing tSNE...\n")
-        perplexity = max(min(30,ncol(zx)/4),1)
-        perplexity = min((ncol(zx)-1)/3, 30)
+        perplexity = max(1,min((ncol(zx)-1)/3, 30))	
         perplexity
         pos <- Rtsne( t(zx), dim=pdim, check_duplicated=FALSE,
                      num_threads=100, ##Y_init=Y_init,
@@ -1024,7 +1022,7 @@ displays the expression levels of selected genes across all conditions in the an
 hm_parcoord_module <- plotModule(
     "hm_parcoord", hm_parcoord.RENDER,
     plotlib="plotly", ## renderFunc="renderPlotly",
-    ##download.fmt = c("png","pdf","html"),  ## PNG & PDF do not work!!! 
+    ## download.fmt = c("png","pdf","html"),  ## PNG & PDF do not work!!! 
     download.fmt = c("html"),
     info.text = hm_parcoord_text,
     options = hm_parcoord_opts,
@@ -1085,7 +1083,10 @@ fillCol(
 	
 ```{r}
 
-library(parcoords)
+if(!require(parcoords)) install.packages("parcoords")
+if(!require(d3r)) install.packages("d3r")
+require(parcoords)
+require(d3r)
 
 hm2_parcoord.RENDER <- reactive({
 
