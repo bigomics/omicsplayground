@@ -297,7 +297,7 @@ Col {.tabset data-width=600}
 	
 ```{r}
 
-hm_splitmap_text = tagsub("Under the <strong>Heatmap</strong> panel, hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. <p>Under the plot configuration {{Settings}}, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: <ol><li>SD - features with the highest standard deviation across all the samples, </li><li>specific - features that are overexpressed in each phenotype class compared to the rest, or by </li><li>PCA - by principal components.<br></ol> <br><p>Users can also choose between 'relative' or 'absolute' expression scale. Under the {CexCol} and {CexRow} settings, it is also possible to adjust the cex for the column and row labels.")
+hm_splitmap_text = tagsub("Under the <strong>Heatmap</strong> panel, hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. <p>Under the plot configuration {{Settings}}, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 150, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: <ol><li>SD - features with the highest standard deviation across all the samples, </li><li>specific - features that are overexpressed in each phenotype class compared to the rest, or by </li><li>PCA - by principal components.<br></ol> <br><p>Users can also choose between 'relative' or 'absolute' expression scale. Under the {CexCol} and {CexRow} settings, it is also possible to adjust the cex for the column and row labels.")
 
 
 require(plotly)
@@ -485,7 +485,7 @@ hm_splitmap_opts = tagList(
     tipify( selectInput('hm_topmode','Top mode:',c("specific","sd","pca"), width='100%'),
            "Specify the criteria for selecting top features to be shown in the heatmap.",
            placement="right", options = list(container = "body")),
-    tipify( radioButtons('hm_ntop','Top N:',c(50,500),inline=TRUE,selected=50),
+    tipify( radioButtons('hm_ntop','Top N:',c(50,150,500),inline=TRUE,selected=50),
            "Select the number of top features to be shown in the heatmap.", placement="top"),
     tipify( radioButtons(
         'hm_scale', 'Scale:', choices=c('relative','absolute'), inline=TRUE),
