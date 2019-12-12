@@ -1633,7 +1633,8 @@ clust_featureRank.RENDER <- reactive({
     }
 
     ## ------------ intersect features, set minimum set size
-    features <- lapply(features, function(f) intersect(f,rownames(X)))
+    genes <- toupper(rownames(X))
+    features <- lapply(features, function(f) intersect(toupper(f), genes))
     features <- features[sapply(features,length) >=10 ]
     
     ## ------------ Just to get current samples
