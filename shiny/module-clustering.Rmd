@@ -257,7 +257,8 @@ hm_filtered_matrix <- reactive({
     
     ## ------------- calculate group summarized
     if(1) { 
-        grp = ngs$samples[colnames(zx),"group"]
+        grpvar = "group"
+        grp = ngs$samples[colnames(zx),grpvar]
         if(0) {
             grp.zx = t(apply( zx, 1, function(x) tapply(x, grp, mean)))
             grp.annot = annot[match(colnames(zx),grp),,drop=FALSE] ## NEED RETHINK!!!
@@ -894,114 +895,314 @@ hm_PCAplot_caption <- reactive({
 `r if(!DEV.VERSION) {"<!--------------------------------------------- "}`
 
 
-### Parallel Coordinates
+### Parallel (plotly)
 	
 ```{r}
 
-hm_parcoord_text = tagsub("Under the <strong>Parallel Coordinates</strong> panel...")
-
 hm_parcoord.RENDER <- reactive({
 
-    ngs <- inputData()
+    ## ngs <- inputData()
     filt <- hm_filtered_matrix()
-    req(ngs, filt)
-    
-    zx <- filt$grp.mat    
-    annot = filt$grp.annot
-    clust.id <- filt$clust    
-    ##zx <- read.csv("https://raw.githubusercontent.com/bcdunbar/datasets/master/parcoords_data.csv")
+    req(filt)
+    if(0) {
+        zx <- t(apply(ngs$X,1,function(x) tapply(x,ngs$samples$group,mean)))
+        zx <- head(zx[order(-apply(zx,1,sd)),],400)
+        clust.id <- cutree(hclust(as.dist(1-cor(t(zx)))),5)
+        df <- read.csv("https://raw.githubusercontent.com/bcdunbar/datasets/master/iris.csv")
+        
+    }    
+    zx <- filt$grp.mat[,]    
+    ## annot = filt$grp.annot
 
-    jj <- order(colnames(zx))
-    zx <- zx[,jj]
+    if(input$hm_pcscale) { zx <- t(scale(t(zx))) }
 
     ## build dimensions
     dimensions <- list()
+    for(i in 1:ncol(zx)) {
+        dimensions[[i]] <-  list(
+            range = c(min(zx[,i]),max(zx[,i])),
+            ## constraintrange = c(100000,150000),
+            ## tickvals = c(0,0.5,1,2,3),
+            ## ticktext = c('A','AB','B','Y','Z'),
+            visible = TRUE,
+            label = colnames(zx)[i],
+            values = zx[,i]
+        )
+    }
+
+    clust.id <- as.integer(factor(filt$clust))
+    ##clust.id <- factor(filt$clust)
+    ##clust.id <- filt$clust
+    table(clust.id)
+
+    df <- data.frame(clust.id=clust.id, zx)
+    klrpal = rep(brewer.pal(8,"Set2"),99)
+    ##klrpal = rep(c("red","blue","green","yellow","magenta","cyan","black","grey"),99)
+    klrpal = klrpal[1:max(clust.id)]
+    ##klrpal <- setNames(klrpal, sort(unique(clust.id)))
+    klrpal2 <- lapply(1:length(klrpal),function(i) c((i-1)/(length(klrpal)-1),klrpal[i]))
     
-    
-    plt <- zx %>%
-        plot_ly(width = 1000, height = 600) %>%
-        add_trace(type = 'parcoords',
-                  line = list(color = clust.id,
-                              colorscale = 'Jet',
-                              showscale = TRUE,
-                              reversescale = TRUE
-                              ## cmin = -4000, cmax = -100
+    plt <-  plot_ly(df, source = "pcoords") %>%    
+        add_trace(type = 'parcoords', 
+                  line = list(color = ~clust.id,
+                              ## colorscale = list(c(0,'red'),c(0.5,'green'),c(1,'blue'))
+                              ##colorscale = 'Jet',
+                              colorscale = klrpal2,
+                              cmin = min(clust.id), cmax = max(clust.id),
+                              showscale = FALSE
+                              ##reversescale = TRUE
                               ),
-                  dimensions = list(
-                      list(range = c(~min(blockHeight),~max(blockHeight)),
-                           constraintrange = c(100000,150000),
-                           label = 'Block Height', values = ~blockHeight),
-                      list(range = c(~min(blockWidth),~max(blockWidth)),
-                           label = 'Block Width', values = ~blockWidth),
-                      list(tickvals = c(0,0.5,1,2,3),
-                           ticktext = c('A','AB','B','Y','Z'),
-                           label = 'Cyclinder Material', values = ~cycMaterial),
-                      list(range = c(-1,4),
-                           tickvals = c(0,1,2,3),
-                           label = 'Block Material', values = ~blockMaterial),
-                      list(range = c(~min(totalWeight),~max(totalWeight)),
-                           visible = TRUE,
-                           label = 'Total Weight', values = ~totalWeight),
-                      list(range = c(~min(assemblyPW),~max(assemblyPW)),
-                           label = 'Assembly Penalty Weight', values = ~assemblyPW),
-                      list(range = c(~min(HstW),~max(HstW)),
-                           label = 'Height st Width', values = ~HstW),
-                      list(range = c(~min(minHW),~max(minHW)),
-                           label = 'Min Height Width', values = ~minHW),
-                      list(range = c(~min(minWD),~max(minWD)),
-                           label = 'Min Width Diameter', values = ~minWD),
-                      list(range = c(~min(rfBlock),~max(rfBlock)),
-                           label = 'RF Block', values = ~rfBlock)
-                  )
-                  )
+                  dimensions = dimensions)
+    plt <- plt %>%
+        layout(margin = list(l=60, r=60, t=0, b=10)) %>%
+        event_register("plotly_restyle")
+    plt
+
+})
+
+hm_parcoord.ranges <- reactiveValues()
+observeEvent( event_data("plotly_restyle", source = "pcoords"), {
+    ## From: https://rdrr.io/cran/plotly/src/inst/examples/shiny/event_data_parcoords/app.R
+    ##
+    d <- event_data("plotly_restyle", source = "pcoords")
+    ## what is the relevant dimension (i.e. variable)?
+    dimension <- as.numeric(stringr::str_extract(names(d[[1]]), "[0-9]+"))
+    ## If the restyle isn't related to a dimension, exit early.
+    if (!length(dimension)) return()
+    if (is.na(dimension)) return()
     
-    
-    
-    
+    filt <- hm_filtered_matrix()
+    req(filt)
+    df <- filt$grp.mat
+    ## careful of the indexing in JS (0) versus R (1)!
+    dimension_name <- colnames(df)[[dimension + 1]]
+    ## a given dimension can have multiple selected ranges
+    ## these will come in as 3D arrays, but a list of vectors 
+    ## is nicer to work with
+    info <- d[[1]][[1]]    
+    if (length(dim(info)) == 3) {
+        hm_parcoord.ranges[[dimension_name]] <- lapply(seq_len(dim(info)[2]), function(i) info[,i,])
+    } else {
+        hm_parcoord.ranges[[dimension_name]] <- list(as.numeric(info))
+    }
 })
 
 hm_parcoord_opts = tagList(
-    tipify( radioButtons("hm_plottype", "Plot type:",
-                         choices=c("ComplexHeatmap","iHeatmap"),
-                         selected="ComplexHeatmap", inline=TRUE, width='100%'),
-           "Choose plot type: ComplexHeatmap (static) or iHeatmap (interactive)",
+    tipify( selectInput("hm_pcvar", "Variable:", choices="group", width='100%'),
+           "Split the parallel axis by this phenotype.",
            placement="right",options = list(container = "body")),
-    tipify( selectInput("hm_splitx", "split by:", choices="group", width='100%'),
-           "Split the samples by a predetermined phenotype class (e.g. tissue or cell type).",
-           placement="right",options = list(container = "body")),
-    tipify( checkboxGroupInput('hm_showlabel', 'Show labels:', choices=c('row','column'),
-                               selected=c('row','column'), inline=TRUE),
-           "Show/hide row or column names.", placement="bottom"),
-    br(),br(),br(),br()
+    tipify( checkboxInput('hm_pcscale','Scale values',TRUE),
+           "Scale expression values to mean=0 and SD=1.",
+           placement="right",options = list(container = "body"))
 )
 
 
-hm_parcoord_caption <- reactive({
-    text1 = "Heatmap showing gene expression sorted by 2-way hierarchical clustering. Red corresponds to overexpression, blue to underexpression of the gene. At the same time, gene clusters are functionally annotated in the 'Annotate clusters' panel on the right."
-    return(text1)
-})
+hm_parcoord_text = tagsub("The <strong>Parallel Coordinates</strong> panel
+displays the expression levels of selected genes across all conditions in the analysis. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap.")
+
 
 hm_parcoord_module <- plotModule(
     "hm_parcoord", hm_parcoord.RENDER,
-    plotlib="base", renderFunc="renderPlot",
-    download.fmt = c("pdf","html"),
-    info.text = hm_splitmap_text,
-    options = hm_splitmap_opts,
-    pdf.width=10, pdf.height=8, info.width="350px",
-    title="Clusters"
+    plotlib="plotly", ## renderFunc="renderPlotly",
+    download.fmt = c("png","pdf","html"),
+    info.text = hm_parcoord_text,
+    options = hm_parcoord_opts,
+    pdf.width=10, pdf.height=6, info.width="350px",
+    title="Parallel coordinates"
 )
 output <- attachModule(output, hm_parcoord_module)
 
+hm_parcoord.selected <- reactive({
+
+    filt <- hm_filtered_matrix()
+    req(filt)
+    df <- filt$grp.mat
+    if(input$hm2_pcscale) { df <- t(scale(t(df))) }
+
+    keep <- TRUE
+    for (i in names(hm_parcoord.ranges)) {
+        range_ <- hm_parcoord.ranges[[i]]
+        range_ <- range_[sapply(range_,length)>0]
+        if(length(range_)>0) {
+            keep_var <- FALSE
+            for (j in seq_along(range_)) {
+                rng <- range_[[j]]
+                keep_var <- keep_var | dplyr::between(df[,i], min(rng), max(rng))
+            }
+            keep <- keep & keep_var
+        }
+    }
+    df[keep,,drop=FALSE]
+})
+
+hm_parcoord_table.RENDER <- reactive({
+
+    df = hm_parcoord.selected()
+    cat("[hm_parcoord_table.RENDER] dim(f)=",dim(df),"\n")
+    numeric.cols <- 1:ncol(df)
+    DT::datatable(
+            df, rownames=TRUE, ## escape = c(-1,-2),
+            extensions = c('Buttons','Scroller'),
+            selection=list(mode='single', target='row', selected=NULL),
+            class = 'compact cell-border stripe hover',
+            options=list(
+                dom = 'lfrtip', ##buttons = c('copy','csv','pdf'),
+                ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                scrollX = TRUE, ##scrollY = TRUE,
+                scrollY = 170, scroller=TRUE, deferRender=TRUE
+            )  ## end of options.list 
+        ) %>%
+        formatSignif(numeric.cols,4) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
+})
+
+hm_parcoord_table_info = "In this table, users can check mean expression values of features across the conditions for the selected genes."
+
+hm_parcoord_table_module <- tableModule(
+    id = "parcoord_table", func = hm_parcoord_table.RENDER,
+    info.text = hm_parcoord_table_info,
+    title="Selected genes", label="b"
+)
+output <- attachModule(output, hm_parcoord_table_module)
+
 fillCol(
-    moduleWidget(hm_parcoord_module, outputFunc="uiOutput")
+    flex = c(1.7,0.05,1),
+    moduleWidget(hm_parcoord_module, outputFunc="plotlyOutput"),
+    br(),
+    moduleWidget(hm_parcoord_table_module, outputFunc="dataTableOutput")
 )
 ```
 
-> **Parallel Coordinates.** Heatmap showing gene expression sorted by
-> 2-way hierarchical clustering. Red corresponds to overexpression,
-> blue to underexpression of the gene. At the same time, gene clusters
-> are functionally annotated in the 'Annotate clusters' panel on the
-> right.
+> **Parallel Coordinates plot.** The Parallel Coordinates plot
+> displays the expression levels of selected genes across all
+> conditions. On the x-axis the experimental conditions are
+> plotted. The y-axis shows the expression level of the genes grouped
+> by condition. The colors correspond to the gene groups as defined by
+> the hierarchical clustered heatmap.
+
+
+### Parallel 
+	
+```{r}
+
+library(parcoords)
+
+hm2_parcoord.RENDER <- reactive({
+
+    ## ngs <- inputData()
+    filt <- hm_filtered_matrix()
+    req(filt)
+    zx <- filt$grp.mat[,]    
+    ## annot = filt$grp.annot
+    clust.id <- (filt$clust)    
+    if(input$hm2_pcscale) { zx <- t(scale(t(zx))) }
+
+    klrpal = rep(brewer.pal(8,"Set2"),99)
+    
+    ## build dimensions
+    library(parcoords)
+    df <- data.frame(gene_group=clust.id, zx)
+    parcoords(
+        df
+       ,rownames = FALSE
+       ,reorderable = TRUE
+       ,brushMode = "1d-axes"
+       ,brushPredicate = "and"
+       ,alphaOnBrushed = 0.15
+       ,queue = TRUE
+       ,margin = list(top=30,bottom=20,left=50,right=20)
+       ##,bundleDimension = "clust"
+       ##,bundlingStrength = 0.01
+       ##,smoothness = 0.02
+       ,color= list(
+             colorBy = "gene_group"
+           , colorScale = "scaleOrdinal"
+           , colorScheme = "schemeCategory10"
+         )
+       ,withD3 = TRUE
+     )
+
+})
+
+hm2_parcoord.selected <- reactive({
+
+    filt <- hm_filtered_matrix()
+    req(filt)
+    df <- filt$grp.mat
+    if(input$hm2_pcscale) { df <- t(scale(t(df))) }
+
+    ids <- rownames(df) %in% input$hm2_parcoord_brushed_row_names
+    df[ids,,drop=FALSE]
+})
+
+hm2_parcoord_opts = tagList(
+    tipify( selectInput("hm2_pcvar", "Variable:", choices="group", width='100%'),
+           "Split the parallel axis by this phenotype.",
+           placement="right",options = list(container = "body")),
+    tipify( checkboxInput('hm2_pcscale','Scale values',TRUE),
+           "Scale expression values to mean=0 and SD=1.",
+           placement="right",options = list(container = "body"))
+)
+
+
+hm2_parcoord_text = tagsub("The <strong>Parallel Coordinates</strong> panel
+displays the expression levels of selected genes across all conditions in the analysis. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap.")
+
+hm2_parcoord_module <- plotModule(
+    "hm2_parcoord", hm2_parcoord.RENDER,
+    plotlib="htmlwidget", renderFunc="renderParcoords",
+    download.fmt = c("png","pdf","html"),
+    info.text = hm2_parcoord_text,
+    options = hm2_parcoord_opts,
+    pdf.width=10, pdf.height=6, info.width="350px",
+    title="Parallel coordinates"
+)
+output <- attachModule(output, hm2_parcoord_module)
+
+hm2_parcoord_table.RENDER <- reactive({
+
+    df = hm2_parcoord.selected()
+    cat("[hm_parcoord_table.RENDER] dim(f)=",dim(df),"\n")
+    numeric.cols <- 1:ncol(df)
+    DT::datatable(
+            df, rownames=TRUE, ## escape = c(-1,-2),
+            extensions = c('Buttons','Scroller'),
+            selection=list(mode='single', target='row', selected=NULL),
+            class = 'compact cell-border stripe hover',
+            options=list(
+                dom = 'lfrtip', ##buttons = c('copy','csv','pdf'),
+                ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                scrollX = TRUE, ##scrollY = TRUE,
+                scrollY = 170, scroller=TRUE, deferRender=TRUE
+            )  ## end of options.list 
+        ) %>%
+        formatSignif(numeric.cols,4) %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
+})
+
+hm2_parcoord_table_info = "In this table, users can check mean expression values of features across the conditions for the selected genes."
+
+hm2_parcoord_table_module <- tableModule(
+    id = "parcoord2_table", func = hm2_parcoord_table.RENDER,
+    info.text = hm2_parcoord_table_info,
+    title="Selected genes", label="b"
+)
+output <- attachModule(output, hm2_parcoord_table_module)
+
+fillCol(
+    flex = c(1.7,0.05,1),
+    moduleWidget(hm2_parcoord_module, outputFunc="parcoordsOutput"),
+    br(),
+    moduleWidget(hm2_parcoord_table_module, outputFunc="dataTableOutput")
+)
+```
+
+> **Parallel Coordinates plot.** The Parallel Coordinates plot
+> displays the expression levels of selected genes across all
+> conditions. On the x-axis the experimental conditions are
+> plotted. The y-axis shows the expression level of the genes grouped
+> by condition. The colors correspond to the gene groups as defined by
+> the hierarchical clustered heatmap.
 
 
 
@@ -1117,7 +1318,6 @@ getClustannotCorrelation <- reactive({
         rho[,i] <- colMeans(rr,na.rm=TRUE)
     }
 
-    cat("<clustering:getClustannotCorrelation> dim(rho)=",dim(rho),"\n")
     ##rho = round(rho, digits=3)
     dim(rho)
 
@@ -1270,13 +1470,9 @@ output <- attachModule(output, clustannot_plots_module)
 
     
 clustannot_table.RENDER <- reactive({
-
-    cat("<clustering:clustannot_table.RENDER> called\n")
     
     rho = getClustannotCorrelation()
     if(is.null(rho)) return(NULL)
-
-    cat("<clustering:clustannot_table.RENDER> dim(rho)=",dim(rho),"\n")
         
     ##rownames(rho) = shortstring(rownames(rho),50)
     rho.name = shortstring(sub(".*:","",rownames(rho)),60)
@@ -1287,8 +1483,6 @@ clustannot_table.RENDER <- reactive({
         df$feature <- wrapHyperLink(df$feature, rownames(df))
     }
 
-    cat("<clustering:clustannot_table.RENDER> dim(df)=",dim(df),"\n")
-    
     DT::datatable(
             df, rownames=FALSE, escape = c(-1,-2),
             extensions = c('Buttons','Scroller'),
@@ -1298,7 +1492,7 @@ clustannot_table.RENDER <- reactive({
                 dom = 'lfrtip', buttons = c('copy','csv','pdf'),
                 ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
                 scrollX = TRUE, ##scrollY = TRUE,
-                scrollY = 200, scroller=TRUE, deferRender=TRUE
+                scrollY = 170, scroller=TRUE, deferRender=TRUE
             )  ## end of options.list 
         ) %>%
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
