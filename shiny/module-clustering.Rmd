@@ -892,10 +892,7 @@ hm_PCAplot_caption <- reactive({
 > plot.
 
 
-`r if(!DEV.VERSION) {"<!--------------------------------------------- "}`
-
-
-### Parallel (plotly)
+### Parallel
 	
 ```{r}
 
@@ -1082,7 +1079,9 @@ fillCol(
 > the hierarchical clustered heatmap.
 
 
-### Parallel 
+`r if(!DEV.VERSION) {"<!--------------------------------------------- "}`
+
+### Parallel2
 	
 ```{r}
 
