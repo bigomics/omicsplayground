@@ -361,8 +361,8 @@ getHSGeneInfo <- function(eg, as.link=TRUE) {
 
 ##skipifexists=FALSE;perplexity=30;sv.rank=-1;prefix="C";gamma=1;numclust=-1
 ##perplexity=3
-pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=30,
-                               sv.rank=-1, gamma=1, prefix="C",
+pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
+                               ntop=4000, sv.rank=-1, gamma=1, prefix="C",
                                kclust=1 )
 {
     has.tnse <- "tsne2d" %in% names(ngs)
@@ -384,7 +384,7 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=30,
         stop("FATAL error. cannot set sX.")
     }
     ##sX = t(irlba(sX, nv=1000)$v)
-    sX = head( sX[order(-apply(sX,1,sd)),], 4000)
+    sX = head( sX[order(-apply(sX,1,sd)),], ntop)
     ## sX = t(scale(t(sX),scale=TRUE))  ## really? or just centering?
     ##sX = t(scale(t(sX),scale=FALSE))  ## really? or just centering?
 
@@ -396,7 +396,7 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=30,
     ## ------------ find t-SNE clusters
     ngs$tsne2d = ngs$tsne3d = NULL  ## scale genes
     if(is.null(perplexity)) {
-        perplexity = min(30, round(ncol(sX)/4) )
+        perplexity = max(1,min(30, round((ncol(sX)-1)/4)))
         perplexity
     }
 
