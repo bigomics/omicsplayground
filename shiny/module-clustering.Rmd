@@ -987,6 +987,29 @@ observeEvent( event_data("plotly_restyle", source = "pcoords"), {
     }
 })
 
+hm_parcoord.selected <- reactive({
+
+    filt <- hm_filtered_matrix()
+    req(filt)
+    df <- filt$grp.mat
+    if(input$hm_pcscale) { df <- t(scale(t(df))) }
+    keep <- TRUE
+    for (i in names(hm_parcoord.ranges)) {
+        range_ <- hm_parcoord.ranges[[i]]
+        range_ <- range_[sapply(range_,length)>0]
+        if(length(range_)>0) {
+            keep_var <- FALSE
+            for (j in seq_along(range_)) {
+                rng <- range_[[j]]
+                keep_var <- keep_var | dplyr::between(df[,i], min(rng), max(rng))
+            }
+            keep <- keep & keep_var
+        }
+    }
+    df[keep,,drop=FALSE]
+})
+
+
 hm_parcoord_opts = tagList(
     tipify( selectInput("hm_pcvar", "Variable:", choices="group", width='100%'),
            "Split the parallel axis by this phenotype.",
@@ -1011,29 +1034,6 @@ hm_parcoord_module <- plotModule(
     title="Parallel coordinates"
 )
 output <- attachModule(output, hm_parcoord_module)
-
-hm_parcoord.selected <- reactive({
-
-    filt <- hm_filtered_matrix()
-    req(filt)
-    df <- filt$grp.mat
-    if(input$hm2_pcscale) { df <- t(scale(t(df))) }
-
-    keep <- TRUE
-    for (i in names(hm_parcoord.ranges)) {
-        range_ <- hm_parcoord.ranges[[i]]
-        range_ <- range_[sapply(range_,length)>0]
-        if(length(range_)>0) {
-            keep_var <- FALSE
-            for (j in seq_along(range_)) {
-                rng <- range_[[j]]
-                keep_var <- keep_var | dplyr::between(df[,i], min(rng), max(rng))
-            }
-            keep <- keep & keep_var
-        }
-    }
-    df[keep,,drop=FALSE]
-})
 
 hm_parcoord_table.RENDER <- reactive({
 
