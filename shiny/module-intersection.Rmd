@@ -600,8 +600,9 @@ cmp_scatterPlotMatrix.PLOT <- reactive({
     }
 
     p <- p %>%
+        ## config(displayModeBar = FALSE) %>% ## disable buttons
+        config( toImageButtonOptions = list(format='svg', height=800, width=800, scale=1.1)) %>%
         event_register('plotly_selected')
-    ## config(displayModeBar = FALSE)  ## disable buttons
 
     dbg("cmp_scatterPlotMatrix:: done\n")
     p    
@@ -1468,13 +1469,12 @@ cmp_venntable.RENDER <- reactive({
     ##D <- cbind(intersection=dt$intersection, D)
     DT::datatable(D, class='compact cell-border stripe',
                   rownames=FALSE,
-                  extensions = c('Buttons','Scroller'), selection='none',
+                  extensions = c('Scroller'), selection='none',
                   options=list(
                       ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
                       scrollX = TRUE, ## scrollY = TRUE,
-                      scrollY = 230, scroller=TRUE, deferRender=TRUE,
-                      dom = 'Blfrtip',                      
-                      buttons = c('copy','csv')
+                      scrollY = 220, scroller=TRUE, deferRender=TRUE,
+                      dom = 'lfrtip'                      
                   )  ## end of options.list 
                   ) %>%
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  
