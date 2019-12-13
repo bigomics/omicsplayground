@@ -1038,7 +1038,6 @@ output <- attachModule(output, hm_parcoord_module)
 hm_parcoord_table.RENDER <- reactive({
 
     df = hm_parcoord.selected()
-    cat("[hm_parcoord_table.RENDER] dim(f)=",dim(df),"\n")
     numeric.cols <- 1:ncol(df)
     DT::datatable(
             df, rownames=TRUE, ## escape = c(-1,-2),
@@ -1177,7 +1176,6 @@ output <- attachModule(output, hm2_parcoord_module)
 hm2_parcoord_table.RENDER <- reactive({
 
     df = hm2_parcoord.selected()
-    cat("[hm_parcoord_table.RENDER] dim(f)=",dim(df),"\n")
     numeric.cols <- 1:ncol(df)
     DT::datatable(
             df, rownames=TRUE, ## escape = c(-1,-2),
@@ -1304,8 +1302,6 @@ getClustannotCorrelation <- reactive({
         cat("<clustering:getClustannotCorrelation> WARNING:: ref error\n")
         return(NULL)
     }
-
-    cat("<clustering:getClustannotCorrelation> dim(ref)=",dim(ref),"\n")
     
     ##-----------  restrict to top??
     dim(ref)
