@@ -310,6 +310,8 @@ observe({
     cvar <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=20)
     sel <- c(grep("cell.type|cell.family|type|family|tissue|histo",cvar,value=TRUE),"<none>")[1]
     updateSelectInput(session, "hm_splitx", choices=c("<none>",cvar), selected=sel)
+    updateSelectInput(session, "hm_pcvar", choices=cvar, selected="group")
+    updateSelectInput(session, "hm2_pcvar", choices=cvar, selected="group")
 })
 
 hm1_splitmap.RENDER <- reactive({
@@ -894,23 +896,32 @@ hm_PCAplot_caption <- reactive({
 	
 ```{r}
 
-hm_parcoord.RENDER <- reactive({
+hm_parcoord.ranges <- reactiveValues()
 
-    ## ngs <- inputData()
+hm_parcoord.matrix <- reactive({
+    ngs <- inputData()
     filt <- hm_filtered_matrix()
     req(filt)
-    if(0) {
-        zx <- t(apply(ngs$X,1,function(x) tapply(x,ngs$samples$group,mean)))
-        zx <- head(zx[order(-apply(zx,1,sd)),],400)
-        clust.id <- cutree(hclust(as.dist(1-cor(t(zx)))),5)
-        df <- read.csv("https://raw.githubusercontent.com/bcdunbar/datasets/master/iris.csv")
-        
-    }    
-    zx <- filt$grp.mat[,]    
-    ## annot = filt$grp.annot
-
+    ##zx <- filt$grp.mat[,]
+    zx <- filt$mat[,]    
+    grp <- input$hm_pcvar
+    if(!(grp %in% colnames(ngs$Y))) grp <- "group"
+    y <- ngs$Y[colnames(zx),grp]
+    zx <- t(apply(zx,1,function(x) tapply(x,y,mean,na.rm=TRUE)))   
     if(input$hm_pcscale) { zx <- t(scale(t(zx))) }
 
+    rr <- isolate(reactiveValuesToList(hm_parcoord.ranges))
+    nrange <- length(rr)
+    for(i in names(rr)) hm_parcoord.ranges[[i]] <- NULL
+
+    list(mat=zx, clust=filt$clust)
+})
+
+hm_parcoord.RENDER <- reactive({
+
+    pc <- hm_parcoord.matrix()
+    req(pc)
+    zx <- pc$mat
     ## build dimensions
     dimensions <- list()
     for(i in 1:ncol(zx)) {
@@ -925,9 +936,7 @@ hm_parcoord.RENDER <- reactive({
         )
     }
 
-    clust.id <- as.integer(factor(filt$clust))
-    ##clust.id <- factor(filt$clust)
-    ##clust.id <- filt$clust
+    clust.id <- as.integer(factor(pc$clust))
     table(clust.id)
 
     df <- data.frame(clust.id=clust.id, zx)
@@ -955,7 +964,6 @@ hm_parcoord.RENDER <- reactive({
 
 })
 
-hm_parcoord.ranges <- reactiveValues()
 observeEvent( event_data("plotly_restyle", source = "pcoords"), {
     ## From: https://rdrr.io/cran/plotly/src/inst/examples/shiny/event_data_parcoords/app.R
     ##
@@ -966,11 +974,10 @@ observeEvent( event_data("plotly_restyle", source = "pcoords"), {
     if (!length(dimension)) return()
     if (is.na(dimension)) return()
     
-    filt <- hm_filtered_matrix()
-    req(filt)
-    df <- filt$grp.mat
+    pc <- hm_parcoord.matrix()
+    req(pc)
     ## careful of the indexing in JS (0) versus R (1)!
-    dimension_name <- colnames(df)[[dimension + 1]]
+    dimension_name <- colnames(pc$mat)[[dimension + 1]]
     ## a given dimension can have multiple selected ranges
     ## these will come in as 3D arrays, but a list of vectors 
     ## is nicer to work with
@@ -984,10 +991,8 @@ observeEvent( event_data("plotly_restyle", source = "pcoords"), {
 
 hm_parcoord.selected <- reactive({
 
-    filt <- hm_filtered_matrix()
-    req(filt)
-    df <- filt$grp.mat
-    if(input$hm_pcscale) { df <- t(scale(t(df))) }
+    mat <- hm_parcoord.matrix()$mat
+    req(mat)
     keep <- TRUE
     for (i in names(hm_parcoord.ranges)) {
         range_ <- hm_parcoord.ranges[[i]]
@@ -996,12 +1001,12 @@ hm_parcoord.selected <- reactive({
             keep_var <- FALSE
             for (j in seq_along(range_)) {
                 rng <- range_[[j]]
-                keep_var <- keep_var | dplyr::between(df[,i], min(rng), max(rng))
+                keep_var <- keep_var | dplyr::between(mat[,i], min(rng), max(rng))
             }
             keep <- keep & keep_var
         }
     }
-    df[keep,,drop=FALSE]
+    mat[keep,,drop=FALSE]
 })
 
 
@@ -1017,7 +1022,6 @@ hm_parcoord_opts = tagList(
 
 hm_parcoord_text = tagsub("The <strong>Parallel Coordinates</strong> panel
 displays the expression levels of selected genes across all conditions in the analysis. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap.")
-
 
 hm_parcoord_module <- plotModule(
     "hm_parcoord", hm_parcoord.RENDER,
@@ -1088,16 +1092,30 @@ if(!require(d3r)) install.packages("d3r")
 require(parcoords)
 require(d3r)
 
+
+hm2_parcoord.matrix <- reactive({
+
+    ngs <- inputData()
+    filt <- hm_filtered_matrix()
+    req(filt)
+    ##zx <- filt$grp.mat[,]
+    zx <- filt$mat[,]    
+    grp <- input$hm2_pcvar
+    y <- ngs$Y[colnames(zx),grp]
+    zx <- t(apply(zx,1,function(x) tapply(x,y,mean,na.rm=TRUE)))   
+    if(input$hm2_pcscale) { zx <- t(scale(t(zx))) }
+
+    list(mat=zx, clust=filt$clust)
+})
+
 hm2_parcoord.RENDER <- reactive({
 
     ## ngs <- inputData()
-    filt <- hm_filtered_matrix()
-    req(filt)
-    zx <- filt$grp.mat[,]    
-    ## annot = filt$grp.annot
-    clust.id <- (filt$clust)    
-    if(input$hm2_pcscale) { zx <- t(scale(t(zx))) }
-
+    pc <- hm2_parcoord.matrix()
+    req(pc)
+    zx <- pc$mat
+    clust.id <- pc$clust    
+    
     klrpal = rep(brewer.pal(8,"Set2"),99)
     
     ## build dimensions
@@ -1126,14 +1144,10 @@ hm2_parcoord.RENDER <- reactive({
 })
 
 hm2_parcoord.selected <- reactive({
-
-    filt <- hm_filtered_matrix()
-    req(filt)
-    df <- filt$grp.mat
-    if(input$hm2_pcscale) { df <- t(scale(t(df))) }
-
-    ids <- rownames(df) %in% input$hm2_parcoord_brushed_row_names
-    df[ids,,drop=FALSE]
+    pc <- hm2_parcoord.matrix()
+    req(pc)
+    ids <- rownames(pc$mat) %in% input$hm2_parcoord_brushed_row_names
+    pc$mat[ids,,drop=FALSE]
 })
 
 hm2_parcoord_opts = tagList(
