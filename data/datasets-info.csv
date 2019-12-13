@@ -18,3 +18,4 @@
 "17","tcga-brca_pub-mx.pgx","multi-omics","BRCA-TCGA public data set (from cBioPortal).","human","64","36820","4356","PR_STATUS ER_STATUS HER2_STATUS PAM50","2019-05-28"
 "18","molinari2018-rnaseq.pgx","RNA-seq","RNA-seq experiment.","mouse","36","8000","11158","strain treatment time","2019-12-10"
 "19","molinari2018-rnaseq-bc.pgx","RNA-seq","RNA-seq experiment (from normalized counts, batch corrected)","mouse","36","8000","11163","strain treatment time","2019-12-11"
+"20","molinari2018-rnaseq-bc2.pgx","RNA-seq","RNA-seq experiment (from normalized counts, no batch correction)","mouse","36","8000","11163","strain treatment time","2019-12-12"

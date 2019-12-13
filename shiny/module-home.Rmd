@@ -78,7 +78,6 @@ USERMODE <- reactiveVal( factor("BASIC", levels=USERLEVELS) )
 output$main_usermode <- renderText({ as.character(USERMODE()) })
 outputOptions(output, "main_usermode", suspendWhenHidden=FALSE)
 
-## if(DEV.VERSION) userlevels = c("basic","pro","developer")
 br();
 ##require(shinyWidgets)
 div( class='usermode-button',
@@ -96,7 +95,6 @@ div( class='usermode-button',
     )
 
 ##shinyjs::hide(selector = "div.usermode-button")
-
 
 ## br()
 ## tipify(
@@ -263,7 +261,9 @@ observeEvent( input$action_play, {
         showLogin()  ## $
     } else {
         removeModal()
-    }
+    }    
+    ## shinyjs::click("main_usermode")
+    
 })
 
 selectedDataSetInfo <- reactive({
@@ -532,30 +532,41 @@ observeEvent( input$main_usermode,
     ## Observe the usermode button and switch levels
     ##
     ##
-    if(input$main_usermode == "BASIC") {
+    usermode <- input$main_usermode
+    if(is.null(usermode)) usermode <- "BASIC"
+
+    cat(">>> switching USERMODE to",usermode,"\n")
+
+    if(usermode == "BASIC") {
         dbg("observeEvent::main_usermode : switching to BASIC mode")
-        lapply(c(PRO_SECTIONS), function(sec) {
+        lapply(c(PRO_SECTIONS,DEV_SECTIONS), function(sec) {
             sel = paste0(sec[1]," li a[href='",sec[2],"']")
             dbg("observeEvent::main_usermode : hiding ",sel)
             shinyjs::hide(selector = sel)
         })
         ##shinyjs::html("navbar-brand","Omics Playground (basic)")
         shinyjs::hide(selector = "div.download-button")
+        shinyjs::hide(selector = "div.modebar")
         USERMODE("BASIC")
     }
     
-    if(input$main_usermode %in% c("PRO","DEV")) {
+    if(usermode %in% c("PRO","DEV")) {
         dbg("observeEvent::main_usermode : switching to PRO mode")
+        lapply(DEV_SECTIONS, function(sec) {
+            sel = paste0(sec[1]," li a[href='",sec[2],"']")
+            shinyjs::hide(selector = sel)
+        })
         lapply(PRO_SECTIONS, function(sec) {
             sel = paste0(sec[1]," li a[href='",sec[2],"']")
             dbg("observeEvent::main_usermode : showing ",sel)
             shinyjs::show(selector = sel)
         })
         shinyjs::show(selector = "div.download-button")
+        shinyjs::show(selector = "div.modebar")
         USERMODE("PRO")
     }
 
-    if(input$main_usermode %in% c("DEV")) {
+    if(usermode %in% c("DEV")) {
         dbg("observeEvent::main_usermode : switching to DEV mode")
         lapply(DEV_SECTIONS, function(sec) {
             sel = paste0(sec[1]," li a[href='",sec[2],"']")
@@ -565,13 +576,9 @@ observeEvent( input$main_usermode,
         ##shinyjs::show(selector = "div.download-button")
         USERMODE("DEV")
     }
-    
-
-
-    
+        
     ##updateNavbarPage(session, "navbar", selected=1)
-})
-
+}, ignoreNULL=TRUE, ignoreInit=TRUE )
 
 
 

@@ -471,6 +471,11 @@ hm2_splitmap.RENDER <- reactive({
         }
     )
     cat("<module-clustering:hm2_splitmap.RENDER> done\n")
+
+    ## DOES NOT WORK...
+    ##plt <- plt %>%
+    ## config(toImageButtonOptions = list(format='svg', height=800, width=800))
+    
     return(plt)
 })
 
@@ -646,7 +651,7 @@ hm_getClusterPositions <- reactive({
     pdim = c(2,3)[ 1 + 1*do3d]
     
     pos = NULL
-    if(input$hm_clustmethod=="default") {
+    if(input$hm_clustmethod=="fixed") {
         require(Rtsne)
         force.compute = FALSE
         ## force.compute = TRUE
@@ -837,8 +842,8 @@ hm_PCAplotFUNC <- reactive({
     }
     title = paste0("<b>PCA</b>  (",nrow(pos)," samples)")
     if(input$hm_clustmethod=="tsne") title = paste0("<b>tSNE</b>  (",nrow(pos)," samples)")
-    ## plt <- plt %>% layout(title=title)
-    ## plt <- plt %>% config(displayModeBar = FALSE)
+    ## plt <- plt %>% layout(title=title) %>% 
+    ##     config(displayModeBar = FALSE)
     ##print(plt)
     return(plt)
 })
@@ -849,7 +854,7 @@ hm_PCAplot_opts = tagList(
             "Set the colors of the samples according to a given phenotype class.", placement="right", options = list(container = "body")),
     tipify( selectInput("hmpca.shapevar", "Shape:", choices=NULL, width='100%'),
             "Set the shapes of the samples according to a given phenotype class.", placement="right", options = list(container = "body")),
-    tipify( radioButtons('hm_clustmethod',"Layout:",c("default","tsne","pca","umap"),inline=TRUE),
+    tipify( radioButtons('hm_clustmethod',"Layout:",c("fixed","tsne","pca","umap"),inline=TRUE),
             "Choose the layout method for clustering to visualise.", placement="top"),
     tipify( radioButtons('hm_ntop2',"Ntop:",c(100,1000,4000,9999),inline=TRUE,selected=1000),
             "Number of top genes for dimensionality reduction.", placement="top"),
@@ -913,7 +918,7 @@ hm_parcoord.matrix <- reactive({
     rr <- isolate(reactiveValuesToList(hm_parcoord.ranges))
     nrange <- length(rr)
     for(i in names(rr)) hm_parcoord.ranges[[i]] <- NULL
-
+    zx <- round(zx, digits=3)
     list(mat=zx, clust=filt$clust)
 })
 
@@ -959,8 +964,13 @@ hm_parcoord.RENDER <- reactive({
                   dimensions = dimensions)
     plt <- plt %>%
         layout(margin = list(l=60, r=60, t=0, b=10)) %>%
+        config( toImageButtonOptions = list(format='svg', width=900, height=600, scale=1.2)) %>%
+        ## config(displayModeBar = FALSE) %>%         
         event_register("plotly_restyle")
-    plt
+
+    if(USERMODE()=="BASIC") shinyjs::hide(selector = "div.modebar")
+
+    plt 
 
 })
 
@@ -992,6 +1002,7 @@ observeEvent( event_data("plotly_restyle", source = "pcoords"), {
 hm_parcoord.selected <- reactive({
 
     mat <- hm_parcoord.matrix()$mat
+    clust <- hm_parcoord.matrix()$clust
     req(mat)
     keep <- TRUE
     for (i in names(hm_parcoord.ranges)) {
@@ -1006,7 +1017,7 @@ hm_parcoord.selected <- reactive({
             keep <- keep & keep_var
         }
     }
-    mat[keep,,drop=FALSE]
+    list(mat=mat[keep,,drop=FALSE], clust=clust[keep])
 })
 
 
@@ -1037,8 +1048,12 @@ output <- attachModule(output, hm_parcoord_module)
 
 hm_parcoord_table.RENDER <- reactive({
 
-    df = hm_parcoord.selected()
-    numeric.cols <- 1:ncol(df)
+    if(USERMODE()=="BASIC") shinyjs::hide(selector = "div.modebar")
+        
+    mat = hm_parcoord.selected()$mat
+    clust = hm_parcoord.selected()$clust
+    df <- data.frame(cluster=clust, mat, check.names=FALSE)
+    numeric.cols <- 2:ncol(df)
     DT::datatable(
             df, rownames=TRUE, ## escape = c(-1,-2),
             extensions = c('Buttons','Scroller'),
@@ -1051,7 +1066,7 @@ hm_parcoord_table.RENDER <- reactive({
                 scrollY = 170, scroller=TRUE, deferRender=TRUE
             )  ## end of options.list 
         ) %>%
-        formatSignif(numeric.cols,4) %>%
+        formatSignif(numeric.cols,3) %>%
         DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
 })
 
@@ -1447,8 +1462,8 @@ clustannot_plots.PLOTLY <- reactive({
     
     subplot( plot_list, nrows=nrows, shareX=TRUE,
             ## template = "plotly_dark",
-            margin=c(0, 0.0, 0.05, 0.05) )
-    
+            margin=c(0, 0.0, 0.05, 0.05) ) %>%
+        config(displayModeBar = FALSE) 
 })
 
 clustannot_plots_opts = tagList(
