@@ -1255,15 +1255,11 @@ observe({
 
 
 getClustannotCorrelation <- reactive({
-
-    dbg("<clustering:getClustannotCorrelation> reacted\n")
     
     ngs <- inputData()
     req(ngs)
     filt <- hm_filtered_matrix()
     req(filt)
-
-    dbg("<clustering:getClustannotCorrelation> 1\n")
     
     zx  <- filt$mat
     idx <- filt$clust
@@ -1276,8 +1272,6 @@ getClustannotCorrelation <- reactive({
     ann.refset = input$xann.refset
     ##if(is.null(ann.refset)) return(NULL)
     req(input$xann.level, input$xann.refset)
-
-    dbg("<clustering:getClustannotCorrelation> 2\n")
         
     ref = NULL
     ref = ngs$gsetX[,]    
