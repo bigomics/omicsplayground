@@ -829,7 +829,7 @@ counts_tab_histplot.RENDER <- reactive({
     n=1000
     gx.hist <- function(gx, n=1000, main="",ylim=NULL) {
         jj <- 1:nrow(gx)
-        if(length(jj)>n) jj <- sample(jj,n)
+        if(length(jj)>n) jj <- sample(jj,n,replace=TRUE)
         h0 <- hist(as.vector(c(gx[jj],min(gx),max(gx))),
                    breaks=120, main=main, border=FALSE,
                    #col=rgb(0.2,0.5,0.8,0.5), 
@@ -999,7 +999,7 @@ getCountsTable <- reactive({
 
     ## if too many samples (like scRNA-seq do subsampling...)
     if(ncol(counts) > 500) {
-        kk <- sample( ncol(counts), 400)
+        kk <- sample(ncol(counts),400,replace=TRUE)
         counts <- counts[,kk,drop=FALSE]
         subtt=c(subtt,"random subset")
     }
@@ -1059,8 +1059,8 @@ getCountsTable <- reactive({
         
     log2counts <- log2(1 + counts)
     ##log2counts[which(log2counts==0)] <- NA
-    jj <- sample(nrow(counts),100)
-    jj <- sample(nrow(counts),1000)
+    jj <- sample(nrow(counts),100,replace=TRUE)
+    jj <- sample(nrow(counts),1000,replace=TRUE)
 
     ## create the plots
     par(mar=c(3,3,3,3), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )    

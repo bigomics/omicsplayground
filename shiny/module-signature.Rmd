@@ -178,6 +178,7 @@ getCurrentMarkers <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
 
+    sig_type="<custom>"
     sig_type="contrast"
     sig_type <- input$sig_type
     ##if(is.null(sig_type)) return(NULL)
@@ -205,7 +206,7 @@ getCurrentMarkers <- reactive({
             } else {
                 ## grep-like match
                 rx <- toupper(gset[1])
-                rx <- grep(rx, xfeatures, value=TRUE)
+                rx <- grep(rx, xfeatures, value=TRUE, ignore.case=TRUE)
                 gset <- rownames(ngs$X)[which(xfeatures %in% rx)]  ## all probes matching gene
             }
         }
@@ -309,7 +310,7 @@ getSingleSampleEnrichment <- reactive({
     ##
     ## Calls calcSingleSampleValues() and calculates single-sample
     ## enrichment values for complete data matrix and reduced data by
-    ## group.
+    ## group (for currentmarkers)
     ##
     ##
     ngs <- inputData()
@@ -324,15 +325,17 @@ getSingleSampleEnrichment <- reactive({
     
     ## get the signature
     gset <- strsplit(IMMCHECK.GENES,split=" ")[[1]]
-    gset <- ngs$families[[10]]
     gset <- getCurrentMarkers()
     if(is.null(gset)) return(NULL)
+
     ##y = 1*(rownames(X) %in% gset)
     ##rownames(X)=toupper(rownames(X)); gset=toupper(gset)
     xgene <- ngs$genes[rownames(X),"gene_name"]
     y = 1*(toupper(xgene) %in% toupper(gset))
     names(y) <- rownames(X)
     table(y)
+   
+    dbg("getSingleSampleEnrichment:: 1")
     
     ## expression by group
     grp = ngs$samples[colnames(X),"group"]
@@ -341,6 +344,8 @@ getSingleSampleEnrichment <- reactive({
     colnames(gX) = groups
     dim(gX)
     dim(ngs$X)
+
+    dbg("getSingleSampleEnrichment:: 2")
     
     ## for large datasets pre-grouping is faster
     ss.bygroup  <- calcSingleSampleValues(gX, y, method=c("rho","gsva"))
@@ -359,6 +364,9 @@ getSingleSampleEnrichment <- reactive({
         ss1 <- calcSingleSampleValues(X[,], y, method=c("rho"))
         ss.bysample <- cbind(ss.bysample, rho=ss1)
     }
+
+    dbg("getSingleSampleEnrichment:: 3")
+
     if(do.gsva) {
         if(do.exact) {
             ##ss.bysample <- calcSingleSampleValues(X[,1:250], y, method=c("rho","gsva"))
@@ -825,9 +833,9 @@ sig_markersplotFUNC <- reactive({
     ngs <- inputData()
     if(is.null(ngs)) return(NULL)
 
-    dbg("<signature:Markers> called\n")        
+    dbg("<signature:sig_markersplotFUNC> called\n")        
     
-    markers <- ngs$families[[10]]
+    markers <- ngs$families[[2]]
     markers <- COLLECTIONS[[10]]
     markers <- getCurrentMarkers()
     if(is.null(markers)) return(NULL)
@@ -910,6 +918,8 @@ sig_markersplotFUNC <- reactive({
 
     }
 
+    dbg("<signature:sig_markersplotFUNC> done!\n")        
+    
 })
 
 ##sig_markers.opts = tagList()
