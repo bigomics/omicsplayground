@@ -19,3 +19,4 @@
 "18","molinari2018-rnaseq.pgx","RNA-seq","RNA-seq experiment.","mouse","36","8000","11158","strain treatment time","2019-12-10"
 "19","molinari2018-rnaseq-bc.pgx","RNA-seq","RNA-seq experiment (from normalized counts, batch corrected)","mouse","36","8000","11163","strain treatment time","2019-12-11"
 "20","molinari2018-rnaseq-bc2.pgx","RNA-seq","RNA-seq experiment (from normalized counts, no batch correction)","mouse","36","8000","11163","strain treatment time","2019-12-12"
+"21","alex2019-data.pgx","unknown","unknown","human","700","60","82","","2019-12-13"

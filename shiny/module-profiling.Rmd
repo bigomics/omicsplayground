@@ -488,8 +488,7 @@ output <- attachModule(output, pr_markersplot_module)
 
 observe({
     ngs <- inputData()
-    req(ngs,input$pr_level)
-    
+    req(ngs,input$pr_level)    
     choices <- names(ngs$families)
     selected = grep("^CD",choices,ignore.case=TRUE,value=TRUE)[1]
     if(input$pr_level=="geneset") {
@@ -801,7 +800,7 @@ fillCol(
 ```{r}
 
 monocle_getResults <- reactive({
-    require(monocle3)
+    if(!require(monocle3)) install.packages("monocle3")
     
     ngs <- inputData()
     req(ngs)
@@ -1373,7 +1372,7 @@ observe({
     ##if(is.null(input$pr_xtaboptions)) return(NULL)
     pheno0 <- grep("group|sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
     kk <- selectSamplesFromSelectedLevels(ngs$Y, input$pr_samplefilter)
-    nphenolevel <- apply(ngs$samples[kk,pheno0],2,function(v) length(unique(v)))
+    nphenolevel <- apply(ngs$samples[kk,pheno0,drop=FALSE],2,function(v) length(unique(v)))
     pheno0 = pheno0[which(nphenolevel>1)]
     genes <- sort(as.character(ngs$genes$gene_name))
     pheno1 <- c("<cell type>",pheno0)
@@ -1444,6 +1443,8 @@ observe({
     genes <- sort(as.character(xgenes))
     g1 <- grep("^CD4|^CD8",genes,value=TRUE)[1]
     g2 <- grep("^CD79|^CD3[DEG]|^CD37",genes,value=TRUE)[1]
+    if(length(g1)==0) g1 <- genes[1]
+    if(length(g2)==0) g2 <- genes[2]
     updateSelectInput(session, "pr_cytovar1", choices=genes, selected=g1)
     updateSelectInput(session, "pr_cytovar2", choices=genes, selected=g2)
 })

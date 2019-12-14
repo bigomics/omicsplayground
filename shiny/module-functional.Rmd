@@ -103,6 +103,19 @@ getKeggTable <- reactive({
     kegg.available <- gsub("hsa|.xml","",dir(xml.dir, pattern="*.xml"))
     kegg.available
     kegg.ids <- getKeggID(rownames(ngs$gsetX))
+    kegg.ids    
+    ## sometimes no KEGG in genesets...
+    if(length(kegg.ids)==0) {
+        sendSweetAlert(
+            session=session,
+            title = "No KEGG terms in enrichment results",
+            text="",
+            type = "warning")
+        dbg("[functional:getKeggTable] no KEGG terms in gsetX")
+        df <- data.frame()
+        return(df)
+    }
+                                   
     jj <- which(!is.na(kegg.ids) &
                 !duplicated(kegg.ids) &
                 kegg.ids %in% kegg.available )
@@ -437,10 +450,13 @@ kegg_actmap.RENDER <- reactive({
     require(igraph)
     ngs <- inputData()
     req(ngs)
-
     df <- getKeggTable()
-    if(is.null(df)) return(NULL)
-    
+    if(is.null(df) || nrow(df)==0) {
+        dbg("[functional:kegg_actmap.RENDER] emtpy KEGG table")
+        ##par(mfrow=c(1,1), mar=c(1,1,1,1)*0, oma=c(0,2,0,1)*0 )
+        ##frame()
+        return(NULL)
+    }
     meta <- ngs$gset.meta$meta
     fx <- sapply(meta, function(x) x$meta.fx)
     qv <- sapply(meta, function(x) x$meta.q)    
@@ -574,6 +590,16 @@ GO_network.RENDER <- reactive({
     
     ##sub2 <- getSigGO(comparison, methods, nterms=250, ntop=25, ngs=ngs)
     sub2 <- go <- ngs$meta.go$graph
+    if(is.null(go)) {
+        sendSweetAlert(
+            session=session,
+            title = "No GO graph in enrichment results",
+            text="",
+            type = "warning")
+        dbg("[functional:GO_network.RENDER] no META.GO in pgx object!")
+        return(NULL)
+    }
+
     score = ngs$meta.go$pathscore[,comparison]        
     score = (score/max(abs(score),na.rm=TRUE))
     score[is.na(score)] = 0
@@ -674,8 +700,11 @@ GO_network.RENDER <- reactive({
 GO_table.RENDER <- reactive({
     ngs <- inputData()
     req(ngs, input$fa_contrast)
-    if(is.null(ngs$meta.go)) return(NULL)
-
+    if(is.null(ngs$meta.go)) {
+        dbg("[functional:GO_table.RENDER] no META.GO in pgx object!")
+        return(NULL)
+    }
+    
     comparison=1
     comparison = input$fa_contrast
     ##req(input$fa_contrast)
@@ -723,6 +752,11 @@ GO_actmap.RENDER <- reactive({
     require(igraph)
     ngs <- inputData()
     req(ngs)
+
+    if(is.null(ngs$meta.go)) {
+        dbg("[functional:GO_actmap.RENDER] no META.GO in pgx object!")
+        return(NULL)
+    }
 
     score = ngs$meta.go$pathscore
     ##if(is.null(score)) return(NULL)
