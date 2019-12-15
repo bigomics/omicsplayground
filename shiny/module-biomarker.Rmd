@@ -97,6 +97,7 @@ observe({
 
     ct <- colnames(ngs$Y)
     ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
+    ##ct <- grep("sample|patient|donor",ct,value=TRUE,invert=TRUE)
     updateSelectInput(session, "pdx_predicted", choices=ct )
     dbg("<module-biomarker::observe1> done!")    
 })
@@ -140,14 +141,13 @@ calcVariableImportance <- eventReactive( input$pdx_runbutton, {
     ## This code also features a progress indicator.
     ##
     ##
-
     dbg("calcVariableImportance:: reacted on runbutton")
     
     ngs <- inputData()
     ##if(is.null(ngs)) return(NULL)
     req(ngs, input$pdx_predicted)
     
-    ct=5
+    ct=2
     ct=12
     colnames(ngs$Y)    
     ct <- input$pdx_predicted
@@ -214,8 +214,11 @@ calcVariableImportance <- eventReactive( input$pdx_runbutton, {
         if(!ft %in% xfam) return(NULL)
         gg <- GSETS[[8]]
         gg <- NULL
-        if(ft %in% names(ngs$families)) gg <- ngs$families[[ft]]
-        if(ft %in% names(GSETS)) gg <- GSETS[[ft]]
+        if(ft %in% names(ngs$families)) {
+            gg <- ngs$families[[ft]]
+        } else if(ft %in% names(GSETS)) {
+            gg <- GSETS[[ft]]
+        }
         pp = filterProbes(ngs$genes, gg)
     }
     pp <- intersect(pp,rownames(X))
@@ -225,9 +228,10 @@ calcVariableImportance <- eventReactive( input$pdx_runbutton, {
     ## ------------- filter with user selection
     ##sel <- input$pdx_select
     sel <- input_pdx_select()
-    if(!is.null(sel) && length(sel)>0) {
+    if(ft=='<custom>' && !is.null(sel) && length(sel)>0) {
         if(sel[1]!="") {
-            pp <- intersect(rownames(X),sel)
+            ##pp <- intersect(rownames(X),sel)
+            pp <- rownames(X)[(toupper(rownames(X)) %in% toupper(sel))]
             X <- X[pp,,drop=FALSE]
         }
     }
@@ -308,7 +312,6 @@ calcVariableImportance <- eventReactive( input$pdx_runbutton, {
         rname <- rownames(R)
         R <- rho[jj,]
         rownames(R) <- rname
-
     }
     
     dbg("calcVariableImportance:: 5: drawing tree\n")
@@ -552,7 +555,7 @@ pdx_boxplots.RENDER <- reactive({
         g <- vars[i]
         gx <- res$X[g,]
         boxplot( gx ~ y, col="grey85", ylim = range(gx),
-                ylab="expression", cex.axis=0.001)
+                ylab="expression", xlab="", cex.axis=0.001)
         axis(2, cex.axis=0.9)
         ##axis(1, at=1:ny, labels=levels(factor(y)), cex.axis=0.6)
         cex1 <- ifelse( ny >= 8, 0.65, 0.8)

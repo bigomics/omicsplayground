@@ -210,8 +210,9 @@ sigDiffExprTable <- reactive({
     fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]        
     pval = res[,qv.col]
     if(is.null(ngs$families)) stop("FATAL:: no families in object")
+    psel <- rownames(res)
     ##psel = filterProbes(ngs$genes, ngs$families[[gx_features]] )
-    psel = filterProbes(ngs$genes, GSETS[[gx_features]] )
+    if(gx_features!="<all>") psel = filterProbes(ngs$genes, GSETS[[gx_features]] )
     res = res[which(pval <= fdr & rownames(res) %in% psel),,drop=FALSE]
     dim(res)
 
@@ -279,8 +280,9 @@ expr_plots_volcano.RENDER <- reactive({
     lfc = as.numeric(input$gx_lfc)
 
     fam.genes = unique(unlist(GSETS[8]))
+    fam.genes = res$gene_name
     ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
-    fam.genes = unique(unlist(GSETS[input$gx_features]))
+    if(input$gx_features!="<all>") fam.genes = unique(unlist(GSETS[input$gx_features]))
     jj <- match(toupper(fam.genes),toupper(res$gene_name))
     sel.genes <- res$gene_name[setdiff(jj,NA)]
     
@@ -337,7 +339,8 @@ expr_plots_maplot.RENDER <- reactive({
     ## filter genes by gene family or gene set
     fam.genes = unique(unlist(ngs$families[10]))
     ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
-    fam.genes = unique(unlist(GSETS[input$gx_features]))
+    fam.genes = res$gene_name
+    if(input$gx_features!="<all>") fam.genes = unique(unlist(GSETS[input$gx_features]))
     jj <- match(toupper(fam.genes),toupper(res$gene_name))
     sel.genes <- res$gene_name[setdiff(jj,NA)]
 
@@ -648,10 +651,10 @@ expr_volcanoAll.RENDER <- reactive({
     fdr = 1
     fdr = as.numeric(input$gx_fdr)
     lfc = as.numeric(input$gx_lfc)
-
+    
     sel.genes = GSETS[["<all>"]]
-    ##sel.genes = unique(unlist(ngs$families[input$gx_features]))
-    sel.genes = unique(unlist(GSETS[input$gx_features]))
+    sel.genes = rownames(ngs$X)
+    if(input$gx_features!="<all>") sel.genes = unique(unlist(GSETS[input$gx_features]))
 
     ncomp <- length(comp)
     nr <- ceiling(sqrt(ncomp/3))
@@ -749,6 +752,7 @@ expr_volcanoMethods.RENDER <- reactive({
     fdr = as.numeric(input$gx_fdr)
     lfc = as.numeric(input$gx_lfc)
     genes = NULL
+
     sel.genes = head(ngs$genes$gene_name,100)
     ##sel.genes = unique(unlist(ngs$families[input$gx_features]))
     sel.genes = unique(unlist(GSETS[input$gx_features]))

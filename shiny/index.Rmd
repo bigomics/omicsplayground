@@ -44,7 +44,8 @@ source(file.path(RDIR,"pgx-init.R"), local=TRUE)
 
 if(0) {    
     ##load("../data/aa2019-haenkenium.pgx")
-    load("../data/geiger2016-arginine.pgx")    
+    load("../data/geiger2016-arginine.pgx")
+    load("../data/alex2019-data.pgx")    
     ## load("../data/GSE10846-dlbcl.pgx")
     ## load("../data/GSE72056-scmelanoma.pgx")
     ## load("../data/rieckmann2017-immprot.pgx")
