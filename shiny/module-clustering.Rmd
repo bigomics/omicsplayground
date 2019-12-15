@@ -155,7 +155,13 @@ hm_filtered_matrix <- reactive({
     } else {
         pp = head(rownames(ngs$X),400)
         gg = ngs$families[[1]]
-        gg = ngs$families[[input$hm_features]]
+        if(input$hm_features =="<all>") {
+            gg = rownames(ngs$X)
+        } else if(input$hm_features %in% names(ngs$families)) {
+            gg = ngs$families[[input$hm_features]]
+        } else {
+            gg = rownames(ngs$X)
+        }
         if(input$hm_customlist!="") {
             gg1 = strsplit(input$hm_customlist,split="[, ;\n\t]")[[1]]
             if(length(gg1)==1) gg1 <- paste0(gg1,"*")
@@ -493,7 +499,7 @@ hm_splitmap_opts = tagList(
            "Specify the criteria for selecting top features to be shown in the heatmap.",
            placement="right", options = list(container = "body")),
     tipify( radioButtons('hm_ntop','Top N:',c(50,150,500),inline=TRUE,selected=50),
-           "Select the number of top features to be shown in the heatmap.", placement="top"),
+           "Select the number of top features to be shown in the heatmap.", placement="right"),
     tipify( radioButtons(
         'hm_scale', 'Scale:', choices=c('relative','absolute'), inline=TRUE),
         "Show relative (i.e. mean-centered) or absolute expression values.",
@@ -633,23 +639,27 @@ hm_getClusterPositions <- reactive({
     ##zx <- hm_filtered_matrix()
 
     dbg("[getClusterPositions] 1")
-    
+
+    ## take full matrix
     zx <- as.matrix(ngs$X)
     kk <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
     zx <- zx[,kk,drop=FALSE]
-
+    
     dbg("[getClusterPositions] 2")
     
-    ## apply feature filter
+    ## --------------- apply feature filter
     gg = ngs$families[[1]]
-    gg = ngs$families[[input$hm_features]]
-    jj <- match(toupper(gg), toupper(ngs$genes$gene_name))
-    gg = ngs$genes$gene_name[setdiff(jj,NA)]
-    pp = filterProbes(ngs$genes, gg)
-    zx = zx[intersect(pp,rownames(zx)),]
+    if(input$hm_features != "<all>") {
+        gg = ngs$families[[input$hm_features]]
+        jj <- match(toupper(gg), toupper(ngs$genes$gene_name))
+        gg = ngs$genes$gene_name[setdiff(jj,NA)]
+        pp = filterProbes(ngs$genes, gg)
+        zx = zx[intersect(pp,rownames(zx)),]
+    }
+    ## zx <- hm_filtered_matrix()
+
     ntop = 1000
-    ntop = as.integer(input$hm_ntop2)
-    
+    ntop = as.integer(input$hm_ntop2)    
     dbg("[getClusterPositions] 3a: ntop=",ntop)
     dbg("[getClusterPositions] 3b: dim(zx)=",dim(zx))    
     zx = zx[order(-apply(zx,1,sd)),,drop=FALSE]  ## OK?
@@ -672,63 +682,37 @@ hm_getClusterPositions <- reactive({
     dbg("[getClusterPositions] 5: dim(zx)=",dim(zx))    
     
     pos = NULL
-    if(input$hm_clustmethod=="fixed") {
-        require(Rtsne)
-        force.compute = FALSE
-        ## force.compute = TRUE
-        if(!force.compute && pdim==2 && !is.null(ngs$tsne2d) ) {
+    force.compute = FALSE
+    clustmethod = input$hm_clustmethod
+    if(clustmethod=="fixed" && !force.compute) {
+        if(pdim==2 && !is.null(ngs$tsne2d) ) {
             cat("getClusterPositions:: 2D tSNE from object\n")
             pos <- ngs$tsne2d[colnames(zx),]
-        } else if(!force.compute && pdim==3 && !is.null(ngs$tsne3d) ) {
+        } else if(pdim==3 && !is.null(ngs$tsne3d) ) {
             cat("getClusterPositions:: 3D tSNE from object\n")
             pos <- ngs$tsne3d[colnames(zx),]
-        } else {
-            cat("getClusterPositions:: computing 2D tSNE...\n")
-            showNotification("computing tSNE...\n")
-            perplexity = max(1,min((ncol(zx)-1)/3, 30))
-            perplexity
-            pos <- Rtsne( t(zx), dim=pdim, check_duplicated=FALSE,
-                         num_threads=100, ##Y_init=Y_init,
-                         perplexity=perplexity )$Y
-            ##plot(pos, pch=19)
         }
-    } else if(input$hm_clustmethod=="tsne") {
-        cat("getClusterPositions:: computing tSNE...\n")
-        showNotification("computing tSNE...\n")
+    } else  {
+        cat("getClusterPositions:: computing ",clustmethod,"...\n")
+        showNotification(paste("computing ",clustmethod,"...\n"))
+        
         perplexity = max(1,min((ncol(zx)-1)/3, 30))	
         perplexity
-        pos <- Rtsne( t(zx), dim=pdim, check_duplicated=FALSE,
-                     num_threads=100, ##Y_init=Y_init,
-                     perplexity=perplexity )$Y
-        ## plot(pos, pch=19)
-    } else if(input$hm_clustmethod=="umap") {
-        ## install.packages("umap")
-        showNotification("computing UMAP...\n")
-        require(umap)
-        ngrp = length(unique(ngs$samples$group))
-        nnb  = min(min(30,max(3,ncol(zx)/ngrp)),ncol(zx))
-        nnb  = max(1,min((ncol(zx)-1)/3, 30))	
-        nnb
-        pos = umap(
-            t(zx),
-            n_neighbours = nnb,
-            n_components = pdim,
-            metric = "euclidean",
-            n_components = pdim
-        )$layout
 
-    } else {
-        cat("getClusterPositions:: computing PCA/SVD...\n")
-        showNotification("computing PCA...\n")
-        require(irlba)
-        ##pos <- cmdscale(dist(t(zx)), k=3)
-        ##pos = svd(zx,nv=3)$v
-        pos = irlba(zx, nv=pdim)$v
+        res <- pgx.clusterSamplesFromMatrix(
+            zx, perplexity=perplexity, is.logx=TRUE,
+            ntop=999999, sv.rank=-1, prefix="C",         
+            kclust=1, prior.counts=NULL, 
+            dims=pdim, find.clusters=FALSE,
+            row.center=TRUE, row.scale=FALSE,
+            method=clustmethod)
+        if(pdim==2) pos <- res$pos2d
+        if(pdim==3) pos <- res$pos3d
     }
 
     pos = scale(pos) ## scale
-    colnames(pos) = paste0("dim",1:ncol(pos))
-    rownames(pos) = colnames(zx)
+    ##colnames(pos) = paste0("dim",1:ncol(pos))
+    ##rownames(pos) = colnames(zx)
 
     idx <- NULL
     if(FALSE) {
@@ -885,15 +869,20 @@ hm_PCAplotFUNC <- reactive({
 
 hm_PCAplot_opts = tagList(
     tipify( selectInput("hmpca.colvar", "Color:", choices=NULL, width='100%'),
-            "Set the colors of the samples according to a given phenotype class.", placement="right", options = list(container = "body")),
+           "Set the colors of the samples according to a given phenotype class.",
+           placement="right", options = list(container = "body")),
     tipify( selectInput("hmpca.shapevar", "Shape:", choices=NULL, width='100%'),
-            "Set the shapes of the samples according to a given phenotype class.", placement="right", options = list(container = "body")),
+           "Set the shapes of the samples according to a given phenotype class.",
+           placement="right", options = list(container = "body")),
     tipify( radioButtons('hm_clustmethod',"Layout:",c("fixed","tsne","pca","umap"),inline=TRUE),
-            "Choose the layout method for clustering to visualise.", placement="top"),
+           "Choose the layout method for clustering to visualise.",
+           placement="right", options = list(container = "body")),
     tipify( radioButtons('hm_ntop2',"Ntop:",c(100,1000,4000,9999),inline=TRUE,selected=1000),
-            "Number of top genes for dimensionality reduction.", placement="top"),
+           "Number of top genes for dimensionality reduction.",
+           placement="right", options = list(container = "body")),
     tipify( checkboxGroupInput('hmpca_options',"Other:", choices=c('label','3D','normalize'), inline=TRUE),
-            "Normalize matrix before calculating distances.", placement="bottom")
+           "Normalize matrix before calculating distances.",
+           placement="right", options = list(container = "body"))
 )
 
 hm_PCAplot_module <- plotModule(

@@ -65,8 +65,11 @@ code.textInput
 ##-----------------------------------------------------------------------------
 ## Added GLOBAL info
 ##-----------------------------------------------------------------------------
+
+## All gene families in Human UPPER CASE
+
 require(org.Hs.eg.db)
-GENE.TITLE = unlist(as.list(org.Hs.egGENENAME))
+GENE.TITLE  = unlist(as.list(org.Hs.egGENENAME))
 GENE.SYMBOL = unlist(as.list(org.Hs.egSYMBOL))
 names(GENE.TITLE) = GENE.SYMBOL
 ##GSET.PREFIX.REGEX = paste(paste0("^",GSET.PREFIXES,"_"),collapse="|")
@@ -237,7 +240,10 @@ pgx.initialize <- function(ngs) {
     }
     famsize <- sapply(ngs$families, length)
     ngs$families <- ngs$families[which(famsize>=10)]
-
+    
+    all.genes <- sort(rownames(ngs$genes))
+    ngs$families[["<all>"]] <- all.genes
+    
     ##-----------------------------------------------------------------------------
     ## Recode survival
     ##-----------------------------------------------------------------------------

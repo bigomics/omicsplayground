@@ -1371,6 +1371,7 @@ observe({
 
     ##if(is.null(input$pr_xtaboptions)) return(NULL)
     pheno0 <- grep("group|sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
+    pheno0 <- grep("sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
     kk <- selectSamplesFromSelectedLevels(ngs$Y, input$pr_samplefilter)
     nphenolevel <- apply(ngs$samples[kk,pheno0,drop=FALSE],2,function(v) length(unique(v)))
     pheno0 = pheno0[which(nphenolevel>1)]
