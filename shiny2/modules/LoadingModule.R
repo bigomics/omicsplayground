@@ -89,7 +89,7 @@ LoadingModule <- function(input, output, session, inputData)
     usermode_infotip = "Select BASIC or PRO user mode. The BASIC mode should be sufficient for most users. The PRO mode unlocks more algorithms, extra visualization panels and advanced analysis modules for single-cell RNA-seq, cell profiling and biomarker analysis."
 
     USERLEVELS = c("BASIC","PRO")
-    if(DEV.VERSION) USERLEVELS = c("BASIC","PRO","DEV")
+    ## if(DEV.VERSION) USERLEVELS = c("BASIC","PRO","DEV")
     USERMODE <- reactiveVal( factor("BASIC", levels=USERLEVELS) )
     output$main_usermode <- renderText({ as.character(USERMODE()) })
     outputOptions(output, "main_usermode", suspendWhenHidden=FALSE)
@@ -295,14 +295,6 @@ LoadingModule <- function(input, output, session, inputData)
     showloading_ntime=0
     showLoadingModal <- function(msg="Loading data...") {
         toon <- randomCartoon()
-        ##toon <- isolate(randomCartoon())
-        ## the first time renderImage gives no image, so for the firs image we give a base64enc
-        ##if(showloading_ntime==0) {
-        ##img0 = imageOutput("loading_image", width="auto", height="250px")
-        ##img0 = img(src = base64enc::dataURI(file=toon$img), width="auto", height="250px")
-        ##} else {
-        ##img0 = imageOutput("loading_image", width="auto", height="250px")
-        ##}
         showModal(modalDialog(
             ##title = HTML("<center><h4>Omics Playground</h4></center>"),
             ##HTML("<center><h2>",pgx.randomSlogan(),"</h2><h4>with Omics Playground</h4></center>"),
@@ -313,7 +305,7 @@ LoadingModule <- function(input, output, session, inputData)
                     img(src = base64enc::dataURI(file=toon$img), width="auto", height="250px"),
                     br()),
             footer = HTML("<center><p>",msg,"  &nbsp; Please wait</p></center>"),
-            size="m", easyClose=TRUE, fade=TRUE))
+            size="m", easyClose=FALSE, fade=TRUE))
         ## Sys.sleep(5)
         showloading_ntime <<- 1
         dbg("showLoadingModal done!\n")

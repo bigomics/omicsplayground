@@ -20,7 +20,7 @@ ClusteringUI <- function(id) {
         tabsetPanel(
             tabPanel("Annotate clusters",uiOutput(ns("hm_annotateUI"))),
             tabPanel("Phenotypes",uiOutput(ns("hm_phenoplotUI"))),
-            tabPanel("Feature ranking",uiOutput(ns("hm_featurerankUI")))                       
+            tabPanel("Feature ranking",uiOutput(ns("hm_featurerankUI")))      
         )
     )
 }
@@ -623,7 +623,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                          ns=ns, height=800)
         )
     })
-
+    outputOptions(output, "hm_heatmapUI", suspendWhenHidden=FALSE) ## important!!!
+    
     caption1 = "**Clustered heatmap.** Heatmap showing gene expression sorted by 2-way hierarchical clustering. Red corresponds to overexpression, blue to underexpression of the gene. At the same time, gene clusters are functionally annotated in the 'Annotate clusters' panel on the right."
     
     ##================================================================================
@@ -758,25 +759,25 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         return(clust)
     })
 
-
-    hm_PCAplotFUNC <- reactive({
+    
+    hm_PCAplot.RENDER <- reactive({
 
         ngs <- inputData()
         req(ngs)
         do3d = ("3D" %in% input$hmpca_options)
 
-        dbg("[hm_PCAplotFUNC:reactive] reacted")
+        dbg("[hm_PCAplot.RENDER:reactive] reacted")
         
         clust <- hm_getClusterPositions()
 
-        dbg("[hm_PCAplotFUNC:reactive] 1")
+        dbg("[hm_PCAplot.RENDER:reactive] 1")
         
         pos <- clust$pos
         sel <- rownames(pos)
         df <- cbind(pos, ngs$Y[sel,])
         if(!is.null(clust$clust)) df[["<cluster>"]] <- clust$clust
 
-        dbg("[hm_PCAplotFUNC:reactive] 2")
+        dbg("[hm_PCAplot.RENDER:reactive] 2")
         
         colvar = shapevar = linevar = textvar = NULL
         if(input$hmpca.colvar %in% colnames(df)) colvar <- factor(df[,input$hmpca.colvar])
@@ -913,14 +914,15 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     )
 
     hm_PCAplot_module <- plotModule(
-        id="hm_PCAplot", func=hm_PCAplotFUNC, ns=ns,
+        id="hm_PCAplot", func=hm_PCAplot.RENDER, ns=ns,
         plotlib = "plotly", info.text = hm_PCAplot_text,
         options = hm_PCAplot_opts,
         pdf.width=8, pdf.height=8,
         title="PCA/tSNE plot"
     )
     output <- attachModule(output, hm_PCAplot_module)
-
+    ## outputOptions(output, "hm_PCAplot", suspendWhenHidden=FALSE) ## important!!!
+    
     hm_PCAplot_caption <- reactive({
         text1 = "The plot visualizes the similarity in expression of samples as a scatterplot in reduced dimension (2D or 3D). Samples that are similar are clustered near to each other, while samples with different expression are positioned farther away. Groups of samples with similar profiles will appear as <i>clusters</i> in the plot."
         if(input$hmpca.colvar!="<none>") {
@@ -943,6 +945,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             moduleWidget(hm_PCAplot_module, outputFunc="plotlyOutput", ns=ns)
         )
     })
+    outputOptions(output, "hm_pcaUI", suspendWhenHidden=FALSE) ## important!!!
+    
     
     ##================================================================================
     ## Parallel coordinates
@@ -1137,7 +1141,7 @@ displays the expression levels of selected genes across all conditions in the an
             moduleWidget(hm_parcoord_table_module, outputFunc="dataTableOutput", ns=ns)
         )
     })
-
+    outputOptions(output, "hm_parcoordUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ## Annotate clusters

@@ -287,7 +287,7 @@ sig_infotext =
         do.rho   = TRUE
         do.gsva  = FALSE
         do.exact = FALSE
-        if(DEV.VERSION) {
+        if(0 && DEV.VERSION) {
             if(input$sig_ssstats=="rho") { do.rho=TRUE; do.gsva = FALSE; do.exact=TRUE }
             if(input$sig_ssstats=="gsva") { do.rho=FALSE; do.gsva = TRUE; do.exact=TRUE }
             if(input$sig_ssstats=="grp.gsva") { do.rho=FALSE; do.gsva=TRUE; do.exact=FALSE }
@@ -296,6 +296,7 @@ sig_infotext =
         }
         ss.bysample <- c()
         if(do.rho) {
+            dbg("getSingleSampleEnrichment:: 2 : do.rho")
             ss1 <- calcSingleSampleValues(X[,], y, method=c("rho"))
             ss.bysample <- cbind(ss.bysample, rho=ss1)
         }
@@ -520,7 +521,7 @@ sig_infotext =
     ## Enrichment {data-height=800}
     ##================================================================================
     
-    sig_enplotsFUNC <- reactive({
+    sig_enplots.RENDER <- reactive({
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
         
@@ -568,7 +569,8 @@ sig_infotext =
 
     sig_enplots.opts = NULL
     sig_enplots.module <- plotModule(
-        "sig_enplots", sig_enplotsFUNC, plotlib="base",
+        "sig_enplots", ns=ns,
+        func=sig_enplots.RENDER, plotlib="base",
         info.text = sig_enplots_info,
         options = sig_enplots.opts,
         pdf.width=8, pdf.height=8, res=90
@@ -798,9 +800,9 @@ sig_infotext =
                "Select to show/hide the feature names in the plot.", placement="top", options = list(container = "body"))
     )
 
-
     sig_overlapScorePlot.module <- plotModule(
-        "sig_overlapScorePlot", sig_overlapScorePlot.RENDER, plotlib="plotly",
+        "sig_overlapScorePlot", ns=ns, 
+        func=sig_overlapScorePlot.RENDER, plotlib="plotly",
         title = "Signature overlap scores", label="a",
         info.text = "Top overlapping gene sets with selected signature. The vertical axis shows the overlap score of the gene set which combines the odds ratio and significance (q-value) of the Fisher's test.",
         options = sig_overlapScorePlot.opts,
@@ -810,7 +812,7 @@ sig_infotext =
 
     
     sig_overlapTable.module <- tableModule(
-        "sig_overlapTable", sig_overlapTable.RENDER,
+        "sig_overlapTable", ns=ns, func=sig_overlapTable.RENDER,
         title = "Overlap with other signatures", label="b",
         ## just.info=TRUE, no.download=TRUE,
         info.text = "Under the <strong>Overlap/similarity tab</strong>, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, logarithm of the  odds ratio (log.OR), as well as the p and q values by the Fisher’s test for the overlap test.",
@@ -839,7 +841,7 @@ sig_infotext =
     ## Markers {data-height=800}
     ##================================================================================
 
-    sig_markersplotFUNC <- reactive({
+    sig_markersplot.RENDER <- reactive({
         ##if(!input$tsne.all) return(NULL)
         require(RColorBrewer)
         require(gplots)
@@ -847,7 +849,7 @@ sig_infotext =
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
 
-        dbg("<signature:sig_markersplotFUNC> called\n")        
+        dbg("<signature:sig_markersplot.RENDER> called\n")        
         
         markers <- ngs$families[[2]]
         markers <- COLLECTIONS[[10]]
@@ -932,13 +934,14 @@ sig_infotext =
 
         }
 
-        dbg("<signature:sig_markersplotFUNC> done!\n")        
+        dbg("<signature:sig_markersplot.RENDER> done!\n")        
         
     })
 
     ##sig_markers.opts = tagList()
     sig_markers.module <- plotModule(
-        "sig_markersplot", sig_markersplotFUNC, plotlib="base",
+        "sig_markersplot", ns=ns,
+        func=sig_markersplot.RENDER, plotlib="base",
         info.text = "After uploading a gene list, the <strong>Markers</strong> section produces a t-SNE plot of samples for each gene, where the samples are colored with respect to the upregulation (in red) or downregulation (in blue) of that particular gene.",
         ##options = sig_markers.opts,
         pdf.width=8, pdf.height=8, res=100
@@ -965,6 +968,8 @@ sig_infotext =
         
         gsea <- sigCalculateGSEA()
         if(is.null(gsea)) return(NULL)
+
+        dbg("sig_enrichmentByContrastTable.RENDER: reacted")
         
         output <- as.matrix(gsea$output)
         output <- round(output, digits=4)
@@ -974,24 +979,30 @@ sig_infotext =
             output$rho <- NULL
         }
         
+        dbg("sig_enrichmentByContrastTable.RENDER: 1 : dim(output)=",dim(output))
+        dbg("sig_enrichmentByContrastTable.RENDER: 1 : colnames(output)=",colnames(output))
+        
         color_fx = as.numeric(output[,"NES"])
-        color_fx[is.na(color_fx)] <- 0  ## yikes...    
+        color_fx[is.na(color_fx)] <- 0  ## yikes...
+
+        dbg("sig_enrichmentByContrastTable.RENDER: 2")
+        
         numeric.cols <- which(sapply(output, is.numeric))
         numeric.cols
 
+        dbg("sig_enrichmentByContrastTable.RENDER: 3 : numeric.cols=",numeric.cols)
+        
         DT::datatable(output, class='compact cell-border stripe',
                       rownames=FALSE,
-                      ##extensions = c('Buttons','Scroller'),
                       extensions = c('Scroller'),
                       ##selection='none',
-                      selection=list(mode='single', target='row', selected=c(1)),
+                      selection=list(mode='single', target='row', selected=1),
                       options=list(
-                          ##dom = 'Blfrtip',
                           dom = 'lrtip',
                           ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, scrollY = 220, scroller=TRUE, deferRender=FALSE,
-                          buttons = c('copy','csv','pdf')
-                      )) %>%  ## end of options.list 
+                          scrollX = TRUE, scrollY = 220, scroller=TRUE,
+                          deferRender=FALSE)
+                      ) %>%  ## end of options.list 
             formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle("NES",
@@ -999,25 +1010,37 @@ sig_infotext =
                                 backgroundSize = '98% 88%',
                                 backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center')
-
+        
     })
 
     sig_enrichmentByContrastGenes.RENDER <- reactive({
         
         ngs <- inputData()
-        if(is.null(ngs)) return(NULL)
+        ##if(is.null(ngs)) return(NULL)
+        req(ngs)
 
+        dbg("sig_enrichmentByContrastGenes.RENDER: reacted")
+        
         gsea <- sigCalculateGSEA()
         if(is.null(gsea)) return(NULL)
+
+        dbg("sig_enrichmentByContrastGenes.RENDER: 1")
         
         i=1
         i <- input$sig_enrichmentByContrastTable_rows_selected
         if(is.null(i) || length(i)==0) return(NULL)
         contr <- rownames(gsea$output)[i]
 
-        ext.db <- input$cmp_querydataset
-        if(is.null(ext.db)) return(NULL)
+        dbg("sig_enrichmentByContrastGenes.RENDER: 2")
 
+        ext.db = "<this dataset>"
+        qq.db <- input$cmp_querydataset
+        if(!is.null(qq.db) && qq.db!="") {
+            ext.db <- qq.db
+        }
+
+        dbg("sig_enrichmentByContrastGenes.RENDER: 3: ext.db=",ext.db)
+        
         ##if(input$sig_enplotsdb=="this dataset") {
         if(ext.db=="<this dataset>") {
             fc <- ngs$gx.meta$meta[[contr]]$meta.fx
@@ -1033,9 +1056,13 @@ sig_infotext =
             names(qv) <- names(fc)
         }
 
+        dbg("sig_enrichmentByContrastGenes.RENDER: 4")
+        
         gset <- getCurrentMarkers()
         if(is.null(gset)) return(NULL)
         
+        dbg("sig_enrichmentByContrastGenes.RENDER: 5")
+
         gset <- setdiff(toupper(gset),c("",NA))
         genes <- intersect(gset,names(fc))    
         fc <- fc[genes]
@@ -1044,23 +1071,25 @@ sig_infotext =
         gene.tt <- substring(GENE.TITLE[toupper(names(fc))],1,40)
         names(gene.tt) <- names(qv) <- names(fc)    
         output <- data.frame(gene=names(fc), title=gene.tt, FC=fc, q=qv)
+
+        dbg("sig_enrichmentByContrastGenes.RENDER: 6")
         
         color_fx = as.numeric(output[,"FC"])
         color_fx[is.na(color_fx)] <- 0  ## yikes...
 
         numeric.cols <- which(sapply(output, is.numeric))
         numeric.cols
+
+        dbg("sig_enrichmentByContrastGenes.RENDER: 7")
         
         DT::datatable(output, class='compact cell-border stripe',
                       rownames=FALSE,
-                      ##extensions = c('Buttons','Scroller'),
                       extensions = c('Scroller'), selection='none',
                       options=list(
-                          ##dom = 'Blfrtip',
                           dom = 'lrftip',
                           ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, scrollY = 210, scroller=TRUE, deferRender=FALSE,
-                          buttons = c('copy','csv','pdf')
+                          scrollX = TRUE, scrollY = 210, scroller=TRUE,
+                          deferRender=FALSE
                       )) %>%  ## end of options.list 
             formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
@@ -1074,16 +1103,17 @@ sig_infotext =
 
     info.text1 = "The table summarizes the enrichment statistics of the gene list against all contrasts by running the GSEA algorithm and plots enrichment outputs."
     sig_enrichmentByContrastTable_module <- tableModule(
-        id = "sig_enrichmentByContrastTable", func = sig_enrichmentByContrastTable.RENDER,
+        id = "sig_enrichmentByContrastTable", ns=ns,
+        func = sig_enrichmentByContrastTable.RENDER,
         info.text = info.text1,
         title = "Enrichment by contrasts", label="a"
     )
     output <- attachModule(output, sig_enrichmentByContrastTable_module)
 
-
     info.text2 = "This table shows the genes of the current signature."
     sig_enrichmentByContrastGenes_module <- tableModule(
-        id = "sig_enrichmentByContrastGenes", func = sig_enrichmentByContrastGenes.RENDER,
+        id = "sig_enrichmentByContrastGenes", ns=ns,
+        func = sig_enrichmentByContrastGenes.RENDER,
         info.text = info.text2,
         title = "Genes in signature", label="b"
     )
@@ -1095,9 +1125,11 @@ sig_infotext =
         fillCol(
             flex = c(1.0,0.04,1.1,0.04,NA), ## width = 600,
             height = 750,
-            moduleWidget(sig_enrichmentByContrastTable_module, outputFunc="dataTableOutput"),
+            moduleWidget(sig_enrichmentByContrastTable_module,
+                         ns=ns, outputFunc="dataTableOutput"),
             br(),
-            moduleWidget(sig_enrichmentByContrastGenes_module, outputFunc="dataTableOutput"),
+            moduleWidget(sig_enrichmentByContrastGenes_module,
+                         ns=ns, outputFunc="dataTableOutput"),
             br(),
             div(HTML(sig_enrichmentTables_caption), class="caption")
         )

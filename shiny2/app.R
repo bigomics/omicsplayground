@@ -17,7 +17,7 @@ source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 ##load("../data/geiger2016-arginine.pgx"); ngs=pgx.initialize(ngs)    
 
 USERMODE = reactiveVal("PRO")
-## DEV.VERSION = TRUE
+DEV.VERSION = TRUE
 
 source("../R/pgx-modules.R")
 source("modules/DataViewModule.R", local=TRUE)
