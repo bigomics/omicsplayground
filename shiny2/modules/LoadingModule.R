@@ -23,7 +23,7 @@ LoadingUI <- function(id) {
     )
 }
 
-LoadingModule <- function(input, output, session, inputData)
+LoadingModule <- function(input, output, session)
 {
     ns <- session$ns ## NAMESPACE
     
@@ -530,6 +530,14 @@ LoadingModule <- function(input, output, session, inputData)
 
         cat(">>> switching USERMODE to",usermode,"\n")
 
+        if(DEV.VERSION) {
+            
+            ##dbg("VALID OUTPUT.OPTIONS =",names(outputOptions(output)))
+            ##dbg("VALID OUTPUT NAMES =",names(output))
+            dbg("VALID INPUT NAMES =",names(input))
+            dbg("session$clientData NAMES =",names(session$clientData))
+        }
+        
         if(usermode == "BASIC") {
             dbg("observeEvent::main_usermode : switching to BASIC mode")
             lapply(c(PRO_SECTIONS,DEV_SECTIONS), function(sec) {
@@ -826,11 +834,10 @@ LoadingModule <- function(input, output, session, inputData)
 
     ##upload_filetypes = c("text/csv","text/comma-separated-values,text/plain",".csv")
     upload_filetypes = c(".csv",".pgx")
-
     
     output$upload_UI <- renderUI({    
         fillRow(
-            flex=c(1,0.05,3),
+            flex=c(1,0.1,3.5),
             height=750,
             wellPanel(
                 fileInput(ns("upload_files"), "Choose files",
@@ -848,7 +855,7 @@ LoadingModule <- function(input, output, session, inputData)
             fillCol(
                 ##flex = c(NA,NA,NA,NA,1),
                 flex = c(NA,1,1),
-                p(HTML(upload_info)),
+                div(HTML(upload_info),style="font-size: 13px;"),
                 tableOutput(ns("upload_status")),
                 ##----------- table with uploaded datasets
                 ##p(HTML(upload_info2)),
@@ -1252,8 +1259,14 @@ LoadingModule <- function(input, output, session, inputData)
     output$upload_datasets <- renderTable({
         uploadedDatasetsTable()
     })
+
     
-    return(inputData)
+    
+    res <- list(
+        inputData = inputData,
+        usermode = reactive(input$main_usermode)
+    )
+    return(res)
 }
 
 

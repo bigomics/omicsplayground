@@ -110,16 +110,16 @@ remotes::install_github("dreamRs/particlesjs")
 ##---------------------------------------------------------------------
 ## ONLY DEV.VERSION
 ##---------------------------------------------------------------------
-if(0) {
+if(1) {
 
-    remotes::install_github("trevorld/r-argparse")
-    devtools::install_github("wwylab/DeMixT")
+    ##remotes::install_github("trevorld/r-argparse")
+    ##devtools::install_github("wwylab/DeMixT")
+    ##install.pkg("uwot", force=TRUE)
     
     ## ---- monocle3 (only DEV!!! many install problems in R 3.5.2!!!)
-    install.pkg("uwot", force=TRUE)
-    BiocManager::install("batchelor")
     install.pkgs(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats',
-                   'S4Vectors', 'SingleCellExperiment','SummarizedExperiment'))
+                   'limma', 'S4Vectors', 'SingleCellExperiment',
+                   'SummarizedExperiment', 'batchelor'))
     devtools::install_github('cole-trapnell-lab/leidenbase')
     devtools::install_github('cole-trapnell-lab/monocle3')
 }

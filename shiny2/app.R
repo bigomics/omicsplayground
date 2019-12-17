@@ -28,6 +28,8 @@ source("modules/IntersectionModule.R", local=TRUE)
 source("modules/FunctionalModule.R", local=TRUE)
 source("modules/SignatureModule.R", local=TRUE)
 source("modules/LoadingModule.R", local=TRUE)
+source("modules/BiomarkerModule.R", local=TRUE)
+source("modules/ProfilingModule.R", local=TRUE)
 
 server = function(input, output, session) {
 
@@ -35,30 +37,49 @@ server = function(input, output, session) {
     ##useShinydashboardPlus()
     cat("===================== SERVER =======================\n")
 
-    ## inputData <- reactive({ ngs })
-    output$main_usermode <- renderText("PRO")
-    
-    inputData <- callModule(LoadingModule, "home1")
-    callModule( DataViewModule, "dataview1", inputData)
-    callModule( ClusteringModule, "clust1", inputData)
-    callModule( ExpressionModule, "expr1", inputData)
-    callModule( EnrichmentModule, "enrich1", inputData)
-    callModule( IntersectionModule, "isect1", inputData)
-    callModule( FunctionalModule, "func1", inputData)
-    callModule( SignatureModule, "sig1", inputData)
+    env <- list()  ## communication environment 
+    ## env[["load"]][["inputData"]] <- reactive({ ngs })    
+    env[["load"]]   <- callModule( LoadingModule, "load")
+    env[["expr"]]   <- callModule( ExpressionModule, "expr", env)
+    env[["view"]]   <- callModule( DataViewModule, "view", env)
+    env[["clust"]]  <- callModule( ClusteringModule, "clust", env)
+    env[["enrich"]] <- callModule( EnrichmentModule, "enrich", env)
+    env[["isect"]]  <- callModule( IntersectionModule, "isect", env)
+    env[["func"]]   <- callModule( FunctionalModule, "func", env)
+    env[["sig"]]    <- callModule( SignatureModule, "sig", env)
+    env[["bio"]]    <- callModule( BiomarkerModule, "bio", env)
+    env[["prof"]]   <- callModule( ProfilingModule, "prof", env)
 
-    output$current_dataset <- renderText({        
-        HTML("<div class='current-data'>",inputData()$name,"</div>")
+    output$current_dataset <- renderText({
+        pgx <- env[["load"]][["inputData"]]()
+        name <- gsub(".*\\/|[.]pgx$","",pgx$name)
+        if(length(name)==0) name = "(no data)"
+        HTML("<div class='current-data'>",name,"</div>")
+    })
+
+    ## Hide/show certain section
+    observe({
+        usermode <- env[["load"]][["usermode"]]()
+        if(length(usermode)==0) return(NULL)
+        dbg("usermode = ",usermode)
+        if(usermode=="BASIC") {
+            hideTab("maintabs","Biomarker")
+            hideTab("maintabs","scProfiling")
+        } else {
+            showTab("maintabs","Biomarker")
+            showTab("maintabs","scProfiling")
+        }
     })
     
-    hide_waiter()    
+    waiter_hide()    
 }
 
 tabView <- function(title, tab.inputs, tab.ui) {
-    tabPanel(title, sidebarLayout(
-                        sidebarPanel( width = 2, tab.inputs ),
-                        mainPanel( width = 10, tab.ui)
-                    ))
+    tabPanel(title,
+             sidebarLayout(
+                 sidebarPanel( width=2, tab.inputs, id="sidebar"),
+                 mainPanel( width=10, tab.ui)
+             ))
 }
 
 title = div(img(src="bigomics-logo-white-48px.png", width="48px"),
@@ -68,22 +89,25 @@ ui = navbarPage(
     title = title, windowTitle="Omics Playground v2",
     theme = shinythemes::shinytheme("cerulean"),
     ##includeCSS("www/navbar.css"),
+    id = "maintabs",
     header = tagList(
         tags$head( tags$link(rel = "stylesheet", href = "navbar.css")),
         shinyjs::useShinyjs(),        
         use_waiter(include_js = FALSE),
         htmlOutput("current_dataset")
     ),
-    tabView("Home",LoadingInputs("home1"),LoadingUI("home1")),
-    tabView("DataView",DataViewInputs("dataview1"),DataViewUI("dataview1")),
-    tabView("Clustering",ClusteringInputs("clust1"),ClusteringUI("clust1")),
-    tabView("Expression",ExpressionInputs("expr1"),ExpressionUI("expr1")),
-    tabView("Enrichment",EnrichmentInputs("enrich1"),EnrichmentUI("enrich1")),
-    tabView("Intersection", IntersectionInputs("isect1"), IntersectionUI("isect1")),
-    tabView("Functional", FunctionalInputs("func1"), FunctionalUI("func1")),
-    tabView("Signature", SignatureInputs("sig1"), SignatureUI("sig1")),
+    tabView("Home",LoadingInputs("load"),LoadingUI("load")),
+    tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
+    tabView("Clustering",ClusteringInputs("clust"),ClusteringUI("clust")),
+    tabView("Expression",ExpressionInputs("expr"),ExpressionUI("expr")),
+    tabView("Enrichment",EnrichmentInputs("enrich"),EnrichmentUI("enrich")),
+    tabView("Intersection", IntersectionInputs("isect"), IntersectionUI("isect")),
+    tabView("Functional", FunctionalInputs("func"), FunctionalUI("func")),
+    tabView("Signature", SignatureInputs("sig"), SignatureUI("sig")),
+    tabView("Biomarker", BiomarkerInputs("bio"), BiomarkerUI("bio")),
+    tabView("scProfiling", ProfilingInputs("prof"), ProfilingUI("prof")),
     footer = tagList(
-        show_waiter_on_load(spin_fading_circles()) # place at the bottom
+        waiter_show_on_load(spin_fading_circles()) # place at the bottom
     )
 )
 

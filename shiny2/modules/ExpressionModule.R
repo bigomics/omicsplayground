@@ -34,14 +34,14 @@ ExpressionUI <- function(id) {
     )
 }
 
-SEL.GXMETHODS <- reactiveVal(NULL)  ## will this be safe for multi-users???
-
-ExpressionModule <- function(input, output, session, inputData)
+ExpressionModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
-
+    inputData <- env[["load"]][["inputData"]]
+    
     rowH = 340  ## row height of panels
     imgH = 280  ## height of images
+    tabH = 190  ## height of tables
     
     description = "<b>Differential Expression Analysis.</b> Compare expression between
 two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups."
@@ -136,7 +136,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ##================================================================================
     ##========================= REACTIVE FUNCTIONS ===================================
     ##================================================================================
-
+    
     selected_gxmethods <- reactive({
         ngs <- inputData()
         gx.methods0 = colnames(ngs$gx.meta$meta[[1]]$fc)
@@ -229,8 +229,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         test = input$gx_testmethod
         if(is.null(comp)) return(NULL)
         if(is.null(test)) return(NULL)
-
-        SEL.GXMETHODS(test)  ## update global
 
         res = getDEGtable(ngs, testmethods=test, comparison=comp, add.pq=TRUE)
         return(res)
@@ -957,7 +955,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                           dom = 'lfrtip',
                           pageLength = 400,
                           ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, scrollY = 160, scroller=TRUE, deferRender=TRUE
+                          scrollX = TRUE, scrollY = tabH, scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             formatSignif(numeric.cols,4) %>%
@@ -1034,7 +1032,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                       extensions = c('Scroller'),
                       options=list(
                           dom = 'lfrtip', 
-                          scrollX = TRUE, scrollY = 160, scroller=TRUE, deferRender=TRUE
+                          scrollX = TRUE, scrollY = tabH, scroller=TRUE, deferRender=TRUE
                       ),  ## end of options.list 
                       selection=list(mode='single', target='row', selected=1)) %>%
             ##formatSignif(1:ncol(df),4) %>%
@@ -1059,15 +1057,14 @@ two conditions. Determine which genes are significantly downregulated or overexp
     
     output$expr_tables_UI <- renderUI({
         fillCol(
-            height = 300,
-            flex = c(1,0.05,NA),
+            height = rowH,
+            flex = c(1,NA),
             fillRow(
                 flex = c(2,0.1,1), 
                 moduleWidget(expr_genetable_module, outputFunc="dataTableOutput", ns=ns),
                 br(),
                 moduleWidget(expr_gsettable_module, outputFunc="dataTableOutput", ns=ns)        
             ),
-            br(),
             div(HTML(expr_tablesUI_caption),class="caption")
         )
     })
@@ -1103,7 +1100,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                       options=list(
                           dom = 'lfrtip', 
                           ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, scrollY = 160, scroller=TRUE, deferRender=TRUE
+                          scrollX = TRUE, scrollY = tabH, scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
@@ -1125,8 +1122,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     expr_fctable_module <- tableModule(
         id="expr_fctable", func=expr_fctable.RENDER, ns=ns,
-        info.text = expr_fctable_text,
         title ="Gene fold changes for all contrasts",
+        info.text = expr_fctable_text,
         caption = expr_fctable_caption
     )
 
@@ -1137,7 +1134,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## library(shinyjqui)
     output$expr_fctable_UI <- renderUI({
         fillCol(
-            height = 300,
+            height = rowH,
             moduleWidget(expr_fctable_module, outputFunc="dataTableOutput", ns=ns)
         )
     })
@@ -1197,7 +1194,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                           extensions = c('Buttons','Scroller'),                      
                           dom = 't',
                           pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, scrollY = 160, scroller=TRUE, deferRender=TRUE
+                          scrollX = TRUE, scrollY = tabH, scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
@@ -1228,10 +1225,14 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## library(shinyjqui)
     output$expr_FDRtable_UI <- renderUI({
         fillCol(
-            height = 300,
+            height = rowH,
             moduleWidget(expr_FDRtable_module, outputFunc="dataTableOutput", ns=ns)       
         )
     })
 
+
+    ## reactive values to return to parent environment
+    outx <- list(selected_gxmethods=selected_gxmethods)
+    return(outx)
     
 } ## end-of-ExpressionModule

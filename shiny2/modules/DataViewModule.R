@@ -19,13 +19,16 @@ DataViewUI <- function(id) {
     )
 }
 
-DataViewModule <- function(input, output, session, inputData)
+DataViewModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
+    inputData <- env[["load"]][["inputData"]]
     
-    rowH = 340  ## row height of panels
-    imgH = 300  ## height of images
-
+    rowH = 360  ## row height of panels
+    imgH = 330  ## height of images
+    fullH = 780 ## full height of panel
+    tabH = 600  ## height of tables
+    
     description = "<b>DataView.</b> Information and descriptive statistics to quickly lookup a gene, check the total counts, or view the data tables."
     output$description <- renderUI(HTML(description))
     
@@ -45,7 +48,7 @@ DataViewModule <- function(input, output, session, inputData)
 
     output$testUI <- renderUI({
         fillPage(
-            ##plotOutput(ns("dvtest"), height=800)
+            ##plotOutput(ns("dvtest"), height=fullH)
             moduleWidget(dvtest_module, ns=ns, height=600)
         )
     })
@@ -90,13 +93,6 @@ DataViewModule <- function(input, output, session, inputData)
             tipify( radioButtons(ns('data_type'),'Data type:', choices=datatypes, selected="logCPM", inline=TRUE),
                    "Choose an input data type for the analysis.", placement="bottom")
         )        
-        if(DEV.VERSION) {
-            ui1 <- tagList(
-                h5("Developer options:"),
-                actionButton(ns('data_redraw'),'redraw')
-            )
-            ui <- c(ui, ui1)
-        }
         ui
     })
     outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
@@ -157,13 +153,7 @@ DataViewModule <- function(input, output, session, inputData)
     ##                     Average Rank plot
     ##----------------------------------------------------------------------
     MARGINS1 = c(7,3.5,2,1)
-    rMARGINS1 <- reactiveVal(MARGINS1)
-    ##if(DEV.VERSION) rMARGINS1 <- reactiveVal(MARGINS1*0)
-    ## MARGINS1 = c(7,3.5,2,1)*0
-    observeEvent( input$data_redraw, {
-        rMARGINS1(MARGINS1)
-    })
-    
+
     data_genePlots_averageRankPlot.RENDER <- reactive({
         require(RColorBrewer)
         
@@ -197,8 +187,7 @@ DataViewModule <- function(input, output, session, inputData)
         j <- which(sub(".*:","",names(mean.fc))==gene)
         ##j <- which(ngs$genes$gene_name==gene)
         
-        ##mar = MARGINS1
-        mar = rMARGINS1()
+        mar = MARGINS1
         par(mar=mar, mgp=c(2.1,0.8,0))
         ##MARGINS1
         plot( mean.fc, type="h", lwd=0.4,
@@ -259,8 +248,7 @@ DataViewModule <- function(input, output, session, inputData)
             ylab="expression (log2CPM)"
         }
         
-        ##mar = MARGINS1
-        mar = rMARGINS1()
+        mar = MARGINS1
         par(mar=mar, mgp=c(2.1,0.8,0))
         
         ## corr always in log.scale and restricted to selected samples subset
@@ -369,7 +357,6 @@ DataViewModule <- function(input, output, session, inputData)
         dbg("[dataview] head(gx)=",head(gx))
         
         mar=MARGINS1
-        mar = rMARGINS1()
         par(mar=mar, mgp=c(2.1,0.8,0))
 
         BLUE = col=rgb(0.2,0.5,0.8,0.8)
@@ -511,9 +498,6 @@ DataViewModule <- function(input, output, session, inputData)
             ##text( grp.pos[,], labels=rownames(grp.pos), font=2, cex=cex1**0.5)
         }
         
-        ##Sys.sleep(3); rMARGINS1(MARGINS1)
-        ##dbg("[dataview] rMARGINS1=",rMARGINS1())
-        ##title("t-SNE clustering", cex.main=1.2, line=0.8)
     })
 
     data_genePlots_tsne_module <- plotModule(
@@ -541,7 +525,6 @@ DataViewModule <- function(input, output, session, inputData)
         require(RColorBrewer)
         par(mar=c(6,4,1,1), mgp=c(2.2,0.8,0))
         mar=MARGINS1
-        mar = rMARGINS1()
         par(mar=mar, mgp=c(1.5,0.5,0))
         
         if( hgnc.gene %in% rownames(TISSUE)) {
@@ -647,7 +630,6 @@ DataViewModule <- function(input, output, session, inputData)
         par(mar=c(6,4,2,1), mgp=c(2.2,0.8,0))
         
         mar=MARGINS1
-        mar = rMARGINS1()
         par(mar=mar, mgp=c(1.5,0.5,0))
         
         barplot( t(res$Rtop) - res$offset, col=res$klr, border=NA, ##horiz=TRUE, 
@@ -719,10 +701,12 @@ DataViewModule <- function(input, output, session, inputData)
     ##----------------------------------------------------------------------
     ##                     Interface
     ##----------------------------------------------------------------------
+    dataview_caption1 = "<b>Gene plots.</b>. <b>(a)</b> t-SNE of samples colored by expression of selected gene. <b>(b)</b> Abundance/expression of selected gene across groups. <b>(c)</b> Top correlated genes. Level of grey corresponds to absolute expression of the gene. <b>(d)</b> Average rank of the selected gene compared to other genes. <b>(e)</b> Further information about the selected gene from public databases. <b>(f)</b> Barplot showing cumulative correlation in other datasets. <b>(g)</b> Tissue expression of selected gene."
+
     output$plotsUI <- renderUI({
         fillCol(
-            flex = c(1,1),
-            height = 800,
+            height = fullH,
+            flex = c(1,1,NA),
             fillRow( 
                 flex = c(1,1,1,1), id = "data_genePlots_row1",
                 height = rowH, ## width=1600, 
@@ -741,7 +725,8 @@ DataViewModule <- function(input, output, session, inputData)
                 ),
                 moduleWidget(data_corplot_module, ns=ns, height=imgH),
                 moduleWidget(data_tissueplot_module, ns=ns, height=imgH)
-            )
+            ),
+            div(HTML(dataview_caption1), class="caption")
         )
     })
 
@@ -749,7 +734,6 @@ DataViewModule <- function(input, output, session, inputData)
     ##dragula("data_genePlots_row2")
     dragula(c("data_genePlots_row1","data_genePlots_row2"))
     
-    dataview_caption1 = "**Gene plots.**. **(a)** t-SNE of samples colored by expression of selected gene. **(b)** Abundance/expression of selected gene across groups. **(c)** Top correlated genes. Level of grey corresponds to absolute expression of the gene. **(d)** Average rank of the selected gene compared to other genes. **(e)** Further information about the selected gene from public databases. **(f)** Barplot showing cumulative correlation in other datasets. **(g)** Tissue expression of selected gene."
 
 
     ##----------------------------------------------------------------------
@@ -1103,10 +1087,14 @@ DataViewModule <- function(input, output, session, inputData)
 
     })
 
+
+    dataview_counts_caption = "<b>Counts distribution</b>. Plots associated with the counts, abundance or expression levels across the samples/groups.  <b>(a)</b> Total counts per sample or average per group.  <b>(b)</b> Distribution of total counts per sample/group. The center horizontal bar correspond to the median.  <b>(c)</b> Histograms of total counts distribution per sample/group. <b>(d)</b> Abundance of major gene types per sample/group. <b>(e)</b> Average count by gene type per sample/group."
+
+
     output$countsUI <- renderUI({
         fillCol(
-            flex = c(1,1),
-            height = 800,
+            flex = c(1,1,NA),
+            height = fullH,
             fillRow(
                 flex = c(1,1,1), id = "counts_tab_row1", height=rowH,
                 moduleWidget(counts_tab_barplot_module, ns=ns, height=imgH),
@@ -1117,13 +1105,11 @@ DataViewModule <- function(input, output, session, inputData)
                 flex = c(1,1), id = "counts_tab_row2", height=rowH,
                 moduleWidget(counts_tab_abundanceplot_module, ns=ns, height=imgH),
                 moduleWidget(counts_tab_average_countplot_module, ns=ns, height=imgH)
-            )
+            ),
+            div(HTML(dataview_counts_caption), class="caption")
         )
     })
     dragula(c("counts_tab_row1","counts_tab_row2"))
-
-    dataview_caption2 = "**Counts distribution**. Plots associated with the counts, abundance or expression levels across the samples/groups.  **(a)** Total counts per sample or average per group.  **(b)** Distribution of total counts per sample/group. The center horizontal bar correspond to the median.  **(c)** Histograms of total counts distribution per sample/group. **(d)** Abundance of major gene types per sample/group. **(e)** Average count by gene type per sample/group."
-
 
     
     dropdown_search_gene='<code>Search gene</code>'
@@ -1225,7 +1211,7 @@ DataViewModule <- function(input, output, session, inputData)
                       options=list(
                           dom = 'lfrtip', 
                           ##pageLength = 60,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scroller=TRUE, scrollX = TRUE, scrollY = 600, 
+                          scroller=TRUE, scrollX = TRUE, scrollY = tabH, 
                           deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
@@ -1237,21 +1223,21 @@ DataViewModule <- function(input, output, session, inputData)
                                 backgroundPosition = 'center')
     })
 
-    caption3="**Gene table.** The table shows the gene expression values per sample, or average expression values across the groups. The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar."
+    data_rawdataTable_caption = "<b>Gene table.</b> The table shows the gene expression values per sample, or average expression values across the groups. The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar."
 
     data_rawdataTable_module <- tableModule(
         id="data_rawdataTable", ns=ns,
         func=data_rawdataTable.RENDER,
-        info.text = data_rawdataTable_text,
         title="Gene expression table",
-        caption=caption3
+        info.text = data_rawdataTable_text,
+        caption = data_rawdataTable_caption
     )
     output <- attachModule(output, data_rawdataTable_module) 
 
     output$genetableUI <- renderUI({
         fillCol(
             flex = c(1),
-            height = 800,
+            height = fullH,
             moduleWidget(data_rawdataTable_module, outputFunc="dataTableOutput",ns=ns)
         )
     })
@@ -1279,29 +1265,29 @@ DataViewModule <- function(input, output, session, inputData)
                       options=list(
                           dom = 'lfrtip', 
                           ##pageLength = 60, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scroller=TRUE, scrollX = TRUE, scrollY = 640,
+                          scroller=TRUE, scrollX = TRUE, scrollY = tabH,
                           deferRender=TRUE
                       )) %>%
             DT::formatStyle(0, target='row', fontSize='12px', lineHeight='70%') 
         
     })
 
-    caption4 ="**Sample information table** with phenotype information of samples."
+    data_sampleTable_caption="<b>Sample information.</b> This table contains phenotype information of the samples."
 
     data_sampleTable_module <- tableModule(
         id="data_sampleTable", ns=ns,
         func=data_sampleTable.RENDER,
+        title="Sample information",
         info.text = "Sample information table with information about phenotype of samples.",
         ##options = data_sampleTable_opts,
-        title="Sample information",
-        caption=caption4
+        caption = data_sampleTable_caption
     )
     output <- attachModule(output, data_sampleTable_module) 
     
     output$sampletableUI <- renderUI({
         fillCol(
             flex = c(1),
-            height = 800,
+            height = fullH,
             moduleWidget(data_sampleTable_module, outputFunc="dataTableOutput", ns=ns)
         )
     })
@@ -1331,7 +1317,7 @@ DataViewModule <- function(input, output, session, inputData)
                       options=list(
                           dom = 'lfrtip', 
                           ##pageLength = 60, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scroller=TRUE, scrollX = TRUE, scrollY = 700,
+                          scroller=TRUE, scrollX = TRUE, scrollY = tabH,
                           deferRender=TRUE
                       )) %>%
             DT::formatStyle(0, target='row', fontSize='12px', lineHeight='70%') %>%
@@ -1345,20 +1331,23 @@ DataViewModule <- function(input, output, session, inputData)
         
     })
 
-    caption5="**Contrast table** summarizing the contrasts of all comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison."
+    data_contrastTable_info = "Table summarizing the contrasts of all comparisons. Here, you can check which samples belong to which groups for the different comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison."
+    
+    data_contrastTable_caption = "<b>Contrast table</b> summarizing the contrasts of all comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison."
 
     data_contrastTable_module <- tableModule(
         id="data_contrastTable", ns=ns,
         func=data_contrastTable.RENDER,
-        info.text = "Table summarizing the contrasts of all comparisons. Here, you can check which samples belong to which groups for the different comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison.",
         ##options = data_sampleTable_opts,
-        title="Contrast table", caption=caption5
+        title="Contrast table",
+        info.text = data_contrastTable_info,
+        caption = data_contrastTable_caption
     )
     output <- attachModule(output, data_contrastTable_module) 
 
     output$contrasttableUI <- renderUI({
         fillCol(
-            flex = c(1), height = 800,
+            flex = c(1), height = fullH,
             moduleWidget(data_contrastTable_module, outputFunc="dataTableOutput", ns=ns)
         )
     })
@@ -1435,21 +1424,24 @@ DataViewModule <- function(input, output, session, inputData)
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')
     })
     
-    datatable_objectsize_text = 'The <b>object sizes</b> table provides information about the (memory) sizes of objects. '
+    datatable_objectsize_text = "This table provides information about  about the memory sizes of objects"
+
     datatable_objectsize_module <- tableModule(
         id="datatable_objectsize", ns=ns,
         func=datatable_objectsize.RENDER,
-        info.text = datatable_objectsize_text,
-        options = NULL, title='Object sizes'
+        options = NULL, title='Object sizes',
+        info.text = datatable_objectsize_text
+        ## caption = datatable_objectsize_caption
     )
     output <- attachModule(output, datatable_objectsize_module)
 
-    caption6="**Resource information.** Details about the execution times of the methods, dimensions and sizes of objects."
+    resourceinfo_caption="<b>Resource information.</b> Details about the execution times of the methods, dimensions and memory sizes of objects."
+
     
     output$resourceinfoUI <- renderUI({    
         fillCol(
             flex = c(1,NA),
-            height = 800,
+            height = fullH,
             fillRow(
                 flex = c(5,1, 2,1, 1.5, 2), ## width = 600,
                 moduleWidget(datatable_timings_module, outputFunc="dataTableOutput", ns=ns),
@@ -1459,7 +1451,7 @@ DataViewModule <- function(input, output, session, inputData)
                 moduleWidget(datatable_objectsize_module, outputFunc="dataTableOutput", ns=ns),
                 br()
             ),
-            HTML(caption6)
+            div(HTML(resourceinfo_caption),class="caption")
         )
     })
 

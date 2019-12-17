@@ -19,6 +19,15 @@ body {
     // background: var(--canvas-color);
 }
 
+
+[class*="col-lg-"],[class*="col-md-"],
+[class*="col-sm-"],[class*="col-xs-"]{
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+}
+
 /*
 .tab-pane {
     background: white;
@@ -35,7 +44,7 @@ body {
 
 .nav-tabs {
     padding: 0px;
-    margin: -10px -20px;
+    margin: 0px 0px;
 }
 
 .nav-tabs>li.active {
@@ -50,13 +59,13 @@ body {
 }
 
 /* sidebar */
-.well {
+#sidebar.well {
     background: var(--light-color);
     border-radius: 0px;
     font-size: 12px;
-    height: 840px;
-    margin: -20px 0px 0px -15px; 
-    padding: 30px 10px 30px 10px;
+    height: 900px;
+    margin: -8px 0px 0px -5px;
+    padding: 30px 15px 30px 15px;
 }
 
 #datainfo {
@@ -66,8 +75,15 @@ body {
     line-height: 1em;
 }
 
+.well {
+    font-size: 12px;
+}
+
 
 /* upper navigation bar */
+.navbar {
+    margin-bottom: 4px !important;
+}
 
 .navbar-fixed-top {
     z-index: 0;
@@ -230,19 +246,21 @@ body {
     background-color: #0067c4;
 }
 
-#action_play {
+#load-action_play {
     color: black;
     background-color: #ffdd00;
     color: white;
     background-color: #e45c00;
 }
-#action_play:hover {
+#load-action_play:hover {
     color: black;
     background-color: #eecc00;
     color: white;
     background-color: #b44c00;    
 }
+
 */
+
 
 
 /* ------------------- modal dialogs -------------- */

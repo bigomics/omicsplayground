@@ -10,7 +10,7 @@ FunctionalUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillCol(
         flex = c(1),
-        height = 750,
+        height = 780,
         tabsetPanel(
             tabPanel("KEGG",uiOutput(ns("kegg_analysis_UI"))),
             tabPanel("GO graph",uiOutput(ns("GO_analysis_UI"))),
@@ -21,14 +21,19 @@ FunctionalUI <- function(id) {
     )
 }
 
-FunctionalModule <- function(input, output, session, inputData)
+FunctionalModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
-
+    inputData <- env[["load"]][["inputData"]]
+    rowH = 780  ## row height of panel
+    tabH = 200  ## row height of panel    
     description = "<b>Functional analysis</b>. <br> Perform specialized functional analysis
 to understand biological functions including GO, KEGG, and drug connectivity mapping."
     output$description <- renderUI(HTML(description))
-
+    
+    description = "<b>Functional analysis</b>. <br> Perform specialized functional analysis
+to understand biological functions including GO, KEGG, and drug connectivity mapping."
+    output$description <- renderUI(HTML(description))
 
     fa_infotext = paste("This module performs specialized pathway and drug enrichment analysis. <br><br>",a_KEGG," is a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. In the <strong>KEGG pathway</strong> panel, each pathway is scored for the selected contrast profile and reported in the table. A unique feature of the platform is that it provides an activation-heatmap comparing the activation levels of pathways across multiple contrast profiles. This facilitates to quickly see and detect the similarities between profiles in certain pathways.
 
@@ -444,7 +449,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                       options=list(
                           dom = 'lfrtip', 
                           scrollX = TRUE, ##scrollY = TRUE,
-                          scrollY = 160, scroller=TRUE, deferRender=TRUE
+                          scrollY = tabH, scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             formatSignif(numeric.cols,4) %>%
@@ -563,7 +568,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
 
     output$kegg_analysis_UI <- renderUI({
         fillCol(
-            height = 750,
+            height = rowH,
             flex = c(1,NA),
             fillRow(
                 flex = c(1.3,0.04,1),
@@ -750,7 +755,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                       options=list(
                           dom = 'lfrtip', 
                           scrollX = TRUE, ##scrollY = TRUE,
-                          scrollY = 160, scroller=TRUE, deferRender=TRUE
+                          scrollY = tabH, scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             formatSignif(numeric.cols,4) %>%
@@ -866,7 +871,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     output$GO_analysis_UI <- renderUI({
         fillCol(
             flex=c(1,NA),
-            height = 750,
+            height = rowH,
             fillRow(
                 height = 650,
                 flex = c(1.2,1),
@@ -1071,7 +1076,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                           ##dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
                           dom = 'lfrtip', 
                           scrollX = TRUE, ##scrollY = TRUE,
-                          scrollY = 180, scroller=TRUE, deferRender=TRUE
+                          scrollY = tabH, scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>% 
@@ -1214,12 +1219,12 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     output$DSEA_analysis_UI <- renderUI({
         fillCol(
             flex = c(1,NA),
-            height = 750,
+            height = rowH,
             fillRow(
                 height = 650,
                 flex = c(2.6,1), 
                 fillCol(
-                    flex = c(1.4,0.07,1),
+                    flex = c(1.3,0.15,1),
                     height = 650,
                     fillRow(
                         flex=c(2.2,1),
@@ -1587,7 +1592,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                              selection=list(mode='single', target='row', selected=1),
                              options=list(
                                  dom = 'lfrtip', 
-                                 scrollX = TRUE, scrollY = 180,
+                                 scrollX = TRUE, scrollY = tabH,
                                  scroller=TRUE, deferRender=TRUE
                              )  ## end of options.list 
                              ) %>%
@@ -1634,7 +1639,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                              selection=list(mode='single', target='row', selected=1),
                              options=list(
                                  dom = 'lfrtip', 
-                                 scrollX = TRUE, scrollY = 180,
+                                 scrollX = TRUE, scrollY = tabH,
                                  scroller=TRUE, deferRender=TRUE
                              )  ## end of options.list 
                              ) %>%
@@ -1805,13 +1810,14 @@ to understand biological functions including GO, KEGG, and drug connectivity map
 
     output$wordcloud_UI <- renderUI({
         fillCol(
-            height = 750,
+            height = rowH,
             flex = c(1,NA),
             fillRow(
                 height = 650,
                 flex = c(3.6,1),
                 fillCol(
-                    flex=c(1.1,0.08,1),
+                    flex=c(1.3,0.15,1),
+                    height = 650,
                     fillRow(
                         flex = c(1.2,0.05,1,0.05,1),
                         moduleWidget(enrich_keyword_module, ns=ns),
@@ -1959,7 +1965,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
 
     output$fireplot_UI <- renderUI({
         fillRow(
-            height = 750,
+            height = rowH,
             flex = c(2,1),
             fillCol(
                 flex = c(NA,1), 
