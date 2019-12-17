@@ -9,7 +9,7 @@ IntersectionInputs <- function(id) {
 IntersectionUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillRow(
-        flex = c(1.5,0.05,1),
+        flex = c(1.5,0.07,1),
         height = 750,
         tabsetPanel(
             tabPanel("Pairs",uiOutput(ns("cmp_scatterPlotMatrix_UI"))),
@@ -636,7 +636,7 @@ between two contrasts."
 
     cmp_scatterPlotMatrix_info = "For the selected contrasts, the <strong>Pairs</strong> panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, The Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as '<custom>' selection."
 
-    cmp_scatterPlotMatrix_caption = "<b>Pairs plot.</b> Pairwise scatterplots for two or more differential expression profiles for multiple selected contrasts.** Similar profiles will show high correlation with points close to the diagonal. For *N>=3*, also volcano plots are shown on the diagonal with points in blue if significant with respect to the chosen `FDR` (significance) and `logFC` thresholds."
+    cmp_scatterPlotMatrix_caption = "<b>Pairs plot.</b> Pairwise scatterplots for two or more differential expression profiles for multiple selected contrasts. Similar profiles will show high correlation with points close to the diagonal. For <i>N>=3</i>, also volcano plots are shown on the diagonal with points in blue if significant with respect to the chosen FDR (significance) and logFC thresholds."
 
     cmp_scatterPlotMatrix_module <- plotModule(
         id="cmp_scatterPlotMatrix", ns=ns,
@@ -647,7 +647,7 @@ between two contrasts."
         download.fmt = c("html"),
         pdf.width=8, pdf.height=8, res=95,
         info.text = cmp_scatterPlotMatrix_info,
-        caption = cmp_scatterPlotMatrix_caption,
+        caption = cmp_scatterPlotMatrix_caption
     )
     output <- attachModule(output, cmp_scatterPlotMatrix_module)
 
@@ -656,10 +656,11 @@ between two contrasts."
             ## id = ns("expr_topgenes"),
             height = 750,
             flex=c(1), ##height = 370,
-            moduleWidget(cmp_scatterPlotMatrix_module, outputFunc="plotlyOutput", ns=ns)
+            moduleWidget(cmp_scatterPlotMatrix_module, height=640,
+                         outputFunc="plotlyOutput", ns=ns)
         )
     })
-
+    ##outputOptions(output, "cmp_scatterPlotMatrix_UI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ## Contrast heatmap 
@@ -842,7 +843,8 @@ between two contrasts."
             ## id = ns("expr_topgenes"),
             height = 750,
             flex=c(1), ##height = 370,
-            moduleWidget(cmp_ctheatmap_module, outputFunc="plotlyOutput", ns=ns)
+            moduleWidget(cmp_ctheatmap_module, height=650,
+                         outputFunc="plotlyOutput", ns=ns)
         )
     })
     
@@ -1077,14 +1079,14 @@ between two contrasts."
         updateSelectInput(session, "cmp_cmapsets", choices=cmapsets, selected="<this dataset>")
     })
 
-
     output$cmp_connectivitymap_UI <- renderUI({
         fillCol(
             height = 750,
             moduleWidget(cmp_connectivitymap.module, outputFunc="scatterD3Output", ns=ns)
         )
     })
-
+    outputOptions(output, "cmp_connectivitymap_UI", suspendWhenHidden=FALSE) ## important!!!
+    
     ##======================================================================
     ## Venn diagram
     ##======================================================================
@@ -1165,7 +1167,7 @@ between two contrasts."
                       options=list(
                           ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = TRUE, ## scrollY = TRUE,
-                          scrollY = 220, scroller=TRUE, deferRender=TRUE,
+                          scrollY = 150, scroller=TRUE, deferRender=TRUE,
                           dom = 'lfrtip'                      
                       )  ## end of options.list 
                       ) %>%
@@ -1214,12 +1216,12 @@ between two contrasts."
     ##---------- UI LAYOUT ----------------------------------
     ##-------------------------------------------------------
     
-    cmp_venn_caption = "<b>Venn diagram and intersection table.</b> **(a)** Venn diagram showing the number of overlapping (significant) genes for multiple contrasts. **(b)** Table reporting genes in the selected overlap region with their fold-changes."
+    cmp_venn_caption = "<b>Venn diagram and intersection table.</b> <b>(a)</b> Venn diagram showing the number of overlapping (significant) genes for multiple contrasts. <b>(b)</b> Table reporting genes in the selected overlap region with their fold-changes."
     
     output$cmp_venndiagram_UI <- renderUI({
         fillCol(
             height = 750,
-            flex = c(1, NA, 0.66, NA),
+            flex = c(1, NA, 0.8, 0.1, NA),
             moduleWidget(cmp_venndiagram_module, ns=ns),            
             ##cmp_venntable_module$buttons,
             inputPanel(
@@ -1231,6 +1233,7 @@ between two contrasts."
             ),
             moduleWidget(cmp_venntable_module, outputFunc="dataTableOutput", ns=ns),
             ##dataTableOutput(ns("cmp_venntable")),
+            br(),
             div(HTML(cmp_venn_caption), class="caption")
         )
     })
@@ -1438,7 +1441,7 @@ between two contrasts."
     )
     output <- attachModule(output, cmp_fcbarplot_module)
 
-    cmp_metavolcano_caption = "<b>Meta-volcano plot and top ranked cumulative fold-change.</b> . **(a)** The meta-volcano highlights the genes that are common/shared in all selected comparisons. **(b)** Genes ranked by cumulative fold-change across the selected comparisons." 
+    cmp_metavolcano_caption = "<b>Meta-volcano plot and top ranked cumulative fold-change.</b> . <b>(a)</b> The meta-volcano highlights the genes that are common/shared in all selected comparisons. <b>(b)</b> Genes ranked by cumulative fold-change across the selected comparisons." 
     
     output$cmp_metavolcano_UI <- renderUI({
         fillCol(

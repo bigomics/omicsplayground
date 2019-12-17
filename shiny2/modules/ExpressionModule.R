@@ -18,7 +18,7 @@ ExpressionUI.test <- function(id) {
 ExpressionUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillCol(
-        flex = c(1.5,1),
+        flex = c(1.4,1),
         height = 750,
         tabsetPanel(
             tabPanel("Plot",uiOutput(ns("expr_plots_UI"))),
@@ -41,7 +41,7 @@ ExpressionModule <- function(input, output, session, inputData)
     ns <- session$ns ## NAMESPACE
 
     rowH = 340  ## row height of panels
-    imgH = 300  ## height of images
+    imgH = 280  ## height of images
     
     description = "<b>Differential Expression Analysis.</b> Compare expression between
 two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups."
@@ -584,22 +584,28 @@ two conditions. Determine which genes are significantly downregulated or overexp
     )
     output <- attachModule(output, expr_plots_boxplot_module)
 
-    expr_plots_caption = "**Expression plots** associated with the selected contrast. **(a)** Volcano-plot plotting significance versus fold-change on the y and x axes, respectively. **(b)** MA-plot plotting fold-change versus signal intensity on the y and x axes, respectively. **(c)** Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change for selected contrast. **(d)** Sorted barplot of the differential expression of the selected gene across all contrasts."
+    expr_plots_caption = "<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting significance versus fold-change on the y and x axes, respectively. <b>(b)</b> MA-plot plotting fold-change versus signal intensity on the y and x axes, respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change for selected contrast. <b>(d)</b> Sorted barplot of the differential expression of the selected gene across all contrasts."
 
     ## library(shinyjqui)
     output$expr_plots_UI <- renderUI({
-        fillRow(
-            id = ns("expr_plots"),
+        fillCol(
             height = rowH,
-            flex=c(1,1,1,1), ##height = 370,
-            moduleWidget(expr_plots_volcano_module, ns=ns, height=imgH), 
-            moduleWidget(expr_plots_maplot_module, ns=ns, height=imgH),
-            moduleWidget(expr_plots_topgenesbarplot_module, ns=ns, height=imgH),
-            moduleWidget(expr_plots_topfoldchange_module, ns=ns, height=imgH)
+            flex = c(1,0.05,NA),
+            fillRow(
+                id = "expr_plots",
+                ##height = rowH,
+                flex=c(1,1,1,1), ##height = 370,
+                moduleWidget(expr_plots_volcano_module, ns=ns, height=imgH), 
+                moduleWidget(expr_plots_maplot_module, ns=ns, height=imgH),
+                moduleWidget(expr_plots_topgenesbarplot_module, ns=ns, height=imgH),
+                moduleWidget(expr_plots_topfoldchange_module, ns=ns, height=imgH)
+            ),
+            br(),
+            div(HTML(expr_plots_caption), class="caption")
         )
     })
     dragula(ns("expr_plots"))
-
+    
     ##================================================================================
     ## Top genes
     ##================================================================================
@@ -689,12 +695,14 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     expr_topgenes_text = "The <strong>Top genes</strong> section shows the average expression plots across the samples for the top differentially (both positively and negatively) expressed genes for the selected comparison from the <code>Contrast</code> settings. Under the plot <i>Settings</i>, users can scale the abundance levels (counts) or ungroup the samples in the plot from the <code>log scale</code> and <code>ungroup samples</code> settings, respectively."
 
-    expr_topgenes_caption = "**Top differentially expressed genes.** Expression barplots of the top most differentially (both positively and negatively) expressed genes for the selected contrast."
+    expr_topgenes_caption = "<b>Top differentially expressed genes.</b> Expression barplots of the top most differentially (both positively and negatively) expressed genes for the selected contrast."
 
     expr_topgenes_module <- plotModule(
         id="expr_topgenes", ns=ns,
         func=expr_topgenes.RENDER, options=expr_topgenes_opts,
-        info.text = expr_topgenes_text, pdf.width=14, pdf.height=4, res=95,
+        info.text = expr_topgenes_text,
+        caption = expr_topgenes_caption,
+        pdf.width=14, pdf.height=4, res=95,
         title="Expression of top differentially expressed genes"
     )
     output <- attachModule(output, expr_topgenes_module)
@@ -795,12 +803,14 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     expr_volcanoAll_text = "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for genes across all contrasts. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
 
-    expr_volcanoAll_caption = "**Volcano plot for all contrasts.** Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings."
+    expr_volcanoAll_caption = "<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings."
 
     expr_volcanoAll_module <- plotModule(
         id="expr_volcanoAll", ns=ns,
         func=expr_volcanoAll.RENDER,
-        info.text = expr_volcanoAll_text, pdf.width=18, pdf.height=6, res=75,
+        info.text = expr_volcanoAll_text,
+        caption = expr_volcanoAll_caption,
+        pdf.width=18, pdf.height=6, res=75,
         title="Volcano plots for all contrasts"
     )
     output <- attachModule(output, expr_volcanoAll_module)
@@ -879,14 +889,15 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     expr_volcanoMethods_text = "Under the <strong>Volcano (methods)</strong> tab, the platform displays the volcano plots provided by multiple differential expression calculation methods for the selected contrast. This provides users an overview of the statistics of all methods at the same time."
 
-    expr_volcanoMethods_caption = "**Volcano plot for all statistical methods.** Simultaneous visualisation of volcano plots of genes by multiple differential expression methods for the selected contrast. Methods showing better statistical significance will show volcano plots with 'higher' wings."
+    expr_volcanoMethods_caption = "<b>Volcano plot for all statistical methods.</b> Simultaneous visualisation of volcano plots of genes by multiple differential expression methods for the selected contrast. Methods showing better statistical significance will show volcano plots with 'higher' wings."
 
     expr_volcanoMethods_module <- plotModule(
         id="expr_volcanoMethods", ns=ns,
         func=expr_volcanoMethods.RENDER,
-        info.text = expr_volcanoMethods_text, pdf.width=18, pdf.height=6, res=75,
         title="Volcano plots for all methods",
-        caption = expr_volcanoMethods_caption
+        info.text = expr_volcanoMethods_text, 
+        caption = expr_volcanoMethods_caption,
+        pdf.width=18, pdf.height=6, res=75
     )
     output <- attachModule(output, expr_volcanoMethods_module)
 
@@ -946,7 +957,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                           dom = 'lfrtip',
                           pageLength = 400,
                           ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, scrollY = 200, scroller=TRUE, deferRender=TRUE
+                          scrollX = TRUE, scrollY = 160, scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             formatSignif(numeric.cols,4) %>%
@@ -1023,8 +1034,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                       extensions = c('Scroller'),
                       options=list(
                           dom = 'lfrtip', 
-                          ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, scrollY = 200, scroller=TRUE, deferRender=TRUE
+                          scrollX = TRUE, scrollY = 160, scroller=TRUE, deferRender=TRUE
                       ),  ## end of options.list 
                       selection=list(mode='single', target='row', selected=1)) %>%
             ##formatSignif(1:ncol(df),4) %>%
@@ -1045,14 +1055,20 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ##output$expr_gsettable <- expr_gsettable_module$render
     output <- attachModule(output, expr_gsettable_module)
 
-    expr_tablesUI_caption = "**Differential expression tables**. **(I)** Statistical results of the the differential expression analysis for selected contrast. The number of stars indicate how many statistical methods identified the gene significant. **(II)** Correlation and enrichment value of gene sets that contain the gene selected in Table I."
+    expr_tablesUI_caption = "<b>Differential expression tables</b>. <b>(I)</b> Statistical results of the the differential expression analysis for selected contrast. The number of stars indicate how many statistical methods identified the gene significant. <b>(II)</b> Correlation and enrichment value of gene sets that contain the gene selected in Table I."
     
     output$expr_tables_UI <- renderUI({
-        fillRow(
-            height = 600, flex = c(2,0.1,1), 
-            moduleWidget(expr_genetable_module, outputFunc="dataTableOutput", ns=ns),
+        fillCol(
+            height = 300,
+            flex = c(1,0.05,NA),
+            fillRow(
+                flex = c(2,0.1,1), 
+                moduleWidget(expr_genetable_module, outputFunc="dataTableOutput", ns=ns),
+                br(),
+                moduleWidget(expr_gsettable_module, outputFunc="dataTableOutput", ns=ns)        
+            ),
             br(),
-            moduleWidget(expr_gsettable_module, outputFunc="dataTableOutput", ns=ns)        
+            div(HTML(expr_tablesUI_caption),class="caption")
         )
     })
 
@@ -1087,7 +1103,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                       options=list(
                           dom = 'lfrtip', 
                           ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, scrollY = 200, scroller=TRUE, deferRender=TRUE
+                          scrollX = TRUE, scrollY = 160, scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
@@ -1105,7 +1121,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     expr_fctable_text = "The <strong>Foldchange (all)</strong> tab reports the gene fold changes for all contrasts in the selected dataset."
 
-    expr_fctable_caption = "**Differential expression (fold-change) across all contrasts.** The column `fc.var` corresponds to the variance of the fold-change across all contrasts."
+    expr_fctable_caption = "<b>Differential expression (fold-change) across all contrasts.</b> The column `fc.var` corresponds to the variance of the fold-change across all contrasts."
 
     expr_fctable_module <- tableModule(
         id="expr_fctable", func=expr_fctable.RENDER, ns=ns,
@@ -1121,7 +1137,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## library(shinyjqui)
     output$expr_fctable_UI <- renderUI({
         fillCol(
-            height = 600,
+            height = 300,
             moduleWidget(expr_fctable_module, outputFunc="dataTableOutput", ns=ns)
         )
     })
@@ -1181,7 +1197,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                           extensions = c('Buttons','Scroller'),                      
                           dom = 't',
                           pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, scrollY = 200, scroller=TRUE, deferRender=TRUE
+                          scrollX = TRUE, scrollY = 160, scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
@@ -1199,7 +1215,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     expr_FDRtable_text = "The <strong>FDR table</strong> tab reports the number of significant genes at different FDR thresholds for all contrasts within the dataset."
 
-    expr_FDRtable_caption = "**Number of significant genes versus FDR.** This table reports the number of significant genes at different FDR thresholds for all contrasts and methods. This enables to quickly see which methods are more sensitive. The left part of the table (in blue) correspond to the number of significant down-regulated genes, the right part (in red) correspond to the number of significant overexpressed genes."
+    expr_FDRtable_caption = "<b>Number of significant genes versus FDR.</b> This table reports the number of significant genes at different FDR thresholds for all contrasts and methods. This enables to quickly see which methods are more sensitive. The left part of the table (in blue) correspond to the number of significant down-regulated genes, the right part (in red) correspond to the number of significant overexpressed genes."
     
     expr_FDRtable_module <- tableModule(
         id="expr_FDRtable", func=expr_FDRtable.RENDER, ns=ns,
@@ -1212,7 +1228,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## library(shinyjqui)
     output$expr_FDRtable_UI <- renderUI({
         fillCol(
-            height = 600,
+            height = 300,
             moduleWidget(expr_FDRtable_module, outputFunc="dataTableOutput", ns=ns)       
         )
     })

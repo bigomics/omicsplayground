@@ -17,9 +17,10 @@ moduleWidget <- function(module, outputFunc="plotOutput", ns=NULL,
     outputFunc2 <- paste0(outputFunc,"('",module.id,"', height='",
                           height,"', width='",width,"')")
     p <- fillCol(
-        flex = c(NA,1),
+        flex = c(NA,1,NA),
         module$button,
-        eval(parse(text=outputFunc2))
+        eval(parse(text=outputFunc2)),
+        div(HTML(module$getCaption()),class="caption")
     )
     ## p <- box(p)
     p
