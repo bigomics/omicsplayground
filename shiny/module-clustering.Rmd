@@ -616,6 +616,7 @@ require(scatterD3)
 
 observe({
     ngs <- inputData()
+    
     var.types = colnames(ngs$Y)
     var.types = var.types[grep("sample|patient",var.types,invert=TRUE)]
     vv = c(var.types,rep("<none>",10))
@@ -884,6 +885,8 @@ hm_PCAplot_opts = tagList(
            "Normalize matrix before calculating distances.",
            placement="right", options = list(container = "body"))
 )
+
+##outputOptions(output, "main_usermode", suspendWhenHidden=FALSE)
 
 hm_PCAplot_module <- plotModule(
     id="hm_PCAplot", func=hm_PCAplotFUNC,

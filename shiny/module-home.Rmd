@@ -1144,6 +1144,10 @@ uploadStatusTable <- reactive({
             MAXCONTRASTS = 5
             MAXSAMPLES   = 20
         }
+        if( USERMODE() == "DEV") {
+            MAXCONTRASTS = 999
+            MAXSAMPLES   = 9999
+        }
         
         ## check files: maximum contrasts allowed
         if(status["contrasts.csv"]=="OK") {

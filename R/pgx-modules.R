@@ -6,10 +6,12 @@ ADDSIGNATURE=TRUE
 ADDSIGNATURE=FALSE
 
 ## ----------------- create widget
-moduleWidget <- function(module, outputFunc="plotOutput", height="100%", width="100%")
+moduleWidget <- function(module, outputFunc="plotOutput", ns=NULL,
+                         height="100%", width="100%")
 {
     ##module.id = ns(module$id)
     module.id = module$id
+    if(!is.null(ns)) module.id <- ns(module.id)    
     if(!is.null(module$outputFunc)) outputFunc = module$outputFunc
     if(!is.character(outputFunc)) outputFunc = as.character(quote(outputFunc))
     outputFunc2 <- paste0(outputFunc,"('",module.id,"', height='",
