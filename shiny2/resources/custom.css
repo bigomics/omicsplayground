@@ -1,0 +1,172 @@
+body {
+    // font-family: Arial;
+    font-size: 14px;
+    font-weight: 400;    
+}
+
+.tooltip-inner {
+  background-color: #e0e0e0FF; 
+  color: #3f3f3fFF; 
+  border: 1px solid #9f9f9fFF;
+  opacity: 1;
+}
+
+.tooltip-arrow-inner {
+  background-color: #e0e0e0;
+  color: #e0e0e0;
+  border: 1px solid #e0e0e0;
+}
+
+code { 
+  color: #1f1f1fFF;
+  background-color: #F9F9F9FF;
+  font-weight: 400;
+}
+
+.sidebar {
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.shiny-output-error-validation {
+        color: red;
+}
+
+.form-control {
+    font-size: 12px;
+    padding: 3px 3px;
+    line-height: '70%';
+}
+
+.gene-info-output {
+    font-size: 0.9em;
+    background-color: #dde6f0BB;
+    padding: 10px 10px 10px 10px;    
+}
+
+.action-text #sig_example1 #sig_example2 #sig_example3 {
+    font-size: 0.9em;
+    color: #2244AA;
+    background-color: transparent;
+    border-style: none;
+    padding: 0
+}
+
+
+@keyframes blinking {
+    0%{
+	background-color: #1967be;	
+        border: #2244AA;
+    }
+    50%{
+        background-color: #2244AA;
+	border: #1967be;		
+    }
+    100%{
+	background-color: #1967be;
+        border: #2244AA;	
+    }
+}
+
+.btn {
+    color: white;
+    background-color: #0067c4AA;
+    padding: 8px 15px;
+    border-radius: 3px;
+//    animation: blinking 3s infinite;
+}
+
+.btn:hover {
+    background-color: #0067c4FF;
+}
+
+    
+.datatables {
+    font-size: 12px; line-height: '70%';
+}
+
+.shiny-input-panel {
+//    margin: -5px 0px -10px 0px;
+//    padding: -10px -10px -10px -10px;
+    font-color: #888;
+    font-size: 0.8em;
+}
+
+.shiny-flow-layout {
+    margin: 0px 0px -17px 0px;
+    font-color: #888;
+    font-size: 0.9em;
+}
+
+.bg-cover-image {
+    background-color: #dde6f0;
+    background-color: #fff;
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    padding: 3rem 1rem;
+    text-align: center;
+    font-size: 0.8em;
+}
+
+#loading-content {
+  position: absolute;
+  background: #000000;
+  opacity: 0.9;
+  z-index: 100;
+  left: 0;
+  right: 0;
+  height: 100%;
+  text-align: center;
+  color: #FFFFFF;
+}
+
+.fa-gear {
+    color: #DDDDDD;
+}
+
+.btn-circle-xs, .btn-circle-xs:hover {
+    background: #FFFFFF;
+    color: #DDDDDD;
+    border: 0px;
+}
+
+.dropdown-menu {
+    background: #EFEEEE;
+    font-size: 0.9em;
+}
+
+.module-label {
+    color: #AAA;
+    font-size: 17px;
+    font-weight: 500;
+    padding-right:8px;
+}
+
+.chart-wrapper .chart-notes {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.3em;
+}
+
+
+// villager-style spinner
+#plot-container {
+    position: relative;
+}
+#loading-spinner {    
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: -1;
+    margin-top: -33px;  /* half of the spinner's height */
+    margin-top: 150px;  /* half of the spinner's height */    
+    margin-left: -33px; /* half of the spinner's width */
+}
+#plot.recalculating {
+  z-index: -2;
+}

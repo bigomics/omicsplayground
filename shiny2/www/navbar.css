@@ -1,0 +1,288 @@
+:root {
+    --main-color:  #2780e3;
+    --hover-color: #1967be;
+    --dark-color:  rgb(10,60,100);
+    /* --canvas-color:rgba(240,248,255,20); */
+    --canvas-color:rgb(255,255,255);    
+    /*  --light-color: rgb(220, 235, 245); */
+    --light-color: #dde6f0;
+}
+
+body {
+    // font-family: Arial;
+    font-size: 14px;
+    font-weight: 400;    
+}
+
+.content {
+    min-height: 800px;
+    // background: var(--canvas-color);
+}
+
+/*
+.tab-pane {
+    background: white;
+    padding: 10px 10px;
+}
+*/
+
+
+/* space in innner tabpanes */
+.tabbable .tab-content {
+    /* margin: -12px -12px -12px -12px; */
+    padding-top: 25px; 
+}
+
+.nav-tabs {
+    padding: 0px;
+    margin: -10px -20px;
+}
+
+.nav-tabs>li.active {
+    border-top: 3px solid var(--main-color);
+    margin-top: -3px;
+}
+
+/* logo */
+#navbar-logo {
+    margin-left: -15px;
+    margin-top: -23px;
+}
+
+/* sidebar */
+.well {
+    background: var(--light-color);
+    border-radius: 0px;
+    font-size: 12px;
+    height: 840px;
+    margin: -20px 0px 0px -15px; 
+    padding: 30px 10px 30px 10px;
+}
+
+#datainfo {
+    background: #f8f8f8;
+    font-size: 12px;
+    padding: 20px 10px;
+    line-height: 1em;
+}
+
+
+/* upper navigation bar */
+
+.navbar-fixed-top {
+    z-index: 0;
+}
+
+.navbar-default {
+    color:rgb(220,220,220);
+    background: var(--main-color);
+}
+
+.navbar-default .navbar-nav>li>a:focus, .navbar-default .navbar-nav>li>a:hover {
+    background: var(--hover-color) !important;
+}
+
+.navbar .navbar-nav > .active > a {
+    background: var(--hover-color) !important;
+}
+
+
+/* tooltips */
+
+.tooltip-inner {
+  background-color: #e0e0e0FF; 
+  color: #3f3f3fFF; 
+  border: 1px solid #9f9f9fFF;
+  opacity: 1;
+}
+
+.tooltip-arrow-inner {
+  background-color: #e0e0e0;
+  color: #e0e0e0;
+  border: 1px solid #e0e0e0;
+}
+
+.code { 
+  color: #1f1f1fFF;
+  background-color: #F9F9F9FF;
+  font-weight: 400;
+}
+
+.gene-info-output {
+    font-size: 0.9em;
+    background-color: #dde6f0BB;
+    padding: 10px 10px 10px 10px;    
+}
+
+.action-text #sig_example1 #sig_example2 #sig_example3 {
+    font-size: 0.9em;
+    color: #2244AA;
+    background-color: transparent;
+    border-style: none;
+    padding: 0
+}
+
+.datatables {
+    font-size: 12px;
+    line-height: '70%';
+}
+
+.bg-cover-image {
+    background-color: #dde6f0;
+    background-color: #fff;
+}
+
+.btn-social-icon {
+    padding: 0px;
+    width:  28px;
+    height: 24px;
+}
+
+.fa-gear {
+    color: #DDDDDD;
+}
+
+.btn-circle-xs, .btn-circle-xs:hover {
+    background: #FFFFFF;
+    color: #DDDDDD;
+    border: 0px;
+}
+
+.dropdown-menu {
+    background: #EFEEEE;
+    font-size: 0.9em;
+}
+
+.module-label {
+    color: #AAA;
+    font-size: 17px;
+    font-weight: 500;
+    padding-right:8px;
+}
+
+.chart-wrapper .chart-notes {
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.3em;
+}
+
+.caption {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.1em;
+}
+
+/* gene input area in signature module */
+.form-control {
+    font-size: 11px !important;
+    line-height: 1.0 !important;
+    padding: 3px 3px;
+}
+
+
+.current-data {
+    position: fixed;
+    font-weight: 200;
+    font-size: 20px;
+    color: rgba(255,255,255,100);
+    top: 10px;
+    right: 30px;
+    z-index: 9999;
+}
+
+
+/* ------------------- buttons -------------- */
+
+#social-buttons {
+    position: fixed;
+    font-weight: 300;
+    font-size: 32px;
+    color: #FFFFFF88;
+    bottom: 10px;
+    left: 10px;
+    z-index: 9999;
+}
+
+
+.radioGroupButtons {
+    margin-top: -3px;
+    margin-bottom: -3px;
+}
+
+/*
+
+.btn, .btn-default {
+    color: white;
+    background-color: #0067c4AA;
+    background-color: #4488dd;
+    padding: 8px 15px;
+    margin: 0px;
+    border-radius: 3px;
+}
+
+.btn:hover, .btn:focus, .btn:active, .btn:active:hover {
+    color: white;
+    background-color: #0067c4;
+}
+
+.btn-default:active, .btn-default:hover, .btn-default:focus, .btn-default.active, .btn-default.active:hover, .btn-default.active:focus, .btn-default.active:active, .open > .dropdown-toggle.btn-default {
+    color: white;
+    background-color: #0067c4;
+}
+
+#action_play {
+    color: black;
+    background-color: #ffdd00;
+    color: white;
+    background-color: #e45c00;
+}
+#action_play:hover {
+    color: black;
+    background-color: #eecc00;
+    color: white;
+    background-color: #b44c00;    
+}
+*/
+
+
+/* ------------------- modal dialogs -------------- */
+#modal-splash {
+    background-color: #2c81e2;    
+}
+
+.modal-content {
+    border:0;
+}
+
+.modal-backdrop {
+    background-color: #000;
+    background-color: #FFF;
+}
+
+.modal-backdrop.in {
+    opacity: 0.5;
+    opacity: 0.85;
+}
+
+.bg-cover-image {
+  background-color: #fff;
+}
+
+.footer{
+  position:absolute;
+  right:0;
+  left:0;
+  bottom:0;
+  padding:3rem 1rem;
+  text-align:center;
+  font-size:0.8em;
+}
+
+
+.action-text #sig_example1 #sig_example2 #sig_example3 {
+    font-size: 0.9em;
+    color: var(--dark-color);
+    background-color: var(--light-color);
+    border-style: none;
+    padding: 0
+}
