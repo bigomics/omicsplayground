@@ -10,7 +10,7 @@ SignatureUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillRow(
         flex = c(1.5,0.05,1),
-        height = 750,
+        height = 780,
         tabsetPanel(
             tabPanel("Enrichment",uiOutput(ns("sig_enplots_UI"))),
             tabPanel("Overlap/similarity",uiOutput(ns("sig_overlapAnalysis_UI"))),
@@ -23,17 +23,21 @@ SignatureUI <- function(id) {
     )
 }
 
-SignatureModule <- function(input, output, session, inputData)
+SignatureModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
 
+    fullH = 780   ## full height of page
+
+    inputData <- env[["load"]][["inputData"]]
+    usermode  <- env[["load"]][["usermode"]]
+    
     description = "<b>Signature Analysis.</b> Users can test their gene signature by
 calculating an enrichment score. Upload your own gene list, or select
 a contrast which then takes the top differentially expressed genes as
 signature."
     output$description <- renderUI(HTML(description))
-
-
+    
 sig_infotext =
     "In the <strong>Signature Analysis module</strong>, users can test their gene signature by calculating an enrichment score. They can use a sample list provided on the platform or upload their own gene list. Instead of a short list, a profile can also be selected, which is a complete gene list resulted from one of the contrasts in the analysis.
 
@@ -56,27 +60,39 @@ sig_infotext =
     CELL.CYCLE.GENES = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP
 5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA"
     style0 = "font-size: 0.9em; color: #24A; background-color: #dde6f0; border-style: none; padding:0"
+
+
+    CMAPSETS <- c(sort(unique(gsub("\\].*","]",colnames(PROFILES$FC)))))
+    CMAPSETS <- c("<this dataset>",CMAPSETS,"<all>")
     
     output$inputsUI <- renderUI({
         ui <- tagList(
             tipify( actionLink(ns("sig_info"), "Info", icon = icon("info-circle")),
                    "Show more information about this module"),
-            hr(), br(), 
-            conditionalPanel(
-                ##condition="input.main_usermode=='PRO'",
-                condition="output.main_usermode=='PRO' || output.main_usermode=='DEV'",
-                tagList(
-                    tipify(selectInput(ns("sig_type"),label="Signature type:",choices=c("<custom>","contrast","hallmark","KEGG")),
-                           "Specify the type of signature of an interest. Users can choose between custom signature, a contrast profile, or some predefined gene sets including Hallmark and KEGG pathways.", placement="top", options = list(container = "body")),
-                    conditionalPanel(
-                        "input.sig_type != '<custom>'",
-                        tipify(selectizeInput(ns("sig_feature"),"Signature:", choices="<custom>",
-                                              selected="<custom>"),
-                               "Select a specific signature group.", placement="top",
-                               options = list(container = "body"))
-                    ))
-            ),
-            br(),br(),
+            hr(), br()
+        )
+
+        ##conditionalPanel(
+        ##condition="input.main_usermode=='PRO'",
+        ##condition="output.main_usermode=='PRO' || output.main_usermode=='DEV'",
+        if(usermode()!="BASIC") {
+            uix = tagList(
+                tipify(selectInput(ns("sig_type"),label="Signature type:",
+                                   choices=c("<custom>","contrast","hallmark","KEGG")),
+                       "Specify the type of signature of an interest. Users can choose between custom signature, a contrast profile, or some predefined gene sets including Hallmark and KEGG pathways.",
+                       placement="top", options = list(container = "body")),
+                ##conditionalPanel(
+                ##    "input['sig-sig_type'] != '<custom>'",
+                tipify(selectInput(ns("sig_feature"),"Signature:",
+                                   choices="<custom>", selected="<custom>"),
+                       "Select a specific signature group.", placement="top",
+                       options = list(container = "body"))
+                ##)
+            )
+            ui = c(ui, uix)
+        }
+
+        uix <- tagList(
             tipify(textAreaInput(ns("sig_genelistUP"), "Genes:", value = IMMCHECK.GENES,
                                  rows=10, placeholder="Paste your gene list"),
                    "Paste a list of signature genes.", placement="top", options = list(container = "body")),
@@ -86,30 +102,33 @@ sig_infotext =
             tipify(actionButton(ns("sig_example1"),"[immune_chkpt] ", style=style0),
                    "Use the list of genes involved in immune checkpoint as a signature."),
             tipify(actionButton(ns("sig_example3"),"[cell_cycle] ", style=style0),
-                   "Use the list of genes involved in cell cycle as a signature."),
-            br(),br(),
-            conditionalPanel(
-                ##condition="input.main_usermode=='PRO'",
-                condition="output.main_usermode=='PRO' || output.main_usermode=='DEV'",
-                tagList(
-                    tipify( selectInput(ns('cmp_querydataset'),"Query dataset:", choices=NULL, multiple=FALSE),
-                           "The query dataset to which the enrichment test should be applied. Enrichment of the selected signature will be calculated to all available contrast profiless in this query dataset.", 
-                           placement="top", options = list(container = "body"))
-                )
-            )
+                   "Use the list of genes involved in cell cycle as a signature.")
         )
+        ui = c(ui, uix)
 
-        if(DEV.VERSION) {
+        if(usermode()!="BASIC") {        
+            uix = tagList(
+                br(),
+                tipify( selectInput(ns('cmp_querydataset'),"Query dataset:",
+                                    choices=CMAPSETS, multiple=FALSE),
+                       "The query dataset to which the enrichment test should be applied. Enrichment of the selected signature will be calculated to all available contrast profiless in this query dataset.", 
+                       placement="top", options = list(container = "body"))
+            )
+            ui = c(ui, uix)
+        }
+        if(usermode()!="BASIC" && DEV.VERSION) {
             uix <- tagList(
                 br(),br(),hr(),h6("Developer options:"),
-                radioButtons('sig_ssstats','ss-stats:',c("rho","gsva","grp.gsva","rho+gsva","rho+grp.gsva"),
+                radioButtons(ns('sig_ssstats'),'ss-stats:',
+                             c("rho","gsva","grp.gsva","rho+gsva","rho+grp.gsva"),
                              inline=TRUE)
             )
             ui <- c(ui, uix)
         }
         ui
     })
-
+    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
@@ -147,22 +166,22 @@ sig_infotext =
 
         if(sig_type=="contrast") {
             contr <- sort(names(ngs$gx.meta$meta))
-            updateSelectizeInput(session, "sig_feature", choices=contr, selected=contr[1])
+            updateSelectInput(session, "sig_feature", choices=contr, selected=contr[1])
         } else if(sig_type=="hallmark") {
             ## collection
             gsets <- sort(grep("HALLMARK",names(GSETS),value=TRUE))
-            updateSelectizeInput(session, "sig_feature", choices=gsets, selected=gsets[1])
+            updateSelectInput(session, "sig_feature", choices=gsets, selected=gsets[1])
         } else if(sig_type=="KEGG") {
             ## collection
             gsets <- sort(grep("KEGG",names(GSETS),value=TRUE))
-            updateSelectizeInput(session, "sig_feature", choices=gsets, selected=gsets[1])
+            updateSelectInput(session, "sig_feature", choices=gsets, selected=gsets[1])
         } else if(sig_type=="geneset") {
             ## all genesets... this is a bit too much for selectInput (DO NOT USE!!)
             gsets <- sort(names(GSETS))
-            updateSelectizeInput(session, "sig_feature", choices=gsets, selected=gsets[1])
+            updateSelectInput(session, "sig_feature", choices=gsets, selected=gsets[1])
         } else {
             ## custom
-            updateSelectizeInput(session, "sig_feature", choices="<custom>", selected="<custom>")
+            updateSelectInput(session, "sig_feature", choices="<custom>", selected="<custom>")
         }
     })
 
@@ -555,14 +574,6 @@ sig_infotext =
         }
     })
 
-    observe({
-        cmapsets <- c(sort(unique(gsub("\\].*","]",colnames(PROFILES$FC)))))
-        cmapsets <- c("<this dataset>",cmapsets,"<all>")
-        ##updateSelectInput(session, "cmp_cmapsets1", choices=cmapsets, selected="<this>")
-        updateSelectInput(session, "cmp_querydataset", choices=cmapsets)
-    })
-
-
     sig_enplots_info = "The <strong>Enrichment</strong> tab performs the enrichment analysis of the gene list against all contrasts by running the GSEA algorithm and plots enrichment outputs. Enrichment statistics can be found in the corresponding table"
     
     sig_enplots_caption = "<b>Enrichment plots.</b> This figure shows the enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature."
@@ -579,7 +590,7 @@ sig_infotext =
 
     output$sig_enplots_UI <- renderUI({
         fillCol(
-            height = 750,
+            height = fullH,
             flex = c(1, NA),
             moduleWidget(sig_enplots.module, ns=ns),
             div(HTML(sig_enplots_caption), class="caption")
@@ -827,7 +838,7 @@ sig_infotext =
     output$sig_overlapAnalysis_UI <- renderUI({
         fillCol(
             flex = c(1,0.04,1,0.08,NA),
-            height = 750,
+            height = fullH,
             moduleWidget(sig_overlapScorePlot.module, outputFunc="plotlyOutput", ns=ns),
             br(),
             moduleWidget(sig_overlapTable.module, outputFunc="dataTableOutput", ns=ns),
@@ -953,7 +964,7 @@ sig_infotext =
     output$sig_markers_UI <- renderUI({
         fillCol(
             flex = c(1,0.04,NA),
-            height = 750,
+            height = fullH,
             moduleWidget(sig_markers.module, ns=ns),
             br(),
             div(HTML(sig_overlap_caption), class="caption")
@@ -1124,7 +1135,7 @@ sig_infotext =
     output$sig_enrichmentTables_UI <- renderUI({
         fillCol(
             flex = c(1.0,0.04,1.1,0.04,NA), ## width = 600,
-            height = 750,
+            height = fullH,
             moduleWidget(sig_enrichmentByContrastTable_module,
                          ns=ns, outputFunc="dataTableOutput"),
             br(),

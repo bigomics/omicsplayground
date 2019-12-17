@@ -24,10 +24,16 @@ IntersectionUI <- function(id) {
     )
 }
 
-IntersectionModule <- function(input, output, session, inputData)
+IntersectionModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
-
+    rowH = 780       # row height of panel 
+    
+    ## reactive functions from shared environment
+    inputData <- env[["load"]][["inputData"]]
+    selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
+    selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
+    
     description = "<b>Intersection analysis</b>. Compare experiments by intersecting
 their signature genes. The main goal is to identify contrasts showing
 similar profiles. Find genes that are commonly up/down regulated
@@ -151,11 +157,11 @@ between two contrasts."
     ##========================= REACTIVE FUNCTIONS ===================================
     ##================================================================================
 
-    selected_gxmethods <- reactive({
-        sel <- SEL.GXMETHODS()
-        req(sel)
-        sel
-    })
+    ## selected_gxmethods <- reactive({
+    ##     ##sel <- SEL.GXMETHODS()
+    ##     req(sel)
+    ##     sel
+    ## })
     
     cmpGetFoldChangeMatrix <- reactive({
         ## 
@@ -654,7 +660,7 @@ between two contrasts."
     output$cmp_scatterPlotMatrix_UI <- renderUI({
         fillCol(
             ## id = ns("expr_topgenes"),
-            height = 750,
+            height = rowH,
             flex=c(1), ##height = 370,
             moduleWidget(cmp_scatterPlotMatrix_module, height=640,
                          outputFunc="plotlyOutput", ns=ns)
@@ -841,7 +847,7 @@ between two contrasts."
     output$cmp_ctheatmap_UI <- renderUI({
         fillCol(
             ## id = ns("expr_topgenes"),
-            height = 750,
+            height = rowH,
             flex=c(1), ##height = 370,
             moduleWidget(cmp_ctheatmap_module, height=650,
                          outputFunc="plotlyOutput", ns=ns)
@@ -1081,7 +1087,7 @@ between two contrasts."
 
     output$cmp_connectivitymap_UI <- renderUI({
         fillCol(
-            height = 750,
+            height = rowH,
             moduleWidget(cmp_connectivitymap.module, outputFunc="scatterD3Output", ns=ns)
         )
     })
@@ -1167,7 +1173,7 @@ between two contrasts."
                       options=list(
                           ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = TRUE, ## scrollY = TRUE,
-                          scrollY = 150, scroller=TRUE, deferRender=TRUE,
+                          scrollY = 180, scroller=TRUE, deferRender=TRUE,
                           dom = 'lfrtip'                      
                       )  ## end of options.list 
                       ) %>%
@@ -1220,7 +1226,7 @@ between two contrasts."
     
     output$cmp_venndiagram_UI <- renderUI({
         fillCol(
-            height = 750,
+            height = rowH,
             flex = c(1, NA, 0.8, 0.1, NA),
             moduleWidget(cmp_venndiagram_module, ns=ns),            
             ##cmp_venntable_module$buttons,
@@ -1445,7 +1451,7 @@ between two contrasts."
     
     output$cmp_metavolcano_UI <- renderUI({
         fillCol(
-            height = 750,
+            height = rowH,
             flex = c(1, 1, NA),
             moduleWidget(cmp_volcano1_module, ns=ns),
             moduleWidget(cmp_fcbarplot_module, ns=ns),

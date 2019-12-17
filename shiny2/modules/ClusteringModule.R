@@ -9,10 +9,10 @@ ClusteringInputs <- function(id) {
 ClusteringUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillRow(
-        flex = c(1.3,0.05,1),
-        height = 750,
+        flex = c(1.3,0.15,1),
+        height = 780,
         tabsetPanel(
-            tabPanel("Heatmap",uiOutput(ns("hm_heatmapUI"))),
+            tabPanel("Heatmap",uiOutput(ns("hm_heatmap_UI"))),
             tabPanel("PCA/tSNE",uiOutput(ns("hm_pcaUI"))),
             tabPanel("Parallel",uiOutput(ns("hm_parcoordUI")))
         ),
@@ -26,10 +26,12 @@ ClusteringUI <- function(id) {
 }
 
 
-ClusteringModule <- function(input, output, session, inputData)
+ClusteringModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
-
+    inputData <- env[["load"]][["inputData"]]
+    fullH = 780  ## full height of page
+    
     description = "<b>Cluster Analysis.</b> Discover clusters of similar genes or samples using unsupervised machine learning."
     output$description <- renderUI(HTML(description))
     
@@ -539,11 +541,14 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                 ),
         br(),br(),br(),br()
     )
+    
+    hm_splitmap_caption = "<b>Clustered heatmap.</b> Heatmap showing gene expression sorted by 2-way hierarchical clustering. Red corresponds to overexpression, blue to underexpression of the gene. At the same time, gene clusters are functionally annotated in the 'Annotate clusters' panel on the right."
 
-    hm_splitmap_caption <- reactive({
-        text1 = "Heatmap showing gene expression sorted by 2-way hierarchical clustering. Red corresponds to overexpression, blue to underexpression of the gene. At the same time, gene clusters are functionally annotated in the 'Annotate clusters' panel on the right."
+    hm_splitmap_captionDN <- reactive({
+        text1 = "<b>Clustered heatmap.</b> Heatmap showing gene expression sorted by 2-way hierarchical clustering. Red corresponds to overexpression, blue to underexpression of the gene. At the same time, gene clusters are functionally annotated in the 'Annotate clusters' panel on the right."
         return(text1)
     })
+    
 
     hm_splitmap.switchRENDER <- reactive({
         cat("<module_intersect::hm_splitmap.switchRENDER\n")
@@ -561,10 +566,11 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         "hm_splitmap", func=hm_splitmap.switchRENDER, ns=ns,
         plotlib="generic", renderFunc="renderUI",
         ## download.fmt = c("pdf","html"),
-        info.text = hm_splitmap_text,
         options = hm_splitmap_opts,
         pdf.width=10, pdf.height=8, info.width="350px",
-        title="Clustered Heatmap"
+        title="Clustered Heatmap",
+        info.text = hm_splitmap_text,
+        caption = hm_splitmap_caption
     )
     output <- attachModule(output, hm_splitmap_module)
 
@@ -615,17 +621,15 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
     ## > **Clustered heatmap.** `r renderUI(HTML(hm_splitmap_caption()))`
 
-    output$hm_heatmapUI <- renderUI({
+    output$hm_heatmap_UI <- renderUI({
         fillCol(
             flex = c(1),
-            height = 800,
+            height = fullH,
             moduleWidget(hm_splitmap_module, outputFunc="uiOutput",
-                         ns=ns, height=800)
+                         ns=ns, height=fullH)
         )
     })
-    outputOptions(output, "hm_heatmapUI", suspendWhenHidden=FALSE) ## important!!!
-    
-    caption1 = "**Clustered heatmap.** Heatmap showing gene expression sorted by 2-way hierarchical clustering. Red corresponds to overexpression, blue to underexpression of the gene. At the same time, gene clusters are functionally annotated in the 'Annotate clusters' panel on the right."
+    outputOptions(output, "hm_heatmap_UI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##================================ PCA/tSNE ======================================
@@ -913,16 +917,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                placement="right", options = list(container = "body"))
     )
 
-    hm_PCAplot_module <- plotModule(
-        id="hm_PCAplot", func=hm_PCAplot.RENDER, ns=ns,
-        plotlib = "plotly", info.text = hm_PCAplot_text,
-        options = hm_PCAplot_opts,
-        pdf.width=8, pdf.height=8,
-        title="PCA/tSNE plot"
-    )
-    output <- attachModule(output, hm_PCAplot_module)
-    ## outputOptions(output, "hm_PCAplot", suspendWhenHidden=FALSE) ## important!!!
-    
     hm_PCAplot_caption <- reactive({
         text1 = "The plot visualizes the similarity in expression of samples as a scatterplot in reduced dimension (2D or 3D). Samples that are similar are clustered near to each other, while samples with different expression are positioned farther away. Groups of samples with similar profiles will appear as <i>clusters</i> in the plot."
         if(input$hmpca.colvar!="<none>") {
@@ -933,15 +927,25 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         }
         return(HTML(text1))
     })
-    ## > **PCA/tSNE plot.** `r renderUI(hm_PCAplot_caption())`
 
-    pca_caption = "**PCA/tSNE plot.** The plot visualizes the similarity in expression of samples as a scatterplot in reduced dimension (2D or 3D). Samples that are similar are clustered near to each other, while samples
- with different expression are positioned farther away. Groups of samples with similar profiles will appear as <i>clusters</i> in the plot."
+    pca_caption_static = "<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of samples as a scatterplot in reduced dimension (2D or 3D). Samples that are similar are clustered near to each other, while samples with different expression are positioned farther away. Groups of samples with similar profiles will appear as <i>clusters</i> in the plot."
+
+    hm_PCAplot_module <- plotModule(
+        id="hm_PCAplot", func=hm_PCAplot.RENDER, ns=ns,
+        plotlib = "plotly", 
+        options = hm_PCAplot_opts,
+        pdf.width=8, pdf.height=8,
+        title="PCA/tSNE plot",
+        info.text = hm_PCAplot_text,
+        caption = pca_caption_static
+    )
+    output <- attachModule(output, hm_PCAplot_module)
+    ## outputOptions(output, "hm_PCAplot", suspendWhenHidden=FALSE) ## important!!!    
 
     output$hm_pcaUI <- renderUI({
         fillCol(
             flex = c(1),
-            height = 800,
+            height = fullH,
             moduleWidget(hm_PCAplot_module, outputFunc="plotlyOutput", ns=ns)
         )
     })
@@ -1085,15 +1089,17 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     hm_parcoord_text = tagsub("The <strong>Parallel Coordinates</strong> panel
 displays the expression levels of selected genes across all conditions in the analysis. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap.")
 
+    
     hm_parcoord_module <- plotModule(
         "hm_parcoord", func=hm_parcoord.RENDER, ns=ns,
         plotlib="plotly", ## renderFunc="renderPlotly",
         ## download.fmt = c("png","pdf","html"),  ## PNG & PDF do not work!!! 
         download.fmt = c("html"),
-        info.text = hm_parcoord_text,
         options = hm_parcoord_opts,
         pdf.width=10, pdf.height=6, info.width="350px",
-        title="Parallel coordinates"
+        title="Parallel coordinates", label="a",
+        info.text = hm_parcoord_text
+        ## caption = hm_parcoord_text,
     )
     output <- attachModule(output, hm_parcoord_module)
 
@@ -1123,19 +1129,20 @@ displays the expression levels of selected genes across all conditions in the an
 
     hm_parcoord_table_info = "In this table, users can check mean expression values of features across the conditions for the selected genes."
 
+    parcoord_caption = "<b>Parallel Coordinates plot.</b> <b>(a)</b>The Parallel Coordinates plot displays the expression levels of selected genes across all conditions. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap. <b>(b)</b> Average expression of selected genes across conditions."
+    
     hm_parcoord_table_module <- tableModule(
         id = "parcoord_table", func = hm_parcoord_table.RENDER, ns=ns,
         info.text = hm_parcoord_table_info,
-        title="Selected genes", label="b"
+        title="Selected genes", label="b",
+        caption = parcoord_caption
     )
     output <- attachModule(output, hm_parcoord_table_module)
 
-    pc_caption = "**Parallel Coordinates plot.** The Parallel Coordinates plot displays the expression levels of selected genes across all conditions. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap."
-
     output$hm_parcoordUI <- renderUI({
         fillCol(
-            flex = c(1.7,0.05,1),
-            height = 800,
+            flex = c(1.2,0.05,1),
+            height = fullH,
             moduleWidget(hm_parcoord_module, outputFunc="plotlyOutput", ns=ns),
             br(),
             moduleWidget(hm_parcoord_table_module, outputFunc="dataTableOutput", ns=ns)
@@ -1356,10 +1363,10 @@ displays the expression levels of selected genes across all conditions in the an
         ##func=clustannot_plots.RENDER, plotlib = "base",
         func=clustannot_plots.PLOTLY, plotlib="plotly",
         download.fmt = c("png","pdf","html"),
-        info.text = clustannot_plots_text,
         options = clustannot_plots_opts,
         pdf.width=8, pdf.height=5, res=80,
-        title="Functional annotation of clusters", label="a"
+        title="Functional annotation of clusters", label="a",
+        info.text = clustannot_plots_text        
     )
     output <- attachModule(output, clustannot_plots_module)
 
@@ -1395,19 +1402,22 @@ displays the expression levels of selected genes across all conditions in the an
 
     clustannot_table_info_text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
 
+
+    clustannot_caption = "<b>Cluster annotation.</b> Functional annotation of the gene clusters as defined by the hierchical clustered heatmap. <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster. Length of the bar corresponds to its average correlation. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
+
     clustannot_table_module <- tableModule(
-        id = "clustannot_table", func = clustannot_table.RENDER,
+        id = "clustannot_table", ns=ns,
+        func = clustannot_table.RENDER,
         info.text = clustannot_table_info_text,
-        title="Annotation scores", label="b"
+        title="Annotation scores", label="b",
+        caption = clustannot_caption
     )
     output <- attachModule(output, clustannot_table_module)
 
-    clustannot_caption = "**Cluster annotation.** Functional annotation for the gene clusters using **`r renderText(input$xann.refset)`**. **(a)** Top ranked annotation features (by correlation) for each gene cluster. Length of the bar corresponds to its average correlation. **(b)** Table of average correlation values of annotation features, for each gene cluster."
-
     output$hm_annotateUI <- renderUI({
         fillCol(
-            flex = c(1.7,0.05,1),
-            height = 800,
+            flex = c(1.2,0.05,1),
+            height = fullH,
             moduleWidget(clustannot_plots_module, outputFunc="plotlyOutput", ns=ns),
             br(),
             moduleWidget(clustannot_table_module, outputFunc="dataTableOutput", ns=ns)
@@ -1490,24 +1500,27 @@ displays the expression levels of selected genes across all conditions in the an
         radioButtons(ns('clust_phenoplot_labelmode'),"Label",c("groups","legend"),inline=TRUE)
     )
 
+    clust_phenoplot_info = tagsub("<strong>Phenotype distribution.</strong> This figure visualizes the distribution of the available phenotype data. You can choose to put the group labels in the figure or as separate legend in the {Label} setting, in the plot {{settings}}")
+    
+    clust_phenoplot_caption = "<b>Phenotype distribution.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
+
     clust_phenoplot.module <- plotModule(
         "clust_phenoplot", ns=ns,
         func = clust_phenoplot.RENDER, ## plotlib="base",
-        info.text = tagsub("<strong>Phenotype distribution.</strong> This figure visualizes the distribution of the available phenotype data. You can choose to put the group labels in the figure or as separate legend in the {Label} setting, in the plot {{settings}}"),
         options = clust_phenoplot.opts,
-        pdf.width=6, pdf.height=9, res=85
+        pdf.width=6, pdf.height=9, res=85,
+        info.text = clust_phenoplot_info,
+        caption = clust_phenoplot_caption
     )
     output <- attachModule(output, clust_phenoplot.module)
 
     output$hm_phenoplotUI <- renderUI({
         fillCol(
             flex = c(1),
-            height = 800,
+            height = fullH,
             moduleWidget(clust_phenoplot.module, ns=ns)
         )
     })
-    
-    phenoplot_caption = "**Phenotype distribution.** The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
 
     ##================================================================================
     ## Feature ranking
@@ -1630,6 +1643,8 @@ displays the expression levels of selected genes across all conditions in the an
 
     clust_featureRank_info = "Ranked discriminant score for top feature sets. The plot ranks the discriminitive power of the feature set (genes) as a cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family/set) can explain the variance in the data the best. <p>Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner."
 
+    clust_featureRank_caption = "<b>Feature-set ranking.</b> Ranked discriminant score for top feature sets. The plot ranks the discriminative power of feature sets (or gene sets) as the cumulative discriminant score for all phenotype variables."
+
     clust_featureRank.opts =  tagList(
         tipify( radioButtons( ns('clust_featureRank_method'),'Method:',
                              choices=c("p-value","correlation","meta"),
@@ -1641,23 +1656,22 @@ displays the expression levels of selected genes across all conditions in the an
     clust_featureRank_module <- plotModule(
         title="Feature-set ranking", ns=ns,
         id="clust_featureRank", func=clust_featureRank.RENDER,
-        info.text = clust_featureRank_info,
         options = clust_featureRank.opts,
-        pdf.width=8, pdf.height=10, res=72
+        pdf.width=8, pdf.height=10, res=72,
+        info.text = clust_featureRank_info,
+        caption = clust_featureRank_caption
     )
     output <- attachModule(output, clust_featureRank_module)
-
-    featureranking_caption = "**Feature-set ranking.** Ranked discriminant score for top feature sets. The plot ranks the discriminative power of feature sets (or gene sets) as the cumulative discriminant score for all phenotype variables."
 
     require(shinycssloaders)
     fillCol(
         moduleWidget(clust_featureRank_module, ns=ns)
     )
-
+    
     output$hm_featurerankUI <- renderUI({
         fillCol(
             flex = c(1),
-            height = 800,
+            height = fullH,
             moduleWidget(clust_featureRank_module, ns=ns)
         )
     })
