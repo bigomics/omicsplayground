@@ -9,9 +9,9 @@ library(waiter)
  
 cat("===================== INIT =======================\n")
 
-RDIR="../R/"
-FILES="../lib/"
-PGX.DIR="../data/"
+RDIR="../R"
+FILES="../lib"
+PGX.DIR="../data"
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 
 ##load("../data/geiger2016-arginine.pgx"); ngs=pgx.initialize(ngs)    
