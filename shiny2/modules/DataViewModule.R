@@ -25,9 +25,9 @@ DataViewModule <- function(input, output, session, env)
     ns <- session$ns ## NAMESPACE
     inputData <- env[["load"]][["inputData"]]
     
-    rowH = 350  ## row height of panels
-    imgH = 330  ## height of images
-    fullH = 720 ## full height of panel
+    rowH = 360  ## row height of panels
+    imgH = 320  ## height of images
+    fullH = 760 ## full height of panel
     tabH = 600  ## height of tables
     
     description = "<b>DataView.</b> Information and descriptive statistics to quickly lookup a gene, check the total counts, or view the data tables."
@@ -716,7 +716,7 @@ DataViewModule <- function(input, output, session, env)
     output$plotsUI <- renderUI({
         fillCol(
             height = fullH,
-            flex = c(1,1,NA),
+            flex = c(1,0.2,1,0.1,NA),
             fillRow( 
                 flex = c(1,1,1,1), id = "data_genePlots_row1",
                 height = rowH, ## width=1600, 
@@ -725,6 +725,7 @@ DataViewModule <- function(input, output, session, env)
                 moduleWidget(data_genePlots_correlationplot_module, ns=ns, height=imgH),
                 moduleWidget(data_genePlots_averageRankPlot_module, ns=ns, height=imgH)
             ),
+            br(),
             fillRow( 
                 flex = c(1,1.4,1.6), id = "data_genePlots_row2",
                 height = rowH, ## width=1600, 
@@ -736,6 +737,7 @@ DataViewModule <- function(input, output, session, env)
                 moduleWidget(data_corplot_module, ns=ns, height=imgH),
                 moduleWidget(data_tissueplot_module, ns=ns, height=imgH)
             ),
+            br(),
             div(HTML(dataview_caption1), class="caption")
         )
     })

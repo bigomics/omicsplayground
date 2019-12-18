@@ -23,7 +23,7 @@ LoadingUI <- function(id) {
     )
 }
 
-LoadingModule <- function(input, output, session)
+LoadingModule <- function(input, output, session, hideUserMode=FALSE)
 {
     ns <- session$ns ## NAMESPACE
     
@@ -91,27 +91,26 @@ LoadingModule <- function(input, output, session)
 
     USERLEVELS = c("BASIC","PRO")
     ## if(DEV.VERSION) USERLEVELS = c("BASIC","PRO","DEV")
-    USERMODE <- reactiveVal( factor("BASIC", levels=USERLEVELS) )
-    output$main_usermode <- renderText({ as.character(USERMODE()) })
-    outputOptions(output, "main_usermode", suspendWhenHidden=FALSE)
+    USERMODE <- reactiveVal( factor("BASIC",levels=USERLEVELS) )
 
     output$inputsUI <- renderUI({
+
+        usermodeUI <- tipify(radioGroupButtons(
+            inputId = ns("main_usermode"),
+            label = "User mode:",
+            choices = USERLEVELS,
+            selected = "BASIC",
+            status = "warning",
+            checkIcon = list(yes = icon("ok", lib = "glyphicon"))),
+            usermode_infotip, placement="bottom", options = list(container="body")
+            )
+        
+        if(hideUserMode) usermodeUI <- NULL
+        
         ui <- tagList(
-            div( id='usermode-button',
-                tipify(radioGroupButtons(
-                    inputId = ns("main_usermode"),
-                    label = "User mode:",
-                    choices = USERLEVELS,
-                    ##choiceNames = toupper(USERLEVELS),
-                    ##choiceValues = USERLEVELS,        
-                    selected = "BASIC",
-                    status = "warning",
-                    checkIcon = list(yes = icon("ok", lib = "glyphicon"))),
-                    usermode_infotip, placement="bottom", options = list(container="body")
-                    )
-                ),
+            usermodeUI,
             br(),br(),br(),
-            p("Dataset info:"),
+            p(strong("Dataset info:")),
             div( htmlOutput(ns("dataset_info")), id="datainfo"),
             br(),
             tipify(actionButton(ns("loadbutton"),label="Load dataset"),
@@ -124,8 +123,6 @@ LoadingModule <- function(input, output, session)
     output$dataset_info <- renderText({
         sec <- currentSection()
         inf <- selectedDataSetInfo()
-        ## cat("[dataset_info] length.inf=",length(inf),"\n")
-        ## cat("[dataset_info] current.section=",sec,"\n")
         inf["conditions"] <- gsub("[,]"," ",inf["conditions"])
         if(sec=="upload-data") {
             HTML(paste("<p>Please upload dataset<br>"))
@@ -269,8 +266,7 @@ LoadingModule <- function(input, output, session)
         } else {
             removeModal()
         }    
-        ## shinyjs::click("main_usermode")
-        
+
     })
 
     selectedDataSetInfo <- reactive({
@@ -1228,12 +1224,10 @@ LoadingModule <- function(input, output, session)
     output$upload_datasets <- renderTable({
         uploadedDatasetsTable()
     })
-
-    
-    
+       
     res <- list(
         inputData = inputData,
-        usermode = reactive(input$main_usermode)
+        usermode = reactive({ USERMODE() })
     )
     return(res)
 }
