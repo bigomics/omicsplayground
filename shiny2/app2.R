@@ -102,23 +102,24 @@ ui = dashboardPagePlus(
             span(class = "logo-lg", "Omics Playground v2"), 
             tags$img(src="bigomics-logo-white-32px.png")),
         enable_rightsidebar = TRUE,
-        rightSidebarIcon = "bars",
-        ## items in the top menu aligned left:
-        left_menu = tagList(
-            dropdownButton(
-                inputId="file-menu", ## 
-                label="File", icon=NULL, circle=FALSE,
-                actionLink(inputId="file_upload", label="Upload"),
-                actionLink(inputId="file_load", label="Load"),
-                actionLink(inputId="file_save", label="Save")
-            ),
-            dropdownButton(
-                inputId="options-menu", ## 
-                label="Options", icon=NULL, circle=FALSE,
-                actionLink(inputId="option1", label="Option1"),
-                actionLink(inputId="option2", label="Option2")
-            )
-        )
+        rightSidebarIcon = "ellipsis-v",
+
+        ## ---------- items in the top menu aligned left:
+        ## left_menu = tagList(
+        ##     dropdownButton(
+        ##         inputId="file-menu", ## 
+        ##         label="File", icon=NULL, circle=FALSE,
+        ##         actionLink(inputId="file_upload", label="Upload"),
+        ##         actionLink(inputId="file_load", label="Load"),
+        ##         actionLink(inputId="file_save", label="Save")
+        ##     ),
+        ##     dropdownButton(
+        ##         inputId="options-menu", ## 
+        ##         label="Options", icon=NULL, circle=FALSE,
+        ##         actionLink(inputId="option1", label="Option1"),
+        ##         actionLink(inputId="option2", label="Option2")
+        ##     )
+        ## )
         ## dropdownMenu(
         ##     type = "notifications",
         ##     notificationItem("Today is a good day!"),

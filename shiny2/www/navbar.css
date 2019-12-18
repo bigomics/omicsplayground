@@ -190,10 +190,13 @@ body {
     line-height: 1.3em;
 }
 
+
 .caption {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 400;
     line-height: 1.1em;
+    position: relative;
+    bottom: -10px;
 }
 
 /* gene input area in signature module */

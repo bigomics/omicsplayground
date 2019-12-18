@@ -41,7 +41,7 @@ ExpressionModule <- function(input, output, session, env)
     ns <- session$ns ## NAMESPACE
     inputData <- env[["load"]][["inputData"]]
     
-    rowH = 340  ## row height of panels
+    rowH = 330  ## row height of panels
     imgH = 280  ## height of images
     tabH = 190  ## height of tables
     
