@@ -38,7 +38,7 @@ EnrichmentModule <- function(input, output, session, env)
     inputData <- env[["load"]][["inputData"]]
     selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
     
-    rowH = 340  ## row height of panels
+    rowH = 330  ## row height of panels
     imgH = 280  ## height of images
     tabH = 190  ## height of tables
 
