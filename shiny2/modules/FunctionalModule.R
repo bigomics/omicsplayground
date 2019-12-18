@@ -12,6 +12,7 @@ FunctionalUI <- function(id) {
         flex = c(1),
         height = 780,
         tabsetPanel(
+            id = ns("tabs"),
             tabPanel("KEGG",uiOutput(ns("kegg_analysis_UI"))),
             tabPanel("GO graph",uiOutput(ns("GO_analysis_UI"))),
             tabPanel("Drug CMap",uiOutput(ns("DSEA_analysis_UI"))),

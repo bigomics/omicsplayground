@@ -12,12 +12,14 @@ SignatureUI <- function(id) {
         flex = c(1.5,0.05,1),
         height = 780,
         tabsetPanel(
+            id = ns("tabs1"),
             tabPanel("Enrichment",uiOutput(ns("sig_enplots_UI"))),
             tabPanel("Overlap/similarity",uiOutput(ns("sig_overlapAnalysis_UI"))),
             tabPanel("Markers",uiOutput(ns("sig_markers_UI")))
         ),
         br(),
         tabsetPanel(
+            id = ns("tabs2"),
             tabPanel("Enrichment table",uiOutput(ns("sig_enrichmentTables_UI")))
         )
     )
@@ -59,8 +61,7 @@ sig_infotext =
     APOPTOSIS.GENES = "BAD CRADD AGT FAS BCL2 PPIF S100A9 S100A8 BBC3 BCL2L11 FADD CTSH MLLT11 TRAF7 BCL2L1 HTRA2 BNIP3 BAK1 PMAIP1 LGALS9 BID"
     CELL.CYCLE.GENES = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP
 5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA"
-    style0 = "font-size: 0.9em; color: #24A; background-color: #dde6f0; border-style: none; padding:0"
-
+    style0 = "font-size: 0.9em; color: #24A; background-color: #dde6f0; border-style: none; padding:0; margin-top: -15px;"
 
     CMAPSETS <- c(sort(unique(gsub("\\].*","]",colnames(PROFILES$FC)))))
     CMAPSETS <- c("<this dataset>",CMAPSETS,"<all>")
@@ -71,11 +72,12 @@ sig_infotext =
                    "Show more information about this module"),
             hr(), br()
         )
-
+        usermode <- usermode()
+        if(length(usermode)==0) usermode <- "BASIC"
         ##conditionalPanel(
         ##condition="input.main_usermode=='PRO'",
         ##condition="output.main_usermode=='PRO' || output.main_usermode=='DEV'",
-        if(usermode()!="BASIC") {
+        if(usermode!="BASIC") {
             uix = tagList(
                 tipify(selectInput(ns("sig_type"),label="Signature type:",
                                    choices=c("<custom>","contrast","hallmark","KEGG")),
@@ -106,9 +108,9 @@ sig_infotext =
         )
         ui = c(ui, uix)
 
-        if(usermode()!="BASIC") {        
+        if(usermode!="BASIC") {        
             uix = tagList(
-                br(),
+                br(),br(),
                 tipify( selectInput(ns('cmp_querydataset'),"Query dataset:",
                                     choices=CMAPSETS, multiple=FALSE),
                        "The query dataset to which the enrichment test should be applied. Enrichment of the selected signature will be calculated to all available contrast profiless in this query dataset.", 
@@ -116,7 +118,7 @@ sig_infotext =
             )
             ui = c(ui, uix)
         }
-        if(usermode()!="BASIC" && DEV.VERSION) {
+        if(usermode!="BASIC" && DEV.VERSION) {
             uix <- tagList(
                 br(),br(),hr(),h6("Developer options:"),
                 radioButtons(ns('sig_ssstats'),'ss-stats:',

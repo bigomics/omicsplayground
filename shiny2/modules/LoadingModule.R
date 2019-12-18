@@ -17,7 +17,7 @@ LoadingUI <- function(id) {
             uiOutput(ns("valueboxes_UI"))
         ),
         tabsetPanel(            
-            tabPanel("Data sets",uiOutput(ns("pgxtable_UI"))),
+            tabPanel("Public datasets",uiOutput(ns("pgxtable_UI"))),
             tabPanel("Upload data",uiOutput(ns("upload_UI")))
         )
     )
@@ -27,7 +27,8 @@ LoadingModule <- function(input, output, session)
 {
     ns <- session$ns ## NAMESPACE
     
-    useShinyjs(rmd=TRUE)
+    ##useShinyjs(rmd=TRUE)
+    useShinyjs()
     useSweetAlert()
     SHOWSPLASH=TRUE
     ## SHOWSPLASH=FALSE
@@ -96,7 +97,7 @@ LoadingModule <- function(input, output, session)
 
     output$inputsUI <- renderUI({
         ui <- tagList(
-            div( class='usermode-button',
+            div( id='usermode-button',
                 tipify(radioGroupButtons(
                     inputId = ns("main_usermode"),
                     label = "User mode:",
@@ -664,8 +665,8 @@ LoadingModule <- function(input, output, session)
     require(shinydashboard)
     ## useShinydashboard()
     vbox <- function(value, label) {
-        box(h1(value, style="font-weight: 800; color: white; padding-top: 16px; margin-top: 0px; margin-left: 20px;"),
-            h5(label, style="color: white; margin-left: 20px;"), width="100%")    
+        box(h1(value, style="font-weight: 800; color: white; padding: 16px 0 0 0; margin: 0 0 0 20px;"),
+            h5(label, style="margin: 0 0 0 20px; color: white; padding-bottom: 25px"), width="100%", class="vbox")
     }
 
     output$valuebox1 <- renderUI({
@@ -695,10 +696,9 @@ LoadingModule <- function(input, output, session)
     output$valueboxes_UI <- renderUI({
         fillRow(
             height=115,
-            ##renderValueBox( div(valueBox(value=200, "subtitle", color="light-blue"), class="value-box")),
-            div( uiOutput(ns("valuebox1")), style="height: 110px; background-color: rgba(39, 128, 227, 0.7); margin-right: 4px;"),
-            div( uiOutput(ns("valuebox2")), style="height: 110px; background-color: rgba(39, 128, 227, 0.7); margin-left: 4px; margin-right: 4px;"),
-            div( uiOutput(ns("valuebox3")), style="height: 110px; background-color: rgba(39, 128, 227, 0.7); margin-left: 4px; margin-right: 10px;")
+            uiOutput(ns("valuebox1")),
+            uiOutput(ns("valuebox2")), 
+            uiOutput(ns("valuebox3"))
         )
     })
 
