@@ -12,8 +12,9 @@ BiomarkerUI <- function(id) {
         flex = c(1),
         height = 780,
         tabsetPanel(
-            tabPanel("Importance",uiOutput(ns("pdx_biomarker_UI"))),
-            tabPanel("Multi-level",uiOutput(ns("pdx_multilevel_UI")))
+            id=ns("tabs"),
+            tabPanel("Importance", uiOutput(ns("pdx_biomarker_UI"))),
+            tabPanel("Multi-level", uiOutput(ns("pdx_multilevel_UI")))
         )
     )
 }
@@ -55,8 +56,7 @@ be multiple categories (classes) or patient survival data."
             tipify( selectInput(ns("pdx_filter"),"Feature filter:", choices=NULL),
                    "Select a filter for the features.", placement="top"),
             conditionalPanel(
-                ##"input.pdx_filter == '<custom>'",
-                paste0("input.",ns('pdx_filter')," == '<custom>'"),
+                "input.pdx_filter == '<custom>'", ns=ns,
                 tipify(
                     ##selectizeInput("pdx_select","Custom features:", choices=NULL, multiple=TRUE),
                     textAreaInput(ns("pdx_select"), "Custom features:", value = NULL,
@@ -470,7 +470,7 @@ be multiple categories (classes) or patient survival data."
         annot <- ngs$Y[colnames(X),]
         dbg("<predict:pdx_heatmap> dim(annot)=",dim(annot),"\n")
         
-        gx.splitmap( X, split=NULL, splitx=splitx,
+        gx.splitmap( X, split=NULL, splitx=splitx, main="  ",
                     show_colnames = FALSE,  ## save space, no sample names
                     show_legend = ifelse(is.null(splitx),TRUE,FALSE),
                     col.annot=annot, annot.ht=2.5, show_rownames=50,

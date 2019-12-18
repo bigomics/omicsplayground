@@ -70,31 +70,7 @@ sig_infotext =
         ui <- tagList(
             tipify( actionLink(ns("sig_info"), "Info", icon = icon("info-circle")),
                    "Show more information about this module"),
-            hr(), br()
-        )
-        usermode <- usermode()
-        if(length(usermode)==0) usermode <- "BASIC"
-        ##conditionalPanel(
-        ##condition="input.main_usermode=='PRO'",
-        ##condition="output.main_usermode=='PRO' || output.main_usermode=='DEV'",
-        if(usermode!="BASIC") {
-            uix = tagList(
-                tipify(selectInput(ns("sig_type"),label="Signature type:",
-                                   choices=c("<custom>","contrast","hallmark","KEGG")),
-                       "Specify the type of signature of an interest. Users can choose between custom signature, a contrast profile, or some predefined gene sets including Hallmark and KEGG pathways.",
-                       placement="top", options = list(container = "body")),
-                ##conditionalPanel(
-                ##    "input['sig-sig_type'] != '<custom>'",
-                tipify(selectInput(ns("sig_feature"),"Signature:",
-                                   choices="<custom>", selected="<custom>"),
-                       "Select a specific signature group.", placement="top",
-                       options = list(container = "body"))
-                ##)
-            )
-            ui = c(ui, uix)
-        }
-
-        uix <- tagList(
+            hr(), br(),
             tipify(textAreaInput(ns("sig_genelistUP"), "Genes:", value = IMMCHECK.GENES,
                                  rows=10, placeholder="Paste your gene list"),
                    "Paste a list of signature genes.", placement="top", options = list(container = "body")),
@@ -104,15 +80,36 @@ sig_infotext =
             tipify(actionButton(ns("sig_example1"),"[immune_chkpt] ", style=style0),
                    "Use the list of genes involved in immune checkpoint as a signature."),
             tipify(actionButton(ns("sig_example3"),"[cell_cycle] ", style=style0),
-                   "Use the list of genes involved in cell cycle as a signature.")
+                   "Use the list of genes involved in cell cycle as a signature."),
+            br(),br(),
+            tipify( actionLink(ns("sig_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+                   "Toggle advanced options.", placement="top"),
+            br(),br(),
+            conditionalPanel(
+                "input.sig_options % 2 == 1", ns=ns,
+                tagList(
+                    tipify(selectInput(ns("sig_type"), label="Signature type:",
+                                       choices=c("<custom>","contrast","hallmark","KEGG")),
+                           "Specify the type of signature of an interest. Users can choose between custom signature, a contrast profile, or some predefined gene sets including Hallmark and KEGG pathways.",
+                           placement="top", options = list(container = "body")),
+                    conditionalPanel(
+                        "input.sig_type != '<custom>'", ns=ns,
+                        tipify(selectInput(ns("sig_feature"),"Signature:",
+                                           choices="<custom>", selected="<custom>"),
+                               "Select a specific signature group.", placement="top",
+                               options = list(container = "body"))
+                    )
+                )
+            )
         )
-        ui = c(ui, uix)
 
+        usermode <- usermode()
+        if(length(usermode)==0) usermode <- "BASIC"
         if(usermode!="BASIC") {        
             uix = tagList(
-                br(),br(),
-                tipify( selectInput(ns('cmp_querydataset'),"Query dataset:",
-                                    choices=CMAPSETS, multiple=FALSE),
+                tipify( selectInput(ns('cmp_querydataset'), "Query dataset:",
+                                    selected = "<this dataset>",
+                                    choices = CMAPSETS, multiple=TRUE),
                        "The query dataset to which the enrichment test should be applied. Enrichment of the selected signature will be calculated to all available contrast profiless in this query dataset.", 
                        placement="top", options = list(container = "body"))
             )
@@ -359,18 +356,41 @@ sig_infotext =
         ##F <- sapply(ngs$gx.meta$meta,function(x) unclass(x$fc)[,"trend.limma"])
         F <- sapply(ngs$gx.meta$meta,function(x) x$meta.fx)
         rownames(F) <- rownames(ngs$gx.meta$meta[[1]])    
+
+        dbg("sigCalculateGSEA:: 1 : dim(F)=",dim(F))
+        dbg("sigCalculateGSEA:: head.rownames(F)=",head(rownames(F)))
+        
         ext.db <- input$cmp_querydataset
-        if(is.null(ext.db)) return(NULL)
-        if(1 && ext.db!="" && ext.db!="<this dataset>") {
-            if(ext.db=="<all>") {
-                F <- PROFILES[["FC"]]
+        if(is.null(ext.db)) ext.db="<this dataset>"
+
+        has.other <- !(length(ext.db)==1 && ext.db[1]=="<this dataset>")
+        has.this  <- ("<this dataset>" %in% ext.db)
+
+        if(ext.db[1]!="" && has.other) {
+            if(any(grep("<all>",ext.db))) {
+                F1 <- PROFILES[["FC"]]
             } else {
                 ext.db0 <- gsub("\\[|\\]","",ext.db)
-                jj <- grep(ext.db0, colnames(PROFILES[["FC"]]))
-                F <- PROFILES[["FC"]][,jj,drop=FALSE]
+                F1 <- PROFILES[["FC"]]
+                ##jj <- grep(ext.db0, colnames(PROFILES[["FC"]]))
+                jj <- unlist(sapply(ext.db0,grep,colnames(F1)))
+                jj <- setdiff(jj,NA)
+                F1 <- F1[,jj,drop=FALSE]
+            }
+            dbg("sigCalculateGSEA:: dim(F1)=",dim(F1))
+            dbg("sigCalculateGSEA:: head.rownames(F1)=",head(rownames(F1)))
+            if(!has.this) {
+                F <- F1
+            } else if(has.this && ncol(F1)>0) {
+                kk <- intersect(toupper(rownames(F)),toupper(rownames(F1)))
+                j1 <- which(toupper(rownames(F)) %in% kk)
+                j2 <- which(toupper(rownames(F1)) %in% kk)
+                F <- cbind(F[j1,,drop=FALSE],F1[j2,,drop=FALSE])
             }
         }
 
+        dbg("sigCalculateGSEA:: 2 : dim(F)=",dim(F))
+        
         ## cleanup matrix
         F = as.matrix(F)
         dim(F)

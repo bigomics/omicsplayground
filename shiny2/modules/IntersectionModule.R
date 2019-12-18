@@ -64,17 +64,24 @@ between two contrasts."
             tipify( selectInput(ns('cmp_comparisons'),'Contrasts:', choices=NULL, multiple=TRUE),
                    "Select the contrasts that you want to compare. If you select N=2 contrast a single scatterplot will be drawn. For N>=3 a scatterplot matrix will be drawn.",
                    placement="top"),
-            tipify( selectInput(ns("cmp_filter"),"Filter:", choices=NULL, multiple=FALSE),
-                   "Select feature filter", placement="top"),
+
+            tipify( actionLink(ns("cmp_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+                   "Toggle advanced options.", placement="top"),
+            br(),br(),
             conditionalPanel(
-                "input.cmp_filter == '<custom>'",
-                tipify( textAreaInput(ns("cmp_customlist"), NULL, value = NULL,
-                                      rows=5, placeholder="Paste your custom gene list"),
-                       "Paste a custom list of genes to highlight.", placement="bottom")
-            ),
-            tipify( selectInput(ns("cmp_level"),"Level:", choices=c("gene","geneset")),
-                   "Select feature level: gene or geneset", placement="top"),
+                "input.cmp_options % 2 == 1", ns=ns,
+                tipify( selectInput(ns("cmp_filter"),"Filter:", choices=NULL, multiple=FALSE),
+                       "Select feature filter", placement="top"),
+                conditionalPanel(
+                    "input.cmp_filter == '<custom>'", ns=ns,
+                    tipify( textAreaInput(ns("cmp_customlist"), NULL, value = NULL,
+                                          rows=5, placeholder="Paste your custom gene list"),
+                           "Paste a custom list of genes to highlight.", placement="bottom")
+                ),
+                tipify( selectInput(ns("cmp_level"),"Level:", choices=c("gene","geneset")),
+                       "Select feature level: gene or geneset", placement="top")
             )
+        )
         if(DEV.VERSION) {
             uix <- tagList(
                 hr(),
