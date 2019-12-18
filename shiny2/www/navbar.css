@@ -78,7 +78,7 @@ body {
 }
 
 #datainfo {
-    background: #f8f8f8;
+    background: #fcfcfc;
     font-size: 12px;
     padding: 20px 10px;
     line-height: 1em;
@@ -259,6 +259,7 @@ body {
     color: white;
     background-color: #e45c00;
 }
+
 #load-action_play:hover {
     color: black;
     background-color: #eecc00;
@@ -267,7 +268,6 @@ body {
 }
 
 */
-
 
 
 /* ------------------- modal dialogs -------------- */

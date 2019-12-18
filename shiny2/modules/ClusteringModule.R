@@ -31,8 +31,11 @@ ClusteringUI <- function(id) {
 ClusteringModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
+
     inputData <- env[["load"]][["inputData"]]
-    fullH = 780  ## full height of page
+    usermode  <- env[["load"]][["usermode"]]
+
+    fullH = 760  ## full height of page
     
     description = "<b>Cluster Analysis.</b> Discover clusters of similar genes or samples using unsupervised machine learning."
     output$description <- renderUI(HTML(description))
@@ -1021,7 +1024,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ## config(displayModeBar = FALSE) %>%         
             event_register("plotly_restyle")
 
-        if(USERMODE()=="BASIC") shinyjs::hide(selector = "div.modebar")
+        if(usermode()=="BASIC") shinyjs::hide(selector = "div.modebar")
 
         plt 
 
@@ -1103,7 +1106,7 @@ displays the expression levels of selected genes across all conditions in the an
 
     hm_parcoord_table.RENDER <- reactive({
 
-        if(USERMODE()=="BASIC") shinyjs::hide(selector = "div.modebar")
+        if(usermode()=="BASIC") shinyjs::hide(selector = "div.modebar")
         
         mat = hm_parcoord.selected()$mat
         clust = hm_parcoord.selected()$clust

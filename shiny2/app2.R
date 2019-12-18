@@ -102,7 +102,7 @@ ui = dashboardPagePlus(
             span(class = "logo-lg", "Omics Playground v2"), 
             tags$img(src="bigomics-logo-white-32px.png")),
         enable_rightsidebar = TRUE,
-        rightSidebarIcon = "gears",
+        rightSidebarIcon = "bars",
         ## items in the top menu aligned left:
         left_menu = tagList(
             dropdownButton(

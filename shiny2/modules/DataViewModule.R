@@ -25,9 +25,9 @@ DataViewModule <- function(input, output, session, env)
     ns <- session$ns ## NAMESPACE
     inputData <- env[["load"]][["inputData"]]
     
-    rowH = 360  ## row height of panels
+    rowH = 350  ## row height of panels
     imgH = 330  ## height of images
-    fullH = 780 ## full height of panel
+    fullH = 720 ## full height of panel
     tabH = 600  ## height of tables
     
     description = "<b>DataView.</b> Information and descriptive statistics to quickly lookup a gene, check the total counts, or view the data tables."
