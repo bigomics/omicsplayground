@@ -45,7 +45,7 @@ server = function(input, output, session) {
 
     env <- list()  ## communication environment 
     ## env[["load"]][["inputData"]] <- reactive({ ngs })    
-    env[["load"]]   <- callModule( LoadingModule, "load", hideUserMode=TRUE)
+    env[["load"]]   <- callModule( LoadingModule, "load", hideUserMode=FALSE)
     env[["expr"]]   <- callModule( ExpressionModule, "expr", env)
     env[["view"]]   <- callModule( DataViewModule, "view", env)
     env[["clust"]]  <- callModule( ClusteringModule, "clust", env)
