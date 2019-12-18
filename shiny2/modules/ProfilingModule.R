@@ -55,21 +55,19 @@ immune cell types, expressed genes and pathway activation."
             tipify(actionLink(ns("pr_info"), "Info", icon=icon("info-circle")),
                    "Show more information about this module."),
             hr(),br(),
+            tipify(selectInput(ns("pr_samplefilter"),"Filter samples:", choices=NULL, multiple=TRUE),
+                   "Filter relevant samples (cells).", placement="top", options = list(container = "body")),
             tipify( actionLink(ns("pr_options"), "Options", icon=icon("cog", lib = "glyphicon")),
                    "Toggle options", placement="top"),
+            br(),br(),
             conditionalPanel(
-                "input.pr_options % 2 == 1",
+                "input.pr_options % 2 == 1", ns=ns, 
                 tagList(
-                    tipify(selectInput(ns("pr_samplefilter"),"Filter samples:", choices=NULL, multiple=TRUE),
-                           "Filter relevant samples (cells).", placement="top", options = list(container = "body")),
                     tipify(radioButtons(ns('pr_clustmethod'),NULL,c("tsne","pca"), inline=TRUE, selected="tsne"),
                            "Specify a layout for the figures: t-SNE or PCA-based layout.",
                            options = list(container = "body")),
                     tipify(checkboxInput(ns("pr_group"), "group", FALSE),
                            "Group/ungroup the samples (cells).", options = list(container = "body"))
-                    ##radioButtons('pr_labelmode',NULL,c("label","legend"), inline=TRUE),
-                    ##checkboxInput("pr_toggleinfo", "toggle info", TRUE),
-                    ##checkboxInput("pr_rowscale", "scale rows", TRUE)
                 )
             )
         )

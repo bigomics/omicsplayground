@@ -59,20 +59,16 @@ to understand biological functions including GO, KEGG, and drug connectivity map
             tipify( selectInput(ns("fa_contrast"),"Contrast:", choices=NULL),
                    "Select the contrast corresponding to the comparison of interest.",
                    placement="top"),
+            tipify( actionLink(ns("fa_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+                   "Show/hide advanced options", placement="top"),
+            br(),
             conditionalPanel(
-                ## condition="input.main_usermode == 'PRO'",
-                condition = "output.main_usermode == 'PRO' || output.main_usermode == 'DEV'",    
-                tipify( actionLink(ns("fa_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                       "Show/hide advanced options", placement="top"),
-                br(),
-                conditionalPanel(
-                    "input.fa_options % 2 == 1",
-                    tagList(
-                        tipify(checkboxInput(ns('fa_normalize'),'normalize activation matrix',TRUE),
-                               "Click to fine-tune the coloring of an activation matrices."),
-                        tipify(checkboxInput(ns('fa_filtertable'),'filter signficant (tables)',FALSE),
-                               "Click to filter the significant entries in the tables.")
-                    )
+                "input.fa_options % 2 == 1", ns=ns,
+                tagList(
+                    tipify(checkboxInput(ns('fa_normalize'),'normalize activation matrix',TRUE),
+                           "Click to fine-tune the coloring of an activation matrices."),
+                    tipify(checkboxInput(ns('fa_filtertable'),'filter signficant (tables)',FALSE),
+                           "Click to filter the significant entries in the tables.")
                 )
             )
         )

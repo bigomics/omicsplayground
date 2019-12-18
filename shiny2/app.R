@@ -13,7 +13,7 @@ RDIR="../R"
 FILES="../lib"
 PGX.DIR="../data"
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
-DEV.VERSION = TRUE
+##DEV.VERSION = TRUE
 
 ##load("../data/geiger2016-arginine.pgx"); ngs=pgx.initialize(ngs)    
 
@@ -62,7 +62,9 @@ server = function(input, output, session) {
         if(length(usermode)==0) usermode <- "BASIC"
         dbg("usermode = ",usermode)
         hideTab("view-tabs","Resource info")
-        hideTab("enrich-tabs1","GeneMap")                        
+        hideTab("enrich-tabs1","GeneMap")
+        hideTab("bio-tab1","Multi-level")
+
         if(usermode=="BASIC") {
             hideTab("maintabs","Biomarker")
             hideTab("maintabs","scProfiling")
@@ -83,6 +85,7 @@ server = function(input, output, session) {
         if(DEV.VERSION) {
             showTab("view-tabs","Resource info")
             showTab("enrich-tabs1","GeneMap")                        
+            showTab("bio-tab1","Multi-level")
         }
     })
 
@@ -126,6 +129,7 @@ ui = navbarPage(
     tabView("Signature", SignatureInputs("sig"), SignatureUI("sig")),
     tabView("Biomarker", BiomarkerInputs("bio"), BiomarkerUI("bio")),
     tabView("scProfiling", ProfilingInputs("prof"), ProfilingUI("prof")),
+
     footer = tagList(
         show_waiter_on_load(spin_fading_circles()) # place at the bottom
     )

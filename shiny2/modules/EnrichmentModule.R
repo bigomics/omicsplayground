@@ -84,19 +84,15 @@ on a geneset level, also called geneset enrichment analysis."
                     tipify( selectInput(ns("gs_lfc"),"logFC threshold", choices=c(0,0.2,0.5,1,2,5), selected=0.2),
                            "Set the logarithmic fold change (logFC) threshold.", placement="top")
                     ),
-            br(),br(),br(),br(),br(),
+            br(),br(),br(),br(),
+            tipify(actionLink(ns("gs_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+                   "Toggle advanced options.", placement="top"),
+            br(),br(),
             conditionalPanel(
-                ##"input.main_usermode == 'PRO'",
-                condition = "output.main_usermode == 'PRO' || output.main_usermode == 'DEV'",    
-                tipify(actionLink(ns("gs_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                       "Toggle advanced options.", placement="top"),
-                br(),
-                conditionalPanel(
-                    "input.gs_options % 2 == 1",
-                    tagList(
-                        tipify( checkboxGroupInput(ns('gs_method'),'Statistical methods:', choices=NULL),
-                               gs_testmethod_text, placement="right", options = list(container="body"))
-                    )
+                "input.gs_options % 2 == 1", ns=ns, 
+                tagList(
+                    tipify(checkboxGroupInput(ns('gs_method'),'Statistical methods:', choices=NULL),
+                           gs_testmethod_text, placement="right", options = list(container="body"))
                 )
             )
         )

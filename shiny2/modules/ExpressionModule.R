@@ -81,22 +81,20 @@ two conditions. Determine which genes are significantly downregulated or overexp
             fillRow( flex=c(1,1),
                     tipify( selectInput(ns("gx_fdr"),"FDR", choices=FDR.VALUES, selected=1),
                            "Set the false discovery rate (FDR) threshold.", placement="top"),
-                    tipify( selectInput(ns("gx_lfc"),"logFC threshold", choices=c(0,0.2,0.5,1,2,5), selected=0.5),
+                    tipify( selectInput(ns("gx_lfc"),"logFC threshold",
+                                        choices=c(0,0.2,0.5,1,2,5), selected=0.5),
                            "Set the logarithmic fold change (logFC) threshold.", placement="top")
                     ),
+            br(),br(),br(),br(),
+            tipify( actionLink(ns("gx_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+                   "Toggle advanced options.", placement="top"),
             br(),br(),
             conditionalPanel(
-                ##condition="input.main_usermode=='PRO'",
-                condition = "output.main_usermode == 'PRO' || output.main_usermode == 'DEV'",        
-                tipify( actionLink(ns("gx_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                       "Toggle advanced options.", placement="top"),
-                conditionalPanel(
-                    "input.gx_options%2 == 1",
-                    tagList(
-                        tipify( checkboxGroupInput(ns('gx_testmethod'),'Statistical methods:',
-                                                   choices=NULL, inline=TRUE),
-                               gx_testmethod_text, placement="right", options = list(container = "body"))
-                    )
+                "input.gx_options % 2 == 1", ns=ns,
+                tagList(
+                    tipify( checkboxGroupInput(ns('gx_testmethod'),'Statistical methods:',
+                                               choices=NULL, inline=TRUE),
+                           gx_testmethod_text, placement="right", options = list(container = "body"))
                 )
             )
         )
