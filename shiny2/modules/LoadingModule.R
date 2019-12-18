@@ -827,7 +827,7 @@ LoadingModule <- function(input, output, session)
 
     upload_info = "<h4>User file upload</h4><p>Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. You can download a zip file with example files here: EXAMPLEZIP. As BASIC user, you have a maximum of 20 samples and 5 comparisons. As PRO user, you can go up to 100 samples and 20 comparisons. If you want to analyze larger datasets, please use the scripts. After that, in sidebar on the left, provide a name for your dataset. Finally, hit the compute button. The computations may take 10 to 30 minutes depending on the size of your dataset."
     DLlink = downloadLink("downloadExampleData","exampledata.zip")
-    upload_info = sub("EXAMPLEZIP",DLlink,upload_info)
+    upload_info = sub("EXAMPLEZIP", DLlink, upload_info)
 
     upload_info2 =
         "<br><h4>Uploaded datasets</h4><p>Below are your uploaded datasets. As a free user, you can only have a maximum of one private dataset. If you want to analyze a new dataset, you must either delete your old dataset or make the dataset public.<br><br>"
