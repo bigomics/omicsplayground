@@ -29,8 +29,9 @@ SignatureModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
 
-    fullH = 730   ## full height of page
+    fullH = 760   ## full height of page
 
+    ## reactive functions from shared environment
     inputData <- env[["load"]][["inputData"]]
     usermode  <- env[["load"]][["usermode"]]
     

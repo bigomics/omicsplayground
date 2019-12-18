@@ -37,6 +37,7 @@ EnrichmentModule <- function(input, output, session, env)
     ## reactive functions from shared environment
     inputData <- env[["load"]][["inputData"]]
     selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
+    usermode  <- env[["load"]][["usermode"]]
     
     rowH = 330  ## row height of panels
     imgH = 280  ## height of images
@@ -61,7 +62,6 @@ on a geneset level, also called geneset enrichment analysis."
     ##================================================================================
     
     FDR.VALUES2 = c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
-    gs_testmethod_text = "Hello World! <a href='https://www.ncbi.nlm.nih.gov/pubmed/19377034'>link</a>"
     gs_testmethod_text = paste("Select a method for the statistical test. To ensure the statistical reliability, the platform performs the gene set enrichment analysis using multiple methods, including",a_Spearman,", ",a_GSVA,", ",a_ssGSEA,", ",a_Fisher,", ",a_GSEA,", ",a_camera," and ",a_fry,".")  ## does not work (tipify cannot handle HTML?)
     gs_testmethod_text = paste("Select a method or multiple methos for the statistical test.")
     
@@ -104,6 +104,7 @@ on a geneset level, also called geneset enrichment analysis."
             )
             ui <- c(ui, uix)
         }
+        ui
     })
     outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
@@ -125,12 +126,17 @@ on a geneset level, also called geneset enrichment analysis."
         comparisons <- colnames(ngs$model.parameters$contr.matrix)
         comparisons = sort(intersect(comparisons, names(meta)))
         updateSelectizeInput(session, "gs_contrast", choices=comparisons)
-        gset.methods = sort(colnames(meta[[1]]$fc))
 
+        ## get the computed geneset methods
+        gset.methods = sort(colnames(meta[[1]]$fc))
         sel2 = c(intersect(GSET.DEFAULTMETHODS,gset.methods),gset.methods)
         sel2 = head(unique(sel2),3)
+
+        ## in BASIC mode make only available the shortlist
+        if(usermode()=="BASIC") gset.methods <- sel2
+
         updateCheckboxGroupInput(session, 'gs_method',
-                                 choices=gset.methods,
+                                 choices = sort(gset.methods),
                                  selected = sel2)
         
     })

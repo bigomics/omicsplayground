@@ -7,7 +7,6 @@ library(devtools)
 require(shinyWidgets)
 library(waiter)
  
-
 cat("===================== INIT =======================\n")
 
 RDIR="../R"
@@ -46,7 +45,7 @@ server = function(input, output, session) {
 
     env <- list()  ## communication environment 
     ## env[["load"]][["inputData"]] <- reactive({ ngs })    
-    env[["load"]]   <- callModule( LoadingModule, "load")
+    env[["load"]]   <- callModule( LoadingModule, "load", hideUserMode=TRUE)
     env[["expr"]]   <- callModule( ExpressionModule, "expr", env)
     env[["view"]]   <- callModule( DataViewModule, "view", env)
     env[["clust"]]  <- callModule( ClusteringModule, "clust", env)
@@ -61,7 +60,7 @@ server = function(input, output, session) {
         pgx <- env[["load"]][["inputData"]]()
         name <- gsub(".*\\/|[.]pgx$","",pgx$name)
         if(length(name)==0) name = "(no data)"
-        HTML("<div class='current-data'>",name,"</div>")
+        name
     })
 
     ## Hide/show certain section
@@ -96,11 +95,6 @@ server = function(input, output, session) {
             showTab("bio-tab1","Multi-level")
         }
     })
-
-    ## Hide BASIC/PRO usermode switch
-    shinyjs::hide(selector="div.usermode-button")
-    shinyjs::hide(selector="#load-main_usermode")
-    shinyjs::hide("load-main_usermode")
     
     hide_waiter()    
 }
@@ -122,10 +116,10 @@ ui = navbarPage(
     ##includeCSS("www/navbar.css"),
     id = "maintabs",
     header = tagList(
-        tags$head( tags$link(rel = "stylesheet", href = "navbar.css")),
+        tags$head(tags$link(rel = "stylesheet", href = "navbar.css")),
         shinyjs::useShinyjs(),        
         use_waiter(include_js = FALSE),
-        htmlOutput("current_dataset")
+        div(textOutput("current_dataset"),class='current-data')
     ),
     tabView("Home",LoadingInputs("load"),LoadingUI("load")),
     tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
