@@ -4,6 +4,7 @@
 !VERSION
 !LICENSE.md
 !NOTICE.md
+!TODO.md
 !README.rst
 !Dockerfile
 !docker/*
@@ -13,5 +14,7 @@
 !data/*
 !R/*
 !scripts/*
-!shiny/*
+!shiny
+!shiny1/*
+!shiny2/*
 
