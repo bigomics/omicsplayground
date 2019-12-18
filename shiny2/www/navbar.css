@@ -256,21 +256,19 @@ body {
     background-color: #0067c4;
 }
 
+*/
+
 #load-action_play {
-    color: black;
-    background-color: #ffdd00;
     color: white;
     background-color: #e45c00;
+    background-image: none;    
 }
 
 #load-action_play:hover {
-    color: black;
-    background-color: #eecc00;
     color: white;
-    background-color: #b44c00;    
+    background-color: #b44c00;
+    background-image: none;    
 }
-
-*/
 
 
 /* ------------------- modal dialogs -------------- */
