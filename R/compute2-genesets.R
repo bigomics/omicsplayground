@@ -6,9 +6,9 @@
 ## source("../R/gset-gsea.r")
 ## source("../R/gset-meta.r")
 
-SAVE.PARAMS <- ls()
+##SAVE.PARAMS <- ls()
 
-compute.testGenesets <- function(ngs, max.features=1000,
+compute.testGenesets <- function(ngs, max.features=1000, lib.dir="../lib",
                                  test.methods = c("gsva","camera","fgsea"))
 {
     
@@ -20,10 +20,10 @@ compute.testGenesets <- function(ngs, max.features=1000,
     is.mouse
     if(is.mouse) {
         cat("Loading MOUSE gene sets...\n")
-        load(file=file.path(FILES,"gmt-all-mouse.rda"))
+        load(file=file.path(lib.dir,"gmt-all-mouse.rda"))
     } else {
         cat("Loading HUMAN gene sets...\n")
-        load(file=file.path(FILES,"gmt-all.rda"))
+        load(file=file.path(lib.dir,"gmt-all.rda"))
     }
     table(sub(":.*","",names(gmt.all)))
     summary(sapply(gmt.all,length))

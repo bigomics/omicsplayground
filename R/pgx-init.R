@@ -23,7 +23,8 @@ library(ggplot2)
 
 useShinyjs(rmd=TRUE)  
 ht_global_opt(fast_hclust = TRUE)
-    
+options(shiny.maxRequestSize = 200*1024^2)  ## max 200Mb upload
+
 source(file.path(RDIR,"gx-heatmap.r"))
 source(file.path(RDIR,"gx-plot.r"))
 source(file.path(RDIR,"gx-limma.r"))
@@ -53,6 +54,10 @@ source(file.path(RDIR,"pgx-drugs.R"))
 
 source(file.path(RDIR,"xcr-graph.r"))
 source(file.path(RDIR,"ui-code.R"))
+
+source( file.path(RDIR,"compute2-genes.R"))
+source( file.path(RDIR,"compute2-genesets.R"))
+source( file.path(RDIR,"compute2-extra.R"))
 
 
 ## you need to override this!!!

@@ -63,25 +63,21 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             tipify( selectInput(ns("hm_features"),"Features:", choices=NULL, multiple=FALSE),
                    "Select a family of features.", placement="top"),
             conditionalPanel(
-                "input.hm_features == '<custom>'",
+                "input.hm_features == '<custom>'", ns=ns,
                 tipify( textAreaInput(ns("hm_customlist"), NULL, value = NULL,
                                       rows=5, placeholder="Paste your custom gene list"),
                        "Paste a custom list of genes to be used as features.", placement="bottom")
             ),
             tipify( selectInput(ns("hm_samplefilter"),"Filter samples:", choices=NULL, multiple=TRUE),
                    "Filter the relevant samples for the analysis.", placement="top"),
+            tipify( actionLink(ns("hm_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+                   "Toggle advanced options.", placement="top"),
+            br(),
             conditionalPanel(
-                ## "input.main_usermode == 'PRO'",
-                condition = "output.main_usermode == 'PRO' || output.main_usermode == 'DEV'",
-                tipify( actionLink(ns("hm_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                       "Toggle advanced options.", placement="top"),
-                br(),
-                conditionalPanel(
-                    "input.hm_options % 2 == 1",
-                    tagList(
-                        tipify( checkboxInput(ns('hm_group'),'grouped',FALSE),
-                               "Group the samples by a predefined phenotype class.", placement="bottom")
-                    )
+                "input.hm_options % 2 == 1", ns=ns,
+                tagList(
+                    tipify( checkboxInput(ns('hm_group'),'group by condition',FALSE),
+                           "Group the samples by condition.", placement="bottom")
                 )
             )
         )

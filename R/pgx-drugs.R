@@ -176,8 +176,7 @@ pgx.computeComboEnrichment <- function(obj, X, x.drugs,
         dim(F)
     }
 
-    if(is.null(contrasts))
-        contrasts <- colnames(F)
+    if(is.null(contrasts)) contrasts <- colnames(F)
     contrasts <- intersect(contrasts, colnames(F))
     contrasts
 

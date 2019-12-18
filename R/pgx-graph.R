@@ -752,7 +752,18 @@ pgx.plotForwardProjection <- function(gr, gene, cex=1, fx=NULL,
 ##================================ GO graph functions ===============================
 ##===================================================================================
 ##fdr=0.05
-pgx.computeCoreGOgraph <- function(ngs, fdr=0.05) {
+pgx.computeCoreGOgraph <- function(ngs, fdr=0.05)
+{
+
+    ## test if there are GO terms
+    mx = ngs$gset.meta$meta[[1]]
+    jj = grep("^GO",rownames(mx))
+    has.go <- (length(jj)>10)
+    has.go
+    if(!has.go) {
+        cat("[pgx.computeCoreGOgraph] WARNING:: not enough GO terms in enrichment.\n")
+        return(NULL)
+    }
 
     ##comparison=comparisons[1];methods=c("fisher","gsva","camera");fdr=0.05
     comparisons = names(ngs$gset.meta$meta)
@@ -832,7 +843,10 @@ getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.25, nterms=500, ntop=1
     ##if(is.null(ngs)) ngs <- isolate(inputData())
     mx = ngs$gset.meta$meta[[comparison]]
     jj = grep("^GO",rownames(mx))
-    if(length(jj)==0) stop("no GO terms in gset.meta$meta!!")
+    if(length(jj)==0) {
+        cat("WARNING:: no GO terms in gset.meta$meta!!")
+        return(NULL)
+    }
     mx = mx[jj,]
     dim(mx)
 

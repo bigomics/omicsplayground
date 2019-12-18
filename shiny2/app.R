@@ -7,17 +7,25 @@ library(devtools)
 require(shinyWidgets)
 library(waiter)
  
+
 cat("===================== INIT =======================\n")
 
 RDIR="../R"
 FILES="../lib"
 PGX.DIR="../data"
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
-##DEV.VERSION = TRUE
+options(shiny.maxRequestSize = 200*1024^2)  ## max 200Mb upload
 
-##load("../data/geiger2016-arginine.pgx"); ngs=pgx.initialize(ngs)    
+## DEV.VERSION = TRUE
+
+if(0) {
+    load("../data/geiger2016-arginine.pgx")
+    load("../../alex/alex2019-data.pgx")
+    ngs=pgx.initialize(ngs)    
+}
 
 source("../R/pgx-modules.R")
+##source("../R/pgx-graph.R")
 source("modules/DataViewModule.R", local=TRUE)
 source("modules/ClusteringModule.R", local=TRUE)
 source("modules/ExpressionModule.R", local=TRUE)
