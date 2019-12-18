@@ -7,7 +7,7 @@
 ##
 
 ##extra <- c("meta.go","deconv","infer","drugs")
-compute.extra <- function(ngs, extra) {
+compute.extra <- function(ngs, extra, lib.dir) {
 
     ## detect if it is single or multi-omics
     single.omics <- !any(grepl("\\[",rownames(ngs$counts)))
@@ -40,8 +40,9 @@ compute.extra <- function(ngs, extra) {
 
     if("deconv" %in% extra) {
         cat(">>> computing deconvolution\n")
-        ngs <- compute.deconvolution(ngs, FILES=FILES, rna.counts=rna.counts,
-                                     full=FALSE) 
+        ngs <- compute.deconvolution(
+            ngs, lib.dir=lib.dir, rna.counts=rna.counts,
+            full=FALSE) 
     }
 
     if("infer" %in% extra) {
@@ -51,7 +52,7 @@ compute.extra <- function(ngs, extra) {
 
     if("drugs" %in% extra) {
         cat(">>> Computing drug enrichment...\n")
-        ngs <- compute.drugEnrichment(ngs, FILES=FILES) 
+        ngs <- compute.drugEnrichment(ngs, lib.dir=lib.dir) 
     }
     
     if("graph" %in% extra) {
@@ -64,12 +65,12 @@ compute.extra <- function(ngs, extra) {
 
 
 ## -------------- deconvolution analysis --------------------------------
-compute.deconvolution <- function(ngs, FILES, rna.counts, full=FALSE) {
+compute.deconvolution <- function(ngs, lib.dir, rna.counts, full=FALSE) {
     
     ## list of reference matrices
     refmat <- list()
-    readSIG <- function(f) read.csv(file.path(FILES,f), row.names=1, check.names=FALSE)
-    LM22 <- read.csv(file.path(FILES,"LM22.txt"),sep="\t",row.names=1)
+    readSIG <- function(f) read.csv(file.path(lib.dir,f), row.names=1, check.names=FALSE)
+    LM22 <- read.csv(file.path(lib.dir,"LM22.txt"),sep="\t",row.names=1)
     refmat[["Immune cell (LM22)"]] <- LM22
     refmat[["Immune cell (ImmProt)"]] <- readSIG("immprot-signature1000.csv")
     refmat[["Immune cell (DICE)"]] <- readSIG("DICE-signature1000.csv")
@@ -91,8 +92,8 @@ compute.deconvolution <- function(ngs, FILES, rna.counts, full=FALSE) {
 
     ## list of reference matrices
     refmat <- list()
-    readSIG <- function(f) read.csv(file.path(FILES,f), row.names=1, check.names=FALSE)
-    LM22 <- read.csv(file.path(FILES,"LM22.txt"),sep="\t",row.names=1)
+    readSIG <- function(f) read.csv(file.path(lib.dir,f), row.names=1, check.names=FALSE)
+    LM22 <- read.csv(file.path(lib.dir,"LM22.txt"),sep="\t",row.names=1)
     refmat[["Immune cell (LM22)"]] <- LM22
     refmat[["Immune cell (ImmProt)"]] <- readSIG("immprot-signature1000.csv")
     refmat[["Immune cell (DICE)"]] <- readSIG("DICE-signature1000.csv")
@@ -165,11 +166,11 @@ compute.cellcycle.gender <- function(ngs, rna.counts) {
     return(ngs)
 }
 
-compute.drugEnrichment <- function(ngs, FILES) {
+compute.drugEnrichment <- function(ngs, lib.dir) {
     ## -------------- drug enrichment
     ##source(file.path(RDIR,"pgx-drugs.R"))
     ##source(file.path(RDIR,"pgx-graph.R", local=TRUE)
-    X <- readRDS(file=file.path(FILES,"l1000_es.rds"))
+    X <- readRDS(file=file.path(lib.dir,"l1000_es.rds"))
     x.drugs <- gsub("_.*$","",colnames(X))
     length(table(x.drugs))
     dim(X)
@@ -180,8 +181,14 @@ compute.drugEnrichment <- function(ngs, FILES) {
         ngs, X, x.drugs, methods=c("GSEA","cor"),
         nprune=NPRUNE, contrast=NULL )
 
+    if(is.null(res.mono)) {
+        cat("[compute.drugEnrichment] WARNING:: pgx.computeDrugEnrichment failed!\n")
+        return(ngs)
+    }
+    
     res.combo <- pgx.computeComboEnrichment(
         ngs, X, x.drugs, res.mono=res.mono,
+        contrasts = NULL,
         ntop=15, nsample=80, nprune=NPRUNE)
     names(res.combo)
 
@@ -193,7 +200,7 @@ compute.drugEnrichment <- function(ngs, FILES) {
     names(ngs$drugs)
 
     ## attach annotation
-    annot0 <- read.csv(file.path(FILES,"L1000_repurposing_drugs.txt"),
+    annot0 <- read.csv(file.path(lib.dir,"L1000_repurposing_drugs.txt"),
                        sep="\t", comment.char="#")
     rownames(annot0) <- annot0$pert_iname
     ##annot0$pert_iname <- NULL

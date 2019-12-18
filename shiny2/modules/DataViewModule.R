@@ -87,13 +87,22 @@ DataViewModule <- function(input, output, session, env)
             ##textInput("search_gene","Filter genes", value="")
             tipify( selectInput(ns("search_gene"),"Search gene:", choices=NULL),
                    "Select a gene of interest for the analysis.", placement="top"),
-            tipify( selectInput(ns("data_samplefilter"),"Filter samples:", choices=NULL, multiple=TRUE),
+            tipify( selectInput(ns("data_samplefilter"),"Filter samples:",
+                                choices=NULL, multiple=TRUE),
                    "Filter the relevant samples for the analysis.", placement="top"),
-            tipify( selectInput(ns('data_groupby'),'Group by:', choices=NULL),
-                   "Select phenotype for grouping the samples.", placement="top"),
-            tipify( radioButtons(ns('data_type'),'Data type:', choices=datatypes, selected="logCPM", inline=TRUE),
-                   "Choose an input data type for the analysis.", placement="bottom")
-        )        
+            br(),
+            tipify( actionLink(ns("data_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+                   "Toggle advanced options.", placement="top"),
+            br(),br(),
+            conditionalPanel(
+                "input.data_options % 2 == 1", ns=ns,
+                tipify( selectInput(ns('data_groupby'),'Group by:', choices=NULL),
+                       "Select phenotype for grouping the samples.", placement="top"),
+                tipify( radioButtons(ns('data_type'),'Data type:',
+                                     choices=datatypes, selected="logCPM", inline=TRUE),
+                       "Choose an input data type for the analysis.", placement="bottom")
+            )
+        )
         ui
     })
     outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!

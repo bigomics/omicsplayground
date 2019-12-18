@@ -146,6 +146,9 @@ LoadingModule <- function(input, output, session)
 
     if(file.exists(PGXINFO.FILE)) {
         ## info file exists, check and update
+        dbg("[LoadingModule] PGXINFO : PGXINFO.FILE=",PGXINFO.FILE)
+        dbg("[LoadingModule] PGXINFO : PGX.DIR=",PGX.DIR)
+        
         info = read.csv(PGXINFO.FILE, stringsAsFactors=FALSE, row.names=1)
         pgx.files = dir(PGX.DIR, pattern=".pgx$")
         all(pgx.files %in% info$dataset)
@@ -189,8 +192,8 @@ LoadingModule <- function(input, output, session)
         ##randomCartoon <- reactive({
         ##invalidateLater(20000)
         cartoon <- sample(cartoon_list,1)[[1]]
-        cartoon$img2 = paste0("cartoons/",cartoon$img)
-        cartoon$img  = paste0("www/cartoons/",cartoon$img)
+        cartoon$img2 = file.path("cartoons",cartoon$img)
+        cartoon$img  = file.path("www/cartoons",cartoon$img)
         cartoon
     }##)
 
@@ -492,35 +495,6 @@ LoadingModule <- function(input, output, session)
     ## Select UI user level
     ##-----------------------------------------------------------------------------
 
-    BASIC_SECTIONS <- list(
-        c('#navbar','#section-dataview'),
-        c('#navbar','#section-clustering'),
-        c('#navbar','#section-expression'),
-        c('#navbar','#section-enrichment'),
-        c('#navbar','#section-intersection'),
-        c('#navbar','#section-functional'),
-        c('#navbar','#section-signature')    
-    )
-
-    PRO_SECTIONS <- list(
-        ## c('#navbar','#section-test'),
-        c('#navbar','#section-biomarker'),
-        c('#navbar','#section-scprofiling'),
-        c('#section-clustering','#section-feature-ranking'),
-        c('#section-expression','#section-fdr-table'),
-        c('#section-expression','#section-volcano-methods'),
-        c('#section-enrichment','#section-fdr-table-1'),
-        c('#section-enrichment','#section-volcano-methods-1'),
-        c('#section-intersection','#section-connectivity-map'),
-        c('#section-intersection','#section-meta-volcano'),
-        c('#section-functional','#section-drug-cmap'),
-        c('#section-functional','#section-wordcloud')
-    )
-
-
-    DEV_SECTIONS <- list(
-    )
-
     observeEvent( input$main_usermode,
     {
         ## Observe the usermode button and switch levels
@@ -530,9 +504,8 @@ LoadingModule <- function(input, output, session)
         if(is.null(usermode)) usermode <- "BASIC"
 
         cat(">>> switching USERMODE to",usermode,"\n")
-
-        if(DEV.VERSION) {
-            
+        
+        if(DEV.VERSION) {            
             ##dbg("VALID OUTPUT.OPTIONS =",names(outputOptions(output)))
             ##dbg("VALID OUTPUT NAMES =",names(output))
             dbg("VALID INPUT NAMES =",names(input))
@@ -541,11 +514,6 @@ LoadingModule <- function(input, output, session)
         
         if(usermode == "BASIC") {
             dbg("observeEvent::main_usermode : switching to BASIC mode")
-            lapply(c(PRO_SECTIONS,DEV_SECTIONS), function(sec) {
-                sel = paste0(sec[1]," li a[href='",sec[2],"']")
-                dbg("observeEvent::main_usermode : hiding ",sel)
-                shinyjs::hide(selector = sel)
-            })
             ##shinyjs::html("navbar-brand","Omics Playground (basic)")
             shinyjs::hide(selector = "div.download-button")
             shinyjs::hide(selector = "div.modebar")
@@ -554,15 +522,6 @@ LoadingModule <- function(input, output, session)
         
         if(usermode %in% c("PRO","DEV")) {
             dbg("observeEvent::main_usermode : switching to PRO mode")
-            lapply(DEV_SECTIONS, function(sec) {
-                sel = paste0(sec[1]," li a[href='",sec[2],"']")
-                shinyjs::hide(selector = sel)
-            })
-            lapply(PRO_SECTIONS, function(sec) {
-                sel = paste0(sec[1]," li a[href='",sec[2],"']")
-                dbg("observeEvent::main_usermode : showing ",sel)
-                shinyjs::show(selector = sel)
-            })
             shinyjs::show(selector = "div.download-button")
             shinyjs::show(selector = "div.modebar")
             USERMODE("PRO")
@@ -570,11 +529,6 @@ LoadingModule <- function(input, output, session)
 
         if(usermode %in% c("DEV")) {
             dbg("observeEvent::main_usermode : switching to DEV mode")
-            lapply(DEV_SECTIONS, function(sec) {
-                sel = paste0(sec[1]," li a[href='",sec[2],"']")
-                dbg("observeEvent::main_usermode : showing ",sel)
-                shinyjs::show(selector = sel)
-            })
             ##shinyjs::show(selector = "div.download-button")
             USERMODE("DEV")
         }
@@ -753,6 +707,7 @@ LoadingModule <- function(input, output, session)
         if(SHOWSPLASH) showStartupModal(once=TRUE)
         
         dbg("<pgxTable.RENDER> reacted")
+
         df <- getPGXTable()
         req(df)
         
@@ -780,8 +735,7 @@ LoadingModule <- function(input, output, session)
 
     })
 
-    pgxDatasetOverview.RENDER <- reactive({
-        
+    pgxDatasetOverview.RENDER <- reactive({        
         df <- getPGXTable()
         req(df)
         sel = input$pgxtable_rows_selected    
@@ -820,13 +774,13 @@ LoadingModule <- function(input, output, session)
     output$downloadExampleData <- downloadHandler(
         filename = "exampledata.zip",
         content = function(file) {
-            zip = paste0(PGX.DIR,"exampledata.zip")
+            zip = file.path(PGX.DIR,"exampledata.zip")
             file.copy(zip,file)
         }
     )
 
-    upload_info = "<h4>User file upload</h4><p>Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. You can download a zip file with example files here: EXAMPLEZIP. As BASIC user, you have a maximum of 20 samples and 5 comparisons. As PRO user, you can go up to 100 samples and 20 comparisons. If you want to analyze larger datasets, please use the scripts. After that, in sidebar on the left, provide a name for your dataset. Finally, hit the compute button. The computations may take 10 to 30 minutes depending on the size of your dataset."
-    DLlink = downloadLink("downloadExampleData","exampledata.zip")
+    upload_info = "<h4>User file upload</h4><p>Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. You can download a zip file with example files here: EXAMPLEZIP. As BASIC user, you have a maximum of 99 samples and 9 comparisons. As PRO user, you can go up to 999 samples and 99 comparisons. If you want to analyze larger datasets, please use the scripts. After uploading, in sidebar on the left, provide a name for your dataset. Finally, hit the compute button. The computations may take 10 to 30 minutes depending on the size of your dataset."
+    DLlink = downloadLink(ns("downloadExampleData"),"exampledata.zip")
     upload_info = sub("EXAMPLEZIP", DLlink, upload_info)
 
     upload_info2 =
@@ -932,23 +886,34 @@ LoadingModule <- function(input, output, session)
             counts    <- as.matrix(uploaded_files[["counts.csv"]])
             samples   <- data.frame(uploaded_files[["samples.csv"]],stringsAsFactors=FALSE)
             contrasts <- as.matrix(uploaded_files[["contrasts.csv"]])
-            
+
+            max.genes = NULL
             if( USERMODE() == "BASIC") {
                 gx.methods   = c("ttest.welch","ttest.rank","trend.limma") ## fastest 3
                 gset.methods = c("fisher","gsva","camera")  ## fastest 3            
                 ## gx.methods   = c("trend.limma","edger.qlf","edger.lrt")
                 ## gset.methods = c("fisher","gsva","fgsea")
                 extra.methods = c("meta.go","infer")
+                max.genes = 5000
             } else {
-                gx.methods   = c("ttest","ttest.rank","ttest.welch","trend.limma","edger.qlf","edger.lrt","deseq2.wald")
-                gset.methods = c("fisher","gsva","fgsea","camera","fry","ssgsea","spearman")
+                gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
+                gset.methods = c("fisher","gsva","fgsea","camera","fry")
+                extra.methods = c("meta.go","infer","deconv","drugs")
+                max.genes = 20000
                 if(ncol(counts) > 1000) {
                     ## probably scRNA-seq
                     gx.methods   = c("ttest","ttest.welch","trend.limma")
                     gset.methods = c("fisher","gsva","fgsea")
+                    max.genes = 10000
                 }
-                extra.methods = c("meta.go","infer","deconv","drugs")
             }
+            if(DEV.VERSION) {
+                gx.methods   = c("ttest","ttest.rank","ttest.welch","trend.limma","edger.qlf","edger.lrt","deseq2.wald")
+                gset.methods = c("fisher","gsva","fgsea","camera","fry","ssgsea","spearman")
+                extra.methods = c("meta.go","infer","deconv","drugs")
+                max.genes = 9999999
+            }
+            
             ##extra.methods = c("meta.go","infer")
             
             ##----------------------------------------------------------------------
@@ -961,10 +926,12 @@ LoadingModule <- function(input, output, session)
             progress$set(message = "Processing", value = 0)
 
             ngs <- pgx.upload(counts, samples, contrasts,
+                              max.genes = max.genes,
                               progress = progress,
                               gx.methods = gx.methods,
                               gset.methods = gset.methods,
-                              extra.methods = extra.methods
+                              extra.methods = extra.methods,
+                              lib.dir = FILES                              
                               )
 
             end_time <- Sys.time()
@@ -994,12 +961,12 @@ LoadingModule <- function(input, output, session)
 
         removeModal()
         showModal( modalDialog(
-            HTML("<center><b>Ready!</b><br>You can now start analyzing your data. Tip: to avoid computing again, download your results locally or save it to the cloud.</center>"),
+            HTML("<b>Ready!</b><br>You can now start exploring your data. Tip: to avoid computing again, download your data object locally or save it to the cloud."),
             title = NULL,
             size = "m",
             footer = tagList(
-                downloadButton("downloadPGX", "Download", icon=icon("download")),
-                actionButton("savedata", "Save", icon=icon("save")),
+                downloadButton("downloadPGX", "Download locally", icon=icon("download")),
+                actionButton("savedata", "Save to cloud", icon=icon("save")),
                 modalButton("Dismiss")
             )
         ))
@@ -1030,7 +997,8 @@ LoadingModule <- function(input, output, session)
         if(saving.ok) {
 
             if(0) {
-                fn = paste0(PGX.DIR,ngs.name,".pgx")
+                ngs.name1 = sub("[.]pgx$","",ngs.name)
+                fn = file.path(PGX.DIR,paste0(ngs.name1,".pgx"))
                 dbg("upload_compute :: saving PGX to",fn)
                 save(ngs, file=fn)  ## would clash with multiple users...
                 ##pgx.dir=PGX.DIR;inc.progress=FALSE;pgx=PGXINFO
@@ -1127,15 +1095,16 @@ LoadingModule <- function(input, output, session)
                 }
             }
             
-            MAXCONTRASTS = 20
-            MAXSAMPLES   = 100
-            if( USERMODE() == "BASIC") {
-                MAXCONTRASTS = 5
-                MAXSAMPLES   = 20
+            MAXSAMPLES   = 99
+            MAXCONTRASTS = 9
+
+            if( USERMODE() == "PRO") {
+                MAXSAMPLES   = 999
+                MAXCONTRASTS = 99
             }
             if( USERMODE() == "DEV") {
-                MAXCONTRASTS = 999
-                MAXSAMPLES   = 9999
+                MAXSAMPLES   = 999999
+                MAXCONTRASTS = 99999
             }
             
             ## check files: maximum contrasts allowed

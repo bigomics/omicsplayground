@@ -1,10 +1,10 @@
 
 
-source("../scripts/options.R")
-MAX.GENES
 
 if(0) {
 
+    ##source("../scripts/options.R")
+    ## MAX.GENES
     DIR = "../data/exampledata/"
     DIR = "~/bigomics/projects/vogel2019-tcell/data"
     counts  = as.matrix(read.csv(file.path(DIR,"counts.csv"), row.names=1))
@@ -16,9 +16,11 @@ if(0) {
 
 pgx.upload <- function(counts, samples, contrasts, ## genes, 
                        ##gx.methods = c("trend.limma","edger.qlf","deseq2.wald"),
+                       max.genes = 9999,
                        gx.methods = c("ttest.welch","trend.limma","edger.qlf"),
                        gset.methods = c("fisher","gsva","fgsea"),
                        extra.methods = c("meta.go","deconv","infer","drugs"),
+                       lib.dir = "../lib",
                        progress=NULL)
 {
 
@@ -155,19 +157,13 @@ pgx.upload <- function(counts, samples, contrasts, ## genes,
                               "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
     USER.GENESETTEST.METHODS = c("fisher","gsva","ssgsea","spearman",
                                  "camera", "fry","fgsea") ## no GSEA, too slow...
-
-
-    ## new callling methods
-    source( file.path(RDIR,"compute2-genes.R"))
-    source( file.path(RDIR,"compute2-genesets.R"))
-    source( file.path(RDIR,"compute2-extra.R"))
     
     ## ------------------ gene level tests ---------------------
     if(!is.null(progress)) progress$inc(0.1, detail = "testing genes")
     
     ngs <- compute.testGenes(
         ngs, contr.matrix,
-        max.features = MAX.GENES,
+        max.features = max.genes,
         test.methods = gx.methods)
     head(ngs$gx.meta$meta[[1]])        
     
@@ -175,15 +171,16 @@ pgx.upload <- function(counts, samples, contrasts, ## genes,
     if(!is.null(progress)) progress$inc(0.2, detail = "testing gene sets")
     
     ngs <- compute.testGenesets(
-        ngs, max.features = MAX.GENES,
-        test.methods = gset.methods)
+        ngs, max.features = max.genes,
+        test.methods = gset.methods,
+        lib.dir = lib.dir )
     head(ngs$gset.meta$meta[[1]])
     
     ## ------------------ extra analyses ---------------------
     if(!is.null(progress)) progress$inc(0.3, detail = "extra modules")
     ##extra <- c("meta.go","deconv","infer","drugs")
     ##extra <- c("meta.go","infer","drugs")
-    ngs <- compute.extra(ngs, extra=extra.methods)
+    ngs <- compute.extra(ngs, extra=extra.methods, lib.dir=lib.dir)
     
     ngs$timings
     return(ngs)
