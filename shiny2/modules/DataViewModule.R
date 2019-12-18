@@ -10,6 +10,7 @@ DataViewInputs <- function(id) {
 DataViewUI <- function(id) {
     ns <- NS(id)  ## namespace
     tabsetPanel(
+        id = ns("tabs"),
         tabPanel("Plots",uiOutput(ns("plotsUI"))),
         tabPanel("Counts",uiOutput(ns("countsUI"))),
         tabPanel("Gene table",uiOutput(ns("genetableUI"))),

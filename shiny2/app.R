@@ -13,11 +13,9 @@ RDIR="../R"
 FILES="../lib"
 PGX.DIR="../data"
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
+DEV.VERSION = TRUE
 
 ##load("../data/geiger2016-arginine.pgx"); ngs=pgx.initialize(ngs)    
-
-USERMODE = reactiveVal("PRO")
-DEV.VERSION = TRUE
 
 source("../R/pgx-modules.R")
 source("modules/DataViewModule.R", local=TRUE)
@@ -33,6 +31,7 @@ source("modules/ProfilingModule.R", local=TRUE)
 
 server = function(input, output, session) {
 
+    useShinyjs()
     ##useShinydashboard()
     ##useShinydashboardPlus()
     cat("===================== SERVER =======================\n")
@@ -60,18 +59,39 @@ server = function(input, output, session) {
     ## Hide/show certain section
     observe({
         usermode <- env[["load"]][["usermode"]]()
-        if(length(usermode)==0) return(NULL)
+        if(length(usermode)==0) usermode <- "BASIC"
         dbg("usermode = ",usermode)
+        hideTab("view-tabs","Resource info")
+        hideTab("enrich-tabs1","GeneMap")                        
         if(usermode=="BASIC") {
             hideTab("maintabs","Biomarker")
             hideTab("maintabs","scProfiling")
+            hideTab("clust-tabs2","Feature ranking")
+            hideTab("expr-tabs1","Volcano (methods)")                        
+            hideTab("expr-tabs2","FDR table")            
+            hideTab("enrich-tabs1","Volcano (methods)")                        
+            hideTab("enrich-tabs2","FDR table")            
         } else {
             showTab("maintabs","Biomarker")
             showTab("maintabs","scProfiling")
+            showTab("clust-tabs2","Feature ranking")
+            showTab("expr-tabs1","Volcano (methods)")                        
+            showTab("expr-tabs2","FDR table")            
+            showTab("enrich-tabs1","Volcano (methods)")                        
+            showTab("enrich-tabs2","FDR table")            
+        }
+        if(DEV.VERSION) {
+            showTab("view-tabs","Resource info")
+            showTab("enrich-tabs1","GeneMap")                        
         }
     })
+
+    ## Hide BASIC/PRO usermode switch
+    shinyjs::hide(selector="div.usermode-button")
+    shinyjs::hide(selector="#load-main_usermode")
+    shinyjs::hide("load-main_usermode")
     
-    waiter_hide()    
+    hide_waiter()    
 }
 
 tabView <- function(title, tab.inputs, tab.ui) {
@@ -107,7 +127,7 @@ ui = navbarPage(
     tabView("Biomarker", BiomarkerInputs("bio"), BiomarkerUI("bio")),
     tabView("scProfiling", ProfilingInputs("prof"), ProfilingUI("prof")),
     footer = tagList(
-        waiter_show_on_load(spin_fading_circles()) # place at the bottom
+        show_waiter_on_load(spin_fading_circles()) # place at the bottom
     )
 )
 

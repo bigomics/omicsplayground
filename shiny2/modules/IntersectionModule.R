@@ -12,12 +12,14 @@ IntersectionUI <- function(id) {
         flex = c(1.5,0.07,1),
         height = 750,
         tabsetPanel(
+            id = ns("tabs1"),
             tabPanel("Pairs",uiOutput(ns("cmp_scatterPlotMatrix_UI"))),
             tabPanel("Contrast heatmap",uiOutput(ns("cmp_ctheatmap_UI"))),
             tabPanel("Connectivity map",uiOutput(ns("cmp_connectivitymap_UI")))
         ),
         br(),
         tabsetPanel(
+            id = ns("tabs2"),
             tabPanel("Venn diagram",uiOutput(ns("cmp_venndiagram_UI"))),
             tabPanel("Meta-volcano",uiOutput(ns("cmp_metavolcano_UI")))
         )

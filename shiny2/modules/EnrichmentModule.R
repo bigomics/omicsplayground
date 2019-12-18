@@ -12,14 +12,16 @@ EnrichmentUI <- function(id) {
         flex = c(1.4,1),
         height = 750,
         tabsetPanel(
+            id = ns("tabs1"),
             tabPanel("Top enriched",uiOutput(ns("enrich_topEnriched_UI"))),
             tabPanel("Plots",uiOutput(ns("enrich_subplots_UI"))),
             tabPanel("Compare",uiOutput(ns("enrich_compare_UI"))),
             tabPanel("Volcano (all)",uiOutput(ns("enrich_volcanoAll_UI"))),
             tabPanel("Volcano (methods)",uiOutput(ns("enrich_volcanoMethods_UI"))),
-            tabPanel("GeneMap (dev)",uiOutput(ns("enrich_genemap_UI")))
+            tabPanel("GeneMap",uiOutput(ns("enrich_genemap_UI")))
         ),
         tabsetPanel(
+            id = ns("tabs2"),
             tabPanel("Table",uiOutput(ns("enrich_tables_UI"))),
             tabPanel("Foldchange (all)",uiOutput(ns("enrich_fctable_UI"))),
             tabPanel("FDR table",uiOutput(ns("enrich_FDRtable_UI")))                       

@@ -12,12 +12,14 @@ ClusteringUI <- function(id) {
         flex = c(1.3,0.15,1),
         height = 780,
         tabsetPanel(
+            id = ns("tabs1"),
             tabPanel("Heatmap",uiOutput(ns("hm_heatmap_UI"))),
             tabPanel("PCA/tSNE",uiOutput(ns("hm_pcaUI"))),
             tabPanel("Parallel",uiOutput(ns("hm_parcoordUI")))
         ),
         br(),
         tabsetPanel(
+            id = ns("tabs2"),
             tabPanel("Annotate clusters",uiOutput(ns("hm_annotateUI"))),
             tabPanel("Phenotypes",uiOutput(ns("hm_phenoplotUI"))),
             tabPanel("Feature ranking",uiOutput(ns("hm_featurerankUI")))      

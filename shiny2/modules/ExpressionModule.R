@@ -21,12 +21,14 @@ ExpressionUI <- function(id) {
         flex = c(1.4,1),
         height = 750,
         tabsetPanel(
+            id = ns("tabs1"),
             tabPanel("Plot",uiOutput(ns("expr_plots_UI"))),
             tabPanel("Top genes",uiOutput(ns("expr_topgenesUI"))),
             tabPanel("Volcano (all)",uiOutput(ns("expr_volcanoAll_UI"))),
             tabPanel("Volcano (methods)",uiOutput(ns("expr_volcanoMethodsUI")))
         ),
         tabsetPanel(
+            id = ns("tabs2"),
             tabPanel("Table",uiOutput(ns("expr_tables_UI"))),
             tabPanel("Foldchange (all)",uiOutput(ns("expr_fctable_UI"))),
             tabPanel("FDR table",uiOutput(ns("expr_FDRtable_UI")))                       
