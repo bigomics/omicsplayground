@@ -26,7 +26,7 @@ FunctionalModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
     inputData <- env[["load"]][["inputData"]]
-    rowH = 780  ## row height of panel
+    rowH = 760  ## row height of panel
     tabH = 200  ## row height of panel    
     description = "<b>Functional analysis</b>. <br> Perform specialized functional analysis
 to understand biological functions including GO, KEGG, and drug connectivity mapping."
