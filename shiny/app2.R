@@ -90,20 +90,23 @@ server = function(input, output, session) {
     hide_waiter()    
 }
 
-
 footer.txt = "Proudly designed and created by <a href='http://bigomics.ch'>BigOmics Analytics</a>."
 powered.txt  = "Powered by BigOmics Analytics"
 
+logo = tagList(span(class="logo-lg", "Omics Playground v2"), 
+               tags$img(src="bigomics-logo-white-32px.png"))
+
+logo1 = div(img(src="bcplatforms-white.svg", height="40px"), id="navbar-logo", class="logo-lg", style="margin-top:-2px;")
+logo2 = div(img(src="company-logo2.png", height="35px"), id="navbar-logo", style="margin-top:-4px; margin-left:-8px;")
+
 ui = dashboardPagePlus( 
-    title = "Omics Playground v2",
+    ##title = "Omics Playground v2",
+    title = "BC | Platforms",    
     skin = "blue",
-    footer = dashboardFooter(
-        left_text = HTML(footer.txt),
-        ),
+    footer = dashboardFooter(left_text = HTML(footer.txt)),
     header = dashboardHeaderPlus(
-        title = tagList(
-            span(class="logo-lg", "Omics Playground v2"), 
-            tags$img(src="bigomics-logo-white-32px.png")),
+        ## title = logo
+        title = tagList(logo1, logo2),
         enable_rightsidebar = TRUE,
         rightSidebarIcon = "ellipsis-v"
         ## ---------- items in the top menu aligned left:

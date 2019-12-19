@@ -107,11 +107,13 @@ tabView <- function(title, tab.inputs, tab.ui) {
              ))
 }
 
-title = div(img(src="bigomics-logo-white-48px.png", width="48px"),
-            "Omics Playground v2", id="navbar-logo", style="margin-top:-13px;")
+TITLE = "Omics PlayCloud"
+TITLE = "Omics Playground v2"
+logo = div(img(src="bigomics-logo-white-48px.png", height="48px"),
+           TITLE, id="navbar-logo", style="margin-top:-13px;")
 
 ui = navbarPage( 
-    title = title, windowTitle="Omics Playground v2",
+    title = logo, windowTitle = TITLE,
     theme = shinythemes::shinytheme("cerulean"),
     ##includeCSS("www/navbar.css"),
     id = "maintabs",

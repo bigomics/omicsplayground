@@ -219,6 +219,10 @@ code {
 }
 */
 
+.box {
+    border-top: 0px !important;
+}
+
 #file-menu,#options-menu {
     font-size: 15px;
     color: white;
@@ -270,7 +274,7 @@ code {
 }
 
 .current-data {
-    position: fixed;
+    position: fixed; 
     font-weight: 200;
     font-size: 20px;
     color: rgba(255,255,255,100);

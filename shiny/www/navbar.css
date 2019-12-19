@@ -54,7 +54,7 @@ body {
 
 /* logo */
 #navbar-logo {
-    margin-left: -15px;
+    margin-left: -0px;
     margin-top: -23px;
 }
 
@@ -64,6 +64,10 @@ body {
     background: var(--main-color);
     color: white;
     margin: 0px 0px 0px 0px;
+    border-top: 0px !important;
+}
+
+.box {
     border-top: 0px !important;
 }
 
