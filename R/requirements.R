@@ -55,7 +55,8 @@ PKG.MANUAL <- c(
     "gputools","Seurat","EPIC","PCSF","NNLM","iTALK",
     "fpc","grid","gridGraphics","Rgraphviz","rWordCloud",
     "shinyparticles","FastGGM","monocle3","proteus",
-    "fastcluster","mygene","diptest","infercnv","pathview")
+    "fastcluster","mygene","diptest","infercnv","pathview",
+    "corrplot","umap")
 
 ##---------------------------------------------------------------------
 ## Install base packages
@@ -76,7 +77,6 @@ pkg.used <- sort(unique(pkg.used))
 
 install.pkgs( setdiff(pkg.used, c(PKG.MANUAL,BIG.NOTUSED)) )
 
-
 ##---------------------------------------------------------------------
 ## reinstall problematics ones
 ##---------------------------------------------------------------------
@@ -95,6 +95,9 @@ remove.pkg("fpc")
 install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
 ##install.packages("../ext/packges/fpc_2.1-10.tar.gz",repos=NULL,type="source")
 install_version("fpc", version="2.1-10", repos="http://cran.us.r-project.org")
+
+install.packages("webshot")
+webshot::install_phantomjs()
 
 ##---------------------------------------------------------------------
 ## Install latest from GITHUB

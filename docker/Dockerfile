@@ -10,10 +10,10 @@ FROM rocker/shiny:3.6.1
 
 RUN apt-get update && apt-get install -y apt-utils \
     libcurl4-gnutls-dev libv8-3.14-dev \
-    libssl-dev libxml2-dev  libjpeg-dev \
+    libssl-dev libxml2-dev libjpeg-dev \
     libgl-dev libglu-dev tk-dev libhdf5-dev \
     libgit2-dev libssh2-1-dev libnetcdf-dev \
-    libudunits2-dev \
+    libudunits2-dev libgdal-dev \
     jags emacs git
 
 ## Remove old folder
