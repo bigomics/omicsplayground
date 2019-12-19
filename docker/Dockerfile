@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y apt-utils \
     libgl-dev libglu-dev tk-dev libhdf5-dev \
     libgit2-dev libssh2-1-dev libnetcdf-dev \
     libudunits2-dev libgdal-dev \
-    jags emacs git
+    jags emacs git procps htop
 
 ## Remove old folder
 RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny 
@@ -23,8 +23,7 @@ RUN rm -fr /omicsplayground
 #------------------------------------------------------------
 ## Pull from GitHub
 #------------------------------------------------------------
-RUN git clone https://github.com/bigomics/omicsplayground.git 
-RUN chmod -R ugo+rwX /omicsplayground
+RUN git clone https://github.com/bigomics/omicsplayground.git && chmod -R ugo+rwX /omicsplayground
 WORKDIR /omicsplayground
 
 #------------------------------------------------------------
@@ -33,10 +32,11 @@ WORKDIR /omicsplayground
 RUN R -e "setwd('R');source('requirements.R')"
 
 #------------------------------------------------------------
-# Copy data into Docker image
+# Copy local data into Docker image
 #------------------------------------------------------------
 COPY data/* /omicsplayground/data/
 RUN R -e "setwd('scripts');source('update-datasets-info.R')"
+RUN R -e "install.packages(c('umap','corrplot','wordcloud'))"
 
 #------------------------------------------------------------
 # Copy further configuration files into the Docker image

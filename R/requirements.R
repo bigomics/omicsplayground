@@ -55,8 +55,7 @@ PKG.MANUAL <- c(
     "gputools","Seurat","EPIC","PCSF","NNLM","iTALK",
     "fpc","grid","gridGraphics","Rgraphviz","rWordCloud",
     "shinyparticles","FastGGM","monocle3","proteus",
-    "fastcluster","mygene","diptest","infercnv","pathview",
-    "corrplot","umap")
+    "fastcluster","mygene","diptest","infercnv","pathview")
 
 ##---------------------------------------------------------------------
 ## Install base packages
@@ -69,9 +68,9 @@ install.pkgs(base.pkg)
 ## Automatically scan all used packages and install
 ##---------------------------------------------------------------------
 
-pkg.used <- system("grep 'library(\\|require(' *R *r ../shiny/*Rmd", intern=TRUE)
+pkg.used <- system("grep 'library(\\|require(' *R *r ../shiny/*R ../shiny/modules/*R", intern=TRUE)
 pkg.used <- gsub(".*require\\(|.*library\\(","",pkg.used)
-pkg.used <- gsub("\"|\\).*","",pkg.used)
+pkg.used <- gsub("\"|\'|\\).*","",pkg.used)
 pkg.used <- grep("[ ]|quietly",pkg.used,value=TRUE,invert=TRUE)
 pkg.used <- sort(unique(pkg.used))
 
@@ -89,11 +88,10 @@ install.pkg("Rgraphviz", force=TRUE)
 install.pkg("fastcluster", force=TRUE)
 install.pkg("mygene", force=TRUE)
 install.pkg("diptest", force=TRUE)
-install.pkg("randomForest", force=TRUE)
+install.pkgs(c("umap","corrplot","wordcloud"))
 
 remove.pkg("fpc")
 install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
-##install.packages("../ext/packges/fpc_2.1-10.tar.gz",repos=NULL,type="source")
 install_version("fpc", version="2.1-10", repos="http://cran.us.r-project.org")
 
 install.packages("webshot")
