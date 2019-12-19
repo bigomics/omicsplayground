@@ -50,7 +50,6 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
         div(
             id="social-buttons",
             tagList(
-                ##actionButton("action1", "label", icon=icon("github")),
                 tipify( tags$a( href="https://omicsplayground.readthedocs.io", icon("book"), target="_blank"),
                        "Read our online documentation at Read-the-docs", placement="top"),
                 tipify( tags$a( href="https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-",
@@ -379,8 +378,8 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
                     textInput("register_email", "E-mail:"),
                     ## textInput("register_organization", "Organization:"),
                     selectInput("register_country", "Country:", choices=c("",all.countries)),
-                    div( ##actionButton("register_btn_skip", "Skip"),
-                        actionButton("register_btn", "Register"),
+                    div( ##actionButton(ns("register_btn_skip"), "Skip"),
+                        actionButton(ns("register_btn"), "Register"),
                         style="text-align: center;")
                 ),
                 footer = div(textOutput("register_warning"),style="color: red;"),
@@ -961,8 +960,8 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
             title = NULL,
             size = "m",
             footer = tagList(
-                downloadButton("downloadPGX", "Download locally", icon=icon("download")),
-                actionButton("savedata", "Save to cloud", icon=icon("save")),
+                downloadButton(ns("downloadPGX"), "Download locally", icon=icon("download")),
+                actionButton(ns("savedata"), "Save to cloud", icon=icon("save")),
                 modalButton("Dismiss")
             )
         ))
