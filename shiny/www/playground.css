@@ -119,11 +119,6 @@ code {
   font-weight: 400;
 }
 
-.sidebar {
-    font-size: 13px;
-    font-weight: 400;
-}
-
 .shiny-output-error-validation {
         color: red;
 }
@@ -216,7 +211,6 @@ code {
   background-color: #fff;
 }
 
-
 /*
 .box-header,dropdown .btn {
     color: #BBB;
@@ -285,11 +279,22 @@ code {
     z-index: 9999;
 }
 
+.poweredby {
+    position: fixed;
+    font-weight: 200;
+    font-size: 12px;
+    color: rgba(255,255,255,100);
+    bottom: 10px;
+    left: 10px;
+    z-index: 9999;
+}
+
 
 .skin-blue .main-header .logo {
     background: rgb(120,120,120);
     background: var(--main-color);
 }
+
 
 /* sidebar: logo hover */
 .skin-blue .main-header .logo:hover {
@@ -315,7 +320,13 @@ code {
     /*  box-shadow: 3px 5px 5px #dfdfdf; */
 }
 
-/* sidebar*/
+/* sidebar */
+.sidebar {
+    font-size: 13px;
+    font-weight: 400;
+}
+
+/* sidebar logo area */
 .skin-blue .main-sidebar {
     background: var(--hover-color);
 /* 
@@ -326,6 +337,7 @@ code {
 */
 }
 
+/* global canvas background */
 .skin-blue .wrapper {
     background-color: var(--light-color);
 }

@@ -118,7 +118,7 @@ ui = navbarPage(
     header = tagList(
         tags$head(tags$link(rel = "stylesheet", href = "navbar.css")),
         shinyjs::useShinyjs(),        
-        use_waiter(include_js = FALSE),
+        use_waiter(),
         div(textOutput("current_dataset"),class='current-data')
     ),
     tabView("Home",LoadingInputs("load"),LoadingUI("load")),

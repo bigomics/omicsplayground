@@ -91,19 +91,21 @@ server = function(input, output, session) {
 }
 
 
+footer.txt = "Proudly designed and created by <a href='http://bigomics.ch'>BigOmics Analytics</a>."
+powered.txt  = "Powered by BigOmics Analytics"
+
 ui = dashboardPagePlus( 
     title = "Omics Playground v2",
     skin = "blue",
     footer = dashboardFooter(
-        left_text = HTML("Proudly designed and created by <a href='http://bigomics.ch'>BigOmics Analytics</a>."),
+        left_text = HTML(footer.txt),
         ),
     header = dashboardHeaderPlus(
         title = tagList(
-            span(class = "logo-lg", "Omics Playground v2"), 
+            span(class="logo-lg", "Omics Playground v2"), 
             tags$img(src="bigomics-logo-white-32px.png")),
         enable_rightsidebar = TRUE,
-        rightSidebarIcon = "ellipsis-v",
-
+        rightSidebarIcon = "ellipsis-v"
         ## ---------- items in the top menu aligned left:
         ## left_menu = tagList(
         ##     dropdownButton(
@@ -152,7 +154,8 @@ ui = dashboardPagePlus(
         includeCSS("www/playground.css"),
         extendShinyjs(text = 'shinyjs.hideControlSidebar = function(params) { $("body").removeClass("control-sidebar-open"); $(window).trigger("resize"); }'),
         extendShinyjs(text='shinyjs.showControlSidebar = function(params) { $("body").addClass("control-sidebar-open"); $(window).trigger("resize"); }'),
-        htmlOutput("current_dataset"),        
+        htmlOutput("current_dataset"),
+        div(HTML(powered.txt), class="poweredby"),
         tabItems(
             tabItem(tabName = "load", LoadingUI("load")),
             tabItem(tabName = "view", DataViewUI("view")),

@@ -8,8 +8,7 @@
 
 FROM bigomics/omicsplayground:latest
 
-RUN apt-get update && apt-get install -y emacs \
-    procps htop
+## RUN apt-get update && apt-get install -y procps htop
 
 #------------------------------------------------------------
 ## Pull from GitHub
@@ -18,12 +17,11 @@ WORKDIR /omicsplayground
 ##RUN rm -fr /omicsplayground ## Remove old folder
 ##RUN git clone https://github.com/bigomics/omicsplayground.git && chmod -R ugo+rwX /omicsplayground
 RUN git pull && chmod -R ugo+rwX /omicsplayground
-WORKDIR /omicsplayground
 
 #------------------------------------------------------------
 ## Install R packages that are required
 #------------------------------------------------------------
-RUN R -e "install.packages(c('umap','corrplot','wordcloud'))"
+##RUN R -e "install.packages(c('umap','corrplot','wordcloud'))"
 
 #------------------------------------------------------------
 # Copy local data into Docker image
