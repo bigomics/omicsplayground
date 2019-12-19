@@ -1,0 +1,42 @@
+## From https://www.r-bloggers.com/deploying-an-r-shiny-app-with-docker/
+## and https://www.bjoern-hartmann.de/post/learn-how-to-dockerize-a-shinyapp-in-7-steps/
+##
+
+#------------------------------------------------------------
+# Prepare R/Shiny with all packages
+#------------------------------------------------------------
+
+FROM bigomics/omicsplayground:latest
+
+RUN apt-get update && apt-get install -y emacs \
+    procps htop
+
+#------------------------------------------------------------
+## Pull from GitHub
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+##RUN rm -fr /omicsplayground ## Remove old folder
+##RUN git clone https://github.com/bigomics/omicsplayground.git && chmod -R ugo+rwX /omicsplayground
+RUN git pull && chmod -R ugo+rwX /omicsplayground
+WORKDIR /omicsplayground
+
+#------------------------------------------------------------
+## Install R packages that are required
+#------------------------------------------------------------
+RUN R -e "install.packages(c('umap','corrplot','wordcloud'))"
+
+#------------------------------------------------------------
+# Copy local data into Docker image
+#------------------------------------------------------------
+##COPY data/* /omicsplayground/data/
+##RUN R -e "setwd('/omicsplayground/scripts');source('update-datasets-info.R')"
+
+#------------------------------------------------------------
+# Copy further configuration files into the Docker image
+#------------------------------------------------------------
+COPY docker/shiny-server.conf  /etc/shiny-server/shiny-server.conf
+COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
+
+EXPOSE 3838
+
+CMD ["/usr/bin/shiny-server.sh"]
