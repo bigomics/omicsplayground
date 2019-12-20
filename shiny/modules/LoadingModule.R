@@ -191,9 +191,11 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
                 id="particles-target",
                 img(src = base64enc::dataURI(file="www/splash/bigomics-splash2.png"),
                     width="100%", height="auto%", style = "position:absolute;"),
+                ##div("Big Omics Data", class="splash-title"),
+                ##div("Isn't big anymore with Omics Playground", class="splash-subtitle"),
                 style="height: 500px; width: 100%; background-color: #2c81e2;"
                 ##height="500px", style="margin-left: -14px; margin-top: -4px;"
-            ),
+            ),            
             footer = tagList(
                 actionButton("action1","Read-the-docs", icon=icon("book"),
                              onclick="window.open('https://omicsplayground.readthedocs.io','_blank')"),
