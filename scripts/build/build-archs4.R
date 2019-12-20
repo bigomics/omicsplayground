@@ -7,6 +7,7 @@
 library("archs4")
 
 archs4dir <- "~/.archs4data"
+archs4dir <- "~/bigomics/data/archs4data"
 archs4_local_data_dir_create(archs4dir)
 
 cwd = getwd()
