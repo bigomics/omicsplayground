@@ -40,7 +40,6 @@ h1, h2, h3, h4, h5, h6 {
 
 /* value boxes */
 .vbox {
-    background: transparent;
     background: var(--main-color);
     color: white;
     margin: -10px 0px 0px 0px;
