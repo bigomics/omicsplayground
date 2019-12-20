@@ -14,7 +14,7 @@ FILES="../lib"
 PGX.DIR="../data"
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 200*1024^2)  ## max 200Mb upload
-o
+
 ## DEV.VERSION = TRUE
 
 if(0) {
