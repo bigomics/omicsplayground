@@ -438,7 +438,8 @@ pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
     }
 
     pos2=pos3=NULL
-    if(method=="umap") {        
+    if(method=="umap") {
+        require(umap)
         if(2 %in% dims) {
             pos2 = umap(
                 t(sX),
