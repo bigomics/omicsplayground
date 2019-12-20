@@ -50,7 +50,7 @@ server = function(input, output, session) {
     env[["func"]]   <- callModule( FunctionalModule, "func", env)
     env[["sig"]]    <- callModule( SignatureModule, "sig", env)
     ##env[["bio"]]    <- callModule( BiomarkerModule, "bio", env)
-    ##env[["prof"]]   <- callModule( ProfilingModule, "prof", env)
+    env[["prof"]]   <- callModule( ProfilingModule, "prof", env)
 
     ## How to hide/show the right (control)sidebar
     observeEvent(input$menuitem, {
@@ -73,9 +73,9 @@ server = function(input, output, session) {
             menuItem("Enrichment", tabName = "enrich", icon=icon("expand-arrows-alt")),
             menuItem("Intersection", tabName = "isect", icon=icon("crosshairs")),
             menuItem("Functional", tabName = "func", icon=icon("square-root-alt")),
-            menuItem("Signature", tabName = "sig", icon=icon("signature"))
+            menuItem("Signature", tabName = "sig", icon=icon("signature")),
             ##menuItem("Biomarker", tabName = "bio", icon=icon("marker")),
-            ##menuItem("scProfiling", tabName = "prof", icon=icon("dot-circle"))
+            menuItem("scProfiling", tabName = "prof", icon=icon("dot-circle"))
         )
         sidebarMenu( id="menuitem", .list = menuitems)
     })
@@ -90,39 +90,37 @@ server = function(input, output, session) {
     hide_waiter()    
 }
 
-footer.txt = "Proudly designed and created by <a href='http://bigomics.ch'>BigOmics Analytics</a>."
-powered.txt  = "Powered by BigOmics Analytics"
+footer.txt = "Powered by <a href='http://bigomics.ch'>BigOmics Analytics</a>."
 
 logo = tagList(span(class="logo-lg", "Omics Playground v2"), 
                tags$img(src="bigomics-logo-white-32px.png"))
 
-##logo = tagList(div(img(src="bcplatforms-white.svg", height="40px"), id="navbar-logo", class="logo-lg", style="margin-top:-2px;"), div(img(src="company-logo2.png", height="35px"), id="navbar-logo", style="margin-top:-4px; margin-left:-8px;"))
+logo = tagList(div(img(src="company-logo.svg", height="36px"), id="navbar-logo", class="logo-lg", style="margin-top:-4px;"), div(img(src="company-logo.svg", height="36px"), id="navbar-logo", style="margin-top:-4px; margin-left:-4px;"))
 
 ui = dashboardPagePlus( 
     title = "Omics Playground v2",
     ##title = "BC | Platforms",    
     skin = "blue",
-    footer = dashboardFooter(left_text = HTML(footer.txt)),
     header = dashboardHeaderPlus(
         title = logo,
         enable_rightsidebar = TRUE,
-        rightSidebarIcon = "ellipsis-v"
+        rightSidebarIcon = "ellipsis-v",
         ## ---------- items in the top menu aligned left:
-        ## left_menu = tagList(
-        ##     dropdownButton(
-        ##         inputId="file-menu", ## 
-        ##         label="File", icon=NULL, circle=FALSE,
-        ##         actionLink(inputId="file_upload", label="Upload"),
-        ##         actionLink(inputId="file_load", label="Load"),
-        ##         actionLink(inputId="file_save", label="Save")
-        ##     ),
-        ##     dropdownButton(
-        ##         inputId="options-menu", ## 
-        ##         label="Options", icon=NULL, circle=FALSE,
-        ##         actionLink(inputId="option1", label="Option1"),
-        ##         actionLink(inputId="option2", label="Option2")
-        ##     )
-        ## )
+        left_menu = tagList(
+            dropdownButton(
+                inputId="file-menu", ## 
+                label="File", icon=NULL, circle=FALSE,
+                actionLink(inputId="file_upload", label="Upload"),
+                actionLink(inputId="file_load", label="Load"),
+                actionLink(inputId="file_save", label="Save")
+            ),
+            dropdownButton(
+                inputId="options-menu", ## 
+                label="Options", icon=NULL, circle=FALSE,
+                actionLink(inputId="option1", label="Option1"),
+                actionLink(inputId="option2", label="Option2")
+            )
+        )
         ## dropdownMenu(
         ##     type = "notifications",
         ##     notificationItem("Today is a good day!"),
@@ -142,9 +140,9 @@ ui = dashboardPagePlus(
             conditionalPanel("input.menuitem=='enrich'", EnrichmentInputs("enrich")),
             conditionalPanel("input.menuitem=='isect'", IntersectionInputs("isect")),
             conditionalPanel("input.menuitem=='func'", FunctionalInputs("func")),
-            conditionalPanel("input.menuitem=='sig'", SignatureInputs("sig"))
-            ##conditionalPanel("input.menuitem=='bio'", BiomarkerInputs("func")),
-            ##conditionalPanel("input.menuitem=='prof'", ProfilingInputs("prof"))
+            conditionalPanel("input.menuitem=='sig'", SignatureInputs("sig")),
+            conditionalPanel("input.menuitem=='bio'", BiomarkerInputs("bio")),
+            conditionalPanel("input.menuitem=='prof'", ProfilingInputs("prof"))
         )
     ),
     body = dashboardBody(
@@ -156,7 +154,6 @@ ui = dashboardPagePlus(
         extendShinyjs(text = 'shinyjs.hideControlSidebar = function(params) { $("body").removeClass("control-sidebar-open"); $(window).trigger("resize"); }'),
         extendShinyjs(text='shinyjs.showControlSidebar = function(params) { $("body").addClass("control-sidebar-open"); $(window).trigger("resize"); }'),
         htmlOutput("current_dataset"),
-        div(HTML(powered.txt), class="poweredby"),
         tabItems(
             tabItem(tabName = "load", LoadingUI("load")),
             tabItem(tabName = "view", DataViewUI("view")),
@@ -165,12 +162,16 @@ ui = dashboardPagePlus(
             tabItem(tabName = "enrich", EnrichmentUI("enrich")),
             tabItem(tabName = "isect", IntersectionUI("isect")),
             tabItem(tabName = "func", FunctionalUI("func")),
-            tabItem(tabName = "sig", SignatureUI("sig"))
-            ##tabItem(tabName = "bio", BiomarkerUI("bio")),
-            ##tabItem(tabName = "prof", ProfilingUI("prof"))
-        ),
+            tabItem(tabName = "sig", SignatureUI("sig")),
+            tabItem(tabName = "bio", BiomarkerUI("bio")),
+            tabItem(tabName = "prof", ProfilingUI("prof"))
+        )
+    ),    
+    footer = tagList(
+        dashboardFooter(left_text = HTML(footer.txt)),
+        ## social_buttons(),
         show_waiter_on_load(spin_fading_circles()) # place at the bottom
-    )    
+    )
 )
 
 shiny::shinyApp(ui, server)

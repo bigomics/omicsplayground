@@ -1,22 +1,21 @@
 :root {
-    --main-color:  rgb(26,110,204);
-    --hover-color: rgb(20,90,150);
+    --hover-color:  rgb(26,110,204);
+    --main-color: rgb(20,90,150);
     --dark-color:  rgb(10,60,100);
-    /* --canvas-color:rgba(240,248,255,20); */
+    --accent-color:  rgb(255,140,0);
     --canvas-color:rgb(255,255,255);    
-    /*  --light-color: rgb(220, 235, 245); */
-    --light-color: #eeeeee;
+    --light-color: #dadada;
 }
 
 body {
-    font-family: "DINOT",sans-serif;
+//    font-family: "DINOT",sans-serif;
     font-size: 13px;
     font-weight: 400;
-    letter-spacing: 0.03em;
+//    letter-spacing: normal;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: "DINAlternate-Bold",serif;
+//    font-family: "DINAlternate-Bold",serif;
     font-weight: bold;
     line-height: normal;
 }
@@ -30,13 +29,13 @@ h1, h2, h3, h4, h5, h6 {
     background: var(--canvas-color);
 }
 
-.tab-pane {
-    background: white;
-    padding: 10px 10px;
+.tab-content {
+//    margin: -12px -12px -12px -12px;
 }
 
-.tab-content {
-    margin: -12px -12px -12px -12px;
+.tabbable .tab-content {
+    background: white;
+    padding: 25px 20px;
 }
 
 /* value boxes */
@@ -44,7 +43,7 @@ h1, h2, h3, h4, h5, h6 {
     background: transparent;
     background: var(--main-color);
     color: white;
-    margin: 0px 0px 0px 0px;
+    margin: -10px 0px 0px 0px;
     border-top: 0px !important;
 }
 
@@ -82,9 +81,19 @@ h1, h2, h3, h4, h5, h6 {
     padding-bottom: 4px !important;
 }
 
-.nav-tabs-custom {
-    margin-bottom: 0px;
+
+.nav-tabs>li>a {
+    padding: 6px 12px;
+    margin: 0px 0px;
+    font-size: 15px;
 }
+
+.nav-tabs>li.active {
+    border-top: 3px solid var(--accent-color);
+    margin-top: -3px;
+}
+
+
 
 .scrollable-element {
 /*    scrollbar-color: red yellow; */
@@ -124,6 +133,23 @@ code {
   background-color: #F9F9F9FF;
   font-weight: 400;
 }
+
+.btn-social-icon {
+    padding: 0px;
+    width:  24px;
+    height: 22px;
+}
+
+#social-buttons {
+    position: fixed;
+    font-weight: 300;
+    font-size: 32px;
+    color: #FFFFFF88;
+    bottom: 10px;
+    left: 10px;
+    z-index: 9999;
+}
+
 
 .shiny-output-error-validation {
         color: red;
@@ -282,7 +308,7 @@ code {
 .current-data {
     position: fixed; 
     font-weight: 200;
-    font-size: 20px;
+    font-size: 18px;
     color: rgba(255,255,255,100);
     top: 10px;
     right: 80px;
@@ -339,12 +365,6 @@ code {
 .skin-blue .main-sidebar {
     background: var(--hover-color);
     background: var(--light-color);
-/* 
-    box-shadow: 3px 5px 5px #dfdfdf;
-    padding-left: 0px;
-    padding-right: 0px;
-    padding-top: 60px; 
-*/
 }
 
 /* global canvas background */
@@ -370,6 +390,7 @@ code {
 .skin-blue .sidebar-menu > li.active > a {
     color: #fff;
     border-radius: 0px;
+    border-left-color: var(--accent-color);
 }
 
 /* sidebar: tab hovered */
