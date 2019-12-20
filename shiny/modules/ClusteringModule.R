@@ -907,15 +907,23 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         tipify( selectInput( ns("hmpca.shapevar"), "Shape:", choices=NULL, width='100%'),
                "Set the shapes of the samples according to a given phenotype class.",
                placement="right", options = list(container = "body")),
-        tipify( radioButtons( ns('hm_clustmethod'),"Layout:",c("fixed","tsne","pca","umap"),inline=TRUE),
-               "Choose the layout method for clustering to visualise.",
-               placement="right", options = list(container = "body")),
-        tipify( radioButtons( ns('hm_ntop2'),"Ntop:",c(100,1000,4000,9999),inline=TRUE,selected=1000),
-               "Number of top genes for dimensionality reduction.",
-               placement="right", options = list(container = "body")),
         tipify( checkboxGroupInput( ns('hmpca_options'),"Other:", choices=c('label','3D','normalize'), inline=TRUE),
                "Normalize matrix before calculating distances.",
-               placement="right", options = list(container = "body"))
+               placement="right", options = list(container = "body")),
+      
+        ## NEED RETINK!!!: Would like to (dynamically) hide this in
+        ## BASIC version. How to do conditional panel for BASIC/PRO in
+        ## non-reactive env????
+        ##
+        ## conditionalPanel("input.hm_features == '<custom>'", ns=ns,
+        div( class="pro-feature",
+            tipify( radioButtons( ns('hm_clustmethod'),"Layout:",c("fixed","tsne","pca","umap"),inline=TRUE),
+                   "Choose the layout method for clustering to visualise.",
+                   placement="right", options = list(container = "body")),
+            tipify( radioButtons( ns('hm_ntop2'),"Ntop:",c(100,1000,4000,9999),inline=TRUE,selected=1000),
+                   "Number of top genes for dimensionality reduction.",
+                   placement="right", options = list(container = "body"))
+            )
     )
 
     hm_PCAplot_caption <- reactive({
