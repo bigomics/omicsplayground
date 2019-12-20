@@ -8,7 +8,7 @@ library(shinydashboardPlus)
 library(devtools)
 require(shinyWidgets)
 library(waiter)
- 
+
 cat("===================== INIT =======================\n")
 
 RDIR="../R"
@@ -70,8 +70,8 @@ server = function(input, output, session) {
             menuItem("DataView", tabName = "view", icon=icon("table")),            
             menuItem("Clustering", tabName = "clust", icon=icon("project-diagram")),
             menuItem("Expression", tabName = "expr", icon=icon("chart-bar")),
-            menuItem("Enrichment", tabName = "enrich", icon=icon("expand-arrows-alt")),
-            menuItem("Intersection", tabName = "isect", icon=icon("crosshairs")),
+            menuItem("Enrichment", tabName = "enrich", icon=icon("object-group")),
+            menuItem("Intersection", tabName = "isect", icon=icon("expand-arrows-alt")),
             menuItem("Functional", tabName = "func", icon=icon("square-root-alt")),
             menuItem("Signature", tabName = "sig", icon=icon("signature")),
             ##menuItem("Biomarker", tabName = "bio", icon=icon("marker")),
@@ -150,7 +150,7 @@ ui = dashboardPagePlus(
         ##useShinydashboard(),
         useShinydashboardPlus(),        
         use_waiter(include_js = FALSE), # do not include js
-        includeCSS("www/playground.css"),
+        includeCSS("www/dashboard.css"),
         extendShinyjs(text = 'shinyjs.hideControlSidebar = function(params) { $("body").removeClass("control-sidebar-open"); $(window).trigger("resize"); }'),
         extendShinyjs(text='shinyjs.showControlSidebar = function(params) { $("body").addClass("control-sidebar-open"); $(window).trigger("resize"); }'),
         htmlOutput("current_dataset"),

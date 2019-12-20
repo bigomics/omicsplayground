@@ -41,9 +41,16 @@ body {
     padding: 25px 20px; 
 }
 
-.nav-tabs {
+.tabbable .nav-tabs {
     padding: 0px;
+    margin: 4px 0px;
+    border-radius: 0px;
+}
+
+.nav-tabs>li>a {
     margin: 0px 0px;
+    padding: 6px 12px;
+    border-radius: 0px;
 }
 
 .nav-tabs>li.active {
@@ -273,11 +280,43 @@ body {
 }
 
 
-/* ------------------- modal dialogs -------------- */
+/* splash */
 #modal-splash {
-    background-color: #2c81e2;    
+    height: 500px;
+    width: 100%;
+    background-color: var(--main-color);
+    padding: 0px !important;
 }
 
+#particles-target {
+    position: absolute;
+    top: 0px;
+    width: 100%;
+}
+
+.splash-title {
+    padding: 2.3em 1em 0 60px;
+    font-family: Lato;
+    font-size: 72px;
+    font-weight: 800;
+    color: white;
+    text-align: left;
+    width: 1000;
+}
+
+.splash-subtitle {
+    padding: 0.0em 1em 0 60px;
+    font-family: Lato;
+    font-size: 18px;
+    font-weight: 200;
+    color: white;
+    text-align: left;
+}
+
+
+
+
+/* modal dialogs */
 .modal-content {
     border:0;
 }
