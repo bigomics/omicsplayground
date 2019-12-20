@@ -35,11 +35,10 @@ body {
 }
 */
 
-
 /* space in innner tabpanes */
 .tabbable .tab-content {
     /* margin: -12px -12px -12px -12px; */
-    padding-top: 25px; 
+    padding: 25px 20x; 
 }
 
 .nav-tabs {
@@ -160,12 +159,6 @@ body {
     background-color: #fff;
 }
 
-.btn-social-icon {
-    padding: 0px;
-    width:  28px;
-    height: 24px;
-}
-
 .fa-gear {
     color: #DDDDDD;
 }
@@ -213,7 +206,7 @@ body {
 .current-data {
     position: fixed;
     font-weight: 200;
-    font-size: 20px;
+    font-size: 18px;
     color: rgba(255,255,255,100);
     top: 10px;
     right: 30px;
@@ -222,6 +215,12 @@ body {
 
 
 /* ------------------- buttons -------------- */
+
+.btn-social-icon {
+    padding: 0px;
+    width:  28px;
+    height: 24px;
+}
 
 #social-buttons {
     position: fixed;
@@ -232,7 +231,6 @@ body {
     left: 10px;
     z-index: 9999;
 }
-
 
 .radioGroupButtons {
     margin-top: -3px;

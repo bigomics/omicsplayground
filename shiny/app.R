@@ -14,7 +14,6 @@ FILES="../lib"
 PGX.DIR="../data"
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 200*1024^2)  ## max 200Mb upload
-
 ## DEV.VERSION = TRUE
 
 if(0) {
@@ -46,9 +45,9 @@ server = function(input, output, session) {
     env <- list()  ## communication environment 
     ## env[["load"]][["inputData"]] <- reactive({ ngs })    
     env[["load"]]   <- callModule( LoadingModule, "load", hideUserMode=FALSE)
-    env[["expr"]]   <- callModule( ExpressionModule, "expr", env)
     env[["view"]]   <- callModule( DataViewModule, "view", env)
     env[["clust"]]  <- callModule( ClusteringModule, "clust", env)
+    env[["expr"]]   <- callModule( ExpressionModule, "expr", env)
     env[["enrich"]] <- callModule( EnrichmentModule, "enrich", env)
     env[["isect"]]  <- callModule( IntersectionModule, "isect", env)
     env[["func"]]   <- callModule( FunctionalModule, "func", env)
