@@ -6,14 +6,14 @@ library(shinyjs)
 library(devtools)
 require(shinyWidgets)
 library(waiter)
- 
+
 cat("===================== INIT =======================\n")
 
 RDIR="../R"
 FILES="../lib"
 PGX.DIR="../data"
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
-options(shiny.maxRequestSize = 200*1024^2)  ## max 200Mb upload
+options(shiny.maxRequestSize = 200*1024^2)  ##max 200Mb upload
 ## DEV.VERSION = TRUE
 
 if(0) {
