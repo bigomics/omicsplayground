@@ -490,6 +490,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
             ##shinyjs::html("navbar-brand","Omics Playground (basic)")
             shinyjs::hide(selector = "div.download-button")
             shinyjs::hide(selector = "div.modebar")
+            shinyjs::hide(selector = "div.pro-feature")
             USERMODE("BASIC")
         }
         
@@ -497,6 +498,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
             dbg("observeEvent::main_usermode : switching to PRO mode")
             shinyjs::show(selector = "div.download-button")
             shinyjs::show(selector = "div.modebar")
+            shinyjs::show(selector = "div.pro-feature")
             USERMODE("PRO")
         }
 
