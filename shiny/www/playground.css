@@ -9,11 +9,17 @@
 }
 
 body {
-    // font-family: Arial;
-    font-size: 14px;
-    font-weight: 400;    
+    font-family: "DINOT",sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.03em;
 }
 
+h1, h2, h3, h4, h5, h6 {
+    font-family: "DINAlternate-Bold",serif;
+    font-weight: bold;
+    line-height: normal;
+}
 .content {
     min-height: 800px;
     background: var(--canvas-color);
@@ -293,7 +299,6 @@ code {
     z-index: 9999;
 }
 
-
 .skin-blue .main-header .logo {
     background: rgb(120,120,120);
     background: var(--main-color);
@@ -333,6 +338,7 @@ code {
 /* sidebar logo area */
 .skin-blue .main-sidebar {
     background: var(--hover-color);
+    background: var(--light-color);
 /* 
     box-shadow: 3px 5px 5px #dfdfdf;
     padding-left: 0px;
@@ -349,6 +355,7 @@ code {
 /* sidebar: tabs */
 .skin-blue .main-sidebar .sidebar .sidebar-menu a {
     color: #fff;
+    color: #333;
     font-size: 14px;
 }
 
@@ -356,7 +363,7 @@ code {
 .skin-blue .main-sidebar .sidebar .sidebar-menu .active a {
     color: #fff;
     font-size: 14px;
-    background: var(--dark-color);
+    background: var(--main-color);
 }
 
 .skin-blue .sidebar-menu > li:hover > a,
@@ -367,7 +374,7 @@ code {
 
 /* sidebar: tab hovered */
 .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover {
-    background: var(--dark-color);    
+    background: var(--hover-color);    
     color: #fff;
 }
 
@@ -380,7 +387,7 @@ code {
     padding-right: 5px;
     padding-top: 80px;
     border-left: 0px;
-    margin-right: 3px;    
+    margin-right: 0px;    
 }
 
 /* right sidebar menu */

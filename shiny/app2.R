@@ -96,17 +96,15 @@ powered.txt  = "Powered by BigOmics Analytics"
 logo = tagList(span(class="logo-lg", "Omics Playground v2"), 
                tags$img(src="bigomics-logo-white-32px.png"))
 
-logo1 = div(img(src="bcplatforms-white.svg", height="40px"), id="navbar-logo", class="logo-lg", style="margin-top:-2px;")
-logo2 = div(img(src="company-logo2.png", height="35px"), id="navbar-logo", style="margin-top:-4px; margin-left:-8px;")
+##logo = tagList(div(img(src="bcplatforms-white.svg", height="40px"), id="navbar-logo", class="logo-lg", style="margin-top:-2px;"), div(img(src="company-logo2.png", height="35px"), id="navbar-logo", style="margin-top:-4px; margin-left:-8px;"))
 
 ui = dashboardPagePlus( 
-    ##title = "Omics Playground v2",
-    title = "BC | Platforms",    
+    title = "Omics Playground v2",
+    ##title = "BC | Platforms",    
     skin = "blue",
     footer = dashboardFooter(left_text = HTML(footer.txt)),
     header = dashboardHeaderPlus(
-        ## title = logo
-        title = tagList(logo1, logo2),
+        title = logo,
         enable_rightsidebar = TRUE,
         rightSidebarIcon = "ellipsis-v"
         ## ---------- items in the top menu aligned left:

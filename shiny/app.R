@@ -14,7 +14,7 @@ FILES="../lib"
 PGX.DIR="../data"
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 200*1024^2)  ## max 200Mb upload
-
+o
 ## DEV.VERSION = TRUE
 
 if(0) {
@@ -23,8 +23,8 @@ if(0) {
     ngs=pgx.initialize(ngs)    
 }
 
+source("global.R")
 source("../R/pgx-modules.R")
-##source("../R/pgx-graph.R")
 source("modules/DataViewModule.R", local=TRUE)
 source("modules/ClusteringModule.R", local=TRUE)
 source("modules/ExpressionModule.R", local=TRUE)
@@ -135,6 +135,7 @@ ui = navbarPage(
     tabView("scProfiling", ProfilingInputs("prof"), ProfilingUI("prof")),
 
     footer = tagList(
+        social_buttons(),
         show_waiter_on_load(spin_fading_circles()) # place at the bottom
     )
 )
