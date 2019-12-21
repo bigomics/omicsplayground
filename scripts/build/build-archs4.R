@@ -3,8 +3,8 @@
 ##
 ##
 
-BiocManager::install("denalitherapeutics/archs4")
-BiocManager::install("GEOmetadb")
+##BiocManager::install("denalitherapeutics/archs4")
+##BiocManager::install("GEOmetadb")
 
 
 library("archs4")
@@ -20,8 +20,7 @@ source("../../R/pgx-functions.R")
 
 archs4dir <- "~/.archs4data"
 ##archs4dir <- "~/bigomics/data/archs4data"
-##archs4dir <- "/data/Projects/Data/archs4data"
-##archs4dir <- "~/Projects/Data/archs4data"
+archs4dir <- "/data/Projects/Data/archs4data"
 
 if(0) {
     archs4_local_data_dir_create(archs4dir)
@@ -106,10 +105,15 @@ for(id in ids) {
     ## get categorical phenotypes
     df <- aa$samples
     vv <- pgx.getCategoricalPhenotypes(df, max.ncat=10, min.ncat=2) 
+
+    if(length(vv)==0) {
+        cat("skipping. no valid phenotypes in GEO series",id,"...\n")
+        next()
+    }
     cat("found discrete phenotypes:",vv,"\n")
     df <- df[,vv,drop=FALSE]
     apply(df,2,table)
-
+    
     ## create contrast matrix
     res <- pgx.makeAutoContrast(df, mingrp=3, slen=15, ref=NA)
     names(res)
