@@ -16,7 +16,7 @@ FILES="../../lib/"
 PGX.DIR="../../data/"
 source("../../R/pgx-init.R")
 source("../../R/pgx-archs4.R")
-source("../../R/pgx-functions.R")
+source("../../R/ngs-functions.R")
 
 archs4dir <- "~/.archs4data"
 ##archs4dir <- "~/bigomics/data/archs4data"
