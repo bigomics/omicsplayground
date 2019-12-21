@@ -54,14 +54,15 @@ rs <- dbGetQuery(con,'select gse,title from gse')
 GSE.TITLE <- rs$title
 names(GSE.TITLE) <- rs$gse
 
-D <- read.csv("../../lib/L1000_repurposing_drugs.txt",
-              sep="\t",comment.char="#")
-drugs = as.character(D$pert_iname)
-drugs1 = grep("[[:punct:]]",drugs,value=TRUE,invert=TRUE)
-
-about.drug <- mclapply(GSE.TITLE[], function(a) any(sapply(drugs1,function(d)grepl(d,a))))
-about.drug <- unlist(about.drug)
-table(about.drug)
+if(0) {
+    D <- read.csv("../../lib/L1000_repurposing_drugs.txt",
+                  sep="\t",comment.char="#")
+    drugs = as.character(D$pert_iname)
+    drugs1 = grep("[[:punct:]]",drugs,value=TRUE,invert=TRUE)
+    about.drug <- mclapply(GSE.TITLE[], function(a) any(sapply(drugs1,function(d)grepl(d,a))))
+    about.drug <- unlist(about.drug)
+    table(about.drug)
+}
 
 ##================================================================================
 ##================================= MAIN =========================================
@@ -74,15 +75,15 @@ all_ids = names(samplesize[ samplesize>=10 & samplesize<=1000 ])
 length(all_ids)
 table(all_ids %in% names(GSE.TITLE))
 
-## Select studies with relevant terms
-ids1 <- all_ids[grep("[ ]aging|^aging|senesc",GSE.TITLE[all_ids],ignore.case=TRUE)]
+## Select studies with relevant terms about AGING
+ids <- all_ids[grep("[ ]aging|^aging|senesc",GSE.TITLE[all_ids],ignore.case=TRUE)]
 
-## Immuno&onco term
+## Select studies with relevant terms about AGING Immuno-oncology terms
 ids2 <- all_ids[grep("cancer|onco|tumor|tumour",GSE.TITLE[all_ids],ignore.case=TRUE)]
 ids2 <- ids2[grep("immun",GSE.TITLE[ids2],ignore.case=TRUE)]
-
 ids <- c(ids1, ids2)
 length(ids)
+
 
 ##ids <- head(ids,20)
 head(ids)
