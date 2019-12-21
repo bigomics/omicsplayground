@@ -16,6 +16,7 @@ source("../../R/pgx-init.R")
 
 archs4dir <- "~/.archs4data"
 archs4dir <- "~/bigomics/data/archs4data"
+##archs4dir <- "/data/Projects/Data/archs4data"
 
 if(0) {
     archs4_local_data_dir_create(archs4dir)
@@ -61,7 +62,7 @@ table(all_ids %in% names(GSE.TITLE))
 ## Select studies with relevant terms
 ids <- all_ids[grep("cancer|onco|immun|aging|senesc",GSE.TITLE[all_ids],ignore.case=TRUE)]
 length(ids)
-##ids <- head(all_ids,100)
+ids <- head(ids,20)
 head(ids)
 GSE.TITLE[ids]
 ##cc <- sample_covariates(a4)$name
