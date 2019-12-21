@@ -63,11 +63,13 @@ length(all_ids)
 table(all_ids %in% names(GSE.TITLE))
 
 ## Select studies with relevant terms
-ids <- all_ids[grep("cancer|onco|immun|aging|senesc",GSE.TITLE[all_ids],ignore.case=TRUE)]
+ids1 <- all_ids[grep("[ ]aging|^aging|senesc",GSE.TITLE[all_ids],ignore.case=TRUE)]
 
-ids <- all_ids[grep("cancer|onco|tumor|tumour",GSE.TITLE[all_ids],ignore.case=TRUE)]
-ids <- ids[grep("immun",GSE.TITLE[ids],ignore.case=TRUE)]
+## Immuno&onco term
+ids2 <- all_ids[grep("cancer|onco|tumor|tumour",GSE.TITLE[all_ids],ignore.case=TRUE)]
+ids2 <- ids2[grep("immun",GSE.TITLE[ids2],ignore.case=TRUE)]
 
+ids <- c(ids1, ids2)
 length(ids)
 ids <- head(ids,20)
 head(ids)
