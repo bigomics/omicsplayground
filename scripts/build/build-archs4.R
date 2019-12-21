@@ -3,8 +3,10 @@
 ##
 ##
 
-##BiocManager::install("denalitherapeutics/archs4")
-##BiocManager::install("GEOmetadb")
+BiocManager::install("denalitherapeutics/archs4")
+BiocManager::install("GEOmetadb")
+
+
 library("archs4")
 library(dplyr)
 library(GEOmetadb)
@@ -17,8 +19,9 @@ source("../../R/pgx-archs4.R")
 source("../../R/pgx-functions.R")
 
 archs4dir <- "~/.archs4data"
-archs4dir <- "~/bigomics/data/archs4data"
+##archs4dir <- "~/bigomics/data/archs4data"
 ##archs4dir <- "/data/Projects/Data/archs4data"
+##archs4dir <- "~/Projects/Data/archs4data"
 
 if(0) {
     archs4_local_data_dir_create(archs4dir)
@@ -43,11 +46,13 @@ library(archs4)
 a4 <- Archs4Repository(datadir=archs4dir)
 
 ## Get titles from GEO experiments
-if(!file.exists('GEOmetadb.sqlite')) getSQLiteFile()
-con <- dbConnect(SQLite(),'GEOmetadb.sqlite')
+metadb <- file.path(archs4dir,'GEOmetadb.sqlite')
+if(!file.exists(metadb)) getSQLiteFile(destdir=archs4dir)
+con <- dbConnect(SQLite(),metadb)
 rs <- dbGetQuery(con,paste("select gse,title from gse where",
                            "contributor like '%Ivo%Kwee%'",sep=" "))
 rs
+
 rs <- dbGetQuery(con,'select gse,title from gse')
 GSE.TITLE <- rs$title
 names(GSE.TITLE) <- rs$gse
@@ -71,11 +76,11 @@ ids2 <- ids2[grep("immun",GSE.TITLE[ids2],ignore.case=TRUE)]
 
 ids <- c(ids1, ids2)
 length(ids)
-ids <- head(ids,20)
+
+##ids <- head(ids,20)
 head(ids)
 GSE.TITLE[ids]
 ##cc <- sample_covariates(a4)$name
-cc3 = c("Sample_title","Sample_source_name_ch1","Sample_characteristics_ch1")
 
 id = "GSE114716"
 id = "GSE53784"
@@ -135,7 +140,7 @@ for(id in ids) {
         
         ## save
         ngs$name <- id
-        ngs$description <- paste0("GEO Series ",id,". ",aa$title,".")
+        ngs$description <- paste0("GEO Series ",id,". ",GSE.TITLE[id],".")
         ngs$datatype <- "RNA-seq"
         ngs$organism <- ngs.detectOrganism(ngs)
         ngs$date <- Sys.Date()
