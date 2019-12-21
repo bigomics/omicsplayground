@@ -58,11 +58,16 @@ names(GSE.TITLE) <- rs$gse
 ## all series ID
 samplesize <- table(a4$sample_table$series_id)
 all_ids = names(samplesize[ samplesize>=20 & samplesize<=200 ])
+all_ids = names(samplesize[ samplesize>=10 & samplesize<=1000 ])
 length(all_ids)
 table(all_ids %in% names(GSE.TITLE))
 
 ## Select studies with relevant terms
 ids <- all_ids[grep("cancer|onco|immun|aging|senesc",GSE.TITLE[all_ids],ignore.case=TRUE)]
+
+ids <- all_ids[grep("cancer|onco|tumor|tumour",GSE.TITLE[all_ids],ignore.case=TRUE)]
+ids <- ids[grep("immun",GSE.TITLE[ids],ignore.case=TRUE)]
+
 length(ids)
 ids <- head(ids,20)
 head(ids)
