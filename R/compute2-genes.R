@@ -8,6 +8,7 @@
 ##
 
 ##SAVE.PARAMS <- ls()
+max.features=1000;type="counts";test.methods=c("ttest","trend.limma")
 
 compute.testGenes <- function(ngs, contr.matrix, max.features=1000, type="counts",
                               test.methods=c("trend.limma","deseq2.wald","edger.qlf"))
@@ -15,7 +16,7 @@ compute.testGenes <- function(ngs, contr.matrix, max.features=1000, type="counts
     single.omics <- !any(grepl("\\[",rownames(ngs$counts)))
     single.omics
     data.types <- unique(gsub("\\[|\\].*","",rownames(ngs$counts)))
-    data.types
+    ##data.types
     if(single.omics || length(data.types)==1) {
         ## single-omics, no missing values
         cat(">>> computing gene tests for SINGLE-OMICS\n")
@@ -178,15 +179,15 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
         ##group[is.na(group)] <- "_"
         group[which(!group %in% rownames(contr.matrix))] <- "_"
         design <- model.matrix(~ 0 + group )  ## clean design no batch effects...
-        colnames(design) <- gsub("group", "", colnames(design))
+        colnames(design) <- sub("^group", "", colnames(design))
         rownames(design) <- colnames(ngs$counts)
         design
         
         ## check contrasts for sample sizes (at least 2 in each group) and
         ## remove otherwise
-        design <- design[,match(rownames(contr.matrix),colnames(design))]
+        design <- design[,match(rownames(contr.matrix),colnames(design)),drop=FALSE]
         colnames(design)
-        design = design[,rownames(contr.matrix)]
+        design = design[,rownames(contr.matrix),drop=FALSE]
         exp.matrix = (design %*% contr.matrix)
         keep <- rep(TRUE,ncol(contr.matrix))
         keep = (colSums(exp.matrix > 0) >= 1 & colSums(exp.matrix < 0) >= 1)

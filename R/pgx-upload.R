@@ -1,6 +1,3 @@
-
-
-
 if(0) {
 
     ##source("../scripts/options.R")
@@ -12,6 +9,11 @@ if(0) {
     ##genes   = read.csv(file.path(DIR,"genes.csv"), row.names=1, stringsAsFactors=FALSE)
     contrasts = as.matrix(read.csv(file.path(DIR,"contrasts.csv"), row.names=1))
     progress = NULL
+
+    counts = aa$counts
+    samples = aa$samples
+    contrasts = aa$contrasts
+
 }
 
 pgx.upload <- function(counts, samples, contrasts, ## genes, 
@@ -145,7 +147,7 @@ pgx.upload <- function(counts, samples, contrasts, ## genes,
             stop("sample annotation file must have 'group' column\n")
         }
     }
-
+    
     ##======================================================================
     ##======================================================================
     ##======================================================================
