@@ -990,6 +990,96 @@ makeClusterContrasts <- function(clusters, min.freq=0.01, full=FALSE,
     return(m1)
 }
 
+
+##mingrp=3;slen=8;ref=NULL
+pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
+
+    shortestunique <- function(xx,slen=3) {
+        k <- min(which(!sapply(1:max(nchar(xx)),function(i) any(duplicated(substring(xx,1,i))))))
+        substring(xx,1,max(k,slen))
+    }
+    
+    autoContrast1 <- function(x, ref, slen) {
+        if(is.null(ref)) ref <- NA
+        x <- as.character(x)
+        nx <- table(x)
+        too.small <- names(which(nx <= mingrp))
+        if(length(too.small)) x[which(x %in% too.small)] <- NA
+        nx <- table(x)
+        x <- factor(x)
+        if(!is.na(ref)) x <- relevel(x, ref=ref)
+        xlevels <- gsub("[^[:alnum:]]","",levels(x))
+        levels(x) <- shortestunique(xlevels,slen=slen)
+        xref <- gsub("[^[:alnum:]]","",levels(x)[1])
+        nn <- length(nx)
+        nn
+        if(nn<2) {
+            return(NULL)
+        } else if(nn == 2) {
+            ct <- model.matrix(~x)[,2]
+            ct <- matrix(ct, ncol=1)
+            colnames(ct) <- paste0(levels(x)[2],"_vs_",levels(x)[1])
+        } else if(nn >= 3) {
+            if(is.na(ref)) {
+                ct <- model.matrix(~0 + x)
+                colnames(ct) <- paste0(levels(x),"_vs_rest")
+            } else {
+                ct <- model.matrix(~0 + x)
+                colnames(ct) <- paste0(levels(x),"_vs_",xref)
+                i=1
+                for(i in 1:ncol(ct)) {
+                    j <- which(!(x %in% levels(x)[c(1,i)]))
+                    ct[j,i] <- NA
+                }
+                ct <- ct[,2:ncol(ct)] ## remove REFvsREF                
+            }
+        }
+        ct
+    }
+
+    if(!is.null(ref) && length(ref)!=ncol(df)) ref <- head(rep(ref,99),ncol(df))
+    
+    K <- c()
+    for(i in 1:ncol(df)) {
+        refi <- NA
+        if(!is.null(ref)) refi <- ref[i]
+        x <- df[,i]
+        if(!(refi %in% x)) refi <- NA
+        ref.pattern <- "wt|contr|ctr|untreat|normal|^no$|neg|ref"
+        detect.ref <- any(grepl(ref.pattern,x,ignore.case=TRUE))
+        if(is.na(refi) & detect.ref) {
+            refi <- grep(ref.pattern,x,ignore.case=TRUE,value=TRUE)[1]
+            cat("automatic reference detected:",refi,"\n")
+        }
+        ct <- autoContrast1(x, ref=refi, slen=slen)
+        colnames(ct) <- paste0(colnames(df)[i],":",colnames(ct))
+        K <- cbind(K,ct)
+    }
+    rownames(K) <- rownames(df)
+    head(K)
+    
+    kcode <- apply(K,1,paste,collapse="-")
+    xc <- factor(kcode, levels=unique(kcode))  ## experimental condition
+    levels(xc) <- paste0("group",1:length(levels(xc)))
+
+    jj <- which(!duplicated(kcode))
+    K2 <- K[jj,,drop=FALSE]
+    rownames(K2) <- xc[jj]
+    head(K2)
+
+    ## Translate coding 0/NA/1 to -1/0/+1 coding of contrast
+    K[K==0] <- -1
+    K[is.na(K)] <- 0
+    K2[K2==0] <- -1
+    K2[is.na(K2)] <- 0
+        
+    list(group = xc, contr.matrix = K2, exp.matrix=K)
+}
+
+##-----------------------------------------------------------------------------
+## KEGG
+##-----------------------------------------------------------------------------
+
 getKeggID <- function(gsets)
 {
     ## Guess KEGG id from gene set name
