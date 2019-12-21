@@ -148,7 +148,8 @@ for(id in ids) {
         ngs$datatype <- "RNA-seq"
         ngs$organism <- ngs.detectOrganism(ngs)
         ngs$date <- Sys.Date()
-
+        ngs$link <- paste0("https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=",id)
+        
         cat("object size: ",format(object.size(ngs), units="MB"),"\n")
         ngs.save(ngs, file=pgx.file)
 
