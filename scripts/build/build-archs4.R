@@ -16,6 +16,7 @@ PGX.DIR="../../data/"
 source("../../R/pgx-init.R")
 source("../../R/pgx-archs4.R")
 source("../../R/ngs-functions.R")
+source("../../R/pgx-contrasts.R")
 
 archs4dir <- "~/.archs4data"
 ##archs4dir <- "~/bigomics/data/archs4data"
@@ -100,7 +101,7 @@ GSE.TITLE[ids]
 ##cc <- sample_covariates(a4)$name
 
 id = "GSE53784"
-id = sample(ids,1)
+id = ids[1]
 id
 length(ids)
 for(id in ids) {
@@ -111,7 +112,7 @@ for(id in ids) {
         cat("skipping already done GEO series",id,"...\n")
         next()
     }
-
+    
     cat("retrieving Archs4 data for GEO series",id,":",GSE.TITLE[id],"\n")
     aa <- pgx.getArchs4Dataset(a4, id) 
     names(aa)
@@ -132,6 +133,7 @@ for(id in ids) {
     apply(df,2,table)
     
     ## create contrast matrix
+    mingrp=3;slen=15;ref=NA
     res <- pgx.makeAutoContrast(df, mingrp=3, slen=15, ref=NA)
     names(res)
     head(res$contr.matrix)
