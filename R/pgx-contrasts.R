@@ -195,8 +195,7 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
         if(nn<2) {
             return(NULL)
         } else if(nn == 2) {
-            ct <- model.matrix(~x)[,2]
-            ct <- matrix(ct, ncol=1)
+            ct <- model.matrix(~x)[,2,drop=FALSE]
             colnames(ct) <- paste0(levels(x)[2],"_vs_",levels(x)[1])
         } else if(nn >= 3) {
             if(is.na(ref1)) {
@@ -210,11 +209,11 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
                     j <- which(!(x %in% levels(x)[c(1,i)]))
                     ct[j,i] <- NA
                 }
-                ct <- ct[,2:ncol(ct)] ## remove REFvsREF                
+                ct <- ct[,2:ncol(ct),drop=FALSE] ## remove REFvsREF                
             }
         }
         ## NA can make ct smaller than full
-        ct <- ct[match(1:length(x),rownames(ct)),]
+        ct <- ct[match(1:length(x),rownames(ct)),,drop=FALSE]
         rownames(ct) <- 1:length(x)
         ct[is.na(ct)] <- 0
         ct
