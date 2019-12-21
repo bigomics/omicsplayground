@@ -1,3 +1,11 @@
+scripts/build/
+
+
+ngs.detectOrganism <- function(ngs) {
+    lowcase.ratio <- mean(grepl("[a-z]",substring(rownames(ngs$counts),2,100)))
+    c("human","mouse")[1 + 1*(lowcase.ratio>0.5)]
+}
+
 ngs.matchFeatures <- function(ngs, genes) {
     jj <- match(toupper(genes), toupper(ngs$genes$gene_name))
     rownames(ngs$genes)[jj]

@@ -20,3 +20,6 @@
 "19","molinari2018-rnaseq-bc.pgx","RNA-seq","RNA-seq experiment (from normalized counts, batch corrected)","mouse","36","8000","11163","strain treatment time","2019-12-11"
 "20","molinari2018-rnaseq-bc2.pgx","RNA-seq","RNA-seq experiment (from normalized counts, no batch correction)","mouse","36","8000","11163","strain treatment time","2019-12-12"
 "21","alex2019-data.pgx","unknown","unknown","human","700","60","82","","2019-12-13"
+"22","GSE100269.pgx","RNA-seq","LEC-induced gene expression changes in melanoma cells","human","48","5000","8546","title source cell_line cell_type cell_source","2019-12-21"
+"23","GSE100099.pgx","RNA-seq","p53 pulses lead to distinct patterns of gene expression albeit similar DNA-binding dynamics","human","75","5000","8524","title source passage cell_line","2019-12-21"
+"24","GSE100127.pgx","RNA-seq","Cross-Site Comparison of Ribosomal Depletion Kits for Illumina RNAseq Library Construction","human","78","5000","8596","title source kit state site","2019-12-21"

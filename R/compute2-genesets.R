@@ -127,7 +127,7 @@ compute.testGenesets <- function(ngs, max.features=1000, lib.dir="../lib",
         jj = unique( c(jj, grep(must.include,colnames(GMT),ignore.case=TRUE)))
         jj = jj[order(colnames(GMT)[jj])]
         length(jj)
-        GMT = GMT[,jj]
+        GMT = GMT[,jj,drop=FALSE]
         gmt.all = gmt.all[colnames(GMT)]
     }
     dim(GMT)
