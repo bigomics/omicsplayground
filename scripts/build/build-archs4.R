@@ -146,7 +146,8 @@ for(id in ids) {
     dim(aa$samples)
     dim(aa$contrasts)
 
-    if(ncol(aa$contrasts)>0) {
+    has.contrast <- (!is.null(aa$contrasts) && ncol(aa$contrasts)>0)    
+    if(has.contrast) {
     
         ## Playground pre-computation
         ngs <- pgx.upload(
