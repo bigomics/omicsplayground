@@ -61,6 +61,7 @@ if(0) {
     drugs1 = grep("[[:punct:]]",drugs,value=TRUE,invert=TRUE)
     about.drug <- mclapply(GSE.TITLE[], function(a) any(sapply(drugs1,function(d)grepl(d,a))))
     about.drug <- unlist(about.drug)
+    names(about.drug) <- GSE.TITLE
     table(about.drug)
 }
 
@@ -71,21 +72,29 @@ if(0) {
 ## all series ID
 samplesize <- table(a4$sample_table$series_id)
 all_ids = names(samplesize[ samplesize>=20 & samplesize<=200 ])
-all_ids = names(samplesize[ samplesize>=10 & samplesize<=1000 ])
+all_ids = names(samplesize[ samplesize>=10 & samplesize<=500 ])
 length(all_ids)
 table(all_ids %in% names(GSE.TITLE))
 
-## Select studies with relevant terms about AGING
-ids <- all_ids[grep("[ ]aging|^aging|senesc",GSE.TITLE[all_ids],ignore.case=TRUE)]
-
-## Select studies with relevant terms about AGING Immuno-oncology terms
-ids2 <- all_ids[grep("cancer|onco|tumor|tumour",GSE.TITLE[all_ids],ignore.case=TRUE)]
-ids2 <- ids2[grep("immun",GSE.TITLE[ids2],ignore.case=TRUE)]
-ids <- c(ids1, ids2)
+## Select studies with relevant terms
+ids <- all_ids[grep("lymphom|leukaem|hemato",GSE.TITLE[all_ids],ignore.case=TRUE)]
+ids <- all_ids[grep("prostate.cancer",GSE.TITLE[all_ids],ignore.case=TRUE)]
+ids <- all_ids[grep("breast.cancer",GSE.TITLE[all_ids],ignore.case=TRUE)]
+ids <- all_ids[grep("cancer|onco|tumor|tumour",GSE.TITLE[all_ids],ignore.case=TRUE)]
 length(ids)
 
+## Select studies with relevant terms about AGING
+ids1 <- all_ids[grep("[ ]aging|^aging|senesc",GSE.TITLE[all_ids],ignore.case=TRUE)]
+length(ids1)
 
+## Select studies with relevant terms about Immuno AND oncology terms
+ids <- all_ids[grep("cancer|onco|tumor|tumour",GSE.TITLE[all_ids],ignore.case=TRUE)]
+ids2 <- ids[grep("immun",GSE.TITLE[ids],ignore.case=TRUE)]
+length(ids2)
+
+ids <- c(ids1, ids2)
 ##ids <- head(ids,20)
+length(ids)
 head(ids)
 GSE.TITLE[ids]
 ##cc <- sample_covariates(a4)$name
