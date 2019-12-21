@@ -29,10 +29,10 @@ if(0) {
     cwd
 }
 
-##sample_columns=cc3;feature_type="gene";row_id="symbol"
+id = "GSE53784"
 pgx.getArchs4Dataset <- function(a4, id)
 {    
-    ##ngs <- as.DGEList(a4, id, feature_type="gene", row_id="symbol")
+    ##feature_type="gene";row_id="symbol"
     cc3 = c("Sample_title","Sample_source_name_ch1","Sample_characteristics_ch1")
     ngs <- my.as.DGEList(a4, id, sample_columns=cc3, feature_type="gene", row_id="symbol")
     is.null(ngs)
@@ -47,7 +47,7 @@ pgx.getArchs4Dataset <- function(a4, id)
 
     cc3 <- intersect(colnames(ngs$samples), cc3)
     ngs$samples <- ngs$samples[,cc3,drop=FALSE]
-
+    cc3
     if("Sample_characteristics_ch1" %in% cc3) {
         ch1  <- ngs$samples[,"Sample_characteristics_ch1"]
         ch1x <- lapply(ch1, function(x) strsplit(x, split="Xx-xX")[[1]])
@@ -84,6 +84,7 @@ my.as.DGEList <- function (a4, id, features = NULL,
                            check_missing_samples = TRUE) 
 {
     require(dplyr)
+
     ##assert_class(a4, "Archs4Repository")
     ##feature_type <- match.arg(feature_type)
     feature_type <- feature_type[1]
@@ -178,19 +179,20 @@ my.as.DGEList <- function (a4, id, features = NULL,
         return(NULL)
     }
 
-    libinfo <- sample_table(a4) %>%
-        select(series_id, sample_id, 
-               ## lib.size = libsize, norm.factors = normfactor,
-               a4libsize) %>% 
-        distinct(sample_id, .keep_all = TRUE)
-    libinfo <- select(si, series_id, sample_id) %>% left_join(libinfo, 
-        by = c("series_id", "sample_id"))
-    na.overflow <- is.na(libinfo$lib.size) | is.na(libinfo$norm.factors)
-    if (any(na.overflow)) {
-        warning("Removing ", sum(na.overflow), " samples due to libsize NA overflow issues")
-        libinfo <- filter(libinfo, !na.overflow)
-        si <- subset(si, sample_id %in% libinfo$sample_id)
-    }
+    ## libinfo <- sample_table(a4) %>%
+    ##     select(series_id, sample_id, 
+    ##            ## lib.size = libsize, norm.factors = normfactor,
+    ##            a4libsize) %>% 
+    ##     distinct(sample_id, .keep_all = TRUE)
+    ## libinfo <- select(si, series_id, sample_id) %>% left_join(libinfo, 
+    ##     by = c("series_id", "sample_id"))
+
+    ## na.overflow <- is.na(libinfo$lib.size) | is.na(libinfo$norm.factors)
+    ## if (any(na.overflow)) {
+    ##     warning("Removing ", sum(na.overflow), " samples due to libsize NA overflow issues")
+    ##     libinfo <- filter(libinfo, !na.overflow)
+    ##     si <- subset(si, sample_id %in% libinfo$sample_id)
+    ## }
     
     rownames(si) <- si[["sample_id"]]
     counts <- local({
@@ -204,17 +206,17 @@ my.as.DGEList <- function (a4, id, features = NULL,
     })
     out  <- suppressWarnings(edgeR::DGEList(counts, genes = finfo, samples = si))
 
-    xref <- match(colnames(out), libinfo$sample_id)
-    if (any(is.na(xref))) {
-        stop("Problem matching sample_id to libinfo data.frame")
-    }
-    if (!all(colnames(out) == libinfo$sample_id[xref])) {
-        stop("Mismatch in outgoing DGEList to libinfo data.frame")
-    }
+    ## xref <- match(colnames(out), libinfo$sample_id)
+    ## if (any(is.na(xref))) {
+    ##     stop("Problem matching sample_id to libinfo data.frame")
+    ## }
+    ## if (!all(colnames(out) == libinfo$sample_id[xref])) {
+    ##     stop("Mismatch in outgoing DGEList to libinfo data.frame")
+    ## }
     ##out$samples$lib.size <- libinfo$lib.size[xref]
     ##out$samples$norm.factors <- libinfo$norm.factors[xref]
     out$samples$lib.size <- colSums(out$counts)
-    out$samples$norm.factors <- rep(1,ncol(out$counts))
+    out$samples$norm.factors <- rep(1,ncol(out$counts))  ## HACK ????
 
     out
 }

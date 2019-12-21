@@ -6,7 +6,6 @@
 ##BiocManager::install("denalitherapeutics/archs4")
 ##BiocManager::install("GEOmetadb")
 
-
 library("archs4")
 library(dplyr)
 library(GEOmetadb)
@@ -40,7 +39,6 @@ if(0) {
     cwd
 }
 
-
 library(archs4)
 a4 <- Archs4Repository(datadir=archs4dir)
 
@@ -56,8 +54,18 @@ rs <- dbGetQuery(con,'select gse,title from gse')
 GSE.TITLE <- rs$title
 names(GSE.TITLE) <- rs$gse
 
-## EXAMPLES
-##
+D <- read.csv("../../lib/L1000_repurposing_drugs.txt",
+              sep="\t",comment.char="#")
+drugs = as.character(D$pert_iname)
+drugs1 = grep("[[:punct:]]",drugs,value=TRUE,invert=TRUE)
+
+about.drug <- mclapply(GSE.TITLE[], function(a) any(sapply(drugs1,function(d)grepl(d,a))))
+about.drug <- unlist(about.drug)
+table(about.drug)
+
+##================================================================================
+##================================= MAIN =========================================
+##================================================================================
 
 ## all series ID
 samplesize <- table(a4$sample_table$series_id)
@@ -81,7 +89,6 @@ head(ids)
 GSE.TITLE[ids]
 ##cc <- sample_covariates(a4)$name
 
-id = "GSE114716"
 id = "GSE53784"
 id = sample(ids,1)
 id
@@ -105,7 +112,7 @@ for(id in ids) {
     ## get categorical phenotypes
     df <- aa$samples
     vv <- pgx.getCategoricalPhenotypes(df, max.ncat=10, min.ncat=2) 
-
+    vv
     if(length(vv)==0) {
         cat("skipping. no valid phenotypes in GEO series",id,"...\n")
         next()
