@@ -105,15 +105,20 @@ id = "GSE53784"
 id = ids[1]
 id
 length(ids)
-for(id in ids) {
+res <- mclapply( ids[1:4], function(id) prepArchs4Dataset(id) )
+res
 
+
+
+prepArchs4Dataset <- function(id) {
+    
     pgx.file <- file.path(archs4dir,paste0(id,".pgx"))
     pgx.file
     if(file.exists(pgx.file)) {
         cat("skipping already done GEO series",id,"...\n")
-        next()
+        return("already done")
     }
-    
+
     cat("retrieving Archs4 data for GEO series",id,":",GSE.TITLE[id],"\n")
     aa <- pgx.getArchs4Dataset(a4, id) 
     names(aa)
@@ -127,7 +132,7 @@ for(id in ids) {
     vv
     if(length(vv)==0) {
         cat("skipping. no valid phenotypes in GEO series",id,"...\n")
-        next()
+        return("skipped. no valid phenotypes")
     }
     cat("found discrete phenotypes:",vv,"\n")
     df <- df[,vv,drop=FALSE]
@@ -149,7 +154,9 @@ for(id in ids) {
 
     has.contrast <- (!is.null(aa$contrasts) && ncol(aa$contrasts)>0)
     has.contrast    
-    if(has.contrast) {
+    if(!has.contrast) {
+        return("skipped. no valid contrasts")
+    } else {
     
         ## Playground pre-computation
         ngs <- pgx.upload(
@@ -174,7 +181,6 @@ for(id in ids) {
         
         cat("object size: ",format(object.size(ngs), units="MB"),"\n")
         ngs.save(ngs, file=pgx.file)
+        return("OK")
     }    
-
-
 }
