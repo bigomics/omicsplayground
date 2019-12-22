@@ -8,7 +8,7 @@ USER.GENETEST.METHODS <- NULL
 ##=============================================================================
 ##==========    Platform helper functions =====================================
 ##=============================================================================
-s=c("abc","abc")
+##s=rep("abc",100)
 
 tagDuplicates <- function(s) {
     ## Tag duplicate with blanks
@@ -17,7 +17,8 @@ tagDuplicates <- function(s) {
     t <- s[jj][1]
     for(t in unique(s[jj])) {
         ii <- which(s==t)
-        blanks <- substring("           ",0,0:(length(ii)-1))
+        spaces <- paste(rep(" ",length(ii)),collapse="")
+        blanks <- substring(spaces,0,0:(length(ii)-1))
         ##s[ii] <- paste(s[ii],1:length(ii),sep=".")
         s[ii] <- paste0(s[ii],blanks)
     }
@@ -246,6 +247,8 @@ getLevels <- function(Y) {
     levels = sort(unlist(levels))
     return(levels)
 }
+
+
 
 selectSamplesFromSelectedLevels <- function(Y, levels)
 {
@@ -688,78 +691,6 @@ pgx.getGeneSetCollections <- function(gsets, min.size=10, max.size=500)
     return(collections)
 }
 
-pgx.scanInfo <- function(pgx.dir, inc.progress=FALSE,
-                         pgx=NULL, verbose=TRUE )
-{
-    require(shiny)
-    ##cat(">>> scanning available data sets...\n")
-    pgx.dir <- sub("/$","",pgx.dir)
-    pgx.files  <- dir(pgx.dir, pattern="[.]pgx$", full.names=TRUE)
-    pgx.files0 <- dir(pgx.dir, pattern="[.]pgx$", full.names=FALSE)
-    if(!is.null(pgx)) {
-        jj <- which(!sub(".pgx$","",pgx.files0) %in% sub(".pgx$","",pgx$dataset))
-        jj
-        if(length(jj)==0) {
-            if(verbose) cat("[pgx.scanInfo] all up to date\n")
-            return(pgx)
-        }
-        pgx.files = pgx.files[jj]
-        pgx.files0 = pgx.files0[jj]
-    }
-
-    ##pgx.files =head(pgx.files,3)
-    f = pgx.files[1]
-    pgx.info <- c()
-    cols <- NULL
-    i=1
-    for(i in 1:length(pgx.files)) {
-        if(verbose) cat("scanning info from",pgx.files[i],"\n")
-        load( pgx.files[i] )
-        cnd = colnames(ngs$samples)
-        cnd = cnd[grep("group|batch|sample|patient|donor|repl|clone|cluster|lib.size|^[.]",cnd,invert=TRUE)]
-        is.mouse = (mean(grepl("[a-z]",ngs$genes$gene_name))>0.8)
-        organism = c("human","mouse")[1 + is.mouse]
-        date = ifelse(is.null(ngs$date), "", as.character(ngs$date))
-
-        this.info <- c(
-            dataset = pgx.files0[i],
-            datatype = ifelse(is.null(ngs$datatype),"", ngs$datatype),
-            description = ifelse(is.null(ngs$description),"", ngs$description),
-            organism = organism,
-            nsamples = nrow(ngs$samples),
-            ngenes = nrow(ngs$X),
-            nsets = nrow(ngs$gsetX),
-            conditions = paste(cnd,collapse=" "),
-            date = date
-        )
-
-        cols <- unique(c(cols, names(this.info)))
-        if(!is.null(pgx.info)) {
-            this.info = this.info[match(cols,names(this.info))]
-            names(this.info) = cols
-            pgx.info = pgx.info[,match(cols,colnames(pgx.info)),drop=FALSE]
-            colnames(pgx.info) = cols
-        }
-        ##cat("i=",i,": ",length(this.info),"\n")
-        pgx.info <- rbind( pgx.info, this.info)
-        if(inc.progress) incProgress( 1/length(pgx.files) )
-    }
-    rownames(pgx.info) <- NULL
-    
-    if(is.null(pgx)) {
-        if(verbose) cat(">>> found",nrow(pgx.info),"data sets\n")
-        pgx.info <- data.frame(pgx.info)
-        rownames(pgx.info) <- NULL
-    } else {
-        if(verbose) cat(">>> updated",nrow(pgx.info),"data sets\n")
-        pgx.info <- data.frame(pgx.info)
-        pgx.info <- pgx.info[,match(colnames(pgx),colnames(pgx.info))]
-        pgx.info = rbind(pgx, pgx.info)
-        rownames(pgx.info) <- NULL
-    }
-    ##write.csv(pgx.info, file="../pgx/pgx-info.csv")
-    return(pgx.info)
-}
 
 ##-----------------------------------------------------------------------------
 ## Generic module functions

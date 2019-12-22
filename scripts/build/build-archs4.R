@@ -17,6 +17,7 @@ source("../../R/pgx-init.R")
 source("../../R/pgx-archs4.R")
 source("../../R/ngs-functions.R")
 source("../../R/pgx-contrasts.R")
+source("../../R/pgx-upload.R")
 
 archs4dir <- "~/.archs4data"
 ##archs4dir <- "~/bigomics/data/archs4data"
@@ -70,42 +71,16 @@ if(0) {
 ##================================= MAIN =========================================
 ##================================================================================
 
-## all series ID
-samplesize <- table(a4$sample_table$series_id)
-all_ids = names(samplesize[ samplesize>=20 & samplesize<=200 ])
-all_ids = names(samplesize[ samplesize>=10 & samplesize<=500 ])
-length(all_ids)
-table(all_ids %in% names(GSE.TITLE))
-
-## Select studies with relevant terms
-ids <- all_ids[grep("lymphom|leukaem|hemato",GSE.TITLE[all_ids],ignore.case=TRUE)]
-ids <- all_ids[grep("prostate.cancer",GSE.TITLE[all_ids],ignore.case=TRUE)]
-ids <- all_ids[grep("breast.cancer",GSE.TITLE[all_ids],ignore.case=TRUE)]
-ids <- all_ids[grep("cancer|onco|tumor|tumour",GSE.TITLE[all_ids],ignore.case=TRUE)]
-length(ids)
-
-## Select studies with relevant terms about AGING
-ids1 <- all_ids[grep("[ ]aging|^aging|senesc",GSE.TITLE[all_ids],ignore.case=TRUE)]
-length(ids1)
-
-## Select studies with relevant terms about Immuno AND oncology terms
-ids <- all_ids[grep("cancer|onco|tumor|tumour",GSE.TITLE[all_ids],ignore.case=TRUE)]
-ids2 <- ids[grep("immun",GSE.TITLE[ids],ignore.case=TRUE)]
-length(ids2)
-
-ids <- c(ids1, ids2)
-##ids <- head(ids,20)
-length(ids)
-head(ids)
-GSE.TITLE[ids]
-##cc <- sample_covariates(a4)$name
-
-id = "GSE53784"
-id = ids[1]
-
-prepArchs4Dataset <- function(id) {
+prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
     
-    pgx.file <- file.path(archs4dir,paste0(id,".pgx"))
+    pgx.file <- file.path(archs4dir,paste0(id,ext,".pgx"))
+    if(!is.null(outdir)) {
+        dir <- file.path(archs4dir,outdir)
+        dir.exists(dir)
+        if(!dir.exists(dir)) system(paste("mkdir -p",dir))
+        pgx.file <- file.path(archs4dir,outdir,paste0(id,ext,".pgx"))
+        pgx.file
+    }
     pgx.file
     if(file.exists(pgx.file)) {
         cat("skipping already done GEO series",id,"...\n")
@@ -114,6 +89,12 @@ prepArchs4Dataset <- function(id) {
 
     cat("retrieving Archs4 data for GEO series",id,":",GSE.TITLE[id],"\n")
     aa <- pgx.getArchs4Dataset(a4, id) 
+    
+    if(is.null(aa)) {
+        cat("skipping. get dataset failed\n")
+        return("skipped. get dataset failed")
+    }
+
     names(aa)
     if("group" %in% colnames(aa$samples)) {
         colnames(aa$samples) <- sub("group","xgroup",colnames(aa$samples))
@@ -152,6 +133,7 @@ prepArchs4Dataset <- function(id) {
     } else {
     
         ## Playground pre-computation
+        counts=aa$counts;samples=aa$samples;contrasts=aa$contrasts
         ngs <- pgx.upload(
             aa$counts, aa$samples, aa$contrasts,
             max.genes=5000,
@@ -160,6 +142,7 @@ prepArchs4Dataset <- function(id) {
             ##extra.methods = c("meta.go","deconv","infer","drugs"),
             extra.methods = c("meta.go","infer","drugs"),
             lib.dir = "../../lib",
+            only.hugo = TRUE,
             progress=NULL)
         
         names(ngs)
@@ -179,12 +162,45 @@ prepArchs4Dataset <- function(id) {
 }
 
 
+## all series ID
+samplesize <- table(a4$sample_table$series_id)
+all_ids = names(samplesize[ samplesize>=20 & samplesize<=200 ])
+all_ids = names(samplesize[ samplesize>=10 & samplesize<=500 ])
+all.titles <- tolower(GSE.TITLE[all_ids])
+length(all_ids)
+table(all_ids %in% names(GSE.TITLE))
+
+## Select studies with relevant terms
+ids.list <- list()
+ids.list[["bloodcancers"]] <- all_ids[grep("lymphom|leukaem|hemato",all.titles)]
+ids.list[["prostate"]] <- all_ids[grep("prostate.cancer",all.titles)]
+ids.list[["breast"]] <- all_ids[grep("breast.cancer",all.titles)]
+ids.list[["cancer"]] <- all_ids[grep("cancer|onco|tumor|tumour",all.titles)]
+ids.list[["aging"]] <- all_ids[grep("[ ]aging|^aging|senesc",all.titles)]
+ids.list[["immune"]] <- all_ids[grep("immun",all.titles)]
+
+## Select studies with relevant terms about Immuno AND oncology terms
+ids.list[["immunonco"]] <- intersect(ids.list[["cancer"]],ids.list[["immune"]])
+
+sapply(ids.list, length)
+
+id = "GSE53784"
+id = ids[1]
+
+
 id = "GSE53784"
 id = ids[1]
 id
 length(ids)
 
 require(parallel)
-res <- mclapply( ids[1:4], function(id) prepArchs4Dataset(id) )
-res
+i=1
+for(i in 1:length(ids.list)) {
+    ext <- paste0("-",ext = names(ids.list)[i])
+    ids <- ids.list[[i]]
+    res <- mclapply(ids[1:4], function(id)
+        prepArchs4Dataset(id, ext=ext, outdir="gse"),
+        mc.cores = 2)
+    unlist(res)
+}
 

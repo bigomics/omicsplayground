@@ -209,10 +209,11 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             zx = ngs$X[intersect(pp,rownames(ngs$X)),]
         }
         if(nrow(zx)==0) return(NULL)
+
         dim(zx)
         kk <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
         zx <- zx[,kk,drop=FALSE]    
-
+        
         if(input$hm_level=="gene" && "chr" %in% names(ngs$genes)) {
             ## Filter out X/Y chromosomes before clustering
             chr <- ngs$genes[rownames(zx),]$chr
@@ -221,14 +222,20 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             zx <- zx[which(not.xy), ]
             dim(zx)
         }
-        
+   
         nmax=4000
         nmax = as.integer(input$hm_ntop)
         idx <- NULL
         splitx <- input$hm_splitx
-        topmode="sd"
+        topmode="specific"
         topmode <- input$hm_topmode
-
+        
+        grp <- ngs$samples[colnames(zx),splitx]
+        table(grp)
+        if(topmode == "specific" && length(table(grp))==1) {
+            topmode <- "sd"
+        }
+        
         if(splitx=="<none>" && topmode=="specific") topmode <- "sd"
         if(topmode=="pca") {
             require(irlba)
@@ -243,7 +250,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                 sv.top[[i]] <- paste0("PC",i,":",sv.top[[i]])
             }
             sv.top1 <- unlist(sv.top)
-            zx <- zx[gg.top,]
+            zx <- zx[gg.top,,drop=FALSE]
             ##rownames(zx) <- sv.top1
             dim(zx)
             ##idx <- paste0("PC",sub(":.*","",sv.top1))
@@ -254,6 +261,10 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             grp <- ngs$samples[colnames(zx),splitx]
             table(grp)
             grp.zx <- t(apply(zx, 1, function(x) tapply(x, grp, mean)))
+            if(length(table(grp))==1) {
+                grp.zx <- t(grp.zx)
+                colnames(grp.zx) <- paste0(splitx,":",grp[1])
+            }
             grp.dx <- grp.zx*0
             nc <- ncol(grp.dx)
             for(i in 1:nc) {
@@ -268,15 +279,17 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             idx <- paste0("M",idx)
             table(idx)        
             gg.top <- unlist(grp.top)
-            zx <- zx[gg.top,]
+            zx <- zx[gg.top,,drop=FALSE]
             dim(zx)
         } else {
+            ## Order by SD
+            ## 
             ii <- order(-apply(zx,1,sd,na.rm=TRUE))
             zx = zx[ii,,drop=FALSE] ## order
             zx = head(zx,nmax)
         }
         ##zx = zx / apply(zx,1,sd,na.rm=TRUE)  ## scale??
-
+        
         ## ------------- cluster the genes???
         if(is.null(idx)) {
             hc  = fastcluster::hclust( as.dist(1 - cor(t(zx),use="pairwise")), method="ward.D2" )
@@ -361,6 +374,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             annot = filt$annot        
         }
         zx.clust <- filt$clust    
+
+        dbg("hm1_splitmap.RENDER: 1: sum.dup.rownames.zx=", sum(duplicated(rownames(zx))))
         
         show_rownames = TRUE
         ##if(nrow(zx) > 100) rownames(zx) = rep("",nrow(zx))

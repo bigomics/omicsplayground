@@ -12,17 +12,20 @@ cat("===================== INIT =======================\n")
 RDIR="../R"
 FILES="../lib"
 PGX.DIR="../data"
+PGX.DIR="~/bigomics/data/archs4data/gse1"
+
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
-options(shiny.maxRequestSize = 200*1024^2)  ##max 200Mb upload
 DEV.VERSION = TRUE
+options(shiny.maxRequestSize = 200*1024^2)  ##max 200Mb upload
 
 if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../../alex/alex2019-data.pgx")
+    load("../data/GSE10846-dlbcl.pgx")
     load("../data/GSE101766.pgx")    
-    ngs=pgx.initialize(ngs)
-    
+    ngs=pgx.initialize(ngs)    
 }
+
 
 source("global.R")
 source("../R/pgx-modules.R")
