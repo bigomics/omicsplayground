@@ -48,12 +48,15 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         show_legend=TRUE;cexRow=1;cexCol=1;mar=c(5,5);column_title_rot=0
         gx = ngs$X
     }
-
+    
     if(verbose>1) cat("input.dim.gx=",dim(gx),"\n")
 
     ## give unique name if duplicated
-    rownames(gx) <- tagDuplicates(rownames(gx))
-    
+    if(sum(duplicated(rownames(gx)))>0) {
+        rownames(gx) <- tagDuplicates(rownames(gx))
+        rownames(row.annot) <- rownames(gx)
+    }
+
     par(xpd=FALSE)
     jj1 <- 1:nrow(gx)
     jj2 <- 1:ncol(gx)
@@ -66,9 +69,11 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         jj2 <- head(order(-apply(gx,2,sd,na.rm=TRUE)),cmax)
     }
     gx <- gx[jj1,jj2]
-
+    
     if(!is.null(row.annot)) row.annot <- row.annot[jj1,,drop=FALSE]
     if(!is.null(col.annot)) col.annot <- col.annot[jj2,,drop=FALSE]
+
+    if(!is.null(row.annot)) cat("[gx.splitmap] 3: duplicated annot.rownames =",sum(duplicated(rownames(row.annot))),"\n")    
     
     fillNA <- function(x) {
         nx <- x
@@ -93,13 +98,17 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     if(do.split && length(split)>1 ) {
         split.idx = split[jj1]
     }
+
+    if(!is.null(row.annot)) cat("[gx.splitmap] 3: duplicated annot.rownames =",sum(duplicated(rownames(row.annot))),"\n")    
+
+
     if(!is.null(split.idx)) {
         row.annot = cbind(row.annot, cluster = split.idx)
         row.annot = data.frame(row.annot)
         colnames(row.annot) = tolower(colnames(row.annot))
         rownames(row.annot) = rownames(gx)
     }
-
+    
     ##--------------------------------------------
     ## split table into column groups
     ##--------------------------------------------
@@ -225,6 +234,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         coldistfun1 <- function(x) dist(x)
         rowdistfun1 <- function(x, y) 1 - cor(x, y)
         gx0 <- gx[,jj,drop=FALSE]
+        grp.title = shortstring(names(grp)[i],15)
 
         hmap = hmap + Heatmap( gx0,
                               col = bluered(64),
@@ -246,7 +256,8 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                               column_names_gp = gpar(fontsize = 11*cexCol),
                               top_annotation = col.ha[[i]],
                               ## top_annotation_height = unit(annot.ht*ncol(col.annot), "mm"),
-                              column_title = names(grp)[i], name = names(grp)[i],
+                              column_title = grp.title,
+                              name = names(grp)[i],
                               column_title_rot = column_title_rot,
                               column_title_gp = gpar(fontsize = 11, fontface='bold')
                               )

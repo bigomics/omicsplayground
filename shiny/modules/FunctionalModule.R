@@ -1249,7 +1249,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         ## get gset meta foldchange-matrix
         S <- sapply( ngs$gset.meta$meta, function(x) x$meta.fx)
         rownames(S) <- rownames(ngs$gset.meta$meta[[1]])
-        S <- S[order(-apply(S,1,sd)),]
+        ##S <- S[order(-apply(S,1,sd)),]
         S <- S[order(-rowMeans(S**2)),]
 
         ## exclude down, GSE gene sets??????
@@ -1288,12 +1288,15 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         nr <- nn / nrow(W)
         W <- W[,which(nn >= 10 & nr <= 0.10)]
         dim(W)
+
+        ## align geneset expression matrix
+        S <- S[rownames(W),,drop=FALSE]
         
         if(!is.null(progress)) progress$inc(0.3*pg.unit, detail="computing GSEA")        
 
         ## compute for average contrast
         require(fgsea)
-        rms.FC <- Matrix::rowMeans(S[rownames(W),]**2)**0.5
+        rms.FC <- Matrix::rowMeans(S**2)**0.5
         rms.FC <- rms.FC + 0.01*rnorm(length(rms.FC))
         gmt <- apply(W,2,function(x) names(which(x!=0)))
         res <- fgsea( gmt, rms.FC, nperm=1000 )
@@ -1306,11 +1309,11 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         res <- res[(res$padj < 1 & res$NES>0),]
         res <- res[order(-abs(res$NES)),]
         dim(res)
-
+        
         ## now compute significant terms for all contrasts
         all.gsea <- list()
         for(i in 1:ncol(S)) {
-            fc <- as.vector(S[rownames(W),i])
+            fc <- as.vector(S[,i])
             names(fc) <- rownames(W)
             fc <- fc + 0.01*rnorm(length(fc))
             gmt1 <- gmt[as.character(res$word)]
@@ -1333,8 +1336,8 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         pos1 = pos1[res$word,]
         pos2 = pos2[res$word,]
         
-        res = list(gsea=all.gsea, tsne=pos1, umap=pos2)
-        res
+        all.res = list(gsea=all.gsea, S=S, W=W, tsne=pos1, umap=pos2)
+        all.res
     }
 
     enrich_getWordFreqResults <- reactive({
@@ -1350,18 +1353,18 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     })
 
 
-    enrich_getWordEnrichment <- reactive({
+    enrich_getCurrentWordEnrichment <- reactive({
 
-        res <- enrich_getWordFreqResults()
-        req(res, input$fa_contrast)
+        all.res <- enrich_getWordFreqResults()
+        req(all.res, input$fa_contrast)
 
         contr=1
         contr <- input$fa_contrast
-        gsea1 <- res$gsea[[ contr ]]
-        topFreq <- data.frame( gsea1, tsne=res$tsne, umap=res$umap)
+        gsea1 <- all.res$gsea[[ contr ]]
+        topFreq <- data.frame( gsea1, tsne=all.res$tsne, umap=all.res$umap)
         
         ## update selectors
-        words <- sort(res$gsea[[1]]$word)
+        words <- sort(all.res$gsea[[1]]$word)
         updateSelectInput(session, "enrich_wordcloud_exclude", choices=words)
         
         return(topFreq)
@@ -1369,7 +1372,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
 
     enrich_wordtsne.RENDER <- reactive({
 
-        topFreq <- enrich_getWordEnrichment()
+        topFreq <- enrich_getCurrentWordEnrichment()
 
         df <- topFreq
         klr = ifelse( df$padj<=0.05, "red", "grey")    
@@ -1405,7 +1408,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
 
     enrich_wordtsne.PLOTLY <- reactive({
 
-        topFreq <- enrich_getWordEnrichment()
+        topFreq <- enrich_getCurrentWordEnrichment()
         
         df <- topFreq
         klr = ifelse( df$padj<=0.05, "red", "grey")    
@@ -1476,7 +1479,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
 
     enrich_wordcloud.RENDER <- reactive({
 
-        topFreq <- enrich_getWordEnrichment()
+        topFreq <- enrich_getCurrentWordEnrichment()
         df <- topFreq
         
         excl.words <- ""
@@ -1501,82 +1504,113 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         ##d3Cloud(text = df$word, size = size)
         
         par(mar=c(1,1,1,1)*0)
-        wordcloud(words = df$word, freq = size,
-                  ##colors=brewer.pal(8, "Dark2"),
-                  colors = brewer.pal(8, color.pal),
-                  scale=c(2,0.1)*0.9, min.freq=minsize)
+        suppressWarnings( suppressMessages(
+            wordcloud(
+                words = df$word, freq = size,
+                ##colors=brewer.pal(8, "Dark2"),
+                colors = brewer.pal(8, color.pal),
+                scale=c(2,0.1)*0.9, min.freq=minsize)
+        ))
         
-
     })
 
-    enrich_keyword.RENDER <- reactive({
+    enrich_gseaplots.RENDER <- reactive({
 
-        ngs <- inputData()
-        req(ngs)
+        
+        dbg("enrich_gseaplots.RENDER: reacted")
+        ngs <- inputData()        
+        all.res <- enrich_getWordFreqResults()        
+        topFreq <- enrich_getCurrentWordEnrichment()
 
-        topFreq <- enrich_getWordEnrichment()
+        req(ngs, all.res, topFreq)
+        req(input$wordcloud_enrichmentTable_rows_selected)
+
+        dbg("enrich_gseaplots.RENDER: 1")
         
         ## get gset meta foldchange-matrix
-        S <- sapply( ngs$gset.meta$meta, function(x) x$meta.fx)
-        S <- S + 0.0001*matrix(rnorm(length(S)),nrow(S),ncol(S))
-        rownames(S) <- rownames(ngs$gset.meta$meta[[1]])
+        ##S <- sapply(ngs$gset.meta$meta, function(x) x$meta.fx)
+        ##S <- S + 0.0001*matrix(rnorm(length(S)),nrow(S),ncol(S))
+        ##rownames(S) <- rownames(ngs$gset.meta$meta[[1]])
+        S <- all.res$S  ## geneset expressions
         
+        keyword = "ribosomal"
         keyword = "lipid"
         keyword = "apoptosis"
         keyword = "cell.cycle"
-
+        
         ##keyword <- input$enrich_wordcloud_clicked_word ## wordcloud2
-        keyword <- input$d3word ## rWordcloud
+        ##keyword <- input$d3word ## rWordcloud
         sel.row <- input$wordcloud_enrichmentTable_rows_selected
         keyword <- topFreq$word[sel.row]
         
         if( length(keyword)==0 || keyword[1] %in% c(NA,"") ) keyword <- "cell.cycle"
-        cat("<enrich_keyword> 3: selected keyword=",keyword,"\n")
-        
-        targets <- grep(keyword, rownames(S), ignore.case=TRUE, value=TRUE)
-        length(targets)
-        gmt <- list("set1"=targets)
-        names(gmt)[1] = keyword
-        
-        require(fgsea)
-        i=1
-        res <- c()
-        for(i in 1:ncol(S)) {
-            res1 <- fgsea( gmt, S[,i], nperm=400 )[,1:5]
-            res <- rbind(res, as.data.frame(res1)[1,])
-        }
-        rownames(res) <- colnames(S)
-        res$padj <- p.adjust( res$pval, method="fdr")
-        ##res <- res[order(-res$NES),]
-        
-        fx <- res$NES
-        pv <- res$pval
-        names(fx) <- names(pv) <- rownames(res)
-        top.up   <- names(sort(fx[which(fx>0)],decreasing=TRUE))
-        top.down <- names(sort(fx[which(fx<0)]))
-        top.q    <- names(pv)[order(pv,-abs(fx))]
+        cat("<enrich_gseaplots> 3: selected keyword=",keyword,"\n")
 
+        dbg("enrich_gseaplots.RENDER: 2")
+        
+        ##targets <- grep(keyword, rownames(S), ignore.case=TRUE, value=TRUE)
+        targets <- names(which(all.res$W[,keyword]==1))
+        ##length(targets)
+        
+        if(0) {
+            gmt <- list("set1"=targets)
+            names(gmt)[1] = keyword
+            require(fgsea)
+            i=1
+            wres <- c()
+            for(i in 1:ncol(S)) {
+                res1 <- fgsea( gmt, S[,i], nperm=400 )[,1:5]
+                wres <- rbind(wres, as.data.frame(res1)[1,])
+            }
+            rownames(wres) <- colnames(S)
+            wres$padj <- p.adjust( wres$pval, method="fdr")
+            ##wres <- wres[order(-wres$NES),]
+            
+            nes <- wres$NES
+            pv  <- wres$pval
+            qv  <- wres$padj
+            names(nes) <- names(pv) <- names(qv) <- rownames(wres)
+        }
+
+        dbg("enrich_gseaplots.RENDER: 3")
+        
+        keyword
+        nes <- unlist(sapply(all.res[["gsea"]], function(G) G[match(keyword,G$word),"NES"]))
+        pv  <- unlist(sapply(all.res[["gsea"]], function(G) G[match(keyword,G$word),"pval"]))
+        qv  <- unlist(sapply(all.res[["gsea"]], function(G) G[match(keyword,G$word),"padj"]))
+        names(qv) <- names(pv) <- names(nes) <- sub("[.]NES","",names(nes))
+
+        dbg("enrich_gseaplots.RENDER: 4")
+        
+        top <- names(pv)[order(-abs(nes),pv)]
+        ##top <- names(pv)[order(pv,-abs(nes))]
+        top <- intersect(top, colnames(S))
+
+        dbg("enrich_gseaplots.RENDER: 5")
+        
         par(mfrow=c(3,3), mar=c(0.2,3.2,3.2,0.2), mgp=c(1.8,0.7,0))
         i=1
         for(i in 1:9) {
-            if(i > length(top.q)) {
+            if(i > length(top)) {
                 frame()
             } else {
-                cmp <- top.q[i]
-                gsea.enplot(S[,cmp], targets, names=NULL, ##main=gs,
-                            main = paste0("#",toupper(keyword),"\n@",cmp),
+                a <- top[i]
+                gsea.enplot(S[,a], targets, names=NULL, ##main=gs,
+                            main = paste0("#",toupper(keyword),"\n@",a),
                             cex.main=0.9, len.main=80)
-                qv1 = formatC(res[cmp,"padj"],format="e", digits=2)
-                nes1 = formatC(res[cmp,"NES"],format="f", digits=2)
+                qv1 = formatC(qv[a],format="e", digits=3)
+                nes1 = formatC(nes[a],format="f", digits=3)
                 tt <- c(paste("NES=",nes1),paste("q=",qv1))
                 legend("topright", tt, bty="n",cex=0.85)
             }
         }
+        dbg("enrich_gseaplots.RENDER: done")
         
     })
 
     wordcloud_enrichmentTable.RENDER <- reactive({    
-        df <- enrich_getWordEnrichment()
+
+        df <- enrich_getCurrentWordEnrichment()
         req(df)
         df <- df[,c("word","pval","padj","ES","NES","size")]
         cat("<wordcloud_enrichmentTable.RENDER> dim(df)=",dim(df),"\n")
@@ -1608,7 +1642,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         ngs <- inputData()
         req(ngs, input$fa_contrast)
 
-        df <- enrich_getWordEnrichment()
+        df <- enrich_getCurrentWordEnrichment()
 
         sel.row=1
         sel.row <- input$wordcloud_enrichmentTable_rows_selected
@@ -1654,7 +1688,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
 
         cat("<wordcloud_actmap> called\n")
         
-        ##df <- enrich_getWordEnrichment()
+        ##df <- enrich_getCurrentWordEnrichment()
         ##req(df)
         res <- enrich_getWordFreqResults()   
         score <- sapply(res$gsea, function(x) x$NES)
@@ -1746,35 +1780,39 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     )
     output <- attachModule(output, enrich_wordcloud_module)
 
-    enrich_keyword_info = "<strong>Keyword enrichment analysis.</strong> Computes enrichment of a selected keyword across all contrasts. Select a keyword by clicking a word in the 'Enrichment table'.
+    enrich_gseaplots_info = "<strong>Keyword enrichment analysis.</strong> Computes enrichment of a selected keyword across all contrasts. Select a keyword by clicking a word in the 'Enrichment table'.
 
 <br><br>Keyword enrichment is computed by running GSEA on the enrichment score profile for all contrasts. We defined the test set as the collection of genesets that contain the keyword in the title/description. Black vertical bars indicate the position of gene sets that contains the *keyword* in the ranked list of enrichment scores. The curve in green corresponds to the 'running statistic' of the keyword enrichment score. The more the green ES curve is shifted to the upper left of the graph, the more the keyword is enriched in the first group. Conversely, a shift of the green ES curve to the lower right, corresponds to keyword enrichment in the second group."
 
-    ##myTextInput('enrich_keyword_keywords','Keyword:',"cell cycle"),
+    ##myTextInput('enrich_gseaplots_keywords','Keyword:',"cell cycle"),
 
-    enrich_keyword_opts = tagList(
-        tipify( textInput(ns('enrich_keyword_keywords'),'Keyword:',"cell cycle"),
+    enrich_gseaplots_opts = tagList(
+        tipify( textInput(ns('enrich_gseaplots_keywords'),'Keyword:',"cell cycle"),
                "Paste a keyword such as 'apoptosis', 'replication' or 'cell cycle'.",
                placement="top", options = list(container = "body"))
     )
 
-    ## enrich_keyword_opts = textInput('enrich_keyword_keywords','Keyword:',"cell cycle")
+    ## enrich_gseaplots_opts = textInput('enrich_gseaplots_keywords','Keyword:',"cell cycle")
 
-    enrich_keyword_module <- plotModule(
-        id="enrich_keyword", label="a",
-        plotlib="base", func=enrich_keyword.RENDER,
-        info.text = enrich_keyword_info,
-        ## options = enrich_keyword_opts,
+    enrich_gseaplots_module <- plotModule(
+        id="enrich_gseaplots", label="a",
+        plotlib="base", func=enrich_gseaplots.RENDER,
+        info.text = enrich_gseaplots_info,
+        ## options = enrich_gseaplots_opts,
         pdf.width=6, pdf.height=6, res=90,
         title = "Enrichment plots"
     )
-    output <- attachModule(output, enrich_keyword_module)
+    output <- attachModule(output, enrich_gseaplots_module)
 
     ##--------buttons for enrichment table
+
+    wordcloud_enrichmentTable_info =
+        "<b>Keyword enrichment table.</b> This table shows the keyword enrichment statistics for the selected contrast. The enrichment is calculated using GSEA for occurance of the keywork in the ordered list of gene set descriptions."
+    
     wordcloud_enrichmentTable_module <- tableModule(
         id = "wordcloud_enrichmentTable", label="e",
         func = wordcloud_enrichmentTable.RENDER,
-        info.text="Keyword enrichment table.", 
+        info.text = wordcloud_enrichmentTable_info,
         title = "Enrichment table"
     )
     output <- attachModule(output, wordcloud_enrichmentTable_module)
@@ -1817,7 +1855,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                     height = 650,
                     fillRow(
                         flex = c(1.2,0.05,1,0.05,1),
-                        moduleWidget(enrich_keyword_module, ns=ns),
+                        moduleWidget(enrich_gseaplots_module, ns=ns),
                         br(),
                         moduleWidget(enrich_wordcloud_module, ns=ns),
                         br(),

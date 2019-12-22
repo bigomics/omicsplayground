@@ -1098,7 +1098,7 @@ sig_infotext =
         names(gene.tt) <- rownames(fc)
         df <- data.frame(gene=rownames(fc), title=gene.tt, fc, check.names=FALSE)
         ##df <- df[order(-abs(df$FC)),]
-        color_fx = as.numeric(fc[,])
+        color_fx = as.numeric(fc)
         color_fx[is.na(color_fx)] <- 0  ## yikes...
 
         numeric.cols <- which(sapply(df, is.numeric))

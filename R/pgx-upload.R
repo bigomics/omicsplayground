@@ -16,9 +16,12 @@ if(0) {
 
 }
 
+
+##max.genes=4000;gx.methods=c("ttest.welch","trend.limma");gset.methods=c("fisher","gsva");lib.dir = FILES;progress=NULL
+
 pgx.upload <- function(counts, samples, contrasts, ## genes, 
                        ##gx.methods = c("trend.limma","edger.qlf","deseq2.wald"),
-                       max.genes = 9999,
+                       max.genes = 9999, only.hugo=TRUE,
                        gx.methods = c("ttest.welch","trend.limma","edger.qlf"),
                        gset.methods = c("fisher","gsva","fgsea"),
                        extra.methods = c("meta.go","deconv","infer","drugs"),
@@ -75,6 +78,7 @@ pgx.upload <- function(counts, samples, contrasts, ## genes,
     is.mouse <- (mean(grepl("[a-z]",rownames(counts))) > 0.9)
     org = ifelse(is.mouse, "mouse", "human")
     org
+    gene.symbol <- NULL
     if(org == "human") {
         require(org.Hs.eg.db)
         GENE.TITLE = unlist(as.list(org.Hs.egGENENAME))
@@ -103,13 +107,40 @@ pgx.upload <- function(counts, samples, contrasts, ## genes,
     ##-------------------------------------------------------------------
     ## collapse multiple row for genes by summing up counts
     ##-------------------------------------------------------------------
-    sum(duplicated(ngs$genes$gene_name))
-    gg = as.character(ngs$genes$gene_name)
-    x1 = apply( ngs$counts, 2, function(x) tapply(x, gg, sum))
-    ngs$genes = ngs$genes[match(rownames(x1), ngs$genes$gene_name),]
-    ngs$counts = x1
-    rownames(ngs$genes) = rownames(ngs$counts) = rownames(x1)
-    remove(x1)
+    ndup <- sum(duplicated(ngs$genes$gene_name))
+    ndup
+    if(ndup>0) {
+        gg = as.character(ngs$genes$gene_name)
+        x1 = apply( ngs$counts, 2, function(x) tapply(x, gg, sum))
+        ngs$genes = ngs$genes[match(rownames(x1), ngs$genes$gene_name),]
+        ngs$counts = x1
+        rownames(ngs$genes) = rownames(ngs$counts) = rownames(x1)
+        remove(x1)
+    }
+
+    ##-------------------------------------------------------------------
+    ## Filter genes?
+    ##-------------------------------------------------------------------
+    if(org == "mouse") {
+        has.name <- !is.na(ngs$genes$gene_name)
+        is.official = TRUE
+        if(only.hugo) is.official <- (ngs$genes$gene_name %in% gene.symbol)
+        rik.genes <- grepl("Rik",ngs$genes$gene_name)
+        ##imm.gene <- grepl("^TR_|^IG_",ngs$genes$gene_biotype)
+        keep <- (has.name & !rik.genes & is.official)
+        ngs$counts <- ngs$counts[keep,]
+        ngs$genes  <- ngs$genes[keep,]        
+    }
+    if(org == "human") {
+        has.name <- !is.na(ngs$genes$gene_name)
+        is.official = TRUE
+        if(only.hugo) is.official <- (ngs$genes$gene_name %in% gene.symbol)
+        ##orf.genes <- grepl("ORF",ngs$genes$gene_name)
+        ##imm.gene <- grepl("^TR_|^IG_",ngs$genes$gene_biotype)
+        keep <- (has.name & is.official)
+        ngs$counts <- ngs$counts[keep,]
+        ngs$genes  <- ngs$genes[keep,]        
+    }
     
     cat("DBG [pgx-upload] 1: dim(ngs$counts)=",dim(ngs$counts),"\n")
     cat("DBG [pgx-upload] 1: sum.is.na(ngs$counts)=",sum(is.na(ngs$counts)),"\n")

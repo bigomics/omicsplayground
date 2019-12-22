@@ -111,37 +111,9 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
     ##-----------------------------------------------------------------------------
     ## UPDATING PGX FILE INFO
     ##-----------------------------------------------------------------------------
-
-    ## what files to use, heavy or light objects
-    PGXINFO <- c()
-    PGXINFO.FILE <- file.path(PGX.DIR,"datasets-info.csv")
-
-    if(file.exists(PGXINFO.FILE)) {
-        ## info file exists, check and update
-        dbg("[LoadingModule] PGXINFO : PGXINFO.FILE=",PGXINFO.FILE)
-        dbg("[LoadingModule] PGXINFO : PGX.DIR=",PGX.DIR)
-        
-        info = read.csv(PGXINFO.FILE, stringsAsFactors=FALSE, row.names=1)
-        pgx.files = dir(PGX.DIR, pattern=".pgx$")
-        all(pgx.files %in% info$dataset)
-        setdiff(pgx.files, info$dataset)
-        if(!all(pgx.files %in% info$dataset)) {
-            info <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=FALSE, pgx=info, verbose=FALSE)
-            rownames(info) <- NULL
-            Sys.chmod(PGXINFO.FILE, mode="0666")
-            write.csv(info, file=PGXINFO.FILE)
-        }
-        ##info = info[match(pgx.files,info$dataset),] 
-        rownames(info) <- NULL
-        PGXINFO <- info  
-    } else {
-        ## no info file, scan and create
-        info <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=FALSE, verbose=FALSE)
-        Sys.chmod(PGXINFO.FILE, mode="0666")
-        write.csv(info, file=PGXINFO.FILE)
-        PGXINFO <- info
-    }
-
+    PGXINFO <- pgx.updateInfoFile(PGX.DIR, file="datasets-info.csv") 
+    dim(PGXINFO)
+    
     ##=================================================================================
     ##========================== MODAL DIALOGS ========================================
     ##=================================================================================
@@ -655,7 +627,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
         ##
         
         if(is.null(PGXINFO)) return(NULL)    
-        dbg("<getPGXTable> reacted")
+        dbg("[LoadingModule:getPGXTable] reacted")
         
         df <- PGXINFO
         pgx.files = dir(PGX.DIR, pattern=".pgx$")
@@ -667,7 +639,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
                       "ngenes","nsets","conditions","date"))
         kk = intersect(kk,colnames(df))
         df = df[,kk]
-
+        
         dbg("<getPGXTable> 2")
         
         df = df[order(df$dataset),]   ## sort alphabetically...
@@ -907,14 +879,16 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
             on.exit(progress$close())    
             progress$set(message = "Processing", value = 0)
 
-            ngs <- pgx.upload(counts, samples, contrasts,
-                              max.genes = max.genes,
-                              progress = progress,
-                              gx.methods = gx.methods,
-                              gset.methods = gset.methods,
-                              extra.methods = extra.methods,
-                              lib.dir = FILES                              
-                              )
+            ngs <- pgx.upload(
+                counts, samples, contrasts,
+                max.genes = max.genes,
+                progress = progress,
+                gx.methods = gx.methods,
+                gset.methods = gset.methods,
+                extra.methods = extra.methods,
+                lib.dir = FILES,
+                only.hugo = TRUE
+            )
 
             end_time <- Sys.time()
             delta_time  = end_time - start_time

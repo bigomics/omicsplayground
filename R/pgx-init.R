@@ -25,6 +25,15 @@ useShinyjs()
 ht_global_opt(fast_hclust = TRUE)
 options(shiny.maxRequestSize = 200*1024^2)  ## max 200Mb upload
 
+
+dbg <- function(... ) {
+    if(DEV.VERSION) {
+        ##msg = paste0(ifelse(is.null(module),"",paste0("<",module,"> ")),msg)
+        msg = sapply( list(...),paste,collapse=" ")
+        cat(paste0("DBG ",sub("\n$","",paste(msg,collapse=" ")),"\n"))
+    }
+}
+
 source(file.path(RDIR,"gx-heatmap.r"))
 source(file.path(RDIR,"gx-plot.r"))
 source(file.path(RDIR,"gx-limma.r"))
@@ -52,6 +61,7 @@ source(file.path(RDIR,"pgx-modules.R"))
 source(file.path(RDIR,"pgx-upload.R"))
 source(file.path(RDIR,"pgx-proteomics.R"))
 source(file.path(RDIR,"pgx-drugs.R"))
+source(file.path(RDIR,"pgx-files.R"))
 
 source(file.path(RDIR,"xcr-graph.r"))
 source(file.path(RDIR,"ui-code.R"))
@@ -77,9 +87,13 @@ INIT.FILE
 file.exists(INIT.FILE)
 
 if(file.exists(INIT.FILE)) {    
-    
-    load(INIT.FILE, verbose=1)
 
+    load(INIT.FILE, verbose=1)
+    dim(PROFILES$FC)
+    PROFILES$FC <- pgx.readDatasetProfiles(PGX.DIR, file="datasets-allFC.csv")
+    PROFILES$FC <- as.matrix(PROFILES$FC)
+    dim(PROFILES$FC)
+    
 } else {
 
     oldvars <- ls()
@@ -140,8 +154,9 @@ if(file.exists(INIT.FILE)) {
     ## Meta MA-profiles (fold changes) of all experiments
     ##-----------------------------------------------------------------------------
     ##load( file.path(FILES,"allMA-pub.rda"), verbose=1)
-    load(file.path(FILES,"allFoldChanges-pub-8k.rda"))
+    ##load(file.path(FILES,"allFoldChanges-pub-8k.rda"))
     ##PROFILES <- list(M=allM, A=allA, FC=allFC)
+    allFC <- pgx.readDatasetProfiles(PGX.DIR, file="datasets-allFC.csv") 
     PROFILES <- list(FC=allFC)
 
     ##remove(allA)
@@ -312,12 +327,4 @@ pgx.initialize <- function(ngs) {
     ngs$gset.meta$outputs <- NULL
     ngs$gmt.all <- NULL
     return(ngs)
-}
-
-dbg <- function(... ) {
-    if(DEV.VERSION) {
-        ##msg = paste0(ifelse(is.null(module),"",paste0("<",module,"> ")),msg)
-        msg = sapply( list(...),paste,collapse=" ")
-        cat(paste0("DBG ",sub("\n$","",paste(msg,collapse=" ")),"\n"))
-    }
 }
