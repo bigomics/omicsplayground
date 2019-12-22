@@ -74,7 +74,8 @@ sig_infotext =
             hr(), br(),
             tipify(textAreaInput(ns("sig_genelistUP"), "Genes:", value = IMMCHECK.GENES,
                                  rows=10, placeholder="Paste your gene list"),
-                   "Paste a list of signature genes.", placement="top", options = list(container = "body")),
+                   "Paste a list of signature genes.", placement="top",
+                   options = list(container = "body")),
             ## textAreaInput("sig_genelistDN", "Signature (down):", rows=6, placeholder="Paste your gene list")
             tipify(actionButton(ns("sig_example2"),"[apoptosis] ", style=style0),
                    "Use the list of genes involved in apoptosis as a signature."),
@@ -85,7 +86,7 @@ sig_infotext =
             br(),br(),
             tipify( actionLink(ns("sig_options"), "Options", icon=icon("cog", lib = "glyphicon")),
                    "Toggle advanced options.", placement="top"),
-            br(),br(),
+            br(),
             conditionalPanel(
                 "input.sig_options % 2 == 1", ns=ns,
                 tagList(
@@ -106,19 +107,12 @@ sig_infotext =
 
         usermode <- usermode()
         if(length(usermode)==0) usermode <- "BASIC"
-        if(usermode!="BASIC") {        
-            uix = tagList(
-                tipify( selectInput(ns('cmp_querydataset'), "Query dataset:",
-                                    selected = "<this dataset>",
-                                    choices = CMAPSETS, multiple=TRUE),
-                       "The query dataset to which the enrichment test should be applied. Enrichment of the selected signature will be calculated to all available contrast profiless in this query dataset.", 
-                       placement="top", options = list(container = "body"))
-            )
-            ui = c(ui, uix)
-        }
         if(usermode!="BASIC" && DEV.VERSION) {
             uix <- tagList(
-                br(),br(),hr(),h6("Developer options:"),
+                hr(),h6("Developer options:"),
+                selectInput(ns('cmp_querydataset'), "Query dataset:",
+                            selected = "<this dataset>",
+                            choices = CMAPSETS, multiple=TRUE),                
                 radioButtons(ns('sig_ssstats'),'ss-stats:',
                              c("rho","gsva","grp.gsva","rho+gsva","rho+grp.gsva"),
                              inline=TRUE)
@@ -200,6 +194,11 @@ sig_infotext =
 
     
     getCurrentMarkers <- reactive({
+        ##
+        ## Get current selection of markers/genes 
+        ##
+        ##
+        
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
 
@@ -342,6 +341,10 @@ sig_infotext =
 
 
     sigCalculateGSEA <- reactive({
+        ## 
+        ## Calculate fgsea for current marker selection and active
+        ## datasets.
+        ##
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
         require(fgsea)
@@ -353,44 +356,40 @@ sig_infotext =
         ##if(is.null(input$sig_enplotsdb)) return(NULL)
         
         ## get all logFC of this dataset
-        F <- NULL   
-        ##F <- sapply(ngs$gx.meta$meta,function(x) unclass(x$fc)[,"trend.limma"])
-        F <- sapply(ngs$gx.meta$meta,function(x) x$meta.fx)
-        rownames(F) <- rownames(ngs$gx.meta$meta[[1]])    
-
-        dbg("sigCalculateGSEA:: 1 : dim(F)=",dim(F))
-        dbg("sigCalculateGSEA:: head.rownames(F)=",head(rownames(F)))
-        
+        meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
+        F <- meta$fc
+        rownames(F) <- toupper(rownames(F))
+                
         ext.db <- input$cmp_querydataset
         if(is.null(ext.db)) ext.db="<this dataset>"
 
-        has.other <- !(length(ext.db)==1 && ext.db[1]=="<this dataset>")
+        has.other <- (length(setdiff(ext.db,c("<this dataset>","")))>0)
         has.this  <- ("<this dataset>" %in% ext.db)
 
         if(ext.db[1]!="" && has.other) {
+
             if(any(grep("<all>",ext.db))) {
                 F1 <- PROFILES[["FC"]]
             } else {
-                ext.db0 <- gsub("\\[|\\]","",ext.db)
                 F1 <- PROFILES[["FC"]]
-                ##jj <- grep(ext.db0, colnames(PROFILES[["FC"]]))
-                jj <- unlist(sapply(ext.db0,grep,colnames(F1)))
+                profiles.db <- sub("].*","]",colnames(F1))
+                jj <- which(profiles.db %in% ext.db)
                 jj <- setdiff(jj,NA)
                 F1 <- F1[,jj,drop=FALSE]
             }
-            dbg("sigCalculateGSEA:: dim(F1)=",dim(F1))
-            dbg("sigCalculateGSEA:: head.rownames(F1)=",head(rownames(F1)))
+
             if(!has.this) {
                 F <- F1
             } else if(has.this && ncol(F1)>0) {
                 kk <- intersect(toupper(rownames(F)),toupper(rownames(F1)))
-                j1 <- which(toupper(rownames(F)) %in% kk)
-                j2 <- which(toupper(rownames(F1)) %in% kk)
-                F <- cbind(F[j1,,drop=FALSE],F1[j2,,drop=FALSE])
+                rownames(F) <- toupper(rownames(F))
+                rownames(F1) <- toupper(rownames(F1))
+                jj <- match(rownames(F),rownames(F1))
+                F1 <- F1[jj,,drop=FALSE]
+                rownames(F1) <- rownames(F)
+                F <- cbind(F,F1)
             }
         }
-
-        dbg("sigCalculateGSEA:: 2 : dim(F)=",dim(F))
         
         ## cleanup matrix
         F = as.matrix(F)
@@ -441,8 +440,10 @@ sig_infotext =
             i=1
             withProgress(message="computing GSEA ...", value=0.8, {
                 res <- lapply(1:ncol(F), function(i) {
-                    res = fgsea(gmt, stats=F[,i], nperm=1000)
-                    res = as.data.frame(res[,c("pval","padj","ES","NES")])
+                    suppressWarnings( suppressMessages(
+                        res <- fgsea(gmt, stats=F[,i], nperm=1000)
+                    ))
+                    res <- as.data.frame(res[,c("pval","padj","ES","NES")])
                     rownames(res)[1] = colnames(F)[i]
                     return(res)
                 })
@@ -1013,25 +1014,18 @@ sig_infotext =
             output$rho <- NULL
         }
         
-        dbg("sig_enrichmentByContrastTable.RENDER: 1 : dim(output)=",dim(output))
-        dbg("sig_enrichmentByContrastTable.RENDER: 1 : colnames(output)=",colnames(output))
-        
         color_fx = as.numeric(output[,"NES"])
-        color_fx[is.na(color_fx)] <- 0  ## yikes...
-
-        dbg("sig_enrichmentByContrastTable.RENDER: 2")
-        
+        color_fx[is.na(color_fx)] <- 0  ## yikes...        
         numeric.cols <- which(sapply(output, is.numeric))
         numeric.cols
-
-        dbg("sig_enrichmentByContrastTable.RENDER: 3 : numeric.cols=",numeric.cols)
         
         DT::datatable(output, class='compact cell-border stripe',
                       rownames=FALSE,
                       extensions = c('Scroller'),
                       ##selection='none',
-                      selection=list(mode='single', target='row', selected=1),
-                      options=list(
+                      ##selection = list(mode='single', target='row', selected=1),
+                      selection = list(target='row', selected=1),
+                      options = list(
                           dom = 'lrtip',
                           ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = TRUE, scrollY = 220, scroller=TRUE,
@@ -1040,7 +1034,7 @@ sig_infotext =
             formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle("NES",
-                                background = color_from_middle(color_fx, 'lightblue', '#f5aeae'),
+                                background = color_from_middle(color_fx,'lightblue','#f5aeae'),
                                 backgroundSize = '98% 88%',
                                 backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center')
@@ -1057,66 +1051,61 @@ sig_infotext =
         
         gsea <- sigCalculateGSEA()
         if(is.null(gsea)) return(NULL)
-
-        dbg("sig_enrichmentByContrastGenes.RENDER: 1")
         
         i=1
         i <- input$sig_enrichmentByContrastTable_rows_selected
         if(is.null(i) || length(i)==0) return(NULL)
-        contr <- rownames(gsea$output)[i]
-
-        dbg("sig_enrichmentByContrastGenes.RENDER: 2")
-
+        
         ext.db = "<this dataset>"
         qq.db <- input$cmp_querydataset
         if(!is.null(qq.db) && qq.db!="") {
             ext.db <- qq.db
         }
 
-        dbg("sig_enrichmentByContrastGenes.RENDER: 3: ext.db=",ext.db)
-        
-        ##if(input$sig_enplotsdb=="this dataset") {
-        if(ext.db=="<this dataset>") {
-            fc <- ngs$gx.meta$meta[[contr]]$meta.fx
-            qv <- ngs$gx.meta$meta[[contr]]$meta.q
-            names(fc) <- rownames(ngs$gx.meta$meta[[contr]])
-            names(qv) <- rownames(ngs$gx.meta$meta[[contr]])
-            names(fc) <- toupper(names(fc))
-            names(qv) <- toupper(names(qv))
-        } else {
-            ##load(file.path(FILES,"allFoldChanges-pub.rda"))
-            fc <- PROFILES[["FC"]][,contr]
-            qv <- rep(NA,length(fc))
-            names(qv) <- names(fc)
-        }
+        meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
+        fc <- meta$fc
+        qv <- meta$qv
+        rownames(fc) <- toupper(rownames(fc))
+        rownames(qv) <- toupper(rownames(qv))
 
-        dbg("sig_enrichmentByContrastGenes.RENDER: 4")
+        has.others <- length(setdiff(ext.db,"<this dataset>")>0)        
+        ext.fc <- NULL
+        if(has.others) {
+            ##load(file.path(FILES,"allFoldChanges-pub.rda"))
+            ext.fc <- PROFILES[["FC"]]
+            jj <- match(rownames(fc),rownames(ext.fc))
+            ext.fc <- ext.fc[jj,,drop=FALSE]
+            rownames(ext.fc) <- rownames(fc)
+            fc <- cbind(fc, ext.fc)
+        }
+        
+        contr <- rownames(gsea$output)[i]
+
+        fc <- fc[,contr,drop=FALSE]
+        ##qv <- qv[,contr,drop=FALSE]
         
         gset <- getCurrentMarkers()
         if(is.null(gset)) return(NULL)
-        
-        dbg("sig_enrichmentByContrastGenes.RENDER: 5")
 
         gset <- setdiff(toupper(gset),c("",NA))
-        genes <- intersect(gset,names(fc))    
-        fc <- fc[genes]
-        fc <- round(fc[order(-abs(fc))],digits=3)
-        qv <- qv[names(fc)]
-        gene.tt <- substring(GENE.TITLE[toupper(names(fc))],1,40)
-        names(gene.tt) <- names(qv) <- names(fc)    
-        output <- data.frame(gene=names(fc), title=gene.tt, FC=fc, q=qv)
+        genes <- intersect(gset,rownames(fc))
+        dd1 <- setdiff(genes,rownames(fc))
+        dd2 <- setdiff(genes,rownames(qv))        
+        fc <- fc[genes,,drop=FALSE]
+        qv <- qv[genes,,drop=FALSE]
 
-        dbg("sig_enrichmentByContrastGenes.RENDER: 6")
         
-        color_fx = as.numeric(output[,"FC"])
+        gene.tt <- substring(GENE.TITLE[toupper(rownames(fc))],1,40)
+        names(gene.tt) <- rownames(fc)
+        df <- data.frame(gene=rownames(fc), title=gene.tt, fc, check.names=FALSE)
+        ##df <- df[order(-abs(df$FC)),]
+        color_fx = as.numeric(fc[,])
         color_fx[is.na(color_fx)] <- 0  ## yikes...
 
-        numeric.cols <- which(sapply(output, is.numeric))
+        numeric.cols <- which(sapply(df, is.numeric))
         numeric.cols
-
-        dbg("sig_enrichmentByContrastGenes.RENDER: 7")
         
-        DT::datatable(output, class='compact cell-border stripe',
+        DT::datatable(df, class='compact cell-border stripe',
                       rownames=FALSE,
                       extensions = c('Scroller'), selection='none',
                       options=list(
@@ -1127,11 +1116,12 @@ sig_infotext =
                       )) %>%  ## end of options.list 
             formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
-                DT::formatStyle("FC",
-                                background = color_from_middle(color_fx, 'lightblue', '#f5aeae'),
-                                backgroundSize = '98% 88%',
-                                backgroundRepeat = 'no-repeat',
-                                backgroundPosition = 'center')    
+                DT::formatStyle(
+                        colnames(fc),
+                        background = color_from_middle(color_fx,'lightblue','#f5aeae'),
+                        backgroundSize = '98% 88%',
+                        backgroundRepeat = 'no-repeat',
+                        backgroundPosition = 'center')    
     })
 
 

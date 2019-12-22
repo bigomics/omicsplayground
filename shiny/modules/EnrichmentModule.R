@@ -479,7 +479,7 @@ on a geneset level, also called geneset enrichment analysis."
         exp.matrix <- ngs$model.parameters$exp.matrix        
         xgroup = as.character(ngs$Y$group)
         
-        grp.name <- strsplit(comp0,split="_vs_|_VS_")[[1]]
+        grp.name <- strsplit(comp0,split="[._ ]vs[._ ]")[[1]]
         grp.name <- c(grp.name, "other")
         xsign <- sign(exp.matrix[,comp0])
         xgroup = grp.name[1*(xsign>0) + 2*(xsign<0) + 1*(xsign==0)]

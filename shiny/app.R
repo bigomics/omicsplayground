@@ -14,12 +14,14 @@ FILES="../lib"
 PGX.DIR="../data"
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 200*1024^2)  ##max 200Mb upload
-## DEV.VERSION = TRUE
+DEV.VERSION = TRUE
 
 if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../../alex/alex2019-data.pgx")
-    ngs=pgx.initialize(ngs)    
+    load("../data/GSE101766.pgx")    
+    ngs=pgx.initialize(ngs)
+    
 }
 
 source("global.R")
