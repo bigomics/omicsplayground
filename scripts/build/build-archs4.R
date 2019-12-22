@@ -56,20 +56,27 @@ rs <- dbGetQuery(con,'select gse,title from gse')
 GSE.TITLE <- rs$title
 names(GSE.TITLE) <- rs$gse
 
+gse.drugs <- NULL
 if(0) {
-    D <- read.csv("../../lib/L1000_repurposing_drugs.txt",
-                  sep="\t",comment.char="#")
-    drugs = as.character(D$pert_iname)
+    D <- read.csv("../../lib/L1000_repurposing_drugs.txt",sep="\t",comment.char="#")
+    drugs = tolower(as.character(D$pert_iname))
     drugs1 = grep("[[:punct:]]",drugs,value=TRUE,invert=TRUE)
-    about.drug <- mclapply(GSE.TITLE[], function(a) any(sapply(drugs1,function(d)grepl(d,a))))
-    about.drug <- unlist(about.drug)
-    names(about.drug) <- GSE.TITLE
-    table(about.drug)
+    length(drugs1)
+    ok1 <- grepl(paste(drugs1[1:2000],collapse="|"),tolower(GSE.TITLE))
+    ok2 <- grepl(paste(drugs1[2001:length(drugs1)],collapse="|"),tolower(GSE.TITLE))
+    about.drugs <- (ok1 | ok2)
+    table(about.drugs)
+
+    gse.drugs <- names(GSE.TITLE)[which(about.drugs)]
+    head(GSE.TITLE[gse.drugs])
+    tail(GSE.TITLE[gse.drugs])
 }
 
 ##================================================================================
-##================================= MAIN =========================================
+##================================= FUNCTIONS ====================================
 ##================================================================================
+
+id="GSE100425";ext="";outdir=NULL
 
 prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
     
@@ -94,7 +101,7 @@ prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
         cat("skipping. get dataset failed\n")
         return("skipped. get dataset failed")
     }
-
+    
     names(aa)
     if("group" %in% colnames(aa$samples)) {
         colnames(aa$samples) <- sub("group","xgroup",colnames(aa$samples))
@@ -162,6 +169,10 @@ prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
 }
 
 
+##================================================================================
+##================================= MAIN =========================================
+##================================================================================
+
 ## all series ID
 samplesize <- table(a4$sample_table$series_id)
 all_ids = names(samplesize[ samplesize>=20 & samplesize<=200 ])
@@ -178,16 +189,16 @@ ids.list[["breast"]] <- all_ids[grep("breast.cancer",all.titles)]
 ids.list[["cancer"]] <- all_ids[grep("cancer|onco|tumor|tumour",all.titles)]
 ids.list[["aging"]] <- all_ids[grep("[ ]aging|^aging|senesc",all.titles)]
 ids.list[["immune"]] <- all_ids[grep("immun",all.titles)]
-
-## Select studies with relevant terms about Immuno AND oncology terms
-ids.list[["immunonco"]] <- intersect(ids.list[["cancer"]],ids.list[["immune"]])
+if(!is.null(gse.drugs)) ids.list[["drugs"]] <- intersect(all_ids, gse.drugs)
 
 sapply(ids.list, length)
+id = ids.list[[1]][1]
+id
 
 require(parallel)
 i=1
 for(i in 1:length(ids.list)) {
-    ext <- paste0("-",ext = names(ids.list)[i])
+    ext <- paste0("-",names(ids.list)[i])
     ids <- ids.list[[i]]
     res <- mclapply(ids[1:4], function(id)
         prepArchs4Dataset(id, ext=ext, outdir="gse"),

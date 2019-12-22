@@ -84,7 +84,7 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
     
     kcode <- apply(K,1,paste,collapse="-")
     xc <- factor(kcode, levels=unique(kcode))  ## experimental condition
-    levels(xc) <- paste0("group",1:length(levels(xc)))
+    levels(xc) <- paste0("condition",1:length(levels(xc)))
 
     jj <- which(!duplicated(kcode))
     K2 <- K[jj,,drop=FALSE]
