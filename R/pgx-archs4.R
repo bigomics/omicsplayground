@@ -57,7 +57,10 @@ pgx.getArchs4Dataset <- function(a4, id)
         nf
         pheno.names <- sub(":.*","",ch1x[[which.max(plen)]])
         pheno.names
-        pheno.values <- t(sapply(pheno.values, function(s) head(c(s,rep(NA,nf)),nf)))        
+        pheno.values <- t(sapply(pheno.values, function(s) head(c(s,rep(NA,nf)),nf)))
+        if(length(pheno.names)==1) {
+            pheno.values <- t(pheno.values)
+        }
         dim(pheno.values)
         colnames(pheno.values) <- gsub("[ /,;+&-]","_",pheno.names)
         head(pheno.values)
