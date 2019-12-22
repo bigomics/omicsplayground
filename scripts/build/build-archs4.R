@@ -184,15 +184,6 @@ ids.list[["immunonco"]] <- intersect(ids.list[["cancer"]],ids.list[["immune"]])
 
 sapply(ids.list, length)
 
-id = "GSE53784"
-id = ids[1]
-
-
-id = "GSE53784"
-id = ids[1]
-id
-length(ids)
-
 require(parallel)
 i=1
 for(i in 1:length(ids.list)) {
