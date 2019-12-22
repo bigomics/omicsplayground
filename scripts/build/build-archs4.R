@@ -100,15 +100,8 @@ head(ids)
 GSE.TITLE[ids]
 ##cc <- sample_covariates(a4)$name
 
-
 id = "GSE53784"
 id = ids[1]
-id
-length(ids)
-res <- mclapply( ids[1:4], function(id) prepArchs4Dataset(id) )
-res
-
-
 
 prepArchs4Dataset <- function(id) {
     
@@ -184,3 +177,12 @@ prepArchs4Dataset <- function(id) {
         return("OK")
     }    
 }
+
+
+id = "GSE53784"
+id = ids[1]
+id
+length(ids)
+res <- mclapply( ids[1:4], function(id) prepArchs4Dataset(id) )
+res
+
