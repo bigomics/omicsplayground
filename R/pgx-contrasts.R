@@ -1,7 +1,104 @@
 
 ##-----------------------------------------------------------------------------
-## LIMMA  helper functions
+## Contrast creation functions
 ##-----------------------------------------------------------------------------
+
+##mingrp=3;slen=8;ref=NULL
+pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
+
+    shortestunique <- function(xx,slen=3) {
+        k <- min(which(!sapply(1:max(nchar(xx)),function(i) any(duplicated(substring(xx,1,i))))))
+        substring(xx,1,max(k,slen))
+    }
+    
+    autoContrast1 <- function(x, ref1, slen, mingrp) {
+        if(is.null(ref1)) ref1 <- NA
+        x <- as.character(x)
+        nx <- table(x)
+        too.small <- names(which(nx < mingrp))
+        if(length(too.small)) x[which(x %in% too.small)] <- NA
+        nx <- table(x)
+        if(length(nx)<2) return(NULL)
+        x <- factor(x)
+        if(!is.na(ref1)) x <- relevel(x, ref=ref1)
+
+        xlevels <- gsub("[^[:alnum:]+-]","",levels(x))        
+        levels(x) <- shortestunique(xlevels,slen=slen)
+        xref <- gsub("[^[:alnum:]]","",levels(x)[1])
+        nn <- length(nx)
+        nn
+        if(nn<2) {
+            return(NULL)
+        } else if(nn == 2) {
+            ct <- model.matrix(~x)[,2,drop=FALSE]
+            colnames(ct) <- paste0(levels(x)[2],"_vs_",levels(x)[1])
+        } else if(nn >= 3) {
+            if(is.na(ref1)) {
+                ct <- model.matrix(~0 + x)
+                colnames(ct) <- paste0(levels(x),"_vs_rest")
+            } else {
+                ct <- model.matrix(~0 + x)
+                colnames(ct) <- paste0(levels(x),"_vs_",xref)
+                i=1
+                for(i in 1:ncol(ct)) {
+                    j <- which(!(x %in% levels(x)[c(1,i)]))
+                    j <- intersect(as.character(j),rownames(ct))
+                    ct[j,i] <- NA
+                }
+                ct <- ct[,2:ncol(ct),drop=FALSE] ## remove REFvsREF                
+            }
+        }
+        ## NA can make ct smaller than full
+        ct <- ct[match(1:length(x),rownames(ct)),,drop=FALSE]
+        rownames(ct) <- 1:length(x)
+        ct[is.na(ct)] <- 0
+        ct
+    }
+
+    if(!is.null(ref) && length(ref)!=ncol(df)) ref <- head(rep(ref,99),ncol(df))
+    
+    K <- c()
+    for(i in 1:ncol(df)) {
+        ref1 <- NA
+        if(!is.null(ref)) ref1 <- ref[i]
+        x <- df[,i]
+        if(!(ref1 %in% x)) ref1 <- NA
+        ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$"
+        detect.ref <- any(grepl(ref.pattern,x,ignore.case=TRUE))
+        if(is.na(ref1) & detect.ref) {
+            ref1 <- grep(ref.pattern,x,ignore.case=TRUE,value=TRUE)
+            ref1 <- sort(ref1)[1]
+            cat("reference auto-detected:",ref1,"\n")
+        }
+        ct <- autoContrast1(x, ref=ref1, slen=slen, mingrp=mingrp)
+        dim(ct)
+        if(!is.null(ct)) {
+            colnames(ct) <- paste0(colnames(df)[i],":",colnames(ct))
+            K <- cbind(K,ct)
+        }
+    }
+    dim(K)
+    
+    rownames(K) <- rownames(df)
+    head(K)
+    
+    kcode <- apply(K,1,paste,collapse="-")
+    xc <- factor(kcode, levels=unique(kcode))  ## experimental condition
+    levels(xc) <- paste0("group",1:length(levels(xc)))
+
+    jj <- which(!duplicated(kcode))
+    K2 <- K[jj,,drop=FALSE]
+    rownames(K2) <- xc[jj]
+    head(K2)
+
+    ## Translate coding 0/NA/1 to -1/0/+1 coding of contrast
+    K[K==0] <- -1
+    K[is.na(K)] <- 0
+    K2[K2==0] <- -1
+    K2[is.na(K2)] <- 0
+        
+    list(group = xc, contr.matrix = K2, exp.matrix=K)
+}
 
 normalizeTMM <- function(counts, log=FALSE, method="TMM") {
     require(edgeR)
@@ -169,101 +266,6 @@ makeClusterContrasts <- function(clusters, min.freq=0.01, full=FALSE,
 }
 
 
-##mingrp=3;slen=8;ref=NULL
-pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
-
-    shortestunique <- function(xx,slen=3) {
-        k <- min(which(!sapply(1:max(nchar(xx)),function(i) any(duplicated(substring(xx,1,i))))))
-        substring(xx,1,max(k,slen))
-    }
-    
-    autoContrast1 <- function(x, ref1, slen, mingrp) {
-        if(is.null(ref1)) ref1 <- NA
-        x <- as.character(x)
-        nx <- table(x)
-        too.small <- names(which(nx < mingrp))
-        if(length(too.small)) x[which(x %in% too.small)] <- NA
-        nx <- table(x)
-        if(length(nx)<2) return(NULL)
-        x <- factor(x)
-        if(!is.na(ref1)) x <- relevel(x, ref=ref1)
-        xlevels <- gsub("[^[:alnum:]]","",levels(x))
-        levels(x) <- shortestunique(xlevels,slen=slen)
-        xref <- gsub("[^[:alnum:]]","",levels(x)[1])
-        nn <- length(nx)
-        nn
-        if(nn<2) {
-            return(NULL)
-        } else if(nn == 2) {
-            ct <- model.matrix(~x)[,2,drop=FALSE]
-            colnames(ct) <- paste0(levels(x)[2],"_vs_",levels(x)[1])
-        } else if(nn >= 3) {
-            if(is.na(ref1)) {
-                ct <- model.matrix(~0 + x)
-                colnames(ct) <- paste0(levels(x),"_vs_rest")
-            } else {
-                ct <- model.matrix(~0 + x)
-                colnames(ct) <- paste0(levels(x),"_vs_",xref)
-                i=1
-                for(i in 1:ncol(ct)) {
-                    j <- which(!(x %in% levels(x)[c(1,i)]))
-                    j <- intersect(as.character(j),rownames(ct))
-                    ct[j,i] <- NA
-                }
-                ct <- ct[,2:ncol(ct),drop=FALSE] ## remove REFvsREF                
-            }
-        }
-        ## NA can make ct smaller than full
-        ct <- ct[match(1:length(x),rownames(ct)),,drop=FALSE]
-        rownames(ct) <- 1:length(x)
-        ct[is.na(ct)] <- 0
-        ct
-    }
-
-    if(!is.null(ref) && length(ref)!=ncol(df)) ref <- head(rep(ref,99),ncol(df))
-    
-    K <- c()
-    for(i in 1:ncol(df)) {
-        ref1 <- NA
-        if(!is.null(ref)) ref1 <- ref[i]
-        x <- df[,i]
-        if(!(ref1 %in% x)) ref1 <- NA
-        ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$"
-        detect.ref <- any(grepl(ref.pattern,x,ignore.case=TRUE))
-        if(is.na(ref1) & detect.ref) {
-            ref1 <- grep(ref.pattern,x,ignore.case=TRUE,value=TRUE)
-            ref1 <- sort(ref1)[1]
-            cat("reference auto-detected:",ref1,"\n")
-        }
-        ct <- autoContrast1(x, ref=ref1, slen=slen, mingrp=mingrp)
-        dim(ct)
-        if(!is.null(ct)) {
-            colnames(ct) <- paste0(colnames(df)[i],":",colnames(ct))
-            K <- cbind(K,ct)
-        }
-    }
-    dim(K)
-    
-    rownames(K) <- rownames(df)
-    head(K)
-    
-    kcode <- apply(K,1,paste,collapse="-")
-    xc <- factor(kcode, levels=unique(kcode))  ## experimental condition
-    levels(xc) <- paste0("group",1:length(levels(xc)))
-
-    jj <- which(!duplicated(kcode))
-    K2 <- K[jj,,drop=FALSE]
-    rownames(K2) <- xc[jj]
-    head(K2)
-
-    ## Translate coding 0/NA/1 to -1/0/+1 coding of contrast
-    K[K==0] <- -1
-    K[is.na(K)] <- 0
-    K2[K2==0] <- -1
-    K2[is.na(K2)] <- 0
-        
-    list(group = xc, contr.matrix = K2, exp.matrix=K)
-}
 
 ##=====================================================================================
 ##=========================== END OF FILE =============================================

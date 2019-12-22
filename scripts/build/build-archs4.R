@@ -147,7 +147,8 @@ for(id in ids) {
     dim(aa$samples)
     dim(aa$contrasts)
 
-    has.contrast <- (!is.null(aa$contrasts) && ncol(aa$contrasts)>0)    
+    has.contrast <- (!is.null(aa$contrasts) && ncol(aa$contrasts)>0)
+    has.contrast    
     if(has.contrast) {
     
         ## Playground pre-computation
@@ -173,6 +174,7 @@ for(id in ids) {
         
         cat("object size: ",format(object.size(ngs), units="MB"),"\n")
         ngs.save(ngs, file=pgx.file)
-
     }    
+
+
 }
