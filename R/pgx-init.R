@@ -62,6 +62,7 @@ source(file.path(RDIR,"pgx-upload.R"))
 source(file.path(RDIR,"pgx-proteomics.R"))
 source(file.path(RDIR,"pgx-drugs.R"))
 source(file.path(RDIR,"pgx-files.R"))
+source(file.path(RDIR,"pgx-wordcloud.R"))
 
 source(file.path(RDIR,"xcr-graph.r"))
 source(file.path(RDIR,"ui-code.R"))

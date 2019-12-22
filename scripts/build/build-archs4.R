@@ -143,11 +143,11 @@ prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
         counts=aa$counts;samples=aa$samples;contrasts=aa$contrasts
         ngs <- pgx.upload(
             aa$counts, aa$samples, aa$contrasts,
-            max.genes=5000,
+            max.genes = 5000,
             gx.methods = c("trend.limma","edger.qlf","edger.lrt"),
             gset.methods = c("fisher","gsva","fgsea"),
-            ##extra.methods = c("meta.go","deconv","infer","drugs"),
-            extra.methods = c("meta.go","infer","drugs"),
+            ##extra.methods = c("meta.go","deconv","infer","drugs","wordcloud"),
+            extra.methods = c("meta.go","infer","drugs","wordcloud"),
             lib.dir = "../../lib",
             only.hugo = TRUE,
             progress=NULL)
