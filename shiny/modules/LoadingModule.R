@@ -847,12 +847,12 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
                 gset.methods = c("fisher","gsva","camera")  ## fastest 3            
                 ## gx.methods   = c("trend.limma","edger.qlf","edger.lrt")
                 ## gset.methods = c("fisher","gsva","fgsea")
-                extra.methods = c("meta.go","infer")
+                extra.methods = c("meta.go","infer","wordcloud")
                 max.genes = 5000
             } else {
                 gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
                 gset.methods = c("fisher","gsva","fgsea","camera","fry")
-                extra.methods = c("meta.go","infer","deconv","drugs")
+                extra.methods = c("meta.go","infer","deconv","drugs","wordcloud")
                 max.genes = 20000
                 if(ncol(counts) > 1000) {
                     ## probably scRNA-seq
@@ -864,7 +864,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
             if(DEV.VERSION) {
                 gx.methods   = c("ttest","ttest.rank","ttest.welch","trend.limma","edger.qlf","edger.lrt","deseq2.wald")
                 gset.methods = c("fisher","gsva","fgsea","camera","fry","ssgsea","spearman")
-                extra.methods = c("meta.go","infer","deconv","drugs")
+                extra.methods = c("meta.go","infer","deconv","drugs","wordcloud")
                 max.genes = 9999999
             }
             

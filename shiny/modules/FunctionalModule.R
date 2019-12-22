@@ -1242,7 +1242,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     ##------------- Functions for WordCloud ------------------------
     ##---------------------------------------------------------------
 
-    pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
+    pgx.calculateWordFreq.SAVE <- function(ngs, progress=NULL, pg.unit=1) {
 
         if(!is.null(progress)) progress$set(message = "WordCloud", value = 0)
         
@@ -1343,15 +1343,15 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     enrich_getWordFreqResults <- reactive({
         ngs <- inputData()
         req(ngs)
-        
-        ## ------------ Create a Progress object
-        progress <- shiny::Progress$new()
-        on.exit(progress$close())    
-
-        res <- pgx.calculateWordFreq(ngs, progress=progress, pg.unit=1)    
+        if("wordcloud" %in% names(ngs)) {
+            res <- ngs$wordcloud
+        } else {
+            progress <- shiny::Progress$new()
+            res <- pgx.calculateWordFreq(ngs, progress=progress, pg.unit=1)
+            on.exit(progress$close())    
+        }
         return(res)
     })
-
 
     enrich_getCurrentWordEnrichment <- reactive({
 

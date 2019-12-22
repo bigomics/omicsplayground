@@ -59,6 +59,13 @@ compute.extra <- function(ngs, extra, lib.dir) {
         cat(">>> computing OmicsGraphs for",rda.file,"\n")
         ngs <- compute.omicsGraphs(ngs) 
     }
+
+    if("wordcloud" %in% extra) {
+        cat(">>> computing WordCloud statistics for",rda.file,"\n")
+        res <- pgx.calculateWordFreq(ngs, progress=NULL, pg.unit=1)        
+        ngs$wordcloud <- res
+        remove(res)
+    }
     
     return(ngs)
 }
