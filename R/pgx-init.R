@@ -74,8 +74,9 @@ DEV.VERSION=FALSE
 ## Caching the init files
 INIT.FILE <- file.path(FILES,"global-init.rda")
 INIT.FILE
+file.exists(INIT.FILE)
 
-if( file.exists(INIT.FILE)) {    
+if(file.exists(INIT.FILE)) {    
     
     load(INIT.FILE, verbose=1)
 
@@ -164,7 +165,7 @@ if( file.exists(INIT.FILE)) {
 
     newvars <- setdiff(ls(), oldvars)
     newvars
-    save( list=newvars, file=file.path(FILES, INIT.FILE))
+    save( list=newvars, file=INIT.FILE)
     
 }
 
