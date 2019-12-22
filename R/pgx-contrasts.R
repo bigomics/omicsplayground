@@ -207,6 +207,7 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
                 i=1
                 for(i in 1:ncol(ct)) {
                     j <- which(!(x %in% levels(x)[c(1,i)]))
+                    j <- intersect(as.character(j),rownames(ct))
                     ct[j,i] <- NA
                 }
                 ct <- ct[,2:ncol(ct),drop=FALSE] ## remove REFvsREF                
@@ -227,11 +228,12 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
         if(!is.null(ref)) ref1 <- ref[i]
         x <- df[,i]
         if(!(ref1 %in% x)) ref1 <- NA
-        ref.pattern <- "wt|contr|ctr|untreat|normal|^no$|neg|ref"
+        ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$"
         detect.ref <- any(grepl(ref.pattern,x,ignore.case=TRUE))
         if(is.na(ref1) & detect.ref) {
-            ref1 <- grep(ref.pattern,x,ignore.case=TRUE,value=TRUE)[1]
-            cat("automatic reference detected:",ref1,"\n")
+            ref1 <- grep(ref.pattern,x,ignore.case=TRUE,value=TRUE)
+            ref1 <- sort(ref1)[1]
+            cat("reference auto-detected:",ref1,"\n")
         }
         ct <- autoContrast1(x, ref=ref1, slen=slen, mingrp=mingrp)
         dim(ct)

@@ -90,14 +90,14 @@ DataViewModule <- function(input, output, session, env)
             tipify( selectInput(ns("data_samplefilter"),"Filter samples:",
                                 choices=NULL, multiple=TRUE),
                    "Filter the relevant samples for the analysis.", placement="top"),
+            tipify( selectInput(ns('data_groupby'),'Group by:', choices=NULL),
+                   "Select phenotype for grouping the samples.", placement="top"),
             br(),
             tipify( actionLink(ns("data_options"), "Options", icon=icon("cog", lib = "glyphicon")),
                    "Toggle advanced options.", placement="top"),
             br(),br(),
             conditionalPanel(
                 "input.data_options % 2 == 1", ns=ns,
-                tipify( selectInput(ns('data_groupby'),'Group by:', choices=NULL),
-                       "Select phenotype for grouping the samples.", placement="top"),
                 tipify( radioButtons(ns('data_type'),'Data type:',
                                      choices=datatypes, selected="logCPM", inline=TRUE),
                        "Choose an input data type for the analysis.", placement="bottom")
@@ -1129,7 +1129,6 @@ DataViewModule <- function(input, output, session, env)
     menu_options='<code>Options</code>'
     
     data_rawdataTable_text = paste0('Under the <strong>gene table </strong>, the average expression values of genes across the groups can be read. The samples (or cells) can be ungrouped by unclicking the ',menu_grouped, ' in the main <i>Options</i> to see the exact expression values per sample (or cell).', 'The genes in the table are ordered by the correlation (<b>rho</b> column) with respect to the gene selected by users from the ',dropdown_search_gene, ' setting. <b>SD</b> column reports the standard deviation of expression across samples (or cells).')
-
     
     data_rawdataTable.RENDER <- reactive({
         ## get current view of raw_counts
@@ -1204,7 +1203,8 @@ DataViewModule <- function(input, output, session, env)
         xgenes <- ngs$genes[rownames(x),"gene_name"]
         gene.title <- GENE.TITLE[toupper(xgenes)]
         gene.title <- substring(gene.title,1,50)
-        x = data.frame( gene=xgenes, title=gene.title, rho=rho, SD=sdx, as.matrix(x), check.names=FALSE)
+        x = data.frame( gene=xgenes, title=gene.title, rho=rho, SD=sdx,
+                       as.matrix(x), check.names=FALSE)
         if(!is.null(rho)) {
             x = x[order(-abs(x$rho)),,drop=FALSE]
         } else {
@@ -1238,9 +1238,9 @@ DataViewModule <- function(input, output, session, env)
     data_rawdataTable_caption = "<b>Gene table.</b> The table shows the gene expression values per sample, or average expression values across the groups. The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar."
 
     data_rawdataTable_module <- tableModule(
-        id="data_rawdataTable", ns=ns,
-        func=data_rawdataTable.RENDER,
-        title="Gene expression table",
+        id = "data_rawdataTable", ns=ns,
+        func = data_rawdataTable.RENDER,
+        title = "Gene expression table",
         info.text = data_rawdataTable_text,
         caption = data_rawdataTable_caption
     )
@@ -1253,9 +1253,7 @@ DataViewModule <- function(input, output, session, env)
             moduleWidget(data_rawdataTable_module, outputFunc="dataTableOutput",ns=ns)
         )
     })
-
     
-
     ##================================================================================
     ##================================= Samples ======================================
     ##================================================================================
@@ -1268,7 +1266,7 @@ DataViewModule <- function(input, output, session, env)
         ##if(is.null(input$data_samplefilter)) return(NULL)    
         dt <- NULL
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        dt <- ngs$samples[samples,]    
+        dt <- ngs$samples[samples,,drop=FALSE]    
         DT::datatable( dt,
                       class = 'compact cell-border stripe hover',
                       rownames = TRUE,
@@ -1317,11 +1315,23 @@ DataViewModule <- function(input, output, session, env)
         dt <- NULL
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
         names(ngs$model.parameters)
-        dt <- sign(ngs$model.parameters$exp.matrix[samples,])
-        colnames(dt) <- sub("_vs_","\nvs ",colnames(dt))
+        if(input$data_ctbygroup=="group") {
+            kk <- which(ngs$samples$group %in% ngs$samples[samples,"group"])
+            dt <- ngs$model.parameters$contr.matrix[kk,,drop=FALSE]
+        } else {
+            dt <- ngs$model.parameters$exp.matrix[samples,,drop=FALSE]
+        }
+        dt <- sign(dt)
+        colnames(dt) <- sub("[_. ]vs[_. ]","\nvs ",colnames(dt))
         dt[dt==0] <- NA
+
+        ## looks better this way
+        dt1 <- dt
+        if(ncol(dt)<8) {
+            dt1 <- cbind(dt,NA,NA,NA,NA,NA,NA,NA,NA)[,1:8]
+        }
         
-        DT::datatable( dt,
+        DT::datatable( dt1,
                       class = 'compact cell-border stripe hover',
                       rownames = TRUE,
                       extensions = c('Buttons','Scroller'),
@@ -1347,10 +1357,16 @@ DataViewModule <- function(input, output, session, env)
     
     data_contrastTable_caption = "<b>Contrast table</b> summarizing the contrasts of all comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison."
 
+    data_contrastTable_opts = tagList(
+        tipify( radioButtons(ns('data_ctbygroup'), "Show by:", choices=c("group","sample")),
+               "Show contrasts by group or by samples.",
+               placement="right", options = list(container = "body"))
+    )
+    
     data_contrastTable_module <- tableModule(
-        id="data_contrastTable", ns=ns,
-        func=data_contrastTable.RENDER,
-        ##options = data_sampleTable_opts,
+        id = "data_contrastTable", ns=ns,
+        func = data_contrastTable.RENDER,
+        options = data_contrastTable_opts,
         title="Contrast table",
         info.text = data_contrastTable_info,
         caption = data_contrastTable_caption

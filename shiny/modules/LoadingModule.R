@@ -126,7 +126,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
         all(pgx.files %in% info$dataset)
         setdiff(pgx.files, info$dataset)
         if(!all(pgx.files %in% info$dataset)) {
-            info <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=TRUE, pgx=info, verbose=FALSE)
+            info <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=FALSE, pgx=info, verbose=FALSE)
             rownames(info) <- NULL
             Sys.chmod(PGXINFO.FILE, mode="0666")
             write.csv(info, file=PGXINFO.FILE)
@@ -698,9 +698,10 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
                       extensions = c('Scroller'),
                       selection = list(mode='single', target='row', selected=NULL ),
                       ##selection = list(mode='none'),
-                      ##filter = "top",
+                      ## filter = "top",
                       options=list(
-                          ##dom = 'Blfrtip', 
+                          ##dom = 'Blfrtip',
+                          ##columnDefs = list(list(searchable = FALSE, targets = 1)),
                           pageLength = 100, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = FALSE, scrollY =400, ## scroller=TRUE,
                           deferRender=TRUE

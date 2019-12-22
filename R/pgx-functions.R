@@ -146,11 +146,11 @@ pgx.getMetaFoldChangeMatrix <- function(ngs, what="meta")
     if(what %in% methods) {
         fc0 = sapply(ngs$gx.meta$meta[sel], function(x) unclass(x$fc)[,what])
         qv0 = sapply(ngs$gx.meta$meta[sel], function(x) unclass(x$q)[,what])
-        rownames(fc0)=rownames(fc0)=rownames(ngs$gx.meta$meta[[1]])
+        rownames(fc0)=rownames(qv0)=rownames(ngs$gx.meta$meta[[1]])
     } else if(what=="meta") {
         fc0 = sapply(ngs$gx.meta$meta[sel], function(x) x$meta.fx)
         qv0 = sapply(ngs$gx.meta$meta[sel], function(x) x$meta.q)
-        rownames(fc0)=rownames(fc0)=rownames(ngs$gx.meta$meta[[1]])
+        rownames(fc0)=rownames(qv0)=rownames(ngs$gx.meta$meta[[1]])
     } else {
         cat("WARNING:: pgx.getMetaFoldChangeMatrix: unknown method")
         return(NULL)
