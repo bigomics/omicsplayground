@@ -123,7 +123,7 @@ is.categorical <- function(x, max.ncat=20, min.ncat=2) {
 
 pgx.getCategoricalPhenotypes <-function(df, max.ncat=20, min.ncat=2) {
     is.bad = 0
-    is.bad <- grepl("^sample|id$|replicate|ratio|year|month|day|age|efs|dfs|surv|follow",tolower(colnames(df)))
+    is.bad <- grepl("^sample$|id$|replicate|ratio|year|month|day|age|efs|dfs|surv|follow",tolower(colnames(df)))
     ## is.factor <- sapply(sapply(data.frame(df), class), function(s) any(s %in% c("factor","character")))
     is.factor <- apply(df, 2, is.categorical)
     is.factor

@@ -1093,7 +1093,6 @@ sig_infotext =
         dd2 <- setdiff(genes,rownames(qv))        
         fc <- fc[genes,,drop=FALSE]
         qv <- qv[genes,,drop=FALSE]
-
         
         gene.tt <- substring(GENE.TITLE[toupper(rownames(fc))],1,40)
         names(gene.tt) <- rownames(fc)
