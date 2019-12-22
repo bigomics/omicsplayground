@@ -183,6 +183,8 @@ id = "GSE53784"
 id = ids[1]
 id
 length(ids)
+
+require(parallel)
 res <- mclapply( ids[1:4], function(id) prepArchs4Dataset(id) )
 res
 
