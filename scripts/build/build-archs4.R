@@ -189,7 +189,7 @@ ids.list <- list()
 ##ids.list[["breast"]] <- all_ids[grep("breast.cancer",all.titles)]
 ##ids.list[["cancer"]] <- all_ids[grep("cancer|onco|tumor|tumour",all.titles)]
 ids.list[["aging"]] <- all_ids[grep("[ ]aging|^aging|senesc",all.titles)]
-ids.list[["immune"]] <- all_ids[grep("immun",all.titles)]
+##ids.list[["immune"]] <- all_ids[grep("immun",all.titles)]
 if(!is.null(gse.drugs)) ids.list[["drugs"]] <- intersect(all_ids, gse.drugs)
 
 sapply(ids.list, length)
@@ -201,8 +201,8 @@ i=1
 for(i in 1:length(ids.list)) {
     ext <- paste0("-",names(ids.list)[i])
     ids <- ids.list[[i]]
-    res <- mclapply(ids[1:2], function(id)
+    res <- mclapply(ids[], function(id)
         prepArchs4Dataset(id, ext=ext, outdir="gse"),
-        mc.cores = 2)
+        mc.cores = 8)
     unlist(res)
 }

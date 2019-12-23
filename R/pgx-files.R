@@ -22,8 +22,9 @@ pgx.readDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
     fn <- file.path(pgx.dir,file)
     fn
     if(!file.exists(fn)) {
-        if(verbose) cat("Creating new. No dataset profiles matrix...\n")
-        pgx.updateDatasetProfiles(pgx.dir, file=file)
+        stop("FATAL : could not find profiles matrix. please create first with initDatasetFolder().\n")
+        ## pgx.updateDatasetProfiles(pgx.dir, file=file)
+        return()
     } else {
         if(verbose) cat("Found existing dataset profiles matrix\n")
     }
