@@ -19,6 +19,12 @@ source("../R/gset-meta.r")
 source("../R/pgx-graph.R")
 source("../R/pgx-functions.R")
 source("../R/ngs-functions.R")
+source("../R/pgx-graph.R")
+source("../R/pgx-drugs.R")
+source("../R/pgx-wordcloud.R")
+source("../R/compute2-genes.R")
+source("../R/compute2-genesets.R")
+source("../R/compute2-extra.R")    
 
 source("options.R")
 MAX.GENES
@@ -237,9 +243,31 @@ if(DIFF.EXPRESSION) {
     head(contr.matrix)
     
     ##contr.matrix = contr.matrix[,1:3]
-    source("../R/compute-genes.R")
-    source("../R/compute-genesets.R")
-    source("../R/compute-extra.R")
+    USER.GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank")
+    USER.GENESETTEST.METHODS = c("fisher","gsva","camera")
+    USER.GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank",
+                            "voom.limma","trend.limma","notrend.limma",
+                            "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
+    USER.GENESETTEST.METHODS = c("fisher","gsva","ssgsea","spearman",
+                                 "camera", "fry","fgsea") ## no GSEA, too slow...
+    
+    ## new callling methods
+    ngs <- compute.testGenes(
+        ngs, contr.matrix,
+        max.features = MAX.GENES,
+        test.methods = USER.GENETEST.METHODS)
+    head(ngs$gx.meta$meta[[1]])        
+    
+    ngs <- compute.testGenesets(
+        ngs, max.features=MAX.GENES,
+        test.methods = USER.GENESETTEST.METHODS,
+        lib.dir = FILES)
+    head(ngs$gset.meta$meta[[1]])
+
+    extra <- c("wordcloud")
+    extra <- c("meta.go","deconv","infer","drugs","wordcloud")
+    ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
+
 }
 
 ## save

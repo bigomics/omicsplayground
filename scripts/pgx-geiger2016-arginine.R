@@ -27,7 +27,15 @@ source("../R/pgx-functions.R")
 source("../R/pgx-deconv.R")
 source("../R/pgx-proteomics.R")
 
+source("../R/pgx-graph.R")
+source("../R/pgx-drugs.R")
+source("../R/pgx-wordcloud.R")
+source("../R/compute2-genes.R")
+source("../R/compute2-genesets.R")
+source("../R/compute2-extra.R")    
+
 source("options.R")
+FILES
 MAX.GENES
 
 PROCESS.DATA=1
@@ -54,7 +62,9 @@ if(PROCESS.DATA) {
     ##------------------------------------------------------------
     ## Read protein data
     ##------------------------------------------------------------
+    ##devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data", "--no-manual"), build_vignettes=FALSE)    
     library(proteus)
+    
     metadataFile <- "../ext/arginine/meta.txt"
     proteinGroupsFile <- "../ext/arginine/proteinGroups.txt"
     ## Read the proteinGroups file
@@ -118,11 +128,9 @@ if(PROCESS.DATA) {
     head(ngs$samples)
     table(ngs$samples$cluster)
     
-    save(ngs, file=rda.file)
 }
 
 if(DIFF.EXPRESSION) {
-    load(file=rda.file, verbose=1)
     rda.file
 
     group.levels <- levels(ngs$samples$group)
@@ -155,30 +163,24 @@ if(DIFF.EXPRESSION) {
     USER.GENESETTEST.METHODS = c("fisher","gsva","ssgsea","spearman",
                                  "camera", "fry","fgsea") ## no GSEA, too slow...
 
-    if(1) {
-        source("../R/compute-genes.R")
-        source("../R/compute-genesets.R")
-    } else {
+    
+    ## new callling methods
+    ngs <- compute.testGenes(
+        ngs, contr.matrix,
+        max.features=MAX.GENES,
+        test.methods = USER.GENETEST.METHODS)
+    head(ngs$gx.meta$meta[[1]])        
+    
+    ngs <- compute.testGenesets(
+        ngs, max.features=MAX.GENES,
+        test.methods = USER.GENESETTEST.METHODS,
+        lib.dir=FILES)
+    head(ngs$gset.meta$meta[[1]])
 
-        ## new callling methods
-        source("../R/compute2-genes.R")
-        test.methods = c("trend.limma","ttest.welch","ttest")
-        test.methods = USER.GENETEST.METHODS
-        ngs <- compute.testGenes(
-            ngs, contr.matrix, max.features=MAX.GENES,
-            test.methods=test.methods)
-        head(ngs$gx.meta$meta[[1]])        
-        
-        source("../R/compute2-genesets.R")
-        test.methods = c("gsva","camera","fgsea")
-        test.methods = USER.GENESETTEST.METHODS
-        ngs <- compute.testGenesets(
-            ngs, max.features=MAX.GENES,
-            test.methods=test.methods)
-        head(ngs$gset.meta$meta[[1]])
-    }
-
-    source("../R/compute-extra.R")
+    extra <- c("meta.go","deconv","infer","drugs","wordcloud")
+    ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
+    
+    names(ngs)
     ngs$timings
 
 }
