@@ -168,7 +168,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                        labels_gp = gpar(fontsize=3.3*annot.ht),
                        grid_width = unit(1*annot.ht, "mm"),
                        grid_height = unit(1*annot.ht, "mm"))
-            aa <- rep( list(ap), ncol(col.annot))
+            aa <- rep(list(ap), ncol(col.annot))
             names(aa) <- colnames(col.annot)
             col.ha[[i]] = HeatmapAnnotation(
                 df = col.annot[jj,,drop=FALSE], col = col.colors,
