@@ -961,7 +961,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
                 ##pgx.dir=PGX.DIR;inc.progress=FALSE;pgx=PGXINFO
                 pgx.name = paste0(sub("[.]pgx","",ngs$name),".pgx")        
                 old.info = PGXINFO[which(!PGXINFO$dataset %in% c(ngs.name,pgx.name)),,drop=FALSE]
-                new.info <- pgx.scanInfo(pgx.dir=PGX.DIR, inc.progress=FALSE, pgx=old.info, verbose=FALSE)
+                new.info <- pgx.scanInfo(pgx.dir=PGX.DIR, pgx=old.info, verbose=FALSE)
                 PGXINFO <<- new.info
                 Sys.chmod(PGXINFO.FILE, mode="0666")
                 write.csv(PGXINFO, file=PGXINFO.FILE)
