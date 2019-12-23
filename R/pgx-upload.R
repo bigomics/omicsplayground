@@ -24,7 +24,7 @@ pgx.upload <- function(counts, samples, contrasts, ## genes,
                        max.genes = 9999, only.hugo=TRUE,
                        gx.methods = c("ttest.welch","trend.limma","edger.qlf"),
                        gset.methods = c("fisher","gsva","fgsea"),
-                       extra.methods = c("meta.go","deconv","infer","drugs"),
+                       extra.methods = c("meta.go","deconv","infer","drugs","wordcloud"),
                        lib.dir = "../lib",
                        progress=NULL)
 {
