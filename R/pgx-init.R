@@ -91,8 +91,11 @@ file.exists(INIT.FILE)
 
 if(file.exists(INIT.FILE)) {    
 
+    cat("<init> loading cached INIT file...\n")
     load(INIT.FILE, verbose=1)
     dim(PROFILES$FC)
+    
+    cat("<init> loading local profiles file...\n")
     PROFILES$FC <- pgx.readDatasetProfiles(PGX.DIR, file="datasets-allFC.csv")
     PROFILES$FC <- as.matrix(PROFILES$FC)
     dim(PROFILES$FC)
