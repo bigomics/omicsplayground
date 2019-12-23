@@ -1,10 +1,14 @@
 
-pgx.initDatasetFolder <- function(datadir, verbose=TRUE, force=FALSE)
+pgx.initDatasetFolder <- function(pgx.dir, verbose=TRUE, force=FALSE)
 {
+    if(!dir.exists(pgx.dir)) {
+        stop(paste("[pgx.initDatasetFolder] FATAL ERROR : folder",pgx.dir,"does not exist"))
+    }
+
     if(verbose) cat("init of data folder (info and allFC) ...\n")
-    r1 <- pgx.updateDatasetProfiles(datadir, file="datasets-allFC.csv",
+    r1 <- pgx.updateDatasetProfiles(pgx.dir, file="datasets-allFC.csv",
                                   force=force, verbose=verbose)
-    r2 <- pgx.updateInfoFile(datadir, file="datasets-info.csv",
+    r2 <- pgx.updateInfoFile(pgx.dir, file="datasets-info.csv",
                              force=force, verbose=verbose) 
 }
 
@@ -12,6 +16,9 @@ pgx.initDatasetFolder <- function(datadir, verbose=TRUE, force=FALSE)
 pgx.readDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
                                     verbose=TRUE)
 {
+    if(!dir.exists(pgx.dir)) {
+        stop(paste("[pgx.initDatasetFolder] FATAL ERROR : folder",pgx.dir,"does not exist"))
+    }
     fn <- file.path(pgx.dir,file)
     fn
     if(!file.exists(fn)) {
@@ -34,6 +41,9 @@ pgx.readDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
 pgx.updateDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
                                       force=FALSE, verbose=TRUE)
 {
+    if(!dir.exists(pgx.dir)) {
+        stop(paste("[pgx.initDatasetFolder] FATAL ERROR : folder",pgx.dir,"does not exist"))
+    }
     
     ## all public datasets
     pgx.files <- dir(pgx.dir, pattern="[.]pgx$")
@@ -111,10 +121,14 @@ pgx.updateDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
     ##return(allFC)
 }
 
-##pgx.dir=PGX.DIR;file="datasets-info.csv"
+##pgx.dir=PGX.DIR;file="datasets-info.csv";force=FALSE;verbose=1
 pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv", 
                                force=FALSE, verbose=TRUE )
 {
+    if(!dir.exists(pgx.dir)) {
+        stop(paste("[pgx.initDatasetFolder] FATAL ERROR : folder",pgx.dir,"does not exist"))
+    }
+
     require(shiny)
     if(verbose) cat(">>> updating data sets info file... (pgx.updateInfoFile) \n")
 
@@ -123,9 +137,11 @@ pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv",
 
     pgxinfo.file <- file.path(pgx.dir, file)
     pgxinfo <- c()
-    if(verbose) cat("checking if PGX-info file",pgxinfo.file,"exists...\n")
-
-    if(!force && file.exists(pgxinfo.file)) {
+    has.info <- file.exists(pgxinfo.file)
+    if(verbose && has.info) cat("checking if PGX-info file",pgxinfo.file,"exists: YES\n")
+    if(verbose && !has.info) cat("checking if PGX-info file",pgxinfo.file,"exists: NO\n")
+    
+    if(!force && has.pgx) {
         if(verbose) cat("File exists. appending to existing info file\n")
 
         pgxinfo = fread.csv(pgxinfo.file, stringsAsFactors=FALSE, row.names=1)
@@ -138,7 +154,6 @@ pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv",
         }
         pgx.files = pgx.files[jj]
     }
-
    
     ##pgx.files =head(pgx.files,3)
     f = pgx.files[1]
