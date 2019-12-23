@@ -150,4 +150,5 @@ ui = navbarPage(
     )
 )
 
-shiny::shinyApp(ui, server
+shiny::shinyApp(ui, server)
+
