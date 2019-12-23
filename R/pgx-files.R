@@ -1,11 +1,16 @@
-## pgx.dir=PGX.DIR;file="datasets-allFC.csv"
+##pgx.dir=PGX.DIR;file="datasets-allFC.csv"
+
+pgx.forceInitDatasetFolder <- function(datadir) {
+    cat("force init of data folder (info and allFC) ...\n")
+    pgx.scanDatasetProfiles(datadir, file="datasets-allFC.csv")
+    pgx.updateInfoFile(datadir, file="datasets-info.csv", force=TRUE) 
+}
 
 pgx.readDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv") {
     fn <- file.path(pgx.dir,file)
     fn
     if(!file.exists(fn)) {
-        pp <- pgx.scanDatasetProfiles(pgx.dir, file=file)
-        dim(pp)
+        pgx.scanDatasetProfiles(pgx.dir, file=file)
     }
     allFC <- read.csv(file=file.path(pgx.dir, file),
                       row.names=1, check.names=FALSE)
@@ -21,6 +26,14 @@ pgx.scanDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv") {
     pub.id <- sub("-.*","",pgx.files)
     pgx.files <- pgx.files[!duplicated(pub.id)]
     pgx.files
+
+    allfc.file <- file.path(pgx.dir,file)
+    
+    aa <- c()
+    if(file.exists(allfc.file)) {
+        aa <- read.csv(allfc.file,row.names=1,check.names=FALSE)
+        dim(aa)
+    }
     
     FC <- list()
     pgx=pgx.files[2]
@@ -57,20 +70,20 @@ pgx.scanDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv") {
     allFC <- do.call(cbind, FC)
     allFC <- as.matrix(allFC)
     dim(allFC)
-    write.csv(allFC, file=file.path(pgx.dir,file))
+    write.csv(allFC, file=allfc.file)
     ##load(file="../files/allFoldChanges.rda", verbose=1)
-    return(allFC)
+    ##return(allFC)
 }
 
 
 ##pgx.dir=PGX.DIR;file="datasets-info.csv"
-pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv") {
+pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv", force=FALSE) {
 
     ## what files to use, heavy or light objects
     pgxinfo <- c()
     pgxinfo.file <- file.path(pgx.dir, file)
 
-    if(file.exists(pgxinfo.file)) {
+    if(!force && file.exists(pgxinfo.file)) {
         ## info file exists, check and update        
         info = read.csv(pgxinfo.file, stringsAsFactors=FALSE, row.names=1)
         pgx.files = dir(pgx.dir, pattern=".pgx$")
@@ -126,7 +139,7 @@ pgx.scanInfo <- function(pgx.dir, inc.progress=FALSE,
         if(verbose) cat("scanning info from",pgx.files[i],"\n")
         load( pgx.files[i] )
         cnd = colnames(ngs$samples)
-        cnd = cnd[grep("group|batch|sample|patient|donor|repl|clone|cluster|lib.size|^[.]",cnd,invert=TRUE)]
+        cnd = cnd[grep("title|source|group|batch|sample|patient|donor|repl|clone|cluster|lib.size|^[.]",cnd,invert=TRUE)]
         is.mouse = (mean(grepl("[a-z]",ngs$genes$gene_name))>0.8)
         organism = c("human","mouse")[1 + is.mouse]
         date = ifelse(is.null(ngs$date), "", as.character(ngs$date))

@@ -610,12 +610,13 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
     ##split=" ";n=5
     andothers <- function(s, split=" ", n=8) {
         if(is.na(s)) return("")
+        s <- sub("^[ ]*","",s)
+        s <- sub("[ ]+"," ",s)
         s1 <- strsplit(s, split=split)[[1]]
         if(length(s1)<=n) return(s)
         n2 <- setdiff(length(s1),n)
         paste(paste(head(s1,n), collapse=" "),"(+",n2,"others)")
     }
-
 
     ## Some 'global' reactive variables used in this file
     uploaded_files <- reactiveValues()
