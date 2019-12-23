@@ -215,4 +215,10 @@ pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv",
     if(verbose) cat("\n")
     rownames(pgxinfo) <- NULL
     
-    pgxinfo <- data.frame(pgxi
+    pgxinfo <- data.frame(pgxinfo)    
+    if(verbose) cat("writing pgx info to",pgxinfo.file,"...\n")
+    write.csv(pgxinfo, file=pgxinfo.file)
+    Sys.chmod(pgxinfo.file, "0666")
+    return(pgxinfo)
+}
+
