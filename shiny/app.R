@@ -12,7 +12,7 @@ cat("===================== INIT =======================\n")
 RDIR="../R"
 FILES="../lib"
 PGX.DIR="../data"
-## PGX.DIR="~/bigomics/data/archs4data/gse"
+##PGX.DIR="~/bigomics/data/archs4data/gse"
 
 source("../R/pgx-functions.R", local=TRUE)  ## pass local vars
 source("../R/pgx-files.R", local=TRUE)  ## pass local vars
