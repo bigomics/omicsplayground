@@ -181,7 +181,7 @@ pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv",
     rownames(pgxinfo) <- NULL
     
     pgxinfo <- data.frame(pgxinfo)    
-    ##write.csv(pgxinfo, file="../pgx/pgx-info.csv")
+    write.csv(pgxinfo, file=pgxinfo.file)
     return(pgxinfo)
 }
 
