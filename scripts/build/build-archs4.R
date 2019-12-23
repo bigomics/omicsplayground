@@ -20,7 +20,7 @@ source("../../R/pgx-contrasts.R")
 source("../../R/pgx-upload.R")
 
 archs4dir <- "~/.archs4data"
-##archs4dir <- "~/bigomics/data/archs4data"
+archs4dir <- "~/bigomics/data/archs4data"
 archs4dir <- "/data/Projects/Data/archs4data"
 
 if(0) {
@@ -76,7 +76,9 @@ if(0) {
 ##================================= FUNCTIONS ====================================
 ##================================================================================
 
-id="GSE100425";ext="";outdir=NULL
+ext="test";outdir="test"
+id="GSE100425"
+id="GSE105087"
 
 prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
     
@@ -95,9 +97,10 @@ prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
     }
 
     cat("retrieving Archs4 data for GEO series",id,":",GSE.TITLE[id],"\n")
-    aa <- pgx.getArchs4Dataset(a4, id) 
-    
-    if(is.null(aa)) {
+    aa <- NULL
+    try.error <- try( aa <- pgx.getArchs4Dataset(a4, id) )
+
+    if(class(try.error)=="try-error" || is.null(aa)) {
         cat("skipping. get dataset failed\n")
         return("skipped. get dataset failed")
     }
@@ -163,6 +166,7 @@ prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
         ngs$link <- paste0("https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=",id)
         
         cat("object size: ",format(object.size(ngs), units="MB"),"\n")
+        cat(">>> saving PGX file ",pgx.file,"\n")
         ngs.save(ngs, file=pgx.file)
         return("OK")
     }    
@@ -184,11 +188,11 @@ table(all_ids %in% names(GSE.TITLE))
 
 ## Select studies with relevant terms
 ids.list <- list()
-##ids.list[["bloodcancers"]] <- all_ids[grep("lymphom|leukaem|hemato",all.titles)]
-##ids.list[["prostate"]] <- all_ids[grep("prostate.cancer",all.titles)]
-##ids.list[["breast"]] <- all_ids[grep("breast.cancer",all.titles)]
+ids.list[["bloodcancers"]] <- all_ids[grep("lymphom|leukaem|hemato",all.titles)]
+ids.list[["prostate"]] <- all_ids[grep("prostate.cancer",all.titles)]
+ids.list[["breast"]] <- all_ids[grep("breast.cancer",all.titles)]
 ##ids.list[["cancer"]] <- all_ids[grep("cancer|onco|tumor|tumour",all.titles)]
-ids.list[["aging"]] <- all_ids[grep("[ ]aging|^aging|senesc",all.titles)]
+##ids.list[["aging"]] <- all_ids[grep("[ ]aging|^aging|senesc",all.titles)]
 ##ids.list[["immune"]] <- all_ids[grep("immun",all.titles)]
 if(!is.null(gse.drugs)) ids.list[["drugs"]] <- intersect(all_ids, gse.drugs)
 
@@ -201,8 +205,36 @@ i=1
 for(i in 1:length(ids.list)) {
     ext <- paste0("-",names(ids.list)[i])
     ids <- ids.list[[i]]
-    res <- mclapply(ids[], function(id)
-        prepArchs4Dataset(id, ext=ext, outdir="gse"),
-        mc.cores = 8)
-    unlist(res)
+
+    NUMCORES = 8
+    ## NUMCORES = 1
+    if(NUMCORES>1) {
+        res <- mclapply(ids[], function(id)
+            prepArchs4Dataset(id, ext=ext, outdir="gse"),
+            mc.cores = 8)
+        unlist(res)
+    } else {
+        j=1
+        res <- rep("",length(ids))
+        names(res) <- ids
+        for(j in 1:length(ids)) {
+            id <- ids[j]
+            id
+            res[j] <- prepArchs4Dataset(id, ext=ext, outdir="gse")
+        }
+    }
+}
+
+res
+
+
+if(0) {
+    id="GSE101868"
+    id = "GSE101766"
+    i=1;j=1
+    ext <- paste0("-",names(ids.list)[i])
+    ids <- ids.list[[i]]
+    id = ids[j]
+    id
+    prepArchs4Dataset(id, ext="test", outdir="test")
 }

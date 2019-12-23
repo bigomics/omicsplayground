@@ -62,8 +62,10 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
         ref1 <- NA
         if(!is.null(ref)) ref1 <- ref[i]
         x <- df[,i]
+        too.small <- (x %in% names(which(table(x)<mingrp)))
+        x[too.small] <- NA
         if(!(ref1 %in% x)) ref1 <- NA
-        ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$"
+        ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$|scrambl"
         detect.ref <- any(grepl(ref.pattern,x,ignore.case=TRUE))
         if(is.na(ref1) & detect.ref) {
             ref1 <- grep(ref.pattern,x,ignore.case=TRUE,value=TRUE)
