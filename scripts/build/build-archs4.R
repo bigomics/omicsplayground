@@ -156,7 +156,7 @@ prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
         
         ## save
         ngs$name <- id
-        ngs$description <- paste0("GEO Series ",id,". ",GSE.TITLE[id],".")
+        ngs$description <- paste0(id,". ",GSE.TITLE[id],".")
         ngs$datatype <- "RNA-seq"
         ngs$organism <- ngs.detectOrganism(ngs)
         ngs$date <- Sys.Date()

@@ -10,6 +10,21 @@ USER.GENETEST.METHODS <- NULL
 ##=============================================================================
 ##s=rep("abc",100)
 
+##check.names=FALSE;row.names=1;stringsAsFactors=FALSE
+fread.csv <- function(file, check.names=FALSE, row.names=1,
+                      stringsAsFactors=FALSE)
+{
+    require(data.table)
+    df <- fread(file=file, check.names=check.names)
+    x <- data.frame(df[,2:ncol(df)], stringsAsFactors=stringsAsFactors,
+                    check.names=check.names)
+    rownames(x) <- df[[row.names]]
+    if(all(sapply(x,class)=="numeric")) x <- as.matrix(x)
+    if(all(sapply(x,class)=="character")) x <- as.matrix(x)
+    if(all(sapply(x,class)=="integer")) x <- as.matrix(x)
+    return(x)
+}
+
 tagDuplicates <- function(s) {
     ## Tag duplicate with blanks
     ##
