@@ -58,6 +58,7 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
     if(!is.null(ref) && length(ref)!=ncol(df)) ref <- head(rep(ref,99),ncol(df))
     
     K <- c()
+    i=1
     for(i in 1:ncol(df)) {
         ref1 <- NA
         if(!is.null(ref)) ref1 <- ref[i]
@@ -88,16 +89,32 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
     
     rownames(K) <- rownames(df)
     head(K)
-    
+
+    ## Now try to infer the underlying "conditions"
     kcode <- apply(K,1,paste,collapse="-")
     xc <- factor(kcode, levels=unique(kcode))  ## experimental condition
     levels(xc) <- paste0("condition",1:length(levels(xc)))
-
     jj <- which(!duplicated(kcode))
+
+    ## SPECIAL CASE!!! if comparisons are degenerate (no valid
+    ## condition groups). LIMMA does not like that. Then delete
+    ## phenotype with lots of levels..
+    if(length(jj) == nrow(K)) {
+        ptype <- sub("[:].*","",colnames(K))
+        del.ptype <- names(which.max(table(ptype)))
+        del <- which(ptype %in% del.ptype)
+        K <- K[,-del,drop=FALSE]
+
+        kcode <- apply(K,1,paste,collapse="-")
+        xc <- factor(kcode, levels=unique(kcode))  ## experimental condition
+        levels(xc) <- paste0("condition",1:length(levels(xc)))
+        jj <- which(!duplicated(kcode))
+    }
+    
     K2 <- K[jj,,drop=FALSE]
     rownames(K2) <- xc[jj]
     head(K2)
-
+    
     ## Translate coding 0/NA/1 to -1/0/+1 coding of contrast
     K[K==0] <- -1
     K[is.na(K)] <- 0
