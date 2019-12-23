@@ -52,8 +52,11 @@ pgx.updateDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
     pgx.files
 
     allfc.file <- file.path(pgx.dir,file)
-    if(verbose) cat("checking if profiles file",allfc.file,"exists...\n")
+    has.fc <- file.exists(allfc.file)
+    if(verbose && has.fc) cat("checking if allFC file",pgxinfo.file,"exists: YES\n")
+    if(verbose && !has.fc) cat("checking if allFC file",pgxinfo.file,"exists: NO\n")
 
+    
     allFC <-NULL
     if(!force && file.exists(allfc.file)) {
         if(verbose) cat("checking which pgx files already done...\n")
