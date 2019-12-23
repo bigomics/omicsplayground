@@ -88,7 +88,7 @@ install.pkg("Rgraphviz", force=TRUE)
 install.pkg("fastcluster", force=TRUE)
 install.pkg("mygene", force=TRUE)
 install.pkg("diptest", force=TRUE)
-install.pkgs(c(,"corrplot","wordcloud"))
+install.pkgs(c("corrplot","wordcloud"))
 install.pkgs(c("umap"))
 
 remove.pkg("fpc")

@@ -55,12 +55,11 @@ pgx.updateDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
     has.fc <- file.exists(allfc.file)
     if(verbose && has.fc) cat("checking if allFC file",allfc.file,"exists: YES\n")
     if(verbose && !has.fc) cat("checking if allFC file",allfc.file,"exists: NO\n")
-
     
     allFC <-NULL
     if(!force && file.exists(allfc.file)) {
         if(verbose) cat("checking which pgx files already done...\n")
-        allFC <- fread.csv(allfc.file,row.names=1,check.names=FALSE)
+        allFC <- read.csv(allfc.file,row.names=1,check.names=FALSE,nrow=5)
         dim(allFC)
         files.done <- gsub("\\[|\\].*","",colnames(allFC))
         files.done <- unique(paste0(files.done,".pgx"))
@@ -68,57 +67,64 @@ pgx.updateDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
     }
 
     if(length(pgx.files)==0) {
-        if(verbose) cat("all done. no scanning required.\n")
-        
-    } else {
-        if(verbose) cat("scanning",length(pgx.files),"PGX files in folder\n")
-        
-        FC <- list()
-        pgx=pgx.files[2]
-        for(pgx in pgx.files) {
-            if(verbose) cat(".")        
-            load(file.path(pgx.dir,pgx),verbose=0)
-            rownames(ngs$X) <- toupper(sub(".*:","",rownames(ngs$X)))
-            ##meta.fx <- sapply(ngs$gx.meta$meta,function(x) x$meta.fx)
-            ##rownames(meta.fx) <- toupper(rownames(ngs$gx.meta$meta[[1]]))
-            meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
-            rownames(meta$fc) <- toupper(rownames(meta$fc))
-            FC[[pgx]] <- meta$fc
-        }
-        if(verbose) cat("\n")
-        
-        ## find common genes
-        all.gg <- toupper(as.character(unlist(sapply(FC, rownames))))
-        gg.tbl <- table(all.gg)
-        table(gg.tbl)
-        
-        ## take 8000 most frequent genes
-        gg <- head(names(sort(-gg.tbl)),8000)
-        length(gg)
-        FC <- lapply(FC, function(x) {
-            x <- x[match(gg,toupper(rownames(x))),,drop=FALSE]
-            rownames(x) <- gg
-            return(x)
-        })
-
-        ## append file name in front of contrast names
-        FC.id <- paste0("[",sub("[.]pgx","",names(FC)),"]")
-        for(i in 1:length(FC)) {
-            colnames(FC[[i]]) <- paste0(FC.id[i]," ",colnames(FC[[i]]))
-        }
-        allFC.new <- do.call(cbind, FC)
-        allFC.new <- as.matrix(allFC.new)
-        if(!is.null(allFC)) {
-            jj <- match(rownames(allFC), rownames(allFC.new))
-            allFC.new <- allFC.new[jj,]
-            rownames(allFC.new) <- rownames(allFC)
-        }
-        allFC <- cbind(allFC, allFC.new)
-
-        dim(allFC)
-        if(verbose) cat("writing all fold-changes to",allfc.file,"...\n")
-        write.csv(allFC, file=allfc.file)
+        if(verbose) cat("all done. no update required.\n")
+        return(NULL)
     }
+
+    if(!force && file.exists(allfc.file)) {
+        if(verbose) cat("checking which pgx files already done...\n")
+        allFC <- fread.csv(allfc.file,row.names=1,check.names=FALSE)
+        dim(allFC)
+    }
+    
+    if(verbose) cat("scanning",length(pgx.files),"PGX files in folder\n")
+    
+    FC <- list()
+    pgx=pgx.files[2]
+    for(pgx in pgx.files) {
+        if(verbose) cat(".")        
+        load(file.path(pgx.dir,pgx),verbose=0)
+        rownames(ngs$X) <- toupper(sub(".*:","",rownames(ngs$X)))
+        ##meta.fx <- sapply(ngs$gx.meta$meta,function(x) x$meta.fx)
+        ##rownames(meta.fx) <- toupper(rownames(ngs$gx.meta$meta[[1]]))
+        meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
+        rownames(meta$fc) <- toupper(rownames(meta$fc))
+        FC[[pgx]] <- meta$fc
+    }
+    if(verbose) cat("\n")
+    
+    ## find common genes
+    all.gg <- toupper(as.character(unlist(sapply(FC, rownames))))
+    gg.tbl <- table(all.gg)
+    table(gg.tbl)
+        
+    ## take 8000 most frequent genes
+    gg <- head(names(sort(-gg.tbl)),8000)
+    length(gg)
+    FC <- lapply(FC, function(x) {
+        x <- x[match(gg,toupper(rownames(x))),,drop=FALSE]
+        rownames(x) <- gg
+        return(x)
+    })
+    
+    ## append file name in front of contrast names
+    FC.id <- paste0("[",sub("[.]pgx","",names(FC)),"]")
+    for(i in 1:length(FC)) {
+        colnames(FC[[i]]) <- paste0(FC.id[i]," ",colnames(FC[[i]]))
+    }
+    allFC.new <- do.call(cbind, FC)
+    allFC.new <- as.matrix(allFC.new)
+    if(!is.null(allFC)) {
+        jj <- match(rownames(allFC), rownames(allFC.new))
+        allFC.new <- allFC.new[jj,]
+        rownames(allFC.new) <- rownames(allFC)
+    }
+    allFC <- cbind(allFC, allFC.new)
+    
+    dim(allFC)
+    if(verbose) cat("writing all fold-changes to",allfc.file,"...\n")
+    write.csv(allFC, file=allfc.file)
+    Sys.chmod(allfc.file, "0666")
 
     ##load(file="../files/allFoldChanges.rda", verbose=1)
     ##return(allFC)
@@ -200,6 +206,7 @@ pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv",
     
     pgxinfo <- data.frame(pgxinfo)    
     write.csv(pgxinfo, file=pgxinfo.file)
+    Sys.chmod(pgxinfo.file, "0666")
     return(pgxinfo)
 }
 
