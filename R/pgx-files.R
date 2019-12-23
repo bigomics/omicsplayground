@@ -84,7 +84,11 @@ pgx.updateDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
     pgx=pgx.files[2]
     for(pgx in pgx.files) {
         if(verbose) cat(".")        
-        load(file.path(pgx.dir,pgx),verbose=0)
+        try.error <- try( load(file.path(pgx.dir,pgx),verbose=0) )
+        if(class(try.error=="try-error")) {
+            warning(paste("error in loading",pgx,"!"))
+            next()
+        }        
         rownames(ngs$X) <- toupper(sub(".*:","",rownames(ngs$X)))
         ##meta.fx <- sapply(ngs$gx.meta$meta,function(x) x$meta.fx)
         ##rownames(meta.fx) <- toupper(rownames(ngs$gx.meta$meta[[1]]))
