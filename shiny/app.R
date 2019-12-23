@@ -13,7 +13,7 @@ RDIR="../R"
 FILES="../lib"
 PGX.DIR="~/bigomics/data/archs4data/gse"
 PGX.DIR="~/Projects/Data/archs4data/gse"
-PGX.DIR="../data"
+##PGX.DIR="../data"
 dir.exists(PGX.DIR)
 
 source("../R/pgx-functions.R", local=TRUE)  ## pass local vars
