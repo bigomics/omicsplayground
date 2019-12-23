@@ -85,7 +85,7 @@ pgx.updateDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
     for(pgx in pgx.files) {
         if(verbose) cat(".")        
         try.error <- try( load(file.path(pgx.dir,pgx),verbose=0) )
-        if(class(try.error=="try-error")) {
+        if(class(try.error)=="try-error") {
             warning(paste("error in loading",pgx,"!"))
             next()
         }        
