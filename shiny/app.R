@@ -12,8 +12,11 @@ cat("===================== INIT =======================\n")
 RDIR="../R"
 FILES="../lib"
 PGX.DIR="../data"
-##PGX.DIR="~/bigomics/data/archs4data/gse1"
+## PGX.DIR="~/bigomics/data/archs4data/gse"
 
+source("../R/pgx-functions.R", local=TRUE)  ## pass local vars
+source("../R/pgx-files.R", local=TRUE)  ## pass local vars
+## pgx.forceInitDatasetFolder(PGX.DIR)
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 DEV.VERSION = TRUE
 options(shiny.maxRequestSize = 200*1024^2)  ##max 200Mb upload

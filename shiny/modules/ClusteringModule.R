@@ -406,7 +406,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             splitx = NULL
         }
 
-        show_legend = TRUE
+        show_legend=show_colnames=TRUE
         if(input$hm_level=="geneset" || !is.null(splitx)) show_legend = FALSE
         annot$group = NULL  ## no group in annotation
         show_colnames <- ("column" %in% input$hm_showlabel)
@@ -433,6 +433,16 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
         nrownames = 60
         nrownames = ifelse("row" %in% input$hm_showlabel,60,0)
+        
+        if(0) {
+            split=splity;splitx=splitx;mar=c(5,25); scale=scale.mode; show_legend=show_legend;
+            show_colnames = show_colnames; column_title_rot=crot;
+            show_rownames = nrownames; softmax=0;
+            ## side.height.fraction=0.03+0.055*NCOL(annot); 
+            labRow=NULL; cexCol=cex1; cexRow=cex2; 
+            col.annot=annot; row.annot=NULL; annot.ht=2.6;
+            main=main; nmax=-1
+        }
         
         withProgress(
             message='rendering heatmap...', value=0.66,
@@ -527,7 +537,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         return(plt)
     })
 
-
+    topmodes <- c("specific","sd","pca")
+    ##if(DEV.VERSION) topmodes <- c("sd","specific","pca")
+    
     hm_splitmap_opts = tagList(
         tipify( radioButtons(ns("hm_plottype"), "Plot type:",
                              choices=c("ComplexHeatmap","iHeatmap"),
@@ -537,7 +549,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         tipify( selectInput(ns("hm_splitx"), "split by:", choices="group", width='100%'),
                "Split the samples by a predetermined phenotype class (e.g. tissue or cell type).",
                placement="right",options = list(container = "body")),
-        tipify( selectInput(ns('hm_topmode'),'Top mode:',c("specific","sd","pca"), width='100%'),
+        tipify( selectInput(ns('hm_topmode'),'Top mode:',topmodes, width='100%'),
                "Specify the criteria for selecting top features to be shown in the heatmap.",
                placement="right", options = list(container = "body")),
         tipify( radioButtons(ns('hm_ntop'),'Top N:',c(50,150,500),inline=TRUE,selected=50),

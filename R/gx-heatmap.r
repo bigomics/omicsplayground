@@ -54,7 +54,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     ## give unique name if duplicated
     if(sum(duplicated(rownames(gx)))>0) {
         rownames(gx) <- tagDuplicates(rownames(gx))
-        rownames(row.annot) <- rownames(gx)
+        if(!is.null(row.annot)) rownames(row.annot) <- rownames(gx)
     }
 
     par(xpd=FALSE)
