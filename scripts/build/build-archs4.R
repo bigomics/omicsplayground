@@ -201,7 +201,7 @@ i=1
 for(i in 1:length(ids.list)) {
     ext <- paste0("-",names(ids.list)[i])
     ids <- ids.list[[i]]
-    res <- mclapply(ids[1:4], function(id)
+    res <- mclapply(ids[1:2], function(id)
         prepArchs4Dataset(id, ext=ext, outdir="gse"),
         mc.cores = 2)
     unlist(res)

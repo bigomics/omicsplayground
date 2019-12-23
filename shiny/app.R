@@ -23,7 +23,7 @@ if(0) {
     load("../../alex/alex2019-data.pgx")
     load("../data/GSE10846-dlbcl.pgx")
     load("../data/GSE101766.pgx")    
-    ngs=pgx.initialize(ngs)    
+    ngs = pgx.initialize(ngs)    
 }
 
 

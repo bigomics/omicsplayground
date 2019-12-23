@@ -908,6 +908,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         
         fc <- ngs$gx.meta$meta[[comparison]]$meta.fx
         names(fc) <- rownames(ngs$gx.meta$meta[[1]])
+
         nes <- round(ngs$drugs[[dmethod]]$X[,comparison],4)
         pv  <- round(ngs$drugs[[dmethod]]$P[,comparison],4)
         qv  <- round(ngs$drugs[[dmethod]]$Q[,comparison],4)
@@ -922,14 +923,14 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                            sep="\t", comment.char="#")
 
         if(dmethod=="combo") {
-            drugs <- strsplit(names(nes),split="[+]")
+            drugs <- strsplit(drug,split="[+]")
             drug1 <- sapply(drugs,"[",1)
             drug2 <- sapply(drugs,"[",2)
             j1 <- match( drug1, descr0$pert_iname)
             j2 <- match( drug2, descr0$pert_iname)
             cmoa <- paste( descr0[j1,"moa"],"+",descr0[j2,"moa"])
             ctarget <- paste( descr0[j1,"target"],"+",descr0[j2,"target"])
-            descr <- data.frame( MOA=cmoa, target=ctarget)
+            descr <- data.frame( moa=cmoa, target=ctarget)
         } else {
             jj <- match( drug, descr0$pert_iname)
             descr <- descr0[jj,c("moa","target")]
@@ -986,36 +987,52 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     })    
 
     dsea_moaplot.RENDER <- reactive({
-        ngs <- inputData()
 
+        ngs <- inputData()
         req(ngs, input$fa_contrast, input$dsea_monocombo)
         
         if(is.null(ngs$drugs)) return(NULL)
         shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
+
+        dbg("[dsea_moaplot.RENDER] 1")
         
         comparison=1
         comparison = input$fa_contrast
         if(is.null(comparison)) return(NULL)
 
+        dbg("[dsea_moaplot.RENDER] 2")
+        
         res <- getDseaTable()
 
+        dbg("[dsea_moaplot.RENDER] 3")
+        
         dmethod="mono"
         dmethod="combo"
         dmethod <- input$dsea_monocombo
+
+        dbg("[dsea_moaplot.RENDER] 4")
         
         j1 <- which( res$padj < 0.2 & res$NES > 0)
         j2 <- which( res$padj < 0.2 & res$NES < 0)
         moa.pos <- strsplit(as.character(res$moa[j1]), split="\\|")
         moa.neg <- strsplit(as.character(res$moa[j2]), split="\\|")
         moa <- strsplit(as.character(res$moa), split="\\|")
-        fx <- mapply(function(x,n) rep(x,n), res$NES, sapply(moa,length))
+        moa.lengths <- sapply(moa,length)
+
+        dbg("[dsea_moaplot.RENDER] 5 : dim(res)=", dim(res))
+        dbg("[dsea_moaplot.RENDER] 5 : length(moa)=", length(moa))
+        dbg("[dsea_moaplot.RENDER] 5 : moa.lengths=", moa.lengths)        
+
+        fx <- mapply(function(x,n) rep(x,n), res$NES, moa.lengths)
         moa.avg <- sort(tapply( unlist(fx), unlist(moa), mean))
         moa.sum <- sort(tapply( unlist(fx), unlist(moa), sum))
         head(moa.pos)
         head(moa.neg)
         moa.pos <- sort(table(unlist(moa.pos)),decreasing=TRUE)
         moa.neg <- sort(table(unlist(moa.neg)),decreasing=TRUE)
-        
+
+        dbg("[dsea_moaplot.RENDER] 6")        
+
         dtg.pos <- strsplit(as.character(res$target[j1]), split="\\|")
         dtg.neg <- strsplit(as.character(res$target[j2]), split="\\|")
         dtg <- strsplit(as.character(res$target), split="\\|")
@@ -1027,6 +1044,8 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         head(dtg.pos)
         head(dtg.neg)
 
+        dbg("[dsea_moaplot.RENDER] 7")        
+        
         NTOP=10
         if(1) {
             moa.top <- sort(c( head(moa.pos,NTOP), -head(moa.neg,NTOP)),decreasing=TRUE)
