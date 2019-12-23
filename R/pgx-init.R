@@ -18,6 +18,8 @@ library(Matrix)
 library(igraph)
 library(DT)
 library(ggplot2)
+library(data.table)
+library(dplyr)
 ## library(Cairo)
 
 ##useShinyjs(rmd=TRUE)  
