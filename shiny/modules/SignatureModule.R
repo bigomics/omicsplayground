@@ -589,11 +589,11 @@ sig_infotext =
             tt <- sub(".*\\]","",f)
             tt <- breakstring(substring(tt,1,50),28,force=TRUE)
             gsea.enplot(F[,i], gset, main=tt, cex.main=cex.main)
-            qv1 <- paste("q=",round(qv[i],digits=4))
-            legend("topright",qv1, cex=0.85, bty="n", adj=0)
+            qv1 <- paste("q=",round(qv[i],digits=3))
+            legend("topright",qv1, cex=0.9, bty="n", adj=0)
             if(grepl("^\\[",f)) {
                 db <- sub("\\].*","]",colnames(F)[i])
-                legend("topleft",db, cex=0.85, bty="n", adj=0)
+                legend("topleft",db, cex=0.9, bty="n", adj=0)
             }
         }
     })

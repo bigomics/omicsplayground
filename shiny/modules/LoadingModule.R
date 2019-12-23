@@ -1006,7 +1006,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
             from.pgx = TRUE
         } else {
             ii <- grep("csv$",input$upload_files$name)
-            ff = lapply(input$upload_files$datapath[ii], read.csv, row.names=1,
+            ff = lapply(input$upload_files$datapath[ii], fread.csv, row.names=1,
                         check.names=FALSE, stringsAsFactors=FALSE )
             names(ff) <- input$upload_files$name[ii]    
         }
