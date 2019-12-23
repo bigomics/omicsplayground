@@ -177,7 +177,13 @@ pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv",
     for(i in 1:length(pgx.files)) {
         ##if(verbose) cat("scanning info from",pgx.files[i],"\n")
         if(verbose) cat(".")        
-        load(file.path(pgx.dir,pgx.files[i]), verbose=0 )
+
+        try.error <- try( load(file.path(pgx.dir,pgx.files[i]), verbose=0 ))
+        if(class(try.error)=="try-error") {
+            warning(paste("error in loading",pgx.files[i],"!"))
+            next()
+        }        
+        
         cnd = colnames(ngs$samples)
         cnd = cnd[grep("title|source|group|batch|sample|patient|donor|repl|clone|cluster|lib.size|^[.]",cnd,invert=TRUE)]
         is.mouse = (mean(grepl("[a-z]",ngs$genes$gene_name))>0.8)
@@ -209,10 +215,4 @@ pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv",
     if(verbose) cat("\n")
     rownames(pgxinfo) <- NULL
     
-    pgxinfo <- data.frame(pgxinfo)    
-    if(verbose) cat("writing pgx info to",pgxinfo.file,"...\n")
-    write.csv(pgxinfo, file=pgxinfo.file)
-    Sys.chmod(pgxinfo.file, "0666")
-    return(pgxinfo)
-}
-
+    pgxinfo <- data.frame(pgxi
