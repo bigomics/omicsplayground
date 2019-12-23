@@ -1316,8 +1316,9 @@ DataViewModule <- function(input, output, session, env)
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
         names(ngs$model.parameters)
         if(input$data_ctbygroup=="group") {
-            kk <- which(ngs$samples$group %in% ngs$samples[samples,"group"])
-            dt <- ngs$model.parameters$contr.matrix[kk,,drop=FALSE]
+            ct <- ngs$model.parameters$contr.matrix
+            kk <- which(rownames(ct) %in% ngs$samples[samples,"group"])
+            dt <- ct[kk,,drop=FALSE]
         } else {
             dt <- ngs$model.parameters$exp.matrix[samples,,drop=FALSE]
         }
