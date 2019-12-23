@@ -37,6 +37,7 @@ source("../R/compute2-extra.R")
 source("options.R")
 FILES
 MAX.GENES
+MAX.GENES=5000
 
 PROCESS.DATA=1
 DIFF.EXPRESSION=1
