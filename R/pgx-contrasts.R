@@ -80,6 +80,11 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
         }
     }
     dim(K)
+
+    if(is.null(K)) {
+        warning("[pgx.makeAutoContrast] non valid contrasts")
+        return(NULL)
+    }
     
     rownames(K) <- rownames(df)
     head(K)

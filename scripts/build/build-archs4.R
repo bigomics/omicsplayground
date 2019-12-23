@@ -79,6 +79,7 @@ if(0) {
 ext="test";outdir="test"
 id="GSE100425"
 id="GSE105087"
+id="GSE111842"
 
 prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
     
@@ -125,6 +126,12 @@ prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
     ## create contrast matrix
     mingrp=3;slen=15;ref=NA
     res <- pgx.makeAutoContrast(df, mingrp=3, slen=15, ref=NA)
+    
+    if(is.null(res)) {
+        cat("skipping. no valid contrasts...\n")
+        return("skipped. no valid contrasts")
+    }
+    
     names(res)
     head(res$contr.matrix)
     aa$samples <- cbind(aa$samples, group=res$group)
@@ -211,7 +218,7 @@ for(i in 1:length(ids.list)) {
     if(NUMCORES>1) {
         res <- mclapply(ids[], function(id)
             prepArchs4Dataset(id, ext=ext, outdir="gse"),
-            mc.cores = 8)
+            mc.cores = NUMCORES)
         unlist(res)
     } else {
         j=1
