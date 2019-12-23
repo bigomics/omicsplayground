@@ -141,7 +141,7 @@ pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv",
     if(verbose && has.info) cat("checking if PGX-info file",pgxinfo.file,"exists: YES\n")
     if(verbose && !has.info) cat("checking if PGX-info file",pgxinfo.file,"exists: NO\n")
     
-    if(!force && has.pgx) {
+    if(!force && has.info) {
         if(verbose) cat("File exists. appending to existing info file\n")
 
         pgxinfo = fread.csv(pgxinfo.file, stringsAsFactors=FALSE, row.names=1)
