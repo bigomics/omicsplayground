@@ -106,51 +106,8 @@ pgx.updateDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
     ##return(allFC)
 }
 
-
 ##pgx.dir=PGX.DIR;file="datasets-info.csv"
-pgx.updateInfoFile.SAVE <- function(pgx.dir, file="datasets-info.csv", verbose=1, force=FALSE) {
-
-    ## what files to use, heavy or light objects
-    pgxinfo <- c()
-    pgxinfo.file <- file.path(pgx.dir, file)
-
-    if(verbose) cat("checking if PGX-info file",pgxinfo.file,"exists...\n")
-    
-    if(!force && file.exists(pgxinfo.file)) {
-        if(verbose) cat("Found existing PGX-info file. Updating ...\n")
-        ## info file exists, check and update        
-        info = fread.csv(pgxinfo.file, stringsAsFactors=FALSE, row.names=1)
-        dim(info)
-        pgx.files = dir(pgx.dir, pattern=".pgx$")
-        all(pgx.files %in% info$dataset)
-        newfiles <- setdiff(pgx.files, info$dataset)
-        cat("[pgx.updateInfo] number of new files=",length(newfiles),"\n")
-        
-        if(length(newfiles)>0) {
-            ## scan files not yet in info file, then update info file
-            info <- pgx.scanInfoFile(pgx.dir=pgx.dir, inc.progress=FALSE,
-                                     pgx=info, verbose=verbose)
-            rownames(info) <- NULL
-            Sys.chmod(pgxinfo.file, mode="0666")
-            write.csv(info, file=pgxinfo.file)
-        }
-        ##info = info[match(pgx.files,info$dataset),] 
-        rownames(info) <- NULL
-        pgxinfo <- info  
-    } else {
-        if(verbose) cat("No PGX-info file. Creating new one ...\n")
-        ## no info file, scan and create from scratch
-        info <- pgx.scanInfoFile(pgx.dir=pgx.dir, inc.progress=FALSE,
-                                 verbose=verbose)
-        Sys.chmod(pgxinfo.file, mode="0666")
-        write.csv(info, file=pgxinfo.file)
-        pgxinfo <- info
-    }
-    return(pgxinfo)
-}
-
-##pgx.dir=PGX.DIR;file="datasets-info.csv"
-pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv", inc.progress=FALSE,
+pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv", 
                                force=FALSE, verbose=TRUE )
 {
     require(shiny)
@@ -213,7 +170,6 @@ pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv", inc.progress=F
         }
         ##cat("i=",i,": ",length(this.info),"\n")
         pgxinfo <- rbind( pgxinfo, this.info)
-        if(inc.progress) incProgress( 1/length(pgx.files) )
     }
     if(verbose) cat("\n")
     rownames(pgxinfo) <- NULL
