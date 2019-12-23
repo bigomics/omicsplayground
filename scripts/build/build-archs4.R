@@ -79,7 +79,7 @@ if(0) {
 ext="test";outdir="test"
 id="GSE100425"
 id="GSE105087"
-id="GSE111842"
+id="GSE96815"
 
 prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
     
@@ -126,6 +126,7 @@ prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
     ## create contrast matrix
     mingrp=3;slen=15;ref=NA
     res <- pgx.makeAutoContrast(df, mingrp=3, slen=15, ref=NA)
+    is.null(res)
     
     if(is.null(res)) {
         cat("skipping. no valid contrasts...\n")
