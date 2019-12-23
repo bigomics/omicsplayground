@@ -17,7 +17,7 @@ if(0) {
 }
 
 
-##max.genes=4000;gx.methods=c("ttest.welch","trend.limma");gset.methods=c("fisher","gsva");lib.dir = FILES;progress=NULL
+##max.genes=5000;gx.methods=c("ttest.welch","trend.limma");gset.methods=c("fisher","gsva");lib.dir = FILES;progress=NULL;only.hugo=1;extra.methods=c("meta.go","deconv","infer","drugs","wordcloud")
 
 pgx.upload <- function(counts, samples, contrasts, ## genes, 
                        ##gx.methods = c("trend.limma","edger.qlf","deseq2.wald"),

@@ -10,10 +10,10 @@ pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
     S <- sapply( ngs$gset.meta$meta, function(x) x$meta.fx)
     rownames(S) <- rownames(ngs$gset.meta$meta[[1]])
     ##S <- S[order(-apply(S,1,sd)),]
-    S <- S[order(-rowMeans(S**2)),]
+    S <- S[order(-rowMeans(S**2)),,drop=FALSE]
     
     ## exclude down, GSE gene sets??????
-    S <- S[grep("dn|down|^gse",rownames(S),ignore.case=TRUE,invert=TRUE),]
+    S <- S[grep("dn|down|^gse",rownames(S),ignore.case=TRUE,invert=TRUE),,drop=FALSE]
     
     if(!is.null(progress)) progress$inc(0.2*pg.unit, detail="calculating word frequencies")
     

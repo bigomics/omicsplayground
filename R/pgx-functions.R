@@ -138,9 +138,16 @@ is.categorical <- function(x, max.ncat=20, min.ncat=2) {
 }
 
 pgx.getCategoricalPhenotypes <-function(df, max.ncat=20, min.ncat=2) {
+    ##
+    ##
+    ##
+
     is.bad = 0
-    is.bad <- grepl("^sample$|id$|replicate|ratio|year|month|day|age|efs|dfs|surv|follow",tolower(colnames(df)))
+    is.bad1 <- grepl("^sample$|id$|replicate|patient|donor|individ|ratio|year|month|day|age|efs|dfs|surv|follow",tolower(colnames(df)))
     ## is.factor <- sapply(sapply(data.frame(df), class), function(s) any(s %in% c("factor","character")))
+    is.bad2 <- apply(df,2,function(x) any(grepl("^sample|patient|replicate|donor|individ",x,ignore.case=TRUE)))    
+    is.bad <- (is.bad1 | is.bad2)
+    
     is.factor <- apply(df, 2, is.categorical)
     is.factor
     n.unique <- apply(df,2,function(x) length(unique(setdiff(x,c(NA,"NA","")))))
