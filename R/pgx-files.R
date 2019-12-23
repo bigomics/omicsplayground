@@ -95,6 +95,11 @@ pgx.updateDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
         }
         allFC.new <- do.call(cbind, FC)
         allFC.new <- as.matrix(allFC.new)
+        if(!is.null(allFC)) {
+            jj <- match(rownames(allFC), rownames(allFC.new))
+            allFC.new <- allFC.new[jj,]
+            rownames(allFC.new) <- rownames(allFC)
+        }
         allFC <- cbind(allFC, allFC.new)
 
         dim(allFC)
@@ -134,6 +139,7 @@ pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv",
         pgx.files = pgx.files[jj]
     }
 
+   
     ##pgx.files =head(pgx.files,3)
     f = pgx.files[1]
     cols <- NULL
