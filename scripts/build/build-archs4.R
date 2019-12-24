@@ -198,12 +198,12 @@ table(all_ids %in% names(GSE.TITLE))
 
 ## Select studies with relevant terms
 ids.list <- list()
-ids.list[["bloodcancers"]] <- all_ids[grep("lymphom|leukaem|hemato",all.titles)]
+ids.list[["aging"]] <- all_ids[grep("[ ]aging|^aging|senesc",all.titles)]
+ids.list[["immune"]] <- all_ids[grep("immun",all.titles)]
 ids.list[["prostate"]] <- all_ids[grep("prostate.cancer",all.titles)]
 ids.list[["breast"]] <- all_ids[grep("breast.cancer",all.titles)]
+ids.list[["bloodcancers"]] <- all_ids[grep("lymphom|leukaem|hemato",all.titles)]
 ##ids.list[["cancer"]] <- all_ids[grep("cancer|onco|tumor|tumour",all.titles)]
-##ids.list[["aging"]] <- all_ids[grep("[ ]aging|^aging|senesc",all.titles)]
-##ids.list[["immune"]] <- all_ids[grep("immun",all.titles)]
 if(!is.null(gse.drugs)) ids.list[["drugs"]] <- intersect(all_ids, gse.drugs)
 
 sapply(ids.list, length)
@@ -216,8 +216,8 @@ for(i in 1:length(ids.list)) {
     ext <- paste0("-",names(ids.list)[i])
     ids <- ids.list[[i]]
 
-    NUMCORES = 8
-    ## NUMCORES = 1
+    ##NUMCORES = 8
+    NUMCORES = 1
     if(NUMCORES>1) {
         res <- mclapply(ids[], function(id)
             prepArchs4Dataset(id, ext=ext, outdir="gse"),
