@@ -30,7 +30,11 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
         xref <- gsub("[^[:alnum:]]","",levels(x)[1])
         nn <- length(nx)
         nn
-        if(nn<2) {
+
+        if(length(levels(x)) != nn) {
+            ## something got wrong...
+            return(NULL)
+        } else if(nn<2) {
             return(NULL)
         } else if(nn == 2) {
             ct <- model.matrix(~x)[,2,drop=FALSE]
