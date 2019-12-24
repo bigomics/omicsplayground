@@ -17,13 +17,19 @@ FROM bigomics/omicsplayground:base
 #------------------------------------------------------------
 ## Pull from GitHub
 #------------------------------------------------------------
+WORKDIR /
+RUN rm -fr /omicsplayground
 RUN git clone https://github.com/bigomics/omicsplayground.git && chmod -R ugo+rwX /omicsplayground
 
 #------------------------------------------------------------
 # Copy local data into Docker image
 #------------------------------------------------------------
-COPY data/* /omicsplayground/data/
+WORKDIR /omicsplayground
+COPY data/*pgx /omicsplayground/data/
 RUN R -e "setwd('data');source('init.R')"
+
+## RUN R -e "install.packages(c('umap','corrplot','wordcloud'))"
+RUN R -e "BiocManager::install(c('pathview'))"
 
 #------------------------------------------------------------
 # Copy further configuration files into the Docker image
