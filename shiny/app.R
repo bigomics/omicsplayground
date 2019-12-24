@@ -30,7 +30,8 @@ if(0) {
     load("../../alex/alex2019-data.pgx")
     load("../data/GSE10846-dlbcl.pgx")
     load("../data/GSE101766.pgx")
-    load("../data-ext/vogel2019-tcells.pgx")    
+    load("../data-ext/vogel2019-tcells.pgx")
+    load("../../exampledata/mouse/mouse.pgx")    
     ngs = pgx.initialize(ngs)    
 }
 

@@ -829,7 +829,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
             ## just for debugging...
             dbg("upload_compute :: ***** dummy computation ******")
             load("../data/geiger2016-arginine.pgx")
-            ngs$name <- "DUMMY DATA"
+            ngs$name <- "DUMMY DATA!!!"
         } else if(has.pgx) {
 
             dbg("upload_compute :: ***** using 'uploaded.pgx' ******")        

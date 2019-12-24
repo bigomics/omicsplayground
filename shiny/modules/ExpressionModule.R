@@ -1000,35 +1000,52 @@ two conditions. Determine which genes are significantly downregulated or overexp
     output <- attachModule(output, expr_genetable_module)
 
     gx_related_genesets <- reactive({
+
         ngs <- inputData()
         res <- sigDiffExprTable()
         if(is.null(res) || nrow(res)==0) return(NULL)
         contr <- input$gx_contrast
         if(is.null(contr)) return(NULL)
+
+        dbg("gx_related_genesets : 1")
         
         ## get table
         sel.row=1;
         sel.row = input$expr_genetable_rows_selected
         if(is.null(sel.row)) return(NULL)
         gene0 <- rownames(res)[sel.row]
-        gene1 <- sub(".*:","",gene0)
+        gene1 <- toupper(sub(".*:","",gene0))  ## always uppercase...
 
-        gset <- names(which(ngs$GMT[gene1,] != 0))
+        dbg("gx_related_genesets : 2 : gene1=", gene1)
+        dbg("gx_related_genesets : 2 : gene1.in.GMT=", gene1 %in% rownames(ngs$GMT))
+        j <- which(toupper(rownames(ngs$GMT))==gene1)
+        gset <- names(which(ngs$GMT[j,] != 0))
+        gset <- intersect(gset, rownames(ngs$gsetX))
         if(length(gset)==0) return(NULL)
+
+        dbg("gx_related_genesets : 3 : length(gset)=",length(gset))
         
         fx <- ngs$gset.meta$meta[[contr]]$meta.fx 
         names(fx) <- rownames(ngs$gset.meta$meta[[contr]])
         fx  <- round(fx[gset],digits=4)
-        rho <- cor(t(ngs$gsetX[gset,]), ngs$X[gene0,])[,1]
+
+        dbg("gx_related_genesets : 4 : gset=",gset)
+        dbg("gx_related_genesets : 4 : gene0=",gene0)
+        
+        rho <- cor(t(ngs$gsetX[gset,]), ngs$X[gene0,])[,1]        
         rho <- round(rho, digits=3)
         gset1 <- substring(gset,1,60)
+
+        dbg("gx_related_genesets : 5")
+        
         df <- data.frame(geneset=gset1, rho=rho, fx=fx, check.names=FALSE)
-        rownames(df) <- gset
+        rownames(df) <- gset       
         df <- df[order(-abs(df$fx)),]
         return(df)
     })
 
     expr_gsettable.RENDER <- reactive({
+
         df <- gx_related_genesets()        
         if(is.null(df)) return(NULL)
 

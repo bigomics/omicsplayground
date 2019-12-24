@@ -144,7 +144,8 @@ on a geneset level, also called geneset enrichment analysis."
     observe({
         ngs <- inputData()
         req(ngs)
-        gsets.groups <- names(COLLECTIONS)
+        nn <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))
+        gsets.groups <- names(COLLECTIONS)[which(nn>=5)]
         gsets.groups <- c("<all>",sort(gsets.groups))
         sel = "<all>"
         hmark <- grep("^H$|hallmark|",gsets.groups,ignore.case=TRUE,value=TRUE)
@@ -414,8 +415,9 @@ on a geneset level, also called geneset enrichment analysis."
                 frame()
             } else {
                 gs <- top.up[i]
-                genes = names(which(ngs$GMT[,gs]!=0))
                 gs1 = breakstring(gs,28,50,force=FALSE)
+                genes = toupper(names(which(ngs$GMT[,gs]!=0)))
+                names(rnk0) <- toupper(names(rnk0))
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
                             main=gs1, cex.main=0.85, len.main=80)
                 qv1 = formatC(qv[gs],format="e", digits=2)
@@ -427,8 +429,9 @@ on a geneset level, also called geneset enrichment analysis."
                 frame()
             } else {
                 gs <- top.down[i]
-                genes = names(which(ngs$GMT[,gs]!=0))
                 gs1 = breakstring(gs,28,50,force=FALSE)
+                genes = toupper(names(which(ngs$GMT[,gs]!=0)))
+                names(rnk0) <- toupper(names(rnk0))
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
                             main=gs1, cex.main=0.85, len.main=80)
                 qv1 = formatC(qv[gs],format="e", digits=2)

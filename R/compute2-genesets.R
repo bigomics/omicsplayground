@@ -72,17 +72,16 @@ compute.testGenesets <- function(ngs, max.features=1000, lib.dir="../lib",
     ## create the GENESETxGENE matrix
     ##-----------------------------------------------------------
     cat("Matching gene set matrix...\n")
-    rownames(X) <- toupper(rownames(X)) ## accomodate for mouse...
-    
-    ## align GMT to X (or ngs$X??)
-    ii <- intersect(rownames(X),rownames(G))
+    gg <- toupper(rownames(X)) ## accomodate for mouse...
+    ii <- intersect(gg,rownames(G))
     G <- G[ii,]
-    xx <- setdiff(rownames(X),rownames(G))
+    xx <- setdiff(gg,rownames(G))
     matX <- Matrix(0, nrow=length(xx), ncol=ncol(G), sparse=TRUE)
     rownames(matX) <- xx
     colnames(matX) <- colnames(G)
     G <- rbind(G, matX)
-    G <- G[match(rownames(X),rownames(G)),]
+    G <- G[match(gg,rownames(G)),]
+    rownames(G) <- rownames(X) ## original name (e.g. mouse)
     dim(G)
     dim(X)
     
@@ -115,13 +114,6 @@ compute.testGenesets <- function(ngs, max.features=1000, lib.dir="../lib",
     }
     dim(G)
     
-    ngs$GMT <- G
-    ##ngs$gmt.all <- gmt.all
-
-    ##-----------------------------------------------------------
-    ## gmt.all
-    ##-----------------------------------------------------------
-    gmt.all <- lapply(apply(G!=0, 2, which),names)
     
     ##-----------------------------------------------------------
     ## get design and contrast matrix
@@ -144,22 +136,24 @@ compute.testGenesets <- function(ngs, max.features=1000, lib.dir="../lib",
     ##-----------------------------------------------------------
     cat(">>> Testing gene sets with methods:",test.methods,"\n")
     test.methods
-    
+
+    ## convert to gene list
+    gmt <- lapply(apply(G!=0, 2, which),names)    
     Y <- ngs$samples
-    gmt=gmt.all
     gc()
     
     gset.meta = gset.fitContrastsWithAllMethods(
-        gmt = gmt.all, X = X, Y = Y, G = G,
+        gmt = gmt, X = X, Y = Y, G = G,
         design=design, ## genes=GENES,
         contr.matrix=contr.matrix, methods=test.methods,
         mc.threads=1, mc.cores=NULL, batch.correct=TRUE
         )
         
-    rownames(gset.meta$timings) <- paste0("[test.genesets]",rownames(gset.meta$timings))
+    rownames(gset.meta$timings) <- paste("[test.genesets]",rownames(gset.meta$timings))
     ngs$timings <- rbind(ngs$timings, gset.meta$timings)
     ngs$gset.meta <- gset.meta
     ngs$gsetX = ngs$gset.meta$matrices[["meta"]]  ## META??!
+    ngs$GMT <- G[,rownames(ngs$gsetX)]
     
     ##-----------------------------------------------------------------------
     ##------------------------ clean up -------------------------------------
@@ -171,7 +165,7 @@ compute.testGenesets <- function(ngs, max.features=1000, lib.dir="../lib",
     remove(X)
     remove(Y)
     remove(G)
-    remove(gmt.all)
+    remove(gmt)
 
     return(ngs)
 }
