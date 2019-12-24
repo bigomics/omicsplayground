@@ -84,7 +84,7 @@ ext="-immune";outdir="gse"
 ext="test";outdir="test"
 id="GSE100425"
 id="GSE105087"
-id="GSE122969"
+id="GSE107655"
 
 prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
     
@@ -116,7 +116,9 @@ prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
         colnames(aa$samples) <- sub("group","xgroup",colnames(aa$samples))
     }
     cleanupSpaces <- function(s) gsub("[ ]+"," ",gsub("^[ ]+|[ ]+$","",s))
-    ##aa$samples <- apply(aa$samples,2,cleanupSpaces)
+    aa$samples <- apply(aa$samples,2,cleanupSpaces)
+    aa$samples <- data.frame(aa$samples, stringsAsFactors=FALSE)
+    aa$samples$batch <- NULL  ## no batch correction for the moment...
     
     ## get categorical phenotypes
     df <- aa$samples

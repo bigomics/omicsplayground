@@ -387,7 +387,7 @@ getHSGeneInfo <- function(eg, as.link=TRUE) {
     return(info)
 }
 
-##skipifexists=0;perplexity=30;sv.rank=-1;prefix="C";kclust=1;ntop=1000;fromX=FALSE;prior.counts=1;mean.center=TRUE;method="tsne";determine.clusters=1;dims=2;find.clusters=TRUE
+##skipifexists=0;perplexity=NULL;sv.rank=-1;prefix="C";kclust=1;ntop=1000;fromX=FALSE;prior.counts=1;mean.center=TRUE;method="tsne";determine.clusters=1;dims=c(2,3);find.clusters=TRUE;row.center=TRUE;row.scale=FALSE
 pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
                                ntop=1000, sv.rank=-1, prefix="C", 
                                fromX=FALSE, is.logx=FALSE,
@@ -400,7 +400,7 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
 
     sX <- ngs$counts
     if(fromX) sX <- 2**ngs$X
-
+    res <- NULL
     res <- pgx.clusterSamplesFromMatrix(
         sX, perplexity=perplexity, is.logx=FALSE,
         ntop=ntop, sv.rank=sv.rank, prefix=prefix,         
@@ -411,7 +411,9 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
 
     if(!is.null(res$pos2d)) ngs$tsne2d <- res$pos2d
     if(!is.null(res$pos3d)) ngs$tsne3d <- res$pos3d
-    if(!is.null(res$idx)) ngs$samples$cluster <- res$idx
+    if(!is.null(res$idx)) {
+        ngs$samples <- cbind(ngs$samples, cluster=as.character(res$idx))
+    }
     
     return(ngs)
 }
