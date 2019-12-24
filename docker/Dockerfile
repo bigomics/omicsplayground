@@ -6,7 +6,7 @@
 # Prepare R/Shiny with all packages
 #------------------------------------------------------------
 
-FROM rocker/shiny:3.6.1
+FROM rocker/shiny:3.6.1 AS base
 
 RUN apt-get update && apt-get install -y apt-utils \
     libcurl4-gnutls-dev libv8-3.14-dev \
@@ -23,29 +23,35 @@ RUN rm -fr /omicsplayground
 #------------------------------------------------------------
 ## Pull from GitHub
 #------------------------------------------------------------
-RUN git clone https://github.com/bigomics/omicsplayground.git && chmod -R ugo+rwX /omicsplayground
 WORKDIR /omicsplayground
+COPY R /omicsplayground/R
+COPY shiny /omicsplayground/shiny
 
 #------------------------------------------------------------
 ## Install R packages that are required
 #------------------------------------------------------------
-RUN pip install umap-learn
 RUN R -e "setwd('R');source('requirements.R')"
+RUN R -e "install.packages(c('umap','corrplot','wordcloud'))"
+RUN pip install umap-learn
+
+FROM base AS latest
+
+#------------------------------------------------------------
+## Pull from GitHub
+#------------------------------------------------------------
+RUN git clone https://github.com/bigomics/omicsplayground.git && chmod -R ugo+rwX /omicsplayground
 
 #------------------------------------------------------------
 # Copy local data into Docker image
 #------------------------------------------------------------
 COPY data/* /omicsplayground/data/
-RUN R -e "setwd('scripts');source('update-datasets-info.R')"
-RUN R -e "install.packages(c('umap','corrplot','wordcloud'))"
+RUN R -e "setwd('data');source('init.R')"
 
 #------------------------------------------------------------
 # Copy further configuration files into the Docker image
 #------------------------------------------------------------
 COPY docker/shiny-server.conf  /etc/shiny-server/shiny-server.conf
 COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
-COPY shiny/resources/rmd_loader.css /usr/local/lib/R/site-library/rmarkdown/rmd/h/rmarkdown/rmd_loader.css
-COPY shiny/resources/bigomics-rotating.gif /usr/local/lib/R/site-library/rmarkdown/rmd/h/rmarkdown/rmd_loader.gif 
 
 EXPOSE 3838
 

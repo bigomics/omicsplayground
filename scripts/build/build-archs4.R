@@ -63,6 +63,9 @@ if(0) {
     drugs = tolower(as.character(D$pert_iname))
     drugs1 = grep("[[:punct:]]",drugs,value=TRUE,invert=TRUE)
     length(drugs1)
+    drugs1 <- drugs1[nchar(drugs1)>=8]
+    length(drugs1)
+    ##ok1 <- grepl(paste(drugs1[1:20],collapse="|"),tolower(GSE.TITLE))    
     ok1 <- grepl(paste(drugs1[1:2000],collapse="|"),tolower(GSE.TITLE))
     ok2 <- grepl(paste(drugs1[2001:length(drugs1)],collapse="|"),tolower(GSE.TITLE))
     about.drugs <- (ok1 | ok2)
@@ -77,10 +80,11 @@ if(0) {
 ##================================= FUNCTIONS ====================================
 ##================================================================================
 
+ext="-immune";outdir="gse"
 ext="test";outdir="test"
 id="GSE100425"
 id="GSE105087"
-id="GSE76253"
+id="GSE122969"
 
 prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
     
@@ -111,7 +115,9 @@ prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
     if("group" %in% colnames(aa$samples)) {
         colnames(aa$samples) <- sub("group","xgroup",colnames(aa$samples))
     }
-
+    cleanupSpaces <- function(s) gsub("[ ]+"," ",gsub("^[ ]+|[ ]+$","",s))
+    ##aa$samples <- apply(aa$samples,2,cleanupSpaces)
+    
     ## get categorical phenotypes
     df <- aa$samples
     vv <- pgx.getCategoricalPhenotypes(df, max.ncat=10, min.ncat=2) 
@@ -215,12 +221,14 @@ i=1
 for(i in 1:length(ids.list)) {
     ext <- paste0("-",names(ids.list)[i])
     ids <- ids.list[[i]]
-
+    outdir <- paste0("gse",ext)
+    outdir
+    
     ##NUMCORES = 8
     NUMCORES = 1
     if(NUMCORES>1) {
         res <- mclapply(ids[], function(id)
-            prepArchs4Dataset(id, ext=ext, outdir="gse"),
+            prepArchs4Dataset(id, ext=ext, outdir=outdir),
             mc.cores = NUMCORES)
         unlist(res)
     } else {
@@ -230,7 +238,7 @@ for(i in 1:length(ids.list)) {
         for(j in 1:length(ids)) {
             id <- ids[j]
             id
-            res[j] <- prepArchs4Dataset(id, ext=ext, outdir="gse")
+            res[j] <- prepArchs4Dataset(id, ext=ext, outdir=outdir)
         }
     }
 }
