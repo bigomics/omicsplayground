@@ -259,7 +259,6 @@ on a geneset level, also called geneset enrichment analysis."
             meta <- calculateMeta(comp, gsmethod, ngs=ngs)
             meta <- meta[rownames(mx),,drop=FALSE]        
             dim(meta)
-            ##gset.size = sapply(ngs$gmt.all[rownames(mx)],length)
             gset.size = Matrix::colSums(ngs$GMT[,rownames(mx),drop=FALSE]!=0)
             names(gset.size) <- rownames(mx)
             
@@ -1052,7 +1051,6 @@ on a geneset level, also called geneset enrichment analysis."
         if(is.null(gs)) return(NULL)
         gs <- gs[1]
         
-        ##gsets = names(ngs$gmt.all)
         gsets = colnames(ngs$GMT)
         if(!(gs %in% gsets)) {
             cat("warning:: geneset",gs,"not in GSETS!!\n")

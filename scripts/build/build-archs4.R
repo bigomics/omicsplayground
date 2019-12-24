@@ -16,6 +16,7 @@ PGX.DIR="../../data/"
 source("../../R/pgx-init.R")
 source("../../R/pgx-archs4.R")
 source("../../R/ngs-functions.R")
+source("../../R/pgx-functions.R")
 source("../../R/pgx-contrasts.R")
 source("../../R/pgx-upload.R")
 
@@ -79,7 +80,7 @@ if(0) {
 ext="test";outdir="test"
 id="GSE100425"
 id="GSE105087"
-id="GSE111950"
+id="GSE76253"
 
 prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
     
@@ -127,6 +128,7 @@ prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
     mingrp=3;slen=15;ref=NA
     res <- pgx.makeAutoContrast(df, mingrp=3, slen=15, ref=NA)
     is.null(res)
+    table(res$group)
     
     if(is.null(res)) {
         cat("skipping. no valid contrasts...\n")

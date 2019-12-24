@@ -45,7 +45,7 @@ COMPUTE.EXTRA=1
 QCFILTER=FALSE
 BATCHCORRECT=FALSE
 
-rda.file="../data/geiger2016-arginine.pgx"
+rda.file="../data/geiger2016-arginine-FAST.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -170,13 +170,11 @@ if(DIFF.EXPRESSION) {
         ngs, contr.matrix,
         max.features=MAX.GENES,
         test.methods = USER.GENETEST.METHODS)
-    head(ngs$gx.meta$meta[[1]])        
     
-    ngs <- compute.testGenesets(
+    ngs <- compute.testGenesets (
         ngs, max.features=MAX.GENES,
         test.methods = USER.GENESETTEST.METHODS,
         lib.dir=FILES)
-    head(ngs$gset.meta$meta[[1]])
 
     extra <- c("meta.go","deconv","infer","drugs","wordcloud")
     ngs <- compute.extra(ngs, extra, lib.dir=FILES) 

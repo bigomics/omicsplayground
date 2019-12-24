@@ -7,53 +7,9 @@ methods=c("gsva","camera")
 methods=c("fisher","gsva","camera")
 use.multicore=TRUE
 
-gmt2mat.nocheck <- function(gmt, bg=NULL, use.multicore=TRUE)
-{
-    ##max.genes=-1;ntop=-1;sparse=TRUE;bg=NULL;normalize=FALSE;r=0.01;use.multicore=TRUE
-    require(Matrix)
-    require(parallel)
-    ##gmt <- gmt[!duplicated(names(gmt))]
-    if(is.null(bg)) {
-        bg <- names(sort(table(unlist(gmt)),decreasing=TRUE))
-    }
-    gmt <- lapply(gmt, function(s) intersect(bg,s))
-    ##kk <- unique(names(gmt))
-    ## D <- Matrix(0, nrow=length(bg),ncol=length(kk), sparse=TRUE)
-    ##D <- sparseMatrix(1, 1, x=0, dims=c(length(bg),ncol=length(kk)))
-    ##rownames(D) <- bg
-    ##colnames(D) <- kk
-    j=1
-    idx <- c()
-    if(use.multicore) {
-        idx <- mclapply(gmt, function(s) match(s,bg))
-        idx[sapply(idx,length)==0] <- 0
-        idx <- sapply(1:length(idx), function(i) rbind(idx[[i]],i))
-        idx <- matrix(unlist(idx[]),byrow=TRUE,ncol=2)
-        idx <- idx[!is.na(idx[,1]),]
-        idx <- idx[idx[,1]>0,]
-        ##D[idx] <- 1
-    } else {
-        idx <- c()
-        for(j in 1:length(gmt)) {
-            ii0 <- which(bg %in% gmt[[j]])
-            if(length(ii0)>0) {
-                ##D[ii0,j] <- +1
-                idx <- rbind(idx, cbind(ii0,j))
-            }
-        }
-    }
-    D <- sparseMatrix(idx[,1], idx[,2], x=rep(1,nrow(idx)),
-                      dims=c(length(bg),ncol=length(gmt)))
-    dim(D)
-    rownames(D) <- bg
-    colnames(D) <- names(gmt)
-    ##D <- Matrix(D, sparse=TRUE)
-    D
-}
-
 mc.threads=1
 ##X=ngs$X;Y=ngs$Y;design=ngs$model.parameters$design;contr.matrix=ngs$model.parameters$contr.matrix;mc.cores=4;mc.threads=1;batch.correct=TRUE;gmt=ngs$gmt.all
-gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, methods,
+gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, methods, 
                                             mc.threads=1, mc.cores=NULL, batch.correct=TRUE)
 {
     require(GSVA)
@@ -85,7 +41,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
     gmt <- gmt[which(keep)]
     length(gmt)
     
-    ## pre-compute the big GMT matrix (again??)
+    ## experiment matrix
     if(!is.null(design)) {
         exp.matrix = (design %*% contr.matrix)[colnames(X),,drop=FALSE]
     } else {
@@ -127,24 +83,21 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
 
         cat("fitting contrasts using spearman/limma... \n")
         require(qlcMatrix)
-        ##GMT = Matrix(sapply( gmt[], function(s) 1*(rownames(X) %in% s)),sparse=TRUE)
-        ##rownames(GMT) = rownames(X)
-        GMT <- gmt2mat.nocheck(gmt[], bg=rownames(X))  ## in gset-gsea.r
-        dim(GMT)
-        table(rownames(X) %in% rownames(GMT))
-        table(colnames(GMT) %in% names(gmt))
-        table(colnames(GMT)==names(gmt))
-        GMT <- GMT[rownames(X),names(gmt)]
+        dim(G)
+        table(rownames(X) %in% rownames(G))
+        table(colnames(G) %in% names(gmt))
+        table(colnames(G)==names(gmt))
+        G <- G[rownames(X),names(gmt)]
 
         ## single-sample gene set enrichment using (fast) rank correlation
         xx1 <-  X - rowMeans(X,na.rm=TRUE)
         xx1 <- apply(xx1,2,rank,na.last="keep")
         ##G = sapply( gmt[], function(s) 1*(gg %in% s))
-        jj = intersect(rownames(GMT),rownames(xx1))
+        jj = intersect(rownames(G),rownames(xx1))
         tt <- system.time({
 
-            zx.rnkcorr <- qlcMatrix::corSparse(GMT[jj,], xx1[jj,])
-            rownames(zx.rnkcorr) <- colnames(GMT)
+            zx.rnkcorr <- qlcMatrix::corSparse(G[jj,], xx1[jj,])
+            rownames(zx.rnkcorr) <- colnames(G)
             colnames(zx.rnkcorr) <- colnames(X)
             ## row-wise (per feature) scaling is 'good practice', see
             ## tests comparing rankcor and ssGSEA/gsva
@@ -154,7 +107,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
             zx.rnkcorr <- normalize(zx.rnkcorr, Y)
             zx.rnkcorr <- zx.rnkcorr[names(gmt),colnames(X)] ## make sure..
 
-    ## compute LIMMA
+            ## compute LIMMA
             all.results[["spearman"]] <- gset.fitContrastsWithLIMMA(
                 zx.rnkcorr, contr.matrix,  design=design, trend=TRUE, conform.output=TRUE)
         })
@@ -168,6 +121,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
             zx.gsva <- NULL
             zx.gsva <- try( gsva(as.matrix(X), gmt[], method="gsva",
                                  parallel.sz=mc.cores, verbose=FALSE))
+            dim(zx.gsva)
             if(is.null(zx.gsva) || class(zx.gsva)=="try-error") {
                 ## switch to single core...
                 cat("WARNING:: GSVA ERROR : retrying single core ... \n")
@@ -179,7 +133,9 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
                 stop("FATAL ERROR in GSVA\n")
             }
             zx.gsva <- normalize(zx.gsva, Y)
-            zx.gsva <- zx.gsva[names(gmt),colnames(X)] ## make sure..
+            jj <- match(names(gmt), rownames(zx.gsva))
+            zx.gsva <- zx.gsva[jj,colnames(X)] ## make sure..
+            zx.gsva[is.na(zx.gsva)] <- 0
             all.results[["gsva"]] <- gset.fitContrastsWithLIMMA(
                 zx.gsva, contr.matrix,  design=design, trend=TRUE, conform.output=TRUE)
         })
@@ -194,13 +150,14 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
                               parallel.sz=mc.cores, verbose=FALSE)
             dim(zx.ssgsea)
             zx.ssgsea <- normalize(zx.ssgsea, Y)
-            zx.ssgsea <- zx.ssgsea[names(gmt),colnames(X)] ## make sure..
+            jj <- match(names(gmt), rownames(zx.ssgsea))
+            zx.ssgsea <- zx.ssgsea[jj,colnames(X)] ## make sure..
+            zx.ssgsea[is.na(zx.ssgsea)] <- 0
             all.results[["ssgsea"]] <- gset.fitContrastsWithLIMMA(
                 zx.ssgsea, contr.matrix, design, trend=TRUE,conform.output=TRUE)
         })
         timings <- rbind(timings, c("ssgsea", tt))
     }
-
 
     k=1
     fitThisContrastWithMethod <- function(method, k) {
@@ -221,11 +178,16 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
 
         ## Standard Fisher exact test
         if("fisher" %in% method) {
-            ## calculate significant genes with LIMMA (we need all gene for GSEA-PR)
+
+            ## calculate significant genes with LIMMA (we need all genes for GSEA-PR)
+            ##cat("fisher: determining DE genes...\n")
             lfc = 0
             lfc05 = 0.2  ## for genes
             fdr = 0.25
-            limma0 = gx.limma( xx, yy, fdr=1.0, lfc=0, ref=ref, trend=TRUE, verbose=0)  ## trend true for NGS
+            suppressWarnings( suppressMessages(
+                limma0 <- gx.limma( xx, yy, fdr=1.0, lfc=0,
+                                   ref=ref, trend=TRUE, verbose=0)  ## trend true for NGS
+            ))
             which.up = which(limma0[,"adj.P.Val"] <= fdr & limma0[,"logFC"] > lfc05)
             which.dn = which(limma0[,"adj.P.Val"] <= fdr & limma0[,"logFC"] < -lfc05)
             ## which.up = which(limma0[,"P.Value"] < 0.05 & limma0[,"logFC"] > lfc05)
@@ -242,8 +204,8 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
             if(length(genes.up) < 20) {
                 genes.up <-  head(rownames(limma0)[order(-limma0[,"logFC"])],20)
             }
-            ##cat("siggenes.down=",length(genes.dn),"\n")
-            ##cat("siggenes.up=",length(genes.up),"\n")
+            
+            ##cat("fisher: testing...\n")
             tt <- system.time({
                 output <- gset.fisher2(genes.up, genes.dn, genesets=gmt, fdr=1.0,
                                        background = rownames(X), check.background=FALSE,
@@ -285,10 +247,10 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
         if("gsva" %in% method) {
             zx <- zx.gsva[,colnames(xx)]
             gs <- intersect(names(gmt),rownames(zx))
-            tt <- system.time(
+            tt <- system.time({
                 output <-  gx.limma( zx[gs,], yy, fdr=1, lfc=0, ref=ref,
-                                    trend=LIMMA.TREND, verbose=0)  ## ssgsea
-            )
+                                    trend=LIMMA.TREND, verbose=0)  ## ssgsea                
+            })
             timings <- rbind(timings, c("gsva", tt))
             head(output)
             dim(output)
@@ -537,10 +499,10 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
         pv = P[[i]]
         qv = Q[[i]]
         fc = S[[i]]
-        ##meta.p = apply(pv, 1, max, na.rm=TRUE ) ## maximum statistic
-        ##meta.q = apply(qv, 1, max, na.rm=TRUE ) ## maximum statistic
-        meta.p = apply(pv, 1, function(p) metap::allmetap(p, method="sumlog")$p[[1]])
-        meta.q = p.adjust(meta.p, method="fdr")
+        meta.p = apply(pv, 1, max, na.rm=TRUE ) ## maximum p-statistic (simple & fast)
+        meta.q = apply(qv, 1, max, na.rm=TRUE ) ## maximum q-statistic (simple & fast)
+        ## meta.p = apply(pv, 1, function(p) metap::allmetap(p, method="sumlog")$p[[1]])
+        ## meta.q = p.adjust(meta.p, method="fdr")
         ss.rank <- function(x) scale(sign(x)*rank(abs(x)),center=FALSE)
         meta.fx = rowMeans( apply(S[[i]], 2, ss.rank), na.rm=TRUE)
         meta = data.frame(fx=meta.fx, p=meta.p, q=meta.q)
@@ -574,6 +536,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, design, contr.matrix, met
     timings0 <- apply(as.matrix(timings[,-1]),2,as.numeric)
     rownames(timings0) <- rownames(timings)
     timings0 <- apply( timings0, 2, function(x) tapply(x,rownames(timings0),sum))
+
     res = list( meta = all.meta, sig.counts = sig.counts,  outputs = all.results,
                matrices = m, timings = timings0)
 
@@ -708,6 +671,50 @@ getGeneSetTables <- function(path) {
 ##======================================================================
 ##======================= GSEA METHODS =================================
 ##======================================================================
+
+gmt2mat.nocheck <- function(gmt, bg=NULL, use.multicore=TRUE)
+{
+    ##max.genes=-1;ntop=-1;sparse=TRUE;bg=NULL;normalize=FALSE;r=0.01;use.multicore=TRUE
+    require(Matrix)
+    require(parallel)
+    ##gmt <- gmt[!duplicated(names(gmt))]
+    if(is.null(bg)) {
+        bg <- names(sort(table(unlist(gmt)),decreasing=TRUE))
+    }
+    gmt <- lapply(gmt, function(s) intersect(bg,s))
+    ##kk <- unique(names(gmt))
+    ## D <- Matrix(0, nrow=length(bg),ncol=length(kk), sparse=TRUE)
+    ##D <- sparseMatrix(1, 1, x=0, dims=c(length(bg),ncol=length(kk)))
+    ##rownames(D) <- bg
+    ##colnames(D) <- kk
+    j=1
+    idx <- c()
+    if(use.multicore) {
+        idx <- mclapply(gmt, function(s) match(s,bg))
+        idx[sapply(idx,length)==0] <- 0
+        idx <- sapply(1:length(idx), function(i) rbind(idx[[i]],i))
+        idx <- matrix(unlist(idx[]),byrow=TRUE,ncol=2)
+        idx <- idx[!is.na(idx[,1]),]
+        idx <- idx[idx[,1]>0,]
+        ##D[idx] <- 1
+    } else {
+        idx <- c()
+        for(j in 1:length(gmt)) {
+            ii0 <- which(bg %in% gmt[[j]])
+            if(length(ii0)>0) {
+                ##D[ii0,j] <- +1
+                idx <- rbind(idx, cbind(ii0,j))
+            }
+        }
+    }
+    D <- sparseMatrix(idx[,1], idx[,2], x=rep(1,nrow(idx)),
+                      dims=c(length(bg),ncol=length(gmt)))
+    dim(D)
+    rownames(D) <- bg
+    colnames(D) <- names(gmt)
+    ##D <- Matrix(D, sparse=TRUE)
+    D
+}
 
 shortstring = function(s,n) {
     s=as.character(s);

@@ -8,10 +8,178 @@
 
 ##SAVE.PARAMS <- ls()
 
+##max.features=5000;lib.dir=FILES;test.methods = c("gsva","camera","fgsea")
+
 compute.testGenesets <- function(ngs, max.features=1000, lib.dir="../lib",
-                                 test.methods = c("gsva","camera","fgsea"))
+                                      test.methods = c("gsva","camera","fgsea"))
 {
+    ## Rewritten 24.12.2019. Now much faster but needs gset-sparseG-XL
+    ## precomputed.
+    ##
+    ##
+    if(!"X" %in% names(ngs)) {
+        stop("[compute.testGenesets] FATAL : object must have normalized matrix X")
+    }
+
+    ##-----------------------------------------------------------
+    ## Load huge geneset matrix
+    ##-----------------------------------------------------------    
+    G <- readRDS(file.path(lib.dir,"gset-sparseG-XL.rds"))
+    G <- t(G)
     
+    ##-----------------------------------------------------------
+    ## Filter gene sets
+    ##-----------------------------------------------------------
+    cat("Filtering gene sets...\n")
+    
+    require(Matrix)
+    require(org.Hs.eg.db)
+    ##GENE.TITLE = unlist(as.list(org.Hs.egGENENAME))
+    ##genes = head(as.character(unlist(as.list(org.Hs.egSYMBOL))),1000)
+    genes = unique(as.character(ngs$genes$gene_name))
+    genes <- toupper(genes)  ## handle mouse genes...
+    G <- G[rownames(G) %in% genes,]
+    dim(G)
+        
+    ## filter gene sets on size
+    gmt.size = colSums(G!=0)
+    summary(gmt.size)
+    size.ok <- (gmt.size >= 15 & gmt.size <= 1e3)
+    G <- G[, which(size.ok)]
+    dim(G)   
+    table(sub(":.*","",colnames(G)))
+    
+    ##-----------------------------------------------------------
+    ## create the full GENE matrix (always collapsed by gene)
+    ##-----------------------------------------------------------
+
+    single.omics <- !any(grepl("\\[",rownames(ngs$counts)))
+    single.omics
+    if(single.omics) {
+        ## normalized matrix
+        X <- ngs$X
+    } else {
+        data.type <- gsub("\\[|\\].*","",rownames(ngs$counts))
+        jj <- which(data.type %in% c("gx","mrna"))
+        length(jj)
+        if(length(jj)==0) {
+            stop("FATAL. could not find gx/mrna values.")
+        }
+        X <- ngs$X[jj,]        
+    }
+    
+    ##-----------------------------------------------------------
+    ## create the GENESETxGENE matrix
+    ##-----------------------------------------------------------
+    cat("Matching gene set matrix...\n")
+    rownames(X) <- toupper(rownames(X)) ## accomodate for mouse...
+    
+    ## align GMT to X (or ngs$X??)
+    ii <- intersect(rownames(X),rownames(G))
+    G <- G[ii,]
+    xx <- setdiff(rownames(X),rownames(G))
+    matX <- Matrix(0, nrow=length(xx), ncol=ncol(G), sparse=TRUE)
+    rownames(matX) <- xx
+    colnames(matX) <- colnames(G)
+    G <- rbind(G, matX)
+    G <- G[match(rownames(X),rownames(G)),]
+    dim(G)
+    dim(X)
+    
+    ##-----------------------------------------------------------
+    ## Prioritize gene sets by fast rank-correlation
+    ##-----------------------------------------------------------    
+    if(is.null(max.features)) max.features <- 20000
+    if(max.features < 0) max.features <- 20000
+    max.features
+    
+    if(max.features > 0) {
+        cat("Reducing gene set matrix...\n")
+        require(limma)
+        ## Reduce gene sets by selecting top varying genesets. We use the
+        ## very fast sparse rank-correlation for approximate single sample
+        ## geneset activation.
+        cX <- X - rowMeans(X, na.rm=TRUE)  ## center!
+        gsetX = qlcMatrix::corSparse( G[,], apply( cX[,],2,rank) )
+        gsetX = limma::normalizeQuantiles(gsetX) ##???
+        grp <- ngs$samples$group
+        gsetX.bygroup <- t(apply(gsetX,1,function(x) tapply(x,grp,mean)))
+        sdx <- apply(gsetX.bygroup,1,sd)
+        names(sdx) <- colnames(G)
+        jj = head(order(-sdx), max.features) 
+        must.include <- "hallmark|kegg|^go|^celltype"
+        jj = unique( c(jj, grep(must.include,colnames(G),ignore.case=TRUE)))
+        jj = jj[order(colnames(G)[jj])]
+        length(jj)
+        G = G[,jj,drop=FALSE]
+    }
+    dim(G)
+    
+    ngs$GMT <- G
+    ##ngs$gmt.all <- gmt.all
+
+    ##-----------------------------------------------------------
+    ## gmt.all
+    ##-----------------------------------------------------------
+    gmt.all <- lapply(apply(G!=0, 2, which),names)
+    
+    ##-----------------------------------------------------------
+    ## get design and contrast matrix
+    ##-----------------------------------------------------------
+    design = ngs$model.parameters$design
+    contr.matrix = ngs$model.parameters$contr.matrix
+    ##contr.matrix
+    ##exp.matrix = (design %*% contr.matrix)
+    
+    all.gset.methods=c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
+                       "fgsea","gsea.permPH","gsea.permGS","gseaPR")
+    ##test.methods = c("fisher","fgsea")
+    ## test.methods = c("fisher","gsva","ssgsea","spearman","camera","fry","fgsea") ## no GSEA
+    ## if(!is.null(USER.GENESETTEST.METHODS)) test.methods = USER.GENESETTEST.METHODS
+    ## ##if(test.methods[1]=="*") test.methods = all.gset.methods
+    test.methods
+    
+    ##-----------------------------------------------------------
+    ## Run methods
+    ##-----------------------------------------------------------
+    cat(">>> Testing gene sets with methods:",test.methods,"\n")
+    test.methods
+    
+    Y <- ngs$samples
+    gmt=gmt.all
+    gc()
+    
+    gset.meta = gset.fitContrastsWithAllMethods(
+        gmt = gmt.all, X = X, Y = Y, G = G,
+        design=design, ## genes=GENES,
+        contr.matrix=contr.matrix, methods=test.methods,
+        mc.threads=1, mc.cores=NULL, batch.correct=TRUE
+        )
+        
+    rownames(gset.meta$timings) <- paste0("[test.genesets]",rownames(gset.meta$timings))
+    ngs$timings <- rbind(ngs$timings, gset.meta$timings)
+    ngs$gset.meta <- gset.meta
+    ngs$gsetX = ngs$gset.meta$matrices[["meta"]]  ## META??!
+    
+    ##-----------------------------------------------------------------------
+    ##------------------------ clean up -------------------------------------
+    ##-----------------------------------------------------------------------
+    
+    ## remove large outputs... (uncomment if needed)
+    ngs$gset.meta$outputs <- NULL
+    
+    remove(X)
+    remove(Y)
+    remove(G)
+    remove(gmt.all)
+
+    return(ngs)
+}
+
+compute.testGenesets.OLD <- function(ngs, max.features=1000, lib.dir="../lib",
+                                     test.methods = c("gsva","camera","fgsea"))
+{
+
     ##-----------------------------------------------------------
     ## Load gene sets
     ##-----------------------------------------------------------    
@@ -83,7 +251,7 @@ compute.testGenesets <- function(ngs, max.features=1000, lib.dir="../lib",
     X <- X[!(rownames(X) %in% c(NA,""," ") ),,drop=FALSE]
     X <- limma::normalizeQuantiles(X)
     dim(X)
-
+    
     ##-----------------------------------------------------------
     ## create the GENESETxGENE matrix
     ##-----------------------------------------------------------
@@ -166,7 +334,8 @@ compute.testGenesets <- function(ngs, max.features=1000, lib.dir="../lib",
     gc()
     
     gset.meta = gset.fitContrastsWithAllMethods(
-        gmt = ngs$gmt.all, X = X, Y = Y, design=design, ## genes=GENES,
+        gmt = ngs$gmt.all, X = X, Y = Y, G = GMT,
+        design=design, ## genes=GENES,
         contr.matrix=contr.matrix, methods=test.methods,
         mc.threads=1, mc.cores=NULL, batch.correct=TRUE )
     
