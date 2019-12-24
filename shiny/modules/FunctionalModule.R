@@ -518,6 +518,8 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         rownames(score2) <- tolower(gsub(".*:|kegg_|_Homo.*$","",
                                          rownames(score2),ignore.case=TRUE))
         rownames(score2) <- substring(rownames(score2), 1, 40)
+        colnames(score2) <- shortstring(colnames(score2), 30)
+        
         ## heatmap(score2, scale="none", mar=c(8,20))
         bmar <- 0 + pmax(50 - nrow(score2),0)*0.3
         corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
@@ -1179,8 +1181,9 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         pdf.width=11, pdf.height=7, res=72
     )
     output <- attachModule(output, dsea_enplots_module)
+    outputOptions(output, "dsea_enplots", suspendWhenHidden=FALSE) ## important!!!
 
-
+    
     ##---------- DSEA Activation map plotting module
     dsea_moaplot.opts = tagList(
         tipify( radioButtons(ns('dsea_moatype'),'Plot type:',c("drug class","target gene"),inline=TRUE),
