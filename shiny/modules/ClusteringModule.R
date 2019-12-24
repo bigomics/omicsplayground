@@ -141,7 +141,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         if(is.null(input$hm_level)) return(NULL)
         choices = names(ngs$families)
         if(input$hm_level=="geneset") {
-            choices = names(COLLECTIONS)
+            nk <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))            
+            choices = names(COLLECTIONS)[nk>=5]
         }
         choices <- c("<custom>",choices)
         choices <- sort(unique(choices))

@@ -288,6 +288,7 @@ pgx.initialize <- function(ngs) {
     
     all.genes <- sort(rownames(ngs$genes))
     ngs$families[["<all>"]] <- all.genes
+    ## rownames(ngs$GMT) <- toupper(rownames(ngs$GMT)) ## everything to human...
     
     ##-----------------------------------------------------------------------------
     ## Recode survival

@@ -539,7 +539,8 @@ immune cell types, expressed genes and pathway activation."
         choices <- names(ngs$families)
         selected = grep("^CD",choices,ignore.case=TRUE,value=TRUE)[1]
         if(input$pr_level=="geneset") {
-            choices <- names(COLLECTIONS)
+            nn <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))
+            choices <- names(COLLECTIONS)[nn>=5]
             selected = grep("HALLMARK",names(COLLECTIONS),ignore.case=TRUE,value=TRUE)
         }
         updateSelectInput(session, "pr_features", choices=choices, selected=selected)

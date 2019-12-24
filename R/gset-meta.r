@@ -284,9 +284,11 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
             cdesign <- cbind(Intercept=1,Group=yy)
             ##design <- model.matrix( ~ 0 + as.factor(yy))
             ##colnames(design) <- levels(yy)
-            tt <- system.time(
-                output <- camera(xx, gmt, cdesign, contrast=2)
-            )
+            tt <- system.time({
+                suppressWarnings( suppressMessages(
+                    output <- camera(xx, gmt, cdesign, contrast=2)
+                ))
+            })
             timings <- rbind(timings, c("camera", tt))
             ## note: camera does not provide any score!!!!
             output$score = c(-1,1)[ 1 + 1*(output$Direction=="Up")] * -log10(output$PValue)
