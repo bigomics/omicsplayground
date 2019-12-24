@@ -10,12 +10,12 @@ USER.GENETEST.METHODS <- NULL
 ##=============================================================================
 ##s=rep("abc",100)
 
-##check.names=FALSE;row.names=1;stringsAsFactors=FALSE
+##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
 fread.csv <- function(file, check.names=FALSE, row.names=1,
-                      stringsAsFactors=FALSE)
+                      stringsAsFactors=FALSE, header=TRUE)
 {
     require(data.table)
-    df <- fread(file=file, check.names=check.names)
+    df <- fread(file=file, check.names=check.names, header=header)
     x <- data.frame(df[,2:ncol(df)], stringsAsFactors=stringsAsFactors,
                     check.names=check.names)
     rownames(x) <- df[[row.names]]
@@ -145,7 +145,7 @@ pgx.getCategoricalPhenotypes <-function(df, max.ncat=20, min.ncat=2) {
 
     is.bad = 0
     is.bad1 <- grepl("^sample$|[_.]id$|replic|rep|patient|donor|individ",tolower(colnames(df)))
-    is.bad2 <- grepl("ratio|year|month|day|age|efs|dfs|surv|follow",tolower(colnames(df)))    
+    is.bad2 <- grepl("ratio|year|month|day|^age$|^efs|^dfs|surv|follow",tolower(colnames(df)))    
     ## is.factor <- sapply(sapply(data.frame(df), class), function(s) any(s %in% c("factor","character")))
     is.bad3 <- apply(df,2,function(x) any(grepl("^sample|patient|replicate|donor|individ",x,ignore.case=TRUE)))    
     is.bad <- (is.bad1 | is.bad2 | is.bad3)

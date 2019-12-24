@@ -1058,11 +1058,11 @@ to understand biological functions including GO, KEGG, and drug connectivity map
             par(mfrow=c(1,1))
 
             if(input$dsea_moatype=="drug class") {
-                par(mar=c(15,4,3,0.5), mgp=c(2,0.7,0))
+                par(mar=c(12,4,3,0.5), mgp=c(2,0.7,0))
                 barplot(moa.top, horiz=FALSE, las=3, ylab="drugs (n)")
                 ##title(main="MOA", line=1 )
             } else {
-                par(mar=c(15,4,3,0.5), mgp=c(2,0.7,0))
+                par(mar=c(12,4,3,0.5), mgp=c(2,0.7,0))
                 barplot(dtg.top, horiz=FALSE, las=3, ylab="drugs (n)")
                 ##title(main="target gene", line=1 )
             }
@@ -1216,7 +1216,6 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         title = "Profile enrichment table"
     )
     output <- attachModule(output, dsea_table_module)
-
 
     observe({
         ngs <- inputData()

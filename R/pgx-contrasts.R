@@ -7,7 +7,10 @@
 pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
 
     shortestunique <- function(xx,slen=3) {
-        k <- min(which(!sapply(1:max(nchar(xx)),function(i) any(duplicated(substring(xx,1,i))))))
+        dup <- sapply(1:max(nchar(xx)),
+                      function(i) any(duplicated(substring(xx,1,i))))
+        if(!any(!dup)) return(xx)
+        k <- min(which(!dup))
         substring(xx,1,max(k,slen))
     }
     
@@ -21,7 +24,7 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
         if(length(nx)<2) return(NULL)
         x <- factor(x)
         if(!is.na(ref1)) x <- relevel(x, ref=ref1)
-
+        
         xlevels <- gsub("[^[:alnum:]+-]","",levels(x))        
         levels(x) <- shortestunique(xlevels,slen=slen)
         xref <- gsub("[^[:alnum:]]","",levels(x)[1])
@@ -66,7 +69,7 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
         too.small <- (x %in% names(which(table(x)<mingrp)))
         x[too.small] <- NA
         if(!(ref1 %in% x)) ref1 <- NA
-        ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$|scrambl"
+        ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$|scrambl|none"
         detect.ref <- any(grepl(ref.pattern,x,ignore.case=TRUE))
         if(is.na(ref1) & detect.ref) {
             ref1 <- grep(ref.pattern,x,ignore.case=TRUE,value=TRUE)
@@ -90,26 +93,29 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL) {
     rownames(K) <- rownames(df)
     head(K)
 
-    ## Now try to infer the underlying "conditions"
-    kcode <- apply(K,1,paste,collapse="-")
-    xc <- factor(kcode, levels=unique(kcode))  ## experimental condition
-    levels(xc) <- paste0("condition",1:length(levels(xc)))
-    jj <- which(!duplicated(kcode))
-
-    ## SPECIAL CASE!!! if comparisons are degenerate (no valid
-    ## condition groups). LIMMA does not like that. Then delete
-    ## phenotype with lots of levels..
-    if(length(jj) == nrow(K)) {
-        ptype <- sub("[:].*","",colnames(K))
-        del.ptype <- names(which.max(table(ptype)))
-        del <- which(ptype %in% del.ptype)
-        K <- K[,-del,drop=FALSE]
-
+    not.ok = TRUE
+    iter=0
+    while(not.ok && iter<100) {
+        ## Now try to infer the underlying "conditions"
         kcode <- apply(K,1,paste,collapse="-")
         xc <- factor(kcode, levels=unique(kcode))  ## experimental condition
         levels(xc) <- paste0("condition",1:length(levels(xc)))
         jj <- which(!duplicated(kcode))
+        length(jj)
+        not.ok = (length(jj)==nrow(K))
+        ## SPECIAL CASE!!! if comparisons are degenerate (no valid
+        ## condition groups). LIMMA does not like that. Then delete
+        ## phenotype with lots of levels..
+        if(not.ok) {
+            ptype <- sub("[:].*","",colnames(K))
+            del.ptype <- names(which.max(table(ptype)))
+            del <- which(ptype %in% del.ptype)
+            K <- K[,-del,drop=FALSE]
+        }
+        iter = iter+1
     }
+    iter
+    length(jj)
     
     K2 <- K[jj,,drop=FALSE]
     rownames(K2) <- xc[jj]

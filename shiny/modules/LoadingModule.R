@@ -848,24 +848,25 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
                 gset.methods = c("fisher","gsva","camera")  ## fastest 3            
                 ## gx.methods   = c("trend.limma","edger.qlf","edger.lrt")
                 ## gset.methods = c("fisher","gsva","fgsea")
-                extra.methods = c("meta.go","infer","wordcloud")
+                extra.methods = c("meta.go","infer","drugs","wordcloud")
                 max.genes = 5000
             } else {
                 gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
                 gset.methods = c("fisher","gsva","fgsea","camera","fry")
-                extra.methods = c("meta.go","infer","deconv","drugs","wordcloud")
+                extra.methods = c("meta.go","infer","deconv","drugs-combo","wordcloud")
                 max.genes = 20000
                 if(ncol(counts) > 1000) {
                     ## probably scRNA-seq
                     gx.methods   = c("ttest","ttest.welch","trend.limma")
                     gset.methods = c("fisher","gsva","fgsea")
+                    extra.methods = c("meta.go","infer","deconv","drugs-combo","wordcloud")                    
                     max.genes = 10000
                 }
             }
             if(DEV.VERSION) {
                 gx.methods   = c("ttest","ttest.rank","ttest.welch","trend.limma","edger.qlf","edger.lrt","deseq2.wald")
                 gset.methods = c("fisher","gsva","fgsea","camera","fry","ssgsea","spearman")
-                extra.methods = c("meta.go","infer","deconv","drugs","wordcloud")
+                extra.methods = c("meta.go","infer","deconv","drugs-combo","wordcloud")
                 max.genes = 9999999
             }
             
@@ -924,6 +925,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
             footer = tagList(
                 downloadButton(ns("downloadPGX"), "Download locally", icon=icon("download")),
                 actionButton(ns("savedata"), "Save to cloud", icon=icon("save")),
+                actionButton(ns("sharedata"), "Share with others", icon=icon("share-alt")),
                 modalButton("Dismiss")
             )
         ))
@@ -940,11 +942,20 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
         }
     )
 
+    observeEvent( input$sharedata, {
+        dbg("[home] observeEvent:sharedata\n")
+        showModal( modalDialog(
+            HTML("<center><b>New feature!</b><br>Sharing your data with others will be soon available as new feature!</center>"),
+            title = NULL, size = "s", fade=FALSE
+        ))
+        return(NULL)
+    })
+    
     observeEvent( input$savedata, {
         dbg("[home] observeEvent:savedata\n")
 
         showModal( modalDialog(
-            HTML("<center><b>New feature!</b><br>Saving your data to the cloud will be soon available for Pro users!</center>"),
+            HTML("<center><b>New feature!</b><br>Saving your data to the cloud will be soon available as new feature for Pro users!</center>"),
             title = NULL, size = "s", fade=FALSE
         ))
         return(NULL)

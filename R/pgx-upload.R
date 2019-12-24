@@ -202,11 +202,14 @@ pgx.upload <- function(counts, samples, contrasts, ## genes,
     
     ## ------------------ gene set tests -----------------------
     if(!is.null(progress)) progress$inc(0.2, detail = "testing gene sets")
-    
-    ngs <- compute.testGenesets(
-        ngs, max.features = max.genes,
-        test.methods = gset.methods,
-        lib.dir = lib.dir )
+
+    max.features=max.genes;test.methods=gset.methods
+    system.time(
+        ngs <- compute.testGenesets(
+            ngs, max.features = max.genes,
+            test.methods = gset.methods,
+            lib.dir = lib.dir )
+    )
     head(ngs$gset.meta$meta[[1]])
     
     ## ------------------ extra analyses ---------------------

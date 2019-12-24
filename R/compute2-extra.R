@@ -9,6 +9,8 @@
 ##extra <- c("meta.go","deconv","infer","drugs")
 compute.extra <- function(ngs, extra, lib.dir) {
 
+    timings <- c()
+    
     ## detect if it is single or multi-omics
     single.omics <- !any(grepl("\\[",rownames(ngs$counts)))
     single.omics
@@ -35,37 +37,73 @@ compute.extra <- function(ngs, extra, lib.dir) {
 
     if("meta.go" %in% extra) {
         cat(">>> Computing GO core graph...\n")
-        ngs$meta.go <- pgx.computeCoreGOgraph(ngs, fdr=0.05)
+        tt <- system.time({
+            ngs$meta.go <- pgx.computeCoreGOgraph(ngs, fdr=0.05)
+        })
+        timings <- rbind(timings, c("meta.go", tt))
     }
 
     if("deconv" %in% extra) {
         cat(">>> computing deconvolution\n")
-        ngs <- compute.deconvolution(
-            ngs, lib.dir=lib.dir, rna.counts=rna.counts,
-            full=FALSE) 
+        tt <- system.time({
+            ngs <- compute.deconvolution(
+                ngs, lib.dir=lib.dir, rna.counts=rna.counts,
+                full=FALSE) 
+        })
+        timings <- rbind(timings, c("deconv", tt))
     }
 
     if("infer" %in% extra) {
         cat(">>> inferring extra phenotypes...\n")
-        ngs <- compute.cellcycle.gender(ngs, rna.counts=rna.counts)
+        tt <- system.time({
+            ngs <- compute.cellcycle.gender(ngs, rna.counts=rna.counts)
+        })
+        timings <- rbind(timings, c("infer", tt))
     }
 
     if("drugs" %in% extra) {
-        cat(">>> Computing drug enrichment...\n")
-        ngs <- compute.drugEnrichment(ngs, lib.dir=lib.dir) 
+        cat(">>> Computing drug enrichment (single)...\n")
+        tt <- system.time({
+            ngs <- compute.drugEnrichment(ngs, lib.dir=lib.dir, combo=FALSE) 
+        })
+        timings <- rbind(timings, c("drugs", tt))
+    }
+
+    if("drugs-combo" %in% extra) {
+        cat(">>> Computing drug enrichment (single+combo)...\n")
+        tt <- system.time({
+            ngs <- compute.drugEnrichment(ngs, lib.dir=lib.dir, combo=TRUE) 
+        })
+        timings <- rbind(timings, c("drugs", tt))
     }
     
     if("graph" %in% extra) {
         cat(">>> computing OmicsGraphs...\n")
-        ngs <- compute.omicsGraphs(ngs) 
+        tt <- system.time({
+            ngs <- compute.omicsGraphs(ngs) 
+        })
+        timings <- rbind(timings, c("graph", tt))
     }
     
     if("wordcloud" %in% extra) {
         cat(">>> computing WordCloud statistics...\n")
-        res <- pgx.calculateWordFreq(ngs, progress=NULL, pg.unit=1)        
+        tt <- system.time({
+            res <- pgx.calculateWordFreq(ngs, progress=NULL, pg.unit=1)        
+        })
+        timings <- rbind(timings, c("wordcloud", tt))
         ngs$wordcloud <- res
         remove(res)
     }
+
+    ##timings0 <- do.call(rbind, timings)
+    timings <- as.matrix(timings)
+    rownames(timings) <- timings[,1]
+    timings0 <- apply(as.matrix(timings[,-1]),2,as.numeric)
+    rownames(timings0) <- rownames(timings)
+    timings0 <- apply( timings0, 2, function(x) tapply(x,rownames(timings0),sum))
+    rownames(timings0) <- paste("[extra]",rownames(timings0))
+    
+    ngs$timings <- rbind(ngs$timings, timings0)
     
     return(ngs)
 }
@@ -173,7 +211,7 @@ compute.cellcycle.gender <- function(ngs, rna.counts) {
     return(ngs)
 }
 
-compute.drugEnrichment <- function(ngs, lib.dir) {
+compute.drugEnrichment <- function(ngs, lib.dir, combo=TRUE ) {
     ## -------------- drug enrichment
     ##source(file.path(RDIR,"pgx-drugs.R"))
     ##source(file.path(RDIR,"pgx-graph.R", local=TRUE)
@@ -182,6 +220,8 @@ compute.drugEnrichment <- function(ngs, lib.dir) {
     length(table(x.drugs))
     dim(X)
 
+    res.mono = res.combo = NULL
+    
     NPRUNE=-1
     NPRUNE=250
     res.mono <- pgx.computeDrugEnrichment(
@@ -192,13 +232,14 @@ compute.drugEnrichment <- function(ngs, lib.dir) {
         cat("[compute.drugEnrichment] WARNING:: pgx.computeDrugEnrichment failed!\n")
         return(ngs)
     }
-    
-    res.combo <- pgx.computeComboEnrichment(
-        ngs, X, x.drugs, res.mono=res.mono,
-        contrasts = NULL,
-        ntop=15, nsample=80, nprune=NPRUNE)
-    names(res.combo)
 
+    if(combo==TRUE) {
+        res.combo <- pgx.computeComboEnrichment(
+            ngs, X, x.drugs, res.mono=res.mono,
+            contrasts = NULL,
+            ntop=15, nsample=80, nprune=NPRUNE)
+        names(res.combo)
+    }
     dim(res.mono[["GSEA"]]$X)
 
     ngs$drugs <- NULL
