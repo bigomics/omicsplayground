@@ -77,9 +77,11 @@ plotModule <- function(input, output, session, ## ns=NULL,
     ##zoom.button <- prettyCheckbox(inputId=ns("zoom"),label=NULL,value=FALSE)
     zoom.button <- NULL
     if(show.maximize) {
+        require(shinyBS)
         zoom.button <- actionButton(inputId=ns("zoombutton"),label=NULL,
                                     icon=icon("window-maximize"),
-                                    class="btn-circle-xs")    
+                                    class="btn-circle-xs")
+        zoom.button <- tipify(zoom.button, "Maximize", placement="right")
     }
     
     ##output$renderbuttons <- renderUI({
