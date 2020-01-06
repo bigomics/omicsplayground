@@ -3,6 +3,8 @@
 ##
 ##
 
+ARCHS4.DIR = "~/.archs4data"
+
 if(0) {
 
     ##BiocManager::install("denalitherapeutics/archs4")
@@ -11,11 +13,11 @@ if(0) {
     library(dplyr)
     library(GEOmetadb)
     
-    archs4dir <- "~/.archs4data"
-    archs4_local_data_dir_create(archs4dir)
+    ARCHS4.DIR <- "~/.archs4data"
+    archs4_local_data_dir_create(ARCHS4.DIR)
     cwd = getwd()
     cwd
-    setwd(archs4dir)
+    setwd(ARCHS4.DIR)
     system("wget https://s3.amazonaws.com/mssm-seq-matrix/human_matrix.h5")
     system("wget https://s3.amazonaws.com/mssm-seq-matrix/human_hiseq_transcript_v2.h5")
     system("wget https://s3.amazonaws.com/mssm-seq-matrix/mouse_matrix.h5")
@@ -23,15 +25,200 @@ if(0) {
     system("wget ftp://ftp.ensembl.org/pub/release-90/gtf/homo_sapiens/Homo_sapiens.GRCh38.90.gtf.gz")
     system("wget ftp://ftp.ensembl.org/pub/release-90/gtf/mus_musculus/Mus_musculus.GRCm38.90.gtf.gz")
     
-    create_augmented_feature_info(datadir=archs4dir)
-    archs4_local_data_dir_validate(datadir=archs4dir)
+    create_augmented_feature_info(datadir=ARCHS4.DIR)
+    archs4_local_data_dir_validate(datadir=ARCHS4.DIR)
     setwd(cwd)
     cwd
 }
 
-id = "GSE53784"
-pgx.getArchs4Dataset <- function(a4, id)
+parseGeoAnnot <- function(annot) {
+    parse.annot <- function(a) {
+        aa <- strsplit(a, split="Xx-xX")[[1]]
+        aa <- lapply(aa, function(x) strsplit(x,split=": ")[[1]])
+        array( sapply(aa, "[",2), dimnames=list(sapply(aa,"[",1)))
+    }        
+    lapply(annot[], parse.annot)
+}
+
+keyword="cancer"
+geo.selectSeries <- function(keyword, variables=NULL)
+{
+    metadb <- file.path(ARCHS4.DIR,'GEOmetadb.sqlite')
+    require(GEOmetadb)        
+    ## Get titles from GEO experiments
+    ##if(!file.exists(metadb)) getSQLiteFile(destdir=ARCHS4.DIR)
+    con <- dbConnect(SQLite(),metadb)
+    dbListTables(con)
+    dbListFields(con,'gse')        
+    series.str <- paste0("('",paste(unique(series),collapse="','"),"')")
+    ##rs <- dbGetQuery(con,paste("SELECT gse,title FROM gse WHERE gse IN",series.str))
+    ww <- strsplit(keyword,split="\\|")[[1]]
+    gse <- c()
+    for(w in ww) {
+        keyword.str <- paste0("'",tolower(w),"')>0")
+        rs1 <- dbGetQuery(con,paste("SELECT gse,title FROM gse WHERE INSTR(LOWER(title),",
+                                    keyword.str))
+        rs2 <- dbGetQuery(con,paste("SELECT gse,summary FROM gse WHERE INSTR(LOWER(summary),",
+                                    keyword.str))
+        gse <- unique(c(gse,unlist(rs1$gse),unlist(rs2$gse)))
+    }
+    length(gse)
+    
+    if(!is.null(variables)) {
+        matrix_file = file.path(ARCHS4.DIR, "human_matrix.h5")
+        ##extracted_expression_file = "/tmp/example_expression_matrix.tsv"
+        file.exists(matrix_file)
+        ## Retrieve information from compressed data
+        annot0  = h5read(matrix_file, "meta/Sample_characteristics_ch1")
+        series0 = h5read(matrix_file, "meta/Sample_series_id")        
+        sel <- grep(variables, annot0)
+        head(annot0[sel])
+        sel <- sel[which(!duplicated(series0[sel]))]
+        gse3   <- series0[sel]
+        annot1 <- parseGeoAnnot(annot0[sel])
+        annot1 <- sapply(annot1, function(s) paste(names(s),collapse="|"))
+        names(annot1) <- gse3
+        length(gse3)
+        gse <- intersect(gse, gse3)
+    }
+
+    series.str <- paste0("('",paste(unique(gse),collapse="','"),"')")    
+    rt <- dbGetQuery(con,paste("SELECT gse,title,summary FROM gse WHERE gse IN ",series.str))
+    rt$variables <- annot1[rt$gse]
+    return(rt)
+}
+
+res <- geo.selectSeries("immune","surv")
+res <- geo.selectSeries("cancer|lymphom","surv")
+
+gse.series = c("GSE76514","GSE81475")
+genes = c('CD101','CD109','CD14','CD151','CD160','CD163','CD163L1','CD164','CD164L2','CD177')
+studies = c("prad_tcga","ov_tcga")
+
+pgx.getArchs4expression <- function(gse.series, genes=NULL, batch.correct=TRUE)
+{
+    ## Adapted from: https://amp.pharm.mssm.edu/archs4/help.html
+    ##
+    ##
+    ## R script to download selected samples
+    ## Copy code and run on a local machine to initiate download
+    ## Check for dependencies and install if missing
+
+    ## packages <- c("rhdf5", "preprocessCore", "sva")
+    ## if (length(setdiff(packages, rownames(installed.packages()))) > 0) {
+    ##     print("Install required packages")
+    ##     source("https://bioconductor.org/biocLite.R")
+    ##     biocLite("rhdf5")
+    ##     biocLite("preprocessCore")
+    ##     biocLite("sva")
+    ## }
+    library("rhdf5")
+    library("preprocessCore")
+    library("sva")
+    
+    matrix_file = file.path(ARCHS4.DIR, "tcga_matrix.h5")
+    matrix_file = file.path(ARCHS4.DIR, "mouse_matrix.h5")
+    matrix_file = file.path(ARCHS4.DIR, "human_matrix.h5")
+    ##extracted_expression_file = "/tmp/example_expression_matrix.tsv"
+    file.exists(matrix_file)
+    h5ls(matrix_file)[,1:2]
+    
+    ## Check if gene expression file was already downloaded, if not in current directory download file form repository
+    if(!file.exists(matrix_file)){
+        ##print("Downloading compressed gene expression matrix.")
+        ##url = "https://s3.amazonaws.com/mssm-seq-matrix/human_matrix.h5"
+        ##download.file(url, matrix_file, quiet = FALSE)
+        stop("pgx.getArchs4Data:: missing file = ",matrix_file)
+    } 
+    
+    ## Retrieve information from compressed data
+    samples0 = h5read(matrix_file, "meta/Sample_geo_accession")
+    tissue0  = h5read(matrix_file, "meta/Sample_source_name_ch1")
+    genes0   = h5read(matrix_file, "meta/genes")
+    series0  = h5read(matrix_file, "meta/Sample_series_id")
+    sampletitle0 = h5read(matrix_file, "meta/Sample_title")
+    
+    if(is.null(genes)) {
+        genes <- genes0
+    } else {
+        genes <- intersect(genes, genes0)
+    }
+    
+    ## Identify columns to be extracted
+    ##sample_locations = which(samples %in% samp)
+    sample_index = which(series0 %in% gse.series)
+    length(sample_index)
+    series = series0[sample_index]
+    samples = samples0[sample_index]
+    gene_index <- match(genes, genes0)
+    tissue <- tissue0[sample_index]
+    sample_title <- sampletitle0[sample_index]
+
+    ##annot = h5read(matrix_file, "meta/Sample_characteristics_ch1")
+    annot = h5read(matrix_file, "meta/Sample_characteristics_ch1",
+                   index = list(sample_index))
+    length(annot)
+    annot <- parseGeoAnnot(annot)    
+    names(annot) <- samples
+    
+    gse.info <- NULL
+    metadb <- file.path(ARCHS4.DIR,'GEOmetadb.sqlite')
+    if(file.exists(metadb)) {
+        require(GEOmetadb)        
+        ## Get titles from GEO experiments
+        ##if(!file.exists(metadb)) getSQLiteFile(destdir=ARCHS4.DIR)
+        con <- dbConnect(SQLite(),metadb)
+        dbListTables(con)
+        dbListFields(con,'gse')        
+        series.str <- paste0("('",paste(unique(series),collapse="','"),"')")
+        ##rs <- dbGetQuery(con,paste("SELECT gse,title FROM gse WHERE gse IN",series.str))
+        gse.info <- dbGetQuery(con,paste("SELECT gse,title,pubmed_id,summary FROM gse WHERE gse IN",series.str))
+        ## rs <- dbGetQuery(con,'SELECT ID,gse,title FROM gse')
+    }
+
+    ## extract gene expression from compressed data
+    expression = h5read(
+        matrix_file, "data/expression",
+        index = list(gene_index, sample_index)
+    )
+    H5close()
+    dim(expression)
+    rownames(expression) = genes
+    ##colnames(expression) = samples
+    colnames(expression) = paste0("[",series,"] ",samples)
+    
+    ## normalize samples and correct for differences in gene count distribution
+    expression = log2(expression+1)
+    ##expression = normalize.quantiles(expression)
+    expression = limma::normalizeQuantiles(expression)    
+    
+    ## correct batch effects in gene expression
+    batch.correct = TRUE
+    if(batch.correct && length(gse.series)>1 ) {
+        batchid = match(series, unique(series))
+        table(batchid)
+        suppressMessages(
+            expression <- ComBat(dat=expression, batch=batchid, par.prior=TRUE, prior.plots=FALSE)
+        )
+    }    
+    
+    res <- list()
+    res$expression <- expression
+    res$characteristics <- annot
+    res$tissue <- tissue
+    ##res$series <- series
+    res$series.info <- gse.info
+    ## res$samples <- samples
+    
+    return(res)
+}
+
+id = "GSE29943"
+pgx.getArchs4Dataset <- function(id, datadir = ARCHS4.DIR, a4 = NULL)
 {    
+    library(archs4)
+    if(is.null(a4)) a4 <- Archs4Repository(datadir=ARCHS4.DIR)  ## takes long time...
+    
     ##feature_type="gene";row_id="symbol"
     cc3 = c("Sample_title","Sample_source_name_ch1","Sample_characteristics_ch1")
     ngs <- my.as.DGEList(a4, id, sample_columns=cc3, feature_type="gene", row_id="symbol")

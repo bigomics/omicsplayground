@@ -26,8 +26,10 @@ FunctionalModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
     inputData <- env[["load"]][["inputData"]]
-    rowH = 760  ## row height of panel
-    tabH = 200  ## row height of panel    
+    fullH = 760
+    rowH = 660  ## row height of panel
+    tabH = 200  ## row height of panel
+    tabH = '70vh'  ## row height of panel    
     description = "<b>Functional analysis</b>. <br> Perform specialized functional analysis
 to understand biological functions including GO, KEGG, and drug connectivity mapping."
     output$description <- renderUI(HTML(description))
@@ -53,7 +55,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
 
     output$inputsUI <- renderUI({
         ui <- tagList(
-            tipify( actionLink(ns("fa_info"), "Info", icon = icon("info-circle") ),
+            tipify( actionLink(ns("fa_info"), "Youtube", icon = icon("youtube") ),
                    "Show more information about this module."),
             hr(), br(),             
             tipify( selectInput(ns("fa_contrast"),"Contrast:", choices=NULL),
@@ -322,7 +324,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     }
 
     KEGGIMG = paste0(tempfile(),".png")
-    output$kegg_graph <- renderImage({
+    kegg_graph.RENDER <- reactive({
 
         ngs <- inputData()
         ##NULL.IMG <- list(src=NULL, contentType = 'image/png')
@@ -356,7 +358,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         if(is.null(df)) return(NULL.IMG)
         
         sel.row=1
-        sel.row <- input$kegg_table_rows_selected
+        sel.row <- kegg_table$rows_selected()
         ##if(is.null(sel.row) || length(sel.row)==0) return(NULL)
         if(is.null(sel.row) || length(sel.row)==0) return(NULL.IMG)
         sel.row <- as.integer(sel.row)
@@ -406,16 +408,18 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         dbg("kegg_graph: copy",outfile,"to",KEGGIMG,"\n")
         unlink(KEGGIMG,force=TRUE)
         file.copy(outfile,KEGGIMG)
+        ## unlink(outfile,force=TRUE)
+        ## img <- readPNG(outfile)
         
         list(src = outfile,
              contentType = 'image/png',
              ##width = 1040*0.8, height = 800*0.9, ## actual size: 1040x800
              ##width = 900, height = 600, ## actual size: 1040x800
-             width = "100%", height = "100%", ## actual size: 1040x800         
-             alt = "pathview image")
-        
-    }, deleteFile = TRUE)        
-
+             width = "100%", height = "100%", ## actual size: 1040x800
+             ##width = img[2], height = img[1], ## actual size: 1040x800         
+             alt = "pathview image")        
+        ##    }, deleteFile = TRUE)
+    })        
 
     ##output$kegg_table <- renderDataTable({
     kegg_table.RENDER <- reactive({
@@ -443,6 +447,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                       class = 'compact cell-border stripe hover',                  
                       extensions = c('Scroller'),
                       selection=list(mode='single', target='row', selected=1),
+                      fillContainer = TRUE,
                       options=list(
                           dom = 'lfrtip', 
                           scrollX = TRUE, ##scrollY = TRUE,
@@ -458,7 +463,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                                 backgroundPosition = 'center') 
     })
 
-    kegg_actmap.RENDER <- reactive({
+    kegg_actmap.RENDER %<a-% reactive({
         require(igraph)
         ngs <- inputData()
         req(ngs)
@@ -528,61 +533,78 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     })    
 
     kegg_info1 = "<strong>KEGG pathways</strong> are a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. In the pathway map, genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Each pathway is scored for the selected contrast profile and reported in the table below. "
-    kegg_buttons1 = plotModuleButtons(
-        "kegg_graph", ns=ns,
-        text=kegg_info1, just.info=TRUE, 
-        download.fmt="png", ##no.download=TRUE,
-        title = "KEGG pathway map", label="a"
-    )
-    output$kegg_graph_png  <- downloadHandler(
-        filename = "plot.png",
-        content = function(file) {
-            file.copy(KEGGIMG,file)
-        }
-    )
 
-    kegg_actmap.opts = tagList()
-    kegg_actmap_module <- plotModule(
-        id="kegg_actmap", func=kegg_actmap.RENDER, ns=ns, 
-        title = "Activation matrix", label="c",
-        info.text = "The <strong>KEGG activation matrix</strong> visualizes the activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
-        ##options = kegg_actmap.opts,
-        pdf.width=10, pdf.height=10, res=72
+    ## kegg_buttons1 = plotModuleButtons(
+    ##     "kegg_graph", ns=ns,
+    ##     text = kegg_info1, just.info=TRUE, 
+    ##     download.fmt="png", ##no.download=TRUE,
+    ##     title = "KEGG pathway map", label="a"
+    ## )
+    ## output$kegg_graph_png  <- downloadHandler(
+    ##     filename = "plot.png",
+    ##     content = function(file) {
+    ##         file.copy(KEGGIMG,file)
+    ##     }
+    ## )
+    
+    callModule(
+        plotModule,
+        id = "kegg_graph", label="a",
+        func = kegg_graph.RENDER,
+        plotlib = "image",
+        ##renderFunc = "renderImage", outputFunc = "imageOutput",
+        download.fmt = "png", just.info=TRUE,
+        info.text = kegg_info1, info.width="350px",
+        height = c(0.53*rowH,750), width = c("100%",1200),
+        title = "Kegg pathway map"
     )
-    output <- attachModule(output, kegg_actmap_module)
 
     kegg_table_info = "<strong>Enrichment table.</strong> The table is interactive; enabling user to sort on different variables and select a pathway by clicking on the row in the table. The scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap."
     
-    kegg_table_module <- tableModule(
+    kegg_table <- callModule(
+        tableModule,
         id = "kegg_table", label="b",
-        func = kegg_table.RENDER, ns=ns, 
+        func = kegg_table.RENDER, 
         info.text = kegg_table_info, 
-        info.width="350px",
-        title = "Enrichment table"
+        info.width = "350px",
+        title = "Enrichment table",
+        height = c(270,700)
     )
-    output <- attachModule(output, kegg_table_module)
 
+    kegg_actmap.opts = tagList()
+    callModule(
+        plotModule,
+        id = "kegg_actmap",
+        func  = kegg_actmap.RENDER,
+        func2 = kegg_actmap.RENDER, 
+        title = "Activation matrix", label="c",
+        info.text = "The <strong>KEGG activation matrix</strong> visualizes the activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
+        ##options = kegg_actmap.opts,
+        pdf.width=10, pdf.height=10,
+        height = c(rowH,750), res=72
+    )
+    
+    
     ##----------------------------------------------------------------------
 
     kegg_analysis_caption = "<b>KEGG pathway analysis.</b> KEGG pathways are a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. <b>(a)</b> Colored KEGG pathway map. Genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. <b>(b)</b> Table reporting (Fisher's exact) enrichment score for each pathway for the selected contrast profile. <b>(c)</b> Activation matrix visualizing activation levels of pathways across multiple contrast profiles." 
 
     output$kegg_analysis_UI <- renderUI({
         fillCol(
-            height = rowH,
+            height = fullH,
             flex = c(1,NA),
             fillRow(
-                flex = c(1.3,0.04,1),
-                height = 650,
+                flex = c(1.3,0.1,1),
+                height = rowH,
                 fillCol(
-                    flex = c(NA,1.8,0.06,1),
-                    height = 600,
-                    kegg_buttons1,
-                    imageOutput(ns("kegg_graph"), height="100%"),
+                    flex = c(1.8,0.1,1),
+                    height = 0.9*rowH,
+                    plotWidget(ns("kegg_graph")),
                     br(),
-                    moduleWidget(kegg_table_module, outputFunc="dataTableOutput", ns=ns)
+                    tableWidget(ns("kegg_table"))
                 ),
                 br(),  ## horizontal space
-                moduleWidget(kegg_actmap_module, ns=ns)
+                plotWidget(ns("kegg_actmap"))
             ),
             div(HTML(kegg_analysis_caption), class="caption")
         )
@@ -752,6 +774,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                       class = 'compact cell-border stripe hover',                  
                       extensions = c('Scroller'),
                       selection=list(mode='single', target='row', selected=1),
+                      fillContainer = TRUE,
                       options=list(
                           dom = 'lfrtip', 
                           scrollX = TRUE, ##scrollY = TRUE,
@@ -767,7 +790,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                                 backgroundPosition = 'center') 
     })
 
-    GO_actmap.RENDER <- reactive({
+    GO_actmap.RENDER %<a-% reactive({
         require(igraph)
         ngs <- inputData()
         req(ngs)
@@ -838,51 +861,59 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         tipify( checkboxInput(ns("GO_colorclusters"), "Color clusters", TRUE),
                "Highlight clusters with different colors.")
     )
-    GO_network_module <- plotModule(
-        "GO_network", ns=ns,
-        func= GO_network.RENDER, plotlib="visnetwork",
+
+    callModule(
+        plotModule,
+        id = "GO_network", 
+        func = GO_network.RENDER,
+        plotlib = "visnetwork",
         title = "Gene Ontology graph", label="a",
         info.text = GO_info1,
         download.fmt = c("pdf","png"), ## no.download=TRUE,
         options = GO_network.opts,
-        pdf.width=10, pdf.height=10, res=80
+        pdf.width=10, pdf.height=10,
+        height = 0.6*rowH, res=72
     )
-    output <- attachModule(output, GO_network_module)
+    ##output <- attachModule(output, GO_network_module)
 
     GO_actmap.opts = tagList()
-    GO_actmap_module <- plotModule(
-        "GO_actmap", func=GO_actmap.RENDER, ns=ns,
+    callModule(
+        plotModule,
+        id = "GO_actmap",
+        func = GO_actmap.RENDER,
+        func2 = GO_actmap.RENDER, 
         title = "Activation matrix", label="c",
         info.text = "The Gene Ontology (GO) activation matrix visualizes the activation of GO terms across conditions. From this figure, you can easily detect GO terms that are consistently up/down across conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         options = GO_actmap.opts,
-        pdf.width=10, pdf.height=10, res=72
+        pdf.width=10, pdf.height=10,
+        height = c(rowH,750), res=72
     )
-    output <- attachModule(output, GO_actmap_module)
-
-    GO_table_module <- tableModule(
+    
+    GO_table <- callModule(
+        tableModule,
         id = "GO_table", label="b",
-        func = GO_table.RENDER, ns=ns, 
+        func = GO_table.RENDER,
         info.text="<strong>GO score table.</strong> The scoring of a GO term is performed by considering the cumulative score of all terms from that term to the root node. That means that GO terms that are supported by higher level terms levels are preferentially scored.", 
-        title = "GO score table"
+        title = "GO score table",
+        height = c(270,700)        
     )
-    output <- attachModule(output, GO_table_module)
 
     GO_analysis_caption = "<b>Gene Ontology (GO) analysis.</b> GO describes our knowledge of the biological domain of genes with respect to three aspects: molecular function, cellular component and biological process. <b>(a)</b> Hierarchical graph representing the enrichment of the GO terms as a tree structure. <b>(b)</b> GO scoring table. The score of a GO term is the cumulative score of all higher order terms. <b>(c)</b> Activation matrix visualizing the enrichment of GO terms across multiple contrast profiles."
     
     output$GO_analysis_UI <- renderUI({
         fillCol(
             flex=c(1,NA),
-            height = rowH,
+            height = fullH,
             fillRow(
-                height = 650,
+                height = rowH,
                 flex = c(1.2,1),
                 fillCol(
                     flex = c(2,1),
-                    height = 600,
-                    moduleWidget(GO_network_module, outputFunc="visNetworkOutput", ns=ns),
-                    moduleWidget(GO_table_module, outputFunc="dataTableOutput", ns=ns)
+                    height = 0.9*rowH,
+                    plotWidget(ns("GO_network")),
+                    tableWidget(ns("GO_table"))
                 ),
-                moduleWidget(GO_actmap_module, ns=ns)
+                plotWidget(ns("GO_actmap"))
             ),
             div(HTML(GO_analysis_caption),class="caption")
         )
@@ -945,7 +976,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     })
 
 
-    dsea_enplots.RENDER <- reactive({
+    dsea_enplots.RENDER %<a-% reactive({
 
         ngs <- inputData()
         if(is.null(ngs$drugs)) return(NULL)
@@ -988,7 +1019,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         
     })    
 
-    dsea_moaplot.RENDER <- reactive({
+    dsea_moaplot.RENDER %<a-% reactive({
 
         ngs <- inputData()
         req(ngs, input$fa_contrast, input$dsea_monocombo)
@@ -1020,10 +1051,6 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         moa.neg <- strsplit(as.character(res$moa[j2]), split="\\|")
         moa <- strsplit(as.character(res$moa), split="\\|")
         moa.lengths <- sapply(moa,length)
-
-        dbg("[dsea_moaplot.RENDER] 5 : dim(res)=", dim(res))
-        dbg("[dsea_moaplot.RENDER] 5 : length(moa)=", length(moa))
-        dbg("[dsea_moaplot.RENDER] 5 : moa.lengths=", moa.lengths)        
 
         fx <- mapply(function(x,n) rep(x,n), res$NES, moa.lengths)
         moa.avg <- sort(tapply( unlist(fx), unlist(moa), mean))
@@ -1092,6 +1119,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                       class = 'compact cell-border stripe hover',                  
                       extensions = c('Scroller'),
                       selection=list(mode='single', target='row', selected=1),
+                      fillContainer = TRUE,
                       options=list(
                           ##dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
                           dom = 'lfrtip', 
@@ -1106,7 +1134,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                                 backgroundPosition = 'center') 
     })
 
-    dsea_actmap.RENDER <- reactive({
+    dsea_actmap.RENDER %<a-% reactive({
         require(igraph)
         ngs <- inputData()
         req(ngs, input$fa_contrast, input$dsea_monocombo)
@@ -1173,15 +1201,18 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         tipify( radioButtons(ns('dsea_monocombo'),"Analysis type:",c("mono","combo"),inline=TRUE),
                "Select type of drug enrichment analysis: mono or combo (if available). ")
     )
-    dsea_enplots_module <- plotModule(
-        "dsea_enplots", func=dsea_enplots.RENDER, ns=ns,
+    callModule(
+        plotModule,
+        id = "dsea_enplots",
+        func = dsea_enplots.RENDER,
+        func2 = dsea_enplots.RENDER,         
         title = "Drug profile enrichment", label="a",
         info.text = "The <strong>Drug Connectivity Map</strong> correlates your signature with more than 5000 known drug profiles from the L1000 database, and shows the top N=10 similar and opposite profiles by running the GSEA algorithm on the contrast-drug profile correlation space.",
         options = dsea_enplots.opts,
-        pdf.width=11, pdf.height=7, res=72
+        pdf.width=11, pdf.height=7,
+        height = 0.5*rowH, res=72
     )
-    output <- attachModule(output, dsea_enplots_module)
-    outputOptions(output, "dsea_enplots", suspendWhenHidden=FALSE) ## important!!!
+    ##outputOptions(output, "dsea_enplots", suspendWhenHidden=FALSE) ## important!!!
 
     
     ##---------- DSEA Activation map plotting module
@@ -1189,36 +1220,41 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         tipify( radioButtons(ns('dsea_moatype'),'Plot type:',c("drug class","target gene"),inline=TRUE),
                "Select plot type of MOA analysis: by class description or by target gene.")
     )
-    dsea_moaplot_module <- plotModule(
-        "dsea_moaplot", func=dsea_moaplot.RENDER, ns=ns,
+    callModule(
+        plotModule,
+        id = "dsea_moaplot",
+        func = dsea_moaplot.RENDER,
+        func2 = dsea_moaplot.RENDER, 
         title = "Mechanism of action", label="c",
         info.text = "This plot visualizes the <strong>mechanism of action</strong> (MOA) across the enriched drug profiles. On the vertical axis, the number of drugs with the same MOA are plotted. You can switch to visualize between MOA or target gene.",
         options = dsea_moaplot.opts,
-        pdf.width=4, pdf.height=6, res=72
+        pdf.width=4, pdf.height=6,
+        height = 0.5*rowH, res=72
     )
-    ##output$dsea_moaplot     <- dsea_moaplot_module$render
-    ##output$dsea_moaplot_pdf <- dsea_moaplot_module$pdf
-    output <- attachModule(output, dsea_moaplot_module)
 
     ##-------- Activation map plotting module
     dsea_actmap.opts = tagList()
-    dsea_actmap_module <- plotModule(
-        "dsea_actmap", dsea_actmap.RENDER, ns=ns,
+    callModule(
+        plotModule,
+        id = "dsea_actmap",
+        func = dsea_actmap.RENDER,
+        func2 = dsea_actmap.RENDER, 
         title = "Activation matrix", label="d",
         info.text = "The <strong>Activation Matrix</strong> visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         options = dsea_actmap.opts,
-        pdf.width=6, pdf.height=10, res=72
+        pdf.width=6, pdf.height=10,
+        height = c(rowH,750), res=72
     )
-    output <- attachModule(output, dsea_actmap_module)
 
     ##--------buttons for table
-    dsea_table_module <- tableModule(
+    dsea_table <- callModule(
+        tableModule,
         id = "dsea_table", label="b",
-        func = dsea_table.RENDER, ns=ns, 
+        func = dsea_table.RENDER, 
         info.text="Drug profile enrichment table. Enrichment is calculated by correlating your signature with more than 5000 known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.", 
-        title = "Profile enrichment table"
+        title = "Profile enrichment table",
+        height = c(270,700)
     )
-    output <- attachModule(output, dsea_table_module)
 
     observe({
         ngs <- inputData()
@@ -1239,27 +1275,27 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     output$DSEA_analysis_UI <- renderUI({
         fillCol(
             flex = c(1,NA),
-            height = rowH,
+            height = fullH,
             fillRow(
-                height = 650,
+                height = rowH,
                 flex = c(2.6,1), 
                 fillCol(
-                    flex = c(1.3,0.15,1),
-                    height = 650,
+                    flex = c(1.2,0.15,1),
+                    height = rowH,
                     fillRow(
                         flex=c(2.2,1),
-                        moduleWidget(dsea_enplots_module, ns=ns),
-                        moduleWidget(dsea_moaplot_module, ns=ns)
+                        plotWidget(ns("dsea_enplots")),
+                        plotWidget(ns("dsea_moaplot"))
                     ),
                     br(),  ## vertical space
-                    moduleWidget(dsea_table_module, outputFunc="dataTableOutput", ns=ns)        
+                    tableWidget(ns("dsea_table"))        
                 ),
-                moduleWidget(dsea_actmap_module, ns=ns)        
+                plotWidget(ns("dsea_actmap"))
             ),
             div(HTML(dsea_analysis_caption),class="caption")
         )
     })
-
+    outputOptions(output, "DSEA_analysis_UI", suspendWhenHidden=FALSE) ## important!!!
 
     ##---------------------------------------------------------------
     ##------------- Functions for WordCloud ------------------------
@@ -1537,7 +1573,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         
     })
 
-    enrich_gseaplots.RENDER <- reactive({
+    enrich_gseaplots.RENDER %<a-% reactive({
 
         
         dbg("enrich_gseaplots.RENDER: reacted")
@@ -1546,7 +1582,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         topFreq <- enrich_getCurrentWordEnrichment()
 
         req(ngs, all.res, topFreq)
-        req(input$wordcloud_enrichmentTable_rows_selected)
+        ##req(input$wordcloud_enrichmentTable_rows_selected)
 
         dbg("enrich_gseaplots.RENDER: 1")
         
@@ -1563,7 +1599,8 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         
         ##keyword <- input$enrich_wordcloud_clicked_word ## wordcloud2
         ##keyword <- input$d3word ## rWordcloud
-        sel.row <- input$wordcloud_enrichmentTable_rows_selected
+        sel.row <- wordcloud_enrichmentTable$rows_selected()
+        req(sel.row)
         keyword <- topFreq$word[sel.row]
         
         if( length(keyword)==0 || keyword[1] %in% c(NA,"") ) keyword <- "cell.cycle"
@@ -1640,16 +1677,18 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         
         numeric.cols <- which(sapply(df, is.numeric))
         numeric.cols
-        tbl <- DT::datatable( df, rownames=FALSE,
-                             class = 'compact cell-border stripe hover',                  
-                             extensions = c('Scroller'),
-                             selection=list(mode='single', target='row', selected=1),
-                             options=list(
-                                 dom = 'lfrtip', 
-                                 scrollX = TRUE, scrollY = tabH,
-                                 scroller=TRUE, deferRender=TRUE
-                             )  ## end of options.list 
-                             ) %>%
+        tbl <- DT::datatable(
+                       df, rownames=FALSE,
+                       class = 'compact cell-border stripe hover',                  
+                       extensions = c('Scroller'),
+                       selection = list(mode='single', target='row', selected=1),
+                       fillContainer = TRUE,
+                       options=list(
+                           dom = 'lfrtip', 
+                           scrollX = TRUE, scrollY = tabH,
+                           scroller=TRUE, deferRender=TRUE
+                       )  ## end of options.list 
+                   ) %>%
             formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>% 
             DT::formatStyle( "NES",
@@ -1668,7 +1707,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         df <- enrich_getCurrentWordEnrichment()
 
         sel.row=1
-        sel.row <- input$wordcloud_enrichmentTable_rows_selected
+        sel.row <- wordcloud_enrichmentTable$rows_selected()
         req(df, sel.row)
         if(is.null(sel.row)) return(NULL)
         
@@ -1690,7 +1729,8 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         tbl <- DT::datatable( df, rownames=FALSE, escape = c(-1,-2),
                              class = 'compact cell-border stripe hover',                  
                              extensions = c('Scroller'),
-                             selection=list(mode='single', target='row', selected=1),
+                             selection = list(mode='single', target='row', selected=1),
+                             fillContainer = TRUE,
                              options=list(
                                  dom = 'lfrtip', 
                                  scrollX = TRUE, scrollY = tabH,
@@ -1707,7 +1747,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         return(tbl)
     })
 
-    wordcloud_actmap.RENDER <- reactive({
+    wordcloud_actmap.RENDER %<a-% reactive({
 
         cat("<wordcloud_actmap> called\n")
         
@@ -1765,21 +1805,27 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     require(wordcloud2)
     require(rWordCloud)
 
-    enrich_wordtsne_module <- plotModule(
-        id="enrich_wordtsne", label="c", ns=ns,
+    enrich_wordtsne_info = "<strong>Word t-SNE.</strong> T-SNE of keywords that were found in the title/description of gene sets. Keywords that are often found together in title/descriptions are placed close together in the t-SNE. For each keyword we computed enrichment using GSEA on the mean (absolute) enrichment profiles (averaged over all contrasts). Statistically significant gene sets (q<0.05) are colored in red. The sizes of the nodes are proportional to the normalized enrichment score (NES) of the keyword."
+
+    enrich_wordtsne_options = tagList(
+        tipify(radioButtons(ns("enrich_wordtsne_algo"),"Clustering algorithm:",
+                            choices=c("tsne","umap"),inline=TRUE),
+               "Choose a clustering algorithm: t-SNE or UMAP.")
+    )
+    
+    callModule(
+        plotModule,
+        id = "enrich_wordtsne", label="c", 
         ##plotlib="ggplot", func=enrich_wordtsne.RENDER,
         plotlib="plotly", func=enrich_wordtsne.PLOTLY, 
-        info.text = "<strong>Word t-SNE.</strong> T-SNE of keywords that were found in the title/description of gene sets. Keywords that are often found together in title/descriptions are placed close together in the t-SNE. For each keyword we computed enrichment using GSEA on the mean (absolute) enrichment profiles (averaged over all contrasts). Statistically significant gene sets (q<0.05) are colored in red. The sizes of the nodes are proportional to the normalized enrichment score (NES) of the keyword.",
-        options = tagList(
-            tipify(radioButtons(ns("enrich_wordtsne_algo"),"Clustering algorithm:",
-                                choices=c("tsne","umap"),inline=TRUE),
-                   "Choose a clustering algorithm: t-SNE or UMAP.")
-        ),
-        pdf.width=8, pdf.height=8, res=72, pdf.pointsize=13,
+        info.text = enrich_wordtsne_info,
+        options = enrich_wordtsne_options,
+        pdf.width=8, pdf.height=8, pdf.pointsize=13,
+        height = 0.5*rowH, res=72,
         ##datacsv = enrich_getWordFreq,
         title = "Word t-SNE"
     )
-    output <- attachModule(output, enrich_wordtsne_module)
+
 
     enrich_wordcloud_opts = tagList(
         tipify(selectInput(ns("enrich_wordcloud_exclude"),"Exclude words:", choices=NULL, multiple=TRUE),
@@ -1789,76 +1835,83 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                "Choose a set of colors.", placement="top", options = list(container = "body"))
     )
 
-    enrich_wordcloud_module <- plotModule(
-        id="enrich_wordcloud", label="b",
-        func = enrich_wordcloud.RENDER, ns=ns,
+    callModule(
+        plotModule,
+        id = "enrich_wordcloud", label="b",
+        func = enrich_wordcloud.RENDER, 
+        func2 = enrich_wordcloud.RENDER, 
         plotlib="base", renderFunc="renderPlot", outputFunc="plotOutput",
         ##plotlib="htmlwidget", renderFunc="renderWordcloud2", outputFunc="wordcloud2Output",
         ##plotlib="htmlwidget", renderFunc="renderd3Cloud", outputFunc="d3CloudOutput",
         ##download.fmt = NULL,
         info.text = "<strong>Word cloud.</strong> Word cloud of the most enriched keywords for the data set. Select a keyword in the 'Enrichment table'. In the plot settings, users can exclude certain words from the figure, or choose the color palette. The sizes of the words are relative to the normalized enrichment score (NES) from the GSEA computation. Keyword enrichment is computed by running GSEA on the mean (squared) enrichment profile (averaged over all contrasts). For each keyword, we defined the 'keyword set' as the collection of genesets that contain that keyword in the title/description.",
         options = enrich_wordcloud_opts,
-        pdf.width=6, pdf.height=6, res=72,
+        pdf.width=6, pdf.height=6, 
+        height = 0.5*rowH, res=72,
         title = "Word cloud"
     )
-    output <- attachModule(output, enrich_wordcloud_module)
 
     enrich_gseaplots_info = "<strong>Keyword enrichment analysis.</strong> Computes enrichment of a selected keyword across all contrasts. Select a keyword by clicking a word in the 'Enrichment table'.
 
 <br><br>Keyword enrichment is computed by running GSEA on the enrichment score profile for all contrasts. We defined the test set as the collection of genesets that contain the keyword in the title/description. Black vertical bars indicate the position of gene sets that contains the *keyword* in the ranked list of enrichment scores. The curve in green corresponds to the 'running statistic' of the keyword enrichment score. The more the green ES curve is shifted to the upper left of the graph, the more the keyword is enriched in the first group. Conversely, a shift of the green ES curve to the lower right, corresponds to keyword enrichment in the second group."
 
     ##myTextInput('enrich_gseaplots_keywords','Keyword:',"cell cycle"),
-
     enrich_gseaplots_opts = tagList(
         tipify( textInput(ns('enrich_gseaplots_keywords'),'Keyword:',"cell cycle"),
                "Paste a keyword such as 'apoptosis', 'replication' or 'cell cycle'.",
                placement="top", options = list(container = "body"))
     )
-
     ## enrich_gseaplots_opts = textInput('enrich_gseaplots_keywords','Keyword:',"cell cycle")
-
-    enrich_gseaplots_module <- plotModule(
-        id="enrich_gseaplots", label="a", ns=ns,
-        plotlib="base", func=enrich_gseaplots.RENDER,
+    callModule(
+        plotModule,
+        id = "enrich_gseaplots", label="a", 
+        plotlib = "base",
+        func = enrich_gseaplots.RENDER,
+        func2 = enrich_gseaplots.RENDER,
         info.text = enrich_gseaplots_info,
         ## options = enrich_gseaplots_opts,
-        pdf.width=6, pdf.height=6, res=90,
+        pdf.width=6, pdf.height=6,
+        height = 0.5*rowH, res=90,
         title = "Enrichment plots"
     )
-    output <- attachModule(output, enrich_gseaplots_module)
 
     ##--------buttons for enrichment table
 
     wordcloud_enrichmentTable_info =
         "<b>Keyword enrichment table.</b> This table shows the keyword enrichment statistics for the selected contrast. The enrichment is calculated using GSEA for occurance of the keywork in the ordered list of gene set descriptions."
     
-    wordcloud_enrichmentTable_module <- tableModule(
+    wordcloud_enrichmentTable <- callModule(
+        tableModule,
         id = "wordcloud_enrichmentTable", label="e",
-        func = wordcloud_enrichmentTable.RENDER, ns=ns, 
+        func = wordcloud_enrichmentTable.RENDER, 
         info.text = wordcloud_enrichmentTable_info,
-        title = "Enrichment table"
+        title = "Enrichment table",
+        height = c(270,700)
     )
-    output <- attachModule(output, wordcloud_enrichmentTable_module)
 
     ##--------buttons for leading edge table
-    wordcloud_leadingEdgeTable_module <- tableModule(
+    wordcloud_leadingEdgeTable <- callModule(
+        tableModule,
         id = "wordcloud_leadingEdgeTable", label="f",
-        func = wordcloud_leadingEdgeTable.RENDER, ns=ns, 
+        func = wordcloud_leadingEdgeTable.RENDER, 
         info.text="Keyword leading edge table.", 
-        title = "Leading-edge table"
+        title = "Leading-edge table",
+        height = c(270,700)
     )
-    output <- attachModule(output, wordcloud_leadingEdgeTable_module)
 
     ##-------- Activation map plotting module
     wordcloud_actmap.opts = tagList()
-    wordcloud_actmap_module <- plotModule(
-        id="wordcloud_actmap", wordcloud_actmap.RENDER, ns=ns,
+    callModule(
+        plotModule,
+        id="wordcloud_actmap",
+        func = wordcloud_actmap.RENDER,
+        func2 = wordcloud_actmap.RENDER,
         title = "Activation matrix", label="d",
         info.text = "The <strong>Activation Matrix</strong> visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         options = wordcloud_actmap.opts,
-        pdf.width=6, pdf.height=10, res=72
+        pdf.width=6, pdf.height=10,
+        height = c(rowH,750), res=72
     )
-    output <- attachModule(output, wordcloud_actmap_module)
 
     ##---------------------------------------------------------------
     ##-------------- UI Layout for WordCloud ------------------------
@@ -1868,32 +1921,32 @@ to understand biological functions including GO, KEGG, and drug connectivity map
 
     output$wordcloud_UI <- renderUI({
         fillCol(
-            height = rowH,
+            height = fullH,
             flex = c(1,NA),
             fillRow(
-                height = 650,
+                height = rowH,
                 flex = c(3.6,1),
                 fillCol(
-                    flex=c(1.3,0.15,1),
-                    height = 650,
+                    flex=c(1.2,0.1,1),
+                    height = rowH,
                     fillRow(
                         flex = c(1.2,0.05,1,0.05,1),
-                        moduleWidget(enrich_gseaplots_module, ns=ns),
+                        plotWidget(ns("enrich_gseaplots")),
                         br(),
-                        moduleWidget(enrich_wordcloud_module, ns=ns),
+                        plotWidget(ns("enrich_wordcloud")),
                         br(),
                         ##moduleWidget(enrich_wordtsne_module), 
-                        moduleWidget(enrich_wordtsne_module, outputFunc="plotlyOutput", ns=ns)
+                        plotWidget(ns("enrich_wordtsne"))
                     ),
                     br(),
                     fillRow(
                         flex=c(1,0.08,1),
-                        moduleWidget(wordcloud_enrichmentTable_module, outputFunc="dataTableOutput", ns=ns),
+                        tableWidget(ns("wordcloud_enrichmentTable")),
                         br(),
-                        moduleWidget(wordcloud_leadingEdgeTable_module, outputFunc="dataTableOutput", ns=ns)
+                        tableWidget(ns("wordcloud_leadingEdgeTable"))
                     )
                 ),
-                moduleWidget(wordcloud_actmap_module, ns=ns)
+                plotWidget(ns("wordcloud_actmap"))
             ),
             div(HTML(wordcloud_caption),class="caption")
         )
@@ -2023,7 +2076,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
 
     output$fireplot_UI <- renderUI({
         fillRow(
-            height = rowH,
+            height = fullH,
             flex = c(2,1),
             fillCol(
                 flex = c(NA,1), 

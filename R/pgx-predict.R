@@ -31,13 +31,14 @@ if(0) {
 ##rho.min=0.5;nmax=100;nsize=20
 
 ##X=topX
-PCOR.FAST=c("cor","pcor","pcor.shrink", "huge","FastGGM","SILGGM")
-PCOR.METHODS=c("cor","pcor","pcor.shrink", "QUIC", "glasso", "huge",
+PCOR.FAST = c("cor","pcor","pcor.shrink", "SILGGM","FastGGM")
+PCOR.METHODS = c("cor","pcor","pcor.shrink", "QUIC", "glasso", "huge",
                ## "clime", "BigQuic", 
                "fastclime", "FastGGM", "SILGGM")
-method=PCOR.FAST
-##gene="NLRC5";X=ngs$X;nmax=1001
 
+gene="CD4";X=ngs$X;nmax=200
+method=PCOR.FAST;nmax=100;fast=TRUE
+method=PCOR.METHODS
 pgx.computePartialCorrelationAroundGene <-
     function(X, gene, method=PCOR.METHODS, nmax=100, fast=FALSE)
 {
@@ -77,6 +78,8 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
         method <- intersect(method, PCOR.FAST)
         method
     }
+    method <- unique(c("cor", method))  ## always cor
+    method
     
     timings <- list()
     rho <- list()
@@ -107,24 +110,18 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
 
     if("huge" %in% method) {
         require(huge)
-        timings[["huge.tiger"]] <- system.time(
-            ##out <- huge(tX)
-            out1 <- huge(tX, method="tiger")
-        )
         timings[["huge.glasso"]] <- system.time(
             ##out <- huge(tX)
-            out2 <- huge(tX, method="glasso")
+            ##out <- huge(tX, method="mb") ## no icov!
+            out <- huge(tX, method="glasso")
         )
         ##res <- huge.select(out, criterion="ric")
         ##res <- huge.select(out, criterion="ebic")
         ##which.opt <- min(which(res$lambda <= res$opt.lambda))
         ##which.opt
-        c1 <- -out1$icov[[length(out1$icov)]]
-        c2 <- -out2$icov[[length(out2$icov)]]
-        diag(c1) <- -diag(c1)
+        c2 <- -out$icov[[length(out$icov)]]
         diag(c2) <- -diag(c2) 
-        rho[["huge.tiger"]]  <- cov2cor(c1)
-        rho[["huge.glasso"]] <- cov2cor(c2)
+        rho[["huge"]] <- cov2cor(c2)
     }
 
     if("FastGGM" %in% method) {
@@ -221,30 +218,44 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
     timings
     names(rho)    
     lapply(rho,dim)
-    flat.rho <- sapply(rho[which(names(rho)!="cor")], as.vector)
-    head(flat.rho)
-    nx <- ncol(tX)
-    meta.pcor <- matrix(apply(flat.rho,1,mean,na.rm=TRUE),nx,nx)    
-    rownames(meta.pcor)=colnames(meta.pcor)=colnames(tX)    
-
+    
+    ## compute average partical correlation (over all methods)
+    nother <- length(setdiff(names(rho),c("cor","rho")))
+    meta.pcor <- NULL
+    if(nother>0) {
+        flat.rho  <- as.vector(rho[["cor"]])
+        flat.prho <- sapply(rho[which(names(rho)!="cor")], as.vector)        
+        jj <- which(abs(flat.prho) > abs(flat.rho)) ## not reliable
+        flat.prho[jj] <- NA    
+        head(flat.prho)
+        head(flat.rho)
+        nx <- ncol(tX)
+        meta.pcor <- matrix(apply(flat.prho,1,mean,na.rm=TRUE),nx,nx)    
+        rownames(meta.pcor)=colnames(meta.pcor)=colnames(tX)    
+    }
+    
     timings <- do.call(rbind, timings)
-    res <- list(meta.pcor=meta.pcor, rho=rho, timings=timings)
+    res <- list(rho=rho, meta.pcor=meta.pcor, timings=timings)
     if("cor" %in% names(rho)) res$cor <- rho[["cor"]]
     names(res)
     return(res)
 }
 
+##rho.min=0.7;nsize=20;main="";what="graph";edge.width=5;layout="fr"
+
 pgx.plotPartialCorrelationAroundGene <-
-    function(res, gene, rho.min=0.7, nsize=20, main="",
-             what=c("cor","pcor","graph"), layout="fr")
+    function(res, gene, rho.min=0.8, nsize=20, main="",
+             what=c("cor","pcor","graph"),
+             edge.width=10, layout="fr")
 {    
+
     rho <- res$rho    
     j <- which(colnames(res$rho[[1]]) %in% gene)
     j
     rho2 <- lapply(res$rho, function(x) x[j,])
     M <- t(as.matrix(do.call(rbind, rho2)))
     M[is.infinite(M) | is.nan(M)] <- NA
-    M <- M[order(-rowMeans(M**2,na.rm=TRUE)),]
+    M <- M[order(-rowMeans(M**2,na.rm=TRUE)),,drop=FALSE]
     ##M <- M[order(-rowMeans(apply(M,2,rank))),] 
     head(M)
 
@@ -283,25 +294,39 @@ pgx.plotPartialCorrelationAroundGene <-
         ##------------------------------------------------------------
         top20 <- head(unique(c(gene, rownames(M))), nsize)
         R <- res$rho[["cor"]][top20,top20]  ## marginal correlation
-        P <- res$meta.pcor[top20,top20]
         gr1 <- graph_from_adjacency_matrix(
             abs(R), mode="undirected", diag=FALSE,  weighted=TRUE)
-        ##gr2 <- graph_from_adjacency_matrix(
-        ##    P, mode="undirected", diag=FALSE,  weighted=TRUE)
         ee <- get.edges(gr1, E(gr1))
-        E(gr1)$pcor <- P[ee]
         E(gr1)$rho <- R[ee]
         V(gr1)$name
-        
+
+        has.pcor <- !is.null(res$meta.pcor)
+        P <- NULL
+        has.pcor
+        if(has.pcor) {
+            P <- res$meta.pcor[top20,top20]
+            P[is.na(P)] <- 0
+            P[is.nan(P)] <- 0
+            E(gr1)$pcor <- P[ee]
+        }
         if(is.null(rho.min)) {
             rho.min <- rev(head(sort(R[gene,],decreasing=TRUE),4))[1]
             rho.min
         }
 
         ## calculate layout
-        gr2 <- subgraph.edges(gr1, which(abs(E(gr1)$rho) >= rho.min))           
+        gr2 <- subgraph.edges(gr1, which( abs(E(gr1)$rho) >= rho.min),
+                              delete.vertices = FALSE )           
+        subgraphs <- decompose.graph(gr2)
+        k <- which(sapply(sapply(subgraphs, function(g) V(g)$name),function(vv) gene %in% vv))
+        gr2 <- subgraphs[[k]]
+                
         V(gr2)$name
-        E(gr2)$width <- 10*abs(E(gr2)$rho)
+        E(gr2)$width <- edge.width * 1.0
+        if(has.pcor) {
+            pw <- abs(E(gr2)$pcor) / mean(abs(E(gr2)$pcor),na.rm=TRUE)
+            E(gr2)$width <- edge.width * pw
+        }
         ly = switch( layout,
                     "fr" = layout_with_fr(gr2),
                     "kk" = layout_with_kk(gr2, weights=1/E(gr2)$weight),
@@ -311,20 +336,30 @@ pgx.plotPartialCorrelationAroundGene <-
                     )
         rownames(ly) <- V(gr2)$name
         head(ly)
-        ly <- ly[V(gr2)$name,]
+        ly <- ly[V(gr2)$name,,drop=FALSE]
         
         add.alpha <- function(col, alpha){
             apply(cbind(t(col2rgb(klr)),alpha),1, function(x)
                 rgb(x[1], x[2], x[3], alpha=x[4], maxColorValue=255))  
-        }    
-        p1 <- sign(E(gr2)$pcor) * (abs(E(gr2)$pcor) / max(abs(E(gr2)$pcor)))**0.2
+        }
+        ##p1 <- 0.8
+        p1 <- 0.8 * E(gr2)$rho
         klrpal <- colorRampPalette(c("red4", "grey90","grey20"))(64)
         ##klrpal <- rev(grey.colors(64))
         klr <- klrpal[32 + 31*p1]
         E(gr2)$color <- add.alpha(klr, 255*abs(p1))
 
+        j <- which( V(gr2)$name == gene )
+        V(gr2)$label.cex <- 0.8
+        V(gr2)$size <- 10
+        V(gr2)$size[j] <- 16
+        V(gr2)$label.cex[j] <- 1.1
+        V(gr2)$frame.color <- "grey50"
+        V(gr2)$frame.color[j] <- "black"
+        
         par(mar=c(0,0,0,0))
         plot(gr2, layout=ly)
+
     }
 
     ##P1 <- P * (abs(P)>0.1)
@@ -333,100 +368,6 @@ pgx.plotPartialCorrelationAroundGene <-
     ##out <- list(graph=gr2)
     ##return(out)
 }
-
-
-pgx.plotPartialCorrelationAroundGene.SAVE <-
-    function(res, gene, rho.min=0.7, nsize=20, main="", what=c("cor","pcor","graph"))
-{    
-    rho <- res$rho    
-    j <- which(colnames(res$rho[[1]]) %in% gene)
-    j
-    rho2 <- lapply(res$rho, function(x) x[j,])
-    M <- t(as.matrix(do.call(rbind, rho2)))
-    M[is.infinite(M) | is.nan(M)] <- NA
-    M <- M[order(-rowMeans(M**2,na.rm=TRUE)),]
-    ##M <- M[order(-rowMeans(apply(M,2,rank))),] 
-    head(M)
-
-    ##------------------------------------------------------------
-    ## Correlation barplots
-    ##------------------------------------------------------------
-    ##par(mfrow=c(2,2))
-    if("cor" %in% what) {
-        par(mar=c(10,4,4,2))
-        r1 <- M[,"cor"] ## / ncol(M)
-        r1 <- head(r1[order(-abs(r1))],nsize)
-        barplot( sort(r1,decreasing=TRUE), beside=FALSE, las=3,
-                ylab="marginal correlation")
-        title(main, cex.main=1.2)
-    }
-
-    if("pcor" %in% what) {
-        r2 <- M[,which(colnames(M)!="cor")] ## / ncol(M)
-        r2 <- head(r2[order(-rowMeans(r2**2)),],nsize)
-        r2 <- r2[order(-rowMeans(r2)),]
-        r2 <- r2 / ncol(r2)
-        par(mar=c(10,4,4,2))
-        barplot( t(r2) ,beside=FALSE, las=3,
-                ylim = c(-1,1)*0.3, 
-                ylab="partial correlation (average)")
-        title(main, cex.main=1.2)
-        if(length(gene)==1) {
-            legend("topright", rev(colnames(r2)), fill=rev(grey.colors(ncol(r2))),
-                   cex=0.85, y.intersp=0.85)
-        }
-    }
-
-    if("graph" %in% what) {
-        ##------------------------------------------------------------
-        ## extract core graph
-        ##------------------------------------------------------------
-        top20 <- head(unique(c(gene, rownames(M))), nsize)
-        R <- res$rho[["cor"]][top20,top20]  ## marginal correlation
-        P <- res$meta.pcor[top20,top20]
-        gr1 <- graph_from_adjacency_matrix(
-            abs(R), mode="undirected", diag=FALSE,  weighted=TRUE)
-        ##gr2 <- graph_from_adjacency_matrix(
-        ##    P, mode="undirected", diag=FALSE,  weighted=TRUE)
-        ee <- get.edges(gr1, E(gr1))
-        E(gr1)$pcor <- P[ee]
-        E(gr1)$rho <- R[ee]
-        V(gr1)$name
-        
-        if(rho.min<0) {
-            nb <- abs(rho.min)+1
-            rho.min <- rev(head(sort(R[gene,],decreasing=TRUE),nb))[1]
-            rho.min
-        }
-        
-        par(mar=c(0,0,0,0))
-        gr2 <- subgraph.edges(gr1, which(abs(E(gr1)$rho) >= rho.min))           
-        V(gr2)$name
-        E(gr2)$width <- 10*abs(E(gr2)$rho)
-        ##E(gr2)$color <- c("blue","red")[1 + (E(gr2)$rho>0)]
-        ##ly <- layout_with_graphopt(gr2)
-        ##ly <- layout_with_kk(gr2)
-        ly <- layout_with_fr(gr2)
-        
-        add.alpha <- function(col, alpha){
-            apply(cbind(t(col2rgb(klr)),alpha),1, function(x)
-                rgb(x[1], x[2], x[3], alpha=x[4], maxColorValue=255))  
-        }    
-        p1 <- sign(E(gr2)$pcor) * (abs(E(gr2)$pcor) / max(abs(E(gr2)$pcor)))**0.2
-        klrpal <- colorRampPalette(c("red4", "grey90","grey20"))(64)
-        ##klrpal <- rev(grey.colors(64))
-        klr <- klrpal[32 + 31*p1]
-        E(gr2)$color <- add.alpha(klr, 255*abs(p1))
-        plot(gr2, layout=ly)
-    }
-
-    ##P1 <- P * (abs(P)>0.1)
-    ##P1 <- 0.5*(P1 + t(P1))
-    ##qgraph(P1, labels=rownames(P1), directed=FALSE)    
-    ##out <- list(graph=gr2)
-    ##return(out)
-}
-
 
 ##----------------------------------------------------------------------
 ## mixOmics related functions
@@ -478,8 +419,8 @@ mixHivePlot <- function(res, ngs, ct, showloops=FALSE, numlab=6, cex=1)
         names(fc) <- rownames(ngs$gx.meta$meta[[ct]])        
         gs <- ngs$gset.meta$meta[[ct]]$meta.fx
         names(gs) <- rownames(ngs$gset.meta$meta[[ct]])        
-        fc <- fc / max(abs(fc))
-        gs <- gs / max(abs(gs))
+        fc <- fc / max(abs(fc),na.rm=TRUE)
+        gs <- gs / max(abs(gs),na.rm=TRUE)
         fx <- c(fc, gs)
     } else if(ct %in% colnames(ngs$samples)) {
         group <- ngs$samples[,ct]
@@ -498,10 +439,10 @@ mixHivePlot <- function(res, ngs, ct, showloops=FALSE, numlab=6, cex=1)
         ##fx <- tapply( V(gr)$importance, sub(".*:","",V(gr)$name), max)        
     }
     head(fx)
-    fx <- fx / max(abs(fx))
+    fx <- fx / max(abs(fx),na.rm=TRUE)
     g <- sub("[1-9]:","",hpd$nodes$lab)
     hpd$nodes$radius <- rank(fx[g]) 
-    hpd$nodes$radius <- 100 * hpd$nodes$radius / max(hpd$nodes$radius)
+    hpd$nodes$radius <- 100 * hpd$nodes$radius / max(hpd$nodes$radius,na.rm=TRUE)
     
     maxgrp <- unlist(lapply(res$W,function(w) max.col(w)))
     ##maxgrp <- colnames(res$W[[1]])[maxgrp]

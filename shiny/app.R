@@ -35,9 +35,9 @@ if(0) {
     ngs = pgx.initialize(ngs)    
 }
 
-
-source("global.R")
-source("../R/pgx-modules.R")
+source("global.R", local=TRUE)
+source("../R/pgx-modules.R", local=TRUE)
+source("modules/LoadingModule.R", local=TRUE)
 source("modules/DataViewModule.R", local=TRUE)
 source("modules/ClusteringModule.R", local=TRUE)
 source("modules/ExpressionModule.R", local=TRUE)
@@ -45,9 +45,11 @@ source("modules/EnrichmentModule.R", local=TRUE)
 source("modules/IntersectionModule.R", local=TRUE)
 source("modules/FunctionalModule.R", local=TRUE)
 source("modules/SignatureModule.R", local=TRUE)
-source("modules/LoadingModule.R", local=TRUE)
-source("modules/BiomarkerModule.R", local=TRUE)
 source("modules/ProfilingModule.R", local=TRUE)
+source("modules/CorrelationModule.R", local=TRUE)
+if(DEV.VERSION) source("modulesX/BiomarkerModule.R", local=TRUE)
+if(DEV.VERSION) source("modulesX/MetaModule.R", local=TRUE)
+if(DEV.VERSION) source("modulesX/BatchCorrectModule.R", local=TRUE)
 
 server = function(input, output, session) {
 
@@ -55,7 +57,8 @@ server = function(input, output, session) {
     ##useShinydashboard()
     ##useShinydashboardPlus()
     cat("===================== SERVER =======================\n")
-
+    cat("calling modules... ")
+    
     env <- list()  ## communication environment 
     ## env[["load"]][["inputData"]] <- reactive({ ngs })    
     env[["load"]]   <- callModule( LoadingModule, "load", hideUserMode=FALSE)
@@ -66,8 +69,13 @@ server = function(input, output, session) {
     env[["isect"]]  <- callModule( IntersectionModule, "isect", env)
     env[["func"]]   <- callModule( FunctionalModule, "func", env)
     env[["sig"]]    <- callModule( SignatureModule, "sig", env)
-    env[["bio"]]    <- callModule( BiomarkerModule, "bio", env)
     env[["prof"]]   <- callModule( ProfilingModule, "prof", env)
+    env[["cor"]]    <- callModule( CorrelationModule, "cor", env)
+    if(DEV.VERSION) env[["bio"]]  <- callModule( BiomarkerModule, "bio", env)
+    if(DEV.VERSION) env[["meta"]] <- callModule( MetaModule, "meta", env)
+    if(DEV.VERSION) env[["bc"]]   <- callModule( BatchCorrectModule, "bc", env)
+
+    cat("[OK]\n")
 
     output$current_dataset <- renderText({
         pgx <- env[["load"]][["inputData"]]()
@@ -83,10 +91,14 @@ server = function(input, output, session) {
         dbg("usermode = ",usermode)
         hideTab("view-tabs","Resource info")
         hideTab("enrich-tabs1","GeneMap")
-        hideTab("bio-tab1","Multi-level")
+
+        hideTab("maintabs","Development")
+        ## hideTab("maintabs","BatchCorrect")
+        ## hideTab("maintabs","Biomarker analysis")
+        ## hideTab("maintabs","MetaAnalysis")
+        ## hideTab("bio-tab1","Multi-level")
 
         if(usermode=="BASIC") {
-            hideTab("maintabs","Biomarker")
             hideTab("maintabs","scProfiling")
             hideTab("clust-tabs2","Feature ranking")
             hideTab("expr-tabs1","Volcano (methods)")                        
@@ -94,7 +106,6 @@ server = function(input, output, session) {
             hideTab("enrich-tabs1","Volcano (methods)")                        
             hideTab("enrich-tabs2","FDR table")            
         } else {
-            showTab("maintabs","Biomarker")
             showTab("maintabs","scProfiling")
             showTab("clust-tabs2","Feature ranking")
             showTab("expr-tabs1","Volcano (methods)")                        
@@ -103,6 +114,10 @@ server = function(input, output, session) {
             showTab("enrich-tabs2","FDR table")            
         }
         if(DEV.VERSION) {
+            showTab("maintabs","Development")            
+            ## showTab("maintabs","Biomarker analysis")
+            ## showTab("maintabs","BatchCorrect")
+            ## showTab("maintabs","MetaAnalysis")
             showTab("view-tabs","Resource info")
             showTab("enrich-tabs1","GeneMap")                        
             showTab("bio-tab1","Multi-level")
@@ -112,13 +127,6 @@ server = function(input, output, session) {
     hide_waiter()    
 }
 
-tabView <- function(title, tab.inputs, tab.ui) {
-    tabPanel(title,
-             sidebarLayout(
-                 sidebarPanel( width=2, tab.inputs, id="sidebar"),
-                 mainPanel( width=10, tab.ui)
-             ))
-}
 
 TITLE = "Omics PlayCloud"
 TITLE = "Omics Playground v2"
@@ -139,14 +147,28 @@ ui = navbarPage(
     tabView("Home",LoadingInputs("load"),LoadingUI("load")),
     tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
     tabView("Clustering",ClusteringInputs("clust"),ClusteringUI("clust")),
-    tabView("Expression",ExpressionInputs("expr"),ExpressionUI("expr")),
-    tabView("Enrichment",EnrichmentInputs("enrich"),EnrichmentUI("enrich")),
-    tabView("Intersection", IntersectionInputs("isect"), IntersectionUI("isect")),
-    tabView("Functional", FunctionalInputs("func"), FunctionalUI("func")),
-    tabView("Signature", SignatureInputs("sig"), SignatureUI("sig")),
-    tabView("Biomarker", BiomarkerInputs("bio"), BiomarkerUI("bio")),
+    navbarMenu(
+        "Expression",
+        tabView("Differential expression",ExpressionInputs("expr"),ExpressionUI("expr")),
+        tabView("Correlation analysis", CorrelationInputs("cor"), CorrelationUI("cor"))
+    ),
+    navbarMenu(
+        "Enrichment",
+        tabView("Geneset enrichment",EnrichmentInputs("enrich"),EnrichmentUI("enrich")),
+        tabView("Functional analysis", FunctionalInputs("func"), FunctionalUI("func"))
+    ),
+    navbarMenu(
+        "Signature",
+        tabView("Intersection analysis", IntersectionInputs("isect"), IntersectionUI("isect")),
+        tabView("Signature analysis", SignatureInputs("sig"), SignatureUI("sig"))
+    ),
     tabView("scProfiling", ProfilingInputs("prof"), ProfilingUI("prof")),
-
+    navbarMenu(
+        "Development",
+        dev.tabView("Biomarker analysis", BiomarkerInputs("bio"), BiomarkerUI("bio")),        
+        dev.tabView("BatchCorrect", BatchCorrectInputs("bc"), BatchCorrectUI("bc")),
+        dev.tabView("MetaAnalysis", MetaInputs("meta"), MetaUI("meta"))
+    ),
     footer = tagList(
         social_buttons(),
         show_waiter_on_load(spin_fading_circles()) # place at the bottom

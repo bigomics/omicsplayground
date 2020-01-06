@@ -5,64 +5,39 @@
 ADDSIGNATURE=TRUE
 ADDSIGNATURE=FALSE
 
-## ----------------- create widget
-moduleWidget <- function(module, outputFunc="plotOutput", ns=NULL,
-                         height="100%", width="100%")
-{
-    ##module.id = ns(module$id)
-    module.id = module$id
-    if(!is.null(ns)) module.id <- ns(module.id)    
-    if(!is.null(module$outputFunc)) outputFunc = module$outputFunc
-    if(!is.character(outputFunc)) outputFunc = as.character(quote(outputFunc))
-    outputFunc2 <- paste0(outputFunc,"('",module.id,"', height='",
-                          height,"', width='",width,"')")
-    p <- fillCol(
-        flex = c(NA,1,NA),
-        module$button,
-        eval(parse(text=outputFunc2)),
-        div(HTML(module$getCaption()),class="caption")
-    )
-    ## p <- box(p)
-    p
+##================================================================================
+##================================================================================
+##================================================================================
+
+
+##================================================================================
+##================================================================================
+##================================================================================
+
+plotWidget <- function(id) {
+    ns <- NS(id)
+    uiOutput(ns("widget"))
 }
-
-attachModule <- function(output, module, ns=NULL) {
-    ## Attach render functions to shiny output. Works for both
-    ## tableModule and plotModule.
-    ##
-    ##
-    if(!"id" %in% names(module)) stop("module must have id")
-    id <- module$id
-    ##if(!is.null(ns)) id <- ns(module$id) ## NEED RETHINK!!!
-    output[[id]] <- module$render
-    if("csv" %in% names(module)) output[[paste0(id,"_csv")]] <- module$csv
-    if("pdf" %in% names(module)) output[[paste0(id,"_pdf")]] <- module$pdf
-    if("png" %in% names(module)) output[[paste0(id,"_png")]] <- module$png
-    if("html" %in% names(module)) output[[paste0(id,"_html")]] <- module$html
-    return(output)
-}
-##attachModule(enrich_fctable_module, "enrich_fctable")
-
-plotModuleButtons <- function(id, text="Help text", title="", ns=NULL,
-                              download.fmt = c("png","pdf"), info.width="300px",
-                              no.download = FALSE, just.info=FALSE, 
-                              options=NULL, inputs=NULL, label="")
+    
+plotModule <- function(input, output, session, ## ns=NULL,
+                       func, info.text="Info text", title="", func2=NULL,
+                       inputs=NULL, options = NULL, label="",
+                       caption="", caption2="", 
+                       plotlib = "base", renderFunc=NULL, outputFunc=NULL,
+                       no.download = FALSE, download.fmt=c("png","pdf"), 
+                       just.info=FALSE, info.width="300px", show.maximize = TRUE,
+                       height = c(400,720), width = c("auto",1080), res=c(72,100),
+                       pdf.width=8, pdf.height=8, pdf.pointsize=12)
 {
-    require(shinyWidgets)
-    require(shinyBS)
-
-    ## all widget IDs
-    if(is.null(ns)) ns=function(x){x}
-    info_id    <- ns(paste0(id,"_info"))
-    options_id <- ns(paste0(id,"_options"))
-    html_id <- ns(paste0(id,"_html"))
-    pdf_id <- ns(paste0(id,"_pdf"))
-    png_id <- ns(paste0(id,"_png"))
-    csv_id <- ns(paste0(id,"_csv"))
-
+    ns <- session$ns    
+    
+    ##--------------------------------------------------------------------------------
+    ##------------------------ BUTTONS -----------------------------------------------
+    ##--------------------------------------------------------------------------------
+    
     if(is.null(inputs) || length(inputs)==0 ) inputs <- ""
     options.button <- ""
-
+    
     if(!just.info && !is.null(options) && length(options)>0) {
         options.button <- dropdownButton(
             ##tags$h3("Options"),
@@ -74,16 +49,16 @@ plotModuleButtons <- function(id, text="Help text", title="", ns=NULL,
             ##icon = icon("align-justify"),
             icon = icon("bars"),
             width = "250px",
-            inputId = options_id,
+            inputId = ns("options"),
             tooltip = tooltipOptions(title = "Settings", placement = "right")
         )
     }
-
+    
     dload.csv = dload.pdf = dload.png = dload.html = NULL
-    if("pdf" %in% download.fmt)  dload.pdf  <- downloadButton(pdf_id, "PDF")
-    if("png" %in% download.fmt)  dload.png  <- downloadButton(png_id, "PNG")
-    if("csv" %in% download.fmt)  dload.csv  <- downloadButton(csv_id, "CSV")
-    if("html" %in% download.fmt) dload.html <- downloadButton(html_id, "HTML")
+    if("pdf" %in% download.fmt)  dload.pdf  <- downloadButton(ns("pdf"), "PDF")
+    if("png" %in% download.fmt)  dload.png  <- downloadButton(ns("png"), "PNG")
+    if("csv" %in% download.fmt)  dload.csv  <- downloadButton(ns("csv"), "CSV")
+    if("html" %in% download.fmt) dload.html <- downloadButton(ns("html"), "HTML")
     
     dload.button <- dropdownButton(
         dload.pdf,
@@ -91,76 +66,63 @@ plotModuleButtons <- function(id, text="Help text", title="", ns=NULL,
         dload.csv,
         dload.html,
         circle = TRUE, size = "xs", ## status = "danger",
-        icon = icon("download"), width = "40px",
+        icon = icon("download"), width = "40px", right=FALSE,
         tooltip = tooltipOptions(title = "Download", placement = "right")
     )
+
     if(no.download || length(download.fmt)==0 ) dload.button <- ""
     label1 = HTML(paste0("<span class='module-label'>",label,"</span>"))
     
-    ## button layout
-    btn <- fillRow(
-        flex=c(NA,NA,NA,NA,1),
+    require(shinyWidgets)
+    ##zoom.button <- prettyCheckbox(inputId=ns("zoom"),label=NULL,value=FALSE)
+    zoom.button <- NULL
+    if(show.maximize) {
+        zoom.button <- actionButton(inputId=ns("zoombutton"),label=NULL,
+                                    icon=icon("window-maximize"),
+                                    class="btn-circle-xs")    
+    }
+    
+    ##output$renderbuttons <- renderUI({
+        ## button layout
+    buttons <- fillRow(
+        flex=c(NA,NA,NA,NA,NA,1),
+        ##flex=c(NA,NA,1),
         label1,
+        ##div( class="button-group", style="display: inline-block; float: left;",
         dropdownButton(
-            tags$p(HTML(text)),
+            tags$p(HTML(info.text)),
             br(),
             circle = TRUE, size = "xs", ## status = "danger",
             icon = icon("info"), width = info.width,
-            inputId = info_id,
+            inputId = ns("info"), right=FALSE,
             tooltip = tooltipOptions(title = "Info", placement = "right")
         ),
         options.button,
         div(class='download-button', dload.button),
-        ##HTML(paste("<center><strong>",title,"</strong></center>"))
+        div(class='zoom-button', zoom.button),
+        ##),
         HTML(paste("<center>",title,"</center>"))
+        ##HTML(paste("<center><strong>",title,"</strong></center>"))
         ##br()
         ##inputs
         ##selectInput("sel123","number",1:10)
     )
-    return(btn)
-}
-
-plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
-                       inputs=NULL, options = NULL, label="", caption="", 
-                       plotlib = "base", renderFunc=NULL, outputFunc=NULL,
-                       no.download = FALSE, download.fmt=c("png","pdf","html"), 
-                       just.info=FALSE, server=TRUE, info.width="300px",
-                       width = "auto", height = "auto",  ## for renderPlot
-                       pdf.width=8, pdf.height=8, pdf.pointsize=12, res=72)
-{
+    ##return(ui)
+    ##})
+    
+    ##--------------------------------------------------------------------------------
+    ##------------------------ FIGURE ------------------------------------------------
+    ##--------------------------------------------------------------------------------
+    
     require(shinyWidgets)
     require(shinyBS)
     require(webshot)
-
-    ## no NS here!!
-    ## info_id <- paste0(id,"_info")
-    ## options_id <- paste0(id,"_options")
-    ## pdf_id <- paste0(id,"_pdf")
-    ## png_id <- paste0(id,"_png")
-    ## html_id <- ns(paste0(id,"_html"))
     
     ## these engines cannot (yet) provide html
     if(plotlib %in% c("base")) {    
         download.fmt <- setdiff(download.fmt, c("html"))
     }
     
-    buttons = plotModuleButtons(
-        id=id, text=info.text, title=title,
-        ns=ns, ## pass through any namespace prefix
-        just.info=just.info, label = label,
-        inputs=inputs, options=options,
-        info.width=info.width,
-        no.download=no.download,
-        download.fmt=download.fmt)
-    ##toggleDropdownButton(info_id)
-    
-    
-    if(any(class(caption)=="reactive")) {
-        caption.fun <- caption
-    } else {
-        caption.fun <- function() { caption }
-    }
-
     do.pdf = "pdf" %in% download.fmt
     do.png = "png" %in% download.fmt
     do.html = "html" %in% download.fmt
@@ -173,100 +135,56 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
     HTMLFILE
     unlink(HTMLFILE)
     
+    ##outputFunc = renderFunc = NULL
     if(plotlib == "generic") {
-        if(is.null(renderFunc)) error("'generic' class must provide renderFunc")
-        renderFUN <- eval(parse(text=renderFunc))
-        render <- renderFUN({
-            func()
-        })
+        if(is.null(renderFunc)) stop("'generic' class must provide renderFunc")
+        if(is.null(outputFunc)) stop("'generic' class must provide outputFunc")
+    } else if(plotlib == "htmlwidget") {
+        if(is.null(renderFunc)) stop("'htmlwidget' class must provide renderFunc")
+        if(is.null(outputFunc)) stop("'htmlwidget' class must provide outputFunc")
     } else if(plotlib == "plotly") {
-        render <- renderPlotly({
-            p <- func()            
-            p
-        })
-        outputFunc = "plotly::plotlyOutput"
-    } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
-        require(htmlwidgets)
-        if(plotlib=="htmlwidget" && is.null(renderFunc)) {
-            error("'htmlwidget' class must provide renderFunc")
-        }
-        if(plotlib=="scatterD3") {
-            require(scatterD3)
-            renderFunc="scatterD3::renderScatterD3"
-            outputFunc="scatterD3::scatterD3Output"
-        }
-        if(plotlib=="pairsD3") {
-            require(pairsD3)
-            renderFunc="pairsD3::renderPairsD3"
-            outputFunc="pairsD3::pairsD3Output"
-        }
-        renderFUN <- eval(parse(text=renderFunc))
-        render <- renderFUN({
-            p <- func()
-            return(p)
-        })
+        ##render <- renderPlotly({ func() })
+        require(plotly)
+        outputFunc = "plotlyOutput"
+        renderFunc = "renderPlotly"
+    } else if(plotlib=="scatterD3") {
+        require(scatterD3)
+        renderFunc="renderScatterD3"
+        outputFunc="scatterD3Output"
+    } else if(plotlib=="pairsD3") {
+        require(pairsD3)
+        renderFunc="renderPairsD3"
+        outputFunc="pairsD3Output"
     } else if(plotlib == "visnetwork") {
         require(visNetwork)
-        render <- renderVisNetwork({
-            p <- func()
-            return(p)
-        })
-        outputFunc="visNetwork::visNetworkOutput"
+        ##render <- renderVisNetwork({ func() })
+        outputFunc="visNetworkOutput"
+        renderFunc = "renderVisNetwork"
     } else if(plotlib %in% c("ggplot","ggplot2")) {
-        render <- renderPlot({
-            plot(func())
-        }, res=res)
+        ##render <- renderPlot({ plot(func())}, res=res)
         outputFunc="plotOutput"
+        renderFunc="function(x) renderPlot(plot(x))"
     } else if(plotlib == "iheatmapr") {
         require(iheatmapr)
-        render <- renderIheatmap({
-            p <- func()            
-            p
-        })
-        outputFunc="iheatmapr::iheatmaprOutput"
+        ##render <- renderIheatmap({ func() })
+        outputFunc="iheatmaprOutput"
+        renderFunc="renderIheatmap"
+    } else if(plotlib == "image") {
+        require(iheatmapr)
+        ##render <- renderIheatmap({ func() })
+        outputFunc="imageOutput"
+        renderFunc="renderImage"
     } else {
-        ##------------------------------------------------------------
         ## Base plotting
-        ##------------------------------------------------------------
-        render <- renderPlot({
-            par(mar=c(0,0,0,0),oma=c(0,0,0,0))
-            func()
-
-            ## NEEEDS FIX!! pdf generating should be done just in
-            ## renderPlot, not here. But cannot get it to work (IK
-            ## 19.10.02)
-            suppressWarnings( suppressMessages(
-                if(do.pdf) {
-                    if(ADDSIGNATURE) {
-                        mtext("created with Omics Playground",
-                              1,line=-1,outer=TRUE,adj=0.98,padj=0,cex=0.6,col="#44444444")
-                    }
-                    dev.print(pdf, file=PDFFILE, width=pdf.width, height=pdf.height,
-                              pointsize=pdf.pointsize)
-                    ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
-                    ##dev.off()  ## important!!
-                }
-            ))
-            
-            suppressWarnings( suppressMessages(
-                if(do.png) {
-                    if(ADDSIGNATURE) {
-                        mtext("created with Omics Playground",
-                              1,line=-1,outer=TRUE,adj=0.98,padj=0,cex=0.6,col="#44444444")
-                    }
-                    dev.print(png, file=PNGFILE, width=pdf.width*100, height=pdf.height*100,
-                              pointsize=pdf.pointsize)
-                    ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
-                    ##dev.off()  ## important!!
-                }
-            ))
-
-        }, res=res, width=width, height=height )
+        ## render <- renderPlot({
+        ##     par(mar=c(0,0,0,0),oma=c(0,0,0,0))
+        ##     func()
+        ## }, res=res, width=width, height=height)
         outputFunc="plotOutput"
+        ##renderFunc="renderPlot"
+        ##renderFunc="function(x) renderPlot(x, res=res, width=width, height=height)"
+        renderFunc="renderPlot"
     }
-
-    ## render2 <- renderPlot({plot_array[[3]]()}, res=res)
-    download.pdf = download.png = download.html = NULL
 
     ##============================================================
     ##=============== Download Handlers ==========================
@@ -282,6 +200,8 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
             font = list(size=6, color="#44444444")
         )
     }
+    
+    download.pdf = download.png = download.html = NULL
 
     if(do.png) {
         download.png <- downloadHandler(
@@ -547,57 +467,238 @@ plotModule <- function(id, func, info.text="Info text", title="", ns=NULL,
         ) ## end of HTML downloadHandler
     } ## end of do HTML
     
+
+    ##--------------------------------------------------------------------------------
+    ##------------------------ OUTPUT ------------------------------------------------
+    ##--------------------------------------------------------------------------------
+
+    ## if("download.csv" %in% names(figure))  output$csv <- download.csv
+    ## if("download.pdf" %in% names(figure))  output$pdf <- download.pdf
+    ## if("download.png" %in% names(figure))  output$png  <- download.png
+    ## if("download.html" %in% names(figure)) output$html <- download.html
+
+    ##if(!is.null(download.csv))  output$csv  <- download.csv
+    if(!is.null(download.pdf))  output$pdf  <- download.pdf
+    if(!is.null(download.png))  output$png  <- download.png
+    if(!is.null(download.html)) output$html <- download.html
+
+    ## all widget IDs
+    ##if(is.null(ns)) ns=function(x){x}
+    ## buttons <- list(
+    ##     info =  ns("info"),
+    ##     options = ns("options"),
+    ##     html =  ns("html"),
+    ##     pdf = ns("pdf"),
+    ##     png = ns("png"),
+    ##     csv = ns("csv"),
+    ##     zoom =  ns("zoom")
+    ## )
+
+    ##--------------------------------------------------------------------------------
+    ##---------------------------- UI ------------------------------------------------
+    ##--------------------------------------------------------------------------------
+
+    ##func2 <- func  ## must be pryr  %<a-% to work!!!
+    if(is.null(func2)) func2 <- func
+    if(length(height)==1) height <- c(height,720)
+    if(length(width)==1)  width  <- c(width,1080)
+    if(length(res)==1)    res    <- c(res,1.4*res)    
+
+    res.1 <- res[1]
+    res.2 <- res[2]
+    ifnotchar.int <- function(s) ifelse(grepl("[%]|auto",s),s,as.integer(s))
+    width.1 <- ifnotchar.int(width[1])
+    width.2 <- ifnotchar.int(width[2])
+    height.1 <- ifnotchar.int(height[1])
+    height.2 <- ifnotchar.int(height[2])
     
-    ## ------------- create a widget????
-    ##widget <- function(w,h) box(fillCol(flex=c(NA,1),button,render),width=w,height=h)
+    ##outputFunc <- sub(".*::","",outputFunc)
+    render = render2 = NULL   
+    if(1 && plotlib=="base") {
+        ## For base plots we need to export PDF/PNG here. For some
+        ## reason does not work in the downloadHandler...
+        ##
+        render <- renderPlot({
+            func()
+            if(1) {
+                suppressWarnings( suppressMessages(
+                    if(do.pdf) {
+                        if(ADDSIGNATURE) {
+                            mtext("created with Omics Playground",
+                                  1,line=-1,outer=TRUE,adj=0.98,padj=0,cex=0.6,col="#44444444")
+                        }
+                        dev.print(pdf, file=PDFFILE, width=pdf.width, height=pdf.height,
+                                  pointsize=pdf.pointsize)
+                        ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
+                        ##dev.off()  ## important!!
+                    }
+                ))            
+                suppressWarnings( suppressMessages(
+                    if(do.png) {
+                        if(ADDSIGNATURE) {
+                            mtext("created with Omics Playground",
+                                  1,line=-1,outer=TRUE,adj=0.98,padj=0,cex=0.6,col="#44444444")
+                        }
+                        dev.print(png, file=PNGFILE, width=pdf.width*100, height=pdf.height*100,
+                                  pointsize=pdf.pointsize)
+                        ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
+                        ##dev.off()  ## important!!
+                    }
+                ))
+            }            
+            ##}, res=res[1], width=width[1], height=height[1] )
+            ##}, res=res[1], width=width.1, height=height.1 )
+            ##}, width=width.1, height=height.1, res=res.1 )
+            }, res=res.1)
+        ##})
+        if(!is.null(func2)) {
+            ##render2 <- renderPlot(func2(), res=res[1], width=width[2], height=height[2])
+            ##render2 <- renderPlot(func2(), res=res[1], width=width.2, height=height.2)
+            ##render2 <- renderPlot(func2(), width=width.2, height=height.2, res=res.2)
+            render2 <- renderPlot(func2(), res=res.2)            
+            ##render2 <- renderPlot(func2())
+        }
+    } else if(plotlib=="image") {
+        render <- renderImage( func(), deleteFile=FALSE)
+        if(!is.null(func2)) {
+            render2 <- renderImage(func2(), deleteFile=FALSE)
+        }
+    } else {
+        render <- eval(parse(text=renderFunc))(func())
+        if(!is.null(func2)) {
+            render2 <- eval(parse(text=renderFunc))(func2())
+        }
+    }
     
-    module <- list(
-        id = id,
-        .func = func,
+    output$renderfigure <- render
+    output$renderpopup  <- render2
+
+    output$popupfig <- renderUI({
+        w <- width.2
+        h <- height.2
+        if(plotlib=="image") {
+            ## retains aspect ratio
+            ##
+            img.file <- func()$src
+            require(png)
+            require(jpeg)
+            img.dim <- c(h,w)
+            if(grepl("png|PNG",img.file)) img.dim <- dim(readPNG(img.file))[1:2]
+            if(grepl("jpg|JPG",img.file)) img.dim <- dim(readJPEG(img.file))[1:2]
+            r <- min( width.2 / img.dim[2], height.2 / img.dim[1])
+            h <- img.dim[1]*r
+            w <- img.dim[2]*r
+        } 
+        if(!is.null(render2)) {
+            r <- eval(parse(text=outputFunc))(ns("renderpopup"), width=w, height=h)
+        } else {
+            r <- eval(parse(text=outputFunc))(ns("renderfigure"), width=w, height=h)
+        }
+  
+        if(any(class(caption2)=="reactive")) {
+            caption2 <- caption2()
+        }
+        tagList(
+            r,
+            div( HTML(caption2), class="caption2")          
+        )
+    })
+        
+    output$widget <- renderUI({
+        ##cat("[output$widget::renderUI] ns.zoombutton = ",ns("zoombutton"),"\n")
+        mtop <- paste0("margin: 400px 20px 20px 20px;")
+        modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2+40,"px;}")
+        modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2+40,"px;}")
+        ##modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2,"px;}")
+        ##modalbody.style <- paste0("#",ns("plotPopup")," .modal-body {min-height:",height.2,"px;}")
+        modalfooter.none <- paste0("#",ns("plotPopup")," .modal-footer{display:none;}")
+  
+        if(any(class(caption)=="reactive")) {
+            caption <- caption()
+        }
+
+        fillCol(
+            flex = c(NA,NA,1,NA,NA,0.001),
+            height = height.1,
+            tagList(
+                tags$head(tags$style(modaldialog.style)),
+                tags$head(tags$style(modalbody.style)),            
+                tags$head(tags$style(modalfooter.none))
+                ##tags$head(tags$style(".caption { margin: 20px 5px;}"))
+            ),
+            ##uiOutput(ns("renderbuttons")),
+            buttons,
+            ##render,
+            eval(parse(text=outputFunc))(ns("renderfigure"), width=width.1, height=height.1),
+            br(),
+            div( HTML(caption), class="caption"),          
+            div(class="popup-plot",
+                bsModal(ns("plotPopup"), title, size="l",
+                        ns("zoombutton"),
+                        ##tagList(renderPlot(plot(sin)))
+                        tagList(uiOutput(ns("popupfig")))
+                        )
+                )
+        )
+    })
+    outputOptions(output, "widget", suspendWhenHidden=FALSE) ## important!!!
+    
+    ##--------------------------------------------------------------------------------
+    ##---------------------------- RETURN VALUE --------------------------------------
+    ##--------------------------------------------------------------------------------
+
+    res <- list(
+        plotfun = func,
+        plotfun2 = func2,
         .tmpfiles = c(pdf=PDFFILE, html=HTMLFILE),
         render = render,
-        ##render2 = render2,
-        pdf = download.pdf,
-        png = download.png,
-        html = download.html,
-        buttons = buttons,
-        getCaption = caption.fun,
+        render2 = render2,
+        download.pdf = download.pdf,
+        download.png = download.png,
+        download.html = download.html,
+        ##buttons = buttons,
+        ##getCaption = caption.fun,
         saveHTML = saveHTML,
-        outputFunc = outputFunc
+        outputFunc = outputFunc,
+        renderFunc = renderFunc
     )
-    ## attr(module, "class") <- "ShinyModule"
-    return(module)
+
 }
 
+##================================================================================
+##================================================================================
+##================================================================================
 
-tableModule <- function(id, func, info.text="Info text",
-                        title="", label="", caption="", ns=NULL,
-                        ##inputs=NULL, 
-                        options = NULL, info.width="300px",
+
+tableWidget <- function(id) {
+    ns <- NS(id)
+    uiOutput(ns("widget"))
+}
+
+tableModule <- function(input, output, session, 
+                        func, info.text="Info text",
+                        title=NULL, label=NULL, caption=NULL, 
+                        server=TRUE, ##inputs=NULL, 
                         ##no.download = FALSE, just.info=FALSE,
-                        server=TRUE)
+                        width="100%", height="auto",
+                        options = NULL, info.width="300px"
+                        )
 {
     require(shinyWidgets)
     require(shinyBS)
 
-    ## all callback ids
-    if(is.null(ns)) ns=function(x)x
-    info_id <- paste0(id,"_info") ## NS?
-    options_id <- paste0(id,"_options")  ## NS?
-    pdf_id <- ns(paste0(id,"_pdf"))
-    csv_id <- ns(paste0(id,"_csv"))    
-    label1 = HTML(paste0("<span class='module-label'>",label,"</span>"))
-
+    ns <- session$ns
+    
     if(any(class(caption)=="reactive")) {
-        caption.fun <- caption
-    } else {
-        caption.fun <- function() { caption }
+        caption <- caption()
+    }
+    if(class(caption)=="character") {
+        caption <- HTML(caption)
     }
     
     options.button <- ""    
     if(!is.null(options) && length(options)>0) {
         options.button <- dropdownButton(
-            ##tags$h3("Options"),
             options,
             ##br(),
             ##dload,
@@ -605,13 +706,20 @@ tableModule <- function(id, func, info.text="Info text",
             ## icon = icon("gear"),
             icon = icon("bars"),
             width = "250px",
-            inputId = options_id,
+            inputId = ns("options"),
             tooltip = tooltipOptions(title = "Settings", placement = "right")
         )
     }
+    label1 = HTML(paste0("<span class='module-label'>",label,"</span>"))
+
+    require(shinyWidgets)
+    zoom.button <- actionButton(inputId=ns("zoombutton"),label=NULL,
+                                icon=icon("window-maximize"),
+                                class="btn-circle-xs")    
     
     buttons <- fillRow(
-        flex=c(NA,NA,NA,NA,1),
+        ##flex=c(NA,NA,NA,NA,1),
+        flex=c(NA,NA,NA,NA,NA,1),
         ##actionLink(options_id, label=NULL, icon = icon("info")),
         label1,
         dropdownButton(
@@ -619,78 +727,114 @@ tableModule <- function(id, func, info.text="Info text",
             br(),
             circle = TRUE, size = "xs", ## status = "danger",
             icon = icon("info"), width = info.width,
-            inputId = info_id,
+            inputId = ns("info"), right=FALSE,
             tooltip = tooltipOptions(title = "Info", placement = "right")
         ),
         options.button,
-        div(class='download-button', dropdownButton(
-            downloadButton(csv_id, "CSV"),
-            circle = TRUE, size = "xs", ## status = "danger",
-            icon = icon("download"), width = "80px",
-            tooltip = tooltipOptions(title = "Download", placement = "right")
-        )),
-        ##HTML(paste("<center><strong>",title,"</strong></center>"))
+        div(class='download-button',
+            dropdownButton(
+                downloadButton(ns("csv"), "CSV"),
+                circle = TRUE, size = "xs", ## status = "danger",
+                icon = icon("download"), width = "80px", right=FALSE,
+                tooltip = tooltipOptions(title = "Download", placement = "right")
+            )),
+        zoom.button,
         HTML(paste("<center>",title,"</center>"))
+        ##HTML(paste("<center><strong>",title,"</strong></center>"))
+        ## HTML(paste("<center>",title,"</center>"))
         ##inputs
         ##selectInput("sel123","number",1:10)
     )
     
     CSVFILE = paste0(gsub("file","data",tempfile()),".csv")
-    CSVFILE
-    
-    render <- renderDataTable({
-        dt <- func()
-        write.csv(dt$x$data, file=CSVFILE, row.names=FALSE)
-        dt
-    }, server=server)
+    CSVFILE    
     
     ## render2 <- renderPlot({plot_array[[3]]()}, res=res)
     download.csv <- downloadHandler(
         filename = "data.csv",
-        content = function(file) file.copy(CSVFILE,file)        
+        content = function(file) {
+            dt <- func()
+            write.csv(dt$x$data, file=CSVFILE, row.names=FALSE)
+            file.copy(CSVFILE,file)
+        }
     )
-    ##box <- fillCol(flex=c(NA,1), button, render)
+    output$csv <- download.csv
+
+    output$datatable <- renderDataTable({
+        dt <- func()
+        ## write.csv(dt$x$data, file=CSVFILE, row.names=FALSE)
+        dt
+    })
+
+    output$popuptable <- renderUI({
+        tagList( renderDataTable(func()) )
+    })
+
+    if(length(height)==1) height <- c(height,700)
+    if(length(width)==1)  width  <- c(width,1200)
+    ifnotchar.int <- function(s) ifelse(grepl("[%]|auto",s),s,as.integer(s))
+    width.1 <- ifnotchar.int(width[1])
+    width.2 <- ifnotchar.int(width[2])
+    height.1 <- ifnotchar.int(height[1])
+    height.2 <- ifnotchar.int(height[2])
     
-    module <- list(
-        id = id,
-        .func = func,
-        .tmpfiles = c(csv=CSVFILE),
-        getCaption = caption.fun,
-        render = render,
-        ##render2 = render2,
-        csv = download.csv,
-        buttons = buttons
-    )
+    output$widget <- renderUI({
+
+        ##modaldialog.style <- paste0("#",ns("tablePopup")," .modal-dialog {width:",width.2+40,"px;}")
+        ##modalbody.style <- paste0("#",ns("tablePopup")," .modal-body {min-height:",height.2+40,"px;}")
+        modaldialog.style <- paste0("#",ns("tablePopup")," .modal-dialog {width:",width.2,"px;}")
+        modalbody.style <- paste0("#",ns("tablePopup")," .modal-body {min-height:",height.2,"px;}")
+        modalfooter.none <- paste0("#",ns("tablePopup")," .modal-footer{display:none;}")
+        div.caption <- NULL
+        if(!is.null(caption)) div.caption <- div(caption, class="table-caption")
+        
+        fillCol(
+            flex = c(NA,NA,1,NA),
+            ##tags$head(tags$style(".popup-table .modal-dialog {width:1200px;}")),
+            ##tags$head(tags$style(".popup-table .modal-body {min-height:700px;}")),
+            ##tags$head(tags$style(".popup-table .modal-footer {display:none;}")),            
+            tags$head(tags$style(modaldialog.style)),
+            tags$head(tags$style(modalbody.style)),
+            tags$head(tags$style(modalfooter.none)),
+            buttons,
+            ##uiOutput(ns("renderbuttons")),
+            div.caption,
+            dataTableOutput(ns("datatable"), width=width.1, height=height.1),
+            ##DT::renderDataTable(func()),
+            ##verbatimTextOutput(ns("zoomstatus"))
+            div(class="popup-table",
+                bsModal(ns("tablePopup"), title, size="l",
+                        ns("zoombutton"),
+                        ##tagList(renderPlot(plot(sin)))
+                        tagList(uiOutput(ns("popuptable")))
+                        )
+                )
+            
+        )
+    })
+    ##outputOptions(output, "widget", suspendWhenHidden=FALSE) ## important!!!
+    
+    ##module <- list(
+    ##id = id,
+    ##.tmpfiles = c(csv=CSVFILE),
+    ##caption = caption,
+    ## render = render,
+    ## render2 = render2,
+    ## download.csv = download.csv,
+    ## buttons = buttons
+    ##)x
     ## attr(module, "class") <- "ShinyModule"
+
+    module <- list(
+        rows_selected = reactive(input$datatable_rows_selected),
+        rows_all = reactive(input$datatable_rows_all)
+    )
     return(module)
 }
 
 
-pgx.randomSlogan <- function(b=NULL) {
-    motto.list <- c("Skip the queue. Take the fast lane",
-                    "Analyze your omics data 10x faster, 100x smarter",
-                    "Self-service analytics for Big Omics data",
-                    "Do-it-yourself. Yes you can",
-                    "Fasten your seat belts. Hi-speed data analytics",
-                    "Zero coding required",
-                    "Make Data Analytics Great Again",
-                    "Smart tools for biodata analytics",
-                    "No need to write pesky R scripts",
-                    "Analytics anywhere. Anytime",
-                    "Analyze with confidence. Be a rockstar",
-                    "Our platform. Your solution",
-                    "Integrate more. Dig deeper",
-                    "Visual analytics. See and understand",
-                    "Explore omics data freely",
-                    "Where do you want to go today?",
-                    "Analytics the way you want",
-                    "Your analysis doesn't go on coffee breaks",
-                    "Fast track your bioinformatics needs"
-                    )
-    s <- sample(motto.list,1)
-    if(!is.null(b)) s <- breakstring2(s,n=b)
-    s
-}
+
+
 
 ########################################################################
 ########################################################################

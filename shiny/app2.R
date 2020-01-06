@@ -15,10 +15,11 @@ RDIR="../R"
 FILES="../lib"
 PGX.DIR="../data"
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
-DEV.VERSION = TRUE
+##DEV.VERSION = TRUE
 
 ##load("../data/geiger2016-arginine.pgx"); ngs=pgx.initialize(ngs)    
 
+source("global.R")
 source("../R/pgx-modules.R")
 source("modules/LoadingModule.R", local=TRUE)
 source("modules/DataViewModule.R", local=TRUE)
@@ -30,7 +31,9 @@ source("modules/FunctionalModule.R", local=TRUE)
 source("modules/SignatureModule.R", local=TRUE)
 source("modules/BiomarkerModule.R", local=TRUE)
 source("modules/ProfilingModule.R", local=TRUE)
-
+source("modules/CorrelationModule.R", local=TRUE)
+source("modulesX/MetaModule.R", local=TRUE)
+source("modulesX/BatchCorrectModule.R", local=TRUE)
 
 server = function(input, output, session) {
 
@@ -46,11 +49,14 @@ server = function(input, output, session) {
     env[["view"]]   <- callModule( DataViewModule, "view", env)
     env[["clust"]]  <- callModule( ClusteringModule, "clust", env)
     env[["enrich"]] <- callModule( EnrichmentModule, "enrich", env)
-    env[["isect"]]  <- callModule( IntersectionModule, "isect", env)
     env[["func"]]   <- callModule( FunctionalModule, "func", env)
+    env[["isect"]]  <- callModule( IntersectionModule, "isect", env)
     env[["sig"]]    <- callModule( SignatureModule, "sig", env)
-    ##env[["bio"]]    <- callModule( BiomarkerModule, "bio", env)
+    env[["bio"]]    <- callModule( BiomarkerModule, "bio", env)
     env[["prof"]]   <- callModule( ProfilingModule, "prof", env)
+    env[["cor"]]    <- callModule( CorrelationModule, "cor", env)
+    env[["meta"]]   <- callModule( MetaModule, "meta", env)
+    env[["bc"]]     <- callModule( BatchCorrectModule, "bc", env)
 
     ## How to hide/show the right (control)sidebar
     observeEvent(input$menuitem, {
@@ -71,11 +77,14 @@ server = function(input, output, session) {
             menuItem("Clustering", tabName = "clust", icon=icon("project-diagram")),
             menuItem("Expression", tabName = "expr", icon=icon("chart-bar")),
             menuItem("Enrichment", tabName = "enrich", icon=icon("object-group")),
-            menuItem("Intersection", tabName = "isect", icon=icon("expand-arrows-alt")),
             menuItem("Functional", tabName = "func", icon=icon("square-root-alt")),
+            menuItem("Intersection", tabName = "isect", icon=icon("expand-arrows-alt")),
             menuItem("Signature", tabName = "sig", icon=icon("signature")),
-            ##menuItem("Biomarker", tabName = "bio", icon=icon("marker")),
-            menuItem("scProfiling", tabName = "prof", icon=icon("dot-circle"))
+            menuItem("Correlation", tabName = "cor", icon=icon("chart-line")),
+            menuItem("Biomarker", tabName = "bio", icon=icon("marker")),
+            menuItem("scProfiling", tabName = "prof", icon=icon("dot-circle")),
+            menuItem("MetaAnalysis", tabName = "meta", icon=icon("project-diagram")),
+            menuItem("BatchCorrect", tabName = "bc", icon=icon("check-double"))
         )
         sidebarMenu( id="menuitem", .list = menuitems)
     })
@@ -128,7 +137,8 @@ ui = dashboardPagePlus(
         ## )
     ),
     sidebar = dashboardSidebar(
-        sidebarMenuOutput("sidebarmenu")
+        sidebarMenuOutput("sidebarmenu"),
+        width = 180
     ),
     rightsidebar = rightSidebar(
         background = "light",
@@ -142,7 +152,10 @@ ui = dashboardPagePlus(
             conditionalPanel("input.menuitem=='func'", FunctionalInputs("func")),
             conditionalPanel("input.menuitem=='sig'", SignatureInputs("sig")),
             conditionalPanel("input.menuitem=='bio'", BiomarkerInputs("bio")),
-            conditionalPanel("input.menuitem=='prof'", ProfilingInputs("prof"))
+            conditionalPanel("input.menuitem=='prof'", ProfilingInputs("prof")),
+            conditionalPanel("input.menuitem=='cor'", CorrelationInputs("cor")),
+            conditionalPanel("input.menuitem=='meta'", MetaInputs("meta")),
+            conditionalPanel("input.menuitem=='bc'", BatchCorrectInputs("bc"))
         )
     ),
     body = dashboardBody(
@@ -164,7 +177,10 @@ ui = dashboardPagePlus(
             tabItem(tabName = "func", FunctionalUI("func")),
             tabItem(tabName = "sig", SignatureUI("sig")),
             tabItem(tabName = "bio", BiomarkerUI("bio")),
-            tabItem(tabName = "prof", ProfilingUI("prof"))
+            tabItem(tabName = "prof", ProfilingUI("prof")),
+            tabItem(tabName = "cor", CorrelationUI("cor")),
+            tabItem(tabName = "meta", MetaUI("meta")),
+            tabItem(tabName = "bc", BatchCorrectUI("bc"))
         )
     ),    
     footer = tagList(
