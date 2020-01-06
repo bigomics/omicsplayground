@@ -1246,8 +1246,8 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         info.text = pr_phenoModule_info,
         ##caption = pr_phenoModule_caption
         pdf.width=5, pdf.height=8,
-        height = c(fullH-80,750), width = c("100%",500),
-        res = c(90,80)
+        height = c(fullH-100,750), width = c("100%",500),
+        res = c(85,85)
     )
 
     output$pr_phenoModule_UI <- renderUI({    
