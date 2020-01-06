@@ -302,7 +302,7 @@ body {
     color: #333;
     // background-color: #0067c4;
     ##border: 1px solid var(--main-color);
-    border: 1px solid #555;
+    border: 1px solid #888;
 }
 
 .dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus {
