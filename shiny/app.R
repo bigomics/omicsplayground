@@ -47,9 +47,9 @@ source("modules/FunctionalModule.R", local=TRUE)
 source("modules/SignatureModule.R", local=TRUE)
 source("modules/ProfilingModule.R", local=TRUE)
 source("modules/CorrelationModule.R", local=TRUE)
-if(DEV.VERSION) source("modulesX/BiomarkerModule.R", local=TRUE)
-if(DEV.VERSION) source("modulesX/MetaModule.R", local=TRUE)
-if(DEV.VERSION) source("modulesX/BatchCorrectModule.R", local=TRUE)
+if(DEV.VERSION) source("../../omicsplayground-dev/shiny/modules/BiomarkerModule.R", local=TRUE)
+if(DEV.VERSION) source("../../omicsplayground-dev/shiny/modules/MetaModule.R", local=TRUE)
+if(DEV.VERSION) source("../../omicsplayground-dev/shiny/modules/BatchCorrectModule.R", local=TRUE)
 
 server = function(input, output, session) {
 
