@@ -51,7 +51,6 @@ if(DEV.VERSION) source("../../omicsplayground-dev/shiny/modules/BiomarkerModule.
 if(DEV.VERSION) source("../../omicsplayground-dev/shiny/modules/MetaModule.R", local=TRUE)
 if(DEV.VERSION) source("../../omicsplayground-dev/shiny/modules/BatchCorrectModule.R", local=TRUE)
 
-
 server = function(input, output, session) {
 
     useShinyjs()
@@ -129,10 +128,22 @@ server = function(input, output, session) {
 }
 
 
-TITLE = "Omics PlayCloud"
-TITLE = "Omics Playground v2"
+version <- scan("../VERSION", character())[1]
+TITLE = paste("Omics Playground",version)
+## TITLE = "Omics PlayCloud"
 logo = div(img(src="bigomics-logo-white-48px.png", height="48px"),
            TITLE, id="navbar-logo", style="margin-top:-13px;")
+
+dev.tabs <- NULL
+if(DEV.VERSION) {
+    dev.tabs <- navbarMenu(
+        "Development",
+        tabView("Biomarker analysis", BiomarkerInputs("bio"), BiomarkerUI("bio")),        
+        tabView("BatchCorrect", BatchCorrectInputs("bc"), BatchCorrectUI("bc")),
+        tabView("MetaAnalysis", MetaInputs("meta"), MetaUI("meta"))
+    )
+}
+
 
 ui = navbarPage( 
     title = logo, windowTitle = TITLE,
@@ -164,12 +175,7 @@ ui = navbarPage(
         tabView("Signature analysis", SignatureInputs("sig"), SignatureUI("sig"))
     ),
     tabView("scProfiling", ProfilingInputs("prof"), ProfilingUI("prof")),
-    navbarMenu(
-        "Development",
-        dev.tabView("Biomarker analysis", BiomarkerInputs("bio"), BiomarkerUI("bio")),        
-        dev.tabView("BatchCorrect", BatchCorrectInputs("bc"), BatchCorrectUI("bc")),
-        dev.tabView("MetaAnalysis", MetaInputs("meta"), MetaUI("meta"))
-    ),
+    dev.tabs,
     footer = tagList(
         social_buttons(),
         show_waiter_on_load(spin_fading_circles()) # place at the bottom
