@@ -8,7 +8,7 @@ myplot_ly <- function(..., theme="default") {
     ##
     ##
     if(theme=="default") {
-        p <- plot_ly(...)
+        p <- plotly::plot_ly(...)
 
     } else if(theme=="dark") {
         font.par <- list(
@@ -18,13 +18,13 @@ myplot_ly <- function(..., theme="default") {
             color='#FFF',
             linecolor='#FFF'
         )
-        p <- plot_ly(...) %>%
+        p <- plotly::plot_ly(...) %>%
             layout(
                 plot_bgcolor = "rgb(10,30,50)",
                 paper_bgcolor = "rgb(10,30,50)",
                 xaxis = axis.par,
                 yaxis = axis.par,
-                titlefont = font.par
+                title = font.par
         )
     }
     return(p)

@@ -365,7 +365,7 @@ code {
 /* splash and modal */
 #modal-splash {
     background-color: #2c81e2;    
-    border-top: 4px solid var(--accent-color) !important;
+    border-bottom: 3px solid var(--accent-color) !important;
 }
 
 .modal-body {
