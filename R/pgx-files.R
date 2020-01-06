@@ -48,8 +48,8 @@ pgx.updateDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
     
     ## all public datasets
     pgx.files <- dir(pgx.dir, pattern="[.]pgx$")
-    pub.id <- sub("-.*","",pgx.files)
-    pgx.files <- pgx.files[!duplicated(pub.id)]
+    ##pub.id <- sub("-.*","",pgx.files)
+    ##pgx.files <- pgx.files[!duplicated(pub.id)]
     pgx.files
 
     allfc.file <- file.path(pgx.dir,file)
@@ -66,7 +66,8 @@ pgx.updateDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
         files.done <- unique(paste0(files.done,".pgx"))
         pgx.files <- setdiff(pgx.files, files.done)
     }
-
+    length(pgx.files)
+    
     if(length(pgx.files)==0) {
         if(verbose) cat("all done. no update required.\n")
         return(NULL)

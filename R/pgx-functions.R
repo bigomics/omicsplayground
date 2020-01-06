@@ -12,16 +12,17 @@ USER.GENETEST.METHODS <- NULL
 
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
 fread.csv <- function(file, check.names=FALSE, row.names=1,
-                      stringsAsFactors=FALSE, header=TRUE)
+                      stringsAsFactors=FALSE, header=TRUE, asMatrix=TRUE)
 {
     require(data.table)
     df <- fread(file=file, check.names=check.names, header=header)
     x <- data.frame(df[,2:ncol(df)], stringsAsFactors=stringsAsFactors,
                     check.names=check.names)
     rownames(x) <- df[[row.names]]
-    if(all(sapply(x,class)=="numeric")) x <- as.matrix(x)
-    if(all(sapply(x,class)=="character")) x <- as.matrix(x)
-    if(all(sapply(x,class)=="integer")) x <- as.matrix(x)
+    is.num <- all(sapply(x,class)=="numeric")
+    is.char <- all(sapply(x,class)=="character")
+    is.int <- all(sapply(x,class)=="integer")
+    if(asMatrix && (is.num || is.char || is.int)) x <- as.matrix(x)
     return(x)
 }
 
@@ -393,11 +394,13 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
                                fromX=FALSE, is.logx=FALSE,
                                kclust=1, prior.counts=NULL, 
                                dims=c(2,3), find.clusters=TRUE,
+                               clust.detect = c("louvain","hclust"),
                                row.center=TRUE, row.scale=FALSE,
                                method=c("tsne","umap","pca") )
 {
 
-
+    clust.detect <- clust.detect[1]
+    
     sX <- ngs$counts
     if(fromX) sX <- 2**ngs$X
     res <- NULL
@@ -406,6 +409,7 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
         ntop=ntop, sv.rank=sv.rank, prefix=prefix,         
         kclust=kclust, prior.counts=prior.counts, 
         dims=dims, find.clusters=find.clusters,
+        clust.detect = clust.detect,
         row.center=row.center, row.scale=row.scale,
         method=method)
 
@@ -418,18 +422,21 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
     return(ngs)
 }
 
-pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
-                                         ntop=1000, sv.rank=-1, prefix="C", 
-                                         fromX=FALSE, is.logx=FALSE,
-                                         kclust=1, prior.counts=NULL, 
-                                         dims=c(2,3), find.clusters=TRUE,
-                                         row.center=TRUE, row.scale=FALSE,
-                                         method=c("tsne","umap","pca") )
+pgx.clusterSamplesFromMatrix <-
+    function(counts, perplexity=NULL,
+             ntop=1000, sv.rank=-1, prefix="C", 
+             fromX=FALSE, is.logx=FALSE, 
+             prior.counts=NULL, dims=c(2,3),
+             row.center=TRUE, row.scale=FALSE,
+             find.clusters=TRUE, kclust=1,
+             clust.detect = c("louvain","hclust"),
+             method=c("tsne","umap","pca") )
 {
     require(Rtsne)
     require(irlba)
     ##set.seed(0)
     method <- method[1]
+    clust.detect <- clust.detect[1]
     
     sX <- counts
     if(is.logx) sX <- 2**sX
@@ -520,8 +527,17 @@ pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
     
     ## ------------ find t-SNE clusters from graph
     idx = NULL
-    if(find.clusters) {
-        cat("Finding clusters...\n")
+    if(find.clusters && clust.detect=="hclust") {
+        cat("Finding clusters using hclust...\n")
+        hc <- hclust(dist(t(sX)))
+        idx2 <- cutree(hc,2)
+        idx3 <- cutree(hc,3)
+        idx4 <- cutree(hc,4)
+        idx5 <- cutree(hc,5)
+        idx <- cutree(hc,kclust)
+
+    } else if(find.clusters && clust.detect=="louvain") {
+        cat("Finding clusters using Louvain...\n")
         require(igraph)
         if(!is.null(pos2)) pos <- pos2
         if(!is.null(pos3)) pos <- pos3

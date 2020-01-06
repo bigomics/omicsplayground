@@ -160,12 +160,13 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
         showModal(modalDialog(
             id="modal-splash",
             div(
-                id="particles-target",
-                img(src = base64enc::dataURI(file="www/splash/bigomics-splash2.png"),
+                id = "particles-target",
+                img(src = base64enc::dataURI(file="www/splash.png"),
                     width="100%", height="auto%", style = "position:absolute;"),
                 ##div("Big Omics Data", class="splash-title"),
                 ##div("Isn't big anymore with Omics Playground", class="splash-subtitle"),
-                style="height: 500px; width: 100%; background-color: #2c81e2;"
+                ##style="height: 500px; width: 100%; background-color: #2c81e2;"
+                style="height: 500px; width: 100%;"                
                 ##height="500px", style="margin-left: -14px; margin-top: -4px;"
             ),            
             footer = tagList(
@@ -219,14 +220,16 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
     })
 
     selectedDataSetInfo <- reactive({
-        sel <- input$pgxtable_rows_selected
+        ##sel <- input$pgxtable_rows_selected
+        sel <- pgxtable$rows_selected()
         if(is.null(sel) || length(sel)==0) return(NULL)
         df <- getPGXTable()
         unlist(lapply(df[sel,],as.character))
     })
 
     selectedDataSet <- reactive({
-        sel <- input$pgxtable_rows_selected
+        ##sel <- input$pgxtable_rows_selected
+        sel <- pgxtable$rows_selected()
         if(is.null(sel) || length(sel)==0) return(NULL)
         df <- getPGXTable()
         as.character(df$dataset[sel])
@@ -246,15 +249,14 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
         toon <- randomCartoon()
         showModal(modalDialog(
             ##title = HTML("<center><h4>Omics Playground</h4></center>"),
-            ##HTML("<center><h2>",pgx.randomSlogan(),"</h2><h4>with Omics Playground</h4></center>"),
             title = HTML("<center><h2>",toon$slogan,"</h2><h4>with Omics Playground</h4></center>"),
             fillRow(flex=c(1,NA,1), br(),
                     ##img0,
                     ##imageOutput("loading_image", width="auto", height="250px"),
-                    img(src = base64enc::dataURI(file=toon$img), width="auto", height="250px"),
+                    img(src = base64enc::dataURI(file=toon$img), width="auto", height="300px"),
                     br()),
             footer = HTML("<center><p>",msg,"  &nbsp; Please wait</p></center>"),
-            size="m", easyClose=FALSE, fade=TRUE))
+            size="l", easyClose=FALSE, fade=TRUE))
         ## Sys.sleep(5)
         showloading_ntime <<- 1
         dbg("showLoadingModal done!\n")
@@ -672,11 +674,15 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
                       selection = list(mode='single', target='row', selected=NULL ),
                       ##selection = list(mode='none'),
                       ## filter = "top",
+                      fillContainer = TRUE,
                       options=list(
                           ##dom = 'Blfrtip',
+                          dom = 'frti',
                           ##columnDefs = list(list(searchable = FALSE, targets = 1)),
-                          pageLength = 100, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = FALSE, scrollY =400, ## scroller=TRUE,
+                          pageLength = 1000, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                          scrollX = FALSE,
+                          ##scrollY =400, ## scroller=TRUE,
+                          scrollY = '100vh', ## scroller=TRUE,
                           deferRender=TRUE
                       )  ## end of options.list 
                       )  %>%
@@ -687,32 +693,38 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
     pgxDatasetOverview.RENDER <- reactive({        
         df <- getPGXTable()
         req(df)
-        sel = input$pgxtable_rows_selected    
+        ##sel = input$pgxtable_rows_selected
+        sel <- pgxtable$rows_selected()
         sel.dataset = df$dataset[sel]
         par(mfrow=c(1,3))
         plot(sin)
         plot(cos)
-        plot(exp)
-        
+        plot(exp)        
     })
-
 
     pgxtable_text = "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the collection date."
 
-    pgxtable_module <- tableModule(
-        id = "pgxtable", func = pgxTable.RENDER,
-        info.text = pgxtable_text,
-        title="Datasets"
-    )
-    output <- attachModule(output, pgxtable_module)
-    outputOptions(output, "pgxtable", suspendWhenHidden=FALSE) ## important!
+    ## pgxtable_module <- tableModule(
+    ##     id = "pgxtable",
+    ##     func = pgxTable.RENDER,
+    ##     info.text = pgxtable_text,
+    ##     title="Datasets"
+    ## )    
+    ## output <- attachModule(output, pgxtable_module)
+    pgxtable <- callModule(
+        tableModule, id = "pgxtable",
+        func = pgxTable.RENDER,
+        title = "Datasets",
+        height = 580)
+    ##outputOptions(output, "pgxtable", suspendWhenHidden=FALSE) ## important!
 
     output$pgxtable_UI <- renderUI({    
         fillCol(
             flex=c(1),
-            height = 750,
+            height = 580,
             ##moduleWidget(pgxplots_module, outputFunc="plotOutput")
-            moduleWidget(pgxtable_module, outputFunc="dataTableOutput", ns=ns)
+            ##moduleWidget(pgxtable_module, outputFunc="dataTableOutput", ns=ns)
+            tableWidget(ns("pgxtable"))
         )
     })
 
@@ -914,7 +926,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
         ## initialize and update global PGX object
         ngs <- pgx.initialize(ngs)
         currentPGX(ngs)  ## copy to global reactive variable
-        selectRows(proxy = dataTableProxy("pgxtable"), selected=NULL)
+        selectRows(proxy = dataTableProxy(ns("pgxtable")), selected=NULL)
         ## shinyjs::click("loadbutton")    
 
         removeModal()

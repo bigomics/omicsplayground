@@ -43,10 +43,12 @@ ExpressionModule <- function(input, output, session, env)
     ## reactive functions from shared environment
     inputData <- env[["load"]][["inputData"]]
     usermode  <- env[["load"]][["usermode"]]
-    
-    rowH = 330  ## row height of panels
-    imgH = 280  ## height of images
-    tabH = 190  ## height of tables
+
+    fullH = 750
+    rowH = 350  ## row height of panels
+    imgH = 270  ## height of images
+    tabH = 160  ## height of tables
+    tabH = "70vh"  ## height of tables
     
     description = "<b>Differential Expression Analysis.</b> Compare expression between
 two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups."
@@ -74,7 +76,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     
     output$inputsUI <- renderUI({
         ui <- tagList(
-            tipify( actionLink(ns("gx_info"), "Info", icon = icon("info-circle")),
+            tipify( actionLink(ns("gx_info"), "Tutorial", icon = icon("youtube")),
                    "Show more information about this module."),
             hr(), br(),             
             tipify( selectInput(ns("gx_contrast"), "Contrast:", choices=NULL),
@@ -225,7 +227,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         rownames(res) = rownames(mx)
         return(res)
     }
-
+    
     diffExprTable <- reactive({
         ## return the full DE table 
         ngs = inputData()
@@ -297,7 +299,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         dbg("sigDiffExprTable: 5 : input$gx_top10=",input$gx_top10,"\n")
         
         ## just show top 10
-        if(input$gx_top10==TRUE) {
+        if(length(input$gx_top10) && input$gx_top10==TRUE) {
             fx  = as.numeric(res[,fx.col])
             names(fx) = rownames(res)
             pp <- unique(c(head(names(sort(-fx[which(fx>0)])),10),
@@ -323,7 +325,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     expr_plots_topgenesbarplot_text = "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> settings."
     expr_plots_topfoldchange_text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the <code>Table</code> section."
     
-    expr_plots_volcano.RENDER <- reactive({
+    expr_plots_volcano.RENDER %<a-% reactive({
         
         comp1=1;fdr=0.10
         comp1 = input$gx_contrast
@@ -355,6 +357,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         sel.genes = intersect(sig.genes, sel.genes)
         xlim = c(-1,1)*max(abs(fx),na.rm=TRUE)
         ylim = c(0, max(12, 1.1*max(-log10(qval),na.rm=TRUE)))
+
         par(mfrow=c(1,1), mar=c(4,3,2,1.5), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
         par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
         gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.genes,
@@ -370,18 +373,85 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     })
 
+    expr_plots_volcano.PLOTLY <- reactive({
+        
+        comp1=1;fdr=0.10
+        comp1 = input$gx_contrast
+        if(length(comp1)==0) return(NULL)
+        if(is.null(input$gx_features)) return(NULL)
+        ngs <- inputData()
+        req(ngs)
+        
+        fdr = 1
+        fdr = as.numeric(input$gx_fdr)
+        
+        res = diffExprTable()
+        if(is.null(res)) return(NULL)
+        lfc=1
+        lfc = as.numeric(input$gx_lfc)
 
-    expr_plots_volcano_module <- plotModule(
-        id="expr_plots_volcano", ns=ns,
-        func=expr_plots_volcano.RENDER, 
-        info.text = expr_plots_volcano_text, label="a",
-        title = "Volcano plot",
-        pdf.width=6, pdf.height=6, res=75
+        fam.genes = unique(unlist(GSETS[8]))
+        fam.genes = res$gene_name
+        ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
+        if(input$gx_features!="<all>") fam.genes = unique(unlist(GSETS[input$gx_features]))
+        jj <- match(toupper(fam.genes),toupper(res$gene_name))
+        sel.genes <- res$gene_name[setdiff(jj,NA)]
+        
+        fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
+        qval = res[,grep("adj.P.Val|meta.q|qval|padj",colnames(res))[1]]
+        qval = pmax(qval, 1e-20)
+        x = res[,grep("logFC|meta.fx|fc",colnames(res))[1]]
+        y <- -log10(qval + 1e-12)
+        
+        sig.genes = fc.genes[which(qval <= fdr & abs(x) > lfc )]
+        sel.genes = intersect(sig.genes, sel.genes)
+
+        impt <- function(g) {
+            j = match(g, fc.genes)
+            x1 = scale(x,center=FALSE)[j]
+            y1 = scale(y,center=FALSE)[j]
+            x = sign(x1)*(x1**2 + 0.25*y1**2)
+            names(x)=g
+            x
+        }
+        lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
+                      head(sel.genes[order(-impt(sel.genes))],10) )
+
+        xlim = c(-1,1)*max(abs(x),na.rm=TRUE)
+        ylim = c(0, max(12, 1.1*max(-log10(qval),na.rm=TRUE)))
+        
+        ## par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
+        plotlyVolcano(
+            x=x, y=y, names=fc.genes,
+            source = "plot1",
+            highlight = sel.genes, label=lab.genes,
+            group.names = c("group1","group0"),
+            ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
+            ##use.fdr=TRUE,
+            psig = fdr, lfc = lfc,
+            xlab = "effect size (log2FC)",
+            ylab = "significance (-log10q)",
+            marker.size = 4,
+            displayModeBar = FALSE,
+            showlegend = FALSE) %>%
+            layout( margin = list(b=65) )                
+    })
+    
+    ##expr_plots_volcano_module <- plotModule(
+    callModule(
+        plotModule,
+        id = "expr_plots_volcano", ## ns=ns,
+        ##func = expr_plots_volcano.RENDER,
+        func = expr_plots_volcano.PLOTLY, plotlib = "plotly",       
+        ##func2 = expr_plots_volcano.RENDER, 
+        info.text = expr_plots_volcano_text, 
+        title = "Volcano plot", label="a",
+        height = imgH,  res=75,
+        pdf.width=6, pdf.height=6
     )
-    output <- attachModule(output, expr_plots_volcano_module)
+    ## output <- attachModule(output, expr_plots_volcano_module)
 
-
-    expr_plots_maplot.RENDER <- reactive({
+    expr_plots_maplot.RENDER %<a-% reactive({
         comp1 = input$gx_contrast
         if(length(comp1)==0) return(NULL)
 
@@ -418,8 +488,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.genes, lfc=lfc,
                           render="canvas", n=5000, nlab=10, 
                           xlim=xlim, ylim=c(0,15),
-                          xlab="average expression (log2.CPM)",
-                          ylab="effect size (log2.FC)",
+                          xlab="average expression (log2CPM)",
+                          ylab="effect size (log2FC)",
                           ma_plot=TRUE, ma = ma, ## hi.col="#222222",
                           use.fdr=TRUE, p.sig=fdr, ##main=comp1,
                           ## main="MA plot",
@@ -427,16 +497,81 @@ two conditions. Determine which genes are significantly downregulated or overexp
                           highlight=sel.genes)
     })
 
-    expr_plots_maplot_module <- plotModule(
-        id="expr_plots_maplot", ns=ns,
-        func=expr_plots_maplot.RENDER, 
+    expr_plots_maplot.PLOTLY %<a-% reactive({
+        comp1 = input$gx_contrast
+        if(length(comp1)==0) return(NULL)
+
+        ngs <- inputData()
+        req(ngs)
+        
+        fdr=1;lfc=1
+        fdr = as.numeric(input$gx_fdr)    
+        lfc = as.numeric(input$gx_lfc)
+        
+        res = diffExprTable()
+        if(is.null(res)) return(NULL)
+        fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
+        ##pval = res$P.Value
+        ##pval = res[,grep("P.Value|meta.p|pval|p.val",colnames(res))[1]]
+
+        ## filter genes by gene family or gene set
+        fam.genes = unique(unlist(ngs$families[10]))
+        ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
+        fam.genes = res$gene_name
+        if(input$gx_features!="<all>") fam.genes = unique(unlist(GSETS[input$gx_features]))
+        jj <- match(toupper(fam.genes),toupper(res$gene_name))
+        sel.genes <- res$gene_name[setdiff(jj,NA)]
+
+        qval = res[,grep("adj.P.Val|meta.q|qval|padj",colnames(res))[1]]
+        y = res[,grep("logFC|meta.fx|fc",colnames(res))[1]]
+        sig.genes = fc.genes[which(qval <= fdr & abs(y) > lfc )]
+        sel.genes = intersect(sig.genes, sel.genes)    
+        ylim = c(-1,1)*max(abs(y),na.rm=TRUE)
+        x = rowMeans( ngs$X[rownames(res),], na.rm=TRUE)
+
+        impt <- function(g) {
+            j = match(g, fc.genes)
+            x1 = scale(x,center=FALSE)[j]
+            y1 = scale(y,center=FALSE)[j]
+            x = sign(y1)*(1.0*x1**2 + 1.0*y1**2)
+            names(x)=g
+            x
+        }
+        lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
+                      head(sel.genes[order(-impt(sel.genes))],10) )
+        
+        highlight=sel.genes;label=lab.genes;names=fc.genes
+        plotlyMA(
+            x=x, y=y, names=fc.genes,
+            source = "plot1",
+            highlight=sel.genes, label=lab.genes,
+            group.names = c("group1","group0"),
+            ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
+            ##use.fdr=TRUE,
+            psig = fdr, lfc = lfc,
+            xlab = "average expression (log2.CPM)",
+            ylab = "effect size (log2.FC)",
+            marker.size = 4,
+            displayModeBar = FALSE,
+            showlegend = FALSE) %>%
+            layout( margin = list(b=65) )
+
+    })
+    
+    callModule( plotModule,
+        id="expr_plots_maplot", 
+        ##func = expr_plots_maplot.RENDER,
+        func = expr_plots_maplot.PLOTLY, plotlib="plotly",
+        ##func2 = expr_plots_maplot.RENDER, 
         info.text = expr_plots_maplot_text, label="b",
         title = "MA plot",
+        height = imgH,
         pdf.width=6, pdf.height=6, res=75
     )
-    output <- attachModule(output, expr_plots_maplot_module)
+    ## output <- attachModule(output, expr_plots_maplot_module)
 
-    expr_plots_topgenesbarplot.RENDER <- reactive({
+    
+    expr_plots_topgenesbarplot.RENDER %<a-% reactive({
         require(RColorBrewer)
         ngs = inputData()
         req(ngs)
@@ -487,23 +622,27 @@ two conditions. Determine which genes are significantly downregulated or overexp
         
     })
 
-    expr_plots_topgenesbarplot_module <- plotModule(
-        id="expr_plots_topgenesbarplot", ns=ns,
-        func=expr_plots_topgenesbarplot.RENDER,
+    callModule(
+        plotModule,
+        id="expr_plots_topgenesbarplot", ## ns=ns,
+        func = expr_plots_topgenesbarplot.RENDER,
+        func2 = expr_plots_topgenesbarplot.RENDER,        
         info.text = expr_plots_topgenesbarplot_text, label="c",
         title = "top DE genes",
+        height = imgH,
         pdf.width=6, pdf.height=6, res=75
     )
-    output <- attachModule(output, expr_plots_topgenesbarplot_module)
+    ## output <- attachModule(output, expr_plots_topgenesbarplot_module)
 
-    expr_plots_topfoldchange.RENDER <- reactive({
+    expr_plots_topfoldchange.RENDER %<a-% reactive({
         require(RColorBrewer)
         ngs = inputData()
         req(ngs)
         
         ## get table
         ##sel=1;pp=rownames(ngs$X)[1]
-        sel = input$expr_genetable_rows_selected
+        ##sel = input$expr_genetable_rows_selected
+        sel = expr_genetable$rows_selected()
         if(is.null(sel)) return(NULL)    
 
         res = sigDiffExprTable()
@@ -545,23 +684,25 @@ two conditions. Determine which genes are significantly downregulated or overexp
         
     })
 
-    expr_plots_topfoldchange_module <- plotModule(
-        id="expr_plots_topfoldchange", ns=ns,
-        func=expr_plots_topfoldchange.RENDER,
+    callModule( plotModule,
+        id = "expr_plots_topfoldchange", 
+        func = expr_plots_topfoldchange.RENDER,
+        func2 = expr_plots_topfoldchange.RENDER,
         info.text = expr_plots_topfoldchange_text,
         title = "Gene in contrasts", label = "d",
+        height = imgH,
         pdf.width=6, pdf.height=6, res=75
     )
-    output <- attachModule(output, expr_plots_topfoldchange_module)
+    ##output <- attachModule(output, expr_plots_topfoldchange_module)
     
-    expr_plots_boxplot.RENDER <- reactive({
+    expr_plots_boxplot.RENDER %<a-% reactive({
         require(RColorBrewer)
         ngs = inputData()
         req(ngs)
         
         ## get table
         ##sel=1
-        sel = input$expr_genetable_rows_selected
+        sel = expr_genetable$rows_selected()
         if(is.null(sel)) return(NULL)    
 
         res = sigDiffExprTable()
@@ -583,12 +724,15 @@ two conditions. Determine which genes are significantly downregulated or overexp
                                logscale=logscale, srt=srt)    
     })
 
-    expr_plots_boxplot_module <- plotModule(
-        id="expr_plots_boxplot", ns=ns,
-        func=expr_plots_boxplot.RENDER,
-        info.text = "This is an example", pdf.width=6, pdf.height=6, res=75
+    callModule( plotModule,
+        id = "expr_plots_boxplot", 
+        func = expr_plots_boxplot.RENDER,
+        func2 = expr_plots_boxplot.RENDER,
+        info.text = "This is an example",
+        height = imgH,
+        pdf.width=6, pdf.height=6, res=75
     )
-    output <- attachModule(output, expr_plots_boxplot_module)
+    ## output <- attachModule(output, expr_plots_boxplot_module)
 
     expr_plots_caption = "<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting significance versus fold-change on the y and x axes, respectively. <b>(b)</b> MA-plot plotting fold-change versus signal intensity on the y and x axes, respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change for selected contrast. <b>(d)</b> Sorted barplot of the differential expression of the selected gene across all contrasts."
 
@@ -596,15 +740,15 @@ two conditions. Determine which genes are significantly downregulated or overexp
     output$expr_plots_UI <- renderUI({
         fillCol(
             height = rowH,
-            flex = c(1,0.05,NA),
+            flex = c(1,0.25,NA),
             fillRow(
                 id = "expr_plots",
                 ##height = rowH,
                 flex=c(1,1,1,1), ##height = 370,
-                moduleWidget(expr_plots_volcano_module, ns=ns, height=imgH), 
-                moduleWidget(expr_plots_maplot_module, ns=ns, height=imgH),
-                moduleWidget(expr_plots_topgenesbarplot_module, ns=ns, height=imgH),
-                moduleWidget(expr_plots_topfoldchange_module, ns=ns, height=imgH)
+                plotWidget(ns("expr_plots_volcano")),
+                plotWidget(ns("expr_plots_maplot")),
+                plotWidget(ns("expr_plots_topgenesbarplot")),
+                plotWidget(ns("expr_plots_topfoldchange"))
             ),
             br(),
             div(HTML(expr_plots_caption), class="caption")
@@ -616,7 +760,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## Top genes
     ##================================================================================
 
-    expr_topgenes.RENDER <- reactive({
+    expr_topgenes.RENDER %<a-% reactive({
 
         ngs <- inputData()
         req(ngs)
@@ -626,7 +770,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if(is.null(res) || nrow(res)==0) return(NULL)
 
         ## filter on active rows (using search)
-        ii <- input$expr_genetable_rows_all
+        ##ii <- input$expr_genetable_rows_all
+        ii  <- expr_genetable$rows_all()
         res <- res[ii,,drop=FALSE]
         if(nrow(res)==0) return(NULL)
         
@@ -703,23 +848,28 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     expr_topgenes_caption = "<b>Top differentially expressed genes.</b> Expression barplots of the top most differentially (both positively and negatively) expressed genes for the selected contrast."
 
-    expr_topgenes_module <- plotModule(
-        id="expr_topgenes", ns=ns,
-        func=expr_topgenes.RENDER, options=expr_topgenes_opts,
+    callModule( plotModule,
+        id = "expr_topgenes", 
+        func = expr_topgenes.RENDER,
+        func2 = expr_topgenes.RENDER,
+        options = expr_topgenes_opts,
         info.text = expr_topgenes_text,
-        caption = expr_topgenes_caption,
-        pdf.width=14, pdf.height=4, res=95,
+        ##caption = expr_topgenes_caption,
+        height = c(imgH,450), width = c('auto',1500), res=c(85,95),
+        pdf.width=14, pdf.height=4, 
         title="Expression of top differentially expressed genes"
     )
-    output <- attachModule(output, expr_topgenes_module)
+    ##output <- attachModule(output, expr_topgenes_module)
 
     ## library(shinyjqui)
     output$expr_topgenesUI <- renderUI({
         fillCol(
             ## id = ns("expr_topgenes"),
             height = rowH,
-            flex=c(1), ##height = 370,
-            moduleWidget(expr_topgenes_module, ns=ns, height=imgH)
+            flex=c(1,NA,NA), ##height = 370,
+            plotWidget(ns("expr_topgenes")),
+            br(),
+            div(HTML(expr_topgenes_caption),class="caption")
         )
     })
 
@@ -727,7 +877,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## Volcano (all contrasts)
     ##================================================================================
 
-    expr_volcanoAll.RENDER <- reactive({
+    expr_volcanoAll.RENDER %<a-% reactive({
 
         ngs = inputData()
         if( is.null(ngs)) return(NULL)
@@ -811,23 +961,28 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     expr_volcanoAll_caption = "<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings."
 
-    expr_volcanoAll_module <- plotModule(
-        id="expr_volcanoAll", ns=ns,
-        func=expr_volcanoAll.RENDER,
+    callModule( plotModule,
+        id="expr_volcanoAll", 
+        func = expr_volcanoAll.RENDER,
+        func2 = expr_volcanoAll.RENDER,
         info.text = expr_volcanoAll_text,
-        caption = expr_volcanoAll_caption,
-        pdf.width=18, pdf.height=6, res=75,
+        ##caption = expr_volcanoAll_caption,
+        pdf.width=18, pdf.height=6,
+        ##height = imgH, res=75,
+        height = c(imgH,500), width = c('auto',1500), res=c(75,90),
         title="Volcano plots for all contrasts"
     )
-    output <- attachModule(output, expr_volcanoAll_module)
+    ##output <- attachModule(output, expr_volcanoAll_module)
 
     ## library(shinyjqui)
     output$expr_volcanoAll_UI <- renderUI({
         fillCol(
             ## id = ns("expr_topgenes"),
             height = rowH,
-            flex=c(1), ##height = 370,
-            moduleWidget(expr_volcanoAll_module, ns=ns, height=imgH)
+            flex=c(1,NA,NA), ##height = 370,
+            plotWidget(ns("expr_volcanoAll")),
+            br(),
+            div(HTML(expr_volcanoAll_caption), class="caption")
         )
     })
 
@@ -835,7 +990,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## Volcano (all methods)
     ##================================================================================
 
-    expr_volcanoMethods.RENDER <- reactive({
+    expr_volcanoMethods.RENDER %<a-% reactive({
         comp = input$gx_contrast
         if(is.null(comp)) return(NULL)
         ngs = inputData()
@@ -897,22 +1052,26 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     expr_volcanoMethods_caption = "<b>Volcano plot for all statistical methods.</b> Simultaneous visualisation of volcano plots of genes by multiple differential expression methods for the selected contrast. Methods showing better statistical significance will show volcano plots with 'higher' wings."
 
-    expr_volcanoMethods_module <- plotModule(
-        id="expr_volcanoMethods", ns=ns,
-        func=expr_volcanoMethods.RENDER,
-        title="Volcano plots for all methods",
+    callModule( plotModule,
+        id = "expr_volcanoMethods", 
+        func = expr_volcanoMethods.RENDER,
+        func2 = expr_volcanoMethods.RENDER,        
+        title = "Volcano plots for all methods",
         info.text = expr_volcanoMethods_text, 
-        caption = expr_volcanoMethods_caption,
-        pdf.width=18, pdf.height=6, res=75
+        ##caption = expr_volcanoMethods_caption,
+        height = c(imgH,500), width = c('auto',1500), res=c(75,90),
+        pdf.width=18, pdf.height=6
     )
-    output <- attachModule(output, expr_volcanoMethods_module)
+    ##output <- attachModule(output, expr_volcanoMethods_module)
 
     ## library(shinyjqui)
     output$expr_volcanoMethodsUI <- renderUI({
         fillCol(
             height = rowH,
-            flex=c(1), ##height = 370,
-            moduleWidget(expr_volcanoMethods_module, ns=ns, height=imgH)
+            flex=c(1,NA,NA), ##height = 370,
+            plotWidget(ns("expr_volcanoMethods")),
+            br(),
+            div(HTML(expr_volcanoMethods_caption), class="caption")
         )
     })
 
@@ -959,11 +1118,14 @@ two conditions. Determine which genes are significantly downregulated or overexp
                       class = 'compact cell-border stripe hover',                  
                       extensions = c('Scroller'),
                       selection=list(mode='single', target='row', selected=1),
+                      fillContainer = TRUE,
                       options=list(
                           dom = 'lfrtip',
                           pageLength = 400,
                           ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, scrollY = tabH, scroller=TRUE, deferRender=TRUE
+                          scrollX = TRUE,
+                          scrollY = tabH,
+                          scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             formatSignif(numeric.cols,4) %>%
@@ -989,15 +1151,19 @@ two conditions. Determine which genes are significantly downregulated or overexp
                placement="top", options = list(container = "body"))    
     )
 
-    expr_genetable_module <- tableModule(
-        id="expr_genetable", func=expr_genetable.RENDER, ns=ns,
-        info.text = expr_genetable_text, label="I", info.width="500px",
+    expr_genetable <- callModule(
+        tableModule,
+        id = "expr_genetable",
+        func = expr_genetable.RENDER, 
+        info.text = expr_genetable_text,
+        label="I", info.width="500px",
         options = expr_genetable_opts,
-        title="Differential expression analysis"
+        title = "Differential expression analysis",
+        height = c(250,700)
     )
 
     ##output$expr_genetable <- expr_genetable_module$render
-    output <- attachModule(output, expr_genetable_module)
+    ##output <- attachModule(output, expr_genetable_module)
 
     gx_related_genesets <- reactive({
 
@@ -1011,7 +1177,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         
         ## get table
         sel.row=1;
-        sel.row = input$expr_genetable_rows_selected
+        ##sel.row = input$expr_genetable_rows_selected
+        sel.row = expr_genetable$rows_selected()
         if(is.null(sel.row)) return(NULL)
         gene0 <- rownames(res)[sel.row]
         gene1 <- toupper(sub(".*:","",gene0))  ## always uppercase...
@@ -1055,9 +1222,12 @@ two conditions. Determine which genes are significantly downregulated or overexp
                       class = 'compact cell-border stripe',
                       rownames=FALSE, escape = c(-1,-2),
                       extensions = c('Scroller'),
+                      fillContainer = TRUE,
                       options=list(
                           dom = 'lfrtip', 
-                          scrollX = TRUE, scrollY = tabH, scroller=TRUE, deferRender=TRUE
+                          scrollX = TRUE,
+                          scrollY = tabH,
+                          scroller=TRUE, deferRender=TRUE
                       ),  ## end of options.list 
                       selection=list(mode='single', target='row', selected=1)) %>%
             ##formatSignif(1:ncol(df),4) %>%
@@ -1068,15 +1238,14 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     expr_gsettable_text = "By clicking on a gene in the Table <code>I</code>, it is possible to see which genesets contain that gene in this table, and check the differential expression status in other comparisons from the <code>Gene in contrasts</code> plot under the <code>Plots</code> tab."
 
-    expr_gsettable_module <- tableModule(
-        id = "expr_gsettable", ns=ns,
-        func=expr_gsettable.RENDER, 
+    callModule(
+        tableModule,
+        id = "expr_gsettable", 
+        func = expr_gsettable.RENDER, 
         info.text = expr_gsettable_text, label="II",
-        title="Gene sets"
-        ## server=FALSE
+        title="Gene sets",
+        height = c(250,700), width = c('100%',800)        
     )
-    ##output$expr_gsettable <- expr_gsettable_module$render
-    output <- attachModule(output, expr_gsettable_module)
 
     expr_tablesUI_caption = "<b>Differential expression tables</b>. <b>(I)</b> Statistical results of the the differential expression analysis for selected contrast. The number of stars indicate how many statistical methods identified the gene significant. <b>(II)</b> Correlation and enrichment value of gene sets that contain the gene selected in Table I."
     
@@ -1086,9 +1255,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
             flex = c(1,NA),
             fillRow(
                 flex = c(2,0.1,1), 
-                moduleWidget(expr_genetable_module, outputFunc="dataTableOutput", ns=ns),
+                tableWidget(ns("expr_genetable")),
                 br(),
-                moduleWidget(expr_gsettable_module, outputFunc="dataTableOutput", ns=ns)        
+                tableWidget(ns("expr_gsettable"))
             ),
             div(HTML(expr_tablesUI_caption),class="caption")
         )
@@ -1122,10 +1291,13 @@ two conditions. Determine which genes are significantly downregulated or overexp
                       class = 'compact cell-border stripe hover',
                       extensions = c('Scroller'),
                       selection=list(mode='single', target='row', selected=c(1)),
+                      fillContainer = TRUE,
                       options=list(
                           dom = 'lfrtip', 
                           ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, scrollY = tabH, scroller=TRUE, deferRender=TRUE
+                          scrollX = TRUE,
+                          scrollY = tabH,
+                          scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
@@ -1145,22 +1317,21 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     expr_fctable_caption = "<b>Differential expression (fold-change) across all contrasts.</b> The column `fc.var` corresponds to the variance of the fold-change across all contrasts."
 
-    expr_fctable_module <- tableModule(
-        id="expr_fctable", func=expr_fctable.RENDER, ns=ns,
+    callModule(
+        tableModule,
+        id="expr_fctable",
+        func = expr_fctable.RENDER, 
         title ="Gene fold changes for all contrasts",
         info.text = expr_fctable_text,
-        caption = expr_fctable_caption
+        caption = expr_fctable_caption,
+        height = c(270,700)
     )
-
-    ##output$expr_fctable     <- expr_fctable_module$render
-    ##output$expr_fctable_csv <- expr_fctable_module$csv
-    output <- attachModule(output, expr_fctable_module)
 
     ## library(shinyjqui)
     output$expr_fctable_UI <- renderUI({
         fillCol(
             height = rowH,
-            moduleWidget(expr_fctable_module, outputFunc="dataTableOutput", ns=ns)
+            tableWidget(ns("expr_fctable"))
         )
     })
 
@@ -1215,11 +1386,14 @@ two conditions. Determine which genes are significantly downregulated or overexp
         
         DT::datatable( D, rownames=FALSE,
                       class = 'compact cell-border stripe hover',
+                      fillContainer = TRUE,
+                      extensions = c('Scroller'),                      
                       options=list(
-                          extensions = c('Buttons','Scroller'),                      
-                          dom = 't',
+                          dom = 'lfrtip',
                           pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, scrollY = tabH, scroller=TRUE, deferRender=TRUE
+                          scrollX = TRUE,
+                          scrollY = tabH,
+                          scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
@@ -1239,23 +1413,25 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     expr_FDRtable_caption = "<b>Number of significant genes versus FDR.</b> This table reports the number of significant genes at different FDR thresholds for all contrasts and methods. This enables to quickly see which methods are more sensitive. The left part of the table (in blue) correspond to the number of significant down-regulated genes, the right part (in red) correspond to the number of significant overexpressed genes."
     
-    expr_FDRtable_module <- tableModule(
-        id="expr_FDRtable", func=expr_FDRtable.RENDER, ns=ns,
+    callModule(
+        tableModule,
+        id="expr_FDRtable",
+        func = expr_FDRtable.RENDER, 
         info.text = expr_FDRtable_text,
-        title='Number of significant genes',
-        caption = expr_FDRtable_caption
+        title = 'Number of significant genes',
+        caption = expr_FDRtable_caption,
+        height = c(270, 700)
     )
-    output <- attachModule(output, expr_FDRtable_module)
+    ##output <- attachModule(output, expr_FDRtable_module)
 
     ## library(shinyjqui)
     output$expr_FDRtable_UI <- renderUI({
         fillCol(
             height = rowH,
-            moduleWidget(expr_FDRtable_module, outputFunc="dataTableOutput", ns=ns)       
+            tableWidget(ns("expr_FDRtable"))
         )
     })
-
-
+    
     ## reactive values to return to parent environment
     outx <- list(selected_gxmethods=selected_gxmethods)
     return(outx)

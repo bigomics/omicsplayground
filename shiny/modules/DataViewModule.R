@@ -25,34 +25,14 @@ DataViewModule <- function(input, output, session, env)
     ns <- session$ns ## NAMESPACE
     inputData <- env[["load"]][["inputData"]]
     
-    rowH = 360  ## row height of panels
-    imgH = 320  ## height of images
+    rowH = 355  ## row height of panels
+    imgH = 315  ## height of images
     fullH = 760 ## full height of panel
     tabH = 600  ## height of tables
     
     description = "<b>DataView.</b> Information and descriptive statistics to quickly lookup a gene, check the total counts, or view the data tables."
     output$description <- renderUI(HTML(description))
     
-    ##----------------------------------------------------------------------
-    ## test panel
-    ##----------------------------------------------------------------------
-
-    dvtest.RENDER <- reactive({
-        par(mfrow=c(2,2), mar=c(4,4,2,2))
-        plot(cos);plot(cos);plot(cos);plot(cos)
-    })
-
-    dvtest_module <- plotModule(
-        id="dvtest", func=dvtest.RENDER, ns=ns
-    )
-    output <- attachModule(output, dvtest_module)
-
-    output$testUI <- renderUI({
-        fillPage(
-            ##plotOutput(ns("dvtest"), height=fullH)
-            moduleWidget(dvtest_module, ns=ns, height=600)
-        )
-    })
     
     ##----------------------------------------------------------------------
     ## More Info (pop up window)
@@ -81,7 +61,7 @@ DataViewModule <- function(input, output, session, env)
 
     output$inputsUI <- renderUI({
         ui <- tagList(
-            tipify( actionLink(ns("data_info"), "Info", icon = icon("info-circle")),
+            tipify( actionLink(ns("data_info"), "Tutorial", icon = icon("youtube")),
                    "Show more information about this module."),
             hr(), br(), 
             ##textInput("search_gene","Filter genes", value="")
@@ -164,7 +144,7 @@ DataViewModule <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     MARGINS1 = c(7,3.5,2,1)
 
-    data_genePlots_averageRankPlot.RENDER <- reactive({
+    data_genePlots_averageRankPlot.RENDER %<a-% reactive({
         require(RColorBrewer)
         
         ngs <- inputData()
@@ -209,13 +189,18 @@ DataViewModule <- function(input, output, session, env)
         text( j, mean.fc[j], gene, pos=3, cex=0.9)
     })
 
-    data_genePlots_averageRankPlot_module <- plotModule(
-        id="data_genePlots_averageRankPlot", ns=ns,
-        func=data_genePlots_averageRankPlot.RENDER,
-        info.text=data_genePlots_averageRankPlot_text, pdf.width=6, pdf.height=6, 
+    ##data_genePlots_averageRankPlot_module <- plotModule(
+    ##id="data_genePlots_averageRankPlot", ns=ns,
+    callModule(
+        plotModule, id="data_genePlots_averageRankPlot",
+        func = data_genePlots_averageRankPlot.RENDER,
+        func2 = data_genePlots_averageRankPlot.RENDER,
+        info.text = data_genePlots_averageRankPlot_text,
+        height = imgH, ## width = '100%',
+        pdf.width=6, pdf.height=6, 
         label="d", title="Average rank"
     )
-    output <- attachModule(output, data_genePlots_averageRankPlot_module) 
+    ##output <- attachModule(output, data_genePlots_averageRankPlot_module) 
 
     ##----------------------------------------------------------------------
     ##                     Correlation plot
@@ -285,7 +270,7 @@ DataViewModule <- function(input, output, session, env)
         return(res)
     })
 
-    data_genePlots_correlationplot.RENDER <- reactive({
+    data_genePlots_correlationplot.RENDER %<a-% reactive({
         res = data_genePlots_correlationplot_data()
         ngs <- inputData()
         if(is.null(ngs) | is.null(res)) return(NULL)
@@ -305,19 +290,23 @@ DataViewModule <- function(input, output, session, env)
                cex=0.85, y.intersp=0.85)
     })
     
-    data_genePlots_correlationplot_module <- plotModule(
-        id="data_genePlots_correlationplot", ns=ns,
-        func=data_genePlots_correlationplot.RENDER,
-        info.text=data_genePlots_correlationplot_text, pdf.width=6, pdf.height=6,
+    ##data_genePlots_correlationplot_module <- plotModule(
+    ##    id="data_genePlots_correlationplot", ns=ns,
+    callModule(
+        plotModule, "data_genePlots_correlationplot",
+        func = data_genePlots_correlationplot.RENDER,
+        func2 = data_genePlots_correlationplot.RENDER,
+        info.text=data_genePlots_correlationplot_text,
+        height = imgH, pdf.width=6, pdf.height=6,
         label="c", title="Top correlated genes"
     )
-    output <- attachModule(output, data_genePlots_correlationplot_module) 
+    ##output <- attachModule(output, data_genePlots_correlationplot_module) 
 
     ##----------------------------------------------------------------------
     ##                     Bar/box plot
     ##---------------------------------------------------------------------- 
     
-    data_genePlots_barplot.RENDER <- reactive({
+    data_genePlots_barplot.RENDER %<a-% reactive({
         require(RColorBrewer)
         
         cat("[dataview] data_genePlots_barplot.RENDER reacted\n")
@@ -408,20 +397,23 @@ DataViewModule <- function(input, output, session, env)
         }
     })
 
-    data_genePlots_barplot_module <- plotModule(
-        id="data_genePlots_barplot", ns=ns,
-        func=data_genePlots_barplot.RENDER,
+    ##data_genePlots_barplot_module <- plotModule(
+    ##    id="data_genePlots_barplot", ns=ns,
+    callModule(
+        plotModule, "data_genePlots_barplot",    
+        func = data_genePlots_barplot.RENDER,
+        func2 = data_genePlots_barplot.RENDER,
         info.text=data_genePlots_barplot_text,
-        pdf.width=6, pdf.height=6, ## height="400px",    
+        height=imgH, pdf.width=6, pdf.height=6, ## height="400px",    
         label="b", title="Abundance/expression barplot"
     )
-    output <- attachModule(output, data_genePlots_barplot_module)
+    ##output <- attachModule(output, data_genePlots_barplot_module)
 
     ##----------------------------------------------------------------------
     ## t-SNE
     ##----------------------------------------------------------------------
     
-    data_genePlots_tsne.RENDER <- reactive({
+    data_genePlots_tsne.RENDER %<a-% reactive({
         require(RColorBrewer)
         
         ngs <- inputData()
@@ -474,7 +466,7 @@ DataViewModule <- function(input, output, session, env)
         klr1 = paste0(col2hex(klr1),"88")
         
         ##par(mar=c(8,2,2.2,1), mgp=c(1,0.5,0))
-        par(mar=c(1.8,2.0,2,2.2), mgp=c(0.9,0.1,0))
+        par(mar=c(2.3,2.3,2,2), mgp=c(0.9,0.1,0))
         jj2 <- order(abs(fc1))
         plot( pos[jj2,], pch=20, cex=cex1, col=klr1[jj2], fg = gray(0.6), bty = "o",
              xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
@@ -510,19 +502,23 @@ DataViewModule <- function(input, output, session, env)
         
     })
 
-    data_genePlots_tsne_module <- plotModule(
-        id="data_genePlots_tsne", ns=ns,
-        func=data_genePlots_tsne.RENDER,
-        info.text=data_genePlots_tsne_text, pdf.width=5, pdf.height=6,
-        label="a", title="t-SNE clustering"
+    ##data_genePlots_tsne_module <- plotModule(
+    ##    id="data_genePlots_tsne", ns=ns,
+    callModule(
+        plotModule, "data_genePlots_tsne",
+        func = data_genePlots_tsne.RENDER,
+        func2 = data_genePlots_tsne.RENDER,
+        info.text = data_genePlots_tsne_text,
+        height = imgH, pdf.width = 5, pdf.height = 6,
+        label = "a", title= "t-SNE clustering"
     )
-    output <- attachModule(output, data_genePlots_tsne_module)
+    ##output <- attachModule(output, data_genePlots_tsne_module)
     
     ##----------------------------------------------------------------------
     ##  Tissue expression plot
     ##----------------------------------------------------------------------
     
-    data_tissueplot.RENDER <- reactive({
+    data_tissueplot.RENDER  %<a-% reactive({
         
         ngs <- inputData()
         req(ngs)
@@ -563,13 +559,17 @@ DataViewModule <- function(input, output, session, env)
         }
     })
     
-    data_tissueplot_module <- plotModule(
-        id="data_tissueplot", ns=ns,
-        func=data_tissueplot.RENDER,
-        info.text=data_tissueplot_text, pdf.width=9, pdf.height=6,
+    ##data_tissueplot_module <- plotModule(
+    ##    id="data_tissueplot", ns=ns,
+    callModule(
+        plotModule, "data_tissueplot",    
+        func = data_tissueplot.RENDER,
+        func2 = data_tissueplot.RENDER,
+        info.text = data_tissueplot_text,
+        height = imgH, pdf.width=9, pdf.height=6,
         label="g", title="Tissue expression"
     )
-    output <- attachModule(output, data_tissueplot_module) 
+    ##output <- attachModule(output, data_tissueplot_module) 
     
     ##----------------------------------------------------------------------
     ##  Cumulative correlation plot (stacked)
@@ -632,7 +632,7 @@ DataViewModule <- function(input, output, session, env)
         return(res)
     })
     
-    data_corplot.RENDER <- reactive({
+    data_corplot.RENDER %<a-% reactive({
         
         res <- data_corplot_data()
         if(is.null(res)) return(NULL)
@@ -652,18 +652,23 @@ DataViewModule <- function(input, output, session, env)
                    cex=0.8, y.intersp=0.8)}
     })
     
-    data_corplot_module <- plotModule(
-        id="data_corplot", ns=ns, func=data_corplot.RENDER,
-        info.text = data_corplot_text, pdf.width=9, pdf.height=6,
+    ##data_corplot_module <- plotModule(
+    ##id="data_corplot", ns=ns, 
+    callModule(
+        plotModule, "data_corplot",
+        func = data_corplot.RENDER,
+        func2 = data_corplot.RENDER,
+        info.text = data_corplot_text,
+        height = imgH, pdf.width=9, pdf.height=6,
         label="f", title="Cumulative correlation"
     )
-    output <- attachModule(output, data_corplot_module) 
+    ##output <- attachModule(output, data_corplot_module) 
     
     ##----------------------------------------------------------------------
     ##                     Gene expression table
     ##----------------------------------------------------------------------
 
-    output$data_geneInfo  <- renderUI({
+    data_geneInfo.RENDER  %<a-% reactive({
 
         require(KEGG.db)
         require(GO.db)
@@ -700,9 +705,17 @@ DataViewModule <- function(input, output, session, env)
         HTML(output)
     })
 
-    data_geneInfo_buttons = plotModuleButtons(
-        "data_geneInfo_buttons", just.info=FALSE, no.download=TRUE,
-        label="e", text=data_geneInfo_text, title = "Gene info",
+    ##data_geneInfo_buttons = plotModuleButtons(
+    ##"data_geneInfo_buttons",
+    callModule(
+        plotModule, "data_geneInfo",
+        plotlib = "generic",
+        func = data_geneInfo.RENDER,
+        func2 = data_geneInfo.RENDER,
+        renderFunc = "renderUI", outputFunc = "htmlOutput",
+        just.info = FALSE, no.download = TRUE,
+        label="e", info.text = data_geneInfo_text,
+        title = "Gene info",
         options = tagList(
             tipify( checkboxInput(ns('data_geneinfo'),'gene summary',FALSE),
                    "Provide a summary for the selected gene.", placement="top")
@@ -711,43 +724,47 @@ DataViewModule <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ##                     Interface
     ##----------------------------------------------------------------------
-    dataview_caption1 = "<b>Gene plots.</b>. <b>(a)</b> t-SNE of samples colored by expression of selected gene. <b>(b)</b> Abundance/expression of selected gene across groups. <b>(c)</b> Top correlated genes. Level of grey corresponds to absolute expression of the gene. <b>(d)</b> Average rank of the selected gene compared to other genes. <b>(e)</b> Further information about the selected gene from public databases. <b>(f)</b> Barplot showing cumulative correlation in other datasets. <b>(g)</b> Tissue expression of selected gene."
+    dataview_caption1 = "<b>Gene plots.</b> <b>(a)</b> t-SNE of samples colored by expression of selected gene. <b>(b)</b> Abundance/expression of selected gene across groups. <b>(c)</b> Top correlated genes. Level of grey corresponds to absolute expression of the gene. <b>(d)</b> Average rank of the selected gene compared to other genes. <b>(e)</b> Further information about the selected gene from public databases. <b>(f)</b> Barplot showing cumulative correlation in other datasets. <b>(g)</b> Tissue expression of selected gene."
 
     output$plotsUI <- renderUI({
         fillCol(
             height = fullH,
-            flex = c(1,0.2,1,0.1,NA),
+            flex = c(1,0.2,1,NA),
             fillRow( 
                 flex = c(1,1,1,1), id = "data_genePlots_row1",
                 height = rowH, ## width=1600, 
-                moduleWidget(data_genePlots_tsne_module, ns=ns, height=imgH),
-                moduleWidget(data_genePlots_barplot_module, ns=ns, height=imgH),
-                moduleWidget(data_genePlots_correlationplot_module, ns=ns, height=imgH),
-                moduleWidget(data_genePlots_averageRankPlot_module, ns=ns, height=imgH)
+                ##moduleWidget(data_genePlots_tsne_module, ns=ns, height=imgH),
+                ##moduleWidget(data_genePlots_barplot_module, ns=ns, height=imgH),
+                ##moduleWidget(data_genePlots_correlationplot_module, ns=ns, height=imgH),
+                ##moduleWidget(data_genePlots_averageRankPlot_module, ns=ns, height=imgH)
+                plotWidget(ns("data_genePlots_tsne")),
+                plotWidget(ns("data_genePlots_barplot")),
+                plotWidget(ns("data_genePlots_correlationplot")),
+                plotWidget(ns("data_genePlots_averageRankPlot"))
             ),
             br(),
             fillRow( 
                 flex = c(1,1.4,1.6), id = "data_genePlots_row2",
                 height = rowH, ## width=1600, 
-                fillCol(
-                    flex = c(NA, 0.01, 1),
-                    data_geneInfo_buttons, br(),
-                    htmlOutput(ns('data_geneInfo'), class="gene-info-output")
-                ),
-                moduleWidget(data_corplot_module, ns=ns, height=imgH),
-                moduleWidget(data_tissueplot_module, ns=ns, height=imgH)
+                ## fillCol(
+                ##     flex = c(NA, 0.01, 1),
+                ##     data_geneInfo_buttons, br(),
+                ##     htmlOutput(ns('data_geneInfo'), class="gene-info-output")
+                ## ),
+                ##moduleWidget(data_corplot_module, ns=ns, height=imgH),
+                ##moduleWidget(data_tissueplot_module, ns=ns, height=imgH)
+                plotWidget(ns("data_geneInfo")),
+                plotWidget(ns("data_corplot")),
+                plotWidget(ns("data_tissueplot"))
             ),
-            br(),
             div(HTML(dataview_caption1), class="caption")
         )
     })
 
     ##dragula("data_genePlots_row1")
     ##dragula("data_genePlots_row2")
-    dragula(c("data_genePlots_row1","data_genePlots_row2"))
+    ##dragula(c("data_genePlots_row1","data_genePlots_row2"))
     
-
-
     ##----------------------------------------------------------------------
     ##                     Info messsages for Counts
     ##----------------------------------------------------------------------
@@ -765,7 +782,7 @@ DataViewModule <- function(input, output, session, env)
     MARGINS2 = c(9,3.5,2,1)
     MARGINS2 = c(8,3.5,2,1)
     
-    counts_tab_barplot.RENDER <- reactive({
+    counts_tab_barplot.RENDER %<a-% reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
         req(input$data_groupby)
@@ -793,18 +810,23 @@ DataViewModule <- function(input, output, session, env)
                 names.arg=names.arg)
     })
 
-    counts_tab_barplot_module <- plotModule(
-        id="counts_tab_barplot", ns=ns, func=counts_tab_barplot.RENDER,
-        info.text = counts_tab_barplot_text, pdf.width=7, pdf.height=6, ## res=45,
+    ##counts_tab_barplot_module <- plotModule(
+    ##id="counts_tab_barplot", ns=ns,
+    callModule(
+        plotModule, "counts_tab_barplot",
+        func = counts_tab_barplot.RENDER,
+        func2 = counts_tab_barplot.RENDER,        
+        info.text = counts_tab_barplot_text,
+        height=imgH, pdf.width=7, pdf.height=6, ## res=45,
         label="a",title='Total counts'
     )
-    output <- attachModule(output, counts_tab_barplot_module)
+    ## output <- attachModule(output, counts_tab_barplot_module)
 
     ##----------------------------------------------------------------------
     ##                     Count information boxplot
     ##----------------------------------------------------------------------
 
-    counts_tab_boxplot.RENDER <- reactive({
+    counts_tab_boxplot.RENDER %<a-% reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
                                         #par(mar=c(3,3,3,3), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )   
@@ -824,18 +846,23 @@ DataViewModule <- function(input, output, session, env)
                 las=3, cex.lab=1, ylab="counts (log2)", outline=FALSE, varwidth = FALSE)
     })
 
-    counts_tab_boxplot_module <- plotModule(
-        id="counts_tab_boxplot", ns=ns, func=counts_tab_boxplot.RENDER,
-        info.text = counts_tab_boxplot_text, pdf.width=7, pdf.height=6, ## res=50,
+    ##counts_tab_boxplot_module <- plotModule(
+    ##    id="counts_tab_boxplot", ns=ns,
+    callModule(
+        plotModule, "counts_tab_boxplot",
+        func = counts_tab_boxplot.RENDER,
+        func2 = counts_tab_barplot.RENDER,
+        info.text = counts_tab_boxplot_text,
+        height=imgH, pdf.width=7, pdf.height=6, ## res=50,
         label="b", title='Counts distribution'
     )
-    output <- attachModule(output, counts_tab_boxplot_module)
+    ##output <- attachModule(output, counts_tab_boxplot_module)
 
     ##----------------------------------------------------------------------
     ##                     Count information histogram
     ##----------------------------------------------------------------------
 
-    counts_tab_histplot.RENDER <- reactive({
+    counts_tab_histplot.RENDER %<a-% reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
                                         #par(mfrow=c(2,3), mar=c(9,4,3,1.5), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )  
@@ -865,18 +892,23 @@ DataViewModule <- function(input, output, session, env)
         gx.hist(gx=res$log2counts[res$jj,], n=2000) #, main="histogram")
     })
 
-    counts_tab_histplot_module <- plotModule(
-        id="counts_tab_histplot", ns=ns, func=counts_tab_histplot.RENDER,
-        info.text = counts_tab_histplot_text, pdf.width=7, pdf.height=6, ## res=50,
+    ##counts_tab_histplot_module <- plotModule(
+    ##id="counts_tab_histplot", ns=ns,
+    callModule(
+        plotModule, "counts_tab_histplot",
+        func = counts_tab_histplot.RENDER,
+        func2 = counts_tab_histplot.RENDER,
+        info.text = counts_tab_histplot_text,
+        height=imgH, pdf.width=7, pdf.height=6, ## res=50,
         label="c", title='Counts histogram'
     )
-    output <- attachModule(output, counts_tab_histplot_module)
+    ##output <- attachModule(output, counts_tab_histplot_module)
 
     ##----------------------------------------------------------------------
     ##                     Count information abundance of major gene types
     ##----------------------------------------------------------------------
 
-    counts_tab_abundanceplot.RENDER <- reactive({
+    counts_tab_abundanceplot.RENDER %<a-% reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
                                         #par(mar=c(6,4,0,4), mgp=c(2.2,0.8,0))
@@ -916,17 +948,22 @@ DataViewModule <- function(input, output, session, env)
 
     })
 
-    counts_tab_abundanceplot_module <- plotModule(
-        id="counts_tab_abundanceplot", ns=ns, func=counts_tab_abundanceplot.RENDER,
-        info.text = counts_tab_abundanceplot_text, pdf.width=10, pdf.height=6, ## res=50,
+    ##counts_tab_abundanceplot_module <- plotModule(
+    ##id="counts_tab_abundanceplot", ns=ns,
+    callModule(
+        plotModule, "counts_tab_abundanceplot",        
+        func = counts_tab_abundanceplot.RENDER,
+        func2 = counts_tab_abundanceplot.RENDER,
+        info.text = counts_tab_abundanceplot_text,
+        height=imgH, pdf.width=10, pdf.height=6, ## res=50,
         label="d",title='Abundance of major gene types'
     )
-    output <- attachModule(output, counts_tab_abundanceplot_module) 
+    ##output <- attachModule(output, counts_tab_abundanceplot_module) 
 
     ##----------------------------------------------------------------------
     ##                     Count information average count by gene type
     ##----------------------------------------------------------------------
-    counts_tab_average_countplot.RENDER <- reactive({
+    counts_tab_average_countplot.RENDER %<a-% reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
                                         #par(mar=c(6,4,0,4), mgp=c(2.2,0.8,0))
@@ -961,12 +998,17 @@ DataViewModule <- function(input, output, session, env)
                fill=rev(klr), cex=0.9, y.intersp=0.75, bty="n")
     })
 
-    counts_tab_average_countplot_module <- plotModule(
-        id="counts_tab_average_countplot", ns=ns, func=counts_tab_average_countplot.RENDER,
-        info.text = counts_tab_average_countplot_text, pdf.width=10, pdf.height=6, ##res=50,
+    ##counts_tab_average_countplot_module <- plotModule(
+    ##id="counts_tab_average_countplot", ns=ns,
+    callModule(
+        plotModule, "counts_tab_average_countplot",
+        func = counts_tab_average_countplot.RENDER,
+        func2 = counts_tab_average_countplot.RENDER,
+        info.text = counts_tab_average_countplot_text,
+        height=imgH, pdf.width=10, pdf.height=6, ##res=50,
         label="e",title='Average count by gene type'
     )
-    output <- attachModule(output, counts_tab_average_countplot_module) 
+    ##output <- attachModule(output, counts_tab_average_countplot_module) 
 
     getCountsTable <- reactive({
         ngs = inputData()
@@ -1099,9 +1141,7 @@ DataViewModule <- function(input, output, session, env)
 
     })
 
-
     dataview_counts_caption = "<b>Counts distribution</b>. Plots associated with the counts, abundance or expression levels across the samples/groups.  <b>(a)</b> Total counts per sample or average per group.  <b>(b)</b> Distribution of total counts per sample/group. The center horizontal bar correspond to the median.  <b>(c)</b> Histograms of total counts distribution per sample/group. <b>(d)</b> Abundance of major gene types per sample/group. <b>(e)</b> Average count by gene type per sample/group."
-
 
     output$countsUI <- renderUI({
         fillCol(
@@ -1109,20 +1149,24 @@ DataViewModule <- function(input, output, session, env)
             height = fullH,
             fillRow(
                 flex = c(1,1,1), id = "counts_tab_row1", height=rowH,
-                moduleWidget(counts_tab_barplot_module, ns=ns, height=imgH),
-                moduleWidget(counts_tab_boxplot_module, ns=ns, height=imgH),
-                moduleWidget(counts_tab_histplot_module, ns=ns, height=imgH)
+                ##moduleWidget(counts_tab_barplot_module, ns=ns, height=imgH),
+                ##moduleWidget(counts_tab_boxplot_module, ns=ns, height=imgH),
+                ##moduleWidget(counts_tab_histplot_module, ns=ns, height=imgH)
+                plotWidget(ns("counts_tab_barplot")),
+                plotWidget(ns("counts_tab_boxplot")),
+                plotWidget(ns("counts_tab_histplot"))
             ),
             fillRow(
                 flex = c(1,1), id = "counts_tab_row2", height=rowH,
-                moduleWidget(counts_tab_abundanceplot_module, ns=ns, height=imgH),
-                moduleWidget(counts_tab_average_countplot_module, ns=ns, height=imgH)
+                ##moduleWidget(counts_tab_abundanceplot_module, ns=ns, height=imgH),
+                ##moduleWidget(counts_tab_average_countplot_module, ns=ns, height=imgH)
+                plotWidget(ns("counts_tab_abundanceplot")),
+                plotWidget(ns("counts_tab_average_countplot"))
             ),
             div(HTML(dataview_counts_caption), class="caption")
         )
     })
-    dragula(c("counts_tab_row1","counts_tab_row2"))
-
+    ##dragula(c("counts_tab_row1","counts_tab_row2"))
     
     dropdown_search_gene='<code>Search gene</code>'
     menu_grouped='<code>grouped</code>'
@@ -1237,20 +1281,28 @@ DataViewModule <- function(input, output, session, env)
 
     data_rawdataTable_caption = "<b>Gene table.</b> The table shows the gene expression values per sample, or average expression values across the groups. The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar."
 
-    data_rawdataTable_module <- tableModule(
-        id = "data_rawdataTable", ns=ns,
+    ## data_rawdataTable_module <- tableModule(
+    ##     id = "data_rawdataTable", ns=ns,
+    ##     func = data_rawdataTable.RENDER,
+    ##     title = "Gene expression table",
+    ##     info.text = data_rawdataTable_text,
+    ##     caption = data_rawdataTable_caption
+    ## )
+    ## output <- attachModule(output, data_rawdataTable_module) 
+    data_rawdataTable <- callModule(
+        tableModule, "data_rawdataTable",
         func = data_rawdataTable.RENDER,
         title = "Gene expression table",
         info.text = data_rawdataTable_text,
         caption = data_rawdataTable_caption
     )
-    output <- attachModule(output, data_rawdataTable_module) 
 
     output$genetableUI <- renderUI({
         fillCol(
             flex = c(1),
             height = fullH,
-            moduleWidget(data_rawdataTable_module, outputFunc="dataTableOutput",ns=ns)
+            ##moduleWidget(data_rawdataTable_module, outputFunc="dataTableOutput",ns=ns)
+            tableWidget(ns("data_rawdataTable"))
         )
     })
     
@@ -1284,21 +1336,24 @@ DataViewModule <- function(input, output, session, env)
 
     data_sampleTable_caption="<b>Sample information.</b> This table contains phenotype information of the samples."
 
-    data_sampleTable_module <- tableModule(
-        id="data_sampleTable", ns=ns,
-        func=data_sampleTable.RENDER,
-        title="Sample information",
+    ##data_sampleTable_module <- tableModule(
+    ##id="data_sampleTable", ns=ns,
+    data_sampleTable <- callModule(
+        tableModule, "data_sampleTable", 
+        func = data_sampleTable.RENDER,
+        title = "Sample information",
         info.text = "Sample information table with information about phenotype of samples.",
         ##options = data_sampleTable_opts,
         caption = data_sampleTable_caption
     )
-    output <- attachModule(output, data_sampleTable_module) 
+    ##output <- attachModule(output, data_sampleTable_module) 
     
     output$sampletableUI <- renderUI({
         fillCol(
             flex = c(1),
             height = fullH,
-            moduleWidget(data_sampleTable_module, outputFunc="dataTableOutput", ns=ns)
+            ##moduleWidget(data_sampleTable_module, outputFunc="dataTableOutput", ns=ns)
+            tableWidget(ns("data_sampleTable"))
         )
     })
         
@@ -1364,23 +1419,25 @@ DataViewModule <- function(input, output, session, env)
                placement="right", options = list(container = "body"))
     )
     
-    data_contrastTable_module <- tableModule(
-        id = "data_contrastTable", ns=ns,
+    ##data_contrastTable_module <- tableModule(
+    ##id = "data_contrastTable", ns=ns,
+    data_contrastTable <- callModule(
+        tableModule, "data_contrastTable",
         func = data_contrastTable.RENDER,
         options = data_contrastTable_opts,
-        title="Contrast table",
+        title = "Contrast table",
         info.text = data_contrastTable_info,
         caption = data_contrastTable_caption
     )
-    output <- attachModule(output, data_contrastTable_module) 
+    ##output <- attachModule(output, data_contrastTable_module) 
 
     output$contrasttableUI <- renderUI({
         fillCol(
             flex = c(1), height = fullH,
-            moduleWidget(data_contrastTable_module, outputFunc="dataTableOutput", ns=ns)
+            ##moduleWidget(data_contrastTable_module, outputFunc="dataTableOutput", ns=ns)
+            tableWidget(ns("data_contrastTable"))
         )
     })
-
     
     ##================================================================================
     ## Resource info (dev)
@@ -1405,15 +1462,16 @@ DataViewModule <- function(input, output, session, env)
     })
 
     datatable_timings_text = 'The <b>timings</b> table reports more detailed information about the object dimensions, object sizes and execution times of the methods.'
-    datatable_timings_module <- tableModule(
-        id="datatable_timings", ns=ns,
+    ##datatable_timings_module <- tableModule(
+    ##id="datatable_timings", ns=ns,
+    datatable_timings <- callModule(
+        tableModule, "datatable_timings",
         func=datatable_timings.RENDER,
         info.text = datatable_timings_text,
         options = NULL, title='Timings'
     )
-    output <- attachModule(output, datatable_timings_module)
+    ## output <- attachModule(output, datatable_timings_module)
     
-
     datatable_objectdims.RENDER <- reactive({
         ngs <- inputData()
         req(ngs)
@@ -1432,14 +1490,16 @@ DataViewModule <- function(input, output, session, env)
     })
 
     datatable_objectdims_text = 'This table provides details about the data dimensions of objects.'
-    datatable_objectdims_module <- tableModule(
-        id="datatable_objectdims", ns=ns,
-        func=datatable_objectdims.RENDER,
+
+    ##datatable_objectdims_module <- tableModule(
+    ##    id="datatable_objectdims", ns=ns,
+    datatable_objectdims <- callModule(
+        tableModule, "datatable_objectdims",        
+        func = datatable_objectdims.RENDER,
         info.text = datatable_objectdims_text,
         options = NULL, title='Object dimensions'
     )
-    output <- attachModule(output, datatable_objectdims_module)
-    
+    ##output <- attachModule(output, datatable_objectdims_module)    
     
     datatable_objectsize.RENDER <- reactive({
         ngs <- inputData()
@@ -1455,17 +1515,18 @@ DataViewModule <- function(input, output, session, env)
     
     datatable_objectsize_text = "This table provides information about  about the memory sizes of objects"
 
-    datatable_objectsize_module <- tableModule(
-        id="datatable_objectsize", ns=ns,
-        func=datatable_objectsize.RENDER,
+    ##datatable_objectsize_module <- tableModule(
+    ##    id="datatable_objectsize", ns=ns,
+    datatable_objectsize <- callModule(
+        tableModule, "datatable_objectsize",            
+        func = datatable_objectsize.RENDER,
         options = NULL, title='Object sizes',
         info.text = datatable_objectsize_text
         ## caption = datatable_objectsize_caption
     )
-    output <- attachModule(output, datatable_objectsize_module)
+    ## output <- attachModule(output, datatable_objectsize_module)
 
     resourceinfo_caption="<b>Resource information.</b> Details about the execution times of the methods, dimensions and memory sizes of objects."
-
     
     output$resourceinfoUI <- renderUI({    
         fillCol(
@@ -1473,11 +1534,14 @@ DataViewModule <- function(input, output, session, env)
             height = fullH,
             fillRow(
                 flex = c(5,1, 2,1, 1.5, 2), ## width = 600,
-                moduleWidget(datatable_timings_module, outputFunc="dataTableOutput", ns=ns),
+                ##moduleWidget(datatable_timings_module, outputFunc="dataTableOutput", ns=ns),
+                tableWidget(ns("datatable_timings")),                
                 br(),
-                moduleWidget(datatable_objectdims_module, outputFunc="dataTableOutput", ns=ns),
+                ##moduleWidget(datatable_objectdims_module, outputFunc="dataTableOutput", ns=ns),
+                tableWidget(ns("datatable_objectdims")),                
                 br(),
-                moduleWidget(datatable_objectsize_module, outputFunc="dataTableOutput", ns=ns),
+                ##moduleWidget(datatable_objectsize_module, outputFunc="dataTableOutput", ns=ns),
+                tableWidget(ns("datatable_objectsize")),                
                 br()
             ),
             div(HTML(resourceinfo_caption),class="caption")

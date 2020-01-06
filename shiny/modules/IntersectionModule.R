@@ -29,7 +29,7 @@ IntersectionUI <- function(id) {
 IntersectionModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
-    rowH = 760       # row height of panel 
+    fullH = 760       # row height of panel 
     
     ## reactive functions from shared environment
     inputData <- env[["load"]][["inputData"]]
@@ -58,7 +58,7 @@ between two contrasts."
     
     output$inputsUI <- renderUI({
         ui <- tagList(
-            tipify( actionLink(ns("cmp_info"), "Info", icon = icon("info-circle")),
+            tipify( actionLink(ns("cmp_info"), "Tutorial", icon = icon("youtube")),
                    "Show more information about this module"),
             hr(), br(),             
             tipify( selectInput(ns('cmp_comparisons'),'Contrasts:', choices=NULL, multiple=TRUE),
@@ -99,8 +99,8 @@ between two contrasts."
     input_cmp_comparisons <- reactive({
         input$cmp_comparisons
     }) %>% debounce(500)
-
-
+    
+    
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
@@ -307,7 +307,7 @@ between two contrasts."
         res = list(mx=mx, mx.full=mx0)
         return(res) 
     })
-
+    
 
     getSignificanceCalls <- reactive({
         ## Gets the matrix of significance calls.
@@ -653,26 +653,29 @@ between two contrasts."
 
     cmp_scatterPlotMatrix_caption = "<b>Pairs plot.</b> Pairwise scatterplots for two or more differential expression profiles for multiple selected contrasts. Similar profiles will show high correlation with points close to the diagonal. For <i>N>=3</i>, also volcano plots are shown on the diagonal with points in blue if significant with respect to the chosen FDR (significance) and logFC thresholds."
 
-    cmp_scatterPlotMatrix_module <- plotModule(
-        id="cmp_scatterPlotMatrix", ns=ns,
-        func=cmp_scatterPlotMatrix.PLOT, plotlib="plotly",
+    callModule(
+        plotModule,
+        id = "cmp_scatterPlotMatrix", 
+        func = cmp_scatterPlotMatrix.PLOT,
+        plotlib="plotly",
         title = "Scatterplot matrix (pairs)",
         options = cmp_scatterPlotMatrix.opts,
         ##  download.fmt = c("pdf","html"),  ## scatterGL does not work for PDF
         download.fmt = c("html"),
-        pdf.width=8, pdf.height=8, res=95,
-        info.text = cmp_scatterPlotMatrix_info,
-        caption = cmp_scatterPlotMatrix_caption
+        pdf.width=8, pdf.height=8,
+        height = c(fullH-80,700), res=95,
+        info.text = cmp_scatterPlotMatrix_info
+        ##caption = cmp_scatterPlotMatrix_caption
     )
-    output <- attachModule(output, cmp_scatterPlotMatrix_module)
+    ##output <- attachModule(output, cmp_scatterPlotMatrix_module)
 
     output$cmp_scatterPlotMatrix_UI <- renderUI({
         fillCol(
             ## id = ns("expr_topgenes"),
-            height = rowH,
-            flex=c(1), ##height = 370,
-            moduleWidget(cmp_scatterPlotMatrix_module, height=640,
-                         outputFunc="plotlyOutput", ns=ns)
+            height = fullH,
+            flex=c(1,NA), ##height = 370,
+            plotWidget(ns("cmp_scatterPlotMatrix")),
+            div(HTML(cmp_scatterPlotMatrix_caption),class="caption")
         )
     })
     ##outputOptions(output, "cmp_scatterPlotMatrix_UI", suspendWhenHidden=FALSE) ## important!!!
@@ -681,8 +684,8 @@ between two contrasts."
     ## Contrast heatmap 
     ##================================================================================
 
-    cmp_ctheatmap.PLOT <- reactive({
-
+    cmp_ctheatmap.PLOT %<a-% reactive({
+        
         dbg("cmp_ctheatmap.RENDER:: reacted")
         
         ngs <- inputData()
@@ -804,7 +807,7 @@ between two contrasts."
         if(min(R,na.rm=TRUE)>=0) col <- tail(col,32)
         if(max(R,na.rm=TRUE)<=0) col <- head(col,32)
 
-        dbg("cmp_ctheatmap.PLOTLY:: 5")
+        dbg("cmp_ctheatmap.PLOTLY:: 5 : dimR=",dim(R))
 
         bluered.pal <- colorRampPalette(colors = c("royalblue3","grey90","indianred3"))
         cellnote <- NULL
@@ -821,8 +824,7 @@ between two contrasts."
         dbg("cmp_ctheatmap.PLOTLY:: done")    
         plt
     })
-
-
+    
     cmp_ctheatmap.opts = tagList(
         tipify( checkboxInput(ns('cmp_ctheatmap_showrho'), "show correlation values", FALSE),
                "Show correlation values in cells."),
@@ -836,30 +838,32 @@ between two contrasts."
                "Number of top genes to compute correlation values.") 
     )
 
-    cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the contrasts visualized as a clustered heatmap. Contrasts that are similar will be clustered close together. The numeric value in the cells correspond to the Pearson correlation coefficient between contrast signatures. Red corresponds to positive correlation and blue to negative correlation."
+cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the contrasts visualized as a clustered heatmap. Contrasts that are similar will be clustered close together. The numeric value in the cells correspond to the Pearson correlation coefficient between contrast signatures. Red corresponds to positive correlation and blue to negative correlation."
     
     cmp_ctheatmap_caption = "<b>Constrast heatmap.</b> Similarity of the contrasts visualized as a clustered heatmap. The numeric value in the cells correspond to the Pearson correlation coefficient. Red corresponds to positive correlation and blue to negative correlation."
-   
-    cmp_ctheatmap_module <- plotModule(
-        id="cmp_ctheatmap", ns=ns,
-        ##cmp_ctheatmap.PLOT, plotlib="base",
-        func=cmp_ctheatmap.PLOTLY, plotlib="plotly",
+    
+    callModule(
+        plotModule,
+        id = "cmp_ctheatmap", 
+        func = cmp_ctheatmap.PLOT, plotlib="base",
+        func2 = cmp_ctheatmap.PLOT,
+        ##func = cmp_ctheatmap.PLOTLY, plotlib="plotly",
         ##cmp_ctheatmap.PLOTLY, plotlib="generic", renderFunc="renderPlotly",
         info.text = cmp_ctheatmap_info,
-        caption = cmp_ctheatmap_caption,
+        ##caption = cmp_ctheatmap_caption,
         options = cmp_ctheatmap.opts,
         download.fmt = c("pdf","html"),
-        pdf.width=11, pdf.height=10, res=85
+        pdf.width = 11, pdf.height = 10,
+        height = c(fullH-50,750), width = c("auto",800), res=c(85,72)
     )
-    output <- attachModule(output, cmp_ctheatmap_module)
 
     output$cmp_ctheatmap_UI <- renderUI({
         fillCol(
             ## id = ns("expr_topgenes"),
-            height = rowH,
-            flex=c(1), ##height = 370,
-            moduleWidget(cmp_ctheatmap_module, height=650,
-                         outputFunc="plotlyOutput", ns=ns)
+            height = fullH,
+            flex = c(1, NA), ##height = 370,
+            plotWidget(ns("cmp_ctheatmap")),
+            div(HTML(cmp_ctheatmap_caption), class="caption")
         )
     })
     
@@ -1078,16 +1082,19 @@ between two contrasts."
 
     cmp_connectivitymap_caption = "<b>Connectivity Map (CMap).</b> The CMap shows the similarity of the contrasts as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away. Note that the order of the groups in a comparison greatly influences calculation of pairwise distances."
     
-    cmp_connectivitymap.module <- plotModule(
-        "cmp_connectivitymap", ns=ns,
-        func=cmp_connectivitymap.RENDER, plotlib="scatterD3",
+    callModule(
+        plotModule,
+        "cmp_connectivitymap", 
+        func = cmp_connectivitymap.RENDER,
+        plotlib="scatterD3",
         options = cmp_connectivitymap.opts,
-        pdf.width=8, pdf.height=8, res=90,
-        info.text = cmp_connectivitymap_info,
-        caption = cmp_connectivitymap_caption,
+        pdf.width=8, pdf.height=8,
+        height = c(fullH-80), res=90,
+        title = "Connectivity map",
+        info.text = cmp_connectivitymap_info
+        ##caption = cmp_connectivitymap_caption,
     )
-    output$cmp_connectivitymap     <- cmp_connectivitymap.module$render
-    output$cmp_connectivitymap_pdf <- cmp_connectivitymap.module$pdf
+
     observe({
         cmapsets <- c(sort(unique(gsub("\\].*","]",colnames(PROFILES$FC)))))
         cmapsets <- c("<this dataset>",cmapsets,"<all>")
@@ -1096,8 +1103,10 @@ between two contrasts."
 
     output$cmp_connectivitymap_UI <- renderUI({
         fillCol(
-            height = rowH,
-            moduleWidget(cmp_connectivitymap.module, outputFunc="scatterD3Output", ns=ns)
+            height = fullH,
+            flex = c(1,NA),
+            plotWidget(ns("cmp_connectivitymap")),
+            div(HTML(cmp_connectivitymap_caption),class="caption")
         )
     })
     outputOptions(output, "cmp_connectivitymap_UI", suspendWhenHidden=FALSE) ## important!!!
@@ -1106,7 +1115,7 @@ between two contrasts."
     ## Venn diagram
     ##======================================================================
 
-    cmp_venndiagram.RENDER <- reactive({
+    cmp_venndiagram.RENDER %<a-% reactive({
         
         dt = getSignificanceCalls()
         if(is.null(dt) || nrow(dt)==0) return(NULL)
@@ -1208,25 +1217,37 @@ between two contrasts."
         radioButtons(ns('cmp_include'),'Counting mode:', choices=c("up/down","both"), inline=TRUE)
     )
 
-    cmp_venndiagram_module <- plotModule(
-        id = "cmp_venndiagram", ns=ns,
+    callModule(
+        plotModule,
+        id = "cmp_venndiagram", 
         func = cmp_venndiagram.RENDER,
+        func2 = cmp_venndiagram.RENDER,
         title = "Venn diagram", label="a",
         info.text = "The Venn diagram visualizes the number of intersecting genes between the profiles. The list of intersecting genes with further details is also reported in an interactive table below, where users can select and remove a particular contrasts from the intersection analysis.",
         options = cmp_venndiagram.opts,
-        pdf.width=8, pdf.height=8, res=72
+        pdf.width=8, pdf.height=8,
+        height = 0.4*fullH, res=72
     )
-    output <- attachModule(output, cmp_venndiagram_module)
-    
-    cmp_venntable_module <- tableModule(
-        id = "cmp_venntable", ns=ns,
+   
+    cmp_venntable_buttons <- inputPanel(
+        div(checkboxGroupInput(
+            ns('cmp_intersection'), NULL,
+            choices=c("A","B","C"), selected=c("A","B","C"),
+            inline=TRUE ),
+            style="font-size: 0.85em;")
+    )
+
+    callModule(
+        tableModule,
+        id = "cmp_venntable", 
         func = cmp_venntable.RENDER,
+        caption = cmp_venntable_buttons,
         title = "Intersecting genes", label="b",
         info.text = "Table of intersecting genes", 
-        info.width = "500px"
+        info.width = "500px",
+        height = 0.4*fullH
     )
-    output <- attachModule(output, cmp_venntable_module)
-
+    
     ##-------------------------------------------------------
     ##---------- UI LAYOUT ----------------------------------
     ##-------------------------------------------------------
@@ -1235,18 +1256,10 @@ between two contrasts."
     
     output$cmp_venndiagram_UI <- renderUI({
         fillCol(
-            height = rowH,
-            flex = c(1, NA, 0.8, 0.1, NA),
-            moduleWidget(cmp_venndiagram_module, ns=ns),            
-            ##cmp_venntable_module$buttons,
-            inputPanel(
-                div(checkboxGroupInput(
-                    ns('cmp_intersection'),"Intersect regions:",
-                    choices=c("A","B","C"), selected=c("A","B","C"),
-                    inline=TRUE ),
-                    style="font-size: 0.8em;")
-            ),
-            moduleWidget(cmp_venntable_module, outputFunc="dataTableOutput", ns=ns),
+            height = fullH,
+            flex = c(1, 1, 0.1, NA),
+            plotWidget(ns("cmp_venndiagram")),
+            tableWidget(ns("cmp_venntable")),
             ##dataTableOutput(ns("cmp_venntable")),
             br(),
             div(HTML(cmp_venn_caption), class="caption")
@@ -1265,7 +1278,7 @@ between two contrasts."
     ## Meta-volcano
     ##================================================================================
 
-    cmp_volcano1.RENDER <- reactive({
+    cmp_volcano1.RENDER %<a-% reactive({
         
         ngs <- inputData()
         req(ngs)
@@ -1341,7 +1354,7 @@ between two contrasts."
         
     })
 
-    cmp_fcbarplot.RENDER <- reactive({
+    cmp_fcbarplot.RENDER %<a-% reactive({
 
         ngs <- inputData()
         sel = names(ngs$gx.meta$meta)
@@ -1378,7 +1391,7 @@ between two contrasts."
         
     })
 
-    cmp_volcano2.RENDER <- reactive({
+    cmp_volcano2.RENDER %<a-% reactive({
 
         ngs <- inputData()
         sel = names(ngs$gx.meta$meta)
@@ -1435,35 +1448,41 @@ between two contrasts."
     cmp_volcano1.opts = tagList(
         ##    radioButtons(ns('cmp_include'),'Counting mode:', choices=c("up/down","both"), inline=TRUE)
     )
-    cmp_volcano1_module <- plotModule(
-        "cmp_volcano1", ns=ns, func=cmp_volcano1.RENDER,
+    callModule(
+        plotModule,
+        id = "cmp_volcano1",
+        func = cmp_volcano1.RENDER,
+        func2 = cmp_volcano1.RENDER,
         title="Meta-volcano plot", label="a",
         info.text = "The Volcano plot visualizes the intersecting genes between the profiles.",
         options = cmp_volcano1.opts,
-        pdf.width=8, pdf.height=6, res=72
+        pdf.width=8, pdf.height=6,
+        height = 0.45*fullH, res=72
     )
-    output <- attachModule(output, cmp_volcano1_module)
 
     cmp_fcbarplot.opts = tagList(
         checkboxInput(ns('cmp_fcbarplot_abs'),'Absolute foldchange')
     )
-    cmp_fcbarplot_module <- plotModule(
-        "cmp_fcbarplot", ns=ns, func=cmp_fcbarplot.RENDER,
+    callModule(
+        plotModule,
+        id = "cmp_fcbarplot",
+        func = cmp_fcbarplot.RENDER,
+        func2 = cmp_fcbarplot.RENDER,
         title="Cumulative fold-change", label="b",
         info.text = "This plot visualizes the cumulative fold-change between the profiles.",
         options = cmp_fcbarplot.opts,
-        pdf.width=8, pdf.height=6, res=72
+        pdf.width=8, pdf.height=6,
+        height = 0.45*fullH, res=72        
     )
-    output <- attachModule(output, cmp_fcbarplot_module)
 
     cmp_metavolcano_caption = "<b>Meta-volcano plot and top ranked cumulative fold-change.</b> . <b>(a)</b> The meta-volcano highlights the genes that are common/shared in all selected comparisons. <b>(b)</b> Genes ranked by cumulative fold-change across the selected comparisons." 
     
     output$cmp_metavolcano_UI <- renderUI({
         fillCol(
-            height = rowH,
+            height = fullH,
             flex = c(1, 1, NA),
-            moduleWidget(cmp_volcano1_module, ns=ns),
-            moduleWidget(cmp_fcbarplot_module, ns=ns),
+            plotWidget(ns("cmp_volcano1")),
+            plotWidget(ns("cmp_fcbarplot")),
             div(HTML(cmp_metavolcano_caption), class="caption")
         )
     })

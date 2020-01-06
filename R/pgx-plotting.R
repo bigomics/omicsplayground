@@ -3,6 +3,269 @@
 ########################################################################
 
 
+myplot_ly <- function(..., theme="default") {
+    ## 'Themed' plotly 
+    ##
+    ##
+    if(theme=="default") {
+        p <- plot_ly(...)
+
+    } else if(theme=="dark") {
+        font.par <- list(
+            color = "#FFF"
+        )
+        axis.par <- list(
+            color='#FFF',
+            linecolor='#FFF'
+        )
+        p <- plot_ly(...) %>%
+            layout(
+                plot_bgcolor = "rgb(10,30,50)",
+                paper_bgcolor = "rgb(10,30,50)",
+                xaxis = axis.par,
+                yaxis = axis.par,
+                titlefont = font.par
+        )
+    }
+    return(p)
+}
+
+
+##lfc=1;psig=0.05;showlegend=FALSE;xlab=ylab="";group.names=c("group1","group2")
+plotlyMA <- function(x, y, names, source="plot1",
+                     group.names=c("group1","group2"),
+                     xlab = "average expression (log2.CPM)",
+                     ylab = "effect size (log2.FC)",
+                     lfc=1, psig=0.05, showlegend=TRUE, highlight=NULL,
+                     marker.size = 5, label=NULL, displayModeBar=TRUE )
+{
+
+    require(plotly)
+
+    if(is.null(highlight)) highlight <- names
+    i0 <- which(!names %in% highlight)
+    i1 <- which(names %in% highlight)
+    
+    p <- plot_ly(
+        type='scatter', mode='markers'
+        ##type='scattergl', mode='markers',
+        ##source=source, key=1:length(x)
+    )
+    
+    p <- p %>%
+        event_register('plotly_hover') %>%
+        event_register('plotly_selected')
+
+    if(length(i0)) {
+        p <- p %>%
+            add_trace(
+                x = x[i0],
+                y = y[i0],
+                text = names[i0],
+                marker = list(
+                    size = marker.size,
+                    color = '#bbb'
+                ),
+                showlegend = showlegend
+            )
+    }
+    
+    if(length(i1)) {
+        p <- p %>%
+            add_trace(
+                x = x[i1],
+                y = y[i1],
+                text = names[i1],
+                marker = list(
+                    size = 5,
+                    color = '#1f77b4'
+                ),
+                showlegend = showlegend
+            )
+    }
+    
+    if(!is.null(label)) {
+        i2 = which(names %in% label)
+        p <- p %>%
+            add_annotations(
+                x = x[i2],
+                y = y[i2],
+                text = names[i2],
+                font = list(
+                    size = 12,
+                    color = '#1f77b4'
+                ),
+                showarrow = FALSE,
+                yanchor = "bottom",
+                yshift = 2,
+                textposition = 'top'
+            )        
+    }
+
+    x1 = 1.05*max(x)
+    yy = 1.05*max(abs(y))
+    abline1 = list(type='line', y0= -lfc, y1= -lfc, x0=0, x1=x1,
+                   line=list(dash='dot', width=1, color="grey"))
+    abline2 = list(type='line', y0= +lfc, y1= +lfc, x0=0, x1=x1,
+                   line=list(dash='dot', width=1, color="grey"))
+        
+    xrange <- c(0,1)*max(abs(x))*1.05
+    yrange <- c(-1,1)*max(abs(y))*1.05        
+    xaxis = list( title = xlab, xrange = xrange )
+    yaxis = list( title = ylab, yrange = yrange )    
+
+    p <- p %>%
+        layout(
+            shapes = list(abline1,abline2),
+            xaxis = xaxis, yaxis = yaxis,
+            showlegend = showlegend,
+            hovermode='closest',
+            dragmode= 'select') %>%
+        config(displayModeBar = displayModeBar)
+    
+    xann <- c(1,1)*0.95
+    yann <- c(0,0.99)
+    ann.text <- paste("UP in", group.names[c(2,1)])
+    
+    p <- p %>%
+        add_annotations(
+            x = xann,
+            y = yann,
+            text = ann.text,
+            font = list(size=10),
+            xanchor = c('right','right'),
+            align = c('right','right'),
+            showarrow = FALSE,
+            xref = 'paper',
+            yref = 'paper',
+            borderpad = 3, 
+            bordercolor = 'black',
+            borderwidth = 0.6)
+
+    p
+}
+
+
+##lfc=1;psig=0.05;showlegend=FALSE;xlab=ylab="";group.names=c("group1","group2");highlight=NULL
+plotlyVolcano <- function(x, y, names, source="plot1", group.names=c("group1","group2"),
+                          xlab="effect size (logFC)", ylab="significance (-log10p)",
+                          lfc=1, psig=0.05, showlegend=TRUE, highlight=NULL,
+                          marker.size = 5, label=NULL, displayModeBar=TRUE )
+{
+
+    require(plotly)
+
+    if(is.null(highlight)) highlight <- names
+    i0 <- which(!names %in% highlight)
+    i1 <- which(names %in% highlight)
+    
+    p <- plot_ly(
+        type='scatter', mode='markers'
+        ##type='scattergl', mode='markers',
+        ##source=source, key=1:length(x)
+    )
+    
+    p <- p %>%
+        event_register('plotly_hover') %>%
+        event_register('plotly_selected')
+
+    if(length(i0)) {
+        p <- p %>%
+            add_trace(
+                x = x[i0],
+                y = y[i0],
+                text = names[i0],
+                marker = list(
+                    size = marker.size,
+                    color = '#bbb'
+                ),
+                showlegend = showlegend
+            )
+    }
+    
+    if(length(i1)) {
+        p <- p %>%
+            add_trace(
+                x = x[i1],
+                y = y[i1],
+                text = names[i1],
+                marker = list(
+                    size = 5,
+                    color = '#1f77b4'
+                ),
+                showlegend = showlegend
+            )
+    }
+    
+    if(!is.null(label)) {
+        i2 = which(names %in% label)
+        p <- p %>%
+            add_annotations(
+                x = x[i2],
+                y = y[i2],
+                text = names[i2],
+                font = list(
+                    size = 12,
+                    color = '#1f77b4'
+                ),
+                showarrow = FALSE,
+                yanchor = "bottom",
+                yshift = 2,
+                textposition = 'top'
+            )
+        
+    }
+
+    y0 = -log10(psig)
+    y1 = 1.05*max(y)
+    xx = 1.05*max(abs(x))
+    abline1 = list(type='line', x0= -lfc, x1= -lfc, y0=0, y1=y1,
+                   line=list(dash='dot', width=1, color="grey"))
+    abline2 = list(type='line', x0= +lfc, x1= +lfc, y0=0, y1=y1,
+                   line=list(dash='dot', width=1, color="grey"))
+    abline3 = list(type='line', x0= -xx, x1= +xx, y0=y0, y1=y0,
+                   line=list(dash='dot', width=1, color="grey"))
+    
+    
+    xrange <- c(-1,1)*max(abs(x))*1.05
+    if(min(x)>=0) xrange <- c(0,1)*max(abs(x))*1.05
+    yrange <- c(-1,1)*max(abs(y))*1.05
+    if(min(y)>=0) yrange <- c(0,1)*max(abs(y))*1.05
+        
+    xaxis = list( title = xlab, xrange = xrange )
+    yaxis  = list( title = ylab, yrange = yrange )    
+    p <- p %>%
+        layout(
+            shapes = list(abline1,abline2,abline3),
+            xaxis = xaxis, yaxis = yaxis,
+            showlegend = showlegend,
+            hovermode='closest',
+            dragmode= 'select') %>%
+        config(displayModeBar = displayModeBar)
+    
+    xann <- c(0.01,0.99)
+    yann <- c(1,1)*1.04
+    ann.text <- paste("UP in", group.names[c(2,1)])
+    
+    p <- p %>%
+        add_annotations(
+            x = xann,
+            y = yann,
+            text = ann.text,
+            font = list(size = 10),
+            xanchor = c('left','right'),
+            align = c('left','right'),
+            showarrow = FALSE,
+            xref = 'paper',
+            yref = 'paper',
+            borderpad = 3, 
+            bordercolor = 'black',
+            borderwidth = 0.6)
+
+    p
+}
+
+
 corclust <- function(x) {
     dd <- as.dist(1 - cor(t(x),use="pairwise"))
     hc <- fastcluster::hclust(dd, method="ward.D2" )

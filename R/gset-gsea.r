@@ -1027,7 +1027,6 @@ gseaLeadingEdgeHeatmap <- function(gsea, maxrow=60, maxcol=60, gsets=NULL,
 ##=========================== PLOTTING ===================================
 ##========================================================================
 
-
 gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,
                         decreasing=TRUE, cex.main=0.9, len.main=40,
                         xlab="Rank in ordered dataset", res=1200,
@@ -1048,7 +1047,8 @@ gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,
     dy <- 0.25*(y1-y0)
     ##par(mgp=c(2.3,0.6,0))
     plot( ii, rnk[ii], type="h", col="grey", ylim=c(y0-dy,y1),
-         xlab=xlab, ylab=ylab, xaxt='n')
+         xlab=NA, ylab=ylab, xaxt='n')
+    mtext(xlab, 1, line=0.75, cex=0.65)
     abline(h=0,lty=2,lwd=0.5)
 
     ## gene set barcode
@@ -1091,6 +1091,102 @@ gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,
                          substr(tt.main,2*len.main+1,3*len.main),sep="\n" )
     }
     title(main=tt.main, cex.main=cex.main, line=0.6)
+}
+
+
+##names=NULL;main=NULL;decreasing=TRUE;cex.main=0.9;len.main=40;xlab="Rank in ordered dataset";res=1200;ylab="Ranked list metric"
+
+gsea.enplot.UPDN <- function(rnk, gset.up, gset.dn, names=NULL, main=NULL,
+                            decreasing=TRUE, cex.main=0.9, len.main=40,
+                            sum.trace=TRUE, res=1200,
+                            xlab="Rank in ordered dataset", 
+                            ylab="Ranked list metric" )
+{
+    ##names=NULL;main=NULL;decreasing=TRUE;cex.main=0.9;len.main=40;
+    ##xlab="Rank in ordered dataset";res=1200;ylab="Ranked list metric"
+    if(!is.null(names)) names(rnk) <- names
+    rnk <- rnk[!is.na(rnk)]
+    rnk <- rnk[order(rnk+1e-8*rnorm(length(rnk)), decreasing=decreasing)]
+
+    ## ranked list metric
+    ii <- (1:length(rnk))
+    if(length(ii) > res) ii <- ii[seq(1,length(ii),length(ii)/res)]
+    qq <- quantile(rnk[ii],probs=c(0.01,0.99),na.rm=TRUE)
+    y1 <- qq[2]
+    y0 <- qq[1] 
+    dy <- 0.25*(y1-y0)
+    ##par(mgp=c(2.3,0.6,0))
+    plot( ii, rnk[ii], type="h", col="grey", ylim=c(y0-1.25*dy,y1),
+         xlab=NA, ylab=ylab, xaxt='n')
+    mtext(xlab, 1, line=1.2, cex=0.7)
+    abline(h=0,lty=2,lwd=0.5)
+
+    ## gene set barcode
+    jj <- match(gset.dn, names(rnk))
+    ##arrows(jj, (y0 - dy), jj, y0, col="grey30", lwd=1, length=0)
+    arrows(jj, (y0 - dy), jj, y0 - 0.5*dy , col="grey30", lwd=1, length=0)
+    ##arrows(jj, 0, jj, -1, col="grey30", lwd=1, length=0)
+    jj <- match(gset.up, names(rnk))
+    arrows(jj, (y0 - 0.5*dy), jj, y0, col="grey30", lwd=1, length=0)
+    ##arrows(jj, 0, jj, 1, col="grey30", lwd=1, length=0)
+    
+    ## color legend
+    kk <- c(seq(1,length(rnk)*0.95,floor(length(rnk)/10)),length(rnk))
+    i=1
+    for(i in 1:(length(kk)-1)) {
+        r <- mean(rnk[kk[c(i,i+1)]])
+        r1 <- (r/max(abs(rnk),na.rm=TRUE))
+        r1 <- abs(r1)**0.66 * sign(r1)
+        irnk <- round(10 + 10*r1)
+        ##cat("irnk=",irnk,"\n")
+        cc <- bluered(20)[irnk]
+        rect(kk[i], y0-1.30*dy, kk[i+1], y0-1.05*dy, col=cc, border=NA)
+    }
+
+    ## weighted cumulative random walk (down genes)
+    x0 <- 1*(names(rnk) %in% gset.dn)
+    x0 <- x0 * abs(rnk)
+    n0 <- sum(!(names(rnk) %in% gset.dn))
+    n1 <- sum(names(rnk) %in% gset.dn)
+    r0 <- cumsum(x0==0) / sum(x0==0)
+    r1 <- cumsum(x0) / (1e-4+sum(x0))
+    ##mx <- quantile(abs(rnk),probs=1)
+    trace.dn <- (r1 - r0)
+    trace.dn <- trace.dn / max(abs(trace.dn)) * 0.8
+    if(max(trace.dn) >= abs(min(trace.dn))) trace.dn <- trace.dn * abs(y1)
+    if(max(trace.dn) < abs(min(trace.dn))) trace.dn <- trace.dn * abs(y0)
+    if(!decreasing) trace.dn <- -1*trace.dn
+    lines(ii, trace.dn[ii], col="orange", type="l",lwd=2.4)
+
+    ## weighted cumulative random walk
+    x0 <- 1*(names(rnk) %in% gset.up)
+    x0 <- x0 * abs(rnk)
+    n0 <- sum(!(names(rnk) %in% gset.up))
+    n1 <- sum(names(rnk) %in% gset.up)
+    r0 <- cumsum(x0==0) / sum(x0==0)
+    r1 <- cumsum(x0) / (1e-4+sum(x0))
+    ##mx <- quantile(abs(rnk),probs=1)
+    trace.up <- (r1 - r0)
+    trace.up <- trace.up / max(abs(trace.up)) * 0.8
+    if(max(trace.up) >= abs(min(trace.up))) trace.up <- trace.up * abs(y1)
+    if(max(trace.up) < abs(min(trace.up))) trace.up <- trace.up * abs(y0)
+    if(!decreasing) trace.up <- -1*trace.up
+    lines(ii, trace.up[ii], col="green", type="l",lwd=2.4)
+
+    if(sum.trace) lines(ii, trace.up[ii] + trace.dn[ii], col="blue", type="l",lwd=2.4)    
+    
+    if(is.null(main)) main="Enrichment plot"
+    tt.main <- as.character(main)
+    if(nchar(tt.main) > len.main) {
+        tt.main <- paste( substr(tt.main,1,len.main),
+                         substr(tt.main,len.main+1,2*len.main),
+                         substr(tt.main,2*len.main+1,3*len.main),sep="\n" )
+    }
+    title(main=tt.main, cex.main=cex.main, line=0.6)
+
+    
+    
+    
 }
 
 if(0) {

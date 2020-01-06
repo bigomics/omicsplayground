@@ -3,7 +3,7 @@
 ## NOTE: This file is supposed to run in the folder .../R/
 ##
 
-install.packages("devtools")
+if(!require(devtools)) install.packages("devtools")
 install.packages("BiocManager", version="3.10")
 require(devtools)
 require(BiocManager)
@@ -111,7 +111,7 @@ remotes::install_github("dreamRs/particlesjs")
 remotes::install_github("JohnCoene/waiter")
 
 ##---------------------------------------------------------------------
-## ONLY DEV.VERSION
+## ONLY DEV.VERSION (single-cell trajectories)
 ##---------------------------------------------------------------------
 if(1) {
 

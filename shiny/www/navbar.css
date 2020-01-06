@@ -28,6 +28,7 @@ body {
     padding-bottom: 4px !important;
 }
 
+/* ---------------------------- template specfic -------------------------- */
 /*
 .tab-pane {
     background: white;
@@ -38,7 +39,7 @@ body {
 /* space in innner tabpanes */
 .tabbable .tab-content {
     /* margin: -12px -12px -12px -12px; */
-    padding: 25px 20px; 
+    padding: 15px 20px; 
 }
 
 .tabbable .nav-tabs {
@@ -63,6 +64,31 @@ body {
     margin-left: -0px;
     margin-top: -23px;
 }
+
+
+/* upper navigation bar */
+.navbar {
+    margin-bottom: 4px !important;
+}
+
+.navbar-fixed-top {
+    z-index: 0;
+}
+
+.navbar-default {
+    color:rgb(220,220,220);
+    background: var(--main-color);
+}
+
+.navbar-default .navbar-nav>li>a:focus, .navbar-default .navbar-nav>li>a:hover {
+    background: var(--hover-color) !important;
+}
+
+.navbar .navbar-nav > .active > a {
+    background: var(--hover-color) !important;
+}
+
+/* ---------------------------- playground -------------------------- */
 
 /* value boxes */
 .vbox {
@@ -96,29 +122,6 @@ body {
 
 .well {
     font-size: 12px;
-}
-
-
-/* upper navigation bar */
-.navbar {
-    margin-bottom: 4px !important;
-}
-
-.navbar-fixed-top {
-    z-index: 0;
-}
-
-.navbar-default {
-    color:rgb(220,220,220);
-    background: var(--main-color);
-}
-
-.navbar-default .navbar-nav>li>a:focus, .navbar-default .navbar-nav>li>a:hover {
-    background: var(--hover-color) !important;
-}
-
-.navbar .navbar-nav > .active > a {
-    background: var(--hover-color) !important;
 }
 
 
@@ -170,10 +173,19 @@ body {
     color: #DDDDDD;
 }
 
-.btn-circle-xs, .btn-circle-xs:hover {
+.btn-circle-xs, .btn-circle-xs:focus {
     background: #FFFFFF;
-    color: #DDDDDD;
+    color: #FFFFFF;
+    color: #EEE;
+    text-shadow: 0 0 0px #ccc;    
     border: 0px;
+    border-radius: 3px !important;
+}
+
+.btn-circle-xs:hover {
+    color: #444;
+    border: 0px;
+    border-radius: 3px;
 }
 
 .dropdown-menu {
@@ -183,9 +195,10 @@ body {
 
 .module-label {
     color: #AAA;
-    font-size: 17px;
-    font-weight: 500;
-    padding-right:8px;
+    font-family: "Arial";
+    font-size: 18px;
+    font-weight: 600;
+    padding-right: 8px;
 }
 
 .chart-wrapper .chart-notes {
@@ -194,13 +207,26 @@ body {
     line-height: 1.3em;
 }
 
-
-.caption {
+.caption,.caption2 {
     font-size: 13px;
     font-weight: 400;
     line-height: 1.1em;
     position: relative;
-    bottom: -10px;
+    padding-top: 0px;
+    bottom: 0px;
+}
+
+.caption2 {
+    padding: 10px 20px;
+}
+
+.table-caption {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.1em;
+    position: relative;
+    padding: 5px 0px 10px 0px;
+    bottom: 0px;
 }
 
 /* gene input area in signature module */
@@ -208,6 +234,29 @@ body {
     font-size: 11px !important;
     line-height: 1.0 !important;
     padding: 3px 3px;
+}
+
+.shiny-input-panel {
+    background-color: #fff;
+    border: 0px solid #ddd;
+    padding: 5px 8px 5px 8px;
+    font-size: 10px !important;
+}
+
+.shiny-input-panel .form-group {
+    margin-bottom: -13px;
+    margin-top: 4px;
+}
+
+.shiny-input-panel .checkbox, .shiny-input-panel .input[type="checkbox"] {
+    font-size: 10px !important;
+    margin-top: -1px;
+    margin-bottom: 10px;    
+}
+
+.selectize-input {
+    padding: 3px 12px;
+    min-height: 30px;
 }
 
 .current-data {
@@ -223,6 +272,11 @@ body {
 
 /* ------------------- buttons -------------- */
 
+.action-button .fab {
+    font-size: 16px;
+    margin-top: 5px;
+}
+
 .btn-social-icon {
     padding: 0px;
     width:  28px;
@@ -232,7 +286,7 @@ body {
 #social-buttons {
     position: fixed;
     font-weight: 300;
-    font-size: 32px;
+    font-size: 30px !important;
     color: #FFFFFF88;
     bottom: 10px;
     left: 10px;
@@ -279,8 +333,7 @@ body {
     background-image: none;    
 }
 
-
-/* splash */
+/* splash screen */
 #modal-splash {
     height: 500px;
     width: 100%;
@@ -292,6 +345,8 @@ body {
     position: absolute;
     top: 0px;
     width: 100%;
+    height: 500px;
+    background-color: var(--main-color);    
 }
 
 .splash-title {
@@ -313,9 +368,6 @@ body {
     text-align: left;
 }
 
-
-
-
 /* modal dialogs */
 .modal-content {
     border:0;
@@ -335,16 +387,23 @@ body {
   background-color: #fff;
 }
 
-.footer{
-  position:absolute;
-  right:0;
-  left:0;
-  bottom:0;
-  padding:3rem 1rem;
-  text-align:center;
-  font-size:0.8em;
+.popup-plot .modal-body {
+    // padding: 20px;
 }
 
+.popup-plot .modal-footer {
+    display: none;
+}
+
+.footer{
+    position:absolute;
+    right:0;
+    left:0;
+    bottom:0;
+    padding:3rem 1rem;
+    text-align:center;
+    font-size:0.8em;
+}
 
 .action-text #sig_example1 #sig_example2 #sig_example3 {
     font-size: 0.9em;
@@ -353,3 +412,5 @@ body {
     border-style: none;
     padding: 0
 }
+
+

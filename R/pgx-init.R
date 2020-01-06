@@ -9,6 +9,7 @@ library(rmarkdown)
 library(shinycssloaders)
 library(dragulaR)
 library(shinyWidgets)
+library(pryr)
 
 library(scatterD3)
 library(fastcluster)
@@ -20,6 +21,7 @@ library(DT)
 library(ggplot2)
 library(data.table)
 library(dplyr)
+library(org.Hs.eg.db)
 ## library(Cairo)
 
 ##useShinyjs(rmd=TRUE)  
@@ -98,6 +100,7 @@ if(file.exists(INIT.FILE)) {
     cat("<init> loading local profiles file...\n")
     PROFILES$FC <- pgx.readDatasetProfiles(PGX.DIR, file="datasets-allFC.csv")
     PROFILES$FC <- as.matrix(PROFILES$FC)
+    PROFILES$FC <- PROFILES$FC[,colMeans(is.na(PROFILES$FC))<0.9,drop=FALSE]
     dim(PROFILES$FC)
     
 } else {

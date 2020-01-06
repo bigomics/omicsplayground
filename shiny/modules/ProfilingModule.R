@@ -31,8 +31,9 @@ ProfilingModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
     inputData <- env[["load"]][["inputData"]]
-    fullH = 780  ## row height of panel
-    tabH = 200  ## row height of panel    
+    fullH = 760  ## full height of panel
+    imgH  = 680  ## row height of panel
+    tabH  = 200  ## row height of panel    
     
     description = "<b>Single-Cell Profiling</b>. Visualize the distribution of (inferred)
 immune cell types, expressed genes and pathway activation."
@@ -198,7 +199,7 @@ immune cell types, expressed genes and pathway activation."
         return(results)
     })
 
-    pr_icpplotFUNC <- reactive({
+    pr_icpplotFUNC %<a-% reactive({
         require(RColorBrewer)
         
         ngs <- inputData()
@@ -365,20 +366,27 @@ immune cell types, expressed genes and pathway activation."
 
     pr_icp_caption = "<b>Cell type profiling (deconvolution).</b> The cell type can be computationally inferred using so-called deconvolution methods by matching the (absolute) expression profile to a known reference set. This reference set can be a cell type reference database but also cancer types, tissue types or cell lines."
     
-    pr_icp_module <- plotModule(
-        "pr_icpplot", ns=ns, func=pr_icpplotFUNC,
+    callModule(
+        plotModule,
+        id = "pr_icpplot",
+        func = pr_icpplotFUNC,
+        func2 = pr_icpplotFUNC,
         title = "Cell type profiling (deconvolution)",
         options = pr_icp.opts,
-        pdf.width=8, pdf.height=8, res=85,
         info.text = pr_icp_info,
-        caption = pr_icp_caption
+        ##caption = pr_icp_caption,
+        pdf.width=8, pdf.height=8, 
+        height = c(fullH-80,780), width = c("100%",1000),
+        res = c(85,95)
     )
-    output <- attachModule(output, pr_icp_module)
+    ##output <- attachModule(output, pr_icp_module)
 
     output$pr_icp_UI <- renderUI({
         fillCol(
             height = fullH,
-            moduleWidget(pr_icp_module, ns=ns)
+            flex = c(1,NA),
+            plotWidget(ns("pr_icpplot")),
+            div(HTML(pr_icp_caption),class="caption")
         )
     })
     outputOptions(output, "pr_icp_UI", suspendWhenHidden=FALSE) ## important!!!
@@ -388,7 +396,7 @@ immune cell types, expressed genes and pathway activation."
     ##================================================================================
     
     ##output$pr_markersplot <- renderPlot({
-    pr_markersplotFUNC <- reactive({
+    pr_markersplotFUNC %<a-% reactive({
         ##if(!input$tsne.all) return(NULL)
         require(RColorBrewer)
         
@@ -523,15 +531,19 @@ immune cell types, expressed genes and pathway activation."
 
     pr_markersplot_caption = "<b>T-SNE distribution of expression of marker genes.</b> Good biomarkers will show a distribution pattern strongly correlated with some phenotype. The top genes with the highest standard deviation are shown. The red color shading is proportional to the (absolute) expression of the gene in corresponding samples." 
 
-    pr_markersplot_module <- plotModule(
-        "pr_markersplot", ns=ns, func=pr_markersplotFUNC,
+    callModule(
+        plotModule,
+        id = "pr_markersplot",
+        func = pr_markersplotFUNC,
+        func2 = pr_markersplotFUNC,        
         title = "Distribution of marker genes",
-        pdf.height = 10, pdf.width=10, res=85,
         options = pr_markersplot.opts,
         info.text = pr_markersplot_info,
-        caption = pr_markersplot_caption
+        pdf.height = 10, pdf.width=10, 
+        height = c(fullH-80,780), width = c("100%",1000),
+        res = c(85,90)
+        ##caption = pr_markersplot_caption
     )
-    output <- attachModule(output, pr_markersplot_module)
 
     observe({
         ngs <- inputData()
@@ -550,7 +562,9 @@ immune cell types, expressed genes and pathway activation."
     output$pr_markersplot_UI <- renderUI({
         fillCol(
             height = fullH,
-            moduleWidget(pr_markersplot_module, ns=ns)
+            flex = c(1,NA),
+            plotWidget(ns("pr_markersplot")),
+            div(HTML(pr_markersplot_caption),class="caption")
         )
     })
 
@@ -561,9 +575,10 @@ immune cell types, expressed genes and pathway activation."
     getCNAfromExpression <- reactive({
         ngs <- inputData()
         req(ngs)
+
+        dbg("<profiling:getCNAfromExpression> calculating CNV")
         
         ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
-        cat("<profiling:getCNAfromExpression> calculating CNV using heuristic smoothing...\n")
         withProgress( message='calculating CNV...', value=0.66, {
             res <- pgx.CNAfromExpression(ngs, nsmooth=40, downsample=1)
         })
@@ -573,9 +588,10 @@ immune cell types, expressed genes and pathway activation."
     getCNAfromExpression.inferCNV <- reactive({
         ngs <- inputData()
         req(ngs)
-        
+
+        dbg("<profiling:getCNAfromExpression> calculating CNV using inferCNV")
         ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
-        cat("<profiling:getCNAfromExpression> calculating CNV using inferCNV...\n")
+
         withProgress( message='calculating inferCNV...', value=0.66, {
             res <- pgx.inferCNV(ngs, refgroup=NULL)
         })
@@ -583,11 +599,13 @@ immune cell types, expressed genes and pathway activation."
     })
 
     ##output$pr_cnaplot <- renderPlot({
-    pr_cnaplotFUNC <- reactive({
+    pr_cnaplotFUNC %<a-% reactive({
         require(RColorBrewer)
         ##return(NULL)    
         ngs <- inputData()
         req(ngs,input$pr_cna_method,input$pr_cna_annotvar,input$pr_cna_orderby)
+
+        dbg("[profiling:pr_cnaplotFUNC] reacted")
         
         if(input$pr_cna_method=="inferCNV") {
             res <- getCNAfromExpression.inferCNV()
@@ -619,15 +637,19 @@ immune cell types, expressed genes and pathway activation."
 
     pr_cnaModule_caption = "<b>Inferred copy number variation (CNV)</b>. Genomic copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. The heatmap shows the inferred copy number of the samples versus chromosomes. The samples are annotated further with phenotype information on the right side of the figure."
 
-    pr_cnaModule <- plotModule(
-        "pr_cnaplot", ns=ns, func=pr_cnaplotFUNC,
+    callModule(
+        plotModule,
+        id = "pr_cnaplot",
+        func = pr_cnaplotFUNC,
+        func2 = pr_cnaplotFUNC,
         options = pr_cna.opts,
         title = "Inferred copy number variation (CNV)",
-        pdf.width=10, pdf.height=8, res=110,
         info.text = pr_cnaModule_info,
-        caption = pr_cnaModule_caption
+        ##caption = pr_cnaModule_caption,
+        pdf.width=10, pdf.height=8, 
+        height = c(fullH - 60,700), width = c('100%',1000),
+        res=110
     )
-    output <- attachModule(output, pr_cnaModule)
 
     observe({
         ngs <- inputData()
@@ -642,10 +664,13 @@ immune cell types, expressed genes and pathway activation."
     output$pr_cnaModule_UI <- renderUI({
         fillCol(
             height = fullH,
-            moduleWidget(pr_cnaModule, ns=ns)
+            flex = c(1,NA),
+            plotWidget(ns("pr_cnaplot")),
+            div(HTML(pr_cnaModule_caption),class="caption")
         )
     })
-
+    outputOptions(output, "pr_cnaModule_UI", suspendWhenHidden=FALSE) ## important!!!
+    
     ##================================================================================
     ## iTALK
     ##================================================================================
@@ -718,7 +743,7 @@ immune cell types, expressed genes and pathway activation."
         return(res)
     })
 
-    italk_netview.RENDER <- reactive({
+    italk_netview.RENDER %<a-% reactive({
         res <- italk_getResults()
         req(res)
         ##if(is.null(res)) return(NULL)
@@ -727,7 +752,7 @@ immune cell types, expressed genes and pathway activation."
         NetView(res_cat, col=res$cell_col, vertex.label.cex=1, arrow.width=1, edge.max.width=5)
     })
 
-    italk_LRPlot.RENDER <- reactive({
+    italk_LRPlot.RENDER %<a-% reactive({
         ## Circos plot
         res <- italk_getResults()
         req(res)
@@ -745,7 +770,7 @@ immune cell types, expressed genes and pathway activation."
         title((paste(comm_type,"genes     ")), line=0.5)
     })
 
-    italk_heatmap.RENDER <- reactive({
+    italk_heatmap.RENDER %<a-% reactive({
         ## Expression heatmap
         ngs <- inputData()
         res <- italk_getResults()
@@ -767,14 +792,16 @@ immune cell types, expressed genes and pathway activation."
                    key=FALSE, keysize=0.6)
     })
 
-
     require(shinyBS)
 
     italk_LRPlot_info = "The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as
 a circle plot. The width of the arrow represents the expression level/log fold change of the ligand; while the width of arrow head represents the expression level/log fold change of the receptor. Different color and the type of the arrow stands for whether the ligand and/or receptor are upregulated or downregulated. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
 
-    italk_LRPlot_module <- plotModule(
-        "italk_LRPlot", ns=ns, func=italk_LRPlot.RENDER,
+    callModule(
+        plotModule,
+        id = "italk_LRPlot",
+        func = italk_LRPlot.RENDER,
+        func2 = italk_LRPlot.RENDER,
         title = "Ligand-Receptor plot", label="a",
         info.text = italk_LRPlot_info,
         options = tagList(
@@ -783,27 +810,31 @@ a circle plot. The width of the arrow represents the expression level/log fold c
                    "Select the maximum number of LR pairs to include in the LR plot.",
                    placement="top")
         ),
-        pdf.width=6, pdf.height=8, res=80
+        pdf.width=6, pdf.height=8,
+        height = imgH, res=80
     )
-    output <- attachModule(output, italk_LRPlot_module)
-
 
     italk_heatmap_info = "The heatmap visualizes the expression level/log fold change of the ligand/receptor genes. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
     
-    italk_heatmap_module <- plotModule(
-        "italk_heatmap", ns=ns, func=italk_heatmap.RENDER,
+    callModule(
+        plotModule,
+        id = "italk_heatmap",
+        func = italk_heatmap.RENDER,
+        func2 = italk_heatmap.RENDER,
         title = "Expression heatmap", label="b",
         info.text = italk_heatmap_info,
         options = tagList(),
-        pdf.width=6, pdf.height=8, res=80
+        pdf.width=6, pdf.height=8,
+        height = imgH, res=80
     )
-    output <- attachModule(output, italk_heatmap_module)
-
     
     italk_netview_info = "The NetView plot visualizes the communication structure of ligand-receptor genes as a graph. The colors represent different types of cells as a structure and the width of edges represent the strength of the communication. Labels on the edges show exactly how many interactions exist between two types of cells. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
 
-    italk_netview_module <- plotModule(
-        "italk_netview", ns=ns, func=italk_netview.RENDER,
+    callModule(
+        plotModule,
+        id = "italk_netview",
+        func = italk_netview.RENDER,
+        func2 = italk_netview.RENDER,
         title = "NetView", label="c",
         info.text = italk_netview_info,
         options = tagList(
@@ -812,9 +843,9 @@ a circle plot. The width of the arrow represents the expression level/log fold c
                    "Select the number of topgenes to search for ligand-receptor pairs.",
                    placement="top" )
         ),
-        pdf.width=6, pdf.height=8, res=80
+        pdf.width=6, pdf.height=8, 
+        height = imgH, res=80
     )
-    output <- attachModule(output, italk_netview_module)
 
     observe({
         ngs <- inputData()
@@ -823,7 +854,6 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         updateSelectInput(session, "italk_groups", choices=ph)
     })
 
-
     italk_panel_caption = "<b>Visualization of ligand-receptor interaction.</b> The iTALK R package is designed to profile and visualize the ligand-receptor mediated intercellular cross-talk signals from single-cell RNA sequencing data (scRNA-seq). iTALK uses a manually curated list of ligand-receptor gene pairs further classified into 4 categories based on the primary function of the ligand: cytokines/chemokines, immune checkpoint genes, growth factors, and others. <b>(a)</b> The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as a circle plot. <b>(b)</b> The heatmap visualizes the expression level/log fold change of the ligand/receptor genes." 
 
     output$italk_panel_UI <- renderUI({
@@ -831,10 +861,10 @@ a circle plot. The width of the arrow represents the expression level/log fold c
             height = fullH,
             flex = c(NA,1,0.05,NA), 
             inputPanel(
-                tipify( selectInput(ns("italk_groups"),"Group by:", choices=""),
+                tipify( selectInput(ns("italk_groups"),NULL, choices=""),
                        "Select the phenotype parameter to divide samples into groups.",
                        placement="right"),
-                tipify( selectInput(ns("italk_category"),"Gene category:",
+                tipify( selectInput(ns("italk_category"),NULL,
                                     choices=c('cytokine','growth factor','checkpoint','other')),
                        "Select the gene category for finding L/R pairs.",
                        placement="right")
@@ -843,9 +873,9 @@ a circle plot. The width of the arrow represents the expression level/log fold c
             fillRow(
                 ##flex = c(1,1,1),
                 flex = c(1,1),
-                moduleWidget(italk_LRPlot_module, ns=ns),
-                moduleWidget(italk_heatmap_module, ns=ns)
-                ##moduleWidget(italk_netview_module, ns=ns)
+                plotWidget(ns("italk_LRPlot")),
+                plotWidget(ns("italk_heatmap"))
+                ## plotWidget(ns("italk_netview"))
             ),
             br(),
             div(HTML(italk_panel_caption),class="caption")
@@ -1038,44 +1068,50 @@ a circle plot. The width of the arrow represents the expression level/log fold c
 
 
     ##------- plotTopMarkers module -------
-    monocle_plotTopMarkers.MODULE <- plotModule(
-        "monocle_plotTopMarkers", ns=ns,
-        func = monocle_plotTopMarkers.RENDER, 
+    callModule(
+        plotModule,
+        id = "monocle_plotTopMarkers", 
+        func = monocle_plotTopMarkers.RENDER,
+        plotlib = "ggplot",
         title = "Top markers by group", label="a", 
         info.text = "The heatmap visualizes the expression of group-specific markers.",
         options = tagList(
             selectInput(ns("monocle_groupby"),"Group by:",choices=NULL),
             selectInput(ns("monocle_ntop"),"ntop:",choices=c(1,2,3,4,5,10,25),selected=5)
         ),
-        pdf.width=5, pdf.height=8, res=72, plotlib="ggplot"
+        pdf.width=5, pdf.height=8,
+        height=imgH, res=c(72,95)
     )
-    output <- attachModule(output, monocle_plotTopMarkers.MODULE)
-
 
     ##------- plotTrajectory module -------
     monocle_plotTrajectory.opts = tagList()
-    monocle_plotTrajectory.MODULE <- plotModule(
-        "monocle_plotTrajectory", ns=ns,
+    callModule(
+        plotModule,
+        id = "monocle_plotTrajectory",
+        plotlib = "ggplot",
         func = monocle_plotTrajectory.RENDER,
         title = "Single-cell trajectory", label="b",
         info.text = "Single-cell trajectory analysis how cells choose between one of several possible end states. Reconstruction algorithms can robustly reveal branching trajectories, along with the genes that cells use to navigate these decisions.",
         options = monocle_plotTrajectory.opts,
-        pdf.width=8, pdf.height=8, res=80, plotlib="ggplot"
+        pdf.width=8, pdf.height=8,
+        height = 0.5*imgH, res=c(80,95)
     )
-    output <- attachModule(output, monocle_plotTrajectory.MODULE)
 
     ##------- plotGene module -------
     monocle_plotGene.opts = tagList(    
         selectInput(ns("monocle_plotgene"),"Gene:",choices=NULL)
     )
-    monocle_plotGene.MODULE <- plotModule(
-        "monocle_plotGene", ns=ns, func=monocle_plotGene.RENDER,
+    callModule(
+        plotModule,
+        id = "monocle_plotGene", plotlib="ggplot",
+        func = monocle_plotGene.RENDER,
         title = "Gene expression", label="c",
         info.text = ".",
         options = monocle_plotGene.opts,
-        pdf.width=8, pdf.height=8, res=80, plotlib="ggplot"
+        pdf.width=8, pdf.height=8,
+        height = 0.5*imgH, res = c(80,95)
     )
-    output <- attachModule(output, monocle_plotGene.MODULE)
+    ##output <- attachModule(output, monocle_plotGene.MODULE)
 
     monocle_panel_caption = "<b>Single-cell trajectory analysis</b>.  <b>(a)</b> Heatmap visualizing the expression of the group-specific top markers. <b>(b)</b> Single-cell trajectory analysis how cells choose between one of several possible end states. Reconstruction algorithms can robustly reveal branching trajectories, along with the genes that cells use to navigate these decisions. <b>(c)</b> Gene expression distribution for selected marker gene."
 
@@ -1086,11 +1122,11 @@ a circle plot. The width of the arrow represents the expression level/log fold c
             ##------- Page layout -------
             fillRow(
                 flex = c(1.2,1),
-                moduleWidget(monocle_plotTopMarkers.MODULE, outputFunc="plotOutput", ns=ns),
+                plotWidget(ns("monocle_plotTopMarkers")),
                 fillCol(
                     flex = c(1,1),
-                    moduleWidget(monocle_plotTrajectory.MODULE, outputFunc="plotOutput", ns=ns),
-                    moduleWidget(monocle_plotGene.MODULE, outputFunc="plotOutput", ns=ns)
+                    plotWidget(ns("monocle_plotTrajectory")),
+                    plotWidget(ns("monocle_plotGene"))
                 )
             ),
             br(),
@@ -1104,7 +1140,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     ##================================================================================
 
     ##output$pr_phenoplot <- renderPlot({
-    pr_phenoplotFUNC <- reactive({
+    pr_phenoplotFUNC %<a-% reactive({
         ##if(!input$tsne.all) return(NULL)
         require(RColorBrewer)
         ngs <- inputData()
@@ -1124,7 +1160,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         if(length(pheno)>6) par(mfrow = c(4,3), mar=c(0.3,0.4,2.8,0.4)*0.8)
         if(length(pheno)>12) par(mfrow = c(5,4), mar=c(0.2,0.2,2.5,0.2)*0.8)
         
-        cex1 <- 1.6*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
+        cex1 <- 1.4*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
         cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
         cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
 
@@ -1201,21 +1237,25 @@ a circle plot. The width of the arrow represents the expression level/log fold c
 
     pr_phenoModule_caption = "<b>Phenotype plots.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
    
-    pr_phenoModule <- plotModule(
-        "pr_phenoplot", ns=ns, func=pr_phenoplotFUNC,
+    callModule(
+        plotModule,
+        id = "pr_phenoplot",
+        func = pr_phenoplotFUNC,
+        func2 = pr_phenoplotFUNC,
         options = pr_phenoplot.opts,
-        pdf.width=5, pdf.height=8, res=90,
         info.text = pr_phenoModule_info,
-        caption = pr_phenoModule_caption
+        ##caption = pr_phenoModule_caption
+        pdf.width=5, pdf.height=8,
+        height = c(fullH-80,750), width = c("100%",500),
+        res = c(90,80)
     )
-    output <- attachModule(output, pr_phenoModule)
-
 
     output$pr_phenoModule_UI <- renderUI({    
         fillCol(
             height = fullH,
-            flex = c(1), 
-            moduleWidget(pr_phenoModule, ns=ns)
+            flex = c(1,NA), 
+            plotWidget(ns("pr_phenoplot")),
+            div(HTML(pr_phenoModule_caption), class="caption")
         )
     })
     outputOptions(output, "pr_phenoModule_UI", suspendWhenHidden=FALSE) ## important!!!
@@ -1225,7 +1265,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     ##================================================================================
 
     ##output$statsplot <- renderPlot({
-    pr_crosstabPlotFUNC <- reactive({
+    pr_crosstabPlotFUNC %<a-% reactive({
         ##if(!input$tsne.all) return(NULL)
         require(RColorBrewer)
         ngs <- inputData()
@@ -1430,20 +1470,22 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         ##br(), cellArgs=list(width='80px')
     )
 
-
     pr_crosstabModule_info = "The <strong>Proportions tab</strong> visualizes the interrelationships between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
     
     pr_crosstabModule_caption = "<b>Proportion plot.</b> Plot visualizing the overlap between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
    
-    pr_crosstabModule <- plotModule(
-        "pr_crosstabPlot", ns=ns, func=pr_crosstabPlotFUNC,
+    callModule(
+        plotModule,
+        id = "pr_crosstabPlot",
+        func = pr_crosstabPlotFUNC,
+        func2 = pr_crosstabPlotFUNC,
         options = pr_crosstab.opts,
-        pdf.width=6, pdf.height=8, res=110,
         info.text = pr_crosstabModule_info,
-        caption = pr_crosstabModule_caption
-    )
-    output$pr_crosstabPlot <- pr_crosstabModule$render
-    output$pr_crosstabPlot_pdf <- pr_crosstabModule$pdf
+        ##caption = pr_crosstabModule_caption,
+        pdf.width=6, pdf.height=8,
+        height = c(fullH-80,760), width = c("100%",650),
+        res=c(110,110)
+        )
 
     observe({
         ngs <- inputData()
@@ -1465,12 +1507,12 @@ a circle plot. The width of the arrow represents the expression level/log fold c
 
     })
 
-
     output$pr_crosstabModule_UI <- renderUI({    
         fillCol(
             height = fullH,
-            flex = c(1), 
-            moduleWidget(pr_crosstabModule, ns=ns)
+            flex = c(1,NA), 
+            plotWidget(ns("pr_crosstabPlot")),
+            div(HTML(pr_crosstabModule_caption), class="caption")
         )
     })
     outputOptions(output, "pr_crosstabModule_UI", suspendWhenHidden=FALSE) ## important!!!
@@ -1480,7 +1522,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     ##================================================================================
 
     ##output$pr_cytoplot <- renderPlot({
-    pr_cytoplotFUNC <- reactive({
+    pr_cytoplotFUNC %<a-% reactive({
         ##if(!input$tsne.all) return(NULL)
         require(RColorBrewer)
         ngs <- inputData()
@@ -1515,21 +1557,23 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     
     pr_cytoModule_caption = "<b>Cyto plot.</b> This plot shows the distribution of samples in relation to the expression of selected gene pairs. It mimics the scatter plots used for gating in flow cytometry analysis."    
     
-    pr_cytoModule <- plotModule(
-        "pr_cytoplot", ns=ns, func=pr_cytoplotFUNC,
+    callModule(
+        plotModule,
+        id = "pr_cytoplot",
+        func = pr_cytoplotFUNC,
+        func2 = pr_cytoplotFUNC,
         options = pr_cyto.opts,
-        pdf.width=6, pdf.height=8, res=80,
         info.text = pr_cytoModule_info,
-        caption = pr_cytoModule_caption
+        ## caption = pr_cytoModule_caption,
+        pdf.width=6, pdf.height=8,
+        height = c(fullH-80,780), width = c("100%",600),
+        res = c(80,80)
     )
-    output$pr_cytoplot <- pr_cytoModule$render
-    output$pr_cytoplot_pdf <- pr_cytoModule$pdf
 
     observe({
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
-
         xgenes <- ngs$genes[rownames(ngs$X),]$gene_name
         genes <- sort(as.character(xgenes))
         g1 <- grep("^CD4|^CD8",genes,value=TRUE)[1]
@@ -1544,8 +1588,9 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     output$pr_cytoModule_UI <- renderUI({    
         fillCol(
             height = fullH,
-            flex = c(1), 
-            moduleWidget(pr_cytoModule, ns=ns)
+            flex = c(1,NA), 
+            plotWidget(ns("pr_cytoplot")),
+            div(HTML(pr_cytoModule_caption), class="caption")
         )
     })
     outputOptions(output, "pr_cytoModule_UI", suspendWhenHidden=FALSE) ## important!!!
