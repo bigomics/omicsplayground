@@ -298,6 +298,16 @@ body {
     margin-bottom: -3px;
 }
 
+.btn:hover, .btn:focus, .btn:active, .btn:active:hover {
+    color: #333;
+    // background-color: #0067c4;
+    border: 1px solid var(--main-color);
+}
+
+.dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus {
+    color: #333;
+}
+
 /*
 
 .btn, .btn-default {
