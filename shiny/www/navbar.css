@@ -301,7 +301,8 @@ body {
 .btn:hover, .btn:focus, .btn:active, .btn:active:hover {
     color: #333;
     // background-color: #0067c4;
-    border: 1px solid var(--main-color);
+    ##border: 1px solid var(--main-color);
+    border: 1px solid #555;
 }
 
 .dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus {
