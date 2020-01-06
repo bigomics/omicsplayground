@@ -36,8 +36,7 @@ PCOR.METHODS = c("cor","pcor","pcor.shrink", "QUIC", "glasso", "huge",
                ## "clime", "BigQuic", 
                "fastclime", "FastGGM", "SILGGM")
 
-gene="CD4";X=ngs$X;nmax=200
-method=PCOR.FAST;nmax=100;fast=TRUE
+##gene="CD4";X=ngs$X;nmax=200;method=PCOR.FAST;nmax=100;fast=TRUE
 method=PCOR.METHODS
 pgx.computePartialCorrelationAroundGene <-
     function(X, gene, method=PCOR.METHODS, nmax=100, fast=FALSE)
