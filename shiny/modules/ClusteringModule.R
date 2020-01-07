@@ -1736,7 +1736,8 @@ displays the expression levels of selected genes across all conditions in the an
         title="Feature-set ranking", 
         func=clust_featureRank.RENDER,
         options = clust_featureRank.opts,
-        pdf.width=8, pdf.height=10, res=72,
+        pdf.width=8, pdf.height=10,
+        height = fullH-80, width=c("auto",800), res=72,
         info.text = clust_featureRank_info,
         caption = clust_featureRank_caption
     )
