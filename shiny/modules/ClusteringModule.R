@@ -461,7 +461,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
     })
 
-    hm2_splitmap.RENDER %<a-% reactive({
+    hm2_splitmap.RENDER <- reactive({
 
         ngs <- inputData()
         req(ngs, input$hm_splitx)
@@ -579,7 +579,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         return(text1)
     })
     
-    hm_splitmap.switchRENDER %<a-% reactive({
+    ##hm_splitmap.switchRENDER %<a-% reactive({
+    hm_splitmap.switchRENDER <- reactive({    
         cat("<module_intersect::hm_splitmap.switchRENDER\n")
         ##req(input$hm_plottype)
         p = NULL
@@ -604,7 +605,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         outputFunc="uiOutput",
         ## download.fmt = c("pdf","html"),
         options = hm_splitmap_opts,
-        height = fullH-60, width='100%',
+        height = fullH-80, width='100%',
         pdf.width=10, pdf.height=8, 
         title="Clustered Heatmap",
         info.text = hm_splitmap_text,
@@ -1622,7 +1623,8 @@ displays the expression levels of selected genes across all conditions in the an
         features <- features[sapply(features,length) >=10 ]
         
         ## ------------ Just to get current samples
-        samples = hm_filtered_matrix()$samples    
+        ##samples = hm_filtered_matrix()$samples    
+        samples <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
         X = X[,samples]
         cvar <- pgx.getCategoricalPhenotypes(ngs$Y)
         cvar = grep("group|sample|patient|years|days|months|gender",
