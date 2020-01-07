@@ -167,6 +167,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         genesets = rownames(ngs$gsetX)
 
         if(input$hm_level=="geneset") {
+            ##-----------------------------------
+            ## Gene set level features
+            ##-----------------------------------
             gsets = rownames(ngs$gsetX)
             gsets = unique(unlist(COLLECTIONS[input$hm_features]))
             zx = ngs$gsetX
@@ -184,6 +187,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             }        
             zx = zx[intersect(gsets,rownames(zx)),]
         } else {
+            ##-----------------------------------
+            ## Gene level features
+            ##-----------------------------------
             pp = head(rownames(ngs$X),400)
             gg = ngs$families[[1]]
             if(input$hm_features =="<all>") {
@@ -224,8 +230,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             zx <- zx[which(not.xy), ]
             dim(zx)
         }
-   
-        nmax=4000
+        
+        nmax = 4000
         nmax = as.integer(input$hm_ntop)
         idx <- NULL
         splitx <- input$hm_splitx
@@ -1433,7 +1439,6 @@ displays the expression levels of selected genes across all conditions in the an
         info.text = clustannot_plots_text        
     )
     ## output <- attachModule(output, clustannot_plots_module)
-
     
     clustannot_table.RENDER <- reactive({
         
