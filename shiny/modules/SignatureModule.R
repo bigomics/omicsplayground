@@ -29,7 +29,7 @@ SignatureModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
 
-    fullH = 760   ## full height of page
+    fullH = 750   ## full height of page
     tabH = '70vh'
     
     ## reactive functions from shared environment

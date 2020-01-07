@@ -26,7 +26,7 @@ FunctionalModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
     inputData <- env[["load"]][["inputData"]]
-    fullH = 760
+    fullH = 750
     rowH = 660  ## row height of panel
     tabH = 200  ## row height of panel
     tabH = '70vh'  ## row height of panel    

@@ -35,7 +35,7 @@ ClusteringModule <- function(input, output, session, env)
     inputData <- env[["load"]][["inputData"]]
     usermode  <- env[["load"]][["usermode"]]
 
-    fullH = 760  ## full height of page
+    fullH = 750  ## full height of page
     
     description = "<b>Cluster Analysis.</b> Discover clusters of similar genes or samples using unsupervised machine learning."
     output$description <- renderUI(HTML(description))
@@ -1738,21 +1738,17 @@ displays the expression levels of selected genes across all conditions in the an
         options = clust_featureRank.opts,
         pdf.width=8, pdf.height=10,
         height = fullH-80, width=c("auto",800), res=72,
-        info.text = clust_featureRank_info,
-        caption = clust_featureRank_caption
+        info.text = clust_featureRank_info
+        ## caption = clust_featureRank_caption
     )
     ##output <- attachModule(output, clust_featureRank_module)
-
-    require(shinycssloaders)
-    fillCol(
-        plotWidget(ns("clust_featureRank"))
-    )
     
     output$hm_featurerankUI <- renderUI({
         fillCol(
-            flex = c(1),
+            flex = c(1, NA),
             height = fullH,
-            plotWidget(ns("clust_featureRank"))
+            plotWidget(ns("clust_featureRank")),
+            div(HTML(clust_featureRank_caption),class="caption")
         )
     })
 
