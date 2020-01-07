@@ -10,7 +10,7 @@ EnrichmentUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillCol(
         flex = c(1.4,1),
-        height = 750,
+        height = 730,
         tabsetPanel(
             id = ns("tabs1"),
             tabPanel("Top enriched",uiOutput(ns("topEnriched_UI"))),
@@ -40,8 +40,8 @@ EnrichmentModule <- function(input, output, session, env)
     usermode  <- env[["load"]][["usermode"]]
     
 
-    fullH = 750
-    rowH = 350  ## row height of panels
+    fullH = 730
+    rowH = 345  ## row height of panels
     imgH = 275  ## height of images
     tabH = 160  ## height of tables
     tabH = "70vh" ## height of tables

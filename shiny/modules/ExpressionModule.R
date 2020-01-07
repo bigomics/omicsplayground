@@ -19,7 +19,7 @@ ExpressionUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillCol(
         flex = c(1.4,1),
-        height = 750,
+        height = 730,
         tabsetPanel(
             id = ns("tabs1"),
             tabPanel("Plot",uiOutput(ns("expr_plots_UI"))),
@@ -44,8 +44,8 @@ ExpressionModule <- function(input, output, session, env)
     inputData <- env[["load"]][["inputData"]]
     usermode  <- env[["load"]][["usermode"]]
 
-    fullH = 750
-    rowH = 350  ## row height of panels
+    fullH = 730
+    rowH = 345  ## row height of panels
     imgH = 270  ## height of images
     tabH = 160  ## height of tables
     tabH = "70vh"  ## height of tables
