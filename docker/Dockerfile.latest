@@ -6,7 +6,7 @@
 # Start from lastest base+data image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:baseplus
+FROM bigomics/omicsplayground:base
 
 #------------------------------------------------------------
 # Install extra packages required since base
@@ -23,9 +23,10 @@ RUN rm -fr /omicsplayground
 RUN git clone https://github.com/bigomics/omicsplayground.git && chmod -R ugo+rwX /omicsplayground
 
 #------------------------------------------------------------
-# Init data folder
+# Copy local data into Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
+COPY data/* /omicsplayground/data/
 RUN R -e "setwd('data');source('init.R')"
 
 #------------------------------------------------------------
