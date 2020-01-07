@@ -29,7 +29,7 @@ Follow the steps below to set up a running platform from the docker file:
 
 .. note::
 
-    Warning. The docker image requires about 5GB hard disk space. Note: if you want the exact version of the NAR/GAB publication, download version v1.0, otherwise docker will download the latest version by default.
+    Warning. The docker image requires about 8GB hard disk space. Note: if you want the exact version of the NAR/GAB publication, download version v1.0, otherwise docker will download the latest version by default.
 
    
 Run from source code
