@@ -611,7 +611,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         outputFunc="uiOutput",
         ## download.fmt = c("pdf","html"),
         options = hm_splitmap_opts,
-        height = fullH-80, width='100%',
+        height = fullH-100, width='100%',
         pdf.width=10, pdf.height=8, 
         title="Clustered Heatmap",
         info.text = hm_splitmap_text,
