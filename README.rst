@@ -54,7 +54,7 @@ the source code:
    Note: download version v1.0 if you want the exact version of the NAR/GAB publication, 
    otherwise GitHub will download the latest version by default.
     
-2. Installed all necessary R packages by running the script in the ``R/`` folder::
+2. Install all necessary R packages by running the script in the ``R/`` folder::
 
     Rscript requirements.R
     
