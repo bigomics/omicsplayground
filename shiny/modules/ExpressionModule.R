@@ -629,7 +629,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         func2 = expr_plots_topgenesbarplot.RENDER,        
         info.text = expr_plots_topgenesbarplot_text, label="c",
         title = "top DE genes",
-        height = imgH,
+        height = c(imgH,500), width=c('auto',800),
         pdf.width=6, pdf.height=6, res=75
     )
     ## output <- attachModule(output, expr_plots_topgenesbarplot_module)
@@ -690,7 +690,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         func2 = expr_plots_topfoldchange.RENDER,
         info.text = expr_plots_topfoldchange_text,
         title = "Gene in contrasts", label = "d",
-        height = imgH,
+        height = c(imgH,500), width=c('auto',700),
         pdf.width=6, pdf.height=6, res=75
     )
     ##output <- attachModule(output, expr_plots_topfoldchange_module)
