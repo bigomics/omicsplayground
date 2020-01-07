@@ -187,6 +187,7 @@ between genes and find coregulated modules."
             X = X[psel,,drop=FALSE]
         }
 
+        showNotification(paste("computing correlation...\n"))        
         res <- pgx.computePartialCorrelationAroundGene(
             X, gene, method=methods, nmax=100, fast=FALSE)    
 
