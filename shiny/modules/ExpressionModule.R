@@ -607,7 +607,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ii <- order(fc.top)
         par(mfrow=c(1,1), mar=c(4,4,2,2)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
         par(mfrow=c(1,1), mar=c(5,3,1,1), mgp=c(2,0.8,0), oma=c(0,0,0,0))
-        barplot(fc.top[ii], las=3, cex.names=0.8, ylab="fold change",
+        barplot(fc.top[ii], las=3, cex.names=0.75, ylab="fold change",
                 col=klr[ii], ylim=c(-1.1,1.2)*max(abs(fc.top),na.rm=TRUE) )
 
         cat("expr_plots_topgenesbarplot.RENDER: 4\n")
@@ -673,7 +673,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         m1 <- ifelse(nch > 30, 16, m1)
 
         ##par( mar=c(4,m1,2,0.5) )
-        par( mar=c(3,m1-0.5,1,1) )
+        par( mar=c(3.2,m1-0.5,1,1) )
         cex1 <- 0.9
         nn <- sum(!is.na(fc.top))
         if(nn>15) cex1 <- 0.8
@@ -691,7 +691,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         info.text = expr_plots_topfoldchange_text,
         title = "Gene in contrasts", label = "d",
         height = c(imgH,500), width=c('auto',700),
-        pdf.width=6, pdf.height=6, res=75
+        pdf.width=6, pdf.height=6, res=74
     )
     ##output <- attachModule(output, expr_plots_topfoldchange_module)
     
