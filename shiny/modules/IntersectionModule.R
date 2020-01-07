@@ -29,7 +29,7 @@ IntersectionUI <- function(id) {
 IntersectionModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
-    fullH = 760       # row height of panel 
+    fullH = 750       # row height of panel 
     
     ## reactive functions from shared environment
     inputData <- env[["load"]][["inputData"]]

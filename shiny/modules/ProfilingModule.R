@@ -31,7 +31,7 @@ ProfilingModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
     inputData <- env[["load"]][["inputData"]]
-    fullH = 760  ## full height of panel
+    fullH = 750  ## full height of panel
     imgH  = 680  ## row height of panel
     tabH  = 200  ## row height of panel    
     
