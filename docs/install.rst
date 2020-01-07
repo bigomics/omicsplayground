@@ -49,7 +49,7 @@ the source code:
 
     git clone https://github.com/bigomics/omicsplayground.git
     
-2. Installed all necessary R packages by running the script in the ``R/`` folder::
+2. Install all necessary R packages by running the script in the ``R/`` folder::
 
     Rscript requirements.R
     
