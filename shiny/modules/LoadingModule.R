@@ -735,7 +735,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
     output$downloadExampleData <- downloadHandler(
         filename = "exampledata.zip",
         content = function(file) {
-            zip = file.path(PGX.DIR,"exampledata.zip")
+            zip = file.path(FILES,"exampledata.zip")
             file.copy(zip,file)
         }
     )
