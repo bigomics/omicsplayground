@@ -34,12 +34,15 @@ RUN R -e "setwd('R');source('requirements.R')"
 RUN R -e "install.packages(c('umap','corrplot','wordcloud'))"
 RUN pip install umap-learn
 
+
+FROM base AS baseplus
+
 #------------------------------------------------------------
 # Copy local data into Docker image
 #------------------------------------------------------------
 COPY data/* /omicsplayground/data/
 
-FROM base AS latest
+FROM baseplus AS latest
 
 #------------------------------------------------------------
 ## Pull from GitHub
