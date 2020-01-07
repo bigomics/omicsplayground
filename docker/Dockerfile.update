@@ -16,18 +16,18 @@ FROM bigomics/omicsplayground:base
 RUN R -e "BiocManager::install(c('pathview','pryr'))"
 
 #------------------------------------------------------------
-## Pull from GitHub
-#------------------------------------------------------------
-WORKDIR /
-RUN rm -fr /omicsplayground
-RUN git clone https://github.com/bigomics/omicsplayground.git && chmod -R ugo+rwX /omicsplayground
-
-#------------------------------------------------------------
 # Copy local data into Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
 COPY data/*pgx /omicsplayground/data/
 RUN R -e "setwd('data');source('init.R')"
+
+#------------------------------------------------------------
+## Pull from GitHub
+#------------------------------------------------------------
+WORKDIR /
+RUN rm -fr /omicsplayground
+RUN git clone https://github.com/bigomics/omicsplayground.git && chmod -R ugo+rwX /omicsplayground
 
 #------------------------------------------------------------
 # Copy further configuration files into the Docker image
