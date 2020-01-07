@@ -3,10 +3,10 @@
 ##
 
 #------------------------------------------------------------
-# Start from lastest base image
+# Start from lastest base+data image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:base
+FROM bigomics/omicsplayground:baseplus
 
 #------------------------------------------------------------
 # Install extra packages required since base
@@ -14,13 +14,6 @@ FROM bigomics/omicsplayground:base
 ## RUN R -e "install.packages(c('umap','corrplot','wordcloud'))"
 ## RUN pip install umap-learn
 RUN R -e "BiocManager::install(c('pathview','pryr'))"
-
-#------------------------------------------------------------
-# Copy local data into Docker image
-#------------------------------------------------------------
-WORKDIR /omicsplayground
-##COPY data/*pgx /omicsplayground/data/
-##RUN R -e "setwd('data');source('init.R')"
 
 #------------------------------------------------------------
 ## Pull from GitHub
