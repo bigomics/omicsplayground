@@ -218,6 +218,11 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: 0px;
 }
 
+.skin-blue .main-header li.user-header {
+    background-color: var(--hover-color);
+}
+
+
 /* ---------------------------- playground -------------------------- */
 
 .container-fluid {
@@ -364,14 +369,16 @@ code {
 
 /* splash and modal */
 #modal-splash {
-    background-color: #2c81e2;    
+    background-color: #2c81e2;
+    background-color: var(--main-color);    
     border-bottom: 3px solid var(--accent-color) !important;
+    border: 0px !important;
+    padding: 0px !important;
 }
 
 .modal-body {
     // background-color: #2c81e2; 
-    border: 0px !important;
-    padding: 0px !important;
+    // padding: 0px !important;
 }
 
 .modal-backdrop {
@@ -428,6 +435,11 @@ code {
     font-size: 0.9em;
 }
 
+.dropdown-menu > li > a {
+    color: #333;
+    font-size: 13px;
+}
+
 .module-label {
     color: #AAA;
     font-size: 17px;
@@ -460,6 +472,6 @@ code {
     font-size: 18px;
     color: rgba(255,255,255,100);
     top: 10px;
-    right: 80px;
+    left: 50%;
     z-index: 9999;
 }
