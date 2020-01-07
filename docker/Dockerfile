@@ -31,7 +31,7 @@ COPY shiny /omicsplayground/shiny
 ## Install R packages that are required
 #------------------------------------------------------------
 RUN R -e "setwd('R');source('requirements.R')"
-RUN R -e "install.packages(c('umap','corrplot','wordcloud'))"
+RUN R -e "install.packages(c('umap','corrplot','wordcloud','pathview'))"
 RUN pip install umap-learn
 
 FROM base AS latest
