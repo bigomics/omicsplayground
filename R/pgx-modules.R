@@ -27,6 +27,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
                        no.download = FALSE, download.fmt=c("png","pdf"), 
                        just.info=FALSE, info.width="300px", show.maximize = TRUE,
                        height = c(400,720), width = c("auto",1080), res=c(72,100),
+                       download.pdf = NULL, download.png = NULL, download.html = NULL,
                        pdf.width=8, pdf.height=8, pdf.pointsize=12)
 {
     ns <- session$ns    
@@ -203,9 +204,10 @@ plotModule <- function(input, output, session, ## ns=NULL,
         )
     }
     
-    download.pdf = download.png = download.html = NULL
+    ## download.pdf = NULL
+    ##download.png = download.html = NULL
 
-    if(do.png) {
+    if(do.png && is.null(download.png)) {
         download.png <- downloadHandler(
             filename = "plot.png",
             content = function(file) {
@@ -300,7 +302,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
         ) ## PNG downloadHandler
     } ## end if do.png
 
-    if(do.pdf) {        
+    if(do.pdf && is.null(download.pdf) ) {        
         download.pdf <- downloadHandler(
             filename = "plot.pdf",
             content = function(file) {
@@ -428,7 +430,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
         return(HTMLFILE)
     }
     
-    if(do.html)  {
+    if(do.html && is.null(download.html) )  {
         download.html <- downloadHandler(
             filename = "plot.html",
             content = function(file) {
@@ -664,7 +666,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
         outputFunc = outputFunc,
         renderFunc = renderFunc
     )
-
+    return(res)
 }
 
 ##================================================================================

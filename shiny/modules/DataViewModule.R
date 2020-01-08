@@ -509,7 +509,7 @@ DataViewModule <- function(input, output, session, env)
         func = data_genePlots_tsne.RENDER,
         func2 = data_genePlots_tsne.RENDER,
         info.text = data_genePlots_tsne_text,
-        height = imgH, pdf.width = 5, pdf.height = 6,
+        height = imgH, pdf.width = 6, pdf.height = 6,
         label = "a", title= "t-SNE clustering"
     )
     ##output <- attachModule(output, data_genePlots_tsne_module)
