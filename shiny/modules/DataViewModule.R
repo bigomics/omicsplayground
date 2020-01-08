@@ -702,7 +702,8 @@ DataViewModule <- function(input, output, session, env)
             output <- paste(output, collapse="<p>")
         }    
         ##output <- paste0("<div style='background-color: #dde6f0;'>",output,"</div>")
-        div(HTML(output), class="gene-info-output", style="overflow: auto; height: 260px;")
+        ##div(HTML(output), class="gene-info-output", style="overflow: auto; height: 260px;")
+        div(HTML(output), class="gene-info-output", style="overflow: auto;")
         ##div(HTML(output), class="gene-info-output")
     })
 
