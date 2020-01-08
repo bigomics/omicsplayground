@@ -84,19 +84,31 @@ server = function(input, output, session) {
         name
     })
 
-    ## Hide/show certain section
+    ## Timed UI messages...
+    nwarn = 0
+    observe({
+        usermode <- env[["load"]][["usermode"]]()
+        if(usermode=="BASIC") {
+            shinyjs::hide(selector = "div.download-button")
+            ## if(nwarn==3) sendSweetAlert( session=session, title="", text="download is disabled")
+        }
+        invalidateLater(1000*30)  ## every 30 seconds check...
+        nwarn <<- nwarn + 1
+    })
+    
+    ## Hide/show certain sections depending on USER MODE
     observe({
         usermode <- env[["load"]][["usermode"]]()
         if(length(usermode)==0) usermode <- "BASIC"
         dbg("usermode = ",usermode)
         hideTab("view-tabs","Resource info")
         hideTab("enrich-tabs1","GeneMap")
-
         hideTab("maintabs","Development")
         ## hideTab("maintabs","BatchCorrect")
         ## hideTab("maintabs","Biomarker analysis")
         ## hideTab("maintabs","MetaAnalysis")
         ## hideTab("bio-tab1","Multi-level")
+        shinyjs::hide(selector = "div.download-button")
 
         if(usermode=="BASIC") {
             hideTab("maintabs","scProfiling")
@@ -104,14 +116,16 @@ server = function(input, output, session) {
             hideTab("expr-tabs1","Volcano (methods)")                        
             hideTab("expr-tabs2","FDR table")            
             hideTab("enrich-tabs1","Volcano (methods)")                        
-            hideTab("enrich-tabs2","FDR table")            
+            hideTab("enrich-tabs2","FDR table")
+            shinyjs::hide(selector = "div.download-button")            
         } else {
             showTab("maintabs","scProfiling")
             showTab("clust-tabs2","Feature ranking")
             showTab("expr-tabs1","Volcano (methods)")                        
             showTab("expr-tabs2","FDR table")            
             showTab("enrich-tabs1","Volcano (methods)")                        
-            showTab("enrich-tabs2","FDR table")            
+            showTab("enrich-tabs2","FDR table")
+            shinyjs::show(selector = "div.download-button")            
         }
         if(DEV.VERSION) {
             showTab("maintabs","Development")            
