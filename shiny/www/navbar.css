@@ -150,7 +150,11 @@ body {
     background-color: #dde6f0BB;
     padding: 10px 10px 10px 10px;
     overflow: auto;
-    height: 250px;
+    height: 260px;
+}
+
+.modal-body .gene-info-output {
+    height: auto;
 }
 
 .action-text #sig_example1 #sig_example2 #sig_example3 {
