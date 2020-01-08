@@ -1011,7 +1011,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         func = hm_PCAplot.RENDER, ## ns=ns,
         plotlib = "plotly", 
         options = hm_PCAplot_opts,
-        height = c(0.9*fullH,600),  width=c("auto",1000),
+        height = c(fullH-100,700), width=c("auto",800),
         pdf.width=8, pdf.height=8,
         title="PCA/tSNE plot",
         info.text = hm_PCAplot_text
