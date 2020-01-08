@@ -837,12 +837,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
         has.pgx <- has.pgx && !is.null(uploaded_files[["uploaded.pgx"]])
         cat("upload_compute: names(uploaded_files)=",names(uploaded_files),"\n")
         
-        if(DEV.VERSION && !has.pgx) {
-            ## just for debugging...
-            dbg("upload_compute :: ***** dummy computation ******")
-            load("../data/geiger2016-arginine.pgx")
-            ngs$name <- "DUMMY DATA!!!"
-        } else if(has.pgx) {
+        if(has.pgx) {
 
             dbg("upload_compute :: ***** using 'uploaded.pgx' ******")        
             ngs <- uploaded_files[["uploaded.pgx"]]

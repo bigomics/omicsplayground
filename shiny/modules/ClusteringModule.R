@@ -585,6 +585,15 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         return(text1)
     })
     
+    output$hm1_splitmap <- renderPlot({
+        hm1_splitmap.RENDER()
+        ## plot(sin)
+    }, res=90)
+
+    output$hm2_splitmap <- renderIheatmap({
+        hm2_splitmap.RENDER()
+    })
+
     ##hm_splitmap.switchRENDER %<a-% reactive({
     hm_splitmap.switchRENDER <- reactive({    
         cat("<module_intersect::hm_splitmap.switchRENDER\n")
@@ -597,63 +606,52 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         }
         return(p)
     })
-
-    ##    hm_splitmap_module <- plotModule(
-    ##        "hm_splitmap",
-    callModule(
-        plotModule,
-        id = "hm_splitmap",
-        func  = hm_splitmap.switchRENDER, ## ns=ns,
-        func2 = hm_splitmap.switchRENDER, ## ns=ns,
-        show.maximize = FALSE,
-        plotlib = "generic",
-        renderFunc="renderUI",
-        outputFunc="uiOutput",
-        ## download.fmt = c("pdf","html"),
-        options = hm_splitmap_opts,
-        height = fullH-100, width='100%',
-        pdf.width=10, pdf.height=8, 
-        title="Clustered Heatmap",
-        info.text = hm_splitmap_text,
-        info.width="350px"
-        ##caption = hm_splitmap_caption
-    )
-    ##output <- attachModule(output, hm_splitmap_module)
-
-    output$hm1_splitmap <- renderPlot({
-        hm1_splitmap.RENDER()
-        ## plot(sin)
-    }, res=90)
-
-    output$hm2_splitmap <- renderIheatmap({
-        hm2_splitmap.RENDER()
-    })
-
-    output$hm_splitmap_pdf <- downloadHandler(
+    
+    ##output$hm_splitmap_pdf <- downloadHandler(
+    hm_splitmap_downloadPDF <- downloadHandler(
         filename = "plot.pdf",
         content = function(file) {
-            PDFFILE = hm_splitmap_module$.tmpfile["pdf"]  ## from above!
-            dbg("hm_splitmap_pdf:: exporting to PDF...")
-            withProgress({
-                if(input$hm_plottype %in% c("ComplexHeatmap","static")) {
-                    pdf(PDFFILE, width=10, height=8)
-                    print(hm1_splitmap.RENDER())  ## should be done inside render for base plot...
-                    dev.off()
-                } else {
-                    save_iheatmap(hm2_splitmap.RENDER(), filename=PDFFILE,  vwidth=1000, vheight=800)
-                }
-            }, message="exporting to PDF", value=0.5)
+            ##PDFFILE = hm_splitmap_module$.tmpfile["pdf"]  ## from above!
+            PDFFILE = paste0(gsub("file","plot",tempfile()),".pdf")            
+            dbg("hm_splitmap_pdf:: exporting SWITCH to PDF...")
+            showNotification("exporting to PDF")            
+            if(input$hm_plottype %in% c("ComplexHeatmap","static")) {
+                pdf(PDFFILE, width=10, height=8)
+                hm1_splitmap.RENDER()  ## should be done inside render for base plot...
+                dev.off()
+            } else {
+                save_iheatmap(hm2_splitmap.RENDER(), filename=PDFFILE,  vwidth=1000, vheight=800)
+            }
             dbg("hm_splitmap_pdf:: exporting done...")
             file.copy(PDFFILE,file)        
         }
     )
 
-    output$hm_splitmap_html <- downloadHandler(
+    hm_splitmap_downloadPNG <- downloadHandler(
+        filename = "plot.png",
+        content = function(file) {
+            ##PDFFILE = hm_splitmap_module$.tmpfile["pdf"]  ## from above!
+            PNGFILE = paste0(gsub("file","plot",tempfile()),".png")            
+            dbg("hm_splitmap_pdf:: exporting SWITCH to PNG...")
+            showNotification("exporting to PNG")
+            if(input$hm_plottype %in% c("ComplexHeatmap","static")) {
+                png(PNGFILE, width=1000, height=1000)
+                print(hm1_splitmap.RENDER())  ## should be done inside render for base plot...
+                dev.off()
+            } else {
+                save_iheatmap(hm2_splitmap.RENDER(), filename=PNGFILE,  vwidth=1000, vheight=800)
+            }
+            dbg("hm_splitmap_png:: exporting done...")
+            file.copy(PNGFILE,file)        
+        }
+    )
+
+    hm_splitmap_downloadHTML <- downloadHandler(
         filename = "plot.html",
         content = function(file) {
-            HTMLFILE = hm_splitmap_module$.tmpfile["html"]  ## from above!
-            ##HTMLFILE = paste0(tempfile(),".html")
-            dbg("renderIheatmap:: exporting to HTML...")
+            ##HTMLFILE = hm_splitmap_module$.tmpfile["html"]  ## from above!
+            HTMLFILE = paste0(gsub("file","plot",tempfile()),".html")            
+            dbg("renderIheatmap:: exporting SWITCH to HTML...")
             withProgress({
                 ##write("<body>HTML export error</body>", file=HTMLFILE)    
                 p <- hm2_splitmap.RENDER()
@@ -664,6 +662,31 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             file.copy(HTMLFILE,file)        
         }
     )
+    
+    ##    hm_splitmap_module <- plotModule(
+    ##        "hm_splitmap",
+    hm_splitmap_module <- callModule(
+        plotModule,
+        id = "hm_splitmap",
+        func  = hm_splitmap.switchRENDER, ## ns=ns,
+        func2 = hm_splitmap.switchRENDER, ## ns=ns,
+        show.maximize = FALSE,
+        plotlib = "generic",
+        renderFunc="renderUI",
+        outputFunc="uiOutput",
+        download.fmt = c("pdf","png","html"),
+        options = hm_splitmap_opts,
+        height = fullH-100, width='100%',
+        pdf.width=10, pdf.height=8, 
+        title="Clustered Heatmap",
+        info.text = hm_splitmap_text,
+        info.width="350px",
+        download.pdf = hm_splitmap_downloadPDF,
+        download.png = hm_splitmap_downloadPNG,
+        download.html = hm_splitmap_downloadHTML
+        ##caption = hm_splitmap_caption
+    )
+    ##output <- attachModule(output, hm_splitmap_module)
 
     output$hm_heatmap_UI <- renderUI({
         fillCol(
