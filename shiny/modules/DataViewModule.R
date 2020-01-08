@@ -720,7 +720,7 @@ DataViewModule <- function(input, output, session, env)
             tipify( checkboxInput(ns('data_geneinfo'),'gene summary',FALSE),
                    "Provide a summary for the selected gene.", placement="top")
         ),
-        height = c(260,600), width=c('auto',500)
+        height = c(260,600), width=c('auto',800)
     )
 
     ##----------------------------------------------------------------------
