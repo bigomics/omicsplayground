@@ -1456,7 +1456,7 @@ displays the expression levels of selected genes across all conditions in the an
         func = clustannot_plots.PLOTLY, plotlib="plotly",
         download.fmt = c("png","pdf","html"),
         options = clustannot_plots_opts,
-        height = c(350,600), width = c(500,1000),
+        height = c(370,600), width = c(500,1000),
         pdf.width=8, pdf.height=5, res=80,
         title="Functional annotation of clusters", label="a",
         info.text = clustannot_plots_text        
@@ -1507,14 +1507,14 @@ displays the expression levels of selected genes across all conditions in the an
         func = clustannot_table.RENDER,
         info.text = clustannot_table_info_text,
         title="Annotation scores", label="b",
-        height = c(270,700), width=c('auto',1000),
+        height = c(250,700), width=c('auto',1000),
         ##caption = clustannot_caption
     )
     ##output <- attachModule(output, clustannot_table_module)
 
     output$hm_annotateUI <- renderUI({
         fillCol(
-            flex = c(1.2,0.05,1,NA),
+            flex = c(1.4,0.05,1,NA),
             height = fullH,
             plotWidget(ns("clustannot_plots")),
             br(),
