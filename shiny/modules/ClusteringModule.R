@@ -614,7 +614,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ##PDFFILE = hm_splitmap_module$.tmpfile["pdf"]  ## from above!
             PDFFILE = paste0(gsub("file","plot",tempfile()),".pdf")            
             dbg("hm_splitmap_pdf:: exporting SWITCH to PDF...")
-            showNotification("exporting to PDF")            
+            ##showNotification("exporting to PDF")            
             if(input$hm_plottype %in% c("ComplexHeatmap","static")) {
                 pdf(PDFFILE, width=10, height=8)
                 hm1_splitmap.RENDER()  ## should be done inside render for base plot...
@@ -633,7 +633,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ##PDFFILE = hm_splitmap_module$.tmpfile["pdf"]  ## from above!
             PNGFILE = paste0(gsub("file","plot",tempfile()),".png")            
             dbg("hm_splitmap_pdf:: exporting SWITCH to PNG...")
-            showNotification("exporting to PNG")
+            ##showNotification("exporting to PNG")
             if(input$hm_plottype %in% c("ComplexHeatmap","static")) {
                 png(PNGFILE, width=1000, height=1000)
                 print(hm1_splitmap.RENDER())  ## should be done inside render for base plot...
