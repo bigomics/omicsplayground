@@ -702,11 +702,10 @@ DataViewModule <- function(input, output, session, env)
             output <- paste(output, collapse="<p>")
         }    
         ##output <- paste0("<div style='background-color: #dde6f0;'>",output,"</div>")
-        HTML(output)
+        div(HTML(output), class="gene-info-output", style="overflow: auto; height: 260px;")
+        ##div(HTML(output), class="gene-info-output")
     })
 
-    ##data_geneInfo_buttons = plotModuleButtons(
-    ##"data_geneInfo_buttons",
     callModule(
         plotModule, "data_geneInfo",
         plotlib = "generic",
@@ -719,7 +718,9 @@ DataViewModule <- function(input, output, session, env)
         options = tagList(
             tipify( checkboxInput(ns('data_geneinfo'),'gene summary',FALSE),
                    "Provide a summary for the selected gene.", placement="top")
-        ))
+        ),
+        height = c(260,600), width=c('auto',500)
+    )
 
     ##----------------------------------------------------------------------
     ##                     Interface
