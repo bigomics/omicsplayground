@@ -25,7 +25,7 @@ pgx.upload <- function(counts, samples, contrasts, ## genes,
                        gx.methods = c("ttest.welch","trend.limma","edger.qlf"),
                        gset.methods = c("fisher","gsva","fgsea"),
                        extra.methods = c("meta.go","deconv","infer","drugs","wordcloud"),
-                       lib.dir = "../lib",
+                       lib.dir = "../lib", do.cluster=TRUE,
                        progress=NULL)
 {
 
@@ -151,13 +151,14 @@ pgx.upload <- function(counts, samples, contrasts, ## genes,
     ## Pre-calculate t-SNE for and get clusters early so we can use it
     ## for doing differential analysis.
     ##-------------------------------------------------------------------
-    if(!is.null(progress)) progress$inc(0.01, detail = "clustering")
-
-    perplexity <- max(3,min(30,round(ncol(ngs$counts)/4)))
-    perplexity
-    ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, perplexity=perplexity)
-    head(ngs$samples)
-    table(ngs$samples$cluster)
+    if(do.cluster) {
+        if(!is.null(progress)) progress$inc(0.01, detail = "clustering")
+        perplexity <- max(3,min(30,round(ncol(ngs$counts)/4)))
+        perplexity
+        ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, perplexity=perplexity)
+        head(ngs$samples)
+        table(ngs$samples$cluster)
+    }
     
     ##======================================================================
     ##======================================================================

@@ -29,6 +29,7 @@ if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../../alex/alex2019-data.pgx")
     load("../data/GSE10846-dlbcl.pgx")
+    load("../data/GSE10846-dlbcl2.pgx")
     load("../data/GSE101766.pgx")
     load("../data-ext/vogel2019-tcells.pgx")
     load("../../exampledata/mouse/mouse.pgx")    

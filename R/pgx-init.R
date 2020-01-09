@@ -224,10 +224,18 @@ pgx.initialize <- function(ngs) {
         obj.missing <- setdiff(obj.needed, names(ngs))
         msg <- paste("invalid ngs object. missing parts in object: ",obj.missing)
         showNotification(msg,duration=NULL,type="error")
-        stop(msg)
+        ##stop(msg)
         return(NULL)
     }
 
+    vars.needed <- c("group")
+    if(!all(vars.needed %in% colnames(ngs$samples))) {
+        vars.missing <- setdiff(vars.needed, colnames(ngs$samples))
+        msg <- paste("invalid ngs object. missing variables in object: ",vars.missing)
+        showNotification(msg,duration=NULL,type="error")
+        ##stop(msg)
+        return(NULL)
+    }
     ## for COMPATIBILITY: if no counts, estimate from X
     if(is.null(ngs$counts)) {
         cat("WARNING:: no counts table. estimating from X\n")
