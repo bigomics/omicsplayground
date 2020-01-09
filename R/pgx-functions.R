@@ -625,14 +625,14 @@ pgx.clusterSamplesFromMatrix <-
         min.size
         small.clusters <- names(which(table(idx) < min.size))
         idx[ which(idx %in% small.clusters)] <- "0"
-        sort(table(idx))
-        
-        ## rename levels with largest cluster first
-        idx <- factor(idx, levels=names(sort(-table(idx))))
-        levels(idx) <- paste0(prefix,1:length(levels(idx)))
-        table(idx)
-        cat("Found",length(unique(idx)),"clusters...\n")
+        sort(table(idx))        
     }
+
+    ## rename levels with largest cluster first
+    idx <- factor(idx, levels=names(sort(-table(idx))))
+    levels(idx) <- paste0(prefix,1:length(levels(idx)))
+    table(idx)
+    cat("Found",length(unique(idx)),"clusters...\n")
 
     res <- list(pos2d=pos2, pos3d=pos3, idx=idx)
     return(res)
