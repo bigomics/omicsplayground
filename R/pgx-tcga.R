@@ -1,3 +1,4 @@
+ARCHS4.DIR = "~/.archs4data"
 
 if(0) {
 
@@ -37,7 +38,6 @@ if(0) {
     pgx.TCGA.selectStudies("*", "^OS_|^EFS_|^DFS_")
 
 
-    ARCHS4.DIR = "~/.archs4data"
     library("rhdf5")
     library("preprocessCore")
     library("sva")    
@@ -57,22 +57,35 @@ if(0) {
     id3 = h5read(matrix_file, "/meta/gdc_cases.submitter_id")        
 }
 
+cancertype="dlbc";variables="OS_"
 pgx.TCGA.selectStudies <- function(cancertype, variables)
 {
+    ## Scan the available TCGA studies for cancertype and clinical
+    ## variables.
+    ##
+    ##
+    ##
     library(cgdsr)
     mycgds <- CGDS("http://www.cbioportal.org/")
     all.studies <- sort(getCancerStudies(mycgds)[,1])
     studies <- grep(cancertype, all.studies, value=TRUE)    
     clin <- list()
     samples <- list()
+    studies
     mystudy <-  studies[1]
+
     for(mystudy in studies) {
+
+        mystudy
+        myprofiles <- getGeneticProfiles(mycgds,mystudy)[,1]
+        myprofiles
 
         ## mrna datatypes
         mrna.type <- "rna_seq_mrna"
         if(any(grepl("v2_mrna$", myprofiles))) mrna.type <- "rna_seq_v2_mrna"
         pr.mrna <- grep( paste0(mrna.type,"$"), myprofiles,value=TRUE)
         pr.mrna
+        if(length(pr.mrna)==0) next()
         
         all.cases <- getCaseLists(mycgds,mystudy)[,1]
         all.cases
@@ -86,34 +99,37 @@ pgx.TCGA.selectStudies <- function(cancertype, variables)
     }
     
     sel <- sapply(clin, function(v) any(grepl(variables,colnames(v))))
+    sel
     sel.studies <- studies[sel]
     sel.clin    <- clin[sel]
     
     res <- list(
         studies = sel.studies,
-        samples = sel.samples,
+        ##samples = sel.samples,
         clinicalData = sel.clin
     )
     return(res)
 }
 
-pgx.TCGA.getExpression <- function(studies, genes=NULL)
+genes=NULL
+pgx.TCGA.getExpression <- function(study, genes=NULL)
 {
-    ##
-    ##
-    ##
+    ## For a specific TCGA study get the expression matrix and
+    ## clinical data.
     ##
     
     ##BiocManager::install("cgdsr")    
     library(cgdsr)
     mycgds <- CGDS("http://www.cbioportal.org/")
 
-    ## Gather data from all studies
+    ## Gather data from all study
     X <- list()
     clin <- list()
-    mystudy <-  studies[1]
-    for(mystudy in studies) {
+    mystudy <-  study[1]
+    for(mystudy in study) {
 
+        cat("getting TCGA expression for",mystudy,"...\n")
+        
         mystudy
         ##myprofiles = "ov_tcga_rna_seq_v2_mrna"        
         myprofiles <- getGeneticProfiles(mycgds,mystudy)[,1]
@@ -124,6 +140,7 @@ pgx.TCGA.getExpression <- function(studies, genes=NULL)
         if(any(grepl("v2_mrna$", myprofiles))) mrna.type <- "rna_seq_v2_mrna"
         pr.mrna <- grep( paste0(mrna.type,"$"), myprofiles,value=TRUE)
         pr.mrna
+        if(length(pr.mrna)==0) next()
         
         all.cases <- getCaseLists(mycgds,mystudy)[,1]
         all.cases
@@ -132,50 +149,65 @@ pgx.TCGA.getExpression <- function(studies, genes=NULL)
         caselist <- grep(paste0(mrna.type,"$"),all.cases,value=TRUE)
         caselist
         samples <- NULL
+        head(genes)
         if(!is.null(genes)) {
-            xx <- t(getProfileData(mycgds, genes, pr.mrna, caselist))
-            samples <- gsub("[.]","-",colnames(xx))
-            colnames(xx) <- samples            
+            ## If only a few genes, getProfileData is a faster way
+            ##
+            expression <- t(getProfileData(mycgds, genes, pr.mrna, caselist))
+            samples <- gsub("[.]","-",colnames(expression))
+            colnames(expression) <- samples            
+            dim(expression)
         } else {
+            ## For all genes, getProfileData cannot do and we use
+            ## locally stored H5 TCGA data file from Archs4.
+            ##
             xx <- getProfileData(mycgds, "---", pr.mrna, caselist)
             samples <- gsub("[.]","-",colnames(xx))[3:ncol(xx)]
             head(samples)
-            
+
             library("rhdf5")
             library("preprocessCore")
-            library("sva")    
+            h5closeAll()
             matrix_file = file.path(ARCHS4.DIR, "tcga_matrix.h5")
-            file.exists(matrix_file)
-            h5ls(matrix_file)[,1:2]
+            has.h5 <- file.exists(matrix_file)
+            has.h5
             
-            ## Retrieve information from compressed data
-            id1 = h5read(matrix_file, "/meta/gdc_cases.samples.portions.submitter_id")
-            id2 = h5read(matrix_file, "/meta/gdc_cases.samples.submitter_id")
-            id3 = h5read(matrix_file, "/meta/gdc_cases.submitter_id")    
-            id2x <- substring(id2,1,15)
+            if(!has.h5) {
+                stop("FATAL: could not find tcga_matrix.h5 matrix. Please download from Archs4.")
+            } else {
+                ## Retrieve information from locally stored H5 compressed data            
+                h5ls(matrix_file)[,1:2]            
+                id1 = h5read(matrix_file, "/meta/gdc_cases.samples.portions.submitter_id")
+                id2 = h5read(matrix_file, "/meta/gdc_cases.samples.submitter_id")
+                id3 = h5read(matrix_file, "/meta/gdc_cases.submitter_id")    
+                id2x <- substring(id2,1,15)
+                
+                h5.genes = h5read(matrix_file, "/meta/genes")            
+                samples = intersect(samples, id2x)
+                sample_index <- which(id2x %in% samples)
+                gene_index <- 1:length(h5.genes)            
+                expression = h5read(
+                    matrix_file, "data/expression",
+                    index = list(gene_index, sample_index)
+                )
+                H5close()
+                dim(expression)
+                colnames(expression) <- substring(id2[sample_index],1,15)
+                rownames(expression) <- h5.genes
+                expression <- expression[,order(-colSums(expression))]
+                expression <- expression[,samples]
+            }
             
-            genes = h5read(matrix_file, "/meta/genes")            
-            samples = intersect(samples, id2x)
-            sample_index <- which(id2x %in% samples)
-            gene_index <- 1:length(genes)            
-            expression = h5read(
-                matrix_file, "data/expression",
-                index = list(gene_index, sample_index)
-            )
-            H5close()
-            dim(expression)
-            colnames(expression) <- substring(id2[sample_index],1,15)
-            rownames(expression) <- genes
-            expression <- expression[,order(-colSums(expression))]
-            expression <- expression[,samples]
         }
-        cc <- getClinicalData(mycgds, caselist)
-        rownames(cc) <- gsub("[.]","-",rownames(cc))
-        cc <- cc[samples,,drop=FALSE]
-        xx <- xx[,samples,drop=FALSE]
-        X[[mystudy]] <- xx
-        clin[[mystudy]] <- cc
+        dim(expression)
+        this.clin <- getClinicalData(mycgds, caselist)
+        rownames(this.clin) <- gsub("[.]","-",rownames(this.clin))
+        this.clin <- this.clin[samples,,drop=FALSE]
+        expression <- expression[,samples,drop=FALSE]
+        X[[mystudy]] <- expression
+        clin[[mystudy]] <- this.clin
     }
+
 
     res <- list(X=X, clin=clin)
     return(res)
@@ -185,6 +217,9 @@ pgx.TCGA.getExpression <- function(studies, genes=NULL)
 pgx.getTCGA.multiomics.TOBEFINISHED <- function(studies, genes=NULL, batch.correct=TRUE,
                                                 tcga.only=TRUE )
 {
+    ## Better use curatedTCGA bioconductor package!!!!
+    ##
+    
     ##BiocManager::install("cgdsr")    
     library(cgdsr)
     mycgds <- CGDS("http://www.cbioportal.org/")

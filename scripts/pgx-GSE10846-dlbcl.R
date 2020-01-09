@@ -22,12 +22,14 @@ source("../R/ngs-functions.R")
 source("../R/pgx-graph.R")
 source("../R/pgx-drugs.R")
 source("../R/pgx-wordcloud.R")
+source("../R/pgx-contrasts.R")
 source("../R/compute2-genes.R")
 source("../R/compute2-genesets.R")
 source("../R/compute2-extra.R")    
 
 source("options.R")
 MAX.GENES
+##MAX.GENES = 99999
 BATCH.CORRECT=TRUE
 SUBSAMPLE=TRUE
 
@@ -209,11 +211,10 @@ if(PROCESS.DATA) {
     ## Pre-calculate t-SNE for and get clusters early so we can use it
     ## for doing differential analysis.
     ##-------------------------------------------------------------------
-    ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, prefix="C",
-                              clust.detect="louvain", kclust=1)
-    table(ngs$samples$cluster)
+    ngs <- pgx.clusterSamples( ngs, skipifexists=FALSE, prefix="C",
+                              clust.detect="hclust", kclust=3)
+    table(ngs$samples$cluster)    
 
-    
 }
 
 
@@ -234,6 +235,14 @@ if(DIFF.EXPRESSION) {
     contr.matrix <- makeDirectContrasts(
         Y = ngs$samples[,c("dlbcl.type","gender","cluster")],
         ref = c("GCB","male",NA))
+
+    res <- makeDirectContrasts2(
+        Y = ngs$samples[,c("dlbcl.type","gender","cluster")],
+        ref = c("GCB","male",NA))
+    contr.matrix <- res$contr.matrix
+    ngs$samples$group <- res$group
+    table(res$group)
+
     dim(contr.matrix)
     head(contr.matrix)
     colnames(contr.matrix) <- sub(".*:","",colnames(contr.matrix))  ## strip prefix 
@@ -246,8 +255,9 @@ if(DIFF.EXPRESSION) {
     USER.GENESETTEST.METHODS = c("fisher","gsva","ssgsea","spearman",
                                  "camera", "fry","fgsea") ## no GSEA, too slow...
 
-    USER.GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank","trend.limma")
-    USER.GENESETTEST.METHODS = c("fisher","gsva","camera")
+    USER.GENETEST.METHODS=c("trend.limma","edger.qlf","deseq2.wald")
+    ##USER.GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank","trend.limma")
+    USER.GENESETTEST.METHODS = c("fisher","gsva","camera","fgsea")
     MAX.GENES
     
     ## new callling methods

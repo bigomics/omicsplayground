@@ -40,7 +40,7 @@ parseGeoAnnot <- function(annot) {
     lapply(annot[], parse.annot)
 }
 
-keyword="cancer"
+##keyword="cancer"
 geo.selectSeries <- function(keyword, variables=NULL)
 {
     metadb <- file.path(ARCHS4.DIR,'GEOmetadb.sqlite')
@@ -50,7 +50,7 @@ geo.selectSeries <- function(keyword, variables=NULL)
     con <- dbConnect(SQLite(),metadb)
     dbListTables(con)
     dbListFields(con,'gse')        
-    series.str <- paste0("('",paste(unique(series),collapse="','"),"')")
+    ##series.str <- paste0("('",paste(unique(series),collapse="','"),"')")
     ##rs <- dbGetQuery(con,paste("SELECT gse,title FROM gse WHERE gse IN",series.str))
     ww <- strsplit(keyword,split="\\|")[[1]]
     gse <- c()
@@ -83,14 +83,14 @@ geo.selectSeries <- function(keyword, variables=NULL)
     }
 
     series.str <- paste0("('",paste(unique(gse),collapse="','"),"')")    
-    rt <- dbGetQuery(con,paste("SELECT gse,title,summary FROM gse WHERE gse IN ",series.str))
+    rt <- dbGetQuery(con,paste("SELECT gse,title,summary FROM gse WHERE gse IN ",
+                               series.str))
     rt$variables <- annot1[rt$gse]
     return(rt)
 }
 
-res <- geo.selectSeries("immune","surv")
-res <- geo.selectSeries("cancer|lymphom","surv")
-
+##res <- geo.selectSeries("immune","surv")
+##res <- geo.selectSeries("cancer|lymphom","surv")
 gse.series = c("GSE76514","GSE81475")
 genes = c('CD101','CD109','CD14','CD151','CD160','CD163','CD163L1','CD164','CD164L2','CD177')
 studies = c("prad_tcga","ov_tcga")

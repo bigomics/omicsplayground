@@ -546,6 +546,12 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
         dbg("[observe:loadbutton] head.names.PGX=",head(names(pgx)))
         dbg("[observe:loadbutton] initializing PGX object")
         ngs <- pgx.initialize(ngs)
+        if(is.null(ngs)) {
+            cat("[observe:loadbutton] ERROR in object initialization\n")
+            showNotification("ERROR in object initialization!\n")
+            removeModal()
+            return(NULL)
+        }
         if(is.null(ngs$name)) ngs$name <- sub("[.]pgx$","",pgx)
 
         ##----------------- remove modal??

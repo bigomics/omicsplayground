@@ -10,25 +10,27 @@ library("archs4")
 library(dplyr)
 library(GEOmetadb)
 
-RDIR="../../R/"
-FILES="../../lib/"
-PGX.DIR="../../data/"
-source("../../R/pgx-init.R")
-source("../../R/pgx-archs4.R")
-source("../../R/ngs-functions.R")
-source("../../R/pgx-functions.R")
-source("../../R/pgx-contrasts.R")
-source("../../R/pgx-upload.R")
+RDIR="../R/"
+FILES="../lib/"
+PGX.DIR="../data/"
+source("../R/pgx-init.R")
+source("../R/pgx-archs4.R")
+source("../R/ngs-functions.R")
+source("../R/pgx-functions.R")
+source("../R/pgx-contrasts.R")
+source("../R/pgx-upload.R")
 
-archs4dir <- "~/.archs4data"
-archs4dir <- "~/bigomics/data/archs4data"
-archs4dir <- "/data/Projects/Data/archs4data"
+## auto search ARCH4 folder
+search.archs4dir <- c("~/.archs4data","~/bigomics/data/archs4data",
+                      "/data/Projects/Data/archs4data")
+ARCHS4.DIR <- names(which(sapply(search.archs4dir,file.exists)))[1]
+ARCHS4.DIR
 
 if(0) {
-    archs4_local_data_dir_create(archs4dir)
+    archs4_local_data_dir_create(ARCHS4.DIR)
     cwd = getwd()
     cwd
-    setwd(archs4dir)
+    setwd(ARCHS4.DIR)
     system("wget https://s3.amazonaws.com/mssm-seq-matrix/human_matrix.h5")
     system("wget https://s3.amazonaws.com/mssm-seq-matrix/human_hiseq_transcript_v2.h5")
     system("wget https://s3.amazonaws.com/mssm-seq-matrix/mouse_matrix.h5")
@@ -36,18 +38,18 @@ if(0) {
     system("wget ftp://ftp.ensembl.org/pub/release-90/gtf/homo_sapiens/Homo_sapiens.GRCh38.90.gtf.gz")
     system("wget ftp://ftp.ensembl.org/pub/release-90/gtf/mus_musculus/Mus_musculus.GRCm38.90.gtf.gz")
     
-    create_augmented_feature_info(datadir=archs4dir)
-    archs4_local_data_dir_validate(datadir=archs4dir)
+    create_augmented_feature_info(datadir=ARCHS4.DIR)
+    archs4_local_data_dir_validate(datadir=ARCHS4.DIR)
     setwd(cwd)
     cwd
 }
 
 library(archs4)
-a4 <- Archs4Repository(datadir=archs4dir)
+a4 <- Archs4Repository(datadir=ARCHS4.DIR)
 
 ## Get titles from GEO experiments
-metadb <- file.path(archs4dir,'GEOmetadb.sqlite')
-if(!file.exists(metadb)) getSQLiteFile(destdir=archs4dir)
+metadb <- file.path(ARCHS4.DIR,'GEOmetadb.sqlite')
+if(!file.exists(metadb)) getSQLiteFile(destdir=ARCHS4.DIR)
 con <- dbConnect(SQLite(),metadb)
 rs <- dbGetQuery(con,paste("select gse,title from gse where",
                            "contributor like '%Ivo%Kwee%'",sep=" "))
@@ -59,7 +61,7 @@ names(GSE.TITLE) <- rs$gse
 
 gse.drugs <- NULL
 if(0) {
-    D <- read.csv("../../lib/L1000_repurposing_drugs.txt",sep="\t",comment.char="#")
+    D <- read.csv("../lib/L1000_repurposing_drugs.txt",sep="\t",comment.char="#")
     drugs = tolower(as.character(D$pert_iname))
     drugs1 = grep("[[:punct:]]",drugs,value=TRUE,invert=TRUE)
     length(drugs1)
@@ -81,19 +83,19 @@ if(0) {
 ##================================================================================
 
 ext="-immune";outdir="gse"
-ext="test";outdir="test"
+ext="-test";outdir="test"
 id="GSE100425"
 id="GSE105087"
 id="GSE107655"
 
 prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
     
-    pgx.file <- file.path(archs4dir,paste0(id,ext,".pgx"))
+    pgx.file <- file.path(ARCHS4.DIR,paste0(id,ext,".pgx"))
     if(!is.null(outdir)) {
-        dir <- file.path(archs4dir,outdir)
+        dir <- file.path(ARCHS4.DIR,outdir)
         dir.exists(dir)
         if(!dir.exists(dir)) system(paste("mkdir -p",dir))
-        pgx.file <- file.path(archs4dir,outdir,paste0(id,ext,".pgx"))
+        pgx.file <- file.path(ARCHS4.DIR,outdir,paste0(id,ext,".pgx"))
         pgx.file
     }
     pgx.file
@@ -104,13 +106,14 @@ prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
 
     cat("retrieving Archs4 data for GEO series",id,":",GSE.TITLE[id],"\n")
     aa <- NULL
-    try.error <- try( aa <- pgx.getArchs4Dataset(a4, id) )
+    try.error <- try( aa <- pgx.getArchs4Dataset(id=id, a4=a4, datadir=ARCHS4.DIR) )
 
     if(class(try.error)=="try-error" || is.null(aa)) {
         cat("skipping. get dataset failed\n")
         return("skipped. get dataset failed")
     }
-    
+
+    ## Some cleaning-up of dataframes...
     names(aa)
     if("group" %in% colnames(aa$samples)) {
         colnames(aa$samples) <- sub("group","xgroup",colnames(aa$samples))
@@ -122,15 +125,33 @@ prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
     
     ## get categorical phenotypes
     df <- aa$samples
-    vv <- pgx.getCategoricalPhenotypes(df, max.ncat=10, min.ncat=2) 
-    vv
-    if(length(vv)==0) {
-        cat("skipping. no valid phenotypes in GEO series",id,"...\n")
-        return("skipped. no valid phenotypes")
+    if(0) {
+        vv <- pgx.getCategoricalPhenotypes(df, max.ncat=10, min.ncat=2,
+                                           remove.dup=TRUE) 
+        vv
+        if(length(vv)==0) {
+            cat("skipping. no valid phenotypes in GEO series",id,"...\n")
+            return("skipped. no valid phenotypes")
+        }
+        cat("found discrete phenotypes:",vv,"\n")
+        df <- df[,vv,drop=FALSE]
+        apply(df,2,table)
     }
-    cat("found discrete phenotypes:",vv,"\n")
-    df <- df[,vv,drop=FALSE]
-    apply(df,2,table)
+    df <- pgx.discretizePhenotypeMatrix(
+        df, max.ncat=10, min.ncat=2, remove.dup=TRUE)
+    
+    ## add clustering
+    gx <- limma::normalizeQuantiles(log2(1+aa$counts))
+    gx <- gx[apply(gx,1,sd,na.rm=TRUE)>0,]
+    gx <- head(gx[order(-apply(gx,1,sd,na.rm=TRUE)),],1000)
+    gx <- gx - rowMeans(gx,na.rm=TRUE)
+    hc <- hclust(as.dist(1 - cor(gx)))
+    if(ncol(gx)<10) {
+        idx <- cutree(hc,2)
+    } else {
+        idx <- cutree(hc,3)
+    }
+    df$cluster <- paste0("cl",idx)
     
     ## create contrast matrix
     mingrp=3;slen=15;ref=NA
@@ -169,8 +190,8 @@ prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
             gset.methods = c("fisher","gsva","fgsea"),
             ##extra.methods = c("meta.go","deconv","infer","drugs","wordcloud"),
             extra.methods = c("meta.go","infer","drugs","wordcloud"),
-            lib.dir = "../../lib",
-            only.hugo = TRUE,
+            lib.dir = "../lib",
+            only.hugo = TRUE, do.cluster=FALSE,
             progress=NULL)
         
         names(ngs)
@@ -180,8 +201,9 @@ prepArchs4Dataset <- function(id, ext="", outdir=NULL) {
         ngs$description <- paste0(id,". ",GSE.TITLE[id],".")
         ngs$datatype <- "RNA-seq"
         ngs$organism <- ngs.detectOrganism(ngs)
-        ngs$date <- Sys.Date()
         ngs$link <- paste0("https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=",id)
+        ngs$create_date <- Sys.Date()
+        ngs$create_method <- "by automated build-archs4 script"
         
         cat("object size: ",format(object.size(ngs), units="MB"),"\n")
         cat(">>> saving PGX file ",pgx.file,"\n")

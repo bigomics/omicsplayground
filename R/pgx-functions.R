@@ -138,8 +138,47 @@ is.categorical <- function(x, max.ncat=20, min.ncat=2) {
     is.factor2
 }
 
+##remove.dup=FALSE
+pgx.discretizePhenotypeMatrix <- function(df, max.ncat=20, min.ncat=2, remove.dup=FALSE) {
+
+    catpheno <- pgx.getCategoricalPhenotypes(
+        df, max.ncat=max.ncat, min.ncat=min.ncat, remove.dup=remove.dup)
+    numpheno <- pgx.getNumericalPhenotypes(df)
+    catpheno
+    numpheno
+    numpheno <- setdiff(numpheno, catpheno) ## already in categories?
+    df.num <- c()
+    if(length(numpheno)) {
+        df.num <- as.matrix(df[,numpheno,drop=FALSE])
+        is.high <- t(t(df.num) > apply(df.num,2,median,na.rm=TRUE))
+        df.num[is.high]  <- "high"
+        df.num[!is.high] <- "low"
+    }
+    df1 <- df[,0]
+    if(length(catpheno)) df1 <- cbind(df1, df[,catpheno])
+    if(length(numpheno)) df1 <- cbind(df1, df.num)
+    df1
+}
+
+pgx.getNumericalPhenotypes <-function(df)
+{
+    is.bad = 0
+    is.bad1 <- grepl("^sample$|[_.]id$|replic|rep|patient|donor|individ",tolower(colnames(df)))
+    is.bad2 <- grepl("year|month|day|^efs|^dfs|surv|follow",tolower(colnames(df)))    
+    is.bad3 <- apply(df,2,function(x) any(grepl("^sample|patient|replicate|donor|individ",x,ignore.case=TRUE)))    
+    is.bad <- (is.bad1 | is.bad2 | is.bad3)
+    table(is.bad)
+    is.bad
+    numratio <- apply(df,2,function(x)length(unique(x))) / nrow(df)
+    numratio
+    numpheno <- (apply(df,2,is.num) & !is.bad & numratio>0.5)
+    numpheno    
+    names(which(numpheno==TRUE))
+}
+
+
 ##max.ncat=20;min.ncat=2
-pgx.getCategoricalPhenotypes <-function(df, max.ncat=20, min.ncat=2) {
+pgx.getCategoricalPhenotypes <-function(df, max.ncat=20, min.ncat=2, remove.dup=FALSE) {
     ##
     ##
     ##
@@ -160,7 +199,26 @@ pgx.getCategoricalPhenotypes <-function(df, max.ncat=20, min.ncat=2) {
     is.id
     is.factor2 <- (!is.bad & is.factor & !is.id & n.unique>=min.ncat & n.unique<= max.ncat)
     is.factor2
-    colnames(df)[which(is.factor2)]
+    df1 <- df[,which(is.factor2)]
+
+    nlevel <- apply(df1,2,function(x) length(unique(x)))
+    nchars <- apply(df1,2,function(x) max(nchar(as.character(x))))
+    df1 <- df1[,order(nlevel,-nchars)]
+    ##head(df1)
+    if(remove.dup && ncol(df1)>1) {
+        i=1
+        j=2
+        is.dup <- rep(FALSE,ncol(df1))
+        for(i in 1:(ncol(df1)-1)) {
+            is.dup[i] <- FALSE
+            for(j in (i+1):ncol(df1)) {
+                is.dup[i] <- is.dup[i] || all(rowSums(table(df1[,i],df1[,j])!=0)==1)
+            }
+        }
+        is.dup
+        df1 <- df1[,which(!is.dup)]
+    }
+    colnames(df1)
 }
 
 pgx.getMetaFoldChangeMatrix <- function(ngs, what="meta")
@@ -388,7 +446,7 @@ getHSGeneInfo <- function(eg, as.link=TRUE) {
     return(info)
 }
 
-##skipifexists=0;perplexity=NULL;sv.rank=-1;prefix="C";kclust=1;ntop=1000;fromX=FALSE;prior.counts=1;mean.center=TRUE;method="tsne";determine.clusters=1;dims=c(2,3);find.clusters=TRUE;row.center=TRUE;row.scale=FALSE
+##skipifexists=0;perplexity=NULL;sv.rank=-1;prefix="C";kclust=1;ntop=1000;fromX=FALSE;prior.counts=1;mean.center=TRUE;method="tsne";determine.clusters=1;dims=c(2,3);find.clusters=TRUE;row.center=TRUE;row.scale=FALSE;clust.detect="louvain"
 pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
                                ntop=1000, sv.rank=-1, prefix="C", 
                                fromX=FALSE, is.logx=FALSE,
@@ -416,7 +474,16 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
     if(!is.null(res$pos2d)) ngs$tsne2d <- res$pos2d
     if(!is.null(res$pos3d)) ngs$tsne3d <- res$pos3d
     if(!is.null(res$idx)) {
-        ngs$samples <- cbind(ngs$samples, cluster=as.character(res$idx))
+        if(class(ngs$samples)=="data.frame") {
+            ngs$samples$cluster <- as.character(res$idx)
+        } else {
+            ## matrix??
+            if("cluster" %in% colnames(ngs$samples)) {
+                ngs$samples[,"cluster"] <- as.character(res$idx)
+            } else {
+                ngs$samples <- cbind(ngs$samples, cluster=as.character(res$idx))
+            }
+        }        
     }
     
     return(ngs)
@@ -984,7 +1051,6 @@ tidy.dataframe <- function(Y) {
     new.Y <- data.frame(new.Y)
     return(new.Y)
 }
-
 
 is.num <- function(y) {
     suppressWarnings(numy <- as.numeric(as.character(y)))
