@@ -29,7 +29,7 @@ source("../R/compute2-extra.R")
 
 source("options.R")
 MAX.GENES
-##MAX.GENES = 99999
+##MAX.GENES = -1
 BATCH.CORRECT=TRUE
 SUBSAMPLE=TRUE
 
@@ -232,10 +232,6 @@ if(DIFF.EXPRESSION) {
         GCB_vs_ABC = GCB - ABC,
         levels = c("ABC","GCB"))
     
-    contr.matrix <- makeDirectContrasts(
-        Y = ngs$samples[,c("dlbcl.type","gender","cluster")],
-        ref = c("GCB","male",NA))
-
     res <- makeDirectContrasts2(
         Y = ngs$samples[,c("dlbcl.type","gender","cluster")],
         ref = c("GCB","male",NA))
