@@ -1037,18 +1037,18 @@ tidy.dataframe <- function(Y) {
     require(tidyverse)
     ##as_tibble(Y)
     Y <- Y[,which(colMeans(is.na(Y))<1)]
-    Y <- apply(Y,2,function(x) sub("NA",NA,x)) ## all characters
+    Y <- apply(Y,2,function(x) sub("^NA$",NA,x)) ## all characters
     Y <- Y[,which(colMeans(is.na(Y))<1)]
     suppressWarnings( num.Y <- apply(Y,2,function(x) as.numeric(as.character(x))) )
     is.numeric <- ( 0.8*colMeans(is.na(num.Y)) <= colMeans(is.na(Y)) )
     nlevel <- apply(Y,2,function(x) length(unique(x)))
     is.factor  <- (!is.numeric | (is.numeric & nlevel<=3) )
     is.factor <- ( is.factor | grepl("batch|replicat|type|clust|group",colnames(Y)) )
-    new.Y <- data.frame(Y)
+    new.Y <- data.frame(Y, check.names=FALSE)
     new.Y[,which(is.numeric)] <- num.Y[,which(is.numeric)]
     new.Y[,which(is.factor)]  <- apply(Y[,which(is.factor)],2,
                                        function(a) factor(as.character(a)))
-    new.Y <- data.frame(new.Y)
+    new.Y <- data.frame(new.Y, check.names=FALSE)
     return(new.Y)
 }
 
