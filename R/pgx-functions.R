@@ -110,27 +110,50 @@ is.POSvsNEG <- function(ngs) {
     ## 'B_vs_A'.
     ##
     cntrmat <- ngs$model.parameters$contr.matrix
+    design <- ngs$model.parameters$design
     ##ct0 <- cntrmat[,comp]        
     grp1 <- sapply(strsplit(colnames(cntrmat),split="_vs_"),"[",1)
     grp2 <- sapply(strsplit(colnames(cntrmat),split="_vs_"),"[",2)
-    grp1x <- intersect(grp1,rownames(cntrmat))
-    grp2x <- intersect(grp2,rownames(cntrmat))        
-    grp1.sign <- mean(cntrmat[intersect(grp1,rownames(cntrmat)),which(grp1 %in% grp1x)])
-    grp2.sign <- mean(cntrmat[intersect(grp2,rownames(cntrmat)),which(grp2 %in% grp2x)])
-    grp1.sign
-    grp2.sign
-    is.PosvsNeg1 <- (grp1.sign > 0 && grp2.sign < 0)
-    ##is.NegvsPos1 <- (grp2.sign > 0 && grp1.sign < 0)
+    design
+    is.PosvsNeg1 <- NA
+    if(!is.null(design)) {
+        grp1x <- intersect(grp1,rownames(cntrmat))
+        grp2x <- intersect(grp2,rownames(cntrmat))        
+        grp1.sign <- mean(cntrmat[intersect(grp1,rownames(cntrmat)),which(grp1 %in% grp1x)])
+        grp2.sign <- mean(cntrmat[intersect(grp2,rownames(cntrmat)),which(grp2 %in% grp2x)])
+        grp1.sign
+        grp2.sign
+        if(!is.nan(grp1.sign) && !is.nan(grp2.sign)) {
+            is.PosvsNeg1 <- (grp1.sign > 0 && grp2.sign < 0)
+            ##is.NegvsPos1 <- (grp2.sign > 0 && grp1.sign < 0)
+        }
+        is.PosvsNeg1
+    } else {
+        a1 <- apply(ngs$samples,1,function(a) mean(a %in% grp1))
+        a2 <- apply(ngs$samples,1,function(a) mean(a %in% grp2))
+        j1 <- which(a1 > a2)  ## samples with phenotype  more in grp1
+        j2 <- which(a2 > a1)  ## samples with phenotype  more in grp2
+        s1 <- rowMeans(cntrmat[j1,,drop=FALSE] > 0)
+        s2 <- rowMeans(cntrmat[j2,,drop=FALSE] > 0)
+        mean(s1)
+        mean(s2)
+        if(mean(s1) > mean(s2)) is.PosvsNeg1 <- TRUE
+        if(mean(s2) > mean(s1)) is.PosvsNeg1 <- FALSE
+    }
     is.PosvsNeg1
-    
+
+    ## look for keywords 
     grp1.neg2 <- mean(grepl("neg|untr|ref|wt|ctr|control",tolower(grp1)))
     grp2.neg2 <- mean(grepl("neg|untr|ref|wt|ctr|control",tolower(grp2)))
     grp1.neg2
     grp2.neg2
-    is.PosvsNeg2 <- ( grp2.neg2 > grp1.neg2)
+    is.PosvsNeg2 <- NA
+    if(grp1.neg2>0 || grp2.neg2>0) {
+        is.PosvsNeg2 <- (grp2.neg2 > grp1.neg2)
+    }
     is.PosvsNeg2
     
-    ok <- setdiff(c(is.PosvsNeg1,is.PosvsNeg2),NA)[1]
+    ok <- setdiff(c(is.PosvsNeg1,is.PosvsNeg2),NA)[1]  ## priority to first test??
     if(is.na(ok) || length(ok)==0) ok <- TRUE  ## DEFAULT if not known !!!!!
     ok
 }
