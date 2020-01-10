@@ -315,10 +315,10 @@ between genes and find coregulated modules."
             mgp=c(2.1,0.8,0), oma=c(0,0,1,0))
         for(i in 1:min(25,length(rho))) {
             gene2 <- names(rho)[i]
-            x <- ngs$X[gene,]
-            y <- ngs$X[gene2,]
+            x <- ngs$X[gene2,]
+            y <- ngs$X[gene,]
             plot(x, y, pch=20, cex=0.95, xlab=gene, ylab=gene2)
-            abline(lm(y ~ x), col="red")
+            abline(lm(x ~ x), col="red")
             
         }
     })
@@ -496,13 +496,37 @@ between genes and find coregulated modules."
         height = c(240,700), width=c('auto',1000),
         ##caption = corfunctional_caption
     )
+
     ##--------------------------------------------------------------------------------
     ## WGCNA
     ##--------------------------------------------------------------------------------
 
-    require(WGCNA)
-    HTML("To be implemented...")
+    getCalculateWGCNA <- reactive({
+        ngs <- inputData()
+        X <- ngs$X
+        pheno <- ngs$samples
+        res <- calculateWGCNA(X, pheno)
+        return(res)
+    })
+    
+    calculateWGCNA <- function(X, pheno) {
+        require(WGCNA)
+        
+        ## Re-cluster samples
+        X1 <- head(X[order(-apply(X,1,sd,na.rm=TRUE)),],1000)
+        sampleTree2 = hclust(dist(X1), method = "average")
+        ## Convert traits to a color representation: white means low, red means high, grey means missing entry
 
+        
+        traitColors = numbers2colors(pheno, signed = FALSE)
+        ## Plot the sample dendrogram and the colors underneath.
+        plotDendroAndColors(sampleTree2, traitColors,
+                            groupLabels = names(datTraits),
+                            main = "Sample dendrogram and trait heatmap")
+
+    }
+
+    
 
 
 } ## end of module
