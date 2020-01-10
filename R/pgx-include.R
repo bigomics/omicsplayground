@@ -49,6 +49,7 @@ source(file.path(RDIR,"gset-meta.r"))
 
 source(file.path(RDIR,"ngs-cook.r"))
 source(file.path(RDIR,"ngs-fit.r"))
+source(file.path(RDIR,"ngs-functions.R"))
 
 source(file.path(RDIR,"pgx-functions.R"))
 source(file.path(RDIR,"pgx-contrasts.R"))
@@ -69,7 +70,7 @@ source(file.path(RDIR,"pgx-wordcloud.R"))
 source(file.path(RDIR,"xcr-graph.r"))
 source(file.path(RDIR,"ui-code.R"))
 
-source( file.path(RDIR,"compute2-genes.R"))
-source( file.path(RDIR,"compute2-genesets.R"))
-source( file.path(RDIR,"compute2-extra.R"))
+source(file.path(RDIR,"compute2-genes.R"))
+source(file.path(RDIR,"compute2-genesets.R"))
+source(file.path(RDIR,"compute2-extra.R"))
 
