@@ -1010,7 +1010,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
             gmtdx <- grep(dx,names(rnk),fixed=TRUE,value=TRUE)  ## L1000 naming allows this...
             length(gmtdx)
             ##if(length(gmtdx) < 3) { frame(); next }
-            gsea.enplot( rnk, gmtdx, main=dx, cex.main=1.25)
+            gsea.enplot( rnk, gmtdx, main=dx, cex.main=1.25, xlab="")
             nes <- round(res$NES[i],2)
             qv  <- round(res$padj[i],3)
             tt <- c( paste("NES=",nes), paste("q=",qv) )
