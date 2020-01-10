@@ -62,6 +62,14 @@ wrapHyperLink <- function(s, gs) {
         url = paste0("https://www.genome.jp/kegg-bin/show_pathway?map=",id,"&show_description=show")
         s1[jj] <- paste0("<a href='",url,"' target='_blank'>",s[jj],"</a>")
     }
+    
+    ## Reactome (afer doing KEGG???)
+    jj <- grep("R-HSA-[0-9][0-9]",gs)
+    if(length(jj)) {
+        id = sub("^.*R-HSA-","R-HSA-",gs[jj])
+        url = paste0("https://reactome.org/content/detail/",id)
+        s1[jj] <- paste0("<a href='",url,"' target='_blank'>",s[jj],"</a>")
+    }
 
     ## Wikipathways
     jj <- grep("_WP[0-9][0-9]",gs)
