@@ -83,7 +83,8 @@ EnrichmentModule <- function(input, output, session, env)
             fillRow( flex=c(1,1),
                     tipify( selectInput(ns("gs_fdr"),"FDR", choices=FDR.VALUES2, selected=1),
                            "Set the false discovery rate (FDR) threshold.", placement="top"),
-                    tipify( selectInput(ns("gs_lfc"),"logFC threshold", choices=c(0,0.2,0.5,1,2,5), selected=0.2),
+                    tipify( selectInput(ns("gs_lfc"),"logFC threshold", choices=c(0,0.2,0.5,1,2,5),
+                                        selected=0),
                            "Set the logarithmic fold change (logFC) threshold.", placement="top")
                     ),
             br(),br(),br(),br(),
