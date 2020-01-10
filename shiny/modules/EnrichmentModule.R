@@ -651,7 +651,6 @@ EnrichmentModule <- function(input, output, session, env)
             showlegend = FALSE) %>%
             layout( margin = list(b=60) )        
     })
-
     
     ##----------------------------------------------------------------------
     ## 1: Gene set activation {data-width=200}
