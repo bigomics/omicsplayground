@@ -405,11 +405,13 @@ two conditions. Determine which genes are significantly downregulated or overexp
         
         sig.genes = fc.genes[which(qval <= fdr & abs(x) > lfc )]
         sel.genes = intersect(sig.genes, sel.genes)
-
+        scaled.x <- scale(x,center=FALSE)
+        scaled.y <- scale(y,center=FALSE)
+        
         impt <- function(g) {
             j = match(g, fc.genes)
-            x1 = scale(x,center=FALSE)[j]
-            y1 = scale(y,center=FALSE)[j]
+            x1 = scaled.x[j]
+            y1 = scaled.y[j]
             x = sign(x1)*(x1**2 + 0.25*y1**2)
             names(x)=g
             x

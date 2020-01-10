@@ -622,11 +622,13 @@ EnrichmentModule <- function(input, output, session, env)
         lfc=0.20
         lfc = as.numeric(input$gs_lfc)
         y <- -log10(qval+1e-20)
-        
+        scaled.fx <- scale(fx,center=FALSE)
+        scale.y <- scale(y,center=FALSE)
+
         impt <- function(g) {
             j = match(g, fc.genes)
-            x1 = scale(x,center=FALSE)[j]
-            y1 = scale(y,center=FALSE)[j]
+            x1 = scaled.fx[j]
+            y1 = scaled.y[j]
             x = sign(x1)*(x1**2 + 0.25*y1**2)
             names(x)=g
             x
