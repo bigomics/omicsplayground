@@ -623,7 +623,7 @@ EnrichmentModule <- function(input, output, session, env)
         lfc = as.numeric(input$gs_lfc)
         y <- -log10(qval+1e-20)
         scaled.fx <- scale(fx,center=FALSE)
-        scale.y <- scale(y,center=FALSE)
+        scaled.y <- scale(y,center=FALSE)
 
         impt <- function(g) {
             j = match(g, fc.genes)
