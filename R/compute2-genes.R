@@ -212,9 +212,17 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     ## prefiltering for low-expressed genes (recommended for edgeR and
     ## DEseq2). Require at least in 2 or 1% of total. Specify the
     ## PRIOR CPM amount to regularize the counts and filter genes
+    PRIOR.CPM = 1
+
     if(type=="counts" && filter.low) {
         PRIOR.CPM = 0.25
         PRIOR.CPM = 1
+        if(0) {
+            ## at least 1, or at 5% percentile of non-zero counts (CPM)
+            cpm <- edgeR::cpm(counts)
+            PRIOR.CPM <- max(1, quantile(cpm[cpm>0.1], probs=0.05)[1])
+        }
+        PRIOR.CPM
         AT.LEAST = ceiling(pmax(2,0.01*ncol(counts)))    
         cat("filtering for low-expressed genes: >",PRIOR.CPM,"CPM in >=",
             AT.LEAST,"samples\n")
@@ -280,15 +288,16 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     ## Run all test methods
     ##
     gx.meta <- ngs.fitContrastsWithAllMethods(
-        X=counts, type=type,
-        samples=samples, genes=NULL, ##genes=genes,
-        methods=methods, design=design,
-        contr.matrix=contr.matrix,
-        prior.cpm=PRIOR.CPM,  ## prior count regularization
-        quantile.normalize=TRUE,  ## only for logCPM
-        remove.batch=FALSE,  ## we do explicit batch correction instead
-        conform.output=TRUE, do.filter=FALSE,
-        custom=NULL, custom.name=NULL )
+        X = counts, type = type,
+        samples = samples, genes = NULL, ##genes=genes,
+        methods = methods, design = design,
+        contr.matrix = contr.matrix,
+        prior.cpm = PRIOR.CPM,  ## prior count regularization
+        quantile.normalize = TRUE,  ## only for logCPM
+        remove.batch = FALSE,  ## we do explicit batch correction instead
+        conform.output = TRUE,
+        do.filter = FALSE,
+        custom = NULL, custom.name = NULL )
     
     names(gx.meta)
     names(gx.meta$outputs)
