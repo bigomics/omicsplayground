@@ -64,7 +64,7 @@ plotlyMA <- function(x, y, names, source="plot1",
                 text = names[i0],
                 marker = list(
                     size = marker.size,
-                    color = '#bbb'
+                    color = '#ccc'
                 ),
                 showlegend = showlegend
             )
@@ -177,7 +177,7 @@ plotlyVolcano <- function(x, y, names, source="plot1", group.names=c("group1","g
                 text = names[i0],
                 marker = list(
                     size = marker.size,
-                    color = '#bbb'
+                    color = '#ccc'
                 ),
                 showlegend = showlegend
             )
@@ -264,7 +264,6 @@ plotlyVolcano <- function(x, y, names, source="plot1", group.names=c("group1","g
 
     p
 }
-
 
 corclust <- function(x) {
     dd <- as.dist(1 - cor(t(x),use="pairwise"))
