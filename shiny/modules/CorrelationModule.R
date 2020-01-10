@@ -382,7 +382,7 @@ between genes and find coregulated modules."
         NTOP = 16
         par(oma=c(0,1,0,0))
         par(mfrow=c(4,4), mar=c(2,1.5,4,1))
-        par(mfrow=c(4,4), mar=c(0.5,1.5,2.8,1))
+        par(mfrow=c(4,4), mar=c(0.2,1.5,3.1,1))
         i=1
         for(i in 1:min(NTOP,nrow(gsea))) {
             gs <- gsea$pathway[i]
@@ -417,7 +417,7 @@ between genes and find coregulated modules."
         options = corGSEA_plots_opts,
         ##info.text = corGSEA_plots_text,        
         title="Correlation GSEA", label="a",
-        height = c(0.5*fullH,650), width = c('auto',1200),
+        height = c(0.55*fullH,650), width = c('auto',1200),
         pdf.width=8, pdf.height=5, res=c(72,85)
     )
     ## output <- attachModule(output, corGSEA_plots_module)
