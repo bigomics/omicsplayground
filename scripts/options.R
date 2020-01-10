@@ -1,4 +1,4 @@
-
+cat("DEPRECATED:: please do not use this file anymore...\n")
 
 FILES="../lib/"
 RDIR="../R/"
