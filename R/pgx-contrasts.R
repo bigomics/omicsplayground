@@ -221,7 +221,7 @@ contrastAsLabels <- function(contr.matrix) {
 
 makeDirectContrasts2 <- function(Y, ref, na.rm=TRUE) {
 
-    contr.matrix <- makeDirectContrasts(Y=Y, ref=ref, na.rm=na.rm) 
+    contr.matrix <- makeDirectContrasts(Y=Y, ref=ref, na.rm=na.rm, warn=FALSE) 
     contr.matrix <- sign(contr.matrix)
     
     detectGroups <- function(contr.matrix) {
@@ -253,13 +253,14 @@ makeDirectContrasts2 <- function(Y, ref, na.rm=TRUE) {
     list(contr.matrix=group.contr.matrix, group=group)
 }
 
-makeDirectContrasts <- function(Y, ref, na.rm=TRUE) {
-    warning("makeDirectContrasts is deprectated. please use makeDirectContrasts2()")
+makeDirectContrasts <- function(Y, ref, na.rm=TRUE, warn=TRUE) {
+    if(warn) warning("makeDirectContrasts is deprectated. please use makeDirectContrasts2()")
     contr.matrix <- c()
     i=2
+    all <- c("all","other","others","rest")
     for(i in 1:ncol(Y)) {
         m1 <- NULL
-        if(!is.na(ref[i]) && ref[i]!="all" ) {
+        if(!is.na(ref[i]) && !ref[i] %in% all ) {
             x <- as.character(Y[,i])
             x[is.na(x)|x=="NA"] <- "_"
             m1 <- model.matrix( ~ 0 + x)
@@ -268,7 +269,7 @@ makeDirectContrasts <- function(Y, ref, na.rm=TRUE) {
             m1 <- m1[,which(colnames(m1)!=ref[i]),drop=FALSE]  ## remove refvsref...
             m1 <- m1[,!colnames(m1) %in% c("NA","_"),drop=FALSE]
             colnames(m1) <- paste0(colnames(m1),"_vs_",ref[i])
-        } else if(!is.na(ref[i]) && ref[i]=="all" ) {
+        } else if(!is.na(ref[i]) && ref[i] %in% all ) {
             x <- as.character(Y[,i])
             x[is.na(x)|x=="NA"] <- "_"            
             m1 <- model.matrix( ~ 0 + x)
@@ -277,7 +278,7 @@ makeDirectContrasts <- function(Y, ref, na.rm=TRUE) {
             m1 <- t(t(m1==1) / colSums(m1==1) - t(m1==0) / colSums(m1==0))
             ##m1 <- m1[,which(colnames(m1)!=ref[i]),drop=FALSE]
             m1 <- m1[,!colnames(m1) %in% c("NA","_"),drop=FALSE]            
-            colnames(m1) <- paste0(colnames(m1),"_vs_other")
+            colnames(m1) <- paste0(colnames(m1),"_vs_others")
         } else {
             levels <- names(table(Y[,i]))
             levels <- setdiff(levels, c(NA,"NA"))
@@ -345,7 +346,7 @@ makeClusterContrasts <- function(clusters, min.freq=0.01, full=FALSE,
     m1 <- model.matrix( ~ 0 + idx)
     colnames(m1) <- sub("^idx","",colnames(m1))
     rownames(m1) <- colnames(m1)
-    colnames(m1) <- paste0(colnames(m1),"_vs_other")
+    colnames(m1) <- paste0(colnames(m1),"_vs_others")
     ##m1 <- m1 - 1/(nrow(m1)-1)*(m1==0)
     m1 <- t(t(m1==1) / colSums(m1==1) - t(m1==0) / colSums(m1==0))
 

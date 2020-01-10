@@ -33,7 +33,6 @@ DataViewModule <- function(input, output, session, env)
     description = "<b>DataView.</b> Information and descriptive statistics to quickly lookup a gene, check the total counts, or view the data tables."
     output$description <- renderUI(HTML(description))
     
-    
     ##----------------------------------------------------------------------
     ## More Info (pop up window)
     ##----------------------------------------------------------------------
@@ -1312,6 +1311,31 @@ DataViewModule <- function(input, output, session, env)
     ##================================= Samples ======================================
     ##================================================================================
 
+    data_phenoClustering.RENDER <- reactive({
+        ngs = inputData()
+        req(ngs)
+        annot <- ngs$samples
+        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+        annot <- annot[samples,,drop=FALSE]
+        plt <- pgx.plotPhenotypeMatrix(annot)
+        ## plt <- plt %>% config(displayModeBar = FALSE)
+        plt
+    })
+
+    data_phenoClustering_caption = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (phenotype data)."
+    callModule(
+        plotModule,
+        id = "data_phenoClustering", label="a",
+        func = data_phenoClustering.RENDER,
+        plotlib = "iheatmapr", 
+        title = "Phenotype clustering",
+        ##info.text = "Sample information table with information about phenotype of samples.",
+        ##options = data_sampleTable_opts,
+        height = c(imgH,600), width = c('auto',1200),
+        pdf.width=10, pdf.height=6 
+    )
+    ##output <- attachModule(output, data_sampleTable_module) 
+
     data_sampleTable.RENDER <- reactive({
         ## get current view of raw_counts
         ngs = inputData()
@@ -1329,33 +1353,39 @@ DataViewModule <- function(input, output, session, env)
                       options=list(
                           dom = 'lfrtip', 
                           ##pageLength = 60, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scroller=TRUE, scrollX = TRUE, scrollY = tabH,
+                          scroller=TRUE, scrollX = TRUE, scrollY = 0.3*tabH,
                           deferRender=TRUE
                       )) %>%
             DT::formatStyle(0, target='row', fontSize='12px', lineHeight='70%') 
         
     })
 
-    data_sampleTable_caption="<b>Sample information.</b> This table contains phenotype information of the samples."
-
+    data_sampleTable_caption="<b>Sample information.</b> This table contains available phenotype information about the samples. Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
     ##data_sampleTable_module <- tableModule(
     ##id="data_sampleTable", ns=ns,
     data_sampleTable <- callModule(
-        tableModule, "data_sampleTable", 
+        tableModule, "data_sampleTable", label="b",
         func = data_sampleTable.RENDER,
         title = "Sample information",
         info.text = "Sample information table with information about phenotype of samples.",
         ##options = data_sampleTable_opts,
-        caption = data_sampleTable_caption
+        ## caption = data_sampleTable_caption
     )
     ##output <- attachModule(output, data_sampleTable_module) 
-    
+
+    sampletableUI_caption <- paste(
+        ## "<b>Phenotype clustering and sample information table.</b>",
+        "<b>(a)</b>",data_phenoClustering_caption,
+        "<b>(b)</b>",data_sampleTable_caption
+    )
     output$sampletableUI <- renderUI({
         fillCol(
-            flex = c(1),
+            flex = c(1,1,NA),
             height = fullH,
             ##moduleWidget(data_sampleTable_module, outputFunc="dataTableOutput", ns=ns)
-            tableWidget(ns("data_sampleTable"))
+            plotWidget(ns("data_phenoClustering")),
+            tableWidget(ns("data_sampleTable")),
+            div(HTML(sampletableUI_caption), class="caption")
         )
     })
         

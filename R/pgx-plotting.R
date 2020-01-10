@@ -297,7 +297,7 @@ setMethod(add_col_annotation,
                 if (!is.null(colors) && colnames(x)[i] %in% names(colors)){
                   tmp_colors <- colors[[colnames(x)[i]]]
                 } else{
-                  tmp_colors <- pick_discrete_colors(as.factor(x[,i]), p)
+                  tmp_colors <- iheatmapr:::pick_discrete_colors(as.factor(x[,i]), p)
                 }
                 p <- add_col_groups(p, 
                                     x[,i],
@@ -397,7 +397,7 @@ pgx.splitHeatmap <- function(ngs, splitx=NULL, top.mode="specific",
     genetips   = rownames(X1)
     
     ## ----- call plotting function
-    plt <- pgx.splitHeatmapX(
+    plt <- pgx.splitHeatmapFromMatrix(
         X=X1, annot=Y,
         xtips=genetips, ytips=sampletips,
         idx=idx, splitx=splitx,
@@ -407,16 +407,15 @@ pgx.splitHeatmap <- function(ngs, splitx=NULL, top.mode="specific",
     return(plt)
 }
 
-
 ##X=head(ngs$X,100);annot=ngs$samples
 ##row_annot_width=0.03;colors=NULL;label_size=11;scale="row.center"
 xtips=NULL;ytips=NULL;lmar=60
 
-pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL, 
-                              xtips=NULL, ytips=NULL, row_clust=TRUE,
-                              row_annot_width=0.03, scale="row.center",
-                              colors=NULL, lmar=60,
-                              rowcex=rowcex, colcex=colcex)
+pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL, 
+                                       xtips=NULL, ytips=NULL, row_clust=TRUE,
+                                       row_annot_width=0.03, scale="row.center",
+                                       colors=NULL, lmar=60,
+                                       rowcex=rowcex, colcex=colcex)
 {
     
     ## constants
@@ -604,6 +603,64 @@ pgx.splitHeatmapX <- function(X, annot, idx=NULL, splitx=NULL,
             size=w*ex, font=list(size=s1) ) 
     }
 
+    
+    return(plt)
+}
+
+
+pgx.plotPhenotypeMatrix <- function(annot)
+{
+    ## ------- set colors
+    colors0 = rep("Set2",ncol(annot))    
+    names(colors0) = colnames(annot)
+    
+    grid_params <- setup_colorbar_grid(
+        nrows = 3, 
+        y_length = 0.32, 
+        y_spacing = 0.39, 
+        x_spacing = 0.17,
+        x_start = 1.1, 
+        y_start = 0.96)
+
+    ## maximize plot area
+    mar <- list(l = 150, r = 0, b = 5, t = 0, pad = 3)
+
+    require(iheatmapr)
+    plt <- NULL
+    empty.X <- matrix(NA,nrow=1,ncol=nrow(annot))
+    colnames(empty.X) <- rownames(annot)
+    plt <- main_heatmap(
+        empty.X,
+        name = "phenotype data",
+        show_colorbar = FALSE,
+        colorbar_grid = grid_params,
+        layout = list(margin = mar)
+    )
+
+    ## ------- annot need to be factor
+    annotF <- data.frame(as.list(annot),stringsAsFactors=TRUE)
+    rownames(annotF) = rownames(annot)
+    cvar <- which(sapply(annotF,is.factor))
+    cvar
+    annotX <- annotF
+    annotX[,cvar] <- data.frame(lapply(annotF[,cvar],as.integer))
+    annotX[,] <- data.frame(lapply(annotX[,],as.numeric))    
+    hc <- hclust(dist(annotX))
+    plt <- plt %>% add_col_dendro(hc, size = 20*ncol(annot)/6 )
+
+    col_annot_height = 10
+    plt <- plt %>%
+        add_col_annotation(
+            ##annotF[colnames(X),,drop=FALSE],
+            annotF[,],
+            size = col_annot_height, buffer = 0.005, side="bottom",
+            colors = colors0, show_title=TRUE)    
+    colcex = 1
+    if(nrow(annot)<100 && colcex>0) {
+        plt <- plt %>% add_col_labels(
+                           side="bottom", size=20*ncol(annot)/6,
+                           font=list(size=11*colcex))
+    }
     
     return(plt)
 }

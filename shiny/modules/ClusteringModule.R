@@ -529,7 +529,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                 ##genetips = rownames(X)
                 
                 cat("<module-clustering:hm2_splitmap.RENDER> plotting\n")            
-                plt <- pgx.splitHeatmapX(
+                plt <- pgx.splitHeatmapFromMatrix(
                     X=X, annot=annotF, ytips=tooltips,
                     idx=idx, splitx=splitx, scale=scale,
                     row_annot_width=0.03, rowcex=rowcex,

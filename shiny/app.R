@@ -21,9 +21,9 @@ source("../R/pgx-files.R", local=TRUE)  ## pass local vars
 ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
-options(shiny.maxRequestSize = 200*1024^2)  ##max 200Mb upload
+options(shiny.maxRequestSize = 500*1024^2)  ##max 500Mb upload
 
-## DEV.VERSION = TRUE
+DEV.VERSION = TRUE
 
 if(0) {
     load("../data/geiger2016-arginine.pgx")
