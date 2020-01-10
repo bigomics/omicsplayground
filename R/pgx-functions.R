@@ -106,42 +106,61 @@ reverse.AvsB <- function(comp) {
 }
 
 is.POSvsNEG <- function(ngs) {
-    ## Determines from contrast matrix if notation is 'A_vs_B' or
-    ## 'B_vs_A'.
+    ## Determines automagically from contrast matrix if notation is
+    ## 'A_vs_B' or 'B_vs_A' (which group is positive in the contrast
+    ## matrix). Too complicated... maybe we should just require one
+    ## definition...
     ##
     cntrmat <- ngs$model.parameters$contr.matrix
     design <- ngs$model.parameters$design
     ##ct0 <- cntrmat[,comp]        
+    cntrmat <- cntrmat[,grep("_vs_",colnames(cntrmat)),drop=FALSE]
+    dim(cntrmat)
     grp1 <- sapply(strsplit(colnames(cntrmat),split="_vs_"),"[",1)
     grp2 <- sapply(strsplit(colnames(cntrmat),split="_vs_"),"[",2)
-    design
+    is.null(design)
     is.PosvsNeg1 <- NA
     if(!is.null(design)) {
-        grp1x <- intersect(grp1,rownames(cntrmat))
-        grp2x <- intersect(grp2,rownames(cntrmat))        
-        grp1.sign <- mean(cntrmat[intersect(grp1,rownames(cntrmat)),which(grp1 %in% grp1x)])
-        grp2.sign <- mean(cntrmat[intersect(grp2,rownames(cntrmat)),which(grp2 %in% grp2x)])
-        grp1.sign
-        grp2.sign
-        if(!is.nan(grp1.sign) && !is.nan(grp2.sign)) {
-            is.PosvsNeg1 <- (grp1.sign > 0 && grp2.sign < 0)
-            ##is.NegvsPos1 <- (grp2.sign > 0 && grp1.sign < 0)
+        is.pn <- rep(NA,length(grp1))
+        i=1
+        for(i in 1:length(grp1)) {
+            ##grp1x <- intersect(grp1[i],rownames(cntrmat))
+            ##grp2x <- intersect(grp2[i],rownames(cntrmat))        
+            ##grp1.sign <- mean(cntrmat[intersect(grp1,rownames(cntrmat)),which(grp1 %in% grp1x)])
+            ##grp2.sign <- mean(cntrmat[intersect(grp2,rownames(cntrmat)),which(grp2 %in% grp2x)])
+            j1 <- grep(grp1[i], rownames(cntrmat))
+            j2 <- grep(grp2[i], rownames(cntrmat))
+            grp1.sign <- mean(cntrmat[j1,i], na.rm=TRUE)
+            grp2.sign <- mean(cntrmat[j2,i], na.rm=TRUE)
+            grp1.sign
+            grp2.sign
+            if(!is.nan(grp1.sign) && !is.nan(grp2.sign)) {
+                is.pn[i] <- (grp1.sign > grp2.sign )
+                ##is.NegvsPos1 <- (grp2.sign > 0 && grp1.sign < 0)
+            }
         }
-        is.PosvsNeg1
+        is.pn
+        is.PosvsNeg1 <- mean(is.pn,na.rm=TRUE)>0
     } else {
-        a1 <- apply(ngs$samples,1,function(a) mean(a %in% grp1))
-        a2 <- apply(ngs$samples,1,function(a) mean(a %in% grp2))
-        j1 <- which(a1 > a2)  ## samples with phenotype  more in grp1
-        j2 <- which(a2 > a1)  ## samples with phenotype  more in grp2
-        s1 <- rowMeans(cntrmat[j1,,drop=FALSE] > 0)
-        s2 <- rowMeans(cntrmat[j2,,drop=FALSE] > 0)
-        mean(s1)
-        mean(s2)
-        if(mean(s1) > mean(s2)) is.PosvsNeg1 <- TRUE
-        if(mean(s2) > mean(s1)) is.PosvsNeg1 <- FALSE
+        is.pn <- rep(NA,length(grp1))
+        i=1
+        for(i in 1:length(grp1)) {
+            a1 <- apply(ngs$samples,1,function(a) mean(a %in% grp1[i]))
+            a2 <- apply(ngs$samples,1,function(a) mean(a %in% grp2[i]))
+            j1 <- which(a1 > a2)  ## samples with phenotype  more in grp1
+            j2 <- which(a2 >= a1)  ## samples with phenotype  more in grp2
+            s1 <- rowMeans(cntrmat[j1,i,drop=FALSE] > 0, na.rm=TRUE)
+            s2 <- rowMeans(cntrmat[j2,i,drop=FALSE] > 0, na.rm=TRUE)
+            mean(s1)
+            mean(s2)
+            if(mean(s1) > mean(s2)) is.pn[i] <- TRUE
+            if(mean(s2) > mean(s1)) is.pn[i] <- FALSE
+        }
+        is.pn
+        is.PosvsNeg1 <- mean(is.pn,na.rm=TRUE)>0
     }
     is.PosvsNeg1
-
+    
     ## look for keywords 
     grp1.neg2 <- mean(grepl("neg|untr|ref|wt|ctr|control",tolower(grp1)))
     grp2.neg2 <- mean(grepl("neg|untr|ref|wt|ctr|control",tolower(grp2)))

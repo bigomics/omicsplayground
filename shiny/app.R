@@ -29,10 +29,8 @@ if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
-    load("../data/GSE10846-dlbcl2.pgx")
     load("../data/GSE10846-xgreta.pgx")
     load("../data/GSE114716-ipilimumab.pgx")
-    load("../../exampledata/mouse/mouse.pgx")    
     ngs = pgx.initialize(ngs)    
 }
 
