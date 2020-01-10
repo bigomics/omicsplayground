@@ -79,7 +79,7 @@ between genes and find coregulated modules."
                 flex = c(2,0.1,1),
                 height = fullH - 60,
                 fillCol(
-                    flex = c(1,0.05,0.6),
+                    flex = c(1,0.05,0.58),
                     plotWidget(ns("corGSEA_plots")),
                     br(),
                     tableWidget(ns("corGSEA_table"))
@@ -417,7 +417,7 @@ between genes and find coregulated modules."
         options = corGSEA_plots_opts,
         ##info.text = corGSEA_plots_text,        
         title="Correlation GSEA", label="a",
-        height = c(0.55*fullH,650), width = c('auto',1200),
+        height = c(0.54*fullH,650), width = c('auto',1200),
         pdf.width=8, pdf.height=5, res=c(72,85)
     )
     ## output <- attachModule(output, corGSEA_plots_module)
@@ -511,7 +511,7 @@ between genes and find coregulated modules."
         info.text = corGSEA_LeadingEdgeTable_info,
         title = "Leading edge genes", label="c",
         ##height = c(230,700), width=c('auto',1000)
-        height = c(655,700), width=c('auto',1000)
+        height = c(657,700), width=c('auto',1000)
         ##caption = corGSEA_caption
     )
 
