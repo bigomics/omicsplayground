@@ -184,6 +184,7 @@ between genes and find coregulated modules."
             methods = PCOR.METHODS
         }
 
+        ## filter genes
         if(input$cor_features!="<all>") {
             ft <- input$cor_features
             psel = filterProbes(ngs$genes, GSETS[[ft]] )
@@ -191,6 +192,10 @@ between genes and find coregulated modules."
             psel <- intersect(psel,rownames(X))
             X = X[psel,,drop=FALSE]
         }
+
+        ## filter samples
+        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$cor_samplefilter)
+        X <- X[,kk,drop=FALSE]
         
         showNotification(paste("computing correlation...\n"))        
         res <- pgx.computePartialCorrelationAroundGene(
