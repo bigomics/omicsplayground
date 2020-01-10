@@ -186,12 +186,13 @@ between genes and find coregulated modules."
             psel <- intersect(psel,rownames(X))
             X = X[psel,,drop=FALSE]
         }
-
+        
         showNotification(paste("computing correlation...\n"))        
         res <- pgx.computePartialCorrelationAroundGene(
             X, gene, method=methods, nmax=100, fast=FALSE)    
 
-        rho1 <- min(abs(head(res$cor[gene,-1],20)))
+        j <- which(rownames(res$cor)==gene)
+        rho1 <- min(abs(head(res$cor[j,-j],20)))
         updateSliderInput(session, "cor_graph_threshold", value=rho1)
 
         res
@@ -305,10 +306,11 @@ between genes and find coregulated modules."
 
         req(input$cor_gene)
         res <- getGenePartialCorrelation()
-        gene <- input$cor_gene
+        this.gene <- input$cor_gene
 
         NTOP = 25
-        rho  <- head(res$cor[gene,-1],NTOP)
+        j <- which(rownames(res$cor) == this.gene)
+        rho  <- head(res$cor[j,-j],NTOP)
         
         ngs <- inputData()
         par(mfrow=c(5,5), mar=c(4,3.5,0.5,0.2),
@@ -316,9 +318,9 @@ between genes and find coregulated modules."
         for(i in 1:min(25,length(rho))) {
             gene2 <- names(rho)[i]
             x <- ngs$X[gene2,]
-            y <- ngs$X[gene,]
-            plot(x, y, pch=20, cex=0.95, xlab=gene, ylab=gene2)
-            abline(lm(x ~ x), col="red")
+            y <- ngs$X[this.gene,]
+            plot(x, y, pch=20, cex=0.95, xlab=gene2, ylab=this.gene)
+            abline(lm(y ~ x), col="red")
             
         }
     })
