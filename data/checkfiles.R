@@ -6,6 +6,7 @@ pgx.files <- dir(".", pattern=".pgx$")
 
 fields <- c('samples','counts','genes','tsne2d','tsne3d','X','model.parameters','gx.meta','gset.meta','gsetX','GMT')
 
+pn.list <- c()
 ok.list <- c()
 p=pgx.files[1]
 for(p in pgx.files[]) {
@@ -24,9 +25,13 @@ for(p in pgx.files[]) {
         cat("loading ",p,": OK\n")
     }
     ok.list[p] <- ok
+    pn.list[p] <- is.POSvsNEG(ngs)
 }
 
 if(0) {
+
     table(ok.list)
+    table(pn.list)
     cbind(ok.list)
+
 }
