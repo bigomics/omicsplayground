@@ -386,8 +386,6 @@ EnrichmentModule <- function(input, output, session, env)
 
         req(ngs, rpt, input$gs_contrast)
 
-        dbg("[topEnriched.RENDER] 1")
-        
         comp=1
         comp = input$gs_contrast
         if(is.null(comp)) return(NULL)
@@ -414,8 +412,6 @@ EnrichmentModule <- function(input, output, session, env)
 
         top.up   <- names(sort(fx[which(fx>0)],decreasing=TRUE))
         top.down <- names(sort(fx[which(fx<0)]))
-
-        dbg("[topEnriched.RENDER] rendering figures...")
         
         par(mfrow=c(2,5), mar=c(0.5,3.2,2.6,0.5), mgp=c(2,0.8,0))
         for(i in 1:5) {

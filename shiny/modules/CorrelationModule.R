@@ -77,20 +77,34 @@ between genes and find coregulated modules."
     })
 
 
-    corfunctional_caption = "<b>Cluster annotation.</b> Functional annotation of the gene clusters as defined by the hierchical clustered heatmap. <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster. Length of the bar corresponds to its average correlation. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
+    corfunctional_caption = "<b>Correlation GSEA.</b> Functional annotation of the correlated genes as defined by Pearson correlation. <b>(a)</b> Top enriched gene sets using the correlation as rank metric. The black bars denote the genes in the gene set and their position in the sorted rank metric. <b>(b)</b> GSEA statistics table. <b>(c)</b> Leading edge table of the genes in the selected gene set."
 
     output$corFunctional_UI <- renderUI({
-        fillRow(
-            flex = c(1,1),
+
+        fillCol(
+            flex = c(1,NA),
             height = fullH,
-            fillCol(
-                flex = c(1,0.05,0.75,NA),
-                plotWidget(ns("corfunctional_plots")),
+            fillRow(
+                flex = c(2,0.1,1),
+                height = fullH - 60,
+                fillCol(
+                    flex = c(1,0.05,0.6),
+                    plotWidget(ns("corGSEA_plots")),
+                    br(),
+                    tableWidget(ns("corGSEA_table"))
+                ),
                 br(),
-                tableWidget(ns("corfunctional_table")),
-                div(HTML(corfunctional_caption), class="caption")
+                fillCol(
+                    ##flex = c(1,0.05,0.65,NA),
+                    flex = c(1),
+                    ##plotWidget(ns("corGSEA_plots")),
+                    ##br(),
+                    ##br(),
+                    tableWidget(ns("corGSEA_LeadingEdgeTable"))
+                    ##div(HTML("caption"), class="caption")
+                )
             ),
-            fillCol()
+            div(HTML(corfunctional_caption), class="caption")
         )
     })
     ##outputOptions(output, "hm_annotateUI", suspendWhenHidden=FALSE) ## important!!!
@@ -243,8 +257,8 @@ between genes and find coregulated modules."
         func2 = cor_barplot.PLOTFUN,        
         info.text = cor_barplot.info,
         options = cor_barplot.opts,
-        title = "Top correlation", label = "a",
-        caption2 = "Top correlated features.",
+        title = "Top correlated genes", label = "a",
+        caption2 = "Top correlated genes.",
         ##pdf.width = 14, pdf.height = 4, 
         height = c(0.45*fullH,500),
         width = c('auto',800),
@@ -344,130 +358,91 @@ between genes and find coregulated modules."
         res = c(80,85)
     )
 
-    
+
     ##--------------------------------------------------------------------------------
-    ## Functional correlation
+    ## Correlation GSEA
     ##--------------------------------------------------------------------------------
-    getFunctionalCorrelation <- reactive({
+    getCorrelationGSEA <- reactive({
         ngs <- inputData()
         gene = "CD4"
         gene <- input$cor_gene
         gx <- ngs$X[gene,]
-        rho <- cor( t(ngs$gsetX), gx, use="pairwise")[,1]         
-        jj <- head(order(-abs(rho)),1000)
-        rho <- rho[jj]
-        sort(rho,decreasing=TRUE)
+        rho <- cor( t(ngs$X), gx, use="pairwise")[,1]         
+
+        gmt <- GSETS[colnames(ngs$GMT)]
+        ## gmt <- GSETS  ## all???
+        gsea <- fgsea(gmt, rho, nperm=1000, minSize=15, maxSize=1000)
+        gsea <- gsea[order(gsea$pval),]
+
+        res <- list(gsea=gsea, rho=rho)
+        return(res)
     })
     
-    corfunctional_plots.PLOTLY <- reactive({
+    corGSEA_plots.RENDER %<a-% reactive({
         require(RColorBrewer)
-        rho = getFunctionalCorrelation()
+        res = getCorrelationGSEA()
         ##if(is.null(rho)) return(NULL)
-        req(rho)
 
-        ## filter with table filter
-        ii <- corfunctional_table$rows_all()
+        ii <- corGSEA_table$rows_all()
         req(ii)
-        rho <- rho[ii]
+        gsea <- res$gsea[ii,,drop=FALSE]
         
-        ##par(mfrow=c(2,3), mar=c(3.5,2,2,1), mgp=c(2,0.8,0))
-        NTERMS = 6
-        NTERMS = 12
-
-        require(RColorBrewer)
-        klrpal = rep(brewer.pal(8,"Set2"),2)
-        ##klrpal = paste0(klrpal,"88")
-        col.addalpha <- function(clr,a=100)
-            paste0("rgba(",paste(col2rgb(clr)[,1],collapse=","),",",a,")")
-        ##klrpal = as.character(sapply(klrpal, col.addalpha, a=50))
-        klrpal <- paste0(klrpal,"55")
-        
-        jj <- unique(c(head(order(rho),NTERMS), head(order(-rho),NTERMS)))
-        x = sort(rho[jj])
-        names(x) = sub(".*:","",names(x))
-        names(x) = gsub(GSET.PREFIX.REGEX,"",names(x))
-
-        y = tagDuplicates(names(x))
-        y = factor(y, levels=y)
-        anntitle <- function(tt) {
-            list(text=tt, font = list(size=13),
-                 xref="paper", yref="paper",
-                 yanchor = "bottom", xanchor = "center",
-                 align = "center", x=0.5, y=1.02 , showarrow = FALSE )
+        ## ENPLOT TYPE
+        NTOP = 16
+        par(oma=c(0,1,0,0))
+        par(mfrow=c(4,4), mar=c(2,1.5,4,1))
+        par(mfrow=c(4,4), mar=c(0.5,1.5,2.8,1))
+        i=1
+        for(i in 1:min(NTOP,nrow(gsea))) {
+            gs <- gsea$pathway[i]
+            gs
+            gmt <- GSETS[[gs]]
+            length(gmt)
+            ##if(length(gmtdx) < 3) { frame(); next }
+            gsea.enplot( res$rho, gmt, main=gs, cex.main=0.9,
+                        xlab="" )
+            nes <- round(gsea$NES[i],2)
+            qv  <- round(gsea$padj[i],3)
+            tt <- c( paste("NES=",nes), paste("q=",qv) )
+            legend("topright", legend=tt, cex=0.9)
         }
-        slen = 60
-        ##x <- as.numeric(x)
-        ##y <- as.numeric(x)
-        klr1 <- klrpal[1 + 1*(sign(x)>0)]
         
-        plt <- plot_ly(
-            x = x, y = y, type='bar',  orientation='h',
-            text = y, hoverinfo = 'text',
-            hovertemplate = paste0("%{y}<extra> </extra>"),
-            ##hovertemplate = "%{y}",
-            marker = list( color= klr1 ) )  %>%
-            layout(
-                showlegend = FALSE,
-                ## annotations = anntitle(names(rho)),
-                ##annotations = list(text="TITLE"),
-                xaxis = list(range = c(-1,1),
-                             titlefont = list(size=11),
-                             tickfont = list(size=10),
-                             showgrid=FALSE,
-                             title = "correlation (R)" ),
-                yaxis = list(title = "",
-                             showgrid = FALSE,
-                             showline = FALSE,
-                             showticklabels = FALSE,
-                             showgrid=FALSE,
-                             zeroline = FALSE)
-            )  
 
-        xanchor <- c('right','left')[1 + 1*(x>0)]
-        plt <- plt %>%
-            ## labeling the y-axis inside bars
-            add_annotations(xref = 'x', yref = 'y',
-                            x = 0.015 * sign(x), y = y,  xanchor=xanchor,
-                            text = shortstring(y,slen), 
-                            font = list(size = 11),
-                            showarrow = FALSE, align = 'right')
-        ##layout(margin = c(0,0,0,0))
     })
 
-    corfunctional_plots_opts = tagList(
+    corGSEA_plots_opts = tagList(
         tipify( selectInput( ns("xann.refset"), "Reference set:", choices="", width='80%'),
                "Specify a reference set to be used in the annotation.",
                placement="left",options = list(container = "body"))
     )
 
-    ##corfunctional_plots_module <- plotModule(
+    ##corGSEA_plots_module <- plotModule(
     callModule(
         plotModule, 
-        id = "corfunctional_plots", ##ns=ns,
-        func = corfunctional_plots.PLOTLY, plotlib="plotly",
-        download.fmt = c("png","pdf","html"),
-        options = corfunctional_plots_opts,
-        ##info.text = corfunctional_plots_text,        
-        title="Functional correlation", label="a",
-        height = c(0.5*fullH,700), width = c('auto',1000),
-        pdf.width=8, pdf.height=5, res=80        
+        id = "corGSEA_plots", ##ns=ns,
+        func = corGSEA_plots.RENDER,
+        func2 = corGSEA_plots.RENDER, 
+        download.fmt = c("png","pdf"),
+        options = corGSEA_plots_opts,
+        ##info.text = corGSEA_plots_text,        
+        title="Correlation GSEA", label="a",
+        height = c(0.5*fullH,650), width = c('auto',1200),
+        pdf.width=8, pdf.height=5, res=c(72,85)
     )
-    ## output <- attachModule(output, corfunctional_plots_module)
-
+    ## output <- attachModule(output, corGSEA_plots_module)
     
-    corfunctional_table.RENDER <- reactive({
+    corGSEA_table.RENDER <- reactive({
         
-        rho = getFunctionalCorrelation()
-        if(is.null(rho)) return(NULL)
+        res = getCorrelationGSEA()
         
-        ##rownames(rho) = shortstring(rownames(rho),50)
-        ##rho.name = shortstring(sub(".*:","",names(rho)),60)
-        rho.name = shortstring(names(rho),50)
         ##rho = data.frame(cbind( name=rho.name, rho))
-        link <- wrapHyperLink(rep("link",length(rho)), names(rho))
-        df = data.frame( feature=rho.name, link=link, rho=round(rho,digits=3))
-        rownames(df) = names(rho)
-
+        gs <- res$gsea$pathway
+        link <- wrapHyperLink(rep("link",length(gs)), gs)
+        df = data.frame( pathway=res$gsea$pathway, link=link,
+                        res$gsea[,c("pval","padj","NES","size")] )
+        rownames(df) = gs
+        numeric.cols = c("pval","padj","NES")
+        
         DT::datatable(
                 df, rownames=FALSE, escape = c(-1,-2),
                 extensions = c('Buttons','Scroller'),
@@ -483,20 +458,70 @@ between genes and find coregulated modules."
                     scroller=TRUE,
                     deferRender=TRUE
                 )  ## end of options.list 
-            ) %>%
+            )  %>%
+            formatSignif(numeric.cols,4)  %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
     })
 
-    corfunctional_table_info = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
+    corGSEA_table_info = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
 
-    corfunctional_table <- callModule(
+    corGSEA_table <- callModule(
         tableModule, 
-        id = "corfunctional_table", 
-        func = corfunctional_table.RENDER,
-        info.text = corfunctional_table_info,
-        title="Correlation table", label="b",
-        height = c(240,700), width=c('auto',1000),
-        ##caption = corfunctional_caption
+        id = "corGSEA_table", 
+        func = corGSEA_table.RENDER,
+        info.text = corGSEA_table_info,
+        title = "Correlation GSEA table", label="b",
+        height = c(220,700), width=c('auto',1000)
+        ##caption = corGSEA_caption
+    )
+    
+    corGSEA_LeadingEdgeTable.RENDER <- reactive({
+        
+        res = getCorrelationGSEA()
+
+        sel=1
+        sel <- corGSEA_table$rows_selected()
+        req(sel)
+        
+        ##rho = data.frame(cbind( name=rho.name, rho))
+        le.genes <- res$gsea[sel,]$leadingEdge[[1]]
+        rho1 <- res$rho[le.genes]
+        title <- substring(GENE.TITLE[le.genes],1,40)
+        df = data.frame( gene = le.genes, rho = rho1, title=title)
+        rownames(df) = le.genes
+        numeric.cols = c("rho")
+        
+        DT::datatable(
+                df, rownames=FALSE, ## escape = c(-1,-2),
+                extensions = c('Buttons','Scroller'),
+                selection=list(mode='single', target='row', selected=c(1)),
+                class = 'compact cell-border stripe hover',
+                fillContainer = TRUE,
+                options=list(
+                    dom = 'lfrtip', 
+                    ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                    scrollX = TRUE, ##scrollY = TRUE,
+                    ##scrollY = 170,
+                    scrollY = '70vh',
+                    scroller=TRUE,
+                    deferRender=TRUE
+                )  ## end of options.list 
+            )  %>%
+            formatSignif(numeric.cols,4)  %>%
+            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
+    })
+
+    corGSEA_LeadingEdgeTable_info = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
+
+    corGSEA_LeadingEdgeTable <- callModule(
+        tableModule, 
+        id = "corGSEA_LeadingEdgeTable", 
+        func = corGSEA_LeadingEdgeTable.RENDER,
+        info.text = corGSEA_LeadingEdgeTable_info,
+        title = "Leading edge genes", label="c",
+        ##height = c(230,700), width=c('auto',1000)
+        height = c(655,700), width=c('auto',1000)
+        ##caption = corGSEA_caption
     )
 
     ##--------------------------------------------------------------------------------
