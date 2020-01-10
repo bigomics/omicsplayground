@@ -1026,24 +1026,16 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         
         if(is.null(ngs$drugs)) return(NULL)
         shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
-
-        dbg("[dsea_moaplot.RENDER] 1")
         
         comparison=1
         comparison = input$fa_contrast
         if(is.null(comparison)) return(NULL)
-
-        dbg("[dsea_moaplot.RENDER] 2")
         
         res <- getDseaTable()
-
-        dbg("[dsea_moaplot.RENDER] 3")
         
         dmethod="mono"
         dmethod="combo"
         dmethod <- input$dsea_monocombo
-
-        dbg("[dsea_moaplot.RENDER] 4")
         
         j1 <- which( res$padj < 0.2 & res$NES > 0)
         j2 <- which( res$padj < 0.2 & res$NES < 0)
@@ -1060,8 +1052,6 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         moa.pos <- sort(table(unlist(moa.pos)),decreasing=TRUE)
         moa.neg <- sort(table(unlist(moa.neg)),decreasing=TRUE)
 
-        dbg("[dsea_moaplot.RENDER] 6")        
-
         dtg.pos <- strsplit(as.character(res$target[j1]), split="\\|")
         dtg.neg <- strsplit(as.character(res$target[j2]), split="\\|")
         dtg <- strsplit(as.character(res$target), split="\\|")
@@ -1072,8 +1062,6 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         dtg.neg <- sort(table(unlist(dtg.neg)),decreasing=TRUE)
         head(dtg.pos)
         head(dtg.neg)
-
-        dbg("[dsea_moaplot.RENDER] 7")        
         
         NTOP=10
         if(1) {
