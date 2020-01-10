@@ -382,7 +382,7 @@ between genes and find coregulated modules."
         NTOP = 16
         par(oma=c(0,1,0,0))
         par(mfrow=c(4,4), mar=c(2,1.5,4,1))
-        par(mfrow=c(4,4), mar=c(0.2,1.5,3.1,1))
+        par(mfrow=c(4,4), mar=c(0.1,1.5,3.2,1))
         i=1
         for(i in 1:min(NTOP,nrow(gsea))) {
             gs <- gsea$pathway[i]
@@ -477,7 +477,7 @@ between genes and find coregulated modules."
         ##rho = data.frame(cbind( name=rho.name, rho))
         le.genes <- res$gsea[sel,]$leadingEdge[[1]]
         rho1 <- res$rho[le.genes]
-        title <- substring(GENE.TITLE[le.genes],1,40)
+        title <- shortstring(GENE.TITLE[le.genes],50)
         df = data.frame( gene = le.genes, rho = rho1, title=title)
         rownames(df) = le.genes
         numeric.cols = c("rho")
@@ -511,7 +511,7 @@ between genes and find coregulated modules."
         info.text = corGSEA_LeadingEdgeTable_info,
         title = "Leading edge genes", label="c",
         ##height = c(230,700), width=c('auto',1000)
-        height = c(657,700), width=c('auto',1000)
+        height = c(660,700), width=c('auto',1000)
         ##caption = corGSEA_caption
     )
 
