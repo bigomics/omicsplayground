@@ -9,11 +9,12 @@
 FROM bigomics/omicsplayground:base
 
 #------------------------------------------------------------
-# Install extra packages required since base
+# Install extra packages required since base (later move to requirements.R!)
 #------------------------------------------------------------
 ## RUN R -e "install.packages(c('umap','corrplot','wordcloud'))"
 ## RUN pip install umap-learn
-RUN R -e "BiocManager::install(c('pathview','pryr'))"
+RUN R -e "BiocManager::install(c('pathview','pryr','RcppParallel'))"
+RUN R -e "devtools::install_github('wt2015-github/FastGGM')"
 
 #------------------------------------------------------------
 ## Pull from GitHub

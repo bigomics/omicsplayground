@@ -24,6 +24,7 @@ source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 500*1024^2)  ##max 500Mb upload
 
 ## DEV.VERSION = TRUE
+if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 
 if(0) {
     load("../data/geiger2016-arginine.pgx")
