@@ -140,11 +140,11 @@ install.packages("../ext/packages/Seurat_v2.3.3.tar.gz",repos=NULL,type="source"
 ##---------------------------------------------------------------------
 ## make sure local ones are preferred
 ##---------------------------------------------------------------------
-install.packages("../ext/packages/nclust1_1.9.4.tar.gz",repos=NULL,type="source")
-install.packages("../ext/packages/nclust_2.1.1.tar.gz",repos=NULL,type="source")
+##install.packages("../ext/packages/nclust1_1.9.4.tar.gz",repos=NULL,type="source")
+##install.packages("../ext/packages/nclust_2.1.1.tar.gz",repos=NULL,type="source")
 
 install.pkgs(c("RcppParallel"))
-install.packages("../ext/packages/FastGGM.tar.gz", repos = NULL, type = "source")
+devtools::install_github('wt2015-github/FastGGM')
 
 install.pkgs(c("HiddenMarkov","coin","rjags","future","argparse"))
 install.pkg("coin", force=TRUE)

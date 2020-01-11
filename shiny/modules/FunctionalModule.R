@@ -528,7 +528,8 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         ## heatmap(score2, scale="none", mar=c(8,20))
         bmar <- 0 + pmax(50 - nrow(score2),0)*0.3
         corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
-                 tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,0,0) )
+                 tl.cex = 0.9*cex2, tl.col="grey20", tl.srt = 45,
+                 mar=c(bmar,0,0,0) )
         
     })    
 
@@ -555,7 +556,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         ##renderFunc = "renderImage", outputFunc = "imageOutput",
         download.fmt = "png", just.info=TRUE,
         info.text = kegg_info1, info.width="350px",
-        height = c(0.53*rowH,750), width = c("100%",1200),
+        height = c(0.53*rowH,700), width = c("100%",1280),
         title = "Kegg pathway map"
     )
 
@@ -847,7 +848,8 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         ## heatmap(score2, scale="none", mar=c(8,20))
         bmar <- 0 + pmax((50 - nrow(score2))*0.25,0)
         corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
-                 tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,0,0) )
+                 tl.cex = 0.9*cex2, tl.col="grey20", tl.srt = 45,
+                 mar=c(bmar,0,0,0) )
         ##dev.off()
         
     })    
@@ -1179,7 +1181,8 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         score2 <- sign(score2) * abs(score2/max(abs(score2)))**3   ## fudging
         bmar <- 0 + pmax((50 - nrow(score2))*0.25,0)
         corrplot( score2, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
-                 tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,0,0) )
+                 tl.cex = 0.9*cex2, tl.col = "grey20", tl.srt = 45,
+                 mar=c(bmar,0,0,0) )
         
     })    
 
@@ -1783,7 +1786,8 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         score2 <- sign(score2) * abs(score2/max(abs(score2)))**3   ## fudging
         bmar <- 0 + pmax((50 - nrow(score2))*0.25,0)
         corrplot( score2, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
-                 tl.cex=cex2, tl.col="grey20", mar=c(bmar,0,0,0) )
+                 tl.cex = 0.9*cex2, tl.col = "grey20", tl.srt = 45,
+                 mar=c(bmar,0,0,0) )
         
     })    
 
