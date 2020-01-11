@@ -685,14 +685,12 @@ between two contrasts."
     ##================================================================================
 
     cmp_ctheatmap.PLOT %<a-% reactive({
-        
-        dbg("cmp_ctheatmap.RENDER:: reacted")
+                        
+        dbg("cmp_ctheatmap.PLOT:: reacted")
         
         ngs <- inputData()
         req(ngs)
         req(input$cmp_comparisons)
-
-        dbg("cmp_ctheatmap.RENDER:: 1")
         
         res <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         res = cmpGetFoldChangeMatrix()
@@ -700,13 +698,10 @@ between two contrasts."
         fc0 = res$fc
         qv0 = res$qv
 
-        dbg("cmp_ctheatmap.RENDER:: 2")
-
+        ntop = 9999
         ntop <- input$cmp_ctheatmap_ntop
         if(ntop=="all") ntop <- 999999
         ntop <- as.integer(ntop)
-        
-        dbg("cmp_ctheatmap.RENDER:: 3")
 
         allfc <- input$cmp_ctheatmap_allfc
         if(!allfc) {
@@ -716,8 +711,6 @@ between two contrasts."
             fc0 <- fc0[,kk,drop=FALSE]
         }
 
-        dbg("cmp_ctheatmap.RENDER:: 4")
-        
         ##R.full <- cor(fc0[,], use="pairwise", method="spearman")
         R.full <- cor(apply(fc0,2,rank), use="pairwise")
         jj <- head(order(-rowMeans(fc0**2)),ntop)
@@ -731,7 +724,7 @@ between two contrasts."
         if( nrow(R) > 20) {notecex=0.75; cex=1.05}
         if( nrow(R) > 50) {notecex=0.65; cex=0.9}
         if( nrow(R) > 80) {notecex=0.0001; cex=0.6}
-
+        
         mar1 <- c(16,18)*1.2
         if(nrow(R) <= 8) { mar1=c(16,18)*2 }
         if(nrow(R) > 30) { mar1=c(16,18)*0.9 }
@@ -743,14 +736,23 @@ between two contrasts."
         if(min(R,na.rm=TRUE)>=0) col <- tail(col,32)
         if(max(R,na.rm=TRUE)<=0) col <- head(col,32)
 
-        dbg("cmp_ctheatmap.RENDER:: 5")
+        dim(R)
+        if(0) {
+            gx.heatmap(R, values=NULL, col=col,
+                       scale="none", mar=mar1, cexRow=cex, cexCol=cex,
+                       cellnote=R, notecex=notecex, notecol="black",
+                       dist.method="euclidean", col.dist.method="euclidean",
+                       keysize=0.35, key=FALSE, zlim=c(-1,1) )
+        } else {
+            col2 <- colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582",
+                                       "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE",
+                                       "#4393C3", "#2166AC", "#053061"))
+            corrplot(R, method = "circle", order="hclust",
+                     col = rev(col2(50)), mar=c(1,0.2,0.2,1) * 0.2*mean(mar1),
+                     tl.cex = 0.8*cex, tl.col="black", tl.srt = 45)
+            ##corrplot(R, method = "circle", order="AOE")
+        }
         
-        gx.heatmap(R, values=NULL, col=col,
-                   scale="none", mar=mar1, cexRow=cex, cexCol=cex,
-                   cellnote=R, notecex=notecex, notecol="black",
-                   dist.method="euclidean", col.dist.method="euclidean",
-                   keysize=0.35, key=FALSE, zlim=c(-1,1) )
-
         dbg("cmp_ctheatmap.RENDER:: done")
 
         ##return(R)
@@ -854,7 +856,7 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
         options = cmp_ctheatmap.opts,
         download.fmt = c("pdf","html"),
         pdf.width = 11, pdf.height = 10,
-        height = c(fullH-50,750), width = c("auto",800), res=c(85,72)
+        height = c(fullH-50,720), width = c("auto",1100), res=c(80,85)
     )
 
     output$cmp_ctheatmap_UI <- renderUI({
@@ -866,7 +868,6 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
             div(HTML(cmp_ctheatmap_caption), class="caption")
         )
     })
-    
     
     ##================================================================================
     ## CONNECTIVITY MAP

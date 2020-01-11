@@ -23,7 +23,7 @@ pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 500*1024^2)  ##max 500Mb upload
 
-## DEV.VERSION = TRUE
+DEV.VERSION = TRUE
 if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 
 if(0) {
@@ -151,8 +151,8 @@ dev.tabs <- NULL
 if(DEV.VERSION) {
     dev.tabs <- navbarMenu(
         "Development",
-        tabView("Biomarker analysis", BiomarkerInputs("bio"), BiomarkerUI("bio")),        
         tabView("BatchCorrect", BatchCorrectInputs("bc"), BatchCorrectUI("bc")),
+        tabView("Biomarker analysis", BiomarkerInputs("bio"), BiomarkerUI("bio")),        
         tabView("MetaAnalysis", MetaInputs("meta"), MetaUI("meta"))
     )
 }
