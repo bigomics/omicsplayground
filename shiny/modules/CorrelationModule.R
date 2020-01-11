@@ -403,7 +403,6 @@ between genes and find coregulated modules."
             legend("topright", legend=tt, cex=0.9)
         }
         
-
     })
 
     corGSEA_plots_opts = tagList(
@@ -419,8 +418,8 @@ between genes and find coregulated modules."
         func = corGSEA_plots.RENDER,
         func2 = corGSEA_plots.RENDER, 
         download.fmt = c("png","pdf"),
-        options = corGSEA_plots_opts,
-        ##info.text = corGSEA_plots_text,        
+        ## options = corGSEA_plots_opts,
+        ## info.text = corGSEA_plots_text,        
         title="Correlation GSEA", label="a",
         height = c(0.54*fullH,650), width = c('auto',1200),
         pdf.width=8, pdf.height=5, res=c(72,85)

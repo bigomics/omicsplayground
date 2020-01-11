@@ -173,14 +173,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             gsets = rownames(ngs$gsetX)
             gsets = unique(unlist(COLLECTIONS[input$hm_features]))
             zx = ngs$gsetX
-            if(0 && DEV.VERSION && !is.null(ngs$gset.meta$matrices) ) {
-                ##zx = ngs$gset.meta$matrices[["meta"]]
-                jj = which(!sapply(ngs$gset.meta$matrices,is.null))
-                mat.names = names(ngs$gset.meta$matrices)[jj]
-                if(is.null(mat.names)) stop("error:: no geneset matrices!")
-                k = input$hm_gsetmatrix
-                if(k %in% mat.names)  zx <- ngs$gset.meta$matrices[[k]]
-            }
             if(input$hm_customlist!="") {
                 gsets1 = genesets[grep(input$hm_customlist, genesets,ignore.case=TRUE)]
                 if(length(gsets1)>2) gsets = gsets1
@@ -222,9 +214,11 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         kk <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
         zx <- zx[,kk,drop=FALSE]    
         
-        if(input$hm_level=="gene" && "chr" %in% names(ngs$genes)) {
+        if( input$hm_level=="gene" && "chr" %in% names(ngs$genes)
+           && input$hm_filterXY ) {
             ## Filter out X/Y chromosomes before clustering
-            chr <- ngs$genes[rownames(zx),]$chr
+            chr.col <- grep("^chr$|^chrom$",colnames(ngs$genes))
+            chr <- ngs$genes[rownames(zx),chr.col]
             not.xy <- !(chr %in% c("X","Y",23,24))
             table(not.xy)
             zx <- zx[which(not.xy), ]
@@ -234,6 +228,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         nmax = 4000
         nmax = as.integer(input$hm_ntop)
         idx <- NULL
+        splitx ="<none>"
         splitx <- input$hm_splitx
         topmode="specific"
         topmode <- input$hm_topmode
@@ -300,7 +295,10 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         
         ## ------------- cluster the genes???
         if(is.null(idx)) {
-            hc  = fastcluster::hclust( as.dist(1 - cor(t(zx),use="pairwise")), method="ward.D2" )
+            D <- as.dist(1 - cor(t(zx),use="pairwise"))
+            system.time( hc <- fastcluster::hclust(D, method="ward.D2" ) )
+            ## system.time( hc <- flashClust::hclust(D, method="ward" ) )
+            ## system.time( hc <- nclust(D, link="ward") )
             ngrp = 4  ## how many default groups???
             idx = paste0("S",cutree(hc, ngrp))
         }
@@ -561,7 +559,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                "Specify the criteria for selecting top features to be shown in the heatmap.",
                placement="right", options = list(container = "body")),
         tipify( radioButtons(ns('hm_ntop'),'Top N:',c(50,150,500),inline=TRUE,selected=50),
-               "Select the number of top features to be shown in the heatmap.", placement="right"),
+               "Select the number of top features in the heatmap.", placement="right"),
+        tipify( checkboxInput(ns('hm_filterXY'),'Exclude X/Y genes',TRUE),
+               "Exclude sex genes on X/Y chromosome.", placement="right"),
         tipify( radioButtons(
             ns('hm_scale'), 'Scale:', choices=c('relative','absolute'), inline=TRUE),
             "Show relative (i.e. mean-centered) or absolute expression values.",
@@ -1247,15 +1247,15 @@ displays the expression levels of selected genes across all conditions in the an
     
     observe({
         ngs <- inputData()    
-        if(is.null(input$xann.level)) return(NULL)
+        if(is.null(input$xann_level)) return(NULL)
         ann.types=sel=NULL
-        if(input$xann.level!="phenotype") {
-            if(input$xann.level=="geneset") {
+        if(input$xann_level!="phenotype") {
+            if(input$xann_level=="geneset") {
                 ann.types <- names(COLLECTIONS)
                 cc = sapply(COLLECTIONS,function(s) length(intersect(s,rownames(ngs$gsetX))))
                 ann.types <- ann.types[cc>=3]
             }
-            if(input$xann.level=="gene") {
+            if(input$xann_level=="gene") {
                 ann.types <- names(ngs$families)
                 cc = sapply(ngs$families,function(g) length(intersect(g,rownames(ngs$X))))
                 ann.types <- ann.types[cc>=3]
@@ -1265,13 +1265,13 @@ displays the expression levels of selected genes across all conditions in the an
             sel = ann.types[1]
             if("H" %in% ann.types) sel = "H"
             j <- grep("^transcription",ann.types,ignore.case=TRUE)
-            if(input$xann.level=="geneset") j <- grep("hallmark",ann.types,ignore.case=TRUE)
+            if(input$xann_level=="geneset") j <- grep("hallmark",ann.types,ignore.case=TRUE)
             if(length(j)>0) sel = ann.types[j[1]]
             ann.types <- sort(ann.types)
         } else {
             ann.types = sel = "<all>"
         }
-        updateSelectInput(session, "xann.refset", choices=ann.types, selected=sel)    
+        updateSelectInput(session, "xann_refset", choices=ann.types, selected=sel)    
     })
 
 
@@ -1288,11 +1288,11 @@ displays the expression levels of selected genes across all conditions in the an
 
         ann.level="geneset"
         ann.refset="Hallmark collection"
-        ann.level = input$xann.level
+        ann.level = input$xann_level
         ##if(is.null(ann.level)) return(NULL)
-        ann.refset = input$xann.refset
+        ann.refset = input$xann_refset
         ##if(is.null(ann.refset)) return(NULL)
-        req(input$xann.level, input$xann.refset)
+        req(input$xann_level, input$xann_refset)
         
         ref = NULL
         ref = ngs$gsetX[,]    
@@ -1329,6 +1329,8 @@ displays the expression levels of selected genes across all conditions in the an
         if(input$hm_level=="geneset") X <- ngs$gsetX
         
         ##----------- for each gene cluster compute average correlation
+        hm_topmode = "sd"
+        hm_topmode <- input$hm_topmode
         idxx = setdiff(idx, c(NA," ","   "))    
         rho <- matrix(NA, nrow(ref), length(idxx))
         colnames(rho) <- idxx
@@ -1341,9 +1343,31 @@ displays the expression levels of selected genes across all conditions in the an
                 bb <- t(ref[,samples,drop=FALSE])
                 ##rr = cor(aa , bb, use="pairwise", method="spearman")
                 rr = cor(apply(aa,2,rank), apply(bb,2,rank), use="pairwise")
-                if(input$hm_topmode=="pca") rr <- abs(rr)
+                if(hm_topmode=="pca") rr <- abs(rr)
                 rho[,i] <- colMeans(rr,na.rm=TRUE)
             }
+        }
+
+        if(ann.level=="geneset" && input$xann_odds_weighting ) {
+            table(idx)
+            grp <- tapply( rownames(zx), idx, list)
+            gmt <- GSETS[rownames(rho)]
+            P <- c()
+            for(i in 1:ncol(rho)) {
+                k <- colnames(rho)[i]
+                res <- gset.fisher(
+                    grp[[k]], gmt, fdr=1, min.genes=0, max.genes=Inf,
+                    background = rownames(X) )
+                res <- res[rownames(rho),]
+                r <- res[,"odd.ratio"]
+                odd.prob <- r / (1+r)
+                ##odd.1mpv <- 1 - res[,"p.value"]
+                ##P <- cbind(P,odd.1mpv)
+                P <- cbind(P,odd.prob)
+            }
+            colnames(P) <- colnames(rho)
+            rownames(P) <- rownames(rho)
+            rho <- rho * (P/max(P))
         }
 
         ##rho = round(rho, digits=3)
@@ -1439,15 +1463,22 @@ displays the expression levels of selected genes across all conditions in the an
     })
 
     clustannot_plots_opts = tagList(
-        tipify( selectInput(ns("xann.level"), "Reference level:",
-                            choices=c("gene","geneset","phenotype"), selected="geneset", width='80%'),
+        tipify( selectInput(ns("xann_level"), "Reference level:",
+                            choices=c("gene","geneset","phenotype"),
+                            selected="geneset", width='80%'),
                "Select the level of an anotation analysis.",
                placement="left", options = list(container = "body")),
-        tipify( selectInput( ns("xann.refset"), "Reference set:", choices="", width='80%'),
+        conditionalPanel(
+            "input.xann_level == 'geneset'", ns=ns,
+            tipify( checkboxInput(ns("xann_odds_weighting"), "Fisher test weighting"),
+                   "Enable weighting with Fisher test probability for gene sets. This will effectively penalize small clusters and increase robustness.",
+                   placement="right", options = list(container = "body"))
+        ),
+        tipify( selectInput( ns("xann_refset"), "Reference set:", choices="", width='80%'),
                "Specify a reference set to be used in the annotation.",
                placement="left",options = list(container = "body"))
     )
-
+    
     ##clustannot_plots_module <- plotModule(
     callModule(
         plotModule, 
@@ -1473,7 +1504,7 @@ displays the expression levels of selected genes across all conditions in the an
         ##rho = data.frame(cbind( name=rho.name, rho))
         df = data.frame( feature=rho.name, round(as.matrix(rho),digits=3))
         rownames(df) = rownames(rho)
-        if(input$xann.level=="geneset") {
+        if(input$xann_level=="geneset") {
             df$feature <- wrapHyperLink(df$feature, rownames(df))
         }
 
@@ -1497,14 +1528,13 @@ displays the expression levels of selected genes across all conditions in the an
     })
 
     clustannot_table_info_text = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
-
-    clustannot_caption = "<b>Cluster annotation.</b> Functional annotation of the gene clusters as defined by the hierchical clustered heatmap. <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster. Length of the bar corresponds to its average correlation. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
-
+    
     ##clustannot_table_module <- tableModule(
     clustannot_table_module <- callModule(
         tableModule, 
         id = "clustannot_table", 
         func = clustannot_table.RENDER,
+        ##options = clustannot_table_opts,
         info.text = clustannot_table_info_text,
         title="Annotation scores", label="b",
         height = c(250,700), width=c('auto',1000),
@@ -1512,6 +1542,9 @@ displays the expression levels of selected genes across all conditions in the an
     )
     ##output <- attachModule(output, clustannot_table_module)
 
+
+    clustannot_caption = "<b>Cluster annotation.</b> Functional annotation of the gene clusters as defined by the hierchical clustered heatmap. <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster. Length of the bar corresponds to its average correlation. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
+    
     output$hm_annotateUI <- renderUI({
         fillCol(
             flex = c(1.4,0.05,1,NA),
