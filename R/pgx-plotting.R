@@ -623,8 +623,6 @@ pgx.plotPhenotypeMatrix0 <- function(annot, annot.ht=4, cluster.samples=TRUE)
     annot.fvar <- annot[,fvar,drop=FALSE]
     
     annot.df <- cbind( annot.fvar, annot.cvar )
-    is.number <- c( rep(1,ncol(annot.fvar)), rep(0,ncol(annot.cvar)))
-    is.number
 
     if(cluster.samples) {
         annotx <- expandAnnotationMatrix(annot.df)
@@ -633,6 +631,9 @@ pgx.plotPhenotypeMatrix0 <- function(annot, annot.ht=4, cluster.samples=TRUE)
         hc <- hclust(dist(annotx))  ## cluster samples
         annot.df <- annot.df[ hc$order, ]
     }
+
+    isnum <- c( rep(1,ncol(annot.fvar)), rep(0,ncol(annot.cvar)))
+    is.binary <- apply(annot.df,2,function(x) all(x %in% c(0,1,NA,TRUE,FALSE,"T","F","NA")))
     
     ## set colorscale for each annotation parameter
     npar = apply(annot.df,2,function(x) length(setdiff(unique(x),NA)))
@@ -641,17 +642,15 @@ pgx.plotPhenotypeMatrix0 <- function(annot, annot.ht=4, cluster.samples=TRUE)
         prm = colnames(annot.cvar)[i]
         klrs = rev(grey.colors(npar[i],start=0.4,end=0.85))
         if(npar[i]==1) klrs = "#E6E6E6"
-        is.num <- is.number[i]
-        if(npar[i]>3 & !is.num) klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]
+        ##if(npar[i]>3 & !is.num[i]) klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]
+        if(!is.binary[i]) klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]        
         ##if(npar[i]==2) klrs = rep(brewer.pal(2,"Paired"),99)[1:npar[i]]
         names(klrs) = sort(unique(annot.cvar[,i]))
         klrs = klrs[!is.na(names(klrs))]
         ann.colors[[prm]] = klrs
     }
 
-    is.binary <- apply(annot.df,2,function(x) all(x %in% c(0,1,NA,TRUE,FALSE,"T","F")))
-    show.legend <- (!is.binary & npar <= 20)
-    
+    show.legend <- (!is.binary & npar <= 20)    
     ha = HeatmapAnnotation(
         df = annot.df,
         ##df2 = annot.fvar[,,drop=FALSE],        
