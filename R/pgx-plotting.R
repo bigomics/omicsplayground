@@ -606,6 +606,8 @@ pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL,
     return(plt)
 }
 
+##annot=ngs$Y
+annot.ht=4;cluster.samples=TRUE
 pgx.plotPhenotypeMatrix0 <- function(annot, annot.ht=4, cluster.samples=TRUE)
 {
 
@@ -623,6 +625,7 @@ pgx.plotPhenotypeMatrix0 <- function(annot, annot.ht=4, cluster.samples=TRUE)
     annot.fvar <- annot[,fvar,drop=FALSE]
     
     annot.df <- cbind( annot.fvar, annot.cvar )
+    colnames(annot.df) <- paste(colnames(annot.df),"        ")
 
     if(cluster.samples) {
         annotx <- expandAnnotationMatrix(annot.df)
@@ -639,18 +642,19 @@ pgx.plotPhenotypeMatrix0 <- function(annot, annot.ht=4, cluster.samples=TRUE)
     npar = apply(annot.df,2,function(x) length(setdiff(unique(x),NA)))
     ann.colors = list()
     for(i in 1:length(npar)) {
-        prm = colnames(annot.cvar)[i]
-        klrs = rev(grey.colors(npar[i],start=0.4,end=0.85))
+        prm = colnames(annot.df)[i]
+        klrs = rev(grey.colors(npar[i],start=0.4,end=0.85))  ## continous scale
         if(npar[i]==1) klrs = "#E6E6E6"
-        ##if(npar[i]>3 & !is.num[i]) klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]
-        if(!is.binary[i]) klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]        
+        ##if(npar[i]>3 & !isnum[i]) klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]
+        if(!is.binary[i] & !isnum[i]) klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]        
         ##if(npar[i]==2) klrs = rep(brewer.pal(2,"Paired"),99)[1:npar[i]]
-        names(klrs) = sort(unique(annot.cvar[,i]))
+        names(klrs) = sort(unique(annot.df[,i]))
         klrs = klrs[!is.na(names(klrs))]
         ann.colors[[prm]] = klrs
     }
 
-    show.legend <- (!is.binary & npar <= 20)    
+    show.legend <- (!is.binary & npar <= 20)
+    
     ha = HeatmapAnnotation(
         df = annot.df,
         ##df2 = annot.fvar[,,drop=FALSE],        
@@ -662,16 +666,22 @@ pgx.plotPhenotypeMatrix0 <- function(annot, annot.ht=4, cluster.samples=TRUE)
         ##annotation_legend_param = aa
         show_legend = show.legend
     )
-
+    
     show_colnames = TRUE
     show_colnames = (nrow(annot.df)<100)
     nullmat <- matrix(0,0,nrow(annot.df))
     colnames(nullmat) <- rownames(annot.df)
+    colnames(nullmat) <- paste(colnames(nullmat),"     ")
     h <- Heatmap( nullmat,
                  top_annotation = ha,
                  show_column_names = show_colnames
                  )
-    draw(h,
+
+    ## some space between heatmap and annotation
+    nullmat2 <- matrix(0,0,nrow(annot.df)*0.15)
+    h2 <- Heatmap( nullmat2)
+    
+    draw(h + h2,
          padding = unit(c(1,10,1,10),"mm"),
          adjust_annotation_extension = TRUE
          )

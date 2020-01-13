@@ -290,7 +290,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         if(!is.null(col.annot)) lab <- c(lab, colnames(col.annot))
         textwidth <- max_text_width(paste0(lab,"XXXXXXXXXXXXX"),
                                     gp = gpar(fontsize = 10*cexRow))
-        rownames = Heatmap( empty.mat,
+        rownames.ha = Heatmap( empty.mat,
                            row_names_max_width = textwidth,
                            row_names_gp = gpar(fontsize = 10*cexRow),
                            show_row_names = show_rownames>0 )
@@ -300,7 +300,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         hmap = hmap + row.ha
     }
     if(show_rownames) {
-        hmap = hmap + rownames
+        hmap = hmap + rownames.ha
     }
 
     ##draw(hmap, annotation_legend_side="right")
