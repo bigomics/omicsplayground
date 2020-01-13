@@ -178,7 +178,6 @@ between genes and find coregulated modules."
 
     getGenePartialCorrelation <- reactive({
         ngs <- inputData()
-        alertDataLoaded(session,ngs)
         req(ngs,input$cor_gene)
         X <- ngs$X    
         gene <- rownames(X)[1]
@@ -236,6 +235,9 @@ between genes and find coregulated modules."
     
     cor_barplot.PLOTFUN %<a-% reactive({
 
+        ngs <- inputData()
+        alertDataLoaded(session,ngs)
+        
         req(input$cor_gene)
         res <- getGenePartialCorrelation()
 

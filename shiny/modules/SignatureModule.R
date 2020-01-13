@@ -200,7 +200,6 @@ infotext =
         ##
         
         ngs <- inputData()
-        alertDataLoaded(session,ngs)
         if(is.null(ngs)) return(NULL)
 
         type="<custom>"
@@ -567,6 +566,7 @@ infotext =
     
     enplots.RENDER %<a-% reactive({
         ngs <- inputData()
+        alertDataLoaded(session,ngs)
         if(is.null(ngs)) return(NULL)
         
         ##require(shinycssloaders)

@@ -117,7 +117,6 @@ immune cell types, expressed genes and pathway activation."
 
     pfGetClusterPositions <- reactive({
         ngs <- inputData()
-        alertDataLoaded(session,ngs)
         req(ngs)
         
         ##zx <- filtered_matrix1()
@@ -204,6 +203,7 @@ immune cell types, expressed genes and pathway activation."
         require(RColorBrewer)
         
         ngs <- inputData()
+        alertDataLoaded(session,ngs)
         req(ngs)
         
         clust <- pfGetClusterPositions()
