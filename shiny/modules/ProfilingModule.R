@@ -322,9 +322,11 @@ immune cell types, expressed genes and pathway activation."
             par(mfrow=c(5,5), mar=c(0,0.2,0.5,0.2), oma=c(1,1,6,1)*0.5)
             if(ncol(score)>25) par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2)*0.6)
             i=1    
-            
-            jj <- head(order(-colMeans(score**2)),36)
-            jj <- jj[order(colnames(score)[jj])]
+            jj <- NULL
+            jj <- head(order(-colMeans(score**2)),36)                
+            if(input$pr_sortby=="name") {
+                jj <- jj[order(colnames(score)[jj])]
+            }            
             colnames(score)[jj]
             for(j in jj) {
                 gx = pmax(score[,j],0)
@@ -357,7 +359,9 @@ immune cell types, expressed genes and pathway activation."
                placement="top", options = list(container = "body")),
         tipify(selectInput(ns("pr_dcmethod"),"method:", choices=NULL),
                "Choose a method for the cell type prediction.",
-               placement="top", options = list(container = "body"))
+               placement="top", options = list(container = "body")),
+        tipify(radioButtons(ns("pr_sortby"),"Sort by:", choices=c("probability","name"), inline=TRUE),
+               "Sort by name or probability.", placement="top", options = list(container = "body"))
     )
 
     pr_icp_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
@@ -471,7 +475,11 @@ immune cell types, expressed genes and pathway activation."
         NP=25
         if(input$pr_level=="gene") NP=36
         top.gx = head(gx,NP)  ## match number of plot below!
-        top.gx = top.gx[order(rownames(top.gx)),,drop=FALSE]
+        if(input$pr_sortby2=="name") {
+            top.gx = top.gx[order(rownames(top.gx)),,drop=FALSE]
+        } else {
+            top.gx = top.gx[order(-rowMeans(top.gx)),,drop=FALSE]
+        }
         top.gx = pmax(top.gx,0)
         ##top.gx <- tanh(top.gx/mean(top.gx))
 
@@ -524,7 +532,9 @@ immune cell types, expressed genes and pathway activation."
                placement="top", options = list(container = "body")),
         tipify(textInput(ns("pr_search"),"Filter:"),
                "Filter markers by a specific keywords.",
-               placement="top", options = list(container = "body"))
+               placement="top", options = list(container = "body")),
+        tipify(radioButtons(ns("pr_sortby2"),"Sort by:", choices=c("intensity","name"), inline=TRUE),
+               "Sort by name or intensity.", placement="top", options = list(container = "body"))
     )
 
     pr_markersplot_info = "The Markers section produces for the top marker genes, a t-SNE with samples colored in red when the gene is overexpressed in corresponding samples. The top genes (N=36) with the highest standard deviation are plotted. <p>In the plotting options, users can also restrict the marker analysis by selecting a particular functional group in which genes are divided into 89 groups, such as chemokines, transcription factors, genes involved in immune checkpoint inhibition, and so on."

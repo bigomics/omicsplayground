@@ -69,7 +69,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                    "Select a family of features.", placement="top"),
             conditionalPanel(
                 "input.hm_features == '<custom>'", ns=ns,
-                tipify( textAreaInput(ns("hm_customlist"), NULL, value = NULL,
+                tipify( textAreaInput(ns("hm_customfeatures"), NULL, value = NULL,
                                       rows=5, placeholder="Paste your custom gene list"),
                        "Paste a custom list of genes to be used as features.", placement="bottom")
             ),
@@ -173,8 +173,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             gsets = rownames(ngs$gsetX)
             gsets = unique(unlist(COLLECTIONS[input$hm_features]))
             zx = ngs$gsetX
-            if(input$hm_customlist!="") {
-                gsets1 = genesets[grep(input$hm_customlist, genesets,ignore.case=TRUE)]
+            if(input$hm_customfeatures!="") {
+                gsets1 = genesets[grep(input$hm_customfeatures, genesets,ignore.case=TRUE)]
                 if(length(gsets1)>2) gsets = gsets1
             }        
             zx = zx[intersect(gsets,rownames(zx)),]
@@ -191,8 +191,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             } else {
                 gg = rownames(ngs$X)
             }
-            if(input$hm_customlist!="") {
-                gg1 = strsplit(input$hm_customlist,split="[, ;\n\t]")[[1]]
+            if(input$hm_customfeatures!="") {
+                gg1 = strsplit(input$hm_customfeatures,split="[, ;\n\t]")[[1]]
                 if(length(gg1)==1) gg1 <- paste0(gg1,"*")
                 gg1 = gsub("[ \n\t]","",gg1)
                 starred = grep("[*]",gg1)

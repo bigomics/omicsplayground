@@ -121,6 +121,12 @@ between genes and find coregulated modules."
                 tagList(
                     tipify( selectInput(ns("cor_features"),"Gene family:", choices=NULL, multiple=FALSE),
                            "Filter for a specific gene family.", placement="top"),
+                    conditionalPanel(
+                        "input.cor_features == '<custom>'", ns=ns,
+                        tipify( textAreaInput(ns("cor_customfeatures"), NULL, value = NULL,
+                                              rows=5, placeholder="Paste your custom gene list"),
+                               "Paste a custom list of genes to be used as features.", placement="bottom")
+                    ),                    
                     tipify( selectInput(ns("cor_samplefilter"),"Filter samples",
                                         choices=NULL, multiple=TRUE),
                            "Filter (include) samples for the analysis")                    
@@ -156,6 +162,7 @@ between genes and find coregulated modules."
         updateSelectInput(session,'cor_gene', choices=genes, selected=sel)
 
         fam <- pgx.getFamilies(ngs,nmin=10,extended=FALSE)
+        fam <- sort(c("<custom>",fam))
         updateSelectInput(session, "cor_features",choices=fam)
 
     })
@@ -185,10 +192,28 @@ between genes and find coregulated modules."
         }
 
         ## filter genes
-        if(input$cor_features!="<all>") {
+        ft <- input$cor_features
+        if(ft=="<custom>" && input$cor_customfeatures!="") {
+            genes <- toupper(ngs$genes$gene_name)
+            gg1 = strsplit(input$cor_customfeatures,split="[, ;\n\t]")[[1]]
+            if(length(gg1)==1) gg1 <- paste0(gg1,"*")
+            gg1 = gsub("[ \n\t]","",gg1)
+            starred = grep("[*]",gg1)
+            if(length(starred)>0) {
+                gg2 = lapply(gg1[starred], function(a)
+                    genes[grep(paste0("^",sub("[*]","",a)),genes,ignore.case=TRUE)])
+                gg1 = unique(c(gg1,unlist(gg2)))
+            }
+            gg1 = intersect(gg1,ngs$genes$gene_name)            
+            if(length(gg1)>1) gg = gg1                        
+            psel = filterProbes(ngs$genes, c(gg,gene))
+            psel <- intersect(psel,rownames(X))
+            X = X[psel,,drop=FALSE]
+            
+        } else if(ft!="<all>" && ft %in% names(GSETS)) {
             ft <- input$cor_features
-            psel = filterProbes(ngs$genes, GSETS[[ft]] )
-            psel = unique(c(gene, psel))
+            psel = filterProbes(ngs$genes, c(gene,GSETS[[ft]]) )
+            ##psel = unique(c(gene, psel))
             psel <- intersect(psel,rownames(X))
             X = X[psel,,drop=FALSE]
         }
@@ -516,7 +541,7 @@ between genes and find coregulated modules."
         info.text = corGSEA_LeadingEdgeTable_info,
         title = "Leading edge genes", label="c",
         ##height = c(230,700), width=c('auto',1000)
-        height = c(660,700), width=c('auto',1000)
+        height = c(665,700), width=c('auto',1000)
         ##caption = corGSEA_caption
     )
 
