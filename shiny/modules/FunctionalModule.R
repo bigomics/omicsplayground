@@ -1648,7 +1648,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                 a <- top[i]
                 gsea.enplot(S[,a], targets, names=NULL, ##main=gs,
                             main = paste0("#",toupper(keyword),"\n@",a),
-                            cex.main=0.9, len.main=80)
+                            cex.main=0.9, len.main=80, xlab="")
                 qv1 = formatC(qv[a],format="e", digits=3)
                 nes1 = formatC(nes[a],format="f", digits=3)
                 tt <- c(paste("NES=",nes1),paste("q=",qv1))

@@ -606,6 +606,79 @@ pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL,
     return(plt)
 }
 
+pgx.plotPhenotypeMatrix0 <- function(annot, annot.ht=4, cluster.samples=TRUE)
+{
+
+    cvar <- pgx.getCategoricalPhenotypes(
+        annot, min.ncat=2, max.ncat=10, remove.dup=FALSE)
+    cvar
+    if(length(unique(annot$group)) > 0.33*nrow(annot)) {
+        cvar <- setdiff(cvar,"group")
+    }
+
+    fvar <- pgx.getNumericalPhenotypes(annot)
+    fvar
+    
+    annot.cvar <- annot[,cvar,drop=FALSE]
+    annot.fvar <- annot[,fvar,drop=FALSE]
+    
+    annot.df <- cbind( annot.fvar, annot.cvar )
+    is.number <- c( rep(1,ncol(annot.fvar)), rep(0,ncol(annot.cvar)))
+    is.number
+
+    if(cluster.samples) {
+        annotx <- expandAnnotationMatrix(annot.df)
+        dim(annot.df)
+        dim(annotx)
+        hc <- hclust(dist(annotx))  ## cluster samples
+        annot.df <- annot.df[ hc$order, ]
+    }
+    
+    ## set colorscale for each annotation parameter
+    npar = apply(annot.df,2,function(x) length(setdiff(unique(x),NA)))
+    ann.colors = list()
+    for(i in 1:length(npar)) {
+        prm = colnames(annot.cvar)[i]
+        klrs = rev(grey.colors(npar[i],start=0.4,end=0.85))
+        if(npar[i]==1) klrs = "#E6E6E6"
+        is.num <- is.number[i]
+        if(npar[i]>3 & !is.num) klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]
+        ##if(npar[i]==2) klrs = rep(brewer.pal(2,"Paired"),99)[1:npar[i]]
+        names(klrs) = sort(unique(annot.cvar[,i]))
+        klrs = klrs[!is.na(names(klrs))]
+        ann.colors[[prm]] = klrs
+    }
+
+    is.binary <- apply(annot.df,2,function(x) all(x %in% c(0,1,NA,TRUE,FALSE,"T","F")))
+    show.legend <- (!is.binary & npar <= 20)
+    
+    ha = HeatmapAnnotation(
+        df = annot.df,
+        ##df2 = annot.fvar[,,drop=FALSE],        
+        col = ann.colors,
+        ##annotation_height = unit(annot.ht, "mm"),
+        simple_anno_size = unit(annot.ht,"mm"),  ## BioC 3.8!!
+        ##show_annotation_name = (i==ngrp),
+        ##annotation_name_gp = gpar(fontsize=3.3*annot.ht),
+        ##annotation_legend_param = aa
+        show_legend = show.legend
+    )
+
+    show_colnames = TRUE
+    show_colnames = (nrow(annot.df)<100)
+    nullmat <- matrix(0,0,nrow(annot.df))
+    colnames(nullmat) <- rownames(annot.df)
+    h <- Heatmap( nullmat,
+                 top_annotation = ha,
+                 show_column_names = show_colnames
+                 )
+    draw(h,
+         padding = unit(c(1,10,1,10),"mm"),
+         adjust_annotation_extension = TRUE
+         )
+    
+}
+
 
 pgx.plotPhenotypeMatrix <- function(annot)
 {

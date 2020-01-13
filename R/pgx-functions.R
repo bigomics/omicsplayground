@@ -1089,6 +1089,7 @@ tidy.dataframe <- function(Y) {
     Y <- Y[,which(colMeans(is.na(Y))<1)]
     Y <- apply(Y,2,function(x) sub("^NA$",NA,x)) ## all characters
     Y <- Y[,which(colMeans(is.na(Y))<1)]
+    Y <- apply(Y,2,function(x) gsub("^[ ]*|[ ]*$","",x))
     suppressWarnings( num.Y <- apply(Y,2,function(x) as.numeric(as.character(x))) )
     is.numeric <- ( 0.8*colMeans(is.na(num.Y)) <= colMeans(is.na(Y)) )
     nlevel <- apply(Y,2,function(x) length(unique(x)))

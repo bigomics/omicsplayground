@@ -149,6 +149,8 @@ DataViewModule <- function(input, output, session, env)
         ngs <- inputData()
         req(ngs)
         
+        dbg("[data_genePlots_averageRankPlot.RENDER] reacted")
+
         gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
         if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
@@ -186,6 +188,9 @@ DataViewModule <- function(input, output, session, env)
              ylab=ylab, xlab="ordered genes", xaxt="n")
         points( j, mean.fc[j], type="h", lwd=2, col="black")
         text( j, mean.fc[j], gene, pos=3, cex=0.9)
+
+        dbg("[data_genePlots_averageRankPlot.RENDER] done")
+
     })
 
     ##data_genePlots_averageRankPlot_module <- plotModule(
@@ -210,6 +215,8 @@ DataViewModule <- function(input, output, session, env)
         
         ngs <- inputData()
         req(ngs)
+
+        dbg("[data_genePlots_correlationplot_data()] reacted")
         
         gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
@@ -250,7 +257,7 @@ DataViewModule <- function(input, output, session, env)
         rho = cor(t(ngs$X[,samples]), ngs$X[pp,samples], use="pairwise")[,1]
         rho[is.na(rho)] <- 0
         jj = head(order(-abs(rho)),30)
-        jj <- c( head(order(rho),12), head(order(-rho),12))
+        jj <- c( head(order(rho),15), head(order(-rho),15))
         jj <- jj[order(-rho[jj])]
         top.rho = rho[jj]
         
@@ -265,14 +272,21 @@ DataViewModule <- function(input, output, session, env)
         names(top.rho) = sub(".*:","",names(top.rho))
         offset = min(top.rho)*0.95
         offset = 0
+
+        dbg("[data_genePlots_correlationplot_data()] done")
+        
         res = list(top.rho=top.rho, offset=offset, klr1=klr1)
         return(res)
     })
 
     data_genePlots_correlationplot.RENDER %<a-% reactive({
+
+        dbg("[data_genePlots_correlationplot.RENDER] reacted")
+
         res = data_genePlots_correlationplot_data()
         ngs <- inputData()
         if(is.null(ngs) | is.null(res)) return(NULL)
+
         gene = ngs$genes$gene_name[1]
         if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
         barplot(res$top.rho - res$offset, col=res$klr1, ## horiz=TRUE,
@@ -280,13 +294,16 @@ DataViewModule <- function(input, output, session, env)
                 main=paste(gene),
                 offset = res$offset, ylab="correlation (r)",
                 ## names.arg=rep(NA,length(top.rho)),
-                cex.names=0.7, cex.main=1, col.main="#7f7f7f", border=NA)
+                cex.names=0.65, cex.main=1, col.main="#7f7f7f", border=NA)
         ##text( (1:length(top.rho) - 0.5)*1.2, offset, names(top.rho),
         ##col="black", cex=0.75, srt=90, pos=3, offset=0.4, font=1)
         legend("topright", legend=c("expr high","expr low"),
                                         #fill=c("grey30","grey80"),
                fill=c("#3380CCCC","#3380CC40"),
                cex=0.85, y.intersp=0.85)
+
+        dbg("[data_genePlots_correlationplot.RENDER] done")
+        
     })
     
     ##data_genePlots_correlationplot_module <- plotModule(
@@ -313,12 +330,7 @@ DataViewModule <- function(input, output, session, env)
         ngs <- inputData()
         req(ngs)
         req(input$data_groupby,input$search_gene,input$data_type)
-        
-        cat("[dataview] data_genePlots_barplot.RENDER : 1\n")    
-        dbg("[dataview] data_groupby=",input$data_groupby)
-        dbg("[dataview] search_gene=",input$search_gene)
-        dbg("[dataview] data_type=",input$data_type)
-        
+                
         gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
         if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
@@ -348,12 +360,9 @@ DataViewModule <- function(input, output, session, env)
             ylab="expression (CPM)"
         } else if(input$data_type=="logCPM") {
             gx = ngs$X[pp,samples]
-        ylab="expression (log2CPM)"
+            ylab="expression (log2CPM)"
         }
-        
-        dbg("[dataview] head(pp)=",head(pp))
-        dbg("[dataview] head(gx)=",head(gx))
-        
+                
         mar=MARGINS1
         par(mar=mar, mgp=c(2.1,0.8,0))
 
@@ -417,6 +426,8 @@ DataViewModule <- function(input, output, session, env)
         
         ngs <- inputData()
         req(ngs)
+
+        dbg("[data_genePlots_tsne.RENDER] reacted")
         
         gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
@@ -498,6 +509,8 @@ DataViewModule <- function(input, output, session, env)
             text( grp.pos, labels=labels, font=2, cex=0.9*cex3, col="black")
             ##text( grp.pos[,], labels=rownames(grp.pos), font=2, cex=cex1**0.5)
         }
+
+        dbg("[data_genePlots_tsne.RENDER] done")
         
     })
 
@@ -522,6 +535,8 @@ DataViewModule <- function(input, output, session, env)
         ngs <- inputData()
         req(ngs)
         if(is.null(input$data_type)) return(NULL)
+
+        dbg("[data_tissueplot.RENDER] reacted")
         
         gene <- input$search_gene
         pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]    
@@ -556,6 +571,9 @@ DataViewModule <- function(input, output, session, env)
         } else {
             frame()
         }
+
+        dbg("[data_tissueplot.RENDER] done")
+        
     })
     
     ##data_tissueplot_module <- plotModule(
@@ -579,8 +597,10 @@ DataViewModule <- function(input, output, session, env)
         ngs <- inputData()
         req(ngs)	
         if(is.null(input$data_type)) return(NULL)
+
+        dbg("[data_corplot_data()] reacted")
         
-        ##samples=colnames(ngs$X);gene="CD4"
+        samples=colnames(ngs$X);gene="CD4"
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
         gene <- input$search_gene
         if(is.null(gene)) return(NULL)    
@@ -589,7 +609,8 @@ DataViewModule <- function(input, output, session, env)
         zx <- ngs$X
         grp <- ngs$samples$group
         dim(zx)
-        if( length(grp) >= 5 && ncol(zx) > 50) {
+        if( FALSE && length(grp) >= 5 && ncol(zx) > 50) {
+            ## TOO SLOW!!! should do pre-computed???
             zx <- t( apply(ngs$X, 1, function(x) tapply(x,grp,mean)))
         }
         head(zx)
@@ -625,13 +646,16 @@ DataViewModule <- function(input, output, session, env)
         ## --- color test -----##
         klr <- grey.colors(ncol(Rtop),start=0.3,end=0.7)
         klr <- colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.2)), alpha = TRUE)(ncol(Rtop))
-        ## --- color test -----##
         
+        dbg("[data_corplot_data()] done!")
+
         res = list(Rtop=Rtop, offset=offset, klr=klr)
         return(res)
     })
     
     data_corplot.RENDER %<a-% reactive({
+
+        dbg("[data_corplot.RENDER] reacted")
         
         res <- data_corplot_data()
         if(is.null(res)) return(NULL)
@@ -648,7 +672,10 @@ DataViewModule <- function(input, output, session, env)
                 )
         if(!is.null(colnames(res$Rtop))) {
             legend("topright", legend=rev(colnames(res$Rtop)), fill=rev(res$klr),
-                   cex=0.8, y.intersp=0.8)}
+                   cex=0.8, y.intersp=0.8)
+        }
+        dbg("[data_corplot.RENDER] done!")
+        
     })
     
     ##data_corplot_module <- plotModule(
@@ -664,7 +691,7 @@ DataViewModule <- function(input, output, session, env)
     ##output <- attachModule(output, data_corplot_module) 
     
     ##----------------------------------------------------------------------
-    ##                     Gene expression table
+    ## Gene information
     ##----------------------------------------------------------------------
 
     data_geneInfo.RENDER  %<a-% reactive({
@@ -830,7 +857,7 @@ DataViewModule <- function(input, output, session, env)
     counts_tab_boxplot.RENDER %<a-% reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
-                                        #par(mar=c(3,3,3,3), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )   
+        ##par(mar=c(3,3,3,3), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )   
         par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
         par(mar=MARGINS2, mgp=c(2.2,0.8,0))
         
@@ -906,7 +933,7 @@ DataViewModule <- function(input, output, session, env)
     ##output <- attachModule(output, counts_tab_histplot_module)
 
     ##----------------------------------------------------------------------
-    ##                     Count information abundance of major gene types
+    ##  Count information abundance of major gene types
     ##----------------------------------------------------------------------
 
     counts_tab_abundanceplot.RENDER %<a-% reactive({
@@ -962,7 +989,7 @@ DataViewModule <- function(input, output, session, env)
     ##output <- attachModule(output, counts_tab_abundanceplot_module) 
 
     ##----------------------------------------------------------------------
-    ##                     Count information average count by gene type
+    ## Count information average count by gene type
     ##----------------------------------------------------------------------
     counts_tab_average_countplot.RENDER %<a-% reactive({
         res = getCountsTable()
@@ -1169,6 +1196,10 @@ DataViewModule <- function(input, output, session, env)
     })
     ##dragula(c("counts_tab_row1","counts_tab_row2"))
     
+    ##================================================================================
+    ##======================  Raw counts/abundance table =============================
+    ##================================================================================
+
     dropdown_search_gene='<code>Search gene</code>'
     menu_grouped='<code>grouped</code>'
     menu_options='<code>Options</code>'
@@ -1180,6 +1211,8 @@ DataViewModule <- function(input, output, session, env)
         ngs = inputData()
         req(ngs)
         req(input$data_groupby)
+
+        dbg("[data_rawdataTable.RENDER] reacted")
         
         pp <- rownames(ngs$X)
         if(input$data_type=="counts") {
@@ -1206,6 +1239,7 @@ DataViewModule <- function(input, output, session, env)
         if(is.null(gene) | gene=="" | is.na(gene)) return(NULL)
         ##xgene = sub(".*:","",rownames(x))
 
+        ## Quickly (?) calculated correlation to selected gene
         rho = NULL
         if(1) {
             k=1
@@ -1260,6 +1294,15 @@ DataViewModule <- function(input, output, session, env)
         j1 <- which(x$gene==gene)
         jj <- c(j1, setdiff(1:nrow(x),j1))
         x <- x[jj,,drop=FALSE]
+
+        if(ncol(x) > 100) {
+            max.row <- 1e5 / ncol(x)
+            max.row <- 100*ceiling(max.row/100)
+            max.row
+            x <- head(x, max.row)
+        }
+        
+        dbg("[data_rawdataTable.RENDER] rendering N=",nrow(x),"rows...")
         
         DT::datatable( x, rownames=FALSE,
                       class = 'compact cell-border stripe hover',
@@ -1314,32 +1357,46 @@ DataViewModule <- function(input, output, session, env)
     data_phenoClustering.RENDER <- reactive({
         ngs = inputData()
         req(ngs)
+        dbg("[data_phenoClustering.RENDER] reacted")
+
         annot <- ngs$samples
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
         annot <- annot[samples,,drop=FALSE]
-        plt <- pgx.plotPhenotypeMatrix(annot)
+        annot.ht <- ifelse( ncol(annot) > 10, 3, 5)
+
+        do.clust <- input$data_phenoclustsamples
+        plt <- pgx.plotPhenotypeMatrix0(
+            annot, annot.ht=annot.ht, cluster.samples=do.clust)
         ## plt <- plt %>% config(displayModeBar = FALSE)
         plt
     })
 
+    data_phenoClustering_opts <- tagList(
+        tipify( checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
+               "Cluster samples.", placement="top")        
+    )
+        
     data_phenoClustering_caption = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (phenotype data)."
     callModule(
         plotModule,
         id = "data_phenoClustering", label="a",
         func = data_phenoClustering.RENDER,
-        plotlib = "iheatmapr", 
+        func2 = data_phenoClustering.RENDER,        
+        ## plotlib = "iheatmapr", 
         title = "Phenotype clustering",
         ##info.text = "Sample information table with information about phenotype of samples.",
-        ##options = data_sampleTable_opts,
-        height = c(imgH,600), width = c('auto',1200),
+        options = data_phenoClustering_opts,
+        height = c(320,600), width = c('auto',1200), res=c(65,75),
         pdf.width=10, pdf.height=6 
     )
     ##output <- attachModule(output, data_sampleTable_module) 
-
+    
     data_sampleTable.RENDER <- reactive({
         ## get current view of raw_counts
         ngs = inputData()
         req(ngs)
+
+        dbg("[data_sampleTable.RENDER] reacted")
         
         ##if(is.null(input$data_samplefilter)) return(NULL)    
         dt <- NULL
@@ -1353,7 +1410,8 @@ DataViewModule <- function(input, output, session, env)
                       options=list(
                           dom = 'lfrtip', 
                           ##pageLength = 60, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scroller=TRUE, scrollX = TRUE, scrollY = 0.3*tabH,
+                          scroller=TRUE, scrollX = TRUE,
+                          scrollY = 0.35*tabH,
                           deferRender=TRUE
                       )) %>%
             DT::formatStyle(0, target='row', fontSize='12px', lineHeight='70%') 
@@ -1383,7 +1441,7 @@ DataViewModule <- function(input, output, session, env)
             flex = c(1,1,NA),
             height = fullH,
             ##moduleWidget(data_sampleTable_module, outputFunc="dataTableOutput", ns=ns)
-            plotWidget(ns("data_phenoClustering")),
+            div( plotWidget(ns("data_phenoClustering")), style="overflow: auto;"),
             tableWidget(ns("data_sampleTable")),
             div(HTML(sampletableUI_caption), class="caption")
         )
@@ -1397,6 +1455,8 @@ DataViewModule <- function(input, output, session, env)
         ## get current view of raw_counts
         ngs = inputData()
         req(ngs)
+
+        dbg("[data_contrastTable.RENDER] reacted")
         
         ##if(is.null(input$data_samplefilter)) return(NULL)    
         dt <- NULL
@@ -1478,6 +1538,9 @@ DataViewModule <- function(input, output, session, env)
     datatable_timings.RENDER <- reactive({
         ngs <- inputData()
         req(ngs)
+
+        dbg("[datatable_timings.RENDER] reacted")
+        
         ##if(is.null(ngs$timings)) return(NULL)
         D <- data.frame()
         if(!is.null(ngs$timings)) {

@@ -771,7 +771,7 @@ pgx.computeCoreGOgraph <- function(ngs, fdr=0.05)
     subgraphs <- list()
     i=1
     for(i in 1:length(comparisons)) {
-        subgraphs[[i]] = getSigGO(
+        subgraphs[[i]] = pgx.getSigGO(
             ngs, comparison=comparisons[i], methods=NULL,
             fdr=fdr, nterms=200, ntop=20)
     }
@@ -836,7 +836,7 @@ getGOgraph <- function() {
 }
 
 ##comparison=1;methods=c("fisher","gsva","camera");nterms=200;ntop=20;fdr=0.20
-getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.25, nterms=500, ntop=100)
+pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.25, nterms=500, ntop=100)
 {
     require(GO.db)
     require(igraph)
@@ -876,7 +876,7 @@ getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.25, nterms=500, ntop=1
     }
 
     ##sig = cbind( score=score, fx=fc, pv=pv, qv=qv)
-    vinfo = data.frame( geneset=names(fc), score=score, fc=fc, pv=pv, qv=qv)
+    vinfo = data.frame( geneset=rownames(mx), score=score, fc=fc, pv=pv, qv=qv)
     colnames(vinfo) = c("geneset","score","fc","pv","qv")  ## need
     head(vinfo)
     remove(fc)

@@ -1,20 +1,64 @@
 
+file = "./OPTIONS_"
+pgx.readOptions <- function(file = "./OPTIONS") {
+    if(!file.exists(file)) return(NULL)
+    opt <- read.table(file, sep="=", row.names=1)
+    opt <- gsub("^[ ]*|[ ]*$","",apply(opt,1,c))
+    opt <- sapply(opt,list)
+    opt <- sapply(opt,strsplit,split=";")
+    names(opt) <- gsub("^[ ]*|[ ]*$","",names(opt))
+    opt
+}
+
+pgx.initDatasetFolders <- function(pgx.dir, verbose=TRUE, force=FALSE)
+{
+    for(i in 1:length(pgx.dir)) {
+        pgx.initDatasetFolder(pgx.dir[i], verbose=verbose, force=force)
+    }
+}
+
 pgx.initDatasetFolder <- function(pgx.dir, verbose=TRUE, force=FALSE)
 {
-    if(!dir.exists(pgx.dir)) {
-        stop(paste("[pgx.initDatasetFolder] FATAL ERROR : folder",pgx.dir,"does not exist"))
+    if(length(pgx.dir)>1) {
+        stop("please use pgx.initDatasetFolders() for multiple folders")
     }
+    for(i in 1:length(pgx.dir)) {
+        if(!dir.exists(pgx.dir)) next()
+        if(verbose) cat("init of data folder: ",pgx.dir[i],"\nn")
+        r1 <- pgx.updateDatasetProfiles(pgx.dir[i], file="datasets-allFC.csv",
+                                        force=force, verbose=verbose)
+        r2 <- pgx.updateInfoFile(pgx.dir[i], file="datasets-info.csv",
+                                 force=force, verbose=verbose)
+    }
+}
 
-    if(verbose) cat("init of data folder (info and allFC) ...\n")
-    r1 <- pgx.updateDatasetProfiles(pgx.dir, file="datasets-allFC.csv",
-                                  force=force, verbose=verbose)
-    r2 <- pgx.updateInfoFile(pgx.dir, file="datasets-info.csv",
-                             force=force, verbose=verbose) 
+verbose=TRUE;file="datasets-allFC.csv"
+pgx.readDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
+                                    verbose=TRUE)
+{
+    F <- NULL
+    i=1
+    for(i in 1:length(pgx.dir)) {
+        if(!dir.exists(pgx.dir[i])) next()
+        f1 <- pgx.readDatasetProfiles1(pgx.dir[i], file=file,
+                                       verbose=verbose)
+        if(is.null(F)) {
+            F <- f1
+        } else {
+            gg <- sort(unique(rownames(F),rownames(f1)))
+            gg <- setdiff(gg, c(NA,""))
+            F <- cbind( F[match(gg,rownames(F)),,drop=FALSE],
+                       f1[match(gg,rownames(f1)),,drop=FALSE] )
+            rownames(F) <- gg
+        }
+    }
+    dim(F)
+    return(F)
 }
 
 ##pgx.dir=PGX.DIR;file="datasets-allFC.csv"
-pgx.readDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
-                                    verbose=TRUE)
+pgx.readDatasetProfiles1 <- function(pgx.dir, file="datasets-allFC.csv",
+                                     verbose=TRUE)
 {
     if(!dir.exists(pgx.dir)) {
         stop(paste("[pgx.initDatasetFolder] FATAL ERROR : folder",pgx.dir,"does not exist"))
@@ -28,7 +72,6 @@ pgx.readDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
     } else {
         if(verbose) cat("Found existing dataset profiles matrix\n")
     }
-    if(verbose) cat("Reading dataset profiles matrix...\n")
     require(data.table)
     allFC <- fread.csv(file=file.path(pgx.dir, file),
                            row.names=1, check.names=FALSE)
@@ -38,9 +81,20 @@ pgx.readDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
     return(allFC)
 }
 
-##pgx.dir=PGX.DIR;file="datasets-allFC.csv";verbose=1
 pgx.updateDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
                                       force=FALSE, verbose=TRUE)
+{
+    i=1
+    for(i in 1:length(pgx.dir)) {
+        if(!dir.exists(pgx.dir)) next()
+        df <- pgx.updateDatasetProfiles1(pgx.dir[i], file=file,
+                                         force=force, verbose=verbose)
+    }    
+}
+
+##pgx.dir=PGX.DIR;file="datasets-allFC.csv";verbose=1
+pgx.updateDatasetProfiles1 <- function(pgx.dir, file="datasets-allFC.csv",
+                                       force=FALSE, verbose=TRUE)
 {
     if(!dir.exists(pgx.dir)) {
         stop(paste("[pgx.initDatasetFolder] FATAL ERROR : folder",pgx.dir,"does not exist"))
@@ -136,8 +190,30 @@ pgx.updateDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
     ##return(allFC)
 }
 
-##pgx.dir=PGX.DIR;file="datasets-info.csv";force=FALSE;verbose=1
 pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv", 
+                               force=FALSE, verbose=TRUE )
+{
+    pgxinfo <- NULL
+    i=1
+    for(i in 1:length(pgx.dir)) {
+        if(!dir.exists(pgx.dir[i])) next()
+        info <- pgx.updateInfoFile1(pgx.dir[i], file=file, force=force, verbose=verbose)
+        dim(info)
+        info$path <- pgx.dir[i]
+        if(is.null(pgxinfo)) {
+            pgxinfo <- info
+        } else {
+            jj <- match(colnames(pgxinfo),colnames(info))
+            pgxinfo <- rbind(pgxinfo, info[,jj])
+        }
+    }
+    dim(pgxinfo)
+    return(pgxinfo)
+}
+
+
+##pgx.dir=PGX.DIR;file="datasets-info.csv";force=FALSE;verbose=1
+pgx.updateInfoFile1 <- function(pgx.dir, file="datasets-info.csv", 
                                force=FALSE, verbose=TRUE )
 {
     if(!dir.exists(pgx.dir)) {
@@ -145,7 +221,7 @@ pgx.updateInfoFile <- function(pgx.dir, file="datasets-info.csv",
     }
 
     require(shiny)
-    if(verbose) cat(">>> updating data sets info file... (pgx.updateInfoFile) \n")
+    if(verbose) cat(">>> updating data sets info file in:",pgx.dir,"\n")
 
     pgx.dir <- sub("/$","",pgx.dir)
     pgx.files  <- dir(pgx.dir, pattern="[.]pgx$", full.names=FALSE)

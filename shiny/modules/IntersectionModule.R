@@ -744,6 +744,7 @@ between two contrasts."
                        dist.method="euclidean", col.dist.method="euclidean",
                        keysize=0.35, key=FALSE, zlim=c(-1,1) )
         } else {
+            require(corrplot)
             col2 <- colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582",
                                        "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE",
                                        "#4393C3", "#2166AC", "#053061"))
@@ -1090,7 +1091,7 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
         plotlib="scatterD3",
         options = cmp_connectivitymap.opts,
         pdf.width=8, pdf.height=8,
-        height = c(fullH-80), res=90,
+        height = c(fullH-110), res=90,
         title = "Connectivity map",
         info.text = cmp_connectivitymap_info
         ##caption = cmp_connectivitymap_caption,
@@ -1301,7 +1302,9 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
             rowMeans(unclass(x$fc)[,gxmethods,drop=FALSE]))
         qv0 = sapply(ngs$gx.meta$meta[sel], function(x)
             apply(unclass(x$q)[,gxmethods,drop=FALSE],1,max))        
-        
+        rownames(fc0) <- rownames(ngs$gx.meta$meta[[1]])
+        rownames(qv0) <- rownames(ngs$gx.meta$meta[[1]])
+                
         if(input$cmp_level=="gene") {
             sel.probes = rownames(fc0) 
             ##sel.probes = filterFamily(ngs$genes, input$cmp_filter, ngs=ngs)
