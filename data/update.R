@@ -15,37 +15,49 @@ library(matrixTests)
 library(kableExtra)
 library(knitr)
 
-source("../R/gset-gsea.r")
-source("../R/gset-meta.r")
-source("../R/pgx-functions.R")
-source("../R/pgx-deconv.R")
-source("../R/pgx-proteomics.R")
-
-source("../R/pgx-graph.R")
-source("../R/pgx-drugs.R")
-source("../R/pgx-wordcloud.R")
-source("../R/compute2-genes.R")
-source("../R/compute2-genesets.R")
-source("../R/compute2-extra.R")    
-
-source("options.R")
+FILES = "../lib/"
+RDIR  = "../R/"
+source("../R/pgx-include.R")
+##source("options.R")
 FILES
 MAX.GENES
 MAX.GENES=5000
 
 pgx.files <- dir(".", pattern=".pgx")
-pgx.file = pgx.files[3]
+pgx.files <- dir("../data.BAK/", pattern=".pgx",full.names=TRUE)
+pgx.files
+pgx.file = pgx.files[1]
 pgx.file
 
 for(pgx.file in pgx.files) {
     
     load(pgx.file, verbose=1)
+    object.size(ngs)/1e6
+    
+    ##extra <- c("meta.go","deconv","infer","drugs","wordcloud")
+    ##extra <- c("wordcloud")
+    ##ngs <- compute.extra(ngs, extra, lib.dir=FILES)     
 
-    extra <- c("meta.go","deconv","infer","drugs","wordcloud")
-    extra <- c("wordcloud")
-    ngs <- compute.extra(ngs, extra, lib.dir=FILES)     
+    i=1
+    for(i in 1:length(ngs$gx.meta$meta)) {
+        colnames(ngs$gx.meta$meta[[i]])
+        rownames(ngs$gx.meta$meta[[i]]$p) <- NULL
+        rownames(ngs$gx.meta$meta[[i]]$q) <- NULL
+        rownames(ngs$gx.meta$meta[[i]]$fc) <- NULL
+    }
+    
+    for(i in 1:length(ngs$gset.meta$meta)) {
+        colnames(ngs$gset.meta$meta[[i]])
+        rownames(ngs$gset.meta$meta[[i]]$p) <- NULL
+        rownames(ngs$gset.meta$meta[[i]]$q) <- NULL
+        rownames(ngs$gset.meta$meta[[i]]$fc) <- NULL        
+    }
+    
+    object.size(ngs)/1e6
+
     names(ngs)
-    ngs.save(ngs, file=pgx.file)
+    pgx.file0 <- sub(".*[/]","",pgx.file)
+    ngs.save(ngs, file=pgx.file0)
 }
 
 
