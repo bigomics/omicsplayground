@@ -147,6 +147,7 @@ DataViewModule <- function(input, output, session, env)
         require(RColorBrewer)
         
         ngs <- inputData()
+        alertDataLoaded(session,ngs)
         req(ngs)
         
         dbg("[data_genePlots_averageRankPlot.RENDER] reacted")

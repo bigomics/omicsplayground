@@ -200,6 +200,7 @@ infotext =
         ##
         
         ngs <- inputData()
+        alertDataLoaded(session,ngs)
         if(is.null(ngs)) return(NULL)
 
         type="<custom>"

@@ -178,6 +178,7 @@ between genes and find coregulated modules."
 
     getGenePartialCorrelation <- reactive({
         ngs <- inputData()
+        alertDataLoaded(session,ngs)
         req(ngs,input$cor_gene)
         X <- ngs$X    
         gene <- rownames(X)[1]

@@ -366,9 +366,11 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         updateSelectInput(session, "hm2_pcvar", choices=cvar, selected="group")
     })
     
-    hm1_splitmap.RENDER %<a-% reactive({
+    ## hm1_splitmap.RENDER %<a-% reactive({
+    hm1_splitmap.RENDER <- reactive({    
         
         ngs <- inputData()
+        alertDataLoaded(session,ngs)        
         filt <- hm_filtered_matrix()
         req(ngs, filt)
         
@@ -449,20 +451,18 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             col.annot=annot; row.annot=NULL; annot.ht=2.6;
             main=main; nmax=-1
         }
-        
-        withProgress(
-            message='rendering heatmap...', value=0.66,
-            gx.splitmap( zx, 
-                        split=splity, splitx=splitx,
-                        mar=c(5,25), scale=scale.mode, show_legend=show_legend,
-                        show_colnames = show_colnames, column_title_rot=crot,
-                        show_rownames = nrownames, softmax=0,
-                        ## side.height.fraction=0.03+0.055*NCOL(annot), 
-                        labRow=NULL, cexCol=cex1, cexRow=cex2, 
-                        col.annot=annot, row.annot=NULL, annot.ht=2.6,
-                        main=main, nmax=-1)
-        )
 
+        showNotification('rendering heatmap...')
+
+        gx.splitmap( zx, 
+                    split=splity, splitx=splitx,
+                    mar=c(5,25), scale=scale.mode, show_legend=show_legend,
+                    show_colnames = show_colnames, column_title_rot=crot,
+                    show_rownames = nrownames, softmax=0,
+                    ## side.height.fraction=0.03+0.055*NCOL(annot), 
+                    labRow=NULL, cexCol=cex1, cexRow=cex2, 
+                        col.annot=annot, row.annot=NULL, annot.ht=2.6,
+                    main=main, nmax=-1)
     })
 
     hm2_splitmap.RENDER <- reactive({
@@ -480,62 +480,61 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         
         scale = ifelse(input$hm_scale=="relative","row.center","none")    
         plt <- NULL
+
+        filt <- hm_filtered_matrix()
+        ##if(is.null(filt)) return(NULL)
+        req(filt)        
+        if(input$hm_group) {
+            X <- filt$grp.mat    
+            annot = filt$grp.annot
+        } else {
+            X <- filt$mat    
+            annot = filt$annot        
+        }
+        idx <- filt$clust    
         
-        withProgress(
-            message='rendering iHeatmap...', value=0.66,
-            {
-                filt <- hm_filtered_matrix()
-                ##if(is.null(filt)) return(NULL)
-                req(filt)        
-                if(input$hm_group) {
-                    X <- filt$grp.mat    
-                    annot = filt$grp.annot
-                } else {
-                    X <- filt$mat    
-                    annot = filt$annot        
-                }
-                idx <- filt$clust    
-                
-                ## sample clustering index
-                splitx <- NULL
-                if(!is.null(split.var) && split.var %in% colnames(annot)) {
-                    splitx <- annot[,split.var]
-                }
-                
-                ## iheatmapr needs factors for sharing between groups
-                annotF <- data.frame(as.list(annot),stringsAsFactors=TRUE)
-                rownames(annotF) = rownames(annot)
-
-                colcex <- as.numeric(input$hm_cexCol)
-                rowcex = as.numeric(input$hm_cexRow)
-                rowcex = ifelse("row" %in% input$hm_showlabel, rowcex, 0)
-                colcex = ifelse("column" %in% input$hm_showlabel, colcex, 0)
-                
-                tooltips = NULL
-                if(input$hm_level=="gene") {
-                    getInfo <- function(g) {
-                        aa = paste0("<b>",ngs$genes[g,"gene_name"],"</b>. ",
-                                    ## ngs$genes[g,"map"],". ",
-                                    ngs$genes[g,"gene_title"],".")
-                        breakstring2(aa, 50, brk="<br>")
-                    }
-                    tooltips = sapply(rownames(X), getInfo)
-                } else {
-                    aa = gsub("_"," ",rownames(X)) ## just geneset names
-                    tooltips = breakstring2(aa, 50, brk="<br>")
-                }
-                ##genetips = rownames(X)
-                
-                cat("<module-clustering:hm2_splitmap.RENDER> plotting\n")            
-                plt <- pgx.splitHeatmapFromMatrix(
-                    X=X, annot=annotF, ytips=tooltips,
-                    idx=idx, splitx=splitx, scale=scale,
-                    row_annot_width=0.03, rowcex=rowcex,
-                    colcex=colcex )
+        ## sample clustering index
+        splitx <- NULL
+        if(!is.null(split.var) && split.var %in% colnames(annot)) {
+            splitx <- annot[,split.var]
+        }
+        
+        ## iheatmapr needs factors for sharing between groups
+        annotF <- data.frame(as.list(annot),stringsAsFactors=TRUE)
+        rownames(annotF) = rownames(annot)
+        
+        colcex <- as.numeric(input$hm_cexCol)
+        rowcex = as.numeric(input$hm_cexRow)
+        rowcex = ifelse("row" %in% input$hm_showlabel, rowcex, 0)
+        colcex = ifelse("column" %in% input$hm_showlabel, colcex, 0)
+        
+        tooltips = NULL
+        if(input$hm_level=="gene") {
+            getInfo <- function(g) {
+                aa = paste0("<b>",ngs$genes[g,"gene_name"],"</b>. ",
+                            ## ngs$genes[g,"map"],". ",
+                            ngs$genes[g,"gene_title"],".")
+                breakstring2(aa, 50, brk="<br>")
             }
-        )
-        cat("<module-clustering:hm2_splitmap.RENDER> done\n")
+            tooltips = sapply(rownames(X), getInfo)
+        } else {
+            aa = gsub("_"," ",rownames(X)) ## just geneset names
+            tooltips = breakstring2(aa, 50, brk="<br>")
+        }
+        ##genetips = rownames(X)
+        
+        cat("<module-clustering:hm2_splitmap.RENDER> plotting\n")            
 
+        showNotification('rendering iHeatmap...')
+
+        plt <- pgx.splitHeatmapFromMatrix(
+            X=X, annot=annotF, ytips=tooltips,
+            idx=idx, splitx=splitx, scale=scale,
+            row_annot_width=0.03, rowcex=rowcex,
+            colcex=colcex )
+       
+        cat("<module-clustering:hm2_splitmap.RENDER> done\n")
+        
         ## DOES NOT WORK...
         ##plt <- plt %>%
         ## config(toImageButtonOptions = list(format='svg', height=800, width=800))
@@ -589,7 +588,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         hm1_splitmap.RENDER()
         ## plot(sin)
     }, res=90)
-
+    
     output$hm2_splitmap <- renderIheatmap({
         hm2_splitmap.RENDER()
     })
@@ -617,10 +616,11 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ##showNotification("exporting to PDF")            
             if(input$hm_plottype %in% c("ComplexHeatmap","static")) {
                 pdf(PDFFILE, width=10, height=8)
-                hm1_splitmap.RENDER()  ## should be done inside render for base plot...
+                print(hm1_splitmap.RENDER())
                 dev.off()
             } else {
-                save_iheatmap(hm2_splitmap.RENDER(), filename=PDFFILE,  vwidth=1000, vheight=800)
+                save_iheatmap(hm2_splitmap.RENDER(), filename=PDFFILE,
+                              vwidth=1000, vheight=800)
             }
             dbg("hm_splitmap_pdf:: exporting done...")
             file.copy(PDFFILE,file)        
@@ -635,7 +635,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             dbg("hm_splitmap_pdf:: exporting SWITCH to PNG...")
             ##showNotification("exporting to PNG")
             if(input$hm_plottype %in% c("ComplexHeatmap","static")) {
-                png(PNGFILE, width=1000, height=1000)
+                png(PNGFILE, width=600, height=600, pointsize=14)
                 print(hm1_splitmap.RENDER())  ## should be done inside render for base plot...
                 dev.off()
             } else {
@@ -669,12 +669,12 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         plotModule,
         id = "hm_splitmap",
         func  = hm_splitmap.switchRENDER, ## ns=ns,
-        func2 = hm_splitmap.switchRENDER, ## ns=ns,
+        ## func2 = hm_splitmap.switchRENDER, ## ns=ns,
         show.maximize = FALSE,
         plotlib = "generic",
         renderFunc="renderUI",
         outputFunc="uiOutput",
-        download.fmt = c("pdf","png","html"),
+        download.fmt = c("pdf","png"),
         options = hm_splitmap_opts,
         height = fullH-100, width='100%',
         pdf.width=10, pdf.height=8, 
