@@ -1386,7 +1386,7 @@ DataViewModule <- function(input, output, session, env)
         title = "Phenotype clustering",
         ##info.text = "Sample information table with information about phenotype of samples.",
         options = data_phenoClustering_opts,
-        height = c(320,600), width = c('auto',1200), res=c(65,75),
+        height = c(320,600), width = c('auto',1200), res=c(68,75),
         pdf.width=10, pdf.height=6 
     )
     ##output <- attachModule(output, data_sampleTable_module) 
