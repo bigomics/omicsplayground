@@ -635,11 +635,12 @@ pgx.plotPhenotypeMatrix0 <- function(annot, annot.ht=4, cluster.samples=TRUE)
         annot.df <- annot.df[ hc$order, ]
     }
 
+    npar <- apply(annot.df,2,function(x) length(setdiff(unique(x),NA)))
     isnum <- c( rep(1,ncol(annot.fvar)), rep(0,ncol(annot.cvar)))
+    is.binary <- apply(annot.df,2,function(x) length(setdiff(unique(x),NA))==2)
     is.binary <- apply(annot.df,2,function(x) all(x %in% c(0,1,NA,TRUE,FALSE,"T","F","NA")))
     
     ## set colorscale for each annotation parameter
-    npar = apply(annot.df,2,function(x) length(setdiff(unique(x),NA)))
     ann.colors = list()
     for(i in 1:length(npar)) {
         prm = colnames(annot.df)[i]
