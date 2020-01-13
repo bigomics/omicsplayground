@@ -1,0 +1,9 @@
+
+title    = Omics Playground
+logo     = bigomics-logo-white-48px.png
+splash   = www/splash.png
+
+usermode = BASIC
+pgx.dir  = ../data;../../omicsplayground-dev/data
+user.pgx = 
+
