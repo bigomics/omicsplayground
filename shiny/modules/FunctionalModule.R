@@ -104,7 +104,6 @@ to understand biological functions including GO, KEGG, and drug connectivity map
 
     getKeggTable <- reactive({
         ngs = inputData()
-        alertDataLoaded(session,ngs)
         req(ngs)
         req(input$fa_contrast)
         
@@ -328,6 +327,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     kegg_graph.RENDER <- reactive({
 
         ngs <- inputData()
+        alertDataLoaded(session,ngs)
         ##NULL.IMG <- list(src=NULL, contentType = 'image/png')
         ##NULL.IMG <- list(src=NA, contentType = 'image/png')
         NULL.IMG <- list(src="", contentType = 'image/png')
