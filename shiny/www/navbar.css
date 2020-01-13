@@ -194,11 +194,6 @@ body {
     border-radius: 3px;
 }
 
-.dropdown-menu {
-    background: #EFEEEE;
-    font-size: 0.9em;
-}
-
 .module-label {
     color: #AAA;
     font-family: "Arial";
@@ -262,7 +257,7 @@ body {
 
 .selectize-input {
     padding: 3px 12px;
-    min-height: 30px;
+    min-height: 28px;
 }
 
 .current-data {
@@ -309,6 +304,16 @@ body {
     // background-color: #0067c4;
     ##border: 1px solid var(--main-color);
     border: 1px solid #999;
+}
+
+.dropdown-menu {
+    background: #EFEEEE;
+    font-size: 0.9em;
+}
+
+.dropdown-menu > li > a {
+    padding: 0px 20px;
+    margin: 4px 0px;
 }
 
 .dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus {

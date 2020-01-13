@@ -1,19 +1,20 @@
 
 tabView <- function(title, tab.inputs, tab.ui) {
-    tabPanel(title,
+    tabPanel(title, ## id=title,
              sidebarLayout(
                  sidebarPanel( width=2, tab.inputs, id="sidebar"),
                  mainPanel( width=10, tab.ui)
              ))
 }
-dev.tabView <- function(title, tab.inputs, tab.ui) {
-    if(!DEV.VERSION) return(NULL)
-    tabView(title, tab.inputs, tab.ui)
-}
-dev.tabPanel <- function(id, ui) {
-    if(!DEV.VERSION) return(NULL)
-    tabPanel(id, ui)
-}
+
+## dev.tabView <- function(title, tab.inputs, tab.ui) {
+##     if(!DEV.VERSION) return(NULL)
+##     tabView(title, tab.inputs, tab.ui)
+## }
+## dev.tabPanel <- function(id, ui) {
+##     if(!DEV.VERSION) return(NULL)
+##     tabPanel(id, ui)
+## }
 
 social_buttons <- function() {
     div(

@@ -24,7 +24,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                         dist.method="euclidean",
                         col.dist.method="euclidean",
                         plot.method="heatmap.2",
-                        col=bluered(64), scale="row", softmax=0,
+                        col = bluered(64), scale="row", softmax=0,
                         ## Rowv = NA, Colv = NA,
                         cluster_rows=TRUE, cluster_columns=TRUE,
                         col.annot=NULL, row.annot=NULL, annot.ht=3,
@@ -237,7 +237,8 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         grp.title = shortstring(names(grp)[i],15)
 
         hmap = hmap + Heatmap( gx0,
-                              col = bluered(64),
+                              ##col = bluered(64),
+                              col = col,  ## from input
                               cluster_rows=cluster_rows,
                               cluster_columns=cluster_columns,
                               ##cluster_columns = as.dendrogram(h1),
@@ -277,7 +278,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         }
         lab = rownames(gx)[subset]
         lab <- substring(lab,1,lab.len)
-        rownames = rowAnnotation(
+        rownames.ha = rowAnnotation(
             link = row_anno_link(at = subset, labels=lab,
                                  link_width = unit(0.8,"cm"),
                                  labels_gp = gpar(fontsize = 10*cexRow)),

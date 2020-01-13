@@ -646,20 +646,21 @@ pgx.plotPhenotypeMatrix0 <- function(annot, annot.ht=4, cluster.samples=TRUE)
         prm = colnames(annot.df)[i]
         klrs = rev(grey.colors(npar[i],start=0.4,end=0.85))  ## continous scale
         if(npar[i]==1) klrs = "#E6E6E6"
-        ##if(npar[i]>3 & !isnum[i]) klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]
-        if(!is.binary[i] & !isnum[i]) klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]        
+        if(npar[i]>3 & !isnum[i]) klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]
+        ##if(!is.binary[i] & !isnum[i]) klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]        
         ##if(npar[i]==2) klrs = rep(brewer.pal(2,"Paired"),99)[1:npar[i]]
         names(klrs) = sort(unique(annot.df[,i]))
         klrs = klrs[!is.na(names(klrs))]
         ann.colors[[prm]] = klrs
     }
 
-    show.legend <- (!is.binary & npar <= 20)
+    show.legend <- (!is.binary & npar <= 10)
     
     ha = HeatmapAnnotation(
         df = annot.df,
         ##df2 = annot.fvar[,,drop=FALSE],        
         col = ann.colors,
+        na_col = "grey99",
         ##annotation_height = unit(annot.ht, "mm"),
         simple_anno_size = unit(annot.ht,"mm"),  ## BioC 3.8!!
         ##show_annotation_name = (i==ngrp),

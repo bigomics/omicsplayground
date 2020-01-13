@@ -1,5 +1,8 @@
-## install.packages("shinydashboardPlus")
-## remotes::install_github("JohnCoene/waiter")
+##
+## Main application for Omics Playground
+##
+##
+##
 
 library(shiny)
 library(shinyjs)
@@ -25,7 +28,7 @@ source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 
 options(shiny.maxRequestSize = 500*1024^2)  ##max 500Mb upload
 
-OPTIONS <- pgx.readOptions(file="OPTIONS") 
+OPTIONS <- pgx.readOptions(file="OPTIONS")
 ## DEV.VERSION = TRUE
 if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 
@@ -35,7 +38,7 @@ if(0) {
     load("../data/GSE10846-xgreta.pgx")
     load("../data/GSE114716-ipilimumab.pgx")
     load("../../omicsplayground-dev/data/CCLE-drugSX2.pgx")
-    ngs = pgx.initialize(ngs)    
+    ngs = pgx.initialize(ngs)
 }
 
 source("global.R", local=TRUE)
@@ -61,9 +64,9 @@ server = function(input, output, session) {
     ##useShinydashboardPlus()
     cat("===================== SERVER =======================\n")
     cat("calling modules... ")
-    
-    env <- list()  ## communication environment 
-    ## env[["load"]][["inputData"]] <- reactive({ ngs })    
+
+    env <- list()  ## communication environment
+    ## env[["load"]][["inputData"]] <- reactive({ ngs })
     env[["load"]]   <- callModule( LoadingModule, "load", hideUserMode=FALSE)
     env[["view"]]   <- callModule( DataViewModule, "view", env)
     env[["clust"]]  <- callModule( ClusteringModule, "clust", env)
@@ -98,7 +101,7 @@ server = function(input, output, session) {
         invalidateLater(1000*30)  ## every 30 seconds check...
         nwarn <<- nwarn + 1
     })
-    
+
     ## Hide/show certain sections depending on USER MODE
     observe({
         usermode <- env[["load"]][["usermode"]]()
@@ -116,32 +119,32 @@ server = function(input, output, session) {
         if(usermode=="BASIC") {
             hideTab("maintabs","scProfiling")
             hideTab("clust-tabs2","Feature ranking")
-            hideTab("expr-tabs1","Volcano (methods)")                        
-            hideTab("expr-tabs2","FDR table")            
-            hideTab("enrich-tabs1","Volcano (methods)")                        
+            hideTab("expr-tabs1","Volcano (methods)")
+            hideTab("expr-tabs2","FDR table")
+            hideTab("enrich-tabs1","Volcano (methods)")
             hideTab("enrich-tabs2","FDR table")
-            shinyjs::hide(selector = "div.download-button")            
+            shinyjs::hide(selector = "div.download-button")
         } else {
             showTab("maintabs","scProfiling")
             showTab("clust-tabs2","Feature ranking")
-            showTab("expr-tabs1","Volcano (methods)")                        
-            showTab("expr-tabs2","FDR table")            
-            showTab("enrich-tabs1","Volcano (methods)")                        
+            showTab("expr-tabs1","Volcano (methods)")
+            showTab("expr-tabs2","FDR table")
+            showTab("enrich-tabs1","Volcano (methods)")
             showTab("enrich-tabs2","FDR table")
-            shinyjs::show(selector = "div.download-button")            
+            shinyjs::show(selector = "div.download-button")
         }
         if(DEV.VERSION) {
-            showTab("maintabs","Development")            
+            showTab("maintabs","Development")
             ## showTab("maintabs","Biomarker analysis")
             ## showTab("maintabs","BatchCorrect")
             ## showTab("maintabs","MetaAnalysis")
             showTab("view-tabs","Resource info")
-            showTab("enrich-tabs1","GeneMap")                        
+            showTab("enrich-tabs1","GeneMap")
             showTab("bio-tab1","Multi-level")
         }
     })
-    
-    hide_waiter()    
+
+    waiter_hide()
 }
 
 version <- scan("../VERSION", character())[1]
@@ -155,20 +158,30 @@ if(DEV.VERSION) {
     dev.tabs <- navbarMenu(
         "Development",
         tabView("BatchCorrect", BatchCorrectInputs("bc"), BatchCorrectUI("bc")),
-        tabView("Biomarker analysis", BiomarkerInputs("bio"), BiomarkerUI("bio")),        
+        tabView("Biomarker analysis", BiomarkerInputs("bio"), BiomarkerUI("bio")),
         tabView("MetaAnalysis", MetaInputs("meta"), MetaUI("meta"))
     )
 }
 
+help.tabs <- navbarMenu(
+    "Help",
+    tabPanel(title=HTML("<a href='https://omicsplayground.readthedocs.io' target='_blank'>Documentation")),
+    tabPanel(title=HTML("<a href='https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-' target='_blank'>Video tutorials</a>")),
+    tabPanel(title=HTML("<a href='https://github.com/bigomics/omicsplayground' target='_blank'>GitHub")),
+    tabPanel(title=HTML("<a href='https://hub.docker.com/r/bigomics/omicsplayground' target='_blank'>Docker")),
+    tabPanel(title=HTML("<a href='https://groups.google.com/d/forum/omicsplayground' target='_blank'>Google groups"))
+)
 
-ui = navbarPage( 
+
+ui = navbarPage(
     title = logo, windowTitle = TITLE,
     theme = shinythemes::shinytheme("cerulean"),
     ##includeCSS("www/navbar.css"),
     id = "maintabs",
+    selected = "Home",
     header = tagList(
         tags$head(tags$link(rel = "stylesheet", href = "navbar.css")),
-        shinyjs::useShinyjs(),        
+        shinyjs::useShinyjs(),
         use_waiter(),
         div(textOutput("current_dataset"),class='current-data')
     ),
@@ -191,10 +204,11 @@ ui = navbarPage(
         tabView("Signature analysis", SignatureInputs("sig"), SignatureUI("sig"))
     ),
     tabView("scProfiling", ProfilingInputs("prof"), ProfilingUI("prof")),
+    help.tabs,
     dev.tabs,
     footer = tagList(
-        social_buttons(),
-        show_waiter_on_load(spin_fading_circles()) # place at the bottom
+        ## social_buttons(),
+        waiter_show_on_load(spin_fading_circles()) # place at the bottom
     )
 )
 
