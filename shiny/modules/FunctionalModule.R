@@ -104,6 +104,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
 
     getKeggTable <- reactive({
         ngs = inputData()
+        alertDataLoaded(session,ngs)
         req(ngs)
         req(input$fa_contrast)
         

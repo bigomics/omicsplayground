@@ -577,8 +577,12 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
     require(shinydashboard)
     ## useShinydashboard()
     vbox <- function(value, label) {
-        box(h1(value, style="font-weight: 800; color: white; padding: 16px 0 0 0; margin: 0 0 0 20px;"),
-            h5(label, style="margin: 0 0 0 20px; font-weight: 400; color: white; padding-bottom: 25px"), width="100%", class="vbox")
+        box(
+            h1(value, style="font-weight: 800; color: white; padding: 16px 0 0 0; margin: 0 0 0 20px;"),
+            h5(label, style="margin: 0 0 0 20px; font-weight: 400; color: white; padding-bottom: 25px"),
+            ##h1(value, style="font-weight: 800; padding: 16px 0 0 0; margin: 0 0 0 20px;"),
+            ##h5(label, style="margin: 0 0 0 20px; font-weight: 400; padding-bottom: 25px"),
+            width="100%", class="vbox")
     }
 
     output$valuebox1 <- renderUI({

@@ -183,6 +183,7 @@ between two contrasts."
         fc0 = NULL
         qv0 = NULL
         ngs <- inputData()
+        alertDataLoaded(session,ngs)        
         req(ngs)
         
         sel = names(ngs$gset.meta$meta)

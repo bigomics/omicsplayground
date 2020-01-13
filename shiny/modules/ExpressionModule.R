@@ -249,6 +249,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ## DE table filtered by FDR and gene family
         ##
         ##
+        dbg("[sigDiffExprTable] reacted")
+
         ngs = inputData()
         ##if(is.null(ngs)) return(NULL)
         req(ngs,input$gx_features,input$gx_fdr,input$gx_lfc)
@@ -266,19 +268,15 @@ two conditions. Determine which genes are significantly downregulated or overexp
         fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]        
         pval = res[,qv.col]
 
-        dbg("sigDiffExprTable: 1\n")
+        dbg("[sigDiffExprTable] 1")
 
         if(is.null(ngs$families)) stop("FATAL:: no families in object")
         psel <- rownames(res)
         ##psel = filterProbes(ngs$genes, ngs$families[[gx_features]] )
-
-        dbg("sigDiffExprTable: 2\n")
         
         if(gx_features!="<all>") psel = filterProbes(ngs$genes, GSETS[[gx_features]] )
         res = res[which(pval <= fdr & rownames(res) %in% psel),,drop=FALSE]
         dim(res)
-
-        dbg("sigDiffExprTable: 3\n")
         
         ## filter on fold-change    
         fx.col = grep("fx|fc|sign|NES|logFC",colnames(res))[1]
@@ -287,16 +285,12 @@ two conditions. Determine which genes are significantly downregulated or overexp
         fx  = as.numeric(res[,fx.col])
         names(fx) = rownames(res)
         res = res[which(abs(fx) >= lfc),,drop=FALSE]
-
-        dbg("sigDiffExprTable: 4 : dim(res)=",dim(res),"\n")
         
         if(nrow(res)==0) {
             validate(need(nrow(res) > 0, "warning. no genes passed current filters."))
             return(NULL)
         }
         res = res[order(-abs(res[,fx.col])),]
-
-        dbg("sigDiffExprTable: 5 : input$gx_top10=",input$gx_top10,"\n")
         
         ## just show top 10
         if(length(input$gx_top10) && input$gx_top10==TRUE) {
@@ -310,7 +304,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
         ## limit number of rows???
         ## res <- head(res, 1000)
-        dbg("sigDiffExprTable: done\n")
+
+        dbg("[sigDiffExprTable] done!")
         
         return(res)
     })
@@ -375,13 +370,18 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     expr_plots_volcano.PLOTLY <- reactive({
         
+        dbg("[expr_plots_volcano.PLOTLY] reacted")
+
         comp1=1;fdr=0.10
         comp1 = input$gx_contrast
         if(length(comp1)==0) return(NULL)
         if(is.null(input$gx_features)) return(NULL)
         ngs <- inputData()
+        alertDataLoaded(session,ngs)
         req(ngs)
-        
+
+        dbg("[expr_plots_volcano.PLOTLY] 1")
+                
         fdr = 1
         fdr = as.numeric(input$gx_fdr)
         
@@ -423,7 +423,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ylim = c(0, max(12, 1.1*max(-log10(qval),na.rm=TRUE)))
         
         ## par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
-        plotlyVolcano(
+        plt <- plotlyVolcano(
             x=x, y=y, names=fc.genes,
             source = "plot1",
             highlight = sel.genes, label=lab.genes,
@@ -436,7 +436,10 @@ two conditions. Determine which genes are significantly downregulated or overexp
             marker.size = 4,
             displayModeBar = FALSE,
             showlegend = FALSE) %>%
-            layout( margin = list(b=65) )                
+            layout( margin = list(b=65) )
+
+        dbg("[expr_plots_volcano.PLOTLY] done!")
+        return(plt)
     })
     
     ##expr_plots_volcano_module <- plotModule(
@@ -505,6 +508,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
         ngs <- inputData()
         req(ngs)
+
+        dbg("[expr_plots_maplot.PLOTLY] reacted")
         
         fdr=1;lfc=1
         fdr = as.numeric(input$gx_fdr)    
@@ -543,7 +548,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                       head(sel.genes[order(-impt(sel.genes))],10) )
         
         highlight=sel.genes;label=lab.genes;names=fc.genes
-        plotlyMA(
+        plt <- plotlyMA(
             x=x, y=y, names=fc.genes,
             source = "plot1",
             highlight=sel.genes, label=lab.genes,
@@ -558,6 +563,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
             showlegend = FALSE) %>%
             layout( margin = list(b=65) )
 
+        dbg("[expr_plots_maplot.PLOTLY] done!")
+        
+        return(plt)
     })
     
     callModule( plotModule,
@@ -579,19 +587,15 @@ two conditions. Determine which genes are significantly downregulated or overexp
         req(ngs)
         comp1 = input$gx_contrast
 
-        cat("expr_plots_topgenesbarplot.RENDER: 1\n")
+        dbg("expr_plots_topgenesbarplot.RENDER: reacted")
         
         if(length(comp1)==0) return(NULL)
         
         ## get table
         ##sel.row=1;pp=rownames(ngs$X)[1]
         ##sel.row = input$expr_genetable_rows_selected
-        cat("expr_plots_topgenesbarplot.RENDER: 2\n")
         
-        res = sigDiffExprTable()
-
-        cat("expr_plots_topgenesbarplot.RENDER: 2a : dim(res)=",dim(res),"\n")
-        
+        res = sigDiffExprTable()        
         if(is.null(res)) return(NULL)
 
         ##fc <- res$meta.fx
@@ -603,16 +607,12 @@ two conditions. Determine which genes are significantly downregulated or overexp
         klr.pal <- brewer.pal(4,"Paired")[2:1]
         klr <- c( rep(klr.pal[1],length(top.up)), rep(klr.pal[2],length(top.dn)) )
         names(fc.top) <- sub(".*:","",names(fc.top))
-
-        cat("expr_plots_topgenesbarplot.RENDER: 3\n")
         
         ii <- order(fc.top)
         par(mfrow=c(1,1), mar=c(4,4,2,2)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
         par(mfrow=c(1,1), mar=c(5,3,1,1), mgp=c(2,0.8,0), oma=c(0,0,0,0))
         barplot(fc.top[ii], las=3, cex.names=0.75, ylab="fold change",
                 col=klr[ii], ylim=c(-1.1,1.2)*max(abs(fc.top),na.rm=TRUE) )
-
-        cat("expr_plots_topgenesbarplot.RENDER: 4\n")
         
         ## warning A_vs_B or B_vs_A not checked!!!
         groups <- strsplit(comp1,split="[._ ]vs[._ ]")[[1]]
@@ -621,6 +621,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ##tt <- c( paste("up in",groups[1]), paste("down in",groups[1]) )
         legend("topleft", legend=tt, fill=klr.pal, cex=0.9, y.intersp=0.85, bty="n")
         ##title("top DE genes",cex.main=1)
+        
+        dbg("expr_plots_topgenesbarplot.RENDER: done\n")
         
     })
 
@@ -1094,13 +1096,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         fx.col = grep("fc|fx|mean.diff|logfc|foldchange",tolower(colnames(res)))[1]
         fx.col
         fx = res[,fx.col]
-
-        dbg("[expression] expr_genetable.RENDER: fc.col=",fx.col)
-        dbg("[expression] expr_genetable.RENDER: fx=",head(fx))
-        dbg("[expression] expr_genetable.RENDER: class(fx)=",class(fx))
         
-        ##cat("dim.rpt=",dim(rpt),"\n")
-        ##cat("colnames.rpt=",colnames(rpt),"\n")
         if("gene_title" %in% colnames(res)) res$gene_title = shortstring(res$gene_title,50)
         rownames(res) = sub(".*:","",rownames(res))
 
@@ -1115,6 +1111,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
         numeric.cols <- which(sapply(res, is.numeric))
         numeric.cols
+
+        dbg("[expression] expr_genetable.RENDER: done!")
         
         DT::datatable( res, rownames=FALSE,
                       class = 'compact cell-border stripe hover',                  
@@ -1169,13 +1167,15 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     gx_related_genesets <- reactive({
 
+        dbg("[gx_related_genesets] reacted")
+        
         ngs <- inputData()
         res <- sigDiffExprTable()
         if(is.null(res) || nrow(res)==0) return(NULL)
         contr <- input$gx_contrast
         if(is.null(contr)) return(NULL)
 
-        dbg("gx_related_genesets : 1")
+        dbg("[gx_related_genesets] 1")
         
         ## get table
         sel.row=1;
@@ -1185,31 +1185,25 @@ two conditions. Determine which genes are significantly downregulated or overexp
         gene0 <- rownames(res)[sel.row]
         gene1 <- toupper(sub(".*:","",gene0))  ## always uppercase...
 
-        dbg("gx_related_genesets : 2 : gene1=", gene1)
-        dbg("gx_related_genesets : 2 : gene1.in.GMT=", gene1 %in% rownames(ngs$GMT))
         j <- which(toupper(rownames(ngs$GMT))==gene1)
         gset <- names(which(ngs$GMT[j,] != 0))
         gset <- intersect(gset, rownames(ngs$gsetX))
         if(length(gset)==0) return(NULL)
-
-        dbg("gx_related_genesets : 3 : length(gset)=",length(gset))
         
         fx <- ngs$gset.meta$meta[[contr]]$meta.fx 
         names(fx) <- rownames(ngs$gset.meta$meta[[contr]])
         fx  <- round(fx[gset],digits=4)
-
-        dbg("gx_related_genesets : 4 : gset=",gset)
-        dbg("gx_related_genesets : 4 : gene0=",gene0)
         
         rho <- cor(t(ngs$gsetX[gset,]), ngs$X[gene0,])[,1]        
         rho <- round(rho, digits=3)
         gset1 <- substring(gset,1,60)
-
-        dbg("gx_related_genesets : 5")
         
         df <- data.frame(geneset=gset1, rho=rho, fx=fx, check.names=FALSE)
         rownames(df) <- gset       
         df <- df[order(-abs(df$fx)),]
+
+        dbg("[gx_related_genesets] done!")
+
         return(df)
     })
 

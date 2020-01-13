@@ -384,6 +384,7 @@ EnrichmentModule <- function(input, output, session, env)
     topEnriched.RENDER %<a-% reactive({
 
         ngs <- inputData()
+        alertDataLoaded(session,ngs)
         rpt <- getGeneSetTable()
         ##if(is.null(rpt)) return(NULL)
 
