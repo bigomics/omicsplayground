@@ -39,13 +39,11 @@ if(file.exists(INIT.FILE)) {
     names(GENE.TITLE) = GENE.SYMBOL
     ##GSET.PREFIX.REGEX = paste(paste0("^",GSET.PREFIXES,"_"),collapse="|")
     GSET.PREFIX.REGEX="^BIOCARTA_|^C2_|^C3_|^C7_|^CHEA_|^GOBP_|^GOCC_|^GOMF_|^HALLMARK_|^KEA_|^KEGG_|^PID_|^REACTOME_|^ST_"
-
-    ##xGENExGENE <- readRDS(file=file.path(FILES,"GENExGENE-cosSparseKNN500-XL.rds"))
+    
+    ## GENExGENE <- readRDS(file=file.path(FILES,"GENExGENE-cosSparseKNN500-XL.rds"))
     GSETxGENE <- readRDS(file.path(FILES,"gset-sparseG-XL.rds"))
     load(file.path(FILES,"gmt-all.rda"),verbose=1)
     GSETS = gmt.all;remove(gmt.all)
-    ##saveRDS(gmt.all, file.path(FILES,"gmt-all.rds"))
-    ##GSETS <- readRDS(file.path(FILES,"gmt-all.rds"))
 
     cat("<init> parsing gene families...\n")
     FAMILIES <- pgx.getGeneFamilies(GENE.SYMBOL, FILES=FILES, min.size=10, max.size=9999)

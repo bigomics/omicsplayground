@@ -72,8 +72,8 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     
     if(!is.null(row.annot)) row.annot <- row.annot[jj1,,drop=FALSE]
     if(!is.null(col.annot)) col.annot <- col.annot[jj2,,drop=FALSE]
-
-    if(!is.null(row.annot)) cat("[gx.splitmap] 3: duplicated annot.rownames =",sum(duplicated(rownames(row.annot))),"\n")    
+    if(!is.null(row.annot)) cat("[gx.splitmap] 3: duplicated annot.rownames =",
+                                sum(duplicated(rownames(row.annot))),"\n")    
     
     fillNA <- function(x) {
         nx <- x
@@ -99,8 +99,8 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         split.idx = split[jj1]
     }
 
-    if(!is.null(row.annot)) cat("[gx.splitmap] 3: duplicated annot.rownames =",sum(duplicated(rownames(row.annot))),"\n")    
-
+    if(!is.null(row.annot)) cat("[gx.splitmap] 3: duplicated annot.rownames =",
+                                sum(duplicated(rownames(row.annot))),"\n")    
 
     if(!is.null(split.idx)) {
         row.annot = cbind(row.annot, cluster = split.idx)

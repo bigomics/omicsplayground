@@ -219,8 +219,8 @@ contrastAsLabels <- function(contr.matrix) {
     K    
 }
 
-makeDirectContrasts2 <- function(Y, ref, na.rm=TRUE) {
-
+makeDirectContrasts2 <- function(Y, ref, na.rm=TRUE)
+{
     contr.matrix <- makeDirectContrasts(Y=Y, ref=ref, na.rm=na.rm, warn=FALSE) 
     contr.matrix <- sign(contr.matrix)
     
@@ -229,7 +229,9 @@ makeDirectContrasts2 <- function(Y, ref, na.rm=TRUE) {
         table(group)
         n.group <- length(unique(group))
         group <- factor(group)
-        ##levels(group) <- paste0("group",1:n.group)
+        if(ncol(contr.matrix)>10) {
+            levels(group) <- paste0("group",1:n.group)
+        }
         group
     }
     contr.matrix0 <- contr.matrix
@@ -243,10 +245,10 @@ makeDirectContrasts2 <- function(Y, ref, na.rm=TRUE) {
     }
     group <- detectGroups(contr.matrix0)
     table(group)
-    if(length(levels(group)) == nrow(contr.matrix)) {
-        stop("contrast matrix is degenerate. please remove a contrast.")
+    if(length(levels(group)) > 0.5*nrow(contr.matrix)) {
+        stop("WARNING:: contrast matrix looks degenerate. consider removing a contrast.")
     }
-    
+
     group.contr.matrix <- contr.matrix[which(!duplicated(group)),]
     rownames(group.contr.matrix) <- group[which(!duplicated(group))]
     

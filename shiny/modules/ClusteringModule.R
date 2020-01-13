@@ -9,7 +9,7 @@ ClusteringInputs <- function(id) {
 ClusteringUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillRow(
-        flex = c(1.3,0.15,1),
+        flex = c(1.4,0.15,1),
         height = 780,
         tabsetPanel(
             id = ns("tabs1"),
@@ -428,7 +428,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         
         cex2 <- ifelse( nrow(zx) > 60, 0.8, 0.9)    
         cex1 <- as.numeric(input$hm_cexCol)*0.9
-        cex2 <- as.numeric(input$hm_cexRow)*0.85
+        cex2 <- as.numeric(input$hm_cexRow)*0.8
         
         crot <- 0
         totnchar <- nchar(paste0(unique(splitx),collapse=""))
@@ -1665,7 +1665,7 @@ displays the expression levels of selected genes across all conditions in the an
     
     require(plotly)
     
-    clust_featureRank.RENDER %<a-% reactive({
+    calcFeatureRanking <- reactive({
         ngs <- inputData()
         req(ngs)
 
@@ -1758,14 +1758,20 @@ displays the expression levels of selected genes across all conditions in the an
             }
             S[,i] = score
         }
+        return(S)
+    })
+    
+    clust_featureRank.RENDER %<a-% reactive({
 
+        S <- calcFeatureRanking()
+        
         if(is.null(S) || nrow(S)==0 || ncol(S)==0 ) return(NULL)
 
         ## top scoring
         S = tail( S[order(rowSums(S)),,drop=FALSE], 35)  
 
         par(mfrow=c(2,1), mar=c(1,5,3,3) )
-        par(mfrow=c(1,2), mar=c(5,5,3,2), oma=c(6,0,4,0)); frame()
+        par(mfrow=c(1,2), mar=c(5,5,3,2), oma=c(6,0,3,0)); frame()
         ## par(mfrow=c(1,1), mar=c(10,5,3,3) )
         rownames(S) = substring(rownames(S),1,80)
         bpos = barplot( t(S), beside=FALSE, las=1,
@@ -1801,7 +1807,8 @@ displays the expression levels of selected genes across all conditions in the an
         func2 = clust_featureRank.RENDER,
         options = clust_featureRank.opts,
         pdf.width=8, pdf.height=10,
-        height = fullH-80, width=c("auto",800), res=72,
+        height = c(fullH-80,700), width=c("auto",800),
+        res = c(72,75),
         info.text = clust_featureRank_info
         ## caption = clust_featureRank_caption
     )

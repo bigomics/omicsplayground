@@ -509,7 +509,11 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
         meta.fx = rowMeans( apply(S[[i]], 2, ss.rank), na.rm=TRUE)
         meta = data.frame(fx=meta.fx, p=meta.p, q=meta.q)
         ##all.meta[[i]] = data.frame( gene.set=names(gmt), meta=meta, fc=I(fc), p=I(pv), q=I(qv))
+        rownames(fc) <- NULL  ## saves memory...
+        rownames(pc) <- NULL
+        rownames(qv) <- NULL
         all.meta[[i]] = data.frame( meta=meta, fc=I(fc), p=I(pv), q=I(qv))
+        rownames(all.meta[[i]]) <- rownames(S[[i]])
     }
     names(all.meta) = tests
 

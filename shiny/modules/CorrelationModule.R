@@ -432,7 +432,8 @@ between genes and find coregulated modules."
         
         ##rho = data.frame(cbind( name=rho.name, rho))
         gs <- res$gsea$pathway
-        link <- wrapHyperLink(rep("link",length(gs)), gs)
+        ##link <- wrapHyperLink(rep("link",length(gs)), gs)
+        link <- wrapHyperLink(rep("&#x1F517;",length(gs)), gs)        
         df = data.frame( pathway=res$gsea$pathway, link=link,
                         res$gsea[,c("pval","padj","NES","size")] )
         rownames(df) = gs

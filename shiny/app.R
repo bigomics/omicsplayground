@@ -9,28 +9,32 @@ library(waiter)
 
 cat("===================== INIT =======================\n")
 
-RDIR="../R"
-FILES="../lib"
-PGX.DIR="~/bigomics/data/archs4data/gse"
-PGX.DIR="~/Projects/Data/archs4data/gse"
-PGX.DIR="../data"
+RDIR = "../R"
+FILES = "../lib"
+PGX.DIR = "~/bigomics/data/archs4data/gse"
+PGX.DIR = "~/Projects/Data/archs4data/gse"
+PGX.DIR = "../data"
+## PGX.DIR = c("../data","../../omicsplayground-dev/data")
 dir.exists(PGX.DIR)
 
 source("../R/pgx-functions.R", local=TRUE)  ## pass local vars
 source("../R/pgx-files.R", local=TRUE)  ## pass local vars
 ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
-pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
+pgx.initDatasetFolders(PGX.DIR, force=FALSE, verbose=1)
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
+
 options(shiny.maxRequestSize = 500*1024^2)  ##max 500Mb upload
 
-DEV.VERSION = TRUE
+OPTIONS <- pgx.readOptions(file="OPTIONS") 
+## DEV.VERSION = TRUE
 if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 
 if(0) {
-    load("../data/geiger2016-arginine.pgx")
+    load("../data/geiger2016-arginineL.pgx")
     load("../data/GSE10846-dlbcl.pgx")
     load("../data/GSE10846-xgreta.pgx")
     load("../data/GSE114716-ipilimumab.pgx")
+    load("../../omicsplayground-dev/data/CCLE-drugSX2.pgx")
     ngs = pgx.initialize(ngs)    
 }
 
@@ -140,7 +144,6 @@ server = function(input, output, session) {
     hide_waiter()    
 }
 
-
 version <- scan("../VERSION", character())[1]
 TITLE = paste("Omics Playground",version)
 ## TITLE = "Omics PlayCloud"
@@ -196,4 +199,5 @@ ui = navbarPage(
 )
 
 shiny::shinyApp(ui, server)
+
 

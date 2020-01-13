@@ -111,7 +111,8 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
     ##-----------------------------------------------------------------------------
     ## UPDATING PGX FILE INFO
     ##-----------------------------------------------------------------------------
-    PGXINFO <- pgx.updateInfoFile(PGX.DIR, file="datasets-info.csv") 
+    PGXINFO <- pgx.updateInfoFile(PGX.DIR, file="datasets-info.csv", 
+                               force=FALSE, verbose=TRUE )
     dim(PGXINFO)
     
     ##=================================================================================
@@ -530,8 +531,10 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
             ## dbg("[observe:loadbutton] setting to default data set = ",pgx,"\n")
             return(NULL)
         }
-        
-        pgx1 = file.path(PGX.DIR,pgx)
+
+        pgx.path <- PGX.DIR[file.exists(file.path(PGX.DIR,pgx))]
+        pgx1 = file.path(pgx.path,pgx)
+        pgx1
         if(file.exists(pgx1)) {
             dbg("[observe:loadbutton] LOADING",pgx1,"\n")
             ##withProgress(message='loading...', value=0.8,
@@ -641,7 +644,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
         df <- PGXINFO
         pgx.files = dir(PGX.DIR, pattern=".pgx$")
         sel <- sub("[.]pgx$","",df$dataset) %in% sub("[.]pgx$","",pgx.files)
-        df <- df[sel,]
+        df <- df[sel,,drop=FALSE]
         
         ##kk = unique(c("dataset","datatype","organism","description",colnames(df)))
         kk = unique(c("dataset","datatype","organism","description","nsamples",
@@ -678,7 +681,6 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
                       rownames=TRUE,
                       extensions = c('Scroller'),
                       selection = list(mode='single', target='row', selected=NULL ),
-                      ##selection = list(mode='none'),
                       ## filter = "top",
                       fillContainer = TRUE,
                       options=list(
@@ -754,41 +756,39 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
         "<br><h4>Uploaded datasets</h4><p>Below are your uploaded datasets. As a free user, you can only have a maximum of one private dataset. If you want to analyze a new dataset, you must either delete your old dataset or make the dataset public.<br><br>"
 
     ##upload_filetypes = c("text/csv","text/comma-separated-values,text/plain",".csv")
-    upload_filetypes = c(".csv",".pgx")
-    
+    upload_filetypes = c(".csv",".pgx")    
     output$upload_UI <- renderUI({    
 
         basic.limits = "99 samples and 9 comparisons"
         pro.limits   = "999 samples and 99 comparisons"
         if(USERMODE()=="BASIC") upload_info = sub("LIMITS", basic.limits, upload_info)
-        if(USERMODE()=="PRO")   upload_info = sub("LIMITS", pro.limits, upload_info)    
-
-        fillRow(
-            flex=c(1,0.1,3.5),
-            height=750,
-            wellPanel(
-                fileInput(ns("upload_files"), "Choose files",
-                          multiple = TRUE, accept = upload_filetypes),
-                textInput(ns("upload_name"),"Name of dataset:"),
-                ##selectInput("upload_datatype","Datatype:",
-                ##            choices=c("RNA-seq","proteomics","scRNA-seq","multi-omics")),
-                ##textAreaInput("upload_description", "Description:", value = NULL,
-                ##              rows=5, placeholder="Describe your data set (minimum 100 characters)"),
-                ##conditionalPanel(
-                ##"output.allFilesOK",
-                actionButton(ns("upload_compute"),"Compute!",icon=icon("running"))
-                ##)
-            ),br(),
-            fillCol(
-                ##flex = c(NA,NA,NA,NA,1),
-                flex = c(NA,1,1),
-                div(HTML(upload_info),style="font-size: 13px;"),
-                tableOutput(ns("upload_status")),
-                ##----------- table with uploaded datasets
-                ##p(HTML(upload_info2)),
-                ##DT::dataTableOutput("upload_datasetsDT"),
-                ##tableOutput("upload_datasets")
-                br()
+        if(USERMODE()=="PRO") upload_info = sub("LIMITS", pro.limits, upload_info)    
+        userdataUI <- NULL
+        if(DEV.VERSION) {
+            userdataUI <- DT::dataTableOutput(ns("userDatasetsUI"))
+        }
+        
+        fillCol(
+            flex = c(1,1.5),
+            height = 750,
+            fillRow(
+                flex = c(1,0.1,3.5),
+                wellPanel(
+                    fileInput(ns("upload_files"), "Choose files",
+                              multiple = TRUE, accept = upload_filetypes),
+                    textInput(ns("upload_name"),"Name of dataset:"),
+                    ##textAreaInput("upload_description", "Description:", value = NULL,
+                    ##              rows=5, placeholder="Describe your data set (minimum 100 characters)"),
+                    actionButton(ns("upload_compute"),"Compute!",icon=icon("running"))
+                ),br(),
+                fillCol(
+                    flex = c(NA,1),
+                    div(HTML(upload_info),style="font-size: 13px;"),
+                    tableOutput(ns("upload_status"))
+                )
+            ),
+            fillRow(
+                userdataUI
             )
         )
     })
@@ -1145,15 +1145,20 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
         uploadStatusTable()
     })
 
-    uploadedDatasetsTable <- reactive({
+    userDatasetsTable <- reactive({
 
         df <- PGXINFO[1:2,] ## test-example
-        df$description <- NULL
-        df$conditions <- NULL
+        ## df$description <- NULL
+        df$datatype <- NULL
+        df$conditions <- NULL        
         df$organism <- NULL
         df$nsets <- NULL
+        df$path <- NULL
         ##df$sharing <- "private/public"
         
+        df <- rbind(df,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA)        
+        df <- head(df,5)
+
         buttonInput <- function(FUN, len, id, ...) {
             inputs <- character(len)
             for (i in seq_len(len)) {
@@ -1174,7 +1179,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
             inline=TRUE,
             label = "publish",
             icon = icon("universal-access"),
-            style='padding:4px; font-size:100%;'
+            style='padding:2px; font-size:90%; color: black;'
         )
         delete <- buttonInput(
             FUN = actionButton,
@@ -1185,31 +1190,38 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
             width="50px",
             inline=TRUE,
             icon = icon("trash"),
-            style='padding:4px; font-size:100%; background-color: #B22222;'
+            style='padding:2px; font-size:90%; color: #B22222;'
         )
         df <- cbind(sharing, delete, df)
         return(df)    
     })
 
-    output$upload_datasetsDT <- DT::renderDataTable({
+    output$userDatasetsUI <- DT::renderDataTable({
+        df <- userDatasetsTable()
+        narrow.cols <- match(c("sharing","delete","nsamples","ngenes"),colnames(df))-1
+        narrow.cols <- setdiff(narrow.cols,NA)
         DT::datatable(
-                uploadedDatasetsTable(),
+                df,
                 rownames=FALSE, escape = c(-1,-2),
+                extensions = c('Scroller'),
+                selection = list(mode='single', target='row', selected=1),                    
+                fillContainer = TRUE,
                 options = list(
                     ## dom = 'T<"clear">lfrtip',
+                    dom = 'frti',
                     autoWidth = TRUE, ## scrollX=TRUE,
-                    selection = 'none',
                     ordering = FALSE, paging=FALSE, searching=FALSE, info=FALSE,
-                    columnDefs = list(list(width='5%', targets = list(0,1,4,5)))                
+                    scrollY = '100vh', ## scroller=TRUE,
+                    columnDefs = list(list(width='5%', targets=narrow.cols))
                 )
-            ) ##  %>%
-        ## DT::formatStyle(0, target='row', fontSize='12px', lineHeight='70%')
+            ) %>%
+            DT::formatStyle(0, target='row', fontSize='12px', lineHeight='90%')
     })
 
-    output$upload_datasets <- renderTable({
-        uploadedDatasetsTable()
-    })
-       
+
+    ##------------------------------------------------
+    ## Module return object
+    ##------------------------------------------------
     res <- list(
         inputData = inputData,
         usermode = reactive({ USERMODE() })

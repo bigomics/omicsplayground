@@ -21,7 +21,7 @@ if(0) {
 
 pgx.upload <- function(counts, samples, contrasts, ## genes, 
                        ##gx.methods = c("trend.limma","edger.qlf","deseq2.wald"),
-                       max.genes = 9999, only.hugo=TRUE,
+                       max.genes = 9999, max.genesets = 9999, only.hugo=TRUE,
                        gx.methods = c("ttest.welch","trend.limma","edger.qlf"),
                        gset.methods = c("fisher","gsva","fgsea"),
                        extra.methods = c("meta.go","deconv","infer","drugs","wordcloud"),
@@ -207,7 +207,7 @@ pgx.upload <- function(counts, samples, contrasts, ## genes,
     max.features=max.genes;test.methods=gset.methods
     system.time(
         ngs <- compute.testGenesets(
-            ngs, max.features = max.genes,
+            ngs, max.features = max.genesets,
             test.methods = gset.methods,
             lib.dir = lib.dir )
     )

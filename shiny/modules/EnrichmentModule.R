@@ -197,7 +197,7 @@ EnrichmentModule <- function(input, output, session, env)
         qv[is.na(qv)] = 0.999
         fc[is.na(fc)] = 0
         score = fc * (-log10(qv))
-        
+        dim(pv)
         if(NCOL(pv)>1) {
             ss.rank <- function(x) scale(sign(x)*rank(abs(x)),center=FALSE)
             fc = rowMeans(scale(fc,center=FALSE),na.rm=TRUE)  ## REALLY???
@@ -210,10 +210,11 @@ EnrichmentModule <- function(input, output, session, env)
             score = rowMeans(apply(score, 2, ss.rank),na.rm=TRUE)
         }
         meta = cbind( score=score, fc=fc, pv=pv, qv=qv)
+        rownames(meta) <- rownames(mx)
         colnames(meta) = c("score","fc","pv","qv")  ## need
         return(meta)
     }
-
+    
     getGeneSetTable <- reactive({
         ngs <- inputData()
         req(ngs)
@@ -327,7 +328,8 @@ EnrichmentModule <- function(input, output, session, env)
                              AveExpr1=AveExpr1[gs])
             
             ## add extra p/q value columns
-            rpt <- cbind( rpt, q=qv[gs,])
+            jj <- match(gs, rownames(mx))
+            rpt <- cbind( rpt, q=qv[jj,])
             
             ##rownames(rpt) = gs
         }  else {
@@ -1296,6 +1298,7 @@ EnrichmentModule <- function(input, output, session, env)
         })
         limma1 <- cbind( fc=limma1.fc, limma1.pq)
         ##limma  = cbind( ngs$gx.meta$meta[[comp]][,c("gene_name","gene_title")], limma1)
+        rownames(limma1) <- rownames(mx)
         
         ## in multi-mode we select *common* genes
         ns <- length(gs)

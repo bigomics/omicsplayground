@@ -45,7 +45,7 @@ COMPUTE.EXTRA=1
 QCFILTER=FALSE
 BATCHCORRECT=FALSE
 
-rda.file="../data/geiger2016-arginine.pgx"
+rda.file="../data/geiger2016-arginineL.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
