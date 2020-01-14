@@ -504,9 +504,9 @@ plotModule <- function(input, output, session, ## ns=NULL,
 
     ##func2 <- func  ## must be pryr  %<a-% to work!!!
     if(is.null(func2)) func2 <- func
-    if(length(height)==1) height <- c(height,720)
-    if(length(width)==1)  width  <- c(width,1080)
-    if(length(res)==1)    res    <- c(res,1.3*res)    
+    if(length(height)==1) height <- c(height,700)
+    if(length(width)==1)  width  <- c(width,1200)
+    if(length(res)==1)    res    <- c(res, 1.3*res)    
 
     res.1 <- res[1]
     res.2 <- res[2]

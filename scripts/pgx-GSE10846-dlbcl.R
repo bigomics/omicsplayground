@@ -8,34 +8,20 @@ library(matrixTests)
 library(kableExtra)
 library(knitr)
 
-source("../R/gx-heatmap.r")
-source("../R/gx-limma.r")
-source("../R/gx-util.r")
-source("../R/ngs-cook.r")
-source("../R/ngs-fit.r")
-source("../R/gset-fisher.r")
-source("../R/gset-gsea.r")
-source("../R/gset-meta.r")
-source("../R/pgx-graph.R")
-source("../R/pgx-functions.R")
-source("../R/ngs-functions.R")
-source("../R/pgx-graph.R")
-source("../R/pgx-drugs.R")
-source("../R/pgx-wordcloud.R")
-source("../R/pgx-contrasts.R")
-source("../R/compute2-genes.R")
-source("../R/compute2-genesets.R")
-source("../R/compute2-extra.R")    
+RDIR = "../R"
+FILES = "../lib"
+source("../R/pgx-include.R")
 
-source("options.R")
-MAX.GENES
-##MAX.GENES = -1
+##source("options.R")
+MAX.GENES = 8000
+MAX.GENESETS = 8000
 BATCH.CORRECT=TRUE
 SUBSAMPLE=TRUE
 
 ## run all available methods 
-USER.GENETEST.METHODS = "*"
-USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
+GENETEST.METHODS=c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
+##USER.GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank","trend.limma")
+GENESETTEST.METHODS = c("fisher","gsva","camera","fgsea")
 
 rda.file="../data/GSE10846-dlbcl2.pgx"
 rda.file
@@ -243,29 +229,17 @@ if(DIFF.EXPRESSION) {
     head(contr.matrix)
     colnames(contr.matrix) <- sub(".*:","",colnames(contr.matrix))  ## strip prefix 
     head(contr.matrix)
-    
-    ##contr.matrix = contr.matrix[,1:3]
-    USER.GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank",
-                            "voom.limma","trend.limma","notrend.limma",
-                            "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
-    USER.GENESETTEST.METHODS = c("fisher","gsva","ssgsea","spearman",
-                                 "camera", "fry","fgsea") ## no GSEA, too slow...
-
-    USER.GENETEST.METHODS=c("trend.limma","edger.qlf","deseq2.wald")
-    ##USER.GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank","trend.limma")
-    USER.GENESETTEST.METHODS = c("fisher","gsva","camera","fgsea")
-    MAX.GENES
-    
+        
     ## new callling methods
     ngs <- compute.testGenes(
         ngs, contr.matrix,
         max.features = MAX.GENES,
-        test.methods = USER.GENETEST.METHODS)
+        test.methods = GENETEST.METHODS)
     head(ngs$gx.meta$meta[[1]])        
     
     ngs <- compute.testGenesets(
-        ngs, max.features=MAX.GENES,
-        test.methods = USER.GENESETTEST.METHODS,
+        ngs, max.features = MAX.GENESETS,
+        test.methods = GENESETTEST.METHODS,
         lib.dir = FILES)
     head(ngs$gset.meta$meta[[1]])
 
