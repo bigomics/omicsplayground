@@ -6,9 +6,9 @@
 pgx.computeDrugEnrichment <- function(obj, X, x.drugs, methods=c("GSEA","cor"),
                                       nprune=250, contrast=NULL )
 {
-    ## obj can be ngs object or fold-change matrix
-    ##
-    ##
+    ## 'obj'   : can be ngs object or fold-change matrix
+    ## X       : drugs profiles (may have multiple for one drug)
+    ## x.drugs : drug associated with profile
     require(fgsea)
     names(obj)
     if("gx.meta" %in% names(obj)) {
