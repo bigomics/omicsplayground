@@ -14,8 +14,6 @@ cat("===================== INIT =======================\n")
 
 RDIR = "../R"
 FILES = "../lib"
-PGX.DIR = "~/bigomics/data/archs4data/gse"
-PGX.DIR = "~/Projects/Data/archs4data/gse"
 PGX.DIR = "../data"
 ## PGX.DIR = c("../data","../../omicsplayground-dev/data")
 dir.exists(PGX.DIR)
@@ -35,6 +33,7 @@ if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 if(0) {
     load("../data/geiger2016-arginineL.pgx")
     load("../data/GSE10846-dlbcl.pgx")
+    load("../data/GSE10846-dlbcl2.pgx")
     load("../data/GSE10846-xgreta.pgx")
     load("../data/GSE114716-ipilimumab.pgx")
     load("../../omicsplayground-dev/data/CCLE-drugSX2.pgx")

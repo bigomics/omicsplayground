@@ -429,8 +429,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         if(input$hm_level=="geneset")  rownames(zx) <- tolower(rownames(zx))
         
         cex2 <- ifelse( nrow(zx) > 60, 0.8, 0.9)    
-        cex1 <- as.numeric(input$hm_cexCol)*0.9
-        cex2 <- as.numeric(input$hm_cexRow)*0.8
+        cex1 <- as.numeric(input$hm_cexCol)*0.85
+        cex2 <- as.numeric(input$hm_cexRow)*0.75
         
         crot <- 0
         totnchar <- nchar(paste0(unique(splitx),collapse=""))
@@ -448,7 +448,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             show_rownames = nrownames; softmax=0;
             ## side.height.fraction=0.03+0.055*NCOL(annot); 
             labRow=NULL; cexCol=cex1; cexRow=cex2; 
-            col.annot=annot; row.annot=NULL; annot.ht=2.6;
+            col.annot=annot; row.annot=NULL; annot.ht=2.2;
             main=main; nmax=-1
         }
 
@@ -461,7 +461,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                     show_rownames = nrownames, softmax=0,
                     ## side.height.fraction=0.03+0.055*NCOL(annot), 
                     labRow=NULL, cexCol=cex1, cexRow=cex2, 
-                        col.annot=annot, row.annot=NULL, annot.ht=2.6,
+                        col.annot=annot, row.annot=NULL, annot.ht=2.2,
                     main=main, nmax=-1)
     })
 
@@ -1428,7 +1428,8 @@ displays the expression levels of selected genes across all conditions in the an
                 layout(
                     showlegend = FALSE,
                     annotations = anntitle(colnames(rho)[i]),
-                    ##annotations = list(text="TITLE"),
+                    ## annotations = list(text="TITLE"),
+                    ## margin = c(0, 0.0, 0.05, 0.05),
                     xaxis = list(range = c(0,1),
                                  titlefont = list(size=11),
                                  tickfont = list(size=10),

@@ -930,16 +930,19 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     getDseaTable <- reactive({
         ngs <- inputData()
         req(ngs)        
-        req(input$fa_contrast, input$dsea_monocombo)
+        req(input$fa_contrast, input$dsea_method)
 
-        comparison=3
+        comparison=1
         names(ngs$gx.meta$meta)
         comparison = input$fa_contrast
         if(is.null(comparison)) return(NULL)
         
+        ct <- grep("annot",names(ngs$drugs),invert=TRUE,value=TRUE)
+        ct
         dmethod="combo"
+        dmethod="sx-mono"
         dmethod="mono"
-        dmethod <- input$dsea_monocombo
+        dmethod <- input$dsea_method
         if(is.null(dmethod)) return(NULL)
         
         fc <- ngs$gx.meta$meta[[comparison]]$meta.fx
@@ -954,11 +957,19 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         qv[is.na(qv)] <- 1
         pv[is.na(pv)] <- 1
         
-        ## SHOULD MAYBE BE DONE IN PREPROCESSING....
-        descr0 <- read.csv(file.path(FILES,"L1000_repurposing_drugs.txt"),
-                           sep="\t", comment.char="#")
-
-        if(dmethod=="combo") {
+        ## SHOULD MAYBE BE DONE IN PREPROCESSING???
+        if( grepl("sx",dmethod) && "sx-annot" %in% names(ngs$drugs)) {
+            descr0 <- ngs$drugs[["sx-annot"]]
+        } else if(!grepl("sx",dmethod) && "annot" %in% names(ngs$drugs)) {
+            descr0 <- ngs$drugs[["annot"]]
+        } else {
+            descr0 <- read.csv(file.path(FILES,"L1000_repurposing_drugs.txt"),
+                               sep="\t", comment.char="#")
+        }
+        dim(descr0)
+        head(descr0)
+        
+        if(grepl("combo",dmethod) ) {
             drugs <- strsplit(drug,split="[+]")
             drug1 <- sapply(drugs,"[",1)
             drug2 <- sapply(drugs,"[",2)
@@ -968,7 +979,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
             ctarget <- paste( descr0[j1,"target"],"+",descr0[j2,"target"])
             descr <- data.frame( moa=cmoa, target=ctarget)
         } else {
-            jj <- match( drug, descr0$pert_iname)
+            jj <- match( toupper(drug), toupper(rownames(descr0)) )
             descr <- descr0[jj,c("moa","target")]
         }
         
@@ -984,7 +995,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         ngs <- inputData()
         if(is.null(ngs$drugs)) return(NULL)
         shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))        
-        req(input$fa_contrast, input$dsea_monocombo)
+        req(input$fa_contrast, input$dsea_method)
 
         comparison=1
         comparison = input$fa_contrast
@@ -994,7 +1005,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
 
         dmethod="mono"
         dmethod="combo"
-        dmethod <- input$dsea_monocombo
+        dmethod <- input$dsea_method
 
         ## rank vector for enrichment plots
         rnk <- ngs$drugs[[dmethod]]$stats[,comparison]
@@ -1013,7 +1024,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
             gmtdx <- grep(dx,names(rnk),fixed=TRUE,value=TRUE)  ## L1000 naming allows this...
             length(gmtdx)
             ##if(length(gmtdx) < 3) { frame(); next }
-            gsea.enplot( rnk, gmtdx, main=dx, cex.main=1.25, xlab="")
+            gsea.enplot( rnk, gmtdx, main=dx, cex.main=1.1, xlab="")
             nes <- round(res$NES[i],2)
             qv  <- round(res$padj[i],3)
             tt <- c( paste("NES=",nes), paste("q=",qv) )
@@ -1025,7 +1036,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     dsea_moaplot.RENDER %<a-% reactive({
 
         ngs <- inputData()
-        req(ngs, input$fa_contrast, input$dsea_monocombo)
+        req(ngs, input$fa_contrast, input$dsea_method)
         
         if(is.null(ngs$drugs)) return(NULL)
         shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
@@ -1038,7 +1049,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         
         dmethod="mono"
         dmethod="combo"
-        dmethod <- input$dsea_monocombo
+        dmethod <- input$dsea_method
         
         j1 <- which( res$padj < 0.2 & res$NES > 0)
         j2 <- which( res$padj < 0.2 & res$NES < 0)
@@ -1074,16 +1085,16 @@ to understand biological functions including GO, KEGG, and drug connectivity map
             ##layout(matrix(1:2,nrow=1),widths=c(1.4,1))
             ##par(mfrow=c(2,1))
             par(mar=c(4,15,5,0.5), mgp=c(2,0.7,0))
-
             par(mfrow=c(1,1))
-
             if(input$dsea_moatype=="drug class") {
-                par(mar=c(12,4,3,0.5), mgp=c(2,0.7,0))
-                barplot(moa.top, horiz=FALSE, las=3, ylab="drugs (n)")
+                par(mfrow=c(2,1), mar=c(4,4,1,0.5), mgp=c(2,0.7,0))
+                barplot(moa.top, horiz=FALSE, las=3, ylab="drugs (n)",
+                        cex.names = 0.8 )
                 ##title(main="MOA", line=1 )
             } else {
-                par(mar=c(12,4,3,0.5), mgp=c(2,0.7,0))
-                barplot(dtg.top, horiz=FALSE, las=3, ylab="drugs (n)")
+                par(mfrow=c(2,1), mar=c(0,4,1,0.5), mgp=c(2,0.7,0))
+                barplot(dtg.top, horiz=FALSE, las=3, ylab="drugs (n)",
+                        cex.names = 0.8 )
                 ##title(main="target gene", line=1 )
             }
         }
@@ -1097,8 +1108,9 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         
         res <- getDseaTable()
         req(res)
-        res$moa <- shortstring(res$moa,50)
-        res$target <- shortstring(res$target,50)
+        res$moa <- shortstring(res$moa,60)
+        res$target <- shortstring(res$target,30)
+        res$drug   <- shortstring(res$drug,60)
         
         ## limit number of results??
         ##jj <- unique(c( head(order(-res$NES),250), tail(order(-res$NES),250)))
@@ -1128,13 +1140,13 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     dsea_actmap.RENDER %<a-% reactive({
         require(igraph)
         ngs <- inputData()
-        req(ngs, input$fa_contrast, input$dsea_monocombo)
+        req(ngs, input$fa_contrast, input$dsea_method)
 
         shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
         if(is.null(ngs$drugs)) return(NULL)
         
         dmethod="mono"
-        dmethod <- input$dsea_monocombo
+        dmethod <- input$dsea_method
         comparison=1
         comparison = input$fa_contrast
         if(is.null(comparison)) return(NULL)
@@ -1190,7 +1202,8 @@ to understand biological functions including GO, KEGG, and drug connectivity map
     
     ##--------- DSEA enplot plotting module
     dsea_enplots.opts = tagList(
-        tipify( radioButtons(ns('dsea_monocombo'),"Analysis type:",c("mono","combo"),inline=TRUE),
+        tipify( radioButtons(ns('dsea_method'),"Analysis type:",
+                             choices = c("mono","combo"), inline=TRUE),
                "Select type of drug enrichment analysis: mono or combo (if available). ")
     )
     callModule(
@@ -1202,7 +1215,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         info.text = "The <strong>Drug Connectivity Map</strong> correlates your signature with more than 5000 known drug profiles from the L1000 database, and shows the top N=10 similar and opposite profiles by running the GSEA algorithm on the contrast-drug profile correlation space.",
         options = dsea_enplots.opts,
         pdf.width=11, pdf.height=7,
-        height = 0.5*rowH, res=72
+        height = 0.54*rowH, res=72
     )
     ##outputOptions(output, "dsea_enplots", suspendWhenHidden=FALSE) ## important!!!
 
@@ -1221,7 +1234,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         info.text = "This plot visualizes the <strong>mechanism of action</strong> (MOA) across the enriched drug profiles. On the vertical axis, the number of drugs with the same MOA are plotted. You can switch to visualize between MOA or target gene.",
         options = dsea_moaplot.opts,
         pdf.width=4, pdf.height=6,
-        height = 0.5*rowH, res=72
+        height = 0.54*rowH, res=72
     )
 
     ##-------- Activation map plotting module
@@ -1245,17 +1258,15 @@ to understand biological functions including GO, KEGG, and drug connectivity map
         func = dsea_table.RENDER, 
         info.text="Drug profile enrichment table. Enrichment is calculated by correlating your signature with more than 5000 known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.", 
         title = "Profile enrichment table",
-        height = c(270,700)
+        height = c(260,700)
     )
 
     observe({
         ngs <- inputData()
         req(ngs)
         ct <- c("mono","combo")
-        if(is.null(ngs$drugs$combo)) {
-            ct <- c("mono")
-        }
-        updateRadioButtons(session, "dsea_monocombo", choices=ct, inline=TRUE)
+        ct <- grep("annot",names(ngs$drugs),invert=TRUE,value=TRUE)
+        updateRadioButtons(session, "dsea_method", choices=ct, inline=TRUE)
     })
        
     ##-----------------------------------------
@@ -1272,7 +1283,7 @@ to understand biological functions including GO, KEGG, and drug connectivity map
                 height = rowH,
                 flex = c(2.6,1), 
                 fillCol(
-                    flex = c(1.2,0.15,1),
+                    flex = c(1.4,0.15,1),
                     height = rowH,
                     fillRow(
                         flex=c(2.2,1),
