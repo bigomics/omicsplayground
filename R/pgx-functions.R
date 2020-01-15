@@ -205,7 +205,7 @@ pgx.discretizePhenotypeMatrix <- function(df, max.ncat=20, min.ncat=2, remove.du
         df.num[!is.high] <- "low"
     }
     df1 <- df[,0]
-    if(length(catpheno)) df1 <- cbind(df1, df[,catpheno])
+    if(length(catpheno)) df1 <- cbind(df1, df[,catpheno,drop=FALSE])
     if(length(numpheno)) df1 <- cbind(df1, df.num)
     df1
 }
@@ -249,11 +249,11 @@ pgx.getCategoricalPhenotypes <-function(df, max.ncat=20, min.ncat=2, remove.dup=
     is.id
     is.factor2 <- (!is.bad & is.factor & !is.id & n.unique>=min.ncat & n.unique<= max.ncat)
     is.factor2
-    df1 <- df[,which(is.factor2)]
+    df1 <- df[,which(is.factor2),drop=FALSE]
 
     nlevel <- apply(df1,2,function(x) length(unique(x)))
     nchars <- apply(df1,2,function(x) max(nchar(as.character(x))))
-    df1 <- df1[,order(nlevel,-nchars)]
+    df1 <- df1[,order(nlevel,-nchars),drop=FALSE]
     ##head(df1)
     if(remove.dup && ncol(df1)>1) {
         i=1
@@ -266,7 +266,7 @@ pgx.getCategoricalPhenotypes <-function(df, max.ncat=20, min.ncat=2, remove.dup=
             }
         }
         is.dup
-        df1 <- df1[,which(!is.dup)]
+        df1 <- df1[,which(!is.dup),drop=FALSE]
     }
     colnames(df1)
 }

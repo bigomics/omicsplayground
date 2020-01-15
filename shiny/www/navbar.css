@@ -10,7 +10,7 @@
 
 body {
     // font-family: Arial;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 400;    
 }
 
@@ -157,14 +157,6 @@ body {
     height: auto;
 }
 
-.action-text #sig_example1 #sig_example2 #sig_example3 {
-    font-size: 0.9em;
-    color: #2244AA;
-    background-color: transparent;
-    border-style: none;
-    padding: 0
-}
-
 .datatables {
     font-size: 12px;
     line-height: '70%';
@@ -175,9 +167,14 @@ body {
     background-color: #fff;
 }
 
+.fa, .fas {
+    line-height: 0px;  // keep buttons size equal
+}
+
 .fa-gear {
     color: #DDDDDD;
 }
+
 
 .btn-circle-xs, .btn-circle-xs:focus {
     background: #FFFFFF;
@@ -256,8 +253,8 @@ body {
 }
 
 .selectize-input {
-    padding: 3px 12px;
-    min-height: 28px;
+    padding: 2px 12px !important;
+    min-height: 26px !important;
 }
 
 .current-data {
@@ -273,9 +270,9 @@ body {
 
 /* ------------------- buttons -------------- */
 
-.action-button .fab {
+.action-button .fab .fa {
     font-size: 16px;
-    margin-top: 5px;
+    margin-top: 0px;
 }
 
 .btn-social-icon {
@@ -425,6 +422,14 @@ body {
     padding:3rem 1rem;
     text-align:center;
     font-size:0.8em;
+}
+
+.action-text #sig_example1 #sig_example2 #sig_example3 {
+    font-size: 0.9em;
+    color: #2244AA;
+    background-color: transparent;
+    border-style: none;
+    padding: 0
 }
 
 .action-text #sig_example1 #sig_example2 #sig_example3 {
