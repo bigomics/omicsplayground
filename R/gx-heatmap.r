@@ -165,7 +165,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
             jj = grp[[i]]
             ##ap <- list(labels_gp=gpar(fontsize=6*cexRow))
             ap <- list( title_gp = gpar(fontsize=3.5*annot.ht),
-                       labels_gp = gpar(fontsize=3.0*annot.ht),
+                       labels_gp = gpar(fontsize=3.1*annot.ht),
                        grid_width = unit(1*annot.ht, "mm"),
                        grid_height = unit(1*annot.ht, "mm"))
             aa <- rep(list(ap), ncol(col.annot))
@@ -174,10 +174,10 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                 df = col.annot[jj,,drop=FALSE],
                 col = col.colors, na_col='#FCFCFC',
                 ##annotation_height = unit(annot.ht, "mm"),
-                simple_anno_size = unit(annot.ht,"mm"),  ## BioC 3.8!!
+                simple_anno_size = unit(0.92*annot.ht,"mm"),  ## BioC 3.8!!
                 show_annotation_name = (i==ngrp),
                 show_legend = show_legend & (npar <= 20),
-                annotation_name_gp = gpar(fontsize=3.0*annot.ht),
+                annotation_name_gp = gpar(fontsize=3.1*annot.ht),
                 annotation_legend_param = aa
             )
         }
