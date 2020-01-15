@@ -262,6 +262,26 @@ pgx.initialize <- function(ngs) {
     ngs$samples <- ngs$Y    ## REALLY?
     
     ##-----------------------------------------------------------------------------
+    ## Keep compatible with old formats
+    ##-----------------------------------------------------------------------------
+    if( all(c("mono","annot") %in% names(ngs$drugs)) ) {
+        dd <- ngs$drugs[["mono"]]
+        dd[["annot"]] <- ngs$drugs[["annot"]]
+        ngs$drugs[["activity/L1000"]] <- dd
+        if("combo" %in% names(ngs$drugs)) {
+            dd2 <- ngs$drugs[["combo"]]
+            aa1 <- ngs$drugs[["annot"]]
+            combo <- rownames(dd2$X)
+            aa2 <- pgx.createComboDrugAnnot(combo, aa1)             
+            dd2[["annot"]] <- aa2
+            ngs$drugs[["activity-combo/L1000"]] <- dd2
+        }
+        ngs$drugs$mono  <- NULL
+        ngs$drugs$annot <- NULL
+        ngs$drugs$combo <- NULL        
+    }
+    
+    ##-----------------------------------------------------------------------------
     ## remove large deprecated outputs from objects
     ##-----------------------------------------------------------------------------
     ngs$gx.meta$outputs <- NULL

@@ -108,7 +108,7 @@ DataViewModule <- function(input, output, session, env)
         updateSelectInput(session, "data_samplefilter", choices=levels)
         genes <- sort(ngs$genes[rownames(ngs$X),]$gene_name)
         sel = genes[1]  ## most var gene
-        updateSelectInput(session,'search_gene', choices=genes, selected=sel)
+        updateSelectizeInput(session,'search_gene', choices=genes, selected=sel, server=TRUE)
         
         grps <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=20)
         grps <- c("<ungrouped>",sort(grps))

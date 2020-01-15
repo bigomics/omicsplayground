@@ -159,7 +159,7 @@ between genes and find coregulated modules."
 
         genes <- sort(ngs$genes[rownames(ngs$X),]$gene_name)
         sel = genes[1]  ## most var gene
-        updateSelectInput(session,'cor_gene', choices=genes, selected=sel)
+        updateSelectizeInput(session,'cor_gene', choices=genes, selected=sel, server=TRUE)
 
         fam <- pgx.getFamilies(ngs,nmin=10,extended=FALSE)
         fam <- sort(c("<custom>",fam))
