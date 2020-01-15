@@ -174,7 +174,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                 df = col.annot[jj,,drop=FALSE],
                 col = col.colors, na_col='#FCFCFC',
                 ##annotation_height = unit(annot.ht, "mm"),
-                simple_anno_size = unit(0.92*annot.ht,"mm"),  ## BioC 3.8!!
+                simple_anno_size = unit(0.85*annot.ht,"mm"),  ## BioC 3.8!!
                 show_annotation_name = (i==ngrp),
                 show_legend = show_legend & (npar <= 20),
                 annotation_name_gp = gpar(fontsize=3.1*annot.ht),
