@@ -690,7 +690,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
     output$hm_heatmap_UI <- renderUI({
         fillCol(
-            flex = c(1,0.1,NA),
+            flex = c(1,0.15,NA),
             height = fullH,
             plotWidget(ns("hm_splitmap")),
             br(),
@@ -1430,6 +1430,7 @@ displays the expression levels of selected genes across all conditions in the an
                     annotations = anntitle(colnames(rho)[i]),
                     ## annotations = list(text="TITLE"),
                     ## margin = c(0, 0.0, 0.05, 0.05),
+                    margin = list(l=5, r=0, t=23, b=12),
                     xaxis = list(range = c(0,1),
                                  titlefont = list(size=11),
                                  tickfont = list(size=10),

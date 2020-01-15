@@ -128,7 +128,7 @@ EnrichmentModule <- function(input, output, session, env)
         meta <- ngs$gset.meta$meta
         comparisons <- colnames(ngs$model.parameters$contr.matrix)
         comparisons = sort(intersect(comparisons, names(meta)))
-        updateSelectizeInput(session, "gs_contrast", choices=comparisons)
+        updateSelectInput(session, "gs_contrast", choices=comparisons)
 
         ## get the computed geneset methods
         gset.methods = sort(colnames(meta[[1]]$fc))

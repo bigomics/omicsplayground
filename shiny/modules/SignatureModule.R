@@ -172,7 +172,7 @@ infotext =
         } else if(type=="geneset") {
             ## all genesets... this is a bit too much for selectInput (DO NOT USE!!)
             gsets <- sort(names(GSETS))
-            updateSelectInput(session, "feature", choices=gsets, selected=gsets[1])
+            updateSelectizeInput(session, "feature", choices=gsets, selected=gsets[1], server=TRUE)
         } else {
             ## custom
             updateSelectInput(session, "feature", choices="<custom>", selected="<custom>")

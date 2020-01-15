@@ -966,10 +966,9 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         ## After: update selectors
         ##------------------------------------------------------------
         GENES = rownames(cds)
-        updateSelectInput(session, "monocle_plotgene", choices=GENES)
+        updateSelectizeInput(session, "monocle_plotgene", choices=GENES, server=TRUE)
         grps = setdiff(colnames(cds@colData),c("Size_Factor"))
-        updateSelectInput(session, "monocle_groupby", choices=grps,
-                          selected=".cluster" )
+        updateSelectInput(session, "monocle_groupby", choices=grps, selected=".cluster" )
 
         progress$inc(0.2, detail = "done")
 
@@ -1105,7 +1104,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         info.text = "Single-cell trajectory analysis how cells choose between one of several possible end states. Reconstruction algorithms can robustly reveal branching trajectories, along with the genes that cells use to navigate these decisions.",
         options = monocle_plotTrajectory.opts,
         pdf.width=8, pdf.height=8,
-        height = 0.5*imgH, res=c(80,95)
+        height = 0.45*imgH, res=c(80,95)
     )
 
     ##------- plotGene module -------
@@ -1120,7 +1119,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         info.text = ".",
         options = monocle_plotGene.opts,
         pdf.width=8, pdf.height=8,
-        height = 0.5*imgH, res = c(80,95)
+        height = 0.45*imgH, res = c(80,95)
     )
     ##output <- attachModule(output, monocle_plotGene.MODULE)
 
@@ -1514,7 +1513,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         genes1 <- c("<none>",genes)
         updateSelectInput(session, "pr_crosstabvar", choices=pheno1)
         updateSelectInput(session, "pr_crosstabpheno", choices=pheno1)
-        updateSelectInput(session, "pr_crosstabgene", choices=genes1)
+        updateSelectizeInput(session, "pr_crosstabgene", choices=genes1, server=TRUE)
 
     })
 
@@ -1591,8 +1590,8 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         g2 <- grep("^CD79|^CD3[DEG]|^CD37",genes,value=TRUE)[1]
         if(length(g1)==0) g1 <- genes[1]
         if(length(g2)==0) g2 <- genes[2]
-        updateSelectInput(session, "pr_cytovar1", choices=genes, selected=g1)
-        updateSelectInput(session, "pr_cytovar2", choices=genes, selected=g2)
+        updateSelectizeInput(session, "pr_cytovar1", choices=genes, selected=g1, server=TRUE)
+        updateSelectizeInput(session, "pr_cytovar2", choices=genes, selected=g2, server=TRUE)
     })
     
 

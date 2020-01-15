@@ -2,6 +2,21 @@
 ##X=comboX;x.drugs=combo.drugs
 ##nprune=250;res.mono=NULL;ntop=10;nsample=20
 
+pgx.createComboDrugAnnot <- function(combo, annot0) {
+    drugs <- strsplit(combo,split="[+]")
+    drug1 <- sapply(drugs,"[",1)
+    drug2 <- sapply(drugs,"[",2)
+    j1 <- match( drug1, rownames(annot0))
+    j2 <- match( drug2, rownames(annot0))
+    cmoa <- paste( annot0[j1,"moa"],"+",annot0[j2,"moa"])
+    ctarget <- paste( annot0[j1,"target"],"+",annot0[j2,"target"])
+    cmoa <- gsub("NA [+] NA","",cmoa)
+    ctarget <- gsub("NA [+] NA","",ctarget)
+    annot1 <- data.frame( drug=combo, moa=cmoa, target=ctarget)
+    annot1
+}
+
+
 ##obj=ngs;methods="GSEA";contrast=NULL;nprune=250
 pgx.computeDrugEnrichment <- function(obj, X, x.drugs, methods=c("GSEA","cor"),
                                       nprune=250, contrast=NULL )

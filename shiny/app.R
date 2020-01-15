@@ -1,8 +1,8 @@
-##
-## Main application for Omics Playground
-##
-##
-##
+##################################################################################
+##                                                                              ##
+##                 Main application for Omics Playground                        ##  
+##                                                                              ##
+##################################################################################
 
 library(shiny)
 library(shinyjs)
@@ -27,7 +27,7 @@ source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 500*1024^2)  ##max 500Mb upload
 OPTIONS <- pgx.readOptions(file="OPTIONS")
 
-## DEV.VERSION = TRUE
+DEV.VERSION = TRUE
 if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 
 if(0) {
@@ -49,6 +49,7 @@ source("modules/ExpressionModule.R", local=TRUE)
 source("modules/EnrichmentModule.R", local=TRUE)
 source("modules/IntersectionModule.R", local=TRUE)
 source("modules/FunctionalModule.R", local=TRUE)
+source("modules/DrugConnectivityModule.R", local=TRUE)
 source("modules/SignatureModule.R", local=TRUE)
 source("modules/ProfilingModule.R", local=TRUE)
 source("modules/CorrelationModule.R", local=TRUE)
@@ -73,6 +74,7 @@ server = function(input, output, session) {
     env[["enrich"]] <- callModule( EnrichmentModule, "enrich", env)
     env[["isect"]]  <- callModule( IntersectionModule, "isect", env)
     env[["func"]]   <- callModule( FunctionalModule, "func", env)
+    env[["drug"]]   <- callModule( DrugConnectivityModule, "drug", env)
     env[["sig"]]    <- callModule( SignatureModule, "sig", env)
     env[["prof"]]   <- callModule( ProfilingModule, "prof", env)
     env[["cor"]]    <- callModule( CorrelationModule, "cor", env)
@@ -195,7 +197,8 @@ ui = navbarPage(
     navbarMenu(
         "Enrichment",
         tabView("Geneset enrichment",EnrichmentInputs("enrich"),EnrichmentUI("enrich")),
-        tabView("Functional analysis", FunctionalInputs("func"), FunctionalUI("func"))
+        tabView("Pathway analysis", FunctionalInputs("func"), FunctionalUI("func")),
+        tabView("Drug connectivity", DrugConnectivityInputs("drug"), DrugConnectivityUI("drug"))
     ),
     navbarMenu(
         "Signature",
