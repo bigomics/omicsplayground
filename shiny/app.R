@@ -23,7 +23,7 @@ source("../R/pgx-include.R", local=TRUE)  ## pass local vars
 pgx.initDatasetFolders(PGX.DIR, force=FALSE, verbose=1)
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 
-options(shiny.maxRequestSize = 500*1024^2)  ##max 500Mb upload
+options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 OPTIONS <- pgx.readOptions(file="OPTIONS")
 
 DEV.VERSION = TRUE

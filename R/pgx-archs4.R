@@ -3,7 +3,16 @@
 ##
 ##
 
+library(rhdf5)
+
 ARCHS4.DIR = "~/.archs4data"
+
+## auto search ARCH4 folder
+search.archs4dir <- c("/data/Projects/Data/archs4data",
+                      "~/bigomics/data/archs4data",
+                      "~/.archs4data")
+ARCHS4.DIR <- names(which(sapply(search.archs4dir,file.exists)))[1]
+cat("setting ARCHS4.DIR folder to",ARCHS4.DIR,"\n")
 
 if(0) {
 
@@ -43,6 +52,8 @@ parseGeoAnnot <- function(annot) {
 ##keyword="cancer"
 geo.selectSeries <- function(keyword, variables=NULL)
 {
+    require(rhdf5)
+
     metadb <- file.path(ARCHS4.DIR,'GEOmetadb.sqlite')
     require(GEOmetadb)        
     ## Get titles from GEO experiments
@@ -274,7 +285,7 @@ my.as.DGEList <- function (a4, id, features = NULL,
                            check_missing_samples = TRUE) 
 {
     require(dplyr)
-
+    
     ##assert_class(a4, "Archs4Repository")
     ##feature_type <- match.arg(feature_type)
     feature_type <- feature_type[1]
