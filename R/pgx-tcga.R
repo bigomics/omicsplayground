@@ -51,7 +51,7 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
     ## names(aa.head) <- aa[ii,2]
     ## aa.head
 
-    dbg("[pgx.TCGA.testSurvivalSignature] extracting expression from H5 matrix file")
+    cat("[pgx.TCGA.testSurvivalSignature] extracting expression from H5 matrix file\n")
     
     h5.samples = h5read(matrix_file, "/meta/gdc_cases.submitter_id")
     h5.genes = h5read(matrix_file, "/meta/genes")            
@@ -73,7 +73,7 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
     dim(expression)
 
     ## Read the survival data
-    dbg("[pgx.TCGA.testSurvivalSignature] reading TCGA survival data...")
+    cat("[pgx.TCGA.testSurvivalSignature] reading TCGA survival data...\n")
     
     surv.file <- file.path(lib.dir, "rtcga-survival.csv")
     surv <- read.csv(surv.file, row.names=1)
@@ -92,7 +92,7 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
     length(all.studies)
     study <- all.studies[1]
 
-    dbg("[pgx.TCGA.testSurvivalSignature] fitting survival probabilities...")
+    cat("[pgx.TCGA.testSurvivalSignature] fitting survival probabilities...\n")
     
     surv.p <- rep(NA,length(all.studies))
     rho.list <- list()
@@ -119,7 +119,7 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
         rho.list[[study]] <- rho
     }
     
-    dbg("[pgx.TCGA.testSurvivalSignature] plotting KM curves...")    
+    cat("[pgx.TCGA.testSurvivalSignature] plotting KM curves...\n")    
     jj <- 1:length(rho.list)
     if(sortby.p) {
         ii <- order(surv.p)

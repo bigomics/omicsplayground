@@ -49,6 +49,22 @@ parseGeoAnnot <- function(annot) {
     lapply(annot[], parse.annot)
 }
 
+metadb <- file.path(ARCHS4.DIR,'GEOmetadb.sqlite')
+geo.getTitleSummary <- function(gse, metadb) {
+    ##metadb <- file.path(ARCHS4.DIR,'GEOmetadb.sqlite')
+    require(GEOmetadb)        
+    ## Get titles from GEO experiments
+    ##if(!file.exists(metadb)) getSQLiteFile(destdir=ARCHS4.DIR)
+    con <- dbConnect(SQLite(),metadb)
+    dbListTables(con)
+    dbListFields(con,'gse')
+    dbListFields(con,'metaInfo')            
+    series.str <- paste0("('",paste(unique(gse),collapse="','"),"')")    
+    sql <- paste("SELECT gse,title,summary FROM gse WHERE gse IN ",series.str)
+    rt <- dbGetQuery(con, sql)
+    return(rt)
+}
+
 ##keyword="cancer"
 geo.selectSeries <- function(keyword, variables=NULL)
 {
