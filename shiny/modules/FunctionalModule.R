@@ -92,6 +92,7 @@ to understand biological functions including GO, KEGG, and WordCloud clustering.
         req(ngs)
         ct <- colnames(ngs$model.parameters$contr.matrix)
         ##ct <- c(ct,"<sd>")
+        ct <- sort(ct)
         updateSelectInput(session, "fa_contrast", choices=ct )
     })
     

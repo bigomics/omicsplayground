@@ -29,6 +29,7 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
                                            sortby.p = FALSE )
 {                                          
     require(survival)
+    require(rhdf5)
 
     ##matrix_file = file.path(ARCHS4.DIR,"tcga_matrix.h5")
     if(!file.exists(matrix_file)) {
