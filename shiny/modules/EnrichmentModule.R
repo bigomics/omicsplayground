@@ -1460,7 +1460,7 @@ EnrichmentModule <- function(input, output, session, env)
         options = gseatable_opts,
         title="Enrichment analysis",
         info.width="500px",
-        height = c(250, 700)
+        height = c(265, 700)
     )
     ## output <- attachModule(output, gseatable_module)
 
@@ -1472,7 +1472,7 @@ EnrichmentModule <- function(input, output, session, env)
         func=genetable.RENDER,
         info.text = genetable_text,
         title="Genes", label="II",
-        height = c(250,700), width = c('100%',800)
+        height = c(265,700), width = c('100%',800)
     )
     ##output <- attachModule(output, genetable_module)
     
@@ -1552,7 +1552,7 @@ EnrichmentModule <- function(input, output, session, env)
         title ="Gene set enrichment for all contrasts",
         info.text = gx_fctable_text,
         caption = gx_fctable_caption,
-        height = c(270,700)
+        height = c(280,700)
     )
     ##output <- attachModule(output, fctable_module)
 
@@ -1656,7 +1656,7 @@ EnrichmentModule <- function(input, output, session, env)
         title = 'Number of significant gene sets',
         info.text = FDRtable_text,
         caption = FDRtable_caption,
-        height = c(270,700)
+        height = c(280,700)
     )
     ##output <- attachModule(output, FDRtable_module)
 

@@ -270,15 +270,21 @@ pgx.initialize <- function(ngs) {
     ngs$samples <- ngs$Y    ## REALLY?
     
     ##-----------------------------------------------------------------------------
-    ## Keep compatible with old formats
+    ## Keep compatible with OLD formats
     ##-----------------------------------------------------------------------------
-    if( all(c("mono","annot") %in% names(ngs$drugs)) ) {
+    if( any(c("mono","combo") %in% names(ngs$drugs)) ) {
         dd <- ngs$drugs[["mono"]]
-        dd[["annot"]] <- ngs$drugs[["annot"]]
+        aa1 <- ngs$drugs[["annot"]]
+        if(is.null(aa1)) {
+            aa1 <- read.csv(file.path(FILES,"L1000_repurposing_drugs.txt"),
+                            sep="\t", comment.char="#")
+            aa1$drug <- aa1$pert_iname
+            rownames(aa1) <- aa1$pert_iname
+        }
+        dd[["annot"]] <- aa1
         ngs$drugs[["activity/L1000"]] <- dd
         if("combo" %in% names(ngs$drugs)) {
             dd2 <- ngs$drugs[["combo"]]
-            aa1 <- ngs$drugs[["annot"]]
             combo <- rownames(dd2$X)
             aa2 <- pgx.createComboDrugAnnot(combo, aa1)             
             dd2[["annot"]] <- aa2

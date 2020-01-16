@@ -1159,7 +1159,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         label="I", info.width="500px",
         options = expr_genetable_opts,
         title = "Differential expression analysis",
-        height = c(250,700)
+        height = c(265,700)
     )
 
     ##output$expr_genetable <- expr_genetable_module$render
@@ -1240,7 +1240,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         func = expr_gsettable.RENDER, 
         info.text = expr_gsettable_text, label="II",
         title="Gene sets",
-        height = c(250,700), width = c('100%',800)        
+        height = c(265,700), width = c('100%',800)        
     )
 
     expr_tablesUI_caption = "<b>Differential expression tables</b>. <b>(I)</b> Statistical results of the the differential expression analysis for selected contrast. The number of stars indicate how many statistical methods identified the gene significant. <b>(II)</b> Correlation and enrichment value of gene sets that contain the gene selected in Table I."
@@ -1320,7 +1320,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         title ="Gene fold changes for all contrasts",
         info.text = expr_fctable_text,
         caption = expr_fctable_caption,
-        height = c(270,700)
+        height = c(280,700)
     )
 
     ## library(shinyjqui)
@@ -1416,7 +1416,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         info.text = expr_FDRtable_text,
         title = 'Number of significant genes',
         caption = expr_FDRtable_caption,
-        height = c(270, 700)
+        height = c(280, 700)
     )
     ##output <- attachModule(output, expr_FDRtable_module)
 
