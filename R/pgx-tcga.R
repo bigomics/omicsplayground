@@ -1,5 +1,3 @@
-ARCHS4.DIR = "~/.archs4data"
-
 if(0) {
 
     BiocManager::install("TCGAbiolinks")
@@ -15,7 +13,6 @@ if(0) {
     brca_RNA <- TCGAretriever::get_profile_data(case_id = q_cases, gprofile_id = rna_prf, glist = q_genes)
     head(brca_RNA[, 1:5])
 
-
     BiocManager::install("curatedTCGAData")
     BiocManager::install("TCGAutils")
     library(curatedTCGAData)
@@ -28,8 +25,11 @@ if(0) {
 
 }
 
-pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100 )
+pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
+                                           sortby.p = FALSE )
 {                                          
+    require(survival)
+
     ##matrix_file = file.path(ARCHS4.DIR,"tcga_matrix.h5")
     if(!file.exists(matrix_file)) {
         stop("cannot find TCGA H5 matrix file")
@@ -73,6 +73,7 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100 )
 
     ## Read the survival data
     dbg("[pgx.TCGA.testSurvivalSignature] reading TCGA survival data...")
+    
     surv.file <- file.path(lib.dir, "rtcga-survival.csv")
     surv <- read.csv(surv.file, row.names=1)
     head(surv)
@@ -90,9 +91,11 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100 )
     length(all.studies)
     study <- all.studies[1]
 
-    dbg("[pgx.TCGA.testSurvivalSignature] plotting KM curves...")
+    dbg("[pgx.TCGA.testSurvivalSignature] fitting survival probabilities...")
     
-    par(mfrow=c(5,7), mar=c(4,4,2,2))
+    surv.p <- rep(NA,length(all.studies))
+    rho.list <- list()
+    names(surv.p) <- all.studies
     for(study in head(all.studies,99)) {
         
         study
@@ -103,23 +106,50 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100 )
         gg <- rownames(expression)
         rho <- cor( expression[,sel], sig[gg], use="pairwise")[,1]
         sel.data <- surv[sel,]
+    
+        ## fit survival curve on two groups
+        poscor <- (rho > median(rho,na.rm=TRUE))
+        table(poscor)
+
+        sdf <- survdiff( Surv(months, status) ~ poscor, data = sel.data)
+        p.val <- 1 - pchisq(sdf$chisq, length(sdf$n) - 1)
+
+        surv.p[study] <- p.val
+        rho.list[[study]] <- rho
+    }
+    
+    dbg("[pgx.TCGA.testSurvivalSignature] plotting KM curves...")    
+    jj <- 1:length(rho.list)
+    if(sortby.p) {
+        ii <- order(surv.p)
+        surv.p <- surv.p[ii]
+        rho.list <- rho.list[ii]
+    }
+
+    par(mfrow=c(5,7), mar=c(2,3,2,1))
+    for(study in names(surv.p)) {
+
+        study
+
+        ## calculate correlation with signature        
+        sel <- which(surv$cancer_type == study)
+        if(length(sel)<20) next()
+        rho <- rho.list[[study]]
+        sel.data <- surv[sel,]
         
         ## fit survival curve on two groups
         poscor <- (rho > median(rho,na.rm=TRUE))
         table(poscor)
         library(survival)
         fit <- survfit( Surv(months, status) ~ poscor, data = sel.data )
-        print(fit)
-        
+
         ##legend.labs <- paste(c("negative","positive"),"correlated")
         legend.labs <- paste(c("rho<0","rho>0"))
         if(1) {
-            sdf <- survdiff( Surv(months, status) ~ poscor, data = sel.data)
-            p.val <- 1 - pchisq(sdf$chisq, length(sdf$n) - 1)
-            p.val <- round(p.val, 3)
-            plot(fit, col=2:3, lwd=2, main=study)
-            legend("bottomleft", legend.labs, pch="__", col=2:3, cex=1.4)
-            legend("bottomright", paste("p=",p.val), bty='n', cex=1.5)
+            p.val <- round(surv.p[study], 3)
+            plot(fit, col=2:3, lwd=2, main=study, xlab="time   (days)")
+            legend("bottomleft", legend.labs, pch="__", lwd=2, col=2:3, cex=1.0)
+            legend("bottomright", paste("p=",p.val), bty='n', cex=1.3)
         } else {
             library(survminer)
             ggsurvplot(
