@@ -60,7 +60,7 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
     sample_index <- 1:length(h5.samples)
     gene_index <- 1:length(h5.genes)            
     
-    sample_index <- which(h5.samples %in% samples)
+    ##sample_index <- which(h5.samples %in% samples)
     gene_index <- which(h5.genes %in% genes)
     head(gene_index)
     
