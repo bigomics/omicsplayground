@@ -26,7 +26,7 @@ source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 OPTIONS <- pgx.readOptions(file="OPTIONS")
 
-##DEV.VERSION = TRUE
+DEV.VERSION = TRUE
 if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 
 if(0) {
