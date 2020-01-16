@@ -11,7 +11,7 @@ CorrelationUI <- function(id) {
     ui <- fillCol(
         height = 750,
         tabsetPanel(
-            id = ns("tabs1"),
+            id = ns("tabs"),
             tabPanel("Correlation",uiOutput(ns("corAnalysis_UI"))),
             tabPanel("Functional",uiOutput(ns("corFunctional_UI")))
         )

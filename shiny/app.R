@@ -26,7 +26,7 @@ source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 OPTIONS <- pgx.readOptions(file="OPTIONS")
 
-DEV.VERSION = TRUE
+## DEV.VERSION = TRUE
 if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 
 if(0) {
@@ -52,7 +52,7 @@ source("modules/DrugConnectivityModule.R", local=TRUE)
 source("modules/SignatureModule.R", local=TRUE)
 source("modules/ProfilingModule.R", local=TRUE)
 source("modules/CorrelationModule.R", local=TRUE)
-if(DEV.VERSION) source("../../omicsplayground-dev/shiny/modules/BiomarkerModule.R", local=TRUE)
+source("modules/BiomarkerModule.R", local=TRUE)
 if(DEV.VERSION) source("../../omicsplayground-dev/shiny/modules/MetaModule.R", local=TRUE)
 if(DEV.VERSION) source("../../omicsplayground-dev/shiny/modules/BatchCorrectModule.R", local=TRUE)
 
@@ -77,7 +77,7 @@ server = function(input, output, session) {
     env[["sig"]]    <- callModule( SignatureModule, "sig", env)
     env[["prof"]]   <- callModule( ProfilingModule, "prof", env)
     env[["cor"]]    <- callModule( CorrelationModule, "cor", env)
-    if(DEV.VERSION) env[["bio"]]  <- callModule( BiomarkerModule, "bio", env)
+    env[["bio"]]    <- callModule( BiomarkerModule, "bio", env)
     if(DEV.VERSION) env[["meta"]] <- callModule( MetaModule, "meta", env)
     if(DEV.VERSION) env[["bc"]]   <- callModule( BatchCorrectModule, "bc", env)
 
@@ -110,14 +110,13 @@ server = function(input, output, session) {
         hideTab("view-tabs","Resource info")
         hideTab("enrich-tabs1","GeneMap")
         hideTab("maintabs","Development")
-        ## hideTab("maintabs","BatchCorrect")
-        ## hideTab("maintabs","Biomarker analysis")
-        ## hideTab("maintabs","MetaAnalysis")
-        ## hideTab("bio-tab1","Multi-level")
+        hideTab("maintabs","Biomarker analysis")
+        hideTab("bio-tabs","Multi-level")
         shinyjs::hide(selector = "div.download-button")
 
         if(usermode=="BASIC") {
             hideTab("maintabs","scProfiling")
+            hideTab("maintabs","Biomarker analysis")            
             hideTab("clust-tabs2","Feature ranking")
             hideTab("expr-tabs1","Volcano (methods)")
             hideTab("expr-tabs2","FDR table")
@@ -126,6 +125,7 @@ server = function(input, output, session) {
             shinyjs::hide(selector = "div.download-button")
         } else {
             showTab("maintabs","scProfiling")
+            showTab("maintabs","Biomarker analysis")
             showTab("clust-tabs2","Feature ranking")
             showTab("expr-tabs1","Volcano (methods)")
             showTab("expr-tabs2","FDR table")
@@ -135,12 +135,9 @@ server = function(input, output, session) {
         }
         if(DEV.VERSION) {
             showTab("maintabs","Development")
-            ## showTab("maintabs","Biomarker analysis")
-            ## showTab("maintabs","BatchCorrect")
-            ## showTab("maintabs","MetaAnalysis")
             showTab("view-tabs","Resource info")
             showTab("enrich-tabs1","GeneMap")
-            showTab("bio-tab1","Multi-level")
+            showTab("bio-tabs","Multi-level")
         }
     })
 
@@ -158,7 +155,6 @@ if(DEV.VERSION) {
     dev.tabs <- navbarMenu(
         "Development",
         tabView("BatchCorrect", BatchCorrectInputs("bc"), BatchCorrectUI("bc")),
-        tabView("Biomarker analysis", BiomarkerInputs("bio"), BiomarkerUI("bio")),
         tabView("MetaAnalysis", MetaInputs("meta"), MetaUI("meta"))
     )
 }
@@ -202,7 +198,8 @@ ui = navbarPage(
     navbarMenu(
         "Signature",
         tabView("Intersection analysis", IntersectionInputs("isect"), IntersectionUI("isect")),
-        tabView("Signature analysis", SignatureInputs("sig"), SignatureUI("sig"))
+        tabView("Signature analysis", SignatureInputs("sig"), SignatureUI("sig")),
+        tabView("Biomarker analysis", BiomarkerInputs("bio"), BiomarkerUI("bio"))        
     ),
     tabView("scProfiling", ProfilingInputs("prof"), ProfilingUI("prof")),
     help.tabs,
