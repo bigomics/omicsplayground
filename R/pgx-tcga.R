@@ -126,7 +126,9 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
         surv.p <- surv.p[ii]
         rho.list <- rho.list[ii]
     }
-
+    surv.q <- p.adjust(surv.p)
+    names(surv.q) <- names(surv.p)
+    
     par(mfrow=c(5,7), mar=c(2,3,2,1))
     for(study in names(surv.p)) {
 
@@ -147,10 +149,13 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
         ##legend.labs <- paste(c("negative","positive"),"correlated")
         legend.labs <- paste(c("rho<0","rho>0"))
         if(1) {
-            p.val <- round(surv.p[study], 3)
-            plot(fit, col=2:3, lwd=2, main=study, xlab="time   (days)")
+            plot(fit, col=2:3, lwd=2, main=study, xlab="time   (days)", cex.main=1.1)
             legend("bottomleft", legend.labs, pch="__", lwd=2, col=2:3, cex=1.0)
-            legend("bottomright", paste("p=",p.val), bty='n', cex=1.3)
+
+            p.val <- round(surv.p[study], 3)
+            q.val <- round(surv.q[study], 3)
+            pq <- c(paste("p=",p.val), paste("q=",q.val))
+            legend("bottomright", pq, bty='n', cex=1.0)
         } else {
             library(survminer)
             ggsurvplot(

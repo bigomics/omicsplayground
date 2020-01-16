@@ -30,7 +30,7 @@ DEV.VERSION = TRUE
 if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 
 if(0) {
-    load("../data/geiger2016-arginineL.pgx")
+    load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
     load("../data/GSE10846-dlbcl2.pgx")
     load("../data/GSE10846-xgreta.pgx")

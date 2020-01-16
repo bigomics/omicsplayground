@@ -237,6 +237,7 @@ between genes and find coregulated modules."
 
         ngs <- inputData()
         alertDataLoaded(session,ngs)
+        req(ngs)
         
         req(input$cor_gene)
         res <- getGenePartialCorrelation()
@@ -244,16 +245,22 @@ between genes and find coregulated modules."
         gene <- rownames(res$cor)[1]
         gene <- input$cor_gene
         gene
-        NTOP = 40
-        prho <- head( res$meta.pcor[gene,], NTOP)
-        rho  <- head( res$cor[gene,], NTOP)
+        NTOP = 50
+        rho  <- res$cor[gene,]
+        rho <- head(rho[order(-abs(rho))],NTOP)
+        rho <- rho[order(-rho)]
+        if(!is.null(res$meta.pcor)) {
+            prho <- res$meta.pcor[gene,]
+            prho <- prho[names(rho)]
+        }
         
         par(mfrow=c(1,1), mar=c(10,4,1,1))
         barplot(rho, beside=FALSE, las=3,
-                ylab = "correlation" )
+                ylab = "correlation",
+                cex.names=0.85 )
                 
         if(!is.null(prho)) {
-       
+            prho <- prho[names(rho)]
             prho[prho>0] <- pmin(prho[prho>0],rho[prho>0])
             prho[prho<0] <- pmax(prho[prho<0],rho[prho<0])
             barplot(prho, beside=FALSE, add=TRUE,
@@ -286,7 +293,7 @@ between genes and find coregulated modules."
         ##pdf.width = 14, pdf.height = 4, 
         height = c(0.45*fullH,500),
         width = c('auto',800),
-        res = c(65,80)
+        res = c(63,80)
     )
 
     ##-----------------------------------------------------------
@@ -348,7 +355,9 @@ between genes and find coregulated modules."
 
         NTOP = 25
         j <- which(rownames(res$cor) == this.gene)
-        rho  <- head(res$cor[j,-j],NTOP)
+        rho <- res$cor[j,-j]
+        rho <- head(rho[order(-abs(rho))],NTOP)
+        rho <- rho[order(-rho)]
         
         ngs <- inputData()
         par(mfrow=c(5,5), mar=c(4,3.5,0.5,0.2),
@@ -387,7 +396,11 @@ between genes and find coregulated modules."
     ## Correlation GSEA
     ##--------------------------------------------------------------------------------
     getCorrelationGSEA <- reactive({
+
         ngs <- inputData()
+        alertDataLoaded(session,ngs)
+        req(ngs)
+        
         gene = "CD4"
         gene <- input$cor_gene
         gx <- ngs$X[gene,]

@@ -673,7 +673,8 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
 
         df <- getPGXTable()
         req(df)
-        
+
+        df$dataset  <- gsub("[.]pgx$"," ",df$dataset)
         df$conditions  <- gsub("[,]"," ",df$conditions)
         df$conditions  <- sapply(as.character(df$conditions), andothers, split=" ", n=5)
         df$description <- shortstring(as.character(df$description),200)
@@ -698,7 +699,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
                           deferRender=TRUE
                       )  ## end of options.list 
                       )  %>%
-            DT::formatStyle(0, target='row', fontSize='12px', lineHeight='95%')
+            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='95%')
 
     })
 
