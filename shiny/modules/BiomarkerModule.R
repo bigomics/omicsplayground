@@ -623,7 +623,7 @@ be multiple categories (classes) or patient survival data."
         pdf.width=10, pdf.height=10,
         height = 370, res=72
     )
-
+    
     pdx_decisiontree.opts = tagList()
     callModule(
         plotModule,
