@@ -24,9 +24,9 @@ BiomarkerModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
     inputData <- env[["load"]][["inputData"]]
-    fullH = 760  ## full height of panel
-    rowH  = 350  ## row height of panel
-    imgH  = 280
+    fullH = 750  ## full height of panel
+    rowH  = 320  ## row height of panel
+    imgH  = 260
         
     description = "<b>Biomarker Module.</b> Select biomarkers that can be used for
 classification or prediction purposes. The phenotype of interest can
@@ -54,8 +54,8 @@ be multiple categories (classes) or patient survival data."
             hr(), br(),             
             tipify(selectInput(ns("pdx_predicted"),"Predicted target:", choices=NULL),
                    "Select the target variable for biomarker selection.",placement="top"),
-            tipify( selectInput(ns("pdx_level"),"Feature level:", choices=c("gene","geneset")),
-                   "Select feature level: gene or geneset", placement="top"),
+            ##tipify( selectInput(ns("pdx_level"),"Feature level:", choices=c("gene","geneset")),
+            ##       "Select feature level: gene or geneset", placement="top"),
             tipify( selectInput(ns("pdx_filter"),"Feature filter:", choices=NULL),
                    "Select a filter for the features.", placement="top"),
             conditionalPanel(
@@ -124,12 +124,11 @@ be multiple categories (classes) or patient survival data."
 
     observe({
         ngs <- inputData()
-        ##if(is.null(ngs)) return(NULL)
-        req(ngs, input$pdx_level)
+        req(ngs)
         ## input$pdx_runbutton
         dbg("<module-biomarker::observe2> reacted")
 
-        if(input$pdx_level=="geneset") {
+        if(FALSE && isolate(input$pdx_level=="geneset")) {
             ft <- names(COLLECTIONS)
             nn <- sapply(COLLECTIONS, function(x) sum(x %in% rownames(ngs$gsetX)))
             ft <- ft[nn >= 10]
@@ -138,7 +137,8 @@ be multiple categories (classes) or patient survival data."
             ft <- pgx.getFamilies(ngs,nmin=10,extended=FALSE)
         }
         ft <- sort(ft)
-        if(input$pdx_level == "gene") ft = sort(c("<custom>",ft))
+        ##if(input$pdx_level == "gene") ft = sort(c("<custom>",ft))
+        ft = sort(c("<custom>",ft))
         updateSelectInput(session, "pdx_filter", choices=ft, selected="<all>")    
 
         dbg("<module-biomarker::observe2> done!")
@@ -196,7 +196,7 @@ be multiple categories (classes) or patient survival data."
         ## select features
         ##-------------------------------------------
         ## group prediction
-        if(isolate(input$pdx_level)=="geneset") {
+        if(FALSE && isolate(input$pdx_level)=="geneset") {
             X <- ngs$gsetX[,names(y)]
         } else {
             X <- ngs$X[,names(y)]
@@ -215,7 +215,7 @@ be multiple categories (classes) or patient survival data."
         if(is.null(ft)) return(NULL)
         
         pp <- rownames(X)
-        if(isolate(input$pdx_level=="geneset")) {
+        if(FALSE && isolate(input$pdx_level=="geneset")) {
             if(!(ft %in% names(COLLECTIONS))) return(NULL)
             pp <- COLLECTIONS[[ft]]
         } else {
@@ -406,7 +406,7 @@ be multiple categories (classes) or patient survival data."
         R <- R[order(-rowSums(R,na.rm=TRUE)),,drop=FALSE]
         R <- pmax(R,0.05)
 
-        if(input$pdx_level=="geneset") {
+        if(FALSE && isolate(input$pdx_level=="geneset")) {
             par(mfrow=c(1,2), oma=c(1,1,1,1)*0.5, mgp=c(2.2,0.8,0))
             par(mar=c(4,8,2,4))
             frame()
@@ -414,7 +414,7 @@ be multiple categories (classes) or patient survival data."
             rownames(R.top) <- tolower(rownames(R.top))
             rownames(R.top) <- substring(rownames(R.top),1,60)
             barplot( t(R.top), las=1, horiz=TRUE,
-                    cex.names=0.95, xlab="cumulative importance" )
+                    cex.names=0.75, xlab="cumulative importance" )
             klr <- grey.colors(ncol(R))
             legend("topright",
                    legend = colnames(R), fill=klr,
@@ -425,7 +425,7 @@ be multiple categories (classes) or patient survival data."
             par(mar=c(7,4,0,4))
             R.top <- head(R,40)
             barplot( t(R.top), las=3, horiz=FALSE,
-                    cex.names=0.9, ylab="cumulative importance" )
+                    cex.names=0.75, ylab="cumulative importance" )
             klr <- grey.colors(ncol(R))
             legend("topright",
                    legend=rev(colnames(R)), fill=rev(klr),
@@ -451,7 +451,7 @@ be multiple categories (classes) or patient survival data."
         cat("<predict:pdx_heatmap> called\n")
         
         gg <- NULL
-        if(input$pdx_level=="geneset") {
+        if(FALSE && isolate(input$pdx_level=="geneset")) {
             gg <- rownames(res$X)
             gg <- intersect(gg, rownames(ngs$gsetX))
             X <- ngs$gsetX[gg,]
@@ -538,7 +538,7 @@ be multiple categories (classes) or patient survival data."
         
         ##vars0 <- setdiff(vars,rownames(res$X))
         ##dbg("pdx_boxplots:: vars0=",vars0,"\n")
-        if(input$pdx_level=="geneset") {
+        if(FALSE && isolate(input$pdx_level=="geneset")) {
             ##xvars <- res$rf$orig.names[vars]
             vars <- intersect(vars,rownames(res$X))
         } else {
@@ -607,7 +607,7 @@ be multiple categories (classes) or patient survival data."
         ##options = pdx_importance.opts,
         label="a",
         pdf.width=10, pdf.height=5,
-        height = 280, res=80
+        height = 270, res=80
         )
     
 
@@ -621,7 +621,7 @@ be multiple categories (classes) or patient survival data."
         info.text = "The heatmap shows the expression of genes of the top most important features.",
         ##options = pdx_heatmap.opts,
         pdf.width=10, pdf.height=10,
-        height = 400, res=72
+        height = 370, res=72
     )
 
     pdx_decisiontree.opts = tagList()
@@ -633,7 +633,7 @@ be multiple categories (classes) or patient survival data."
         info.text = "The decision tree shows a tree solution for classification based on the top most important features.",
         ##options = pdx_decisiontree.opts,
         pdf.width=10, pdf.height=6,
-        height = 350, res=72
+        height = 315, res=72
     )
 
     pdx_boxplots.opts = tagList()
@@ -646,7 +646,7 @@ be multiple categories (classes) or patient survival data."
         info.text = "These boxplots shows the expression of genes/samples of the identified features.",
         ##options = pdx_boxplots.opts,
         pdf.width=10, pdf.height=5.5,
-        height = 350, res=90
+        height = 320, res=90
     )
 
     pdx_biomarker_caption = "<b>Biomarker selection</b>. The expression of certain genes may be used as *markers* to predict a certain phenotype such as response to a therapy. Finding such *biomarkers* are of high importance in clinical applications. <b>(a)</b> An importance score for each feature is calculated using multiple machine learning algorithms, including LASSO, elastic nets, random forests, and extreme gradient boosting. The top features are plotted  according to cumulative ranking by the algorithms. <b>(b)</b> The heatmap shows the expression distribution for the top most important features. <b>(c)</b> The decision tree shows (one) tree solution for classification based on the top most important features. <b>(d)</b> Boxplots show the expression of biomarker genes across the groups."
@@ -656,7 +656,8 @@ be multiple categories (classes) or patient survival data."
             height = fullH,
             flex = c(1,0.05,NA),
             fillRow(
-                flex = c(1,0.1,1), 
+                flex = c(1,0.1,1),
+                height = fullH - 100,                
                 fillCol(
                     flex = c(0.7,1),
                     plotWidget(ns("pdx_importance")),
