@@ -11,6 +11,13 @@ DEV.VERSION=FALSE
 ## Added GLOBAL info
 ##-----------------------------------------------------------------------------
 
+## auto search ARCH4 folder
+search.archs4dir <- c("/data/Projects/Data/archs4data",
+                      "~/bigomics/data/archs4data", "~/.archs4data")
+ARCHS4.DIR <- names(which(sapply(search.archs4dir,file.exists)))[1]
+cat("setting ARCHS4.DIR folder to",ARCHS4.DIR,"\n")
+
+
 ## Caching the init files
 INIT.FILE <- file.path(FILES,"global-init.rda")
 INIT.FILE
@@ -115,6 +122,7 @@ if(file.exists(INIT.FILE)) {
     save( list=newvars, file=INIT.FILE)
     
 }
+
 
 ##================================================================================
 ##========================== FUNCTIONS ===========================================
