@@ -491,7 +491,7 @@ be multiple categories (classes) or patient survival data."
         
     })    
 
-    pdx_decisiontree.RENDER <- reactive({
+    pdx_decisiontree.RENDER %<a-% reactive({
 
         dbg("<pdx_decisiontree.RENDER> reacted")
         
@@ -629,6 +629,7 @@ be multiple categories (classes) or patient survival data."
         plotModule,
         "pdx_decisiontree",
         func = pdx_decisiontree.RENDER,
+        func2 = pdx_decisiontree.RENDER,
         title = "Decision tree", label="c",
         info.text = "The decision tree shows a tree solution for classification based on the top most important features.",
         ##options = pdx_decisiontree.opts,
