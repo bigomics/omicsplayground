@@ -115,7 +115,7 @@ server = function(input, output, session) {
         shinyjs::hide(selector = "div.download-button")
 
         if(usermode=="BASIC") {
-            hideTab("maintabs","scProfiling")
+            hideTab("maintabs","SingleCell")
             hideTab("maintabs","Biomarker analysis")            
             hideTab("clust-tabs2","Feature ranking")
             hideTab("expr-tabs1","Volcano (methods)")
@@ -124,7 +124,7 @@ server = function(input, output, session) {
             hideTab("enrich-tabs2","FDR table")
             shinyjs::hide(selector = "div.download-button")
         } else {
-            showTab("maintabs","scProfiling")
+            showTab("maintabs","SingleCell")
             showTab("maintabs","Biomarker analysis")
             showTab("clust-tabs2","Feature ranking")
             showTab("expr-tabs1","Volcano (methods)")
@@ -201,7 +201,7 @@ ui = navbarPage(
         tabView("Signature analysis", SignatureInputs("sig"), SignatureUI("sig")),
         tabView("Biomarker analysis", BiomarkerInputs("bio"), BiomarkerUI("bio"))        
     ),
-    tabView("scProfiling", ProfilingInputs("prof"), ProfilingUI("prof")),
+    tabView("SingleCell", ProfilingInputs("prof"), ProfilingUI("prof")),
     help.tabs,
     dev.tabs,
     footer = tagList(
