@@ -13,7 +13,7 @@ FROM bigomics/omicsplayground:base
 #------------------------------------------------------------
 ## RUN R -e "install.packages(c('umap','corrplot','wordcloud'))"
 ## RUN pip install umap-learn
-RUN R -e "BiocManager::install(c('pathview','RcppParallel'))"
+RUN R -e "BiocManager::install(c('pathview','randomForest'))"
 RUN R -e "devtools::install_github('wt2015-github/FastGGM')"
 
 #------------------------------------------------------------

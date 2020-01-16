@@ -26,7 +26,7 @@ source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 OPTIONS <- pgx.readOptions(file="OPTIONS")
 
-## DEV.VERSION = TRUE
+##DEV.VERSION = TRUE
 if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 
 if(0) {
@@ -34,7 +34,7 @@ if(0) {
     load("../data/GSE10846-dlbcl.pgx")
     load("../data/GSE10846-dlbcl2.pgx")
     load("../data/GSE10846-xgreta.pgx")
-    load("../data/GSE114716-ipilimumab.pgx")
+    load("../data/guarda2019-myc-12k-LT.pgx")
     load("../../omicsplayground-dev/data/CCLE-drugSX2.pgx")
     ngs = pgx.initialize(ngs)
 }
@@ -104,28 +104,31 @@ server = function(input, output, session) {
 
     ## Hide/show certain sections depending on USER MODE
     observe({
+
         usermode <- env[["load"]][["usermode"]]()
         if(length(usermode)==0) usermode <- "BASIC"
         dbg("usermode = ",usermode)
+        
         hideTab("view-tabs","Resource info")
-        hideTab("enrich-tabs1","GeneMap")
         hideTab("maintabs","Development")
         hideTab("maintabs","Biomarker analysis")
-        hideTab("bio-tabs","Multi-level")
+        hideTab("maintabs","Drug connectivity")
+        hideTab("maintabs","SingleCell")
         shinyjs::hide(selector = "div.download-button")
 
-        if(usermode=="BASIC") {
-            hideTab("maintabs","SingleCell")
-            hideTab("maintabs","Biomarker analysis")            
-            hideTab("clust-tabs2","Feature ranking")
-            hideTab("expr-tabs1","Volcano (methods)")
-            hideTab("expr-tabs2","FDR table")
-            hideTab("enrich-tabs1","Volcano (methods)")
-            hideTab("enrich-tabs2","FDR table")
-            shinyjs::hide(selector = "div.download-button")
-        } else {
+        hideTab("enrich-tabs1","GeneMap")
+        hideTab("bio-tabs","Multi-level")
+        hideTab("clust-tabs2","Feature ranking")
+        hideTab("expr-tabs1","Volcano (methods)")
+        hideTab("expr-tabs2","FDR table")
+        hideTab("enrich-tabs1","Volcano (methods)")
+        hideTab("enrich-tabs2","FDR table")
+        
+        if(usermode != "BASIC") {
             showTab("maintabs","SingleCell")
             showTab("maintabs","Biomarker analysis")
+            showTab("maintabs","Drug connectivity")
+
             showTab("clust-tabs2","Feature ranking")
             showTab("expr-tabs1","Volcano (methods)")
             showTab("expr-tabs2","FDR table")
@@ -133,12 +136,14 @@ server = function(input, output, session) {
             showTab("enrich-tabs2","FDR table")
             shinyjs::show(selector = "div.download-button")
         }
+
         if(DEV.VERSION) {
             showTab("maintabs","Development")
             showTab("view-tabs","Resource info")
             showTab("enrich-tabs1","GeneMap")
             showTab("bio-tabs","Multi-level")
         }
+        
     })
 
     waiter_hide()
