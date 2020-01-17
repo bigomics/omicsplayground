@@ -1,41 +1,4 @@
 
-pgx.createAllFC <- function(pgx.files, pgx.names=NULL)
-{
-    require(rhdf5)
-
-    ##pgx0 <- dir(pgx.dir, "[.]pgx$", full.names=FALSE)
-    ##pgx <- dir(pgx.dir, "[.]pgx$", full.names=TRUE)
-    if(is.null(pgx.names) && !is.null(names(pgx.files))) {
-        pgx.names <- names(pgx.files)
-    }
-    if(is.null(pgx.names)) {
-        pgx.names <- pgx.files
-    }
-
-    F <- list()
-    cat("reading FC from",length(pgx.files),"pgx files ")
-    i=1
-    for(i in 1:length(pgx.files)) {
-        if(!file.exists(pgx.files[i])) next()
-        cat(".")
-        load(pgx.files[i], verbose=0)
-        meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
-        rownames(meta$fc) <- toupper(rownames(meta$fc))
-        pgx <- sub(".*[/]|[.]pgx$","",pgx.names[i])
-        colnames(meta$fc) <- paste0("[",pgx,"] ",colnames(meta$fc))
-        F[[ pgx ]] <- meta$fc    
-    }
-    cat("\n")
-    
-    genes <- sort(unique(unlist(sapply(F, rownames))))
-    length(genes)
-    
-    F <- lapply(F, function(x) x[match(genes,rownames(x)),,drop=FALSE])
-    allFC <- do.call(cbind, F)
-    rownames(allFC) <- genes
-    return(allFC)
-}
-
 ##h5.file="test.h5";chunk=100
 pgx.saveMatrixH5 <- function(X, h5.file, chunk=0 )
 {
@@ -70,21 +33,6 @@ pgx.saveMatrixH5 <- function(X, h5.file, chunk=0 )
 
     h5write( rownames(X), h5.file, "data/rownames")
     h5write( colnames(X), h5.file, "data/colnames")    
-
-    ## make big ranking matrix
-    orderx <- apply(X,2,order)
-    rownames(orderx) <- rownames(X)
-    dim(orderx)
-
-    sig100.dn <- apply(head(orderx,100),2,function(i) list(rownames(X)[i]))
-    sig100.dn <- unlist(sig100.dn, recursive=FALSE)
-    sig100.up <- apply(tail(orderx,100),2,function(i) list(rev(rownames(X)[i])))
-    sig100.up <- unlist(sig100.up, recursive=FALSE)
-    names(sig100.dn) <- paste(names(sig100.dn),"(DOWN)")
-    names(sig100.up) <- paste(names(sig100.up),"(UP)")    
-    h5write( sig100.dn, h5.file, "data/sig100.dn")  ## can write list???    
-    h5write( sig100.up, h5.file, "data/sig100.up")  ## can write list??
-
     
     h5closeAll()
 }
