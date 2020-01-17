@@ -67,18 +67,10 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     return(res)
 }
 
-pgx.createSignatureH5 <- function(pgx.files, h5.file, chunk=100, pgx.names=NULL)
+chunk=100
+pgx.createSignatureH5 <- function(pgx.files, h5.file, chunk=100)
 {
     require(rhdf5)
-
-    ##pgx0 <- dir(pgx.dir, "[.]pgx$", full.names=FALSE)
-    ##pgx <- dir(pgx.dir, "[.]pgx$", full.names=TRUE)
-    if(is.null(pgx.names) && !is.null(names(pgx.files))) {
-        pgx.names <- names(pgx.files)
-    }
-    if(is.null(pgx.names)) {
-        pgx.names <- pgx.files
-    }
 
     ##--------------------------------------------------
     ## make big FC signature matrix
@@ -92,13 +84,13 @@ pgx.createSignatureH5 <- function(pgx.files, h5.file, chunk=100, pgx.names=NULL)
         load(pgx.files[i], verbose=0)
         meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         rownames(meta$fc) <- toupper(rownames(meta$fc))
-        pgx <- gsub(".*[/]|[.]pgx$","",pgx.names[i])
+        pgx <- gsub(".*[/]|[.]pgx$","",pgx.files[i])
         colnames(meta$fc) <- paste0("[",pgx,"] ",colnames(meta$fc))
         F[[ pgx ]] <- meta$fc    
     }
     cat("\n")
     
-    genes <- sort(unique(as.vector(sapply(F,rownames))))
+    genes <- sort(unique(as.vector(unlist(sapply(F,rownames)))))
     length(genes)    
     F <- lapply(F, function(x) x[match(genes,rownames(x)),,drop=FALSE])
     X <- do.call(cbind, F)
