@@ -680,7 +680,7 @@ tableWidget <- function(id) {
 }
 
 tableModule <- function(input, output, session, 
-                        func, info.text="Info text",
+                        func, func2=NULL, info.text="Info text",
                         title=NULL, label=NULL, caption=NULL, 
                         server=TRUE, ##inputs=NULL, 
                         ##no.download = FALSE, just.info=FALSE,
@@ -763,24 +763,28 @@ tableModule <- function(input, output, session,
         }
     )
     output$csv <- download.csv
+    
+    if(is.null(func2)) func2 <- func
+    if(length(height)==1) height <- c(height,700)
+    if(length(width)==1)  width  <- c(width,1280)
+    ifnotchar.int <- function(s) ifelse(grepl("[%]|auto",s),s,as.integer(s))
+    width.1 <- ifnotchar.int(width[1])
+    width.2 <- ifnotchar.int(width[2])
+    height.1 <- ifnotchar.int(height[1])
+    height.2 <- ifnotchar.int(height[2])
 
     output$datatable <- renderDataTable({
         dt <- func()
         ## write.csv(dt$x$data, file=CSVFILE, row.names=FALSE)
         dt
     })
-
-    output$popuptable <- renderUI({
-        tagList( renderDataTable(func()) )
+    output$datatable2 <- renderDataTable({
+        func2()
     })
-
-    if(length(height)==1) height <- c(height,700)
-    if(length(width)==1)  width  <- c(width,1200)
-    ifnotchar.int <- function(s) ifelse(grepl("[%]|auto",s),s,as.integer(s))
-    width.1 <- ifnotchar.int(width[1])
-    width.2 <- ifnotchar.int(width[2])
-    height.1 <- ifnotchar.int(height[1])
-    height.2 <- ifnotchar.int(height[2])
+    
+    output$popuptable <- renderUI({
+        dataTableOutput(ns("datatable2"), width=width.2-40, height=height.2-40)
+    })
     
     output$widget <- renderUI({
 
@@ -817,17 +821,6 @@ tableModule <- function(input, output, session,
         )
     })
     ##outputOptions(output, "widget", suspendWhenHidden=FALSE) ## important!!!
-    
-    ##module <- list(
-    ##id = id,
-    ##.tmpfiles = c(csv=CSVFILE),
-    ##caption = caption,
-    ## render = render,
-    ## render2 = render2,
-    ## download.csv = download.csv,
-    ## buttons = buttons
-    ##)x
-    ## attr(module, "class") <- "ShinyModule"
 
     module <- list(
         rows_selected = reactive(input$datatable_rows_selected),

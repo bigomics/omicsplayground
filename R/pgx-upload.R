@@ -186,11 +186,11 @@ pgx.upload <- function(counts, samples, contrasts, ## genes,
 
     ngs$timings <- c()
     
-    USER.GENETEST.METHODS = c("ttest","ttest.welch","ttest.rank",
-                              "voom.limma","trend.limma","notrend.limma",
-                              "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
-    USER.GENESETTEST.METHODS = c("fisher","gsva","ssgsea","spearman",
-                                 "camera", "fry","fgsea") ## no GSEA, too slow...
+    GENETEST.METHODS = c("ttest","ttest.welch","ttest.rank",
+                         "voom.limma","trend.limma","notrend.limma",
+                         "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
+    GENESETTEST.METHODS = c("fisher","gsva","ssgsea","spearman",
+                            "camera", "fry","fgsea") ## no GSEA, too slow...
     
     ## ------------------ gene level tests ---------------------
     if(!is.null(progress)) progress$inc(0.1, detail = "testing genes")
