@@ -29,6 +29,7 @@ DataViewModule <- function(input, output, session, env)
     imgH = 315  ## height of images
     fullH = 750 ## full height of panel
     tabH = 600  ## height of tables
+    ##tabH = "70vh"  ## height of tables
     
     description = "<b>DataView.</b> Information and descriptive statistics to quickly lookup a gene, check the total counts, or view the data tables."
     output$description <- renderUI(HTML(description))
@@ -730,7 +731,7 @@ DataViewModule <- function(input, output, session, env)
         }    
         ##output <- paste0("<div style='background-color: #dde6f0;'>",output,"</div>")
         ##div(HTML(output), class="gene-info-output", style="overflow: auto; height: 260px;")
-        div(HTML(output), class="gene-info-output", style="overflow: auto;")
+        div(HTML(output), class="gene-info-output", style="overflow-y: auto;")
         ##div(HTML(output), class="gene-info-output")
     })
 
@@ -1355,7 +1356,47 @@ DataViewModule <- function(input, output, session, env)
     ##================================= Samples ======================================
     ##================================================================================
 
-    data_phenoClustering.RENDER <- reactive({
+    data_phenoHeatmap.RENDER <- reactive({
+        ngs = inputData()
+        req(ngs)
+        dbg("[data_phenoHeatmap.RENDER] reacted")
+
+        annot <- ngs$samples
+        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+        annot <- annot[samples,,drop=FALSE]
+        annot.ht <- ifelse( ncol(annot) > 10, 3.5, 5)
+        annot.ht <- ifelse( ncol(annot) > 50, 2.5, annot.ht)
+        
+        do.clust <- input$data_phenoclustsamples
+        plt <- pgx.plotPhenotypeMatrix0(
+            annot, annot.ht=annot.ht, cluster.samples=do.clust)
+        ## plt <- plt %>% config(displayModeBar = FALSE)
+        plt
+    })
+    
+    data_phenoHeatmap_opts <- tagList(
+        tipify( checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
+               "Cluster samples.", placement="top")        
+    )
+        
+    data_phenoHeatmap_caption = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (phenotype data)."
+
+    callModule(
+        plotModule,
+        id = "data_phenoHeatmap", label="a",
+        func = data_phenoHeatmap.RENDER,
+        func2 = data_phenoHeatmap.RENDER,        
+        ## plotlib = "iheatmapr", 
+        title = "Phenotype clustering",
+        ##info.text = "Sample information table with information about phenotype of samples.",
+        options = data_phenoHeatmap_opts,
+        height = c(360,600), width = c('auto',1200), res=c(68,75),
+        pdf.width=10, pdf.height=6 
+    )
+    ##output <- attachModule(output, data_sampleTable_module) 
+
+    data_phenoCorrelationMatrix.RENDER %<a-% reactive({
+
         ngs = inputData()
         req(ngs)
         dbg("[data_phenoClustering.RENDER] reacted")
@@ -1363,32 +1404,28 @@ DataViewModule <- function(input, output, session, env)
         annot <- ngs$samples
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
         annot <- annot[samples,,drop=FALSE]
-        annot.ht <- ifelse( ncol(annot) > 10, 3, 5)
+        pq <- pgx.testPhenoCorrelation(annot, plot=TRUE)
 
-        do.clust <- input$data_phenoclustsamples
-        plt <- pgx.plotPhenotypeMatrix0(
-            annot, annot.ht=annot.ht, cluster.samples=do.clust)
-        ## plt <- plt %>% config(displayModeBar = FALSE)
-        plt
     })
 
-    data_phenoClustering_opts <- tagList(
+    data_phenoCorrelationMatrix_opts <- tagList(
         tipify( checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
                "Cluster samples.", placement="top")        
     )
         
-    data_phenoClustering_caption = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (phenotype data)."
+    data_phenoCorrelationMatrix_caption = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (phenotype data)."
+
     callModule(
         plotModule,
-        id = "data_phenoClustering", label="a",
-        func = data_phenoClustering.RENDER,
-        func2 = data_phenoClustering.RENDER,        
+        id = "data_phenoCorrelationMatrix", label="a",
+        func = data_phenoCorrelationMatrix.RENDER,
+        func2 = data_phenoCorrelationMatrix.RENDER,        
         ## plotlib = "iheatmapr", 
-        title = "Phenotype clustering",
+        title = "Phenotype correlation",
         ##info.text = "Sample information table with information about phenotype of samples.",
-        options = data_phenoClustering_opts,
-        height = c(320,600), width = c('auto',1200), res=c(68,75),
-        pdf.width=10, pdf.height=6 
+        options = data_phenoCorrelationMatrix_opts,
+        height = c(360,700), width = c('auto',900), res=c(72,75),
+        pdf.width=8, pdf.height=6 
     )
     ##output <- attachModule(output, data_sampleTable_module) 
     
@@ -1410,23 +1447,47 @@ DataViewModule <- function(input, output, session, env)
                       selection = list(mode='single', target='row', selected=1),
                       options=list(
                           dom = 'lfrtip', 
-                          ##pageLength = 60, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scroller=TRUE, scrollX = TRUE,
-                          scrollY = 0.35*tabH,
+                          scroller=TRUE, scrollX = TRUE, scrollY = 190,
                           deferRender=TRUE
                       )) %>%
-            DT::formatStyle(0, target='row', fontSize='12px', lineHeight='70%') 
-        
+            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')         
     })
 
+    data_sampleTable.RENDER2 <- reactive({
+        ## get current view of raw_counts
+        ngs = inputData()
+        req(ngs)
+
+        dbg("[data_sampleTable.RENDER2] reacted")
+        
+        ##if(is.null(input$data_samplefilter)) return(NULL)    
+        dt <- NULL
+        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+        dt <- ngs$samples[samples,,drop=FALSE]    
+        DT::datatable( dt,
+                      class = 'compact cell-border stripe hover',
+                      rownames = TRUE,
+                      extensions = c('Buttons','Scroller'),
+                      selection = list(mode='single', target='row', selected=1),
+                      options=list(
+                          dom = 'lfrtip', 
+                          scroller=TRUE, scrollX = TRUE, scrollY = 600,
+                          deferRender=TRUE
+                      )) %>%
+            DT::formatStyle(0, target='row', fontSize='12px', lineHeight='70%')         
+    })
+
+    
     data_sampleTable_caption="<b>Sample information.</b> This table contains available phenotype information about the samples. Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
     ##data_sampleTable_module <- tableModule(
     ##id="data_sampleTable", ns=ns,
     data_sampleTable <- callModule(
         tableModule, "data_sampleTable", label="b",
         func = data_sampleTable.RENDER,
+        func2 = data_sampleTable.RENDER2,
         title = "Sample information",
         info.text = "Sample information table with information about phenotype of samples.",
+        height = c(280,750), width=c('auto',1280),
         ##options = data_sampleTable_opts,
         ## caption = data_sampleTable_caption
     )
@@ -1434,20 +1495,26 @@ DataViewModule <- function(input, output, session, env)
 
     sampletableUI_caption <- paste(
         ## "<b>Phenotype clustering and sample information table.</b>",
-        "<b>(a)</b>",data_phenoClustering_caption,
+        "<b>(a)</b>",data_phenoHeatmap_caption,
         "<b>(b)</b>",data_sampleTable_caption
     )
+
     output$sampletableUI <- renderUI({
         fillCol(
-            flex = c(1,1,NA),
+            flex = c(1.2,1,NA),
             height = fullH,
-            ##moduleWidget(data_sampleTable_module, outputFunc="dataTableOutput", ns=ns)
-            div( plotWidget(ns("data_phenoClustering")), style="overflow: auto;"),
+            fillRow(
+                flex = c(2,0.07,1),
+                div(plotWidget(ns("data_phenoHeatmap")), style="overflow-y: auto;"),
+                br(),
+                plotWidget(ns("data_phenoCorrelationMatrix"))
+            ),
             tableWidget(ns("data_sampleTable")),
             div(HTML(sampletableUI_caption), class="caption")
         )
     })
-        
+
+    
     ##================================================================================
     ##================================= CONTRASTS ====================================
     ##================================================================================

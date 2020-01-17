@@ -19,8 +19,8 @@ PGX.DIR = "../data"
 dir.exists(PGX.DIR)
 
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars
-##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
-pgx.initDatasetFolders(PGX.DIR, force=FALSE, verbose=1)
+## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
+pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload

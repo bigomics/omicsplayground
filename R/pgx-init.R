@@ -1,5 +1,5 @@
-source(file.path(RDIR,"pgx-include.R"),local=TRUE)
 
+## source(file.path(RDIR,"pgx-include.R"),local=TRUE)
 ## you need to override this!!!
 PRO.VERSION=FALSE
 DEV.VERSION=FALSE

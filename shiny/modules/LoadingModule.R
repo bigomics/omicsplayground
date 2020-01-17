@@ -111,8 +111,9 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
     ##-----------------------------------------------------------------------------
     ## UPDATING PGX FILE INFO
     ##-----------------------------------------------------------------------------
-    PGXINFO <- pgx.updateInfoFile(PGX.DIR, file="datasets-info.csv", 
-                               force=FALSE, verbose=TRUE )
+    ##PGXINFO <- pgx.updateInfoFile(PGX.DIR, file="datasets-info.csv", 
+    ##                           force=FALSE, verbose=TRUE )
+    PGXINFO <- pgx.scanInfoFile(PGX.DIR, file="datasets-info.csv", verbose=TRUE )
     dim(PGXINFO)
     
     ##=================================================================================
