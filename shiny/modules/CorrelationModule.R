@@ -30,12 +30,12 @@ CorrelationModule <- function(input, output, session, env)
     rowH  = 340  ## full height of page
     
     description = "<b>Correlation Analysis.</b> Statistical correlation analysis on a
-gene or gene set level with visualisations. Compute the correlation
+gene with visualisations. Compute the correlation
 between genes and find coregulated modules."
     output$description <- renderUI(HTML(description))
 
 
-    cor_infotext ="The <strong>Correlation Analysis Module</strong> provides statistical correlation analysis on gene level or gene set level with visualisations. During the visual analysis, users can filter out some samples or collapse the samples by predetermined groups. It also correlates the gene to the expressions of other genes across datasets such as ImmProt and HPA, and plots the cumulative correlation. Furthermore, it displays the tissue expression for a selected gene using the genotype-tissue expression (GTEx) dataset."
+    cor_infotext ="The <strong>Correlation Analysis Module</strong> provides statistical correlation analysis on gene level with visualisations. During the visual analysis, users can filter out some samples or collapse the samples by predetermined groups. The dark shaded area in the barplot estimates the partial correlation."
     
 
     ##================================================================================
@@ -409,7 +409,7 @@ between genes and find coregulated modules."
         gmt <- GSETS[colnames(ngs$GMT)]
         ## gmt <- GSETS  ## all???
         gsea <- fgsea(gmt, rho, nperm=1000, minSize=15, maxSize=1000)
-        gsea <- gsea[order(gsea$pval),]
+        gsea <- gsea[order(-gsea$NES),]
 
         res <- list(gsea=gsea, rho=rho)
         return(res)
@@ -475,14 +475,16 @@ between genes and find coregulated modules."
         gs <- res$gsea$pathway
         ##link <- wrapHyperLink(rep("link",length(gs)), gs)
         link <- wrapHyperLink(rep("&#x1F517;",length(gs)), gs)        
-        df = data.frame( pathway=res$gsea$pathway, link=link,
+        df = data.frame( pathway=gs, link=link,
                         res$gsea[,c("pval","padj","NES","size")] )
-        rownames(df) = gs
+        df$pathway <- shortstring(df$pathway,80)
         numeric.cols = c("pval","padj","NES")
+        ##selectmode <- ifelse(input$corGSEAtable_multiselect,'multiple','single')
         
         DT::datatable(
                 df, rownames=FALSE, escape = c(-1,-2),
                 extensions = c('Buttons','Scroller'),
+                ##selection=list(mode='multiple', target='row', selected=c(1)),
                 selection=list(mode='single', target='row', selected=c(1)),
                 class = 'compact cell-border stripe hover',
                 fillContainer = TRUE,
@@ -502,10 +504,15 @@ between genes and find coregulated modules."
 
     corGSEA_table_info = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
 
+    corGSEA_table_opts <- tagList(
+        checkboxInput(ns("corGSEAtable_multiselect"),"enable multi-select")
+    )
+    
     corGSEA_table <- callModule(
         tableModule, 
         id = "corGSEA_table", 
         func = corGSEA_table.RENDER,
+        ## options = corGSEA_table_opts,
         info.text = corGSEA_table_info,
         title = "Correlation GSEA table", label="b",
         height = c(220,700), width=c('auto',1000)
@@ -519,9 +526,15 @@ between genes and find coregulated modules."
         sel=1
         sel <- corGSEA_table$rows_selected()
         req(sel)
+        le.genes <- res$gsea[sel[1],]$leadingEdge[[1]]
+        if(length(sel)>1) {
+            for(i in 2:length(sel)) {
+                le.genes2 <- res$gsea[sel[i],]$leadingEdge[[1]]
+                le.genes <- intersect(le.genes, le.genes2)
+            }
+        }
         
         ##rho = data.frame(cbind( name=rho.name, rho))
-        le.genes <- res$gsea[sel,]$leadingEdge[[1]]
         rho1 <- res$rho[le.genes]
         title <- shortstring(GENE.TITLE[le.genes],50)
         df = data.frame( gene = le.genes, rho = rho1, title=title)
