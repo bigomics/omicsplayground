@@ -1,19 +1,29 @@
 
-pgx.createAllFC <- function(pgx.dir)
+pgx.createAllFC <- function(pgx.files, pgx.names=NULL)
 {
     require(rhdf5)
 
-    pgx0 <- dir(pgx.dir, full.names=FALSE)
-    pgx <- dir(pgx.dir, full.names=TRUE)
+    ##pgx0 <- dir(pgx.dir, "[.]pgx$", full.names=FALSE)
+    ##pgx <- dir(pgx.dir, "[.]pgx$", full.names=TRUE)
+    if(is.null(pgx.names) && !is.null(names(pgx.files))) {
+        pgx.names <- names(pgx.files)
+    }
+    if(is.null(pgx.names)) {
+        pgx.names <- pgx.files
+    }
+
     F <- list()
-    cat("reading FC from",length(pgx),"pgx files ")
+    cat("reading FC from",length(pgx.files),"pgx files ")
     i=1
-    for(i in 1:length(pgx)) {
+    for(i in 1:length(pgx.files)) {
+        if(!file.exists(pgx.files[i])) next()
         cat(".")
-        load(pgx[i])
+        load(pgx.files[i], verbose=0)
         meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         rownames(meta$fc) <- toupper(rownames(meta$fc))
-        F[[pgx0[i]]] <- meta$fc    
+        pgx <- sub(".*[/]|[.]pgx$","",pgx.names[i])
+        colnames(meta$fc) <- paste0("[",pgx,"] ",colnames(meta$fc))
+        F[[ pgx ]] <- meta$fc    
     }
     cat("\n")
     
@@ -26,26 +36,56 @@ pgx.createAllFC <- function(pgx.dir)
     return(allFC)
 }
 
-pgx.saveMatrixH5 <- function(X, h5.file) {
-
+##h5.file="test.h5";chunk=100
+pgx.saveMatrixH5 <- function(X, h5.file, chunk=0 )
+{
+   
     require(rhdf5)
     unlink(h5.file)
-    h5createFile(h5.file)
-    
-    ## h5createGroup("myhdf5file.h5","foo")
-    ## A = matrix(1:10,nr=5,nc=2)
-    ## h5write(A, "myhdf5file.h5","foo/A")
-    
-    h5createGroup(h5.file,"data")    
+
+    if(chunk==0) {
+        h5createFile(h5.file)    
+        ## h5createGroup("myhdf5file.h5","foo")
+        ## A = matrix(1:10,nr=5,nc=2)
+        ## h5write(A, "myhdf5file.h5","foo/A")    
+        h5createGroup(h5.file,"data")    
+        h5write( X, h5.file, "data/matrix")
+    } else {
+        h5createFile(h5.file)    
+        h5createGroup(h5.file,"data")
+        h5createDataset(
+            h5.file, "data/matrix",
+            c(nrow(X),ncol(X)),
+            ##storage.mode = "integer",
+            chunk = c(chunk,ncol(X)),
+            level = 7
+        )
+        h5write(
+            X,
+            file = h5.file,
+            name = "data/matrix",
+            index = list(1:nrow(X),1:ncol(X))
+        )
+    }
+
     h5write( rownames(X), h5.file, "data/rownames")
     h5write( colnames(X), h5.file, "data/colnames")    
-    h5write( X, h5.file, "data/matrix")
+
+    ## make big ranking matrix
+    orderx <- apply(X,2,order)
+    rownames(orderx) <- rownames(X)
+    dim(orderx)
+
+    sig100.dn <- apply(head(orderx,100),2,function(i) list(rownames(X)[i]))
+    sig100.dn <- unlist(sig100.dn, recursive=FALSE)
+    sig100.up <- apply(tail(orderx,100),2,function(i) list(rev(rownames(X)[i])))
+    sig100.up <- unlist(sig100.up, recursive=FALSE)
+    names(sig100.dn) <- paste(names(sig100.dn),"(DOWN)")
+    names(sig100.up) <- paste(names(sig100.up),"(UP)")    
+    h5write( sig100.dn, h5.file, "data/sig100.dn")  ## can write list???    
+    h5write( sig100.up, h5.file, "data/sig100.up")  ## can write list??
+
     
-    ## h5createDataset(
-    ##     h5.file, "data/matrix",
-    ##     c(nrow(allFC),ncol(allFC)),
-    ##     storage.mode = "integer",
-    ##     chunk=c(1000,1), level=7)
     h5closeAll()
 }
 
