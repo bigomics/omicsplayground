@@ -111,12 +111,47 @@ compute.extra <- function(ngs, extra, lib.dir) {
         remove(res)
     }
 
+    if("connectivity" %in% extra) {
+        cat(">>> computing connectivity scores...\n")
+
+        sigdb.list = c(
+            file.path(PGX.DIR,"datasets-allFC.csv"),
+            file.path(FILES,"sigdb-gse25k.h5")
+        )
+        for(sigdb in sigdb.list) {
+            if(file.exists(sigdb)) {
+                ntop = 9999
+                cat("computing scores for DB",sigdb,"\n")                
+                tt <- system.time({
+                    scores <- pgx.computeConnectivityScores(
+                        ngs, sigdb, ntop=ntop, contrasts=NULL)
+                })
+                timings <- rbind(timings, c("connectivity", tt))
+                
+                sigdb0 <- sub(".*/","",sigdb)
+                ngs$connectivity[[sigdb0]] <- scores
+                remove(scores)
+            }
+        }
+        names(ngs$connectivity)        
+    }
+
+    ##------------------------------------------------------
+    ## pretty collapse all timings
+    ##------------------------------------------------------
     ##timings0 <- do.call(rbind, timings)
     timings <- as.matrix(timings)
     rownames(timings) <- timings[,1]
-    timings0 <- apply(as.matrix(timings[,-1]),2,as.numeric)
+    timings0 <- apply(as.matrix(timings[,-1,drop=FALSE]),2,as.numeric)
     rownames(timings0) <- rownames(timings)
     timings0 <- apply( timings0, 2, function(x) tapply(x,rownames(timings0),sum))
+    if(is.null(nrow(timings0))) {
+        cn <- names(timings0)
+        rn <- unique(rownames(timings))
+        timings0 <- matrix(timings0, nrow=1)
+        colnames(timings0) <- cn
+        rownames(timings0) <- rn[1]
+    }
     rownames(timings0) <- paste("[extra]",rownames(timings0))
     
     ngs$timings <- rbind(ngs$timings, timings0)

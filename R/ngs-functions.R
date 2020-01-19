@@ -1,3 +1,55 @@
+ngs.getGeneAnnotation <- function(genes)
+{
+
+    require(org.Hs.eg.db)
+    require(org.Mm.eg.db)
+    hs.genes <- unique(unlist(as.list(org.Hs.egSYMBOL)))
+    mm.genes <- unique(unlist(as.list(org.Mm.egSYMBOL)))
+
+    is.human <- mean(genes %in% hs.genes) > mean(genes %in% mm.genes)
+    is.mouse <- mean(genes %in% hs.genes) < mean(genes %in% mm.genes)
+
+    is.human
+    if(is.human) {
+        GENE.TITLE = unlist(as.list(org.Hs.egGENENAME))
+        SYMBOL = unlist(as.list(org.Hs.egSYMBOL))
+        names(GENE.TITLE) = SYMBOL
+        CHRLOC = as.list(org.Hs.egCHRLOC)
+        names(CHRLOC) = SYMBOL
+    }
+    if(is.mouse) {
+        GENE.TITLE = unlist(as.list(org.Mm.egGENENAME))
+        SYMBOL = unlist(as.list(org.Mm.egSYMBOL))
+        names(GENE.TITLE) = SYMBOL
+        CHRLOC = as.list(org.Hs.egCHRLOC)
+        names(CHRLOC) = SYMBOL
+    }
+
+    head(GENE.TITLE)
+    gene_title <- GENE.TITLE[rownames(X)]
+
+    ## get chromosome locations
+    chrloc0 <- CHRLOC[rownames(X)]
+    loc <- sapply(chrloc0, "[", 1)
+    loc[sapply(loc,is.null)] <- NA
+    loc <- abs(as.integer(unlist(loc)))
+    chrom <- sapply(chrloc0, function(s) names(s)[1])
+    chrom[sapply(chrom,is.null)] <- NA
+    chrom <- as.vector(unlist(chrom))
+
+    ## get protein info
+    ## fill me
+    
+    annot = data.frame( gene_name = rownames(X),
+                       gene_title = gene_title,
+                       chr=chrom, pos=loc)
+    ##genes = apply(genes,2,as.character)
+    head(annot)
+    rownames(annot) = rownames(X)
+    annot
+}
+
+
 ngs.detectOrganism <- function(ngs) {
     lowcase.ratio <- mean(grepl("[a-z]",substring(rownames(ngs$counts),2,100)))
     c("human","mouse")[1 + 1*(lowcase.ratio>0.5)]
