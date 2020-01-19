@@ -19,6 +19,7 @@ PGX.DIR = "../data"
 dir.exists(PGX.DIR)
 
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars
+source("../R/pgx-files.R", local=TRUE)  ## pass local vars
 ## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
@@ -26,13 +27,12 @@ source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 OPTIONS <- pgx.readOptions(file="OPTIONS")
 
-DEV.VERSION = TRUE
+## DEV.VERSION = TRUE
 if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 
 if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
-    load("../data/GSE10846-dlbcl2.pgx")
     load("../data/GSE10846-xgreta.pgx")
     load("../data/guarda2019-myc-12k-LT.pgx")
     load("../../omicsplayground-dev/data/CCLE-drugSX2.pgx")
@@ -53,8 +53,11 @@ source("modules/SignatureModule.R", local=TRUE)
 source("modules/ProfilingModule.R", local=TRUE)
 source("modules/CorrelationModule.R", local=TRUE)
 source("modules/BiomarkerModule.R", local=TRUE)
-if(DEV.VERSION) source("../../omicsplayground-dev/shiny/modules/MetaModule.R", local=TRUE)
-if(DEV.VERSION) source("../../omicsplayground-dev/shiny/modules/BatchCorrectModule.R", local=TRUE)
+if(DEV.VERSION) {
+    source("../../omicsplayground-dev/shiny/modules/ConnectivityModule.R", local=TRUE)
+    source("../../omicsplayground-dev/shiny/modules/TcgaModule.R", local=TRUE)
+    source("../../omicsplayground-dev/shiny/modules/BatchCorrectModule.R", local=TRUE)
+}
 
 server = function(input, output, session) {
 
@@ -78,8 +81,11 @@ server = function(input, output, session) {
     env[["prof"]]   <- callModule( ProfilingModule, "prof", env)
     env[["cor"]]    <- callModule( CorrelationModule, "cor", env)
     env[["bio"]]    <- callModule( BiomarkerModule, "bio", env)
-    if(DEV.VERSION) env[["meta"]] <- callModule( MetaModule, "meta", env)
-    if(DEV.VERSION) env[["bc"]]   <- callModule( BatchCorrectModule, "bc", env)
+    if(DEV.VERSION) {
+        env[["cmap"]] <- callModule( ConnectivityModule, "cmap", env)
+        env[["tcga"]] <- callModule( TcgaModule, "tcga", env)
+        env[["bc"]]   <- callModule( BatchCorrectModule, "bc", env)
+    }
 
     cat("[OK]\n")
 
@@ -159,8 +165,9 @@ dev.tabs <- NULL
 if(DEV.VERSION) {
     dev.tabs <- navbarMenu(
         "Development",
-        tabView("BatchCorrect", BatchCorrectInputs("bc"), BatchCorrectUI("bc")),
-        tabView("MetaAnalysis", MetaInputs("meta"), MetaUI("meta"))
+        tabView("Batch-effects analysis", BatchCorrectInputs("bc"), BatchCorrectUI("bc")),
+        tabView("Connectivity mapping", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
+        tabView("TCGA survival", TcgaInputs("tcga"), TcgaUI("tcga"))
     )
 }
 

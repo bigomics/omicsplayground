@@ -20,13 +20,11 @@ RDIR  = "../R/"
 source("../R/pgx-include.R")
 ##source("options.R")
 FILES
-MAX.GENES
-MAX.GENES=5000
 
 pgx.files <- dir(".", pattern=".pgx")
-pgx.files <- dir("../data.BAK/", pattern=".pgx",full.names=TRUE)
+##pgx.files <- dir("../data.BAK/", pattern=".pgx",full.names=TRUE)
 pgx.files
-pgx.file = pgx.files[1]
+pgx.file = pgx.files[3]
 pgx.file
 
 for(pgx.file in pgx.files) {
@@ -35,29 +33,16 @@ for(pgx.file in pgx.files) {
     object.size(ngs)/1e6
     
     ##extra <- c("meta.go","deconv","infer","drugs","wordcloud")
-    ##extra <- c("wordcloud")
-    ##ngs <- compute.extra(ngs, extra, lib.dir=FILES)     
-
-    i=1
-    for(i in 1:length(ngs$gx.meta$meta)) {
-        colnames(ngs$gx.meta$meta[[i]])
-        rownames(ngs$gx.meta$meta[[i]]$p) <- NULL
-        rownames(ngs$gx.meta$meta[[i]]$q) <- NULL
-        rownames(ngs$gx.meta$meta[[i]]$fc) <- NULL
-    }
+    extra <- c("connectivity")
+    ngs <- compute.extra(ngs, extra, lib.dir=FILES)     
+    names(ngs$connectivity)
     
-    for(i in 1:length(ngs$gset.meta$meta)) {
-        colnames(ngs$gset.meta$meta[[i]])
-        rownames(ngs$gset.meta$meta[[i]]$p) <- NULL
-        rownames(ngs$gset.meta$meta[[i]]$q) <- NULL
-        rownames(ngs$gset.meta$meta[[i]]$fc) <- NULL        
-    }
-    
-    object.size(ngs)/1e6
-
+    ##------------------ save new object -------------------
     names(ngs)
     pgx.file0 <- sub(".*[/]","",pgx.file)
+    pgx.file0
     ngs.save(ngs, file=pgx.file0)
+    
 }
 
 

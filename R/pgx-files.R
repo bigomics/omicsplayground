@@ -55,7 +55,7 @@ pgx.initDatasetFolder <- function(pgx.dir, verbose=TRUE, force=FALSE)
     i=1
     for(i in 1:length(pgx.dir)) {
         ## pgx.initDatasetFolder(pgx.dir[i], verbose=verbose, force=force)
-        info <- pgx.updateDatasetsMetaFiles1 (
+        info <- pgx.initDatasetFolder1 (
             pgx.dir[i],
             allfc.file = "datasets-allFC.csv",
             info.file = "datasets-info.csv",
@@ -63,19 +63,6 @@ pgx.initDatasetFolder <- function(pgx.dir, verbose=TRUE, force=FALSE)
             verbose = verbose)    
 
     }
-}
-
-pgx.initDatasetFolder.NOTUSED <- function(pgx.dir, verbose=TRUE, force=FALSE)
-{
-    if(!dir.exists(pgx.dir)) return(NULL)
-    if(verbose) cat("init of data folder: ",pgx.dir,"\n")
-
-    ## r1 <- pgx.updateDatasetProfiles(pgx.dir, file="datasets-allFC.csv",
-    ##                                 force=force, verbose=verbose)
-    ## r2 <- pgx.updateInfoFile(pgx.dir, file="datasets-info.csv",
-    ##                          force=force, verbose=verbose)
-
-
 }
 
 verbose=TRUE;file="datasets-allFC.csv"
@@ -155,10 +142,10 @@ pgx.scanInfoFile <- function(pgx.dir, file="datasets-info.csv", verbose=TRUE)
 
 
 ##pgx.dir=PGX.DIR[1];allfc.file="datasets-allFC.csv";verbose=1;info.file="datasets-info.csv";force=1
-pgx.updateDatasetsMetaFiles1 <- function( pgx.dir,
-                                         allfc.file = "datasets-allFC.csv",
-                                         info.file = "datasets-info.csv",
-                                         force=FALSE, verbose=TRUE)
+pgx.initDatasetFolder1 <- function( pgx.dir,
+                                   allfc.file = "datasets-allFC.csv",
+                                   info.file = "datasets-info.csv",
+                                   force=FALSE, verbose=TRUE)
 {
 
     if(!dir.exists(pgx.dir)) {
@@ -188,7 +175,7 @@ pgx.updateDatasetsMetaFiles1 <- function( pgx.dir,
     ## If an allFC file exits, check if it is done for all PGX files
     ##----------------------------------------------------------------------
 
-    pgxinfo <- c()
+    pgxinfo <- NULL
     pgx.missing0 <- pgx.files
     pgx.missing1 <- pgx.files
     force
@@ -211,7 +198,7 @@ pgx.updateDatasetsMetaFiles1 <- function( pgx.dir,
         jj <- which(!(sub(".pgx$","",pgx.missing1) %in% sub(".pgx$","",pgxinfo$dataset)))
         pgx.missing1 = pgx.missing1[jj]
     }
-    
+   
     ##----------------------------------------------------------------------
     ## Check if it is done for all PGX files
     ##----------------------------------------------------------------------
@@ -248,6 +235,7 @@ pgx.updateDatasetsMetaFiles1 <- function( pgx.dir,
     
     for(pgx in pgx.missing) {
 
+        pgx
         if(verbose) cat(".")        
         try.error <- try( load( file.path(pgx.dir,pgx),verbose=0) )
         if(class(try.error)=="try-error") {
@@ -286,14 +274,16 @@ pgx.updateDatasetsMetaFiles1 <- function( pgx.dir,
         )
         
         info.cols <- unique(c(info.cols, names(this.info)))
-        if(!is.null(pgxinfo) && NCOL(pgxinfo)>0 ) {
+        if(!is.null(pgxinfo) && NCOL(pgxinfo)>0 && nrow(pgxinfo)>0 ) {
             this.info = this.info[match(info.cols,names(this.info))]
             names(this.info) = info.cols
             pgxinfo = pgxinfo[,match(info.cols,colnames(pgxinfo)),drop=FALSE]
             colnames(pgxinfo) = info.cols
+            pgxinfo <- rbind( pgxinfo, this.info)
+        } else {
+            pgxinfo <- rbind(NULL,this.info)
         }
-        ##cat("i=",i,": ",length(this.info),"\n")
-        pgxinfo <- rbind( pgxinfo, this.info)
+        ## pgxinfo <- rbind( pgxinfo, this.info)
     }
     if(verbose) cat("\n")
     rownames(pgxinfo) <- NULL    
@@ -303,7 +293,9 @@ pgx.updateDatasetsMetaFiles1 <- function( pgx.dir,
     ## Update the INFO meta file
     ##----------------------------------------------------------------------    
     if(force) {
-        sel <- which(pgxinfo$datasets %in% pgx.files)
+        ## remove unneccessary entries if forced.
+        sel <- which(pgxinfo$dataset %in% pgx.files)
+        sel <- which(sub(".pgx$","",pgxinfo$dataset) %in% sub(".pgx$","",pgx.files))
         pgxinfo <- pgxinfo[sel,,drop=FALSE]
     }
     if(verbose) cat("writing new PGX.INFO file to",info.file1,"...\n")

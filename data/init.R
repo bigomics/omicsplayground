@@ -11,7 +11,11 @@ pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=TRUE)
 
 if(0) {
 
+    F <- read.csv("datasets-allFC.csv",check.names=FALSE,row.names=1)
+    
     info <- pgx.scanInfoFile(PGX.DIR, verbose=TRUE)
     head(info)[,1:2]
 
+    
+    
 }

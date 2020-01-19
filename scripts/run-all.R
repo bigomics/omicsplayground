@@ -7,7 +7,8 @@
 all.scripts <- dir(".", pattern="pgx-.*R$")
 
 ## These are the default example scripts (uncomment if you really want to do all)
-all.scripts <- grep("GSE10846|GSE114716|GSE22886|GSE28492|GSE32591|GSE53784|GSE88808|GSE72056|GSE92332|GSE98638|geiger2016|rieckmann2017|tcga-brca|tcga-prad", all.scripts, ignore.case=TRUE, value=TRUE)
+all.scripts <- grep("GSE10846|GSE114716|GSE22886|GSE53784|GSE72056|geiger2016|tcga-brca",
+                    all.scripts, ignore.case=TRUE, value=TRUE)
 all.scripts
 
 script=all.scripts[1]
@@ -26,5 +27,5 @@ for(script in all.scripts) {
 }
 
 ## scan and update datasets info
-source("update-datasets-info.R")
+## source("update-datasets-info.R")
 

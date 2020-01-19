@@ -1,5 +1,5 @@
-##BiocManager::install("crossmeta", version = "3.8")
-#BiocManager::install("ccmap", version = "3.8")
+BiocManager::install("crossmeta")
+BiocManager::install("ccmap")
 
 library(ccmap)
 library(ccdata)
@@ -7,6 +7,7 @@ library(ccdata)
 ##dim(cmap_es)
 system.time( data(l1000_es) )
 dim(l1000_es)
+
 
 require(fgsea)
 X <- l1000_es
@@ -25,6 +26,9 @@ length(sel)
 ##saveRDS( X[,sel], file="../files/l1000_es_1763drugs.rds")
 saveRDS( X[,sel], file="../files/l1000_es_5685drugs.rds")
 ##saveRDS( X[,sel], file="../files/l1000_es_8221drugs.rds")
+
+
+
 
 
 if(0) {
