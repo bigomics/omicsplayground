@@ -15,8 +15,9 @@ library(matrixTests)
 library(kableExtra)
 library(knitr)
 
-FILES = "../lib/"
-RDIR  = "../R/"
+FILES = "../lib"
+RDIR  = "../R"
+PGX.DIR = "../data"
 source("../R/pgx-include.R")
 ##source("options.R")
 FILES
@@ -28,9 +29,16 @@ pgx.file = pgx.files[3]
 pgx.file
 
 for(pgx.file in pgx.files) {
+
+    cat("*********** updating",pgx.file,"**********\n")
     
     load(pgx.file, verbose=1)
     object.size(ngs)/1e6
+
+    if(0 && "connectivity" %in% names(ngs)) {
+        cat("already done. skipping...\n")
+        next()
+    }
     
     ##extra <- c("meta.go","deconv","infer","drugs","wordcloud")
     extra <- c("connectivity")

@@ -7,7 +7,7 @@
 all.scripts <- dir(".", pattern="pgx-.*R$")
 
 ## These are the default example scripts (uncomment if you really want to do all)
-all.scripts <- grep("GSE10846|GSE114716|GSE22886|GSE53784|GSE72056|geiger2016|tcga-brca",
+all.scripts <- grep("GSE10846|GSE114716|GSE22886|GSE53784|GSE72056|geiger2016|tcga-brca_pub-gx",
                     all.scripts, ignore.case=TRUE, value=TRUE)
 all.scripts
 
