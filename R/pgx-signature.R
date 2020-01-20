@@ -133,7 +133,7 @@ pgx.createSignatureDatabaseH5 <- function(pgx.files, h5.file, chunk=100, update.
     ## return(X)
 }
 
-mc.cores=8
+mc.cores=24
 pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir) 
 {
 
@@ -160,21 +160,31 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir)
     sel <- grep("HALLMARK|C[1-9]|^GO", rownames(G))
     sel <- grep("HALLMARK", rownames(G))
     length(sel)
+
     G <- G[sel,,drop=FALSE]
     gmt <- apply( G, 1, function(x) colnames(G)[which(x!=0)])
 
     ##X <- X[,1:20]
-    
+    X[is.na(X)] <- 0
+
+    cat("[pgx.addEnrichmentSignaturesH5] starting fGSEA...\n")    
     require(fgsea)
     ##F1 <- apply(X, 2, function(x) {fgsea( gmt, x, nperm=1000)$NES })
-    F1 <- apply(X, 2, function(x) {fgsea( gmt, x, nperm=10)$NES })  ## FDR not important, small nperm
-    rownames(F1) <- rownames(G)
+    F1 <- apply(X[,1:10], 2, function(x) {fgsea( gmt, x, nperm=100)$NES })  ## FDR not important, small nperm
+    dim(F1)
+    cat("[pgx.addEnrichmentSignaturesH5] dim(F1)=",dim(F1),"\n")
+    rownames(F1) <- names(gmt)
 
+
+    cat("[pgx.addEnrichmentSignaturesH5] starting GSVA... \n")    
     require(GSVA)
     ## mc.cores = 4
     F2 <- gsva(X, gmt, method="gsva", parallel.sz=mc.cores)
+    rownames(F2) <- names(gmt)
     dim(F2)
-    
+
+
+    cat("[pgx.addEnrichmentSignaturesH5] done!\n")        
     if(!h5exists(h5.file, "enrichment")) h5createGroup(h5.file,"enrichment")
     h5write(rownames(F1), h5.file, "enrichment/genesets")
     h5write(F1, h5.file, "enrichment/GSEA")
