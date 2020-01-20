@@ -9,6 +9,13 @@ USER.GENETEST.METHODS <- NULL
 ##==========    Platform helper functions =====================================
 ##=============================================================================
 ##s=rep("abc",100)
+dbg <- function(... ) {
+    if(DEV.VERSION) {
+        ##msg = paste0(ifelse(is.null(module),"",paste0("<",module,"> ")),msg)
+        msg = sapply( list(...),paste,collapse=" ")
+        cat(paste0("DBG ",sub("\n$","",paste(msg,collapse=" ")),"\n"))
+    }
+}
 
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
 fread.csv <- function(file, check.names=FALSE, row.names=1,
