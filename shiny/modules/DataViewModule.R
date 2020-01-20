@@ -1379,7 +1379,8 @@ DataViewModule <- function(input, output, session, env)
                "Cluster samples.", placement="top")        
     )
         
-    data_phenoHeatmap_caption = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (phenotype data)."
+    data_phenoHeatmap_caption = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (i.e. phenotype data)."
+    data_phenoHeatmap_info = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (i.e. phenotype data). Column ordering has been performed using hierarchical clustering on a one-hot encoded matrix."
 
     callModule(
         plotModule,
@@ -1388,14 +1389,14 @@ DataViewModule <- function(input, output, session, env)
         func2 = data_phenoHeatmap.RENDER,        
         ## plotlib = "iheatmapr", 
         title = "Phenotype clustering",
-        ##info.text = "Sample information table with information about phenotype of samples.",
+        info.text = data_phenoHeatmap_info,
         options = data_phenoHeatmap_opts,
         height = c(360,600), width = c('auto',1200), res=c(68,75),
         pdf.width=10, pdf.height=6 
     )
     ##output <- attachModule(output, data_sampleTable_module) 
 
-    data_phenoCorrelationMatrix.RENDER %<a-% reactive({
+    data_phenotypeAssociation.RENDER %<a-% reactive({
 
         ngs = inputData()
         req(ngs)
@@ -1408,22 +1409,24 @@ DataViewModule <- function(input, output, session, env)
 
     })
 
-    data_phenoCorrelationMatrix_opts <- tagList(
+    data_phenotypeAssociation_opts <- tagList(
         tipify( checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
                "Cluster samples.", placement="top")        
     )
-        
-    data_phenoCorrelationMatrix_caption = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (phenotype data)."
+    
+    data_phenotypeAssociation_caption = "<b>Phenotype association matrix.</b> Clustered heatmap of phenotype association. The values corresponds to the -log10(p) value of the corresponding statistical test between two phenotype variables. A higher value corresponds to stronger 'correlation'."
+    data_phenotypeAssociation_info = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (i.e. phenotype data). The values corresponds to the -log10(p) value of the corresponding statistical test between two phenotype variables. A higher value corresponds to stronger 'correlated' variables. For discrete-discrete pairs the Fisher's exact test is used. For continuous-discrete pairs, the Kruskal-Wallis test is used. For continuous-continous pairs, Pearson's correlation test is used."
 
     callModule(
         plotModule,
-        id = "data_phenoCorrelationMatrix", label="a",
-        func = data_phenoCorrelationMatrix.RENDER,
-        func2 = data_phenoCorrelationMatrix.RENDER,        
-        ## plotlib = "iheatmapr", 
-        title = "Phenotype correlation",
+        id = "data_phenotypeAssociation", label="b",
+        func = data_phenotypeAssociation.RENDER,
+        func2 = data_phenotypeAssociation.RENDER,        
+        ## plotlib = "iheatmapr",
+        info.text = data_phenotypeAssociation_info,
+        title = "Phenotype association",
         ##info.text = "Sample information table with information about phenotype of samples.",
-        options = data_phenoCorrelationMatrix_opts,
+        options = data_phenotypeAssociation_opts,
         height = c(360,700), width = c('auto',900), res=c(72,75),
         pdf.width=8, pdf.height=6 
     )
@@ -1478,15 +1481,17 @@ DataViewModule <- function(input, output, session, env)
     })
 
     
-    data_sampleTable_caption="<b>Sample information.</b> This table contains available phenotype information about the samples. Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
+    data_sampleTable_caption="<b>Sample information table.</b> Phenotype information about the samples. Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
+    data_sampleTable_info = "<b>Sample information table.</b> Phenotype information about the samples. Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
     ##data_sampleTable_module <- tableModule(
     ##id="data_sampleTable", ns=ns,
+
     data_sampleTable <- callModule(
-        tableModule, "data_sampleTable", label="b",
+        tableModule, "data_sampleTable", label="c",
         func = data_sampleTable.RENDER,
         func2 = data_sampleTable.RENDER2,
         title = "Sample information",
-        info.text = "Sample information table with information about phenotype of samples.",
+        info.text = data_sampleTable_info,
         height = c(280,750), width=c('auto',1280),
         ##options = data_sampleTable_opts,
         ## caption = data_sampleTable_caption
@@ -1496,7 +1501,8 @@ DataViewModule <- function(input, output, session, env)
     sampletableUI_caption <- paste(
         ## "<b>Phenotype clustering and sample information table.</b>",
         "<b>(a)</b>",data_phenoHeatmap_caption,
-        "<b>(b)</b>",data_sampleTable_caption
+        "<b>(b)</b>",data_phenotypeAssociation_caption,
+        "<b>(c)</b>",data_sampleTable_caption
     )
 
     output$sampletableUI <- renderUI({
@@ -1507,7 +1513,7 @@ DataViewModule <- function(input, output, session, env)
                 flex = c(2,0.07,1),
                 div(plotWidget(ns("data_phenoHeatmap")), style="overflow-y: auto;"),
                 br(),
-                plotWidget(ns("data_phenoCorrelationMatrix"))
+                plotWidget(ns("data_phenotypeAssociation"))
             ),
             tableWidget(ns("data_sampleTable")),
             div(HTML(sampletableUI_caption), class="caption")
@@ -1569,9 +1575,9 @@ DataViewModule <- function(input, output, session, env)
         
     })
 
-    data_contrastTable_info = "Table summarizing the contrasts of all comparisons. Here, you can check which samples belong to which groups for the different comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison."
+    data_contrastTable_info = "<b>Contrast table.</b> Table summarizing the contrasts of all comparisons. Here, you can check which samples belong to which groups for the different comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison."
     
-    data_contrastTable_caption = "<b>Contrast table</b> summarizing the contrasts of all comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison."
+    data_contrastTable_caption = "<b>Contrast table.</b> summarizing the contrasts of all comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison."
 
     data_contrastTable_opts = tagList(
         tipify( radioButtons(ns('data_ctbygroup'), "Show by:", choices=c("group","sample")),

@@ -3,7 +3,9 @@ if(0) {
     sigdb = "../data/datasets-allFC.csv"
     h5.file = "../data/sigdb-gse25k.h5"
     FILES="../lib"
-    
+    RDIR="../R"
+    source("../R/pgx-include.R")
+    source("../R/pgx-files.R")
 }
 
 chunk=100
@@ -127,19 +129,14 @@ pgx.createSignatureDatabaseH5 <- function(pgx.files, h5.file, chunk=100, update.
 
     }
 
-    ##--------------------------------------------------
-    ## Add GSEA/GSVA (at this moment only Hallmark)
-    ##--------------------------------------------------
-    if(!update.only || !h5exists(h5.file, "enrichment")) {
-        pgx.addGenesetSignaturesH5(h5.file, X)
-    }
-
     h5closeAll()
     ## return(X)
 }
 
-pgx.addGenesetSignaturesH5 <- function(h5.file, X=NULL )
+mc.cores=8
+pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir) 
 {
+
     require(rhdf5)
     
     h5exists <- function(h5.file, obj) {
@@ -158,29 +155,30 @@ pgx.addGenesetSignaturesH5 <- function(h5.file, X=NULL )
     ##sig100.dn <- h5read(h5.file, "signature/sig100.dn")  
     ##sig100.up <- h5read(h5.file, "signature/sig100.up")  
     
-    G <- readRDS(file.path(FILES,"gset-sparseG-XL.rds"))
+    G <- readRDS(file.path(lib.dir,"gset-sparseG-XL.rds"))
     dim(G)    
     sel <- grep("HALLMARK|C[1-9]|^GO", rownames(G))
     sel <- grep("HALLMARK", rownames(G))
     length(sel)
-    G <- G[sel,]
+    G <- G[sel,,drop=FALSE]
     gmt <- apply( G, 1, function(x) colnames(G)[which(x!=0)])
 
-    ##X <- X[,1:10]
+    ##X <- X[,1:20]
     
     require(fgsea)
-    F1 <- apply(X, 2, function(x) {fgsea( gmt, x, nperm=1000)$NES })
+    ##F1 <- apply(X, 2, function(x) {fgsea( gmt, x, nperm=1000)$NES })
+    F1 <- apply(X, 2, function(x) {fgsea( gmt, x, nperm=10)$NES })  ## FDR not important, small nperm
     rownames(F1) <- rownames(G)
 
     require(GSVA)
-    mc.cores = 4
+    ## mc.cores = 4
     F2 <- gsva(X, gmt, method="gsva", parallel.sz=mc.cores)
     dim(F2)
     
     if(!h5exists(h5.file, "enrichment")) h5createGroup(h5.file,"enrichment")
-    h5write( rownames(F1), h5.file, "enrichment/genesets")
-    h5write( F1, h5.file, "enrichment/fGSEA")
-    h5write( F2, h5.file, "enrichment/GSVA")
+    h5write(rownames(F1), h5.file, "enrichment/genesets")
+    h5write(F1, h5.file, "enrichment/GSEA")
+    h5write(F2, h5.file, "enrichment/GSVA")
 
     h5ls(h5.file)
     h5closeAll()

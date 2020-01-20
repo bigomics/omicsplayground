@@ -57,6 +57,7 @@ if(DEV.VERSION) {
     source("../../omicsplayground-dev/shiny/modules/ConnectivityModule.R", local=TRUE)
     source("../../omicsplayground-dev/shiny/modules/TcgaModule.R", local=TRUE)
     source("../../omicsplayground-dev/shiny/modules/BatchCorrectModule.R", local=TRUE)
+    source("../../omicsplayground-dev/shiny/modules/MultiLevelModule.R", local=TRUE)
 }
 
 server = function(input, output, session) {
@@ -85,6 +86,7 @@ server = function(input, output, session) {
         env[["cmap"]] <- callModule( ConnectivityModule, "cmap", env)
         env[["tcga"]] <- callModule( TcgaModule, "tcga", env)
         env[["bc"]]   <- callModule( BatchCorrectModule, "bc", env)
+        env[["multi"]]   <- callModule( MultiLevelModule, "multi", env)
     }
 
     cat("[OK]\n")
@@ -123,7 +125,7 @@ server = function(input, output, session) {
         shinyjs::hide(selector = "div.download-button")
 
         hideTab("enrich-tabs1","GeneMap")
-        hideTab("bio-tabs","Multi-level")
+        ##hideTab("bio-tabs","Multi-level")
         hideTab("clust-tabs2","Feature ranking")
         hideTab("expr-tabs1","Volcano (methods)")
         hideTab("expr-tabs2","FDR table")
@@ -147,7 +149,7 @@ server = function(input, output, session) {
             showTab("maintabs","Development")
             showTab("view-tabs","Resource info")
             showTab("enrich-tabs1","GeneMap")
-            showTab("bio-tabs","Multi-level")
+            ## showTab("bio-tabs","Multi-level")
         }
         
     })
@@ -167,7 +169,8 @@ if(DEV.VERSION) {
         "Development",
         tabView("Batch-effects analysis", BatchCorrectInputs("bc"), BatchCorrectUI("bc")),
         tabView("Connectivity mapping", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
-        tabView("TCGA survival", TcgaInputs("tcga"), TcgaUI("tcga"))
+        tabView("TCGA survival", TcgaInputs("tcga"), TcgaUI("tcga")),
+        tabView("Multi-level", MultiLevelInputs("multi"), MultiLevelUI("multi"))
     )
 }
 
@@ -211,7 +214,7 @@ ui = navbarPage(
         "Signature",
         tabView("Intersection analysis", IntersectionInputs("isect"), IntersectionUI("isect")),
         tabView("Signature analysis", SignatureInputs("sig"), SignatureUI("sig")),
-        tabView("Biomarker analysis", BiomarkerInputs("bio"), BiomarkerUI("bio"))        
+        tabView("Biomarker analysis", BiomarkerInputs("bio"), BiomarkerUI("bio"))
     ),
     tabView("SingleCell", ProfilingInputs("prof"), ProfilingUI("prof")),
     help.tabs,

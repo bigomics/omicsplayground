@@ -235,11 +235,18 @@ body {
     padding: 3px 3px;
 }
 
+
+.shiny-flow-layout {
+    margin: 0px 0px -17px 0px;
+    font-color: #888;
+    font-size: 0.9em;
+}
+
 .shiny-input-panel {
     background-color: #fff;
     border: 0px solid #ddd;
     padding: 5px 8px 5px 8px;
-    font-size: 10px !important;
+/*    font-size: 10px !important; */
 }
 
 .shiny-input-panel .form-group {
@@ -271,6 +278,13 @@ body {
 
 /* ------------------- buttons -------------- */
 
+.run-button,.load-button {
+    outline: none;
+    border-color: #1967be;
+    box-shadow: 0 0 5px #1967be;
+}
+
+
 .action-button .fab .fa {
     font-size: 16px;
     margin-top: 0px;
@@ -300,7 +314,7 @@ body {
 .btn:hover, .btn:focus, .btn:active, .btn:active:hover {
     color: #333;
     // background-color: #0067c4;
-    ##border: 1px solid var(--main-color);
+    // border: 1px solid var(--main-color);
     border: 1px solid #999;
 }
 

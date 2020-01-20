@@ -68,7 +68,7 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
     if("tsne" %in% methods && 2 %in% dims) {
         cat("calculating t-SNE 2D...\n")
         require(Rtsne)
-        perplexity <- pmax(min(ncol(X)/3,30),2)
+        perplexity <- pmax(min(ncol(X)/4,30),2)
         perplexity        
         pos <- Rtsne( t(rX[,]), dims = 2,
                     is_distance = FALSE, check_duplicates=FALSE,                     
@@ -82,7 +82,7 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
     if("tsne" %in% methods && 3 %in% dims) {
         cat("calculating t-SNE 3D...\n")
         require(Rtsne)
-        perplexity <- pmax(min(ncol(X)/3,30),2)
+        perplexity <- pmax(min(ncol(X)/4,30),2)
         perplexity        
         pos <- Rtsne( t(rX[,]), dims = 3,
                     is_distance = FALSE, check_duplicates=FALSE,

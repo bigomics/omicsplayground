@@ -10,7 +10,7 @@ DrugConnectivityUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillCol(
         flex = c(1),
-        height = 780,
+        height = 750,
         tabsetPanel(
             id = ns("tabs"),
             tabPanel("Drug CMap",uiOutput(ns("DSEA_analysis_UI")))
@@ -26,7 +26,7 @@ DrugConnectivityModule <- function(input, output, session, env)
     fullH = 750
     rowH = 660  ## row height of panel
     tabH = 200  ## row height of panel
-    tabH = '70vh'  ## row height of panel    
+    tabH = '60vh'  ## row height of panel    
     description = "<b>Drug Connectivity Analysis</b>. <br> Perform drug connectivity analysis
 to see if certain drug activity or drug sensitivity signatures matches your experimental signatures. Matching drug signatures to your experiments may elicudate biological functions through mechanism-of-action (MOA) and known drug molecular targets. "
     output$description <- renderUI(HTML(description))
@@ -397,7 +397,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         info.text = "The <strong>Activation Matrix</strong> visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         options = dsea_actmap.opts,
         pdf.width=6, pdf.height=10,
-        height = c(rowH,750), res=72
+        height = c(fullH-120,750), res=72
     )
 
     ##--------buttons for table
@@ -407,7 +407,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         func = dsea_table.RENDER, 
         info.text="Drug profile enrichment table. Enrichment is calculated by correlating your signature with more than 5000 known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.", 
         title = "Profile enrichment table",
-        height = c(260,700)
+        height = c(240,700)
     )
        
     ##-----------------------------------------
