@@ -116,7 +116,7 @@ compute.extra <- function(ngs, extra, lib.dir) {
 
         sigdb.list = c(
             file.path(PGX.DIR,"datasets-allFC.csv"),
-            file.path(FILES,"sigdb-gse25k.h5")
+            file.path(PGX.DIR,"sigdb-gse25k.h5")
         )
         for(sigdb in sigdb.list) {
             if(file.exists(sigdb)) {
