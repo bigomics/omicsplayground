@@ -1,4 +1,5 @@
 
+sigdb="../data/datasets-allFC.csv"
 pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=-1, contrasts=NULL)
 {
 
@@ -18,7 +19,8 @@ pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=-1, contrasts=NULL)
         if(file.exists(sigdb)) h5.file <- sigdb
     }
     
-    if(is.null(contrasts)) contrasts <- colnames(meta$fc)
+    if(is.null(contrasts))
+        contrasts <- colnames(meta$fc)
     contrasts <- intersect(contrasts, colnames(meta$fc))
 
     scores <- list()
