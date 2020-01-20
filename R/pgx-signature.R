@@ -170,7 +170,7 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir)
     cat("[pgx.addEnrichmentSignaturesH5] starting fGSEA...\n")    
     require(fgsea)
     ##F1 <- apply(X, 2, function(x) {fgsea( gmt, x, nperm=1000)$NES })
-    F1 <- apply(X[,1:10], 2, function(x) {fgsea( gmt, x, nperm=100)$NES })  ## FDR not important, small nperm
+    F1 <- apply(X[,], 2, function(x) {fgsea( gmt, x, nperm=100)$NES })  ## FDR not important, small nperm
     dim(F1)
     cat("[pgx.addEnrichmentSignaturesH5] dim(F1)=",dim(F1),"\n")
     rownames(F1) <- names(gmt)
