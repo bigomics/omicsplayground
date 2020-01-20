@@ -1,5 +1,192 @@
+if(0) {
 
-sigdb="../data/datasets-allFC.csv"
+    sigdb = "../data/datasets-allFC.csv"
+    h5.file = "../data/sigdb-gse25k.h5"
+    FILES="../lib"
+    
+}
+
+chunk=100
+pgx.createSignatureDatabaseH5 <- function(pgx.files, h5.file, chunk=100, update.only=FALSE)
+{
+    require(rhdf5)
+
+    h5exists <- function(h5.file, obj) {
+        xobjs <- apply(h5ls(h5.file)[,1:2],1,paste,collapse="/")
+        obj %in% gsub("^/|^//","",xobjs)
+    }
+
+    if(update.only && h5exists(h5.file, "data/matrix")) {
+        X  <- h5read(h5.file, "data/matrix")
+        rn <- h5read(h5.file,"data/rownames")
+        cn <- h5read(h5.file,"data/colnames")
+        rownames(X) <- rn
+        colnames(X) <- cn
+    } else {
+        ##--------------------------------------------------
+        ## make big FC signature matrix
+        ##--------------------------------------------------
+        F <- list()
+        cat("reading FC from",length(pgx.files),"pgx files ")
+        i=1
+        for(i in 1:length(pgx.files)) {
+            if(!file.exists(pgx.files[i])) next()
+            cat(".")
+            load(pgx.files[i], verbose=0)
+            meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
+            rownames(meta$fc) <- toupper(rownames(meta$fc))  ## mouse-friendly
+            pgx <- gsub(".*[/]|[.]pgx$","",pgx.files[i])
+            colnames(meta$fc) <- paste0("[",pgx,"] ",colnames(meta$fc))
+            F[[ pgx ]] <- meta$fc    
+        }
+        cat("\n")
+        
+        genes <- as.vector(unlist(sapply(F,rownames)))
+        genes <- sort(unique(toupper(genes)))
+        length(genes)    
+        F <- lapply(F, function(x) x[match(genes,rownames(x)),,drop=FALSE])
+        X <- do.call(cbind, F)
+        rownames(X) <- genes    
+
+        ## Filter out genes (not on known chromosomes...)
+        genes <- rownames(X)
+        gannot <- ngs.getGeneAnnotation(genes)
+        table(is.na(gannot$chr))
+        sel <- which(!is.na(gannot$chr))
+        X <- X[sel,,drop=FALSE]
+        dim(X)
+
+        pgx.saveMatrixH5(X, h5.file, chunk=chunk)
+
+        if(0) {
+            h5ls(h5.file)
+            h5write( X, h5.file, "data/matrix")  ## can write list??
+            h5write( colnames(X), h5.file,"data/colnames")
+            h5write( rownames(X), h5.file,"data/rownames")
+        }        
+        remove(F)
+    }
+    dim(X)
+    
+    ##--------------------------------------------------
+    ## Calculate top100 gene signatures
+    ##--------------------------------------------------
+    cat("Creating signatures...\n")
+    
+    if(!update.only || !h5exists(h5.file, "signature")) {
+        ## X  <- h5read(h5.file, "data/matrix")
+        rn <- h5read(h5.file,"data/rownames")
+        cn <- h5read(h5.file,"data/colnames")
+        h5ls(h5.file)
+        
+        dim(X)
+        ##X <- X[,1:100]
+        X[is.na(X)] <- 0
+        orderx <- apply(X,2,function(x) {
+            idx=order(x);
+            list(DN=head(idx,100),UP=rev(tail(idx,100)))
+        })    
+        sig100.dn <- sapply(orderx,"[[","DN")
+        sig100.dn <- apply(sig100.dn, 2, function(i) rn[i])
+        sig100.up <- sapply(orderx,"[[","UP")
+        sig100.up <- apply(sig100.up, 2, function(i) rn[i])
+        
+        if(!h5exists(h5.file, "signature")) h5createGroup(h5.file,"signature")    
+        h5write( sig100.dn, h5.file, "signature/sig100.dn")  ## can write list???    
+        h5write( sig100.up, h5.file, "signature/sig100.up")  ## can write list??
+        
+        remove(orderx)
+        remove(sig100.dn)
+        remove(sig100.up)
+    }
+    
+    ##--------------------------------------------------
+    ## Precalculate t-SNE/UMAP
+    ##--------------------------------------------------
+    dim(X)
+
+    if(!update.only || !h5exists(h5.file, "clustering")) {
+        
+        if(!h5exists(h5.file, "clustering")) h5createGroup(h5.file,"clustering")    
+        h5ls(h5.file)
+        
+        pos <- pgx.clusterBigMatrix(
+            abs(X),  ## on absolute foldchange!!
+            methods=c("pca","tsne","umap"),
+            dims=c(2,3),
+            reduce.sd = 2000,
+            reduce.pca = 200 )
+        names(pos)
+        
+        h5write( pos[["pca2d"]], h5.file, "clustering/pca2d")  ## can write list??    
+        h5write( pos[["pca3d"]], h5.file, "clustering/pca3d")  ## can write list??    
+        h5write( pos[["tsne2d"]], h5.file, "clustering/tsne2d")  ## can write list??    
+        h5write( pos[["tsne3d"]], h5.file, "clustering/tsne3d")  ## can write list??    
+        h5write( pos[["umap2d"]], h5.file, "clustering/umap2d")  ## can write list??    
+        h5write( pos[["umap3d"]], h5.file, "clustering/umap3d")  ## can write list??            
+
+    }
+
+    ##--------------------------------------------------
+    ## Add GSEA/GSVA (at this moment only Hallmark)
+    ##--------------------------------------------------
+    if(!update.only || !h5exists(h5.file, "enrichment")) {
+        pgx.addGenesetSignaturesH5(h5.file, X)
+    }
+
+    h5closeAll()
+    ## return(X)
+}
+
+pgx.addGenesetSignaturesH5 <- function(h5.file, X=NULL )
+{
+    require(rhdf5)
+    
+    h5exists <- function(h5.file, obj) {
+        xobjs <- apply(h5ls(h5.file)[,1:2],1,paste,collapse="/")
+        obj %in% gsub("^/|^//","",xobjs)
+    }
+
+    if(is.null(X)) {
+        X  <- h5read(h5.file, "data/matrix")
+        rn <- h5read(h5.file,"data/rownames")
+        cn <- h5read(h5.file,"data/colnames")
+        rownames(X) <- rn
+        colnames(X) <- cn
+    }
+
+    ##sig100.dn <- h5read(h5.file, "signature/sig100.dn")  
+    ##sig100.up <- h5read(h5.file, "signature/sig100.up")  
+    
+    G <- readRDS(file.path(FILES,"gset-sparseG-XL.rds"))
+    dim(G)    
+    sel <- grep("HALLMARK|C[1-9]|^GO", rownames(G))
+    sel <- grep("HALLMARK", rownames(G))
+    length(sel)
+    G <- G[sel,]
+    gmt <- apply( G, 1, function(x) colnames(G)[which(x!=0)])
+
+    ##X <- X[,1:10]
+    
+    require(fgsea)
+    F1 <- apply(X, 2, function(x) {fgsea( gmt, x, nperm=1000)$NES })
+    rownames(F1) <- rownames(G)
+
+    require(GSVA)
+    mc.cores = 4
+    F2 <- gsva(X, gmt, method="gsva", parallel.sz=mc.cores)
+    dim(F2)
+    
+    if(!h5exists(h5.file, "enrichment")) h5createGroup(h5.file,"enrichment")
+    h5write( rownames(F1), h5.file, "enrichment/genesets")
+    h5write( F1, h5.file, "enrichment/fGSEA")
+    h5write( F2, h5.file, "enrichment/GSVA")
+
+    h5ls(h5.file)
+    h5closeAll()
+
+}
+
 pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=-1, contrasts=NULL)
 {
 
@@ -215,133 +402,6 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     head(res)
     return(res)
 }
-
-chunk=100
-pgx.createSignatureDatabaseH5 <- function(pgx.files, h5.file, chunk=100, update.only=FALSE)
-{
-    require(rhdf5)
-
-    h5exists <- function(h5.file, obj) {
-        xobjs <- apply(h5ls(h5.file)[,1:2],1,paste,collapse="/")
-        obj %in% gsub("^/|^//","",xobjs)
-    }
-
-    if(update.only && h5exists(h5.file, "data/matrix")) {
-        X  <- h5read(h5.file, "data/matrix")
-        rn <- h5read(h5.file,"data/rownames")
-        cn <- h5read(h5.file,"data/colnames")
-        rownames(X) <- rn
-        colnames(X) <- cn
-    } else {
-        ##--------------------------------------------------
-        ## make big FC signature matrix
-        ##--------------------------------------------------
-        F <- list()
-        cat("reading FC from",length(pgx.files),"pgx files ")
-        i=1
-        for(i in 1:length(pgx.files)) {
-            if(!file.exists(pgx.files[i])) next()
-            cat(".")
-            load(pgx.files[i], verbose=0)
-            meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
-            rownames(meta$fc) <- toupper(rownames(meta$fc))  ## mouse-friendly
-            pgx <- gsub(".*[/]|[.]pgx$","",pgx.files[i])
-            colnames(meta$fc) <- paste0("[",pgx,"] ",colnames(meta$fc))
-            F[[ pgx ]] <- meta$fc    
-        }
-        cat("\n")
-        
-        genes <- as.vector(unlist(sapply(F,rownames)))
-        genes <- sort(unique(toupper(genes)))
-        length(genes)    
-        F <- lapply(F, function(x) x[match(genes,rownames(x)),,drop=FALSE])
-        X <- do.call(cbind, F)
-        rownames(X) <- genes    
-
-        ## Filter out genes (not on known chromosomes...)
-        genes <- rownames(X)
-        gannot <- ngs.getGeneAnnotation(genes)
-        table(is.na(gannot$chr))
-        sel <- which(!is.na(gannot$chr))
-        X <- X[sel,,drop=FALSE]
-        dim(X)
-
-        pgx.saveMatrixH5(X, h5.file, chunk=chunk)
-
-        if(0) {
-            h5ls(h5.file)
-            h5write( X, h5.file, "data/matrix")  ## can write list??
-            h5write( colnames(X), h5.file,"data/colnames")
-            h5write( rownames(X), h5.file,"data/rownames")
-        }        
-        remove(F)
-    }
-    dim(X)
-    
-    ##--------------------------------------------------
-    ## Calculate top100 gene signatures
-    ##--------------------------------------------------
-    cat("Creating signatures...\n")
-    
-    if(!update.only || !h5exists(h5.file, "signature")) {
-        ## X  <- h5read(h5.file, "data/matrix")
-        rn <- h5read(h5.file,"data/rownames")
-        cn <- h5read(h5.file,"data/colnames")
-        h5ls(h5.file)
-        
-        dim(X)
-        ##X <- X[,1:100]
-        X[is.na(X)] <- 0
-        orderx <- apply(X,2,function(x) {
-            idx=order(x);
-            list(DN=head(idx,100),UP=rev(tail(idx,100)))
-        })    
-        sig100.dn <- sapply(orderx,"[[","DN")
-        sig100.dn <- apply(sig100.dn, 2, function(i) rn[i])
-        sig100.up <- sapply(orderx,"[[","UP")
-        sig100.up <- apply(sig100.up, 2, function(i) rn[i])
-        
-        if(!h5exists(h5.file, "signature")) h5createGroup(h5.file,"signature")    
-        h5write( sig100.dn, h5.file, "signature/sig100.dn")  ## can write list???    
-        h5write( sig100.up, h5.file, "signature/sig100.up")  ## can write list??
-        
-        remove(orderx)
-        remove(sig100.dn)
-        remove(sig100.up)
-    }
-    
-    ##--------------------------------------------------
-    ## Precalculate t-SNE/UMAP
-    ##--------------------------------------------------
-    dim(X)
-
-    if(!update.only || !h5exists(h5.file, "clustering")) {
-        
-        if(!h5exists(h5.file, "clustering")) h5createGroup(h5.file,"clustering")    
-        h5ls(h5.file)
-        
-        pos <- pgx.clusterBigMatrix(
-            abs(X),  ## on absolute foldchange!!
-            methods=c("pca","tsne","umap"),
-            dims=c(2,3),
-            reduce.sd = 2000,
-            reduce.pca = 200 )
-        names(pos)
-        
-        h5write( pos[["pca2d"]], h5.file, "clustering/pca2d")  ## can write list??    
-        h5write( pos[["pca3d"]], h5.file, "clustering/pca3d")  ## can write list??    
-        h5write( pos[["tsne2d"]], h5.file, "clustering/tsne2d")  ## can write list??    
-        h5write( pos[["tsne3d"]], h5.file, "clustering/tsne3d")  ## can write list??    
-        h5write( pos[["umap2d"]], h5.file, "clustering/umap2d")  ## can write list??    
-        h5write( pos[["umap3d"]], h5.file, "clustering/umap3d")  ## can write list??            
-
-    }
-
-
-    h5closeAll()
-    ## return(X)
-}
-    
 
 pgx.ReclusterSignatureDatabase <- function(h5.file, reduce.sd=1000, reduce.pca=100)
 {
