@@ -175,24 +175,24 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir)
     cat("[pgx.addEnrichmentSignaturesH5] dim(F1)=",dim(F1),"\n")
     rownames(F1) <- names(gmt)
 
+    if(!h5exists(h5.file, "enrichment")) h5createGroup(h5.file,"enrichment")
+    h5write(rownames(F1), h5.file, "enrichment/genesets")
+    h5write(F1, h5.file, "enrichment/GSEA")
 
+    
     cat("[pgx.addEnrichmentSignaturesH5] starting GSVA... \n")    
     require(GSVA)
     ## mc.cores = 4
     F2 <- gsva(X, gmt, method="gsva", parallel.sz=mc.cores)
     rownames(F2) <- names(gmt)
     dim(F2)
-
-
-    cat("[pgx.addEnrichmentSignaturesH5] done!\n")        
-    if(!h5exists(h5.file, "enrichment")) h5createGroup(h5.file,"enrichment")
-    h5write(rownames(F1), h5.file, "enrichment/genesets")
-    h5write(F1, h5.file, "enrichment/GSEA")
     h5write(F2, h5.file, "enrichment/GSVA")
 
     h5ls(h5.file)
     h5closeAll()
 
+    cat("[pgx.addEnrichmentSignaturesH5] done!\n")
+    
 }
 
 pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=-1, contrasts=NULL)
