@@ -700,7 +700,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
                           deferRender=TRUE
                       )  ## end of options.list 
                       )  %>%
-            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='95%')
+            DT::formatStyle(0, target='row', fontSize='11.5px', lineHeight='95%')
 
     })
 

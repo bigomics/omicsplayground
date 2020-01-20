@@ -26,10 +26,10 @@ ngs.getGeneAnnotation <- function(genes)
     }
 
     head(GENE.TITLE)
-    gene_title <- GENE.TITLE[rownames(X)]
+    gene_title <- GENE.TITLE[genes]
 
     ## get chromosome locations
-    chrloc0 <- CHRLOC[rownames(X)]
+    chrloc0 <- CHRLOC[genes]
     loc <- sapply(chrloc0, "[", 1)
     loc[sapply(loc,is.null)] <- NA
     loc <- abs(as.integer(unlist(loc)))
@@ -40,12 +40,12 @@ ngs.getGeneAnnotation <- function(genes)
     ## get protein info
     ## fill me
     
-    annot = data.frame( gene_name = rownames(X),
+    annot = data.frame( gene_name = genes,
                        gene_title = gene_title,
                        chr=chrom, pos=loc)
     ##genes = apply(genes,2,as.character)
     head(annot)
-    rownames(annot) = rownames(X)
+    rownames(annot) = genes
     annot
 }
 

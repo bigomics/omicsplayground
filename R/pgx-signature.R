@@ -29,9 +29,10 @@ pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=-1, contrasts=NULL)
         
         fc <- meta$fc[,ct]
         names(fc) <- rownames(meta$fc)
-
+        names(fc) <- toupper(names(fc)) ## for mouse
+        
+        h5.file
         if(!is.null(h5.file))  {
-            h5.file
             res <- pgx.correlateSignatureH5(
                 fc, h5.file = h5.file,
                 nsig=100, ntop=ntop, nperm=10000)            
@@ -62,19 +63,23 @@ pgx.correlateSignature <- function(fc, refmat, nsig=100, ntop=1000, nperm=10000)
     ##
     
     if(is.null(names(fc))) stop("fc must have names")
+
+    ## mouse... mouse...
+    names(fc) <- toupper(names(fc))
     
     ## or instead compute correlation on top100 fc genes (read from file)
     ##refmat = PROFILES$FC
     rn <- rownames(refmat)
     cn <- colnames(refmat)
-
+    
     ## ---------------------------------------------------------------
     ## Compute simple correlation between query profile and signatures
     ## ---------------------------------------------------------------
-    gg <- names(c(head(sort(fc),nsig), head(tail(fc),nsig)))
+    fc <- sort(fc)
+    gg <- unique(names(c(head(fc,nsig), tail(fc,nsig))))
     ##gg <- intersect(names(fc),rn)
     gg <- intersect(gg,rn)
-    G <- refmat[gg,,drop=FALSE]
+    G  <- refmat[gg,,drop=FALSE]
     dim(G)
     rho <- cor( G[gg,], fc[gg], use="pairwise")[,1]
     names(rho) <- colnames(G)
@@ -149,6 +154,9 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     
     if(is.null(names(fc))) stop("fc must have names")
     
+    ## mouse... mouse...
+    names(fc) <- toupper(names(fc))
+
     ## or instead compute correlation on top100 fc genes (read from file)
     rn <- h5read(h5.file,"data/rownames")
     cn <- h5read(h5.file,"data/colnames")
@@ -156,7 +164,8 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     ## ---------------------------------------------------------------
     ## Compute simple correlation between query profile and signatures
     ## ---------------------------------------------------------------
-    gg <- names(c(head(sort(fc),nsig), head(tail(fc),nsig)))
+    fc <- sort(fc)
+    gg <- unique(names(c(head(fc,nsig), tail(fc,nsig))))
     ##gg <- intersect(names(fc),rn)
     gg <- intersect(gg,rn)
     row.idx <- match(gg,rn)
@@ -235,14 +244,15 @@ pgx.createSignatureDatabaseH5 <- function(pgx.files, h5.file, chunk=100, update.
             cat(".")
             load(pgx.files[i], verbose=0)
             meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
-            rownames(meta$fc) <- toupper(rownames(meta$fc))
+            rownames(meta$fc) <- toupper(rownames(meta$fc))  ## mouse-friendly
             pgx <- gsub(".*[/]|[.]pgx$","",pgx.files[i])
             colnames(meta$fc) <- paste0("[",pgx,"] ",colnames(meta$fc))
             F[[ pgx ]] <- meta$fc    
         }
         cat("\n")
         
-        genes <- sort(unique(as.vector(unlist(sapply(F,rownames)))))
+        genes <- as.vector(unlist(sapply(F,rownames)))
+        genes <- sort(unique(toupper(genes)))
         length(genes)    
         F <- lapply(F, function(x) x[match(genes,rownames(x)),,drop=FALSE])
         X <- do.call(cbind, F)
