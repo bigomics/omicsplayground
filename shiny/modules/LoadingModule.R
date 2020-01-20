@@ -88,7 +88,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
             p(strong("Dataset info:")),
             div( htmlOutput(ns("dataset_info")), id="datainfo"),
             br(),
-            tipify(actionButton(ns("loadbutton"),label="Load dataset"),
+            tipify( actionButton(ns("loadbutton"),label="Load dataset",class="load-button"),
                    "Click to load the selected dataset.", placement="bottom")
         )
         ui

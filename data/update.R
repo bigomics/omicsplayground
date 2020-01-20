@@ -34,7 +34,7 @@ for(pgx.file in pgx.files) {
     
     load(pgx.file, verbose=1)
     object.size(ngs)/1e6
-
+    
     if(0 && "connectivity" %in% names(ngs)) {
         cat("already done. skipping...\n")
         next()

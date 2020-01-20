@@ -22,7 +22,9 @@ library(data.table)
 library(dplyr)
 library(org.Hs.eg.db)
 ## library(Cairo)
+library(dragulaR)
 
+    
 ##useShinyjs(rmd=TRUE)  
 useShinyjs()
 ht_global_opt(fast_hclust = TRUE)

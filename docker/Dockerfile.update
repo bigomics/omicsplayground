@@ -1,0 +1,40 @@
+## From https://www.r-bloggers.com/deploying-an-r-shiny-app-with-docker/
+## and https://www.bjoern-hartmann.de/post/learn-how-to-dockerize-a-shinyapp-in-7-steps/
+##
+
+#------------------------------------------------------------
+# Start from lastest base+data image
+#------------------------------------------------------------
+
+FROM bigomics/omicsplayground:latest
+
+#------------------------------------------------------------
+# Install extra packages required since base (later move to requirements.R!)
+#------------------------------------------------------------
+## RUN R -e "install.packages(c('umap','corrplot','wordcloud'))"
+## RUN pip install umap-learn
+## RUN R -e "BiocManager::install(c('pathview','randomForest'))"
+## RUN R -e "devtools::install_github('wt2015-github/FastGGM')"
+
+#------------------------------------------------------------
+## Pull from GitHub
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+RUN git pull
+
+#------------------------------------------------------------
+# Copy local data into Docker image
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+## COPY data-examples/* /omicsplayground/data/
+## RUN R -e "setwd('data');source('init.R')"
+
+#------------------------------------------------------------
+# Copy further configuration files into the Docker image
+#------------------------------------------------------------
+COPY docker/shiny-server.conf  /etc/shiny-server/shiny-server.conf
+COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
+
+EXPOSE 3838
+
+CMD ["/usr/bin/shiny-server.sh"]
