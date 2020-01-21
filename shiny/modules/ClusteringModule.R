@@ -133,6 +133,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
     observeEvent( input$hm_splitby, {
         ngs <- inputData()
+        req(ngs)
         if(input$hm_splitby=='none') return()
         if(input$hm_splitby=='gene') {
             xgenes <- sort(rownames(ngs$X))
@@ -140,7 +141,11 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         }
         if(input$hm_splitby=='phenotype') {
             cvar <- sort(pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=20))
-            updateSelectInput(session, "hm_splitvar", choices=cvar, selected=cvar[1])
+            sel <- cvar[1]
+            cvar0 <- grep("^[.]",cvar,value=TRUE,invert=TRUE) ## no estimated vars
+            sel <- head(c(grep("type|family|class|stat",cvar0,ignore.case=TRUE,value=TRUE),
+                          cvar0,cvar),1)
+            updateSelectInput(session, "hm_splitvar", choices=cvar, selected=sel)
         }
     })
     
@@ -604,8 +609,10 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                              selected="ComplexHeatmap", inline=TRUE, width='100%'),
                "Choose plot type: ComplexHeatmap (static) or iHeatmap (interactive)",
                placement="right",options = list(container = "body")),
-        tipify( radioButtons(ns("hm_splitby"), "split by:", inline=TRUE,
-                             choices=c("none","phenotype","gene")),
+        tipify( radioButtons(
+            ns("hm_splitby"), "split by:", inline=TRUE,
+            ## selected="phenotype",
+            choices=c("none","phenotype","gene")),
                "Split the samples by phenotype or expression level of a gene.",
                placement="right",options = list(container = "body")),
         conditionalPanel(
