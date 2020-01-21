@@ -30,6 +30,16 @@ OPTIONS <- pgx.readOptions(file="OPTIONS")
 DEV.VERSION = TRUE
 if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 
+HIDEUSERMODE = FALSE
+USERMODE = "FULL"
+if(file.exists("BASIC")) {
+    cat("********************* BASIC MODE **********************\n")
+    USERMODE = "BASIC"
+    HIDEUSERMODE = TRUE
+    DEV.VERSION = FALSE
+}
+
+
 if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
@@ -70,7 +80,7 @@ server = function(input, output, session) {
 
     env <- list()  ## communication environment
     ## env[["load"]][["inputData"]] <- reactive({ ngs })
-    env[["load"]]   <- callModule( LoadingModule, "load", hideUserMode=FALSE)
+    env[["load"]]   <- callModule( LoadingModule, "load", hideUserMode=HIDEUSERMODE)
     env[["view"]]   <- callModule( DataViewModule, "view", env)
     env[["clust"]]  <- callModule( ClusteringModule, "clust", env)
     env[["expr"]]   <- callModule( ExpressionModule, "expr", env)
@@ -102,6 +112,7 @@ server = function(input, output, session) {
     nwarn = 0
     observe({
         usermode <- env[["load"]][["usermode"]]()
+        if(USERMODE=="BASIC") usermode <- "BASIC" ## override
         if(usermode=="BASIC") {
             shinyjs::hide(selector = "div.download-button")
             ## if(nwarn==3) sendSweetAlert( session=session, title="", text="download is disabled")
@@ -125,7 +136,6 @@ server = function(input, output, session) {
         shinyjs::hide(selector = "div.download-button")
 
         hideTab("enrich-tabs1","GeneMap")
-        ##hideTab("bio-tabs","Multi-level")
         hideTab("clust-tabs2","Feature ranking")
         hideTab("expr-tabs1","Volcano (methods)")
         hideTab("expr-tabs2","FDR table")
@@ -149,7 +159,6 @@ server = function(input, output, session) {
             showTab("maintabs","Development")
             showTab("view-tabs","Resource info")
             showTab("enrich-tabs1","GeneMap")
-            ## showTab("bio-tabs","Multi-level")
         }
         
     })
