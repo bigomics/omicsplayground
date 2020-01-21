@@ -62,11 +62,11 @@ source("modules/ProfilingModule.R", local=TRUE)
 source("modules/CorrelationModule.R", local=TRUE)
 source("modules/BiomarkerModule.R", local=TRUE)
 
-if(DEV.VERSION) {
-    source("../../omicsplayground-dev/shiny/modules/ConnectivityModule.R", local=TRUE)
-    source("../../omicsplayground-dev/shiny/modules/TcgaModule.R", local=TRUE)
-    source("../../omicsplayground-dev/shiny/modules/BatchCorrectModule.R", local=TRUE)
-    source("../../omicsplayground-dev/shiny/modules/MultiLevelModule.R", local=TRUE)
+if(DEV.VERSION && dir.exists("xmodules")) {
+    source("xmodules/ConnectivityModule.R", local=TRUE)
+    source("xmodules/TcgaModule.R", local=TRUE)
+    source("xmodules/BatchCorrectModule.R", local=TRUE)
+    source("xmodules/MultiLevelModule.R", local=TRUE)
 }
 
 server = function(input, output, session) {
@@ -77,14 +77,15 @@ server = function(input, output, session) {
     cat("===================== SERVER =======================\n")
     cat("calling modules... ")
 
-    upload.limits <- c("samples" = opt$MAX_SAMPLES,
-                       "comparisons" = opt$MAX_COMPARISONS)
+    max.limits <- c("samples" = opt$MAX_SAMPLES,
+                    "comparisons" = opt$MAX_COMPARISONS,
+                    "genes" = opt$MAX_GENES)
     
     env <- list()  ## communication environment
     ## env[["load"]][["inputData"]] <- reactive({ ngs })
     env[["load"]]   <- callModule(
         LoadingModule, "load", hideUserMode=HIDEUSERMODE,
-        upload.limits = upload.limits)
+        max.limits = max.limits)
     env[["view"]]   <- callModule( DataViewModule, "view", env)
     env[["clust"]]  <- callModule( ClusteringModule, "clust", env)
     env[["expr"]]   <- callModule( ExpressionModule, "expr", env)

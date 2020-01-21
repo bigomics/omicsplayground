@@ -27,7 +27,8 @@ LoadingUI <- function(id) {
 
 
 LoadingModule <- function(input, output, session, hideUserMode=FALSE,
-                          upload.limits=c("samples"=1000,"comparisons"=20))
+                          max.limits=c("samples"=1000,"comparisons"=20,
+                                          "genes"=8000))
 {
     ns <- session$ns ## NAMESPACE
     
@@ -769,8 +770,8 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE,
 
         basic.limits = "25 samples and 5 comparisons"
         pro.limits   = "1000 samples and 20 comparisons"
-        limits <- paste(upload.limits["samples"],"samples and",
-                        upload.limits["comparisons"],"comparisons")
+        limits <- paste(max.limits["samples"],"samples and",
+                        max.limits["comparisons"],"comparisons")
         
         upload_info = sub("LIMITS", limits, upload_info)
         ##if(USERMODE()=="PRO") upload_info = sub("LIMITS", pro.limits, upload_info)    
@@ -866,25 +867,26 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE,
             samples   <- data.frame(uploaded_files[["samples.csv"]],stringsAsFactors=FALSE)
             contrasts <- as.matrix(uploaded_files[["contrasts.csv"]])
 
-            max.genes = NULL
+            max.genes = as.integer(max.limits["genes"])
+            
             if( USERMODE() == "BASIC") {
                 gx.methods   = c("ttest.welch","ttest.rank","trend.limma") ## fastest 3
                 gset.methods = c("fisher","gsva","camera")  ## fastest 3            
                 ## gx.methods   = c("trend.limma","edger.qlf","edger.lrt")
                 ## gset.methods = c("fisher","gsva","fgsea")
                 extra.methods = c("meta.go","infer","drugs","wordcloud")
-                max.genes = 10000
+                ##max.genes = 10000
             } else {
                 gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
                 gset.methods = c("fisher","gsva","fgsea","camera","fry")
                 extra.methods = c("meta.go","infer","deconv","drugs-combo","wordcloud")
-                max.genes = 25000
+                ## max.genes = 25000
                 if(ncol(counts) > 1000) {
                     ## probably scRNA-seq
                     gx.methods   = c("ttest","ttest.welch","trend.limma")
                     gset.methods = c("fisher","gsva","fgsea")
-                    extra.methods = c("meta.go","infer","deconv","drugs-combo","wordcloud")                    
-                    max.genes = 10000
+                    extra.methods = c("meta.go","infer","deconv","drugs-combo","wordcloud")
+                    ## max.genes = 10000
                 }
             }
             if(DEV.VERSION) {
@@ -1089,17 +1091,8 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE,
             
             MAXSAMPLES   = 25
             MAXCONTRASTS = 5
-            MAXSAMPLES   = upload.limits["samples"]
-            MAXCONTRASTS = upload.limits["comparisons"]
-
-            ## if( USERMODE() == "PRO") {
-            ##     MAXSAMPLES   = 1000
-            ##     MAXCONTRASTS = 20
-            ## }
-            ## if( USERMODE() == "DEV") {
-            ##     MAXSAMPLES   = 999999
-            ##     MAXCONTRASTS = 99999
-            ## }
+            MAXSAMPLES   = as.integer(max.limits["samples"])
+            MAXCONTRASTS = as.integer(max.limits["comparisons"])
             
             ## check files: maximum contrasts allowed
             if(status["contrasts.csv"]=="OK") {
