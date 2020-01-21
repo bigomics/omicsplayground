@@ -2,6 +2,7 @@
 ## Plotting functions
 ########################################################################
 
+
 ##df=ngs$samples
 pgx.testPhenoCorrelation <- function(df, plot=TRUE, cex=1)
 {
