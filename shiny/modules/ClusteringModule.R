@@ -662,9 +662,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ##req(input$hm_plottype)
         p = NULL
         if(input$hm_plottype %in% c("ComplexHeatmap","static") ) {
-            p = plotOutput(ns("hm1_splitmap"), height=fullH-60)  ## see below
+            p = plotOutput(ns("hm1_splitmap"), height=fullH-100)  ## height defined here!!
         } else {
-            p = iheatmaprOutput(ns("hm2_splitmap"), height=fullH-60) ## see below
+            p = iheatmaprOutput(ns("hm2_splitmap"), height=fullH-100) ## height defined here!!
         }
         return(p)
     })
@@ -1534,7 +1534,7 @@ displays the expression levels of selected genes across all conditions in the an
         func = clustannot_plots.PLOTLY, plotlib="plotly",
         download.fmt = c("png","pdf","html"),
         options = clustannot_plots_opts,
-        height = c(370,600), width = c(500,1000),
+        height = c(360,600), width = c(500,1000),
         pdf.width=8, pdf.height=5, res=80,
         title="Functional annotation of clusters", label="a",
         info.text = clustannot_plots_text        
@@ -1584,7 +1584,7 @@ displays the expression levels of selected genes across all conditions in the an
         ##options = clustannot_table_opts,
         info.text = clustannot_table_info_text,
         title="Annotation scores", label="b",
-        height = c(250,700), width=c('auto',1000),
+        height = c(240,700), width=c('auto',1000),
         ##caption = clustannot_caption
     )
     ##output <- attachModule(output, clustannot_table_module)
