@@ -31,10 +31,10 @@ DEV.VERSION = TRUE
 if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 
 HIDEUSERMODE = FALSE
-USERMODE = "FULL"
+USERMODE0 = "FULL"
 if(file.exists("BASIC")) {
     cat("********************* BASIC MODE **********************\n")
-    USERMODE = "BASIC"
+    USERMODE0 = "BASIC"
     HIDEUSERMODE = TRUE
     DEV.VERSION = FALSE
 }
@@ -63,6 +63,7 @@ source("modules/SignatureModule.R", local=TRUE)
 source("modules/ProfilingModule.R", local=TRUE)
 source("modules/CorrelationModule.R", local=TRUE)
 source("modules/BiomarkerModule.R", local=TRUE)
+
 if(DEV.VERSION) {
     source("../../omicsplayground-dev/shiny/modules/ConnectivityModule.R", local=TRUE)
     source("../../omicsplayground-dev/shiny/modules/TcgaModule.R", local=TRUE)
@@ -112,7 +113,7 @@ server = function(input, output, session) {
     nwarn = 0
     observe({
         usermode <- env[["load"]][["usermode"]]()
-        if(USERMODE=="BASIC") usermode <- "BASIC" ## override
+        if(USERMODE0=="BASIC") usermode <- "BASIC" ## override
         if(usermode=="BASIC") {
             shinyjs::hide(selector = "div.download-button")
             ## if(nwarn==3) sendSweetAlert( session=session, title="", text="download is disabled")

@@ -765,8 +765,8 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
     upload_filetypes = c(".csv",".pgx")    
     output$upload_UI <- renderUI({    
 
-        basic.limits = "99 samples and 9 comparisons"
-        pro.limits   = "999 samples and 99 comparisons"
+        basic.limits = "25 samples and 5 comparisons"
+        pro.limits   = "1000 samples and 20 comparisons"
         if(USERMODE()=="BASIC") upload_info = sub("LIMITS", basic.limits, upload_info)
         if(USERMODE()=="PRO") upload_info = sub("LIMITS", pro.limits, upload_info)    
         userdataUI <- NULL
@@ -868,12 +868,12 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
                 ## gx.methods   = c("trend.limma","edger.qlf","edger.lrt")
                 ## gset.methods = c("fisher","gsva","fgsea")
                 extra.methods = c("meta.go","infer","drugs","wordcloud")
-                max.genes = 5000
+                max.genes = 10000
             } else {
                 gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
                 gset.methods = c("fisher","gsva","fgsea","camera","fry")
                 extra.methods = c("meta.go","infer","deconv","drugs-combo","wordcloud")
-                max.genes = 20000
+                max.genes = 25000
                 if(ncol(counts) > 1000) {
                     ## probably scRNA-seq
                     gx.methods   = c("ttest","ttest.welch","trend.limma")
@@ -1082,12 +1082,12 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
                 }
             }
             
-            MAXSAMPLES   = 99
-            MAXCONTRASTS = 9
+            MAXSAMPLES   = 25
+            MAXCONTRASTS = 5
 
             if( USERMODE() == "PRO") {
-                MAXSAMPLES   = 999
-                MAXCONTRASTS = 99
+                MAXSAMPLES   = 1000
+                MAXCONTRASTS = 20
             }
             if( USERMODE() == "DEV") {
                 MAXSAMPLES   = 999999
