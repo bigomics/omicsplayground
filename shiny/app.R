@@ -25,16 +25,14 @@ pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
-OPTIONS <- pgx.readOptions(file="OPTIONS")
+opt <- pgx.readOptions(file="OPTIONS")
 
 DEV.VERSION = TRUE
 if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 
 HIDEUSERMODE = FALSE
-USERMODE0 = "FULL"
-if(file.exists("BASIC")) {
+if(opt$USERMODE=="basic") {
     cat("********************* BASIC MODE **********************\n")
-    USERMODE0 = "BASIC"
     HIDEUSERMODE = TRUE
     DEV.VERSION = FALSE
 }
@@ -113,9 +111,11 @@ server = function(input, output, session) {
     nwarn = 0
     observe({
         usermode <- env[["load"]][["usermode"]]()
-        if(USERMODE0=="BASIC") usermode <- "BASIC" ## override
+        if(opt$USERMODE=="basic") usermode <- "BASIC" ## override
         if(usermode=="BASIC") {
             shinyjs::hide(selector = "div.download-button")
+            shinyjs::hide(selector = "div.modebar")
+            shinyjs::hide(selector = "div.pro-feature")
             ## if(nwarn==3) sendSweetAlert( session=session, title="", text="download is disabled")
         }
         invalidateLater(1000*30)  ## every 30 seconds check...
@@ -135,6 +135,8 @@ server = function(input, output, session) {
         hideTab("maintabs","Drug connectivity")
         hideTab("maintabs","SingleCell")
         shinyjs::hide(selector = "div.download-button")
+        shinyjs::hide(selector = "div.modebar")
+        shinyjs::hide(selector = "div.pro-feature")
 
         hideTab("enrich-tabs1","GeneMap")
         hideTab("clust-tabs2","Feature ranking")
@@ -142,6 +144,10 @@ server = function(input, output, session) {
         hideTab("expr-tabs2","FDR table")
         hideTab("enrich-tabs1","Volcano (methods)")
         hideTab("enrich-tabs2","FDR table")
+
+        if(opt$UPLOAD %in% c("no","false")) {
+            hideTab("load-tabs","Upload data")            
+        }
         
         if(usermode != "BASIC") {
             showTab("maintabs","SingleCell")
@@ -154,6 +160,9 @@ server = function(input, output, session) {
             showTab("enrich-tabs1","Volcano (methods)")
             showTab("enrich-tabs2","FDR table")
             shinyjs::show(selector = "div.download-button")
+            shinyjs::show(selector = "div.modebar")
+            shinyjs::show(selector = "div.pro-feature")
+
         }
 
         if(DEV.VERSION) {

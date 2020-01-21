@@ -325,7 +325,7 @@ between genes and find coregulated modules."
         selectInput(ns('cor_graph_layout'),'layout:', choices=GRAPH.LAYOUTS)
         )
 
-    cor_graph_info <- "</b>Correlation network.</b> Correlation graph centered on selected gene with top most correlated features. Red edges correspond to negative (marginal) correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation of the gene pair."
+    cor_graph_info <- "<b>Correlation network.</b> Correlation graph centered on selected gene with top most correlated features. Red edges correspond to negative (marginal) correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation of the gene pair."
     
     callModule(
         plotModule,
@@ -452,6 +452,9 @@ between genes and find coregulated modules."
                placement="left",options = list(container = "body"))
     )
 
+    corGSEA_plots_info = "<b>Correlation GSEA.</b> Functional GSEA enrichment of correlated genes. Black vertical bars indicate the rank of genes in the gene set in the sorted correlation metric. The green curve corresponds to the 'running statistics' of the enrichment score (ES). The more the green ES curve is shifted to the upper left of the graph, the more the gene set is enriched in the first group. Conversely, a shift of the ES curve to the lower right, corresponds to more enrichment in the second group."
+
+    
     ##corGSEA_plots_module <- plotModule(
     callModule(
         plotModule, 
@@ -460,7 +463,7 @@ between genes and find coregulated modules."
         func2 = corGSEA_plots.RENDER, 
         download.fmt = c("png","pdf"),
         ## options = corGSEA_plots_opts,
-        ## info.text = corGSEA_plots_text,        
+        info.text = corGSEA_plots_info,        
         title="Correlation GSEA", label="a",
         height = c(0.54*fullH,650), width = c('auto',1200),
         pdf.width=8, pdf.height=5, res=c(72,85)
@@ -502,7 +505,7 @@ between genes and find coregulated modules."
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
     })
 
-    corGSEA_table_info = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
+    corGSEA_table_info = "<b>Enrichment table.</b> Statistical results from the GSEA computation for functional enrichment of correlated genes. The column 'pval' and 'padj' correspond to the p-value and (multiple testing) adjusted p-value of the GSEA test, respectively. The 'NES' column reports the normalized enrichment score."
 
     corGSEA_table_opts <- tagList(
         checkboxInput(ns("corGSEAtable_multiselect"),"enable multi-select")
@@ -561,8 +564,8 @@ between genes and find coregulated modules."
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
     })
 
-    corGSEA_LeadingEdgeTable_info = "In this table, users can check mean correlation values of features in the clusters with respect to the annotation references database selected in the settings."
-
+    corGSEA_LeadingEdgeTable_info = "<b>Leading-edge table</b> Leading edge genes as reported by GSEA corresponding to the selected geneset. The 'rho' column reports the correlation with respect to the query gene."
+    
     corGSEA_LeadingEdgeTable <- callModule(
         tableModule, 
         id = "corGSEA_LeadingEdgeTable", 

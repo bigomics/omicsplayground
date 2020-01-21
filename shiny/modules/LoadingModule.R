@@ -17,7 +17,8 @@ LoadingUI <- function(id) {
             height=130,
             uiOutput(ns("valueboxes_UI"))
         ),
-        tabsetPanel(            
+        tabsetPanel(
+            id = ns("tabs"),
             tabPanel("Public datasets",uiOutput(ns("pgxtable_UI"))),
             tabPanel("Upload data",uiOutput(ns("upload_UI")))
         )
