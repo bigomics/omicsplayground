@@ -27,13 +27,6 @@ if(file.exists(INIT.FILE)) {
 
     cat("<init> loading cached INIT file...\n")
     load(INIT.FILE, verbose=1)
-    dim(PROFILES$FC)
-    
-    cat("<init> loading local profiles file...\n")
-    PROFILES$FC <- pgx.readDatasetProfiles(PGX.DIR, file="datasets-allFC.csv")
-    PROFILES$FC <- as.matrix(PROFILES$FC)
-    PROFILES$FC <- PROFILES$FC[,colMeans(is.na(PROFILES$FC))<0.9,drop=FALSE]
-    dim(PROFILES$FC)
     
 } else {
 
@@ -95,12 +88,11 @@ if(file.exists(INIT.FILE)) {
     ##load( file.path(FILES,"allMA-pub.rda"), verbose=1)
     ##load(file.path(FILES,"allFoldChanges-pub-8k.rda"))
     ##PROFILES <- list(M=allM, A=allA, FC=allFC)
-    allFC <- pgx.readDatasetProfiles(PGX.DIR, file="datasets-allFC.csv") 
-    PROFILES <- list(FC=allFC)
-
+    ##allFC <- pgx.readDatasetProfiles(PGX.DIR, file="datasets-allFC.csv") 
+    ##PROFILES <- list(FC=allFC)
     ##remove(allA)
     ##remove(allM)
-    remove(allFC)
+    ##remove(allFC)
 
     ##-----------------------------------------------------------------------------
     ## Colors

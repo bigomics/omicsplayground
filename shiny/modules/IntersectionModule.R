@@ -736,24 +736,17 @@ between two contrasts."
         ##col <- tail(BLUERED(16),8)
         if(min(R,na.rm=TRUE)>=0) col <- tail(col,32)
         if(max(R,na.rm=TRUE)<=0) col <- head(col,32)
+        cellnote <- NULL
 
-        dim(R)
-        if(0) {
-            gx.heatmap(R, values=NULL, col=col,
-                       scale="none", mar=mar1, cexRow=cex, cexCol=cex,
-                       cellnote=R, notecex=notecex, notecol="black",
-                       dist.method="euclidean", col.dist.method="euclidean",
-                       keysize=0.35, key=FALSE, zlim=c(-1,1) )
-        } else {
-            require(corrplot)
-            col2 <- colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582",
-                                       "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE",
-                                       "#4393C3", "#2166AC", "#053061"))
-            corrplot(R, method = "circle", order="hclust",
-                     col = rev(col2(50)), mar=c(1,0.2,0.2,1) * 0.2*mean(mar1),
-                     tl.cex = 0.8*cex, tl.col="black", tl.srt = 45)
-            ##corrplot(R, method = "circle", order="AOE")
-        }
+
+        col2 <- colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582",
+                                   "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE",
+                                   "#4393C3", "#2166AC", "#053061"))        
+        require(corrplot)
+        corrplot(R, method = "circle", order="hclust",
+                 col = rev(col2(50)), mar=c(1,0.2,0.2,1) * 0.2*mean(mar1),
+                 tl.cex = 0.8*cex, tl.col="black", tl.srt = 45)
+        ##corrplot(R, method = "circle", order="AOE")
         
         dbg("cmp_ctheatmap.RENDER:: done")
 
@@ -815,7 +808,7 @@ between two contrasts."
 
         bluered.pal <- colorRampPalette(colors = c("royalblue3","grey90","indianred3"))
         cellnote <- NULL
-        if(input$cmp_ctheatmap_showrho) cellnote <- R
+        ##if(input$cmp_ctheatmap_showrho) cellnote <- R
 
         plt <- heatmaply(
             R, margins = c(250, 200, NA, 0),
@@ -830,8 +823,8 @@ between two contrasts."
     })
     
     cmp_ctheatmap.opts = tagList(
-        tipify( checkboxInput(ns('cmp_ctheatmap_showrho'), "show correlation values", FALSE),
-               "Show correlation values in cells."),
+        ##tipify( checkboxInput(ns('cmp_ctheatmap_showrho'), "show correlation values", FALSE),
+        ##"Show correlation values in cells."),
         tipify( checkboxInput(ns('cmp_ctheatmap_allfc'), "show all contrasts", TRUE),
                "Show all contrasts or just the selected ones."),
         ##tipify( checkboxInput('cmp_ctheatmap_fixed', "fix heatmap", FALSE),
@@ -876,70 +869,6 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
     ##================================================================================
     
     ##ntop=1000;nb=100
-    pgx.getExternalSignaturesFC <- function(fc, nb, sets="<all>", ntop=-1)
-    {
-        ## 
-        ## requires: PROFILES (from global env)
-        ##
-        if(0) {
-            fc <- cbind(ngs$gx.meta$meta[[1]]$meta.fx)
-            rownames(fc) <- rownames(ngs$gx.meta$meta[[1]])
-        }
-        if(is.null(fc)) return(NULL)
-        
-        fc0 <- fc
-        rownames(fc0) <- toupper(sub(".*:","",rownames(fc0)))
-        allFC <- PROFILES$FC
-        allFC <- allFC[match(rownames(fc0), rownames(allFC)),]
-        rownames(allFC) <- rownames(fc0)
-        dim(allFC)
-        
-        ##sets=c("<all>");ntop=100
-        extFC <- allFC
-        if(sets[1]!="<all>") {
-            db <- gsub("\\].*","]",colnames(extFC))
-            table(db)
-            kk <- which(db %in% sets)
-            extFC <- extFC[,kk,drop=FALSE]
-        }
-        
-        ## get top SD fold-changing genes
-        if(ntop > 0) {
-            sd0=sd1=1
-            sd0 <- Matrix::rowMeans(extFC**2, na.rm=TRUE)
-            sd1 <- Matrix::rowMeans(fc0**2, na.rm=TRUE)
-            sd0[which(is.na(sd0))] <- 0.0
-            sd1[which(is.na(sd1))] <- 0.0
-            sd2 <- sd0 * sd1
-            table(sd2!=0)
-            jj <- order(-abs(sd2))
-            jj <- head(jj[which(sd2[jj]!=0)],ntop)
-            fc0 <- fc0[jj,,drop=FALSE]
-            extFC <- extFC[jj,,drop=FALSE]
-        }
-        dim(extFC)
-        dim(fc0)
-        
-        ## determine most similar experiment by fold-change correlation
-        suppressWarnings(
-            xrho <- cor( apply(fc0,2,rank,na.last="keep"),
-                        apply(extFC,2,rank,na.last="keep"),
-                        use="pairwise")
-        )
-        dim(xrho)
-        
-        nn <-  ceiling( nb / nrow(xrho) )
-        ii <- as.vector(apply(xrho,1,function(x) head(order(-x),nn)))
-        bb <- colnames(extFC)[sort(unique(ii))]
-        length(bb)
-        
-        ## add to original FC/Q
-        gg <- toupper(sub(".*:","",rownames(fc0)))
-        jj <- match(gg, rownames(allFC))
-        fcx <- as.matrix(allFC)[jj,bb,drop=FALSE]
-        return(fcx)
-    }
-
     getNeighbourhoodFoldChangeMatrix <- reactive({
 
         ngs <- inputData()
@@ -947,26 +876,6 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
         ##fc0 = sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
         fc0 <- res$fc
         rownames(fc0) <- toupper(gsub(".*:","",rownames(fc0)))
-
-        others <- input$cmp_cmapsets
-        others <- setdiff(others,c("<this dataset>",""))
-        if("<all>" %in% others) others <- "<all>"
-
-        cat("getNeighbourhoodFoldChangeMatrix:: others=",others,"\n")
-        cat("getNeighbourhoodFoldChangeMatrix:: len.others=",length(others),"\n")
-        
-        if(TRUE && length(others)>0) {
-            fc1 <- res$fc[,,drop=FALSE]
-            ntop <- 200
-            if(!is.null(input$cmp_topgenes)) ntop <- as.integer(input$cmp_topgenes)
-            nnb = 500
-            if(!is.null(input$cmp_neighbours)) nnb <- as.integer(input$cmp_neighbours)
-            fcx <- pgx.getExternalSignaturesFC(fc1, nb=nnb, ntop=ntop, sets=others)
-            gg <- intersect(rownames(fc0),rownames(fcx))
-            length(gg)
-            fc0 <- cbind( fc0[gg,], fcx[gg,] )        
-        }
-        if(NCOL(fc0)<2) return(NULL)
 
         ## normalize???
         fc0 <- scale(fc0, center=TRUE)
@@ -1069,14 +978,13 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
     })
 
     cmp_connectivitymap.opts = tagList(
-        tipify( selectInput(ns('cmp_cmapsets'),"Dataset:", choices=NULL, multiple=TRUE),
-               "Select datasets to compare with external contrast profiles."),
+        ##tipify( selectInput(ns('cmp_cmapsets'),"Dataset:", choices=NULL, multiple=TRUE),
+        ##"Select datasets to compare with external contrast profiles."),
         tipify(radioButtons(ns('cmp_cmapclust'),"Layout:",c("tsne","pca"),inline=TRUE),
                "Choose the plot layout: t-SNE or PCA"),
-        tipify(radioButtons(ns('cmp_topgenes'),'Top genes:',c(50,200,1000),inline=TRUE,selected=200),
-               "Specify the number of top genes for computations."),
-        tipify(radioButtons(ns('cmp_neighbours'),'Neighbours:',c(100,500,2000),inline=TRUE,selected=500),
-               "Set the number of neighbours two show in the t-SNE or PCA.")    
+        tipify(radioButtons(
+            ns('cmp_topgenes'),'Top genes:',c(50,200,1000), inline=TRUE,selected=200),
+            "Specify the number of top genes for calculating the distances.")
         ##checkboxGroupInput('fc_cmap_options',NULL,c('show names','add negative'),
         ##                   selected=c('show names'),inline=TRUE),
     )
@@ -1097,12 +1005,6 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
         info.text = cmp_connectivitymap_info
         ##caption = cmp_connectivitymap_caption,
     )
-
-    observe({
-        cmapsets <- c(sort(unique(gsub("\\].*","]",colnames(PROFILES$FC)))))
-        cmapsets <- c("<this dataset>",cmapsets,"<all>")
-        updateSelectInput(session, "cmp_cmapsets", choices=cmapsets, selected="<this dataset>")
-    })
 
     output$cmp_connectivitymap_UI <- renderUI({
         fillCol(

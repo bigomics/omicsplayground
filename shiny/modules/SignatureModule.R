@@ -63,9 +63,6 @@ infotext =
     APOPTOSIS.GENES = "BAD CRADD AGT FAS BCL2 PPIF S100A9 S100A8 BBC3 BCL2L11 FADD CTSH MLLT11 TRAF7 BCL2L1 HTRA2 BNIP3 BAK1 PMAIP1 LGALS9 BID"
     CELL.CYCLE.GENES = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA"
     style0 = "font-size: 0.9em; color: #24A; background-color: #dde6f0; border-style: none; padding:0; margin-top: -15px;"
-
-    CMAPSETS <- c(sort(unique(gsub("\\].*","]",colnames(PROFILES$FC)))))
-    CMAPSETS <- c("<this dataset>",CMAPSETS,"<all>")
     
     output$inputsUI <- renderUI({
         ui <- tagList(
@@ -110,9 +107,6 @@ infotext =
         if(usermode!="BASIC" && DEV.VERSION) {
             uix <- tagList(
                 hr(),h6("Developer options:"),
-                selectInput(ns('cmp_querydataset'), "Query dataset:",
-                            selected = "<this dataset>",
-                            choices = CMAPSETS, multiple=TRUE),                
                 radioButtons(ns('ssstats'),'ss-stats:',
                              c("rho","gsva","grp.gsva","rho+gsva","rho+grp.gsva"),
                              inline=TRUE)
@@ -242,14 +236,12 @@ infotext =
             probes <- rownames(ngs$gx.meta$meta[[contr]])
             genes <- toupper(ngs$genes[probes,"gene_name"])
             top.genes <- genes[order(-fx)]
-            top.genes <- intersect( top.genes, rownames(PROFILES$FC))
             top.genes <- head(top.genes,100)
             top.genes0 <- paste(top.genes,collapse=" ")
             updateTextAreaInput(session,"genelistUP", value=top.genes0)
             gset <- top.genes
         } else if(input$feature %in% names(GSETS)) {
             gset <- toupper(GSETS[[input$feature]])
-            gset <- intersect(gset, rownames(PROFILES$FC))
             gset0 <- paste(gset, collapse=" ")
             updateTextAreaInput(session,"genelistUP", value=gset0)
         } else {
@@ -359,38 +351,7 @@ infotext =
         meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         F <- meta$fc
         rownames(F) <- toupper(rownames(F))
-                
-        ext.db <- input$cmp_querydataset
-        if(is.null(ext.db)) ext.db="<this dataset>"
-
-        has.other <- (length(setdiff(ext.db,c("<this dataset>","")))>0)
-        has.this  <- ("<this dataset>" %in% ext.db)
-
-        if(ext.db[1]!="" && has.other) {
-
-            if(any(grep("<all>",ext.db))) {
-                F1 <- PROFILES[["FC"]]
-            } else {
-                F1 <- PROFILES[["FC"]]
-                profiles.db <- sub("].*","]",colnames(F1))
-                jj <- which(profiles.db %in% ext.db)
-                jj <- setdiff(jj,NA)
-                F1 <- F1[,jj,drop=FALSE]
-            }
-
-            if(!has.this) {
-                F <- F1
-            } else if(has.this && ncol(F1)>0) {
-                kk <- intersect(toupper(rownames(F)),toupper(rownames(F1)))
-                rownames(F) <- toupper(rownames(F))
-                rownames(F1) <- toupper(rownames(F1))
-                jj <- match(rownames(F),rownames(F1))
-                F1 <- F1[jj,,drop=FALSE]
-                rownames(F1) <- rownames(F)
-                F <- cbind(F,F1)
-            }
-        }
-        
+                        
         ## cleanup matrix
         F = as.matrix(F)
         dim(F)
@@ -1072,28 +1033,12 @@ infotext =
         i <- enrichmentByContrastTable$rows_selected()
         if(is.null(i) || length(i)==0) return(NULL)
         
-        ext.db = "<this dataset>"
-        qq.db <- input$cmp_querydataset
-        if(!is.null(qq.db) && qq.db!="") {
-            ext.db <- qq.db
-        }
 
         meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         fc <- meta$fc
         qv <- meta$qv
         rownames(fc) <- toupper(rownames(fc))
         rownames(qv) <- toupper(rownames(qv))
-
-        has.others <- length(setdiff(ext.db,"<this dataset>")>0)        
-        ext.fc <- NULL
-        if(has.others) {
-            ##load(file.path(FILES,"allFoldChanges-pub.rda"))
-            ext.fc <- PROFILES[["FC"]]
-            jj <- match(rownames(fc),rownames(ext.fc))
-            ext.fc <- ext.fc[jj,,drop=FALSE]
-            rownames(ext.fc) <- rownames(fc)
-            fc <- cbind(fc, ext.fc)
-        }
         
         contr <- rownames(gsea$output)[i]
 
