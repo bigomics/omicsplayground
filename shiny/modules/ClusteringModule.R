@@ -1590,7 +1590,7 @@ displays the expression levels of selected genes across all conditions in the an
     ##output <- attachModule(output, clustannot_table_module)
 
 
-    clustannot_caption = "<b>Cluster annotation.</b> Functional annotation of the gene clusters as defined by the hierchical clustered heatmap. <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster. Length of the bar corresponds to its average correlation. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
+    clustannot_caption = "<b>Cluster annotation.</b> <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster as defined  in the heatmap. Length of the bar corresponds to its average correlation. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
     
     output$hm_annotateUI <- renderUI({
         fillCol(
