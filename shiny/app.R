@@ -31,7 +31,7 @@ DEV.VERSION = TRUE
 if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 
 HIDEUSERMODE = FALSE
-if(opt$USERMODE=="basic") {
+if(opt$USER_MODE=="basic") {
     cat("********************* BASIC MODE **********************\n")
     HIDEUSERMODE = TRUE
     DEV.VERSION = FALSE
@@ -77,9 +77,14 @@ server = function(input, output, session) {
     cat("===================== SERVER =======================\n")
     cat("calling modules... ")
 
+    upload.limits <- c("samples" = opt$MAX_SAMPLES,
+                       "comparisons" = opt$MAX_COMPARISONS)
+    
     env <- list()  ## communication environment
     ## env[["load"]][["inputData"]] <- reactive({ ngs })
-    env[["load"]]   <- callModule( LoadingModule, "load", hideUserMode=HIDEUSERMODE)
+    env[["load"]]   <- callModule(
+        LoadingModule, "load", hideUserMode=HIDEUSERMODE,
+        upload.limits = upload.limits)
     env[["view"]]   <- callModule( DataViewModule, "view", env)
     env[["clust"]]  <- callModule( ClusteringModule, "clust", env)
     env[["expr"]]   <- callModule( ExpressionModule, "expr", env)
@@ -111,7 +116,7 @@ server = function(input, output, session) {
     nwarn = 0
     observe({
         usermode <- env[["load"]][["usermode"]]()
-        if(opt$USERMODE=="basic") usermode <- "BASIC" ## override
+        if(opt$USER_MODE=="basic") usermode <- "BASIC" ## override
         if(usermode=="BASIC") {
             shinyjs::hide(selector = "div.download-button")
             shinyjs::hide(selector = "div.modebar")
@@ -145,7 +150,7 @@ server = function(input, output, session) {
         hideTab("enrich-tabs1","Volcano (methods)")
         hideTab("enrich-tabs2","FDR table")
 
-        if(opt$UPLOAD %in% c("no","false")) {
+        if(opt$ENABLE_UPLOAD %in% c("no","false")) {
             hideTab("load-tabs","Upload data")            
         }
         

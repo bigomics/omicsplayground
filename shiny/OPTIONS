@@ -1,4 +1,5 @@
-USERMODE = basic
-UPLOAD = no
-
+USER_MODE = basic
+ENABLE_UPLOAD = yes
+MAX_SAMPLES = 25
+MAX_COMPARISONS = 5
 

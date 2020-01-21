@@ -26,7 +26,8 @@ LoadingUI <- function(id) {
 }
 
 
-LoadingModule <- function(input, output, session, hideUserMode=FALSE)
+LoadingModule <- function(input, output, session, hideUserMode=FALSE,
+                          upload.limits=c("samples"=1000,"comparisons"=20))
 {
     ns <- session$ns ## NAMESPACE
     
@@ -755,7 +756,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
         }
     )
 
-    upload_info = "<h4>User file upload</h4><p>Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. You can download a zip file with example files here: EXAMPLEZIP. You can upload a maximum of <u>LIMITS</u>. If you want to analyze larger datasets, please use the scripts and upload the pgx file. After uploading, in sidebar on the left, provide a name for your dataset. Finally, hit the compute button. The computations may take 10 to 30 minutes depending on the size of your dataset."
+    upload_info = "<h4>User file upload</h4><p>Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. You can download a zip file with example files here: EXAMPLEZIP. You can upload a maximum of <u>LIMITS</u>. After uploading, in sidebar on the left, provide a name for your dataset. Finally, hit the compute button. The computations may take 10 to 30 minutes depending on the size of your dataset."
     DLlink = downloadLink(ns("downloadExampleData"),"exampledata.zip")
     upload_info = sub("EXAMPLEZIP", DLlink, upload_info)
     
@@ -768,8 +769,11 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
 
         basic.limits = "25 samples and 5 comparisons"
         pro.limits   = "1000 samples and 20 comparisons"
-        if(USERMODE()=="BASIC") upload_info = sub("LIMITS", basic.limits, upload_info)
-        if(USERMODE()=="PRO") upload_info = sub("LIMITS", pro.limits, upload_info)    
+        limits <- paste(upload.limits["samples"],"samples and",
+                        upload.limits["comparisons"],"comparisons")
+        
+        upload_info = sub("LIMITS", limits, upload_info)
+        ##if(USERMODE()=="PRO") upload_info = sub("LIMITS", pro.limits, upload_info)    
         userdataUI <- NULL
         if(DEV.VERSION) {
             userdataUI <- DT::dataTableOutput(ns("userDatasetsUI"))
@@ -1085,15 +1089,17 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE)
             
             MAXSAMPLES   = 25
             MAXCONTRASTS = 5
+            MAXSAMPLES   = upload.limits["samples"]
+            MAXCONTRASTS = upload.limits["comparisons"]
 
-            if( USERMODE() == "PRO") {
-                MAXSAMPLES   = 1000
-                MAXCONTRASTS = 20
-            }
-            if( USERMODE() == "DEV") {
-                MAXSAMPLES   = 999999
-                MAXCONTRASTS = 99999
-            }
+            ## if( USERMODE() == "PRO") {
+            ##     MAXSAMPLES   = 1000
+            ##     MAXCONTRASTS = 20
+            ## }
+            ## if( USERMODE() == "DEV") {
+            ##     MAXSAMPLES   = 999999
+            ##     MAXCONTRASTS = 99999
+            ## }
             
             ## check files: maximum contrasts allowed
             if(status["contrasts.csv"]=="OK") {
