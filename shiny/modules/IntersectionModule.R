@@ -1217,7 +1217,7 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
                    "Threshold for fold-change (log2 scale)")
         ),
         br(),br(),br(),br(),
-        radioButtons(ns('cmp_include'),'Counting mode:', choices=c("up/down","both"), inline=TRUE)
+        radioButtons(ns('cmp_include'),'Counting mode:', choices=c("both","up/down"), inline=TRUE)
     )
 
     callModule(
