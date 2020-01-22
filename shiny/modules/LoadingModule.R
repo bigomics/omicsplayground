@@ -26,9 +26,10 @@ LoadingUI <- function(id) {
 }
 
 
-LoadingModule <- function(input, output, session, hideUserMode=FALSE,
+LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                           max.limits=c("samples"=1000,"comparisons"=20,
-                                          "genes"=8000))
+                                       "genes"=19999),
+                          defaultMode="BASIC" )
 {
     ns <- session$ns ## NAMESPACE
     
@@ -37,6 +38,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE,
     useSweetAlert()
     SHOWSPLASH=TRUE
     ## SHOWSPLASH=FALSE
+    hideModeButton <- toupper(hideModeButton)
     
     LOGIN_AUTHENTICATION = "none"
     ##LOGIN_AUTHENTICATION = "register"
@@ -70,6 +72,7 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE,
     USERLEVELS = c("BASIC","PRO")
     ## if(DEV.VERSION) USERLEVELS = c("BASIC","PRO","DEV")
     USERMODE <- reactiveVal( factor("BASIC",levels=USERLEVELS) )
+    USERMODE <- reactiveVal( factor(toupper(defaultMode),levels=USERLEVELS) )
 
     output$inputsUI <- renderUI({
 
@@ -77,13 +80,13 @@ LoadingModule <- function(input, output, session, hideUserMode=FALSE,
             inputId = ns("main_usermode"),
             label = "User mode:",
             choices = USERLEVELS,
-            selected = "BASIC",
+            selected = toupper(defaultMode),
             status = "warning",
             checkIcon = list(yes = icon("ok", lib = "glyphicon"))),
             usermode_infotip, placement="bottom", options = list(container="body")
             )
         
-        if(hideUserMode) usermodeUI <- NULL
+        if(hideModeButton) usermodeUI <- NULL
         
         ui <- tagList(
             usermodeUI,
