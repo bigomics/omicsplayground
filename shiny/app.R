@@ -25,15 +25,14 @@ pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
+if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
 
 DEV.VERSION = TRUE
 if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
 
-HIDEUSERMODE = FALSE
 if(opt$USER_MODE=="basic") {
     cat("********************* BASIC MODE **********************\n")
-    HIDEUSERMODE = TRUE
     DEV.VERSION = FALSE
 }
 
@@ -84,8 +83,8 @@ server = function(input, output, session) {
     env <- list()  ## communication environment
     ## env[["load"]][["inputData"]] <- reactive({ ngs })
     env[["load"]]   <- callModule(
-        LoadingModule, "load", hideUserMode=HIDEUSERMODE,
-        max.limits = max.limits)
+        LoadingModule, "load", hideModeButton=opt$HIDE_MODEBUTTON,
+        max.limits = max.limits, defaultMode=opt$USER_MODE )
     env[["view"]]   <- callModule( DataViewModule, "view", env)
     env[["clust"]]  <- callModule( ClusteringModule, "clust", env)
     env[["expr"]]   <- callModule( ExpressionModule, "expr", env)
@@ -151,7 +150,7 @@ server = function(input, output, session) {
         hideTab("enrich-tabs1","Volcano (methods)")
         hideTab("enrich-tabs2","FDR table")
 
-        if(opt$ENABLE_UPLOAD %in% c("no","false")) {
+        if(toupper(opt$ENABLE_UPLOAD) %in% c("NO","FALSE")) {
             hideTab("load-tabs","Upload data")            
         }
         
@@ -183,7 +182,7 @@ server = function(input, output, session) {
 }
 
 version <- scan("../VERSION", character())[1]
-TITLE = paste("Omics Playground",version)
+TITLE = paste(opt$TITLE,version)
 ## TITLE = "Omics PlayCloud"
 logo = div(img(src="bigomics-logo-white-48px.png", height="48px"),
            TITLE, id="navbar-logo", style="margin-top:-13px;")
