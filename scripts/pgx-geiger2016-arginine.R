@@ -45,10 +45,10 @@ COMPUTE.EXTRA=1
 QCFILTER=FALSE
 BATCHCORRECT=FALSE
 
-rda.file="../data/geiger2016-arginineL.pgx"
+rda.file="../data/geiger2016-arginine.pgx"
 rda.file
 
-##load(file=rda.file, verbose=1)
+## load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
 ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$date = date()
@@ -176,6 +176,7 @@ if(DIFF.EXPRESSION) {
         test.methods = USER.GENESETTEST.METHODS,
         lib.dir=FILES)
 
+    extra <- c("graph")
     extra <- c("meta.go","deconv","infer","drugs","wordcloud")
     ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
     

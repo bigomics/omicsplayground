@@ -3,8 +3,8 @@
 ## Contrast creation functions
 ##-----------------------------------------------------------------------------
 
-##mingrp=3;slen=8;ref=NULL
-pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL)
+##mingrp=3;slen=20;ref=NULL
+pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL)
 {
     ## "Automagiccally" parse dataframe and create contrasts using
     ## default assumptions.
@@ -21,6 +21,7 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL)
     autoContrast1 <- function(x, ref1, slen, mingrp) {
         if(is.null(ref1)) ref1 <- NA
         x <- as.character(x)
+        x <- iconv(x, "latin1", "ASCII", sub="")
         nx <- table(x)
         too.small <- names(which(nx < mingrp))
         if(length(too.small)) x[which(x %in% too.small)] <- NA
@@ -66,6 +67,17 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL)
         ct
     }
 
+    ## try detect comment fields (and remove)
+    countSpaces <- function(s) { sapply(gregexpr(" ", s), function(p) { sum(p>=0) } ) }    
+    justComment <- function(x) {
+        x <- iconv(x, "latin1", "ASCII", sub="")
+        (nchar(x) > 50 || countSpaces(x)>=4)
+    }
+    is.comment <- sapply(df[1,], justComment)
+    df <- df[,which(!is.comment),drop=FALSE]
+    
+
+    ## repeat ref if too short
     if(!is.null(ref) && length(ref)!=ncol(df)) ref <- head(rep(ref,99),ncol(df))
     
     K <- c()
@@ -76,6 +88,8 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=8, ref=NULL)
         x <- df[,i]
         too.small <- (x %in% names(which(table(x)<mingrp)))
         x[too.small] <- NA
+        x <- iconv(x, "latin1", "ASCII", sub="")
+
         if(!(ref1 %in% x)) ref1 <- NA
         ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$|scrambl|none|vehicle"
         detect.ref <- any(grepl(ref.pattern,x,ignore.case=TRUE))

@@ -1,15 +1,10 @@
-
-
 ##install.packages("bigalgebra")
 ##install.packages("bigmemory")
 ##install.packages("biganalytics")
 ##install.packages("bigpca")
 
-source("../R/gx-heatmap.r")
-source("../R/gx-limma.r")
 source("../R/gx-util.r")
 
-library(Rtsne.multicore)
 library(Rtsne)
 library(qlcMatrix)
 library(irlba)
@@ -18,90 +13,54 @@ library(sparsesvd)
 require(org.Hs.eg.db)
 dir("~")
 
-if(0) {
+##----------------------------------------------------------------------
+## From geneset GMT file, create large sparse 0/1 matrix.
+##----------------------------------------------------------------------
 
-    library(org.Hs.eg.db)
-    ##library(org.Mm.eg.db)
-    symbol <- as.list( org.Hs.egSYMBOL)
-    known.symbols <- sort(unique(unlist(symbol)))
-    ##mm.symbol <- as.list( org.Mm.egSYMBOL)
-    ##mm.symbol <- sort(unique(unlist(mm.symbol)))
-    ##tail(mm.symbol,100)
-    ##known.symbols <- unique(c(known.symbols, toupper(mm.symbol)))
+load(file="../lib/gmt-all.rda",verbose=1)
+G <- build.createSparseGenesetMatrix(gmt.all)
+dim(G)
+save(G, file="gset-sparseG-XL2.rda")
 
-    load(file="../files/gmt-all.rda",verbose=1)
-    gmt.size <- sapply(gmt.all,length)
-    summary(gmt.size)
-    gmt.all <- gmt.all[which(gmt.size >= 15 & gmt.size <= 1000)]
-    ##gmt.all <- gmt.all[1:2000]
+load(file="gset-sparseG-XL2.rda", verbose=1)
+dim(G)
+max(G)
 
-    ##symbol = unlist(as.list(org.Hs.egSYMBOL))
-    ##refseq = unlist(as.list(org.Hs.egREFSEQ))
-    genes.table <- table(unlist(gmt.all))
-    summary(as.integer(genes.table))
-    length(gmt.all)
-    ##genes <- names(which( genes.table >= 10 & genes.table <= 1000  ))
-    genes <- names(which( genes.table >= 10 ))
-    genes <- genes[grep("^LOC|RIK$",genes,invert=TRUE)]
-    head(setdiff(genes, known.symbols),100)
-    tail(setdiff(genes, known.symbols),100)
-    length(genes)
-    genes <- intersect(genes, known.symbols)
-    ##pw <- grep("pathway",names(gmt.all),ignore.case=TRUE)
-    ##genes <- sort(unique(unlist(gmt.all[pw])))
-    length(genes)
 
-    gmt.all <- mclapply(gmt.all, function(s) intersect(s,genes))
-    gmt.size <- sapply(gmt.all,length)
-    summary(gmt.size)
-    gmt.all <- gmt.all[which(gmt.size >= 15 & gmt.size <= 500)]
-    length(gmt.all)
-
-    require(parallel)
-    G = mclapply(gmt.all, function(s) 1*(genes %in% s) / pmax(sum(s %in% genes),1)  )
-    G = do.call(rbind, G)
-    G = Matrix(G, sparse=TRUE)
-    dim(G)
-    colnames(G) = genes
-    ngenes <- Matrix::rowSums(G!=0)
-    summary(ngenes)
-    sum(ngenes < 10)
-
-    save(G, file="gset-sparseG-XL.rda")
-}
-
-if(0) {
+build.computeGeneGenesetTSNE <- function(X, G) {
     ##
     ## Compute t-SNE for all genes and gene sets
     ##
     ##
     ##
-
-    load(file="../files/gset-sparseG-XL.rda",verbose=1)
+    
+    ##load(file="../files/gset-sparseG-XL.rda",verbose=1)
     ##head(G)[,1:5]
     dim(G)
     cat("dim(G)=",dim(G),"\n")
 
+    ## compute SD (both directions)
+    sd1 <- apply(G, 1, sd, na.rm=TRUE)
+    sd2 <- apply(G, 2, sd, na.rm=TRUE)
+        
     cat("computing SVD...\n")
     require(sparsesvd)
     ##G1 = 1*(G!=0)
-    G1 = G
-    dim(G1)
-    ##system.time( res <- irlba(G1[1:1000,], nv=200) )
-    ##system.time( res <- big.PCA(G1[,], nv=20) )
-    system.time( res <- sparsesvd(G1[,], rank=8000) )
-    save(res, file="sparsesvdG1rank8000.rda")
-    
-    ## -------------------- compute t-SNE ----------------------------
+    ##system.time( res <- irlba(G[1:1000,], nv=200) )
+    ##system.time( res <- big.PCA(G[,], nv=20) )
+    jj <- head(order(-sd1),1000)
+    system.time( res <- sparsesvd(G[,jj], rank=100) )
     G2 <- res$u %*% diag(res$d)
     dim(G2)
     cat("computing t-SNE for gene sets...\n")
-    system.time( tsne <- Rtsne.multicore( as.matrix(G2), check_duplicates=FALSE,
-                                         num_threads=24))
+    system.time( tsne <- Rtsne( as.matrix(G2), check_duplicates=FALSE,
+                               num_threads=4))
     ##plot(tsne$Y, pch=20, cex=0.5)
-    rownames(tsne$Y) <- rownames(G)
-    write.csv( tsne$Y, file="tsne-all-genesets-XL-r8k.csv")
 
+    rownames(tsne$Y) <- rownames(G2)
+    dim(tsne$Y)
+    ## write.csv( tsne$Y, file="tsne-all-genesets-XL-r8k.csv")
+    write.csv( tsne$Y, file="gset-sparseG-XL2-tsneGS.csv")
     remove(G2)
 
     ## -------------------- compute t-SNE ----------------------------
@@ -113,8 +72,9 @@ if(0) {
     dim(tsne$Y)
     rownames(tsne$Y) <- colnames(G)
     dim(tsne$Y)
-    write.csv( tsne$Y, file="tsne-all-genes-XL-r8k.csv")
-
+    ## write.csv( tsne$Y, file="tsne-all-genes-XL-r8k.csv")
+    write.csv( tsne$Y, file="gset-sparseG-XL2-tsneGenes.csv")
+    
     ##pos=read.csv(file="tsne-all-genes-XL.csv",row.names=1)
     ##dim(pos)
 
@@ -133,10 +93,10 @@ if(0) {
     library(scran)
     library(igraph)
     require(gplots)
-
-    load(file="../files/gset-sparseG-XL.rda",verbose=1)
-    tsne_gsets <- read.csv(file="../files/tsne-all-genesets-XL.csv",row.names=1)
-    tsne_genes <- read.csv(file="../files/tsne-all-genes-XL.csv",row.names=1)
+    
+    G <- readRDS(file="../lib/gset-sparseG-XL.rds")
+    tsne_gsets <- read.csv(file="../lib/tsne-all-genesets-XL.csv",row.names=1)
+    tsne_genes <- read.csv(file="../lib/tsne-all-genes-XL.csv",row.names=1)
     ##tsne_gsets <- read.csv(file="tsne-all-genesets-wXL.csv",row.names=1)
     ##tsne_genes <- read.csv(file="tsne-all-genes-wXL.csv",row.names=1)
     dim(tsne_gsets)
@@ -241,3 +201,63 @@ if(0) {
 
 }
 
+
+
+
+build.createSparseGenesetMatrix <- function(gmt.all) {
+    
+    ## ----------- Get all official gene symbols
+    library(org.Hs.eg.db)
+    ##library(org.Mm.eg.db)
+    symbol <- as.list( org.Hs.egSYMBOL)
+    known.symbols <- sort(unique(unlist(symbol)))
+    ##mm.symbol <- as.list( org.Mm.egSYMBOL)
+    ##mm.symbol <- sort(unique(unlist(mm.symbol)))
+    ##tail(mm.symbol,100)
+    ##known.symbols <- unique(c(known.symbols, toupper(mm.symbol)))
+
+    ##------------- filter by size
+    gmt.size <- sapply(gmt.all,length)
+    summary(gmt.size)
+    gmt.all <- gmt.all[which(gmt.size >= 15 & gmt.size <= 1000)]
+    ##gmt.all <- gmt.all[1:2000]
+
+    ## ------------- filter genes by minimum frequency and chrom
+    ##symbol = unlist(as.list(org.Hs.egSYMBOL))
+    ##refseq = unlist(as.list(org.Hs.egREFSEQ))
+    genes.table <- table(unlist(gmt.all))
+    summary(as.integer(genes.table))
+    length(gmt.all)
+    ##genes <- names(which( genes.table >= 10 & genes.table <= 1000  ))
+    genes <- names(which( genes.table >= 10 ))
+    genes <- genes[grep("^LOC|RIK$",genes,invert=TRUE)]
+    genes <- intersect(genes, known.symbols)
+    annot <- ngs.getGeneAnnotation(genes)
+    genes <- genes[ !is.na(annot$chr) ]
+    length(genes)
+
+    ## Filter genesets with permitted genes (official and min.sharing)
+    gmt.all <- mclapply(gmt.all, function(s) intersect(s,genes))
+    gmt.size <- sapply(gmt.all,length)
+    summary(gmt.size)
+    gmt.all <- gmt.all[which(gmt.size >= 15 & gmt.size <= 500)]
+    length(gmt.all)
+
+    ## build huge sparsematrix gene x genesets
+    require(parallel)
+    genes <- sort(genes)
+    idx.j <- mclapply(gmt.all[], function(s) match(s,genes))
+    idx.i <- lapply(1:length(gmt.all), function(i) rep(i,length(idx.j[[i]])))
+    ii <- unlist(idx.i)
+    jj <- unlist(idx.j)
+    length(ii)
+    length(jj)
+    G <- sparseMatrix( i=ii, j=jj, x=rep(1,length(ii)),
+                      dims = c(length(gmt.all), length(genes)) )
+    dim(G)
+    
+    colnames(G) = genes
+    rownames(G) = names(gmt.all)
+
+    return(G)
+}

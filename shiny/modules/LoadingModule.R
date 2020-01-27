@@ -808,21 +808,21 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         )
     })
 
-    output$allFilesOK <- reactive({    
-        files.needed = c("counts.csv","samples.csv","contrasts.csv")
-        all.there <- all(files.needed %in% names(uploaded_files))    
-        df <- uploadStatusTable()
-        filled = all.ok = TRUE
-        all.ok = all( df$status == "OK")
-        filled = (input$upload_name!="")
-        ## filled = (input$upload_name!="" && nchar(input$upload_description)>=100)
-        ## all.ok    <- all(sapply(uploaded_files, function(x) x$status=="OK"))
-        ok <- (all.there && all.ok && filled)
-        if(ok) shinyjs::enable("upload_compute")
-        if(!ok) shinyjs::disable("upload_compute")
-        ok
-    })
-    outputOptions(output, "allFilesOK", suspendWhenHidden = FALSE) ## important!
+    ## output$allFilesOK <- reactive({    
+    ##     files.needed = c("counts.csv","samples.csv","contrasts.csv")
+    ##     all.there <- all(files.needed %in% names(uploaded_files))    
+    ##     df <- uploadStatusTable()
+    ##     filled = all.ok = TRUE
+    ##     all.ok = all( df$status == "OK")
+    ##     filled = (input$upload_name!="")
+    ##     ## filled = (input$upload_name!="" && nchar(input$upload_description)>=100)
+    ##     ## all.ok    <- all(sapply(uploaded_files, function(x) x$status=="OK"))
+    ##     ok <- (all.there && all.ok && filled)
+    ##     if(ok) shinyjs::enable("upload_compute")
+    ##     if(!ok) shinyjs::disable("upload_compute")
+    ##     ok
+    ## })
+    ## outputOptions(output, "allFilesOK", suspendWhenHidden = FALSE) ## important!
 
     observeEvent( input$upload_compute, {
         ## are you sure? Any message/warning before computation is done.
@@ -847,17 +847,15 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     })
 
     observeEvent( c(input$myconfirmation,input$myconfirmation2), {
-
-        ## if(isFALSE(input$myconfirmation)) { return(NULL) }
-
+        ## 
+        ## Start pre-computing the object from the uploaded files
+        ## after confirmation is received.
+        ##
+        
         ## --------------------- OK start ---------------------------
-        dbg("upload_compute :: showing coffee modal")
-        showLoadingModal("Calculating... it's a good time to get a coffee now.")
-
         has.pgx <- ("uploaded.pgx" %in% names(uploaded_files))       
         has.pgx <- has.pgx && !is.null(uploaded_files[["uploaded.pgx"]])
-        cat("upload_compute: names(uploaded_files)=",names(uploaded_files),"\n")
-        
+        cat("upload_compute: names(uploaded_files)=",names(uploaded_files),"\n")        
         if(has.pgx) {
 
             dbg("upload_compute :: ***** using 'uploaded.pgx' ******")        
@@ -865,6 +863,9 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             
         } else {
             dbg("upload_compute :: ***** real computation *****")
+
+            dbg("upload_compute :: showing coffee modal")
+            showLoadingModal("Calculating... it's a good time to get a coffee now.")
             
             counts    <- as.matrix(uploaded_files[["counts.csv"]])
             samples   <- data.frame(uploaded_files[["samples.csv"]],stringsAsFactors=FALSE)
@@ -892,7 +893,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                     ## max.genes = 10000
                 }
             }
-            if(DEV.VERSION) {
+            if(FALSE && DEV.VERSION) {
                 gx.methods   = c("ttest","ttest.rank","ttest.welch","trend.limma","edger.qlf","edger.lrt","deseq2.wald")
                 gset.methods = c("fisher","gsva","fgsea","camera","fry","ssgsea","spearman")
                 extra.methods = c("meta.go","infer","deconv","drugs-combo","wordcloud")
@@ -910,15 +911,14 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             on.exit(progress$close())    
             progress$set(message = "Processing", value = 0)
 
-            ngs <- pgx.upload(
+            ngs <- pgx.computeObjectPGX(
                 counts, samples, contrasts,
                 max.genes = max.genes,
-                progress = progress,
                 gx.methods = gx.methods,
                 gset.methods = gset.methods,
                 extra.methods = extra.methods,
-                lib.dir = FILES,
-                only.hugo = TRUE
+                lib.dir = FILES, only.hugo = TRUE,
+                progress = progress
             )
 
             end_time <- Sys.time()
@@ -1044,6 +1044,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             if(is.null(ngs$name)) ngs$name <- sub(".pgx$","",input$upload_files$name[i])
             uploaded_files[["uploaded.pgx"]] <- ngs
             from.pgx = TRUE
+
         } else {
             ii <- grep("csv$",input$upload_files$name)
             ff = lapply(input$upload_files$datapath[ii], read.csv, row.names=1,
@@ -1080,8 +1081,8 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                 files.ncol[i] = ncol(uploaded_files[[fn]])
             }
         }
-
-        if(!from.pgx) {
+        
+        if(from.pgx==FALSE) {
 
             ## check files: matching dimensions
             if(status["counts.csv"]=="OK" && status["samples.csv"]=="OK") {

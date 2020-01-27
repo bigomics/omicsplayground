@@ -40,79 +40,6 @@ compute.testGenes <- function(ngs, contr.matrix, max.features=1000, type="counts
 test.methods=c("trend.limma","deseq2.wald","edger.qlf")
 test.methods=c("trend.limma","ttest.welch","ttest")
 max.features=1000
-compute.testGenesMultiOmics <- function(ngs, contr.matrix, max.features=1000, 
-                               test.methods=c("trend.limma","deseq2.wald","edger.qlf"))
-{
-    ngs$gx.meta <- NULL
-    ngs$model.parameters <- NULL
-    ngs$gx.meta$meta <- vector("list",ncol(contr.matrix))
-    ngs$X <- c()
-    ngs$timings <- c()
-    for(j in 1:4) {
-        nk <- ncol(contr.matrix)
-        ngs$gx.meta$sig.counts[[j]] <- vector("list",nk)
-    }
-
-    data.type <- gsub("\\[|\\].*","",rownames(ngs$counts))
-    data.types <- unique(data.type)
-    data.types
-    dt = "cn"
-    dt = "gx"
-    dt <- data.types[1]
-    dt
-    for(dt in data.types) {
-        
-        ## get data block
-        ngs1 <- ngs
-        jj <- which(data.type == dt)
-        ngs1$counts <- ngs1$counts[jj,]
-        ngs1$genes  <- ngs1$genes[jj,]
-        
-        ## determine if datatype are counts or not
-        type = "not.counts"
-        if(min(ngs1$counts,na.rm=TRUE) >= 0 &&
-           max(ngs1$counts,na.rm=TRUE) >= 50 ) {
-            type <- "counts"
-        }
-        dt
-        type
-        
-        ## do test
-        ngs1 <- compute.testGenesSingleOmics(
-            ngs=ngs1, type=type,
-            contr.matrix=contr.matrix,
-            max.features=max.features,
-            test.methods=test.methods)
-        
-        ## copy results
-        ngs$model.parameters <- ngs1$model.parameters
-        names(ngs1$gx.meta)
-        for(k in 1:ncol(contr.matrix)) {
-            ngs$gx.meta$meta[[k]] <- rbind(ngs$gx.meta$meta[[k]],
-                                           ngs1$gx.meta$meta[[k]])
-        }
-        names(ngs$gx.meta$meta) <- names(ngs1$gx.meta$meta)
-        for(j in 1:4) {
-            nk <- ncol(contr.matrix)
-            for(k in 1:nk) {
-                cnt1 <- ngs1$gx.meta$sig.counts[[j]][[k]]
-                cnt0 <- ngs$gx.meta$sig.counts[[j]][[k]]
-                rownames(cnt1) <- paste0("[",dt,"]",rownames(cnt1))
-                ngs$gx.meta$sig.counts[[j]][[k]] <- rbind(cnt0, cnt1)
-            }
-            names(ngs$gx.meta$sig.counts[[j]]) <- names(ngs1$gx.meta$sig.counts[[j]])            
-        }
-        names(ngs$gx.meta$sig.counts) <- names(ngs1$gx.meta$sig.counts)
-        ngs$timings <- rbind(ngs$timings, ngs1$timings)
-        ngs$X <- rbind(ngs$X, ngs1$X)
-    }
-
-    gg <- rownames(ngs$counts)
-    ngs$X <- ngs$X[match(gg,rownames(ngs$X)),]
-    ##ngs$genes <- ngs$genes[match(gg,rownames(ngs$genes)),]
-    ngs$model.parameters <- ngs1$model.parameters
-    return(ngs)
-}
 
 compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
                                 type="counts", filter.low = TRUE,
@@ -323,6 +250,81 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     ## remove large outputs... (uncomment if needed!!!)
     ngs$gx.meta$outputs <- NULL
 
+    return(ngs)
+}
+
+
+compute.testGenesMultiOmics <- function(ngs, contr.matrix, max.features=1000, 
+                               test.methods=c("trend.limma","deseq2.wald","edger.qlf"))
+{
+    ngs$gx.meta <- NULL
+    ngs$model.parameters <- NULL
+    ngs$gx.meta$meta <- vector("list",ncol(contr.matrix))
+    ngs$X <- c()
+    ngs$timings <- c()
+    for(j in 1:4) {
+        nk <- ncol(contr.matrix)
+        ngs$gx.meta$sig.counts[[j]] <- vector("list",nk)
+    }
+
+    data.type <- gsub("\\[|\\].*","",rownames(ngs$counts))
+    data.types <- unique(data.type)
+    data.types
+    dt = "cn"
+    dt = "gx"
+    dt <- data.types[1]
+    dt
+    for(dt in data.types) {
+        
+        ## get data block
+        ngs1 <- ngs
+        jj <- which(data.type == dt)
+        ngs1$counts <- ngs1$counts[jj,]
+        ngs1$genes  <- ngs1$genes[jj,]
+        
+        ## determine if datatype are counts or not
+        type = "not.counts"
+        if(min(ngs1$counts,na.rm=TRUE) >= 0 &&
+           max(ngs1$counts,na.rm=TRUE) >= 50 ) {
+            type <- "counts"
+        }
+        dt
+        type
+        
+        ## do test
+        ngs1 <- compute.testGenesSingleOmics(
+            ngs=ngs1, type=type,
+            contr.matrix=contr.matrix,
+            max.features=max.features,
+            test.methods=test.methods)
+        
+        ## copy results
+        ngs$model.parameters <- ngs1$model.parameters
+        names(ngs1$gx.meta)
+        for(k in 1:ncol(contr.matrix)) {
+            ngs$gx.meta$meta[[k]] <- rbind(ngs$gx.meta$meta[[k]],
+                                           ngs1$gx.meta$meta[[k]])
+        }
+        names(ngs$gx.meta$meta) <- names(ngs1$gx.meta$meta)
+        for(j in 1:4) {
+            nk <- ncol(contr.matrix)
+            for(k in 1:nk) {
+                cnt1 <- ngs1$gx.meta$sig.counts[[j]][[k]]
+                cnt0 <- ngs$gx.meta$sig.counts[[j]][[k]]
+                rownames(cnt1) <- paste0("[",dt,"]",rownames(cnt1))
+                ngs$gx.meta$sig.counts[[j]][[k]] <- rbind(cnt0, cnt1)
+            }
+            names(ngs$gx.meta$sig.counts[[j]]) <- names(ngs1$gx.meta$sig.counts[[j]])            
+        }
+        names(ngs$gx.meta$sig.counts) <- names(ngs1$gx.meta$sig.counts)
+        ngs$timings <- rbind(ngs$timings, ngs1$timings)
+        ngs$X <- rbind(ngs$X, ngs1$X)
+    }
+
+    gg <- rownames(ngs$counts)
+    ngs$X <- ngs$X[match(gg,rownames(ngs$X)),]
+    ##ngs$genes <- ngs$genes[match(gg,rownames(ngs$genes)),]
+    ngs$model.parameters <- ngs1$model.parameters
     return(ngs)
 }
 

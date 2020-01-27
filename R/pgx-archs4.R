@@ -8,9 +8,11 @@ library(rhdf5)
 ARCHS4.DIR = "~/.archs4data"
 
 ## auto search ARCH4 folder
-search.archs4dir <- c("/data/Projects/Data/archs4data",
-                      "~/bigomics/data/archs4data",
-                      "~/.archs4data")
+search.archs4dir <- c(
+    "/data/Projects/Data/archs4data",
+    "~/bigomics/data/archs4data",
+    "~/.archs4data", "~/archs4data", "../libx")
+
 ARCHS4.DIR <- names(which(sapply(search.archs4dir,file.exists)))[1]
 cat("setting ARCHS4.DIR folder to",ARCHS4.DIR,"\n")
 
