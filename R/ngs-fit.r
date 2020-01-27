@@ -65,6 +65,7 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, genes, design, contr.matr
     if(methods[1]=="*") {
         methods <- ALL.GENETEST.METHODS
     }
+    methods <- intersect(methods, ALL.GENETEST.METHODS)
     cat("calculating methods:",methods,"\n")
                     
     ##------------------------------------------------------------------

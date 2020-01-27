@@ -1,6 +1,6 @@
-ALL.GENESET.METHODS=c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
-                  ##"plage", "cuda.gsea", "enricher",
-                  "gsea.permPH","gsea.permGS","gseaPR","fgsea")
+ALL.GENESET.METHODS = c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
+                        ##"plage", "cuda.gsea", "enricher",
+                        "gsea.permPH","gsea.permGS","gseaPR","fgsea")
 methods=ALL.GENESET.METHODS
 methods=c("fisher","ssgsea","gsva","fgsea","gseaPR")
 methods=c("gsva","camera")
@@ -29,6 +29,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
     if(methods[1]=="*") {
         methods <- ALL.GENESET.METHODS
     }
+    methods <- intersect(methods, ALL.GENESET.METHODS)
     cat("calculating methods:",methods,"\n")
 
     ##  filter small gene sets

@@ -9,6 +9,129 @@ if(0) {
 }
 
 chunk=100
+pgx.createCreedsSigDB <- function(gmt.files, h5.file, chunk=100, update.only=FALSE)
+{
+    require(rhdf5)
+
+    h5exists <- function(h5.file, obj) {
+        xobjs <- apply(h5ls(h5.file)[,1:2],1,paste,collapse="/")
+        obj %in% gsub("^/|^//","",xobjs)
+    }
+
+    if(update.only && h5exists(h5.file, "data/matrix")) {
+        X  <- h5read(h5.file, "data/matrix")
+        rn <- h5read(h5.file,"data/rownames")
+        cn <- h5read(h5.file,"data/colnames")
+        rownames(X) <- rn
+        colnames(X) <- cn
+    } else {
+        ##--------------------------------------------------
+        ## make big FC signature matrix
+        ##--------------------------------------------------
+        F <- list()
+        sig100.dn <- list()
+        sig100.up <- list()
+        cat("reading gene lists from",length(gmt.files),"gmt files ")
+        i=1
+        for(i in 1:length(gmt.files)) {
+            if(!file.exists(gmt.files[i])) next()
+            cat(".")
+            try.error <- try( gmt <- read.gmt(gmt.files[i], add.source=TRUE) )
+            if(class(try.error)=="try-error") next()
+            
+            j1 <- grep("-up ", names(gmt))
+            j2 <- grep("-dn ", names(gmt))
+            f1 <- lapply( gmt[j1], function(gg) {x=length(gg):1;names(x)=gg;x})
+            f2 <- lapply( gmt[j2], function(gg) {x=-length(gg):-1;names(x)=gg;x})
+
+            s1 <- gmt[j1]
+            s2 <- gmt[j2]
+
+            ff <- lapply(1:length(f1),function(i) c(f1[[i]],f2[[i]]))
+            names(ff) <- sub("-up","",names(f1))
+            names(s1) <- names(s2) <- names(ff)
+            sig100.up <- c(sig100.up, s1)
+            sig100.dn <- c(sig100.dn, s2)
+            F <- c(F, ff)
+        }
+        cat("\n")
+
+        genes <- as.vector(unlist(sapply(F[],names)))
+        genes <- sort(unique(toupper(genes)))
+        length(genes)    
+
+        ## Filter out genes (not on known chromosomes...)
+        gannot <- ngs.getGeneAnnotation(genes)
+        table(!is.na(gannot$chr))
+        sel <- which(!is.na(gannot$chr))
+        genes <- sort(genes[sel])
+
+        X <- lapply(F, function(x) x[match(genes,names(x))])
+        X <- do.call(cbind, X)
+        dim(X)
+        rownames(X) <- genes    
+        remove(F)
+        
+        h5.file
+        pgx.saveMatrixH5(X, h5.file, chunk=chunk)
+
+
+        if(!h5exists(h5.file, "signature")) h5createGroup(h5.file,"signature")    
+
+        sig100.dn <- do.call(cbind, sig100.dn)
+        
+        h5write( sig100.dn, h5.file, "signature/sig100.dn")  ## can write list???    
+        h5write( sig100.up, h5.file, "signature/sig100.up")  ## can write list??
+
+
+
+        
+
+        if(0) {
+            h5ls(h5.file)
+            h5write( X, h5.file, "data/matrix")  ## can write list??
+            h5write( colnames(X), h5.file,"data/colnames")
+            h5write( rownames(X), h5.file,"data/rownames")
+            h5closeAll()
+        }        
+
+    }
+    dim(X)
+    
+    
+    ##--------------------------------------------------
+    ## Precalculate t-SNE/UMAP
+    ##--------------------------------------------------
+    dim(X)
+
+    if(!update.only || !h5exists(h5.file, "clustering")) {
+        
+        if(!h5exists(h5.file, "clustering")) h5createGroup(h5.file,"clustering")    
+        h5ls(h5.file)
+        
+        pos <- pgx.clusterBigMatrix(
+            abs(X),  ## on absolute foldchange!!
+            methods=c("pca","tsne","umap"),
+            dims=c(2,3),
+            reduce.sd = 2000,
+            reduce.pca = 200 )
+        names(pos)
+        
+        h5write( pos[["pca2d"]], h5.file, "clustering/pca2d")  ## can write list??    
+        h5write( pos[["pca3d"]], h5.file, "clustering/pca3d")  ## can write list??    
+        h5write( pos[["tsne2d"]], h5.file, "clustering/tsne2d")  ## can write list??    
+        h5write( pos[["tsne3d"]], h5.file, "clustering/tsne3d")  ## can write list??    
+        h5write( pos[["umap2d"]], h5.file, "clustering/umap2d")  ## can write list??    
+        h5write( pos[["umap3d"]], h5.file, "clustering/umap3d")  ## can write list??            
+
+    }
+
+    h5closeAll()
+    ## return(X)
+}
+
+
+chunk=100
 pgx.createSignatureDatabaseH5 <- function(pgx.files, h5.file, chunk=100, update.only=FALSE)
 {
     require(rhdf5)
