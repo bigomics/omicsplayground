@@ -65,6 +65,17 @@ pgx.initDatasetFolder <- function(pgx.dir, verbose=TRUE, force=FALSE)
     }
 }
 
+
+if(0) {
+    ##h5ls(h5.file)
+    pgx.createSignatureDatabaseH5( pgx.files, h5.file, update.only=FALSE)
+    h5ls(h5.file)
+    pgx.addEnrichmentSignaturesH5(h5.file, X=NULL, mc.cores=8,
+                                  lib.dir=FILES, methods=c("gsea"))
+    h5ls(h5.file)
+}
+
+
 verbose=TRUE;file="datasets-allFC.csv"
 pgx.readDatasetProfiles <- function(pgx.dir, file="datasets-allFC.csv",
                                     verbose=TRUE)

@@ -116,7 +116,7 @@ compute.extra <- function(ngs, extra, lib.dir) {
         ngs$connectivity <- NULL  ## clean up
         sigdb.list = c(
             file.path(PGX.DIR,"datasets-allFC.csv"),
-            file.path(PGX.DIR,"sigdb-archs4-4k.h5")
+            file.path(FILES,"sigdb-archs4.h5")
         )
         for(sigdb in sigdb.list) {
             if(file.exists(sigdb)) {
