@@ -1031,7 +1031,7 @@ multi.dist <- function(x, p=4, method=c("pearson","euclidean","manhattan"))
             } else {
                 d1 <- dist( this.x, method=m, p=p)
             }
-            m1 <- matrix(rank(as.vector(as.matrix(d1))),nrow=nrow(x))
+            m1 <- matrix(rank(as.vector(as.matrix(d1)),na.last="keep"),nrow=nrow(x))
             m1 <- m1 / max(m1,na.rm=TRUE)
             diag(m1) <- 0
             mm <- pmin(mm, m1, na.rm=TRUE)

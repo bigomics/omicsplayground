@@ -46,6 +46,7 @@ RUN git clone https://github.com/bigomics/omicsplayground.git && chmod -R ugo+rw
 #------------------------------------------------------------
 # Copy local data into Docker image
 #------------------------------------------------------------
+WORKDIR /
 COPY data-examples/* /omicsplayground/data/
 RUN R -e "setwd('data');source('init.R')"
 

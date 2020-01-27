@@ -952,7 +952,7 @@ expandAnnotationMatrixSAVE <- function(A) {
     m1 <- list()
     for(i in 1:ncol(A)) {
         if(is.num(A[,i])) {
-            m0 <- matrix(rank(A[,i]), ncol=1)
+            m0 <- matrix(rank(A[,i],na.last="keep"), ncol=1)
             colnames(m0) <- colnames(A)[i]
         } else {
             x <- as.character(A[,i])
