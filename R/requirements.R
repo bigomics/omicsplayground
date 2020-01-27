@@ -61,7 +61,7 @@ PKG.MANUAL <- c(
 ## Install base packages
 ##---------------------------------------------------------------------
 
-base.pkg = c("shiny","flexdashboard","shinydashboard")
+base.pkg = c("shiny","flexdashboard","shinydashboard","shinydashboardPlus")
 install.pkgs(base.pkg)
 
 ##---------------------------------------------------------------------
@@ -72,6 +72,7 @@ pkg.used <- system("grep 'library(\\|require(' *R *r ../shiny/*R ../shiny/module
 pkg.used <- gsub(".*require\\(|.*library\\(","",pkg.used)
 pkg.used <- gsub("\"|\'|\\).*","",pkg.used)
 pkg.used <- grep("[ ]|quietly",pkg.used,value=TRUE,invert=TRUE)
+pkg.used <- c(pkg.used,"optparse","docopt")
 pkg.used <- sort(unique(pkg.used))
 
 install.pkgs( setdiff(pkg.used, c(PKG.MANUAL,BIG.NOTUSED)) )
