@@ -440,7 +440,7 @@ mixHivePlot <- function(res, ngs, ct, showloops=FALSE, numlab=6, cex=1)
     head(fx)
     fx <- fx / max(abs(fx),na.rm=TRUE)
     g <- sub("[1-9]:","",hpd$nodes$lab)
-    hpd$nodes$radius <- rank(fx[g]) 
+    hpd$nodes$radius <- rank(fx[g],na.last="keep") 
     hpd$nodes$radius <- 100 * hpd$nodes$radius / max(hpd$nodes$radius,na.rm=TRUE)
     
     maxgrp <- unlist(lapply(res$W,function(w) max.col(w)))
@@ -459,7 +459,7 @@ mixHivePlot <- function(res, ngs, ct, showloops=FALSE, numlab=6, cex=1)
     ## hpd$nodes$color <- brewer.pal(8,"Set2")[maxgrp[hpd$nodes$lab]]
     
     wt1 <- hpd$edges$weight ## edge.importance
-    wt1 <- rank(abs(wt1)) * sign(wt1)
+    wt1 <- rank(abs(wt1),na.last="keep") * sign(wt1)
     hpd$edges$weight <- 3 * abs(wt1/max(abs(wt1)))**2
     hpd$edges$color  <- alpha("grey70",0.3)
 
@@ -608,7 +608,7 @@ mixPlotLoadings <- function(res, showloops=FALSE, cex=1)
             ##lwd = exp(abs(ee$rho)/mean(abs(ee$rho)))
             lwd <- ee$importance
             ##lwd = exp(abs(ewt)/mean(abs(ewt)))
-            lwd <- rank(abs(lwd))**1.5
+            lwd <- rank(abs(lwd),na.last="keep")**1.5
             lwd <- 3.0 * cex * (lwd/max(lwd))
             lty <- 1 + 1*(sign(ee$rho)<0)
             xy <- cbind(match(ee$from,g1), match(ee$to,g2))            

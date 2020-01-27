@@ -6,6 +6,9 @@ if(0) {
     RDIR="../R"
     source("../R/pgx-include.R")
     source("../R/pgx-files.R")
+
+    gmt.files = dir("../../Data/Creeds","gmt$",full.names=TRUE)
+    h5.file = "../lib/sigdb-creeds.h5"
 }
 
 chunk=100
@@ -48,8 +51,11 @@ pgx.createCreedsSigDB <- function(gmt.files, h5.file, chunk=100, update.only=FAL
             s2 <- gmt[j2]
 
             ff <- lapply(1:length(f1),function(i) c(f1[[i]],f2[[i]]))
-            names(ff) <- sub("-up","",names(f1))
-            names(s1) <- names(s2) <- names(ff)
+            sig.names <- sub("-up","",names(f1))
+            prefix <- gsub(".*/|single_|_perturbations|.gmt|_signatures","",gmt.files[i])
+            sig.names <- paste0("[CREEDS:",prefix,"] ",sig.names)
+            
+            names(s1) <- names(s2) <- names(ff) <- sig.names
             sig100.up <- c(sig100.up, s1)
             sig100.dn <- c(sig100.dn, s2)
             F <- c(F, ff)
@@ -75,18 +81,15 @@ pgx.createCreedsSigDB <- function(gmt.files, h5.file, chunk=100, update.only=FAL
         h5.file
         pgx.saveMatrixH5(X, h5.file, chunk=chunk)
 
+        na100 <- rep(NA,100)
+        msig100.up <- sapply(sig100.up, function(g) head(c(intersect(g,genes),na100),100))
+        msig100.dn <- sapply(sig100.dn, function(g) head(c(intersect(g,genes),na100),100))
 
         if(!h5exists(h5.file, "signature")) h5createGroup(h5.file,"signature")    
-
-        sig100.dn <- do.call(cbind, sig100.dn)
+        h5write( msig100.up, h5.file, "signature/sig100.up")  ## can write list??
+        h5write( msig100.dn, h5.file, "signature/sig100.dn")  ## can write list???    
+        remove(sig100.up,sig100.dn,msig100.up,msig100.dn)
         
-        h5write( sig100.dn, h5.file, "signature/sig100.dn")  ## can write list???    
-        h5write( sig100.up, h5.file, "signature/sig100.up")  ## can write list??
-
-
-
-        
-
         if(0) {
             h5ls(h5.file)
             h5write( X, h5.file, "data/matrix")  ## can write list??
@@ -102,13 +105,9 @@ pgx.createCreedsSigDB <- function(gmt.files, h5.file, chunk=100, update.only=FAL
     ##--------------------------------------------------
     ## Precalculate t-SNE/UMAP
     ##--------------------------------------------------
-    dim(X)
 
     if(!update.only || !h5exists(h5.file, "clustering")) {
-        
-        if(!h5exists(h5.file, "clustering")) h5createGroup(h5.file,"clustering")    
-        h5ls(h5.file)
-        
+                
         pos <- pgx.clusterBigMatrix(
             abs(X),  ## on absolute foldchange!!
             methods=c("pca","tsne","umap"),
@@ -117,13 +116,15 @@ pgx.createCreedsSigDB <- function(gmt.files, h5.file, chunk=100, update.only=FAL
             reduce.pca = 200 )
         names(pos)
         
-        h5write( pos[["pca2d"]], h5.file, "clustering/pca2d")  ## can write list??    
-        h5write( pos[["pca3d"]], h5.file, "clustering/pca3d")  ## can write list??    
-        h5write( pos[["tsne2d"]], h5.file, "clustering/tsne2d")  ## can write list??    
-        h5write( pos[["tsne3d"]], h5.file, "clustering/tsne3d")  ## can write list??    
-        h5write( pos[["umap2d"]], h5.file, "clustering/umap2d")  ## can write list??    
-        h5write( pos[["umap3d"]], h5.file, "clustering/umap3d")  ## can write list??            
-
+        if(!h5exists(h5.file, "clustering")) h5createGroup(h5.file,"clustering")    
+        h5ls(h5.file)
+        h5write( pos[["pca2d"]], h5.file, "clustering/pca2d")  
+        h5write( pos[["pca3d"]], h5.file, "clustering/pca3d")  
+        h5write( pos[["tsne2d"]], h5.file, "clustering/tsne2d") 
+        h5write( pos[["tsne3d"]], h5.file, "clustering/tsne3d") 
+        h5write( pos[["umap2d"]], h5.file, "clustering/umap2d") 
+        h5write( pos[["umap3d"]], h5.file, "clustering/umap3d") 
+        
     }
 
     h5closeAll()
@@ -290,7 +291,7 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
     gmt <- apply( G, 1, function(x) colnames(G)[which(x!=0)])
 
     ##X <- X[,1:20]
-    X[is.na(X)] <- 0
+    ##X[is.na(X)] <- 0
 
     if(!h5exists(h5.file, "enrichment")) h5createGroup(h5.file,"enrichment")
     h5write(names(gmt), h5.file, "enrichment/genesets")
@@ -298,11 +299,13 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
     if("gsea" %in% methods) {
         cat("[pgx.addEnrichmentSignaturesH5] starting fGSEA...\n")    
         require(fgsea)
-        ##F1 <- apply(X, 2, function(x) {fgsea( gmt, x, nperm=1000)$NES })
-
-        ##F1 <- apply(X[,], 2, function(x) {fgsea( gmt, x, nperm=1000)$NES })  ## FDR not important, small nperm
-        F1 <- mclapply( 1:ncol(X), function(i) { fgsea( gmt, X[,i], nperm=1000)$NES })  
-        F1 <- do.call( cbind, F1)
+        F1 <- mclapply(1:ncol(X), function(i) {
+            xi <- X[,i]
+            xi[is.na(xi)] <- 0
+            xi <- xi + 1e-3*rnorm(length(xi))
+            fgsea( gmt, xi, nperm=1000)$NES
+        })  
+        F1 <- do.call(cbind, F1)
         rownames(F1) <- names(gmt)
         colnames(F1) <- colnames(X)
         dim(F1)
@@ -500,8 +503,11 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     G <- h5read(h5.file, "data/matrix", index=list(row.idx,1:length(cn)))
     dim(G)
     dimnames(G) <- list(rn[row.idx],cn)
+    G1 <- apply( G[gg,], 2, rank, na.last="keep" )
+    f1 <- rank( fc[gg], na.last="keep" )
     rho <- cor( G[gg,], fc[gg], use="pairwise")[,1]
-
+    remove(G)
+    
     ## --------------------------------------------------
     ## test all signature on query profile using fGSEA
     ## --------------------------------------------------

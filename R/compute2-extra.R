@@ -7,7 +7,13 @@
 ##
 
 ##extra <- c("meta.go","deconv","infer","drugs")
-compute.extra <- function(ngs, extra, lib.dir) {
+
+SIGDB = c(
+    file.path(PGX.DIR,"datasets-allFC.csv"),
+    file.path(FILES,"sigdb-archs4.h5")
+)
+
+compute.extra <- function(ngs, extra, lib.dir, sigdb=SIGDB) {
 
     timings <- c()
     
@@ -114,22 +120,23 @@ compute.extra <- function(ngs, extra, lib.dir) {
     if("connectivity" %in% extra) {
         cat(">>> computing connectivity scores...\n")
         ngs$connectivity <- NULL  ## clean up
-        sigdb.list = c(
-            file.path(PGX.DIR,"datasets-allFC.csv"),
-            file.path(FILES,"sigdb-archs4.h5")
-        )
-        for(sigdb in sigdb.list) {
-            if(file.exists(sigdb)) {
+        ## sigdb.list = c(
+        ##     file.path(PGX.DIR,"datasets-allFC.csv"),
+        ##     file.path(FILES,"sigdb-archs4.h5")
+        ## )
+        
+        for(db in sigdb) {
+            if(file.exists(db)) {
                 ntop = 9999
-                cat("computing scores for DB",sigdb,"\n")                
+                cat("computing scores for sigDB",db,"\n")                
                 tt <- system.time({
                     scores <- pgx.computeConnectivityScores(
-                        ngs, sigdb, ntop=ntop, contrasts=NULL)
+                        ngs, db, ntop=ntop, contrasts=NULL)
                 })
                 timings <- rbind(timings, c("connectivity", tt))
                 
-                sigdb0 <- sub(".*/","",sigdb)
-                ngs$connectivity[[sigdb0]] <- scores
+                db0 <- sub(".*/","",db)
+                ngs$connectivity[[db0]] <- scores
                 remove(scores)
             }
         }

@@ -868,7 +868,7 @@ pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.25, nterms=500, nt
     score = fc * (-log10(qv))
     dim(pv)
     if(NCOL(pv)>1) {
-        ss.rank <- function(x) scale(sign(x)*rank(abs(x)),center=FALSE)
+        ss.rank <- function(x) scale(sign(x)*rank(abs(x),na.last="keep"),center=FALSE)
         fc = rowMeans(scale(fc,center=FALSE),na.rm=TRUE)
         pv = apply(pv,1,max,na.rm=TRUE)
         qv = apply(qv,1,max,na.rm=TRUE)

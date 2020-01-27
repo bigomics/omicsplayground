@@ -506,7 +506,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
         meta.q = apply(qv, 1, max, na.rm=TRUE ) ## maximum q-statistic (simple & fast)
         ## meta.p = apply(pv, 1, function(p) metap::allmetap(p, method="sumlog")$p[[1]])
         ## meta.q = p.adjust(meta.p, method="fdr")
-        ss.rank <- function(x) scale(sign(x)*rank(abs(x)),center=FALSE)
+        ss.rank <- function(x) scale(sign(x)*rank(abs(x),na.last="keep"),center=FALSE)
         meta.fx = rowMeans( apply(S[[i]], 2, ss.rank), na.rm=TRUE)
         meta = data.frame(fx=meta.fx, p=meta.p, q=meta.q)
         ##all.meta[[i]] = data.frame( gene.set=names(gmt), meta=meta, fc=I(fc), p=I(pv), q=I(qv))
