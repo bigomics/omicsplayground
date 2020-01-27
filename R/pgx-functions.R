@@ -257,10 +257,11 @@ pgx.getCategoricalPhenotypes <-function(df, max.ncat=20, min.ncat=2, remove.dup=
     is.factor2 <- (!is.bad & is.factor & !is.id & n.unique>=min.ncat & n.unique<= max.ncat)
     is.factor2
     df1 <- df[,which(is.factor2),drop=FALSE]
-
+    dim(df1)
     nlevel <- apply(df1,2,function(x) length(unique(x)))
-    nchars <- apply(df1,2,function(x) max(nchar(as.character(x))))
+    nchars <- apply(df1,2,function(x) max(nchar(iconv(x, "latin1", "ASCII", sub=""))))
     df1 <- df1[,order(nlevel,-nchars),drop=FALSE]
+    dim(df1)
     ##head(df1)
     if(remove.dup && ncol(df1)>1) {
         i=1

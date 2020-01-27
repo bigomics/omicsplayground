@@ -17,9 +17,9 @@ if(0) {
 }
 
 
-##max.genes=5000;gx.methods=c("ttest.welch","trend.limma");gset.methods=c("fisher","gsva");lib.dir = FILES;progress=NULL;only.hugo=1;extra.methods=c("meta.go","deconv","infer","drugs","wordcloud")
+##max.genes=max.genesets=5000;gx.methods=c("ttest.welch","trend.limma");gset.methods=c("fisher","gsva");lib.dir = FILES;progress=NULL;only.hugo=1;extra.methods=c("meta.go","deconv","infer","drugs","wordcloud")
 
-pgx.upload <- function(counts, samples, contrasts, ## genes, 
+pgx.computeObjectPGX <- function(counts, samples, contrasts, ## genes, 
                        ##gx.methods = c("trend.limma","edger.qlf","deseq2.wald"),
                        max.genes = 9999, max.genesets = 9999, only.hugo=TRUE,
                        gx.methods = c("ttest.welch","trend.limma","edger.qlf"),
@@ -38,10 +38,10 @@ pgx.upload <- function(counts, samples, contrasts, ## genes,
     ##-------------------------------------------------------------------
     ##load(file=rda.file, verbose=1)
     ngs <- list()  ## empty object
-    ngs$name = "(uploaded)"
+    ngs$name = "data set"
     ngs$date = date()
     ngs$datatype = "unknown"
-    ngs$description = "uploaded data set"
+    ngs$description = "data set"
 
     ngs$samples = samples
     ngs$counts  = counts
@@ -153,7 +153,7 @@ pgx.upload <- function(counts, samples, contrasts, ## genes,
     ##-------------------------------------------------------------------
     if(do.cluster) {
         if(!is.null(progress)) progress$inc(0.01, detail = "clustering")
-        perplexity <- max(3,min(30,round(ncol(ngs$counts)/4)))
+        perplexity <- max(2,min(30,round(ncol(ngs$counts)/4)))
         perplexity
         ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, perplexity=perplexity)
         head(ngs$samples)
@@ -164,9 +164,10 @@ pgx.upload <- function(counts, samples, contrasts, ## genes,
     ##======================================================================
     ##======================================================================
 
-    ## make model matrix for group vs. rest
-    ##contr.matrix <- makeClusterContrasts(ngs$samples$cluster)
+    ## contrast matrix
     contr.matrix <- ngs$contrasts
+
+    ## create groups if not exists
     if(!"group" %in% colnames(ngs$samples)) {
         ct = apply(ngs$samples,2,function(px) mean(px %in% rownames(ngs$contrasts),na.rm=TRUE))
         group.col = which(ct > 0.95)

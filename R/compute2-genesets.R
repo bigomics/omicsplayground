@@ -24,14 +24,14 @@ compute.testGenesets <- function(ngs, max.features=1000, lib.dir="../lib",
     ##-----------------------------------------------------------
     ## Load huge geneset matrix
     ##-----------------------------------------------------------    
-    G <- readRDS(file.path(lib.dir,"gset-sparseG-XL.rds"))
-    G <- t(G)
+    G <- t(readRDS(file.path(lib.dir,"gset-sparseG-XL.rds")))
+    dim(G)
     
     ##-----------------------------------------------------------
-    ## Filter gene sets
+    ## Filter genes
     ##-----------------------------------------------------------
-    cat("Filtering gene sets...\n")
-    
+
+    ## filter genes only in dataset
     require(Matrix)
     require(org.Hs.eg.db)
     ##GENE.TITLE = unlist(as.list(org.Hs.egGENENAME))
@@ -40,8 +40,18 @@ compute.testGenesets <- function(ngs, max.features=1000, lib.dir="../lib",
     genes <- toupper(genes)  ## handle mouse genes...
     G <- G[rownames(G) %in% genes,]
     dim(G)
-        
+
+    ##-----------------------------------------------------------
+    ## Filter gene sets
+    ##-----------------------------------------------------------
+
+    ## cat("Filtering gene sets on family...\n")
+    sort(table(sub("[:].*","",colnames(G))))
+    sel <- which(!grepl("AGING|DRUG",colnames(G)))  ## not useful???
+    ## G <- G[,sel]    
+
     ## filter gene sets on size
+    cat("Filtering gene sets on size...\n")
     gmt.size = colSums(G!=0)
     summary(gmt.size)
     size.ok <- (gmt.size >= 15 & gmt.size <= 1e3)
