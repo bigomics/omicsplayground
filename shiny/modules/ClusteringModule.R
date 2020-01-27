@@ -1833,8 +1833,8 @@ displays the expression levels of selected genes across all conditions in the an
                        cex.names=0.9, horiz=TRUE,
                        xlab="discriminant score" )
         ##title("feature-set score", cex=1.3)
-        cc1 = grey.colors(ncol(Y))
-        legend("bottomright",legend=colnames(Y), fill=cc1,
+        cc1 = grey.colors(ncol(S))
+        legend("bottomright",legend=colnames(S), fill=cc1,
                cex=0.8, y.intersp=0.8, inset=c(0,0.035), bg="white")
         
     })
