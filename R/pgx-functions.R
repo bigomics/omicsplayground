@@ -118,6 +118,8 @@ is.POSvsNEG <- function(ngs) {
     ## matrix). Too complicated... maybe we should just require one
     ## definition...
     ##
+    ## We should get rid of this...
+    ##
     cntrmat <- ngs$model.parameters$contr.matrix
     design <- ngs$model.parameters$design
     ##ct0 <- cntrmat[,comp]        
@@ -125,6 +127,8 @@ is.POSvsNEG <- function(ngs) {
     dim(cntrmat)
     grp1 <- sapply(strsplit(colnames(cntrmat),split="_vs_"),"[",1)
     grp2 <- sapply(strsplit(colnames(cntrmat),split="_vs_"),"[",2)
+    grp1 <- sub(".*[:]","",grp1)
+    grp2 <- sub(".*[:]","",grp2)
     is.null(design)
     is.PosvsNeg1 <- NA
     if(!is.null(design)) {
@@ -135,8 +139,8 @@ is.POSvsNEG <- function(ngs) {
             ##grp2x <- intersect(grp2[i],rownames(cntrmat))        
             ##grp1.sign <- mean(cntrmat[intersect(grp1,rownames(cntrmat)),which(grp1 %in% grp1x)])
             ##grp2.sign <- mean(cntrmat[intersect(grp2,rownames(cntrmat)),which(grp2 %in% grp2x)])
-            j1 <- grep(grp1[i], rownames(cntrmat))
-            j2 <- grep(grp2[i], rownames(cntrmat))
+            j1 <- grep(grp1[i], rownames(cntrmat), fixed=TRUE)
+            j2 <- grep(grp2[i], rownames(cntrmat), fixed=TRUE)
             grp1.sign <- mean(cntrmat[j1,i], na.rm=TRUE)
             grp2.sign <- mean(cntrmat[j2,i], na.rm=TRUE)
             grp1.sign

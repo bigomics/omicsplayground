@@ -34,7 +34,8 @@ pgx.createSignatureDatabaseH5 <- function(pgx.files, h5.file, chunk=100, update.
         for(i in 1:length(pgx.files)) {
             if(!file.exists(pgx.files[i])) next()
             cat(".")
-            load(pgx.files[i], verbose=0)
+            try.error <- try( load(pgx.files[i], verbose=0) )
+            if(class(try.error)=="try-error") next()
             meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
             rownames(meta$fc) <- toupper(rownames(meta$fc))  ## mouse-friendly
             pgx <- gsub(".*[/]|[.]pgx$","",pgx.files[i])
@@ -133,8 +134,9 @@ pgx.createSignatureDatabaseH5 <- function(pgx.files, h5.file, chunk=100, update.
     ## return(X)
 }
 
-mc.cores=24
-pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir) 
+mc.cores=24;lib.dir=FILES
+pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
+                                          methods = c("gsea","gsva") ) 
 {
 
     require(rhdf5)
@@ -167,27 +169,35 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir)
     ##X <- X[,1:20]
     X[is.na(X)] <- 0
 
-    cat("[pgx.addEnrichmentSignaturesH5] starting fGSEA...\n")    
-    require(fgsea)
-    ##F1 <- apply(X, 2, function(x) {fgsea( gmt, x, nperm=1000)$NES })
-    F1 <- apply(X[,], 2, function(x) {fgsea( gmt, x, nperm=100)$NES })  ## FDR not important, small nperm
-    dim(F1)
-    cat("[pgx.addEnrichmentSignaturesH5] dim(F1)=",dim(F1),"\n")
-    rownames(F1) <- names(gmt)
-
     if(!h5exists(h5.file, "enrichment")) h5createGroup(h5.file,"enrichment")
-    h5write(rownames(F1), h5.file, "enrichment/genesets")
-    h5write(F1, h5.file, "enrichment/GSEA")
+    h5write(names(gmt), h5.file, "enrichment/genesets")
 
+    if("gsea" %in% methods) {
+        cat("[pgx.addEnrichmentSignaturesH5] starting fGSEA...\n")    
+        require(fgsea)
+        ##F1 <- apply(X, 2, function(x) {fgsea( gmt, x, nperm=1000)$NES })
+
+        ##F1 <- apply(X[,], 2, function(x) {fgsea( gmt, x, nperm=1000)$NES })  ## FDR not important, small nperm
+        F1 <- mclapply( 1:ncol(X), function(i) { fgsea( gmt, X[,i], nperm=1000)$NES })  
+        F1 <- do.call( cbind, F1)
+        rownames(F1) <- names(gmt)
+        colnames(F1) <- colnames(X)
+        dim(F1)
+        cat("[pgx.addEnrichmentSignaturesH5] dim(F1)=",dim(F1),"\n")
+        rownames(F1) <- names(gmt)
+        h5write(F1, h5.file, "enrichment/GSEA")
+    }
     
-    cat("[pgx.addEnrichmentSignaturesH5] starting GSVA... \n")    
-    require(GSVA)
-    ## mc.cores = 4
-    F2 <- gsva(X, gmt, method="gsva", parallel.sz=mc.cores)
-    rownames(F2) <- names(gmt)
-    dim(F2)
-    h5write(F2, h5.file, "enrichment/GSVA")
-
+    if("gsva" %in% methods) {
+        cat("[pgx.addEnrichmentSignaturesH5] starting GSVA... \n")    
+        require(GSVA)
+        ## mc.cores = 4
+        F2 <- gsva(X, gmt, method="gsva", parallel.sz=mc.cores)
+        rownames(F2) <- names(gmt)
+        dim(F2)
+        h5write(F2, h5.file, "enrichment/GSVA")
+    }
+    
     h5ls(h5.file)
     h5closeAll()
 

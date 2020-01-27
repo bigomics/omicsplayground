@@ -12,6 +12,7 @@ ProfilingUI <- function(id) {
         flex = c(1.6,0.10,1),
         height = 780,
         tabsetPanel(
+            id = ns("tabs1"),
             tabPanel("Cell type",uiOutput(ns("pr_icp_UI"))),
             tabPanel("Markers",uiOutput(ns("pr_markersplot_UI"))),
             tabPanel("CNV",uiOutput(ns("pr_cnaModule_UI"))),
@@ -20,6 +21,7 @@ ProfilingUI <- function(id) {
         ),
         br(),
         tabsetPanel(
+            id = ns("tabs2"),
             tabPanel("Phenotypes",uiOutput(ns("pr_phenoModule_UI"))),
             tabPanel("Proportions",uiOutput(ns("pr_crosstabModule_UI"))),
             tabPanel("CytoPlot",uiOutput(ns("pr_cytoModule_UI")))      
@@ -590,8 +592,8 @@ immune cell types, expressed genes and pathway activation."
         dbg("<profiling:getCNAfromExpression> calculating CNV")
         
         ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
-        withProgress( message='calculating CNV...', value=0.66, {
-            res <- pgx.CNAfromExpression(ngs, nsmooth=40, downsample=1)
+        withProgress( message='calculating CNV (sma40)...', value=0.33, {
+            res <- pgx.CNAfromExpression(ngs, nsmooth=40)
         })
         return(res)
     })
@@ -603,7 +605,7 @@ immune cell types, expressed genes and pathway activation."
         dbg("<profiling:getCNAfromExpression> calculating CNV using inferCNV")
         ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
 
-        withProgress( message='calculating inferCNV...', value=0.66, {
+        withProgress( message='calculating CNV (inferCNV)...', value=0.33, {
             res <- pgx.inferCNV(ngs, refgroup=NULL)
         })
         return(res)
@@ -628,7 +630,9 @@ immune cell types, expressed genes and pathway activation."
             annotvar <- input$pr_cna_annotvar
             if(annotvar=="<none>") annotvar <- NULL
             order.by <- input$pr_cna_orderby
-            pgx.plotCNAHeatmap(ngs, res, annot=annotvar, order.by=order.by)
+            pgx.plotCNAHeatmap(
+                ngs, res, annot=annotvar, order.by=order.by,
+                downsample=10 )
         }
         
     })
@@ -977,8 +981,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         return(cds)
     })
 
-    monocle_topMarkers <- reactive({
-    })
+    ## monocle_topMarkers <- reactive({ })
 
     monocle_plotTopMarkers.RENDER <- reactive({
 

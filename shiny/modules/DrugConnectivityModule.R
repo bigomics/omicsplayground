@@ -105,13 +105,14 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         alertDataLoaded(session,ngs)
         req(ngs)        
         req(input$dr_contrast, input$dsea_method)
-
+        
         comparison=1
         names(ngs$gx.meta$meta)
         comparison = input$dr_contrast
         if(is.null(comparison)) return(NULL)
         
         names(ngs$drugs)
+        dmethod = "activity-combo/L1000"
         dmethod = "activity/L1000"
         dmethod <- input$dsea_method
         if(is.null(dmethod)) return(NULL)
@@ -203,51 +204,110 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         
         dmethod="mono"
         dmethod="combo"
+        moatype="target gene"
+        names(ngs$drugs)
         dmethod <- input$dsea_method
-        
-        j1 <- which( res$padj < 0.2 & res$NES > 0)
-        j2 <- which( res$padj < 0.2 & res$NES < 0)
-        moa.pos <- strsplit(as.character(res$moa[j1]), split="[\\|;]")
-        moa.neg <- strsplit(as.character(res$moa[j2]), split="[\\|;]")
-        moa <- strsplit(as.character(res$moa), split="[\\|;]")
-        moa.lengths <- sapply(moa,length)
-
-        fx <- mapply(function(x,n) rep(x,n), res$NES, moa.lengths)
-        moa.avg <- sort(tapply( unlist(fx), unlist(moa), mean))
-        moa.sum <- sort(tapply( unlist(fx), unlist(moa), sum))
-        head(moa.pos)
-        head(moa.neg)
-        moa.pos <- sort(table(unlist(moa.pos)),decreasing=TRUE)
-        moa.neg <- sort(table(unlist(moa.neg)),decreasing=TRUE)
-
-        dtg.pos <- strsplit(as.character(res$target[j1]), split="[\\|;]")
-        dtg.neg <- strsplit(as.character(res$target[j2]), split="[\\|;]")
-        dtg <- strsplit(as.character(res$target), split="[\\|;]")
-        dx <- mapply(function(x,n) rep(x,n), res$NES, sapply(dtg,length))
-        dtg.avg <- sort(tapply( unlist(dx), unlist(dtg), mean))
-        dtg.sum <- sort(tapply( unlist(dx), unlist(dtg), sum))    
-        dtg.pos <- sort(table(unlist(dtg.pos)),decreasing=TRUE)
-        dtg.neg <- sort(table(unlist(dtg.neg)),decreasing=TRUE)
-        head(dtg.pos)
-        head(dtg.neg)
-        
+        moatype = input$dsea_moatype
+        moamethod = input$dsea_moamethod
         NTOP=10
-        if(1) {
+        dtg.top = moa.top = NULL
+        
+        if(moamethod=="count") {
+            j1 <- which( res$padj < 0.2 & res$NES > 0)
+            j2 <- which( res$padj < 0.2 & res$NES < 0)
+            moa.pos <- strsplit(as.character(res$moa[j1]), split="[\\|;]")
+            moa.neg <- strsplit(as.character(res$moa[j2]), split="[\\|;]")
+            moa <- strsplit(as.character(res$moa), split="[\\|;]")
+            moa.lengths <- sapply(moa,length)
+            
+            fx <- mapply(function(x,n) rep(x,n), res$NES, moa.lengths)
+            moa.avg <- sort(tapply( unlist(fx), unlist(moa), mean))
+            moa.sum <- sort(tapply( unlist(fx), unlist(moa), sum))
+            head(moa.pos)
+            head(moa.neg)
+            moa.pos <- sort(table(unlist(moa.pos)),decreasing=TRUE)
+            moa.neg <- sort(table(unlist(moa.neg)),decreasing=TRUE)
+            
+            dtg.pos <- strsplit(as.character(res$target[j1]), split="[\\|;]")
+            dtg.neg <- strsplit(as.character(res$target[j2]), split="[\\|;]")
+            dtg <- strsplit(as.character(res$target), split="[\\|;]")
+            dx <- mapply(function(x,n) rep(x,n), res$NES, sapply(dtg,length))
+            dtg.avg <- sort(tapply( unlist(dx), unlist(dtg), mean))
+            dtg.sum <- sort(tapply( unlist(dx), unlist(dtg), sum))    
+            dtg.pos <- sort(table(unlist(dtg.pos)),decreasing=TRUE)
+            dtg.neg <- sort(table(unlist(dtg.neg)),decreasing=TRUE)
+            head(dtg.pos)
+            head(dtg.neg)
+
             moa.top <- sort(c( head(moa.pos,NTOP), -head(moa.neg,NTOP)),decreasing=TRUE)
             dtg.top <- sort(c( head(dtg.pos,NTOP), -head(dtg.neg,NTOP)),decreasing=TRUE)
+
+        } else {
+            
+            if(moatype=="target gene") {
+                
+                ## GSEA on molecular targets
+                targets <- unique(unlist(strsplit(as.character(res$target),split="\\|")))
+                targets <- setdiff(targets,NA)
+                targets.list <- lapply(as.character(res$target), function(s) strsplit(s,split="\\|")[[1]])
+                names(targets.list) <- rownames(res)
+                gmt <- lapply(targets, function(g) names(which(sapply(targets.list,function(t) (g %in% t)))))
+                names(gmt) <- targets
+                
+                rnk <- res$NES
+                names(rnk) <- rownames(res)
+                suppressWarnings( res1 <- fgsea( gmt, rnk, nperm=20000) )
+                res1 <- res1[order(res1$pval),]
+                head(res1)            
+
+                jj <- unique(c(head(order(-res1$NES),NTOP),tail(order(-res1$NES),NTOP)))
+                dtg.top <- res1$NES[jj]
+                names(dtg.top) <- res1$pathway[jj]
+                
+            }
+            if(moatype=="drug class") {
+
+                ## GSEA on moa terms
+                moa <- unique(unlist(strsplit(as.character(res$moa),split="\\|")))
+                moa <- setdiff(moa,NA)
+                moa.list <- lapply(as.character(res$moa), function(s) strsplit(s,split="\\|")[[1]])
+                names(moa.list) <- rownames(res)
+                gmt <- lapply(moa, function(g) names(which(sapply(moa.list,function(t) (g %in% t)))))
+                names(gmt) <- moa
+                
+                rnk <- res$NES
+                names(rnk) <- rownames(res)
+                suppressWarnings( res1 <- fgsea( gmt, rnk, nperm=20000) )
+                res1 <- res1[order(res1$pval),]
+                head(res1)            
+
+                jj <- unique(c(head(order(-res1$NES),NTOP),tail(order(-res1$NES),NTOP)))
+                moa.top <- res1$NES[jj]
+                names(moa.top) <- res1$pathway[jj]
+                
+            }
+                        
+        }
+        
+        if(1) {
 
             ##layout(matrix(1:2,nrow=1),widths=c(1.4,1))
             ##par(mfrow=c(2,1))
             par(mar=c(4,15,5,0.5), mgp=c(2,0.7,0))
             par(mfrow=c(1,1))
-            if(input$dsea_moatype=="drug class") {
+            ylab = "drugs  (n)"
+            if(moamethod=="enrichment") ylab = "enrichment  (NES)"
+
+            if(moatype=="drug class") {
                 par(mfrow=c(2,1), mar=c(4,4,1,0.5), mgp=c(2,0.7,0))
-                barplot(moa.top, horiz=FALSE, las=3, ylab="drugs (n)",
+                barplot(moa.top, horiz=FALSE, las=3,
+                        ylab=ylab,
                         cex.names = 0.8 )
                 ##title(main="MOA", line=1 )
             } else {
                 par(mfrow=c(2,1), mar=c(0,4,1,0.5), mgp=c(2,0.7,0))
-                barplot(dtg.top, horiz=FALSE, las=3, ylab="drugs (n)",
+                barplot(dtg.top, horiz=FALSE, las=3, ## ylab="drugs (n)",
+                        ylab=ylab,
                         cex.names = 0.8 )
                 ##title(main="target gene", line=1 )
             }
@@ -271,7 +331,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         jj <- unique(c( head(order(-res$NES),1000), tail(order(-res$NES),1000)))
         jj <- jj[order(-abs(res$NES[jj]))]
         res <- res[jj,]
-        
+
+        colnames(res) <- sub("moa","MOA",colnames(res))
         DT::datatable( res, rownames=FALSE,
                       class = 'compact cell-border stripe hover',                  
                       extensions = c('Scroller'),
@@ -372,7 +433,9 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     ##---------- DSEA Activation map plotting module
     dsea_moaplot.opts = tagList(
         tipify( radioButtons(ns('dsea_moatype'),'Plot type:',c("drug class","target gene"),inline=TRUE),
-               "Select plot type of MOA analysis: by class description or by target gene.")
+               "Select plot type of MOA analysis: by class description or by target gene."),
+        tipify( radioButtons(ns('dsea_moamethod'),'Method:',c("count","enrichment"),inline=TRUE),
+               "Select method of MOA analysis: count significant terms or enrichment test.")
     )
     callModule(
         plotModule,

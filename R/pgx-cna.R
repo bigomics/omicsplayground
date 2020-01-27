@@ -171,9 +171,12 @@ pgx.inferCNV <- function(ngs, refgroup=NULL, progress=NULL ) {
 }
 
 ##nsmooth=80;downsample=10
-pgx.CNAfromExpression <- function(ngs, nsmooth=40, downsample=10)
+pgx.CNAfromExpression <- function(ngs, nsmooth=40)
 {
-
+    ## This estimates CNV by local smoothing of relative expression
+    ## values.
+    ##
+    ##
     require(org.Hs.eg.db)
     head(ngs$genes)
 
@@ -193,7 +196,7 @@ pgx.CNAfromExpression <- function(ngs, nsmooth=40, downsample=10)
     head(genes)
 
     if(!is.null(ngs$counts)) {
-        cna <- log2(100 + ngs$counts)  ## moderated log2
+        cna <- log2(100 + edgeR::cpm(ngs$counts))  ## moderated log2
     } else {
         cna <- ngs$X
     }
@@ -219,12 +222,29 @@ pgx.CNAfromExpression <- function(ngs, nsmooth=40, downsample=10)
     ##---------------------------------------------------------------------
     ##cna <- cna - rowMeans(cna,na.rm=TRUE)
     mavg <- function(x,n=nsmooth){ stats::filter(x,rep(1/n,n), sides=2, circular=TRUE)}
-    cna <- t(scale(t(cna),center=FALSE))
+    cna <- t(scale(t(cna),center=FALSE))  ## z-score
     cna <- apply(cna,2,mavg)
     cna <- cna - apply(cna,1,median,na.rm=TRUE)
     rownames(cna) <- rownames(cna0)
     dim(cna)
-    
+        
+    res <- list(cna=cna, chr=genes$chr, pos=genes$pos)
+    return(res)
+}
+
+
+pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=-1, lwd=1,
+                               downsample=10,
+                               order.by="clust", clip=0, lab.cex=0.6 )
+{
+    require(irlba)
+    ##source("../R/gx-heatmap.r")
+    cna <- res$cna
+    chr <- res$chr
+    chr <- as.character(chr)
+    pos <- res$pos
+    table(chr)
+
     ##---------------------------------------------------------------------
     ## Downsample if needed
     ##---------------------------------------------------------------------
@@ -234,43 +254,29 @@ pgx.CNAfromExpression <- function(ngs, nsmooth=40, downsample=10)
         n <- downsample
         jj <- as.vector(sapply(1:((nrow(cna)+n)/n),rep,n))[1:nrow(cna)]
         cna <- apply(cna, 2, function(x) tapply(x,jj,mean))
-        g1 <- tapply(rownames(cna0),jj,function(x) x[1])
-        gg <- tapply(rownames(cna0),jj,paste,collapse=",")
+        ##g1 <- tapply(rownames(cna0),jj,function(x) x[1])
+        gg <- tapply(rownames(res$cna),jj,paste,collapse=",")
         rownames(cna) <- gg
-        genes <- genes[g1,]
-        rownames(genes) <- gg
-        dim(cna)
+        j1 <- which(!duplicated(jj))
+        chr <- chr[j1]
+        pos <- tapply(pos,jj,mean)
     }
 
     ##---------------------------------------------------------------------
     ## take out small groups/chromsomes
     ##---------------------------------------------------------------------
-    ii <- which(genes$chr %in% names(which(table(genes$chr)>3)) )
+    ii <- which(chr %in% names(which(table(chr)>3)) )
     cna <- cna[ii,]
-    genes <- genes[ii,]
-    genes$chr <- as.character(genes$chr)
-    table(genes$chr)
-    
-    res <- list(cna=cna, chr=genes$chr, pos=genes$pos)
-    return(res)
-}
-
-
-pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=-1, lwd=1,
-                               order.by="clust", clip=0, lab.cex=0.6 )
-{
-    require(irlba)
-    ##source("../R/gx-heatmap.r")
-    cna <- res$cna
-    chr <- res$chr
-    chr <- as.character(chr)
+    pos <- pos[ii]
+    chr <- chr[ii]
     table(chr)
-
+    
     ## ensure order on chrpos
     ichr <- as.integer(sub("X",23,sub("Y",24,sub("chr","",chr))))
-    jj <- order(ichr, res$pos)
+    jj <- order(ichr, pos)
     cna <- cna[jj,]
     chr <- chr[jj]
+    pos <- pos[jj]
     
     ## center/scale
     cna <- cna - rowMeans(cna,na.rm=TRUE)

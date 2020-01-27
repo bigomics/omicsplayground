@@ -82,19 +82,18 @@ install.pkgs( setdiff(pkg.used, c(PKG.MANUAL,BIG.NOTUSED)) )
 ##---------------------------------------------------------------------
 
 require(devtools)
-##install.packages("gridGraphics")
 ##install.pkg("grid", force=TRUE)
-install_version("gridGraphics", version="0.3-0", repos="http://cran.us.r-project.org")
+install.pkg("gridGraphics", force=TRUE)
 install.pkg("Rgraphviz", force=TRUE)
 install.pkg("fastcluster", force=TRUE)
 install.pkg("mygene", force=TRUE)
 install.pkg("diptest", force=TRUE)
 install.pkgs(c("corrplot","wordcloud"))
-install.pkgs(c("umap"))
+install.pkgs(c("umap","fpc"))
 
-remove.pkg("fpc")
-install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
-install_version("fpc", version="2.1-10", repos="http://cran.us.r-project.org")
+##remove.pkg("fpc")
+##install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
+##install_version("fpc", version="2.1-10", repos="http://cran.us.r-project.org")
 
 install.packages("webshot")
 webshot::install_phantomjs()
@@ -141,8 +140,6 @@ install.packages("../ext/packages/Seurat_v2.3.3.tar.gz",repos=NULL,type="source"
 ##---------------------------------------------------------------------
 ## make sure local ones are preferred
 ##---------------------------------------------------------------------
-##install.packages("../ext/packages/nclust1_1.9.4.tar.gz",repos=NULL,type="source")
-##install.packages("../ext/packages/nclust_2.1.1.tar.gz",repos=NULL,type="source")
 
 install.pkgs(c("RcppParallel"))
 devtools::install_github('wt2015-github/FastGGM')

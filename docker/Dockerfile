@@ -40,6 +40,7 @@ FROM base AS latest
 ## Pull from GitHub
 #------------------------------------------------------------
 WORKDIR /
+RUN rm -fr /omicsplayground
 RUN git clone https://github.com/bigomics/omicsplayground.git && chmod -R ugo+rwX /omicsplayground
 
 #------------------------------------------------------------

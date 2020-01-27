@@ -13,6 +13,7 @@ pgx.createComboDrugAnnot <- function(combo, annot0) {
     cmoa <- gsub("NA [+] NA","",cmoa)
     ctarget <- gsub("NA [+] NA","",ctarget)
     annot1 <- data.frame( drug=combo, moa=cmoa, target=ctarget)
+    rownames(annot1) <- combo
     annot1
 }
 

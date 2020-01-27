@@ -36,7 +36,6 @@ if(opt$USER_MODE=="basic") {
     DEV.VERSION = FALSE
 }
 
-
 if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
@@ -149,6 +148,7 @@ server = function(input, output, session) {
         hideTab("expr-tabs2","FDR table")
         hideTab("enrich-tabs1","Volcano (methods)")
         hideTab("enrich-tabs2","FDR table")
+        hideTab("prof-tabs1","Monocle")
 
         if(toupper(opt$ENABLE_UPLOAD) %in% c("NO","FALSE")) {
             hideTab("load-tabs","Upload data")            
@@ -174,6 +174,7 @@ server = function(input, output, session) {
             showTab("maintabs","Development")
             showTab("view-tabs","Resource info")
             showTab("enrich-tabs1","GeneMap")
+            showTab("prof-tabs1","Monocle")
         }
         
     })
