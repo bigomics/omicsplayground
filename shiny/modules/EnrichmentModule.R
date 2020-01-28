@@ -428,7 +428,7 @@ EnrichmentModule <- function(input, output, session, env)
                 names(rnk0) <- toupper(names(rnk0))
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
                             main=gs1, xlab="",
-                            cex.main=0.85, len.main=80)
+                            cex.main=0.80, len.main=80)
                 qv1 = formatC(qv[gs],format="e", digits=2)
                 legend("topright", paste("q=",qv1), bty="n",cex=0.85)
             }
@@ -443,7 +443,7 @@ EnrichmentModule <- function(input, output, session, env)
                 names(rnk0) <- toupper(names(rnk0))
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
                             main=gs1, xlab="",
-                            cex.main=0.85, len.main=80)
+                            cex.main=0.80, len.main=80)
                 qv1 = formatC(qv[gs],format="e", digits=2)
                 legend("topright", paste("q=",qv1), bty="n",cex=0.85)
             }
@@ -910,7 +910,7 @@ EnrichmentModule <- function(input, output, session, env)
                 if(i==1) cmp <- paste0(gset,"\n",cmp)
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
                             main=cmp, xlab="",
-                            cex.main=0.85, len.main=80)
+                            cex.main=0.80, len.main=80)
                 qv1 = formatC(qv0,format="e", digits=2)
                 legend("topright", paste("q=",qv1), bty="n",cex=0.85)
             }
@@ -929,7 +929,7 @@ EnrichmentModule <- function(input, output, session, env)
                 if(i==1) cmp <- paste0(gset,"\n",cmp)
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
                             main=cmp, xlab="",
-                            cex.main=0.85, len.main=80)
+                            cex.main=0.80, len.main=80)
                 qv1 = formatC(qv0,format="e", digits=2)
                 legend("topright", paste("q=",qv1), bty="n",cex=0.85)
             }

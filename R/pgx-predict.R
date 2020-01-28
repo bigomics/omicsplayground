@@ -343,10 +343,10 @@ pgx.plotPartialCorrelationAroundGene <-
         }
         ##p1 <- 0.8
         p1 <- 0.8 * E(gr2)$rho
-        klrpal <- colorRampPalette(c("red4", "grey90","grey20"))(64)
+        klrpal <- colorRampPalette(c("red3", "grey90","grey30"))(64)
         ##klrpal <- rev(grey.colors(64))
         klr <- klrpal[32 + 31*p1]
-        E(gr2)$color <- add.alpha(klr, 255*abs(p1))
+        E(gr2)$color <- add.alpha(klr, 64*abs(p1))
 
         j <- which( V(gr2)$name == gene )
         V(gr2)$label.cex <- 0.8

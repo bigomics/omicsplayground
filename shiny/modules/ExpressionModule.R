@@ -141,6 +141,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
         updateCheckboxGroupInput(session, 'gx_testmethod',
                                  choices = sort(gx.methods),
                                  selected = sel1)
+
+        updateCheckboxInput(session, "gx_ungroup", value= (ncol(ngs$X)<=8) )        
+        
     })
 
     ##================================================================================
@@ -758,7 +761,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
             div(HTML(expr_plots_caption), class="caption")
         )
     })
-    dragula(ns("expr_plots"))
+    ##dragula(ns("expr_plots"))
     
     ##================================================================================
     ## Top genes
@@ -843,7 +846,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     expr_topgenes_opts = tagList(
         tipify( checkboxInput(ns('gx_logscale'),'log scale',TRUE),
-               "Logarithmic scale the counts (abundance levels).", placement="top", options = list(container = "body")),
+               "Logarithmic scale the counts (abundance levels).",
+               placement="top", options = list(container = "body")),
         tipify( checkboxInput(ns('gx_ungroup'),'ungroup samples',FALSE),
                "Ungroup samples in the plot", placement="bottom")
     )
@@ -876,7 +880,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
             div(HTML(expr_topgenes_caption),class="caption")
         )
     })
-
+    outputOptions(output, "expr_topgenesUI", suspendWhenHidden=FALSE) ## important!!!
+    
     ##================================================================================
     ## Volcano (all contrasts)
     ##================================================================================

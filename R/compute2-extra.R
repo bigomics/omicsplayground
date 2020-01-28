@@ -7,18 +7,17 @@
 ##
 
 ##extra <- c("meta.go","deconv","infer","drugs")
+EXTRA.MODULES = c("meta.go","deconv","infer","drugs","drugs-combo",
+                  "connectivity","graph","wordcloud")
 
 compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
-    
-    if(is.null(sigdb)) {
-        sigdb = c(
-            file.path(lib.dir,"../data/datasets-allFC.csv"),
-            file.path(lib.dir,"sigdb-archs4.h5"),
-            file.path(lib.dir,"sigdb-creeds.h5")
-        )
-    }
-    
+        
     timings <- c()
+
+    extra <- intersect(extra, EXTRA.MODULES)
+    if(length(extra)==0) {
+        return(ngs)
+    }
     
     ## detect if it is single or multi-omics
     single.omics <- !any(grepl("\\[",rownames(ngs$counts)))
@@ -123,6 +122,15 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
     if("connectivity" %in% extra) {
         cat(">>> computing connectivity scores...\n")
         ngs$connectivity <- NULL  ## clean up
+
+        if(is.null(sigdb)) {
+            sigdb = c(
+                file.path(lib.dir,"../data/datasets-allFC.csv"),
+                file.path(lib.dir,"sigdb-archs4.h5"),
+                file.path(lib.dir,"sigdb-creeds.h5")
+            )
+        }
+
         ## sigdb.list = c(
         ##     file.path(PGX.DIR,"datasets-allFC.csv"),
         ##     file.path(FILES,"sigdb-archs4.h5")

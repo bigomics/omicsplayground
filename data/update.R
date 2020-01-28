@@ -33,7 +33,9 @@ for(pgx.file in pgx.files) {
     }
     
     ##extra <- c("meta.go","deconv","infer","drugs","wordcloud")
-    extra <- c("connectivity")
+    ##extra <- c("connectivity")
+    extra <- c("drugs")
+    ngs$drugs <- NULL
     ngs <- compute.extra(ngs, extra, lib.dir=FILES)     
     names(ngs$connectivity)
     

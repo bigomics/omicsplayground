@@ -6,12 +6,12 @@
 # Start from lastest base+data image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:latest
+FROM bigomics/omicsplayground:testing
 
 #------------------------------------------------------------
 # Install extra packages required since base (later move to requirements.R!)
 #------------------------------------------------------------
-RUN R -e "install.packages(c('shinydashboardPlus','optparse','docopt'))"
+RUN R -e "install.packages(c('shinydashboardPlus','optparse','docopt','randomForest'))"
 ## RUN R -e "devtools::install_github('JohnCoene/waiter')"
 ## RUN pip install umap-learn
 ## RUN R -e "BiocManager::install(c('pathview','randomForest'))"
@@ -21,6 +21,7 @@ RUN R -e "install.packages(c('shinydashboardPlus','optparse','docopt'))"
 ## Pull from GitHub
 #------------------------------------------------------------
 WORKDIR /omicsplayground
+## RUN rm data/geiger2016-arginine.pgx
 RUN git pull
 
 #------------------------------------------------------------
