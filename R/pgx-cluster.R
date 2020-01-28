@@ -21,11 +21,11 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
     }
         
     ## scale and augment if few samples
+    rX <- rX - rowMeans(rX,na.rm=TRUE) ## do??
     rX[is.na(rX)] <- 0
-    rX <- rX - rowMeans(rX) ## do??
     rX <- scale(rX) ## columm normalization
     if(ncol(rX)<=6) rX <- cbind(rX,rX,rX,rX,rX,rX)
-    rX <- rX + 1e-2*matrix(rnorm(length(rX)),nrow(rX),ncol(rX))
+    rX <- rX + 1e-3*matrix(rnorm(length(rX)),nrow(rX),ncol(rX))
     dim(rX)
     
     ## Further pre-reduce dimensions using SVD

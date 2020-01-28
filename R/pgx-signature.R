@@ -43,7 +43,7 @@ pgx.createCreedsSigDB <- function(gmt.files, h5.file, chunk=100, update.only=FAL
             cat(".")
             try.error <- try( gmt <- read.gmt(gmt.files[i], add.source=TRUE) )
             if(class(try.error)=="try-error") next()
-             gmt <- head(gmt,30)  ## ONLY FOR TESTING
+            ##gmt <- head(gmt,30)  ## ONLY FOR TESTING
             
             j1 <- grep("-up ", names(gmt))
             j2 <- grep("-dn ", names(gmt))
@@ -92,14 +92,17 @@ pgx.createCreedsSigDB <- function(gmt.files, h5.file, chunk=100, update.only=FAL
         h5write( msig100.up, h5.file, "signature/sig100.up")  ## can write list??
         h5write( msig100.dn, h5.file, "signature/sig100.dn")  ## can write list???    
         remove(sig100.up,sig100.dn,msig100.up,msig100.dn)
-        
-        if(0) {
+
+        ## check NA!!! sometimes it is set to large negative
+        if(1) {
+
             h5ls(h5.file)
+            X  <- h5read(h5.file, "data/matrix")
+            head(X[,1])
             X[which(X < -999999)] <- NA
+            head(X[,1])
             dim(X)
             h5write( X, h5.file, "data/matrix")  ## can write list??
-            h5write( colnames(X), h5.file,"data/colnames")
-            h5write( rownames(X), h5.file,"data/rownames")
             h5closeAll()
         }        
 
@@ -112,7 +115,8 @@ pgx.createCreedsSigDB <- function(gmt.files, h5.file, chunk=100, update.only=FAL
     ##--------------------------------------------------
 
     if(!update.only || !h5exists(h5.file, "clustering")) {
-                
+
+        X[is.na(X)] <- 0
         pos <- pgx.clusterBigMatrix(
             abs(X),  ## on absolute foldchange!!
             methods=c("pca","tsne","umap"),
@@ -134,6 +138,18 @@ pgx.createCreedsSigDB <- function(gmt.files, h5.file, chunk=100, update.only=FAL
 
     h5closeAll()
     ## return(X)
+
+    ## check NA!!! sometimes it is set to large negative
+    if(0) {
+        h5ls(h5.file)
+        X  <- h5read(h5.file, "data/matrix")
+        head(X[,1])
+        ##X[which(X < -999999)] <- NA
+        ##head(X[,1])
+        ##h5write( X, h5.file, "data/matrix")  ## can write list??
+        ##h5closeAll()
+    }        
+
 }
 
 
@@ -281,6 +297,7 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
         cn <- h5read(h5.file,"data/colnames")
         rownames(X) <- rn
         colnames(X) <- cn
+        X[which(X < -999999)] <- NA
     }
 
     ##sig100.dn <- h5read(h5.file, "signature/sig100.dn")  
@@ -506,12 +523,14 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     gg <- intersect(gg,rn)
     row.idx <- match(gg,rn)
     G <- h5read(h5.file, "data/matrix", index=list(row.idx,1:length(cn)))
-    dim(G)
+    G[which(G < -999999)] <- NA
+    dim(G)    
     dimnames(G) <- list(rn[row.idx],cn)
-    G1 <- apply( G[gg,], 2, rank, na.last="keep" )
-    f1 <- rank( fc[gg], na.last="keep" )
-    rho <- cor( G[gg,], fc[gg], use="pairwise")[,1]
-    remove(G)
+    
+    rG <- apply( G[gg,], 2, rank, na.last="keep" )
+    rfc <- rank( fc[gg], na.last="keep" )
+    rho <- cor( rG, rfc, use="pairwise")[,1]
+    remove(G,rG,rfc)
     
     ## --------------------------------------------------
     ## test all signature on query profile using fGSEA
@@ -569,7 +588,8 @@ pgx.ReclusterSignatureDatabase <- function(h5.file, reduce.sd=1000, reduce.pca=1
     cn <- h5read(h5.file,"data/colnames")
     rownames(X) <- rn
     colnames(X) <- cn
-
+    X[which(X < -999999)] <- NA
+    
     ##--------------------------------------------------
     ## Precalculate t-SNE/UMAP
     ##--------------------------------------------------
