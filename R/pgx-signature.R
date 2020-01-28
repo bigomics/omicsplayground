@@ -465,8 +465,10 @@ pgx.correlateSignature <- function(fc, refmat, nsig=100, ntop=1000, nperm=10000)
     sig100.up <- sapply(orderx,"[[","UP")
     sig100.up <- apply(sig100.up, 2, function(i) rn[i])
     dim(sig100.dn)
-    
+
+    ## ---------------------------------------------------------------    
     ## combine up/down into one (unsigned GSEA test)
+    ## ---------------------------------------------------------------
     gmt <- rbind(sig100.up, sig100.dn)
     gmt <- unlist(apply(gmt, 2, list),recursive=FALSE)
     names(gmt) <- colnames(X)
@@ -552,7 +554,7 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     length(gmt)
     
     ##system.time( res <- fgsea(gmt, fc, nperm=10000))
-    system.time( res <- fgsea(gmt, abs(fc), nperm=nperm))
+    system.time( res <- fgsea(gmt, abs(fc), nperm=nperm))  ## really unsigned???
     dim(res)
             
     ## ---------------------------------------------------------------
