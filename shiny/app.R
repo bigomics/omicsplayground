@@ -16,7 +16,6 @@ cat("===================== INIT =======================\n")
 RDIR = "../R"
 FILES = "../lib"
 PGX.DIR = "../data"
-## PGX.DIR = c("../data","../../omicsplayground-dev/data")
 dir.exists(PGX.DIR)
 
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars
@@ -41,7 +40,7 @@ if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
     load("../data/am2019-jev.pgx")
-    load("../data/guarda2019-myc-12k-LT.pgx")
+    load("../data/tcga-brca_pub-gx.pgx")
     load("../../omicsplayground-dev/data/CCLE-drugSX2.pgx")
     ngs = pgx.initialize(ngs)
 }

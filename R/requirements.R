@@ -90,7 +90,7 @@ install.pkg("fastcluster", force=TRUE)
 install.pkg("mygene", force=TRUE)
 install.pkg("diptest", force=TRUE)
 install.pkgs(c("corrplot","wordcloud"))
-install.pkgs(c("umap","fpc"))
+install.pkgs(c("umap","fpc","randomForest"))
 
 ##remove.pkg("fpc")
 ##install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
