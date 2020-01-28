@@ -73,7 +73,9 @@ pkg.used <- system("grep 'library(\\|require(' *R *r ../shiny/*R ../shiny/module
 pkg.used <- gsub(".*require\\(|.*library\\(","",pkg.used)
 pkg.used <- gsub("\"|\'|\\).*","",pkg.used)
 pkg.used <- grep("[ ]|quietly",pkg.used,value=TRUE,invert=TRUE)
-pkg.used <- c(pkg.used,"optparse","docopt")
+
+pkg.needed <- c('umap','corrplot','wordcloud',"optparse","docopt","randomForest")
+pkg.used <- c(pkg.used, pkg.needed)
 pkg.used <- sort(unique(pkg.used))
 
 install.pkgs( setdiff(pkg.used, c(PKG.MANUAL,BIG.NOTUSED)) )
@@ -89,8 +91,7 @@ install.pkg("Rgraphviz", force=TRUE)
 install.pkg("fastcluster", force=TRUE)
 install.pkg("mygene", force=TRUE)
 install.pkg("diptest", force=TRUE)
-install.pkgs(c("corrplot","wordcloud"))
-install.pkgs(c("umap","fpc","randomForest"))
+install.pkgs(c("fpc"))
 
 ##remove.pkg("fpc")
 ##install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
