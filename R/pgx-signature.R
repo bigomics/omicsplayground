@@ -103,15 +103,11 @@ pgx.correlateSignature <- function(fc, refmat, nsig=100, ntop=1000, nperm=10000)
     ## rank correlation??
     rG  <- apply( G[gg,], 2, rank, na.last="keep" )
     rfc <- rank( fc[gg], na.last="keep" )
-    rho <- cor(rG, rfc, use="pairwise")[,1]
+    ##rho <- cor(rG, rfc, use="pairwise")[,1]
 
     rG[is.na(rG)] <- 0  ## NEED RETHINK: are missing values to be treated as zero???
     rfc[is.na(rfc)] <- 0
-    rho2 <- cor(rG, rfc, use="pairwise")[,1]
-
-    rG <- t(t(rG) - colMeans(rG,na.rm=TRUE))
-    rfc <- rfc - mean(rfc,na.rm=TRUE)
-    dcos <- (t(rG) %*% rfc) / (1e-8 + sqrt(colSums(rG**2)) * sqrt(sum(rfc**2)))
+    rho <- cor(rG, rfc, use="pairwise")[,1]
     
     remove(G,rG,rfc)
         
@@ -163,8 +159,6 @@ pgx.correlateSignature <- function(fc, refmat, nsig=100, ntop=1000, nperm=10000)
     ## ---------------------------------------------------------------
     jj <- match(res$pathway, names(rho))
     res$rho <- rho[jj]
-    res$rho2 <- rho2[jj]
-    res$dcos <- dcos[jj]
     res$R2 <- rho[jj]**2
     res$score <- res$R2*res$NES
     res <- res[order(res$score, decreasing=TRUE),]
@@ -213,15 +207,11 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     ## rank correlation??
     rG  <- apply( G[gg,], 2, rank, na.last="keep" )
     rfc <- rank( fc[gg], na.last="keep" )
-    rho <- cor(rG, rfc, use="pairwise")[,1]
+    ##rho <- cor(rG, rfc, use="pairwise")[,1]
 
     rG[is.na(rG)] <- 0  ## NEED RETHINK: are missing values to be treated as zero???
     rfc[is.na(rfc)] <- 0
-    rho2 <- cor(rG, rfc, use="pairwise")[,1]
-
-    rG <- t(t(rG) - colMeans(rG,na.rm=TRUE))
-    rfc <- rfc - mean(rfc,na.rm=TRUE)
-    dcos <- (t(rG) %*% rfc) / (1e-8 + sqrt(colSums(rG**2)) * sqrt(sum(rfc**2)))
+    rho <- cor(rG, rfc, use="pairwise")[,1]
     
     remove(G,rG,rfc)
     
@@ -253,8 +243,6 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     ## ---------------------------------------------------------------
     jj <- match( res$pathway, names(rho))
     res$rho  <- rho[jj]
-    res$rho2 <- rho2[jj]
-    res$dcos <- dcos[jj]
     res$R2 <- rho[jj]**2
     res$score <- res$R2*res$NES
     res <- res[order(res$score, decreasing=TRUE),]
