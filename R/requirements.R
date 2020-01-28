@@ -55,7 +55,8 @@ PKG.MANUAL <- c(
     "gputools","Seurat","EPIC","PCSF","NNLM","iTALK",
     "fpc","grid","gridGraphics","Rgraphviz","rWordCloud",
     "shinyparticles","FastGGM","monocle3","proteus",
-    "fastcluster","mygene","diptest","infercnv","pathview")
+    ## "infercnv","pathview",
+    "mygene","diptest")
 
 ##---------------------------------------------------------------------
 ## Install base packages
@@ -146,10 +147,12 @@ devtools::install_github('wt2015-github/FastGGM')
 
 install.pkgs(c("HiddenMarkov","coin","rjags","future","argparse"))
 install.pkg("coin", force=TRUE)
-install.packages("../ext/packages/infercnv_1.1.3mod.tar.gz",repos=NULL,type="source")  ## old version
+##install.packages("../ext/packages/infercnv_1.1.3mod.tar.gz",repos=NULL,type="source")  ## old version
+BiocManager::install("infercnv")
 
 install.pkg("KEGGREST", force=TRUE)
-install.packages("../ext/packages/pathview_1.16.7.tar.gz",repos=NULL,type="source")  ## old version
+##install.packages("../ext/packages/pathview_1.16.7.tar.gz",repos=NULL,type="source")  ## old version
+install.pkg("pathview")  ## works now...
 
 ##---------------------------------------------------------------------
 ## remove unneccessary big packages...
