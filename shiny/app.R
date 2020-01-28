@@ -40,7 +40,7 @@ if(opt$USER_MODE=="basic") {
 if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
-    load("../data/GSE10846-xgreta.pgx")
+    load("../data/am2019-jev.pgx")
     load("../data/guarda2019-myc-12k-LT.pgx")
     load("../../omicsplayground-dev/data/CCLE-drugSX2.pgx")
     ngs = pgx.initialize(ngs)
