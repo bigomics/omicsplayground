@@ -1,11 +1,3 @@
-##
-##
-##
-## Mar2019/IK: adding new scale/normalize
-##
-##
-##
-
 library(knitr)
 library(limma)
 library(edgeR)
@@ -25,7 +17,7 @@ FILES
 pgx.files <- dir(".", pattern=".pgx")
 ##pgx.files <- dir("../data.BAK/", pattern=".pgx",full.names=TRUE)
 pgx.files
-pgx.file = pgx.files[3]
+pgx.file = pgx.files[8]
 pgx.file
 
 for(pgx.file in pgx.files) {
