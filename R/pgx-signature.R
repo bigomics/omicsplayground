@@ -7,7 +7,9 @@ if(0) {
     source("../R/pgx-include.R")
     source("../R/pgx-files.R")
 
+    gmt.files = dir("~/Projects/Data/Creeds","gmt$",full.names=TRUE)
     gmt.files = dir("../../Data/Creeds","gmt$",full.names=TRUE)
+    h5.file = "../lib/sigdb-creeds.h5.test"
     h5.file = "../lib/sigdb-creeds.h5"
 }
 
@@ -41,6 +43,7 @@ pgx.createCreedsSigDB <- function(gmt.files, h5.file, chunk=100, update.only=FAL
             cat(".")
             try.error <- try( gmt <- read.gmt(gmt.files[i], add.source=TRUE) )
             if(class(try.error)=="try-error") next()
+             gmt <- head(gmt,30)  ## ONLY FOR TESTING
             
             j1 <- grep("-up ", names(gmt))
             j2 <- grep("-dn ", names(gmt))
@@ -80,7 +83,7 @@ pgx.createCreedsSigDB <- function(gmt.files, h5.file, chunk=100, update.only=FAL
         
         h5.file
         pgx.saveMatrixH5(X, h5.file, chunk=chunk)
-
+        
         na100 <- rep(NA,100)
         msig100.up <- sapply(sig100.up, function(g) head(c(intersect(g,genes),na100),100))
         msig100.dn <- sapply(sig100.dn, function(g) head(c(intersect(g,genes),na100),100))
@@ -92,6 +95,8 @@ pgx.createCreedsSigDB <- function(gmt.files, h5.file, chunk=100, update.only=FAL
         
         if(0) {
             h5ls(h5.file)
+            X[which(X < -999999)] <- NA
+            dim(X)
             h5write( X, h5.file, "data/matrix")  ## can write list??
             h5write( colnames(X), h5.file,"data/colnames")
             h5write( rownames(X), h5.file,"data/rownames")
@@ -258,7 +263,7 @@ pgx.createSignatureDatabaseH5 <- function(pgx.files, h5.file, chunk=100, update.
     ## return(X)
 }
 
-mc.cores=24;lib.dir=FILES
+##mc.cores=24;lib.dir=FILES
 pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
                                           methods = c("gsea","gsva") ) 
 {

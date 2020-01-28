@@ -13,31 +13,14 @@ library(RColorBrewer)
 library(gplots)
 library(matrixTests)
 library(kableExtra)
-library(knitr)
 
-source("../R/gx-heatmap.r")
-source("../R/gx-limma.r")
-source("../R/gx-util.r")
-source("../R/ngs-cook.r")
-source("../R/ngs-fit.r")
-source("../R/gset-fisher.r")
-source("../R/gset-gsea.r")
-source("../R/gset-meta.r")
-source("../R/pgx-functions.R")
-source("../R/pgx-deconv.R")
-source("../R/pgx-proteomics.R")
-
-source("../R/pgx-graph.R")
-source("../R/pgx-drugs.R")
-source("../R/pgx-wordcloud.R")
-source("../R/compute2-genes.R")
-source("../R/compute2-genesets.R")
-source("../R/compute2-extra.R")    
-
-source("options.R")
+RDIR = "../R"
+FILES = "../lib"
+PGX.DIR = "../data"
+source("../R/pgx-include.R")
+##source("options.R")
 FILES
-MAX.GENES
-MAX.GENES=5000
+MAX.GENES = 5000
 
 PROCESS.DATA=1
 DIFF.EXPRESSION=1
@@ -156,28 +139,25 @@ if(DIFF.EXPRESSION) {
     rda.file
     ngs$timings <- c()
     
-    USER.GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank")
-    USER.GENESETTEST.METHODS = c("fisher","gsva","camera")
-    USER.GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank",
-                            "voom.limma","trend.limma","notrend.limma",
-                            "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
-    USER.GENESETTEST.METHODS = c("fisher","gsva","ssgsea","spearman",
-                                 "camera", "fry","fgsea") ## no GSEA, too slow...
-
+    GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank",
+                       "voom.limma","trend.limma","notrend.limma",
+                       "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
+    GENESET.METHODS = c("fisher","gsva","ssgsea","spearman",
+                        "camera", "fry","fgsea") ## no GSEA, too slow...
     
     ## new callling methods
     ngs <- compute.testGenes(
         ngs, contr.matrix,
         max.features=MAX.GENES,
-        test.methods = USER.GENETEST.METHODS)
+        test.methods = GENETEST.METHODS)
     
     ngs <- compute.testGenesets (
         ngs, max.features=MAX.GENES,
-        test.methods = USER.GENESETTEST.METHODS,
+        test.methods = GENESET.METHODS,
         lib.dir=FILES)
 
-    extra <- c("graph")
-    extra <- c("meta.go","deconv","infer","drugs","wordcloud")
+    extra <- c("connectivity")
+    extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")
     ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
     
     names(ngs)

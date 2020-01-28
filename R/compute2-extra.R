@@ -8,13 +8,16 @@
 
 ##extra <- c("meta.go","deconv","infer","drugs")
 
-SIGDB = c(
-    file.path(PGX.DIR,"datasets-allFC.csv"),
-    file.path(FILES,"sigdb-archs4.h5")
-)
-
-compute.extra <- function(ngs, extra, lib.dir, sigdb=SIGDB) {
-
+compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
+    
+    if(is.null(sigdb)) {
+        sigdb = c(
+            file.path(lib.dir,"../data/datasets-allFC.csv"),
+            file.path(lib.dir,"sigdb-archs4.h5"),
+            file.path(lib.dir,"sigdb-creeds.h5")
+        )
+    }
+    
     timings <- c()
     
     ## detect if it is single or multi-omics

@@ -128,8 +128,8 @@ server = function(input, output, session) {
 
     ## Hide/show certain sections depending on USER MODE
     observe({
-
-        usermode <- env[["load"]][["usermode"]]()
+        pgx <- env[["load"]][["inputData"]]() ## trigger on change dataset
+        usermode <- env[["load"]][["usermode"]]()  ## trigger on button
         if(length(usermode)==0) usermode <- "BASIC"
         dbg("usermode = ",usermode)
         
@@ -167,7 +167,6 @@ server = function(input, output, session) {
             shinyjs::show(selector = "div.download-button")
             shinyjs::show(selector = "div.modebar")
             shinyjs::show(selector = "div.pro-feature")
-
         }
 
         if(DEV.VERSION) {
