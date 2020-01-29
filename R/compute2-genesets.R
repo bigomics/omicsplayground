@@ -44,16 +44,19 @@ compute.testGenesets <- function(ngs, max.features=1000, lib.dir="../lib",
     ##-----------------------------------------------------------
     ## Filter gene sets
     ##-----------------------------------------------------------
-    cat("Filtering gene sets...\n")
-    sort(table(sub("[:].*","",colnames(G))))
-    sel <- which(!grepl("AGING|DRUG",colnames(G)))  ## not useful???
-    G <- G[,sel]    
+    if(0) {
+        cat("Filtering gene sets...\n")
+        sort(table(sub("[:].*","",colnames(G))))
+        sel <- which(!grepl("AGING|DRUG",colnames(G)))  ## not useful???
+        sel <- which(!grepl("AGING",colnames(G)))  ## not useful???
+        G <- G[,sel]
+    }
 
     ## filter gene sets on size
     cat("Filtering gene sets on size...\n")
     gmt.size = colSums(G!=0)
     summary(gmt.size)
-    size.ok <- (gmt.size >= 15 & gmt.size <= 1e3)
+    size.ok <- (gmt.size >= 15 & gmt.size <= 1000 )
     G <- G[, which(size.ok)]
     dim(G)   
     table(sub(":.*","",colnames(G)))

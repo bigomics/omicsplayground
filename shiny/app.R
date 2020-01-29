@@ -14,8 +14,8 @@ cat("===================== INIT =======================\n")
 
 RDIR = "../R"
 FILES = "../lib"
-PGX.DIR = "../data"
 PGX.DIR = c("../data","../data-extra","../../omicsplayground-dev/data")
+PGX.DIR = "../data"
 dir.exists(PGX.DIR)
 
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars

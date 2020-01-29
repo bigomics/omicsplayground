@@ -55,6 +55,7 @@ pgx.initDatasetFolder <- function(pgx.dir, verbose=TRUE, force=FALSE)
     i=1
     for(i in 1:length(pgx.dir)) {
         ## pgx.initDatasetFolder(pgx.dir[i], verbose=verbose, force=force)
+        if(!dir.exists(pgx.dir[i])) next()
         info <- pgx.initDatasetFolder1 (
             pgx.dir[i],
             allfc.file = "datasets-allFC.csv",
@@ -64,7 +65,6 @@ pgx.initDatasetFolder <- function(pgx.dir, verbose=TRUE, force=FALSE)
 
     }
 }
-
 
 if(0) {
     ##h5ls(h5.file)

@@ -1,5 +1,5 @@
-BiocManager::install("crossmeta")
-BiocManager::install("ccmap")
+##BiocManager::install("crossmeta")
+##BiocManager::install("ccmap")
 
 library(ccmap)
 library(ccdata)
@@ -13,6 +13,10 @@ require(fgsea)
 X <- l1000_es
 x.drugs <- gsub("_.*$","",colnames(X))
 length(table(x.drugs))
+
+sum(table(x.drugs)>=10)
+sum(table(x.drugs)>=20)
+
 gmt <- tapply(colnames(X), x.drugs, list)
 gmt.size <- sapply(gmt,length)  ## how many profiles per drug
 table(gmt.size)
@@ -20,12 +24,14 @@ table(gmt.size)
 gmt <- gmt[which(gmt.size>=15)]
 ##gmt <- gmt[which(gmt.size>=20)]
 length(gmt)
+
 gg <- intersect(rownames(l1000_es),rownames(cmap_es))
 sel <- which(x.drugs %in% names(gmt))
 length(sel)
 ##saveRDS( X[,sel], file="../files/l1000_es_1763drugs.rds")
 saveRDS( X[,sel], file="../files/l1000_es_5685drugs.rds")
 ##saveRDS( X[,sel], file="../files/l1000_es_8221drugs.rds")
+
 
 
 
