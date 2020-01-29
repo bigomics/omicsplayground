@@ -232,11 +232,14 @@ pgx.TCGA.selectStudies <- function(cancertype, variables)
 }
 
 genes=NULL;study="prad_tcga"
-pgx.TCGA.getExpression <- function(study, genes=NULL, from.h5=TRUE)
+pgx.TCGA.getExpression <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE)
 {
     ## For a specific TCGA study get the expression matrix and
     ## clinical data.
     ##
+
+    ## check if H5 exists
+    from.h5 <- (from.h5 && !is.null(matrix_file) && file.exists(matrix_file))
     
     ##BiocManager::install("cgdsr")    
     library(cgdsr)
@@ -296,7 +299,7 @@ pgx.TCGA.getExpression <- function(study, genes=NULL, from.h5=TRUE)
             library("rhdf5")
             library("preprocessCore")
             h5closeAll()
-            matrix_file = file.path(ARCHS4.DIR, "tcga_matrix.h5")
+            ##matrix_file = file.path(ARCHS4.DIR, "tcga_matrix.h5")
             has.h5 <- file.exists(matrix_file)
             has.h5
             
