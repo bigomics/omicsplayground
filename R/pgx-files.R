@@ -1,12 +1,12 @@
 
 ##h5.file="test.h5";chunk=100
-pgx.saveMatrixH5 <- function(X, h5.file, chunk=0 )
+pgx.saveMatrixH5 <- function(X, h5.file, chunk=NULL )
 {
    
     require(rhdf5)
     unlink(h5.file)
 
-    if(chunk==0) {
+    if(is.null(chunk)) {
         h5createFile(h5.file)    
         ## h5createGroup("myhdf5file.h5","foo")
         ## A = matrix(1:10,nr=5,nc=2)
@@ -20,7 +20,7 @@ pgx.saveMatrixH5 <- function(X, h5.file, chunk=0 )
             h5.file, "data/matrix",
             c(nrow(X),ncol(X)),
             ##storage.mode = "integer",
-            chunk = c(chunk,ncol(X)),
+            chunk = chunk,
             level = 7
         )
         h5write(

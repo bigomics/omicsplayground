@@ -12,14 +12,13 @@ library(waiter)
 
 cat("===================== INIT =======================\n")
 
-
 RDIR = "../R"
 FILES = "../lib"
 PGX.DIR = "../data"
+PGX.DIR = c("../data","../data-extra","../../omicsplayground-dev/data")
 dir.exists(PGX.DIR)
 
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars
-source("../R/pgx-files.R", local=TRUE)  ## pass local vars
 ## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
