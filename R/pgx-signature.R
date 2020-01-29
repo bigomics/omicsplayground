@@ -259,10 +259,9 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
 
 
 chunk=100
-pgx.createCreedsSigDB <- function(gmt.files, h5.file, chunk=100, update.only=FALSE)
+pgx.createCreedsSigDB <- function(gmt.files, h5.file, update.only=FALSE)
 {
     require(rhdf5)
-
     h5exists <- function(h5.file, obj) {
         xobjs <- apply(h5ls(h5.file)[,1:2],1,paste,collapse="/")
         obj %in% gsub("^/|^//","",xobjs)
@@ -327,7 +326,7 @@ pgx.createCreedsSigDB <- function(gmt.files, h5.file, chunk=100, update.only=FAL
         remove(F)
         
         h5.file
-        pgx.saveMatrixH5(X, h5.file, chunk=chunk)
+        pgx.saveMatrixH5(X, h5.file, chunk=c(nrow(X),1))
         
         na100 <- rep(NA,100)
         msig100.up <- sapply(sig100.up, function(g) head(c(intersect(g,genes),na100),100))
@@ -397,9 +396,7 @@ pgx.createCreedsSigDB <- function(gmt.files, h5.file, chunk=100, update.only=FAL
 
 }
 
-
-chunk=100
-pgx.createSignatureDatabaseH5 <- function(pgx.files, h5.file, chunk=100, update.only=FALSE)
+pgx.createSignatureDatabaseH5 <- function(pgx.files, h5.file, update.only=FALSE)
 {
     require(rhdf5)
 
@@ -449,7 +446,7 @@ pgx.createSignatureDatabaseH5 <- function(pgx.files, h5.file, chunk=100, update.
         X <- X[sel,,drop=FALSE]
         dim(X)
 
-        pgx.saveMatrixH5(X, h5.file, chunk=chunk)
+        pgx.saveMatrixH5(X, h5.file, chunk=c(nrow(X),1))
 
         if(0) {
             h5ls(h5.file)
