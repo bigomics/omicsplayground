@@ -27,8 +27,8 @@ options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
 
-DEV.VERSION = TRUE
-if(!dir.exists("../../omicsplayground-dev")) DEV.VERSION = FALSE
+DEV.VERSION = FALSE
+if(dir.exists("../../omicsplayground-dev")) DEV.VERSION = TRUE
 
 if(opt$USER_MODE=="basic") {
     cat("********************* BASIC MODE **********************\n")
