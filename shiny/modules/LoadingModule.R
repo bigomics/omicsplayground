@@ -994,6 +994,9 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         if(saving.ok) {
 
             if(0) {
+                ##!!!!!!!!!!!!!!!!!!!!!!!!
+                ##!!!!!!! BROKEN !!!!!!!!!
+                ##!!!!!!!!!!!!!!!!!!!!!!!!
                 ngs.name1 = sub("[.]pgx$","",ngs.name)
                 fn = file.path(PGX.DIR,paste0(ngs.name1,".pgx"))
                 dbg("upload_compute :: saving PGX to",fn)

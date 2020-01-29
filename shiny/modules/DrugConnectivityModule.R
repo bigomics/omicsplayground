@@ -139,7 +139,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         jj <- match( toupper(drug), toupper(rownames(annot)) )
         annot <- annot[jj,c("moa","target")]        
         res <- data.frame( drug=drug, NES=nes, pval=pv, padj=qv, annot)
-        res <- res[order(-abs(res$NES)),]
+        ##res <- res[order(-abs(res$NES)),]
+        res <- res[order(res$pval,-abs(res$NES)),]
         
         return(res)
     })
@@ -158,6 +159,11 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
 
         res <- getDseaTable()
 
+        ## filter with table selection/search
+        ii  <- dsea_table$rows_all()
+        req(ii)
+        res <- res[ii,,drop=FALSE]
+        
         dmethod="mono"
         dmethod="combo"
         dmethod <- input$dsea_method
@@ -169,7 +175,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         ##table(sapply(rownames(res), function(g) sum(grepl(g,names(rnk),fixed=TRUE))))
         
         ## ENPLOT TYPE
-        itop <- c( head(order(-res$NES),10), tail(order(-res$NES),10))
+        ##itop <- c( head(order(-res$NES),10), tail(order(-res$NES),10))
+        itop <- 1:min(20,nrow(res))
         par(oma=c(0,1,0,0))
         par(mfrow=c(4,5), mar=c(1,1.5,1.8,1))
         i=1
@@ -294,10 +301,10 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         res$drug   <- shortstring(res$drug,60)
         
         ## limit number of results??
-        ##jj <- unique(c( head(order(-res$NES),250), tail(order(-res$NES),250)))
-        jj <- unique(c( head(order(-res$NES),1000), tail(order(-res$NES),1000)))
-        jj <- jj[order(-abs(res$NES[jj]))]
-        res <- res[jj,]
+        ## ##jj <- unique(c( head(order(-res$NES),250), tail(order(-res$NES),250)))
+        ## jj <- unique(c( head(order(-res$NES),1000), tail(order(-res$NES),1000)))
+        ## jj <- jj[order(-abs(res$NES[jj]))]
+        ## res <- res[jj,]
 
         colnames(res) <- sub("moa","MOA",colnames(res))
         DT::datatable( res, rownames=FALSE,
@@ -389,7 +396,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         func = dsea_enplots.RENDER,
         func2 = dsea_enplots.RENDER,         
         title = "Drug profile enrichment", label="a",
-        info.text = "The <strong>Drug Connectivity Map</strong> correlates your signature with more than 5000 known drug profiles from the L1000 database, and shows the top N=10 similar and opposite profiles by running the GSEA algorithm on the contrast-drug profile correlation space.",
+        info.text = "The <strong>Drug Connectivity Map</strong> correlates your signature with more than 5000 known drug profiles from the L1000 database, and shows similar and opposite profiles by running the GSEA algorithm on the contrast-drug profile correlation space.",
         options = dsea_enplots.opts,
         pdf.width=11, pdf.height=7,
         height = 0.54*rowH, res=72
@@ -435,8 +442,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         tableModule,
         id = "dsea_table", label="b",
         func = dsea_table.RENDER, 
-        info.text="Drug profile enrichment table. Enrichment is calculated by correlating your signature with more than 5000 known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.", 
-        title = "Profile enrichment table",
+        info.text="<b>Enrichment table.</b> Enrichment is calculated by correlating your signature with more than 5000 known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.", 
+        title = "Enrichment table",
         height = c(240,700)
     )
        
@@ -444,7 +451,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     ## Page layout
     ##-----------------------------------------
 
-    dsea_analysis_caption = "<b>Drug Connectivity Map.</b> Drug CMap correlates your signature with more than 5000 known drug perturbation profiles from the L1000 database. <b>(a)</b> Figure showing the top N=10 similar and opposite profiles by running the GSEA algorithm on the contrast-drug profile correlation space. <b>(b)</b> Table summarizing the statistical results of the drug enrichment analysis. <b>(c)</b> Mechanism-of-action plot showing the top most frequent drug class (or target genes) having similar or opposite enrichment compared to the query signature. <b>(d)</b> Activation matrix visualizing enrichment levels of drug signatures across multiple contrast profiles." 
+    dsea_analysis_caption = "<b>Drug Connectivity Map.</b> Drug CMap correlates your signature with more than 5000 known drug perturbation profiles from the L1000 database. <b>(a)</b> Figure showing the most similar (or opposite) profiles by running the GSEA algorithm on the contrast-drug profile correlation space. <b>(b)</b> Table summarizing the statistical results of the drug enrichment analysis. <b>(c)</b> Mechanism-of-action plot showing the top most frequent drug class (or target genes) having similar or opposite enrichment compared to the query signature. <b>(d)</b> Activation matrix visualizing enrichment levels of drug signatures across multiple contrast profiles." 
 
     output$DSEA_analysis_UI <- renderUI({
         fillCol(
