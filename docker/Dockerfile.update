@@ -17,11 +17,11 @@ RUN R -e "install.packages(c('shinydashboardPlus','optparse','docopt','randomFor
 ## RUN R -e "BiocManager::install(c('pathview','randomForest'))"
 ## RUN R -e "devtools::install_github('wt2015-github/FastGGM')"
 
-#------------------------------------------------------------
+#------------------------------------------------------------x
 ## Pull from GitHub
 #------------------------------------------------------------
 WORKDIR /omicsplayground
-RUN rm data/geiger2016-arginine.pgx
+## RUN rm data/geiger2016-arginine.pgx
 RUN git pull
 
 #------------------------------------------------------------
