@@ -3,6 +3,51 @@
 ## Contrast creation functions
 ##-----------------------------------------------------------------------------
 
+##mingrp=3;contrasts=c("genotype:mut_vs_WT")
+pgx.makeSpecificContrasts <- function(df, contrasts, mingrp=3)
+{
+
+    K <- c()
+    i=1
+    for(i in 1:length(contrasts)) {
+        ct <- contrasts[i]
+        if(!(grepl("[:]",ct) && grepl("_vs_",ct))) next()
+        ph <- sub("[:].*","",ct)
+        if(!ph %in% colnames(df)) next()
+        
+        groups <- strsplit(sub(".*[:]","",ct),split="_vs_")[[1]]
+        y <- -1*(df[,ph] == groups[2])  + 1*(df[,ph] == groups[1])
+        K <- cbind(K, y)
+        colnames(K)[ncol(K)] <- ct
+    }
+    rownames(K) <- rownames(df)
+
+    detectGroups <- function(contr.matrix) {
+        group <- apply(contr.matrix,1,paste,collapse="_")
+        table(group)
+        n.group <- length(unique(group))
+        group <- factor(group)
+        if(ncol(contr.matrix)>10) {
+            levels(group) <- paste0("group",1:n.group)
+        }
+        group
+    }
+
+    K0 <- contrastAsLabels(K)
+    group <- detectGroups(K0)
+    table(group)
+    if(length(levels(group)) > 0.5*nrow(K)) {
+        cat("WARNING:: contrast matrix looks degenerate. consider removing a contrast.\n")
+    }
+
+    contr.matrix <- K[which(!duplicated(group)),,drop=FALSE]
+    rownames(contr.matrix) <- group[which(!duplicated(group))]
+    
+    res <- list(contr.matrix=contr.matrix, group=group)
+    
+    return(res)
+}
+
 ##mingrp=3;slen=20;ref=NULL
 pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL)
 {
@@ -233,8 +278,13 @@ contrastAsLabels <- function(contr.matrix) {
     K    
 }
 
+## for compatibility...
+makeDirectContrasts2 <- function(Y, ref, na.rm=TRUE) {
+    makeDirectContrasts(Y=Y, ref=ref, na.rm=na.rm)
+}
+
 ##Y=ngs$samples;na.rm=TRUE
-makeDirectContrasts2 <- function(Y, ref, na.rm=TRUE)
+makeDirectContrasts <- function(Y, ref, na.rm=TRUE)
 {
     detectGroups <- function(contr.matrix) {
         group <- apply(contr.matrix,1,paste,collapse="_")
@@ -246,32 +296,32 @@ makeDirectContrasts2 <- function(Y, ref, na.rm=TRUE)
         }
         group
     }
-
-    contr.matrix <- makeDirectContrasts(Y=Y, ref=ref, na.rm=na.rm, warn=FALSE) 
-    contr.matrix <- sign(contr.matrix)    
-    contr.matrix0 <- contr.matrix
-    no.vs <- grep("_vs_|_VS_",colnames(contr.matrix0),invert=TRUE)
+    
+    exp.matrix <- makeDirectContrasts000(Y=Y, ref=ref, na.rm=na.rm, warn=FALSE) 
+    exp.matrix <- sign(exp.matrix)    
+    exp.matrix0 <- exp.matrix
+    no.vs <- grep("_vs_|_VS_",colnames(exp.matrix0),invert=TRUE)
     no.vs
     if(length(no.vs)>0) {
-        colnames(contr.matrix0)[no.vs] <- paste0(colnames(contr.matrix0)[no.vs],":Y_vs_N")
+        colnames(exp.matrix0)[no.vs] <- paste0(colnames(exp.matrix0)[no.vs],":Y_vs_N")
     }    
-    if(all(grepl("_vs_|_VS_",colnames(contr.matrix0)))) {
-        contr.matrix0 <- contrastAsLabels(contr.matrix0)
+    if(all(grepl("_vs_|_VS_",colnames(exp.matrix0)))) {
+        exp.matrix0 <- contrastAsLabels(exp.matrix0)
     }
-    group <- detectGroups(contr.matrix0)
+    group <- detectGroups(exp.matrix0)
     table(group)
-    if(length(levels(group)) > 0.5*nrow(contr.matrix)) {
+    if(length(levels(group)) > 0.5*nrow(exp.matrix)) {
         cat("WARNING:: contrast matrix looks degenerate. consider removing a contrast.\n")
     }
 
-    group.contr.matrix <- contr.matrix[which(!duplicated(group)),]
-    rownames(group.contr.matrix) <- group[which(!duplicated(group))]
+    contr.matrix <- contr.matrix[which(!duplicated(group)),,drop=FALSE]
+    rownames(contr.matrix) <- group[which(!duplicated(group))]
     
-    list(contr.matrix=group.contr.matrix, group=group)
+    list(contr.matrix=contr.matrix, group=group)
 }
 
-makeDirectContrasts <- function(Y, ref, na.rm=TRUE, warn=TRUE) {
-    if(warn) warning("makeDirectContrasts is deprectated. please use makeDirectContrasts2()")
+makeDirectContrasts000 <- function(Y, ref, na.rm=TRUE, warn=FALSE) {
+    ## if(warn) warning("makeDirectContrasts is deprectated. please use makeDirectContrasts2()")
     contr.matrix <- c()
     i=2
     all <- c("all","other","others","rest")
