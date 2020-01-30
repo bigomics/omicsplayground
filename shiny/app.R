@@ -59,11 +59,11 @@ source("modules/ProfilingModule.R", local=TRUE)
 source("modules/CorrelationModule.R", local=TRUE)
 source("modules/BiomarkerModule.R", local=TRUE)
 
-if(DEV.VERSION && dir.exists("xmodules")) {
-    source("xmodules/ConnectivityModule.R", local=TRUE)
-    source("xmodules/TcgaModule.R", local=TRUE)
-    source("xmodules/BatchCorrectModule.R", local=TRUE)
-    source("xmodules/MultiLevelModule.R", local=TRUE)
+if(DEV.VERSION && dir.exists("../../omicsplayground-dev")) {
+    source("../../omicsplayground-dev/shiny/modules/ConnectivityModule.R", local=TRUE)
+    source("../../omicsplayground-dev/shiny/modules/TcgaModule.R", local=TRUE)
+    source("../../omicsplayground-dev/shiny/modules/BatchCorrectModule.R", local=TRUE)
+    source("../../omicsplayground-dev/shiny/modules/MultiLevelModule.R", local=TRUE)
 }
 
 server = function(input, output, session) {
