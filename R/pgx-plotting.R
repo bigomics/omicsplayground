@@ -113,6 +113,28 @@ pgx.testPhenoCorrelation <- function(df, plot=TRUE, cex=1)
 }
 
 
+## for plotly
+darkmode <- function(p) {
+    font.par <- list(
+        color = "#AAA"
+    )
+    axis.par <- list(
+        color='#AAA',
+        linecolor='#AAA',
+        tickcolor='#AAA',
+        zerolinecolor='#AAA'
+    )
+    p <- layout(p,
+                plot_bgcolor = "rgb(10,20,40)",
+                paper_bgcolor = "rgb(10,20,40)",
+                xaxis = axis.par,
+                yaxis = axis.par,
+                zaxis = axis.par,
+                title = font.par
+                )
+    return(p)
+}
+
 myplot_ly <- function(..., theme="default") {
     ## 'Themed' plotly 
     ##
