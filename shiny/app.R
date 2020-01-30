@@ -10,6 +10,7 @@ library(devtools)
 require(shinyWidgets)
 library(waiter)
 
+
 cat("===================== INIT =======================\n")
 
 RDIR = "../R"
