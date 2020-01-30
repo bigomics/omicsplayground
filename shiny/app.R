@@ -14,9 +14,9 @@ cat("===================== INIT =======================\n")
 
 RDIR = "../R"
 FILES = "../lib"
-PGX.DIR = c("../data","../data-extra")
 ##PGX.DIR = "../data"
-PGX.DIR = "/data/PublicData/archs4data/gse25k"
+##PGX.DIR = "/data/PublicData/archs4data/gse25k"
+PGX.DIR = c("../data","../data-extra")
 dir.exists(PGX.DIR)
 
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars
