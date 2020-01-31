@@ -114,7 +114,7 @@ pgx.testPhenoCorrelation <- function(df, plot=TRUE, cex=1)
 
 
 ## for plotly
-darkmode <- function(p) {
+darkmode <- function(p, dim=2) {
     font.par <- list(
         color = "#AAA"
     )
@@ -129,9 +129,15 @@ darkmode <- function(p) {
                 paper_bgcolor = "rgb(10,20,40)",
                 xaxis = axis.par,
                 yaxis = axis.par,
-                zaxis = axis.par,
+                ## zaxis = axis.par,
                 title = font.par
                 )
+    if(dim==3) {
+        p <- layout(p,
+                    zaxis = axis.par
+                    )
+        
+    }
     return(p)
 }
 

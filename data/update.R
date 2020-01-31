@@ -6,6 +6,7 @@ library(gplots)
 library(matrixTests)
 library(kableExtra)
 library(knitr)
+library(rhdf5)
 
 FILES = "../lib"
 RDIR  = "../R"
@@ -17,7 +18,7 @@ FILES
 pgx.files <- dir(".", pattern=".pgx")
 ##pgx.files <- dir("../data.BAK/", pattern=".pgx",full.names=TRUE)
 pgx.files
-pgx.file = pgx.files[8]
+pgx.file = pgx.files[1]
 pgx.file
 
 for(pgx.file in pgx.files) {
@@ -33,9 +34,7 @@ for(pgx.file in pgx.files) {
     }
     
     ##extra <- c("meta.go","deconv","infer","drugs","wordcloud")
-    ##extra <- c("connectivity")
-    extra <- c("drugs")
-    ngs$drugs <- NULL
+    extra <- c("connectivity")
     ngs <- compute.extra(ngs, extra, lib.dir=FILES)     
     names(ngs$connectivity)
     

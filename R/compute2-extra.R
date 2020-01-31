@@ -124,11 +124,8 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
         ngs$connectivity <- NULL  ## clean up
 
         if(is.null(sigdb)) {
-            sigdb = c(
-                file.path(lib.dir,"../data/datasets-allFC.csv"),
-                file.path(lib.dir,"sigdb-archs4.h5"),
-                file.path(lib.dir,"sigdb-creeds.h5")
-            )
+            sigdb <- dir(lib.dir, pattern="sigdb-.*h5", full.names=TRUE)
+            sigdb
         }
 
         ## sigdb.list = c(

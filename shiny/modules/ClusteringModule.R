@@ -128,6 +128,12 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         }
 
         ## updateRadioButtons(session, "hm_splitby", selected='none')
+
+        ## update defaults??
+        lab <- c()
+        if(ncol(ngs$X)<80) lab <- c(lab,"column")
+        if(nrow(ngs$X)<80) lab <- c(lab,"row")
+        updateCheckboxGroupInput(session,"hm_showlabel", selected=lab)
         
     })
 
@@ -390,12 +396,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             }
         }
 
-        ## update defaults??
-        lab <- c()
-        if(ncol(zx)<80) lab <- c(lab,"column")
-        if(nrow(zx)<80) lab <- c(lab,"row")
-        isolate(updateCheckboxGroupInput(session,"hm_showlabel", selected=lab))
-
         dbg("[ClusteringModule:getFilteredMatrix] done!")
         
         ##input$top_terms
@@ -480,7 +480,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         if(input$hm_level=="geneset" || !is.null(splitx)) show_legend = FALSE
         annot$group = NULL  ## no group in annotation
         show_colnames <- ("column" %in% input$hm_showlabel)
-        if(ncol(zx) > 200) show_colnames <- FALSE ## never...    
+        ##if(ncol(zx) > 200) show_colnames <- FALSE ## never...    
         
         if(input$hm_level=="gene") {
             rownames(zx) = sub(".*:","",rownames(zx))
