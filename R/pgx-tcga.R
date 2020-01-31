@@ -26,7 +26,7 @@ if(0) {
 }
 
 pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
-                                           sortby.p = FALSE )
+                                           sortby.p = FALSE, plot=TRUE, verbose=1 )
 {                                          
     require(survival)
     require(rhdf5)
@@ -51,7 +51,7 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
     ## names(aa.head) <- aa[ii,2]
     ## aa.head
 
-    cat("[pgx.TCGA.testSurvivalSignature] extracting expression from H5 matrix file\n")
+    if(verbose) cat("[pgx.TCGA.testSurvivalSignature] extracting expression from H5 matrix file\n")
     
     h5.samples = h5read(matrix_file, "/meta/gdc_cases.submitter_id")
     h5.genes = h5read(matrix_file, "/meta/genes")            
@@ -73,7 +73,7 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
     dim(expression)
 
     ## Read the survival data
-    cat("[pgx.TCGA.testSurvivalSignature] reading TCGA survival data...\n")
+    if(verbose) cat("[pgx.TCGA.testSurvivalSignature] reading TCGA survival data...\n")
     
     surv.file <- file.path(lib.dir, "rtcga-survival.csv")
     surv <- read.csv(surv.file, row.names=1)
@@ -92,7 +92,7 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
     length(all.studies)
     study <- all.studies[1]
 
-    cat("[pgx.TCGA.testSurvivalSignature] fitting survival probabilities...\n")
+    if(verbose) cat("[pgx.TCGA.testSurvivalSignature] fitting survival probabilities...\n")
     
     surv.p <- rep(NA,length(all.studies))
     rho.list <- list()
@@ -118,63 +118,66 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
         surv.p[study] <- p.val
         rho.list[[study]] <- rho
     }
-    
-    cat("[pgx.TCGA.testSurvivalSignature] plotting KM curves...\n")    
-    jj <- 1:length(rho.list)
-    if(sortby.p) {
-        ii <- order(surv.p)
-        surv.p <- surv.p[ii]
-        rho.list <- rho.list[ii]
-    }
-    surv.q <- p.adjust(surv.p)
-    names(surv.q) <- names(surv.p)
-    
-    par(mfrow=c(5,7), mar=c(2,3,2,1))
-    for(study in names(surv.p)) {
 
-        study
-
-        ## calculate correlation with signature        
-        sel <- which(surv$cancer_type == study)
-        if(length(sel)<20) next()
-        rho <- rho.list[[study]]
-        sel.data <- surv[sel,]
+    if(plot) {
+        if(verbose) cat("[pgx.TCGA.testSurvivalSignature] plotting KM curves...\n")    
+        jj <- 1:length(rho.list)
+        if(sortby.p) {
+            ii <- order(surv.p)
+            surv.p <- surv.p[ii]
+            rho.list <- rho.list[ii]
+        }
+        surv.q <- p.adjust(surv.p)
+        names(surv.q) <- names(surv.p)
         
-        ## fit survival curve on two groups
-        poscor <- (rho > median(rho,na.rm=TRUE))
-        table(poscor)
-        library(survival)
-        fit <- survfit( Surv(months, status) ~ poscor, data = sel.data )
-
-        ##legend.labs <- paste(c("negative","positive"),"correlated")
-        legend.labs <- paste(c("rho<0","rho>0"))
-        if(1) {
-            plot(fit, col=2:3, lwd=2, main=study, xlab="time   (days)", cex.main=1.1)
-            legend("bottomleft", legend.labs, pch="__", lwd=2, col=2:3, cex=1.0)
-
-            p.val <- round(surv.p[study], 3)
-            q.val <- round(surv.q[study], 3)
-            pq <- c(paste("p=",p.val), paste("q=",q.val))
-            legend("bottomright", pq, bty='n', cex=1.0)
-        } else {
-            library(survminer)
-            ggsurvplot(
-                fit, 
-                data = sel.data, 
-                size = 1,                 # change line size
-                ## palette = c("#E7B800", "#2E9FDF"),# custom color palettes
-                conf.int = TRUE,          # Add confidence interval
-                pval = TRUE,              # Add p-value
-                risk.table = TRUE,        # Add risk table
-                risk.table.col = "strata",# Risk table color by groups
-                ## legend.labs = c("Male", "Female"),    # Change legend labels
-                legend.labs = legend.labs,
-                risk.table.height = 0.20, # Useful to change when you have multiple groups
-                ggtheme = theme_bw()      # Change ggplot2 theme
-            )
-        } ## end of if
-    } ## end of for
+        par(mfrow=c(5,7), mar=c(2,3,2,1))
+        for(study in names(surv.p)) {
+            
+            study
+            
+            ## calculate correlation with signature        
+            sel <- which(surv$cancer_type == study)
+            if(length(sel)<20) next()
+            rho <- rho.list[[study]]
+            sel.data <- surv[sel,]
+            
+            ## fit survival curve on two groups
+            poscor <- (rho > median(rho,na.rm=TRUE))
+            table(poscor)
+            library(survival)
+            fit <- survfit( Surv(months, status) ~ poscor, data = sel.data )
+            
+            ##legend.labs <- paste(c("negative","positive"),"correlated")
+            legend.labs <- paste(c("rho<0","rho>0"))
+            if(1) {
+                plot(fit, col=2:3, lwd=2, main=study, xlab="time   (days)", cex.main=1.1)
+                legend("bottomleft", legend.labs, pch="__", lwd=2, col=2:3, cex=1.0)
+                
+                p.val <- round(surv.p[study], 3)
+                q.val <- round(surv.q[study], 3)
+                pq <- c(paste("p=",p.val), paste("q=",q.val))
+                legend("bottomright", pq, bty='n', cex=1.0)
+            } else {
+                library(survminer)
+                ggsurvplot(
+                    fit, 
+                    data = sel.data, 
+                    size = 1,                 # change line size
+                    ## palette = c("#E7B800", "#2E9FDF"),# custom color palettes
+                    conf.int = TRUE,          # Add confidence interval
+                    pval = TRUE,              # Add p-value
+                    risk.table = TRUE,        # Add risk table
+                    risk.table.col = "strata",# Risk table color by groups
+                    ## legend.labs = c("Male", "Female"),    # Change legend labels
+                    legend.labs = legend.labs,
+                    risk.table.height = 0.20, # Useful to change when you have multiple groups
+                    ggtheme = theme_bw()      # Change ggplot2 theme
+                )
+            } ## end of if
+        } ## end of for
+    }
     
+    return(surv.p)
 }        
 
 cancertype="dlbc";variables="OS_"
