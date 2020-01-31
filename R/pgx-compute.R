@@ -16,9 +16,10 @@ if(0) {
 
 }
 
-
-max.genes=max.genesets=25000;lib.dir=FILES;progress=NULL;only.hugo=1;extra.methods=c("meta.go","deconv","infer","drugs","wordcloud")
-##gx.methods=c("ttest.welch","trend.limma");gset.methods=c("fisher","gsva");
+if(0) {
+    max.genes=max.genesets=25000;lib.dir=FILES;progress=NULL;only.hugo=1;extra.methods=c("meta.go","deconv","infer","drugs","wordcloud")
+    gx.methods=c("ttest.welch","trend.limma");gset.methods=c("fisher","gsva");
+}
 
 pgx.computeObjectPGX <- function(counts, samples, contrasts, ## genes, 
                                  ##gx.methods = c("trend.limma","edger.qlf","deseq2.wald"),

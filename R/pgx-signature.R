@@ -20,7 +20,7 @@ if(0) {
 
 pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=-1, contrasts=NULL)
 {
-
+    require(rhdf5)
     meta = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
     colnames(meta$fc)
     
@@ -180,6 +180,7 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     ##
     ##
     ##
+    require(rhdf5)
     
     if(is.null(names(fc))) stop("fc must have names")    
     ## mouse... mouse...
@@ -561,7 +562,7 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
     h5write(names(gmt), h5.file, "enrichment/genesets")
 
     if("gsea" %in% methods) {
-        cat("[pgx.addEnrichmentSignaturesH5] starting fGSEA...\n")    
+        cat("[pgx.addEnrichmentSignaturesH5] starting fGSEA for",length(gmt),"gene sets...\n")    
         require(fgsea)
         F1 <- mclapply(1:ncol(X), function(i) {
             xi <- X[,i]
@@ -579,7 +580,7 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
     }
     
     if("gsva" %in% methods) {
-        cat("[pgx.addEnrichmentSignaturesH5] starting GSVA... \n")    
+        cat("[pgx.addEnrichmentSignaturesH5] starting GSVA for",length(gmt),"gene sets...\n")            
         require(GSVA)
         ## mc.cores = 4
         F2 <- gsva(X, gmt, method="gsva", parallel.sz=mc.cores)

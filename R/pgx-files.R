@@ -1,11 +1,10 @@
 
 ##h5.file="test.h5";chunk=100
 pgx.saveMatrixH5 <- function(X, h5.file, chunk=NULL )
-{
-   
+{   
     require(rhdf5)
     unlink(h5.file)
-
+    
     if(is.null(chunk)) {
         h5createFile(h5.file)    
         ## h5createGroup("myhdf5file.h5","foo")
