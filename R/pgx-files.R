@@ -56,6 +56,20 @@ pgx.initDatasetFolder <- function(pgx.dir, verbose=TRUE, force=FALSE)
     for(i in 1:length(pgx.dir)) {
         ## pgx.initDatasetFolder(pgx.dir[i], verbose=verbose, force=force)
         if(!dir.exists(pgx.dir[i])) next()
+
+        ## skip if no pgx files
+        npgx <- length(dir(pgx.dir[i],"pgx$"))
+        if(npgx==0) {
+            cat("no pgx files in",pgx.dir[i],"\n")
+            next()
+        }
+
+        ## skip if too many...
+        if(npgx > 100) {
+            cat("too many files in",pgx.dir[i],". Please init manually\n")
+            next()
+        }
+        
         info <- pgx.initDatasetFolder1 (
             pgx.dir[i],
             allfc.file = "datasets-allFC.csv",

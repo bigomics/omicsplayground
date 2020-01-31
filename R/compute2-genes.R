@@ -166,7 +166,7 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     }
     
     ##-----------------------------------------------------------------------------
-    ## Shrink number of genes before testing
+    ## Shrink number of genes before testing (highest SD/var)
     ##-----------------------------------------------------------------------------
     if(is.null(max.features)) max.features <- -1
     if(max.features > 0 && nrow(counts) > max.features) {
@@ -199,15 +199,6 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     ##-----------------------------------------------------------------------------
     ## Do the fitting
     ##-----------------------------------------------------------------------------
-    ## Select test methods
-    ##
-    ## all.methods=c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma",
-    ##               "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
-    ## methods=c("trend.limma","edger.qlf","deseq2.wald")
-    ## if(ncol(counts)>500) methods=c("trend.limma","edger.qlf","edger.lrt")
-    ## methods
-    ## if(!is.null(USER.GENETEST.METHODS)) methods = USER.GENETEST.METHODS
-    ## if(methods[1]=="*") methods = all.methods
     methods <- test.methods
     
     cat(">>> Testing differential expressed genes (DEG) with methods:",methods,"\n")

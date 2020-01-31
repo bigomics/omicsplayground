@@ -178,6 +178,8 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
 }        
 
 cancertype="dlbc";variables="OS_"
+cancertype="brca_tcga_pub"
+
 pgx.TCGA.selectStudies <- function(cancertype, variables)
 {
     ## Scan the available TCGA studies for cancertype and clinical
@@ -201,7 +203,8 @@ pgx.TCGA.selectStudies <- function(cancertype, variables)
         myprofiles
 
         ## mrna datatypes
-        mrna.type <- "rna_seq_mrna"
+        mrna.type <- "mrna"
+        if(any(grepl("rna_seq_mrna$", myprofiles))) mrna.type <- "rna_seq_mrna"
         if(any(grepl("v2_mrna$", myprofiles))) mrna.type <- "rna_seq_v2_mrna"
         pr.mrna <- grep( paste0(mrna.type,"$"), myprofiles,value=TRUE)
         pr.mrna
@@ -214,8 +217,11 @@ pgx.TCGA.selectStudies <- function(cancertype, variables)
         caselist <- grep(paste0(mrna.type,"$"),all.cases,value=TRUE)
         caselist
         clin0 <- getClinicalData(mycgds, caselist)
+        head(clin0)[,1:4]
+        rownames(clin0) <- gsub("[.]","-",rownames(clin0)) ## correct names...
+        head(clin0)[,1:4]
         clin[[mystudy]] <- clin0
-        samples[[mystudy]] <- gsub("[.]","-",rownames(clin0))
+        samples[[mystudy]] <- rownames(clin0)
     }
     
     sel <- sapply(clin, function(v) any(grepl(variables,colnames(v))))
@@ -231,8 +237,8 @@ pgx.TCGA.selectStudies <- function(cancertype, variables)
     return(res)
 }
 
-genes=NULL;study="prad_tcga"
-pgx.TCGA.getExpression <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE)
+genes=NULL;study="brca_tcga_pub"
+pgx.TCGA.getExpressionClinicalData <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE)
 {
     ## For a specific TCGA study get the expression matrix and
     ## clinical data.
@@ -265,11 +271,15 @@ pgx.TCGA.getExpression <- function(study, genes=NULL, matrix_file=NULL, from.h5=
         myprofiles
 
         ## mrna datatypes
-        mrna.type <- "rna_seq_mrna"
-        if(any(grepl("v2_mrna$", myprofiles))) mrna.type <- "rna_seq_v2_mrna"
+        mrna.type <- "_mrna"
+        if(any(grepl("rna_seq_v2_mrna$", myprofiles))) mrna.type <- "rna_seq_v2_mrna"
+        if(any(grepl("rna_seq_mrna$", myprofiles))) mrna.type <- "rna_seq_mrna"
         pr.mrna <- grep( paste0(mrna.type,"$"), myprofiles,value=TRUE)
         pr.mrna
-        if(length(pr.mrna)==0) next()
+        if(length(pr.mrna)==0) {
+            cat("WARNING:: could not find mRNA for",mystudy,"...\n")
+            next()
+        }
         
         all.cases <- getCaseLists(mycgds,mystudy)[,1]
         all.cases

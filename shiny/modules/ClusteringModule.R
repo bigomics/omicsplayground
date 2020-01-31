@@ -1444,7 +1444,7 @@ displays the expression levels of selected genes across all conditions in the an
             NTERMS=6
         }
         if(ncol(rho)<=2) {
-            NTERMS=20
+            NTERMS=22
         }
 
         klrpal = rep(brewer.pal(8,"Set2"),2)
