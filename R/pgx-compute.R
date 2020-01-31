@@ -83,13 +83,17 @@ pgx.computeObjectPGX <- function(counts, samples, contrasts, ## genes,
         require(org.Hs.eg.db)
         GENE.TITLE = unlist(as.list(org.Hs.egGENENAME))
         gene.symbol = unlist(as.list(org.Hs.egSYMBOL))
+        gene.map <- sapply(as.list(org.Hs.egMAP),"[",1)
         names(GENE.TITLE) = gene.symbol
+        names(gene.map) = gene.symbol
     }
     if(org == "mouse") {
         require(org.Mm.eg.db)
         GENE.TITLE = unlist(as.list(org.Mm.egGENENAME))
         gene.symbol = unlist(as.list(org.Mm.egSYMBOL))
+        gene.map <- sapply(as.list(org.Mm.egMAP),"[",1)
         names(GENE.TITLE) = gene.symbol
+        names(gene.map) = gene.symbol
     }
     if(!is.null(progress)) {
         aa <- paste("detected organism: ",org)
@@ -99,8 +103,10 @@ pgx.computeObjectPGX <- function(counts, samples, contrasts, ## genes,
     
     gene <- rownames(ngs$counts)
     gene1 <- sapply(gene, function(s) strsplit(s,split="[;,]")[[1]][1])
+    gene1 <- alias2hugo(gene1)  ## convert to HUGO
     ngs$genes = data.frame( gene_name = gene1,
                            gene_alias = gene,
+                           chr_loc = gene.map[gene1],
                            gene_title = GENE.TITLE[gene1] )
     ##rownames(ngs$genes) <- gene1
     
@@ -127,7 +133,9 @@ pgx.computeObjectPGX <- function(counts, samples, contrasts, ## genes,
         if(only.hugo) is.official <- (ngs$genes$gene_name %in% gene.symbol)
         rik.genes <- grepl("Rik",ngs$genes$gene_name)
         ##imm.gene <- grepl("^TR_|^IG_",ngs$genes$gene_biotype)
-        keep <- (has.name & !rik.genes & is.official)
+        has.chrloc <- !is.na(ngs$genes$chr_loc)
+        
+        keep <- (has.name & !rik.genes & is.official & has.chrloc)
         ngs$counts <- ngs$counts[keep,]
         ngs$genes  <- ngs$genes[keep,]        
     }
@@ -137,7 +145,9 @@ pgx.computeObjectPGX <- function(counts, samples, contrasts, ## genes,
         if(only.hugo) is.official <- (ngs$genes$gene_name %in% gene.symbol)
         ##orf.genes <- grepl("ORF",ngs$genes$gene_name)
         ##imm.gene <- grepl("^TR_|^IG_",ngs$genes$gene_biotype)
-        keep <- (has.name & is.official)
+        has.chrloc <- !is.na(ngs$genes$chr_loc)
+
+        keep <- (has.name & is.official & & has.chrloc)
         ngs$counts <- ngs$counts[keep,]
         ngs$genes  <- ngs$genes[keep,]        
     }
@@ -180,6 +190,7 @@ pgx.computeObjectPGX <- function(counts, samples, contrasts, ## genes,
             stop("sample annotation file must have 'group' column\n")
         }
     }
+
     
     ##======================================================================
     ##======================================================================

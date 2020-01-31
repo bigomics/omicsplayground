@@ -8,6 +8,27 @@ USER.GENETEST.METHODS <- NULL
 ##=============================================================================
 ##==========    Platform helper functions =====================================
 ##=============================================================================
+
+s
+trimsame <- function(s) {
+
+    minchar <- min(nchar(s))
+    minchar
+    is.same = TRUE
+    whereSpaces <- function(s) { sapply(gregexpr(" ", s), function(p) { sum(p>=0) } ) }
+    
+    while(is.same && i<minchar) {
+        is.same <- all(duplicated(substring(s,1,i))[-1])
+        i = i + 1
+    }
+    i=i-1
+    samepart <- substring(s[1],1,i)
+    samepart
+    
+    
+}
+
+
 ##s=rep("abc",100)
 dbg <- function(... ) {
     if(DEV.VERSION) {

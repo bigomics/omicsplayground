@@ -70,7 +70,7 @@ source(file.path(RDIR,"pgx-files.R"))
 source(file.path(RDIR,"pgx-wordcloud.R"))
 source(file.path(RDIR,"pgx-ui.R"))
 source(file.path(RDIR,"pgx-tcga.R"))
-source(file.path(RDIR,"pgx-archs4.R"))
+##source(file.path(RDIR,"pgx-archs4.R"))
 source(file.path(RDIR,"pgx-cluster.R"))
 source(file.path(RDIR,"pgx-signature.R"))
 

@@ -48,8 +48,8 @@ pgx.makeSpecificContrasts <- function(df, contrasts, mingrp=3)
     return(res)
 }
 
-##mingrp=3;slen=20;ref=NULL
-pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL)
+##mingrp=3;slen=20;ref=NULL;fix.degenerate=FALSE
+pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate=FALSE)
 {
     ## "Automagiccally" parse dataframe and create contrasts using
     ## default assumptions.
@@ -120,12 +120,13 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL)
     }
     is.comment <- sapply(df[1,], justComment)
     df <- df[,which(!is.comment),drop=FALSE]
-    
+    df[df==""] <- NA
+    df[df==" "] <- NA
 
     ## repeat ref if too short
     if(!is.null(ref) && length(ref)!=ncol(df)) ref <- head(rep(ref,99),ncol(df))
     
-    K <- c()
+    K <- NULL
     i=1
     for(i in 1:ncol(df)) {
         ref1 <- NA
@@ -159,44 +160,64 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL)
     
     rownames(K) <- rownames(df)
     head(K)
+    dim(K)
 
+    ## Now try to infer the underlying "conditions"
     K1 <- contrastAsLabels(K-0.5)
-
-    ##
-    is.degenerate = TRUE
-    iter=0
-    while(is.degenerate && iter<100) {
-        ## Now try to infer the underlying "conditions"
-        kcode <- apply(K1,1,paste,collapse="_")
-        xc <- factor(kcode, levels=unique(kcode))  ## experimental condition
-        ##levels(xc) <- paste0("condition",1:length(levels(xc)))
-        jj <- which(!duplicated(kcode))
-        length(jj)
-        ## SPECIAL CASE!!! if comparisons are degenerate (no valid
-        ## condition groups). LIMMA does not like that. Then delete
-        ## phenotype with most levels one by one
-        is.degenerate = (length(jj)==nrow(K1) || mean(table(xc)==1)>0.5 )
-        is.degenerate        
-        if(is.degenerate) {
-            ptype <- sub("[:].*","",colnames(K1))
-            del.ptype <- names(which.max(table(ptype)))
-            del.ptype
-            del <- which(ptype %in% del.ptype)
-            K1 <- K1[,-del,drop=FALSE]
-        }
-        iter = iter+1
-    }
-    iter
+    kcode <- apply(K1,1,paste,collapse="_")
+    xc <- factor(kcode, levels=unique(kcode))  ## experimental condition
+    if(ncol(K1)>10) levels(xc) <- paste0("condition",1:length(levels(xc))) ## too long...
+    jj <- which(!duplicated(kcode))
     length(jj)    
     K2 <- K[jj,colnames(K1),drop=FALSE]
     rownames(K2) <- xc[jj]
+    dim(K2)
     head(K2)
+    is.degenerate = (length(jj) > 0.9*nrow(K1) || mean(table(xc)==1)>0.5 )
+    is.degenerate
+    
+    ## THIS IS EXPERIMENTAL: remove 
+    if(fix.degenerate && is.degenerate) {
+        is.degenerate = TRUE
+        iter=0
+        while(is.degenerate && iter<100) {
+            ## Now try to infer the underlying "conditions"
+            kcode <- apply(K1,1,paste,collapse="_")
+            xc <- factor(kcode, levels=unique(kcode))  ## experimental condition
+            if(ncol(K1)>10) levels(xc) <- paste0("condition",1:length(levels(xc))) ## too long...
+            jj <- which(!duplicated(kcode))
+            length(jj)
+            ## SPECIAL CASE!!! if comparisons are degenerate (no valid
+            ## condition groups). LIMMA does not like that. Then delete
+            ## phenotype with most levels one by one
+            is.degenerate = (length(jj)==nrow(K1) || mean(table(xc)==1)>0.5 )
+            is.degenerate        
+            if(is.degenerate) {
+                ptype <- sub("[:].*","",colnames(K1))
+                del.ptype <- names(which.max(table(ptype)))
+                del.ptype
+                del <- which(ptype %in% del.ptype)
+                K1 <- K1[,-del,drop=FALSE]
+            }
+            iter = iter+1
+        }
+        iter
+        length(jj)    
+        K2 <- K[jj,colnames(K1),drop=FALSE]
+        rownames(K2) <- xc[jj]
+        head(K2)
+    } else {
+        ## Go for zero design (no-replicates)
+        K2 <- NULL
+    }
     
     ## Translate coding 0/NA/1 to -1/0/+1 coding of contrast
     K[K==0] <- -1
     K[is.na(K)] <- 0
-    K2[K2==0] <- -1
-    K2[is.na(K2)] <- 0
+    if(!is.null(K2)) {
+        K2[K2==0] <- -1
+        K2[is.na(K2)] <- 0
+    }
         
     list(group = xc, contr.matrix = K2, exp.matrix=K)
 }

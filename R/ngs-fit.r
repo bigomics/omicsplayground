@@ -19,27 +19,6 @@ methods=c("ttest.welch","trend.limma","deseq2.wald","edger.qlf")
 methods
 
 ##-----------------------------------------------------------------------------
-##--------------------- FIND ALL MARKERS --------------------------------------
-##-----------------------------------------------------------------------------
-
-## ngs.findAllMarkers <- function(counts, clusters) {
-##     ## make model matrix for group vs. rest
-##     ##clusters <- ngs$samples$cluster
-##     table(clusters)
-##     contr.matrix <- makeClusterContrasts(clusters)
-##     contr.matrix
-##     out <- ngs.fitContrastsWithAllMethods(
-##         counts, samples, genes, design, contr.matrix,
-##         prior.cpm=1, conform.output=TRUE, do.filter=TRUE,
-##         quantile.normalize=TRUE,
-##         remove.batch=TRUE, methods=ALL.GENETEST.METHODS,
-##         custom=NULL, custom.name=NULL )
-##     return(out)
-## }
-
-
-
-##-----------------------------------------------------------------------------
 ##-------------------- FIT ALL CONTRASTS --------------------------------------
 ##-----------------------------------------------------------------------------
 
@@ -67,18 +46,17 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, genes, design, contr.matr
     }
     methods <- intersect(methods, ALL.GENETEST.METHODS)
     cat("calculating methods:",methods,"\n")
-                    
+
+    ## If degenerate set design to NULL
+    if( !is.null(design) && nrow(design)==ncol(X) ) {
+        ## "no-replicate" design!!!
+        cat("WARNING: degenerate design. setting to NULL\n")
+        design <- NULL
+    }
+    
     ##------------------------------------------------------------------
     ## define transformation methods: log2CPM for counts
     ##------------------------------------------------------------------        
-
-    ## cat("prior CPM counts =",prior.cpm,"\n")
-    ## cat("CPM scale =",cpm.scale,"\n")
-    ## X <- log2(t(t(counts) / colSums(counts)) * cpm.scale + prior.cpm)  ## CPM
-    ## if(quantile.normalize)  {
-    ##     cat("quantile normalizing logCPM values\n")
-    ##     X <- limma::normalizeQuantiles(X)  ## in linear space
-    ## }
     counts <- NULL
     if(type=="counts") {
         cat("assuming counts data\n")
@@ -388,12 +366,15 @@ ngs.fitContrastsWithTTEST <- function( X, contr.matrix, design, method="welch",
 
 ##trend=TRUE;robust=TRUE
 ngs.fitContrastsWithLIMMA <- function( X, contr.matrix, design, method=c("voom","limma"),
-                                      trend=TRUE, robust=TRUE, conform.output=FALSE, plot=TRUE)
+                                      trend=TRUE, robust=TRUE, conform.output=FALSE, plot=FALSE)
 {
     design
     method <- method[1]
     
     if(!is.null(design)) {
+        ## With no design (grouping) we perform LIMMA not on the
+        ## entire contrast matrix but per contrast one-by-one.
+        ##
         ##cat("fitting LIMMA contrasts with design matrix....\n")
         design1 <- design[,rownames(contr.matrix),drop=FALSE]
         if(method=="voom") {
@@ -425,7 +406,7 @@ ngs.fitContrastsWithLIMMA <- function( X, contr.matrix, design, method=c("voom",
         names(tables) <- colnames(contr.matrix)
 
     } else {
-        ##cat("fitting LIMMA contrasts with explicit contrasts....\n")
+        cat("fitting LIMMA contrasts without design....\n")
         tables <- list()
         i=1
         for(i in 1:ncol(contr.matrix)) {
@@ -473,17 +454,20 @@ ngs.fitContrastsWithLIMMA <- function( X, contr.matrix, design, method=c("voom",
     return(res)
 }
 
-##method="qlf";robust=FALSE;plot=FALSE;conform.output=TRUE
+##method="qlf";robust=TRUE;plot=FALSE;conform.output=TRUE
 ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
-                                      method=c("qlf","lrt"), X=null, 
+                                      method=c("qlf","lrt"), X=NULL, 
                                       conform.output=FALSE, robust=TRUE, plot=TRUE)
 {
     require(limma)
     require(edgeR)
+    method=method[1]
+
     dge <- DGEList( round(counts), group=NULL)  ## we like integer counts...
     dge$samples$group <- group
     ##dge$samples = cbind(dge$samples, samples)
     dge <- calcNormFactors(dge, method="TMM")
+
     if(is.null(design)) {
         res <- .ngs.fitContrastsWithEDGER.nodesign(
             dge=dge, contr.matrix=contr.matrix, method=method,
@@ -492,10 +476,9 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
     }
     
     dge <- estimateDisp(dge, design=design, robust=robust)
-    if(is.null(X)) X <- edgeR::cpm(counts, log=TRUE, prior.count=0.0001)
+    if(is.null(X)) X <- edgeR::cpm(counts, log=TRUE)
 
     ##method="qlf";robust=FALSE;plot=FALSE
-    method=method[1]
     if(method=="qlf") {
         fit <- glmQLFit(dge, design, robust=robust)
     } else if(method=="lrt") {
@@ -563,12 +546,22 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
 .ngs.fitContrastsWithEDGER.nodesign <- function( dge, contr.matrix, method=c("qlf","lrt"), X=NULL,
                                                 conform.output=FALSE, robust=TRUE, plot=TRUE)
 {
+    ## With no design matrix, we must do EdgeR per contrast
+    ## one-by-one. Warning this can become very slow.
+    ##
+    cat("calling .ngs.fitContrastsWithEDGER.nodesign\n")
+    
     if(class(dge)!="DGEList") stop("dge must be a DGEList object")
     method=method[1]
     ##X = log2(0.0001+dge$counts)  ## assuming pseudocount already added
     if(is.null(X)) X <- edgeR::cpm(counts, log=TRUE)
-    dge <- estimateDisp(dge, design=NULL, robust=robust)
-
+    dge <- estimateDisp(dge, design=NULL, robust=robust)  ## fails...
+    dge.disp <- estimateDisp(dge$counts, design=NULL, robust=robust) 
+    ##dge@.Data <- c(dge@.Data, dge.disp)
+    dge$common.dispersion  <- dge.disp$common.dispersion
+    dge$trended.dispersion <- dge.disp$trended.dispersion
+    dge$tagwise.dispersion <- dge.disp$tagwise.dispersion
+    
     contr.matrix0 <- matrix(c(-1,0,1),nrow=3)
     rownames(contr.matrix0) <- c("yneg","yo","ypos")
     colnames(contr.matrix0) <- "pos_vs_neg"
@@ -632,10 +625,10 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
 }
 
 ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design, 
-                                        X, genes, test="Wald", conform.output=FALSE)
+                                        X=NULL, genes=NULL, test="Wald", conform.output=FALSE)
 {
     if(is.null(design)) {
-        out <- ngs.fitConstrastsWithDESEQ2.nodesign(
+        out <- .ngs.fitConstrastsWithDESEQ2.nodesign(
             counts=counts, contr.matrix=contr.matrix, test=test,
             conform.output=conform.output)
         return(out)
@@ -673,7 +666,7 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
 
     ## logCPM for calculating means
     ##X <- edgeR::cpm(counts(dds),log=TRUE,prior.count=0.000001)
-    if(is.null(X)) X <- log2(counts(dds))
+    if(is.null(X)) X <- edgeR::cpm(counts, log=TRUE)
     dim(X)
 
     exp.matrix = contr.matrix
@@ -725,7 +718,7 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
 }
 
 ##dds=fish2$dds.object
-ngs.fitConstrastsWithDESEQ2.nodesign <- function(counts, contr.matrix, test="Wald",
+.ngs.fitConstrastsWithDESEQ2.nodesign <- function(counts, contr.matrix, test="Wald",
                                                  conform.output=FALSE, X=NULL)
 {
     require(DESeq2)
@@ -734,7 +727,7 @@ ngs.fitConstrastsWithDESEQ2.nodesign <- function(counts, contr.matrix, test="Wal
     ##if(!is.null(design)) stop("design must be NULL")
     counts <- round(counts)
     ##X <- edgeR::cpm(counts,log=TRUE)
-    if(is.null(X)) X <- log2(counts)
+    if(is.null(X)) X <- edgeR::cpm(counts, log=TRUE)
     dim(X)
     if(nrow(contr.matrix) != ncol(X)) {
         stop("ngs.fitConstrastsWithDESEQ2.nodesign:: contrast matrix must be by sample")

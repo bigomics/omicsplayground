@@ -840,13 +840,13 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                 size = "s",
                 footer = tagList(
                     modalButton("Cancel"),
-                    actionButton(ns("myconfirmation2"),"Confirm", icon=NULL)
+                    actionButton(ns("myconfirmation"),"Confirm", icon=NULL)
                 )
             ))
         }
     })
 
-    observeEvent( c(input$myconfirmation,input$myconfirmation2), {
+    observeEvent( input$myconfirmation, {
         ## 
         ## Start pre-computing the object from the uploaded files
         ## after confirmation is received.
