@@ -147,7 +147,7 @@ pgx.computeObjectPGX <- function(counts, samples, contrasts, ## genes,
         ##imm.gene <- grepl("^TR_|^IG_",ngs$genes$gene_biotype)
         has.chrloc <- !is.na(ngs$genes$chr_loc)
 
-        keep <- (has.name & is.official & & has.chrloc)
+        keep <- (has.name & is.official & has.chrloc)
         ngs$counts <- ngs$counts[keep,]
         ngs$genes  <- ngs$genes[keep,]        
     }
