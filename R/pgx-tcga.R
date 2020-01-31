@@ -298,7 +298,7 @@ pgx.TCGA.getExpressionClinicalData <- function(study, genes=NULL, matrix_file=NU
             colnames(expression) <- samples            
             dim(expression)
         } else {
-            cat("extracting from locally store H5 matrix...\n")
+            cat("extracting from locally stored H5 matrix...\n")
             ## For all genes, getProfileData cannot do and we use
             ## locally stored H5 TCGA data file from Archs4.
             ##
