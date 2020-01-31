@@ -8,7 +8,8 @@
 ##
 
 ##SAVE.PARAMS <- ls()
-max.features=1000;type="counts";test.methods=c("ttest","trend.limma")
+max.features=25000;type="counts"
+test.methods=c("ttest.welch","trend.limma","edger.qlf","edger.lrt")
 
 compute.testGenes <- function(ngs, contr.matrix, max.features=1000, type="counts",
                               test.methods=c("trend.limma","deseq2.wald","edger.qlf"))
@@ -38,12 +39,12 @@ compute.testGenes <- function(ngs, contr.matrix, max.features=1000, type="counts
 }
 
 test.methods=c("trend.limma","deseq2.wald","edger.qlf")
-test.methods=c("trend.limma","ttest.welch","ttest")
-max.features=1000
+test.methods=c("ttest.welch","trend.limma","edger.qlf")
+max.features=25000;type="counts";filter.low=TRUE
 
 compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
-                                type="counts", filter.low = TRUE,
-                                test.methods = c("trend.limma","deseq2.wald","edger.qlf"))
+                                         type="counts", filter.low = TRUE,
+                                         test.methods = c("trend.limma","deseq2.wald","edger.qlf"))
 {
 
     ##-----------------------------------------------------------------------------
@@ -77,8 +78,8 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     ##-----------------------------------------------------------------------------
     ## normalize contrast matrix to zero mean and signed sums to one
     ##-----------------------------------------------------------------------------
-    contr.matrix[is.na(contr.matrix)] <- 0
     contr.matrix0 <- contr.matrix  ## SAVE
+    contr.matrix[is.na(contr.matrix)] <- 0
     
     ## take out any empty comparisons
     contr.matrix <- contr.matrix0[,which(colSums(contr.matrix0!=0)>0),drop=FALSE]
@@ -131,7 +132,6 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     ##-----------------------------------------------------------------------------
     ## Filter genes
     ##-----------------------------------------------------------------------------    
-    ## get *RAW* counts but use filtered probes from cooked
     counts = ngs$counts  ##??
     genes  = ngs$genes
     samples = ngs$samples
@@ -200,7 +200,7 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     ## Do the fitting
     ##-----------------------------------------------------------------------------
     methods <- test.methods
-    
+    methods
     cat(">>> Testing differential expressed genes (DEG) with methods:",methods,"\n")
 
     ## Run all test methods
@@ -216,6 +216,8 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
         conform.output = TRUE,
         do.filter = FALSE,
         custom = NULL, custom.name = NULL )
+
+    cat("done!\n")
     
     names(gx.meta)
     names(gx.meta$outputs)
