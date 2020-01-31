@@ -17,16 +17,17 @@ if(0) {
 }
 
 
-##max.genes=max.genesets=5000;gx.methods=c("ttest.welch","trend.limma");gset.methods=c("fisher","gsva");lib.dir = FILES;progress=NULL;only.hugo=1;extra.methods=c("meta.go","deconv","infer","drugs","wordcloud")
+max.genes=max.genesets=25000;lib.dir=FILES;progress=NULL;only.hugo=1;extra.methods=c("meta.go","deconv","infer","drugs","wordcloud")
+##gx.methods=c("ttest.welch","trend.limma");gset.methods=c("fisher","gsva");
 
 pgx.computeObjectPGX <- function(counts, samples, contrasts, ## genes, 
-                       ##gx.methods = c("trend.limma","edger.qlf","deseq2.wald"),
-                       max.genes = 9999, max.genesets = 9999, only.hugo=TRUE,
-                       gx.methods = c("ttest.welch","trend.limma","edger.qlf"),
-                       gset.methods = c("fisher","gsva","fgsea"),
-                       extra.methods = c("meta.go","deconv","infer","drugs","wordcloud"),
-                       lib.dir = "../lib", do.cluster=TRUE,
-                       progress=NULL)
+                                 ##gx.methods = c("trend.limma","edger.qlf","deseq2.wald"),
+                                 max.genes = 9999, max.genesets = 9999, only.hugo=TRUE,
+                                 gx.methods = c("ttest.welch","trend.limma","edger.qlf"),
+                                 gset.methods = c("fisher","gsva","fgsea"),
+                                 extra.methods = c("meta.go","deconv","infer","drugs","wordcloud"),
+                                 lib.dir = "../lib", do.cluster=TRUE,
+                                 progress=NULL)
 {
 
     library(org.Hs.eg.db)
@@ -190,7 +191,6 @@ pgx.computeObjectPGX <- function(counts, samples, contrasts, ## genes,
             stop("sample annotation file must have 'group' column\n")
         }
     }
-
     
     ##======================================================================
     ##======================================================================

@@ -22,7 +22,7 @@ methods
 ##-------------------- FIT ALL CONTRASTS --------------------------------------
 ##-----------------------------------------------------------------------------
 
-ngs.fitContrastsWithAllMethods <- function(X, samples, genes, design, contr.matrix,
+ngs.fitContrastsWithAllMethods <- function(X, samples, design, contr.matrix, genes=NULL, 
                                            type="counts", prior.cpm=1, quantile.normalize=FALSE,
                                            conform.output=TRUE, do.filter=TRUE, cpm.scale=1e6,
                                            remove.batch=TRUE, methods=ALL.GENETEST.METHODS,
@@ -34,19 +34,20 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, genes, design, contr.matr
     require(edgeR)
     require(limma)
     if(0) {
-        do.filter=FALSE;conform.output=TRUE;remove.batch=FALSE;
-        custom=NULL;custom.name=NULL;quantile.normalize=FALSE
-        counts=ngs$count;samples=ngs$samples;genes=ngs$genes;cpm.scale=1e6
+        do.filter=FALSE;conform.output=TRUE;remove.batch=FALSE;prior.cpm=1;
+        custom=NULL;custom.name=NULL;quantile.normalize=FALSE;cpm.scale=1e6
+        ##counts=ngs$count;samples=ngs$samples;genes=NULL;
         ##design=ngs$model.parameters$design;contr.matrix=ngs$model.parameters$contr.matrix
-        prior.cpm=1;
     }
 
     if(methods[1]=="*") {
         methods <- ALL.GENETEST.METHODS
     }
     methods <- intersect(methods, ALL.GENETEST.METHODS)
-    cat("calculating methods:",methods,"\n")
 
+    cat("calculating methods:",methods,"\n")
+    ##cat("dim(X) = ",dim(X),"\n")
+    
     ## If degenerate set design to NULL
     if( !is.null(design) && nrow(design)==ncol(X) ) {
         ## "no-replicate" design!!!
@@ -69,6 +70,7 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, genes, design, contr.matr
         cat("no parameter transformation\n")
         ## X <- X
     }
+
     
     ##------------------------------------------------------------------
     ## Quantile normalize if needed
@@ -210,6 +212,7 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, genes, design, contr.matr
     ##----------------------------------------------------------------------
     ## add some statistics
     ##----------------------------------------------------------------------
+    cat("calculating statistics...\n")
     i=1
     for(i in 1:length(outputs)) {
 
@@ -253,6 +256,8 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, genes, design, contr.matr
     ##--------------------------------------------------------------
     ## Reshape matrices by comparison
     ##--------------------------------------------------------------
+    cat("reshape matrices...\n")
+
     ##fdr = 0.25
     tests = colnames(outputs[[1]]$p.value)
     ntest = length(tests)
@@ -279,6 +284,7 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, genes, design, contr.matr
     ##--------------------------------------------------
     ## meta analysis, aggregate p-values
     ##--------------------------------------------------
+    cat("aggregating p-values...\n")
     require(metap)
     all.meta <- list()
     i=1
@@ -286,7 +292,7 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, genes, design, contr.matr
         pv = P[[i]]
         qv = Q[[i]]
         fc = logFC[[i]]
-
+        
         ## avoid strange values
         fc[is.infinite(fc) | is.nan(fc)] <- NA
         pv <- pmax(pv, 1e-99)
@@ -461,11 +467,13 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
 {
     require(limma)
     require(edgeR)
+
     method=method[1]
 
+    cat("[ngs.fitContrastsWithEDGER] dim(counts)=",dim(counts),"\n")
+    
     dge <- DGEList( round(counts), group=NULL)  ## we like integer counts...
     dge$samples$group <- group
-    ##dge$samples = cbind(dge$samples, samples)
     dge <- calcNormFactors(dge, method="TMM")
 
     if(is.null(design)) {
@@ -550,11 +558,12 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
     ## one-by-one. Warning this can become very slow.
     ##
     cat("calling .ngs.fitContrastsWithEDGER.nodesign\n")
+    cat("[.ngs.fitContrastsWithEDGER.nodesign] dim(dge$counts)=",dim(dge$counts),"\n")
     
     if(class(dge)!="DGEList") stop("dge must be a DGEList object")
     method=method[1]
     ##X = log2(0.0001+dge$counts)  ## assuming pseudocount already added
-    if(is.null(X)) X <- edgeR::cpm(counts, log=TRUE)
+    if(is.null(X)) X <- edgeR::cpm(dge$counts, log=TRUE)
     dge <- estimateDisp(dge, design=NULL, robust=robust)  ## fails...
     dge.disp <- estimateDisp(dge$counts, design=NULL, robust=robust) 
     ##dge@.Data <- c(dge@.Data, dge.disp)
@@ -662,7 +671,7 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
     }
     ## we add the gene annotation here (not standard...)
     colnames(rowData(dds))
-    rowData(dds)$genes = genes
+    if(!is.null(genes)) rowData(dds)$genes = genes
 
     ## logCPM for calculating means
     ##X <- edgeR::cpm(counts(dds),log=TRUE,prior.count=0.000001)
