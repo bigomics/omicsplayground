@@ -178,6 +178,7 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
     
     ## THIS IS EXPERIMENTAL: remove 
     if(fix.degenerate && is.degenerate) {
+        cat("WARNING:: contrast matrix looks degenerate. trying to remove some contrasts...\n")
         is.degenerate = TRUE
         iter=0
         while(is.degenerate && iter<100) {
@@ -207,6 +208,7 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
         rownames(K2) <- xc[jj]
         head(K2)
     } else {
+        cat("WARNING:: contrast matrix looks degenerate. going for NULL design...\n")
         ## Go for zero design (no-replicates)
         K2 <- NULL
     }
