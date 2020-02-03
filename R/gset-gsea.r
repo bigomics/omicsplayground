@@ -1091,7 +1091,7 @@ gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,
                          substr(tt.main,2*len.main+1,3*len.main),sep="\n" )
         tt.main <- sub("\n$","",tt.main)
     }
-    title(main=tt.main, cex.main=cex.main, line=0.6)
+    title(main=tt.main, cex.main=cex.main, line=0.3)
 }
 
 

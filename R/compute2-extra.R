@@ -136,7 +136,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
         for(db in sigdb) {
             if(file.exists(db)) {
                 ntop = 9999
-                cat("computing scores for sigDB",db,"\n")                
+                cat("computing connectivity scores for sigDB",db,"\n")                
                 tt <- system.time({
                     scores <- pgx.computeConnectivityScores(
                         ngs, db, ntop=ntop, contrasts=NULL)
