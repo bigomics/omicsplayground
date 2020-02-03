@@ -36,8 +36,8 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, design, contr.matrix, gen
     if(0) {
         do.filter=FALSE;conform.output=TRUE;remove.batch=FALSE;prior.cpm=1;
         custom=NULL;custom.name=NULL;quantile.normalize=FALSE;cpm.scale=1e6
-        ##counts=ngs$count;samples=ngs$samples;genes=NULL;
-        ##design=ngs$model.parameters$design;contr.matrix=ngs$model.parameters$contr.matrix
+        X=ngs$count;samples=ngs$samples;genes=NULL;
+        design=ngs$model.parameters$design;contr.matrix=ngs$model.parameters$contr.matrix
     }
 
     if(methods[1]=="*") {
@@ -49,7 +49,7 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, design, contr.matrix, gen
     ##cat("dim(X) = ",dim(X),"\n")
     
     ## If degenerate set design to NULL
-    if( !is.null(design) && nrow(design)==ncol(X) ) {
+    if(!is.null(design) && ncol(design)>=ncol(X) ) {
         ## "no-replicate" design!!!
         cat("WARNING: degenerate design. setting to NULL\n")
         design <- NULL

@@ -4,11 +4,11 @@ ALL.GENESET.METHODS = c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
 methods=ALL.GENESET.METHODS
 methods=c("fisher","ssgsea","gsva","fgsea","gseaPR")
 methods=c("gsva","camera")
-methods=c("fisher","gsva","camera")
+methods=c("fisher","gsva","fgsea")
 use.multicore=TRUE
 
 mc.threads=1
-##X=ngs$X;Y=ngs$Y;design=ngs$model.parameters$design;contr.matrix=ngs$model.parameters$contr.matrix;mc.cores=4;mc.threads=1;batch.correct=TRUE;gmt=ngs$gmt.all
+##X=ngs$X;Y=ngs$Y;design=ngs$model.parameters$design;contr.matrix=ngs$model.parameters$contr.matrix;mc.cores=4;mc.threads=1;batch.correct=TRUE
 gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, methods, 
                                             mc.threads=1, mc.cores=NULL, batch.correct=TRUE)
 {
@@ -57,18 +57,20 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
     if("batch" %in% colnames(Y) && batch.correct) cat("correcting for batch effects\n")
     if("nnm" %in% colnames(Y) && batch.correct) cat("correcting for NNM\n")
     ##zx=zx.gsva
-    normalize <- function(zx, Y) {
+    my.normalize <- function(zx, Y) {
         if("batch" %in% colnames(Y) && batch.correct) {
             ##design0 = model.matrix( ~ Y$group )
-            if(!is.null(design)) {
+            nbatch <- length(unique(Y$batch))
+            if(!is.null(design) && nbatch>1) {
                 zx <- removeBatchEffect( zx, batch=Y$batch, design=design)
-            } else {
+            } else if(nbatch>1) {
                 zx <- removeBatchEffect( zx, batch=Y$batch)
             }
         }
         if("nnm" %in% colnames(Y) && batch.correct) {
             yy = Y$nnm
-            zx = gx.nnmcorrect( zx, yy, k=3)
+            ny <- length(unique(yy))
+            if(ny>1) zx <- gx.nnmcorrect( zx, yy, k=3)
         }
         zx <- scale(normalizeQuantiles(zx))
         return(zx)
@@ -105,7 +107,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
             zx.rnkcorr <- t(scale(t(zx.rnkcorr)))
 
             ## additional batch correction and NNM
-            zx.rnkcorr <- normalize(zx.rnkcorr, Y)
+            zx.rnkcorr <- my.normalize(zx.rnkcorr, Y)
             zx.rnkcorr <- zx.rnkcorr[names(gmt),colnames(X)] ## make sure..
 
             ## compute LIMMA
@@ -115,7 +117,8 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
         timings <- rbind(timings, c("spearman", tt))
         sum(is.na(zx.rnkcorr))
     }
-    
+
+    methods
     if("gsva" %in% methods) {
         cat("fitting contrasts using GSVA/limma... \n")
         tt <- system.time({
@@ -133,7 +136,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
             if(class(zx.gsva)=="try-error") {
                 stop("FATAL ERROR in GSVA\n")
             }
-            zx.gsva <- normalize(zx.gsva, Y)
+            zx.gsva <- my.normalize(zx.gsva, Y)
             jj <- match(names(gmt), rownames(zx.gsva))
             zx.gsva <- zx.gsva[jj,colnames(X)] ## make sure..
             zx.gsva[is.na(zx.gsva)] <- 0
@@ -150,7 +153,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
             zx.ssgsea <- gsva(as.matrix(X), gmt[], method="ssgsea",
                               parallel.sz=mc.cores, verbose=FALSE)
             dim(zx.ssgsea)
-            zx.ssgsea <- normalize(zx.ssgsea, Y)
+            zx.ssgsea <- my.normalize(zx.ssgsea, Y)
             jj <- match(names(gmt), rownames(zx.ssgsea))
             zx.ssgsea <- zx.ssgsea[jj,colnames(X)] ## make sure..
             zx.ssgsea[is.na(zx.ssgsea)] <- 0
@@ -580,7 +583,6 @@ gset.fitContrastsWithLIMMA <- function( gsetX, contr.matrix, design,
         }
         names(tables) <- colnames(contr.matrix)
     } else {
-
         ##trend=TRUE
         tables <- list()
         i=1

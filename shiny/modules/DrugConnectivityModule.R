@@ -190,7 +190,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             nes <- round(res$NES[i],2)
             qv  <- round(res$padj[i],3)
             tt <- c( paste("NES=",nes), paste("q=",qv) )
-            legend("topright", legend=tt, cex=0.9)
+            legend("topright", legend=tt, cex=0.85, y.intersp=0.85)
         }
         
     })    
@@ -399,7 +399,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         info.text = "The <strong>Drug Connectivity Map</strong> correlates your signature with more than 5000 known drug profiles from the L1000 database, and shows similar and opposite profiles by running the GSEA algorithm on the contrast-drug profile correlation space.",
         options = dsea_enplots.opts,
         pdf.width=11, pdf.height=7,
-        height = 0.54*rowH, res=72
+        height = c(0.54*rowH,650), width=c('auto',1280),
+        res = c(72,90)
     )
     ##outputOptions(output, "dsea_enplots", suspendWhenHidden=FALSE) ## important!!!
 
@@ -464,7 +465,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
                     flex = c(1.4,0.15,1),
                     height = rowH,
                     fillRow(
-                        flex=c(2.2,1),
+                        flex=c(2.0,1),
                         plotWidget(ns("dsea_enplots")),
                         plotWidget(ns("dsea_moaplot"))
                     ),

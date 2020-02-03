@@ -38,9 +38,11 @@ compute.testGenes <- function(ngs, contr.matrix, max.features=1000, type="counts
     return(ngs)
 }
 
-test.methods=c("trend.limma","deseq2.wald","edger.qlf")
-test.methods=c("ttest.welch","trend.limma","edger.qlf")
-max.features=25000;type="counts";filter.low=TRUE
+if(0) {
+    test.methods=c("trend.limma","deseq2.wald","edger.qlf")
+    test.methods=c("ttest.welch","trend.limma","edger.qlf")
+    max.features=25000;type="counts";filter.low=TRUE
+}
 
 compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
                                          type="counts", filter.low = TRUE,
@@ -128,6 +130,7 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     model.parameters <- list(design = design,
                              contr.matrix = contr.matrix, 
                              exp.matrix = exp.matrix)
+    ngs$model.parameters <- model.parameters
     
     ##-----------------------------------------------------------------------------
     ## Filter genes
