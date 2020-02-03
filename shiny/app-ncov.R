@@ -14,9 +14,9 @@ cat("===================== INIT =======================\n")
 
 RDIR = "../R"
 FILES = "../lib"
-##PGX.DIR = "../data"
-##PGX.DIR = "/data/PublicData/archs4data/gse25k"
 PGX.DIR = c("../data","../data-extra")
+PGX.DIR = c("../data","/data/PublicData/pgx/gse-virome")
+PGX.DIR = c("/data/PublicData/pgx/gse-virome")
 dir.exists(PGX.DIR)
 
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars
@@ -30,6 +30,8 @@ opt <- pgx.readOptions(file="OPTIONS")
 
 DEV.VERSION = FALSE
 if(dir.exists("../../omicsplayground-dev")) DEV.VERSION = TRUE
+DEV.VERSION = FALSE
+
 
 if(opt$USER_MODE=="basic") {
     cat("********************* BASIC MODE **********************\n")
@@ -59,9 +61,10 @@ source("modules/SignatureModule.R", local=TRUE)
 source("modules/ProfilingModule.R", local=TRUE)
 source("modules/CorrelationModule.R", local=TRUE)
 source("modules/BiomarkerModule.R", local=TRUE)
+source("../../omicsplayground-dev/shiny/modules/ConnectivityModule.R", local=TRUE)
 
 if(DEV.VERSION && dir.exists("../../omicsplayground-dev")) {
-    source("../../omicsplayground-dev/shiny/modules/ConnectivityModule.R", local=TRUE)
+    ##source("../../omicsplayground-dev/shiny/modules/ConnectivityModule.R", local=TRUE)
     source("../../omicsplayground-dev/shiny/modules/TcgaModule.R", local=TRUE)
     source("../../omicsplayground-dev/shiny/modules/BatchCorrectModule.R", local=TRUE)
     source("../../omicsplayground-dev/shiny/modules/MultiLevelModule.R", local=TRUE)
@@ -95,9 +98,9 @@ server = function(input, output, session) {
     env[["prof"]]   <- callModule( ProfilingModule, "prof", env)
     env[["cor"]]    <- callModule( CorrelationModule, "cor", env)
     env[["bio"]]    <- callModule( BiomarkerModule, "bio", env)
+    env[["cmap"]] <- callModule( ConnectivityModule, "cmap", env)
 
     if(DEV.VERSION) {
-        env[["cmap"]] <- callModule( ConnectivityModule, "cmap", env)
         env[["tcga"]] <- callModule( TcgaModule, "tcga", env)
         env[["bc"]]   <- callModule( BatchCorrectModule, "bc", env)
         env[["multi"]]   <- callModule( MultiLevelModule, "multi", env)
@@ -193,7 +196,7 @@ if(DEV.VERSION) {
     dev.tabs <- navbarMenu(
         "Development",
         tabView("Batch-effects analysis", BatchCorrectInputs("bc"), BatchCorrectUI("bc")),
-        tabView("ConnectivityMap", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
+        ##tabView("ConnectivityMap", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
         tabView("TCGA survival", TcgaInputs("tcga"), TcgaUI("tcga")),
         tabView("Multi-level", MultiLevelInputs("multi"), MultiLevelUI("multi"))
     )
@@ -242,7 +245,8 @@ ui = navbarPage(
         tabView("Signature analysis", SignatureInputs("sig"), SignatureUI("sig")),
         tabView("Biomarker analysis", BiomarkerInputs("bio"), BiomarkerUI("bio"))
     ),
-    tabView("SingleCell", ProfilingInputs("prof"), ProfilingUI("prof")),
+    ##tabView("SingleCell", ProfilingInputs("prof"), ProfilingUI("prof")),
+    tabView("ConnectivityMap", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
     help.tabs,
     dev.tabs,
     footer = tagList(

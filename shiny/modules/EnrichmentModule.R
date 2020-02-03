@@ -42,7 +42,7 @@ EnrichmentModule <- function(input, output, session, env)
 
     fullH = 730
     rowH = 345  ## row height of panels
-    imgH = 275  ## height of images
+    imgH = 265  ## height of images
     tabH = 160  ## height of tables
     tabH = "70vh" ## height of tables
 
@@ -379,15 +379,14 @@ EnrichmentModule <- function(input, output, session, env)
     ##========================= FUNCTIONS ============================================
     ##================================================================================
     
-    ## Top enriched
-
+    ## Top enriched    
     topEnriched.RENDER %<a-% reactive({
 
         ngs <- inputData()
         alertDataLoaded(session,ngs)
         rpt <- getGeneSetTable()
         ##if(is.null(rpt)) return(NULL)
-
+        
         req(ngs, rpt, input$gs_contrast)
 
         comp=1
@@ -414,50 +413,37 @@ EnrichmentModule <- function(input, output, session, env)
         qv = rpt[,qv.col]
         names(qv) <- names(fx) <- rownames(rpt)
 
-        top.up   <- names(sort(fx[which(fx>0)],decreasing=TRUE))
-        top.down <- names(sort(fx[which(fx<0)]))
+        ##top.up <- names(sort(fx[which(fx>0)],decreasing=TRUE))
+        ##top.dn <- names(sort(fx[which(fx<0)]))
+        top <- rownames(rpt)
         
-        par(mfrow=c(2,5), mar=c(0.5,3.2,2.6,0.5), mgp=c(2,0.8,0))
-        for(i in 1:5) {
-            if(i > length(top.up)) {
+        par(mfrow=c(2,5), mar=c(0.5,3.0,2.8,0.1), mgp=c(2,0.8,0))
+        for(i in 1:10) {
+            if(i > length(top)) {
                 frame()
             } else {
-                gs <- top.up[i]
+                gs <- top[i]
                 gs1 = breakstring(gs,28,50,force=FALSE)
                 genes = toupper(names(which(ngs$GMT[,gs]!=0)))
                 names(rnk0) <- toupper(names(rnk0))
+                ylab = ""
+                if(i %in% c(1,6)) ylab = "Ranked list metric"
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
-                            main=gs1, xlab="",
-                            cex.main=0.80, len.main=80)
+                            main=gs1, xlab="", ylab=ylab,
+                            cex.main=0.78, len.main=80)
                 qv1 = formatC(qv[gs],format="e", digits=2)
                 legend("topright", paste("q=",qv1), bty="n",cex=0.85)
             }
         }
-        for(i in 1:5) {
-            if(i > length(top.down)) {
-                frame()
-            } else {
-                gs <- top.down[i]
-                gs1 = breakstring(gs,28,50,force=FALSE)
-                genes = toupper(names(which(ngs$GMT[,gs]!=0)))
-                names(rnk0) <- toupper(names(rnk0))
-                gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
-                            main=gs1, xlab="",
-                            cex.main=0.80, len.main=80)
-                qv1 = formatC(qv[gs],format="e", digits=2)
-                legend("topright", paste("q=",qv1), bty="n",cex=0.85)
-            }
-        }
-        
     })
 
     topEnriched_text = "The <strong>Top enriched</strong> section shows the enrichment plots for the top differentially (both positively and negatively) enriched gene sets for the selected comparison in the <code>Contrast</code> settings. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score (ES). The more the green ES curve is shifted to the upper left of the graph, the more the gene set is enriched in the first group. Conversely, a shift of the ES curve to the lower right, corresponds to more enrichment in the second group."
 
-    topEnriched_caption = "<b>Top enriched gene sets.</b> Enrichment plots of the top differentially enriched gene sets (up and down). Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score."
+    topEnriched_caption = "<b>Top enriched gene sets.</b> Enrichment plots of the top differentially enriched gene sets. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score."
 
     callModule(
         plotModule,
-        id = "topEnriched", 
+        id = "topEnriched", label="a",
         func = topEnriched.RENDER,
         func2 = topEnriched.RENDER,
         info.text = topEnriched_text,
@@ -466,14 +452,97 @@ EnrichmentModule <- function(input, output, session, env)
         title = "Top enriched gene sets"
         ##caption = topEnriched_caption
     )
+
+
+    topEnrichedFreq.RENDER %<a-% reactive({
+
+        ngs <- inputData()
+
+        rpt <- getGeneSetTable()
+        ##if(is.null(rpt)) return(NULL)
+        req(ngs, rpt, input$gs_contrast)
+
+        comp=1
+        comp = input$gs_contrast
+        if(is.null(comp)) return(NULL)
+        if(!(comp %in% names(ngs$gx.meta$meta))) return(NULL)
+        
+        ## filter on active rows (using search)
+        ##ii <- input$gseatable_rows_all
+        ii <- gseatable$rows_all()
+        rpt <- rpt[ii,,drop=FALSE]
+        if(nrow(rpt)==0) return(NULL)
+        
+        fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(rpt))[1]
+        fx = rpt[,fx.col]
+        names(fx) <- rownames(rpt)
+
+        top <- rownames(rpt)        
+        ntop <- as.integer(input$gs_enrichfreq_ntop)
+        top <- head(top,ntop)
+        
+        F <- 1*(ngs$GMT[,top]>0)
+        if(input$gs_enrichfreq_gsetweight) {
+            F <- t(t(F)  / colSums(F,na.rm=TRUE))
+        }
+        F <- t(t(F) * sign(fx[top]))
+        if(input$gs_enrichfreq_fcweight) {
+            F <- t(t(F) * abs(fx[top]))
+        } 
+        F <- head(F[order(-rowSums(abs(F))),,drop=FALSE], 24)
+        F <- F[order(-rowSums(F)),,drop=FALSE]
+        F <- as.matrix(F)
+       
+        par(mfrow=c(1,1), mar=c(6,4,2,0.5), mgp=c(2,0.8,0))
+        col1 = grey.colors(ncol(F),start=0.15)
+        barplot(t(F), beside=FALSE, las=3, cex.names=0.80, col=col1,
+                ylab="frequency")
+        
+    })
+
+    topEnrichedFreq_text = "<strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency. Genes that are frequently shared among the top enriched gene sets may suggest driver genes."
+
+    topEnrichedFreq_caption = "<strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency."
+    
+    topEnrichedFreq.opts = tagList(
+        tipify( radioButtons(ns('gs_enrichfreq_ntop'),"Number of top sets",
+                             c(5,10,25,100),inline=TRUE, selected=10),
+               "Number of top genesets to consider for counting the gene frequency."),
+        tipify( checkboxInput(ns('gs_enrichfreq_gsetweight'),"Weight by geneset size"),
+               "Weight by (inverse) gene set size."), 
+        tipify( checkboxInput(ns('gs_enrichfreq_fcweight'),"Weight by FC"),
+               "Weight by fold-change of current contrast.")         
+    )
+    
+    callModule(
+        plotModule,
+        id = "topEnrichedFreq", label="b",
+        func = topEnrichedFreq.RENDER,
+        func2 = topEnrichedFreq.RENDER,
+        options = topEnrichedFreq.opts,
+        info.text = topEnrichedFreq_text,
+        height = c(imgH,400), width = c('auto',1280),
+        res = c(72,90),
+        pdf.width = 14, pdf.height = 4, 
+        title = "Gene frequency"
+        ##caption = topEnrichedFreq_caption
+    )
     
     ## library(shinyjqui)
+    topEnriched_captionALL <- paste(
+        "<b>(a)</b>",topEnriched_caption,
+        "<b>(b)</b>",topEnrichedFreq_caption)
+    
     output$topEnriched_UI <- renderUI({
         fillCol(
             height = rowH,
             flex = c(1,NA),
-            plotWidget(ns("topEnriched")),
-            div(HTML(topEnriched_caption), class="caption")
+            fillRow(
+                flex = c(2.4,1),
+                plotWidget(ns("topEnriched")),
+                plotWidget(ns("topEnrichedFreq"))
+            ),
+            div(HTML(topEnriched_captionALL), class="caption")
         )
     })
 
@@ -524,10 +593,13 @@ EnrichmentModule <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ## 0: Volcano plot in gene space
     ##----------------------------------------------------------------------
+    subplot.MAR = c(3,3.5,1.5,0.5)
+    subplot.MAR = c(3.5,4,1.5,0.8)
+
     subplot1.RENDER %<a-% reactive({
         
         par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0.5,0.2)*2 )
-        par(mar=c(3,3.5,1.5,0.5))
+        par(mar=subplot.MAR)
         
         ngs <- inputData()    
         req(ngs)
@@ -585,7 +657,7 @@ EnrichmentModule <- function(input, output, session, env)
     subplot1.PLOTLY %<a-% reactive({
         
         ##par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0.5,0.2)*2 )
-        ##par(mar=c(3,3.5,1.5,0.5))
+        ##par(mar=subplot.MAR)
         
         ngs <- inputData()    
         req(ngs)
@@ -662,7 +734,7 @@ EnrichmentModule <- function(input, output, session, env)
     subplot2.RENDER %<a-% reactive({
         
         par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0.5,0.2)*2 )
-        par(mar=c(3,3.5,1.5,0.5))
+        par(mar=subplot.MAR)
         
         ngs <- inputData()    
         req(ngs)
@@ -701,7 +773,7 @@ EnrichmentModule <- function(input, output, session, env)
     subplot3.RENDER %<a-% reactive({
 
         par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0.5,0.2)*2 )
-        par(mar=c(3,3.5,1.5,0.5))
+        par(mar=subplot.MAR)
         
         ngs <- inputData()    
         req(ngs)
@@ -744,7 +816,7 @@ EnrichmentModule <- function(input, output, session, env)
     subplot4.RENDER %<a-% reactive({
 
         par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0.5,0.2)*2 )
-        par(mar=c(3,3.5,1.5,0.5))
+        par(mar=subplot.MAR)
         
         ngs <- inputData()    
         req(ngs)
@@ -795,7 +867,7 @@ EnrichmentModule <- function(input, output, session, env)
         ##func = subplot1.RENDER,
         ##func2 = subplot1.RENDER,        
         info.text = subplot1_text,
-        pdf.width=6, pdf.height=6, res=80,
+        pdf.width=6, pdf.height=6, res=72,
         height = imgH, 
         title="Volcano plot", label="a"
     )
@@ -806,7 +878,7 @@ EnrichmentModule <- function(input, output, session, env)
         func = subplot2.RENDER,
         func2 = subplot2.RENDER,
         info.text = subplot2_text,
-        pdf.width=6, pdf.height=6, res=80,
+        pdf.width=6, pdf.height=6, res=72,
         height = imgH,
         options = tagList(
             tipify( checkboxInput(
@@ -822,7 +894,7 @@ EnrichmentModule <- function(input, output, session, env)
         func = subplot3.RENDER,
         func2 = subplot3.RENDER,
         info.text = subplot3_text,
-        pdf.width=6, pdf.height=6, res=80,
+        pdf.width=6, pdf.height=6, res=72,
         height = imgH,
         options = tagList(
             tipify( checkboxInput(ns('gs_ungroup2'),'ungroup samples',FALSE),
@@ -837,7 +909,7 @@ EnrichmentModule <- function(input, output, session, env)
         func = subplot4.RENDER,
         func2 = subplot4.RENDER,
         info.text = subplot4_text,
-        pdf.width=6, pdf.height=6, res=80,
+        pdf.width=6, pdf.height=6, res=72,
         height = imgH,
         title = "Enrichment vs. expression", label="d"
     )
@@ -889,7 +961,7 @@ EnrichmentModule <- function(input, output, session, env)
         score <- sapply(ngs$gset.meta$meta, function(x) x[gset,"meta.fx"])
 
         top.up   <- names(sort(score[which(score>0)],decreasing=TRUE))
-        top.down <- names(sort(score[which(score<0)]))
+        top.dn <- names(sort(score[which(score<0)]))
         genes    <- names(which(ngs$GMT[,gset]!=0))
         genes    <- toupper(sub(".*:","",genes))
         gx.meta  <- ngs$gx.meta$meta
@@ -916,10 +988,10 @@ EnrichmentModule <- function(input, output, session, env)
             }
         }
         for(i in 1:5) {
-            if(i > length(top.down)) {
+            if(i > length(top.dn)) {
                 frame()
             } else {
-                cmp <- top.down[i]
+                cmp <- top.dn[i]
                 rnk0 <- gx.meta[[cmp]]$meta.fx
                 names(rnk0) <- rownames(gx.meta[[1]])
                 names(rnk0) <- toupper(sub(".*:","",names(rnk0)))
@@ -1362,7 +1434,7 @@ EnrichmentModule <- function(input, output, session, env)
         fx = NULL
         fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(rpt))[1]
         if(length(fx.col)>0) fx = rpt[,fx.col]
-
+        
         jj = which(sapply(rpt,is.numeric))
         if(length(jj)>0) rpt[,jj] = round(rpt[,jj],digits=4)    
         jj = which( sapply(rpt,is.character) |  sapply(rpt,is.factor) )
@@ -1376,9 +1448,10 @@ EnrichmentModule <- function(input, output, session, env)
         rpt$GS <- wrapHyperLink(rpt$GS, rownames(rpt))    
         selectmode = "single"
         selectmode
-        
-        numeric.cols <- which(sapply(rpt, is.numeric))
-        numeric.cols
+
+        is.numcol <- sapply(rpt, is.numeric)
+        numcols <- which( is.numcol & !colnames(rpt) %in% c("size"))
+        numcols
 
         ##rpt = format(rpt, digits=4)
         DT::datatable(rpt,
@@ -1395,7 +1468,7 @@ EnrichmentModule <- function(input, output, session, env)
                           scrollY = tabH,
                           scroller=TRUE, deferRender=TRUE
                       )) %>%
-            formatSignif(numeric.cols,4) %>%
+            formatSignif(numcols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
                 DT::formatStyle(fx.col, 
                                 background = color_from_middle( fx, 'lightblue', '#f5aeae'))

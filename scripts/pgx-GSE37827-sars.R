@@ -5,16 +5,18 @@ PGX.DIR = "../data"
 source("../R/pgx-include.R")
 ##source("options.R")
 
-BATCH.CORRECT=1
-rda.file="../data-extra/GSE53784-wnvjev.pgx"
+rda.file="../data-extra/GSE37827-sars.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
 ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
-ngs$datatype = "RNA-seq"
-ngs$description = "GSE53784 (Clarke et al., MBio 2014). Gene expression in the brain following WNV or JEV infection. WNV- or JEV-infected (N=3) vs. mock-infected (N=3) mouse brain."
+ngs$datatype = "mRNA (microarray)"
+ngs$description = "GSE37827. SCL006,icSARS CoV Urbani or icSARS Bat SRBD (spike receptor binding domain from the wild type strain Urbani to allow for infection of human and non-human primate cells) infections of the 2B4 clonal derivative of Calu-3 cells - Time course. Purpose of experiment was to compare transcriptomics of 2B4 cells (clonal derivative of Calu-3 cells) infected with either icSARS CoV or the icSARS deltaORF6 mutant."
+
+PROCESS.DATA = TRUE
+DIFF.EXPRESSION = TRUE
 
 ## READ/PARSE DATA
 if(PROCESS.DATA) {
@@ -27,15 +29,15 @@ if(PROCESS.DATA) {
     library(hgu133plus2.db)
 
     ## load series and platform data from GEO
-    geo <- getGEO("GSE53784", GSEMatrix=TRUE, getGPL=TRUE)
+    geo <- getGEO("GSE37827", GSEMatrix=TRUE, getGPL=TRUE)
     attr(geo, "names")
     X <- exprs(geo[[1]])
-    head(X)
+    head(X)[,1:4]
     
     ## extract GENE symbol from featureData
     colnames(featureData(geo[[1]])@data)
-    gene.annot <- featureData(geo[[1]])@data$gene
-    gene.symbol <- gsub("[ ]","",sapply(strsplit(gene.annot,split="//"),"[",2))
+    gene.symbol <- as.character(featureData(geo[[1]])@data$GENE_SYMBOL)
+    ##gene.symbol <- gsub("[ ]","",sapply(strsplit(gene.annot,split="//"),"[",2))
     gene.symbol[10000 + 1:10]    
     jj <- which( !gene.symbol %in% c(NA,"-",""))
     X <- X[jj,]
@@ -44,43 +46,35 @@ if(PROCESS.DATA) {
     ## Get sample info
     pdata = pData(geo[[1]])
     head(pdata)
-    tt <- as.character(pdata$title)    
-    treatment <- sub("_.*","",tt)
-    replicate <- sub(".*_","",tt)
-    sampleTable <- data.frame(sample=tt, treatment=treatment)
+    tt <- as.character(pdata$title)
+    tt <- sub("_B$","B",tt)
+    sampleTable <- do.call(rbind,strsplit(tt,split="_"))
+    head(sampleTable)
+    colnames(sampleTable) <- c("code","infected","time","replicate")
     colnames(X) <- rownames(sampleTable) <- tt
-
-    ## conform tables
-    sample.names <- as.character(sampleTable$sample)
-    rownames(sampleTable) = colnames(X) = sample.names
     
     ##-------------------------------------------------------------------
     ## gene annotation
     ##-------------------------------------------------------------------
-    require(org.Mm.eg.db)
-    GENE.TITLE = unlist(as.list(org.Mm.egGENENAME))
-    gene.symbol = unlist(as.list(org.Mm.egSYMBOL))
+    require(org.Hs.eg.db)
+    GENE.TITLE = unlist(as.list(org.Hs.egGENENAME))
+    gene.symbol = unlist(as.list(org.Hs.egSYMBOL))
     names(GENE.TITLE) = gene.symbol
     head(GENE.TITLE)
     gene_title <- GENE.TITLE[rownames(X)]
 
     ## get chromosome locations
-    chrloc = as.list(org.Mm.egCHRLOC)
+    chrloc = sapply(as.list(org.Hs.egMAP),"[",1)
     names(chrloc) = gene.symbol
     chrloc <- chrloc[rownames(X)]
-    loc <- sapply(chrloc, "[", 1)
-    chrom <- sapply(chrloc, function(s) names(s)[1])
-    loc[sapply(loc,is.null)] <- NA
-    chrom[sapply(chrom,is.null)] <- NA
-    chrom <- as.vector(unlist(chrom))
-    loc   <- as.vector(unlist(loc))
 
     genes = data.frame( gene_name=rownames(X),
                        gene_title=gene_title,
-                       chr=chrom, pos=loc)
+                       chr=chrloc)
     ##genes = apply(genes,2,as.character)
     head(genes)
 
+    ## take out duplicated
     jj <- order(-apply(X,1,sd))
     X <- X[jj,]
     genes <- genes[jj,]    
@@ -95,7 +89,7 @@ if(PROCESS.DATA) {
     library(limma)
     X <- limma::normalizeQuantiles(X)
     ngs$counts <- 2**X  ## treat as counts
-    ngs$samples <- sampleTable
+    ngs$samples <- data.frame(sampleTable)
     ngs$genes = genes
     
     ##-------------------------------------------------------------------
@@ -104,19 +98,61 @@ if(PROCESS.DATA) {
     ##-------------------------------------------------------------------
     ngs <- pgx.clusterSamples(ngs, perplexity=2, skipifexists=FALSE, prefix="C")
     head(ngs$samples)
+
 }
 
 
 if(DIFF.EXPRESSION) {
+
+    ##load(file=rda.file, verbose=1)
     
     head(ngs$samples)
-    ngs$samples$group <- ngs$samples$treatment
+    grp <- paste(ngs$samples$infected,ngs$samples$time,sep="_")
+    ngs$samples$group <- grp
     levels = unique(ngs$samples$group)
     levels
-
+    
     contr.matrix <- makeContrasts(
-        JEV_vs_MOCK = JEV - MOCK,
-        WNV_vs_Mock = WNV - Mock,
+        BatSRBD_0h_vs_mock_0h = BatSRBD_0h - mock_0h,
+        ##BatSRBD_7h_vs_mock_7h = BatSRBD_7h - mock_7h,
+        BatSRBD_12h_vs_mock_12h = BatSRBD_12h - mock_12h,
+        BatSRBD_24h_vs_mock_24h = BatSRBD_24h - mock_24h,
+        BatSRBD_30h_vs_mock_30h = BatSRBD_30h - mock_30h,
+        BatSRBD_36h_vs_mock_36h = BatSRBD_36h - mock_36h,
+        BatSRBD_48h_vs_mock_48h = BatSRBD_48h - mock_48h,
+        BatSRBD_54h_vs_mock_54h = BatSRBD_54h - mock_54h,
+        BatSRBD_60h_vs_mock_60h = BatSRBD_60h - mock_60h,
+        BatSRBD_72h_vs_mock_72h = BatSRBD_72h - mock_72h,
+        BatSRBD_1d_vs_mock_1d =
+            (BatSRBD_0h + BatSRBD_12h + BatSRBD_24h)/3 -
+            (mock_0h + mock_12h + mock_24h)/3,
+        BatSRBD_2d_vs_mock_2d =
+            (BatSRBD_30h + BatSRBD_36h + BatSRBD_48h)/3 -
+            (mock_30h + mock_36h + mock_48h)/3,
+        BatSRBD_3d_vs_mock_3d =
+            (BatSRBD_54h + BatSRBD_60h + BatSRBD_72h)/3 -
+            (mock_54h + mock_60h + mock_72h)/3 ,
+
+        icSARSCoV_0h_vs_mock_0h = icSARSCoV_0h - mock_0h,
+        icSARSCoV_7h_vs_mock_7h = icSARSCoV_7h - mock_7h,
+        icSARSCoV_12h_vs_mock_12h = icSARSCoV_12h - mock_12h,
+        icSARSCoV_24h_vs_mock_24h = icSARSCoV_24h - mock_24h,
+        icSARSCoV_30h_vs_mock_30h = icSARSCoV_30h - mock_30h,
+        icSARSCoV_36h_vs_mock_36h = icSARSCoV_36h - mock_36h,
+        icSARSCoV_48h_vs_mock_48h = icSARSCoV_48h - mock_48h,
+        icSARSCoV_54h_vs_mock_54h = icSARSCoV_54h - mock_54h,
+        icSARSCoV_60h_vs_mock_60h = icSARSCoV_60h - mock_60h,
+        icSARSCoV_72h_vs_mock_72h = icSARSCoV_72h - mock_72h,
+        icSARSCoV_1d_vs_mock_1d =
+            (icSARSCoV_0h + icSARSCoV_12h + icSARSCoV_24h)/3 -
+            (mock_0h + mock_12h + mock_24h)/3,
+        icSARSCoV_2d_vs_mock_2d =
+            (icSARSCoV_30h + icSARSCoV_36h + icSARSCoV_48h)/3 -
+            (mock_30h + mock_36h + mock_48h)/3,
+        icSARSCoV_3d_vs_mock_3d =
+            (icSARSCoV_54h + icSARSCoV_60h + icSARSCoV_72h)/3 -
+            (mock_54h + mock_60h + mock_72h)/3 ,
+
         levels = levels)
     contr.matrix
     
@@ -130,7 +166,7 @@ if(DIFF.EXPRESSION) {
                         "camera", "fry","fgsea") ## no GSEA, too slow...
     GENETEST.METHODS=c("trend.limma","edger.qlf","deseq2.wald")
     GENESET.METHODS = c("fisher","gsva","fgsea") ## no GSEA, too slow...
-    
+
     MAX.GENES = 20000
     MAX.GENESETS = 5000
     
@@ -151,6 +187,7 @@ if(DIFF.EXPRESSION) {
     
     names(ngs)
     ngs$timings
+
 
 }
 

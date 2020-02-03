@@ -17,7 +17,6 @@ if(0) {
 
 }
 
-
 pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=-1, contrasts=NULL)
 {
     require(rhdf5)

@@ -121,7 +121,8 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
 
     if("connectivity" %in% extra) {
         cat(">>> computing connectivity scores...\n")
-        ngs$connectivity <- NULL  ## clean up
+
+        ## ngs$connectivity <- NULL  ## clean up
 
         if(is.null(sigdb)) {
             sigdb <- dir(lib.dir, pattern="sigdb-.*h5", full.names=TRUE)
@@ -132,7 +133,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
         ##     file.path(PGX.DIR,"datasets-allFC.csv"),
         ##     file.path(FILES,"sigdb-archs4.h5")
         ## )
-        
+        db <- sigdb[1]
         for(db in sigdb) {
             if(file.exists(db)) {
                 ntop = 9999
@@ -158,6 +159,11 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
     timings <- as.matrix(timings)
     rownames(timings) <- timings[,1]
     timings0 <- apply(as.matrix(timings[,-1,drop=FALSE]),2,as.numeric)
+    if(nrow(timings)==1) {
+        timings0 <- matrix(timings0,nrow=1)
+        colnames(timings0) <- colnames(timings)[-1]
+        rownames(timings0) <- rownames(timings)
+    }
     rownames(timings0) <- rownames(timings)
     timings0 <- apply( timings0, 2, function(x) tapply(x,rownames(timings0),sum))
     if(is.null(nrow(timings0))) {
