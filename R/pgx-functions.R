@@ -9,23 +9,49 @@ USER.GENETEST.METHODS <- NULL
 ##==========    Platform helper functions =====================================
 ##=============================================================================
 
-s
-trimsame <- function(s) {
-
-    minchar <- min(nchar(s))
-    minchar
+##s=title
+trimsame <- function(s, split=" ") {
+    for(i in 1:4) s <- gsub(paste0(split,split),split,s)
+    whereSpaces <- function(s) as.vector(gregexpr(split, s)[[1]])
+    sp <- whereSpaces(s[1])    
     is.same = TRUE
-    whereSpaces <- function(s) { sapply(gregexpr(" ", s), function(p) { sum(p>=0) } ) }
-    
-    while(is.same && i<minchar) {
-        is.same <- all(duplicated(substring(s,1,i))[-1])
+    i=1
+    while(is.same && i<=length(sp)) {
+        is.same <- all(duplicated(substring(s,1,sp[i]))[-1])
         i = i + 1
     }
-    i=i-1
-    samepart <- substring(s[1],1,i)
+    is.same    
+    samepart <- substring(s[1],1,sp[i-2])
     samepart
-    
-    
+    s1 <- sub(samepart,"",s)    
+    s1
+}
+
+trimsame2 <- function(s,split=" ")
+{
+    for(i in 1:4) s <- gsub(paste0(split,split),split,s)
+    s1 <- strsplit(s[1], split=split)[[1]]
+    if(length(s1)<4) return(s)
+    ww <- c()
+    i=1;j=3
+    for(i in 1:(length(s1)-3)) {
+        k <- length(s1)-i+1
+        w1 <- lapply(3:k, function(j) head(s1[i:length(s1)],j))
+        w1 <- sapply(w1, paste, collapse=" ")
+        w1 <- gsub("\\(|\\)|\\[|\\]",".",w1)
+        ww <- c(ww,rev(w1))
+    }
+
+    s2 <- s
+    for(i in 1:length(ww)) {
+        if( all(grepl(ww[i],s2))) {
+            s2 <- sub(ww[i],"",s2)
+        }
+    }
+
+    s2 <- as.character(sapply(s2, trimws))
+    for(i in 1:4) s2 <- gsub(paste0(split,split),split,s2)    
+    s2
 }
 
 
