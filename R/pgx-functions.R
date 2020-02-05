@@ -13,21 +13,31 @@ USER.GENETEST.METHODS <- NULL
 trimsame <- function(s, split=" ") {
     for(i in 1:4) s <- gsub(paste0(split,split),split,s)
     whereSpaces <- function(s) as.vector(gregexpr(split, s)[[1]])
-    sp <- whereSpaces(s[1])    
+    sp <- whereSpaces(s[1])
+    sp
+    if(length(sp)==0) return(s)
+    
     is.same = TRUE
     i=1
+    j=0
     while(is.same && i<=length(sp)) {
         is.same <- all(duplicated(substring(s,1,sp[i]))[-1])
+        if(is.same) j = i
         i = i + 1
     }
-    is.same    
-    samepart <- substring(s[1],1,sp[i-2])
-    samepart
-    s1 <- sub(samepart,"",s)    
+    i
+    j
+    is.same
+    s1 <- s
+    if(j>0) {
+        samepart <- substring(s[1],1,sp[j])
+        samepart
+        s1 <- sub(samepart,"",s)
+    }
     s1
 }
 
-trimsame2 <- function(s,split=" ")
+trimsame.middle <- function(s,split=" ")
 {
     for(i in 1:4) s <- gsub(paste0(split,split),split,s)
     s1 <- strsplit(s[1], split=split)[[1]]
@@ -41,19 +51,25 @@ trimsame2 <- function(s,split=" ")
         w1 <- gsub("\\(|\\)|\\[|\\]",".",w1)
         ww <- c(ww,rev(w1))
     }
-
     s2 <- s
     for(i in 1:length(ww)) {
         if( all(grepl(ww[i],s2))) {
             s2 <- sub(ww[i],"",s2)
         }
     }
-
     s2 <- as.character(sapply(s2, trimws))
     for(i in 1:4) s2 <- gsub(paste0(split,split),split,s2)    
     s2
 }
 
+split=" "
+trimsame.ends <- function(s, split=" ") {
+    s1 <- trimsame(s, split=split)
+    s2 <- sapply(strsplit(s1, split=split),function(x) paste(rev(x),collapse=" "))
+    s3 <- trimsame(s2, split=split)
+    s4 <- sapply(strsplit(s3, split=split),function(x) paste(rev(x),collapse=" "))
+    s4
+}
 
 ##s=rep("abc",100)
 dbg <- function(... ) {
