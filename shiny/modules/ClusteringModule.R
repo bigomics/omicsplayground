@@ -130,11 +130,10 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ## updateRadioButtons(session, "hm_splitby", selected='none')
 
         ## update defaults??
-        lab <- c()
-        if(ncol(ngs$X)<80) lab <- c(lab,"column")
-        if(nrow(ngs$X)<80) lab <- c(lab,"row")
-        updateCheckboxGroupInput(session,"hm_showlabel", selected=lab)
-        
+        lab <- c("row","column")
+        if(ncol(ngs$X) > 80) lab <- c("row")
+        ##if(nrow(ngs$X)<100) lab <- c(lab,"row")
+        updateCheckboxGroupInput(session,"hm_showlabel", selected=lab)        
     })
 
     observeEvent( input$hm_splitby, {
