@@ -21,7 +21,7 @@ RUN R -e "install.packages(c('shinydashboardPlus','optparse','docopt','randomFor
 ## Pull from GitHub
 #------------------------------------------------------------
 WORKDIR /omicsplayground
-## RUN rm data/geiger2016-arginine.pgx
+RUN rm data/geiger2016-arginine.pgx
 RUN git pull
 
 #------------------------------------------------------------
