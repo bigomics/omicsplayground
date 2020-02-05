@@ -33,6 +33,9 @@ if(PROCESS.DATA) {
     attr(geo, "names")
     X <- exprs(geo[[1]])
     head(X)[,1:4]
+    max(X)
+    min(X)
+    X <- log2(X)
     
     ## extract GENE symbol from featureData
     colnames(featureData(geo[[1]])@data)
@@ -96,7 +99,7 @@ if(PROCESS.DATA) {
     ## Pre-calculate t-SNE for and get clusters early so we can use it
     ## for doing differential analysis.
     ##-------------------------------------------------------------------
-    ngs <- pgx.clusterSamples(ngs, perplexity=2, skipifexists=FALSE, prefix="C")
+    ngs <- pgx.clusterSamples(ngs, perplexity=30, skipifexists=FALSE, prefix="C")
     head(ngs$samples)
 
 }

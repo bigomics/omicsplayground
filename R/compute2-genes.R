@@ -81,10 +81,12 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     ## normalize contrast matrix to zero mean and signed sums to one
     ##-----------------------------------------------------------------------------
     contr.matrix0 <- contr.matrix  ## SAVE
-    contr.matrix[is.na(contr.matrix)] <- 0
-    
+
     ## take out any empty comparisons
     contr.matrix <- contr.matrix0[,which(colSums(contr.matrix0!=0)>0),drop=FALSE]
+    contr.matrix[is.na(contr.matrix)] <- 0
+    
+    ## normalize
     for(i in 1:ncol(contr.matrix)) {
         m <- contr.matrix[,i]
         m[is.na(m)] <- 0
