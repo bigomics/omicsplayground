@@ -15,7 +15,9 @@ ngs.getGeneAnnotation <- function(genes)
         SYMBOL = unlist(as.list(org.Hs.egSYMBOL))
         names(GENE.TITLE) = SYMBOL
         CHRLOC = as.list(org.Hs.egCHRLOC)
+        MAP = as.list(org.Hs.egMAP)
         names(CHRLOC) = SYMBOL
+        names(MAP) = SYMBOL
     }
     if(is.mouse) {
         GENE.TITLE = unlist(as.list(org.Mm.egGENENAME))
@@ -38,8 +40,7 @@ ngs.getGeneAnnotation <- function(genes)
     chrom <- as.vector(unlist(chrom))
 
     ## get protein info
-    ## fill me
-    
+    ## fill me    
     annot = data.frame( gene_name = genes,
                        gene_title = gene_title,
                        chr=chrom, pos=loc)
