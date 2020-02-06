@@ -36,8 +36,9 @@ pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=-1, contrasts=NULL)
         if(file.exists(sigdb)) h5.file <- sigdb
     }
     
-    if(is.null(contrasts))
+    if(is.null(contrasts)) {
         contrasts <- colnames(meta$fc)
+    }
     contrasts <- intersect(contrasts, colnames(meta$fc))
 
     scores <- list()
@@ -52,12 +53,12 @@ pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=-1, contrasts=NULL)
         if(!is.null(h5.file))  {
             res <- pgx.correlateSignatureH5(
                 fc, h5.file = h5.file,
-                nsig=100, ntop=ntop, nperm=10000)            
+                nsig=100, ntop=ntop, nperm=9999)            
 
         } else if(!is.null(refmat)) {                
             res <- pgx.correlateSignature(
                 fc, refmat = refmat,
-                nsig=100, ntop=ntop, nperm=10000)
+                nsig=100, ntop=ntop, nperm=9999)
             
         } else {
             stop("FATAL:: could not determine reference type")
@@ -92,10 +93,11 @@ pgx.correlateSignature <- function(fc, refmat, nsig=100, ntop=1000, nperm=10000)
     ## ---------------------------------------------------------------
     ## Compute simple correlation between query profile and signatures
     ## ---------------------------------------------------------------
-    fc <- sort(fc)
-    gg <- unique(names(c(head(fc,nsig), tail(fc,nsig))))
+    gg <- intersect(rn, names(fc))
+    fc1 <- sort(fc[gg])
+    gg <- unique(names(c(head(fc1,nsig), tail(fc1,nsig))))
     ##gg <- intersect(names(fc),rn)
-    gg <- intersect(gg,rn)
+    ##gg <- intersect(gg,rn)
     G  <- refmat[gg,,drop=FALSE]
     dim(G)
 
@@ -172,7 +174,7 @@ pgx.correlateSignature <- function(fc, refmat, nsig=100, ntop=1000, nperm=10000)
     return(res)
 }
 
-ntop=1000;nsig=100;nperm=10000
+##ntop=1000;nsig=100;nperm=10000
 pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=10000)
 {
     ##
@@ -192,12 +194,13 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     ## ---------------------------------------------------------------
     ## Compute simple correlation between query profile and signatures
     ## ---------------------------------------------------------------
-    fc <- sort(fc)
-    gg <- unique(names(c(head(fc,nsig), tail(fc,nsig))))
-    ##gg <- intersect(names(fc),rn)
-    gg <- intersect(gg,rn)
+    gg <- intersect(names(fc),rn)
+    fc1 <- sort(fc[gg])
+    gg <- unique(names(c(head(fc1,nsig), tail(fc1,nsig))))
+    ## gg <- intersect(gg,rn)
     row.idx <- match(gg,rn)
     G <- h5read(h5.file, "data/matrix", index=list(row.idx,1:length(cn)))
+    dim(G)
     ##head(G[,1])
     G[which(G < -999999)] <- NA
     ##G[is.na(G)] <- 0  ## NEED RETHINK: are missing values to be treated as zero???
@@ -208,7 +211,6 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     rG  <- apply( G[gg,], 2, rank, na.last="keep" )
     rfc <- rank( fc[gg], na.last="keep" )
     ##rho <- cor(rG, rfc, use="pairwise")[,1]
-
     rG[is.na(rG)] <- 0  ## NEED RETHINK: are missing values to be treated as zero???
     rfc[is.na(rfc)] <- 0
     rho <- cor(rG, rfc, use="pairwise")[,1]
