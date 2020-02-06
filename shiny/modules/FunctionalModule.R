@@ -154,13 +154,13 @@ to understand biological functions including GO, KEGG, and WordCloud clustering.
         names(gene.fc) <- names(gene.qv) <- genesUPPERCASE
         
         ## calculate set size
-        sig.genes <- names(gene.fc)
-        sig.genes <- names(which(abs(gene.fc) >= 1))
-        sig.genes <- names(which(gene.qv < 0.25 & abs(gene.fc) >= 1))
+        sig.fc <- input$kegg_table_logfc
+        ##sig.genes <- names(gene.fc)
+        sig.genes <- names(which(abs(gene.fc) >= sig.fc))
+        sig.genes <- names(which(gene.qv < 0.20 & abs(gene.fc) >= sig.fc))  ## DETERMINE SIGNIFICANT
         pw.genes <- lapply(GSETS[kegg.gsets], intersect, names(gene.fc))
         ngene0 <- sapply(pw.genes, length)
         ngene1 <- sapply(lapply(pw.genes, intersect, sig.genes), length)
-
         sig.genes <- sig.genes[order(-abs(gene.fc[sig.genes]))]
         top.genes <- sapply(GSETS[kegg.gsets], function(x)
             paste0(head(intersect(sig.genes,x),6),collapse=","))
@@ -561,11 +561,16 @@ to understand biological functions including GO, KEGG, and WordCloud clustering.
     )
 
     kegg_table_info = "<strong>Enrichment table.</strong> The table is interactive; enabling user to sort on different variables and select a pathway by clicking on the row in the table. The scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap."
+
+    kegg_table_opts <- tagList(
+        selectInput(ns("kegg_table_logfc"),"logFC threshold for Fisher-test",c(0.2,0.5,1))
+    )
     
     kegg_table <- callModule(
         tableModule,
         id = "kegg_table", label="b",
-        func = kegg_table.RENDER, 
+        func = kegg_table.RENDER,
+        options = kegg_table_opts,
         info.text = kegg_table_info, 
         info.width = "350px",
         title = "Enrichment table",

@@ -39,14 +39,14 @@ if(opt$USER_MODE=="basic") {
 if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
-    load("../data/am2019-jev.pgx")
+    load("../data-extra/carr2019-jev.pgx")
     load("../data/tcga-brca_pub-gx.pgx")
     load("../../omicsplayground-dev/data/CCLE-drugSX2.pgx")
     ngs = pgx.initialize(ngs)
 }
 
 source("global.R", local=TRUE)
-source("../R/pgx-modules.R", local=TRUE)
+##source("../R/pgx-modules.R", local=TRUE)
 source("modules/LoadingModule.R", local=TRUE)
 source("modules/DataViewModule.R", local=TRUE)
 source("modules/ClusteringModule.R", local=TRUE)
