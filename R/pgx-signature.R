@@ -551,6 +551,7 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
     dim(G)    
     sel <- grep("HALLMARK|C[1-9]|^GO", rownames(G))
     sel <- grep("HALLMARK", rownames(G))
+    sel <- grep("HALLMARK|KEGG", rownames(G))
     length(sel)
 
     G <- G[sel,,drop=FALSE]
@@ -559,7 +560,13 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
     ##X <- X[,1:20]
     ##X[is.na(X)] <- 0
 
-    if(!h5exists(h5.file, "enrichment")) h5createGroup(h5.file,"enrichment")
+    if(!h5exists(h5.file, "enrichment")) {
+        h5createGroup(h5.file,"enrichment")
+    }
+
+    if(h5exists(h5.file, "enrichment/genesets")) {
+        h5delete(h5.file, "enrichment/genesets")
+    }
     h5write(names(gmt), h5.file, "enrichment/genesets")
 
     if("gsea" %in% methods) {
@@ -569,7 +576,7 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
             xi <- X[,i]
             xi[is.na(xi)] <- 0
             xi <- xi + 1e-3*rnorm(length(xi))
-            fgsea( gmt, xi, nperm=1000)$NES
+            fgsea( gmt, xi, nperm=10000 )$NES
         })  
         F1 <- do.call(cbind, F1)
         rownames(F1) <- names(gmt)
@@ -577,6 +584,7 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
         dim(F1)
         cat("[pgx.addEnrichmentSignaturesH5] dim(F1)=",dim(F1),"\n")
         rownames(F1) <- names(gmt)
+        if(h5exists(h5.file, "enrichment/GSEA")) h5delete(h5.file, "enrichment/GSEA")
         h5write(F1, h5.file, "enrichment/GSEA")
     }
     
@@ -587,6 +595,7 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
         F2 <- gsva(X, gmt, method="gsva", parallel.sz=mc.cores)
         rownames(F2) <- names(gmt)
         dim(F2)
+        if(h5exists(h5.file, "enrichment/GSVA")) h5delete(h5.file, "enrichment/GSVA")
         h5write(F2, h5.file, "enrichment/GSVA")
     }
     

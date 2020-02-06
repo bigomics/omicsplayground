@@ -173,7 +173,9 @@ if(0) {
     
     source("../R/pgx-include.R")
     extra <- c("connectivity")
-    sigdb = "/data/PublicData/LINCS/sigdb-lincsXL.h5"
+    sigdb = c("/data/PublicData/LINCS/sigdb-lincs.h5",
+              "/data/PublicData/LINCS/sigdb-virome.h5")
+    sigdb = c("../libx/sigdb-lincs.h5","../libx/sigdb-virome.h5")
     ngs <- compute.extra(ngs, extra, lib.dir=FILES, sigdb=sigdb) 
     names(ngs$connectivity)
     
