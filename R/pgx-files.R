@@ -1,20 +1,20 @@
 
 ##h5.file="test.h5";chunk=100
-pgx.saveMatrixH5 <- function(X, h5.file, chunk=NULL )
+pgx.saveMatrixH5 <- function(X, h5.file, chunk=NULL, del=TRUE )
 {   
     require(rhdf5)
-    unlink(h5.file)
+    if(del) unlink(h5.file)
     
     if(is.null(chunk)) {
-        h5createFile(h5.file)    
+        if(del) h5createFile(h5.file)    
         ## h5createGroup("myhdf5file.h5","foo")
         ## A = matrix(1:10,nr=5,nc=2)
         ## h5write(A, "myhdf5file.h5","foo/A")    
         h5createGroup(h5.file,"data")    
         h5write( X, h5.file, "data/matrix")
     } else {
-        h5createFile(h5.file)    
-        h5createGroup(h5.file,"data")
+        if(del) h5createFile(h5.file)    
+        if(del) h5createGroup(h5.file,"data")
         h5createDataset(
             h5.file, "data/matrix",
             c(nrow(X),ncol(X)),

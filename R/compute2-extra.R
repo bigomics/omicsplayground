@@ -123,9 +123,11 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
         cat(">>> computing connectivity scores...\n")
 
         ## ngs$connectivity <- NULL  ## clean up
-
         if(is.null(sigdb)) {
-            sigdb <- dir(lib.dir, pattern="sigdb-.*h5", full.names=TRUE)
+            ##sigdb <- dir(c(FILES,FILESX), pattern="sigdb-.*h5", full.names=TRUE)   
+            lib.dir2 <- c(lib.dir, sub("lib$","libx",lib.dir))  ### NEED BETTER SOLUTION!!!
+            lib.dir2 <- unique(lib.dir2)
+            sigdb <- dir(lib.dir2, pattern="sigdb-.*h5", full.names=TRUE)
             sigdb
         }
 

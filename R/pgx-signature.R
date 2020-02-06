@@ -461,7 +461,7 @@ pgx.createSignatureDatabaseH5 <- function(pgx.files, h5.file, update.only=FALSE)
     ##--------------------------------------------------
     ## Calculate top100 gene signatures
     ##--------------------------------------------------
-    cat("Creating signatures...\n")
+    cat("Creating top-100 signatures...\n")
     
     if(!update.only || !h5exists(h5.file, "signature")) {
         ## X  <- h5read(h5.file, "data/matrix")

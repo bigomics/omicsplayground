@@ -33,6 +33,7 @@ if(PROCESS.DATA) {
     attr(geo, "names")
     X <- exprs(geo[[1]])
     head(X)[,1:4]
+    max(X)
     
     ## extract GENE symbol from featureData
     colnames(featureData(geo[[1]])@data)
@@ -47,6 +48,7 @@ if(PROCESS.DATA) {
     pdata = pData(geo[[1]])
     head(pdata)
     tt <- as.character(pdata$title)
+    head(tt)
     tt <- sub("MCL001_","",tt)
     tt <- sub("_mRNA","",tt)
     tt <- sub("RFP-MERS","RFPMERS",tt)
@@ -105,7 +107,7 @@ if(PROCESS.DATA) {
     ## Pre-calculate t-SNE for and get clusters early so we can use it
     ## for doing differential analysis.
     ##-------------------------------------------------------------------
-    ngs <- pgx.clusterSamples(ngs, perplexity=30, skipifexists=FALSE, prefix="C")
+    ngs <- pgx.clusterSamples(ngs, perplexity=20, skipifexists=FALSE, prefix="C")
     head(ngs$samples)
 
 }
