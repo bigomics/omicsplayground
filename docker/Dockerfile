@@ -34,7 +34,7 @@ RUN R -e "setwd('R');source('requirements.R')"
 RUN R -e "install.packages(c('umap','corrplot','wordcloud'))"
 RUN pip install umap-learn
 
-FROM base AS latest
+## FROM base AS rbase
 
 #------------------------------------------------------------
 ## Pull from GitHub

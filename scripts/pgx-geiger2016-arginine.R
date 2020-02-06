@@ -169,6 +169,19 @@ rda.file
 ngs.save(ngs, file=rda.file)
 
 
+if(0) {
+    
+    source("../R/pgx-include.R")
+    extra <- c("connectivity")
+    sigdb = "/data/PublicData/LINCS/sigdb-lincsXL.h5"
+    ngs <- compute.extra(ngs, extra, lib.dir=FILES, sigdb=sigdb) 
+    names(ngs$connectivity)
+    
+    rda.file
+    ngs.save(ngs, file=rda.file)
+
+}
+
 
 
 
