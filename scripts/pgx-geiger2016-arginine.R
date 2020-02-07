@@ -47,8 +47,7 @@ if(PROCESS.DATA) {
     ## Read protein data
     ##------------------------------------------------------------
     ##devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data", "--no-manual"), build_vignettes=FALSE)    
-    library(proteus)
-    
+    library(proteus)    
     metadataFile <- "../ext/arginine/meta.txt"
     proteinGroupsFile <- "../ext/arginine/proteinGroups.txt"
     ## Read the proteinGroups file
@@ -174,12 +173,13 @@ if(0) {
     extra <- c("connectivity")
     sigdb = c("/data/PublicData/LINCS/sigdb-lincs.h5",
               "/data/PublicData/LINCS/sigdb-virome.h5")
-    sigdb = c("../libx/sigdb-lincs.h5","../libx/sigdb-virome.h5")
+    sigdb = c("../libx/sigdb-lincs.h5","../libx/sigdb-lincsXL.h5","../libx/sigdb-virome.h5")
     sigdb = NULL
     ngs <- compute.extra(ngs, extra, lib.dir=FILES, sigdb=sigdb) 
     names(ngs$connectivity)
     
     rda.file
+    rda.file="../data/geiger2016-arginineX.pgx"
     ngs.save(ngs, file=rda.file)
 
 }

@@ -17,7 +17,7 @@ if(0) {
 
 }
 
-pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=-1, contrasts=NULL)
+pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=1000, contrasts=NULL)
 {
     require(rhdf5)
     meta = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
@@ -527,7 +527,6 @@ pgx.createSignatureDatabaseH5 <- function(pgx.files, h5.file, update.only=FALSE)
 pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
                                           methods = c("gsea","gsva") ) 
 {
-
     require(rhdf5)
     
     h5exists <- function(h5.file, obj) {
@@ -556,14 +555,12 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
 
     G <- G[sel,,drop=FALSE]
     gmt <- apply( G, 1, function(x) colnames(G)[which(x!=0)])
-
     ##X <- X[,1:20]
     ##X[is.na(X)] <- 0
 
     if(!h5exists(h5.file, "enrichment")) {
         h5createGroup(h5.file,"enrichment")
     }
-
     if(h5exists(h5.file, "enrichment/genesets")) {
         h5delete(h5.file, "enrichment/genesets")
     }
@@ -579,13 +576,14 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
             fgsea( gmt, xi, nperm=10000 )$NES
         })  
         F1 <- do.call(cbind, F1)
+        cat("[pgx.addEnrichmentSignaturesH5] dim(F1)=",dim(F1),"\n")
         rownames(F1) <- names(gmt)
         colnames(F1) <- colnames(X)
         dim(F1)
-        cat("[pgx.addEnrichmentSignaturesH5] dim(F1)=",dim(F1),"\n")
         rownames(F1) <- names(gmt)
         if(h5exists(h5.file, "enrichment/GSEA")) h5delete(h5.file, "enrichment/GSEA")
         h5write(F1, h5.file, "enrichment/GSEA")
+        h5write(rownames(F1), h5.file, "enrichment/genesets")
     }
     
     if("gsva" %in% methods) {
@@ -593,10 +591,12 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
         require(GSVA)
         ## mc.cores = 4
         F2 <- gsva(X, gmt, method="gsva", parallel.sz=mc.cores)
+        cat("[pgx.addEnrichmentSignaturesH5] dim(F2)=",dim(F2),"\n")
         rownames(F2) <- names(gmt)
         dim(F2)
         if(h5exists(h5.file, "enrichment/GSVA")) h5delete(h5.file, "enrichment/GSVA")
         h5write(F2, h5.file, "enrichment/GSVA")
+        h5write(rownames(F2), h5.file, "enrichment/genesets")
     }
     
     h5ls(h5.file)

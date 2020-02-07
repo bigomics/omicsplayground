@@ -251,20 +251,23 @@ is.POSvsNEG <- function(ngs) {
     ok
 }
 
+
 is.categorical <- function(x, max.ncat=20, min.ncat=2) {
     is.factor <- any(class(x) %in% c("factor","character"))
     is.factor
     n.unique <- length(unique(setdiff(x,NA)))
     n.notna  <- length(x[!is.na(x)])
+    n.unique
+    n.notna
     is.id    <- (n.unique > 0.8*n.notna)
     is.id
     is.factor2 <- (is.factor & !is.id & n.unique>=min.ncat & n.unique<= max.ncat)
     is.factor2
 }
 
-##remove.dup=FALSE
-pgx.discretizePhenotypeMatrix <- function(df, max.ncat=20, min.ncat=2, remove.dup=FALSE) {
-
+##remove.dup=FALSE;min.ncat=2;max.ncat=20
+pgx.discretizePhenotypeMatrix <- function(df, min.ncat=2, max.ncat=20, remove.dup=FALSE)
+{
     catpheno <- pgx.getCategoricalPhenotypes(
         df, max.ncat=max.ncat, min.ncat=min.ncat, remove.dup=remove.dup)
     numpheno <- pgx.getNumericalPhenotypes(df)
