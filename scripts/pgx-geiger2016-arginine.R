@@ -168,7 +168,6 @@ if(DIFF.EXPRESSION) {
 rda.file
 ngs.save(ngs, file=rda.file)
 
-
 if(0) {
     
     source("../R/pgx-include.R")
@@ -176,6 +175,7 @@ if(0) {
     sigdb = c("/data/PublicData/LINCS/sigdb-lincs.h5",
               "/data/PublicData/LINCS/sigdb-virome.h5")
     sigdb = c("../libx/sigdb-lincs.h5","../libx/sigdb-virome.h5")
+    sigdb = NULL
     ngs <- compute.extra(ngs, extra, lib.dir=FILES, sigdb=sigdb) 
     names(ngs$connectivity)
     
