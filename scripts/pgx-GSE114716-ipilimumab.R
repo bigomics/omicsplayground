@@ -1,20 +1,10 @@
-source("../R/gx-heatmap.r")
-source("../R/gx-limma.r")
-source("../R/gx-util.r")
-source("../R/ngs-cook.r")
-source("../R/ngs-fit.r")
-source("../R/gset-fisher.r")
-source("../R/gset-gsea.r")
-source("../R/gset-meta.r")
-source("../R/pgx-graph.R")
-source("../R/pgx-functions.R")
-source("../R/ngs-functions.R")
 
-source("options.R")
-
-USER.GENETEST.METHODS=c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma",
-                        "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
-USER.GENESETTEST.METHODS = c("fisher","gsva","ssgsea","spearman","camera","fry","fgsea") ## no GSEA
+RDIR = "../R"
+FILES = "../lib"
+PGX.DIR = "../data"
+source("../R/pgx-include.R")
+##source("options.R")
+FILES
 
 BATCH.CORRECT=1
 rda.file="../data/GSE114716-ipilimumab.pgx"
@@ -45,7 +35,10 @@ if(PROCESS.DATA) {
 
     ## still need to get the matrix...
     system("wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE114nnn/GSE114716/suppl/GSE114716_raw.counts.hs.xlsx -P /tmp")
-    if(!require(xlsx)) install.packages("xlsx")
+    if(!require(xlsx)) {
+        install.packages("rJava")
+        install.packages("xlsx")
+    }
     library(xlsx)
     counts <- read.xlsx2("/tmp/GSE114716_raw.counts.hs.xlsx", 1)  ## yikes.. xlsx...
     genes  <- as.character(counts[,1])
