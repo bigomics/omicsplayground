@@ -55,6 +55,7 @@ RUN R -e "setwd('data');source('init.R')"
 #------------------------------------------------------------
 COPY docker/shiny-server.conf  /etc/shiny-server/shiny-server.conf
 COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
+RUN chmod ugo+rwX /tmp && chmod o+t /tmp
 
 EXPOSE 3838
 
