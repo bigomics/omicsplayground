@@ -138,7 +138,8 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
         db <- sigdb[1]
         for(db in sigdb) {
             if(file.exists(db)) {
-                ntop = 9999
+                ntop = 10000
+                ntop = 1000
                 cat("computing connectivity scores for sigDB",db,"\n")                
                 tt <- system.time({
                     scores <- pgx.computeConnectivityScores(

@@ -140,7 +140,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         annot <- annot[jj,c("moa","target")]        
         res <- data.frame( drug=drug, NES=nes, pval=pv, padj=qv, annot)
         ##res <- res[order(-abs(res$NES)),]
-        res <- res[order(res$pval,-abs(res$NES)),]
+        ##res <- res[order(res$pval,-abs(res$NES)),]
+        res <- res[order(-res$NES),]
         
         return(res)
     })

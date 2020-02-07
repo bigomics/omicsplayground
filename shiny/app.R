@@ -15,7 +15,7 @@ cat("===================== INIT =======================\n")
 RDIR = "../R"
 FILES = "../lib"
 ##PGX.DIR = "../data"
-##PGX.DIR = "/data/PublicData/archs4data/gse25k"
+##PGX.DIR = "/data/PublicData/pgx/gse-virome"
 PGX.DIR = c("../data","../data-extra")
 dir.exists(PGX.DIR)
 
@@ -39,7 +39,7 @@ if(opt$USER_MODE=="basic") {
 if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
-    load("../data-extra/carr2019-jev.pgx")
+    load("../data/GSE114716-ipilimumabX.pgx")
     load("../data/tcga-brca_pub-gx.pgx")
     load("../../omicsplayground-dev/data/CCLE-drugSX2.pgx")
     ngs = pgx.initialize(ngs)

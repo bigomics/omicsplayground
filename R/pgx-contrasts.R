@@ -111,6 +111,10 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
         ct[is.na(ct)] <- 0
         ct
     }
+    
+
+    ## repeat ref if too short
+    if(!is.null(ref) && length(ref)!=ncol(df)) ref <- head(rep(ref,99),ncol(df))
 
     ## try detect comment fields (and remove)
     countSpaces <- function(s) { sapply(gregexpr(" ", s), function(p) { sum(p>=0) } ) }    
@@ -119,13 +123,26 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
         (nchar(x) > 50 || countSpaces(x)>=4)
     }
     is.comment <- sapply(df[1,], justComment)
-    df <- df[,which(!is.comment),drop=FALSE]
+    is.comment
+
+    sel <- which(!is.comment)
+    sel
+    if(length(sel)==0) {
+        cat("WARNING:: could not auto-find variables...\n")
+        return(NULL)
+    }
+
+    df <- df[,sel,drop=FALSE]
+    if(!is.null(ref)) ref <- ref[sel]
     df[df==""] <- NA
     df[df==" "] <- NA
+    dim(df)   
 
-    ## repeat ref if too short
-    if(!is.null(ref) && length(ref)!=ncol(df)) ref <- head(rep(ref,99),ncol(df))
-    
+    ## emergency bail out...
+    if(ncol(df)==0) {
+        
+    }
+        
     K <- NULL
     i=1
     for(i in 1:ncol(df)) {
