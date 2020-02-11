@@ -1,3 +1,5 @@
+## "any(rownames "
+
 ngs.getGeneAnnotation <- function(genes)
 {
 
@@ -5,7 +7,7 @@ ngs.getGeneAnnotation <- function(genes)
     require(org.Mm.eg.db)
     hs.genes <- unique(unlist(as.list(org.Hs.egSYMBOL)))
     mm.genes <- unique(unlist(as.list(org.Mm.egSYMBOL)))
-
+    
     is.human <- mean(genes %in% hs.genes) > mean(genes %in% mm.genes)
     is.mouse <- mean(genes %in% hs.genes) < mean(genes %in% mm.genes)
 

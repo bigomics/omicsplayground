@@ -329,3 +329,22 @@ rda.file
 ngs$drugs$combo <- NULL  ## save space??
 ngs.save(ngs, file=rda.file)
 
+
+
+if(0) {
+
+    load(file=rda.file, verbose=1)
+    X <- ngs$X
+    dim(X)
+    
+    require(umap)
+    require(uwot)
+    system.time( r1 <- umap::umap(t(ngs$X)) )
+    system.time( r2 <- uwot::umap(t(ngs$X)) )
+    system.time( r3 <- uwot::umap(t(ngs$X), n_threads=64) )
+    system.time( r3 <- uwot::umap(t(ngs$X), pca=200, n_threads=64) )
+
+    str(r1)
+    str(r2)
+    
+}

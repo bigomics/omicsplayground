@@ -112,11 +112,13 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
         ct
     }
     
-
     ## repeat ref if too short
     if(!is.null(ref) && length(ref)!=ncol(df)) ref <- head(rep(ref,99),ncol(df))
 
-    ## try detect comment fields (and remove)
+    ## trim leading/end parts that are equal
+    df <- apply(df, 2, trimsame)
+
+    ## try detect (fluffy) comment fields (and remove)
     countSpaces <- function(s) { sapply(gregexpr(" ", s), function(p) { sum(p>=0) } ) }    
     justComment <- function(x) {
         x <- iconv(x, "latin1", "ASCII", sub="")
@@ -124,23 +126,46 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
     }
     is.comment <- sapply(df[1,], justComment)
     is.comment
-
     sel <- which(!is.comment)
     sel
     if(length(sel)==0) {
         cat("WARNING:: could not auto-find variables...\n")
         return(NULL)
     }
-
     df <- df[,sel,drop=FALSE]
     if(!is.null(ref)) ref <- ref[sel]
     df[df==""] <- NA
     df[df==" "] <- NA
     dim(df)   
-
+    
+    ## ----------- try to detect time series (detect factors by time)
+    if(0) {
+        has.time <- any(grepl("hr|hour|time|day",colnames(df),ignore.case=TRUE))
+        has.time
+        if(has.time && NCOL(df)>1) {
+            time.col <- grep("hr|hour|time|day",colnames(df),ignore.case=TRUE)[1]
+            df1 <- df[,-time.col,drop=FALSE]
+            time <- df[,time.col]
+            vars.bytime <- names(which(apply(df1, 2, function(x) sum(table(x,time)==0)==0)))
+            vars.bytime
+            if(length(vars.bytime)>0) {
+                cat("detected time-series variables:",vars.bytime,"\n")
+                dt <- c()
+                i=1
+                for(i in 1:length(vars.bytime)) {
+                    dt <- cbind(dt, paste(df1[,vars.bytime[i]], time, sep="_"))
+                }
+                colnames(dt) <- paste0(vars.bytime,"_",colnames(df)[time.col])
+                head(dt)
+                df <- cbind(df, dt)
+            }
+        }
+        head(df)
+    }
+    
     ## emergency bail out...
     if(ncol(df)==0) {
-        
+        return(NULL)
     }
         
     K <- NULL
@@ -169,7 +194,7 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
         }
     }
     dim(K)
-
+    
     if(is.null(K)) {
         warning("[pgx.makeAutoContrast] non valid contrasts")
         return(NULL)
@@ -224,7 +249,7 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
         K2 <- K[jj,colnames(K1),drop=FALSE]
         rownames(K2) <- xc[jj]
         head(K2)
-    } else {
+    } else if(!fix.degenerate && is.degenerate) {
         cat("WARNING:: contrast matrix looks degenerate. going for NULL design...\n")
         ## Go for zero design (no-replicates)
         K2 <- NULL

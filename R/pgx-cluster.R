@@ -2,7 +2,7 @@
 
 ##reduce.sd=1000;reduce.pca=100;methods=c("pca","tsne","umap");dims=c(2,3)
 pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
-                                 reduce.sd = 1000, reduce.pca = 100 )
+                                 reduce.sd = 1000, reduce.pca = 100, umap.pkg="uwot" )
 {
     require(irlba)
     require(Rtsne)
@@ -95,11 +95,18 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
     
     if("umap" %in% methods && 2 %in% dims) {
         cat("calculating UMAP 2D...\n")
-        require(umap)
-        custom.config <- umap.defaults
-        custom.config$n_components = 2
-        custom.config$n_neighbors = pmax(min(ncol(X)/4,15),2)
-        pos <- umap( t(rX[,]), custom.config )$layout
+        if(umap.pkg=="uwot") {
+            require(uwot)
+            nb = pmax(min(ncol(X)/4,15),2)
+            pos <- uwot::umap( t(rX[,]), n_components=2, n_neighbors=nb)
+        } else {
+            require(umap)
+            custom.config <- umap.defaults
+            custom.config$n_components = 2
+            custom.config$n_neighbors = pmax(min(ncol(X)/4,15),2)
+            pos <- umap::umap( t(rX[,]), custom.config )$layout
+        } 
+            
         ## rownames(pos) <- colnames(X)[1:nrow(pos)]
         pos <- pos[1:ncol(X),]  ## if augmented
         rownames(pos) <- colnames(X)
@@ -109,11 +116,17 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
     
     if("umap" %in% methods && 3 %in% dims) {
         cat("calculating UMAP 3D...\n")
-        require(umap)
-        custom.config <- umap.defaults
-        custom.config$n_components = 3
-        custom.config$n_neighbors = pmax(min(ncol(X)/4,15),2)
-        pos <- umap( t(rX[,]), custom.config )$layout
+        if(umap.pkg=="uwot") {
+            require(uwot)
+            nb = pmax(min(ncol(X)/4,15),2)
+            pos <- uwot::umap( t(rX[,]), n_components=3, n_neighbors=nb )
+        } else {
+            require(umap)
+            custom.config <- umap.defaults
+            custom.config$n_components = 3
+            custom.config$n_neighbors = pmax(min(ncol(X)/4,15),2)
+            pos <- umap::umap( t(rX[,]), custom.config )$layout
+        }
         dim(pos)
         pos <- pos[1:ncol(X),]  ## if augmented
         rownames(pos) <- colnames(X)

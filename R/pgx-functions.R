@@ -9,8 +9,66 @@ USER.GENETEST.METHODS <- NULL
 ##==========    Platform helper functions =====================================
 ##=============================================================================
 
+probe2symbol <- function(probes, type=NULL) {
+    require("AnnotationDbi")
+    if(is.null(type) ) {
+        id.list <- list(
+            "ensemble" = unlist(as.list(org.Hs.egENSEMBL)),
+            "unigene" =  unlist(as.list(org.Hs.egUNIGENE)),
+            "refseq"  =  unlist(as.list(org.Hs.egREFSEQ)),
+            "accnum"  = unlist(as.list(org.Hs.egACCNUM)),
+            "uniprot" = unlist(as.list(org.Hs.egUNIPROT)),
+            "symbol" = unlist(as.list(org.Hs.egSYMBOL))
+        )
+        mx <- sapply(id.list, function(id) mean(probes %in% id))
+        if(max(mx,na.rm=TRUE) > 0.5) {
+            type <- names(mx)[which.max(mx)]
+        }
+        type
+    }
+    if(is.null(type)) {
+        cat("probe2symbol: invalid type: ",type,"\n")
+        return(NULL)
+    }
+    if(!type %in% c("ensemble","unigene","refseq","accnum","uniprot","symbol")) {
+        cat("probe2symbol: invalid type: ",type,"\n")
+        return(NULL)
+    }
+    type
+    if(type=="symbol") {
+        cat("probe2symbol: probe is alread symbol\n")
+        return(probes)
+    }
+    
+    symbol0 <- mapIds(org.Hs.eg.db, probes, 'SYMBOL', toupper(type))
+    nna <- which(is.na(names(symbol0)))
+    names(symbol0)[nna] <- paste0("probe.",nna)
+    symbol <- sapply(symbol0,"[",1)
+    isnull <- sapply(symbol,is.null)
+    symbol[isnull] <- NA
+    symbol <- unlist(symbol)
+    names(symbol) <- NULL
+    head(symbol)
+    symbol    
+}
+
+
 ##s=title
-trimsame <- function(s, split=" ") {
+
+trimsame <- function(s, split=" ", ends=TRUE, summarize=FALSE) {
+    if(ends) return(trimsame.ends(s, split=split, summarize=summarize))
+    return(trimsame0(s, split=split, summarize=summarize))
+}
+
+trimsame.ends <- function(s, split=" ", summarize=FALSE) {
+    s1 <- trimsame0(s, split=split, summarize=summarize)
+    s2 <- sapply(strsplit(s1, split=split),function(x) paste(rev(x),collapse=" "))
+    s3 <- trimsame0(s2, split=split, summarize=summarize, rev=TRUE)
+    s4 <- sapply(strsplit(s3, split=split),function(x) paste(rev(x),collapse=" "))
+    s4
+}
+
+trimsame0 <- function(s, split=" ", summarize=FALSE, rev=FALSE) {
     for(i in 1:4) s <- gsub(paste0(split,split),split,s)
     whereSpaces <- function(s) as.vector(gregexpr(split, s)[[1]])
     sp <- whereSpaces(s[1])
@@ -32,43 +90,15 @@ trimsame <- function(s, split=" ") {
     if(j>0) {
         samepart <- substring(s[1],1,sp[j])
         samepart
-        s1 <- sub(samepart,"",s)
+        subst <- ""
+        if(summarize) {
+            subst <- substring(strsplit(trimws(samepart),split=split)[[1]],1,1)
+            if(rev) subst <- rev(subst)
+            subst <- paste(c(toupper(subst)," "),collapse="")
+        }
+        s1 <- sub(samepart,subst,s)
     }
     s1
-}
-
-trimsame.middle <- function(s,split=" ")
-{
-    for(i in 1:4) s <- gsub(paste0(split,split),split,s)
-    s1 <- strsplit(s[1], split=split)[[1]]
-    if(length(s1)<4) return(s)
-    ww <- c()
-    i=1;j=3
-    for(i in 1:(length(s1)-3)) {
-        k <- length(s1)-i+1
-        w1 <- lapply(3:k, function(j) head(s1[i:length(s1)],j))
-        w1 <- sapply(w1, paste, collapse=" ")
-        w1 <- gsub("\\(|\\)|\\[|\\]",".",w1)
-        ww <- c(ww,rev(w1))
-    }
-    s2 <- s
-    for(i in 1:length(ww)) {
-        if( all(grepl(ww[i],s2))) {
-            s2 <- sub(ww[i],"",s2)
-        }
-    }
-    s2 <- as.character(sapply(s2, trimws))
-    for(i in 1:4) s2 <- gsub(paste0(split,split),split,s2)    
-    s2
-}
-
-split=" "
-trimsame.ends <- function(s, split=" ") {
-    s1 <- trimsame(s, split=split)
-    s2 <- sapply(strsplit(s1, split=split),function(x) paste(rev(x),collapse=" "))
-    s3 <- trimsame(s2, split=split)
-    s4 <- sapply(strsplit(s3, split=split),function(x) paste(rev(x),collapse=" "))
-    s4
 }
 
 ##s=rep("abc",100)
@@ -265,7 +295,7 @@ is.categorical <- function(x, max.ncat=20, min.ncat=2) {
     is.factor2
 }
 
-##remove.dup=FALSE;min.ncat=2;max.ncat=20
+##remove.dup=TRUE;min.ncat=2;max.ncat=20
 pgx.discretizePhenotypeMatrix <- function(df, min.ncat=2, max.ncat=20, remove.dup=FALSE)
 {
     catpheno <- pgx.getCategoricalPhenotypes(
@@ -302,7 +332,6 @@ pgx.getNumericalPhenotypes <-function(df)
     numpheno    
     names(which(numpheno==TRUE))
 }
-
 
 ##max.ncat=20;min.ncat=2
 pgx.getCategoricalPhenotypes <-function(df, max.ncat=20, min.ncat=2, remove.dup=FALSE) {
@@ -459,8 +488,6 @@ getLevels <- function(Y) {
     levels = sort(unlist(levels))
     return(levels)
 }
-
-
 
 selectSamplesFromSelectedLevels <- function(Y, levels)
 {

@@ -14,8 +14,9 @@ cat("===================== INIT =======================\n")
 
 RDIR = "../R"
 FILES = "../lib"
-##PGX.DIR = "../data"
+FILESX = "../libx"
 ##PGX.DIR = "/data/PublicData/pgx/gse-virome"
+PGX.DIR = c("../data","../data-irb")
 PGX.DIR = c("../data","../data-extra")
 dir.exists(PGX.DIR)
 
@@ -30,8 +31,9 @@ opt <- pgx.readOptions(file="OPTIONS")
 
 DEV.VERSION = FALSE
 if(dir.exists("../../omicsplayground-dev")) DEV.VERSION = TRUE
+DEV.VERSION = FALSE
 
-if(opt$USER_MODE=="basic") {
+if(opt$USER_MODE=="BASIC") {
     cat("********************* BASIC MODE **********************\n")
     DEV.VERSION = FALSE
 }
@@ -39,8 +41,10 @@ if(opt$USER_MODE=="basic") {
 if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
-    load("../data/GSE114716-ipilimumabX.pgx")
+    load("../data/GSE102908-ibetX.pgx")
     load("../data/tcga-brca_pub-gx.pgx")
+    load("../data/GSE22886-immune.pgx")   
+    load("../data-irb/guarda2020-myc.pgx")
     load("../../omicsplayground-dev/data/CCLE-drugSX2.pgx")
     ngs = pgx.initialize(ngs)
 }
@@ -56,7 +60,7 @@ source("modules/IntersectionModule.R", local=TRUE)
 source("modules/FunctionalModule.R", local=TRUE)
 source("modules/DrugConnectivityModule.R", local=TRUE)
 source("modules/SignatureModule.R", local=TRUE)
-source("modules/ProfilingModule.R", local=TRUE)
+source("modules/SingleCellModule.R", local=TRUE)
 source("modules/CorrelationModule.R", local=TRUE)
 source("modules/BiomarkerModule.R", local=TRUE)
 
@@ -82,8 +86,8 @@ server = function(input, output, session) {
     env <- list()  ## communication environment
     ## env[["load"]][["inputData"]] <- reactive({ ngs })
     env[["load"]]   <- callModule(
-        LoadingModule, "load", hideModeButton=opt$HIDE_MODEBUTTON,
-        max.limits = max.limits, defaultMode=opt$USER_MODE )
+        LoadingModule, "load", hideModeButton = opt$HIDE_MODEBUTTON,
+        max.limits = max.limits, defaultMode = opt$USER_MODE )
     env[["view"]]   <- callModule( DataViewModule, "view", env)
     env[["clust"]]  <- callModule( ClusteringModule, "clust", env)
     env[["expr"]]   <- callModule( ExpressionModule, "expr", env)
@@ -92,10 +96,10 @@ server = function(input, output, session) {
     env[["func"]]   <- callModule( FunctionalModule, "func", env)
     env[["drug"]]   <- callModule( DrugConnectivityModule, "drug", env)
     env[["sig"]]    <- callModule( SignatureModule, "sig", env)
-    env[["prof"]]   <- callModule( ProfilingModule, "prof", env)
+    env[["scell"]]   <- callModule( SingleCellModule, "scell", env)
     env[["cor"]]    <- callModule( CorrelationModule, "cor", env)
     env[["bio"]]    <- callModule( BiomarkerModule, "bio", env)
-
+        
     if(DEV.VERSION) {
         env[["cmap"]] <- callModule( ConnectivityModule, "cmap", env)
         env[["tcga"]] <- callModule( TcgaModule, "tcga", env)
@@ -116,7 +120,7 @@ server = function(input, output, session) {
     nwarn = 0
     observe({
         usermode <- env[["load"]][["usermode"]]()
-        if(opt$USER_MODE=="basic") usermode <- "BASIC" ## override
+        if(opt$USER_MODE=="BASIC") usermode <- "BASIC" ## override
         if(usermode=="BASIC") {
             shinyjs::hide(selector = "div.download-button")
             shinyjs::hide(selector = "div.modebar")
@@ -130,9 +134,25 @@ server = function(input, output, session) {
     ## Hide/show certain sections depending on USER MODE
     observe({
         pgx <- env[["load"]][["inputData"]]() ## trigger on change dataset
+        req(pgx)
         usermode <- env[["load"]][["usermode"]]()  ## trigger on button
         if(length(usermode)==0) usermode <- "BASIC"
+
         dbg("usermode = ",usermode)
+        dbg("is.null.pgx = ",is.null(pgx))
+        dbg("length.pgx = ",length(pgx))
+        dbg("[MAIN] opt$SINGLE_CELL=",opt$SINGLE_CELL)
+        
+        show.cc <- ( (opt$SINGLE_CELL == "AUTO" && ncol(pgx$counts) >= 500) ||
+                     (opt$SINGLE_CELL == "AUTO" && grepl("^scRNA",pgx$datatype)) ||
+                     opt$SINGLE_CELL == "TRUE")
+
+        dbg("[MAIN] 1: show.cc=",show.cc)
+        dbg("[MAIN] 1: is.true(show.cc)=",show.cc==TRUE)        
+        if(is.null(show.cc) || is.na(show.cc) || length(show.cc)==0) show.cc <- FALSE
+
+        dbg("[MAIN] 2: show.cc=",show.cc)
+        dbg("[MAIN] 2: is.true(show.cc)=",show.cc==TRUE)        
         
         hideTab("view-tabs","Resource info")
         hideTab("maintabs","Development")
@@ -149,14 +169,15 @@ server = function(input, output, session) {
         hideTab("expr-tabs2","FDR table")
         hideTab("enrich-tabs1","Volcano (methods)")
         hideTab("enrich-tabs2","FDR table")
-        hideTab("prof-tabs1","Monocle")
+        hideTab("scell-tabs1","CNV")
+        hideTab("scell-tabs1","Monocle")
 
         if(toupper(opt$ENABLE_UPLOAD) %in% c("NO","FALSE")) {
             hideTab("load-tabs","Upload data")            
         }
         
         if(usermode != "BASIC") {
-            showTab("maintabs","SingleCell")
+            if(show.cc) showTab("maintabs","SingleCell")
             showTab("maintabs","Biomarker analysis")
             showTab("maintabs","Drug connectivity")
 
@@ -174,7 +195,8 @@ server = function(input, output, session) {
             showTab("maintabs","Development")
             showTab("view-tabs","Resource info")
             showTab("enrich-tabs1","GeneMap")
-            showTab("prof-tabs1","Monocle")
+            showTab("scell-tabs1","CNV")
+            showTab("scell-tabs1","Monocle")
         }
         
     })
@@ -238,11 +260,11 @@ ui = navbarPage(
     ),
     navbarMenu(
         "Signature",
-        tabView("Intersection analysis", IntersectionInputs("isect"), IntersectionUI("isect")),
-        tabView("Signature analysis", SignatureInputs("sig"), SignatureUI("sig")),
+        tabView("Compare signatures", IntersectionInputs("isect"), IntersectionUI("isect")),
+        tabView("Test signature", SignatureInputs("sig"), SignatureUI("sig")),
         tabView("Biomarker analysis", BiomarkerInputs("bio"), BiomarkerUI("bio"))
     ),
-    tabView("SingleCell", ProfilingInputs("prof"), ProfilingUI("prof")),
+    tabView("SingleCell", SingleCellInputs("scell"), SingleCellUI("scell")),
     help.tabs,
     dev.tabs,
     footer = tagList(

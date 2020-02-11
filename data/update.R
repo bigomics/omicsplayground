@@ -18,10 +18,10 @@ source("../R/pgx-include.R")
 FILES
 
 pgx.files <- dir(".", pattern=".pgx")
-pgx.files <- grep("X.pgx$",pgx.files,invert=TRUE,value=TRUE)
+##pgx.files <- grep("X.pgx$",pgx.files,invert=TRUE,value=TRUE)
 ##pgx.files <- dir("../data.BAK/", pattern=".pgx",full.names=TRUE)
 pgx.files
-pgx.file = pgx.files[2]
+pgx.file = pgx.files[7]
 pgx.file
 
 for(pgx.file in pgx.files) {
@@ -46,7 +46,6 @@ for(pgx.file in pgx.files) {
     names(ngs)
     pgx.file0 <- sub(".*[/]","",pgx.file)
     pgx.file0 <- file.path(OUT.DIR,pgx.file0)
-    pgx.file0 <- sub(".pgx$","X.pgx",pgx.file0)
     pgx.file0
     ngs.save(ngs, file=pgx.file0)    
 }

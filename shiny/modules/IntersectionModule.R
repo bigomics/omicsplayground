@@ -9,19 +9,19 @@ IntersectionInputs <- function(id) {
 IntersectionUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillRow(
-        flex = c(1.5,0.07,1),
+        flex = c(1.33,0.07,1),
         height = 750,
         tabsetPanel(
             id = ns("tabs1"),
             tabPanel("Pairs",uiOutput(ns("cmp_scatterPlotMatrix_UI"))),
-            tabPanel("Contrast heatmap",uiOutput(ns("cmp_ctheatmap_UI"))),
-            tabPanel("Connectivity map",uiOutput(ns("cmp_connectivitymap_UI")))
+            tabPanel("Contrast heatmap",uiOutput(ns("cmp_ctheatmap_UI")))
+            ## tabPanel("Connectivity map",uiOutput(ns("cmp_connectivitymap_UI")))
         ),
         br(),
         tabsetPanel(
             id = ns("tabs2"),
-            tabPanel("Venn diagram",uiOutput(ns("cmp_venndiagram_UI"))),
-            tabPanel("Meta-volcano",uiOutput(ns("cmp_metavolcano_UI")))
+            tabPanel("Venn diagram",uiOutput(ns("cmp_venndiagram_UI")))
+            ##tabPanel("Meta-volcano",uiOutput(ns("cmp_metavolcano_UI")))
         )
     )
 }
@@ -358,21 +358,23 @@ between two contrasts."
         if( length(isect) == 0) {
             fc1 = fc0
         } else {
-            ## only gene at least significant in one group
+            ## only genes at least significant in one group
             jj = which(rowSums(dt[,2:ncol(dt),drop=FALSE]!=0)>0)
             if(length(jj)==0) return(NULL)
             dt = dt[jj,,drop=FALSE]
 
-            ## check same sign 
-            kk = 1 + match(c("B","C"),LETTERS[1:10])
-            kk = 1 + match(isect,LETTERS[1:10])
-            kk <- intersect(kk, 1:ncol(dt))
-            
-            dt1 = dt[,kk,drop=FALSE]    
-            jj = which( rowMeans(sign(dt1)== +1)==1 |
-                        (rowMeans(sign(dt1)== -1)==1) )    
-            dt = dt[jj,,drop=FALSE]    
-            remove(dt1)
+            ## check same sign
+            if(input$cmp_include=="up/down") {
+                kk = 1 + match(c("B","C"),LETTERS[1:10])
+                kk = 1 + match(isect,LETTERS[1:10])
+                kk <- intersect(kk, 1:ncol(dt))
+                
+                dt1 = dt[,kk,drop=FALSE]    
+                jj = which( rowMeans(sign(dt1)== +1)==1 |
+                            (rowMeans(sign(dt1)== -1)==1) )    
+                dt = dt[jj,,drop=FALSE]    
+                remove(dt1)
+            }
             
             ## only genes in the selected intersection
             intersection="ABC"
@@ -482,9 +484,10 @@ between two contrasts."
         if(input$cmp_splom_highlight) {
             df.color = c("#00000033","#0066FF")[1 + is.sel]
             df.color = c("#AAAAAA","#1e60BB")[1 + is.sel]
-            df.color = c("#AAAAAA66","#1e60BBCC")[1 + is.sel]
+            df.color = c("#AAAAAA55","#1e60BB88")[1 + is.sel]
         } else {
             df.color = rep("#00000088",nrow(df))
+            df.color = rep("#1e60BB88",nrow(df))
         }
         
         ## Labels for top 50 
@@ -635,9 +638,12 @@ between two contrasts."
         }
 
         p <- p %>%
+            layout(margin = list(80,80,80,80) )  ## l,r,b,t
+        
+        p <- p %>%
             ## config(displayModeBar = FALSE) %>% ## disable buttons
             config( toImageButtonOptions = list(format='svg', height=800, width=800, scale=1.1)) %>%
-            event_register('plotly_selected')
+            event_register('plotly_selected') 
 
         dbg("cmp_scatterPlotMatrix:: done\n")
         p    
@@ -1044,7 +1050,7 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
                    include=include, bty="n", fg=grey(0.7),
                    circle.col=c("turquoise", "salmon","lightgreen","orange") )
         tt = paste(label,"=",colnames(dt)[-1])
-        legend("topleft", legend=tt, bty='n', cex=1.0, y.intersp=0.95,
+        legend("topleft", legend=tt, bty='n', cex=0.9, y.intersp=0.95,
                inset=c(0.04,-0.01), xpd=TRUE)
         
     })
@@ -1053,24 +1059,16 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
     cmp_venntable.RENDER <- reactive({
         ngs <- inputData()
         req(ngs)
-
-        dbg("cmp_venntable.RENDER:: reacted")
         
         ## get foldchanges
         fc0 = getSignificantFoldChangeMatrix()  ## isolate??
-
-        dbg("cmp_venntable.RENDER:: 1 : dim(fc0)=",dim(fc0))
         
         if(is.null(fc0) || nrow(fc0)==0) return(NULL)
-        
-        dbg("cmp_venntable.RENDER:: 2")
         
         fc0 <- fc0[order(-rowMeans(fc0)),,drop=FALSE]        
         fc0 = round(fc0, digits=3)
         colnames(fc0) = paste0("fc.",LETTERS[1:ncol(fc0)])
         ##fc0 = data.frame(fc0)
-
-        dbg("cmp_venntable.RENDER:: 3")
         
         ## add gene name/title
         if(input$cmp_level == "gene") {
@@ -1084,8 +1082,6 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
             name[is.na(name)] = "NA"
             fc0 = data.frame(name=name, fc0, check.names=FALSE)
         }
-
-        dbg("cmp_venntable.RENDER:: 4")
         
         df = data.frame( fc0, check.names=FALSE)
         ##dt <- dt[rownames(fc0),]    
@@ -1103,23 +1099,21 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  
     })
 
-    ##-------------------------------------------------------
-    ##---------- MODULES ------------------------------------
-    ##-------------------------------------------------------
-
     FDR.VALUES2 <- c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
     cmp_venndiagram.opts = tagList(
         ##    checkboxGroupInput(ns('cmp_intersection'),NULL, choices=c("A","B","C"), inline=TRUE )    
         fillRow(
             flex=c(1,1), ## height=80,       
             tipify( selectInput(ns("cmp_fdr"),"FDR", choices=FDR.VALUES2, selected=0.05),
-                   "Threshold for false discovery rate"),
+                   "Threshold for false discovery rate",
+                   placement="bottom", options = list(container = "body")),
             tipify( selectInput(ns("cmp_lfc"),"logFC threshold", choices=c(0,0.2,0.5,1,2,5),
-                                selected=1),
-                   "Threshold for fold-change (log2 scale)")
+                                selected=0.5),
+                   "Threshold for fold-change (log2 scale)",
+                   placement="bottom", options = list(container = "body"))
         ),
         br(),br(),br(),br(),
-        radioButtons(ns('cmp_include'),'Counting mode:', choices=c("both","up/down"), inline=TRUE)
+        radioButtons(ns('cmp_include'),'Counting:', choices=c("both","up/down"), inline=TRUE)
     )
 
     callModule(
@@ -1131,9 +1125,67 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
         info.text = "The Venn diagram visualizes the number of intersecting genes between the profiles. The list of intersecting genes with further details is also reported in an interactive table below, where users can select and remove a particular contrasts from the intersection analysis.",
         options = cmp_venndiagram.opts,
         pdf.width=8, pdf.height=8,
-        height = 0.4*fullH, res=72
+        height = 0.48*fullH, res=72
     )
-   
+
+    callModule(
+        tableModule,
+        id = "cmp_venntable", 
+        func = cmp_venntable.RENDER,
+        ##caption = cmp_venntable_buttons,
+        title = "Intersecting genes", label="b",
+        info.text = "Table of intersecting genes", 
+        info.width = "500px",
+        height = 0.4*fullH
+    )
+    
+
+    ##================================================================================
+    ## Cumuative FC
+    ##================================================================================
+
+    cmp_fcbarplot.RENDER %<a-% reactive({
+
+        ngs <- inputData()
+        sel = names(ngs$gx.meta$meta)
+        req(input$cmp_comparisons)
+        sel = input_cmp_comparisons()
+        if(is.null(sel) || length(sel)==0 || sel[1]=="") return(NULL)
+        sel = intersect(sel, names(ngs$gx.meta$meta))
+        
+        ##fc = sapply(ngs$gx.meta$meta[1:3], function(x) x$meta.fx)
+        ##rownames(fc) <- rownames(ngs$gx.meta$meta[[1]])    
+        fc = getSignificantFoldChangeMatrix()  ## isolate??
+        fc <- fc[,sel,drop=FALSE]
+        if(input$cmp_fcbarplot_abs) {
+            fc <- abs(fc)  
+        }
+        fc[is.na(fc)] <- 0
+        fc <- fc[order(-rowMeans(fc**2,na.rm=TRUE)),,drop=FALSE]
+        fc <- head(fc,30)
+        fc <- fc[order(-rowMeans(fc,na.rm=TRUE)),,drop=FALSE]
+        
+        ## add some empty rows (keeps barplot bar-widths equal)
+        fc.na <- matrix(0,nrow=100,ncol=ncol(fc))
+        fc <- rbind(fc,fc.na)
+        fc.top <- head(fc,38)
+        
+        par(mar=c(8,4,2,2))
+        par(mfrow=c(1,1), mar=c(9,4,1,1), mgp=c(2.4,1,0) )
+        fc.sum <- rowSums(fc.top,na.rm=TRUE)
+        ylim <- c(min(c(0,fc.sum)), max(0,1.3*max(fc.sum)))
+        barplot(t(fc.top), las=3, cex.names=0.85,
+                ylim=ylim, ylab="cumulative logFC")
+        legend("topright", legend=colnames(fc.top),
+               fill=c("grey20","grey50","grey80"),
+               cex=0.85, y.intersp=0.8)
+        
+    })
+
+    cmp_fcbarplot.opts = tagList(
+        checkboxInput(ns('cmp_fcbarplot_abs'),'Absolute foldchange')
+    )
+
     cmp_venntable_buttons <- inputPanel(
         div(checkboxGroupInput(
             ns('cmp_intersection'), NULL,
@@ -1143,28 +1195,31 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
     )
 
     callModule(
-        tableModule,
-        id = "cmp_venntable", 
-        func = cmp_venntable.RENDER,
+        plotModule,
+        id = "cmp_fcbarplot",
+        func = cmp_fcbarplot.RENDER,
+        func2 = cmp_fcbarplot.RENDER,
         caption = cmp_venntable_buttons,
-        title = "Intersecting genes", label="b",
-        info.text = "Table of intersecting genes", 
-        info.width = "500px",
-        height = 0.4*fullH
+        title = "Cumulative fold-change", label="b",
+        info.text = "</b>Cumulative fold-change.</b> This plot visualizes the cumulative fold-change of genes shared between the profiles.",
+        options = cmp_fcbarplot.opts,
+        pdf.width=8, pdf.height=6,
+        height = 0.40*fullH, res=c(69,95)
     )
-    
+
     ##-------------------------------------------------------
     ##---------- UI LAYOUT ----------------------------------
     ##-------------------------------------------------------
     
-    cmp_venn_caption = "<b>Venn diagram and intersection table.</b> <b>(a)</b> Venn diagram showing the number of overlapping (significant) genes for multiple contrasts. <b>(b)</b> Table reporting genes in the selected overlap region with their fold-changes."
+    cmp_venn_caption = "<b>(a)</b> <b>Venn diagram</b> showing the number of overlapping genes for multiple contrasts. <b>(b)</b> <b>Cumulative fold-change plot</b> of genes in the selected overlap region."
     
     output$cmp_venndiagram_UI <- renderUI({
         fillCol(
             height = fullH,
-            flex = c(1, 1, 0.1, NA),
+            flex = c(1.2, 1, 0.05, NA),
             plotWidget(ns("cmp_venndiagram")),
-            tableWidget(ns("cmp_venntable")),
+            plotWidget(ns("cmp_fcbarplot")),
+            ##tableWidget(ns("cmp_venntable")),
             ##dataTableOutput(ns("cmp_venntable")),
             br(),
             div(HTML(cmp_venn_caption), class="caption")
@@ -1178,221 +1233,7 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
         updateCheckboxGroupInput(session, "cmp_intersection", choices=dt.labels,
                                  selected=dt.labels, inline=TRUE )    
     })
-
-    ##================================================================================
-    ## Meta-volcano
-    ##================================================================================
-
-    cmp_volcano1.RENDER %<a-% reactive({
-        
-        ngs <- inputData()
-        req(ngs)
-        
-        sel = names(ngs$gx.meta$meta)
-        sel = input_cmp_comparisons()
-        if(is.null(sel) || sel[1]=="") return(NULL)
-        sel = intersect(sel, names(ngs$gx.meta$meta))
-        
-        ## GENE LEVEL
-        gxmethods <- "trend.limma"
-        gxmethods <- c("trend.limma","edger.qlf","deseq2.wald")
-        gxmethods <- selected_gxmethods()
-        if(length(gxmethods)<1 || gxmethods[1]=="") return(NULL)
-        
-        ##fc0 = sapply(ngs$gx.meta$meta[sel], function(x) unclass(x$fc)[,"trend.limma"])
-        ##qv0 = sapply(ngs$gx.meta$meta[sel], function(x) unclass(x$q)[,"trend.limma"])
-        fc0 = sapply(ngs$gx.meta$meta[sel], function(x)
-            rowMeans(unclass(x$fc)[,gxmethods,drop=FALSE]))
-        qv0 = sapply(ngs$gx.meta$meta[sel], function(x)
-            apply(unclass(x$q)[,gxmethods,drop=FALSE],1,max))        
-        rownames(fc0) <- rownames(ngs$gx.meta$meta[[1]])
-        rownames(qv0) <- rownames(ngs$gx.meta$meta[[1]])
-                
-        if(input$cmp_level=="gene") {
-            sel.probes = rownames(fc0) 
-            ##sel.probes = filterFamily(ngs$genes, input$cmp_filter, ngs=ngs)
-            if(input$cmp_filter %in% names(GSETS)) {
-                sel.probes = filterProbes(ngs$genes, GSETS[[input$cmp_filter]])
-            } else if(input$cmp_filter == "<custom>") {
-                genes = strsplit( input$cmp_customlist, split="[, ;]")[[1]]
-                if(length(genes)>0) {
-                    sel.probes = filterProbes(ngs$genes, genes)
-                }
-            }
-            sel.probes = intersect(sel.probes, rownames(fc0))
-            fc0 = fc0[sel.probes,,drop=FALSE]
-            qv0 = qv0[sel.probes,,drop=FALSE]
-        }
-        rownames(fc0) = sub(".*:","",rownames(fc0))
-        rownames(qv0) = sub(".*:","",rownames(qv0))
-        fdr=0.001;lfc=2
-        fdr = as.numeric(input$cmp_fdr)
-        lfc = as.numeric(input$cmp_lfc)
-        if(is.null(fdr)) return(NULL)
-        if(is.null(lfc)) return(NULL)
-
-        dbg("dim(fc0)=",dim(fc0))
-        
-        ## check signs, thresholds
-        sign.fc <- sign(rowMeans(fc0))
-        min.fc <- apply(abs(fc0),1,min) * sign.fc
-        same.sign <- (rowMeans(sign(fc0)==sign.fc)==1)
-        max.qv <- apply(qv0,1,max)
-        fc.genes <- rownames(fc0)
-        in.common <- which( abs(min.fc) >= lfc & max.qv <= fdr & same.sign) 
-        sel.genes <- fc.genes[in.common]
-        ##max.qv[which(!same.sign)] <- 1
-        
-        dbg("min.min.fc=",min(min.fc))
-        dbg("max.min.fc=",max(min.fc))
-        dbg("min.max.qv=",min(max.qv))
-        dbg("max.max.qv=",max(max.qv))
-
-        par(mfrow=c(1,1), mar=c(5,5,1,3), mgp=c(2.4,1,0) )
-        gx.volcanoPlot.XY( x= min.fc, pv= max.qv, gene=fc.genes,
-                          render="canvas", n=5000, nlab=25, 
-                          ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
-                          use.fdr=TRUE, p.sig=fdr, lfc=lfc,
-                          cex=0.5, lab.cex=1.2, cex.main=1.5,
-                          xlab="meta fold change (log2)",
-                          ylab="meta significance (log10q)",
-                          highlight=sel.genes)
-        ##title(main="common genes", line=1, cex=1.4)
-        
-    })
-
-    cmp_fcbarplot.RENDER %<a-% reactive({
-
-        ngs <- inputData()
-        sel = names(ngs$gx.meta$meta)
-        sel = input_cmp_comparisons()
-        if(sel[1]=="") return(NULL)
-        sel = intersect(sel, names(ngs$gx.meta$meta))
-
-        
-        ##fc = sapply(ngs$gx.meta$meta[1:3], function(x) x$meta.fx)
-        ##rownames(fc) <- rownames(ngs$gx.meta$meta[[1]])    
-        fc = getSignificantFoldChangeMatrix()  ## isolate??
-        fc <- fc[,sel,drop=FALSE]
-        if(input$cmp_fcbarplot_abs) {
-            fc <- abs(fc)  
-        }
-        fc <- fc[order(-rowMeans(fc**2)),,drop=FALSE]
-        fc <- head(fc,30)
-        fc <- fc[order(-rowMeans(fc)),,drop=FALSE]
-        
-        ## add some empty rows (keeps barplot bar-widths equal)
-        fc.na <- matrix(0,nrow=100,ncol=ncol(fc))
-        fc <- rbind(fc,fc.na)
-        fc.top <- head(fc,30)
-        
-        par(mar=c(8,4,2,2))
-        par(mfrow=c(1,1), mar=c(8,5,3,3), mgp=c(2.4,1,0) )
-        fc.sum <- rowSums(fc.top,na.rm=TRUE)
-        ylim <- c(min(c(0,fc.sum)), max(0,1.3*max(fc.sum)))
-        barplot(t(fc.top), las=3, cex.names=0.9,
-                ylim=ylim, ylab="cumulative logFC")
-        legend("topright", legend=colnames(fc.top),
-               fill=c("grey20","grey50","grey80"),
-               cex=0.9, y.intersp=0.8)
-        
-    })
-
-    cmp_volcano2.RENDER %<a-% reactive({
-
-        ngs <- inputData()
-        sel = names(ngs$gx.meta$meta)
-        sel = input_cmp_comparisons()
-        if(sel[1]=="") return(NULL)
-        sel = intersect(sel, names(ngs$gx.meta$meta))
-        
-        ## GENESET LEVEL
-        fc0 = sapply(ngs$gset.meta$meta[sel], function(x) unclass(x$fc)[,"gsva"])
-        qv0 = sapply(ngs$gset.meta$meta[sel], function(x) unclass(x$q)[,"gsva"])        
-        if(input$cmp_level == "geneset") {
-            gsets = unique(unlist(COLLECTIONS[input$cmp_filter]))
-            gsets = intersect(gsets, rownames(fc0))
-            fc0 = fc0[gsets,,drop=FALSE]
-            qv0 = qv0[gsets,,drop=FALSE]
-        }
-        
-        rownames(fc0) = sub(".*:","",rownames(fc0))
-        rownames(qv0) = sub(".*:","",rownames(qv0))
-        fdr=0.001;lfc=2
-        fdr = as.numeric(input$cmp_fdr)
-        lfc = as.numeric(input$cmp_lfc)
-        if(is.null(fdr)) return(NULL)
-        if(is.null(lfc)) return(NULL)
-
-        ## check signs, thresholds
-        sign.fc <- sign(rowMeans(fc0))
-        min.fc <- apply(abs(fc0),1,min) * sign.fc
-        same.sign <- (rowMeans(sign(fc0)==sign.fc)==1)
-        max.qv <- apply(qv0,1,max)
-        fc.genes <- rownames(fc0)
-        in.common <- which( abs(min.fc) >= lfc & max.qv <= fdr & same.sign) 
-        sel.genes <- fc.genes[in.common]
-        ##max.qv[which(!same.sign)] <- 1
-        
-        par(mfrow=c(1,1), mar=c(4,5,1,3), mgp=c(2.4,1,0) )
-        gx.volcanoPlot.XY( x= min.fc, pv= max.qv, gene=fc.genes,
-                          render="canvas", n=5000, nlab=25, 
-                          ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
-                          use.fdr=TRUE, p.sig=fdr, lfc=lfc,
-                          cex=0.5, lab.cex=1.2, cex.main=1.5,
-                          xlab="meta fold change (log2)",
-                          ylab="meta significance (log10q)",
-                          highlight=sel.genes)
-        ##title(main="common gene sets", line=1, cex=1.4)
-
-        
-    })
-
-    ##------------------------------------------------------------
-    ##------------------------------------------------------------
-    ##------------------------------------------------------------
-
-    cmp_volcano1.opts = tagList(
-        ##    radioButtons(ns('cmp_include'),'Counting mode:', choices=c("up/down","both"), inline=TRUE)
-    )
-    callModule(
-        plotModule,
-        id = "cmp_volcano1",
-        func = cmp_volcano1.RENDER,
-        func2 = cmp_volcano1.RENDER,
-        title="Meta-volcano plot", label="a",
-        info.text = "The Volcano plot visualizes the intersecting genes between the profiles.",
-        options = cmp_volcano1.opts,
-        pdf.width=8, pdf.height=6,
-        height = 0.45*fullH, res=72
-    )
-
-    cmp_fcbarplot.opts = tagList(
-        checkboxInput(ns('cmp_fcbarplot_abs'),'Absolute foldchange')
-    )
-    callModule(
-        plotModule,
-        id = "cmp_fcbarplot",
-        func = cmp_fcbarplot.RENDER,
-        func2 = cmp_fcbarplot.RENDER,
-        title="Cumulative fold-change", label="b",
-        info.text = "This plot visualizes the cumulative fold-change between the profiles.",
-        options = cmp_fcbarplot.opts,
-        pdf.width=8, pdf.height=6,
-        height = 0.45*fullH, res=72        
-    )
-
-    cmp_metavolcano_caption = "<b>Meta-volcano plot and top ranked cumulative fold-change.</b> . <b>(a)</b> The meta-volcano highlights the genes that are common/shared in all selected comparisons. <b>(b)</b> Genes ranked by cumulative fold-change across the selected comparisons." 
     
-    output$cmp_metavolcano_UI <- renderUI({
-        fillCol(
-            height = fullH,
-            flex = c(1, 1, NA),
-            plotWidget(ns("cmp_volcano1")),
-            plotWidget(ns("cmp_fcbarplot")),
-            div(HTML(cmp_metavolcano_caption), class="caption")
-        )
-    })
 
     
 } ## end-of-Module 

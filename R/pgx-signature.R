@@ -1,7 +1,7 @@
 if(0) {
 
     sigdb = "../data/datasets-allFC.csv"
-    h5.file = "../data/sigdb-gse25k.h5"
+    h5.file = "../libx/sigdb-virome.h5"
     FILES="../lib"
     RDIR="../R"
     source("../R/pgx-include.R")
@@ -12,12 +12,14 @@ if(0) {
     h5.file = "../lib/sigdb-creeds.h5.test"
     h5.file = "../lib/sigdb-creeds.h5"
 
+    load("../data/geiger2016-arginineX.pgx")
     fc <- ngs$gx.meta$meta[[1]]$meta.fx
     names(fc) <- rownames(ngs$gx.meta$meta[[1]])
 
 }
 
-pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=1000, contrasts=NULL)
+pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=1000, contrasts=NULL,
+                                          remove.le=FALSE )
 {
     require(rhdf5)
     meta = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
@@ -47,7 +49,7 @@ pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=1000, contrasts=NULL)
         
         fc <- meta$fc[,ct]
         names(fc) <- rownames(meta$fc)
-        names(fc) <- toupper(names(fc)) ## for mouse
+        names(fc) <- toupper(names(fc)) ## for MOUSE!!
         
         h5.file
         if(!is.null(h5.file))  {
@@ -64,9 +66,15 @@ pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=1000, contrasts=NULL)
             stop("FATAL:: could not determine reference type")
         }
         dim(res)
+
         scores[[ct]] <- res
     }
 
+    ## remove leadingEdge (take too much memory!!!)
+    if(remove.le) {
+        for(j in 1:length(scores)) scores[[j]]$leadingEdge <- NULL
+    }
+    
     names(scores)
     return(scores)
 }
@@ -523,8 +531,8 @@ pgx.createSignatureDatabaseH5 <- function(pgx.files, h5.file, update.only=FALSE)
     ## return(X)
 }
 
-##mc.cores=24;lib.dir=FILES
-pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
+##mc.cores=4;lib.dir=FILES;methods="gsea"
+pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=0, lib.dir,
                                           methods = c("gsea","gsva") ) 
 {
     require(rhdf5)
@@ -542,7 +550,7 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
         colnames(X) <- cn
         X[which(X < -999999)] <- NA
     }
-
+    
     ##sig100.dn <- h5read(h5.file, "signature/sig100.dn")  
     ##sig100.up <- h5read(h5.file, "signature/sig100.up")  
     
@@ -564,37 +572,45 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=4, lib.dir,
     if(h5exists(h5.file, "enrichment/genesets")) {
         h5delete(h5.file, "enrichment/genesets")
     }
-    h5write(names(gmt), h5.file, "enrichment/genesets")
+    ##h5write(names(gmt), h5.file, "enrichment/genesets")
 
     if("gsea" %in% methods) {
         cat("[pgx.addEnrichmentSignaturesH5] starting fGSEA for",length(gmt),"gene sets...\n")    
         require(fgsea)
+        i=1
         F1 <- mclapply(1:ncol(X), function(i) {
             xi <- X[,i]
             xi[is.na(xi)] <- 0
             xi <- xi + 1e-3*rnorm(length(xi))
-            fgsea( gmt, xi, nperm=10000 )$NES
-        })  
+            fres <- fgsea(gmt, xi, nperm=10000, nproc=mc.cores)
+            r <- fres$NES
+            names(r) <- fres$pathway
+            r
+        })
+
+        cat("[pgx.addEnrichmentSignaturesH5] length(F1)=",length(F1),"\n")
         F1 <- do.call(cbind, F1)
-        cat("[pgx.addEnrichmentSignaturesH5] dim(F1)=",dim(F1),"\n")
-        rownames(F1) <- names(gmt)
-        colnames(F1) <- colnames(X)
-        dim(F1)
-        rownames(F1) <- names(gmt)
+        cat("[pgx.addEnrichmentSignaturesH5] 1: dim(F1)=",dim(F1),"\n")
+        ## rownames(F1) <- names(gmt)
+        ## colnames(F1) <- colnames(X)
+        F1 <- F1[match(names(gmt),rownames(F1)),,drop=FALSE]
+        F1[is.na(F1)] <- 0
+        cat("[pgx.addEnrichmentSignaturesH5] 2: dim(F1)=",dim(F1),"\n")
         if(h5exists(h5.file, "enrichment/GSEA")) h5delete(h5.file, "enrichment/GSEA")
+        if(h5exists(h5.file, "enrichment/genesets")) h5delete(h5.file, "enrichment/genesets")
         h5write(F1, h5.file, "enrichment/GSEA")
         h5write(rownames(F1), h5.file, "enrichment/genesets")
     }
-    
     if("gsva" %in% methods) {
-        cat("[pgx.addEnrichmentSignaturesH5] starting GSVA for",length(gmt),"gene sets...\n")            
+        cat("[pgx.addEnrichmentSignaturesH5] starting GSVA for",length(gmt),"gene sets...\n")
         require(GSVA)
         ## mc.cores = 4
         F2 <- gsva(X, gmt, method="gsva", parallel.sz=mc.cores)
         cat("[pgx.addEnrichmentSignaturesH5] dim(F2)=",dim(F2),"\n")
-        rownames(F2) <- names(gmt)
-        dim(F2)
+        F2 <- F2[match(names(gmt),rownames(F2)),,drop=FALSE]
+        F2[is.na(F2)] <- 0
         if(h5exists(h5.file, "enrichment/GSVA")) h5delete(h5.file, "enrichment/GSVA")
+        if(h5exists(h5.file, "enrichment/genesets")) h5delete(h5.file, "enrichment/genesets")
         h5write(F2, h5.file, "enrichment/GSVA")
         h5write(rownames(F2), h5.file, "enrichment/genesets")
     }

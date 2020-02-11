@@ -57,7 +57,7 @@ pgx.computeObjectPGX <- function(counts, samples, contrasts, ## genes,
     is.log
     if(is.log) {
         ngs$counts <- 2**ngs$counts  ## undo logarithm
-        cat("[pgx-upload.R] undo logarithm\n")
+        cat("[pgx.computeObjectPGX] undo logarithm\n")
     }
 
     mean.counts <- mean(colSums(ngs$counts,na.rm=TRUE))
@@ -72,7 +72,7 @@ pgx.computeObjectPGX <- function(counts, samples, contrasts, ## genes,
         ngs$counts_multiplier = unit
     }
     ngs$counts_multiplier
-    cat("[pgx-upload.R] count_multiplier= ",ngs$counts_multiplier,"\n")
+    cat("[pgx.computeObjectPGX] count_multiplier= ",ngs$counts_multiplier,"\n")
     
     ##-------------------------------------------------------------------
     ## create gene annotation if not given
@@ -101,7 +101,7 @@ pgx.computeObjectPGX <- function(counts, samples, contrasts, ## genes,
         aa <- paste("detected organism: ",org)
         progress$inc(0.01, detail = aa)
     }
-    cat("[pgx-upload.R] detected organism: ",org,"\n")
+    cat("[pgx.computeObjectPGX] detected organism: ",org,"\n")
     
     gene <- rownames(ngs$counts)
     gene1 <- sapply(gene, function(s) strsplit(s,split="[;,]")[[1]][1])
