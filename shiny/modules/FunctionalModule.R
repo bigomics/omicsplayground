@@ -25,11 +25,17 @@ FunctionalUI <- function(id) {
 FunctionalModule <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
+
     inputData <- env[["load"]][["inputData"]]
+    selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
+    selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
+
     fullH = 750
     rowH = 660  ## row height of panel
     tabH = 200  ## row height of panel
     tabH = '70vh'  ## row height of panel    
+
+
     description = "<b>Functional analysis</b>. <br> Perform specialized functional analysis
 to understand biological functions including GO, KEGG, and drug connectivity mapping."
     output$description <- renderUI(HTML(description))
@@ -86,7 +92,7 @@ to understand biological functions including GO, KEGG, and WordCloud clustering.
             HTML(fa_infotext),
             easyClose = TRUE, size="l" ))
     })
-
+    
     observe({
         ngs <- inputData()
         req(ngs)
@@ -102,6 +108,7 @@ to understand biological functions including GO, KEGG, and WordCloud clustering.
     ##================================================================================
 
     getKeggTable <- reactive({
+
         ngs = inputData()
         req(ngs)
         req(input$fa_contrast)
@@ -135,6 +142,59 @@ to understand biological functions including GO, KEGG, and WordCloud clustering.
         kegg.gsets <- rownames(ngs$gsetX)[jj]
         kegg.ids <- kegg.ids[jj]
 
+        meta <- ngs$gset.meta$meta[[comparison]]
+        meta <- meta[kegg.gsets,]
+        mm <- selected_gsetmethods()
+        dbg("[functional:getKeggTable] 1: gset methods = ",mm)
+        mm <- intersect(mm, colnames(meta$q))
+        dbg("[functional:getKeggTable] 2: gset methods = ",mm)
+        meta.q <- apply(meta$q[,mm,drop=FALSE],1,max,na.rm=TRUE)
+        
+        df <- data.frame( kegg.id=kegg.ids, pathway=kegg.gsets,
+                         logFC = meta$meta.fx, meta.q = meta.q,
+                         check.names=FALSE)
+        ##df <- df[order(-fx),]
+        df <- df[!duplicated(df$kegg.id), ]  ## take out duplicated gene sets...
+        df <- df[order(-abs(df$logFC)),]    
+        return(df)
+    })
+
+    getKeggTable.SAVE <- reactive({
+
+        ngs = inputData()
+        req(ngs)
+        req(input$fa_contrast)
+        
+        ## ----- get comparison
+        comparison=2
+        comparison <- input$fa_contrast
+        if(!(comparison %in% names(ngs$gset.meta$meta))) return(NULL)
+
+        ## ----- get KEGG id
+        xml.dir <- file.path(FILES,"kegg-xml")
+        kegg.available <- gsub("hsa|.xml","",dir(xml.dir, pattern="*.xml"))
+        kegg.available
+        kegg.ids <- getKeggID(rownames(ngs$gsetX))
+        kegg.ids    
+        ## sometimes no KEGG in genesets...
+        if(length(kegg.ids)==0) {
+            sendSweetAlert(
+                session=session,
+                title = "No KEGG terms in enrichment results",
+                text="",
+                type = "warning")
+            dbg("[functional:getKeggTable] no KEGG terms in gsetX")
+            df <- data.frame()
+            return(df)
+        }
+        
+        jj <- which(!is.na(kegg.ids) &
+                    !duplicated(kegg.ids) &
+                    kegg.ids %in% kegg.available )
+        kegg.gsets <- rownames(ngs$gsetX)[jj]
+        kegg.ids <- kegg.ids[jj]
+        
+        ##------------------------------------------------------------
         ## get gene set FC and q-value
         names(ngs$gset.meta$meta)
         meta <- ngs$gset.meta$meta[[comparison]]
@@ -144,6 +204,7 @@ to understand biological functions including GO, KEGG, and WordCloud clustering.
         fx <- round(fx[kegg.gsets], digits=3)
         qv <- round(qv[kegg.gsets], digits=5)
 
+        ##------------------------------------------------------------
         ## get gene set FC and q-value
         gene.meta <- ngs$gx.meta$meta[[comparison]]
         gene.fc <- gene.meta$meta.fx
@@ -152,7 +213,8 @@ to understand biological functions including GO, KEGG, and WordCloud clustering.
         gene.qv <- apply( gene.qv[,setdiff(colnames(gene.qv),c("ttest","t.test"))],1,max)  ## no t-test...
         genesUPPERCASE <- toupper(sub(".*:","",rownames(gene.meta)))
         names(gene.fc) <- names(gene.qv) <- genesUPPERCASE
-        
+
+        ##------------------------------------------------------------        
         ## calculate set size
         sig.fc <- input$kegg_table_logfc
         ##sig.genes <- names(gene.fc)
@@ -172,6 +234,7 @@ to understand biological functions including GO, KEGG, and WordCloud clustering.
         delta <- sapply( pw.genes, function(gg) mean(gg %in% sig.up) - mean(gg %in% sig.dn) )
         delta <- round(100*delta, digits=2)
         
+        ##------------------------------------------------------------
         ## fast Fisher test
         require(corpora)
         ft.pv <- rep(1, length(ngene1))
@@ -187,8 +250,6 @@ to understand biological functions including GO, KEGG, and WordCloud clustering.
         ft.qv <- round(p.adjust(ft.pv, method="fdr"),digits=4)
         ft.res <- data.frame( ratio=ft.r, "k/n"=paste0(ngene1,"/",ngene0), q=ft.qv, check.names=FALSE)
 
-        ##
-        kegg.ids2 <- paste0("KEGG:",kegg.ids)
         df <- data.frame( kegg.id=kegg.ids, pathway=kegg.gsets,
                          ##"delta.pct" = delta,
                          ##fx=fx, ## meta.q=qv,
@@ -200,12 +261,12 @@ to understand biological functions including GO, KEGG, and WordCloud clustering.
         df <- df[!duplicated(df$kegg.id), ]  ## take out duplicated gene sets...
         return(df)
     })
-
+    
     getFilteredKeggTable <- reactive({
         df <- getKeggTable()
         do.filter = FALSE
         do.filter <- input$fa_filtertable
-        if(do.filter) df <- df[which(df$q < 0.999),]
+        if(do.filter) df <- df[which(df$meta.q < 0.999),]
         return(df)
     })
 
@@ -438,7 +499,7 @@ to understand biological functions including GO, KEGG, and WordCloud clustering.
         ## add hyperlink
         url = paste0("https://www.genome.jp/kegg-bin/show_pathway?map=hsa",df$kegg.id,"&show_description=show")
         df$kegg.id <- paste0("<a href='",url,"' target='_blank'>",df$kegg.id,"</a>")    
-        df$pathway <- wrapHyperLink(df$pathway, df$pathway)
+        ##df$pathway <- wrapHyperLink(df$pathway, df$pathway)
         
         numeric.cols <- which(sapply(df, is.numeric))
         numeric.cols
@@ -456,14 +517,15 @@ to understand biological functions including GO, KEGG, and WordCloud clustering.
                       ) %>%
             formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>% 
-                DT::formatStyle( "ratio",
+                DT::formatStyle( "logFC",
                                 ##background = styleColorBar(c(0,3), 'lightblue'),
-                                background = color_from_middle( df[,"ratio"], 'lightblue', '#f5aeae'),
+                                background = color_from_middle( df[,"logFC"], 'lightblue', '#f5aeae'),
                                 backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center') 
     })
 
     kegg_actmap.RENDER %<a-% reactive({
+
         require(igraph)
         ngs <- inputData()
         req(ngs)
@@ -563,7 +625,7 @@ to understand biological functions including GO, KEGG, and WordCloud clustering.
     kegg_table_info = "<strong>Enrichment table.</strong> The table is interactive; enabling user to sort on different variables and select a pathway by clicking on the row in the table. The scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap."
 
     kegg_table_opts <- tagList(
-        selectInput(ns("kegg_table_logfc"),"logFC threshold for Fisher-test",c(0.2,0.5,1))
+        ##selectInput(ns("kegg_table_logfc"),"logFC threshold for Fisher-test",c(0.2,0.5,1))
     )
     
     kegg_table <- callModule(

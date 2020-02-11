@@ -126,8 +126,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         } else {
             updateRadioButtons(session, "hm_gsetmatrix", choices=c("meta"), inline=TRUE)    
         }
-
-        ## updateRadioButtons(session, "hm_splitby", selected='none')
+        
+        updateRadioButtons(session, "hm_splitby", selected='none')
 
         ## update defaults??
         lab <- c("row","column")
@@ -513,7 +513,11 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             main=main; nmax=-1
         }
 
-        dbg('rendering heatmap...')
+        dbg('rendering heatmap: dim(zx)=',dim(zx))
+        dbg('rendering heatmap: table(splitx)=',table(splitx))
+        dbg('rendering heatmap: table(splity)=',table(splity))
+        dbg('rendering heatmap: calling gx.splitmap() ... ')
+        
         showNotification('rendering heatmap...')
 
         gx.splitmap( zx, 
@@ -1401,14 +1405,18 @@ displays the expression levels of selected genes across all conditions in the an
 
         if(ann.level=="geneset" && input$xann_odds_weighting ) {
             table(idx)
-            grp <- tapply( rownames(zx), idx, list)
+            grp <- tapply( toupper(rownames(zx)), idx, list)  ## toupper for mouse!!
             gmt <- GSETS[rownames(rho)]
+            bg.genes <- toupper(rownames(X))
+            dbg("[getClustannotCorrelation] bg.genes=",head(bg.genes))
+            dbg("[getClustannotCorrelation] head(gmt[[1]])=",head(gmt[[1]]))
+
             P <- c()
             for(i in 1:ncol(rho)) {
                 k <- colnames(rho)[i]
                 res <- gset.fisher(
                     grp[[k]], gmt, fdr=1, min.genes=0, max.genes=Inf,
-                    background = rownames(X) )
+                    background = bg.genes )
                 res <- res[rownames(rho),]
                 r <- res[,"odd.ratio"]
                 odd.prob <- r / (1+r)
@@ -1486,7 +1494,7 @@ displays the expression levels of selected genes across all conditions in the an
                                  titlefont = list(size=11),
                                  tickfont = list(size=10),
                                  showgrid=FALSE,
-                                 title = "correlation (R)" ),
+                                 title = "\ncorrelation (R)" ),
                     yaxis = list(title = "",
                                  showgrid = FALSE,
                                  showline = FALSE,
@@ -1498,7 +1506,7 @@ displays the expression levels of selected genes across all conditions in the an
                 add_annotations(xref = 'paper', yref = 'y',
                                 x = 0.01, y = y, xanchor='left',
                                 text = shortstring(y,slen), 
-                                font = list(size = 11),
+                                font = list(size = 10),
                                 showarrow = FALSE, align = 'right')
             ##layout(margin = c(0,0,0,0))
         }

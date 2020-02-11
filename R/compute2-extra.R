@@ -143,7 +143,8 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
                 cat("computing connectivity scores for sigDB",db,"\n")                
                 tt <- system.time({
                     scores <- pgx.computeConnectivityScores(
-                        ngs, db, ntop=ntop, contrasts=NULL)
+                        ngs, db, ntop=ntop, contrasts=NULL,
+                        remove.le=TRUE )
                 })
                 timings <- rbind(timings, c("connectivity", tt))
                 

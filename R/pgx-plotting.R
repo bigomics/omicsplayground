@@ -136,7 +136,6 @@ darkmode <- function(p, dim=2) {
         p <- layout(p,
                     zaxis = axis.par
                     )
-        
     }
     return(p)
 }

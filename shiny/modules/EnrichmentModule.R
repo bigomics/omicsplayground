@@ -1441,7 +1441,7 @@ EnrichmentModule <- function(input, output, session, env)
         if(length(jj)>0) rpt[,jj] = apply(rpt[,jj,drop=FALSE],2,shortstring,100)
 
         if(!input$gs_showqvalues) {
-            rpt <- rpt[,grep("^q[.]",colnames(rpt),invert=TRUE)]
+            rpt <- rpt[,grep("^q[.]|^q$",colnames(rpt),invert=TRUE)]
         }
 
         ## wrap with known links.
@@ -1490,7 +1490,8 @@ EnrichmentModule <- function(input, output, session, env)
             colnames(rpt) <- c("gene_name","fc","p","q","gset.rho")
         }
         ##rpt <- rpt[,c("gene_name","fc","p","q","gset.rho"),drop=FALSE]
-        
+
+        colnames(rpt) <- sub("^GS$","gene set",colnames(rpt))
         numeric.cols <- which(sapply(rpt, is.numeric))
         numeric.cols
 

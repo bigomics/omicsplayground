@@ -272,10 +272,10 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
             nshow <- show_rownames / length(unique(split.idx))
             nshow <- max(nshow,10)
             subidx <- tapply(1:length(split.idx), split.idx, function(ii)
-                ii[head(order(-apply(gx[ii,],1,sd,na.rm=TRUE)),nshow)] )
+                ii[head(order(-apply(gx[ii,,drop=FALSE],1,sd,na.rm=TRUE)),nshow)] )
             subset <- unlist(subidx)
         } else {
-            subset = head(order(-apply(gx,1,sd,na.rm=TRUE) ), show_rownames )
+            subset = head(order(-apply(gx,1,sd,na.rm=TRUE)), show_rownames )
         }
         lab = rownames(gx)[subset]
         lab <- substring(lab,1,lab.len)
@@ -366,7 +366,7 @@ gx.heatmap2 <- function(gx,
     gx <- gx[jj1,jj2]
 
     ## small random number
-    gx = gx + 1e-8*matrix(rnorm(length(gx[,])),nrow=nrow(gx),ncol=ncol(gx))
+    gx = gx + 1e-8*matrix(rnorm(length(gx)),nrow=nrow(gx),ncol=ncol(gx))
 
     fillNA <- function(x) {
         nx <- x
@@ -682,7 +682,7 @@ gx.heatmap <- function(gx, values=NULL,
         if(length(jj)) {
             require(RColorBrewer)
             klrs = rep(brewer.pal(8,"Set2"),99)
-            cc0[jj,] <- matrix(klrs[ry[jj,]+1], nrow=length(jj))
+            cc0[jj,,drop=FALSE] <- matrix(klrs[ry[jj,,drop=FALSE]+1], nrow=length(jj))
         }
         ##cc0 = cc0[which(rowMeans(!is.na(cc0))>0),,drop=FALSE ]
         cc0 <- t(cc0)
@@ -703,7 +703,7 @@ gx.heatmap <- function(gx, values=NULL,
         if(length(jj)) {
             require(RColorBrewer)
             klrs = rep(brewer.pal(8,"Set2"),99)
-            cc1[jj,] <- matrix(klrs[ry[jj,]+1], nrow=length(jj))
+            cc1[jj,,drop=FALSE] <- matrix(klrs[ry[jj,,drop=FALSE]+1], nrow=length(jj))
         }
         rownames(cc1) <- colnames(row.annot)
         colnames(cc1) <- rownames(row.annot)
@@ -876,13 +876,13 @@ clustermap <- function(x, nc=6, nr=6, na=4, q=0.80, p=2,
 
     ## order annotation
     order.annot <- function(A, kx, c1, n) {
-        mkx <- apply( kx[,], 2, function(x) tapply(x,c1,mean))
+        mkx <- apply( kx, 2, function(x) tapply(x,c1,mean))
         rho1 <- cor(t(A),t(mkx),use="pairwise")
         r <- apply(-abs(rho1),2,order)
         jj <- unique(as.vector(t(r)))
-        A <- A[jj,]
-        A <- A[!duplicated(A),]
-        head(A[,],n)
+        A <- A[jj,,drop=FALSE]
+        A <- A[!duplicated(A),,drop=FALSE]
+        head(A,n)
     }
 
     ## create annotation side bars
@@ -905,7 +905,7 @@ clustermap <- function(x, nc=6, nr=6, na=4, q=0.80, p=2,
         ##h3 <- corclust(ax)
         na0 <- min(na,dim(col.annot))
         col.annot <- kxmap(col.annot, cutree(h3,na0), c2, q=q)
-        col.annot <- col.annot[h3$order,]
+        col.annot <- col.annot[h3$order,,drop=FALSE]
         ## image( col.annot[,h2$order], col=my.col)
         ry <- t(apply(col.annot,1,rank,na.last="keep"))
         ry <- ry - apply(ry,1,min,na.rm=TRUE)

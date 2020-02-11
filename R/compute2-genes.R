@@ -137,9 +137,27 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     ##-----------------------------------------------------------------------------
     ## Filter genes
     ##-----------------------------------------------------------------------------    
-    counts = ngs$counts  ##??
+    counts = ngs$counts  ## notice original counts are not affected
     genes  = ngs$genes
     samples = ngs$samples
+
+    ## Rescale if too low. Often EdgeR/DeSeq can give errors of total counts
+    ## are too low. Happens often with single-cell (10x?). We rescale
+    ## to a minimum of 1 million counts (CPM)
+    if(type=="counts") {
+        mean.counts <- mean(colSums(counts,na.rm=TRUE))
+        mean.counts
+        if( mean.counts < 1e6) {
+            counts = counts * 1e6 / mean.counts
+        }
+        mean(colSums(counts,na.rm=TRUE))
+    }
+
+    ## set zero off-set??? striclty set small value to zero???
+    if(0) {
+        zero.th <- 0.25*mean(colSums(counts,na.rm=TRUE)/1e6)
+        counts[counts<zero.th] <- 0
+    }
     
     ## prefiltering for low-expressed genes (recommended for edgeR and
     ## DEseq2). Require at least in 2 or 1% of total. Specify the
@@ -210,6 +228,7 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
 
     ## Run all test methods
     ##
+    ##X=counts;design=design,
     gx.meta <- ngs.fitContrastsWithAllMethods(
         X = counts, type = type,
         samples = samples, genes = NULL, ##genes=genes,

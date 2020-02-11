@@ -704,7 +704,9 @@ infotext =
     })
 
     overlapScorePlot.RENDER <- reactive({
-        
+
+        require(RColorBrewer)
+
         df <- getOverlapTable()
         sel <- 1:nrow(df)
         sel<- overlapTable$rows_all()

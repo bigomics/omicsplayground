@@ -22,7 +22,7 @@ plotWidget <- function(id) {
 plotModule <- function(input, output, session, ## ns=NULL,
                        func, info.text="Info text", title="", func2=NULL,
                        inputs=NULL, options = NULL, label="",
-                       caption="", caption2="", 
+                       caption="", caption2="", ## header=NULL,
                        plotlib = "base", renderFunc=NULL, outputFunc=NULL,
                        no.download = FALSE, download.fmt=c("png","pdf"), 
                        just.info=FALSE, info.width="300px", show.maximize = TRUE,
@@ -602,9 +602,12 @@ plotModule <- function(input, output, session, ## ns=NULL,
         if(any(class(caption2)=="reactive")) {
             caption2 <- caption2()
         }
+        if(any(class(caption2)=="character")) {
+            caption2 <- HTML(caption2)
+        }
         tagList(
             r,
-            div( HTML(caption2), class="caption2")          
+            div( caption2, class="caption2")          
         )
     })
         
@@ -619,6 +622,9 @@ plotModule <- function(input, output, session, ## ns=NULL,
   
         if(any(class(caption)=="reactive")) {
             caption <- caption()
+        }
+        if(any(class(caption)=="character")) {
+            caption <- HTML(caption)
         }
 
         fillCol(
@@ -635,7 +641,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
             ##render,
             eval(parse(text=outputFunc))(ns("renderfigure"), width=width.1, height=height.1),
             br(),
-            div( HTML(caption), class="caption"),          
+            div( caption, class="caption"),          
             div(class="popup-plot",
                 bsModal(ns("plotPopup"), title, size="l",
                         ns("zoombutton"),

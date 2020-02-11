@@ -64,7 +64,7 @@ pgx.initDatasetFolder <- function(pgx.dir, verbose=TRUE, force=FALSE)
         }
 
         ## skip if too many...
-        if(npgx > 100) {
+        if(npgx > 100 && force==FALSE) {
             cat("too many files in",pgx.dir[i],". Please init manually\n")
             next()
         }
