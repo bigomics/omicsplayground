@@ -1162,13 +1162,14 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
         }
         fc[is.na(fc)] <- 0
         fc <- fc[order(-rowMeans(fc**2,na.rm=TRUE)),,drop=FALSE]
-        fc <- head(fc,30)
+        NTOP = 40
+        fc <- head(fc,NTOP)
         fc <- fc[order(-rowMeans(fc,na.rm=TRUE)),,drop=FALSE]
         
         ## add some empty rows (keeps barplot bar-widths equal)
         fc.na <- matrix(0,nrow=100,ncol=ncol(fc))
         fc <- rbind(fc,fc.na)
-        fc.top <- head(fc,38)
+        fc.top <- head(fc,NTOP)
         
         par(mar=c(8,4,2,2))
         par(mfrow=c(1,1), mar=c(9,4,1,1), mgp=c(2.4,1,0) )
