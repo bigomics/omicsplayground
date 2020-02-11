@@ -1104,7 +1104,7 @@ cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the cont
         ##    checkboxGroupInput(ns('cmp_intersection'),NULL, choices=c("A","B","C"), inline=TRUE )    
         fillRow(
             flex=c(1,1), ## height=80,       
-            tipify( selectInput(ns("cmp_fdr"),"FDR", choices=FDR.VALUES2, selected=0.05),
+            tipify( selectInput(ns("cmp_fdr"),"FDR", choices=FDR.VALUES2, selected=0.20),
                    "Threshold for false discovery rate",
                    placement="bottom", options = list(container = "body")),
             tipify( selectInput(ns("cmp_lfc"),"logFC threshold", choices=c(0,0.2,0.5,1,2,5),
