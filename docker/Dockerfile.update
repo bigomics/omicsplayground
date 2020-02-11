@@ -28,7 +28,8 @@ RUN git pull
 # Copy local data into Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
-## COPY data-examples/* /omicsplayground/data/
+## COPY data-examples/* data/
+COPY data-examples/geiger2016-arginine.pgx data/
 ## RUN R -e "setwd('data');source('init.R')"
 
 #------------------------------------------------------------
