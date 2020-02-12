@@ -952,7 +952,7 @@ to understand biological functions including GO, KEGG, and WordCloud clustering.
         func = GO_actmap.RENDER,
         func2 = GO_actmap.RENDER, 
         title = "Activation matrix", label="c",
-        info.text = "The Gene Ontology (GO) activation matrix visualizes the activation of GO terms across conditions. From this figure, you can easily detect GO terms that are consistently up/down across conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
+        info.text = "The <b>GO activation matrix</b> visualizes the activation of GO terms across conditions. From this figure, you can easily detect GO terms that are consistently up/down across conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         options = GO_actmap.opts,
         pdf.width=10, pdf.height=10,
         height = c(rowH,750), res=72

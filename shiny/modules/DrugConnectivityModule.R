@@ -93,7 +93,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         req(ngs)
         ct <- colnames(ngs$model.parameters$contr.matrix)
         ##ct <- c(ct,"<sd>")
-        updateSelectInput(session, "dr_contrast", choices=ct )
+        updateSelectInput(session, "dr_contrast", choices=sort(ct) )
     })
     
     ##================================================================================
@@ -159,7 +159,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         if(is.null(comparison)) return(NULL)
 
         res <- getDseaTable()
-
         ## filter with table selection/search
         ii  <- dsea_table$rows_all()
         req(ii)
@@ -220,7 +219,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         names(ngs$drugs)
         dmethod <- input$dsea_method
         moatype = input$dsea_moatype
-        NTOP=10
+        NTOP=12
         dtg.top = moa.top = NULL
         
         if(moatype=="target gene") {
@@ -276,14 +275,12 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             if(moatype=="drug class") {
                 par(mfrow=c(2,1), mar=c(4,4,1,0.5), mgp=c(2,0.7,0))
                 barplot(moa.top, horiz=FALSE, las=3,
-                        ylab=ylab,
-                        cex.names = 0.8 )
+                        ylab=ylab, cex.names = 0.8 )
                 ##title(main="MOA", line=1 )
             } else {
                 par(mfrow=c(2,1), mar=c(0,4,1,0.5), mgp=c(2,0.7,0))
                 barplot(dtg.top, horiz=FALSE, las=3, ## ylab="drugs (n)",
-                        ylab=ylab,
-                        cex.names = 0.8 )
+                        ylab=ylab, cex.names = 0.8 )
                 ##title(main="target gene", line=1 )
             }
         }
@@ -422,7 +419,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         info.text = "This plot visualizes the <strong>mechanism of action</strong> (MOA) across the enriched drug profiles. On the vertical axis, the number of drugs with the same MOA are plotted. You can switch to visualize between MOA or target gene.",
         options = dsea_moaplot.opts,
         pdf.width=4, pdf.height=6,
-        height = 0.54*rowH, res=72
+        height = c(0.54*rowH, 600), width=c('auto',1000),
+        res=c(72,100)
     )
 
     ##-------- Activation map plotting module
@@ -436,7 +434,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         info.text = "The <strong>Activation Matrix</strong> visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         options = dsea_actmap.opts,
         pdf.width=6, pdf.height=10,
-        height = c(fullH-120,750), res=72
+        height = c(fullH-120,750),
+        res=72
     )
 
     ##--------buttons for table

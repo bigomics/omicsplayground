@@ -1,21 +1,10 @@
-library(knitr)
-library(limma)
-library(edgeR)
-library(RColorBrewer)
-library(gplots)
-library(matrixTests)
-library(kableExtra)
-library(knitr)
-library(rhdf5)
 
+RDIR = "../R"
 FILES = "../lib"
-FILESX = "../libx"
-RDIR  = "../R"
 PGX.DIR = "../data"
 OUT.DIR = "."
-source("../R/pgx-include.R")
-##source("options.R")
 FILES
+source(file.path(RDIR,"pgx-include.R"))
 
 pgx.files <- dir(".", pattern=".pgx")
 ##pgx.files <- grep("X.pgx$",pgx.files,invert=TRUE,value=TRUE)

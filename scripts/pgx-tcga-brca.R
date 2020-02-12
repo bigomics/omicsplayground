@@ -1,35 +1,20 @@
 ##rm(list=setdiff(ls(),run.param))
-library(knitr)
-library(limma)
-library(edgeR)
-library(RColorBrewer)
-library(gplots)
-library(matrixTests)
-library(kableExtra)
-library(knitr)
 
-source("../R/gx-heatmap.r")
-source("../R/gx-limma.r")
-source("../R/gx-util.r")
-source("../R/ngs-cook.r")
-source("../R/ngs-fit.r")
-source("../R/ngs-functions.R")
-source("../R/gset-fisher.r")
-source("../R/gset-gsea.r")
-source("../R/gset-meta.r")
-source("../R/pgx-drugs.R")
-source("../R/pgx-graph.R")
-source("../R/pgx-functions.R")
+RDIR = "../R"
+FILES = "../lib"
+PGX.DIR = "../data"
+source("../R/pgx-include.R")
+##source("options.R")
 
-source("options.R")
 MAX.GENES
-MAX.GENES = 4000
+MAX.GENES = 8000
+MAX.GENESETS = 8000
 BATCH.CORRECT=TRUE
 
 ## run all available methods 
-USER.GENETEST.METHODS = c("trend.limma","edger.qlf","deseq2.wald")
-USER.GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
-USER.GENESETTEST.METHODS = c("gsva","camera","fgsea")
+GENETEST.METHODS = c("trend.limma","edger.qlf","deseq2.wald")
+GENESETTEST.METHODS = c("gsva","fisher","camera","fgsea","fry","spearman")
+GENESETTEST.METHODS = c("gsva","camera","fgsea")
 
 rda.file="../data/tcga-brca_pub-gx.pgx"
 rda.file
@@ -149,22 +134,10 @@ if(PROCESS.DATA) {
     ##ngs$samples$batch <- NULL  ##???
     ##ngs$samples$batch <- as.integer(lib.size2)
 
-    ## tagged rownames
-    ##row.id = paste0("tag",1:nrow(ngs$genes),":",ngs$genes[,"gene_name"])  
-    ##row.id = ngs$genes[,"gene_name"]
-    ##rownames(ngs$genes) = rownames(ngs$counts) = row.id
-    ##names(ngs)
-
     ##-------------------------------------------------------------------
     ## collapse multiple row for genes by summing up counts
     ##-------------------------------------------------------------------
     sum(duplicated(rownames(X)))
-    ## x1 = apply(ngs$counts, 2, function(x) tapply(x, ngs$genes$gene_name, sum))
-    ## ngs$genes = ngs$genes[match(rownames(x1),ngs$genes$gene_name),]
-    ## ngs$counts = x1
-    ## dim(x1)
-    ## rownames(ngs$genes) = rownames(ngs$counts) = rownames(x1)
-    ## remove(x1)
     ##ngs <- ngs.collapseByGene(ngs)
     ##dim(ngs$counts)
         
@@ -214,11 +187,31 @@ if(DIFF.EXPRESSION) {
     ## dim(contr.matrix)
     ## head(contr.matrix)
     ##contr.matrix = contr.matrix[,1:3]
+
+    GENETEST.METHODS=c("trend.limma","edger.qlf","deseq2.wald")
+    GENESET.METHODS = c("fisher","gsva","fgsea") ## no GSEA, too slow...
+    MAX.GENES = 20000
+    MAX.GENESETS = 5000
     
-    source("../R/compute-genes.R")
-    source("../R/compute-genesets.R")    
-    source("../R/compute-extra.R")
+    ## new callling methods
+    ngs <- compute.testGenes(
+        ngs, contr.matrix,
+        max.features = MAX.GENES,
+        test.methods = GENETEST.METHODS)
     
+    ngs <- compute.testGenesets (
+        ngs, max.features=MAX.GENESETS,
+        test.methods = GENESET.METHODS,
+        lib.dir=FILES)
+
+    extra <- c("drugs-combo")
+    extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")
+    ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
+    
+    names(ngs)
+    names(ngs$drugs)
+    ngs$timings    
+
 }
 
 ## save
