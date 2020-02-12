@@ -15,8 +15,8 @@ cat("===================== INIT =======================\n")
 RDIR = "../R"
 FILES = "../lib"
 FILESX = "../libx"
-##PGX.DIR = "/data/PublicData/pgx/gse-virome"
-PGX.DIR = c("../data","../data-irb")
+PGX.DIR = "~/bigomics/pgx/gse-virome"
+##PGX.DIR = c("../data","../data-irb")
 ##PGX.DIR = c("../data","../data-extra")
 dir.exists(PGX.DIR)
 
@@ -31,7 +31,7 @@ opt <- pgx.readOptions(file="OPTIONS")
 
 DEV.VERSION = FALSE
 if(dir.exists("../../omicsplayground-dev")) DEV.VERSION = TRUE
-DEV.VERSION = FALSE
+##DEV.VERSION = FALSE
 
 if(opt$USER_MODE=="BASIC") {
     cat("********************* BASIC MODE **********************\n")

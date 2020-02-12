@@ -3,6 +3,163 @@
 ## Contrast creation functions
 ##-----------------------------------------------------------------------------
 
+## for compatibility...
+makeDirectContrasts2 <- function(Y, ref, na.rm=TRUE) {
+    makeDirectContrasts(Y=Y, ref=ref, na.rm=na.rm)
+}
+
+##Y=ngs$samples;na.rm=TRUE
+makeDirectContrasts <- function(Y, ref, na.rm=TRUE)
+{
+    detectGroups <- function(contr.matrix) {
+        group <- apply(contr.matrix,1,paste,collapse="_")
+        table(group)
+        n.group <- length(unique(group))
+        group <- factor(group)
+        if(ncol(contr.matrix)>10) {
+            levels(group) <- paste0("group",1:n.group)
+        }
+        group
+    }
+    
+    exp.matrix <- makeDirectContrasts000(Y=Y, ref=ref, na.rm=na.rm, warn=FALSE) 
+    exp.matrix <- sign(exp.matrix)    
+    no.vs <- grep("_vs_|_VS_",colnames(exp.matrix),invert=TRUE)
+    no.vs
+    if(length(no.vs)>0) {
+        colnames(exp.matrix)[no.vs] <- paste0(colnames(exp.matrix)[no.vs],":Y_vs_N")
+    }    
+    exp.matrix0 <- exp.matrix
+    if(all(grepl("_vs_|_VS_",colnames(exp.matrix0)))) {
+        exp.matrix0 <- contrastAsLabels(exp.matrix0)
+    }
+    group <- detectGroups(exp.matrix0)
+    table(group)
+    if(length(levels(group)) > 0.5*nrow(exp.matrix)) {
+        cat("WARNING:: contrast matrix looks degenerate. consider removing a contrast.\n")
+    }
+
+    contr.matrix <- exp.matrix[which(!duplicated(group)),,drop=FALSE]
+    rownames(contr.matrix) <- group[which(!duplicated(group))]
+    
+    list(contr.matrix=contr.matrix, group=group, exp.matrix=exp.matrix)
+}
+
+makeDirectContrasts000 <- function(Y, ref, na.rm=TRUE, warn=FALSE) {
+    ## if(warn) warning("makeDirectContrasts is deprectated. please use makeDirectContrasts2()")
+    contr.matrix <- c()
+    i=2
+    cref <- as.character(ref)
+    all <- c("all","other","others","rest")
+    for(i in 1:ncol(Y)) {
+        m1 <- NULL
+        if(!is.na(ref[i]) && !ref[i] %in% all ) {
+            x <- as.character(Y[,i])
+            x[is.na(x)|x=="NA"] <- "_"
+            m1 <- model.matrix( ~ 0 + x)
+            colnames(m1) <- sub("^x","",colnames(m1))
+            m1 <- m1 - m1[,cref[i]]  ## +1/-1 encoding
+            m1 <- m1[,which(colnames(m1)!=cref[i]),drop=FALSE]  ## remove refvsref...
+            m1 <- m1[,!colnames(m1) %in% c("NA","_"),drop=FALSE]
+            colnames(m1) <- paste0(colnames(m1),"_vs_",ref[i])
+        } else if(!is.na(ref[i]) && ref[i] %in% all ) {
+            x <- as.character(Y[,i])
+            x[is.na(x)|x=="NA"] <- "_"            
+            m1 <- model.matrix( ~ 0 + x)
+            colnames(m1) <- sub("^x","",colnames(m1))
+            ##m1 <- m1 - m1[,cref[i]]  ## +1/-1 encoding
+            m1 <- t(t(m1==1) / colSums(m1==1) - t(m1==0) / colSums(m1==0))
+            ##m1 <- m1[,which(colnames(m1)!=cref[i]),drop=FALSE]
+            m1 <- m1[,!colnames(m1) %in% c("NA","_"),drop=FALSE]            
+            colnames(m1) <- paste0(colnames(m1),"_vs_others")
+        } else {
+            levels <- names(table(Y[,i]))
+            levels <- setdiff(levels, c(NA,"NA"))
+            levels
+            if(length(levels)>1) {
+                cc <- makeFullContrasts(levels)
+                x <- as.character(Y[,i])
+                x[is.na(x)] <- "_"
+                mm <- model.matrix( ~ 0 + x)
+                colnames(mm) <- sub("^x","",colnames(mm))
+                m1 <- mm[,rownames(cc)] %*% cc
+            }
+        }
+        if(!is.null(m1)) {
+            mm <- gsub("[: ]","_",colnames(Y)[i])
+            colnames(m1) <- paste0(mm,":",colnames(m1))
+            contr.matrix <- cbind(contr.matrix, m1)
+        }
+    }
+    ##colnames(contr.matrix) <- colnames(Y)
+    ##colnames(contr.matrix) <- paste0(colnames(Y),":",colnames(contr.matrix))
+
+    ## take out any empty comparisons
+    contr.matrix <- contr.matrix[,which(colSums(contr.matrix!=0)>0),drop=FALSE]
+
+    ## normalize to zero mean and symmetric sum-to-one. Any NA to zero.
+    for(i in 1:ncol(contr.matrix)) {
+        m <- contr.matrix[,i]
+        m[is.na(m)] <- 0
+        contr.matrix[,i] <- 1*(m>0)/sum(m>0) - 1*(m<0)/sum(m<0)
+    }
+    rownames(contr.matrix) <- rownames(Y)
+    sign(contr.matrix)
+}
+
+makeFullContrasts <- function(levels, by.sample=FALSE) {
+    levels <- sort(unique(as.character(levels)))
+    cc <- t(combn(levels,2))
+    contr.matrix <- c()
+    for(i in nrow(cc):1) {
+        ctr <- 1*(levels==cc[i,1]) - 1*(levels==cc[i,2])
+        contr.matrix <- cbind(ctr,contr.matrix)
+        colnames(contr.matrix)[1] <- paste(cc[i,],collapse="_vs_")
+    }
+    rownames(contr.matrix) <- levels
+    if(by.sample) {
+        design <- model.matrix( ~ 0 + levels )
+        colnames(design) <- sub("^levels","",colnames(design))
+        rownames(design) <- names(clusters)
+        design <- design[,rownames(contr.matrix)]
+        contr.matrix <- design %*% contr.matrix
+    }
+    return(contr.matrix)
+}
+
+makeClusterContrasts <- function(clusters, min.freq=0.01, full=FALSE,
+                                 by.sample=FALSE ) {
+    ## make model matrix for cluster_i vs. rest
+    if(0) {
+        min.size <- pmax(3, 0.01*length(clusters))
+        small.clusters <- names(which(table(clusters) < min.size))
+        clusters[ which(clusters %in% small.clusters)] <- "cluster0"
+        sort(table(clusters))
+    }
+    idx <- sort(unique(as.character(clusters)))
+    m1 <- model.matrix( ~ 0 + idx)
+    colnames(m1) <- sub("^idx","",colnames(m1))
+    rownames(m1) <- colnames(m1)
+    colnames(m1) <- paste0(colnames(m1),"_vs_others")
+    ##m1 <- m1 - 1/(nrow(m1)-1)*(m1==0)
+    m1 <- t(t(m1==1) / colSums(m1==1) - t(m1==0) / colSums(m1==0))
+
+    diag(m1) <- 1
+    if(full==TRUE) {
+        m2 <- makeFullContrasts(unique(clusters))
+        m2 <- m2[rownames(m1),]
+        m1 <- cbind(m1, m2)
+    }
+    if(by.sample) {
+        design <- model.matrix( ~ 0 + clusters )
+        colnames(design) <- sub("^clusters","",colnames(design))
+        rownames(design) <- names(clusters)
+        design <- design[,rownames(m1)]
+        m1 <- design %*% m1
+    }
+    return(m1)
+}
+
 ##mingrp=3;contrasts=c("genotype:mut_vs_WT")
 pgx.makeSpecificContrasts <- function(df, contrasts, mingrp=3)
 {
@@ -341,161 +498,6 @@ contrastAsLabels <- function(contr.matrix) {
     colnames(K) <- colnames(contr.matrix)
     rownames(K) <- rownames(contr.matrix)
     K    
-}
-
-## for compatibility...
-makeDirectContrasts2 <- function(Y, ref, na.rm=TRUE) {
-    makeDirectContrasts(Y=Y, ref=ref, na.rm=na.rm)
-}
-
-##Y=ngs$samples;na.rm=TRUE
-makeDirectContrasts <- function(Y, ref, na.rm=TRUE)
-{
-    detectGroups <- function(contr.matrix) {
-        group <- apply(contr.matrix,1,paste,collapse="_")
-        table(group)
-        n.group <- length(unique(group))
-        group <- factor(group)
-        if(ncol(contr.matrix)>10) {
-            levels(group) <- paste0("group",1:n.group)
-        }
-        group
-    }
-    
-    exp.matrix <- makeDirectContrasts000(Y=Y, ref=ref, na.rm=na.rm, warn=FALSE) 
-    exp.matrix <- sign(exp.matrix)    
-    exp.matrix0 <- exp.matrix
-    no.vs <- grep("_vs_|_VS_",colnames(exp.matrix0),invert=TRUE)
-    no.vs
-    if(length(no.vs)>0) {
-        colnames(exp.matrix0)[no.vs] <- paste0(colnames(exp.matrix0)[no.vs],":Y_vs_N")
-    }    
-    if(all(grepl("_vs_|_VS_",colnames(exp.matrix0)))) {
-        exp.matrix0 <- contrastAsLabels(exp.matrix0)
-    }
-    group <- detectGroups(exp.matrix0)
-    table(group)
-    if(length(levels(group)) > 0.5*nrow(exp.matrix)) {
-        cat("WARNING:: contrast matrix looks degenerate. consider removing a contrast.\n")
-    }
-
-    contr.matrix <- contr.matrix[which(!duplicated(group)),,drop=FALSE]
-    rownames(contr.matrix) <- group[which(!duplicated(group))]
-    
-    list(contr.matrix=contr.matrix, group=group)
-}
-
-makeDirectContrasts000 <- function(Y, ref, na.rm=TRUE, warn=FALSE) {
-    ## if(warn) warning("makeDirectContrasts is deprectated. please use makeDirectContrasts2()")
-    contr.matrix <- c()
-    i=2
-    all <- c("all","other","others","rest")
-    for(i in 1:ncol(Y)) {
-        m1 <- NULL
-        if(!is.na(ref[i]) && !ref[i] %in% all ) {
-            x <- as.character(Y[,i])
-            x[is.na(x)|x=="NA"] <- "_"
-            m1 <- model.matrix( ~ 0 + x)
-            colnames(m1) <- sub("^x","",colnames(m1))
-            m1 <- m1 - m1[,ref[i]]  ## +1/-1 encoding
-            m1 <- m1[,which(colnames(m1)!=ref[i]),drop=FALSE]  ## remove refvsref...
-            m1 <- m1[,!colnames(m1) %in% c("NA","_"),drop=FALSE]
-            colnames(m1) <- paste0(colnames(m1),"_vs_",ref[i])
-        } else if(!is.na(ref[i]) && ref[i] %in% all ) {
-            x <- as.character(Y[,i])
-            x[is.na(x)|x=="NA"] <- "_"            
-            m1 <- model.matrix( ~ 0 + x)
-            colnames(m1) <- sub("^x","",colnames(m1))
-            ##m1 <- m1 - m1[,ref[i]]  ## +1/-1 encoding
-            m1 <- t(t(m1==1) / colSums(m1==1) - t(m1==0) / colSums(m1==0))
-            ##m1 <- m1[,which(colnames(m1)!=ref[i]),drop=FALSE]
-            m1 <- m1[,!colnames(m1) %in% c("NA","_"),drop=FALSE]            
-            colnames(m1) <- paste0(colnames(m1),"_vs_others")
-        } else {
-            levels <- names(table(Y[,i]))
-            levels <- setdiff(levels, c(NA,"NA"))
-            levels
-            if(length(levels)>1) {
-                cc <- makeFullContrasts(levels)
-                x <- as.character(Y[,i])
-                x[is.na(x)] <- "_"
-                mm <- model.matrix( ~ 0 + x)
-                colnames(mm) <- sub("^x","",colnames(mm))
-                m1 <- mm[,rownames(cc)] %*% cc
-            }
-        }
-        if(!is.null(m1)) {
-            colnames(m1) <- paste0(colnames(Y)[i],":",colnames(m1))
-            contr.matrix <- cbind(contr.matrix, m1)
-        }
-    }
-    ##colnames(contr.matrix) <- colnames(Y)
-    ##colnames(contr.matrix) <- paste0(colnames(Y),":",colnames(contr.matrix))
-
-    ## take out any empty comparisons
-    contr.matrix <- contr.matrix[,which(colSums(contr.matrix!=0)>0),drop=FALSE]
-
-    ## normalize to zero mean and symmetric sum-to-one. Any NA to zero.
-    for(i in 1:ncol(contr.matrix)) {
-        m <- contr.matrix[,i]
-        m[is.na(m)] <- 0
-        contr.matrix[,i] <- 1*(m>0)/sum(m>0) - 1*(m<0)/sum(m<0)
-    }
-    rownames(contr.matrix) <- rownames(Y)
-    sign(contr.matrix)
-}
-
-makeFullContrasts <- function(levels, by.sample=FALSE) {
-    levels <- sort(unique(as.character(levels)))
-    cc <- t(combn(levels,2))
-    contr.matrix <- c()
-    for(i in nrow(cc):1) {
-        ctr <- 1*(levels==cc[i,1]) - 1*(levels==cc[i,2])
-        contr.matrix <- cbind(ctr,contr.matrix)
-        colnames(contr.matrix)[1] <- paste(cc[i,],collapse="_vs_")
-    }
-    rownames(contr.matrix) <- levels
-    if(by.sample) {
-        design <- model.matrix( ~ 0 + levels )
-        colnames(design) <- sub("^levels","",colnames(design))
-        rownames(design) <- names(clusters)
-        design <- design[,rownames(contr.matrix)]
-        contr.matrix <- design %*% contr.matrix
-    }
-    return(contr.matrix)
-}
-
-makeClusterContrasts <- function(clusters, min.freq=0.01, full=FALSE,
-                                 by.sample=FALSE ) {
-    ## make model matrix for cluster_i vs. rest
-    if(0) {
-        min.size <- pmax(3, 0.01*length(clusters))
-        small.clusters <- names(which(table(clusters) < min.size))
-        clusters[ which(clusters %in% small.clusters)] <- "cluster0"
-        sort(table(clusters))
-    }
-    idx <- sort(unique(as.character(clusters)))
-    m1 <- model.matrix( ~ 0 + idx)
-    colnames(m1) <- sub("^idx","",colnames(m1))
-    rownames(m1) <- colnames(m1)
-    colnames(m1) <- paste0(colnames(m1),"_vs_others")
-    ##m1 <- m1 - 1/(nrow(m1)-1)*(m1==0)
-    m1 <- t(t(m1==1) / colSums(m1==1) - t(m1==0) / colSums(m1==0))
-
-    diag(m1) <- 1
-    if(full==TRUE) {
-        m2 <- makeFullContrasts(unique(clusters))
-        m2 <- m2[rownames(m1),]
-        m1 <- cbind(m1, m2)
-    }
-    if(by.sample) {
-        design <- model.matrix( ~ 0 + clusters )
-        colnames(design) <- sub("^clusters","",colnames(design))
-        rownames(design) <- names(clusters)
-        design <- design[,rownames(m1)]
-        m1 <- design %*% m1
-    }
-    return(m1)
 }
 
 

@@ -80,7 +80,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
         
         tt <- system.time({
             ngs <- compute.drugSensitivityEnrichment(
-                ngs, lib.dir=lib.dir, ref.db = c("CTRPv2","GDSC"), combo=FALSE) 
+                ngs, lib.dir=lib.dir, combo=FALSE, ref.db=c("CTRPv2","GDSC")) 
         })
         timings <- rbind(timings, c("drugs-sx", tt))
 
@@ -96,7 +96,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
 
         tt <- system.time({
             ngs <- compute.drugSensitivityEnrichment(
-                ngs, lib.dir=lib.dir, ref.db = c("CTRPv2","GDSC"), combo=TRUE) 
+                ngs, lib.dir=lib.dir, combo=TRUE, ref.db=c("CTRPv2","GDSC")) 
         })
         timings <- rbind(timings, c("drugs-sx-combo", tt))
     }
@@ -319,7 +319,6 @@ compute.drugActivityEnrichment <- function(ngs, lib.dir, combo=TRUE ) {
     
     annot1 <- NULL
     if(combo==TRUE) {
-
         res.combo <- pgx.computeComboEnrichment(
             ngs, X, x.drugs, res.mono=res.mono,
             contrasts = NULL,
@@ -327,8 +326,8 @@ compute.drugActivityEnrichment <- function(ngs, lib.dir, combo=TRUE ) {
         names(res.combo)
                 
         ## create combo annotation table from mono-drug
-        combo <- rownames(res.combo$X)
-        annot1 <- pgx.createComboDrugAnnot(combo, annot0)        
+        dd.combo <- rownames(res.combo$X)
+        annot1 <- pgx.createComboDrugAnnot(dd.combo, annot0)        
     }
     dim(res.mono[["GSEA"]]$X)
 
@@ -389,8 +388,8 @@ compute.drugSensitivityEnrichment <- function(ngs, lib.dir, combo=TRUE, ref.db=c
             names(res.combo)
             
             ## create combo annotation table from mono-drug
-            combo <- rownames(res.combo$X)
-            annot1 <- pgx.createComboDrugAnnot(combo, annot0)
+            dd.combo <- rownames(res.combo$X)
+            annot1 <- pgx.createComboDrugAnnot(dd.combo, annot0)
         }
         
         s1 <- paste0("sensitivity/",ref)
