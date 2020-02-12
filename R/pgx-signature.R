@@ -762,4 +762,184 @@ pgx.computeGeneSetExpression <- function(X, gmt, method=NULL,
     return(S)
 }
 
+##================================================================================
+##========================= SIGDB H5 FUNCTIONS ===================================
+##================================================================================
+
+sigdb.getConnectivityFullPath <- function(sigdb) {
+    db.exists <- sapply( c(FILES,FILESX,PGX.DIR), function(d) file.exists(file.path(d,sigdb)))
+    db.exists
+    db.dir <- names(which(db.exists))[1]
+    db.dir
+    file.path(db.dir, sigdb)                
+}
+
+sigdb.getConnectivityContrasts <- function(sigdb) {
+    db <- getConnectivityFullPath(sigdb)
+    dbg("[getConnectivityContrasts] sigdb=",sigdb)
+    dbg("[getConnectivityContrasts] db=",db)
+    h5read(db, "data/colnames")
+}
+
+sigdb.getConnectivityMatrix <- function(sigdb, select=NULL, genes=NULL)
+{
+    require(rhdf5)
+    
+    if(0) {
+        dbg("[getConnectivityMatrix] reacted")
+        sigdb = "sigdb-archs4.h5"
+        sigdb = "sigdb-creeds.h5"
+        sigdb <- input$cmap_sigdb
+        req(sigdb)
+    }
+    dbg("[getConnectivityMatrix] called")
+    dbg("[getConnectivityMatrix] sigdb=",sigdb)
+    if(sigdb=="" || is.null(sigdb)) {
+        dbg("[getConnectivityMatrix] ***WARNING*** sigdb=",sigdb)
+        return(NULL)
+    }
+
+    if(!is.null(select)) dbg("[getConnectivityMatrix] length(select)=",length(select))
+    if(!is.null(genes))  dbg("[getConnectivityMatrix] length(genes)=",length(genes))
+    
+    db.exists <- sapply( c(FILES,FILESX,PGX.DIR), function(d) file.exists(file.path(d,sigdb)))
+    db.exists
+    X <- NULL
+    if(any(db.exists)) {
+        db.dir <- names(which(db.exists))[1]
+        db.dir
+        if(grepl("csv$",sigdb)) {
+            X <- read.csv(file.path(db.dir, sigdb), row.names=1, check.names=FALSE)
+            X <- as.matrix(X)
+            X <- X[,colMeans(is.na(X)) < 0.99,drop=FALSE]  ## omit empty columns
+            if(!is.null(genes)) X <- X[intersect(genes,rownames(X)),,drop=FALSE]
+            if(!is.null(select)) X <- X[, intersect(select,colnames(X))]
+        }
+        if(grepl("h5$",sigdb)) {
+            h5.file <- file.path(db.dir, sigdb)                
+            cn <- h5read(h5.file, "data/colnames")
+            rn <- h5read(h5.file, "data/rownames")
+            rowidx <- 1:length(rn)
+            colidx <- 1:length(cn)
+            if(!is.null(genes)) rowidx <- match(intersect(genes,rn),rn)                
+            if(!is.null(select)) colidx <- match(intersect(select,cn),cn)
+
+            nr <- length(rowidx)
+            nc <- length(colidx)
+            dbg("*** WARNING *** reading large H5 file:",nr,"x",nc,"")
+
+            X  <- h5read(h5.file, "data/matrix", index = list(rowidx,colidx) )
+            rownames(X) <- rn[rowidx]
+            colnames(X) <- cn[colidx]
+        }
+    } else {
+        cat("[getConnectivityMatrix] WARNING: could not retrieve matrix\n")
+        ## X <- as.matrix(PROFILES$FC)
+        ## X <- X[,colMeans(is.na(X)) < 0.99,drop=FALSE]  ## omit empty columns
+        ## if(!is.null(genes)) X <- X[intersect(genes,rownames(X)),,drop=FALSE]
+        ## if(!is.null(select)) X <- X[, intersect(select,colnames(X))]
+    }
+    class(X)        
+    return(X)
+}
+
+sigdb.getEnrichmentMatrix <- function(sigdb, select=NULL, nc=-1)
+{
+    require(rhdf5)
+    if(sigdb=="" || is.null(sigdb)) {
+        dbg("[getEnrichmentMatrix] ***WARNING*** sigdb=",sigdb)
+        return(NULL)
+    }
+    if(!is.null(select)) {
+        dbg("[getEnrichmentMatrix] length(select)=",length(select))
+        dbg("[getEnrichmentMatrix] head(select)=",head(select))
+    }        
+    if(!grepl("h5$",sigdb)) {
+        stop("getEnrichmentMatrix:: only for H5 database files")
+        return(NULL)
+    }
+
+    h5exists <- function(h5.file, obj) {
+        xobjs <- apply(h5ls(h5.file)[,1:2],1,paste,collapse="/")
+        obj %in% gsub("^/|^//","",xobjs)
+    }
+    
+    db.exists <- sapply(c(FILES,FILESX,PGX.DIR), function(d) file.exists(file.path(d,sigdb)))
+    db.exists
+    Y <- NULL
+    if(any(db.exists)) {            
+        db.dir <- names(which(db.exists))[1]
+        db.dir
+        h5.file <- file.path(db.dir, sigdb)                
+        cn <- h5read(h5.file, "data/colnames")
+
+        has.gs   <- h5exists(h5.file, "enrichment/genesets")
+        has.gsea <- h5exists(h5.file, "enrichment/GSEA") 
+        if(!has.gs && has.gsea) {
+            dbg("[getEnrichmentMatrix] WARNING: PGX object has no enrichment results")
+            return(NULL)
+        }
+
+        rn <- h5read(h5.file, "enrichment/genesets")
+        rowidx <- 1:length(rn)
+        colidx <- 1:length(cn)
+        if(!is.null(select)) colidx <- match(intersect(select,cn),cn)
+        Y  <- h5read(h5.file, "enrichment/GSEA", index = list(rowidx,colidx) )
+        rownames(Y) <- rn[rowidx]
+        colnames(Y) <- cn[colidx]
+        dim(Y)            
+        sdy <- apply(Y,1,sd)
+        Y <- Y[order(-sdy),]
+    }
+
+    ## cluster genesets into larger groups
+    if(nc>0) {
+        hc <- hclust(dist(Y[,]))
+        idx <- paste0("h",cutree(hc, nc))
+        Y2 <- tapply( 1:nrow(Y), idx, function(i) colMeans(Y[i,,drop=FALSE]))
+        Y2 <- do.call(rbind, Y2)
+        idx.names <- tapply(rownames(Y),idx,paste,collapse=",")
+        idx.names <- gsub("H:HALLMARK_","",idx.names)
+        idx.names <- gsub("C2:KEGG_","",idx.names)
+        rownames(Y2) <- as.character(idx.names[rownames(Y2)])
+        Y <- Y2
+    }
+
+    if(nrow(Y)==0) {
+        return(NULL)
+    }
+
+    class(Y)        
+    return(Y)
+}
+
+sigdb.getSignatureMatrix <- function(sigdb) {
+    require(rhdf5)
+    if(sigdb=="" || is.null(sigdb)) {
+        dbg("[getEnrichmentMatrix] ***WARNING*** sigdb=",sigdb)
+        return(NULL)
+    }
+    if(!is.null(select)) dbg("[getEnrichmentMatrix] length(select)=",length(select))
+
+    if(!grepl("h5$",sigdb)) {
+        stop("getEnrichmentMatrix:: only for H5 database files")
+    }
+    
+    db.exists <- sapply(c(FILES,FILESX,PGX.DIR), function(d) file.exists(file.path(d,sigdb)))
+    db.exists
+    up=dn=NULL
+    if(any(db.exists)) {            
+        db.dir <- names(which(db.exists))[1]
+        db.dir
+        h5.file <- file.path(db.dir, sigdb)
+        h5ls(h5.file)
+        cn <- h5read(h5.file, "data/colnames")
+        dn <- h5read(h5.file, "signature/sig100.dn")
+        up <- h5read(h5.file, "signature/sig100.up")
+        colnames(dn) <- cn
+        colnames(up) <- cn
+    }
+    list(up=up, dn=dn)
+}
+
 
