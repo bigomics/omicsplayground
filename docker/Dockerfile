@@ -8,12 +8,12 @@
 
 FROM rocker/shiny:3.6.1 AS base
 
-RUN apt-get update && apt-get install -y apt-utils \
+RUN apt update && apt install -y apt-utils \
     libcurl4-gnutls-dev libv8-3.14-dev \
     libssl-dev libxml2-dev libjpeg-dev \
     libgl-dev libglu-dev tk-dev libhdf5-dev \
     libgit2-dev libssh2-1-dev libnetcdf-dev \
-    libudunits2-dev libgdal-dev \
+    libudunits2-dev libgdal-dev libbz2-dev \
     jags emacs git procps htop python-pip \
     pdftk
 

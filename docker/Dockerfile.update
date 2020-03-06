@@ -6,16 +6,15 @@
 # Start from lastest base+data image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:testing
+FROM bigomics/omicsplayground:build
 
 #------------------------------------------------------------
 # Install extra packages required since base (later move to requirements.R!)
 #------------------------------------------------------------
 
 RUN apt-get install -y pdftk
-
-RUN R -e "install.packages(c('shinydashboardPlus','optparse','docopt','randomForest','org.Mm.eg.db'))"
-RUN R -e "BiocManager::install(c('org.Mm.eg.db','EnsDb.Hsapiens.v86','EnsDb.Mmusculus.v79'))"
+RUN R -e "install.packages(c('shinydashboardPlus','optparse','docopt','randomForest'))"
+##RUN R -e "BiocManager::install(c('org.Mm.eg.db','EnsDb.Hsapiens.v86','EnsDb.Mmusculus.v79'))"
 
 #------------------------------------------------------------x
 ## Pull from GitHub
