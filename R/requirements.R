@@ -45,8 +45,8 @@ BIG.NOTUSED <- c(
     "RNAseqData.HNRNPC.bam.chr14",
     ##"org.Mm.eg.db",
     "tximportData",
-    "EnsDb.Hsapiens.v86",
-    "EnsDb.Mmusculus.v79",
+    ##"EnsDb.Hsapiens.v86",
+    ##"EnsDb.Mmusculus.v79",
     "TxDb.Hsapiens.UCSC.hg19.knownGene",
     "TxDb.Mmusculus.UCSC.mm10.knownGene"
 )    
