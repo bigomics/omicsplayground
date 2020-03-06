@@ -5,7 +5,7 @@ PGX.DIR = "../data"
 source("../R/pgx-include.R")
 ##source("options.R")
 
-rda.file="../data-extra/GSE45042-corona.pgx"
+rda.file="../data/GSE45042-corona.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 
@@ -33,7 +33,10 @@ if(PROCESS.DATA) {
     
     ## extract GENE symbol from featureData
     gene.symbol <- as.character(featureData(geo[[1]])@data$GENE_SYMBOL)
-    ##gene.symbol <- gsub("[ ]","",sapply(strsplit(gene.annot,split="//"),"[",2))
+    dim(X)
+    length(gene.symbol)
+    ## gene.symbol <- gsub("[ ]","",sapply(strsplit(gene.annot,split="//"),"[",2))
+    ## gene.symbol <- alias2hugo(gene.symbol)
     gene.symbol[10000 + 1:10]    
     jj <- which( !gene.symbol %in% c(NA,"-",""))
     X <- X[jj,]
@@ -91,15 +94,14 @@ if(PROCESS.DATA) {
     ## Pre-calculate t-SNE for and get clusters early so we can use it
     ## for doing differential analysis.
     ##-------------------------------------------------------------------
-    ngs <- pgx.clusterSamples(ngs, perplexity=30, skipifexists=FALSE, prefix="C")
+    ngs <- pgx.clusterSamples(ngs, perplexity=NULL, skipifexists=FALSE, prefix="C")
     head(ngs$samples)
 
 }
 
-
 if(DIFF.EXPRESSION) {
 
-    load(file=rda.file, verbose=1)
+    ##load(file=rda.file, verbose=1)
     
     head(ngs$samples)
     grp <- paste(ngs$samples$treatment,ngs$samples$time,sep="_")
@@ -123,11 +125,6 @@ if(DIFF.EXPRESSION) {
     rda.file
     ngs$timings <- c()
     
-    GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank",
-                       "voom.limma","trend.limma","notrend.limma",
-                       "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
-    GENESET.METHODS = c("fisher","gsva","ssgsea","spearman",
-                        "camera", "fry","fgsea") ## no GSEA, too slow...
     GENETEST.METHODS=c("trend.limma","edger.qlf","deseq2.wald")
     GENESET.METHODS = c("fisher","gsva","fgsea") ## no GSEA, too slow...
 
@@ -146,12 +143,11 @@ if(DIFF.EXPRESSION) {
         lib.dir=FILES)
 
     extra <- c("connectivity")
-    extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")
+    extra <- c("meta.go","infer","drugs","wordcloud","connectivity")
     ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
     
     names(ngs)
     ngs$timings
-
 
 }
 

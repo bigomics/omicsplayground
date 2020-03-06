@@ -1,4 +1,22 @@
 
+##----------------------------------------------------------------------
+## Auto-detection helper functions
+##----------------------------------------------------------------------
+
+pgx.detect_batch_params <- function(Y) {
+    grep("batch|cell.line|patient|mouse|sample|repl|strain", colnames(Y), value=TRUE)
+}
+
+pgx.detect_timevar <- function(Y) {
+    has.time <- any(grepl("time|hour|hr|day", colnames(Y)))
+    has.time
+    ttvar <- grep("time|hour|hr|day", colnames(Y),value=TRUE)
+    ttvar
+    ##ttvar <- ttvar[sapply(ttvar, function(v) all(table(Y[,v])>1))]
+    ttvar
+}
+
+
 ##-----------------------------------------------------------------------------
 ## Contrast creation functions
 ##-----------------------------------------------------------------------------
@@ -48,41 +66,45 @@ makeDirectContrasts <- function(Y, ref, na.rm=TRUE)
 makeDirectContrasts000 <- function(Y, ref, na.rm=TRUE, warn=FALSE) {
     ## if(warn) warning("makeDirectContrasts is deprectated. please use makeDirectContrasts2()")
     contr.matrix <- c()
-    i=2
-    cref <- as.character(ref)
+    if(length(ref)<ncol(Y)) ref <- head(rep(ref,99),ncol(Y))
     all <- c("all","other","others","rest")
+    ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$|scrambl|none|dmso|vehicle"
+    i=1    
     for(i in 1:ncol(Y)) {
+
         m1 <- NULL
-        if(!is.na(ref[i]) && !ref[i] %in% all ) {
-            x <- as.character(Y[,i])
-            x[is.na(x)|x=="NA"] <- "_"
-            m1 <- model.matrix( ~ 0 + x)
-            colnames(m1) <- sub("^x","",colnames(m1))
-            m1 <- m1 - m1[,cref[i]]  ## +1/-1 encoding
-            m1 <- m1[,which(colnames(m1)!=cref[i]),drop=FALSE]  ## remove refvsref...
+        ref1 <- ref[i]
+        x <- as.character(Y[,i])
+        x[is.na(x)|x=="NA"] <- "_"
+        detect.ref <- any(grepl(ref.pattern,x,ignore.case=TRUE))
+        detect.ref
+        if(is.na(ref1) & detect.ref) {
+            ref1 <- grep(ref.pattern,x,ignore.case=TRUE,value=TRUE)
+            ref1 <- sort(ref1)[1]
+            cat("reference auto-detected:",ref1,"\n")
+        }
+        cref <- as.character(ref1)
+        m1 <- model.matrix( ~ 0 + x)
+        colnames(m1) <- sub("^x","",colnames(m1))
+
+        if(!is.na(ref1) && !ref1 %in% all ) {
+            m1 <- m1 - m1[,cref]  ## +1/-1 encoding
+            m1 <- m1[,which(colnames(m1)!=cref),drop=FALSE]  ## remove refvsref...
             m1 <- m1[,!colnames(m1) %in% c("NA","_"),drop=FALSE]
-            colnames(m1) <- paste0(colnames(m1),"_vs_",ref[i])
-        } else if(!is.na(ref[i]) && ref[i] %in% all ) {
-            x <- as.character(Y[,i])
-            x[is.na(x)|x=="NA"] <- "_"            
-            m1 <- model.matrix( ~ 0 + x)
-            colnames(m1) <- sub("^x","",colnames(m1))
-            ##m1 <- m1 - m1[,cref[i]]  ## +1/-1 encoding
+            colnames(m1) <- paste0(colnames(m1),"_vs_",ref1)
+        } else if(!is.na(ref1) && ref1 %in% all ) {
+            ##m1 <- m1 - m1[,cref]  ## +1/-1 encoding
             m1 <- t(t(m1==1) / colSums(m1==1) - t(m1==0) / colSums(m1==0))
-            ##m1 <- m1[,which(colnames(m1)!=cref[i]),drop=FALSE]
+            ##m1 <- m1[,which(colnames(m1)!=cref),drop=FALSE]
             m1 <- m1[,!colnames(m1) %in% c("NA","_"),drop=FALSE]            
             colnames(m1) <- paste0(colnames(m1),"_vs_others")
         } else {
-            levels <- names(table(Y[,i]))
+            levels <- names(table(x))
             levels <- setdiff(levels, c(NA,"NA"))
             levels
             if(length(levels)>1) {
                 cc <- makeFullContrasts(levels)
-                x <- as.character(Y[,i])
-                x[is.na(x)] <- "_"
-                mm <- model.matrix( ~ 0 + x)
-                colnames(mm) <- sub("^x","",colnames(mm))
-                m1 <- mm[,rownames(cc)] %*% cc
+                m1 <- m1[,rownames(cc)] %*% cc
             }
         }
         if(!is.null(m1)) {
@@ -91,8 +113,6 @@ makeDirectContrasts000 <- function(Y, ref, na.rm=TRUE, warn=FALSE) {
             contr.matrix <- cbind(contr.matrix, m1)
         }
     }
-    ##colnames(contr.matrix) <- colnames(Y)
-    ##colnames(contr.matrix) <- paste0(colnames(Y),":",colnames(contr.matrix))
 
     ## take out any empty comparisons
     contr.matrix <- contr.matrix[,which(colSums(contr.matrix!=0)>0),drop=FALSE]
@@ -123,7 +143,7 @@ makeFullContrasts <- function(levels, by.sample=FALSE) {
         rownames(design) <- names(clusters)
         design <- design[,rownames(contr.matrix)]
         contr.matrix <- design %*% contr.matrix
-    }
+    }    
     return(contr.matrix)
 }
 
@@ -265,12 +285,12 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
         ## NA can make ct smaller than full
         ct <- ct[match(1:length(x),rownames(ct)),,drop=FALSE]
         rownames(ct) <- 1:length(x)
-        ct[is.na(ct)] <- 0
+        ## ct[is.na(ct)] <- 0 ## no!!
         ct
     }
     
     ## repeat ref if too short
-    if(!is.null(ref) && length(ref)!=ncol(df)) ref <- head(rep(ref,99),ncol(df))
+    if(!is.null(ref) && length(ref)<ncol(df)) ref <- head(rep(ref,99),ncol(df))
 
     ## trim leading/end parts that are equal
     df <- apply(df, 2, trimsame)
@@ -334,9 +354,8 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
         too.small <- (x %in% names(which(table(x)<mingrp)))
         x[too.small] <- NA
         x <- iconv(x, "latin1", "ASCII", sub="")
-
         if(!(ref1 %in% x)) ref1 <- NA
-        ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$|scrambl|none|vehicle"
+        ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$|scrambl|none|dmso|vehicle"
         detect.ref <- any(grepl(ref.pattern,x,ignore.case=TRUE))
         if(is.na(ref1) & detect.ref) {
             ref1 <- grep(ref.pattern,x,ignore.case=TRUE,value=TRUE)

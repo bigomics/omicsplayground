@@ -82,20 +82,18 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
     res.gsva = res.ssgsea = res.rnkcorr = NULL
     methods
 
+    dim(G)
+    table(rownames(X) %in% rownames(G))
+    table(colnames(G) %in% names(gmt))
+    G <- G[rownames(X),names(gmt)]
+
     if("spearman" %in% methods) {
 
         cat("fitting contrasts using spearman/limma... \n")
         require(qlcMatrix)
-        dim(G)
-        table(rownames(X) %in% rownames(G))
-        table(colnames(G) %in% names(gmt))
-        table(colnames(G)==names(gmt))
-        G <- G[rownames(X),names(gmt)]
-
         ## single-sample gene set enrichment using (fast) rank correlation
         xx1 <-  X - rowMeans(X,na.rm=TRUE)
         xx1 <- apply(xx1,2,rank,na.last="keep")
-        ##G = sapply( gmt[], function(s) 1*(gg %in% s))
         jj = intersect(rownames(G),rownames(xx1))
         tt <- system.time({
 
@@ -447,6 +445,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
     ## Reshape matrices by comparison
     ##--------------------------------------------------------------
     names(all.results)
+    cat("[gset.fitContrastsWithAllMethods] length(all.results)=",length(all.results),"\n")
     tests = names(all.results[[1]])
     ntest = length(tests)
     P = lapply(tests, function(k) sapply( all.results, function(x) x[[k]][,"p.value"]))
@@ -512,7 +511,6 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
         ss.rank <- function(x) scale(sign(x)*rank(abs(x),na.last="keep"),center=FALSE)
         meta.fx = rowMeans( apply(S[[i]], 2, ss.rank), na.rm=TRUE)
         meta = data.frame(fx=meta.fx, p=meta.p, q=meta.q)
-        ##all.meta[[i]] = data.frame( gene.set=names(gmt), meta=meta, fc=I(fc), p=I(pv), q=I(qv))
         rownames(fc) <- NULL  ## saves memory...
         rownames(pc) <- NULL
         rownames(qv) <- NULL
@@ -525,19 +523,29 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
     ## Add meta matrices (this becomes quite large...)
     ##--------------------------------------------------
     cat("computing meta-matrix... \n")
+
     m <- list(gsva=zx.gsva, ssgsea=zx.ssgsea, rnkcorr=zx.rnkcorr)        
     m = m[which(!sapply(m,is.null))]
     names(m)
-    ## conform
-    if(length(m)>1) {
-        ##m <- lapply(m, function(x) apply(x,2,rank,na.last="keep"))
-        m = lapply(m, function(x) scale(x,center=FALSE))
-        avg.m  <- Reduce('+',m) / length(m)  ## matrix mean
-        meta.matrix <- scale(avg.m,center=FALSE)
-        meta.matrix <- normalizeQuantiles(meta.matrix)
+
+    if(0) {
+        if(length(m)>1) {
+            ## Average normalized single-sample values
+            ##m <- lapply(m, function(x) apply(x,2,rank,na.last="keep"))
+            m = lapply(m, function(x) scale(x,center=FALSE))
+            avg.m  <- Reduce('+',m) / length(m)  ## matrix mean
+            meta.matrix <- scale(avg.m,center=FALSE)
+            meta.matrix <- normalizeQuantiles(meta.matrix)
+        } else {
+            meta.matrix <- m[[1]]
+        }
+        m[["meta"]] <- meta.matrix
     } else {
-        meta.matrix <- m[[1]]
+        ## average expression of geneset members
+        ng <- colSums(G!=0)
+        meta.matrix <- as.matrix(t(G!=0) %*% X) / ng
     }
+    ## meta.matrix <- meta.matrix - rowMeans(meta.matrix,na.rm=TRUE)  ## center??
     m[["meta"]] <- meta.matrix
     
     ##timings0 <- do.call(rbind, timings)

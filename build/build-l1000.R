@@ -8,33 +8,42 @@ library(ccdata)
 system.time( data(l1000_es) )
 dim(l1000_es)
 
+D <- read.csv("../lib/L1000_repurposing_drugs.txt",sep="\t",
+              skip=13, header=FALSE,row.names=1)
 
 require(fgsea)
 X <- l1000_es
+X <- X[,order(-colMeans(X**2))]
 x.drugs <- gsub("_.*$","",colnames(X))
+names(x.drugs) <- colnames(X)
 length(table(x.drugs))
+table(x.drugs %in% rownames(D))
+
+## only with annotation...
+sel <- x.drugs %in% rownames(D)
+X <- X[,sel]
+x.drugs <- gsub("_.*$","",colnames(X))
 
 sum(table(x.drugs)>=10)
+sum(table(x.drugs)>=15)
 sum(table(x.drugs)>=20)
 
 gmt <- tapply(colnames(X), x.drugs, list)
 gmt.size <- sapply(gmt,length)  ## how many profiles per drug
 table(gmt.size)
-##gmt <- gmt[which(gmt.size>=10)]
-gmt <- gmt[which(gmt.size>=15)]
-##gmt <- gmt[which(gmt.size>=20)]
-length(gmt)
 
-gg <- intersect(rownames(l1000_es),rownames(cmap_es))
-sel <- which(x.drugs %in% names(gmt))
-length(sel)
-##saveRDS( X[,sel], file="../files/l1000_es_1763drugs.rds")
-saveRDS( X[,sel], file="../files/l1000_es_5685drugs.rds")
-##saveRDS( X[,sel], file="../files/l1000_es_8221drugs.rds")
+nmin = 20
+gmt1 <- gmt[which(gmt.size >= nmin)]
+length(gmt1)
+gmt1 <- lapply(gmt1, function(g) head(g,nmin))
 
+X1 <- X[,which(colnames(X) %in% unlist(gmt1))]
+dim(X)
+dim(X1)
+length(gmt1)
 
-
-
+saveRDS( X1[,], file="../lib/l1000_es_5685drugs.rds")
+saveRDS( X1[,], file="../lib/l1000_es_520drugs.rds")
 
 
 if(0) {

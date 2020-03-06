@@ -9,7 +9,7 @@ ClusteringInputs <- function(id) {
 ClusteringUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillRow(
-        flex = c(1.4,0.15,1),
+        flex = c(1.4,0.10,1),
         height = 780,
         tabsetPanel(
             id = ns("tabs1"),
@@ -83,6 +83,10 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                 tagList(
                     tipify( checkboxInput(ns('hm_group'),'group by condition',FALSE),
                            "Group the samples by condition.", placement="bottom")
+                ),
+                tagList(
+                    tipify( checkboxInput(ns('hm_excludedown'),'exclude down genesets',FALSE),
+                           "Exclude down genesets.", placement="bottom")
                 )
             )
         )
@@ -122,9 +126,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         if(DEV.VERSION && !is.null(ngs$gset.meta$matrices) ) {
             jj = which(!sapply(ngs$gset.meta$matrices,is.null))
             mat.names = names(ngs$gset.meta$matrices)[jj]
-            updateRadioButtons(session, "hm_gsetmatrix", choices=mat.names, selected="meta", inline=TRUE)    
-        } else {
-            updateRadioButtons(session, "hm_gsetmatrix", choices=c("meta"), inline=TRUE)    
+            updateRadioButtons(session, "hm_gsetmatrix", choices=mat.names,
+                               selected="meta", inline=TRUE)    
+            ##updateRadioButtons(session, "hm_gsetmatrix", choices=c("meta"), inline=TRUE)    
         }
         
         updateRadioButtons(session, "hm_splitby", selected='none')
@@ -197,6 +201,10 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             gsets = rownames(ngs$gsetX)
             gsets = unique(unlist(COLLECTIONS[input$hm_features]))
             zx = ngs$gsetX
+            if(DEV.VERSION) {
+                k <- input$hm_gsetmatrix
+                zx <- as.matrix(ngs$gset.meta$matrices[[k]])
+            }            
             if(input$hm_customfeatures!="") {
                 gsets1 = genesets[grep(input$hm_customfeatures, genesets,ignore.case=TRUE)]
                 if(length(gsets1)>2) gsets = gsets1
@@ -243,11 +251,26 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ## Filter out X/Y chromosomes before clustering
             chr.col <- grep("^chr$|^chrom$",colnames(ngs$genes))
             chr <- ngs$genes[rownames(zx),chr.col]
-            not.xy <- !(chr %in% c("X","Y",23,24))
+            not.xy <- !(chr %in% c("X","Y",23,24)) & !grepl("^X|^Y|chrX|chrY",chr)
             table(not.xy)
             zx <- zx[which(not.xy), ]
             dim(zx)
         }
+
+        if(input$hm_excludedown && input$hm_level=="geneset") {
+            sel <- grep("dn|down",rownames(zx),ignore.case=TRUE,invert=TRUE)
+            zx <- zx[sel,,drop=FALSE]
+        }
+        
+        return(zx)
+    })
+
+    
+    getTopMatrix <- reactive({
+
+        ngs <- inputData()
+        req(ngs)
+        zx <- getFilteredMatrix()
         
         nmax = 4000
         nmax = as.integer(input$hm_ntop)
@@ -262,13 +285,13 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
         grp <- NULL
         if(do.split && splitvar %in% colnames(ngs$samples)) {
-            dbg("[ClusteringModule:getFilteredMatrix] splitting by phenotype: ",splitvar)
+            dbg("[ClusteringModule:getTopMatrix] splitting by phenotype: ",splitvar)
             grp <- ngs$samples[colnames(zx),splitvar]
         }
         table(grp)
 
         if(do.split && splitvar %in% rownames(ngs$X)) {
-            dbg("[ClusteringModule:getFilteredMatrix] splitting by gene: ",splitvar)
+            dbg("[ClusteringModule:getTopMatrix] splitting by gene: ",splitvar)
             ##xgene <- rownames(ngs$X)[1]
             gx <- ngs$X[splitvar,]
             if(ncol(zx)>50) {
@@ -281,8 +304,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             grp <- paste0(splitvar,":",grp)
         }
         
-        dbg("[ClusteringModule:getFilteredMatrix] len.grp=",length(grp))
-        dbg("[ClusteringModule:getFilteredMatrix] splitby=",splitby)
+        dbg("[ClusteringModule:getTopMatrix] len.grp=",length(grp))
+        dbg("[ClusteringModule:getTopMatrix] splitby=",splitby)
         
         ##if(length(grp)==0) splitby <- 'none'
         if(do.split && length(grp)==0) return(NULL)        
@@ -295,7 +318,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         if(!do.split && topmode=="specific") topmode <- "sd"
         
         if(topmode=="pca") {
-            dbg("[ClusteringModule:getFilteredMatrix] splitting by PCA")
+            dbg("[ClusteringModule:getTopMatrix] splitting by PCA")
             require(irlba)
             NPCA=5
             svdres <- irlba(zx - rowMeans(zx), nv=NPCA)
@@ -321,8 +344,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ##grp <- ngs$samples[colnames(zx),"cluster"]
             table(grp)
 
-            dbg("[ClusteringModule:getFilteredMatrix] head.grp=",head(grp))
-            dbg("[ClusteringModule:getFilteredMatrix] dim.zx=",dim(zx))
+            dbg("[ClusteringModule:getTopMatrix] head.grp=",head(grp))
+            dbg("[ClusteringModule:getTopMatrix] dim.zx=",dim(zx))
 
             grp.zx <- t(apply(zx, 1, function(x) tapply(x, grp, mean)))
             if(length(table(grp))==1) {
@@ -348,7 +371,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         } else {
             ## Order by SD
             ## 
-            dbg("[ClusteringModule:getFilteredMatrix] order by SD")
+            dbg("[ClusteringModule:getTopMatrix] order by SD")
             ii <- order(-apply(zx,1,sd,na.rm=TRUE))
             zx = zx[ii,,drop=FALSE] ## order
             zx = head(zx,nmax)
@@ -395,7 +418,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             }
         }
 
-        dbg("[ClusteringModule:getFilteredMatrix] done!")
+        dbg("[ClusteringModule:getTopMatrix] done!")
         
         ##input$top_terms
         filt <- list(mat=zx, annot=annot, grp=grp,
@@ -435,7 +458,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         alertDataLoaded(session,ngs)
         req(ngs)
         
-        filt <- getFilteredMatrix()        
+        filt <- getTopMatrix()        
         req(filt)
         ##if(is.null(filt)) return(NULL)
         
@@ -543,7 +566,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         scale = ifelse(input$hm_scale=="relative","row.center","none")    
         plt <- NULL
 
-        filt <- getFilteredMatrix()
+        filt <- getTopMatrix()
         ##if(is.null(filt)) return(NULL)
         req(filt)
         
@@ -632,8 +655,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             tipify( selectInput(ns('hm_ntop'),'Top N:',c(50,150,500),selected=50),
                    "Select the number of top features in the heatmap.", placement="right")
         ),
-        tipify( checkboxInput(ns('hm_filterXY'),'Exclude X/Y genes',TRUE),
-               "Exclude sex genes on X/Y chromosome.", placement="right"),
+        tipify( checkboxInput(ns('hm_filterXY'),'Exclude X/Y genes',FALSE),
+               "Exclude genes on X/Y chromosomes.", placement="right"),
         tipify( radioButtons(
             ns('hm_scale'), 'Scale:', choices=c('relative','absolute'), inline=TRUE),
             "Show relative (i.e. mean-centered) or absolute expression values.",
@@ -695,6 +718,15 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                 save_iheatmap(hm2_splitmap.RENDER(), filename=PDFFILE,
                               vwidth=1000, vheight=800)
             }
+            if(WATERMARK) {
+                cat("adding watermark to PDF...\n")
+                ##PDFFILE="~/Downloads/plot.pdf"
+                tmp1 <- paste0(tempfile(),".pdf")
+                file.copy(PDFFILE,tmp1)
+                cmd = paste("pdftk",tmp1,"stamp ../lib/watermark.pdf output",PDFFILE)
+                cat("cmd = ",cmd,"\n")
+                system(cmd)
+            }            
             dbg("hm_splitmap_pdf:: exporting done...")
             file.copy(PDFFILE,file)        
         }
@@ -763,11 +795,11 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
     output$hm_heatmap_UI <- renderUI({
         fillCol(
-            flex = c(1,0.15,NA),
+            flex = c(NA,0.025,1),
             height = fullH,
-            plotWidget(ns("hm_splitmap")),
+            div(HTML(hm_splitmap_caption), class="caption"),
             br(),
-            div(HTML(hm_splitmap_caption), class="caption")
+            plotWidget(ns("hm_splitmap"))
         )
     })
     outputOptions(output, "hm_heatmap_UI", suspendWhenHidden=FALSE) ## important!!!
@@ -804,26 +836,29 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
     hm_getClusterPositions <- reactive({
 
-        dbg("[getClusterPositions] reacted")
+        dbg("[hm_getClusterPositions] reacted")
 
         ngs <- inputData()
         req(ngs)
 
         ## take full matrix
-        zx <- as.matrix(ngs$X)
-        kk <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
-        zx <- zx[,kk,drop=FALSE]
-        
-        ## --------------- apply feature filter
-        gg = ngs$families[[1]]
-        if(input$hm_features != "<all>") {
-            gg = ngs$families[[input$hm_features]]
-            jj <- match(toupper(gg), toupper(ngs$genes$gene_name))
-            gg = ngs$genes$gene_name[setdiff(jj,NA)]
-            pp = filterProbes(ngs$genes, gg)
-            zx = zx[intersect(pp,rownames(zx)),]
-        }
+        zx <- getFilteredMatrix()
 
+        if(0) {
+            zx <- as.matrix(ngs$X)
+            kk <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
+            zx <- zx[,kk,drop=FALSE]
+            ## --------------- apply feature filter
+            gg = ngs$families[[1]]
+            if(input$hm_features != "<all>") {
+                gg = ngs$families[[input$hm_features]]
+                jj <- match(toupper(gg), toupper(ngs$genes$gene_name))
+                gg = ngs$genes$gene_name[setdiff(jj,NA)]
+                pp = filterProbes(ngs$genes, gg)
+                zx = zx[intersect(pp,rownames(zx)),]
+            }
+        }
+        
         ntop = 1000
         ntop = as.integer(input$hm_ntop2)    
         zx = zx[order(-apply(zx,1,sd)),,drop=FALSE]  ## OK?
@@ -872,15 +907,14 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         idx <- NULL
         if(FALSE) {
             ## should be relatively fast in sample space...
-            cat("getClusterPositions:: louvain clustering...\n")
+            cat("[hm_getClusterPositions] louvain clustering...\n")
             require(igraph)
             dist = as.dist(dist(pos))
             gr = graph_from_adjacency_matrix(
                 1.0/dist, diag=FALSE, mode="undirected")
             idx <- cluster_louvain(gr)$membership
         }
-
-        dbg("[getClusterPositions] done")
+        dbg("[hm_getClusterPositions] done")
 
         clust = list(pos=pos, clust=idx) 
         return(clust)
@@ -1016,6 +1050,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         if(input$hm_clustmethod=="tsne") title = paste0("<b>tSNE</b>  (",nrow(pos)," samples)")
         ## plt <- plt %>% layout(title=title) %>% 
         ##     config(displayModeBar = FALSE)
+        plt <- plt %>% 
+            config(toImageButtonOptions = list(format='svg', height=800, width=800))
         ##print(plt)
         return(plt)
     })
@@ -1057,7 +1093,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         return(HTML(text1))
     })
 
-    pca_caption_static = "<br><b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of samples as a scatterplot in reduced dimension (2D or 3D). Samples that are similar are clustered near to each other, while samples with different expression are positioned farther away. Groups of samples with similar profiles will appear as <i>clusters</i> in the plot."
+    pca_caption_static = "<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of samples as a scatterplot in reduced dimension (2D or 3D). Samples that are similar are clustered near to each other, while samples with different expression are positioned farther away. Groups of samples with similar profiles will appear as <i>clusters</i> in the plot."
 
     ##hm_PCAplot_module <- plotModule(
     callModule(
@@ -1067,7 +1103,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         plotlib = "plotly", 
         options = hm_PCAplot_opts,
         height = c(fullH-100,700), width=c("auto",800),
-        pdf.width=8, pdf.height=8,
+        pdf.width=6, pdf.height=6,
         title="PCA/tSNE plot",
         info.text = hm_PCAplot_text
         ##caption = pca_caption_static
@@ -1077,10 +1113,11 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
     output$hm_pcaUI <- renderUI({
         fillCol(
-            flex = c(1,NA),
+            flex = c(NA,0.02,1),
             height = fullH,
-            plotWidget(ns("hm_PCAplot")),
-            div(HTML(pca_caption_static), class="caption")
+            div(HTML(pca_caption_static), class="caption"),
+            br(),
+            plotWidget(ns("hm_PCAplot"))
         )
     })
     outputOptions(output, "hm_pcaUI", suspendWhenHidden=FALSE) ## important!!!
@@ -1094,7 +1131,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     
     hm_parcoord.matrix <- reactive({
         ngs <- inputData()
-        filt <- getFilteredMatrix()
+        filt <- getTopMatrix()
         req(filt)
         ##zx <- filt$grp.mat[,]
         zx <- filt$mat[,]    
@@ -1284,12 +1321,13 @@ displays the expression levels of selected genes across all conditions in the an
 
     output$hm_parcoordUI <- renderUI({
         fillCol(
-            flex = c(1.2,0.05,1,NA),
+            flex = c(NA,0.02,1.2,0.05,1),
             height = fullH,
+            div(HTML(parcoord_caption), class="caption"),
+            br(),
             plotWidget(ns("hm_parcoord")),
             br(),
-            tableWidget(ns("hm_parcoord_table")),
-            div(HTML(parcoord_caption), class="caption")
+            tableWidget(ns("hm_parcoord_table"))
         )
     })
     outputOptions(output, "hm_parcoordUI", suspendWhenHidden=FALSE) ## important!!!
@@ -1334,7 +1372,7 @@ displays the expression levels of selected genes across all conditions in the an
         
         ngs <- inputData()
         req(ngs)
-        filt <- getFilteredMatrix()
+        filt <- getTopMatrix()
         req(filt)
         
         zx  <- filt$mat
@@ -1403,7 +1441,7 @@ displays the expression levels of selected genes across all conditions in the an
             }
         }
 
-        if(ann.level=="geneset" && input$xann_odds_weighting ) {
+        if(input$hm_level=="gene" && ann.level=="geneset" && input$xann_odds_weighting ) {
             table(idx)
             grp <- tapply( toupper(rownames(zx)), idx, list)  ## toupper for mouse!!
             gmt <- GSETS[rownames(rho)]
@@ -1546,7 +1584,7 @@ displays the expression levels of selected genes across all conditions in the an
         id="clustannot_plots", ##ns=ns,
         ##func=clustannot_plots.RENDER, plotlib = "base",
         func = clustannot_plots.PLOTLY, plotlib="plotly",
-        download.fmt = c("png","pdf","html"),
+        download.fmt = c("png","pdf"),
         options = clustannot_plots_opts,
         height = c(360,600), width = c(500,1000),
         pdf.width=8, pdf.height=5, res=80,
@@ -1604,16 +1642,17 @@ displays the expression levels of selected genes across all conditions in the an
     ##output <- attachModule(output, clustannot_table_module)
 
 
-    clustannot_caption = "<b>Cluster annotation.</b> <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster as defined  in the heatmap. Length of the bar corresponds to its average correlation. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
+    clustannot_caption = "<b>Cluster annotation.</b> <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster as defined  in the heatmap. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
     
     output$hm_annotateUI <- renderUI({
         fillCol(
-            flex = c(1.4,0.05,1,NA),
+            flex = c(NA,0.03,1.4,0.03,1),
             height = fullH,
+            div(HTML(clustannot_caption), class="caption"),
+            br(),
             plotWidget(ns("clustannot_plots")),
             br(),
-            plotWidget(ns("clustannot_table")),
-            div(HTML(clustannot_caption), class="caption")
+            plotWidget(ns("clustannot_table"))
         )
     })
     outputOptions(output, "hm_annotateUI", suspendWhenHidden=FALSE) ## important!!!
@@ -1714,10 +1753,11 @@ displays the expression levels of selected genes across all conditions in the an
 
     output$hm_phenoplotUI <- renderUI({
         fillCol(
-            flex = c(1, NA),
+            flex = c(NA,0.025,1),
             height = fullH,
-            plotWidget(ns("clust_phenoplot")),
-            div(HTML(clust_phenoplot_caption),class="caption")
+            div(HTML(clust_phenoplot_caption),class="caption"),
+            br(),
+            plotWidget(ns("clust_phenoplot"))
         )
     })
 
@@ -1741,12 +1781,16 @@ displays the expression levels of selected genes across all conditions in the an
         }
 
         ## ------------ intersect features, set minimum set size
+        rownames(X) <- toupper(rownames(X))
         genes <- toupper(rownames(X))
+        features <- lapply(features, toupper)
         features <- lapply(features, function(f) intersect(toupper(f), genes))
         features <- features[sapply(features,length) >=10 ]
+
+        cat("[calcFeatureRanking] length(features)=",length(features),"\n")
         
         ## ------------ Just to get current samples
-        ##samples = getFilteredMatrix()$samples    
+        ##samples = getTopMatrix()$samples    
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
         X = X[,samples]
         cvar <- pgx.getCategoricalPhenotypes(ngs$Y)
@@ -1757,6 +1801,9 @@ displays the expression levels of selected genes across all conditions in the an
         kk = which(apply(Y,2,function(y) length(unique(y))>1))
         Y = Y[,kk,drop=FALSE]
         dim(Y)
+
+        cat("[calcFeatureRanking] dim(X)=",dim(X),"\n")
+        cat("[calcFeatureRanking] dim(Y)=",dim(Y),"\n")
         
         ## ------------ Note: this takes a while. Maybe better precompute off-line...
         sdx = apply(X,1,sd)
@@ -1779,11 +1826,19 @@ displays the expression levels of selected genes across all conditions in the an
 
             grp = Y[,i]
             grp = as.character(grp)
+            
+            cat("[calcFeatureRanking] head(grp)=",head(grp),"\n")
+            
             score = rep(NA, length(features))
             names(score) = names(features)
             j=1
             for(j in 1:length(features)) {
+
                 pp = features[[j]]
+                cat("[calcFeatureRanking] length(feat)=",length(pp),"\n")
+                cat("[calcFeatureRanking] head(feat)=",head(pp),"\n")
+                cat("[calcFeatureRanking] head(rnX)=",head(rownames(X)),"\n")
+                
                 if(gene.level) {
                     pp = filterProbes(ngs$genes, features[[j]])
                 }
@@ -1793,6 +1848,10 @@ displays the expression levels of selected genes across all conditions in the an
                 dim(X1)
                 ##cat("<clust_featureRank> dim(X1)=",dim(X1),"\n")
                 ##if( nrow(X1) 
+
+                cat("[calcFeatureRanking] length(pp)=",length(pp),"\n")
+                cat("[calcFeatureRanking] length(grp)=",length(grp),"\n")
+                cat("[calcFeatureRanking] dim(X1)=",dim(X1),"\n")
                 
                 s1 = s2 = 1
                 method = input$clust_featureRank_method
@@ -1803,10 +1862,10 @@ displays the expression levels of selected genes across all conditions in the an
                     diag(D) = NA
                     s1 = mean(D,na.rm=TRUE)
                 }
-
+                
                 if(method %in% c("p-value","meta")) {
                     jj  <- which(!is.na(grp))
-                    design = model.matrix( ~ grp[jj])
+                    design = model.matrix( ~ grp[jj])                    
                     suppressWarnings( fit <- eBayes(lmFit( X1[,jj], design)) )
                     suppressWarnings( suppressMessages( top <- topTable(fit) ))
                     ##s2 = mean(-log10(top$P.Value))  ## as score
@@ -1878,10 +1937,11 @@ displays the expression levels of selected genes across all conditions in the an
     
     output$hm_featurerankUI <- renderUI({
         fillCol(
-            flex = c(1, NA),
+            flex = c(NA,0.035,1),
             height = fullH,
-            plotWidget(ns("clust_featureRank")),
-            div(HTML(clust_featureRank_caption),class="caption")
+            div(HTML(clust_featureRank_caption),class="caption"),
+            br(),
+            plotWidget(ns("clust_featureRank"))
         )
     })
 

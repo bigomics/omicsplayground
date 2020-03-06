@@ -27,6 +27,7 @@ ngs.getGeneAnnotation <- function(genes)
         names(GENE.TITLE) = SYMBOL
         CHRLOC = as.list(org.Hs.egCHRLOC)
         names(CHRLOC) = SYMBOL
+        MAP <- NULL ## no map for mouse???
     }
 
     head(GENE.TITLE)
@@ -34,24 +35,26 @@ ngs.getGeneAnnotation <- function(genes)
 
     ## get chromosome locations
     chrloc0 <- CHRLOC[genes]
-    loc <- sapply(chrloc0, "[", 1)
+    loc <- sapply(chrloc0, "[", 1) ## only first
     loc[sapply(loc,is.null)] <- NA
     loc <- abs(as.integer(unlist(loc)))
     chrom <- sapply(chrloc0, function(s) names(s)[1])
     chrom[sapply(chrom,is.null)] <- NA
     chrom <- as.vector(unlist(chrom))
 
+    map <- NULL
+    if(!is.null(MAP)) map <- MAP[genes]
+    
     ## get protein info
     ## fill me    
     annot = data.frame( gene_name = genes,
                        gene_title = gene_title,
-                       chr=chrom, pos=loc)
+                       chr=chrom, pos=loc, map=map)
     ##genes = apply(genes,2,as.character)
     head(annot)
     rownames(annot) = genes
     annot
 }
-
 
 ngs.detectOrganism <- function(ngs) {
     lowcase.ratio <- mean(grepl("[a-z]",substring(rownames(ngs$counts),2,100)))

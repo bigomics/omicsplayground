@@ -183,7 +183,7 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
 
 pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
                                          ntop=1000, sv.rank=-1, prefix="C", 
-                                         fromX=FALSE, is.logx=FALSE, 
+                                         is.logx=FALSE, 
                                          prior.counts=NULL, dims=c(2,3),
                                          row.center=TRUE, row.scale=FALSE,
                                          find.clusters=TRUE, kclust=1,
@@ -198,12 +198,17 @@ pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
     
     sX <- counts
     if(is.logx) sX <- 2**sX
+
+    cat("[pgx.clusterSamplesFromMatrix] dim(sX)=",dim(sX),"\n")
     
     if(is.null(prior.counts)) {
         qq <- quantile(as.vector(sX[sX>0]),probs=0.50) ## at 50%
         qq
         prior.counts <- qq
     }
+
+    cat("[pgx.clusterSamplesFromMatrix] prior.counts=",prior.counts,"\n")
+    
     sX <- log2(prior.counts + sX)
     sX <- limma::normalizeQuantiles(sX)  ## in linear space
     if(row.center) sX <- sX - rowMeans(sX,na.rm=TRUE)
@@ -234,23 +239,23 @@ pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
 
     pos2=pos3=NULL
     if(method=="umap") {
-        require(umap)
+        require(uwot)
         if(2 %in% dims) {
-            pos2 = umap(
+            pos2 = uwot::umap(
                 t(sX),
-                n_neighbours = perplexity,
+                n_neighbors = perplexity,
                 n_components = 2,
                 metric = "euclidean"
-            )$layout
+            )
             colnames(pos2) <- c("umap_1","umap_2")
         }
         if(3 %in% dims) {
-            pos3 = umap(
+            pos3 = uwot::umap(
                 t(sX),
-                n_neighbours = perplexity,
+                n_neighbors = perplexity,
                 n_components = 3,
                 metric = "euclidean"
-            )$layout
+            )
             colnames(pos3) <- c("umap_1","umap_2","umap_3")
         }
     } else if(method=="tsne") {

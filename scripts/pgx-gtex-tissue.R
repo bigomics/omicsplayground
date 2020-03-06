@@ -4,7 +4,7 @@ PGX.DIR = "../data"
 source("../R/pgx-include.R")
 ##source("options.R")
 
-rda.file="../data-extra/gtex-tissues.pgx"
+rda.file="../data-extra/gtex-tissue.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 
@@ -39,7 +39,8 @@ if(PROCESS.DATA) {
     table(tissue)
     X <- c()
     s = tissue[1]
-    for(s in unique(tissue)) {
+    tissues <- setdiff(unique(tissue),c(NA,""))
+    for(s in tissues) {
         ii <- which(tissue == s)
         xx <- X0[,ii]
         if(length(ii) > 10) {

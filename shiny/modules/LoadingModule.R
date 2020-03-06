@@ -1,4 +1,3 @@
-
 LoadingInputs <- function(id) {
     ns <- NS(id)  ## namespace
     tagList(
@@ -71,7 +70,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
 
     USERLEVELS = c("BASIC","PRO")
     ## if(DEV.VERSION) USERLEVELS = c("BASIC","PRO","DEV")
-    USERMODE <- reactiveVal( factor("BASIC",levels=USERLEVELS) )
+    ##USERMODE <- reactiveVal( factor("BASIC",levels=USERLEVELS) )
     USERMODE <- reactiveVal( factor(toupper(defaultMode),levels=USERLEVELS) )
 
     output$inputsUI <- renderUI({
@@ -148,7 +147,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         cartoon$img  = file.path("www/cartoons",cartoon$img)
         cartoon
     }##)
-
+    
     startup_count=0
     ##require(shinyparticles)
     require(particlesjs)
@@ -163,7 +162,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             return(NULL)  ## UI not ready???
         }
         if(once && startup_count>0) return(NULL)
-
+        
         dbg("showStartupModal: showing!\n")    
         showModal(modalDialog(
             id="modal-splash",
@@ -825,7 +824,23 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     ## outputOptions(output, "allFilesOK", suspendWhenHidden = FALSE) ## important!
 
     observeEvent( input$upload_compute, {
+
         ## are you sure? Any message/warning before computation is done.
+
+        has.pgx <- ("uploaded.pgx" %in% names(uploaded_files))
+        has.csv <- all(c("counts.csv","samples.csv","contrasts.csv") %in% names(uploaded_files))
+        if(has.pgx) has.pgx <- has.pgx && !is.null(uploaded_files[["uploaded.pgx"]])
+
+        dbg("[observeEvent::upload_compute] names(uploaded_files)=",names(uploaded_files))
+        dbg("[observeEvent::upload_compute] has.pgx=",has.pgx)
+        dbg("[observeEvent::upload_compute] has.csv=",has.csv)
+        
+        if(!has.pgx && !has.csv ) {
+            dbg("upload_compute :: ***** no PGX, no CSV files, no party *****")
+            ##removeModal()
+            return(NULL)
+        }
+
         if(0) {
             require(shinyWidgets)
             confirmSweetAlert(
@@ -851,19 +866,20 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         ## Start pre-computing the object from the uploaded files
         ## after confirmation is received.
         ##
+
+        cat("upload_compute: names(uploaded_files)=",names(uploaded_files),"\n")        
         
         ## --------------------- OK start ---------------------------
         has.pgx <- ("uploaded.pgx" %in% names(uploaded_files))       
-        has.pgx <- has.pgx && !is.null(uploaded_files[["uploaded.pgx"]])
-        cat("upload_compute: names(uploaded_files)=",names(uploaded_files),"\n")        
-        if(has.pgx) {
+        if(has.pgx) has.pgx <- has.pgx && !is.null(uploaded_files[["uploaded.pgx"]])
 
+        if(has.pgx) {            
             dbg("upload_compute :: ***** using 'uploaded.pgx' ******")        
             ngs <- uploaded_files[["uploaded.pgx"]]
             
         } else {
-            dbg("upload_compute :: ***** real computation *****")
 
+            dbg("upload_compute :: ***** computing from CSV files *****")
             dbg("upload_compute :: showing coffee modal")
             showLoadingModal("Calculating... it's a good time to get a coffee now.")
             
@@ -872,6 +888,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             contrasts <- as.matrix(uploaded_files[["contrasts.csv"]])
 
             max.genes = as.integer(max.limits["genes"])
+            max.genesets = 9999
             
             if( USERMODE() == "BASIC") {
                 gx.methods   = c("ttest.welch","ttest.rank","trend.limma") ## fastest 3
@@ -911,15 +928,31 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             on.exit(progress$close())    
             progress$set(message = "Processing", value = 0)
 
-            ngs <- pgx.computeObjectPGX(
-                counts, samples, contrasts,
+            progress$inc(0.01, detail = "parsing data")            
+            ngs <- pgx.createPGX(
+                counts, samples, contrasts, ## genes, 
+                only.hugo = TRUE, only.proteincoding = TRUE)
+            names(ngs)
+            
+            ngs <- pgx.computePGX(
+                ngs,
                 max.genes = max.genes,
+                max.genesets = max.genesets, 
                 gx.methods = gx.methods,
                 gset.methods = gset.methods,
                 extra.methods = extra.methods,
-                lib.dir = FILES, only.hugo = TRUE,
-                progress = progress
-            )
+                lib.dir = FILES, do.cluster=TRUE,
+                progress=progress)
+            
+            ## ngs <- pgx.computeObjectPGX(
+            ##     counts, samples, contrasts,
+            ##     max.genes = max.genes,
+            ##     gx.methods = gx.methods,
+            ##     gset.methods = gset.methods,
+            ##     extra.methods = extra.methods,
+            ##     lib.dir = FILES, only.hugo = TRUE,
+            ##     progress = progress
+            ## )
 
             end_time <- Sys.time()
             delta_time  = end_time - start_time
@@ -1050,9 +1083,32 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
 
         } else {
             ii <- grep("csv$",input$upload_files$name)
-            ff = lapply(input$upload_files$datapath[ii], read.csv, row.names=1,
-                        check.names=FALSE, stringsAsFactors=FALSE )
-            names(ff) <- input$upload_files$name[ii]    
+            inputnames <- input$upload_files$name[ii]
+            uploadnames <- input$upload_files$datapath[ii]
+            ##ff = lapply(uploadnames, read.csv, row.names=1,
+            ##check.names=FALSE, stringsAsFactors=FALSE )
+            ##names(ff) <- uploadnames
+            cat("<uploaded_files> length(uploadnames)=",length(uploadnames),"\n")
+            ff <- list()
+            if(length(uploadnames)>0) {
+                for(i in 1:length(uploadnames)) {
+                    fn1 <- inputnames[i]
+                    fn2 <- uploadnames[i]
+                    cat("<uploaded_files> fn1=",fn1,"\n")
+                    cat("<uploaded_files> fn2=",fn2,"\n")
+                    df <- NULL
+                    if(grepl("counts",fn1)) {
+                        ## allows duplicated rownames
+                        df0 <- read.csv(fn2, check.names=FALSE, stringsAsFactors=FALSE)
+                        df <- as.matrix(df0[,-1])
+                        rownames(df) <- as.character(df0[,1])
+                    } else {
+                        df <- read.csv(fn2, row.names=1, check.names=FALSE, stringsAsFactors=FALSE)
+                    }
+                    ff[[ inputnames[i] ]] <- df
+                }
+            }
+            
         }
         
         ## store files in reactive value

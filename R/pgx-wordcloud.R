@@ -3,6 +3,11 @@
 ##---------------------------------------------------------------
 
 pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
+
+    if(is.null(ngs$gset.meta)) {
+        cat("[pgx.calculateWordFreq] FATAL ERROR: no gset.meta in object\n")
+        return(NULL)
+    }
     
     if(!is.null(progress)) progress$set(message = "WordCloud", value = 0)
     
@@ -59,7 +64,7 @@ pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
     rms.FC <- Matrix::rowMeans(S**2)**0.5
     rms.FC <- rms.FC + 0.01*rnorm(length(rms.FC))
     gmt <- apply(W,2,function(x) names(which(x!=0)))
-    res <- fgsea( gmt, rms.FC, nperm=1000 )
+    suppressWarnings( res <- fgsea( gmt, rms.FC, nperm=1000 ) )
     res$leadingEdge <- sapply(res$leadingEdge,paste,collapse="//")
     ## res$leadingEdge <- NULL
     colnames(res)[1] <- "word"
@@ -89,8 +94,10 @@ pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
     
     require(Rtsne)
     library(umap)
+    require(uwot)
     pos1 = Rtsne(as.matrix(t(W)),perplexity=10,check_duplicates=FALSE)$Y
-    pos2 = umap(as.matrix(t(W)))$layout
+    ##pos2 = umap::umap(as.matrix(t(W)))$layout
+    pos2 = uwot::umap(as.matrix(t(W)))
     rownames(pos1) = rownames(pos2) = colnames(W)
     colnames(pos1) = colnames(pos2) = c("x","y")
     pos1 = pos1[res$word,]

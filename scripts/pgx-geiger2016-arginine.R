@@ -6,14 +6,6 @@
 ##
 ##
 
-library(knitr)
-library(limma)
-library(edgeR)
-library(RColorBrewer)
-library(gplots)
-library(matrixTests)
-library(kableExtra)
-
 RDIR = "../R"
 FILES = "../lib"
 PGX.DIR = "../data"
@@ -28,6 +20,7 @@ COMPUTE.EXTRA=1
 QCFILTER=FALSE
 BATCHCORRECT=FALSE
 
+rda.file="../data/geiger2016-test.pgx"
 rda.file="../data/geiger2016-arginine.pgx"
 rda.file
 
@@ -166,6 +159,10 @@ if(DIFF.EXPRESSION) {
 
 rda.file
 ngs.save(ngs, file=rda.file)
+
+rda.file = "../data/geiger2016-arginineX.pgx"
+ngs.save(ngs, file=rda.file, light=FALSE)
+
 
 if(0) {
     

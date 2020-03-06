@@ -146,7 +146,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         return(res)
     })
 
-
     dsea_enplots.RENDER %<a-% reactive({
 
         ngs <- inputData()
@@ -162,13 +161,12 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         ## filter with table selection/search
         ii  <- dsea_table$rows_all()
         req(ii)
-        res <- res[ii,,drop=FALSE]
+        if(length(ii)>0) {
+            res <- res[ii,,drop=FALSE]
+        }
         
-        dmethod="mono"
-        dmethod="combo"
-        dmethod <- input$dsea_method
-
         ## rank vector for enrichment plots
+        dmethod <- input$dsea_method
         rnk <- ngs$drugs[[dmethod]]$stats[,comparison]
         dctype <- sub("_.*$","",names(rnk))
         ##table(rownames(res) %in% dctype)
@@ -183,10 +181,11 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         for(i in itop) {
             dx <- rownames(res)[i]
             dx
-            gmtdx <- grep(dx,names(rnk),fixed=TRUE,value=TRUE)  ## L1000 naming allows this...
+            gmtdx <- grep(dx,names(rnk),fixed=TRUE,value=TRUE)  ## L1000 naming
             length(gmtdx)
             ##if(length(gmtdx) < 3) { frame(); next }
-            gsea.enplot( rnk, gmtdx, main=dx, cex.main=1.1, xlab="")
+            dx1 <- substring(dx,1,26)
+            gsea.enplot( rnk, gmtdx, main=dx1, cex.main=1.1, xlab="")
             nes <- round(res$NES[i],2)
             qv  <- round(res$padj[i],3)
             tt <- c( paste("NES=",nes), paste("q=",qv) )
@@ -210,16 +209,107 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         if(is.null(comparison)) return(NULL)
         
         res <- getDseaTable()
-
         dbg("[dsea_moaplot.RENDER] dim(res)=",dim(res))
         
-        dmethod="mono"
         dmethod="combo"
         moatype="target gene"
         names(ngs$drugs)
         dmethod <- input$dsea_method
-        moatype = input$dsea_moatype
+        moatype <- input$dsea_moatype
         NTOP=12
+        dtg.top = moa.top = NULL
+        
+        if(moatype=="target gene") {
+            
+            ## GSEA on molecular targets
+            targets.list <- lapply(as.character(res$target),
+                                   function(s) trimws(strsplit(s,split="[\\|;,]")[[1]]) )
+            names(targets.list) <- rownames(res)
+            targets <- setdiff(unique(unlist(targets.list)),c(NA,""," "))
+            gmt <- lapply(targets, function(g) names(which(sapply(targets.list,function(t) (g %in% t)))))
+            names(gmt) <- targets
+            
+            rnk <- res$NES
+            names(rnk) <- rownames(res)
+            suppressWarnings( res1 <- fgsea( gmt, rnk, nperm=20000) )
+            res1 <- res1[order(res1$pval),]
+            head(res1)            
+            
+            jj <- unique(c(head(order(-res1$NES),NTOP),tail(order(-res1$NES),NTOP)))
+            dtg.top <- res1$NES[jj]
+            names(dtg.top) <- res1$pathway[jj]
+            
+        }
+        if(moatype=="drug class") {
+            
+            ## GSEA on moa terms
+            moa.list <- lapply(as.character(res$moa),
+                               function(s) trimws(strsplit(s,split="[\\|;,]")[[1]]))
+            names(moa.list) <- rownames(res)
+            moa <- setdiff( unlist(moa.list), c("",NA," "))
+            gmt <- lapply(moa, function(g) names(which(sapply(moa.list,function(t) (g %in% t)))))
+            names(gmt) <- moa
+            
+            rnk <- res$NES
+            names(rnk) <- rownames(res)
+            suppressWarnings( res1 <- fgsea( gmt, rnk, nperm=20000) )
+            res1 <- res1[order(res1$pval),]
+            head(res1)            
+            
+            jj <- unique(c(head(order(-res1$NES),NTOP),tail(order(-res1$NES),NTOP)))
+            moa.top <- res1$NES[jj]
+            names(moa.top) <- res1$pathway[jj]                                    
+        }
+        
+        if(1) {
+
+            ##layout(matrix(1:2,nrow=1),widths=c(1.4,1))
+            ##par(mfrow=c(2,1))
+            par(mar=c(4,15,5,0.5), mgp=c(2,0.7,0))
+            par(mfrow=c(1,1))
+            ylab = "enrichment  (NES)"
+
+            if(moatype=="drug class") {
+                par(mfrow=c(2,1), mar=c(4,3.8,1,0.2), mgp=c(1.9,0.7,0))
+                barplot(moa.top, horiz=FALSE, las=3,
+                        ylab=ylab, cex.names = 0.8 )
+                ##title(main="MOA", line=1 )
+            } else {
+                par(mfrow=c(2,1), mar=c(0,3.8,1,0.2), mgp=c(1.9,0.7,0))
+                barplot(dtg.top, horiz=FALSE, las=3, ## ylab="drugs (n)",
+                        ylab=ylab, cex.names = 0.8 )
+                ##title(main="target gene", line=1 )
+            }
+        }
+        
+    })    
+
+    ##
+    ## TEMPORARY: please merge with dsea_moaplot.RENDER
+    ##
+    dsea_moaplot.RENDER2 %<a-% reactive({
+
+        ngs <- inputData()
+        req(ngs, input$dr_contrast, input$dsea_method)
+        
+        if(is.null(ngs$drugs)) return(NULL)
+        shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
+
+        dbg("[dsea_moaplot.RENDER] reacted")
+        
+        comparison=1
+        comparison = input$dr_contrast
+        if(is.null(comparison)) return(NULL)
+        
+        res <- getDseaTable()
+        dbg("[dsea_moaplot.RENDER] dim(res)=",dim(res))
+        
+        dmethod="combo"
+        moatype="target gene"
+        names(ngs$drugs)
+        dmethod <- input$dsea_method
+        moatype <- input$dsea_moatype
+        NTOP = 24
         dtg.top = moa.top = NULL
         
         if(moatype=="target gene") {
@@ -275,18 +365,18 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             if(moatype=="drug class") {
                 par(mfrow=c(2,1), mar=c(4,4,1,0.5), mgp=c(2,0.7,0))
                 barplot(moa.top, horiz=FALSE, las=3,
-                        ylab=ylab, cex.names = 0.8 )
+                        ylab=ylab, cex.names = 0.9 )
                 ##title(main="MOA", line=1 )
             } else {
                 par(mfrow=c(2,1), mar=c(0,4,1,0.5), mgp=c(2,0.7,0))
                 barplot(dtg.top, horiz=FALSE, las=3, ## ylab="drugs (n)",
-                        ylab=ylab, cex.names = 0.8 )
+                        ylab=ylab, cex.names = 0.9 )
                 ##title(main="target gene", line=1 )
             }
         }
         
     })    
-
+    
     dsea_table.RENDER <- reactive({
         ngs <- inputData()
         req(ngs)
@@ -324,7 +414,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
                                 backgroundPosition = 'center') 
     })
 
-    dsea_actmap.RENDER %<a-% reactive({
+    dsea_actmap.plotdata <- reactive({
         require(igraph)
         ngs <- inputData()
         req(ngs, input$dr_contrast, input$dsea_method)
@@ -361,28 +451,42 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         score <- score[ii,jj,drop=FALSE]
         
         cex2=1
-        colnames(score) = substring(colnames(score),1,30)
-        rownames(score) = substring(rownames(score),1,50)
+        colnames(score) = substring(colnames(score),1,25)
+        rownames(score) = substring(rownames(score),1,42)
         if(ncol(score)>15) {
-            rownames(score) = substring(rownames(score),1,40)
+            rownames(score) = substring(rownames(score),1,34)
             cex2=0.85
         }
         if(ncol(score)>25) {
-            rownames(score) = substring(rownames(score),1,30)
+            rownames(score) = substring(rownames(score),1,25)
             colnames(score) <- rep("",ncol(score))
             cex2=0.7
         }
 
-        par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,2,0,1))
-        require(corrplot)
         score2 <- score
         if(input$dr_normalize) score2 <- t( t(score2) / apply(abs(score2),2,max)) 
         score2 <- sign(score2) * abs(score2/max(abs(score2)))**3   ## fudging
-        bmar <- 0 + pmax((50 - nrow(score2))*0.25,0)
-        corrplot( score2, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
-                 tl.cex = 0.9*cex2, tl.col = "grey20", tl.srt = 45,
-                 mar=c(bmar,0,0,0) )
+
+        list( score=score2, cex=cex2)
+    })        
         
+    dsea_actmap.RENDER <- reactive({
+
+        plt <- dsea_actmap.plotdata()
+
+        par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,2,0,1))
+        require(corrplot)
+        corrplot( plt$score, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
+                 tl.cex = 0.9*plt$cex, tl.col = "grey20", tl.srt = 90)
+    })    
+
+    dsea_actmap.RENDER2 <- reactive({
+
+        plt <- dsea_actmap.plotdata()
+        par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,2,0,1))
+        require(corrplot)
+        corrplot( t(plt$score), is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
+                 tl.cex = 0.9*plt$cex, tl.col = "grey20", tl.srt = 90)
     })    
 
     
@@ -393,8 +497,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         id = "dsea_enplots",
         func = dsea_enplots.RENDER,
         func2 = dsea_enplots.RENDER,         
-        title = "Drug profile enrichment", label="a",
-        info.text = "The <strong>Drug Connectivity Map</strong> correlates your signature with more than 5000 known drug profiles from the L1000 database, and shows similar and opposite profiles by running the GSEA algorithm on the contrast-drug profile correlation space.",
+        title = "Drug connectivity", label="a",
+        info.text = "<strong>Drug connectivity</strong> correlates your signature with more than 5000 known drug profiles from the L1000 database, and shows similar and opposite profiles by running the GSEA algorithm on the drug profile correlation space.",
         options = dsea_enplots.opts,
         pdf.width=11, pdf.height=7,
         height = c(0.54*rowH,650), width=c('auto',1280),
@@ -414,7 +518,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         plotModule,
         id = "dsea_moaplot",
         func = dsea_moaplot.RENDER,
-        func2 = dsea_moaplot.RENDER, 
+        func2 = dsea_moaplot.RENDER2, 
         title = "Mechanism of action", label="c",
         info.text = "This plot visualizes the <strong>mechanism of action</strong> (MOA) across the enriched drug profiles. On the vertical axis, the number of drugs with the same MOA are plotted. You can switch to visualize between MOA or target gene.",
         options = dsea_moaplot.opts,
@@ -429,12 +533,12 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         plotModule,
         id = "dsea_actmap",
         func = dsea_actmap.RENDER,
-        func2 = dsea_actmap.RENDER, 
+        func2 = dsea_actmap.RENDER2, 
         title = "Activation matrix", label="d",
         info.text = "The <strong>Activation Matrix</strong> visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         options = dsea_actmap.opts,
         pdf.width=6, pdf.height=10,
-        height = c(fullH-120,750),
+        height = c(fullH-120,600), width = c('auto',1200),
         res=72
     )
 
@@ -452,15 +556,17 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     ## Page layout
     ##-----------------------------------------
 
-    dsea_analysis_caption = "<b>Drug Connectivity Map.</b> Drug CMap correlates your signature with more than 5000 known drug perturbation profiles from the L1000 database. <b>(a)</b> Figure showing the most similar (or opposite) profiles by running the GSEA algorithm on the contrast-drug profile correlation space. <b>(b)</b> Table summarizing the statistical results of the drug enrichment analysis. <b>(c)</b> Mechanism-of-action plot showing the top most frequent drug class (or target genes) having similar or opposite enrichment compared to the query signature. <b>(d)</b> Activation matrix visualizing enrichment levels of drug signatures across multiple contrast profiles." 
+    dsea_analysis_caption = "<b>(a)</b> <b>Drug connectivity</b> correlates your signature with more than 5000 known drug perturbation profiles from the L1000 database. The figures show the most similar (or opposite) profiles by running the GSEA algorithm on the profile correlation space. <b>(b)</b> <b>Enrichment table</b> summarizing the statistical results of the drug enrichment analysis. <b>(c)</b> <b>Mechanism-of-action</b> plot showing the top most frequent drug class (or target genes) having similar or opposite enrichment compared to the query signature. <b>(d)</b> <b>Activation matrix</b> visualizing enrichment levels of drug signatures across multiple contrast profiles." 
 
     output$DSEA_analysis_UI <- renderUI({
         fillCol(
-            flex = c(1,NA),
-            height = fullH,
+            flex = c(NA,0.035,1),
+            height = fullH,            
+            div(HTML(dsea_analysis_caption),class="caption"),
+            br(),
             fillRow(
                 height = rowH,
-                flex = c(2.6,1), 
+                flex = c(2.8,1), 
                 fillCol(
                     flex = c(1.4,0.15,1),
                     height = rowH,
@@ -473,8 +579,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
                     tableWidget(ns("dsea_table"))        
                 ),
                 plotWidget(ns("dsea_actmap"))
-            ),
-            div(HTML(dsea_analysis_caption),class="caption")
+            )
         )
     })
     outputOptions(output, "DSEA_analysis_UI", suspendWhenHidden=FALSE) ## important!!!

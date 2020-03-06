@@ -1,37 +1,26 @@
-library(knitr)
-library(limma)
-library(edgeR)
-library(RColorBrewer)
-library(gplots)
-library(matrixTests)
-library(kableExtra)
-library(knitr)
 
-source("../R/gx-heatmap.r")
-source("../R/gx-limma.r")
-source("../R/gx-util.r")
-source("../R/gx-combat.r")
-source("../R/ngs-cook.r")
-source("../R/ngs-fit.r")
-source("../R/gset-fisher.r")
-source("../R/gset-gsea.r")
-source("../R/gset-meta.r")
-source("../R/pgx-graph.R")
-source("../R/pgx-functions.R")
+RDIR = "../R"
+FILES = "../lib"
+PGX.DIR = "../data"
+source("../R/pgx-include.R")
+##source("options.R")
+FILES
+MAX.GENES = 8000
+MAX.GENESETS = 8000
 
-source("options.R")
-MAX.GENES
-##MAX.GENES=2000
-MAX.SAMPLES
+PROCESS.DATA=1
+DIFF.EXPRESSION=1
+COMPUTE.EXTRA=1
+QCFILTER=FALSE
+BATCHCORRECT=FALSE
 
 COMPARE="group"
 COMPARE="clusters"
 COMPARE="pheno"
 DOWNSAMPLE=0
-DOWNSAMPLE=150
+DOWNSAMPLE=100
 
-rda.file="../data/GSE72056-scmelanoma.pgx"
-##rda.file = sub(".pgx$",paste0("-vs",COMPARE,".pgx"),rda.file)
+rda.file="../data/GSE72056-scmelanoma-v2.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -84,8 +73,7 @@ if(PROCESS.DATA) {
     rownames(counts) <- alias2hugo(rownames(counts))
 
     ## do we have immune cell coding genes?
-    imm.genes <- grep("^IGH|^IGJ|^IGK|^IGL|^TRA[VJCD]|^TRB[VJCD]|^TRD[VJCD]|^TRG[VJCD]",
-                      rownames(counts),value=TRUE)
+    imm.genes <- grep("^IGH|^IGJ|^IGK|^IGL|^TRA[VJCD]|^TRB[VJCD]|^TRD[VJCD]|^TRG[VJCD]", rownames(counts),value=TRUE)
     imm.genes
 
     ##-------------------------------------------------------------------
@@ -257,15 +245,11 @@ if(PROCESS.DATA) {
     }
 
     dim(ngs$counts)
-    ngs$timings <- c()
-    rda.file
-    save(ngs, file=rda.file)
 }
 
 
 if(DIFF.EXPRESSION) {
 
-    load(file=rda.file, verbose=1)
     COMPARE
 
     ## ----------------- test genes ------------------------------------------
@@ -280,12 +264,14 @@ if(DIFF.EXPRESSION) {
         ##contr.matrix <- makeDirectContrasts(
         ##    ngs$samples[,c("malignant","cluster","P2RX7","PDCD1","CD274","CD8A")],
         ##    ref=c("no","cl1","neg","neg","neg","neg") )
-        contr.matrix <- makeDirectContrasts(
-            Y = ngs$samples[,c("malignant","cluster","BRAF")],
-            ref = c("no","all","neg","neg") )
-        head(contr.matrix)
-        colnames(contr.matrix) <- sub(".*:","",colnames(contr.matrix))  ## strip prefix
-        head(contr.matrix)
+        contr <- makeDirectContrasts(
+            Y = ngs$samples[,c("malignant","cluster","BRAF","cell.type")],
+            ref = c("no","others","neg","others") )
+        head(contr$contr.matrix)
+        contr.matrix = contr$contr.matrix
+        ##colnames(contr.matrix) <- sub(".*:","",colnames(contr.matrix))  ## strip prefix
+        colnames(contr.matrix)
+        ngs$samples$group <- contr$group
         ##apply(contr.matrix,2,table)
 
     } else if(COMPARE=="clusters") {
@@ -313,16 +299,33 @@ if(DIFF.EXPRESSION) {
     }
     
     head(contr.matrix)
-    ##USER.GENETEST.METHODS=c("trend.limma","edger.qlf","deseq2.wald")
-    USER.GENETEST.METHODS=c("trend.limma","edger.qlf","edger.lrt")
-    USER.GENESETTEST.METHODS=c("gsva","camera","fgsea")
-    ##USER.GENETEST.METHODS="*"
-    ##USER.GENESETTEST.METHODS="*"
     
     ngs$timings <- c()
-    source("../R/compute-genes.R")
-    source("../R/compute-genesets.R")
-    source("../R/compute-extra.R")
+    ##source("../R/compute-genes.R")
+    ##source("../R/compute-genesets.R")
+    ##source("../R/compute-extra.R")
+
+    GENETEST.METHODS=c("trend.limma","edger.qlf","edger.lrt")
+    GENESET.METHODS=c("gsva","camera","fgsea")
+    
+    ## new callling methods
+    ngs <- compute.testGenes(
+        ngs, contr.matrix,
+        max.features = MAX.GENES,
+        test.methods = GENETEST.METHODS)
+    
+    ngs <- compute.testGenesets (
+        ngs, max.features = MAX.GENESETS,
+        test.methods = GENESET.METHODS,
+        lib.dir = FILES)
+
+    extra <- c("connectivity")
+    extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")
+    ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
+    
+    names(ngs)
+    ngs$timings
+
 }
 
 rda.file

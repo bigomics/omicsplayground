@@ -7,6 +7,7 @@
 ##
 
 ##extra <- c("meta.go","deconv","infer","drugs")
+##extra <- c("wordcloud")
 EXTRA.MODULES = c("meta.go","deconv","infer","drugs","drugs-combo",
                   "connectivity","graph","wordcloud")
 
@@ -127,10 +128,10 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
             ##sigdb <- dir(c(FILES,FILESX), pattern="sigdb-.*h5", full.names=TRUE)   
             lib.dir2 <- c(lib.dir, sub("lib$","libx",lib.dir))  ### NEED BETTER SOLUTION!!!
             lib.dir2 <- unique(lib.dir2)
-            sigdb <- dir(lib.dir2, pattern="sigdb-.*h5", full.names=TRUE)
+            sigdb <- dir(lib.dir2, pattern="sigdb-.*h5$", full.names=TRUE)
             sigdb
         }
-
+        
         ## sigdb.list = c(
         ##     file.path(PGX.DIR,"datasets-allFC.csv"),
         ##     file.path(FILES,"sigdb-archs4.h5")
@@ -140,11 +141,15 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
             if(file.exists(db)) {
                 ntop = 10000
                 ntop = 1000
-                cat("computing connectivity scores for sigDB",db,"\n")                
+                cat("computing connectivity scores for sigDB",db,"\n")
+                ## in memory for many comparisons
+                meta = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
+                inmemory <- ifelse(ncol(meta$fc)>50,TRUE,FALSE) 
+                inmemory
                 tt <- system.time({
                     scores <- pgx.computeConnectivityScores(
                         ngs, db, ntop=ntop, contrasts=NULL,
-                        remove.le=TRUE )
+                        remove.le=TRUE, inmemory=inmemory )
                 })
                 timings <- rbind(timings, c("connectivity", tt))
                 
@@ -186,7 +191,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
 
 
 ## -------------- deconvolution analysis --------------------------------
-compute.deconvolution <- function(ngs, lib.dir, rna.counts, full=FALSE) {
+compute.deconvolution <- function(ngs, lib.dir, rna.counts=ngs$counts, full=FALSE) {
     
     ## list of reference matrices
     refmat <- list()
@@ -254,7 +259,7 @@ compute.deconvolution <- function(ngs, lib.dir, rna.counts, full=FALSE) {
 }
 
 ## -------------- infer sample characteristics --------------------------------
-compute.cellcycle.gender <- function(ngs, rna.counts) {
+compute.cellcycle.gender <- function(ngs, rna.counts=ngs$counts) {
     pp <- rownames(rna.counts)
     is.mouse = (mean(grepl("[a-z]",gsub(".*:|.*\\]","",pp))) > 0.8)
     is.mouse
@@ -289,20 +294,24 @@ compute.cellcycle.gender <- function(ngs, rna.counts) {
 
 
 compute.drugActivityEnrichment <- function(ngs, lib.dir, combo=TRUE ) {
+
     ## -------------- drug enrichment
-    ##source(file.path(RDIR,"pgx-drugs.R"))
-    ##source(file.path(RDIR,"pgx-graph.R", local=TRUE)
-    X <- readRDS(file=file.path(lib.dir,"l1000_es.rds"))
-    x.drugs <- gsub("_.*$","",colnames(X))
-    length(table(x.drugs))
+    L1000.FILE = "l1000_es_1451drugs.rds"
+    L1000.FILE = "l1000_es.rds"
+    cat("reading L1000 reference file:",L1000.FILE,"\n")
+    X <- readRDS(file=file.path(lib.dir,L1000.FILE))
+    xdrugs <- gsub("_.*$","",colnames(X))
+    ndrugs <- length(table(xdrugs))
+    ndrugs
+    cat("number of profiles:",ncol(X),"\n")
+    cat("number of drugs in database:",ndrugs,"\n")
     dim(X)
 
-    res.mono = res.combo = NULL
-    
+    res.mono = res.combo = NULL    
     NPRUNE=-1
     NPRUNE=250
     res.mono <- pgx.computeDrugEnrichment(
-        ngs, X, x.drugs, methods=c("GSEA","cor"),
+        ngs, X, xdrugs, methods=c("GSEA","cor"),
         nprune=NPRUNE, contrast=NULL )
 
     if(is.null(res.mono)) {
@@ -320,7 +329,7 @@ compute.drugActivityEnrichment <- function(ngs, lib.dir, combo=TRUE ) {
     annot1 <- NULL
     if(combo==TRUE) {
         res.combo <- pgx.computeComboEnrichment(
-            ngs, X, x.drugs, res.mono=res.mono,
+            ngs, X, xdrugs, res.mono=res.mono,
             contrasts = NULL,
             ntop=15, nsample=80, nprune=NPRUNE)
         names(res.combo)
@@ -342,7 +351,7 @@ compute.drugActivityEnrichment <- function(ngs, lib.dir, combo=TRUE ) {
     }
 
     remove(X)
-    remove(x.drugs)
+    remove(xdrugs)
     return(ngs)
 }
 
@@ -354,8 +363,8 @@ compute.drugSensitivityEnrichment <- function(ngs, lib.dir, combo=TRUE, ref.db=c
         ##X <- readRDS(file=file.path(lib.dir,"drugSX-GDSC-t25-g1000.rds"))
         ##X <- readRDS(file=file.path(lib.dir,"drugSX-CTRPv2-t25-g1000.rds"))
         X <- readRDS(file=file.path(lib.dir,paste0("drugSX-",ref,"-t25-g1000.rds")))
-        x.drugs <- gsub("@.*$","",colnames(X))
-        length(table(x.drugs))
+        xdrugs <- gsub("@.*$","",colnames(X))
+        length(table(xdrugs))
         dim(X)
         
         res.mono = res.combo = NULL
@@ -363,7 +372,7 @@ compute.drugSensitivityEnrichment <- function(ngs, lib.dir, combo=TRUE, ref.db=c
         NPRUNE=-1
         NPRUNE=250
         res.mono <- pgx.computeDrugEnrichment(
-            ngs, X, x.drugs, methods=c("GSEA","cor"),
+            ngs, X, xdrugs, methods=c("GSEA","cor"),
             nprune=NPRUNE, contrast=NULL )
         
         if(is.null(res.mono)) {
@@ -382,7 +391,7 @@ compute.drugSensitivityEnrichment <- function(ngs, lib.dir, combo=TRUE, ref.db=c
         if(combo==TRUE) {
             
             res.combo <- pgx.computeComboEnrichment(
-                ngs, X, x.drugs, res.mono=res.mono,
+                ngs, X, xdrugs, res.mono=res.mono,
                 contrasts = NULL,
                 ntop=15, nsample=80, nprune=NPRUNE)
             names(res.combo)
@@ -406,7 +415,7 @@ compute.drugSensitivityEnrichment <- function(ngs, lib.dir, combo=TRUE, ref.db=c
     names(ngs$drugs)
     
     remove(X)
-    remove(x.drugs)
+    remove(xdrugs)
     return(ngs)
 }
 

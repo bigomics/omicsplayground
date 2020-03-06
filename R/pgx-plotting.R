@@ -2,6 +2,57 @@
 ## Plotting functions
 ########################################################################
 
+if(0) {
+
+    barplot( t(x), beside=FALSE, las=3)
+    ##par(mgp=c(2,1,0))
+    pgx.stackedBarplot(x, ylab="cumulative logFC",
+                       cex.names=1.2) 
+
+    par(mar=c(4,20,4,2))
+    pgx.stackedBarplot(x, xlab="cumulative logFC",
+                       hz=TRUE, cex.names=1.2) 
+
+    x=zx0;dim=2;method="pca"
+
+}
+
+pgx.plotSampleClustering <- function(x, dim=2, 
+                                     method=c("tsne","umap","pca"),
+                                     ntop=1000, ...)
+{
+    method = method[1]    
+    clust <- pgx.clusterSamplesFromMatrix(
+        x, is.logx=TRUE, perplexity=NULL,
+        ntop=ntop, sv.rank=-1,         
+        prior.counts=NULL, dims=dim,
+        row.center=TRUE, row.scale=FALSE,
+        find.clusters=FALSE, kclust=1,
+        prefix="C", clust.detect = "louvain",
+        method = method )
+
+    ##col1 <- as.integer(clust$idx)
+    plot( clust$pos2d, ... )
+
+}
+
+pgx.stackedBarplot <- function(x, hz=FALSE, ...)
+{
+    ##x <- x[order(rowMeans(x,na.rm=TRUE)),]    
+    ##barplot( t(x), beside=FALSE, las=3)
+    x.pos <- pmax(x,0)
+    x.neg <- pmin(x,0)
+    y0 <- 1.1*max(abs(rowSums(x,na.rm=TRUE)))
+    rownames(x.neg) <- NULL
+    if(hz==TRUE) {
+        barplot( t(x.pos), horiz=TRUE, beside=FALSE, las=1, xlim=c(-1,1)*y0, ... )
+        barplot( t(x.neg), horiz=TRUE, beside=FALSE, las=1, add=TRUE, ... )
+    } else {
+        barplot( t(x.pos), beside=FALSE, las=3, ylim=c(-1,1)*y0, ... )
+        barplot( t(x.neg), beside=FALSE, las=3, add=TRUE, ... )
+    }
+}
+
 
 ##df=ngs$samples
 pgx.testPhenoCorrelation <- function(df, plot=TRUE, cex=1)
@@ -885,11 +936,10 @@ pgx.plotPhenotypeMatrix <- function(annot)
     return(plt)
 }
 
-
 pgx.plotGeneExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
                                    level="gene", grouped=FALSE, srt=0,
-                                   collapse.others=TRUE, max.points=-1,
-                                   group.names=NULL,
+                                   collapse.others=TRUE, showothers=TRUE,
+                                   max.points=-1, group.names=NULL,
                                    main=NULL, xlab=NULL, ylab=NULL, names=TRUE )
 {
     if(0) {
@@ -971,7 +1021,6 @@ pgx.plotGeneExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
         if("other" %in% levels0) levels0 <- c(levels0[levels0!="other"],"other")
         xgroup <- factor(xgroup, levels=levels0)
     }
-
     
     ## ------------- set color of samples
     require(RColorBrewer)
@@ -993,6 +1042,13 @@ pgx.plotGeneExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
         gx <- ngs$X[probe,rownames(ngs$samples)]
     }
     if(!logscale) gx <- 2**(gx)
+    
+    ## -------------- remove others
+    if(showothers==FALSE && any(grepl("other",xgroup)) ) {
+        jj <- grep("other",xgroup,invert=TRUE)
+        xgroup <- xgroup[jj]
+        gx <- gx[jj]
+    }
 
     ## -------------- plot grouped or ungrouped
     if(is.null(main)) main <- probe

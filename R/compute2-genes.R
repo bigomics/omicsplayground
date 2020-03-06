@@ -8,13 +8,14 @@
 ##
 
 ##SAVE.PARAMS <- ls()
-max.features=25000;type="counts"
-test.methods=c("ttest.welch","trend.limma","edger.qlf","edger.lrt")
+max.features=20000;type="counts"
+test.methods=c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
+test.methods=c("trend.limma","edger.qlf","deseq2.wald")
 
 compute.testGenes <- function(ngs, contr.matrix, max.features=1000, type="counts",
                               test.methods=c("trend.limma","deseq2.wald","edger.qlf"))
 {
-    single.omics <- !any(grepl("\\[",rownames(ngs$counts)))
+    single.omics <- mean(grepl("\\[",rownames(ngs$counts))) < 0.1
     single.omics
     data.types <- unique(gsub("\\[|\\].*","",rownames(ngs$counts)))
     ##data.types
@@ -22,10 +23,10 @@ compute.testGenes <- function(ngs, contr.matrix, max.features=1000, type="counts
         ## single-omics, no missing values
         cat(">>> computing gene tests for SINGLE-OMICS\n")
         ngs <- compute.testGenesSingleOmics(
-            ngs=ngs, type=type,
-            contr.matrix=contr.matrix,
-            max.features=max.features,
-            test.methods=test.methods)
+            ngs = ngs, type = type,
+            contr.matrix = contr.matrix,
+            max.features = max.features,
+            test.methods = test.methods)
     } else {
         ## multi-omics, missing values allowed
         cat(">>> computing gene tests for MULTI-OMICS\n")
@@ -44,6 +45,7 @@ if(0) {
     max.features=25000;type="counts";filter.low=TRUE
 }
 
+##contr.matrix=ngs$contrasts
 compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
                                          type="counts", filter.low = TRUE,
                                          test.methods = c("trend.limma","deseq2.wald","edger.qlf"))

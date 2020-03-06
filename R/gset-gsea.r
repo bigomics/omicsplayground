@@ -1032,8 +1032,10 @@ gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,
                         xlab="Rank in ordered dataset", res=1200,
                         ylab="Ranked list metric" )
 {
-    ##names=NULL;main=NULL;decreasing=TRUE;cex.main=0.9;len.main=40;
-    ##xlab="Rank in ordered dataset";res=1200;ylab="Ranked list metric"
+    if(0) {
+        names=NULL;main=NULL;decreasing=TRUE;cex.main=0.9;len.main=40;
+        xlab="Rank in ordered dataset";res=1200;ylab="Ranked list metric"
+    }
     if(!is.null(names)) names(rnk) <- names
     rnk <- rnk[!is.na(rnk)]
     rnk <- rnk[order(rnk+1e-8*rnorm(length(rnk)), decreasing=decreasing)]
@@ -1054,17 +1056,22 @@ gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,
     ## gene set barcode
     jj <- match(gset, names(rnk))
     ##points(jj, rnk[jj], col="grey30",lwd=1, type="h")
-    arrows(jj, (y0 - dy), jj, y0, col="grey30", lwd=1, length=0)
+    w1 <- ifelse(length(jj)<100,0.5,0.2)
+    w1 <- ifelse(length(jj)<50,1,w1)
+    arrows(jj, (y0 - dy), jj, y0, col="grey30", lwd=w1, length=0)
     ##arrows(jj, (y0 - 0.66*dy), jj, y0, col="grey30", lwd=1, length=0)
-    kk <- c(seq(1,length(rnk)*0.95,floor(length(rnk)/10)),length(rnk))
+
+    ## red/blue bar at bottom
+    kk <- c(seq(1,length(rnk)*0.95,floor(length(rnk)/11)),length(rnk))
+    length(kk)
     i=1
     for(i in 1:(length(kk)-1)) {
         r <- mean(rnk[kk[c(i,i+1)]])
         r1 <- (r/max(abs(rnk),na.rm=TRUE))
         r1 <- abs(r1)**0.66 * sign(r1)
-        irnk <- round(10 + 10*r1)
+        irnk <- 1 + round( (length(kk)-1)*(1 + r1))
         ##cat("irnk=",irnk,"\n")
-        cc <- bluered(20)[irnk]
+        cc <- bluered(2*length(kk)-1)[irnk]
         rect(kk[i], y0-1.05*dy, kk[i+1], y0-0.80*dy, col=cc, border=NA)
     }
 
@@ -1092,6 +1099,7 @@ gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,
         tt.main <- sub("\n$","",tt.main)
     }
     title(main=tt.main, cex.main=cex.main, line=0.3)
+
 }
 
 

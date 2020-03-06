@@ -1,41 +1,50 @@
 if(0) {
 
-    sigdb = "../data/datasets-allFC.csv"
-    h5.file = "../libx/sigdb-virome.h5"
     FILES="../lib"
     RDIR="../R"
-    source("../R/pgx-include.R")
-    source("../R/pgx-files.R")
+    source(file.path(RDIR,"pgx-include.R"))
+    source(file.path(RDIR,"pgx-files.R"))
 
-    gmt.files = dir("~/Projects/Data/Creeds","gmt$",full.names=TRUE)
-    gmt.files = dir("../../Data/Creeds","gmt$",full.names=TRUE)
-    h5.file = "../lib/sigdb-creeds.h5.test"
-    h5.file = "../lib/sigdb-creeds.h5"
+    library(rhdf5)
+    h5.file = "../libx/sigdb-tcga.h5"
+    X <- h5read(h5.file, "data/matrix")
+    rownames(X) <- h5read(h5.file, "data/rownames")
+    colnames(X) <- h5read(h5.file, "data/colnames")
+    dim(X)
 
-    load("../data/geiger2016-arginineX.pgx")
-    fc <- ngs$gx.meta$meta[[1]]$meta.fx
-    names(fc) <- rownames(ngs$gx.meta$meta[[1]])
-
+    load("../data/tcga-brca_pub.pgx")
+    F <- sapply(ngs$gx.meta$meta, function(m) m$meta.fx)
+    rownames(F) <- rownames(ngs$gx.meta$meta[[1]])
+    dim(F)
+    query <- F[,1]
+    
 }
 
+##================================================================================
+##========================= CONNECTIVITY FUNCTIONS ===============================
+##================================================================================
+
 pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=1000, contrasts=NULL,
-                                          remove.le=FALSE )
+                                          remove.le=FALSE, inmemory=FALSE )
 {
     require(rhdf5)
     meta = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
     colnames(meta$fc)
     
     is.h5ref <- grepl("h5$",sigdb)       
-    ##cat("[calcConnectivityScores] sigdb =",sigdb,"\n")
-    ##cat("[calcConnectivityScores] ntop =",ntop,"\n")
-    h5.file <- NULL
-    refmat <- NULL
-    if(grepl("csv$",sigdb)) {
-        refmat <- read.csv(sigdb,row.names=1,check.names=FALSE)
-        dim(refmat)
+    if(!is.h5ref) {
+        cat("[pgx.computeConnectivityScores] ERROR: must be H5 formatted file\n")
+        return(NULL)
     }
-    if(grepl("h5$",sigdb)) {
-        if(file.exists(sigdb)) h5.file <- sigdb
+    if(inmemory) {
+        cat("[pgx.computeConnectivityScores] *** using in-memory ***\n")
+    }
+
+    h5.file <- NULL
+    if(file.exists(sigdb)) h5.file <- sigdb
+    if(is.null(h5.file)) {
+        cat("[pgx.computeConnectivityScores] ERROR: could not H5 file\n")
+        return(NULL)
     }
     
     if(is.null(contrasts)) {
@@ -43,31 +52,27 @@ pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=1000, contrasts=NULL,
     }
     contrasts <- intersect(contrasts, colnames(meta$fc))
 
-    scores <- list()
-    ct <- contrasts[1]
-    for(ct in contrasts) {
+    if(inmemory) {
+        F = meta$fc
+        scores <- pgx.correlateSignatureH5.inmemory(
+            meta$fc, h5.file = h5.file,
+            nsig=100, ntop=ntop, nperm=9999)
+        if(is.null(names(scores))) names(scores) <- colnames(meta$fc)
         
-        fc <- meta$fc[,ct]
-        names(fc) <- rownames(meta$fc)
-        names(fc) <- toupper(names(fc)) ## for MOUSE!!
-        
-        h5.file
-        if(!is.null(h5.file))  {
-            res <- pgx.correlateSignatureH5(
-                fc, h5.file = h5.file,
-                nsig=100, ntop=ntop, nperm=9999)            
-
-        } else if(!is.null(refmat)) {                
-            res <- pgx.correlateSignature(
-                fc, refmat = refmat,
-                nsig=100, ntop=ntop, nperm=9999)
+    } else {
+        scores <- list()
+        ct <- contrasts[1]
+        for(ct in contrasts) {
             
-        } else {
-            stop("FATAL:: could not determine reference type")
+            f1 <- meta$fc[,ct]
+            names(f1) <- rownames(meta$fc)
+            names(f1) <- toupper(names(f1)) ## for MOUSE!!            
+            res <- pgx.correlateSignatureH5(
+                f1, h5.file = h5.file,
+                nsig=100, ntop=ntop, nperm=9999)                        
+            dim(res)            
+            scores[[ct]] <- res
         }
-        dim(res)
-
-        scores[[ct]] <- res
     }
 
     ## remove leadingEdge (take too much memory!!!)
@@ -79,9 +84,208 @@ pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=1000, contrasts=NULL,
     return(scores)
 }
 
+##ntop=1000;nsig=100;nperm=10000
+pgx.correlateSignatureH5.inmemory <- function(F, h5.file, nsig=100, ntop=1000, nperm=10000)
+{
+    ##
+    ##
+    ##
+    ##
+    require(rhdf5)
 
-## ntop=1000;nsig=100;nperm=10000
-pgx.correlateSignature <- function(fc, refmat, nsig=100, ntop=1000, nperm=10000)
+    if(NCOL(F)==1 && class(F)=="numeric") {
+        rn <- names(F)
+        F <- matrix(F,ncol=1)
+        rownames(F) <- rn
+    }
+    
+    if(is.null(rownames(F))) stop("F must have rownames")    
+    ## mouse... mouse...
+    rownames(F) <- toupper(rownames(F))
+
+    ## or instead compute correlation on top100 fc genes (read from file)
+    rn <- h5read(h5.file,"data/rownames")
+    cn <- h5read(h5.file,"data/colnames")
+
+    ## Entire matrix in memory????
+    matG <- h5read(h5.file, "data/matrix")  ### whole matrix!!!!
+    matG[which(matG < -999999)] <- NA
+
+    mem1 <- round(object.size(matG)/1e9,2)
+    cat("[pgx.correlateSignatureH5] object.size(matG)=",mem1,"Gb\n")  ## gigabytes....
+    
+    ## ---------------------------------------------------------------
+    ## Compute simple correlation between query profile and signatures
+    ## ---------------------------------------------------------------
+    res <- list()
+    i=1
+    for(i in 1:ncol(F)) {
+
+        gg <- intersect(rownames(F),rn)
+        fc1 <- sort(F[gg,i])
+        gg <- unique(names(c(head(fc1,nsig), tail(fc1,nsig))))
+        ## gg <- intersect(gg,rn)
+        remove(fc1)
+        row.idx <- match(gg,rn)
+        length(row.idx)
+        
+        ##G <- h5read(h5.file, "data/matrix", index=list(row.idx,1:length(cn)))  ### SLOW!!!
+        rG <- matG[row.idx,,drop=FALSE]
+        rG  <- apply( rG,2,rank, na.last="keep" )
+        dim(rG)
+        dimnames(rG) <- list(rn[row.idx],cn)
+
+        ## this FC signature
+        fc <- F[gg,i]
+
+        ## rank correlation??
+        ##rG  <- apply( G[gg,], 2, rank, na.last="keep" )
+        rfc <- rank( fc, na.last="keep" )
+        ##rho <- cor(rG, rfc, use="pairwise")[,1]
+        rG[is.na(rG)] <- 0  ## NEED RETHINK: are missing values to be treated as zero???
+        rfc[is.na(rfc)] <- 0
+        rho <- cor(rG, rfc, use="pairwise")[,1]
+    
+        remove(rG,rfc)
+        
+        ## --------------------------------------------------
+        ## test tops signatures using fGSEA
+        ## --------------------------------------------------
+        
+        require(fgsea)
+        sel <- head(names(sort(-abs(rho))), ntop)
+        sel.idx <- match(sel, cn)
+        sig100.up <- h5read(h5.file, "signature/sig100.up",
+                            index = list(NULL, sel.idx) )
+        sig100.dn <- h5read(h5.file, "signature/sig100.dn",
+                            index = list(NULL, sel.idx) )                        
+        ##head(sig100.up,2)    
+        
+        ## combine up/down into one (unsigned GSEA test)
+        gmt <- rbind(sig100.up, sig100.dn)
+        gmt <- unlist(apply(gmt, 2, list),recursive=FALSE)
+        names(gmt) <- cn[sel.idx]
+        length(gmt)
+        
+        ## use entire fc vector
+        system.time(res1 <- fgsea(gmt, abs(fc), nperm=nperm))  ## really unsigned???
+        dim(res1)
+        
+        ## ---------------------------------------------------------------
+        ## Combine correlation+GSEA by combined score (NES*rho)
+        ## ---------------------------------------------------------------
+        jj <- match( res1$pathway, names(rho))
+        res1$rho  <- rho[jj]
+        res1$R2 <- rho[jj]**2
+        res1$score <- (res1$R2 * res1$NES)
+
+        fn <- colnames(F)[i]
+        res[[fn]] <- res1[order(res1$score, decreasing=TRUE),]
+
+        gc()
+        
+    }
+        
+    if(0) {
+        res$rho.p <- cor.pvalue(res$rho, n=length(gg))
+        res$meta.p  <- apply( res[,c("pval","rho.p")], 1, function(p) sumz(p)$p)    
+        res <- res[order(res$meta.p),]
+    }
+    remove(matG)
+    gc()
+    
+    return(res)
+}
+
+##ntop=1000;nsig=100;nperm=10000
+pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=10000,
+                                     h5.data = "data/matrix", h5.rn="data/rownames",
+                                     h5.cn="data/colnames")
+{
+    ##
+    ##
+    ##
+    ##
+    require(rhdf5)
+    
+    if(is.null(names(fc))) stop("fc must have names")    
+    ## mouse... mouse...
+    names(fc) <- toupper(names(fc))
+
+    ## or instead compute correlation on top100 fc genes (read from file)
+    rn <- h5read(h5.file,"data/rownames")
+    cn <- h5read(h5.file,"data/colnames")
+
+    ## ---------------------------------------------------------------
+    ## Compute simple correlation between query profile and signatures
+    ## ---------------------------------------------------------------
+    gg <- intersect(names(fc),rn)
+    fc1 <- sort(fc[gg])
+    gg <- unique(names(c(head(fc1,nsig), tail(fc1,nsig))))
+    ## gg <- intersect(gg,rn)
+    length(gg)
+    row.idx <- match(gg,rn)
+    G <- h5read(h5.file, "data/matrix", index=list(row.idx,1:length(cn)))
+    dim(G)
+    ##head(G[,1])
+    G[which(G < -999999)] <- NA
+    ##G[is.na(G)] <- 0  ## NEED RETHINK: are missing values to be treated as zero???
+    dim(G)    
+    dimnames(G) <- list(rn[row.idx],cn)
+
+    ## rank correlation??
+    rG  <- apply( G[gg,], 2, rank, na.last="keep" )
+    rfc <- rank( fc[gg], na.last="keep" )
+    ##rho <- cor(rG, rfc, use="pairwise")[,1]
+    rG[is.na(rG)] <- 0  ## NEED RETHINK: are missing values to be treated as zero???
+    rfc[is.na(rfc)] <- 0
+    rho <- cor(rG, rfc, use="pairwise")[,1]
+    
+    remove(G,rG,rfc)
+    
+    ## --------------------------------------------------
+    ## test tops signatures using fGSEA
+    ## --------------------------------------------------    
+    require(fgsea)
+    sel <- head(names(sort(-abs(rho))), ntop)
+    sel.idx <- match(sel, cn)
+    sig100.up <- h5read(h5.file, "signature/sig100.up",
+                        index = list(1:100, sel.idx) )
+    sig100.dn <- h5read(h5.file, "signature/sig100.dn",
+                        index = list(1:100, sel.idx) )                        
+    ##head(sig100.up,2)    
+
+    ## combine up/down into one (unsigned GSEA test)
+    gmt <- rbind(sig100.up, sig100.dn)
+    gmt <- unlist(apply(gmt, 2, list),recursive=FALSE)
+    names(gmt) <- cn[sel.idx]
+    length(gmt)
+    
+    ##system.time( res <- fgsea(gmt, fc, nperm=10000))
+    system.time( res <- fgsea(gmt, abs(fc), nperm=nperm))  ## really unsigned???
+    dim(res)
+            
+    ## ---------------------------------------------------------------
+    ## Combine correlation+GSEA by combined score (NES*rho)
+    ## ---------------------------------------------------------------
+    jj <- match( res$pathway, names(rho))
+    res$rho  <- rho[jj]
+    res$R2 <- rho[jj]**2
+    res$score <- res$R2 * res$NES
+    res <- res[order(res$score, decreasing=TRUE),]
+
+    if(0) {
+        res$rho.p <- cor.pvalue(res$rho, n=length(gg))
+        res$meta.p  <- apply( res[,c("pval","rho.p")], 1, function(p) sumz(p)$p)    
+        res <- res[order(res$meta.p),]
+    }
+    
+    head(res)
+    return(res)
+}
+
+## ntop=1000;nsig=500;nperm=10000
+pgx.correlateSignature.matrix <- function(fc, refmat, nsig=100, ntop=1000, nperm=10000)
 {
     ##
     ##
@@ -130,9 +334,9 @@ pgx.correlateSignature <- function(fc, refmat, nsig=100, ntop=1000, nperm=10000)
     notx <- setdiff(sel,colnames(refmat))
     if(length(notx)>0) {
         ## should not happen...   
-        cat("[pgx.correlateSignature] length(sel)=",length(sel),"\n")
-        cat("[pgx.correlateSignature] head(sel)=",head(sel),"\n")
-        cat("[pgx.correlateSignature] head.notx=",head(notx),"\n")
+        cat("[pgx.correlateSignature.matrix] length(sel)=",length(sel),"\n")
+        cat("[pgx.correlateSignature.matrix] head(sel)=",head(sel),"\n")
+        cat("[pgx.correlateSignature.matrix] head.notx=",head(notx),"\n")
     }
 
     sel <- intersect(sel, colnames(refmat))  
@@ -168,91 +372,6 @@ pgx.correlateSignature <- function(fc, refmat, nsig=100, ntop=1000, nperm=10000)
     ## ---------------------------------------------------------------
     jj <- match(res$pathway, names(rho))
     res$rho <- rho[jj]
-    res$R2 <- rho[jj]**2
-    res$score <- res$R2*res$NES
-    res <- res[order(res$score, decreasing=TRUE),]
-
-    if(0) {
-        res$rho.p <- cor.pvalue(res$rho, n=length(gg))
-        res$meta.p  <- apply( res[,c("pval","rho.p")], 1, function(p) sumz(p)$p)    
-        res <- res[order(res$meta.p),]
-    }
-    
-    head(res)
-    return(res)
-}
-
-##ntop=1000;nsig=100;nperm=10000
-pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=10000)
-{
-    ##
-    ##
-    ##
-    ##
-    require(rhdf5)
-    
-    if(is.null(names(fc))) stop("fc must have names")    
-    ## mouse... mouse...
-    names(fc) <- toupper(names(fc))
-
-    ## or instead compute correlation on top100 fc genes (read from file)
-    rn <- h5read(h5.file,"data/rownames")
-    cn <- h5read(h5.file,"data/colnames")
-
-    ## ---------------------------------------------------------------
-    ## Compute simple correlation between query profile and signatures
-    ## ---------------------------------------------------------------
-    gg <- intersect(names(fc),rn)
-    fc1 <- sort(fc[gg])
-    gg <- unique(names(c(head(fc1,nsig), tail(fc1,nsig))))
-    ## gg <- intersect(gg,rn)
-    row.idx <- match(gg,rn)
-    G <- h5read(h5.file, "data/matrix", index=list(row.idx,1:length(cn)))
-    dim(G)
-    ##head(G[,1])
-    G[which(G < -999999)] <- NA
-    ##G[is.na(G)] <- 0  ## NEED RETHINK: are missing values to be treated as zero???
-    dim(G)    
-    dimnames(G) <- list(rn[row.idx],cn)
-
-    ## rank correlation??
-    rG  <- apply( G[gg,], 2, rank, na.last="keep" )
-    rfc <- rank( fc[gg], na.last="keep" )
-    ##rho <- cor(rG, rfc, use="pairwise")[,1]
-    rG[is.na(rG)] <- 0  ## NEED RETHINK: are missing values to be treated as zero???
-    rfc[is.na(rfc)] <- 0
-    rho <- cor(rG, rfc, use="pairwise")[,1]
-    
-    remove(G,rG,rfc)
-    
-    ## --------------------------------------------------
-    ## test tops signatures using fGSEA
-    ## --------------------------------------------------
-    
-    require(fgsea)
-    sel <- head(names(sort(-abs(rho))), ntop)
-    sel.idx <- match(sel, cn)
-    sig100.up <- h5read(h5.file, "signature/sig100.up",
-                        index = list(1:100, sel.idx) )
-    sig100.dn <- h5read(h5.file, "signature/sig100.dn",
-                        index = list(1:100, sel.idx) )                        
-    ##head(sig100.up,2)    
-
-    ## combine up/down into one (unsigned GSEA test)
-    gmt <- rbind(sig100.up, sig100.dn)
-    gmt <- unlist(apply(gmt, 2, list),recursive=FALSE)
-    names(gmt) <- cn[sel.idx]
-    length(gmt)
-    
-    ##system.time( res <- fgsea(gmt, fc, nperm=10000))
-    system.time( res <- fgsea(gmt, abs(fc), nperm=nperm))  ## really unsigned???
-    dim(res)
-            
-    ## ---------------------------------------------------------------
-    ## Combine correlation+GSEA by combined score (NES*rho)
-    ## ---------------------------------------------------------------
-    jj <- match( res$pathway, names(rho))
-    res$rho  <- rho[jj]
     res$R2 <- rho[jj]**2
     res$score <- res$R2*res$NES
     res <- res[order(res$score, decreasing=TRUE),]
@@ -582,9 +701,9 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=0, lib.dir,
             xi <- X[,i]
             xi[is.na(xi)] <- 0
             xi <- xi + 1e-3*rnorm(length(xi))
-            fres <- fgsea(gmt, xi, nperm=10000, nproc=mc.cores)
-            r <- fres$NES
-            names(r) <- fres$pathway
+            res1 <- fgsea(gmt, xi, nperm=10000, nproc=mc.cores)
+            r <- res1$NES
+            names(r) <- res1$pathway
             r
         })
 
@@ -942,4 +1061,121 @@ sigdb.getSignatureMatrix <- function(sigdb) {
     list(up=up, dn=dn)
 }
 
+##================================================================================
+##========================= TESTING FUNCTIONS ====================================
+##================================================================================
+
+nsig=500
+pgx._testSignaturesMethods <- function(query, X, nsig=200, do.meta=TRUE)
+{
+    cat("********** WARNING: ONLY FOR TESTING PURPOSES *************\n")
+    
+    library(signatureSearch)
+    db_path = "/tmp/sigdb.h5"
+    X[is.na(X)] <- 0 ## sure??
+    colnames(X) <- paste0(colnames(X),"__cell__type")
+    build_custom_db(X, db_path)
+    ##db_path=cmap
+    h5ls(db_path)
+    head(colnames(X))
+    
+    library(signatureSearch)
+    upset <- head(names(query[order(-query)]), nsig)
+    downset <- tail(names(query[order(-query)]), nsig)
+
+    timings <- list()    
+    
+    ## ---------------- CMap method
+    gess <- list()
+    cat("calculating with 'cmap' method...\n")
+    qsig_cmap <- qSig(query = list(upset=upset, downset=downset), 
+                      gess_method="CMAP", refdb=db_path)
+    timings[["cmap"]] <- system.time(
+        gess[["cmap"]] <- gess_cmap(qSig=qsig_cmap, chunk_size=5000)@result
+    )
+    
+    ## ---------------- LINCS method
+    cat("calculating with 'lincs' method...\n")
+    qsig_lincs <- qSig(query = list(upset=upset, downset=downset), 
+                       gess_method="LINCS", refdb=db_path)
+    timings[["lincs"]] <- system.time(
+        gess[["lincs"]] <- gess_lincs(qsig_lincs, sortby="NCS", tau=FALSE)@result
+    )
+    
+    ## ----------------- gCMAP (original rankbased method)
+    cat("calculating with 'gcmap' method...\n")
+    qsig_gcmap <- qSig(query = cbind(query), gess_method = "gCMAP", refdb=db_path)
+    timings[["gcmap"]] <- system.time(
+        gess[["gcmap"]] <- gess_gcmap(qsig_gcmap, higher=1, lower=-1)@result
+    )
+    
+    ## ------------------ Fisher exact
+    ##qsig_fisher <- qSig(query = cbind(query), gess_method = "Fisher", refdb=db_path)
+    ##timings[["fisher"]] <- system.time(
+    ##    gess[["fisher"]] <- gess_fisher(qSig=qsig_fisher, higher=1, lower=-1)@result
+    ##)
+    
+    ## CORall (global correlation)
+    cat("calculating with 'sp' (spearman correlation) method...\n")    
+    qsig_sp <- qSig(query = cbind(query), gess_method = "Cor", refdb=db_path)
+    timings[["sp"]] <- system.time(
+        gess[["sp"]] <- gess_cor(qSig=qsig_sp, method="spearman")@result
+    )
+    
+    ## Corsub: Subset z-scores of 150 up and down gene sets from 
+    ## "vorinostat__SKB__trt_cp" signature.
+    cat("calculating with 'spsub'  (sub-spearman correlation) method...\n")    
+    query_sub <- cbind(query[c(upset, downset)])
+    qsig_spsub <- qSig(query = query_sub, gess_method = "Cor", refdb=db_path)
+    timings[["spsub"]] <- system.time(
+        gess[["spsub"]] <- gess_cor(qSig=qsig_spsub, method="spearman")@result
+    )
+    
+    ##---------- using our correlateSignature()
+    cat("calculating with 'correlateSignature' method...\n")    
+    timings[["corsig"]] <- system.time(
+        res <- pgx.correlateSignature.matrix(query, X, ntop=9999)
+    )
+    res$score <- res$score * sign(res$rho)
+    res$NES   <- res$NES * sign(res$rho)
+    res$pert <- sapply(strsplit(res$pathway,split="__"),"[[",1)
+    res$cell <- sapply(strsplit(res$pathway,split="__"),"[[",2)
+    res$type <- sapply(strsplit(res$pathway,split="__"),"[[",3)
+    head(res)
+    gess[["corsig.score"]] <- res
+    res$score <- res$NES
+    gess[["corsig.NES"]]   <- res
+    res$score <- res$rho
+    gess[["corsig.rho"]]   <- res
+       
+    ##--------------------------------------------------------------
+    ## gather all scores
+    ##--------------------------------------------------------------
+    scores <- list()
+    i=1
+    for(i in 1:length(gess)) {
+        res <- gess[[i]]
+        k <- grep("score|effect|WTCS",colnames(res))[1]
+        var <- colnames(res)[k]
+        var
+        rnk <- data.frame(res)[,k]
+        names(rnk) <- apply(res[,c("pert","cell","type")],1,paste,collapse="__")
+        rnk <- rnk[match(colnames(X),names(rnk))]
+        scores[[names(gess)[i]]] <- rnk
+    }
+    S <- do.call( cbind, scores)
+    dim(S)
+    head(S)
+
+    S <- S[order(-rowMeans(S)),]
+
+    if(0) {
+        png("pgx-signature-compareMethods.png",w=1200,h=1200)
+        pairs( S, cex.label=3 )
+        dev.off()
+    }
+    timings0 <- do.call(rbind, timings)[,1:3]
+    
+    return(list(scores=S, timings=timings0))
+}
 
