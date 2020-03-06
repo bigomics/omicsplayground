@@ -43,7 +43,7 @@ BIG.NOTUSED <- c(
     "BH","PCSF",
     "DeMixT", ## purify
     "RNAseqData.HNRNPC.bam.chr14",
-    "org.Mm.eg.db",
+    ##"org.Mm.eg.db",
     "tximportData",
     "EnsDb.Hsapiens.v86",
     "EnsDb.Mmusculus.v79",
