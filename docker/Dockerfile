@@ -14,7 +14,8 @@ RUN apt-get update && apt-get install -y apt-utils \
     libgl-dev libglu-dev tk-dev libhdf5-dev \
     libgit2-dev libssh2-1-dev libnetcdf-dev \
     libudunits2-dev libgdal-dev \
-    jags emacs git procps htop python-pip
+    jags emacs git procps htop python-pip \
+    pdftk
 
 ## Remove old folder
 RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny 

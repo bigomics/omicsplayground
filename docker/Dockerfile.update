@@ -11,6 +11,9 @@ FROM bigomics/omicsplayground:testing
 #------------------------------------------------------------
 # Install extra packages required since base (later move to requirements.R!)
 #------------------------------------------------------------
+
+RUN apt-get install -y pdftk
+
 RUN R -e "install.packages(c('shinydashboardPlus','optparse','docopt','randomForest'))"
 ## RUN R -e "devtools::install_github('JohnCoene/waiter')"
 ## RUN pip install umap-learn
