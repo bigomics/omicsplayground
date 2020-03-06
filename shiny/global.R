@@ -1,3 +1,11 @@
+showHideTab <- function(pgx, slot, tabname, subtab) {
+    if(!slot %in% names(pgx)) {
+        cat(paste("[MAIN] object has no ",slot," results. hiding tab.\n"))
+        hideTab(tabname, subtab)
+    } else {
+        showTab(tabname, subtab)
+    }
+}
 
 tabView <- function(title, tab.inputs, tab.ui) {
     tabPanel(title, ## id=title,

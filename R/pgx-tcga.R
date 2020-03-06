@@ -25,8 +25,8 @@ if(0) {
 
 }
 
-pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
-                                           sortby.p = FALSE, plot=TRUE, verbose=1 )
+pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100,
+                                 sortby.p = FALSE, plot=TRUE, verbose=1 )
 {                                          
     require(survival)
     require(rhdf5)
@@ -183,7 +183,7 @@ pgx.TCGA.testSurvivalSignature <- function(sig, matrix_file, lib.dir, ntop=100,
 cancertype="dlbc";variables="OS_"
 cancertype="brca_tcga_pub"
 
-pgx.TCGA.selectStudies <- function(cancertype, variables)
+pgx.selectTCGAstudies <- function(cancertype, variables)
 {
     ## Scan the available TCGA studies for cancertype and clinical
     ## variables.
@@ -241,7 +241,7 @@ pgx.TCGA.selectStudies <- function(cancertype, variables)
 }
 
 genes=NULL;study="brca_tcga_pub"
-pgx.TCGA.getExpressionClinicalData <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE)
+pgx.getTCGAdataset <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE)
 {
     ## For a specific TCGA study get the expression matrix and
     ## clinical data.

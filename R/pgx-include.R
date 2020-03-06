@@ -73,6 +73,7 @@ source(file.path(RDIR,"pgx-tcga.R"))
 ##source(file.path(RDIR,"pgx-archs4.R"))
 source(file.path(RDIR,"pgx-cluster.R"))
 source(file.path(RDIR,"pgx-signature.R"))
+##source(file.path(RDIR,"pgx-getgeo.R"))
 
 source(file.path(RDIR,"xcr-graph.r"))
 source(file.path(RDIR,"ui-code.R"))

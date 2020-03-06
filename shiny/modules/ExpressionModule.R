@@ -489,7 +489,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         sig.genes = fc.genes[which(qval <= fdr & abs(fx) > lfc )]
         sel.genes = intersect(sig.genes, sel.genes)    
         xlim = c(-1,1)*max(abs(fx),na.rm=TRUE)
-        ma = rowMeans( ngs$X[rownames(res),], na.rm=TRUE)
+        ma = rowMeans(ngs$X[rownames(res),], na.rm=TRUE)
 
         par(mfrow=c(1,1), mar=c(4,3,2,1.5), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
         par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
@@ -802,6 +802,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         comp = input$gx_contrast
         grouped <- !input$gx_ungroup
         logscale <- input$gx_logscale
+        showothers <- input$gx_showothers
         
         srt=30
         ylab = ifelse(logscale, "log2CPM", "CPM")
@@ -823,7 +824,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
             gene = sub(".*:","",top.up[i])
             pgx.plotGeneExpression(
                 ngs, gene, comp=comp, grouped=grouped, max.points=1000,
-                collapse.others=1, ylab = ylab, xlab="",
+                collapse.others=TRUE, showothers=showothers,
+                ylab = ylab, xlab="",
                 logscale=logscale, names=show.names, srt=srt, main="")
             title( gene, cex.main=1, line=-0.6)
 
@@ -835,7 +837,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
             gene = sub(".*:","",top.down[i])
             pgx.plotGeneExpression(
                 ngs, gene, comp=comp, grouped=grouped,  max.points=1000,
-                collapse.others=TRUE, ylab = ylab, xlab="",
+                collapse.others=TRUE, showothers=showothers,
+                ylab = ylab, xlab="",
                 logscale=logscale, names=show.names, srt=srt, main="")
             title( gene, cex.main=1, line=-0.6)
             ##qv1 = formatC(qv[gs],format="e", digits=2)
@@ -847,10 +850,14 @@ two conditions. Determine which genes are significantly downregulated or overexp
     expr_topgenes_opts = tagList(
         tipify( checkboxInput(ns('gx_logscale'),'log scale',TRUE),
                "Logarithmic scale the counts (abundance levels).",
-               placement="top", options = list(container = "body")),
+               placement="right", options = list(container = "body")),
         tipify( checkboxInput(ns('gx_ungroup'),'ungroup samples',FALSE),
-               "Ungroup samples in the plot", placement="bottom")
-    )
+               "Ungroup samples in the plot",
+               placement="right", options = list(container = "body")),
+        tipify( checkboxInput(ns('gx_showothers'),'show others',TRUE),
+               "Show the 'others' class (if any)",
+               placement="right", options = list(container = "body"))
+        )
 
     expr_topgenes_text = "The <strong>Top genes</strong> section shows the average expression plots across the samples for the top differentially (both positively and negatively) expressed genes for the selected comparison from the <code>Contrast</code> settings. Under the plot <i>Settings</i>, users can scale the abundance levels (counts) or ungroup the samples in the plot from the <code>log scale</code> and <code>ungroup samples</code> settings, respectively."
 
@@ -941,7 +948,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                 fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]
                 qval = res[,qv.col]
                 fx = res[,fx.col]
-                
+
                 sig.genes = fc.gene[which(qval <= fdr & abs(fx) >= lfc)]
                 ##genes1 = intersect(sig.genes, sel.genes)
                 genes1 = sig.genes[which(toupper(sig.genes) %in% toupper(sel.genes))]
@@ -958,7 +965,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                 if(is.first) axis(2, tcl=0.5, mgp=c(-2,-1.5,0))
                 if(last.row) axis(1, tcl=0.5, mgp=c(-2,-1.5,0))
                 box()
-                legend("topright", legend=comp[i], cex=1.0,bg="white")
+                legend("topright", legend=comp[i], cex=0.95,bg="white")
 
                 incProgress( 1/length(comp) )
             }

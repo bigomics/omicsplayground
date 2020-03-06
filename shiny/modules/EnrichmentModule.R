@@ -302,8 +302,8 @@ EnrichmentModule <- function(input, output, session, env)
                     pp <- intersect(rownames(ngs$GMT),names(fc))
                     length(pp)
                 }            
-                ngenes <- Matrix::colSums(ngs$GMT[pp,jj])
-                G <- t(ngs$GMT[pp,jj])
+                G <- t(ngs$GMT[pp,jj] != 0)
+                ngenes <- Matrix::rowSums(G)
                 meta.fc <- as.vector(G %*% fc[pp] / ngenes)
                 names(meta.fc) <- rownames(G)
                 AveExpr1 <- Matrix::rowMeans(G %*% rnaX[pp,s1]) / ngenes
@@ -427,7 +427,8 @@ EnrichmentModule <- function(input, output, session, env)
                 genes = toupper(names(which(ngs$GMT[,gs]!=0)))
                 names(rnk0) <- toupper(names(rnk0))
                 ylab = ""
-                if(i %in% c(1,6)) ylab = "Ranked list metric"
+                ## if(i %in% c(1,6)) ylab = "Ranked list metric"
+                if(i%%5 == 1) ylab = "Ranked list metric"
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
                             main=gs1, xlab="", ylab=ylab,
                             cex.main=0.78, len.main=80)
@@ -538,8 +539,9 @@ EnrichmentModule <- function(input, output, session, env)
             height = rowH,
             flex = c(1,NA),
             fillRow(
-                flex = c(2.4,1),
+                flex = c(2.4,0.05,1),
                 plotWidget(ns("topEnriched")),
+                br(),
                 plotWidget(ns("topEnrichedFreq"))
             ),
             div(HTML(topEnriched_captionALL), class="caption")

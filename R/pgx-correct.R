@@ -60,7 +60,7 @@ randomImputeMissing <- function(x) {
     return(x)
 }
 
-pgx.performBatchCorrection <- function(ngs, zx, batchparams, method)
+pgx.performBatchCorrection <- function(ngs, zx, batchparams, method=c("ComBat","BMC","limma","MNN","fastMNN"))
 {
     require(limma)
     require(irlba)

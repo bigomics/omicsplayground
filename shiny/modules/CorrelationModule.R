@@ -42,12 +42,14 @@ between genes and find coregulated modules."
     ##========================= OUTPUT UI ============================================
     ##================================================================================
 
-    corAnalysis_caption = "<b>Correlation analysis.</b> <b>(a)</b> Top correlated features with selected gene. <b>(b)</b> Correlation network around the selected gene. <b>(c)</b> Scatter plots of top correlated expression features."
+    corAnalysis_caption = " <b>(a)</b> <b>Top-ranked correlation.</b> Top correlated features with respect to selected gene. <b>(b)</b> <b>Correlation network</b> around the selected gene. <b>(c)</b> <b>Scatter plots</b> of gene expression of top correlated genes."
     
     output$corAnalysis_UI <- renderUI({
         fillCol(
-            flex = c(1,NA),
+            flex = c(NA,0.035,1),
             height = fullH,
+            div(HTML(corAnalysis_caption), class="caption"),
+            br(),
             fillRow(
                 flex = c(1,0.1,1.2),
                 fillCol(
@@ -55,47 +57,45 @@ between genes and find coregulated modules."
                     height = fullH-80,
                     plotWidget(ns('cor_barplot')),
                     plotWidget(ns('cor_graph'))
-                ),
+                ),	
                 br(), ## spacer
                 fillCol(
                     flex = c(NA,1),
                     height = fullH-80,
                     plotWidget(ns('cor_scatter'))
                 )
-            ),
-            div(HTML(corAnalysis_caption), class="caption")
+            )
         )
     })
 
-
-    corfunctional_caption = "<b>Correlation GSEA.</b> Functional annotation of the correlated genes as defined by Pearson correlation. <b>(a)</b> Top enriched gene sets using the correlation as rank metric. The black bars denote the genes in the gene set and their position in the sorted rank metric. <b>(b)</b> GSEA statistics table. <b>(c)</b> Leading edge table of the genes in the selected gene set."
+    corfunctional_caption = "<b>(a)</b> <b>Correlation GSEA.</b> Top enriched gene sets using the correlation as rank metric. The black bars denote the genes in the gene set and their position in the sorted rank metric. <b>(b)</b> <b>Enrichment table.</b> Statistical results from GSEA analysis. <b>(c)</b> <b>Gene frequency.</b> Frequency of leading edge genes in top correlated genesets. <b>(d)</b> <b>Leading edge table.</b> Leading edge genes and rank statistics (rho) of the selected geneset."
 
     output$corFunctional_UI <- renderUI({
 
         fillCol(
-            flex = c(1,NA),
+            flex = c(NA,0.025,1),
             height = fullH,
+            div(HTML(corfunctional_caption), class="caption"),
+            br(),
             fillRow(
-                flex = c(2,0.1,1),
+                flex = c(1.8,0.11,1),
                 height = fullH - 60,
                 fillCol(
-                    flex = c(1,0.05,0.58),
+                    flex = c(1,0.1,0.65),
                     plotWidget(ns("corGSEA_plots")),
                     br(),
                     tableWidget(ns("corGSEA_table"))
                 ),
                 br(),
                 fillCol(
-                    ##flex = c(1,0.05,0.65,NA),
-                    flex = c(1),
-                    ##plotWidget(ns("corGSEA_plots")),
-                    ##br(),
-                    ##br(),
+                    flex = c(1,0.035,1.3),
+                    ##flex = c(1),
+                    plotWidget(ns("corGSEA_cumFC")),
+                    br(),
                     tableWidget(ns("corGSEA_LeadingEdgeTable"))
                     ##div(HTML("caption"), class="caption")
                 )
-            ),
-            div(HTML(corfunctional_caption), class="caption")
+            )
         )
     })
     ##outputOptions(output, "hm_annotateUI", suspendWhenHidden=FALSE) ## important!!!
@@ -163,7 +163,7 @@ between genes and find coregulated modules."
 
         fam <- pgx.getFamilies(ngs,nmin=10,extended=FALSE)
         fam <- sort(c("<custom>",fam))
-        updateSelectInput(session, "cor_features",choices=fam)
+        updateSelectInput(session, "cor_features", choices=fam)
 
     })
 
@@ -265,7 +265,7 @@ between genes and find coregulated modules."
             prho[prho<0] <- pmax(prho[prho<0],rho[prho<0])
             barplot(prho, beside=FALSE, add=TRUE,
                     col="grey40", names.arg="")
-            legend("topright",
+            legend("topright", cex=0.85, y.intersp=0.85,
                    c("correlation","partial correlation"),
                    fill=c("grey70","grey40"))
         }
@@ -280,7 +280,7 @@ between genes and find coregulated modules."
     )
 
     cor_barplot.info = "<b>Top correlated genes.</b> Highest correlated genes in respect to the selected gene. The height of the bars correspond to the Pearson correlation value. The dark grey bars correspond to the 'partial correlation' which essentially corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction."
-    
+   
     callModule(
         plotModule,
         id = "cor_barplot", 
@@ -290,7 +290,7 @@ between genes and find coregulated modules."
         options = cor_barplot.opts,
         title = "Top correlated genes", label = "a",
         caption2 = "Top correlated genes.",
-        ##pdf.width = 14, pdf.height = 4, 
+        pdf.width = 10, pdf.height = 5, 
         height = c(0.45*fullH,500),
         width = c('auto',800),
         res = c(63,80)
@@ -395,6 +395,7 @@ between genes and find coregulated modules."
     ##--------------------------------------------------------------------------------
     ## Correlation GSEA
     ##--------------------------------------------------------------------------------
+
     getCorrelationGSEA <- reactive({
 
         ngs <- inputData()
@@ -425,10 +426,9 @@ between genes and find coregulated modules."
         gsea <- res$gsea[ii,,drop=FALSE]
         
         ## ENPLOT TYPE
-        NTOP = 16
-        par(oma=c(0,1,0,0))
-        par(mfrow=c(4,4), mar=c(2,1.5,4,1))
-        par(mfrow=c(4,4), mar=c(0.1,1.5,3.2,1))
+        NTOP = 20
+        par(oma=c(0,2,0,0))
+        par(mfrow=c(4,5), mar=c(0.1,1.5,3.2,1))
         i=1
         for(i in 1:min(NTOP,nrow(gsea))) {
             gs <- gsea$pathway[i]
@@ -436,8 +436,11 @@ between genes and find coregulated modules."
             gmt <- GSETS[[gs]]
             length(gmt)
             ##if(length(gmtdx) < 3) { frame(); next }
-            gsea.enplot( res$rho, gmt, main=gs, cex.main=0.9,
-                        xlab="" )
+            ylab = ""
+            if( i%%5 == 1) ylab = "correlation (rho)"            
+            gsea.enplot( res$rho, gmt, xlab="", ylab=ylab,
+                        main=substring(gs,1,58),
+                        cex.main=0.92, len.main=30 )
             nes <- round(gsea$NES[i],2)
             qv  <- round(gsea$padj[i],3)
             tt <- c( paste("NES=",nes), paste("q=",qv) )
@@ -465,8 +468,8 @@ between genes and find coregulated modules."
         ## options = corGSEA_plots_opts,
         info.text = corGSEA_plots_info,        
         title="Correlation GSEA", label="a",
-        height = c(0.54*fullH,650), width = c('auto',1200),
-        pdf.width=8, pdf.height=5, res=c(72,85)
+        height = c(0.51*fullH,650), width = c('auto',1200),
+        pdf.width=12, pdf.height=7, res=c(72,90)
     )
     ## output <- attachModule(output, corGSEA_plots_module)
     
@@ -479,7 +482,7 @@ between genes and find coregulated modules."
         ##link <- wrapHyperLink(rep("link",length(gs)), gs)
         link <- wrapHyperLink(rep("&#x1F517;",length(gs)), gs)        
         df = data.frame( pathway=gs, link=link,
-                        res$gsea[,c("pval","padj","NES","size")] )
+                        res$gsea[,c("NES","pval","padj","size")] )
         df$pathway <- shortstring(df$pathway,80)
         numeric.cols = c("pval","padj","NES")
         ##selectmode <- ifelse(input$corGSEAtable_multiselect,'multiple','single')
@@ -502,7 +505,13 @@ between genes and find coregulated modules."
                 )  ## end of options.list 
             )  %>%
             formatSignif(numeric.cols,4)  %>%
-            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
+            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
+                DT::formatStyle("NES",
+                                background = color_from_middle(df[,"NES"], 'lightblue', '#f5aeae'),
+                                backgroundSize = '98% 88%',
+                                backgroundRepeat = 'no-repeat',
+                                backgroundPosition = 'center')
+
     })
 
     corGSEA_table_info = "<b>Enrichment table.</b> Statistical results from the GSEA computation for functional enrichment of correlated genes. The column 'pval' and 'padj' correspond to the p-value and (multiple testing) adjusted p-value of the GSEA test, respectively. The 'NES' column reports the normalized enrichment score."
@@ -518,14 +527,71 @@ between genes and find coregulated modules."
         ## options = corGSEA_table_opts,
         info.text = corGSEA_table_info,
         title = "Correlation GSEA table", label="b",
-        height = c(220,700), width=c('auto',1000)
+        height = c(250,700), width=c('auto',1000)
         ##caption = corGSEA_caption
     )
+    
+
+    corGSEA_cumFC.RENDER %<a-% reactive({
+
+        require(RColorBrewer)
+        res = getCorrelationGSEA()
+        ##if(is.null(rho)) return(NULL)
+
+        ii <- 1:nrow(res$gsea)
+        ii <- corGSEA_table$rows_all()
+        req(ii)
+        ii <- head(ii,20)
+        le.genes <- res$gsea[ii,]$leadingEdge
+        names(le.genes) <- res$gsea[ii,]$pathway
+        all.le <- unique(unlist(le.genes))
+        
+        F <- 1*sapply(le.genes, function(g) all.le %in% g)
+        rownames(F) <- all.le
+        colnames(F) <- names(le.genes)
+        if(0) {
+            if(input$gs_enrichfreq_gsetweight) {
+                F <- t(t(F)  / colSums(F,na.rm=TRUE))
+            }
+            F <- t(t(F) * sign(fx[top]))
+            if(input$gs_enrichfreq_fcweight) {
+                F <- t(t(F) * abs(fx[top]))
+            }
+        }
+
+        F <- head(F[order(-rowSums(F**2)),,drop=FALSE],30)
+        F <- F[order(-rowSums(F)),,drop=FALSE]
+        F <- as.matrix(F)
+       
+        par(mfrow=c(1,1), mar=c(6,4,2,0.5), mgp=c(2,0.8,0))
+        col1 = grey.colors(ncol(F),start=0.15)
+        barplot(t(F), beside=FALSE, las=3, cex.names=0.80, col=col1,
+                ylab="frequency")
+        
+    })
+
+    corGSEA_cumFC_opts = tagList()
+
+    corGSEA_cumFC_info = "<b>Leading-edge gene frequency.</b>"
+    
+    ##corGSEA_cumFC_module <- plotModule(
+    callModule(
+        plotModule, 
+        id = "corGSEA_cumFC", ##ns=ns,
+        func = corGSEA_cumFC.RENDER,
+        func2 = corGSEA_cumFC.RENDER, 
+        download.fmt = c("png","pdf"),
+        ## options = corGSEA_cumFC_opts,
+        info.text = corGSEA_cumFC_info,        
+        title="Leading-edge gene frequency", label="c",
+        height = c(280,650), width = c('auto',1000),
+        pdf.width=10, pdf.height=6, res=c(72,90)
+    )
+
     
     corGSEA_LeadingEdgeTable.RENDER <- reactive({
         
         res = getCorrelationGSEA()
-
         sel=1
         sel <- corGSEA_table$rows_selected()
         req(sel)
@@ -561,7 +627,13 @@ between genes and find coregulated modules."
                 )  ## end of options.list 
             )  %>%
             formatSignif(numeric.cols,4)  %>%
-            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
+            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
+                DT::formatStyle("rho",
+                                background = color_from_middle(df[,"rho"], 'lightblue', '#f5aeae'),
+                                backgroundSize = '98% 88%',
+                                backgroundRepeat = 'no-repeat',
+                                backgroundPosition = 'center')
+
     })
 
     corGSEA_LeadingEdgeTable_info = "<b>Leading-edge table</b> Leading edge genes as reported by GSEA corresponding to the selected geneset. The 'rho' column reports the correlation with respect to the query gene."
@@ -571,12 +643,12 @@ between genes and find coregulated modules."
         id = "corGSEA_LeadingEdgeTable", 
         func = corGSEA_LeadingEdgeTable.RENDER,
         info.text = corGSEA_LeadingEdgeTable_info,
-        title = "Leading edge genes", label="c",
-        ##height = c(230,700), width=c('auto',1000)
-        height = c(665,700), width=c('auto',1000)
+        title = "Leading edge genes", label="d",
+        height = c(378,700), width=c('auto',1000)
+        ##height = c(665,700), width=c('auto',1000)
         ##caption = corGSEA_caption
     )
-
+   
     ##--------------------------------------------------------------------------------
     ## WGCNA
     ##--------------------------------------------------------------------------------

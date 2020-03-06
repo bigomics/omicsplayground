@@ -654,7 +654,9 @@ be multiple categories (classes) or patient survival data."
     output$pdx_biomarker_UI <- renderUI({
         fillCol(
             height = fullH,
-            flex = c(1,0.05,NA),
+            flex = c(NA,0.05,1),
+            div(HTML(pdx_biomarker_caption),class="caption"),
+            br(),
             fillRow(
                 flex = c(1,0.1,1),
                 height = fullH - 100,                
@@ -669,9 +671,7 @@ be multiple categories (classes) or patient survival data."
                     plotWidget(ns("pdx_decisiontree")),
                     plotWidget(ns("pdx_boxplots"))
                 )
-            ),
-            br(),
-            div(HTML(pdx_biomarker_caption),class="caption")
+            )
         )
     })
     outputOptions(output, "pdx_biomarker_UI", suspendWhenHidden=FALSE) ## important!!!

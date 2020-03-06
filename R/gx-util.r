@@ -27,7 +27,7 @@ mat2hugo <- function(x) {
 }
 
 ##s=symbol    
-alias2hugo <- function(s) {
+alias2hugo.SAVE <- function(s) {
     require(org.Hs.eg.db,quietly=TRUE)
     ##eg <- sapply(lapply(s, get, env=org.Hs.egALIAS2EG),"[",1)
     s.na = which(!is.na(s) & s!="" & s!=" ")

@@ -135,12 +135,8 @@ compute.testGenesets <- function(ngs, max.features=1000, lib.dir="../lib",
     ##contr.matrix
     ##exp.matrix = (design %*% contr.matrix)
     
-    all.gset.methods=c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
+    ALL.GSET.METHODS=c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
                        "fgsea","gsea.permPH","gsea.permGS","gseaPR")
-    ##test.methods = c("fisher","fgsea")
-    ## test.methods = c("fisher","gsva","ssgsea","spearman","camera","fry","fgsea") ## no GSEA
-    ## if(!is.null(USER.GENESETTEST.METHODS)) test.methods = USER.GENESETTEST.METHODS
-    ## ##if(test.methods[1]=="*") test.methods = all.gset.methods
     test.methods
     
     ##-----------------------------------------------------------
@@ -159,12 +155,15 @@ compute.testGenesets <- function(ngs, max.features=1000, lib.dir="../lib",
         design=design, ## genes=GENES,
         contr.matrix=contr.matrix, methods=test.methods,
         mc.threads=1, mc.cores=NULL, batch.correct=TRUE
-        )
-        
+    )
+    
     rownames(gset.meta$timings) <- paste("[test.genesets]",rownames(gset.meta$timings))
     ngs$timings <- rbind(ngs$timings, gset.meta$timings)
     ngs$gset.meta <- gset.meta
-    ngs$gsetX = ngs$gset.meta$matrices[["meta"]]  ## META??!
+
+    names(ngs$gset.meta$matrices)
+    ##ngs$gsetX = ngs$gset.meta$matrices[["fc"]]  ## META or average FC??!
+    ngs$gsetX = ngs$gset.meta$matrices[["meta"]]  ## META or average FC??!
     ngs$GMT <- G[,rownames(ngs$gsetX)]
     
     ##-----------------------------------------------------------------------
@@ -320,7 +319,7 @@ compute.testGenesets.OLD <- function(ngs, max.features=1000, lib.dir="../lib",
     ##contr.matrix
     ##exp.matrix = (design %*% contr.matrix)
     
-    all.gset.methods=c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
+    ALL.GSET.METHODS=c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
                        "fgsea","gsea.permPH","gsea.permGS","gseaPR")
     ##test.methods = c("fisher","fgsea")
     ## test.methods = c("fisher","gsva","ssgsea","spearman","camera","fry","fgsea") ## no GSEA

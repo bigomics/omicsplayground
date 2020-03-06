@@ -1,36 +1,17 @@
-##rm(list=setdiff(ls(),run.param))
-library(knitr)
-library(limma)
-library(edgeR)
-library(RColorBrewer)
-library(gplots)
-library(matrixTests)
-library(kableExtra)
-library(knitr)
 
-source("../R/gx-heatmap.r")
-source("../R/gx-limma.r")
-source("../R/gx-util.r")
-source("../R/ngs-cook.r")
-source("../R/ngs-fit.r")
-source("../R/ngs-functions.R")
-source("../R/gset-fisher.r")
-source("../R/gset-gsea.r")
-source("../R/gset-meta.r")
-source("../R/pgx-drugs.R")
-source("../R/pgx-graph.R")
-source("../R/pgx-functions.R")
+RDIR = "../R"
+FILES = "../lib"
+PGX.DIR = "../data"
+source("../R/pgx-include.R")
 
-source("options.R")
-MAX.GENES
-MAX.GENES = 4000
-BATCH.CORRECT=TRUE
+MAX.GENES = 20000
+MAX.GENESETS = 5000
 
 ## run these methods 
-USER.GENETEST.METHODS = c("trend.limma","edger.qlf","deseq2.wald")
-USER.GENESETTEST.METHODS = c("gsva","camera","fgsea")
+GENETEST.METHODS = c("trend.limma","edger.qlf","deseq2.wald")
+GENESETTEST.METHODS = c("gsva","camera","fgsea")
 
-rda.file="../data/tcga-prad-gx.pgx"
+rda.file="../data/tcga-prad.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -39,26 +20,52 @@ ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$datatype = "RNA-seq"
 ngs$description = "TCGA prostate cancer data set. Gene expression from patients with Gleason score. Data from cBioPortal."
 
+PROCESS.DATA = 1
+DIFF.EXPRESSION = 1
+
 ## READ/PARSE DATA
 if(PROCESS.DATA) {
 
-    ## ##############################################################
-    ## get data from cBioportal
-    ##
-    download.dir = "/tmp/prad_tcga"
-    if(!dir.exists(download.dir)) {
-        system(paste("mkdir -p ",download.dir))
-        system(paste("wget -c http://download.cbioportal.org/prad_tcga.tar.gz -P ",download.dir))
-        system(paste("(cd ",download.dir," && tar xvfz prad_tcga.tar.gz)"))
+
+    ## Please download from https://amp.pharm.mssm.edu/archs4/download.html
+    TCGA_MATRIX = "../libx/tcga_matrix.h5"
+    if(file.exists(TCGA_MATRIX)) {
+
+        tcga <- pgx.getTCGAdataset(study="prad_tcga", genes=NULL,
+                                   matrix_file=TCGA_MATRIX, from.h5=TRUE)
+        names(tcga)
+        X <- tcga$X[[1]]
+        clin <- tcga$clin[[1]]
+        
     } else {
-        ## should exists..
+        ## get data from cBioportal
+        ##
+        download.dir = "/tmp/prad_tcga"
+        if(!dir.exists(download.dir)) {
+            system(paste("mkdir -p ",download.dir))
+            system(paste("wget -c http://download.cbioportal.org/prad_tcga.tar.gz -P ",download.dir))
+            system(paste("(cd ",download.dir," && tar xvfz prad_tcga.tar.gz)"))
+        } else {
+            ## should exists..
+        }
+        getwd()
+        dir(download.dir)
+        
+        clin <- read.csv(file.path(download.dir,"data_bcr_clinical_data_patient.txt"),
+                         skip=4, sep="\t")
+        rownames(clin) <- clin$PATIENT_ID
+
+        X.data   <- read.csv(file.path(download.dir,"data_RNA_Seq_v2_expression_median.txt"),
+                             sep="\t", check.names=FALSE)
+        X <- X.data[,3:ncol(X.data)]
+        gene <- X.data$Hugo_Symbol
+        sum(duplicated(X.data$Hugo_Symbol))
+        X <- apply(X, 2, function(x) tapply(x,gene,sum))
+        dim(X)
+        colnames(X) <- sub("-01$","",colnames(X))
+        
     }
-    getwd()
-    dir(download.dir)
     
-    clin <- read.csv(file.path(download.dir,"data_bcr_clinical_data_patient.txt"),
-                     skip=4, sep="\t")
-    rownames(clin) <- clin$PATIENT_ID
     sel1 <- c(
         ##"GLEASON_PATTERN_PRIMARY","GLEASON_PATTERN_SECONDARY",
         "GLEASON_SCORE",
@@ -73,16 +80,7 @@ if(PROCESS.DATA) {
     clin <- data.frame(clin1)
     clin$CLIN_T_STAGE <- sub("[abc]","",clin$CLIN_T_STAGE)  ## simplify
     clin$GLEASON_SCORE <- gsub("[ ]","",paste0("G",clin$GLEASON_SCORE))  ## simplify
-    
-    X.data   <- read.csv(file.path(download.dir,"data_RNA_Seq_v2_expression_median.txt"),
-                         sep="\t", check.names=FALSE)
-    X <- X.data[,3:ncol(X.data)]
-    gene <- X.data$Hugo_Symbol
-    sum(duplicated(X.data$Hugo_Symbol))
-    X <- apply(X, 2, function(x) tapply(x,gene,sum))
-    dim(X)
-    colnames(X) <- sub("-01$","",colnames(X))
-    
+        
     samples <- sort(intersect(colnames(X),rownames(clin)))
     X <- X[,samples]
     sampleTable <- clin[samples,]        
@@ -91,7 +89,7 @@ if(PROCESS.DATA) {
     ## gene annotation
     ##-------------------------------------------------------------------
     require(org.Hs.eg.db)
-    GENE.TITLE = unlist(as.list(org.Hs.egGENENAME))
+    GENE.TITLE  = unlist(as.list(org.Hs.egGENENAME))
     gene.symbol = unlist(as.list(org.Hs.egSYMBOL))
     names(GENE.TITLE) = gene.symbol
     head(GENE.TITLE)
@@ -108,7 +106,6 @@ if(PROCESS.DATA) {
     chrom <- as.vector(unlist(chrom))
     
     dtype <- gsub("\\[|\\].*","",rownames(X))
-    table(dtype)
     genes = data.frame(
         ##data_type = "mrna",
         gene_name=gene,
@@ -144,17 +141,10 @@ if(PROCESS.DATA) {
                               perplexity=30)
     head(ngs$samples)
     
-    ##-------------------------------------------------------------------
-    ## save
-    ##-------------------------------------------------------------------    
-    rda.file
-    save(ngs, file=rda.file)
 }
 
 
 if(DIFF.EXPRESSION) {
-    rda.file
-    load(file=rda.file, verbose=1)
     
     head(ngs$samples)
     ##score <- paste0("G",as.character(ngs$samples$GLEASON_SCORE))
@@ -182,27 +172,45 @@ if(DIFF.EXPRESSION) {
         G9_vs_G8 = G9 - G8,
         G8_vs_G7 = G8 - G7,
         G7_vs_G6 = G7 - G6,
+
         G10_vs_G6 = G10 - G6,
         G9_vs_G6 = G9 - G6,
         G8_vs_G6 = G8 - G6,
+
         levels = levels)
     
     dim(contr.matrix)
     head(contr.matrix)
     
-    ## some methods (yet) cannot handle direct contrasts!!!
-    ## contr.matrix <- makeDirectContrasts(
-    ##     ngs$samples[,c("PR_STATUS","ER_STATUS","HER2_STATUS")],
-    ##     ref = c("0","0","0"))
-    ## dim(contr.matrix)
-    ## head(contr.matrix)
-    ##contr.matrix = contr.matrix[,1:3]
+    GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank",
+                       "voom.limma","trend.limma","notrend.limma",
+                       "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
+    GENESET.METHODS = c("fisher","gsva","ssgsea","spearman",
+                        "camera", "fry","fgsea") ## no GSEA, too slow...
+    GENETEST.METHODS=c("trend.limma","edger.qlf","deseq2.wald")
+    GENESET.METHODS = c("fisher","gsva","fgsea") ## no GSEA, too slow...
+    MAX.GENES = 20000
+    MAX.GENESETS = 5000
     
-    ##USER.GENETEST.METHODS = c("trend.limma","ttest.welch")
-    ##USER.GENESETTEST.METHODS = c("gsva","camera")
-    source("../R/compute-genes.R")
-    source("../R/compute-genesets.R")    
-    source("../R/compute-extra.R")
+    ## new callling methods
+    ngs <- compute.testGenes(
+        ngs, contr.matrix,
+        max.features = MAX.GENES,
+        test.methods = GENETEST.METHODS)
+    
+    ngs <- compute.testGenesets (
+        ngs, max.features=MAX.GENESETS,
+        test.methods = GENESET.METHODS,
+        lib.dir=FILES)
+    
+    extra <- c("drugs-combo")
+    ##extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")
+    extra <- c("meta.go","infer","drugs","wordcloud","connectivity")
+    ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
+    
+    names(ngs)
+    names(ngs$drugs)
+    ngs$timings    
     
 }
 

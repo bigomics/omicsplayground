@@ -9,46 +9,91 @@ USER.GENETEST.METHODS <- NULL
 ##==========    Platform helper functions =====================================
 ##=============================================================================
 
-probe2symbol <- function(probes, type=NULL) {
+probe2symbol <- function(probes, type=NULL, org="human") {
+
     require("AnnotationDbi")
-    if(is.null(type) ) {
-        id.list <- list(
-            "ensemble" = unlist(as.list(org.Hs.egENSEMBL)),
-            "unigene" =  unlist(as.list(org.Hs.egUNIGENE)),
-            "refseq"  =  unlist(as.list(org.Hs.egREFSEQ)),
-            "accnum"  = unlist(as.list(org.Hs.egACCNUM)),
-            "uniprot" = unlist(as.list(org.Hs.egUNIPROT)),
-            "symbol" = unlist(as.list(org.Hs.egSYMBOL))
+    if(mean(grepl("^ENS",probes))>0.5) {
+        probes <- gsub("[.].*","",probes)
+    }
+    
+    if(is.null(type)) {
+        library(org.Hs.eg.db)
+        hs.list <- list(
+            "human.ensembl" = unlist(as.list(org.Hs.egENSEMBL)),
+            "human.unigene" =  unlist(as.list(org.Hs.egUNIGENE)),
+            "human.refseq"  =  unlist(as.list(org.Hs.egREFSEQ)),
+            "human.accnum"  = unlist(as.list(org.Hs.egACCNUM)),
+            "human.uniprot" = unlist(as.list(org.Hs.egUNIPROT)),
+            "human.symbol" = unlist(as.list(org.Hs.egSYMBOL))
+            )
+        library(org.Mm.eg.db)
+        mm.list <- list(
+            "mouse.ensembl" = unlist(as.list(org.Mm.egENSEMBL)),
+            "mouse.unigene" =  unlist(as.list(org.Mm.egUNIGENE)),
+            "mouse.refseq"  =  unlist(as.list(org.Mm.egREFSEQ)),
+            "mouse.accnum"  = unlist(as.list(org.Mm.egACCNUM)),
+            "mouse.uniprot" = unlist(as.list(org.Mm.egUNIPROT)),
+            "mouse.symbol" = unlist(as.list(org.Mm.egSYMBOL))
         )
+        id.list <- c(hs.list, mm.list)
         mx <- sapply(id.list, function(id) mean(probes %in% id))
+        mx
+        type=NULL
         if(max(mx,na.rm=TRUE) > 0.5) {
-            type <- names(mx)[which.max(mx)]
+            mx0 <- names(mx)[which.max(mx)]
+            org  <- sub("[.].*","",mx0)
+            type <- sub(".*[.]","",mx0)
         }
+        org
         type
     }
     if(is.null(type)) {
         cat("probe2symbol: invalid type: ",type,"\n")
         return(NULL)
     }
-    if(!type %in% c("ensemble","unigene","refseq","accnum","uniprot","symbol")) {
+    if(!type %in% c("ensembl","unigene","refseq","accnum","uniprot","symbol")) {
         cat("probe2symbol: invalid type: ",type,"\n")
         return(NULL)
     }
+
+    cat("[probe2symbol] organism = ",org,"\n")
+    cat("[probe2symbol] probe.type = ",type,"\n")
     type
+
     if(type=="symbol") {
         cat("probe2symbol: probe is alread symbol\n")
-        return(probes)
+        if(any(grep(" /// ",probes))) {
+            symbol0 <- strsplit(probes, split=" /// ")
+        } else if(any(grep("[;,]",probes))) {
+            symbol0 <- strsplit(probes, split="[;,]")
+        } else {
+            symbol0 <- probes
+        }
+
+        ## all.symbols <- NULL
+        ## if(org=="human") all.symbols <- unlist(as.list(org.Hs.egSYMBOL))
+        ## if(org=="mouse") all.symbols <- unlist(as.list(org.Mm.egSYMBOL))
+        ## symbol0 <- lapply(symbol0, function(s) intersect(s,all.symbols))
+
+    } else {
+        org
+        if(org=="human") {
+            symbol0 <- mapIds(org.Hs.eg.db, probes, 'SYMBOL', toupper(type))
+        }
+        if(org=="mouse") {
+            symbol0 <- mapIds(org.Mm.eg.db, probes, 'SYMBOL', toupper(type))
+        }
     }
-    
-    symbol0 <- mapIds(org.Hs.eg.db, probes, 'SYMBOL', toupper(type))
+
     nna <- which(is.na(names(symbol0)))
     names(symbol0)[nna] <- paste0("probe.",nna)
-    symbol <- sapply(symbol0,"[",1)
+    symbol <- sapply(symbol0,"[",1)  ## takes first symbol only!!!
     isnull <- sapply(symbol,is.null)
     symbol[isnull] <- NA
     symbol <- unlist(symbol)
     names(symbol) <- NULL
     head(symbol)
+
     symbol    
 }
 
@@ -894,18 +939,29 @@ extremeCorrelation <- function(query_sig, ref_set, n=200) {
 ##s=symbol
 alias2hugo <- function(s) {
     require(org.Hs.eg.db,quietly=TRUE)
+    require(org.Mm.eg.db,quietly=TRUE)
+    hs.symbol <- unlist(as.list(org.Hs.egSYMBOL))
+    mm.symbol <- unlist(as.list(org.Mm.egSYMBOL))
+    is.human <- mean(s %in% hs.symbol,na.rm=TRUE) > mean(s %in% mm.symbol,na.rm=TRUE)
+    is.human
     ##eg <- sapply(lapply(s, get, env=org.Hs.egALIAS2EG),"[",1)
     s.na = which(!is.na(s) & s!="" & s!=" ")
     s1 <- s[s.na]
-    eg <- sapply(mget(s1, env=org.Hs.egALIAS2EG, ifnotfound=NA),"[",1)
-    eg[is.na(eg)] <- "unknown"
-    symb <- sapply(mget(eg, env=org.Hs.egSYMBOL, ifnotfound=NA),"[",1)
-    jj <- which(is.na(symb))
-    if(length(jj)) symb[jj] <- s1[jj]
-    symb
-    symb0 <- rep(NA,length(s))
-    symb0[s.na] <- symb
-    return(symb0)
+    if(is.human) {
+        eg <- sapply(mget(s1, env=org.Hs.egALIAS2EG, ifnotfound=NA),"[",1)
+        eg[is.na(eg)] <- "unknown"
+        hugo <- sapply(mget(eg, env=org.Hs.egSYMBOL, ifnotfound=NA),"[",1)
+    } else {
+        eg <- sapply(mget(s1, env=org.Mm.egALIAS2EG, ifnotfound=NA),"[",1)
+        eg[is.na(eg)] <- "unknown"
+        hugo <- sapply(mget(eg, env=org.Mm.egSYMBOL, ifnotfound=NA),"[",1)        
+    }
+    jj <- which(is.na(hugo))
+    if(length(jj)) hugo[jj] <- s1[jj]
+    hugo
+    hugo0 <- rep(NA,length(s))
+    hugo0[s.na] <- hugo
+    return(hugo0)
 }
 
 breakstringBROKEN <- function(s, n, force=FALSE) {

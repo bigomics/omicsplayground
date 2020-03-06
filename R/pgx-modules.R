@@ -2,14 +2,22 @@
 ## PLOT/TABLE MODULES
 ########################################################################
 
-ADDSIGNATURE=TRUE
-ADDSIGNATURE=FALSE
+WATERMARK=TRUE
+##WATERMARK=FALSE
 
-##================================================================================
-##================================================================================
-##================================================================================
-
-
+addWatermarkPlotly <- function(p) {
+    add_annotations(
+        p,
+        ##yshift = -100, 
+        ##x = 1, y=-0.05, xanchor = "right", 
+        x = 0.5, y = 0.5, xanchor = "middle", 
+        xref="paper", yref="paper", showarrow=FALSE,
+        text = "Omics Playground\nFree version",
+        font = list(size=64, family='Arial', color="#AAAAAA22")
+        ##font = list(size=12, color="#00000066")
+    )
+}
+    
 ##================================================================================
 ##================================================================================
 ##================================================================================
@@ -134,7 +142,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
     if(do.pdf) PDFFILE = paste0(gsub("file","plot",tempfile()),".pdf")
     if(do.png) PNGFILE = paste0(gsub("file","plot",tempfile()),".png")
     HTMLFILE = paste0(gsub("file","plot",tempfile()),".html")  ## tempory for webshot
-    ##HTMLFILE = "/tmp/plot.html"
     HTMLFILE
     unlink(HTMLFILE)
     
@@ -192,18 +199,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
     ##============================================================
     ##=============== Download Handlers ==========================
     ##============================================================
-    addSignaturePlotly <- function(p) {
-        add_annotations(
-            p,
-            x = 1, y=-0.05,
-            ##yshift = -100, 
-            xref="paper", yref="paper",
-            text = "created with Omics Playground",
-            xanchor = "right", showarrow=FALSE,
-            font = list(size=6, color="#44444444")
-        )
-    }
-    
     ## download.pdf = NULL
     ##download.png = download.html = NULL
 
@@ -216,7 +211,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     if(plotlib=="plotly") {
                         cat("downloadHandler:: exporting plotly to PNG\n")
                         p <- func()
-                        if(ADDSIGNATURE) p = addSignaturePlotly(p)                             
                         p$width = pdf.width * 100
                         p$height = pdf.height * 100
                         ##is.plotly3d <- class(p)[1]=="plotly" && all( c("x","y","z") %in% names(p$x$attrs[[1]]))
@@ -235,7 +229,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     } else if(plotlib=="iheatmapr") {
                         cat("downloadHandler:: exporting iheatmapR to PNG\n")
                         p <- func()
-                        if(ADDSIGNATURE) p = addSignaturePlotly(p)                             
                         save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PNGFILE)
                     } else if(plotlib=="visnetwork") {
                         cat("downloadHandler:: exporting visnetwork to PNG\n")
@@ -311,7 +304,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     if(plotlib=="plotly") {
                         cat("downloadHandler:: exporting plotly to PDF\n")
                         p <- func()
-                        if(ADDSIGNATURE) p = addSignaturePlotly(p)                             
                         p$width = pdf.width * 100
                         p$height = pdf.height * 100
                         ##is.plotly3d <- class(p)[1]=="plotly" && all( c("x","y","z") %in% names(p$x$attrs[[1]]))
@@ -330,7 +322,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     } else if(plotlib=="iheatmapr") {
                         cat("downloadHandler:: exporting iheatmapR to PDF\n")
                         p <- func()
-                        if(ADDSIGNATURE) p = addSignaturePlotly(p)                             
                         save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PDFFILE)
                     } else if(plotlib=="visnetwork") {
                         cat("downloadHandler:: exporting visnetwork to PDF\n")
@@ -357,7 +348,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     } else if(plotlib=="base") {
                         ##cat("downloadHandler:: exporting to base plot to PDF\n")
                         cat("downloadHandler:: exporting base plot to PDF\n")
-                        
                         ## NEEEDS FIX!! pdf generating should be done
                         ## just here, not anymore in the
                         ## renderPlot. But cannot get it to work (IK 19.10.02)
@@ -389,9 +379,23 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         mtext("Error. PDF not available.",line=-8)
                         dev.off()
                     }
+
+                    cat("file.exists(PDFFILE) = ",file.exists(PDFFILE),"\n")
+
+                    ## ImageMagick or pdftk
+                    if(WATERMARK) {
+                        cat("adding watermark to PDF...\n")
+                        ##PDFFILE="~/Downloads/plot.pdf"
+                        tmp1 <- paste0(tempfile(),".pdf")
+                        file.copy(PDFFILE,tmp1)
+                        cmd = paste("pdftk",tmp1,"stamp ../lib/watermark.pdf output",PDFFILE)
+                        cat("cmd = ",cmd,"\n")
+                        system(cmd)
+                    }
                     
                     ## finally copy to final exported file
                     file.copy(PDFFILE,file)
+                    
                 }, message="exporting to PDF", value=0.8)
             } ## content 
         ) ## PDF downloadHandler
@@ -402,7 +406,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
         if(plotlib == "plotly" ) {
             cat("downloadHandler:: exporting plotly to HTML\n")
             p <- func()
-            if(ADDSIGNATURE) p <- addSignaturePlotly(p)
+            if(WATERMARK) p <- addWatermarkPlotly(p)
             htmlwidgets::saveWidget(p, HTMLFILE) 
         } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
             cat("downloadHandler:: exporting htmlwidget to HTML\n")
@@ -439,7 +443,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     if(plotlib == "plotly" ) {
                         cat("downloadHandler:: exporting plotly to HTML\n")
                         p <- func()
-                        if(ADDSIGNATURE) p <- addSignaturePlotly(p)
+                        if(WATERMARK) p <- addWatermarkPlotly(p)
                         htmlwidgets::saveWidget(p, HTMLFILE) 
                     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
                         cat("downloadHandler:: exporting htmlwidget to HTML\n")
@@ -527,10 +531,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
             if(1) {
                 suppressWarnings( suppressMessages(
                     if(do.pdf) {
-                        if(ADDSIGNATURE) {
-                            mtext("created with Omics Playground",
-                                  1,line=-1,outer=TRUE,adj=0.98,padj=0,cex=0.6,col="#44444444")
-                        }
                         dev.print(pdf, file=PDFFILE, width=pdf.width, height=pdf.height,
                                   pointsize=pdf.pointsize)
                         ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
@@ -539,10 +539,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
                 ))            
                 suppressWarnings( suppressMessages(
                     if(do.png) {
-                        if(ADDSIGNATURE) {
-                            mtext("created with Omics Playground",
-                                  1,line=-1,outer=TRUE,adj=0.98,padj=0,cex=0.6,col="#44444444")
-                        }
                         dev.print(png, file=PNGFILE, width=pdf.width*100, height=pdf.height*100,
                                   pointsize=pdf.pointsize)
                         ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
@@ -781,11 +777,11 @@ tableModule <- function(input, output, session,
 
     output$datatable <- renderDataTable({
         dt <- func()
-        ## write.csv(dt$x$data, file=CSVFILE, row.names=FALSE)
+        ##dt <- dt %>% DT::formatStyle(0, target='row', fontSize='11px', lineHeight='80%')
         dt
     })
     output$datatable2 <- renderDataTable({
-        func2()
+        func2() %>% DT::formatStyle(0, target='row', fontSize='12px', lineHeight='90%')
     })
     
     output$popuptable <- renderUI({

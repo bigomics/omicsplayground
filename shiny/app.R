@@ -1,12 +1,11 @@
-##################################################################################
-##                                                                              ##
-##                 Main application for Omics Playground                        ##  
-##                                                                              ##
-##################################################################################
+#########################################################################
+##                                                                     ##
+##              Main application for Omics Playground                  ##
+##                                                                     ##
+#########################################################################
 
 library(shiny)
 library(shinyjs)
-library(devtools)
 require(shinyWidgets)
 library(waiter)
 
@@ -15,9 +14,8 @@ cat("===================== INIT =======================\n")
 RDIR = "../R"
 FILES = "../lib"
 FILESX = "../libx"
-##PGX.DIR = "~/bigomics/pgx/gse-virome"
-##PGX.DIR = c("../data","../data-irb")
 PGX.DIR = c("../data","../data-extra")
+PGX.DIR = "../data"
 dir.exists(PGX.DIR)
 
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars
@@ -25,13 +23,20 @@ source("../R/pgx-include.R", local=TRUE)  ## pass local vars
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 
+## --------------------------------------------------------------------
+## ----------------------- READ OPTIONS -------------------------------
+## --------------------------------------------------------------------
+
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
 
+WATERMARK = (opt$WATERMARK %in% c("true","TRUE"))
+SHOW_QUESTIONS = FALSE
+
 DEV.VERSION = FALSE
 if(dir.exists("../../omicsplayground-dev")) DEV.VERSION = TRUE
-##DEV.VERSION = FALSE
+DEV.VERSION = FALSE
 
 if(opt$USER_MODE=="BASIC") {
     cat("********************* BASIC MODE **********************\n")
@@ -42,12 +47,14 @@ if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
     load("../data/GSE102908-ibetX.pgx")
-    load("../data/tcga-brca_pub-gx.pgx")
+    load("../data/tcga-brca_pub.pgx")
     load("../data/GSE22886-immune.pgx")   
-    load("../data-irb/guarda2020-myc.pgx")
-    load("../../omicsplayground-dev/data/CCLE-drugSX2.pgx")
     ngs = pgx.initialize(ngs)
 }
+
+## --------------------------------------------------------------------
+## ------------------------ READ MODULES ------------------------------
+## --------------------------------------------------------------------
 
 source("global.R", local=TRUE)
 ##source("../R/pgx-modules.R", local=TRUE)
@@ -58,14 +65,16 @@ source("modules/ExpressionModule.R", local=TRUE)
 source("modules/EnrichmentModule.R", local=TRUE)
 source("modules/IntersectionModule.R", local=TRUE)
 source("modules/FunctionalModule.R", local=TRUE)
+source("modules/WordCloudModule.R", local=TRUE)
 source("modules/DrugConnectivityModule.R", local=TRUE)
 source("modules/SignatureModule.R", local=TRUE)
 source("modules/SingleCellModule.R", local=TRUE)
 source("modules/CorrelationModule.R", local=TRUE)
 source("modules/BiomarkerModule.R", local=TRUE)
+source("modules/QuestionModule.R", local=TRUE)
+source("modules/ConnectivityModule.R", local=TRUE)
 
 if(DEV.VERSION && dir.exists("../../omicsplayground-dev")) {
-    source("../../omicsplayground-dev/shiny/modules/ConnectivityModule.R", local=TRUE)
     source("../../omicsplayground-dev/shiny/modules/TcgaModule.R", local=TRUE)
     source("../../omicsplayground-dev/shiny/modules/BatchCorrectModule.R", local=TRUE)
     source("../../omicsplayground-dev/shiny/modules/MultiLevelModule.R", local=TRUE)
@@ -94,43 +103,29 @@ server = function(input, output, session) {
     env[["enrich"]] <- callModule( EnrichmentModule, "enrich", env)
     env[["isect"]]  <- callModule( IntersectionModule, "isect", env)
     env[["func"]]   <- callModule( FunctionalModule, "func", env)
+    env[["word"]]   <- callModule( WordCloudModule, "word", env)
     env[["drug"]]   <- callModule( DrugConnectivityModule, "drug", env)
     env[["sig"]]    <- callModule( SignatureModule, "sig", env)
-    env[["scell"]]   <- callModule( SingleCellModule, "scell", env)
+    env[["scell"]]  <- callModule( SingleCellModule, "scell", env)
     env[["cor"]]    <- callModule( CorrelationModule, "cor", env)
     env[["bio"]]    <- callModule( BiomarkerModule, "bio", env)
+    env[["cmap"]] <- callModule( ConnectivityModule, "cmap", env)
+    callModule( QuestionModule, "qa", lapse = -1)
         
     if(DEV.VERSION) {
-        env[["cmap"]] <- callModule( ConnectivityModule, "cmap", env)
         env[["tcga"]] <- callModule( TcgaModule, "tcga", env)
         env[["bc"]]   <- callModule( BatchCorrectModule, "bc", env)
         env[["multi"]]   <- callModule( MultiLevelModule, "multi", env)
     }
-
     cat("[OK]\n")
-
+    
     output$current_dataset <- renderText({
         pgx <- env[["load"]][["inputData"]]()
         name <- gsub(".*\\/|[.]pgx$","",pgx$name)
         if(length(name)==0) name = "(no data)"
         name
     })
-
-    ## Timed UI messages...
-    nwarn = 0
-    observe({
-        usermode <- env[["load"]][["usermode"]]()
-        if(opt$USER_MODE=="BASIC") usermode <- "BASIC" ## override
-        if(usermode=="BASIC") {
-            shinyjs::hide(selector = "div.download-button")
-            shinyjs::hide(selector = "div.modebar")
-            shinyjs::hide(selector = "div.pro-feature")
-            ## if(nwarn==3) sendSweetAlert( session=session, title="", text="download is disabled")
-        }
-        invalidateLater(1000*30)  ## every 30 seconds check...
-        nwarn <<- nwarn + 1
-    })
-
+  
     ## Hide/show certain sections depending on USER MODE
     observe({
         pgx <- env[["load"]][["inputData"]]() ## trigger on change dataset
@@ -142,21 +137,17 @@ server = function(input, output, session) {
         dbg("is.null.pgx = ",is.null(pgx))
         dbg("length.pgx = ",length(pgx))
         dbg("[MAIN] opt$SINGLE_CELL=",opt$SINGLE_CELL)
-        
+
+        ## show single-cell module??
         show.cc <- ( (opt$SINGLE_CELL == "AUTO" && ncol(pgx$counts) >= 500) ||
                      (opt$SINGLE_CELL == "AUTO" && grepl("^scRNA",pgx$datatype)) ||
                      opt$SINGLE_CELL == "TRUE")
-
-        dbg("[MAIN] 1: show.cc=",show.cc)
-        dbg("[MAIN] 1: is.true(show.cc)=",show.cc==TRUE)        
         if(is.null(show.cc) || is.na(show.cc) || length(show.cc)==0) show.cc <- FALSE
-
-        dbg("[MAIN] 2: show.cc=",show.cc)
-        dbg("[MAIN] 2: is.true(show.cc)=",show.cc==TRUE)        
+        show.cc <- show.cc && "deconv" %in% names(pgx)
         
         hideTab("view-tabs","Resource info")
         hideTab("maintabs","Development")
-        hideTab("maintabs","Biomarker analysis")
+        hideTab("maintabs","Find biomarkers")
         hideTab("maintabs","Drug connectivity")
         hideTab("maintabs","SingleCell")
         shinyjs::hide(selector = "div.download-button")
@@ -171,16 +162,11 @@ server = function(input, output, session) {
         hideTab("enrich-tabs2","FDR table")
         hideTab("scell-tabs1","CNV")
         hideTab("scell-tabs1","Monocle")
-
-        if(toupper(opt$ENABLE_UPLOAD) %in% c("NO","FALSE")) {
-            hideTab("load-tabs","Upload data")            
-        }
         
         if(usermode != "BASIC") {
             if(show.cc) showTab("maintabs","SingleCell")
-            showTab("maintabs","Biomarker analysis")
+            showTab("maintabs","Find biomarkers")
             showTab("maintabs","Drug connectivity")
-
             showTab("clust-tabs2","Feature ranking")
             showTab("expr-tabs1","Volcano (methods)")
             showTab("expr-tabs2","FDR table")
@@ -198,6 +184,15 @@ server = function(input, output, session) {
             showTab("scell-tabs1","CNV")
             showTab("scell-tabs1","Monocle")
         }
+
+        ## Dynamically show upon availability
+        if(toupper(opt$ENABLE_UPLOAD) %in% c("NO","FALSE")) {
+            hideTab("load-tabs","Upload data")            
+        }
+        showHideTab(pgx, "connectivity", "maintabs", "Similar experiments")
+        showHideTab(pgx, "drugs", "maintabs", "Drug connectivity")
+        showHideTab(pgx, "wordcloud", "maintabs", "Word cloud") 
+
         
     })
 
@@ -206,7 +201,6 @@ server = function(input, output, session) {
 
 version <- scan("../VERSION", character())[1]
 TITLE = paste(opt$TITLE,version)
-## TITLE = "Omics PlayCloud"
 logo = div(img(src="bigomics-logo-white-48px.png", height="48px"),
            TITLE, id="navbar-logo", style="margin-top:-13px;")
 
@@ -215,7 +209,6 @@ if(DEV.VERSION) {
     dev.tabs <- navbarMenu(
         "Development",
         tabView("Batch-effects analysis", BatchCorrectInputs("bc"), BatchCorrectUI("bc")),
-        tabView("ConnectivityMap", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
         tabView("TCGA survival", TcgaInputs("tcga"), TcgaUI("tcga")),
         tabView("Multi-level", MultiLevelInputs("multi"), MultiLevelUI("multi"))
     )
@@ -230,7 +223,6 @@ help.tabs <- navbarMenu(
     tabPanel(title=HTML("<a href='https://groups.google.com/d/forum/omicsplayground' target='_blank'>Google groups"))
 )
 
-
 ui = navbarPage(
     title = logo, windowTitle = TITLE,
     theme = shinythemes::shinytheme("cerulean"),
@@ -243,6 +235,7 @@ ui = navbarPage(
         shinyjs::useShinyjs(),
         use_waiter(),
         div(textOutput("current_dataset"),class='current-data')
+        ##QuestionModule_UI("qa")
     ),
     tabView("Home",LoadingInputs("load"),LoadingUI("load")),
     tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
@@ -256,13 +249,15 @@ ui = navbarPage(
         "Enrichment",
         tabView("Geneset enrichment",EnrichmentInputs("enrich"),EnrichmentUI("enrich")),
         tabView("Pathway analysis", FunctionalInputs("func"), FunctionalUI("func")),
+        tabView("Word cloud", WordCloudInputs("word"), WordCloudUI("word")),
         tabView("Drug connectivity", DrugConnectivityInputs("drug"), DrugConnectivityUI("drug"))
     ),
     navbarMenu(
         "Signature",
         tabView("Compare signatures", IntersectionInputs("isect"), IntersectionUI("isect")),
-        tabView("Test signature", SignatureInputs("sig"), SignatureUI("sig")),
-        tabView("Biomarker analysis", BiomarkerInputs("bio"), BiomarkerUI("bio"))
+        tabView("Test signatures", SignatureInputs("sig"), SignatureUI("sig")),
+        tabView("Find biomarkers", BiomarkerInputs("bio"), BiomarkerUI("bio")),
+        tabView("Similar experiments", ConnectivityInputs("cmap"), ConnectivityUI("cmap"))
     ),
     tabView("SingleCell", SingleCellInputs("scell"), SingleCellUI("scell")),
     help.tabs,
@@ -274,5 +269,6 @@ ui = navbarPage(
 )
 
 shiny::shinyApp(ui, server)
+
 
 

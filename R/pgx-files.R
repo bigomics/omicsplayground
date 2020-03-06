@@ -1,3 +1,7 @@
+h5exists <- function(h5.file, obj) {
+    xobjs <- apply(h5ls(h5.file)[,1:2],1,paste,collapse="/")
+    obj %in% gsub("^/|^//","",xobjs)
+}
 
 ##h5.file="test.h5";chunk=100
 pgx.saveMatrixH5 <- function(X, h5.file, chunk=NULL, del=TRUE )
@@ -15,6 +19,7 @@ pgx.saveMatrixH5 <- function(X, h5.file, chunk=NULL, del=TRUE )
     } else {
         if(del) h5createFile(h5.file)    
         if(del) h5createGroup(h5.file,"data")
+        if(h5exists(h5.file,"data/matrix")) h5delete(h5.file, "data/matrix")        
         h5createDataset(
             h5.file, "data/matrix",
             c(nrow(X),ncol(X)),
