@@ -14,11 +14,7 @@ FROM bigomics/omicsplayground:testing
 
 RUN apt-get install -y pdftk
 
-RUN R -e "install.packages(c('shinydashboardPlus','optparse','docopt','randomForest'))"
-## RUN R -e "devtools::install_github('JohnCoene/waiter')"
-## RUN pip install umap-learn
-## RUN R -e "BiocManager::install(c('pathview','randomForest'))"
-## RUN R -e "devtools::install_github('wt2015-github/FastGGM')"
+RUN R -e "install.packages(c('shinydashboardPlus','optparse','docopt','randomForest','org.Mm.eg.db'))"
 
 #------------------------------------------------------------x
 ## Pull from GitHub
