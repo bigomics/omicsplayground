@@ -417,7 +417,7 @@ EnrichmentModule <- function(input, output, session, env)
         ##top.dn <- names(sort(fx[which(fx<0)]))
         top <- rownames(rpt)
         
-        par(mfrow=c(2,5), mar=c(0.5,3.0,2.8,0.1), mgp=c(2,0.8,0))
+        par(mfrow=c(2,5), mar=c(0.5,2.5,2.8,0), mgp=c(2,0.8,0))
         for(i in 1:10) {
             if(i > length(top)) {
                 frame()
@@ -490,7 +490,7 @@ EnrichmentModule <- function(input, output, session, env)
         if(input$gs_enrichfreq_fcweight) {
             F <- t(t(F) * abs(fx[top]))
         } 
-        F <- head(F[order(-rowSums(abs(F))),,drop=FALSE], 24)
+        F <- head(F[order(-rowSums(abs(F))),,drop=FALSE], 32)
         F <- F[order(-rowSums(F)),,drop=FALSE]
         F <- as.matrix(F)
        
@@ -507,11 +507,13 @@ EnrichmentModule <- function(input, output, session, env)
     
     topEnrichedFreq.opts = tagList(
         tipify( radioButtons(ns('gs_enrichfreq_ntop'),"Number of top sets",
-                             c(5,10,25,100),inline=TRUE, selected=10),
+                             c(5,10,25,100),inline=TRUE, selected=25),
                "Number of top genesets to consider for counting the gene frequency."),
-        tipify( checkboxInput(ns('gs_enrichfreq_gsetweight'),"Weight by geneset size"),
+        tipify( checkboxInput(ns('gs_enrichfreq_gsetweight'),
+                              "Weight by geneset size", TRUE),
                "Weight by (inverse) gene set size."), 
-        tipify( checkboxInput(ns('gs_enrichfreq_fcweight'),"Weight by FC"),
+        tipify( checkboxInput(ns('gs_enrichfreq_fcweight'),
+                              "Weight by FC", TRUE),
                "Weight by fold-change of current contrast.")         
     )
     
@@ -522,9 +524,9 @@ EnrichmentModule <- function(input, output, session, env)
         func2 = topEnrichedFreq.RENDER,
         options = topEnrichedFreq.opts,
         info.text = topEnrichedFreq_text,
-        height = c(imgH,400), width = c('auto',1280),
-        res = c(72,90),
-        pdf.width = 14, pdf.height = 4, 
+        height = c(imgH,450), width = c('auto',1000),
+        res = c(72,100),
+        pdf.width = 10, pdf.height = 5, 
         title = "Gene frequency"
         ##caption = topEnrichedFreq_caption
     )
@@ -539,7 +541,7 @@ EnrichmentModule <- function(input, output, session, env)
             height = rowH,
             flex = c(1,NA),
             fillRow(
-                flex = c(2.4,0.05,1),
+                flex = c(2.1,0.05,1),
                 plotWidget(ns("topEnriched")),
                 br(),
                 plotWidget(ns("topEnrichedFreq"))
@@ -869,7 +871,8 @@ EnrichmentModule <- function(input, output, session, env)
         ##func = subplot1.RENDER,
         ##func2 = subplot1.RENDER,        
         info.text = subplot1_text,
-        pdf.width=6, pdf.height=6, res=72,
+        pdf.width=6, pdf.height=6,
+        res = c(72,100),
         height = imgH, 
         title="Volcano plot", label="a"
     )

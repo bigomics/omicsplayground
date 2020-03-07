@@ -1327,18 +1327,11 @@ DataViewModule <- function(input, output, session, env)
 
     data_rawdataTable_caption = "<b>Gene table.</b> The table shows the gene expression values per sample, or average expression values across the groups. The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar."
 
-    ## data_rawdataTable_module <- tableModule(
-    ##     id = "data_rawdataTable", ns=ns,
-    ##     func = data_rawdataTable.RENDER,
-    ##     title = "Gene expression table",
-    ##     info.text = data_rawdataTable_text,
-    ##     caption = data_rawdataTable_caption
-    ## )
-    ## output <- attachModule(output, data_rawdataTable_module) 
     data_rawdataTable <- callModule(
         tableModule, "data_rawdataTable",
         func = data_rawdataTable.RENDER,
         title = "Gene expression table",
+        filename = "counts.csv",
         info.text = data_rawdataTable_text,
         caption = data_rawdataTable_caption
     )
@@ -1483,14 +1476,13 @@ DataViewModule <- function(input, output, session, env)
     
     data_sampleTable_caption="<b>Sample information table.</b> Phenotype information about the samples. Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
     data_sampleTable_info = "<b>Sample information table.</b> Phenotype information about the samples. Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
-    ##data_sampleTable_module <- tableModule(
-    ##id="data_sampleTable", ns=ns,
 
     data_sampleTable <- callModule(
         tableModule, "data_sampleTable", label="c",
         func = data_sampleTable.RENDER,
         func2 = data_sampleTable.RENDER2,
         title = "Sample information",
+        filename = "samples.csv",
         info.text = data_sampleTable_info,
         height = c(280,750), width=c('auto',1280),
         ##options = data_sampleTable_opts,
@@ -1580,7 +1572,8 @@ DataViewModule <- function(input, output, session, env)
     data_contrastTable_caption = "<b>Contrast table.</b> summarizing the contrasts of all comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison."
 
     data_contrastTable_opts = tagList(
-        tipify( radioButtons(ns('data_ctbygroup'), "Show by:", choices=c("group","sample")),
+        tipify( radioButtons(ns('data_ctbygroup'),
+                             "Show by:", choices=c("group","sample")),
                "Show contrasts by group or by samples.",
                placement="right", options = list(container = "body"))
     )
@@ -1592,6 +1585,7 @@ DataViewModule <- function(input, output, session, env)
         func = data_contrastTable.RENDER,
         options = data_contrastTable_opts,
         title = "Contrast table",
+        filename = "contrasts.csv",
         info.text = data_contrastTable_info,
         caption = data_contrastTable_caption
     )
@@ -1635,7 +1629,7 @@ DataViewModule <- function(input, output, session, env)
     ##id="datatable_timings", ns=ns,
     datatable_timings <- callModule(
         tableModule, "datatable_timings",
-        func=datatable_timings.RENDER,
+        func = datatable_timings.RENDER,
         info.text = datatable_timings_text,
         options = NULL, title='Timings'
     )

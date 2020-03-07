@@ -201,7 +201,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             gsets = rownames(ngs$gsetX)
             gsets = unique(unlist(COLLECTIONS[input$hm_features]))
             zx = ngs$gsetX
-            if(DEV.VERSION) {
+            if(DEV.VERSION && !is.null(ngs$gset.meta$matrices) ) {
                 k <- input$hm_gsetmatrix
                 zx <- as.matrix(ngs$gset.meta$matrices[[k]])
             }            
