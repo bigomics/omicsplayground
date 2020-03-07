@@ -684,7 +684,7 @@ tableWidget <- function(id) {
 tableModule <- function(input, output, session, 
                         func, func2=NULL, info.text="Info text",
                         title=NULL, label=NULL, caption=NULL, 
-                        server=TRUE, ##inputs=NULL, 
+                        server=TRUE, filename="data.csv", ##inputs=NULL, 
                         ##no.download = FALSE, just.info=FALSE,
                         width="100%", height="auto",
                         options = NULL, info.width="300px"
@@ -757,7 +757,7 @@ tableModule <- function(input, output, session,
     
     ## render2 <- renderPlot({plot_array[[3]]()}, res=res)
     download.csv <- downloadHandler(
-        filename = "data.csv",
+        filename = filename,
         content = function(file) {
             dt <- func()
             write.csv(dt$x$data, file=CSVFILE, row.names=FALSE)

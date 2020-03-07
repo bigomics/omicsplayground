@@ -36,7 +36,7 @@ SHOW_QUESTIONS = FALSE
 
 DEV.VERSION = FALSE
 if(dir.exists("../../omicsplayground-dev")) DEV.VERSION = TRUE
-DEV.VERSION = FALSE
+##DEV.VERSION = FALSE
 
 if(opt$USER_MODE=="BASIC") {
     cat("********************* BASIC MODE **********************\n")

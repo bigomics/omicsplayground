@@ -886,7 +886,8 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             counts    <- as.matrix(uploaded_files[["counts.csv"]])
             samples   <- data.frame(uploaded_files[["samples.csv"]],stringsAsFactors=FALSE)
             contrasts <- as.matrix(uploaded_files[["contrasts.csv"]])
-
+            contrasts[is.na(contrasts)] <- 0
+            
             max.genes = as.integer(max.limits["genes"])
             max.genesets = 9999
             

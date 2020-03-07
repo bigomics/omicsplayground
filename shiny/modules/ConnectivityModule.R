@@ -164,6 +164,7 @@ ConnectivityModule <- function(input, output, session, env)
     getCurrentContrast <- reactive({
         ngs <- inputData()
         req(ngs, input$cmap_contrast)        
+        ct=1
         ct <- input$cmap_contrast
         fc <- ngs$gx.meta$meta[[ct]]$meta.fx
         names(fc) <- rownames(ngs$gx.meta$meta[[ct]])
@@ -186,16 +187,22 @@ ConnectivityModule <- function(input, output, session, env)
     }
     
     getConnectivityContrasts <- function(sigdb) {
-        db <- getConnectivityFullPath(sigdb)
         dbg("[getConnectivityContrasts] sigdb=",sigdb)
+        if(length(sigdb)==0 || is.null(sigdb) || sigdb=="" ) return(NULL)
+
+        db <- getConnectivityFullPath(sigdb)
         dbg("[getConnectivityContrasts] db=",db)
-        h5read(db, "data/colnames")
+        cn <- NULL
+        if(file.exists(db)) {
+            require(rhdf5)
+            cn <- h5read(db, "data/colnames")
+        }
+        cn
     }
     
     getConnectivityMatrix <- function(sigdb, select=NULL, genes=NULL)
     {
-        require(rhdf5)
-        
+        require(rhdf5)        
         if(0) {
             dbg("[getConnectivityMatrix] reacted")
             sigdb = "sigdb-archs4.h5"
@@ -481,7 +488,7 @@ ConnectivityModule <- function(input, output, session, env)
             sel <- grep("cluster[:]",scores$pathway,invert=TRUE)
             scores <- scores[sel,,drop=FALSE]
         }
-
+        
         ## only those in existing database
         ct <- getConnectivityContrasts(sigdb)
         scores <- scores[which(rownames(scores) %in% ct),,drop=FALSE]
@@ -501,7 +508,7 @@ ConnectivityModule <- function(input, output, session, env)
         ##if(DEV.VERSION) ntop <- input$cmap_le_ntop
         
         if(no.le && abs_score==TRUE) {            
-
+            
             dbg("[getConnectivityScores] recomputing leading edge")
             ## recreate "leadingEdge" list
             sig <- getSignatureMatrix(sigdb)
@@ -518,8 +525,7 @@ ConnectivityModule <- function(input, output, session, env)
             ee <- mapply(c, e1, e2)
             ee <- ee[match(scores$pathway,names(ee))]
             dbg("[getConnectivityScores] length(ee)=",length(ee) )
-            if(length(ee)) dbg("[getConnectivityScores] head(ee[[1]])=",head(ee[[1]]) )
-
+            if(length(ee)) dbg("[getConnectivityScores] head(ee[[1]])=",head(ee[[1]]))
             scores$leadingEdge <- ee
         }
         if(no.le && abs_score==FALSE) {            
@@ -529,8 +535,8 @@ ConnectivityModule <- function(input, output, session, env)
             fc  <- getCurrentContrast()$fc
             fc  <- fc[order(-abs(fc))]
             
-            fc.up <- head(names(fc[fc>0]),ntop)
-            fc.dn <- head(names(fc[fc<0]),ntop)
+            fc.up <- head(names(fc[fc>0]), ntop)
+            fc.dn <- head(names(fc[fc<0]), ntop)
             
             p1  <- apply(sig$up, 2, function(g) intersect(fc.up,g))
             p2  <- apply(sig$dn, 2, function(g) intersect(fc.dn,g))
@@ -541,8 +547,8 @@ ConnectivityModule <- function(input, output, session, env)
             nn <- mapply(c, n1, n2)
 
             ee <- vector("list",nrow(scores))
-            pos.rho <- which(scores$rho>=0)
-            neg.rho <- which(scores$rho<0)
+            pos.rho <- which(scores$rho >= 0)
+            neg.rho <- which(scores$rho < 0)
             ee[pos.rho] <- pp[match(scores$pathway[pos.rho],names(pp))]
             ee[neg.rho] <- nn[match(scores$pathway[neg.rho],names(nn))]
             scores$leadingEdge <- ee
@@ -938,7 +944,7 @@ ConnectivityModule <- function(input, output, session, env)
         F1 <- cumFCplot.RENDER()
         col1 = grey.colors(ncol(F1),start=0.15)
         legend("topleft", legend = rev(colnames(F1)),
-               fill = rev(col1), cex=0.7, y.intersp=0.8)
+               fill = rev(col1), cex=0.72, y.intersp=0.85)
         
     })
 
@@ -1006,6 +1012,17 @@ ConnectivityModule <- function(input, output, session, env)
             F <- abs(F)  
         }
         F <- F[order(-rowMeans(F**2)),,drop=FALSE]
+
+        ## add current contrast
+        if(1) {
+            ct <- getCurrentContrast()
+            gx <- ct$gs[match(rownames(F),names(ct$gs))]
+            names(gx) <- rownames(F)
+            gx[is.na(gx)] <- 0
+            F <- cbind(gx, F)
+            colnames(F)[1] <- ct$name
+        }
+        
         F
     })
     
@@ -1018,44 +1035,36 @@ ConnectivityModule <- function(input, output, session, env)
             return(NULL)
         }
         
-        ## add current contrast
-        ct <- getCurrentContrast()
-        gx <- ct$gs[match(rownames(F),names(ct$gs))]
-        names(gx) <- rownames(F)
-        gx[is.na(gx)] <- 0
-        F1 <- cbind(gx, F)
-        colnames(F1)[1] <- ct$name
-
         if(input$cumgsea_order == "FC") {
-            F1 <- F1[order(-abs(F1[,1])),]
-            F1 <- head(F1,20)
-            F1 <- F1[order(F1[,1]),,drop=FALSE]
+            F <- F[order(-abs(F[,1])),]
+            F <- head(F,20)
+            F <- F[order(F[,1]),,drop=FALSE]
         } else {
-            F1 <- F1[order(-rowMeans(F1**2)),]
-            F1 <- head(F1,20)
-            F1 <- F1[order(rowMeans(F1)),,drop=FALSE]
+            F <- F[order(-rowMeans(F**2)),]
+            F <- head(F,20)
+            F <- F[order(rowMeans(F)),,drop=FALSE]
         }
         
-        rownames(F1) <- gsub("H:HALLMARK_","",rownames(F1))
-        rownames(F1) <- gsub("C2:KEGG_","",rownames(F1))
-        rownames(F1) <- shortstring(rownames(F1),72)
-        maxfc <- max(abs(rowSums(F1,na.rm=TRUE)))
-        xlim <- c(-1*(min(F1,na.rm=TRUE)<0),1.2)*maxfc
+        rownames(F) <- gsub("H:HALLMARK_","",rownames(F))
+        rownames(F) <- gsub("C2:KEGG_","",rownames(F))
+        rownames(F) <- shortstring(rownames(F),72)
+        maxfc <- max(abs(rowSums(F,na.rm=TRUE)))
+        xlim <- c(-1*(min(F,na.rm=TRUE)<0),1.2)*maxfc
         
         par(mfrow=c(1,2), mar=c(4.5,1,0.4,1), mgp=c(2.4,1,0))
         frame()
         ## frame()
-        col1 = grey.colors(ncol(F1),start=0.15)
+        col1 = grey.colors(ncol(F),start=0.15)
         ##barplot(t(F), las=3, cex.names=0.85, col=col1,
         ##        horiz = TRUE, las=1, 
         ## xlim=xlim,
         ##        xlab="cumulative enrichment")
         pgx.stackedBarplot(
-            F1, las=1, cex.names=0.85, col=col1, hz = TRUE,
+            F, las=1, cex.names=0.85, col=col1, hz = TRUE,
             ## las=1, xlim=xlim,
             xlab="cumulative enrichment")
 
-        fname <- sub("\\].*","]",colnames(F1))
+        fname <- sub("\\].*","]",colnames(F))
         ##legend("bottomright", legend = fname,
         ##       fill = col1, cex=0.7, y.intersp=0.85)
         
@@ -1414,15 +1423,19 @@ ConnectivityModule <- function(input, output, session, env)
         ii <- head(order(-abs(df$score)),25)
         ii <- head(ii,ntop)
         df <- df[ii,,drop=FALSE]
-        tt.genes <- table(unlist(df$leadingEdge))
-        le.genes <- sort(unique(unlist(df$leadingEdge)))        
-        dbg("[getLeadingEdgeGraph] head(le.genes[[1]]) = ",head(df$leadingEdge[[1]]))
-        dbg("[getLeadingEdgeGraph] length(le.genes) = ",length(le.genes))
-        
-        A <- 1*sapply( df$leadingEdge, function(g) le.genes %in% g)
-        rownames(A) <- le.genes
-        A <- head( A[order(-rowMeans(A)),,drop=FALSE], 100)
-        
+
+        if(input$LEgraph_level == "gene") {
+            le.genes <- sort(unique(unlist(df$leadingEdge)))        
+            A <- 1*sapply( df$leadingEdge, function(g) le.genes %in% g)
+            rownames(A) <- le.genes
+        } else {
+            F <- cumEnrichmentTable()
+            le.sets <- apply(F, 2, function(x) head(order(-abs(x)),10))
+            le.sets <- apply(le.sets, 2, function(i) rownames(F)[i])
+            A <- 1*apply( le.sets, 2, function(g) rownames(F) %in% g)
+            rownames(A) <- rownames(F)
+        }
+        A <- head( A[order(-rowMeans(A)),,drop=FALSE], 100)        
         head(A)
         ##adjM <- pmax( cor(t(A)), 0)  ## only positive correlation???
         adjM <- (A %*% t(A))
@@ -1456,8 +1469,20 @@ ConnectivityModule <- function(input, output, session, env)
         gr <- subgraph.edges(gr, which(abs(E(gr)$weight) >= minwt) )
         if(length(V(gr))==0) return(NULL)
 
-        fc <- getCurrentContrast()$fc
-        fc <- fc[V(gr)$name]
+        fc=cumFC=NULL
+        if(input$LEgraph_level=="gene") {
+            fc <- getCurrentContrast()$fc
+            fc <- fc[V(gr)$name]
+            cumFC <- cumulativeFCtable()
+            cumFC <- cumFC[V(gr)$name,]
+            fontsize = 22
+        }
+        if(input$LEgraph_level=="geneset") {
+            cumFC <- cumEnrichmentTable()
+            cumFC <- cumFC[V(gr)$name,]
+            fc <- cumFC[,1]
+            fontsize = 18
+        }
         fc <- fc / max(abs(fc))
         
         sizevar <- input$LEgraph_sizevar
@@ -1465,7 +1490,7 @@ ConnectivityModule <- function(input, output, session, env)
         if(sizevar=="centrality") {
             vsize <- log(1+betweenness(gr))
         } else if(sizevar=="cumFC") {
-            fc1 <- rowMeans(cumulativeFCtable())
+            fc1 <- rowMeans(cumFC)
             vsize <- abs(fc1[match(V(gr)$name,names(fc1))])**2
         } else if(sizevar=="FC") {
             vsize <- abs(fc[match(V(gr)$name,names(fc))])**2
@@ -1499,7 +1524,7 @@ ConnectivityModule <- function(input, output, session, env)
         graph <- visNetwork(
             nodes = visdata$nodes,
             edges = visdata$edges) %>%
-            visNodes(font = list(size = 24))  %>%
+            visNodes(font = list(size = fontsize))  %>%
             ## visEdges(hidden=FALSE, width=2, color=list(opacity=0.9))  %>%
             visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)) %>%
             ## visPhysics(enabled=TRUE)  %>%
@@ -1510,18 +1535,21 @@ ConnectivityModule <- function(input, output, session, env)
         
     })
     
-    leadingEdgeGraph.opts <- tagList(        
+    leadingEdgeGraph.opts <- tagList(
+        tipify( radioButtons(ns("LEgraph_level"),"level:",c("gene","geneset"),
+                             inline=TRUE),
+               "Gene or geneset graph."),        
         tipify( sliderInput(ns("LEgraph_threshold"),"edge threshold:",0,1,0.5,0.01),
                "Threshold value for edges."),
         tipify( radioButtons(ns("LEgraph_ntop"),"N-neighbours:",c(5,10,25,100),selected=10,inline=TRUE),
                "Number of simlar experiments to consider."),
         tipify( radioButtons(ns("LEgraph_sizevar"),"Size:",c("FC","cumFC","centrality"),
-                             selected="centrality", inline=TRUE),
-               "Parameter for node size.")
+                             selected="cumFC", inline=TRUE),
+               "Parameter for node size.")        
     )
     
-    leadingEdgeGraph_caption = "<b>Leading-edge graph.</b> Network of shared leading-edge genes between top-N most similar signatures."
-    leadingEdgeGraph_info = "<b>Leading-edge graph.</b> Network of shared leading-edge genes between top-N most similar signatures. In the plot options you can set the threshold the edges."
+    leadingEdgeGraph_caption = "<b>Leading-edge graph.</b> Network of shared leading-edge genes (or genesets) between top-N most similar signatures."
+    leadingEdgeGraph_info = "<b>Leading-edge graph.</b> Network of shared leading-edge genes (or genesets) between top-N most similar signatures. In the plot options you can set the threshold the edges."
     
     callModule(
         plotModule,
@@ -1539,15 +1567,15 @@ ConnectivityModule <- function(input, output, session, env)
     )
     
 
-    ##================================================================================    
+    ##======================================================================    
     ## Pairs
-    ##================================================================================
-
     ##======================================================================
+
+    ##----------------------------------------------------------------------
     ## Scatterplot matrix in plotly
     ##
     ## From: https://plot.ly/r/splom/
-    ##======================================================================
+    ##----------------------------------------------------------------------
 
     cmapPairsPlot.PLOT <- reactive({
 
@@ -1985,7 +2013,7 @@ ConnectivityModule <- function(input, output, session, env)
             div(HTML(cmapMetaAnalysis_caption,"<br><br>"), class="caption"),
             br(),
             fillRow(
-                flex = c(0.9,0.06,1),
+                flex = c(1.0,0.06,1.1),
                 fillCol(
                     flex = c(1,1.1),
                     plotWidget(ns("cumFCplot")),                
@@ -2000,7 +2028,7 @@ ConnectivityModule <- function(input, output, session, env)
             )
         )
     })
-    outputOptions(output, "cmapMetaAnalysis_UI", suspendWhenHidden=FALSE) ## important!!!    
+    outputOptions(output,"cmapMetaAnalysis_UI", suspendWhenHidden=FALSE) ## important!!!    
     
     
 } ## end-of-Module 

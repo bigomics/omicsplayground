@@ -82,7 +82,8 @@ between two contrasts."
                                           rows=5, placeholder="Paste your custom gene list"),
                            "Paste a custom list of genes to highlight.", placement="bottom")
                 ),
-                tipify( selectInput(ns("cmp_level"),"Level:", choices=c("gene","geneset")),
+                tipify( radioButtons(ns("cmp_level"),"Level:",
+                                     choices=c("gene","geneset"), inline=TRUE),
                        "Select feature level: gene or geneset", placement="top")
             )
         )
@@ -782,6 +783,14 @@ between two contrasts."
         br(),br(),br(),br(),
         radioButtons(ns('cmp_include'),'Counting:', choices=c("both","up/down"), inline=TRUE)
     )
+   
+    cmp_venntable_buttons <- inputPanel(
+        div(checkboxGroupInput(
+            ns('cmp_intersection'), NULL,
+            choices=c("A","B","C"), ## selected=c("A","B","C"),
+            inline=TRUE ),
+            style="font-size:0.85em; margin-top:-10px;")
+    )
 
     callModule(
         plotModule,
@@ -789,10 +798,11 @@ between two contrasts."
         func = cmp_venndiagram.RENDER,
         func2 = cmp_venndiagram.RENDER,
         title = "Venn diagram", label="b",
+        ##caption = cmp_venntable_buttons,
         info.text = "The Venn diagram visualizes the number of intersecting genes between the profiles. The list of intersecting genes with further details is also reported in an interactive table below, where users can select and remove a particular contrasts from the intersection analysis.",
         options = cmp_venndiagram.opts,
         pdf.width=8, pdf.height=8,
-        height = 0.48*fullH, res=72
+        height = 0.42*fullH, res=72
     )
 
     callModule(
@@ -805,7 +815,6 @@ between two contrasts."
         info.width = "500px",
         height = 0.4*fullH
     )
-    
 
     ##================================================================================
     ## Cumuative FC
@@ -836,20 +845,22 @@ between two contrasts."
         col1 = grey.colors(ncol(fc),start=0.15)
 
         if(input$cmp_level=="geneset") {
-            fc.top <- head(fc,20)
+            fc.top <- head(fc,24)
             fc.top <- fc.top[order(rowMeans(fc.top,na.rm=TRUE)),,drop=FALSE]            
             rownames(fc.top) <- tolower(rownames(fc.top))
-            rownames(fc.top) <- gsub(".*[:]|[ ]*\\(.*","",rownames(fc.top))
+            rownames(fc.top) <- gsub(".*[:]","",rownames(fc.top))
+            ## rownames(fc.top) <- gsub("[ ]*\\(.*","",rownames(fc.top))
             par(mar=c(4,4,2,2))
             par(mfrow=c(1,3), mar=c(7.8,0,0,1), mgp=c(2.1,0.8,0) )
+            par(mfrow=c(1,3), mar=c(5,0,0,1), mgp=c(2.1,0.8,0) )
             ##barplot(t(fc.top), las=3, cex.names=0.81, col=col1,
             ##        ylim=ylim, ylab="cumulative logFC")
             frame()
             frame()
             pgx.stackedBarplot(
-                fc.top, cex.names=1.33, col=col1,
+                fc.top, cex.names=1.3, col=col1,
                 hz=TRUE,  ## ylim=ylim,
-                ylab="cumulative logFC")
+                xlab="cumulative logFC")
             legend("topleft", legend=colnames(fc.top),
                    fill = col1, cex=1.0, y.intersp=0.8)
         } else {
@@ -873,30 +884,21 @@ between two contrasts."
         checkboxInput(ns('cmp_fcbarplot_abs'),'Absolute foldchange')
     )
 
-    cmp_venntable_buttons <- inputPanel(
-        div(checkboxGroupInput(
-            ns('cmp_intersection'), NULL,
-            choices=c("A","B","C"), ## selected=c("A","B","C"),
-            inline=TRUE ),
-            style="font-size: 0.85em;")
-    )
-
     callModule(
         plotModule,
         id = "cmp_fcbarplot", label="c",
         func = cmp_fcbarplot.RENDER,
         func2 = cmp_fcbarplot.RENDER,
-        caption = cmp_venntable_buttons,
+        ##caption = cmp_venntable_buttons,
         title = "Cumulative fold-change", 
         info.text = "</b>Cumulative fold-change.</b> This plot visualizes the cumulative fold-change of genes shared between the profiles.",
         options = cmp_fcbarplot.opts,
-        pdf.width=8, pdf.height=6,
-        height = c(0.40*fullH,550), width=c('auto',1000),
-        res=c(69,105)
+        pdf.width = 8, pdf.height = 6,
+        height = c(0.45*fullH,550), width=c('auto',1000),
+        res=c(78,110)
     )
-
-
-    ##================================================================================    
+    
+    ##================================================================================
     ## Single-pair scatter plot
     ##================================================================================
 
@@ -1569,8 +1571,9 @@ between two contrasts."
                 plotWidget(ns("cmp_scatterPlotMatrix")),
                 br(),
                 fillCol(
-                    flex = c(1.2, 1),
+                    flex = c(0.9,NA,1),
                     plotWidget(ns("cmp_venndiagram")),
+                    cmp_venntable_buttons,
                     plotWidget(ns("cmp_fcbarplot"))
                 )
             )

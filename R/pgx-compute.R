@@ -33,6 +33,13 @@ pgx.createPGX <- function(counts, samples, contrasts, ## genes,
     }
 
     ##-------------------------------------------------------------------
+    ## clean up input files
+    ##-------------------------------------------------------------------
+    counts <- as.matrix(counts)
+    contrasts <- as.matrix(contrasts)
+    contrasts[is.na(contrasts)] <- 0
+    
+    ##-------------------------------------------------------------------
     ## convert to gene symbol
     ##-------------------------------------------------------------------
     symbol <- probe2symbol(rownames(counts), type=NULL)

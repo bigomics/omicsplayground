@@ -387,12 +387,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         res$moa <- shortstring(res$moa,60)
         res$target <- shortstring(res$target,30)
         res$drug   <- shortstring(res$drug,60)
-        
-        ## limit number of results??
-        ## ##jj <- unique(c( head(order(-res$NES),250), tail(order(-res$NES),250)))
-        ## jj <- unique(c( head(order(-res$NES),1000), tail(order(-res$NES),1000)))
-        ## jj <- jj[order(-abs(res$NES[jj]))]
-        ## res <- res[jj,]
 
         colnames(res) <- sub("moa","MOA",colnames(res))
         DT::datatable( res, rownames=FALSE,
