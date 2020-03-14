@@ -343,9 +343,9 @@ between genes and find coregulated modules."
         res = c(72,80)
     )
 
-    ##--------------------------------------------------------------------------------
+    ##-----------------------------------------------------------------------------
     ## Correlation scatter plots
-    ##--------------------------------------------------------------------------------
+    ##-----------------------------------------------------------------------------
     
     cor_scatter.PLOTFUN %<a-% reactive({
 
@@ -360,8 +360,8 @@ between genes and find coregulated modules."
         rho <- rho[order(-rho)]
         
         ngs <- inputData()
-        par(mfrow=c(5,5), mar=c(4,3.5,0.5,0.2),
-            mgp=c(2.1,0.8,0), oma=c(0,0,1,0))
+        par(mfrow=c(5,5), mar=c(4,3.5,0.3,0),
+            mgp=c(1.9,0.7,0), oma=c(0,0,1,0))
         for(i in 1:min(25,length(rho))) {
             gene2 <- names(rho)[i]
             x <- ngs$X[gene2,]

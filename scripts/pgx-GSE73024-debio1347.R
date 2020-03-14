@@ -141,7 +141,10 @@ ngs <- compute.testGenesets (
 extra <- c("connectivity")
 extra <- c("drugs")
 extra <- c("meta.go","infer","drugs","wordcloud","connectivity")
-ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
+
+sigdb = NULL
+##sigdb = c("../libx/sigdb-lincs-cp.h5","../libx/sigdb-lincs-gt.h5")
+ngs <- compute.extra(ngs, extra, lib.dir=FILES, sigdb=sigdb) 
 
 names(ngs)
 ngs$timings

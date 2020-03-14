@@ -1,9 +1,9 @@
 LoadingInputs <- function(id) {
     ns <- NS(id)  ## namespace
     tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
-        ##uiOutput(ns("socialButtons"))
+        uiOutput(ns("description"))
+        ## uiOutput(ns("inputsUI"))
+        ## uiOutput(ns("socialButtons"))
     )
 }
 
@@ -19,7 +19,8 @@ LoadingUI <- function(id) {
         tabsetPanel(
             id = ns("tabs"),
             tabPanel("Public datasets",uiOutput(ns("pgxtable_UI"))),
-            tabPanel("Upload data",uiOutput(ns("upload_UI")))
+            tabPanel("Upload data",uiOutput(ns("upload_UI"))),
+            tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
         )
     )
 }
@@ -48,6 +49,13 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                                   header=TRUE, stringsAsFactors=FALSE)
         LOGIN_AUTHENTICATION = "password"
     }
+
+    ##-----------------------------------------------------------------------------
+    ## Description
+    ##-----------------------------------------------------------------------------
+    description = "<b> Omics Playground</b> is a user-friendly and interactive self-service bioinformatics platform for the in-depth analysis, visualization and interpretation of transcriptomics and proteomics data. Life scientists can easily perform complex data analysis and visualization without coding, and significantly reduce the time to discovery."
+    
+    output$description <- renderUI(HTML(description))
 
     ##-----------------------------------------------------------------------------
     ## Show current dataset on each page
@@ -89,7 +97,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         
         ui <- tagList(
             usermodeUI,
-            br(),br(),br(),
+            ##br(),br(),br(),
             p(strong("Dataset info:")),
             div( htmlOutput(ns("dataset_info")), id="datainfo"),
             br(),
@@ -739,12 +747,16 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
 
     output$pgxtable_UI <- renderUI({    
         fillCol(
-            flex=c(1),
-            height = 580,
-            ##moduleWidget(pgxplots_module, outputFunc="plotOutput")
-            ##moduleWidget(pgxtable_module, outputFunc="dataTableOutput", ns=ns)
-            tableWidget(ns("pgxtable"))
-        )
+            height = 750,
+            fillRow(
+                flex = c(1,0.1,4.5),
+                wellPanel(
+                    uiOutput(ns("inputsUI"))
+                ),
+                br(),
+                tableWidget(ns("pgxtable"))
+            )
+        )        
     })
 
     ##================================================================================
@@ -786,12 +798,12 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             flex = c(1,1.5),
             height = 750,
             fillRow(
-                flex = c(1,0.1,3.5),
+                flex = c(1,0.1,4.5),
                 wellPanel(
                     fileInput(ns("upload_files"), "Choose files",
                               multiple = TRUE, accept = upload_filetypes),
-                    textInput(ns("upload_name"),"Name of dataset:"),
-                    ##textAreaInput("upload_description", "Description:", value = NULL,
+                    ## textInput(ns("upload_name"),"Name of dataset:"),
+                    ## textAreaInput("upload_description", "Description:", value = NULL,
                     ##              rows=5, placeholder="Describe your data set (minimum 100 characters)"),
                     actionButton(ns("upload_compute"),"Compute!",icon=icon("running"))
                 ),br(),
@@ -963,11 +975,11 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             names(ngs)
             head(ngs$samples)
             
-            ngs$name = "uploaded"
             ngs$datatype = "generic"
             ngs$description = "not available"
-            
-            ngs.name = gsub("[ ]","-",input$upload_name)
+
+            ngs.name = "(uploaded)"
+            ##ngs.name = gsub("[ ]","-",input$upload_name)
             ngs$name = ngs.name
             ## ngs$datatype = input$upload_datatype
             ## ngs$description = input$upload_description
@@ -989,7 +1001,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                 downloadButton(ns("downloadPGX"), "Download locally", icon=icon("download")),
                 actionButton(ns("savedata"), "Save to cloud", icon=icon("save")),
                 actionButton(ns("sharedata"), "Share with others", icon=icon("share-alt")),
-                modalButton("Dismiss")
+                modalButton("Start!")
             )
         ))
         
@@ -1146,8 +1158,8 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
 
             ## check files: matching dimensions
             if(status["counts.csv"]=="OK" && status["samples.csv"]=="OK") {
-                if(!all( colnames(uploaded_files[["counts.csv"]]) ==
-                         rownames(uploaded_files[["samples.csv"]]) )) {
+                if(!all( sort(colnames(uploaded_files[["counts.csv"]])) ==
+                         sort(rownames(uploaded_files[["samples.csv"]])) )) {
                     status["counts.csv"] = "ERROR: colnames do not match (with samples)"
                     status["samples.csv"]  = "ERROR: rownames do not match (with counts)"
                 }
@@ -1289,6 +1301,132 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     })
 
 
+    ##---------------------------------------------------------------
+    ##------------- modules for UsersMap ---------------------------
+    ##---------------------------------------------------------------
+
+    getUsersMapTable <- reactive({
+        require(rgeolocate)
+
+        access.files <- c(file.path(FILESX,"ncov2019_access.log"),
+                          "/var/www/html/logs/access.log",
+                          "/var/log/apache2/access.log")
+        access.files <- access.files[file.exists(access.files)]
+        access.files
+        if(length(access.files)==0) return(NULL)
+        ##accessfile = file.path(FILESX,"access-ncov2019.log")
+        accessfile <- access.files[1]
+        ##if(!file.exists(accessfile)) return(NULL)
+
+        ## extract IP
+        accessfile                          
+        acc <- read.table(accessfile)
+        ip <- as.character(acc[,1])
+        ##loc <- ip_api(unique(ip))
+        ip <- unique(ip)
+
+        ## extract period
+        acc.date <- gsub("[:].*|\\[","",as.character(acc[,4]))
+        from.date <- head(acc.date,1)
+        to.date <- tail(acc.date,1)
+        from.to <- paste(from.date,"-",to.date)
+        from.to
+        
+        ##file <- system.file("extdata","GeoLite2-Country.mmdb", package = "rgeolocate")
+        ##loc <- maxmind(ip, file, "country_code")
+        file <- file.path(FILESX,"GeoLite2-City.mmdb")
+        loc <- rgeolocate::maxmind(ip, file, c("country_code", "country_name", "city_name"))
+        country_code <- unique(loc$country_code)
+        names(country_code) <- loc[match(country_code,loc$country_code),"country_name"]
+        tt <- table(loc$country_name)
+        df <- data.frame( country_name = names(tt),
+                         country_code = country_code[names(tt)],
+                         visitors = (as.integer(tt)))
+
+        res <- list(table=df, period=from.to)
+
+    })
+
+    
+    usersmap.RENDER %<a-% reactive({
+
+        require(rworldmap)
+        require(RColorBrewer)
+
+        df <- ACCESS.LOG$table
+        ##df <- getUsersMapTable()$table
+        
+        ##sPDF <- getMap()  
+        ##mapCountryData(sPDF, nameColumnToPlot='continent')
+
+        sPDF <- joinCountryData2Map(
+            df,
+            joinCode = "ISO2",
+            nameJoinColumn = "country_code")
+        
+        par(mai=c(0,0.4,0.2,1),xaxs="i",yaxs="i")
+        mapParams <- mapCountryData(
+            sPDF, nameColumnToPlot="visitors",
+            ##mapTitle = "Number of unique IPs",
+            mapTitle = "", addLegend='FALSE',
+            colourPalette = RColorBrewer::brewer.pal(9,"Blues"),
+            numCats=9, catMethod="logFixedWidth")   
+                   
+        ##add a modified legend using the same initial parameters as mapCountryData
+        do.call( addMapLegend,
+                c(mapParams, labelFontSize = 0.85, legendWidth = 1.2, legendShrink = 0.5,
+                  legendMar = 4, horizontal = FALSE, legendArgs = NULL, tcl = -0.5,
+                  sigFigs = 4, digits = 3)
+                )
+        
+    })
+    
+    usersmap_info = "<strong>Visitors map.</strong> The world map shows the number of users visiting this site by unique IP."
+    
+    callModule(
+        plotModule,
+        id = "usersmap", ## label="a", 
+        plotlib = "baseplot",
+        func = usersmap.RENDER,
+        func2 = usersmap.RENDER, 
+        info.text = usersmap_info,
+        ##options = usersmap_options,
+        pdf.width=12, pdf.height=7, pdf.pointsize=13,
+        height = c(450,600), width = c('auto',1000), res=72,
+        ##datacsv = enrich_getWordFreq,
+        title = "Number of visitors by country"
+    )
+
+    ##usersmap_caption = "<b>(a)</b> <b>Geo locate.</b>"
+    output$usersmapUI <- renderUI({
+        ##u <- getUsersMapTable()
+        u <- ACCESS.LOG
+        df <- u$table
+        rownames(df) <-  df$country_name
+        tot.users <- sum(df$visitors)
+        freq <- df$visitors
+        names(freq) <- df$country_name
+        top.countries <- head(sort(freq,dec=TRUE),10)
+        top.countriesTT <- paste("<li>",names(top.countries),top.countries,collapse=" ")
+        
+        HTML(
+            "<b>Total visitors:</b>",tot.users,"<br><br>",
+            "<b>Top 10 countries:</b><br><ol>",top.countriesTT,"</ol><br>",
+            "<b>Period:</b><br>",u$period,"<br><br>"
+        )
+    })
+    
+    output$usersmap_UI <- renderUI({
+        fillCol(
+            height = 600,
+            fillRow(
+                flex = c(1,4.5),
+                wellPanel( uiOutput(ns("usersmapUI"))),
+                plotWidget(ns("usersmap"))
+            )
+        )
+    })
+    
     ##------------------------------------------------
     ## Module return object
     ##------------------------------------------------

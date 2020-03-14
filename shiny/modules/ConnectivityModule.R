@@ -14,9 +14,9 @@ ConnectivityUI <- function(id) {
         height = 750,
         tabsetPanel(
             id = ns("tabs1"),
-            tabPanel("Experiment clustering", uiOutput(ns("cmapClustering_UI"))),
+            tabPanel("FC-FC correlation", uiOutput(ns("cmapCorrelation_UI"))),
             tabPanel("Meta-analysis", uiOutput(ns("cmapMetaAnalysis_UI"))),
-            tabPanel("Pairs plot", uiOutput(ns("cmapPairsBoard_UI")))            
+            tabPanel("Experiment clustering", uiOutput(ns("cmapClustering_UI")))            
         )
     )
 }
@@ -34,7 +34,7 @@ ConnectivityModule <- function(input, output, session, env)
     selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
     selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     
-    description = "<b>Experiment connectivity.</b> Find similar experiments by correlating their signatures. The main goal is to identify experiments showing similar signatures and find genes that are commonly up/down regulated between experiments."
+    description = "<b>Similar Experiments.</b> Find similar experiments by correlating their signatures. The main goal is to identify experiments showing similar signatures and find genes that are commonly up/down regulated between experiments."
     output$description <- renderUI(HTML(description))
 
     cmap_infotext =
@@ -117,7 +117,7 @@ ConnectivityModule <- function(input, output, session, env)
         sigdb <- c("A","B","C")
         sigdb0 <- dir(c(FILES,FILESX,PGX.DIR), pattern="sigdb-.*h5")
         sigdb <- names(ngs$connectivity)  ## only precomputed inside PGX object??
-        sigdb <- intersect(sigdb, sigdb0)
+        sigdb <- sort(intersect(sigdb, sigdb0))
         sigdb
         sel <- sigdb[1]
         ##if(any(grepl("sigdb",sigdb))) sel <- grep("sigdb",sigdb,value=TRUE)[1]
@@ -444,6 +444,7 @@ ConnectivityModule <- function(input, output, session, env)
         ntop = 1000
         sigdb = "sigdb-gtex.h5"
         sigdb = "sigdb-lincs.h5"
+        sigdb = "sigdb-lincs-cp.h5"
         sigdb = "sigdb-creeds.h5"
         sigdb = "sigdb-archs4.h5"
         sigdb <- input$cmap_sigdb
@@ -457,11 +458,9 @@ ConnectivityModule <- function(input, output, session, env)
             dbg("[getConnectivityScores] ERROR : could not get scores")
             return(NULL)
         }
-        dbg("[getConnectivityScores] names(all.scores)=",names(all.scores))
         
         ct = names(all.scores)[1]
         ct <- input$cmap_contrast
-        dbg("[getConnectivityScores] input$cmap_contrast=",ct)
         if(!ct %in% names(all.scores)) {
             dbg("[getConnectivityScores] ERROR : contrast not in connectivity scores")
             return(NULL)
@@ -477,7 +476,6 @@ ConnectivityModule <- function(input, output, session, env)
         scores <- scores[!duplicated(scores$pathway),]
         rownames(scores) <- scores$pathway
         dim(scores)
-        dbg("[getConnectivityScores] dim(scores)=",dim(scores))
 
         if(nrow(scores)==0 || ncol(scores)==0 ) {
             dbg("[getConnectivityScores] ERROR : scores has zero dimensions")
@@ -490,9 +488,10 @@ ConnectivityModule <- function(input, output, session, env)
         }
         
         ## only those in existing database
-        ct <- getConnectivityContrasts(sigdb)
-        scores <- scores[which(rownames(scores) %in% ct),,drop=FALSE]
-                
+        cts <- getConnectivityContrasts(sigdb)
+        scores <- scores[which(rownames(scores) %in% cts),,drop=FALSE]
+        dim(scores)
+        
         ## filter on significance
         qsig = 0.05
         qsig <- input$connectivityScoreTable_qsig
@@ -640,7 +639,7 @@ ConnectivityModule <- function(input, output, session, env)
         
         ##colnames(df) <- sub("padj","NES.q",colnames(df))
         df$leadingEdge <- shortstring(sapply(df$leadingEdge,paste,collapse=","),40)
-        df$pathway <- shortstring(df$pathway,85)
+        df$pathway <- shortstring(df$pathway,100)
         df$leadingEdge <- NULL
         
         colnames(df) <- sub("pathway","dataset/contrast",colnames(df))
@@ -696,12 +695,12 @@ ConnectivityModule <- function(input, output, session, env)
         options = connectivityScoreTable_opts,
         info.width = "150px",
         title = "Similarity scores",
-        height = c(270,720), width = c('auto',1280)
+        height = c(285,720), width = c('auto',1280)
     )
     
-    ##================================================================================
+    ##============================================================================
     ## FC-FC correlation/scatter plots
-    ##================================================================================
+    ##============================================================================
     
     mfplots=c(4,5)
     cmap_FCFCscatter <- function(fc, F, mfplots, ylab)
@@ -720,7 +719,7 @@ ConnectivityModule <- function(input, output, session, env)
         F <- F[gg,1:min(nplots,ncol(F)),drop=FALSE]        
         F0 <- F0[gg,colnames(F),drop=FALSE]        
         i=1
-        par(mfrow=mfplots, mar=c(5.3,1.6,0.5,0.5),
+        par(mfrow=mfplots, mar=c(5.1,1.6,0.2,0.5),
             mgp=c(2.6,0.7,0), oma=c(0,3,0,0))
         i=1
         for(i in 1:ncol(F)) {
@@ -873,8 +872,8 @@ ConnectivityModule <- function(input, output, session, env)
         title = "FC-FC scatter plots",
         ##info.text = cmap_connectivitymap_info
         ##caption = cmap_connectivitymap_caption,
-        pdf.height=7, pdf.width=11, 
-        height = c(340,600), width=c("auto",1280),
+        pdf.height=4.5, pdf.width=10, 
+        height = c(320,600), width=c("auto",1280),
         res = c(90,110)
     )
 
@@ -974,6 +973,7 @@ ConnectivityModule <- function(input, output, session, env)
         title="Cumulative foldchange", label="a",
         func = cumFCplot.RENDER,
         func2 = cumFCplot.RENDER2,
+        csvFunc = cumulativeFCtable,
         info.text =  cumFCplot.info,
         ## caption =  cumFCplot.caption,
         options = cumFCplot.opts,
@@ -1004,7 +1004,6 @@ ConnectivityModule <- function(input, output, session, env)
         dbg("[cumEnrichmentTable] dim(F)=",dim(F))
 
         ## multiply with sign of enrichment
-        df <- getConnectivityScores()
         rho1 <- df$rho[match(colnames(F),df$pathway)]
         F <- t(t(F) * sign(rho1))
 
@@ -1097,6 +1096,7 @@ ConnectivityModule <- function(input, output, session, env)
         title="Cumulative enrichment", label="b",
         func = cumEnrichmentPlot.RENDER,
         func2 = cumEnrichmentPlot.RENDER,
+        csvFunc = cumEnrichmentTable,
         info.text =  cumEnrichmentPlot.info,
         ## caption =  cumFCplot.caption,
         options = cumEnrichmentPlot.opts,
@@ -1106,9 +1106,9 @@ ConnectivityModule <- function(input, output, session, env)
     )    
 
 
-    ##================================================================================
+    ##=============================================================================
     ## CONNECTIVITY MAP
-    ##================================================================================
+    ##=============================================================================
            
     connectivityMap.RENDER <- reactive({
         
@@ -1190,6 +1190,8 @@ ConnectivityModule <- function(input, output, session, env)
             greyred64 <- colorRampPalette(colors=c("grey15","grey30","indianred3","firebrick4"))(64)
             ##greyred64 <- colorRampPalette(colors=c("grey15","grey15","grey30","green4"))(64)
         }
+
+        ## add transparency
         greyred64 <- sapply(1:64,function(i) paste0(greyred64[i],sprintf("%02X",0+4*i-1)))
         bluered64 <- sapply(1:64,function(i) paste0(bluered64[i],sprintf("%02X",abs(-259+8*i-1)) ))        
         colorby <- "score"
@@ -1387,10 +1389,11 @@ ConnectivityModule <- function(input, output, session, env)
     
     callModule(
         plotModule,
-        "connectivityMap", label = "c",
+        "connectivityMap", label = "a",
         func = connectivityMap.RENDER1, plotlib="plotly",
         func2 = connectivityMap.RENDER, 
         options = connectivityMap.opts,
+        download.fmt = c("html"),  ## PDF/PNG does not work???
         title = "Connectivity map",
         info.text = connectivityMap_info,
         ##caption = connectivityMap_caption,
@@ -1424,17 +1427,9 @@ ConnectivityModule <- function(input, output, session, env)
         ii <- head(ii,ntop)
         df <- df[ii,,drop=FALSE]
 
-        if(input$LEgraph_level == "gene") {
-            le.genes <- sort(unique(unlist(df$leadingEdge)))        
-            A <- 1*sapply( df$leadingEdge, function(g) le.genes %in% g)
-            rownames(A) <- le.genes
-        } else {
-            F <- cumEnrichmentTable()
-            le.sets <- apply(F, 2, function(x) head(order(-abs(x)),10))
-            le.sets <- apply(le.sets, 2, function(i) rownames(F)[i])
-            A <- 1*apply( le.sets, 2, function(g) rownames(F) %in% g)
-            rownames(A) <- rownames(F)
-        }
+        le.genes <- sort(unique(unlist(df$leadingEdge)))        
+        A <- 1*sapply( df$leadingEdge, function(g) le.genes %in% g)
+        rownames(A) <- le.genes
         A <- head( A[order(-rowMeans(A)),,drop=FALSE], 100)        
         head(A)
         ##adjM <- pmax( cor(t(A)), 0)  ## only positive correlation???
@@ -1445,7 +1440,7 @@ ConnectivityModule <- function(input, output, session, env)
             adjM, mode="undirected", weighted=TRUE, diag=FALSE)
 
         ## set graph threshold to some sensible value [0,1]
-        wt0 <- tail(sort(abs(E(gr)$weight)),80)[1] ## about 20 nodes
+        wt0 <- tail(sort(abs(E(gr)$weight)),80)[1] ## about 80 edges
         ##dbg("[getLeadingEdgeGraph] setting edge threshold to wt=",wt0)
         updateSliderInput(session, "LEgraph_threshold", value = 0.99*wt0)
         
@@ -1461,7 +1456,8 @@ ConnectivityModule <- function(input, output, session, env)
 
         gr <- getLeadingEdgeGraph()
         if(is.null(gr)) return(NULL)
-                
+        vv <- V(gr)$name
+        
         max(abs(E(gr)$weight))
         minwt <- 0.5
         minwt <- input$LEgraph_threshold
@@ -1470,19 +1466,11 @@ ConnectivityModule <- function(input, output, session, env)
         if(length(V(gr))==0) return(NULL)
 
         fc=cumFC=NULL
-        if(input$LEgraph_level=="gene") {
-            fc <- getCurrentContrast()$fc
-            fc <- fc[V(gr)$name]
-            cumFC <- cumulativeFCtable()
-            cumFC <- cumFC[V(gr)$name,]
-            fontsize = 22
-        }
-        if(input$LEgraph_level=="geneset") {
-            cumFC <- cumEnrichmentTable()
-            cumFC <- cumFC[V(gr)$name,]
-            fc <- cumFC[,1]
-            fontsize = 18
-        }
+        fc <- getCurrentContrast()$fc
+        fc <- fc[V(gr)$name]
+        cumFC <- cumulativeFCtable()
+        cumFC <- cumFC[V(gr)$name,]
+        fontsize = 22
         fc <- fc / max(abs(fc))
         
         sizevar <- input$LEgraph_sizevar
@@ -1536,9 +1524,6 @@ ConnectivityModule <- function(input, output, session, env)
     })
     
     leadingEdgeGraph.opts <- tagList(
-        tipify( radioButtons(ns("LEgraph_level"),"level:",c("gene","geneset"),
-                             inline=TRUE),
-               "Gene or geneset graph."),        
         tipify( sliderInput(ns("LEgraph_threshold"),"edge threshold:",0,1,0.5,0.01),
                "Threshold value for edges."),
         tipify( radioButtons(ns("LEgraph_ntop"),"N-neighbours:",c(5,10,25,100),selected=10,inline=TRUE),
@@ -1548,8 +1533,8 @@ ConnectivityModule <- function(input, output, session, env)
                "Parameter for node size.")        
     )
     
-    leadingEdgeGraph_caption = "<b>Leading-edge graph.</b> Network of shared leading-edge genes (or genesets) between top-N most similar signatures."
-    leadingEdgeGraph_info = "<b>Leading-edge graph.</b> Network of shared leading-edge genes (or genesets) between top-N most similar signatures. In the plot options you can set the threshold the edges."
+    leadingEdgeGraph_caption = "<b>Leading-edge graph.</b> Network of shared leading-edge genes between top-N most similar signatures."
+    leadingEdgeGraph_info = "<b>Leading-edge graph.</b> Network of shared leading-edge genes between top-N most similar signatures. In the plot options you can set the threshold the edges."
     
     callModule(
         plotModule,
@@ -1562,7 +1547,169 @@ ConnectivityModule <- function(input, output, session, env)
         info.text = leadingEdgeGraph_info,
         ## caption = leadingEdgeGraph_caption,
         pdf.height=7, pdf.width=11, 
-        height = c(650,720), width=c("auto",1000),
+        height = c(300,720), width=c("auto",1000),
+        res = c(90,100)
+    )
+
+    ##-------------------------------------------------------------------------------
+    ## Enrichment graph 
+    ##-------------------------------------------------------------------------------    
+    
+    getEnrichmentGraph <- reactive({
+        
+        dbg("[getEnrichmentGraph] reacted")
+                
+        ## get enrichment scores
+        F <- cumEnrichmentTable()
+
+        if(input$enrichGraph_oddweighting) {
+            gr2 <- getLeadingEdgeGraph()
+            le.genes <- V(gr2)$name
+            gsets <- GSETS[rownames(F)]
+            ##gsets <- lapply(gsets, function(x) intersect(x,le.genes))
+            gsets <- gsets[sapply(gsets,length)>=5]
+            bg <- unique(unlist(gsets))
+            ft <- gset.fisher(le.genes, gsets, fdr=1.0,
+                              min.genes=3, max.genes=99999,
+                              background=bg)
+            ft <- ft[match(rownames(F),rownames(ft)),]            
+            F <- F * log(1+ft$odd.ratio)            
+        }
+
+        ## get top average-enriched
+        ntop <- as.integer(input$enrichGraph_ntop)
+        le.sets <- apply(F, 2, function(x) head(order(-abs(x)), ntop))
+        le.sets <- apply(le.sets, 2, function(i) rownames(F)[i])
+        A <- 1*apply( le.sets, 2, function(g) rownames(F) %in% g)
+        rownames(A) <- rownames(F)
+
+        ## create graph
+        A <- head( A[order(-rowMeans(A)),,drop=FALSE], 100)        
+        head(A)
+        ##adjM <- pmax( cor(t(A)), 0)  ## only positive correlation???
+        adjM <- (A %*% t(A))
+        adjM <- adjM / max(adjM,na.rm=TRUE)
+        require(igraph)
+        gr <- graph_from_adjacency_matrix(
+            adjM, mode="undirected", weighted=TRUE, diag=FALSE)
+
+        ## set graph threshold to some sensible value [0,1]
+        wt0 <- tail(sort(abs(E(gr)$weight)),25)[1] ## about 20 nodes
+        ##dbg("[getEnrichmentGraph] setting edge threshold to wt=",wt0)
+        updateSliderInput(session, "enrichGraph_threshold", value = 0.99*wt0)
+        
+        return(gr)
+    })
+    
+    enrichmentGraph.VISNETWORK <- reactive({
+
+        require(igraph)
+        require(visNetwork)
+        require(gplots) ## for col2hex
+        ## return(NULL)
+
+        gr <- getEnrichmentGraph()
+        if(is.null(gr)) return(NULL)
+                
+        gr2 <- getLeadingEdgeGraph()
+        pw <- V(gr)$name
+        le.genes <- V(gr2)$name
+        
+        pw.genes <- sapply( GSETS[pw], function(gs) intersect(gs,le.genes))
+        pw.genes <- sapply(pw.genes, paste, collapse=" ")
+        
+        max(abs(E(gr)$weight))
+        minwt <- 0.5
+        minwt <- input$enrichGraph_threshold
+        minwt <- min(c(minwt, 0.99*max(abs(E(gr)$weight),na.rm=TRUE)))
+        gr <- subgraph.edges(gr, which(abs(E(gr)$weight) >= minwt) )
+        if(length(V(gr))==0) return(NULL)
+
+        fc=cumFC=NULL
+        cumFC <- cumEnrichmentTable()
+        cumFC <- cumFC[V(gr)$name,]
+        fc <- cumFC[,1]
+        fontsize = 18
+        fc <- fc / max(abs(fc))
+        
+        sizevar <- input$enrichGraph_sizevar
+        vsize = 15
+        if(sizevar=="centrality") {
+            vsize <- log(1+betweenness(gr))
+        } else if(sizevar=="cumFC") {
+            fc1 <- rowMeans(cumFC)
+            vsize <- abs(fc1[match(V(gr)$name,names(fc1))])**2
+        } else if(sizevar=="FC") {
+            vsize <- abs(fc[match(V(gr)$name,names(fc))])**2
+        } else {
+            vsize <- 1
+        }
+        vsize <- 3 + 12 * (abs(vsize) / max(abs(vsize),na.rm=TRUE))**0.5
+
+        bluered.pal <- colorRampPalette(
+            ##colors = c("navyblue","royalblue4","grey90","indianred3","firebrick4")
+            colors = c("royalblue4","royalblue2","grey90","indianred3","firebrick4")
+        )       
+        vcolor <- bluered.pal(65)[ 33 + round(32*fc) ]
+        vcolor <- paste0(vcolor,"AA") ## add transparency
+        
+        ## defaults graph parameters
+        vname <- sub("H:HALLMARK_|C2:KEGG_","",V(gr)$name)
+        V(gr)$label <- vname
+        V(gr)$title <- paste0("<b>",vname,"</b><br>",pw.genes)
+        V(gr)$size  <- vsize      ## rather small
+        ##V(gr)$color  <- c("skyblue","salmon")[1 + 1*(sign(fc)>0)]       ## rather small
+        V(gr)$color  <- vcolor
+
+        ew = abs(E(gr)$weight)
+        E(gr)$width <- 1.5 * (0.2 + 10*(ew/max(ew,na.rm=TRUE))**2)
+        E(gr)$color <- "#DDD"  ## lightgrey
+
+        visdata <- toVisNetworkData(gr, idToLabel=FALSE)
+        
+        ## ------------------ plot using visNetwork (zoomable) -----------------
+        graph <- visNetwork(
+            nodes = visdata$nodes,
+            edges = visdata$edges) %>%
+            visNodes(font = list(size = fontsize))  %>%
+            ## visEdges(hidden=FALSE, width=2, color=list(opacity=0.9))  %>%
+            visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)) %>%
+            ## visPhysics(enabled=TRUE)  %>%
+            ## visInteraction(hideEdgesOnDrag = TRUE) %>%
+            ## visIgraphLayout(layout="layout.norm", layoutMatrix=pos)
+            visIgraphLayout(layout="layout_nicely")
+        graph
+        
+    })
+    
+    enrichmentGraph.opts <- tagList(
+        tipify( sliderInput(ns("enrichGraph_threshold"),"edge threshold:",0,1,0.5,0.01),
+               "Threshold value for edges."),
+        tipify( radioButtons(ns("enrichGraph_ntop"),"N-neighbours:",c(5,10,25,100),
+                             selected=10, inline=TRUE),
+               "Number of simlar experiments to consider."),
+        tipify( checkboxInput(ns("enrichGraph_oddweighting"),"Odd ratio weighting",FALSE),
+               "Odds ratio weighting."),
+        tipify( radioButtons(ns("enrichGraph_sizevar"),"Size:",c("FC","cumFC","centrality"),
+                             selected="cumFC", inline=TRUE),
+               "Parameter for node size.")        
+    )
+    
+    enrichmentGraph_caption = "<b>Enrichment graph.</b> Network of shared enrichmed genesets between top-N most similar signatures."
+    enrichmentGraph_info = "<b>Enrichment graph.</b> Network of shared enriched genesets between top-N most similar signatures. In the plot options you can set the threshold the edges."
+    
+    callModule(
+        plotModule,
+        "enrichmentGraph", label = "d",
+        ##func = enrichmentGraph.RENDER,
+        ##func2 = enrichmentGraph.RENDER,
+        func = enrichmentGraph.VISNETWORK, plotlib="visnetwork",
+        options = enrichmentGraph.opts,
+        title = "Enrichment graph",
+        info.text = enrichmentGraph_info,
+        ## caption = enrichmentGraph_caption,
+        pdf.height=7, pdf.width=11, 
+        height = c(330,720), width=c("auto",1000),
         res = c(90,100)
     )
     
@@ -1603,7 +1750,8 @@ ConnectivityModule <- function(input, output, session, env)
         sigdb <- input$cmap_sigdb
         req(sigdb)        
         ct2 = all.ct[1]
-        sel.row <- connectivityScoreTable2$rows_selected()
+        ##sel.row <- connectivityScoreTable2$rows_selected()
+        sel.row <- connectivityScoreTable$rows_selected()
         req(sel.row)        
         df <- getConnectivityScores()
         df <- df[abs(df$score)>0,,drop=FALSE]
@@ -1825,7 +1973,7 @@ ConnectivityModule <- function(input, output, session, env)
 
     callModule(
         plotModule,
-        id = "cmapPairsPlot", label="a",
+        id = "cmapPairsPlot", label="c",
         func = cmapPairsPlot.PLOT,
         plotlib="plotly",
         title = "Scatterplot matrix (pairs)",
@@ -1854,7 +2002,7 @@ ConnectivityModule <- function(input, output, session, env)
         
         ##colnames(df) <- sub("padj","NES.q",colnames(df))
         ##df$leadingEdge <- shortstring(sapply(df$leadingEdge,paste,collapse=","),40)
-        df$pathway <- shortstring(df$pathway,85)
+        df$pathway <- shortstring(df$pathway,110)
         df$leadingEdge <- NULL
         
         dbg("[connectivityScoreTable.RENDER] dim(df)=",dim(df))        
@@ -1906,26 +2054,6 @@ ConnectivityModule <- function(input, output, session, env)
         height = c(660,700), width = c('auto',1280)
     )
 
-    cmapPairsBoard_caption = paste(
-        "<b>(a)</b>",cmapPairsPlot_caption,
-        "<b>(b)</b>",connectivityScoreTable_info
-    )
-    
-    output$cmapPairsBoard_UI <- renderUI({
-        fillCol(
-            height = fullH,
-            flex=c(NA,0.025,1), ##height = 370,
-            div(HTML(cmapPairsBoard_caption),class="caption"),
-            br(),
-            fillRow(
-                flex=c(1.5,0.1,1),
-                plotWidget(ns("cmapPairsPlot")),
-                br(),
-                tableWidget(ns("connectivityScoreTable2"))
-            )
-        )
-    })
-    ##outputOptions(output, "cmapPairsPlot_UI", suspendWhenHidden=FALSE) ## important!!!
 
     ##=========================================================================
     ## META-CONNECTIVITY MAP
@@ -1970,50 +2098,60 @@ ConnectivityModule <- function(input, output, session, env)
     ##================================================================================
     ##========================= OUTPUT UI ============================================
     ##================================================================================
-       
-    cmapClustering_caption = paste(
+
+    ## ------------------------------------------------------
+    ## --------------------- tab1 ---------------------------
+    ## ------------------------------------------------------
+    
+    cmapCorrelation_caption = paste(
         "<b>(a)</b>", cmap_FCFCplots_caption,
         "<b>(b)</b>", connectivityScoreTable_info,
-        "<b>(c)</b>", connectivityMap_caption
+        "<b>(c)</b>", cmapPairsPlot_caption
     )
     
-    output$cmapClustering_UI <- renderUI({
+    output$cmapCorrelation_UI <- renderUI({
         ##req(input$dimensions)
         fillCol(
             height = fullH,
             ## height = input$dimensions[2], ## dynamics with JS  
             flex = c(NA,0.015,1),
-            div(HTML(cmapClustering_caption,"<br><br>"), class="caption"),
+            div(HTML(cmapCorrelation_caption,"<br><br>"), class="caption"),
             br(),
             fillRow(
                 flex = c(1.2,0.05,1),
                 fillCol(
-                    flex = c(1.2,0.035,1),                    
+                    flex = c(1.1,0.03,1),                    
                     plotWidget(ns("cmap_FCFCplots")),
                     br(),
                     tableWidget(ns("connectivityScoreTable"))
                 ),
                 br(),
-                plotWidget(ns("connectivityMap"))
+                ##plotWidget(ns("connectivityMap"))
+                plotWidget(ns("cmapPairsPlot"))
             )
         )
     })
-    outputOptions(output, "cmapClustering_UI", suspendWhenHidden=FALSE) ## important!!!
+    outputOptions(output, "cmapCorrelation_UI", suspendWhenHidden=FALSE) ## important!!!
+
+    ## ------------------------------------------------------
+    ## --------------------- tab2 ---------------------------
+    ## ------------------------------------------------------
 
     cmapMetaAnalysis_caption = paste(
         "<b>(a)</b>", cumFCplot.caption,
         "<b>(b)</b>", cumEnrichmentPlot.caption,
-        "<b>(c)</b>", leadingEdgeGraph_caption
+        "<b>(c)</b>", leadingEdgeGraph_caption,
+        "<b>(d)</b>", enrichmentGraph_caption
     )
     
     output$cmapMetaAnalysis_UI <- renderUI({
         fillCol(
             height = fullH,
-            flex = c(NA,0.015,1),
-            div(HTML(cmapMetaAnalysis_caption,"<br><br>"), class="caption"),
+            flex = c(NA,0.02,1),
+            div(HTML(cmapMetaAnalysis_caption,"<br>"), class="caption"),
             br(),
             fillRow(
-                flex = c(1.0,0.06,1.1),
+                flex = c(1.0,0.06,1.2),
                 fillCol(
                     flex = c(1,1.1),
                     plotWidget(ns("cumFCplot")),                
@@ -2021,8 +2159,9 @@ ConnectivityModule <- function(input, output, session, env)
                 ),
                 br(),
                 fillCol(
-                    ##flex = c(1.1,1),
-                    plotWidget(ns("leadingEdgeGraph"))
+                    flex = c(1,1.1),
+                    plotWidget(ns("leadingEdgeGraph")),
+                    plotWidget(ns("enrichmentGraph"))
                     ##tableWidget(ns("connectivityScoreTable2"))
                 )
             )
@@ -2030,5 +2169,33 @@ ConnectivityModule <- function(input, output, session, env)
     })
     outputOptions(output,"cmapMetaAnalysis_UI", suspendWhenHidden=FALSE) ## important!!!    
     
+    ## ------------------------------------------------------
+    ## --------------------- tab2 ---------------------------
+    ## ------------------------------------------------------
+
+    cmapClustering_caption = paste(
+        "<b>(a)</b>",connectivityMap_caption,
+        "<b>(b)</b>",connectivityScoreTable_info
+    )
+
+    require(sortable)
+    
+    output$cmapClustering_UI <- renderUI({
+        fillCol(
+            height = fullH,
+            flex=c(NA,0.025,1), ##height = 370,
+            div(HTML(cmapClustering_caption),class="caption"),
+            br(),
+            fillRow(
+                flex=c(1.5,0.1,1), 
+                plotWidget(ns("connectivityMap")),
+                ##plotWidget(ns("cmapPairsPlot")),
+                br(),
+                tableWidget(ns("connectivityScoreTable2"))
+            )
+        )
+    })
+    ##outputOptions(output, "cmapPairsPlot_UI", suspendWhenHidden=FALSE) ## important!!!
+
     
 } ## end-of-Module 

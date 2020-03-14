@@ -42,13 +42,16 @@ pgx.stackedBarplot <- function(x, hz=FALSE, ...)
     ##barplot( t(x), beside=FALSE, las=3)
     x.pos <- pmax(x,0)
     x.neg <- pmin(x,0)
-    y0 <- 1.1*max(abs(rowSums(x,na.rm=TRUE)))
+    y0 <- max(abs(rowSums(x,na.rm=TRUE)))
+    y0 <- max(rowSums(pmax(x,0),na.rm=TRUE),
+              rowSums(pmax(-x,0),na.rm=TRUE))
+
     rownames(x.neg) <- NULL
     if(hz==TRUE) {
         barplot( t(x.pos), horiz=TRUE, beside=FALSE, las=1, xlim=c(-1,1)*y0, ... )
         barplot( t(x.neg), horiz=TRUE, beside=FALSE, las=1, add=TRUE, ... )
     } else {
-        barplot( t(x.pos), beside=FALSE, las=3, ylim=c(-1,1)*y0, ... )
+        barplot( t(x.pos), beside=FALSE, las=3, ylim=c(-1.1,1.1)*y0, ... )
         barplot( t(x.neg), beside=FALSE, las=3, add=TRUE, ... )
     }
 }

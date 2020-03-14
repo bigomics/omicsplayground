@@ -1,3 +1,91 @@
+getAccessLogs <- function(access.dirs, lib.dir) {
+    
+    ##access.dirs <- c(FILESX, file.path(FILESX,"apache2"),
+    ##                 "/var/www/html/logs", "/var/log/apache2")
+    ##access.dirs <- c(FILESX)
+    access.dirs <- access.dirs[sapply(access.dirs,dir.exists)]
+    if(length(access.dirs)==0) return(NULL)
+    access.dirs
+    access.files <- lapply(access.dirs, dir, pattern="access.log", full.names=TRUE)
+    access.files
+    access.files <- unlist(access.files)
+
+    access.files
+    access.logs <- lapply(access.files, function(f)
+        suppressMessages(suppressWarnings(try(read.table(f)))))
+    access.logs <- access.logs[sapply(access.logs,class)=="data.frame"]
+    i=3
+    for(i in 1:length(access.logs)) {
+        df <- access.logs[[i]]
+        cols <- c("V1","V4","V6")
+        if(mean(grepl(":80$",df[,"V1"])) > 0.9) {
+            cols <- c("V2","V5","V7")
+        }
+        access.logs[[i]] <- df[,cols]
+        colnames(access.logs[[i]]) <- c("ip","date","get")
+    }    
+
+    ## Filter access log
+    acc <- do.call(rbind, access.logs)
+    if(1) {
+        sel <- grep("omicsplayground",acc[,"get"])
+        acc <- acc[sel,]
+    }
+    dim(acc)
+    
+    ## Extract visiting period
+    acc.date <- gsub("[:].*|\\[","",as.character(acc[,"date"]))
+    Sys.setlocale("LC_TIME", "C")
+    acc.date2 <- acc.date[order(as.Date(acc.date, format = "%d/%b/%Y"))]
+    from.date <- head(acc.date2,1)
+    to.date <- tail(acc.date2,1)
+    from.to <- paste(from.date,"-",to.date)
+    from.to
+
+    ## Extract IP
+    acc.ip <- as.character(acc[,"ip"])
+    ##loc <- ip_api(unique(acc.ip))
+    ip <- unique(acc.ip)
+
+    require(rgeolocate)
+    ##file <- system.file("extdata","GeoLite2-Country.mmdb", package = "rgeolocate")
+    ##loc <- maxmind(ip, file, "country_code")
+    file <- file.path(lib.dir,"GeoLite2-City.mmdb")
+    loc <- rgeolocate::maxmind(ip, file, c("country_code", "country_name", "city_name"))
+    country_code <- unique(loc$country_code)
+    names(country_code) <- loc[match(country_code,loc$country_code),"country_name"]
+
+    acc$country_code <- loc$country_code[match(acc.ip,ip)]
+    tail(sort(table(acc$country_code)),40)
+
+    if(0) {
+
+        getDodgy <- function(acc0,n=100) {
+            ii <- grep("omicsplayground",acc0[,"get"],invert=TRUE)
+            ii <- ii[which(nchar(as.character(acc0[ii,"get"])) > 20)]
+            head(acc0[ii,],n=n)
+        }
+        
+        tail(sort(table(acc$country_code)),40)
+
+        ii <- which(acc.cc=="US")
+        getDodgy(acc[ii,],100)
+
+        ii <- which(acc.cc=="CN")
+        getDodgy(acc[ii,],100)        
+    }
+
+    tt <- table(loc$country_name)
+    df <- data.frame( country_name = names(tt),
+                     country_code = country_code[names(tt)],
+                     visitors = (as.integer(tt)))
+    df <- df[order(-df$visitors),]
+    sum(df$visitors)
+    
+    res <- list(table=df, period=from.to)
+    return(res)
+}
+
 h5exists <- function(h5.file, obj) {
     xobjs <- apply(h5ls(h5.file)[,1:2],1,paste,collapse="/")
     obj %in% gsub("^/|^//","",xobjs)
@@ -42,13 +130,17 @@ pgx.saveMatrixH5 <- function(X, h5.file, chunk=NULL, del=TRUE )
 }
 
 
+file = "./OPTIONS"
 file = "./OPTIONS_"
 pgx.readOptions <- function(file = "./OPTIONS") {
     if(!file.exists(file)) return(NULL)
     opt <- read.table(file, sep="=", row.names=1)
-    opt <- gsub("^[ ]*|[ ]*$","",apply(opt,1,c))
+    opt <- gsub("^[ ]*|[ ]*$","",apply(opt,1,c)) ## strip leading/post spaces
     opt <- sapply(opt,list)
-    opt <- sapply(opt,strsplit,split=";")
+    opt <- sapply(opt,strsplit,split="[;,]")
+    is.bool <- sapply(opt, function(x) all(tolower(x) %in% c("true","false")))
+    is.bool
+    opt[is.bool] <- sapply(opt[is.bool], function(x) tolower(x) %in% c("true"))
     names(opt) <- gsub("^[ ]*|[ ]*$","",names(opt))
     opt
 }

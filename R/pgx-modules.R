@@ -28,14 +28,16 @@ plotWidget <- function(id) {
 }
     
 plotModule <- function(input, output, session, ## ns=NULL,
-                       func, info.text="Info text", title="", func2=NULL,
+                       func, func2=NULL, 
+                       info.text="Info text", title="", 
                        inputs=NULL, options = NULL, label="",
                        caption="", caption2="", ## header=NULL,
-                       plotlib = "base", renderFunc=NULL, outputFunc=NULL,
+                       plotlib = "base", renderFunc=NULL, outputFunc=NULL, csvFunc=NULL,
                        no.download = FALSE, download.fmt=c("png","pdf"), 
                        just.info=FALSE, info.width="300px", show.maximize = TRUE,
                        height = c(400,720), width = c("auto",1080), res=c(72,100),
-                       download.pdf = NULL, download.png = NULL, download.html = NULL,
+                       download.pdf = NULL, download.png = NULL,
+                       download.html = NULL, download.csv = NULL,
                        pdf.width=8, pdf.height=8, pdf.pointsize=12)
 {
     ns <- session$ns    
@@ -66,8 +68,9 @@ plotModule <- function(input, output, session, ## ns=NULL,
     dload.csv = dload.pdf = dload.png = dload.html = NULL
     if("pdf" %in% download.fmt)  dload.pdf  <- downloadButton(ns("pdf"), "PDF")
     if("png" %in% download.fmt)  dload.png  <- downloadButton(ns("png"), "PNG")
-    if("csv" %in% download.fmt)  dload.csv  <- downloadButton(ns("csv"), "CSV")
     if("html" %in% download.fmt) dload.html <- downloadButton(ns("html"), "HTML")
+    ##if("csv" %in% download.fmt)  dload.csv  <- downloadButton(ns("csv"), "CSV")
+    if(!is.null(csvFunc))  dload.csv  <- downloadButton(ns("csv"), "CSV")
     
     dload.button <- dropdownButton(
         dload.pdf,
@@ -137,10 +140,14 @@ plotModule <- function(input, output, session, ## ns=NULL,
     do.pdf = "pdf" %in% download.fmt
     do.png = "png" %in% download.fmt
     do.html = "html" %in% download.fmt
+    ##do.csv  = "csv" %in% download.fmt && !is.null(csvFunc)
+    do.csv = !is.null(csvFunc)
 
-    PNGFILE=PDFFILE=HTMLFILE=NULL
+    
+    PNGFILE=PDFFILE=HTMLFILE=CSVFILE=NULL
     if(do.pdf) PDFFILE = paste0(gsub("file","plot",tempfile()),".pdf")
     if(do.png) PNGFILE = paste0(gsub("file","plot",tempfile()),".png")
+    if(do.csv) CSVFILE = paste0(gsub("file","data",tempfile()),".csv")    
     HTMLFILE = paste0(gsub("file","plot",tempfile()),".html")  ## tempory for webshot
     HTMLFILE
     unlink(HTMLFILE)
@@ -474,6 +481,20 @@ plotModule <- function(input, output, session, ## ns=NULL,
             } ## end of content
         ) ## end of HTML downloadHandler
     } ## end of do HTML
+
+    ##if(do.csv && is.null(download.csv) )  {
+    if(do.csv)  {
+        download.csv <- downloadHandler(
+            filename = "data.csv",
+            content = function(file) {
+                withProgress({
+                    data <- csvFunc()                    
+                    ##file.copy(CSVFILE,file)
+                    write.csv(data, file=file)
+                }, message="exporting to CSV", value=0.8)
+            } ## end of content
+        ) ## end of HTML downloadHandler
+    } ## end of do HTML
     
 
     ##--------------------------------------------------------------------------------
@@ -485,7 +506,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
     ## if("download.png" %in% names(figure))  output$png  <- download.png
     ## if("download.html" %in% names(figure)) output$html <- download.html
 
-    ##if(!is.null(download.csv))  output$csv  <- download.csv
+    if(!is.null(download.csv))  output$csv  <- download.csv
     if(!is.null(download.pdf))  output$pdf  <- download.pdf
     if(!is.null(download.png))  output$png  <- download.png
     if(!is.null(download.html)) output$html <- download.html
@@ -662,6 +683,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
         download.pdf = download.pdf,
         download.png = download.png,
         download.html = download.html,
+        download.csv = download.csv,
         ##buttons = buttons,
         ##getCaption = caption.fun,
         saveHTML = saveHTML,

@@ -76,7 +76,6 @@ ngs.collapseByGeneSLOW <- function(ngs) {
     return(ngs)
 }
 
-
 ngs.collapseByGene <- function(ngs) {
     ##sum(duplicated(ngs$genes$gene_name))
     gene <- as.character(ngs$genes$gene_name)

@@ -122,10 +122,19 @@ pgx.inferGender <- function(X, gene_name=NULL) {
     ##
     ##cc.genes <- readLines(con = "../opt/seurat/regev_lab_cell_cycle_genes.txt")
     if(is.null(gene_name)) gene_name <- toupper(sub(".*:","",rownames(X)))
-    y.genes = intersect(c("DDX3Y","RPS4Y1","USP9Y","KDM5D"),gene_name)
-    y.genes
-    x.genes = intersect(c("XIST"),gene_name)
-    x.genes
+    if(0) {
+        X <- log2(1+ngs$counts)
+        gene_name = rownames(X)
+        x.genes <- rownames(ngs$genes)[grep("X",ngs$genes$chr)]
+        y.genes <- rownames(ngs$genes)[grep("Y",ngs$genes$chr)]
+        x.genes
+        y.genes
+    } else {
+        y.genes = intersect(c("DDX3Y","RPS4Y1","USP9Y","KDM5D"),gene_name)
+        y.genes
+        x.genes = intersect(c("XIST"),gene_name)
+        x.genes
+    }
     if( length(y.genes)==0 && length(x.genes)==0 ) {
         cat("warning:: could not determine sex. missing some X/Y marker genes\n")
         sex <- rep(NA, ncol(X))
@@ -133,24 +142,18 @@ pgx.inferGender <- function(X, gene_name=NULL) {
     }
     sex <- rep(NA, ncol(X))
     if( length(y.genes)>0 && length(x.genes)>0 ) {
-        y.expr <- colMeans(X[match(y.genes, gene_name),,drop=FALSE])
         x.expr <- colMeans(X[match(x.genes, gene_name),,drop=FALSE])
-        y.expr
+        y.expr <- colMeans(X[match(y.genes, gene_name),,drop=FALSE])
         x.expr
+        y.expr
+        mean.expr <- colMeans(X)
         ##plot(x.expr, y.expr)
         sex <- rep(NA, ncol(X))
-        sex <- ifelse( x.expr > y.expr, "F", "M")
+        sex <- ifelse( x.expr > mean.expr & y.expr < mean.expr, "F", sex)
+        sex <- ifelse( y.expr > mean.expr & x.expr < mean.expr, "M", sex)
+        sex        
         return(sex)
     }
-    if( length(y.genes)>0 && length(x.genes)==0 ) {
-        y.expr <- colMeans(X[match(y.genes, gene_name),,drop=FALSE])
-        y.expr
-        sex <- rep(NA, length(y.expr))
-        sex <- ifelse(y.expr > log2(100), "M", sex)
-        sex <- ifelse(y.expr < log2(10),  "F", sex)
-        return(sex)
-    }
-    table(sex)
     return(sex)
 }
 

@@ -1,3 +1,5 @@
+dbg(">>> sourcing BiomarkerModule \n")
+
 BiomarkerInputs <- function(id) {
     ns <- NS(id)  ## namespace
     tagList(
@@ -107,25 +109,23 @@ be multiple categories (classes) or patient survival data."
         return(gg)
     }) %>% debounce(1000)
 
-
     observe({
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
-        dbg("<module-biomarker::observe1> reacted")
-
+        dbg("[module-biomarker::observe1] reacted")
         ct <- colnames(ngs$Y)
-        ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
-        ##ct <- grep("sample|patient|donor",ct,value=TRUE,invert=TRUE)
+        ##ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
+        ct <- grep("sample|patient|donor",ct,value=TRUE,invert=TRUE)
         updateSelectInput(session, "pdx_predicted", choices=ct )
-        dbg("<module-biomarker::observe1> done!")    
+        dbg("[module-biomarker::observe1] done!")    
     })
 
     observe({
         ngs <- inputData()
         req(ngs)
         ## input$pdx_runbutton
-        dbg("<module-biomarker::observe2> reacted")
+        dbg("[module-biomarker::observe2] reacted")
 
         if(FALSE && isolate(input$pdx_level=="geneset")) {
             ft <- names(COLLECTIONS)
@@ -140,7 +140,7 @@ be multiple categories (classes) or patient survival data."
         ft = sort(c("<custom>",ft))
         updateSelectInput(session, "pdx_filter", choices=ft, selected="<all>")    
 
-        dbg("<module-biomarker::observe2> done!")
+        dbg("[module-biomarker::observe2] done!")
     })
 
     calcVariableImportance <- eventReactive( input$pdx_runbutton, {

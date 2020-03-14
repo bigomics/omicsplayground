@@ -2,7 +2,6 @@ RDIR = "../R"
 FILES = "../lib"
 FILESX = "../libx"
 PGX.DIR = "../data"
-OUT.DIR = "."
 FILES
 source(file.path(RDIR,"pgx-include.R"))
 
@@ -12,7 +11,7 @@ pgx.files <- dir(".", pattern=".pgx")
 
 pgx.files
 pgx.file = pgx.files[1]
-pgx.file = pgx.files[7]
+pgx.file = pgx.files[9]
 pgx.file
 
 for(pgx.file in pgx.files) {
@@ -38,23 +37,22 @@ for(pgx.file in pgx.files) {
     ##ngs$drugs <- NULL
     sigdb = "../libx/sigdb-gtex.h5"
     sigdb = c("../libx/sigdb-lincs.h5","../libx/sigdb-creeds.h5","../libx/sigdb-drugsx.h5")
-
     all.db <- dir("../libx","sigdb.*h5$")
     db1 <- setdiff(all.db, names(ngs$connectivity))
     db1
-    if(length(db1)==0) next()
-    
+    if(length(db1)==0) next()    
     sigdb = paste0("../libx/",db1)
+
+    sigdb = c("../libx/sigdb-lincs-cp.h5","../libx/sigdb-lincs-gt.h5")
+    
     ngs <- compute.extra(ngs, extra, lib.dir=FILES, sigdb=sigdb )     
+
+    ngs$connectivity[["sigdb-lincs.h5"]] <- NULL
     names(ngs$connectivity)
-    sort(sapply(ngs$connectivity,object.size))
     
     ##------------------ save new object -------------------
     names(ngs)
-    pgx.file0 <- sub(".*[/]","",pgx.file)
-    pgx.file0 <- file.path(OUT.DIR,pgx.file0)
-    pgx.file0
-    ngs.save(ngs, file=pgx.file0)    
+    ngs.save(ngs, file=pgx.file)    
 
     
 }
