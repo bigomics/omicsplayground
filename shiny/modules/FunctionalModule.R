@@ -605,6 +605,8 @@ to understand biological functions including GO and KEGG pathway analysis."
             return(NULL)
         }
 
+        dbg("[functional:GO_network.RENDER] 1: len.V(sub2)=",length(V(sub2)))
+        
         score = ngs$meta.go$pathscore[,comparison]        
         score = (score/max(abs(score),na.rm=TRUE))
         score[is.na(score)] = 0
@@ -613,9 +615,12 @@ to understand biological functions including GO and KEGG pathway analysis."
         V(sub2)$label <- V(sub2)$Term
         V(sub2)$label[which(is.na(score)|score==0)] = ""
         pos = sub2$layout
+
+        dbg("[functional:GO_network.RENDER] 1: all(score=0)=",all(score==0))
+        all.zero <- all(score==0)
         
         ##if("prune" %in% input$GO_options) {
-        if(input$GO_prunetree) {
+        if(!all.zero && input$GO_prunetree) {
             ##cat("pruning GO graph\n")
             vv = V(sub2)[which(!is.na(score) & score!=0)]
             sp = shortest_paths(sub2, from="all", to=vv, mode="all", output="vpath")
@@ -625,6 +630,11 @@ to understand biological functions including GO and KEGG pathway analysis."
             score = score[V(sub2)$name]
         }
 
+        dbg("[functional:GO_network.RENDER] 2: len.V(sub2)=",length(V(sub2)))
+        if(length(V(sub2))==0) {
+            ## return(NULL)
+        }
+        
         ## remove root?
         removeroot=TRUE
         if(removeroot) {

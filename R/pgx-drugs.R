@@ -19,12 +19,12 @@ pgx.createComboDrugAnnot <- function(combo, annot0) {
 
 
 ##obj=ngs;methods="GSEA";contrast=NULL;nprune=250
-pgx.computeDrugEnrichment <- function(obj, X, x.drugs, methods=c("GSEA","cor"),
+pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
                                       nprune=250, contrast=NULL )
 {
     ## 'obj'   : can be ngs object or fold-change matrix
     ## X       : drugs profiles (may have multiple for one drug)
-    ## x.drugs : drug associated with profile
+    ## xdrugs : drug associated with profile
     require(fgsea)
     names(obj)
     if("gx.meta" %in% names(obj)) {
@@ -53,7 +53,7 @@ pgx.computeDrugEnrichment <- function(obj, X, x.drugs, methods=c("GSEA","cor"),
     F <- F[,contrast,drop=FALSE]
 
     ## create drug meta sets
-    meta.gmt <- tapply(colnames(X), x.drugs, list)
+    meta.gmt <- tapply(colnames(X), xdrugs, list)
     meta.gmt <- meta.gmt[which(sapply(meta.gmt,length)>=15)]
     length(meta.gmt)
 
@@ -78,11 +78,11 @@ pgx.computeDrugEnrichment <- function(obj, X, x.drugs, methods=c("GSEA","cor"),
 
     ## experiment to drug
     require(Matrix)
-    ##D <- model.matrix( ~ 0 + x.drugs)
-    D <- sparse.model.matrix( ~ 0 + x.drugs)
+    ##D <- model.matrix( ~ 0 + xdrugs)
+    D <- sparse.model.matrix( ~ 0 + xdrugs)
     dim(X)
     dim(D)
-    colnames(D) <- sub("^x.drugs","",colnames(D))
+    colnames(D) <- sub("^xdrugs","",colnames(D))
     rownames(D) <- colnames(X)          ## not necessary..
 
     results <- list()
@@ -163,15 +163,15 @@ pgx.computeDrugEnrichment <- function(obj, X, x.drugs, methods=c("GSEA","cor"),
 
 
 
-pgx.computeComboEnrichment <- function(obj, X, x.drugs,
+pgx.computeComboEnrichment <- function(obj, X, xdrugs,
                                        ntop=10, nsample=20, nprune=250,
                                        contrasts=NULL, res.mono=NULL )
 {
     require(fgsea)
     if(0) {
         X <- readRDS(file=file.path(FILES,"l1000_es.rds"))
-        x.drugs <- gsub("_.*$","",colnames(X))
-        length(table(x.drugs))
+        xdrugs <- gsub("_.*$","",colnames(X))
+        length(table(xdrugs))
         dim(X)
         ntop=10;nsample=20
     }
@@ -200,7 +200,7 @@ pgx.computeComboEnrichment <- function(obj, X, x.drugs,
     if(is.null(res.mono)) {
         cat("Calculating single drug enrichment using GSEA ...\n")
         er.mono <- pgx.computeDrugEnrichment(
-            obj, X, x.drugs, methods="GSEA",
+            obj, X, xdrugs, methods="GSEA",
             nprune=nprune, contrasts=NULL )
         er.mono <- er.mono[["GSEA"]]
         names(er.mono)
@@ -232,8 +232,8 @@ pgx.computeComboEnrichment <- function(obj, X, x.drugs,
         cmbn.idx
         cmbn <- sort(rownames(er.mono$X)[cmbn.idx])
         head(cmbn)
-        p1 <- sample(which(x.drugs==cmbn[1]),nsample,replace=TRUE)
-        p2 <- sample(which(x.drugs==cmbn[2]),nsample,replace=TRUE)
+        p1 <- sample(which(xdrugs==cmbn[1]),nsample,replace=TRUE)
+        p2 <- sample(which(xdrugs==cmbn[2]),nsample,replace=TRUE)
         pp <- cbind(p1, p2)
         sample.pairs[[k]] <- pp
     }
@@ -244,7 +244,7 @@ pgx.computeComboEnrichment <- function(obj, X, x.drugs,
     comboX <- apply(sample.pairs, 1, function(ii) rowMeans(X[,ii],na.rm=TRUE))
     dim(comboX)
     ##colnames(comboX) <- apply(combo.idx, 1, function(ii) paste(colnames(X)[ii],collapse="+"))
-    combo.drugs <- apply(sample.pairs, 1, function(ii) paste(sort(x.drugs[ii]),collapse="+"))
+    combo.drugs <- apply(sample.pairs, 1, function(ii) paste(sort(xdrugs[ii]),collapse="+"))
 
     tail(sort(table(combo.drugs)))
     sum(table(combo.drugs)>=15)
@@ -258,7 +258,7 @@ pgx.computeComboEnrichment <- function(obj, X, x.drugs,
     cat("Calculating drug-combo enrichment using GSEA ...\n")
     dim(comboX)
     res.combo <- pgx.computeDrugEnrichment(
-        obj, X=comboX, x.drugs=combo.drugs, methods="GSEA", nprune=nprune)
+        obj, X=comboX, xdrugs=combo.drugs, methods="GSEA", nprune=nprune)
     res.combo <- res.combo[["GSEA"]]
     names(res.combo)
 

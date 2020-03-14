@@ -6,7 +6,7 @@
 
 library(shiny)
 library(shinyjs)
-require(shinyWidgets)
+library(shinyWidgets)
 library(waiter)
 
 cat("===================== INIT =======================\n")
@@ -31,11 +31,9 @@ options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
 
-WATERMARK = (opt$WATERMARK %in% c("true","TRUE"))
+WATERMARK = opt$WATERMARK
 SHOW_QUESTIONS = FALSE
-
-DEV.VERSION = FALSE
-if(dir.exists("../../omicsplayground-dev")) DEV.VERSION = TRUE
+DEV.VERSION = opt$DEV_VERSION && dir.exists("../../omicsplayground-dev")
 ##DEV.VERSION = FALSE
 
 if(opt$USER_MODE=="BASIC") {
@@ -44,7 +42,7 @@ if(opt$USER_MODE=="BASIC") {
 }
 
 if(0) {
-    load("../data/geiger2016-arginine.pgx")
+    load("../data/geiger2016-arginineX.pgx")
     load("../data/GSE10846-dlbcl.pgx")
     load("../data/GSE102908-ibetX.pgx")
     load("../data/tcga-brca_pub.pgx")
@@ -56,8 +54,18 @@ if(0) {
 ## ------------------------ READ MODULES ------------------------------
 ## --------------------------------------------------------------------
 
+MODULES <- c("load","view","clust","expr","enrich","isect","func",
+             "word","drug","sig","scell","cor","bio","cmap",
+             "tcga","bc","multi","qa")
+if(is.null(opt$MODULES_ENABLED)) opt$MODULES_ENABLED = MODULES
+ENABLED  <- array(MODULES %in% opt$MODULES_ENABLED, dimnames=list(MODULES))
+DISABLED <- array(MODULES %in% opt$MODULES_DISABLED, dimnames=list(MODULES))
+ENABLED  <- ENABLED & !DISABLED
+ENABLED
+
+cat("[MAIN] sourcing modules...\n")
+
 source("global.R", local=TRUE)
-##source("../R/pgx-modules.R", local=TRUE)
 source("modules/LoadingModule.R", local=TRUE)
 source("modules/DataViewModule.R", local=TRUE)
 source("modules/ClusteringModule.R", local=TRUE)
@@ -73,27 +81,37 @@ source("modules/CorrelationModule.R", local=TRUE)
 source("modules/BiomarkerModule.R", local=TRUE)
 source("modules/QuestionModule.R", local=TRUE)
 source("modules/ConnectivityModule.R", local=TRUE)
+##source("modules/UsersMapModule.R", local=TRUE)
 
 if(DEV.VERSION && dir.exists("../../omicsplayground-dev")) {
     source("../../omicsplayground-dev/shiny/modules/TcgaModule.R", local=TRUE)
     source("../../omicsplayground-dev/shiny/modules/BatchCorrectModule.R", local=TRUE)
     source("../../omicsplayground-dev/shiny/modules/MultiLevelModule.R", local=TRUE)
+    ENABLED[c("tcga","bc","multi")] <- TRUE
+} else {
+    ENABLED[c("tcga","bc","multi")] <- FALSE
 }
+ENABLED
+
+cat("[MAIN] starting server and UI...\n")
+
+MAINTABS = c("DataView","Clustering","Expression","Enrichment",
+             "Signature","SingleCell","Development")
 
 server = function(input, output, session) {
 
     useShinyjs()
     ##useShinydashboard()
     ##useShinydashboardPlus()
+
     cat("===================== SERVER =======================\n")
-    cat("calling modules... ")
+    cat("[MAIN] calling modules...\n")
 
     max.limits <- c("samples" = opt$MAX_SAMPLES,
                     "comparisons" = opt$MAX_COMPARISONS,
                     "genes" = opt$MAX_GENES)
     
     env <- list()  ## communication environment
-    ## env[["load"]][["inputData"]] <- reactive({ ngs })
     env[["load"]]   <- callModule(
         LoadingModule, "load", hideModeButton = opt$HIDE_MODEBUTTON,
         max.limits = max.limits, defaultMode = opt$USER_MODE )
@@ -101,22 +119,21 @@ server = function(input, output, session) {
     env[["clust"]]  <- callModule( ClusteringModule, "clust", env)
     env[["expr"]]   <- callModule( ExpressionModule, "expr", env)
     env[["enrich"]] <- callModule( EnrichmentModule, "enrich", env)
-    env[["isect"]]  <- callModule( IntersectionModule, "isect", env)
-    env[["func"]]   <- callModule( FunctionalModule, "func", env)
-    env[["word"]]   <- callModule( WordCloudModule, "word", env)
-    env[["drug"]]   <- callModule( DrugConnectivityModule, "drug", env)
-    env[["sig"]]    <- callModule( SignatureModule, "sig", env)
-    env[["scell"]]  <- callModule( SingleCellModule, "scell", env)
-    env[["cor"]]    <- callModule( CorrelationModule, "cor", env)
-    env[["bio"]]    <- callModule( BiomarkerModule, "bio", env)
-    env[["cmap"]] <- callModule( ConnectivityModule, "cmap", env)
-    callModule( QuestionModule, "qa", lapse = -1)
-        
-    if(DEV.VERSION) {
-        env[["tcga"]] <- callModule( TcgaModule, "tcga", env)
-        env[["bc"]]   <- callModule( BatchCorrectModule, "bc", env)
-        env[["multi"]]   <- callModule( MultiLevelModule, "multi", env)
-    }
+    if(ENABLED["func"])   env[["func"]]   <- callModule( FunctionalModule, "func", env)
+    if(ENABLED["word"])   env[["word"]]   <- callModule( WordCloudModule, "word", env)
+    if(ENABLED["drug"])   env[["drug"]]   <- callModule( DrugConnectivityModule, "drug", env)
+    if(ENABLED["isect"])  env[["isect"]]  <- callModule( IntersectionModule, "isect", env)
+    if(ENABLED["sig"])    env[["sig"]]    <- callModule( SignatureModule, "sig", env)
+    if(ENABLED["scell"])  env[["scell"]]  <- callModule( SingleCellModule, "scell", env)
+    if(ENABLED["cor"])    env[["cor"]]    <- callModule( CorrelationModule, "cor", env)
+    if(ENABLED["bio"])    env[["bio"]]    <- callModule( BiomarkerModule, "bio", env)
+    if(ENABLED["cmap"])   env[["cmap"]]   <- callModule( ConnectivityModule, "cmap", env)
+    if(ENABLED["tcga"])   env[["tcga"]]   <- callModule( TcgaModule, "tcga", env)
+    if(ENABLED["bc"])     env[["bc"]]     <- callModule( BatchCorrectModule, "bc", env)
+    if(ENABLED["multi"])  env[["multi"]]  <- callModule( MultiLevelModule, "multi", env)
+
+    env[["qa"]]     <- callModule( QuestionModule, "qa", lapse = -1)
+    
     cat("[OK]\n")
     
     output$current_dataset <- renderText({
@@ -129,14 +146,19 @@ server = function(input, output, session) {
     ## Hide/show certain sections depending on USER MODE
     observe({
         pgx <- env[["load"]][["inputData"]]() ## trigger on change dataset
-        req(pgx)
+
+        ## hide all main tabs
+        if(is.null(pgx)) {
+            lapply(MAINTABS, function(m) hideTab("maintabs",m))
+            return(NULL)
+        }
+
+        ## show all main tabs
+        lapply(MAINTABS, function(m) showTab("maintabs",m))
+        
+        ## get user mode
         usermode <- env[["load"]][["usermode"]]()  ## trigger on button
         if(length(usermode)==0) usermode <- "BASIC"
-
-        dbg("usermode = ",usermode)
-        dbg("is.null.pgx = ",is.null(pgx))
-        dbg("length.pgx = ",length(pgx))
-        dbg("[MAIN] opt$SINGLE_CELL=",opt$SINGLE_CELL)
 
         ## show single-cell module??
         show.cc <- ( (opt$SINGLE_CELL == "AUTO" && ncol(pgx$counts) >= 500) ||
@@ -144,15 +166,10 @@ server = function(input, output, session) {
                      opt$SINGLE_CELL == "TRUE")
         if(is.null(show.cc) || is.na(show.cc) || length(show.cc)==0) show.cc <- FALSE
         show.cc <- show.cc && "deconv" %in% names(pgx)
+
         
         hideTab("view-tabs","Resource info")
         hideTab("maintabs","Development")
-        hideTab("maintabs","Find biomarkers")
-        hideTab("maintabs","Drug connectivity")
-        hideTab("maintabs","SingleCell")
-        shinyjs::hide(selector = "div.download-button")
-        shinyjs::hide(selector = "div.modebar")
-        shinyjs::hide(selector = "div.pro-feature")
 
         hideTab("enrich-tabs1","GeneMap")
         hideTab("clust-tabs2","Feature ranking")
@@ -160,21 +177,18 @@ server = function(input, output, session) {
         hideTab("expr-tabs2","FDR table")
         hideTab("enrich-tabs1","Volcano (methods)")
         hideTab("enrich-tabs2","FDR table")
+
+        hideTab("maintabs","SingleCell")
         hideTab("scell-tabs1","CNV")
-        hideTab("scell-tabs1","Monocle")
-        
+        hideTab("scell-tabs1","Monocle")        
+        if(show.cc) showTab("maintabs","SingleCell")
+
         if(usermode != "BASIC") {
-            if(show.cc) showTab("maintabs","SingleCell")
-            showTab("maintabs","Find biomarkers")
-            showTab("maintabs","Drug connectivity")
             showTab("clust-tabs2","Feature ranking")
             showTab("expr-tabs1","Volcano (methods)")
             showTab("expr-tabs2","FDR table")
             showTab("enrich-tabs1","Volcano (methods)")
             showTab("enrich-tabs2","FDR table")
-            shinyjs::show(selector = "div.download-button")
-            shinyjs::show(selector = "div.modebar")
-            shinyjs::show(selector = "div.pro-feature")
         }
 
         if(DEV.VERSION) {
@@ -192,26 +206,14 @@ server = function(input, output, session) {
         showHideTab(pgx, "connectivity", "maintabs", "Similar experiments")
         showHideTab(pgx, "drugs", "maintabs", "Drug connectivity")
         showHideTab(pgx, "wordcloud", "maintabs", "Word cloud") 
-
+        
+        if(!file.exists(file.path(FILESX,"access-ncov2019.log"))) {
+            hideTab("load-tabs","Visitors map")            
+        }
         
     })
 
     waiter_hide()
-}
-
-version <- scan("../VERSION", character())[1]
-TITLE = paste(opt$TITLE,version)
-logo = div(img(src="bigomics-logo-white-48px.png", height="48px"),
-           TITLE, id="navbar-logo", style="margin-top:-13px;")
-
-dev.tabs <- NULL
-if(DEV.VERSION) {
-    dev.tabs <- navbarMenu(
-        "Development",
-        tabView("Batch-effects analysis", BatchCorrectInputs("bc"), BatchCorrectUI("bc")),
-        tabView("TCGA survival", TcgaInputs("tcga"), TcgaUI("tcga")),
-        tabView("Multi-level", MultiLevelInputs("multi"), MultiLevelUI("multi"))
-    )
 }
 
 help.tabs <- navbarMenu(
@@ -223,12 +225,51 @@ help.tabs <- navbarMenu(
     tabPanel(title=HTML("<a href='https://groups.google.com/d/forum/omicsplayground' target='_blank'>Google groups"))
 )
 
-ui = navbarPage(
-    title = logo, windowTitle = TITLE,
-    theme = shinythemes::shinytheme("cerulean"),
-    ##includeCSS("www/navbar.css"),
-    id = "maintabs",
-    selected = "Home",
+TABVIEWS <- list(
+    "load" = tabView("Home",LoadingInputs("load"),LoadingUI("load")),
+    "view" = tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
+    "clust" = tabView("Clustering",ClusteringInputs("clust"),ClusteringUI("clust")),
+    "expr" = tabView("Differential expression",ExpressionInputs("expr"),ExpressionUI("expr")),
+    "cor"  = tabView("Correlation analysis", CorrelationInputs("cor"), CorrelationUI("cor")),
+    "enrich" = tabView("Geneset enrichment",EnrichmentInputs("enrich"), EnrichmentUI("enrich")),
+    "func" = tabView("Pathway analysis", FunctionalInputs("func"), FunctionalUI("func")),
+    "word" = tabView("Word cloud", WordCloudInputs("word"), WordCloudUI("word")),
+    "drug" = tabView("Drug connectivity", DrugConnectivityInputs("drug"), DrugConnectivityUI("drug")),
+    "isect" = tabView("Compare signatures", IntersectionInputs("isect"), IntersectionUI("isect")),
+    "sig" = tabView("Test signatures", SignatureInputs("sig"), SignatureUI("sig")),
+    "bio" = tabView("Find biomarkers", BiomarkerInputs("bio"), BiomarkerUI("bio")),
+    "cmap" = tabView("Similar experiments", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
+    "scell" = tabView("SingleCell", SingleCellInputs("scell"), SingleCellUI("scell"))    
+)
+
+if(DEV.VERSION) {
+    TABVIEWS <- c(
+        TABVIEWS,
+        list(
+            "bc" = tabView("Batch-effects analysis", BatchCorrectInputs("bc"), BatchCorrectUI("bc")),
+            "tcga" = tabView("TCGA survival", TcgaInputs("tcga"), TcgaUI("tcga")),
+            "multi" = tabView("Multi-level", MultiLevelInputs("multi"), MultiLevelUI("multi"))
+        )
+    )
+}
+
+tabs = "load"
+createNavbarPage <- function(tabs)
+{
+
+    version <- scan("../VERSION", character())[1]
+    TITLE = paste(opt$TITLE,version)
+    LOGO = div(img(src="bigomics-logo-white-48px.png", height="48px"),
+               TITLE, id="navbar-logo", style="margin-top:-13px;")
+    
+    title = tagList(LOGO)
+    windowTitle = TITLE
+    ##title = "LOGO"
+    theme = shinythemes::shinytheme("cerulean")
+    ##header = header
+    id = "maintabs"
+    ##selected = "Home"
+    
     header = tagList(
         tags$head(tags$link(rel = "stylesheet", href = "navbar.css")),
         TAGS.JSSCRIPT,
@@ -236,39 +277,61 @@ ui = navbarPage(
         use_waiter(),
         div(textOutput("current_dataset"),class='current-data')
         ##QuestionModule_UI("qa")
-    ),
-    tabView("Home",LoadingInputs("load"),LoadingUI("load")),
-    tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
-    tabView("Clustering",ClusteringInputs("clust"),ClusteringUI("clust")),
-    navbarMenu(
-        "Expression",
-        tabView("Differential expression",ExpressionInputs("expr"),ExpressionUI("expr")),
-        tabView("Correlation analysis", CorrelationInputs("cor"), CorrelationUI("cor"))
-    ),
-    navbarMenu(
-        "Enrichment",
-        tabView("Geneset enrichment",EnrichmentInputs("enrich"),EnrichmentUI("enrich")),
-        tabView("Pathway analysis", FunctionalInputs("func"), FunctionalUI("func")),
-        tabView("Word cloud", WordCloudInputs("word"), WordCloudUI("word")),
-        tabView("Drug connectivity", DrugConnectivityInputs("drug"), DrugConnectivityUI("drug"))
-    ),
-    navbarMenu(
-        "Signature",
-        tabView("Compare signatures", IntersectionInputs("isect"), IntersectionUI("isect")),
-        tabView("Test signatures", SignatureInputs("sig"), SignatureUI("sig")),
-        tabView("Find biomarkers", BiomarkerInputs("bio"), BiomarkerUI("bio")),
-        tabView("Similar experiments", ConnectivityInputs("cmap"), ConnectivityUI("cmap"))
-    ),
-    tabView("SingleCell", SingleCellInputs("scell"), SingleCellUI("scell")),
-    help.tabs,
-    dev.tabs,
+    )
+    names(header) <- NULL
+
     footer = tagList(
-        ## social_buttons(),
+        ##social_buttons(),
         waiter_show_on_load(spin_fading_circles()) # place at the bottom
+    )
+
+    ## create TAB list
+    createNavbarMenu <- function(title, tabs, icon=NULL) {
+        tablist <- TABVIEWS[tabs]
+        names(tablist) <- NULL
+        do.call( navbarMenu, c(tablist, title=title, icon=icon) )
+    }
+    ##tablist <- TABVIEWS[tabs]
+    tablist <- list()
+    for(i in 1:length(tabs)) {
+        itab <- tabs[[i]]
+        itab <- itab[which(ENABLED[itab])] ## only enabled
+        if(length(itab)>1) {
+            m <- createNavbarMenu( names(tabs)[i], itab )
+            tablist[[i]] <- m
+        } else if(length(itab)==1) {
+            tablist[[i]] <- TABVIEWS[[itab]] 
+        } else {
+        }
+    }
+    tablist <- tablist[!sapply(tablist,is.null)]
+    
+    ## add help menu
+    tablist[["helpmenu"]] <- help.tabs
+    names(tablist) <- NULL
+
+    selected = "Home"    
+    do.call( navbarPage, c(tablist,
+                           title=title, id=id,
+                           selected=selected,
+                           windowTitle = windowTitle,
+                           header = tagList(header),
+                           footer = tagList(footer),
+                           theme = theme) )
+
+}
+
+ui = createNavbarPage(
+    tabs = list(
+        "Home" = "load",
+        "DataView" = "view",
+        "Clustering" = "clust",
+        "Expression" = c("expr","cor"),
+        "Enrichment" = c("enrich","func","word","drug"),
+        "Signature" = c("isect","sig","bio","cmap"),
+        "SingleCell" = "scell",
+        "Development" = c("bc","tcga","multi")
     )
 )
 
 shiny::shinyApp(ui, server)
-
-
-

@@ -20,7 +20,7 @@ COMPUTE.EXTRA=1
 QCFILTER=FALSE
 BATCHCORRECT=FALSE
 
-rda.file="../data/geiger2016-test.pgx"
+rda.file="../data/geiger2016-arginineX.pgx"
 rda.file="../data/geiger2016-arginine.pgx"
 rda.file
 
@@ -148,6 +148,7 @@ if(DIFF.EXPRESSION) {
         test.methods = GENESET.METHODS,
         lib.dir=FILES)
 
+    extra <- c("drugs-combo")
     extra <- c("connectivity")
     extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")
     ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
@@ -160,24 +161,26 @@ if(DIFF.EXPRESSION) {
 rda.file
 ngs.save(ngs, file=rda.file)
 
-rda.file = "../data/geiger2016-arginineX.pgx"
-ngs.save(ngs, file=rda.file, light=FALSE)
-
-
 if(0) {
     
     source("../R/pgx-include.R")
     extra <- c("connectivity")
-    sigdb = c("/data/PublicData/LINCS/sigdb-lincs.h5",
-              "/data/PublicData/LINCS/sigdb-virome.h5")
-    sigdb = c("../libx/sigdb-lincs.h5","../libx/sigdb-lincsXL.h5","../libx/sigdb-virome.h5")
     sigdb = NULL
+    sigdb = c("../libx/sigdb-lincs.h5","../libx/sigdb-virome.h5")
+    sigdb = c("../libx/sigdb-l1000.h5")
+    sigdb = "../libx/sigdb-lincs-cp.h5"
+    sigdb = c("../libx/sigdb-lincs-cp.h5","../libx/sigdb-lincs-gt.h5")
     ngs <- compute.extra(ngs, extra, lib.dir=FILES, sigdb=sigdb) 
     names(ngs$connectivity)
     
     rda.file
     rda.file="../data/geiger2016-arginineX.pgx"
     ngs.save(ngs, file=rda.file)
+
+    cp <- ngs$connectivity[["sigdb-lincs-cp.h5"]]
+    head(cp[[6]])
+
+
 
 }
 

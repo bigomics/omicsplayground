@@ -759,14 +759,12 @@ DataViewModule <- function(input, output, session, env)
     output$plotsUI <- renderUI({
         fillCol(
             height = fullH,
-            flex = c(1,0.2,1,NA),
+            flex = c(NA,0.04,1,0.2,1),
+            div(HTML(dataview_caption1), class="caption"),
+            br(),
             fillRow( 
                 flex = c(1,1,1,1), id = "data_genePlots_row1",
                 height = rowH, ## width=1600, 
-                ##moduleWidget(data_genePlots_tsne_module, ns=ns, height=imgH),
-                ##moduleWidget(data_genePlots_barplot_module, ns=ns, height=imgH),
-                ##moduleWidget(data_genePlots_correlationplot_module, ns=ns, height=imgH),
-                ##moduleWidget(data_genePlots_averageRankPlot_module, ns=ns, height=imgH)
                 plotWidget(ns("data_genePlots_tsne")),
                 plotWidget(ns("data_genePlots_barplot")),
                 plotWidget(ns("data_genePlots_correlationplot")),
@@ -781,13 +779,10 @@ DataViewModule <- function(input, output, session, env)
                 ##     data_geneInfo_buttons, br(),
                 ##     htmlOutput(ns('data_geneInfo'), class="gene-info-output")
                 ## ),
-                ##moduleWidget(data_corplot_module, ns=ns, height=imgH),
-                ##moduleWidget(data_tissueplot_module, ns=ns, height=imgH)
                 plotWidget(ns("data_geneInfo")),
                 plotWidget(ns("data_corplot")),
                 plotWidget(ns("data_tissueplot"))
-            ),
-            div(HTML(dataview_caption1), class="caption")
+            )
         )
     })
 
@@ -1175,25 +1170,21 @@ DataViewModule <- function(input, output, session, env)
 
     output$countsUI <- renderUI({
         fillCol(
-            flex = c(1,1,NA),
+            flex = c(NA,0.04,1,1),
             height = fullH,
+            div(HTML(dataview_counts_caption), class="caption"),
+            br(),
             fillRow(
                 flex = c(1,1,1), id = "counts_tab_row1", height=rowH,
-                ##moduleWidget(counts_tab_barplot_module, ns=ns, height=imgH),
-                ##moduleWidget(counts_tab_boxplot_module, ns=ns, height=imgH),
-                ##moduleWidget(counts_tab_histplot_module, ns=ns, height=imgH)
                 plotWidget(ns("counts_tab_barplot")),
                 plotWidget(ns("counts_tab_boxplot")),
                 plotWidget(ns("counts_tab_histplot"))
             ),
             fillRow(
                 flex = c(1,1), id = "counts_tab_row2", height=rowH,
-                ##moduleWidget(counts_tab_abundanceplot_module, ns=ns, height=imgH),
-                ##moduleWidget(counts_tab_average_countplot_module, ns=ns, height=imgH)
                 plotWidget(ns("counts_tab_abundanceplot")),
                 plotWidget(ns("counts_tab_average_countplot"))
-            ),
-            div(HTML(dataview_counts_caption), class="caption")
+            )
         )
     })
     ##dragula(c("counts_tab_row1","counts_tab_row2"))
@@ -1332,15 +1323,16 @@ DataViewModule <- function(input, output, session, env)
         func = data_rawdataTable.RENDER,
         title = "Gene expression table",
         filename = "counts.csv",
-        info.text = data_rawdataTable_text,
-        caption = data_rawdataTable_caption
+        info.text = data_rawdataTable_text
+        ##caption = data_rawdataTable_caption
     )
 
     output$genetableUI <- renderUI({
         fillCol(
-            flex = c(1),
+            flex = c(NA,0.025,1),
             height = fullH,
-            ##moduleWidget(data_rawdataTable_module, outputFunc="dataTableOutput",ns=ns)
+            div(HTML(data_rawdataTable_caption), class="caption"),
+            br(),
             tableWidget(ns("data_rawdataTable"))
         )
     })
@@ -1499,19 +1491,19 @@ DataViewModule <- function(input, output, session, env)
 
     output$sampletableUI <- renderUI({
         fillCol(
-            flex = c(1.2,1,NA),
+            flex = c(NA,0.04,1.2,1),
             height = fullH,
+            div(HTML(sampletableUI_caption), class="caption"),
+            br(),
             fillRow(
                 flex = c(2,0.07,1),
                 div(plotWidget(ns("data_phenoHeatmap")), style="overflow-y: auto;"),
                 br(),
                 plotWidget(ns("data_phenotypeAssociation"))
             ),
-            tableWidget(ns("data_sampleTable")),
-            div(HTML(sampletableUI_caption), class="caption")
+            tableWidget(ns("data_sampleTable"))
         )
     })
-
     
     ##================================================================================
     ##================================= CONTRASTS ====================================
@@ -1586,15 +1578,16 @@ DataViewModule <- function(input, output, session, env)
         options = data_contrastTable_opts,
         title = "Contrast table",
         filename = "contrasts.csv",
-        info.text = data_contrastTable_info,
-        caption = data_contrastTable_caption
+        info.text = data_contrastTable_info
+        ##caption = data_contrastTable_caption
     )
     ##output <- attachModule(output, data_contrastTable_module) 
 
     output$contrasttableUI <- renderUI({
         fillCol(
-            flex = c(1), height = fullH,
-            ##moduleWidget(data_contrastTable_module, outputFunc="dataTableOutput", ns=ns)
+            flex = c(NA,0.03,1), height = fullH,
+            div(HTML(data_contrastTable_caption),class="caption"),
+            br(),
             tableWidget(ns("data_contrastTable"))
         )
     })
@@ -1693,21 +1686,19 @@ DataViewModule <- function(input, output, session, env)
     
     output$resourceinfoUI <- renderUI({    
         fillCol(
-            flex = c(1,NA),
+            flex = c(NA,0.02,1),
             height = fullH,
+            div(HTML(resourceinfo_caption),class="caption"),
+            br(),
             fillRow(
                 flex = c(5,1, 2,1, 1.5, 2), ## width = 600,
-                ##moduleWidget(datatable_timings_module, outputFunc="dataTableOutput", ns=ns),
                 tableWidget(ns("datatable_timings")),                
                 br(),
-                ##moduleWidget(datatable_objectdims_module, outputFunc="dataTableOutput", ns=ns),
                 tableWidget(ns("datatable_objectdims")),                
                 br(),
-                ##moduleWidget(datatable_objectsize_module, outputFunc="dataTableOutput", ns=ns),
                 tableWidget(ns("datatable_objectsize")),                
                 br()
-            ),
-            div(HTML(resourceinfo_caption),class="caption")
+            )
         )
     })
 

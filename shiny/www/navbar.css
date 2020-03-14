@@ -162,6 +162,11 @@ body {
     line-height: '70%';
 }
 
+.dataTables_filter {
+    float: left !important;
+    text-align: left !important;
+}
+
 .bg-cover-image {
     background-color: #dde6f0;
     background-color: #fff;

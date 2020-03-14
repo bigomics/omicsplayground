@@ -128,7 +128,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
             ##sigdb <- dir(c(FILES,FILESX), pattern="sigdb-.*h5", full.names=TRUE)   
             lib.dir2 <- c(lib.dir, sub("lib$","libx",lib.dir))  ### NEED BETTER SOLUTION!!!
             lib.dir2 <- unique(lib.dir2)
-            sigdb <- dir(lib.dir2, pattern="sigdb-.*h5$", full.names=TRUE)
+            sigdb <- dir(lib.dir2, pattern="^sigdb-.*h5$", full.names=TRUE)
             sigdb
         }
         
@@ -300,6 +300,7 @@ compute.drugActivityEnrichment <- function(ngs, lib.dir, combo=TRUE ) {
     L1000.FILE = "l1000_es.rds"
     cat("reading L1000 reference file:",L1000.FILE,"\n")
     X <- readRDS(file=file.path(lib.dir,L1000.FILE))
+    
     xdrugs <- gsub("_.*$","",colnames(X))
     ndrugs <- length(table(xdrugs))
     ndrugs

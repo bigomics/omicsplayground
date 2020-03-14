@@ -1,3 +1,7 @@
+access.dirs <- c(FILESX, file.path(FILESX,"apache2"),
+                 "/var/www/html/logs", "/var/log/apache2")
+ACCESS.LOG <- getAccessLogs(access.dirs, lib.dir=FILESX)
+
 showHideTab <- function(pgx, slot, tabname, subtab) {
     if(!slot %in% names(pgx)) {
         cat(paste("[MAIN] object has no ",slot," results. hiding tab.\n"))

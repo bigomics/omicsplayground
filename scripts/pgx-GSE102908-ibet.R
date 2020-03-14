@@ -1,4 +1,3 @@
-
 RDIR = "../R"
 FILES = "../lib"
 FILESX = "../libx"
@@ -12,7 +11,7 @@ rda.file="../data/GSE102908-ibet.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
-ngs <- list()  ## empty object
+##ngs <- list()  ## empty object
 ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$datatype = "mRNA (microarray)"
 ngs$description = "GSE102908. RNAseq data from SCCOHT1 and OVCAR8 ovarian cancer cells treated with BET inhibitors. Analysis of mRNA profile of 2 cell lines exposed to DMSO, OTX015 for 4 and 24 hours in duplicate."
@@ -70,7 +69,7 @@ if(PROCESS.DATA) {
         ngs, max.features = MAX.GENESETS,
         test.methods = GENESET.METHODS,
         lib.dir=FILES)
-
+    
     extra <- c("connectivity")
     extra <- c("drugs-combo")
     extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")
@@ -85,6 +84,25 @@ if(PROCESS.DATA) {
 ## save
 rda.file
 ngs.save(ngs, file=rda.file)
+
+if(0) {
+    
+    source("../R/pgx-include.R")
+    extra <- c("connectivity")
+    sigdb = NULL
+    sigdb = c("../libx/sigdb-l1000.h5")
+    sigdb = "../libx/sigdb-lincs-cp2.h5"
+    sigdb = c("../libx/sigdb-lincs-cp.h5","../libx/sigdb-lincs-gt.h5")
+    ngs <- compute.extra(ngs, extra, lib.dir=FILES, sigdb=sigdb) 
+    names(ngs$connectivity)
+    
+    rda.file
+    ngs.save(ngs, file=rda.file)
+    
+    cp <- ngs$connectivity[["sigdb-lincs-cp.h5"]]
+    head(cp[[6]])
+
+}
 
 
 

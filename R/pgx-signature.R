@@ -64,11 +64,11 @@ pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=1000, contrasts=NULL,
         ct <- contrasts[1]
         for(ct in contrasts) {
             
-            f1 <- meta$fc[,ct]
-            names(f1) <- rownames(meta$fc)
-            names(f1) <- toupper(names(f1)) ## for MOUSE!!            
+            fc <- meta$fc[,ct]
+            names(fc) <- rownames(meta$fc)
+            names(fc) <- toupper(names(fc)) ## for MOUSE!!            
             res <- pgx.correlateSignatureH5(
-                f1, h5.file = h5.file,
+                fc, h5.file = h5.file,
                 nsig=100, ntop=ntop, nperm=9999)                        
             dim(res)            
             scores[[ct]] <- res
@@ -213,6 +213,7 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     names(fc) <- toupper(names(fc))
 
     ## or instead compute correlation on top100 fc genes (read from file)
+    h5closeAll()
     rn <- h5read(h5.file,"data/rownames")
     cn <- h5read(h5.file,"data/colnames")
 
@@ -225,6 +226,7 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     ## gg <- intersect(gg,rn)
     length(gg)
     row.idx <- match(gg,rn)
+    h5closeAll()
     G <- h5read(h5.file, "data/matrix", index=list(row.idx,1:length(cn)))
     dim(G)
     ##head(G[,1])
@@ -239,7 +241,7 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     ##rho <- cor(rG, rfc, use="pairwise")[,1]
     rG[is.na(rG)] <- 0  ## NEED RETHINK: are missing values to be treated as zero???
     rfc[is.na(rfc)] <- 0
-    rho <- cor(rG, rfc, use="pairwise")[,1]
+    suppressWarnings( rho <- cor(rG, rfc, use="pairwise")[,1] )
     
     remove(G,rG,rfc)
     

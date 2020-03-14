@@ -563,7 +563,7 @@ infotext =
 
     enplots_info = "The <strong>Enrichment</strong> tab performs the enrichment analysis of the gene list against all contrasts by running the GSEA algorithm and plots enrichment outputs. Enrichment statistics can be found in the corresponding table"
     
-    enplots_caption = "<b>Enrichment plots.</b> This figure shows the enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature."
+    enplots_caption = "<b>Enrichment plots.</b> Enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature."
 
     enplots.opts = NULL
     callModule(
@@ -581,9 +581,10 @@ infotext =
     output$enplots_UI <- renderUI({
         fillCol(
             height = fullH,
-            flex = c(1, NA),
-            plotWidget(ns("enplots")),
-            div(HTML(enplots_caption), class="caption")
+            flex = c(NA,0.03,1),
+            div(HTML(enplots_caption), class="caption"),
+            br(),
+            plotWidget(ns("enplots"))
         )
     })
     
@@ -833,13 +834,13 @@ infotext =
         
     output$overlapAnalysis_UI <- renderUI({
         fillCol(
-            flex = c(1,0.04,1,0.08,NA),
+            flex = c(NA,0.035,1,0.04,1),
             height = fullH,
+            div(HTML(overlap_caption), class="caption"),
+            br(),
             plotWidget(ns("overlapScorePlot")),
             br(),
-            tableWidget(ns("overlapTable")),
-            br(),
-            div(HTML(overlap_caption), class="caption")
+            tableWidget(ns("overlapTable"))
         )
     })
 
@@ -947,7 +948,7 @@ infotext =
 
     markersplot_info = "After uploading a gene list, the <strong>Markers</strong> section produces a t-SNE plot of samples for each gene, where the samples are colored with respect to the upregulation (in red) or downregulation (in blue) of that particular gene."
 
-    markers_caption = "<b>Markers t-SNE plot</b>. This figure shows the t-SNE plot for each gene, where the dot (corresponding to samples) are colored depending on the upregulation (in red) or downregulation (in blue) of that particular gene."
+    markers_caption = "<b>Markers t-SNE plot</b>. T-SNE plot for each gene, where the dot (corresponding to samples) are colored depending on the upregulation (in red) or downregulation (in blue) of that particular gene."
     
     ##markers.opts = tagList()
     callModule(
@@ -965,11 +966,11 @@ infotext =
 
     output$markers_UI <- renderUI({
         fillCol(
-            flex = c(1,0.04,NA),
+            flex = c(NA,0.025,1),
             height = fullH,
-            plotWidget(ns("markersplot")),
-            br(),
-            div(HTML(markers_caption), class="caption")
+            div(HTML(markers_caption), class="caption"),
+            br(),            
+            plotWidget(ns("markersplot"))
         )
     })
     
@@ -1112,13 +1113,13 @@ infotext =
 
     output$enrichmentTables_UI <- renderUI({
         fillCol(
-            flex = c(1.0,0.04,1.0,0.04,NA), ## width = 600,
+            flex = c(NA,0.04,1.0,0.04,1.0), ## width = 600,
             height = fullH,
+            div(HTML(enrichmentTables_caption), class="caption"),
+            br(),
             plotWidget(ns("enrichmentByContrastTable")),
             br(),
-            plotWidget(ns("enrichmentByContrastGenes")),
-            br(),
-            div(HTML(enrichmentTables_caption), class="caption")
+            plotWidget(ns("enrichmentByContrastGenes"))
         )
     })
 

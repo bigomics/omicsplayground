@@ -481,14 +481,18 @@ EnrichmentModule <- function(input, output, session, env)
         top <- rownames(rpt)        
         ntop <- as.integer(input$gs_enrichfreq_ntop)
         top <- head(top,ntop)
+        if(!all(top %in% colnames(ngs$GMT))) return(NULL)
         
         F <- 1*(ngs$GMT[,top]>0)
+        wt = FALSE
         if(input$gs_enrichfreq_gsetweight) {
             F <- t(t(F)  / colSums(F,na.rm=TRUE))
+            wt = TRUE
         }
         F <- t(t(F) * sign(fx[top]))
         if(input$gs_enrichfreq_fcweight) {
             F <- t(t(F) * abs(fx[top]))
+            wt = TRUE
         } 
         F <- head(F[order(-rowSums(abs(F))),,drop=FALSE], 32)
         F <- F[order(-rowSums(F)),,drop=FALSE]
@@ -496,8 +500,9 @@ EnrichmentModule <- function(input, output, session, env)
        
         par(mfrow=c(1,1), mar=c(6,4,2,0.5), mgp=c(2,0.8,0))
         col1 = grey.colors(ncol(F),start=0.15)
+        ylab = ifelse(wt, "weighted frequency", "frequency")
         barplot(t(F), beside=FALSE, las=3, cex.names=0.80, col=col1,
-                ylab="frequency")
+                ylab=ylab)
         
     })
 
@@ -527,7 +532,7 @@ EnrichmentModule <- function(input, output, session, env)
         height = c(imgH,450), width = c('auto',1000),
         res = c(72,100),
         pdf.width = 10, pdf.height = 5, 
-        title = "Gene frequency"
+        title = "Frequency in top gene sets"
         ##caption = topEnrichedFreq_caption
     )
     

@@ -19,9 +19,11 @@ if(0) {
 if(0) {
     max.genes=max.genesets=25000;lib.dir=FILES;progress=NULL;only.hugo=1;extra.methods=c("meta.go","deconv","infer","drugs","wordcloud")
     gx.methods=c("ttest.welch","trend.limma");gset.methods=c("fisher","gsva");
+    only.hugo=TRUE;only.proteincoding=TRUE
 }
 
-pgx.createPGX <- function(counts, samples, contrasts, ## genes, 
+pgx.createPGX <- function(counts, samples, contrasts, ## genes,
+                          auto.scale=TRUE,
                           only.hugo=TRUE, only.proteincoding=TRUE)
 {
     
@@ -38,16 +40,14 @@ pgx.createPGX <- function(counts, samples, contrasts, ## genes,
     counts <- as.matrix(counts)
     contrasts <- as.matrix(contrasts)
     contrasts[is.na(contrasts)] <- 0
-    
-    ##-------------------------------------------------------------------
-    ## convert to gene symbol
-    ##-------------------------------------------------------------------
-    symbol <- probe2symbol(rownames(counts), type=NULL)
-    ##symbol <- alias2symbol(symbol)  ## to latest HUGO
-    jj <- which(!is.na(symbol))
-    counts <- as.matrix(counts[jj,])
-    rownames(counts) <- symbol[jj]
 
+    ##-------------------------------------------------------------------
+    ## conform
+    ##-------------------------------------------------------------------
+    kk <- intersect(colnames(counts),rownames(samples))
+    counts <- counts[,kk,drop=FALSE]
+    samples <- samples[kk,,drop=FALSE]
+    
     ##-------------------------------------------------------------------
     ## check counts
     ##-------------------------------------------------------------------
@@ -55,22 +55,50 @@ pgx.createPGX <- function(counts, samples, contrasts, ## genes,
     is.log
     if(is.log) {
         counts <- 2**counts  ## undo logarithm
-        cat("[pgx.createPGX] undo logarithm\n")
+        cat("[pgx.createPGX] undo-ing logarithm\n")
     }
-
-    mean.counts <- mean(colSums(counts,na.rm=TRUE))
-    is.toobig <- log10(mean.counts) > 10
-    is.toobig
     counts_multiplier = 1
-    if(is.toobig) {
-        ## scale to about 10 million reads
-        ##progress$inc(0.01, detail = "scaling down counts")
-        unit <- 10**(round(log10(mean.counts)) - 7)  
-        counts <- counts / unit
-        counts_multiplier = unit
+    totcounts = colSums(counts)
+    
+    if(auto.scale) {
+        
+        ## decide if normalizing is necessary (WARNING changes total counts!!!)
+        totratio <- log10(max(totcounts) / min(totcounts))
+        totratio
+        if(totratio > 6) {
+            cat("[pgx.createPGX:autoscale] normalizing necessary!\n")
+            meancounts <- exp(mean(log(totcounts)))
+            meancounts
+            counts <- t( t(counts) / totcounts) * meancounts
+        }
+        
+        ## check if too big (more than billion read)
+        mean.counts <- mean(colSums(counts,na.rm=TRUE))
+        mean.counts
+        is.toobig <- log10(mean.counts) > 9
+        is.toobig
+        if(is.toobig) {
+            ## scale to about 10 million reads
+            ##progress$inc(0.01, detail = "scaling down counts")
+            unit <- 10**(round(log10(mean.counts)) - 7)
+            unit
+            counts <- counts / unit
+            counts_multiplier = unit
+        }
+        counts_multiplier
+        cat("[pgx.createPGX:autoscale] count_multiplier= ",counts_multiplier,"\n")
     }
-    counts_multiplier
-    cat("[pgx.createPGX] count_multiplier= ",counts_multiplier,"\n")
+    
+    ##-------------------------------------------------------------------
+    ## convert probes to gene symbol
+    ##-------------------------------------------------------------------
+    symbol <- probe2symbol(rownames(counts), type=NULL)
+    if(mean(rownames(counts) == symbol,na.rm=TRUE) < 0.5) {
+        ##symbol <- alias2hugo(symbol)  ## to latest HUGO
+        jj <- which(!is.na(symbol))
+        counts <- as.matrix(counts[jj,])
+        rownames(counts) <- symbol[jj]
+    }
     
     ##-------------------------------------------------------------------
     ## create ngs object
@@ -86,6 +114,8 @@ pgx.createPGX <- function(counts, samples, contrasts, ## genes,
     ngs$counts  = as.matrix(counts)
     ##ngs$genes   = data.frame(genes)
     ngs$contrasts = as.matrix(contrasts)
+
+    ngs$total_counts = totcounts
     ngs$counts_multiplier = counts_multiplier
     
     ##-------------------------------------------------------------------
@@ -130,10 +160,11 @@ pgx.createPGX <- function(counts, samples, contrasts, ## genes,
         GENE.BIOTYPE = daf$gene_biotype
         names(GENE.BIOTYPE) = daf$gene_name
     }
-    
+
+    ## take only first gene as rowname, retain others as alias
     gene <- rownames(ngs$counts)
-    gene1 <- sapply(gene, function(s) strsplit(s,split="[;,]")[[1]][1])
-    gene1 <- alias2hugo(gene1)  ## convert to HUGO
+    gene1 <- sapply(gene, function(s) strsplit(s,split="[;,\\|]")[[1]][1])
+    gene1 <- alias2hugo(gene1)  ## convert to latest HUGO
     ngs$genes = data.frame( gene_name = gene1,
                            gene_alias = gene,
                            chr = gene.map[gene1],
@@ -188,6 +219,12 @@ pgx.createPGX <- function(counts, samples, contrasts, ## genes,
         ngs$counts <- ngs$counts[keep,]
         ngs$genes  <- ngs$genes[keep,]        
     }
+    
+    ##-------------------------------------------------------------------
+    ## Do infer cell cycle/gender here (before any batchcorrection)
+    ##-------------------------------------------------------------------
+    ngs <- compute.cellcycle.gender(ngs)
+    head(ngs$samples)
     
     cat("DBG [pgx-upload] 1: dim(ngs$counts)=",dim(ngs$counts),"\n")
     cat("DBG [pgx-upload] 1: sum.is.na(ngs$counts)=",sum(is.na(ngs$counts)),"\n")

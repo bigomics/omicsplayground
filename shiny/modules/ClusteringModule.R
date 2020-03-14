@@ -1761,9 +1761,9 @@ displays the expression levels of selected genes across all conditions in the an
         )
     })
 
-    ##================================================================================
+    ##=============================================================================
     ## Feature ranking
-    ##================================================================================
+    ##=============================================================================
     
     require(plotly)
     
@@ -1835,9 +1835,6 @@ displays the expression levels of selected genes across all conditions in the an
             for(j in 1:length(features)) {
 
                 pp = features[[j]]
-                cat("[calcFeatureRanking] length(feat)=",length(pp),"\n")
-                cat("[calcFeatureRanking] head(feat)=",head(pp),"\n")
-                cat("[calcFeatureRanking] head(rnX)=",head(rownames(X)),"\n")
                 
                 if(gene.level) {
                     pp = filterProbes(ngs$genes, features[[j]])
@@ -1848,10 +1845,6 @@ displays the expression levels of selected genes across all conditions in the an
                 dim(X1)
                 ##cat("<clust_featureRank> dim(X1)=",dim(X1),"\n")
                 ##if( nrow(X1) 
-
-                cat("[calcFeatureRanking] length(pp)=",length(pp),"\n")
-                cat("[calcFeatureRanking] length(grp)=",length(grp),"\n")
-                cat("[calcFeatureRanking] dim(X1)=",dim(X1),"\n")
                 
                 s1 = s2 = 1
                 method = input$clust_featureRank_method
@@ -1927,9 +1920,9 @@ displays the expression levels of selected genes across all conditions in the an
         func = clust_featureRank.RENDER,
         func2 = clust_featureRank.RENDER,
         options = clust_featureRank.opts,
-        pdf.width=8, pdf.height=10,
+        pdf.width=8, pdf.height=8,
         height = c(fullH-80,700), width=c("auto",800),
-        res = c(72,75),
+        res = c(72,90),
         info.text = clust_featureRank_info
         ## caption = clust_featureRank_caption
     )

@@ -65,11 +65,10 @@ probe2symbol <- function(probes, type=NULL, org="human") {
         if(any(grep(" /// ",probes))) {
             symbol0 <- strsplit(probes, split=" /// ")
         } else if(any(grep("[;,]",probes))) {
-            symbol0 <- strsplit(probes, split="[;,]")
+            symbol0 <- strsplit(probes, split="[;,\\|]")
         } else {
             symbol0 <- probes
         }
-
         ## all.symbols <- NULL
         ## if(org=="human") all.symbols <- unlist(as.list(org.Hs.egSYMBOL))
         ## if(org=="mouse") all.symbols <- unlist(as.list(org.Mm.egSYMBOL))

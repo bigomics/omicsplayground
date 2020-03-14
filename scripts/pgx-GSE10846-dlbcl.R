@@ -23,7 +23,8 @@ GENETEST.METHODS=c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
 ##USER.GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank","trend.limma")
 GENESETTEST.METHODS = c("fisher","gsva","camera","fgsea")
 
-rda.file="../data/GSE10846-dlbcl2.pgx"
+
+rda.file="../data/GSE10846-dlbcl.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)

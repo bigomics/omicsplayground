@@ -713,7 +713,7 @@ between two contrasts."
         par(mfrow=c(1,1), mar=c(1,1,3,1)*0, bty="n")
         par(oma=c(0.0,0,0,0))
         limma::vennDiagram(
-                   dt1,  main="", cex.main=1.2, cex=1.2, mar=c(0,0,2,0),
+                   dt1,  main=NULL, cex.main=0.2, cex=1.2, mar=c(0,0,2,0),
                    include=include, bty="n", fg=grey(0.7),
                    circle.col=c("turquoise", "salmon","lightgreen","orange") )
         tt = paste(label,"=",colnames(dt)[-1])
@@ -802,7 +802,7 @@ between two contrasts."
         info.text = "The Venn diagram visualizes the number of intersecting genes between the profiles. The list of intersecting genes with further details is also reported in an interactive table below, where users can select and remove a particular contrasts from the intersection analysis.",
         options = cmp_venndiagram.opts,
         pdf.width=8, pdf.height=8,
-        height = 0.42*fullH, res=72
+        height = 0.40*fullH, res=72
     )
 
     callModule(
@@ -820,7 +820,7 @@ between two contrasts."
     ## Cumuative FC
     ##================================================================================
 
-    cmp_fcbarplot.RENDER %<a-% reactive({
+    cmp_cumFCplot.RENDER %<a-% reactive({
 
         ngs <- inputData()
         sel = names(ngs$gx.meta$meta)
@@ -831,9 +831,9 @@ between two contrasts."
         
         ##fc = sapply(ngs$gx.meta$meta[1:3], function(x) x$meta.fx)
         ##rownames(fc) <- rownames(ngs$gx.meta$meta[[1]])    
-        fc = getSignificantFoldChangeMatrix()  ## isolate??
+        fc = getSignificantFoldChangeMatrix()  ## isolate??xs
         fc <- fc[,sel,drop=FALSE]
-        if(input$cmp_fcbarplot_abs) {
+        if(input$cmp_cumFCplot_abs) {
             fc <- abs(fc)  
         }
         fc[is.na(fc)] <- 0
@@ -871,31 +871,33 @@ between two contrasts."
             par(mfrow=c(1,1), mar=c(9,4,1,1), mgp=c(2.4,1,0) )
             ##barplot(t(fc.top), las=3, cex.names=0.81, col=col1,
             ##        ylim=ylim, ylab="cumulative logFC")
-            pgx.stackedBarplot(fc.top, cex.names=0.80, col=col1,
+            pgx.stackedBarplot(fc.top, cex.names=0.77, col=col1,
                                ## ylim=ylim,
                                ylab="cumulative logFC")        
             legend("topleft", legend=colnames(fc.top),
-                   fill = col1, cex=0.78, y.intersp=0.78)
+                   fill = col1, cex=0.75, y.intersp=0.78)
         }
         
     })
 
-    cmp_fcbarplot.opts = tagList(
-        checkboxInput(ns('cmp_fcbarplot_abs'),'Absolute foldchange')
+    cmp_cumFCplot.opts = tagList(
+        checkboxInput(ns('cmp_cumFCplot_abs'),'Absolute foldchange')
     )
 
     callModule(
         plotModule,
-        id = "cmp_fcbarplot", label="c",
-        func = cmp_fcbarplot.RENDER,
-        func2 = cmp_fcbarplot.RENDER,
+        id = "cmp_cumFCplot", label="c",
+        func = cmp_cumFCplot.RENDER,
+        func2 = cmp_cumFCplot.RENDER,
+        csvFunc = getSignificantFoldChangeMatrix,
+        download.fmt = c("pdf","png"),
         ##caption = cmp_venntable_buttons,
         title = "Cumulative fold-change", 
         info.text = "</b>Cumulative fold-change.</b> This plot visualizes the cumulative fold-change of genes shared between the profiles.",
-        options = cmp_fcbarplot.opts,
+        options = cmp_cumFCplot.opts,
         pdf.width = 8, pdf.height = 6,
         height = c(0.45*fullH,550), width=c('auto',1000),
-        res=c(78,110)
+        res=c(75,110)
     )
     
     ##================================================================================
@@ -1574,7 +1576,7 @@ between two contrasts."
                     flex = c(0.9,NA,1),
                     plotWidget(ns("cmp_venndiagram")),
                     cmp_venntable_buttons,
-                    plotWidget(ns("cmp_fcbarplot"))
+                    plotWidget(ns("cmp_cumFCplot"))
                 )
             )
         )
