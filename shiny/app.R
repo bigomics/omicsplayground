@@ -207,7 +207,7 @@ server = function(input, output, session) {
         showHideTab(pgx, "drugs", "maintabs", "Drug connectivity")
         showHideTab(pgx, "wordcloud", "maintabs", "Word cloud") 
         
-        if(!file.exists(file.path(FILESX,"access-ncov2019.log"))) {
+        if(!file.exists(file.path(FILESX,"access.log"))) {
             hideTab("load-tabs","Visitors map")            
         }
         
