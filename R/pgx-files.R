@@ -1,4 +1,6 @@
-getAccessLogs <- function(access.dirs, lib.dir) {
+access.dirs=FILESX
+
+getAccessLogs <- function(access.dirs, filter.opg=TRUE) {
     
     ##access.dirs <- c(FILESX, file.path(FILESX,"apache2"),
     ##                 "/var/www/html/logs", "/var/log/apache2")
@@ -27,11 +29,12 @@ getAccessLogs <- function(access.dirs, lib.dir) {
 
     ## Filter access log
     acc <- do.call(rbind, access.logs)
-    if(1) {
+    if(filter.opg) {
         sel <- grep("omicsplayground",acc[,"get"])
         acc <- acc[sel,]
     }
     dim(acc)
+    head(acc)
     
     ## Extract visiting period
     acc.date <- gsub("[:].*|\\[","",as.character(acc[,"date"]))
@@ -48,12 +51,12 @@ getAccessLogs <- function(access.dirs, lib.dir) {
     ip <- unique(acc.ip)
 
     require(rgeolocate)
-    ##file <- system.file("extdata","GeoLite2-Country.mmdb", package = "rgeolocate")
-    ##loc <- maxmind(ip, file, "country_code")
-    file <- file.path(lib.dir,"GeoLite2-City.mmdb")
-    loc <- rgeolocate::maxmind(ip, file, c("country_code", "country_name", "city_name"))
-    country_code <- unique(loc$country_code)
-    names(country_code) <- loc[match(country_code,loc$country_code),"country_name"]
+    file <- system.file("extdata","GeoLite2-Country.mmdb", package = "rgeolocate")
+    loc <- maxmind(ip, file, c("country_code","country_name"))
+    ##file <- file.path(lib.dir,"GeoLite2-City.mmdb")
+    ##loc <- rgeolocate::maxmind(ip, file, c("country_code", "country_name", "city_name"))
+    country_codes <- unique(loc$country_code)
+    names(country_codes) <- loc[match(country_codes,loc$country_code),"country_name"]
 
     acc$country_code <- loc$country_code[match(acc.ip,ip)]
     tail(sort(table(acc$country_code)),40)
@@ -77,7 +80,7 @@ getAccessLogs <- function(access.dirs, lib.dir) {
 
     tt <- table(loc$country_name)
     df <- data.frame( country_name = names(tt),
-                     country_code = country_code[names(tt)],
+                     country_code = country_codes[names(tt)],
                      visitors = (as.integer(tt)))
     df <- df[order(-df$visitors),]
     sum(df$visitors)

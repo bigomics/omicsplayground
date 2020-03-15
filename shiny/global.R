@@ -1,6 +1,6 @@
-access.dirs <- c(FILESX, file.path(FILESX,"apache2"),
-                 "/var/www/html/logs", "/var/log/apache2")
-ACCESS.LOG <- getAccessLogs(access.dirs, lib.dir=FILESX)
+access.dirs = c(FILESX, file.path(FILESX,"apache2"),"/var/www/html/logs", "/var/log/apache2")
+access.dirs = FILESX
+ACCESS.LOG <- getAccessLogs(access.dirs, filter.opg=FALSE)
 
 showHideTab <- function(pgx, slot, tabname, subtab) {
     if(!slot %in% names(pgx)) {
