@@ -1,4 +1,4 @@
-access.dirs=FILESX
+##access.dirs=FILESX
 
 getAccessLogs <- function(access.dirs, filter.opg=TRUE) {
     

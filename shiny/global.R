@@ -1,4 +1,4 @@
-access.dirs = c(FILESX, file.path(FILESX,"apache2"),"/var/www/html/logs", "/var/log/apache2")
+##access.dirs = c(FILESX, file.path(FILESX,"apache2"),"/var/www/html/logs", "/var/log/apache2")
 access.dirs = FILESX
 ACCESS.LOG <- getAccessLogs(access.dirs, filter.opg=FALSE)
 
