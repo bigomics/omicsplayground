@@ -16,6 +16,8 @@ getAccessLogs <- function(access.dirs, filter.opg=TRUE) {
     access.logs <- lapply(access.files, function(f)
         suppressMessages(suppressWarnings(try(read.table(f)))))
     access.logs <- access.logs[sapply(access.logs,class)=="data.frame"]
+    if(length(access.logs)==0) return(NULL)
+
     i=3
     for(i in 1:length(access.logs)) {
         df <- access.logs[[i]]
