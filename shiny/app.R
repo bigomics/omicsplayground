@@ -171,7 +171,8 @@ server = function(input, output, session) {
         
         hideTab("view-tabs","Resource info")
         hideTab("maintabs","Development")
-
+        hideTab("maintabs","SingleCell")
+        
         hideTab("enrich-tabs1","GeneMap")
         hideTab("clust-tabs2","Feature ranking")
         hideTab("expr-tabs1","Volcano (methods)")
