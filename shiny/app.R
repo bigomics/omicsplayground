@@ -150,6 +150,8 @@ server = function(input, output, session) {
         ## hide all main tabs
         if(is.null(pgx)) {
             lapply(MAINTABS, function(m) hideTab("maintabs",m))
+            if(!opt$ENABLE_UPLOAD)  hideTab("load-tabs","Upload data")
+            if(is.null(ACCESS.LOG)) hideTab("load-tabs","Visitors map")            
             return(NULL)
         }
 
@@ -166,7 +168,6 @@ server = function(input, output, session) {
                      opt$SINGLE_CELL == "TRUE")
         if(is.null(show.cc) || is.na(show.cc) || length(show.cc)==0) show.cc <- FALSE
         show.cc <- show.cc && "deconv" %in% names(pgx)
-
         
         hideTab("view-tabs","Resource info")
         hideTab("maintabs","Development")
@@ -200,16 +201,11 @@ server = function(input, output, session) {
         }
 
         ## Dynamically show upon availability
-        if(toupper(opt$ENABLE_UPLOAD) %in% c("NO","FALSE")) {
-            hideTab("load-tabs","Upload data")            
-        }
+        if(opt$ENABLE_UPLOAD) showTab("load-tabs","Upload data")            
         showHideTab(pgx, "connectivity", "maintabs", "Similar experiments")
         showHideTab(pgx, "drugs", "maintabs", "Drug connectivity")
         showHideTab(pgx, "wordcloud", "maintabs", "Word cloud") 
-        
-        if(!file.exists(file.path(FILESX,"access.log"))) {
-            hideTab("load-tabs","Visitors map")            
-        }
+        if(!is.null(ACCESS.LOG)) showTab("load-tabs","Visitors map")            
         
     })
 
