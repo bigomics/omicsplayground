@@ -13,7 +13,8 @@ FROM bigomics/omicsplayground:testing
 #------------------------------------------------------------
 
 RUN apt-get install -y pdftk libbz2-dev
-RUN R -e "install.packages(c('shinydashboardPlus','optparse','docopt','randomForest','rgeolocate','rworldmap'))"
+RUN R -e "install.packages(c('shinydashboardPlus','optparse','docopt','randomForest','rworldmap'))"
+RUN R -e "BiocManager::install(c('rgeolocate','rworldmap'))"
 RUN R -e "BiocManager::install(c('org.Mm.eg.db','EnsDb.Hsapiens.v86','EnsDb.Mmusculus.v79'))"
 
 #------------------------------------------------------------x
