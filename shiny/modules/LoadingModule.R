@@ -20,7 +20,8 @@ LoadingUI <- function(id) {
             id = ns("tabs"),
             tabPanel("Public datasets",uiOutput(ns("pgxtable_UI"))),
             tabPanel("Upload data",uiOutput(ns("upload_UI"))),
-            tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
+            tabPanel("Visitors map",uiOutput(ns("usersmap_UI"))),
+            tabPanel("Forum",uiOutput(ns("forum_UI")))
         )
     )
 }
@@ -1346,7 +1347,6 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         res <- list(table=df, period=from.to)
 
     })
-
     
     usersmap.RENDER %<a-% reactive({
 
@@ -1398,7 +1398,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     )
 
     ##usersmap_caption = "<b>(a)</b> <b>Geo locate.</b>"
-    output$usersmapUI <- renderUI({
+    output$usersmapInfo <- renderUI({
         ##u <- getUsersMapTable()
         u <- ACCESS.LOG
         df <- u$table
@@ -1421,9 +1421,29 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             height = 600,
             fillRow(
                 flex = c(1,4.5),
-                wellPanel( uiOutput(ns("usersmapUI"))),
+                wellPanel( uiOutput(ns("usersmapInfo"))),
                 plotWidget(ns("usersmap"))
             )
+        )
+    })
+
+
+    ##---------------------------------------------------------------
+    ##----------------- modules for Forum ---------------------------
+    ##---------------------------------------------------------------
+
+    output$forum <- renderUI({
+        IFRAME = "<iframe id='forum_embed' src='https://groups.google.com/forum/embed/?place=forum/omicsplayground#!forum/omicsplayground' scrolling='no' frameborder='0' width='100%' height='700'></iframe>"
+        src = 'https://groups.google.com/forum/embed/?place=forum/omicsplayground#!forum/omicsplayground'
+        ## src = 'https://groups.google.com/forum/embed/?place=omicsplayground#!topic/omicsplayground/4o-ryBjyv3Y'        
+        ## tags$iframe(src=src, scrolling='no', frameborder=0, width='100%', height=700)
+        tags$iframe(src=src, seamless="seamless", frameborder=0, width='100%', height=550)
+    })
+    
+    output$forum_UI <- renderUI({
+        fillCol(
+            height = 550,
+            htmlOutput(ns("forum"))
         )
     })
     

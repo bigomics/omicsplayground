@@ -16,6 +16,7 @@ getAccessLogs <- function(access.dirs, filter.opg=TRUE) {
     access.logs <- lapply(access.files, function(f)
         suppressMessages(suppressWarnings(try(read.table(f)))))
     access.logs <- access.logs[sapply(access.logs,class)=="data.frame"]
+    length(access.logs)
     if(length(access.logs)==0) return(NULL)
 
     i=3
@@ -31,6 +32,7 @@ getAccessLogs <- function(access.dirs, filter.opg=TRUE) {
 
     ## Filter access log
     acc <- do.call(rbind, access.logs)
+    dim(acc)
     if(filter.opg) {
         sel <- grep("omicsplayground",acc[,"get"])
         acc <- acc[sel,]
@@ -55,11 +57,14 @@ getAccessLogs <- function(access.dirs, filter.opg=TRUE) {
     require(rgeolocate)
     file <- system.file("extdata","GeoLite2-Country.mmdb", package = "rgeolocate")
     loc <- maxmind(ip, file, c("country_code","country_name"))
+    loc$ip <- ip
     ##file <- file.path(lib.dir,"GeoLite2-City.mmdb")
     ##loc <- rgeolocate::maxmind(ip, file, c("country_code", "country_name", "city_name"))
+    loc$country_name[which(loc$ip %in% c("127.0.0.1"))] <- "<local.ip>"
+    ##loc$country_code[which(loc$ip %in% c("127.0.0.1"))] <- "<local.ip>"
+    
     country_codes <- unique(loc$country_code)
     names(country_codes) <- loc[match(country_codes,loc$country_code),"country_name"]
-
     acc$country_code <- loc$country_code[match(acc.ip,ip)]
     tail(sort(table(acc$country_code)),40)
 
