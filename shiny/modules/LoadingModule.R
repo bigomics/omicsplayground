@@ -20,8 +20,8 @@ LoadingUI <- function(id) {
             id = ns("tabs"),
             tabPanel("Public datasets",uiOutput(ns("pgxtable_UI"))),
             tabPanel("Upload data",uiOutput(ns("upload_UI"))),
-            tabPanel("Visitors map",uiOutput(ns("usersmap_UI"))),
-            tabPanel("Forum",uiOutput(ns("forum_UI")))
+            tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
+            ##tabPanel("Forum",uiOutput(ns("forum_UI")))
         )
     )
 }
