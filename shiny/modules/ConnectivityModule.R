@@ -1773,7 +1773,7 @@ ConnectivityModule <- function(input, output, session, env)
         ## Number of selected genes
         sel.genes = grep("^CD",rownames(df),value=TRUE)
         ##sel.genes = head(rownames(df),ntop)  ## high-light top100
-        logfc <- as.integer(input$cmap_splom_logFC)
+        logfc <- as.numeric(input$cmap_logFC)
         sel.genes <- rownames(df)[ rowSums(abs(df) > logfc)>=1 ]  ## minimum FC
         head(sel.genes)
 
@@ -1960,7 +1960,7 @@ ConnectivityModule <- function(input, output, session, env)
         ##tipify( checkboxInput(ns("cmap_splom_highlight"),"Highlight genes",TRUE),
         ##       "Enable highlighting genes on the plots.",
         ##       placement="right", options = list(container = "body")),
-        tipify( selectInput(ns("cmap_splom_logFC"),"logFC threshold:",c(0.5,1,2,3,4),selected=1), "Threshold for (log) foldchange to highlight in plot.",  placement="right", options = list(container = "body"))
+        tipify( selectInput(ns("cmap_logFC"),"logFC threshold:",c(0,0.5,1,2,3,4),selected=1), "Threshold for (log) foldchange to highlight in plot.",  placement="right", options = list(container = "body"))
     )
 
     cmapPairsPlot_info = "For the selected contrasts, the <strong>Pairs</strong> panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, The Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as '<custom>' selection."
