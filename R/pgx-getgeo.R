@@ -609,6 +609,16 @@ eset.getCH1 <- function(eset) {
     pdata
 }
 
+eset.parseCharacteristicsInfo <- function(ch, split=",") {
+    terms <- sub(":.*$","",trimws(strsplit(ch, split=",")[[1]]))
+    value <- t(sapply(ch, function(s) (strsplit(s,split=",")[[1]]) ))
+    value <- apply(value, 2, function(s) trimws(sub(".*[:]","",s)))
+    value <- data.frame(value, stringsAsFactors=FALSE, check.names=FALSE)
+    rownames(value) <- NULL
+    dim(value)
+    colnames(value) <- terms
+    value
+}
 
 ##title=title2
 title2pheno <- function(title, split=NULL, trim=TRUE, summarize=TRUE)
