@@ -20,8 +20,8 @@ LoadingUI <- function(id) {
             id = ns("tabs"),
             tabPanel("Public datasets",uiOutput(ns("pgxtable_UI"))),
             tabPanel("Upload data",uiOutput(ns("upload_UI"))),
-            tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
-            ##tabPanel("Forum",uiOutput(ns("forum_UI")))
+            tabPanel("Visitors map",uiOutput(ns("usersmap_UI"))),
+            tabPanel("Community forum",uiOutput(ns("forum_UI")))
         )
     )
 }
@@ -30,7 +30,7 @@ LoadingUI <- function(id) {
 LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                           max.limits=c("samples"=1000,"comparisons"=20,
                                        "genes"=19999),
-                          defaultMode="BASIC" )
+                          defaultMode="BASIC")
 {
     ns <- session$ns ## NAMESPACE
     
@@ -54,7 +54,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     ##-----------------------------------------------------------------------------
     ## Description
     ##-----------------------------------------------------------------------------
-    description = "<b> Omics Playground</b> is a user-friendly and interactive self-service bioinformatics platform for the in-depth analysis, visualization and interpretation of transcriptomics and proteomics data. Life scientists can easily perform complex data analysis and visualization without coding, and significantly reduce the time to discovery."
+    description = "<b>Omics Playground</b> is an interactive self-service bioinformatics platform for the analysis, visualization and interpretation of transcriptomics and proteomics data. Life scientists can easily perform complex data analysis and visualization without coding, and significantly reduce the time to discovery."
     
     output$description <- renderUI(HTML(description))
 
@@ -1431,15 +1431,25 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     ##---------------------------------------------------------------
     ##----------------- modules for Forum ---------------------------
     ##---------------------------------------------------------------
-
-    output$forum <- renderUI({
-        IFRAME = "<iframe id='forum_embed' src='https://groups.google.com/forum/embed/?place=forum/omicsplayground#!forum/omicsplayground' scrolling='no' frameborder='0' width='100%' height='700'></iframe>"
-        src = 'https://groups.google.com/forum/embed/?place=forum/omicsplayground#!forum/omicsplayground'
-        ## src = 'https://groups.google.com/forum/embed/?place=omicsplayground#!topic/omicsplayground/4o-ryBjyv3Y'        
-        ## tags$iframe(src=src, scrolling='no', frameborder=0, width='100%', height=700)
-        tags$iframe(src=src, seamless="seamless", frameborder=0, width='100%', height=550)
-    })
     
+    output$forum <- renderUI({
+        
+        parenturl <- paste0(session$clientData$url_protocol,
+                            "//",session$clientData$url_hostname,
+                            ":",session$clientData$url_port,
+                            session$clientData$url_pathname)
+        ## parenturl <- gsub("localhost","127.0.0.1",parenturl)
+        parenturl <- URLencode(parenturl, TRUE)
+        cat("[LoadingModule:forum] parenturl =",parenturl,"\n")
+        src = paste0('https://groups.google.com/forum/embed/?place=forum/omicsplayground',
+                     '&showsearch=true&showpopout=true&parenturl=',parenturl)
+        cat("src = ",src,"\n")
+        tags$iframe(id="forum_embed", src=src, height=600, width='100%',
+                    ##seamless="seamless",
+                    frameborder='no')
+        ##HTML(src)
+    })
+            
     output$forum_UI <- renderUI({
         fillCol(
             height = 550,
