@@ -22,6 +22,7 @@ source("../R/pgx-include.R", local=TRUE)  ## pass local vars
 ## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
+source("global.R", local=TRUE)
 
 ## --------------------------------------------------------------------
 ## ----------------------- READ OPTIONS -------------------------------
@@ -65,7 +66,6 @@ ENABLED
 
 cat("[MAIN] sourcing modules...\n")
 
-source("global.R", local=TRUE)
 source("modules/LoadingModule.R", local=TRUE)
 source("modules/DataViewModule.R", local=TRUE)
 source("modules/ClusteringModule.R", local=TRUE)
@@ -100,9 +100,9 @@ MAINTABS = c("DataView","Clustering","Expression","Enrichment",
 
 server = function(input, output, session) {
 
-    useShinyjs()
-    ##useShinydashboard()
-    ##useShinydashboardPlus()
+    ## useShinyjs()
+    ## useShinydashboard()
+    ## useShinydashboardPlus()
 
     cat("===================== SERVER =======================\n")
     cat("[MAIN] calling modules...\n")
@@ -110,7 +110,6 @@ server = function(input, output, session) {
     max.limits <- c("samples" = opt$MAX_SAMPLES,
                     "comparisons" = opt$MAX_COMPARISONS,
                     "genes" = opt$MAX_GENES)
-    
     env <- list()  ## communication environment
     env[["load"]]   <- callModule(
         LoadingModule, "load", hideModeButton = opt$HIDE_MODEBUTTON,
@@ -253,7 +252,6 @@ if(DEV.VERSION) {
 tabs = "load"
 createNavbarPage <- function(tabs)
 {
-
     version <- scan("../VERSION", character())[1]
     TITLE = paste(opt$TITLE,version)
     LOGO = div(img(src="bigomics-logo-white-48px.png", height="48px"),
@@ -261,16 +259,13 @@ createNavbarPage <- function(tabs)
     
     title = tagList(LOGO)
     windowTitle = TITLE
-    ##title = "LOGO"
     theme = shinythemes::shinytheme("cerulean")
-    ##header = header
     id = "maintabs"
-    ##selected = "Home"
-    
+    ##selected = "Home"    
     header = tagList(
         tags$head(tags$link(rel = "stylesheet", href = "navbar.css")),
-        TAGS.JSSCRIPT,
         shinyjs::useShinyjs(),
+        TAGS.JSSCRIPT,
         use_waiter(),
         div(textOutput("current_dataset"),class='current-data')
         ##QuestionModule_UI("qa")
