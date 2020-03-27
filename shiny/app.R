@@ -266,6 +266,7 @@ createNavbarPage <- function(tabs)
         tags$head(tags$link(rel = "stylesheet", href = "navbar.css")),
         shinyjs::useShinyjs(),
         TAGS.JSSCRIPT,
+        tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
         use_waiter(),
         div(textOutput("current_dataset"),class='current-data')
         ##QuestionModule_UI("qa")

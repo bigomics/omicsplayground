@@ -61,7 +61,7 @@ probe2symbol <- function(probes, type=NULL, org="human") {
     type
 
     if(type=="symbol") {
-        cat("probe2symbol: probe is alread symbol\n")
+        cat("probe2symbol: probe is already symbol\n")
         if(any(grep(" /// ",probes))) {
             symbol0 <- strsplit(probes, split=" /// ")
         } else if(any(grep("[;,]",probes))) {

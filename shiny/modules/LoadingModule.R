@@ -1449,11 +1449,22 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                     frameborder='no')
         ##HTML(src)
     })
+         
+    output$tweet <- renderUI({
+        ## NOT WORKING YET...
+        tags$a(class="twitter-timeline",
+               href="https://twitter.com/bigomics?ref_src=twsrc%5Etfw")
+        ##tags$script('twttr.widgets.load(document.getElementById("tweet"));')
+    })
             
     output$forum_UI <- renderUI({
         fillCol(
             height = 550,
-            htmlOutput(ns("forum"))
+            fillRow(
+                flex=c(4,0),
+                htmlOutput(ns("forum"))
+                ##uiOutput("tweet")
+            )
         )
     })
     
