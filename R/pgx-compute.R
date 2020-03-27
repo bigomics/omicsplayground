@@ -23,7 +23,7 @@ if(0) {
 }
 
 pgx.createPGX <- function(counts, samples, contrasts, ## genes,
-                          auto.scale=TRUE,
+                          auto.scale=TRUE, only.chrom=TRUE, rik.orf=FALSE,
                           only.hugo=TRUE, only.proteincoding=TRUE)
 {
     
@@ -164,7 +164,7 @@ pgx.createPGX <- function(counts, samples, contrasts, ## genes,
     ## take only first gene as rowname, retain others as alias
     gene <- rownames(ngs$counts)
     gene1 <- sapply(gene, function(s) strsplit(s,split="[;,\\|]")[[1]][1])
-    gene1 <- alias2hugo(gene1)  ## convert to latest HUGO
+    gene1 <- alias2hugo(gene1)  ## always convert to latest HUGO
     ngs$genes = data.frame( gene_name = gene1,
                            gene_alias = gene,
                            chr = gene.map[gene1],
@@ -192,30 +192,25 @@ pgx.createPGX <- function(counts, samples, contrasts, ## genes,
     ##-------------------------------------------------------------------
     if(org == "mouse") {
         has.name <- !is.na(ngs$genes$gene_name)
-        is.official = TRUE
+        has.chrloc = is.official = not.rik = TRUE
         if(only.hugo) is.official <- (ngs$genes$gene_name %in% gene.symbol)
-        rik.genes <- grepl("Rik",ngs$genes$gene_name)
+        if(!rik.orf) not.rik <- grepl("Rik",ngs$genes$gene_name,invert=TRUE) ## ???
         ##imm.gene <- grepl("^TR_|^IG_",ngs$genes$gene_biotype)
-        has.chrloc <- !is.na(ngs$genes$chr)
-        is.protcoding <- ngs$genes$gene_biotype %in% c("protein_coding")
-        
-        keep <- (has.name & !rik.genes & is.official & has.chrloc)
-        if(only.proteincoding) keep <- keep & is.protcoding
-        
+        if(only.chrom) has.chrloc <- !is.na(ngs$genes$chr)
+        if(only.proteincoding) is.protcoding <- ngs$genes$gene_biotype %in% c("protein_coding")
+        keep <- (has.name & not.rik & is.official & has.chrloc & is.protcoding)
         ngs$counts <- ngs$counts[keep,]
         ngs$genes  <- ngs$genes[keep,]        
     }
     if(org == "human") {
         has.name <- !is.na(ngs$genes$gene_name)
-        is.official = TRUE
+        has.chrloc = is.official = is.protcoding = not.orf = TRUE
         if(only.hugo) is.official <- (ngs$genes$gene_name %in% gene.symbol)
-        ##orf.genes <- grepl("ORF",ngs$genes$gene_name)
+        if(!rik.orf) not.orf <- grepl("ORF",ngs$genes$gene_name,invert=TRUE)
         ##imm.gene <- grepl("^TR_|^IG_",ngs$genes$gene_biotype)
-        has.chrloc <- !is.na(ngs$genes$chr)
-        is.protcoding <- ngs$genes$gene_biotype %in% c("protein_coding")
-        
-        keep <- (has.name & is.official & has.chrloc)
-        if(only.proteincoding) keep <- keep & is.protcoding
+        if(only.chrom) has.chrloc <- !is.na(ngs$genes$chr)
+        if(only.proteincoding) is.protcoding <- ngs$genes$gene_biotype %in% c("protein_coding")
+        keep <- (has.name & not.orf & is.official & has.chrloc & is.protcoding)
         ngs$counts <- ngs$counts[keep,]
         ngs$genes  <- ngs$genes[keep,]        
     }
