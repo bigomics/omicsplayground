@@ -194,7 +194,7 @@ pgx.createPGX <- function(counts, samples, contrasts, ## genes,
         has.name <- !is.na(ngs$genes$gene_name)
         has.chrloc = is.official = not.rik = TRUE
         if(only.hugo) is.official <- (ngs$genes$gene_name %in% gene.symbol)
-        if(!rik.orf) not.rik <- grepl("Rik",ngs$genes$gene_name,invert=TRUE) ## ???
+        if(!rik.orf) not.rik <- !grepl("Rik",ngs$genes$gene_name) ## ???
         ##imm.gene <- grepl("^TR_|^IG_",ngs$genes$gene_biotype)
         if(only.chrom) has.chrloc <- !is.na(ngs$genes$chr)
         if(only.proteincoding) is.protcoding <- ngs$genes$gene_biotype %in% c("protein_coding")
@@ -206,7 +206,7 @@ pgx.createPGX <- function(counts, samples, contrasts, ## genes,
         has.name <- !is.na(ngs$genes$gene_name)
         has.chrloc = is.official = is.protcoding = not.orf = TRUE
         if(only.hugo) is.official <- (ngs$genes$gene_name %in% gene.symbol)
-        if(!rik.orf) not.orf <- grepl("ORF",ngs$genes$gene_name,invert=TRUE)
+        if(!rik.orf) not.orf <- !grepl("ORF",ngs$genes$gene_name)
         ##imm.gene <- grepl("^TR_|^IG_",ngs$genes$gene_biotype)
         if(only.chrom) has.chrloc <- !is.na(ngs$genes$chr)
         if(only.proteincoding) is.protcoding <- ngs$genes$gene_biotype %in% c("protein_coding")

@@ -259,7 +259,8 @@ compute.deconvolution <- function(ngs, lib.dir, rna.counts=ngs$counts, full=FALS
 }
 
 ## -------------- infer sample characteristics --------------------------------
-compute.cellcycle.gender <- function(ngs, rna.counts=ngs$counts) {
+compute.cellcycle.gender <- function(ngs, rna.counts=ngs$counts)
+{
     pp <- rownames(rna.counts)
     is.mouse = (mean(grepl("[a-z]",gsub(".*:|.*\\]","",pp))) > 0.8)
     is.mouse
@@ -271,7 +272,7 @@ compute.cellcycle.gender <- function(ngs, rna.counts=ngs$counts) {
             ##counts <- ngs$counts
             counts <- rna.counts
             rownames(counts) <- toupper(ngs$genes[rownames(counts),"gene_name"])
-            res <- try( pgx.inferCellCyclePhase(counts) )  ## can give bins error
+            res <- try(pgx.inferCellCyclePhase(counts) )  ## can give bins error
             if(class(res)!="try-error") {
                 ngs$samples$.cell_cycle <- res
                 table(ngs$samples$.cell_cycle)

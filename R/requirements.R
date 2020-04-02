@@ -108,7 +108,7 @@ devtools::install_github("GfellerLab/EPIC", build_vignettes=TRUE)
 devtools::install_github('linxihui/NNLM')
 devtools::install_github("Coolgenome/iTALK", build_vignettes = TRUE)
 devtools::install_github('adymimos/rWordCloud', force=TRUE)
-remotes::install_github("dreamRs/shinyparticles")
+## remotes::install_github("dreamRs/shinyparticles")
 remotes::install_github("dreamRs/particlesjs")
 remotes::install_github("JohnCoene/waiter")
 
