@@ -181,6 +181,7 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
     return(ngs)
 }
 
+is.logx=FALSE
 pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
                                          ntop=1000, sv.rank=-1, prefix="C", 
                                          is.logx=FALSE, 
@@ -197,6 +198,7 @@ pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
     clust.detect <- clust.detect[1]
     
     sX <- counts
+    is.logx    
     if(is.logx) sX <- 2**sX
 
     cat("[pgx.clusterSamplesFromMatrix] dim(sX)=",dim(sX),"\n")
@@ -206,7 +208,6 @@ pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
         qq
         prior.counts <- qq
     }
-
     cat("[pgx.clusterSamplesFromMatrix] prior.counts=",prior.counts,"\n")
     
     sX <- log2(prior.counts + sX)
@@ -259,17 +260,19 @@ pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
             colnames(pos3) <- c("umap_1","umap_2","umap_3")
         }
     } else if(method=="tsne") {
+        require(Rtsne)
         if(2 %in% dims) {
             pos2 = Rtsne( t(sX), dim=2, perplexity=perplexity,
-                         check_duplicates=FALSE, num_threads=99)$Y
+                         check_duplicates=FALSE, num_threads=0)$Y
             colnames(pos2) <- c("tnse_1","tnse_2")
         }
         if(3 %in% dims) {
             pos3 = Rtsne( t(sX), dim=3, perplexity=perplexity,
-                         check_duplicates=FALSE, num_threads=99)$Y
+                         check_duplicates=FALSE, num_threads=0)$Y
             colnames(pos3) <- c("tnse_1","tnse_2","tnse_3")
         }
     } else if(method=="pca") {
+        require(irlba)
         sv.rank
         svd <- irlba(sX, nv=3)
         if(2 %in% dims) {

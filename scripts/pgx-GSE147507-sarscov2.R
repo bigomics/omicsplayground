@@ -35,6 +35,14 @@ if(PROCESS.DATA) {
     system("wget https://ftp.ncbi.nlm.nih.gov/geo/series/GSE147nnn/GSE147507/suppl/GSE147507_RawReadCounts.tsv.gz -O /tmp/GSE147507_RawReadCounts.tsv.gz")
     X <- read.csv("/tmp/GSE147507_RawReadCounts.tsv.gz",
                   sep="\t",row.names=1,check.names=FALSE)
+    X <- as.matrix(X)
+
+    if(0) {
+        require(Rtsne)
+        X <- X*1.0001
+        res <- Rtsne( t(head(X,200)), perplexity=6)
+        res <- Rtsne( t(head(X,800)), perplexity=6)        
+    }
     
     ## Get sample info
     pdata = pData(geo[[1]])
@@ -51,6 +59,8 @@ if(PROCESS.DATA) {
 
     sampleTable$group <- with(sampleTable, paste(treatment,cell_line,time_point,sep="_"))
     sampleTable$group <- gsub("[-]","",sampleTable$group)
+    sampleTable$group[c(13:14)] <- paste0(sampleTable$group[c(13:14)],"_rsv")
+    
     ##colnames(X) <- rownames(sampleTable) <- tt
 
     ## match counts and sampleTable
@@ -89,7 +99,7 @@ if(PROCESS.DATA) {
     ## Now create an DGEList object  (see tximport Vignette)
     ##-------------------------------------------------------------------
     library(limma)
-    ngs$counts <- X  ## treat as counts
+    ngs$counts <- as.matrix(X)  ## treat as counts
     ngs$samples <- data.frame(sampleTable)
     ngs$genes = genes
     
@@ -98,7 +108,8 @@ if(PROCESS.DATA) {
     ## for doing differential analysis.
     ##-------------------------------------------------------------------
     dim(ngs$counts)
-    ngs <- pgx.clusterSamples(ngs, perplexity=NULL, skipifexists=FALSE, prefix="C")
+    ngs <- pgx.clusterSamples(ngs, method="pca", perplexity=NULL,
+                              skipifexists=FALSE, prefix="C")
     head(ngs$samples)
 
 }
@@ -114,7 +125,7 @@ if(DIFF.EXPRESSION) {
     contr.matrix <- makeContrasts(
         SARSCoV2NHBE_vs_Mock = SARSCoV2_NHBE_24h - Mock_NHBE_24h,
         SARSCoV2A549_vs_Mock = SARSCoV2_A549_24h - Mock_A549_24h,                
-        RSVA549_vs_Mock = RSV_A549_24h - Mock_A549_24h,
+        RSVA549_vs_Mock = RSV_A549_24h - Mock_A549_24h_rsv,
         IAVA549_vs_Mock = IAV_A549_9h - Mock_A549_9h,                
         levels = levels)
     contr.matrix
