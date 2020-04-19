@@ -13,7 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 If you are a non-profit company, academic, or use our products for 
 personal use, you may enjoy our software for free under the 
-[Creative Commons (CC) Attribution-NonCommercial licence](https://creativecommons.org).
+[Creative Commons (CC) Attribution-NonCommercial license](https://creativecommons.org).
 
 
 ## Commercial/governmental
