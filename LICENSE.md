@@ -3,7 +3,7 @@
 Omics Playground is open source: you are allowed to download the
 source code and make your own edits. Although Omics Playground is open
 source, the software is distributed under a dual license: for
-non-commerical or commercial use.
+non-commercial or commercial use.
 
 This program is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
