@@ -1045,6 +1045,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ## plt <- plt %>% layout(title=title) %>% 
         ##     config(displayModeBar = FALSE)
         plt <- plt %>% 
+            config(displayModeBar = FALSE) %>% 
             config(toImageButtonOptions = list(format='svg', height=800, width=800))
         ##print(plt)
         return(plt)
