@@ -396,8 +396,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         df$kegg.id <- paste0("<a href='",url,"' target='_blank'>",df$kegg.id,"</a>")    
         ##df$pathway <- wrapHyperLink(df$pathway, df$pathway)
         
-        numeric.cols <- which(sapply(df, is.numeric))
-        numeric.cols
+        numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
         
         DT::datatable( df, rownames=FALSE, escape = c(-1,-2),
                       class = 'compact cell-border stripe hover',                  
@@ -741,7 +740,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         id2 = paste0("abc(",sub(":","_",dt$id),")")  ## to match with wrapHyperLink
         dt$id <- wrapHyperLink(as.character(dt$id), id2)  ## add link
         
-        numeric.cols <- which(sapply(dt, is.numeric))
+        numeric.cols <- colnames(dt)[which(sapply(dt, is.numeric))]
         numeric.cols
 
         DT::datatable( dt, rownames=FALSE, escape = c(-1,-2),
