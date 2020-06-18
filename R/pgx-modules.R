@@ -2,22 +2,68 @@
 ## PLOT/TABLE MODULES
 ########################################################################
 
-WATERMARK=TRUE
+##if(!exists("WATERMARK")) WATERMARK=FALSE
+##WATERMARK=TRUE
 ##WATERMARK=FALSE
 
-addWatermarkPlotly <- function(p) {
+SLOGAN = c(
+    "'I Feel Empowered' - created with Omics Playground",
+    "'I Love Data' - created with Omics Playground",
+    "'I Get Insight' - created with Omics Playground",
+    "'Eureka moments' - created with Omics Playground",
+    "'I See Clearly' - created with Omics Playground"
+    )
+
+addWatermark.base <- function(line=-1.5, cex=0.8, col="#6699ff88") {    
+    txt = "'Feel empowered' --- with Omics Playground"
+    txt = sample(SLOGAN,1)
+    ##mtext(txt,outer=TRUE, side=1,line=line, cex=cex, col=col, xpd=NA)
+    title(sub=txt, adj=1, line=3.5, font=2, cex.sub=cex, col.sub=col)
+}
+addWatermark.Plotly <- function(p) {
     add_annotations(
         p,
         ##yshift = -100, 
-        ##x = 1, y=-0.05, xanchor = "right", 
+        ##x = 1, y=-0.1, xanchor = "right",
+        ##x = 0.5, y=-0.1, xanchor = "middle", 
         x = 0.5, y = 0.5, xanchor = "middle", 
         xref="paper", yref="paper", showarrow=FALSE,
-        text = "Omics Playground\nFree version",
-        font = list(size=64, family='Arial', color="#AAAAAA22")
-        ##font = list(size=12, color="#00000066")
+        ##text = "'Feel empowered' --- with Omics Playground",
+        ##text = "'Feel empowered'\nwith Omics Playground",
+        text = sub(" - ","\n",sample(SLOGAN,1)),
+        font = list(size=50, family='Arial', color="#AAAAAA22")
+        ##font = list(size=18, family='Arial', color="#AAAAAA22")
     )
 }
-    
+addWatermark.PDF <- function(file, col="#88002288") {
+    if(system("which pdftk",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
+    tmp1 <- paste0(gsub("file","plot",tempfile()),".pdf")
+    tmp2 <- paste0(gsub("file","plot",tempfile()),".pdf")
+    txt <- sample(SLOGAN,1)
+    ##txt = sub("with Omics","with\nOmics",sub(" - ","\n",txt))
+    pdf(tmp1,w=8,h=8)
+    frame()
+    ##text(0.5,0.5,txt,font=2,cex=4,col=col)
+    ##text(0.5,1.0,txt,font=2,cex=1.5,col=col,xpd=FALSE)
+    ##text(1.08,0.5,txt,srt=90,font=1,cex=1.3,col=col,xpd=TRUE)
+    text(0.5,-0.2,txt,srt=0,font=2,cex=1,col=col,xpd=TRUE)
+    dev.off()
+    cmd <- paste("pdftk",file,"stamp",tmp1,"output",tmp2) ## NEED pdftk installed!!!
+    cmd
+    system(cmd)
+    file.copy(tmp2,file,overwrite=TRUE)
+    unlink(tmp1)
+    unlink(tmp2)
+}
+
+##addWatermark.PDF(file) 
+
+## prepare ORCA server
+library(orca)
+if(!exists("ORCA") || !ORCA$process$is_alive()) {
+    ORCA <- orca_serve()
+}
+
 ##================================================================================
 ##================================================================================
 ##================================================================================
@@ -131,6 +177,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
     require(shinyWidgets)
     require(shinyBS)
     require(webshot)
+    require(orca)
     
     ## these engines cannot (yet) provide html
     if(plotlib %in% c("base")) {    
@@ -187,7 +234,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
         outputFunc="iheatmaprOutput"
         renderFunc="renderIheatmap"
     } else if(plotlib == "image") {
-        require(iheatmapr)
         ##render <- renderIheatmap({ func() })
         outputFunc="imageOutput"
         renderFunc="renderImage"
@@ -216,13 +262,18 @@ plotModule <- function(input, output, session, ## ns=NULL,
                 withProgress({
                     ## unlink(PNGFILE) ## do not remove!
                     if(plotlib=="plotly") {
-                        cat("downloadHandler:: exporting plotly to PNG\n")
+
                         p <- func()
-                        p$width = pdf.width * 100
-                        p$height = pdf.height * 100
-                        ##is.plotly3d <- class(p)[1]=="plotly" && all( c("x","y","z") %in% names(p$x$attrs[[1]]))
-                        err <- try(export(p, PNGFILE))  ## deprecated but still works...
-                        if(class(err)=="try-error") {
+                        p$width = pdf.width * 80
+                        p$height = pdf.height * 80
+
+                        cat("[pgx-modules::plotModule] exporting plotly to PNG with ORCA\n")
+                        ##err <- try(export(p, PNGFILE))  ## deprecated 
+                        ##err <- try(orca(p, PNGFILE))
+                        err <- try(ORCA$export(p, PNGFILE, width=p$width, height=p$height)) 
+                        if(class(err)!="try-error") {
+                            cat("[pgx-modules::plotModule] OK!\n")
+                        } else {
                             cat("downloadHandler:: export failed, trying webshot...\n")
                             htmlwidgets::saveWidget(p, HTMLFILE) 
                             err2 <- try(webshot(HTMLFILE,vwidth=pdf.width*100,
@@ -261,31 +312,16 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         ##
                     } else if(plotlib=="base") {
                         ##cat("downloadHandler:: exporting to base plot to PDF\n")
-                        cat("downloadHandler:: exporting base plot to PNG\n")
-                        
+                        cat("downloadHandler:: exporting base plot to PNG\n")                        
                         ## NEEEDS FIX!! pdf generating should be done
                         ## just here, not anymore in the
                         ## renderPlot. But cannot get it to work (IK 19.10.02)
                         if(0) {
-                            cat("downloadHandler:: creating new PDF device\n")
-                            add.ADVERTISEMENT = TRUE
-                            add.ADVERTISEMENT = FALSE
-                            pdf(file=PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
+                            cat("downloadHandler:: creating new PNG device\n")
+                            png(file=PNGFILE, width=80*pdf.width, height=80*pdf.height)
                             func()
                             ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
-                            plot(sin)
-                            ## ##mtext( caption.fun(), outer=TRUE, side=1,line=-3.5, cex=1, xpd=NA)
-                            ## if(add.ADVERTISEMENT) {
-                            ##     par(mfrow=c(1,1),par=c(1,1,1,1)*0.5)
-                            ##     frame()
-                            ##     motto <- pgx.randomSlogan(b=30)
-                            ##     mex = min(pdf.width,pdf.height)/8.0
-                            ##     text(0.5, 0.95, "Created with BigOmics Playground", cex=1.2*mex)
-                            ##     text(0.5, 0.70, motto, cex=2*mex, font=4)
-                            ##     text(0.5, 0.25, "BigOmics Analytics", cex=1.5*mex, font=2)
-                            ##     text(0.5, 0.15, "Self-service bioinformatics solutions", cex=1.2*mex)
-                            ##     text(0.5, 0.05, "www.bigomics.ch", cex=1.2*mex, font=3, xpd=NA)
-                            ## }
+                            ##plot(sin)
                             dev.off()  ## important!!
                         }
                     } else { ## end base                
@@ -297,6 +333,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     
                     ## finally copy to final exported file
                     file.copy(PNGFILE,file)
+                    cat("[pgx-modules::plotModule] export to PNG done!\n")                    
                 }, message="exporting to PNG", value=0.8)
             } ## content 
         ) ## PNG downloadHandler
@@ -311,12 +348,18 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     if(plotlib=="plotly") {
                         cat("downloadHandler:: exporting plotly to PDF\n")
                         p <- func()
-                        p$width = pdf.width * 100
-                        p$height = pdf.height * 100
-                        ##is.plotly3d <- class(p)[1]=="plotly" && all( c("x","y","z") %in% names(p$x$attrs[[1]]))
-                        err <- try(export(p, PDFFILE))  ## deprecated but still works...
-                        if(class(err)=="try-error") {
-                            cat("downloadHandler:: export failed, trying webshot...\n")
+                        ## if(WATERMARK) p <- addWatermark.Plotly(p)
+                        p$width = pdf.width * 80
+                        p$height = pdf.height * 80
+
+                        cat("[pgx-modules::plotModule] exporting plotly to PDF with ORCA\n")
+                        ##err <- try(export(p, PDFFILE))  ## deprecated
+                        ##err <- try(orca(p, PDFFILE))
+                        err <- try(ORCA$export(p, PDFFILE, width=p$width, height=p$height)) 
+                        if(class(err)!="try-error") {
+                            cat("[pgx-modules::plotModule] OK!\n")                            
+                        } else {                            
+                            cat("[pgx-modules::plotModule] export failed, trying webshot...\n")
                             htmlwidgets::saveWidget(p, HTMLFILE) 
                             err2 <- try(webshot(HTMLFILE,vwidth=pdf.width*100,
                                                 vheight=pdf.height*100,PDFFILE))
@@ -360,24 +403,9 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         ## renderPlot. But cannot get it to work (IK 19.10.02)
                         if(0) {
                             cat("downloadHandler:: creating new PDF device\n")
-                            add.ADVERTISEMENT = TRUE
-                            add.ADVERTISEMENT = FALSE
                             pdf(file=PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
                             func()
-                            ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
-                            plot(sin)
-                            ## ##mtext( caption.fun(), outer=TRUE, side=1,line=-3.5, cex=1, xpd=NA)
-                            ## if(add.ADVERTISEMENT) {
-                            ##     par(mfrow=c(1,1),par=c(1,1,1,1)*0.5)
-                            ##     frame()
-                            ##     motto <- pgx.randomSlogan(b=30)
-                            ##     mex = min(pdf.width,pdf.height)/8.0
-                            ##     text(0.5, 0.95, "Created with BigOmics Playground", cex=1.2*mex)
-                            ##     text(0.5, 0.70, motto, cex=2*mex, font=4)
-                            ##     text(0.5, 0.25, "BigOmics Analytics", cex=1.5*mex, font=2)
-                            ##     text(0.5, 0.15, "Self-service bioinformatics solutions", cex=1.2*mex)
-                            ##     text(0.5, 0.05, "www.bigomics.ch", cex=1.2*mex, font=3, xpd=NA)
-                            ## }
+                            ##plot(sin)
                             dev.off()  ## important!!
                         }
                     } else { ## end base                
@@ -386,23 +414,17 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         mtext("Error. PDF not available.",line=-8)
                         dev.off()
                     }
-
-                    cat("file.exists(PDFFILE) = ",file.exists(PDFFILE),"\n")
-
-                    ## ImageMagick or pdftk
-                    if(WATERMARK) {
-                        cat("adding watermark to PDF...\n")
-                        ##PDFFILE="~/Downloads/plot.pdf"
-                        tmp1 <- paste0(tempfile(),".pdf")
-                        file.copy(PDFFILE,tmp1)
-                        cmd = paste("pdftk",tmp1,"stamp ../lib/watermark.pdf output",PDFFILE)
-                        cat("cmd = ",cmd,"\n")
-                        system(cmd)
-                    }
                     
+                    cat("[pgx-modules::plotModule] file.exists(PDFFILE) = ",file.exists(PDFFILE),"\n")
+                    
+                    ## ImageMagick or pdftk
+                    if(TRUE && WATERMARK) {
+                        cat("[pgx-modules::plotModule] adding watermark to PDF...\n")
+                        addWatermark.PDF(PDFFILE) 
+                    }
                     ## finally copy to final exported file
                     file.copy(PDFFILE,file)
-                    
+                    cat("[pgx-modules::plotModule] export to PDF done!\n")
                 }, message="exporting to PDF", value=0.8)
             } ## content 
         ) ## PDF downloadHandler
@@ -413,7 +435,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
         if(plotlib == "plotly" ) {
             cat("downloadHandler:: exporting plotly to HTML\n")
             p <- func()
-            if(WATERMARK) p <- addWatermarkPlotly(p)
+            if(WATERMARK) p <- addWatermark.Plotly(p)
             htmlwidgets::saveWidget(p, HTMLFILE) 
         } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
             cat("downloadHandler:: exporting htmlwidget to HTML\n")
@@ -450,7 +472,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     if(plotlib == "plotly" ) {
                         cat("downloadHandler:: exporting plotly to HTML\n")
                         p <- func()
-                        if(WATERMARK) p <- addWatermarkPlotly(p)
+                        if(WATERMARK) p <- addWatermark.Plotly(p)
                         htmlwidgets::saveWidget(p, HTMLFILE) 
                     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
                         cat("downloadHandler:: exporting htmlwidget to HTML\n")
@@ -501,27 +523,10 @@ plotModule <- function(input, output, session, ## ns=NULL,
     ##------------------------ OUTPUT ------------------------------------------------
     ##--------------------------------------------------------------------------------
 
-    ## if("download.csv" %in% names(figure))  output$csv <- download.csv
-    ## if("download.pdf" %in% names(figure))  output$pdf <- download.pdf
-    ## if("download.png" %in% names(figure))  output$png  <- download.png
-    ## if("download.html" %in% names(figure)) output$html <- download.html
-
     if(!is.null(download.csv))  output$csv  <- download.csv
     if(!is.null(download.pdf))  output$pdf  <- download.pdf
     if(!is.null(download.png))  output$png  <- download.png
     if(!is.null(download.html)) output$html <- download.html
-
-    ## all widget IDs
-    ##if(is.null(ns)) ns=function(x){x}
-    ## buttons <- list(
-    ##     info =  ns("info"),
-    ##     options = ns("options"),
-    ##     html =  ns("html"),
-    ##     pdf = ns("pdf"),
-    ##     png = ns("png"),
-    ##     csv = ns("csv"),
-    ##     zoom =  ns("zoom")
-    ## )
 
     ##--------------------------------------------------------------------------------
     ##---------------------------- UI ------------------------------------------------
@@ -548,35 +553,44 @@ plotModule <- function(input, output, session, ## ns=NULL,
         ## reason does not work in the downloadHandler...
         ##
         render <- renderPlot({
+            ## save base render in object
+            ##pdf(NULL)
+            ##dev.control(displaylist="enable")
             func()
+            ##p1.base <- recordPlot()
+            ##invisible(dev.off())
+            
             if(1) {
                 suppressWarnings( suppressMessages(
                     if(do.pdf) {
+                        ##pdf(file=PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
                         dev.print(pdf, file=PDFFILE, width=pdf.width, height=pdf.height,
                                   pointsize=pdf.pointsize)
-                        ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
-                        ##dev.off()  ## important!!
-                    }
-                ))            
-                suppressWarnings( suppressMessages(
-                    if(do.png) {
-                        dev.print(png, file=PNGFILE, width=pdf.width*100, height=pdf.height*100,
-                                  pointsize=pdf.pointsize)
-                        ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
+                        ##p1.base
+                        ##if(WATERMARK) addWatermark.base()
                         ##dev.off()  ## important!!
                     }
                 ))
-            }            
-            ##}, res=res[1], width=width[1], height=height[1] )
-            ##}, res=res[1], width=width.1, height=height.1 )
-            ##}, width=width.1, height=height.1, res=res.1 )
-            }, res=res.1)
-        ##})
+            }
+            if(1) {
+                suppressWarnings( suppressMessages(
+                    if(do.png) {
+                        ##png(file=PNGFILE, width=pdf.width*100, height=pdf.height*100,pointsize=pdf.pointsize)
+                        dev.print(png, file=PNGFILE, width=pdf.width*100, height=pdf.height*100,
+                                  pointsize=pdf.pointsize)
+                        ##p1.base
+                        ##dev.off()  ## important!!
+                    }
+                ))
+            }
+            ##p1.base
+        }, res=res.1)
+
         if(!is.null(func2)) {
-            ##render2 <- renderPlot(func2(), res=res[1], width=width[2], height=height[2])
-            ##render2 <- renderPlot(func2(), res=res[1], width=width.2, height=height.2)
-            ##render2 <- renderPlot(func2(), width=width.2, height=height.2, res=res.2)
-            render2 <- renderPlot(func2(), res=res.2)            
+            render2 <- renderPlot({
+                func2()
+                ##if(WATERMARK) addWatermark.base()                
+            }, res=res.2)            
             ##render2 <- renderPlot(func2())
         }
     } else if(plotlib=="image") {
@@ -614,8 +628,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
             r <- eval(parse(text=outputFunc))(ns("renderpopup"), width=w, height=h)
         } else {
             r <- eval(parse(text=outputFunc))(ns("renderfigure"), width=w, height=h)
-        }
-  
+        }  
         if(any(class(caption2)=="reactive")) {
             caption2 <- caption2()
         }

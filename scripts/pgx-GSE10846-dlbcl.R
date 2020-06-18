@@ -15,6 +15,7 @@ source("../R/pgx-include.R")
 ##source("options.R")
 MAX.GENES = 8000
 MAX.GENESETS = 8000
+BATCH.CORRECT=FALSE
 BATCH.CORRECT=TRUE
 SUBSAMPLE=TRUE
 
@@ -24,14 +25,14 @@ GENETEST.METHODS=c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
 GENESETTEST.METHODS = c("fisher","gsva","camera","fgsea")
 
 
-rda.file="../data/GSE10846-dlbcl.pgx"
+rda.file="../data/GSE10846-dlbcl-nc.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
 ngs <- list()  ## empty object
 ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$datatype = "mRNA (microarray)"
-ngs$description = "GSE10846 data set (Lenz et al, 2008). The retrospective study included 181 clinical samples from CHOP-treated patients and 233 clinical samples from Rituximab-CHOP-treated patients. DLBCL has ABC and GCB subtypes."
+ngs$description = "GSE10846 data set (Lenz et al, 2008). The retrospective study included 181 clinical samples from CHOP-treated patients and 233 clinical samples from Rituximab-CHOP-treated patients. DLBCL has ABC and GCB subtypes. [not batch-corrected]"
 
 ## READ/PARSE DATA
 if(PROCESS.DATA) {
@@ -207,8 +208,7 @@ if(PROCESS.DATA) {
 
 if(DIFF.EXPRESSION) {
 
-    ##load(file=rda.file, verbose=1)
-    
+    ##load(file=rda.file, verbose=1)    
     head(ngs$samples)
     ngs$samples$group <- as.character(ngs$samples$dlbcl.type)
     levels = unique(ngs$samples$group)
@@ -221,7 +221,7 @@ if(DIFF.EXPRESSION) {
     
     res <- makeDirectContrasts2(
         Y = ngs$samples[,c("dlbcl.type","gender","cluster")],
-        ref = c("GCB","male",NA))
+        ref = c("GCB","male","rest"))
     contr.matrix <- res$contr.matrix
     ngs$samples$group <- res$group
     table(res$group)
@@ -246,6 +246,7 @@ if(DIFF.EXPRESSION) {
 
     extra <- c("wordcloud")
     extra <- c("meta.go","deconv","infer","drugs","wordcloud")
+    extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")    
     ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
 
 }

@@ -71,8 +71,9 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
         perplexity <- pmax(min(ncol(X)/4,30),2)
         perplexity        
         pos <- Rtsne( t(rX[,]), dims = 2,
-                    is_distance = FALSE, check_duplicates=FALSE,                     
-                    perplexity = perplexity, num_threads=0)$Y
+                     ## pca = TRUE, partial_pca = TRUE,
+                     is_distance = FALSE, check_duplicates=FALSE,                     
+                     perplexity = perplexity, num_threads=0)$Y
         pos <- pos[1:ncol(X),]  ## if augmented
         rownames(pos) <- colnames(X)
         colnames(pos) <- paste0("tSNE-",c("x","y"))                
@@ -85,8 +86,9 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
         perplexity <- pmax(min(ncol(X)/4,30),2)
         perplexity        
         pos <- Rtsne( t(rX[,]), dims = 3,
-                    is_distance = FALSE, check_duplicates=FALSE,
-                    perplexity = perplexity, num_threads=0)$Y
+                     ## pca = TRUE, partial_pca = TRUE,                     
+                     is_distance = FALSE, check_duplicates=FALSE,
+                     perplexity = perplexity, num_threads=0)$Y
         pos <- pos[1:ncol(X),]  ## if augmented        
         rownames(pos) <- colnames(X)
         colnames(pos) <- paste0("tSNE-",c("x","y","z"))        
@@ -181,7 +183,7 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
     return(ngs)
 }
 
-is.logx=FALSE
+is.logx=FALSE;ntop=1000
 pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
                                          ntop=1000, sv.rank=-1, prefix="C", 
                                          is.logx=FALSE, 
@@ -212,7 +214,8 @@ pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
     
     sX <- log2(prior.counts + sX)
     sX <- limma::normalizeQuantiles(sX)  ## in linear space
-    if(row.center) sX <- sX - rowMeans(sX,na.rm=TRUE)
+    if(row.center)
+        sX <- sX - rowMeans(sX,na.rm=TRUE)
     sX = head( sX[order(-apply(sX,1,sd)),], ntop)
     ## sX = t(scale(t(sX),scale=TRUE))  ## really? or just centering?
     ##sX = t(scale(t(sX),scale=FALSE))  ## really? or just centering?
@@ -263,11 +266,13 @@ pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
         require(Rtsne)
         if(2 %in% dims) {
             pos2 = Rtsne( t(sX), dim=2, perplexity=perplexity,
+                         ##pca = TRUE, partial_pca = TRUE,                         
                          check_duplicates=FALSE, num_threads=0)$Y
             colnames(pos2) <- c("tnse_1","tnse_2")
         }
         if(3 %in% dims) {
             pos3 = Rtsne( t(sX), dim=3, perplexity=perplexity,
+                         ## pca = TRUE, partial_pca = TRUE,
                          check_duplicates=FALSE, num_threads=0)$Y
             colnames(pos3) <- c("tnse_1","tnse_2","tnse_3")
         }

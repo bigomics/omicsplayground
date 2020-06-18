@@ -136,7 +136,7 @@ between two contrasts."
         if(is.null(ngs)) return(NULL)
         req(input$cmp_level)
         ##flt.choices = names(ngs$families)
-        cat("[intersection:observeEvent] input.cmp_level=",input$cmp_level,"\n")
+        dbg("[IntersectionModule::observeEvent]  input.cmp_level=",input$cmp_level,"\n")
         if(input$cmp_level=="geneset") {
             ft <- names(COLLECTIONS)
             nn <- sapply(COLLECTIONS, function(x) sum(x %in% rownames(ngs$gsetX)))
@@ -149,10 +149,10 @@ between two contrasts."
         ## if(input$cmp_level=="gene") ft = sort(c("<custom>",ft))
         ## ft = sort(c("<custom>",ft))
         
-        cat("[intersection:observeEvent] head.ft=",head(ft),"\n")       
+        dbg("[IntersectionModule::observeEvent] head.ft=",head(ft),"\n")       
         updateSelectInput(session, "cmp_filter", choices=ft, selected="<all>")
         
-        cat("[intersection:observeEvent] done!\n")       
+        dbg("[IntersectionModule::observeEvent] done!\n")       
         
     })
     
@@ -192,7 +192,7 @@ between two contrasts."
         ##
         ##
         ##
-        cat("<module-intersect:getFoldChangeMatrix> reacted\n")
+        dbg("<intersectionModule:getFoldChangeMatrix> reacted\n")
 
         fc0 = NULL
         qv0 = NULL
@@ -232,7 +232,6 @@ between two contrasts."
             fc1 = fc0[gsets,,drop=FALSE]
             qv1 = qv0[gsets,,drop=FALSE]
         } else {
-            
             ## Gene
             ##
             gxmethods <- "trend.limma"
@@ -297,7 +296,7 @@ between two contrasts."
         ##
         ##
         ##
-        dbg("<module-intersect:getCPMMatrix> reacted\n")
+        dbg("[IntersectionModule::getCPMMatrix] reacted\n")
 
         ngs <- inputData()
         req(ngs)
@@ -433,8 +432,10 @@ between two contrasts."
     ##
     ## From: https://plot.ly/r/splom/
     ##======================================================================
-
+    
     cmp_scatterPlotMatrix.PLOT <- reactive({
+
+        dbg("[IntersectionModule::cmp_scatterPlotMatrix.PLOT]  reacted\n")
 
         require(ggplot2)
         require(plotly)
@@ -479,7 +480,6 @@ between two contrasts."
         if(1) {
             ntop = 99999
             ##ntop <- input$cmp_splom_ntop        
-            
             jj <- match(sel.genes, rownames(df))
             jj <- c(jj, 1:min(ntop,nrow(df)))
             if(nrow(df)>ntop) {
@@ -492,6 +492,10 @@ between two contrasts."
         }
         dim(df)
 
+        dbg("[IntersectionModule::cmp_scatterPlotMatrix.PLOT] dim(fc0)=",dim(fc0),"\n")
+        dbg("[IntersectionModule::cmp_scatterPlotMatrix.PLOT] dim(fc1)=",dim(fc1),"\n")
+        dbg("[IntersectionModule::cmp_scatterPlotMatrix.PLOT] dim(df)=",dim(df),"\n")
+        
         ## resort selection so that selected genes are drawn last to avoid
         ## covering them up.
         is.sel = (rownames(df) %in% sel.genes)
@@ -1253,7 +1257,11 @@ between two contrasts."
         
         res <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         res = getFoldChangeMatrix()
+
         if(is.null(res)) return(NULL)
+        ##validate(need(NCOL(res$fc)<2, "warning. need multiple comparisons."))
+        if(NCOL(res$fc)<2) return(NULL)        
+        
         fc0 = res$fc
         qv0 = res$qv
 
@@ -1327,6 +1335,8 @@ between two contrasts."
         ##res <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         res = getFoldChangeMatrix()
         if(is.null(res)) return(NULL)
+        if(NCOL(res$fc)<2) return(NULL)
+
         fc0 = res$fc
         qv0 = res$qv
 
@@ -1450,6 +1460,9 @@ between two contrasts."
         res <- getNeighbourhoodFoldChangeMatrix()
         fc  <- res$fc
         fc[is.na(fc)] <- 0
+
+        ##validate(need(NCOL(fc)>=2, "warning. need multiple comparisons."))
+        if(NCOL(fc)<2) return(NULL)        
         
         add.negative=FALSE
         ##add.negative <- ("add negative" %in% input$fc_cmap_options)
@@ -1471,11 +1484,11 @@ between two contrasts."
             require(Rtsne)
             perplexity <- pmax(min(ncol(fc)/5,30),2)
             perplexity
-
             sfc <- scale(fc)
             if(ncol(sfc)<=6) sfc <- cbind(sfc,sfc,sfc,sfc)
             sfc <- sfc + 1e-2*matrix(rnorm(length(sfc)),nrow(sfc),ncol(sfc))
             pos <- Rtsne( t(sfc), is_distance=FALSE, check_duplicates=FALSE,
+                         ## pca = TRUE, partial_pca = TRUE,
                          perplexity=perplexity, num_threads=4)$Y
             pos <- pos[1:ncol(fc),]
             xlab="tSNE-x"

@@ -252,7 +252,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ## DE table filtered by FDR and gene family
         ##
         ##
-        dbg("[sigDiffExprTable] reacted")
+        dbg("[ExpressionModule::sigDiffExprTable] reacted")
 
         ngs = inputData()
         ##if(is.null(ngs)) return(NULL)
@@ -270,8 +270,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
         fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]        
         pval = res[,qv.col]
-
-        dbg("[sigDiffExprTable] 1")
 
         if(is.null(ngs$families)) stop("FATAL:: no families in object")
         psel <- rownames(res)
@@ -308,7 +306,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ## limit number of rows???
         ## res <- head(res, 1000)
 
-        dbg("[sigDiffExprTable] done!")
+        dbg("[ExpressionModule::sigDiffExprTable] done!")
         
         return(res)
     })
@@ -1096,12 +1094,12 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ##================================================================================
 
     expr_genetable.RENDER <- reactive({
-
-        dbg("[expression] expr_genetable.RENDER: reacted")
+        
+        dbg("[ExpressionModule::expr_genetable.RENDER] reacted")
         
         res <- sigDiffExprTable()
         ##req(res)
-        dbg("[expression] expr_genetable.RENDER: dim(res)=",dim(res),"\n")
+        dbg("[ExpressionModule::expr_genetable.RENDER] dim(res)=",dim(res),"\n")
         
         if(is.null(res) || nrow(res)==0) return(NULL)
         
@@ -1122,9 +1120,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
         }
 
         numeric.cols <- which(sapply(res, is.numeric))
-        numeric.cols
-
-        dbg("[expression] expr_genetable.RENDER: done!")
+        numeric.cols <- colnames(res)[numeric.cols]
+        dbg("[ExpressionModule::expr_genetable.RENDER] numeric.cols=",numeric.cols)
+        dbg("[ExpressionModule::expr_genetable.RENDER] done!")
         
         DT::datatable( res, rownames=FALSE,
                       class = 'compact cell-border stripe hover',                  
