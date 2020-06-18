@@ -153,6 +153,7 @@ immune cell types, expressed genes and pathway activation."
                 perplexity = min((ncol(zx)-1)/3, 30)
                 perplexity
                 pos <- Rtsne( t(zx), dim=tsne.dim, check_duplicated=FALSE,
+                             ## pca = TRUE, partial_pca = TRUE,                             
                              num_threads=100, ##Y_init=Y_init, 
                              perplexity=perplexity )$Y
             }

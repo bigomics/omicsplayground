@@ -18,16 +18,11 @@ PGX.DIR = c("../data","../data-extra")
 PGX.DIR = "../data"
 dir.exists(PGX.DIR)
 
-source("../R/pgx-include.R", local=TRUE)  ## pass local vars
-## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
-pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
-source("../R/pgx-init.R", local=TRUE)  ## pass local vars
-source("global.R", local=TRUE)
-
 ## --------------------------------------------------------------------
 ## ----------------------- READ OPTIONS -------------------------------
 ## --------------------------------------------------------------------
 
+source("../R/pgx-files.R", local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
@@ -35,15 +30,23 @@ opt <- pgx.readOptions(file="OPTIONS")
 WATERMARK = opt$WATERMARK
 SHOW_QUESTIONS = FALSE
 DEV.VERSION = opt$DEV_VERSION && dir.exists("../../omicsplayground-dev")
-##DEV.VERSION = FALSE
+if(opt$USER_MODE=="BASIC") DEV.VERSION = FALSE
 
-if(opt$USER_MODE=="BASIC") {
-    cat("********************* BASIC MODE **********************\n")
-    DEV.VERSION = FALSE
-}
+## show options
+cat(paste(paste(names(opt), "\t= ", sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
+
+## --------------------------------------------------------------------
+## ------------------------ READ FUNCTIONS ----------------------------
+## --------------------------------------------------------------------
+
+source("../R/pgx-include.R", local=TRUE)  ## pass local vars
+## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
+pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
+source("../R/pgx-init.R", local=TRUE)  ## pass local vars
+source("global.R", local=TRUE)
 
 if(0) {
-    load("../data/geiger2016-arginineX.pgx")
+    load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
     load("../data/GSE102908-ibetX.pgx")
     load("../data/tcga-brca_pub.pgx")
@@ -130,10 +133,9 @@ server = function(input, output, session) {
     if(ENABLED["tcga"])   env[["tcga"]]   <- callModule( TcgaModule, "tcga", env)
     if(ENABLED["bc"])     env[["bc"]]     <- callModule( BatchCorrectModule, "bc", env)
     if(ENABLED["multi"])  env[["multi"]]  <- callModule( MultiLevelModule, "multi", env)
-
     env[["qa"]]     <- callModule( QuestionModule, "qa", lapse = -1)
     
-    cat("[OK]\n")
+    cat("[MAIN] all modules called\n")
     
     output$current_dataset <- renderText({
         pgx <- env[["load"]][["inputData"]]()
@@ -141,7 +143,7 @@ server = function(input, output, session) {
         if(length(name)==0) name = "(no data)"
         name
     })
-  
+   
     ## Hide/show certain sections depending on USER MODE
     observe({
         pgx <- env[["load"]][["inputData"]]() ## trigger on change dataset
@@ -156,11 +158,7 @@ server = function(input, output, session) {
 
         ## show all main tabs
         lapply(MAINTABS, function(m) showTab("maintabs",m))
-        
-        ## get user mode
-        usermode <- env[["load"]][["usermode"]]()  ## trigger on button
-        if(length(usermode)==0) usermode <- "BASIC"
-
+                
         ## show single-cell module??
         show.cc <- ( (opt$SINGLE_CELL == "AUTO" && ncol(pgx$counts) >= 500) ||
                      (opt$SINGLE_CELL == "AUTO" && grepl("^scRNA",pgx$datatype)) ||
@@ -184,7 +182,7 @@ server = function(input, output, session) {
         hideTab("scell-tabs1","Monocle")        
         if(show.cc) showTab("maintabs","SingleCell")
 
-        if(usermode != "BASIC") {
+        if(opt$USER_MODE == "PRO") {
             showTab("clust-tabs2","Feature ranking")
             showTab("expr-tabs1","Volcano (methods)")
             showTab("expr-tabs2","FDR table")

@@ -192,7 +192,7 @@ pgx.createPGX <- function(counts, samples, contrasts, ## genes,
     ##-------------------------------------------------------------------
     if(org == "mouse") {
         has.name <- !is.na(ngs$genes$gene_name)
-        has.chrloc = is.official = not.rik = TRUE
+        has.chrloc = is.official = not.rik = is.protcoding = TRUE
         if(only.hugo) is.official <- (ngs$genes$gene_name %in% gene.symbol)
         if(!rik.orf) not.rik <- !grepl("Rik",ngs$genes$gene_name) ## ???
         ##imm.gene <- grepl("^TR_|^IG_",ngs$genes$gene_biotype)

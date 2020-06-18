@@ -1461,7 +1461,7 @@ EnrichmentModule <- function(input, output, session, env)
 
         is.numcol <- sapply(rpt, is.numeric)
         numcols <- which( is.numcol & !colnames(rpt) %in% c("size"))
-        numcols
+        numcols <- colnames(rpt)[numcols]
 
         ##rpt = format(rpt, digits=4)
         DT::datatable(rpt,

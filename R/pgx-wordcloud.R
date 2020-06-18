@@ -96,7 +96,9 @@ pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
     library(umap)
     require(uwot)
     nb = floor(pmin(pmax(ncol(W)/4,1),10))
-    pos1 = Rtsne(as.matrix(t(W)),perplexity=nb,check_duplicates=FALSE)$Y
+    pos1 = Rtsne( as.matrix(t(W)), perplexity=nb,
+                 ## pca =TRUE, partial_pca =TRUE,
+                 check_duplicates=FALSE)$Y
     ##pos2 = umap::umap(as.matrix(t(W)))$layout
     pos2 = uwot::umap(as.matrix(t(W)),n_neighbors=nb)
     rownames(pos1) = rownames(pos2) = colnames(W)

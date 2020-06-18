@@ -1026,6 +1026,8 @@ gseaLeadingEdgeHeatmap <- function(gsea, maxrow=60, maxcol=60, gsets=NULL,
 ##========================================================================
 ##=========================== PLOTTING ===================================
 ##========================================================================
+library(gplots)
+bluered <- function(n=64) gplots::colorpanel(n,"royalblue3","grey90","indianred3")
 
 gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,
                         decreasing=TRUE, cex.main=0.9, len.main=40,

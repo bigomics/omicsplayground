@@ -682,7 +682,11 @@ gx.heatmap <- function(gx, values=NULL,
         if(length(jj)) {
             require(RColorBrewer)
             klrs = rep(brewer.pal(8,"Set2"),99)
-            cc0[jj,,drop=FALSE] <- matrix(klrs[ry[jj,,drop=FALSE]+1], nrow=length(jj))
+            klrs.mat <- matrix(klrs[ry[jj,,drop=FALSE]+1], nrow=length(jj))
+            dbg("[gx-heatmap.r::gx.heatmap] dim(klrs.mat)=",dim(klrs.mat))
+            dbg("[gx-heatmap.r::gx.heatmap] dim(cc0)=",dim(cc0))
+            dbg("[gx-heatmap.r::gx.heatmap] length(jj)=",length(jj))
+            cc0[jj,] <- klrs.mat
         }
         ##cc0 = cc0[which(rowMeans(!is.na(cc0))>0),,drop=FALSE ]
         cc0 <- t(cc0)

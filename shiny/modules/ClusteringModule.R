@@ -720,12 +720,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             }
             if(WATERMARK) {
                 cat("adding watermark to PDF...\n")
-                ##PDFFILE="~/Downloads/plot.pdf"
-                tmp1 <- paste0(tempfile(),".pdf")
-                file.copy(PDFFILE,tmp1)
-                cmd = paste("pdftk",tmp1,"stamp ../lib/watermark.pdf output",PDFFILE)
-                cat("cmd = ",cmd,"\n")
-                system(cmd)
+                addWatermark.PDF(PDFFILE) ## from pgx-modules.R
             }            
             dbg("hm_splitmap_pdf:: exporting done...")
             file.copy(PDFFILE,file)        
@@ -735,7 +730,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     hm_splitmap_downloadPNG <- downloadHandler(
         filename = "plot.png",
         content = function(file) {
-            ##PDFFILE = hm_splitmap_module$.tmpfile["pdf"]  ## from above!
             PNGFILE = paste0(gsub("file","plot",tempfile()),".png")            
             dbg("hm_splitmap_pdf:: exporting SWITCH to PNG...")
             ##showNotification("exporting to PNG")

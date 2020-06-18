@@ -60,14 +60,14 @@ the source code:
     
 3. Run the following command in the ``scripts/`` folder to build the datasets::
 
-    Rscript run-all.R
+    Rscript build-datasets.R
 
    Note: Building the datasets can vary from minutes to a couple of hours depending on their sizes.
 
 4. Change the current directory into the ``shiny/`` folder and execute the following command
    to run the platform::
 
-    R -e "rmarkdown::run(shiny_args=list(launch.browser=TRUE))"
+    R -e "shiny::runApp(launch.browser=TRUE)"
 
    If you have Shiny Server installed you can create a link to the
    shiny folder in the system-wide shiny-server apps folder or in your
