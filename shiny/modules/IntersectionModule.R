@@ -659,8 +659,8 @@ between two contrasts."
             layout(margin = list(80,80,80,80) )  ## l,r,b,t
         
         p <- p %>%
-            ## config(displayModeBar = FALSE) %>% ## disable buttons
-            config( toImageButtonOptions = list(format='svg', height=800, width=800, scale=1.1)) %>%
+            config(displayModeBar = FALSE) %>% ## disable buttons
+            config(toImageButtonOptions = list(format='svg', height=800, width=800, scale=1.1)) %>%
             event_register('plotly_selected') 
 
         dbg("cmp_scatterPlotMatrix:: done\n")
@@ -680,11 +680,11 @@ between two contrasts."
         plotModule,
         id = "cmp_scatterPlotMatrix", 
         func = cmp_scatterPlotMatrix.PLOT,
-        plotlib="plotly",
+        plotlib = "plotly",
         title = "Scatterplot matrix (pairs)", label="a",
         options = cmp_scatterPlotMatrix.opts,
-        ##  download.fmt = c("pdf","html"),  ## scatterGL does not work for PDF
-        download.fmt = c("html"),
+        ## download.fmt = c("pdf","html"),  ## scatterGL does not work for PDF
+        ## download.fmt = c("html"),
         pdf.width=8, pdf.height=8,
         height = c(fullH-80,700), res=95,
         info.text = cmp_scatterPlotMatrix_info

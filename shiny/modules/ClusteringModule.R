@@ -1186,7 +1186,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         plt <- plt %>%
             layout(margin = list(l=60, r=60, t=0, b=30)) %>%
             config( toImageButtonOptions = list(format='svg', width=900, height=600, scale=1.2)) %>%
-            ## config(displayModeBar = FALSE) %>%         
+            config(displayModeBar = FALSE) %>%         
             event_register("plotly_restyle")
 
         if(usermode()=="BASIC") shinyjs::hide(selector = "div.modebar")
@@ -1262,7 +1262,7 @@ displays the expression levels of selected genes across all conditions in the an
         func = hm_parcoord.RENDER, ## ns = ns,
         plotlib="plotly", ## renderFunc="renderPlotly",
         ## download.fmt = c("png","pdf","html"),  ## PNG & PDF do not work!!! 
-        download.fmt = c("html"),
+        ## download.fmt = c("html"),
         options = hm_parcoord_opts,
         height = c(0.45*fullH,600), width = c("100%",1000),
         pdf.width=10, pdf.height=6, info.width="350px",
