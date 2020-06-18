@@ -7,11 +7,18 @@
 ##WATERMARK=FALSE
 
 SLOGAN = c(
-    "'I Feel Empowered' - created with Omics Playground",
-    "'I Love Data' - created with Omics Playground",
-    "'I Get Insight' - created with Omics Playground",
-    "'Eureka moments' - created with Omics Playground",
-    "'I See Clearly' - created with Omics Playground"
+    "'I Feel Empowered' - with OmicsPlayground",
+    "'I Love Data' - with OmicsPlayground",
+    "'I Get Insights' - with OmicsPlayground",
+    "'Data, Knowledge, Insight' - with OmicsPlayground",
+    "'So Much More' - with OmicsPlayground",
+    "'Do-it-myself' - with OmicsPlayground",
+    "'Yes-I-Can' - with OmicsPlayground",
+    "'Dig Deeper' - with OmicsPlayground",
+    "'Never Stop Exploring' - with OmicsPlayground",
+    "'Take control' - with OmicsPlayground",    
+    "'My Eureka! moments' - with OmicsPlayground",
+    "'I See Clearly Now' - with OmicsPlayground"
     )
 
 addWatermark.base <- function(line=-1.5, cex=0.8, col="#6699ff88") {    
@@ -35,7 +42,10 @@ addWatermark.Plotly <- function(p) {
         ##font = list(size=18, family='Arial', color="#AAAAAA22")
     )
 }
-addWatermark.PDF <- function(file, col="#88002288") {
+
+colBL="#00448855"
+colRD="#88004455"
+addWatermark.PDF <- function(file, col="#88006655") {
     if(system("which pdftk",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
     tmp1 <- paste0(gsub("file","plot",tempfile()),".pdf")
     tmp2 <- paste0(gsub("file","plot",tempfile()),".pdf")
@@ -44,9 +54,14 @@ addWatermark.PDF <- function(file, col="#88002288") {
     pdf(tmp1,w=8,h=8)
     frame()
     ##text(0.5,0.5,txt,font=2,cex=4,col=col)
+    legend("bottom", txt, cex=1.75, text.font=2, text.col=col,
+           xjust = 0.5, yjust = 0.5, adj=-0.012,
+           inset=c(0,-0.15), xpd=TRUE,
+           bg="#88006611", border=NULL, box.col = NA,
+           text.width = 2.05*strwidth(txt) )
     ##text(0.5,1.0,txt,font=2,cex=1.5,col=col,xpd=FALSE)
     ##text(1.08,0.5,txt,srt=90,font=1,cex=1.3,col=col,xpd=TRUE)
-    text(0.5,-0.2,txt,srt=0,font=2,cex=1,col=col,xpd=TRUE)
+    ##text(0.5,-0.2,txt,srt=0,font=2,cex=1,col=col,xpd=TRUE)
     dev.off()
     cmd <- paste("pdftk",file,"stamp",tmp1,"output",tmp2) ## NEED pdftk installed!!!
     cmd
@@ -56,8 +71,10 @@ addWatermark.PDF <- function(file, col="#88002288") {
     unlink(tmp2)
 }
 
-##addWatermark.PDF(file) 
-
+if(0) {
+    file = "/home/kwee/Downloads/plot.pdf"
+    addWatermark.PDF(file) 
+}
 ## prepare ORCA server
 library(orca)
 if(!exists("ORCA") || !ORCA$process$is_alive()) {
@@ -415,16 +432,18 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         dev.off()
                     }
                     
-                    cat("[pgx-modules::plotModule] file.exists(PDFFILE) = ",file.exists(PDFFILE),"\n")
-                    
+                    ## finally copy to final exported file
+                    file.copy(PDFFILE,file)
+
                     ## ImageMagick or pdftk
                     if(TRUE && WATERMARK) {
                         cat("[pgx-modules::plotModule] adding watermark to PDF...\n")
-                        addWatermark.PDF(PDFFILE) 
+                        ##addWatermark.PDF(PDFFILE)
+                        addWatermark.PDF(file) 
                     }
-                    ## finally copy to final exported file
-                    file.copy(PDFFILE,file)
                     cat("[pgx-modules::plotModule] export to PDF done!\n")
+
+
                 }, message="exporting to PDF", value=0.8)
             } ## content 
         ) ## PDF downloadHandler

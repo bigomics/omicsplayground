@@ -377,7 +377,7 @@ WordCloudModule <- function(input, output, session, env)
         ##do.filter <- input$wc_filtertable
         ##if(do.filter) df <- df[which(df$padj < 0.99),]
         
-        numeric.cols <- which(sapply(df, is.numeric))
+        numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
         numeric.cols
         tbl <- DT::datatable(
                        df, rownames=FALSE,
@@ -424,7 +424,7 @@ WordCloudModule <- function(input, output, session, env)
         df <- df[order(-abs(df$fx)),]
         rownames(df) <- ee
         
-        numeric.cols <- which(sapply(df, is.numeric))
+        numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
         numeric.cols
 
         df$leading.edge <- wrapHyperLink(df$leading.edge, df$leading.edge)  ## add link
