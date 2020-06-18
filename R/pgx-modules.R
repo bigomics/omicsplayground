@@ -194,7 +194,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
     require(shinyWidgets)
     require(shinyBS)
     require(webshot)
-    require(orca)
+    require(plotly)
     
     ## these engines cannot (yet) provide html
     if(plotlib %in% c("base")) {    
