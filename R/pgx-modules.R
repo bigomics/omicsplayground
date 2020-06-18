@@ -76,7 +76,7 @@ if(0) {
     addWatermark.PDF(file) 
 }
 ## prepare ORCA server
-library(orca)
+library(plotly)
 if(!exists("ORCA") || !ORCA$process$is_alive()) {
     ORCA <- orca_serve()
 }
