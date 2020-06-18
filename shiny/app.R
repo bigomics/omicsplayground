@@ -326,3 +326,6 @@ ui = createNavbarPage(
 )
 
 shiny::shinyApp(ui, server)
+
+
+(sessionInfo()[[c("basePkgs","otherPkgs","loadedOnly")]])

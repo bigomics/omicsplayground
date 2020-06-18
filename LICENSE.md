@@ -7,7 +7,7 @@ non-commercial or commercial use.
 
 This program is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 ## Non-commercial
 
@@ -19,11 +19,11 @@ personal use, you may enjoy our software for free under the
 ## Commercial/governmental
 
 If you are not entitled to the non-commercial license, or you are an
-institutional or governmental agency, you must purchase a commercial license. Buying
-such a license is mandatory as soon as you develop commercial
-activities involving Omics Playground software. These activities
-include: offering paid services to customers as an ASP, SaaS,
-professional consulting, or shipping Omics Playground with a closed
-source product.
+institutional or governmental agency, you must purchase a commercial
+license. Buying such a license is mandatory as soon as you develop
+commercial activities involving Omics Playground software. These
+activities include: offering paid services to customers as an ASP,
+SaaS, professional consulting, or shipping Omics Playground with a
+closed source product.
 
 
