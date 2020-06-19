@@ -657,10 +657,13 @@ between two contrasts."
 
         p <- p %>%
             layout(margin = list(80,80,80,80) )  ## l,r,b,t
-        
+
         p <- p %>%
-            config(displayModeBar = FALSE) %>% ## disable buttons
-            config(toImageButtonOptions = list(format='svg', height=800, width=800, scale=1.1)) %>%
+            ##config(displayModeBar = FALSE) %>% ## disable buttons
+            config(modeBarButtonsToRemove = setdiff(all.plotly.buttons,"toImage") ) %>%
+            config(toImageButtonOptions = list(format='svg',
+                                               height=800, width=800, scale=1.1)) %>%
+            config(displaylogo = FALSE) %>% 
             event_register('plotly_selected') 
 
         dbg("cmp_scatterPlotMatrix:: done\n")
