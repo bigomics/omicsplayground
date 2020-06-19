@@ -45,7 +45,7 @@ addWatermark.Plotly <- function(p) {
 
 colBL="#00448855"
 colRD="#88004455"
-addWatermark.PDF <- function(file, col="#88006655") {
+addWatermark.PDF.SAVE <- function(file, col="#88006655") {
     if(system("which pdftk",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
     tmp1 <- paste0(gsub("file","plot",tempfile()),".pdf")
     tmp2 <- paste0(gsub("file","plot",tempfile()),".pdf")
@@ -70,6 +70,17 @@ addWatermark.PDF <- function(file, col="#88006655") {
     unlink(tmp1)
     unlink(tmp2)
 }
+addWatermark.PDF <- function(file) {
+    if(system("which pdftk",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
+    tmp1 <- file.path(FILES,"watermark.pdf")
+    tmp2 <- paste0(gsub("file","plot",tempfile()),".pdf")
+    cmd <- paste("pdftk",file,"stamp",tmp1,"output",tmp2) ## NEED pdftk installed!!!
+    cmd
+    system(cmd)
+    file.copy(tmp2,file,overwrite=TRUE)
+    unlink(tmp1)
+    unlink(tmp2)
+}
 
 if(0) {
     file = "/home/kwee/Downloads/plot.pdf"
@@ -78,7 +89,7 @@ if(0) {
 ## prepare ORCA server
 library(plotly)
 if(!exists("ORCA") || !ORCA$process$is_alive()) {
-    ORCA <- orca_serve()
+    ORCA <- orca_serve(more_args="--enable-webgl")
 }
 
 ##================================================================================
