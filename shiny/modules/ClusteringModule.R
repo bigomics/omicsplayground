@@ -1045,7 +1045,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ## plt <- plt %>% layout(title=title) %>% 
         ##     config(displayModeBar = FALSE)
         plt <- plt %>% 
-            config(displayModeBar = FALSE) %>% 
+            config(displayModeBar = FALSE) %>%
+            ##config(modeBarButtonsToRemove = all.plotly.buttons ) %>%
+            config(displaylogo = FALSE) %>% 
             config(toImageButtonOptions = list(format='svg', height=800, width=800))
         ##print(plt)
         return(plt)
@@ -1185,11 +1187,11 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                       dimensions = dimensions)
         plt <- plt %>%
             layout(margin = list(l=60, r=60, t=0, b=30)) %>%
-            config( toImageButtonOptions = list(format='svg', width=900, height=600, scale=1.2)) %>%
-            config(displayModeBar = FALSE) %>%         
+            ##config(displayModeBar = FALSE) %>%
+            ##config(modeBarButtonsToRemove = setdiff(all.plotly.buttons,"toImage") ) %>%
+            config(toImageButtonOptions = list(format='svg', width=900, height=350, scale=1.2)) %>%
+            config(displaylogo = FALSE) %>%
             event_register("plotly_restyle")
-
-        if(usermode()=="BASIC") shinyjs::hide(selector = "div.modebar")
 
         plt 
 
