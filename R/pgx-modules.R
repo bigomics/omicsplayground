@@ -72,14 +72,13 @@ addWatermark.PDF.SAVE <- function(file, col="#88006655") {
 }
 addWatermark.PDF <- function(file) {
     if(system("which pdftk",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
-    tmp1 <- file.path(FILES,"watermark.pdf")
-    tmp2 <- paste0(gsub("file","plot",tempfile()),".pdf")
-    cmd <- paste("pdftk",file,"stamp",tmp1,"output",tmp2) ## NEED pdftk installed!!!
+    mark <- file.path(FILES,"watermark.pdf")
+    tmp <- paste0(gsub("file","plot",tempfile()),".pdf")
+    cmd <- paste("pdftk",file,"stamp",mark,"output",tmp) ## NEED pdftk installed!!!
     cmd
     system(cmd)
-    file.copy(tmp2,file,overwrite=TRUE)
-    unlink(tmp1)
-    unlink(tmp2)
+    file.copy(tmp,file,overwrite=TRUE)
+    unlink(tmp)
 }
 
 if(0) {
