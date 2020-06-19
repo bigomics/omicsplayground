@@ -87,11 +87,11 @@ if(0) {
 }
 ## prepare ORCA server
 library(plotly)
+if(exists("ORCA") && ORCA$process$is_alive()) {
+    ORCA$close()
+}
 if(!exists("ORCA") || !ORCA$process$is_alive()) {
-    ORCA <- orca_serve(
-        more_args="--enable-webgl",
-        env = c(DISPLAY=":0")
-        )
+    ORCA <- orca_serve(more_args="--enable-webgl")
 }
 
 ##================================================================================
