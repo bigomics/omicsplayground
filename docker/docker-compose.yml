@@ -1,0 +1,23 @@
+version: '3.3'
+
+services:
+  orca-server:
+    container_name: orca-server
+    image: quay.io/plotly/orca:latest
+    restart: always
+
+  playground:
+    container_name: playground1
+    depends_on:
+      - orca-server
+    image: bigomics/omicsplayground:dev
+    volumes:
+      - omxp_data:/omicsplayground/data
+    ports:
+      - "4000:3838"
+    restart: always
+    environment:
+      ORCA_SERVER: orca-server:9091
+
+volumes:
+   omxp_data: {}
