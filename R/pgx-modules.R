@@ -45,7 +45,7 @@ addWatermark.Plotly <- function(p) {
 
 colBL="#00448855"
 colRD="#88004455"
-addWatermark.PDF <- function(file, col="#88006655") {
+addWatermark.PDF.SAVE <- function(file, col="#88006655") {
     if(system("which pdftk",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
     tmp1 <- paste0(gsub("file","plot",tempfile()),".pdf")
     tmp2 <- paste0(gsub("file","plot",tempfile()),".pdf")
@@ -70,6 +70,16 @@ addWatermark.PDF <- function(file, col="#88006655") {
     unlink(tmp1)
     unlink(tmp2)
 }
+addWatermark.PDF <- function(file) {
+    if(system("which pdftk",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
+    mark <- file.path(FILES,"watermark.pdf")
+    tmp <- paste0(gsub("file","plot",tempfile()),".pdf")
+    cmd <- paste("pdftk",file,"stamp",mark,"output",tmp) ## NEED pdftk installed!!!
+    cmd
+    system(cmd)
+    file.copy(tmp,file,overwrite=TRUE)
+    unlink(tmp)
+}
 
 if(0) {
     file = "/home/kwee/Downloads/plot.pdf"
@@ -84,7 +94,7 @@ library(plotly)
 format="pdf";width=height=800;scale=1;port=9091;file="plot.pdf"
 plotlyOrca <- function(p, file = "plot.pdf", format = tools::file_ext(file), 
                        scale = NULL, width = NULL, height = NULL,
-                       server="http://127.0.0.1", port=9091)
+                       server="http://orca-server", port=9091)
 {
     bod <- list(figure = plotly_build(p)$x[c("data", "layout")],
                 format = format, width = width, height = height, 
@@ -303,8 +313,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         ##err <- try(export(p, PNGFILE))  ## deprecated 
                         ##err <- try(orca(p, PNGFILE))
                         ##err <- try(ORCA$export(p, PNGFILE, width=p$width, height=p$height))
-                        err <- try(plotlyOrca(p, PNGFILE, width=p$width, height=p$height,
-                                              format="png", server = "http://orca")) 
+                        err <- try(plotlyOrca(p, PNGFILE, width=p$width, height=p$height))
                         if(class(err)!="try-error") {
                             cat("[pgx-modules::plotModule] OK!\n")
                         } else {
@@ -390,8 +399,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         ##err <- try(export(p, PDFFILE))  ## deprecated
                         ##err <- try(orca(p, PDFFILE))
                         ##err <- try(ORCA$export(p, PDFFILE, width=p$width, height=p$height))
-                        err <- try(plotlyOrca(p, PDFFILE, width=p$width, height=p$height,
-                                              format="pdf", server = "http://orca"))
+                        err <- try(plotlyOrca(p, PDFFILE, width=p$width, height=p$height))
                         if(class(err)!="try-error") {
                             cat("[pgx-modules::plotModule] OK!\n")                            
                         } else {                            
