@@ -9,7 +9,7 @@ services:
       - play
 
   playground:
-    container_name: playground1
+    container_name: playground
     depends_on:
       - orca-server
     image: bigomics/omicsplayground:dev
