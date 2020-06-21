@@ -9,7 +9,7 @@
 ## ------------------------ CHECKS ------------------------------------
 ## --------------------------------------------------------------------
 
-res <- system("ping orca-server",intern=TRUE)
+res <- system("ping -c1 orca-server",intern=TRUE)
 orca.ok <- (length(res)>0)
 orca.ok
 if(!orca.ok) {
