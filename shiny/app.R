@@ -9,8 +9,8 @@
 ## ------------------------ CHECKS ------------------------------------
 ## --------------------------------------------------------------------
 
-res <- system("docker exec orca-server which orca",intern=TRUE)
-orca.ok <- (length(res)>0 && res=="/usr/bin/orca")
+res <- system("ping orca-server",intern=TRUE)
+orca.ok <- (length(res)>0)
 orca.ok
 if(!orca.ok) {
     cat("###############################################################\n")
