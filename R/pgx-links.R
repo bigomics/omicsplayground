@@ -24,3 +24,19 @@ a_Fisher="<a href='https://www.jstor.org/stable/2340521?seq=1#metadata_info_tab_
 a_GSEA="<a href='http://software.broadinstitute.org/gsea/index.jsp'>GSEA</a>" 
 a_camera="<a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3458527'>camera</a>"
 a_fry="<a href='https://academic.oup.com/bioinformatics/article/26/17/2176/200022'>fry</a>"
+
+
+SLOGAN = c(
+    "'I Feel Empowered' - with OmicsPlayground",
+    "'I Love Data' - with OmicsPlayground",
+    "'I Get Insights' - with OmicsPlayground",
+    "'Data, Knowledge, Insight' - with OmicsPlayground",
+    "'So Much More' - with OmicsPlayground",
+    "'Do-it-myself' - with OmicsPlayground",
+    "'Yes-I-Can' - with OmicsPlayground",
+    "'Dig Deeper' - with OmicsPlayground",
+    "'Never Stop Exploring' - with OmicsPlayground",
+    "'Take control' - with OmicsPlayground",    
+    "'My Eureka! moments' - with OmicsPlayground",
+    "'I See Clearly Now' - with OmicsPlayground"
+    )
