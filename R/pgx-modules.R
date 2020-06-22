@@ -6,6 +6,7 @@
 ##WATERMARK=TRUE
 ##WATERMARK=FALSE
 
+
 colBL="#00448855"
 colRD="#88004455"
 addWatermark.PDF <- function(file) {
