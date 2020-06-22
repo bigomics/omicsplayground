@@ -6,22 +6,6 @@
 ##WATERMARK=TRUE
 ##WATERMARK=FALSE
 
-SLOGAN = c(
-    "'I Feel Empowered' - with OmicsPlayground",
-    "'I Love Data' - with OmicsPlayground",
-    "'I Get Insights' - with OmicsPlayground",
-    "'Data, Knowledge, Insight' - with OmicsPlayground",
-    "'So Much More' - with OmicsPlayground",
-    "'Do-it-myself' - with OmicsPlayground",
-    "'Yes-I-Can' - with OmicsPlayground",
-    "'Dig Deeper' - with OmicsPlayground",
-    "'Never Stop Exploring' - with OmicsPlayground",
-    "'Take control' - with OmicsPlayground",    
-    "'My Eureka! moments' - with OmicsPlayground",
-    "'I See Clearly Now' - with OmicsPlayground"
-    )
-
-
 colBL="#00448855"
 colRD="#88004455"
 addWatermark.PDF <- function(file) {
@@ -35,76 +19,95 @@ addWatermark.PDF <- function(file) {
     unlink(tmp)
 }
 
-if(0) {
-    file = "/home/kwee/Downloads/plot.pdf"
-    addWatermark.PDF(file) 
-}
-
 ## prepare ORCA server if we are not in a Docker
 library(plotly)
-is.docker <- file.exists("/.dockerenv")
-if(!is.docker && (!exists("ORCA") || !ORCA$process$is_alive())) {
-    ##ORCA <- orca_serve()
-}
 
-p=plot_ly(x=1:3,y=1:3);format="pdf";width=height=800;scale=1;port=9091;file="plot.pdf"
+p=plot_ly(x=1:3,y=1:3,mode="markers",type="scattergl")
+format="pdf";width=height=800;scale=1;file="plot.pdf";server=NULL
 plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file), 
-                         scale = NULL, width = NULL, height = NULL,
-                         server="http://orca-server", port=9091)
+                         scale = NULL, width = NULL, height = NULL, server=NULL)
 {
     is.docker <- file.exists("/.dockerenv")
     has.orca.bin <- file.exists("/usr/local/bin/orca")
+    has.orca.srv <- has.orca.bin && exists("ORCA") && "export" %in% names(ORCA)
     is.docker
     has.orca.bin
-    cat("[pgx-modules::plotlyExport] class(p)=",class(p)[1],"\n")
-    cat("[pgx-modules::plotlyExport] file=",file,"\n")
-    cat("[pgx-modules::plotlyExport] format=",format,"\n")
-    ##unlink(file)
+    has.orca.srv
     
-    suppressMessages(suppressWarnings(
-        err  <- try(httr::POST("http://orca-server:9091", body=plotly:::to_JSON("")))
-    ))
-    err
-    if(is.docker && class(err)!="try-error") {
+    message("[pgx-modules::plotlyExport] class(p) = ",class(p)[1])
+    message("[pgx-modules::plotlyExport] file = ",file)
+    message("[pgx-modules::plotlyExport] format = ",format)
+    message("[pgx-modules::plotlyExport] is.docker = ",is.docker)
+
+    message("[pgx-modules::plotlyExport] exists(ORCA) = ",exists("ORCA"))
+    message("[pgx-modules::plotlyExport] ORCA$port = ",ORCA$port)
+    message("[pgx-modules::plotlyExport] class(ORCA) = ",class(ORCA))
+    message("[pgx-modules::plotlyExport] ORCA is alive = ",ORCA$process$is_alive())
+    
+    ## remove old
+    unlink(file,force=TRUE)
+
+    ## See if any ORCA server is responding
+    if(is.null(server)) {
+        srv.list <- c("http://orca-server:9091","http://localhost:9091","http://localhost:5151")
+        srv.responding <- sapply(srv.list, function(s)
+            class(try(httr::POST(s, body=plotly:::to_JSON("")),silent=TRUE))!="try-error")
+        srv.responding
+        server <- names(srv.responding)[which(srv.responding)][1]
+        if(is.na(server)) server <- NULL
+    } else {
+        server <- server[1]
+        srv.responding <- class(try(httr::POST(server, body=plotly:::to_JSON("")),silent=TRUE))!="try-error"
+        srv.responding
+        if(!srv.responding) server <- NULL
+    }
+    server
+    export.ok <- FALSE
+
+    message("[pgx-modules::plotlyExport] server = ",server)
+        
+    if(!is.null(server)) {
         bod <- list(figure = plotly_build(p)$x[c("data", "layout")],
                     format = format, width = width, height = height, 
                     scale = scale)
+        res <- httr::POST(server, body = plotly:::to_JSON(bod))
         httr::stop_for_status(res)
         httr::warn_for_status(res)
         con <- httr::content(res, as = "raw")
         writeBin(con, file)
-        if(class(err)!="try-error") cat("Plotly exported with orca-server\n")
+        message("[pgx-modules::plotlyExport] exported with Orca server on ",server)
+        export.ok <- TRUE
     }
-    err
-    if(0 && has.orca.bin && class(err)=="try-error") {
+    
+    if(0 && has.orca.bin && !export.ok) {
+        ## BUG: currently orca() cannot write to /tmp folder
         err <- try(orca(p, file=file, format=format, width=width, height=height))
-        if(class(err)!="try-error") cat("Plotly exported with orca()\n")
+        export.ok <- class(err)!="try-error"
+        if(export.ok) message("[pgx-modules::plotlyExport] exported with orca()")
     }
-    err
-    if(1 && has.orca.bin && class(err)=="try-error") {
-        if(!exists("ORCA") || !ORCA$process$is_alive()) {
-            ORCA <- orca_serve()
-        }
+    
+    if(1 && has.orca.srv && !export.ok) {
         err <- try(ORCA$export(p, file=file, format=format, width=width, height=height))
-        if(class(err)!="try-error") cat("Plotly exported with orca-serve()\n")
+        export.ok <- class(err)!="try-error"
+        if(export.ok) message("[pgx-modules::plotlyExport] exported with ORCA$export()")
     }
-    err
-    if(1 && class(err)=="try-error") {
+    
+    if(1 && !export.ok) {
+        ## works only for non-GL plots
         err <- try(export(p, file))
-        if(class(err)!="try-error") cat("Plotly exported with export()\n")
+        export.ok <- class(err)!="try-error"
+        if(export.ok) message("[pgx-modules::plotlyExport] exported with export() (deprecated)")        
     }
-    err
-    if(0 && class(err)=="try-error") {
+    if(0 && !export.ok) {
         require(webshot)
         tmp = paste0(tempfile(),".html")
         htmlwidgets::saveWidget(p, tmp) 
         err <- try(webshot::webshot(url=tmp,file=file,vwidth=width*100, vheight=height*100))
-        err
-        if(class(err)!="try-error") cat("Plotly exported with webshot()\n")
+        export.ok <- class(err)!="try-error"        
+        if(export.ok) message("[pgx-modules::plotlyExport] exported with webshot()")
     }
-    err
-    if(class(err)=="try-error") {
-        cat("Plotly export failed\n")
+    if(!export.ok) {
+        message("[pgx-modules::plotlyExport] WARNING: export failed!")
         if(format=="png") png(file)
         if(format=="pdf") pdf(file)
         par(mfrow=c(1,1));frame()
@@ -112,10 +115,9 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
         dev.off()
     }
 
-    cat("[pgx-modules::plotlyExport] file.exists(file)=",file.exists(file),"\n")
-
-    ok <- class(err)!="try-error" && file.exists(file)
-    return(ok)
+    message("[pgx-modules::plotlyExport] file.exists(file)=",file.exists(file))
+    export.ok <- export.ok && file.exists(file)
+    return(export.ok)
 }
 
 ##================================================================================
@@ -325,21 +327,17 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         ##err <- try(ORCA$export(p, PNGFILE, width=p$width, height=p$height))
                         plotlyExport(p, PNGFILE, width=p$width, height=p$height)
                     } else if(plotlib=="iheatmapr") {
-                        cat("downloadHandler:: exporting iheatmapR to PNG\n")
                         p <- func()
                         save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PNGFILE)
                     } else if(plotlib=="visnetwork") {
-                        cat("downloadHandler:: exporting visnetwork to PNG\n")
                         p <- func()
                         visSave(p, HTMLFILE)
                         webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PNGFILE)
                     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
-                        cat("downloadHandler:: exporting htmlwidget to PNG\n")
                         p <- func()
                         htmlwidgets::saveWidget(p, HTMLFILE)
                         webshot(HTMLFILE, vwidth=pdf.width*100,vheight=pdf.height*100,PNGFILE)
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
-                        cat("downloadHandler:: exporting ggplot to PNG\n")
                         p <- func()
                         ##p = addSignature(p)                             
                         ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
@@ -347,17 +345,15 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         print(p) 
                         dev.off() 
                     } else if(plotlib=="generic") {
-                        cat("downloadHandler:: generic to PNGFILE = ",PNGFILE,"\n")
                         ## generic function should produce PDF inside plot func()
                         ##
                     } else if(plotlib=="base") {
                         ##cat("downloadHandler:: exporting to base plot to PDF\n")
-                        cat("downloadHandler:: exporting base plot to PNG\n")                        
                         ## NEEEDS FIX!! pdf generating should be done
                         ## just here, not anymore in the
                         ## renderPlot. But cannot get it to work (IK 19.10.02)
                         if(0) {
-                            cat("downloadHandler:: creating new PNG device\n")
+                            cat("[downloadHandler] creating new PNG device")
                             png(file=PNGFILE, width=80*pdf.width, height=80*pdf.height)
                             func()
                             ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
@@ -373,7 +369,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     
                     ## finally copy to final exported file
                     file.copy(PNGFILE,file)
-                    cat("[pgx-modules::plotModule] export to PNG done!\n")                    
+                    message("[pgx-modules::plotModule] export to PNG done!")                    
                 }, message="exporting to PNG", value=0.8)
             } ## content 
         ) ## PNG downloadHandler
@@ -386,7 +382,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
                 withProgress({
                     ## unlink(PDFFILE) ## do not remove!
                     if(plotlib=="plotly") {
-                        cat("downloadHandler:: exporting plotly to PDF\n")
                         p <- func()
                         ## if(WATERMARK) p <- addWatermark.Plotly(p)
                         p$width = pdf.width * 80
@@ -396,21 +391,17 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         ##err <- try(ORCA$export(p, PDFFILE, width=p$width, height=p$height))
                         plotlyExport(p, PDFFILE, width=p$width, height=p$height)
                     } else if(plotlib=="iheatmapr") {
-                        cat("downloadHandler:: exporting iheatmapR to PDF\n")
                         p <- func()
                         save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PDFFILE)
                     } else if(plotlib=="visnetwork") {
-                        cat("downloadHandler:: exporting visnetwork to PDF\n")
                         p <- func()
                         visSave(p, HTMLFILE)
                         webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
                     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
-                        cat("downloadHandler:: exporting htmlwidget to PDF\n")
                         p <- func()
                         htmlwidgets::saveWidget(p, HTMLFILE)
                         webshot(HTMLFILE, vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
-                        cat("downloadHandler:: exporting ggplot to PDF\n")
                         p <- func()
                         ##p = addSignature(p)                             
                         ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
@@ -418,17 +409,13 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         print(p) 
                         dev.off() 
                     } else if(plotlib=="generic") {
-                        cat("downloadHandler:: generic to PDFFILE = ",PDFFILE,"\n")
                         ## generic function should produce PDF inside plot func()
                         ##
                     } else if(plotlib=="base") {
-                        ##cat("downloadHandler:: exporting to base plot to PDF\n")
-                        cat("downloadHandler:: exporting base plot to PDF\n")
                         ## NEEEDS FIX!! pdf generating should be done
                         ## just here, not anymore in the
                         ## renderPlot. But cannot get it to work (IK 19.10.02)
                         if(0) {
-                            cat("downloadHandler:: creating new PDF device\n")
                             pdf(file=PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
                             func()
                             ##plot(sin)
@@ -442,20 +429,15 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     }
                     
                     ## finally copy to final exported file
-                    cat("[pgx-modules::plotModule] PDFFILE = ",PDFFILE,"\n")
-                    cat("[pgx-modules::plotModule] file = ",file,"\n")
-
                     file.copy(PDFFILE,file)
 
                     ## ImageMagick or pdftk
                     if(TRUE && WATERMARK) {
-                        cat("[pgx-modules::plotModule] adding watermark to PDF...\n")
+                        message("[pgx-modules::plotModule] adding watermark to PDF...")
                         ##addWatermark.PDF(PDFFILE)
                         addWatermark.PDF(file) 
                     }
-                    cat("[pgx-modules::plotModule] export to PDF done!\n")
-
-
+                    message("[pgx-modules::plotModule] export to PDF done!")
                 }, message="exporting to PDF", value=0.8)
             } ## content 
         ) ## PDF downloadHandler
@@ -464,12 +446,10 @@ plotModule <- function(input, output, session, ## ns=NULL,
     saveHTML <- function() {
         ## unlink(HTMLFILE) ## do not remove!
         if(plotlib == "plotly" ) {
-            cat("downloadHandler:: exporting plotly to HTML\n")
             p <- func()
             if(WATERMARK) p <- addWatermark.Plotly(p)
             htmlwidgets::saveWidget(p, HTMLFILE) 
         } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
-            cat("downloadHandler:: exporting htmlwidget to HTML\n")
             p <- func()
             htmlwidgets::saveWidget(p, HTMLFILE) 
         } else if(plotlib == "iheatmapr") {
@@ -483,7 +463,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
             ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
             saveWidget( ggplotly(p), file = HTMLFILE);
         } else if(plotlib=="generic") {
-            cat("downloadHandler:: generic to HTMLFILE = ",HTMLFILE,"\n")
             ## generic function should produce PDF inside plot func()
             ##
         } else if(plotlib=="base") {
@@ -501,12 +480,10 @@ plotModule <- function(input, output, session, ## ns=NULL,
                 withProgress({
                     ## unlink(HTMLFILE) ## do not remove!
                     if(plotlib == "plotly" ) {
-                        cat("downloadHandler:: exporting plotly to HTML\n")
                         p <- func()
                         if(WATERMARK) p <- addWatermark.Plotly(p)
                         htmlwidgets::saveWidget(p, HTMLFILE) 
                     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
-                        cat("downloadHandler:: exporting htmlwidget to HTML\n")
                         p <- func()
                         htmlwidgets::saveWidget(p, HTMLFILE) 
                     } else if(plotlib == "iheatmapr") {
@@ -520,7 +497,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
                         saveWidget( ggplotly(p), file = HTMLFILE);
                     } else if(plotlib=="generic") {
-                        cat("downloadHandler:: generic to HTMLFILE = ",HTMLFILE,"\n")
                         ## generic function should produce PDF inside plot func()
                         ##
                     } else if(plotlib=="base") {

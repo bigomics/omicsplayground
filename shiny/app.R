@@ -8,39 +8,46 @@ library(shiny)
 library(shinyjs)
 library(shinyWidgets)
 library(waiter)
+library(plotly)
 
 ## --------------------------------------------------------------------
 ## ------------------------ CHECKS ------------------------------------
 ## --------------------------------------------------------------------
+message("\n\n")
+message("#################################################################")
+message("##################### OMICS PLAYGROUND ##########################")
+message("#################################################################")
+message("\n\n")
 
-DOCKER.ENV = file.exists("/.dockerenv")
-DOCKER.ENV
-
-if(DOCKER.ENV) {
-    res <- system("ping -c1 orca-server",intern=TRUE)
-    orca.ok <- (length(res)>0)
-    orca.ok
-    if(!orca.ok) {
-        cat("###############################################################\n")
-        cat("##### ERROR:: ORCA server not running. please start ORCA. #####\n")
-        cat("###############################################################\n")
-        stop()
-    }
-} else {
-    if(!file.exists("/usr/local/bin/orca")) {
-        cat("###############################################################\n")
-        cat("####### WARNING:: could not find /usr/local/bin/orca  #########\n")
-        cat("###############################################################\n")
-    } else {
-        ORCA <- plotly::orca_serve()
-    }    
-}
 
 ## --------------------------------------------------------------------
 ## ------------------------- INIT -------------------------------------
 ## --------------------------------------------------------------------
 
-cat("===================== INIT =======================\n")
+message("\n==================================================")
+message("===================== INIT =======================")
+message("==================================================\n")
+
+DOCKER.ENV = file.exists("/.dockerenv")
+DOCKER.ENV
+
+assignInNamespace("correct_orca", function() return(TRUE), ns="plotly")
+ORCA <- plotly::orca_serve(port=5151, keep_alive=TRUE, more_args="--enable-webgl")
+srv.local  <- class(try(httr::POST("http://localhost:5151", body=plotly:::to_JSON("")),silent=TRUE))!="try-error"
+srv.docker <- class(try(httr::POST("http://orca-server:9091", body=plotly:::to_JSON("")),silent=TRUE))!="try-error"
+
+message("local ORCA is alive = ",ORCA$process$is_alive())
+message("local ORCA is responding = ",srv.local)
+message("docker ORCA is responding = ",srv.docker)
+
+if(1 && !srv.local && !srv.docker) {
+    warning("##### ERROR:: ORCA server not running. please start ORCA. #####")
+    stop()
+}
+
+## --------------------------------------------------------------------
+## ---------------------------  OPTIONS -------------------------------
+## --------------------------------------------------------------------
 
 RDIR = "../R"
 FILES = "../lib"
@@ -48,10 +55,6 @@ FILESX = "../libx"
 PGX.DIR = c("../data","../data-extra")
 PGX.DIR = "../data"
 dir.exists(PGX.DIR)
-
-## --------------------------------------------------------------------
-## ----------------------- READ OPTIONS -------------------------------
-## --------------------------------------------------------------------
 
 source("../R/pgx-files.R", local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
@@ -64,11 +67,13 @@ DEV.VERSION = opt$DEV_VERSION && dir.exists("../../omicsplayground-dev")
 if(opt$USER_MODE=="BASIC") DEV.VERSION = FALSE
 
 ## show options
-cat(paste(paste(names(opt), "\t= ", sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
+message(paste(paste(names(opt), "\t= ", sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
+
 
 ## --------------------------------------------------------------------
 ## ------------------------ READ FUNCTIONS ----------------------------
 ## --------------------------------------------------------------------
+
 
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars
 ## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
@@ -98,7 +103,7 @@ DISABLED <- array(MODULES %in% opt$MODULES_DISABLED, dimnames=list(MODULES))
 ENABLED  <- ENABLED & !DISABLED
 ENABLED
 
-cat("[MAIN] sourcing modules...\n")
+message("[MAIN] sourcing modules folder...")
 
 source("modules/LoadingModule.R", local=TRUE)
 source("modules/DataViewModule.R", local=TRUE)
@@ -127,19 +132,20 @@ if(DEV.VERSION && dir.exists("../../omicsplayground-dev")) {
 }
 ENABLED
 
-cat("[MAIN] starting server and UI...\n")
-
 MAINTABS = c("DataView","Clustering","Expression","Enrichment",
              "Signature","SingleCell","Development")
 
+## --------------------------------------------------------------------
+## --------------------------- SERVER ---------------------------------
+## --------------------------------------------------------------------
+
 server = function(input, output, session) {
 
-    ## useShinyjs()
-    ## useShinydashboard()
-    ## useShinydashboardPlus()
+    message("\n===================================================")
+    message("===================== SERVER ======================")
+    message("===================================================\n")
 
-    cat("===================== SERVER =======================\n")
-    cat("[MAIN] calling modules...\n")
+    message("[MAIN] calling modules...")
 
     max.limits <- c("samples" = opt$MAX_SAMPLES,
                     "comparisons" = opt$MAX_COMPARISONS,
@@ -166,7 +172,7 @@ server = function(input, output, session) {
     if(ENABLED["multi"])  env[["multi"]]  <- callModule( MultiLevelModule, "multi", env)
     env[["qa"]]     <- callModule( QuestionModule, "qa", lapse = -1)
     
-    cat("[MAIN] all modules called\n")
+    message("[MAIN] all modules called")
     
     output$current_dataset <- renderText({
         pgx <- env[["load"]][["inputData"]]()
@@ -241,6 +247,11 @@ server = function(input, output, session) {
     waiter_hide()
 }
 
+
+## --------------------------------------------------------------------
+## ------------------------------ UI ----------------------------------
+## --------------------------------------------------------------------
+
 help.tabs <- navbarMenu(
     "Help",
     tabPanel(title=HTML("<a href='https://omicsplayground.readthedocs.io' target='_blank'>Documentation")),
@@ -279,8 +290,12 @@ if(DEV.VERSION) {
 }
 
 tabs = "load"
-createNavbarPage <- function(tabs)
+createUI <- function(tabs)
 {
+    message("\n===================================================")
+    message("======================= UI ========================")
+    message("===================================================\n")
+
     version <- scan("../VERSION", character())[1]
     TITLE = paste(opt$TITLE,version)
     LOGO = div(img(src="bigomics-logo-white-48px.png", height="48px"),
@@ -343,7 +358,7 @@ createNavbarPage <- function(tabs)
 
 }
 
-ui = createNavbarPage(
+ui = createUI(
     tabs = list(
         "Home" = "load",
         "DataView" = "view",
@@ -356,8 +371,19 @@ ui = createNavbarPage(
     )
 )
 
+
+## --------------------------------------------------------------------
+## ------------------------------ RUN ---------------------------------
+## --------------------------------------------------------------------
+
+
 shiny::shinyApp(ui, server)
 
 
 ##pkgs <- c( sessionInfo()[["basePkgs"]], names(sessionInfo()[["otherPkgs"]]),
 ##          names(sessionInfo()[["loadedOnly"]]) )
+
+
+## --------------------------------------------------------------------
+## ------------------------------ EOF----------------------------------
+## --------------------------------------------------------------------
