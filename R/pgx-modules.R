@@ -44,7 +44,7 @@ if(0) {
 library(plotly)
 is.docker <- file.exists("/.dockerenv")
 if(!is.docker && (!exists("ORCA") || !ORCA$process$is_alive())) {
-    ORCA <- orca_serve()
+    ##ORCA <- orca_serve()
 }
 
 p=plot_ly(x=1:3,y=1:3);format="pdf";width=height=800;scale=1;port=9091;file="plot.pdf"
