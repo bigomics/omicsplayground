@@ -21,55 +21,9 @@ SLOGAN = c(
     "'I See Clearly Now' - with OmicsPlayground"
     )
 
-addWatermark.base <- function(line=-1.5, cex=0.8, col="#6699ff88") {    
-    txt = "'Feel empowered' --- with Omics Playground"
-    txt = sample(SLOGAN,1)
-    ##mtext(txt,outer=TRUE, side=1,line=line, cex=cex, col=col, xpd=NA)
-    title(sub=txt, adj=1, line=3.5, font=2, cex.sub=cex, col.sub=col)
-}
-addWatermark.Plotly <- function(p) {
-    add_annotations(
-        p,
-        ##yshift = -100, 
-        ##x = 1, y=-0.1, xanchor = "right",
-        ##x = 0.5, y=-0.1, xanchor = "middle", 
-        x = 0.5, y = 0.5, xanchor = "middle", 
-        xref="paper", yref="paper", showarrow=FALSE,
-        ##text = "'Feel empowered' --- with Omics Playground",
-        ##text = "'Feel empowered'\nwith Omics Playground",
-        text = sub(" - ","\n",sample(SLOGAN,1)),
-        font = list(size=50, family='Arial', color="#AAAAAA22")
-        ##font = list(size=18, family='Arial', color="#AAAAAA22")
-    )
-}
 
 colBL="#00448855"
 colRD="#88004455"
-addWatermark.PDF.SAVE <- function(file, col="#88006655") {
-    if(system("which pdftk",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
-    tmp1 <- paste0(gsub("file","plot",tempfile()),".pdf")
-    tmp2 <- paste0(gsub("file","plot",tempfile()),".pdf")
-    txt <- sample(SLOGAN,1)
-    ##txt = sub("with Omics","with\nOmics",sub(" - ","\n",txt))
-    pdf(tmp1,w=8,h=8)
-    frame()
-    ##text(0.5,0.5,txt,font=2,cex=4,col=col)
-    legend("bottom", txt, cex=1.75, text.font=2, text.col=col,
-           xjust = 0.5, yjust = 0.5, adj=-0.012,
-           inset=c(0,-0.15), xpd=TRUE,
-           bg="#88006611", border=NULL, box.col = NA,
-           text.width = 2.05*strwidth(txt) )
-    ##text(0.5,1.0,txt,font=2,cex=1.5,col=col,xpd=FALSE)
-    ##text(1.08,0.5,txt,srt=90,font=1,cex=1.3,col=col,xpd=TRUE)
-    ##text(0.5,-0.2,txt,srt=0,font=2,cex=1,col=col,xpd=TRUE)
-    dev.off()
-    cmd <- paste("pdftk",file,"stamp",tmp1,"output",tmp2) ## NEED pdftk installed!!!
-    cmd
-    system(cmd)
-    file.copy(tmp2,file,overwrite=TRUE)
-    unlink(tmp1)
-    unlink(tmp2)
-}
 addWatermark.PDF <- function(file) {
     if(system("which pdftk",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
     mark <- file.path(FILES,"watermark.pdf")
@@ -85,25 +39,83 @@ if(0) {
     file = "/home/kwee/Downloads/plot.pdf"
     addWatermark.PDF(file) 
 }
-## prepare ORCA server
-library(plotly)
-##if(!exists("ORCA") || !ORCA$process$is_alive()) {
-##    ORCA <- orca_serve()
-##}
 
-format="pdf";width=height=800;scale=1;port=9091;file="plot.pdf"
-plotlyOrca <- function(p, file = "plot.pdf", format = tools::file_ext(file), 
-                       scale = NULL, width = NULL, height = NULL,
-                       server="http://orca-server", port=9091)
+## prepare ORCA server if we are not in a Docker
+library(plotly)
+is.docker <- file.exists("/.dockerenv")
+if(!is.docker && (!exists("ORCA") || !ORCA$process$is_alive())) {
+    ORCA <- orca_serve()
+}
+
+p=plot_ly(x=1:3,y=1:3);format="pdf";width=height=800;scale=1;port=9091;file="plot.pdf"
+plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file), 
+                         scale = NULL, width = NULL, height = NULL,
+                         server="http://orca-server", port=9091)
 {
-    bod <- list(figure = plotly_build(p)$x[c("data", "layout")],
-                format = format, width = width, height = height, 
-                scale = scale)
-    res <- httr::POST(paste0(server,":",port), body=plotly:::to_JSON(bod))
-    httr::stop_for_status(res)
-    httr::warn_for_status(res)
-    con <- httr::content(res, as = "raw")
-    writeBin(con, file)
+    is.docker <- file.exists("/.dockerenv")
+    has.orca.bin <- file.exists("/usr/local/bin/orca")
+    is.docker
+    has.orca.bin
+    cat("[pgx-modules::plotlyExport] class(p)=",class(p)[1],"\n")
+    cat("[pgx-modules::plotlyExport] file=",file,"\n")
+    cat("[pgx-modules::plotlyExport] format=",format,"\n")
+    ##unlink(file)
+    
+    suppressMessages(suppressWarnings(
+        err  <- try(httr::POST("http://orca-server:9091", body=plotly:::to_JSON("")))
+    ))
+    err
+    if(is.docker && class(err)!="try-error") {
+        bod <- list(figure = plotly_build(p)$x[c("data", "layout")],
+                    format = format, width = width, height = height, 
+                    scale = scale)
+        httr::stop_for_status(res)
+        httr::warn_for_status(res)
+        con <- httr::content(res, as = "raw")
+        writeBin(con, file)
+        if(class(err)!="try-error") cat("Plotly exported with orca-server\n")
+    }
+    err
+    if(0 && has.orca.bin && class(err)=="try-error") {
+        err <- try(orca(p, file=file, format=format, width=width, height=height))
+        if(class(err)!="try-error") cat("Plotly exported with orca()\n")
+    }
+    err
+    if(1 && has.orca.bin && class(err)=="try-error") {
+        if(!exists("ORCA") || !ORCA$process$is_alive()) {
+            ORCA <- orca_serve()
+        }
+        err <- try(ORCA$export(p, file=file, format=format, width=width, height=height))
+        if(class(err)!="try-error") cat("Plotly exported with orca-serve()\n")
+    }
+    err
+    if(1 && class(err)=="try-error") {
+        err <- try(export(p, file))
+        if(class(err)!="try-error") cat("Plotly exported with export()\n")
+    }
+    err
+    if(0 && class(err)=="try-error") {
+        require(webshot)
+        tmp = paste0(tempfile(),".html")
+        htmlwidgets::saveWidget(p, tmp) 
+        err <- try(webshot::webshot(url=tmp,file=file,vwidth=width*100, vheight=height*100))
+        err
+        if(class(err)!="try-error") cat("Plotly exported with webshot()\n")
+    }
+    err
+    if(class(err)=="try-error") {
+        cat("Plotly export failed\n")
+        if(format=="png") png(file)
+        if(format=="pdf") pdf(file)
+        par(mfrow=c(1,1));frame()
+        text(0.5,0.5,"Plotly export error",cex=2)
+        dev.off()
+    }
+
+    cat("[pgx-modules::plotlyExport] file.exists(file)=",file.exists(file),"\n")
+
+    ok <- class(err)!="try-error" && file.exists(file)
+    return(ok)
 }
 
 ##================================================================================
@@ -308,25 +320,10 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         p <- func()
                         p$width = pdf.width * 80
                         p$height = pdf.height * 80
-
-                        cat("[pgx-modules::plotModule] exporting plotly to PNG with ORCA\n")
                         ##err <- try(export(p, PNGFILE))  ## deprecated 
                         ##err <- try(orca(p, PNGFILE))
                         ##err <- try(ORCA$export(p, PNGFILE, width=p$width, height=p$height))
-                        err <- try(plotlyOrca(p, PNGFILE, width=p$width, height=p$height))
-                        if(class(err)!="try-error") {
-                            cat("[pgx-modules::plotModule] OK!\n")
-                        } else {
-                            cat("downloadHandler:: export failed, trying webshot...\n")
-                            htmlwidgets::saveWidget(p, HTMLFILE) 
-                            err2 <- try(webshot(HTMLFILE,vwidth=pdf.width*100,
-                                                vheight=pdf.height*100,PNGFILE))
-                            if(class(err2)=="try-error") {
-                                png(PNGFILE)
-                                text(0.5,0.5,"PNG export error (plotly)")
-                                dev.off()
-                            }
-                        }
+                        plotlyExport(p, PNGFILE, width=p$width, height=p$height)
                     } else if(plotlib=="iheatmapr") {
                         cat("downloadHandler:: exporting iheatmapR to PNG\n")
                         p <- func()
@@ -394,25 +391,10 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         ## if(WATERMARK) p <- addWatermark.Plotly(p)
                         p$width = pdf.width * 80
                         p$height = pdf.height * 80
-
-                        cat("[pgx-modules::plotModule] exporting plotly to PDF with ORCA\n")
                         ##err <- try(export(p, PDFFILE))  ## deprecated
                         ##err <- try(orca(p, PDFFILE))
                         ##err <- try(ORCA$export(p, PDFFILE, width=p$width, height=p$height))
-                        err <- try(plotlyOrca(p, PDFFILE, width=p$width, height=p$height))
-                        if(class(err)!="try-error") {
-                            cat("[pgx-modules::plotModule] OK!\n")                            
-                        } else {                            
-                            cat("[pgx-modules::plotModule] export failed, trying webshot...\n")
-                            htmlwidgets::saveWidget(p, HTMLFILE) 
-                            err2 <- try(webshot(HTMLFILE,vwidth=pdf.width*100,
-                                                vheight=pdf.height*100,PDFFILE))
-                            if(class(err2)=="try-error") {
-                                pdf(PDFFILE)
-                                text(0.5,0.5,"PDF export error (plotly)")
-                                dev.off()
-                            }
-                        }
+                        plotlyExport(p, PDFFILE, width=p$width, height=p$height)
                     } else if(plotlib=="iheatmapr") {
                         cat("downloadHandler:: exporting iheatmapR to PDF\n")
                         p <- func()
@@ -460,6 +442,9 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     }
                     
                     ## finally copy to final exported file
+                    cat("[pgx-modules::plotModule] PDFFILE = ",PDFFILE,"\n")
+                    cat("[pgx-modules::plotModule] file = ",file,"\n")
+
                     file.copy(PDFFILE,file)
 
                     ## ImageMagick or pdftk
