@@ -64,11 +64,9 @@ opt <- pgx.readOptions(file="OPTIONS")
 WATERMARK = opt$WATERMARK
 SHOW_QUESTIONS = FALSE
 DEV.VERSION = opt$DEV_VERSION && dir.exists("../../omicsplayground-dev")
-if(opt$USER_MODE=="BASIC") DEV.VERSION = FALSE
 
 ## show options
 message(paste(paste(names(opt), "\t= ", sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
-
 
 ## --------------------------------------------------------------------
 ## ------------------------ READ FUNCTIONS ----------------------------
@@ -98,35 +96,46 @@ MODULES <- c("load","view","clust","expr","enrich","isect","func",
              "word","drug","sig","scell","cor","bio","cmap",
              "tcga","bc","multi","qa")
 if(is.null(opt$MODULES_ENABLED)) opt$MODULES_ENABLED = MODULES
+if(is.null(opt$MODULES_DISNABLED)) opt$MODULES_DISNABLED = NA
 ENABLED  <- array(MODULES %in% opt$MODULES_ENABLED, dimnames=list(MODULES))
 DISABLED <- array(MODULES %in% opt$MODULES_DISABLED, dimnames=list(MODULES))
 ENABLED  <- ENABLED & !DISABLED
 ENABLED
 
-message("[MAIN] sourcing modules folder...")
+modules <- dir("modules", pattern=".R$")
+for(m in modules) {
+    message("[MAIN] loading module ",m)
+    source(paste0("modules/",m), local=TRUE)
+}
 
-source("modules/LoadingModule.R", local=TRUE)
-source("modules/DataViewModule.R", local=TRUE)
-source("modules/ClusteringModule.R", local=TRUE)
-source("modules/ExpressionModule.R", local=TRUE)
-source("modules/EnrichmentModule.R", local=TRUE)
-source("modules/IntersectionModule.R", local=TRUE)
-source("modules/FunctionalModule.R", local=TRUE)
-source("modules/WordCloudModule.R", local=TRUE)
-source("modules/DrugConnectivityModule.R", local=TRUE)
-source("modules/SignatureModule.R", local=TRUE)
-source("modules/SingleCellModule.R", local=TRUE)
-source("modules/CorrelationModule.R", local=TRUE)
-source("modules/BiomarkerModule.R", local=TRUE)
-source("modules/QuestionModule.R", local=TRUE)
-source("modules/ConnectivityModule.R", local=TRUE)
-##source("modules/UsersMapModule.R", local=TRUE)
+## source("modules/LoadingModule.R", local=TRUE)
+## source("modules/DataViewModule.R", local=TRUE)
+## source("modules/ClusteringModule.R", local=TRUE)
+## source("modules/ExpressionModule.R", local=TRUE)
+## source("modules/EnrichmentModule.R", local=TRUE)
+## source("modules/IntersectionModule.R", local=TRUE)
+## source("modules/FunctionalModule.R", local=TRUE)
+## source("modules/WordCloudModule.R", local=TRUE)
+## source("modules/DrugConnectivityModule.R", local=TRUE)
+## source("modules/SignatureModule.R", local=TRUE)
+## source("modules/SingleCellModule.R", local=TRUE)
+## source("modules/CorrelationModule.R", local=TRUE)
+## source("modules/BiomarkerModule.R", local=TRUE)
+## source("modules/QuestionModule.R", local=TRUE)
+## source("modules/ConnectivityModule.R", local=TRUE)
+## source("modules/UsersMapModule.R", local=TRUE)
 
 if(DEV.VERSION && dir.exists("../../omicsplayground-dev")) {
-    source("../../omicsplayground-dev/shiny/modules/TcgaModule.R", local=TRUE)
-    source("../../omicsplayground-dev/shiny/modules/BatchCorrectModule.R", local=TRUE)
-    source("../../omicsplayground-dev/shiny/modules/MultiLevelModule.R", local=TRUE)
+    xmodules <- dir("../../omicsplayground-dev/shiny/modules", pattern=".R$")
+    for(m in xmodules) {
+        message("[MAIN] loading module ",m)
+        source(paste0("../../omicsplayground-dev/shiny/modules/",m), local=TRUE)
+    }
+    ##source("../../omicsplayground-dev/shiny/modules/TcgaModule.R", local=TRUE)
+    ##source("../../omicsplayground-dev/shiny/modules/BatchCorrectModule.R", local=TRUE)
+    ##source("../../omicsplayground-dev/shiny/modules/MultiLevelModule.R", local=TRUE)
     ENABLED[c("tcga","bc","multi")] <- TRUE
+    modules <- c(modules, xmodules)
 } else {
     ENABLED[c("tcga","bc","multi")] <- FALSE
 }

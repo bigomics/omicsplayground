@@ -8,6 +8,13 @@ The project maintains the following source code repositories:
  * https://github.com/bigomics/playground.git
 
 
+## Coding practices
+
+- Refrain as much as possible to use library() and require() within
+  functions. Use '::' instead.
+- 
+
+
 ## Third-party Content
 
 The project uses the following third-party content:

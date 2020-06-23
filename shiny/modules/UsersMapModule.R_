@@ -48,7 +48,7 @@ UsersMapModule <- function(input, output, session, env)
         require(rgeolocate)
 
         accessfile = file.path(FILESX,"access-ncov2019.log")
-        if(!file.exists(accessfile)) return(NULL
+        if(!file.exists(accessfile)) return(NULL)
                                             
         acc <- read.table(accessfile)
         ip <- as.character(acc[,1])
