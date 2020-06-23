@@ -1,6 +1,6 @@
 ##access.dirs=FILESX
 
-getAccessLogs <- function(access.dirs, filter.opg=TRUE) {
+pgx.parseAccessLogs <- function(access.dirs, filter.opg=TRUE) {
     
     ##access.dirs <- c(FILESX, file.path(FILESX,"apache2"),
     ##                 "/var/www/html/logs", "/var/log/apache2")
