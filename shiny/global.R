@@ -2,9 +2,9 @@ message("[MAIN::global] reading global.R")
 
 ##access.dirs = c(FILESX, file.path(FILESX,"apache2"),"/var/www/html/logs", "/var/log/apache2")
 access.dirs = c( FILESX, file.path(FILESX,"apache2.log"))
-access.dirs = c("/var/www/html/logs", "/var/log/apache2","log","../log")
-##access.dirs = file.path(FILESX,"apache2.log")
-ACCESS.LOG <- getAccessLogs(access.dirs, filter.opg=FALSE)
+access.dirs = c("/var/www/html/logs", "/var/log/apache2","/var/log/apache",
+                "/var/log/httpd","/var/log")
+ACCESS.LOG <- pgx.parseAccessLogs(access.dirs, filter.opg=FALSE)
 sum(ACCESS.LOG$table$visitors)
 
 showHideTab <- function(pgx, slot, tabname, subtab) {
