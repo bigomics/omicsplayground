@@ -13,8 +13,11 @@ FROM bigomics/omicsplayground:base
 #------------------------------------------------------------
 
 RUN apt install -y xvfb
-# RUN R -e "BiocManager::install(c('randomForest'))"
+#RUN R -e "BiocManager::install(c('metap'))"
+#RUN R -e "install.packages(c('metap'))"
 # RUN pip install umap-learn
+RUN devtools::install_version("mnormt", version="1.5-7", repos="http://cran.us.r-project.org") \
+    && install.packages(c("metap"))
 
 #------------------------------------------------------------
 # Clone fresh code from GitHub
