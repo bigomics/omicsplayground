@@ -16,8 +16,8 @@ echo git push
 echo git push --tags
 
 ##---------------- docker ----------------------
-echo "nohup docker build -f docker/Dockerfile --no-cache -t $image . > docker.out &"
-echo docker build -f docker/Dockerfile -t $image .
+echo "nohup docker build -f docker/Dockerfile --no-cache -t $image:build . > docker.out &"
+echo docker build -f docker/Dockerfile -t $image:build .
 
 ## +run in background, remove contained after use, give nice name
 echo docker run --rm -d -p 4000:3838 --name=play1 $image

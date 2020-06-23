@@ -33,12 +33,19 @@ DOCKER.ENV
 
 assignInNamespace("correct_orca", function() return(TRUE), ns="plotly")
 ORCA <- plotly::orca_serve(port=5151, keep_alive=TRUE, more_args="--enable-webgl")
-srv.local  <- class(try(httr::POST("http://localhost:5151", body=plotly:::to_JSON("")),silent=TRUE))!="try-error"
-srv.docker <- class(try(httr::POST("http://orca-server:9091", body=plotly:::to_JSON("")),silent=TRUE))!="try-error"
+##ORCA <- plotly::orca_serve(port=5151)
+Sys.sleep(2)
+res.local <- try(httr::POST("http://localhost:5151", body=plotly:::to_JSON("")),silent=TRUE)
+res.docker <- try(httr::POST("http://orca-server:9091", body=plotly:::to_JSON("")),silent=TRUE)
+responding.local   <- class(res.local)=="response"
+responding.docker  <- class(res.docker)=="response"
 
 message("local ORCA is alive = ",ORCA$process$is_alive())
-message("local ORCA is responding = ",srv.local)
-message("docker ORCA is responding = ",srv.docker)
+message("local ORCA response = ",class(res.local))
+message("local ORCA is responding = ",responding.local)
+
+message("docker ORCA response = ",class(res.docker))
+message("docker ORCA is responding = ",responding.docker)
 
 if(1 && !srv.local && !srv.docker) {
     warning("##### ERROR:: ORCA server not running. please start ORCA. #####")
@@ -66,7 +73,7 @@ SHOW_QUESTIONS = FALSE
 DEV.VERSION = opt$DEV_VERSION && dir.exists("../../omicsplayground-dev")
 
 ## show options
-message(paste(paste(names(opt), "\t= ", sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
+message("/n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
 
 ## --------------------------------------------------------------------
 ## ------------------------ READ FUNCTIONS ----------------------------

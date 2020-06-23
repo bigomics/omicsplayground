@@ -6,10 +6,10 @@
 # Prepare R/Shiny with all packages
 #------------------------------------------------------------
 
-FROM rocker/shiny:3.6.1 AS base
+FROM rocker/shiny:3.6.3 AS base
 
 RUN apt update && apt install -y apt-utils \
-    libcurl4-gnutls-dev libv8-3.14-dev \
+    libcurl4-gnutls-dev libnode-dev \
     libssl-dev libxml2-dev libjpeg-dev \
     libgl-dev libglu-dev tk-dev libhdf5-dev \
     libgit2-dev libssh2-1-dev libnetcdf-dev \
