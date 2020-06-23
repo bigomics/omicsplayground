@@ -12,11 +12,10 @@ services:
     container_name: playground
     depends_on:
       - orca-server
-##  image: bigomics/omicsplayground:latest
-    image: bigomics/omicsplayground:dev
+    image: bigomics/omicsplayground:latest
     volumes:
       - /var/log/apache2:/omicsplayground/xlib/apache2.log      
-##      - ~/pgx_data:/omicsplayground/data
+##    - ./data:/omicsplayground/data
     ports:
       - 4000:3838
     networks:
