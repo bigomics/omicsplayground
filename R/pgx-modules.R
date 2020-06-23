@@ -278,20 +278,16 @@ plotModule <- function(input, output, session, ## ns=NULL,
         outputFunc="pairsD3Output"
     } else if(plotlib == "visnetwork") {
         require(visNetwork)
-        ##render <- renderVisNetwork({ func() })
         outputFunc="visNetworkOutput"
         renderFunc = "renderVisNetwork"
     } else if(plotlib %in% c("ggplot","ggplot2")) {
-        ##render <- renderPlot({ plot(func())}, res=res)
         outputFunc="plotOutput"
         renderFunc="function(x) renderPlot(plot(x))"
     } else if(plotlib == "iheatmapr") {
         require(iheatmapr)
-        ##render <- renderIheatmap({ func() })
         outputFunc="iheatmaprOutput"
         renderFunc="renderIheatmap"
     } else if(plotlib == "image") {
-        ##render <- renderIheatmap({ func() })
         outputFunc="imageOutput"
         renderFunc="renderImage"
     } else {
@@ -319,13 +315,9 @@ plotModule <- function(input, output, session, ## ns=NULL,
                 withProgress({
                     ## unlink(PNGFILE) ## do not remove!
                     if(plotlib=="plotly") {
-
                         p <- func()
                         p$width = pdf.width * 80
                         p$height = pdf.height * 80
-                        ##err <- try(export(p, PNGFILE))  ## deprecated 
-                        ##err <- try(orca(p, PNGFILE))
-                        ##err <- try(ORCA$export(p, PNGFILE, width=p$width, height=p$height))
                         plotlyExport(p, PNGFILE, width=p$width, height=p$height)
                     } else if(plotlib=="iheatmapr") {
                         p <- func()
@@ -340,21 +332,23 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         webshot(HTMLFILE, vwidth=pdf.width*100,vheight=pdf.height*100,PNGFILE)
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
                         p <- func()
-                        ##p = addSignature(p)                             
-                        ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
-                        png(PNGFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
+                        png(PNGFILE, width=pdf.width*100, height=pdf.height*100, pointsize=pdf.pointsize)
                         print(p) 
                         dev.off() 
+                    } else if(plotlib=="image") {
+                        p <- func()
+                        dbg("[downloadHandler.PNG] copy image ",p$src,"to PNGFILE",PNGFILE)
+                        file.copy(p$src, PNGFILE, overwrite=TRUE)
                     } else if(plotlib=="generic") {
-                        ## generic function should produce PDF inside plot func()
+                        ## generic function should produce PNG inside plot func()
                         ##
                     } else if(plotlib=="base") {
-                        ##cat("downloadHandler:: exporting to base plot to PDF\n")
+                        ##cat("downloadHandler:: exporting to base plot to PNG\n")
                         ## NEEEDS FIX!! pdf generating should be done
                         ## just here, not anymore in the
                         ## renderPlot. But cannot get it to work (IK 19.10.02)
                         if(0) {
-                            cat("[downloadHandler] creating new PNG device")
+                            dbg("[downloadHandler.PNG] creating new PNG device")
                             png(file=PNGFILE, width=80*pdf.width, height=80*pdf.height)
                             func()
                             ##dev.copy2pdf(file=PDFFILE, width=pdf.width, height=pdf.height)
@@ -369,8 +363,9 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     }
                     
                     ## finally copy to final exported file
-                    file.copy(PNGFILE,file)
-                    message("[pgx-modules::plotModule] export to PNG done!")                    
+                    file.copy(PNGFILE, file, overwrite=TRUE)
+                    dbg("[downloadHandler.PNG] copy PNGFILE",PNGFILE,"to download file",file )
+                    dbg("[pgx-modules::downloadHandler.PNG] export to PNG done!")                    
                 }, message="exporting to PNG", value=0.8)
             } ## content 
         ) ## PNG downloadHandler
@@ -409,6 +404,11 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         pdf(PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
                         print(p) 
                         dev.off() 
+                    } else if(plotlib=="image") {
+                        p <- func()
+                        ## p$src  ## PNG image file
+                        ## generic function should produce PDF inside plot func()
+                        ##
                     } else if(plotlib=="generic") {
                         ## generic function should produce PDF inside plot func()
                         ##
@@ -430,7 +430,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     }
                     
                     ## finally copy to final exported file
-                    file.copy(PDFFILE,file)
+                    file.copy(PDFFILE, file, overwrite=TRUE)
 
                     ## ImageMagick or pdftk
                     if(TRUE && WATERMARK) {
@@ -463,6 +463,8 @@ plotModule <- function(input, output, session, ## ns=NULL,
             p <- func()
             ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
             saveWidget( ggplotly(p), file = HTMLFILE);
+        } else if(plotlib=="image") {
+            write("<body>image cannot export to HTML</body>",HTMLFILE)
         } else if(plotlib=="generic") {
             ## generic function should produce PDF inside plot func()
             ##
@@ -500,13 +502,15 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     } else if(plotlib=="generic") {
                         ## generic function should produce PDF inside plot func()
                         ##
+                    } else if(plotlib=="image") {
+                        write("<body>image cannot be exported to HTML</body>",HTMLFILE)
                     } else if(plotlib=="base") {
-                        write("<body>R base plots cannot export to HTML</body>",HTMLFILE)
+                        write("<body>R base plots cannot be exported to HTML</body>",HTMLFILE)
                     } else { ## end base
                         write("<body>HTML export error</body>",file=HTMLFILE)
                     }
                     ## finally copy to fina lexport file
-                    file.copy(HTMLFILE,file)
+                    file.copy(HTMLFILE, file, overwrite=TRUE)
                 }, message="exporting to HTML", value=0.8)
             } ## end of content
         ) ## end of HTML downloadHandler
@@ -519,14 +523,13 @@ plotModule <- function(input, output, session, ## ns=NULL,
             content = function(file) {
                 withProgress({
                     data <- csvFunc()                    
-                    ##file.copy(CSVFILE,file)
+                    ##file.copy(CSVFILE, file, overwrite=TRUE)
                     write.csv(data, file=file)
                 }, message="exporting to CSV", value=0.8)
             } ## end of content
         ) ## end of HTML downloadHandler
     } ## end of do HTML
     
-
     ##--------------------------------------------------------------------------------
     ##------------------------ OUTPUT ------------------------------------------------
     ##--------------------------------------------------------------------------------
@@ -567,7 +570,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
             func()
             ##p1.base <- recordPlot()
             ##invisible(dev.off())
-            
             if(1) {
                 suppressWarnings( suppressMessages(
                     if(do.pdf) {
@@ -605,6 +607,9 @@ plotModule <- function(input, output, session, ## ns=NULL,
         render <- renderImage( func(), deleteFile=FALSE)
         if(!is.null(func2)) {
             render2 <- renderImage(func2(), deleteFile=FALSE)
+        }
+        if(do.png) {
+            ## file.copy(func()$src, PNGFILE, overwrite=TRUE )
         }
     } else {
         render <- eval(parse(text=renderFunc))(func())
@@ -804,7 +809,7 @@ tableModule <- function(input, output, session,
         content = function(file) {
             dt <- func()
             write.csv(dt$x$data, file=CSVFILE, row.names=FALSE)
-            file.copy(CSVFILE,file)
+            file.copy(CSVFILE, file, overwrite=TRUE)
         }
     )
     output$csv <- download.csv

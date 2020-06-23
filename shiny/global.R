@@ -1,3 +1,5 @@
+message("[MAIN::global] reading global.R")
+
 ##access.dirs = c(FILESX, file.path(FILESX,"apache2"),"/var/www/html/logs", "/var/log/apache2")
 access.dirs = c( FILESX, file.path(FILESX,"apache2.log"))
 access.dirs = c("/var/www/html/logs", "/var/log/apache2","log","../log")

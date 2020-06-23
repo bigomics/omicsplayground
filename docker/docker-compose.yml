@@ -13,7 +13,7 @@ services:
     depends_on:
       - orca-server
 ##  image: bigomics/omicsplayground:latest
-    image: bigomics/omicsplayground:test
+    image: bigomics/omicsplayground:dev
     volumes:
       - /var/log/apache2:/omicsplayground/xlib/apache2.log      
 ##      - ~/pgx_data:/omicsplayground/data

@@ -77,6 +77,7 @@ opt <- pgx.readOptions(file="OPTIONS")
 WATERMARK = opt$WATERMARK
 SHOW_QUESTIONS = FALSE
 DEV.VERSION = opt$DEV_VERSION && dir.exists("../../omicsplayground-dev")
+## DEBUG = TRUE
 
 ## show options
 message("/n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
@@ -84,7 +85,6 @@ message("/n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 ## --------------------------------------------------------------------
 ## ------------------------ READ FUNCTIONS ----------------------------
 ## --------------------------------------------------------------------
-
 
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars
 ## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
