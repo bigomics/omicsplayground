@@ -316,8 +316,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ##================================================================================
 
     ## ------------------  Info messsages
-    expr_plots_volcano_text = "A volcano plot of genes for the selected comparison under the <code>Contrast</code> settings."
-    expr_plots_maplot_text = "An application of a Bland-Altman (MA) plot of genes for the selected comparison under the <code>Contrast</code> settings."
+    expr_plots_volcano_text = "A volcano plot of genes for the selected comparison under the <code>Contrast</code> settings plotting fold-change versus significance on the x and y axes, respectively."
+    expr_plots_maplot_text = "An application of a Bland-Altman (MA) plot of genes for the selected comparison under the <code>Contrast</code> settings plotting mean intensity versus fold-change on the x and y axes, respectively."
     expr_plots_topgenesbarplot_text = "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> settings."
     expr_plots_topfoldchange_text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the <code>Table</code> section."
     
@@ -737,9 +737,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         height = imgH,
         pdf.width=6, pdf.height=6, res=75
     )
-    ## output <- attachModule(output, expr_plots_boxplot_module)
 
-    expr_plots_caption = "<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting significance versus fold-change on the y and x axes, respectively. <b>(b)</b> MA-plot plotting fold-change versus signal intensity on the y and x axes, respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change for selected contrast. <b>(d)</b> Sorted barplot of the differential expression of the selected gene across all contrasts."
+    expr_plots_caption = "<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting fold-change versuson significance the x and y axes, respectively. <b>(b)</b> MA-plot plotting signal intensity versus fold-change on the x and y axes, respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change for selected contrast. <b>(d)</b> Sorted barplot of the differential expression of the selected gene across all contrasts."
 
     ## library(shinyjqui)
     output$expr_plots_UI <- renderUI({

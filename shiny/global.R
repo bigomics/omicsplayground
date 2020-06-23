@@ -1,5 +1,6 @@
 ##access.dirs = c(FILESX, file.path(FILESX,"apache2"),"/var/www/html/logs", "/var/log/apache2")
 access.dirs = c( FILESX, file.path(FILESX,"apache2.log"))
+access.dirs = c("/var/www/html/logs", "/var/log/apache2","log","../log")
 ##access.dirs = file.path(FILESX,"apache2.log")
 ACCESS.LOG <- getAccessLogs(access.dirs, filter.opg=FALSE)
 sum(ACCESS.LOG$table$visitors)
