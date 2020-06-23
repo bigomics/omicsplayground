@@ -43,11 +43,10 @@ responding.docker  <- class(res.docker)=="response"
 message("local ORCA is alive = ",ORCA$process$is_alive())
 message("local ORCA response = ",class(res.local))
 message("local ORCA is responding = ",responding.local)
-
 message("docker ORCA response = ",class(res.docker))
 message("docker ORCA is responding = ",responding.docker)
 
-if(1 && !srv.local && !srv.docker) {
+if(1 && !responding.local && !responding.docker) {
     warning("##### ERROR:: ORCA server not running. please start ORCA. #####")
     stop()
 }
