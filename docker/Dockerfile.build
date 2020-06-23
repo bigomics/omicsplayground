@@ -1,0 +1,50 @@
+## From https://www.r-bloggers.com/deploying-an-r-shiny-app-with-docker/
+## and https://www.bjoern-hartmann.de/post/learn-how-to-dockerize-a-shinyapp-in-7-steps/
+##
+
+#------------------------------------------------------------
+# Start from lastest base+data image
+#------------------------------------------------------------
+
+FROM bigomics/omicsplayground:base
+
+#------------------------------------------------------------
+# Install extra packages required since base (later move to requirements.R!)
+#------------------------------------------------------------
+
+RUN apt install -y xvfb
+# RUN R -e "BiocManager::install(c('randomForest'))"
+# RUN pip install umap-learn
+
+#------------------------------------------------------------
+# Clone fresh code from GitHub
+#------------------------------------------------------------
+WORKDIR /
+RUN rm -fr /omicsplayground \
+    && git clone https://github.com/bigomics/omicsplayground.git \
+    && chmod -R ugo+rwX /omicsplayground
+
+#------------------------------------------------------------
+# Install Plotly/Orca server
+#------------------------------------------------------------
+RUN wget https://github.com/plotly/orca/releases/download/v1.3.1/orca-1.3.1.AppImage \
+    && mv orca-1.3.1.AppImage /usr/local/bin \
+    && cp omicsplayground/ext/bin/orca /usr/local/bin/orca \
+    && chmod ugo+x /usr/local/bin/orca-1.3.1.AppImage /usr/local/bin/orca   
+
+#------------------------------------------------------------
+# Copy example data into Docker image
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+COPY data/geiger2016-arginine.pgx data/
+RUN R -e "setwd('data');source('init.R')"
+
+#------------------------------------------------------------
+# Copy further configuration files into the Docker image
+#------------------------------------------------------------
+COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
+COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
+RUN chmod ugo+rwX /tmp && chmod o+t /tmp
+
+EXPOSE 3838
+CMD ["/usr/bin/shiny-server.sh"]
