@@ -128,7 +128,7 @@ to understand biological functions including GO and KEGG pathway analysis."
                 title = "No KEGG terms in enrichment results",
                 text="",
                 type = "warning")
-            dbg("[functional:getKeggTable] no KEGG terms in gsetX")
+            dbg("[FunctionalModule::getKeggTable] no KEGG terms in gsetX")
             df <- data.frame()
             return(df)
         }
@@ -142,9 +142,9 @@ to understand biological functions including GO and KEGG pathway analysis."
         meta <- ngs$gset.meta$meta[[comparison]]
         meta <- meta[kegg.gsets,]
         mm <- selected_gsetmethods()
-        dbg("[functional:getKeggTable] 1: gset methods = ",mm)
+        dbg("[FunctionalModule::getKeggTable] 1: gset methods = ",mm)
         mm <- intersect(mm, colnames(meta$q))
-        dbg("[functional:getKeggTable] 2: gset methods = ",mm)
+        dbg("[FunctionalModule::getKeggTable] 2: gset methods = ",mm)
         meta.q <- apply(meta$q[,mm,drop=FALSE],1,max,na.rm=TRUE)
         
         df <- data.frame( kegg.id=kegg.ids, pathway=kegg.gsets,
@@ -277,7 +277,6 @@ to understand biological functions including GO and KEGG pathway analysis."
         lockBinding("geneannot.map", as.environment("package:pathview"))
     }
 
-    KEGGIMG = paste0(tempfile(),".png")
     kegg_graph.RENDER <- reactive({
 
         ngs <- inputData()
@@ -339,6 +338,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         curwd
         tmpdir <- tempdir()
         tmpdir
+        dbg("[FunctionalModule::kegg_graph] switch to /tmp folder=",tmpdir,"\n")        
         setwd(tmpdir)
         pv.out <- pathview(
             gene.data = fc, pathway.id=pathway.id, gene.idtype="SYMBOL",
@@ -351,22 +351,17 @@ to understand biological functions including GO and KEGG pathway analysis."
 
         ## back to previous working folder
         setwd(curwd)   
-        dbg("kegg_graph: back to working folder=",getwd(),"\n")
+        dbg("[FunctionalModule::kegg_graph] back to working folder=",getwd(),"\n")
         
         ##width  <- session$clientData$output_kegg_graph_width
         ##height <- session$clientData$output_kegg_graph_height    
         outfile = file.path(tmpdir,paste0("hsa",pathway.id,".pathview.png"))
-        dbg("kegg_graph: outfile=",outfile,"\n")
+        dbg("[FunctionalModule::kegg_graph] outfile=",outfile,"\n")
+        dbg("[FunctionalModule::kegg_graph] file.exists(outfile)=",file.exists(outfile),"\n")
         file.exists(outfile)
         if(!file.exists(outfile)) return(NULL.IMG)
-
-        dbg("kegg_graph: copy",outfile,"to",KEGGIMG,"\n")
-        unlink(KEGGIMG,force=TRUE)
-        file.copy(outfile,KEGGIMG)
-        ## unlink(outfile,force=TRUE)
-        ## img <- readPNG(outfile)
-        
-        list(src = outfile,
+                
+        list(src = outfile, 
              contentType = 'image/png',
              ##width = 1040*0.8, height = 800*0.9, ## actual size: 1040x800
              ##width = 900, height = 600, ## actual size: 1040x800
@@ -425,7 +420,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         req(ngs)
         df <- getKeggTable()
         if(is.null(df) || nrow(df)==0) {
-            dbg("[functional:kegg_actmap.RENDER] emtpy KEGG table")
+            dbg("[FunctionalModule::kegg_actmap.RENDER] emtpy KEGG table")
             ##par(mfrow=c(1,1), mar=c(1,1,1,1)*0, oma=c(0,2,0,1)*0 )
             ##frame()
             return(NULL)
@@ -600,11 +595,11 @@ to understand biological functions including GO and KEGG pathway analysis."
                 title = "No GO graph in enrichment results",
                 text="",
                 type = "warning")
-            dbg("[functional:GO_network.RENDER] no META.GO in pgx object!")
+            dbg("[FunctionalModule::GO_network.RENDER] no META.GO in pgx object!")
             return(NULL)
         }
 
-        dbg("[functional:GO_network.RENDER] 1: len.V(sub2)=",length(V(sub2)))
+        dbg("[FunctionalModule::GO_network.RENDER] 1: len.V(sub2)=",length(V(sub2)))
         
         score = ngs$meta.go$pathscore[,comparison]        
         score = (score/max(abs(score),na.rm=TRUE))
@@ -615,7 +610,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         V(sub2)$label[which(is.na(score)|score==0)] = ""
         pos = sub2$layout
 
-        dbg("[functional:GO_network.RENDER] 1: all(score=0)=",all(score==0))
+        dbg("[FunctionalModule::GO_network.RENDER] 1: all(score=0)=",all(score==0))
         all.zero <- all(score==0)
         
         ##if("prune" %in% input$GO_options) {
@@ -629,7 +624,7 @@ to understand biological functions including GO and KEGG pathway analysis."
             score = score[V(sub2)$name]
         }
 
-        dbg("[functional:GO_network.RENDER] 2: len.V(sub2)=",length(V(sub2)))
+        dbg("[FunctionalModule::GO_network.RENDER] 2: len.V(sub2)=",length(V(sub2)))
         if(length(V(sub2))==0) {
             ## return(NULL)
         }
@@ -715,7 +710,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         ngs <- inputData()
         req(ngs, input$fa_contrast)
         if(is.null(ngs$meta.go)) {
-            dbg("[functional:GO_table.RENDER] no META.GO in pgx object!")
+            dbg("[FunctionalModule::GO_table.RENDER] no META.GO in pgx object!")
             return(NULL)
         }
         
@@ -769,7 +764,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         req(ngs)
 
         if(is.null(ngs$meta.go)) {
-            dbg("[functional:GO_actmap.RENDER] no META.GO in pgx object!")
+            dbg("[FunctionalModule:GO_actmap.RENDER] no META.GO in pgx object!")
             return(NULL)
         }
 

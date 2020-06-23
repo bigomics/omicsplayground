@@ -53,7 +53,7 @@ source(file.path(RDIR,"ngs-cook.r"))
 source(file.path(RDIR,"ngs-fit.r"))
 source(file.path(RDIR,"ngs-functions.R"))
 
-source(file.path(RDIR,"pgx-functions.R"))
+source(file.path(RDIR,"pgx-functions.R"), local=TRUE)
 source(file.path(RDIR,"pgx-contrasts.R"))
 source(file.path(RDIR,"pgx-graph.R"))
 source(file.path(RDIR,"pgx-deconv.R"))
