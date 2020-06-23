@@ -6,36 +6,41 @@
 # Start from lastest base+data image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:testing
+FROM bigomics/omicsplayground:base
 
 #------------------------------------------------------------
 # Install extra packages required since base (later move to requirements.R!)
 #------------------------------------------------------------
 
-RUN apt-get install -y pdftk libbz2-dev
-RUN R -e "install.packages(c('shinydashboardPlus','optparse','docopt','randomForest'))"
-RUN R -e "BiocManager::install(c('rgeolocate','rworldmap','randomForest'))"
-RUN R -e "BiocManager::install(c('org.Mm.eg.db','EnsDb.Hsapiens.v86','EnsDb.Mmusculus.v79'))"
+# RUN R -e "BiocManager::install(c('randomForest'))"
+# RUN pip install umap-learn
 
 #------------------------------------------------------------x
-## Pull from GitHub
+# Pull from GitHub
 #------------------------------------------------------------
-WORKDIR /omicsplayground
-RUN rm data/geiger2016-arginine.pgx
-RUN git pull
+WORKDIR /
+RUN rm -fr /omicsplayground \
+    && git clone https://github.com/bigomics/omicsplayground.git
+
+#------------------------------------------------------------x
+# Install Plotly/Orca server
+#------------------------------------------------------------
+RUN wget https://github.com/plotly/orca/releases/download/v1.3.1/orca-1.3.1.AppImage \
+    && mv orca-1.3.1.AppImage /usr/local/bin \
+    && cp omicsplayground/ext/bin/orca /usr/local/bin/orca \
+    && chmod ugo+x /usr/local/bin/orca-1.3.1.AppImage /usr/local/bin/orca   
 
 #------------------------------------------------------------
-# Copy local data into Docker image
+# Copy example data into Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
-## COPY data-examples/* data/
-COPY data-examples/geiger2016-arginine.pgx data/
-## RUN R -e "setwd('data');source('init.R')"
+# COPY data-examples/* data/
+# RUN R -e "setwd('omicsplayground/data');source('init.R')"
 
 #------------------------------------------------------------
 # Copy further configuration files into the Docker image
 #------------------------------------------------------------
-COPY docker/shiny-server.conf  /etc/shiny-server/shiny-server.conf
+COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
 COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
 RUN chmod ugo+rwX /tmp && chmod o+t /tmp
 
