@@ -1,11 +1,59 @@
 message("[MAIN::global] reading global.R")
 
+## Parse access logs
 ##access.dirs = c(FILESX, file.path(FILESX,"apache2"),"/var/www/html/logs", "/var/log/apache2")
-access.dirs = c( FILESX, file.path(FILESX,"apache2.log"))
 access.dirs = c("/var/www/html/logs", "/var/log/apache2","/var/log/apache",
                 "/var/log/httpd","/var/log")
 ACCESS.LOG <- pgx.parseAccessLogs(access.dirs, filter.opg=FALSE)
 sum(ACCESS.LOG$table$visitors)
+
+##-------------------------------
+## show options
+##-------------------------------
+globalvars <- list(RDIR=RDIR, FILES=FILES, PGX.DIR=PGX.DIR, ACCESS.LOG=access.dirs)
+globalvars <- sapply(globalvars,paste,collapse=" ")
+message("\nPATHS:")
+message(paste(paste(names(globalvars),"\t= ",globalvars),collapse="\n"),"\n")
+
+##-----------------------------------------------------
+## Orca server
+##-----------------------------------------------------
+
+message("*****************************************")
+message("***** starting local ORCA server ********")
+message("*****************************************")
+
+assignInNamespace("correct_orca", function() return(TRUE), ns="plotly")
+ORCA <- plotly::orca_serve(port=5151, keep_alive=TRUE, more_args="--enable-webgl")
+##ORCA <- plotly::orca_serve(port=5151)
+for(i in 1:10) {
+    res.local <- try(httr::POST("http://localhost:5151", body=plotly:::to_JSON("")),silent=TRUE)
+    responding.local   <- class(res.local)=="response"
+    message("local ORCA is responding = ",responding.local)
+    if(responding.local) break
+    Sys.sleep(1)
+}
+
+res.local <- try(httr::POST("http://localhost:5151", body=plotly:::to_JSON("")),silent=TRUE)
+res.docker <- try(httr::POST("http://orca-server:9091", body=plotly:::to_JSON("")),silent=TRUE)
+responding.local   <- class(res.local)=="response"
+responding.docker  <- class(res.docker)=="response"
+
+message("local ORCA is alive = ",ORCA$process$is_alive())
+message("local ORCA response = ",class(res.local))
+message("local ORCA is responding = ",responding.local)
+message("docker ORCA response = ",class(res.docker))
+message("docker ORCA is responding = ",responding.docker)
+
+if(1 && !responding.local && !responding.docker) {
+    warning("##### ERROR:: ORCA server not running. please start ORCA. #####")
+    stop()
+}
+
+##======================================================================
+##==================== FUNCTIONS =======================================
+##======================================================================
+
 
 showHideTab <- function(pgx, slot, tabname, subtab) {
     if(!slot %in% names(pgx)) {
@@ -86,3 +134,10 @@ all.plotly.buttons = c(
     "hoverClosestCartesian","hoverCompareCartesian",
     "resetViews","toggleSpikelines",
     "resetViewMapbox","zoomInMapbox","zoomOutMapbox")
+
+
+
+
+##======================================================================
+##==================== END-OF-FILE =====================================
+##======================================================================
