@@ -695,6 +695,7 @@ immune cell types, expressed genes and pathway activation."
         ngs <- inputData()
         ## if(is.null(ngs)) return(NULL)
         req(ngs)
+        req(input$italk_groups)
         
         require(iTALK)
         db <- iTALK::database
@@ -763,6 +764,7 @@ immune cell types, expressed genes and pathway activation."
         lr.type = c("L","R","LR")[ 1*is.ligand + 2*is.receptor]
         names(lr.type) <- colnames(gx0)
         table(lr.type)
+        dim(gx0)
         res <- list( table=res_cat, exprs=gx0, cell_col=cell_col, lr.type=lr.type)
         return(res)
     })
@@ -874,10 +876,10 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     observe({
         ngs <- inputData()
         req(ngs)
-        ph <- colnames(ngs$samples)
-        sel = 1
-        ct <- grep("cell.fam|cell.type|type",ph,value=TRUE)
-        if(length(ct)>0 && ct[1] %in% ph) sel <- ct[1]
+        ph <- sort(colnames(ngs$samples))
+        sel = ph[1]
+        ct <- grep("cell.fam|cell.type|type|cluster",ph,value=TRUE)
+        if(length(ct)>0) sel <- ct[1]
         updateSelectInput(session, "italk_groups", choices=ph, selected=sel)
     })
 

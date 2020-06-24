@@ -69,7 +69,7 @@ source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
-    load("../data/GSE102908-ibetX.pgx")
+    load("../data/GSE72056-scmelanoma.pgx")
     load("../data/tcga-brca_pub.pgx")
     load("../data/GSE22886-immune.pgx")   
     ngs = pgx.initialize(ngs)
@@ -114,7 +114,7 @@ if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
 
 
 MAINTABS = c("DataView","Clustering","Expression","Enrichment",
-             "Signature","SingleCell","Development")
+             "Signature","CellProfiling","Development")
 
 ## --------------------------------------------------------------------
 ## --------------------------- SERVER ---------------------------------
@@ -125,9 +125,8 @@ server = function(input, output, session) {
     message("\n========================================================")
     message("===================== SERVER ===========================")
     message("========================================================\n")
-
     message("[MAIN] calling modules...")
-
+    
     max.limits <- c("samples" = opt$MAX_SAMPLES,
                     "comparisons" = opt$MAX_COMPARISONS,
                     "genes" = opt$MAX_GENES)
@@ -162,11 +161,11 @@ server = function(input, output, session) {
         name
     })
    
-    ## Hide/show certain sections depending on USER MODE
+    ## Dynamicall hide/show certain sections depending on USERMODE/object
     observe({
         pgx <- env[["load"]][["inputData"]]() ## trigger on change dataset
 
-        ## hide all main tabs
+        ## hide all main tabs until we have an object
         if(is.null(pgx)) {
             lapply(MAINTABS, function(m) hideTab("maintabs",m))
             if(!opt$ENABLE_UPLOAD)  hideTab("load-tabs","Upload data")
@@ -177,16 +176,9 @@ server = function(input, output, session) {
         ## show all main tabs
         lapply(MAINTABS, function(m) showTab("maintabs",m))
                 
-        ## show single-cell module??
-        show.cc <- ( (opt$SINGLE_CELL == "AUTO" && ncol(pgx$counts) >= 500) ||
-                     (opt$SINGLE_CELL == "AUTO" && grepl("^scRNA",pgx$datatype)) ||
-                     opt$SINGLE_CELL == "TRUE")
-        if(is.null(show.cc) || is.na(show.cc) || length(show.cc)==0) show.cc <- FALSE
-        show.cc <- show.cc && "deconv" %in% names(pgx)
-        
         hideTab("view-tabs","Resource info")
         hideTab("maintabs","Development")
-        hideTab("maintabs","SingleCell")
+        hideTab("maintabs","CellProfiling")
         
         hideTab("enrich-tabs1","GeneMap")
         hideTab("clust-tabs2","Feature ranking")
@@ -194,11 +186,6 @@ server = function(input, output, session) {
         hideTab("expr-tabs2","FDR table")
         hideTab("enrich-tabs1","Volcano (methods)")
         hideTab("enrich-tabs2","FDR table")
-
-        hideTab("maintabs","SingleCell")
-        hideTab("scell-tabs1","CNV")
-        hideTab("scell-tabs1","Monocle")        
-        if(show.cc) showTab("maintabs","SingleCell")
 
         if(opt$USER_MODE == "PRO") {
             showTab("clust-tabs2","Feature ranking")
@@ -208,6 +195,10 @@ server = function(input, output, session) {
             showTab("enrich-tabs2","FDR table")
         }
 
+        hideTab("maintabs","CellProfiling")
+        hideTab("scell-tabs1","CNV")  ## DEV only
+        hideTab("scell-tabs1","Monocle") ## DEV only       
+
         if(DEV.VERSION) {
             showTab("maintabs","Development")
             showTab("view-tabs","Resource info")
@@ -216,11 +207,13 @@ server = function(input, output, session) {
             showTab("scell-tabs1","Monocle")
         }
 
-        ## Dynamically show upon availability
+        ## Dynamically show upon availability in pgx object
         if(opt$ENABLE_UPLOAD) showTab("load-tabs","Upload data")            
         showHideTab(pgx, "connectivity", "maintabs", "Similar experiments")
         showHideTab(pgx, "drugs", "maintabs", "Drug connectivity")
-        showHideTab(pgx, "wordcloud", "maintabs", "Word cloud") 
+        showHideTab(pgx, "wordcloud", "maintabs", "Word cloud")
+        showHideTab(pgx, "deconv", "maintabs", "CellProfiling") 
+        
         if(!is.null(ACCESS.LOG)) showTab("load-tabs","Visitors map")            
         
     })
@@ -256,7 +249,7 @@ TABVIEWS <- list(
     "sig" = tabView("Test signatures", SignatureInputs("sig"), SignatureUI("sig")),
     "bio" = tabView("Find biomarkers", BiomarkerInputs("bio"), BiomarkerUI("bio")),
     "cmap" = tabView("Similar experiments", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
-    "scell" = tabView("SingleCell", SingleCellInputs("scell"), SingleCellUI("scell"))    
+    "scell" = tabView("CellProfiling", SingleCellInputs("scell"), SingleCellUI("scell"))    
 )
 
 if(DEV.VERSION) {
@@ -353,7 +346,7 @@ ui = createUI(
         "Expression" = c("expr","cor"),
         "Enrichment" = c("enrich","func","word","drug"),
         "Signature" = c("isect","sig","bio","cmap"),
-        "SingleCell" = "scell",
+        "CellProfiling" = "scell",
         "Development" = c("bc","tcga","multi")
     )
 )

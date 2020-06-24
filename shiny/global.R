@@ -54,7 +54,6 @@ if(1 && !responding.local && !responding.docker) {
 ##==================== FUNCTIONS =======================================
 ##======================================================================
 
-
 showHideTab <- function(pgx, slot, tabname, subtab) {
     if(!slot %in% names(pgx)) {
         cat(paste("[MAIN] object has no ",slot," results. hiding tab.\n"))
