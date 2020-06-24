@@ -5,7 +5,7 @@ pgx.parseAccessLogs <- function(access.dirs, filter.opg=TRUE) {
     ##access.dirs <- c(FILESX, file.path(FILESX,"apache2"),
     ##                 "/var/www/html/logs", "/var/log/apache2")
     ##access.dirs <- c(FILESX)
-    access.dirs <- access.dirs[sapply(access.dirs,dir.exists)]
+    access.dirs <- access.dirs[dir.exists(access.dirs)]
     if(length(access.dirs)==0) return(NULL)
     access.dirs
     access.files <- lapply(access.dirs, dir, pattern="access.log", full.names=TRUE)
