@@ -3,7 +3,9 @@ message("[MAIN::global] reading global.R")
 ## Parse access logs
 ##access.dirs = c(FILESX, file.path(FILESX,"apache2"),"/var/www/html/logs", "/var/log/apache2")
 access.dirs = c("/var/www/html/logs", "/var/log/apache2","/var/log/apache",
-                "/var/log/httpd","/var/log")
+                "/var/log/httpd")
+access.dirs <- access.dirs[dir.exists(access.dirs)]
+access.dirs
 ACCESS.LOG <- pgx.parseAccessLogs(access.dirs, filter.opg=FALSE)
 sum(ACCESS.LOG$table$visitors)
 

@@ -59,15 +59,20 @@ immune cell types, expressed genes and pathway activation."
             tipify(actionLink(ns("sc_info"), "Info", icon=icon("info-circle")),
                    "Show more information about this module."),
             hr(),br(),
-            tipify(selectInput(ns("sc_samplefilter"),"Filter samples:", choices=NULL, multiple=TRUE),
-                   "Filter relevant samples (cells).", placement="top", options = list(container = "body")),
-            tipify( actionLink(ns("sc_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+            tipify( actionLink(ns("sc_options"), "Options",
+                               icon=icon("cog", lib = "glyphicon")),
                    "Toggle options", placement="top"),
             br(),br(),
             conditionalPanel(
                 "input.sc_options % 2 == 1", ns=ns, 
                 tagList(
-                    tipify(radioButtons(ns('sc_clustmethod'),NULL,c("tsne","pca"), inline=TRUE, selected="tsne"),
+                    tipify(selectInput(ns("sc_samplefilter"),"Filter samples:",
+                                       choices=NULL, multiple=TRUE),
+                           "Filter relevant samples (cells).",
+                           placement="top", options = list(container = "body")),
+                    
+                    tipify(radioButtons(ns('sc_clustmethod'),NULL,c("tsne","pca"),
+                                        inline=TRUE, selected="tsne"),
                            "Specify a layout for the figures: t-SNE or PCA-based layout.",
                            options = list(container = "body"))
                 )
