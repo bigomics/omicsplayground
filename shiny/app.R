@@ -120,35 +120,15 @@ ENABLED
 modules <- dir("modules", pattern=".R$")
 for(m in modules) {
     message("[MAIN] loading module ",m)
-    source(paste0("modules/",m))
+    source(paste0("modules/",m), local=TRUE)
 }
-
-## source("modules/LoadingModule.R", local=TRUE)
-## source("modules/DataViewModule.R", local=TRUE)
-## source("modules/ClusteringModule.R", local=TRUE)
-## source("modules/ExpressionModule.R", local=TRUE)
-## source("modules/EnrichmentModule.R", local=TRUE)
-## source("modules/IntersectionModule.R", local=TRUE)
-## source("modules/FunctionalModule.R", local=TRUE)
-## source("modules/WordCloudModule.R", local=TRUE)
-## source("modules/DrugConnectivityModule.R", local=TRUE)
-## source("modules/SignatureModule.R", local=TRUE)
-## source("modules/SingleCellModule.R", local=TRUE)
-## source("modules/CorrelationModule.R", local=TRUE)
-## source("modules/BiomarkerModule.R", local=TRUE)
-## source("modules/QuestionModule.R", local=TRUE)
-## source("modules/ConnectivityModule.R", local=TRUE)
-## source("modules/UsersMapModule.R", local=TRUE)
 
 if(DEV.VERSION && dir.exists("../../omicsplayground-dev")) {
     xmodules <- dir("../../omicsplayground-dev/shiny/modules", pattern=".R$")
     for(m in xmodules) {
         message("[MAIN] loading module ",m)
-        source(paste0("../../omicsplayground-dev/shiny/modules/",m), local=FALSE)
+        source(paste0("../../omicsplayground-dev/shiny/modules/",m), local=TRUE)
     }
-    ##source("../../omicsplayground-dev/shiny/modules/TcgaModule.R", local=TRUE)
-    ##source("../../omicsplayground-dev/shiny/modules/BatchCorrectModule.R", local=TRUE)
-    ##source("../../omicsplayground-dev/shiny/modules/MultiLevelModule.R", local=TRUE)
     ENABLED[c("tcga","bc","multi")] <- TRUE
     modules <- c(modules, xmodules)
 } else {
