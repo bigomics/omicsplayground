@@ -6,7 +6,7 @@ DEV.VERSION=FALSE
 
 ## some custom code
 ##code.textInput
-FILESX = sub("lib$","libx",FILES)
+##FILESX = sub("lib$","libx",FILES)
 
 ##-----------------------------------------------------------------------------
 ## Added GLOBAL info
