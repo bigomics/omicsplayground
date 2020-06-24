@@ -379,7 +379,7 @@ immune cell types, expressed genes and pathway activation."
         id = "sc_icpplot",
         func = sc_icpplotFUNC,
         func2 = sc_icpplotFUNC,
-        title = "Cell type profiling (deconvolution)",
+        ##title = "Cell type profiling (deconvolution)",
         options = sc_icp.opts,
         info.text = sc_icp_info,
         ##caption = sc_icp_caption,
@@ -392,9 +392,9 @@ immune cell types, expressed genes and pathway activation."
     output$sc_icp_UI <- renderUI({
         fillCol(
             height = fullH,
-            flex = c(1,NA),
-            plotWidget(ns("sc_icpplot")),
-            div(HTML(sc_icp_caption),class="caption")
+            flex = c(NA,1),
+            div(HTML(sc_icp_caption),class="caption"),
+            plotWidget(ns("sc_icpplot"))
         )
     })
     outputOptions(output, "sc_icp_UI", suspendWhenHidden=FALSE) ## important!!!
@@ -550,7 +550,7 @@ immune cell types, expressed genes and pathway activation."
         id = "sc_markersplot",
         func = sc_markersplotFUNC,
         func2 = sc_markersplotFUNC,        
-        title = "Distribution of marker genes",
+        ##title = "Distribution of marker genes",
         options = sc_markersplot.opts,
         info.text = sc_markersplot_info,
         pdf.height = 10, pdf.width=10, 
@@ -576,9 +576,9 @@ immune cell types, expressed genes and pathway activation."
     output$sc_markersplot_UI <- renderUI({
         fillCol(
             height = fullH,
-            flex = c(1,NA),
-            plotWidget(ns("sc_markersplot")),
-            div(HTML(sc_markersplot_caption),class="caption")
+            flex = c(NA,1),
+            div(HTML(sc_markersplot_caption),class="caption"),
+            plotWidget(ns("sc_markersplot")) 
         )
     })
 
@@ -680,9 +680,9 @@ immune cell types, expressed genes and pathway activation."
     output$sc_cnaModule_UI <- renderUI({
         fillCol(
             height = fullH,
-            flex = c(1,NA),
-            plotWidget(ns("sc_cnaplot")),
-            div(HTML(sc_cnaModule_caption),class="caption")
+            flex = c(NA,1),
+            div(HTML(sc_cnaModule_caption),class="caption"),
+            plotWidget(ns("sc_cnaplot"))
         )
     })
     outputOptions(output, "sc_cnaModule_UI", suspendWhenHidden=FALSE) ## important!!!
@@ -888,7 +888,8 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     output$italk_panel_UI <- renderUI({
         fillCol(
             height = fullH,
-            flex = c(NA,1,0.05,NA), 
+            flex = c(NA,NA,1), 
+            div(HTML(italk_panel_caption),class="caption"),
             inputPanel(
                 tipify( selectInput(ns("italk_groups"),NULL, choices=""),
                        "Select the phenotype parameter to divide samples into groups.",
@@ -905,9 +906,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
                 plotWidget(ns("italk_LRPlot")),
                 plotWidget(ns("italk_heatmap"))
                 ## plotWidget(ns("italk_netview"))
-            ),
-            br(),
-            div(HTML(italk_panel_caption),class="caption")
+            )
         )
     })
     outputOptions(output, "italk_panel_UI", suspendWhenHidden=FALSE) ## important!!!
@@ -1190,7 +1189,9 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     output$monocle_panel_UI <- renderUI({
         fillCol(
             height = fullH,
-            flex = c(1,0.05,NA), 
+            flex = c(NA,0.05,1), 
+            div(HTML(monocle_panel_caption), class="caption"),
+            br(),
             ##------- Page layout -------
             fillRow(
                 flex = c(1.2,1),
@@ -1200,9 +1201,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
                     plotWidget(ns("monocle_plotTrajectory")),
                     plotWidget(ns("monocle_plotGene"))
                 )
-            ),
-            br(),
-            div(HTML(monocle_panel_caption), class="caption")
+            )
         )
     })
     outputOptions(output, "monocle_panel_UI", suspendWhenHidden=FALSE) ## important!!!
@@ -1325,9 +1324,9 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     output$sc_phenoModule_UI <- renderUI({    
         fillCol(
             height = fullH,
-            flex = c(1,NA), 
-            plotWidget(ns("sc_phenoplot")),
-            div(HTML(sc_phenoModule_caption), class="caption")
+            flex = c(NA,1), 
+            div(HTML(sc_phenoModule_caption), class="caption"),
+            plotWidget(ns("sc_phenoplot"))
         )
     })
     outputOptions(output, "sc_phenoModule_UI", suspendWhenHidden=FALSE) ## important!!!
@@ -1582,9 +1581,9 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     output$sc_crosstabModule_UI <- renderUI({    
         fillCol(
             height = fullH,
-            flex = c(1,NA), 
-            plotWidget(ns("sc_crosstabPlot")),
-            div(HTML(sc_crosstabModule_caption), class="caption")
+            flex = c(NA,1),
+            div(HTML(sc_crosstabModule_caption), class="caption"),
+            plotWidget(ns("sc_crosstabPlot"))
         )
     })
     outputOptions(output, "sc_crosstabModule_UI", suspendWhenHidden=FALSE) ## important!!!
@@ -1660,9 +1659,9 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     output$sc_cytoModule_UI <- renderUI({    
         fillCol(
             height = fullH,
-            flex = c(1,NA), 
-            plotWidget(ns("sc_cytoplot")),
-            div(HTML(sc_cytoModule_caption), class="caption")
+            flex = c(NA,1),
+            div(HTML(sc_cytoModule_caption), class="caption"),            
+            plotWidget(ns("sc_cytoplot"))
         )
     })
     outputOptions(output, "sc_cytoModule_UI", suspendWhenHidden=FALSE) ## important!!!

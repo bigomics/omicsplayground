@@ -28,7 +28,8 @@ WORKDIR /omicsplayground
 COPY R /omicsplayground/R
 COPY shiny /omicsplayground/shiny
 RUN R -e "setwd('R');source('requirements.R')"
-RUN R -e "install.packages(c('umap','corrplot','wordcloud','metap'))"
+RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
+    'metap','brew'))"
 
 #------------------------------------------------------------
 # Other packages

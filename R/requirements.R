@@ -101,6 +101,7 @@ install.packages("webshot")
 webshot::install_phantomjs()
 devtools::install_version("mnormt", version="1.5-7", repos="http://cran.us.r-project.org") 
 install.packages(c("metap"))
+install.packages(c("brew"))
 
 ##---------------------------------------------------------------------
 ## Install latest from GITHUB
