@@ -12,7 +12,7 @@ FROM bigomics/omicsplayground:build
 # Install extra packages required since base
 #------------------------------------------------------------
 
-RUN apt install -y xvfb
+# RUN apt install -y xvfb
 # RUN R -e "BiocManager::install(c('randomForest'))"
 # RUN pip install umap-learn
 
