@@ -69,8 +69,8 @@ PGX.DIR = c("../data","../data-extra")
 PGX.DIR = "../data"
 dir.exists(PGX.DIR)
 
-##source("../R/pgx-files.R", local=TRUE)  ## pass local vars
-source("../R/pgx-files.R") 
+source("../R/pgx-files.R", local=TRUE)  ## pass local vars
+##source("../R/pgx-files.R",local=FALSE) 
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
@@ -87,11 +87,11 @@ message("/n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 ## ------------------------ READ FUNCTIONS ----------------------------
 ## --------------------------------------------------------------------
 
-source("../R/pgx-include.R")  ## pass local vars
+source("../R/pgx-include.R", local=TRUE)  ## pass local vars
 ## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 source("../R/pgx-init.R")  ## pass local vars
-source("../R/pgx-functions.R")  ## pass local vars
+##source("../R/pgx-functions.R", local=TRUE)  ## pass local vars
 source("global.R")
 
 if(0) {
