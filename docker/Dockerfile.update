@@ -17,6 +17,14 @@ FROM bigomics/omicsplayground:build
 RUN R -e "install.packages(c('brew'))"
 # RUN pip install umap-learn
 
+
+#------------------------------------------------------------
+# Copy extra data into Docker image
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+COPY data/GSE72056-scmelanoma.pgx data/
+RUN R -e "setwd('data');source('init.R')"
+
 #------------------------------------------------------------
 # Pull latest from GitHub
 #------------------------------------------------------------

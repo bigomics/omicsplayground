@@ -40,10 +40,10 @@ source("../R/pgx-include.R", local=TRUE)  ## pass local vars
 source("global.R", local=TRUE)
 
 
+message("\n")
 message("*****************************************")
 message("******** parsing OPTIONS file ***********")
 message("*****************************************")
-message("\n")
 
 source(file.path(RDIR,"pgx-files.R"), local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
