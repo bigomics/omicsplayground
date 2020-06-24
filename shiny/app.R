@@ -20,9 +20,9 @@ message("#################################################################")
 message("\n\n")
 
 
-message("==================================================")
-message("===================== INIT =======================")
-message("==================================================\n")
+message("==========================================================")
+message("======================= INIT =============================")
+message("==========================================================\n")
 
 
 message("*******************************************")
@@ -108,6 +108,11 @@ if(DEV.VERSION && dir.exists("../../omicsplayground-dev")) {
 }
 ENABLED
 
+has.sigdb <- length(dir(FILESX,pattern="sigdb.*h5")>0)
+has.sigdb
+if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
+
+
 MAINTABS = c("DataView","Clustering","Expression","Enrichment",
              "Signature","SingleCell","Development")
 
@@ -117,9 +122,9 @@ MAINTABS = c("DataView","Clustering","Expression","Enrichment",
 
 server = function(input, output, session) {
 
-    message("\n===================================================")
-    message("===================== SERVER ======================")
-    message("===================================================\n")
+    message("\n========================================================")
+    message("===================== SERVER ===========================")
+    message("========================================================\n")
 
     message("[MAIN] calling modules...")
 
@@ -265,12 +270,13 @@ if(DEV.VERSION) {
     )
 }
 
+
 tabs = "load"
 createUI <- function(tabs)
 {
-    message("\n===================================================")
-    message("======================= UI ========================")
-    message("===================================================\n")
+    message("\n======================================================")
+    message("======================= UI ===========================")
+    message("======================================================\n")
 
     version <- scan("../VERSION", character())[1]
     TITLE = paste(opt$TITLE,version)
@@ -298,7 +304,9 @@ createUI <- function(tabs)
         waiter_show_on_load(spin_fading_circles()) # place at the bottom
     )
 
+    ##-------------------------------------
     ## create TAB list
+    ##-------------------------------------
     createNavbarMenu <- function(title, tabs, icon=NULL) {
         tablist <- TABVIEWS[tabs]
         names(tablist) <- NULL
@@ -323,6 +331,9 @@ createUI <- function(tabs)
     tablist[["helpmenu"]] <- help.tabs
     names(tablist) <- NULL
 
+    ##-------------------------------------
+    ## create navbarPage
+    ##-------------------------------------
     selected = "Home"    
     do.call( navbarPage, c(tablist,
                            title=title, id=id,
