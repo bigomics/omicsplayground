@@ -602,8 +602,8 @@ immune cell types, expressed genes and pathway activation."
         tipify(selectInput(ns("sc_dcmethod2"),"method:", choices=NULL),
                "Choose a method for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        tipify(checkboxInput(ns("sc_group2"), "group", FALSE),
-               "Group/ungroup the samples (cells).",
+        tipify(checkboxInput(ns("sc_group2"), "group", TRUE),
+               "Group the samples/cells by grouping factor.",
                options=list(container="body"))
     )
 
