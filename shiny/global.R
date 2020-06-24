@@ -29,8 +29,12 @@ ORCA <- plotly::orca_serve(port=5151, keep_alive=TRUE, more_args="--enable-webgl
 for(i in 1:10) {
     res.local <- try(httr::POST("http://localhost:5151", body=plotly:::to_JSON("")),silent=TRUE)
     responding.local   <- class(res.local)=="response"
-    message("local ORCA is responding = ",responding.local)
-    if(responding.local) break
+    ##message("local ORCA is responding = ",responding.local)
+    cat(".")
+    if(responding.local) {
+        cat("\n")
+        break
+    }
     Sys.sleep(1)
 }
 

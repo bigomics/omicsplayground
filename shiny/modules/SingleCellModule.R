@@ -8,24 +8,25 @@ SingleCellInputs <- function(id) {
 
 SingleCellUI <- function(id) {
     ns <- NS(id)  ## namespace
-    fillRow(
-        flex = c(1.6,0.10,1),
+    fillCol(
+        flex = c(1),
         height = 780,
         tabsetPanel(
             id = ns("tabs1"),
             tabPanel("Cell type",uiOutput(ns("sc_icp_UI"))),
+            tabPanel("Mapping",uiOutput(ns("sc_mapping_UI"))),
             tabPanel("Markers",uiOutput(ns("sc_markersplot_UI"))),
             tabPanel("CNV",uiOutput(ns("sc_cnaModule_UI"))),
             tabPanel("iTALK",uiOutput(ns("italk_panel_UI"))),
             tabPanel("Monocle",uiOutput(ns("monocle_panel_UI")))            
-        ),
-        br(),
-        tabsetPanel(
-            id = ns("tabs2"),
-            tabPanel("Phenotypes",uiOutput(ns("sc_phenoModule_UI"))),
-            tabPanel("Proportions",uiOutput(ns("sc_crosstabModule_UI"))),
-            tabPanel("CytoPlot",uiOutput(ns("sc_cytoModule_UI")))      
         )
+        ## br(),
+        ## tabsetPanel(
+        ##     id = ns("tabs2"),
+        ##     tabPanel("Phenotypes",uiOutput(ns("sc_phenoModule_UI"))),
+        ##     tabPanel("Proportions",uiOutput(ns("sc_crosstabModule_UI"))),
+        ##     tabPanel("CytoPlot",uiOutput(ns("sc_cytoModule_UI")))      
+        ## )
     )
 }
 
@@ -68,9 +69,7 @@ immune cell types, expressed genes and pathway activation."
                 tagList(
                     tipify(radioButtons(ns('sc_clustmethod'),NULL,c("tsne","pca"), inline=TRUE, selected="tsne"),
                            "Specify a layout for the figures: t-SNE or PCA-based layout.",
-                           options = list(container = "body")),
-                    tipify(checkboxInput(ns("sc_group"), "group", FALSE),
-                           "Group/ungroup the samples (cells).", options = list(container = "body"))
+                           options = list(container = "body"))
                 )
             )
         )
@@ -105,11 +104,12 @@ immune cell types, expressed genes and pathway activation."
         refsets <- sort(names(ngs$deconv))
         refsel <- grep("LM22",refsets,value=TRUE)
         updateSelectInput(session,"sc_refset",choices=refsets, selected=refsel)
-        ## updateSelectInput(session,"sc_refset2",choices=refsets, selected=refsel)
+        updateSelectInput(session,"sc_refset2",choices=refsets, selected=refsel)
         
         dcmethods <- names(ngs$deconv[[1]])
         dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
         updateSelectInput(session, "sc_dcmethod", choices=dcmethods, selected=dcsel)
+        updateSelectInput(session, "sc_dcmethod2", choices=dcmethods, selected=dcsel)
 
     })
 
@@ -129,11 +129,6 @@ immune cell types, expressed genes and pathway activation."
         zx <- zx[,kk,drop=FALSE]
         zx = head(zx[order(-apply(zx,1,sd)),],1000)
         zx = t(scale(t(zx)))  ## scale??
-
-        if(FALSE && input$sc_group) {
-            grp = ngs$Y[colnames(zx),"group"]
-            zx = t(apply( zx, 1, function(x) tapply(x, grp, mean)))
-        }
 
         pos = NULL
         if(input$sc_clustmethod=="tsne") {
@@ -180,9 +175,10 @@ immune cell types, expressed genes and pathway activation."
         return( list(pos=pos, clust=clust) )
     })
 
-    ##================================================================================
+    
+    ##==========================================================================
     ## Cell type
-    ##================================================================================
+    ##==========================================================================
 
     getDeconvResults <- reactive({
         ngs <- inputData()
@@ -202,7 +198,7 @@ immune cell types, expressed genes and pathway activation."
         return(results)
     })
 
-    sc_icpplotFUNC %<a-% reactive({
+    sc_icp.plotFUNC %<a-% reactive({
         require(RColorBrewer)
         
         ngs <- inputData()
@@ -239,83 +235,10 @@ immune cell types, expressed genes and pathway activation."
         score <- score[ii,jj]
         score0 <- score
         pos <- pos[rownames(score),]
-        
-        if(input$sc_group && input$sc_view!="distribution") {
-            grp <- ngs$samples[rownames(score),"group"]
-            pos <- apply(pos,2,function(x) tapply(x,grp,median))
-            score <- apply(score,2,function(x) tapply(x,grp,mean))
-            ii <- hclust(dist(score))$order
-            jj <- hclust(dist(t(score)))$order
-            score <- score[ii,jj]        
-        }    
         b0 <- 1 + 0.85*pmax(30 - ncol(score), 0)
-
-        if(input$sc_view=="dotmap") {
-            require(corrplot)
-            ##gx.heatmap(score)
-            par(mfrow=c(1,1), mar=c(0,0,8,1), oma=c(1,1,1,1)*0.5 )
-            score3 <- score**1.5
-            rownames(score3) <- paste("",rownames(score3),"  ")
-            tl.srt=90
-            tl.cex=ifelse(nrow(score)>60,0.7,0.85)
-            if(max(sapply(rownames(score3),nchar))>30) tl.srt=45
-            corrplot( t(score3), mar=c(b0,1,4,1),
-                     cl.lim = c(0,max(score3)), cl.pos = "n",
-                     tl.cex = tl.cex, tl.col = "grey20",
-                     tl.srt = tl.srt )
-        }
-
-        if(input$sc_view=="heatmap") {
-
-            ##if(PRO.VERSION) {
-            usermode = USERMODE()
-            if(!is.null(usermode) && usermode >= 'PRO') {            
-                kk <- head(colnames(score)[order(-colMeans(score**2))],18)
-                kk <- intersect(colnames(score),kk)
-                all.scores <- ngs$deconv[["LM22"]]
-                all.scores <- ngs$deconv[[input$sc_refset]]
-                if(input$sc_group && input$sc_view!="distribution") {
-                    grp <- ngs$samples[rownames(all.scores[[1]]),"group"]
-                    for(i in 1:length(all.scores)) {
-                        all.scores[[i]] <- apply(all.scores[[i]],2,
-                                                 function(x) tapply(x,grp,mean))
-                        ii <- rownames(score)
-                        all.scores[[i]] <- all.scores[[i]][ii,kk]
-                    }
-                }    
-
-                nm <- length(all.scores)
-                m=3;n=2
-                if(nm>6) {m=3;n=3}
-                if(nm>9) {m=4;n=3}
-                rr <- 2+max(nchar(colnames(score)))/2
-                par(mfrow=c(m,n), mar=c(0,0.3,2,0.3), oma=c(10,0,0,rr), xpd=TRUE)
-                k=1
-                for(k in 1:length(all.scores)) {
-                    ii <- rownames(score)
-                    score1 <- all.scores[[k]][ii,kk]
-                    ##score1 <- score1[rownames(score0),kk]
-                    if(k%%n!=0) colnames(score1) <- rep("",ncol(score1))
-                    if((k-1)%/%n!=(nm-1)%/%n) rownames(score1) <- rep("",nrow(score1))
-                    score1 <- score1 / (1e-8+rowSums(score1))
-                    if(nrow(score1) > 100)  rownames(score1) <- rep("",nrow(score1))
-                    gx.imagemap( t(score1**1), cex=0.85, main="", clust=FALSE)
-                    title(main=names(all.scores)[k], cex.main=1.1, line=0.4, font.main=1)
-                }
-                
-            } else {
-                score1 <- score
-                score1 <- score1 / (1e-8+rowSums(score1))            
-                if(nrow(score1) > 100)  rownames(score1) <- rep("",nrow(score))
-                gx.heatmap( t(score1**2), scale="none", 
-                           cexRow=1, cexCol=0.6, col=heat.colors(16),
-                           mar=c(b0,15), key=FALSE, keysize=0.5)
-            }
-            
-        }    
         
-        if(input$sc_view=="distribution") {
-            
+        ##if(input$sc_view=="distribution")
+        {
             cex1 = 1.2
             cex1 <- 0.9*c(2.2,1.1,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
             klrpal = colorRampPalette(c("grey90", "grey50", "red3"))(16)
@@ -354,31 +277,27 @@ immune cell types, expressed genes and pathway activation."
     })
 
     sc_icp.opts = tagList(
-        ##radioButtons('sc_view',NULL,c("distribution","dotmap","heatmap"), inline=TRUE),
-        tipify(selectInput(ns("sc_view"),"plot type:", choices=c("distribution","dotmap","heatmap")),
-               "Specify the plot type: distribution, dotmap, or heatmap.",
-               placement="top", options = list(container = "body")),
         tipify(selectInput(ns("sc_refset"), "reference:", choices=NULL),
                "Select a reference dataset for the cell type prediction.",
                placement="top", options = list(container = "body")),
         tipify(selectInput(ns("sc_dcmethod"),"method:", choices=NULL),
                "Choose a method for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        tipify(radioButtons(ns("sc_sortby"),"Sort by:", choices=c("probability","name"), inline=TRUE),
-               "Sort by name or probability.", placement="top", options = list(container = "body"))
+        tipify(radioButtons(ns("sc_sortby"),"Sort by:",
+                            choices=c("probability","name"), inline=TRUE),
+               "Sort by name or probability.", placement="top",
+               options = list(container = "body"))
     )
 
     sc_icp_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
-
-    sc_icp_captionSAVE = "> **Cell type profiling (deconvolution).** The cell type can be computationally inferred using so-called deconvolution methods by matching the (absolute) expression profile to a known reference set. This reference set can be a cell type reference database but also cancer types, tissue types or cell lines. Reference set: `r renderText(input$sc_refset)`. Deconvolution method: `r renderText(input$sc_dcmethod)`"
 
     sc_icp_caption = "<b>Cell type profiling (deconvolution).</b> The cell type can be computationally inferred using so-called deconvolution methods by matching the (absolute) expression profile to a known reference set. This reference set can be a cell type reference database but also cancer types, tissue types or cell lines."
     
     callModule(
         plotModule,
         id = "sc_icpplot",
-        func = sc_icpplotFUNC,
-        func2 = sc_icpplotFUNC,
+        func = sc_icp.plotFUNC,
+        func2 = sc_icp.plotFUNC,
         ##title = "Cell type profiling (deconvolution)",
         options = sc_icp.opts,
         info.text = sc_icp_info,
@@ -389,22 +308,597 @@ immune cell types, expressed genes and pathway activation."
     )
     ##output <- attachModule(output, sc_icp_module)
 
+    ## output$sc_icp_UI <- renderUI({
+    ##     fillCol(
+    ##         height = fullH,
+    ##         flex = c(NA,1),
+    ##         div(HTML(sc_icp_caption),class="caption"),
+    ##         plotWidget(ns("sc_icpplot"))
+    ##     )
+    ## })
+    ## outputOptions(output, "sc_icp_UI", suspendWhenHidden=FALSE) ## important!!!
+
+    ##===========================================================================
+    ## Phenotypes
+    ##===========================================================================
+
+    ##output$sc_phenoplot <- renderPlot({
+    sc_pheno.plotFUNC %<a-% reactive({
+        ##if(!input$tsne.all) return(NULL)
+        require(RColorBrewer)
+        ngs <- inputData()
+        ##if(is.null(ngs)) return(NULL)
+        req(ngs)
+        
+        clust <- pfGetClusterPositions()
+        if(is.null(clust)) return(NULL)
+        
+        pos <- ngs$tsne2d
+        pos <- clust$pos
+        sel <- rownames(pos)
+        pheno = colnames(ngs$Y)
+
+        ## layout
+        par(mfrow = c(3,2), mar=c(0.3,0.7,2.8,0.7))
+        if(length(pheno)>6) par(mfrow = c(4,3), mar=c(0.3,0.4,2.8,0.4)*0.8)
+        if(length(pheno)>12) par(mfrow = c(5,4), mar=c(0.2,0.2,2.5,0.2)*0.8)
+        
+        cex1 <- 1.4*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
+        cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
+        cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
+
+        ## is it a float/number???
+        is.num <- function(y, fmin=0.1) {
+            suppressWarnings(numy <- as.numeric(as.character(y)))
+            t1 <- !all(is.na(numy)) && is.numeric(numy)
+            t2 <- (length(unique(y))/length(y)) > fmin
+            (t1 && t2)
+        }
+        
+        i=6    
+        for(i in 1:min(20,length(pheno))) {
+
+            px=4
+            px=pheno[i]
+            y = ngs$Y[sel,px]
+            y[which(y %in% c(NA,""," ","NA","na"))] <- NA
+            if(sum(!is.na(y))==0) next
+
+            if(is.num(y)) {
+                klrpal = colorRampPalette(c("grey90", "grey50", "red3"))(16)
+                y = rank(as.numeric(y))
+                ny <- round(1 + 15*(y - min(y))/(max(y)-min(y)))
+                klr0 = klrpal[ny]
+            } else {
+                y = factor(as.character(y))
+                klrpal = COLORS
+                klrpal <- paste0(col2hex(klrpal),"99")
+                klr0 = klrpal[y]
+            }
+
+            jj = which(is.na(klr0))
+            if(length(jj)) klr0[jj] <- "#AAAAAA22"
+            plot( pos, pch=19, cex=cex1, col=klr0,fg = gray(0.5), bty = "o",
+                 xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
+
+            if(!is.num(y)) {
+                if(input$sc_labelmode=="legend") {
+                    legend("bottomright", legend=levels(y), fill=klrpal,
+                           cex=0.9, y.intersp=0.8, bg="white")
+                } else {
+                    grp.pos <- apply(pos,2,function(x) tapply(x,y,mean,na.rm=TRUE))
+                    grp.pos <- apply(pos,2,function(x) tapply(x,y,median,na.rm=TRUE))
+                    nvar <- length(setdiff(y,NA))
+                    if(nvar==1) {
+                        grp.pos <- matrix(grp.pos,nrow=1)
+                        rownames(grp.pos) <- setdiff(y,NA)[1]
+                    }
+                    
+                    labels = rownames(grp.pos)
+                    ## title("\u2591\u2592\u2593") 
+                    boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
+                    boxes = sapply(nchar(labels),function(n) paste(rep("█",n),collapse=""))
+                    ##boxes = sapply(nchar(labels),function(n) paste(rep("#",n),collapse=""))
+                    cex2 <- c(1.4,1.2,1,0.8)[cut(length(labels),breaks=c(-1,5,10,20,999))]    
+                    text( grp.pos, labels=boxes, cex=cex2, col="#CCCCCC99")
+                    text( grp.pos, labels=labels, font=2, cex=1.1*cex2, col="white")
+                    text( grp.pos, labels=labels, font=2, cex=cex2)
+                    ##text( grp.pos[,], labels=rownames(grp.pos), font=2, cex=cex1**0.5)
+                }
+            }
+            title(tolower(pheno[i]), cex.main=1.3, line=0.5, col="grey40")
+        }
+    })
+
+
+    sc_phenoplot.opts <- tagList(
+        tipify( radioButtons(ns('sc_labelmode'),'Label:',c("groups","legend"), inline=TRUE),
+               "Select whether you want the group labels to be plotted inside the plots or in a seperate legend.")
+    )
+
+    sc_phenoModule_info = "<strong>Phenotypes.</strong> This figure visualizes the distribution of the phenotype information. In the plot options, you can select whether you want the group labels to be plotted inside the plots or in a seperate legend."
+
+    sc_phenoModule_caption = "<b>Phenotype plots.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
+   
+    callModule(
+        plotModule,
+        id = "sc_phenoplot",
+        func = sc_pheno.plotFUNC,
+        func2 = sc_pheno.plotFUNC,
+        options = sc_phenoplot.opts,
+        info.text = sc_phenoModule_info,
+        ##caption = sc_phenoModule_caption
+        pdf.width=5, pdf.height=8,
+        height = c(fullH-100,750), width = c("100%",500),
+        res = c(85,85)
+    )
+
+    
     output$sc_icp_UI <- renderUI({
-        fillCol(
-            height = fullH,
-            flex = c(NA,1),
-            div(HTML(sc_icp_caption),class="caption"),
-            plotWidget(ns("sc_icpplot"))
+        fillRow(
+            flex = c(1.5,0.08,1),
+            fillCol(
+                height = fullH,
+                flex = c(NA,1),
+                div(HTML(sc_icp_caption),class="caption"),
+                plotWidget(ns("sc_icpplot"))
+            ),
+            br(),
+            fillCol(
+                height = fullH,
+                flex = c(NA,1), 
+                div(HTML(sc_phenoModule_caption), class="caption"),
+                plotWidget(ns("sc_phenoplot"))
+            )
         )
     })
     outputOptions(output, "sc_icp_UI", suspendWhenHidden=FALSE) ## important!!!
+
     
-    ##================================================================================
+    ##=========================================================================
+    ## Type mapping (heatmap)
+    ##=========================================================================
+
+    getDeconvResults2 <- reactive({
+        ngs <- inputData()
+        req(ngs)
+
+        method = "meta"
+        method <- input$sc_dcmethod2
+        if(is.null(method)) return(NULL)
+        
+        refset = "LM22"
+        refset <- input$sc_refset2
+        if(!("deconv" %in% names(ngs))) return(NULL)
+        results <- ngs$deconv[[refset]][[method]]
+        ## threshold everything (because DCQ can be negative!!!)
+        results <- pmax(results,0)
+        
+        return(results)
+    })
+
+    sc_mapping.plotFUNC %<a-% reactive({
+        require(RColorBrewer)
+        
+        ngs <- inputData()
+        alertDataLoaded(session,ngs)
+        req(ngs)
+        
+        clust <- pfGetClusterPositions()
+        if(is.null(clust)) return(NULL)
+        pos <- ngs$tsne2d
+        pos <- clust$pos
+        
+        score <- ngs$deconv[["LM22"]][["meta"]]
+        score = getDeconvResults2()
+        if(is.null(score) || length(score)==0  ) return(NULL)
+        
+        ## normalize
+        score <- score[rownames(pos),,drop=FALSE]
+        score[is.na(score)] <- 0
+        score <- pmax(score,0)
+        ##score <- score - min(score,na.rm=TRUE) + 0.01 ## subtract background??
+        ##score <- score / (1e-20 + sqrt(rowMeans(score**2,na.rm=TRUE)))
+        score <- score / (1e-20 + rowSums(score))
+        score <- tanh(score/mean(abs(score)))
+        score <- score / max(score,na.rm=TRUE)
+        summary(as.vector(score))
+
+        ## take top10 features
+        jj.top <- unique(as.vector(apply(score,1,function(x) head(order(-x),10))))
+        score <- score[,jj.top]
+        score <- score[,order(-colMeans(score**2))]    
+        score <- score[,1:min(50,ncol(score))]
+        ii <- hclust(dist(score))$order
+        jj <- hclust(dist(t(score)))$order
+        score <- score[ii,jj]
+        score0 <- score
+        pos <- pos[rownames(score),]
+        
+        if(input$sc_group2)
+        {
+            grp <- ngs$samples[rownames(score),"group"]
+            pos <- apply(pos,2,function(x) tapply(x,grp,median))
+            score <- apply(score,2,function(x) tapply(x,grp,mean))
+            ii <- hclust(dist(score))$order
+            jj <- hclust(dist(t(score)))$order
+            score <- score[ii,jj]        
+        }    
+        b0 <- 0.1 + 0.70*pmax(30 - ncol(score), 0)
+
+        if(input$sc_view2 == "dotmap") {
+            require(corrplot)
+            ##gx.heatmap(score)
+            par(mfrow=c(1,1), mar=c(0,0,8,1), oma=c(1,1,1,1)*0.5 )
+            score3 <- score**1.5
+            rownames(score3) <- paste("",rownames(score3),"  ")
+            tl.srt=90
+            tl.cex=ifelse(nrow(score)>60,0.7,0.85)
+            if(max(sapply(rownames(score3),nchar))>30) tl.srt=45
+            corrplot( t(score3), mar=c(b0,1,4,1),
+                     cl.lim = c(0,max(score3)), cl.pos = "n",
+                     tl.cex = tl.cex, tl.col = "grey20",
+                     tl.srt = tl.srt )
+        }
+
+        if(input$sc_view2 == "heatmap") {
+            ##if(PRO.VERSION) {
+            ##usermode = USERMODE()
+            usermode = "PRO"
+            if(!is.null(usermode) && usermode >= 'PRO') {            
+                kk <- head(colnames(score)[order(-colMeans(score**2))],18)
+                kk <- intersect(colnames(score),kk)
+                all.scores <- ngs$deconv[["LM22"]]
+                all.scores <- ngs$deconv[[input$sc_refset2]]
+                if(input$sc_group2 && input$sc_view2!="distribution") {
+                    grp <- ngs$samples[rownames(all.scores[[1]]),"group"]
+                    for(i in 1:length(all.scores)) {
+                        all.scores[[i]] <- apply(all.scores[[i]],2,
+                                                 function(x) tapply(x,grp,mean))
+                        ii <- rownames(score)
+                        all.scores[[i]] <- all.scores[[i]][ii,kk]
+                    }
+                }    
+
+                nm <- length(all.scores)
+                m=3;n=2
+                if(nm>6) {m=3;n=3}
+                if(nm>9) {m=4;n=3}
+                rr <- 2+max(nchar(colnames(score)))/2
+                par(mfrow=c(m,n), mar=c(0,0.3,2,0.3), oma=c(10,0,0,rr), xpd=TRUE)
+                k=1
+                for(k in 1:length(all.scores)) {
+                    ii <- rownames(score)
+                    score1 <- all.scores[[k]][ii,kk]
+                    ##score1 <- score1[rownames(score0),kk]
+                    if(k%%n!=0) colnames(score1) <- rep("",ncol(score1))
+                    if((k-1)%/%n!=(nm-1)%/%n) rownames(score1) <- rep("",nrow(score1))
+                    score1 <- score1 / (1e-8+rowSums(score1))
+                    if(nrow(score1) > 100)  rownames(score1) <- rep("",nrow(score1))
+                    gx.imagemap( t(score1**1), cex=0.85, main="", clust=FALSE)
+                    title(main=names(all.scores)[k], cex.main=1.1, line=0.4, font.main=1)
+                }
+                
+            } else {
+                score1 <- score
+                score1 <- score1 / (1e-8+rowSums(score1))            
+                if(nrow(score1) > 100)  rownames(score1) <- rep("",nrow(score))
+                gx.heatmap( t(score1**2), scale="none", 
+                           cexRow=1, cexCol=0.6, col=heat.colors(16),
+                           mar=c(b0,15), key=FALSE, keysize=0.5)
+            }
+            
+        }    
+    })
+
+    SC_VIEWTYPES2 = c("dotmap"="dotmap","heatmap (by method)"="heatmap")    
+    sc_mapping.opts = tagList(
+        tipify(selectInput(ns("sc_view2"),"plot type:",SC_VIEWTYPES2),
+               "Specify the plot type: dotmap, or heatmap.",
+               placement="top", options = list(container = "body")),
+        tipify(selectInput(ns("sc_refset2"), "reference:", choices=NULL),
+               "Select a reference dataset for the cell type prediction.",
+               placement="top", options = list(container = "body")),
+        tipify(selectInput(ns("sc_dcmethod2"),"method:", choices=NULL),
+               "Choose a method for the cell type prediction.",
+               placement="top", options = list(container = "body")),
+        tipify(checkboxInput(ns("sc_group2"), "group", FALSE),
+               "Group/ungroup the samples (cells).",
+               options=list(container="body"))
+    )
+
+    sc_mapping_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
+
+    sc_mapping_caption = "<b>Cell type mapping.</b> The inferred cell types can be by matched to the phenotype variable of the data set. The reference set can be a cell type reference database but also cancer types, tissue types or cell lines."
+    
+    callModule(
+        plotModule,
+        id = "sc_mappingplot",
+        func = sc_mapping.plotFUNC,
+        func2 = sc_mapping.plotFUNC,
+        ##title = "Cell type profiling (deconvolution)",
+        options = sc_mapping.opts,
+        info.text = sc_mapping_info,
+        ##caption = sc_icp_caption,
+        pdf.width=8, pdf.height=8, 
+        height = c(fullH-80,780), width = c("100%",1000),
+        res = c(85,95)
+    )
+    ##output <- attachModule(output, sc_icp_module
+    
+    ##======================================================================
+    ## Proportions
+    ##======================================================================
+
+    ##output$statsplot <- renderPlot({
+    sc_crosstab.plotFUNC %<a-% reactive({
+        ##if(!input$tsne.all) return(NULL)
+        require(RColorBrewer)
+        ngs <- inputData()
+
+        req(ngs)
+        req(input$sc_crosstabpheno, input$sc_crosstabvar, input$sc_crosstabgene)
+        
+        scores = ngs$deconv[[1]][[1]]  ## just an example...
+        if(input$sc_crosstabvar == "<cell type>") {
+            scores <- getDeconvResults()
+            if(is.null(scores)) return(NULL)
+            scores <- pmax(scores,0) ## ??
+        } else {
+            x <- as.character(ngs$Y[,1])
+            x <- as.character(ngs$Y[,input$sc_crosstabvar])
+            x[is.na(x)] <- "_"
+            scores <- model.matrix( ~ 0 + x )
+            rownames(scores) <- rownames(ngs$Y)
+            colnames(scores) <- sub("^x","",colnames(scores))
+        }
+        dim(scores)
+
+        ## restrict to selected sample set
+        kk <- head(1:nrow(scores),1000)
+        kk <- 1:nrow(scores)
+        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$sc_samplefilter)
+        scores <- scores[kk,,drop=FALSE]
+        scores <- scores[,which(colSums(scores)>0),drop=FALSE]
+        scores[which(is.na(scores))] <- 0    
+        dim(scores)
+
+        ## expected counts per stat level
+        ##kk.counts <- colSums(ngs$counts[,kk,drop=FALSE])  ## total count of selected samples
+        kk.counts <- colSums(2**ngs$X[,kk,drop=FALSE])  ## approximate counts from log2X
+        grp.counts <- ( t(scores / rowSums(scores)) %*% matrix(kk.counts,ncol=1))[,1]  
+        
+        getProportionsTable <- function(pheno, is.gene=FALSE) {    
+            y <- NULL
+            ##if("gene" %in% input$sc_crosstaboptions) {
+            if( is.gene ) {
+                xgene <- ngs$genes[rownames(ngs$X),]$gene_name
+                gx <- ngs$X[which(xgene == pheno),kk,drop=FALSE]
+                gx.highTH <- mean(gx, na.rm=TRUE)
+                y <- paste(pheno,c("low","high"))[ 1 + 1*(gx >= gx.highTH)]
+                table(y)
+            } else if(pheno %in% colnames(ngs$samples)) {
+                y <- ngs$samples[kk,1]
+                y <- ngs$samples[kk,pheno]
+                pheno <- tolower(pheno)
+            } else if(pheno == "<cell type>") {
+                res1 <- getDeconvResults()
+                res1 <- pmax(res1,0) ## ??
+                res1 <- res1[kk,,drop=FALSE]
+                ##res1 <- res1[,which(colSums(res1)>0),drop=FALSE]
+                y <- colnames(res1)[max.col(res1)]  ## take maximum col??
+                remove(res1)
+                pheno <- "<cell type>"
+            } else {
+                return(NULL)
+            }   
+            
+            ## calculate proportions by group
+            grp <- factor(as.character(y))
+            ngrp <- length(levels(grp))
+            grp.score <- apply(scores, 2, function(x) tapply(x,grp,mean,na.rm=TRUE))
+            ngrp
+            if(ngrp==1) {
+                grp.score <- matrix(grp.score,nrow=1)
+                rownames(grp.score) <- y[1]
+                colnames(grp.score) <- colnames(scores)
+            }
+            
+            ## weighted counts
+            grp.score[is.na(grp.score)] <- 0
+            grps <- levels(grp)
+            grp.score
+            fy <-  (table(y) / sum(!is.na(y)))
+            jj <- match(rownames(grp.score),names(fy))
+            grp.score <-  grp.score * as.vector(fy[jj])
+            ## normalize to total 100% 
+            grp.score <- grp.score / (1e-20+sum(grp.score))
+            
+            ## reduce to maximum number of items (x-axis)
+            if(0) {
+                ##jj <- which(colSums(grp.score) > 0.001)
+                jj <- order(-colSums(grp.score))
+                j1 <- head(jj, 25)  ## define maximum number of items
+                j0 <- setdiff(jj, j1)
+                grp.score0 <- grp.score[,j1,drop=FALSE]
+                grp.counts0 <- grp.counts[j1]
+                if(length(j0)>0) {
+                    grp.score0 <- cbind( grp.score0, "other"=rowSums(grp.score[,j0,drop=FALSE]))
+                    grp.counts0 <- c(grp.counts0, "other"=sum(grp.counts[j0]))
+                }
+                grp.score <- grp.score0
+                grp.counts <- grp.counts0
+                grp.score <- t( t(grp.score) / (1e-20+colSums(grp.score)))  ##
+            }
+            
+            ## normalize to total 100% and reduce to maximum number of items (y-axis)
+            jj <- order(-rowSums(grp.score))
+            j1 <- head(jj, 10)  ## define maximum number of items
+            j0 <- setdiff(jj, j1)
+            grp.score0 <- grp.score[j1,,drop=FALSE]
+            if(length(j0)>0) {
+                grp.score0 <- rbind( grp.score0, "other"=colSums(grp.score[j0,,drop=FALSE]))
+            }
+            grp.score <- grp.score0
+            grp.score <- t( t(grp.score) / (1e-20+colSums(grp.score)))  ##
+
+            ## cluster columns??
+            ##dist1 <- dist(t(scale(grp.score)))
+            dist1 <- dist(t(grp.score))
+            dist1[is.na(dist1)] <- mean(dist1,na.rm=TRUE)
+            jj <- hclust(dist1)$order
+            grp.score <- grp.score[,jj,drop=FALSE]
+            return(grp.score)
+        }
+
+        ## select phenotype variable
+        head(ngs$samples)
+        pheno=1
+        pheno="cluster"
+        pheno="activated"
+        pheno="cell.type"
+        pheno="<cell type>"
+        pheno <- input$sc_crosstabpheno
+        if(is.null(pheno)) return(NULL)
+
+        ##pheno="cluster"
+        grp.score1 <- getProportionsTable(pheno, is.gene=FALSE)    
+        grp.score2 <- NULL
+        gene = ngs$genes$gene_name[1]
+        gene = input$sc_crosstabgene
+        if(gene != "<none>") {
+            grp.score2 <- getProportionsTable(pheno=gene, is.gene=TRUE)
+            kk <- colnames(grp.score2)[order(grp.score2[1,])]
+            grp.score2  <- grp.score2[,match(kk,colnames(grp.score2))]
+            grp.score1  <- grp.score1[,match(kk,colnames(grp.score1))]
+        }
+        
+        jj <- match(colnames(grp.score1),names(grp.counts))
+        grp.counts <- grp.counts[jj] / 1e6  ## per million
+        names(grp.counts) = colnames(grp.score1)
+
+        ##-------------- plot by estimated cell.type ----------------------
+        
+        ##par(mar = c(4,6,2,3))
+        layout(matrix(c(1,2,3), 3,1), heights=c(2,4,3))
+        if(!is.null(grp.score2)) {
+            layout(matrix(c(1,2,3,4), 4,1), heights=c(2.2,1,4,2))
+        }
+        
+        ## top bar with counts
+        par(mar = c(0,5,5.3,3), mgp=c(2.0,0.8,0) )
+        xlim <- c(0,1.2*length(grp.counts))  ## reserves space for legend
+        barplot( grp.counts, col="grey50", ylab="counts (M)", cex.axis=0.8,
+                cex.lab=0.8, names.arg=NA, xpd=NA, xlim=1.3*xlim, ## log="y", 
+                ylim=c(0.01, max(grp.counts)), yaxs="i" )
+        ## title(pheno, cex.main=1.2, line=2, col="grey40")
+        
+        ## middle plot (gene)
+        if(!is.null(grp.score2)) {
+            klrpal2 = COLORS[1:nrow(grp.score2)]
+            klrpal2 = rev(grey.colors(nrow(grp.score2),start=0.45))
+            par(mar = c(0,5,0.3,3), mgp=c(2.4,0.9,0) )
+            barplot( 100*grp.score2, col=klrpal2, las=3, srt=45,
+                    xlim=1.3*xlim, ylim=c(0,99.99),
+                    names.arg = rep(NA, ncol(grp.score2)),
+                    ylab="(%)", cex.axis=0.90)
+            legend(1.02*xlim[2], 100, legend=rownames(grp.score2),
+                   fill=klrpal2, xpd=TRUE, cex=0.8, y.intersp=0.8,
+                   bg="white", bty="n")
+        }
+
+        if(1) {
+            ## main proportion graph
+            klrpal1 = COLORS[1:nrow(grp.score1)]
+            par(mar = c(4,5,0.3,3), mgp=c(2.4,0.9,0) )
+            barplot( 100*grp.score1, col=klrpal1, las=3, srt=45, xlim=1.3*xlim,
+                    ylim=c(0,99.99), ylab="proportion (%)", cex.axis=0.90)
+            legend(1.02*xlim[2], 100, legend=rev(rownames(grp.score1)),
+                   fill=rev(klrpal1), xpd=TRUE, cex=0.8, y.intersp=0.8,
+                   bg="white", bty="n")
+        }
+        
+    })
+
+
+    sc_crosstab.opts <- tagList(
+        tipify(selectInput(ns("sc_crosstabvar"),label="x-axis:", choices=NULL, multiple=FALSE),
+                           "Choose a predefined phenotype group on the x-axis.",
+                           placement="top", options = list(container = "body")),
+        tipify(selectInput(ns("sc_crosstabpheno"),label="y-axis:", choices=NULL, multiple=FALSE),
+               "Choose a predefined phenotype group on the y-axis.",
+               placement="top", options = list(container = "body")),
+        tipify(selectInput(ns("sc_crosstabgene"),label="gene:", choices=NULL, multiple=FALSE),
+               "Visualize the expression barplot of a gene by specifying the gene name.",
+               placement="top", options = list(container = "body"))
+        ##checkboxGroupInput('sc_crosstaboptions','',c("gene"), inline=TRUE, width='50px')
+        ##selectInput("sc_crosstabgene",label=NULL, choices=NULL, multiple=FALSE),
+        ##br(), cellArgs=list(width='80px')
+    )
+
+    sc_crosstabModule_info = "The <strong>Proportions tab</strong> visualizes the interrelationships between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
+    
+    sc_crosstabModule_caption = "<b>Proportion plot.</b> Plot visualizing the overlap between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
+   
+    callModule(
+        plotModule,
+        id = "sc_crosstabPlot",
+        func = sc_crosstab.plotFUNC,
+        func2 = sc_crosstab.plotFUNC,
+        options = sc_crosstab.opts,
+        info.text = sc_crosstabModule_info,
+        ##caption = sc_crosstabModule_caption,
+        pdf.width=8, pdf.height=8,
+        height = c(fullH-80,760), width = c("100%",650),
+        res=c(110,110)
+        )
+
+    observe({
+        ngs <- inputData()
+        ##if(is.null(ngs)) return(NULL)
+        req(ngs)
+
+        ##if(is.null(input$sc_crosstaboptions)) return(NULL)
+        pheno0 <- grep("group|sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
+        pheno0 <- grep("sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
+        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$sc_samplefilter)
+        nphenolevel <- apply(ngs$samples[kk,pheno0,drop=FALSE],2,function(v) length(unique(v)))
+        pheno0 = pheno0[which(nphenolevel>1)]
+        genes <- sort(as.character(ngs$genes$gene_name))
+        pheno1 <- c("<cell type>",pheno0)
+        genes1 <- c("<none>",genes)
+        updateSelectInput(session, "sc_crosstabvar", choices=pheno1)
+        updateSelectInput(session, "sc_crosstabpheno", choices=pheno1)
+        updateSelectizeInput(session, "sc_crosstabgene", choices=genes1, server=TRUE)
+
+    })
+
+    output$sc_mapping_UI <- renderUI({
+        fillRow(
+            flex = c(1.3,0.08,1),
+            fillCol(
+                height = fullH,
+                flex = c(NA,1),
+                div(HTML(sc_mapping_caption),class="caption"),
+                plotWidget(ns("sc_mappingplot"))
+            ),
+            br(),
+            fillCol(
+                height = fullH,
+                flex = c(NA,1),
+                div(HTML(sc_crosstabModule_caption), class="caption"),
+                plotWidget(ns("sc_crosstabPlot"))
+            )
+        )
+    })
+    outputOptions(output, "sc_mapping_UI", suspendWhenHidden=FALSE) ## important!
+    
+    ##==========================================================================
     ## Markers
-    ##================================================================================
+    ##==========================================================================
     
     ##output$sc_markersplot <- renderPlot({
-    sc_markersplotFUNC %<a-% reactive({
+    sc_markers.plotFUNC %<a-% reactive({
         ##if(!input$tsne.all) return(NULL)
         require(RColorBrewer)
         
@@ -417,20 +911,20 @@ immune cell types, expressed genes and pathway activation."
         pos <- clust$pos
         
         ##markers <- ngs$families[["CD family"]]
-        if(is.null(input$sc_features)) return(NULL)
-        if(input$sc_features=="") return(NULL)
+        if(is.null(input$sc_mrk_features)) return(NULL)
+        if(input$sc_mrk_features=="") return(NULL)
 
         term = ""
-        if(input$sc_level=="gene") {
+        if(input$sc_mrk_level=="gene") {
             markers <- ngs$families[["Transcription factors (ChEA)"]]
-            if(input$sc_search!="") {
-                term = input$sc_search
+            if(input$sc_mrk_search!="") {
+                term = input$sc_mrk_search
                 jj <- grep(term, ngs$genes$gene_name, ignore.case=TRUE )
                 markers <- ngs$genes$gene_name[jj]
                 term = paste("filter:",term)
-            } else if(input$sc_features %in% names(ngs$families)) {
-                markers <- ngs$families[[input$sc_features]]
-                term = input$sc_features
+            } else if(input$sc_mrk_features %in% names(ngs$families)) {
+                markers <- ngs$families[[input$sc_mrk_features]]
+                term = input$sc_mrk_features
             } else {
                 markers <- ngs$genes$gene_name
             }
@@ -439,17 +933,17 @@ immune cell types, expressed genes and pathway activation."
             jj <- match(markers,toupper(ngs$genes$gene_name))
             pmarkers <- intersect(rownames(ngs$genes)[jj],rownames(ngs$X))
             gx <- ngs$X[pmarkers,rownames(pos),drop=FALSE]
-        } else if(input$sc_level=="geneset") {
+        } else if(input$sc_mrk_level=="geneset") {
             ##markers <- ngs$families[["Immune checkpoint (custom)"]]
             markers <- COLLECTIONS[[1]]
-            if(is.null(input$sc_features)) return(NULL)
-            ft <- input$sc_features
-            if(input$sc_search=="" && ft %in% names(COLLECTIONS)) {
-                markers <- COLLECTIONS[[input$sc_features]]
+            if(is.null(input$sc_mrk_features)) return(NULL)
+            ft <- input$sc_mrk_features
+            if(input$sc_mrk_search=="" && ft %in% names(COLLECTIONS)) {
+                markers <- COLLECTIONS[[input$sc_mrk_features]]
                 markers <- intersect(markers, rownames(ngs$gsetX))
-                term = input$sc_features
-            } else if(input$sc_search!="") {
-                term = input$sc_search
+                term = input$sc_mrk_features
+            } else if(input$sc_mrk_search!="") {
+                term = input$sc_mrk_search
                 jj <- grep(term, rownames(ngs$gsetX), ignore.case=TRUE )
                 markers <- rownames(ngs$gsetX)[jj]
                 term = paste("filter:",term)
@@ -477,9 +971,9 @@ immune cell types, expressed genes and pathway activation."
         klrpal = paste0(col2hex(klrpal),"66")
 
         NP=25
-        if(input$sc_level=="gene") NP=36
+        if(input$sc_mrk_level=="gene") NP=36
         top.gx = head(gx,NP)  ## match number of plot below!
-        if(input$sc_sortby2=="name") {
+        if(input$sc_mrk_sortby=="name") {
             top.gx = top.gx[order(rownames(top.gx)),,drop=FALSE]
         } else {
             top.gx = top.gx[order(-rowMeans(top.gx)),,drop=FALSE]
@@ -488,7 +982,7 @@ immune cell types, expressed genes and pathway activation."
         ##top.gx <- tanh(top.gx/mean(top.gx))
 
         plevel="gene"
-        plevel <- input$sc_level
+        plevel <- input$sc_mrk_level
         
         par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,1,1)*0.5)
         par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,6,1)*0.5)
@@ -528,17 +1022,20 @@ immune cell types, expressed genes and pathway activation."
     })
 
     sc_markersplot.opts = tagList(
-        tipify(selectInput(ns("sc_level"),"Level:", choices=c("gene","geneset")),
+        tipify(selectInput(ns("sc_mrk_level"),"Level:", choices=c("gene","geneset")),
                "Specify the level of the marker analysis: gene or gene set level.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("sc_features"),"Feature set:", choices=NULL, multiple=FALSE),
+        tipify(selectInput(ns("sc_mrk_features"),"Feature set:", choices=NULL,
+                           multiple=FALSE),
                "Select a particular functional group for the analysis.",
                placement="top", options = list(container = "body")),
-        tipify(textInput(ns("sc_search"),"Filter:"),
+        tipify(textInput(ns("sc_mrk_search"),"Filter:"),
                "Filter markers by a specific keywords.",
                placement="top", options = list(container = "body")),
-        tipify(radioButtons(ns("sc_sortby2"),"Sort by:", choices=c("intensity","name"), inline=TRUE),
-               "Sort by name or intensity.", placement="top", options = list(container = "body"))
+        tipify(radioButtons(ns("sc_mrk_sortby"),"Sort by:",
+                            choices=c("intensity","name"), inline=TRUE),
+               "Sort by name or intensity.", placement="top",
+               options = list(container = "body"))
     )
 
     sc_markersplot_info = "The Markers section produces for the top marker genes, a t-SNE with samples colored in red when the gene is overexpressed in corresponding samples. The top genes (N=36) with the highest standard deviation are plotted. <p>In the plotting options, users can also restrict the marker analysis by selecting a particular functional group in which genes are divided into 89 groups, such as chemokines, transcription factors, genes involved in immune checkpoint inhibition, and so on."
@@ -548,8 +1045,8 @@ immune cell types, expressed genes and pathway activation."
     callModule(
         plotModule,
         id = "sc_markersplot",
-        func = sc_markersplotFUNC,
-        func2 = sc_markersplotFUNC,        
+        func = sc_markers.plotFUNC,
+        func2 = sc_markers.plotFUNC,        
         ##title = "Distribution of marker genes",
         options = sc_markersplot.opts,
         info.text = sc_markersplot_info,
@@ -561,30 +1058,122 @@ immune cell types, expressed genes and pathway activation."
 
     observe({
         ngs <- inputData()
-        req(ngs,input$sc_level)    
+        req(ngs,input$sc_mrk_level)    
         choices <- names(ngs$families)
         selected = grep("^CD",choices,ignore.case=TRUE,value=TRUE)[1]
-        if(input$sc_level=="geneset") {
+        if(input$sc_mrk_level=="geneset") {
             nn <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))
             choices <- names(COLLECTIONS)[nn>=5]
             selected = grep("HALLMARK",names(COLLECTIONS),ignore.case=TRUE,value=TRUE)
         }
         updateSelectInput(session, "sc_features", choices=choices, selected=selected)
+        updateSelectInput(session, "sc_mrk_features", choices=choices, selected=selected)
 
     })
     
-    output$sc_markersplot_UI <- renderUI({
-        fillCol(
-            height = fullH,
-            flex = c(NA,1),
-            div(HTML(sc_markersplot_caption),class="caption"),
-            plotWidget(ns("sc_markersplot")) 
-        )
+    ## output$sc_markersplot_UI <- renderUI({
+    ##     fillCol(
+    ##         height = fullH,
+    ##         flex = c(NA,1),
+    ##         div(HTML(sc_markersplot_caption),class="caption"),
+    ##         plotWidget(ns("sc_markersplot")) 
+    ##     )
+    ## })
+
+
+    ##======================================================================
+    ## CytoPlot
+    ##======================================================================
+
+    ##output$sc_cytoplot <- renderPlot({
+    sc_cyto.plotFUNC %<a-% reactive({
+        ##if(!input$tsne.all) return(NULL)
+        require(RColorBrewer)
+        ngs <- inputData()
+        ##if(is.null(ngs)) return(NULL)
+        req(ngs)
+        
+        if(is.null(input$sc_cytovar1)) return(NULL)
+        if(is.null(input$sc_cytovar2)) return(NULL)
+        if(input$sc_cytovar1=="") return(NULL)
+        if(input$sc_cytovar2=="") return(NULL)
+
+        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$sc_samplefilter)    
+        gene1 <- input$sc_cytovar1
+        gene2 <- input$sc_cytovar2
+        ##if(gene1 == gene2) return(NULL)
+        par(mfrow=c(1,1), mar=c(12,4,6,2))
+        pgx.cytoPlot( ngs, gene1, gene2, samples=kk, cex=0.8,
+                     col="grey60", cex.names=1)
+        
     })
 
-    ##================================================================================
+    sc_cyto.opts = tagList(
+        tipify(selectInput(ns("sc_cytovar1"),label="x-axis:", choices=NULL, multiple=FALSE),
+               "Select your prefered gene on the x-axis.",
+               placement="top", options = list(container = "body")),
+        tipify(selectInput(ns("sc_cytovar2"),label="y-axis:", choices=NULL, multiple=FALSE),
+               "Choose your prefered gene on the y-axis.",
+               placement="top", options = list(container = "body"))
+    )
+
+    sc_cytoModule_info = "For each combination of gene pairs, the platform can generate a cytometry-like plot of samples under the Cytoplot tab. The aim of this feature is to observe the distribution of samples in relation to the selected gene pairs. For instance, when applied to single-cell sequencing data from immunological cells, it can mimic flow cytometry analysis and distinguish T helper cells from the other T cells by selecting the CD4 and CD8 gene combination."
+    
+    sc_cytoModule_caption = "<b>Cyto plot.</b> This plot shows the distribution of samples in relation to the expression of selected gene pairs. It mimics the scatter plots used for gating in flow cytometry analysis."    
+    
+    callModule(
+        plotModule,
+        id = "sc_cytoplot",
+        func = sc_cyto.plotFUNC,
+        func2 = sc_cyto.plotFUNC,
+        options = sc_cyto.opts,
+        info.text = sc_cytoModule_info,
+        ## caption = sc_cytoModule_caption,
+        pdf.width=6, pdf.height=8,
+        height = c(fullH-80,780), width = c("100%",600),
+        res = c(80,80)
+    )
+
+    observe({
+        ngs <- inputData()
+        ##if(is.null(ngs)) return(NULL)
+        req(ngs)
+        xgenes <- ngs$genes[rownames(ngs$X),]$gene_name
+        genes <- sort(as.character(xgenes))
+        g1 <- grep("^CD4|^CD8",genes,value=TRUE)[1]
+        g2 <- grep("^CD79|^CD3[DEG]|^CD37",genes,value=TRUE)[1]
+        if(length(g1)==0) g1 <- genes[1]
+        if(length(g2)==0) g2 <- genes[2]
+        updateSelectizeInput(session, "sc_cytovar1", choices=genes, selected=g1, server=TRUE)
+        updateSelectizeInput(session, "sc_cytovar2", choices=genes, selected=g2, server=TRUE)
+    })
+   
+    
+    output$sc_markersplot_UI <- renderUI({
+        fillRow(
+            flex = c(1.3,0.08,1),
+            fillCol(
+                height = fullH,
+                flex = c(NA,1),
+                div(HTML(sc_markersplot_caption),class="caption"),
+                plotWidget(ns("sc_markersplot")) 
+            ),
+            br(),
+            fillCol(
+                height = fullH,
+                flex = c(NA,1),
+                div(HTML(sc_cytoModule_caption), class="caption"),
+                plotWidget(ns("sc_cytoplot"))
+            )
+        )
+    })
+    outputOptions(output, "sc_markersplot_UI", suspendWhenHidden=FALSE) ## important!!!
+
+
+    
+    ##==========================================================================
     ## CNV
-    ##================================================================================
+    ##==========================================================================
 
     getCNAfromExpression <- reactive({
         ngs <- inputData()
@@ -613,13 +1202,13 @@ immune cell types, expressed genes and pathway activation."
     })
 
     ##output$sc_cnaplot <- renderPlot({
-    sc_cnaplotFUNC %<a-% reactive({
+    sc_cna.plotFUNC %<a-% reactive({
         require(RColorBrewer)
         ##return(NULL)    
         ngs <- inputData()
         req(ngs,input$sc_cna_method,input$sc_cna_annotvar,input$sc_cna_orderby)
 
-        dbg("[profiling:sc_cnaplotFUNC] reacted")
+        dbg("[profiling:sc_cna.plotFUNC] reacted")
         
         if(input$sc_cna_method=="inferCNV") {
             res <- getCNAfromExpression.inferCNV()
@@ -656,8 +1245,8 @@ immune cell types, expressed genes and pathway activation."
     callModule(
         plotModule,
         id = "sc_cnaplot",
-        func = sc_cnaplotFUNC,
-        func2 = sc_cnaplotFUNC,
+        func = sc_cna.plotFUNC,
+        func2 = sc_cna.plotFUNC,
         options = sc_cna.opts,
         title = "Inferred copy number variation (CNV)",
         info.text = sc_cnaModule_info,
@@ -687,9 +1276,9 @@ immune cell types, expressed genes and pathway activation."
     })
     outputOptions(output, "sc_cnaModule_UI", suspendWhenHidden=FALSE) ## important!!!
     
-    ##================================================================================
+    ##===========================================================================
     ## iTALK
-    ##================================================================================
+    ##===========================================================================
     
     italk_getResults <- reactive({
         ngs <- inputData()
@@ -885,6 +1474,9 @@ a circle plot. The width of the arrow represents the expression level/log fold c
 
     italk_panel_caption = "<b>Visualization of ligand-receptor interaction.</b> The iTALK R package is designed to profile and visualize the ligand-receptor mediated intercellular cross-talk signals from single-cell RNA sequencing data (scRNA-seq). iTALK uses a manually curated list of ligand-receptor gene pairs further classified into 4 categories based on the primary function of the ligand: cytokines/chemokines, immune checkpoint genes, growth factors, and others. <b>(a)</b> The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as a circle plot. <b>(b)</b> The heatmap visualizes the expression level/log fold change of the ligand/receptor genes." 
 
+    
+    italk_panel_caption = "<b>Visualization of ligand-receptor interaction.</b> The iTALK R package is designed to profile and visualize the ligand-receptor mediated intercellular cross-talk signals from single-cell RNA sequencing data (scRNA-seq). iTALK uses a manually curated list of ligand-receptor gene pairs further classified into 4 categories based on the primary function of the ligand: cytokines/chemokines, immune checkpoint genes, growth factors, and others. <b>(a)</b> The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as a circle plot. <b>(b)</b> The heatmap visualizes the expression level/log fold change of the ligand/receptor genes.  <b>(c)</b> The NetView plot visualizes the communication structure of ligand-receptor genes as a graph." 
+
     output$italk_panel_UI <- renderUI({
         fillCol(
             height = fullH,
@@ -904,17 +1496,16 @@ a circle plot. The width of the arrow represents the expression level/log fold c
                 ##flex = c(1,1,1),
                 flex = c(1,1),
                 plotWidget(ns("italk_LRPlot")),
-                plotWidget(ns("italk_heatmap"))
-                ## plotWidget(ns("italk_netview"))
+                plotWidget(ns("italk_heatmap")),
+                plotWidget(ns("italk_netview"))
             )
         )
     })
     outputOptions(output, "italk_panel_UI", suspendWhenHidden=FALSE) ## important!!!
-    
-    
-    ##================================================================================
+        
+    ##==========================================================================
     ## Trajectory (dev)
-    ##================================================================================
+    ##==========================================================================
 
     monocle_getResults <- reactive({
 
@@ -1206,465 +1797,6 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     })
     outputOptions(output, "monocle_panel_UI", suspendWhenHidden=FALSE) ## important!!!
     
-    ##================================================================================
-    ## Phenotypes
-    ##================================================================================
-
-    ##output$sc_phenoplot <- renderPlot({
-    sc_phenoplotFUNC %<a-% reactive({
-        ##if(!input$tsne.all) return(NULL)
-        require(RColorBrewer)
-        ngs <- inputData()
-        ##if(is.null(ngs)) return(NULL)
-        req(ngs)
-        
-        clust <- pfGetClusterPositions()
-        if(is.null(clust)) return(NULL)
-        
-        pos <- ngs$tsne2d
-        pos <- clust$pos
-        sel <- rownames(pos)
-        pheno = colnames(ngs$Y)
-
-        ## layout
-        par(mfrow = c(3,2), mar=c(0.3,0.7,2.8,0.7))
-        if(length(pheno)>6) par(mfrow = c(4,3), mar=c(0.3,0.4,2.8,0.4)*0.8)
-        if(length(pheno)>12) par(mfrow = c(5,4), mar=c(0.2,0.2,2.5,0.2)*0.8)
-        
-        cex1 <- 1.4*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
-        cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
-        cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
-
-        ## is it a float/number???
-        is.num <- function(y, fmin=0.1) {
-            suppressWarnings(numy <- as.numeric(as.character(y)))
-            t1 <- !all(is.na(numy)) && is.numeric(numy)
-            t2 <- (length(unique(y))/length(y)) > fmin
-            (t1 && t2)
-        }
-        
-        i=6    
-        for(i in 1:min(20,length(pheno))) {
-
-            px=4
-            px=pheno[i]
-            y = ngs$Y[sel,px]
-            y[which(y %in% c(NA,""," ","NA","na"))] <- NA
-            if(sum(!is.na(y))==0) next
-
-            if(is.num(y)) {
-                klrpal = colorRampPalette(c("grey90", "grey50", "red3"))(16)
-                y = rank(as.numeric(y))
-                ny <- round(1 + 15*(y - min(y))/(max(y)-min(y)))
-                klr0 = klrpal[ny]
-            } else {
-                y = factor(as.character(y))
-                klrpal = COLORS
-                klrpal <- paste0(col2hex(klrpal),"99")
-                klr0 = klrpal[y]
-            }
-
-            jj = which(is.na(klr0))
-            if(length(jj)) klr0[jj] <- "#AAAAAA22"
-            plot( pos, pch=19, cex=cex1, col=klr0,fg = gray(0.5), bty = "o",
-                 xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
-
-            if(!is.num(y)) {
-                if(input$sc_labelmode=="legend") {
-                    legend("bottomright", legend=levels(y), fill=klrpal,
-                           cex=0.9, y.intersp=0.8, bg="white")
-                } else {
-                    grp.pos <- apply(pos,2,function(x) tapply(x,y,mean,na.rm=TRUE))
-                    grp.pos <- apply(pos,2,function(x) tapply(x,y,median,na.rm=TRUE))
-                    nvar <- length(setdiff(y,NA))
-                    if(nvar==1) {
-                        grp.pos <- matrix(grp.pos,nrow=1)
-                        rownames(grp.pos) <- setdiff(y,NA)[1]
-                    }
-                    
-                    labels = rownames(grp.pos)
-                    ## title("\u2591\u2592\u2593") 
-                    boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
-                    boxes = sapply(nchar(labels),function(n) paste(rep("█",n),collapse=""))
-                    ##boxes = sapply(nchar(labels),function(n) paste(rep("#",n),collapse=""))
-                    cex2 <- c(1.4,1.2,1,0.8)[cut(length(labels),breaks=c(-1,5,10,20,999))]    
-                    text( grp.pos, labels=boxes, cex=cex2, col="#CCCCCC99")
-                    text( grp.pos, labels=labels, font=2, cex=1.1*cex2, col="white")
-                    text( grp.pos, labels=labels, font=2, cex=cex2)
-                    ##text( grp.pos[,], labels=rownames(grp.pos), font=2, cex=cex1**0.5)
-                }
-            }
-            title(tolower(pheno[i]), cex.main=1.3, line=0.5, col="grey40")
-        }
-    })
-
-
-    sc_phenoplot.opts <- tagList(
-        tipify( radioButtons(ns('sc_labelmode'),'Label:',c("groups","legend"), inline=TRUE),
-               "Select whether you want the group labels to be plotted inside the plots or in a seperate legend.")
-    )
-
-    sc_phenoModule_info = "<strong>Phenotypes.</strong> This figure visualizes the distribution of the phenotype information. In the plot options, you can select whether you want the group labels to be plotted inside the plots or in a seperate legend."
-
-    sc_phenoModule_caption = "<b>Phenotype plots.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
-   
-    callModule(
-        plotModule,
-        id = "sc_phenoplot",
-        func = sc_phenoplotFUNC,
-        func2 = sc_phenoplotFUNC,
-        options = sc_phenoplot.opts,
-        info.text = sc_phenoModule_info,
-        ##caption = sc_phenoModule_caption
-        pdf.width=5, pdf.height=8,
-        height = c(fullH-100,750), width = c("100%",500),
-        res = c(85,85)
-    )
-
-    output$sc_phenoModule_UI <- renderUI({    
-        fillCol(
-            height = fullH,
-            flex = c(NA,1), 
-            div(HTML(sc_phenoModule_caption), class="caption"),
-            plotWidget(ns("sc_phenoplot"))
-        )
-    })
-    outputOptions(output, "sc_phenoModule_UI", suspendWhenHidden=FALSE) ## important!!!
-    
-    ##================================================================================
-    ## Proportions
-    ##================================================================================
-
-    ##output$statsplot <- renderPlot({
-    sc_crosstabPlotFUNC %<a-% reactive({
-        ##if(!input$tsne.all) return(NULL)
-        require(RColorBrewer)
-        ngs <- inputData()
-
-        req(ngs)
-        req(input$sc_crosstabpheno, input$sc_crosstabvar, input$sc_crosstabgene)
-        
-        scores = ngs$deconv[[1]][[1]]  ## just an example...
-        if(input$sc_crosstabvar == "<cell type>") {
-            scores <- getDeconvResults()
-            if(is.null(scores)) return(NULL)
-            scores <- pmax(scores,0) ## ??
-        } else {
-            x <- as.character(ngs$Y[,1])
-            x <- as.character(ngs$Y[,input$sc_crosstabvar])
-            x[is.na(x)] <- "_"
-            scores <- model.matrix( ~ 0 + x )
-            rownames(scores) <- rownames(ngs$Y)
-            colnames(scores) <- sub("^x","",colnames(scores))
-        }
-        dim(scores)
-
-        ## restrict to selected sample set
-        kk <- head(1:nrow(scores),1000)
-        kk <- 1:nrow(scores)
-        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$sc_samplefilter)
-        scores <- scores[kk,,drop=FALSE]
-        scores <- scores[,which(colSums(scores)>0),drop=FALSE]
-        scores[which(is.na(scores))] <- 0    
-        dim(scores)
-
-        ## expected counts per stat level
-        ##kk.counts <- colSums(ngs$counts[,kk,drop=FALSE])  ## total count of selected samples
-        kk.counts <- colSums(2**ngs$X[,kk,drop=FALSE])  ## approximate counts from log2X
-        grp.counts <- ( t(scores / rowSums(scores)) %*% matrix(kk.counts,ncol=1))[,1]  
-        
-        getProportionsTable <- function(pheno, is.gene=FALSE) {    
-            y <- NULL
-            ##if("gene" %in% input$sc_crosstaboptions) {
-            if( is.gene ) {
-                xgene <- ngs$genes[rownames(ngs$X),]$gene_name
-                gx <- ngs$X[which(xgene == pheno),kk,drop=FALSE]
-                gx.highTH <- mean(gx, na.rm=TRUE)
-                y <- paste(pheno,c("low","high"))[ 1 + 1*(gx >= gx.highTH)]
-                table(y)
-            } else if(pheno %in% colnames(ngs$samples)) {
-                y <- ngs$samples[kk,1]
-                y <- ngs$samples[kk,pheno]
-                pheno <- tolower(pheno)
-            } else if(pheno == "<cell type>") {
-                res1 <- getDeconvResults()
-                res1 <- pmax(res1,0) ## ??
-                res1 <- res1[kk,,drop=FALSE]
-                ##res1 <- res1[,which(colSums(res1)>0),drop=FALSE]
-                y <- colnames(res1)[max.col(res1)]  ## take maximum col??
-                remove(res1)
-                pheno <- "<cell type>"
-            } else {
-                return(NULL)
-            }   
-            
-            ## calculate proportions by group
-            grp <- factor(as.character(y))
-            ngrp <- length(levels(grp))
-            grp.score <- apply(scores, 2, function(x) tapply(x,grp,mean,na.rm=TRUE))
-            ngrp
-            if(ngrp==1) {
-                grp.score <- matrix(grp.score,nrow=1)
-                rownames(grp.score) <- y[1]
-                colnames(grp.score) <- colnames(scores)
-            }
-            
-            ## weighted counts
-            grp.score[is.na(grp.score)] <- 0
-            grps <- levels(grp)
-            grp.score
-            fy <-  (table(y) / sum(!is.na(y)))
-            jj <- match(rownames(grp.score),names(fy))
-            grp.score <-  grp.score * as.vector(fy[jj])
-            ## normalize to total 100% 
-            grp.score <- grp.score / (1e-20+sum(grp.score))
-            
-            ## reduce to maximum number of items (x-axis)
-            if(0) {
-                ##jj <- which(colSums(grp.score) > 0.001)
-                jj <- order(-colSums(grp.score))
-                j1 <- head(jj, 25)  ## define maximum number of items
-                j0 <- setdiff(jj, j1)
-                grp.score0 <- grp.score[,j1,drop=FALSE]
-                grp.counts0 <- grp.counts[j1]
-                if(length(j0)>0) {
-                    grp.score0 <- cbind( grp.score0, "other"=rowSums(grp.score[,j0,drop=FALSE]))
-                    grp.counts0 <- c(grp.counts0, "other"=sum(grp.counts[j0]))
-                }
-                grp.score <- grp.score0
-                grp.counts <- grp.counts0
-                grp.score <- t( t(grp.score) / (1e-20+colSums(grp.score)))  ##
-            }
-            
-            ## normalize to total 100% and reduce to maximum number of items (y-axis)
-            jj <- order(-rowSums(grp.score))
-            j1 <- head(jj, 10)  ## define maximum number of items
-            j0 <- setdiff(jj, j1)
-            grp.score0 <- grp.score[j1,,drop=FALSE]
-            if(length(j0)>0) {
-                grp.score0 <- rbind( grp.score0, "other"=colSums(grp.score[j0,,drop=FALSE]))
-            }
-            grp.score <- grp.score0
-            grp.score <- t( t(grp.score) / (1e-20+colSums(grp.score)))  ##
-
-            ## cluster columns??
-            ##dist1 <- dist(t(scale(grp.score)))
-            dist1 <- dist(t(grp.score))
-            dist1[is.na(dist1)] <- mean(dist1,na.rm=TRUE)
-            jj <- hclust(dist1)$order
-            grp.score <- grp.score[,jj,drop=FALSE]
-            return(grp.score)
-        }
-
-        ## select phenotype variable
-        head(ngs$samples)
-        pheno=1
-        pheno="cluster"
-        pheno="activated"
-        pheno="cell.type"
-        pheno="<cell type>"
-        pheno <- input$sc_crosstabpheno
-        if(is.null(pheno)) return(NULL)
-
-        ##pheno="cluster"
-        grp.score1 <- getProportionsTable(pheno, is.gene=FALSE)    
-        grp.score2 <- NULL
-        gene = ngs$genes$gene_name[1]
-        gene = input$sc_crosstabgene
-        if(gene != "<none>") {
-            grp.score2 <- getProportionsTable(pheno=gene, is.gene=TRUE)
-            kk <- colnames(grp.score2)[order(grp.score2[1,])]
-            grp.score2  <- grp.score2[,match(kk,colnames(grp.score2))]
-            grp.score1  <- grp.score1[,match(kk,colnames(grp.score1))]
-        }
-        
-        jj <- match(colnames(grp.score1),names(grp.counts))
-        grp.counts <- grp.counts[jj] / 1e6  ## per million
-        names(grp.counts) = colnames(grp.score1)
-
-        ##-------------- plot by estimated cell.type ----------------------
-        
-        ##par(mar = c(4,6,2,3))
-        layout(matrix(c(1,2,3), 3,1), heights=c(2,4,3))
-        if(!is.null(grp.score2)) {
-            layout(matrix(c(1,2,3,4), 4,1), heights=c(2.2,1,4,2))
-        }
-        
-        ## top bar with counts
-        par(mar = c(0,5,5.3,3), mgp=c(2.0,0.8,0) )
-        xlim <- c(0,1.2*length(grp.counts))  ## reserves space for legend
-        barplot( grp.counts, col="grey50", ylab="counts (M)", cex.axis=0.8,
-                cex.lab=0.8, names.arg=NA, xpd=NA, xlim=1.3*xlim, ## log="y", 
-                ylim=c(0.01, max(grp.counts)), yaxs="i" )
-        ## title(pheno, cex.main=1.2, line=2, col="grey40")
-        
-        ## middle plot (gene)
-        if(!is.null(grp.score2)) {
-            klrpal2 = COLORS[1:nrow(grp.score2)]
-            klrpal2 = rev(grey.colors(nrow(grp.score2),start=0.45))
-            par(mar = c(0,5,0.3,3), mgp=c(2.4,0.9,0) )
-            barplot( 100*grp.score2, col=klrpal2, las=3, srt=45,
-                    xlim=1.3*xlim, ylim=c(0,99.99),
-                    names.arg = rep(NA, ncol(grp.score2)),
-                    ylab="(%)", cex.axis=0.90)
-            legend(1.02*xlim[2], 100, legend=rownames(grp.score2),
-                   fill=klrpal2, xpd=TRUE, cex=0.8, y.intersp=0.8,
-                   bg="white", bty="n")
-        }
-
-        if(1) {
-            ## main proportion graph
-            klrpal1 = COLORS[1:nrow(grp.score1)]
-            par(mar = c(4,5,0.3,3), mgp=c(2.4,0.9,0) )
-            barplot( 100*grp.score1, col=klrpal1, las=3, srt=45, xlim=1.3*xlim,
-                    ylim=c(0,99.99), ylab="proportion (%)", cex.axis=0.90)
-            legend(1.02*xlim[2], 100, legend=rev(rownames(grp.score1)),
-                   fill=rev(klrpal1), xpd=TRUE, cex=0.8, y.intersp=0.8,
-                   bg="white", bty="n")
-        }
-        
-    })
-
-
-    sc_crosstab.opts <- tagList(
-        tipify(selectInput(ns("sc_crosstabvar"),label="x-axis:", choices=NULL, multiple=FALSE),
-                           "Choose a predefined phenotype group on the x-axis.",
-                           placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("sc_crosstabpheno"),label="y-axis:", choices=NULL, multiple=FALSE),
-               "Choose a predefined phenotype group on the y-axis.",
-               placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("sc_crosstabgene"),label="gene:", choices=NULL, multiple=FALSE),
-               "Visualize the expression barplot of a gene by specifying the gene name.",
-               placement="top", options = list(container = "body"))
-        ##checkboxGroupInput('sc_crosstaboptions','',c("gene"), inline=TRUE, width='50px')
-        ##selectInput("sc_crosstabgene",label=NULL, choices=NULL, multiple=FALSE),
-        ##br(), cellArgs=list(width='80px')
-    )
-
-    sc_crosstabModule_info = "The <strong>Proportions tab</strong> visualizes the interrelationships between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
-    
-    sc_crosstabModule_caption = "<b>Proportion plot.</b> Plot visualizing the overlap between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
-   
-    callModule(
-        plotModule,
-        id = "sc_crosstabPlot",
-        func = sc_crosstabPlotFUNC,
-        func2 = sc_crosstabPlotFUNC,
-        options = sc_crosstab.opts,
-        info.text = sc_crosstabModule_info,
-        ##caption = sc_crosstabModule_caption,
-        pdf.width=6, pdf.height=8,
-        height = c(fullH-80,760), width = c("100%",650),
-        res=c(110,110)
-        )
-
-    observe({
-        ngs <- inputData()
-        ##if(is.null(ngs)) return(NULL)
-        req(ngs)
-
-        ##if(is.null(input$sc_crosstaboptions)) return(NULL)
-        pheno0 <- grep("group|sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
-        pheno0 <- grep("sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
-        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$sc_samplefilter)
-        nphenolevel <- apply(ngs$samples[kk,pheno0,drop=FALSE],2,function(v) length(unique(v)))
-        pheno0 = pheno0[which(nphenolevel>1)]
-        genes <- sort(as.character(ngs$genes$gene_name))
-        pheno1 <- c("<cell type>",pheno0)
-        genes1 <- c("<none>",genes)
-        updateSelectInput(session, "sc_crosstabvar", choices=pheno1)
-        updateSelectInput(session, "sc_crosstabpheno", choices=pheno1)
-        updateSelectizeInput(session, "sc_crosstabgene", choices=genes1, server=TRUE)
-
-    })
-
-    output$sc_crosstabModule_UI <- renderUI({    
-        fillCol(
-            height = fullH,
-            flex = c(NA,1),
-            div(HTML(sc_crosstabModule_caption), class="caption"),
-            plotWidget(ns("sc_crosstabPlot"))
-        )
-    })
-    outputOptions(output, "sc_crosstabModule_UI", suspendWhenHidden=FALSE) ## important!!!
-
-    ##================================================================================
-    ## CytoPlot
-    ##================================================================================
-
-    ##output$sc_cytoplot <- renderPlot({
-    sc_cytoplotFUNC %<a-% reactive({
-        ##if(!input$tsne.all) return(NULL)
-        require(RColorBrewer)
-        ngs <- inputData()
-        ##if(is.null(ngs)) return(NULL)
-        req(ngs)
-        
-        if(is.null(input$sc_cytovar1)) return(NULL)
-        if(is.null(input$sc_cytovar2)) return(NULL)
-        if(input$sc_cytovar1=="") return(NULL)
-        if(input$sc_cytovar2=="") return(NULL)
-
-        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$sc_samplefilter)    
-        gene1 <- input$sc_cytovar1
-        gene2 <- input$sc_cytovar2
-        ##if(gene1 == gene2) return(NULL)
-        par(mfrow=c(1,1), mar=c(12,4,6,2))
-        pgx.cytoPlot( ngs, gene1, gene2, samples=kk, cex=0.8,
-                     col="grey60", cex.names=1)
-        
-    })
-
-    sc_cyto.opts = tagList(
-        tipify(selectInput(ns("sc_cytovar1"),label="x-axis:", choices=NULL, multiple=FALSE),
-               "Select your prefered gene on the x-axis.",
-               placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("sc_cytovar2"),label="y-axis:", choices=NULL, multiple=FALSE),
-               "Choose your prefered gene on the y-axis.",
-               placement="top", options = list(container = "body"))
-    )
-
-    sc_cytoModule_info = "For each combination of gene pairs, the platform can generate a cytometry-like plot of samples under the Cytoplot tab. The aim of this feature is to observe the distribution of samples in relation to the selected gene pairs. For instance, when applied to single-cell sequencing data from immunological cells, it can mimic flow cytometry analysis and distinguish T helper cells from the other T cells by selecting the CD4 and CD8 gene combination."
-    
-    sc_cytoModule_caption = "<b>Cyto plot.</b> This plot shows the distribution of samples in relation to the expression of selected gene pairs. It mimics the scatter plots used for gating in flow cytometry analysis."    
-    
-    callModule(
-        plotModule,
-        id = "sc_cytoplot",
-        func = sc_cytoplotFUNC,
-        func2 = sc_cytoplotFUNC,
-        options = sc_cyto.opts,
-        info.text = sc_cytoModule_info,
-        ## caption = sc_cytoModule_caption,
-        pdf.width=6, pdf.height=8,
-        height = c(fullH-80,780), width = c("100%",600),
-        res = c(80,80)
-    )
-
-    observe({
-        ngs <- inputData()
-        ##if(is.null(ngs)) return(NULL)
-        req(ngs)
-        xgenes <- ngs$genes[rownames(ngs$X),]$gene_name
-        genes <- sort(as.character(xgenes))
-        g1 <- grep("^CD4|^CD8",genes,value=TRUE)[1]
-        g2 <- grep("^CD79|^CD3[DEG]|^CD37",genes,value=TRUE)[1]
-        if(length(g1)==0) g1 <- genes[1]
-        if(length(g2)==0) g2 <- genes[2]
-        updateSelectizeInput(session, "sc_cytovar1", choices=genes, selected=g1, server=TRUE)
-        updateSelectizeInput(session, "sc_cytovar2", choices=genes, selected=g2, server=TRUE)
-    })
-    
-
-    output$sc_cytoModule_UI <- renderUI({    
-        fillCol(
-            height = fullH,
-            flex = c(NA,1),
-            div(HTML(sc_cytoModule_caption), class="caption"),            
-            plotWidget(ns("sc_cytoplot"))
-        )
-    })
-    outputOptions(output, "sc_cytoModule_UI", suspendWhenHidden=FALSE) ## important!!!
     
     return(NULL)
 }
