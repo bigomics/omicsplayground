@@ -90,9 +90,9 @@ message("/n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars
 ## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
-source("../R/pgx-init.R")  ## pass local vars
+source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 ##source("../R/pgx-functions.R", local=TRUE)  ## pass local vars
-source("global.R")
+source("global.R", local=TRUE)
 
 if(0) {
     load("../data/geiger2016-arginine.pgx")
