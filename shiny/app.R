@@ -36,9 +36,10 @@ PGX.DIR = c("../data","../data-extra")
 PGX.DIR = "../data"
 dir.exists(PGX.DIR)
 
+DEBUG = TRUE
+
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars
 source("global.R", local=TRUE)
-
 
 message("\n")
 message("*****************************************")
@@ -52,7 +53,6 @@ opt <- pgx.readOptions(file="OPTIONS")
 WATERMARK = opt$WATERMARK
 SHOW_QUESTIONS = FALSE
 DEV.VERSION = opt$DEV_VERSION && dir.exists("../../omicsplayground-dev")
-## DEBUG = TRUE
 USER_MODE = opt$USER_MODE
 
 ## show options
