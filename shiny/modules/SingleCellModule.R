@@ -531,6 +531,8 @@ immune cell types, expressed genes and pathway activation."
         }    
         b0 <- 0.1 + 0.70*pmax(30 - ncol(score), 0)
 
+        message("[SingleCellModule::sc_mapping.plotFUNC] USER_MODE=",USER_MODE)
+        
         if(input$sc_view2 == "dotmap") {
             require(corrplot)
             ##gx.heatmap(score)
@@ -597,6 +599,7 @@ immune cell types, expressed genes and pathway activation."
     })
 
     SC_VIEWTYPES2 = c("dotmap"="dotmap","heatmap (by method)"="heatmap")    
+    
     sc_mapping.opts = tagList(
         tipify(selectInput(ns("sc_view2"),"plot type:",SC_VIEWTYPES2),
                "Specify the plot type: dotmap, or heatmap.",

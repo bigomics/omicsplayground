@@ -14,7 +14,7 @@ FROM bigomics/omicsplayground:build
 
 # RUN apt install -y xvfb
 # RUN R -e "BiocManager::install(c('randomForest'))"
-RUN R -e "install.packages(c('brew'))"
+# RUN R -e "install.packages(c('brew'))"
 # RUN pip install umap-learn
 
 

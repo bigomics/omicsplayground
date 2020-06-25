@@ -53,6 +53,7 @@ WATERMARK = opt$WATERMARK
 SHOW_QUESTIONS = FALSE
 DEV.VERSION = opt$DEV_VERSION && dir.exists("../../omicsplayground-dev")
 ## DEBUG = TRUE
+USER_MODE = opt$USER_MODE
 
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
