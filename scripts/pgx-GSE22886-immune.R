@@ -1,24 +1,12 @@
-library(knitr)
-library(limma)
-library(edgeR)
-library(RColorBrewer)
-library(gplots)
-library(matrixTests)
-library(kableExtra)
-library(knitr)
+RDIR = "../R"
+FILES = "../lib"
+PGX.DIR = "../data"
+source("../R/pgx-include.R")
+##source("options.R")
+FILES
+MAX.GENES = 8000
+MAX.GENESETS = 8000
 
-source("../R/gx-heatmap.r")
-source("../R/gx-limma.r")
-source("../R/gx-util.r")
-source("../R/ngs-cook.r")
-source("../R/ngs-fit.r")
-source("../R/gset-fisher.r")
-source("../R/gset-gsea.r")
-source("../R/gset-meta.r")
-source("../R/pgx-graph.R")
-source("../R/pgx-functions.R")
-
-source("options.R")
 rda.file="../data/GSE22886-immune.pgx"
 rda.file
 
@@ -29,7 +17,9 @@ ngs$date = date()
 ngs$datatype = "mRNA (microarray)"
 ngs$description = "GSE22886 data set (Abbas et al, 2005). Twelve different types of human leukocytes from peripheral blood and bone marrow, treated to induce activation and/or differentiation, and profiled their gene expression before and after treatment. The twelve cell types are: B cells, CD14+ cells, CD4+ CD45RO+ CD45RA- T cells, CD4+ T cells, CD8+ T cells, IgG/IgA memory B cells, IgM memory B cells, Monocytes, NK cells, Neutrophils, Plasma cells from bone marrow, and Plasma cells from PBMC."
 
-## READ/PARSE DATA
+PROCESS.DATA=1
+DIFF.EXPRESSION=1
+
 if(PROCESS.DATA) {
 
     ## ##############################################################
@@ -205,13 +195,9 @@ if(PROCESS.DATA) {
     ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE)
     head(ngs$samples)
 
-
-    rda.file
-    save(ngs, file=rda.file)
 }
 
 if(DIFF.EXPRESSION) {
-    load(file=rda.file, verbose=1)
 
     levels = levels(ngs$samples$group)
     contr.matrix <- makeContrasts(
@@ -246,15 +232,33 @@ if(DIFF.EXPRESSION) {
         levels = levels)
     t(contr.matrix)
 
-    ## USER.GENETEST.METHODS=c("trend.limma","deseq2","edger.qlf")
-    USER.GENESETTEST.METHODS=c("gsva","fisher","camera","fgsea")
-
     ##contr.matrix = contr.matrix[,1:3]
-    source("../R/compute-genes.R")
-    source("../R/compute-genesets.R")
-    source("../R/compute-extra.R")
+    ##source("../R/compute-genes.R")
+    ##source("../R/compute-genesets.R")
+    ##source("../R/compute-extra.R")
 
+    GENETEST.METHODS=c("trend.limma","edger.qlf","edger.lrt")
+    GENESET.METHODS=c("gsva","fisher","camera","fgsea")
+    
+    ## new callling methods
+    ngs <- compute.testGenes(
+        ngs, contr.matrix,
+        max.features = MAX.GENES,
+        test.methods = GENETEST.METHODS)
+    
+    ngs <- compute.testGenesets (
+        ngs, max.features = MAX.GENESETS,
+        test.methods = GENESET.METHODS,
+        lib.dir = FILES)
+
+    extra <- c("connectivity")
+    extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")
+    ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
+    
+    names(ngs)
+    ngs$timings
 }
+
 
 rda.file
 ngs$drugs$combo <- NULL  ## save space!!
