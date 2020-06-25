@@ -167,14 +167,24 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     observe({
         ngs = inputData()
         req(ngs)
-        if(is.null(input$hm_level)) return(NULL)
+        req(input$hm_level)
+        ###if(is.null(input$hm_level)) return(NULL)
         choices = names(ngs$families)
+
+        dbg("[ClusteringModule::observe] dim(ngs$counts)=",dim(ngs$counts))
+        dbg("[ClusteringModule::observe] dim(ngs$gsetX)=",dim(ngs$gsetX))
+        dbg("[ClusteringModule::observe] length(choices)=",length(choices))
+        dbg("[ClusteringModule::observe] length(COLLECTIONS)=",length(COLLECTIONS))
+        
         if(input$hm_level=="geneset") {
             nk <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))            
             choices = names(COLLECTIONS)[nk>=5]
         }
         choices <- c("<custom>",choices)
         choices <- sort(unique(choices))
+
+        dbg("[ClusteringModule::observe] length(choices)=",length(choices))
+        
         updateSelectInput(session, "hm_features", choices=choices)
     })
     
