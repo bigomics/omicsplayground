@@ -4,6 +4,9 @@
 ##                                                                     ##
 #########################################################################
 
+DEBUG = FALSE
+DEBUG = TRUE
+
 library(shiny)
 library(shinyjs)
 library(shinyWidgets)
@@ -35,8 +38,6 @@ FILESX = "../libx"
 PGX.DIR = c("../data","../data-extra")
 PGX.DIR = "../data"
 dir.exists(PGX.DIR)
-
-DEBUG = TRUE
 
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars
 source("global.R", local=TRUE)

@@ -271,6 +271,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ngs <- inputData()
         req(ngs)
         zx <- getFilteredMatrix()
+
+        dbg("[ClusteringModule:getTopMatrix] dim(ngs$counts) = ",dim(ngs$counts))
+        dbg("[ClusteringModule:getTopMatrix] dim(zx) = ",dim(zx))
         
         nmax = 4000
         nmax = as.integer(input$hm_ntop)
