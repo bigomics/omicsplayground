@@ -136,7 +136,6 @@ between two contrasts."
         if(is.null(ngs)) return(NULL)
         req(input$cmp_level)
         ##flt.choices = names(ngs$families)
-        dbg("[IntersectionModule::observeEvent]  input.cmp_level=",input$cmp_level,"\n")
         if(input$cmp_level=="geneset") {
             ft <- names(COLLECTIONS)
             nn <- sapply(COLLECTIONS, function(x) sum(x %in% rownames(ngs$gsetX)))
@@ -147,13 +146,8 @@ between two contrasts."
         }
         ft <- sort(ft)
         ## if(input$cmp_level=="gene") ft = sort(c("<custom>",ft))
-        ## ft = sort(c("<custom>",ft))
-        
-        dbg("[IntersectionModule::observeEvent] head.ft=",head(ft),"\n")       
+        ## ft = sort(c("<custom>",ft))        
         updateSelectInput(session, "cmp_filter", choices=ft, selected="<all>")
-        
-        dbg("[IntersectionModule::observeEvent] done!\n")       
-        
     })
     
     observe({
@@ -192,8 +186,7 @@ between two contrasts."
         ##
         ##
         ##
-        dbg("<intersectionModule:getFoldChangeMatrix> reacted\n")
-
+        ##dbg("<intersectionModule:getFoldChangeMatrix> reacted\n")
         fc0 = NULL
         qv0 = NULL
         ngs <- inputData()
@@ -296,7 +289,7 @@ between two contrasts."
         ##
         ##
         ##
-        dbg("[IntersectionModule::getCPMMatrix] reacted\n")
+        ##dbg("[IntersectionModule::getCPMMatrix] reacted\n")
 
         ngs <- inputData()
         req(ngs)
@@ -491,10 +484,6 @@ between two contrasts."
             df <- data.frame(df[jj,])
         }
         dim(df)
-
-        dbg("[IntersectionModule::cmp_scatterPlotMatrix.PLOT] dim(fc0)=",dim(fc0),"\n")
-        dbg("[IntersectionModule::cmp_scatterPlotMatrix.PLOT] dim(fc1)=",dim(fc1),"\n")
-        dbg("[IntersectionModule::cmp_scatterPlotMatrix.PLOT] dim(df)=",dim(df),"\n")
         
         ## resort selection so that selected genes are drawn last to avoid
         ## covering them up.
@@ -1083,10 +1072,7 @@ between two contrasts."
             ## config(displayModeBar = FALSE) %>% ## disable buttons
             config( toImageButtonOptions = list(format='svg', height=800, width=800, scale=1.1)) %>%
             event_register('plotly_selected') 
-
-        dbg("cmp_pairsPlot:: done\n")
         p    
-
     })
 
     cmp_pairsPlot.opts = tagList(
@@ -1183,9 +1169,7 @@ between two contrasts."
         dim(N)
         
         require(corpora) 
-        dbg("computing Fisher-test p values...")
         pv <- corpora::fisher.pval( N[,1], N[,2], N[,3], N[,4], log.p=FALSE)
-        dbg("done!\n")
         head(pv)
         names(pv) <- rownames(N)
         pv = pv[match(names(odds.ratio),names(pv))]
@@ -1252,8 +1236,6 @@ between two contrasts."
 
     cmp_ctheatmap.PLOT %<a-% reactive({
                         
-        dbg("cmp_ctheatmap.PLOT:: reacted")
-        
         ngs <- inputData()
         req(ngs)
         req(input$cmp_comparisons)
@@ -1316,15 +1298,10 @@ between two contrasts."
                  col = rev(col2(50)), mar=c(1,0.2,0.2,1) * 0.2*mean(mar1),
                  tl.cex = 0.65*cex, tl.col="black", tl.srt = 90)
         ##corrplot(R, method = "circle", order="AOE")
-        
-        dbg("cmp_ctheatmap.RENDER:: done")
-
         ##return(R)
     })
 
     cmp_ctheatmap.PLOTLY <- reactive({
-
-        dbg("cmp_ctheatmap.PLOTLY:: reacted")
 
         ## install.packages("heatmaply")
         require(heatmaply)
@@ -1332,9 +1309,6 @@ between two contrasts."
         ngs <- inputData()
         req(ngs)
         ##req(input$cmp_comparisons)
-
-        dbg("cmp_ctheatmap.PLOTLY:: 1")
-        
         ##res <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         res = getFoldChangeMatrix()
         if(is.null(res)) return(NULL)
@@ -1343,15 +1317,11 @@ between two contrasts."
         fc0 = res$fc
         qv0 = res$qv
 
-        dbg("cmp_ctheatmap.PLOTLY:: 2")
-
         ntop=2000
         ntop <- input$cmp_ctheatmap_ntop
         if(ntop=="all") ntop <- 999999
         ntop <- as.integer(ntop)
         
-        dbg("cmp_ctheatmap.PLOTLY:: 3")
-
         allfc <- input$cmp_ctheatmap_allfc
         if(!allfc) {
             comp = input_cmp_comparisons()
@@ -1360,8 +1330,6 @@ between two contrasts."
             fc0 <- fc0[,kk,drop=FALSE]
         }
 
-        dbg("cmp_ctheatmap.PLOTLY:: 4")
-        
         ##R.full <- cor(fc0[,], use="pairwise", method="spearman")
         R.full <- cor(apply(fc0,2,rank), use="pairwise")
         jj <- head(order(-rowMeans(fc0**2)),ntop)
@@ -1375,8 +1343,6 @@ between two contrasts."
         if(min(R,na.rm=TRUE)>=0) col <- tail(col,32)
         if(max(R,na.rm=TRUE)<=0) col <- head(col,32)
 
-        dbg("cmp_ctheatmap.PLOTLY:: 5 : dimR=",dim(R))
-
         bluered.pal <- colorRampPalette(colors = c("royalblue3","grey90","indianred3"))
         cellnote <- NULL
         ##if(input$cmp_ctheatmap_showrho) cellnote <- R
@@ -1389,7 +1355,6 @@ between two contrasts."
             colors = bluered.pal,
             limits = c(-1,1))        
 
-        dbg("cmp_ctheatmap.PLOTLY:: done")    
         plt
     })
     

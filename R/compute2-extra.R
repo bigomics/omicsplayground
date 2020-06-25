@@ -24,10 +24,10 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
     single.omics <- !any(grepl("\\[",rownames(ngs$counts)))
     single.omics
     if(single.omics) {
-        cat(">>> computing extra for SINGLE-OMICS\n")
+        message(">>> computing extra for SINGLE-OMICS")
         rna.counts <- ngs$counts
     } else {
-        cat(">>> computing extra for MULTI-OMICS\n")
+        message(">>> computing extra for MULTI-OMICS")
         data.type <- gsub("\\[|\\].*","",rownames(ngs$counts))
         jj <- which(data.type %in% c("gx","mrna"))
         length(jj)
@@ -39,13 +39,13 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
         is.logged <- ( min(rna.counts, na.rm=TRUE) < 0 ||
                        max(rna.counts, na.rm=TRUE) < 50 )
         if(is.logged) {
-            cat("expression data seems log. undoing logarithm\n")
+            message("expression data seems log. undoing logarithm")
             rna.counts <- 2**rna.counts
         }
     }
 
     if("meta.go" %in% extra) {
-        cat(">>> Computing GO core graph...\n")
+        message(">>> Computing GO core graph...")
         tt <- system.time({
             ngs$meta.go <- pgx.computeCoreGOgraph(ngs, fdr=0.05)
         })
@@ -53,7 +53,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
     }
 
     if("deconv" %in% extra) {
-        cat(">>> computing deconvolution\n")
+        message(">>> computing deconvolution")
         tt <- system.time({
             ngs <- compute.deconvolution(
                 ngs, lib.dir=lib.dir, rna.counts=rna.counts,
@@ -63,7 +63,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
     }
 
     if("infer" %in% extra) {
-        cat(">>> inferring extra phenotypes...\n")
+        message(">>> inferring extra phenotypes...")
         tt <- system.time({
             ngs <- compute.cellcycle.gender(ngs, rna.counts=rna.counts)
         })
@@ -71,7 +71,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
     }
 
     if("drugs" %in% extra) {
-        cat(">>> Computing drug enrichment (single)...\n")
+        message(">>> Computing drug enrichment (single)...")
         ngs$drugs <- NULL  ## reset??
 
         tt <- system.time({
@@ -88,7 +88,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
     }
 
     if("drugs-combo" %in% extra) {
-        cat(">>> Computing drug enrichment (combo)...\n")
+        message(">>> Computing drug enrichment (combo)...")
         tt <- system.time({
             ngs <- compute.drugActivityEnrichment(
                 ngs, lib.dir=lib.dir, combo=TRUE) 
@@ -103,7 +103,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
     }
     
     if("graph" %in% extra) {
-        cat(">>> computing OmicsGraphs...\n")
+        message(">>> computing OmicsGraphs...")
         tt <- system.time({
             ngs <- compute.omicsGraphs(ngs) 
         })
@@ -111,7 +111,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
     }
     
     if("wordcloud" %in% extra) {
-        cat(">>> computing WordCloud statistics...\n")
+        message(">>> computing WordCloud statistics...")
         tt <- system.time({
             res <- pgx.calculateWordFreq(ngs, progress=NULL, pg.unit=1)        
         })
@@ -121,7 +121,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
     }
 
     if("connectivity" %in% extra) {
-        cat(">>> computing connectivity scores...\n")
+        message(">>> computing connectivity scores...")
 
         ## ngs$connectivity <- NULL  ## clean up
         if(is.null(sigdb)) {
@@ -141,7 +141,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
             if(file.exists(db)) {
                 ntop = 10000
                 ntop = 1000
-                cat("computing connectivity scores for sigDB",db,"\n")
+                message("computing connectivity scores for sigDB",db)
                 ## in memory for many comparisons
                 meta = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
                 inmemory <- ifelse(ncol(meta$fc)>50,TRUE,FALSE) 
@@ -266,7 +266,7 @@ compute.cellcycle.gender <- function(ngs, rna.counts=ngs$counts)
     is.mouse
     if(!is.mouse) {
         if(1) {
-            cat("estimating cell cycle (using Seurat)...\n")
+            message("estimating cell cycle (using Seurat)...")
             ngs$samples$cell.cycle <- NULL
             ngs$samples$.cell.cycle <- NULL
             ##counts <- ngs$counts
@@ -279,14 +279,14 @@ compute.cellcycle.gender <- function(ngs, rna.counts=ngs$counts)
             }
         }
         if(!(".gender" %in% colnames(ngs$samples) )) {
-            cat("estimating gender...\n")
+            message("estimating gender...")
             ngs$samples$.gender <- NULL
             X <- log2(1+rna.counts)
             gene_name <- ngs$genes[rownames(X),"gene_name"]
             ngs$samples$.gender <- pgx.inferGender( X, gene_name )
             table(ngs$samples$.gender)
         } else {
-            cat("gender already estimated. skipping...\n")
+            message("gender already estimated. skipping...")
         }
         head(ngs$samples)
     }
@@ -299,14 +299,14 @@ compute.drugActivityEnrichment <- function(ngs, lib.dir, combo=TRUE ) {
     ## -------------- drug enrichment
     L1000.FILE = "l1000_es_1451drugs.rds"
     L1000.FILE = "l1000_es.rds"
-    cat("reading L1000 reference file:",L1000.FILE,"\n")
+    message("[compute.drugActivityEnrichment] reading L1000 reference file:",L1000.FILE)
     X <- readRDS(file=file.path(lib.dir,L1000.FILE))
     
     xdrugs <- gsub("_.*$","",colnames(X))
     ndrugs <- length(table(xdrugs))
     ndrugs
-    cat("number of profiles:",ncol(X),"\n")
-    cat("number of drugs in database:",ndrugs,"\n")
+    message("number of profiles:",ncol(X))
+    message("number of drugs in database:",ndrugs)
     dim(X)
 
     res.mono = res.combo = NULL    

@@ -821,7 +821,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         var.types1 = c("<none>",var.types)
         grp = vv[1]
         if("group" %in% var.types) grp = "group"
-        dbg("updating hmpca.colvar and hmpca.shapevar...")
         updateSelectInput(session, "hmpca.colvar", choices=var.types0, selected=grp)
         updateSelectInput(session, "hmpca.shapevar", choices=var.types1, selected="<none>")
         ##updateSelectInput(session, "hmpca.line", choices=var.types1, selected="<none>")

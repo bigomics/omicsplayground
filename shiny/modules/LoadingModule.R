@@ -33,6 +33,9 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                           defaultMode="BASIC")
 {
     ns <- session$ns ## NAMESPACE
+
+    message("[LoadingModule] DEBUG=",DEBUG)
+    message("[LoadingModule] USER_MODE=",USER_MODE)
     
     ##useShinyjs(rmd=TRUE)
     useShinyjs()
@@ -113,6 +116,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         sec <- currentSection()
         inf <- selectedDataSetInfo()
         inf["conditions"] <- gsub("[,]"," ",inf["conditions"])
+        inf <- sapply(inf, function(s) substring(s,1,500)) 
         if(sec=="upload-data") {
             HTML(paste("<p>Please upload dataset<br>"))
         } else if(length(inf)==0) {
@@ -648,10 +652,6 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         paste(paste(head(s1,n), collapse=" "),"(+",n2,"others)")
     }
 
-    ## Some 'global' reactive variables used in this file
-    uploaded_files <- reactiveValues()
-    ##shinyjs::disable("upload_compute")
-
     getPGXTable <- reactive({
         ## get table of data sets
         ##
@@ -763,6 +763,10 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     ##================================================================================
     ## Upload data
     ##================================================================================
+
+    ## Some 'global' reactive variables used in this file
+    uploaded_files <- reactiveValues()
+    ##shinyjs::disable("upload_compute")
     
     output$downloadExampleData <- downloadHandler(
         filename = "exampledata.zip",
@@ -783,8 +787,6 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     upload_filetypes = c(".csv",".pgx")    
     output$upload_UI <- renderUI({    
 
-        basic.limits = "25 samples and 5 comparisons"
-        pro.limits   = "1000 samples and 20 comparisons"
         limits <- paste(max.limits["samples"],"samples and",
                         max.limits["comparisons"],"comparisons")
         
@@ -811,7 +813,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                 fillCol(
                     flex = c(NA,1),
                     div(HTML(upload_info),style="font-size: 13px;"),
-                    tableOutput(ns("upload_status"))
+                    tableOutput(ns("uploadStatusTableOutput"))
                 )
             ),
             fillRow(
@@ -820,26 +822,9 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         )
     })
 
-    ## output$allFilesOK <- reactive({    
-    ##     files.needed = c("counts.csv","samples.csv","contrasts.csv")
-    ##     all.there <- all(files.needed %in% names(uploaded_files))    
-    ##     df <- uploadStatusTable()
-    ##     filled = all.ok = TRUE
-    ##     all.ok = all( df$status == "OK")
-    ##     filled = (input$upload_name!="")
-    ##     ## filled = (input$upload_name!="" && nchar(input$upload_description)>=100)
-    ##     ## all.ok    <- all(sapply(uploaded_files, function(x) x$status=="OK"))
-    ##     ok <- (all.there && all.ok && filled)
-    ##     if(ok) shinyjs::enable("upload_compute")
-    ##     if(!ok) shinyjs::disable("upload_compute")
-    ##     ok
-    ## })
-    ## outputOptions(output, "allFilesOK", suspendWhenHidden = FALSE) ## important!
-
     observeEvent( input$upload_compute, {
 
         ## are you sure? Any message/warning before computation is done.
-
         has.pgx <- ("uploaded.pgx" %in% names(uploaded_files))
         has.csv <- all(c("counts.csv","samples.csv","contrasts.csv") %in% names(uploaded_files))
         if(has.pgx) has.pgx <- has.pgx && !is.null(uploaded_files[["uploaded.pgx"]])
@@ -849,29 +834,21 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         dbg("[observeEvent::upload_compute] has.csv=",has.csv)
         
         if(!has.pgx && !has.csv ) {
-            dbg("upload_compute :: ***** no PGX, no CSV files, no party *****")
+            message("[LoadingModule::*upload_compute} WARNING: ***** no PGX, no CSV files *****")
             ##removeModal()
             return(NULL)
         }
 
-        if(0) {
-            require(shinyWidgets)
-            confirmSweetAlert(
-                session = session,
-                inputId = ns("myconfirmation"),
-                text = "Your data will be uploaded for computation. Are you sure?"
+        showModal( modalDialog(
+            HTML("Your data will be uploaded for computation. By uploading the data you accept our EULA and you confirm that the data has been anonymized. For research use only."),
+            title = NULL,
+            size = "s",
+            footer = tagList(
+                modalButton("Cancel"),
+                actionButton(ns("myconfirmation"),"Confirm", icon=NULL)
             )
-        } else {
-            showModal( modalDialog(
-                HTML("Your data will be uploaded for computation. By uploading the data you accept our EULA and you confirm that the data has been anonymized. For research use only."),
-                title = NULL,
-                size = "s",
-                footer = tagList(
-                    modalButton("Cancel"),
-                    actionButton(ns("myconfirmation"),"Confirm", icon=NULL)
-                )
-            ))
-        }
+        ))
+        
     })
 
     observeEvent( input$myconfirmation, {
@@ -879,21 +856,20 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         ## Start pre-computing the object from the uploaded files
         ## after confirmation is received.
         ##
-
-        cat("upload_compute: names(uploaded_files)=",names(uploaded_files),"\n")        
+        
+        dbg("[LoadingModule::*myconfirmation] names(uploaded_files)=",names(uploaded_files))        
         
         ## --------------------- OK start ---------------------------
         has.pgx <- ("uploaded.pgx" %in% names(uploaded_files))       
         if(has.pgx) has.pgx <- has.pgx && !is.null(uploaded_files[["uploaded.pgx"]])
 
         if(has.pgx) {            
-            dbg("upload_compute :: ***** using 'uploaded.pgx' ******")        
+            message("[LoadingModule] ***** using precomputed PGX ******")        
             ngs <- uploaded_files[["uploaded.pgx"]]
             
         } else {
 
-            dbg("upload_compute :: ***** computing from CSV files *****")
-            dbg("upload_compute :: showing coffee modal")
+            message("[LoadingModule] ***** computing from CSV files *****")
             showLoadingModal("Calculating... it's a good time to get a coffee now.")
             
             counts    <- as.matrix(uploaded_files[["counts.csv"]])
@@ -905,6 +881,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             max.genesets = 9999
             
             if( USERMODE() == "BASIC") {
+                dbg("[LoadingModule::*myconfirmation] setting BASIC methods")            
                 gx.methods   = c("ttest.welch","ttest.rank","trend.limma") ## fastest 3
                 gset.methods = c("fisher","gsva","camera")  ## fastest 3            
                 ## gx.methods   = c("trend.limma","edger.qlf","edger.lrt")
@@ -912,6 +889,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                 extra.methods = c("meta.go","infer","drugs","wordcloud")
                 ##max.genes = 10000
             } else {
+                dbg("[LoadingModule::*myconfirmation] setting PRO methods")                            
                 gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
                 gset.methods = c("fisher","gsva","fgsea","camera","fry")
                 extra.methods = c("meta.go","infer","deconv","drugs-combo","wordcloud")
@@ -936,6 +914,8 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             ##----------------------------------------------------------------------
             ## Upload and do precomputation
             ##----------------------------------------------------------------------
+            dbg("[LoadingModule::*myconfirmation] setting PRO methods")
+
             start_time <- Sys.time()
             ## Create a Progress object
             progress <- shiny::Progress$new()
@@ -986,13 +966,19 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             ## ngs$description = input$upload_description
             ngs$date = date()
         }
+
         
         ## initialize and update global PGX object
         ngs <- pgx.initialize(ngs)
+        dbg("[LoadingModule] pgx.initialize() PGX object")
+        dbg("[LoadingModule] dim(ngs$counts)=", dim(ngs$counts))
+        
         currentPGX(ngs)  ## copy to global reactive variable
         selectRows(proxy = dataTableProxy(ns("pgxtable")), selected=NULL)
         ## shinyjs::click("loadbutton")    
 
+        dbg("[LoadingModule] dim(pgx$counts)=", dim(currentPGX()$counts))
+        
         removeModal()
         showModal( modalDialog(
             HTML("<b>Ready!</b><br>You can now start exploring your data. Tip: to avoid computing again, download your data object locally or save it to the cloud."),
@@ -1019,7 +1005,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     )
 
     observeEvent( input$sharedata, {
-        dbg("[home] observeEvent:sharedata\n")
+        dbg("[LoadingModule] observeEvent:input$sharedata reacted")
         showModal( modalDialog(
             HTML("<center><b>New feature!</b><br>Sharing your data with others will be soon available as new feature!</center>"),
             title = NULL, size = "s", fade=FALSE
@@ -1028,8 +1014,9 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     })
     
     observeEvent( input$savedata, {
-        dbg("[home] observeEvent:savedata\n")
 
+        dbg("[LoadingModule] observeEvent:savedata reacted")
+        
         showModal( modalDialog(
             HTML("<center><b>New feature!</b><br>Saving your data to the cloud will be soon available as new feature for Pro users!</center>"),
             title = NULL, size = "s", fade=FALSE
@@ -1072,21 +1059,21 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
 
     })
 
-
     uploadStatusTable <- reactive({
         
-        cat("<uploaded_files> name=",input$upload_files$name,"\n")
-        cat("<uploaded_files> datapath=",input$upload_files$datapath,"\n")
+        dbg("[uploadStatusTable] uploaded_files$name=",input$upload_files$name)
+        dbg("[uploadStatusTable] uploaded_files$datapath=",input$upload_files$datapath)
+
         ##for(i in 1:length(uploaded_files)) uploaded_files[[i]] <- NULL
         uploaded_files[["uploaded.pgx"]] <- NULL
         
         ## read uploaded files
         from.pgx = FALSE
         has.pgx <- any(grepl("[.]pgx$",input$upload_files$name))
+        ff <- list()
         if(has.pgx) {
             i <- grep("[.]pgx$",input$upload_files$name)
             load(input$upload_files$datapath[i])  ## load NGS/PGX
-            ff <- list()
             ff[["counts.csv"]] <- ngs$counts
             ff[["samples.csv"]] <- ngs$samples
             ff[["contrasts.csv"]] <- ngs$model.parameters$contr.matrix
@@ -1099,17 +1086,12 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             ii <- grep("csv$",input$upload_files$name)
             inputnames <- input$upload_files$name[ii]
             uploadnames <- input$upload_files$datapath[ii]
-            ##ff = lapply(uploadnames, read.csv, row.names=1,
-            ##check.names=FALSE, stringsAsFactors=FALSE )
-            ##names(ff) <- uploadnames
-            cat("<uploaded_files> length(uploadnames)=",length(uploadnames),"\n")
-            ff <- list()
+            dbg("[uploadStatusTable] inputnames=",inputnames,"\n")
+            dbg("[uploadStatusTable] uploadnames=",uploadnames,"\n")
             if(length(uploadnames)>0) {
                 for(i in 1:length(uploadnames)) {
                     fn1 <- inputnames[i]
                     fn2 <- uploadnames[i]
-                    cat("<uploaded_files> fn1=",fn1,"\n")
-                    cat("<uploaded_files> fn2=",fn2,"\n")
                     df <- NULL
                     if(grepl("counts",fn1)) {
                         ## allows duplicated rownames
@@ -1121,9 +1103,9 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                     }
                     ff[[ inputnames[i] ]] <- df
                 }
-            }
-            
+            }            
         }
+
         
         ## store files in reactive value
         files.needed = c("counts.csv","samples.csv","contrasts.csv")
@@ -1205,8 +1187,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                     status["contrasts.csv"] = "ERROR: contrasts do not match groups"
                 }
             }
-        }
-
+        } ## end-if-from-pgx
         
         ## check files
         description = c(
@@ -1224,12 +1205,11 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         return(df)    
     })
 
-    output$upload_status <- renderTable({
+    output$uploadStatusTableOutput <- renderTable({
         uploadStatusTable()
     })
 
     userDatasetsTable <- reactive({
-
         df <- PGXINFO[1:2,] ## test-example
         ## df$description <- NULL
         df$datatype <- NULL
