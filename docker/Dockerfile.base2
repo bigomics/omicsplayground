@@ -74,10 +74,21 @@ RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
 
 
 #------------------------------------------------------------
+# Install Plotly/Orca server
+#------------------------------------------------------------
+RUN wget https://github.com/plotly/orca/releases/download/v1.3.1/orca-1.3.1.AppImage \
+    && mv orca-1.3.1.AppImage /usr/local/bin \
+    && cp omicsplayground/ext/bin/orca /usr/local/bin/orca \
+    && chmod ugo+x /usr/local/bin/orca-1.3.1.AppImage /usr/local/bin/orca   
+
+
+#------------------------------------------------------------
 # Run shiny server
 #------------------------------------------------------------
+WORKDIR /omicsplayground
+COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
+COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
+RUN chmod ugo+rwX /tmp && chmod o+t /tmp
 
 EXPOSE 3838
-COPY shiny-server.sh /usr/bin/shiny-server.sh
 CMD ["/usr/bin/shiny-server.sh"]
-
