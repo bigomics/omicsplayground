@@ -1,6 +1,6 @@
 FROM ubuntu:20.04
 
-MAINTAINER Winston Chang "winston@rstudio.com"
+MAINTAINER Ivo Kwee "kwee@bigomics.ch"
 
 # =====================================================================
 # R

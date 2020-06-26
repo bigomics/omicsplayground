@@ -13,15 +13,14 @@ LOCAL.PKGS
 
 install.pkg <- function(pkg, force=FALSE) {
     if(force || !pkg %in% installed.packages()) {
-
         if(pkg %in% LOCAL.PKGS) {
             ## if available locally, we install local version
             cat("installing",pkg,"from local folder...\n")
             pkg1 = dir("../ext/packages",pattern=paste0(pkg,"_"),full.name=TRUE)
-            try( install.packages(pkg1,repos=NULL,type="source") )
+            try(install.packages(pkg1,repos=NULL,type="source"))
         } else {
             cat("installing",pkg,"from CRAN/BioConductor...\n")
-            try( BiocManager::install(pkg, dependencies=NA,
+            try(BiocManager::install(pkg, dependencies=NA,
                                       ask=FALSE, update=FALSE))
         }
     } else {
@@ -120,11 +119,6 @@ remotes::install_github("JohnCoene/waiter")
 ## ONLY DEV.VERSION (single-cell trajectories)
 ##---------------------------------------------------------------------
 if(1) {
-
-    ##remotes::install_github("trevorld/r-argparse")
-    ##devtools::install_github("wwylab/DeMixT")
-    ##install.pkg("uwot", force=TRUE)
-    
     ## ---- monocle3 (only DEV!!! many install problems in R 3.5.2!!!)
     install.pkgs(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats',
                    'limma', 'S4Vectors', 'SingleCellExperiment',

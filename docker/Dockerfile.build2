@@ -1,0 +1,46 @@
+## From https://www.r-bloggers.com/deploying-an-r-shiny-app-with-docker/
+## and https://www.bjoern-hartmann.de/post/learn-how-to-dockerize-a-shinyapp-in-7-steps/
+##
+
+#------------------------------------------------------------
+# Start from lastest base+data image
+#------------------------------------------------------------
+
+FROM bigomics/omicsplayground:base2
+
+#------------------------------------------------------------
+# Install any extra packages required since base
+#------------------------------------------------------------
+
+# RUN apt install -y xvfb
+# RUN R -e "BiocManager::install(c('metap'))"
+# RUN R -e "install.packages(c('metap'))"
+# RUN pip3 install umap-learn
+RUN R -e "devtools::install_version('mnormt', version='1.5-7')" \
+    && R -e "install.packages(c('metap','brew','Seurat'))"
+
+#------------------------------------------------------------
+# Clone fresh code from GitHub
+#------------------------------------------------------------
+WORKDIR /
+RUN rm -fr /omicsplayground \
+    && git clone https://github.com/bigomics/omicsplayground.git \
+    && chmod -R ugo+rwX /omicsplayground
+
+#------------------------------------------------------------
+# Copy any extra data sets into Docker image
+#------------------------------------------------------------
+# WORKDIR /omicsplayground
+# COPY data/GSE10846-dlbcl-nc.pgx data/
+# RUN R -e "setwd('data');source('init.R')"
+
+#------------------------------------------------------------
+# Copy further configuration files into the Docker image
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
+COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
+RUN chmod ugo+rwX /tmp && chmod o+t /tmp
+
+EXPOSE 3838
+CMD ["/usr/bin/shiny-server.sh"]
