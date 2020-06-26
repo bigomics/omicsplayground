@@ -52,7 +52,7 @@ RUN apt-get install -y \
 #     rm -f version.txt ssp-latest.deb
 
 # Download and install shiny server pro
-RUN wget https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.14.948-amd64.deb \
+RUN wget https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.14.948-amd64.deb . \
      && sudo gdebi shiny-server-1.5.14.948-amd64.deb
 
 RUN R -e "install.packages(c('shiny', 'rmarkdown'), repos='http://cran.rstudio.com/')"
