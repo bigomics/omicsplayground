@@ -90,7 +90,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                 )
             )
         )
-        if(DEV.VERSION) {
+        if(USER_MODE=="DEV") {
             ui1 <- tagList(
                 br(),hr(),
                 h5("Developer options:"),
@@ -113,14 +113,17 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             HTML(clust_infotext),
             easyClose = TRUE, size="l" ))
     })
-    
-   
+       
     ## update filter choices upon change of data set 
     observe({
         ngs <- inputData()
         req(ngs)
         
         levels = getLevels(ngs$Y)
+
+        dbg("[ClusteringModule::observe] updating hm_samplefilter")
+        dbg("[ClusteringModule::observe] head(levels)=",head(levels))
+
         updateSelectInput(session, "hm_samplefilter", choices=levels)
         
         if(DEV.VERSION && !is.null(ngs$gset.meta$matrices) ) {
@@ -171,20 +174,23 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ###if(is.null(input$hm_level)) return(NULL)
         choices = names(ngs$families)
 
+        dbg("[ClusteringModule::observe] input$hm_level=",input$hm_level)
         dbg("[ClusteringModule::observe] dim(ngs$counts)=",dim(ngs$counts))
         dbg("[ClusteringModule::observe] dim(ngs$gsetX)=",dim(ngs$gsetX))
         dbg("[ClusteringModule::observe] length(choices)=",length(choices))
         dbg("[ClusteringModule::observe] length(COLLECTIONS)=",length(COLLECTIONS))
         
         if(input$hm_level=="geneset") {
-            nk <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))            
+            dbg("[ClusteringModule::observe] change to COLLECTIONS")            
+            nk <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))
             choices = names(COLLECTIONS)[nk>=5]
         }
         choices <- c("<custom>",choices)
         choices <- sort(unique(choices))
 
+        dbg("[ClusteringModule::observe] updating hm_features")
         dbg("[ClusteringModule::observe] length(choices)=",length(choices))
-        
+        dbg("[ClusteringModule::observe] head(choices)=",head(choices))
         updateSelectInput(session, "hm_features", choices=choices)
     })
     
@@ -798,7 +804,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         download.html = hm_splitmap_downloadHTML
         ##caption = hm_splitmap_caption
     )
-    ##output <- attachModule(output, hm_splitmap_module)
 
     output$hm_heatmap_UI <- renderUI({
         fillCol(
@@ -1117,8 +1122,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         info.text = hm_PCAplot_text
         ##caption = pca_caption_static
     )
-    ## output <- attachModule(output, hm_PCAplot_module)
-    ## outputOptions(output, "hm_PCAplot", suspendWhenHidden=FALSE) ## important!!!    
 
     output$hm_pcaUI <- renderUI({
         fillCol(
@@ -1284,7 +1287,6 @@ displays the expression levels of selected genes across all conditions in the an
         info.text = hm_parcoord_text
         ## caption = hm_parcoord_text,
     )
-    ## output <- attachModule(output, hm_parcoord_module)
 
     hm_parcoord_table.RENDER <- reactive({
 
@@ -1326,7 +1328,6 @@ displays the expression levels of selected genes across all conditions in the an
         height = c(270,700)
         ## caption = parcoord_caption
     )
-    ## output <- attachModule(output, hm_parcoord_table_module)
 
     output$hm_parcoordUI <- renderUI({
         fillCol(
@@ -1600,7 +1601,6 @@ displays the expression levels of selected genes across all conditions in the an
         title="Functional annotation of clusters", label="a",
         info.text = clustannot_plots_text        
     )
-    ## output <- attachModule(output, clustannot_plots_module)
     
     clustannot_table.RENDER <- reactive({
         
@@ -1648,8 +1648,6 @@ displays the expression levels of selected genes across all conditions in the an
         height = c(240,700), width=c('auto',1000),
         ##caption = clustannot_caption
     )
-    ##output <- attachModule(output, clustannot_table_module)
-
 
     clustannot_caption = "<b>Cluster annotation.</b> <b>(a)</b> Top ranked annotation features (by correlation) for each gene cluster as defined  in the heatmap. <b>(b)</b> Table of average correlation values of annotation features, for each gene cluster."
     
@@ -1758,7 +1756,6 @@ displays the expression levels of selected genes across all conditions in the an
         info.text = clust_phenoplot_info
         ## caption = clust_phenoplot_caption
     )
-    ##output <- attachModule(output, clust_phenoplot.module)
 
     output$hm_phenoplotUI <- renderUI({
         fillCol(
@@ -1769,7 +1766,8 @@ displays the expression levels of selected genes across all conditions in the an
             plotWidget(ns("clust_phenoplot"))
         )
     })
-
+    ## outputOptions(output, "hm_phenoplotUI", suspendWhenHidden=FALSE) ## important!!!
+    
     ##=============================================================================
     ## Feature ranking
     ##=============================================================================
@@ -1935,7 +1933,6 @@ displays the expression levels of selected genes across all conditions in the an
         info.text = clust_featureRank_info
         ## caption = clust_featureRank_caption
     )
-    ##output <- attachModule(output, clust_featureRank_module)
     
     output$hm_featurerankUI <- renderUI({
         fillCol(

@@ -516,16 +516,17 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         ##-----------------------------------------------------------------
         ## This is the main loader function that loads the ngs object.
         ##-----------------------------------------------------------------
-        dbg("inputData:: ---------- reacted ---------------\n")
-        dbg("inputData:: LOGIN_AUTHENTICATION=",LOGIN_AUTHENTICATION,"\n")
-        dbg("inputData:: USER$Logged=",USER$logged,"\n")
+        dbg("[LoadingModule::inputData] ---------- reacted ---------------\n")
+        dbg("[LoadingModule::inputData] LOGIN_AUTHENTICATION=",LOGIN_AUTHENTICATION,"\n")
+        dbg("[LoadingModule::inputData] USER$Logged=",USER$logged,"\n")
         
-        ## authenicate user
-        ##if(!USER$logged) showLogin()
+        ## authenicate user if needed
+        ## if(!USER$logged) showLogin()
+        ## if(LOGIN_AUTHENTICATION!="none" && USER$logged) showLogin()
         if(LOGIN_AUTHENTICATION!="none" && !USER$logged) return(NULL)
 
         pgx <- currentPGX()
-
+        dbg("[LoadingModule::inputData] is.null(pgx)=",is.null(pgx),"\n")        
         return(pgx)
     })
 
@@ -536,8 +537,8 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         pgx = NULL
         pgx = isolate(selectedDataSet())
 
-        dbg("[observe:loadbutton] loadbutton=",btn,"\n")
-        dbg("[observe:loadbutton] 1: pgx.selected=",pgx)
+        dbg("[LoadingModule::<loadbutton>] loadbutton=",btn,"\n")
+        dbg("[LoadingModule::<loadbutton>] pgx.selected=",pgx)
 
         if(!is.null(btn) && btn!=0 && !is.null(pgx)) {
             ## show loading pop-up
@@ -551,25 +552,26 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             return(NULL)
         }
 
+        
         pgx.path <- PGX.DIR[file.exists(file.path(PGX.DIR,pgx))]
         pgx1 = file.path(pgx.path,pgx)
         pgx1
         if(file.exists(pgx1)) {
-            dbg("[observe:loadbutton] LOADING",pgx1,"\n")
+            dbg("[LoadingModule::<loadbutton>] LOADING",pgx1,"\n")
             ##withProgress(message='loading...', value=0.8,
             load(pgx1,verbose=0)
         } else {
-            cat("[observe:loadbutton] ERROR file not found : ",pgx1,"\n")
+            cat("[LoadingModule::<loadbutton>] ERROR file not found : ",pgx1,"\n")
             removeModal()
             return(NULL)
         }
         
         ##----------------- update input
-        dbg("[observe:loadbutton] head.names.PGX=",head(names(pgx)))
-        dbg("[observe:loadbutton] initializing PGX object")
+        dbg("[LoadingModule::<loadbutton>] head.names.NGS=",head(names(ngs)))
+        dbg("[LoadingModule::<loadbutton>] initializing PGX object")
         ngs <- pgx.initialize(ngs)
         if(is.null(ngs)) {
-            cat("[observe:loadbutton] ERROR in object initialization\n")
+            cat("[LoadingModule::<loadbutton>] ERROR in object initialization\n")
             showNotification("ERROR in object initialization!\n")
             removeModal()
             return(NULL)
@@ -583,7 +585,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         }
         
         currentPGX(ngs)
-        dbg("[observe:loadbutton] ready! \n")
+        dbg("[LoadingModule::<loadbutton>] ready! \n")
     })
     ##}, ignoreNULL=FALSE )
     ##}, ignoreNULL=TRUE )
@@ -669,13 +671,9 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         kk = unique(c("dataset","datatype","organism","description","nsamples",
                       "ngenes","nsets","conditions","date"))
         kk = intersect(kk,colnames(df))
-        df = df[,kk]
-        
-        dbg("<getPGXTable> 2")
-        
+        df = df[,kk]               
         df = df[order(df$dataset),]   ## sort alphabetically...
         rownames(df) <- NULL
-
         df
     })
 
@@ -808,7 +806,8 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                     ## textInput(ns("upload_name"),"Name of dataset:"),
                     ## textAreaInput("upload_description", "Description:", value = NULL,
                     ##              rows=5, placeholder="Describe your data set (minimum 100 characters)"),
-                    actionButton(ns("upload_compute"),"Compute!",icon=icon("running"))
+                    actionButton(ns("upload_compute"),"Compute!",icon=icon("running"),
+                                 class="run-button")
                 ),br(),
                 fillCol(
                     flex = c(NA,1),
@@ -864,9 +863,9 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         if(has.pgx) has.pgx <- has.pgx && !is.null(uploaded_files[["uploaded.pgx"]])
 
         if(has.pgx) {            
-            message("[LoadingModule] ***** using precomputed PGX ******")        
+            message("[LoadingModule] ***** using uploaded PGX ******")        
             ngs <- uploaded_files[["uploaded.pgx"]]
-            
+            currentPGX(ngs)  ## copy to global reactive variable
         } else {
 
             message("[LoadingModule] ***** computing from CSV files *****")
@@ -955,10 +954,8 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             
             names(ngs)
             head(ngs$samples)
-            
             ngs$datatype = "generic"
             ngs$description = "not available"
-
             ngs.name = "(uploaded)"
             ##ngs.name = gsub("[ ]","-",input$upload_name)
             ngs$name = ngs.name
@@ -967,18 +964,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             ngs$date = date()
         }
 
-        
-        ## initialize and update global PGX object
-        ngs <- pgx.initialize(ngs)
-        dbg("[LoadingModule] pgx.initialize() PGX object")
-        dbg("[LoadingModule] dim(ngs$counts)=", dim(ngs$counts))
-        
-        currentPGX(ngs)  ## copy to global reactive variable
-        selectRows(proxy = dataTableProxy(ns("pgxtable")), selected=NULL)
-        ## shinyjs::click("loadbutton")    
-
-        dbg("[LoadingModule] dim(pgx$counts)=", dim(currentPGX()$counts))
-        
+                
         removeModal()
         showModal( modalDialog(
             HTML("<b>Ready!</b><br>You can now start exploring your data. Tip: to avoid computing again, download your data object locally or save it to the cloud."),
@@ -991,6 +977,15 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                 modalButton("Start!")
             )
         ))
+
+        ## initialize and update global PGX object
+        ngs <- pgx.initialize(ngs)
+        dbg("[LoadingModule] pgx.initialize() PGX object")
+        dbg("[LoadingModule] dim(ngs$counts)=", dim(ngs$counts))        
+        selectRows(proxy = dataTableProxy(ns("pgxtable")), selected=NULL)
+        currentPGX(ngs)  ## copy to global reactive variable
+        dbg("[LoadingModule] dim(pgx$counts)=", dim(currentPGX()$counts))
+        ##currentPGX(ngs)  ## copy to global reactive variable
         
     })
 
@@ -1453,6 +1448,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     ##------------------------------------------------
     res <- list(
         inputData = inputData,
+        ##inputData = currentPGX,
         usermode = reactive({ USERMODE() })
     )
     return(res)
