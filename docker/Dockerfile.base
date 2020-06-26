@@ -17,13 +17,14 @@ RUN apt update && apt install -y apt-utils \
     jags emacs git procps htop python-pip \
     pdftk xvfb
 
-## Remove old folder
-RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny 
-RUN rm -fr /omicsplayground
 
 #------------------------------------------------------------
 # Install R packages that are required
 #------------------------------------------------------------
+## Remove old folder
+RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny 
+RUN rm -fr /omicsplayground
+
 WORKDIR /omicsplayground
 COPY R /omicsplayground/R
 COPY shiny /omicsplayground/shiny
