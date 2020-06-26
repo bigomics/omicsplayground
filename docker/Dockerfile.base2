@@ -92,5 +92,9 @@ COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
 COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
 RUN chmod ugo+rwX /tmp && chmod o+t /tmp
 
+# Add shiny user to group shiny
+RUN groupadd  shiny \
+&& useradd --gid shiny --shell /bin/bash --create-home shiny
+
 EXPOSE 3838
 CMD ["/usr/bin/shiny-server.sh"]
