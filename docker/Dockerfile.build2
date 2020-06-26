@@ -16,8 +16,8 @@ FROM bigomics/omicsplayground:base2
 # RUN R -e "BiocManager::install(c('metap'))"
 # RUN R -e "install.packages(c('metap'))"
 # RUN pip3 install umap-learn
-RUN R -e "devtools::install_version('mnormt', version='1.5-7')" \
-    && R -e "install.packages(c('metap','brew','Seurat'))"
+# RUN R -e "devtools::install_version('mnormt', version='1.5-7')" \
+#    && R -e "install.packages(c('metap','brew','Seurat'))"
 
 #------------------------------------------------------------
 # Clone fresh code from GitHub
