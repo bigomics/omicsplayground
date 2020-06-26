@@ -107,8 +107,7 @@ pgx.inferCellCyclePhase <- function(counts)
     ##counts1 <- cbind(counts,counts,counts,counts,counts,counts)
     obj <- CreateSeuratObject(counts)
     obj <- NormalizeData(obj)
-    obj <- CellCycleScoring(
-        obj, s_genes, g2m_genes, set.ident = TRUE)
+    obj <- CellCycleScoring(obj, s_genes, g2m_genes, set.ident = TRUE)
 
     ## view cell cycle scores and phase assignments
     ##head(x = obj@meta.data)
