@@ -99,7 +99,7 @@ be multiple categories (classes) or patient survival data."
     ##}) %>% debounce(3000)
 
     input_pdx_select <- reactive({
-        dbg("<input_pdx_select>  reacted")
+        dbg("[BiomarkerModule:<input_pdx_select>]  reacted")
         gg <- input$pdx_select
         if(is.null(gg)) return(NULL)
         ##req(gg)
@@ -113,19 +113,18 @@ be multiple categories (classes) or patient survival data."
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
-        dbg("[module-biomarker::observe1] reacted")
+        dbg("[BiomarkerModule::observe1] reacted")
         ct <- colnames(ngs$Y)
         ##ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
         ct <- grep("sample|patient|donor",ct,value=TRUE,invert=TRUE)
         updateSelectInput(session, "pdx_predicted", choices=ct )
-        dbg("[module-biomarker::observe1] done!")    
     })
 
     observe({
         ngs <- inputData()
         req(ngs)
         ## input$pdx_runbutton
-        dbg("[module-biomarker::observe2] reacted")
+        dbg("[BiomarkerModule::observe2] reacted")
 
         if(FALSE && isolate(input$pdx_level=="geneset")) {
             ft <- names(COLLECTIONS)
@@ -139,8 +138,6 @@ be multiple categories (classes) or patient survival data."
         ##if(input$pdx_level == "gene") ft = sort(c("<custom>",ft))
         ft = sort(c("<custom>",ft))
         updateSelectInput(session, "pdx_filter", choices=ft, selected="<all>")    
-
-        dbg("[module-biomarker::observe2] done!")
     })
 
     calcVariableImportance <- eventReactive( input$pdx_runbutton, {
@@ -149,7 +146,7 @@ be multiple categories (classes) or patient survival data."
         ##
         
         ## input$pdx_runbutton
-        dbg("calcVariableImportance:: reacted on runbutton")
+        dbg("[BiomarkerModule::calcVariableImportance] reacted on runbutton")
         
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
@@ -160,13 +157,13 @@ be multiple categories (classes) or patient survival data."
         colnames(ngs$Y)    
         isolate(ct <- input$pdx_predicted)
         
-        dbg("calcVariableImportance","predicting = ",ct,"\n")
+        dbg("  calcVariableImportance","predicting = ",ct,"\n")
         do.survival <- grepl("survival",ct,ignore.case=TRUE)
-        dbg("calcVariableImportance","do.survival = ",do.survival,"\n")
+        dbg("  calcVariableImportance","do.survival = ",do.survival,"\n")
         
         if(is.null(ct)) return(NULL)
         
-        dbg("calcVariableImportance","2")
+        dbg("  calcVariableImportance","2")
 
         NFEATURES=50
         NFEATURES=60
@@ -176,20 +173,16 @@ be multiple categories (classes) or patient survival data."
         ## Make sure it closes when we exit this reactive, even if there's an error
         on.exit(progress$close())
         
-        dbg("calcVariableImportance:: 1\n")
         progress$set(message = "Variable importance", value = 0)
         
         if(!(ct %in% colnames(ngs$Y))) return(NULL)
         y0 <- ngs$Y[,ct]
         names(y0) <- rownames(ngs$Y)
         y <- y0[!is.na(y0)]
-        dbg("calcVariableImportance:: table.y=",table(y),"\n")
         
         table(y)
         if(length(y)<40) y <- head(rep(y,10),100)  ## augment to 100 samples
         table(y)
-
-        dbg("calcVariableImportance:: 2\n")
         
         ##-------------------------------------------
         ## select features
@@ -200,13 +193,11 @@ be multiple categories (classes) or patient survival data."
         } else {
             X <- ngs$X[,names(y)]
         }
-
         dim(X)
         X0 <- X
         length(y)
         
         ## ----------- filter with selected features
-        dbg("calcVariableImportance:: 3: filtering with selected features\n")
         progress$inc(1/10, detail = "Filtering features")
         
         ft="<all>"
@@ -243,8 +234,6 @@ be multiple categories (classes) or patient survival data."
                 X <- X[pp,,drop=FALSE]
             }
         }
-
-        dbg("calcVariableImportance:: 4a: dim.X=",dim(X),"\n")
         
         ## ----------- restrict to top 100
         dim(X)
@@ -252,8 +241,6 @@ be multiple categories (classes) or patient survival data."
         sdx <- mean(apply(X,1,sd))
         X <- X + 0.25*sdx*matrix(rnorm(length(X)),nrow(X),ncol(X))  ## add some noise
         dim(X)
-
-        dbg("calcVariableImportance:: 4b: restrict top: dim.X=",dim(X),"\n")
         
         progress$inc(4/10, detail = "computing scores")
         
@@ -401,6 +388,9 @@ be multiple categories (classes) or patient survival data."
         
         res <- calcVariableImportance()
         if(is.null(res)) return(NULL)
+
+        dbg("[BiomarkerModule::pdx_importance.RENDER] called\n")
+        
         R <- res$R
         R <- R[order(-rowSums(R,na.rm=TRUE)),,drop=FALSE]
         R <- pmax(R,0.05)
@@ -436,9 +426,13 @@ be multiple categories (classes) or patient survival data."
 
     pdx_heatmap.RENDER %<a-% reactive({
 
+        dbg("[BiomarkerModule::pdx_heatmap] reacted\n")
+        
         ngs <- inputData()
         alertDataLoaded(session, ngs) 
         req(ngs)
+
+        dbg("[BiomarkerModule::pdx_heatmap] called\n")
         
         res <- calcVariableImportance()
         if(is.null(res)) {
@@ -461,7 +455,6 @@ be multiple categories (classes) or patient survival data."
             X <- ngs$X[gg,]
         }
 
-        dbg("<predict:pdx_heatmap> dim(X)=",dim(X),"\n")
         X <- head(X[order(-apply(X,1,sd)),],40)  ## top50
 
         splitx <- NULL
@@ -492,7 +485,7 @@ be multiple categories (classes) or patient survival data."
 
     pdx_decisiontree.RENDER %<a-% reactive({
 
-        dbg("<pdx_decisiontree.RENDER> reacted")
+        dbg("[BiomarkerModule::pdx_decisiontree] reacted")
         
         res <- calcVariableImportance()
         if(is.null(res)) return(NULL)
@@ -523,7 +516,8 @@ be multiple categories (classes) or patient survival data."
                     visInteraction(tooltipStyle='position:fixed;visibility:hidden;padding:5px;white-space:nowrap;font-family:helvetica;font-size:10px;background-color:lightgrey;')
             }
         } 
-
+        dbg("[BiomarkerModule::pdx_decisiontree] done")
+        
     })
     
     pdx_boxplots.RENDER %<a-% reactive({

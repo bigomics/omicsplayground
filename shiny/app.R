@@ -27,7 +27,6 @@ message("==========================================================")
 message("======================= INIT =============================")
 message("==========================================================\n")
 
-
 message("*******************************************")
 message("******* SETTING GLOBAL VARIABLES **********")
 message("*******************************************")
@@ -56,6 +55,7 @@ SHOW_QUESTIONS = FALSE
 DEV.VERSION = opt$DEV_VERSION && dir.exists("../../omicsplayground-dev")
 USER_MODE = opt$USER_MODE
 
+
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
 
@@ -81,6 +81,8 @@ if(0) {
 ## ------------------------ READ MODULES ------------------------------
 ## --------------------------------------------------------------------
 
+
+
 MODULES <- c("load","view","clust","expr","enrich","isect","func",
              "word","drug","sig","scell","cor","bio","cmap",
              "tcga","bc","multi","qa")
@@ -95,6 +97,7 @@ modules <- dir("modules", pattern=".R$")
 for(m in modules) {
     message("[MAIN] loading module ",m)
     source(paste0("modules/",m), local=TRUE)
+    ##source(paste0("modules/",m), local=FALSE)
 }
 
 if(DEV.VERSION && dir.exists("../../omicsplayground-dev")) {
@@ -110,6 +113,7 @@ if(DEV.VERSION && dir.exists("../../omicsplayground-dev")) {
 }
 ENABLED
 
+## disable connectivity map if we have no signature database folder
 has.sigdb <- length(dir(FILESX,pattern="sigdb.*h5")>0)
 has.sigdb
 if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
@@ -152,10 +156,11 @@ server = function(input, output, session) {
     if(ENABLED["tcga"])   env[["tcga"]]   <- callModule( TcgaModule, "tcga", env)
     if(ENABLED["bc"])     env[["bc"]]     <- callModule( BatchCorrectModule, "bc", env)
     if(ENABLED["multi"])  env[["multi"]]  <- callModule( MultiLevelModule, "multi", env)
-    env[["qa"]]     <- callModule( QuestionModule, "qa", lapse = -1)
+    env[["qa"]] <- callModule( QuestionModule, "qa", lapse = -1)
     
     message("[MAIN] all modules called")
-    
+    ## outputOptions(output, "clust", suspendWhenHidden=FALSE) ## important!!!
+
     output$current_dataset <- renderText({
         pgx <- env[["load"]][["inputData"]]()
         name <- gsub(".*\\/|[.]pgx$","",pgx$name)
@@ -166,7 +171,7 @@ server = function(input, output, session) {
     ## Dynamicall hide/show certain sections depending on USERMODE/object
     observe({
         pgx <- env[["load"]][["inputData"]]() ## trigger on change dataset
-
+        
         ## hide all main tabs until we have an object
         if(is.null(pgx)) {
             lapply(MAINTABS, function(m) hideTab("maintabs",m))
@@ -175,38 +180,31 @@ server = function(input, output, session) {
             return(NULL)
         }
 
+        message("[MAIN] dataset changed. reconfiguring menu...")
+
         ## show all main tabs
         lapply(MAINTABS, function(m) showTab("maintabs",m))
-                
+
+        
         hideTab("view-tabs","Resource info")
         hideTab("maintabs","Development")
-        hideTab("maintabs","CellProfiling")
-        
-        hideTab("enrich-tabs1","GeneMap")
-        hideTab("clust-tabs2","Feature ranking")
-        hideTab("expr-tabs1","Volcano (methods)")
-        hideTab("expr-tabs2","FDR table")
-        hideTab("enrich-tabs1","Volcano (methods)")
-        hideTab("enrich-tabs2","FDR table")
 
-        if(opt$USER_MODE == "PRO") {
-            showTab("clust-tabs2","Feature ranking")
-            showTab("expr-tabs1","Volcano (methods)")
-            showTab("expr-tabs2","FDR table")
-            showTab("enrich-tabs1","Volcano (methods)")
-            showTab("enrich-tabs2","FDR table")
+        if(opt$USER_MODE == "BASIC") {
+            hideTab("maintabs","CellProfiling")
+            hideTab("enrich-tabs1","GeneMap")
+            hideTab("clust-tabs2","Feature ranking")
+            hideTab("expr-tabs1","Volcano (methods)")
+            hideTab("expr-tabs2","FDR table")
+            hideTab("enrich-tabs1","Volcano (methods)")
+            hideTab("enrich-tabs2","FDR table")
         }
 
-        hideTab("maintabs","CellProfiling")
-        hideTab("scell-tabs1","CNV")  ## DEV only
-        hideTab("scell-tabs1","Monocle") ## DEV only       
-
-        if(DEV.VERSION) {
+        if(!opt$USER_MODE == "DEV" || DEV.VERSION) {
             showTab("maintabs","Development")
             showTab("view-tabs","Resource info")
             showTab("enrich-tabs1","GeneMap")
-            showTab("scell-tabs1","CNV")
-            showTab("scell-tabs1","Monocle")
+            hideTab("scell-tabs1","CNV")  ## DEV only
+            hideTab("scell-tabs1","Monocle") ## DEV only       
         }
 
         ## Dynamically show upon availability in pgx object
@@ -214,9 +212,10 @@ server = function(input, output, session) {
         showHideTab(pgx, "connectivity", "maintabs", "Similar experiments")
         showHideTab(pgx, "drugs", "maintabs", "Drug connectivity")
         showHideTab(pgx, "wordcloud", "maintabs", "Word cloud")
-        showHideTab(pgx, "deconv", "maintabs", "CellProfiling") 
-        
-        if(!is.null(ACCESS.LOG)) showTab("load-tabs","Visitors map")            
+        showHideTab(pgx, "deconv", "maintabs", "CellProfiling")         
+        if(!is.null(ACCESS.LOG)) showTab("load-tabs","Visitors map")                    
+
+        message("[MAIN] reconfiguring menu done.")
         
     })
 
@@ -337,6 +336,7 @@ createUI <- function(tabs)
                            header = tagList(header),
                            footer = tagList(footer),
                            theme = theme) )
+
 
 }
 
