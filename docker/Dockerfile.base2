@@ -78,9 +78,9 @@ RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
 # Install Plotly/Orca server
 #------------------------------------------------------------
 WORKDIR /omicsplayground
+COPY ext/bin/orca /usr/local/bin/orca 
 RUN wget https://github.com/plotly/orca/releases/download/v1.3.1/orca-1.3.1.AppImage \
     && mv orca-1.3.1.AppImage /usr/local/bin \
-    && cp ./ext/bin/orca /usr/local/bin/orca \
     && chmod ugo+x /usr/local/bin/orca-1.3.1.AppImage /usr/local/bin/orca   
 
 
