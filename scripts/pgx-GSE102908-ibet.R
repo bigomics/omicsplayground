@@ -11,7 +11,7 @@ rda.file="../data/GSE102908-ibet.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
-##ngs <- list()  ## empty object
+ngs <- list()  ## empty object
 ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$datatype = "mRNA (microarray)"
 ngs$description = "GSE102908. RNAseq data from SCCOHT1 and OVCAR8 ovarian cancer cells treated with BET inhibitors. Analysis of mRNA profile of 2 cell lines exposed to DMSO, OTX015 for 4 and 24 hours in duplicate."
@@ -73,7 +73,7 @@ if(PROCESS.DATA) {
     extra <- c("connectivity")
     extra <- c("drugs-combo")
     extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")
-    extra <- c("meta.go","infer","drugs-combo","wordcloud","connectivity")
+    extra <- c("meta.go","deconv","infer","drugs-combo","wordcloud","connectivity")
     ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
     
     names(ngs)
