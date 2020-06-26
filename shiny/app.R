@@ -158,7 +158,8 @@ server = function(input, output, session) {
     if(ENABLED["multi"])  env[["multi"]]  <- callModule( MultiLevelModule, "multi", env)
     env[["qa"]] <- callModule( QuestionModule, "qa", lapse = -1)
     
-    message("[MAIN] all modules called")
+    ## message("[MAIN] all modules called:",paste(names(env),collapse=" "))
+    message("[MAIN] modules enabled:",paste(names(which(ENABLED)),collapse=" "))
     ## outputOptions(output, "clust", suspendWhenHidden=FALSE) ## important!!!
 
     output$current_dataset <- renderText({
@@ -184,7 +185,6 @@ server = function(input, output, session) {
 
         ## show all main tabs
         lapply(MAINTABS, function(m) showTab("maintabs",m))
-
         
         hideTab("view-tabs","Resource info")
         hideTab("maintabs","Development")

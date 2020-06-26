@@ -986,6 +986,9 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         currentPGX(ngs)  ## copy to global reactive variable
         dbg("[LoadingModule] dim(pgx$counts)=", dim(currentPGX()$counts))
         ##currentPGX(ngs)  ## copy to global reactive variable
+
+        ## clean up uploaded_file object
+        for(s in names(uploaded_files)) uploaded_files[[s]] <- NULL
         
     })
 
@@ -1054,6 +1057,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
 
     })
 
+
     uploadStatusTable <- reactive({
         
         dbg("[uploadStatusTable] uploaded_files$name=",input$upload_files$name)
@@ -1072,7 +1076,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             ff[["counts.csv"]] <- ngs$counts
             ff[["samples.csv"]] <- ngs$samples
             ff[["contrasts.csv"]] <- ngs$model.parameters$contr.matrix
-
+            
             if(is.null(ngs$name)) ngs$name <- sub(".pgx$","",input$upload_files$name[i])
             uploaded_files[["uploaded.pgx"]] <- ngs
             from.pgx = TRUE
