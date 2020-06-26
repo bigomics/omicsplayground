@@ -2,7 +2,6 @@
 
 ngs.getGeneAnnotation <- function(genes)
 {
-
     require(org.Hs.eg.db)
     require(org.Mm.eg.db)
     hs.genes <- unique(unlist(as.list(org.Hs.egSYMBOL)))
@@ -18,6 +17,7 @@ ngs.getGeneAnnotation <- function(genes)
         names(GENE.TITLE) = SYMBOL
         CHRLOC = as.list(org.Hs.egCHRLOC)
         MAP = as.list(org.Hs.egMAP)
+        MAP = sapply(MAP,paste,collapse="|")
         names(CHRLOC) = SYMBOL
         names(MAP) = SYMBOL
     }
