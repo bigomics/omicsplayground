@@ -39,6 +39,7 @@ if(0) {
 ##-------------------------------------------------------------------------------------
 id="GSE100035"
 id="GSE102908"
+id="GSE102908"
 
 pgx.getGEOseries <- function(id, convert.hugo=TRUE) {
     
@@ -77,7 +78,7 @@ pgx.getGEOseries <- function(id, convert.hugo=TRUE) {
     dim(sampleinfo)
     head(sampleinfo)
     
-    ## create contrast matrix
+    ## automagically create contrast matrix
     mingrp=3;slen=15;ref=NA
     ct <- pgx.makeAutoContrast(sampleinfo, mingrp=3, slen=20, ref=NA)
     is.null(ct)
