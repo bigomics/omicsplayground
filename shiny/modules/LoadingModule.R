@@ -865,7 +865,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         if(has.pgx) {            
             message("[LoadingModule] ***** using uploaded PGX ******")        
             ngs <- uploaded_files[["uploaded.pgx"]]
-            currentPGX(ngs)  ## copy to global reactive variable
+            ## currentPGX(ngs)  ## copy to global reactive variable
         } else {
 
             message("[LoadingModule] ***** computing from CSV files *****")
@@ -1057,6 +1057,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         has.pgx <- any(grepl("[.]pgx$",input$upload_files$name))
         ff <- list()
         if(has.pgx) {
+            dbg("[uploadStatusTable] *** from uploaded PGX ***")            
             i <- grep("[.]pgx$",input$upload_files$name)
             load(input$upload_files$datapath[i])  ## load NGS/PGX
             ff[["counts.csv"]] <- ngs$counts
@@ -1068,6 +1069,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             from.pgx = TRUE
 
         } else {
+            dbg("[uploadStatusTable] *** from CSV ***")            
             ii <- grep("csv$",input$upload_files$name)
             inputnames <- input$upload_files$name[ii]
             uploadnames <- input$upload_files$datapath[ii]
@@ -1123,7 +1125,8 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         }
         
         if(from.pgx==FALSE) {
-
+            dbg("[uploadStatusTable] checking CSV files...")            
+            
             ## check files: matching dimensions
             if(status["counts.csv"]=="OK" && status["samples.csv"]=="OK") {
                 if(!all( sort(colnames(uploaded_files[["counts.csv"]])) ==
@@ -1185,6 +1188,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                          description=description,
                          nrow=files.nrow, ncol=files.ncol )
 
+        dbg("[uploadStatusTable] done")            
         ## deselect
         ## selectRows(proxy = dataTableProxy("pgxtable"), selected=NULL)
         return(df)    
