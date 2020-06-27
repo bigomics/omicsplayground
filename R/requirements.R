@@ -127,8 +127,8 @@ if(1) {
     devtools::install_github('cole-trapnell-lab/monocle3')
 }
 
-## ----- proteus
-## devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data", "--no-manual"), build_vignettes=FALSE)
+## proteus
+devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data", "--no-manual"), build_vignettes=FALSE)
 
 ##---------------------------------------------------------------------
 ## Seurat needs to be downgraded and dependencies to installed...
