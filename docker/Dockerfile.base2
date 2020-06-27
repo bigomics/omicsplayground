@@ -13,8 +13,8 @@ RUN apt-get update && apt-get install -y software-properties-common
 #RUN add-apt-repository "deb http://cran.rstudio.com/bin/linux/ubuntu $(lsb_release -cs)/"
 #RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
 
-RUN apt update && apt install -y apt-utils \
-    libcurl4-gnutls-dev libnode-dev \
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
+    apt-utils libcurl4-gnutls-dev libnode-dev \
     libssl-dev libxml2-dev libjpeg-dev \
     libgl-dev libglu-dev tk-dev libhdf5-dev \
     libgit2-dev libssh2-1-dev libnetcdf-dev \
@@ -26,8 +26,7 @@ RUN apt update && apt install -y apt-utils \
     libcairo2-dev libxt-dev xvfb 
     
 # Install basic stuff and R
-RUN apt-get update && apt-get install -y \
-    r-base r-base-dev r-recommended
+RUN apt install -y r-base r-base-dev r-recommended
 
 # Install Plotly/Orca server
 COPY ext/bin/orca /usr/local/bin/orca 
