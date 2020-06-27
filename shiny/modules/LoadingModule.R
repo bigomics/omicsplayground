@@ -879,42 +879,32 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             max.genes = as.integer(max.limits["genes"])
             max.genesets = 9999
             
-            if( USERMODE() == "BASIC") {
+            if( FALSE && USERMODE() == "BASIC") {
                 dbg("[LoadingModule::*myconfirmation] setting BASIC methods")            
                 gx.methods   = c("ttest.welch","ttest.rank","trend.limma") ## fastest 3
                 gset.methods = c("fisher","gsva","camera")  ## fastest 3            
                 ## gx.methods   = c("trend.limma","edger.qlf","edger.lrt")
                 ## gset.methods = c("fisher","gsva","fgsea")
                 extra.methods = c("meta.go","infer","drugs","wordcloud")
-                ##max.genes = 10000
             } else {
-                dbg("[LoadingModule::*myconfirmation] setting PRO methods")                            
+                dbg("[LoadingModule::*myconfirmation] setting PRO methods")  
                 gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
                 gset.methods = c("fisher","gsva","fgsea","camera","fry")
-                extra.methods = c("meta.go","infer","deconv","drugs-combo","wordcloud")
-                ## max.genes = 25000
-                if(ncol(counts) > 1000) {
-                    ## probably scRNA-seq
-                    gx.methods   = c("ttest","ttest.welch","trend.limma")
+                extra.methods = c("meta.go","infer","deconv","drugs-combo",
+                                  "wordcloud","connectivity")
+                if(ncol(counts) > 750) {
+                    ## probably scRNA-seq... to long
+                    gx.methods   = c("ttest","ttest.welch","trend.limma") ## only t-test...
                     gset.methods = c("fisher","gsva","fgsea")
-                    extra.methods = c("meta.go","infer","deconv","drugs-combo","wordcloud")
-                    ## max.genes = 10000
+                    extra.methods = c("meta.go","infer","deconv","drugs-combo",
+                                      "wordcloud","connectivity")
+                    max.genes = 10000
                 }
             }
-            if(FALSE && DEV.VERSION) {
-                gx.methods   = c("ttest","ttest.rank","ttest.welch","trend.limma","edger.qlf","edger.lrt","deseq2.wald")
-                gset.methods = c("fisher","gsva","fgsea","camera","fry","ssgsea","spearman")
-                extra.methods = c("meta.go","infer","deconv","drugs-combo","wordcloud")
-                max.genes = 9999999
-            }
-            
-            ##extra.methods = c("meta.go","infer")
             
             ##----------------------------------------------------------------------
             ## Upload and do precomputation
             ##----------------------------------------------------------------------
-            dbg("[LoadingModule::*myconfirmation] setting PRO methods")
-
             start_time <- Sys.time()
             ## Create a Progress object
             progress <- shiny::Progress$new()
@@ -964,7 +954,12 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             ngs$date = date()
         }
 
-                
+        ## initialize and update global PGX object
+        ngs <- pgx.initialize(ngs)
+        currentPGX(ngs)  ## copy to global reactive variable
+        selectRows(proxy = dataTableProxy(ns("pgxtable")), selected=NULL)
+        ## shinyjs::click("loadbutton")    
+
         removeModal()
         showModal( modalDialog(
             HTML("<b>Ready!</b><br>You can now start exploring your data. Tip: to avoid computing again, download your data object locally or save it to the cloud."),
@@ -978,18 +973,9 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             )
         ))
 
-        ## initialize and update global PGX object
-        ngs <- pgx.initialize(ngs)
-        dbg("[LoadingModule] pgx.initialize() PGX object")
-        dbg("[LoadingModule] dim(ngs$counts)=", dim(ngs$counts))        
-        selectRows(proxy = dataTableProxy(ns("pgxtable")), selected=NULL)
-        currentPGX(ngs)  ## copy to global reactive variable
-        dbg("[LoadingModule] dim(pgx$counts)=", dim(currentPGX()$counts))
-        ##currentPGX(ngs)  ## copy to global reactive variable
-
         ## clean up uploaded_file object
         for(s in names(uploaded_files)) uploaded_files[[s]] <- NULL
-        
+                
     })
 
     output$downloadPGX <- downloadHandler(
