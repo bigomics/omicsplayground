@@ -6,7 +6,8 @@
 # Start from lastest base+data image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:base2
+##FROM bigomics/omicsplayground:base2
+FROM bigomics/omicsplayground:v2.3.0
 
 #------------------------------------------------------------
 # Install any extra packages required since base
@@ -23,9 +24,12 @@ FROM bigomics/omicsplayground:base2
 # Clone fresh code from GitHub
 #------------------------------------------------------------
 WORKDIR /
-RUN rm -fr /omicsplayground \
-    && git clone https://github.com/bigomics/omicsplayground.git \
-    && chmod -R ugo+rwX /omicsplayground
+#RUN rm -fr /omicsplayground \
+#    && git clone https://github.com/bigomics/omicsplayground.git \
+#    && chmod -R ugo+rwX /omicsplayground
+
+WORKDIR /omicsplayground
+RUN git pull
 
 #------------------------------------------------------------
 # Copy any extra data sets into Docker image
@@ -33,6 +37,11 @@ RUN rm -fr /omicsplayground \
 WORKDIR /omicsplayground
 # COPY data/GSE10846-dlbcl-nc.pgx data/
 # RUN R -e "setwd('data');source('init.R')"
+
+#------------------------------------------------------------
+# Orca stuff
+#------------------------------------------------------------
+RUN cp ext/bin/orca /usr/local/bin && chmod ugo+x /usr/local/bin/orca
 
 #------------------------------------------------------------
 # Copy further configuration files into the Docker image
