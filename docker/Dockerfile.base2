@@ -7,14 +7,15 @@ MAINTAINER Ivo Kwee "kwee@bigomics.ch"
 # =====================================================================
 
 # Need this to add R repo
-RUN apt-get update && apt-get install -y software-properties-common
+RUN apt update && apt install -y \
+    apt-utils software-properties-common
 
 # Add R apt repository
 #RUN add-apt-repository "deb http://cran.rstudio.com/bin/linux/ubuntu $(lsb_release -cs)/"
 #RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
 
-RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
-    apt-utils libcurl4-gnutls-dev libnode-dev \
+RUN DEBIAN_FRONTEND=noninteractive apt install -y \
+    libcurl4-gnutls-dev libnode-dev \
     libssl-dev libxml2-dev libjpeg-dev \
     libgl-dev libglu-dev tk-dev libhdf5-dev \
     libgit2-dev libssh2-1-dev libnetcdf-dev \
