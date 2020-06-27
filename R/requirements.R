@@ -61,7 +61,8 @@ PKG.MANUAL <- c(
 ## Install base packages
 ##---------------------------------------------------------------------
 
-base.pkg = c("shiny","flexdashboard","shinydashboard","shinydashboardPlus")
+base.pkg = c("shiny","flexdashboard","shinydashboard",
+             "shinydashboardPlus",'R.utils')
 install.pkgs(base.pkg)
 
 ##---------------------------------------------------------------------
@@ -85,16 +86,11 @@ install.pkgs( setdiff(pkg.used, c(PKG.MANUAL,BIG.NOTUSED)) )
 
 require(devtools)
 ##install.pkg("grid", force=TRUE)
-install.pkg("gridGraphics", force=TRUE)
-install.pkg("Rgraphviz", force=TRUE)
-install.pkg("fastcluster", force=TRUE)
-install.pkg("mygene", force=TRUE)
-install.pkg("diptest", force=TRUE)
-install.pkgs("fpc")
-install.pkg("webshot")
+install.pkgs(c("gridGraphics","Rgraphviz","fastcluster", "mygene",
+               "diptest", "fpc", "webshot"))
 ##webshot::install_phantomjs() 
 devtools::install_version("mnormt", version="1.5-7", repos="http://cran.us.r-project.org") 
-install.pkgs(c("metap",'umap','corrplot','wordcloud','metap','brew','Seurat','R.utils')
+install.pkgs(c('umap','corrplot','wordcloud','metap','brew','Seurat'))
 
 ##---------------------------------------------------------------------
 ## Install latest from GITHUB
@@ -136,18 +132,14 @@ devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data"
 
 install.pkgs(c("RcppParallel"))
 devtools::install_github('wt2015-github/FastGGM')
-
 install.pkgs(c("HiddenMarkov","coin","rjags","future","argparse"))
-install.pkg("coin", force=TRUE)
+install.pkg("rjags", force=TRUE)
 ##install.packages("../ext/packages/infercnv_1.1.3mod.tar.gz",repos=NULL,type="source")  ## old version
 BiocManager::install("infercnv")
-
-install.pkg("KEGGREST", force=TRUE)
-##install.packages("../ext/packages/pathview_1.16.7.tar.gz",repos=NULL,type="source")  ## old version
-install.pkg("pathview")  ## works now...
+install.pkgs(c("KEGGREST","pathview"), force=TRUE)
 
 ##---------------------------------------------------------------------
 ## remove unneccessary big packages...
 ##---------------------------------------------------------------------
-
+BIG.NOTUSED
 remove.pkgs(BIG.NOTUSED)
