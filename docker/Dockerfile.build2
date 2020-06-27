@@ -30,7 +30,7 @@ RUN rm -fr /omicsplayground \
 #------------------------------------------------------------
 # Copy any extra data sets into Docker image
 #------------------------------------------------------------
-# WORKDIR /omicsplayground
+WORKDIR /omicsplayground
 # COPY data/GSE10846-dlbcl-nc.pgx data/
 # RUN R -e "setwd('data');source('init.R')"
 
