@@ -306,6 +306,7 @@ if(DIFF.EXPRESSION) {
     ##source("../R/compute-extra.R")
 
     GENETEST.METHODS=c("trend.limma","edger.qlf","edger.lrt")
+    GENETEST.METHODS=c("ttest","ttest.welch","notrend.limma") ## fastest methods
     GENESET.METHODS=c("gsva","camera","fgsea")
     
     ## new callling methods

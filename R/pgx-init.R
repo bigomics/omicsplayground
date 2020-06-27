@@ -14,6 +14,7 @@ DEV.VERSION=FALSE
 
 ## Caching the init files
 INIT.FILE <- file.path(FILES,"global-init.rda")
+INIT.FILE <- "/tmp/global-init.rda" ## avoid rw permission
 INIT.FILE
 file.exists(INIT.FILE)
 
