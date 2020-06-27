@@ -22,7 +22,7 @@ RUN apt update && apt install -y apt-utils \
     jags emacs git procps htop \
     python3 python3-pip python-is-python3 \
     pdftk vim-tiny less wget gdebi-core \
-    pandoc pandoc-citeproc \ 
+    pandoc pandoc-citeproc phantomjs \ 
     libcairo2-dev libxt-dev xvfb 
     
 # Install basic stuff and R
@@ -54,7 +54,7 @@ RUN rm -fr /omicsplayground \
 WORKDIR /omicsplayground
 RUN R -e "setwd('R');source('requirements.R')"
 RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
-    'metap','brew'))"
+    'metap','brew','Seurat','R.utils'))"
 
 #------------------------------------------------------------
 # Build default data sets 
