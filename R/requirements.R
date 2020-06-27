@@ -91,17 +91,10 @@ install.pkg("fastcluster", force=TRUE)
 install.pkg("mygene", force=TRUE)
 install.pkg("diptest", force=TRUE)
 install.pkgs("fpc")
-install.pkgs("Seurat")
-
-##remove.pkg("fpc")
-##install.pkgs(c('mclust', 'flexmix', 'prabclus', 'diptest', 'mvtnorm', 'robustbase', 'kernlab', 'trimcluster'))
-##install_version("fpc", version="2.1-10", repos="http://cran.us.r-project.org")
-
-install.packages("webshot")
+install.pkg("webshot")
 ##webshot::install_phantomjs() 
 devtools::install_version("mnormt", version="1.5-7", repos="http://cran.us.r-project.org") 
-install.packages(c("metap"))
-install.packages(c("brew"))
+install.pkgs(c("metap",'umap','corrplot','wordcloud','metap','brew','Seurat','R.utils')
 
 ##---------------------------------------------------------------------
 ## Install latest from GITHUB
