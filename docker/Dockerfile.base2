@@ -21,43 +21,14 @@ RUN apt update && apt install -y apt-utils \
     libudunits2-dev libgdal-dev libbz2-dev \
     jags emacs git procps htop \
     python3 python3-pip python-is-python3 \
-    pdftk xvfb vim-tiny less wget gdebi
+    pdftk vim-tiny less wget gdebi-core \
+    pandoc pandoc-citeproc \ 
+    libcairo2-dev libxt-dev xvfb 
+    
 
 # Install basic stuff and R
 RUN apt-get update && apt-get install -y \
     r-base r-base-dev r-recommended
-
-
-# =====================================================================
-# Shiny Server Pro
-# =====================================================================
-
-RUN apt-get install -y \
-    gdebi-core \
-    pandoc \
-    pandoc-citeproc \
-    libcurl4-gnutls-dev \
-    libcairo2-dev \
-    libxt-dev
-
-# Download and install libssl 0.9.8
-#RUN wget --no-verbose http://ftp.us.debian.org/debian/pool/main/o/openssl/libssl0.9.8_0.9.8o-4squeeze14_amd64.deb && \
-#    dpkg -i libssl0.9.8_0.9.8o-4squeeze14_amd64.deb && \
-#    rm -f libssl0.9.8_0.9.8o-4squeeze14_amd64.deb
-
-# Download and install shiny server pro
-# RUN wget https://s3.amazonaws.com/rstudio-shiny-server-pro-build/ubuntu-12.04/x86_64/VERSION -O "version.txt" && \
-#     VERSION=$(cat version.txt)  && \
-#     wget "https://s3.amazonaws.com/rstudio-shiny-server-pro-build/ubuntu-12.04/x86_64/shiny-server-commercial-$VERSION-amd64.deb" -O ssp-latest.deb && \
-#     gdebi -n ssp-latest.deb && \
-#     rm -f version.txt ssp-latest.deb
-
-# Download and install shiny server pro
-RUN wget https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.14.948-amd64.deb \
-     && gdebi --non-interactive shiny-server-1.5.14.948-amd64.deb \
-     && rm -f shiny-server-1.5.14.948-amd64.deb \     
-
-## RUN R -e "install.packages(c('shiny', 'rmarkdown'), repos='http://cran.rstudio.com/')"
 
 #------------------------------------------------------------
 # Install R packages that are required
@@ -67,14 +38,17 @@ RUN rm -fr /omicsplayground /var/lib/shiny-server/bookmarks/shiny \
     && mkdir -p /var/lib/shiny-server/bookmarks/shiny \
     && mkdir -p /omicsplayground
 
+## Clone clean install from GitHub and remove .git folder
+WORKDIR /
+RUN rm -fr /omicsplayground \
+    && git clone https://github.com/bigomics/omicsplayground.git \
+    && chmod -R ugo+rwX /omicsplayground \
+    && rm -fr /omicsplayground/.git
+
 ## install R packages
-WORKDIR /omicsplayground
-COPY R /omicsplayground/R
-COPY shiny /omicsplayground/shiny
 RUN R -e "setwd('R');source('requirements.R')"
 RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
     'metap','brew'))"
-
 
 #------------------------------------------------------------
 # Install Plotly/Orca server
@@ -85,18 +59,27 @@ RUN wget https://github.com/plotly/orca/releases/download/v1.3.1/orca-1.3.1.AppI
     && mv orca-1.3.1.AppImage /usr/local/bin \
     && chmod ugo+x /usr/local/bin/orca-1.3.1.AppImage /usr/local/bin/orca   
 
+#------------------------------------------------------------
+# Build default data sets into Docker image
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+RUN R -e "setwd('scripts');source('build-datasets.R')" \
+    && R -e "setwd('data');source('init.R')"
+
 
 #------------------------------------------------------------
-# Run shiny server
+# Add shiny user to group shiny
+#------------------------------------------------------------
+RUN groupadd  shiny \
+    && useradd --gid shiny --shell /bin/bash --create-home shiny
+
+#------------------------------------------------------------
+# Copy further configuration files into the Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
 COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
 COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
 RUN chmod ugo+rwX /tmp && chmod o+t /tmp
-
-# Add shiny user to group shiny
-RUN groupadd  shiny \
-&& useradd --gid shiny --shell /bin/bash --create-home shiny
 
 EXPOSE 3838
 CMD ["/usr/bin/shiny-server.sh"]
