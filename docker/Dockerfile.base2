@@ -46,6 +46,7 @@ RUN rm -fr /omicsplayground \
     && rm -fr /omicsplayground/.git
 
 ## install R packages
+WORKDIR /omicsplayground
 RUN R -e "setwd('R');source('requirements.R')"
 RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
     'metap','brew'))"
