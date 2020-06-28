@@ -7,40 +7,41 @@
 #------------------------------------------------------------
 
 FROM bigomics/omicsplayground:base
+##FROM bigomics/omicsplayground:v2.3.0
 
 #------------------------------------------------------------
-# Install extra packages required since base (later move to requirements.R!)
+# Install any extra packages required since base
 #------------------------------------------------------------
 
-RUN apt install -y xvfb
+# RUN apt install -y xvfb
 # RUN R -e "BiocManager::install(c('metap'))"
 # RUN R -e "install.packages(c('metap'))"
-# RUN pip install umap-learn
-RUN R -e "devtools::install_version('mnormt', version='1.5-7', repos='http://cran.us.r-project.org')" \
-    && R -e "install.packages(c('metap','brew','Seurat'))"
+# RUN pip3 install umap-learn
+# RUN R -e "devtools::install_version('mnormt', version='1.5-7')" \
+#    && R -e "install.packages(c('metap','brew','Seurat'))"
 
 #------------------------------------------------------------
 # Clone fresh code from GitHub
 #------------------------------------------------------------
 WORKDIR /
-RUN rm -fr /omicsplayground \
-    && git clone https://github.com/bigomics/omicsplayground.git \
-    && chmod -R ugo+rwX /omicsplayground
+#RUN rm -fr /omicsplayground \
+#    && git clone https://github.com/bigomics/omicsplayground.git \
+#    && chmod -R ugo+rwX /omicsplayground
+
+WORKDIR /omicsplayground
+RUN git pull
 
 #------------------------------------------------------------
-# Install Plotly/Orca server
-#------------------------------------------------------------
-RUN wget https://github.com/plotly/orca/releases/download/v1.3.1/orca-1.3.1.AppImage \
-    && mv orca-1.3.1.AppImage /usr/local/bin \
-    && cp omicsplayground/ext/bin/orca /usr/local/bin/orca \
-    && chmod ugo+x /usr/local/bin/orca-1.3.1.AppImage /usr/local/bin/orca   
-
-#------------------------------------------------------------
-# Build example data sets into Docker image
+# Copy any extra data sets into Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
-RUN R -e "setwd('scripts');source('build-datasets.R')"
-RUN R -e "setwd('data');source('init.R')"
+# COPY data/GSE10846-dlbcl-nc.pgx data/
+# RUN R -e "setwd('data');source('init.R')"
+
+#------------------------------------------------------------
+# Orca stuff
+#------------------------------------------------------------
+RUN cp ext/bin/orca /usr/local/bin && chmod ugo+x /usr/local/bin/orca
 
 #------------------------------------------------------------
 # Copy further configuration files into the Docker image

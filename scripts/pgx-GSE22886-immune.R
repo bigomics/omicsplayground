@@ -27,11 +27,10 @@ if(PROCESS.DATA) {
     library(Biobase)
     library(GEOquery)
     library(limma)
-    if(0) {
-        source("https://bioconductor.org/biocLite.R")
-        biocLite("hgu133plus2.db")
-        biocLite("hgu133a.db")
-        biocLite("hgu133b.db")
+    if(1) {
+        if(!require("hgu133plus2.db")) BiocManager::install("hgu133plus2.db")
+        if(!require("hgu133a.db")) BiocManager::install("hgu133a.db")
+        if(!require("hgu133b.db")) BiocManager::install("hgu133b.db")
     }
     library(hgu133plus2.db)
     library(hgu133a.db)
