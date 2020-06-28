@@ -52,7 +52,6 @@ RUN groupadd  shiny \
 #------------------------------------------------------------
 # Copy further configuration files into the Docker image
 #------------------------------------------------------------
-WORKDIR /omicsplayground
 RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
 COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
 COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
