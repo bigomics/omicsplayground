@@ -36,7 +36,7 @@ RUN git pull
 # Copy any extra data sets into Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
-RUN R -e "setwd('script');source('build-datasets.R')"
+RUN R -e "setwd('scripts');source('build-datasets.R')"
 ## COPY data/GSE10846-dlbcl-nc.pgx data/
 RUN R -e "setwd('data');source('init.R')"
 

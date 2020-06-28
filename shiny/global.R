@@ -1,8 +1,6 @@
 message("[MAIN::global] reading global.R")
 
-
 ## Parse access logs
-##access.dirs = c(FILESX, file.path(FILESX,"apache2"),"/var/www/html/logs", "/var/log/apache2")
 access.dirs = c("/var/www/html/logs", "/var/log/apache2","/var/log/apache",
                 "/var/log/httpd","/var/log/nginx")
 access.dirs <- access.dirs[dir.exists(access.dirs)]
