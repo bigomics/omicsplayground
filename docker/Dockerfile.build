@@ -24,9 +24,10 @@ FROM bigomics/omicsplayground:base
 # Clone fresh code from GitHub
 #------------------------------------------------------------
 WORKDIR /
-#RUN rm -fr /omicsplayground \
-#    && git clone https://github.com/bigomics/omicsplayground.git \
-#    && chmod -R ugo+rwX /omicsplayground
+RUN rm -fr /omicsplayground \
+    && git clone https://github.com/bigomics/omicsplayground.git \
+    && chmod -R ugo+rwX /omicsplayground \
+#   && rm -fr /omicsplayground/.git \
 
 WORKDIR /omicsplayground
 RUN git pull
@@ -35,16 +36,12 @@ RUN git pull
 # Copy any extra data sets into Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
-# COPY data/GSE10846-dlbcl-nc.pgx data/
-# RUN R -e "setwd('data');source('init.R')"
+RUN R -e "setwd('script');source('build-datasets.R')"
+## COPY data/GSE10846-dlbcl-nc.pgx data/
+RUN R -e "setwd('data');source('init.R')"
 
 #------------------------------------------------------------
-# Orca stuff
-#------------------------------------------------------------
-RUN cp ext/bin/orca /usr/local/bin && chmod ugo+x /usr/local/bin/orca
-
-#------------------------------------------------------------
-# Copy further configuration files into the Docker image
+# Update configuration files into the Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
 COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf

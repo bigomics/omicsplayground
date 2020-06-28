@@ -14,7 +14,7 @@ FROM bigomics/omicsplayground:build
 
 # RUN apt install -y xvfb
 # RUN R -e "BiocManager::install(c('randomForest'))"
-RUN R -e "install.packages(c('Seurat'))"
+# RUN R -e "install.packages(c('Seurat'))"
 # RUN pip install umap-learn
 
 
@@ -22,8 +22,8 @@ RUN R -e "install.packages(c('Seurat'))"
 # Copy extra data into Docker image
 #------------------------------------------------------------
 WORKDIR /omicsplayground
-COPY data/GSE72056-scmelanoma.pgx data/
-RUN R -e "setwd('data');source('init.R')"
+# COPY data/GSE72056-scmelanoma.pgx data/
+# RUN R -e "setwd('data');source('init.R')"
 
 #------------------------------------------------------------
 # Pull latest from GitHub
@@ -32,7 +32,7 @@ WORKDIR /omicsplayground
 RUN git pull
 
 #------------------------------------------------------------
-# Copy further configuration files into the Docker image
+# Update server configuration files into the Docker image
 #------------------------------------------------------------
 COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
 COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
