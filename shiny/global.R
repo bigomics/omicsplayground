@@ -33,9 +33,8 @@ for(i in 1:10) {
     res.local <- try(httr::POST("http://localhost:5151", body=plotly:::to_JSON("")),silent=TRUE)
     responding.local   <- class(res.local)=="response"
     ##message("local ORCA is responding = ",responding.local)
-    cat(".")
+    message("trying to reach local orca...")
     if(responding.local) {
-        cat("\n")
         break
     }
     Sys.sleep(1)

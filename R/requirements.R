@@ -74,10 +74,11 @@ pkg.used <- gsub(".*require\\(|.*library\\(","",pkg.used)
 pkg.used <- gsub("\"|\'|\\).*","",pkg.used)
 pkg.used <- grep("[ ]|quietly",pkg.used,value=TRUE,invert=TRUE)
 
-pkg.needed <- c('umap','corrplot','wordcloud',"optparse","docopt","randomForest")
+pkg.needed <- c('umap','corrplot','wordcloud',"optparse","docopt",
+                "randomForest")
+
 pkg.used <- c(pkg.used, pkg.needed)
 pkg.used <- sort(unique(pkg.used))
-
 install.pkgs( setdiff(pkg.used, c(PKG.MANUAL,BIG.NOTUSED)) )
 
 ##---------------------------------------------------------------------
