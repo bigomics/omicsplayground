@@ -26,8 +26,8 @@ FROM bigomics/omicsplayground:base
 WORKDIR /
 RUN rm -fr /omicsplayground \
     && git clone https://github.com/bigomics/omicsplayground.git \
-    && chmod -R ugo+rwX /omicsplayground \
 #   && rm -fr /omicsplayground/.git \
+    && chmod -R ugo+rwX /omicsplayground 
 
 WORKDIR /omicsplayground
 RUN git pull
