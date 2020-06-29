@@ -294,13 +294,6 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
 
     USER <- reactiveValues( logged = FALSE, name="anonymous")
 
-    observeEvent( input$logout, {
-        ##updateTextInput(session, ".username", value=NULL)
-        reset(ns("login_username"))
-        reset(ns("login_password"))
-        USER$logged <- FALSE
-    })
-
     if(LOGIN_AUTHENTICATION=="password") {
 
         showLogin <- function() {
@@ -386,10 +379,19 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                 ##delay(2000, hide("register_warning", anim = TRUE, animType = "fade"))
                 delay(2000, {output$register_warning <- renderText("")})
             }
-        })
+        }) 
+
+        ## observe-event end-if-REGISTER
     } else {
         showLogin <- function() {}
     }
+
+    observeEvent( input$logout, {
+        ##updateTextInput(session, ".username", value=NULL)
+        reset(ns("login_username"))
+        reset(ns("login_password"))
+        USER$logged <- FALSE
+    })
 
     output$login_warning = renderText("")
 
@@ -453,6 +455,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         }
         ##hide("login_warning")
     })
+
     
     ##=================================================================================
     ##======================== USER LEVEL =============================================

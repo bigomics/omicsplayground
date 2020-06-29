@@ -56,6 +56,11 @@ RUN groupadd  shiny \
     && useradd --gid shiny --shell /bin/bash --create-home shiny
 
 #------------------------------------------------------------
+# Clean up when done.
+#------------------------------------------------------------
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+#------------------------------------------------------------
 # Copy further configuration files into the Docker image
 #------------------------------------------------------------
 RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
