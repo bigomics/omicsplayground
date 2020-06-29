@@ -25,10 +25,11 @@ RUN apt update && apt install -y \
 RUN apt install -y r-base r-base-dev r-recommended
 
 # Install Plotly/Orca server
-RUN wget https://github.com/plotly/orca/releases/download/v1.3.1/orca-1.3.1.AppImage \
-    && mv orca-1.3.1.AppImage /usr/local/bin 
-COPY ext/bin/orca /usr/local/bin/orca \
-    && chmod ugo+x /usr/local/bin/orca-1.3.1.AppImage /usr/local/bin/orca   
+RUN wget -nv https://github.com/plotly/orca/releases/download/v1.3.1/orca-1.3.1.AppImage \
+    && mv orca-1.3.1.AppImage /usr/local/bin/ 
+COPY ext/bin/orca /usr/local/bin/ 
+RUN chmod ugo+x /usr/local/bin/orca-1.3.1.AppImage \
+    && chmod ugo+x /usr/local/bin/orca   
 
 #------------------------------------------------------------
 # Install R packages that are required
@@ -38,9 +39,14 @@ RUN rm -fr /omicsplayground
 WORKDIR /omicsplayground
 COPY R /omicsplayground/R
 COPY shiny /omicsplayground/shiny
+
+## auto detected packages
 RUN R -e "setwd('R');source('requirements.R')"
+
+## any missing packages
 RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
-    'metap','brew','Seurat','R.utils'))"
+    'metap','brew','Seurat','R.utils','rhdf5'))"
+RUN R -e "BiocManager::install(c('rhdf5'))"
 RUN rm -fr /omicsplayground/R /omicsplayground/shiny
 
 #------------------------------------------------------------
