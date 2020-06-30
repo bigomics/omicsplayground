@@ -8,7 +8,7 @@ all.scripts <- dir(".", pattern="pgx-.*R$")
 
 ## These are some default example scripts (uncomment if you really want to do all)
 all.scripts <- c("pgx-geiger2016-arginine.R","pgx-GSE72056-scmelanoma.R",
-                 "pgx-GSE22886-immune.R","pgx-tcga-brca.R","pgx-GSE102908-ibet.R")
+                 "pgx-GSE22886-immune.R","pgx-tcga-brca.R")
 all.scripts
 
 script=all.scripts[1]
