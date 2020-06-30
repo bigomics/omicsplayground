@@ -25,7 +25,7 @@ RUN apt update && apt install -y \
 RUN apt install -y r-base r-base-dev r-recommended
 
 # Install shiny-server
-RUN wget https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.14.948-amd64.deb \
+RUN wget -nv https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.14.948-amd64.deb \
     && sudo gdebi shiny-server-1.5.14.948-amd64.deb
 
 # Install Plotly/Orca server
