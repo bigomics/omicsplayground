@@ -234,12 +234,11 @@ body {
 }
 
 /* gene input area in signature module */
-.form-control {
+textarea.form-control {
     font-size: 11px !important;
     line-height: 1.0 !important;
     padding: 3px 3px;
 }
-
 
 .shiny-flow-layout {
     margin: 0px 0px -17px 0px;

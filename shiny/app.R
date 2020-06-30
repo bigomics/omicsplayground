@@ -4,6 +4,7 @@
 ##                                                                     ##
 #########################################################################
 
+
 DEBUG = FALSE
 DEBUG = TRUE
 
@@ -55,7 +56,6 @@ SHOW_QUESTIONS = FALSE
 DEV.VERSION = opt$DEV_VERSION && dir.exists("../../omicsplayground-dev")
 USER_MODE = opt$USER_MODE
 
-
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
 
@@ -81,8 +81,6 @@ if(0) {
 ## ------------------------ READ MODULES ------------------------------
 ## --------------------------------------------------------------------
 
-
-
 MODULES <- c("load","view","clust","expr","enrich","isect","func",
              "word","drug","sig","scell","cor","bio","cmap",
              "tcga","bc","multi","qa")
@@ -93,7 +91,11 @@ DISABLED <- array(MODULES %in% opt$MODULES_DISABLED, dimnames=list(MODULES))
 ENABLED  <- ENABLED & !DISABLED
 ENABLED
 
-modules <- dir("modules", pattern=".R$")
+source("modules/AuthenticationDialog.R")
+LOGIN_AUTHENTICATION = "none"
+LOGIN_AUTHENTICATION = "register"
+
+modules <- dir("modules", pattern="Module.R$")
 for(m in modules) {
     message("[MAIN] loading module ",m)
     source(paste0("modules/",m), local=TRUE)
@@ -101,7 +103,7 @@ for(m in modules) {
 }
 
 if(DEV.VERSION && dir.exists("../../omicsplayground-dev")) {
-    xmodules <- dir("../../omicsplayground-dev/shiny/modules", pattern=".R$")
+    xmodules <- dir("../../omicsplayground-dev/shiny/modules", pattern="Module..R$")
     for(m in xmodules) {
         message("[MAIN] loading module ",m)
         source(paste0("../../omicsplayground-dev/shiny/modules/",m), local=TRUE)
@@ -139,7 +141,8 @@ server = function(input, output, session) {
     env <- list()  ## communication environment
     env[["load"]]   <- callModule(
         LoadingModule, "load", hideModeButton = opt$HIDE_MODEBUTTON,
-        max.limits = max.limits, defaultMode = opt$USER_MODE )
+        max.limits = max.limits, defaultMode = opt$USER_MODE,
+        authentication = LOGIN_AUTHENTICATION)
     env[["view"]]   <- callModule( DataViewModule, "view", env)
     env[["clust"]]  <- callModule( ClusteringModule, "clust", env)
     env[["expr"]]   <- callModule( ExpressionModule, "expr", env)
