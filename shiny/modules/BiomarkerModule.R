@@ -63,11 +63,12 @@ be multiple categories (classes) or patient survival data."
                 "input.pdx_filter == '<custom>'", ns=ns,
                 tipify(
                     ##selectizeInput("pdx_select","Custom features:", choices=NULL, multiple=TRUE),
-                    textAreaInput(ns("pdx_select"), "Custom features:", value = NULL,
-                                  rows=8, placeholder="Paste your gene list"),
+                    div(class='gene-list',
+                        textAreaInput(ns("pdx_select"), "Custom features:", value = NULL,
+                                      rows=8, placeholder="Paste your gene list")),
                     "Paste a custom gene list to be used as features.", placement="top")
             ),
-            tipify(actionButton(ns("pdx_runbutton"), label="Compute",class="run-button"),
+            tipify(actionButton(ns("pdx_runbutton"), label="Compute", class="run-button"),
                    "Click to start biomarker computation.", placement="right")
         )
         if(DEV.VERSION) {

@@ -28,9 +28,8 @@ LoadingUI <- function(id) {
 
 
 LoadingModule <- function(input, output, session, hideModeButton=TRUE,
-                          max.limits=c("samples"=1000,"comparisons"=20,
-                                       "genes"=19999),
-                          defaultMode="BASIC")
+                          max.limits=c("samples"=1000,"comparisons"=20,"genes"=19999),
+                          defaultMode="BASIC", authentication="none")
 {
     ns <- session$ns ## NAMESPACE
 
@@ -43,8 +42,9 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     SHOWSPLASH=TRUE
     ## SHOWSPLASH=FALSE
     hideModeButton <- toupper(hideModeButton)
-    
-    LOGIN_AUTHENTICATION = "none"
+
+    LOGIN_AUTHENTICATION = authentication
+    ## LOGIN_AUTHENTICATION = "none"
     ##LOGIN_AUTHENTICATION = "register"
     ##LOGIN_AUTHENTICATION = "password"
     CREDENTIALS = NULL
@@ -53,6 +53,12 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                                   header=TRUE, stringsAsFactors=FALSE)
         LOGIN_AUTHENTICATION = "password"
     }
+
+    auth <- callModule(
+        AuthenticationDialog, "auth",
+        type = LOGIN_AUTHENTICATION,
+        credentials = CREDENTIALS
+    )
 
     ##-----------------------------------------------------------------------------
     ## Description
@@ -211,19 +217,18 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         dbg("showStartupModal done!\n")
     }
 
-    observeEvent( input$action_beer, {
-        dbg("buy beer button action\n")
-        startup_count <<- startup_count + 1    
-        USER$logged <- TRUE
-        USER$name   <- "beer buddy"
-        removeModal()
-        ##alert("Wow. Thanks buddy!")
-        sendSweetAlert(
-            session=session, title="Wow. Thanks buddy!",
-            text = "Free entrance for you!", type = "info")
-        ##Sys.sleep(4);removeModal()
-    })
-
+    ## observeEvent( input$action_beer, {
+    ##     dbg("buy beer button action\n")
+    ##     startup_count <<- startup_count + 1    
+    ##     USER$logged <- TRUE
+    ##     USER$name   <- "beer buddy"
+    ##     removeModal()
+    ##     ##alert("Wow. Thanks buddy!")
+    ##     sendSweetAlert(
+    ##         session=session, title="Wow. Thanks buddy!",
+    ##         text = "Free entrance for you!", type = "info")
+    ##     ##Sys.sleep(4);removeModal()
+    ## })
 
     observeEvent( input$action_play, {
 
@@ -232,8 +237,11 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
 
         startup_count <<- startup_count + 1    
         if(LOGIN_AUTHENTICATION!="none") {
-            showLogin()  ## $
+            message("[LoadingModule] authentication required")
+            ## showLogin()  ## $
+            AuthenticationUI(ns("auth"))
         } else {
+            message("[LoadingModule] continuing without authentication")
             removeModal()
         }    
 
@@ -292,170 +300,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     ##==================== USER AUTHENTICATION ========================================
     ##=================================================================================
 
-    USER <- reactiveValues( logged = FALSE, name="anonymous")
-
-    if(LOGIN_AUTHENTICATION=="password") {
-
-        showLogin <- function() {
-            showModal( modalDialog(
-                id = "login",
-                title = "Login to Omics Playground",
-                tagList( 
-                    textInput(ns("login_username"), "Username:"),
-                    passwordInput(ns("login_password"), "Password:"),
-                    div( actionButton(ns("login_btn"), "Login"),
-                        style="text-align: center;")
-                ),
-                footer = textOutput(ns("login_warning")),
-                size = "s"
-            ))
-        }
-
-
-    } else if(LOGIN_AUTHENTICATION=="register") {    
-
-        showLogin <- function() {
-            showModal( modalDialog(
-                id = "login",
-                title = "Login to Omics Playground",
-                tagList( 
-                    p("Please", actionLink(ns("register_link"),"register"),"to use the Omics Playground. If you have already registered please enter your registration email address below."),
-                    textInput(ns("login_username"), "E-mail:"),
-                    div( actionButton(ns("login_btn"), "Login"),
-                        style="text-align: center;")
-                ),
-                footer = div(textOutput(ns("login_warning")),style="color: red;"),
-                size = "s"
-            ))
-        }
-        
-        observeEvent( input$register_link, {
-            ##install.packages("countrycode")
-            require(countrycode)
-            all.countries = countrycode::codelist[,"country.name.en"]
-            
-            showModal( modalDialog(
-                id = "register",
-                title = "Omics Playground registration",
-                tagList( 
-                    p("Fill in the form below. Registration data is used to measure usage only. This helps us track and better serve our user community."),
-                    ## textInput("register_name", "Name:"),
-                    textInput("register_email", "E-mail:"),
-                    ## textInput("register_organization", "Organization:"),
-                    selectInput("register_country", "Country:", choices=c("",all.countries)),
-                    div( ##actionButton(ns("register_btn_skip"), "Skip"),
-                        actionButton(ns("register_btn"), "Register"),
-                        style="text-align: center;")
-                ),
-                footer = div(textOutput("register_warning"),style="color: red;"),
-                size = "s"
-            ))
-        })           
-
-        observeEvent( input$register_btn, {
-            register.OK = ( input$register_email != "" &&
-                            grepl("@",input$register_email) &&  ## valid email
-                            ## input$register_name != "" &&
-                            input$register_country != "" )
-            if(register.OK) {
-                rdata <- paste("Tom Cruise","ACME Inc.","USA",date(),sep=",")
-                rdata <- paste(input$register_email,
-                               input$register_name,
-                               input$register_organization,
-                               input$register_country,
-                               date(), sep=",")
-                write( rdata, file="logs/registered.csv", append=TRUE )
-
-                USER$name   <- input$register_email
-                USER$logged <- TRUE  ## global reactive
-                show("register_warning")
-                output$register_warning = renderText(paste("Welcome",input$register_email,"!"))
-                delay(3000, hide("register_warning", anim = TRUE, animType = "fade"))
-                removeModal()
-                
-            } else {
-                ##show("register_warning")
-                output$register_warning = renderText("Invalid email or country")
-                ##delay(2000, hide("register_warning", anim = TRUE, animType = "fade"))
-                delay(2000, {output$register_warning <- renderText("")})
-            }
-        }) 
-
-        ## observe-event end-if-REGISTER
-    } else {
-        showLogin <- function() {}
-    }
-
-    observeEvent( input$logout, {
-        ##updateTextInput(session, ".username", value=NULL)
-        reset(ns("login_username"))
-        reset(ns("login_password"))
-        USER$logged <- FALSE
-    })
-
-    output$login_warning = renderText("")
-
-    observeEvent( input$login_btn, {           
-
-        cat("LOGIN_AUTHENTICATION=",LOGIN_AUTHENTICATION,"\n")
-        cat("username=",input$login_username,"\n")
-        cat("password=",input$login_password,"\n")
-        cat("Logged=",USER$logged,"\n")
-
-        login.OK = FALSE
-        if(LOGIN_AUTHENTICATION=="register") {
-            ##if( is.null(input$login_username) || is.null(input$login_password)) return(NULL)
-            ##if( input$login_username=="" || input$login_password=="") return(NULL)    
-            ##if( is.null(input$login_name) || input$login_name == "") return(NULL)
-            if( is.null(input$login_username) || input$login_username=="") return(NULL)
-            registered <- read.csv(file="logs/registered.csv",header=FALSE,stringsAsFactors=FALSE)
-            registered.users <- unique(registered[,1]) ## emails
-
-            cat("registered.users=",registered.users,"\n")
-            registered.users <- c(registered.users,"demo@bigomics.ch")
-            login.OK = (input$login_username %in% registered.users)
-        }
-        
-        if(LOGIN_AUTHENTICATION=="password") {
-            if( is.null(input$login_username) || is.null(input$login_password)) return(NULL)
-            if( input$login_username=="" || input$login_password=="") return(NULL)    
-            username <- input$login_username
-            ok.user <- isTRUE(CREDENTIALS[username,"password"]==input$login_password)
-            ok.date <- isTRUE( Sys.Date() < as.Date(CREDENTIALS[username,"expiry"]) )
-            login.OK = (ok.user && ok.date)
-        }
-
-        if (login.OK) {
-            output$login_warning = renderText("")
-            removeModal()
-
-            USER$name   <- input$login_username
-            USER$logged <- TRUE
-            
-            ## Here you can perform some user-specific functions, or site news
-            if(0) {
-                showModal(modalDialog(
-                    paste("Welcome",USER$name,"!"),
-                    footer=NULL, size="m"))
-                Sys.sleep(3)
-            }
-            removeModal()
-            
-        } else {
-            ##show("login_warning")
-            if(LOGIN_AUTHENTICATION=="password") {
-                output$login_warning = renderText("Invalid username or password")
-            }
-            if(LOGIN_AUTHENTICATION=="register") {
-                output$login_warning = renderText("Email address not recognized")
-            }
-            ##delay(2000, hide("login_warning", anim = TRUE, animType = "fade"))
-            delay(2000, {output$login_warning <- renderText("")})
-            USER$logged <- FALSE
-        }
-        ##hide("login_warning")
-    })
-
+    ## USER <- reactiveValues( logged = FALSE, name="anonymous")
     
     ##=================================================================================
     ##======================== USER LEVEL =============================================
@@ -521,12 +366,12 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         ##-----------------------------------------------------------------
         dbg("[LoadingModule::inputData] ---------- reacted ---------------\n")
         dbg("[LoadingModule::inputData] LOGIN_AUTHENTICATION=",LOGIN_AUTHENTICATION,"\n")
-        dbg("[LoadingModule::inputData] USER$Logged=",USER$logged,"\n")
+        dbg("[LoadingModule::inputData] auth$logged=",auth$logged(),"\n")
         
         ## authenicate user if needed
         ## if(!USER$logged) showLogin()
         ## if(LOGIN_AUTHENTICATION!="none" && USER$logged) showLogin()
-        if(LOGIN_AUTHENTICATION!="none" && !USER$logged) return(NULL)
+        if(LOGIN_AUTHENTICATION!="none" && !auth$logged()) return(NULL)
 
         pgx <- currentPGX()
         dbg("[LoadingModule::inputData] is.null(pgx)=",is.null(pgx),"\n")        
