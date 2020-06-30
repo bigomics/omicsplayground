@@ -20,7 +20,8 @@ RUN apt update && apt install -y \
     pdftk vim-tiny less wget gdebi-core \
     pandoc pandoc-citeproc phantomjs \ 
     libcairo2-dev libxt-dev xvfb 
-    
+
+
 # Install basic stuff and R
 RUN apt install -y r-base r-base-dev r-recommended
 
