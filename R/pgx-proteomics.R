@@ -74,7 +74,8 @@ prot.readProteinGroups <- function(file, sep="\t", collapse.gene=TRUE,
 }
 
 
-##file="proteinGroups.txt";meta.file="meta.txt";use.LFQ=FALSE;unit="intensity";is.log2=FALSE
+file="proteinGroups.txt";meta.file="meta.txt";use.LFQ=FALSE;unit="intensity";is.log2=FALSE
+meta.file="samples.csv";
 proteus.readProteinGroups <- function(file="proteinGroups.txt", meta.file="meta.txt",
                                       unit="intensity", use.LFQ=FALSE, is.log2=FALSE,
                                       collapse.gene=FALSE, na.zero=FALSE) 
@@ -90,11 +91,30 @@ proteus.readProteinGroups <- function(file="proteinGroups.txt", meta.file="meta.
     } else {
         meta <- read.delim(meta.file, header=TRUE, sep="\t")
     }
+
+    if(!"sample" %in% colnames(meta)) {
+        stop("metadata file must have 'sample' column")
+    }
+
+    samples_with_data <- sub("Intensity ","",grep("^Intensity ",colnames(fread(file,nrow=5)),value=TRUE))
+    samples_in_meta <- meta$sample
+
+    if(any(!samples_in_meta %in% samples_with_data)) {
+        sel_nodata <- setdiff(samples_in_meta, samples_with_data)
+        message("WARNING: no data for samples: ",sel_nodata)
+        meta <- meta[which(samples_in_meta %in% samples_with_data),]
+    }
+    if(any(!samples_with_data %in% samples_in_meta)) {
+        sel_nometa <- setdiff(samples_with_data, samples_in_meta)
+        message("WARNING: no meta-information for samples: ",sel_nometa)
+    }
+    
     measure.cols <- NULL
+    measure.cols <- paste("Intensity",meta$sample)
     if(use.LFQ) {
         measure.cols <- paste("LFQ intensity",meta$sample)
-        names(measure.cols) <- meta$sample
     }
+    names(measure.cols) <- meta$sample
     pdat <- readProteinGroups(file, meta, measure.cols=measure.cols)
 
     summary(pdat)
