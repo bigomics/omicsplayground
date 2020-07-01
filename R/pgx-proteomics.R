@@ -9,12 +9,12 @@ prot.readProteinGroups <- function(file, sep="\t", collapse.gene=TRUE,
                                    use.LFQ=FALSE, filter.contaminants=TRUE)
 {
     ## Split data file
-    cat("reading proteinGroups file ",file,"\n")
+    message("reading proteinGroups file ",file)
     D = read.csv(file, sep=sep, check.names=FALSE)
     ##D = read.csv(file, sep="\t", check.names=FALSE)
     ##D = fread(file, check.names=FALSE)
     ##D = data.frame(D, check.names=FALSE)
-    D = data.frame(D, check.names=TRUE)
+    D = data.frame(D, check.names=TRUE) ## need dots
     dim(D)
     colnames(D)
     head(D)[,1:10]
@@ -74,9 +74,9 @@ prot.readProteinGroups <- function(file, sep="\t", collapse.gene=TRUE,
 }
 
 
-file="proteinGroups.txt";meta.file="meta.txt";use.LFQ=FALSE;unit="intensity";is.log2=FALSE
-meta.file="samples.csv";
-proteus.readProteinGroups <- function(file="proteinGroups.txt", meta.file="meta.txt",
+##file="proteinGroups.txt";meta="meta.txt";use.LFQ=FALSE;unit="intensity";is.log2=FALSE
+##meta="samples.csv";
+proteus.readProteinGroups <- function(file="proteinGroups.txt", meta="meta.txt",
                                       unit="intensity", use.LFQ=FALSE, is.log2=FALSE,
                                       collapse.gene=FALSE, na.zero=FALSE) 
 {
@@ -86,14 +86,20 @@ proteus.readProteinGroups <- function(file="proteinGroups.txt", meta.file="meta.
     ##------------------------------------------------------------
     ## Read protein data
     ##------------------------------------------------------------
-    if(grepl("csv$",meta.file)) {
-        meta <- read.csv(meta.file, header=TRUE)
-    } else {
-        meta <- read.delim(meta.file, header=TRUE, sep="\t")
-    }
+
+    if(is.character(meta)) {
+        if(grepl("csv$",meta)) {
+            meta <- read.csv(meta, header=TRUE)
+        } else {
+            meta <- read.delim(meta, header=TRUE, sep="\t")
+        }
+    } 
 
     if(!"sample" %in% colnames(meta)) {
         stop("metadata file must have 'sample' column")
+    }
+    if(!"condition" %in% colnames(meta)) {
+        stop("metadata file must have 'condition' column")
     }
 
     samples_with_data <- sub("Intensity ","",grep("^Intensity ",colnames(fread(file,nrow=5)),value=TRUE))
@@ -101,12 +107,12 @@ proteus.readProteinGroups <- function(file="proteinGroups.txt", meta.file="meta.
 
     if(any(!samples_in_meta %in% samples_with_data)) {
         sel_nodata <- setdiff(samples_in_meta, samples_with_data)
-        message("WARNING: no data for samples: ",sel_nodata)
+        message("WARNING: no data for samples: ",sel_nodata,"(discarding)")
         meta <- meta[which(samples_in_meta %in% samples_with_data),]
     }
     if(any(!samples_with_data %in% samples_in_meta)) {
         sel_nometa <- setdiff(samples_with_data, samples_in_meta)
-        message("WARNING: no meta-information for samples: ",sel_nometa)
+        message("WARNING: no meta-information for samples: ",sel_nometa,"(discarding)")
     }
     
     measure.cols <- NULL
