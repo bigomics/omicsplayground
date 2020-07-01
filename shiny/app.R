@@ -6,7 +6,9 @@
 
 
 DEBUG = FALSE
-DEBUG = TRUE
+##DEBUG = TRUE
+LOGIN_AUTHENTICATION = "none"
+##LOGIN_AUTHENTICATION = "register"
 
 library(shiny)
 library(shinyjs)
@@ -41,6 +43,7 @@ dir.exists(PGX.DIR)
 
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars
 source("global.R", local=TRUE)
+source("modules/AuthenticationDialog.R")
 
 message("\n")
 message("*****************************************")
@@ -90,10 +93,6 @@ ENABLED  <- array(MODULES %in% opt$MODULES_ENABLED, dimnames=list(MODULES))
 DISABLED <- array(MODULES %in% opt$MODULES_DISABLED, dimnames=list(MODULES))
 ENABLED  <- ENABLED & !DISABLED
 ENABLED
-
-source("modules/AuthenticationDialog.R")
-LOGIN_AUTHENTICATION = "none"
-LOGIN_AUTHENTICATION = "register"
 
 modules <- dir("modules", pattern="Module.R$")
 for(m in modules) {
