@@ -21,7 +21,12 @@ install.pkg <- function(pkg, force=FALSE) {
         } else {
             cat("installing",pkg,"from CRAN/BioConductor...\n")
             try(BiocManager::install(pkg, dependencies=NA,
-                                      ask=FALSE, update=FALSE))
+                                     ask=FALSE, update=FALSE))
+            if(!require(pkg, character.only=TRUE)) {
+                cat("retrying to install",pkg,"from CRAN...\n")
+                try(install.packages(pkg, dependencies=NA,
+                                     ask=FALSE, update=FALSE))
+            }
         }
     } else {
         cat("package",pkg,"already installed\n")
@@ -75,8 +80,7 @@ pkg.used <- gsub("\"|\'|\\).*","",pkg.used)
 pkg.used <- grep("[ ]|quietly",pkg.used,value=TRUE,invert=TRUE)
 
 pkg.needed <- c('umap','corrplot','wordcloud',"optparse","docopt",
-                "randomForest")
-
+                "randomForest",'rhdf5','qgraph','psych')
 pkg.used <- c(pkg.used, pkg.needed)
 pkg.used <- sort(unique(pkg.used))
 install.pkgs( setdiff(pkg.used, c(PKG.MANUAL,BIG.NOTUSED)) )
