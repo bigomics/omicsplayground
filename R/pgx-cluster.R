@@ -140,11 +140,11 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
 }
 
 
-##skipifexists=0;perplexity=NULL;sv.rank=-1;prefix="C";kclust=1;ntop=1000;fromX=FALSE;prior.counts=1;mean.center=TRUE;method="tsne";determine.clusters=1;dims=c(2,3);find.clusters=TRUE;row.center=TRUE;row.scale=FALSE;clust.detect="louvain"
+##skipifexists=0;perplexity=NULL;sv.rank=-1;prefix="C";kclust=1;ntop=1000;fromX=FALSE;prior.count=1;mean.center=TRUE;method="tsne";determine.clusters=1;dims=c(2,3);find.clusters=TRUE;row.center=TRUE;row.scale=FALSE;clust.detect="louvain"
 pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
                                ntop=1000, sv.rank=-1, prefix="C", 
                                fromX=FALSE, is.logx=FALSE,
-                               kclust=1, prior.counts=NULL, 
+                               kclust=1, prior.count=NULL, 
                                dims=c(2,3), find.clusters=TRUE,
                                clust.detect = c("louvain","hclust"),
                                row.center=TRUE, row.scale=FALSE,
@@ -159,7 +159,7 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
     res <- pgx.clusterSamplesFromMatrix(
         sX, perplexity=perplexity, is.logx=FALSE,
         ntop=ntop, sv.rank=sv.rank, prefix=prefix,         
-        kclust=kclust, prior.counts=prior.counts, 
+        kclust=kclust, prior.count=prior.count, 
         dims=dims, find.clusters=find.clusters,
         clust.detect = clust.detect,
         row.center=row.center, row.scale=row.scale,
@@ -187,7 +187,7 @@ is.logx=FALSE;ntop=1000
 pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
                                          ntop=1000, sv.rank=-1, prefix="C", 
                                          is.logx=FALSE, 
-                                         prior.counts=NULL, dims=c(2,3),
+                                         prior.count=NULL, dims=c(2,3),
                                          row.center=TRUE, row.scale=FALSE,
                                          find.clusters=TRUE, kclust=1,
                                          clust.detect = c("louvain","hclust"),
@@ -202,20 +202,19 @@ pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
     sX <- counts
     is.logx    
     if(is.logx) sX <- 2**sX
-
     cat("[pgx.clusterSamplesFromMatrix] dim(sX)=",dim(sX),"\n")
-    
-    if(is.null(prior.counts)) {
-        qq <- quantile(as.vector(sX[sX>0]),probs=0.50) ## at 50%
-        qq
-        prior.counts <- qq
+
+    if(is.null(prior.count) || prior.count>0 ) {
+        if(is.null(prior.count)) {
+            qq <- quantile(as.vector(sX[sX>0]),probs=0.50) ## at 50%!!
+            qq
+            prior.count <- qq
+        }
+        cat("[pgx.clusterSamplesFromMatrix] prior.count=",prior.count,"\n")
+        sX <- log2(prior.count + sX)
     }
-    cat("[pgx.clusterSamplesFromMatrix] prior.counts=",prior.counts,"\n")
-    
-    sX <- log2(prior.counts + sX)
     sX <- limma::normalizeQuantiles(sX)  ## in linear space
-    if(row.center)
-        sX <- sX - rowMeans(sX,na.rm=TRUE)
+    if(row.center) sX <- sX - rowMeans(sX,na.rm=TRUE)
     sX = head( sX[order(-apply(sX,1,sd)),], ntop)
     ## sX = t(scale(t(sX),scale=TRUE))  ## really? or just centering?
     ##sX = t(scale(t(sX),scale=FALSE))  ## really? or just centering?

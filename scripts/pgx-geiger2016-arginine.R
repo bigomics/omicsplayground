@@ -58,7 +58,7 @@ if(PROCESS.DATA) {
 
     ## scale/normalize
     norm.counts <- prot.normalizeCounts(
-        norm.counts, scaling=0.01,
+        norm.counts, scaling=1e6,
         qnormalize=TRUE, prior.count=0, plot=0)
     ##hist(log2(1e-8+norm.counts), breaks=100)
     

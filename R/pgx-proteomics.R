@@ -4,51 +4,58 @@
 ##
 ######################################################################## 
 
-##file="./proteinGroups.txt";sep="\t"
+## file="./proteinGroups.txt";sep="\t";collapse.gene=TRUE;use.LFQ=FALSE;filter.contaminants=TRUE
 prot.readProteinGroups <- function(file, sep="\t", collapse.gene=TRUE,
                                    use.LFQ=FALSE, filter.contaminants=TRUE)
 {
     ## Split data file
     message("reading proteinGroups file ",file)
-    D = read.csv(file, sep=sep, check.names=FALSE)
-    ##D = read.csv(file, sep="\t", check.names=FALSE)
-    ##D = fread(file, check.names=FALSE)
-    ##D = data.frame(D, check.names=FALSE)
-    D = data.frame(D, check.names=TRUE) ## need dots
+    ## D = read.csv(file, sep=sep, check.names=FALSE)
+    ## D = read.csv(file, sep="\t", check.names=FALSE)
+    D = fread(file, check.names=FALSE)
+    D = data.frame(D, check.names=FALSE)
+    ## D = data.frame(D, check.names=TRUE) ## need dots????
     dim(D)
     colnames(D)
     head(D)[,1:10]
 
     ##col.required <- c("Gene.names","Protein.names")
     ## Filter contaminants
-    D$is.contaminant <- (D$Reverse=="+" | D$Only.identified.by.site=="+" |
-                         D$Potential.contaminant=="+")
+    D$is.contaminant <- (D[['Reverse']] == "+" |
+                         D[['Only identified by site']] == "+" |
+                         D[['Potential contaminant']] == "+")
     table(D$is.contaminant)
     if(filter.contaminants) {
-        D$Gene.names[which(D$is.contaminant)]
+        ##D$Gene.names[which(D$is.contaminant)]
         D <- D[which(!D$is.contaminant),]
     }
+    dim(D)
     
     ## parse gene annotation
-    genes = D[,c("Protein.IDs","Gene.names","Protein.names")]
+    genes = D[,c("Protein IDs","Gene names","Protein names")]
     head(genes)
     colnames(genes) = c("protein_id","gene_name","gene_title")
     gg = as.character(genes$gene_name)
     gg = sapply(gg, function(x) strsplit(x,split=";")[[1]][1]) ## take just FIRST gene
+    genes$gene_alias <- genes$gene_name 
     genes$gene_name <- gg
     genes$is_contaminant <- D$is.contaminant
     
     ## give unique rownames
     rownames(D) = paste0("tag",1:nrow(D),":",genes$gene_name)  ## add one gene to tags
     rownames(genes) = rownames(D)
-
+    dim(D)
+    dim(genes)
+    
     ## extract data blocks (use LFQ as intensity)
-    counts = D[,grep("^Intensity[.].*",colnames(D))]
+    counts = D[,grep("^Intensity ",colnames(D),value=TRUE)]
+    dim(counts)
     if(use.LFQ) {
-        counts = D[,grep("^LFQ",colnames(D))]
+        counts = D[,grep("^LFQ Intensity",colnames(D))]
     }
-    colnames(counts) <- sub("Intensity.","",colnames(counts))
-    colnames(counts) <- sub("LFQ.intensity.","",colnames(counts))
+    counts <- as.matrix(sapply(counts,as.numeric))  ## from integer64
+    colnames(counts) <- sub("Intensity ","",colnames(counts))
+    colnames(counts) <- sub("LFQ intensity ","",colnames(counts))
     sum(is.na(counts))
     summary(colSums(counts,na.rm=TRUE))
 
@@ -69,6 +76,8 @@ prot.readProteinGroups <- function(file, sep="\t", collapse.gene=TRUE,
     res$samples <- data.frame(sample.name=colnames(counts) )
     res$genes <- genes
     res$counts <- as.matrix(counts)
+
+    message("sample info template created but please complete ngs$samples")
     
     return(res)
 }
@@ -121,7 +130,7 @@ proteus.readProteinGroups <- function(file="proteinGroups.txt", meta="meta.txt",
         measure.cols <- paste("LFQ intensity",meta$sample)
     }
     names(measure.cols) <- meta$sample
-    pdat <- readProteinGroups(file, meta, measure.cols=measure.cols)
+    pdat <- proteus::readProteinGroups(file, meta, measure.cols=measure.cols)
 
     summary(pdat)
     ##summary(colSums(pdat$tab, na.rm=TRUE))
@@ -182,7 +191,7 @@ proteus.readProteinGroups <- function(file="proteinGroups.txt", meta="meta.txt",
         pdat$detect <- apply(pdat$detect, 2, function(x) tapply(x, gene, sum, na.rm=TRUE))            
 
         ## collapse stats
-        S <- tapply(1:nrow(pdat$stats), pdat$stats$condition, function(i) pdat$stats[i,])
+        S <- tapply(1:nrow(pdat$stats), pdat$stats$condition, function(i) pdat$stats[i,,drop=FALSE])
         S <- lapply(1:length(S), function(k) {
             s1 <- apply(S[[k]][,3:5], 2, function(x) tapply(x, gene, mean, na.rm=TRUE))
             data.frame(id=rownames(s1), condition=names(S)[k], s1)
@@ -211,12 +220,20 @@ proteus.readProteinGroups <- function(file="proteinGroups.txt", meta="meta.txt",
     return(pdat)
 }
 
-##counts=pdat$tab;plot=TRUE;qnormalize=TRUE;impute=1e-1;prior.count=1;normalize.sums=1;zero.thr=0.25
-prot.normalizeCounts <- function(counts, scaling=0.01, by.column=TRUE,
+##counts=prot$tab;plot=TRUE;qnormalize=TRUE;prior.count=1;zero.thr=0.25;scaling=1e6
+prot.normalizeCounts <- function(counts, scaling=1e6, by.column=TRUE,
                                  qnormalize=TRUE, prior.count=1, 
                                  zero.thr=0.25, plot=TRUE )
 
 {    
+
+    if(scaling<1) {
+        stop("scaling must be >1")
+    }
+    if(prior.count<0) {
+        stop("prior.count must be >0")
+    }
+
     ##------------------------------------------------------------
     ## start with original counts from MaxQuant
     ##------------------------------------------------------------
@@ -228,31 +245,19 @@ prot.normalizeCounts <- function(counts, scaling=0.01, by.column=TRUE,
     if(plot) hist( log2(X),breaks=100, main="uncorrected")
     min(X,na.rm=TRUE)
     X[ X <= zero.thr ] <- NA  ## treat zero as NA for the moment
-        
+    
     ##------------------------------------------------------------
     ## normalize to CPM (or otherwise)
     ##------------------------------------------------------------
-    ##scaling=0.01
     ##scaling=1e6
     scaling
-    if(!is.null(scaling)) {
-        if(by.column && scaling < 1) {
-            cat(paste0("scaling ",round(scaling*100,1),"% percentile to unit (by column)\n"))
-            ## q0 <- quantile(X[X!=0],probs=scaling,na.rm=TRUE)[[1]]
-            qq0 <- apply(X, 2, function(x) quantile(x[x!=0], probs=scaling, na.rm=TRUE)[1])
-            X <- t(t(X) / qq0) * 1 
-            if(plot) hist( log2(X),breaks=100, main=paste("q-scaling:",scaling,"\n"))
-        } else if(!by.column && scaling < 1) {
-            cat(paste0("scaling ",round(scaling*100,1),"% percentile to unit count\n"))
-            q0 <- quantile(X[X!=0],probs=scaling,na.rm=TRUE)[[1]]
-            X <- X / q0 * 1 
-            if(plot) hist( log2(X),breaks=100, main=paste("q-scaling:",scaling,"\n"))
-        } else if(by.column && scaling >= 1) {
-            cat("scaling columns to",scaling,"total counts\n")
+    if(!is.null(scaling) && scaling >= 1) {
+        if(by.column) {
+            message("scaling columns to ",scaling," total counts")
             X <- t(t(X) / colSums(X,na.rm=TRUE)) * scaling  ## counts-per-million
             if(plot) hist( log2(1e-8+X),breaks=100, main=paste("column scaling:",scaling,"\n"))
         } else {
-            cat("global scaling to average",scaling,"counts\n")
+            message("global scaling to average ",scaling," counts")
             X <- X / mean(colSums(X,na.rm=TRUE)) * scaling  ## counts-per-million
             if(plot) hist( log2(1e-8+X),breaks=100, main=paste("global scaling:",scaling,"\n"))
         }
@@ -279,10 +284,14 @@ prot.normalizeCounts <- function(counts, scaling=0.01, by.column=TRUE,
     ##------------------------------------------------------------
     ## add prior normalized count
     ##------------------------------------------------------------
-    ##prior.count=1  ## you can change this if necessary
+    if(prior.count < 1 && prior.count >0) {
+        minx <- min(X,na.rm=TRUE)
+        selx <- !is.na(X) & X>0 & X>minx
+        prior.count <- quantile(X[selx], probs=prior.count)
+    }
     prior.count
     if(prior.count > 0) {
-        cat("adding prior count=",prior.count,"\n")
+        message("adding prior.count=",prior.count)
         if(plot) hist( log2(prior.count + X),breaks=100, main="log(prior.count+X)")
         X <- prior.count + X
     }
