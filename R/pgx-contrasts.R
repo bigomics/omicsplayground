@@ -39,7 +39,7 @@ makeDirectContrasts <- function(Y, ref, na.rm=TRUE)
         }
         group
     }
-    
+  
     exp.matrix <- makeDirectContrasts000(Y=Y, ref=ref, na.rm=na.rm, warn=FALSE) 
     exp.matrix <- sign(exp.matrix)    
     no.vs <- grep("_vs_|_VS_",colnames(exp.matrix),invert=TRUE)
