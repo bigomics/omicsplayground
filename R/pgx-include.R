@@ -7,7 +7,6 @@ library(shinycssloaders)
 library(dragulaR)
 library(shinyWidgets)
 library(pryr)
-
 library(survival)
 library(knitr)
 library(scatterD3)
@@ -24,6 +23,8 @@ library(org.Hs.eg.db)
 ## library(Cairo)
 library(dragulaR)
 
+##lapply(c("LC_CTYPE","LC_TIME","LC_PAPER","LC_MEASUREMENT"),Sys.setlocale,"en_US.UTF-8")
+Sys.setlocale("LC_ALL", "C")  ## really??
     
 ##useShinyjs(rmd=TRUE)  
 useShinyjs()

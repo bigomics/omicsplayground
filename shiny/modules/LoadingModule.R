@@ -44,22 +44,19 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     hideModeButton <- toupper(hideModeButton)
 
     LOGIN_AUTHENTICATION = authentication
-    ## LOGIN_AUTHENTICATION = "none"
-    ##LOGIN_AUTHENTICATION = "register"
-    ##LOGIN_AUTHENTICATION = "password"
-    CREDENTIALS = NULL
-    if(file.exists("CREDENTIALS")) {
-        CREDENTIALS <- read.table("CREDENTIALS",row.names=1,
-                                  header=TRUE, stringsAsFactors=FALSE)
-        LOGIN_AUTHENTICATION = "password"
+    auth <- NULL
+    if(file.exists("CREDENTIALS") && LOGIN_AUTHENTICATION == "password") {
+        auth <- callModule(
+            PasswordAuthenticationDialog, "auth",
+            credentials.file = "CREDENTIALS")
+    } else if(LOGIN_AUTHENTICATION == "register") {
+        auth <- callModule(
+            AuthenticationDialog, "auth",
+            credentials.file = "REGISTERED")
+    } else {
+        LOGIN_AUTHENTICATION = "none"
     }
-
-    auth <- callModule(
-        AuthenticationDialog, "auth",
-        type = LOGIN_AUTHENTICATION,
-        credentials = CREDENTIALS
-    )
-
+   
     ##-----------------------------------------------------------------------------
     ## Description
     ##-----------------------------------------------------------------------------
@@ -1118,56 +1115,13 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     ##---------------------------------------------------------------
     ##------------- modules for UsersMap ---------------------------
     ##---------------------------------------------------------------
-
-    getUsersMapTable <- reactive({
-        require(rgeolocate)
-
-        access.files <- c(file.path(FILESX,"ncov2019_access.log"),
-                          "/var/www/html/logs/access.log",
-                          "/var/log/apache2/access.log")
-        access.files <- access.files[file.exists(access.files)]
-        access.files
-        if(length(access.files)==0) return(NULL)
-        ##accessfile = file.path(FILESX,"access-ncov2019.log")
-        accessfile <- access.files[1]
-        ##if(!file.exists(accessfile)) return(NULL)
-
-        ## extract IP
-        accessfile                          
-        acc <- read.table(accessfile)
-        ip <- as.character(acc[,1])
-        ##loc <- ip_api(unique(ip))
-        ip <- unique(ip)
-
-        ## extract period
-        acc.date <- gsub("[:].*|\\[","",as.character(acc[,4]))
-        from.date <- head(acc.date,1)
-        to.date <- tail(acc.date,1)
-        from.to <- paste(from.date,"-",to.date)
-        from.to
-        
-        ##file <- system.file("extdata","GeoLite2-Country.mmdb", package = "rgeolocate")
-        ##loc <- maxmind(ip, file, "country_code")
-        file <- file.path(FILESX,"GeoLite2-City.mmdb")
-        loc <- rgeolocate::maxmind(ip, file, c("country_code", "country_name", "city_name"))
-        country_code <- unique(loc$country_code)
-        names(country_code) <- loc[match(country_code,loc$country_code),"country_name"]
-        tt <- table(loc$country_name)
-        df <- data.frame( country_name = names(tt),
-                         country_code = country_code[names(tt)],
-                         visitors = (as.integer(tt)))
-
-        res <- list(table=df, period=from.to)
-
-    })
     
     usersmap.RENDER %<a-% reactive({
-
+        
         require(rworldmap)
         require(RColorBrewer)
 
-        df <- ACCESS.LOG$table
-        ##df <- getUsersMapTable()$table
+        df <- ACCESS.LOG$visitors
         
         ##sPDF <- getMap()  
         ##mapCountryData(sPDF, nameColumnToPlot='continent')
@@ -1179,7 +1133,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         
         par(mai=c(0,0.4,0.2,1),xaxs="i",yaxs="i")
         mapParams <- mapCountryData(
-            sPDF, nameColumnToPlot="visitors",
+            sPDF, nameColumnToPlot="count",
             ##mapTitle = "Number of unique IPs",
             mapTitle = "", addLegend='FALSE',
             colourPalette = RColorBrewer::brewer.pal(9,"Blues"),
@@ -1212,12 +1166,12 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
 
     ##usersmap_caption = "<b>(a)</b> <b>Geo locate.</b>"
     output$usersmapInfo <- renderUI({
-        ##u <- getUsersMapTable()
+
         u <- ACCESS.LOG
-        df <- u$table
+        df <- u$visitors
         rownames(df) <-  df$country_name
-        tot.users <- sum(df$visitors)
-        freq <- df$visitors
+        tot.users <- sum(df$count)
+        freq <- df$count
         names(freq) <- df$country_name
         top.countries <- head(sort(freq,dec=TRUE),10)
         top.countriesTT <- paste("<li>",names(top.countries),top.countries,collapse=" ")
