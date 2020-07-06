@@ -4,10 +4,11 @@
 ##                                                                     ##
 #########################################################################
 
-
 DEBUG = FALSE
 ##DEBUG = TRUE
+##.setSmtpServer("~/bigomics/server-conf/smtp_server/infomaniak.env")
 LOGIN_AUTHENTICATION = "none"
+##LOGIN_AUTHENTICATION = "password"
 ##LOGIN_AUTHENTICATION = "register"
 
 library(shiny)
@@ -25,7 +26,6 @@ message("##################### OMICS PLAYGROUND ##########################")
 message("#################################################################")
 message("\n\n")
 
-
 message("==========================================================")
 message("======================= INIT =============================")
 message("==========================================================\n")
@@ -41,9 +41,11 @@ PGX.DIR = c("../data","../data-extra")
 PGX.DIR = "../data"
 dir.exists(PGX.DIR)
 
+
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars
 source("global.R", local=TRUE)
 source("modules/AuthenticationDialog.R")
+##source("modules/AuthenticationDialog.R")
 
 message("\n")
 message("*****************************************")

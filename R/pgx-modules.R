@@ -655,6 +655,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
     })
         
     output$widget <- renderUI({
+
         ##cat("[output$widget::renderUI] ns.zoombutton = ",ns("zoombutton"),"\n")
         mtop <- paste0("margin: 400px 20px 20px 20px;")
         modaldialog.style <- paste0("#",ns("plotPopup")," .modal-dialog {width:",width.2+40,"px;}")
