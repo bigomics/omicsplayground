@@ -1,4 +1,4 @@
-message("[MAIN::global] reading global.R")
+message("===================== global.R ==================")
 
 ## Parse access logs
 access.dirs = c("/var/www/html/logs", "/var/log/apache2","/var/log/apache",

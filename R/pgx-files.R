@@ -11,15 +11,16 @@ pgx.parseAccessLogs <- function(logs.dir, filter.opg=TRUE, from=NULL, to=NULL,
     logs.dir <- logs.dir[dir.exists(logs.dir)]
     if(length(logs.dir)==0) return(NULL)
     logs.dir
-    access.files <- lapply(logs.dir, dir, pattern="access.log", full.names=TRUE)
+    access.files <- lapply(logs.dir, dir, pattern="access.log",
+                           full.names=TRUE, recursive=TRUE )
     access.files
     access.files <- unlist(access.files)
 
     access.files
-    ##access.logs <- lapply(access.files, function(f)
-    ##    suppressMessages(suppressWarnings(try(read.table(f)))))
     access.logs <- lapply(access.files, function(f)
-        suppressMessages(suppressWarnings(try(fread(f)))))
+        suppressMessages(suppressWarnings(try(read.table(f)))))
+    ##access.logs <- lapply(access.files, function(f)
+    ##    suppressMessages(suppressWarnings(try(fread(f,sep=" ")))))
 
     access.logs <- access.logs[sapply(access.logs,nrow)>0]
     length(access.logs)

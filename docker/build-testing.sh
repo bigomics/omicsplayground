@@ -23,8 +23,8 @@ docker exec testing bash -c 'chmod ugo+rwX /var/log/shiny-server'
 echo Copying current git files to container
 tar -c `git ls-files` | docker container cp - testing:/omicsplayground
 docker exec testing cp docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
-#docker exec testing cp docker/shiny-playground.sh /usr/bin/shiny-playground.sh
-docker container cp docker/shiny-playground.sh testing:/usr/bin/shiny-playground.sh
+docker exec testing cp docker/shiny-server.sh /usr/bin/shiny-server.sh
+#docker container cp docker/shiny-playground.sh testing:/usr/bin/shiny-playground.sh
 
 PGX="geiger2016-arginine.pgx GSE72056-scmelanoma.pgx"
 for p in $PGX; do \
