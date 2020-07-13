@@ -50,7 +50,8 @@ pgx.parseAccessLogs <- function(logs.dir, filter.opg=TRUE, from=NULL, to=NULL,
     head(acc)
     
     ## Extract visiting period
-    Sys.setlocale("LC_TIME","C") ## just to make sure
+    Sys.setlocale("LC_TIME","en_US.UTF-8")    
+    ##Sys.setlocale("LC_TIME","C") ## just to make sure
     acc$date <- gsub("[:].*|\\[","",as.character(acc[,"date"]))
     acc$date <- as.Date(acc$date, format = "%d/%b/%Y")
     acc <- acc[order(acc$date),]
