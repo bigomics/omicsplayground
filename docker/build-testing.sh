@@ -35,7 +35,7 @@ docker exec testing R -e "setwd('data');source('init.R')"
     
 echo Installing extra packages
 #docker exec testing cp ext/bin/orca /usr/local/bin
-## docker exec testing R -e "install.packages('uwot')"
+docker exec testing R -e "install.packages('R.utils')"
 
 echo Committing to bigomics/omicsplayground:testing
 docker commit testing bigomics/omicsplayground:testing
