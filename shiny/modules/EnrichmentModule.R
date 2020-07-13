@@ -37,8 +37,6 @@ EnrichmentModule <- function(input, output, session, env)
     ## reactive functions from shared environment
     inputData <- env[["load"]][["inputData"]]
     selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
-    usermode  <- env[["load"]][["usermode"]]
-    
 
     fullH = 730
     rowH = 345  ## row height of panels
@@ -134,9 +132,6 @@ EnrichmentModule <- function(input, output, session, env)
         gset.methods = sort(colnames(meta[[1]]$fc))
         sel2 = c(intersect(GSET.DEFAULTMETHODS,gset.methods),gset.methods)
         sel2 = head(unique(sel2),3)
-
-        ## in BASIC mode make only available the shortlist
-        if(usermode()=="BASIC") gset.methods <- sel2
 
         updateCheckboxGroupInput(session, 'gs_method',
                                  choices = sort(gset.methods),

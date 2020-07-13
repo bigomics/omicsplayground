@@ -26,10 +26,9 @@ LoadingUI <- function(id) {
     )
 }
 
-
-LoadingModule <- function(input, output, session, hideModeButton=TRUE,
+LoadingModule <- function(input, output, session, 
                           max.limits=c("samples"=1000,"comparisons"=20,"genes"=19999),
-                          defaultMode="BASIC", authentication="none")
+                          authentication="none")
 {
     ns <- session$ns ## NAMESPACE
 
@@ -41,22 +40,35 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     useSweetAlert()
     SHOWSPLASH=TRUE
     ## SHOWSPLASH=FALSE
-    hideModeButton <- toupper(hideModeButton)
 
-    LOGIN_AUTHENTICATION = authentication
+    message("[LoadingModule] in.shinyproxy = ",in.shinyproxy())    
+    message("[LoadingModule] SHINYPROXY_USERNAME = ",Sys.getenv("SHINYPROXY_USERNAME"))
+    message("[LoadingModule] SHINYPROXY_USERGROUPS = ",Sys.getenv("SHINYPROXY_USERGROUPS"))
+
+    AUTHENTICATION = authentication
+    message("[LoadingModule] AUTHENTICATION=",AUTHENTICATION)
+
     auth <- NULL
-    if(file.exists("CREDENTIALS") && LOGIN_AUTHENTICATION == "password") {
+    if(AUTHENTICATION == "password") {
         auth <- callModule(
             PasswordAuthenticationDialog, "auth",
             credentials.file = "CREDENTIALS")
-    } else if(LOGIN_AUTHENTICATION == "register") {
+    } else if(AUTHENTICATION == "register") {
         auth <- callModule(
-            AuthenticationDialog, "auth",
-            credentials.file = "REGISTERED")
+            RegisterAuthenticationDialog, "auth",
+            register.file = "../logs/register.log")
+    } else if(AUTHENTICATION == "shinyproxy" && in.shinyproxy()) {
+        username <- NULL
+        is.anonymous <- Sys.getenv("SHINYPROXY_USERGROUPS")=="ANONYMOUS"
+        if(!is.anonymous) username <- Sys.getenv("SHINYPROXY_USERNAME")
+        auth <- callModule( NoAuthenticationDialog, "auth",
+                           username=username)
     } else {
-        LOGIN_AUTHENTICATION = "none"
-    }
-   
+        ## none
+        auth <- callModule(NoAuthenticationDialog, "auth")
+    } 
+
+    
     ##-----------------------------------------------------------------------------
     ## Description
     ##-----------------------------------------------------------------------------
@@ -81,29 +93,8 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     ## User interface
     ##-----------------------------------------------------------------------------
 
-    usermode_infotip = "Select BASIC or PRO user mode. The BASIC mode should be sufficient for most users. The PRO mode unlocks more algorithms, extra visualization panels and advanced analysis modules for single-cell RNA-seq, cell profiling and biomarker analysis."
-
-    USERLEVELS = c("BASIC","PRO")
-    ## if(DEV.VERSION) USERLEVELS = c("BASIC","PRO","DEV")
-    ##USERMODE <- reactiveVal( factor("BASIC",levels=USERLEVELS) )
-    USERMODE <- reactiveVal( factor(toupper(defaultMode),levels=USERLEVELS) )
-
-    output$inputsUI <- renderUI({
-
-        usermodeUI <- tipify(radioGroupButtons(
-            inputId = ns("main_usermode"),
-            label = "User mode:",
-            choices = USERLEVELS,
-            selected = toupper(defaultMode),
-            status = "warning",
-            checkIcon = list(yes = icon("ok", lib = "glyphicon"))),
-            usermode_infotip, placement="bottom", options = list(container="body")
-            )
-        
-        if(hideModeButton) usermodeUI <- NULL
-        
+    output$inputsUI <- renderUI({        
         ui <- tagList(
-            usermodeUI,
             ##br(),br(),br(),
             p(strong("Dataset info:")),
             div( htmlOutput(ns("dataset_info")), id="datainfo"),
@@ -170,7 +161,6 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     particlesjs.conf <- rjson::fromJSON(file="resources/particlesjs-config.json")
 
     showStartupModal <- function(once=FALSE) {    
-
         if(length(input$loadbutton)==0) {
             dbg("[showStartupModal] UI not ready. skipping")
             ##delay(8000, selectRows(proxy = dataTableProxy("pgxtable"), selected=1))
@@ -180,37 +170,9 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         if(once && startup_count>0) return(NULL)
         
         dbg("showStartupModal: showing!\n")    
-        showModal(modalDialog(
-            id="modal-splash",
-            div(
-                id = "particles-target",
-                img(src = base64enc::dataURI(file="www/splash.png"),
-                    width="100%", height="auto%", style = "position:absolute;"),
-                ##div("Big Omics Data", class="splash-title"),
-                ##div("Isn't big anymore with Omics Playground", class="splash-subtitle"),
-                ##style="height: 500px; width: 100%; background-color: #2c81e2;"
-                style="height: 500px; width: 100%;"                
-                ##height="500px", style="margin-left: -14px; margin-top: -4px;"
-            ),            
-            footer = tagList(
-                actionButton("action1","Read-the-docs", icon=icon("book"),
-                             onclick="window.open('https://omicsplayground.readthedocs.io','_blank')"),
-                actionButton("action2","Watch the tutorial", icon=icon("youtube"),
-                             onclick="window.open('https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-','_blank')"),
-                actionButton("action3","Get the source", icon=icon("github"),
-                             onclick="window.open('https://github.com/bigomics/omicsplayground','_blank')"),
-                actionButton("action4","Docker image", icon=icon("docker"),
-                             onclick="window.open('https://hub.docker.com/r/bigomics/omicsplayground','_blank')"),
-                actionButton("action5","User forum", icon=icon("users"),
-                             onclick="window.open('https://groups.google.com/d/forum/omicsplayground','_blank')"),
-                ## actionButton(ns("action_beer"),"Buy us a beer!", icon=icon("beer")),
-                ## actionButton(ns("action_pizza"),"Donate pizza", icon=icon("pizza-slice")),
-                ## modalButton("Let's start!")
-                actionButton(ns("action_play"), "Let's play!")
-            ),
-            particles(config=particlesjs.conf, target_id = "particles-target", timeout = 1000),
-            size="l", easyClose=FALSE, fade=FALSE))
-        ##startup_count <<- startup_count + 1    
+        AuthenticationUI(ns("auth"))
+        
+        startup_count <<- startup_count + 1    
         dbg("showStartupModal done!\n")
     }
 
@@ -226,23 +188,6 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     ##         text = "Free entrance for you!", type = "info")
     ##     ##Sys.sleep(4);removeModal()
     ## })
-
-    observeEvent( input$action_play, {
-
-        dbg("action_play:: play button action\n")
-        cat("action_play:: LOGIN_AUTHENTICATION=",LOGIN_AUTHENTICATION,"\n")
-
-        startup_count <<- startup_count + 1    
-        if(LOGIN_AUTHENTICATION!="none") {
-            message("[LoadingModule] authentication required")
-            ## showLogin()  ## $
-            AuthenticationUI(ns("auth"))
-        } else {
-            message("[LoadingModule] continuing without authentication")
-            removeModal()
-        }    
-
-    })
 
     selectedDataSetInfo <- reactive({
         ##sel <- input$pgxtable_rows_selected
@@ -299,57 +244,6 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
 
     ## USER <- reactiveValues( logged = FALSE, name="anonymous")
     
-    ##=================================================================================
-    ##======================== USER LEVEL =============================================
-    ##=================================================================================
-
-    ##-----------------------------------------------------------------------------
-    ## Select UI user level
-    ##-----------------------------------------------------------------------------
-
-    observeEvent( input$main_usermode,
-    {
-        ## Observe the usermode button and switch levels
-        ##
-        ##
-        usermode <- input$main_usermode
-        if(is.null(usermode)) usermode <- "BASIC"
-
-        cat(">>> switching USERMODE to",usermode,"\n")
-        
-        if(DEV.VERSION) {            
-            ##dbg("VALID OUTPUT.OPTIONS =",names(outputOptions(output)))
-            ##dbg("VALID OUTPUT NAMES =",names(output))
-            dbg("VALID INPUT NAMES =",names(input))
-            dbg("session$clientData NAMES =",names(session$clientData))
-        }
-        
-        if(usermode == "BASIC") {
-            dbg("observeEvent::main_usermode : switching to BASIC mode")
-            ##shinyjs::html("navbar-brand","Omics Playground (basic)")
-            shinyjs::hide(selector = "div.download-button")
-            shinyjs::hide(selector = "div.modebar")
-            shinyjs::hide(selector = "div.pro-feature")
-            USERMODE("BASIC")
-        }
-        
-        if(usermode %in% c("PRO","DEV")) {
-            dbg("observeEvent::main_usermode : switching to PRO mode")
-            shinyjs::show(selector = "div.download-button")
-            shinyjs::show(selector = "div.modebar")
-            shinyjs::show(selector = "div.pro-feature")
-            USERMODE("PRO")
-        }
-
-        if(usermode %in% c("DEV")) {
-            dbg("observeEvent::main_usermode : switching to DEV mode")
-            ##shinyjs::show(selector = "div.download-button")
-            USERMODE("DEV")
-        }
-        
-        ##updateNavbarPage(session, "navbar", selected=1)
-    }, ignoreNULL=TRUE, ignoreInit=TRUE )
-
     ##================================================================================
     ##====================== INPUT DATA REACTIVE OBJECT ==============================
     ##================================================================================
@@ -362,13 +256,14 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         ## This is the main loader function that loads the ngs object.
         ##-----------------------------------------------------------------
         dbg("[LoadingModule::inputData] ---------- reacted ---------------\n")
-        dbg("[LoadingModule::inputData] LOGIN_AUTHENTICATION=",LOGIN_AUTHENTICATION,"\n")
+        dbg("[LoadingModule::inputData] AUTHENTICATION=",AUTHENTICATION,"\n")
         dbg("[LoadingModule::inputData] auth$logged=",auth$logged(),"\n")
         
         ## authenicate user if needed
         ## if(!USER$logged) showLogin()
-        ## if(LOGIN_AUTHENTICATION!="none" && USER$logged) showLogin()
-        if(LOGIN_AUTHENTICATION!="none" && !auth$logged()) return(NULL)
+        ## if(AUTHENTICATION!="none" && USER$logged) showLogin()
+        ##if(AUTHENTICATION!="none" && !auth$logged()) return(NULL)
+        if(!auth$logged()) return(NULL)
 
         pgx <- currentPGX()
         dbg("[LoadingModule::inputData] is.null(pgx)=",is.null(pgx),"\n")        
@@ -634,7 +529,6 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
                         max.limits["comparisons"],"comparisons")
         
         upload_info = sub("LIMITS", limits, upload_info)
-        ##if(USERMODE()=="PRO") upload_info = sub("LIMITS", pro.limits, upload_info)    
         userdataUI <- NULL
         if(DEV.VERSION) {
             userdataUI <- DT::dataTableOutput(ns("userDatasetsUI"))
@@ -724,27 +618,19 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             max.genes = as.integer(max.limits["genes"])
             max.genesets = 9999
             
-            if( FALSE && USERMODE() == "BASIC") {
-                dbg("[LoadingModule::*myconfirmation] setting BASIC methods")            
-                gx.methods   = c("ttest.welch","ttest.rank","trend.limma") ## fastest 3
-                gset.methods = c("fisher","gsva","camera")  ## fastest 3            
-                ## gx.methods   = c("trend.limma","edger.qlf","edger.lrt")
-                ## gset.methods = c("fisher","gsva","fgsea")
-                extra.methods = c("meta.go","infer","drugs","wordcloud")
-            } else {
-                dbg("[LoadingModule::*myconfirmation] setting PRO methods")  
-                gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
-                gset.methods = c("fisher","gsva","fgsea","camera","fry")
+
+            dbg("[LoadingModule::*myconfirmation] setting PRO methods")  
+            gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
+            gset.methods = c("fisher","gsva","fgsea","camera","fry")
+            extra.methods = c("meta.go","infer","deconv","drugs-combo",
+                              "wordcloud","connectivity")
+            if(ncol(counts) > 750) {
+                ## probably scRNA-seq... to long
+                gx.methods   = c("ttest","ttest.welch","trend.limma") ## only t-test...
+                gset.methods = c("fisher","gsva","fgsea")
                 extra.methods = c("meta.go","infer","deconv","drugs-combo",
                                   "wordcloud","connectivity")
-                if(ncol(counts) > 750) {
-                    ## probably scRNA-seq... to long
-                    gx.methods   = c("ttest","ttest.welch","trend.limma") ## only t-test...
-                    gset.methods = c("fisher","gsva","fgsea")
-                    extra.methods = c("meta.go","infer","deconv","drugs-combo",
-                                      "wordcloud","connectivity")
-                    max.genes = 10000
-                }
+                max.genes = 10000
             }
             
             ##----------------------------------------------------------------------
@@ -853,9 +739,8 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
         return(NULL)
         
         ## -------------------- save PGX file/object
-        saving.ok = ( USERMODE() == "PRO")
+        saving.ok = FALSE
         if(saving.ok) {
-
             if(0) {
                 ##!!!!!!!!!!!!!!!!!!!!!!!!
                 ##!!!!!!! BROKEN !!!!!!!!!
@@ -881,7 +766,7 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
             
         } else {
             showModal( modalDialog(
-                "Sorry. Saving only possible in Pro mode",
+                "Sorry. Saving only possible for Premium users",
                 title = NULL, size = "s", fade=FALSE
             ))
         }
@@ -1239,9 +1124,9 @@ LoadingModule <- function(input, output, session, hideModeButton=TRUE,
     ## Module return object
     ##------------------------------------------------
     res <- list(
-        inputData = inputData,
+        inputData = inputData
         ##inputData = currentPGX,
-        usermode = reactive({ USERMODE() })
+        ##usermode = reactive({ USERMODE() })
     )
     return(res)
 }

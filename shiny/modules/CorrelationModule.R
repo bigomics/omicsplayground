@@ -24,7 +24,6 @@ CorrelationModule <- function(input, output, session, env)
     ns <- session$ns ## NAMESPACE
 
     inputData <- env[["load"]][["inputData"]]
-    usermode  <- env[["load"]][["usermode"]]
 
     fullH = 750  ## full height of page
     rowH  = 340  ## full height of page

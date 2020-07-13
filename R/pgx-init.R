@@ -19,10 +19,8 @@ INIT.FILE
 file.exists(INIT.FILE)
 
 if(file.exists(INIT.FILE)) {    
-
-    cat("<init> loading cached INIT file...\n")
-    load(INIT.FILE, verbose=1)
-    
+    message("[INIT] loading cached INIT file...")
+    load(INIT.FILE, verbose=1)    
 } else {
 
     oldvars <- ls()
@@ -40,7 +38,7 @@ if(file.exists(INIT.FILE)) {
     load(file.path(FILES,"gmt-all.rda"),verbose=1)
     GSETS = gmt.all;remove(gmt.all)
 
-    cat("<init> parsing gene families...\n")
+    message("[INIT] parsing gene families...")
     FAMILIES <- pgx.getGeneFamilies(GENE.SYMBOL, FILES=FILES, min.size=10, max.size=9999)
     ##FAMILIES <- c(FAMILIES, list( "<LM22 markers>"=LM22_MARKERS,"<ImmProt markers>"=IMMPROT_MARKERS))
     fam.file <- file.path(FILES,"custom-families.gmt")
@@ -55,7 +53,7 @@ if(file.exists(INIT.FILE)) {
     names(f1) <- sub("FAMILY:<all>","<all>",names(f1))
     GSETS <- c(GSETS,f1)
 
-    cat("<init> parsing collections...\n")
+    message("[INIT] parsing collections...")
     COLLECTIONS <- pgx.getGeneSetCollections(names(GSETS), min.size=10, max.size=99999)
     COLLECTIONS <- COLLECTIONS[order(names(COLLECTIONS))]
 
@@ -131,7 +129,7 @@ pgx.getFamilies <- function(ngs, nmin=10, extended=FALSE) {
 
 pgx.initialize <- function(ngs) {
 
-    cat("INFO <init:initialize> initializing ngs object for the Playground\n")
+    message("[pgx-init:initialize] initializing ngs object")
 
     ##----------------- check object
     obj.needed <- c("genes", ## "deconv","collections", "families", "counts",

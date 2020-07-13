@@ -22,9 +22,6 @@ library(dplyr)
 library(org.Hs.eg.db)
 ## library(Cairo)
 library(dragulaR)
-
-##lapply(c("LC_CTYPE","LC_TIME","LC_PAPER","LC_MEASUREMENT"),Sys.setlocale,"en_US.UTF-8")
-Sys.setlocale("LC_ALL", "C")  ## really??
     
 ##useShinyjs(rmd=TRUE)  
 useShinyjs()

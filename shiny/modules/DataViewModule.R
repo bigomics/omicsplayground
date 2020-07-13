@@ -687,7 +687,7 @@ DataViewModule <- function(input, output, session, env)
         func = data_corplot.RENDER,
         func2 = data_corplot.RENDER,
         info.text = data_corplot_text,
-        height = imgH, pdf.width=9, pdf.height=6,
+        height = imgH, pdf.width=8, pdf.height=6,
         label="f", title="Cumulative correlation"
     )
     ##output <- attachModule(output, data_corplot_module) 

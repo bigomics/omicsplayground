@@ -6,7 +6,6 @@
 ##WATERMARK=TRUE
 ##WATERMARK=FALSE
 
-
 colBL="#00448855"
 colRD="#88004455"
 addWatermark.PDF <- function(file) {
@@ -23,8 +22,7 @@ addWatermark.PDF <- function(file) {
 ## prepare ORCA server if we are not in a Docker
 library(plotly)
 
-p=plot_ly(x=1:3,y=1:3,mode="markers",type="scattergl")
-format="pdf";width=height=800;scale=1;file="plot.pdf";server=NULL
+##p=plot_ly(x=1:3,y=1:3,mode="markers",type="scattergl");format="pdf";width=height=800;scale=1;file="plot.pdf";server=NULL
 plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file), 
                          scale = NULL, width = NULL, height = NULL, server=NULL)
 {
@@ -268,6 +266,11 @@ plotModule <- function(input, output, session, ## ns=NULL,
         require(plotly)
         outputFunc = "plotlyOutput"
         renderFunc = "renderPlotly"
+    } else if(plotlib == "echarts") {
+        ##render <- renderPlotly({ func() })
+        require(plotly)
+        outputFunc = "echarts4rOutput"
+        renderFunc = "renderEcharts4r"
     } else if(plotlib=="scatterD3") {
         require(scatterD3)
         renderFunc="renderScatterD3"
@@ -379,7 +382,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     ## unlink(PDFFILE) ## do not remove!
                     if(plotlib=="plotly") {
                         p <- func()
-                        ## if(WATERMARK) p <- addWatermark.Plotly(p)
                         p$width = pdf.width * 80
                         p$height = pdf.height * 80
                         ##err <- try(export(p, PDFFILE))  ## deprecated
@@ -448,7 +450,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
         ## unlink(HTMLFILE) ## do not remove!
         if(plotlib == "plotly" ) {
             p <- func()
-            if(WATERMARK) p <- addWatermark.Plotly(p)
             htmlwidgets::saveWidget(p, HTMLFILE) 
         } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
             p <- func()
@@ -484,7 +485,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     ## unlink(HTMLFILE) ## do not remove!
                     if(plotlib == "plotly" ) {
                         p <- func()
-                        if(WATERMARK) p <- addWatermark.Plotly(p)
                         htmlwidgets::saveWidget(p, HTMLFILE) 
                     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3") ) {
                         p <- func()
@@ -577,7 +577,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         dev.print(pdf, file=PDFFILE, width=pdf.width, height=pdf.height,
                                   pointsize=pdf.pointsize)
                         ##p1.base
-                        ##if(WATERMARK) addWatermark.base()
                         ##dev.off()  ## important!!
                     }
                 ))
@@ -599,7 +598,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
         if(!is.null(func2)) {
             render2 <- renderPlot({
                 func2()
-                ##if(WATERMARK) addWatermark.base()                
             }, res=res.2)            
             ##render2 <- renderPlot(func2())
         }

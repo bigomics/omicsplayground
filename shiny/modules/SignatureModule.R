@@ -34,7 +34,6 @@ SignatureModule <- function(input, output, session, env)
     
     ## reactive functions from shared environment
     inputData <- env[["load"]][["inputData"]]
-    usermode  <- env[["load"]][["usermode"]]
     
     description = "<b>Signature Analysis.</b> Users can test their gene signature by
 calculating an enrichment score. Upload your own gene list, or select
@@ -102,9 +101,7 @@ infotext =
             )
         )
 
-        usermode <- usermode()
-        if(length(usermode)==0) usermode <- "BASIC"
-        if(usermode!="BASIC" && DEV.VERSION) {
+        if(DEV.VERSION) {
             uix <- tagList(
                 hr(),h6("Developer options:"),
                 radioButtons(ns('ssstats'),'ss-stats:',
