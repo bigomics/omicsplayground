@@ -33,7 +33,6 @@ ClusteringModule <- function(input, output, session, env)
     ns <- session$ns ## NAMESPACE
 
     inputData <- env[["load"]][["inputData"]]
-    usermode  <- env[["load"]][["usermode"]]
 
     fullH = 750  ## full height of page
     
@@ -903,7 +902,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             res <- pgx.clusterSamplesFromMatrix(
                 zx, perplexity=perplexity, is.logx=TRUE,
                 ntop=999999, sv.rank=-1, prefix="C",         
-                kclust=1, prior.counts=NULL, 
+                kclust=1, prior.count=NULL, 
                 dims=pdim, find.clusters=FALSE,
                 row.center=TRUE, row.scale=FALSE,
                 method=clustmethod)
@@ -1290,8 +1289,6 @@ displays the expression levels of selected genes across all conditions in the an
 
     hm_parcoord_table.RENDER <- reactive({
 
-        if(usermode()=="BASIC") shinyjs::hide(selector = "div.modebar")
-        
         mat = hm_parcoord.selected()$mat
         clust = hm_parcoord.selected()$clust
         df <- data.frame(cluster=clust, mat, check.names=FALSE)

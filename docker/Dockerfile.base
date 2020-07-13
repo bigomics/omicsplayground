@@ -53,7 +53,7 @@ RUN R -e "setwd('R');source('requirements.R')"
 RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
     'metap','brew','Seurat','R.utils','rhdf5', 'mygene', \
     'qgraph','psych'))"
-RUN R -e "BiocManager::install(c('rhdf5'))"
+RUN R -e "BiocManager::install(c('rhdf5','monocle'))"
 RUN rm -fr /omicsplayground/R /omicsplayground/shiny
 
 #------------------------------------------------------------

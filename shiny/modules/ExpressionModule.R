@@ -42,7 +42,6 @@ ExpressionModule <- function(input, output, session, env)
 
     ## reactive functions from shared environment
     inputData <- env[["load"]][["inputData"]]
-    usermode  <- env[["load"]][["usermode"]]
 
     fullH = 730
     rowH = 345  ## row height of panels
@@ -134,9 +133,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         gx.methods = colnames(ngs$gx.meta$meta[[1]]$fc) ## available
         sel1 = c(intersect(GX.DEFAULTTEST,gx.methods),gx.methods)
         sel1 = head(unique(sel1),3) ## maximum three!!
-
-        ## in BASIC mode make only available the shortlist
-        if(usermode()=="BASIC") gx.methods <- sel1
 
         updateCheckboxGroupInput(session, 'gx_testmethod',
                                  choices = sort(gx.methods),

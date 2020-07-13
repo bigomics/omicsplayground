@@ -95,7 +95,8 @@ install.pkgs(c("gridGraphics","Rgraphviz","fastcluster", "mygene",
                "diptest", "fpc", "webshot"))
 ##webshot::install_phantomjs() 
 devtools::install_version("mnormt", version="1.5-7", repos="http://cran.us.r-project.org") 
-install.pkgs(c('umap','corrplot','wordcloud','metap','brew','Seurat'))
+install.pkgs(c('umap','corrplot','wordcloud','metap','brew'))
+install.pkgs(c('monocle','Seurat'))
 
 ##---------------------------------------------------------------------
 ## Install latest from GITHUB

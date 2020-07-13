@@ -4,12 +4,15 @@
 ##                                                                     ##
 #########################################################################
 
+message("\n\n")
+message("#################################################################")
+message("##################### OMICS PLAYGROUND ##########################")
+message("#################################################################")
+message("\n\n")
+
 DEBUG = FALSE
 ##DEBUG = TRUE
 ##.setSmtpServer("~/bigomics/server-conf/smtp_server/infomaniak.env")
-LOGIN_AUTHENTICATION = "none"
-##LOGIN_AUTHENTICATION = "password"
-##LOGIN_AUTHENTICATION = "register"
 
 library(shiny)
 library(shinyjs)
@@ -17,35 +20,44 @@ library(shinyWidgets)
 library(waiter)
 library(plotly)
 
-## --------------------------------------------------------------------
-## ------------------------ CHECKS ------------------------------------
-## --------------------------------------------------------------------
-message("\n\n")
-message("#################################################################")
-message("##################### OMICS PLAYGROUND ##########################")
-message("#################################################################")
-message("\n\n")
+message("\n")
+message("************************************************")
+message("********* RUNTIME ENVIRONMENT VARIABLES ********")
+message("************************************************")
 
-message("==========================================================")
-message("======================= INIT =============================")
-message("==========================================================\n")
+Sys.setlocale("LC_CTYPE","en_US.UTF-8") 
+Sys.setlocale("LC_TIME","en_US.UTF-8")
+##Sys.setlocale("LC_ALL", "C")  ## really??
+##Sys.setenv("SHINYPROXY_USERNAME"="Test Person")
 
+envcat <- function(var) message(var," = ",Sys.getenv(var))
+envcat("SHINYPROXY_USERNAME")
+envcat("SHINYPROXY_USERGROUPS")
+envcat("PLAYGROUND_AUTHENTICATION")
+envcat("PLAYGROUND_USERID")
+envcat("PLAYGROUND_EXPIRY")
+envcat("PLAYGROUND_LEVEL")
+envcat("PLAYGROUND_HELLO")
+
+## --------------------------------------------------------------------
+## -------------------------- INIT ------------------------------------
+## --------------------------------------------------------------------
+
+message("\n")
 message("*******************************************")
 message("******* SETTING GLOBAL VARIABLES **********")
 message("*******************************************")
 
-RDIR = "../R"
-FILES = "../lib"
-FILESX = "../libx"
-PGX.DIR = c("../data","../data-extra")
-PGX.DIR = "../data"
-dir.exists(PGX.DIR)
-
+OPG = ".."
+RDIR = file.path(OPG,"R")
+FILES = file.path(OPG,"lib")
+FILESX = file.path(OPG,"libx")
+PGX.DIR = file.path(OPG,"data")
+##PGX.DIR = c(PGX.DIR,file.path(OPG,"data-extra"))
 
 source("../R/pgx-include.R", local=TRUE)  ## pass local vars
 source("global.R", local=TRUE)
 source("modules/AuthenticationDialog.R")
-##source("modules/AuthenticationDialog.R")
 
 message("\n")
 message("*****************************************")
@@ -56,10 +68,23 @@ source(file.path(RDIR,"pgx-files.R"), local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
-WATERMARK = opt$WATERMARK
+
+## over-ride options
+## opt$AUTHENTICATION = "none"
+## opt$AUTHENTICATION = "password"
+## opt$AUTHENTICATION = "register"
+if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
+    auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
+    message("[ENV] overriding PLAYGROUND_AUTHENTICATION = ",auth)
+    opt$AUTHENTICATION = auth
+}
+
+
+WATERMARK      = opt$WATERMARK
 SHOW_QUESTIONS = FALSE
-DEV.VERSION = opt$DEV_VERSION && dir.exists("../../omicsplayground-dev")
-USER_MODE = opt$USER_MODE
+DEV.VERSION    = opt$DEV_VERSION && dir.exists("../../omicsplayground-dev")
+USER_MODE      = opt$USER_MODE
+AUTHENTICATION = opt$AUTHENTICATION
 
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
@@ -121,7 +146,6 @@ has.sigdb <- length(dir(FILESX,pattern="sigdb.*h5")>0)
 has.sigdb
 if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
 
-
 MAINTABS = c("DataView","Clustering","Expression","Enrichment",
              "Signature","CellProfiling","Development")
 
@@ -130,7 +154,7 @@ MAINTABS = c("DataView","Clustering","Expression","Enrichment",
 ## --------------------------------------------------------------------
 
 server = function(input, output, session) {
-
+  
     message("\n========================================================")
     message("===================== SERVER ===========================")
     message("========================================================\n")
@@ -141,9 +165,8 @@ server = function(input, output, session) {
                     "genes" = opt$MAX_GENES)
     env <- list()  ## communication environment
     env[["load"]]   <- callModule(
-        LoadingModule, "load", hideModeButton = opt$HIDE_MODEBUTTON,
-        max.limits = max.limits, defaultMode = opt$USER_MODE,
-        authentication = LOGIN_AUTHENTICATION)
+        LoadingModule, "load", max.limits = max.limits,
+        authentication = AUTHENTICATION)
     env[["view"]]   <- callModule( DataViewModule, "view", env)
     env[["clust"]]  <- callModule( ClusteringModule, "clust", env)
     env[["expr"]]   <- callModule( ExpressionModule, "expr", env)
@@ -172,11 +195,11 @@ server = function(input, output, session) {
         if(length(name)==0) name = "(no data)"
         name
     })
-   
+      
     ## Dynamicall hide/show certain sections depending on USERMODE/object
     observe({
         pgx <- env[["load"]][["inputData"]]() ## trigger on change dataset
-        
+
         ## hide all main tabs until we have an object
         if(is.null(pgx)) {
             lapply(MAINTABS, function(m) hideTab("maintabs",m))
@@ -186,7 +209,6 @@ server = function(input, output, session) {
         }
 
         message("[MAIN] dataset changed. reconfiguring menu...")
-
         ## show all main tabs
         lapply(MAINTABS, function(m) showTab("maintabs",m))
         
@@ -219,13 +241,10 @@ server = function(input, output, session) {
         showHideTab(pgx, "deconv", "maintabs", "CellProfiling")         
         if(!is.null(ACCESS.LOG)) showTab("load-tabs","Visitors map")                    
 
-        message("[MAIN] reconfiguring menu done.")
-        
+        message("[MAIN] reconfiguring menu done.")        
     })
-
     waiter_hide()
 }
-
 
 ## --------------------------------------------------------------------
 ## ------------------------------ UI ----------------------------------
@@ -268,7 +287,6 @@ if(DEV.VERSION) {
     )
 }
 
-
 tabs = "load"
 createUI <- function(tabs)
 {
@@ -279,15 +297,14 @@ createUI <- function(tabs)
     version <- scan("../VERSION", character())[1]
     TITLE = paste(opt$TITLE,version)
     LOGO = div(img(src="bigomics-logo-white-48px.png", height="48px"),
-               TITLE, id="navbar-logo", style="margin-top:-13px;")
-    
+               TITLE, id="navbar-logo", style="margin-top:-13px;")    
     title = tagList(LOGO)
     windowTitle = TITLE
     theme = shinythemes::shinytheme("cerulean")
     id = "maintabs"
     ##selected = "Home"    
     header = tagList(
-        tags$head(tags$link(rel = "stylesheet", href = "navbar.css")),
+        tags$head(tags$link(rel = "stylesheet", href = "playground.css")),
         shinyjs::useShinyjs(),
         TAGS.JSSCRIPT,
         tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
@@ -296,10 +313,15 @@ createUI <- function(tabs)
         ##QuestionModule_UI("qa")
     )
     names(header) <- NULL
-
+    
     footer = tagList(
         ##social_buttons(),
-        waiter_show_on_load(spin_fading_circles()) # place at the bottom
+        waiter_show_on_load(
+            html = spin_wave(),
+            ##color = "#2780e3",
+            color = "#1967be",            
+            logo = "ready.png"
+        ) # place at the bottom
     )
 
     ##-------------------------------------
@@ -339,9 +361,7 @@ createUI <- function(tabs)
                            windowTitle = windowTitle,
                            header = tagList(header),
                            footer = tagList(footer),
-                           theme = theme) )
-
-
+                           theme = theme))
 }
 
 ui = createUI(
@@ -357,14 +377,11 @@ ui = createUI(
     )
 )
 
-
 ## --------------------------------------------------------------------
 ## ------------------------------ RUN ---------------------------------
 ## --------------------------------------------------------------------
 
-
 shiny::shinyApp(ui, server)
-
 
 ##pkgs <- c( sessionInfo()[["basePkgs"]], names(sessionInfo()[["otherPkgs"]]),
 ##          names(sessionInfo()[["loadedOnly"]]) )

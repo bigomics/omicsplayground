@@ -549,8 +549,6 @@ immune cell types, expressed genes and pathway activation."
         }
 
         if(input$sc_view2 == "heatmap") {
-            ##if(PRO.VERSION) {
-            ##usermode = USERMODE()
             usermode = "PRO"
             if(!is.null(usermode) && usermode >= 'PRO') {            
                 kk <- head(colnames(score)[order(-colMeans(score**2))],18)

@@ -25,8 +25,8 @@ message("***** starting local ORCA server ********")
 message("*****************************************")
 
 assignInNamespace("correct_orca", function() return(TRUE), ns="plotly")
-ORCA <- plotly::orca_serve(port=5151, keep_alive=TRUE, more_args="--enable-webgl")
 ##ORCA <- plotly::orca_serve(port=5151)
+ORCA <- plotly::orca_serve(port=5151, keep_alive=TRUE, more_args="--enable-webgl")
 for(i in 1:10) {
     res.local <- try(httr::POST("http://localhost:5151", body=plotly:::to_JSON("")),silent=TRUE)
     responding.local   <- class(res.local)=="response"
@@ -35,7 +35,7 @@ for(i in 1:10) {
     if(responding.local) {
         break
     }
-    Sys.sleep(1)
+    Sys.sleep(2)
 }
 
 res.local <- try(httr::POST("http://localhost:5151", body=plotly:::to_JSON("")),silent=TRUE)
@@ -57,6 +57,16 @@ if(1 && !responding.local && !responding.docker) {
 ##======================================================================
 ##==================== FUNCTIONS =======================================
 ##======================================================================
+
+in.shinyproxy <- function() {
+    ## Determine if we are in ShinyProxy
+    ##
+    vars <- c("SHINYPROXY_USERNAME","SHINYPROXY_USERGROUPS",
+              "PLAYGROUND_USERID","PLAYGROUND_LEVEL")
+    vars <- c("SHINYPROXY_USERNAME","SHINYPROXY_USERGROUPS")
+    vals <- sapply(vars,Sys.getenv)
+    all(vals!="")
+}
 
 showHideTab <- function(pgx, slot, tabname, subtab) {
     if(!slot %in% names(pgx)) {
