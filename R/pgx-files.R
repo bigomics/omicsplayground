@@ -21,7 +21,8 @@ pgx.parseAccessLogs <- function(logs.dir, filter.opg=TRUE, from=NULL, to=NULL,
         suppressMessages(suppressWarnings(try(read.table(f)))))
     ##access.logs <- lapply(access.files, function(f)
     ##    suppressMessages(suppressWarnings(try(fread(f,sep=" ")))))
-
+    access.logs <- access.logs[sapply(access.logs,class)!="try-error"]
+    
     access.logs <- access.logs[sapply(access.logs,nrow)>0]
     length(access.logs)
     if(length(access.logs)==0) return(NULL)
