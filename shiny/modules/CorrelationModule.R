@@ -244,22 +244,27 @@ between genes and find coregulated modules."
         gene <- rownames(res$cor)[1]
         gene <- input$cor_gene
         gene
-        NTOP = 50
+        
+        NTOP = 40
         rho  <- res$cor[gene,]
         rho <- head(rho[order(-abs(rho))],NTOP)
         rho <- rho[order(-rho)]
         if(!is.null(res$meta.pcor)) {
             prho <- res$meta.pcor[gene,]
-            prho <- prho[names(rho)]
+            ##prho <- prho[names(rho)]
+            prho <- prho[match(names(rho),names(prho))]
+            names(prho) <- names(rho)
+            prho[is.na(prho)] <- 0            
         }
         
         par(mfrow=c(1,1), mar=c(10,4,1,1))
         barplot(rho, beside=FALSE, las=3,
                 ylab = "correlation",
                 cex.names=0.85 )
-                
+        
         if(!is.null(prho)) {
-            prho <- prho[names(rho)]
+            ##prho <- prho[match(names(rho),names(prho))]
+            ##prho[is.na(prho)] <- 0
             prho[prho>0] <- pmin(prho[prho>0],rho[prho>0])
             prho[prho<0] <- pmax(prho[prho<0],rho[prho<0])
             barplot(prho, beside=FALSE, add=TRUE,
@@ -268,7 +273,7 @@ between genes and find coregulated modules."
                    c("correlation","partial correlation"),
                    fill=c("grey70","grey40"))
         }
-
+        
     })
 
     cor_barplot.opts <- tagList(

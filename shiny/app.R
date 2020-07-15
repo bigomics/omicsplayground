@@ -101,6 +101,7 @@ source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
+    load("../data/GSE10846-xgreta.pgx")
     load("../data/GSE72056-scmelanoma.pgx")
     load("../data/tcga-brca_pub.pgx")
     load("../data/GSE22886-immune.pgx")   
