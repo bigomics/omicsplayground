@@ -55,7 +55,7 @@ FILESX = file.path(OPG,"libx")
 PGX.DIR = file.path(OPG,"data")
 ##PGX.DIR = c(PGX.DIR,file.path(OPG,"data-extra"))
 
-source("../R/pgx-include.R", local=TRUE)  ## pass local vars
+source(file.path(RDIR,"pgx-include.R"),local=TRUE)  ## pass local vars
 source("global.R", local=TRUE)
 source("modules/AuthenticationDialog.R")
 
