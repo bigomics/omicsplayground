@@ -154,6 +154,7 @@ pgx.parseAccessLogs <- function(logs.dir, filter.opg=TRUE, from=NULL, to=NULL,
 }
 
 h5exists <- function(h5.file, obj) {
+    require(rhdf5)    
     xobjs <- apply(h5ls(h5.file)[,1:2],1,paste,collapse="/")
     obj %in% gsub("^/|^//","",xobjs)
 }
