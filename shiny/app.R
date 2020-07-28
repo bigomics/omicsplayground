@@ -149,6 +149,12 @@ if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
 MAINTABS = c("DataView","Clustering","Expression","Enrichment",
              "Signature","CellProfiling","Development")
 
+if(0) {
+    save.image(file="../cache/image.RData")
+    system.time( load(file="../cache/image.RData") )
+}
+
+
 ## --------------------------------------------------------------------
 ## --------------------------- SERVER ---------------------------------
 ## --------------------------------------------------------------------

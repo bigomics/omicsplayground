@@ -76,22 +76,22 @@ ConnectivityModule <- function(input, output, session, env)
                     checkboxInput(ns("cmap_abs_score"),"abs.score",TRUE),
                     "Use absolute score value",
                     placement="right", options = list(container = "body"))
+                ## tipify(
+                ##     checkboxInput(ns("cmap_dogenelist"),"custom gene list"),
+                ##     "Custom gene list",
+                ##     placement="right", options = list(container = "body")),
+                ## conditionalPanel(
+                ##     "input.cmap_dogenelist == true", ns=ns,
+                ##     tipify( textAreaInput(ns("cmap_genelist"),NULL,value=NULL,rows=5,
+                ##                           placeholder="Paste your custom gene list"),
+                ##            "Paste a custom list of genes to be used as features.",
+                ##            placement="bottom")
+                ## )
             )
         )
-        if(0 && DEV.VERSION) {
-            uix <- tagList(
-                hr(),
-                h5("Developer options:"),
-                checkboxInput(ns('cmap_cmapbatchcorrect'),'Batch correct (experimental)',
-                              FALSE),
-                radioButtons(ns("cmap_le_ntop"),"LE ntop",c(100,250),inline=TRUE)
-            )
-            ui <- c(ui, uix)
-        }
         ui
     })
     outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
-        
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
@@ -135,7 +135,7 @@ ConnectivityModule <- function(input, output, session, env)
         
     })
     
-    ## update choices upon change of feature level
+    ## update choices upon change of chosen contrast
     ##observeEvent( input$cmap_level, {
     observeEvent( input$cmap_contrast, {
 
@@ -143,7 +143,7 @@ ConnectivityModule <- function(input, output, session, env)
         req(ngs)
 
         ## reset CMap threshold zero/max
-        res <- getConnectivityScores()
+        res <- getConnectivityScores()  ## result gets cached
         req(res)
         dbg("[observe:cmap_contrast] dim(res)=",dim(res))        
         max <- round(0.999*max(abs(res$score),na.rm=TRUE),digits=1)
@@ -152,14 +152,6 @@ ConnectivityModule <- function(input, output, session, env)
         updateSliderInput(session, 'cmap_scorethreshold', value=0, max=max)
                                
     })
-
-
-    ## ## plotly.restyle
-    ## observeEvent(input$marker, {
-    ##     plotlyProxy("plot", session) %>%
-    ##         plotlyProxyInvoke("restyle", list(marker = list(symbol = input$marker)),
-    ##                           list(input$traceNo))
-    ## })
     
     getCurrentContrast <- reactive({
         ngs <- inputData()
@@ -346,7 +338,8 @@ ConnectivityModule <- function(input, output, session, env)
         db.exists <- sapply(c(FILES,FILESX,PGX.DIR), function(d) file.exists(file.path(d,sigdb)))
         db.exists
         up=dn=NULL
-        if(any(db.exists)) {            
+        if(any(db.exists)) {
+            require(rhdf5)
             db.dir <- names(which(db.exists))[1]
             db.dir
             h5.file <- file.path(db.dir, sigdb)
@@ -366,7 +359,6 @@ ConnectivityModule <- function(input, output, session, env)
         req(ngs)
         
         ## get the foldchanges of selected comparison and neighbourhood
-        
         method="umap";dims=2
         method <- input$cmap_layout
         dbg("[getConnectivityPositions] method=",method)
@@ -560,7 +552,8 @@ ConnectivityModule <- function(input, output, session, env)
 
         return(scores)
     })
-    
+
+
     getThresholdedConnectivityScores <- reactive({
 
         dbg("[getThresholdedConnectivityScores] reacted")
@@ -2056,11 +2049,14 @@ ConnectivityModule <- function(input, output, session, env)
 
 
     ##=========================================================================
-    ## META-CONNECTIVITY MAP
+    ## META-CONNECTIVITY MAP (?????)
     ##=========================================================================
 
-    computeMetaGSEA <- function(scores)
+    computeMetaGSEA.NOTUSED <- function(scores)
     {
+        ## What does this do????? (IK)
+        ##
+        ##
         dim(scores)
 
         score.terms <- sub("[ ]\\(.*","",sub(".*\\] ","",rownames(scores)))
@@ -2170,7 +2166,7 @@ ConnectivityModule <- function(input, output, session, env)
     outputOptions(output,"cmapMetaAnalysis_UI", suspendWhenHidden=FALSE) ## important!!!    
     
     ## ------------------------------------------------------
-    ## --------------------- tab2 ---------------------------
+    ## --------------------- tab3 ---------------------------
     ## ------------------------------------------------------
 
     cmapClustering_caption = paste(

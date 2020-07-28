@@ -356,7 +356,8 @@ textarea.form-control {
 
 
 .btn, .btn-default {
-    background-image: linear-gradient(#f5f5f5, #ffffff 60%, #dcdcdc);
+    background-color: white;
+    /* background-image: linear-gradient(#f5f5f5, #ffffff 60%, #dcdcdc); */
 }
 
 /*

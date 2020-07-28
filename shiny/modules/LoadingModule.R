@@ -1085,7 +1085,6 @@ LoadingModule <- function(input, output, session,
     ##---------------------------------------------------------------
     
     output$forum <- renderUI({
-        
         parenturl <- paste0(session$clientData$url_protocol,
                             "//",session$clientData$url_hostname,
                             ":",session$clientData$url_port,
