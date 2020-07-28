@@ -6,12 +6,18 @@ if(0) {
     source(file.path(RDIR,"pgx-files.R"))
 
     library(rhdf5)
-    h5.file = "../libx/sigdb-tcga.h5"
+    h5.file = "../libx/sigdb-archs4.h5"
     X <- h5read(h5.file, "data/matrix")
     rownames(X) <- h5read(h5.file, "data/rownames")
     colnames(X) <- h5read(h5.file, "data/colnames")
     dim(X)
-
+    object.size(X)/1e6
+    
+    fx <- X["RFX7",]
+    head(sort(fx),50)
+    tail(sort(fx),50)
+    
+    
     load("../data/tcga-brca_pub.pgx")
     F <- sapply(ngs$gx.meta$meta, function(m) m$meta.fx)
     rownames(F) <- rownames(ngs$gx.meta$meta[[1]])

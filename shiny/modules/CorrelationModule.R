@@ -248,6 +248,7 @@ between genes and find coregulated modules."
         rho  <- res$cor[gene,]
         rho <- head(rho[order(-abs(rho))],NTOP)
         rho <- rho[order(-rho)]
+        prho <- NULL
         if(!is.null(res$meta.pcor)) {
             prho <- res$meta.pcor[gene,]
             prho <- prho[names(rho)]
