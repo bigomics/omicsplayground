@@ -55,7 +55,7 @@ FILESX = file.path(OPG,"libx")
 PGX.DIR = file.path(OPG,"data")
 ##PGX.DIR = c(PGX.DIR,file.path(OPG,"data-extra"))
 
-source("../R/pgx-include.R", local=TRUE)  ## pass local vars
+source(file.path(RDIR,"pgx-include.R"),local=TRUE)  ## pass local vars
 source("global.R", local=TRUE)
 source("modules/AuthenticationDialog.R")
 
@@ -101,6 +101,7 @@ source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
+    load("../data/GSE10846-xgreta.pgx")
     load("../data/GSE72056-scmelanoma.pgx")
     load("../data/tcga-brca_pub.pgx")
     load("../data/GSE22886-immune.pgx")   

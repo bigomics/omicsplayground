@@ -551,9 +551,13 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
     ##timings0 <- do.call(rbind, timings)
     timings <- as.matrix(timings)
     rownames(timings) <- timings[,1]
-    timings0 <- apply(as.matrix(timings[,-1]),2,as.numeric)
+    timings0 <- matrix(timings[,-1],nrow=nrow(timings))
+    timings0 <- matrix(as.numeric(timings0),nrow=nrow(timings0))
     rownames(timings0) <- rownames(timings)
-    timings0 <- apply( timings0, 2, function(x) tapply(x,rownames(timings0),sum))
+    if(nrow(timings0)>1 && sum(duplicated(rownames(timings0))>0) ) {
+        ## timings0 <- apply(timings0, 2, function(x) tapply(x,rownames(timings0),sum))
+        timings0 <- do.call(rbind,tapply(1:nrow(timings0),rownames(timings0),function(i) colSums(timings0[i,,drop=FALSE])))        
+    }
 
     res = list( meta = all.meta, sig.counts = sig.counts,  outputs = all.results,
                matrices = m, timings = timings0)
