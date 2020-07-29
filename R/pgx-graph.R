@@ -835,6 +835,7 @@ getGOgraph <- function() {
     return(go_graph)
 }
 
+
 ##comparison=1;methods=c("fisher","gsva","camera");nterms=200;ntop=20;fdr=0.20
 pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.25, nterms=500, ntop=100)
 {
@@ -850,6 +851,7 @@ pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.25, nterms=500, nt
     mx = mx[jj,]
     dim(mx)
 
+    ## All methods????
     if(is.null(methods)) {
         methods <- colnames(unclass(mx$p))
     }
@@ -909,7 +911,9 @@ pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.25, nterms=500, nt
     V(go_graph)$value = rep(0,length(V(go_graph)))
     V(go_graph)[vinfo$go_id]$foldchange = vinfo$fc
     V(go_graph)[vinfo$go_id]$qvalue = vinfo$qv
-    V(go_graph)[vinfo$go_id]$value = vinfo$fc * (1 - vinfo$qv)**1
+
+    ## Value = "q-weighted fold-change"
+    V(go_graph)[vinfo$go_id]$value = vinfo$fc * (1 - vinfo$qv)**1 
 
     ##v1 <- sig.terms[1]
     get.vpath <- function(v1) {
