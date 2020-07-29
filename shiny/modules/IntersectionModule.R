@@ -1152,7 +1152,7 @@ between two contrasts."
         fc0 = getActiveFoldChangeMatrix()$fc  ## isolate??        
         if(is.null(fc0) || nrow(fc0)==0) return(NULL)
 
-        sel.genes <- names(which(GSETxGENE[42174,]!=0))        
+        ##sel.genes <- names(which(GSETxGENE[42174,]!=0))        
         pairs.sel <- plotly::event_data("plotly_selected", source="pairs")
         sel.genes <- as.character(pairs.sel$key)
         if(length(sel.genes) == 0) return(NULL)

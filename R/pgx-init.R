@@ -218,12 +218,27 @@ pgx.initialize <- function(ngs) {
     ## rownames(ngs$GMT) <- toupper(rownames(ngs$GMT)) ## everything to human...
     
     ##-----------------------------------------------------------------------------
+    ## Recompute geneset meta.fx as average fold-change of genes
+    ##-----------------------------------------------------------------------------
+    message("[pgx.initialize] Recomputing geneset fold-changes")
+    nc <- length(ngs$gset.meta$meta)
+    i=1
+    for(i in 1:nc) {
+        gs <- ngs$gset.meta$meta[[i]]
+        fc <- ngs$gx.meta$meta[[i]]$meta.fx
+        names(fc) <- rownames(ngs$gx.meta$meta[[i]])
+        fc <- fc[which(toupper(names(fc)) %in% colnames(GSETxGENE))]
+        mx <- (GSETxGENE[rownames(gs),toupper(names(fc))] %*% fc)[,1]
+        ngs$gset.meta$meta[[i]]$meta.fx <- mx
+    }
+
+    ##-----------------------------------------------------------------------------
     ## Recode survival
     ##-----------------------------------------------------------------------------
     pheno <- colnames(ngs$Y)
     ## DLBCL coding
     if(("OS.years" %in% pheno && "OS.status" %in% pheno)) {
-        cat("found OS survival data\n")
+        message("found OS survival data")
         event <- ( ngs$Y$OS.status %in% c("DECEASED","DEAD","1","yes","YES","dead"))
         ngs$Y$OS.survival <- ifelse(event, ngs$Y$OS.years, -ngs$Y$OS.years)            
     }

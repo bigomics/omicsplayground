@@ -576,9 +576,7 @@ between genes and find coregulated modules."
     })
 
     corGSEA_cumFC_opts = tagList()
-
-    corGSEA_cumFC_info = "<b>Leading-edge gene frequency.</b>"
-    
+    corGSEA_cumFC_info = "<b>Leading-edge gene frequency.</b>"    
     ##corGSEA_cumFC_module <- plotModule(
     callModule(
         plotModule, 
@@ -654,35 +652,56 @@ between genes and find coregulated modules."
         ##caption = corGSEA_caption
     )
    
-    ##--------------------------------------------------------------------------------
+    ##================================================================================
     ## WGCNA
-    ##--------------------------------------------------------------------------------
+    ##================================================================================
 
-    getCalculateWGCNA <- reactive({
-        ngs <- inputData()
-        X <- ngs$X
-        pheno <- ngs$samples
-        res <- calculateWGCNA(X, pheno)
-        return(res)
-    })
-    
-    calculateWGCNA <- function(X, pheno) {
+    wgcna.plotSampleDendro <- function(X, pheno) {
         require(WGCNA)
-        
-        ## Re-cluster samples
+        ## Cluster samples
         X1 <- head(X[order(-apply(X,1,sd,na.rm=TRUE)),],1000)
-        sampleTree2 = hclust(dist(X1), method = "average")
-        ## Convert traits to a color representation: white means low, red means high, grey means missing entry
-
-        
-        traitColors = numbers2colors(pheno, signed = FALSE)
+        sampleTree2 = hclust(dist(t(X1)), method = "average")
+        ipheno <- apply(pheno,2,function(x) as.numeric(factor(x)))
+        colnames(ipheno) <- colnames(pheno)
+        rownames(ipheno) <- rownames(pheno)
+        traitColors = numbers2colors(ipheno, signed = FALSE)
         ## Plot the sample dendrogram and the colors underneath.
-        plotDendroAndColors(sampleTree2, traitColors,
-                            groupLabels = names(datTraits),
-                            main = "Sample dendrogram and trait heatmap")
+        plotDendroAndColors(
+            sampleTree2, traitColors[,],
+            groupLabels = colnames(ipheno),
+            cex.colorLabels = 0.8, cex.dendroLabels = 0.9, cex.rowText = 0.8,             
+            main = "Sample dendrogram and trait heatmap")
 
     }
 
+    wgcna_plotSampleDendro.RENDER %<a-% reactive({
+        ngs <- inputData()
+        X <- ngs$X
+        pheno <- ngs$samples
+        wgcna.plotDendroAndColors(X, pheno)
+    })
+
+    wgcna_plotSampleDendro_opts = tagList()
+    wgcna_plotSampleDendro_info = "<b>Sample dendrogram and trait heatmap.</b>"    
+
+    callModule(
+        plotModule, 
+        id = "wgcna_plotSampleDendro", ##ns=ns,
+        func = wgcna_plotSampleDendro.RENDER,
+        func2 = wgcna_plotSampleDendro.RENDER, 
+        download.fmt = c("png","pdf"),
+        ## options = corGSEA_cumFC_opts,
+        info.text = wgcna_plotSampleDendro_info,        
+        title="Sample dendrogram and trait heatmap", label="a",
+        height = c(280,650), width = c('auto',1000),
+        pdf.width=10, pdf.height=5, res=c(72,90)
+    )
+
+
+
+    
+
+    
     
 
 
