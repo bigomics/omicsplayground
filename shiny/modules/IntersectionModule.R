@@ -1396,7 +1396,8 @@ between two contrasts."
     getNeighbourhoodFoldChangeMatrix <- reactive({
 
         ngs <- inputData()
-        res = pgx.getMetaFoldChangeMatrix(ngs, what="trend.limma")
+        ##res = pgx.getMetaFoldChangeMatrix(ngs, what="trend.limma")
+        res = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         ##fc0 = sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
         fc0 <- res$fc
         rownames(fc0) <- toupper(gsub(".*:","",rownames(fc0)))

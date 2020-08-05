@@ -601,6 +601,8 @@ EnrichmentModule <- function(input, output, session, env)
     subplot.MAR = c(3.5,4,1.5,0.8)
 
     subplot1.RENDER %<a-% reactive({
+
+        dbg("[subplot1.RENDER] reacted")
         
         par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0.5,0.2)*2 )
         par(mar=subplot.MAR)
@@ -612,9 +614,12 @@ EnrichmentModule <- function(input, output, session, env)
         comp = input$gs_contrast
         ngs <- inputData()
         req(ngs)
+
+        dbg("[subplot1.RENDER] called")
         
         gx.meta <- ngs$gx.meta$meta[[comp]]
-        limma1 = sapply(gx.meta[,c("fc","p","q")],function(x) x[,"trend.limma"])
+        ## limma1 = sapply(gx.meta[,c("fc","p","q")],function(x) x[,"trend.limma"])
+        limma1 = data.frame( meta.fx=gx.meta$meta.fx, meta.q=gx.meta$meta.q)
         gx.annot <- ngs$genes[rownames(gx.meta),c("gene_name","gene_title")]
         ##limma = cbind( gx.meta[,c("gene_name","gene_title")], limma1)
         limma = cbind(gx.annot, limma1)
@@ -622,6 +627,8 @@ EnrichmentModule <- function(input, output, session, env)
         gs = gset_selected()
         if(is.null(gs)) return(NULL)
         gs <- gs[1]
+
+        dbg("[subplot1.RENDER] gs = ",gs)
         
         ##sel.genes = names(which(ngs$GMT[,gs]!=0))
         jj = match(toupper(GSETS[[gs]]), toupper(limma$gene_name))
@@ -632,7 +639,7 @@ EnrichmentModule <- function(input, output, session, env)
         fc.genes = as.character(limma[,grep("^gene$|gene_name",colnames(limma))])
         fx = limma[,grep("logFC|meta.fx|fc",colnames(limma))[1]]
         qval = limma[,grep("^q|adj.P.Val|meta.q|qval|padj",colnames(limma))[1]]
-        sig.genes = fc.genes[which(qval <= fdr & abs(fx) > 0.1)]
+        ##sig.genes = fc.genes[which(qval <= fdr & abs(fx) > 0.1)]
         
         qval <- pmax(qval,1e-12)  ## prevent q=0
         qval[which(is.na(qval))] <- 1
@@ -643,7 +650,9 @@ EnrichmentModule <- function(input, output, session, env)
         
         lfc=0.20
         lfc = as.numeric(input$gs_lfc)
-    
+
+        dbg("[subplot1.RENDER] drawing plot")
+        
         ##par(mar=c(4,3,3,1), mgp=c(2.0,0.8,0), oma=c(1,1.5,1,1.5) )
         gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.genes,
                           render="canvas", n=5000, nlab=10, 
@@ -662,6 +671,8 @@ EnrichmentModule <- function(input, output, session, env)
         
         ##par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0.5,0.2)*2 )
         ##par(mar=subplot.MAR)
+
+        dbg("[subplot1.PLOTLY] reacted")
         
         ngs <- inputData()    
         req(ngs)
@@ -672,15 +683,17 @@ EnrichmentModule <- function(input, output, session, env)
         req(ngs)
         
         gx.meta <- ngs$gx.meta$meta[[comp]]
-        limma1 = sapply(gx.meta[,c("fc","p","q")],function(x) x[,"trend.limma"])
+        ##m1 <- intersect(c("trend.limma","notrend.limma","ttest"),colnames(gx.meta$p))[1]
+        ##m1
+        ##limma1 = sapply(gx.meta[,c("fc","p","q")],function(x) x[,m1])
+        limma1 = data.frame( meta.fx=gx.meta$meta.fx, meta.q=gx.meta$meta.q)
         gx.annot <- ngs$genes[rownames(gx.meta),c("gene_name","gene_title")]
         ##limma = cbind( gx.meta[,c("gene_name","gene_title")], limma1)
         limma = cbind(gx.annot, limma1)
     
         gs = gset_selected()
         if(is.null(gs)) return(NULL)
-        gs <- gs[1]
-        
+        gs <- gs[1]        
         ##sel.genes = names(which(ngs$GMT[,gs]!=0))
         jj = match(toupper(GSETS[[gs]]), toupper(limma$gene_name))
         sel.genes <- setdiff(limma$gene_name[jj],c(NA,""," "))
@@ -690,7 +703,7 @@ EnrichmentModule <- function(input, output, session, env)
         fc.genes = as.character(limma[,grep("^gene$|gene_name",colnames(limma))])
         fx = limma[,grep("logFC|meta.fx|fc",colnames(limma))[1]]
         qval = limma[,grep("^q|adj.P.Val|meta.q|qval|padj",colnames(limma))[1]]
-        sig.genes = fc.genes[which(qval <= fdr & abs(fx) > 0.1)]
+        ##sig.genes = fc.genes[which(qval <= fdr & abs(fx) > 0.1)]
         
         qval <- pmax(qval,1e-12)  ## prevent q=0
         qval[which(is.na(qval))] <- 1
@@ -730,6 +743,7 @@ EnrichmentModule <- function(input, output, session, env)
             displayModeBar = FALSE,
             showlegend = FALSE) %>%
             layout( margin = list(b=60) )        
+
     })
     
     ##----------------------------------------------------------------------
@@ -1248,7 +1262,8 @@ EnrichmentModule <- function(input, output, session, env)
         comp1=1
         comp1 = input$gs_contrast
         gx.meta <- ngs$gx.meta$meta[[comp1]]
-        limma1 = sapply(gx.meta[,c("fc","p","q")],function(x) x[,"trend.limma"])
+        ##limma1 = sapply(gx.meta[,c("fc","p","q")],function(x) x[,"trend.limma"])
+        limma1 = data.frame( fc=gx.meta$meta.fx, meta.q=gx.meta$meta.q)        
         ##limma = cbind( ngs$gx.meta$meta[[comp1]][,c("gene_name","gene_title")], limma1)
         gx.annot <- ngs$genes[rownames(gx.meta),c("gene_name","gene_title")]
         ##limma = cbind( gx.meta[,c("gene_name","gene_title")], limma1)
@@ -1356,7 +1371,6 @@ EnrichmentModule <- function(input, output, session, env)
         gs = gset_selected()
         if(is.null(gs) || length(gs)==0) return(NULL)
         
-        ##limma = ngs$gx.meta$outputs[["trend.limma"]]$tables[[comp]]
         mx <- ngs$gx.meta$meta[[comp]]
         is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]",rownames(mx)))
         is.multiomics
@@ -1366,15 +1380,16 @@ EnrichmentModule <- function(input, output, session, env)
             ##rownames(mx) <- sub(".*:|.*\\]","",rownames(mx))
         }            
         
-        gxmethods <- c("trend.limma","ttest.welch")
+        ##gxmethods <- c("trend.limma","ttest.welch")
         gxmethods <- selected_gxmethods() ## from module-expression
         req(gxmethods)
         ##limma1 = sapply(mx[,c("fc","p","q")], function(x) x[,"trend.limma"])
-        limma1.fc <- rowMeans(mx$fc[,gxmethods,drop=FALSE],na.rm=TRUE)
+        ##limma1.fc <- rowMeans(mx$fc[,gxmethods,drop=FALSE],na.rm=TRUE)
+        limma1.fc <- mx$meta.fx
         limma1.pq = sapply(mx[,c("p","q")], function(x) {
             apply(x[,gxmethods,drop=FALSE],1,max,na.rm=TRUE)
         })
-        limma1 <- cbind( fc=limma1.fc, limma1.pq)
+        limma1 <- cbind( fc=limma1.fc, q=limma1.pq)
         ##limma  = cbind( ngs$gx.meta$meta[[comp]][,c("gene_name","gene_title")], limma1)
         rownames(limma1) <- rownames(mx)
         

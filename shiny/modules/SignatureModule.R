@@ -597,14 +597,20 @@ infotext =
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
         
-        markers <- GSETS[[100]]
+        ##markers <- GSETS[[100]]
         markers <- getCurrentMarkers()
         if(is.null(markers)) return(NULL)
         
+        dbg("[getOverlapTable] called")
+        
         ## fold change just for ranking of genes
-        F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
+        ##F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
+        F <- sapply(ngs$gx.meta$meta, function(x) x$meta.fx)
+        rownames(F) <- rownames(ngs$gx.meta$meta[[1]])
         fx <- rowMeans(F**2)
         ##markers=head(names(sort(-abs(fx))),100)
+
+        dbg("[getOverlapTable] settiing up Fisher test")
         
         ## fisher test
         ##ii <- setdiff(match(markers, colnames(GSETxGENE)),NA)
@@ -618,7 +624,7 @@ infotext =
         dim(N)
         
         require(corpora) 
-        dbg("computing Fisher-test p values...")
+        dbg("computing p-values...")
         pv <- corpora::fisher.pval( N[,1], N[,2], N[,3], N[,4], log.p=FALSE)
         dbg("done!\n")
         head(pv)
@@ -1062,7 +1068,7 @@ infotext =
         color_fx = as.numeric(fc)
         color_fx[is.na(color_fx)] <- 0  ## yikes...
 
-        numeric.cols <- which(sapply(df, is.numeric))
+        numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
         numeric.cols
         
         DT::datatable(df, class='compact cell-border stripe',

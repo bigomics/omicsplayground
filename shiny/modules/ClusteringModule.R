@@ -893,6 +893,13 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             } else if(pdim==3 && !is.null(ngs$tsne3d) ) {
                 pos <- ngs$tsne3d[colnames(zx),]
             }
+        } else if("cluster" %in% names(ngs) &&
+                  clustmethod %in% names(ngs$cluster$pos) )  {
+            showNotification(paste("switching to ",clustmethod," layout...\n"))
+            pos <- ngs$cluster$pos[[clustmethod]]
+            if(pdim==2 && clustmethod=="pca") pos <- pos[,1:2]
+            if(pdim==3 && clustmethod=="pca") pos <- pos[,1:3]
+
         } else  {
             showNotification(paste("computing ",clustmethod,"...\n"))
             

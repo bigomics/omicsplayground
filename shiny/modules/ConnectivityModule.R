@@ -1447,9 +1447,12 @@ ConnectivityModule <- function(input, output, session, env)
         require(gplots) ## for col2hex
         ## return(NULL)
 
+        dbg("[leadingEdgeGraph.VISNETWORK] reacted")
+        
         gr <- getLeadingEdgeGraph()
         if(is.null(gr)) return(NULL)
-        vv <- V(gr)$name
+
+        dbg("[leadingEdgeGraph.VISNETWORK] 1")
         
         max(abs(E(gr)$weight))
         minwt <- 0.5
@@ -1458,13 +1461,25 @@ ConnectivityModule <- function(input, output, session, env)
         gr <- subgraph.edges(gr, which(abs(E(gr)$weight) >= minwt) )
         if(length(V(gr))==0) return(NULL)
 
+        dbg("[leadingEdgeGraph.VISNETWORK] 2")
+
         fc=cumFC=NULL
         fc <- getCurrentContrast()$fc
+
+        dbg("[leadingEdgeGraph.VISNETWORK] 2a")
+        
         fc <- fc[V(gr)$name]
         cumFC <- cumulativeFCtable()
+
+        dbg("[leadingEdgeGraph.VISNETWORK] 2b")
+        dbg("[leadingEdgeGraph.VISNETWORK] dim(cumFC) = ",dim(cumFC))
+        dbg("[leadingEdgeGraph.VISNETWORK] v.name = ",head(V(gr)$name))
+       
         cumFC <- cumFC[V(gr)$name,]
         fontsize = 22
         fc <- fc / max(abs(fc))
+
+        dbg("[leadingEdgeGraph.VISNETWORK] 3")
         
         sizevar <- input$LEgraph_sizevar
         vsize = 15
@@ -1479,6 +1494,8 @@ ConnectivityModule <- function(input, output, session, env)
             vsize <- 1
         }
         vsize <- 3 + 12 * (abs(vsize) / max(abs(vsize),na.rm=TRUE))**0.5
+
+        dbg("[leadingEdgeGraph.VISNETWORK] 4")
 
         bluered.pal <- colorRampPalette(
             ##colors = c("navyblue","royalblue4","grey90","indianred3","firebrick4")
@@ -1499,6 +1516,8 @@ ConnectivityModule <- function(input, output, session, env)
         E(gr)$width <- 1.5 * (0.2 + 10*(ew/max(ew,na.rm=TRUE))**2)
         E(gr)$color <- "#DDD"  ## lightgrey
 
+        dbg("[leadingEdgeGraph.VISNETWORK] 5")
+        
         visdata <- toVisNetworkData(gr, idToLabel=FALSE)
         
         ## ------------------ plot using visNetwork (zoomable) -----------------
