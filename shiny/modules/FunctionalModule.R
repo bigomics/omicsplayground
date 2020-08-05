@@ -705,6 +705,10 @@ to understand biological functions including GO and KEGG pathway analysis."
             visPhysics(enabled=FALSE) 
     })    
 
+    matchGOid2gset <- function(id,gsets) {
+        gsets.id <- sub("\\)$","",sub(".*\\(GO_","GO:",gsets))
+        match(id,gsets.id)
+    }
 
     GO_table.RENDER <- reactive({
         ngs <- inputData()
@@ -725,13 +729,28 @@ to understand biological functions including GO and KEGG pathway analysis."
         scores <- round(scores, digits=3)
         scores <- sort(scores, decreasing=TRUE)
         go.term = V(go)[names(scores)]$Term
-        qv=fx=NULL
-        if("qvalue" %in% names(ngs$meta.go)) qv = ngs$meta.go$qvalue[names(scores),comparison]
-        if("foldchange" %in% names(ngs$meta.go)) fx = ngs$meta.go$foldchange[names(scores),comparison]
         
-        go.term = substring(go.term, 1, 80)
-        dt1 = round( cbind(score=scores, meta.fx=fx, meta.q=qv), digits=4)    
-        dt = data.frame( id=names(scores), term=go.term, dt1, stringsAsFactors=FALSE)    
+        ## get FC and q-value (should we match with Enrichment table???)
+        qv=fx=NULL
+        if(0) {
+            if("qvalue" %in% names(ngs$meta.go)) qv = ngs$meta.go$qvalue[names(scores),comparison]
+            if("foldchange" %in% names(ngs$meta.go)) fx = ngs$meta.go$foldchange[names(scores),comparison]
+        } else {
+            ## match with enrichment table
+            gs.meta <- ngs$gset.meta$meta[[comparison]]
+            ii <- matchGOid2gset(names(scores),rownames(gs.meta))
+            gs.meta <- gs.meta[ii,]
+            gs.meta$GO.id <- rownames(scores)
+            
+            mm <- selected_gsetmethods()
+            mm <- intersect(mm, colnames(gs.meta$q))
+            qv <- apply(gs.meta$q[,mm,drop=FALSE],1,max,na.rm=TRUE) ## meta-q
+            fx <- gs.meta$meta.fx
+        }
+        
+        go.term1 = substring(go.term, 1, 80)
+        dt1 = round( cbind(score=scores, logFC=fx, meta.q=qv), digits=4)    
+        dt = data.frame( id=names(scores), term=go.term1, dt1, stringsAsFactors=FALSE)    
         id2 = paste0("abc(",sub(":","_",dt$id),")")  ## to match with wrapHyperLink
         dt$id <- wrapHyperLink(as.character(dt$id), id2)  ## add link
         
