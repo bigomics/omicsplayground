@@ -296,11 +296,15 @@ EnrichmentModule <- function(input, output, session, env)
                     rownames(rnaX) <- sub(".*:|.*\\]","",rownames(rnaX))
                     pp <- intersect(rownames(ngs$GMT),names(fc))
                     length(pp)
-                }            
+                }
+                
                 G <- t(ngs$GMT[pp,jj] != 0)
                 ngenes <- Matrix::rowSums(G)
-                meta.fc <- as.vector(G %*% fc[pp] / ngenes)
-                names(meta.fc) <- rownames(G)
+                ## meta.fc <- as.vector(G %*% fc[pp] / ngenes)
+                ## names(meta.fc) <- rownames(G)
+                meta.fc <- ngs$gset.meta$meta[[comp]]$meta.fx
+                names(meta.fc) <- rownames(ngs$gset.meta$meta[[comp]])
+                
                 AveExpr1 <- Matrix::rowMeans(G %*% rnaX[pp,s1]) / ngenes
                 AveExpr0 <- Matrix::rowMeans(G %*% rnaX[pp,s0]) / ngenes
                 remove(rnaX)
