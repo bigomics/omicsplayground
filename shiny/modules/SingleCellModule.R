@@ -71,8 +71,8 @@ immune cell types, expressed genes and pathway activation."
                            "Filter relevant samples (cells).",
                            placement="top", options = list(container = "body")),
                     
-                    tipify(radioButtons(ns('sc_clustmethod'),NULL,c("tsne","pca"),
-                                        inline=TRUE, selected="tsne"),
+                    tipify(selectInput(ns('sc_clustmethod'),"Layout", c("default","pca"),
+                                       selected="default"),
                            "Specify a layout for the figures: t-SNE or PCA-based layout.",
                            options = list(container = "body"))
                 )
@@ -100,6 +100,15 @@ immune cell types, expressed genes and pathway activation."
         ## levels for sample filter
         levels <- getLevels(ngs$Y)
         updateSelectInput(session, "sc_samplefilter", choices=levels)
+
+        ## update cluster methods if available in object
+        if("cluster" %in% names(ngs)) {
+            clustmethods <- names(ngs$cluster$pos)
+            clustmethods <- c("default",clustmethods)
+            updateSelectInput(session, "sc_clustmethod",
+                              choices=clustmethods )
+        }
+        
     })
 
     observe({
@@ -116,6 +125,9 @@ immune cell types, expressed genes and pathway activation."
         updateSelectInput(session, "sc_dcmethod", choices=dcmethods, selected=dcsel)
         updateSelectInput(session, "sc_dcmethod2", choices=dcmethods, selected=dcsel)
 
+        grpvars <- colnames(ngs$samples)
+        updateSelectInput(session, "sc_group2", choices=grpvars, selected="group")        
+        
     })
 
     ##================================================================================
@@ -136,35 +148,18 @@ immune cell types, expressed genes and pathway activation."
         zx = t(scale(t(zx)))  ## scale??
 
         pos = NULL
-        if(input$sc_clustmethod=="tsne") {
-            require(Rtsne)
-            tsne.dim = 3
-            ##do3d <- grepl("3D", as.character(input$sc_clustmethod))
-            do3d <- ("3D" %in% input$pca.options)
-            tsne.dim = c(2,3)[ 1 + 1*do3d]
-            force.compute = FALSE
-            ## force.compute = TRUE        
-            if(!force.compute && tsne.dim==2 && !is.null(ngs$tsne2d) ) {
-                pos <- ngs$tsne2d[colnames(zx),]
-            } else if(!force.compute && tsne.dim==3 && !is.null(ngs$tsne3d) ) {
-                pos <- ngs$tsne3d[colnames(zx),]
-            } else {
-                perplexity = max(min(30,ncol(zx)/4),1)
-                perplexity = min((ncol(zx)-1)/3, 30)
-                perplexity
-                pos <- Rtsne( t(zx), dim=tsne.dim, check_duplicated=FALSE,
-                             ## pca = TRUE, partial_pca = TRUE,                             
-                             num_threads=100, ##Y_init=Y_init, 
-                             perplexity=perplexity )$Y
-            }
-        } else {
-            ##cat("pfGetClusterPositions:: computing PCA/SVD...\n")
+        m <- input$sc_clustmethod
+        has.clust <- ("cluster" %in% names(ngs) && m %in% names(ngs$cluster$pos))
+        if(!has.clust && m=="pca") {
             require(irlba)
-            ##pos <- cmdscale(dist(t(zx)), k=3)
-            ##pos = svd(zx,nv=3)$v
-            pos = irlba(zx,nv=3)$v        
+            pos = irlba(zx,nv=3)$v
+            rownames(pos) <- colnames(zx)
+        } else if(has.clust) {
+            pos <- ngs$cluster$pos[[m]][,1:2]
+        } else {            
+            pos <- ngs$tsne2d
         }
-        
+        pos <- pos[colnames(zx),]
         pos = scale(pos) ## scale 
         colnames(pos) = paste0("dim",1:ncol(pos))
         rownames(pos) = colnames(zx)    
@@ -471,6 +466,7 @@ immune cell types, expressed genes and pathway activation."
         method = "meta"
         method <- input$sc_dcmethod2
         if(is.null(method)) return(NULL)
+        req(input$sc_refset2)
         
         refset = "LM22"
         refset <- input$sc_refset2
@@ -481,13 +477,14 @@ immune cell types, expressed genes and pathway activation."
         
         return(results)
     })
-
+    
     sc_mapping.plotFUNC %<a-% reactive({
         require(RColorBrewer)
         
         ngs <- inputData()
         alertDataLoaded(session,ngs)
         req(ngs)
+        req(input$sc_refset2)
         
         clust <- pfGetClusterPositions()
         if(is.null(clust)) return(NULL)
@@ -520,9 +517,12 @@ immune cell types, expressed genes and pathway activation."
         score0 <- score
         pos <- pos[rownames(score),]
         
-        if(input$sc_group2)
+        grpvar <- input$sc_group2
+        refset <- input$sc_refset2
+
+        if(grpvar!="<ungrouped>" && grpvar %in% colnames(ngs$samples))
         {
-            grp <- ngs$samples[rownames(score),"group"]
+            grp <- ngs$samples[rownames(score),grpvar]
             pos <- apply(pos,2,function(x) tapply(x,grp,median))
             score <- apply(score,2,function(x) tapply(x,grp,mean))
             ii <- hclust(dist(score))$order
@@ -546,6 +546,10 @@ immune cell types, expressed genes and pathway activation."
                      cl.lim = c(0,max(score3)), cl.pos = "n",
                      tl.cex = tl.cex, tl.col = "grey20",
                      tl.srt = tl.srt )
+
+            ##mtext(grpvar, side=1, line=0.5)
+            ##title(sub=grpvar, line=0)
+            ##mtext(refset, side=4, line=0.5)            
         }
 
         if(input$sc_view2 == "heatmap") {
@@ -555,8 +559,9 @@ immune cell types, expressed genes and pathway activation."
                 kk <- intersect(colnames(score),kk)
                 all.scores <- ngs$deconv[["LM22"]]
                 all.scores <- ngs$deconv[[input$sc_refset2]]
-                if(input$sc_group2 && input$sc_view2!="distribution") {
-                    grp <- ngs$samples[rownames(all.scores[[1]]),"group"]
+                grpvar <- input$sc_group2
+                if(grpvar!="<ungrouped>" && grpvar %in% colnames(ngs$samples)) {
+                    grp <- ngs$samples[rownames(all.scores[[1]]),grpvar]
                     for(i in 1:length(all.scores)) {
                         all.scores[[i]] <- apply(all.scores[[i]],2,
                                                  function(x) tapply(x,grp,mean))
@@ -597,6 +602,7 @@ immune cell types, expressed genes and pathway activation."
     })
 
     SC_VIEWTYPES2 = c("dotmap"="dotmap","heatmap (by method)"="heatmap")    
+    message("[sc_mapping.plotFUNC] 1")
     
     sc_mapping.opts = tagList(
         tipify(selectInput(ns("sc_view2"),"plot type:",SC_VIEWTYPES2),
@@ -608,7 +614,8 @@ immune cell types, expressed genes and pathway activation."
         tipify(selectInput(ns("sc_dcmethod2"),"method:", choices=NULL),
                "Choose a method for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        tipify(checkboxInput(ns("sc_group2"), "group", TRUE),
+        tipify(selectInput(ns("sc_group2"), "group by:", "group",
+                           selected = "group"),
                "Group the samples/cells by grouping factor.",
                options=list(container="body"))
     )
@@ -675,6 +682,7 @@ immune cell types, expressed genes and pathway activation."
         grp.counts <- ( t(scores / rowSums(scores)) %*% matrix(kk.counts,ncol=1))[,1]  
         
         getProportionsTable <- function(pheno, is.gene=FALSE) {    
+            message("[getProportionsTable] 2")
             y <- NULL
             ##if("gene" %in% input$sc_crosstaboptions) {
             if( is.gene ) {

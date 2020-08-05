@@ -112,7 +112,8 @@ DataViewModule <- function(input, output, session, env)
         updateSelectizeInput(session,'search_gene', choices=genes, selected=sel, server=TRUE)
         
         grps <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=20)
-        grps <- c("<ungrouped>",sort(grps))
+        grps <- sort(grps)
+        if(ncol(ngs$counts) <= 100) grps <- c("<ungrouped>",grps)
         selgrp <- grps[1]
         if("group" %in% grps) selgrp = "group"
         if(nrow(ngs$samples)<=20) selgrp = "<ungrouped>"
@@ -440,10 +441,13 @@ DataViewModule <- function(input, output, session, env)
         }
         nsamples = length(samples)
         
-        grp = factor(ngs$Y[samples,"group"])    
-        klr0 = rep(brewer.pal(8,"Set2"),99)
-        klr0 = COLORS
-        klr = klr0[factor(ngs$Y[samples,"group"])]
+        ##grpvar <- input$data_groupby
+        ##if(grpvar=="<ungrouped>") grpvar="group"
+        ##grp = factor(ngs$Y[samples,grpvar])    
+
+        ##klr0 = rep(brewer.pal(8,"Set2"),99)
+        ##klr0 = COLORS
+        ##klr = klr0[factor(ngs$Y[samples,grpvar])]
         
         ## precompute
         pp=rownames(ngs$genes)[1]
@@ -484,14 +488,11 @@ DataViewModule <- function(input, output, session, env)
              xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
         
         ## determine how to do grouping for group labels
-        grp <- factor(ngs$samples[samples,]$group)
-        ngrp <- length(unique(grp))
-        
-        if("cell.type" %in% colnames(ngs$samples) && ngrp>20) {
-            grp <- ngs$samples[samples,]$cell.type
-            dbg("[DataView] change to cell.type grp : head.grp=",head(grp))
-        }
-        
+        grpvar <- input$data_groupby
+        if(grpvar=="<ungrouped>") grpvar="group"
+        ##grp <- factor(ngs$samples[samples,"group"])
+        grp <- factor(ngs$samples[samples,grpvar])
+                
         cex2 = ifelse(nrow(pos) < 50, 1.5, 1.1)
         cex2 = ifelse(nrow(pos) > 200, 0.8, cex2)
         if(0 && input$pr_labelmode=="legend") {
@@ -507,7 +508,8 @@ DataViewModule <- function(input, output, session, env)
             labels = rownames(grp.pos)
             cex3 <- c(1.4,1.2,1,0.8)[cut(length(labels),breaks=c(-1,5,10,20,999))]
             boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
-            text( grp.pos, labels=boxes, cex=0.9*cex3, col="#CCCCCC88")
+            ##text( grp.pos, labels=boxes, cex=0.9*cex3, col="#CCCCCC88")
+            text( grp.pos, labels=boxes, cex=0.9*cex3, col="#CCCC00BB")
             text( grp.pos, labels=labels, font=2, cex=0.9*cex3, col="black")
             ##text( grp.pos[,], labels=rownames(grp.pos), font=2, cex=cex1**0.5)
         }
@@ -1220,6 +1222,7 @@ DataViewModule <- function(input, output, session, env)
         x0=x
         
         ##------------------ select samples
+        dbg("[data_rawdataTable.RENDER] select samples")
         x <- x[,]
         samples <- colnames(ngs$X)
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
@@ -1233,6 +1236,7 @@ DataViewModule <- function(input, output, session, env)
         ##xgene = sub(".*:","",rownames(x))
 
         ## Quickly (?) calculated correlation to selected gene
+        dbg("[data_rawdataTable.RENDER] calculate rho")
         rho = NULL
         if(1) {
             k=1
@@ -1249,10 +1253,13 @@ DataViewModule <- function(input, output, session, env)
         
         ##if(input$data_sampling=="grouped") {
         ##do.grouped <- input$data_grouped
-        do.grouped <- (input$data_groupby != "<ungrouped>")
-        if(length(samples)>500) do.grouped <- TRUE
+        grpvar = "group"
+        grpvar <- input$data_groupby
+        if(length(samples)>500 && grpvar=="<ungrouped>") grpvar="group"
+        do.grouped <- (grpvar != "<ungrouped>")
         if(do.grouped) {
-            grpvar <- input$data_groupby
+            dbg("[data_rawdataTable.RENDER] grouping by:",grpvar)            
+
             group = ngs$Y[colnames(x),grpvar]
             allgroups = sort(unique(group))
             newx = c()
@@ -1271,6 +1278,8 @@ DataViewModule <- function(input, output, session, env)
         x99 = quantile(as.vector(x0[which(x0>0)]),probs=0.99)
         
         if(NCOL(x)==0 || nrow(x)==0) return(NULL)
+
+        dbg("[data_rawdataTable.RENDER] create dataframe")            
         ##rownames(x) = sub(".*:","",rownames(x))
         xgenes <- ngs$genes[rownames(x),"gene_name"]
         gene.title <- GENE.TITLE[toupper(xgenes)]
@@ -1294,9 +1303,9 @@ DataViewModule <- function(input, output, session, env)
             max.row
             x <- head(x, max.row)
         }
-        
-        dbg("[data_rawdataTable.RENDER] rendering N=",nrow(x),"rows...")
-        
+
+        dbg("[data_rawdataTable.RENDER] rendering N=",nrow(x),"rows")
+        dbg("[data_rawdataTable.RENDER] build DT::datatable")        
         DT::datatable( x, rownames=FALSE,
                       class = 'compact cell-border stripe hover',
                       extensions = c('Buttons','Scroller'),

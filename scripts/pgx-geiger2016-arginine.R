@@ -131,7 +131,7 @@ if(DIFF.EXPRESSION) {
     rda.file
     ngs$timings <- c()
     
-    GENETEST.METHODS=c("ttest","ttest.welch","ttest.rank",
+    GENETEST.METHODS=c("ttest","ttest.welch", ## "ttest.rank",
                        "voom.limma","trend.limma","notrend.limma",
                        "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
     GENESET.METHODS = c("fisher","gsva","ssgsea","spearman",

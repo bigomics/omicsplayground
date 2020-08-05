@@ -11,7 +11,7 @@ message("#################################################################")
 message("\n\n")
 
 DEBUG = FALSE
-##DEBUG = TRUE
+DEBUG = TRUE
 ##.setSmtpServer("~/bigomics/server-conf/smtp_server/infomaniak.env")
 
 library(shiny)
@@ -104,7 +104,8 @@ if(0) {
     load("../data/GSE10846-xgreta.pgx")
     load("../data/GSE72056-scmelanoma.pgx")
     load("../data/tcga-brca_pub.pgx")
-    load("../data/GSE22886-immune.pgx")   
+    load("../data/GSE22886-immune.pgx")
+    load("../data/pgx-grassi2020-10x-S.pgx")
     ngs = pgx.initialize(ngs)
 }
 
