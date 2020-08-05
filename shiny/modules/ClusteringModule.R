@@ -1103,7 +1103,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     )
 
     hm_PCAplot_caption <- reactive({
-        text1 = "The plot visualizes the similarity in expression of samples as a scatterplot in reduced dimension (2D or 3D). Samples that are similar are clustered near to each other, while samples with different expression are positioned farther away. Groups of samples with similar profiles will appear as <i>clusters</i> in the plot."
+        text1 = "The plot visualizes the similarity of samples as a scatterplot in reduced dimension (2D or 3D). Samples that are similar (in expression) are clustered near to each other, while samples with different expression are positioned farther away. Groups of samples with similar profiles will appear as <i>clusters</i> in the plot."
         if(input$hmpca.colvar!="<none>") {
             text1 <- paste(text1, "Colors correspond to the <strong>",input$hmpca.colvar,"</strong>phenotype.")
         }
