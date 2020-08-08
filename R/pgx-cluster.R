@@ -183,7 +183,7 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
     return(ngs)
 }
 
-is.logx=FALSE;ntop=1000
+##is.logx=FALSE;ntop=1000
 pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
                                          ntop=1000, sv.rank=-1, prefix="C", 
                                          is.logx=FALSE, 

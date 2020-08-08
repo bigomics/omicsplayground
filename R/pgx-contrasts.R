@@ -34,7 +34,7 @@ makeDirectContrasts <- function(Y, ref, na.rm=TRUE)
         table(group)
         n.group <- length(unique(group))
         group <- factor(group)
-        if(ncol(contr.matrix)>10) {
+        if(ncol(contr.matrix)>3) {
             levels(group) <- paste0("group",1:n.group)
         }
         group

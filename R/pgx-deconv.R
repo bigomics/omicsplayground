@@ -163,8 +163,10 @@ pgx.multiDeconvolution <- function(counts, refmat, methods=DECONV.METHODS)
     methods
     timings <- c()
     results <- list()
+    refnames <- names(refmat)
     i=1
     for(i in 1:length(refmat)) {
+        message("[pgx.multiDeconvolution] computing for refset",refnames[i])
         ref <- refmat[[i]]
         dim(ref)
         res = pgx.deconvolution(counts[,], ref=ref, methods=methods)

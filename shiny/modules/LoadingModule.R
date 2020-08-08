@@ -127,7 +127,7 @@ LoadingModule <- function(input, output, session,
     ##                           force=FALSE, verbose=TRUE )
     PGXINFO <- pgx.scanInfoFile(PGX.DIR, file="datasets-info.csv", verbose=TRUE )
     dim(PGXINFO)
-    
+   
     ##=================================================================================
     ##========================== MODAL DIALOGS ========================================
     ##=================================================================================
@@ -400,12 +400,15 @@ LoadingModule <- function(input, output, session,
         ##
         
         if(is.null(PGXINFO)) return(NULL)    
-        dbg("[LoadingModule:getPGXTable] reacted")
+        dbg("[LoadingModule:getPGXTable] *reacted*")
         
         df <- PGXINFO
         pgx.files = dir(PGX.DIR, pattern=".pgx$")
         sel <- sub("[.]pgx$","",df$dataset) %in% sub("[.]pgx$","",pgx.files)
         df <- df[sel,,drop=FALSE]
+
+        dbg("[LoadingModule:getPGXTable] dim(PGXINFO)=",dim(PGXINFO))
+        dbg("[LoadingModule:getPGXTable] dim(df)=",dim(df))
         
         ##kk = unique(c("dataset","datatype","organism","description",colnames(df)))
         kk = unique(c("dataset","datatype","organism","description","nsamples",
@@ -422,11 +425,12 @@ LoadingModule <- function(input, output, session,
 
         if(SHOWSPLASH) showStartupModal(once=TRUE)
         
-        dbg("<pgxTable.RENDER> reacted")
+        dbg("[pgxTable.RENDER] reacted")
 
         df <- getPGXTable()
         req(df)
-
+        dbg("[pgxTable.RENDER] dim(df)=",dim(df))
+        
         df$dataset  <- gsub("[.]pgx$"," ",df$dataset)
         df$conditions  <- gsub("[,]"," ",df$conditions)
         df$conditions  <- sapply(as.character(df$conditions), andothers, split=" ", n=5)

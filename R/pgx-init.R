@@ -228,7 +228,9 @@ pgx.initialize <- function(ngs) {
         fc <- ngs$gx.meta$meta[[i]]$meta.fx
         names(fc) <- rownames(ngs$gx.meta$meta[[i]])
         fc <- fc[which(toupper(names(fc)) %in% colnames(GSETxGENE))]
-        mx <- (GSETxGENE[rownames(gs),toupper(names(fc))] %*% fc)[,1]
+        ## G1 <- GSETxGENE[rownames(gs),toupper(names(fc))]
+        G1 <- t(ngs$GMT[names(fc),rownames(gs)])
+        mx <- (G1 %*% fc)[,1]
         ngs$gset.meta$meta[[i]]$meta.fx <- mx
     }
 
