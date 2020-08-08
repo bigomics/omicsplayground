@@ -133,23 +133,27 @@ immune cell types, expressed genes and pathway activation."
     ##================================================================================
     ##========================= REACTIVE FUNCTIONS ===================================
     ##================================================================================
-
+    
     pfGetClusterPositions <- reactive({
         ngs <- inputData()
         req(ngs)
         
+        dbg("[pfGetClusterPositions] called")
+        
         ##zx <- filtered_matrix1()
         zx = ngs$X
+        kk = colnames(zx)
         kk <- selectSamplesFromSelectedLevels(ngs$Y, input$sc_samplefilter)
-        if(length(kk)==0) return(NULL)
-        
+        if(length(kk)==0) return(NULL)        
         zx <- zx[,kk,drop=FALSE]
         zx = head(zx[order(-apply(zx,1,sd)),],1000)
         zx = t(scale(t(zx)))  ## scale??
 
         pos = NULL
+        m = "tsne"
         m <- input$sc_clustmethod
         has.clust <- ("cluster" %in% names(ngs) && m %in% names(ngs$cluster$pos))
+        has.clust
         if(!has.clust && m=="pca") {
             require(irlba)
             pos = irlba(zx,nv=3)$v
@@ -159,6 +163,7 @@ immune cell types, expressed genes and pathway activation."
         } else {            
             pos <- ngs$tsne2d
         }
+        dim(pos)
         pos <- pos[colnames(zx),]
         pos = scale(pos) ## scale 
         colnames(pos) = paste0("dim",1:ncol(pos))
@@ -166,12 +171,22 @@ immune cell types, expressed genes and pathway activation."
 
         ##if(input$pca.gx=="<cluster>")
         require(igraph)
-        dist = as.dist(dist(pos))
+        dbg("[pfGetClusterPositions] computing distances and clusters...")
+        dbg("[pfGetClusterPositions] dim(pos) = ",dim(pos))
+        
+        ##dist = as.dist(dist(pos))
+        dist = 0.001+dist(pos)**2
+
+        dbg("[pfGetClusterPositions] creating graph")
+        
         gr = graph_from_adjacency_matrix(
             1.0/dist, diag=FALSE, mode="undirected")
+
+        dbg("[pfGetClusterPositions] cluster louvain")
+        
         clust <- cluster_louvain(gr)$membership
 
-        ##cat("pfGetClusterPositions:: done!\n")
+        dbg("pfGetClusterPositions:: done!")
         return( list(pos=pos, clust=clust) )
     })
 
@@ -183,18 +198,15 @@ immune cell types, expressed genes and pathway activation."
     getDeconvResults <- reactive({
         ngs <- inputData()
         req(ngs)
-
-        method = "meta"
+        dbg("[SingleCellModule:getDeconvResults] called")
+        method="meta";refset = "LM22"
         method <- input$sc_dcmethod
-        if(is.null(method)) return(NULL)
-        
-        refset = "LM22"
+        if(is.null(method)) return(NULL)               
         refset <- input$sc_refset
         if(!("deconv" %in% names(ngs))) return(NULL)
         results <- ngs$deconv[[refset]][[method]]
         ## threshold everything (because DCQ can be negative!!!)
-        results <- pmax(results,0)
-        
+        results <- pmax(results,0)        
         return(results)
     })
 
@@ -203,14 +215,13 @@ immune cell types, expressed genes and pathway activation."
         
         ngs <- inputData()
         alertDataLoaded(session,ngs)
-        req(ngs)
-        
+        req(ngs)        
         clust <- pfGetClusterPositions()
         if(is.null(clust)) return(NULL)
+        dbg("[SingleCellModule:sc_icp.plotFUNC] called")
         pos <- ngs$tsne2d
-        pos <- clust$pos
-        
-        score <- ngs$deconv[["LM22"]][["meta"]]
+        pos <- clust$pos        
+        score <- ngs$deconv[[1]][["meta"]]
         score = getDeconvResults()
         if(is.null(score) || length(score)==0  ) return(NULL)
         
@@ -269,11 +280,10 @@ immune cell types, expressed genes and pathway activation."
                        cex=1.2, text.font=1, y.intersp=0.8, bty="n",
                        inset=c(-0.05,-0.0) )
             }
-
             refset <- input$sc_refset
-            mtext(refset, outer=TRUE, line=0.5, cex=1.0)
-            
+            mtext(refset, outer=TRUE, line=0.5, cex=1.0)            
         }
+        
     })
 
     sc_icp.opts = tagList(
@@ -329,7 +339,7 @@ immune cell types, expressed genes and pathway activation."
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
-        
+        dbg("[SingleCellModule:sc_pheno.plotFUNC] called")
         clust <- pfGetClusterPositions()
         if(is.null(clust)) return(NULL)
         
@@ -467,6 +477,7 @@ immune cell types, expressed genes and pathway activation."
         method <- input$sc_dcmethod2
         if(is.null(method)) return(NULL)
         req(input$sc_refset2)
+        dbg("[SingleCellModule:getDeconvResults2] called")
         
         refset = "LM22"
         refset <- input$sc_refset2
@@ -485,6 +496,7 @@ immune cell types, expressed genes and pathway activation."
         alertDataLoaded(session,ngs)
         req(ngs)
         req(input$sc_refset2)
+        dbg("[SingleCellModule:sc_mapping.plotFUNC] called")
         
         clust <- pfGetClusterPositions()
         if(is.null(clust)) return(NULL)
@@ -530,8 +542,6 @@ immune cell types, expressed genes and pathway activation."
             score <- score[ii,jj]        
         }    
         b0 <- 0.1 + 0.70*pmax(30 - ncol(score), 0)
-
-        message("[SingleCellModule::sc_mapping.plotFUNC] USER_MODE=",USER_MODE)
         
         if(input$sc_view2 == "dotmap") {
             require(corrplot)
@@ -602,7 +612,7 @@ immune cell types, expressed genes and pathway activation."
     })
 
     SC_VIEWTYPES2 = c("dotmap"="dotmap","heatmap (by method)"="heatmap")    
-    message("[sc_mapping.plotFUNC] 1")
+    message("[SingleCellModule::sc_mapping.plotFUNC] 1")
     
     sc_mapping.opts = tagList(
         tipify(selectInput(ns("sc_view2"),"plot type:",SC_VIEWTYPES2),
@@ -614,10 +624,9 @@ immune cell types, expressed genes and pathway activation."
         tipify(selectInput(ns("sc_dcmethod2"),"method:", choices=NULL),
                "Choose a method for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("sc_group2"), "group by:", "group",
-                           selected = "group"),
+        tipify(selectInput(ns("sc_group2"), "group by:", "group", selected = "group"),
                "Group the samples/cells by grouping factor.",
-               options=list(container="body"))
+               placement="top", options=list(container="body"))
     )
 
     sc_mapping_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
@@ -651,6 +660,8 @@ immune cell types, expressed genes and pathway activation."
 
         req(ngs)
         req(input$sc_crosstabpheno, input$sc_crosstabvar, input$sc_crosstabgene)
+
+        dbg("[SingleCellModule::sc_crosstab.plotFUNC] called")
         
         scores = ngs$deconv[[1]][[1]]  ## just an example...
         if(input$sc_crosstabvar == "<cell type>") {
@@ -682,7 +693,7 @@ immune cell types, expressed genes and pathway activation."
         grp.counts <- ( t(scores / rowSums(scores)) %*% matrix(kk.counts,ncol=1))[,1]  
         
         getProportionsTable <- function(pheno, is.gene=FALSE) {    
-            message("[getProportionsTable] 2")
+            dbg("[SingleCellModule::getProportionsTable()] called")
             y <- NULL
             ##if("gene" %in% input$sc_crosstaboptions) {
             if( is.gene ) {
@@ -872,6 +883,8 @@ immune cell types, expressed genes and pathway activation."
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
 
+        dbg("[SingleCellModule::observe] 123")
+
         ##if(is.null(input$sc_crosstaboptions)) return(NULL)
         pheno0 <- grep("group|sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
         pheno0 <- grep("sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
@@ -919,6 +932,8 @@ immune cell types, expressed genes and pathway activation."
         ngs <- inputData()
         req(ngs)
         
+        dbg("[SingleCellModule::sc_markers.plotFUNC] called")
+
         clust <- pfGetClusterPositions()
         if(is.null(clust)) return(NULL)
         pos <- ngs$tsne2d
@@ -1073,6 +1088,8 @@ immune cell types, expressed genes and pathway activation."
     observe({
         ngs <- inputData()
         req(ngs,input$sc_mrk_level)    
+        dbg("[SingleCellModule::observed] 222")
+        
         choices <- names(ngs$families)
         selected = grep("^CD",choices,ignore.case=TRUE,value=TRUE)[1]
         if(input$sc_mrk_level=="geneset") {
@@ -1111,6 +1128,8 @@ immune cell types, expressed genes and pathway activation."
         if(is.null(input$sc_cytovar2)) return(NULL)
         if(input$sc_cytovar1=="") return(NULL)
         if(input$sc_cytovar2=="") return(NULL)
+        
+        dbg("[SingleCellModule::sc_cyto.plotFUNC] called")
 
         kk <- selectSamplesFromSelectedLevels(ngs$Y, input$sc_samplefilter)    
         gene1 <- input$sc_cytovar1
@@ -1193,7 +1212,7 @@ immune cell types, expressed genes and pathway activation."
         ngs <- inputData()
         req(ngs)
 
-        dbg("<profiling:getCNAfromExpression> calculating CNV with SMA40 ...")
+        dbg("[SingleCellModule:getCNAfromExpression] calculating CNV with SMA40 ...")
         
         ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
         withProgress( message='calculating CNV (sma40)...', value=0.33, {
@@ -1206,7 +1225,7 @@ immune cell types, expressed genes and pathway activation."
         ngs <- inputData()
         req(ngs)
 
-        dbg("<profiling:getCNAfromExpression> calculating CNV using inferCNV...")
+        dbg("[SingleCellModule:getCNAfromExpression] calculating CNV using inferCNV...")
         ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
         
         withProgress( message='calculating CNV (inferCNV)...', value=0.33, {
@@ -1222,7 +1241,7 @@ immune cell types, expressed genes and pathway activation."
         ngs <- inputData()
         req(ngs,input$sc_cna_method,input$sc_cna_annotvar,input$sc_cna_orderby)
 
-        dbg("[profiling:sc_cna.plotFUNC] reacted")
+        dbg("[SingleCellModule:sc_cna.plotFUNC] reacted")
         
         if(input$sc_cna_method=="inferCNV") {
             res <- getCNAfromExpression.inferCNV()
@@ -1275,6 +1294,8 @@ immune cell types, expressed genes and pathway activation."
         ##if(is.null(ngs)) return(NULL)
         req(ngs)        
         ## levels for sample filter
+        dbg("[SingleCellModule:sc_cna:observe] reacted")
+        
         annotvar <- c(colnames(ngs$Y),"<none>")
         updateSelectInput(session, "sc_cna_annotvar", choices=annotvar)
         
@@ -1299,6 +1320,8 @@ immune cell types, expressed genes and pathway activation."
         ## if(is.null(ngs)) return(NULL)
         req(ngs)
         req(input$italk_groups)
+
+        dbg("[SingleCellModule:italk_getResults] reacted")
         
         require(iTALK)
         db <- iTALK::database
@@ -1406,6 +1429,8 @@ immune cell types, expressed genes and pathway activation."
         req(ngs,res)
         ##if(is.null(res)) return(NULL)
         
+        dbg("[SingleCellModule:italk_heatmap.RENDER] reacted")
+
         res_cat <- res$table
         ntop=50
         ntop = as.integer(input$italk_LRPlot_ntop)
@@ -1529,7 +1554,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         req(ngs)
         ##if(is.null(ngs)) return(NULL)
 
-        dbg("monocle_getResults: reacted")
+        dbg("[SingleCellModule:monocle_getResults] reacted")
         
         ## Create a Progress object
         progress <- shiny::Progress$new()
@@ -1645,13 +1670,13 @@ a circle plot. The width of the arrow represents the expression level/log fold c
 
     monocle_plotTopMarkers.RENDER %<a-% reactive({
 
-        dbg("monocle_plotTopMarkers.RENDER: reacted")
+        dbg("[SingleCellModule:monocle_plotTopMarkers.RENDER] reacted")
         
         cds <- monocle_getResults()
         require(monocle3)
         req(cds,input$monocle_groupby)
 
-        dbg("monocle_plotTopMarkers.RENDER: 1")
+        dbg("[SingleCellModule:monocle_plotTopMarkers.RENDER] 1")        
         
         ## Find marker genes expressed by each cluster
         pheno1 = "cluster"
@@ -1660,7 +1685,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         pheno1
         marker_test_res = top_markers(cds, group_cells_by=pheno1, cores=4)
 
-        dbg("monocle_plotTopMarkers.RENDER: 2")
+        dbg("[SingleCellModule:monocle_plotTopMarkers.RENDER] 2") 
         
         NTOP = 1
         NTOP = 3
@@ -1672,7 +1697,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         ##top_n(1, marker_test_q_value)
         ##top_n(1, pseudo_R2)
 
-        dbg("monocle_plotTopMarkers.RENDER: 3")
+        dbg("[SingleCellModule:monocle_plotTopMarkers.RENDER] 3")         
         
         top_specific_marker_ids = unique(top_specific_markers %>% pull(gene_id))    
         scale_max1 = 0.8 * log(max(assay(cds))+0.1)
@@ -1685,7 +1710,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         ## g <- qplot(seq(0,4*pi,0.1), sin(seq(0,4*pi,0.1)))
         g <- g + theme(plot.margin=unit(c(1,1,1,1)*0.5,"cm"))
 
-        dbg("monocle_plotTopMarkers.RENDER: DONE!")
+        dbg("[SingleCellModule:monocle_plotTopMarkers.RENDER] done!")
 
         return(g)
     })

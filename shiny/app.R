@@ -13,6 +13,7 @@ message("\n\n")
 DEBUG = FALSE
 DEBUG = TRUE
 ##.setSmtpServer("~/bigomics/server-conf/smtp_server/infomaniak.env")
+message("DEBUG = ",DEBUG)
 
 library(shiny)
 library(shinyjs)
@@ -58,13 +59,13 @@ PGX.DIR = file.path(OPG,"data")
 source(file.path(RDIR,"pgx-include.R"),local=TRUE)  ## pass local vars
 source("global.R", local=TRUE)
 source("modules/AuthenticationDialog.R")
+source(file.path(RDIR,"pgx-files.R"), local=TRUE)  ## pass local vars
 
 message("\n")
 message("*****************************************")
 message("******** parsing OPTIONS file ***********")
 message("*****************************************")
 
-source(file.path(RDIR,"pgx-files.R"), local=TRUE)  ## pass local vars
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
@@ -105,7 +106,7 @@ if(0) {
     load("../data/GSE72056-scmelanoma.pgx")
     load("../data/tcga-brca_pub.pgx")
     load("../data/GSE22886-immune.pgx")
-    load("../data/pgx-grassi2020-10x-S.pgx")
+    load("../data/grassi2020-10x-tcells.pgx")
     ngs = pgx.initialize(ngs)
 }
 

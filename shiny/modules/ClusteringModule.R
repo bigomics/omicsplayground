@@ -1077,13 +1077,14 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     })
 
     hm_PCAplot_opts = tagList(
-        tipify( selectInput( ns("hmpca.colvar"), "Color:", choices=NULL, width='100%'),
-               "Set the colors of the samples according to a given phenotype class.",
+        tipify( selectInput( ns("hmpca.colvar"), "Color/label:", choices=NULL, width='100%'),
+               "Set colors/labels according to a given phenotype.",
                placement="right", options = list(container = "body")),
         tipify( selectInput( ns("hmpca.shapevar"), "Shape:", choices=NULL, width='100%'),
-               "Set the shapes of the samples according to a given phenotype class.",
+               "Set shapes according to a given phenotype.",
                placement="right", options = list(container = "body")),
-        tipify( checkboxGroupInput( ns('hmpca_options'),"Other:", choices=c('label','3D','normalize'), inline=TRUE),
+        tipify( checkboxGroupInput( ns('hmpca_options'),"Other:",
+                                   choices=c('label','3D','normalize'), inline=TRUE),
                "Normalize matrix before calculating distances.",
                placement="right", options = list(container = "body")),
       

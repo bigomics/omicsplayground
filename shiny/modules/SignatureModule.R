@@ -904,12 +904,8 @@ infotext =
         fc1 = tanh(1.0*fc / (1e-4+sd(fc)))
         fc1 = fc1[rownames(pos)]
         
-        cex1 = 1.1
-        if(nrow(pos) < 30) cex1 = 1.8
-        if(nrow(pos) > 200) cex1 = 0.5
-
         cex1 = 1.2
-        cex1 <- 0.85*c(1.6,1.2,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
+        cex1 <- 0.7*c(1.6,1.2,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
         cex2 <- ifelse(level=="gene",1,0.8)
         klrpal = colorRampPalette(c("grey90", "grey60", "red3"))(16)
 

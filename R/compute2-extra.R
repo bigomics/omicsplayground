@@ -238,6 +238,7 @@ compute.deconvolution <- function(ngs, lib.dir, rna.counts=ngs$counts, full=FALS
     if(full==FALSE) {
         ## Fast methods, subset of references
         sel = c("Immune cell (LM22)","Immune cell (ImmunoStates)",
+                "Immune cell (DICE)","Immune cell (ImmProt)",
                 "Tissue (GTEx)","Cell line (HPA)","Cancer type (CCLE)")
         refmat <- refmat[intersect(sel,names(refmat))]
         methods <- c("DCQ","DeconRNAseq","I-NNLS","NNLM","cor")        
