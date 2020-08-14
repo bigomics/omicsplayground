@@ -11,7 +11,7 @@ message("#################################################################")
 message("\n\n")
 
 DEBUG = FALSE
-DEBUG = TRUE
+#DEBUG = TRUE
 ##.setSmtpServer("~/bigomics/server-conf/smtp_server/infomaniak.env")
 message("DEBUG = ",DEBUG)
 

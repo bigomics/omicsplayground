@@ -2,16 +2,15 @@
 ##
 ##
 
-
 ## all scripts
-all.scripts <- dir(".", pattern="pgx-.*R$")
+all.scripts <- dir("../scripts", pattern="pgx-.*R$")
 
 ## These are some default example scripts (uncomment if you really want to do all)
 all.scripts <- c("pgx-geiger2016-arginine.R","pgx-GSE72056-scmelanoma.R",
                  "pgx-GSE22886-immune.R","pgx-tcga-brca.R")
 all.scripts
-
 script=all.scripts[1]
+
 for(script in all.scripts) {
 
     ## skip if already done
@@ -20,7 +19,8 @@ for(script in all.scripts) {
 
     ## run script
     cat(">>>>>>>>>>>>>>>>>> processing",script,"<<<<<<<<<<<<<<<\n")
-    source(script, local=FALSE)
+    script1 <- paste0("../scripts/",script)
+    source(script1, local=FALSE)
 
     ## clean up
     rm(list=setdiff(ls(),c("script","all.scripts")))

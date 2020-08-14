@@ -851,7 +851,7 @@ infotext =
     ## Markers {data-height=800}
     ##================================================================================
 
-    markersplot.RENDER %<a-% reactive({
+    markers.RENDER %<a-% reactive({
         ##if(!input$tsne.all) return(NULL)
         require(RColorBrewer)
         require(gplots)
@@ -859,7 +859,7 @@ infotext =
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
 
-        dbg("<signature:markersplot.RENDER> called\n")        
+        dbg("<signature:markers.RENDER> called\n")        
         
         markers <- ngs$families[[2]]
         markers <- COLLECTIONS[[10]]
@@ -909,10 +909,27 @@ infotext =
         cex2 <- ifelse(level=="gene",1,0.8)
         klrpal = colorRampPalette(c("grey90", "grey60", "red3"))(16)
 
-        nmax = 35
-        par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2), oma=c(2,1,2,1)*0.8 )
+        nmax=NULL
+        if(input$markers_layout=="6x6") {
+            nmax = 35
+            par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2), oma=c(2,1,2,1)*0.8 )
+        }
+        if(input$markers_layout=="4x4") {
+            nmax = 15
+            par(mfrow=c(4,4), mar=c(0,0.2,0.5,0.2), oma=c(2,1,2,1)*0.8 )
+        }
+
         top.gx = head(gx,nmax)
-        top.gx = top.gx[order(rownames(top.gx)),,drop=FALSE]
+        if(input$markers_sortby=="name") {
+            top.gx = top.gx[order(rownames(top.gx)),,drop=FALSE]
+        }
+        if(input$markers_sortby=="probability") {
+            top.gx = top.gx[order(-rowMeans(top.gx)),,drop=FALSE]
+        }
+        if(input$markers_sortby=="correlation") {
+            rho <- cor(t(top.gx), fc1)[,1]
+            top.gx = top.gx[order(-rho),,drop=FALSE]
+        }
         
         i=1    
         for(i in 0:min(nmax,nrow(top.gx))) {
@@ -940,25 +957,36 @@ infotext =
 
         }
 
-        dbg("<signature:markersplot.RENDER> done!\n")        
+        dbg("<signature:markers.RENDER> done!\n")        
         
     })
 
 
-    markersplot_info = "After uploading a gene list, the <strong>Markers</strong> section produces a t-SNE plot of samples for each gene, where the samples are colored with respect to the upregulation (in red) or downregulation (in blue) of that particular gene."
+    markers_info = "After uploading a gene list, the <strong>Markers</strong> section produces a t-SNE plot of samples for each gene, where the samples are colored with respect to the upregulation (in red) or downregulation (in blue) of that particular gene."
 
     markers_caption = "<b>Markers t-SNE plot</b>. T-SNE plot for each gene, where the dot (corresponding to samples) are colored depending on the upregulation (in red) or downregulation (in blue) of that particular gene."
     
-    ##markers.opts = tagList()
+    markers.opts = tagList(
+        tipify(radioButtons(ns("markers_sortby"),"Sort by:",
+                            choices=c("correlation","probability","name"), inline=TRUE),
+               "Sort by correlation, probability or name.", placement="top",
+               options = list(container = "body")),
+        tipify(radioButtons(ns("markers_layout"),"Layout:", choices=c("4x4","6x6"),
+                            ## selected="6x6",
+                            inline=TRUE),
+               "Choose layout.", 
+               placement="top", options = list(container = "body")),
+    )
+
     callModule(
         plotModule,
-        id = "markersplot",
+        id = "markers",
         title = "Markers plot", 
-        func = markersplot.RENDER,
-        func2 = markersplot.RENDER,
+        func = markers.RENDER,
+        func2 = markers.RENDER,
         plotlib = "base",
-        info.text = markersplot_info,
-        ##options = markers.opts,
+        info.text = markers_info,
+        options = markers.opts,
         pdf.width=8, pdf.height=8,
         height = c(fullH-100,750), res=c(100,95)
     )
@@ -969,7 +997,7 @@ infotext =
             height = fullH,
             div(HTML(markers_caption), class="caption"),
             br(),            
-            plotWidget(ns("markersplot"))
+            plotWidget(ns("markers"))
         )
     })
     

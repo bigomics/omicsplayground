@@ -1,26 +1,10 @@
-library(knitr)
-library(limma)
-library(edgeR)
-library(RColorBrewer)
-library(gplots)
-library(matrixTests)
-library(kableExtra)
-library(knitr)
 
-source("../R/gx-heatmap.r")
-source("../R/gx-limma.r")
-source("../R/gx-util.r")
-source("../R/ngs-cook.r")
-source("../R/ngs-fit.r")
-source("../R/gset-fisher.r")
-source("../R/gset-gsea.r")
-source("../R/gset-meta.r")
-source("../R/pgx-graph.R")
-source("../R/xcr-graph.r")
-source("../R/pgx-functions.R")
-
-source("options.R")
-##MAX.GENES=2000
+RDIR = "../R"
+FILES = "../lib"
+PGX.DIR = "../data"
+source("../R/pgx-include.R")
+FILES
+MAX.GENES = 8000
 
 COMPARE.CLUSTERS=FALSE
 ##COMPARE.CLUSTERS=TRUE
@@ -149,7 +133,8 @@ if(PROCESS.DATA) {
     ngs$counts = x1
     rownames(ngs$genes) = rownames(ngs$counts) = rownames(x1)
     remove(x1)
-
+    dim(ngs$counts)
+    
     ##-------------------------------------------------------------------
     ## gene filtering
     ##-------------------------------------------------------------------
@@ -157,7 +142,7 @@ if(PROCESS.DATA) {
     ##keep <- filterByExpr(ngs)  ## default edgeR filter
     ##keep <- (rowSums(cpm(ngs$counts, log=TRUE) > 1) >= 0.01)
     if(0) {
-        keep <- (rowMeans(ngs$counts >= 3) >= 0.001)
+        keep <- (rowMeans(ngs$counts >= 3) > 0.01)
         table(keep)
         ngs$counts <- ngs$counts[keep,]
         ngs$genes  <- ngs$genes[keep,]
@@ -173,7 +158,7 @@ if(PROCESS.DATA) {
     ##-------------------------------------------------------------------
     ## take top varying
     ##-------------------------------------------------------------------
-
+    MAX.GENES
     if(TRUE && MAX.GENES>0) {
         cat("shrinking data matrices: n=",MAX.GENES,"\n")
         logcpm = edgeR::cpm(ngs$counts, log=TRUE)
@@ -184,15 +169,10 @@ if(PROCESS.DATA) {
         ngs$genes  <- ngs$genes[jj,]
     }
     dim(ngs$counts)
-    ngs$timings <- c()
-
-    rda.file
-    save(ngs, file=rda.file)
 }
 
 
 if(DIFF.EXPRESSION) {
-    load(file=rda.file, verbose=1)
 
     ## ----------------- test genes ------------------------------------------
     COMPARE.CLUSTERS
@@ -233,13 +213,36 @@ if(DIFF.EXPRESSION) {
         ##contr.matrix = contr.matrix[,1:3]
     }
 
+    rda.file
+    ngs$timings <- c()
+    
+    GENETEST.METHODS=c("ttest","ttest.welch", ## "ttest.rank",
+                       "voom.limma","trend.limma","notrend.limma",
+                       "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
+    GENESET.METHODS = c("fisher","gsva","ssgsea","spearman",
+                        "camera", "fry","fgsea") ## no GSEA, too slow...
+    GENETEST.METHODS=c("ttest.welch", "trend.limma", "edger.qlf")
+    GENESET.METHODS = c("fisher","gsva","fgsea") ## no GSEA, too slow...
+    
+    ## new callling methods
+    ngs <- compute.testGenes(
+        ngs, contr.matrix,
+        max.features=MAX.GENES,
+        test.methods = GENETEST.METHODS)
+    
+    ngs <- compute.testGenesets (
+        ngs, max.features=MAX.GENES,
+        test.methods = GENESET.METHODS,
+        lib.dir=FILES)
 
-    ##USER.GENETEST.METHODS=c("ttest.welch","trend.limma","edger.qlf","edger.lrt")
-    USER.GENETEST.METHODS=c("trend.limma","edger.qlf","edger.lrt")
-    USER.GENESETTEST.METHODS=c("fisher","gsva","camera","fgsea")
-    source("../R/compute-genes.R")
-    source("../R/compute-genesets.R")
-    source("../R/compute-extra.R")
+    extra <- c("drugs-combo")
+    extra <- c("connectivity")
+    extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")
+    ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
+    
+    names(ngs)
+    ngs$timings
+
 }
 
 rda.file

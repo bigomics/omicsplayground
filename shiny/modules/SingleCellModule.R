@@ -74,7 +74,7 @@ immune cell types, expressed genes and pathway activation."
                     tipify(selectInput(ns('sc_clustmethod'),"Layout", c("default","pca"),
                                        selected="default"),
                            "Specify a layout for the figures: t-SNE or PCA-based layout.",
-                           options = list(container = "body"))
+                           placement="top", options = list(container = "body"))
                 )
             )
         )
@@ -169,24 +169,62 @@ immune cell types, expressed genes and pathway activation."
         colnames(pos) = paste0("dim",1:ncol(pos))
         rownames(pos) = colnames(zx)    
 
+        return(pos)
+    })
+
+    pfGetClusterPositions2 <- reactive({
+        ngs <- inputData()
+        req(ngs)
+        
+        dbg("[pfGetClusterPositions2] called")
+        
+        ##zx <- filtered_matrix1()
+        zx = ngs$X
+        kk = colnames(zx)
+        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$sc_samplefilter)
+        if(length(kk)==0) return(NULL)        
+        zx <- zx[,kk,drop=FALSE]
+        zx = head(zx[order(-apply(zx,1,sd)),],1000)
+        zx = t(scale(t(zx)))  ## scale??
+
+        pos = NULL
+        m = "tsne"
+        m <- input$sc_clustmethod
+        has.clust <- ("cluster" %in% names(ngs) && m %in% names(ngs$cluster$pos))
+        has.clust
+        if(!has.clust && m=="pca") {
+            require(irlba)
+            pos = irlba(zx,nv=3)$v
+            rownames(pos) <- colnames(zx)
+        } else if(has.clust) {
+            pos <- ngs$cluster$pos[[m]][,1:2]
+        } else {            
+            pos <- ngs$tsne2d
+        }
+        dim(pos)
+        pos <- pos[colnames(zx),]
+        pos = scale(pos) ## scale 
+        colnames(pos) = paste0("dim",1:ncol(pos))
+        rownames(pos) = colnames(zx)    
+
         ##if(input$pca.gx=="<cluster>")
         require(igraph)
-        dbg("[pfGetClusterPositions] computing distances and clusters...")
-        dbg("[pfGetClusterPositions] dim(pos) = ",dim(pos))
+        dbg("[pfGetClusterPositions2] computing distances and clusters...")
+        dbg("[pfGetClusterPositions2] dim(pos) = ",dim(pos))
         
         ##dist = as.dist(dist(pos))
         dist = 0.001+dist(pos)**2
 
-        dbg("[pfGetClusterPositions] creating graph")
+        dbg("[pfGetClusterPositions2] creating graph")
         
         gr = graph_from_adjacency_matrix(
             1.0/dist, diag=FALSE, mode="undirected")
 
-        dbg("[pfGetClusterPositions] cluster louvain")
+        dbg("[pfGetClusterPositions2] cluster louvain")
         
         clust <- cluster_louvain(gr)$membership
 
-        dbg("pfGetClusterPositions:: done!")
+        dbg("pfGetClusterPositions2:: done!")
         return( list(pos=pos, clust=clust) )
     })
 
@@ -216,11 +254,11 @@ immune cell types, expressed genes and pathway activation."
         ngs <- inputData()
         alertDataLoaded(session,ngs)
         req(ngs)        
-        clust <- pfGetClusterPositions()
-        if(is.null(clust)) return(NULL)
+        clust.pos <- pfGetClusterPositions()
+        if(is.null(clust.pos)) return(NULL)
         dbg("[SingleCellModule:sc_icp.plotFUNC] called")
         pos <- ngs$tsne2d
-        pos <- clust$pos        
+        pos <- clust.pos        
         score <- ngs$deconv[[1]][["meta"]]
         score = getDeconvResults()
         if(is.null(score) || length(score)==0  ) return(NULL)
@@ -256,12 +294,23 @@ immune cell types, expressed genes and pathway activation."
             ##klrpal = paste0(col2hex(klrpal),"AA")    
             klrpal = paste0(col2hex(klrpal),"66")
             
+            lyo <- input$sc_layout
+            ntop = 25
             par(mfrow=c(5,5), mar=c(0.2,0.2,1.8,0.2), oma=c(1,1,1,1)*0.8 )
             par(mfrow=c(5,5), mar=c(0,0.2,0.5,0.2), oma=c(1,1,6,1)*0.5)
             if(ncol(score)>25) par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2)*0.6)
+            if(lyo == "4x4") {
+                par(mfrow=c(4,4), mar=c(0,0.2,0.5,0.2)*0.6)
+                ntop = 16
+            }
+            if(lyo == "6x6") {
+                par(mfrow=c(6,6), mar=c(0,0.2,0.5,0.2)*0.6)
+                ntop = 36
+            }
+
             i=1    
             jj <- NULL
-            jj <- head(order(-colMeans(score**2)),36)                
+            jj <- head(order(-colMeans(score**2)),ntop)                
             if(input$sc_sortby=="name") {
                 jj <- jj[order(colnames(score)[jj])]
             }            
@@ -287,16 +336,21 @@ immune cell types, expressed genes and pathway activation."
     })
 
     sc_icp.opts = tagList(
-        tipify(selectInput(ns("sc_refset"), "reference:", choices=NULL),
+        tipify(selectInput(ns("sc_refset"), "Reference:", choices=NULL),
                "Select a reference dataset for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("sc_dcmethod"),"method:", choices=NULL),
+        tipify(selectInput(ns("sc_dcmethod"),"Method:", choices=NULL),
                "Choose a method for the cell type prediction.",
                placement="top", options = list(container = "body")),
         tipify(radioButtons(ns("sc_sortby"),"Sort by:",
                             choices=c("probability","name"), inline=TRUE),
                "Sort by name or probability.", placement="top",
-               options = list(container = "body"))
+               options = list(container = "body")),
+        tipify(radioButtons(ns("sc_layout"),"Layout:", choices=c("4x4","6x6"),
+                            ## selected="6x6",
+                            inline=TRUE),
+               "Choose layout.", 
+               placement="top", options = list(container = "body"))        
     )
 
     sc_icp_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
@@ -340,11 +394,11 @@ immune cell types, expressed genes and pathway activation."
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
         dbg("[SingleCellModule:sc_pheno.plotFUNC] called")
-        clust <- pfGetClusterPositions()
-        if(is.null(clust)) return(NULL)
+        clust.pos <- pfGetClusterPositions()
+        if(is.null(clust.pos)) return(NULL)
         
         pos <- ngs$tsne2d
-        pos <- clust$pos
+        pos <- clust.pos
         sel <- rownames(pos)
         pheno = colnames(ngs$Y)
 
@@ -498,10 +552,10 @@ immune cell types, expressed genes and pathway activation."
         req(input$sc_refset2)
         dbg("[SingleCellModule:sc_mapping.plotFUNC] called")
         
-        clust <- pfGetClusterPositions()
-        if(is.null(clust)) return(NULL)
+        clust.pos <- pfGetClusterPositions()
+        if(is.null(clust.pos)) return(NULL)
         pos <- ngs$tsne2d
-        pos <- clust$pos
+        pos <- clust.pos
         
         score <- ngs$deconv[["LM22"]][["meta"]]
         score = getDeconvResults2()
@@ -934,10 +988,10 @@ immune cell types, expressed genes and pathway activation."
         
         dbg("[SingleCellModule::sc_markers.plotFUNC] called")
 
-        clust <- pfGetClusterPositions()
-        if(is.null(clust)) return(NULL)
+        clust.pos <- pfGetClusterPositions()
+        if(is.null(clust.pos)) return(NULL)
         pos <- ngs$tsne2d
-        pos <- clust$pos
+        pos <- clust.pos
         
         ##markers <- ngs$families[["CD family"]]
         if(is.null(input$sc_mrk_features)) return(NULL)
