@@ -38,7 +38,7 @@ metadataFile <- "../ext/arginine/meta.txt"
 proteinGroupsFile <- "../ext/arginine/proteinGroups.txt"
 ## Read the proteinGroups file
 prot <- proteus.readProteinGroups(
-    file=proteinGroupsFile, meta.file=metadataFile,
+    file=proteinGroupsFile, meta=metadataFile,
     collapse.gene=1, unit="intensity", is.log2=TRUE, use.LFQ=FALSE)
 
 ##-------------------------------------------------------------------
