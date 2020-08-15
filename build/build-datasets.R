@@ -20,8 +20,11 @@ for(script in all.scripts) {
     ## run script
     cat(">>>>>>>>>>>>>>>>>> processing",script,"<<<<<<<<<<<<<<<\n")
     script1 <- paste0("../scripts/",script)
-    source(script1, local=FALSE)
-
+    try.err <- try(source(script1, local=FALSE))
+    if(class(try.err=="try-error")) {
+        cat("WARNING:: Error in source",script,"\n")
+    }
+    
     ## clean up
     rm(list=setdiff(ls(),c("script","all.scripts")))
 }
