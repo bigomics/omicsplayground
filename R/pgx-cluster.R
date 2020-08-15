@@ -226,14 +226,18 @@ pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
     ##sX = sX + 0.001*matrix(rnorm(length(sX)),nrow(sX),ncol(sX))
 
     ## ------------ find t-SNE clusters
+    max.perplexity <-  max(1,min(30, round((ncol(sX)-1)/4)))
     if(is.null(perplexity)) {
-        perplexity = max(1,min(30, round((ncol(sX)-1)/4)))
-        perplexity
+        perplexity  <- max.perplexity
+    }
+    if(perplexity > max.perplexity) {
+        message("[pgx.clusterSamplesFromMatrix] perplexity too large, decreasing perplexity to ",max.perplexity)
+        perplexity  <- max.perplexity
     }
 
     ##sv.rank=20
     if(sv.rank > 0) {
-        cat("performing tSNE on reduced PCA k=",sv.rank,"\n")
+        message("performing tSNE on reduced PCA k=",sv.rank)
         svd <- irlba(sX, nv=sv.rank)
         sv <- svd$v %*% diag(svd$d[1:ncol(svd$v)])
         rownames(sv) <- colnames(sX)
