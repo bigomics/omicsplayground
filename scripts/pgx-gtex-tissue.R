@@ -17,7 +17,7 @@ source("../R/pgx-include.R")
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data-extra/gtex-tissue.pgx"
+rda.file="../data/gtex-tissue.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 

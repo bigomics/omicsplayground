@@ -17,7 +17,7 @@ source(file.path(RDIR,"pgx-getgeo.R"))
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data-extra/GSE93156-idelalisib.pgx"
+rda.file="../data/GSE93156-idelalisib.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 

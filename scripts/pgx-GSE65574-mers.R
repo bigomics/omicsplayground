@@ -15,7 +15,7 @@ source("../R/pgx-include.R")
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data-extra/GSE65574-mers.pgx"
+rda.file="../data/GSE65574-mers.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
