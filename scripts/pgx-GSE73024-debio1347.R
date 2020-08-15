@@ -1,3 +1,10 @@
+##===================================================================
+##================ Script to build PGX object =======================
+##===================================================================
+##
+##
+##
+##
 
 RDIR = "../R"
 FILES = "../lib"
@@ -7,16 +14,25 @@ source("../R/pgx-include.R")
 source("../R/pgx-getgeo.R")
 ##source("options.R")
 
+##------------------------------------------------------------
+## Set data set name
+##------------------------------------------------------------
+
 rda.file="../data/GSE73024-debio1437.pgx"
 rda.file
 ##load(file=rda.file, verbose=1)
 
+##------------------------------------------------------------
+## Read data
+##------------------------------------------------------------
 ## load series and platform data from GEO
 ngs <- pgx.getGEOseries("GSE73024")
 names(ngs)
 sum(duplicated(rownames(ngs$genes)))
 
-##load(file=rda.file, verbose=1)
+##------------------------------------------------------------
+## Set data set information
+##------------------------------------------------------------
 ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$datatype = "mRNA (microarray)"
 ngs$description = "GSE73024 data set (Nakanishi et al, 2015). Transcriptome analysis of response to a selective FGFR inhibitor (CH5183284/Debio1347), a mitogen-activated protein kinase kinase (MEK) inhibitor, or a phosphoinositide 3-kinase (PI3K) inhibitor."
@@ -53,8 +69,15 @@ if(1) {
     ngs$counts <- 2**bX
 }
 
-## Pre-calculate t-SNE 
+##-------------------------------------------------------------------
+## Pre-calculate t-SNE for and get clusters
+##-------------------------------------------------------------------
 ngs <- pgx.clusterSamples(ngs, perplexity=NULL, skipifexists=FALSE, prefix="C")
+
+
+##-------------------------------------------------------------------
+## Create contrasts 
+##-------------------------------------------------------------------
 
 ## not very good autocontrasts...
 colnames(ngs$contrasts) 
@@ -117,10 +140,13 @@ cl.cancertype[is.na(cl.cancertype)] = "*"
 colnames(ngs$contrasts) <- paste0(cl.cancertype,"_",colnames(ngs$contrasts))
 colnames(ngs$contrasts) <- sub("[*]_","",colnames(ngs$contrasts))
 
+##-------------------------------------------------------------------
+## Start computations
+##-------------------------------------------------------------------
 rda.file
 ngs$timings <- c()
 
-GENETEST.METHODS=c("trend.limma","edger.qlf","deseq2.wald")
+GENE.METHODS=c("trend.limma","edger.qlf","deseq2.wald")
 GENESET.METHODS = c("fisher","gsva","fgsea") ## no GSEA, too slow...
 
 MAX.GENES = 20000
@@ -131,7 +157,7 @@ contr.matrix = ngs$contrasts
 ngs <- compute.testGenes(
     ngs, contr.matrix,
     max.features = MAX.GENES,
-    test.methods = GENETEST.METHODS)
+    test.methods = GENE.METHODS)
 
 ngs <- compute.testGenesets (
     ngs, max.features=MAX.GENESETS,
@@ -149,11 +175,15 @@ ngs <- compute.extra(ngs, extra, lib.dir=FILES, sigdb=sigdb)
 names(ngs)
 ngs$timings
 
-## save
-##rda.file="../data/GSE73024-debio1437.pgx"
+##-------------------------------------------------------------------
+## save PGX object
+##-------------------------------------------------------------------
 rda.file
 ngs.save(ngs, file=rda.file)
 
+##===================================================================
+##========================= END OF FILE =============================
+##===================================================================
 
 
 

@@ -58,7 +58,7 @@ the source code:
 
     Rscript requirements.R
     
-3. Run the following command in the ``scripts/`` folder to build the datasets::
+3. Run the following command in the ``build/`` folder to build the datasets::
 
     Rscript build-datasets.R
 

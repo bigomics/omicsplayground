@@ -54,6 +54,7 @@ RDIR = file.path(OPG,"R")
 FILES = file.path(OPG,"lib")
 FILESX = file.path(OPG,"libx")
 PGX.DIR = file.path(OPG,"data")
+##PGX.DIR = file.path(OPG,"data-extra")
 ##PGX.DIR = c(PGX.DIR,file.path(OPG,"data-extra"))
 
 source(file.path(RDIR,"pgx-include.R"),local=TRUE)  ## pass local vars
@@ -80,7 +81,6 @@ if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     opt$AUTHENTICATION = auth
 }
 
-
 WATERMARK      = opt$WATERMARK
 SHOW_QUESTIONS = FALSE
 DEV.VERSION    = opt$DEV_VERSION && dir.exists("../../omicsplayground-dev")
@@ -94,12 +94,15 @@ message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 ## ------------------------ READ FUNCTIONS ----------------------------
 ## --------------------------------------------------------------------
 
-## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
+##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 ##source("../R/pgx-functions.R", local=TRUE)  ## pass local vars
 
 if(0) {
+    PGX.DIR="../data-extra/"
+    pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
+    
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
     load("../data/GSE10846-xgreta.pgx")
@@ -107,6 +110,7 @@ if(0) {
     load("../data/tcga-brca_pub.pgx")
     load("../data/GSE22886-immune.pgx")
     load("../data/grassi2020-10x-tcells.pgx")
+    load("../data-extra/GSE98638-scliver0.pgx")    
     ngs = pgx.initialize(ngs)
 }
 

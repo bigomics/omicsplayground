@@ -11,8 +11,8 @@ COMPUTE.EXTRA   = 1
 MAX.GENES   = 8000
 MAX.SAMPLES = 1000
 
-USER.GENETEST.METHODS    = c("trend.limma","edger.qlf","deseq2.wald")
-USER.GENESETTEST.METHODS = c("gsva","camera","fgsea")
+USER.GENE.METHODS    = c("trend.limma","edger.qlf","deseq2.wald")
+USER.GENESET.METHODS = c("gsva","camera","fgsea")
 
 ##BATCH.CORRECT = FALSE
 EXT = ""

@@ -1,3 +1,10 @@
+##===================================================================
+##================ Script to build PGX object =======================
+##===================================================================
+##
+##
+##
+##
 
 RDIR = "../R"
 FILES = "../lib"
@@ -305,15 +312,15 @@ if(DIFF.EXPRESSION) {
     ##source("../R/compute-genesets.R")
     ##source("../R/compute-extra.R")
 
-    GENETEST.METHODS=c("trend.limma","edger.qlf","edger.lrt")
-    GENETEST.METHODS=c("ttest","ttest.welch","notrend.limma") ## fastest methods
+    GENE.METHODS=c("trend.limma","edger.qlf","edger.lrt")
+    GENE.METHODS=c("ttest","ttest.welch","notrend.limma") ## fastest methods
     GENESET.METHODS=c("gsva","camera","fgsea")
     
     ## new callling methods
     ngs <- compute.testGenes(
         ngs, contr.matrix,
         max.features = MAX.GENES,
-        test.methods = GENETEST.METHODS)
+        test.methods = GENE.METHODS)
     
     ngs <- compute.testGenesets (
         ngs, max.features = MAX.GENESETS,
