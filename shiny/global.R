@@ -1,4 +1,6 @@
-message("===================== global.R ==================")
+message("===============================================================")
+message("========================= global.R ============================")
+message("===============================================================")
 
 ## Parse access logs
 access.dirs = c("/var/www/html/logs", "/var/log/apache2","/var/log/apache",
@@ -22,35 +24,13 @@ message(paste(paste(names(globalvars),"\t= ",globalvars),collapse="\n"),"\n")
 
 message("*****************************************")
 message("***** starting local ORCA server ********")
-message("*****************************************")
+message("*****************************************\n")
 
-assignInNamespace("correct_orca", function() return(TRUE), ns="plotly")
-##ORCA <- plotly::orca_serve(port=5151)
-ORCA <- plotly::orca_serve(port=5151, keep_alive=TRUE, more_args="--enable-webgl")
-for(i in 1:10) {
-    res.local <- try(httr::POST("http://localhost:5151", body=plotly:::to_JSON("")),silent=TRUE)
-    responding.local   <- class(res.local)=="response"
-    ##message("local ORCA is responding = ",responding.local)
-    message("trying to reach local orca...")
-    if(responding.local) {
-        break
-    }
-    Sys.sleep(2)
-}
-
-res.local <- try(httr::POST("http://localhost:5151", body=plotly:::to_JSON("")),silent=TRUE)
-res.docker <- try(httr::POST("http://orca-server:9091", body=plotly:::to_JSON("")),silent=TRUE)
-responding.local   <- class(res.local)=="response"
-responding.docker  <- class(res.docker)=="response"
-
-message("local ORCA is alive = ",ORCA$process$is_alive())
-message("local ORCA response = ",class(res.local))
-message("local ORCA is responding = ",responding.local)
-message("docker ORCA response = ",class(res.docker))
-message("docker ORCA is responding = ",responding.docker)
-
-if(1 && !responding.local && !responding.docker) {
-    warning("##### ERROR:: ORCA server not running. please start ORCA. #####")
+## see: pgx-module.R
+orca.available <- initOrca(launch=TRUE) 
+orca.available
+if(!orca.available) {
+    warning("##### FATAL:: Could not connect to ORCA server. Please start ORCA. #####")
     stop()
 }
 

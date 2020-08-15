@@ -9,6 +9,17 @@ USER.GENETEST.METHODS <- NULL
 ##==========    Platform helper functions =====================================
 ##=============================================================================
 
+pgx.checkObject <- function(ngs) {
+    must.have <- c("name","counts","samples","genes","model.parameters",
+                   "X","gx.meta","gset.meta","gsetX","GMT")
+    not.present <- setdiff(must.have,names(ngs))
+    if(length(not.present)>0) {
+        not.present <- paste(not.present, collapse=" ")
+        message("[pgx.checkObject] WARNING!!! object does not have: ",not.present)
+    }
+    all(must.have %in% names(ngs))
+}
+
 probe2symbol <- function(probes, type=NULL, org="human") {
 
     require("AnnotationDbi")

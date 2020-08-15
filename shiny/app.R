@@ -100,8 +100,9 @@ source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 ##source("../R/pgx-functions.R", local=TRUE)  ## pass local vars
 
 if(0) {
-    PGX.DIR="../data-extra/"
-    pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
+    
+    ##PGX.DIR="../test/"
+    ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
     
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
