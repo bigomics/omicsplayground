@@ -16,7 +16,7 @@ source("../R/pgx-include.R")
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data-extra/GSE56677-merscov.pgx"
+rda.file="../data/GSE56677-merscov.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 

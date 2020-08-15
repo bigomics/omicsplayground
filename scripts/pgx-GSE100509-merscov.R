@@ -12,7 +12,7 @@ PGX.DIR = "../data"
 source("../R/pgx-include.R")
 ##source("options.R")
 
-rda.file="../data-extra/GSE100509-merscov.pgx"
+rda.file="../data/GSE100509-merscov.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 
