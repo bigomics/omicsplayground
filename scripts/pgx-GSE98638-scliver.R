@@ -21,6 +21,7 @@ DOWNSAMPLE=75
 ## Set data set information
 ##------------------------------------------------------------
 
+rda.file="../data/GSE98638-scliver-TEST.pgx"
 rda.file="../data/GSE98638-scliver.pgx"
 ##if(COMPARE.CLUSTERS) rda.file <- sub(".pgx$",paste0("-vsCLUST.pgx"),rda.file)
 ##if(DOWNSAMPLE>0) rda.file <- sub(".pgx$",paste0("-s",DOWNSAMPLE,".pgx"),rda.file)
@@ -178,7 +179,6 @@ if(TRUE && MAX.GENES>0) {
 }
 dim(ngs$counts)
 
-
 ##-------------------------------------------------------------------
 ## Create contrasts 
 ##-------------------------------------------------------------------
@@ -216,8 +216,6 @@ if(COMPARE.CLUSTERS) {
         levels = levels)
     dim(contr.matrix)
     contr.matrix
-    
-    ##contr.matrix = contr.matrix[,1:3]
 }
 
 ##-------------------------------------------------------------------

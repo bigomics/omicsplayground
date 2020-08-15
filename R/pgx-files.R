@@ -209,7 +209,7 @@ pgx.readOptions <- function(file = "./OPTIONS") {
     opt
 }
 
-##pgx.dir=PGX.DIR
+##pgx.dir=PGX.DIR;verbose=force=TRUE
 pgx.initDatasetFolder <- function(pgx.dir, verbose=TRUE, force=FALSE)
 {
     i=1
@@ -424,14 +424,20 @@ pgx.initDatasetFolder1 <- function( pgx.dir,
         if(verbose) cat(".")        
         try.error <- try( load( file.path(pgx.dir,pgx),verbose=0) )
         if(class(try.error)=="try-error") {
-            cat(paste("error in loading PGX file:",pgx,". skipping\n"))
+            message(paste("[pgx.initDatasetFolder1] ERROR in loading PGX file:",pgx,". skipping\n"))
             next()
         }        
+        
+        if(!pgx.checkObject(ngs)) {
+            message(paste("[pgx.initDatasetFolder1] ERROR in PGX object! skipping\n"))
+            next()            
+        }
 
+        
         ##---------------------------------------------
         ## extract the meta FC matrix
         ##---------------------------------------------
-        rownames(ngs$X) <- toupper(sub(".*:","",rownames(ngs$X)))
+        ## rownames(ngs$X) <- toupper(sub(".*:","",rownames(ngs$X)))
         meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         rownames(meta$fc) <- toupper(rownames(meta$fc))
         missing.FC[[pgx]] <- meta$fc

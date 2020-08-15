@@ -19,8 +19,84 @@ addWatermark.PDF <- function(file) {
     unlink(tmp)
 }
 
+##================================================================================
+##============ Welcome to the ORCA hell .... =====================================
+##================================================================================
+
 ## prepare ORCA server if we are not in a Docker
 library(plotly)
+
+initOrca <- function(launch=TRUE) {
+
+    require(plotly)
+    responding.local = FALSE
+    responding.docker = FALSE
+    responding.process = FALSE
+    orca.server = NULL
+    
+    ## See if an orca-server docker is running
+    srv.list <- c("http://orca-server:9091","http://localhost:9091")
+    srv.responding <- sapply(srv.list, function(s)
+        class(try(httr::POST(s, body=plotly:::to_JSON("")),silent=TRUE))!="try-error")
+    srv.responding
+    orca.server <- names(srv.responding)[which(srv.responding)]
+    if(is.na(orca.server[1])) orca.server <- NULL
+    responding.docker  <- !is.null(orca.server)
+    ##message("docker ORCA response = ",class(res.docker))
+    message("[initOrca] dockerized ORCA is responding = ",responding.docker)
+    message("[initOrca] dockerized ORCA server = ", paste(orca.server,collapse=" "))
+    
+    ## If not, we try to connect to local orca-server at port 5151
+    if(!responding.docker) {
+        res.local <- try(httr::POST("http://localhost:5151", body=plotly:::to_JSON("")),silent=TRUE)
+        responding.local <- class(res.local)=="response"
+        message("[initOrca] local ORCA server at http://localhost:5151")
+        message("[initOrca] local ORCA server is responding = ",responding.local)
+    }
+    
+    ## If a orca docker or server is not running, we try to lauch a local orca process
+    if(launch && !responding.docker && !responding.local) {
+        message("[initOrca] Trying to launch local orca-server...")
+        assignInNamespace("correct_orca", function() return(TRUE), ns="plotly")
+        ##ORCA <- plotly::orca_serve(port=5151)
+        ORCA <- plotly::orca_serve(port=5151, keep_alive=TRUE, more_args="--enable-webgl")
+        ORCA$process$is_alive()
+        for(i in 1:10) {
+            res.process <- try(httr::POST("http://localhost:5151", body=plotly:::to_JSON("")),silent=TRUE)
+            responding.process <- class(res.process)=="response"
+            ##message("local ORCA is responding = ",responding.local)
+            message("trying to reach local orca...")
+            if(responding.process) {
+                break
+            }
+            Sys.sleep(2)
+        }
+        res.process  <- try(httr::POST("http://localhost:5151", body=plotly:::to_JSON("")),silent=TRUE)
+        has.response <- class(res.process)=="response"
+        responding.process <- ORCA$process$is_alive() && has.response
+        message("[initOrca] ORCA process is alive = ",ORCA$process$is_alive())
+        message("[initOrca] ORCA process has response = ",has.response)
+        message("[initOrca] ORCA process is responding = ",responding.process)
+    }
+    
+    if(responding.docker) {
+        message("[initOrca] --> using dockerized ORCA server at ",orca.server)
+    }
+
+    if(responding.local) {
+        message("[initOrca] --> using local ORCA server at http://localhost:5151")
+    }
+
+    if(responding.process) {
+        message("[initOrca] --> using local ORCA server process from Plotly")
+    }
+
+    orca.available <- responding.local || responding.docker || responding.process
+    if(!orca.available) {
+        message("[initOrca] WARNING!!! Could not connect to ORCA server")
+    }    
+    return(orca.available)
+}
 
 ##p=plot_ly(x=1:3,y=1:3,mode="markers",type="scattergl");format="pdf";width=height=800;scale=1;file="plot.pdf";server=NULL
 plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file), 
@@ -46,7 +122,7 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
     ## remove old
     unlink(file,force=TRUE)
 
-    ## See if any ORCA server is responding
+    ## See if any ORCA server is responding (docker or already local)
     if(is.null(server)) {
         srv.list <- c("http://orca-server:9091","http://localhost:9091","http://localhost:5151")
         srv.responding <- sapply(srv.list, function(s)
@@ -74,7 +150,7 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
         httr::warn_for_status(res)
         con <- httr::content(res, as = "raw")
         writeBin(con, file)
-        message("[pgx-modules::plotlyExport] exported with Orca server on ",server)
+        message("[pgx-modules::plotlyExport] exported with ORCA server on ",server)
         export.ok <- TRUE
     }
     
