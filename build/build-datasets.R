@@ -21,7 +21,7 @@ for(script in all.scripts) {
     cat(">>>>>>>>>>>>>>>>>> processing",script,"<<<<<<<<<<<<<<<\n")
     script1 <- paste0("../scripts/",script)
     try.err <- try(source(script1, local=FALSE))
-    if(class(try.err=="try-error")) {
+    if(class(try.err)=="try-error") {
         cat("WARNING:: Error in source",script,"\n")
     }
     
