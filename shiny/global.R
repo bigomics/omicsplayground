@@ -27,9 +27,9 @@ message("***** starting local ORCA server ********")
 message("*****************************************\n")
 
 ## see: pgx-module.R
-orca.available <- initOrca(launch=TRUE) 
-orca.available
-if(!orca.available) {
+ORCA <- initOrca(launch=TRUE) 
+class(ORCA)
+if(is.null(ORCA)) {
     warning("##### FATAL:: Could not connect to ORCA server. Please start ORCA. #####")
     stop()
 }

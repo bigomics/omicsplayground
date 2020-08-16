@@ -52,9 +52,11 @@ initOrca <- function(launch=TRUE) {
         responding.local <- class(res.local)=="response"
         message("[initOrca] local ORCA server at http://localhost:5151")
         message("[initOrca] local ORCA server is responding = ",responding.local)
+        orca.server = "http://localhost:5151"
     }
     
     ## If a orca docker or server is not running, we try to lauch a local orca process
+    ORCA = NULL
     if(launch && !responding.docker && !responding.local) {
         message("[initOrca] Trying to launch local orca-server...")
         assignInNamespace("correct_orca", function() return(TRUE), ns="plotly")
@@ -77,6 +79,7 @@ initOrca <- function(launch=TRUE) {
         message("[initOrca] ORCA process is alive = ",ORCA$process$is_alive())
         message("[initOrca] ORCA process has response = ",has.response)
         message("[initOrca] ORCA process is responding = ",responding.process)
+        orca.server = ORCA
     }
     
     if(responding.docker) {
@@ -88,58 +91,63 @@ initOrca <- function(launch=TRUE) {
     }
 
     if(responding.process) {
-        message("[initOrca] --> using local ORCA server process from Plotly")
+        message("[initOrca] --> using local ORCA process from Plotly")
     }
 
-    orca.available <- responding.local || responding.docker || responding.process
+    ##orca.available <- responding.docker || responding.local || responding.process
+    orca.available <- !is.null(orca.server)
     if(!orca.available) {
         message("[initOrca] WARNING!!! Could not connect to ORCA server")
     }    
-    return(orca.available)
+
+    return(orca.server)
 }
 
-##p=plot_ly(x=1:3,y=1:3,mode="markers",type="scattergl");format="pdf";width=height=800;scale=1;file="plot.pdf";server=NULL
+##require(plotly);p=plot_ly(x=1:3,y=1:3,mode="markers",type="scattergl");format="pdf";width=height=800;scale=1;file="plot.pdf";server=NULL
 plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file), 
                          scale = NULL, width = NULL, height = NULL, server=NULL)
 {
     is.docker <- file.exists("/.dockerenv")
     has.orca.bin <- file.exists("/usr/local/bin/orca")
-    has.orca.srv <- has.orca.bin && exists("ORCA") && "export" %in% names(ORCA)
+    has.orca.proc <- has.orca.bin && exists("ORCA") && "export" %in% names(ORCA)
     is.docker
     has.orca.bin
-    has.orca.srv
+    has.orca.proc
+    export.ok <- FALSE
     
-    message("[pgx-modules::plotlyExport] class(p) = ",class(p)[1])
-    message("[pgx-modules::plotlyExport] file = ",file)
-    message("[pgx-modules::plotlyExport] format = ",format)
-    message("[pgx-modules::plotlyExport] is.docker = ",is.docker)
+    message("[plotlyExport] class(p) = ",class(p)[1])
+    if(class(p)[1] != "plotly") {
+        message("[plotlyExport] ERROR : not a plotly object")
+        return(NULL)
+    }
 
-    message("[pgx-modules::plotlyExport] exists(ORCA) = ",exists("ORCA"))
-    message("[pgx-modules::plotlyExport] ORCA$port = ",ORCA$port)
-    message("[pgx-modules::plotlyExport] class(ORCA) = ",class(ORCA))
-    message("[pgx-modules::plotlyExport] ORCA is alive = ",ORCA$process$is_alive())
+    message("[plotlyExport] file = ",file)
+    message("[plotlyExport] format = ",format)
+    message("[plotlyExport] is.docker = ",is.docker)
+    message("[plotlyExport] exists(ORCA) = ",exists("ORCA"))
+    message("[plotlyExport] class(ORCA) = ",class(ORCA))
+    ##message("[plotlyExport] ORCA$port = ",ORCA$port)
+    ##message("[plotlyExport] ORCA is alive = ",ORCA$process$is_alive())
     
     ## remove old
     unlink(file,force=TRUE)
 
     ## See if any ORCA server is responding (docker or already local)
-    if(is.null(server)) {
-        srv.list <- c("http://orca-server:9091","http://localhost:9091","http://localhost:5151")
-        srv.responding <- sapply(srv.list, function(s)
-            class(try(httr::POST(s, body=plotly:::to_JSON("")),silent=TRUE))!="try-error")
-        srv.responding
-        server <- names(srv.responding)[which(srv.responding)][1]
-        if(is.na(server)) server <- NULL
-    } else {
-        server <- server[1]
-        srv.responding <- class(try(httr::POST(server, body=plotly:::to_JSON("")),silent=TRUE))!="try-error"
-        srv.responding
-        if(!srv.responding) server <- NULL
+    global.srv  <- exists("ORCA") && class(ORCA)[1]=="character"
+    global.srv
+    if(is.null(server) && !global.srv) {
+        server <- c("http://orca-server:9091","http://localhost:9091","http://localhost:5151")
     }
+    if(is.null(server) && global.srv) {
+        server <- ORCA
+    }
+    srv.responding <- sapply(server, function(s)
+        class(try(httr::POST(s, body=plotly:::to_JSON("")),silent=TRUE))!="try-error")
+    srv.responding
+    server <- names(srv.responding)[which(srv.responding)][1]
+    if(length(server)==0 || is.na(server[1])) server <- NULL
     server
-    export.ok <- FALSE
-
-    message("[pgx-modules::plotlyExport] server = ",server)
+    message("[plotlyExport] using orca server = ",server)
         
     if(!is.null(server)) {
         bod <- list(figure = plotly_build(p)$x[c("data", "layout")],
@@ -150,28 +158,28 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
         httr::warn_for_status(res)
         con <- httr::content(res, as = "raw")
         writeBin(con, file)
-        message("[pgx-modules::plotlyExport] exported with ORCA server on ",server)
+        message("[plotlyExport] --> exported with ORCA server on ",server)
         export.ok <- TRUE
     }
     
-    if(0 && has.orca.bin && !export.ok) {
-        ## BUG: currently orca() cannot write to /tmp folder
-        err <- try(orca(p, file=file, format=format, width=width, height=height))
-        export.ok <- class(err)!="try-error"
-        if(export.ok) message("[pgx-modules::plotlyExport] exported with orca()")
-    }
+    ## if(0 && has.orca.bin && !export.ok) {
+    ##     ## BUG: currently orca() cannot write to /tmp folder
+    ##     err <- try(orca(p, file=file, format=format, width=width, height=height))
+    ##     export.ok <- class(err)!="try-error"
+    ##     if(export.ok) message("[plotlyExport] --> exported with orca()")
+    ## }
     
-    if(1 && has.orca.srv && !export.ok) {
+    if(1 && has.orca.proc && !export.ok) {
         err <- try(ORCA$export(p, file=file, format=format, width=width, height=height))
         export.ok <- class(err)!="try-error"
-        if(export.ok) message("[pgx-modules::plotlyExport] exported with ORCA$export()")
+        if(export.ok) message("[plotlyExport] --> exported with ORCA$export()")
     }
     
     if(1 && !export.ok) {
         ## works only for non-GL plots
         err <- try(export(p, file))
         export.ok <- class(err)!="try-error"
-        if(export.ok) message("[pgx-modules::plotlyExport] exported with export() (deprecated)")        
+        if(export.ok) message("[plotlyExport] --> exported with export() (deprecated)")        
     }
     if(0 && !export.ok) {
         require(webshot)
@@ -179,10 +187,10 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
         htmlwidgets::saveWidget(p, tmp) 
         err <- try(webshot::webshot(url=tmp,file=file,vwidth=width*100, vheight=height*100))
         export.ok <- class(err)!="try-error"        
-        if(export.ok) message("[pgx-modules::plotlyExport] exported with webshot()")
+        if(export.ok) message("[plotlyExport] --> exported with webshot()")
     }
     if(!export.ok) {
-        message("[pgx-modules::plotlyExport] WARNING: export failed!")
+        message("[plotlyExport] WARNING: export failed!")
         if(format=="png") png(file)
         if(format=="pdf") pdf(file)
         par(mfrow=c(1,1));frame()
@@ -190,7 +198,7 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
         dev.off()
     }
 
-    message("[pgx-modules::plotlyExport] file.exists(file)=",file.exists(file))
+    message("[plotlyExport] file.exists(file)=",file.exists(file))
     export.ok <- export.ok && file.exists(file)
     return(export.ok)
 }
@@ -444,7 +452,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     ## finally copy to final exported file
                     file.copy(PNGFILE, file, overwrite=TRUE)
                     dbg("[downloadHandler.PNG] copy PNGFILE",PNGFILE,"to download file",file )
-                    dbg("[pgx-modules::downloadHandler.PNG] export to PNG done!")                    
+                    dbg("[downloadHandler.PNG] export to PNG done!")                    
                 }, message="exporting to PNG", value=0.8)
             } ## content 
         ) ## PNG downloadHandler
@@ -512,11 +520,11 @@ plotModule <- function(input, output, session, ## ns=NULL,
 
                     ## ImageMagick or pdftk
                     if(TRUE && WATERMARK) {
-                        message("[pgx-modules::plotModule] adding watermark to PDF...")
+                        message("[plotModule] adding watermark to PDF...")
                         ##addWatermark.PDF(PDFFILE)
                         addWatermark.PDF(file) 
                     }
-                    message("[pgx-modules::plotModule] export to PDF done!")
+                    message("[plotModule] export to PDF done!")
                 }, message="exporting to PDF", value=0.8)
             } ## content 
         ) ## PDF downloadHandler
