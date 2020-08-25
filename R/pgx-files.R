@@ -426,10 +426,9 @@ pgx.initDatasetFolder1 <- function( pgx.dir,
         if(class(try.error)=="try-error") {
             message(paste("[pgx.initDatasetFolder1] ERROR in loading PGX file:",pgx,". skipping\n"))
             next()
-        }        
-        
+        }                
         if(!pgx.checkObject(ngs)) {
-            message(paste("[pgx.initDatasetFolder1] ERROR in PGX object! skipping\n"))
+            message(paste("[pgx.initDatasetFolder1] INVALID PGX object",pgx,". Skipping\n"))
             next()            
         }
 
