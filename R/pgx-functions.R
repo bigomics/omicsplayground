@@ -10,7 +10,7 @@ USER.GENETEST.METHODS <- NULL
 ##=============================================================================
 
 pgx.checkObject <- function(ngs) {
-    must.have <- c("name","counts","samples","genes","model.parameters",
+    must.have <- c("counts","samples","genes","model.parameters",
                    "X","gx.meta","gset.meta","gsetX","GMT")
     not.present <- setdiff(must.have,names(ngs))
     if(length(not.present)>0) {

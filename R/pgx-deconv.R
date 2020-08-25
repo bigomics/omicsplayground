@@ -189,12 +189,14 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
     if(max(X)<100 || min(X)<0) {
         cat("WARNING:: pgx.deconvolution: is X really counts? (not logarithmic)\n")
     }
-
     mat <- as.matrix(X)
-    rownames(mat) <- toupper(gsub(".*:","",rownames(mat))) ## handle mouse??
+    rownames(mat) <- gsub(".*:","",rownames(mat)) ## strip prefix
+    rownames(mat) <- toupper(rownames(mat)) ## handle mouse??
     mat <- mat[order(-rowMeans(mat)),]
     mat <- as.matrix(mat[!duplicated(rownames(mat)),])
     head(mat)[,1:4]
+
+    rownames(ref) <- toupper(rownames(ref))
     ref <- ref[order(-rowMeans(ref)),]
     ref <- as.matrix(ref[!duplicated(rownames(ref)),])
     head(ref)[,1:4]

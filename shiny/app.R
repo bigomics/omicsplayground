@@ -111,7 +111,8 @@ if(0) {
     load("../data/tcga-brca_pub.pgx")
     load("../data/GSE22886-immune.pgx")
     load("../data/grassi2020-10x-tcells.pgx")
-    load("../data-extra/GSE98638-scliver0.pgx")    
+    load("../data-extra/GSE98638-scliver0.pgx")
+    load("../data/GSE102908-ibet.pgx")
     ngs = pgx.initialize(ngs)
 }
 
