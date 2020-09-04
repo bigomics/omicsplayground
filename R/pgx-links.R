@@ -1,3 +1,7 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
 
 tagsub <- function(s) {
     s <- gsub("\\{\\{","<i>",gsub("\\}\\}","</i>",s))  ## {{...}}

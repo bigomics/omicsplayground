@@ -1,10 +1,12 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
 ########################################################################
 ##
 ## Functions for batch correction
 ##
-## Ivo Kwee
-## 2019 BigOmics Analytics
-## no copyright
 ########################################################################
 
 ##use.design=TRUE;dist.method="cor";center.x=FALSE;replace=FALSE

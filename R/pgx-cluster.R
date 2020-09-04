@@ -1,3 +1,7 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
 
 
 ##reduce.sd=1000;reduce.pca=100;methods=c("pca","tsne","umap");dims=c(2,3)

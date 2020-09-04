@@ -1,3 +1,8 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
 imputeMedian <- function(X) {
     mx <- apply(X,1,median,na.rm=TRUE)
     mx[is.na(mx)] <- median(mx,na.rm=TRUE)

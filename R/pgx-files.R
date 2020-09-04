@@ -1,3 +1,8 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
 ##access.dirs=FILESX
 
 ##filter.opg=TRUE;from=NULL;to=NULL;unique=TRUE

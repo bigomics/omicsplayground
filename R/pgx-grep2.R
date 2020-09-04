@@ -1,3 +1,9 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
+
 ## https://cran.r-project.org/web/packages/GREP2/vignettes/vignette.html
 if(0) {
     install.packages(c("devtools", "XML", "parallel", "utils", "rentrez", "RCurl"))

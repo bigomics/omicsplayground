@@ -1,9 +1,6 @@
 ##
-##
-## This should contain computation not strictly needed for the BASIC
-## functionality of the Playground
-##
-##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
 ##extra <- c("meta.go","deconv","infer","drugs")

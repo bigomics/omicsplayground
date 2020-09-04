@@ -1,7 +1,10 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
 ## Script to run GSEA Analysis from R
 ##
-## IOR February 2014
-## Ivo Kwee
 
 GSEA.JAR="/opt/GSEA/gsea2-2.2.4.jar"
 GSEA.JAR="/opt/GSEA/gsea-3.0.jar"

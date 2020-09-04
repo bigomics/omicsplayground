@@ -1,3 +1,8 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
 require(gplots)
 bluered <- function(n=64) colorpanel(n,"blue","grey90","red")
 bluered <- function(n=64) colorpanel(n,"dodgerblue4","grey90","indianred3")

@@ -1,3 +1,8 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
 ALL.GENESET.METHODS = c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
                         ##"plage", "cuda.gsea", "enricher",
                         "gsea.permPH","gsea.permGS","gseaPR","fgsea")
