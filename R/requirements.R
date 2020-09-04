@@ -1,4 +1,9 @@
 ##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
+##
 ##
 ## NOTE: This file is supposed to run in the folder .../R/
 ##

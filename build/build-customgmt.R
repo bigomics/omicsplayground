@@ -1,3 +1,8 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
 source("../R/gx-heatmap.r")
 source("../R/gx-limma.r")
 source("../R/gx-util.r")

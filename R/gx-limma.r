@@ -1,9 +1,12 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
+
 ########################################################################
 ## Compute LIMMA from matrices or from GCT/CLS file
 ##
-## Ivo Kwee
-## 2016 Institute of Oncology Research
-## no copyright
 ########################################################################
 
 require(limma)

@@ -1,3 +1,8 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
 source("../R/gx-util.r")
 source("../R/gset-gsea.r")
 source("../R/gset-fisher.r")

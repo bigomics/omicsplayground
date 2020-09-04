@@ -1,4 +1,7 @@
-
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
 
 ##x=gx;y=ngs$samples$group;bee=bar=TRUE;offx=3;sig.stars=FALSE;xoff=0;srt=60
 gx.b3plot <- function(x, y, width=1, bar=TRUE, bee=TRUE, sig.stars=FALSE,

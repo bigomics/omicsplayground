@@ -1,7 +1,6 @@
 ##
 ##
 ## https://www.r-bloggers.com/deploying-an-r-shiny-app-with-docker/
-##
 ## https://www.bjoern-hartmann.de/post/learn-how-to-dockerize-a-shinyapp-in-7-steps/
 ##
 

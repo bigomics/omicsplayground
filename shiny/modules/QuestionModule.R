@@ -1,3 +1,8 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
 
 QUESTIONS.ANSWERS <- list(
     c("Would you recommend Omics Playground to your colleagues?","no|maybe|yes|sure|definitely!"),

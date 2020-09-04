@@ -1,3 +1,8 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
 ##X=comboX;x.drugs=combo.drugs
 ##X=comboX;x.drugs=combo.drugs
 ##nprune=250;res.mono=NULL;ntop=10;nsample=20

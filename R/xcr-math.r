@@ -1,3 +1,8 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
 ##matlist=list(S1,S2);weights=1
 matrix.mean.SAVE <- function( matlist, weights=1) {
     matx <- lapply(matlist,function(x) as.vector(x))

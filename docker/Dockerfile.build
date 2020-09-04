@@ -1,6 +1,8 @@
-## From https://www.r-bloggers.com/deploying-an-r-shiny-app-with-docker/
-## and https://www.bjoern-hartmann.de/post/learn-how-to-dockerize-a-shinyapp-in-7-steps/
 ##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
 
 #------------------------------------------------------------
 # Start from lastest base+data image
