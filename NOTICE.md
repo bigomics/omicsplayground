@@ -1,5 +1,11 @@
 # NOTICE
 
+BigOmics Analytics OmicsPlaygroud
+
+Copyright (c) 2020 BigOmics Analytics
+
+This product includes software developed at BigOmics Analytics
+(http://www.bigomics.ch/).
 
 ## Source Code
 
@@ -7,13 +13,11 @@ The project maintains the following source code repositories:
 
  * https://github.com/bigomics/playground.git
 
+## Authors
 
-## Coding practices
-
-- Refrain as much as possible to use library() and require() within
-  functions. Use '::' instead.
-- 
-
+Omics Playground is written by:
+ - Ivo Kwee <kwee@bigomics.ch>
+ - Murodzhon Akmedov <akhmedov@bigomics.ch>
 
 ## Third-party Content
 
