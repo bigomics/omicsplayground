@@ -3,7 +3,6 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-## "any(rownames "
 
 ngs.getGeneAnnotation <- function(genes)
 {

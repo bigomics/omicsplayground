@@ -146,8 +146,10 @@ pgx.parseAccessLogs <- function(logs.dir, filter.opg=TRUE, from=NULL, to=NULL,
     } else {
         tt <- table(as.character(acc$country_name))
     }
+    cc <- country_codes[names(tt)]
+    names(cc) <- names(tt)
     df <- data.frame( country_name = names(tt),
-                     country_code = country_codes[names(tt)],
+                     country_code = cc,
                      count = (as.integer(tt)))
     df <- df[order(-df$count),]
     sum(df$count)
