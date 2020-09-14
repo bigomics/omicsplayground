@@ -80,6 +80,8 @@ opt <- pgx.readOptions(file="OPTIONS")
 ## opt$AUTHENTICATION = "none"
 ## opt$AUTHENTICATION = "password"
 ## opt$AUTHENTICATION = "register"
+opt$DEV_VERSION=TRUE
+
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
     message("[ENV] overriding PLAYGROUND_AUTHENTICATION = ",auth)
@@ -91,6 +93,7 @@ SHOW_QUESTIONS = FALSE
 DEV.VERSION    = opt$DEV_VERSION && dir.exists("../../omicsplayground-dev")
 USER_MODE      = opt$USER_MODE
 AUTHENTICATION = opt$AUTHENTICATION
+DEV.VERSION
 
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
@@ -104,11 +107,9 @@ pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 source("../R/pgx-init.R", local=TRUE)  ## pass local vars
 ##source("../R/pgx-functions.R", local=TRUE)  ## pass local vars
 
-if(0) {
-    
+if(0) {    
     ##PGX.DIR="../test/"
-    ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
-    
+    ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl.pgx")
     load("../data/GSE10846-xgreta.pgx")
@@ -129,7 +130,7 @@ MODULES <- c("load","view","clust","expr","enrich","isect","func",
              "word","drug","sig","scell","cor","bio","cmap",
              "tcga","bc","multi","qa")
 if(is.null(opt$MODULES_ENABLED)) opt$MODULES_ENABLED = MODULES
-if(is.null(opt$MODULES_DISNABLED)) opt$MODULES_DISNABLED = NA
+if(is.null(opt$MODULES_DISABLED)) opt$MODULES_DISABLED = NA
 ENABLED  <- array(MODULES %in% opt$MODULES_ENABLED, dimnames=list(MODULES))
 DISABLED <- array(MODULES %in% opt$MODULES_DISABLED, dimnames=list(MODULES))
 ENABLED  <- ENABLED & !DISABLED
@@ -143,9 +144,9 @@ for(m in modules) {
 }
 
 if(DEV.VERSION && dir.exists("../../omicsplayground-dev")) {
-    xmodules <- dir("../../omicsplayground-dev/shiny/modules", pattern="Module..R$")
+    xmodules <- dir("../../omicsplayground-dev/shiny/modules", pattern="Module.R$")
     for(m in xmodules) {
-        message("[MAIN] loading module ",m)
+        message("[MAIN] loading extra module ",m)
         source(paste0("../../omicsplayground-dev/shiny/modules/",m), local=TRUE)
     }
     ENABLED[c("tcga","bc","multi")] <- TRUE
