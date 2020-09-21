@@ -2,9 +2,68 @@
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
+##
 
 
-##reduce.sd=1000;reduce.pca=100;methods=c("pca","tsne","umap");dims=c(2,3)
+##reduce.sd=1000;reduce.pca=100;methods=c("pca","tsne","umap");dims=c(2,3);umap.pkg="uwot"
+pgx.clusterSamples2 <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3),
+                                reduce.sd = 1000, reduce.pca = 100,
+                                scale.rows=TRUE, rank.tf=TRUE, umap.pkg="uwot" )
+{
+
+    X <- log2(1 + pgx$counts)
+    X <- limma::normalizeQuantiles(X)
+    if(scale.rows) X <- X  - rowMeans(X)
+    dim(X)
+    sdx <- apply(X,1,sd)
+    X <- X[head(order(-sdx),reduce.sd),]
+    dim(X)
+    
+    clust.pos <- pgx.clusterBigMatrix(X, methods=methods, dims=dims,
+                                      reduce.sd=-1, reduce.pca=reduce.pca,
+                                      umap.pkg=umap.pkg )
+
+    pgx$cluster <- NULL
+    pgx$cluster$pos  <- clust.pos
+
+    meta.pos <- do.call(cbind, clust.pos)
+    if(rank.tf) meta.pos <- apply(meta.pos,2,rank) ## ??
+    meta.pos <- scale(meta.pos)
+    dim(meta.pos)
+
+    km.sizes <- c(2,3,4,5,7,10,15,20,25,50,100)
+    km.sizes <- km.sizes[km.sizes < nrow(meta.pos)]
+
+    ## perform K-means
+    message("perform K-means...")
+    km <- lapply(km.sizes, function(k) kmeans(meta.pos, k, iter.max=10))
+    km.clust <- do.call(cbind,lapply(km,function(r) r$cluster))
+    dim(km.clust)
+    colnames(km.clust) <- paste0("kmeans.",km.sizes)    
+    pgx$cluster$index[["kmeans"]] <- km.clust
+
+    ## perform hclust (on positions)
+    message("perform hclust (on positions)...")
+    hc <- hclust( dist(meta.pos[,]), method="ward.D")
+    hc.clust <- lapply(km.sizes, function(k) cutree(hc,k))
+    hc.clust <- do.call(cbind, hc.clust)
+    colnames(hc.clust) <- paste0("hclust.",km.sizes)    
+    pgx$cluster$index[["hclust"]] <- hc.clust
+
+    ## perform hclust (on original data)
+    message("perform hclust (on data)...")
+    dd <- dist(t(X[,]))
+    dd <- as.dist(1 - cor(X))
+    hx <- fastcluster::hclust( dd, method="ward.D")
+    hx.clust <- lapply(km.sizes, function(k) cutree(hx,k))
+    hx.clust <- do.call(cbind, hx.clust)
+    colnames(hx.clust) <- paste0("xclust.",km.sizes)    
+    pgx$cluster$index[["xclust"]] <- hx.clust
+    
+    return(pgx)
+}
+
+##reduce.sd=1000;reduce.pca=100;methods=c("pca","tsne","umap");dims=c(2,3);umap.pkg="uwot"
 pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
                                  reduce.sd = 1000, reduce.pca = 100, umap.pkg="uwot" )
 {
@@ -145,7 +204,7 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
 
 
 ##skipifexists=0;perplexity=NULL;sv.rank=-1;prefix="C";kclust=1;ntop=1000;fromX=FALSE;prior.count=1;mean.center=TRUE;method="tsne";determine.clusters=1;dims=c(2,3);find.clusters=TRUE;row.center=TRUE;row.scale=FALSE;clust.detect="louvain"
-pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
+pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=30,
                                ntop=1000, sv.rank=-1, prefix="C", 
                                fromX=FALSE, is.logx=FALSE,
                                kclust=1, prior.count=NULL, 
@@ -188,7 +247,7 @@ pgx.clusterSamples <- function(ngs, skipifexists=FALSE, perplexity=NULL,
 }
 
 ##is.logx=FALSE;ntop=1000
-pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
+pgx.clusterSamplesFromMatrix <- function(counts, perplexity=30,
                                          ntop=1000, sv.rank=-1, prefix="C", 
                                          is.logx=FALSE, 
                                          prior.count=NULL, dims=c(2,3),
@@ -230,7 +289,8 @@ pgx.clusterSamplesFromMatrix <- function(counts, perplexity=NULL,
     ##sX = sX + 0.001*matrix(rnorm(length(sX)),nrow(sX),ncol(sX))
 
     ## ------------ find t-SNE clusters
-    max.perplexity <-  max(1,min(30, round((ncol(sX)-1)/4)))
+    ##max.perplexity <-  max(1,min(30, round((ncol(sX)-1)/4)))
+    max.perplexity <-  max(1,round((ncol(sX)-1)/4))
     if(is.null(perplexity)) {
         perplexity  <- max.perplexity
     }

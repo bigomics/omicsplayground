@@ -61,9 +61,19 @@ length(gmt1)
 saveRDS( X1[,], file="../lib/l1000_es_n20d1043.rds")
 saveRDS( X1[,], file="../lib/l1000_es_n15d3756.rds")
 
-
 if(0) {
-    system.time( X <- readRDS(file="../files/l1000_es_5685drugs.rds"))
+    library(data.table)
+    X <- readRDS(file="../lib/l1000_es_n15d3756.rds")
+    X <- readRDS(file="../lib/l1000_es_n20d1043.rds")
+    dim(X)
+    
+    system.time( X <- readRDS(file="../lib/l1000_es.rds") )
+    system.time( X <- data.table::fread(file="../lib/l1000_es.csv.gz") )
+    dim(X)
+    X1 <- as.matrix(fread("../lib/l1000_es.csv.gz"), rownames=1)
+    dim(X1)
+    head(X1)[,1:4]
+    
     source("../R/pgx-drugs.R")
     source("../R/pgx-functions.R")
     load("../pgx/guarda2019-myc-12k-LT.pgx")
