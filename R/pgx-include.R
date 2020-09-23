@@ -86,4 +86,5 @@ source(file.path(RDIR,"compute2-genes.R"))
 source(file.path(RDIR,"compute2-genesets.R"))
 source(file.path(RDIR,"compute2-extra.R"))
 source(file.path(RDIR,"pgx-compute.R"))
+source(file.path(RDIR,"pgx-singlecell.R"))
 
