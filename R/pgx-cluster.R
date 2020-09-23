@@ -265,22 +265,23 @@ pgx.clusterSamplesFromMatrix <- function(counts, perplexity=30,
     sX <- counts
     is.logx    
     if(is.logx) sX <- 2**sX
-    cat("[pgx.clusterSamplesFromMatrix] dim(sX)=",dim(sX),"\n")
 
     if(is.null(prior.count) || prior.count>0 ) {
         if(is.null(prior.count)) {
-            qq <- quantile(as.vector(sX[sX>0]),probs=0.50) ## at 50%!!
+            qq <- quantile(as.vector(sX[sX>0]),probs=0.10) ## at 10%
             qq
             prior.count <- qq
         }
         cat("[pgx.clusterSamplesFromMatrix] prior.count=",prior.count,"\n")
-        sX <- log2(prior.count + sX)
+        sX <- (prior.count + sX)
     }
+
+    sX <- log2(sX)
     sX <- limma::normalizeQuantiles(sX)  ## in linear space
     if(row.center) sX <- sX - rowMeans(sX,na.rm=TRUE)
     sX = head( sX[order(-apply(sX,1,sd)),], ntop)
     ## sX = t(scale(t(sX),scale=TRUE))  ## really? or just centering?
-    ##sX = t(scale(t(sX),scale=FALSE))  ## really? or just centering?
+    ## sX = t(scale(t(sX),scale=FALSE))  ## really? or just centering?
     if(row.scale) sX <- (sX / apply(sX,1,sd,na.rm=TRUE))
     
     dim(sX)
