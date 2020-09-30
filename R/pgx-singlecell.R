@@ -60,57 +60,88 @@ pgx.poolCells <- function(counts, pos, npools, sample.id, cluster) {
 }
 
 
-## qc.filter=FALSE;filter.a=2.5
-pgx.SeuratIntegration <- function(counts, batch, qc.filter=TRUE, filter.a=2.5) {
+## qc.filter=FALSE;filter.a=2.5;sct=FALSE
+## qc.filter=FALSE;filter.a=2.5;sct=TRUE
+pgx.SeuratBatchCorrect <- function(counts, batch, qc.filter=FALSE, sct=FALSE) {
     
     ##
-    ## From Seurat vignette: Integration / batch correction
+    ## From Seurat vignette: Integration/batch correction. Note there
+    ## is no QC filtering for samples on ribo/mito content. You need
+    ## to do that before.
     ##
     library(Seurat)
-    message("[pgx.SeuratIntegration] Processing batches...")        
+    nbatch <- length(unique(batch))
+    message("[pgx.SeuratIntegration] Processing ",nbatch," batches...")        
     obj.list <- list()
     i=1
     b=batch[1]
     batches <- unique(batch)
+    batches
     for(i in 1:length(batches)) {
         sel <- which(batch==batches[i])
         ##sel <- head(sel,200)
         counts1 <- counts[,sel]
-        if(qc.filter) {
-            ## QC prefiltering
-            counts1 <- pgx.SeuratFiltering(counts1, a=filter.a)  
+        obj <- CreateSeuratObject(counts1)
+        if(sct) {
+            obj <- SCTransform(obj, vars.to.regress = NULL, verbose = FALSE)
+            ##obj <- SCTransform(obj)
+        } else {
+            obj <- NormalizeData(obj, normalization.method="LogNormalize",
+                                 scale.factor=10000, verbose=FALSE)
+            obj <- FindVariableFeatures(obj, selection.method="vst", verbose=FALSE)
         }
-        obj <- CreateSeuratObject(counts1)    
-        obj <- NormalizeData(obj, normalization.method = "LogNormalize", scale.factor = 10000, verbose=FALSE)
-        obj <- FindVariableFeatures(obj, selection.method="vst", verbose=FALSE)
         obj$batch <- b
-        ##obj$treatment <- treatment[i]
         obj.list[[i]] <- obj
+    }
+    
+    anchor.features=NULL
+    sct
+    if(sct) {
+        ## See: https://satijalab.org/seurat/v3.0/integration.html
+        anchor.features <- SelectIntegrationFeatures(
+            object.list = obj.list, nfeatures = 3000)
+        obj.list <- PrepSCTIntegration(
+            object.list = obj.list,
+            anchor.features = anchor.features, 
+            verbose = FALSE)        
+    } else {
+        anchor.features=2000
     }
     
     message("[pgx.SeuratIntegration] Finding anchors...")
     options(future.globals.maxSize = 8*1024^3) ## set to 8GB
-    NUM.CC = 20
+    ##NUM.CC=10;k.filter=10
+    NUM.CC = max(min(20, min(table(batch))-1),1)
+    NUM.CC
     ndims <- sapply(obj.list,ncol)
-    ndims
-    k.filter <- min(min(ndims),200)
+    mindim <- max(min(ndims)-1,1)
+    mindim
+    normalization.method = ifelse(sct,"SCT","LogNormalize")
+    message("[pgx.SeuratIntegration] NUM.CC = ",NUM.CC)
+    message("[pgx.SeuratIntegration] normalization.method = ",normalization.method)
     anchors <- FindIntegrationAnchors(
-        obj.list, dims = 1:NUM.CC, k.filter=k.filter,
-        anchor.features = nrow(counts),
+        obj.list, dims = 1:NUM.CC,
+        k.filter = min(200,mindim),
+        k.anchor = min(5,mindim),
+        k.score = min(30,mindim),
+        anchor.features = anchor.features,
+        normalization.method = normalization.method,
         verbose = FALSE)
-
-    message("[pgx.SeuratIntegration] Integration data...")    
-    integrated <- IntegrateData(anchorset = anchors,
-                                dims = 1:NUM.CC,
-                                verbose=FALSE)
+    
+    message("[pgx.SeuratIntegration] Integrating data...")    
+    integrated <- IntegrateData(
+        anchorset = anchors,
+        ##k.weight = min(100,mindim),
+        dims = 1:NUM.CC,
+        normalization.method = normalization.method,        
+        verbose = FALSE)
     dim(integrated)
-    ## obj <- CreateSeuratObject(counts)    
-    ## obj <- AddMetaData(obj, sample.id, col.name = "Sample.id")    
-    ## obj
-    ## slotNames(obj[["RNA"]])
-    ## table(Idents(obj))    
-    integrated.matrix <- as.matrix(integrated$integrated@data)
+    
+    key <- ifelse(sct, "SCT", "integrated")
+    integrated.matrix <- as.matrix(integrated[[key]]@data)
+    integrated.matrix <- exp(integrated.matrix)-1 ## natural log
     dim(integrated.matrix)
+    
     return(integrated.matrix)    
 }
 
@@ -168,9 +199,6 @@ pgx.SeuratFiltering <- function(counts, a=2.5)
     counts <- counts[,sel]
     counts
 }
-
-
-
 
 
 if(0) {
@@ -268,9 +296,9 @@ if(0) {
     dim(obj)
     
     ## total count normalization
-    hist(colSums(2**obj[["RNA"]]@data[,1:1000]),breaks=100)
+    hist(colSums(exp(obj[["RNA"]]@data[,1:1000])),breaks=100)
     obj <- NormalizeData(obj, normalization.method = "LogNormalize", scale.factor = 10000)    
-    hist(colSums(2**obj[["RNA"]]@data[,1:1000]),breaks=100)
+    hist(colSums(exp(obj[["RNA"]]@data[,1:1000])),breaks=100)
     
     ## Find highly variable top 2000 genes
     obj <- FindVariableFeatures(obj, selection.method = "vst", nfeatures = 2000)
@@ -283,3 +311,4 @@ if(0) {
     obj <- RunPCA(obj, features=VariableFeatures(object=obj))
     ElbowPlot(obj)    
 }
+

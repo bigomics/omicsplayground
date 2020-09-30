@@ -336,13 +336,13 @@ pgx.clusterSamplesFromMatrix <- function(counts, perplexity=30,
             pos2 = Rtsne( t(sX), dim=2, perplexity=perplexity,
                          ##pca = TRUE, partial_pca = TRUE,                         
                          check_duplicates=FALSE, num_threads=0)$Y
-            colnames(pos2) <- c("tnse_1","tnse_2")
+            colnames(pos2) <- c("tsne_1","tsne_2")
         }
         if(3 %in% dims) {
             pos3 = Rtsne( t(sX), dim=3, perplexity=perplexity,
                          ## pca = TRUE, partial_pca = TRUE,
                          check_duplicates=FALSE, num_threads=0)$Y
-            colnames(pos3) <- c("tnse_1","tnse_2","tnse_3")
+            colnames(pos3) <- c("tsne_1","tsne_2","tsne_3")
         }
     } else if(method=="pca") {
         require(irlba)
