@@ -116,7 +116,7 @@ remotes::install_github("dreamRs/particlesjs")
 remotes::install_github("JohnCoene/waiter")
 
 ##---------------------------------------------------------------------
-## ONLY DEV.VERSION (single-cell trajectories)
+## ONLY DEV.MODE (single-cell trajectories)
 ##---------------------------------------------------------------------
 if(1) {
     ## ---- monocle3 (only DEV!!! many install problems in R 3.5.2!!!)
@@ -140,9 +140,10 @@ devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data"
 ##---------------------------------------------------------------------
 ## make sure local ones are preferred
 ##---------------------------------------------------------------------
+##force=TRUE
 
 install.pkgs(c("RcppParallel"))
-devtools::install_github('wt2015-github/FastGGM')
+devtools::install_github('wt2015-github/FastGGM', force=TRUE)
 install.pkgs(c("HiddenMarkov","coin","rjags","future","argparse"))
 install.pkg("rjags", force=TRUE)
 ##install.packages("../ext/packages/infercnv_1.1.3mod.tar.gz",repos=NULL,type="source")  ## old version
@@ -150,7 +151,7 @@ BiocManager::install("infercnv")
 install.pkgs(c("KEGGREST","pathview"), force=TRUE)
 
 ##---------------------------------------------------------------------
-## remove unneccessary big packages...
+## remove unneccessary big packages??
 ##---------------------------------------------------------------------
 BIG.NOTUSED
-remove.pkgs(BIG.NOTUSED)
+## remove.pkgs(BIG.NOTUSED)

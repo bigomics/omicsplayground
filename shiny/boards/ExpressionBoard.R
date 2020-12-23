@@ -3,6 +3,8 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+message(">>> sourcing ExpressionBoard")
+
 ExpressionInputs <- function(id) {
     ns <- NS(id)  ## namespace
     tagList(
@@ -41,7 +43,7 @@ ExpressionUI <- function(id) {
     )
 }
 
-ExpressionModule <- function(input, output, session, env)
+ExpressionBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
 
@@ -117,7 +119,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     
     observeEvent( input$gx_info, {
         showModal(modalDialog(
-            title = HTML("<strong>Differential Expression Analysis Module</strong>"),
+            title = HTML("<strong>Differential Expression Analysis Board</strong>"),
             HTML(gx_infotext),
             easyClose = TRUE, size="l"))
     })
@@ -253,7 +255,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ## DE table filtered by FDR and gene family
         ##
         ##
-        dbg("[ExpressionModule::sigDiffExprTable] reacted")
+        dbg("[ExpressionBoard::sigDiffExprTable] reacted")
 
         ngs = inputData()
         ##if(is.null(ngs)) return(NULL)
@@ -307,7 +309,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ## limit number of rows???
         ## res <- head(res, 1000)
 
-        dbg("[ExpressionModule::sigDiffExprTable] done!")
+        dbg("[ExpressionBoard::sigDiffExprTable] done!")
         
         return(res)
     })
@@ -1095,11 +1097,11 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     expr_genetable.RENDER <- reactive({
         
-        dbg("[ExpressionModule::expr_genetable.RENDER] reacted")
+        dbg("[ExpressionBoard::expr_genetable.RENDER] reacted")
         
         res <- sigDiffExprTable()
         ##req(res)
-        dbg("[ExpressionModule::expr_genetable.RENDER] dim(res)=",dim(res),"\n")
+        dbg("[ExpressionBoard::expr_genetable.RENDER] dim(res)=",dim(res),"\n")
         
         if(is.null(res) || nrow(res)==0) return(NULL)
         
@@ -1110,7 +1112,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if("gene_title" %in% colnames(res)) res$gene_title = shortstring(res$gene_title,50)
         rownames(res) = sub(".*:","",rownames(res))
 
-        if(!DEV.VERSION) {
+        if(!DEV) {
             kk = grep("meta.fx|meta.fc|meta.p",colnames(res),invert=TRUE)
             res <- res[,kk,drop=FALSE]
         }
@@ -1121,8 +1123,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
         numeric.cols <- which(sapply(res, is.numeric))
         numeric.cols <- colnames(res)[numeric.cols]
-        dbg("[ExpressionModule::expr_genetable.RENDER] numeric.cols=",numeric.cols)
-        dbg("[ExpressionModule::expr_genetable.RENDER] done!")
+        dbg("[ExpressionBoard::expr_genetable.RENDER] numeric.cols=",numeric.cols)
+        dbg("[ExpressionBoard::expr_genetable.RENDER] done!")
         
         DT::datatable( res, rownames=FALSE,
                       class = 'compact cell-border stripe hover',                  
@@ -1442,4 +1444,4 @@ two conditions. Determine which genes are significantly downregulated or overexp
     outx <- list(selected_gxmethods=selected_gxmethods)
     return(outx)
     
-} ## end-of-ExpressionModule
+} ## end-of-ExpressionBoard

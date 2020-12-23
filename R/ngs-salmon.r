@@ -29,7 +29,7 @@ ngs.rawSalmon <- function(sampleTable, gencode, txi=NULL)
     }
 
     keys = rownames(txi$counts)
-    geneTable = ngs.getGeneAnnotation(keys, keytype="ENSEMBL", gencode)
+    geneTable = ngs.getGeneAnnot(keys, keytype="ENSEMBL", gencode)
 
     ## we like this..
     probegene = paste0(rownames(geneTable),":",geneTable$gene_name)
@@ -170,7 +170,7 @@ ngs.tximportSalmon <- function(sf.files, count.type="lengthScaledTPM", organism=
 
 ##keys = sub("[.].*$","",rownames(txi$counts))
 ##gencode <- read.delim("files/ngs/Gencode.v22.Genes.Annotation.txt")
-ngs.getGeneAnnotation <- function(keys, keytype, gencode)
+ngs.getGeneAnnot <- function(keys, keytype, gencode)
 {
 
     ## add more gene annotation

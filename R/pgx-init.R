@@ -3,19 +3,14 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+## NOTE: needs global variables file
 
-## source(file.path(RDIR,"pgx-include.R"),local=TRUE)
-## you need to override this!!!
-PRO.VERSION=FALSE
-DEV.VERSION=FALSE
-
-## some custom code
-##code.textInput
-##FILESX = sub("lib$","libx",FILES)
 
 ##-----------------------------------------------------------------------------
-## Added GLOBAL info
+## GLOBAL variables
 ##-----------------------------------------------------------------------------
+
+source(file.path(RDIR,"pgx-functions.R"),local=TRUE)  ## pass local vars
 
 ## Caching the init files
 INIT.FILE <- file.path(FILES,"global-init.rda")
@@ -113,28 +108,14 @@ if(file.exists(INIT.FILE)) {
     
 }
 
+pgx.initialize.SAVE <- function(ngs) {
 
-##================================================================================
-##========================== FUNCTIONS ===========================================
-##================================================================================
-
-pgx.getFamilies <- function(ngs, nmin=10, extended=FALSE) {
-    if(extended) {
-        fam <- grep("^[<].*|^FAMILY|^TISSUE|^COMPARTMENT|^CELLTYPE|^GOCC|^DISEASE|^CUSTOM",
-                    names(GSETS),value=TRUE)
-        fam <- grep("^[<].*|^FAMILY|^COMPARTMENT|^CUSTOM",names(GSETS),value=TRUE)
-    } else {
-        fam <- grep("^[<].*|^FAMILY|^CUSTOM",names(GSETS),value=TRUE)
-    }
-    xgenes <- toupper(rownames(ngs$X))
-    xgenes <- toupper(ngs$genes$gene_name)
-    jj <- which(sapply(GSETS[fam],function(x) sum(x %in% xgenes)) >= nmin)
-    sort(fam[jj])
-}
-
-pgx.initialize <- function(ngs) {
-
-    message("[pgx-init:initialize] initializing ngs object")
+    ##---------------------------------------------------------------------
+    ## This function must be called after creation of a PGX/NGS object
+    ## and include some cleaning up and updating some internal
+    ## structures to keep compatibility with new/old versions.
+    ##---------------------------------------------------------------------
+    message("[pgx.initialize] initializing ngs object")
 
     ##----------------- check object
     obj.needed <- c("genes", ## "deconv","collections", "families", "counts",
@@ -150,13 +131,14 @@ pgx.initialize <- function(ngs) {
     }
 
     vars.needed <- c("group")
-    if(!all(vars.needed %in% colnames(ngs$samples))) {
+    if(FALSE && !all(vars.needed %in% colnames(ngs$samples))) {
         vars.missing <- setdiff(vars.needed, colnames(ngs$samples))
         msg <- paste("invalid ngs object. missing variables in object: ",vars.missing)
         showNotification(msg,duration=NULL,type="error")
         ##stop(msg)
         return(NULL)
     }
+    
     ## for COMPATIBILITY: if no counts, estimate from X
     if(is.null(ngs$counts)) {
         cat("WARNING:: no counts table. estimating from X\n")
@@ -181,11 +163,11 @@ pgx.initialize <- function(ngs) {
     ## clean up: ngs$Y is a cleaned up ngs$samples
     ngs$samples$barcode <- NULL
     ngs$samples <- ngs$samples[,which(colMeans(is.na(ngs$samples))<1),drop=FALSE]
-    kk = grep("group|batch|lib.size|norm.factor|repl|donor|clone|sample|barcode",
+    kk = grep("batch|lib.size|norm.factor|repl|donor|clone|sample|barcode",
               colnames(ngs$samples),invert=TRUE)
-    kk <- unique( c(grep("^group$",colnames(ngs$samples)),kk))
+    ##kk <- unique( c(grep("^group$",colnames(ngs$samples)),kk))
     ngs$Y = ngs$samples[colnames(ngs$X),kk,drop=FALSE]
-    ngs$Y <- tidy.dataframe(ngs$Y) ## NEED CHECK!!!
+    ngs$Y <- type.convert(ngs$Y)   ## autoconvert to datatypes
     
     ##----------------------------------------------------------------
     ## Tidy up genes matrix
@@ -271,7 +253,8 @@ pgx.initialize <- function(ngs) {
     ## ONLY categorical variables for the moment!!!
     k1 = pgx.getCategoricalPhenotypes(ngs$Y, min.ncat=2, max.ncat=20)
     k2 = grep("OS.survival",colnames(ngs$Y),value=TRUE)
-    kk = sort(unique(c("group",k1,k2)))
+    ##kk = sort(unique(c("group",k1,k2)))
+    kk = sort(unique(c(k1,k2)))
     ngs$Y <- ngs$Y[,kk]
     colnames(ngs$Y)
     ngs$samples <- ngs$Y    ## REALLY?

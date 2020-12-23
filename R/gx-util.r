@@ -4,7 +4,11 @@
 ##
 
 imputeMedian <- function(X) {
-    mx <- apply(X,1,median,na.rm=TRUE)
+    if(NCOL(X)==1) {
+        mx <- median(X,na.rm=TRUE)
+    } else {
+        mx <- apply(X,1,median,na.rm=TRUE)
+    }
     mx[is.na(mx)] <- median(mx,na.rm=TRUE)
     impX <- X
     impX[is.na(impX)] <- 0

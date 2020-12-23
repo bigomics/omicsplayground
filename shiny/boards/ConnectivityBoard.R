@@ -3,6 +3,9 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+message(">>> sourcing ConnectivityBoard")
+##source("global.R")
+
 library(rhdf5)
 
 ConnectivityInputs <- function(id) {
@@ -26,7 +29,7 @@ ConnectivityUI <- function(id) {
     )
 }
 
-ConnectivityModule <- function(input, output, session, env)
+ConnectivityBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
     ## fullH = session$clientdata$output_foo_height
@@ -104,7 +107,7 @@ ConnectivityModule <- function(input, output, session, env)
     
     observeEvent( input$cmap_info, {
         showModal(modalDialog(
-            title = HTML("<strong>Connectivity Analysis Module</strong>"),
+            title = HTML("<strong>Connectivity Analysis Board</strong>"),
             HTML(cmap_infotext),
             easyClose = TRUE, size="l" ))
     })
@@ -501,7 +504,7 @@ ConnectivityModule <- function(input, output, session, env)
         abs_score = TRUE
         abs_score <- input$cmap_abs_score
         ntop = 100
-        ##if(DEV.VERSION) ntop <- input$cmap_le_ntop
+        ##if(DEV) ntop <- input$cmap_le_ntop
         
         if(no.le && abs_score==TRUE) {            
             
@@ -628,7 +631,7 @@ ConnectivityModule <- function(input, output, session, env)
         df <- df[abs(df$score)>0,,drop=FALSE]
         
         ##--------- temporarily add LINCS descriptive name !!!!!!!!!!!!!! -----------------
-        if(DEV.VERSION && input$cmap_sigdb=="sigdb-lincs.h5" && !is.null(PERTINFO)) {
+        if(DEV && input$cmap_sigdb=="sigdb-lincs.h5" && !is.null(PERTINFO)) {
             dd <- sub("\\|.*","", df$pathway)
             pert_iname = PERTINFO[match(dd,rownames(PERTINFO)),"pert_iname"]
             df$pathway <- paste0(df$pathway," (",pert_iname,")")
@@ -2218,4 +2221,4 @@ ConnectivityModule <- function(input, output, session, env)
     ##outputOptions(output, "cmapPairsPlot_UI", suspendWhenHidden=FALSE) ## important!!!
 
     
-} ## end-of-Module 
+} ## end-of-Board 

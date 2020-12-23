@@ -3,7 +3,8 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-dbg(">>> sourcing BiomarkerModule \n")
+message(">>> sourcing BiomarkerModule")
+## source("global.R")
 
 BiomarkerInputs <- function(id) {
     ns <- NS(id)  ## namespace
@@ -26,7 +27,7 @@ BiomarkerUI <- function(id) {
     ui
 }
 
-BiomarkerModule <- function(input, output, session, env)
+BiomarkerBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
     inputData <- env[["load"]][["inputData"]]
@@ -34,13 +35,13 @@ BiomarkerModule <- function(input, output, session, env)
     rowH  = 320  ## row height of panel
     imgH  = 260
         
-    description = "<b>Biomarker Module.</b> Select biomarkers that can be used for
+    description = "<b>Biomarker Board.</b> Select biomarkers that can be used for
 classification or prediction purposes. The phenotype of interest can
 be multiple categories (classes) or patient survival data."
     output$description <- renderUI(HTML(description))
 
     pdx_infotext =
-        "The <strong>Biomarker Module</strong> performs the biomarker selection that can be used for classification or prediction purposes.
+        "The <strong>Biomarker Board</strong> performs the biomarker selection that can be used for classification or prediction purposes.
 
 <br><br>To better understand which genes, mutations, or gene sets influence the final phenotype the most, Playground calculates a variable importance score for each feature using state-of-the-art machine learning algorithms, including LASSO, elastic nets, random forests, and extreme gradient boosting, and provides the top 50 features according to cumulative ranking by the algorithms. By combining several methods, the platform aims to select the best possible biomarkers.
 
@@ -76,7 +77,7 @@ be multiple categories (classes) or patient survival data."
             tipify(actionButton(ns("pdx_runbutton"), label="Compute", class="run-button"),
                    "Click to start biomarker computation.", placement="right")
         )
-        if(DEV.VERSION) {
+        if(DEV) {
             uix <- tagList(
                 hr(),br(),
                 h6("Developer options:"),
@@ -95,7 +96,7 @@ be multiple categories (classes) or patient survival data."
     observeEvent( input$pdx_info, {
         dbg("<module-biomarker::observe pdxinfo> reacted")
         showModal(modalDialog(
-            title = HTML("<strong>Biomarker Module</strong>"),
+            title = HTML("<strong>Biomarker Board</strong>"),
             HTML(pdx_infotext),
             easyClose = TRUE, size="l"))
     })
@@ -105,7 +106,7 @@ be multiple categories (classes) or patient survival data."
     ##}) %>% debounce(3000)
 
     input_pdx_select <- reactive({
-        dbg("[BiomarkerModule:<input_pdx_select>]  reacted")
+        dbg("[BiomarkerBoard:<input_pdx_select>]  reacted")
         gg <- input$pdx_select
         if(is.null(gg)) return(NULL)
         ##req(gg)
@@ -119,7 +120,7 @@ be multiple categories (classes) or patient survival data."
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
-        dbg("[BiomarkerModule::observe1] reacted")
+        dbg("[BiomarkerBoard::observe1] reacted")
         ct <- colnames(ngs$Y)
         ##ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
         ct <- grep("sample|patient|donor",ct,value=TRUE,invert=TRUE)
@@ -130,7 +131,7 @@ be multiple categories (classes) or patient survival data."
         ngs <- inputData()
         req(ngs)
         ## input$pdx_runbutton
-        dbg("[BiomarkerModule::observe2] reacted")
+        dbg("[BiomarkerBoard::observe2] reacted")
 
         if(FALSE && isolate(input$pdx_level=="geneset")) {
             ft <- names(COLLECTIONS)
@@ -152,7 +153,7 @@ be multiple categories (classes) or patient survival data."
         ##
         
         ## input$pdx_runbutton
-        dbg("[BiomarkerModule::calcVariableImportance] reacted on runbutton")
+        dbg("[BiomarkerBoard::calcVariableImportance] reacted on runbutton")
         
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
@@ -163,13 +164,8 @@ be multiple categories (classes) or patient survival data."
         colnames(ngs$Y)    
         isolate(ct <- input$pdx_predicted)
         
-        dbg("  calcVariableImportance","predicting = ",ct,"\n")
         do.survival <- grepl("survival",ct,ignore.case=TRUE)
-        dbg("  calcVariableImportance","do.survival = ",do.survival,"\n")
-        
         if(is.null(ct)) return(NULL)
-        
-        dbg("  calcVariableImportance","2")
 
         NFEATURES=50
         NFEATURES=60
@@ -285,7 +281,7 @@ be multiple categories (classes) or patient survival data."
             head(R)
         }
         
-        if(DEV.VERSION) {
+        if(DEV) {
             is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]",rownames(R)))
             is.multiomics    
             do.multiomics <- (is.multiomics && isolate(input$pdx_multiomics))
@@ -327,8 +323,8 @@ be multiple categories (classes) or patient survival data."
         require(rpart)
         R <- R[order(-rowSums(R)),,drop=FALSE]
         sel <- head(rownames(R),100)
-        sel <- head(rownames(R),NFEATURES)  ## top50 features
         sel <- intersect(sel,rownames(X))
+        sel <- head(rownames(R),NFEATURES)  ## top50 features
         tx <- t(X[sel,,drop=FALSE])
         dim(tx)
         
@@ -395,7 +391,7 @@ be multiple categories (classes) or patient survival data."
         res <- calcVariableImportance()
         if(is.null(res)) return(NULL)
 
-        dbg("[BiomarkerModule::pdx_importance.RENDER] called\n")
+        dbg("[BiomarkerBoard::pdx_importance.RENDER] called\n")
         
         R <- res$R
         R <- R[order(-rowSums(R,na.rm=TRUE)),,drop=FALSE]
@@ -432,13 +428,13 @@ be multiple categories (classes) or patient survival data."
 
     pdx_heatmap.RENDER %<a-% reactive({
 
-        dbg("[BiomarkerModule::pdx_heatmap] reacted\n")
+        dbg("[BiomarkerBoard::pdx_heatmap] reacted\n")
         
         ngs <- inputData()
         alertDataLoaded(session, ngs) 
         req(ngs)
 
-        dbg("[BiomarkerModule::pdx_heatmap] called\n")
+        dbg("[BiomarkerBoard::pdx_heatmap] called\n")
         
         res <- calcVariableImportance()
         if(is.null(res)) {
@@ -491,7 +487,7 @@ be multiple categories (classes) or patient survival data."
 
     pdx_decisiontree.RENDER %<a-% reactive({
 
-        dbg("[BiomarkerModule::pdx_decisiontree] reacted")
+        dbg("[BiomarkerBoard::pdx_decisiontree] reacted")
         
         res <- calcVariableImportance()
         if(is.null(res)) return(NULL)
@@ -522,7 +518,7 @@ be multiple categories (classes) or patient survival data."
                     visInteraction(tooltipStyle='position:fixed;visibility:hidden;padding:5px;white-space:nowrap;font-family:helvetica;font-size:10px;background-color:lightgrey;')
             }
         } 
-        dbg("[BiomarkerModule::pdx_decisiontree] done")
+        dbg("[BiomarkerBoard::pdx_decisiontree] done")
         
     })
     
@@ -678,4 +674,4 @@ be multiple categories (classes) or patient survival data."
 
 
     ## return(NULL)
-} ## end-of-Module
+} ## end-of-Board

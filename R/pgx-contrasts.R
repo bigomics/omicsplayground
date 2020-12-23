@@ -3,6 +3,7 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+## source(file.path(RDIR,"pgx-functions.R"))
 
 ##----------------------------------------------------------------------
 ## Auto-detection helper functions
@@ -21,30 +22,163 @@ pgx.detect_timevar <- function(Y) {
     ttvar
 }
 
+pgx.getGroups <- function(exp.matrix, nmax=3) {
+    ##
+    ##
+    ##
+    group <- apply(exp.matrix,1,paste,collapse="_")
+    table(group)
+    group <- factor(group)
+    if(ncol(exp.matrix) > nmax) {
+        ngroup <- length(unique(group))
+        levels(group) <- paste0("group",1:ngroup)
+    }
+    as.character(group)
+}
+
+pgx.expMatrix <- function(pheno, contr.matrix) {
+
+    ctx <- rownames(contr.matrix)
+    ## already an experiment contrast
+    if(all(ctx==rownames(pheno))) {
+        return(contr.matrix)
+    }    
+    group.col <- names(which(apply(pheno, 2, function(x) all(ctx %in% x))))[1]
+    if(length(group.col)==0) {
+        stop("FATAL: could not find group column\n")
+    }
+    grp <- pheno[,group.col]
+    exp.matrix <- contr.matrix[match(grp,ctx),]
+    rownames(exp.matrix) <- rownames(pheno)
+    exp.matrix
+}
 
 ##-----------------------------------------------------------------------------
 ## Contrast creation functions
 ##-----------------------------------------------------------------------------
+
+pgx.makeStratifiedContrastsDF <- function(data, vars, strata, ref) {
+
+    dstrata <- data[,strata]
+    S <- model.matrix( ~ 0 + dstrata)
+    colnames(S) <- sub("^dstrata","",colnames(S))
+
+    df <- cbind( data[,vars,drop=FALSE], strata=dstrata)
+    md <- makeDirectContrasts(df,c(ref,"others"))
+
+    M <- md$contr.matrix
+    C0 <- M[,grep("strata",colnames(M),invert=TRUE),drop=FALSE]
+    C1 <- M[,grep("strata",colnames(M)),drop=FALSE]
+    colnames(C1)
+    colnames(C1) <- paste0(gsub("strata:|_vs_others","",colnames(C1)))
+    contr.matrix <- c()
+    i=1
+    for(i in 1:ncol(C0)) {
+        m1 <- (C1==1) * C0[,i]
+        ##colnames(m1) <- paste0(colnames(C1),"::",colnames(C0)[i])
+        colnames(m1) <- paste0(colnames(C0)[i],"@",colnames(C1))
+        contr.matrix <- cbind(contr.matrix, m1)
+    }
+
+    ## construct exp matrix
+    grp <- md$group
+    G <- model.matrix( ~ 0 + grp)
+    colnames(G) <- sub("^grp","",colnames(G))
+    G <- G[,rownames(contr.matrix)]
+    exp.matrix <- G %*% contr.matrix
+
+    ## check levels
+    sel <- ( colSums(contr.matrix==-1)>0 &
+             colSums(contr.matrix==+1)>0 )
+    table(sel)
+    contr.matrix <- contr.matrix[,sel]
+    exp.matrix <- exp.matrix[,sel]
+    
+    res <- list(contr.matrix = contr.matrix,
+                group = md$group,
+                exp.matrix = exp.matrix)
+    res
+}
+
+pgx.makeStratifiedContrasts <- function(Y, strata, ref) {
+    
+    S <- model.matrix( ~ 0 + strata)
+    colnames(S) <- sub("^strata","",colnames(S))
+
+    df <- data.frame(Y,strata)
+    md <- makeDirectContrasts(df,c(ref,"others"))
+
+    M <- md$contr.matrix
+    C0 <- M[,grep("strata",colnames(M),invert=TRUE),drop=FALSE]
+    C1 <- M[,grep("strata",colnames(M)),drop=FALSE]
+    colnames(C1)
+    colnames(C1) <- paste0(gsub("strata:|_vs_others","",colnames(C1)))
+    contr.matrix <- c()
+    i=1
+    for(i in 1:ncol(C0)) {
+        m1 <- (C1==1) * C0[,i]
+        ##colnames(m1) <- paste0(colnames(C1),"::",colnames(C0)[i])
+        colnames(m1) <- paste0(colnames(C0)[i],"@",colnames(C1))
+        contr.matrix <- cbind(contr.matrix, m1)
+    }
+
+    ## construct exp matrix
+    grp <- md$group
+    G <- model.matrix( ~ 0 + grp)
+    colnames(G) <- sub("^grp","",colnames(G))
+    G <- G[,rownames(contr.matrix)]
+    exp.matrix <- G %*% contr.matrix
+
+    ## check levels
+    sel <- ( colSums(contr.matrix==-1)>0 &
+             colSums(contr.matrix==+1)>0 )
+    table(sel)
+    contr.matrix <- contr.matrix[,sel]
+    exp.matrix <- exp.matrix[,sel]
+    
+    
+    res <- list(contr.matrix = contr.matrix,
+                group = md$group,
+                exp.matrix = exp.matrix)
+    res
+}
 
 ## for compatibility...
 makeDirectContrasts2 <- function(Y, ref, na.rm=TRUE) {
     makeDirectContrasts(Y=Y, ref=ref, na.rm=na.rm)
 }
 
+expmat2contrast <- function(exp.matrix) {
+    group <- apply(exp.matrix,1,paste,collapse="_")
+    table(group)
+    n.group <- length(unique(group))
+    group <- factor(group)
+    if(ncol(exp.matrix)>3) {
+        levels(group) <- paste0("group",1:n.group)
+    }
+    sel <- !duplicated(group)
+    contr.matrix <- exp.matrix[sel,]
+    rownames(contr.matrix) <- group[sel]
+    group
+    list(contr.matrix=contr.matrix, group=group, exp.matrix=exp.matrix)
+}
+
 ##Y=ngs$samples;na.rm=TRUE
 makeDirectContrasts <- function(Y, ref, na.rm=TRUE)
 {
-    detectGroups <- function(contr.matrix) {
-        group <- apply(contr.matrix,1,paste,collapse="_")
-        table(group)
-        n.group <- length(unique(group))
-        group <- factor(group)
-        if(ncol(contr.matrix)>3) {
-            levels(group) <- paste0("group",1:n.group)
-        }
-        group
+
+    ## check enough levels
+    nlevel <- apply(Y,2,function(y) length(unique(y)))
+    if(any(nlevel<2)) {
+        notlevely <- colnames(Y)[which(nlevel<2)]
+        message("warning:: not enough levels: ",notlevely)
     }
-  
+    ii <- which(nlevel>1)
+    ii
+    Y <- Y[,ii,drop=FALSE]
+    ref <- ref[ii]
+
+    ## make contrast
     exp.matrix <- makeDirectContrasts000(Y=Y, ref=ref, na.rm=na.rm, warn=FALSE) 
     exp.matrix <- sign(exp.matrix)    
     no.vs <- grep("_vs_|_VS_",colnames(exp.matrix),invert=TRUE)
@@ -56,7 +190,7 @@ makeDirectContrasts <- function(Y, ref, na.rm=TRUE)
     if(all(grepl("_vs_|_VS_",colnames(exp.matrix0)))) {
         exp.matrix0 <- contrastAsLabels(exp.matrix0)
     }
-    group <- detectGroups(exp.matrix0)
+    group <- pgx.getGroups(exp.matrix0)
     table(group)
     if(length(levels(group)) > 0.5*nrow(exp.matrix)) {
         cat("WARNING:: contrast matrix looks degenerate. consider removing a contrast.\n")
@@ -70,20 +204,31 @@ makeDirectContrasts <- function(Y, ref, na.rm=TRUE)
 
 makeDirectContrasts000 <- function(Y, ref, na.rm=TRUE, warn=FALSE) {
     ## if(warn) warning("makeDirectContrasts is deprectated. please use makeDirectContrasts2()")
+    if(NCOL(Y)==1) Y <- data.frame(Y=Y)
+
+    ## check
+    all <- c("all","other","others","rest")
+    has.ref <- rep(NA,ncol(Y))
+    for(i in 1:ncol(Y)) has.ref[i] <- (ref[i] %in% Y[,i] || ref[i] %in% all)
+    if(!all(has.ref)) {
+        stop("ERROR:: reference ", which(!has.ref), " not in phenotype matrix\n")
+        return(NULL)
+    }
+
     contr.matrix <- c()
     if(length(ref)<ncol(Y)) ref <- head(rep(ref,99),ncol(Y))
-    all <- c("all","other","others","rest")
     ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$|scrambl|none|dmso|vehicle"
     i=1    
     for(i in 1:ncol(Y)) {
 
         m1 <- NULL
         ref1 <- ref[i]
+        if(ref1 %in% c("*","full")) ref1 <- NA
         x <- as.character(Y[,i])
         x[is.na(x)|x=="NA"] <- "_"
         detect.ref <- any(grepl(ref.pattern,x,ignore.case=TRUE))
         detect.ref
-        if(is.na(ref1) & detect.ref) {
+        if(is.na(ref1) && detect.ref) {
             ref1 <- grep(ref.pattern,x,ignore.case=TRUE,value=TRUE)
             ref1 <- sort(ref1)[1]
             cat("reference auto-detected:",ref1,"\n")
@@ -92,12 +237,12 @@ makeDirectContrasts000 <- function(Y, ref, na.rm=TRUE, warn=FALSE) {
         m1 <- model.matrix( ~ 0 + x)
         colnames(m1) <- sub("^x","",colnames(m1))
 
-        if(!is.na(ref1) && !ref1 %in% all ) {
+        if(!is.na(ref1) && !(ref1 %in% all) ) {
             m1 <- m1 - m1[,cref]  ## +1/-1 encoding
             m1 <- m1[,which(colnames(m1)!=cref),drop=FALSE]  ## remove refvsref...
             m1 <- m1[,!colnames(m1) %in% c("NA","_"),drop=FALSE]
             colnames(m1) <- paste0(colnames(m1),"_vs_",ref1)
-        } else if(!is.na(ref1) && ref1 %in% all ) {
+        } else if(!is.na(ref1) && (ref1 %in% all) ) {
             ##m1 <- m1 - m1[,cref]  ## +1/-1 encoding
             m1 <- t(t(m1==1) / colSums(m1==1) - t(m1==0) / colSums(m1==0))
             ##m1 <- m1[,which(colnames(m1)!=cref),drop=FALSE]
@@ -204,19 +349,8 @@ pgx.makeSpecificContrasts <- function(df, contrasts, mingrp=3)
     }
     rownames(K) <- rownames(df)
 
-    detectGroups <- function(contr.matrix) {
-        group <- apply(contr.matrix,1,paste,collapse="_")
-        table(group)
-        n.group <- length(unique(group))
-        group <- factor(group)
-        if(ncol(contr.matrix)>10) {
-            levels(group) <- paste0("group",1:n.group)
-        }
-        group
-    }
-
     K0 <- contrastAsLabels(K)
-    group <- detectGroups(K0)
+    group <- pgx.getGroups(K0)
     table(group)
     if(length(levels(group)) > 0.5*nrow(K)) {
         cat("WARNING:: contrast matrix looks degenerate. consider removing a contrast.\n")
@@ -231,7 +365,8 @@ pgx.makeSpecificContrasts <- function(df, contrasts, mingrp=3)
 }
 
 ##mingrp=3;slen=20;ref=NULL;fix.degenerate=FALSE
-pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate=FALSE)
+pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, 
+                                 fix.degenerate=FALSE, skip.hidden=TRUE )
 {
     ## "Automagiccally" parse dataframe and create contrasts using
     ## default assumptions.
@@ -246,6 +381,9 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
     }
     
     autoContrast1 <- function(x, ref1, slen, mingrp) {
+        ## Automatically create contrast. If 2 levels, create A-vs-B,
+        ## otherwise create A-vs-others.
+        ##
         if(is.null(ref1)) ref1 <- NA
         x <- as.character(x)
         x <- iconv(x, "latin1", "ASCII", sub="")
@@ -297,9 +435,29 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
     ## repeat ref if too short
     if(!is.null(ref) && length(ref)<ncol(df)) ref <- head(rep(ref,99),ncol(df))
 
+    cat("[pgx.makeAutoContrast] 1: dim(df)",dim(df),"\n")
+    
+    ## filter out 'internal/hidden' and 'group' parameters
+    ##not.used <- grepl("^[.]|group",colnames(df))
+    not.used <- grepl("^[.]",colnames(df))    
+    if(skip.hidden && sum(not.used)>0 && sum(!not.used)>0 ) {
+        df <- df[,!not.used,drop=FALSE]
+    }
+
+    cat("[pgx.makeAutoContrast] 2: dim(df)",dim(df),"\n")
+    
+    ## first all to characters
+    df.rownames <- rownames(df)
+    df <- data.frame(df, check.names=FALSE)
+    df <- apply(df, 2, as.character)
+
+    cat("[pgx.makeAutoContrast] 3: dim(df)",dim(df),"\n")
+    
     ## trim leading/end parts that are equal
     df <- apply(df, 2, trimsame)
 
+    cat("[pgx.makeAutoContrast] 4: dim(df)",dim(df),"\n")
+    
     ## try detect (fluffy) comment fields (and remove)
     countSpaces <- function(s) { sapply(gregexpr(" ", s), function(p) { sum(p>=0) } ) }    
     justComment <- function(x) {
@@ -319,6 +477,19 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
     df[df==""] <- NA
     df[df==" "] <- NA
     dim(df)   
+
+    ## ----------- use type.convert to infer parameters
+    df <- type.convert(data.frame(df,check.names=FALSE))
+
+    ## ----------- convert numeric variables into bins
+    ii <- which(sapply(df,class) %in% c("integer","numeric"))
+    if(length(ii)) {
+        for(i in ii) {
+            x <- as.numeric(as.character(df[,i]))
+            x <- c("low","high")[1 + 1*(x > median(x,na.rm=TRUE))]
+            df[,i] <- factor(x, levels=c("low","high"))
+        }        
+    }
     
     ## ----------- try to detect time series (detect factors by time)
     if(0) {
@@ -349,7 +520,9 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
     if(ncol(df)==0) {
         return(NULL)
     }
-        
+
+    ## For each phenotype parameter we 'automagically' try to create a
+    ## contrast
     K <- NULL
     i=1
     for(i in 1:ncol(df)) {
@@ -358,9 +531,9 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
         x <- df[,i]
         too.small <- (x %in% names(which(table(x)<mingrp)))
         x[too.small] <- NA
-        x <- iconv(x, "latin1", "ASCII", sub="")
+        x <- iconv(x, "latin1", "ASCII", sub="")  ## ???
         if(!(ref1 %in% x)) ref1 <- NA
-        ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$|scrambl|none|dmso|vehicle"
+        ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$|scrambl|none|dmso|vehicle|low|null|zero|^not"
         detect.ref <- any(grepl(ref.pattern,x,ignore.case=TRUE))
         if(is.na(ref1) & detect.ref) {
             ref1 <- grep(ref.pattern,x,ignore.case=TRUE,value=TRUE)
@@ -381,7 +554,7 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
         return(NULL)
     }
     
-    rownames(K) <- rownames(df)
+    rownames(K) <- df.rownames
     head(K)
     dim(K)
 
@@ -443,7 +616,8 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, fix.degenerate
         K2[K2==0] <- -1
         K2[is.na(K2)] <- 0
     }
-        
+    rownames(K) <- df.rownames
+    
     list(group = xc, contr.matrix = K2, exp.matrix=K)
 }
 
@@ -523,8 +697,6 @@ contrastAsLabels <- function(contr.matrix) {
     rownames(K) <- rownames(contr.matrix)
     K    
 }
-
-
 
 ##=====================================================================================
 ##=========================== END OF FILE =============================================

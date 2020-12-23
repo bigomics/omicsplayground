@@ -3,6 +3,8 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+message(">>> sourcing DrugConnectivityBoard")
+
 DrugConnectivityInputs <- function(id) {
     ns <- NS(id)  ## namespace
     tagList(
@@ -24,7 +26,7 @@ DrugConnectivityUI <- function(id) {
     )
 }
 
-DrugConnectivityModule <- function(input, output, session, env)
+DrugConnectivityBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
     inputData <- env[["load"]][["inputData"]]
@@ -88,7 +90,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     
     observeEvent( input$dr_info, {
         showModal(modalDialog(
-            title = HTML("<strong>Drug Connectivity Analysis Module</strong>"),
+            title = HTML("<strong>Drug Connectivity Analysis Board</strong>"),
             HTML(dr_infotext),
             easyClose = TRUE, size="l" ))
     })

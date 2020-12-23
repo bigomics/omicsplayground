@@ -1250,8 +1250,7 @@ if(0) {
     require(glmnet)
     require(sva)
     source("../R/gx-heatmap.r")
-    source("../R/gx-limma.r")
-    
+    source("../R/gx-limma.r")    
     load("../pgx/GSE10846-dlbcl-mRNA-8k.pgx",verbose=1)
     
     y <- factor(ngs$samples$dlbcl.type)

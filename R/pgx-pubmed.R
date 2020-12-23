@@ -10,6 +10,116 @@ BLUERED <- colorRampPalette(
     rev(c("#67001F", "#B2182B", "#D6604D", "#F4A582", "#FDDBC7", "#FFFFFF", "#D1E5F0",
           "#92C5DE", "#4393C3", "#2166AC", "#053061")))
 
+if(0) {
+    GENERIF.MATRIX <- readRDS(file=file.path(FILES,"geneRIF-matrix.rds"))
+    gene="Socs3";context=c("inflamm","cancer")
+    gene="Socs3";context="."
+}
+
+pmid.getGeneContext <- function(gene, keyword)
+{
+    library(data.table)
+    library(org.Hs.eg.db)
+    library(org.Mm.eg.db)
+    
+    gene1 <- c(gene,sub("([0-9])","-\\1",gene))
+    ##gene1 <- paste0(paste0("^",gene1),"|[\\(, ]",gene1,"[\\)-,\\( ]|",gene1,"$")
+    gene1 <- paste0("^",gene1,"$|^",gene1,"[-]")
+    gene1 <- paste(gene1,collapse="|")
+    gene1
+    
+    if(gene %in% keys(org.Hs.egALIAS2EG)) {
+        gname <- get(get(gene, org.Hs.egALIAS2EG),org.Hs.egGENENAME)
+        gname <- gsub("[, -]",".",gname)
+        gene1 <- paste0(gene1,"|",gname)
+    } else if(gene %in% keys(org.Mm.egALIAS2EG)) {
+        gname <- get(get(gene, org.Mm.egALIAS2EG),org.Mm.egGENENAME)
+        gname <- gsub("[, -]",".",gname)
+        gene1 <- paste0(gene1,"|",gname)
+    }
+    gene1
+    
+    rif.words <- colnames(GENERIF.MATRIX)
+    ii <- grepl(gene1, rif.words, ignore.case=TRUE)
+    match0 <- rowSums(GENERIF.MATRIX[,ii,drop=FALSE]) >0
+    match1 <- rep(1, length(match0))
+    if(length(keyword)>0) {
+        i=1
+        for(i in 1:length(keyword)) {
+            jj <- grepl(keyword[i], rif.words, ignore.case=TRUE)
+            match1 <- match1 & (rowSums(GENERIF.MATRIX[,jj,drop=FALSE])>0)
+        }
+    }
+    sel <- ((match0 * match1) >0)
+    table(sel)
+    rif.hits <- rownames(GENERIF.MATRIX)[sel]
+    rif.hits <- rif.hits[!duplicated(rif.hits)]
+    ## rif.hits
+
+    ## calculate P-value for this keyword
+    A <- table(gene=match0, keyword=match1)
+    A
+    pv <- NA
+    if(nrow(A)==2 && ncol(A)==2) {
+        pv <- fisher.test(A, alternative="greater")$p.value
+    }
+    pv    
+    
+    context1 <- NULL
+    if(1) {
+        match2 <- ((match0 * match1)>0)
+        m0 <- colSums(match2 * (GENERIF.MATRIX!=0))
+        m1 <- colSums(GENERIF.MATRIX!=0)
+        pp <- corpora::fisher.pval(m0, sum(match2)+1, m1, nrow(GENERIF.MATRIX)+1, alternative="greater")
+        pp <- sort(pp)
+        qq <- p.adjust(pp)
+        qq <- sort(qq)
+        context1 <- head(qq[qq < 1],100)
+        head(context1,20)
+    }
+
+    list(rifs=rif.hits, table=A, p.value=pv, context=context1)
+}
+
+pmid.getPubMedContext <- function(gene, context) {
+    ##install.packages("RISmed")
+    require(RISmed)
+    require(org.Hs.eg.db)
+    res <- EUtilsSummary(
+        paste0(gene,"[sym] AND ",context),
+        type="esearch", db="pubmed", datetype='pdat',
+        mindate=2000, maxdate=2099, retmax=1000)
+    QueryCount(res)
+    if(QueryCount(res)==0) {
+        return(NULL)
+    }
+    gene1 <- c(gene,sub("([0-9])","-\\1",gene),sub("([0-9])","[ ]\\1",gene))
+    gene1
+    gene1 <- paste(gene1,collapse="|")
+    gene1
+    ##gname <- get(get("Hmox1", org.Mm.egALIAS2EG),org.Mm.egGENENAME)
+    gname <- get(get(toupper(gene), org.Hs.egALIAS2EG),org.Hs.egGENENAME)
+    gene2 <- paste0(gene1,"|",gsub("[ -]",".",gname))
+    extractRIF <- function(a) {
+        s <- strsplit(a,split="[.;:]")[[1]]
+        hit <- grepl(gene2,s,ignore.case=TRUE) & grepl(context,s,ignore.case=TRUE)
+        if(!any(hit)) return(NULL)
+        s <- paste(s[hit], collapse=".")
+        sub("^[ ]*","",s)
+    }        
+    fetch <- EUtilsGet(res)
+    tt <- ArticleTitle(fetch)
+    aa <- AbstractText(fetch)
+    tt2 <- paste(tt,".",aa)
+    pp <- PMID(fetch)
+    rif <- lapply(tt2, extractRIF)
+    rif[sapply(rif,is.null)] <- NA
+    rif <- unlist(rif)
+    rif[!is.na(rif)] <- paste0(rif," (PMID:",pp,")")[!is.na(rif)]
+    list(pmid=pp, title=tt, rif=rif)
+}
+
+
 pmid.buildMatrix <- function() {
     require(org.Hs.eg.db)
     pmid   <- as.list(org.Hs.egPMID2EG)
@@ -57,7 +167,7 @@ pmid.buildGraph <- function(P) {
     P[1:10,1:10]
     dim(P)
     
-    ## creat graph from overlap
+    ## create graph from overlap
     M <- P[,] %*% t(P[,])
     dim(M)
     diag(M) <- 0

@@ -8,6 +8,43 @@ bluered <- function(n=64) colorpanel(n,"blue","grey90","red")
 bluered <- function(n=64) colorpanel(n,"dodgerblue4","grey90","indianred3")
 bluered <- function(n=64) colorpanel(n,"royalblue3","grey90","indianred3")
 
+gx.markermap <- function(X, splitx, n=5, ...)
+{
+    F <- tapply(1:ncol(X), splitx, function(i) rowMeans(X[,i,drop=FALSE]))
+    F <- do.call(cbind,F)
+    F <- F - rowMeans(F)
+    topg <- apply(F,2,function(x) head(order(-x),n))
+    topg <- apply(topg, 2, function(i) rownames(F)[i])
+    gg <- as.vector(topg)
+    gg.idx <- as.vector(sapply(colnames(topg),rep,n))
+    ##gx.splitmap(X[gg,], splitx=splitx, split=gg.idx, nmax=999, show_colnames=FALSE, softmax=TRUE, scale='none')
+    gx.splitmap(X[gg,], splitx=splitx, split=gg.idx, ...)
+}
+
+gx.PCAheatmap <- function(X, nv=5, ngenes=10, ...) {
+    if(class(X)=="list" && "X" %in% names(X)) {
+        X <- X$X - rowMeans(X$X)
+    }
+    X <- X - rowMeans(X,na.rm=TRUE)
+    res <- irlba::irlba(X, nv=nv)
+    gg <- apply(res$u,2,function(x) head(rownames(X)[order(-abs(x))],ngenes))
+    sx <- paste0("PC.",as.vector(sapply(1:nv,rep,10)))
+    gx.splitmap( X[gg,], split=sx, ... )
+}
+
+gx.PCAcomponents <- function(X, nv=20, ngenes) {
+    if(class(X)=="list" && "X" %in% names(X))  X <- X$X
+    res <- irlba::irlba(X - rowMeans(X), nv=nv)
+    ##par(mfrow=c(5,4), mar=c(1,1,2,8))
+    for(i in 1:nv) {
+        gg <- head(rownames(X)[order(-abs(res$u[,i]))],ngenes)
+        X1 <- X[gg,]
+        X1 <- (X1 - rowMeans(X1)) / (1e-4 + apply(X1,1,sd)) ## scale??
+        colnames(X1) <- NULL
+        gx.imagemap(X1, main=paste0("PC",i), cex=0.8)
+    }
+}
+
 gx.imagemap <- function(X, main="", cex=1, clust=TRUE)
 {
     if(clust) {
@@ -29,15 +66,17 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                         dist.method="euclidean",
                         col.dist.method="euclidean",
                         plot.method="heatmap.2",
-                        col=bluered(64), scale="row", softmax=0,
+                        ## col=bluered(64),
+                        scale="row", softmax=0,
                         ## Rowv = NA, Colv = NA,
-                        cluster_rows=TRUE, cluster_columns=TRUE,
+                        cluster_rows=TRUE, cluster_columns=TRUE, sort_columns=NULL,
                         col.annot=NULL, row.annot=NULL, annot.ht=3,
-                        nmax=1000, cmax=NULL, main=" ", verbose=1,
-                        cexRow=1, cexCol=1, mar=c(5,5),
-                        title_cex=1, column_title_rot=0,
-                        show_legend=TRUE, show_rownames=60, lab.len=80,
-                        show_colnames=TRUE, use.nclust=FALSE,
+                        nmax=1000, cmax=NULL, main=" ", verbose=1, denoise = 0,
+                        cexRow=1, cexCol=1, mar=c(5,5,5,5),
+                        title_cex=1.2, column_title_rot=0,
+                        show_legend=TRUE, show_key=TRUE,
+                        show_rownames=60, lab.len=80, 
+                        show_colnames=NULL, use.nclust=FALSE,
                         ... )
 {
     require("ComplexHeatmap")
@@ -46,17 +85,28 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     ht_global_opt(fast_hclust = TRUE)
     ##require(heatmap3)
     if(0) {
-        clust.method="ward.D2"; dist.method="euclidean"; col.dist.method="euclidean";
-        col=bluered(); scale="row"; verbose=1; annot.ht=3;
-        col.annot=NULL; row.annot=NULL;split=5;splitx=5
-        nmax=1000; cmax=NULL; indent.names=FALSE;lab.len=80;softmax=0
-        show_rownames=show_colnames=TRUE;cluster_rows=cluster_columns=TRUE
-        show_legend=TRUE;cexRow=1;cexCol=1;mar=c(5,5);column_title_rot=0
-        gx = ngs$X
+        split=5; splitx=NULL;
+        clust.method="ward.D2";
+        dist.method="euclidean";
+        col.dist.method="euclidean";
+        plot.method="heatmap.2";
+        ## col=bluered(64);
+        scale="row"; softmax=0;
+        ## Rowv = NA; Colv = NA;
+        cluster_rows=TRUE; cluster_columns=TRUE; sort_columns=NULL;
+        col.annot=NULL; row.annot=NULL; annot.ht=3;
+        nmax=1000; cmax=NULL; main=" "; verbose=1; denoise = 0;
+        cexRow=1; cexCol=1; mar=c(5,5,5,5);
+        title_cex=1.2; column_title_rot=0;
+        show_legend=TRUE; show_key=TRUE;
+        show_rownames=60; lab.len=80; 
+        show_colnames=NULL; use.nclust=FALSE;
     }
     
     if(verbose>1) cat("input.dim.gx=",dim(gx),"\n")
-
+    if(is.null(show_colnames)) {
+        show_colnames <- ifelse(ncol(gx)>100, FALSE, TRUE)
+    }
     ## give unique name if duplicated
     if(sum(duplicated(rownames(gx)))>0) {
         rownames(gx) <- tagDuplicates(rownames(gx))
@@ -76,10 +126,14 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     }
     gx <- gx[jj1,jj2]
     
-    if(!is.null(row.annot)) row.annot <- row.annot[jj1,,drop=FALSE]
-    if(!is.null(col.annot)) col.annot <- col.annot[jj2,,drop=FALSE]
-    if(!is.null(row.annot)) cat("[gx.splitmap] 3: duplicated annot.rownames =",
-                                sum(duplicated(rownames(row.annot))),"\n")    
+    if(!is.null(row.annot)) {
+        row.annot <- row.annot[jj1,,drop=FALSE]
+    }
+    if(!is.null(col.annot)) {
+        col.annot <- col.annot[,which(colSums(is.na(col.annot))<1),drop=FALSE]
+        col.annot <- col.annot[jj2,,drop=FALSE]
+        col.annot <- type.convert(col.annot)
+    }
     
     fillNA <- function(x) {
         nx <- x
@@ -87,7 +141,33 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         nx <- x + is.na(x)*rowMeans(x,na.rm=TRUE)
         nx
     }
+    if(length(mar)==1) mar <- rep(mar[1],4) ## old style
+    if(length(mar)==2) mar <- c(mar[1],5,5,mar[2]) ## old style
+    
+    ##--------------------------------------------
+    ## PCA denoising 
+    ##--------------------------------------------
+    if(denoise>0) {
+        sv <- irlba::irlba(gx, nv=denoise)
+        dn <- dimnames(gx)
+        gx <- sv$u %*% diag(sv$d) %*% t(sv$v)
+        dimnames(gx) <- dn
+    }
 
+    ##--------------------------------------------
+    ## column sorting
+    ##--------------------------------------------
+    if(!cluster_columns && !is.null(sort_columns)) {
+        y <- col.annot[,sort_columns,drop=FALSE]
+        y1 <- as.integer(factor(y))
+        ##ct <- paste0(ngs$samples$cell.type,"",ngs$samples$phenotype)    
+        ##jj <- hclust(dist(scale(t(gx))),method="ward.D2")$order
+        jj <- hclust(dist(t(gx)),method="ward.D2")$order
+        jj <- jj[order(1e6*y1[jj] + 1:length(jj))]
+        gx <- gx[,jj]
+        col.annot <- col.annot[jj,]
+    }
+    
     ##--------------------------------------------
     ## split rows
     ##--------------------------------------------
@@ -146,27 +226,47 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     isanumber <- function(x) {
         x <- sub("NA",NA,x)
         x[which(x=="")] <- NA
-        suppressWarnings(nx <- as.numeric(x[!is.na(x)]))
+        x <- x[!is.na(x)]
+        suppressWarnings(nx <- as.numeric(as.character(x)))
         (length(nx)>0 && mean(!is.na(nx)) > 0.5)
     }
-
+    
     ## column  HeatmapAnnotation objects
     col.ha = vector("list",ngrp)
     if(!is.null(col.annot)) {
+        
         col.annot <- col.annot[,which(colMeans(is.na(col.annot))<1),drop=FALSE]
-        npar = apply(col.annot,2,function(x) length(setdiff(unique(x),NA)))
+        col.pars = lapply(data.frame(col.annot),function(x) sort(unique(x[!is.na(x)])))
+        ##npar = apply(col.annot,2,function(x) length(unique(x[!is.na(x)])))
+        npar <- sapply(col.pars, length)
+
         col.colors = list()
+        i=1
         for(i in 1:length(npar)) {
             prm = colnames(col.annot)[i]
             klrs = rev(grey.colors(npar[i],start=0.4,end=0.85))
             if(npar[i]==1) klrs = "#E6E6E6"
-            is.number <- isanumber(col.annot[,i])
-            if(npar[i]>3 & !is.number) klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]
+            names(klrs) <- col.pars[[i]]
+            x <- col.annot[,i]
+            is.number <- isanumber(x)
+            if(npar[i]>3 & !is.number) {
+                klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]
+                names(klrs) <- col.pars[[i]]
+                klrs = klrs[!is.na(names(klrs))]
+            }
+            if(any(is.na(x))) klrs = c(klrs, "NA"="grey90")
+            if(is.number) {
+                x <- as.numeric(as.character(x))
+                rr <- range(x,na.rm=TRUE)
+                rr <- rr + c(-1,1)*1e-8
+                klrs <- circlize::colorRamp2(rr, c("grey85", "grey40"))
+            }            
             ##if(npar[i]==2) klrs = rep(brewer.pal(2,"Paired"),99)[1:npar[i]]
-            names(klrs) = sort(unique(col.annot[,i]))
-            klrs = klrs[!is.na(names(klrs))]
+            ##names(klrs) = sort(unique(col.annot[,i]))
             col.colors[[prm]] = klrs
         }
+
+        i=1
         for(i in 1:ngrp) {
             jj = grp[[i]]
             ##ap <- list(labels_gp=gpar(fontsize=6*cexRow))
@@ -178,7 +278,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
             names(aa) <- colnames(col.annot)
             col.ha[[i]] = HeatmapAnnotation(
                 df = col.annot[jj,,drop=FALSE],
-                col = col.colors, na_col='#FCFCFC',
+                col = col.colors,  na_col='#FCFCFC',
                 ##annotation_height = unit(annot.ht, "mm"),
                 simple_anno_size = unit(0.85*annot.ht,"mm"),  ## BioC 3.8!!
                 show_annotation_name = (i==ngrp),
@@ -188,7 +288,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
             )
         }
     }
-
+    
     ## row annotation bars
     row.ha = NULL
     if(!is.null(row.annot)) {
@@ -218,319 +318,29 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
             width = unit(annot.ht*ncol(row.annot),"mm")
         )
     }
-
+    
     ## ------------- scaling options
-    if("col" %in% scale || "both" %in% scale) gx = scale(gx)
-    if("row" %in% scale || "both" %in% scale) gx = t(scale(t(gx)))
-    if("cols" %in% scale || "both" %in% scale) gx = scale(gx)
-    if("rows" %in% scale || "both" %in% scale) gx = t(scale(t(gx)))
+    if(any(c("col","cols","both") %in% scale)) gx = scale(gx)
+    if(any(c("row","rows","both") %in% scale)) gx = t(scale(t(gx)))
     if("col.center" %in% scale) gx = scale(gx,center=TRUE,scale=FALSE)
-    if("row.center" %in% scale) gx = t(scale(t(gx),center=TRUE,scale=FALSE))
-
-    if(softmax) {
-        gx <- tanh(0.5 * gx / sd(gx))
-    }
-
-    ## ------------- draw heatmap
-    ##split.idx = NULL
-    ##if(!is.null(split) && split>0) split.idx = row.annot[rownames(gx),split,drop=FALSE]
-    hmap = NULL
-    for(i in 1:ngrp) {
-        jj <- grp[[i]]
-
-        coldistfun1 <- function(x) dist(x)
-        rowdistfun1 <- function(x,y) 1 - cor(x, y)
-        gx0 <- gx[,jj,drop=FALSE]
-        grp.title = shortstring(names(grp)[i],15)
-
-        hmap = hmap + Heatmap( gx0,
-                              ##col = bluered(64),
-                              col = col,  ## from input
-                              cluster_rows=cluster_rows,
-                              cluster_columns=cluster_columns,
-                              ##cluster_columns = as.dendrogram(h1),
-                              ##cluster_rows = as.dendrogram(h2),
-                              clustering_distance_rows = dist.method,
-                              ##clustering_distance_columns = "euclidean",
-                              clustering_distance_columns = col.dist.method,
-                              clustering_method_rows = "ward.D2",
-                              ##clustering_method_rows = "average",
-                              clustering_method_columns = "ward.D2",
-                              show_heatmap_legend = FALSE,
-                              show_row_names=FALSE, show_column_names=show_colnames,
-                              split = split.idx,
-                              row_title_gp = gpar(fontsize = 11),  ## cluster titles
-                              row_names_gp = gpar(fontsize = 10*cexRow),
-                              column_names_gp = gpar(fontsize = 11*cexCol),
-                              top_annotation = col.ha[[i]],
-                              ## top_annotation_height = unit(annot.ht*ncol(col.annot), "mm"),
-                              column_title = grp.title,
-                              name = names(grp)[i],
-                              column_title_rot = column_title_rot,
-                              column_title_gp = gpar(fontsize = 11*title_cex, fontface='bold')
-                              )
-    }
-
-    if( show_rownames < nrow(gx) && show_rownames>0 ) {
-        ## empty matrix just for rownames on the far right
-        if(1 && !is.null(split.idx) && length(unique(split.idx))>1) {
-            nshow=10
-            nshow <- show_rownames / length(unique(split.idx))
-            nshow <- max(nshow,10)
-            subidx <- tapply(1:length(split.idx), split.idx, function(ii)
-                ii[head(order(-apply(gx[ii,,drop=FALSE],1,sd,na.rm=TRUE)),nshow)] )
-            subset <- unlist(subidx)
-        } else {
-            subset = head(order(-apply(gx,1,sd,na.rm=TRUE)), show_rownames )
-        }
-        lab = rownames(gx)[subset]
-        lab <- substring(lab,1,lab.len)
-        rownames.ha = rowAnnotation(
-            link = row_anno_link(at = subset, labels=lab,
-                                 link_width = unit(0.8,"cm"),
-                                 labels_gp = gpar(fontsize = 10*cexRow)),
-            width = unit(0.8,"cm") + 0.8*max_text_width(lab))
-    } else {
-        ## empty matrix just for rownames on the far right
-        empty.mat = matrix(nrow = nrow(gx), ncol = 0)
-        rownames(empty.mat) = rownames(gx)
-        lab = rownames(gx)
-        if(!is.null(col.annot)) lab <- c(lab, colnames(col.annot))
-        textwidth <- max_text_width(paste0(lab,"XXXXXXXXXXXXX"),
-                                    gp = gpar(fontsize = 10*cexRow))
-        rownames.ha = Heatmap( empty.mat,
-                           row_names_max_width = textwidth,
-                           row_names_gp = gpar(fontsize = 10*cexRow),
-                           show_row_names = show_rownames>0 )
-    }
-
-    if(!is.null(row.ha)) {
-        hmap = hmap + row.ha
-    }
-    if(show_rownames) {
-        hmap = hmap + rownames.ha
-    }
-
-    ##draw(hmap, annotation_legend_side="right")
-    draw(hmap, annotation_legend_side="right",
-         padding = unit( c(mar[1], 1, 2, mar[2])*0.5, "mm"),
-         gap = unit(1.0,"mm") )
-    ##hmap
-
-    ##res <- c()
-    ##res$col.clust <- h1
-    ##res$row.clust <- h2
-    ##invisible(res)
-}
-
-
-gx.splitmap.SAVE <- function(gx, split=5, splitx=NULL,
-                        clust.method="ward.D2",
-                        dist.method="euclidean",
-                        col.dist.method="euclidean",
-                        plot.method="heatmap.2",
-                        col = bluered(64), scale="row", softmax=0,
-                        ## Rowv = NA, Colv = NA,
-                        cluster_rows=TRUE, cluster_columns=TRUE,
-                        col.annot=NULL, row.annot=NULL, annot.ht=3,
-                        nmax=1000, cmax=NULL, main=" ", verbose=1,
-                        cexRow=1, cexCol=1, mar=c(5,5),
-                        title_cex=1, column_title_rot=0,
-                        show_legend=TRUE, show_rownames=60, lab.len=80,
-                        show_colnames=TRUE, use.nclust=FALSE,
-                        ... )
-{
-    require("ComplexHeatmap")
-    require("RColorBrewer")
-    require("fastcluster")
-    ht_global_opt(fast_hclust = TRUE)
-    ##require(heatmap3)
-    if(0) {
-        clust.method="ward.D2"; dist.method="euclidean"; col.dist.method="euclidean";
-        col=bluered(); scale="row"; verbose=1; annot.ht=3;
-        col.annot=NULL; row.annot=NULL;split=5;splitx=5
-        nmax=1000; cmax=NULL; indent.names=FALSE;lab.len=80;softmax=0
-        show_rownames=show_colnames=TRUE;cluster_rows=cluster_columns=TRUE
-        show_legend=TRUE;cexRow=1;cexCol=1;mar=c(5,5);column_title_rot=0
-        gx = ngs$X
-    }
-    
-    if(verbose>1) cat("input.dim.gx=",dim(gx),"\n")
-
-    ## give unique name if duplicated
-    if(sum(duplicated(rownames(gx)))>0) {
-        rownames(gx) <- tagDuplicates(rownames(gx))
-        if(!is.null(row.annot)) rownames(row.annot) <- rownames(gx)
-    }
-
-    par(xpd=FALSE)
-    jj1 <- 1:nrow(gx)
-    jj2 <- 1:ncol(gx)
-    if(!is.null(nmax) && nmax < nrow(gx) && nmax>0 ) {
-        ##cat("restricting to top",nmax,"maxSD genes\n")
-        jj1 <- head(order(-apply(gx,1,sd,na.rm=TRUE) ),nmax)
-    }
-    if(!is.null(cmax) && cmax < ncol(gx) && cmax>0 ) {
-        ##cat("restricting to top",cmax,"maxSD samples\n")
-        jj2 <- head(order(-apply(gx,2,sd,na.rm=TRUE)),cmax)
-    }
-    gx <- gx[jj1,jj2]
-    
-    if(!is.null(row.annot)) row.annot <- row.annot[jj1,,drop=FALSE]
-    if(!is.null(col.annot)) col.annot <- col.annot[jj2,,drop=FALSE]
-    if(!is.null(row.annot)) cat("[gx.splitmap] 3: duplicated annot.rownames =",
-                                sum(duplicated(rownames(row.annot))),"\n")    
-    
-    fillNA <- function(x) {
-        nx <- x
-        nx[is.na(nx)] <- 0
-        nx <- x + is.na(x)*rowMeans(x,na.rm=TRUE)
-        nx
-    }
-
-    ##--------------------------------------------
-    ## split rows
-    ##--------------------------------------------
-    do.split = !is.null(split)
-    split.idx = NULL
-    if(do.split && class(split)=="numeric" && length(split)==1 ) {
-        hc = fastcluster::hclust( as.dist(1 - cor(t(gx))), method="ward.D2" )
-        split.idx = paste0("group",cutree(hc, split))
-    }
-    if(do.split && class(split)=="character" && length(split)==1 &&
-       !is.null(row.annot) && split %in% colnames(row.annot) ) {
-        split.idx = row.annot[,split]
-    }
-    if(do.split && length(split)>1 ) {
-        split.idx = split[jj1]
-    }
-
-    if(!is.null(row.annot)) cat("[gx.splitmap] 3: duplicated annot.rownames =",
-                                sum(duplicated(rownames(row.annot))),"\n")    
-
-    if(!is.null(split.idx)) {
-        row.annot = cbind(row.annot, cluster = split.idx)
-        row.annot = data.frame(row.annot)
-        colnames(row.annot) = tolower(colnames(row.annot))
-        rownames(row.annot) = rownames(gx)
-    }
-    
-    ##--------------------------------------------
-    ## split columns
-    ##--------------------------------------------
-    do.splitx = !is.null(splitx)
-    idx2 = NULL
-    if(do.splitx && class(splitx)=="numeric" && length(splitx)==1 ) {
-        ##require(nclust)
-        require(fastcluster)
-        system.time( hc <- fastcluster::hclust( as.dist(1 - cor(gx)), method="ward.D2" ))
-        ##system.time( hc <- nclust( as.dist(1 - cor(gx)), link="ward" ))
-        idx2 = paste0("cluster",cutree(hc, splitx))
-    }
-    if(do.splitx && class(splitx)=="character" && length(splitx)==1 &&
-       !is.null(col.annot) && splitx %in% colnames(col.annot) ) {
-        idx2 = as.character(col.annot[,splitx])
-    }
-    if(do.splitx && length(splitx)>1 ) {
-        idx2 = as.character(splitx[jj2])
-    }
-    if(!is.null(idx2)) {
-        grp <- tapply( colnames(gx), idx2, list)
-        ngrp = length(grp)
-    } else {
-        grp <- list(colnames(gx))
-        names(grp)[1] = main
-        ngrp = 1
-    }
-
-    isanumber <- function(x) {
-        x <- sub("NA",NA,x)
-        x[which(x=="")] <- NA
-        suppressWarnings(nx <- as.numeric(x[!is.na(x)]))
-        (length(nx)>0 && mean(!is.na(nx)) > 0.5)
-    }
-
-    ## column  HeatmapAnnotation objects
-    col.ha = vector("list",ngrp)
-    if(!is.null(col.annot)) {
-        col.annot <- col.annot[,which(colMeans(is.na(col.annot))<1),drop=FALSE]
-        npar = apply(col.annot,2,function(x) length(setdiff(unique(x),NA)))
-        col.colors = list()
-        for(i in 1:length(npar)) {
-            prm = colnames(col.annot)[i]
-            klrs = rev(grey.colors(npar[i],start=0.4,end=0.85))
-            if(npar[i]==1) klrs = "#E6E6E6"
-            is.number <- isanumber(col.annot[,i])
-            if(npar[i]>3 & !is.number) klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]
-            ##if(npar[i]==2) klrs = rep(brewer.pal(2,"Paired"),99)[1:npar[i]]
-            names(klrs) = sort(unique(col.annot[,i]))
-            klrs = klrs[!is.na(names(klrs))]
-            col.colors[[prm]] = klrs
-        }
+    if("row.center" %in% scale) gx = gx - rowMeans(gx,na.rm=TRUE)
+    if("row.bmc" %in% scale) {
         for(i in 1:ngrp) {
-            jj = grp[[i]]
-            ##ap <- list(labels_gp=gpar(fontsize=6*cexRow))
-            ap <- list( title_gp = gpar(fontsize=3.5*annot.ht),
-                       labels_gp = gpar(fontsize=3.1*annot.ht),
-                       grid_width = unit(1*annot.ht, "mm"),
-                       grid_height = unit(1*annot.ht, "mm"))
-            aa <- rep(list(ap), ncol(col.annot))
-            names(aa) <- colnames(col.annot)
-            col.ha[[i]] = HeatmapAnnotation(
-                df = col.annot[jj,,drop=FALSE],
-                col = col.colors, na_col='#FCFCFC',
-                ##annotation_height = unit(annot.ht, "mm"),
-                simple_anno_size = unit(0.85*annot.ht,"mm"),  ## BioC 3.8!!
-                show_annotation_name = (i==ngrp),
-                show_legend = show_legend & (npar <= 20),
-                annotation_name_gp = gpar(fontsize=3.1*annot.ht),
-                annotation_legend_param = aa
-            )
+            jj <- grp[[i]]
+            gx[,jj] = gx[,jj,drop=FALSE] - rowMeans(gx[,jj,drop=FALSE],na.rm=TRUE)
         }
     }
-
-    ## row annotation bars
-    row.ha = NULL
-    if(!is.null(row.annot)) {
-        npar = apply(row.annot,2,function(x) length(unique(x)))
-        row.colors = list()
-        i=1
-        for(i in 1:length(npar)) {
-            prm = colnames(row.annot)[i]
-            klrs = rev(grey.colors(npar[i],start=0.3, end=0.8))
-            if(npar[i]==1) klrs = "#E6E6E6"
-            if(npar[i]>3) klrs = rep(brewer.pal(8,"Set2"),99)[1:npar[i]]
-            ##if(npar[i]==2) klrs = rep(brewer.pal(2,"Paired"),99)[1:npar[i]]
-            names(klrs) = sort(unique(row.annot[,i]))
-            row.colors[[prm]] = klrs
-        }
-        ##row.ha = HeatmapAnnotation(
-        ##row.ha = Heatmap(
-        row.ha = rowAnnotation(
-            df = row.annot,
-            col = row.colors,
-            ##show_annotation_name = TRUE,
-            show_annotation_name = show_colnames,
-            show_legend = FALSE,
-            ##annotation_name_gp = gpar(fontsize=9*cexRow),
-            annotation_name_gp = gpar(fontsize=3.3*annot.ht),
-            simple_anno_size = unit(annot.ht,"mm"),  ## BioC 3.8!!
-            width = unit(annot.ht*ncol(row.annot),"mm")
-        )
-    }
-
-    ## ------------- scaling options
-    if("col" %in% scale || "both" %in% scale) gx = scale(gx)
-    if("row" %in% scale || "both" %in% scale) gx = t(scale(t(gx)))
-    if("cols" %in% scale || "both" %in% scale) gx = scale(gx)
-    if("rows" %in% scale || "both" %in% scale) gx = t(scale(t(gx)))
-    if("col.center" %in% scale) gx = scale(gx,center=TRUE,scale=FALSE)
-    if("row.center" %in% scale) gx = t(scale(t(gx),center=TRUE,scale=FALSE))
-
     if(softmax) {
         gx <- tanh(0.5 * gx / sd(gx))
     }
-
+    
+    ## ------------- colorscale options
+    colmin = min(gx[,],na.rm=TRUE)
+    colmax = max(gx[,],na.rm=TRUE)
+    colmean = mean(gx[,],na.rm=TRUE)
+    col_scale = circlize::colorRamp2(c(colmin, colmean, colmax),
+                                     c("royalblue3","grey90","indianred3"))
+    
     ## ------------- draw heatmap
     ##split.idx = NULL
     ##if(!is.null(split) && split>0) split.idx = row.annot[rownames(gx),split,drop=FALSE]
@@ -541,11 +351,13 @@ gx.splitmap.SAVE <- function(gx, split=5, splitx=NULL,
         coldistfun1 <- function(x) dist(x)
         rowdistfun1 <- function(x,y) 1 - cor(x, y)
         gx0 <- gx[,jj,drop=FALSE]
-        grp.title = shortstring(names(grp)[i],15)
+        grp.title = names(grp)[i]
+        ##grp.title = shortstring(names(grp)[i],15)
 
         hmap = hmap + Heatmap( gx0,
                               ##col = bluered(64),
-                              col = col,  ## from input
+                              ##col = col,  ## from input
+                              col = col_scale,  ## from input
                               cluster_rows=cluster_rows,
                               cluster_columns=cluster_columns,
                               ##cluster_columns = as.dendrogram(h1),
@@ -567,7 +379,8 @@ gx.splitmap.SAVE <- function(gx, split=5, splitx=NULL,
                               column_title = grp.title,
                               name = names(grp)[i],
                               column_title_rot = column_title_rot,
-                              column_title_gp = gpar(fontsize = 11*title_cex, fontface='bold')
+                              column_title_gp = gpar(fontsize = 11*title_cex, fontface='plain')
+                              ##column_title_gp = gpar(fontsize = 11*title_cex, fontface='bold')
                               )
     }
 
@@ -586,9 +399,10 @@ gx.splitmap.SAVE <- function(gx, split=5, splitx=NULL,
         lab = rownames(gx)[subset]
         lab <- substring(lab,1,lab.len)
         rownames.ha = rowAnnotation(
-            link = row_anno_link(at = subset, labels=lab,
-                                 link_width = unit(0.8,"cm"),
-                                 labels_gp = gpar(fontsize = 10*cexRow)),
+            ##link = row_anno_link(at = subset, labels=lab,
+            link = anno_mark(at = subset, labels=lab,
+                             link_width = unit(0.8,"cm"),
+                             labels_gp = gpar(fontsize = 10*cexRow)),
             width = unit(0.8,"cm") + 0.8*max_text_width(lab))
     } else {
         ## empty matrix just for rownames on the far right
@@ -613,10 +427,20 @@ gx.splitmap.SAVE <- function(gx, split=5, splitx=NULL,
 
     ##draw(hmap, annotation_legend_side="right")
     draw(hmap, annotation_legend_side="right",
-         padding = unit( c(mar[1], 1, 2, mar[2])*0.5, "mm"),
-         gap = unit(1.0,"mm") )
+         padding = unit(mar, "mm"), gap = unit(1.0,"mm") )
     ##hmap
 
+    if(show_key) {
+        px <- c(min(gx),mean(gx),max(gx))
+        ## px <- c(-1,0,1)*max(abs(gx))
+        col_fun = circlize::colorRamp2(px, c("royalblue3","grey90","indianred3"))
+        lgd = Legend(col_fun = col_fun, at=px[c(1,3)], labels=round(px[c(1,3)],2),
+                     border = "transparent", labels_gp = gpar(fontsize = 8), 
+                     legend_width = unit(0.1, "npc"), legend_height = unit(0.01, "npc"),
+                     title = "\n", direction = "horizontal")
+        draw(lgd, x=unit(0.05, "npc"), y=unit(1.01, "npc"), just=c("left", "top"))
+    }
+    
     ##res <- c()
     ##res$col.clust <- h1
     ##res$row.clust <- h2
@@ -852,7 +676,7 @@ gx.heatmap2 <- function(gx,
     ##rpad = mar[2] + ifelse(ncol(gx) < 20, 50, 0)
     rpad = mar[2]
     draw(hmap, annotation_legend_side="right",
-         padding = unit(c(mar[1], 1, 5, rpad), "mm"))
+         padding = unit(c(mar[1], 1, 1, rpad), "mm"))
     ##hmap
 
     ##res <- c()
@@ -872,7 +696,7 @@ gx.heatmap <- function(gx, values=NULL,
                        scale="row", verbose=1, symm=FALSE,
                        ## Rowv = NA, Colv = NA,
                        col.annot=NULL, row.annot=NULL, annot.ht=1,
-                       nmax=1000, cmax=NULL,
+                       nmax=1000, cmax=NULL, show_colnames=TRUE,
                        indent.names=FALSE,
                        ... )
 {
@@ -1028,14 +852,18 @@ gx.heatmap <- function(gx, values=NULL,
     if("col" %in% scale || "both" %in% scale) gx = scale(gx)
     if("row" %in% scale || "both" %in% scale) gx = t(scale(t(gx)))
     if("colcenter" %in% scale) gx = scale(gx,center=TRUE,scale=FALSE)
-    if("rowcenter" %in% scale) gx = t(scale(t(gx),center=TRUE,scale=FALSE))
-
+    if("row.center" %in% scale) gx = gx - rowMeans(gx,na.rm=TRUE)
+    
     if(!is.null(values)) gx <- values[rownames(gx),colnames(gx)]
-    if(softmax) gx <- tanh( gx / sd(gx))
+    if(softmax) gx <- tanh(0.5* gx / sd(gx))
     ##if(all(gx>=0)) col <- tail(col,length(col)/2)
     ##if(all(gx<=0)) col <- head(col,length(col)/2)
-    side.height <- 0.065 * annot.ht * NCOL(cc0)
+    side.height <- 0.1 * annot.ht * NCOL(cc0)
 
+    if(!show_colnames) {
+        colnames(gx) <- rep("",ncol(gx))
+    }
+    
     if(plot.method=="heatmap.3" && !is.na(cc0) && !is.na(cc1) ) {
         if(verbose>1) cat("plotting with heatmap.3 + ColSideColors\n")
         if(is.null(h1) && is.null(h2)) {

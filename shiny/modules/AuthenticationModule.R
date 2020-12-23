@@ -31,8 +31,9 @@ AuthenticationUI <- function(id) {
 }
 
 
-NoAuthenticationDialog <- function(input, output, session, username=NULL)
+NoAuthenticationModule <- function(input, output, session, username=NULL)
 {
+    message("[NoAuthenticationModule] >>>> using no authentication <<<<")
     ns <- session$ns    
     USER <- reactiveValues(logged=FALSE, name="", email="",
                            password=NA, registered=NA, level="")    
@@ -50,23 +51,206 @@ NoAuthenticationDialog <- function(input, output, session, username=NULL)
         removeModal()
         showModal(splashHelloModal(name=USER$name,ns=ns))
         USER$logged <- TRUE
-    })
-
-    observeEvent(input$hello_letsplay,{
-        removeModal()
+        ##Sys.sleep(3);cat("wait 3 seconds to close...\n");removeModal()        
     })
     
     rt <- list(
         level  = reactive(USER$level),
-        name = reactive(USER$name),
+        name   = reactive(USER$name),
         logged = reactive(USER$logged)
     )
     return(rt)
 }
 
-PasswordAuthenticationDialog <- function(input, output, session,
+FirebaseAuthenticationModule <- function(input, output, session,
+                                         firebase=NULL, firebase2=NULL)
+{
+    message("[NoAuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
+
+    ns <- session$ns    
+    USER <- reactiveValues(logged=FALSE, name=NA, password=NA, email=NA, level=NA)    
+    ##credentials <- read.csv(credentials.file,colClasses="character")
+    ##head(credentials)
+    
+    require(firebase)
+    if(is.null(firebase)) {
+        ## NEED CHECK!!! THIS SEEMS NOT WORKING
+        firebase <- FirebaseEmailPassword$new()
+    }
+    if(is.null(firebase2)) {
+        ## NEED CHECK!!! THIS SEEMS NOT WORKING
+        firebase2 <- FirebaseSocial$new()
+    }
+
+    if(!file.exists("firebase.rds")) {
+        stop("ERROR: Please install Firebase API.KEY and PROJECT.ID using firebase::firebase_config() ")
+    }
+    
+    output$showLogin <- renderUI({
+
+        forgot.link <- actionLink(ns("forgot"),"Forgot password?",
+                                  style='font-size:13px; color: white;')
+        
+        m <- splashLoginModal(
+            ns = ns,
+            with.email = TRUE,
+            with.username = FALSE,
+            with.password = TRUE,
+            with.register = TRUE,
+            alt = forgot.link
+        )
+        
+        tagList(
+            useFirebase(),
+            ##useFirebaseUI(),
+            showModal(m)
+        )
+    })
+
+    output$login_warning = renderText("")
+
+    observeEvent( input$login_btn, {           
+
+        cat("name     =",input$login_username,"\n")
+        cat("email    =",input$login_email,"\n")
+        cat("password =",input$login_password,"\n")
+        cat("Logged   =",USER$logged,"\n")
+        
+        ok1 <- (!is.null(input$login_email) && !is.null(input$login_password))
+        ok2 <- (input$login_email!="" && input$login_password!="")
+        if(!ok1 || !ok2) {
+            cat("[FirebaseEmailPasswordModule::login_btn] Invalid email or password!\n")
+            return(NULL)    
+        }
+        
+        ## SIGNIN USING FIREBASE
+        cat("Signing-in into FireBase server...\n")
+        firebase$sign_in(input$login_email, input$login_password)
+
+        ## WAIT FOR SIGNING
+        ##cat("Waiting for FireBase confirmation...\n")
+        ## firebase$req_sign_in()
+    })
+
+    observeEvent( input$register_btn, {           
+
+        cat("name     =",input$login_username,"\n")
+        cat("email    =",input$login_email,"\n")
+        cat("password =",input$login_password,"\n")
+        cat("Logged   =",USER$logged,"\n")
+        
+        ok1 <- (!is.null(input$login_email) && !is.null(input$login_password))
+        ok2 <- (input$login_email!="" && input$login_password!="")
+        if(!ok1 || !ok2) {
+            cat("[FirebaseEmailPasswordModule::register_btn] Invalid email or password!\n")
+            return(NULL)    
+        }
+        username <- input$login_username
+
+        ## SIGNIN USING FIREBASE
+        cat("Registering on FireBase server...\n")        
+        firebase$create(input$login_email, input$login_password)
+
+        ## WAIT FOR SIGNING
+        ##cat("Waiting for FireBase confirmation...\n")
+        ## firebase$req_sign_in()
+    })
+
+    observeEvent( input$forgot, {           
+
+        cat("name     =",input$login_username,"\n")
+        cat("email    =",input$login_email,"\n")
+        cat("password =",input$login_password,"\n")
+        cat("Logged   =",USER$logged,"\n")
+        
+        ok <- (!is.null(input$login_email) && input$login_email!="")
+        if(!ok) {
+            cat("[FirebaseEmailPasswordModule::forgot] Invalid email!\n")
+            return(NULL)    
+        }
+
+        ## SIGNIN USING FIREBASE
+        cat("Reset password on FireBase server...\n")        
+        firebase$reset_password(input$login_email)
+
+        ## WAIT FOR SIGNING
+        ##cat("Waiting for FireBase confirmation...\n")
+        ## firebase$req_sign_in()
+    })
+    
+    ## check if creation sucessful
+    observeEvent(firebase$get_created(), {
+        created <- firebase$get_created()        
+        msg <- created$response$message
+        if(created$success){
+            showNotification("Account created!", type = "message")
+        } else {
+            showNotification(paste("Error!",msg), type = "error")
+        }
+        ## print results to the console
+        print(created)
+    })
+
+    observeEvent(firebase$get_reset(), {
+        reset <- firebase$get_reset()        
+        print(reset)
+
+        if(reset$success){
+            showNotification("Password reset!", type = "message")
+        } else {
+            showNotification(paste("Error!",msg), type = "error")
+        }
+    })
+    
+    observeEvent( firebase$get_signed_in(), {
+
+        ## do somethind
+        signed <- firebase$get_signed_in()
+        cat("names(signed) = ",names(signed),"\n")
+        cat("names(signed$success) = ",names(signed$success),"\n")
+        cat("names(signed$response) = ",names(signed$response),"\n")
+        user  <- signed$user$displayName
+        email <- signed$user$email
+        cat("signed_in = ",signed$signed_in,"\n")
+        cat("user = ",user,"\n")
+        cat("email = ",email,"\n")
+
+        if(signed$success) {
+            cat("Sign in successfull\n")        
+            output$login_warning = renderText("")
+            removeModal()
+            USER$name  <- signed$response$displayName
+            USER$email <- signed$response$email
+            ## Here you can perform some user-specific functions, or site news
+            showModal(splashHelloModal(USER$name,ns=ns))
+            ##removeModal()
+            USER$logged <- TRUE            
+        } else {
+            cat("Warning: could not sign in\n")                    
+            output$login_warning = renderText("could not sign-in")
+            ##shinyjs::delay(2000, hide("login_warning", anim = TRUE, animType = "fade"))
+            shinyjs::delay(2000, {output$login_warning <- renderText("")})
+            USER$logged <- FALSE
+        }
+        ##hide("login_warning")
+        print(signed)
+        
+    })    
+    
+    rt <- list(
+        level  = reactive(USER$level),
+        name   = reactive(USER$name),
+        email  = reactive(USER$email),
+        logged = reactive(USER$logged)
+    )
+    return(rt)
+}
+
+PasswordAuthenticationModule <- function(input, output, session,
                                          credentials.file)
 {
+    message("[NoAuthenticationModule] >>>> using local Email+Password authentication <<<<")
+
     ns <- session$ns    
     USER <- reactiveValues(logged=FALSE, username=NA, password=NA, level=NA)    
     credentials <- read.csv(credentials.file,colClasses="character")
@@ -137,10 +321,6 @@ PasswordAuthenticationDialog <- function(input, output, session,
         ##hide("login_warning")
     })
 
-    observeEvent(input$hello_letsplay,{
-        removeModal()
-    })
-
     rt <- list(
         level  = reactive(USER$level),
         name   = reactive(USER$username),
@@ -150,8 +330,10 @@ PasswordAuthenticationDialog <- function(input, output, session,
 }
 
 register.file="../logs/register.log"
-RegisterAuthenticationDialog <- function(input, output, session, register.file)
+RegisterAuthenticationModule <- function(input, output, session, register.file)
 {
+    message("[NoAuthenticationModule] >>>> using Register authentication <<<<")
+
     ns <- session$ns
     dir.create("../logs",showWarnings=FALSE)        
     register.file    
@@ -170,7 +352,7 @@ RegisterAuthenticationDialog <- function(input, output, session, register.file)
                            password=NA, registered=FALSE, level="")
         
     output$showLogin <- renderUI({
-        message("[AuthenticationDialog::UI] USER$logged = ",USER$logged)
+        message("[AuthenticationModule::UI] USER$logged = ",USER$logged)
         ## If login is OK then do nothing
         if(USER$logged) {
             return(NULL)
@@ -190,8 +372,8 @@ RegisterAuthenticationDialog <- function(input, output, session, register.file)
     
     observeEvent( input$login_btn, {           
         
-        message("[AuthenticationDialog::login] login_btn pressed")                
-        message("[AuthenticationDialog::login] email = ",input$login_email)
+        message("[AuthenticationModule::login] login_btn pressed")                
+        message("[AuthenticationModule::login] email = ",input$login_email)
         email <- input$login_email
         ## check login
         email.exists <- email %in% REGISTERED$email
@@ -208,9 +390,8 @@ RegisterAuthenticationDialog <- function(input, output, session, register.file)
         USER$registered <- user.registered
         USER$logged <- TRUE
         
-        message("[AuthenticationDialog::login] email.exists = ",email.exists)
-        message("[AuthenticationDialog::login] user.registered = ",user.registered)
-        ##showDialog("welcome")
+        message("[AuthenticationModule::login] email.exists = ",email.exists)
+        message("[AuthenticationModule::login] user.registered = ",user.registered)
         removeModal()
         Sys.sleep(DIALOG_SLEEP)
         showModal(splashHelloModal(
@@ -218,9 +399,6 @@ RegisterAuthenticationDialog <- function(input, output, session, register.file)
             name = USER$name,
             msg = "Welcome back. We wish you many great discoveries today!"
         ))
-        observeEvent(input$hello_letsplay,{
-            removeModal()
-        })
         
     })
         
@@ -239,7 +417,7 @@ RegisterAuthenticationDialog <- function(input, output, session, register.file)
     }
 
     createAccountModal <- function(user) {
-        message("[AuthenticationDialog::createAccount] user$name = ",user$name)            
+        message("[AuthenticationModule::createAccount] user$name = ",user$name)            
         m <- modalDialog(
             id = "auth_dialog",
             ##title = "Create an Account",
@@ -290,7 +468,7 @@ RegisterAuthenticationDialog <- function(input, output, session, register.file)
             ),                    
             ##footer = NULL,
             easyClose = FALSE,
-            size = "l"
+            size = "m"
         )
 
         observeEvent( input$register_cancel, {
@@ -301,14 +479,14 @@ RegisterAuthenticationDialog <- function(input, output, session, register.file)
 
         observeEvent( input$register_submit, {
             
-            message("[AuthenticationDialog::createAccount] REGISTER pressed")
+            message("[AuthenticationModule::createAccount] REGISTER pressed")
             qq <- c(name = input$register_name,
                     company = input$register_company,
                     role = input$register_role,
                     hear = input$register_hear)
 
             if(any(is.null(qq) | qq=="")) {
-                message("[AuthenticationDialog::createAccount] missing fields")
+                message("[AuthenticationModule::createAccount] missing fields")
                 output$register_warning = renderText("Please fill in all required fields")
                 shinyjs::delay(2000, {output$register_warning <- renderText("")})
                 return(NULL)
@@ -328,7 +506,7 @@ RegisterAuthenticationDialog <- function(input, output, session, register.file)
                 return(NULL)
             }
 
-            message("[AuthenticationDialog::createAccount] all answered!")
+            message("[AuthenticationModule::createAccount] all answered!")
             lapply(1:length(qq), function(i) message(names(qq)[i],"=",qq[i]))
             ##
             ## save somewhere!
@@ -355,14 +533,8 @@ RegisterAuthenticationDialog <- function(input, output, session, register.file)
                 name = USER$name,
                 msg = "Thank you for registering. We wish you many great discoveries today!"
             ))
-
-            observeEvent(input$hello_letsplay,{
-                removeModal()
-            })
             
         })
-
-                
         m
     }   
 
@@ -417,10 +589,12 @@ RegisterAuthenticationDialog <- function(input, output, session, register.file)
 }
 
 credentials.file="./CREDENTIALS"
-FullAuthenticationDialog.SAVE <- function(input, output, session,
+FullAuthenticationModule.SAVE <- function(input, output, session,
                                           credentials.file,
                                           type="splash")
 {
+    message("[NoAuthenticationModule] >>>> using Full authentication <<<<")
+
     ns <- session$ns
     dir.create("../logs",showWarnings=FALSE)            
     credentials.file    
@@ -444,7 +618,7 @@ FullAuthenticationDialog.SAVE <- function(input, output, session,
     SMTP_SECRET  <- Sys.getenv("SMTP_SECRET")
     has.smtp <- SMTP_SERVER!="" && SMTP_USER!="" && SMTP_SECRET!=""
     has.smtp
-    message("[AuthenticationDialog] has.smtp = ",has.smtp)
+    message("[AuthenticationModule] has.smtp = ",has.smtp)
     
     DIALOG_SLEEP = 0.3
     ##waiter_show(spin_fading_circles())
@@ -458,7 +632,7 @@ FullAuthenticationDialog.SAVE <- function(input, output, session,
     }
     
     output$showLogin <- renderUI({
-        message("[AuthenticationDialog::UI] USER$logged = ",USER$logged)
+        message("[AuthenticationModule::UI] USER$logged = ",USER$logged)
         ## If login is OK then do nothing
         if(USER$logged) {
             return(NULL)
@@ -470,13 +644,13 @@ FullAuthenticationDialog.SAVE <- function(input, output, session,
     observeEvent( input$login_btn, {           
         
         message("[AuthenticationDialog::login] login_btn pressed")                
-        message("[AuthenticationDialog::login] email = ",input$login_email)
+        message("[AuthenticationModule::login] email = ",input$login_email)
         email <- input$login_email
 
         ## check login
         valid.email <- validEmailFormat(email)
         if(!valid.email) {
-            message("[AuthenticationDialog::login] email not valid")
+            message("[AuthenticationModule::login] email not valid")
             output$login_warning = renderText("invalid email format")
             shinyjs::delay(2000, {output$login_warning <- renderText("")}) 
             return(NULL)
@@ -495,9 +669,9 @@ FullAuthenticationDialog.SAVE <- function(input, output, session,
         USER$registered <- user.registered
         USER$logged <- FALSE
         
-        message("[AuthenticationDialog::login] email.exists = ",email.exists)
-        message("[AuthenticationDialog::login] user.registered = ",user.registered)
-        message("[AuthenticationDialog::login] nlogin = ",nlogin)
+        message("[AuthenticationModule::login] email.exists = ",email.exists)
+        message("[AuthenticationModule::login] user.registered = ",user.registered)
+        message("[AuthenticationModule::login] nlogin = ",nlogin)
         
         if(email.exists && user.registered) {
             ## existing user, already registered
@@ -505,16 +679,16 @@ FullAuthenticationDialog.SAVE <- function(input, output, session,
             Sys.sleep(DIALOG_SLEEP)
             updateCredentials(USER, credentials.file)
             if(FALSE && nlogin == 2) {
-                message("[AuthenticationDialog::login] >>> asking user experience")
+                message("[AuthenticationModule::login] >>> asking user experience")
                 showDialog("ask.experience")
             } else {
-                message("[AuthenticationDialog::login] >>> welcome  user")                
+                message("[AuthenticationModule::login] >>> welcome  user")                
                 showDialog("welcome")
             }
             USER$logged <- TRUE
         } else  {
             ## fist time or unregistered user
-            message("[AuthenticationDialog::login] >>> creating account")
+            message("[AuthenticationModule::login] >>> creating account")
             showDialog("create.account")
         }
     })
@@ -534,15 +708,15 @@ FullAuthenticationDialog.SAVE <- function(input, output, session,
     
     ##observeEvent( input$verify_recaptcha, {})    
     observeEvent( input$verify_btn, {
-        message("[AuthenticationDialog::register] verify_btn pressed")
-        message("[AuthenticationDialog::register] USER$email = ",USER$email)
-        message("[AuthenticationDialog::register] USER$password = ",USER$password)        
-        message("[AuthenticationDialog::register] verify_code = ",input$verify_code)
+        message("[AuthenticationModule::register] verify_btn pressed")
+        message("[AuthenticationModule::register] USER$email = ",USER$email)
+        message("[AuthenticationModule::register] USER$password = ",USER$password)        
+        message("[AuthenticationModule::register] verify_code = ",input$verify_code)
 
         if(input$verify_code == "") return(NULL)
 
         ok = (USER$password == input$verify_code)
-        message("[AuthenticationDialog::register] ok = ",ok)        
+        message("[AuthenticationModule::register] ok = ",ok)        
         
         if(ok) {
             output$verify_warning = renderText("")
@@ -573,7 +747,7 @@ FullAuthenticationDialog.SAVE <- function(input, output, session,
     
     showDialog <- function(stage, data=NULL)
     {
-        message("[AuthenticationDialog::showModalDialog] stage = ",stage)
+        message("[AuthenticationModule::showModalDialog] stage = ",stage)
         ##removeModal()
 
         output$verify_warning = renderText("")
@@ -677,12 +851,12 @@ FullAuthenticationDialog.SAVE <- function(input, output, session,
         require(animation)
         tmpfile="./captcha.png"
         tmpfile <- tempfile()        
-        message("[AuthenticationDialog:animated_captcha] render GIF")        
+        message("[AuthenticationModule:animated_captcha] render GIF")        
         saveGIF( animateCaptcha(),
                 movie.name = tmpfile, interval = 0.01, fps=70,
                 nmax = 100, ani.width = 240, ani.height = 50, loop=1)
         ## Return a list containing information about the image
-        message("[AuthenticationDialog:animated_captcha] saved GIF")
+        message("[AuthenticationModule:animated_captcha] saved GIF")
         list(
             src = tmpfile,
             contentType = "image/gif",
@@ -693,7 +867,7 @@ FullAuthenticationDialog.SAVE <- function(input, output, session,
     })
     
     createAccountModal <- function(user) {
-        message("[AuthenticationDialog::createAccount] user$name = ",user$name)            
+        message("[AuthenticationModule::createAccount] user$name = ",user$name)            
         m <- modalDialog(
             id = "auth_dialog",
             ##title = "Tell us a bit about yourself",
@@ -745,19 +919,19 @@ FullAuthenticationDialog.SAVE <- function(input, output, session,
             removeModal()
         })
         observeEvent( input$ask_register, {
-            message("[AuthenticationDialog::createAccount] REGISTER pressed")
+            message("[AuthenticationModule::createAccount] REGISTER pressed")
             qq <- c(name = input$ask_name,
                     company = input$ask_company,
                     role = input$ask_role,
                     hear = input$ask_hear)
 
             if(any(is.null(qq) | qq=="")) {
-                message("[AuthenticationDialog::createAccount] missing fields")
+                message("[AuthenticationModule::createAccount] missing fields")
                 output$ask_warning = renderText("Please fill in all required fields")
                 shinyjs::delay(2000, {output$ask_warning <- renderText("")})                
                 return(NULL)
             } else {
-                message("[AuthenticationDialog::createAccount] all answered!")
+                message("[AuthenticationModule::createAccount] all answered!")
                 lapply(1:length(qq), function(i) message(names(qq)[i],"=",qq[i]))
                 ##
                 ## save somewhere!
@@ -778,7 +952,7 @@ FullAuthenticationDialog.SAVE <- function(input, output, session,
     }   
     
     askExperienceModal <- function(user) {
-            message("[AuthenticationDialog::askExperience]")            
+            message("[AuthenticationModule::askExperience]")            
             m <- modalDialog(
                 id = "auth_dialog",
                 ##title = "Tell us a bit about yourself",
@@ -834,7 +1008,7 @@ FullAuthenticationDialog.SAVE <- function(input, output, session,
                 removeModal()
             })
             observeEvent( input$askxp_submit, {
-                message("[AuthenticationDialog::askExperience] Submit pressed")
+                message("[AuthenticationModule::askExperience] Submit pressed")
                 answers <- c(
                     askxp_satisfied = input$askxp_satisfied,
                     askxp_recommend = input$askxp_recommend,
@@ -897,18 +1071,18 @@ FullAuthenticationDialog.SAVE <- function(input, output, session,
         require(emayili)
         require(magrittr) 
         
-        message("[AuthenticationDialog::smtpAuthCode] *************************")
-        message("[AuthenticationDialog::smtpAuthCode] ****** SENDING EMAIL ****")
-        message("[AuthenticationDialog::smtpAuthCode] *************************")
-        message("[AuthenticationDialog::smtpAuthCode] email = ",email)
-        message("[AuthenticationDialog::smtpAuthCode] code = ",auth.code)
+        message("[AuthenticationModule::smtpAuthCode] *************************")
+        message("[AuthenticationModule::smtpAuthCode] ****** SENDING EMAIL ****")
+        message("[AuthenticationModule::smtpAuthCode] *************************")
+        message("[AuthenticationModule::smtpAuthCode] email = ",email)
+        message("[AuthenticationModule::smtpAuthCode] code = ",auth.code)
 
         SMTP_SERVER  <- Sys.getenv("SMTP_SERVER")
         SMTP_USER    <- Sys.getenv("SMTP_USER")
         SMTP_SECRET  <- Sys.getenv("SMTP_SECRET")        
-        message("[AuthenticationDialog::smtpAuthCode] SMTP_SERVER = ",SMTP_SERVER)
-        message("[AuthenticationDialog::smtpAuthCode] SMTP_USER = ",SMTP_USER)
-        message("[AuthenticationDialog::smtpAuthCode] SMTP_SECRET = ",SMTP_SECRET)        
+        message("[AuthenticationModule::smtpAuthCode] SMTP_SERVER = ",SMTP_SERVER)
+        message("[AuthenticationModule::smtpAuthCode] SMTP_USER = ",SMTP_USER)
+        message("[AuthenticationModule::smtpAuthCode] SMTP_SECRET = ",SMTP_SECRET)        
 
         msg <- paste0(
             "Welcome to the Omics Playground!\n\n",            
@@ -950,10 +1124,10 @@ FullAuthenticationDialog.SAVE <- function(input, output, session,
     return(res)
 }
 
-splashHelloModal <- function(name, msg=NULL, ns=NULL, duration=-4000)
+splashHelloModal <- function(name, msg=NULL, ns=NULL, duration=3500)
 {
     if(is.null(ns)) ns <- function(e) return(e)
-    message("[AuthenticationDialog::splashHelloModel]")
+    message("[AuthenticationModule::splashHelloModel]")
     
     all.hello = c("Hello","Salut","Hola","Privet","Nǐ hǎo","Ciao","Hi","Hoi","Hej",
                   "Yassou","Selam","Hey","Hei","Grützi","Салам")
@@ -973,24 +1147,25 @@ splashHelloModal <- function(name, msg=NULL, ns=NULL, duration=-4000)
         div(HTML(title),style="font-size:70px;font-weight:700;line-height:1em;"),
         br(),
         div(HTML(subtitle),style="font-size:30px;"),
-        br(),br(),br(),
-        actionButton(ns("hello_letsplay"),"Let's play!",class="red-button")
-        ## actionButton("hello_letsplay","Let's play!",class="red-button")        
+        br(),br(),br()
     )
     body <- tagList(
         div(id="splash-title",splash.title)
     )
     m <- particlesSplashModal(body, ns=ns, easyClose=TRUE, fade=TRUE,
                               buttons=FALSE, footer=FALSE)    
-    if(duration>0) shinyjs::delay(duration, removeModal())
+    if(duration>0) {
+        cat("closing hello in",round(duration/1000,1),"seconds...\n")
+        shinyjs::delay(duration, removeModal())
+    }
     return(m)
 }
 
 splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
-                             with.username=FALSE, alt=NULL)
+                             with.username=FALSE, with.register=FALSE, alt=NULL)
 {
     if(is.null(ns)) ns <- function(e) return(e)
-    message("[AuthenticationDialog::splashLoginModal]")
+    message("[AuthenticationModule::splashLoginModal]")
 
     titles <- list()
     titles[[1]] = c("Big Omics Data","Isn't big anymore with Omics Playground")
@@ -1053,6 +1228,18 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     div.alt <- div()
     if(!is.null(alt)) div.alt <- alt
     top <- HTML(rep("<br>",sum(c(!with.email,!with.username,!with.password))))
+
+    div.button <- div(
+        id="splash-buttons",
+        actionButton(ns("login_btn"),"Login",class="red-button")
+    )
+    if(with.register) {
+        div.button <- div(
+            id="splash-buttons",
+            actionButton(ns("login_btn"),"Login",class="red-button"),
+            actionButton(ns("register_btn"),"Register",class="red-button")
+        )
+    }
     
     ##splash.panel=div();ns=function(x)x
     splash.panel <- div(
@@ -1062,8 +1249,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
         div.password,
         div.alt,
         br(),br(),
-        ##actionButton(ns("login_btn"),NULL,icon=icon("sign-in-alt")),
-        actionButton(ns("login_btn"),"Login",class="red-button")
+        div.button
     )
     body <- tagList(
         div(id="splash-title",splash.title),
@@ -1079,7 +1265,7 @@ particlesSplashModal <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
     require(particlesjs)
     type <- type[1]    
     if(is.null(ns)) ns <- function(e) return(e)
-    message("[AuthenticationDialog::splashModal]")
+    message("[AuthenticationModule::splashModal]")
 
     div.footer = modalButton("Dismiss")
     if(buttons) {
@@ -1122,7 +1308,7 @@ particlesSplashModal <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
         ),
         footer = div.footer,
         particlesjs::particles(config=particlesjs.conf, target_id = "particles-target", timeout = 1000),
-        size="l", easyClose=easyClose, fade=fade
+        size="m", easyClose=easyClose, fade=fade
     ) ## end of modalDialog
     
     return(m)
@@ -1136,14 +1322,14 @@ if(0) {
     )
     
     server <- function(input, output, session) {
-        ##auth <- AuthenticationDialog(input, output, session, "password") 
-        auth <- callModule(AuthenticationDialog, "auth", type="password")
+        ##auth <- AuthenticationModule(input, output, session, "password") 
+        auth <- callModule(AuthenticationModule, "auth", type="password")
         ## Render the plot
         output$results <- renderPlot({
             ##auth$showLogin()
             if(auth$logged()==FALSE) {
                 AuthenticationUI("auth")
-                message("[authenticateDialog] done! email=",email)
+                message("[authenticateModule] done! email=",email)
             } else {
                 plot(sin)
                 cat("class(auth)=",class(auth),"\n")

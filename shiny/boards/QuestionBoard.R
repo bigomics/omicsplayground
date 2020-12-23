@@ -12,11 +12,11 @@ QUESTIONS.ANSWERS <- list(
     c("Are you a student?","yes|no")
 )
 
-QuestionModule_UI <- function(id) {
+QuestionBoard_UI <- function(id) {
     ##ns <- NS(id)  ## namespace
 }
 
-QuestionModule <- function(input, output, session, lapse=5)
+QuestionBoard <- function(input, output, session, lapse=5)
 {
     ns <- session$ns ## NAMESPACE
     
@@ -24,7 +24,7 @@ QuestionModule <- function(input, output, session, lapse=5)
     cur_question <- reactiveVal("")
     
     showQuestion <- function(qa=NULL) {
-        dbg("[QuestionModule:showQuestion] reacted")
+        dbg("[QuestionBoard:showQuestion] reacted")
         if(is.null(qa)) qa <- sample(QUESTIONS.ANSWERS,1)[[1]]
         question <- qa[1]
         cur_question(qa[1])
@@ -56,12 +56,12 @@ QuestionModule <- function(input, output, session, lapse=5)
     })
 
     observeEvent( input$question_submit, {
-        dbg("[QuestionModule$:observeEvent] input$question_submit")
+        dbg("[QuestionBoard$:observeEvent] input$question_submit")
         question <- cur_question()
         answer <- input$answer
         qa <- data.frame(time=date(), question="question", answer="answer")
         qa <- data.frame(time=date(), question=question, answer=answer)
-        dbg("[QuestionModule$:observeEvent] updating answer.csv file...")
+        dbg("[QuestionBoard$:observeEvent] updating answer.csv file...")
         write.table( qa, file="answers.csv", sep=",", append=TRUE,
                     row.names=FALSE, col.names=FALSE)
         removeModal()        

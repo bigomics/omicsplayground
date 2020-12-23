@@ -3,6 +3,8 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+message(">>> sourcing WordCloudBoard")
+
 WordCloudInputs <- function(id) {
     ns <- NS(id)  ## namespace
     tagList(
@@ -24,7 +26,7 @@ WordCloudUI <- function(id) {
     )
 }
 
-WordCloudModule <- function(input, output, session, env)
+WordCloudBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
 
@@ -82,7 +84,7 @@ WordCloudModule <- function(input, output, session, env)
     
     observeEvent( input$wc_info, {
         showModal(modalDialog(
-            title = HTML("<strong>WordCloud Analysis Module</strong>"),
+            title = HTML("<strong>WordCloud Analysis Board</strong>"),
             HTML(wc_infotext),
             easyClose = TRUE, size="l" ))
     })

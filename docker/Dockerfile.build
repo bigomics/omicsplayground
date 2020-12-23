@@ -12,11 +12,11 @@ FROM bigomics/omicsplayground:base
 ##FROM bigomics/omicsplayground:v2.3.0
 
 #------------------------------------------------------------
-# Arghh... we forgot shiny-server...
+# Arghh... we forgot shiny-server???
 #------------------------------------------------------------
 
-RUN wget -nv https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.14.948-amd64.deb \
-    && gdebi --n --q shiny-server-1.5.14.948-amd64.deb
+# RUN wget -nv https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.14.948-amd64.deb \
+#    && gdebi --n --q shiny-server-1.5.14.948-amd64.deb
 
 #------------------------------------------------------------
 # Install any extra packages required since base
@@ -25,8 +25,7 @@ RUN wget -nv https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.
 # RUN apt install -y xvfb
 # RUN R -e "devtools::install_version('mnormt', version='1.5-7')" \
 #    && R -e "install.packages(c())"
-RUN R -e "BiocManager::install(c('rhdf5','mygene','qgraph', \
-    'psych','metap','brew','Seurat','monocle'))"
+# RUN R -e "BiocManager::install(c('Seurat','monocle'))"
 # RUN R -e "install.packages(c('rhdf5'))"
 # RUN pip3 install umap-learn
 

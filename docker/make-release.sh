@@ -16,7 +16,10 @@ echo git push
 echo git push --tags
 
 ##---------------- docker ----------------------
-echo "nohup docker build -f docker/Dockerfile --no-cache -t $image:build . > docker.out &"
+echo "nohup docker build -f docker/Dockerfile.base --no-cache -t $image:base . > docker.out &"
+echo "nohup docker build -f docker/Dockerfile.build --no-cache -t $image:build . > docker.out &"
+
+
 echo docker build -f docker/Dockerfile -t $image:build .
 
 ## +run in background, remove contained after use, give nice name

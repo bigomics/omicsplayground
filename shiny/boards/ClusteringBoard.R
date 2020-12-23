@@ -3,6 +3,8 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+message(">>> sourcing ClusteringModule")
+
 ClusteringInputs <- function(id) {
     ns <- NS(id)  ## namespace
     tagList(
@@ -33,7 +35,7 @@ ClusteringUI <- function(id) {
 }
 
 
-ClusteringModule <- function(input, output, session, env)
+ClusteringBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
 
@@ -94,7 +96,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                 )
             )
         )
-        if(USER_MODE=="DEV") {
+        if(0) {
             ui1 <- tagList(
                 br(),hr(),
                 h5("Developer options:"),
@@ -113,7 +115,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
     observeEvent( input$clust_info, {
         showModal(modalDialog(
-            title = HTML("<strong>Clustering Module</strong>"),
+            title = HTML("<strong>Clustering Board</strong>"),
             HTML(clust_infotext),
             easyClose = TRUE, size="l" ))
     })
@@ -125,12 +127,12 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         
         levels = getLevels(ngs$Y)
 
-        dbg("[ClusteringModule::observe] updating hm_samplefilter")
-        dbg("[ClusteringModule::observe] head(levels)=",head(levels))
+        dbg("[ClusteringBoard::observe] updating hm_samplefilter")
+        dbg("[ClusteringBoard::observe] head(levels)=",head(levels))
 
         updateSelectInput(session, "hm_samplefilter", choices=levels)
         
-        if(DEV.VERSION && !is.null(ngs$gset.meta$matrices) ) {
+        if(DEV && !is.null(ngs$gset.meta$matrices) ) {
             jj = which(!sapply(ngs$gset.meta$matrices,is.null))
             mat.names = names(ngs$gset.meta$matrices)[jj]
             updateRadioButtons(session, "hm_gsetmatrix", choices=mat.names,
@@ -178,23 +180,23 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ###if(is.null(input$hm_level)) return(NULL)
         choices = names(ngs$families)
 
-        dbg("[ClusteringModule::observe] input$hm_level=",input$hm_level)
-        dbg("[ClusteringModule::observe] dim(ngs$counts)=",dim(ngs$counts))
-        dbg("[ClusteringModule::observe] dim(ngs$gsetX)=",dim(ngs$gsetX))
-        dbg("[ClusteringModule::observe] length(choices)=",length(choices))
-        dbg("[ClusteringModule::observe] length(COLLECTIONS)=",length(COLLECTIONS))
+        dbg("[ClusteringBoard::observe] input$hm_level=",input$hm_level)
+        dbg("[ClusteringBoard::observe] dim(ngs$counts)=",dim(ngs$counts))
+        dbg("[ClusteringBoard::observe] dim(ngs$gsetX)=",dim(ngs$gsetX))
+        dbg("[ClusteringBoard::observe] length(choices)=",length(choices))
+        dbg("[ClusteringBoard::observe] length(COLLECTIONS)=",length(COLLECTIONS))
         
         if(input$hm_level=="geneset") {
-            dbg("[ClusteringModule::observe] change to COLLECTIONS")            
+            dbg("[ClusteringBoard::observe] change to COLLECTIONS")            
             nk <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))
             choices = names(COLLECTIONS)[nk>=5]
         }
         choices <- c("<custom>",choices)
         choices <- sort(unique(choices))
 
-        dbg("[ClusteringModule::observe] updating hm_features")
-        dbg("[ClusteringModule::observe] length(choices)=",length(choices))
-        dbg("[ClusteringModule::observe] head(choices)=",head(choices))
+        dbg("[ClusteringBoard::observe] updating hm_features")
+        dbg("[ClusteringBoard::observe] length(choices)=",length(choices))
+        dbg("[ClusteringBoard::observe] head(choices)=",head(choices))
         updateSelectInput(session, "hm_features", choices=choices)
     })
     
@@ -221,7 +223,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             gsets = rownames(ngs$gsetX)
             gsets = unique(unlist(COLLECTIONS[input$hm_features]))
             zx = ngs$gsetX
-            if(DEV.VERSION && !is.null(ngs$gset.meta$matrices) ) {
+            if(DEV && !is.null(ngs$gset.meta$matrices) ) {
                 k <- input$hm_gsetmatrix
                 zx <- as.matrix(ngs$gset.meta$matrices[[k]])
             }            
@@ -292,8 +294,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         req(ngs)
         zx <- getFilteredMatrix()
 
-        dbg("[ClusteringModule:getTopMatrix] dim(ngs$counts) = ",dim(ngs$counts))
-        dbg("[ClusteringModule:getTopMatrix] dim(zx) = ",dim(zx))
+        dbg("[ClusteringBoard:getTopMatrix] dim(ngs$counts) = ",dim(ngs$counts))
+        dbg("[ClusteringBoard:getTopMatrix] dim(zx) = ",dim(zx))
         
         nmax = 4000
         nmax = as.integer(input$hm_ntop)
@@ -308,13 +310,13 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
         grp <- NULL
         if(do.split && splitvar %in% colnames(ngs$samples)) {
-            dbg("[ClusteringModule:getTopMatrix] splitting by phenotype: ",splitvar)
+            dbg("[ClusteringBoard:getTopMatrix] splitting by phenotype: ",splitvar)
             grp <- ngs$samples[colnames(zx),splitvar]
         }
         table(grp)
 
         if(do.split && splitvar %in% rownames(ngs$X)) {
-            dbg("[ClusteringModule:getTopMatrix] splitting by gene: ",splitvar)
+            dbg("[ClusteringBoard:getTopMatrix] splitting by gene: ",splitvar)
             ##xgene <- rownames(ngs$X)[1]
             gx <- ngs$X[splitvar,]
             if(ncol(zx)>50) {
@@ -327,8 +329,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             grp <- paste0(splitvar,":",grp)
         }
         
-        dbg("[ClusteringModule:getTopMatrix] len.grp=",length(grp))
-        dbg("[ClusteringModule:getTopMatrix] splitby=",splitby)
+        dbg("[ClusteringBoard:getTopMatrix] len.grp=",length(grp))
+        dbg("[ClusteringBoard:getTopMatrix] splitby=",splitby)
         
         ##if(length(grp)==0) splitby <- 'none'
         if(do.split && length(grp)==0) return(NULL)        
@@ -341,7 +343,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         if(!do.split && topmode=="specific") topmode <- "sd"
         
         if(topmode=="pca") {
-            dbg("[ClusteringModule:getTopMatrix] splitting by PCA")
+            dbg("[ClusteringBoard:getTopMatrix] splitting by PCA")
             require(irlba)
             NPCA=5
             svdres <- irlba(zx - rowMeans(zx), nv=NPCA)
@@ -367,8 +369,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ##grp <- ngs$samples[colnames(zx),"cluster"]
             table(grp)
 
-            dbg("[ClusteringModule:getTopMatrix] head.grp=",head(grp))
-            dbg("[ClusteringModule:getTopMatrix] dim.zx=",dim(zx))
+            dbg("[ClusteringBoard:getTopMatrix] head.grp=",head(grp))
+            dbg("[ClusteringBoard:getTopMatrix] dim.zx=",dim(zx))
 
             grp.zx <- t(apply(zx, 1, function(x) tapply(x, grp, mean)))
             if(length(table(grp))==1) {
@@ -394,7 +396,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         } else {
             ## Order by SD
             ## 
-            dbg("[ClusteringModule:getTopMatrix] order by SD")
+            dbg("[ClusteringBoard:getTopMatrix] order by SD")
             ii <- order(-apply(zx,1,sd,na.rm=TRUE))
             zx = zx[ii,,drop=FALSE] ## order
             zx = head(zx,nmax)
@@ -426,7 +428,13 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                 grp.annot = annot[match(colnames(zx),gg.grp),,drop=FALSE] ## NEED RETHINK!!!
                 rownames(grp.annot) = colnames(zx)
             } else {
-                grp.zx = tapply( colnames(zx), gg.grp, function(k) rowMeans(zx[,k,drop=FALSE],na.rm=TRUE))
+                
+                cat("[ClusteringBoard:getTopMatrix] gg.grp = ",gg.grp,"\n")
+                cat("[ClusteringBoard:getTopMatrix] dim(zx) = ",dim(zx),"\n")
+                cat("[ClusteringBoard:getTopMatrix] colnames(zx) = ",colnames(zx),"\n")
+                
+                grp.zx = tapply( colnames(zx), gg.grp, function(k)
+                    rowMeans(zx[,k,drop=FALSE],na.rm=TRUE))
                 grp.zx = do.call( cbind, grp.zx)
                 ## take most frequent term as group annotation value
                 most.freq <- function(x) names(sort(-table(x)))[1]
@@ -441,7 +449,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             }
         }
 
-        dbg("[ClusteringModule:getTopMatrix] done!")
+        dbg("[ClusteringBoard:getTopMatrix] done!")
         
         ##input$top_terms
         filt <- list(mat=zx, annot=annot, grp=grp,
@@ -650,7 +658,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     })
 
     topmodes <- c("specific","sd","pca")
-    ##if(DEV.VERSION) topmodes <- c("sd","specific","pca")
+    ##if(DEV) topmodes <- c("sd","specific","pca")
     
     hm_splitmap_opts = tagList(
         tipify( radioButtons(ns("hm_plottype"), "Plot type:",
@@ -1955,4 +1963,4 @@ displays the expression levels of selected genes across all conditions in the an
     })
 
 
-} ## end of Module
+} ## end of Board

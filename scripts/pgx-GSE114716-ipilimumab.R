@@ -51,6 +51,7 @@ dim(exprs(gset))
 ## still need to get the matrix...
 system("wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE114nnn/GSE114716/suppl/GSE114716_raw.counts.hs.xlsx -P /tmp")
 if(!require(xlsx)) {
+    ## need to do: >> sudo R CMD javareconf
     install.packages("rJava")
     install.packages("xlsx")
 }
@@ -110,7 +111,20 @@ genes = data.frame( gene_name=rownames(X),
                    chr=chrom, pos=loc)
 ##genes = apply(genes,2,as.character)
 head(genes)
-rownames(genes) = rownames(X)
+table(rownames(genes) == rownames(X))
+
+if(0) {
+    ## check txlen vs average counts
+    genes <- ngs.getGeneAnnotation(rownames(X))
+    head(genes)
+    par(mfrow=c(2,2), mar=c(4,4,2,2))
+    plot( genes$tx_len, rowMeans(X),pch=".")
+    plot( log(1+genes$tx_len), log(1+rowMeans(X)),pch=".")
+    plot( log(1+genes$tx_len), log(1+rowMeans(X)),pch=".")
+    xlen <- imputeMedian(genes$tx_len)
+    plot( log(1+genes$tx_len), log(1+rowMeans(X)/xlen),pch=".")
+
+}
 
 ##--------------------------------------------------------------------
 ## check if batch correction is needed

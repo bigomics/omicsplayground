@@ -3,6 +3,8 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+message(">>> sourcing CorrelationBoard")
+
 CorrelationInputs <- function(id) {
     ns <- NS(id)  ## namespace
     tagList(
@@ -24,7 +26,7 @@ CorrelationUI <- function(id) {
     ui
 }
 
-CorrelationModule <- function(input, output, session, env)
+CorrelationBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
 
@@ -39,7 +41,7 @@ between genes and find coregulated modules."
     output$description <- renderUI(HTML(description))
 
 
-    cor_infotext ="The <strong>Correlation Analysis Module</strong> provides statistical correlation analysis on gene level with visualisations. During the visual analysis, users can filter out some samples or collapse the samples by predetermined groups. The dark shaded area in the barplot estimates the partial correlation."
+    cor_infotext ="The <strong>Correlation Analysis Board</strong> provides statistical correlation analysis on gene level with visualisations. During the visual analysis, users can filter out some samples or collapse the samples by predetermined groups. The dark shaded area in the barplot estimates the partial correlation."
     
 
     ##================================================================================
@@ -147,7 +149,7 @@ between genes and find coregulated modules."
 
     observeEvent( input$cor_info, {
         showModal(modalDialog(
-            title = HTML("<strong>Correlation Analysis Module</strong>"),
+            title = HTML("<strong>Correlation Analysis Board</strong>"),
             HTML(cor_infotext),
             easyClose = TRUE ))
     })
@@ -703,12 +705,4 @@ between genes and find coregulated modules."
         pdf.width=10, pdf.height=5, res=c(72,90)
     )
 
-
-
-    
-
-    
-    
-
-
-} ## end of module
+} ## end of Board

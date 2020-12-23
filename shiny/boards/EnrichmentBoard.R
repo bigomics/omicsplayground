@@ -3,6 +3,8 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+message(">>> sourcing EnrichmentBoard")
+
 EnrichmentInputs <- function(id) {
     ns <- NS(id)  ## namespace
     tagList(
@@ -35,7 +37,7 @@ EnrichmentUI <- function(id) {
 }
 
 
-EnrichmentModule <- function(input, output, session, env)
+EnrichmentBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
 
@@ -102,7 +104,7 @@ EnrichmentModule <- function(input, output, session, env)
                 )
             )
         )
-        if(DEV.VERSION) {
+        if(DEV) {
             uix <- tagList(
                 hr(),h6("Developer options:"),
                 tipify( radioButtons(ns('gs_lfcmethod'),'Score method: (dev)', choices=c("fc","gs")),
@@ -120,7 +122,7 @@ EnrichmentModule <- function(input, output, session, env)
     
     observeEvent( input$gs_info, {
         showModal(modalDialog(
-            title = HTML("<strong>Enrichment Analysis Module</strong>"),
+            title = HTML("<strong>Enrichment Analysis Board</strong>"),
             HTML(gs_infotext),
             easyClose = TRUE, size="l" ))
     })
@@ -277,7 +279,7 @@ EnrichmentModule <- function(input, output, session, env)
             jj <- rownames(mx)
             
             gsdiff.method <- "fc"  ## OLD default
-            if(DEV.VERSION) gsdiff.method <- input$gs_lfcmethod
+            if(DEV) gsdiff.method <- input$gs_lfcmethod
             if(gsdiff.method=="gs") {
                 AveExpr1 <- rowMeans(ngs$gsetX[jj,s1])
                 AveExpr0 <- rowMeans(ngs$gsetX[jj,s0])
@@ -1776,6 +1778,6 @@ EnrichmentModule <- function(input, output, session, env)
     outx <- list(selected_gsetmethods=selected_gsetmethods)
     return(outx)
 
-} ## end-of-Module
+} ## end-of-Board
 
 

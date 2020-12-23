@@ -17,8 +17,9 @@ max.features=20000;type="counts"
 test.methods=c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
 test.methods=c("trend.limma","edger.qlf","deseq2.wald")
 
-compute.testGenes <- function(ngs, contr.matrix, max.features=1000, type="counts",
-                              test.methods=c("trend.limma","deseq2.wald","edger.qlf"))
+compute.testGenes <- function(ngs, contr.matrix, max.features=1000, 
+                              test.methods=c("trend.limma","deseq2.wald","edger.qlf"),
+                              remove.outputs=TRUE )
 {
     single.omics <- mean(grepl("\\[",rownames(ngs$counts))) < 0.1
     single.omics
@@ -28,18 +29,22 @@ compute.testGenes <- function(ngs, contr.matrix, max.features=1000, type="counts
         ## single-omics, no missing values
         cat(">>> computing gene tests for SINGLE-OMICS\n")
         ngs <- compute.testGenesSingleOmics(
-            ngs = ngs, type = type,
+            ngs = ngs, 
             contr.matrix = contr.matrix,
             max.features = max.features,
-            test.methods = test.methods)
+            test.methods = test.methods,
+            remove.outputs = remove.outputs
+        )
     } else {
         ## multi-omics, missing values allowed
         cat(">>> computing gene tests for MULTI-OMICS\n")
         ngs <- compute.testGenesMultiOmics(
             ngs=ngs,  ## type is inferred
-            contr.matrix=contr.matrix,
-            max.features=max.features,
-            test.methods=test.methods)
+            contr.matrix = contr.matrix,
+            max.features = max.features,
+            test.methods = test.methods,
+            remove.outputs = remove.outputs
+        )
     }
     return(ngs)
 }
@@ -52,48 +57,77 @@ if(0) {
 
 ##contr.matrix=ngs$contrasts
 compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
-                                         type="counts", filter.low = TRUE,
+                                         filter.low = TRUE, remove.outputs=TRUE, 
                                          test.methods = c("trend.limma","deseq2.wald","edger.qlf"))
 {
 
+    contr.matrix0 <- contr.matrix  ## SAVE
+    
     ##-----------------------------------------------------------------------------
     ## Check parameters, decide group level
     ##-----------------------------------------------------------------------------    
     if(!("counts" %in% names(ngs))) {
         stop("cannot find counts in ngs object")
     }
-    
-    group = NULL
-    if( all(rownames(contr.matrix) %in% ngs$samples$group)) {
-        cat("testing on groups...\n")
-        group = as.character(ngs$samples$group)
+    if(!("X" %in% names(ngs))) {
+        stop("cannot find normalized expression X in ngs object")
     }
-    if( all(rownames(contr.matrix) %in% ngs$samples$cluster)) {
-        cat("testing on clusters...\n")
-        group = as.character(ngs$samples$cluster)
-    }
-    if( all(rownames(contr.matrix) %in% rownames(ngs$samples))) {
-        cat("testing on samples...\n")
-        group = rownames(ngs$samples)
+
+    ## detect group column if matching all conditions
+    grp <- rownames(contr.matrix)
+    group.col <- names(which(apply(ngs$samples, 2, function(x) all(grp %in% x))))
+    if(length(group.col)>0) {
+        group.col <- group.col[1]
+        cat("groups column detected:",group.col,"\n")
     }
     
-    if(is.null(group)) {
-        stop("invalid contrast matrix. could not assign groups")
+    stat.group = NULL
+    is.expmatrix <- all(rownames(contr.matrix)==rownames(ngs$samples))
+    if(length(group.col) && !is.na(group.col)) {
+
+        cat("contrasts on groups...\n")
+        stat.group = as.character(ngs$samples[,group.col])
+
+    } else if(is.expmatrix) {
+        cat("[compute.testGenesSingleOmics] contrasts on samples...\n")
+        ##stat.group = rownames(ngs$samples)
+
+        ## convert sample-wise contrasts to group-wise contrasts
+        cat("[compute.testGenesSingleOmics] detecting statistical groups...\n")        
+        stat.group <- pgx.getGroups(contr.matrix)
+
+        cat("[compute.testGenesSingleOmics] length(stat.group) = ",length(stat.group),"\n")
+        cat("[compute.testGenesSingleOmics] stat.group = ",stat.group,"\n")
+
+        nlev <- length(unique(stat.group))
+        if( nlev < nrow(contr.matrix)) {
+            cat("replacing contrast matrix...\n")
+            stat0 <- sort(unique(stat.group))
+            contr.matrix <- contr.matrix[match(stat0,stat.group),,drop=FALSE]
+            rownames(contr.matrix) <- stat0
+        }        
+
+    } else {
+        stop("[compute.testGenesSingleOmics] FATAL:: could not set statistical groups!")
     }
-    
-    table(group)
+
+    table(stat.group)
     ##dim(contr.matrix)
     
     ##-----------------------------------------------------------------------------
     ## normalize contrast matrix to zero mean and signed sums to one
     ##-----------------------------------------------------------------------------
-    contr.matrix0 <- contr.matrix  ## SAVE
 
-    ## take out any empty comparisons
-    contr.matrix <- contr.matrix0[,which(colSums(contr.matrix0!=0)>0),drop=FALSE]
-    contr.matrix[is.na(contr.matrix)] <- 0
+    cat("[compute.testGenesSingleOmics] dim(contr.matrix) = ",dim(contr.matrix),"\n")
     
-    ## normalize
+    ## take out any empty comparisons
+    sel <- (colSums(contr.matrix>0) & colSums(contr.matrix<0))
+    contr.matrix <- contr.matrix[,sel,drop=FALSE]
+    contr.matrix[is.na(contr.matrix)] <- 0
+
+    cat("[compute.testGenesSingleOmics] dim(contr.matrix) = ",dim(contr.matrix),"\n")
+    
+    ## normalize?? why??
     for(i in 1:ncol(contr.matrix)) {
         m <- contr.matrix[,i]
         m[is.na(m)] <- 0
@@ -105,80 +139,88 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     ## create design matrix from defined contrasts (group or clusters)
     ##-----------------------------------------------------------------------------
     
-    no.design <- all(group %in% rownames(ngs$samples))  ## sample-wise design
+    no.design <- all(stat.group == rownames(ngs$samples))  ## sample-wise design
     no.design
     design=NULL
     
     if(no.design) {
         ## SAMPLE-WISE DESIGN
-        design=NULL
+        design = NULL
         exp.matrix <- contr.matrix
     } else {
         ## GROUP DESIGN
-        ##group[is.na(group)] <- "_"
-        group[which(!group %in% rownames(contr.matrix))] <- "_"
-        design <- model.matrix(~ 0 + group )  ## clean design no batch effects...
-        colnames(design) <- sub("^group", "", colnames(design))
-        rownames(design) <- colnames(ngs$counts)
-        design
+        ##stat.group[is.na(stat.group)] <- "_"
+
+        cat("[compute.testGenesSingleOmics] length(stat.group) = ",length(stat.group),"\n")
+        cat("[compute.testGenesSingleOmics] rownames(contr.matrix) = ",rownames(contr.matrix),"\n")
         
-        ## check contrasts for sample sizes (at least 2 in each group) and
-        ## remove otherwise
+        notk <- which(!stat.group %in% rownames(contr.matrix))
+        
+        if(length(notk)) {
+            stat.group[notk] <- "_"
+        }
+
+        cat("[compute.testGenesSingleOmics] length(stat.group) = ",length(stat.group),"\n")
+        cat("[compute.testGenesSingleOmics] stat.group = ",stat.group,"\n")
+
+        design <- model.matrix(~ 0 + stat.group )  ## clean design no batch effects...
+        colnames(design) <- sub("^stat.group", "", colnames(design))
+
+        cat("[compute.testGenesSingleOmics] dim(design) = ",dim(design),"\n")
+        cat("[compute.testGenesSingleOmics] dim(ngs$samples) = ",dim(ngs$samples),"\n")        
+        rownames(design) <- rownames(ngs$samples)
+        head(design)
+        
+        ## make sure matrix align and compute experiment matrix
         design <- design[,match(rownames(contr.matrix),colnames(design)),drop=FALSE]
-        colnames(design)
-        design = design[,rownames(contr.matrix),drop=FALSE]
+        colnames(design) <- rownames(contr.matrix)
+        ##design = design[,rownames(contr.matrix),drop=FALSE]
         exp.matrix = (design %*% contr.matrix)
+
+        ## check contrasts for sample sizes (at least 2 in each group) and
+        ## remove otherwise        
         keep <- rep(TRUE,ncol(contr.matrix))
         keep = (colSums(exp.matrix > 0) >= 1 & colSums(exp.matrix < 0) >= 1)
         ##keep = ( colSums(exp.matrix > 0) >= 2 & colSums(exp.matrix < 0) >= 2 )
         table(keep)
-        contr.matrix = contr.matrix[,keep,drop=FALSE]
-        exp.matrix = (design %*% contr.matrix)
+        contr.matrix <- contr.matrix[,keep,drop=FALSE]
+        exp.matrix   <- exp.matrix[,keep,drop=FALSE]
     }
 
     model.parameters <- list(design = design,
                              contr.matrix = contr.matrix, 
-                             exp.matrix = exp.matrix)
+                             exp.matrix = exp.matrix,
+                             group = stat.group
+                             )
     ngs$model.parameters <- model.parameters
     
     ##-----------------------------------------------------------------------------
     ## Filter genes
     ##-----------------------------------------------------------------------------    
-    counts = ngs$counts  ## notice original counts are not affected
+    counts = ngs$counts  ## notice original counts will not be affected
     genes  = ngs$genes
     samples = ngs$samples
 
     ## Rescale if too low. Often EdgeR/DeSeq can give errors of total counts
     ## are too low. Happens often with single-cell (10x?). We rescale
     ## to a minimum of 1 million counts (CPM)
-    if(type=="counts") {
+    if(1) {
         mean.counts <- mean(colSums(counts,na.rm=TRUE))
         mean.counts
         if( mean.counts < 1e6) {
+            cat("[compute.testGenesSingleOmics] apply global mean scaling to 1e6...\n")        
             counts = counts * 1e6 / mean.counts
         }
         mean(colSums(counts,na.rm=TRUE))
-    }
-
-    ## set zero off-set??? striclty set small value to zero???
-    if(0) {
-        zero.th <- 0.25*mean(colSums(counts,na.rm=TRUE)/1e6)
-        counts[counts<zero.th] <- 0
     }
     
     ## prefiltering for low-expressed genes (recommended for edgeR and
     ## DEseq2). Require at least in 2 or 1% of total. Specify the
     ## PRIOR CPM amount to regularize the counts and filter genes
     PRIOR.CPM = 1
-
-    if(type=="counts" && filter.low) {
+    if(filter.low) {
         PRIOR.CPM = 0.25
         PRIOR.CPM = 1
-        if(0) {
-            ## at least 1, or at 5% percentile of non-zero counts (CPM)
-            cpm <- edgeR::cpm(counts)
-            PRIOR.CPM <- max(1, quantile(cpm[cpm>0.1], probs=0.05)[1])
-        }
         PRIOR.CPM
         AT.LEAST = ceiling(pmax(2,0.01*ncol(counts)))    
         cat("filtering for low-expressed genes: >",PRIOR.CPM,"CPM in >=",
@@ -203,15 +245,12 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
         cat("shrinking data matrices: n=",max.features,"\n")
         ##avg.prior.count <- mean(PRIOR.CPM * Matrix::colSums(counts) / 1e6)  ##
         ##logcpm = edgeR::cpm(counts, log=TRUE, prior.count=avg.prior.count)
-        if(type=="counts") {
-            logcpm <- log2(PRIOR.CPM + edgeR::cpm(counts, log=FALSE))
-            sdx <- apply(logcpm,1,sd)
-        } else {
-            sdx <- apply(counts,1,sd)
-        }
+        ##logcpm <- log2(PRIOR.CPM + edgeR::cpm(counts, log=FALSE))
+        logcpm <- logCPM(counts, total=NULL)
+        sdx <- apply(logcpm,1,sd)
         jj <- head( order(-sdx), max.features )  ## how many genes?
         ## always add immune genes??
-        if("gene_biotype" %in% colnames(genes)) {
+        if(FALSE && "gene_biotype" %in% colnames(genes)) {
             imm.gene <- grep("^TR_|^IG_",genes$gene_biotype)
             imm.gene <- imm.gene[which(sdx[imm.gene] > 0.001)]
             jj <- unique(c(jj,imm.gene))
@@ -236,8 +275,15 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     ## Run all test methods
     ##
     ##X=counts;design=design,
+    if(!is.null(ngs$X)) {
+        X <- ngs$X[rownames(counts),]
+    } else {
+        X <- logCPM(counts, total=NULL, prior=PRIOR.CPM)  ## million??
+    }
+    X <- X[rownames(counts),]
+    
     gx.meta <- ngs.fitContrastsWithAllMethods(
-        X = counts, type = type,
+        counts = counts, X=X, ## type = type,
         samples = samples, genes = NULL, ##genes=genes,
         methods = methods, design = design,
         contr.matrix = contr.matrix,
@@ -272,14 +318,17 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     ngs$gx.meta <- gx.meta
     
     ## remove large outputs... (uncomment if needed!!!)
-    ngs$gx.meta$outputs <- NULL
+    if(remove.outputs) {
+        ngs$gx.meta$outputs <- NULL
+    }
 
     return(ngs)
 }
 
 
 compute.testGenesMultiOmics <- function(ngs, contr.matrix, max.features=1000, 
-                               test.methods=c("trend.limma","deseq2.wald","edger.qlf"))
+                                        test.methods=c("trend.limma","deseq2.wald","edger.qlf"),
+                                        remove.outputs=TRUE )
 {
     ngs$gx.meta <- NULL
     ngs$model.parameters <- NULL
