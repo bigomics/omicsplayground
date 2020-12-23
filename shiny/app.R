@@ -9,22 +9,22 @@
 ##                                                                     ##
 #########################################################################
 
-message("\n\n")
-message("#################################################################")
-message("##################### OMICS PLAYGROUND ##########################")
-message("#################################################################")
-message("\n\n")
-
-DEBUG = FALSE
-#DEBUG = TRUE
-##.setSmtpServer("~/bigomics/server-conf/smtp_server/infomaniak.env")
-message("DEBUG = ",DEBUG)
-
 library(shiny)
 library(shinyjs)
 library(shinyWidgets)
 library(waiter)
 library(plotly)
+
+message("\n\n")
+message("###############################################################")
+message("##################### OMICS PLAYGROUND ########################")
+message("###############################################################")
+message("\n\n")
+
+DEBUG = FALSE
+DEBUG = TRUE
+##.setSmtpServer("~/bigomics/server-conf/smtp_server/infomaniak.env")
+message("DEBUG = ",DEBUG)
 
 message("\n")
 message("************************************************")
@@ -50,37 +50,39 @@ envcat("PLAYGROUND_HELLO")
 ## --------------------------------------------------------------------
 
 message("\n")
-message("*******************************************")
-message("******* SETTING GLOBAL VARIABLES **********")
-message("*******************************************")
+message("***********************************************")
+message("*********** SETTING GLOBAL VARIABLES **********")
+message("***********************************************")
 
-OPG = ".."
-RDIR = file.path(OPG,"R")
-FILES = file.path(OPG,"lib")
-FILESX = file.path(OPG,"libx")
-PGX.DIR = file.path(OPG,"data")
-##PGX.DIR = file.path(OPG,"data-extra")
-##PGX.DIR = c(PGX.DIR,file.path(OPG,"data-extra"))
+source("global.R")
+cat("OPG =",OPG,"\n")
+cat("RDIR =",RDIR,"\n")
+cat("FILES =",FILES,"\n")
+cat("FILESX =",FILESX,"\n")
+cat("PGX.DIR =",PGX.DIR,"\n")
 
-source(file.path(RDIR,"pgx-include.R"),local=TRUE)  ## pass local vars
-source("global.R", local=TRUE)
-source("modules/AuthenticationDialog.R")
-source(file.path(RDIR,"pgx-files.R"), local=TRUE)  ## pass local vars
+src.local=TRUE  ## need???
+src.local=FALSE  ## need???
+source(file.path(RDIR,"pgx-include.R"),local=src.local)  ## pass local vars
+source(file.path(RDIR,"pgx-functions.R"), local=src.local)  ## pass local vars
+source(file.path(RDIR,"pgx-files.R"), local=src.local)  ## pass local vars
+source(file.path(RDIR,"pgx-init.R"),local=src.local)     ## pass local vars
+source("init.R", local=src.local)
 
 message("\n")
-message("*****************************************")
-message("******** parsing OPTIONS file ***********")
-message("*****************************************")
+message("*********************************************")
+message("*********** parsing OPTIONS file ************")
+message("*********************************************")
 
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
 
 ## over-ride options
-## opt$AUTHENTICATION = "none"
+opt$AUTHENTICATION = "none"
 ## opt$AUTHENTICATION = "password"
 ## opt$AUTHENTICATION = "register"
-opt$DEV_VERSION=TRUE
+##opt$AUTHENTICATION = "firebase"
 
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
@@ -88,12 +90,12 @@ if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     opt$AUTHENTICATION = auth
 }
 
+## copy to global environment
 WATERMARK      = opt$WATERMARK
 SHOW_QUESTIONS = FALSE
-DEV.VERSION    = opt$DEV_VERSION && dir.exists("../../omicsplayground-dev")
 USER_MODE      = opt$USER_MODE
 AUTHENTICATION = opt$AUTHENTICATION
-DEV.VERSION
+DEV = (USER_MODE=="DEV" && dir.exists("../../omicsplayground-dev"))
 
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
@@ -102,16 +104,22 @@ message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 ## ------------------------ READ FUNCTIONS ----------------------------
 ## --------------------------------------------------------------------
 
+source("modules/AuthenticationModule.R",local=src.local)
+source("modules/ComputePgxModule.R",local=src.local)
+source("modules/MakeContrastModule.R",local=src.local)
+source("modules/NormalizeCountsModule.R",local=src.local)
+source("modules/SuperBatchCorrectModule.R",local=src.local)
+source("modules/UploadModule.R",local=src.local)
+##source("modules/UsersMapModule.R_")
+
 ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
-source("../R/pgx-init.R", local=TRUE)  ## pass local vars
-##source("../R/pgx-functions.R", local=TRUE)  ## pass local vars
 
 if(0) {    
     ##PGX.DIR="../test/"
     ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
     load("../data/geiger2016-arginine.pgx")
-    load("../data/GSE10846-dlbcl.pgx")
+    load("../data/GSE10846-dlbcl-nc.pgx")
     load("../data/GSE10846-xgreta.pgx")
     load("../data/GSE72056-scmelanoma.pgx")
     load("../data/tcga-brca_pub.pgx")
@@ -123,34 +131,36 @@ if(0) {
 }
 
 ## --------------------------------------------------------------------
-## ------------------------ READ MODULES ------------------------------
+## ------------------------ READ BOARDS -------------------------------
 ## --------------------------------------------------------------------
 
-MODULES <- c("load","view","clust","expr","enrich","isect","func",
+BOARDS <- c("load","view","clust","expr","enrich","isect","func",
              "word","drug","sig","scell","cor","bio","cmap",
              "tcga","bc","multi","qa")
-if(is.null(opt$MODULES_ENABLED)) opt$MODULES_ENABLED = MODULES
-if(is.null(opt$MODULES_DISABLED)) opt$MODULES_DISABLED = NA
-ENABLED  <- array(MODULES %in% opt$MODULES_ENABLED, dimnames=list(MODULES))
-DISABLED <- array(MODULES %in% opt$MODULES_DISABLED, dimnames=list(MODULES))
+if(is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED = BOARDS
+if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
+ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
+DISABLED <- array(BOARDS %in% opt$BOARDS_DISABLED, dimnames=list(BOARDS))
 ENABLED  <- ENABLED & !DISABLED
 ENABLED
 
-modules <- dir("modules", pattern="Module.R$")
-for(m in modules) {
-    message("[MAIN] loading module ",m)
-    source(paste0("modules/",m), local=TRUE)
-    ##source(paste0("modules/",m), local=FALSE)
+boards <- dir("boards", pattern="Board.R$")
+for(m in boards) {
+    message("[MAIN] loading board ",m)
+    source(paste0("boards/",m), local=src.local)
+    ##source(paste0("boards/",m), local=FALSE)
 }
 
-if(DEV.VERSION && dir.exists("../../omicsplayground-dev")) {
-    xmodules <- dir("../../omicsplayground-dev/shiny/modules", pattern="Module.R$")
-    for(m in xmodules) {
-        message("[MAIN] loading extra module ",m)
-        source(paste0("../../omicsplayground-dev/shiny/modules/",m), local=TRUE)
+if(0 && DEV && dir.exists("../../omicsplayground-dev")) {
+    xboards <- dir("../../omicsplayground-dev/modulesx", pattern="Board.R$")
+    xboards
+    m=xboards[1]
+    for(m in xboards) {
+        message("[MAIN] loading extra board ",m)
+        source(paste0("../../omicsplayground-dev/modulesx/",m), local=src.local)
     }
     ENABLED[c("tcga","bc","multi")] <- TRUE
-    modules <- c(modules, xmodules)
+    boards <- c(boards, xboards)
 } else {
     ENABLED[c("tcga","bc","multi")] <- FALSE
 }
@@ -179,35 +189,43 @@ server = function(input, output, session) {
     message("\n========================================================")
     message("===================== SERVER ===========================")
     message("========================================================\n")
-    message("[MAIN] calling modules...")
-    
+    message("[MAIN] calling boards...")
+
+    library(firebase)
+    firebase  <- FirebaseEmailPassword$new()
+    firebase2 <- FirebaseSocial$new()
+
+    ## firebase <- NULL
     max.limits <- c("samples" = opt$MAX_SAMPLES,
                     "comparisons" = opt$MAX_COMPARISONS,
                     "genes" = opt$MAX_GENES)
     env <- list()  ## communication environment
     env[["load"]]   <- callModule(
-        LoadingModule, "load", max.limits = max.limits,
-        authentication = AUTHENTICATION)
-    env[["view"]]   <- callModule( DataViewModule, "view", env)
-    env[["clust"]]  <- callModule( ClusteringModule, "clust", env)
-    env[["expr"]]   <- callModule( ExpressionModule, "expr", env)
-    env[["enrich"]] <- callModule( EnrichmentModule, "enrich", env)
-    if(ENABLED["func"])   env[["func"]]   <- callModule( FunctionalModule, "func", env)
-    if(ENABLED["word"])   env[["word"]]   <- callModule( WordCloudModule, "word", env)
-    if(ENABLED["drug"])   env[["drug"]]   <- callModule( DrugConnectivityModule, "drug", env)
-    if(ENABLED["isect"])  env[["isect"]]  <- callModule( IntersectionModule, "isect", env)
-    if(ENABLED["sig"])    env[["sig"]]    <- callModule( SignatureModule, "sig", env)
-    if(ENABLED["scell"])  env[["scell"]]  <- callModule( SingleCellModule, "scell", env)
-    if(ENABLED["cor"])    env[["cor"]]    <- callModule( CorrelationModule, "cor", env)
-    if(ENABLED["bio"])    env[["bio"]]    <- callModule( BiomarkerModule, "bio", env)
-    if(ENABLED["cmap"])   env[["cmap"]]   <- callModule( ConnectivityModule, "cmap", env)
-    if(ENABLED["tcga"])   env[["tcga"]]   <- callModule( TcgaModule, "tcga", env)
-    if(ENABLED["bc"])     env[["bc"]]     <- callModule( BatchCorrectModule, "bc", env)
-    if(ENABLED["multi"])  env[["multi"]]  <- callModule( MultiLevelModule, "multi", env)
-    env[["qa"]] <- callModule( QuestionModule, "qa", lapse = -1)
+        LoadingBoard, "load", max.limits = max.limits,
+        authentication = AUTHENTICATION,
+        firebase=firebase, firebase2=firebase2)
+    env[["view"]]   <- callModule( DataViewBoard, "view", env)
+    env[["clust"]]  <- callModule( ClusteringBoard, "clust", env)
+    env[["expr"]]   <- callModule( ExpressionBoard, "expr", env)
+    env[["enrich"]] <- callModule( EnrichmentBoard, "enrich", env)
+    if(ENABLED["func"])   env[["func"]]   <- callModule( FunctionalBoard, "func", env)
+    if(ENABLED["word"])   env[["word"]]   <- callModule( WordCloudBoard, "word", env)
+    if(ENABLED["drug"])   env[["drug"]]   <- callModule( DrugConnectivityBoard, "drug", env)
+    if(ENABLED["isect"])  env[["isect"]]  <- callModule( IntersectionBoard, "isect", env)
+    if(ENABLED["sig"])    env[["sig"]]    <- callModule( SignatureBoard, "sig", env)
+    if(ENABLED["scell"])  env[["scell"]]  <- callModule( SingleCellBoard, "scell", env)
+    if(ENABLED["cor"])    env[["cor"]]    <- callModule( CorrelationBoard, "cor", env)
+    if(ENABLED["bio"])    env[["bio"]]    <- callModule( BiomarkerBoard, "bio", env)
+    if(ENABLED["cmap"])   env[["cmap"]]   <- callModule( ConnectivityBoard, "cmap", env)
+    if(1 && DEV) {
+        if(ENABLED["tcga"])   env[["tcga"]]   <- callModule( TcgaBoard, "tcga", env)
+        ##if(ENABLED["bc"])     env[["bc"]]     <- callModule( BatchCorrectBoard, "bc", env)
+        if(ENABLED["multi"])  env[["multi"]]  <- callModule( MultiLevelBoard, "multi", env)
+    }
+    env[["qa"]] <- callModule( QuestionBoard, "qa", lapse = -1)
     
-    ## message("[MAIN] all modules called:",paste(names(env),collapse=" "))
-    message("[MAIN] modules enabled:",paste(names(which(ENABLED)),collapse=" "))
+    ## message("[MAIN] all boards called:",paste(names(env),collapse=" "))
+    message("[MAIN] boards enabled:",paste(names(which(ENABLED)),collapse=" "))
     ## outputOptions(output, "clust", suspendWhenHidden=FALSE) ## important!!!
 
     output$current_dataset <- renderText({
@@ -246,7 +264,7 @@ server = function(input, output, session) {
             hideTab("enrich-tabs2","FDR table")
         }
 
-        if(!opt$USER_MODE == "DEV" || DEV.VERSION) {
+        if(opt$USER_MODE == "DEV" || DEV) {
             showTab("maintabs","Development")
             showTab("view-tabs","Resource info")
             showTab("enrich-tabs1","GeneMap")
@@ -256,10 +274,10 @@ server = function(input, output, session) {
 
         ## Dynamically show upon availability in pgx object
         if(opt$ENABLE_UPLOAD) showTab("load-tabs","Upload data")            
-        showHideTab(pgx, "connectivity", "maintabs", "Similar experiments")
-        showHideTab(pgx, "drugs", "maintabs", "Drug connectivity")
-        showHideTab(pgx, "wordcloud", "maintabs", "Word cloud")
-        showHideTab(pgx, "deconv", "maintabs", "CellProfiling")         
+        tabRequire(pgx, "connectivity", "maintabs", "Similar experiments")
+        tabRequire(pgx, "drugs", "maintabs", "Drug connectivity")
+        tabRequire(pgx, "wordcloud", "maintabs", "Word cloud")
+        tabRequire(pgx, "deconv", "maintabs", "CellProfiling")         
         if(!is.null(ACCESS.LOG)) showTab("load-tabs","Visitors map")                    
 
         message("[MAIN] reconfiguring menu done.")        
@@ -297,7 +315,7 @@ TABVIEWS <- list(
     "scell" = tabView("CellProfiling", SingleCellInputs("scell"), SingleCellUI("scell"))    
 )
 
-if(DEV.VERSION) {
+if(0 && DEV) {
     TABVIEWS <- c(
         TABVIEWS,
         list(
@@ -314,7 +332,7 @@ createUI <- function(tabs)
     message("\n======================================================")
     message("======================= UI ===========================")
     message("======================================================\n")
-
+    
     version <- scan("../VERSION", character())[1]
     TITLE = paste(opt$TITLE,version)
     LOGO = div(img(src="bigomics-logo-white-48px.png", height="48px"),
@@ -326,15 +344,17 @@ createUI <- function(tabs)
     ##selected = "Home"    
     header = tagList(
         tags$head(tags$link(rel = "stylesheet", href = "playground.css")),
+        tags$head(tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
+        firebase::useFirebase(),
         TAGS.JSSCRIPT,
         tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
         use_waiter(),
         div(textOutput("current_dataset"),class='current-data')
-        ##QuestionModule_UI("qa")
+        ##QuestionBoard_UI("qa")
     )
     names(header) <- NULL
-    
+   
     footer = tagList(
         ##social_buttons(),
         waiter_show_on_load(

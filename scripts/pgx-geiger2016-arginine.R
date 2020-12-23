@@ -22,8 +22,8 @@ FILES
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data/geiger2016-arginineX.pgx"
-rda.file="../data/geiger2016-arginine.pgx"
+rda.file="../data/geiger2016-arginine-test.pgx"
+##rda.file="../data/geiger2016-arginine.pgx"
 rda.file
 
 ## load(file=rda.file, verbose=1)
@@ -39,40 +39,50 @@ ngs$description = "Proteome profiles of activated  vs resting human naive T cell
 ##devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data", "--no-manual"), build_vignettes=FALSE)    
 library(org.Hs.eg.db)
 library(proteus)    
-metadataFile <- "../ext/arginine/meta.txt"
-proteinGroupsFile <- "../ext/arginine/proteinGroups.txt"
+meta=metadataFile="../ext/arginine/meta.txt"
+file=proteinGroupsFile="../ext/arginine/proteinGroups.txt"
 ## Read the proteinGroups file
-prot <- proteus.readProteinGroups(
-    file=proteinGroupsFile, meta=metadataFile,
-    collapse.gene=1, unit="intensity", is.log2=TRUE, use.LFQ=FALSE)
+prot <- prot.readProteinGroups(
+    proteinGroupsFile, meta=metadataFile,
+    collapse.gene=TRUE, use.LFQ=FALSE)
+
+if(0) {
+    prot <- proteus.readProteinGroups(
+        proteinGroupsFile, meta=metadataFile,
+        collapse.gene=TRUE, use.LFQ=FALSE)
+}
 
 ##-------------------------------------------------------------------
 ## scale/normalize counts
 ##-------------------------------------------------------------------    
 ## impute missing values
 norm.counts <- prot.imputeMissing(
-    prot$tab, groups=prot$metadata$condition,
+    prot$counts, groups=prot$samples$condition,
     method="group.median", zero.na=TRUE)
 
 ## scale/normalize
 norm.counts <- prot.normalizeCounts(
-    norm.counts, scaling=1e6,
-    qnormalize=TRUE, prior.count=0, plot=0)
+    norm.counts, scale=1e6, scaling="global", ## prior.count=0, 
+    qnormalize=TRUE)
 ##hist(log2(1e-8+norm.counts), breaks=100)
 
 ##-------------------------------------------------------------------
 ## create ngs object
 ##-------------------------------------------------------------------
-ngs$samples = prot$metadata
-colnames(ngs$samples) <- sub("condition","group",colnames(ngs$samples))
+##ngs$samples = prot$metadata
+ngs$samples = prot$samples
+##colnames(ngs$samples) <- sub("condition","group",colnames(ngs$samples))
 ##ngs$counts = data$counts
 ngs$counts = norm.counts
 colnames(ngs$counts)==ngs$samples$sample
 short.name <- sub(".*_tcell_","",colnames(ngs$counts))
 rownames(ngs$samples)=colnames(ngs$counts)=short.name
 
+ngs$X <- log2( ngs$counts + 1)
+
 ## relevel factors??
-ngs$samples$group <- relevelFactorFirst(ngs$samples$group)
+##ngs$samples$group <- relevelFactorFirst(ngs$samples$group)
+ngs$samples$condition <- relevelFactorFirst(ngs$samples$condition)
 ngs$samples$activated <- relevelFactorFirst(ngs$samples$activated)
 ngs$samples$time <- relevelFactorFirst(ngs$samples$time)   
 
@@ -80,19 +90,10 @@ require(org.Hs.eg.db)
 GENE.TITLE = unlist(as.list(org.Hs.egGENENAME))
 gene.symbol = unlist(as.list(org.Hs.egSYMBOL))
 names(GENE.TITLE) = gene.symbol
-ngs$genes = data.frame( gene_name = prot$gene,
-                       gene_alias = prot$gene.names,
-                       gene_title = GENE.TITLE[prot$gene] )
-
-##-------------------------------------------------------------------
-## collapse multiple row for genes by summing up counts
-##-------------------------------------------------------------------
-sum(duplicated(ngs$genes$gene_name))
-x1 = apply( ngs$counts, 2, function(x) tapply(x, ngs$genes$gene_name, sum))
-ngs$genes = ngs$genes[match(rownames(x1), ngs$genes$gene_name),]
-ngs$counts = x1
-rownames(ngs$genes) = rownames(ngs$counts) = rownames(x1)
-remove(x1)
+## ngs$genes = data.frame( gene_name = prot$gene,
+##                        gene_alias = prot$gene.names,
+##                        gene_title = GENE.TITLE[prot$gene] )
+ngs$genes <- prot$genes
 
 ##-------------------------------------------------------------------
 ## Pre-calculate t-SNE for and get clusters
@@ -104,7 +105,7 @@ table(ngs$samples$cluster)
 ##-------------------------------------------------------------------
 ## Create contrasts 
 ##-------------------------------------------------------------------
-group.levels <- levels(ngs$samples$group)
+group.levels <- levels(ngs$samples$condition)
 group.levels
 ## 10 contrasts in total
 contr.matrix <- makeContrasts(
@@ -126,6 +127,8 @@ contr.matrix
 ##-------------------------------------------------------------------
 ## Start computations
 ##-------------------------------------------------------------------
+source("../R/pgx-include.R")
+
 ngs$timings <- c()
 
 GENE.METHODS=c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
@@ -145,10 +148,12 @@ ngs <- compute.testGenes(
     ngs, contr.matrix,
     max.features=MAX.GENES,
     test.methods = GENE.METHODS)
+names(ngs)
 
 ngs <- compute.testGenesets (
     ngs, max.features=MAX.GENES,
     test.methods = GENESET.METHODS,
+    remove.outputs = FALSE,
     lib.dir=FILES)
 
 extra <- c("drugs-combo")
@@ -164,6 +169,7 @@ if(0) {
 }
 
 names(ngs)
+names(ngs$gset.meta)
 ngs$timings
 
 ##-------------------------------------------------------------------

@@ -27,8 +27,8 @@ methods
 ##-------------------- FIT ALL CONTRASTS --------------------------------------
 ##-----------------------------------------------------------------------------
 
-ngs.fitContrastsWithAllMethods <- function(X, samples, design, contr.matrix, genes=NULL, 
-                                           type="counts", prior.cpm=1, quantile.normalize=FALSE,
+ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, contr.matrix, genes=NULL, 
+                                           prior.cpm=1, quantile.normalize=FALSE, ## type="counts", 
                                            conform.output=TRUE, do.filter=TRUE, cpm.scale=1e6,
                                            remove.batch=TRUE, methods=ALL.GENETEST.METHODS,
                                            custom=NULL, custom.name=NULL )
@@ -56,26 +56,21 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, design, contr.matrix, gen
     ## If degenerate set design to NULL
     if(!is.null(design) && ncol(design)>=ncol(X) ) {
         ## "no-replicate" design!!!
-        cat("WARNING: degenerate design. setting to NULL\n")
+        cat("WARNING: degenerate design. setting design to NULL\n")
+        contr.matrix <- design %*% contr.matrix
         design <- NULL
     }
     
     ##------------------------------------------------------------------
     ## define transformation methods: log2CPM for counts
     ##------------------------------------------------------------------        
-    counts <- NULL
-    if(type=="counts") {
-        cat("assuming counts data\n")
-        cat("  prior CPM counts =",prior.cpm,"\n")
-        cat("  CPM scale =",cpm.scale,"\n")
-        counts <- X  ## input was counts
+    if(is.null(X)) {
+        cat("prior CPM counts =",prior.cpm,"\n")
+        cat("CPM scale =",cpm.scale,"\n")
         X <- log2(t(t(counts) / colSums(counts)) * cpm.scale + prior.cpm)  ## CPM
     } else {
-        ## do nothing (assume inpute is linear gaussian)
-        cat("no parameter transformation\n")
-        ## X <- X
+        cat("using input log-expression matrix X...\n")
     }
-
     
     ##------------------------------------------------------------------
     ## Quantile normalize if needed
@@ -85,14 +80,18 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, design, contr.matrix, gen
         X <- limma::normalizeQuantiles(X)  ## in linear space
     }
     ##------------------------------------------------------------------    
-    ## main grouping variable for modeling
+    ## get main grouping variable for modeling
     ##------------------------------------------------------------------
     group <- NULL
-    rownames(contr.matrix)
-    if(all(rownames(contr.matrix) %in% samples$group)) {
-        group <- samples$group
+    ##if(all(rownames(contr.matrix) %in% samples$group)) {
+    ##    group <- samples$group
+    ##}
+    group <- colnames(design)[max.col(design)]
+    if(nrow(design) == ncol(design) &&
+       all(rownames(design)==colnames(design))) {
+        group <- NULL
     }
-
+        
     timings <- list()
     outputs = list()
 
@@ -297,6 +296,7 @@ ngs.fitContrastsWithAllMethods <- function(X, samples, design, contr.matrix, gen
         pv = P[[i]]
         qv = Q[[i]]
         fc = logFC[[i]]
+        mx = aveExpr[[i]]
         
         ## avoid strange values
         fc[is.infinite(fc) | is.nan(fc)] <- NA
@@ -386,7 +386,7 @@ ngs.fitContrastsWithLIMMA <- function( X, contr.matrix, design, method=c("voom",
         ## With no design (grouping) we perform LIMMA not on the
         ## entire contrast matrix but per contrast one-by-one.
         ##
-        ##cat("fitting LIMMA contrasts with design matrix....\n")
+        cat("fitting LIMMA contrasts with design matrix....\n")
         design1 <- design[,rownames(contr.matrix),drop=FALSE]
         if(method=="voom") {
             v <- voom(2**X, design1, plot=plot, normalize.method="none")

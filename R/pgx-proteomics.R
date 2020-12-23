@@ -10,8 +10,8 @@
 ##
 ######################################################################## 
 
-## file="./proteinGroups.txt";sep="\t";collapse.gene=TRUE;use.LFQ=FALSE;filter.contaminants=TRUE
-prot.readProteinGroups <- function(file, sep="\t", collapse.gene=TRUE,
+##sep="\t";collapse.gene=TRUE;use.LFQ=FALSE;filter.contaminants=TRUE
+prot.readProteinGroups <- function(file, meta=NULL, sep="\t", collapse.gene=TRUE, 
                                    use.LFQ=FALSE, filter.contaminants=TRUE)
 {
     ## Split data file
@@ -27,9 +27,10 @@ prot.readProteinGroups <- function(file, sep="\t", collapse.gene=TRUE,
 
     ##col.required <- c("Gene.names","Protein.names")
     ## Filter contaminants
-    D$is.contaminant <- (D[['Reverse']] == "+" |
-                         D[['Only identified by site']] == "+" |
-                         D[['Potential contaminant']] == "+")
+    contaminant.cols <- c("Reverse","Only identified by site","Potential contaminant")
+    contaminant.cols <- intersect(contaminant.cols,colnames(D))
+    contaminant.cols
+    D$is.contaminant <- (rowSums(D[,contaminant.cols,drop=FALSE]=='+',na.rm=TRUE)>=1)
     table(D$is.contaminant)
     if(filter.contaminants) {
         ##D$Gene.names[which(D$is.contaminant)]
@@ -38,7 +39,7 @@ prot.readProteinGroups <- function(file, sep="\t", collapse.gene=TRUE,
     dim(D)
     
     ## parse gene annotation
-    genes = D[,c("Protein IDs","Gene names","Protein names")]
+    genes = D[,c("Majority protein IDs","Gene names","Protein names")]
     head(genes)
     colnames(genes) = c("protein_id","gene_name","gene_title")
     gg = as.character(genes$gene_name)
@@ -78,8 +79,19 @@ prot.readProteinGroups <- function(file, sep="\t", collapse.gene=TRUE,
         rownames(genes) <- genes$gene_name
     }
     
+    if(!is.null(meta) && is.character(meta)) {
+        if(grepl("csv$",meta)) {
+            meta <- read.csv(meta, header=TRUE)
+        } else {
+            meta <- read.delim(meta, header=TRUE, sep="\t")
+        }
+    }
+    if(is.null(meta)) {
+        meta <- data.frame(sample.name=colnames(counts))
+    }
+
     res <- c()
-    res$samples <- data.frame(sample.name=colnames(counts) )
+    res$samples <- meta
     res$genes <- genes
     res$counts <- as.matrix(counts)
 
@@ -122,12 +134,12 @@ proteus.readProteinGroups <- function(file="proteinGroups.txt", meta="meta.txt",
 
     if(any(!samples_in_meta %in% samples_with_data)) {
         sel_nodata <- setdiff(samples_in_meta, samples_with_data)
-        message("WARNING: no data for samples: ",sel_nodata,"(discarding)")
+        message("WARNING: no data for samples: ",sel_nodata," (discarding)")
         meta <- meta[which(samples_in_meta %in% samples_with_data),]
     }
     if(any(!samples_with_data %in% samples_in_meta)) {
         sel_nometa <- setdiff(samples_with_data, samples_in_meta)
-        message("WARNING: no meta-information for samples: ",sel_nometa,"(discarding)")
+        message("WARNING: no meta-information for samples: ",sel_nometa," (discarding)")
     }
     
     measure.cols <- NULL
@@ -227,18 +239,12 @@ proteus.readProteinGroups <- function(file="proteinGroups.txt", meta="meta.txt",
 }
 
 ##counts=prot$tab;plot=TRUE;qnormalize=TRUE;prior.count=1;zero.thr=0.25;scaling=1e6
-prot.normalizeCounts <- function(counts, scaling=1e6, by.column=TRUE,
-                                 qnormalize=TRUE, prior.count=1, 
-                                 zero.thr=0.25, plot=TRUE )
+scaling=1e12
+prot.normalizeCounts <- function(counts, scale=1e6, scaling="by.column",
+                                 qnormalize=TRUE, zero.offset=0.01, 
+                                 zero.thr=0.25 )
 
 {    
-
-    if(scaling<1) {
-        stop("scaling must be >1")
-    }
-    if(prior.count<0) {
-        stop("prior.count must be >0")
-    }
 
     ##------------------------------------------------------------
     ## start with original counts from MaxQuant
@@ -247,60 +253,58 @@ prot.normalizeCounts <- function(counts, scaling=1e6, by.column=TRUE,
     sum(is.na(X))
     sum(X==0)
     sum(X==0,na.rm=TRUE)
-    if(plot) par(mfrow=c(3,3))
-    if(plot) hist( log2(X),breaks=100, main="uncorrected")
     min(X,na.rm=TRUE)
     X[ X <= zero.thr ] <- NA  ## treat zero as NA for the moment
+    which.zeros <- Matrix::which(X==0 | is.na(X), arr.ind=TRUE)
+    length(which.zeros)
     
     ##------------------------------------------------------------
     ## normalize to CPM (or otherwise)
     ##------------------------------------------------------------
-    ##scaling=1e6
-    scaling
-    if(!is.null(scaling) && scaling >= 1) {
-        if(by.column) {
-            message("scaling columns to ",scaling," total counts")
-            X <- t(t(X) / colSums(X,na.rm=TRUE)) * scaling  ## counts-per-million
-            if(plot) hist( log2(1e-8+X),breaks=100, main=paste("column scaling:",scaling,"\n"))
-        } else {
-            message("global scaling to average ",scaling," counts")
-            X <- X / mean(colSums(X,na.rm=TRUE)) * scaling  ## counts-per-million
-            if(plot) hist( log2(1e-8+X),breaks=100, main=paste("global scaling:",scaling,"\n"))
-        }
-        colSums(X, na.rm=TRUE)
+    ##scale=1e6
+    if(is.null(scale)) {
+        scale <- mean(colSums(X,na.rm=TRUE))
+        message("set scale parameter to = ",scale)
     }
+
+    if(scaling=="by.column") {
+        message("scaling by columns to ",scale," total counts")
+        X <- t(t(X) / colSums(X,na.rm=TRUE)) * scale  ## counts-per-million
+    } else if(scaling=="global") {
+        message("global average scaling to ",scale," counts")
+        X <- X / mean(colSums(X,na.rm=TRUE)) * scale  ## counts-per-million
+    } else {
+        stop("FATAL:: unknown scaling method. scaling = ",scaling)
+    }
+    colSums(X, na.rm=TRUE)
     
+    ##------------------------------------------------------------
+    ## set zero offset
+    ##------------------------------------------------------------
+    ##zero.offset=0.01;zero.thr=0.25
+    if(zero.offset > 0 && zero.offset < 1) {
+        q0 <- quantile(X,probs=zero.offset,na.rm=TRUE)
+        log2(q0)
+        message("set log2(x)=0 to ",log2(q0))
+        X <- X / q0 ## scale to unit
+    }
+       
     ##------------------------------------------------------------
     ## choose quantile or median normalization (on not-missing values)
     ##------------------------------------------------------------
     if(qnormalize) {
         ##gx.hist(log2(X))
         jj <- sample(ncol(X),10)
-        if(plot) gx.hist( log2(1e-8+X[,jj]),main="Quantile normalized (before)")
         X <- limma::normalizeQuantiles(X)
         ##X <- proteus::normalizeMedian(X)
-        if(plot) gx.hist( log2(1e-8+X[,jj]),main="Quantile normalized (after)")
+        X <- pmax(X,0)
     }
-    
+
     ##------------------------------------------------------------
     ## put back 'missing' values to zero
     ##------------------------------------------------------------
-    X[is.na(X)] <- 0
+    X[which.zeros] <- 0
     
-    ##------------------------------------------------------------
-    ## add prior normalized count
-    ##------------------------------------------------------------
-    if(prior.count < 1 && prior.count >0) {
-        minx <- min(X,na.rm=TRUE)
-        selx <- !is.na(X) & X>0 & X>minx
-        prior.count <- quantile(X[selx], probs=prior.count)
-    }
-    prior.count
-    if(prior.count > 0) {
-        message("adding prior.count=",prior.count)
-        if(plot) hist( log2(prior.count + X),breaks=100, main="log(prior.count+X)")
-        X <- prior.count + X
-    }
     return(X)
 }
 

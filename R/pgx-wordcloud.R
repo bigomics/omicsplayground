@@ -56,7 +56,7 @@ pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
     ## filter on minimal size and maximum ratio
     nn <- Matrix::colSums(W,na.rm=TRUE)
     nr <- nn / nrow(W)
-    W <- W[,which(nn >= 10 & nr <= 0.10)]
+    W <- W[,which(nn >= 10 & nr <= 0.10),drop=FALSE]
     dim(W)
     
     ## align geneset expression matrix
@@ -100,7 +100,14 @@ pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
     require(Rtsne)
     library(umap)
     require(uwot)
-    nb = floor(pmin(pmax(ncol(W)/4,1),10))
+    if(NCOL(W) <= 3) {
+        ## t-SNE doesn't like 1-2 columns...
+        W <- cbind(W, W, W, W, W)
+        W <- W + 1e-2*matrix(rnorm(length(W)),nrow(W),ncol(W))
+    }
+    nb = floor(pmin(pmax(ncol(W)/4,2),10))
+    message("[pgx.calculateWordFreq] dim(W) = ",paste(dim(W),collapse="x"))
+    message("[pgx.calculateWordFreq] setting perplexity = ",nb)
     pos1 = Rtsne( as.matrix(t(W)), perplexity=nb,
                  ## pca =TRUE, partial_pca =TRUE,
                  check_duplicates=FALSE)$Y
@@ -108,8 +115,8 @@ pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
     pos2 = uwot::umap(as.matrix(t(W)),n_neighbors=nb)
     rownames(pos1) = rownames(pos2) = colnames(W)
     colnames(pos1) = colnames(pos2) = c("x","y")
-    pos1 = pos1[res$word,]
-    pos2 = pos2[res$word,]
+    pos1 = pos1[match(res$word,rownames(pos1)),]
+    pos2 = pos2[match(res$word,rownames(pos2)),]
     
     all.res = list(gsea=all.gsea, S=S, W=W, tsne=pos1, umap=pos2)
     all.res

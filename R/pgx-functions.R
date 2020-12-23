@@ -11,8 +11,330 @@ USER.GENESETTEST.METHODS <- NULL
 USER.GENETEST.METHODS <- NULL
 
 ##=============================================================================
-##==========    Platform helper functions =====================================
+##===================    Platform helper functions ============================
 ##=============================================================================
+
+pgx.initialize <- function(ngs) {
+
+    ##---------------------------------------------------------------------
+    ## This function must be called after creation of a PGX/NGS object
+    ## and include some cleaning up and updating some internal
+    ## structures to keep compatibility with new/old versions.
+    ##---------------------------------------------------------------------
+    message("[pgx.initialize] initializing ngs object")
+
+    ##----------------- check object
+    obj.needed <- c("genes", ## "deconv","collections", "families", "counts",
+                    "GMT","gset.meta","gsetX","gx.meta","model.parameters",
+                    "samples","tsne2d","X")
+    all(obj.needed %in% names(ngs))
+    if(!all(obj.needed %in% names(ngs))) {
+        obj.missing <- setdiff(obj.needed, names(ngs))
+        msg <- paste("invalid ngs object. missing parts in object: ",obj.missing)
+        showNotification(msg,duration=NULL,type="error")
+        ##stop(msg)
+        return(NULL)
+    }
+
+    vars.needed <- c("group")
+    if(FALSE && !all(vars.needed %in% colnames(ngs$samples))) {
+        vars.missing <- setdiff(vars.needed, colnames(ngs$samples))
+        msg <- paste("invalid ngs object. missing variables in object: ",vars.missing)
+        showNotification(msg,duration=NULL,type="error")
+        ##stop(msg)
+        return(NULL)
+    }
+    
+    ## for COMPATIBILITY: if no counts, estimate from X
+    if(is.null(ngs$counts)) {
+        cat("WARNING:: no counts table. estimating from X\n")
+        ##ngs$counts <- (2**ngs$X-1) ##
+        ngs$counts = pmax(2**ngs$X - 1,0)
+        k = grep("lib.size|libsize",colnames(ngs$samples))[1]
+        if(length(k)>0) {
+            libsize = ngs$samples[colnames(ngs$counts),k]
+            libsize
+            ngs$counts = t(t(ngs$counts) * libsize)
+        }
+    }
+    ngs$counts <- as.matrix(ngs$counts)
+    if(!is.null(ngs$X)) ngs$X <- as.matrix(ngs$X)
+    
+    ##----------------------------------------------------------------
+    ## Tidy up phenotype matrix (important!!!): get numbers/integers
+    ## into numeric, categorical into factors....
+    ##----------------------------------------------------------------
+    ngs$samples <- tidy.dataframe(ngs$samples)  ## warning!! this converts all to CHR!!
+
+    ## clean up: ngs$Y is a cleaned up ngs$samples
+    ngs$samples$barcode <- NULL
+    ngs$samples <- ngs$samples[,which(colMeans(is.na(ngs$samples))<1),drop=FALSE]
+    kk = grep("batch|lib.size|norm.factor|repl|donor|clone|sample|barcode",
+              colnames(ngs$samples),invert=TRUE)
+    ngs$Y = ngs$samples[colnames(ngs$X),kk,drop=FALSE]
+    ngs$Y <- type.convert(ngs$Y)   ## autoconvert to datatypes
+    
+    ##----------------------------------------------------------------
+    ## Tidy up genes matrix
+    ##----------------------------------------------------------------
+    ngs$genes = ngs$genes[rownames(ngs$counts),,drop=FALSE]
+    ngs$genes$gene_name = as.character(ngs$genes$gene_name)
+    ngs$genes$gene_title = as.character(ngs$genes$gene_title)
+
+    ## Add chromosome annotation if not
+    if(!("chr" %in% names(ngs$genes))) {
+        symbol = sapply(as.list(org.Hs.egSYMBOL),"[",1)  ## some have multiple chroms..
+        CHR = sapply(as.list(org.Hs.egCHR),"[",1)  ## some have multiple chroms..
+        MAP <- sapply(as.list(org.Hs.egMAP),"[",1)  ## some have multiple chroms..
+        names(CHR) = names(MAP) = symbol
+        ngs$genes$chr <- CHR[ngs$genes$gene_name]
+        ngs$genes$map <- MAP[ngs$genes$gene_name]
+    }
+
+    ##-----------------------------------------------------------------------------
+    ## intersect and filter gene families (convert species to human gene sets)
+    ##-----------------------------------------------------------------------------
+    if("hgnc_symbol" %in% colnames(ngs$genes) ) {
+        hgenes <- toupper(ngs$genes$hgnc_symbol)
+        genes  <- ngs$genes$gene_name
+        ngs$families <- lapply(FAMILIES, function(x) setdiff(genes[match(x,hgenes)],NA))
+    } else {
+        genes <- toupper(ngs$genes$gene_name)
+        ngs$families <- lapply(FAMILIES, function(x) intersect(x,genes))
+    }
+    famsize <- sapply(ngs$families, length)
+    ngs$families <- ngs$families[which(famsize>=10)]
+    
+    all.genes <- sort(rownames(ngs$genes))
+    ngs$families[["<all>"]] <- all.genes
+    ## rownames(ngs$GMT) <- toupper(rownames(ngs$GMT)) ## everything to human...
+    
+    ##-----------------------------------------------------------------------------
+    ## Recompute geneset meta.fx as average fold-change of genes
+    ##-----------------------------------------------------------------------------
+    message("[pgx.initialize] Recomputing geneset fold-changes")
+    nc <- length(ngs$gset.meta$meta)
+    i=1
+    for(i in 1:nc) {
+        gs <- ngs$gset.meta$meta[[i]]
+        fc <- ngs$gx.meta$meta[[i]]$meta.fx
+        names(fc) <- rownames(ngs$gx.meta$meta[[i]])
+        fc <- fc[which(toupper(names(fc)) %in% colnames(GSETxGENE))]
+        ## G1 <- GSETxGENE[rownames(gs),toupper(names(fc))]
+        G1 <- t(ngs$GMT[names(fc),rownames(gs)])
+        mx <- (G1 %*% fc)[,1]
+        ngs$gset.meta$meta[[i]]$meta.fx <- mx
+    }
+
+    ##-----------------------------------------------------------------------------
+    ## Recode survival
+    ##-----------------------------------------------------------------------------
+    pheno <- colnames(ngs$Y)
+    ## DLBCL coding
+    if(("OS.years" %in% pheno && "OS.status" %in% pheno)) {
+        message("found OS survival data")
+        event <- ( ngs$Y$OS.status %in% c("DECEASED","DEAD","1","yes","YES","dead"))
+        ngs$Y$OS.survival <- ifelse(event, ngs$Y$OS.years, -ngs$Y$OS.years)            
+    }
+
+    ## cBioportal coding
+    if(("OS_MONTHS" %in% pheno && "OS_STATUS" %in% pheno)) {
+        cat("found OS survival data\n")
+        event <- ( ngs$Y$OS_STATUS %in% c("DECEASED","DEAD","1","yes","YES","dead"))
+        ngs$Y$OS.survival <- ifelse(event, ngs$Y$OS_MONTHS, -ngs$Y$OS_MONTHS)            
+    }
+
+    ##-----------------------------------------------------------------------------
+    ## Remove redundant???
+    ##-----------------------------------------------------------------------------
+    if(".gender" %in% colnames(ngs$Y) &&
+        any(c("gender","sex") %in% tolower(colnames(ngs$Y)))) {
+        ngs$Y$.gender <- NULL
+    }
+    
+    ## *****************************************************************
+    ## ******************NEED RETHINK***********************************
+    ## *****************************************************************
+    ## ONLY categorical variables for the moment!!!
+    k1 = pgx.getCategoricalPhenotypes(ngs$Y, min.ncat=2, max.ncat=20)
+    k2 = grep("OS.survival",colnames(ngs$Y),value=TRUE)
+    ##kk = sort(unique(c("group",k1,k2)))
+    kk = sort(unique(c(k1,k2)))
+    ngs$Y <- ngs$Y[,kk]
+    colnames(ngs$Y)
+    ngs$samples <- ngs$Y    ## REALLY?
+    
+    ##-----------------------------------------------------------------------------
+    ## Keep compatible with OLD formats
+    ##-----------------------------------------------------------------------------
+    if( any(c("mono","combo") %in% names(ngs$drugs)) ) {
+        dd <- ngs$drugs[["mono"]]
+        aa1 <- ngs$drugs[["annot"]]
+        if(is.null(aa1)) {
+            aa1 <- read.csv(file.path(FILES,"L1000_repurposing_drugs.txt"),
+                            sep="\t", comment.char="#")
+            aa1$drug <- aa1$pert_iname
+            rownames(aa1) <- aa1$pert_iname
+        }
+        dd[["annot"]] <- aa1
+        ngs$drugs[["activity/L1000"]] <- dd
+        if("combo" %in% names(ngs$drugs)) {
+            dd2 <- ngs$drugs[["combo"]]
+            combo <- rownames(dd2$X)
+            aa2 <- pgx.createComboDrugAnnot(combo, aa1)             
+            dd2[["annot"]] <- aa2
+            ngs$drugs[["activity-combo/L1000"]] <- dd2
+        }
+        ngs$drugs$mono  <- NULL
+        ngs$drugs$annot <- NULL
+        ngs$drugs$combo <- NULL        
+    }
+    
+    ##-----------------------------------------------------------------------------
+    ## remove large deprecated outputs from objects
+    ##-----------------------------------------------------------------------------
+    ngs$gx.meta$outputs <- NULL
+    ngs$gset.meta$outputs <- NULL
+    ngs$gmt.all <- NULL
+    return(ngs)
+}
+
+pgx.phenoMatrix <- function(pgx, phenotype) {
+    y <- pgx$samples[,phenotype]
+    mm <- t(model.matrix(~0+y))
+    rownames(mm) <- sub("^y","",rownames(mm))
+    colnames(mm) <- rownames(pgx$samples)
+    as.matrix(mm)
+}
+
+cex=1
+text_repel.NOTWORKING <- function( x, y, text, cex=1, force=1e-7, maxiter=20000)
+{    
+    if(0) {
+        ggplot(mtcars, aes(wt, mpg, label=rownames(mtcars))) +
+            geom_point() +
+            geom_text_repel()
+        
+        x=mtcars[,"wt"]
+        y=mtcars[,"mpg"]
+        text=rownames(mtcars)
+        
+        labx <- out[,3]
+        laby <- out[,4]
+        ggplot(mtcars, aes(wt, mpg)) +
+            geom_point() +
+            geom_text(x = labx, y = laby, label=rownames(mtcars))
+                      
+
+    }
+    ## x and y posiitons as a dataframe
+    df <- data.frame(x=x, y=y, text=text)
+    w <- diff(range(x))
+    h <- diff(range(y))
+    dx0 <- w * 0.08
+    dy0 <- h * 0.05
+    par(mfrow=c(1,1)); plot(x,y,type='n')
+    dx1 <- max(strwidth(text, cex=cex, units="user") * w)
+    dy1 <- max(strheight(text, cex=cex, units="user") * w)
+    out <- util.findboxes(
+        df, "x", "y",
+        box_padding_x = dx1,
+        box_padding_y = dy1,
+        point_padding_x = dx0,
+        point_padding_y = dy0,
+        xlim = range(x),
+        ylim = range(y),
+        force = 1e-7, maxiter = 20000
+    )
+    out[,3:4]
+}
+
+#' Given a Set of Points and Box sizes,
+#' https://github.com/slowkow/ggrepel/issues/24
+util.findboxes <- function( df, xcol, ycol,
+                           box_padding_x, box_padding_y,
+                           point_padding_x, point_padding_y,
+                           xlim, ylim,
+                           force = 1e-7, maxiter = 20000
+                           )
+{
+    library(ggrepel)
+    library(ggimage)
+  # x and y posiitons as a dataframe
+  posdf <- df[c(xcol, ycol)]
+
+  # returnd a df where columns are points
+  boxdf <- apply(posdf, 1, function(row) {
+    xval <- row[xcol]
+    yval <- row[ycol]
+    return(c(
+      xval - box_padding_x / 2,
+      yval - box_padding_y / 2,
+      xval + box_padding_x / 2,
+      yval + box_padding_y / 2
+    ))
+  })
+  # columns are x1,y1,x2,y2
+  boxmatrix <- as.matrix(t(boxdf))
+
+  moved <- ggrepel:::repel_boxes(
+    data_points = as.matrix(posdf),
+    point_padding_x = point_padding_x,
+    point_padding_y = point_padding_y,
+    boxes = boxmatrix,
+    xlim = xlim,
+    ylim = ylim,
+    hjust = 0.5,
+    vjust = 0.5,
+    force = force,
+    maxiter = maxiter
+  )
+
+  finaldf <- cbind(posdf, moved)
+  names(finaldf) <- c("x1", "y1", "x2", "y2")
+  return(finaldf)
+}
+
+rowscale <- function(x) {
+    x  <- x - Matrix::rowMeans(x,na.rm=TRUE)
+    x / (1e-4 + sqrt(rowMeans(x**2,na.rm=TRUE)))
+}
+
+strwrap2 <- function(str,n ) {
+    sapply(str,function(s) paste(base::strwrap(s,n),collapse="\n"))
+}
+
+add_opacity <- function(hexcol,opacity) {
+    toRGB(hexcol)
+    rgba <- strsplit(gsub("rgba\\(|\\)","",toRGB(hexcol,opacity)),split=",")
+    rgba <- apply(do.call(rbind, rgba),2,as.numeric)
+    rgb(rgba[,1]/255,rgba[,2]/255,rgba[,3]/255,rgba[,4])
+}
+
+logCPM <- function(counts, total=NULL, prior=1) {
+    ## Transform to logCPM (log count-per-million) if total counts is
+    ## larger than 1e6, otherwise scale to previous avarage total count.
+    ##
+    ##
+    if(is.null(total)) {
+        ##total <- nrow(counts)
+        ##total <- mean(colSums(counts1!=0)) ## avg. number of expr genes
+        total0 <- mean(Matrix::colSums(counts,na.rm=TRUE)) ## previous sum 
+        total <- ifelse( total0 < 1e6, total0, 1e6 )
+        message("[logCPM] setting column sums to = ",round(total,2))
+    }
+    if(any(class(counts)=="dgCMatrix")) {
+        ## fast/sparse calculate CPM
+        cpm <- counts
+        cpm@x <- total * cpm@x / rep.int(Matrix::colSums(cpm), diff(cpm@p))  ## fast divide by columns sum
+        cpm@x <- log2(prior + cpm@x)
+        return(cpm)
+    } else {
+        cpm <- t(t(counts) / Matrix::colSums(counts)) * total
+        x <- log2(prior + cpm)
+        return(x)
+    }
+}
 
 pgx.checkObject <- function(ngs) {
     must.have <- c("counts","samples","genes","model.parameters",
@@ -23,6 +345,53 @@ pgx.checkObject <- function(ngs) {
         message("[pgx.checkObject] WARNING!!! object does not have: ",not.present)
     }
     all(must.have %in% names(ngs))
+}
+
+matGroupMeans <- function(X, group, FUN=rowMeans, dir=1) {
+    if(dir==2) X <- t(X)
+    mX <- do.call(cbind, tapply(1:ncol(X),group,function(i) rowMeans(X[,i,drop=FALSE],na.rm=TRUE)))
+    if(dir==2) mX <- t(mX)
+    mX
+}
+
+knnMedianFilter <- function(x, pos, k=10)
+{
+    library(FNN)
+    nb <- get.knn(pos[,], k=k)$nn.index
+    fx <- factor(x)
+    mx <- matrix(fx[as.vector(nb)],nrow=nrow(nb),ncol=ncol(nb))
+    x1 <- apply(mx,1,function(x) names(which.max(table(x))))
+    x1
+}
+
+knnImputeMissing <- function(x, pos, missing=NA, k=10)
+{
+    library(FNN)
+    k0 <- which(x==missing)    
+    k1 <- which(x!=missing)
+    if(length(k0)==0) {
+        return(x)
+    }
+    pos0 <- pos[k0,]
+    pos1 <- pos[k1,]
+    nb <- get.knnx(pos1, pos0, k=k)$nn.index
+    fx <- factor(x[k1])
+    mx <- matrix(fx[as.vector(nb)],nrow=nrow(nb),ncol=ncol(nb))
+    x.imp <- apply(mx,1,function(x) names(which.max(table(x))))
+    x[which(x==missing)] <- x.imp
+    x
+}
+
+randomImputeMissing <- function(x) {
+    i=1
+    for(i in 1:ncol(x)) {
+        jj <- which(is.na(x[,i]) | x[,i]=="NA")
+        if(length(jj)) {
+            rr <- sample( x[-jj,i], length(jj), replace=TRUE)
+            x[jj,i] <- rr
+        }
+    }
+    return(x)
 }
 
 probe2symbol <- function(probes, type=NULL, org="human") {
@@ -438,29 +807,6 @@ pgx.getCategoricalPhenotypes <-function(df, max.ncat=20, min.ncat=2, remove.dup=
     colnames(df1)
 }
 
-pgx.getMetaFoldChangeMatrix <- function(ngs, what="meta")
-{
-    fc0 = NULL
-    qv0 = NULL
-    ##ngs <- inputData()
-    sel = names(ngs$gset.meta$meta)
-    methods = colnames(unclass(ngs$gx.meta$meta[[1]]$fc))
-    if(what %in% methods) {
-        fc0 = sapply(ngs$gx.meta$meta[sel], function(x) unclass(x$fc)[,what])
-        qv0 = sapply(ngs$gx.meta$meta[sel], function(x) unclass(x$q)[,what])
-        rownames(fc0)=rownames(qv0)=rownames(ngs$gx.meta$meta[[1]])
-    } else if(what=="meta") {
-        fc0 = sapply(ngs$gx.meta$meta[sel], function(x) x$meta.fx)
-        qv0 = sapply(ngs$gx.meta$meta[sel], function(x) x$meta.q)
-        rownames(fc0)=rownames(qv0)=rownames(ngs$gx.meta$meta[[1]])
-    } else {
-        cat("WARNING:: pgx.getMetaFoldChangeMatrix: unknown method")
-        return(NULL)
-    }
-    res = list(fc=fc0, qv=qv0)
-    return(res)
-}
-
 ##gene="CD4"
 pgx.getGeneCorrelation <- function(gene, xref) {
 
@@ -664,6 +1010,32 @@ getHSGeneInfo <- function(eg, as.link=TRUE) {
 ##levels="gene";contrast="Bmem_activation";layout=NULL;gene="IRF4";layout="layout_with_fr";hilight=NULL
 pgx.getGeneFamilies <- function(genes, FILES="../files", min.size=10, max.size=500)
 {
+
+    ##dir="/home/share/datasets/gmt/";nrows=-1
+    read.gmt <- function(file, dir=NULL, add.source=FALSE, nrows=-1) {
+        f0 <- file
+        if(strtrim(file,1)=="/") dir=NULL
+        if(!is.null(dir)) f0 <- paste(sub("/$","",dir),"/",file,sep="")
+        ##cat("reading GMT from file",file,"\n")
+        gmt <- read.csv(f0,sep="!",header=FALSE,comment.char="#",nrows=nrows)[,1]
+        gmt <- as.character(gmt)
+        gmt <- gsub("[\t]+","\t",gmt)
+        gmt <- sapply(gmt,strsplit,split="\t")
+        names(gmt) <- NULL
+        gmt.name <- sapply(gmt,"[",1)
+        gmt.source <- sapply(gmt,"[",2)
+        gmt.genes <- sapply(gmt,function(x) paste(x[3:length(x)],collapse=" "))
+        ##gmt.genes <- gsub("[\t]+"," ",gmt.genes)
+        gset <- sapply(gmt.genes,strsplit,split=" ")
+        gset <- lapply(gset, function(x) setdiff(x,c("","NA",NA)))
+        names(gset) <- gmt.name
+        if(add.source) {
+            names(gset) <- paste0(names(gset)," (",gmt.source,")")
+        }
+        gset <- gset[which(lapply(gset,length)>0)]
+        gset
+    }
+
     ##-----------------------------------------------------------------------------
     ## Gene families
     ##-----------------------------------------------------------------------------
@@ -1070,9 +1442,9 @@ color_from_middle <- function (data, color1,color2) {
 tidy.dataframe <- function(Y) {
     require(tidyverse)
     ##as_tibble(Y)
-    Y <- Y[,which(colMeans(is.na(Y))<1)]
+    Y <- Y[,which(colMeans(is.na(Y))<1),drop=FALSE]
     Y <- apply(Y,2,function(x) sub("^NA$",NA,x)) ## all characters
-    Y <- Y[,which(colMeans(is.na(Y))<1)]
+    Y <- Y[,which(colMeans(is.na(Y))<1),drop=FALSE]
     Y <- apply(Y,2,function(x) gsub("^[ ]*|[ ]*$","",x))
     suppressWarnings( num.Y <- apply(Y,2,function(x) as.numeric(as.character(x))) )
     is.numeric <- ( 0.8*colMeans(is.na(num.Y)) <= colMeans(is.na(Y)) )
@@ -1080,12 +1452,14 @@ tidy.dataframe <- function(Y) {
     is.factor  <- (!is.numeric | (is.numeric & nlevel<=3) )
     is.factor <- ( is.factor | grepl("batch|replicat|type|clust|group",colnames(Y)) )
     new.Y <- data.frame(Y, check.names=FALSE)
-    new.Y[,which(is.numeric)] <- num.Y[,which(is.numeric)]
-    new.Y[,which(is.factor)]  <- apply(Y[,which(is.factor)],2,
+    new.Y[,which(is.numeric)] <- num.Y[,which(is.numeric),drop=FALSE]
+    new.Y[,which(is.factor)]  <- apply(Y[,which(is.factor),drop=FALSE],2,
                                        function(a) factor(as.character(a)))
     new.Y <- data.frame(new.Y, check.names=FALSE)
     return(new.Y)
 }
+
+param.class <- function(A) sapply(tidy.dataframe(A),class)
 
 is.num <- function(y) {
     suppressWarnings(numy <- as.numeric(as.character(y)))
@@ -1213,61 +1587,6 @@ correctMarchSeptemberGenes <- function(gg) {
 }
 
 cor.pvalue <- function(x,n) pnorm(-abs(x/((1-x**2)/(n-2))**0.5))
-
-##k=NULL;mc.cores=2
-hclustGraph <- function(g, k=NULL, mc.cores=2)
-{
-    ## Hierarchical clustering of graph using iterative Louvain
-    ## clustering on different levels. If k=NULL iterates until
-    ## convergences.
-    ##
-    require(parallel)
-    idx = rep(1, length(V(g)))
-    K = c()
-    maxiter=100
-    if(!is.null(k)) maxiter=k
-    iter=1
-    ok=1
-    idx.len = -1
-    while( iter <= maxiter && ok ) {
-        old.len = idx.len
-        newidx0 = newidx = idx
-        i=idx[1]
-        if(mc.cores>1 && length(unique(idx))>1) {
-            idx.list = tapply(1:length(idx),idx,list)
-            mc.cores
-            system.time( newidx0 <- mclapply(idx.list, function(ii) {
-                subg = induced_subgraph(g, ii)
-                subi = cluster_louvain(subg)$membership
-                return(subi)
-            }, mc.cores=mc.cores) )
-            newidx0 = lapply(1:length(newidx0), function(i) paste0(i,"-",newidx0[[i]]))
-            newidx0 = as.vector(unlist(newidx0))
-            newidx = rep(NA,length(idx))
-            newidx[as.vector(unlist(idx.list))] = newidx0
-        } else {
-            for(i in unique(idx)) {
-                ii = which(idx==i)
-                subg = induced_subgraph(g, ii)
-                subi = cluster_louvain(subg)$membership
-                newidx[ii] = paste(i,subi,sep="-")
-            }
-        }
-        vv = names(sort(table(newidx),decreasing=TRUE))
-        idx = as.integer(factor(newidx, levels=vv))
-        K = cbind(K, idx)
-        idx.len = length(table(idx))
-        ok = (idx.len > old.len)
-        iter = iter+1
-    }
-    if(NCOL(K)==1) K <- matrix(K, ncol=1)
-    rownames(K) = V(g)$name
-    if(!ok && is.null(k)) K = K[,1:(ncol(K)-1),drop=FALSE]
-    dim(K)
-    ##K = K[,1:(ncol(K)-1)]
-    colnames(K) <- NULL
-    return(K)
-}
 
 ##=====================================================================================
 ##=========================== END OF FILE =============================================

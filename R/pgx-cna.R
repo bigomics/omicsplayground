@@ -163,10 +163,6 @@ pgx.inferCNV <- function(ngs, refgroup=NULL, progress=NULL ) {
             xtips=NULL, ytips=NULL,
             row_annot_width=0.03, scale="row.center",
             colors=NULL, label_size=11 )
-        
-
-        
-        
     }
 
     ## clean up folder??
@@ -243,7 +239,6 @@ pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=-1, lwd=1,
                                order.by="clust", clip=0, lab.cex=0.6 )
 {
     require(irlba)
-    ##source("../R/gx-heatmap.r")
     cna <- res$cna
     chr <- res$chr
     chr <- as.character(chr)
@@ -344,7 +339,6 @@ pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=-1, lwd=1,
 
     ## ---------- do plotting ------------
 
-    ##source("../R/gx-heatmap.r")
     par(mgp=c(0.8,0.4,0))
     wa <- 0.1
     if(!is.null(ann.mat)) wa <- 0.05 + 0.016*ncol(ann.mat)

@@ -10,14 +10,8 @@
 ########################################################################
 
 require(limma)
-REF.CLASS=c("CTRL","CTR","DMSO","NT","0","NON","REF")
-
-gx.limmaGCT <- function(gct, class, ...) {
-    X <- read.table(gct, sep="\t", skip=2, row.names=1, header=TRUE)[,-1]
-    y <- read.table(cls, sep="\t", skip=2, header=FALSE )[1,]
-    y <- as.character(unlist(y))
-    gx.limma(X, y, ...)
-}
+REF.CLASS = c("ctrl","ctr","control","dmso","nt","0","non","no","ref",
+              "wt","wildtype","untreated","normal","false","healthy")
 
 gx.limma <- function(gep, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
                      max.na=0.20, ref=REF.CLASS, trend=FALSE, verbose=1 )
@@ -25,6 +19,127 @@ gx.limma <- function(gep, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
     require(limma)
     if(0) {
         fdr=0.05;compute.means=TRUE;lfc=0.20;ref=REF.CLASS
+        max.na=0.2;ref=REF.CLASS;trend=FALSE;verbose=1
+    }
+    if(sum(duplicated(rownames(gep)))>0) {
+        cat("WARNING:: matrix has duplicated rownames\n")
+    }
+    ## detect single sample case
+    is.single = (max(table(pheno))==1)
+    if(is.single) {
+        cat("WARNING:: no replicates, no stats...\n")
+        gep <- cbind(gep,gep)
+        pheno <- c(pheno,pheno)
+    }
+
+    ## filter probes and samples
+    ii <- which( rowMeans(is.na(gep)) <= max.na )
+    jj <- which(!is.na(pheno) )
+    if(verbose>0) cat(sum(is.na(pheno)>0),"with missing phenotype\n")
+    gep0 <- gep[ii,jj]
+    pheno0 <- as.character(pheno[jj])
+    gep0 <- gep0[!(rownames(gep0) %in% c(NA,"","NA")),]
+    if(verbose>0) {
+        cat("analyzing",ncol(gep0),"samples\n")
+        cat("testing",nrow(gep0),"features\n")
+    }
+
+    ## auto-detect reference
+    pheno.ref <- c()
+    ref.detected <- FALSE
+    ref <- toupper(ref)
+    ## is.ref <- grepl(paste(ref,collapse="|"),pheno0)
+    is.ref <- (toupper(pheno0) %in% toupper(ref))
+    ref.detected <- (sum(is.ref)>0 && sum(!is.ref)>0)    
+
+    ##if(!is.null(ref) && sum( toupper(pheno0) %in% ref)>0 ) {
+    if(ref.detected) {
+        pheno.ref <- unique(pheno0[which(toupper(pheno0) %in% toupper(ref))])
+        if(verbose>0) cat("setting reference to y=",pheno.ref,"\n")
+        bb <- c(pheno.ref, sort(setdiff(unique(pheno0),pheno.ref)) )
+    } else {
+        if(verbose>0) cat("WARNING: could not auto-detect reference\n")
+        bb <- as.character(sort(unique(pheno0)))
+        if(verbose>0) cat("setting reference to first class",bb[1],"\n")
+    }
+    if(length(bb)!=2) {
+        stop("gx.limma::fatal error:only two class comparisons")
+        return
+    }
+    design <- cbind(1, pheno0==bb[2])
+    colnames(design) <- c( "WT", "2vs1" )
+    d1 <- colnames(design)[1]
+    d2 <- colnames(design)[2]
+    fit <- lmFit( gep0, design)
+    fit <- eBayes(fit, trend=trend)
+    top <- topTable(fit, coef=d2, number=nrow(gep0))
+    if("ID" %in% colnames(top)) {
+        rownames(top) <- top$ID
+        top$ID <- NULL
+    }
+    top <- top[rownames(gep0),]
+    head(top)
+    
+    ## only significant
+    top <- top[ which(top$adj.P.Val <= fdr & abs(top$logFC)>=lfc ), ]
+    if(verbose>0) cat("found",nrow(top),"significant at fdr=",fdr,"and minimal FC=",lfc,"\n")
+
+    if(compute.means && nrow(top)>0 ) {
+        avg <- t(apply(gep0[rownames(top),], 1,
+                         function(x) tapply(x, pheno0, mean, na.rm=TRUE)))
+        avg <- avg[,as.character(bb),drop=FALSE]
+        colnames(avg) <- paste0("AveExpr.",colnames(avg))
+        top <- cbind(top, avg)
+    }
+    top$B <- NULL
+
+    if(is.single) {
+        top$P.Value <- NA
+        top$adj.P.Val <- NA
+        top$t <- NA
+    }
+
+    ## reorder on fold change
+    top <- top[ order(abs(top$logFC),decreasing=TRUE),]
+    ##colnames(top) <-   sub("logFC","logR",colnames(top))
+
+    ## unlist???
+    ##top = do.call(cbind, top)
+    return(top)
+}
+
+gx.meanFstats <- function(gep, pheno) {
+    getF <- function(x,y) {
+        ii <- which(!is.na(y))
+        y1 <- y[ii]
+        if(class(y1)=="factor") y1 <- factor(as.character(y1))
+        design <- model.matrix(~y1)
+        fit <- lmFit( x[,ii], design)
+        fit <- eBayes(fit, trend=TRUE)
+        top <- topTableF(fit, number=nrow(x))
+        mean(top$F)
+    }
+    fstat <- c()
+    px <- tidy.dataframe(pheno)  ## get variable types correct
+    for(p in c("random",colnames(px))) {
+        if(p=="random") {
+            y <- sample(c("a","b"), ncol(gep), replace=TRUE)
+        } else {
+            y <- px[,p]
+            p
+        }
+        fstat[p] <- getF(gep,y)
+    }
+    fstat
+}
+
+gx.limmaF <- function(gep, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
+                      max.na=0.20, ref=REF.CLASS, trend=FALSE, verbose=1 )
+{
+    require(limma)
+    if(0) {
+        fdr=0.05;compute.means=TRUE;lfc=0.20;ref=REF.CLASS;max.na=0.20;
+        trend=TRUE;verbose=1
     }
     if(sum(duplicated(rownames(gep)))>0) {
         cat("matrix has duplicated rownames. please remove.\n")
@@ -47,46 +162,72 @@ gx.limma <- function(gep, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
     if(verbose>0) {
         cat("analyzing",ncol(gep0),"samples\n")
         cat("testing",nrow(gep0),"features\n")
+        cat("in",length(unique(pheno0)),"groups\n")
     }
 
-    ## LIMMA
+    ## auto-detect reference
     pheno.ref <- c()
+    ref.detected <- FALSE
     ref <- toupper(ref)
-    if(!is.null(ref) && sum( toupper(pheno0) %in% ref)>0 ) {
+    ## is.ref <- grepl(paste(ref,collapse="|"),pheno0)
+    is.ref <- (toupper(pheno0) %in% toupper(ref))
+    ref.detected <- (sum(is.ref)>0 && sum(!is.ref)>0)
+    ref.detected
+
+    ##if(!is.null(ref) && sum( toupper(pheno0) %in% ref)>0 ) {
+    if(ref.detected) {
         pheno.ref <- unique(pheno0[which(toupper(pheno0) %in% toupper(ref))])
-        if(verbose>0) cat("setting reference to",pheno.ref,"\n")
+        if(verbose>0) cat("setting reference to y=",pheno.ref,"\n")
         bb <- c(pheno.ref, sort(setdiff(unique(pheno0),pheno.ref)) )
+        pheno1 <- relevel(factor(pheno0), ref=bb[1])
     } else {
+        if(verbose>0) cat("WARNING: could not auto-detect reference\n")
         bb <- as.character(sort(unique(pheno0)))
         if(verbose>0) cat("setting reference to first class",bb[1],"\n")
+        pheno1 <- relevel(factor(pheno0), ref=bb[1])        
     }
-    if(length(bb)!=2) {
+    if(0 && length(bb)!=2) {
         stop("gx.limma::fatal error:only two class comparisons")
         return
     }
-    design <- cbind( 1, pheno0==bb[2])
-    colnames(design) <- c( "WT", "2vs1" )
-    d1 <- colnames(design)[1]
-    d2 <- colnames(design)[2]
+
+    ##design <- cbind(1, pheno0==bb[2])
+    design <- model.matrix(~ pheno1)
+    colnames(design)
+    colnames(design)[2:ncol(design)] <- paste0(levels(pheno1)[-1],"_vs_",levels(pheno1)[1])
+    colnames(design) <- gsub("\\(|\\)","",colnames(design))
     fit <- lmFit( gep0, design)
     fit <- eBayes(fit, trend=trend)
-    top <- topTable(fit, coef=d2, number=nrow(gep0))
+    ##top <- topTable(fit, coef=NULL, number=nrow(gep0))
+    top <- topTableF(fit, number=nrow(gep0))
+    head(top)
+    top$B <- NULL
     if("ID" %in% colnames(top)) {
         rownames(top) <- top$ID
         top$ID <- NULL
     }
+    top <- top[,setdiff(colnames(top),colnames(design)),drop=FALSE]
     top <- top[rownames(gep0),]
-
+    
+    ## compute average
+    avg <- do.call(cbind,tapply(1:ncol(gep0), pheno1, function(i)
+        rowMeans(gep0[,i,drop=FALSE])))
+    ##top <- cbind( top, avg[rownames(top),])
+    if(!"logFC" %in% colnames(top)) {
+        maxFC <- apply(avg,1,max,na.rm=TRUE) - apply(avg,1,min,na.rm=TRUE)
+        top$logFC <- NULL
+        top <- cbind(logFC=maxFC, top)
+        rownames(top) <- rownames(gep0)
+    }
+    
     ## only significant
     top <- top[ which(top$adj.P.Val <= fdr & abs(top$logFC)>=lfc ), ]
     if(verbose>0) cat("found",nrow(top),"significant at fdr=",fdr,"and minimal FC=",lfc,"\n")
 
     if(compute.means && nrow(top)>0 ) {
-        gep.m <- t(apply(gep0[rownames(top),], 1,
-                         function(x) tapply(x, pheno0, mean, na.rm=TRUE)))
-        gep.m <- gep.m[,as.character(bb)]
-        top$AveExpr <- NULL
-        top$AveExpr <- gep.m
+        avg1 <- avg[rownames(top),]
+        colnames(avg1) <- paste0("AveExpr.",colnames(avg1))
+        top <- cbind(top, avg1)
     }
     top$B <- NULL
 
@@ -94,16 +235,20 @@ gx.limma <- function(gep, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
         top$P.Value <- NA
         top$adj.P.Val <- NA
         top$t <- NA
+        top$F <- NA
     }
 
     ## reorder on fold change
-    top <- top[ order(abs(top$logFC),decreasing=TRUE),]
-    ##colnames(top) <-   sub("logFC","logR",colnames(top))
+    top <- top[order(abs(top$logFC),decreasing=TRUE),]
+    ##colnames(top) <-  sub("logFC","logR",colnames(top))
 
     ## unlist
-    top = do.call(cbind, top)
+    ##top = do.call(cbind, top)
     return(top)
 }
+
+
+
 
 ## two-factorial design, no interaction
 gx.limma.paired <- function(gep, pheno, pair, fdr=0.05, lfc=0.20, ref=REF.CLASS,

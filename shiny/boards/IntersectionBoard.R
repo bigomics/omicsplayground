@@ -3,6 +3,8 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+message(">>> sourcing IntersectionBoard")
+
 IntersectionInputs <- function(id) {
     ns <- NS(id)  ## namespace
     tagList(
@@ -15,7 +17,7 @@ IntersectionUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillCol(
         height = 750,
-        if(DEV.VERSION) {
+        if(DEV) {
             tabsetPanel(
                 id = ns("tabs1"),
                 tabPanel("Pairs",uiOutput(ns("cmp_scatterPlotMatrix_UI"))),
@@ -35,7 +37,7 @@ IntersectionUI <- function(id) {
     
 }
 
-IntersectionModule <- function(input, output, session, env)
+IntersectionBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
     fullH = 750       # row height of panel 
@@ -92,7 +94,7 @@ between two contrasts."
                        "Select feature level: gene or geneset", placement="top")
             )
         )
-        if(DEV.VERSION) {
+        if(DEV) {
             uix <- tagList(
                 hr(),
                 h5("Developer options:"),
@@ -117,7 +119,7 @@ between two contrasts."
     
     observeEvent( input$cmp_info, {
         showModal(modalDialog(
-            title = HTML("<strong>Intersection Analysis Module</strong>"),
+            title = HTML("<strong>Intersection Analysis Board</strong>"),
             HTML(cmp_infotext),
             easyClose = TRUE, size="l" ))
     })
@@ -191,7 +193,7 @@ between two contrasts."
         ##
         ##
         ##
-        ##dbg("<intersectionModule:getFoldChangeMatrix> reacted\n")
+        ##dbg("<intersectionBoard:getFoldChangeMatrix> reacted\n")
         fc0 = NULL
         qv0 = NULL
         ngs <- inputData()
@@ -294,7 +296,7 @@ between two contrasts."
         ##
         ##
         ##
-        ##dbg("[IntersectionModule::getCPMMatrix] reacted\n")
+        ##dbg("[IntersectionBoard::getCPMMatrix] reacted\n")
 
         ngs <- inputData()
         req(ngs)
@@ -433,14 +435,14 @@ between two contrasts."
     
     cmp_scatterPlotMatrix.PLOT <- reactive({
 
-        dbg("[IntersectionModule::cmp_scatterPlotMatrix.PLOT]  reacted\n")
+        dbg("[IntersectionBoard::cmp_scatterPlotMatrix.PLOT]  reacted\n")
 
         require(ggplot2)
         require(plotly)
         ##require(GGally)
 
         featuretype = "logFC"
-        if(DEV.VERSION) {
+        if(DEV) {
             req(input$cmp_featuretype)
             featuretype <- input$cmp_featuretype
         }
@@ -1612,4 +1614,4 @@ between two contrasts."
     })
     ##outputOptions(output, "cmp_ctClustering_UI", suspendWhenHidden=FALSE) ## important!!!
     
-} ## end-of-Module 
+} ## end-of-Board 

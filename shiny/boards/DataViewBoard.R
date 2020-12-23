@@ -3,6 +3,7 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+message(">>> sourcing DataViewBoard")
 
 DataViewInputs <- function(id) {
     ns <- NS(id)  ## namespace
@@ -25,7 +26,7 @@ DataViewUI <- function(id) {
     )
 }
 
-DataViewModule <- function(input, output, session, env)
+DataViewBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
     inputData <- env[["load"]][["inputData"]]
@@ -99,7 +100,7 @@ DataViewModule <- function(input, output, session, env)
     ## ------- observe functions -----------
     observeEvent( input$data_info, {
         showModal(modalDialog(
-            title = HTML("<strong>Data View Module</strong>"),
+            title = HTML("<strong>Data View Board</strong>"),
             HTML(data_infotext),
             easyClose = TRUE, size="l" ))
     })

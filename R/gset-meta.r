@@ -47,6 +47,14 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
     gmt <- gmt[which(keep)]
     length(gmt)
     
+    ## If degenerate set design to NULL
+    if(!is.null(design) && ncol(design)>=ncol(X) ) {
+        ## "no-replicate" design!!!
+        cat("WARNING: degenerate design. setting design to NULL\n")
+        contr.matrix <- design %*% contr.matrix
+        design <- NULL
+    }
+
     ## experiment matrix
     if(!is.null(design)) {
         exp.matrix = (design %*% contr.matrix)[colnames(X),,drop=FALSE]
@@ -64,7 +72,6 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
     ##zx=zx.gsva
     my.normalize <- function(zx, Y) {
         if("batch" %in% colnames(Y) && batch.correct) {
-            ##design0 = model.matrix( ~ Y$group )
             nbatch <- length(unique(Y$batch))
             if(!is.null(design) && nbatch>1) {
                 zx <- removeBatchEffect( zx, batch=Y$batch, design=design)
@@ -97,25 +104,27 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
         cat("fitting contrasts using spearman/limma... \n")
         require(qlcMatrix)
         ## single-sample gene set enrichment using (fast) rank correlation
-        xx1 <-  X - rowMeans(X,na.rm=TRUE)
-        xx1 <- apply(xx1,2,rank,na.last="keep")
+        xx1 <-  X - rowMeans(X,na.rm=TRUE)  ## center it...
+        xx1 <- apply(xx1,2,rank,na.last="keep")  ## rank correlation (like spearman)
         jj = intersect(rownames(G),rownames(xx1))
         tt <- system.time({
 
-            zx.rnkcorr <- qlcMatrix::corSparse(G[jj,], xx1[jj,])
+            zx.rnkcorr <- qlcMatrix::corSparse(G[jj,], xx1[jj,])  ## superfast
             rownames(zx.rnkcorr) <- colnames(G)
             colnames(zx.rnkcorr) <- colnames(X)
+
             ## row-wise (per feature) scaling is 'good practice', see
             ## tests comparing rankcor and ssGSEA/gsva
-            zx.rnkcorr <- t(scale(t(zx.rnkcorr)))
+            ##zx.rnkcorr <- t(scale(t(zx.rnkcorr))) ## ??? 2020.10.26 IK.. not sure
 
-            ## additional batch correction and NNM
+            ## additional batch correction and NNM???
             zx.rnkcorr <- my.normalize(zx.rnkcorr, Y)
             zx.rnkcorr <- zx.rnkcorr[names(gmt),colnames(X)] ## make sure..
 
             ## compute LIMMA
             all.results[["spearman"]] <- gset.fitContrastsWithLIMMA(
                 zx.rnkcorr, contr.matrix,  design=design, trend=TRUE, conform.output=TRUE)
+
         })
         timings <- rbind(timings, c("spearman", tt))
         sum(is.na(zx.rnkcorr))
@@ -528,7 +537,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
     ## Add meta matrices (this becomes quite large...)
     ##--------------------------------------------------
     cat("computing meta-matrix... \n")
-
+    
     m <- list(gsva=zx.gsva, ssgsea=zx.ssgsea, rnkcorr=zx.rnkcorr)        
     m = m[which(!sapply(m,is.null))]
     names(m)
@@ -576,6 +585,8 @@ gset.fitContrastsWithLIMMA <- function( gsetX, contr.matrix, design,
                                        trend=TRUE,conform.output=FALSE)
 {
     if(!is.null(design)) {
+        cat("fitting gset.LIMMA contrasts with design matrix....\n")
+
         ##xfit = normalizeQuantiles(xfit)
         vfit <- lmFit(gsetX, design)
         vfit <- contrasts.fit(vfit, contrasts=contr.matrix)
@@ -600,6 +611,8 @@ gset.fitContrastsWithLIMMA <- function( gsetX, contr.matrix, design,
         }
         names(tables) <- colnames(contr.matrix)
     } else {
+        cat("fitting gset.LIMMA contrasts without design....\n")
+
         ##trend=TRUE
         tables <- list()
         i=1

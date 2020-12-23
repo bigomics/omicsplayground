@@ -8,8 +8,13 @@ require(org.Hs.eg.db)
 symbol <- unlist(as.list(org.Hs.egSYMBOL))
 NGENES = 1000
 FILES = "../files"
-
 source("../R/gx-util.r")
+source("../R/pgx-include.R")
+
+
+cat("************************************************************************\n")
+cat("*********************** BUILD SIGNATURES START *************************\n")
+cat("************************************************************************\n")
 
 ##----------------------------------------------------------------------
 ##------------------- CCLE CELL LINE signature -------------------------
@@ -153,3 +158,50 @@ head(sigx)
 sdx <- apply(log2(100+sigx),1,sd)
 sigx <- head(sigx[order(-sdx),],NGENES)
 write.csv(sigx, file=file.path(FILES,"ImmProt-signature.csv"))
+
+
+##----------------------------------------------------------------------
+## --------------------- Meta/combined signature -----------------------
+##----------------------------------------------------------------------
+
+M1 = read.csv(file.path(FILES,"LM22.txt"),row.names=1,sep="\t",check.names=FALSE)
+M2 = read.csv(file.path(FILES,"ImmunoStates_matrix.csv"),row.names=1,check.names=FALSE)
+M3 = read.csv(file.path(FILES,"immprot-signature1000.csv"),row.names=1,check.names=FALSE)
+M4 = read.csv(file.path(FILES,"DICE-signature1000.csv"),row.names=1,check.names=FALSE)
+
+ref0 <- list(LM22=M1, ImmunoStates=M2, ImmProt=M3, DICE=M4)
+ref0 <- lapply(ref0, as.matrix)
+lapply(ref0, nrow)
+
+for(i in 1:length(ref0)) {
+    colnames(ref0[[i]]) <- pgx.simplifyCellTypes(colnames(ref0[[i]]),low.th=0)
+    colnames(ref0[[i]]) <- paste0(names(ref0)[i],":",colnames(ref0[[i]]))
+    rownames(ref0[[i]]) <- symbol2hugo(rownames(ref0[[i]]))
+}
+
+gg <- sort(Reduce(union,lapply(ref0,rownames)))
+head(gg)
+ref1 <- lapply(ref0, function(x) x[match(gg,rownames(x)),])
+R <- do.call(cbind, ref1)
+colnames(R)
+rownames(R) <- gg
+
+## Normalize and impute missing values
+R1 <- t( t(R) / (0.001 + colSums(R,na.rm=TRUE)) ) * 1e6
+R1 <- pmax(normalizeQuantiles(R1),0)
+R1 <- imputeMedian(R1)
+R1 <- pmax(normalizeQuantiles(R1),0)
+
+## Correct for batch effects
+batch <- sub(":.*","",colnames(R1))
+table(batch)
+R1 <- exp(removeBatchEffect(log(1 + R1), batch=batch)) - 1
+colnames(R1) <- sub(".*:","",colnames(R1))
+## R1 <- round(R1)
+
+write.csv(R1, file=file.path(FILES,"signature-immuneMeta.csv"))
+
+
+cat("************************************************************************\n")
+cat("*********************** BUILD SIGNATURES END ***************************\n")
+cat("************************************************************************\n")

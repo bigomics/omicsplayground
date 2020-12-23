@@ -3,11 +3,10 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-require(NNLM)
-source("../R/pgx-deconv.R")
-source("../R/gx-heatmap.r")
-
 if(0) {
+    require(NNLM)
+    source(file.path(RDIR,"pgx-deconv.R"))
+    source(file.path(RDIR,"gx-heatmap.R"))
 
     load("../pgx/geiger2018b-liver2-asis-8k.pgx", verbose=1)
     load("../pgx/geiger2018b-liver2-bc-8k.pgx", verbose=1)
@@ -115,7 +114,6 @@ if(0) {
 
 
 }
-
 
 PURIFY.METHODS=c("nnlm","nnmf","isopurer","demixt","undo")
 method=PURIFY.METHODS

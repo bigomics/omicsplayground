@@ -3,59 +3,112 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-
 ngs.getGeneAnnotation <- function(genes)
 {
     require(org.Hs.eg.db)
     require(org.Mm.eg.db)
     hs.genes <- unique(unlist(as.list(org.Hs.egSYMBOL)))
     mm.genes <- unique(unlist(as.list(org.Mm.egSYMBOL)))
+
+    ## if multiple genes, take first
+    genes0 <- genes ## save
+    genes <- sapply(genes, function(s) strsplit(s,split="[;,\\|]")[[1]][1])
     
     is.human <- mean(genes %in% hs.genes) > mean(genes %in% mm.genes)
     is.mouse <- mean(genes %in% hs.genes) < mean(genes %in% mm.genes)
-
     is.human
+    is.mouse
+
+    txlen=SYMBOL=CHRLOC=MAP=NULL
     if(is.human) {
+        message("detected organism: human")
         GENE.TITLE = unlist(as.list(org.Hs.egGENENAME))
         SYMBOL = unlist(as.list(org.Hs.egSYMBOL))
         names(GENE.TITLE) = SYMBOL
         CHRLOC = as.list(org.Hs.egCHRLOC)
+        CHRLOC <- CHRLOC[match(names(SYMBOL),names(CHRLOC))]        
         MAP = as.list(org.Hs.egMAP)
+        MAP = MAP[match(names(SYMBOL),names(MAP))]                
         MAP = sapply(MAP,paste,collapse="|")
         names(CHRLOC) = SYMBOL
         names(MAP) = SYMBOL
+        
+        ##BiocManager::install("TxDb.Hsapiens.UCSC.hg19.knownGene")
+        require("TxDb.Hsapiens.UCSC.hg19.knownGene")
+        txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+        tx <- transcriptLengths(txdb)
+        TXLEN <- tapply( tx$tx_len, tx$gene_id, mean, na.rm=TRUE)
+        TXLEN <- TXLEN[match(names(SYMBOL),names(TXLEN))]
+        names(TXLEN) <- SYMBOL        
+        head(TXLEN)
+
+        ## get gene biotype
+        require("EnsDb.Hsapiens.v86")
+        daf <- transcripts(EnsDb.Hsapiens.v86,
+                           columns = c("gene_name", "gene_biotype"),
+                           return.type="DataFrame")
+        GENE.BIOTYPE = daf$gene_biotype
+        names(GENE.BIOTYPE) = daf$gene_name
+        
     }
     if(is.mouse) {
+        message("detected organism: mouse")
         GENE.TITLE = unlist(as.list(org.Mm.egGENENAME))
         SYMBOL = unlist(as.list(org.Mm.egSYMBOL))
         names(GENE.TITLE) = SYMBOL
-        CHRLOC = as.list(org.Hs.egCHRLOC)
+        CHRLOC = as.list(org.Mm.egCHRLOC)
+        CHRLOC <- CHRLOC[match(names(SYMBOL),names(CHRLOC))]
         names(CHRLOC) = SYMBOL
         MAP <- NULL ## no map for mouse???
+
+        ##BiocManager::install("TxDb.Mmusculus.UCSC.mm10.knownGene")       
+        require("TxDb.Mmusculus.UCSC.mm10.knownGene")               
+        txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
+        tx <- transcriptLengths(txdb)
+        TXLEN <- tapply( tx$tx_len, tx$gene_id, mean, na.rm=TRUE)
+        TXLEN <- TXLEN[match(names(SYMBOL),names(TXLEN))]
+        names(TXLEN) <- SYMBOL        
+        head(TXLEN)
+
+        require("EnsDb.Mmusculus.v79")
+        daf <- transcripts(EnsDb.Mmusculus.v79,
+                           columns = c("gene_name", "gene_biotype"),
+                           return.type="DataFrame")
+        GENE.BIOTYPE = daf$gene_biotype
+        names(GENE.BIOTYPE) = daf$gene_name
+        
     }
-
-    head(GENE.TITLE)
+    remove(txdb)
+    remove(tx)
+    
+    gene_title=gene_biotype=chrom=loc=map=txlen=NULL    
     gene_title <- GENE.TITLE[genes]
-
-    ## get chromosome locations
     chrloc0 <- CHRLOC[genes]
-    loc <- sapply(chrloc0, "[", 1) ## only first
+    loc <- sapply(chrloc0, "[", 1) ## take only first entry !!!
     loc[sapply(loc,is.null)] <- NA
     loc <- abs(as.integer(unlist(loc)))
     chrom <- sapply(chrloc0, function(s) names(s)[1])
     chrom[sapply(chrom,is.null)] <- NA
     chrom <- as.vector(unlist(chrom))
-
-    map <- NULL
+    txlen <- round(TXLEN[genes])
+    gene_biotype <- GENE.BIOTYPE[genes]
+    
+    map <- paste0("chr",chrom)
+    map <- sub("chrNA",NA,map)
     if(!is.null(MAP)) map <- MAP[genes]
     
     ## get protein info
     ## fill me    
     annot = data.frame( gene_name = genes,
                        gene_title = gene_title,
-                       chr=chrom, pos=loc, map=map)
+                       gene_biotype = gene_biotype,
+                       chr=chrom, pos=loc, 
+                       tx_len = txlen,
+                       map=map )
     ##genes = apply(genes,2,as.character)
     head(annot)
+    annot[is.na(annot)] <- ""  ## replace NA with empty string
+    
     rownames(annot) = genes
     annot
 }

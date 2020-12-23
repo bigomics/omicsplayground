@@ -41,7 +41,11 @@ dbg <- function(... ) {
     }
 }
 
-source(file.path(RDIR,"gx-heatmap.r"))
+##source(file.path(RDIR,"pgx-functions.R"), local=TRUE)
+source(file.path(RDIR,"pgx-functions.R"))
+##source(file.path(RDIR,"pgx-init.R"))
+
+source(file.path(RDIR,"gx-heatmap.r"), local=TRUE)
 source(file.path(RDIR,"gx-plot.r"))
 source(file.path(RDIR,"gx-limma.r"))
 source(file.path(RDIR,"gx-volcano.r"))
@@ -54,10 +58,8 @@ source(file.path(RDIR,"gset-meta.r"))
 
 source(file.path(RDIR,"ngs-cook.r"))
 source(file.path(RDIR,"ngs-fit.r"))
-source(file.path(RDIR,"ngs-functions.R"))
 
-##source(file.path(RDIR,"pgx-functions.R"), local=TRUE)
-source(file.path(RDIR,"pgx-functions.R"))
+source(file.path(RDIR,"pgx-api.R"), local=TRUE)
 source(file.path(RDIR,"pgx-contrasts.R"))
 source(file.path(RDIR,"pgx-graph.R"))
 source(file.path(RDIR,"pgx-deconv.R"))
@@ -85,6 +87,9 @@ source(file.path(RDIR,"ui-code.R"))
 source(file.path(RDIR,"compute2-genes.R"))
 source(file.path(RDIR,"compute2-genesets.R"))
 source(file.path(RDIR,"compute2-extra.R"))
-source(file.path(RDIR,"pgx-compute.R"))
+source(file.path(RDIR,"pgx-compute.R"), local=TRUE)
+##source(file.path(RDIR,"pgx-compute.R"))
 source(file.path(RDIR,"pgx-singlecell.R"))
+source(file.path(RDIR,"pgx-vizpanels.R"))
+
 

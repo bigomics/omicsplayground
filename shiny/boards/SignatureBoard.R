@@ -3,6 +3,8 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+message(">>> sourcing SignatureBoard")
+
 SignatureInputs <- function(id) {
     ns <- NS(id)  ## namespace
     tagList(
@@ -30,7 +32,7 @@ SignatureUI <- function(id) {
     )
 }
 
-SignatureModule <- function(input, output, session, env)
+SignatureBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
 
@@ -70,6 +72,7 @@ infotext =
     
     output$inputsUI <- renderUI({
         ui <- tagList(
+            tags$head(tags$style("#sig-genelistUP.form-control {font-size:11px;padding:3px;height:100px;}")),
             tipify( actionLink(ns("info"), "Tutorial", icon = icon("youtube")),
                    "Show more information about this module"),
             hr(), br(),
@@ -106,7 +109,7 @@ infotext =
             )
         )
 
-        if(DEV.VERSION) {
+        if(DEV) {
             uix <- tagList(
                 hr(),h6("Developer options:"),
                 radioButtons(ns('ssstats'),'ss-stats:',
@@ -125,7 +128,7 @@ infotext =
     
     observeEvent( input$info, {
         showModal(modalDialog(
-            title = HTML("<strong>Signature Analysis Module</strong>"),
+            title = HTML("<strong>Signature Analysis Board</strong>"),
             HTML(infotext),
             easyClose = TRUE, size="l"))
     })
@@ -299,7 +302,7 @@ infotext =
         do.rho   = TRUE
         do.gsva  = FALSE
         do.exact = FALSE
-        if(0 && DEV.VERSION) {
+        if(0 && DEV) {
             if(input$ssstats=="rho") { do.rho=TRUE; do.gsva = FALSE; do.exact=TRUE }
             if(input$ssstats=="gsva") { do.rho=FALSE; do.gsva = TRUE; do.exact=TRUE }
             if(input$ssstats=="grp.gsva") { do.rho=FALSE; do.gsva=TRUE; do.exact=FALSE }
@@ -701,7 +704,7 @@ infotext =
         score = (log10(A$odds.ratio) * -log10(A$q.fisher + 1e-40))**0.5
         score = round(score, digits=3)
         df <- cbind(db=db, geneset=gset.names, score=score, "k/K"=ratio.kk, A, common.genes=commongenes)
-        if(DEV.VERSION) {
+        if(DEV) {
             df <- df[,c("db","geneset","score","k/K","ratio","odds.ratio","log.OR","q.fisher","common.genes")]
         } else {
             df <- df[,c("db","geneset","score","k/K","odds.ratio","q.fisher","common.genes")]
@@ -1020,7 +1023,7 @@ infotext =
         output <- as.matrix(gsea$output)
         output <- round(output, digits=4)
         output <- data.frame( contrast=rownames(output), output)
-        if(!DEV.VERSION) {
+        if(!DEV) {
             output$p <- NULL
             output$rho <- NULL
         }
@@ -1155,4 +1158,4 @@ infotext =
         )
     })
 
-}  ## end-of-Module
+}  ## end-of-Board

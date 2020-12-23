@@ -75,7 +75,6 @@ ngs.cookForEDGER <- function( counts, samples=NULL, genes=NULL, normalization="n
 
         ## remove batch-effects with LIMMA. Be sure to include batch in the
         ## model to avoid overfitting.
-        ##samples$group = with(cooked$samples, paste(strain,treatment))
         has.batch <-  ("batch" %in% colnames(cooked$samples))
         if(has.batch && remove.batch==TRUE) {
             cat("Found 'batch' column in sample table. Correcting for batch effects...\n")

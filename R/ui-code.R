@@ -68,14 +68,14 @@ code.textInput = HTML(" <script> var myTextInputBinding = new Shiny.InputBinding
             });
             Shiny.inputBindings.register(myTextInputBinding, 'shiny.myTextInput');</script>")
 
-textInputRow <- function (inputId, label, value = "")
+inlineTextInput <- function (inputId, label, value = "")
 {
     div(style="display:inline-block",
         tags$label(label, "for"=inputId),
         tags$input(id=inputId, type="text", value=value, class="input-small"))
 }
 
-selectInputRow <- function (inputId, label, value = "")
+inlineSelectInput <- function (inputId, label, value = "")
 {
     div(style="display:inline-block",
         tags$label(label, "for"=inputId),

@@ -3,38 +3,283 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-DECONV.METHODS = c("I-NNLS","CIBERSORT","DCQ","DeconRNAseq","EPIC","NNLM","cor")
+DECONV.METHODS = c("I-NNLS","CIBERSORT","DCQ","DeconRNAseq","EPIC","NNLM",
+                   "cor","SingleR")
 
-if(0) {
-    ## WARNING: this snippet will overwrite your ngs object...
-    ##
-    ##
+##low.th=0.01;add.unknown=1;collapse="no";min.prob=0.2
+pgx.inferCellType <- function(counts, low.th=0.01, add.unknown=FALSE,
+                              min.prob=0.2, min.count=3, scalex=FALSE,
+                              normalize.mat = TRUE, method="NNLM",
+                              collapse="max", markers=NULL)
+{
+    ## infer cell type from markers
+    if(is.null(markers)) {
+        ##M = read.csv(file.path(FILES,"LM22.txt"),row.names=1,sep="\t",check.names=FALSE)
+        ##colnames(M) <- gsub(" ","_",sub(" ",".",sub(" ","_",colnames(M))))
+        ##colnames(M) <- sub("Macrophages_","Macrophages.",colnames(M))
+        message("[pgx.inferCellType] using database: 'signature-immuneMeta.csv'")
+        M = read.csv(file.path(FILES,"signature-immuneMeta.csv"),row.names=1,check.names=FALSE)
+        M <- as.matrix(M)
+    } else {
+        message("[pgx.inferCellType] using provided markers list")
+        marker.genes <- gsub("[-+]*$","",unlist(markers))
+        marker.genes <- sort(unique(marker.genes))
+        M <- matrix(0, nrow=length(marker.genes), ncol=length(markers))
+        dimnames(M) <- list(marker.genes, names(markers))
+        dim(M)
+        k=7
+        k=1
+        for(k in 1:ncol(M)) {
+            mm <- markers[[k]]
+            ##m.pos <- sub("[+]$","",grep("[+]$",mm,value=TRUE))
+            m.neg <- sub("[-]$","",grep("[-]$",mm,value=TRUE))
+            m.pos <- setdiff(gsub("[+-]$","",mm),m.neg)
+            if(length(m.pos)) M[match(m.pos,rownames(M)),k] <- +1
+            if(length(m.neg)) M[match(m.neg,rownames(M)),k] <- -1
+        }
+        M <- pmax(M,0)  ## sorry.. no negative markers yet in this function
+        M <- as.matrix(M)
+    }
 
-    load(file="../pgx/geiger2018-arginine-8k-LT.pgx",verbose=1)
-    load(file="../pgx/sallusto2019-th1star-UC-12x-LT.pgx",verbose=1)
-    imm.sig <- t(apply(ngs$count, 1, function(x) tapply(x, ngs$samples$group, mean)))
-    imm.sig <- head(imm.sig[order(-apply(ngs$X,1,sd)),],1000)
-    ##imm.sig <- head(imm.sig[order(-apply(imm.sig,1,sd)),],500)
-    dim(imm.sig)
-    colnames(imm.sig) <- sub("_S$",".resting",colnames(imm.sig))
-    colnames(imm.sig) <- sub("_A$",".activated",colnames(imm.sig))
-    write.csv(imm.sig, file="../files/immprot-signature1000.csv")
-    remove(ngs)
+    ## Filter count matrix 
+    X <- counts
+    X <- X[(rowMeans(X >= min.count) > low.th),] ## OK???
 
-    ##devtools::install_github("GfellerLab/EPIC", build_vignettes=TRUE)
-    load(file="../pgx/schmiedel2018-DICE-mRNA-4k.pgx",verbose=1)
-    dice.sig <- t(apply(ngs$count, 1, function(x) tapply(x, ngs$samples$group, mean)))
-    dice.sig <- head(dice.sig[order(-apply(ngs$X,1,sd)),],1000)
-    dice.sig <- head(dice.sig[order(-apply(dice.sig,1,sd)),],500)
-    dim(dice.sig)
-    write.csv(dice.sig, file="../files/DICE-signature1000.csv")
-    remove(ngs)
+    ## Match matrices
+    rownames(X) <- toupper(rownames(X))
+    rownames(M) <- toupper(rownames(M))
+    gg <- intersect(rownames(M),rownames(X))
+    X1 <- X[gg,]
+    M1 <- M[gg,]
+    M1 <- M1[,colSums(M1!=0)>0,drop=FALSE]
+    if(scalex) X1 <- X1 / (1 + rowMeans(X1))
+    
+    ## run deconvolution algorithm
+    ##add.unknown=0;method="SingleR"
+    out <- pgx.deconvolution(X1, ref=M1, methods=method,
+                             add.unknown=add.unknown, normalize.mat=normalize.mat)
+    names(out$results)
+    P <- out$results[[method]]  ## choose specified method
+    rownames(P) <- colnames(X1)
+    P[is.na(P)] <- 0
+    dim(P)
+    
+    ## Collapse to single cell.type
+    if(collapse=="sum") {
+        P <- tapply(1:ncol(P), colnames(P), function(i) rowSums(P[,i,drop=FALSE]))
+    } else if(collapse=="mean") {
+        P <- tapply(1:ncol(P), colnames(P), function(i) rowMeans(P[,i,drop=FALSE]))
+    ## } else if(collapse=="max") {
+    } else {
+        P <- tapply(1:ncol(P), colnames(P), function(i) apply(P[,i,drop=FALSE],1,max))
+    }
+    P <- do.call(cbind,P)    
+    dim(P)
+    
+    ## Get maximum probability cell.type
+    P <- P / (1e-6 + rowSums(P,na.rm=TRUE))
+    pmax <- apply(P,1,max,na.rm=TRUE)
+    sel.dodgy <- (pmax < min.prob) ## not reliable
+    cell.type <- colnames(P)[max.col(P)]
+    if(any(sel.dodgy)) cell.type[which(sel.dodgy)] <- NA
+    
+    ## collapse small groups to 'other_cells'
+    low.ct <- names(which(table(cell.type) < low.th*length(cell.type)))
+    cell.type[cell.type %in% low.ct] <- "other_cells"
+
+    names(cell.type) <- colnames(counts)
+    cell.type    
 }
 
-pgx.testSignature <- function(ngs, sig) {
+##low.th=0.01;add.unknown=0;celltype0=NULL;min.prob=0.2
+pgx.inferCellTypeLM22 <- function(counts, low.th=0.01, add.unknown=FALSE,
+                                  normalize.mat = TRUE, method="NNLM",
+                                  min.count=3, celltype0=NULL, min.prob=0.2)
+{
+    ## Two-pass (2-level) cell type identification using LM22
+    ##
+    ##
+    M = read.csv(file.path(FILES,"LM22.txt"),row.names=1,sep="\t",check.names=FALSE)
+    M <- as.matrix(M)
+    colnames(M) <- gsub(" ","_",sub(" ",".",sub(" ","_",colnames(M))))
+    colnames(M) <- sub("Macrophages_","Macrophages.",colnames(M))
+
+    if(is.null(celltype0)) {
+        celltype0 <- pgx.inferCellType(counts, low.th=0, add.unknown=add.unknown,
+                                       normalize.mat = TRUE, method="NNLM",
+                                       min.prob=min.prob)
+        table(celltype0)
+    }
+
+    ## Filter count matrix
+    X <- counts
+    X <- X[(rowMeans(X >= min.count) > low.th),] ## OK???
+
+    ## Match matrices
+    rownames(X) <- toupper(rownames(X))
+    rownames(M) <- toupper(rownames(M))
+    gg <- intersect(rownames(X),rownames(M))
+    X <- X[gg,]
+    M <- M[gg,]
+    
+    celltype <- rep(NA, ncol(X))
+    ct="T_cells"
+    for(ct in unique(celltype0)) {
+        M1 <- M[,grep(ct,colnames(M)),drop=FALSE]
+        jj <- which(celltype0==ct)
+        ct3 <- celltype0[jj]
+        dim(M1)
+        if(ncol(M1)>1) {
+            X1 <- X[,jj,drop=FALSE]
+            X1 <- X1 / (1e-3 + rowMeans(X1)) ## center feature means??
+            M1 <- M1 / (1e-3 + rowMeans(M1)) ## center feature means??
+            res1 <- pgx.deconvolution(
+                X1, ref=M1, methods="NNLM", normalize.mat = TRUE, 
+                add.unknown=FALSE )
+            ct3 <- colnames(M1)[max.col(res1$results[["NNLM"]])]
+        }
+        celltype[jj] <- ct3        
+    }
+    table(celltype0)
+    table(celltype)
+    table(celltype0, celltype)
+
+    ## collapse small groups to 'other_cells'
+    low.ct <- names(which(table(celltype) < low.th*length(celltype)))
+    celltype[celltype %in% low.ct] <- "other_cells"
+
+    names(celltype) <- colnames(counts)
+    celltype    
+}
+
+pgx.checkCellTypeMarkers <- function(counts, min.count=3, markers=NULL)
+{
+    ## Checks if markers are expressed (positive markers) or
+    ## not-expressed (negative markers).
+    ##
+    ##
+    CANONICAL.MARKERS.SAVE = list(
+        "B cells" = c("Ms4a1","CD79a","CD79b", "Fcmr","Ebr1"),
+        "CD4 T cells" = c("Il17r","Ccr7","Cd3e","Cd3d","Cd3g"),
+        "CD8 T cells" = c("Cd8a","Cd8b"),
+        "NK cells" = c("Gnly","Nkg7","Gzma", "Klrb1c", "Klrk1", "Klra4"),
+        "Dendritic cells" = c("Fcer1a","Cst3","Siglech","Fscn1","Ccl22"),
+        "Macrophages" = c("C1qa","C1qb","C1qc","Lyz2"),
+        "Monocytes" = c("Ly6c2","Lyz","Cd14","Fcgr3a","Ms4a7"),    
+        "B16.melanoma" = c("Mlana", "Dct", "Tyrp1", "Mt1", "Mt2", "Pmel", "Pgk1")    
+    )
+    CANONICAL.MARKERS2 = list(
+        ##"Bcells" = c("Ms4a1+","CD79a+","CD79b+","Fcmr+","Ebf1+"),
+        "B_cells" = c("Ms4a1+","Cd79a+","Cd79b+"),
+        "T_cells" = c("Cd3e+","Cd3d+","Cd3g+"),
+        ##"TcellsCD4" = c("Il17r","Ccr7","Cd3e","Cd3d","Cd3g"),
+        ##"TcellsCD8" = c("Cd8a","Cd8b1"),
+        "NK_cells" = c("Gzma+", "Klrb1c+", "Klra4+"),
+        ##"DendriticCells" = c("Fscn1","Ccl22","Cst3"),
+        "Dendritic_cells" = c("Cst3+","H2-Ab1+","Adgre1-"),
+        "Macrophages" = c("C1qa+","C1qb+","C1qc+"),
+        "Monocytes" = c("Ly6c2+","Lyz2+","Ccr2+"),
+        "Immune_cell" = c("Ptprc+")
+        ## "B16.melanoma" = c("Mlana", "Dct", "Tyrp1", "Mt1", "Mt2", "Pmel", "Pgk1")    
+    )
+    if(is.null(markers)) {
+        markers <- CANONICAL.MARKERS2
+    }
+
+    ##markers <- markers[order(names(markers))]
+    marker.genes <- sort(unique(unlist(markers)))
+    marker.genes <- gsub("[-+]$","",marker.genes)
+    marker.genes
+    
+    M <- matrix(0, nrow=length(marker.genes), ncol=length(markers))
+    dimnames(M) <- list(marker.genes,names(markers))
+    dim(M)
+    k=7
+    k=1
+    for(k in 1:ncol(M)) {
+        mm <- markers[[k]]
+        ##m.pos <- sub("[+]$","",grep("[+]$",mm,value=TRUE))
+        m.neg <- sub("[-]$","",grep("[-]$",mm,value=TRUE))
+        m.pos <- setdiff(gsub("[+-]$","",mm),m.neg)
+        if(length(m.pos)) M[match(m.pos,rownames(M)),k] <- +1
+        if(length(m.neg)) M[match(m.neg,rownames(M)),k] <- -1
+    }
+    ##M <- M[,colSums(M!=0)>0]
+    M
+    X=counts
+    ##X <- (counts / rowMeans(counts))**2
+    rownames(M) <- toupper(rownames(M))
+    rownames(X) <- toupper(rownames(X))
+    gg <- intersect(rownames(M),rownames(X))
+    counts0 <- counts[match(gg,toupper(rownames(counts))),]
+    
+    X1 <- 1*(X[gg,] >= min.count)
+    M1 <- M[gg,]
+    check.pos <-  t(pmax(M1,0)) %*% X1 == colSums(pmax(M1,0))
+    
+    check.neg <-  t(pmin(M1,0)) %*% X1 == colSums(pmin(M1,0))
+    table(check.pos)
+    table(check.neg)
+    check <- 1*t(check.pos & check.neg)
+
+    list(check=check, marker.expr=counts0, markers=markers,
+         plotMarkers=plotMarkers)
+}
 
 
+pgx.simplifyCellTypes <- function(ct, low.th=0.01)
+{
+    ## Simplifies cell types names from LM22, DICE, ImmProt and
+    ## ImmunoStates to standardized classification names.
+    ##
+    
+    ## LM22
+    ct[grep("^B.cells",ct)] <- "B_cells"
+    ct[grep("^T.cells",ct)] <- "T_cells"    
+    ct[grep("^Macrophages",ct)] <- "Macrophages"
+    ct[grep("^NK",ct)] <- "NK_cells"
+    ct[grep("^Dendritic",ct)] <- "Dendritic_cells"
+    ct[grep("^Mast",ct)] <- "Mast_cells"
+    ct[grep("^Plasma",ct)] <- "Plasma_cells"
+    ct[grep("Eosinophils|Neutrophils",ct)] <- "Granulocytes"
 
+    ## DICE
+    ct[grep("CD4|CD8|TH[12]|TFH|TREG|THSTAR",ct)] <- "T_cells"
+    ct[grep("^M2$",ct)] <- "Macrophages"
+    ct[grep("^B_CELL",ct)] <- "B_cells"
+    ct[grep("^MONOCYTES$",ct)] <- "Monocytes"
+
+    ## ImmProt
+    ct[grep("^Bmem|^Bnav|^Bplasma",ct)] <- "B_cells"
+    ct[grep("^T4|^Th17|^T8|Th[12]|Tregs",ct)] <- "T_cells"
+    ct[grep("^NK",ct)] <- "NK_cells"
+    ct[grep("^mDC|^pDC",ct)] <- "Dendritic_cells"
+    ct[grep("^M2$",ct)] <- "Macrophages"
+    ct[grep("^MOim|^MOnc|^MOcl",ct)] <- "Monocytes"
+    ct[grep("^BSph|^ESph|^NTph",ct)] <- "Granulocytes"
+
+    ## ImmunoStates
+    ct[grep("B_cell",ct)] <- "B_cells"
+    ct[grep("T_cell",ct)] <- "T_cells"    
+    ct[grep("macrophage",ct)] <- "Macrophages"
+    ct[grep("natural.killer",ct)] <- "NK_cells"
+    ct[grep("dendritic",ct)] <- "Dendritic_cells"
+    ct[grep("plasma",ct)] <- "Plasma_cells"
+    ct[grep("MAST",ct)] <- "Mast_cells"
+    ct[grep("monocyte",ct)] <- "Monocytes"
+    ct[grep("eosinophil|neutrophil|basophil",ct)] <- "Granulocytes"
+    ct[grep("hemato",ct)] <- "other_cells"
+
+    ## otherCells (from EPIC)
+    ##ct[grep("otherCells",ct)] <- "unknown_cells"
+    
+    ## collapse low frequency celltype to "other"
+    low.ct <- names(which(table(ct) < low.th*length(ct)))
+    ct[ct %in% low.ct] <- "other_cells"
+    
+    ##ct <- sub("cells","_cells",ct,ignore.case=TRUE)
+    ## ct <- tolower(ct)
+    ct
 }
 
 pgx.purify <- function( X, ref, k=3, method=2) {
@@ -111,14 +356,48 @@ pgx.inferCellCyclePhase <- function(counts)
     rownames(counts) <- toupper(rownames(counts))  ## mouse...
     ##counts1 <- cbind(counts,counts,counts,counts,counts,counts)
     obj <- CreateSeuratObject(counts)
-    obj <- NormalizeData(obj)
-    obj <- CellCycleScoring(obj, s_genes, g2m_genes, set.ident = TRUE)
-
+    obj <- NormalizeData(obj, verbose=0)
+    suppressWarnings( obj <- CellCycleScoring(obj, s.features=s_genes,
+                                              g2m.features=g2m_genes, set.ident=TRUE))
     ## view cell cycle scores and phase assignments
     ##head(x = obj@meta.data)
     ##table(obj@meta.data$Phase)
+    s.score <- obj@meta.data$S.Score
+    g2m.score <- obj@meta.data$G2M.Score
     phase <- obj@meta.data$Phase
+    if(is.null(phase) || length(phase)==0) return(NULL)
     return(phase)
+}
+
+##counts=ngs$counts
+pgx.scoreCellCycle <- function(counts)
+{
+    require(Seurat)
+
+    ## List of cell cycle markers, from Tirosh et al, 2015
+    ##
+    ##cc.genes <- readLines(con = "../opt/seurat/regev_lab_cell_cycle_genes.txt")
+    cc.genes = strsplit("MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA",split=" ")[[1]]
+    s_genes <- cc.genes[1:43]
+    g2m_genes <- cc.genes[44:97]
+    length(s_genes)
+    length(g2m_genes)
+    
+    ## Create our Seurat object and complete the initalization steps
+    rownames(counts) <- toupper(rownames(counts))  ## mouse...
+    ##counts1 <- cbind(counts,counts,counts,counts,counts,counts)
+    obj <- CreateSeuratObject(counts)
+    obj <- NormalizeData(obj, verbose=0)
+    suppressWarnings( obj <- CellCycleScoring(obj, s_genes, g2m_genes, set.ident=TRUE))
+    ## view cell cycle scores and phase assignments
+    ##head(x = obj@meta.data)
+    ##table(obj@meta.data$Phase)
+    s.score <- obj@meta.data$S.Score
+    g2m.score <- obj@meta.data$G2M.Score
+    phase <- obj@meta.data$Phase
+    df <- data.frame(phase=phase, s.score=s.score, g2m.score=g2m.score)
+    if(nrow(df)==0) return(NULL)
+    return(df)
 }
 
 pgx.inferGender <- function(X, gene_name=NULL) {
@@ -187,25 +466,60 @@ pgx.multiDeconvolution <- function(counts, refmat, methods=DECONV.METHODS)
     return(res2)
 }
 
-##X=as.matrix(2**ngs$X);ref="LM22";methods=DECONV.METHODS
-pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
+##X=as.matrix(2**ngs$X);ref="LM22";methods="NNLM"
+pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
+                              add.unknown=FALSE, normalize.mat=TRUE)
 {
 
-    if(max(X)<100 || min(X)<0) {
+    if(max(X)<50 || min(X)<0) {
         cat("WARNING:: pgx.deconvolution: is X really counts? (not logarithmic)\n")
     }
+
+    ## clean up matrix, remove duplicate names
     mat <- as.matrix(X)
     rownames(mat) <- gsub(".*:","",rownames(mat)) ## strip prefix
     rownames(mat) <- toupper(rownames(mat)) ## handle mouse??
-    mat <- mat[order(-rowMeans(mat)),]
-    mat <- as.matrix(mat[!duplicated(rownames(mat)),])
-    head(mat)[,1:4]
+    mat <- mat[order(-rowMeans(mat)),,drop=FALSE]
+    mat <- as.matrix(mat[!duplicated(rownames(mat)),,drop=FALSE])
 
+    ref <- as.matrix(ref)
     rownames(ref) <- toupper(rownames(ref))
-    ref <- ref[order(-rowMeans(ref)),]
-    ref <- as.matrix(ref[!duplicated(rownames(ref)),])
-    head(ref)[,1:4]
+    ref <- ref[order(-rowMeans(ref)),,drop=FALSE]
+    ref <- as.matrix(ref[!duplicated(rownames(ref)),,drop=FALSE])
 
+    ## Add "unknown" class to reference matrix
+    if(add.unknown==TRUE) {
+        gg <- intersect(rownames(ref),rownames(mat))
+        x1 <- log(1+ref[gg,,drop=FALSE])
+        y1 <- log(1+rowMeans(mat[gg,,drop=FALSE]))
+        x1 <- cbind(offset=1, x1)
+
+        ## compute residual matrix by substracting all possible linear
+        ## combinations of reference.
+        require(NNLM)
+        x1 <- ref[gg,,drop=FALSE]
+        y1 <- rowMeans(mat[gg,,drop=FALSE])
+        cf <- nnlm(x1,cbind(y1))$coefficients
+        cf[is.na(cf)] <- 0
+        resid <- pmax(y1 - x1 %*% cf,0) ## residual vector           
+        resx <- rep(0,nrow(ref))
+        names(resx) <- rownames(ref)
+        resx[gg] <- resid
+        ref <- cbind(ref, "unknown_cells"=resx)
+    }
+    
+    ## normalize all matrices to CPM
+    if(normalize.mat) {
+        ref <- t(t(ref) / sqrt(1e-6 + colSums(ref**2))) * 1e6
+        mat <- t(t(mat) / sqrt(1e-6 + colSums(mat**2))) * 1e6
+    }
+    
+    ## add small noise, some methods need it...
+    ref <- ref + 1e-2*matrix(rnorm(length(ref)),nrow(ref),ncol(ref))  
+    mat <- mat + 1e-2*matrix(rnorm(length(mat)),nrow(mat),ncol(mat)) 
+    ref <- pmax(ref,0)
+    mat <- pmax(mat,0)
+        
     gg <- intersect(rownames(ref),rownames(mat))
     head(gg)
     if(length(gg)==0) {
@@ -218,11 +532,11 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
         length(gg)
         ##ref <- ref[gg,]
         ##mat <- mat[gg,]
-        qx <- normalizeQuantiles( cbind(ref[gg,],mat[gg,]))
+        qx <- limma::normalizeQuantiles( cbind(ref[gg,],mat[gg,]))
         ref <- qx[,colnames(ref)]
         mat <- mat[,colnames(mat)]
     }
-
+    
     timings <- list()
     results <- list()
     methods
@@ -257,7 +571,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
         mat1 <- mat
         colnames(mat1) <- 1:ncol(mat)  ## EPIC doesnt like duplicated column names...
         stime <- system.time( try(
-            out <- EPIC(bulk = mat1[,], reference = ref.list)
+            out <- EPIC(bulk = mat1, reference = ref.list)
         ))
         remove(mat1)
         if(!is.null(out)) {
@@ -279,10 +593,10 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
         library(DeconRNASeq)
         ## uses pca() from pcaMethods
         drs <- NULL
-        stime <- system.time(
+        stime <- system.time(suppressMessages(suppressWarnings(
             drs <- try(DeconRNASeq(data.frame(mat, check.names=FALSE),
                                    data.frame(ref, check.names=FALSE))$out.all)
-        )
+        )))
         timings[["DeconRNAseq"]] <- stime
         class(drs)
         if(!is.null(drs) && class(drs)!="try-error") {
@@ -304,9 +618,9 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
         stime <- system.time(
             res.dcq <- try(
                 dcq(reference_data = log2(1+as.matrix(ref)),
-                    mix_data = log2(1 + as.matrix(mat)),  ## log data OK??
+                    mix_data = log2(1+as.matrix(mat)),  ## log data OK??
                     ##marker_set = matrix(rownames(ref),ncol=1),
-                    marker_set = cbind(rownames(ref)),
+                    marker_set = cbind(intersect(rownames(ref),rownames(mat))),
                     alpha_used=0.05, lambda_min=0.2, number_of_repeats=3,
                     precent_of_data=1.0)
             ))
@@ -320,35 +634,36 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
     }
 
     if("I-NNLS" %in% methods) {
+        ## !!!!!!!!!!!!!! WARNING:: needs more testing/validation !!!!!!!!!!!!!
         ##----- Constrained iterative non-negative least squares (Abbas et al. 2009) ----
-        GetFractions.Abbas <- function(XX, YY, w=NA){
+        GetFractions.Abbas <- function(XX, y, w=NA){
             ## XX is immune expression data
-            ## YY is cancer expression data
+            ## y is cancer expression data
             ss.remove=c()
             ss.names=colnames(XX)
-            while(T){
+            while(TRUE){
                 if(length(ss.remove)==0) {
                     tmp.XX=XX
                 } else{
                     if(is.null(ncol(tmp.XX))) return(rep(0, ncol(XX)))
-                    tmp.XX=tmp.XX[, -ss.remove]
+                    tmp.XX=tmp.XX[,-ss.remove,drop=FALSE]
                 }
                 if(length(ss.remove)>0){
                     ss.names=ss.names[-ss.remove]
                     if(length(ss.names)==0) return(rep(0, ncol(XX)))
                 }
                 if(is.na(w[1])) {
-                    tmp=lsfit(tmp.XX, YY, intercept=F)
+                    tmp=lsfit(tmp.XX, y, intercept=FALSE)
                 } else {
-                    tmp=lsfit(tmp.XX, YY, w, intercept=F)
+                    tmp=lsfit(tmp.XX, y, w, intercept=FALSE)
                 }
-                if(is.null(ncol(tmp.XX))) {
+                if(ncol(tmp.XX)==1) {
                     tmp.beta=tmp$coefficients[1]
                 } else {
                     tmp.beta=tmp$coefficients[1:(ncol(tmp.XX)+0)]
                 }
-                if(min(tmp.beta>0)) break
-                ss.remove=which.min(tmp.beta)
+                if(min(tmp.beta>0)) break ## break if coefs are all positive
+                ss.remove=which.min(tmp.beta)  ## removes most negative coeff
             }
             tmp.F=rep(0, ncol(XX))
             names(tmp.F)=colnames(XX)
@@ -374,32 +689,32 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
         ## NNLM
         ##install.packages("NNLM")
         require(NNLM)
-        x1 <- log2(1+ref[gg,])
-        x2 <- log2(1+mat[gg,])
+        x1 <- log2(1+ref[gg,,drop=FALSE])
+        x2 <- log2(1+mat[gg,,drop=FALSE])
         x1 <- cbind(offset=1, x1)
         stime <- system.time(
-            cf <- nnlm(x1,x2)$coefficients[-1,]
+            cf <- nnlm(x1,x2)$coefficients[-1,,drop=FALSE]
         )
         timings[["NNLM"]] <- stime
         cat("deconvolution using NNLM took",stime[3],"s\n")
         results[["NNLM"]] <- t(cf)
 
         ## very much the same as I-NNLS
-        results[["NNLM.lin"]] <- t(nnlm(ref[gg,], mat[gg,])$coefficients)
+        results[["NNLM.lin"]] <- t(nnlm(ref[gg,,drop=FALSE], mat[gg,,drop=FALSE])$coefficients)
 
-        r1 <- apply(ref[gg,],2,rank,na.last="keep")
-        r2 <- apply(mat[gg,],2,rank,na.last="keep")
+        r1 <- apply(ref[gg,,drop=FALSE],2,rank,na.last="keep")
+        r2 <- apply(mat[gg,,drop=FALSE],2,rank,na.last="keep")
         r1 <- cbind(offset=1, r1)
-        cf <- nnlm(r1,r2)$coefficients[-1,]
+        cf <- nnlm(r1,r2)$coefficients[-1,,drop=FALSE]
         results[["NNLM.rnk"]] <- t(cf)
 
     }
 
-    ## Simple correlation
+    ## Simple (rank) correlation
     if("cor" %in% methods) {
         ##results[["cor"]] <- cor(log2(1+mat[gg,]), log2(1+ref[gg,]))
-        r1 <- apply(mat[gg,],2,rank,na.last="keep")
-        r2 <- apply(ref[gg,],2,rank,na.last="keep")
+        r1 <- apply(mat[gg,,drop=FALSE],2,rank,na.last="keep")
+        r2 <- apply(ref[gg,,drop=FALSE],2,rank,na.last="keep")
         stime <- system.time(
             cf <- cor(r1,r2,use="pairwise")
         )
@@ -408,6 +723,15 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
         results[["cor"]] <- cf
     }
 
+    if("SingleR" %in% methods) {
+        require(SingleR)
+        stime <- system.time(
+            sr1 <- SingleR( test=mat, ref=ref, labels=colnames(ref))
+        )
+        timings[["SingleR"]] <- stime
+        cat("deconvolution using SingleR took",stime[3],"s\n")
+        results[["SingleR"]] <- sr1$scores
+    }
     ## clean up
     names(results)
     results <- results[which(!sapply(results,is.null))]
@@ -416,7 +740,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS)
     ## meta
     if(length(results)>1) {
         jj <- colnames(ref)
-        norm.results <- lapply( results, function(x) x[,jj] / (1e-8 + rowSums(x[,jj]))  )
+        norm.results <- lapply( results, function(x) x[,jj,drop=FALSE] / (1e-8 + rowSums(x[,jj,drop=FALSE]))  )
         lognorm.results <- lapply( norm.results, function(x) log(0.001+pmax(x,0)))
         res.meta1 = Reduce( '+', norm.results) / length(norm.results)
         res.meta2 = exp(Reduce( '+', lognorm.results) / length(lognorm.results))
