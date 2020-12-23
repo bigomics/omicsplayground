@@ -3,9 +3,11 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+## Quick update of latest build image with new packages, data and git
+## code and make new (test) image.
 
 #------------------------------------------------------------
-# Start from lastest base+data image
+# Start from lastest build image
 #------------------------------------------------------------
 
 FROM bigomics/omicsplayground:build
@@ -18,7 +20,6 @@ FROM bigomics/omicsplayground:build
 # RUN R -e "BiocManager::install(c('randomForest'))"
 RUN R -e "install.packages(c('R.utils'))"
 # RUN pip install umap-learn
-
 
 #------------------------------------------------------------
 # Copy extra data into Docker image

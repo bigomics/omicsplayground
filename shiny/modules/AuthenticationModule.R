@@ -40,7 +40,8 @@ NoAuthenticationModule <- function(input, output, session, username=NULL)
     USER$name <- username
     
     output$showLogin <- renderUI({
-        m <- splashLoginModal(ns=ns, with.email=FALSE, with.password=FALSE)
+        m <- splashLoginModal(
+            ns=ns, with.email=FALSE, with.password=FALSE, login.text="Start")
         ## shinyjs::delay(2000, {output$login_warning <- renderText("")})
         showModal(m)
     })
@@ -1162,7 +1163,8 @@ splashHelloModal <- function(name, msg=NULL, ns=NULL, duration=3500)
 }
 
 splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
-                             with.username=FALSE, with.register=FALSE, alt=NULL)
+                             with.username=FALSE, with.register=FALSE,
+                             login.text="Login", alt=NULL)
 {
     if(is.null(ns)) ns <- function(e) return(e)
     message("[AuthenticationModule::splashLoginModal]")
@@ -1236,7 +1238,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     if(with.register) {
         div.button <- div(
             id="splash-buttons",
-            actionButton(ns("login_btn"),"Login",class="red-button"),
+            actionButton(ns("login_btn"),login.text,class="red-button"),
             actionButton(ns("register_btn"),"Register",class="red-button")
         )
     }
