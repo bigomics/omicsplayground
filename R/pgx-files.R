@@ -258,6 +258,7 @@ pgx.initDatasetFolder <- function(pgx.dir, verbose=TRUE, force=FALSE)
             verbose = verbose)    
 
     }
+
 }
 
 if(0) {
@@ -348,9 +349,9 @@ pgx.scanInfoFile <- function(pgx.dir, file="datasets-info.csv", verbose=TRUE)
 pgx.updateInfoPGX <- function(pgxinfo, ngs, remove.old=TRUE)
 {
 
-    cnd = grep("title|source|group|batch|sample|patient|donor|repl|clone|cluster|lib.size|^[.]",
+    cond = grep("title|source|group|batch|sample|patient|donor|repl|clone|cluster|lib.size|^[.]",
                colnames(ngs$samples),invert=TRUE,value=TRUE)
-    cnd
+    cond
 
     is.mouse = (mean(grepl("[a-z]",ngs$genes$gene_name))>0.8)
     organism = c("human","mouse")[1 + is.mouse]
@@ -358,10 +359,10 @@ pgx.updateInfoPGX <- function(pgxinfo, ngs, remove.old=TRUE)
     
     this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
     date = ifelse(is.null(ngs$date), this.date, as.character(ngs$date))
-    
+    dataset.name <- ifelse(is.null(ngs$name), pgxfile, ngs$name)
+        
     this.info <- c(
-        ##dataset = pgxfile,
-        dataset = ngs$name,
+        dataset = dataset.name,
         ## author = "", ## add author? maintainer? owner??
         collection = ngs$collection,
         datatype = ifelse(is.null(ngs$datatype),"", ngs$datatype),
@@ -370,47 +371,58 @@ pgx.updateInfoPGX <- function(pgxinfo, ngs, remove.old=TRUE)
         nsamples = nrow(ngs$samples),
         ngenes = nrow(ngs$X),
         nsets = nrow(ngs$gsetX),
-        conditions = paste(cnd,collapse=" "),
+        conditions = paste(cond,collapse=" "),
         date = as.character(date),
         path = NULL
     )
 
     ## force to be character...
-    pgxinfo$date <- as.character(pgxinfo$date)
-    which.factor <- which(sapply(pgxinfo,is.factor))
-    for(i in which.factor) {
-        pgxinfo[,i] <- as.character(pgxinfo[,i])
-    }
+    !is.null(pgxinfo) && NCOL(pgxinfo)>0 && nrow(pgxinfo)>0
     
-    ## remove existing entries??
-    if(remove.old) {
-        d1 <- sub("[.]pgx$","",pgxinfo$dataset)
-        d2 <- sub("[.]pgx$","",this.info["dataset"])
-        if(d2 %in% d1) {
-            sel <- which(d1!=d2)
-            pgxinfo <- pgxinfo[sel,,drop=FALSE]
+    if(!is.null(pgxinfo) && NCOL(pgxinfo)>0 && nrow(pgxinfo)>0 )
+    {
+        if("date" %in% colnames(pgxinfo)) {
+            pgxinfo$date <- as.character(pgxinfo$date)
         }
-    }
-    
-    ## merge with same columns
-    info.cols <- colnames(pgxinfo)
-    info.cols <- unique(c(info.cols, names(this.info)))
-    if(!is.null(pgxinfo) && NCOL(pgxinfo)>0 && nrow(pgxinfo)>0 ) {
+        which.factor <- which(sapply(pgxinfo,is.factor))
+        which.factor
+        for(i in which.factor) {
+            pgxinfo[,i] <- as.character(pgxinfo[,i])
+        }
+        
+        ## remove existing entries??
+        if(remove.old) {
+            d1 <- sub("[.]pgx$","",pgxinfo$dataset)
+            d2 <- sub("[.]pgx$","",this.info["dataset"])
+            if(d2 %in% d1 && d2!="") {
+                sel <- which(d1!=d2)
+                pgxinfo <- pgxinfo[sel,,drop=FALSE]
+            }
+        }
+        
+        ## merge with same columns
+        info.cols <- colnames(pgxinfo)
+        info.cols <- unique(c(info.cols, names(this.info)))
         this.info = this.info[match(info.cols,names(this.info))]
         names(this.info) = info.cols
-        pgxinfo = pgxinfo[,match(info.cols,colnames(pgxinfo)),drop=FALSE]
-        colnames(pgxinfo) = info.cols
-        pgxinfo <- rbind( pgxinfo, this.info)
+        pgxinfo1 <- pgxinfo
+        for(f in setdiff(info.cols,colnames(pgxinfo1))) {
+            pgxinfo1[[f]] <- NA
+        }
+        match(info.cols,colnames(pgxinfo1))
+        pgxinfo1 = pgxinfo1[,match(info.cols,colnames(pgxinfo1)),drop=FALSE]
+        colnames(pgxinfo1) = info.cols        
+        pgxinfo <- rbind( pgxinfo1, this.info)
     } else {
-        pgxinfo <- this.info
+        pgxinfo <- data.frame(rbind(this.info))
     }
 
     pgxinfo
 }
 
 
-##pgx.dir=PGX.DIR[1];allfc.file="datasets-allFC.csv";verbose=1;info.file="datasets-info.csv";force=1
-pgx.initDatasetFolder1 <- function( pgx.dir,
+##pgx.dir1=PGX.DIR[1];allfc.file="datasets-allFC.csv";verbose=1;info.file="datasets-info.csv";force=1
+pgx.initDatasetFolder1 <- function( pgx.dir1,
                                    allfc.file = "datasets-allFC.csv",
                                    info.file = "datasets-info.csv",
                                    force=FALSE, verbose=TRUE)
@@ -419,25 +431,25 @@ pgx.initDatasetFolder1 <- function( pgx.dir,
     ##
     ##
 
-    if(!dir.exists(pgx.dir)) {
+    if(!dir.exists(pgx.dir1)) {
         stop(paste("[pgx.updateDatasetsMetaFiles1] FATAL ERROR : folder",pgx.dir,"does not exist"))
     }
     
     ## all public datasets
-    pgx.dir <- pgx.dir[1]  ## only one folder!!!
-    pgx.files <- dir(pgx.dir, pattern="[.]pgx$")
+    pgx.dir1 <- pgx.dir1[1]  ## only one folder!!!
+    pgx.files <- dir(pgx.dir1, pattern="[.]pgx$")
     pgx.files
 
     ##----------------------------------------------------------------------
     ## If an allFC file exists
     ##----------------------------------------------------------------------
 
-    allfc.file1 <- file.path(pgx.dir, allfc.file)
+    allfc.file1 <- file.path(pgx.dir1, allfc.file)
     has.fc <- file.exists(allfc.file1)
     if(verbose && has.fc) cat("file",allfc.file1,"exists: YES\n")
     if(verbose && !has.fc) cat("file",allfc.file1,"exists: NO\n")
 
-    info.file1 <- file.path(pgx.dir, info.file)
+    info.file1 <- file.path(pgx.dir1, info.file)
     has.info <- file.exists(info.file1)
     if(verbose && has.info) cat("file",info.file1,"exists: YES\n")
     if(verbose && !has.info) cat("file",info.file1,"exists: NO\n")
@@ -483,7 +495,7 @@ pgx.initDatasetFolder1 <- function( pgx.dir,
         if(verbose) cat("no update required. use FORCE=1 for forced update.\n")
         return(NULL)
     }
-    if(verbose) cat("scanning",length(pgx.missing),"PGX files in folder",pgx.dir,"\n")
+    if(verbose) cat("scanning",length(pgx.missing),"PGX files in folder",pgx.dir1,"\n")
         
     ##----------------------------------------------------------------------
     ## Reread allFC file. Before we only read the header.
@@ -502,20 +514,22 @@ pgx.initDatasetFolder1 <- function( pgx.dir,
 
     info.cols <- NULL
     missing.FC <- list()
-    pgx = pgx.missing[1]
-
     cat("[pgx.initDatasetFolder1] missing pgx=",pgx.missing,"\n")
+    pgx = pgx.missing[1]
+    pgxfile = "CCLE-drugSX.pgx"
+    
     ngs <- NULL
     for(pgxfile in pgx.missing) {
 
         pgxfile
         if(verbose) cat(".")        
-        try.error <- try( load(file.path(pgx.dir,pgxfile),verbose=0) )
+        try.error <- try( load(file.path(pgx.dir1,pgxfile),verbose=0) )
         if(class(try.error)=="try-error") {
             message(paste("[pgx.initDatasetFolder1] ERROR in loading PGX file:",pgxfile,". skipping\n"))
             next()
         }                
 
+        cat("[pgx.initDatasetFolder1] pgxfile=",pgxfile,"\n")
         cat("[pgx.initDatasetFolder1] names(ngs)=",names(ngs),"\n")
 
         if(!pgx.checkObject(ngs)) {
@@ -538,7 +552,9 @@ pgx.initDatasetFolder1 <- function( pgx.dir,
         pgxinfo <- pgx.updateInfoPGX(pgxinfo, ngs)
         tail(pgxinfo)
         ## pgxinfo <- rbind( pgxinfo, this.info)
+
     }
+
     ngs <- NULL
     if(verbose) cat("\n")
     rownames(pgxinfo) <- NULL    
