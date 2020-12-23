@@ -7,9 +7,10 @@ FROM ubuntu:20.10
 
 MAINTAINER Ivo Kwee "kwee@bigomics.ch"
 
-
 # =====================================================================
-# Create docker image for Omics Playground 
+# Creates base docker image for Omics Playground. Generally not for
+# direct deployment but as base image for further build. Install
+# necessary Debian packages, R packages and fresh Git clone.
 # =====================================================================
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -59,7 +60,16 @@ RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
     'metap','brew','Seurat','R.utils','rhdf5', 'mygene', \
     'qgraph','psych'))"
 RUN R -e "BiocManager::install(c('rhdf5','monocle'))"
+
+#------------------------------------------------------------
+# Clone fresh code from GitHub
+#------------------------------------------------------------
+WORKDIR /
 RUN rm -fr /omicsplayground/R /omicsplayground/shiny
+RUN rm -fr /omicsplayground \
+    && git clone https://github.com/bigomics/omicsplayground.git \
+#   && rm -fr /omicsplayground/.git \
+    && chmod -R ugo+rwX /omicsplayground 
 
 #------------------------------------------------------------
 # Add shiny user to group shiny

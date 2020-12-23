@@ -3,23 +3,18 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+## Start from base image, update git code and add data
+## folder. Create docker ready to be deployed.
 
 #------------------------------------------------------------
-# Start from lastest base+data image
+# Start from lastest base image
 #------------------------------------------------------------
 
 FROM bigomics/omicsplayground:base
 ##FROM bigomics/omicsplayground:v2.3.0
 
 #------------------------------------------------------------
-# Arghh... we forgot shiny-server???
-#------------------------------------------------------------
-
-# RUN wget -nv https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.14.948-amd64.deb \
-#    && gdebi --n --q shiny-server-1.5.14.948-amd64.deb
-
-#------------------------------------------------------------
-# Install any extra packages required since base
+# Install any extra (forgotten...) packages since base
 #------------------------------------------------------------
 
 # RUN apt install -y xvfb
@@ -32,12 +27,15 @@ FROM bigomics/omicsplayground:base
 #------------------------------------------------------------
 # Clone fresh code from GitHub
 #------------------------------------------------------------
-WORKDIR /
-RUN rm -fr /omicsplayground \
-    && git clone https://github.com/bigomics/omicsplayground.git \
-#   && rm -fr /omicsplayground/.git \
-    && chmod -R ugo+rwX /omicsplayground 
+# WORKDIR /
+# RUN rm -fr /omicsplayground \
+#     && git clone https://github.com/bigomics/omicsplayground.git \
+# #   && rm -fr /omicsplayground/.git \
+#     && chmod -R ugo+rwX /omicsplayground 
 
+#------------------------------------------------------------
+# Update code from GitHub
+#------------------------------------------------------------
 WORKDIR /omicsplayground
 RUN git pull
 
