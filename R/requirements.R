@@ -4,14 +4,13 @@
 ##
 
 ##
-##
 ## NOTE: This file is supposed to run in the folder .../R/
 ##
 
-if(!require(devtools)) install.packages("devtools")
+install.packages("devtools")
 install.packages("BiocManager", version="3.10")
-require(devtools)
-require(BiocManager)
+library(devtools)
+library(BiocManager)
 
 LOCAL.PKGS <- sub("_.*","",dir("../ext/packages"))
 LOCAL.PKGS
@@ -53,7 +52,7 @@ BIG.NOTUSED <- c(
     "DeMixT", ## purify
     "RNAseqData.HNRNPC.bam.chr14",
     ##"org.Mm.eg.db",
-    "tximportData",
+    "tximportData"
     ##"EnsDb.Hsapiens.v86",
     ##"EnsDb.Mmusculus.v79",
     ##"TxDb.Hsapiens.UCSC.hg19.knownGene",  ## need for import
