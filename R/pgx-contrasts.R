@@ -45,10 +45,18 @@ pgx.expMatrix <- function(pheno, contr.matrix) {
     }    
     group.col <- names(which(apply(pheno, 2, function(x) all(ctx %in% x))))[1]
     if(length(group.col)==0) {
-        stop("FATAL: could not find group column\n")
+        stop("FATAL: could not resolve group column\n")
     }
+    cat("[pgx.expMatrix] group.col =",group.col,"\n")
+    
     grp <- pheno[,group.col]
-    exp.matrix <- contr.matrix[match(grp,ctx),]
+
+    cat("[pgx.expMatrix] dim(contr.matrix) =",dim(contr.matrix),"\n")
+    cat("[pgx.expMatrix] grp =",grp,"\n")
+    cat("[pgx.expMatrix] ctx =",ctx,"\n")
+    
+    exp.matrix <- contr.matrix[match(grp,ctx),,drop=FALSE]
+    cat("[pgx.expMatrix] dim(exp.matrix) =",dim(exp.matrix),"\n")
     rownames(exp.matrix) <- rownames(pheno)
     exp.matrix
 }

@@ -394,8 +394,10 @@ pgx.scoreCellCycle <- function(counts)
     ##table(obj@meta.data$Phase)
     s.score <- obj@meta.data$S.Score
     g2m.score <- obj@meta.data$G2M.Score
+    diff.score <- s.score - g2m.score
     phase <- obj@meta.data$Phase
-    df <- data.frame(phase=phase, s.score=s.score, g2m.score=g2m.score)
+    df <- data.frame(phase=phase, s_score=s.score, g2m_score=g2m.score,
+                     diff_score=diff.score)
     if(nrow(df)==0) return(NULL)
     return(df)
 }

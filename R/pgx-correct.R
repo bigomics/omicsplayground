@@ -7,8 +7,417 @@
 ##
 ##
 
-## max.rho=0.3;force=TRUE;batch.par=batch.cov="*";max.iter=10;hc.top=50;partype=NULL;force=FALSE;bio.correct=c("mito","ribo","cc.phase","cc.score", "sva","pca","hc");pca.correct=hc.correct=1;sva.correct=mnn.correct=nnm.correct=0
+## max.rho=0.3;batch.par=batch.cov="*";max.iter=10;hc.top=50;partype=NULL;bio.correct=c("mito","ribo","cc.phase","cc.score", "sva","pca","hc");pca.correct=hc.correct=1;sva.correct=mnn.correct=nnm.correct=0
+bio.correct=c("mito","ribo","cc.phase","cc.score","gender")
 pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
+                                   batch.par="*", ## batch.cov="*",
+                                   lib.correct = TRUE,
+                                   bio.correct=c("mito","ribo","cell_cycle","gender"),
+                                   sva.correct=TRUE, pca.correct=TRUE, hc.correct=TRUE,
+                                   mnn.correct=NULL, nnm.correct=FALSE,
+                                   max.rho=0.3, max.iter=10, hc.top=50)
+{    
+
+    getModelMatrix <- function(v) {
+        y <- as.character(pheno[,v])
+        y[is.na(y)] <- "NA"  ## or impute???
+        m1 <- model.matrix( ~ y)[,-1,drop=FALSE]
+        colnames(m1) <- sub("^y",paste0(v,"="),colnames(m1))
+        m1
+    }
+    if(is.null(model.par) && is.null(batch.par)) {
+        stop("ERROR:: model and batch cannot be both NULL")
+    }
+
+    ## tidy up pheno matrix?? get correct parameter types
+    ##pheno <- tidy.dataframe(pheno)
+    pheno <- type.convert(pheno)
+    
+    ## setup model matrix
+    if(!is.null(model.par) && length(model.par)>0 ) {
+        model.par <- intersect(model.par, colnames(pheno))
+        mod1 <- do.call(cbind,lapply(model.par, getModelMatrix))
+        rownames(mod1) <- rownames(pheno)
+    }
+    model.par
+
+    ## get technical/biological effects
+    Y <- pgx.computeBiologicalEffects(X)
+    colnames(Y) <- paste0(".",colnames(Y))
+    head(Y)
+
+    ## add to phenotype matrix
+    pheno <- cbind(pheno, Y)
+    not.na <- colSums(is.na(pheno))<1
+    nlev <- apply(pheno,2,function(x) length(unique(x[!is.na(x)])))
+    nlev
+    pheno <- pheno[,which(nlev>1 & not.na),drop=FALSE]
+    partype <- sapply(pheno,class)
+    partype
+    
+    ##--------------------------------------------------------------------
+    ## select parameters
+    ##--------------------------------------------------------------------    
+    batch.par <- NULL   
+
+    ## select all non-model variables
+    if(!is.null(batch.par) && batch.par[1]=="*") {
+        batch.par <- setdiff(colnames(pheno),model.par)
+    }
+
+    ## select all non-model variables, bio.correct and lib.correct???
+    full.correct = FALSE
+    if(!is.null(batch.par) && batch.par[1]=="<*>") {
+        full.correct = TRUE
+        lib.correct = TRUE
+    }
+        
+    bio.correct
+    if("mito" %in% bio.correct || full.correct) {
+        b1 <- grep("mito", colnames(pheno), value=TRUE)
+        batch.par <- c(batch.par, b1)
+    }
+    if("ribo" %in% bio.correct || full.correct) {
+        b1 <- grep("ribo", colnames(pheno), value=TRUE)
+        batch.par <- c(batch.par, b1)
+    }
+    if("cell_cycle" %in% bio.correct || full.correct) {
+        b1 <- grep("cc[.]", colnames(pheno), value=TRUE)  ## both cc.phase and cc.score
+        batch.par <- c(batch.par, b1)
+    }
+    if("cc.phase" %in% bio.correct || full.correct) {
+        b1 <- grep("cc[.].*phase$", colnames(pheno), value=TRUE)
+        batch.par <- c(batch.par, b1)
+    }
+    if("cc.score" %in% bio.correct || full.correct) {
+        b1 <- grep("cc[.].*score$", colnames(pheno), value=TRUE)
+        batch.par <- c(batch.par, b1)
+    }
+    if("gender" %in% bio.correct || full.correct) {
+        b1 <- grep("gender", colnames(pheno), value=TRUE)
+        batch.par <- c(batch.par, b1)
+    }        
+    
+    model.par
+    batch.par <- intersect(batch.par,colnames(pheno))
+    batch.par <- setdiff(batch.par, model.par)
+    batch.par <- setdiff(batch.par, c("group","cluster","condition"))  ## never???    
+    batch.par
+    
+    ##--------------------------------------------------------------------
+    ## guess parameter type
+    ##--------------------------------------------------------------------    
+
+    ## select which are (continuous) covariates or (discrete) factors 
+    sel1 <- which(partype %in% c("factor","character","discrete","logical"))
+    batch.prm <- intersect(batch.par, names(partype[sel1]))
+    sel2 <- which(partype %in% c("integer","numeric"))    
+    batch.cov <- intersect(batch.par, names(partype[sel2]))
+    
+    batch.prm
+    batch.cov
+
+    model.par <- intersect(model.par, colnames(pheno))
+    batch.prm <- intersect(batch.prm, colnames(pheno))
+    batch.cov <- intersect(batch.cov, colnames(pheno))    
+    if(length(model.par)==0)  model.par <- NULL
+    if(length(batch.prm)==0)  batch.prm <- NULL
+    if(length(batch.cov)==0)  batch.cov <- NULL
+    
+    ##--------------------------------------------------------------------
+    ## Check confounding
+    ##--------------------------------------------------------------------
+    if(!is.null(batch.prm) && !is.null(mod1)) {
+        mod0 <- do.call(cbind,lapply(batch.prm, getModelMatrix))        
+        rho <- cor(mod0,mod1)
+        rho
+        rho[is.na(rho)] <- 0
+        if(max(abs(rho),na.rm=TRUE) > max.rho) {
+            idx <- which(abs(rho) > max.rho, arr.ind=TRUE)
+            idx
+            for(i in 1:nrow(idx)) {
+                v0 <- colnames(mod0)[idx[i,1]]
+                v1 <- colnames(mod1)[idx[i,2]]
+                cat(paste0("WARNING:: '",v0,"' is confounded with '",v1,"' ",
+                           ": rho= ",round(rho[idx[i,1],idx[i,2]],3),"\n"))
+            }
+            confounding.pars <- colnames(mod0)[idx[,1]]
+            confounding.pars <- unique(gsub("=.*","",confounding.pars))
+            cat("WARNING:: removing confounding batch factors:",confounding.pars,"\n")
+            batch.prm <- setdiff(batch.prm, confounding.pars)
+        }
+    }
+
+    if(!is.null(batch.cov) && !is.null(mod1)) {
+        cvar <- data.matrix(pheno[,batch.cov])
+        rho1 <- cor(cvar,mod1,use="pairwise")
+        rho1
+        rho1[is.na(rho1)] <- 0        
+        if(max(abs(rho1),na.rm=TRUE) > max.rho) {
+            idx <- which(abs(rho1) > max.rho, arr.ind=TRUE)    
+            idx
+            for(i in 1:nrow(idx)) {
+                v0 <- colnames(cvar)[idx[i,1]]
+                v1 <- colnames(mod1)[idx[i,2]]
+                cat(paste0("WARNING:: '",v0,"' is confounded with '",v1,"' ",
+                           ": rho= ",round(rho1[idx[i,1],idx[i,2]],3),"\n"))
+            }
+            confounding.cov <- colnames(cvar)[idx[,1]]
+            confounding.cov <- unique(gsub("=.*","",confounding.cov))
+            confounding.cov
+            cat("WARNING:: removing confounding batch covariates:",confounding.cov,"\n")
+            batch.cov <- setdiff(batch.cov, confounding.cov)
+            batch.cov
+        }
+    }
+
+    cat("[pgx.superBatchCorrect] model.par=",model.par,"\n")
+    cat("[pgx.superBatchCorrect] batch.prm=",batch.prm,"\n")
+    cat("[pgx.superBatchCorrect] batch.cov=",batch.cov,"\n")
+    
+    cX <- X    
+    mod1x <- matrix(1,ncol(cX),1)
+    if(!is.null(mod1)) mod1x <- cbind(1, mod1)
+
+    ##--------------------------------------------------------------------
+    ## Remove (unwanted) technical experiment effects (libsize, nfeature, etc.)
+    ##--------------------------------------------------------------------
+    if(lib.correct || full.correct) {
+        sel <- grep("libsize|nfeature",colnames(pheno),value=TRUE)
+        if(length(sel)) {
+            cat("[pgx.superBatchCorrect] Correcting for unwanted technical effects:",sel,"\n")
+            exp.pheno <- pheno[,sel,drop=FALSE]
+            cX <- removeBatchEffect(cX, covariates=exp.pheno, design=mod1x)
+        }
+    }
+
+    ##--------------------------------------------------------------------
+    ## Remove (unwanted) biological effects
+    ##--------------------------------------------------------------------
+    if(!is.null(bio.correct) && length(bio.correct)>0 && bio.correct[1]!=FALSE ) {
+
+        p1 <- intersect(batch.prm,colnames(Y))
+        cat("[pgx.superBatchCorrect] Correcting for unwanted biological factors:",p1,"\n")        
+        if(length(p1)) {
+            i=1
+            for(i in 1:length(p1)) {
+                b1 <- pheno[,p1[i]]
+                cX <- removeBatchEffect(cX, batch=b1, design=mod1x)
+            }
+        }
+
+        p2 <- intersect(batch.cov,colnames(Y))
+        if(length(p2)) {
+            cat("[pgx.superBatchCorrect] Correcting for unwanted biological covariates:",p2,"\n")
+            b2 <- pheno[,p2,drop=FALSE]
+            cX <- removeBatchEffect(cX, covariates=b2, design=mod1x)
+        }
+        
+        ##out <- pgx.removeBiologicalEffect(cX, pheno, model.par=model.par,
+        ##                                  correct=bio.correct, force=force)
+        ##cY <- out$Y  ## extended phenotypes
+        ##cX <- out$X
+    }
+    
+    ##--------------------------------------------------------------------
+    ## batch correct other parameters with limma
+    ##--------------------------------------------------------------------
+    if(!is.null(batch.prm) && length(batch.prm)>0) {
+        batch.prm
+        batch.prm1 <- setdiff(batch.prm, colnames(Y))
+        cat("[pgx.superBatchCorrect] Batch correction for factors:",batch.prm1,"\n")
+        b <- batch.prm1[1]
+        for(b in batch.prm1) {
+            ##cat("Performing batch correction for factor:",b,"\n")            
+            batch <- as.character(pheno[,b])
+            nna <- sum(is.na(batch))
+            if(nna>0) {
+                ## impute missing values
+                batch[is.na(batch)] <- sample(batch[!is.na(batch)],nna,replace=TRUE)
+            }
+            mod1x <- matrix(1,ncol(cX),1)
+            if(!is.null(mod1)) mod1x <- cbind(1, mod1)
+            cX <- removeBatchEffect(cX, batch=batch, design=mod1x)
+        }
+    }
+
+    batch.cov
+    if(!is.null(batch.cov) && length(batch.cov)>0) {        
+        batch.cov
+        batch.cov1 <- setdiff(batch.cov, colnames(Y))
+        cat("[pgx.superBatchCorrect] Batch correction for covariates:",batch.cov1,"\n")
+        for(b in batch.cov1) {
+            ##cat("Performing batch correction for covariate:",b,"\n")                        
+            batch <- as.numeric(pheno[,b])
+            ##batch[is.na(batch)] <- "NA"
+            nna <- sum(is.na(batch))
+            if(nna>0) {
+                batch[is.na(batch)] <- sample(batch[!is.na(batch)],nna,replace=TRUE)
+            }
+            mod1x <- matrix(1,ncol(cX),1)
+            if(!is.null(mod1)) mod1x <- cbind(1, mod1)
+            cX <- removeBatchEffect(cX, covariates=batch, design=mod1x)
+        }
+    }
+    
+    ##--------------------------------------------------------------------
+    ## MNN correction (e.g. for single-cell)
+    ##--------------------------------------------------------------------
+    if(!is.null(mnn.correct)) {
+        mnn.correct <- intersect(mnn.correct, colnames(pheno))
+        if(length(mnn.correct)==0) mnn.correct <- NULL
+    }
+    if(!is.null(mnn.correct)) {
+        require(batchelor)
+        cat("[pgx.superBatchCorrect] Mutual Nearest Neighbour (MNN) correction on",mnn.correct,"\n")
+        b <- pheno[,mnn.correct]
+        out <- batchelor::mnnCorrect(cX, batch=b, cos.norm.out=FALSE)
+        cX <- out@assays@data[["corrected"]]
+    }
+
+    ##--------------------------------------------------------------------
+    ## Nearest-neighbour matching (NNM)
+    ##--------------------------------------------------------------------
+    if(nnm.correct) {
+        cat("[pgx.superBatchCorrect] Correcting with nearest-neighbour matching (NNM)\n")        
+        for(i in 1:length(model.par)) {
+            y1 <- pheno[,model.par[i]]
+            cX <- gx.nnmcorrect(cX, y1, center.x=TRUE, center.m=TRUE)$X
+        }
+    }
+
+    ##--------------------------------------------------------------------
+    ## SVA correction (removing unwanted variation)
+    ##--------------------------------------------------------------------
+    if(sva.correct && !is.null(mod1)) {
+        message("[pgx.superBatchCorrect] Calculating SVA...")
+        require(SmartSVA)
+        ##
+        ## This is a combination of methods from SVA and SmartSVA
+        ## because of speed. 
+        ##
+
+        ##cX=X
+        ##y <- pheno[,"dlbcl.type"]
+        ##df <- data.frame(var = y)    
+        ## mod1x = model.matrix( ~var, df)
+        ## mod0x = model.matrix( ~1, df)        
+        mod1x <- cbind(1, mod1)
+        mod0x <- mod1x[,1,drop=FALSE] ## just ones...        
+        if(0) {
+            ## original method using SVA
+            n.sv = num.sv(cX, mod1x, method="be")
+            n.sv            
+        } else {
+            ## fast method using SmartSVA
+            pp <- paste0(model.par,collapse="+")
+            pp
+            lm.expr <- paste0("lm(t(cX) ~ ",pp,", data=pheno)")
+            X.r <- t(resid(eval(parse(text=lm.expr))))
+            n.sv <- EstDimRMT(X.r, FALSE)$dim + 1
+            n.sv
+        }
+        sv <- try( sva(cX, mod1x, mod0=mod0x, n.sv=n.sv)$sv )
+        ##sv <- SmartSVA::smartsva.cpp(cX, mod1x, mod0=mod0x, n.sv=n.sv)$sv
+        if(any(class(sv)=="try-error")) {
+            a <- 0.01*mean(apply(cX,1,sd))
+            cX1 <- cX + a*matrix(rnorm(length(cX)),nrow(cX),ncol(cX))
+            sv <- try( sva(cX1, mod1x, mod0=mod0x, n.sv=pmax(n.sv-1,1))$sv )
+        }
+        if(!any(class(sv)=="try-error")) {
+            message("[pgx.superBatchCorrect] Performing SVA correction...")
+            ##sv <- svaseq( 2**X, mod1, mod0, n.sv=NULL)$sv
+            cX <- removeBatchEffect(cX, covariates=sv, design=mod1x)
+            ##cX <- removeBatchEffect(X, covariates=sv)
+        }
+    }
+    ##gx.heatmap(cX, nmax=100, col.annot=phenox, keysize=0.9)
+
+    ##--------------------------------------------------------------------
+    ## PCA correction: remove remaining batch effect using PCA
+    ## (iteratively, only SV larger than max correlated SV)
+    ## --------------------------------------------------------------------
+    if(pca.correct && !is.null(mod1)) {
+        ii <- 1:99
+        niter=0
+        nremove=0
+        while(length(ii)>0 && niter<max.iter) {
+            nv <- min(10,ncol(cX)-1)
+            suppressWarnings(suppressMessages(
+                sv <- irlba::irlba(cX, nv=nv)$v
+            ))
+            if(1) {
+                sv.rho <- cor(sv,mod1)
+                sv.rho
+                sv.rho <- apply(abs(sv.rho),1,max)
+                ii <- which(sv.rho < max.rho)
+                ii <- ii[ii<which.max(sv.rho)]
+            } else {
+
+            }
+            ii
+            if(length(ii)>0) {
+                mod1x <- cbind(1, mod1)
+                cX <- removeBatchEffect(cX, covariates=sv[,ii], design=mod1x)
+                nremove = nremove +1
+            }
+            niter <- niter+1
+        }
+        niter
+        if(niter==max.iter) {
+            cat("WARNING:: PCA correction did not converge after",nremove,"iterations\n")
+        } else {
+            cat("Performed",nremove,"iterations of PCA batch correction\n")      
+        }
+    }
+
+    ##--------------------------------------------------------------------
+    ## HC correction: remove remaining batch effect iteratively using
+    ## hclust
+    ## --------------------------------------------------------------------
+    if(hc.correct && !is.null(mod1)) {
+        ii <- 1:99
+        niter=0
+        nremove=0
+        while(length(ii)>0 && niter<max.iter) {
+            xx <- head(cX[order(-apply(cX,1,sd)),], hc.top)
+            hc <- cutree(hclust(dist(t(xx)),method="ward.D2"),2)
+            table(hc)
+            hc.rho <- cor(hc,mod1)
+            hc.rho
+            hc.rho <- apply(abs(hc.rho),1,max)
+            ii <- which(hc.rho < max.rho)
+            ii
+            if(length(ii)>0) {
+                mod1x <- cbind(1,mod1)
+                cX <- removeBatchEffect(cX, covariates=scale(hc), design=mod1x)
+                nremove = nremove +1
+            }
+            niter <- niter+1
+        }
+        niter
+        if(niter==max.iter) {
+            cat("WARNING:: HC correction did not converge after",nremove,"iterations\n")
+        } else {
+            cat("Performed",nremove,"iterations of HC batch correction\n")
+        }
+    }
+    
+    ##--------------------------------------------------------------------
+    ## important: means seems to be affected!!! regressed out??
+    ##--------------------------------------------------------------------
+    cX <- cX - rowMeans(cX) + rowMeans(X) 
+
+    cat("[pgx.superBatchCorrect] almost done!\n")
+
+    res <- list(X=cX, Y=pheno)
+
+    cat("[pgx.superBatchCorrect] done!\n")
+    
+    return(res)
+}
+
+pgx.superBatchCorrect.OLD <- function(X, pheno, model.par, partype=NULL,
                                   batch.par="*", ## batch.cov="*",
                                   bio.correct=c("mito","ribo","cc.phase","cc.score","gender"),
                                   sva.correct=TRUE, pca.correct=TRUE, hc.correct=TRUE,
@@ -16,15 +425,6 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
                                   max.rho=0.3, max.iter=10, hc.top=50,
                                   force=FALSE)
 {    
-    getModelMatrix.SAVE <- function(v) {
-        pheno1 <- pheno
-        pheno1[is.na(pheno1)] <- "NA"  ## or impute???
-        colnames(pheno1) <- paste0(colnames(pheno1),"_IS_")
-        expr <- paste0("model.matrix(~",v,"_IS_,data=pheno1)")
-        m1 <- eval(parse(text=expr))[,-1,drop=FALSE]
-        colnames(m1) <- sub("_IS_","=",colnames(m1))
-        m1
-    }
     getModelMatrix <- function(v) {
         y <- as.character(pheno[,v])
         y[is.na(y)] <- "NA"  ## or impute???
@@ -750,6 +1150,68 @@ pgx.plotMitoRibo <- function(counts, percentage=TRUE) {
     head(df)
     barplot( t(df), beside=FALSE, las=3 )
     
+}
+
+##max.rho=0.3;force.remove=TRUE;correct.mito=TRUE;correct.ribo=TRUE;correct.cc=TRUE
+pgx.computeBiologicalEffects <- function(X, is.count=FALSE)
+{    
+    ## estimate biological variation
+    ##
+    ## X:     log-expression matrix
+    ##
+
+    message("[pgx.computeBiologicalEffects] estimating biological effects...")
+
+    ## shift zero to 1% percentile
+    if(!is.count) {
+        q0 <- quantile(X[X>0], probs=0.01)
+        q0
+        tx <- pmax(X - q0,0)
+        cx <- pmax(2**tx - 1, 0)  ## counts
+    } else {
+        cx <- X
+        tx <- log2(cx + 1)
+    }
+    nfeature <- Matrix::colSums(cx>0)+1
+    libsize  <- Matrix::colSums(cx)
+
+    mt.genes <- grep("^MT-",rownames(X),ignore.case=TRUE,value=TRUE)
+    rb.genes <- grep("^RP[SL]",rownames(X),ignore.case=TRUE,value=TRUE)
+    mito = ribo = 0
+    mt.genes
+    rb.genes
+    if(length(mt.genes)>0) {
+        mito <- Matrix::colMeans(tx[mt.genes,,drop=FALSE])
+        pct.mito <- Matrix::colSums(cx[mt.genes,,drop=FALSE],na.rm=TRUE) / libsize
+    }
+    if(length(rb.genes)>0) {
+        ii <- rb.genes[order(-apply(tx[rb.genes,],1,sd,na.rm=TRUE))]
+        sel20 <- head(ii,20)
+        ribo <- Matrix::colMeans(tx[rb.genes,,drop=FALSE])
+        ribo20 <- Matrix::colMeans(tx[sel20,,drop=FALSE])
+        pct.ribo <- Matrix::colSums(cx[rb.genes,,drop=FALSE],na.rm=TRUE) / libsize
+    }
+    pheno <- data.frame(
+        mito = mito,
+        ribo = ribo,
+        ##ribo20 = ribo20,
+        ##pct.mito = pct.mito,
+        ##pct.ribo = pct.ribo,
+        libsize = log2(libsize+1),
+        nfeature = log2(nfeature+1),
+        check.names=FALSE
+    )
+    
+    cc.score <- try(pgx.scoreCellCycle(cx))
+    head(cc.score)
+    if(!any(class(cc.score)=="try-error")) {
+        colnames(cc.score) <- paste0("cc.",colnames(cc.score))
+        pheno <- cbind(pheno, cc.score)
+    }
+    pheno$gender <- pgx.inferGender(cx)
+
+    head(pheno)    
+    return(pheno)
 }
 
 ##max.rho=0.3;force.remove=TRUE;correct.mito=TRUE;correct.ribo=TRUE;correct.cc=TRUE
