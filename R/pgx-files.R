@@ -346,81 +346,6 @@ pgx.scanInfoFile <- function(pgx.dir, file="datasets-info.csv", verbose=TRUE)
     return(pgxinfo)
 }
 
-pgx.updateInfoPGX <- function(pgxinfo, ngs, remove.old=TRUE)
-{
-
-    cond = grep("title|source|group|batch|sample|patient|donor|repl|clone|cluster|lib.size|^[.]",
-               colnames(ngs$samples),invert=TRUE,value=TRUE)
-    cond
-
-    is.mouse = (mean(grepl("[a-z]",ngs$genes$gene_name))>0.8)
-    organism = c("human","mouse")[1 + is.mouse]
-    if("organism" %in% names(ngs)) organism <- ngs$organism
-    
-    this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-    date = ifelse(is.null(ngs$date), this.date, as.character(ngs$date))
-    dataset.name <- ifelse(is.null(ngs$name), pgxfile, ngs$name)
-        
-    this.info <- c(
-        dataset = dataset.name,
-        ## author = "", ## add author? maintainer? owner??
-        collection = ngs$collection,
-        datatype = ifelse(is.null(ngs$datatype),"", ngs$datatype),
-        description = ifelse(is.null(ngs$description),"", ngs$description),
-        organism = organism,
-        nsamples = nrow(ngs$samples),
-        ngenes = nrow(ngs$X),
-        nsets = nrow(ngs$gsetX),
-        conditions = paste(cond,collapse=" "),
-        date = as.character(date),
-        path = NULL
-    )
-
-    ## force to be character...
-    !is.null(pgxinfo) && NCOL(pgxinfo)>0 && nrow(pgxinfo)>0
-    
-    if(!is.null(pgxinfo) && NCOL(pgxinfo)>0 && nrow(pgxinfo)>0 )
-    {
-        if("date" %in% colnames(pgxinfo)) {
-            pgxinfo$date <- as.character(pgxinfo$date)
-        }
-        which.factor <- which(sapply(pgxinfo,is.factor))
-        which.factor
-        for(i in which.factor) {
-            pgxinfo[,i] <- as.character(pgxinfo[,i])
-        }
-        
-        ## remove existing entries??
-        if(remove.old) {
-            d1 <- sub("[.]pgx$","",pgxinfo$dataset)
-            d2 <- sub("[.]pgx$","",this.info["dataset"])
-            if(d2 %in% d1 && d2!="") {
-                sel <- which(d1!=d2)
-                pgxinfo <- pgxinfo[sel,,drop=FALSE]
-            }
-        }
-        
-        ## merge with same columns
-        info.cols <- colnames(pgxinfo)
-        info.cols <- unique(c(info.cols, names(this.info)))
-        this.info = this.info[match(info.cols,names(this.info))]
-        names(this.info) = info.cols
-        pgxinfo1 <- pgxinfo
-        for(f in setdiff(info.cols,colnames(pgxinfo1))) {
-            pgxinfo1[[f]] <- NA
-        }
-        match(info.cols,colnames(pgxinfo1))
-        pgxinfo1 = pgxinfo1[,match(info.cols,colnames(pgxinfo1)),drop=FALSE]
-        colnames(pgxinfo1) = info.cols        
-        pgxinfo <- rbind( pgxinfo1, this.info)
-    } else {
-        pgxinfo <- data.frame(rbind(this.info))
-    }
-
-    pgxinfo
-}
-
-
 ##pgx.dir1=PGX.DIR[1];allfc.file="datasets-allFC.csv";verbose=1;info.file="datasets-info.csv";force=1
 pgx.initDatasetFolder1 <- function( pgx.dir1,
                                    allfc.file = "datasets-allFC.csv",
@@ -479,6 +404,7 @@ pgx.initDatasetFolder1 <- function( pgx.dir1,
         pgxinfo = fread.csv(info.file1, stringsAsFactors=FALSE, row.names=1)
         dim(pgxinfo)       
         jj <- which(!(sub(".pgx$","",pgx.missing1) %in% sub(".pgx$","",pgxinfo$dataset)))
+        jj
         pgx.missing1 = pgx.missing1[jj]
     }
    
@@ -536,6 +462,10 @@ pgx.initDatasetFolder1 <- function( pgx.dir1,
             message(paste("[pgx.initDatasetFolder1] INVALID PGX object",pgxfile,". Skipping\n"))
             next()            
         }
+
+        ## check if name exists
+        ##if(is.null(ngs$name)) ngs$name <- sub(".pgx$","",pgxfile)
+        ngs$name <- sub(".pgx$","",pgxfile)  ## force filename as name
         
         ##---------------------------------------------
         ## extract the meta FC matrix
@@ -548,7 +478,6 @@ pgx.initDatasetFolder1 <- function( pgx.dir1,
         ##---------------------------------------------
         ## compile the info for update
         ##---------------------------------------------
-
         pgxinfo <- pgx.updateInfoPGX(pgxinfo, ngs)
         tail(pgxinfo)
         ## pgxinfo <- rbind( pgxinfo, this.info)
@@ -633,4 +562,80 @@ pgx.initDatasetFolder1 <- function( pgx.dir1,
     return(pgxinfo)
 }
 
+
+pgx.updateInfoPGX <- function(pgxinfo, ngs, remove.old=TRUE)
+{
+
+    cond = grep("title|source|group|batch|sample|patient|donor|repl|clone|cluster|lib.size|^[.]",
+               colnames(ngs$samples),invert=TRUE,value=TRUE)
+    cond
+
+    is.mouse = (mean(grepl("[a-z]",ngs$genes$gene_name))>0.8)
+    organism = c("human","mouse")[1 + is.mouse]
+    if("organism" %in% names(ngs)) organism <- ngs$organism
+    
+    this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+    date = ifelse(is.null(ngs$date), this.date, as.character(ngs$date))
+    dataset.name <- ngs$name
+    ## dataset.name <- ifelse(is.null(ngs$name), pgxfile, ngs$name)
+        
+    this.info <- c(
+        dataset = dataset.name,
+        ## author = "", ## add author? maintainer? owner??
+        collection = ngs$collection,
+        datatype = ifelse(is.null(ngs$datatype),"", ngs$datatype),
+        description = ifelse(is.null(ngs$description),"", ngs$description),
+        organism = organism,
+        nsamples = nrow(ngs$samples),
+        ngenes = nrow(ngs$X),
+        nsets = nrow(ngs$gsetX),
+        conditions = paste(cond,collapse=" "),
+        date = as.character(date),
+        path = NULL
+    )
+
+    ## force to be character...
+    !is.null(pgxinfo) && NCOL(pgxinfo)>0 && nrow(pgxinfo)>0
+    
+    if(!is.null(pgxinfo) && NCOL(pgxinfo)>0 && nrow(pgxinfo)>0 )
+    {
+        if("date" %in% colnames(pgxinfo)) {
+            pgxinfo$date <- as.character(pgxinfo$date)
+        }
+        which.factor <- which(sapply(pgxinfo,is.factor))
+        which.factor
+        for(i in which.factor) {
+            pgxinfo[,i] <- as.character(pgxinfo[,i])
+        }
+        
+        ## remove existing entries??
+        if(remove.old && nrow(pgxinfo)>0 ) {
+            d1 <- sub("[.]pgx$","",pgxinfo$dataset)
+            d2 <- sub("[.]pgx$","",this.info["dataset"])
+            if( !is.null(d2) && !is.na(d2) && 
+                d2 %in% d1 && d2!="") {
+                sel <- which(d1!=d2)
+                pgxinfo <- pgxinfo[sel,,drop=FALSE]
+            }
+        }
+        
+        ## merge with same columns
+        info.cols <- colnames(pgxinfo)
+        info.cols <- unique(c(info.cols, names(this.info)))
+        this.info = this.info[match(info.cols,names(this.info))]
+        names(this.info) = info.cols
+        pgxinfo1 <- pgxinfo
+        for(f in setdiff(info.cols,colnames(pgxinfo1))) {
+            pgxinfo1[[f]] <- NA
+        }
+        match(info.cols,colnames(pgxinfo1))
+        pgxinfo1 = pgxinfo1[,match(info.cols,colnames(pgxinfo1)),drop=FALSE]
+        colnames(pgxinfo1) = info.cols        
+        pgxinfo <- rbind( pgxinfo1, this.info)
+    } else {
+        pgxinfo <- data.frame(rbind(this.info))
+    }
+
+    pgxinfo
+}
 

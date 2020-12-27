@@ -297,7 +297,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                     batch.correct = FALSE,      ## done in UI                        
                     filter.genes = do.filter,
                     only.chrom = only.chrom,
-                    rik.orf = !excl.rigorf,
+                    rik.orf = !excl.rikorf,
                     only.proteincoding = only.proteincoding, 
                     only.hugo = only.hugo,
                     convert.hugo = only.hugo

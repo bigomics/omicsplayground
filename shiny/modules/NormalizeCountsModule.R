@@ -50,9 +50,9 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
                 sidebarLayout(
                     sidebarPanel(
                         ##helpText(bc_info), 
-                        radioButtons(ns("selectmethod"),"Select normalization:",
-                                     choices=all.methods, selected="CPM"),
-                        br(),
+                        ##radioButtons(ns("selectmethod"),"Select normalization:",
+                        ##choices=all.methods, selected="CPM"),
+                        ##br(),
                         checkboxInput(ns("postqn"),"Post quantile normalization"),
                         checkboxInput(ns("addnoise"),"Simulate unnormalized"),
                         width = 2
@@ -87,8 +87,9 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
             })
             
             normalized_counts <- reactive({
-                req(input$selectmethod)
-                method <- input$selectmethod
+                ##req(input$selectmethod)
+                ##method <- input$selectmethod
+                method = "CPM"
                 norm.counts <- NULL
                 pgx <- pgx()
                 if(method %in% all.methods) {

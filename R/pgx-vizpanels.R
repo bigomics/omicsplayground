@@ -1008,12 +1008,12 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
 
 viz.BatchCorrection <- function(pgx, cX, cX2=NULL, phenotype, stat="F", 
                                 pca.heatmap=FALSE, nmax=40, cex=1,
-                                pos1=NULL, pos2=NULL, npca=3,
+                                pos1=NULL, pos2=NULL, npca=3, pheno=NULL,
                                 main=c("not-corrected", "corrected","corrected2"),
                                 title=NULL, subtitle=NULL, caption=NULL)
 {
     X0 <- pgx$X  ## ???
-    pheno <- pgx$samples
+    if(is.null(pheno))  pheno <- pgx$samples
     pos0 <- pgx$tsne2d
     if(0) {
         viz.BatchCorrectionMatrix(X0=X0, pheno=pheno, cX=cX, cX2=cX2,
@@ -1028,7 +1028,7 @@ viz.BatchCorrection <- function(pgx, cX, cX2=NULL, phenotype, stat="F",
 }
 
 viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="F", 
-                                      pca.heatmap=FALSE, nmax=40, cex=1,
+                                      pca.heatmap=FALSE, nmax=40, cex=1, 
                                       pos0=NULL, pos1=NULL, pos2=NULL, npca=3,
                                       main=c("not-corrected", "corrected","corrected2"),
                                       title=NULL, subtitle=NULL, caption=NULL)
@@ -1102,40 +1102,11 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     ##-------------------------------------------
     ## PCA variance plots (F-statistics)
     ##-------------------------------------------    
-    xcounts <- pmax(2**X0 - 1,0)
-    libsize <- colSums(xcounts, na.rm=TRUE)
-    nfeature <- colSums(xcounts>0, na.rm=TRUE)
-    gg <- rownames(xcounts)
-
-    pheno1 <- data.frame(libsize, nfeature)
-    colnames(pheno1) <- c("<libsize>","<nfeature>")    
-    gg.mito <- grep("^mt-",gg,value=TRUE,ignore.case=TRUE)
-    gg.ribo <- grep("^rp[ls]",gg,value=TRUE,ignore.case=TRUE)    
-    if(length(gg.mito)) pheno1$"<mito>" <- colSums(xcounts[gg.mito,]) / libsize
-    if(length(gg.ribo)) pheno1$"<ribo>" <- colSums(xcounts[gg.ribo,]) / libsize
-
-    cat("[viz.BatchCorrectionMatrix] colnames(pheno)=",colnames(pheno),"\n")
-    cat("[viz.BatchCorrectionMatrix] colnames(pheno1)=",colnames(pheno1),"\n")
-    cat("[viz.BatchCorrectionMatrix] dim(pheno)=",dim(pheno),"\n")
-    cat("[viz.BatchCorrectionMatrix] dim(pheno1)=",dim(pheno1),"\n")
-
-    sel1 <- setdiff(colnames(pheno1),colnames(pheno))    
-    pheno2 <- cbind(pheno, pheno1[,sel1,drop=FALSE])
-
-    cat("[viz.BatchCorrectionMatrix] colnames(pheno2)=",colnames(pheno2),"\n")
-    
-    pheno2 <- pheno2[,order(colnames(pheno2))]
-    pheno2 <- pheno2[,colMeans(is.na(pheno2))<1]
-
-    cat("[viz.BatchCorrectionMatrix] colnames(pheno2)=",colnames(pheno2),"\n")
-    
-    ##-------------------------------------------
-    ## F-statistics plots
-    ##-------------------------------------------    
     flist <- list()
+    pheno1 <- pheno[,order(colnames(pheno)),drop=FALSE]
     for(i in 1:length(xlist)) {
         f1 <- pgx.PC_correlation(
-            xlist[[i]], pheno2, nv=npca, stat="F", plot=TRUE,
+            xlist[[i]], pheno1, nv=npca, stat="F", plot=TRUE,
             main = paste0("PC variance (",main[i],")"))
         f1 <- f1 + theme(plot.margin = margin(4,4,0,4,"mm"),
                          legend.justification = c(0,1),

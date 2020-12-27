@@ -55,6 +55,25 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
     moduleServer(
         id,
         function(input, output, session) {
+
+
+            observeEvent( input$bc_strength, {
+                if(input$bc_strength=="low") {
+                    updateSelectInput(session,"bc_batchpar",selected="*")
+                    updateCheckboxGroupInput(session, "bc_methods", selected="")
+                }
+                if(input$bc_strength=="medium") {
+                    sel <- c("*","<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
+                    updateSelectInput(session,"bc_batchpar",selected=sel)
+                    updateCheckboxGroupInput(session, "bc_methods", selected=c("PCA","HC"))
+                }
+                if(input$bc_strength=="strong") {
+                    sel <- c("*","<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
+                    updateSelectInput(session,"bc_batchpar",selected="")
+                    updateCheckboxGroupInput(session, "bc_methods", selected="SVA")
+                }
+
+            })
             
             outobj <- eventReactive(input$bc_compute, {
                 
@@ -67,14 +86,16 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 bp <- isolate(input$bc_batchpar)
                 bc <- isolate(input$bc_methods)
                 ##bv <- NULL
-
+                
                 if(is.null(mp) && is.null(bp)) return(NULL)
                 cat("outobj: 1\n")
-                
+
+                lib.correct <- FALSE
                 bio.correct <- c()
-                if("mito/ribo" %in% bc)  bio.correct <- c(bio.correct, c("mito","ribo"))
-                if("cell.cycle" %in% bc) bio.correct <- c(bio.correct, c("cc.phase","cc.score"))
-                if("gender" %in% bc)     bio.correct <- c(bio.correct, c("gender"))
+                if("<libsize>" %in% bp)  lib.correct <- TRUE
+                if("<mito/ribo>" %in% bp)  bio.correct <- c(bio.correct, c("mito","ribo"))
+                if("<cell_cycle>" %in% bp) bio.correct <- c(bio.correct, c("cc.score"))
+                if("<gender>" %in% bp)     bio.correct <- c(bio.correct, c("gender"))
 
                 cat("outobj: 2\n")                
                 hc.correct  <- "HC"  %in% bc
@@ -91,10 +112,6 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                     X0 <- log2(1 + X0)  ## X0: normalized counts (e.g. CPM)
                 }
                 
-                cat("[SuperBatchCorrectServer] libsizes=",colSums(2**X0),"\n")
-                cat("[SuperBatchCorrectServer] dim(pheno)=",dim(pheno()),"\n")
-                cat("[SuperBatchCorrectServer] dim(X0)=",dim(X0),"\n")                
-
                 cat("Performing SuperBatchCorrection\n")
                 out <- pgx.superBatchCorrect(
                     X = X0,
@@ -102,6 +119,7 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                     model.par = mp,
                     batch.par = bp,
                     ## batch.cov = bv,
+                    lib.correct = lib.correct,                    
                     bio.correct = bio.correct,
                     hc.correct = hc.correct,
                     pca.correct = pca.correct,
@@ -145,26 +163,23 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 do.pca <- (input$bc_maptype == "PCA")                    
                 ##viz.BatchCorrection( ngs, out$X, cX2=NULL, phenotype=p1,
                 ##title=NULL, subtitle=NULL, caption=NULL)
-                cat("[SuperBatchCorrectServer] max(X) = ",max(X()),"\n")
-                cat("[SuperBatchCorrectServer] max(cX) = ",max(out$X),"\n")
-                cat("[SuperBatchCorrectServer] dim(X) = ",dim(X()),"\n")
-                cat("[SuperBatchCorrectServer] dim(cX) = ",dim(out$X),"\n")
 
                 X0 <- X()
                 if(is.count) {
                     X0 <- log2(1 + X0)  ## X0: normalized counts (e.g. CPM)
                 }
-
+                nmax <- as.integer(input$bc_nmax)
+                
                 viz.BatchCorrectionMatrix(
                     X0=X0, pheno=out$Y, cX=out$X, phenotype=p1,
-                    pca.heatmap=do.pca, nmax=40, cex=1.8, npca=3, 
+                    pca.heatmap=do.pca, nmax=nmax, cex=1.8, npca=3, 
                     title=NULL, subtitle=NULL, caption=NULL)
             })
             
             output$inputsUI <- renderUI({
 
                 ns <- session$ns
-                bc.options = c("mito/ribo","cell.cycle","gender","PCA","HC","SVA","NNM")
+                bc.options = c("PCA","HC","SVA","NNM")
                 bc.selected = ""
                 ##bc.selected = c("mito/ribo","cell.cycle","gender")
                 
@@ -173,17 +188,21 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 bc_info <- "Batch correction can clean your data from 'unwanted variables'. Please specify your parameters of interest.\n"
                 
                 ##pheno.par <- colnames(ngs$samples)
-                pheno.par <- colnames(pheno())
+                pheno.par <- sort(colnames(pheno()))
                 sel.par   <- c(grep("^[.]",pheno.par,invert=TRUE,value=TRUE),pheno.par)[1]
-
+                batch.par <- c("*",pheno.par,"<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
+                
                 tagList(
                     ##helpText(bc_info),
                     p(bc_info),
                     ## shinyWidgets::prettySwitch(ns("on_off"),"on/off", inputId="s1"),
                     selectInput(ns("bc_modelpar"), "Model parameters:", pheno.par,
                                 selected=sel.par, multiple=TRUE),
-                    actionButton(ns("bc_compute"),"Apply correction",
-                                 icon=icon("exclamation-triangle"), class="run-button"),
+                    radioButtons(ns("bc_strength"), NULL,
+                                 c("low","medium","strong"), inline=TRUE),
+                    actionButton(ns("bc_compute"),"Batch correct",
+                                 ## icon=icon("exclamation-triangle"),
+                                 class="run-button"),
                     br(), br(),
                     tipify( actionLink(ns("bc_options"), "Advanced",
                                        icon=icon("cog", lib = "glyphicon")),
@@ -192,13 +211,15 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                     conditionalPanel(
                         "input.bc_options%2 == 1", ns=ns,
                         tagList(
-                            selectInput(ns("bc_batchpar"), "Batch parameters:", c("*",pheno.par),
+                            selectInput(ns("bc_batchpar"), "Batch parameters:", batch.par,
                                         selected="*", multiple=TRUE),                       
                             tipify( checkboxGroupInput(
                                 ns('bc_methods'),'Correction methods:',
                                 choices=bc.options, bc.selected, inline=FALSE),
                                 "Advanced options", placement="right",
                                 options = list(container = "body")),
+                            radioButtons(ns("bc_nmax"), "Nmax:",
+                                         c(40,200,1000), inline=TRUE),
                             radioButtons(ns("bc_maptype"), "Heatmap type:",
                                          c("topSD","PCA"), inline=TRUE)
                         )
