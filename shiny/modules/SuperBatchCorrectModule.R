@@ -218,14 +218,14 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                             tipify(
                                 selectInput(ns("bc_batchpar"), "Batch parameters:", batch.par,
                                             selected="*", multiple=TRUE),
-                                "Specifiy the batch parameters that you want to correct for. The <i>star</i> stands for all remaining (unwanted) parameters not specified as parameter of interest. Bracketed parameters are technical/biological summaries computed from your data.",
+                                "Specifiy the batch parameters that you want to correct for. The <b>star</b> stands for all remaining (unwanted) parameters not specified as parameter of interest. Bracketed parameters are technical/biological summaries computed from your data.",
                                 placement="left", options=list(container="body")
                             ),
                             tipify(
                                 checkboxGroupInput(
                                     ns('bc_methods'),'Correction methods:',
                                     choices=bc.options, bc.selected, inline=FALSE),
-                                "Advanced batch correction methods. <b>PCA</b> corrects PC components not correlated to any model parameters; HC iteratively corrects hierarchical clustering; SVA applies surrogate variable analysis (Leek et al.); NNM applies nearest neighbour matching, a quasi-pairing approach for incomplete matched data.",
+                                "Advanced batch correction methods. <b>PCA</b> corrects PC components not correlated to any model parameters; <b>HC</b> iteratively corrects hierarchical clustering; <b>SVA</b> applies surrogate variable analysis (Leek et al.); <b>NNM</b> applies nearest neighbour matching, a quasi-pairing approach for incomplete matched data.",
                                 placement="left", options=list(container="body")
                             ),
                             tipify( radioButtons(ns("bc_nmax"), "Nmax:",c(40,200,1000),
