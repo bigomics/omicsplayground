@@ -4,7 +4,6 @@
 ##
 
 ##
-##
 ## NOTE: This file is supposed to run in the folder .../R/
 ##
 
