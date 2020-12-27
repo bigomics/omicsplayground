@@ -39,25 +39,29 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
         id,
         function(input, output, session) {
             ns <- session$ns
-            
+
+            ## statistical method for GENE level testing
             GENETEST.METHODS = c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma",
                                  "deseq2.wald","deseq2.lrt","edger.qlf","edger.lrt")
             GENETEST.METHODS1 = c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma")
             GENETEST.METHODS1 = c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma")
             GENETEST.METHODS2 = c("deseq2.wald","deseq2.lrt","edger.qlf","edger.lrt")
 
+            ## statistical method for GENESET level testing
             GENESET.METHODS = c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
                                 ##"plage","enricher","gsea.permPH","gsea.permGS","gseaPR",
                                 "fgsea")
             GENESET.METHODS1 = c("fisher","spearman","fgsea") 
             GENESET.METHODS2 = c("gsva","ssgsea", "camera", "fry")
-            
+
+            ## batch correction and extrs methods
             BC_METHODS = c("limma","SVA","ComBat")
             EXTRA_METHODS = c("meta.go","infer","deconv","drugs-combo",
                               "wordcloud","connectivity")
             EXTRA_METHODS1 = c("meta.go","infer","deconv","drugs","wordcloud")
             EXTRA_METHODS2 = c("drugs-combo","connectivity")
             
+
             output$UI <- renderUI({
                 fillCol(
                     height = height,
@@ -89,8 +93,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                                          class="run-button"),
                             br(),br(),
                             actionLink(ns("options"), "Advanced", icon=icon("cog", lib="glyphicon")),
-                            style = "",
-                            )
+                            style = ""
+                        )
                     ),
                     br(),
                     conditionalPanel(
@@ -129,10 +133,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                                 premium.feature(
                                     checkboxGroupInput(
                                         ns('gene_methods2'),
-                                        ## 'Gene tests:',
                                         NULL,
-                                        GENETEST.METHODS2,
-                                        selected = NULL
+                                        GENETEST.METHODS2
                                     )
                                 )
                             ),
@@ -147,8 +149,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                                     checkboxGroupInput(
                                         ns('gset_methods2'),
                                         NULL,
-                                        GENESET.METHODS2,
-                                        selected = c("fisher","fgsea")
+                                        GENESET.METHODS2
                                     )
                                 )
                             ),

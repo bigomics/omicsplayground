@@ -41,11 +41,16 @@ if(is.null(ORCA)) {
 tipify2 <- function(...) {
     tipify(..., options = list(container = "body"))
 }
-premium.feature <- function(..., disabled=TRUE) {
-    if(!disabled) return(...)
+
+premium.feature <- function(...) {
+    message("[premium.feature] USER_MODE = ",USER_MODE)
+    message("[premium.feature] DEV = ",DEV)        
+    el <- list(...)
+    if(USER_MODE %in% c("pro","premium","dev")) return(el)
     tipify(disabled(...),
            "This is a Premium feature. Upgrade to enable this feature."
-           )
+           )    
+
 }
 
 in.shinyproxy <- function() {

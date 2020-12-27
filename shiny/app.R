@@ -67,7 +67,6 @@ source(file.path(RDIR,"pgx-include.R"),local=src.local)  ## pass local vars
 source(file.path(RDIR,"pgx-functions.R"), local=src.local)  ## pass local vars
 source(file.path(RDIR,"pgx-files.R"), local=src.local)  ## pass local vars
 source(file.path(RDIR,"pgx-init.R"),local=src.local)     ## pass local vars
-source("init.R", local=src.local)
 
 message("\n")
 message("*********************************************")
@@ -82,7 +81,7 @@ opt <- pgx.readOptions(file="OPTIONS")
 opt$AUTHENTICATION = "none"
 ## opt$AUTHENTICATION = "password"
 ## opt$AUTHENTICATION = "register"
-##opt$AUTHENTICATION = "firebase"
+## opt$AUTHENTICATION = "firebase"
 
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
@@ -93,9 +92,9 @@ if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
 ## copy to global environment
 WATERMARK      = opt$WATERMARK
 SHOW_QUESTIONS = FALSE
-USER_MODE      = opt$USER_MODE
+##USER_MODE      = opt$USER_MODE
 AUTHENTICATION = opt$AUTHENTICATION
-DEV = (USER_MODE=="DEV" && dir.exists("../../omicsplayground-dev"))
+DEV = (USER_MODE=="dev" && dir.exists("../../omicsplayground-dev"))
 
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
@@ -104,6 +103,7 @@ message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 ## ------------------------ READ FUNCTIONS ----------------------------
 ## --------------------------------------------------------------------
 
+source("init.R", local=FALSE)
 source("modules/AuthenticationModule.R",local=src.local)
 source("modules/ComputePgxModule.R",local=src.local)
 source("modules/MakeContrastModule.R",local=src.local)
@@ -257,7 +257,7 @@ server = function(input, output, session) {
         hideTab("view-tabs","Resource info")
         hideTab("maintabs","Development")
 
-        if(opt$USER_MODE == "BASIC") {
+        if(USER_MODE == "basic") {
             hideTab("maintabs","CellProfiling")
             hideTab("enrich-tabs1","GeneMap")
             hideTab("clust-tabs2","Feature ranking")
@@ -267,7 +267,7 @@ server = function(input, output, session) {
             hideTab("enrich-tabs2","FDR table")
         }
 
-        if(opt$USER_MODE == "DEV" || DEV) {
+        if(USER_MODE == "dev" || DEV) {
             showTab("maintabs","Development")
             showTab("view-tabs","Resource info")
             showTab("enrich-tabs1","GeneMap")
