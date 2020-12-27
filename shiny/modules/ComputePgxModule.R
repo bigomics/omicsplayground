@@ -97,21 +97,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                         "input.options%2 == 1", ns=ns,
                         fillRow(
                             div(width=150),
-                            ## wellPanel(
-                            ##     radioButtons(
-                            ##         ns('normalization_methods'),
-                            ##         'Normalization:',
-                            ##         choiceNames = c("none","CPM","CPM + quantile"),
-                            ##         choiceValues = c("none","CPM","CPM.qn")
-                            ##     )
-                            ## ),
-                            ## wellPanel(
-                            ##     checkboxGroupInput(
-                            ##         ns('correction_methods'),
-                            ##         'Batch correction:',
-                            ##         BC_METHODS
-                            ##     )
-                            ## ),
                             wellPanel(
                                 checkboxGroupInput(
                                     ns('filter_methods'),
@@ -258,18 +243,10 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                 extra.methods = c("meta.go","infer","deconv","drugs-combo",
                                   "wordcloud","connectivity")
 
+                ## get selected methods from input
                 gx.methods   <- c(input$gene_methods,input$gene_methods2)
                 gset.methods <- c(input$gset_methods,input$gset_methods2)
                 extra.methods <- c(input$extra_methods,input$extra_methods2)
-                
-                if(FALSE && ncol(counts) > 750) {
-                    ## probably scRNA-seq... to long
-                    gx.methods   = c("ttest","ttest.welch","trend.limma") ## only t-test...
-                    gset.methods = c("fisher","gsva","fgsea")
-                    extra.methods = c("meta.go","infer","deconv","drugs-combo",
-                                      "wordcloud","connectivity")
-                    max.genes = 10000
-                }            
                 
                 ##----------------------------------------------------------------------
                 ## Start computation

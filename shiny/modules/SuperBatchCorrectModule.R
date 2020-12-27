@@ -183,7 +183,6 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 ##bc.selected = c("mito/ribo","cell.cycle","gender")
                 
                 bc_info <- NULL
-                bc_info <- "Batch correction. Specify your parameters of interest ('model parameters') and batch parameters you want to correct for.\n\n"
                 bc_info <- "Batch correction can clean your data from 'unwanted variables'. Please specify your parameters of interest.\n"
                 
                 ##pheno.par <- colnames(ngs$samples)
@@ -202,7 +201,7 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                     tipify2(                    
                         radioButtons(ns("bc_strength"), NULL,
                                      c("low","medium","strong"), inline=TRUE),
-                        "Choose 'strength' of batch correction. 'low' corrects only for explicit batch parameters, 'medium' corrects for additional unwanted biological effects (inferred from your data), 'strong' applies SVA or NNM (nearest neighbour matching). You can tune the selection under the advanced options."),
+                        "Choose the strength of batch correction: <b>low</b> corrects only for explicit batch parameters, <b>medium</b> corrects for additional unwanted biological effects (inferred from your data), <b>strong</b> applies SVA or NNM (nearest neighbour matching). You can tune the selection under the advanced options."),
                     actionButton(ns("bc_compute"),"Batch correct",
                                  ## icon=icon("exclamation-triangle"),
                                  class="run-button"),
@@ -214,24 +213,26 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                     conditionalPanel(
                         "input.bc_options%2 == 1", ns=ns,
                         tagList(
-                            selectInput(ns("bc_batchpar"), "Batch parameters:", batch.par,
-                                        selected="*", multiple=TRUE),                       
-                            checkboxGroupInput(
-                                ns('bc_methods'),'Correction methods:',
-                                choices=bc.options, bc.selected, inline=FALSE),
-                            radioButtons(ns("bc_nmax"), "Nmax:",
-                                         c(40,200,1000), inline=TRUE),
-                            radioButtons(ns("bc_maptype"), "Heatmap type:",
-                                         c("topSD","PCA"), inline=TRUE)
+                            tipify(
+                                selectInput(ns("bc_batchpar"), "Batch parameters:", batch.par,
+                                            selected="*", multiple=TRUE),
+                                "Specifiy the batch parameters that you want to correct for. The <i>star</i> stands for all remaining (unwanted) parameters not specified as parameter of interest. Bracketed parameters are technical/biological summaries computed from your data."),
+                            tipify(
+                                checkboxGroupInput(
+                                    ns('bc_methods'),'Correction methods:',
+                                    choices=bc.options, bc.selected, inline=FALSE),
+                                "Advanced batch correction methods. <b>PCA</b> corrects PC components not correlated to any model parameters; HC iteratively corrects hierarchical clustering; SVA applies surrogate variable analysis (Leek et al.); NNM applies nearest neighbour matching, a quasi-pairing approach for incomplete matched data.",
+                                placement="right", options=list(container="body")
+                            ),
+                            tipify( radioButtons(ns("bc_nmax"), "Nmax:",c(40,200,1000),
+                                                 inline=TRUE),
+                                   "Maximum number of genes in heatmap",
+                                   placement="right", options=list(container = "body")),
+                            tipify( radioButtons(ns("bc_maptype"), "Heatmap type:",
+                                                 c("topSD","PCA"), inline=TRUE),
+                                   "Type of heatmap: top SD or PCA.")
                         )
-                    ),
-                    bsTooltip(ns("bc_batchpar"),
-                              "Batch correction will be performed on these parameters. The 'star' stands for all remaining phenotype parameters not specified as model parameters. <x> denote calculated technical/biological parameters from your data.",
-                              "right", options = list(container = "body")),
-                    bsTooltip(ns('bc_methods'),
-                              "Advanced batch correction methods. 'PCA' correct PC components that are not correlated to any model parameters; 'HC' iteratively corrects the first level of hierarchical clustering if not correlated to any model parameters; 'SVA' applies surrogate variable analysis (Leek et al.); 'NNM' applies nearest neighbour matching, a quasi-pairing approach for incomplete matched data.",
-                              placement = "right", options = list(container = "body"))
-
+                    )
                 )
  
             })
