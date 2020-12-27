@@ -48,7 +48,7 @@ remove.pkgs <- function(pkgs, force=FALSE) {
 }
 
 BIG.NOTUSED <- c(
-    "reactome.db", ## >2GB!!
+    "reactome.db", ## >2GB!!!
     "BH","PCSF",
     "DeMixT", ## purify
     "RNAseqData.HNRNPC.bam.chr14",
@@ -56,8 +56,8 @@ BIG.NOTUSED <- c(
     "tximportData",
     ##"EnsDb.Hsapiens.v86",
     ##"EnsDb.Mmusculus.v79",
-    "TxDb.Hsapiens.UCSC.hg19.knownGene",
-    "TxDb.Mmusculus.UCSC.mm10.knownGene"
+    ##"TxDb.Hsapiens.UCSC.hg19.knownGene",  ## need for import
+    ##"TxDb.Mmusculus.UCSC.mm10.knownGene"  ## need for import
 )    
 
 PKG.MANUAL <- c(
@@ -72,7 +72,7 @@ PKG.MANUAL <- c(
 ##---------------------------------------------------------------------
 
 base.pkg = c("shiny","flexdashboard","shinydashboard",
-             "shinydashboardPlus",'R.utils')
+             "shinydashboardPlus",'R.utils','shinythemes')
 install.pkgs(base.pkg)
 
 ##---------------------------------------------------------------------
