@@ -56,7 +56,6 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
         id,
         function(input, output, session) {
 
-
             observeEvent( input$bc_strength, {
                 if(input$bc_strength=="low") {
                     updateSelectInput(session,"bc_batchpar",selected="*")
@@ -189,17 +188,21 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 
                 ##pheno.par <- colnames(ngs$samples)
                 pheno.par <- sort(colnames(pheno()))
-                sel.par   <- c(grep("^[.]",pheno.par,invert=TRUE,value=TRUE),pheno.par)[1]
+                sel.par   <- c(grep("^[.<]",pheno.par,invert=TRUE,value=TRUE),pheno.par)[1]
                 batch.par <- c("*",pheno.par,"<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
                 
                 tagList(
                     ##helpText(bc_info),
                     p(bc_info),
                     ## shinyWidgets::prettySwitch(ns("on_off"),"on/off", inputId="s1"),
-                    selectInput(ns("bc_modelpar"), "Model parameters:", pheno.par,
-                                selected=sel.par, multiple=TRUE),
-                    radioButtons(ns("bc_strength"), NULL,
-                                 c("low","medium","strong"), inline=TRUE),
+                    tipify2(
+                        selectInput(ns("bc_modelpar"), "Model parameters:", pheno.par,
+                                    selected=sel.par, multiple=TRUE),
+                        "Please specify your model parameters. These are the parameters of interest that will determine your groupings."),
+                    tipify2(                    
+                        radioButtons(ns("bc_strength"), NULL,
+                                     c("low","medium","strong"), inline=TRUE),
+                        "Choose 'strength' of batch correction. 'low' corrects only for explicit batch parameters, 'medium' corrects for additional unwanted biological effects (inferred from your data), 'strong' applies SVA or NNM (nearest neighbour matching). You can tune the selection under the advanced options."),
                     actionButton(ns("bc_compute"),"Batch correct",
                                  ## icon=icon("exclamation-triangle"),
                                  class="run-button"),
@@ -213,19 +216,24 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                         tagList(
                             selectInput(ns("bc_batchpar"), "Batch parameters:", batch.par,
                                         selected="*", multiple=TRUE),                       
-                            tipify( checkboxGroupInput(
+                            checkboxGroupInput(
                                 ns('bc_methods'),'Correction methods:',
                                 choices=bc.options, bc.selected, inline=FALSE),
-                                "Advanced options", placement="right",
-                                options = list(container = "body")),
                             radioButtons(ns("bc_nmax"), "Nmax:",
                                          c(40,200,1000), inline=TRUE),
                             radioButtons(ns("bc_maptype"), "Heatmap type:",
                                          c("topSD","PCA"), inline=TRUE)
                         )
-                    )
-                )
+                    ),
+                    bsTooltip(ns("bc_batchpar"),
+                              "Batch correction will be performed on these parameters. The 'star' stands for all remaining phenotype parameters not specified as model parameters. <x> denote calculated technical/biological parameters from your data.",
+                              "right", options = list(container = "body")),
+                    bsTooltip(ns('bc_methods'),
+                              "Advanced batch correction methods. 'PCA' correct PC components that are not correlated to any model parameters; 'HC' iteratively corrects the first level of hierarchical clustering if not correlated to any model parameters; 'SVA' applies surrogate variable analysis (Leek et al.); 'NNM' applies nearest neighbour matching, a quasi-pairing approach for incomplete matched data.",
+                              placement = "right", options = list(container = "body"))
 
+                )
+ 
             })
                 
 
