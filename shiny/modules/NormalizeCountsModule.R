@@ -53,8 +53,14 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
                         ##radioButtons(ns("selectmethod"),"Select normalization:",
                         ##choices=all.methods, selected="CPM"),
                         ##br(),
-                        checkboxInput(ns("postqn"),"Post quantile normalization"),
-                        checkboxInput(ns("addnoise"),"Simulate unnormalized"),
+                        tipify2(
+                            checkboxInput(ns("postqn"),"Post quantile normalization"),
+                            "Apply additional quantile normalization after scaling method."
+                        ),
+                        tipify2(
+                            checkboxInput(ns("addnoise"),"Simulate unnormalized"),
+                            "Simulated unnormalized data by adding random scaling to raw data"
+                        ),
                         width = 2
                     ),
                     mainPanel(

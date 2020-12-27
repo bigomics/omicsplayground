@@ -68,7 +68,7 @@ WORKDIR /
 RUN rm -fr /omicsplayground/R /omicsplayground/shiny
 RUN rm -fr /omicsplayground \
     && git clone https://github.com/bigomics/omicsplayground.git \
-    && rm -fr /omicsplayground/.git \
+##    && rm -fr /omicsplayground/.git \
     && chmod -R ugo+rwX /omicsplayground 
 
 #------------------------------------------------------------
