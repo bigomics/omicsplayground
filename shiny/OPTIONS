@@ -1,5 +1,5 @@
 TITLE = "Omics Playground"
-USER_MODE = BASIC
+##USER_MODE = basic
 AUTHENTICATION = none
 #AUTHENTICATION = password
 ENABLE_UPLOAD = TRUE

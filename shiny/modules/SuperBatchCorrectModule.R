@@ -68,7 +68,7 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 }
                 if(input$bc_strength=="strong") {
                     sel <- c("*","<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
-                    updateSelectInput(session,"bc_batchpar",selected="")
+                    updateSelectInput(session,"bc_batchpar",selected=sel)
                     updateCheckboxGroupInput(session, "bc_methods", selected="SVA")
                 }
 
@@ -197,18 +197,20 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                     tipify2(
                         selectInput(ns("bc_modelpar"), "Model parameters:", pheno.par,
                                     selected=sel.par, multiple=TRUE),
-                        "Please specify your model parameters. These are the parameters of interest that will determine your groupings."),
-                    tipify2(                    
+                        "Please specify your model parameters. These are the parameters of interest that will determine your groupings.", placement="left"),
+                    tipify(                    
                         radioButtons(ns("bc_strength"), NULL,
                                      c("low","medium","strong"), inline=TRUE),
-                        "Choose the strength of batch correction: <b>low</b> corrects only for explicit batch parameters, <b>medium</b> corrects for additional unwanted biological effects (inferred from your data), <b>strong</b> applies SVA or NNM (nearest neighbour matching). You can tune the selection under the advanced options."),
+                        "Choose the strength of batch correction: <b>low</b> corrects only for explicit batch parameters, <b>medium</b> corrects for additional unwanted biological effects (inferred from your data), <b>strong</b> applies SVA or NNM (nearest neighbour matching). You can tune the selection under the advanced options.", 
+                        placement="left", options=list(container="body")),                    
                     actionButton(ns("bc_compute"),"Batch correct",
                                  ## icon=icon("exclamation-triangle"),
                                  class="run-button"),
                     br(), br(),
                     tipify( actionLink(ns("bc_options"), "Advanced",
                                        icon=icon("cog", lib = "glyphicon")),
-                           "Toggle advanced options.", placement="top"),
+                           "Toggle advanced options.", 
+                           placement="left", options=list(container="body")),
                     br(),
                     conditionalPanel(
                         "input.bc_options%2 == 1", ns=ns,
@@ -216,25 +218,27 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                             tipify(
                                 selectInput(ns("bc_batchpar"), "Batch parameters:", batch.par,
                                             selected="*", multiple=TRUE),
-                                "Specifiy the batch parameters that you want to correct for. The <i>star</i> stands for all remaining (unwanted) parameters not specified as parameter of interest. Bracketed parameters are technical/biological summaries computed from your data."),
+                                "Specifiy the batch parameters that you want to correct for. The <i>star</i> stands for all remaining (unwanted) parameters not specified as parameter of interest. Bracketed parameters are technical/biological summaries computed from your data.",
+                                placement="left", options=list(container="body")
+                            ),
                             tipify(
                                 checkboxGroupInput(
                                     ns('bc_methods'),'Correction methods:',
                                     choices=bc.options, bc.selected, inline=FALSE),
                                 "Advanced batch correction methods. <b>PCA</b> corrects PC components not correlated to any model parameters; HC iteratively corrects hierarchical clustering; SVA applies surrogate variable analysis (Leek et al.); NNM applies nearest neighbour matching, a quasi-pairing approach for incomplete matched data.",
-                                placement="right", options=list(container="body")
+                                placement="left", options=list(container="body")
                             ),
                             tipify( radioButtons(ns("bc_nmax"), "Nmax:",c(40,200,1000),
                                                  inline=TRUE),
                                    "Maximum number of genes in heatmap",
-                                   placement="right", options=list(container = "body")),
+                                   placement="left", options=list(container = "body")),
                             tipify( radioButtons(ns("bc_maptype"), "Heatmap type:",
                                                  c("topSD","PCA"), inline=TRUE),
-                                   "Type of heatmap: top SD or PCA.")
+                                   "Type of heatmap: top SD or PCA.",
+                                   placement="left", options=list(container="body"))
                         )
                     )
-                )
- 
+                )                
             })
                 
 

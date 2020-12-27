@@ -14,8 +14,9 @@ RDIR    = file.path(OPG,"R")
 FILES   = file.path(OPG,"lib")
 FILESX  = file.path(OPG,"libx")
 PGX.DIR = file.path(OPG,"data")
-DEV     = FALSE
 
+USER_MODE = "pro"
+DEV = FALSE
 
 ##======================================================================
 ##==================== END-OF-FILE =====================================
