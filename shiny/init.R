@@ -38,6 +38,9 @@ if(is.null(ORCA)) {
 ##==================== FUNCTIONS =======================================
 ##======================================================================
 
+tipify2 <- function(...) {
+    tipify(..., options = list(container = "body"))
+}
 premium.feature <- function(..., disabled=TRUE) {
     if(!disabled) return(...)
     tipify(disabled(...),
