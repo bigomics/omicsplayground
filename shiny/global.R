@@ -8,7 +8,8 @@ message("===============================================================")
 message("========================= global.R ============================")
 message("===============================================================")
 
-OPG     = "~/Playground/omicsplayground"
+##OPG     = "~/Playground/omicsplayground"
+OPG     = ".."
 RDIR    = file.path(OPG,"R")
 FILES   = file.path(OPG,"lib")
 FILESX  = file.path(OPG,"libx")
