@@ -192,8 +192,11 @@ server = function(input, output, session) {
     message("[MAIN] calling boards...")
 
     library(firebase)
-    firebase  <- FirebaseEmailPassword$new()
-    firebase2 <- FirebaseSocial$new()
+    firebase=firebase2=NULL
+    if(AUTHENTICATION=="firebase") {
+        firebase  <- FirebaseEmailPassword$new()
+        firebase2 <- FirebaseSocial$new()
+    }
 
     ## firebase <- NULL
     max.limits <- c("samples" = opt$MAX_SAMPLES,

@@ -1233,7 +1233,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
 
     div.button <- div(
         id="splash-buttons",
-        actionButton(ns("login_btn"),"Login",class="red-button")
+        actionButton(ns("login_btn"),login.text,class="red-button")
     )
     if(with.register) {
         div.button <- div(
