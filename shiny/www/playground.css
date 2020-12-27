@@ -146,10 +146,12 @@ body {
 
 /* tooltips */
 .tooltip-inner {
-  background-color: #e0e0e0FF; 
-  color: #3f3f3fFF; 
-  border: 1px solid #9f9f9fFF;
-  opacity: 1;
+    background-color: #e0e0e0FF;
+    background-color: #fcfca0FF; 
+    color: #3f3f3fFF; 
+    border: 1px solid #9f9f9fFF;
+    opacity: 1;
+    text-align: left;    
 }
 
 .tooltip-arrow-inner {
