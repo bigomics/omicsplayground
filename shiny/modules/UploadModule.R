@@ -188,7 +188,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             
             observeEvent( input$advanced_mode, {
                 if(input$advanced_mode) {
-                    showTab("tabs", "Normalize")
+                    ## showTab("tabs", "Normalize")   ## NOT YET!!!
                     showTab("tabs", "BatchCorrect")
                 } else {
                     hideTab("tabs", "Normalize")
