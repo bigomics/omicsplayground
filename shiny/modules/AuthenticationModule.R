@@ -1197,7 +1197,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[24]] = c("Succes is Exploration","The first thing you have to find is the unknown. Learning is searching; anything else is just waiting. &ndash; Dale Daute")
     
     title <- titles[[length(titles)]]
-    ## title <- sample(titles,1)[[1]]
+    title <- sample(titles,1)[[1]]
     splash.title <- div(
         br(),br(),
         div(HTML(title[1]),style="font-size:70px;font-weight:700;line-height:1em;"),
