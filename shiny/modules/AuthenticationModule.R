@@ -1185,19 +1185,19 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[13]] = c("I Love Omics Data!","Unleash your inner nerd with Omics Playground")
     titles[[14]] = c("More Omics Data","Is all I want for Christmas")
     titles[[15]] = c("Keep Exploring","Never stop discovering with Omics Playground")
-    titles[[16]] = c("Real Bioinformaticians","Do it with Omics Playground (or in assembler...)")
+    titles[[16]] = c("Real Bioinformaticians","Do it with Omics Playground")
     titles[[17]] = c("Real Biologists","Do it with Omics Playground")
     titles[[18]] = c("Ich bin doch nicht blöd!","Of course I use Omics Playground")
     titles[[19]] = c("Non sono mica scemo!","Of course I use Omics Playground")
     ## below from https://www.quotesweekly.com/keep-exploring-quotes/
-    titles[[20]] = c("The Unexplored Plan","When you get into the whole field of exploring, you realize that we live on a relatively unexplored plan. – E. O. Wilson")
-    titles[[21]] = c("Explore More","The more you explore, the more you learn and grow<br>– Nitesh Nishad")
-    titles[[22]] = c("Discover New Oceans","Man cannot discover new oceans unless he has the courage to lose sight of the shore – Andre Gide")
-    titles[[23]] = c("Adventurous Life","Love adventurous life. Be passionately curious about exploring new adventures. – Lailah Gifty Akita")
-    titles[[24]] = c("Succes is Exploration","The first thing you have to find is the unknown. Learning is searching; anything else is just waiting. – Dale Daute")
+    titles[[20]] = c("The Unexplored Plan","When you get into the whole field of exploring, you realize that we live on a relatively unexplored plan. &ndash; E. O. Wilson")
+    titles[[21]] = c("Explore More","The more you explore, the more you learn and grow<br>&ndash; Nitesh Nishad")
+    titles[[22]] = c("Discover New Oceans","Man cannot discover new oceans unless he has the courage to lose sight of the shore &ndash; Andre Gide")
+    titles[[23]] = c("Adventurous Life","Love adventurous life. Be passionately curious about exploring new adventures. &ndash; Lailah Gifty Akita")
+    titles[[24]] = c("Succes is Exploration","The first thing you have to find is the unknown. Learning is searching; anything else is just waiting. &ndash; Dale Daute")
     
     title <- titles[[length(titles)]]
-    title <- sample(titles,1)[[1]]
+    ## title <- sample(titles,1)[[1]]
     splash.title <- div(
         br(),br(),
         div(HTML(title[1]),style="font-size:70px;font-weight:700;line-height:1em;"),
