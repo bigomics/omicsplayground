@@ -258,6 +258,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                 on.exit(progress$close())    
                 progress$set(message = "Processing", value = 0)
 
+                pgx.showCartoonModal("Computation may take 5-20 minutes...")
+                
                 flt <- input$filter_methods
                 do.filter <- (length(flt)>0 && flt[1]!="")
                 only.hugo <- ("only.hugo" %in% flt)
@@ -325,6 +327,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                 ##----------------------------------------------------------------------
                 ## Remove modal and show we are ready
                 ##----------------------------------------------------------------------
+                ##removeModal()
                 if(alertready) {
                     shinyalert("Ready!","We wish you lots of discoveries!")
                 }
