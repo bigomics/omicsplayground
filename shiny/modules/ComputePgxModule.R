@@ -44,24 +44,25 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
             GENETEST.METHODS = c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma",
                                  "deseq2.wald","deseq2.lrt","edger.qlf","edger.lrt")
             GENETEST.METHODS1 = c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma")
-            GENETEST.METHODS1 = c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma")
             GENETEST.METHODS2 = c("deseq2.wald","deseq2.lrt","edger.qlf","edger.lrt")
-
+            GENETEST.SELECTED = c("trend.limma","deseq2.wald","edger.qlf")
+            
             ## statistical method for GENESET level testing
             GENESET.METHODS = c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
                                 ##"plage","enricher","gsea.permPH","gsea.permGS","gseaPR",
                                 "fgsea")
             GENESET.METHODS1 = c("fisher","spearman","fgsea") 
             GENESET.METHODS2 = c("gsva","ssgsea", "camera", "fry")
+            GENESET.SELECTED = c("fisher","gsva","fgsea")
 
             ## batch correction and extrs methods
-            BC_METHODS = c("limma","SVA","ComBat")
-            EXTRA_METHODS = c("meta.go","infer","deconv","drugs-combo",
+            EXTRA.METHODS = c("meta.go","infer","deconv", "drugs", ## "drugs-combo",
                               "wordcloud","connectivity")
-            EXTRA_METHODS1 = c("meta.go","infer","deconv","drugs","wordcloud")
-            EXTRA_METHODS2 = c("drugs-combo","connectivity")
-            
+            EXTRA.METHODS1 = c("meta.go","infer","deconv","drugs","wordcloud")
+            EXTRA.METHODS2 = c("drugs-combo","connectivity")
+            EXTRA.SELECTED = c(EXTRA.METHODS)
 
+            
             output$UI <- renderUI({
                 fillCol(
                     height = height,
@@ -112,62 +113,63 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                                           ## "excl.immuno"
                                           ## "excl.xy"
                                           ),
-                                    selected = c("only.hugo","only.proteincoding",
-                                                 "excl.rikorf"),
                                     choiceNames =
                                         c("Convert to HUGO",
                                           "Protein-coding only",
                                           "Exclude Rik/ORF"
                                           ##"Exclude immunogenes",
                                           ##"Exclude X/Y genes"
-                                          )
+                                          ),
+                                    selected = c(
+                                        "only.hugo",
+                                        "only.proteincoding",
+                                        "excl.rikorf")
                                 )
                             ),
                             wellPanel(
                                 checkboxGroupInput(
                                     ns('gene_methods'),
                                     'Gene tests:',
-                                    GENETEST.METHODS1,
-                                    selected = c("ttest","ttest.welch","trend.limma")
-                                ),
-                                premium.feature(
-                                    checkboxGroupInput(
-                                        ns('gene_methods2'),
-                                        NULL,
-                                        GENETEST.METHODS2
-                                    )
+                                    GENETEST.METHODS,
+                                    selected = GENETEST.SELECTED
                                 )
+                                ## premium.feature(
+                                ##     checkboxGroupInput(
+                                ##         ns('gene_methods2'),
+                                ##         NULL,
+                                ##         GENETEST.METHODS2
+                                ##     )
+                                ## )
                             ),
                             wellPanel(
                                 checkboxGroupInput(
                                     ns('gset_methods'),
                                     'Enrichment methods:',
-                                    GENESET.METHODS1,
-                                    selected = c("fisher","spearman","fgsea")
+                                    GENESET.METHODS,
+                                    selected = GENESET.SELECTED
                                 ),
-                                premium.feature(
-                                    checkboxGroupInput(
-                                        ns('gset_methods2'),
-                                        NULL,
-                                        GENESET.METHODS2
-                                    )
-                                )
+                                ## premium.feature(
+                                ##     checkboxGroupInput(
+                                ##         ns('gset_methods2'),
+                                ##         NULL,
+                                ##         choices = GENESET.METHODS2
+                                ##     )
+                                ## )
                             ),
                             wellPanel(
                                 checkboxGroupInput(
                                     ns('extra_methods'),
                                     'Extra analysis:',
-                                    EXTRA_METHODS1,
-                                    selected = c("infer","wordcloud")
-                                ),
-                                premium.feature(
-                                    checkboxGroupInput(
-                                        ns('extra_methods2'),
-                                        NULL,
-                                        EXTRA_METHODS2
-                                    )
+                                    choices = EXTRA.METHODS,
+                                    selected = EXTRA.SELECTED
                                 )
-                                
+                                ## premium.feature(
+                                ##     checkboxGroupInput(
+                                ##         ns('extra_methods2'),
+                                ##         NULL,
+                                ##         choices = EXTRA.METHODS2
+                                ##     )
+                                ## )                                
                             ),
                             div(width=150)                            
                         ) ## end of fillRow
@@ -175,7 +177,19 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                 ) ## end of fill Col
             })
 
+            if(FALSE) {
+                observeEvent( input$gene_methods, {
+                    if(length(input$gene_methods) > 3){
+                        updateCheckboxGroupInput(session, "gene_methods",
+                                                 selected= tail(input$gene_methods,3))
+                    }
+                    if(length(input$gene_methods) < 1){
+                        updateCheckboxGroupInput(session, "gene_methods", selected= "ttest")
+                    }
+                })
+            }
 
+            
             observeEvent( input$options, {
                 ## shinyjs::disable(ns("gene_methods2"))
             })

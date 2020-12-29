@@ -48,7 +48,6 @@ if(0) {
 }
 
 UploadModuleUI <- function(id) {
-    cat("********* UploadModuleUI ********\n")
     ns <- NS(id)
     tabsetPanel(
         id = ns("tabs"),
@@ -70,7 +69,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
         id,
         function(input, output, session) {
 
-            cat("********* UploadModuleServer ********\n")
+            cat("[UploadModuleServer] called\n")
             ns <- session$ns
             ## ns <- NS(id)
             
@@ -332,7 +331,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 if(nrow(xx)>1000) xx <- xx[sample(1:nrow(xx),1000),,drop=FALSE]
                 dc <- melt(xx)
                 dc$value[dc$value==0] <- NA
-                tt2 <- paste(nrow(counts),"x",ncol(counts))
+                tt2 <- paste(nrow(counts),"genes x",ncol(counts),"samples")
                 ggplot(dc, aes(x=value, color=Var2)) +
                     geom_density() + xlab("log2(1+counts)") +
                     theme( legend.position = "none") +
@@ -367,12 +366,20 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 ## discretized continuous variable into 10 bins
                 ii <- unlist(vt$col_name[c("numeric","integer")])
                 ii
-                if(length(ii)) {
+                if(!is.null(ii) && length(ii)) {
+                    cat("[UploadModule::phenoStats] discretizing variables:",colnames(df)[ii],"\n")
                     df[,ii] <- apply(df[,ii,drop=FALSE], 2, function(x) cut(x, breaks=10))
                 }
 
+                cat("[UploadModule::phenoStats] dim(df)=",dim(df),"\n")
+                cat("[UploadModule::phenoStats] class(df)=",class(df),"\n")
+                
                 p1 <- df %>% inspect_cat() %>% show_plot()
-                tt2 <- paste(nrow(pheno),"x",ncol(pheno))
+
+                cat("[UploadModule::phenoStats] class(p1)=",class(p1),"\n")
+
+                tt2 <- paste(nrow(pheno),"samples x",ncol(pheno),"phenotypes")
+                ## tt2 <- paste(ncol(pheno),"phenotypes")
                 p1 <- p1 + ggtitle("PHENOTYPES", subtitle=tt2) +
                     theme(
                         ##axis.text.x = element_text(size=8, vjust=+5),
@@ -384,10 +391,6 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             })
             
             output$contrastStats <- renderPlot({
-                
-                cat("[contrastStats] renderPlot called \n")
-                ##req(uploaded$contrasts.csv)
-                cat("[contrastStats] dim(uploaded$ct)=",dim(uploaded$contrasts.csv),"\n")
                 
                 has.contrasts <- !is.null(uploaded$contrasts.csv) &&
                     NCOL(uploaded$contrasts.csv)>0
@@ -408,20 +411,27 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 
                 require(inspectdf)
                 req(uploaded$contrasts.csv, uploaded$samples.csv)
-
                 pheno <- uploaded$samples.csv
                 contrasts <- uploaded$contrasts.csv
-
+                
                 ## convert to experiment matrix if not already...
                 if(!all(rownames(contrasts)==rownames(pheno))) {
                     contrasts <- pgx.expMatrix(pheno, contrasts)
                 }
                 ##contrasts <- sign(contrasts)
                 df <- contrastAsLabels(contrasts)
-                px <- head(colnames(df),20)  ## maximum??
+                px <- head(colnames(df),20)  ## maximum to show??
                 df <- data.frame(df[,px,drop=FALSE],check.names=FALSE)
-                tt2 <- paste(nrow(contrasts),"x",ncol(contrasts))
+                tt2 <- paste(nrow(contrasts),"samples x",ncol(contrasts),"contrasts")
+                ##tt2 <- paste(ncol(contrasts),"contrasts")
+
+                cat("[UploadModule::phenoStats] dim(df)=",dim(df),"\n")
+                cat("[UploadModule::phenoStats] tt2=",tt2,"\n")
+
                 p1 <- df %>% inspect_cat() %>% show_plot()                    
+
+                cat("[UploadModule::phenoStats] class(p1)=",class(p1),"\n")
+                
                 p1 <- p1 + ggtitle("CONTRASTS", subtitle=tt2) +
                     theme(
                         ##axis.text.x = element_text(size=8, vjust=+5),

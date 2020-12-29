@@ -153,7 +153,7 @@ LoadingBoard <- function(input, output, session,
         } else if(length(inf)==0) {
             HTML(paste("<p>Please select a dataset<br>"))
         } else {
-            HTML(paste("<p><b>",names(inf),"</b>:", inf,"<br>"))
+            HTML(paste("<p><b>",names(inf),"</b>:", inf,""))
         }
     })
 
