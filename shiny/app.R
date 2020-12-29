@@ -254,9 +254,6 @@ server = function(input, output, session) {
         ## show all main tabs
         lapply(MAINTABS, function(m) showTab("maintabs",m))
         
-        hideTab("view-tabs","Resource info")
-        hideTab("maintabs","Development")
-
         if(USER_MODE == "basic") {
             hideTab("maintabs","CellProfiling")
             hideTab("enrich-tabs1","GeneMap")
@@ -271,6 +268,11 @@ server = function(input, output, session) {
             showTab("maintabs","Development")
             showTab("view-tabs","Resource info")
             showTab("enrich-tabs1","GeneMap")
+            showTab("scell-tabs1","CNV")  ## DEV only
+            showTab("scell-tabs1","Monocle") ## DEV only       
+        } else {
+            hideTab("view-tabs","Resource info")
+            hideTab("maintabs","Development")
             hideTab("scell-tabs1","CNV")  ## DEV only
             hideTab("scell-tabs1","Monocle") ## DEV only       
         }

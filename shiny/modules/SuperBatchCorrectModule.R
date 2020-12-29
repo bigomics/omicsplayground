@@ -64,7 +64,7 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 if(input$bc_strength=="medium") {
                     sel <- c("*","<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
                     updateSelectInput(session,"bc_batchpar",selected=sel)
-                    updateCheckboxGroupInput(session, "bc_methods", selected=c("PCA","HC"))
+                    updateCheckboxGroupInput(session,"bc_methods", selected=c("PCA","HC"))
                 }
                 if(input$bc_strength=="strong") {
                     sel <- c("*","<cell_cycle>","<gender>","<libsize>","<mito/ribo>")

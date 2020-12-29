@@ -1103,6 +1103,7 @@ pgx.cytoPlot <- function(ngs, gene1, gene2, cex=1, col="grey60",
     m1 <- mean(x1)
     m2 <- mean(x2)
 
+    ## select samples in different quadrants
     j1 <- samples[which(x1 < m1 & x2 > m2)]
     j2 <- samples[which(x1 > m1 & x2 < m2)]
     j3 <- samples[which(x1 > m1 & x2 > m2)]
@@ -1113,10 +1114,11 @@ pgx.cytoPlot <- function(ngs, gene1, gene2, cex=1, col="grey60",
         j3 <- c(j3, sample(samples,5))
         j4 <- c(j4, sample(samples,5))
     }
-    z1 <- kde2d( x1[j1], x2[j1], n=50)
-    z2 <- kde2d( x1[j2], x2[j2], n=50)
-    z3 <- kde2d( x1[j3], x2[j3], n=50)
-    z4 <- kde2d( x1[j4], x2[j4], n=50)
+    z1=z2=z3=z4=NULL
+    if(length(j1)>1) z1 <- kde2d( x1[j1], x2[j1], n=50)
+    if(length(j2)>1) z2 <- kde2d( x1[j2], x2[j2], n=50)
+    if(length(j3)>1) z3 <- kde2d( x1[j3], x2[j3], n=50)
+    if(length(j4)>1) z4 <- kde2d( x1[j4], x2[j4], n=50)
     ##z0 <- kde2d( x1[], x2[], n=50)
 
     ##par(mfrow=c(1,1))
@@ -1482,12 +1484,25 @@ pgx.testPhenoCorrelation <- function(df, plot=TRUE, cex=1)
     return(list(P=P, Q=Q))
 }
 
-
 ##=================================================================================
 ## Lower level R level plotting functions
 ##=================================================================================
 
-width=height=NULL;scale=1;hjust=vjust=0 
+gghist <- function(x) {
+    require(dplyr)
+    require(tidyr)
+    require(tibble)
+    as_tibble(x) %>%
+        pivot_longer(
+            cols=everything(),
+            names_to="cell",
+            values_to="expression"
+        ) %>%
+        ggplot(aes(x=expression, group=cell)) +
+        geom_density() +
+        coord_cartesian(ylim=c(0,0.6), xlim=c(0,3))
+}
+
 plotly2ggplot <- function (plot, width=NULL, height=NULL, scale=1, hjust=0, vjust=0) 
 {
     library(png)

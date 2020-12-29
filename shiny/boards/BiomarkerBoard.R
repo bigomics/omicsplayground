@@ -178,7 +178,7 @@ be multiple categories (classes) or patient survival data."
         progress$set(message = "Variable importance", value = 0)
         
         if(!(ct %in% colnames(ngs$Y))) return(NULL)
-        y0 <- ngs$Y[,ct]
+        y0 <- as.character(ngs$Y[,ct])
         names(y0) <- rownames(ngs$Y)
         y <- y0[!is.na(y0)]
         
@@ -523,6 +523,7 @@ be multiple categories (classes) or patient survival data."
     })
     
     pdx_boxplots.RENDER %<a-% reactive({
+
         res <- calcVariableImportance()
         if(is.null(res)) return(NULL)
 
@@ -565,7 +566,7 @@ be multiple categories (classes) or patient survival data."
         i=1
         for(i in 1:min(12,length(vars))) {
             ##g <- rownames(res$R)[i]
-            g <- vars[i]
+            g  <- vars[i]
             gx <- res$X[g,]
             boxplot( gx ~ y, col="grey85", ylim = range(gx),
                     ylab="expression", xlab="", cex.axis=0.001)
