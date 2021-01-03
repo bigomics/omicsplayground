@@ -75,7 +75,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                         cexRow=1, cexCol=1, mar=c(5,5,5,5),
                         title_cex=1.2, column_title_rot=0,
                         show_legend=TRUE, show_key=TRUE,
-                        show_rownames=60, lab.len=80, 
+                        show_rownames=60, lab.len=80, key.offset=c(0.05,1.01),
                         show_colnames=NULL, use.nclust=FALSE,
                         ... )
 {
@@ -112,7 +112,8 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         rownames(gx) <- tagDuplicates(rownames(gx))
         if(!is.null(row.annot)) rownames(row.annot) <- rownames(gx)
     }
-
+    if(split==1) split <- NULL
+    
     par(xpd=FALSE)
     jj1 <- 1:nrow(gx)
     jj2 <- 1:ncol(gx)
@@ -174,7 +175,9 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     do.split = !is.null(split)
     split.idx = NULL
     if(do.split && class(split)=="numeric" && length(split)==1 ) {
-        hc = fastcluster::hclust( as.dist(1 - cor(t(gx))), method="ward.D2" )
+        cor.gx <- cor(t(gx),use="pairwise")
+        cor.gx[is.na(cor.gx)] <- 0
+        hc = fastcluster::hclust( as.dist(1 - cor.gx), method="ward.D2" )
         split.idx = paste0("group",cutree(hc, split))
     }
     if(do.split && class(split)=="character" && length(split)==1 &&
@@ -320,10 +323,27 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     }
     
     ## ------------- scaling options
-    if(any(c("col","cols","both") %in% scale)) gx = scale(gx)
-    if(any(c("row","rows","both") %in% scale)) gx = t(scale(t(gx)))
-    if("col.center" %in% scale) gx = scale(gx,center=TRUE,scale=FALSE)
-    if("row.center" %in% scale) gx = gx - rowMeans(gx,na.rm=TRUE)
+    ## if(any(c("col","cols","both") %in% scale)) gx = scale(gx)
+    ## if(any(c("row","rows","both") %in% scale)) gx = t(scale(t(gx)))
+    ## if("col.center" %in% scale) gx = scale(gx,center=TRUE,scale=FALSE)
+    ## if("row.center" %in% scale) gx = gx - rowMeans(gx,na.rm=TRUE)
+    if("col" %in% scale || "both" %in% scale) {
+        ##gx = scale(gx)
+        tgx <- t(gx) - colMeans(gx,na.rm=TRUE)
+        gx <- t(tgx / (1e-8 + apply(gx, 2, sd)))
+        remove(tgx)
+    }
+    if("row" %in% scale || "both" %in% scale) {
+        ##gx = t(scale(t(gx)))
+        gx <- gx - rowMeans(gx,na.rm=TRUE)
+        gx <- gx / (1e-8 + apply(gx, 1, sd))
+    }
+    if("col.center" %in% scale) {
+        gx  <- t( t(gx) - colMeans(gx, na.rm=TRUE))
+    }
+    if("row.center" %in% scale) {
+        gx  <- gx - rowMeans(gx,na.rm=TRUE)
+    }    
     if("row.bmc" %in% scale) {
         for(i in 1:ngrp) {
             jj <- grp[[i]]
@@ -438,7 +458,8 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                      border = "transparent", labels_gp = gpar(fontsize = 8), 
                      legend_width = unit(0.1, "npc"), legend_height = unit(0.01, "npc"),
                      title = "\n", direction = "horizontal")
-        draw(lgd, x=unit(0.05, "npc"), y=unit(1.01, "npc"), just=c("left", "top"))
+        ##key.offset=c(0.05,1.01)
+        draw(lgd, x=unit(key.offset[1], "npc"), y=unit(key.offset[2], "npc"), just=c("left", "top"))
     }
     
     ##res <- c()
@@ -448,7 +469,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
 }
 
 ##gx=X
-gx.heatmap2 <- function(gx,
+gx.heatmap2.DEPRECATED <- function(gx,
                         row.clust.method="complete",
                         col.clust.method="complete",
                         row.dist.method="pearson",
@@ -464,6 +485,9 @@ gx.heatmap2 <- function(gx,
                         is_distance=FALSE, symmetric=FALSE,
                         ... )
 {
+    ##
+    ## Same as gx.heatmap but using ComplexHeatmap for rendering
+    ##
     require("ComplexHeatmap")
     require("RColorBrewer")
     require("fastcluster")
@@ -512,7 +536,7 @@ gx.heatmap2 <- function(gx,
     ##clust.method="ward.D2"
     h1 <- NULL
     if(!is.null(col.clust.method) && !is.na(col.clust.method) ) {
-        require(nclust)
+        ##require(nclust)
         if(is_distance) {
             d1 = as.dist(gx)
         } else if(col.dist.method=="pearson") {
@@ -609,13 +633,26 @@ gx.heatmap2 <- function(gx,
         )
     }
 
+    ## scaling options
+    if("col" %in% scale || "both" %in% scale) {
+        ##gx = scale(gx)
+        tgx <- t(gx) - colMeans(gx,na.rm=TRUE)
+        gx <- t(tgx / (1e-8 + apply(gx, 2, sd)))
+        remove(tgx)
+    }
+    if("row" %in% scale || "both" %in% scale) {
+        ##gx = t(scale(t(gx)))
+        gx <- gx - rowMeans(gx,na.rm=TRUE)
+        gx <- gx / (1e-8 + apply(gx, 1, sd))
+    }
+    if("col.center" %in% scale) {
+        gx  <- t( t(gx) - colMeans(gx, na.rm=TRUE))
+    }
+    if("row.center" %in% scale) {
+        gx  <- gx - rowMeans(gx,na.rm=TRUE)
+    }
+
     ## draw heatmap
-    if("col" %in% scale || "both" %in% scale) gx = scale(gx)
-    if("row" %in% scale || "both" %in% scale) gx = t(scale(t(gx)))
-    if("cols" %in% scale || "both" %in% scale) gx = scale(gx)
-    if("rows" %in% scale || "both" %in% scale) gx = t(scale(t(gx)))
-    if("colcenter" %in% scale) gx = scale(gx,center=TRUE,scale=FALSE)
-    if("rowcenter" %in% scale) gx = t(scale(t(gx),center=TRUE,scale=FALSE))
     split.idx = NULL
     if(!is.null(split) && split>0) split.idx = row.annot[rownames(gx),split,drop=FALSE]
 
@@ -652,7 +689,7 @@ gx.heatmap2 <- function(gx,
                    row_names_gp = gpar(fontsize = 10*cexRow),
                    column_names_gp = gpar(fontsize = 11*cexCol),
                    top_annotation = col.ha,
-                   top_annotation_height = unit(annot.ht*ncol(col.annot), "mm"),
+                   ## top_annotation_height = unit(annot.ht*ncol(col.annot), "mm"),
                    column_title = main,
                    column_title_gp = gpar(fontsize = 13, fontface='bold'),
                    name=main)
@@ -848,11 +885,24 @@ gx.heatmap <- function(gx, values=NULL,
     ### RowSideColors dont like NULL/NA...
     sym=FALSE
     if(sum(gx<0,na.rm=TRUE)>0 || scale %in% c("row","col")) sym=TRUE
-    ## draw heatmap
-    if("col" %in% scale || "both" %in% scale) gx = scale(gx)
-    if("row" %in% scale || "both" %in% scale) gx = t(scale(t(gx)))
-    if("colcenter" %in% scale) gx = scale(gx,center=TRUE,scale=FALSE)
-    if("row.center" %in% scale) gx = gx - rowMeans(gx,na.rm=TRUE)
+    ## scaling options
+    if("col" %in% scale || "both" %in% scale) {
+        ##gx = scale(gx)
+        tgx <- t(gx) - colMeans(gx,na.rm=TRUE)
+        gx <- t(tgx / (1e-8 + apply(gx, 2, sd)))
+        remove(tgx)
+    }
+    if("row" %in% scale || "both" %in% scale) {
+        ##gx = t(scale(t(gx)))
+        gx <- gx - rowMeans(gx,na.rm=TRUE)
+        gx <- gx / (1e-8 + apply(gx, 1, sd))
+    }
+    if("col.center" %in% scale) {
+        gx  <- t( t(gx) - colMeans(gx, na.rm=TRUE))
+    }
+    if("row.center" %in% scale) {
+        gx  <- gx - rowMeans(gx,na.rm=TRUE)
+    }
     
     if(!is.null(values)) gx <- values[rownames(gx),colnames(gx)]
     if(softmax) gx <- tanh(0.5* gx / sd(gx))
@@ -863,7 +913,8 @@ gx.heatmap <- function(gx, values=NULL,
     if(!show_colnames) {
         colnames(gx) <- rep("",ncol(gx))
     }
-    
+
+    ## draw heatmap    
     if(plot.method=="heatmap.3" && !is.na(cc0) && !is.na(cc1) ) {
         if(verbose>1) cat("plotting with heatmap.3 + ColSideColors\n")
         if(is.null(h1) && is.null(h2)) {

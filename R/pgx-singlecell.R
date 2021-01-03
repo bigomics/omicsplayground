@@ -127,7 +127,7 @@ pgx.createPGX.10X <- function(outs, ncells=2000, aggr.file="aggregation.csv")
         message("[createPGX.10X] performing batch integration using MNN...")                
         bX <- logCPM(counts, total=1e4)
         bb <- pgx$samples[,"batch"]
-        bX <- pgx.scBatchCorrect(bX, batch=bb, method="MNN")        
+        bX <- pgx.scBatchIntegrate(bX, batch=bb, method="MNN")        
         ## pgx <- pgx.clusterSamples(pgx, X=bX, method="tsne", dims=2)
         pgx <- pgx.clusterSamples2(pgx, X=bX, methods=c("pca","tsne","umap"), dims=c(2,3))
         pgx$tsne2d <- pgx$cluster$pos[["tsne2d"]]
@@ -495,33 +495,39 @@ pgx.poolCells <- function(counts, ncells, groups=NULL, stats="sum",
     return(res)
 }
 
-pgx.scBatchCorrect <- function(X, batch,
-                               method=c("ComBat","limma","CCA","MNN","Harmony"))
+pgx.scBatchIntegrate <- function(X, batch,
+                               method=c("ComBat","limma","CCA","MNN","Harmony","liger"))
 {
     ## method <- method[1]
     res <- list()
+    ##pos <- list()
     if("ComBat" %in% method) {
+        message("[pgx.scBatchIntegrate] single-cell batch correction using ComBat...")
         require(sva)
         ## ComBat correction
         res[["ComBat"]] <- sva::ComBat(X, batch=batch, par.prior=TRUE)
     }
     if("limma" %in% method) {
+        message("[pgx.scBatchIntegrate] single-cell batch correction using LIMMA...")
         require(limma)
         ## LIMMA correction
         res[["limma"]] <- limma::removeBatchEffect(X, batch=batch)
     }
     if("CCA" %in% method) {
+        message("[pgx.scBatchIntegrate] single-cell batch correction using CCA (Seurat)...")
         ## Seurat CCA correction
         counts <- pmax(2**X - 1,0)
-        res[["CCA"]] <- pgx.SeuratBatchCorrect(counts, batch=batch)
+        res[["CCA"]] <- pgx.SeuratBatchIntegrate(counts, batch=batch)
     }
     if("MNN" %in% method) {
+        message("[pgx.scBatchIntegrate] single-cell batch correction using MNN...")        
         ## MNN correction
         require(batchelor)
         mnn <- mnnCorrect(X, batch=batch, cos.norm.in=TRUE, cos.norm.out=FALSE)        
         res[["MNN"]] <- assays(mnn)[["corrected"]]
     }
     if("Harmony" %in% method) {
+        message("[pgx.scBatchIntegrate] single-cell batch correction using Harmony...")                
         require(harmony)
         ## Harmony corrections
         nv <- min(ncol(X),30)
@@ -537,6 +543,40 @@ pgx.scBatchCorrect <- function(X, batch,
         res[["Harmony"]] <- (out$u %*% diag(out$d) %*% hm$Z_corr)
         dimnames(res[["Harmony"]]) <- dimnames(X)
     }
+    if("liger" %in% method) {
+        message("[pgx.scBatchIntegrate] single-cell batch correction using LIGER...")
+        require(liger)
+        xlist <- tapply(1:ncol(X), batch, function(i) pmax(2**X[,i]-1,0))
+        liger <- liger::createLiger(xlist, take.gene.union=TRUE)
+        liger <- liger::normalize(liger)
+        ##liger <- liger::selectGenes(liger, var.thresh=1e-8, alpha.thresh=0.999, do.plot=TRUE)
+        ##liger <- liger::selectGenes(liger, num.genes=100, tol=1e-2, do.plot=TRUE)        
+        liger@var.genes <- head(rownames(X)[order(-apply(X,1,sd))],100)
+        liger <- liger::scaleNotCenter(liger)        
+        vg <- liger@var.genes
+        vg
+        xdim <- sapply(xlist,ncol)
+        xdim
+        k=15
+        k <- round(min(30,length(vg)/3,median(xdim/2)))
+        k
+        ## OFTEN GIVES ERROR!!!!!
+        liger <- try( liger::optimizeALS(liger, k=k) )
+        ##liger <- liger::optimizeALS(liger, k=k, lambda=5, nrep=3)
+        ##liger  <- liger::online_iNMF(liger, k=k, miniBatch_size=1000, max.epochs = 5)
+        if(class(liger)=="try-error") {
+            ## res[["LIGER"]] <- NULL
+        } else {
+            liger <- liger::quantile_norm(liger)
+            ##liger <- liger::quantile_norm(liger, knn_k=round(k/2), min_cells=k, dims.use=1:k)
+            ##liger <- louvainCluster(liger, resolution = 0.25)
+            ##liger <- runUMAP(liger, distance='cosine', n_neighbors=30, min_dist=0.3)
+            cX <- t(liger@H.norm %*% liger@W)
+            dim(cX)
+            cat("[pgx.scBatchIntegrate] WARNING:: LIGER returns smaller matrix")
+            res[["LIGER"]] <- cX
+        }
+    }
     if(length(res)==1) {
         res <- res[[1]]
     }
@@ -546,8 +586,8 @@ pgx.scBatchCorrect <- function(X, batch,
 ## qc.filter=FALSE;filter.a=2.5;sct=FALSE
 ## qc.filter=FALSE;filter.a=2.5;sct=TRUE
 ##nanchors=-1
-pgx.SeuratBatchCorrect <- function(counts, batch, qc.filter=FALSE,
-                                   nanchors=-1, sct=FALSE)
+pgx.SeuratBatchIntegrate <- function(counts, batch, qc.filter=FALSE,
+                                     nanchors=-1, sct=FALSE)
 {    
     ##
     ## From Seurat vignette: Integration/batch correction using
@@ -557,7 +597,7 @@ pgx.SeuratBatchCorrect <- function(counts, batch, qc.filter=FALSE,
     library(Seurat)
     dim(counts)
     nbatch <- length(unique(batch))
-    message("[pgx.SeuratIntegration] Processing ",nbatch," batches...")        
+    message("[pgx.SeuratBatchIntegrate] Processing ",nbatch," batches...")        
     obj.list <- list()
     i=1
     b=batch[1]
@@ -597,33 +637,33 @@ pgx.SeuratBatchCorrect <- function(counts, batch, qc.filter=FALSE,
         if(nanchors>0) anchor.features=nanchors ## really?
     }
     
-    message("[pgx.SeuratIntegration] Finding anchors...")
+    message("[pgx.SeuratBatchIntegrate] Finding anchors...")
     options(future.globals.maxSize = 8*1024^3) ## set to 8GB
     ##NUM.CC=10;k.filter=10
     NUM.CC = max(min(20, min(table(batch))-1),1)
     NUM.CC
-    ndims <- sapply(obj.list,ncol)
-    mindim <- max(min(ndims)-1,1)
-    mindim
+    bdims <- sapply(obj.list,ncol)
+    kmax <- max(min(bdims)-1,1)
+    kmax
     normalization.method = ifelse(sct,"SCT","LogNormalize")
-    message("[pgx.SeuratIntegration] NUM.CC = ",NUM.CC)
-    message("[pgx.SeuratIntegration] normalization.method = ",normalization.method)
+    message("[pgx.SeuratBatchIntegrate] NUM.CC = ",NUM.CC)
+    message("[pgx.SeuratBatchIntegrate] normalization.method = ",normalization.method)
     anchors <- FindIntegrationAnchors(
         obj.list, dims = 1:NUM.CC,
-        k.filter = min(200,mindim),
-        k.anchor = min(5,mindim),
-        k.score = min(30,mindim),
+        k.filter = min(200,kmax),
+        k.anchor = min(5,kmax),
+        k.score = min(30,kmax),
         anchor.features = anchor.features,
         normalization.method = normalization.method,
         verbose = FALSE)
     
-    message("[pgx.SeuratIntegration] Integrating data...")
+    message("[pgx.SeuratBatchIntegrate] Integrating data...")
     len.anchors <- length(anchors@anchor.features)
-    message("[pgx.SeuratIntegration] number of anchors = ",len.anchors)    
+    message("[pgx.SeuratBatchIntegrate] number of anchors = ",len.anchors)    
 
     integrated <- IntegrateData(
         anchorset = anchors,
-        ##k.weight = min(100,mindim),
+        k.weight = min(100,kmax),  ##  troublesome...
         dims = 1:NUM.CC,
         normalization.method = normalization.method,        
         verbose = FALSE)
@@ -640,6 +680,10 @@ pgx.SeuratBatchCorrect <- function(counts, batch, qc.filter=FALSE,
     zc <- Matrix::which(counts[rownames(mat.integrated),]==0,arr.ind=TRUE)
     mat.integrated[zc] <- 0
 
+    ## set missing to zero...
+    ##mat.integrated[is.nan(mat.integrated)] <- 0
+    mat.integrated[is.na(mat.integrated)] <- 0
+    
     if(!nrow(mat.integrated)==nrow(counts)) {
         cat("WARNING:: number of rows of integrated matrix has changed!")
     }
