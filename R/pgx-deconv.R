@@ -185,7 +185,7 @@ pgx.checkCellTypeMarkers <- function(counts, min.count=3, markers=NULL)
     if(is.null(markers)) {
         markers <- CANONICAL.MARKERS2
     }
-
+    
     ##markers <- markers[order(names(markers))]
     marker.genes <- sort(unique(unlist(markers)))
     marker.genes <- gsub("[-+]$","",marker.genes)
@@ -211,19 +211,19 @@ pgx.checkCellTypeMarkers <- function(counts, min.count=3, markers=NULL)
     rownames(M) <- toupper(rownames(M))
     rownames(X) <- toupper(rownames(X))
     gg <- intersect(rownames(M),rownames(X))
-    counts0 <- counts[match(gg,toupper(rownames(counts))),]
+    counts0 <- counts[match(gg,toupper(rownames(counts))),,drop=FALSE]
     
-    X1 <- 1*(X[gg,] >= min.count)
-    M1 <- M[gg,]
-    check.pos <-  t(pmax(M1,0)) %*% X1 == colSums(pmax(M1,0))
-    
-    check.neg <-  t(pmin(M1,0)) %*% X1 == colSums(pmin(M1,0))
+    X1 <- 1*(X[gg,,drop=FALSE] >= min.count)
+    M1 <- M[gg,,drop=FALSE]
+    check.pos <-  t(pmax(M1,0)) %*% X1
+    check.neg <-  t(pmin(M1,0)) %*% X1
+    check.pos <-  t(M1 == +1) %*% X1 / colSums(M1 == 1)    
+    check.neg <-  t(M1 == -1) %*% X1 / colSums(M1 == -1)
     table(check.pos)
     table(check.neg)
     check <- 1*t(check.pos & check.neg)
 
-    list(check=check, marker.expr=counts0, markers=markers,
-         plotMarkers=plotMarkers)
+    list(check=check, marker.expr=counts0, markers=markers)
 }
 
 
