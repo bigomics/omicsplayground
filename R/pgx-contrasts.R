@@ -94,7 +94,8 @@ pgx.makeStratifiedContrastsDF <- function(data, vars, strata, ref) {
     colnames(G) <- sub("^grp","",colnames(G))
     G <- G[,rownames(contr.matrix)]
     exp.matrix <- G %*% contr.matrix
-
+    rownames(exp.matrix) <- rownames(data)
+    
     ## check levels
     sel <- ( colSums(contr.matrix==-1)>0 &
              colSums(contr.matrix==+1)>0 )
@@ -136,7 +137,8 @@ pgx.makeStratifiedContrasts <- function(Y, strata, ref) {
     colnames(G) <- sub("^grp","",colnames(G))
     G <- G[,rownames(contr.matrix)]
     exp.matrix <- G %*% contr.matrix
-
+    rownames(exp.matrix) <- rownames(Y)
+    
     ## check levels
     sel <- ( colSums(contr.matrix==-1)>0 &
              colSums(contr.matrix==+1)>0 )

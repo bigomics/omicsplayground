@@ -1063,7 +1063,7 @@ gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,
     ##points(jj, rnk[jj], col="grey30",lwd=1, type="h")
     w1 <- ifelse(length(jj)<100,0.5,0.2)
     w1 <- ifelse(length(jj)<50,1,w1)
-    arrows(jj, (y0 - dy), jj, y0, col="grey30", lwd=w1, length=0)
+    arrows(jj, (y0 - dy), jj, y0, col="grey20", lwd=w1*1.1, length=0)
     ##arrows(jj, (y0 - 0.66*dy), jj, y0, col="grey30", lwd=1, length=0)
 
     ## red/blue bar at bottom
