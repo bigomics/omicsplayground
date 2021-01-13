@@ -4,7 +4,7 @@
 ##
 
 
-pgx.getGroups <- function(pgx) {
+pgx.getModelGroups <- function(pgx) {
     model <- pgx$model.parameters$design
     if(is.null(model)) {
         group <- rownames(pgx$model.parameters$exp.matrix)

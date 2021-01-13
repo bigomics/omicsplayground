@@ -4,7 +4,7 @@
 ##
 
 require(org.Hs.eg.db)
-source("../../R/pgx-functions.R")
+source("../R/pgx-functions.R")
 
 
 cat("************************************************************************\n")
@@ -36,6 +36,18 @@ dim(info)
 
 cat("writing to gene-info.csv")
 write.csv(info, file="../../lib/gene-info.csv", row.names=FALSE)
+
+##--------------------------------------------------------
+## Human to mouse translation
+##--------------------------------------------------------
+
+##install.packages("homologene")
+require("homologene")
+
+hs.symbols <- sort(unique(unlist(as.list(org.Hs.egSYMBOL))))
+length(hs.symbols)
+mm <- homologene::human2mouse(hs.symbols)
+head(mm)
 
 
 

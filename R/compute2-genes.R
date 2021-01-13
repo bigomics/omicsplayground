@@ -95,10 +95,6 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
         ## convert sample-wise contrasts to group-wise contrasts
         cat("[compute.testGenesSingleOmics] detecting statistical groups...\n")        
         stat.group <- pgx.getGroups(contr.matrix)
-
-        cat("[compute.testGenesSingleOmics] length(stat.group) = ",length(stat.group),"\n")
-        cat("[compute.testGenesSingleOmics] stat.group = ",stat.group,"\n")
-
         nlev <- length(unique(stat.group))
         if( nlev < nrow(contr.matrix)) {
             cat("replacing contrast matrix...\n")
@@ -117,15 +113,11 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     ##-----------------------------------------------------------------------------
     ## normalize contrast matrix to zero mean and signed sums to one
     ##-----------------------------------------------------------------------------
-
-    cat("[compute.testGenesSingleOmics] dim(contr.matrix) = ",dim(contr.matrix),"\n")
     
     ## take out any empty comparisons
     sel <- (colSums(contr.matrix>0) & colSums(contr.matrix<0))
     contr.matrix <- contr.matrix[,sel,drop=FALSE]
     contr.matrix[is.na(contr.matrix)] <- 0
-
-    cat("[compute.testGenesSingleOmics] dim(contr.matrix) = ",dim(contr.matrix),"\n")
     
     ## normalize?? why??
     for(i in 1:ncol(contr.matrix)) {
@@ -150,24 +142,12 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     } else {
         ## GROUP DESIGN
         ##stat.group[is.na(stat.group)] <- "_"
-
-        cat("[compute.testGenesSingleOmics] length(stat.group) = ",length(stat.group),"\n")
-        cat("[compute.testGenesSingleOmics] rownames(contr.matrix) = ",rownames(contr.matrix),"\n")
-        
-        notk <- which(!stat.group %in% rownames(contr.matrix))
-        
+        notk <- which(!stat.group %in% rownames(contr.matrix))        
         if(length(notk)) {
             stat.group[notk] <- "_"
         }
-
-        cat("[compute.testGenesSingleOmics] length(stat.group) = ",length(stat.group),"\n")
-        cat("[compute.testGenesSingleOmics] stat.group = ",stat.group,"\n")
-
         design <- model.matrix(~ 0 + stat.group )  ## clean design no batch effects...
         colnames(design) <- sub("^stat.group", "", colnames(design))
-
-        cat("[compute.testGenesSingleOmics] dim(design) = ",dim(design),"\n")
-        cat("[compute.testGenesSingleOmics] dim(ngs$samples) = ",dim(ngs$samples),"\n")        
         rownames(design) <- rownames(ngs$samples)
         head(design)
         

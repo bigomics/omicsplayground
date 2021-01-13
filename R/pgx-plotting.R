@@ -841,7 +841,7 @@ pgx.plotExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
     } else  {
         samples <- rownames(expmat)
         ##xgroup <- ngs$samples$group
-        xgroup <- pgx.getGroups(ngs)  ## statistical groups
+        xgroup <- pgx.getModelGroups(ngs)  ## statistical groups
     }
     
     ## currently cast to character... :(
@@ -1895,6 +1895,9 @@ pgx._scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title=""
     if(is.null(type)) {
         type <- c("numeric","factor")[1 + class(var) %in% c("factor","character")]
     }
+    if(is.null(colnames(pos))) {
+        colnames(pos) <- c("x","y")
+    }
     
     ## normalize pos
     xlim0 <- range(pos[,1])
@@ -2095,6 +2098,9 @@ pgx._scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
         type <- c("numeric","factor")[1 + class(var) %in% c("factor","character")]
     }
     label.type <- label.type[1]
+    if(is.null(colnames(pos))) {
+        colnames(pos) <- c("x","y")
+    }
     
     ## automatically set pointsize of dots
     if(is.null(cex)) {
@@ -2409,6 +2415,9 @@ pgx._scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
         i <- as.integer(cut(nr,breaks=c(0,100,500,1000,5000,Inf)))
         cex  <- c(2,1.4,1,0.7,0.4)[i]
     }
+    if(is.null(colnames(pos))) {
+        colnames(pos) <- c("x","y")
+    }
 
     ## normalize pos
     ## normalize pos
@@ -2618,6 +2627,9 @@ pgx._scatterPlotXY.D3 <- function(pos, var=NULL, type=NULL, col=NULL, cex=1,
         opacity=1;label.clusters=FALSE;labels=NULL
         legend.ysp=0.85;legend.pos = "bottomleft"
         title=NULL;nrows=NULL; barscale=0.8
+    }
+    if(is.null(colnames(pos))) {
+        colnames(pos) <- c("x","y")
     }
     if(is.null(xlab))
         xlab <- colnames(pos)[1]

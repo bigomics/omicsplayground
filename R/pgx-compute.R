@@ -55,7 +55,6 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     ##-------------------------------------------------------------------
     guess.log <- (min(counts,na.rm=TRUE) < 0 || max(counts,na.rm=TRUE) < 100)
     guess.log <- guess.log && is.null(X) && (is.null(is.logx) || is.logx==TRUE)
-    guess.log
     if(is.null(is.logx)) is.logx <- guess.log
     if(is.logx) {
         cat("[pgx.createPGX] input assumed log-expression (logarithm)\n")

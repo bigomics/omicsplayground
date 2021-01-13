@@ -394,8 +394,33 @@ randomImputeMissing <- function(x) {
     return(x)
 }
 
-probe2symbol <- function(probes, type=NULL, org="human") {
+human2mouse.SLLOWWW <- function(x){
+    require("biomaRt")
+    human = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+    mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl")
+    genesV2 = getLDS(attributes = c("hgnc_symbol"),
+                     filters = "hgnc_symbol",
+                     values = x , mart = human,
+                     attributesL = c("mgi_symbol"),
+                     martL = mouse,
+                     uniqueRows=T)
+    genesx <- unique(genesV2[, 2])
+    ## Print the first 6 genes found to the screen
+    print(head(genesx))
+    return(genesx)
+}
 
+human2mouse <- function(x) {
+    require(homologene)
+    homologene::human2mouse(x)
+}
+mouse2human <- function(x) {
+    require(homologene)
+    homologene::mouse2human(x)
+}
+
+probe2symbol <- function(probes, type=NULL, org="human")
+{
     require("AnnotationDbi")
     if(mean(grepl("^ENS",probes))>0.5) {
         probes <- gsub("[.].*","",probes)
@@ -1323,31 +1348,36 @@ extremeCorrelation <- function(query_sig, ref_set, n=200) {
     return(rho)
 }
 
-##s=symbol
-alias2hugo <- function(s) {
+##s=symbol;org="hs"
+alias2hugo <- function(s, org=NULL, na.orig=TRUE) {
     require(org.Hs.eg.db,quietly=TRUE)
     require(org.Mm.eg.db,quietly=TRUE)
     hs.symbol <- unlist(as.list(org.Hs.egSYMBOL))
     mm.symbol <- unlist(as.list(org.Mm.egSYMBOL))
-    is.human <- mean(s %in% hs.symbol,na.rm=TRUE) > mean(s %in% mm.symbol,na.rm=TRUE)
-    is.human
+    if(is.null(org)) {
+        is.human <- mean(s %in% hs.symbol,na.rm=TRUE) > mean(s %in% mm.symbol,na.rm=TRUE)
+        org <- ifelse(is.human,"hs","mm")
+    }
+    org    
     ##eg <- sapply(lapply(s, get, env=org.Hs.egALIAS2EG),"[",1)
-    s.na = which(!is.na(s) & s!="" & s!=" ")
-    s1 <- s[s.na]
-    if(is.human) {
+    nna = which(!is.na(s) & s!="" & s!=" ")
+    s1 <- trimws(s[nna])
+    hugo <- NULL
+    if(org == "hs") {
         eg <- sapply(mget(s1, env=org.Hs.egALIAS2EG, ifnotfound=NA),"[",1)
         eg[is.na(eg)] <- "unknown"
         hugo <- sapply(mget(eg, env=org.Hs.egSYMBOL, ifnotfound=NA),"[",1)
-    } else {
+    } else if(org == "mm") {
         eg <- sapply(mget(s1, env=org.Mm.egALIAS2EG, ifnotfound=NA),"[",1)
         eg[is.na(eg)] <- "unknown"
         hugo <- sapply(mget(eg, env=org.Mm.egSYMBOL, ifnotfound=NA),"[",1)        
+    } else {
+        stop("[alias2hugo] invalid organism")
     }
     jj <- which(is.na(hugo))
-    if(length(jj)) hugo[jj] <- s1[jj]
-    hugo
+    if(na.orig && length(jj)) hugo[jj] <- s1[jj]
     hugo0 <- rep(NA,length(s))
-    hugo0[s.na] <- hugo
+    hugo0[nna] <- hugo
     return(hugo0)
 }
 

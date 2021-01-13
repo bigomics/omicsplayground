@@ -115,8 +115,8 @@ gset.fisher <- function(genes, genesets, background=NULL,
     pv <- rep(NA, length(genesets))
     names(pv) <- names(genesets)
     if(method=="fast.fisher") {
-        require(corpora)
-        pv <- fisher.pval( a, (a+b), c, (c+d), alternative="greater")
+        ## require(corpora)
+        pv <- corpora::fisher.pval( a, (a+b), c, (c+d), alternative="greater")
     } else if(method=="fisher") {
         if(mc) {
             ##cat("multicore testing\n")
