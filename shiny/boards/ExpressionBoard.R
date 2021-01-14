@@ -199,7 +199,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
         fdr = 0.05
         ##fdr = as.numeric(input$gx_fdr)
-        star.symbols = sapply(1:20,function(i) paste(rep("★",i),collapse=""))
+        star.symbols = sapply(1:20,function(i) paste(rep("\u2605",i),collapse=""))
         stars = c("",star.symbols)[ 1 + rowSums(mx.q <= fdr, na.rm=TRUE)]        
         
         ## recalculate group averages???
