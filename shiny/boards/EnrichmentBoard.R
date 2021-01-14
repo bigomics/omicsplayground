@@ -257,8 +257,7 @@ EnrichmentBoard <- function(input, output, session, env)
             qv[is.na(qv)] = 0.999
             fx[is.na(fx)] = 0
 
-            stars.symbols = sapply(1:20,function(i) paste(rep("★",i),collapse=""))
-            ##stars.symbols = sapply(1:20,function(i) paste(rep("*",i),collapse=""))
+            stars.symbols = sapply(1:20,function(i) paste(rep("\u2605",i),collapse=""))
             stars = c("",stars.symbols)[1+rowSums(qv < 0.05)]                
             names(stars) <- rownames(mx)
             
