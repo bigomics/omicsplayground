@@ -58,7 +58,7 @@ LoadingBoard <- function(input, output, session,
         auth <- callModule(
             ##FirebaseAuthenticationModule, "auth")
             FirebaseAuthenticationModule, "auth",
-            firebase=firebase, firebase2=firebase2)
+            firebase = firebase, firebase2 = firebase2)
     } else if(AUTHENTICATION == "register") {
         auth <- callModule(
             RegisterAuthenticationModule, "auth",
@@ -67,8 +67,7 @@ LoadingBoard <- function(input, output, session,
         username <- NULL
         is.anonymous <- Sys.getenv("SHINYPROXY_USERGROUPS")=="ANONYMOUS"
         if(!is.anonymous) username <- Sys.getenv("SHINYPROXY_USERNAME")
-        auth <- callModule( NoAuthenticationModule, "auth",
-                           username=username)
+        auth <- callModule(NoAuthenticationModule, "auth", username=username)
     } else {
         ## none
         auth <- callModule(NoAuthenticationModule, "auth")
@@ -269,6 +268,7 @@ LoadingBoard <- function(input, output, session,
 
         deletePGX <- function() {
             if(input$confirmdelete) {
+
                 cat(">>> deleting",pgxfile,"\n")
                 pgxfile2 <- paste0(pgxfile1,"_")  ## mark as deleted
                 file.rename(pgxfile1, pgxfile2)
@@ -294,13 +294,46 @@ LoadingBoard <- function(input, output, session,
             }
         }
 
-        shinyalert(
-            paste("Delete this dataset?"),
-            paste("Are you sure you want\nto delete '",pgxfile,"'?"),
-            confirmButtonText = "Delete",
-            showCancelButton = TRUE,
-            callbackR = deletePGX,
-            inputId = "confirmdelete")
+
+        sel  <- which(sub("[.]pgx$","",PGXINFO()$dataset) == sub("[.]pgx$","",pgxfile))
+        this.pgxinfo <- PGXINFO()[sel,]
+
+
+        owner1 = "owner"
+        owner1 <- this.pgxinfo$owner
+        if(is.null(owner1) || is.na(owner1)) owner1 <- ""
+        is.owner <- (owner1 == auth$name())
+        ## must be owner and not empty/anonymous
+        not.anonymous <- !is.na(auth$name()) && auth$name()!="" 
+        
+        is.uploaded <- this.pgxinfo$collection == "uploaded"
+        ##allow.delete <- is.owner && !is.na(owner1) && owner1!="" && 
+        ##    !is.na(auth$name() && auth$name()!="" )
+        allow.delete <- is.uploaded && !not.anonymous
+        
+        message("[LoadingBoard::@deletebutton] WARNING:: ",pgxfile," owned by ",owner1," \n")
+        message("[LoadingBoard::@deletebutton] current user = ",auth$name()," \n")
+        message("[LoadingBoard::@deletebutton] allow.delete = ",allow.delete," \n")
+        message("[LoadingBoard::@deletebutton] is.owner = ",is.owner," \n")
+        
+        allow.delete = TRUE
+        if(!allow.delete) {
+            message("[LoadingBoard::@deletebutton] WARNING:: ",pgxfile," not owned by ",auth$name()," \n")
+            shinyalert::shinyalert(
+                            title = "Error!",
+                            text = "You do not have permission to delete this dataset",
+                            type = "error"
+                        )
+        } else {
+            shinyalert::shinyalert(
+                "Delete this dataset?",
+                paste("Are you sure you want\nto delete '",pgxfile,"'?"),
+                confirmButtonText = "Delete",
+                showCancelButton = TRUE,
+                callbackR = deletePGX,
+                inputId = "confirmdelete")
+        }
+
         
     })
     

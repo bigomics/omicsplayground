@@ -112,7 +112,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         rownames(gx) <- tagDuplicates(rownames(gx))
         if(!is.null(row.annot)) rownames(row.annot) <- rownames(gx)
     }
-    if(split==1) split <- NULL
+    if(!is.null(split) && split==1) split <- NULL
     
     par(xpd=FALSE)
     jj1 <- 1:nrow(gx)
@@ -1172,17 +1172,6 @@ clustermap <- function(x, nc=6, nr=6, na=4, q=0.80, p=2,
         heatmap.3(kx, Colv=as.dendrogram(h2), Rowv=as.dendrogram(h1),
                   col=my.col, labRow=labrow, labCol=labcol,
                   ColSideColors=cc0, ...)
-
-        if(0) {
-            heatmap3(kx, Colv=as.dendrogram(h2), Rowv=as.dendrogram(h1),
-                     col=my.col, labRow=labrow, labCol=labcol,
-                     ColSideColors=cc0)
-            heatmap.3( kx, Colv=as.dendrogram(h2), Rowv=as.dendrogram(h1),
-                      col=my.col, symm=TRUE, trace="none", rowsep=j1, colsep=j2,
-                      sepwidth=c(1,1)*0.10, ## density.info="none", keysize=1,
-                      labRow=labrow, labCol=labcol,
-                      ColSideColors=cc0,  ... )
-        }
         ##side.height.fraction=0.1*nh )
         ##dev.off()
     }

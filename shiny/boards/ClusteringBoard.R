@@ -562,7 +562,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             show_colnames = show_colnames; column_title_rot=crot;
             show_rownames = nrownames; softmax=0;
             ## side.height.fraction=0.03+0.055*NCOL(annot); 
-            labRow=NULL; cexCol=cex1; cexRow=cex2; 
+            cexCol=cex1; cexRow=cex2; 
             col.annot=annot; row.annot=NULL; annot.ht=2.2;
             main=main; nmax=-1
         }
@@ -581,7 +581,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                     show_colnames = show_colnames, column_title_rot=crot,
                     show_rownames = nrownames, softmax=0,
                     ## side.height.fraction=0.03+0.055*NCOL(annot), 
-                    labRow=NULL, cexCol=cex1, cexRow=cex2, 
+                    cexCol=cex1, cexRow=cex2, 
                     col.annot=annot, row.annot=NULL, annot.ht=2.2,
                     main=main, nmax=-1)
     })
