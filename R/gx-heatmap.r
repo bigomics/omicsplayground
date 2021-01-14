@@ -112,7 +112,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         rownames(gx) <- tagDuplicates(rownames(gx))
         if(!is.null(row.annot)) rownames(row.annot) <- rownames(gx)
     }
-    if(split==1) split <- NULL
+    if(!is.null(split) && split==1) split <- NULL
     
     par(xpd=FALSE)
     jj1 <- 1:nrow(gx)
