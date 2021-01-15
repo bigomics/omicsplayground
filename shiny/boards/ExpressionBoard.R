@@ -727,9 +727,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
         par(mfrow=c(1,1), mar=c(6,4,3,0)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
         par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(1,0,0,0))
-        pgx.plotGeneExpression(ngs, gene, comp=comp, grouped=grouped,
-                               max.points=2000, names=TRUE,
-                               logscale=logscale, srt=srt)    
+        pgx.plotExpression(ngs, gene, comp=comp, grouped=grouped,
+                           max.points=2000, names=TRUE,
+                           logscale=logscale, srt=srt)    
     })
 
     callModule( plotModule,
@@ -822,7 +822,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
             if(i > length(top.up)) { frame() }
             gene = sub(".*:","",top.up[i])
-            pgx.plotGeneExpression(
+            pgx.plotExpression(
                 ngs, gene, comp=comp, grouped=grouped, max.points=1000,
                 collapse.others=TRUE, showothers=showothers,
                 ylab = ylab, xlab="",
@@ -832,10 +832,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
         }
 
         for(i in 1:nc) {
-
             if(i > length(top.down)) { frame() }
             gene = sub(".*:","",top.down[i])
-            pgx.plotGeneExpression(
+            pgx.plotExpression(
                 ngs, gene, comp=comp, grouped=grouped,  max.points=1000,
                 collapse.others=TRUE, showothers=showothers,
                 ylab = ylab, xlab="",

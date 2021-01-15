@@ -787,7 +787,7 @@ EnrichmentBoard <- function(input, output, session, env)
         ngrp <- length(unique(ngs$samples$group))
         srt <- ifelse(!grouped || ngrp>4, 30, 0)
         if(!grouped && ncol(ngs$X) > 15) srt <- 60
-        pgx.plotGeneExpression(
+        pgx.plotExpression(
             ngs, gset, comp=comp0, logscale=TRUE, level="geneset",
             collapse.others=collapse.others, grouped=grouped,
             srt=srt, main="", ylab="gene set enrichment")
@@ -829,7 +829,7 @@ EnrichmentBoard <- function(input, output, session, env)
             grouped <- !input$gs_ungroup2
             srt <- ifelse(!grouped || ngrp>4, 30, 0)
             if(!grouped && ncol(ngs$X) > 15) srt <- 60
-            pgx.plotGeneExpression(
+            pgx.plotExpression(
                 ngs, probe, comp=comp0, logscale=TRUE, level="gene",
                 collapse.others=collapse.others, grouped=grouped,
                 srt=srt, main="")
