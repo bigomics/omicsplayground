@@ -179,6 +179,8 @@ LoadingBoard <- function(input, output, session,
     PGXINFO.FILE <- file.path(PGX.DIR[1], "datasets-info.csv")  ## first folder!!
     PGXINFO  <- reactiveVal(NULL)    
     infofile <- pgx.scanInfoFile(PGX.DIR, file="datasets-info.csv", verbose=TRUE )
+    cat("[LoadingBoard] dim.infofile = ",dim(infofile),"\n")
+
     if(!"collection" %in% colnames(infofile)) {
         infofile$collection <- rep("",nrow(infofile))
     } else {
@@ -186,6 +188,15 @@ LoadingBoard <- function(input, output, session,
     }
     PGXINFO(infofile)
 
+    selectedPGX <- reactive({
+        ##sel <- input$pgxtable_rows_selected
+        sel <- pgxtable$rows_selected()
+        if(is.null(sel) || length(sel)==0) return(NULL)
+        df <- getPGXTable()
+        pgxfile <- as.character(df$dataset[sel])
+        pgxfile <- paste0(sub("[.]pgx$","",pgxfile),".pgx") ## add/replace .pgx
+        pgxfile
+    })
 
     ##=============================================================================
     ##========================== OBSERVE/REACT ====================================
@@ -382,16 +393,6 @@ LoadingBoard <- function(input, output, session,
         if(is.null(sel) || length(sel)==0) return(NULL)
         df <- getPGXTable()
         unlist(lapply(df[sel,],as.character))
-    })
-
-    selectedPGX <- reactive({
-        ##sel <- input$pgxtable_rows_selected
-        sel <- pgxtable$rows_selected()
-        if(is.null(sel) || length(sel)==0) return(NULL)
-        df <- getPGXTable()
-        pgxfile <- as.character(df$dataset[sel])
-        pgxfile <- paste0(sub("[.]pgx$","",pgxfile),".pgx") ## add/replace .pgx
-        pgxfile
     })
 
     currentSection <- reactive({
