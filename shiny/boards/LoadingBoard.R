@@ -180,11 +180,12 @@ LoadingBoard <- function(input, output, session,
     PGXINFO  <- reactiveVal(NULL)    
     infofile <- pgx.scanInfoFile(PGX.DIR, file="datasets-info.csv", verbose=TRUE )
     cat("[LoadingBoard] dim.infofile = ",dim(infofile),"\n")
-
-    if(!"collection" %in% colnames(infofile)) {
-        infofile$collection <- rep("",nrow(infofile))
-    } else {
-        infofile$collection <- ifelse(is.na(infofile$collection),"",infofile$collection)
+    if(!is.null(infofile) && nrow(infofile)) {
+        if(!"collection" %in% colnames(infofile)) {
+            infofile$collection <- rep("",nrow(infofile))
+        } else {
+            infofile$collection <- ifelse(is.na(infofile$collection),"",infofile$collection)
+        }
     }
     PGXINFO(infofile)
 
