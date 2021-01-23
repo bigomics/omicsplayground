@@ -61,7 +61,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
             EXTRA.METHODS1 = c("meta.go","infer","deconv","drugs","wordcloud")
             EXTRA.METHODS2 = c("drugs-combo","connectivity")
             EXTRA.SELECTED = c(EXTRA.METHODS)
-
             
             output$UI <- renderUI({
                 fillCol(

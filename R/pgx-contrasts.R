@@ -22,7 +22,7 @@ pgx.detect_timevar <- function(Y) {
     ttvar
 }
 
-pgx.getGroups <- function(exp.matrix, nmax=3) {
+pgx.getConditions <- function(exp.matrix, nmax=3) {
     ##
     ##
     ##
@@ -200,7 +200,7 @@ makeDirectContrasts <- function(Y, ref, na.rm=TRUE)
     if(all(grepl("_vs_|_VS_",colnames(exp.matrix0)))) {
         exp.matrix0 <- contrastAsLabels(exp.matrix0)
     }
-    group <- pgx.getGroups(exp.matrix0)
+    group <- pgx.getConditions(exp.matrix0)
     table(group)
     if(length(levels(group)) > 0.5*nrow(exp.matrix)) {
         cat("WARNING:: contrast matrix looks degenerate. consider removing a contrast.\n")
@@ -360,7 +360,7 @@ pgx.makeSpecificContrasts <- function(df, contrasts, mingrp=3)
     rownames(K) <- rownames(df)
 
     K0 <- contrastAsLabels(K)
-    group <- pgx.getGroups(K0)
+    group <- pgx.getConditions(K0)
     table(group)
     if(length(levels(group)) > 0.5*nrow(K)) {
         cat("WARNING:: contrast matrix looks degenerate. consider removing a contrast.\n")
