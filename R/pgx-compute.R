@@ -6,7 +6,6 @@
 
 source(file.path(RDIR,"ngs-functions.R"))
 
-
 if(0) {
     is.logx=FALSE;do.cluster=TRUE;auto.scale=TRUE;only.chrom=TRUE
     max.genes=max.genesets=25000;lib.dir=FILES;progress=NULL;only.hugo=1;
@@ -317,6 +316,7 @@ pgx.computePGX <- function(ngs,
     ## contrast matrix
     colnames(ngs$contrasts)
     contr.matrix <- ngs$contrasts
+    contr.matrix <- as.matrix(contr.matrix) ## must be numeric matrix...
 
     ## create groups if not exists (IK: maybe not necessary anymore)
     if(TRUE  && !"group" %in% colnames(ngs$samples)) {
@@ -330,7 +330,7 @@ pgx.computePGX <- function(ngs,
         } else {
             ## stop("sample annotation file must have 'group' column\n")
             cat("creating statistical groups...\n")
-            ngs$samples$group <- pgx.getGroups(contr.matrix, nmax=1)             
+            ngs$samples$group <- pgx.getConditions(contr.matrix, nmax=1)             
         }
     }
     

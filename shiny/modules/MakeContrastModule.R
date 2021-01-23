@@ -47,7 +47,6 @@ MakeContrastUI <- function(id) {
     uiOutput(ns("UI"))
 }
 
-
 MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
 {
     require(DT)

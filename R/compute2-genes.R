@@ -76,6 +76,7 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     ## detect group column if matching all conditions
     grp <- rownames(contr.matrix)
     group.col <- names(which(apply(ngs$samples, 2, function(x) all(grp %in% x))))
+    group.col    
     if(length(group.col)>0) {
         group.col <- group.col[1]
         cat("groups column detected:",group.col,"\n")
@@ -83,26 +84,27 @@ compute.testGenesSingleOmics <- function(ngs, contr.matrix, max.features=1000,
     
     stat.group = NULL
     is.expmatrix <- all(rownames(contr.matrix)==rownames(ngs$samples))
+    is.expmatrix
     if(length(group.col) && !is.na(group.col)) {
 
         cat("contrasts on groups...\n")
         stat.group = as.character(ngs$samples[,group.col])
 
     } else if(is.expmatrix) {
+
         cat("[compute.testGenesSingleOmics] contrasts on samples...\n")
         ##stat.group = rownames(ngs$samples)
-
         ## convert sample-wise contrasts to group-wise contrasts
         cat("[compute.testGenesSingleOmics] detecting statistical groups...\n")        
-        stat.group <- pgx.getGroups(contr.matrix)
+        stat.group <- pgx.getConditions(contr.matrix, nmax=0)
         nlev <- length(unique(stat.group))
+        nlev        
         if( nlev < nrow(contr.matrix)) {
             cat("replacing contrast matrix...\n")
             stat0 <- sort(unique(stat.group))
             contr.matrix <- contr.matrix[match(stat0,stat.group),,drop=FALSE]
             rownames(contr.matrix) <- stat0
-        }        
-
+        }                        
     } else {
         stop("[compute.testGenesSingleOmics] FATAL:: could not set statistical groups!")
     }
