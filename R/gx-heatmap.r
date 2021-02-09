@@ -112,7 +112,8 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         rownames(gx) <- tagDuplicates(rownames(gx))
         if(!is.null(row.annot)) rownames(row.annot) <- rownames(gx)
     }
-    if(!is.null(split) && split==1) split <- NULL
+    if(!is.null(split) && length(split)==1 && split==1) split <- NULL
+    if(!is.null(splitx) && length(splitx)==1 && splitx==1) splitx <- NULL
     
     par(xpd=FALSE)
     jj1 <- 1:nrow(gx)
@@ -173,6 +174,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     ## split rows
     ##--------------------------------------------
     do.split = !is.null(split)
+    do.split
     split.idx = NULL
     if(do.split && class(split)=="numeric" && length(split)==1 ) {
         cor.gx <- cor(t(gx),use="pairwise")
@@ -202,6 +204,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     ## split columns
     ##--------------------------------------------
     do.splitx = !is.null(splitx)
+    do.splitx
     idx2 = NULL
     if(do.splitx && class(splitx)=="numeric" && length(splitx)==1 ) {
         ##require(nclust)

@@ -22,9 +22,10 @@ ConnectivityUI <- function(id) {
         height = 750,
         tabsetPanel(
             id = ns("tabs1"),
-            tabPanel("FC-FC correlation", uiOutput(ns("cmapCorrelation_UI"))),
+            tabPanel("FC correlation", uiOutput(ns("cmapCorrelation_UI"))),
+            tabPanel("FC heatmap", uiOutput(ns("cmapHeatmap_UI"))),            
             tabPanel("Meta-analysis", uiOutput(ns("cmapMetaAnalysis_UI"))),
-            tabPanel("Experiment clustering", uiOutput(ns("cmapClustering_UI")))            
+            tabPanel("Experiment clustering", uiOutput(ns("cmapClustering_UI")))
         )
     )
 }
@@ -696,11 +697,11 @@ ConnectivityBoard <- function(input, output, session, env)
         options = connectivityScoreTable_opts,
         info.width = "150px",
         title = "Similarity scores",
-        height = c(285,720), width = c('auto',1280)
+        height = c(260,720), width = c('auto',1280)
     )
     
     ##============================================================================
-    ## FC-FC correlation/scatter plots
+    ## FC correlation/scatter plots
     ##============================================================================
     
     mfplots=c(4,5)
@@ -773,19 +774,18 @@ ConnectivityBoard <- function(input, output, session, env)
     }
     
     getTopProfiles <- reactive({
-
         ## Get profiles of top-enriched contrasts (not all genes...)
         ##
-        ##
-        
+        ##        
         df <- getConnectivityScores()
         ##if(is.null(df)) return(NULL)
         ##pw <- head(df$pathway,28)
 
         ii=1:100;sigdb="sigdb-archs4.h5"        
+
         ii <- connectivityScoreTable$rows_all()
         req(ii,input$cmap_sigdb)        
-        ii <- head(ii,12)  ## 50??
+        ii <- head(ii,50)  ## 50??
         pw <- df$pathway[ii]
         
         sigdb <- input$cmap_sigdb
@@ -798,8 +798,7 @@ ConnectivityBoard <- function(input, output, session, env)
         var.genes <- unique(c(var.genes, sample(names(fc),ngenes)))  ## add some random        
         F <- getConnectivityMatrix(sigdb, select=pw, genes=var.genes)
         dbg("[getTopProfiles] *** READING H5 *** dim(F)=",dim(F))
-        ## F <- t(t(F) * sign(score))
-        
+        ## F <- t(t(F) * sign(score))        
         pw <- intersect(pw, colnames(F))
         F <- F[,pw,drop=FALSE]
         return(F)        
@@ -819,7 +818,8 @@ ConnectivityBoard <- function(input, output, session, env)
         ct <- res1$name
         F <- getTopProfiles()
         if(NCOL(F)==0) return(NULL)
-
+        F <- F[,1:min(ncol(F),10),drop=FALSE]
+        
         if(input$fcfc_plottype=="scatter") {
             mfplots <- c(2,5)
             cmap_FCFCscatter(fc, F, mfplots, ylab=ct)
@@ -831,50 +831,24 @@ ConnectivityBoard <- function(input, output, session, env)
         
     })
     
-    cmap_FCFCplots.RENDER2 <- reactive({        
-        ngs <- inputData()
-        req(ngs)        
-
-        dbg("[cmap_FCFCplots.RENDER2] reacted")
-        
-        ##ct <- input$cmap_contrast
-        ##fc <- ngs$gx.meta$meta[[ct]]$meta.fx
-        ##names(fc) <- rownames(ngs$gx.meta$meta[[ct]])
-        res1 <- getCurrentContrast()
-        fc <- res1$fc
-        ct <- res1$name
-        F <- getTopProfiles()
-
-        if(input$fcfc_plottype=="scatter") {
-            mfplots <- c(4,7)
-            cmap_FCFCscatter(fc, F, mfplots, ylab=ct)
-        } else {
-            mfplots <- c(5,5)
-            df <- getConnectivityScores()                        
-            cmap_FCFCenplot(fc, F, mfplots, ylab, df)
-        }
-        
-    })
-
     cmap_FCFCplots.opts <- tagList(        
         radioButtons(ns("fcfc_plottype"),"Plot type:",c("scatter","enrichment"),
                      inline=TRUE)
     )
     
-    cmap_FCFCplots_caption = "<b>FC-FC scatter plots.</b> Scatter plots of gene expression foldchange values between two contrasts. Foldchanges that are similar show high correlation, i.e. are close to the diagonal."
+    cmap_FCFCplots_caption = "<b>FC scatter plots.</b> Scatter plots of gene expression foldchange values between two contrasts. Foldchanges that are similar show high correlation, i.e. are close to the diagonal."
     
     callModule(
         plotModule,
         "cmap_FCFCplots", label = "a",
         func = cmap_FCFCplots.RENDER,
-        ##func2 = cmap_FCFCplots.RENDER2,
         func2 = cmap_FCFCplots.RENDER,
         options = cmap_FCFCplots.opts,
-        title = "FC-FC scatter plots",
+        title = "FC scatter plots",
         ##info.text = cmap_connectivitymap_info
         ##caption = cmap_connectivitymap_caption,
         pdf.height=4.5, pdf.width=10, 
-        height = c(320,600), width=c("auto",1280),
+        height = c(360,600), width=c("auto",1280),
         res = c(90,110)
     )
 
@@ -889,9 +863,9 @@ ConnectivityBoard <- function(input, output, session, env)
         F[is.na(F)] <- 0
         dbg("[cumulativeFCtable] dim.F=",dim(F))
 
-        if(NCOL(F)>10) {
-            F <- F[,1:min(10,ncol(F)),drop=FALSE]  ## maximum 10
-        }
+        ## maximum 10??
+        MAXF = 20
+        ## F <- F[,1:min(MAXF,ncol(F)),drop=FALSE]  
 
         ## multiply with sign of rho
         df <- getConnectivityScores()
@@ -918,6 +892,10 @@ ConnectivityBoard <- function(input, output, session, env)
         ##
         F <- cumulativeFCtable()
         req(F)
+
+        MAXF=10
+        F <- F[,1:min(MAXF,ncol(F)),drop=FALSE]
+        
         if(input$cumFCplot_order=="FC") {
             F <- F[order(-abs(F[,1])),]
             F1 <- head(F,45)
@@ -2008,6 +1986,7 @@ ConnectivityBoard <- function(input, output, session, env)
     )
     ##output <- attachModule(output, cmapPairsPlot_module)
 
+
     connectivityScoreTable2.RENDER <- reactive({
         
         df <- getConnectivityScores()
@@ -2073,50 +2052,53 @@ ConnectivityBoard <- function(input, output, session, env)
         title = "Similarity scores",
         height = c(660,700), width = c('auto',1280)
     )
+    
+    ##=============================================================================
+    ## CONNECTIVITY HEATMAP
+    ##=============================================================================
+           
 
-
-    ##=========================================================================
-    ## META-CONNECTIVITY MAP (?????)
-    ##=========================================================================
-
-    computeMetaGSEA.NOTUSED <- function(scores)
-    {
-        ## What does this do????? (IK)
+    connectivityHeatmap.RENDER %<a-% reactive({
         ##
-        ##
-        dim(scores)
+        F <- cumulativeFCtable()
+        req(F)
+        F <- F[,1:min(NCOL(F),45),drop=FALSE]
+        if(input$cumFCplot_order=="FC") {
+            F <- F[order(-abs(F[,1])),]
+            F1 <- head(F,70)
+        } else {
+            F1 <- head(F,70)
+        }
+        ##F1 <- F1[order(rowMeans(F1)),,drop=FALSE]
+        
+        ## par(mfrow=c(1,1), mar=c(0,0,0,0))
+        ## gx.heatmap(t(F1), keysize=0.85, mar=c(6,10))
+        gx.splitmap(t(F1), mar=c(6,20), split=1, cexRow=0.85, cexCol=0.75)
+        ##F1
+        
+    })
+    
+    connectivityHeatmap.opts = tagList(
+    )
+    
+    connectivityHeatmap_info = "<b>The Connectivity Map</b> shows the similarity of the contrasts profiles as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away."
 
-        score.terms <- sub("[ ]\\(.*","",sub(".*\\] ","",rownames(scores)))
-        score.terms <- strsplit(score.terms, split="[:\\|]")
-        score.words <- lapply(score.terms, function(m) unlist(strsplit(m,split="[ _-]")))
-        
-        all.terms <- names(which(table(unlist(score.terms))>=8))
-        all.words <- names(which(table(unlist(score.words))>=8))
-        length(all.terms)
-        length(all.words)
-        
-        ss <- rownames(scores)
-        terms.gmt <- lapply(all.terms, function(a) ss[grep(a,score.terms,fixed=TRUE)] )
-        words.gmt <- lapply(all.words, function(a) ss[grep(a,score.words,fixed=TRUE)] )
-        names(terms.gmt) <- all.terms
-        names(words.gmt) <- all.words
-        
-        ##rnk <- scores$score * sign(scores$rho)
-        rnk <- scores$score
-        names(rnk) <- rownames(scores)
-        require(fgsea)
-        ncore <- bpparam()$workers
-        ncore
-        system.time( res1 <- fgsea( terms.gmt, rnk, nperm=10000, nproc=ncore) )
-        system.time( res2 <- fgsea( words.gmt, rnk, nperm=10000, nproc=ncore) )
-        
-        res1 <- res1[order(res1$pval),]
-        res2 <- res2[order(res2$pval),]
-        res1 <- res1[order(-abs(res1$NES)),]
-        res2 <- res2[order(-abs(res2$NES)),]
-        head(res1,20)[,1:5]
-        
-    }
+    connectivityHeatmap_caption = "<b>Connectivity Map.</b> The CMap shows the similarity of the contrasts as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away."
+    
+    callModule(
+        plotModule,
+        "connectivityHeatmap", label = "a",
+        func = connectivityHeatmap.RENDER, ## plotlib="plotly",
+        ## func2 = connectivityHeatmap.RENDER, 
+        options = connectivityHeatmap.opts,
+        title = "Connectivity Heatmap",
+        info.text = connectivityHeatmap_info,
+        ##caption = connectivityHeatmap_caption,
+        pdf.width=12, pdf.height=6,
+        height = c(680,800), width = c('auto',1000),
+        res=90
+    )
+    
     
     ##================================================================================
     ##========================= OUTPUT UI ============================================
@@ -2143,7 +2125,7 @@ ConnectivityBoard <- function(input, output, session, env)
             fillRow(
                 flex = c(1.2,0.05,1),
                 fillCol(
-                    flex = c(1.1,0.03,1),                    
+                    flex = c(1.3,0.03,1),                    
                     plotWidget(ns("cmap_FCFCplots")),
                     br(),
                     tableWidget(ns("connectivityScoreTable"))
@@ -2220,5 +2202,27 @@ ConnectivityBoard <- function(input, output, session, env)
     })
     ##outputOptions(output, "cmapPairsPlot_UI", suspendWhenHidden=FALSE) ## important!!!
 
+    ## ------------------------------------------------------
+    ## --------------------- tab4 ---------------------------
+    ## ------------------------------------------------------
+
+    cmapHeatmap_caption = paste(
+        "<b>(a)</b>",connectivityHeatmap_caption,
+        "<b>(b)</b>",connectivityScoreTable_info
+    )
+
+    require(sortable)
+    
+    output$cmapHeatmap_UI <- renderUI({
+        fillCol(
+            height = fullH,
+            flex=c(NA,0.05,2), ##height = 370,
+            div(HTML(cmapHeatmap_caption), class="caption"),
+            br(),
+            plotWidget(ns("connectivityHeatmap"))
+        )
+    })
+    ##outputOptions(output, "cmapPairsPlot_UI", suspendWhenHidden=FALSE) ## important!!!
+    
     
 } ## end-of-Board 

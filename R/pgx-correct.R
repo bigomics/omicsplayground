@@ -7,8 +7,7 @@
 ##
 ##
 
-## max.rho=0.3;batch.par=batch.cov="*";max.iter=10;hc.top=50;partype=NULL;bio.correct=c("mito","ribo","cc.phase","cc.score", "sva","pca","hc");pca.correct=hc.correct=1;sva.correct=mnn.correct=nnm.correct=0
-bio.correct=c("mito","ribo","cc.phase","cc.score","gender")
+## max.rho=0.3;batch.par=batch.cov="*";max.iter=10;hc.top=50;partype=NULL;pca.correct=hc.correct=1;sva.correct=mnn.correct=nnm.correct=0;bio.correct=c("mito","ribo","cc.phase","cc.score","gender")
 pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
                                    batch.par="*", ## batch.cov="*",
                                    lib.correct = TRUE,
@@ -179,15 +178,19 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
     mod1x <- matrix(1,ncol(cX),1)
     if(!is.null(mod1)) mod1x <- cbind(1, mod1)
 
+    B <- mod1x[,0]  ## accumulate batch-correction matrix
+    
     ##--------------------------------------------------------------------
     ## Remove (unwanted) technical experiment effects (libsize, nfeature, etc.)
     ##--------------------------------------------------------------------
     if(lib.correct || full.correct) {
         sel <- grep("libsize|nfeature",colnames(pheno),value=TRUE)
+        sel
         if(length(sel)) {
-            cat("[pgx.superBatchCorrect] Correcting for unwanted technical effects:",sel,"\n")
+            cat("[pgx.superBatchCorrect] Correcting for unwanted library effects:",sel,"\n")
             exp.pheno <- pheno[,sel,drop=FALSE]
             cX <- removeBatchEffect(cX, covariates=exp.pheno, design=mod1x)
+            B <- cbind(B, exp.pheno)
         }
     }
 
@@ -203,6 +206,9 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             for(i in 1:length(p1)) {
                 b1 <- pheno[,p1[i]]
                 cX <- removeBatchEffect(cX, batch=b1, design=mod1x)
+                b1x <- model.matrix( ~b1)[,-1,drop=FALSE]
+                colnames(b1x) <- sub("^b1",paste0(p1[i],"."),colnames(b1x))
+                B <- cbind(B, b1x)
             }
         }
 
@@ -211,6 +217,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             cat("[pgx.superBatchCorrect] Correcting for unwanted biological covariates:",p2,"\n")
             b2 <- pheno[,p2,drop=FALSE]
             cX <- removeBatchEffect(cX, covariates=b2, design=mod1x)
+            B <- cbind(B, b2)
         }
         
         ##out <- pgx.removeBiologicalEffect(cX, pheno, model.par=model.par,
@@ -238,6 +245,10 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             mod1x <- matrix(1,ncol(cX),1)
             if(!is.null(mod1)) mod1x <- cbind(1, mod1)
             cX <- removeBatchEffect(cX, batch=batch, design=mod1x)
+            
+            b1x <- model.matrix( ~batch)[,-1,drop=FALSE]
+            colnames(b1x) <- sub("^batch",paste0(b,"."),colnames(b1x))
+            B <- cbind(B, b1x)
         }
     }
 
@@ -257,6 +268,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             mod1x <- matrix(1,ncol(cX),1)
             if(!is.null(mod1)) mod1x <- cbind(1, mod1)
             cX <- removeBatchEffect(cX, covariates=batch, design=mod1x)
+            B <- cbind(B, batch)
         }
     }
     
@@ -320,6 +332,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
         sv <- try( sva(cX, mod1x, mod0=mod0x, n.sv=n.sv)$sv )
         ##sv <- SmartSVA::smartsva.cpp(cX, mod1x, mod0=mod0x, n.sv=n.sv)$sv
         if(any(class(sv)=="try-error")) {
+            ## try again with little bit of noise...
             a <- 0.01*mean(apply(cX,1,sd))
             cX1 <- cX + a*matrix(rnorm(length(cX)),nrow(cX),ncol(cX))
             sv <- try( sva(cX1, mod1x, mod0=mod0x, n.sv=pmax(n.sv-1,1))$sv )
@@ -327,8 +340,11 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
         if(!any(class(sv)=="try-error")) {
             message("[pgx.superBatchCorrect] Performing SVA correction...")
             ##sv <- svaseq( 2**X, mod1, mod0, n.sv=NULL)$sv
+            rownames(sv) <- colnames(cX)
+            colnames(sv) <- paste0("SV.",1:ncol(sv))
             cX <- removeBatchEffect(cX, covariates=sv, design=mod1x)
             ##cX <- removeBatchEffect(X, covariates=sv)
+            B <- cbind(B, sv)
         }
     }
     ##gx.heatmap(cX, nmax=100, col.annot=phenox, keysize=0.9)
@@ -341,24 +357,22 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
         ii <- 1:99
         niter=0
         nremove=0
+        pX <- NULL
         while(length(ii)>0 && niter<max.iter) {
             nv <- min(10,ncol(cX)-1)
             suppressWarnings(suppressMessages(
-                sv <- irlba::irlba(cX, nv=nv)$v
+                pc <- irlba::irlba(cX, nv=nv)$v
             ))
-            if(1) {
-                sv.rho <- cor(sv,mod1)
-                sv.rho
-                sv.rho <- apply(abs(sv.rho),1,max)
-                ii <- which(sv.rho < max.rho)
-                ii <- ii[ii<which.max(sv.rho)]
-            } else {
-
-            }
+            pc.rho <- cor(pc,mod1)
+            pc.rho
+            pc.rho <- apply(abs(pc.rho),1,max)
+            ii <- which(pc.rho < max.rho)
+            ii <- ii[ ii < which.max(pc.rho) ]
             ii
             if(length(ii)>0) {
                 mod1x <- cbind(1, mod1)
-                cX <- removeBatchEffect(cX, covariates=sv[,ii], design=mod1x)
+                cX <- removeBatchEffect(cX, covariates=pc[,ii], design=mod1x)
+                pX <- cbind( pX, pc[,ii,drop=FALSE] )
                 nremove = nremove +1
             }
             niter <- niter+1
@@ -368,6 +382,10 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             cat("WARNING:: PCA correction did not converge after",nremove,"iterations\n")
         } else {
             cat("Performed",nremove,"iterations of PCA batch correction\n")      
+        }
+        if(!is.null(pX)) {
+            colnames(pX) <- paste0("PC.",1:ncol(pX))
+            B <- cbind(B, pX)  ## update batch correction matrix
         }
     }
 
@@ -379,6 +397,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
         ii <- 1:99
         niter=0
         nremove=0
+        pX <- NULL
         while(length(ii)>0 && niter<max.iter) {
             xx <- head(cX[order(-apply(cX,1,sd)),], hc.top)
             hc <- cutree(hclust(dist(t(xx)),method="ward.D2"),2)
@@ -390,8 +409,10 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             ii
             if(length(ii)>0) {
                 mod1x <- cbind(1,mod1)
-                cX <- removeBatchEffect(cX, covariates=scale(hc), design=mod1x)
-                nremove = nremove +1
+                hc <- scale(hc)
+                cX <- removeBatchEffect(cX, covariates=hc, design=mod1x)
+                pX <- cbind(pX, hc) 
+                nremove = nremove + 1
             }
             niter <- niter+1
         }
@@ -401,6 +422,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
         } else {
             cat("Performed",nremove,"iterations of HC batch correction\n")
         }
+        if(!is.null(pX)) B <- cbind(B, pX)  ## update batch correction matrix
     }
     
     ##--------------------------------------------------------------------
@@ -410,7 +432,8 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
 
     cat("[pgx.superBatchCorrect] almost done!\n")
 
-    res <- list(X=cX, Y=pheno)
+    ## B <- type.convert(B)    
+    res <- list(X=cX, Y=pheno, B=B)
 
     cat("[pgx.superBatchCorrect] done!\n")
     
