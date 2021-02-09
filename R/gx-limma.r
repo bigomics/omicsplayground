@@ -13,35 +13,141 @@ require(limma)
 REF.CLASS = c("ctrl","ctr","control","dmso","nt","0","non","no","ref",
               "wt","wildtype","untreated","normal","false","healthy")
 
-gx.limma <- function(gep, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
+
+gx.limma <- function(X, pheno, B=NULL, 
+                     fdr=0.05, compute.means=TRUE, lfc=0.20,
                      max.na=0.20, ref=REF.CLASS, trend=FALSE, verbose=1 )
+{
+    require(limma)
+    if(0) {
+        fdr=0.05;compute.means=TRUE;lfc=0.20;ref=REF.CLASS
+        max.na=0.2;trend=FALSE;verbose=1
+    }
+    if(sum(duplicated(rownames(X)))>0) {
+        cat("WARNING:: matrix has duplicated rownames\n")
+    }
+    ## detect single sample case
+    is.single = (max(table(pheno))==1)
+    if(is.single) {
+        cat("WARNING:: no replicates, duplicating samples...\n")
+        X <- cbind(X,X)
+        pheno <- c(pheno,pheno)
+    }
+
+    ## filter probes and samples
+    ii <- which( rowMeans(is.na(X)) <= max.na )
+    jj <- which(!is.na(pheno) )
+    if(verbose>0) cat(sum(is.na(pheno)>0),"with missing phenotype\n")
+    X0 <- X[ii,jj]
+    pheno0 <- as.character(pheno[jj])
+    X0 <- X0[!(rownames(X0) %in% c(NA,"","NA")),]
+    if(verbose>0) {
+        cat("analyzing",ncol(X0),"samples\n")
+        cat("testing",nrow(X0),"features\n")
+    }
+
+    ## auto-detect reference
+    pheno.ref <- c()
+    ref.detected <- FALSE
+    ref <- toupper(ref)
+    ## is.ref <- grepl(paste(ref,collapse="|"),pheno0)
+    is.ref <- (toupper(pheno0) %in% toupper(ref))
+    ref.detected <- (sum(is.ref)>0 && sum(!is.ref)>0)    
+
+    ##if(!is.null(ref) && sum( toupper(pheno0) %in% ref)>0 ) {
+    if(ref.detected) {
+        pheno.ref <- unique(pheno0[which(toupper(pheno0) %in% toupper(ref))])
+        if(verbose>0) cat("setting reference to y=",pheno.ref,"\n")
+        bb <- c(pheno.ref, sort(setdiff(unique(pheno0),pheno.ref)) )
+    } else {
+        if(verbose>0) cat("WARNING: could not auto-detect reference\n")
+        bb <- as.character(sort(unique(pheno0)))
+        if(verbose>0) cat("setting reference to first class",bb[1],"\n")
+    }
+    if(length(bb)!=2) {
+        stop("gx.limma::fatal error:only two class comparisons")
+        return
+    }
+
+    ## setup model and perform LIMMA
+    design <- cbind(1, pheno0==bb[2])
+    colnames(design) <- c( "WT", "2vs1" )
+    d1 <- colnames(design)[1]
+    d2 <- colnames(design)[2]
+
+    if(!is.null(B)) {
+        if(verbose>0) cat("augmenting design matrix with:",paste(colnames(B)),"\n")
+        sel <- which(colMeans(B==1)<1) ## take out any constant term
+        design <- cbind(design, B[,sel,drop=FALSE])
+    }
+
+    fit <- lmFit( X0, design)
+    fit <- eBayes(fit, trend=trend)
+    top <- topTable(fit, coef=d2, number=nrow(X0))
+    if("ID" %in% colnames(top)) {
+        rownames(top) <- top$ID
+        top$ID <- NULL
+    }
+    top <- top[rownames(X0),]
+    head(top)
+    
+    ## only significant
+    top <- top[ which(top$adj.P.Val <= fdr & abs(top$logFC)>=lfc ), ]
+    if(verbose>0) cat("found",nrow(top),"significant at fdr=",fdr,"and minimal FC=",lfc,"\n")
+
+    if(compute.means && nrow(top)>0 ) {
+        avg <- t(apply(X0[rownames(top),], 1,
+                         function(x) tapply(x, pheno0, mean, na.rm=TRUE)))
+        avg <- avg[,as.character(bb),drop=FALSE]
+        colnames(avg) <- paste0("AveExpr.",colnames(avg))
+        top <- cbind(top, avg)
+    }
+    top$B <- NULL
+
+    if(is.single) {
+        top$P.Value <- NA
+        top$adj.P.Val <- NA
+        top$t <- NA
+    }
+
+    ## reorder on fold change
+    top <- top[ order(abs(top$logFC),decreasing=TRUE),]
+    ##colnames(top) <-   sub("logFC","logR",colnames(top))
+
+    ## unlist???
+    ##top = do.call(cbind, top)
+    return(top)
+}
+
+gx.limma.SAVE <- function(X, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
+                          max.na=0.20, ref=REF.CLASS, trend=FALSE, verbose=1 )
 {
     require(limma)
     if(0) {
         fdr=0.05;compute.means=TRUE;lfc=0.20;ref=REF.CLASS
         max.na=0.2;ref=REF.CLASS;trend=FALSE;verbose=1
     }
-    if(sum(duplicated(rownames(gep)))>0) {
+    if(sum(duplicated(rownames(X)))>0) {
         cat("WARNING:: matrix has duplicated rownames\n")
     }
     ## detect single sample case
     is.single = (max(table(pheno))==1)
     if(is.single) {
         cat("WARNING:: no replicates, no stats...\n")
-        gep <- cbind(gep,gep)
+        X <- cbind(X,X)
         pheno <- c(pheno,pheno)
     }
 
     ## filter probes and samples
-    ii <- which( rowMeans(is.na(gep)) <= max.na )
+    ii <- which( rowMeans(is.na(X)) <= max.na )
     jj <- which(!is.na(pheno) )
     if(verbose>0) cat(sum(is.na(pheno)>0),"with missing phenotype\n")
-    gep0 <- gep[ii,jj]
+    X0 <- X[ii,jj]
     pheno0 <- as.character(pheno[jj])
-    gep0 <- gep0[!(rownames(gep0) %in% c(NA,"","NA")),]
+    X0 <- X0[!(rownames(X0) %in% c(NA,"","NA")),]
     if(verbose>0) {
-        cat("analyzing",ncol(gep0),"samples\n")
-        cat("testing",nrow(gep0),"features\n")
+        cat("analyzing",ncol(X0),"samples\n")
+        cat("testing",nrow(X0),"features\n")
     }
 
     ## auto-detect reference
@@ -70,14 +176,14 @@ gx.limma <- function(gep, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
     colnames(design) <- c( "WT", "2vs1" )
     d1 <- colnames(design)[1]
     d2 <- colnames(design)[2]
-    fit <- lmFit( gep0, design)
+    fit <- lmFit( X0, design)
     fit <- eBayes(fit, trend=trend)
-    top <- topTable(fit, coef=d2, number=nrow(gep0))
+    top <- topTable(fit, coef=d2, number=nrow(X0))
     if("ID" %in% colnames(top)) {
         rownames(top) <- top$ID
         top$ID <- NULL
     }
-    top <- top[rownames(gep0),]
+    top <- top[rownames(X0),]
     head(top)
     
     ## only significant
@@ -85,7 +191,7 @@ gx.limma <- function(gep, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
     if(verbose>0) cat("found",nrow(top),"significant at fdr=",fdr,"and minimal FC=",lfc,"\n")
 
     if(compute.means && nrow(top)>0 ) {
-        avg <- t(apply(gep0[rownames(top),], 1,
+        avg <- t(apply(X0[rownames(top),], 1,
                          function(x) tapply(x, pheno0, mean, na.rm=TRUE)))
         avg <- avg[,as.character(bb),drop=FALSE]
         colnames(avg) <- paste0("AveExpr.",colnames(avg))
@@ -108,7 +214,7 @@ gx.limma <- function(gep, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
     return(top)
 }
 
-gx.meanFstats <- function(gep, pheno) {
+gx.meanFstats <- function(X, pheno) {
     getF <- function(x,y) {
         ii <- which(!is.na(y))
         y1 <- y[ii]
@@ -123,17 +229,17 @@ gx.meanFstats <- function(gep, pheno) {
     px <- tidy.dataframe(pheno)  ## get variable types correct
     for(p in c("random",colnames(px))) {
         if(p=="random") {
-            y <- sample(c("a","b"), ncol(gep), replace=TRUE)
+            y <- sample(c("a","b"), ncol(X), replace=TRUE)
         } else {
             y <- px[,p]
             p
         }
-        fstat[p] <- getF(gep,y)
+        fstat[p] <- getF(X,y)
     }
     fstat
 }
 
-gx.limmaF <- function(gep, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
+gx.limmaF <- function(X, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
                       max.na=0.20, ref=REF.CLASS, trend=FALSE, verbose=1 )
 {
     require(limma)
@@ -141,27 +247,27 @@ gx.limmaF <- function(gep, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
         fdr=0.05;compute.means=TRUE;lfc=0.20;ref=REF.CLASS;max.na=0.20;
         trend=TRUE;verbose=1
     }
-    if(sum(duplicated(rownames(gep)))>0) {
+    if(sum(duplicated(rownames(X)))>0) {
         cat("matrix has duplicated rownames. please remove.\n")
     }
     ## detect single sample case
     is.single = (max(table(pheno))==1)
     if(is.single) {
         cat("warning: no replicates, no stats...\n")
-        gep <- cbind(gep,gep)
+        X <- cbind(X,X)
         pheno <- c(pheno,pheno)
     }
 
     ## filter probes and samples
-    ii <- which( rowMeans(is.na(gep)) <= max.na )
+    ii <- which( rowMeans(is.na(X)) <= max.na )
     jj <- which(!is.na(pheno) )
     if(verbose>0) cat(sum(is.na(pheno)>0),"with missing phenotype\n")
-    gep0 <- gep[ii,jj]
+    X0 <- X[ii,jj]
     pheno0 <- as.character(pheno[jj])
-    gep0 <- gep0[!(rownames(gep0) %in% c(NA,"","NA")),]
+    X0 <- X0[!(rownames(X0) %in% c(NA,"","NA")),]
     if(verbose>0) {
-        cat("analyzing",ncol(gep0),"samples\n")
-        cat("testing",nrow(gep0),"features\n")
+        cat("analyzing",ncol(X0),"samples\n")
+        cat("testing",nrow(X0),"features\n")
         cat("in",length(unique(pheno0)),"groups\n")
     }
 
@@ -196,10 +302,10 @@ gx.limmaF <- function(gep, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
     colnames(design)
     colnames(design)[2:ncol(design)] <- paste0(levels(pheno1)[-1],"_vs_",levels(pheno1)[1])
     colnames(design) <- gsub("\\(|\\)","",colnames(design))
-    fit <- lmFit( gep0, design)
+    fit <- lmFit( X0, design)
     fit <- eBayes(fit, trend=trend)
-    ##top <- topTable(fit, coef=NULL, number=nrow(gep0))
-    top <- topTableF(fit, number=nrow(gep0))
+    ##top <- topTable(fit, coef=NULL, number=nrow(X0))
+    top <- topTableF(fit, number=nrow(X0))
     head(top)
     top$B <- NULL
     if("ID" %in% colnames(top)) {
@@ -207,17 +313,17 @@ gx.limmaF <- function(gep, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
         top$ID <- NULL
     }
     top <- top[,setdiff(colnames(top),colnames(design)),drop=FALSE]
-    top <- top[rownames(gep0),]
+    top <- top[rownames(X0),]
     
     ## compute average
-    avg <- do.call(cbind,tapply(1:ncol(gep0), pheno1, function(i)
-        rowMeans(gep0[,i,drop=FALSE])))
+    avg <- do.call(cbind,tapply(1:ncol(X0), pheno1, function(i)
+        rowMeans(X0[,i,drop=FALSE])))
     ##top <- cbind( top, avg[rownames(top),])
     if(!"logFC" %in% colnames(top)) {
         maxFC <- apply(avg,1,max,na.rm=TRUE) - apply(avg,1,min,na.rm=TRUE)
         top$logFC <- NULL
         top <- cbind(logFC=maxFC, top)
-        rownames(top) <- rownames(gep0)
+        rownames(top) <- rownames(X0)
     }
     
     ## only significant
@@ -251,15 +357,15 @@ gx.limmaF <- function(gep, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
 
 
 ## two-factorial design, no interaction
-gx.limma.paired <- function(gep, pheno, pair, fdr=0.05, lfc=0.20, ref=REF.CLASS,
+gx.limma.paired <- function(X, pheno, pair, fdr=0.05, lfc=0.20, ref=REF.CLASS,
                             compute.means=FALSE, trend=FALSE )
 {
     ##fdr=0.05;lfc=0.20;ref=REF.CLASS;compute.means=TRUE
     ## LIMMA
     require(limma)
     cat("Paired LIMMA\n")
-    cat("analyzing",ncol(gep),"samples\n")
-    gep <- gep[!(rownames(gep) %in% c(NA,"","NA")),]
+    cat("analyzing",ncol(X),"samples\n")
+    X <- X[!(rownames(X) %in% c(NA,"","NA")),]
     pheno <- as.character(pheno)
     pair  <- as.character(pair)
 
@@ -298,17 +404,17 @@ gx.limma.paired <- function(gep, pheno, pair, fdr=0.05, lfc=0.20, ref=REF.CLASS,
     design <- model.matrix( ~ a + b)
 
     ## perform fitting
-    fit0 <- lmFit( gep, design)
+    fit0 <- lmFit( X, design)
     fit2 <- eBayes(fit0, trend=trend)
 
     ## extract toptable
     bcoef <- grep("^b",colnames(fit2$coefficients))
-    top <- topTable(fit2, coef=bcoef, number=nrow(gep))
+    top <- topTable(fit2, coef=bcoef, number=nrow(X))
     if(colnames(top)[1]=="ID") {  ## old style
         rownames(top) <- top[,"ID"]
         top$ID <- NULL
     }
-    top <- top[rownames(gep),]
+    top <- top[rownames(X),]
 
     ## only significant
     if(fdr < 1) {
@@ -318,25 +424,25 @@ gx.limma.paired <- function(gep, pheno, pair, fdr=0.05, lfc=0.20, ref=REF.CLASS,
     cat("found",nrow(top),"significant at fdr=",fdr,"and minimum logFC=",lfc,"\n")
 
     ## compute means if requested
-    gep.m <- NULL
+    X.m <- NULL
     if(compute.means && nrow(top)>0 ) {
         ff <- paste( pair, pheno, sep="." )
-        gep.m <- t(apply( gep[rownames(top),],1,
+        X.m <- t(apply( X[rownames(top),],1,
                          function(x) tapply(x, ff, mean, na.rm=TRUE)))
         top$AveExpr <- NULL
-        top$AveExpr <- gep.m
+        top$AveExpr <- X.m
     } else {
         ff <- pheno
-        gep.m <- t(apply( gep[rownames(top),],1,
+        X.m <- t(apply( X[rownames(top),],1,
                          function(x) tapply(x, ff, mean, na.rm=TRUE)))
         top$AveExpr <- NULL
-        top$AveExpr <- gep.m
+        top$AveExpr <- X.m
     }
 
     ## fold-change
     jj <- order( -abs(top$logFC) )
     top <- top[jj,]
-    if(!is.null(gep.m)) gep.m <- gep.m[rownames(top),]
+    if(!is.null(X.m)) X.m <- X.m[rownames(top),]
 
     ## results
     top$B <- NULL
@@ -345,15 +451,15 @@ gx.limma.paired <- function(gep, pheno, pair, fdr=0.05, lfc=0.20, ref=REF.CLASS,
 
 ## two-factorial design
 ##ref=c("CTRL","DMSO","NT")
-gx.limma.two.factorial <- function(gep, factors, fdr=0.05, lfc=0.20, trend=FALSE,
+gx.limma.two.factorial <- function(X, factors, fdr=0.05, lfc=0.20, trend=FALSE,
                                    ref=REF.CLASS, compute.means=TRUE)
 {
 
     ## LIMMA
     require(limma)
     cat("Two-factorial LIMMA\n")
-    cat("analyzing",ncol(gep),"samples\n")
-    gep <- gep[!(rownames(gep) %in% c(NA,"","NA")),]
+    cat("analyzing",ncol(X),"samples\n")
+    X <- X[!(rownames(X) %in% c(NA,"","NA")),]
 
     ## create factors
     fct <- vector("list",ncol(factors))
@@ -389,7 +495,7 @@ gx.limma.two.factorial <- function(gep, factors, fdr=0.05, lfc=0.20, trend=FALSE
     colnames(design)[4] <- paste(colnames(factors)[1],colnames(factors)[2],sep="*")
 
     ## perform fitting
-    fit0 <- lmFit( gep, design)
+    fit0 <- lmFit( X, design)
     cc0 <- paste(v1[1],".",paste(rev(levels(fct[[2]])),collapse="vs"),sep="")
     cc1 <- paste(v1[2],".",paste(rev(levels(fct[[2]])),collapse="vs"),sep="")
     cont.matrix <- cbind( c(0,0,1,0), c(0,0,1,1), diff=c(0,0,0,1) )
@@ -399,15 +505,15 @@ gx.limma.two.factorial <- function(gep, factors, fdr=0.05, lfc=0.20, trend=FALSE
     fit2 <- eBayes(fit1, trend=trend)
 
     ## extract toptable
-    top1 <- topTable(fit2, coef=colnames(cont.matrix)[1], number=nrow(gep))
-    top2 <- topTable(fit2, coef=colnames(cont.matrix)[2], number=nrow(gep))
-    top3 <- topTable(fit2, coef=colnames(cont.matrix)[3], number=nrow(gep))
-    top1 <- top1[rownames(gep),]
-    top2 <- top2[rownames(gep),]
-    top3 <- top3[rownames(gep),]
+    top1 <- topTable(fit2, coef=colnames(cont.matrix)[1], number=nrow(X))
+    top2 <- topTable(fit2, coef=colnames(cont.matrix)[2], number=nrow(X))
+    top3 <- topTable(fit2, coef=colnames(cont.matrix)[3], number=nrow(X))
+    top1 <- top1[rownames(X),]
+    top2 <- top2[rownames(X),]
+    top3 <- top3[rownames(X),]
 
     ## only significant
-    kk <- rownames(gep)
+    kk <- rownames(X)
     sig <- decideTests(fit2, p.value=fdr, lfc=lfc )
     vennDiagram(sig, cex=0.8)
     title(sub=paste("fdr=",fdr,sep=""))
@@ -425,10 +531,10 @@ gx.limma.two.factorial <- function(gep, factors, fdr=0.05, lfc=0.20, trend=FALSE
     cat("found",nrow(sig),"significant at fdr=",fdr,"and minimal FC=",lfc,"\n")
 
     ## compute means if requested
-    gep.m <- NULL
+    X.m <- NULL
     if(compute.means && nrow(sig)>0 ) {
         ff <- paste( factors[,1], factors[,2], sep="." )
-        gep.m <- t(apply( gep[rownames(sig),],1,function(x) tapply(x, ff, mean)))
+        X.m <- t(apply( X[rownames(sig),],1,function(x) tapply(x, ff, mean)))
     }
 
     ## fold-change
@@ -441,7 +547,7 @@ gx.limma.two.factorial <- function(gep, factors, fdr=0.05, lfc=0.20, trend=FALSE
     top3 <- top3[jj,]
     sig <- sig[jj,]
     logfc <- logfc[jj,]
-    if(!is.null(gep.m)) gep.m <- gep.m[jj,]
+    if(!is.null(X.m)) X.m <- X.m[jj,]
 
     ## pq-values
     pv <- cbind( top1$P.Value, top2$P.Value, top3$P.Value)
@@ -455,13 +561,13 @@ gx.limma.two.factorial <- function(gep, factors, fdr=0.05, lfc=0.20, trend=FALSE
                       t = rowMeans(tt[,1:2]),
                       P.Value = rowMeans(pv[,1:2]),
                       adj.P.Val = rowMeans(qv[,1:2]),
-                      AveExpr = gep.m
+                      AveExpr = X.m
                       )
 
     ## results
     res <- c()
     res$fdr <- fdr
-    res$means <- gep.m
+    res$means <- X.m
     res$limma <- list( top1, top2, top3)
     names(res$limma) <- colnames(cont.matrix)
     res$sig <- sig

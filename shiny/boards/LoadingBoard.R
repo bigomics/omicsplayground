@@ -454,25 +454,25 @@ LoadingBoard <- function(input, output, session,
             return(NULL)
         }
 
-        ngs <- loadPGX(pgxfile)
+        message("[LoadingBoard::<loadbutton>] loading pgxfile = ",pgxfile)
+        pgx <- loadPGX(pgxfile)
 
-        if(is.null(ngs)) {
+        if(is.null(pgx)) {
             cat("[LoadingBoard::<loadbutton>] ERROR file not found : ",pgxfile,"\n")
             removeModal()
             return(NULL)
         }
         
         ##----------------- update input
-        dbg("[LoadingBoard::<loadbutton>] head.names.NGS=",head(names(ngs)))
-        dbg("[LoadingBoard::<loadbutton>] initializing PGX object")
-        ngs <- pgx.initialize(ngs)
-        if(is.null(ngs)) {
+        message("[LoadingBoard::<loadbutton>] initializing PGX object")
+        pgx <- pgx.initialize(pgx)
+        if(is.null(pgx)) {
             cat("[LoadingBoard::<loadbutton>] ERROR in object initialization\n")
             showNotification("ERROR in object initialization!\n")
             removeModal()
             return(NULL)
         }
-        if(is.null(ngs$name)) ngs$name <- sub("[.]pgx$","",pgx)
+        if(is.null(pgx$name)) pgx$name <- sub("[.]pgx$","",pgxfile)
 
         ##----------------- remove modal??
         if(startup_count>0) {
@@ -480,7 +480,7 @@ LoadingBoard <- function(input, output, session,
             removeModal()
         }
         
-        currentPGX(ngs)
+        currentPGX(pgx)
         dbg("[LoadingBoard::<loadbutton>] ready! \n")
     })
     ##}, ignoreNULL=FALSE )
@@ -673,9 +673,9 @@ LoadingBoard <- function(input, output, session,
     observeEvent( uploaded_pgx(), {
 
         cat("uploaded PGX detected! [LoadingBoard:observe:uploaded_pgx]\n")
-        ngs <- uploaded_pgx()
-        ngs$collection <- "uploaded"
-        currentPGX(ngs)
+        pgx <- uploaded_pgx()
+        pgx$collection <- "uploaded"
+        currentPGX(pgx)
         selectRows(proxy=dataTableProxy(ns("pgxtable")), selected=NULL)
         
         ## removeModal()
@@ -707,7 +707,8 @@ LoadingBoard <- function(input, output, session,
         fn  <- file.path(PGX.DIR,pgxname)
         message("[LoadingBoard::@savedata] saving PGX to ",fn)
         message("[LoadingBoard::@savedata] names(pgx)= ",names(pgx),"\n")
-        
+
+        ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ## Note: Currently we use 'ngs' as object name but want to go
         ## towards 'pgx' as standard name. Actually saving as RDS
         ## should be better.

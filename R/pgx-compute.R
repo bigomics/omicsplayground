@@ -313,15 +313,20 @@ pgx.computePGX <- function(ngs,
     ##======================================================================
     ##======================================================================
 
+    if(!"contrasts" %in% names(ngs)) {
+        stop("[pgx.computePGX] FATAL:: no contrasts in object")
+    }
+    
     ## contrast matrix
     colnames(ngs$contrasts)
     contr.matrix <- ngs$contrasts
     contr.matrix <- as.matrix(contr.matrix) ## must be numeric matrix...
 
-    ## create groups if not exists (IK: maybe not necessary anymore)
-    if(TRUE  && !"group" %in% colnames(ngs$samples)) {
+    ## create groups if not exists. DEPRECATED: maybe not necessary anymore (IK)
+    if(FALSE  && !"group" %in% colnames(ngs$samples)) {
         ct = apply(ngs$samples,2,function(px) mean(px %in% rownames(ngs$contrasts),na.rm=TRUE))
         group.col = which(ct > 0.95)
+        group.col
         if(length(group.col)>0) {
             grp.var = colnames(ngs$samples)[group.col[1]]
             cat(paste0("INFO [pgx-upload] assigning '",grp.var,"' variable as 'group' column\n"))
@@ -338,8 +343,7 @@ pgx.computePGX <- function(ngs,
     ##======================================================================
     ##======================================================================
 
-    ngs$timings <- c()
-    
+    ngs$timings <- c()    
     GENETEST.METHODS = c("ttest","ttest.welch","ttest.rank",
                          "voom.limma","trend.limma","notrend.limma",
                          "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
