@@ -465,8 +465,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         updateSelectInput(session, "hm2_pcvar", choices=cvar, selected="group")        
     })
     
-    hm1_splitmap.RENDER %<a-% reactive({
-    ##hm1_splitmap.RENDER <- reactive({    
+    ##hm1_splitmap.RENDER %<a-% reactive({
+    hm1_splitmap.RENDER <- reactive({    
 
         ##------------------------------------------------------------
         ## ComplexHeatmap based splitted heatmap
@@ -488,9 +488,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             annot = filt$annot        
         }
         zx.clust <- filt$clust    
-
-        dbg("hm1_splitmap.RENDER: 1: dim(zx)=", dim(zx))
-        dbg("hm1_splitmap.RENDER: 1: sum.dup.rownames.zx=", sum(duplicated(rownames(zx))))
         
         show_rownames = TRUE
         ##if(nrow(zx) > 100) rownames(zx) = rep("",nrow(zx))
@@ -553,28 +550,25 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             col.annot=annot; row.annot=NULL; annot.ht=2.2;
             main=main; nmax=-1
         }
-
-        dbg('rendering heatmap: dim(zx)=',dim(zx))
-        dbg('rendering heatmap: table(splitx)=',table(splitx))
-        dbg('rendering heatmap: table(splity)=',table(splity))
-        dbg('rendering heatmap: calling gx.splitmap() ... ')
         
         showNotification('rendering heatmap...')
-
-        gx.splitmap( zx, 
-                    split=splity, splitx=splitx,
-                    mar=c(15,25),
-                    scale=scale.mode, show_legend=show_legend,
-                    show_colnames = show_colnames, column_title_rot=crot,
-                    show_rownames = nrownames, softmax=0,
-                    ## side.height.fraction=0.03+0.055*NCOL(annot), 
-                    cexCol=cex1, cexRow=cex2, 
-                    col.annot=annot, row.annot=NULL, annot.ht=2.2,
-                    main=main, nmax=-1)
+        plt <- grid::grid.grabExpr(
+                         gx.splitmap( zx, 
+                                     split=splity, splitx=splitx,
+                                     mar=c(10,20),
+                                     scale=scale.mode, show_legend=show_legend,
+                                     show_colnames = show_colnames, column_title_rot=crot,
+                                     show_rownames = nrownames, softmax=0,
+                                     ## side.height.fraction=0.03+0.055*NCOL(annot), 
+                                     cexCol=cex1, cexRow=cex2, 
+                                     col.annot=annot, row.annot=NULL, annot.ht=2.2,
+                                     main=main, nmax=-1)
+                     )
+        plt
     })
 
-    hm2_splitmap.RENDER %<a-% reactive({
-    ## hm2_splitmap.RENDER <- reactive({
+    ##hm2_splitmap.RENDER %<a-% reactive({
+    hm2_splitmap.RENDER <- reactive({
 
         ##------------------------------------------------------------
         ## iHeatmap based splitted heatmap
@@ -703,7 +697,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     })
     
     output$hm1_splitmap <- renderPlot({
-        hm1_splitmap.RENDER()
+        grid.draw(hm1_splitmap.RENDER())
         ## plot(sin)
     }, res=90)
     
@@ -731,9 +725,11 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             PDFFILE = paste0(gsub("file","plot",tempfile()),".pdf")            
             dbg("[ClusteringBoard] hm_splitmap_downloadPDF: exporting SWITCH to PDF...")
             ##showNotification("exporting to PDF")            
-            if(input$hm_plottype %in% c("ComplexHeatmap","static")) {
+            if(1 && input$hm_plottype %in% c("ComplexHeatmap","static")) {
                 pdf(PDFFILE, width=10, height=8)
-                print(hm1_splitmap.RENDER())
+                grid.draw(hm1_splitmap.RENDER())
+                ##print(hm1_splitmap.RENDER())
+                ##hm1_splitmap.RENDER()
                 dev.off()
             } else {
                 save_iheatmap(hm2_splitmap.RENDER(), filename=PDFFILE,
@@ -752,11 +748,12 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         filename = "plot.png",
         content = function(file) {
             PNGFILE = paste0(gsub("file","plot",tempfile()),".png")            
-            dbg("[ClusteringBoard] hm_splitmap_downloadPDF:: exporting SWITCH to PNG...")            
+            dbg("[ClusteringBoard] hm_splitmap_downloadPDF:: exporting SWITCH to PNG...")
             ##showNotification("exporting to PNG")
-            if(input$hm_plottype %in% c("ComplexHeatmap","static")) {
+            if(1 && input$hm_plottype %in% c("ComplexHeatmap","static")) {
                 png(PNGFILE, width=800, height=600, pointsize=24)
-                print(hm1_splitmap.RENDER())  ## should be done inside render for base plot...
+                grid.draw(hm1_splitmap.RENDER())
+                ##print(hm1_splitmap.RENDER())  ## should be done inside render for base plot...
                 ##hm1_splitmap.RENDER()  ## should be done inside render for base plot...
                 ##plot(sin)
                 dev.off()
