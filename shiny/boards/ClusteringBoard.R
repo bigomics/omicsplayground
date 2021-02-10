@@ -1138,11 +1138,17 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ##zx <- filt$grp.mat[,]
         zx <- filt$mat[,]    
         grp <- input$hm_pcvar
-        if(!(grp %in% colnames(ngs$Y))) grp <- "group"
-        y <- ngs$Y[colnames(zx),grp]
+        if(grp %in% colnames(ngs$Y)) {
+            y <- ngs$Y[colnames(zx),grp]
+        } else if("group" %in% colnames(ngs$Y)) {
+            y <- ngs$Y[colnames(zx),"group"]            
+        } else {
+            y <- ngs$model.parameters$group
+        }
         zx <- t(apply(zx,1,function(x) tapply(x,y,mean,na.rm=TRUE)))   
-        if(input$hm_pcscale) { zx <- t(scale(t(zx))) }
-        
+        if(input$hm_pcscale) {
+            zx <- t(scale(t(zx)))
+        }
         rr <- isolate(reactiveValuesToList(hm_parcoord.ranges))
         nrange <- length(rr)
         for(i in names(rr)) hm_parcoord.ranges[[i]] <- NULL

@@ -265,8 +265,6 @@ infotext =
         ##
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
-        
-        dbg("getSingleSampleEnrichment:: called\n")
 
         ## select samples
         X = ngs$X
@@ -285,17 +283,14 @@ infotext =
         names(y) <- rownames(X)
         table(y)
         
-        dbg("getSingleSampleEnrichment:: 1")
-        
         ## expression by group
-        grp = ngs$samples[colnames(X),"group"]
+        ##grp = ngs$samples[colnames(X),"group"]
+        grp <- ngs$model.parameters$group
         groups = unique(grp)
         gX <- sapply( groups, function(g) rowMeans(X[,which(grp==g),drop=FALSE]))
         colnames(gX) = groups
         dim(gX)
         dim(ngs$X)
-
-        dbg("getSingleSampleEnrichment:: 2")
         
         ## for large datasets pre-grouping is faster
         ss.bygroup  <- calcSingleSampleValues(gX, y, method=c("rho","gsva"))
@@ -316,8 +311,6 @@ infotext =
             ss.bysample <- cbind(ss.bysample, rho=ss1)
         }
 
-        dbg("getSingleSampleEnrichment:: 3")
-
         if(do.gsva) {
             if(do.exact) {
                 ##ss.bysample <- calcSingleSampleValues(X[,1:250], y, method=c("rho","gsva"))
@@ -329,8 +322,6 @@ infotext =
                 ss.bysample <- cbind(ss.bysample, gsva=ss1)
             }
         }
-
-        dbg("getSingleSampleEnrichment:: done!\n")
         
         res <- list( by.sample=ss.bysample, by.group=ss.bygroup)
         return(res)
@@ -891,7 +882,8 @@ infotext =
         pos = ngs$tsne2d[colnames(gx),]
         gx = gx - min(gx,na.rm=TRUE) + 0.001 ## subtract background
         dim(gx)
-        grp <- ngs$samples[colnames(gx),"group"]
+        ##grp <- ngs$samples[colnames(gx),"group"]
+        grp <- ngs$model.parameters$group
         zx <- t(apply(gx,1,function(x) tapply(x,as.character(grp),mean)))
         gx <- gx[order(-apply(zx,1,sd)),,drop=FALSE]
         rownames(gx) = sub(".*:","",rownames(gx))

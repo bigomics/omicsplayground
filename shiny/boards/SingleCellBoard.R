@@ -132,8 +132,10 @@ immune cell types, expressed genes and pathway activation."
         updateSelectInput(session, "sc_dcmethod", choices=dcmethods, selected=dcsel)
         updateSelectInput(session, "sc_dcmethod2", choices=dcmethods, selected=dcsel)
 
-        grpvars <- colnames(ngs$samples)
-        updateSelectInput(session, "sc_group2", choices=grpvars, selected="group")        
+        grpvars <- c("<ungrouped>",colnames(ngs$samples))
+        sel <- grpvars[1]
+        if(ncol(ngs$X) > 30) sel <- grpvars[2]
+        updateSelectInput(session, "sc_group2", choices=grpvars, selected=sel)        
         
     })
 
@@ -685,7 +687,7 @@ immune cell types, expressed genes and pathway activation."
         tipify(selectInput(ns("sc_dcmethod2"),"method:", choices=NULL),
                "Choose a method for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("sc_group2"), "group by:", "group", selected = "group"),
+        tipify(selectInput(ns("sc_group2"), "group by:", "group", selected = NULL),
                "Group the samples/cells by grouping factor.",
                placement="top", options=list(container="body"))
     )
@@ -944,8 +946,6 @@ immune cell types, expressed genes and pathway activation."
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
 
-        dbg("[SingleCellBoard::observe] 123")
-
         ##if(is.null(input$sc_crosstaboptions)) return(NULL)
         pheno0 <- grep("group|sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
         pheno0 <- grep("sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
@@ -988,16 +988,13 @@ immune cell types, expressed genes and pathway activation."
     ##output$sc_markersplot <- renderPlot({
     sc_markers.plotFUNC %<a-% reactive({
         ##if(!input$tsne.all) return(NULL)
-        require(RColorBrewer)
-        
+        require(RColorBrewer)        
         ngs <- inputData()
         req(ngs)
-        
-        dbg("[SingleCellBoard::sc_markers.plotFUNC] called")
 
         clust.pos <- pfGetClusterPositions()
         if(is.null(clust.pos)) return(NULL)
-        pos <- ngs$tsne2d
+        ##pos <- ngs$tsne2d
         pos <- clust.pos
         
         ##markers <- ngs$families[["CD family"]]
@@ -1023,6 +1020,7 @@ immune cell types, expressed genes and pathway activation."
             jj <- match(markers,toupper(ngs$genes$gene_name))
             pmarkers <- intersect(rownames(ngs$genes)[jj],rownames(ngs$X))
             gx <- ngs$X[pmarkers,rownames(pos),drop=FALSE]
+
         } else if(input$sc_mrk_level=="geneset") {
             ##markers <- ngs$families[["Immune checkpoint (custom)"]]
             markers <- COLLECTIONS[[1]]
@@ -1045,9 +1043,14 @@ immune cell types, expressed genes and pathway activation."
             cat("fatal error")
             return(NULL)
         }
+
+        if(!"group" %in% names(ngs$model.parameters)) {
+            stop("[sc_markers.plotFUNC] FATAL: no group in model.parameters")
+        }
                
         ## prioritize gene with large variance (groupwise)
-        grp <- as.character(ngs$samples[rownames(pos),"group"])
+        ##grp <- as.character(ngs$samples[rownames(pos),"group"])
+        grp <- ngs$model.parameters$group[rownames(pos)]
         zx <- t(apply(gx,1,function(x) tapply(x,grp,mean)))
         gx <- gx[order(-apply(zx,1,sd)),,drop=FALSE]
         gx <- gx - min(gx,na.rm=TRUE) + 0.01 ## subtract background??    
@@ -1234,8 +1237,8 @@ immune cell types, expressed genes and pathway activation."
         req(ngs)
         xgenes <- ngs$genes[rownames(ngs$X),]$gene_name
         genes <- sort(as.character(xgenes))
-        g1 <- grep("^CD4|^CD8",genes,value=TRUE)[1]
-        g2 <- grep("^CD79|^CD3[DEG]|^CD37",genes,value=TRUE)[1]
+        g1 <- grep("^CD4|^CD8",genes,value=TRUE,ignore.case=TRUE)[1]
+        g2 <- grep("^CD79|^CD3[DEG]|^CD37",genes,value=TRUE,ignore.case=TRUE)[1]
         if(length(g1)==0) g1 <- genes[1]
         if(length(g2)==0) g2 <- genes[2]
         updateSelectizeInput(session, "sc_cytovar1", choices=genes, selected=g1, server=TRUE)
