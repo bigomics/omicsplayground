@@ -29,8 +29,9 @@ LoadingUI <- function(id) {
 }
 
 LoadingBoard <- function(input, output, session, 
-                          max.limits=c("samples"=1000,"comparisons"=20,"genes"=19999),
-                          authentication="none", firebase=NULL, firebase2=NULL)
+                         max.limits = c("samples"=1000,"comparisons"=20,"genes"=19999),
+                         enable_delete = TRUE, enable_save = TRUE,
+                         authentication="none", firebase=NULL, firebase2=NULL)
 {
     ns <- session$ns ## NAMESPACE
     
@@ -104,6 +105,15 @@ LoadingBoard <- function(input, output, session,
     }
     
     output$inputsUI <- renderUI({        
+
+        delete_button <- NULL
+        if(enable_delete) {
+            delete_button <- tipify( actionButton(
+                ns("deletebutton"), label=NULL, icon=icon("trash"),
+                style='padding:2px 1px 1px 1px; font-size:140%; color: #B22222; width:30px;'
+            ),"Delete the selected dataset.", placement="bottom")
+        }
+
         ui <- tagList(
             useShinyalert(),  # Set up shinyalert
             p(strong("Dataset info:")),
@@ -122,10 +132,7 @@ LoadingBoard <- function(input, output, session,
                     style='padding:2px 1px 1px 1px; font-size:140%; width:30px;'
                 ),"Download CSV files (counts.csv, samples.csv, contrasts.csv).",
                 placement="bottom"),
-                tipify( actionButton(
-                    ns("deletebutton"), label=NULL, icon=icon("trash"),
-                    style='padding:2px 1px 1px 1px; font-size:140%; color: #B22222; width:30px;'
-                ),"Delete the selected dataset.", placement="bottom")
+                delete_button
             ),
             br(),br(),
             tipify( actionLink(ns("showfilter"), "show filters", icon=icon("cog", lib = "glyphicon")),
@@ -210,6 +217,7 @@ LoadingBoard <- function(input, output, session,
         pgxfile1 = file.path(pgx.path,pgxfile)
         pgxfile1
         ngs <- NULL
+        pgx <- NULL
         if(file.exists(pgxfile1)) {
             message("[LoadingBoard::loadPGX] loading ",pgxfile)
             ##withProgress(message='loading...', value=0.8,
@@ -218,7 +226,8 @@ LoadingBoard <- function(input, output, session,
             cat("[LoadingBoard::loadPGX] error file not found : ",pgxfile)
             return(NULL)
         }
-        return(ngs)
+        if(!is.null(ngs)) return(ngs)
+        if(!is.null(pgx)) return(pgx)
     }
     
     output$downloadpgx <- downloadHandler(
@@ -678,13 +687,18 @@ LoadingBoard <- function(input, output, session,
         currentPGX(pgx)
         selectRows(proxy=dataTableProxy(ns("pgxtable")), selected=NULL)
         
+        savedata_button <- NULL
+        if(enable_save) {
+            savedata_button <- actionButton(ns("savedata"), "Save my data", icon=icon("save"))
+        }
+        
         ## removeModal()
         showModal( modalDialog(
             HTML("<b>Ready!</b><br>You can now start exploring your data. Tip: to avoid computing again, save it to your data onto the server or download the binary PGX file now."),
             title = NULL,
             size = "s",
             footer = tagList(
-                actionButton(ns("savedata"), "Save my data", icon=icon("save")),
+                savedata_button,
                 downloadButton(ns("downloadpgx2"), "Download PGX", icon=icon("download")),
                 ## actionButton(ns("sharedata"), "Share with others", icon=icon("share-alt")),
                 modalButton("Start!")

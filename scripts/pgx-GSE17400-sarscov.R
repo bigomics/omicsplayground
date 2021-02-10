@@ -117,7 +117,6 @@ ngs$genes = genes
 ngs <- pgx.clusterSamples(ngs, perplexity=8, skipifexists=FALSE, prefix="C")
 head(ngs$samples)
 
-
 ##-------------------------------------------------------------------
 ## Create contrasts 
 ##-------------------------------------------------------------------

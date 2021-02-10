@@ -129,7 +129,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
         dbg("[ClusteringBoard::observe] updating hm_samplefilter")
         dbg("[ClusteringBoard::observe] head(levels)=",head(levels))
-
         updateSelectInput(session, "hm_samplefilter", choices=levels)
         
         if(DEV && !is.null(ngs$gset.meta$matrices) ) {
@@ -178,14 +177,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         req(ngs)
         req(input$hm_level)
         ###if(is.null(input$hm_level)) return(NULL)
-        choices = names(ngs$families)
-
-        dbg("[ClusteringBoard::observe] input$hm_level=",input$hm_level)
-        dbg("[ClusteringBoard::observe] dim(ngs$counts)=",dim(ngs$counts))
-        dbg("[ClusteringBoard::observe] dim(ngs$gsetX)=",dim(ngs$gsetX))
-        dbg("[ClusteringBoard::observe] length(choices)=",length(choices))
-        dbg("[ClusteringBoard::observe] length(COLLECTIONS)=",length(COLLECTIONS))
-        
+        choices = names(ngs$families)        
         if(input$hm_level=="geneset") {
             dbg("[ClusteringBoard::observe] change to COLLECTIONS")            
             nk <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))
@@ -193,10 +185,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         }
         choices <- c("<custom>",choices)
         choices <- sort(unique(choices))
-
-        dbg("[ClusteringBoard::observe] updating hm_features")
-        dbg("[ClusteringBoard::observe] length(choices)=",length(choices))
-        dbg("[ClusteringBoard::observe] head(choices)=",head(choices))
         updateSelectInput(session, "hm_features", choices=choices)
     })
     
@@ -268,15 +256,16 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         kk <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
         zx <- zx[,kk,drop=FALSE]    
         
-        if( input$hm_level=="gene" && "chr" %in% names(ngs$genes)
-           && input$hm_filterXY ) {
+        if( input$hm_level=="gene" &&
+            "chr" %in% names(ngs$genes) &&
+            input$hm_filterXY )
+        {
             ## Filter out X/Y chromosomes before clustering
             chr.col <- grep("^chr$|^chrom$",colnames(ngs$genes))
             chr <- ngs$genes[rownames(zx),chr.col]
             not.xy <- !(chr %in% c("X","Y",23,24)) & !grepl("^X|^Y|chrX|chrY",chr)
             table(not.xy)
             zx <- zx[which(not.xy), ]
-            dim(zx)
         }
 
         if(input$hm_excludedown && input$hm_level=="geneset") {
@@ -312,8 +301,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         if(do.split && splitvar %in% colnames(ngs$samples)) {
             dbg("[ClusteringBoard:getTopMatrix] splitting by phenotype: ",splitvar)
             grp <- ngs$samples[colnames(zx),splitvar]
+            table(grp)
         }
-        table(grp)
 
         if(do.split && splitvar %in% rownames(ngs$X)) {
             dbg("[ClusteringBoard:getTopMatrix] splitting by gene: ",splitvar)
@@ -341,7 +330,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             topmode <- "sd"
         }
         if(!do.split && topmode=="specific") topmode <- "sd"
-        
+        grp.zx <- NULL        
         if(topmode=="pca") {
             dbg("[ClusteringBoard:getTopMatrix] splitting by PCA")
             require(irlba)
@@ -367,11 +356,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ## sample cluster specifice gene prioritazion
             ##
             ##grp <- ngs$samples[colnames(zx),"cluster"]
-            table(grp)
-
-            dbg("[ClusteringBoard:getTopMatrix] head.grp=",head(grp))
-            dbg("[ClusteringBoard:getTopMatrix] dim.zx=",dim(zx))
-
             grp.zx <- t(apply(zx, 1, function(x) tapply(x, grp, mean)))
             if(length(table(grp))==1) {
                 grp.zx <- t(grp.zx)
@@ -420,33 +404,32 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         samples = colnames(zx) ## original sample list
         
         ## ------------- calculate group summarized (for what???)
-        if(1) { 
-            grpvar = "group"
-            gg.grp = ngs$samples[colnames(zx),grpvar]
-            if(0) {
-                grp.zx = t(apply( zx, 1, function(x) tapply(x, gg.grp, mean)))
-                grp.annot = annot[match(colnames(zx),gg.grp),,drop=FALSE] ## NEED RETHINK!!!
-                rownames(grp.annot) = colnames(zx)
-            } else {
-                
-                cat("[ClusteringBoard:getTopMatrix] gg.grp = ",gg.grp,"\n")
-                cat("[ClusteringBoard:getTopMatrix] dim(zx) = ",dim(zx),"\n")
-                cat("[ClusteringBoard:getTopMatrix] colnames(zx) = ",colnames(zx),"\n")
-                
-                grp.zx = tapply( colnames(zx), gg.grp, function(k)
-                    rowMeans(zx[,k,drop=FALSE],na.rm=TRUE))
-                grp.zx = do.call( cbind, grp.zx)
-                ## take most frequent term as group annotation value
-                most.freq <- function(x) names(sort(-table(x)))[1]
-                grp.annot = tapply( rownames(annot), gg.grp, function(k) {
-                    f <- apply(annot[k,,drop=FALSE],2,function(x) most.freq(x))
-                    w.null <- sapply(f,is.null)
-                    if(any(w.null))  f[which(w.null)] <- NA
-                    unlist(f)
-                })
-                grp.annot = data.frame(do.call( rbind, grp.annot))
-                grp.annot = grp.annot[colnames(grp.zx),]
-            }
+        grp.zx <- NULL
+        if("group" %in% colnames(ngs$samples)) { 
+            gg.grp = ngs$samples[colnames(zx),"group"]
+        } else {
+            gg.grp = ngs$model.parameters$group
+            ##annot$group <- gg.grp
+        }
+        
+        if(0) {
+            grp.zx = t(apply( zx, 1, function(x) tapply(x, gg.grp, mean)))
+            grp.annot = annot[match(colnames(zx),gg.grp),,drop=FALSE] ## NEED RETHINK!!!
+            rownames(grp.annot) = colnames(zx)
+        } else {
+            grp.zx = tapply( colnames(zx), gg.grp, function(k)
+                rowMeans(zx[,k,drop=FALSE],na.rm=TRUE))
+            grp.zx = do.call( cbind, grp.zx)
+            ## take most frequent term as group annotation value
+            most.freq <- function(x) names(sort(-table(x)))[1]
+            grp.annot = tapply( rownames(annot), gg.grp, function(k) {
+                f <- apply(annot[k,,drop=FALSE],2,function(x) most.freq(x))
+                w.null <- sapply(f,is.null)
+                if(any(w.null))  f[which(w.null)] <- NA
+                unlist(f)
+            })
+            grp.annot = data.frame(do.call( rbind, grp.annot))
+            grp.annot = grp.annot[colnames(grp.zx),]
         }
 
         dbg("[ClusteringBoard:getTopMatrix] done!")
@@ -482,8 +465,12 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         updateSelectInput(session, "hm2_pcvar", choices=cvar, selected="group")        
     })
     
-    ##hm1_splitmap.RENDER %<a-% reactive({
-    hm1_splitmap.RENDER <- reactive({    
+    hm1_splitmap.RENDER %<a-% reactive({
+    ##hm1_splitmap.RENDER <- reactive({    
+
+        ##------------------------------------------------------------
+        ## ComplexHeatmap based splitted heatmap
+        ##------------------------------------------------------------
         
         ngs <- inputData()
         alertDataLoaded(session,ngs)
@@ -586,12 +573,16 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                     main=main, nmax=-1)
     })
 
-    hm2_splitmap.RENDER <- reactive({
+    hm2_splitmap.RENDER %<a-% reactive({
+    ## hm2_splitmap.RENDER <- reactive({
 
+        ##------------------------------------------------------------
+        ## iHeatmap based splitted heatmap
+        ##------------------------------------------------------------
         ngs <- inputData()
         req(ngs)
         
-        cat("<module-clustering:hm2_splitmap.RENDER> reacted\n")
+        message("[ClusteringBoard] hm2_splitmap.RENDER: reacted\n")
 
         ## -------------- variable to split samples        
         scale = ifelse(input$hm_scale=="relative","row.center","none")    
@@ -638,8 +629,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         }
         ##genetips = rownames(X)
         
-        cat("<module-clustering:hm2_splitmap.RENDER> plotting\n")            
-
+        message("[ClusteringBoard] hm2_splitmap.RENDER: plotting\n")
+        
         showNotification('rendering iHeatmap...')
 
         plt <- pgx.splitHeatmapFromMatrix(
@@ -648,8 +639,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             row_annot_width=0.03, rowcex=rowcex,
             colcex=colcex )
        
-        cat("<module-clustering:hm2_splitmap.RENDER> done\n")
-        
+        message("[ClusteringBoard] hm2_splitmap.RENDER: done\n")        
         ## DOES NOT WORK...
         ##plt <- plt %>%
         ## config(toImageButtonOptions = list(format='svg', height=800, width=800))
@@ -722,7 +712,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     })
 
     hm_splitmap.switchRENDER <- reactive({    
-        cat("<module_intersect::hm_splitmap.switchRENDER\n")
+        message("[ClusteringBoard] hm_splitmap.switchRENDER\n")
         ##req(input$hm_plottype)
         p = NULL
         if(input$hm_plottype %in% c("ComplexHeatmap","static") ) {
@@ -739,7 +729,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         content = function(file) {
             ##PDFFILE = hm_splitmap_module$.tmpfile["pdf"]  ## from above!
             PDFFILE = paste0(gsub("file","plot",tempfile()),".pdf")            
-            dbg("hm_splitmap_pdf:: exporting SWITCH to PDF...")
+            dbg("[ClusteringBoard] hm_splitmap_downloadPDF: exporting SWITCH to PDF...")
             ##showNotification("exporting to PDF")            
             if(input$hm_plottype %in% c("ComplexHeatmap","static")) {
                 pdf(PDFFILE, width=10, height=8)
@@ -750,28 +740,30 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                               vwidth=1000, vheight=800)
             }
             if(WATERMARK) {
-                cat("adding watermark to PDF...\n")
+                dbg("[ClusteringBoard] adding watermark to PDF...\n")
                 addWatermark.PDF(PDFFILE) ## from pgx-modules.R
             }            
-            dbg("hm_splitmap_pdf:: exporting done...")
+            dbg("[ClusteringBoard] hm_splitmap_downloadPDF: exporting done...")
             file.copy(PDFFILE,file)        
         }
     )
-
+    
     hm_splitmap_downloadPNG <- downloadHandler(
         filename = "plot.png",
         content = function(file) {
             PNGFILE = paste0(gsub("file","plot",tempfile()),".png")            
-            dbg("hm_splitmap_pdf:: exporting SWITCH to PNG...")
+            dbg("[ClusteringBoard] hm_splitmap_downloadPDF:: exporting SWITCH to PNG...")            
             ##showNotification("exporting to PNG")
             if(input$hm_plottype %in% c("ComplexHeatmap","static")) {
-                png(PNGFILE, width=600, height=600, pointsize=14)
+                png(PNGFILE, width=800, height=600, pointsize=24)
                 print(hm1_splitmap.RENDER())  ## should be done inside render for base plot...
+                ##hm1_splitmap.RENDER()  ## should be done inside render for base plot...
+                ##plot(sin)
                 dev.off()
             } else {
                 save_iheatmap(hm2_splitmap.RENDER(), filename=PNGFILE,  vwidth=1000, vheight=800)
             }
-            dbg("hm_splitmap_png:: exporting done...")
+            dbg("[ClusteringBoard] hm_splitmap_downloadPNG: exporting done...")            
             file.copy(PNGFILE,file)        
         }
     )
@@ -798,17 +790,17 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     hm_splitmap_module <- callModule(
         plotModule,
         id = "hm_splitmap",
-        func  = hm_splitmap.switchRENDER, ## ns=ns,
+        func = hm_splitmap.switchRENDER, ## ns=ns,
         ## func2 = hm_splitmap.switchRENDER, ## ns=ns,
         show.maximize = FALSE,
         plotlib = "generic",
-        renderFunc="renderUI",
-        outputFunc="uiOutput",
+        renderFunc = "renderUI",
+        outputFunc = "uiOutput",
         download.fmt = c("pdf","png"),
         options = hm_splitmap_opts,
         height = fullH-100, width='100%',
         pdf.width=10, pdf.height=8, 
-        title="Clustered Heatmap",
+        title ="Clustered Heatmap",
         info.text = hm_splitmap_text,
         info.width="350px",
         download.pdf = hm_splitmap_downloadPDF,
@@ -867,21 +859,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ## take full matrix
         zx <- getFilteredMatrix()
 
-        if(0) {
-            zx <- as.matrix(ngs$X)
-            kk <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
-            zx <- zx[,kk,drop=FALSE]
-            ## --------------- apply feature filter
-            gg = ngs$families[[1]]
-            if(input$hm_features != "<all>") {
-                gg = ngs$families[[input$hm_features]]
-                jj <- match(toupper(gg), toupper(ngs$genes$gene_name))
-                gg = ngs$genes$gene_name[setdiff(jj,NA)]
-                pp = filterProbes(ngs$genes, gg)
-                zx = zx[intersect(pp,rownames(zx)),]
-            }
-        }
-        
         ntop = 1000
         ntop = as.integer(input$hm_ntop2)    
         zx = zx[order(-apply(zx,1,sd)),,drop=FALSE]  ## OK?
@@ -893,39 +870,36 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         if("normalize" %in% input$hmpca_options) {
             zx <- scale(t(scale(t(zx))))
         }
-        pdim = 2
+        clustmethod="tsne";pdim=2
         do3d <- ("3D" %in% input$hmpca_options)
         pdim = c(2,3)[ 1 + 1*do3d]
         
         pos = NULL
         force.compute = FALSE
         clustmethod = input$hm_clustmethod
-        if(clustmethod=="fixed" && !force.compute) {
+        clustmethod0 <- paste0(clustmethod,pdim,"d")
+        
+        if(clustmethod=="default" && !force.compute) {
             if(pdim==2 && !is.null(ngs$tsne2d) ) {
                 pos <- ngs$tsne2d[colnames(zx),]
             } else if(pdim==3 && !is.null(ngs$tsne3d) ) {
                 pos <- ngs$tsne3d[colnames(zx),]
             }
-        } else if("cluster" %in% names(ngs) &&
-                  clustmethod %in% names(ngs$cluster$pos) )  {
-            showNotification(paste("switching to ",clustmethod," layout...\n"))
-            pos <- ngs$cluster$pos[[clustmethod]]
-            if(pdim==2 && clustmethod=="pca") pos <- pos[,1:2]
-            if(pdim==3 && clustmethod=="pca") pos <- pos[,1:3]
-
+        } else if( clustmethod0 %in% names(ngs$cluster$pos))  {
+            showNotification(paste("switching to ",clustmethod0," layout...\n"))
+            pos <- ngs$cluster$pos[[clustmethod0]]
+            if(pdim==2) pos <- pos[,1:2]
+            if(pdim==3) pos <- pos[,1:3]
         } else  {
-            showNotification(paste("computing ",clustmethod,"...\n"))
-            
+            showNotification(paste("computing ",clustmethod,"...\n"))            
             perplexity = max(1,min((ncol(zx)-1)/3, 30))	
             perplexity
-
-            res <- pgx.clusterSamplesFromMatrix(
-                zx, perplexity=perplexity, is.logx=TRUE,
-                ntop=999999, sv.rank=-1, prefix="C",         
-                kclust=1, prior.count=NULL, 
-                dims=pdim, find.clusters=FALSE,
-                row.center=TRUE, row.scale=FALSE,
-                method=clustmethod)
+            res <- pgx.clusterMatrix(
+                zx, dims = pdim, perplexity = perplexity, 
+                ntop = 999999, prefix = "C",         
+                find.clusters = FALSE, kclust = 1,                 
+                row.center = TRUE, row.scale = FALSE,
+                method = clustmethod)
             if(pdim==2) pos <- res$pos2d
             if(pdim==3) pos <- res$pos3d
         }
@@ -933,7 +907,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         pos = scale(pos) ## scale
         ##colnames(pos) = paste0("dim",1:ncol(pos))
         ##rownames(pos) = colnames(zx)
-
+        
         idx <- NULL
         if(FALSE) {
             ## should be relatively fast in sample space...
@@ -1107,7 +1081,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ##
         ## conditionalPanel("input.hm_features == '<custom>'", ns=ns,
         div( class="pro-feature",
-            tipify( radioButtons( ns('hm_clustmethod'),"Layout:",c("fixed","tsne","pca","umap"),inline=TRUE),
+            tipify( radioButtons( ns('hm_clustmethod'),"Layout:",c("default","tsne","pca","umap"),inline=TRUE),
                    "Choose the layout method for clustering to visualise.",
                    placement="right", options = list(container = "body")),
             tipify( radioButtons( ns('hm_ntop2'),"Ntop:",c(100,1000,4000,9999),inline=TRUE,selected=1000),
@@ -1129,7 +1103,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
     pca_caption_static = "<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of samples as a scatterplot in reduced dimension (2D or 3D). Samples that are similar are clustered near to each other, while samples with different expression are positioned farther away. Groups of samples with similar profiles will appear as <i>clusters</i> in the plot."
 
-    ##hm_PCAplot_module <- plotModule(
     callModule(
         plotModule, 
         id = "hm_PCAplot",
@@ -1396,7 +1369,7 @@ displays the expression levels of selected genes across all conditions in the an
     })
 
 
-    getClustannotCorrelation <- reactive({
+    getClustAnnotCorrelation <- reactive({
         
         ngs <- inputData()
         req(ngs)
@@ -1435,7 +1408,7 @@ displays the expression levels of selected genes across all conditions in the an
             ref = t(expandAnnotationMatrix(ngs$Y))
         }
         if(is.null(ref)) {
-            cat("<clustering:getClustannotCorrelation> WARNING:: ref error\n")
+            cat("<clustering:getClustAnnotCorrelation> WARNING:: ref error\n")
             return(NULL)
         }
         
@@ -1474,8 +1447,8 @@ displays the expression levels of selected genes across all conditions in the an
             grp <- tapply( toupper(rownames(zx)), idx, list)  ## toupper for mouse!!
             gmt <- GSETS[rownames(rho)]
             bg.genes <- toupper(rownames(X))
-            dbg("[getClustannotCorrelation] bg.genes=",head(bg.genes))
-            dbg("[getClustannotCorrelation] head(gmt[[1]])=",head(gmt[[1]]))
+            dbg("[getClustAnnotCorrelation] bg.genes=",head(bg.genes))
+            dbg("[getClustAnnotCorrelation] head(gmt[[1]])=",head(gmt[[1]]))
 
             P <- c()
             for(i in 1:ncol(rho)) {
@@ -1502,7 +1475,7 @@ displays the expression levels of selected genes across all conditions in the an
 
     clustannot_plots.PLOTLY <- reactive({
         require(RColorBrewer)
-        rho = getClustannotCorrelation()
+        rho = getClustAnnotCorrelation()
         ##if(is.null(rho)) return(NULL)
         req(rho)
         
@@ -1576,7 +1549,7 @@ displays the expression levels of selected genes across all conditions in the an
                                 showarrow = FALSE, align = 'right')
             ##layout(margin = c(0,0,0,0))
         }
-
+        
         if(length(plot_list) <= 4) {
             nrows = ceiling(length(plot_list)/2 )
         } else {
@@ -1622,7 +1595,7 @@ displays the expression levels of selected genes across all conditions in the an
     
     clustannot_table.RENDER <- reactive({
         
-        rho = getClustannotCorrelation()
+        rho = getClustAnnotCorrelation()
         if(is.null(rho)) return(NULL)
         
         ##rownames(rho) = shortstring(rownames(rho),50)

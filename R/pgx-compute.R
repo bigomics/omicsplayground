@@ -263,9 +263,12 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     if(do.cluster) {
         cat("[pgx.createPGX] clustering samples...\n")        
         ##if(!is.null(progress)) progress$inc(0.01, detail = "clustering")
+        perplexity=30
         perplexity <- max(1,min(30,round(ncol(ngs$counts)/4)))
         perplexity=NULL
-        ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, perplexity=perplexity)
+        ## ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, perplexity=perplexity)
+        ngs <- pgx.clusterSamples2(ngs, dims=c(2,3), perplexity=perplexity,
+                                   methods=c("pca","tsne","umap"))
         head(ngs$samples)
         table(ngs$samples$cluster)
 
