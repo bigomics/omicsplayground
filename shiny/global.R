@@ -5,7 +5,7 @@
 
 ## we may eventually migrate all OPTIONS into this file
 
-message("[] reading global.R ...")
+message("[MAIN] reading global.R ...")
 
 ##OPG     = "~/Playground/omicsplayground"
 OPG     = ".."
@@ -17,4 +17,21 @@ PGX.DIR = file.path(OPG,"data")
 USER_MODE = "pro"
 DEV       = FALSE
 WATERMARK = FALSE
-DEBUG     = TRUE
+DEBUG     = FALSE
+
+if(0) {
+    TITLE           = "Omics Playground"
+    AUTHENTICATION  = "none"
+    ##AUTHENTICATION = password
+    ENABLE_UPLOAD   = TRUE
+    ENABLE_SAVE     = FALSE
+    ENABLE_DELETE   = FALSE
+    MAX_SAMPLES     = 20
+    MAX_COMPARISONS = 5
+    MAX_GENES       = 19999
+    WATERMARK       = TRUE
+    ##BOARDS_ENABLED = load,view,clust,expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap
+    ##BOARDS_ENABLED = load,view,clust,expr,cor,enrich,func
+    BOARDS_DISABLED = c("tcga","multi")
+    ##BOARDS_DISABLED = tcga,multi,sig,isect,bio
+}

@@ -19,11 +19,7 @@ message("\n\n")
 message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
 message("###############################################################")
-message("\n")
 
-##DEBUG = FALSE
-##DEBUG = TRUE
-message("DEBUG = ",DEBUG)
 
 message("\n")
 message("************************************************")
@@ -54,11 +50,15 @@ message("*********** SETTING GLOBAL VARIABLES **********")
 message("***********************************************")
 
 source("global.R")
-cat("OPG =",OPG,"\n")
-cat("RDIR =",RDIR,"\n")
-cat("FILES =",FILES,"\n")
-cat("FILESX =",FILESX,"\n")
-cat("PGX.DIR =",PGX.DIR,"\n")
+
+message("OPG =",OPG)
+message("RDIR =",RDIR)
+message("FILES =",FILES)
+message("FILESX =",FILESX)
+message("PGX.DIR =",PGX.DIR)
+
+message("DEBUG = ",DEBUG)
+message("WATERMARK = ",WATERMARK)
 
 src.local=TRUE  ## need???
 src.local=FALSE  ## need???
