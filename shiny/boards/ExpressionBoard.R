@@ -932,28 +932,42 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
         
         ##comp <- head(comp,75)  ## maximum 75!!!
+        i=1
+        F <- list()
+        Q <- list()
+        for(i in 1:length(comp)) {
+            
+            test = GX.DEFAULTTEST
+            test = input$gx_testmethod
+            if(is.null(test)) return(NULL)
+            res = getDEGtable(ngs, testmethods=test, comparison=i, add.pq=TRUE)
+            
+            fc.gene = res[,grep("^gene$|^gene_name$",colnames(res))]
+            ##pv.col = grep("p.val|pval|meta.p",colnames(res),ignore.case=TRUE)[1]
+            qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
+            fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]
+            qval = res[,qv.col]
+            fx   = res[,fx.col]
+            names(qval) <- names(fx) <- fc.gene
+            F[[i]] <- fx
+            Q[[i]] <- qval
+        }
+
+        ymax=15
+        ymax <- 1.2 * max(-log10(1e-99 + unlist(Q)), na.rm=TRUE)        
+        
         withProgress(message="computing volcano plots ...", value=0, {
             i=1
             for(i in 1:length(comp)) {
-                
-                test = GX.DEFAULTTEST
-                test = input$gx_testmethod
-                if(is.null(test)) return(NULL)
-                res = getDEGtable(ngs, testmethods=test, comparison=i, add.pq=TRUE)
-                
-                fc.gene = res[,grep("^gene$|^gene_name$",colnames(res))]
-                ##pv.col = grep("p.val|pval|meta.p",colnames(res),ignore.case=TRUE)[1]
-                qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
-                fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]
-                qval = res[,qv.col]
-                fx = res[,fx.col]
-
+                qval <- Q[[i]]
+                fx   <- F[[i]]
+                fc.gene <- names(qval)
                 sig.genes = fc.gene[which(qval <= fdr & abs(fx) >= lfc)]
                 ##genes1 = intersect(sig.genes, sel.genes)
                 genes1 = sig.genes[which(toupper(sig.genes) %in% toupper(sel.genes))]
                 gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.gene,
                                   render="canvas", n=1000, nlab=5, 
-                                  xlim=NULL, ylim=c(0,15), axes=FALSE, 
+                                  xlim=NULL, ylim=c(0,ymax), axes=FALSE, 
                                   use.fdr=TRUE, p.sig=fdr, lfc=lfc,
                                   ##main=comp[i], 
                                   ## ma.plot=TRUE, use.rpkm=TRUE,
@@ -1036,30 +1050,38 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ## fc = cbind( meta=mx[,"meta.fx"], fc)
         ## qv = cbind( meta=mx[,"meta.q"], qv)
 
+        ymax <- 1.2 * max(-log10(1e-99 + qv), na.rm=TRUE) ## y-axis       
+        
         xlim = c(-1.1,1.1)*max(abs(fc))
         xlim = 1.3*c(-1,1) * quantile(abs(fc),probs=0.999)
         fc.genes = ngs$genes[rownames(mx),"gene_name"]
-        i=1
-        for(i in 1:min(24,ncol(qv))) {
-            fx = fc[,i]
-            ## pval = pv[,i]
-            qval = qv[,i]
-            sig.genes = fc.genes[which(qval <= fdr & abs(fx) >= lfc)]
-            ##genes1 = intersect(sig.genes, sel.genes)
-            genes1 = sig.genes[which(toupper(sig.genes) %in% toupper(sel.genes))]
-            gx.volcanoPlot.XY(
-                x=fx, pv=qval, gene=fc.genes,
-                render="canvas", n=5000, nlab=5, 
-                xlim=xlim, ylim=c(0,15), axes=FALSE, 
-                use.fdr=TRUE, p.sig=fdr, lfc=lfc,
-                ##main=comp[i], 
-                ## ma.plot=TRUE, use.rpkm=TRUE,
-                cex=0.6, lab.cex=1.5, highlight=genes1)
-            axis(2, tcl=0.5, mgp=c(-2,-1.5,0))
-            axis(1, tcl=0.5, mgp=c(-2,-1.5,0))
-            box()
-            legend("topright", legend=colnames(fc)[i], cex=1.2, bg="white")
-        }
+        nplots <- min(24,ncol(qv))
+        
+        withProgress(message="computing volcano plots ...", value=0, {
+            i=1
+            for(i in 1:nplots) {
+                fx = fc[,i]
+                ## pval = pv[,i]
+                qval = qv[,i]
+                sig.genes = fc.genes[which(qval <= fdr & abs(fx) >= lfc)]
+                ##genes1 = intersect(sig.genes, sel.genes)
+                genes1 = sig.genes[which(toupper(sig.genes) %in% toupper(sel.genes))]
+                gx.volcanoPlot.XY(
+                    x=fx, pv=qval, gene=fc.genes,
+                    render="canvas", n=5000, nlab=5, 
+                    xlim=xlim, ylim=c(0,ymax), axes=FALSE, 
+                    use.fdr=TRUE, p.sig=fdr, lfc=lfc,
+                    ##main=comp[i], 
+                    ## ma.plot=TRUE, use.rpkm=TRUE,
+                    cex=0.6, lab.cex=1.5, highlight=genes1)
+                axis(2, tcl=0.5, mgp=c(-2,-1.5,0))
+                axis(1, tcl=0.5, mgp=c(-2,-1.5,0))
+                box()
+                legend("topright", legend=colnames(fc)[i], cex=1.2, bg="white")
+
+                incProgress( 1/length(nplots) )                
+            }
+        })
 
     })
 

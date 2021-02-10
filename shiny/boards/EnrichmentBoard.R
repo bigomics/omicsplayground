@@ -1102,24 +1102,36 @@ EnrichmentBoard <- function(input, output, session, env)
 
         fdr = as.numeric(input$gs_fdr)    
         lfc = as.numeric(input$gs_lfc)
-        sel.gsets = COLLECTIONS[[1]]
-        sel.gsets = COLLECTIONS[[input$gs_features]]
+        sel.gsets <- NULL
+        if(input$gs_features != "<all>") {
+            ##sel.gsets = COLLECTIONS[[1]]
+            sel.gsets = COLLECTIONS[[input$gs_features]]
+        }
 
+        i=1
+        mx.list <- list()
+        for(i in 1:length(meta)) {
+            mx.list[[i]] <- calculateMeta(i, gsmethod, ngs=ngs)
+        }
+        
+        qv <- sapply(mx.list, function(mx) mx[,"qv"])
+        ymax <- 1.2 * max(-log10(1e-99 + unlist(qv)), na.rm=TRUE)                
+        
         withProgress(message="computing volcano plots ...", value=0, {
             i=1
             for(i in 1:length(meta)) {
-                mx <- calculateMeta(i, gsmethod, ngs=ngs)
+                mx <- mx.list[[i]]
                 is.sig <- (mx[,"qv"] <= fdr & abs(mx[,"fc"]) >= lfc)
                 sig.gs = rownames(mx)[which(is.sig)]
-                sig.gs <- intersect(sel.gsets, sig.gs)
+                if(!is.null(sel.gsets)) sig.gs <- intersect(sel.gsets, sig.gs)
                 gx.volcanoPlot.XY(
                     x = mx[,"fc"], pv = mx[,"qv"],
                     use.fdr=TRUE, p.sig=fdr, lfc=lfc,                
                     gene = substring(rownames(mx),1,35), 
-                    xlab = "effect size (NES)", lab.cex=1.5, nlab=3,
+                    xlab = "effect size (NES)", lab.cex=0, nlab=0,
                     render="canvas", n=1000, highlight=sig.gs,
                     cex=1, cex.axis=1.3, cex.main=1.4, axes=FALSE,
-                    ylim=c(0,10), main="" )
+                    ylim=c(0,ymax), main="" )
                 ##title(names(meta)[i],line=-1)
                 legend("topright",names(meta)[i], cex=1.2, bg="white")
 
@@ -1193,42 +1205,49 @@ EnrichmentBoard <- function(input, output, session, env)
         sel.gsets = COLLECTIONS[[1]]
         sel.gsets = COLLECTIONS[[input$gs_features]]
         
+        ymax <- 1.2 * max(-log10(1e-99 + qv), na.rm=TRUE)
+
         ng = ncol(fx)
         nn = c(2, max(ng/2,5))
         par(mfrow=nn, mar=c(2,4,2.3,2)*0, mgp=c(2.6,1,0))
+        
+        withProgress(message="computing volcano plots ...", value=0, {
+            i=1
+            for(i in 1:ng) {
+                
+                is.sig <- ( qv[,i] <= fdr & abs(fx[,i]) >= lfc)
+                sig.gs = rownames(mx)[which(is.sig)]
+                sig.gs <- intersect(sel.gsets, sig.gs)
+                
+                method = colnames(fx)[i]
+                gx.volcanoPlot.XY(
+                    x = fx[,i], pv = qv[,i],
+                    use.fdr=TRUE, p.sig=fdr, lfc=lfc,
+                    ##gene = substring(rownames(mx),1,35),
+                    gene = rownames(mx),
+                    xlab = "effect size (NES)", ylim=c(0,ymax), 
+                    lab.cex=0, nlab=0, axes=FALSE, 
+                    render="canvas", n=1000, highlight=sig.gs,
+                    cex=1, cex.axis=1.3, main="")
+                
+                ##title(mt, line=-1.5, cex.main=1.4)
+                legend("topright",method,bg="white", cex=1.2)
+                
+                ##volcano_plot(limma, render="plotly", n=1000, cex=1, highlight=genes)
+                ## draw axis if first column or last row
+                n=nn[2]
+                is.first = (i%%n==1)
+                last.row = ( (i-1)%/%n == (ng-1)%/%n )
+                if(is.first) axis(2, tcl=0.5, mgp=c(-2,-1.5,0))
+                if(last.row) axis(1, tcl=0.5, mgp=c(-2,-1.5,0))
+                box()
+                
+                incProgress( 1/length(ng) )                
+            }
+        })
 
-        i=1
-        for(i in 1:ng) {
-            
-            is.sig <- ( qv[,i] <= fdr & abs(fx[,i]) >= lfc)
-            sig.gs = rownames(mx)[which(is.sig)]
-            sig.gs <- intersect(sel.gsets, sig.gs)
-            
-            method = colnames(fx)[i]
-            gx.volcanoPlot.XY(
-                x = fx[,i], pv = qv[,i],
-                use.fdr=TRUE, p.sig=fdr, lfc=lfc,
-                ##gene = substring(rownames(mx),1,35),
-                gene = rownames(mx),
-                xlab = "effect size (NES)", ylim=c(0,10), 
-                lab.cex=1.5, nlab=3, axes=FALSE, 
-                render="canvas", n=1000, highlight=sig.gs,
-                cex=1, cex.axis=1.3, main="")
 
-            ##title(mt, line=-1.5, cex.main=1.4)
-            legend("topright",method,bg="white", cex=1.2)
-            
-            ##volcano_plot(limma, render="plotly", n=1000, cex=1, highlight=genes)
-            ## draw axis if first column or last row
-            n=nn[2]
-            is.first = (i%%n==1)
-            last.row = ( (i-1)%/%n == (ng-1)%/%n )
-            if(is.first) axis(2, tcl=0.5, mgp=c(-2,-1.5,0))
-            if(last.row) axis(1, tcl=0.5, mgp=c(-2,-1.5,0))
-            box()
-
-        }
-
+        
     })
 
     volcanoMethods_text = "The <strong>Volcano (methods)</strong> panel displays the volcano plots provided by different enrichment calculation methods. This provides users an quick overview of the sensitivity of the statistical methods at once. Methods showing better statistical significance will show volcano plots with 'higher' wings."

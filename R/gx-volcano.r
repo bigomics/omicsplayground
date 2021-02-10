@@ -35,13 +35,9 @@ gx.volcanoPlot.XY <- function(x, pv, gene, ma_plot=FALSE, ma=NULL, p.sig=0.05, l
         }
     }
 
-    ##x = data[,fc]
-    ##pv = data[,pv]
-    if(is.null(ylim)) ylim <- c(0, max(-log10(1e-20+pv)))
-    ##if(min(pv)==0 && is.null(ylim))  pv <- pmax(pv,1e-20)
-    ##if(min(pv)==0 && !is.null(ylim)) pv <- pmax(pv,10**(-max(ylim)))
-    ##pmin = 0.9 * min(pv[which(pv>0)],na.rm=TRUE)
-    ##y = -log10( pmax(pv, pmin) )
+    pmin=1e-99
+    if(!is.null(ylim)) pmin=10^(-max(ylim,na.rm=TRUE))
+    if(is.null(ylim)) ylim <- c(0, max(-log10(pmin+pv)))
     y = pmin(-log10(pv), max(ylim))
     nsig = c( "down"=sum( x <= -lfc & pv <= p.sig ), "up"=sum( x >= lfc & pv <= p.sig))
 
@@ -94,38 +90,46 @@ gx.volcanoPlot.XY <- function(x, pv, gene, ma_plot=FALSE, ma=NULL, p.sig=0.05, l
     }
 
     gene.txt <- substring(gene,1,30)  ## shortened for labels
-
+    plt <- NULL
+    
     if(render=="scatterD3") {
         require(scatterD3)
         tooltip_text = paste(gene,"<br>x=",round(x,digits=3),
                              "<br>p=",round(pv,digits=4) )
         jj = order(klr)
-        scatterD3(x=x[jj], y=y[jj],
-                  ##point_size = cex*10*cex.wt,
-                  point_size = cex*10,
-                  point_opacity=0.66,
-                  xlab=xlab, ylab=ylab, col_var=klr[jj], legend_width=0,
-                  lab = lab[jj], labels_size = lab.cex*10,
-                  tooltip_text = tooltip_text[jj], caption=main,
-                  tooltips = TRUE, colors = c("2"=hi.col,"1"="#BBBBBB") )
-
+        labjj=NULL
+        if(lab.cex>0) labjj=lab[jj]
+        plt <- scatterD3(
+            x=x[jj], y=y[jj],
+            ##point_size = cex*10*cex.wt,
+            point_size = cex*10,
+            point_opacity=0.66,
+            xlab=xlab, ylab=ylab, col_var=klr[jj], legend_width=0,
+            lab = labjj, labels_size = lab.cex*10,
+            tooltip_text = tooltip_text[jj], caption=main,
+            tooltips = TRUE, colors = c("2"=hi.col,"1"="#BBBBBB") )
+        
     } else if(render=="plotly") {
         require(plotly)
         gene2 = paste0("  ",gene.txt, "  ")
         ann = data.frame(gene=gene2, x=x, y=y)[jj,,drop=FALSE]
         ann.left  = ann[which(ann$x<0),]
         ann.right = ann[which(ann$x>=0),]
-        plot_ly(x=x, y=y, type="scattergl", mode="markers",
-                marker = list(size=5*cex, color="#BBBBBB"), hoverinfo='text',
-                text = tt ) %>%
-            add_annotations(x=ann.left$x, y=ann.left$y, text=ann.left$gene,
-                            xref='x', yref='y', xanchor='right', showarrow=FALSE,
-                            font=list(size=10*lab.cex, color=hi.col) )  %>%
-            add_annotations(x=ann.right$x, y=ann.right$y, text=ann.right$gene,
-                            xref='x', yref='y', xanchor='left', showarrow=FALSE,
-                            font=list(size=10*lab.cex, color=hi.col) )  %>%
+        plt <- plot_ly(x=x, y=y, type="scattergl", mode="markers",
+                       marker = list(size=5*cex, color="#BBBBBB"), hoverinfo='text',
+                       text = tt ) %>%
             layout( xaxis=list(title=xlab, range=xlim),
                    yaxis=list(title=ylab, range=ylim) )
+        if(lab.cex > 0) {
+            plt <- plt  %>%
+                add_annotations(x=ann.left$x, y=ann.left$y, text=ann.left$gene,
+                                xref='x', yref='y', xanchor='right', showarrow=FALSE,
+                                font=list(size=10*lab.cex, color=hi.col) )  %>%
+                add_annotations(x=ann.right$x, y=ann.right$y, text=ann.right$gene,
+                                xref='x', yref='y', xanchor='left', showarrow=FALSE,
+                                font=list(size=10*lab.cex, color=hi.col) ) 
+        }
+        ##plt 
 
     } else {
         ##ylim=NULL;cex=1;main="";p.sig=0.05;lab.cex=1
@@ -148,15 +152,14 @@ gx.volcanoPlot.XY <- function(x, pv, gene, ma_plot=FALSE, ma=NULL, p.sig=0.05, l
             legend("bottomleft",legend=paste(nsig["down"],"DOWN"), bty="n",
                    cex=1, text.col="grey50")
         }
-
         ## points(x=x[jj], y= y[jj], pch=19, cex=0.4*cex, col="#1e60bb" )
-        if(length(jj)>0) {
+        if(length(jj)>0 && lab.cex>0) {
             text(x=x[jj], y= y[jj], labels = gene.txt[jj],
                  pos=3, cex=0.65*lab.cex, offset=0.3, col=hi.col )
         }
 
     }
-
+    plt
 }
 
 ##n=1000;cex=1;highlight=rownames(X)[1:500];nlab=10;ma.plot=FALSE;use.fdr=TRUE

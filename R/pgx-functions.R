@@ -61,6 +61,27 @@ pgx.initialize <- function(pgx) {
     if(!is.null(pgx$X)) pgx$X <- as.matrix(pgx$X)
     
     ##----------------------------------------------------------------
+    ## model parameters
+    ##----------------------------------------------------------------
+    has.design <- !is.null(pgx$model.parameters$design)
+    has.expmatrix <- !is.null(pgx$model.parameters$exp.matrix)
+    if(!"group" %in% names(pgx$model.parameters) && has.design) {
+        ii <- max.col(pgx$model.parameters$design)
+        group <- colnames(pgx$model.parameters$design)[ii]
+        names(group) <- rownames(pgx$model.parameters$design)
+        pgx$model.parameters$group <- group
+    }
+    if(!"group" %in% names(pgx$model.parameters) && has.expmatrix) {
+        group <- pgx.getConditions(pgx$model.parameters$exp.matrix,nmax=0)
+        names(group) <- rownames(pgx$model.parameters$exp.matrix)
+        pgx$model.parameters$group <- group
+    }
+    
+    if(is.null(pgx$model.parameters$group)) {
+        stop("[pgx.initialize] FATAL: group is null!!!")
+    }
+
+    ##----------------------------------------------------------------
     ## Tidy up phenotype matrix (important!!!): get numbers/integers
     ## into numeric, categorical into factors....
     ##----------------------------------------------------------------

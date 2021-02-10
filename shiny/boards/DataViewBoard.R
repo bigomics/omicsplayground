@@ -235,12 +235,7 @@ DataViewBoard <- function(input, output, session, env)
             samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
         }
         nsamples = length(samples)
-        
-        grp = factor(ngs$Y[samples,"group"])
-        klr0 = rep(brewer.pal(8,"Set2"),99)
-        klr0 = COLORS
-        klr = klr0[factor(ngs$Y[samples,"group"])]
-        
+                
         ## precompute
         pp=rownames(ngs$genes)[1]
         pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
@@ -272,12 +267,10 @@ DataViewBoard <- function(input, output, session, env)
         
         gx1 <- sqrt(rowSums(ngs$X[names(top.rho),samples]**2,na.rm=TRUE))
         gx1 <- (gx1 / max(gx1))
-        ## klr1 <- rev(grey.colors(16,start=0.2,end=0.9,gamma=0.25))[1+round(15*gx1) ]
-        ## klr1[which(is.na(klr1))] <- "#DDDDDD"
-        ##------ Color test ------#
-        klr1 <- rev(colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)), alpha = TRUE)(16))[1+round(15*gx1) ]
+        klr1 <- rev(colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)),
+                                     alpha = TRUE)(16))[1+round(15*gx1) ]
         klr1[which(is.na(klr1))] <- rgb(0.2,0.5,0.8,0.1)
-        ##------------------------#
+
         names(top.rho) = sub(".*:","",names(top.rho))
         offset = min(top.rho)*0.95
         offset = 0
@@ -446,15 +439,7 @@ DataViewBoard <- function(input, output, session, env)
             samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
         }
         nsamples = length(samples)
-        
-        ##grpvar <- input$data_groupby
-        ##if(grpvar=="<ungrouped>") grpvar="group"
-        ##grp = factor(ngs$Y[samples,grpvar])    
-
-        ##klr0 = rep(brewer.pal(8,"Set2"),99)
-        ##klr0 = COLORS
-        ##klr = klr0[factor(ngs$Y[samples,grpvar])]
-        
+                
         ## precompute
         pp=rownames(ngs$genes)[1]
         pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
@@ -494,17 +479,15 @@ DataViewBoard <- function(input, output, session, env)
              xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
         
         ## determine how to do grouping for group labels
-        grpvar <- input$data_groupby
-        if(grpvar=="<ungrouped>") grpvar="group"
-        ##grp <- factor(ngs$samples[samples,"group"])
-        grp <- factor(ngs$samples[samples,grpvar])
+        groupby <- input$data_groupby
+        grp <- NULL
+        if(groupby != "<ungrouped>") {
+            grp <- factor(ngs$samples[samples,groupby])
+        }
                 
         cex2 = ifelse(nrow(pos) < 50, 1.5, 1.1)
         cex2 = ifelse(nrow(pos) > 200, 0.8, cex2)
-        if(0 && input$pr_labelmode=="legend") {
-            legend("bottomright", legend=levels(grp), fill=klrpal,
-                   cex=cex2, y.intersp=0.8, bg="white")
-        } else {
+        if(!is.null(grp)) {
             ##grp.pos <- apply(pos,2,function(x) tapply(x,grp,mean))
             grp.pos <- apply(pos,2,function(x) tapply(x,grp,median))
             if(length(unique(grp))==1) {
@@ -515,8 +498,8 @@ DataViewBoard <- function(input, output, session, env)
             cex3 <- c(1.4,1.2,1,0.8)[cut(length(labels),breaks=c(-1,5,10,20,999))]
             boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
             ##text( grp.pos, labels=boxes, cex=0.9*cex3, col="#CCCCCC88")
-            text( grp.pos, labels=boxes, cex=0.9*cex3, col="#CCCC00BB")
-            text( grp.pos, labels=labels, font=2, cex=0.9*cex3, col="black")
+            text( grp.pos, labels=boxes, cex=0.65*cex3, col="#CCCC00BB")
+            text( grp.pos, labels=labels, font=2, cex=0.65*cex3, col="black")
             ##text( grp.pos[,], labels=rownames(grp.pos), font=2, cex=cex1**0.5)
         }
 
@@ -617,8 +600,8 @@ DataViewBoard <- function(input, output, session, env)
         
         ## corr always in log.scale and restricted to selected samples subset
         zx <- ngs$X
-        grp <- ngs$samples$group
         dim(zx)
+        grp <- ngs$samples$group
         if( FALSE && length(grp) >= 5 && ncol(zx) > 50) {
             ## TOO SLOW!!! should do pre-computed???
             zx <- t( apply(ngs$X, 1, function(x) tapply(x,grp,mean)))
@@ -1260,13 +1243,19 @@ DataViewBoard <- function(input, output, session, env)
         ##if(input$data_sampling=="grouped") {
         ##do.grouped <- input$data_grouped
         grpvar = "group"
+        group <- NULL
         grpvar <- input$data_groupby
-        if(length(samples)>500 && grpvar=="<ungrouped>") grpvar="group"
-        do.grouped <- (grpvar != "<ungrouped>")
-        if(do.grouped) {
-            dbg("[data_rawdataTable.RENDER] grouping by:",grpvar)            
 
+        if(grpvar %in% colnames(ngs$Y)) {
             group = ngs$Y[colnames(x),grpvar]
+        }
+        if(length(samples)>500 && grpvar=="<ungrouped>") {
+            ##grpvar="group"
+            group <- ngs$model.parameters$group
+        }
+        do.grouped <- (grpvar!="<ungrouped>")
+        if(do.grouped && !is.null(group) ) {
+            ##group = ngs$Y[colnames(x),grpvar]
             allgroups = sort(unique(group))
             newx = c()
             for(gr in allgroups) {
@@ -1537,7 +1526,8 @@ DataViewBoard <- function(input, output, session, env)
         names(ngs$model.parameters)
         if(input$data_ctbygroup=="group") {
             ct <- ngs$model.parameters$contr.matrix
-            kk <- which(rownames(ct) %in% ngs$samples[samples,"group"])
+            ##kk <- which(rownames(ct) %in% ngs$samples[samples,"group"])
+            kk <- which(rownames(ct) %in% ngs$model.parameters$group[samples])
             dt <- ct[kk,,drop=FALSE]
         } else {
             dt <- ngs$model.parameters$exp.matrix[samples,,drop=FALSE]
@@ -1580,7 +1570,7 @@ DataViewBoard <- function(input, output, session, env)
 
     data_contrastTable_opts = tagList(
         tipify( radioButtons(ns('data_ctbygroup'),
-                             "Show by:", choices=c("group","sample")),
+                             "Show by:", choices=c("sample","group")),
                "Show contrasts by group or by samples.",
                placement="right", options = list(container = "body"))
     )
