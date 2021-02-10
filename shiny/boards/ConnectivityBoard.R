@@ -2056,7 +2056,6 @@ ConnectivityBoard <- function(input, output, session, env)
     ##=============================================================================
     ## CONNECTIVITY HEATMAP
     ##=============================================================================
-           
 
     connectivityHeatmap.RENDER %<a-% reactive({
         ##
@@ -2065,15 +2064,12 @@ ConnectivityBoard <- function(input, output, session, env)
         F <- F[,1:min(NCOL(F),45),drop=FALSE]
         if(input$cumFCplot_order=="FC") {
             F <- F[order(-abs(F[,1])),]
-            F1 <- head(F,70)
-        } else {
-            F1 <- head(F,70)
         }
-        ##F1 <- F1[order(rowMeans(F1)),,drop=FALSE]
-        
+        F1 <- head(F,60)
+        ##F1 <- F1[order(rowMeans(F1)),,drop=FALSE]        
         ## par(mfrow=c(1,1), mar=c(0,0,0,0))
         ## gx.heatmap(t(F1), keysize=0.85, mar=c(6,10))
-        gx.splitmap(t(F1), mar=c(6,20), split=1, cexRow=0.85, cexCol=0.75)
+        gx.splitmap(t(F1), mar=c(10,20), split=1, cexRow=0.85, cexCol=0.75)
         ##F1
         
     })
