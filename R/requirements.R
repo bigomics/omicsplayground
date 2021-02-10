@@ -97,7 +97,9 @@ require(devtools)
 ##install.pkg("grid", force=TRUE)
 install.pkgs(c("gridGraphics","Rgraphviz","fastcluster", "mygene",
                "diptest", "fpc", "webshot"))
-##webshot::install_phantomjs() 
+webshot::install_phantomjs(force=TRUE)  ## cp to /usr/local/bin !!
+file.copy("~/bin/phantomjs","/usr/local/bin") ## need sudo!!
+
 devtools::install_version("mnormt", version="1.5-7", repos="http://cran.us.r-project.org") 
 install.pkgs(c('umap','corrplot','wordcloud','metap','brew'))
 install.pkgs(c('monocle','Seurat'))

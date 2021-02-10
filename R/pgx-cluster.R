@@ -5,15 +5,15 @@
 ##
 
 if(0) {
-    reduce.sd=1000;reduce.pca=50;center.rows=TRUE;scale.rows=FALSE;umap.pkg="uwot";perplexity=30
-    methods=c("tsne");dims=2
+    reduce.sd=1000;reduce.pca=50;center.rows=TRUE;scale.rows=FALSE;umap.pkg="uwot"
+    methods=c("tsne");perplexity=30;dims=2;rank.tf=FALSE 
     ##methods=c("pca","tsne","umap");dims=c(2,3);umap.pkg="uwot"
 }
 
 pgx.clusterSamples2 <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3),
                                 reduce.sd=1000, reduce.pca=50, perplexity=30,
                                 rank.tf=FALSE, center.rows=TRUE, scale.rows=FALSE,
-                                X=NULL, umap.pkg="uwot" )
+                                X=NULL, umap.pkg="uwot", replace.orig=TRUE )
 {
     if(!is.null(X)) {
         message("using provided X matrix...")
@@ -32,27 +32,22 @@ pgx.clusterSamples2 <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3)
     if(center.rows) X <- X  - rowMeans(X)
     if(scale.rows)  X <- X / (1e-6+apply(X,1,sd))
     if(rank.tf) X <- scale(apply(X,2,rank))  ## works nicely
-
+    
     dim(X)
     clust.pos <- pgx.clusterBigMatrix(
         X, methods=methods, dims=dims, perplexity=perplexity,
         reduce.sd=-1, reduce.pca=reduce.pca,
         umap.pkg=umap.pkg )
     names(clust.pos)
+    clust.index <- factor(clust.pos$membership)
     
-    if(1) {
-        clust.index <- factor(clust.pos$membership)
+    if(replace.orig) {
+        message("[pgx.clusterSamples2] update tsne2d/tsne3d and 'cluster' pheno...")
         pgx$samples$cluster <- clust.index
         pgx$tsne2d <- clust.pos[["tsne2d"]]
         pgx$tsne3d <- clust.pos[["tsne3d"]]
-        
     } else {
-        meta.pos <- do.call(cbind, clust.pos)
-        meta.pos <- apply(meta.pos,2,rank) ## ??
-        meta.pos <- scale(meta.pos)
-        dim(meta.pos)        
-        clust.index <- pgx.FindClusters(meta.pos)
-        names(clust.index)
+        message("[pgx.clusterSamples2] skipping tsne2d/tsne3d update...")
     }
 
     pgx$cluster <- NULL

@@ -559,7 +559,7 @@ trimsame0 <- function(s, split=" ", summarize=FALSE, rev=FALSE) {
 
 ##s=rep("abc",100)
 dbg <- function(... ) {
-    if(exists("DEBUG") && DEBUG==TRUE) {
+    if(exists("DEBUG") && DEBUG) {
         ##msg = paste0(ifelse(is.null(module),"",paste0("<",module,"> ")),msg)
         msg = sapply( list(...),paste,collapse=" ")
         cat(paste0("[DBG] ",sub("\n$","",paste(msg,collapse=" ")),"\n"))

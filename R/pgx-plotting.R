@@ -3067,13 +3067,13 @@ setMethod(add_col_annotation,
 
 ##X=head(ngs$X,100);annot=ngs$samples
 ##row_annot_width=0.03;colors=NULL;label_size=11;scale="row.center"
-xtips=NULL;ytips=NULL;lmar=60
+##xtips=NULL;ytips=NULL;lmar=60
 
 pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL, 
                                        xtips=NULL, ytips=NULL, row_clust=TRUE,
                                        row_annot_width=0.03, scale="row.center",
                                        colors=NULL, lmar=60,
-                                       rowcex=rowcex, colcex=colcex)
+                                       rowcex=1, colcex=1)
 {
     
     ## constants
@@ -3094,14 +3094,14 @@ pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL,
     if("col" %in% scale) X <- scale(X)
     
     ## ------ split Y-axis (genes) by factor
+    hc.order <- function(x) {
+        suppressWarnings( dd <- as.dist(1 - cor(t(x),use="pairwise")) )
+        ## cat("DBG >pgx-plotting:pgx.splitHeatmapX> sum.is.na.dd=",sum(is.na(dd)),"\n")
+        if(sum(is.na(dd))) dd[is.na(dd)] <- 1
+        hc <- fastcluster::hclust(dd, method="ward.D2" )
+        rownames(x)[hc$order]
+    }
     if(!is.null(idx)) {        
-        hc.order <- function(x) {
-            suppressWarnings( dd <- as.dist(1 - cor(t(x),use="pairwise")) )
-            ## cat("DBG >pgx-plotting:pgx.splitHeatmapX> sum.is.na.dd=",sum(is.na(dd)),"\n")
-            if(sum(is.na(dd))) dd[is.na(dd)] <- 1
-            hc <- fastcluster::hclust(dd, method="ward.D2" )
-            rownames(x)[hc$order]
-        }
         if(row_clust) {
             kk  <- tapply(rownames(X),idx,function(k) c(hc.order(X[k,]),"   "))
         } else {

@@ -19,11 +19,10 @@ message("\n\n")
 message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
 message("###############################################################")
-message("\n\n")
+message("\n")
 
-DEBUG = FALSE
-DEBUG = TRUE
-##.setSmtpServer("~/bigomics/server-conf/smtp_server/infomaniak.env")
+##DEBUG = FALSE
+##DEBUG = TRUE
 message("DEBUG = ",DEBUG)
 
 message("\n")
@@ -90,7 +89,7 @@ if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
 }
 
 ## copy to global environment
-WATERMARK      = opt$WATERMARK
+##WATERMARK      = opt$WATERMARK
 SHOW_QUESTIONS = FALSE
 ##USER_MODE      = opt$USER_MODE
 AUTHENTICATION = opt$AUTHENTICATION
@@ -190,7 +189,7 @@ server = function(input, output, session) {
     message("===================== SERVER ===========================")
     message("========================================================\n")
     message("[MAIN] calling boards...")
-
+    
     library(firebase)
     firebase=firebase2=NULL
     if(AUTHENTICATION=="firebase") {
@@ -205,7 +204,8 @@ server = function(input, output, session) {
     env <- list()  ## communication environment
     env[["load"]]   <- callModule(
         LoadingBoard, "load", max.limits = max.limits,
-        authentication = AUTHENTICATION,
+        authentication = AUTHENTICATION, enable_delete = opt$ENABLE_DELETE,
+        enable_save = opt$ENABLE_SAVE,
         firebase=firebase, firebase2=firebase2)
     env[["view"]]   <- callModule( DataViewBoard, "view", env)
     env[["clust"]]  <- callModule( ClusteringBoard, "clust", env)

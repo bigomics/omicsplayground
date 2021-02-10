@@ -7,9 +7,9 @@
 ##install.packages("base2grob")
 ##install.packages("plotrix")
 ##install.packages("multipanelfigure")
-outs="~/IRB/Gonzalez_10x_combined/outs/"
+##outs="~/IRB/Gonzalez_10x_combined/outs/"
 
-seurat2pgx <- function(obj) {
+seurat2pgx <- function(obj, do.cluster=FALSE) {
     ## Convert a Seurat object to a minimal PGX object.
     ##
     ##
@@ -33,6 +33,13 @@ seurat2pgx <- function(obj) {
     
     head(pgx$samples)
     head(pgx$genes)
+    if(do.cluster) {
+        message("[seurat2pgx] clustering samples")
+        pgx <- pgx.clusterSamples2(
+            pgx, dims=c(2,3), methods=c("pca","tsne","umap")
+        )
+        names(pgx$cluster$pos)
+    }   
 
     ## copy clustering from Seurat
     if("tsne" %in% names(obj@reductions)) {

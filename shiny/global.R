@@ -3,6 +3,9 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+## we may eventually migrate all OPTIONS into this file
+
+message("[] reading global.R ...")
 
 ##OPG     = "~/Playground/omicsplayground"
 OPG     = ".."
@@ -12,5 +15,6 @@ FILESX  = file.path(OPG,"libx")
 PGX.DIR = file.path(OPG,"data")
 
 USER_MODE = "pro"
-DEV = FALSE
-
+DEV       = FALSE
+WATERMARK = FALSE
+DEBUG     = TRUE
