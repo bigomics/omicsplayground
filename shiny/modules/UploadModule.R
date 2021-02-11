@@ -62,7 +62,8 @@ UploadModuleUI <- function(id) {
 }
 
 UploadModuleServer <- function(id, height=720, FILES = "../lib", 
-                               max.limits = c(samples=20, comparisons=20, genes=8000)
+                               max.limits = c(samples=100, comparisons=20,
+                                              genes=20000, genesets=10000)
                                )
 {
     moduleServer(
@@ -290,7 +291,8 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 enable = upload_ok,
                 alertready = FALSE,
                 FILES = FILES,
-                max.features = as.integer(max.limits["genes"]),
+                max.genes = as.integer(max.limits["genes"]),
+                max.genesets = as.integer(max.limits["genesets"]),
                 height = height
             )
 

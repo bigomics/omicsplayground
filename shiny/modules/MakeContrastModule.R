@@ -60,14 +60,12 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
             
             observe({
                 cat("[MakeContrastServer] obs1 : reacted\n")
+                if(is.null(phenoRT()) || is.null(contrRT())) {
+                    rv$contr <- NULL
+                }
                 req(phenoRT(), contrRT())
-                cat("[MakeContrastServer] copying contrRT to rv.contr...\n")
-                cat("[MakeContrastServer] dim(phenoRT)=",dim(phenoRT()),"\n")
-                cat("[MakeContrastServer] dim(contrRT)=",dim(contrRT()),"\n")
-                cat("[MakeContrastServer] colnames(phenoRT)=",colnames(phenoRT()),"\n")
-                cat("[MakeContrastServer] colnames(contrRT)=",colnames(contrRT()),"\n")
-
                 rv$contr <- pgx.expMatrix(phenoRT(), contrRT())
+                
                 d1 <- dim(isolate(rv$contr))
                 cat("[MakeContrastServer] dim(rv)=",d1,"\n")
             })
@@ -194,9 +192,12 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
                 cat('clicked on delete contrast',id,'\n')
                 if(length(id)==0) return(NULL)
                 ##updateActionButton(session, paste0("contrast_delete_",id),label="XXX")
-                cat("[contrast_delete] 1: dim(ct) = ",dim(isolate(rv$contr)),"\n")
-                isolate( rv$contr <- rv$contr[,-id,drop=FALSE] )
-                cat("[contrast_delete] 2: dim(ct) = ",dim(isolate(rv$contr)),"\n")
+                cat("[contrast_delete] 1: dim(ct) = ",dim(rv$contr),"\n")
+                rv$contr <- rv$contr[,-id,drop=FALSE] 
+                if(NCOL(rv$contr)==0) {
+                    rv$contr <- NULL
+                }
+                cat("[contrast_delete] 2: dim(ct) = ",dim(rv$contr),"\n")
                 ## invalidateLater(3000, session)
             })
             

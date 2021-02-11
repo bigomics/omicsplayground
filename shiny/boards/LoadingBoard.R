@@ -29,7 +29,8 @@ LoadingUI <- function(id) {
 }
 
 LoadingBoard <- function(input, output, session, 
-                         max.limits = c("samples"=1000,"comparisons"=20,"genes"=19999),
+                         max.limits = c("samples"=1000,"comparisons"=20,
+                                        "genes"=20000, "genesets"=10000),
                          enable_delete = TRUE, enable_save = TRUE,
                          authentication="none", firebase=NULL, firebase2=NULL)
 {
