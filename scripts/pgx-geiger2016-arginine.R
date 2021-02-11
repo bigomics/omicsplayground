@@ -38,7 +38,7 @@ ngs$description = "Proteome profiles of activated  vs resting human naive T cell
 ##------------------------------------------------------------
 ##devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data", "--no-manual"), build_vignettes=FALSE)    
 library(org.Hs.eg.db)
-library(proteus)    
+##library(proteus)    
 meta=metadataFile="../ext/arginine/meta.txt"
 file=proteinGroupsFile="../ext/arginine/proteinGroups.txt"
 ## Read the proteinGroups file
@@ -131,8 +131,8 @@ source("../R/pgx-include.R")
 
 ngs$timings <- c()
 
-GENE.METHODS=c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
-GENESET.METHODS = c("fisher","gsva","camera","fgsea")
+GENE.METHODS=c("trend.limma")
+GENESET.METHODS = c("fisher","fgsea")
 
 GENE.METHODS=c("ttest","ttest.welch", ## "ttest.rank",
                    "voom.limma","trend.limma","notrend.limma",

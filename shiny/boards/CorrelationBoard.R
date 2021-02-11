@@ -422,7 +422,7 @@ between genes and find coregulated modules."
         names(rho) <- toupper(names(rho))
         gmt <- GSETS[colnames(ngs$GMT)]
         ## gmt <- GSETS  ## all???
-        gsea <- fgsea(gmt, rho, nperm=1000, minSize=15, maxSize=1000)
+        gsea <- fgsea(gmt, rho, minSize=15, maxSize=1000)
         gsea <- gsea[order(-gsea$NES),]
         head(gsea)
         res <- list(gsea=gsea, rho=rho)

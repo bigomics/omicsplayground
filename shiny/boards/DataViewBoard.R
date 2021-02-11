@@ -1299,8 +1299,6 @@ DataViewBoard <- function(input, output, session, env)
             x <- head(x, max.row)
         }
 
-        dbg("[data_rawdataTable.RENDER] rendering N=",nrow(x),"rows")
-        dbg("[data_rawdataTable.RENDER] build DT::datatable")        
         DT::datatable( x, rownames=FALSE,
                       class = 'compact cell-border stripe hover',
                       extensions = c('Buttons','Scroller'),
@@ -1315,6 +1313,7 @@ DataViewBoard <- function(input, output, session, env)
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle(colnames(x),
                                 background = styleColorBar(c(0,x99), 'lightblue'),
+                                ##background = color_from_middle(x99, 'lightblue', '#f5aeae'),
                                 backgroundSize = '98% 88%',
                                 backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center')
@@ -1383,7 +1382,6 @@ DataViewBoard <- function(input, output, session, env)
         height = c(360,600), width = c('auto',1200), res=c(68,75),
         pdf.width=10, pdf.height=6 
     )
-    ##output <- attachModule(output, data_sampleTable_module) 
 
     data_phenotypeAssociation.RENDER %<a-% reactive({
 
@@ -1419,7 +1417,6 @@ DataViewBoard <- function(input, output, session, env)
         height = c(360,700), width = c('auto',900), res=c(72,75),
         pdf.width=8, pdf.height=6 
     )
-    ##output <- attachModule(output, data_sampleTable_module) 
     
     data_sampleTable.RENDER <- reactive({
         ## get current view of raw_counts

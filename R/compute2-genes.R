@@ -90,8 +90,10 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     is.expmatrix
 
     if(length(group.col) && !is.na(group.col)) {
+
         cat("contrasts on groups...\n")
         stat.group = as.character(pgx$samples[,group.col])
+        names(stat.group) <- rownames(pgx$samples)
 
     } else if(is.expmatrix) {
 
