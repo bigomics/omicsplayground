@@ -170,7 +170,6 @@ if(0) {
     system.time( load(file="../cache/image.RData") )
 }
 
-
 ## --------------------------------------------------------------------
 ## --------------------------- SERVER ---------------------------------
 ## --------------------------------------------------------------------
@@ -188,11 +187,12 @@ server = function(input, output, session) {
         firebase  <- FirebaseEmailPassword$new()
         firebase2 <- FirebaseSocial$new()
     }
-
+   
     ## firebase <- NULL
     max.limits <- c("samples" = opt$MAX_SAMPLES,
                     "comparisons" = opt$MAX_COMPARISONS,
-                    "genes" = opt$MAX_GENES)
+                    "genes" = opt$MAX_GENES,
+                    "genesets" = opt$MAX_GENESETS)
     env <- list()  ## communication environment
     env[["load"]]   <- callModule(
         LoadingBoard, "load", max.limits = max.limits,

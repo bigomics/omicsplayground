@@ -33,7 +33,8 @@ ComputePgxUI <- function(id) {
 
 ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                              FILES, enable=TRUE, height=720,
-                             alertready=TRUE, max.features = 10000)
+                             alertready=TRUE,
+                             max.genes = 20000, max.genesets = 10000)
 {
     moduleServer(
         id,
@@ -250,8 +251,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                 ##-----------------------------------------------------------
                 ## Set statistical methods and run parameters
                 ##-----------------------------------------------------------                
-                max.genes    = as.integer(max.features)
-                max.genesets = as.integer(max.features)
+                max.genes    = as.integer(max.genes)
+                max.genesets = as.integer(max.genesets)
                 
                 gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
                 gset.methods = c("fisher","gsva","fgsea","camera","fry")

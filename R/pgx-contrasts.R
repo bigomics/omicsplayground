@@ -40,15 +40,17 @@ pgx.expMatrix <- function(pheno, contr.matrix) {
 
     ctx <- rownames(contr.matrix)
     ## already an experiment contrast
-    if(all(ctx==rownames(pheno))) {
+    if(length(ctx)==nrow(pheno) && all(ctx %in% rownames(pheno))) {
+        contr.matrix <- contr.matrix[match(rownames(pheno),ctx),,drop=FALSE]
         return(contr.matrix)
     }    
     group.col <- names(which(apply(pheno, 2, function(x) all(ctx %in% x))))[1]
-    if(length(group.col)==0) {
-        stop("FATAL: could not resolve group column\n")
+    if(is.null(group.col) || length(group.col)==0) {
+        message("[pgx.expMatrix] WARNING: could not resolve group column. No exp.matrix\n")
+        return(NULL)
     }
-    cat("[pgx.expMatrix] group.col =",group.col,"\n")
-    
+
+    cat("[pgx.expMatrix] group.col =",group.col,"\n")    
     grp <- pheno[,group.col]
 
     cat("[pgx.expMatrix] dim(contr.matrix) =",dim(contr.matrix),"\n")
