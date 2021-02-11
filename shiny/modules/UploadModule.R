@@ -69,7 +69,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
         id,
         function(input, output, session) {
 
-            cat("[UploadModuleServer] called\n")
+            message("[UploadModuleServer] called\n")
             ns <- session$ns
             ## ns <- NS(id)
             
@@ -535,18 +535,12 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                         uploaded[[names(matlist)[i]]] <- matlist[[i]]
                     }
                 }
-
-                cat("[upload_files] dim(counts.csv)=",dim(uploaded$counts.csv),"\n")
-                cat("[upload_files] dim(samples.csv)=",dim(uploaded$samples.csv),"\n")
-                cat("[upload_files] dim(contrasts.csv)=",dim(uploaded$contrasts.csv),"\n")
                 
-                cat("[upload_files] done!\n")
+                message("[upload_files] done!\n")
             })
                                     
             statusTable <- reactive({        
                 
-                message("[statusTable] ********** CALLED ***************")
-
                 ## check dimensions
                 status = rep("please upload",3)
                 files.needed = c("counts.csv","samples.csv","contrasts.csv")        

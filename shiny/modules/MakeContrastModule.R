@@ -170,8 +170,8 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
             }    
 
             observeEvent( c(input$group1, input$group2), {
-                g1 <- gsub("[-_.<>]","",input$group1)
-                g2 <- gsub("[-_.<>]","",input$group2)
+                g1 <- gsub("[-_.,<> ]","",input$group1)
+                g2 <- gsub("[-_.,<> ]","",input$group2)
                 g1 <- paste(g1,collapse="")
                 g2 <- paste(g2,collapse="")
                 if(is.null(g1) || length(g1)==0) g1 <- ""
@@ -181,7 +181,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
                 g1 <- substring(g1,1,20)
                 g2 <- substring(g2,1,20)
                 pp <- paste(input$param,collapse="*")
-                pp <- gsub("[-_.<>]","",pp)
+                pp <- gsub("[-_.,<> ]","",pp)
                 tt <- paste0(pp,":",g1,"_vs_",g2)
                 if(g1=="" && g2=="") tt <- ""
                 updateTextInput(session, "newname", value=tt)

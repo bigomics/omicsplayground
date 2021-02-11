@@ -123,14 +123,14 @@ immune cell types, expressed genes and pathway activation."
         req(ngs)
         refsets = "LM22"
         refsets <- sort(names(ngs$deconv))
-        refsel <- grep("LM22",refsets,value=TRUE)
+        refsel <- unique(c(grep("LM22",refsets,value=TRUE),refsets))[1]
         updateSelectInput(session,"sc_refset",choices=refsets, selected=refsel)
         updateSelectInput(session,"sc_refset2",choices=refsets, selected=refsel)
         
-        dcmethods <- names(ngs$deconv[[1]])
-        dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
-        updateSelectInput(session, "sc_dcmethod", choices=dcmethods, selected=dcsel)
-        updateSelectInput(session, "sc_dcmethod2", choices=dcmethods, selected=dcsel)
+        ## dcmethods <- names(ngs$deconv[[1]])
+        ## dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
+        ## updateSelectInput(session, "sc_dcmethod", choices=dcmethods, selected=dcsel)
+        ## updateSelectInput(session, "sc_dcmethod2", choices=dcmethods, selected=dcsel)
 
         grpvars <- c("<ungrouped>",colnames(ngs$samples))
         sel <- grpvars[1]
@@ -139,6 +139,23 @@ immune cell types, expressed genes and pathway activation."
         
     })
 
+    observeEvent( input$sc_refset, {
+        req(input$sc_refset)
+        ngs <- inputData()
+        dcmethods <- names(ngs$deconv[[input$sc_refset]])
+        dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
+        updateSelectInput(session, "sc_dcmethod", choices=dcmethods, selected=dcsel)
+    })
+
+    observeEvent( input$sc_refset2, {
+        req(input$sc_refset2)
+        ngs <- inputData()
+        dcmethods <- names(ngs$deconv[[input$sc_refset2]])
+        dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
+        updateSelectInput(session, "sc_dcmethod2", choices=dcmethods, selected=dcsel)
+    })
+        
+    
     ##================================================================================
     ##========================= REACTIVE FUNCTIONS ===================================
     ##================================================================================
@@ -254,6 +271,11 @@ immune cell types, expressed genes and pathway activation."
         results <- ngs$deconv[[refset]][[method]]
         ## threshold everything (because DCQ can be negative!!!)
         results <- pmax(results,0)        
+
+        ## limit to  top50??
+        ##ii <- head(order(-colSums(results)),100))
+        ##results <- results[,ii,drop=FALSE]
+        
         return(results)
     })
 
@@ -291,6 +313,7 @@ immune cell types, expressed genes and pathway activation."
         ii <- hclust(dist(score))$order
         jj <- hclust(dist(t(score)))$order
         score <- score[ii,jj]
+
         score0 <- score
         pos <- pos[rownames(score),]
         b0 <- 1 + 0.85*pmax(30 - ncol(score), 0)
@@ -379,17 +402,6 @@ immune cell types, expressed genes and pathway activation."
         height = c(fullH-80,780), width = c("100%",1000),
         res = c(85,95)
     )
-    ##output <- attachModule(output, sc_icp_module)
-
-    ## output$sc_icp_UI <- renderUI({
-    ##     fillCol(
-    ##         height = fullH,
-    ##         flex = c(NA,1),
-    ##         div(HTML(sc_icp_caption),class="caption"),
-    ##         plotWidget(ns("sc_icpplot"))
-    ##     )
-    ## })
-    ## outputOptions(output, "sc_icp_UI", suspendWhenHidden=FALSE) ## important!!!
 
     ##===========================================================================
     ## Phenotypes
@@ -416,7 +428,7 @@ immune cell types, expressed genes and pathway activation."
         if(length(pheno)>6) par(mfrow = c(4,3), mar=c(0.3,0.4,2.8,0.4)*0.8)
         if(length(pheno)>12) par(mfrow = c(5,4), mar=c(0.2,0.2,2.5,0.2)*0.8)
         
-        cex1 <- 1.4*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
+        cex1 <- 1.2*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
         cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
         cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
 
@@ -472,7 +484,7 @@ immune cell types, expressed genes and pathway activation."
                     boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
                     boxes = sapply(nchar(labels),function(n) paste(rep("█",n),collapse=""))
                     ##boxes = sapply(nchar(labels),function(n) paste(rep("#",n),collapse=""))
-                    cex2 <- c(1.4,1.2,1,0.8)[cut(length(labels),breaks=c(-1,5,10,20,999))]    
+                    cex2 <- c(1.3,1.1,0.9,0.7)[cut(length(labels),breaks=c(-1,5,10,20,999))]    
                     text( grp.pos, labels=boxes, cex=cex2, col="#CCCCCC99")
                     text( grp.pos, labels=labels, font=2, cex=1.1*cex2, col="white")
                     text( grp.pos, labels=labels, font=2, cex=cex2)
@@ -548,6 +560,7 @@ immune cell types, expressed genes and pathway activation."
         results <- ngs$deconv[[refset]][[method]]
         ## threshold everything (because DCQ can be negative!!!)
         results <- pmax(results,0)
+
         
         return(results)
     })
@@ -728,7 +741,7 @@ immune cell types, expressed genes and pathway activation."
         
         scores = ngs$deconv[[1]][[1]]  ## just an example...
         if(input$sc_crosstabvar == "<cell type>") {
-            scores <- getDeconvResults()
+            scores <- getDeconvResults2()
             if(is.null(scores)) return(NULL)
             scores <- pmax(scores,0) ## ??
         } else {
@@ -739,8 +752,11 @@ immune cell types, expressed genes and pathway activation."
             rownames(scores) <- rownames(ngs$Y)
             colnames(scores) <- sub("^x","",colnames(scores))
         }
+        
         dim(scores)
-
+        message("[SingleCellBoard::sc_crosstab.plotFUNC] 1 : dim(scores) = ",
+                paste(dim(scores),collapse="x"),"\n")
+        
         ## restrict to selected sample set
         kk <- head(1:nrow(scores),1000)
         kk <- 1:nrow(scores)
@@ -749,6 +765,16 @@ immune cell types, expressed genes and pathway activation."
         scores <- scores[,which(colSums(scores)>0),drop=FALSE]
         scores[which(is.na(scores))] <- 0    
         dim(scores)
+
+        ## limit to top25??
+        topsel <- head(order(-colSums(scores)),25)
+        scores <- scores[,topsel]
+        
+        message("[SingleCellBoard::sc_crosstab.plotFUNC] 2 : dim(scores) = ",
+                paste(dim(scores),collapse="x"),"\n")
+
+        message("[SingleCellBoard::sc_crosstab.plotFUNC] 2 : length(kk) = ",
+                length(kk),"\n")
 
         ## expected counts per stat level
         ##kk.counts <- colSums(ngs$counts[,kk,drop=FALSE])  ## total count of selected samples
@@ -770,7 +796,7 @@ immune cell types, expressed genes and pathway activation."
                 y <- ngs$samples[kk,pheno]
                 pheno <- tolower(pheno)
             } else if(pheno == "<cell type>") {
-                res1 <- getDeconvResults()
+                res1 <- getDeconvResults2()
                 res1 <- pmax(res1,0) ## ??
                 res1 <- res1[kk,,drop=FALSE]
                 ##res1 <- res1[,which(colSums(res1)>0),drop=FALSE]
@@ -801,9 +827,10 @@ immune cell types, expressed genes and pathway activation."
             grp.score <-  grp.score * as.vector(fy[jj])
             ## normalize to total 100% 
             grp.score <- grp.score / (1e-20+sum(grp.score))
+            dim(grp.score)
             
             ## reduce to maximum number of items (x-axis)
-            if(0) {
+            if(0 && ncol(grp.score) > 25 ) {
                 ##jj <- which(colSums(grp.score) > 0.001)
                 jj <- order(-colSums(grp.score))
                 j1 <- head(jj, 25)  ## define maximum number of items
@@ -817,18 +844,22 @@ immune cell types, expressed genes and pathway activation."
                 grp.score <- grp.score0
                 grp.counts <- grp.counts0
                 grp.score <- t( t(grp.score) / (1e-20+colSums(grp.score)))  ##
+                dim(grp.score)
             }
             
             ## normalize to total 100% and reduce to maximum number of items (y-axis)
-            jj <- order(-rowSums(grp.score))
-            j1 <- head(jj, 10)  ## define maximum number of items
-            j0 <- setdiff(jj, j1)
-            grp.score0 <- grp.score[j1,,drop=FALSE]
-            if(length(j0)>0) {
-                grp.score0 <- rbind( grp.score0, "other"=colSums(grp.score[j0,,drop=FALSE]))
+            if(nrow(grp.score) > 10 ) {
+                jj <- order(-rowSums(grp.score))
+                j1 <- head(jj, 10)  ## define maximum number of items
+                j0 <- setdiff(jj, j1)
+                grp.score0 <- grp.score[j1,,drop=FALSE]
+                if(length(j0)>0) {
+                    grp.score0 <- rbind( grp.score0, "other"=colSums(grp.score[j0,,drop=FALSE]))
+                }
+                grp.score <- grp.score0
             }
-            grp.score <- grp.score0
             grp.score <- t( t(grp.score) / (1e-20+colSums(grp.score)))  ##
+            
 
             ## cluster columns??
             ##dist1 <- dist(t(scale(grp.score)))
@@ -936,10 +967,10 @@ immune cell types, expressed genes and pathway activation."
         options = sc_crosstab.opts,
         info.text = sc_crosstabModule_info,
         ##caption = sc_crosstabModule_caption,
-        pdf.width=8, pdf.height=8,
-        height = c(fullH-80,760), width = c("100%",650),
+        pdf.width=12, pdf.height=8,
+        height = c(fullH-80,760), width = c("100%",900),
         res=c(110,110)
-        )
+    )
 
     observe({
         ngs <- inputData()
@@ -1237,8 +1268,9 @@ immune cell types, expressed genes and pathway activation."
         req(ngs)
         xgenes <- ngs$genes[rownames(ngs$X),]$gene_name
         genes <- sort(as.character(xgenes))
-        g1 <- grep("^CD4|^CD8",genes,value=TRUE,ignore.case=TRUE)[1]
-        g2 <- grep("^CD79|^CD3[DEG]|^CD37",genes,value=TRUE,ignore.case=TRUE)[1]
+        g1 <- grep("^CD4|^CD8|^CD",genes,value=TRUE,ignore.case=TRUE)[1]
+        g2 <- grep("^CD79|^CD3[DEG]|^CD37|^CD", setdiff(genes,g1),
+                   value=TRUE,ignore.case=TRUE)[1]
         if(length(g1)==0) g1 <- genes[1]
         if(length(g2)==0) g2 <- genes[2]
         updateSelectizeInput(session, "sc_cytovar1", choices=genes, selected=g1, server=TRUE)

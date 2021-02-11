@@ -138,7 +138,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     ngs$counts  = as.matrix(counts)
     ##ngs$genes   = data.frame(genes)
     ngs$contrasts = as.matrix(contrasts)
-    ngs$X <- X  ## normalized log-expression
+    ngs$X <- X  ## input normalized log-expression (can be NULL)
     
     ngs$total_counts = totcounts
     ngs$counts_multiplier = counts_multiplier
@@ -178,7 +178,8 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     cat("[pgx.createPGX] annotating genes...\n")
     ngs$genes <- ngs.getGeneAnnotation(genes=rownames(ngs$counts))  
     rownames(ngs$genes) <- rownames(ngs$counts)
-
+    ngs$genes[is.na(ngs$genes)] <- ""
+    
     ##-------------------------------------------------------------------
     ## Filter genes?
     ##-------------------------------------------------------------------
@@ -189,7 +190,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
 
     if(filter.genes && org == "mouse") {
         SYMBOL = unlist(as.list(org.Mm.egSYMBOL))        
-        has.name <- !is.na(ngs$genes$gene_name)
+        has.name <- !is.na(ngs$genes$gene_name) && ngs$genes$gene_name!=""
         has.chrloc = is.official = not.rik = is.protcoding = TRUE
         if(only.hugo) is.official <- (ngs$genes$gene_name %in% SYMBOL)
         if(!rik.orf) not.rik <- !grepl("Rik",ngs$genes$gene_name) ## ???
@@ -204,7 +205,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     }
     if(filter.genes && org == "human") {
         SYMBOL = unlist(as.list(org.Hs.egSYMBOL))
-        has.name <- !is.na(ngs$genes$gene_name)
+        has.name <- !is.na(ngs$genes$gene_name) && ngs$genes$gene_name!=""
         has.chrloc = is.official = is.protcoding = not.orf = TRUE
         if(only.hugo) is.official <- (ngs$genes$gene_name %in% SYMBOL)
         if(!rik.orf) not.orf <- !grepl("ORF",ngs$genes$gene_name)
@@ -217,7 +218,6 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
         ngs$genes  <- ngs$genes[keep,]
         if(!is.null(ngs$X)) ngs$X <- ngs$X[keep,]
     }
-
     
     ##-------------------------------------------------------------------
     ## Do infer cell cycle/gender here (before any batchcorrection)
