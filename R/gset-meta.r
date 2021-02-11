@@ -138,14 +138,14 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
             zx.gsva <- try( gsva(as.matrix(X), gmt[], method="gsva",
                                  parallel.sz=mc.cores, verbose=FALSE))
             dim(zx.gsva)
-            if(is.null(zx.gsva) || class(zx.gsva)=="try-error") {
+            if(is.null(zx.gsva) || "try-error" %in% class(zx.gsva) ) {
                 ## switch to single core...
                 cat("WARNING:: GSVA ERROR : retrying single core ... \n")
                 zx.gsva <- try(gsva(as.matrix(X), gmt[], method="gsva",
                                     parallel.sz=1, verbose=FALSE))
             }
             class(zx.gsva)
-            if(class(zx.gsva)=="try-error") {
+            if("try-error" %in% class(zx.gsva)) {
                 stop("FATAL ERROR in GSVA\n")
             }
             zx.gsva <- my.normalize(zx.gsva, Y)
@@ -403,7 +403,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
             rnk <- rnk + 1e-8*rnorm(length(rnk))
             ##output <- fgsea(gmt[1:2], rnk, nperm=1001, nproc=1)
             tt <- system.time(                
-                output <- fgsea(gmt, rnk, nperm=10000,
+                output <- fgsea(gmt, rnk, ## nperm=10000,
                                 minSize=1, maxSize=9999, nproc=1) ## nproc0 fails!!!
             )
             timings <- rbind(timings, c("fgsea", tt))

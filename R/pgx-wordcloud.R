@@ -69,7 +69,7 @@ pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
     rms.FC <- Matrix::rowMeans(S**2)**0.5
     rms.FC <- rms.FC + 0.01*rnorm(length(rms.FC))
     gmt <- apply(W,2,function(x) names(which(x!=0)))
-    suppressWarnings( res <- fgsea( gmt, rms.FC, nperm=1000 ) )
+    suppressWarnings( res <- fgsea::fgsea( gmt, rms.FC ) )
     res$leadingEdge <- sapply(res$leadingEdge,paste,collapse="//")
     ## res$leadingEdge <- NULL
     colnames(res)[1] <- "word"
@@ -87,7 +87,7 @@ pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
         names(fc) <- rownames(W)
         fc <- fc + 0.01*rnorm(length(fc))
         gmt1 <- gmt[as.character(res$word)]
-        res1 <- fgsea( gmt1, fc, nperm=1000 )
+        res1 <- fgsea::fgsea( gmt1, fc )
         res1$leadingEdge <- sapply(res1$leadingEdge,paste,collapse="//")
         ## res$leadingEdge <- NULL
             colnames(res1)[1] <- "word"

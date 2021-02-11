@@ -188,6 +188,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
 
 
 ## -------------- deconvolution analysis --------------------------------
+##lib.dir=FILES;rna.counts=ngs$counts;full=FALSE
 compute.deconvolution <- function(ngs, lib.dir, rna.counts=ngs$counts, full=FALSE) {
     
     ## list of reference matrices

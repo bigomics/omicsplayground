@@ -442,7 +442,6 @@ pgx.inferGender <- function(X, gene_name=NULL) {
     return(sex)
 }
 
-
 ##counts=ngs$counts
 pgx.multiDeconvolution <- function(counts, refmat, methods=DECONV.METHODS)
 {
@@ -450,17 +449,20 @@ pgx.multiDeconvolution <- function(counts, refmat, methods=DECONV.METHODS)
     timings <- c()
     results <- list()
     refnames <- names(refmat)
+    refnames
     i=1
     for(i in 1:length(refmat)) {
         message("[pgx.multiDeconvolution] computing for ",refnames[i])
         ref <- refmat[[i]]
         dim(ref)
         res = pgx.deconvolution(counts[,], ref=ref, methods=methods)
-        names(res)
-        names(res$results)
-        results[[i]] <- res$results
-        names(results)[i] <- names(refmat)[i]
-        timings <- rbind(timings, res$timings)
+        if(!is.null(res)) {
+            names(res)
+            names(res$results)
+            m <- names(refmat)[i]
+            results[[m]] <- res$results
+            timings <- rbind(timings, res$timings)
+        }
     }
     timings
     timings0 <- apply(timings, 2, function(x) tapply(x, rownames(timings), sum))
@@ -468,7 +470,7 @@ pgx.multiDeconvolution <- function(counts, refmat, methods=DECONV.METHODS)
     return(res2)
 }
 
-##X=as.matrix(2**ngs$X);ref="LM22";methods="NNLM"
+##X=as.matrix(2**ngs$X);methods="NNLM"
 pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
                               add.unknown=FALSE, normalize.mat=TRUE)
 {
@@ -512,8 +514,8 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     
     ## normalize all matrices to CPM
     if(normalize.mat) {
-        ref <- t(t(ref) / sqrt(1e-6 + colSums(ref**2))) * 1e6
-        mat <- t(t(mat) / sqrt(1e-6 + colSums(mat**2))) * 1e6
+        ref <- t(t(ref) / sqrt(1e-6 + colSums(ref**2,na.rm=TRUE))) * 1e6
+        mat <- t(t(mat) / sqrt(1e-6 + colSums(mat**2,na.rm=TRUE))) * 1e6
     }
     
     ## add small noise, some methods need it...
@@ -524,8 +526,9 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
         
     gg <- intersect(rownames(ref),rownames(mat))
     head(gg)
-    if(length(gg)==0) {
-        stop("ERROR:: pgx.deconvolution: no overlapping rownames")
+    if(length(gg) < 10) {
+        message("WARNING:: pgx.deconvolution: no enough marker genes")
+        return(NULL)
     }
 
     ## conform??
