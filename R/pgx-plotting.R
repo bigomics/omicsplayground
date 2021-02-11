@@ -1080,10 +1080,9 @@ pgx.plotOmicsNetwork <- function(ngs, gene=NULL, reduced=NULL, levels=c("gene","
 
 }
 
-
-##gene1="CD4";gene2="CD8A";col="black";cex=1;k=11
+##gene1="CD4";gene2="CD8A";col="black";cex=1;k=11;samples=NULL;cex.names=1
 pgx.cytoPlot <- function(ngs, gene1, gene2, cex=1, col="grey60",
-                         cex.names=1, samples=NULL, k=11)
+                         lab.unit=NULL, cex.names=1, samples=NULL, k=11)
 {
     library(MASS)
     library(RColorBrewer)
@@ -1122,7 +1121,9 @@ pgx.cytoPlot <- function(ngs, gene1, gene2, cex=1, col="grey60",
     ##z0 <- kde2d( x1[], x2[], n=50)
 
     ##par(mfrow=c(1,1))
-    plot(x1, x2, xlab=gene1, ylab=gene2, col=col, pch=19, cex=cex)
+    xlab1 <- paste(gene1, lab.unit, collapse="  ")
+    ylab1 <- paste(gene2, lab.unit, collapse="  ")
+    plot(x1, x2, xlab=xlab1, ylab=ylab1, col=col, pch=19, cex=cex)
     abline(h=mean(x1), v=mean(x2), lwd=1, lty=2)
     ##z0$z <- log2(z0$z)
     ##contour(z0, drawlabels=FALSE, nlevels=k, col=my.cols, add=TRUE, lwd=2)
@@ -1148,17 +1149,17 @@ pgx.cytoPlot <- function(ngs, gene1, gene2, cex=1, col="grey60",
         inferred.celltype <- ngs$deconv[[1]][["meta"]]
         dim(inferred.celltype)
         ##cex.names=2
-        lab1 <- names(sort(-colSums(inferred.celltype[j1,])))[1:3]
-        pos1 <- apply(cbind(x1, x2)[j1,],2,median)
-        text( pos1[1], pos1[2], paste(lab1,collapse="\n"),cex=cex.names, xpd=TRUE)
+        lab1 <- head(names(sort(-colSums(inferred.celltype[j1,,drop=FALSE]))),3)
+        pos1 <- apply(cbind(x1, x2)[j1,,drop=FALSE],2,median)
+        text( pos1[1], pos1[2], paste(lab1,collapse="\n"),cex=0.9*cex.names, xpd=TRUE)
 
-        lab2 <- names(sort(-colSums(inferred.celltype[j2,])))[1:3]
-        pos2 <- apply(cbind(x1, x2)[j2,],2,median)
-        text( pos2[1], pos2[2], paste(lab2,collapse="\n"),cex=cex.names, xpd=TRUE)
+        lab2 <- head(names(sort(-colSums(inferred.celltype[j2,,drop=FALSE]))),3)
+        pos2 <- apply(cbind(x1, x2)[j2,,drop=FALSE],2,median)
+        text( pos2[1], pos2[2], paste(lab2,collapse="\n"),cex=0.9*cex.names, xpd=TRUE)
 
-        lab3 <- names(sort(-colSums(inferred.celltype[j3,])))[1:3]
-        pos3 <- apply(cbind(x1, x2)[j3,],2,median)
-        text( pos3[1], pos3[2], paste(lab3,collapse="\n"),cex=cex.names, xpd=TRUE)
+        lab3 <- head(names(sort(-colSums(inferred.celltype[j3,,drop=FALSE]))),3)
+        pos3 <- apply(cbind(x1, x2)[j3,,drop=FALSE],2,median)
+        text( pos3[1], pos3[2], paste(lab3,collapse="\n"),cex=0.9*cex.names, xpd=TRUE)
 
     }
 

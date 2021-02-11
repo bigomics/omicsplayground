@@ -179,7 +179,7 @@ pgx.correlateSignatureH5.inmemory <- function(F, h5.file, nsig=100, ntop=1000, n
         length(gmt)
         
         ## use entire fc vector
-        system.time(res1 <- fgsea(gmt, abs(fc), nperm=nperm))  ## really unsigned???
+        system.time(res1 <- fgseaSimple(gmt, abs(fc), nperm=nperm))  ## really unsigned???
         dim(res1)
         
         ## ---------------------------------------------------------------
@@ -275,7 +275,7 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     length(gmt)
     
     ##system.time( res <- fgsea(gmt, fc, nperm=10000))
-    system.time( res <- fgsea(gmt, abs(fc), nperm=nperm))  ## really unsigned???
+    system.time( res <- fgseaSimple(gmt, abs(fc), nperm=nperm))  ## really unsigned???
     dim(res)
             
     ## ---------------------------------------------------------------
@@ -376,7 +376,7 @@ pgx.correlateSignature.matrix <- function(fc, refmat, nsig=100, ntop=1000, nperm
     
     ##system.time( res <- fgsea(gmt, fc, nperm=10000))
     suppressMessages( suppressWarnings(
-        res <- fgsea(gmt, abs(fc), nperm=nperm)
+        res <- fgseaSimple(gmt, abs(fc), nperm=nperm)
     ))
     dim(res)
             
@@ -714,7 +714,7 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=0, lib.dir,
             xi <- X[,i]
             xi[is.na(xi)] <- 0
             xi <- xi + 1e-3*rnorm(length(xi))
-            res1 <- fgsea(gmt, xi, nperm=10000, nproc=mc.cores)
+            res1 <- fgseaSimple(gmt, xi, nperm=10000, nproc=mc.cores)
             r <- res1$NES
             names(r) <- res1$pathway
             r

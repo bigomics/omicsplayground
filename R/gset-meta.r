@@ -403,7 +403,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
             rnk <- rnk + 1e-8*rnorm(length(rnk))
             ##output <- fgsea(gmt[1:2], rnk, nperm=1001, nproc=1)
             tt <- system.time(                
-                output <- fgsea(gmt, rnk, ## nperm=10000,
+                output <- fgseaSimple(gmt, rnk, nperm=10000,
                                 minSize=1, maxSize=9999, nproc=1) ## nproc0 fails!!!
             )
             timings <- rbind(timings, c("fgsea", tt))

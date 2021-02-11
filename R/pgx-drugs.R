@@ -111,7 +111,7 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
         res0 <- list()
         i=1
         for(i in 1:ncol(R1)) {
-            suppressWarnings(res0[[i]] <- fgsea( meta.gmt, stats=R1[,i], nperm=1000))
+            suppressWarnings(res0[[i]] <- fgseaSimple( meta.gmt, stats=R1[,i], nperm=1000))
         }
         names(res0) <- colnames(R1)
         length(res0)

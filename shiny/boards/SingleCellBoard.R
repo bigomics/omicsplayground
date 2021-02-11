@@ -1183,7 +1183,6 @@ immune cell types, expressed genes and pathway activation."
     observe({
         ngs <- inputData()
         req(ngs,input$sc_mrk_level)    
-        dbg("[SingleCellBoard::observed] 222")
         
         choices <- names(ngs$families)
         selected = grep("^CD",choices,ignore.case=TRUE,value=TRUE)[1]
@@ -1230,9 +1229,9 @@ immune cell types, expressed genes and pathway activation."
         gene1 <- input$sc_cytovar1
         gene2 <- input$sc_cytovar2
         ##if(gene1 == gene2) return(NULL)
-        par(mfrow=c(1,1), mar=c(12,4,6,2))
+        par(mfrow=c(1,1), mar=c(10,5,4,1))
         pgx.cytoPlot( ngs, gene1, gene2, samples=kk, cex=0.8,
-                     col="grey60", cex.names=1)
+                     col="grey60", cex.names=1, lab.unit="(log2CPM)")
         
     })
 
@@ -1266,13 +1265,25 @@ immune cell types, expressed genes and pathway activation."
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
-        xgenes <- ngs$genes[rownames(ngs$X),]$gene_name
-        genes <- sort(as.character(xgenes))
-        g1 <- grep("^CD4|^CD8|^CD",genes,value=TRUE,ignore.case=TRUE)[1]
-        g2 <- grep("^CD79|^CD3[DEG]|^CD37|^CD", setdiff(genes,g1),
-                   value=TRUE,ignore.case=TRUE)[1]
+        ## just at new data load
+        genes <- NULL
+        g1=g2=NULL
+        if(0) {
+            xgenes <- ngs$genes[rownames(ngs$X),]$gene_name
+            genes <- sort(as.character(xgenes))
+            g1 <- grep("^CD4|^CD8|^CD",genes,value=TRUE,ignore.case=TRUE)[1]
+            g2 <- grep("^CD79|^CD3[DEG]|^CD37|^CD", setdiff(genes,g1),
+                       value=TRUE,ignore.case=TRUE)[1]
+        } else {
+            F <- pgx.getMetaFoldChangeMatrix(ngs)$fc
+            F <- F[order(-apply(F,1,sd)),]
+            genes <- rownames(F)
+            g1 <- rownames(F)[1]
+            g2 <- rownames(F)[2]
+        }
         if(length(g1)==0) g1 <- genes[1]
         if(length(g2)==0) g2 <- genes[2]
+
         updateSelectizeInput(session, "sc_cytovar1", choices=genes, selected=g1, server=TRUE)
         updateSelectizeInput(session, "sc_cytovar2", choices=genes, selected=g2, server=TRUE)
     })
@@ -1297,7 +1308,6 @@ immune cell types, expressed genes and pathway activation."
         )
     })
     outputOptions(output, "sc_markersplot_UI", suspendWhenHidden=FALSE) ## important!!!
-
 
     
     ##==========================================================================

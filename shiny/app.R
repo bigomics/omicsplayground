@@ -15,7 +15,6 @@ library(shinyWidgets)
 library(waiter)
 library(plotly)
 
-
 message("\n\n")
 message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
@@ -40,7 +39,6 @@ envcat("PLAYGROUND_EXPIRY")
 envcat("PLAYGROUND_LEVEL")
 envcat("PLAYGROUND_HELLO")
 
-
 ## --------------------------------------------------------------------
 ## -------------------------- INIT ------------------------------------
 ## --------------------------------------------------------------------
@@ -57,7 +55,6 @@ message("RDIR =",RDIR)
 message("FILES =",FILES)
 message("FILESX =",FILESX)
 message("PGX.DIR =",PGX.DIR)
-
 message("DEBUG = ",DEBUG)
 message("WATERMARK = ",WATERMARK)
 
@@ -120,13 +117,7 @@ if(0) {
     ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
-    load("../data/GSE10846-xgreta.pgx")
-    load("../data/GSE72056-scmelanoma.pgx")
-    load("../data/tcga-brca_pub.pgx")
-    load("../data/GSE22886-immune.pgx")
-    load("../data/grassi2020-10x-tcells.pgx")
-    load("../data-extra/GSE98638-scliver0.pgx")
-    load("../data/GSE102908-ibet.pgx")
+    load("../data/timo-sara-v1.pgx")
     ngs = pgx.initialize(ngs)
 }
 
