@@ -37,12 +37,11 @@ if(0) {
 
 ##X=topX
 PCOR.FAST = c("cor","pcor","pcor.shrink", "SILGGM","FastGGM")
-PCOR.METHODS = c("cor","pcor","pcor.shrink", "QUIC", "glasso", "huge",
-               ## "clime", "BigQuic", 
+PCOR.METHODS = c("cor","pcor","pcor.shrink", "glasso", "huge",
+               ## "clime", "BigQuic", "QUIC", 
                "fastclime", "FastGGM", "SILGGM")
 
 ##gene="CD4";X=ngs$X;nmax=200;method=PCOR.FAST;nmax=100;fast=TRUE
-method=PCOR.METHODS
 pgx.computePartialCorrelationAroundGene <-
     function(X, gene, method=PCOR.METHODS, nmax=100, fast=FALSE)
 {
