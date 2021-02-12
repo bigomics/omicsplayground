@@ -40,7 +40,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     
     dr_infotext = paste("<b>This module performs drug enrichment analysis</b> to see if certain drug activity or drug sensitivity signatures matches your experimental signatures. Matching drug signatures to your experiments may elicudate biological functions through mechanism-of-action (MOA) and known drug molecular targets.
 
-<br><br> In the <a href='https://portals.broadinstitute.org/cmap/'>Drug Connectivity Map</a> panel, you can correlate your signature with more than 5000 known drug profiles from the L1000 database. An activation-heatmap compares drug activation profiles across multiple contrasts. This facilitates to quickly see and detect the similarities between contrasts for certain drugs.
+<br><br> In the <a href='https://portals.broadinstitute.org/cmap/'>Drug Connectivity Map</a> panel, you can correlate your signature with known drug profiles from the L1000 database. An activation-heatmap compares drug activation profiles across multiple contrasts. This facilitates to quickly see and detect the similarities between contrasts for certain drugs.
 
 <br><br><br><br>
 <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=6' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>
@@ -475,7 +475,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
 
         plt <- dsea_actmap.plotdata()
 
-        par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,2,0,1))
+        par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1,0,0))
         require(corrplot)
         corrplot( plt$score, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
                  tl.cex = 0.9*plt$cex, tl.col = "grey20", tl.srt = 90)
@@ -484,7 +484,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     dsea_actmap.RENDER2 <- reactive({
 
         plt <- dsea_actmap.plotdata()
-        par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,2,0,1))
+        par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1,0,0))
         require(corrplot)
         corrplot( t(plt$score), is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
                  tl.cex = 0.9*plt$cex, tl.col = "grey20", tl.srt = 90)
@@ -499,7 +499,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         func = dsea_enplots.RENDER,
         func2 = dsea_enplots.RENDER,         
         title = "Drug connectivity", label="a",
-        info.text = "<strong>Drug connectivity</strong> correlates your signature with more than 5000 known drug profiles from the L1000 database, and shows similar and opposite profiles by running the GSEA algorithm on the drug profile correlation space.",
+        info.text = "<strong>Drug connectivity</strong> correlates your signature with known drug profiles from the L1000 database, and shows similar and opposite profiles by running the GSEA algorithm on the drug profile correlation space.",
         options = dsea_enplots.opts,
         pdf.width=11, pdf.height=7,
         height = c(0.54*rowH,650), width=c('auto',1280),
@@ -548,7 +548,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         tableModule,
         id = "dsea_table", label="b",
         func = dsea_table.RENDER, 
-        info.text="<b>Enrichment table.</b> Enrichment is calculated by correlating your signature with more than 5000 known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.", 
+        info.text="<b>Enrichment table.</b> Enrichment is calculated by correlating your signature with known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.", 
         title = "Enrichment table",
         height = c(240,700)
     )
@@ -557,7 +557,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     ## Page layout
     ##-----------------------------------------
 
-    dsea_analysis_caption = "<b>(a)</b> <b>Drug connectivity</b> correlates your signature with more than 5000 known drug perturbation profiles from the L1000 database. The figures show the most similar (or opposite) profiles by running the GSEA algorithm on the profile correlation space. <b>(b)</b> <b>Enrichment table</b> summarizing the statistical results of the drug enrichment analysis. <b>(c)</b> <b>Mechanism-of-action</b> plot showing the top most frequent drug class (or target genes) having similar or opposite enrichment compared to the query signature. <b>(d)</b> <b>Activation matrix</b> visualizing enrichment levels of drug signatures across multiple contrast profiles." 
+    dsea_analysis_caption = "<b>(a)</b> <b>Drug connectivity</b> correlates your signature with known drug perturbation profiles from the L1000 database. The figures show the most similar (or opposite) profiles by running the GSEA algorithm on the profile correlation space. <b>(b)</b> <b>Enrichment table</b> summarizing the statistical results of the drug enrichment analysis. <b>(c)</b> <b>Mechanism-of-action</b> plot showing the top most frequent drug class (or target genes) having similar or opposite enrichment compared to the query signature. <b>(d)</b> <b>Activation matrix</b> visualizing enrichment levels of drug signatures across multiple contrast profiles." 
 
     output$DSEA_analysis_UI <- renderUI({
         fillCol(

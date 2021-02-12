@@ -298,18 +298,14 @@ LoadingBoard <- function(input, output, session,
 
                 this.pgx <- sub("[.]pgx$","",pgxfile)
                 all.pgx  <- sub("[.]pgx$","",PGXINFO()$dataset)
-                message("[LoadingBoard::@deletebutton] all.pgx= ",all.pgx,"\n")
 
                 ## get selected row before deleting
                 table.pgx <- sub("[.]pgx$","",getPGXTable()$dataset)
-                cat("[LoadingBoard::@deletebutton] table.pgx = ",table.pgx,"\n")
-                cat("[LoadingBoard::@deletebutton] this.pgx = ",this.pgx,"\n")
                 sel <- which(table.pgx == this.pgx)
 
                 newpgx <- PGXINFO()[all.pgx != this.pgx,]
                 PGXINFO(newpgx)
 
-                message("[LoadingBoard::@deletebutton] selecting row = ",sel,"\n")
                 selectRows(proxy=dataTableProxy(ns("pgxtable")), selected=sel)
             } else {
                 cat(">>> deletion cancelled\n")
@@ -319,7 +315,6 @@ LoadingBoard <- function(input, output, session,
 
         sel  <- which(sub("[.]pgx$","",PGXINFO()$dataset) == sub("[.]pgx$","",pgxfile))
         this.pgxinfo <- PGXINFO()[sel,]
-
 
         owner1 = "owner"
         owner1 <- this.pgxinfo$owner
@@ -685,21 +680,58 @@ LoadingBoard <- function(input, output, session,
         cat("uploaded PGX detected! [LoadingBoard:observe:uploaded_pgx]\n")
         pgx <- uploaded_pgx()
         pgx$collection <- "uploaded"
+        ## pgx$owner <- "user"
         currentPGX(pgx)
         selectRows(proxy=dataTableProxy(ns("pgxtable")), selected=NULL)
         
         savedata_button <- NULL
         if(enable_save) {
-            savedata_button <- actionButton(ns("savedata"), "Save my data", icon=icon("save"))
+            
+            ##savedata_button <- actionButton(ns("savedata"), "Save my data", icon=icon("save"))
+            ##observeEvent( input$savedata, {
+
+            dbg("[LoadingBoard] observeEvent:savedata reacted")        
+            ## -------------- save PGX file/object ---------------
+            ##pgx <- currentPGX()
+            pgx$collection <- "uploaded"
+            pgxname <- sub("[.]pgx$","",pgx$name)
+            pgxname <- paste0(gsub("[ ]","_",pgxname),".pgx")
+            fn  <- file.path(PGX.DIR,pgxname)
+            message("[LoadingBoard::@savedata] saving PGX to ",fn)
+            message("[LoadingBoard::@savedata] names(pgx)= ",names(pgx),"\n")
+
+            ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ## Note: Currently we use 'ngs' as object name but want to go
+            ## towards 'pgx' as standard name. Actually saving as RDS
+            ## should be better.
+            ngs=pgx
+            save(ngs, file=fn)
+            remove(ngs)
+            
+            message("[LoadingBoard::@savedata] updating PGXINFO file")
+            new.info <- pgx.updateInfoPGX(PGXINFO(), pgx, remove.old=TRUE)
+            Sys.chmod(PGXINFO.FILE, mode="0666")
+            write.csv(new.info, file=PGXINFO.FILE)
+            PGXINFO(new.info)
+            message("[LoadingBoard::@savedata] saved PGXINFO file!")
+            
+            touchtable(touchtable()+1)
+            ##sleep(1)
+            ##removeModal()
         }
+
         
         ## removeModal()
+        msg1 <- "<b>Ready!</b><br>You can now start exploring your data. "
+        if(enable_save) {
+            msg1 <- paste(msg1,"Your data has been saved in your library.")
+        }
         showModal( modalDialog(
-            HTML("<b>Ready!</b><br>You can now start exploring your data. Tip: to avoid computing again, save your data on the server."),
+            HTML(msg1),
             title = NULL,
             size = "s",
             footer = tagList(
-                savedata_button,
+                ##savedata_button,
                 ## actionButton(ns("sharedata"), "Share with others", icon=icon("share-alt")),
                 modalButton("Start!")
             )
@@ -710,37 +742,6 @@ LoadingBoard <- function(input, output, session,
     })
 
     
-    observeEvent( input$savedata, {
-
-        dbg("[LoadingBoard] observeEvent:savedata reacted")        
-        ## -------------- save PGX file/object ---------------
-        pgx <- currentPGX()
-        pgx$collection <- "uploaded"
-        pgxname <- sub("[.]pgx$","",pgx$name)
-        pgxname <- paste0(gsub("[ ]","_",pgxname),".pgx")
-        fn  <- file.path(PGX.DIR,pgxname)
-        message("[LoadingBoard::@savedata] saving PGX to ",fn)
-        message("[LoadingBoard::@savedata] names(pgx)= ",names(pgx),"\n")
-
-        ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ## Note: Currently we use 'ngs' as object name but want to go
-        ## towards 'pgx' as standard name. Actually saving as RDS
-        ## should be better.
-        ngs=pgx
-        save(ngs, file=fn)
-        remove(ngs)
-        
-        message("[LoadingBoard::@savedata] updating PGXINFO file")
-        new.info <- pgx.updateInfoPGX(PGXINFO(), pgx, remove.old=TRUE)
-        Sys.chmod(PGXINFO.FILE, mode="0666")
-        write.csv(new.info, file=PGXINFO.FILE)
-        PGXINFO(new.info)
-
-        touchtable(touchtable()+1)
-        ##sleep(1)
-        removeModal()
-        message("[LoadingBoard::@savedata] saved PGXINFO file!")
-    })
         
 
     ##---------------------------------------------------------------
