@@ -695,12 +695,11 @@ LoadingBoard <- function(input, output, session,
         
         ## removeModal()
         showModal( modalDialog(
-            HTML("<b>Ready!</b><br>You can now start exploring your data. Tip: to avoid computing again, save it to your data onto the server or download the binary PGX file now."),
+            HTML("<b>Ready!</b><br>You can now start exploring your data. Tip: to avoid computing again, save your data on the server."),
             title = NULL,
             size = "s",
             footer = tagList(
                 savedata_button,
-                downloadButton(ns("downloadpgx2"), "Download PGX", icon=icon("download")),
                 ## actionButton(ns("sharedata"), "Share with others", icon=icon("share-alt")),
                 modalButton("Start!")
             )
@@ -736,30 +735,13 @@ LoadingBoard <- function(input, output, session,
         Sys.chmod(PGXINFO.FILE, mode="0666")
         write.csv(new.info, file=PGXINFO.FILE)
         PGXINFO(new.info)
-        message("[LoadingBoard::@savedata] saved PGXINFO file!")
 
-        ##sleep(1)
         touchtable(touchtable()+1)
-        
+        ##sleep(1)
+        removeModal()
+        message("[LoadingBoard::@savedata] saved PGXINFO file!")
     })
         
-    output$downloadpgx2 <- downloadHandler(
-        ##filename = "userdata.pgx",
-        filename = function() {
-            ##selectedPGX()
-            pgx <- currentPGX()
-            pgxfile <- paste0(sub("[.]pgx$","",pgx$name),".pgx")
-            pgxfile
-        },
-        content = function(file) {
-            ##pgxfile <- selectedPGX()
-            ngs <- currentPGX()  ## current dataset object
-            temp <- tempfile()
-            cat("[LoadingBoard::loadPGX2] temp = ",temp)            
-            save(ngs, file=temp)
-            file.copy(temp,file)
-        }
-    )
 
     ##---------------------------------------------------------------
     ##--------------------- modules for UsersMap --------------------
