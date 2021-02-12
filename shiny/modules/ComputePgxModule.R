@@ -275,7 +275,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                 }
 
                 ## at least do meta.go
-                extra.methods <- unique(c("meta.go"), extra.methods)                
+                extra.methods <- unique(c("meta.go",extra.methods))
                 
                 ##----------------------------------------------------------------------
                 ## Start computation
