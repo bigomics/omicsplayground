@@ -57,12 +57,11 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
             GENESET.SELECTED = c("fisher","gsva","fgsea")
 
             ## batch correction and extrs methods
-            EXTRA.METHODS = c("meta.go","infer","deconv", "drugs", ## "drugs-combo",
+            EXTRA.METHODS = c("infer","deconv", "drugs", 
                               "wordcloud","connectivity")
-            EXTRA.METHODS1 = c("meta.go","infer","deconv","drugs","wordcloud")
-            EXTRA.METHODS2 = c("drugs-combo","connectivity")            
-            EXTRA.SELECTED = c(EXTRA.METHODS)
-            EXTRA.SELECTED = c("meta.go","infer","drugs","wordcloud")
+            EXTRA.METHODS1 = c("infer","drugs","wordcloud")
+            EXTRA.METHODS2 = c("deconv","connectivity")            
+            EXTRA.SELECTED = c("infer","drugs","wordcloud")
             
             output$UI <- renderUI({
                 fillCol(
@@ -110,21 +109,25 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                                     choiceValues =
                                         c("only.hugo",
                                           "only.proteincoding",
-                                          "excl.rikorf"
+                                          "excl.rikorf",
+                                          "remove.notexpressed"
                                           ## "excl.immuno"
                                           ## "excl.xy"
                                           ),
                                     choiceNames =
-                                        c("Convert to HUGO",
-                                          "Protein-coding only",
-                                          "Exclude Rik/ORF"
+                                        c("convert to HUGO",
+                                          "protein-coding only",
+                                          "exclude Rik/ORF",
+                                          "remove not-expressed"
                                           ##"Exclude immunogenes",
                                           ##"Exclude X/Y genes"
                                           ),
                                     selected = c(
                                         "only.hugo",
                                         "only.proteincoding",
-                                        "excl.rikorf")
+                                        "excl.rikorf",
+                                        "remove.notexpressed"
+                                    )
                                 )
                             ),
                             wellPanel(
@@ -233,7 +236,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                     shinyalert("ERROR","You must give a dataset name and description")
                     return(NULL)
                 }
-
                 
                 ##-----------------------------------------------------------
                 ## Retrieve the most recent matrices from reactive values
@@ -256,13 +258,24 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                 
                 gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
                 gset.methods = c("fisher","gsva","fgsea","camera","fry")
-                extra.methods = c("meta.go","infer","deconv","drugs-combo",
-                                  "wordcloud","connectivity")
+                extra.methods = c("infer","deconv","wordcloud","connectivity")
 
                 ## get selected methods from input
                 gx.methods   <- c(input$gene_methods,input$gene_methods2)
                 gset.methods <- c(input$gset_methods,input$gset_methods2)
                 extra.methods <- c(input$extra_methods,input$extra_methods2)
+
+                if(length(gx.methods)==0) {
+                    shinyalert("ERROR","You must select at least one gene test method")
+                    return(NULL)
+                }
+                if(length(gset.methods)==0) {
+                    shinyalert("ERROR","You must select at least one geneset test method")
+                    return(NULL)
+                }
+
+                ## at least do meta.go
+                extra.methods <- unique(c("meta.go"), extra.methods)                
                 
                 ##----------------------------------------------------------------------
                 ## Start computation
@@ -276,21 +289,21 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                 pgx.showCartoonModal("Computation may take 5-20 minutes...")
                 
                 flt <- input$filter_methods
-                do.filter <- (length(flt)>0 && flt[1]!="")
                 only.hugo <- ("only.hugo" %in% flt)
                 do.protein <- ("proteingenes"   %in% flt)
                 excl.rikorf <- ("excl.rikorf"  %in% flt)
                 excl.immuno <- ("excl.immuno"  %in% flt)
                 excl.xy <- ("excl.xy"  %in% flt)
                 only.chrom <- ("only.chrom"  %in% flt)
-                only.proteincoding <- ("only.proteincoding"  %in% flt)                
+                only.proteincoding <- ("only.proteincoding"  %in% flt)
+                filter.genes <- ("remove.notexpressed"  %in% flt)                
                 
                 progress$inc(0.01, detail = "parsing data")            
                 ngs <- pgx.createPGX(
                     counts, samples, contrasts, ## genes,
                     X = NULL,
                     batch.correct = FALSE,      ## done in UI                        
-                    filter.genes = do.filter,
+                    filter.genes = filter.genes,
                     only.chrom = only.chrom,
                     rik.orf = !excl.rikorf,
                     only.proteincoding = only.proteincoding, 

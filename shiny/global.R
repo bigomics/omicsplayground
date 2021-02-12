@@ -35,3 +35,5 @@ if(0) {
     BOARDS_DISABLED = c("tcga","multi")
     ##BOARDS_DISABLED = tcga,multi,sig,isect,bio
 }
+
+dbg <- function(msg) if(DEBUG) message(cat(msg))

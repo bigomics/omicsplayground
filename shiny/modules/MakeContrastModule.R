@@ -214,6 +214,19 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
                 ##ct.name <- paste0(input$group1name,"_vs_",input$group2name)
                 ct.name <- input$newname
                 samples <- rownames(phenoRT())
+
+                if( sum(ctx<0)==0 || sum(ctx>0)==0 ) {
+                    shinyalert("ERROR","Both groups must have samples")
+                    return(NULL)
+                }
+                if(ct.name %in% c(NA,""," ")) {
+                    shinyalert("ERROR","You must give a contrast name")
+                    return(NULL)
+                }
+                if(!is.null(rv$contr) && ct.name %in% colnames(rv$contr)) {
+                    shinyalert("ERROR","Contrast name already exists. Please give a different name.")
+                    return(NULL)
+                }
                 
                 ## update reactive value
                 if(!is.null(rv$contr)) {
