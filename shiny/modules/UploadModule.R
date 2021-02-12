@@ -254,13 +254,11 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 ## Monitor for changes in the contrast matrix and if
                 ## so replace the uploaded reactive values.
                 ##
-                cat("[UploadModule::modified_ct] reacted!\n")
+                message("[UploadModule::modified_ct] reacted!")
                 ct <- modified_ct()
-                if(!is.null(ct)) {
-                    cat("[UploadModule::modified_ct] updating contrast!\n")
-                    cat("[UploadModule::modified_ct] dim(ct)=",dim(ct),"\n")
-                    uploaded$contrasts.csv <- ct
-                }
+                message("[UploadModule::modified_ct] updating contrast!")
+                message("[UploadModule::modified_ct] dim(ct)=",dim(ct))
+                uploaded$contrasts.csv <- ct
             })
 
             upload_ok <- reactive({
@@ -394,13 +392,17 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             
             output$contrastStats <- renderPlot({
                 
-                has.contrasts <- !is.null(uploaded$contrasts.csv) &&
-                    NCOL(uploaded$contrasts.csv)>0
-
+                ct <- uploaded$contrasts.csv
+                has.contrasts <- !is.null(ct) && NCOL(ct)>0
                 statusTab <- statusTable()
                 status.ok <- statusTab["contrasts.csv","status"]
+
+                message("[output$contrastStats] status.ok = ",status.ok)
+                message("[output$contrastStats] has.contrasts = ",has.contrasts)
+                message("[output$contrastStats] dim(uploaded$contrasts.csv) = ",
+                        dim(uploaded$contrasts.csv))
                 
-                if(status.ok!="OK") {
+                if( status.ok!="OK" || !has.contrasts) {
                     frame()
                     status.ds <- statusTab["contrasts.csv","description"]
                     msg <- paste(toupper(status.ok),"\n\n","Please upload 'contrasts.csv'",

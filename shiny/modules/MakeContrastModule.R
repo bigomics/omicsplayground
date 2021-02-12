@@ -54,12 +54,12 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
         id,
         function(input, output, session) {            
 
-            cat("*** MakeContrastServer ***\n")
+            dbg("*** MakeContrastServer ***\n")
             ns <- session$ns
             rv <- reactiveValues(contr=NULL)
             
             observe({
-                cat("[MakeContrastServer] obs1 : reacted\n")
+                dbg("[MakeContrastServer] obs1 : reacted\n")
                 if(is.null(phenoRT()) || is.null(contrRT())) {
                     rv$contr <- NULL
                 }
@@ -67,7 +67,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
                 rv$contr <- pgx.expMatrix(phenoRT(), contrRT())
                 
                 d1 <- dim(isolate(rv$contr))
-                cat("[MakeContrastServer] dim(rv)=",d1,"\n")
+                dbg("[MakeContrastServer] dim(rv)=",d1,"\n")
             })
             
             output$UI <- renderUI({
@@ -135,7 +135,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
                 cond <- sel.conditions()
                 if(length(cond)==0) return(NULL)
                 items <- c("<others>",sort(unique(cond)))
-                cat("[MakeContrastServer:createcomparison] items=",items,"\n")
+                dbg("[MakeContrastServer:createcomparison] items=",items,"\n")
                 
                 tagList(
                     tags$head(tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
@@ -189,15 +189,16 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
                 ## Observe if a contrast is to be deleted
                 ##
                 id <- as.numeric(gsub(".*_","",input$contrast_delete))
-                cat('clicked on delete contrast',id,'\n')
+                message('[contrast_delete] clicked on delete contrast',id)
                 if(length(id)==0) return(NULL)
                 ##updateActionButton(session, paste0("contrast_delete_",id),label="XXX")
-                cat("[contrast_delete] 1: dim(ct) = ",dim(rv$contr),"\n")
-                rv$contr <- rv$contr[,-id,drop=FALSE] 
-                if(NCOL(rv$contr)==0) {
-                    rv$contr <- NULL
+                message("[contrast_delete] 1: dim(ct) = ",dim(rv$contr))
+                if(!is.null(rv$contr) && NCOL(rv$contr) <= 1) {
+                    rv$contr <- rv$contr[,0,drop=FALSE]
+                } else {
+                    rv$contr <- rv$contr[,-id,drop=FALSE] 
                 }
-                cat("[contrast_delete] 2: dim(ct) = ",dim(rv$contr),"\n")
+                message("[contrast_delete] 2: dim(ct) = ",dim(rv$contr))
                 ## invalidateLater(3000, session)
             })
             
@@ -242,15 +243,15 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
 
                 req(phenoRT())
                 df <- phenoRT()
-                cat("[MakeContrastServerRT:autocontrast] dim(df)=",dim(df),"\n")                
+                dbg("[MakeContrastServerRT:autocontrast] dim(df)=",dim(df),"\n")                
                 ct <- pgx.makeAutoContrast(
                     df, mingrp=3, slen=20, ref=NULL, fix.degenerate=FALSE)
                 rownames(ct$exp.matrix) <- rownames(df)
                 ctx <- ct$exp.matrix
                 
-                cat("[MakeContrastServerRT:autocontrast] updating contrasts...\n")
-                cat("[MakeContrastServerRT:autocontrast] dim(rv$contr)=",dim(rv$contr),"\n")
-                cat("[MakeContrastServerRT:autocontrast] dim(ctx)=",dim(ctx),"\n")
+                dbg("[MakeContrastServerRT:autocontrast] updating contrasts...\n")
+                dbg("[MakeContrastServerRT:autocontrast] dim(rv$contr)=",dim(rv$contr),"\n")
+                dbg("[MakeContrastServerRT:autocontrast] dim(ctx)=",dim(ctx),"\n")
 
                 ## update reactive value
                 if(!is.null(rv$contr)) {
@@ -263,14 +264,10 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
 
             output$contrastTable <- DT::renderDataTable({
 
-                cat('[contrastTable] >>>> reacted \n')
-                cat('[contrastTable] dim(contr) = ',dim(rv$contr),'\n')
+                message('[contrastTable] >>>> reacted')
+                message('[contrastTable] dim(contr) = ',dim(rv$contr))
                 
-                if(!is.null(rv$contr)) {
-                    ct <- rv$contr
-                } else {
-                    ct <- contrRT()
-                }
+                ct <- rv$contr
                 
                 if(is.null(ct) || NCOL(ct)==0) {
                     df <- data.frame(
@@ -317,13 +314,6 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
                         onclick = paste0('Shiny.onInputChange(\"',ns("contrast_delete"),'\",this.id)')
                     )
 
-                    cat("[contrastTable] dim(ct) = ",dim(ct),"\n")
-                    cat("[contrastTable] len(delbuttons) = ",length(deleteButtons),"\n")
-                    cat("[contrastTable] length(ss1) = ",length(ss1),"\n")
-                    cat("[contrastTable] length(ss2) = ",length(ss2),"\n")
-                    cat("[contrastTable] class(ss1) = ",class(ss1),"\n")
-                    cat("[contrastTable] class(ss2) = ",class(ss2),"\n")
-
                     df <- data.frame(
                         delete = deleteButtons,
                         comparison = colnames(ct),
@@ -334,7 +324,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
                     )
                 }
                 rownames(df) <- NULL
-                cat("[contrastTable] render datatable dim(df) = ",dim(df),"\n")
+                dbg("[contrastTable] render datatable dim(df) = ",dim(df))
                 
                 datatable(
                     df, rownames=FALSE,
