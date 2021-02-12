@@ -209,9 +209,10 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ## Gene set level features
             ##-----------------------------------
             gsets = rownames(ngs$gsetX)
-            gsets = unique(unlist(COLLECTIONS[input$hm_features]))
+            ##gsets = unique(unlist(COLLECTIONS[input$hm_features]))
+            gsets = unique(COLLECTIONS[[input$hm_features]])
             zx = ngs$gsetX
-            if(DEV && !is.null(ngs$gset.meta$matrices) ) {
+            if(FALSE && !is.null(ngs$gset.meta$matrices) ) {
                 k <- input$hm_gsetmatrix
                 zx <- as.matrix(ngs$gset.meta$matrices[[k]])
             }            
@@ -538,6 +539,11 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         if(!is.null(splitx) & (totnchar > 44 || nx>=6) ) crot=90
         if(main=="<all>") main <- "  "
 
+        ##!!!!! for some reason grid uses main for viewport naming and
+        ##!!!!! does not like special chars in main. Disabling heatmap
+        ##!!!!! title...
+        main = " "
+        
         nrownames = 60
         nrownames = ifelse("row" %in% input$hm_showlabel,60,0)
         
@@ -546,7 +552,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             show_colnames = show_colnames; column_title_rot=crot;
             show_rownames = nrownames; softmax=0;
             ## side.height.fraction=0.03+0.055*NCOL(annot); 
-            cexCol=cex1; cexRow=cex2; 
+            cexCol=cex1; cexRow=cex2;title_cex=1.0 
             col.annot=annot; row.annot=NULL; annot.ht=2.2;
             main=main; nmax=-1
         }
@@ -560,7 +566,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                                      show_colnames = show_colnames, column_title_rot=crot,
                                      show_rownames = nrownames, softmax=0,
                                      ## side.height.fraction=0.03+0.055*NCOL(annot), 
-                                     cexCol=cex1, cexRow=cex2, 
+                                     title_cex=1.05, cexCol=cex1, cexRow=cex2, 
                                      col.annot=annot, row.annot=NULL, annot.ht=2.2,
                                      main=main, nmax=-1)
                      )
@@ -697,7 +703,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     })
     
     output$hm1_splitmap <- renderPlot({
-        grid.draw(hm1_splitmap.RENDER())
+        plt <- hm1_splitmap.RENDER()
+        message("[ClusteringBoard:hm1_splitmap:renderPlot]")
+        grid.draw(plt, recording=FALSE)
         ## plot(sin)
     }, res=90)
     
@@ -812,7 +820,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             height = fullH,
             div(HTML(hm_splitmap_caption), class="caption"),
             br(),
-            plotWidget(ns("hm_splitmap"))
+            plotWidget(ns("hm_splitmap"))  %>% withSpinner()
         )
     })
     outputOptions(output, "hm_heatmap_UI", suspendWhenHidden=FALSE) ## important!!!
@@ -1686,7 +1694,7 @@ displays the expression levels of selected genes across all conditions in the an
         if(length(pheno)>=12) par(mfrow = c(5,4), mar=c(0.2,0.2,2.5,0.2)*0.8)
         i=1    
 
-        cex1 <- 1.3*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
+        cex1 <- 1.1*c(1.8,1.3,0.8,0.5)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
         cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
         cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
         
@@ -1723,7 +1731,7 @@ displays the expression levels of selected genes across all conditions in the an
                 }
                 labels = rownames(grp.pos)
                 boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
-                cex2 = 0.99*cex1**0.33
+                cex2 = 0.9*cex1**0.33
                 text( grp.pos, labels=boxes, cex=cex2*0.95, col="#CCCCCC99")
                 text( grp.pos, labels=labels, font=2, cex=cex2)
             }

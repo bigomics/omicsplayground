@@ -722,9 +722,11 @@ LoadingBoard <- function(input, output, session,
 
         
         ## removeModal()
-        msg1 <- "<b>Ready!</b><br>You can now start exploring your data. "
+        msg1 <- "<b>Ready!</b>"
         if(enable_save) {
-            msg1 <- paste(msg1,"Your data has been saved in your library.")
+            msg1 <- "<b>Ready!</b><br>Your data is ready and has been saved in your library. You can now start exploring your data."
+        } else {
+            msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
         }
         showModal( modalDialog(
             HTML(msg1),

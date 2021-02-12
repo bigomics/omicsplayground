@@ -39,7 +39,7 @@ pgx.clusterSamples2 <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3)
         reduce.sd=-1, reduce.pca=reduce.pca,
         umap.pkg=umap.pkg )
     names(clust.pos)
-    clust.index <- factor(clust.pos$membership)
+    clust.index <- paste0("c",clust.pos$membership)
     
     if(replace.orig) {
         message("[pgx.clusterSamples2] update tsne2d/tsne3d and 'cluster' pheno...")

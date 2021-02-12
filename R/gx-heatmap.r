@@ -385,7 +385,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     grp.order <- 1:ngrp
     if(!is.null(order.groups) && ngrp>1 && order.groups[1] == "clust") {
         ## Reorder cluster indices based on similarity clustering
-        mx <- do.call(cbind, lapply(grp, function(i) rowMeans(gx[,i])))
+        mx <- do.call(cbind, lapply(grp, function(i) rowMeans(gx[,i,drop=FALSE])))
         ##mx <- head(mx[order(-apply(mx,1,sd)),],100)
         mx <- t(scale(t(mx)))
         grp.order <- hclust(dist(t(mx)))$order

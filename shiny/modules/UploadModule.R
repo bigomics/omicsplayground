@@ -130,9 +130,9 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     br(),
                     fillRow(
                         flex = c(0.75,1,1),
-                        plotOutput(ns("countStats"))  %>% withSpinner(),
-                        plotOutput(ns("phenoStats"))  %>% withSpinner(),
-                        plotOutput(ns("contrastStats"))  %>% withSpinner()
+                        plotOutput(ns("countStats")) %>% withSpinner(),
+                        plotOutput(ns("phenoStats")) %>% withSpinner(),
+                        plotOutput(ns("contrastStats")) %>% withSpinner()
                     )
                     ##br(), 
                     ##DT::dataTableOutput(ns("statusTableOutput"))
