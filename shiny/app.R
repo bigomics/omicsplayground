@@ -187,7 +187,7 @@ server = function(input, output, session) {
         firebase  <- FirebaseEmailPassword$new()
         firebase2 <- FirebaseSocial$new()
     }
-    
+   
     ## firebase <- NULL
     max.limits <- c("samples" = opt$MAX_SAMPLES,
                     "comparisons" = opt$MAX_COMPARISONS,
