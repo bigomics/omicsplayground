@@ -18,6 +18,7 @@ USER_MODE = "pro"
 DEV       = FALSE
 WATERMARK = FALSE
 DEBUG     = FALSE
+DEBUG     = TRUE
 
 if(0) {
     TITLE           = "Omics Playground"

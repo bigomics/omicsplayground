@@ -131,16 +131,16 @@ ConnectivityBoard <- function(input, output, session, env)
         sel <- sigdb[1]
         ##if(any(grepl("sigdb",sigdb))) sel <- grep("sigdb",sigdb,value=TRUE)[1]
         updateSelectInput(session, "cmap_sigdb", choices=sigdb, selected=sel)
-
+    })
+    
+    observe({
         ## reset CMap threshold zero/max
-        res <- isolate(getConnectivityScores())
-        if(!is.null(res)) {
-            dbg("[observe:ngs] dim(res)=",dim(res))
-            max <- round(0.999*max(abs(res$score),na.rm=TRUE),digits=1)
-            dbg("[observe:ngs] head(res$score)=",head(res$score))
-            dbg("[observe:ngs] max=",max)
-            updateSliderInput(session, 'cmap_scorethreshold', value=0, max=max)
-        }
+        res <- getConnectivityScores()
+        req(res)
+        dbg("[observe:ngs] dim(res)=",dim(res))
+        max <- round(0.999*max(abs(res$score),na.rm=TRUE),digits=1)
+        max <- round(0.999*tail(sort(abs(res$score)),10)[1],digits=1)
+        updateSliderInput(session, 'cmap_scorethreshold', value=0, max=max)
         
     })
     
@@ -1105,6 +1105,8 @@ ConnectivityBoard <- function(input, output, session, env)
         if(is.null(pos0)) return(NULL)
         if(is.null(res0)) return(NULL)
 
+        dbg("[connectivityMap.RENDER] dim(pos0) = ",dim(pos0))
+        
         cmap_grouped <- "grouped" %in% input$cmap_plotoptions
         if(cmap_grouped) {
             ##res0 <- collapseByDataset(res0)
@@ -1123,8 +1125,8 @@ ConnectivityBoard <- function(input, output, session, env)
 
         ## draw high score last
         jj <- order(res$score)
-        res <- res[jj,]
-        pos <- pos[jj,]
+        res <- res[jj,,drop=FALSE]
+        pos <- pos[jj,,drop=FALSE]
         
         ## parse groups/dataset from name
         jj <- grep("\\]",rownames(pos))
@@ -1337,7 +1339,7 @@ ConnectivityBoard <- function(input, output, session, env)
             ns('cmap_layout'),"Layout:",c("pca","tsne","volcano"), selected="tsne", inline=TRUE),
             "Choose the plot layout: t-SNE, PCA or volcano-type",
             placement="right", options = list(container = "body")),
-        tipify(sliderInput(ns('cmap_scorethreshold'),"Score threshold:", 0, 4, 0, step=0.01),
+        tipify(sliderInput(ns('cmap_scorethreshold'),"Score threshold:", 0, 1, 0, step=0.01),
                "Threshold the points by minimum score",
                placement="right", options = list(container = "body")),
         tipify(radioButtons(
