@@ -38,6 +38,8 @@ pgx.getConditions <- function(exp.matrix, nmax=3) {
 
 pgx.expMatrix <- function(pheno, contr.matrix) {
 
+    dbg("[pgx.expMatrix] called")
+    
     ctx <- rownames(contr.matrix)
     ## already an experiment contrast
     if(length(ctx)==nrow(pheno) && all(ctx %in% rownames(pheno))) {
@@ -45,20 +47,21 @@ pgx.expMatrix <- function(pheno, contr.matrix) {
         return(contr.matrix)
     }    
     group.col <- names(which(apply(pheno, 2, function(x) all(ctx %in% x))))[1]
-    if(is.null(group.col) || length(group.col)==0) {
+    if(is.null(group.col) || length(group.col)==0 || is.na(group.col) ) {
         message("[pgx.expMatrix] WARNING: could not resolve group column. No exp.matrix\n")
         return(NULL)
     }
 
-    cat("[pgx.expMatrix] group.col =",group.col,"\n")    
+    dbg("[pgx.expMatrix] group.col =",group.col)
     grp <- pheno[,group.col]
 
-    cat("[pgx.expMatrix] dim(contr.matrix) =",dim(contr.matrix),"\n")
-    cat("[pgx.expMatrix] grp =",grp,"\n")
-    cat("[pgx.expMatrix] ctx =",ctx,"\n")
+    dbg("[pgx.expMatrix] dim(contr.matrix) =",paste(dim(contr.matrix)))
+    dbg("[pgx.expMatrix] grp =",paste(grp))
+    dbg("[pgx.expMatrix] ctx =",paste(ctx))
     
     exp.matrix <- contr.matrix[match(grp,ctx),,drop=FALSE]
-    cat("[pgx.expMatrix] dim(exp.matrix) =",dim(exp.matrix),"\n")
+    dbg("[pgx.expMatrix] dim(exp.matrix) =",paste(dim(exp.matrix)))
+
     rownames(exp.matrix) <- rownames(pheno)
     exp.matrix
 }

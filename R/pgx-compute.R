@@ -181,38 +181,47 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     ngs$genes[is.na(ngs$genes)] <- ""
     
     ##-------------------------------------------------------------------
+    ## Filter out not-expressed
+    ##-------------------------------------------------------------------
+    if(filter.genes) {
+        cat("[pgx.createPGX] filtering out not-expressed genes...\n")
+        keep <- (Matrix::rowMeans(ngs$counts > 0) > 0) ## at least in 
+        ngs$counts <- ngs$counts[keep,]
+        ngs$genes  <- ngs$genes[keep,,drop=FALSE]
+        if(!is.null(ngs$X)) ngs$X <- ngs$X[keep,]
+    }
+    
+    ##-------------------------------------------------------------------
     ## Filter genes?
     ##-------------------------------------------------------------------
     is.mouse <- (mean(grepl("[a-z]",rownames(ngs$counts))) > 0.9)
     org = ifelse(is.mouse, "mouse", "human")
     org
     cat("[pgx.createPGX] detected organism: ",org,"\n")
-
-    if(filter.genes && org == "mouse") {
+    do.filter <- (only.hugo | only.chrom | only.proteincoding | !rik.orf)        
+    if(do.filter && org == "mouse") {
         SYMBOL = unlist(as.list(org.Mm.egSYMBOL))        
-        has.name <- !is.na(ngs$genes$gene_name) && ngs$genes$gene_name!=""
         has.chrloc = is.official = not.rik = is.protcoding = TRUE
         if(only.hugo) is.official <- (ngs$genes$gene_name %in% SYMBOL)
         if(!rik.orf) not.rik <- !grepl("Rik",ngs$genes$gene_name) ## ???
         ##imm.gene <- grepl("^TR_|^IG_",ngs$genes$gene_biotype)
         if(only.chrom) has.chrloc <- !is.na(ngs$genes$chr)
         if(only.proteincoding) is.protcoding <- ngs$genes$gene_biotype %in% c("protein_coding")
-        keep <- (has.name & not.rik & is.official & has.chrloc & is.protcoding)
+        keep <- (not.rik & is.official & has.chrloc & is.protcoding)
         table(keep)
         ngs$counts <- ngs$counts[keep,]
         ngs$genes  <- ngs$genes[keep,]
         if(!is.null(ngs$X)) ngs$X <- ngs$X[keep,]
     }
-    if(filter.genes && org == "human") {
+    if(do.filter && org == "human") {
         SYMBOL = unlist(as.list(org.Hs.egSYMBOL))
-        has.name <- !is.na(ngs$genes$gene_name) && ngs$genes$gene_name!=""
         has.chrloc = is.official = is.protcoding = not.orf = TRUE
         if(only.hugo) is.official <- (ngs$genes$gene_name %in% SYMBOL)
         if(!rik.orf) not.orf <- !grepl("ORF",ngs$genes$gene_name)
         ##imm.gene <- grepl("^TR_|^IG_",ngs$genes$gene_biotype)
         if(only.chrom) has.chrloc <- !is.na(ngs$genes$chr)
         if(only.proteincoding) is.protcoding <- ngs$genes$gene_biotype %in% c("protein_coding")
-        keep <- (has.name & not.orf & is.official & has.chrloc & is.protcoding)
+        keep <- (not.orf & is.official & has.chrloc & is.protcoding)
         table(keep)
         ngs$counts <- ngs$counts[keep,]
         ngs$genes  <- ngs$genes[keep,]
