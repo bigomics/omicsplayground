@@ -415,30 +415,22 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
                                 backgroundPosition = 'center') 
     })
 
-    dsea_actmap.plotdata <- reactive({
-        require(igraph)
-        ngs <- inputData()
-        req(ngs, input$dr_contrast, input$dsea_method)
 
-        shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
+    dseaPlotActmap <- function(ngs, dmethod, comparison, nterms, nfc) {
+
         if(is.null(ngs$drugs)) return(NULL)
-        
-        dmethod="activity/L1000";comparison=1
-        dmethod <- input$dsea_method        
-        comparison = input$dr_contrast
-        if(is.null(comparison)) return(NULL)
-        
+        ##dmethod="activity/L1000";comparison=1        
         nes <- ngs$drugs[[dmethod]]$X
         qv  <- ngs$drugs[[dmethod]]$Q
         score <- nes * (1 - qv)**2
         score[is.na(score)] <- 0
-        if(NCOL(score)==1) score <- cbind(score,score)
+        if(NCOL(score)==1) score <- cbind(score,score)  ## UGLY....
         
         ## reduce score matrix
         ##score = head(score[order(-rowSums(abs(score))),],40)
         ##score = score[head(order(-rowSums(score**2)),50),] ## max number of terms
-        score = score[head(order(-score[,comparison]**2),50),,drop=FALSE] ## max number of terms    
-        score = score[,head(order(-colSums(score**2)),25),drop=FALSE] ## max comparisons/FC
+        score = score[head(order(-score[,comparison]**2),nterms),,drop=FALSE] ## number of terms    
+        score = score[,head(order(-colSums(score**2)),nfc),drop=FALSE] ## max comparisons/FC
 
         cat("dsea_actmap:: dim(score)=",dim(score),"\n")
         score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
@@ -452,42 +444,55 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         score <- score[ii,jj,drop=FALSE]
         
         cex2=1
-        colnames(score) = substring(colnames(score),1,25)
-        rownames(score) = substring(rownames(score),1,42)
-        if(ncol(score)>15) {
-            rownames(score) = substring(rownames(score),1,34)
-            cex2=0.85
-        }
-        if(ncol(score)>25) {
-            rownames(score) = substring(rownames(score),1,25)
-            colnames(score) <- rep("",ncol(score))
-            cex2=0.7
-        }
+        colnames(score) = substring(colnames(score),1,30)
+        rownames(score) = substring(rownames(score),1,50)
+        cex2=0.85
 
         score2 <- score
         if(input$dr_normalize) score2 <- t( t(score2) / apply(abs(score2),2,max)) 
         score2 <- sign(score2) * abs(score2/max(abs(score2)))**3   ## fudging
 
-        list( score=score2, cex=cex2)
-    })        
+        par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1,0,0))
+        require(corrplot)
+        corrplot( score2, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
+                 tl.cex = 0.9*cex2, tl.col = "grey20", tl.srt = 90)
+
+    }      
         
     dsea_actmap.RENDER <- reactive({
 
-        plt <- dsea_actmap.plotdata()
+        require(igraph)
+        ngs <- inputData()
+        req(ngs, input$dr_contrast, input$dsea_method)
 
-        par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1,0,0))
-        require(corrplot)
-        corrplot( plt$score, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
-                 tl.cex = 0.9*plt$cex, tl.col = "grey20", tl.srt = 90)
+        shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
+        if(is.null(ngs$drugs)) return(NULL)
+        
+        dmethod="activity/L1000";comparison=1
+        dmethod <- input$dsea_method        
+        comparison = input$dr_contrast
+        if(is.null(comparison)) return(NULL)
+
+        dseaPlotActmap(ngs, dmethod, comparison, nterms=50, nfc=20)
+
     })    
 
     dsea_actmap.RENDER2 <- reactive({
 
-        plt <- dsea_actmap.plotdata()
-        par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1,0,0))
-        require(corrplot)
-        corrplot( t(plt$score), is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
-                 tl.cex = 0.9*plt$cex, tl.col = "grey20", tl.srt = 90)
+        require(igraph)
+        ngs <- inputData()
+        req(ngs, input$dr_contrast, input$dsea_method)
+
+        shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
+        if(is.null(ngs$drugs)) return(NULL)
+        
+        dmethod="activity/L1000";comparison=1
+        dmethod <- input$dsea_method        
+        comparison = input$dr_contrast
+        if(is.null(comparison)) return(NULL)
+
+        dseaPlotActmap(ngs, dmethod, comparison, nterms=50, nfc=100)
+        
     })    
 
     
@@ -539,7 +544,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         info.text = "The <strong>Activation Matrix</strong> visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         options = dsea_actmap.opts,
         pdf.width=6, pdf.height=10,
-        height = c(fullH-120,600), width = c('auto',1200),
+        height = c(fullH,750), width=c("100%",1400),        
         res=72
     )
 

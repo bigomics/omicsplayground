@@ -457,22 +457,12 @@ WordCloudBoard <- function(input, output, session, env)
         return(tbl)
     })
 
-    wordcloud_actmap.RENDER %<a-% reactive({
 
-        cat("<wordcloud_actmap> called\n")
-        
-        ##df <- enrich_getCurrentWordEnrichment()
-        ##req(df)
-        res <- enrich_getWordFreqResults()   
-        score <- sapply(res$gsea, function(x) x$NES)
-        rownames(score) <- res$gsea[[1]]$word
+    plotWcActmap <- function(score, normalize, nterm, nfc) {
         
         ## reduce score matrix
-        ##score = head(score[order(-rowSums(abs(score))),],40)
-        ##score = score[head(order(-rowSums(score**2)),50),] ## max number of terms
-        ##score = score[head(order(-score[,comparison]**2),50),,drop=FALSE] ## max terms
-        score = score[head(order(-rowMeans(score[,]**2)),50),,drop=FALSE] ## max terms    
-        score = score[,head(order(-colSums(score**2)),25),drop=FALSE] ## max comparisons/FC
+        score = score[head(order(-rowMeans(score[,]**2)),nterm),,drop=FALSE] ## max terms    
+        score = score[,head(order(-colSums(score**2)),nfc),drop=FALSE] ## max comparisons/FC
 
         cat("<wordcloud_actmap> dim(score)=",dim(score),"\n")
         score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
@@ -485,31 +475,61 @@ WordCloudBoard <- function(input, output, session, env)
         jj <- hclust(d2)$order
         score <- score[ii,jj,drop=FALSE]
         
-        cex2=1
         colnames(score) = substring(colnames(score),1,30)
         rownames(score) = substring(rownames(score),1,50)
-        if(ncol(score)>15) {
-            rownames(score) = substring(rownames(score),1,40)
-            cex2=0.85
-        }
-        if(ncol(score)>25) {
-            rownames(score) = substring(rownames(score),1,30)
-            colnames(score) <- rep("",ncol(score))
-            cex2=0.7
-        }
+        colnames(score) <- paste0(colnames(score)," ")
+        cex2=0.85
 
         par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,2,0,1))
         require(corrplot)
         score2 <- score
-        if(input$wc_normalize) score2 <- t(t(score2) / apply(abs(score2),2,max)) ## normalize rows???
+        if(normalize) score2 <- t(t(score2) / apply(abs(score2),2,max)) ## normalize cols???
         score2 <- sign(score2) * abs(score2/max(abs(score2)))**3   ## fudging
         bmar <- 0 + pmax((50 - nrow(score2))*0.25,0)
         corrplot( score2, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
-                 tl.cex = 0.9*cex2, tl.col = "grey20", tl.srt = 45,
+                 tl.cex = 0.9*cex2, tl.col = "grey20", tl.srt = 90,
                  mar=c(bmar,0,0,0) )
+    }
+    
+    wordcloud_actmap.RENDER %<a-% reactive({
+
+        cat("<wordcloud_actmap> called\n")
         
+        ##df <- enrich_getCurrentWordEnrichment()
+        ##req(df)
+        res <- enrich_getWordFreqResults()   
+        score <- sapply(res$gsea, function(x) x$NES)
+        rownames(score) <- res$gsea[[1]]$word
+        
+        plotWcActmap(
+            score = score,
+            normalize = input$wc_normalize,
+            nterm = 50,
+            nfc = 20
+        )
+                    
     })    
 
+    wordcloud_actmap.RENDER2 %<a-% reactive({
+
+        cat("<wordcloud_actmap> called\n")
+        
+        ##df <- enrich_getCurrentWordEnrichment()
+        ##req(df)
+        res <- enrich_getWordFreqResults()   
+        score <- sapply(res$gsea, function(x) x$NES)
+        rownames(score) <- res$gsea[[1]]$word
+        
+        plotWcActmap(
+            score = score,
+            normalize = input$wc_normalize,
+            nterm = 50,
+            nfc = 100
+        )
+                    
+    })    
+
+    
     ##---------------------------------------------------------------
     ##------------- modules for WordCloud ---------------------------
     ##---------------------------------------------------------------
@@ -616,12 +636,13 @@ WordCloudBoard <- function(input, output, session, env)
         plotModule,
         id="wordcloud_actmap",
         func = wordcloud_actmap.RENDER,
-        func2 = wordcloud_actmap.RENDER,
+        func2 = wordcloud_actmap.RENDER2,
         title = "Activation matrix", label="d",
         info.text = "The <strong>Activation Matrix</strong> visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         options = wordcloud_actmap.opts,
         pdf.width=6, pdf.height=10,
-        height = c(rowH,750), res=72
+        height = c(rowH,750), width=c("100%",1400),
+        res=72
     )
 
     ##---------------------------------------------------------------
@@ -638,7 +659,7 @@ WordCloudBoard <- function(input, output, session, env)
             br(),
             fillRow(
                 height = rowH,
-                flex = c(3.6,1),
+                flex = c(3.8,1),
                 fillCol(
                     flex=c(1.2,0.1,1),
                     height = rowH,

@@ -254,14 +254,18 @@ server = function(input, output, session) {
             hideTab("expr-tabs2","FDR table")
             hideTab("enrich-tabs1","Volcano (methods)")
             hideTab("enrich-tabs2","FDR table")
+            ## hideTab("cor-tabs","Functional")
         }
 
+        ## hideTab("cor-tabs","Functional")
+        
         if(USER_MODE == "dev" || DEV) {
             showTab("maintabs","Development")
             showTab("view-tabs","Resource info")
             showTab("enrich-tabs1","GeneMap")
             showTab("scell-tabs1","CNV")  ## DEV only
-            showTab("scell-tabs1","Monocle") ## DEV only       
+            showTab("scell-tabs1","Monocle") ## DEV only
+            showTab("cor-tabs","Functional")
         } else {
             hideTab("view-tabs","Resource info")
             hideTab("maintabs","Development")

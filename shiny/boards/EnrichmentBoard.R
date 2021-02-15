@@ -1105,7 +1105,8 @@ EnrichmentBoard <- function(input, output, session, env)
         
         ## select maximum 24 comparisons (because of space...)
         q.score <- sapply(Q, function(q) mean(tail(sort(-log10(1e-99+q)),100)))
-        sel   <- head(names(sort(q.score, decreasing=TRUE)),20)
+        sel <- head(names(sort(q.score, decreasing=TRUE)),20)
+        sel <- sort(sel)
         Q <- Q[sel]
         mx.list <- mx.list[sel]
         

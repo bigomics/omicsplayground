@@ -419,7 +419,63 @@ to understand biological functions including GO and KEGG pathway analysis."
                                 backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center') 
     })
+    
 
+    plotKEGGactmap <- function(meta, df, normalize, nterms, nfc)
+    {
+
+        fx <- sapply(meta, function(x) x$meta.fx)
+        qv <- sapply(meta, function(x) x$meta.q)    
+        rownames(fx) <- rownames(qv) <- rownames(meta[[1]])
+
+        kk <- rownames(fx)
+        kk <- as.character(df$pathway)
+        ##if(is.na(kk) || kk=="" || !(kk %in% rownames(fx))) return(NULL)
+        if(length(kk) < 3) return(NULL)
+
+        if(mean(is.na(qv))<0.01) {
+            score <- fx[kk,,drop=FALSE] * (1 - qv[kk,,drop=FALSE])**2
+        } else {
+            score <- fx[kk,,drop=FALSE] 
+        }
+        dim(score)
+        if(NCOL(score)==1) score <- cbind(score,score)  ## UGLY...
+        
+        score <- score[head(order(-rowSums(score**2)),nterms),,drop=FALSE]  ## nr gene sets
+        score <- score[,head(order(-colSums(score**2)),nfc),drop=FALSE]  ## max comparisons/FC    
+        score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
+        d1 <- as.dist(1-cor(t(score),use="pairwise"))
+        d2 <- as.dist(1-cor(score,use="pairwise"))
+        d1[is.na(d1)] <- 1
+        d2[is.na(d2)] <- 1
+        ii=1:nrow(score);jj=1
+        jj <- hclust(d2)$order
+        ii <- hclust(d1)$order
+        score <- score[ii,jj,drop=FALSE]
+        
+        rownames(score) = substring(rownames(score),1,50)
+        cex2=0.85
+        
+        score2 <- score
+        if(normalize) score2 <- t(t(score2) / apply(abs(score2),2,max))
+        score2 <- sign(score2) * abs(score2/max(abs(score2)))**3   ## fudging
+        rownames(score2) <- tolower(gsub(".*:|kegg_|_Homo.*$","",
+                                         rownames(score2),ignore.case=TRUE))
+        rownames(score2) <- substring(rownames(score2), 1, 40)
+        colnames(score2) <- shortstring(colnames(score2), 30)
+        colnames(score2) <- paste0(colnames(score2)," ")
+        
+        ## heatmap(score2, scale="none", mar=c(8,20))
+        bmar <- 0 + pmax(50 - nrow(score2),0)*0.3
+        par(mfrow=c(1,1), mar=c(1,1,10,1), oma=c(0,1.5,0,0.5) )
+        require(corrplot)
+        corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
+                 tl.cex = 0.85*cex2, tl.col="grey20", tl.srt = 90,
+                 mar=c(bmar,0,0.5,0) )
+
+
+    }
+    
     kegg_actmap.RENDER %<a-% reactive({
 
         require(igraph)
@@ -433,78 +489,28 @@ to understand biological functions including GO and KEGG pathway analysis."
             return(NULL)
         }
         meta <- ngs$gset.meta$meta
-        fx <- sapply(meta, function(x) x$meta.fx)
-        qv <- sapply(meta, function(x) x$meta.q)    
-        rownames(fx) <- rownames(qv) <- rownames(meta[[1]])
-        
-        kk <- as.character(df$pathway)
-        ##if(is.na(kk) || kk=="" || !(kk %in% rownames(fx))) return(NULL)
-        if(length(kk) < 3) return(NULL)
 
-        if(mean(is.na(qv))<0.01) {
-            score <- fx[kk,,drop=FALSE] * (1 - qv[kk,,drop=FALSE])**2
-        } else {
-            score <- fx[kk,,drop=FALSE] 
-        }
-        dim(score)
-        if(NCOL(score)==1) score <- cbind(score,score)
-        
-        score <- score[head(order(-rowSums(score**2)),50),,drop=FALSE]  ## maximum nr of gene sets
-        score <- score[,head(order(-colSums(score**2)),25),drop=FALSE]  ## max comparisons/FC    
-        score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
-        d1 <- as.dist(1-cor(t(score),use="pairwise"))
-        d2 <- as.dist(1-cor(score,use="pairwise"))
-        d1[is.na(d1)] <- 1
-        d2[is.na(d2)] <- 1
-        ii=1:nrow(score);jj=1
-        jj <- hclust(d2)$order
-        ii <- hclust(d1)$order
-        score <- score[ii,jj,drop=FALSE]
-        
-        cex2=0.9
-        rownames(score) = substring(rownames(score),1,50)
-        if(ncol(score)>15) {
-            rownames(score) = substring(rownames(score),1,40)
-            cex2=0.8
-        }
-        if(ncol(score)>25) {
-            rownames(score) = substring(rownames(score),1,30)
-            colnames(score) <- rep("",ncol(score))
-            cex2=0.65
-        }
-        
-        par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,2,0,1) )
-        require(corrplot)
-        score2 <- score
-        if(input$fa_normalize) score2 <- t(t(score2) / apply(abs(score2),2,max))
-        score2 <- sign(score2) * abs(score2/max(abs(score2)))**3   ## fudging
-        rownames(score2) <- tolower(gsub(".*:|kegg_|_Homo.*$","",
-                                         rownames(score2),ignore.case=TRUE))
-        rownames(score2) <- substring(rownames(score2), 1, 40)
-        colnames(score2) <- shortstring(colnames(score2), 30)
-        
-        ## heatmap(score2, scale="none", mar=c(8,20))
-        bmar <- 0 + pmax(50 - nrow(score2),0)*0.3
-        corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
-                 tl.cex = 0.9*cex2, tl.col="grey20", tl.srt = 45,
-                 mar=c(bmar,0,0,0) )
+        plotKEGGactmap(meta, df, normalize = input$fa_normalize, nterms=50, nfc=25)
         
     })    
 
-    kegg_info1 = "<strong>KEGG pathways</strong> are a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. In the pathway map, genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Each pathway is scored for the selected contrast profile and reported in the table below. "
+    kegg_actmap.RENDER2 %<a-% reactive({
 
-    ## kegg_buttons1 = plotModuleButtons(
-    ##     "kegg_graph", ns=ns,
-    ##     text = kegg_info1, just.info=TRUE, 
-    ##     download.fmt="png", ##no.download=TRUE,
-    ##     title = "KEGG pathway map", label="a"
-    ## )
-    ## output$kegg_graph_png  <- downloadHandler(
-    ##     filename = "plot.png",
-    ##     content = function(file) {
-    ##         file.copy(KEGGIMG,file)
-    ##     }
-    ## )
+        require(igraph)
+        ngs <- inputData()
+        req(ngs)
+        df <- getKeggTable()
+        if(is.null(df) || nrow(df)==0) {
+            dbg("[FunctionalBoard::kegg_actmap.RENDER] emtpy KEGG table")
+            ##par(mfrow=c(1,1), mar=c(1,1,1,1)*0, oma=c(0,2,0,1)*0 )
+            ##frame()
+            return(NULL)
+        }
+        meta <- ngs$gset.meta$meta
+        plotKEGGactmap(meta, df, normalize = input$fa_normalize, nterms=50, nfc=100)        
+    })    
+
+    kegg_info1 = "<strong>KEGG pathways</strong> are a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. In the pathway map, genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Each pathway is scored for the selected contrast profile and reported in the table below. "
     
     callModule(
         plotModule,
@@ -540,12 +546,13 @@ to understand biological functions including GO and KEGG pathway analysis."
         plotModule,
         id = "kegg_actmap",
         func  = kegg_actmap.RENDER,
-        func2 = kegg_actmap.RENDER, 
+        func2 = kegg_actmap.RENDER2, 
         title = "Activation matrix", label="c",
         info.text = "The <strong>KEGG activation matrix</strong> visualizes the activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         ##options = kegg_actmap.opts,
         pdf.width=10, pdf.height=10,
-        height = c(rowH,750), res=72
+        height = c(rowH,750), width = c("100%",1400),
+        res=72
     )
     
     
@@ -784,27 +791,17 @@ to understand biological functions including GO and KEGG pathway analysis."
                                 backgroundPosition = 'center') 
     })
 
-    GO_actmap.RENDER %<a-% reactive({
-        require(igraph)
-        ngs <- inputData()
-        req(ngs)
 
-        if(is.null(ngs$meta.go)) {
-            dbg("[FunctionalBoard:GO_actmap.RENDER] no META.GO in pgx object!")
-            return(NULL)
-        }
-
-        score = ngs$meta.go$pathscore
-        ##if(is.null(score)) return(NULL)
-        go = ngs$meta.go$graph
+    plotGOactmap <- function(score, go, normalize, maxterm, maxfc)
+    {
         score[is.na(score)] = 0
         rownames(score) = V(go)[rownames(score)]$Term
         cat("GO_actmap:: dim(score)=",dim(score),"\n")
         
         ## reduce score matrix
         ##score = head(score[order(-rowSums(abs(score))),],40)
-        score = score[head(order(-rowSums(score**2)),50),,drop=FALSE] ## max number of terms    
-        score = score[,head(order(-colSums(score**2)),25),drop=FALSE] ## max comparisons/FC
+        score = score[head(order(-rowSums(score**2)),maxterm),,drop=FALSE] ## max number terms    
+        score = score[,head(order(-colSums(score**2)),maxfc),drop=FALSE] ## max comparisons/FC
         if(NCOL(score)==1) score <- cbind(score,score)   
         cat("GO_actmap:: dim(score)=",dim(score),"\n")
 
@@ -818,35 +815,73 @@ to understand biological functions including GO and KEGG pathway analysis."
         ii <- hclust(d1)$order
         score <- score[ii,jj,drop=FALSE]
         
-        cex2=1
         colnames(score) = substring(colnames(score),1,30)
         rownames(score) = substring(rownames(score),1,50)
-        if(ncol(score)>15) {
-            rownames(score) = substring(rownames(score),1,40)
-            cex2=0.85
-        }
-        if(ncol(score)>25) {
-            rownames(score) = substring(rownames(score),1,30)
-            colnames(score) <- rep("",ncol(score))
-            cex2=0.7
-        }
-
+        cex2=0.85
+        colnames(score) <- paste0(colnames(score)," ")
+        
         ##pdf("module-functional.pdf",w=8,h=12)
-        par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,2,0,1))
-        require(corrplot)
         score2 <- score
-        if(input$fa_normalize) score2 <- t( t(score2) / apply(abs(score2),2,max)) ## column scale???
+        if(normalize) score2 <- t( t(score2) / apply(abs(score2),2,max)) ## column scale???
         ##score2 <- abs(score2)**0.8 * sign(score2)  ## fudging
         score2 <- sign(score2) * abs(score2/max(abs(score2)))**0.8   ## fudging
         ## heatmap(score2, scale="none", mar=c(8,20))
+
         bmar <- 0 + pmax((50 - nrow(score2))*0.25,0)
-        corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
-                 tl.cex = 0.9*cex2, tl.col="grey20", tl.srt = 45,
-                 mar=c(bmar,0,0,0) )
-        ##dev.off()
-        
+        par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1.5,0,0.5))
+        require(corrplot)
+        corrplot::corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
+                           tl.cex = 0.85*cex2, tl.col="grey20", tl.srt = 90,
+                           mar=c(bmar,0,0,0) )
+
+
+    }
+
+    GO_actmap.RENDER %<a-% reactive({
+        require(igraph)
+        ngs <- inputData()
+        req(ngs)
+
+        if(is.null(ngs$meta.go)) {
+            dbg("[FunctionalBoard:GO_actmap.RENDER] no META.GO in pgx object!")
+            return(NULL)
+        }
+
+        score = ngs$meta.go$pathscore
+        ##if(is.null(score)) return(NULL)
+        go = ngs$meta.go$graph
+
+        plotGOactmap(
+            score = score, go = go,
+            normalize = input$fa_normalize,
+            maxterm = 50,
+            maxfc = 25
+        )
+                    
     })    
 
+    GO_actmap.RENDER2 %<a-% reactive({
+        require(igraph)
+        ngs <- inputData()
+        req(ngs)
+
+        if(is.null(ngs$meta.go)) {
+            dbg("[FunctionalBoard:GO_actmap.RENDER] no META.GO in pgx object!")
+            return(NULL)
+        }
+
+        score = ngs$meta.go$pathscore
+        ##if(is.null(score)) return(NULL)
+        go = ngs$meta.go$graph
+
+        plotGOactmap(
+            score = score, go = go,
+            normalize = input$fa_normalize,
+            maxterm = 50,
+            maxfc = 100
+        )
+                    
+    })    
 
     GO_info1 = "The <strong>Gene Ontology</strong> (GO) provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. The structure of GO can be described in terms of a graph, where each GO term is a node, and the relationships between the terms are edges between the nodes. GO is loosely hierarchical, with ‘child’ terms being more specialized than their ‘parent’ terms. The graph is interactive. You can move the graph and zoom in using the mouse."
 
@@ -876,12 +911,13 @@ to understand biological functions including GO and KEGG pathway analysis."
         plotModule,
         id = "GO_actmap",
         func = GO_actmap.RENDER,
-        func2 = GO_actmap.RENDER, 
+        func2 = GO_actmap.RENDER2, 
         title = "Activation matrix", label="c",
         info.text = "The <b>GO activation matrix</b> visualizes the activation of GO terms across conditions. From this figure, you can easily detect GO terms that are consistently up/down across conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         options = GO_actmap.opts,
         pdf.width=10, pdf.height=10,
-        height = c(rowH,750), res=72
+        height = c(rowH,750), width = c("100%",1400),
+        res=72
     )
     
     GO_table <- callModule(
