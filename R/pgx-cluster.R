@@ -381,7 +381,7 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
 }
 
 pgx.clusterMatrix <- function(X, perplexity=30, dims=c(2,3),
-                              ntop=1000, npca=50, prefix="C",
+                              ntop=1000, npca=50, prefix="c",
                               row.center=TRUE, row.scale=FALSE,
                               find.clusters=TRUE, kclust=1,
                               clust.detect = c("louvain","hclust"),
@@ -534,7 +534,7 @@ pgx.clusterMatrix <- function(X, perplexity=30, dims=c(2,3),
 
 ##is.logx=FALSE;ntop=1000
 pgx.clusterMatrix.SAVE <- function(X, perplexity=30,
-                                   ntop=1000, npca=50, prefix="C", 
+                                   ntop=1000, npca=50, prefix="c", 
                                    dims=c(2,3),
                                    row.center=TRUE, row.scale=FALSE,
                                    find.clusters=TRUE, kclust=1,

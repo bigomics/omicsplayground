@@ -797,14 +797,15 @@ two conditions. Determine which genes are significantly downregulated or overexp
         las = ifelse(ngrp>3, 3, 0)
         mar1 = ifelse(las==3, 4, 3)
         mar1 = ifelse(las==3, 3.5, 2.5)
-
+        
         comp=1;grouped=0;logscale=1
         comp = input$gx_contrast
         grouped <- !input$gx_ungroup
         logscale <- input$gx_logscale
         showothers <- input$gx_showothers
         
-        srt=30
+        srt = 30
+        mar1 = 3.5
         ylab = ifelse(logscale, "log2CPM", "CPM")
         show.names <- ifelse(!grouped & ngrp>25, FALSE, TRUE)
         ##nx = ifelse(grouped, ngrp, length(y))

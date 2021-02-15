@@ -168,8 +168,10 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
             }    
 
             observeEvent( c(input$group1, input$group2), {
-                g1 <- gsub("[-_.,<> ]","",input$group1)
-                g2 <- gsub("[-_.,<> ]","",input$group2)
+                g1 <- gsub("[-_.,<> ]",".",input$group1)
+                g2 <- gsub("[-_.,<> ]",".",input$group2)
+                g1 <- gsub("[.]+",".",g1)
+                g2 <- gsub("[.]+",".",g2)                
                 g1 <- paste(g1,collapse="")
                 g2 <- paste(g2,collapse="")
                 if(is.null(g1) || length(g1)==0) g1 <- ""

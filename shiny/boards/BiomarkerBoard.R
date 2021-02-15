@@ -527,7 +527,7 @@ be multiple categories (classes) or patient survival data."
         res <- calcVariableImportance()
         if(is.null(res)) return(NULL)
 
-        dbg("pdx_boxplots:: called\n")    
+        dbg("[BiomarkerBoard::pdx_boxplots] called\n")    
         vars <- setdiff(res$rf$frame$var,"<leaf>")
         vars <- res$rf$orig.names[vars]
         if(length(vars)==0) return(NULL)
@@ -562,7 +562,7 @@ be multiple categories (classes) or patient survival data."
         ny <- length(unique(y))    
         par(mfrow=c(2,4), mar=c(3.5,3,2,0.5),
             mgp=c(2,0.8,0), oma=c(0.5,1,1,1)*0)
-        if(length(vars)>8) par(mfrow=c(3,4), mar=c(2.8,3,2,0.3),)
+        if(length(vars)>8) par(mfrow=c(3,4), mar=c(2.8,3,2,0.3))
         i=1
         for(i in 1:min(12,length(vars))) {
             ##g <- rownames(res$R)[i]

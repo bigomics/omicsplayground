@@ -1247,8 +1247,8 @@ between two contrasts."
         req(ngs)
         req(input$cmp_comparisons)
         
-        res <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
-        res = getFoldChangeMatrix()
+        ## res <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
+        res <- getFoldChangeMatrix()
 
         if(is.null(res)) return(NULL)
         ##validate(need(NCOL(res$fc)<2, "warning. need multiple comparisons."))

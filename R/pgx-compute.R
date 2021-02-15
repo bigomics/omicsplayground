@@ -370,7 +370,7 @@ pgx.computePGX <- function(ngs,
         max.features = max.genes,
         test.methods = gx.methods)
     head(ngs$gx.meta$meta[[1]])        
-    
+       
     ## ------------------ gene set tests -----------------------
     if(!is.null(progress)) progress$inc(0.2, detail = "testing gene sets")
 

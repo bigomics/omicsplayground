@@ -572,7 +572,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
                     flex = c(1.4,0.15,1),
                     height = rowH,
                     fillRow(
-                        flex=c(2.0,1),
+                        flex=c(1.9,1),
                         plotWidget(ns("dsea_enplots")),
                         plotWidget(ns("dsea_moaplot"))
                     ),
