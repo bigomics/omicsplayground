@@ -13,7 +13,7 @@ USER.GENETEST.METHODS <- NULL
 ##=============================================================================
 ##===================    Platform helper functions ============================
 ##=============================================================================
-
+##pgx=ngs
 pgx.initialize <- function(pgx) {
 
     ##---------------------------------------------------------------------
@@ -177,11 +177,12 @@ pgx.initialize <- function(pgx) {
     ## ******************NEED RETHINK***********************************
     ## *****************************************************************
     ## ONLY categorical variables for the moment!!!
-    k1 = pgx.getCategoricalPhenotypes(pgx$Y, min.ncat=2, max.ncat=20)
+    n1 <- nrow(pgx$Y)-1
+    k1 = pgx.getCategoricalPhenotypes(pgx$Y, min.ncat=2, max.ncat=9999)
     k2 = grep("OS.survival",colnames(pgx$Y),value=TRUE)
     ##kk = sort(unique(c("group",k1,k2)))
     kk = sort(unique(c(k1,k2)))
-    pgx$Y <- pgx$Y[,kk]
+    pgx$Y <- pgx$Y[,kk,drop=FALSE]
     colnames(pgx$Y)
     pgx$samples <- pgx$Y    ## REALLY?
     
@@ -759,13 +760,14 @@ is.POSvsNEG <- function(pgx) {
 }
 
 
-is.categorical <- function(x, max.ncat=20, min.ncat=2) {
+is.categorical <- function(x, max.ncat=null, min.ncat=2) {
+    max.ncat <- length(x)-1
     is.factor <- any(class(x) %in% c("factor","character"))
     is.factor
     n.unique <- length(unique(setdiff(x,NA)))
     n.notna  <- length(x[!is.na(x)])
     n.unique
-    n.notna
+    n.notna    
     is.id    <- (n.unique > 0.8*n.notna)
     is.id
     is.factor2 <- (is.factor & !is.id & n.unique>=min.ncat & n.unique<= max.ncat)
@@ -810,12 +812,13 @@ pgx.getNumericalPhenotypes <-function(df)
     names(which(numpheno==TRUE))
 }
 
-##max.ncat=20;min.ncat=2
-pgx.getCategoricalPhenotypes <-function(df, max.ncat=20, min.ncat=2, remove.dup=FALSE) {
+##max.ncat=9999;min.ncat=2
+pgx.getCategoricalPhenotypes <-function(df, min.ncat=2, max.ncat=20, remove.dup=FALSE) {
     ##
     ##
     ##
-
+    ##df <- type.convert(df)
+    
     is.bad = 0
     is.bad1 <- grepl("^sample$|[_.]id$|replic|rep|patient|donor|individ",tolower(colnames(df)))
     is.bad2 <- grepl("ratio|year|month|day|^age$|^efs|^dfs|surv|follow",tolower(colnames(df)))    

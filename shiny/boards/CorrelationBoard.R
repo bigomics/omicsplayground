@@ -287,7 +287,7 @@ between genes and find coregulated modules."
     cor_barplot.opts <- tagList(
         ##checkboxInput(ns('cor_partialpc'),'partial correlation', value=FALSE)
         radioButtons(ns('cor_partialpc'),'partial correlation',
-                     c("none","fast","all methods"), selected="fast",
+                     c("none","fast","all methods"), selected="none",
                      inline=TRUE )
     )
 

@@ -62,7 +62,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     ##========================= INPUTS UI ============================================
     ##================================================================================
 
-    output$inputsUI <- renderUI({
+    output$inputsUI <- renderUI({        
         ui <- tagList(
             ##tipify( actionLink(ns("clust_info"), "Info", icon = icon("info-circle")),
             ##       "Show more information about this module."),
@@ -87,12 +87,14 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             conditionalPanel(
                 "input.hm_options % 2 == 1", ns=ns,
                 tagList(
-                    tipify( checkboxInput(ns('hm_group'),'group by condition',FALSE),
-                           "Group the samples by condition.", placement="bottom")
-                ),
-                tagList(
+                    ##tipify( checkboxInput(ns('hm_group'),'group by condition',FALSE),
+                    ##       "Group the samples by condition.", placement="bottom")
+                    tipify( selectInput(ns('hm_group'),'Group by:',choices=NULL),
+                           "Group the samples by condition.", placement="top"),
+                    tipify( checkboxInput(ns('hm_filterXY'),'exclude X/Y genes',FALSE),
+                           "Exclude genes on X/Y chromosomes.", placement="right"),
                     tipify( checkboxInput(ns('hm_excludedown'),'exclude down genesets',FALSE),
-                           "Exclude down genesets.", placement="bottom")
+                           "Exclude down genesets.", placement="top")
                 )
             )
         )
@@ -112,7 +114,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
-
+    
     observeEvent( input$clust_info, {
         showModal(modalDialog(
             title = HTML("<strong>Clustering Board</strong>"),
@@ -146,6 +148,15 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         if(ncol(ngs$X) > 80) lab <- c("row")
         ##if(nrow(ngs$X)<100) lab <- c(lab,"row")
         updateCheckboxGroupInput(session,"hm_showlabel", selected=lab)        
+
+        ## update defaults??
+        n1 <- nrow(ngs$samples)-1
+        groupings <- colnames(ngs$samples)
+        ## groupings <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=n1)
+        groupings <- c("<ungrouped>",sort(groupings))
+        updateSelectInput(session,"hm_group", choices=groupings)        
+
+
     })
 
     observeEvent( input$hm_splitby, {
@@ -308,7 +319,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         if(do.split && splitvar %in% rownames(ngs$X)) {
             dbg("[ClusteringBoard:getTopMatrix] splitting by gene: ",splitvar)
             ##xgene <- rownames(ngs$X)[1]
-            gx <- ngs$X[splitvar,]
+            gx <- ngs$X[splitvar,,drop=FALSE]
             if(ncol(zx)>50) {
                 qq <- quantile(gx, probs=c(0.33,0.66), na.rm=TRUE)
                 grp <- cut(gx, breaks=c(-999,qq,999), label=c("low","medium","high"))
@@ -318,9 +329,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             }
             grp <- paste0(splitvar,":",grp)
         }
-        
-        dbg("[ClusteringBoard:getTopMatrix] len.grp=",length(grp))
-        dbg("[ClusteringBoard:getTopMatrix] splitby=",splitby)
         
         ##if(length(grp)==0) splitby <- 'none'
         if(do.split && length(grp)==0) return(NULL)        
@@ -394,7 +402,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             system.time( hc <- fastcluster::hclust(D, method="ward.D2" ) )
             ## system.time( hc <- flashClust::hclust(D, method="ward" ) )
             ## system.time( hc <- nclust(D, link="ward") )
-            ngrp = 4  ## how many default groups???
+            ngrp = min(4, nrow(zx))  ## how many default groups???
             idx = paste0("S",cutree(hc, ngrp))
         }
 
@@ -404,24 +412,19 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         annot = annot[,kk,drop=FALSE]  ## no group??    
         samples = colnames(zx) ## original sample list
         
-        ## ------------- calculate group summarized (for what???)
+        ## ----------------------------------------------------
+        ## ------------ calculate group summarized ------------
+        ## ----------------------------------------------------
         grp.zx <- NULL
-        if("group" %in% colnames(ngs$samples)) { 
-            gg.grp = ngs$samples[colnames(zx),"group"]
-        } else {
-            gg.grp = ngs$model.parameters$group
-            ##annot$group <- gg.grp
-        }
-        
-        if(0) {
-            grp.zx = t(apply( zx, 1, function(x) tapply(x, gg.grp, mean)))
-            grp.annot = annot[match(colnames(zx),gg.grp),,drop=FALSE] ## NEED RETHINK!!!
-            rownames(grp.annot) = colnames(zx)
-        } else {
+        grp.var = "group"
+        grp.var <- input$hm_group
+
+        if(grp.var %in% colnames(ngs$samples)) { 
+            gg.grp <- ngs$samples[colnames(zx),grp.var]
+            ## take most frequent term as group annotation value
             grp.zx = tapply( colnames(zx), gg.grp, function(k)
                 rowMeans(zx[,k,drop=FALSE],na.rm=TRUE))
             grp.zx = do.call( cbind, grp.zx)
-            ## take most frequent term as group annotation value
             most.freq <- function(x) names(sort(-table(x)))[1]
             grp.annot = tapply( rownames(annot), gg.grp, function(k) {
                 f <- apply(annot[k,,drop=FALSE],2,function(x) most.freq(x))
@@ -431,6 +434,11 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             })
             grp.annot = data.frame(do.call( rbind, grp.annot))
             grp.annot = grp.annot[colnames(grp.zx),]
+        } else {
+
+            grp.zx <- zx
+            grp.annot <- annot
+
         }
 
         dbg("[ClusteringBoard:getTopMatrix] done!")
@@ -456,16 +464,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     require(plotly)
     require(scatterD3)
     ##require(tippy)
-    
-    observe({
-        ngs <- inputData()
-        req(ngs)
-
-        cvar <- sort(pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=20))
-        updateSelectInput(session, "hm_pcvar", choices=cvar, selected="group")
-        updateSelectInput(session, "hm2_pcvar", choices=cvar, selected="group")        
-    })
-    
+        
     ##hm1_splitmap.RENDER %<a-% reactive({
     hm1_splitmap.RENDER <- reactive({    
 
@@ -481,7 +480,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         req(filt)
         ##if(is.null(filt)) return(NULL)
         
-        if(input$hm_group) {
+        ##if(input$hm_group) {
+        if(1) {
             zx <- filt$grp.mat    
             annot = filt$grp.annot
         } else {
@@ -592,7 +592,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ##if(is.null(filt)) return(NULL)
         req(filt)
         
-        if(input$hm_group) {
+        ##if(input$hm_group) {
+        if(1) {
             X <- filt$grp.mat    
             annot = filt$grp.annot
         } else {
@@ -647,7 +648,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         return(plt)
     })
 
-    topmodes <- c("specific","sd","pca")
+    topmodes <- c("sd","pca","specific")
     ##if(DEV) topmodes <- c("sd","specific","pca")
     
     hm_splitmap_opts = tagList(
@@ -676,8 +677,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             tipify( selectInput(ns('hm_ntop'),'Top N:',c(50,150,500),selected=50),
                    "Select the number of top features in the heatmap.", placement="right")
         ),
-        tipify( checkboxInput(ns('hm_filterXY'),'Exclude X/Y genes',FALSE),
-               "Exclude genes on X/Y chromosomes.", placement="right"),
+        br(),
         tipify( radioButtons(
             ns('hm_scale'), 'Scale:', choices=c('relative','absolute'), inline=TRUE),
             "Show relative (i.e. mean-centered) or absolute expression values.",
@@ -1143,17 +1143,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ngs <- inputData()
         filt <- getTopMatrix()
         req(filt)
-        ##zx <- filt$grp.mat[,]
-        zx <- filt$mat[,]    
-        grp <- input$hm_pcvar
-        if(grp %in% colnames(ngs$Y)) {
-            y <- ngs$Y[colnames(zx),grp]
-        } else if("group" %in% colnames(ngs$Y)) {
-            y <- ngs$Y[colnames(zx),"group"]            
-        } else {
-            y <- ngs$model.parameters$group
-        }
-        zx <- t(apply(zx,1,function(x) tapply(x,y,mean,na.rm=TRUE)))   
+        zx <- filt$grp.mat[,]
         if(input$hm_pcscale) {
             zx <- t(scale(t(zx)))
         }
@@ -1264,9 +1254,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
 
     hm_parcoord_opts = tagList(
-        tipify( selectInput(ns("hm_pcvar"), "Variable:", choices="group", width='100%'),
-               "Split the parallel axis by this phenotype.",
-               placement="right",options = list(container = "body")),
         tipify( checkboxInput(ns('hm_pcscale'),'Scale values',TRUE),
                "Scale expression values to mean=0 and SD=1.",
                placement="right",options = list(container = "body"))
@@ -1796,7 +1783,7 @@ displays the expression levels of selected genes across all conditions in the an
         features <- lapply(features, function(f) intersect(toupper(f), genes))
         features <- features[sapply(features,length) >=10 ]
 
-        cat("[calcFeatureRanking] length(features)=",length(features),"\n")
+        dbg("[calcFeatureRanking] length(features)=",length(features))
         
         ## ------------ Just to get current samples
         ##samples = getTopMatrix()$samples    
@@ -1811,8 +1798,8 @@ displays the expression levels of selected genes across all conditions in the an
         Y = Y[,kk,drop=FALSE]
         dim(Y)
 
-        cat("[calcFeatureRanking] dim(X)=",dim(X),"\n")
-        cat("[calcFeatureRanking] dim(Y)=",dim(Y),"\n")
+        dbg("[calcFeatureRanking] dim(X)=",dim(X))
+        dbg("[calcFeatureRanking] dim(Y)=",dim(Y))
         
         ## ------------ Note: this takes a while. Maybe better precompute off-line...
         sdx = apply(X,1,sd)
@@ -1871,7 +1858,7 @@ displays the expression levels of selected genes across all conditions in the an
                     suppressWarnings( fit <- eBayes(lmFit( X1[,jj], design)) )
                     suppressWarnings( suppressMessages( top <- topTable(fit) ))
                     ##s2 = mean(-log10(top$P.Value))  ## as score
-                    s2 = mean(-log10(top$adj.P.Val),na.rm=TRUE)  ## as score
+                    s2 = mean(-log10(1e-99 + top$adj.P.Val),na.rm=TRUE)  ## as score
                 }
                 
                 f = 1
@@ -1881,6 +1868,7 @@ displays the expression levels of selected genes across all conditions in the an
             }
             S[,i] = score
         }
+        S[is.na(S)] <- 0 ## missing values
         return(S)
     })
     

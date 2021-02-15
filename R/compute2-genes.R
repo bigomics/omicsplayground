@@ -275,12 +275,8 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     ## Run all test methods
     ##
     ##X=counts;design=design,
-    if(!is.null(pgx$X)) {
-        X <- pgx$X[rownames(counts),colnames(counts)]
-    } else {
-        X <- logCPM(counts, total=NULL, prior=PRIOR.CPM)  ## million??
-    }
-    X <- X[rownames(counts),colnames(counts)]
+    X <- pgx$X[rownames(counts),colnames(counts)]
+    ##X <- X[rownames(counts),colnames(counts)]
     dim(X)
     
     gx.meta <- ngs.fitContrastsWithAllMethods(
@@ -317,6 +313,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     ##pgx$Y = pgx$samples[colnames(pgx$X),]
     pgx$model.parameters <- model.parameters
     pgx$gx.meta <- gx.meta
+    pgx$X <- X  ## replace with filtered
     
     ## remove large outputs... (uncomment if needed!!!)
     if(remove.outputs) {

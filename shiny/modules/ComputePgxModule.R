@@ -57,11 +57,10 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
             GENESET.SELECTED = c("fisher","gsva","fgsea")
 
             ## batch correction and extrs methods
-            EXTRA.METHODS = c("infer","deconv", "drugs", 
-                              "wordcloud","connectivity")
-            EXTRA.METHODS1 = c("infer","drugs","wordcloud")
+            EXTRA.METHODS = c("deconv", "drugs", "wordcloud","connectivity")
+            EXTRA.METHODS1 = c("drugs","wordcloud")
             EXTRA.METHODS2 = c("deconv","connectivity")            
-            EXTRA.SELECTED = c("infer","drugs","wordcloud")
+            EXTRA.SELECTED = c("drugs","wordcloud")
             
             output$UI <- renderUI({
                 fillCol(
@@ -246,9 +245,9 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                 contrasts <- as.matrix(contrastsRT())
                 contrasts[is.na(contrasts)] <- 0
                 
-                cat("[LoadingModule] dim(counts)=",dim(counts),"\n")
-                cat("[LoadingModule] dim(samples)=",dim(samples),"\n")
-                cat("[LoadingModule] dim(contrasts)=",dim(contrasts),"\n")
+                dbg("[LoadingModule] dim(counts)=",dim(counts))
+                dbg("[LoadingModule] dim(samples)=",dim(samples))
+                dbg("[LoadingModule] dim(contrasts)=",dim(contrasts))
                 
                 ##-----------------------------------------------------------
                 ## Set statistical methods and run parameters
@@ -258,7 +257,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                 
                 gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
                 gset.methods = c("fisher","gsva","fgsea","camera","fry")
-                extra.methods = c("infer","deconv","wordcloud","connectivity")
+                extra.methods = c("deconv","wordcloud","connectivity")
 
                 ## get selected methods from input
                 gx.methods   <- c(input$gene_methods,input$gene_methods2)
@@ -274,8 +273,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                     return(NULL)
                 }
 
-                ## at least do meta.go
-                extra.methods <- unique(c("meta.go",extra.methods))
+                ## at least do meta.go, infer
+                extra.methods <- unique(c("meta.go","infer",extra.methods))
                 
                 ##----------------------------------------------------------------------
                 ## Start computation
