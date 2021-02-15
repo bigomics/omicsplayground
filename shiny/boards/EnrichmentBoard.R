@@ -1269,7 +1269,7 @@ EnrichmentBoard <- function(input, output, session, env)
         id="volcanoMethods",
         func = volcanoMethods.RENDER,
         func2 = volcanoMethods.RENDER,
-        height = c(imgH,450), width = c("auto",1500), res=c(72,85),
+        height = c(imgH,450), width = c('auto',1600), res=c(75,90),
         pdf.width=15, pdf.height=5, 
         title="Volcano plots for all methods",
         info.text = volcanoMethods_text

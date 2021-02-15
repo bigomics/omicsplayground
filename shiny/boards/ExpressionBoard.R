@@ -1011,7 +1011,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ##caption = expr_volcanoAll_caption,
         pdf.width=18, pdf.height=6,
         ##height = imgH, res=75,
-        height = c(imgH,500), width = c('auto',1500), res=c(75,90),
+        height = c(imgH,450), width = c('auto',1600), res=c(75,90),
         title="Volcano plots for all contrasts"
     )
     ##output <- attachModule(output, expr_volcanoAll_module)
