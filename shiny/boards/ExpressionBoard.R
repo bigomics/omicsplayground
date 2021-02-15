@@ -936,7 +936,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ## select maximum 36 comparisons (because of space...)
         q.score <- sapply(Q, function(q) mean(tail(sort(-log10(q)),100)))
         q.top   <- head(names(sort(q.score, decreasing=TRUE)),20)
-        comp <- q.top
+        comp <- sort(q.top)
         ## comp <- comp[comp %in% q.top]
         Q <- Q[comp]
         F <- F[comp]
