@@ -16,7 +16,7 @@ EnrichmentInputs <- function(id) {
 EnrichmentUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillCol(
-        flex = c(1.4,1),
+        flex = c(1.5,1),
         height = 730,
         tabsetPanel(
             id = ns("tabs1"),
