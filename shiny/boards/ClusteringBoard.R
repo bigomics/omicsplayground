@@ -909,20 +909,12 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             if(pdim==3) pos <- res$pos3d
         }
 
+        pos <- pos[colnames(zx),]
         pos = scale(pos) ## scale
         ##colnames(pos) = paste0("dim",1:ncol(pos))
         ##rownames(pos) = colnames(zx)
         
         idx <- NULL
-        if(FALSE) {
-            ## should be relatively fast in sample space...
-            cat("[hm_getClusterPositions] louvain clustering...\n")
-            require(igraph)
-            dist = as.dist(dist(pos))
-            gr = graph_from_adjacency_matrix(
-                1.0/dist, diag=FALSE, mode="undirected")
-            idx <- cluster_louvain(gr)$membership
-        }
         dbg("[hm_getClusterPositions] done")
 
         clust = list(pos=pos, clust=idx) 
@@ -965,7 +957,10 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                     'triangle-right','+',c(15:0))
 
         require(plotly)
-        tt.info <- paste('Sample:', rownames(df),'</br>Group:', df$group)
+        Y <- ngs$Y[sel,]
+        ##tt.info <- paste('Sample:', rownames(df),'</br>Group:', df$group)
+        tt.info <- as.character(apply(Y, 1, function(y) paste0(colnames(Y),": ",y,"</br>",collapse="")))
+        
         cex1 = c(1.0,0.8,0.6)[1 + 1*(nrow(pos)>30) + 1*(nrow(pos)>200)]
 
         if(do3d ) {
@@ -1060,7 +1055,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ## plt <- plt %>% layout(title=title) %>% 
         ##     config(displayModeBar = FALSE)
         plt <- plt %>% 
-            config(displayModeBar = FALSE) %>%
+            ##config(displayModeBar = FALSE) %>%
+            config(displayModeBar = TRUE) %>%
             ##config(modeBarButtonsToRemove = all.plotly.buttons ) %>%
             config(displaylogo = FALSE) %>% 
             config(toImageButtonOptions = list(format='svg', height=800, width=800))

@@ -338,7 +338,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             jj <- unique(c(head(order(-res1$NES),NTOP),tail(order(-res1$NES),NTOP)))
             dtg.top <- res1$NES[jj]
             names(dtg.top) <- res1$pathway[jj]
-            
         }
         if(moatype=="drug class") {
             
@@ -358,28 +357,25 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             
             jj <- unique(c(head(order(-res1$NES),NTOP),tail(order(-res1$NES),NTOP)))
             moa.top <- res1$NES[jj]
-            names(moa.top) <- res1$pathway[jj]                                    
+            names(moa.top) <- res1$pathway[jj]
         }
         
-        if(1) {
-
-            ##layout(matrix(1:2,nrow=1),widths=c(1.4,1))
-            ##par(mfrow=c(2,1))
-            par(mar=c(4,15,5,0.5), mgp=c(2,0.7,0))
-            par(mfrow=c(1,1))
-            ylab = "enrichment  (NES)"
-
-            if(moatype=="drug class") {
-                par(mfrow=c(2,1), mar=c(4,4,1,0.5), mgp=c(2,0.7,0))
-                barplot(moa.top, horiz=FALSE, las=3,
-                        ylab=ylab, cex.names = 0.9 )
-                ##title(main="MOA", line=1 )
-            } else {
-                par(mfrow=c(2,1), mar=c(0,4,1,0.5), mgp=c(2,0.7,0))
-                barplot(dtg.top, horiz=FALSE, las=3, ## ylab="drugs (n)",
-                        ylab=ylab, cex.names = 0.9 )
-                ##title(main="target gene", line=1 )
-            }
+        ##layout(matrix(1:2,nrow=1),widths=c(1.4,1))
+        ##par(mfrow=c(2,1))
+        par(mar=c(4,15,5,0.5), mgp=c(2,0.7,0))
+        par(mfrow=c(1,1))
+        ylab = "enrichment  (NES)"
+        
+        if(moatype=="drug class") {
+            par(mfrow=c(2,1), mar=c(4,4,1,0.5), mgp=c(2,0.7,0))
+            barplot(moa.top, horiz=FALSE, las=3,
+                    ylab=ylab, cex.names = 0.93 )
+            ##title(main="MOA", line=1 )
+        } else {
+            par(mfrow=c(2,1), mar=c(0,4,1,0.5), mgp=c(2,0.7,0))
+            barplot(dtg.top, horiz=FALSE, las=3, ## ylab="drugs (n)",
+                    ylab=ylab, cex.names = 0.9 )
+            ##title(main="target gene", line=1 )
         }
         
     })    
