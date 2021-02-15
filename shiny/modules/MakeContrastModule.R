@@ -180,7 +180,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
                 if(is.na(g2)) g2 <- ""
                 g1 <- substring(g1,1,20)
                 g2 <- substring(g2,1,20)
-                pp <- paste(input$param,collapse="*")
+                pp <- paste(input$param,collapse=".")
                 pp <- gsub("[-_.,<> ]","",pp)
                 tt <- paste0(pp,":",g1,"_vs_",g2)
                 if(g1=="" && g2=="") tt <- ""

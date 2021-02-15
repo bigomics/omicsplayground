@@ -621,6 +621,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ## warning A_vs_B or B_vs_A not checked!!!
         groups <- strsplit(comp1,split="[._ ]vs[._ ]")[[1]]
         if(is.POSvsNEG(ngs)) groups <- rev(groups)
+        groups <- gsub("@.*","",groups)
         tt <- c( paste("up in",groups[2]), paste("up in",groups[1]) )
         ##tt <- c( paste("up in",groups[1]), paste("down in",groups[1]) )
         legend("topleft", legend=tt, fill=klr.pal, cex=0.9, y.intersp=0.85, bty="n")
@@ -910,39 +911,16 @@ two conditions. Determine which genes are significantly downregulated or overexp
         sel.genes = rownames(ngs$X)
         if(input$gx_features!="<all>") sel.genes = unique(unlist(GSETS[input$gx_features]))
 
-        ncomp <- length(comp)
-        nr <- ceiling(sqrt(ncomp/3))
-        NC <- 3*nr
-        if(ncomp <= (nr-1)*NC) nr <- (nr-1)
-        par(mfrow=c(nr,NC), mar=c(4,4,2,2)*0)
-
-        ng = length(comp)
-        nn = c(2, max(ceiling(ng/2),5))
-        ##if(ng>12) nn = c(3,8)
-        par(mfrow=nn, mar=c(2,4,2.3,2)*0, mgp=c(2.6,1,0))
-        n = ceiling(sqrt(ng))
-        if(ng>24) {
-            n = max(ceiling(ng/3),6)
-            par(mfrow=c(3,n), mar=c(4,4,2,2)*0)
-        } else if(FALSE && ng <= 3) {
-            par(mfrow=c(1,3), mar=c(4,4,2,2)*0)
-        } else {
-            n = max(ceiling(ng/2),6)
-            par(mfrow=c(2,n), mar=c(4,4,2,2)*0)
-        }
-
+        test = colnames(ngs$gx.meta$meta[[1]]$p)
+        test = input$gx_testmethod
+        if(is.null(test)) return(NULL)
         
         ##comp <- head(comp,75)  ## maximum 75!!!
         i=1
         F <- list()
         Q <- list()
         for(i in 1:length(comp)) {
-            
-            test = GX.DEFAULTTEST
-            test = input$gx_testmethod
-            if(is.null(test)) return(NULL)
-            res = getDEGtable(ngs, testmethods=test, comparison=i, add.pq=TRUE)
-            
+            res = getDEGtable(ngs, testmethods=test, comparison=i, add.pq=TRUE)            
             fc.gene = res[,grep("^gene$|^gene_name$",colnames(res))]
             ##pv.col = grep("p.val|pval|meta.p",colnames(res),ignore.case=TRUE)[1]
             qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
@@ -952,7 +930,41 @@ two conditions. Determine which genes are significantly downregulated or overexp
             names(qval) <- names(fx) <- fc.gene
             F[[i]] <- fx
             Q[[i]] <- qval
-        }
+        }        
+        names(Q) <- names(F) <- comp
+
+        ## select maximum 36 comparisons (because of space...)
+        q.score <- sapply(Q, function(q) mean(tail(sort(-log10(q)),100)))
+        q.top   <- head(names(sort(q.score, decreasing=TRUE)),20)
+        comp <- q.top
+        ## comp <- comp[comp %in% q.top]
+        Q <- Q[comp]
+        F <- F[comp]
+
+        ##-------------------------------------------------
+        ## plot layout
+        ##-------------------------------------------------
+        ## ncomp <- length(comp)
+        ## nr <- ceiling(sqrt(ncomp/3))
+        ## NC <- 3*nr
+        ## if(ncomp <= (nr-1)*NC) nr <- (nr-1)
+        ## par(mfrow=c(nr,NC), mar=c(4,4,2,2)*0)
+
+        ng = length(comp)
+        nn = c(2, max(ceiling(ng/2),5))
+        ##if(ng>12) nn = c(3,8)
+        par(mfrow=nn, mar=c(2,4,2.3,2)*0, mgp=c(2.6,1,0))
+        nc = ceiling(sqrt(ng))
+        if(ng>24) {
+            nc = max(ceiling(ng/3),6)
+            par(mfrow=c(3,nc), mar=c(4,4,2,2)*0)
+        } else if(FALSE && ng <= 3) {
+            nc = 3
+            par(mfrow=c(1,nc), mar=c(4,4,2,2)*0)
+        } else {
+            nc = max(ceiling(ng/2),6)
+            par(mfrow=c(2,nc), mar=c(4,4,2,2)*0)
+        }        
 
         ymax=15
         ymax <- 1.2 * max(-log10(1e-99 + unlist(Q)), na.rm=TRUE)        
@@ -974,8 +986,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
                                   ## ma.plot=TRUE, use.rpkm=TRUE,
                                   cex=0.6, lab.cex=1.5, highlight=genes1)
 
-                is.first = (i%%NC==1)
-                last.row = ( (i-1)%/%NC == (length(comp)-1)%/%NC )
+                is.first = (i%%nc==1)
+                last.row = ( (i-1)%/%nc == (length(comp)-1)%/%nc )
                 if(is.first) axis(2, tcl=0.5, mgp=c(-2,-1.5,0))
                 if(last.row) axis(1, tcl=0.5, mgp=c(-2,-1.5,0))
                 box()
