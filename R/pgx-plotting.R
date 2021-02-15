@@ -820,7 +820,7 @@ pgx.plotExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
             ## A_vs_B or B_vs_A notation !!!
             group.names <- rev(group.names) ## reversed!!
         } 
-
+        group.names <- gsub("@.*","",group.names)  ## strip postfix
     }
     
     if(!is.null(comp)) {
