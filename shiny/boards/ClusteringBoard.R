@@ -957,10 +957,10 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                     'triangle-right','+',c(15:0))
 
         require(plotly)
-        Y <- ngs$Y[sel,]
+        Y <- cbind("sample"=rownames(ngs$Y), ngs$Y[sel,])
         ##tt.info <- paste('Sample:', rownames(df),'</br>Group:', df$group)
-        tt.info <- as.character(apply(Y, 1, function(y) paste0(colnames(Y),": ",y,"</br>",collapse="")))
-        
+        tt.info <- apply(Y, 1, function(y) paste0(colnames(Y),": ",y,"</br>",collapse=""))
+        tt.info <- as.character(tt.info)
         cex1 = c(1.0,0.8,0.6)[1 + 1*(nrow(pos)>30) + 1*(nrow(pos)>200)]
 
         if(do3d ) {
