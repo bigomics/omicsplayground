@@ -228,7 +228,7 @@ EnrichmentBoard <- function(input, output, session, env)
         dim(mx)
         
         outputs = NULL
-        gsmethod = gsmethod0 = colnames(unclass(mx$fc))
+        gsmethod = colnames(unclass(mx$fc))
         gsmethod <- input$gs_method   
         if(is.null(gsmethod) || length(gsmethod)==0) return(NULL)
         
@@ -1080,8 +1080,8 @@ EnrichmentBoard <- function(input, output, session, env)
         if(is.null(input$gs_features)) return(NULL)
         
         meta = ngs$gset.meta$meta
-        gsmethod0 = colnames(meta[[1]]$fc)
-        gsmethod = intersect(gsmethod0, GSET.DEFAULTMETHODS)    
+        gsmethod = colnames(meta[[1]]$fc)
+        gsmethod = intersect(gsmethod, GSET.DEFAULTMETHODS)    
         gsmethod <- input$gs_method
         if(is.null(gsmethod) || length(gsmethod)==0) return(NULL)
         
@@ -1098,16 +1098,17 @@ EnrichmentBoard <- function(input, output, session, env)
         for(i in 1:length(meta)) {
             mx.list[[i]] <- calculateMeta(i, gsmethod, ngs=ngs)
         }
+        names(mx.list) <- names(meta)
         
-        Q <- sapply(mx.list, function(mx) mx[,"qv"])
-        names(Q) <- names(mx.list) <- names(meta)
+        Q <- lapply(mx.list, function(mx) mx[,"qv"])
+        names(Q) <- names(mx.list) 
         
         ## select maximum 24 comparisons (because of space...)
-        q.score <- sapply(Q, function(q) mean(tail(sort(-log10(q)),100)))
+        q.score <- sapply(Q, function(q) mean(tail(sort(-log10(1e-99+q)),100)))
         sel   <- head(names(sort(q.score, decreasing=TRUE)),20)
         Q <- Q[sel]
         mx.list <- mx.list[sel]
-
+        
         ##------------- layout ----------------
         ng = length(mx.list)
         ##nn = c(2, max(ceiling(ng/2),5))
@@ -1124,18 +1125,22 @@ EnrichmentBoard <- function(input, output, session, env)
             nc = max(ceiling(ng/2),6)
             par(mfrow=c(2,nc), mar=c(4,4,2,2)*0)
         }        
-        
+
         ymax <- 1.2 * max(-log10(1e-99 + unlist(Q)), na.rm=TRUE)                        
+
+        message("[DBG] [volcanoAll.RENDER] ng = ",ng)
+        message("[DBG] [volcanoAll.RENDER] ymax = ",ymax)
+
         withProgress(message="computing volcano plots ...", value=0, {
             i=1
-            for(i in 1:length(meta)) {
+            for(i in 1:length(mx.list)) {
                 mx <- mx.list[[i]]
-                qv <- Q[[i]]
-                is.sig <- (qv <= fdr & abs(mx[,"fc"]) >= lfc)
+                ## qv <- Q[[i]]
+                is.sig <- (mx[,"qv"] <= fdr & abs(mx[,"fc"]) >= lfc)
                 sig.gs = rownames(mx)[which(is.sig)]
                 if(!is.null(sel.gsets)) sig.gs <- intersect(sel.gsets, sig.gs)
                 gx.volcanoPlot.XY(
-                    x = mx[,"fc"], pv = qv,
+                    x = mx[,"fc"], pv = mx[,"qv"],
                     use.fdr=TRUE, p.sig=fdr, lfc=lfc,                
                     gene = substring(rownames(mx),1,35), 
                     xlab = "effect size (NES)", lab.cex=0, nlab=0,
@@ -1143,18 +1148,18 @@ EnrichmentBoard <- function(input, output, session, env)
                     cex=1, cex.axis=1.3, cex.main=1.4, axes=FALSE,
                     ylim=c(0,ymax), main="" )
                 ##title(names(meta)[i],line=-1)
-                legend("topright",names(meta)[i], cex=1.2, bg="white")
+                legend("topright",names(mx.list)[i], cex=1.2, bg="white")
 
                 ## draw axis if first column or last row
                 ##n=nn[2]
                 is.first = (i%%nc==1)
-                last.row = ( (i-1)%/%nc == (length(meta)-1)%/%nc )
+                last.row = ( (i-1)%/%nc == (length(mx.list)-1)%/%nc )
                 if(is.first) axis(2, tcl=0.5, mgp=c(-2,-1.5,0))
                 if(last.row) axis(1, tcl=0.5, mgp=c(-2,-1.5,0))
                 box()
 
                 ##volcano_plot(limma, render="plotly", n=1000, cex=1, highlight=genes)
-                incProgress( 1/length(meta) )
+                incProgress( 1.0/length(mx.list) )
             }
         })
     })
