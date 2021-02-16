@@ -44,7 +44,7 @@ file=proteinGroupsFile="../ext/arginine/proteinGroups.txt"
 ## Read the proteinGroups file
 prot <- prot.readProteinGroups(
     proteinGroupsFile, meta=metadataFile,
-    collapse.gene=TRUE, use.LFQ=FALSE)
+    is.log=TRUE, collapse.gene=TRUE, use.LFQ=FALSE)
 
 if(0) {
     prot <- proteus.readProteinGroups(
@@ -64,7 +64,8 @@ norm.counts <- prot.imputeMissing(
 norm.counts <- prot.normalizeCounts(
     norm.counts, scale=1e6, scaling="global", ## prior.count=0, 
     qnormalize=TRUE)
-##hist(log2(1e-8+norm.counts), breaks=100)
+
+##hist(log2(1+norm.counts), breaks=200)
 
 ##-------------------------------------------------------------------
 ## create ngs object
@@ -110,12 +111,12 @@ group.levels <- levels(ngs$samples$condition)
 group.levels
 ## 10 contrasts in total
 contr.matrix <- makeContrasts(
+    act_vs_notact = (act96h + act72h + act48h + act24h + act12h)/5 - notact,
     act12h_vs_notact = act12h - notact,
     act24h_vs_notact = act24h - notact,
     act48h_vs_notact = act48h - notact,
     act72h_vs_notact = act72h - notact,
     act96h_vs_notact = act96h - notact,
-    act_vs_notact = (act96h + act72h + act48h + act24h + act12h)/5 - notact,
     act48h_vs_act12h = act48h - act12h,
     act72h_vs_act12h = act72h - act12h,
     act72h_vs_act48h = act72h - act48h,
@@ -160,7 +161,7 @@ ngs <- compute.testGenesets (
 
 extra <- c("drugs-combo")
 extra <- c("connectivity")
-extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")
+extra <- c("meta.go","infer","deconv","drugs","wordcloud","connectivity")
 ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
 
 if(0) {

@@ -622,7 +622,6 @@ plot_grid.sharedAxisLabels <- function(plotList, nrow) {
 }
 
 
-contrast="ABC_vs_GCB"
 pgx.Volcano <- function(pgx, contrast, level="gene", psig=0.05, fc=1,
                         cex=1, cex.lab=0.85, hilight=NULL, ntop=20,
                         plotlib="base")

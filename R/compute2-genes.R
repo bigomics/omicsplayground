@@ -83,6 +83,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         group.col <- group.col[1]
         cat("groups column detected:",group.col,"\n")
     }
+    group.col
     
     stat.group = NULL
     ##is.expmatrix <- all(rownames(contr.matrix)==rownames(pgx$samples))
@@ -196,8 +197,10 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
 
     ## notice original counts will not be affected
     ss <- names(stat.group)
-    counts  = pgx$counts[,ss,drop=FALSE]  
-    genes   = pgx$genes
+    gg <- rownames(pgx$counts)
+    if(!is.null(pgx$X)) gg <- intersect(gg,rownames(pgx$X))
+    counts  = pgx$counts[gg,ss,drop=FALSE]  
+    genes   = pgx$genes[gg,]
     samples = pgx$samples[ss,]
 
     ## Rescale if too low. Often EdgeR/DeSeq can give errors of total counts
@@ -293,6 +296,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         remove.batch = FALSE,  ## we do explicit batch correction instead
         conform.output = TRUE,
         do.filter = FALSE,
+        correct.AveExpr = TRUE,
         custom = NULL, custom.name = NULL
     )
 

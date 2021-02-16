@@ -10,9 +10,10 @@
 ##
 ######################################################################## 
 
-##sep="\t";collapse.gene=TRUE;use.LFQ=FALSE;filter.contaminants=TRUE
-prot.readProteinGroups <- function(file, meta=NULL, sep="\t", collapse.gene=TRUE, 
-                                   use.LFQ=FALSE, filter.contaminants=TRUE)
+## sep="\t";collapse.gene=TRUE;use.LFQ=FALSE;filter.contaminants=TRUE
+prot.readProteinGroups <- function(file, meta=NULL, sep="\t", collapse.gene=TRUE,
+                                   is.log=FALSE, use.LFQ=FALSE,
+                                   filter.contaminants=TRUE)
 {
     ## Split data file
     message("reading proteinGroups file ",file)
@@ -58,9 +59,17 @@ prot.readProteinGroups <- function(file, meta=NULL, sep="\t", collapse.gene=TRUE
     counts = D[,grep("^Intensity ",colnames(D),value=TRUE)]
     dim(counts)
     if(use.LFQ) {
-        counts = D[,grep("^LFQ Intensity",colnames(D))]
+        sel <- grep("^LFQ Intensity",colnames(D))
+        if(length(sel)==0) {
+            stop("FATAL:: could not find LFQ Intensity data")
+        }
+        counts = D[,sel,drop=FALSE]
     }
-    counts <- as.matrix(sapply(counts,as.numeric))  ## from integer64
+    if(is.log) {
+        counts <- 2**as.matrix(counts)
+    } else {
+        counts <- as.matrix(sapply(counts,as.numeric))  ## from integer64
+    }
     colnames(counts) <- sub("Intensity ","",colnames(counts))
     colnames(counts) <- sub("LFQ intensity ","",colnames(counts))
     sum(is.na(counts))
@@ -239,7 +248,6 @@ proteus.readProteinGroups <- function(file="proteinGroups.txt", meta="meta.txt",
 }
 
 ##counts=prot$tab;plot=TRUE;qnormalize=TRUE;prior.count=1;zero.thr=0.25;scaling=1e6
-scaling=1e12
 prot.normalizeCounts <- function(counts, scale=1e6, scaling="by.column",
                                  qnormalize=TRUE, zero.offset=0.01, 
                                  zero.thr=0.25 )

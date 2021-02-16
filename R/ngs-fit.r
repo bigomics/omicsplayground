@@ -318,6 +318,7 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
     all.meta <- list()
     i=1
     for(i in 1:ntest) {
+
         pv = P[[i]]
         qv = Q[[i]]
         fc = logFC[[i]]
