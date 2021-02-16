@@ -304,16 +304,6 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     
     names(gx.meta)
     names(gx.meta$outputs)
-    
-    names(gx.meta$outputs[[1]])
-    names(gx.meta$outputs[[1]][["tables"]])
-    str(gx.meta$outputs[[1]][["tables"]])
-    head(gx.meta$outputs[[1]][["tables"]][[1]])
-    gx.meta$outputs[[1]][["tables"]][[1]]["TNIP3",]
-    gx.meta$outputs[[2]][["tables"]][[1]]["TNIP3",]
-    gx.meta$outputs[[3]][["tables"]][[1]]["TNIP3",]
-    gx.meta$outputs[[4]][["tables"]][[1]]["TNIP3",]
-    
     print(gx.meta$timings)
     
     ##--------------------------------------------------------------------------------
