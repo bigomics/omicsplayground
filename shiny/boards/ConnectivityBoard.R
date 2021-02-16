@@ -2190,7 +2190,7 @@ ConnectivityBoard <- function(input, output, session, env)
             div(HTML(cmapClustering_caption),class="caption"),
             br(),
             fillRow(
-                flex=c(1.5,0.1,1), 
+                flex=c(1.3,0.05,1), 
                 plotWidget(ns("connectivityMap")),
                 ##plotWidget(ns("cmapPairsPlot")),
                 br(),

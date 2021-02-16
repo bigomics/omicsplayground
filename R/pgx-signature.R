@@ -160,10 +160,9 @@ pgx.correlateSignatureH5.inmemory <- function(F, h5.file, nsig=100, ntop=1000, n
     
         remove(rG,rfc)
         
-        ## --------------------------------------------------
+        ##--------------------------------------------------
         ## test tops signatures using fGSEA
-        ## --------------------------------------------------
-        
+        ##--------------------------------------------------
         require(fgsea)
         sel <- head(names(sort(-abs(rho))), ntop)
         sel.idx <- match(sel, cn)

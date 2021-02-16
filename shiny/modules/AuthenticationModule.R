@@ -1131,7 +1131,8 @@ splashHelloModal <- function(name, msg=NULL, ns=NULL, duration=3500)
     message("[AuthenticationModule::splashHelloModel]")
     
     all.hello = c("Hello","Salut","Hola","Privet","Ni hao","Ciao","Hi","Hoi","Hej",
-                  "Yassou","Selam","Hey","Hei","Grützi","Салам")
+                  "Yassou","Selam","Hey","Hei","Grutzi","Салам","Bonjour",
+                  "Namaste","Salam","Selamat","Shalom","Goeiedag","Yaxshimusiz")
     title = paste( paste0(sample(all.hello,3),"!"), collapse=" ")
     if(!is.null(name) && !is.na(name) && !name %in% c("NA","")) {
         first.name <- strsplit(as.character(name),split=" ")[[1]][1]
