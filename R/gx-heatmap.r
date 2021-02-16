@@ -771,7 +771,7 @@ gx.heatmap <- function(gx, values=NULL,
     ##require(heatmap3)
     if(0) {
         clust.method="ward.D2"; dist.method="pearson"; col.dist.method="euclidean";
-        plot.method="heatmap.2"
+        plot.method="heatmap.2";symm=FALSE;values=NULL;softmax=FALSE
         col=colorpanel(64,"blue","grey90","red"); scale="row"; verbose=1
         ## Rowv = NA, Colv = NA
         col.annot=NULL; row.annot=NULL; nmax=1000; cmax=NULL; indent.names=FALSE
@@ -1002,17 +1002,35 @@ gx.heatmap <- function(gx, values=NULL,
         }
     } else if(plot.method=="heatmap.3" && is.na(cc0) && is.na(cc1) ) {
         if(verbose>1) cat("plotting with heatmap.3 no ColSideColors\n")
-        heatmap.3(gx, Colv=as.dendrogram(h1), Rowv=as.dendrogram(h2),
-                  dendrogram=dd, col=col, scale="none",
-                  symkey=sym, symbreaks=sym, trace="none",
-                  side.height.fraction=side.height,
-                  ...)
+        if(is.null(h1) && is.null(h2)) {
+            heatmap.3(gx, Colv=NULL, Rowv=NULL,
+                      dendrogram=dd, col=col, scale="none",
+                      symkey=sym, symbreaks=sym, trace="none",
+                      side.height.fraction=side.height,
+                      ...)
+        } else {
+            heatmap.3(gx, Colv=as.dendrogram(h1), Rowv=as.dendrogram(h2),
+                      dendrogram=dd, col=col, scale="none",
+                      symkey=sym, symbreaks=sym, trace="none",
+                      side.height.fraction=side.height,
+                      ...)
+        }
+    
     }  else {
         if(verbose>1) cat("plotting with heatmap.2\n")
-        heatmap.2(gx, Colv=as.dendrogram(h1), Rowv=as.dendrogram(h2),
-                  dendrogram=dd, col=col, scale="none",
-                  ##side.height.fraction=side.height,
-                  symkey=sym, symbreaks=sym, trace="none", ...)
+        if(is.null(h1) && is.null(h2))  {
+            heatmap.2(gx, Colv=NULL, Rowv=NULL,
+                      dendrogram=dd, col=col, scale="none",
+                      ##side.height.fraction=side.height,
+                      ##symkey=sym, symbreaks=sym, trace="none")
+                      symkey=sym, symbreaks=sym, trace="none", ...)
+        } else {
+            heatmap.2(gx, Colv=as.dendrogram(h1), Rowv=as.dendrogram(h2),
+                      dendrogram=dd, col=col, scale="none",
+                      ##side.height.fraction=side.height,
+                      ##symkey=sym, symbreaks=sym, trace="none")
+                      symkey=sym, symbreaks=sym, trace="none", ...)
+        }
     }
 
     res <- c()
