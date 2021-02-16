@@ -34,6 +34,7 @@ if(0) {
 ##================================================================================
 ##========================= CONNECTIVITY FUNCTIONS ===============================
 ##================================================================================
+##ntop=1000;contrasts=NULL;remove.le=FALSE;inmemory=TRUE
 
 pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=1000, contrasts=NULL,
                                           remove.le=FALSE, inmemory=FALSE )
@@ -52,7 +53,9 @@ pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=1000, contrasts=NULL,
     }
 
     h5.file <- NULL
-    if(file.exists(sigdb)) h5.file <- sigdb
+    if(file.exists(sigdb)) {
+        h5.file <- sigdb
+    }
     if(is.null(h5.file)) {
         cat("[pgx.computeConnectivityScores] ERROR: could not H5 file\n")
         return(NULL)
@@ -64,17 +67,14 @@ pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=1000, contrasts=NULL,
     contrasts <- intersect(contrasts, colnames(meta$fc))
 
     if(inmemory) {
-        F = meta$fc
+        F = meta$fc[,contrasts]
         scores <- pgx.correlateSignatureH5.inmemory(
             meta$fc, h5.file = h5.file,
-            nsig=100, ntop=ntop, nperm=9999)
-        if(is.null(names(scores))) names(scores) <- colnames(meta$fc)
-        
+            nsig=100, ntop=ntop, nperm=9999)        
     } else {
         scores <- list()
         ct <- contrasts[1]
-        for(ct in contrasts) {
-            
+        for(ct in contrasts) {            
             fc <- meta$fc[,ct]
             names(fc) <- rownames(meta$fc)
             names(fc) <- toupper(names(fc)) ## for MOUSE!!            
@@ -85,6 +85,7 @@ pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=1000, contrasts=NULL,
             scores[[ct]] <- res
         }
     }
+    if(is.null(names(scores))) names(scores) <- contrasts
 
     ## remove leadingEdge (take too much memory!!!)
     if(remove.le) {
@@ -95,8 +96,8 @@ pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=1000, contrasts=NULL,
     return(scores)
 }
 
-##ntop=1000;nsig=100;nperm=10000
-pgx.correlateSignatureH5.inmemory <- function(F, h5.file, nsig=100, ntop=1000, nperm=10000)
+## ntop=1000;nsig=100;nperm=10000
+pgx.correlateSignatureH5.inmemory <- function(F, h5.file, nsig=100, ntop=1000, nperm=1000)
 {
     ##
     ##
@@ -121,7 +122,9 @@ pgx.correlateSignatureH5.inmemory <- function(F, h5.file, nsig=100, ntop=1000, n
     ## Entire matrix in memory????
     matG <- h5read(h5.file, "data/matrix")  ### whole matrix!!!!
     matG[which(matG < -999999)] <- NA
-
+    rownames(matG) <- rn
+    colnames(matG) <- cn
+    
     mem1 <- round(object.size(matG)/1e9,2)
     cat("[pgx.correlateSignatureH5] object.size(matG)=",mem1,"Gb\n")  ## gigabytes....
     
@@ -131,7 +134,7 @@ pgx.correlateSignatureH5.inmemory <- function(F, h5.file, nsig=100, ntop=1000, n
     res <- list()
     i=1
     for(i in 1:ncol(F)) {
-
+        
         gg <- intersect(rownames(F),rn)
         fc1 <- sort(F[gg,i])
         gg <- unique(names(c(head(fc1,nsig), tail(fc1,nsig))))
@@ -142,16 +145,14 @@ pgx.correlateSignatureH5.inmemory <- function(F, h5.file, nsig=100, ntop=1000, n
         
         ##G <- h5read(h5.file, "data/matrix", index=list(row.idx,1:length(cn)))  ### SLOW!!!
         rG <- matG[row.idx,,drop=FALSE]
-        rG  <- apply( rG,2,rank, na.last="keep" )
+        rG <- apply( rG,2,rank, na.last="keep" )
         dim(rG)
         dimnames(rG) <- list(rn[row.idx],cn)
 
         ## this FC signature
-        fc <- F[gg,i]
-
-        ## rank correlation??
+        fc <- F[,i]                        
         ##rG  <- apply( G[gg,], 2, rank, na.last="keep" )
-        rfc <- rank( fc, na.last="keep" )
+        rfc <- rank( fc[gg], na.last="keep" ) ## rank correlation??
         ##rho <- cor(rG, rfc, use="pairwise")[,1]
         rG[is.na(rG)] <- 0  ## NEED RETHINK: are missing values to be treated as zero???
         rfc[is.na(rfc)] <- 0

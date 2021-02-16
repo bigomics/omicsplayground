@@ -175,9 +175,7 @@ names(ngs)
 names(ngs$gset.meta)
 ngs$timings
 
-##-------------------------------------------------------------------
 ## save PGX object
-##-------------------------------------------------------------------
 rda.file
 ngs.save(ngs, file=rda.file)
 
