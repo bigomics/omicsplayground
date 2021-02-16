@@ -53,7 +53,7 @@ if(0) {
 }
 
 ##-------------------------------------------------------------------
-## scale/normalize counts
+## scale/normalize counts for proteomics
 ##-------------------------------------------------------------------    
 ## impute missing values
 norm.counts <- prot.imputeMissing(
@@ -78,7 +78,7 @@ colnames(ngs$counts)==ngs$samples$sample
 short.name <- sub(".*_tcell_","",colnames(ngs$counts))
 rownames(ngs$samples)=colnames(ngs$counts)=short.name
 
-ngs$X <- log2( ngs$counts + 1)
+ngs$X <- log2(ngs$counts + 1)
 
 ## relevel factors??
 ##ngs$samples$group <- relevelFactorFirst(ngs$samples$group)
@@ -99,6 +99,7 @@ ngs$genes <- prot$genes
 ## Pre-calculate t-SNE for and get clusters
 ##-------------------------------------------------------------------
 ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, perplexity=3)
+ngs <- pgx.clusterSamples2(ngs, perplexity=3)
 head(ngs$samples)
 table(ngs$samples$cluster)
 
@@ -146,9 +147,10 @@ MAX.GENESETS = 8000
 ## new callling methods
 ngs <- compute.testGenes(
     ngs, contr.matrix,
-    max.features=MAX.GENES,
+    max.features = MAX.GENES,
     test.methods = GENE.METHODS)
 names(ngs)
+head(ngs$gx.meta$meta[[1]])
 
 ngs <- compute.testGenesets (
     ngs, max.features=MAX.GENES,
@@ -177,6 +179,29 @@ ngs$timings
 ##-------------------------------------------------------------------
 rda.file
 ngs.save(ngs, file=rda.file)
+
+if(0) {
+
+    load("../data/geiger2016-arginine-test.pgx")
+    names(ngs$gx.meta$meta)
+    dim(ngs$gx.meta$meta[[1]])
+    m1 <- ngs$gx.meta$meta[[1]]
+    head(m1[order(-m1$meta.fx),])
+    head(sort(ngs$gx.meta$meta[[1]]$meta.avg),50)
+    tail(sort(ngs$gx.meta$meta[[1]]$meta.avg),50)
+    head(sort(rowMeans(ngs$X)))
+    tail(sort(rowMeans(ngs$X)))
+
+    s0 <- names(which(ngs$model.parameters$exp.matrix[,1]==-1))
+    s1 <- names(which(ngs$model.parameters$exp.matrix[,1]==1))
+    mean(ngs$X["TNIP3",s0])
+    mean(ngs$X["TNIP3",s1])
+    
+    
+    
+}
+
+
 
 ##===================================================================
 ##========================= END OF FILE =============================

@@ -279,24 +279,36 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     ##X <- X[rownames(counts),colnames(counts)]
     dim(X)
     
+    quantile.normalize=TRUE;remove.batch=FALSE;conform.output=TRUE;do.filter=FALSE;custom=NULL;custom.name=NULL
+
     gx.meta <- ngs.fitContrastsWithAllMethods(
         counts = counts, X=X, ## type = type,
-        samples = samples, genes = NULL, ##genes=genes,
-        methods = methods, design = design,
+        samples = samples,
+        genes = NULL, ##genes=genes,
+        methods = methods,
+        design = design,
         contr.matrix = contr.matrix,
         prior.cpm = PRIOR.CPM,  ## prior count regularization
         quantile.normalize = TRUE,  ## only for logCPM
         remove.batch = FALSE,  ## we do explicit batch correction instead
         conform.output = TRUE,
         do.filter = FALSE,
-        custom = NULL, custom.name = NULL )
+        custom = NULL, custom.name = NULL
+    )
 
     cat("done!\n")
     
     names(gx.meta)
     names(gx.meta$outputs)
+    
     names(gx.meta$outputs[[1]])
-    names(gx.meta$outputs[[1]][[1]])
+    names(gx.meta$outputs[[1]][["tables"]])
+    str(gx.meta$outputs[[1]][["tables"]])
+    head(gx.meta$outputs[[1]][["tables"]][[1]])
+    gx.meta$outputs[[1]][["tables"]][[1]]["TNIP3",]
+    gx.meta$outputs[[2]][["tables"]][[1]]["TNIP3",]
+    gx.meta$outputs[[3]][["tables"]][[1]]["TNIP3",]
+    gx.meta$outputs[[4]][["tables"]][[1]]["TNIP3",]
     
     print(gx.meta$timings)
     

@@ -31,7 +31,7 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
                                            prior.cpm=1, quantile.normalize=FALSE, ## type="counts", 
                                            conform.output=TRUE, do.filter=TRUE, cpm.scale=1e6,
                                            remove.batch=TRUE, methods=ALL.GENETEST.METHODS,
-                                           custom=NULL, custom.name=NULL )
+                                           correct.AveExpr=TRUE,custom=NULL, custom.name=NULL )
 {
     ##--------------------------------------------------------------
     ## Run all tests on raw counts
@@ -41,7 +41,7 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
     if(0) {
         do.filter=FALSE;conform.output=TRUE;remove.batch=FALSE;prior.cpm=1;
         custom=NULL;custom.name=NULL;quantile.normalize=FALSE;cpm.scale=1e6
-        X=ngs$count;samples=ngs$samples;genes=NULL;
+        counts=ngs$counts;X=ngs$X;samples=ngs$samples;genes=NULL;correct.AveExpr=TRUE
         design=ngs$model.parameters$design;contr.matrix=ngs$model.parameters$contr.matrix
     }
 
@@ -214,6 +214,29 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
     }
 
     ##----------------------------------------------------------------------
+    ## "corrections" ...
+    ##----------------------------------------------------------------------
+    if(correct.AveExpr) {
+        cat("correcting AveExpr values...\n")
+        ## Some methods like edgeR and Deseq2 compute some weird
+        ## normalized expression matrix. We need to "correct" for
+        ## those.
+        ## 
+        exp.matrix = contr.matrix
+        if(!is.null(design)) exp.matrix <- (design %*% contr.matrix)
+        samples0 <- lapply(apply(exp.matrix!=0,2,which),function(i) rownames(exp.matrix)[i])
+        avgX <- sapply(samples0, function(s) rowMeans(X[,s,drop=FALSE]))
+        dim(avgX)
+        i=j=1
+        for(i in 1:length(outputs)) {
+            for(j in 1:length(outputs[[i]]$tables)) {
+                outputs[[i]]$tables[[j]]$AveExpr <- avgX[,j]
+            }
+        }
+
+    }
+    
+    ##----------------------------------------------------------------------
     ## add some statistics
     ##----------------------------------------------------------------------
     cat("calculating statistics...\n")
@@ -221,9 +244,10 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
     for(i in 1:length(outputs)) {
 
         res = outputs[[i]]
-        M = sapply( res$tables, function(x) x[,"AveExpr"])
-        Q = sapply( res$tables, function(x) x[,"adj.P.Val"] )
-        P = sapply( res$tables, function(x) x[,"P.Value"] )
+        M  = sapply( res$tables, function(x) x[,"AveExpr"])  ## !!!! edgeR and Deseq2 are weird!!!
+        ##M  = sapply( res$tables, function(x) rowMeans(x[,c("AveExpr0","AveExpr1")]))  ## NEED RETHINK!!!
+        Q  = sapply( res$tables, function(x) x[,"adj.P.Val"] )
+        P  = sapply( res$tables, function(x) x[,"P.Value"] )
         logFC = sapply( res$tables, function(x) x[,"logFC"] )
         colnames(M) = colnames(logFC) = colnames(P) = colnames(Q) = colnames(contr.matrix)
         rownames(M) = rownames(logFC) = rownames(P) = rownames(Q) = rownames(res$tables[[1]])
@@ -253,7 +277,7 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
         res$q.value = Q
         res$logFC = logFC
         res$aveExpr = M
-
+        
         outputs[[i]] <- res
     }
 
@@ -269,6 +293,7 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
     Q = lapply(1:ntest, function(i) sapply( outputs, function(x) x$q.value[,i]))
     logFC = lapply(1:ntest, function(i) sapply( outputs, function(x) x$logFC[,i]))
     aveExpr = lapply(1:ntest, function(i) sapply( outputs, function(x) x$aveExpr[,i]))
+
     sig.up = lapply(1:ntest, function(i) {
         do.call(rbind,lapply(outputs, function(x) x$sig.counts[["up"]][i,]))
     })
@@ -311,7 +336,8 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
         meta.fx = rowMeans(fc, na.rm=TRUE)
         ##p.meta   = apply(pv, 1, function(p) metap::allmetap(p, method="sumlog")$p[[1]])
         ## q.meta = p.adjust(p.meta, method="BH")
-        meta = data.frame(fx=meta.fx, p=meta.p, q=meta.q)
+        meta.avg <- rowMeans(mx, na.rm=TRUE)
+        meta = data.frame(fx=meta.fx, p=meta.p, q=meta.q, avg=meta.avg)
         rownames(meta) <- rownames(logFC[[i]])
         rownames(fc) <- NULL  ## save memory
         rownames(pv) <- NULL
@@ -320,7 +346,7 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
         if(!is.null(genes)) all.meta[[i]] <- cbind(genes, all.meta[[i]])
     }
     names(all.meta) = tests
-
+    
     timings0 <- do.call(rbind, timings)
     res = list( outputs=outputs,  meta=all.meta, sig.counts=sig.counts,
                timings = timings0, X=X )
