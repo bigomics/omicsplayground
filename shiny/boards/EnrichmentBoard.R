@@ -383,6 +383,45 @@ EnrichmentBoard <- function(input, output, session, env)
     ##================================================================================
     ##========================= FUNCTIONS ============================================
     ##================================================================================
+
+    plotTopEnriched <- function(ngs, rpt, comp, ntop, rowcol)
+    {
+            gx.meta <- ngs$gx.meta$meta[[comp]]
+            ##rnk0 <- gx.meta[,"fc"][,"trend.limma"]
+            ##names(rnk0) = gx.meta[,"gene_name"]        
+            rnk0 <- gx.meta$meta.fx
+            names(rnk0) = ngs$genes[rownames(gx.meta),"gene_name"]
+            rnk0 = rnk0 - mean(rnk0,na.rm=TRUE)  ## scaling/centering should be done in calculation...                
+            fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(rpt))[1]
+            qv.col = grep("meta.q|q$",colnames(rpt))[1]
+            fx = rpt[,fx.col]
+            qv = rpt[,qv.col]
+            names(qv) <- names(fx) <- rownames(rpt)
+            
+            ##top.up <- names(sort(fx[which(fx>0)],decreasing=TRUE))
+            ##top.dn <- names(sort(fx[which(fx<0)]))
+            top <- rownames(rpt)
+            
+            par(mfrow=rowcol, mar=c(0.5,3.0,2.8,0), mgp=c(1.9,0.8,0))
+            for(i in 1:ntop) {
+                if(i > length(top)) {
+                    frame()
+                } else {
+                    gs <- top[i]
+                    gs1 = breakstring(gs,28,50,force=FALSE)
+                    genes = toupper(names(which(ngs$GMT[,gs]!=0)))
+                    names(rnk0) <- toupper(names(rnk0))
+                    ylab = ""
+                    ## if(i %in% c(1,6)) ylab = "Ranked list metric"
+                    if(i%%rowcol[2] == 1) ylab = "Ranked list metric"
+                    gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
+                                main=gs1, xlab="", ylab=ylab,
+                            cex.main=0.78, len.main=80)
+                    qv1 = formatC(qv[gs],format="e", digits=2)
+                    legend("topright", paste("q=",qv1), bty="n",cex=0.85)
+                }
+            }
+        }
     
     ## Top enriched    
     topEnriched.RENDER %<a-% reactive({
@@ -391,59 +430,47 @@ EnrichmentBoard <- function(input, output, session, env)
         alertDataLoaded(session,ngs)
         rpt <- getGeneSetTable()
         ##if(is.null(rpt)) return(NULL)
-        
         req(ngs, rpt, input$gs_contrast)
 
         comp=1
         comp = input$gs_contrast
         if(is.null(comp)) return(NULL)
         if(!(comp %in% names(ngs$gx.meta$meta))) return(NULL)
-        
-        gx.meta <- ngs$gx.meta$meta[[comp]]
-        ##rnk0 <- gx.meta[,"fc"][,"trend.limma"]
-        ##names(rnk0) = gx.meta[,"gene_name"]        
-        rnk0 <- gx.meta$meta.fx
-        names(rnk0) = ngs$genes[rownames(gx.meta),"gene_name"]
-        rnk0 = rnk0 - mean(rnk0,na.rm=TRUE)  ## scaling/centering should be done in calculation...
-        
+
         ## filter on active rows (using search)
         ##ii <- input$gseatable_rows_all
         ii <- gseatable$rows_all()
         rpt <- rpt[ii,,drop=FALSE]
         if(nrow(rpt)==0) return(NULL)
         
-        fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(rpt))[1]
-        qv.col = grep("meta.q|q$",colnames(rpt))[1]
-        fx = rpt[,fx.col]
-        qv = rpt[,qv.col]
-        names(qv) <- names(fx) <- rownames(rpt)
-
-        ##top.up <- names(sort(fx[which(fx>0)],decreasing=TRUE))
-        ##top.dn <- names(sort(fx[which(fx<0)]))
-        top <- rownames(rpt)
-        
-        par(mfrow=c(2,5), mar=c(0.5,2.5,2.8,0), mgp=c(2,0.8,0))
-        for(i in 1:10) {
-            if(i > length(top)) {
-                frame()
-            } else {
-                gs <- top[i]
-                gs1 = breakstring(gs,28,50,force=FALSE)
-                genes = toupper(names(which(ngs$GMT[,gs]!=0)))
-                names(rnk0) <- toupper(names(rnk0))
-                ylab = ""
-                ## if(i %in% c(1,6)) ylab = "Ranked list metric"
-                if(i%%5 == 1) ylab = "Ranked list metric"
-                gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
-                            main=gs1, xlab="", ylab=ylab,
-                            cex.main=0.78, len.main=80)
-                qv1 = formatC(qv[gs],format="e", digits=2)
-                legend("topright", paste("q=",qv1), bty="n",cex=0.85)
-            }
-        }
+        plotTopEnriched(ngs, rpt, comp=comp, ntop=10, rowcol=c(2,5))        
     })
 
-    topEnriched_text = "The <strong>Top enriched</strong> section shows the enrichment plots for the top differentially (both positively and negatively) enriched gene sets for the selected comparison in the <code>Contrast</code> settings. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score (ES). The more the green ES curve is shifted to the upper left of the graph, the more the gene set is enriched in the first group. Conversely, a shift of the ES curve to the lower right, corresponds to more enrichment in the second group."
+    ## Top enriched    
+    topEnriched.RENDER2 %<a-% reactive({
+
+        ngs <- inputData()
+        alertDataLoaded(session,ngs)
+        rpt <- getGeneSetTable()
+        ##if(is.null(rpt)) return(NULL)
+        req(ngs, rpt, input$gs_contrast)
+
+        comp=1
+        comp = input$gs_contrast
+        if(is.null(comp)) return(NULL)
+        if(!(comp %in% names(ngs$gx.meta$meta))) return(NULL)
+
+        ## filter on active rows (using search)
+        ##ii <- input$gseatable_rows_all
+        ii <- gseatable$rows_all()
+        rpt <- rpt[ii,,drop=FALSE]
+        if(nrow(rpt)==0) return(NULL)
+        
+        plotTopEnriched(ngs=ngs, rpt=rpt, comp=comp, ntop=24, rowcol=c(4,6))        
+    })
+    
+    
+    topEnriched_text = "This plot shows the <strong>top enriched</strong> gene sets for the selected comparison in the <code>Contrast</code> settings. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score (ES). The more the green ES curve is shifted to the upper left of the graph, the more the gene set is enriched in the first group. Conversely, a shift of the ES curve to the lower right, corresponds to more enrichment in the second group."
 
     topEnriched_caption = "<b>Top enriched gene sets.</b> Enrichment plots of the top differentially enriched gene sets. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score."
 
@@ -451,9 +478,9 @@ EnrichmentBoard <- function(input, output, session, env)
         plotModule,
         id = "topEnriched", label="a",
         func = topEnriched.RENDER,
-        func2 = topEnriched.RENDER,
+        func2 = topEnriched.RENDER2,
         info.text = topEnriched_text,
-        height = c(imgH,450), width = c('auto',1500), res=95,
+        height = c(imgH,720), width = c('auto',1500), res=90,
         pdf.width = 14, pdf.height = 4, 
         title = "Top enriched gene sets"
         ##caption = topEnriched_caption
