@@ -226,8 +226,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         PRIOR.CPM = 1
         PRIOR.CPM
         AT.LEAST = ceiling(pmax(2,0.01*ncol(counts)))    
-        cat("filtering for low-expressed genes: >",PRIOR.CPM,"CPM in >=",
-            AT.LEAST,"samples\n")
+        cat("filtering for low-expressed genes: >",PRIOR.CPM,"CPM in >=",AT.LEAST,"samples\n")
         keep <- (rowSums( edgeR::cpm(counts) > PRIOR.CPM, na.rm=TRUE) >= AT.LEAST)
         ##keep <- edgeR::filterByExpr(counts)  ## default edgeR filter
         pgx$filtered <- NULL
