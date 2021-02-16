@@ -138,7 +138,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
             if(file.exists(db)) {
                 ntop = 10000
                 ntop = 1000
-                message("computing connectivity scores for sigDB",db)
+                message("computing connectivity scores for ",db)
                 ## in memory for many comparisons
                 meta = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
                 inmemory <- ifelse(ncol(meta$fc)>50,TRUE,FALSE) 
@@ -304,8 +304,8 @@ compute.drugActivityEnrichment <- function(ngs, lib.dir, combo=TRUE ) {
     xdrugs <- gsub("_.*$","",colnames(X))
     ndrugs <- length(table(xdrugs))
     ndrugs
-    message("number of profiles:",ncol(X))
-    message("number of drugs in database:",ndrugs)
+    message("number of profiles: ",ncol(X))
+    message("number of drugs in database: ",ndrugs)
     dim(X)
 
     res.mono = res.combo = NULL    
