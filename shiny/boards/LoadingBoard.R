@@ -263,9 +263,10 @@ LoadingBoard <- function(input, output, session,
             dir.create(tmp <- tempfile())
             tmp2 <- file.path(tmp,pgxname)
             dir.create(tmp2)
+            exp.matrix <- sign(ngs$model.parameters$exp.matrix)
             write.csv(ngs$counts,  file=file.path(tmp2, "counts.csv"))
             write.csv(ngs$samples, file=file.path(tmp2, "samples.csv"))
-            write.csv(ngs$model.parameters$exp.matrix, file=file.path(tmp2, "contrasts.csv"))
+            write.csv(exp.matrix, file=file.path(tmp2, "contrasts.csv"))
             zipfile <- tempfile(fileext = ".zip")
             zip::zip(zipfile,
                      files=paste0(pgxname,"/",c("counts.csv","samples.csv","contrasts.csv")),
