@@ -19,7 +19,7 @@ DataViewUI <- function(id) {
         id = ns("tabs"),
         tabPanel("Plots",uiOutput(ns("plotsUI"))),
         tabPanel("Counts",uiOutput(ns("countsUI"))),
-        tabPanel("Gene table",uiOutput(ns("genetableUI"))),
+        tabPanel("Table",uiOutput(ns("genetableUI"))),
         tabPanel("Samples",uiOutput(ns("sampletableUI"))),
         tabPanel("Contrasts",uiOutput(ns("contrasttableUI"))),        
         tabPanel("Resource info",uiOutput(ns("resourceinfoUI")))
@@ -1189,6 +1189,22 @@ DataViewBoard <- function(input, output, session, env)
     menu_options='<code>Options</code>'
     
     data_rawdataTable_text = paste0('Under the <strong>gene table </strong>, the average expression values of genes across the groups can be read. The samples (or cells) can be ungrouped by unclicking the ',menu_grouped, ' in the main <i>Options</i> to see the exact expression values per sample (or cell).', 'The genes in the table are ordered by the correlation (<b>rho</b> column) with respect to the gene selected by users from the ',dropdown_search_gene, ' setting. <b>SD</b> column reports the standard deviation of expression across samples (or cells).')
+
+    observeEvent( input$data_type, {
+        ngs = inputData()
+        if(input$data_type %in% c("counts","CPM")) {
+            pp <- rownames(ngs$counts)
+        } else {
+            ## log2CPM
+            pp <- rownames(ngs$X)
+        }
+        ## levels for sample filter
+        genes <- sort(ngs$genes[pp,]$gene_name)
+        sel = genes[1]  ## most var gene
+        updateSelectizeInput(session,'search_gene', choices=genes, selected=sel, server=TRUE)
+
+    })
+
     
     data_rawdataTable.RENDER <- reactive({
         ## get current view of raw_counts
@@ -1200,19 +1216,20 @@ DataViewBoard <- function(input, output, session, env)
         
         pp <- rownames(ngs$X)
         if(input$data_type=="counts") {
-            x <- ngs$counts[pp,]
+            ##x <- ngs$counts[pp,]
+            x <- ngs$counts
         } else if(input$data_type=="CPM") {
             ##x <- 2**ngs$X
-            x <- edgeR::cpm(ngs$counts[pp,])
+            ##x <- edgeR::cpm(ngs$counts[pp,], log=FALSE)
+            x <- edgeR::cpm(ngs$counts, log=FALSE)
         } else {
             ## log2CPM
-            x <- ngs$X[pp,]
+            x <- ngs$X
         }
         x0=x
         
         ##------------------ select samples
         dbg("[data_rawdataTable.RENDER] select samples")
-        x <- x[,]
         samples <- colnames(ngs$X)
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
         samples <- intersect(colnames(x),samples)
@@ -1226,12 +1243,9 @@ DataViewBoard <- function(input, output, session, env)
 
         ## Quickly (?) calculated correlation to selected gene
         dbg("[data_rawdataTable.RENDER] calculate rho")
-        rho = NULL
-        if(1) {
+        rho = sdx = avg = NULL
+        if(input$data_type == "logCPM") {
             k=1
-            ##k <- which(xgene==gene)
-            ##logx <- log2(1 + edgeR::cpm(ngs$counts))
-            ##logx <- logx[rownames(x),]
             logx <- ngs$X[rownames(x),]
             xgenes <- ngs$genes[rownames(x),"gene_name"]
             k <- which(xgenes==gene)
@@ -1239,6 +1253,7 @@ DataViewBoard <- function(input, output, session, env)
             rho = round(rho[rownames(x)], digits=3)
             sdx = round(apply(logx[,samples],1,sd),digits=3)
         }
+        avg <- round(rowMeans(x),digits=3)
         
         ##if(input$data_sampling=="grouped") {
         ##do.grouped <- input$data_grouped
@@ -1279,13 +1294,16 @@ DataViewBoard <- function(input, output, session, env)
         xgenes <- ngs$genes[rownames(x),"gene_name"]
         gene.title <- GENE.TITLE[toupper(xgenes)]
         gene.title <- substring(gene.title,1,50)
-        x = data.frame( gene=xgenes, title=gene.title, rho=rho, SD=sdx,
-                       as.matrix(x), check.names=FALSE)
-        if(!is.null(rho)) {
-            x = x[order(-abs(x$rho)),,drop=FALSE]
+        if(is.null(rho)) {
+            x = data.frame( gene=xgenes, title=gene.title,
+                           avg=avg,
+                           as.matrix(x), check.names=FALSE)
         } else {
-            x = x[order(-x$SD),,drop=FALSE]
+            x = data.frame( gene=xgenes, title=gene.title,
+                           rho=rho, SD=sdx, avg=avg,
+                           as.matrix(x), check.names=FALSE)
         }
+        x = x[order(x$gene),,drop=FALSE]
 
         ## put selected gene always on top
         j1 <- which(x$gene==gene)
