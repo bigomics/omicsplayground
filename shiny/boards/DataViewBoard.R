@@ -64,6 +64,7 @@ DataViewBoard <- function(input, output, session, env)
     ## data set parameters
     datatypes <- c("CPM","logCPM")
     datatypes <- c("counts","CPM","logCPM")
+    datatypes <- c("counts","logCPM")
 
     output$inputsUI <- renderUI({
         ui <- tagList(
