@@ -1288,11 +1288,11 @@ DataViewBoard <- function(input, output, session, env)
         gene.title <- substring(gene.title,1,50)
         if(is.null(rho)) {
             x = data.frame( gene=xgenes, title=gene.title,
-                           avg=avg,
+                           AVG=avg,
                            as.matrix(x), check.names=FALSE)
         } else {
             x = data.frame( gene=xgenes, title=gene.title,
-                           rho=rho, SD=sdx, avg=avg,
+                           rho=rho, SD=sdx, AVG=avg,
                            as.matrix(x), check.names=FALSE)
         }
         x = x[order(x$gene),,drop=FALSE]
