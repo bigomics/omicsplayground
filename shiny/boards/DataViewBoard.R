@@ -189,12 +189,13 @@ DataViewBoard <- function(input, output, session, env)
         ##j <- which(ngs$genes$gene_name==gene)
         
         mar = MARGINS1
+        mar[4] = 0
         par(mar=mar, mgp=c(2.1,0.8,0))
         ##MARGINS1
         plot( mean.fc, type="h", lwd=0.4,
              ## col="#3380CC11", 
-             col="#bbd4ee", 
-                                        #main="average rank", cex.main=1.2,
+             col="#bbd4ee", cex.axis=0.9,
+             ##main="average rank", cex.main=1.2,
              ylab=ylab, xlab="ordered genes", xaxt="n")
         points( j, mean.fc[j], type="h", lwd=2, col="black")
         text( j, mean.fc[j], gene, pos=3, cex=0.9)
@@ -297,13 +298,14 @@ DataViewBoard <- function(input, output, session, env)
                 main=paste(gene),
                 offset = res$offset, ylab="correlation (r)",
                 ## names.arg=rep(NA,length(top.rho)),
-                cex.names=0.65, cex.main=1, col.main="#7f7f7f", border=NA)
+                cex.names=0.75, cex.main=1, cex.axis=0.9,
+                col.main="#7f7f7f", border=NA)
         ##text( (1:length(top.rho) - 0.5)*1.2, offset, names(top.rho),
         ##col="black", cex=0.75, srt=90, pos=3, offset=0.4, font=1)
         legend("topright", legend=c("expr high","expr low"),
                                         #fill=c("grey30","grey80"),
                fill=c("#3380CCCC","#3380CC40"),
-               cex=0.85, y.intersp=0.85)
+               cex=0.8, y.intersp=0.85)
 
         dbg("[data_genePlots_correlationplot.RENDER] done")
         
@@ -394,16 +396,16 @@ DataViewBoard <- function(input, output, session, env)
             if(sorting == "inc")  jj <- order(gx)
             tt=""
             barplot(gx[jj], col=BLUE, ##col=klr[jj],
-                    las=3, cex.names=0.85,
-                    ylab=ylab, xlab=tt,
-                    main=gene, cex.main=1, col.main="#7f7f7f", border=NA,
-                    names.arg=rep(NA,length(gx)) )
+                    las = 3, cex.names = 0.8,
+                    ylab = ylab, xlab = tt,
+                    main = gene, cex.main=1, col.main="#7f7f7f", border=NA,
+                    names.arg = rep(NA,length(gx)) )
             if(length(gx)<100) {
                 cx1 = ifelse(length(gx) > 20, 0.8, 0.9)
                 cx1 = ifelse(length(gx) > 40, 0.6, cx1)
                 cx1 = ifelse(length(gx) < 10, 1, cx1)
                 text((1:length(gx)-0.5)*1.2, -0.04*max(gx), names(gx)[jj], 
-                     las=3, cex=cx1, pos=2, adj=0, offset=0, srt=60, xpd=TRUE)
+                     las=3, cex=cx1, pos=2, adj=0, offset=0, srt=45, xpd=TRUE)
             }
         }
     })
@@ -590,9 +592,6 @@ DataViewBoard <- function(input, output, session, env)
         require(RColorBrewer)
         ngs <- inputData()
         req(ngs)	
-        if(is.null(input$data_type)) return(NULL)
-
-        dbg("[data_corplot_data()] reacted")
         
         samples=colnames(ngs$X);gene="CD4"
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
@@ -602,21 +601,17 @@ DataViewBoard <- function(input, output, session, env)
         ## corr always in log.scale and restricted to selected samples subset
         zx <- ngs$X
         dim(zx)
-        grp <- ngs$samples$group
-        if( FALSE && length(grp) >= 5 && ncol(zx) > 50) {
-            ## TOO SLOW!!! should do pre-computed???
-            zx <- t( apply(ngs$X, 1, function(x) tapply(x,grp,mean)))
-        }
-        head(zx)
-        rownames(zx) <- toupper(sub(".*:","",rownames(zx)))  ## NEED RETHINK!
-        
+        ##rownames(zx) <- toupper(sub(".*:","",rownames(zx)))  ## NEED RETHINK!
+        zx.gene <- as.character(ngs$genes[rownames(ngs$X),]$gene_name)
+
+        rownames(zx) <- toupper(zx.gene)        
         xref <- list("this_data"=zx, HPA_tissue=as.matrix(TISSUE),
                      ImmProt=as.matrix(IMMPROT))
         gene0 <- toupper(gene)  ## uppercase mouse
         R <- pgx.getGeneCorrelation(gene0, xref=xref)    
         if(is.null(R)) return(NULL)
         
-        rho.genes = as.character(ngs$genes$gene_name)
+        rho.genes = toupper(zx.gene)
         if("hgnc_symbol" %in% colnames(ngs$genes)) {
             rho.genes = as.character(ngs$genes$hgnc_symbol)
         }
@@ -654,8 +649,7 @@ DataViewBoard <- function(input, output, session, env)
         res <- data_corplot_data()
         if(is.null(res)) return(NULL)
         
-        par(mar=c(6,4,2,1), mgp=c(2.2,0.8,0))
-        
+        par(mar=c(6,4,2,1), mgp=c(2.2,0.8,0))        
         mar=MARGINS1
         par(mar=mar, mgp=c(1.5,0.5,0))
         
@@ -755,7 +749,7 @@ DataViewBoard <- function(input, output, session, env)
             div(HTML(dataview_caption1), class="caption"),
             br(),
             fillRow( 
-                flex = c(1,1,1,1), id = "data_genePlots_row1",
+                flex = c(0.9,1,1.2,0.8), id = "data_genePlots_row1",
                 height = rowH, ## width=1600, 
                 plotWidget(ns("data_genePlots_tsne")),
                 plotWidget(ns("data_genePlots_barplot")),
@@ -945,12 +939,9 @@ DataViewBoard <- function(input, output, session, env)
         barplot(res$prop.counts, las=3, #main="abundance of major gene types", cex.main=1.6,
                                         #cex.names=res$cx1+0.04, 
                 cex.lab=1.0, border = NA,
-                ylim=c(0,ymax)*1.6, ylab="abundance (%)",
-                names.arg=names.arg, cex.names=cex.names,
+                ylim = c(0,ymax)*1.6, ylab = "abundance (%)",
+                names.arg = names.arg, cex.names = cex.names,
                 col = klr)
-                                        # legend("topleft", legend=rev(rownames(res$prop.counts)),
-                                        #        fill=rev(grey.colors(nrow(res$prop.counts))),
-                                        #        cex=1, y.intersp=0.4, bty="n")
         leg <- legend("topleft", legend=rev(rownames(res$prop.counts)),
                                         #fill=rev(grey.colors(nrow(res$prop.counts))),
                       fill=rev(klr),cex=1, y.intersp=0.75, bty="n", plot = FALSE)
