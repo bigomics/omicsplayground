@@ -8,6 +8,7 @@ if(0) {
     reduce.sd=1000;reduce.pca=50;center.rows=TRUE;scale.rows=FALSE;umap.pkg="uwot"
     methods=c("tsne");perplexity=30;dims=2;rank.tf=FALSE 
     ##methods=c("pca","tsne","umap");dims=c(2,3);umap.pkg="uwot"
+    
 }
 
 pgx.clusterSamples2 <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3),
@@ -200,7 +201,7 @@ pgx.FindClusters <- function(X, method=c("kmeans","hclust","louvain","meta"),
     return(index)
 }
 
-##reduce.sd=1000;reduce.pca=50;methods=c("pca","tsne","umap");dims=c(2,3);umap.pkg="uwot"
+##reduce.sd=1000;reduce.pca=50;methods=c("pca","tsne","umap");dims=c(2,3);umap.pkg="uwot";center.features=TRUE;scale.features=FALSE;perplexity=30
 pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
                                  reduce.sd = 1000, reduce.kmeans = 1000, reduce.pca = 50,
                                  center.features=TRUE, scale.features=FALSE,
@@ -374,6 +375,7 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
         gr <- scran::buildSNNGraph(rX, d=d)
         idx <- cluster_louvain(gr)$membership
         table(idx)
+        idx <- idx[1:ncol(X)]  ## not augmented!!!!
         all.pos$membership <- idx
     }
     

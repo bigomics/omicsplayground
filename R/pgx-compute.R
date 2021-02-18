@@ -16,7 +16,7 @@ if(0) {
 
     counts <- ngs$counts
     samples <- ngs$samples
-    contrasts <- ngs$model.parameters$contr.matrix
+    contrasts <- ngs$model.parameters$contr.matrix[,1,drop=FALSE]
 
 }
 
@@ -67,9 +67,9 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
         samples <- samples[used.samples,,drop=FALSE]
         contrasts <- contrasts[used.samples,,drop=FALSE] ## sample-based!!! 
 
-        message(cat("[pgx.createPGX] dim(counts) = ",dim(counts)))
-        message(cat("[pgx.createPGX] dim(samples) = ",dim(samples)))
-        message(cat("[pgx.createPGX] dim(contrasts) = ",dim(contrasts)))
+        message("[pgx.createPGX] dim(counts) = ",dim(counts))
+        message("[pgx.createPGX] dim(samples) = ",dim(samples))
+        message("[pgx.createPGX] dim(contrasts) = ",dim(contrasts))
         
     }
     
@@ -218,10 +218,12 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     ##-------------------------------------------------------------------
     if(filter.genes) {
         cat("[pgx.createPGX] filtering out not-expressed genes...\n")
-        keep <- (Matrix::rowMeans(ngs$counts > 0) > 0) ## at least in 
+        keep <- (Matrix::rowMeans(ngs$counts > 0) > 0) ## at least in one...
         ngs$counts <- ngs$counts[keep,]
         ngs$genes  <- ngs$genes[keep,,drop=FALSE]
-        if(!is.null(ngs$X)) ngs$X <- ngs$X[keep,]
+        if(!is.null(ngs$X)) {
+            ngs$X <- ngs$X[keep,]
+        }
     }
     
     ##-------------------------------------------------------------------
@@ -305,20 +307,11 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     if(do.cluster) {
         cat("[pgx.createPGX] clustering samples...\n")        
         ##if(!is.null(progress)) progress$inc(0.01, detail = "clustering")
-        perplexity=30
-        perplexity <- max(1,min(30,round(ncol(ngs$counts)/4)))
-        perplexity=NULL
-        ## ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, perplexity=perplexity)
-        ngs <- pgx.clusterSamples2(ngs, dims=c(2,3), perplexity=perplexity,
+        ## ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, perplexity=NULL)
+        ngs <- pgx.clusterSamples2(ngs, dims=c(2,3), perplexity=NULL,
                                    methods=c("pca","tsne","umap"))
         head(ngs$samples)
         table(ngs$samples$cluster)
-
-        ## Extra clustering methods: PCA, t-SNE, UMAP.
-        ##ngs <- pgx.clusterSamples2(ngs, dims=c(2,3))
-        ##names(ngs$cluster)
-        ##ngs$tsne2d <- ngs$cluster$pos[["tsne2d"]] ## old style
-        ##ngs$tsne3d <- ngs$cluster$pos[["tsne3d"]] ## old style        
     }
 
     ##-------------------------------------------------------------------

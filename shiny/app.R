@@ -117,6 +117,7 @@ if(0) {
     ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
+    load("../data/guarda2020-myc-v2.pgx")    
     ngs = pgx.initialize(ngs)
 }
 
