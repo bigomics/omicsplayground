@@ -18,8 +18,8 @@ DataViewUI <- function(id) {
     tabsetPanel(
         id = ns("tabs"),
         tabPanel("Plots",uiOutput(ns("plotsUI"))),
-        tabPanel("Counts",uiOutput(ns("countsUI"))),
-        tabPanel("Table",uiOutput(ns("genetableUI"))),
+        tabPanel("QC",uiOutput(ns("countsUI"))),
+        tabPanel("Counts",uiOutput(ns("genetableUI"))),
         tabPanel("Samples",uiOutput(ns("sampletableUI"))),
         tabPanel("Contrasts",uiOutput(ns("contrasttableUI"))),        
         tabPanel("Resource info",uiOutput(ns("resourceinfoUI")))
@@ -603,7 +603,7 @@ DataViewBoard <- function(input, output, session, env)
         rsum <- rowSums(R,na.rm=TRUE)
         jj = head(order(abs(rsum),decreasing=TRUE),35)
         jj = head(order(-abs(rsum)),30)
-        jj <- c( head(order(rsum),20), head(order(-rsum),20))
+        jj <- c( head(order(rsum),15), head(order(-rsum),15))
         jj <- jj[order(-rsum[jj])]
         head(rsum[jj])
         Rtop = R[jj,,drop=FALSE]
