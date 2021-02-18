@@ -220,43 +220,14 @@ DataViewBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ##                     Correlation plot
     ##----------------------------------------------------------------------
-    
-    data_genePlots_correlationplot_data <- reactive({
-        require(RColorBrewer)
         
-        ngs <- inputData()
-        req(ngs)
+    getTopCorrelatedGenes <- function(ngs, gene, n=30, samples=NULL) {
 
-        dbg("[data_genePlots_correlationplot_data()] reacted")
-        
-        gene = "KCNN4"
-        gene = ngs$genes$gene_name[1]
-        if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
-        samples = colnames(ngs$X)
-        if(!is.null(input$data_samplefilter)) {
-            samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        }
-        nsamples = length(samples)
-                
         ## precompute
+        if(is.null(samples)) samples = colnames(ngs$X)
+        samples <- intersect(samples, colnames(ngs$X))
         pp=rownames(ngs$genes)[1]
         pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
-        
-        gx = NULL
-        ylab = NULL
-        if(input$data_type=="counts") {
-            gx = ngs$counts[pp,samples]
-            ylab="expression (counts)"
-        } else if(input$data_type=="CPM") {
-            gx = 2**ngs$X[pp,samples]
-            ylab="expression (CPM)"
-        } else if(input$data_type=="logCPM") {
-            gx = ngs$X[pp,samples]
-            ylab="expression (log2CPM)"
-        }
-        
-        mar = MARGINS1
-        par(mar=mar, mgp=c(2.1,0.8,0))
         
         ## corr always in log.scale and restricted to selected samples subset
         ## should match exactly the rawtable!!
@@ -281,29 +252,38 @@ DataViewBoard <- function(input, output, session, env)
         
         res = list(top.rho=top.rho, offset=offset, klr1=klr1)
         return(res)
-    })
+    }
 
     data_genePlots_correlationplot.RENDER %<a-% reactive({
 
-        dbg("[data_genePlots_correlationplot.RENDER] reacted")
-
-        res = data_genePlots_correlationplot_data()
         ngs <- inputData()
-        if(is.null(ngs) | is.null(res)) return(NULL)
-
+        req(ngs)
+        
+        gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
         if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+
+        samples = colnames(ngs$X)
+        if(!is.null(input$data_samplefilter)) {
+            samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+        }
+        
+        res <- getTopCorrelatedGenes(ngs, gene=gene, n=30, samples=samples) 
+        ## res = data_genePlots_correlationplot_data()
+
+        mar = MARGINS1
+        par(mar=mar, mgp=c(2.1,0.8,0))
         barplot(res$top.rho - res$offset, col=res$klr1, ## horiz=TRUE,
-                las=3,#main=paste("top correlated genes\nwith",gene),
-                main=paste(gene),
+                las = 3,#main=paste("top correlated genes\nwith",gene),
+                main = paste(gene),
                 offset = res$offset, ylab="correlation (r)",
                 ## names.arg=rep(NA,length(top.rho)),
-                cex.names=0.75, cex.main=1, cex.axis=0.9,
+                cex.names = 0.85, cex.main = 1, cex.axis = 0.9,
                 col.main="#7f7f7f", border=NA)
         ##text( (1:length(top.rho) - 0.5)*1.2, offset, names(top.rho),
         ##col="black", cex=0.75, srt=90, pos=3, offset=0.4, font=1)
         legend("topright", legend=c("expr high","expr low"),
-                                        #fill=c("grey30","grey80"),
+               ##fill=c("grey30","grey80"),
                fill=c("#3380CCCC","#3380CC40"),
                cex=0.8, y.intersp=0.85)
 
@@ -749,7 +729,7 @@ DataViewBoard <- function(input, output, session, env)
             div(HTML(dataview_caption1), class="caption"),
             br(),
             fillRow( 
-                flex = c(0.9,1,1.2,0.8), id = "data_genePlots_row1",
+                flex = c(0.9,1,1.3,0.7), id = "data_genePlots_row1",
                 height = rowH, ## width=1600, 
                 plotWidget(ns("data_genePlots_tsne")),
                 plotWidget(ns("data_genePlots_barplot")),

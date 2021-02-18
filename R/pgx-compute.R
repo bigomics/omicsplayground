@@ -13,11 +13,16 @@ if(0) {
     gx.methods=c("ttest.welch","trend.limma");gset.methods=c("fisher","gsva");
     only.hugo=TRUE;only.proteincoding=TRUE;rik.orf=FALSE
     batch.correct=TRUE
+
+    counts <- ngs$counts
+    samples <- ngs$samples
+    contrasts <- ngs$model.parameters$contr.matrix
+
 }
 
 pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
                           is.logx=NULL, do.cluster=TRUE, batch.correct=TRUE,
-                          auto.scale=TRUE, filter.genes=TRUE,
+                          auto.scale=TRUE, filter.genes=TRUE, prune.samples=FALSE,
                           only.chrom=TRUE, rik.orf=FALSE,
                           only.hugo=TRUE, convert.hugo=TRUE,
                           only.proteincoding=TRUE)
@@ -40,6 +45,34 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     contrasts <- as.matrix(contrasts)
     contrasts[is.na(contrasts)] <- 0
 
+    ## convert group-wise contrast to sample-wise
+    if("group" %in% names(samples) && nrow(contrasts)!=nrow(samples)) {
+        is.group.contrast <- all(rownames(contrasts) %in% samples$group)
+        is.group.contrast
+        if(is.group.contrast) {
+            ## group
+            message("[pgx.createPGX] converting group contrast to sample-wise contrasts...")
+            contrasts.new <- contrasts[samples$group,,drop=FALSE]
+            rownames(contrasts.new) <- rownames(samples)
+            contrasts <- contrasts.new
+        }
+    }
+    
+    ## prune.samples=FALSE
+    used.samples <- names(which(rowSums(contrasts!=0)>0))
+    if(prune.samples && length(used.samples) < ncol(counts) ) {
+
+        message("[pgx.createPGX] pruning not-used samples...")
+        counts  <- counts[,used.samples,drop=FALSE]
+        samples <- samples[used.samples,,drop=FALSE]
+        contrasts <- contrasts[used.samples,,drop=FALSE] ## sample-based!!! 
+
+        message(cat("[pgx.createPGX] dim(counts) = ",dim(counts)))
+        message(cat("[pgx.createPGX] dim(samples) = ",dim(samples)))
+        message(cat("[pgx.createPGX] dim(contrasts) = ",dim(contrasts)))
+        
+    }
+    
     ##-------------------------------------------------------------------
     ## conform
     ##-------------------------------------------------------------------
