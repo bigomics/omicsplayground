@@ -1073,7 +1073,7 @@ ConnectivityBoard <- function(input, output, session, env)
         frame()
         col1 = grey.colors(ncol(F),start=0.15)
         pgx.stackedBarplot(
-            F, las=1, cex.names=0.7, col=col1, hz = TRUE,
+            F, las=1, cex.names=0.78, col=col1, hz = TRUE,
             ## las=1, xlim=xlim,
             xlab="cumulative enrichment")
 
