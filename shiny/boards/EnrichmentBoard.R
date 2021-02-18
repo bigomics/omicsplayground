@@ -1108,17 +1108,16 @@ EnrichmentBoard <- function(input, output, session, env)
         
         meta = ngs$gset.meta$meta
         gsmethod = colnames(meta[[1]]$fc)
-        gsmethod = intersect(gsmethod, GSET.DEFAULTMETHODS)    
         gsmethod <- input$gs_method
         if(is.null(gsmethod) || length(gsmethod)==0) return(NULL)
-        
+
+        fdr=1;lfc=1
         fdr = as.numeric(input$gs_fdr)    
         lfc = as.numeric(input$gs_lfc)
         sel.gsets <- NULL
-        if(input$gs_features != "<all>") {
-            ##sel.gsets = COLLECTIONS[[1]]
-            sel.gsets = COLLECTIONS[[input$gs_features]]
-        }
+        sel.gsets <- rownames(meta[[1]])
+        sel.gsets = COLLECTIONS[[1]]
+        sel.gsets = COLLECTIONS[[input$gs_features]]
 
         i=1
         mx.list <- list()
@@ -1133,62 +1132,58 @@ EnrichmentBoard <- function(input, output, session, env)
         ## select maximum 24 comparisons (because of space...)
         q.score <- sapply(Q, function(q) mean(tail(sort(-log10(1e-99+q)),100)))
         sel <- head(names(sort(q.score, decreasing=TRUE)),20)
-        sel <- sort(sel)
-        Q <- Q[sel]
-        mx.list <- mx.list[sel]
+        ## sel <- sort(sel)
+        Q <- Q[which(names(Q) %in% sel)]
+        mx.list <- mx.list[names(Q)]
+        ymax <- 1.2 * max(-log10(1e-99 + unlist(Q)), na.rm=TRUE)
         
         ##------------- layout ----------------
-        ng = length(mx.list)
-        ##nn = c(2, max(ceiling(ng/2),5))
-        ##if(ng>12) nn = c(3,8)
-        ##par(mfrow=nn, mar=c(2,4,2.3,2)*0, mgp=c(2.6,1,0))
-        nc = ceiling(sqrt(ng))
-        if(ng>24) {
-            nc = max(ceiling(ng/3),6)
-            par(mfrow=c(3,nc), mar=c(4,4,2,2)*0)
-        } else if(FALSE && ng <= 3) {
+        nplots <- length(mx.list)
+        par(mfrow=c(1,1), mar=c(1,1,1,1)*0.2, mgp=c(2.6,1,0), oma=c(1,1,0,0)*2)
+        if(nplots>24) {
+            nc = max(ceiling(nplots/3),6)
+            par(mfrow=c(3,nc))
+        } else if(FALSE && nplots <= 3) {
             nc = 3
-            par(mfrow=c(1,nc), mar=c(4,4,2,2)*0)
+            par(mfrow=c(1,nc))
         } else {
-            nc = max(ceiling(ng/2),6)
-            par(mfrow=c(2,nc), mar=c(4,4,2,2)*0)
+            nc = max(ceiling(nplots/2),6)
+            par(mfrow=c(2,nc))
         }        
-
-        ymax <- 1.2 * max(-log10(1e-99 + unlist(Q)), na.rm=TRUE)                        
-
-        message("[DBG] [volcanoAll.RENDER] ng = ",ng)
-        message("[DBG] [volcanoAll.RENDER] ymax = ",ymax)
-
+        
         withProgress(message="computing volcano plots ...", value=0, {
+
             i=1
-            for(i in 1:length(mx.list)) {
+            for(i in 1:nplots) {
+
                 mx <- mx.list[[i]]
                 ## qv <- Q[[i]]
                 is.sig <- (mx[,"qv"] <= fdr & abs(mx[,"fc"]) >= lfc)
+                table(is.sig)
                 sig.gs = rownames(mx)[which(is.sig)]
                 if(!is.null(sel.gsets)) sig.gs <- intersect(sel.gsets, sig.gs)
+
                 gx.volcanoPlot.XY(
                     x = mx[,"fc"], pv = mx[,"qv"],
                     use.fdr=TRUE, p.sig=fdr, lfc=lfc,                
-                    gene = substring(rownames(mx),1,35), 
+                    gene = rownames(mx), 
                     xlab = "effect size (NES)", lab.cex=0, nlab=0,
                     render="canvas", n=1000, highlight=sig.gs,
                     cex=1, cex.axis=1.3, cex.main=1.4, axes=FALSE,
                     ylim=c(0,ymax), main="" )
-                ##title(names(meta)[i],line=-1)
-                legend("topright",names(mx.list)[i], cex=1.2, bg="white")
 
                 ## draw axis if first column or last row
-                ##n=nn[2]
+                box(lwd=1, col="black", lty="solid")
                 is.first = (i%%nc==1)
-                last.row = ( (i-1)%/%nc == (length(mx.list)-1)%/%nc )
-                if(is.first) axis(2, tcl=0.5, mgp=c(-2,-1.5,0))
-                if(last.row) axis(1, tcl=0.5, mgp=c(-2,-1.5,0))
-                box()
-
-                ##volcano_plot(limma, render="plotly", n=1000, cex=1, highlight=genes)
-                incProgress( 1.0/length(mx.list) )
+                last.row = ( (i-1)%/%nc == (nplots-1)%/%nc )
+                if(is.first) axis(2, mgp=c(2,0.7,0), cex.axis=0.8)
+                if(last.row) axis(1, mgp=c(2,0.7,0), cex.axis=0.8)
+                legend("top", legend=names(mx.list)[i], box.lty=0,
+                       x.intersp = 0.3, y.intersp = 0.5,
+                       cex=1.2, bg="white")
+                incProgress( 1.0/nplots )
             }
+            
         })
     })
     
@@ -1250,13 +1245,14 @@ EnrichmentBoard <- function(input, output, session, env)
         
         ymax <- 1.2 * max(-log10(1e-99 + qv), na.rm=TRUE)
 
-        ng = ncol(fx)
-        nn = c(2, max(ng/2,5))
-        par(mfrow=nn, mar=c(2,4,2.3,2)*0, mgp=c(2.6,1,0))
+        nplots = ncol(fx)
+        nc = max(nplots/2,5)
+        nn = c(2, nc)
+        par(mfrow=nn, mar=c(1,1,1,1)*0.2, mgp=c(2.6,1,0), oma=c(1,1,0,0)*2)
         
         withProgress(message="computing volcano plots ...", value=0, {
             i=1
-            for(i in 1:ng) {
+            for(i in 1:nplots) {
                 
                 is.sig <- ( qv[,i] <= fdr & abs(fx[,i]) >= lfc)
                 sig.gs = rownames(mx)[which(is.sig)]
@@ -1274,18 +1270,19 @@ EnrichmentBoard <- function(input, output, session, env)
                     cex=1, cex.axis=1.3, main="")
                 
                 ##title(mt, line=-1.5, cex.main=1.4)
-                legend("topright",method,bg="white", cex=1.2)
-                
+                box(lwd=1, col="black", lty="solid")                
+
                 ##volcano_plot(limma, render="plotly", n=1000, cex=1, highlight=genes)
                 ## draw axis if first column or last row
-                n=nn[2]
-                is.first = (i%%n==1)
-                last.row = ( (i-1)%/%n == (ng-1)%/%n )
-                if(is.first) axis(2, tcl=0.5, mgp=c(-2,-1.5,0))
-                if(last.row) axis(1, tcl=0.5, mgp=c(-2,-1.5,0))
-                box()
+                is.first = (i%%nc==1)
+                last.row = ( (i-1)%/%nc == (nplots-1)%/%nc )
+                if(is.first) axis(2, mgp=c(2,0.7,0), cex.axis=0.8)
+                if(last.row) axis(1, mgp=c(2,0.7,0), cex.axis=0.8)
+                legend("top", legend=method, box.lty=0,
+                       x.intersp = 0.3, y.intersp = 0.5,
+                       cex=1.2, bg="white")
                 
-                incProgress( 1/length(ng) )                
+                incProgress( 1/nplots )                
             }
         })
 

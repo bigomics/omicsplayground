@@ -13,7 +13,6 @@ viz.PhenoStats <- function(pgx){}
 viz.PhenoStatsBy <- function(pgx, by.pheno){}
 viz.Expression <- function(pgx, pheno, genes){}
 viz.Contrasts <- function(pgx, contrasts){}
-viz.CompareFC <- function(pgx, contrasts){}
 viz.MitoRiboQC <- function(pgx){}
 viz.VHVLusage <- function(pgx) {}
 viz.BatchCorrection <- function(pgx, cX){}
@@ -21,6 +20,67 @@ viz.showFigure <- function(fig){}
 viz._showPlotly <- function(fig){}
 viz._showShiny  <- function(fig){}
 viz._showGGplot  <- function(fig){}
+
+if(0) {
+
+    RDIR = "../R"
+    FILES = "../lib"
+    PGX.DIR = "../data"
+    source("../R/pgx-include.R")
+    ##source("options.R")
+    FILES
+    source("pgx-include.R")
+    load("../data/geiger2016-arginine.pgx")
+    viz.Contrasts(ngs, contrasts=NULL)
+    
+    
+}
+
+viz.FoldChangeHeatmap <- function(pgx, comparisons=NULL, hilight=NULL,
+                                  ntop=10, plot.diag=NULL, cex=1, nrow=NULL,
+                                  title=NULL, subtitle=NULL, caption=NULL)                              
+{
+    ## 
+    ##
+    ##
+
+    if(is.null(comparisons)) {
+        ct <- names(pgx$gx.meta$meta)
+    }
+    
+    out <- pgx.getMetaFoldChangeMatrix(pgx)
+    F <- out$fc
+    Q <- out$qv
+
+    ii <- head(order(-rowMeans(F**2)),60)
+    F1 <- F[ii,]
+    F1 <- F1[order(rowMeans(F1)),]
+    
+    hm <- Heatmap( t(F1),
+                  cluster_rows = TRUE,
+                  cluster_columns = FALSE)
+
+    p1 <- ggbarplot( t(F1), las=3,
+                    legend.pos=c(1.2,1.05), legend.cex=0.9,
+                    xlab="", ylab="cumulative fold-change") +
+        theme(
+            plot.margin = unit(c(0.3,5.6,0,0), "cm")
+        )
+    p2 <- grid.grabExpr(draw(hm))
+    
+    ##--------------------------------------------------
+    ## Arrange
+    ##--------------------------------------------------
+    fig <- cowplot::plot_grid(p1, p2, nrow=nrow, rel_heights=c(1,1.8)) 
+    fig
+    
+    if(is.null(title)) title = "Fold Change heatmap"
+    if(is.null(subtitle)) subtitle = "Clustering of fold-changes signatures."    
+    if(is.null(caption)) caption <- paste0("Project: ",pgx$name)
+
+    viz.showFigure(fig, title=title, subtitle=subtitle, caption=caption)
+    
+}
 
 ##pos="tsne2d";pheno1="cluster";pheno2="cell.type"
 viz.ClusterMarkers <- function(pgx, pheno1, pheno2, n=NULL, pos="tsne2d",
@@ -513,7 +573,7 @@ viz.GeneSetEnrichment <- function(pgx, genesets, contrast, pos=NULL,
     viz.showFigure(plist, title=title, subtitle=subtitle, caption=caption)    
 }
 
-viz.Contrasts <- function(pgx, contrasts, ntop=10, dir=1, pos=NULL,
+viz.Contrasts <- function(pgx, contrasts=NULL, ntop=10, dir=1, pos=NULL,
                           psig=0.05, fc=0.20,
                           cex=1, type = c("pair","MA","volcano"),
                           level="gene", filt=NULL, label.type="box",
@@ -615,7 +675,7 @@ viz.Contrasts <- function(pgx, contrasts, ntop=10, dir=1, pos=NULL,
     viz.showFigure(plist, title=title, subtitle=subtitle, caption=caption)
     
 }
-
+ 
 ##title=NULL;subtitle=NULL;caption=NULL
 ##hilight=NULL;ntop=20
 viz.FoldChangePairs <- function(pgx, comparisons=NULL, hilight=NULL,
@@ -1355,9 +1415,9 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
 }
 
 
-##================================================================================================
-##================================================================================================
-##================================================================================================
+##=============================================================================================
+##=============================================================================================
+##=============================================================================================
 ##plots=plotList
 
 ## just a shortcut
