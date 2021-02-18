@@ -63,10 +63,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                     height = height,
                     flex = c(0.2,NA,0.05,1.3),
                     br(),
-                    ## conditionalPanel(
-                    ##     "input.options%2 == 0", ns=ns,
-                    ##     div(style="height: 250px;")
-                    ## ),
                     fluidRow(
                         column(
                             4, align="center", offset=4,
@@ -278,6 +274,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                     counts, samples, contrasts, ## genes,
                     X = NULL,
                     batch.correct = FALSE,      ## done in UI                        
+                    prune.samples = TRUE,
                     filter.genes = filter.genes,
                     only.chrom = only.chrom,
                     rik.orf = !excl.rikorf,

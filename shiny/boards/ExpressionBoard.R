@@ -52,7 +52,7 @@ ExpressionBoard <- function(input, output, session, env)
 
     fullH = 730
     rowH = 345  ## row height of panels
-    imgH = 270  ## height of images
+    imgH = 300  ## height of images
     tabH = 160  ## height of tables
     tabH = "70vh"  ## height of tables
     
@@ -871,8 +871,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         options = expr_topgenes_opts,
         info.text = expr_topgenes_text,
         ##caption = expr_topgenes_caption,
-        height = c(imgH,450), width = c('auto',1500), res=c(85,95),
-        pdf.width=14, pdf.height=4, 
+        height = c(imgH,420), width = c('auto',1600), res=c(85,95),
+        pdf.width=14, pdf.height=3.5, 
         title="Expression of top differentially expressed genes"
     )
     ##output <- attachModule(output, expr_topgenes_module)
