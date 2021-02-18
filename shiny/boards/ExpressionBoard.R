@@ -26,7 +26,7 @@ ExpressionUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillCol(
         flex = c(1.6,1),
-        height = 730,
+        height = 750,
         tabsetPanel(
             id = ns("tabs1"),
             tabPanel("Plot",uiOutput(ns("expr_plots_UI"))),
@@ -1009,7 +1009,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ##caption = expr_volcanoAll_caption,
         pdf.width=18, pdf.height=6,
         ##height = imgH, res=75,
-        height = c(imgH,450), width = c('auto',1600), res=c(75,90),
+        height = c(imgH,450), width = c('auto',1600),
+        res=c(75,95),
         title="Volcano plots for all contrasts"
     )
     ##output <- attachModule(output, expr_volcanoAll_module)
@@ -1115,7 +1116,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         title = "Volcano plots for all methods",
         info.text = expr_volcanoMethods_text, 
         ##caption = expr_volcanoMethods_caption,
-        height = c(imgH,500), width = c('auto',1500), res=c(75,90),
+        height = c(imgH,450), width = c('auto',1600),
+        res=c(75,95),
         pdf.width=18, pdf.height=6
     )
     ##output <- attachModule(output, expr_volcanoMethods_module)
