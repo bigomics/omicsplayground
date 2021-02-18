@@ -933,7 +933,7 @@ ConnectivityBoard <- function(input, output, session, env)
                placement="right", options = list(container = "body")),
         tipify( radioButtons(ns('cumFCplot_order'),'Order:',
                              choiceValues = c("FC","cumFC"),
-                             choiceNames = c("current FC","cumFC"),
+                             choiceNames = c("this FC","cumFC"),
                              selected="cumFC", inline=TRUE),
                "How to order the cumulative barplot.",
                placement="right", options = list(container = "body"))
@@ -1088,7 +1088,7 @@ ConnectivityBoard <- function(input, output, session, env)
                placement="right", options = list(container = "body")),
         tipify( radioButtons(ns('cumgsea_order'),'Order:',
                              choiceValues = c("FC","cumFC"),
-                             choiceNames = c("current FC","cumFC"),
+                             choiceNames = c("this FC","cumFC"),
                              selected="cumFC", inline=TRUE),
                "How to order the cumulative barplot.",
                placement="right", options = list(container = "body"))        
