@@ -962,7 +962,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
         }        
 
         ymax=15
-        ymax <- 1.2 * max(-log10(1e-99 + unlist(Q)), na.rm=TRUE)        
+        ## ymax <- 1.2 * max(-log10(1e-99 + unlist(Q)), na.rm=TRUE)
+        nlq <- -log10(1e-99 + unlist(Q))
+        ymax <- max(3, 1.2 * quantile(nlq, probs=0.999, na.rm=TRUE)[1]) ## y-axis
         
         withProgress(message="computing volcano plots ...", value=0, {
 
@@ -1053,8 +1055,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
         fc = unclass(mx$fc)
         ##pv = unclass(mx$p)
         qv = unclass(mx$q)
-        ymax <- 1.2 * max(-log10(1e-99 + qv), na.rm=TRUE) ## y-axis               
-        xlim = c(-1.1,1.1)*max(abs(fc))
+        nlq <- -log10(1e-99 + qv)
+        ymax <- max(3, 1.2 * quantile(nlq, probs=0.999, na.rm=TRUE)[1]) ## y-axis        
+        xlim = c(-1.1,1.1) * max(abs(fc))
         xlim = 1.3*c(-1,1) * quantile(abs(fc),probs=0.999)
         fc.genes = ngs$genes[rownames(mx),"gene_name"]
         nplots <- min(24,ncol(qv))

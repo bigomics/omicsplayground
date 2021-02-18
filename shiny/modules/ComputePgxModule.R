@@ -44,22 +44,18 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
             ## statistical method for GENE level testing
             GENETEST.METHODS = c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma",
                                  "deseq2.wald","deseq2.lrt","edger.qlf","edger.lrt")
-            GENETEST.METHODS1 = c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma")
-            GENETEST.METHODS2 = c("deseq2.wald","deseq2.lrt","edger.qlf","edger.lrt")
             GENETEST.SELECTED = c("trend.limma","deseq2.wald","edger.qlf")
             
             ## statistical method for GENESET level testing
             GENESET.METHODS = c("fisher","ssgsea","gsva", "spearman", "camera", "fry",
                                 ##"plage","enricher","gsea.permPH","gsea.permGS","gseaPR",
                                 "fgsea")
-            GENESET.METHODS1 = c("fisher","spearman","fgsea") 
-            GENESET.METHODS2 = c("gsva","ssgsea", "camera", "fry")
             GENESET.SELECTED = c("fisher","gsva","fgsea")
 
             ## batch correction and extrs methods
             EXTRA.METHODS = c("deconv", "drugs", "wordcloud","connectivity")
-            EXTRA.METHODS1 = c("drugs","wordcloud")
-            EXTRA.METHODS2 = c("deconv","connectivity")            
+            EXTRA.NAMES = c("infer celltypes (deconv)", "drugs enrichment",
+                            "wordcloud","experiment connectivity")
             EXTRA.SELECTED = c("drugs","wordcloud")
             
             output$UI <- renderUI({
@@ -136,13 +132,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                                     GENETEST.METHODS,
                                     selected = GENETEST.SELECTED
                                 )
-                                ## premium.feature(
-                                ##     checkboxGroupInput(
-                                ##         ns('gene_methods2'),
-                                ##         NULL,
-                                ##         GENETEST.METHODS2
-                                ##     )
-                                ## )
                             ),
                             wellPanel(
                                 checkboxGroupInput(
@@ -151,28 +140,15 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                                     GENESET.METHODS,
                                     selected = GENESET.SELECTED
                                 ),
-                                ## premium.feature(
-                                ##     checkboxGroupInput(
-                                ##         ns('gset_methods2'),
-                                ##         NULL,
-                                ##         choices = GENESET.METHODS2
-                                ##     )
-                                ## )
                             ),
                             wellPanel(
                                 checkboxGroupInput(
                                     ns('extra_methods'),
                                     'Extra analysis:',
-                                    choices = EXTRA.METHODS,
+                                    choiceValues = EXTRA.METHODS,
+                                    choiceNames = EXTRA.NAMES,
                                     selected = EXTRA.SELECTED
                                 )
-                                ## premium.feature(
-                                ##     checkboxGroupInput(
-                                ##         ns('extra_methods2'),
-                                ##         NULL,
-                                ##         choices = EXTRA.METHODS2
-                                ##     )
-                                ## )                                
                             ),
                             div(width=150)                            
                         ) ## end of fillRow

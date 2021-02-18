@@ -1135,7 +1135,9 @@ EnrichmentBoard <- function(input, output, session, env)
         ## sel <- sort(sel)
         Q <- Q[which(names(Q) %in% sel)]
         mx.list <- mx.list[names(Q)]
-        ymax <- 1.2 * max(-log10(1e-99 + unlist(Q)), na.rm=TRUE)
+        ##ymax <- 1.2 * max(-log10(1e-99 + unlist(Q)), na.rm=TRUE)
+        nlq <- -log10(1e-99 + unlist(Q))
+        ymax <- max(3, 1.2 * quantile(nlq, probs=0.999, na.rm=TRUE)[1]) ## y-axis        
         
         ##------------- layout ----------------
         nplots <- length(mx.list)
@@ -1243,7 +1245,9 @@ EnrichmentBoard <- function(input, output, session, env)
         sel.gsets = COLLECTIONS[[1]]
         sel.gsets = COLLECTIONS[[input$gs_features]]
         
-        ymax <- 1.2 * max(-log10(1e-99 + qv), na.rm=TRUE)
+        nlq <- -log10(1e-99 + unlist(qv))
+        ymax <- max(3, 1.2 * quantile(nlq, probs=0.999, na.rm=TRUE)[1]) ## y-axis        
+        ##ymax <- 1.2 * max(-log10(1e-99 + qv), na.rm=TRUE)
 
         nplots = ncol(fx)
         nc = max(nplots/2,5)
