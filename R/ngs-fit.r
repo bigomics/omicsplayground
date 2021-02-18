@@ -224,13 +224,21 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
         ## 
         exp.matrix = contr.matrix
         if(!is.null(design)) exp.matrix <- (design %*% contr.matrix)
-        samples0 <- lapply(apply(exp.matrix!=0,2,which),function(i) rownames(exp.matrix)[i])
-        avgX <- sapply(samples0, function(s) rowMeans(X[,s,drop=FALSE]))
+        samplesX <- lapply(apply(exp.matrix!=0,2,which),function(i) rownames(exp.matrix)[i])
+        samples1 <- lapply(apply(exp.matrix>0,2,which),function(i) rownames(exp.matrix)[i])
+        samples0 <- lapply(apply(exp.matrix<0,2,which),function(i) rownames(exp.matrix)[i])
+
+        avgX <- sapply(samplesX, function(s) rowMeans(X[,s,drop=FALSE]))
+        avg.1 <- sapply(samples1, function(s) rowMeans(X[,s,drop=FALSE]))
+        avg.0 <- sapply(samples0, function(s) rowMeans(X[,s,drop=FALSE]))
+        
         dim(avgX)
         i=j=1
         for(i in 1:length(outputs)) {
             for(j in 1:length(outputs[[i]]$tables)) {
                 outputs[[i]]$tables[[j]]$AveExpr <- avgX[,j]
+                outputs[[i]]$tables[[j]]$AveExpr1 <- avg.1[,j]
+                outputs[[i]]$tables[[j]]$AveExpr0 <- avg.0[,j]
             }
         }
 
@@ -245,12 +253,14 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
 
         res = outputs[[i]]
         M  = sapply( res$tables, function(x) x[,"AveExpr"])  ## !!!! edgeR and Deseq2 are weird!!!
-        ##M  = sapply( res$tables, function(x) rowMeans(x[,c("AveExpr0","AveExpr1")]))  ## NEED RETHINK!!!
+        M0  = sapply( res$tables, function(x) x[,"AveExpr0"])
+        M1  = sapply( res$tables, function(x) x[,"AveExpr1"])
         Q  = sapply( res$tables, function(x) x[,"adj.P.Val"] )
         P  = sapply( res$tables, function(x) x[,"P.Value"] )
         logFC = sapply( res$tables, function(x) x[,"logFC"] )
         colnames(M) = colnames(logFC) = colnames(P) = colnames(Q) = colnames(contr.matrix)
         rownames(M) = rownames(logFC) = rownames(P) = rownames(Q) = rownames(res$tables[[1]])
+        rownames(M0) = rownames(M1) = rownames(res$tables[[1]])
 
         ## count significant terms
         qvalues = c(1e-16,10**seq(-8,-2,2),0.05, 0.1, 0.2, 0.5,1)
@@ -277,6 +287,8 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
         res$q.value = Q
         res$logFC = logFC
         res$aveExpr = M
+        res$aveExpr0 = M0
+        res$aveExpr1 = M1
         
         outputs[[i]] <- res
     }
@@ -293,6 +305,8 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
     Q = lapply(1:ntest, function(i) sapply( outputs, function(x) x$q.value[,i]))
     logFC = lapply(1:ntest, function(i) sapply( outputs, function(x) x$logFC[,i]))
     aveExpr = lapply(1:ntest, function(i) sapply( outputs, function(x) x$aveExpr[,i]))
+    aveExpr0 = lapply(1:ntest, function(i) sapply( outputs, function(x) x$aveExpr0[,i]))
+    aveExpr1 = lapply(1:ntest, function(i) sapply( outputs, function(x) x$aveExpr1[,i]))
 
     sig.up = lapply(1:ntest, function(i) {
         do.call(rbind,lapply(outputs, function(x) x$sig.counts[["up"]][i,]))
@@ -323,6 +337,8 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
         qv = Q[[i]]
         fc = logFC[[i]]
         mx = aveExpr[[i]]
+        mx0 = aveExpr0[[i]]
+        mx1 = aveExpr1[[i]]
         
         ## avoid strange values
         fc[is.infinite(fc) | is.nan(fc)] <- NA
@@ -338,12 +354,18 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
         ##p.meta   = apply(pv, 1, function(p) metap::allmetap(p, method="sumlog")$p[[1]])
         ## q.meta = p.adjust(p.meta, method="BH")
         meta.avg <- rowMeans(mx, na.rm=TRUE)
-        meta = data.frame(fx=meta.fx, p=meta.p, q=meta.q, avg=meta.avg)
+        meta.avg0 <- rowMeans(mx0, na.rm=TRUE)
+        meta.avg1 <- rowMeans(mx1, na.rm=TRUE)
+
+        meta = data.frame(fx=meta.fx, p=meta.p, q=meta.q)
+        ##avg <- data.frame(avg=meta.avg, avg0=meta.avg0, avg1=meta.avg1)
+        avg <- data.frame(avg.0=meta.avg0, avg.1=meta.avg1)
         rownames(meta) <- rownames(logFC[[i]])
-        rownames(fc) <- NULL  ## save memory
+        rownames(avg)  <- rownames(logFC[[i]])
+        rownames(fc) <- NULL  ## saves memory
         rownames(pv) <- NULL
         rownames(qv) <- NULL
-        all.meta[[i]] = data.frame(meta=meta, fc=I(fc), p=I(pv), q=I(qv))
+        all.meta[[i]] = data.frame(meta=meta, avg, fc=I(fc), p=I(pv), q=I(qv))
         if(!is.null(genes)) all.meta[[i]] <- cbind(genes, all.meta[[i]])
     }
     names(all.meta) = tests

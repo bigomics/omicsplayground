@@ -140,13 +140,13 @@ gx.volcanoPlot.XY <- function(x, pv, gene, ma_plot=FALSE, ma=NULL, p.sig=0.05, l
              axes=axes, cex.axis=cex.axis, cex.lab=cex.axis )
         psig = -log10(p.sig)
         if(ma_plot) {
-            abline(h=c(-1,1)*lfc, v=0, lty=3, col="grey50")
+            abline(h=c(-1,1)*lfc, v=0, lty=3, col="grey50", lwd=0.5)
             legend("topright",legend=paste(nsig["up"],"UP"), bty="n",
                    cex=1, text.col="grey50")
             legend("bottomright",legend=paste(nsig["down"],"DOWN"), bty="n",
                    cex=1, text.col="grey50")
         } else {
-            abline(v=c(-1,1)*lfc, h=c(-1,1)*psig, lty=3, col="grey50")
+            abline(v=c(-1,1)*lfc, h=c(-1,1)*psig, lty=3, col="grey50", lwd=0.5)
             legend("bottomright",legend=paste(nsig["up"],"UP"), bty="n",
                    cex=1, text.col="grey50")
             legend("bottomleft",legend=paste(nsig["down"],"DOWN"), bty="n",
@@ -292,9 +292,9 @@ gx.volcanoPlot.LIMMA <- function(tab, render="scatterD3", n=1000, highlight=NULL
              cex.axis=cex.axis, axes=axes)
         psig = -log10(p.sig)
         if(!ma.plot)
-            abline(v=c(-1,1), h=c(-1,1)*psig, lty=3, col="grey50")
+            abline(v=c(-1,1), h=c(-1,1)*psig, lty=3, col="grey50", lwd=0.5)
         if(ma.plot)
-            abline(h=c(-1,1), v=0, lty=3, col="grey50")
+            abline(h=c(-1,1), v=0, lty=3, col="grey50", lwd=0.5)
         ## points(x=x[jj], y= y[jj], pch=19, cex=0.4*cex, col="#1e60bb" )
         if(length(jj)>0) {
             text(x=x[jj], y= y[jj], labels = gene[jj],

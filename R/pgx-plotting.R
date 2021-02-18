@@ -1811,8 +1811,8 @@ pgx.violinPlot <- function(x, y, jitter=0.015, vcol="grey85",
 ##group.name="group";xlab="x";ylab="y";srt=0;main=NULL;base_size=14
 ggbarplot <- function(mat, xlab="x", ylab="y", srt=0, main=NULL, 
                       las=NULL, col=NULL, beside=FALSE,
-                      legend.pos = c(1,1), base_size=12,
-                      group.name="group")
+                      legend.pos = c(1,1), legend.cex = 1,
+                      base_size=12, group.name="group")
 {
     library(reshape2)
     library(ggplot2)
@@ -1849,8 +1849,9 @@ ggbarplot <- function(mat, xlab="x", ylab="y", srt=0, main=NULL,
     p <- p + theme(
                  legend.title = element_blank(), 
                  legend.justification = legend.pos,
+                 legend.text = element_text(size=9*legend.cex),
                  legend.position = legend.pos,
-                 legend.key.size = unit(10, "pt"),
+                 legend.key.size = unit(9*legend.cex, "pt"),
                  legend.key.height = unit(7, "pt"))
     if(nrow(mat)==1) {
         p <- p + theme(legend.position = 'none')

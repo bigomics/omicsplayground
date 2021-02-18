@@ -979,8 +979,9 @@ DataViewBoard <- function(input, output, session, env)
         par(mar=c(7,4,0,2))
         par(mar=MARGINS2, mgp=c(2.2,0.8,0))
         
-        klr <- colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)), alpha = TRUE)(nrow(res$avg.counts))
-                                        # klr <- grey.colors(nrow(res$avg.counts))
+        klr <- colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.1)),
+                                alpha = TRUE)(nrow(res$avg.counts))
+        ## klr <- grey.colors(nrow(res$avg.counts))
         
         ## ---- xlab ------ ###
         names.arg = colnames(res$avg.counts)

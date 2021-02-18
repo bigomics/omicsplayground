@@ -25,7 +25,7 @@ ExpressionUI.test <- function(id) {
 ExpressionUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillCol(
-        flex = c(1.5,1),
+        flex = c(1.6,1),
         height = 730,
         tabsetPanel(
             id = ns("tabs1"),
@@ -903,7 +903,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if(length(comp)==0) return(NULL)
         if(is.null(input$gx_features)) return(NULL)
         
-        fdr = 1
+        fdr=1;lfc=0
         fdr = as.numeric(input$gx_fdr)
         lfc = as.numeric(input$gx_lfc)
         
@@ -944,32 +944,28 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ##-------------------------------------------------
         ## plot layout
         ##-------------------------------------------------
-        ## ncomp <- length(comp)
-        ## nr <- ceiling(sqrt(ncomp/3))
-        ## NC <- 3*nr
-        ## if(ncomp <= (nr-1)*NC) nr <- (nr-1)
-        ## par(mfrow=c(nr,NC), mar=c(4,4,2,2)*0)
 
         ng = length(comp)
         nn = c(2, max(ceiling(ng/2),5))
         ##if(ng>12) nn = c(3,8)
-        par(mfrow=nn, mar=c(2,4,2.3,2)*0, mgp=c(2.6,1,0))
+        par(mfrow=nn, mar=c(1,1,1,1)*0.2, mgp=c(2.6,1,0), oma=c(1,1,0,0)*2)
         nc = ceiling(sqrt(ng))
         if(ng>24) {
             nc = max(ceiling(ng/3),6)
-            par(mfrow=c(3,nc), mar=c(4,4,2,2)*0)
+            par(mfrow=c(3,nc))
         } else if(FALSE && ng <= 3) {
             nc = 3
-            par(mfrow=c(1,nc), mar=c(4,4,2,2)*0)
+            par(mfrow=c(1,nc))
         } else {
             nc = max(ceiling(ng/2),6)
-            par(mfrow=c(2,nc), mar=c(4,4,2,2)*0)
+            par(mfrow=c(2,nc))
         }        
 
         ymax=15
         ymax <- 1.2 * max(-log10(1e-99 + unlist(Q)), na.rm=TRUE)        
         
         withProgress(message="computing volcano plots ...", value=0, {
+
             i=1
             for(i in 1:length(comp)) {
                 qval <- Q[[i]]
@@ -986,15 +982,17 @@ two conditions. Determine which genes are significantly downregulated or overexp
                                   ## ma.plot=TRUE, use.rpkm=TRUE,
                                   cex=0.6, lab.cex=1.5, highlight=genes1)
 
+                box(lwd=1, col="black", lty="solid")
                 is.first = (i%%nc==1)
                 last.row = ( (i-1)%/%nc == (length(comp)-1)%/%nc )
-                if(is.first) axis(2, tcl=0.5, mgp=c(-2,-1.5,0))
-                if(last.row) axis(1, tcl=0.5, mgp=c(-2,-1.5,0))
-                box()
-                legend("topright", legend=comp[i], cex=0.95,bg="white")
-
+                if(is.first) axis(2, mgp=c(2,0.7,0), cex.axis=0.8)
+                if(last.row) axis(1, mgp=c(2,0.7,0), cex.axis=0.8)
+                legend("top", legend=comp[i], box.lty=0,
+                       x.intersp = 0.3, y.intersp = 0.5,
+                       cex=1.2, bg="white")
                 incProgress( 1/length(comp) )
             }
+            
         })  ## progress
 
     })
@@ -1033,44 +1031,45 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ##================================================================================
 
     expr_volcanoMethods.RENDER %<a-% reactive({
+
         comp = input$gx_contrast
         if(is.null(comp)) return(NULL)
         ngs = inputData()
         req(ngs)
         if(is.null(input$gx_features)) return(NULL)
         
-        fdr = 1
+        fdr=1;lfc=1;comp=names(ngs$gx.meta$meta)[1]
         fdr = as.numeric(input$gx_fdr)
         lfc = as.numeric(input$gx_lfc)
         genes = NULL
-
+        
         sel.genes = head(ngs$genes$gene_name,100)
         ##sel.genes = unique(unlist(ngs$families[input$gx_features]))
         sel.genes = unique(unlist(GSETS[input$gx_features]))
-        
-        ##methods = names(ngs$gx.meta$output)
-        methods = colnames(ngs$gx.meta$meta[[1]]$fc)
-        par(mfrow=c(2,6), mar=c(4,4,2,2)*0)
-        if(length(methods)>12) {
-            par(mfrow=c(3,8), mar=c(4,4,2,2)*0)
-        }
         
         ## meta tables
         mx = ngs$gx.meta$meta[[comp]]
         fc = unclass(mx$fc)
         ##pv = unclass(mx$p)
         qv = unclass(mx$q)
-        ## fc = cbind( meta=mx[,"meta.fx"], fc)
-        ## qv = cbind( meta=mx[,"meta.q"], qv)
-
-        ymax <- 1.2 * max(-log10(1e-99 + qv), na.rm=TRUE) ## y-axis       
-        
+        ymax <- 1.2 * max(-log10(1e-99 + qv), na.rm=TRUE) ## y-axis               
         xlim = c(-1.1,1.1)*max(abs(fc))
         xlim = 1.3*c(-1,1) * quantile(abs(fc),probs=0.999)
         fc.genes = ngs$genes[rownames(mx),"gene_name"]
         nplots <- min(24,ncol(qv))
+
+        ##methods = names(ngs$gx.meta$output)
+        methods = colnames(ngs$gx.meta$meta[[1]]$fc)
+        nc=6
+        par(mfrow=c(2,6), mar=c(4,4,2,2)*0, oma=c(1,1,0,0)*2)
+        if(nplots>12) {
+            nplots <- min(nplots,24)
+            par(mfrow=c(3,8), mar=c(4,4,2,2)*0)
+            nc=8
+        }
         
         withProgress(message="computing volcano plots ...", value=0, {
+            
             i=1
             for(i in 1:nplots) {
                 fx = fc[,i]
@@ -1087,13 +1086,20 @@ two conditions. Determine which genes are significantly downregulated or overexp
                     ##main=comp[i], 
                     ## ma.plot=TRUE, use.rpkm=TRUE,
                     cex=0.6, lab.cex=1.5, highlight=genes1)
-                axis(2, tcl=0.5, mgp=c(-2,-1.5,0))
-                axis(1, tcl=0.5, mgp=c(-2,-1.5,0))
-                box()
-                legend("topright", legend=colnames(fc)[i], cex=1.2, bg="white")
-
+                
+                is.first = (i%%nc==1)
+                last.row = ( (i-1)%/%nc == (nplots-1)%/%nc )
+                is.first
+                last.row
+                if(is.first) axis(2, mgp=c(2,0.7,0), cex.axis=0.8)
+                if(last.row) axis(1, mgp=c(2,0.7,0), cex.axis=0.8)                
+                box(lwd=1, col="black", lty="solid")
+                legend("top", legend=colnames(fc)[i], cex=1.2,
+                       bg="white", box.lty=0,
+                       x.intersp = 0.1, y.intersp = 0.1)
                 incProgress( 1/length(nplots) )                
             }
+
         })
 
     })
