@@ -45,12 +45,12 @@ EnrichmentBoard <- function(input, output, session, env)
     inputData <- env[["load"]][["inputData"]]
     selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
 
-    fullH = 730
-    rowH = 345  ## row height of panels
-    imgH = 265  ## height of images
+    fullH = 720
+    rowH = 365  ## row height of panels
+    imgH = 300  ## height of images
     tabH = 160  ## height of tables
-    tabH = "70vh" ## height of tables
-
+    tabH = "70vh"  ## height of tables
+    
     description = "<b>Geneset enrichment analysis.</b> Perform differential expression analysis on a geneset level, also called geneset enrichment analysis."
     output$description <- renderUI(HTML(description))
     

@@ -1001,7 +1001,7 @@ pgx.plotOmicsNetwork <- function(ngs, gene=NULL, reduced=NULL, levels=c("gene","
     esel <- rep(0,nrow(ee))
 
     ## ------------------ highlight selection with labels
-    if(!is.null(hilight)) {
+    if(!is.null(hilight) && length(hilight)) {
         ##sel <- ngs$collections[[10]]
         sel <- hilight
         ##mm  <- ngs$genes_tsne_graph$members
@@ -1966,7 +1966,7 @@ pgx._scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title=""
         }
         
         ## high light points
-        if(!is.null(hilight)) {
+        if(!is.null(hilight) && length(hilight)) {
             jj <- which(rownames(pos) %in% hilight)
             if(length(jj)) {
                 points(pos[jj,,drop=FALSE], pch=1, lwd=1.2, cex=cex*0.95)
@@ -2029,7 +2029,7 @@ pgx._scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title=""
         if(bty!='n') box(lwd=0.8, bty=bty, col="black")
         grid(lwd=0.8)
         
-        if(!is.null(hilight)) {
+        if(!is.null(hilight) && length(hilight)>0) {
             jj <- which(rownames(pos) %in% hilight)
             if(length(jj)) {
                 points(pos[jj,,drop=FALSE], pch=1, lwd=1.2, cex=cex*0.95)
@@ -2816,7 +2816,7 @@ plotlyMA <- function(x, y, names, source="plot1",
             )
     }
     
-    if(!is.null(label)) {
+    if(!is.null(label) && length(label)>0) {
         i2 = which(names %in% label)
         p <- p %>%
             add_annotations(
@@ -2928,7 +2928,7 @@ plotlyVolcano <- function(x, y, names, source="plot1", group.names=c("group1","g
             )
     }
     
-    if(!is.null(label)) {
+    if(!is.null(label) && length(label)>0) {
         i2 = which(names %in% label)
         p <- p %>%
             add_annotations(
