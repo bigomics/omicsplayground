@@ -278,7 +278,11 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 }
                 counts
             })
-                        
+
+            batch_vectors <- reactive({
+                correctedX()$B
+            })
+            
             ##computed_pgx <- ComputePgxServer(
             computed_pgx  <- ComputePgxServer(
                 id = "compute",
@@ -286,6 +290,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 countsRT = corrected_counts,
                 samplesRT = reactive(uploaded$samples.csv),
                 contrastsRT = reactive(uploaded$contrasts.csv),
+                batchRT = batch_vectors, 
                 enable = upload_ok,
                 alertready = FALSE,
                 FILES = FILES,
