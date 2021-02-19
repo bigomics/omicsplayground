@@ -26,21 +26,23 @@ gx.limma <- function(X, pheno, B=NULL,
     if(sum(duplicated(rownames(X)))>0) {
         cat("WARNING:: matrix has duplicated rownames\n")
     }
-    ## detect single sample case
-    is.single = (max(table(pheno))==1)
-    if(is.single) {
-        cat("WARNING:: no replicates, duplicating samples...\n")
-        X <- cbind(X,X)
-        pheno <- c(pheno,pheno)
-    }
 
     if(!is.null(B) && NCOL(B)==1) {
         B <- matrix(B,ncol=1)
         rownames(B) <- rownames(pheno) 
         colnames(B) <- "batch"
     }
+
+    ## detect single sample case
+    is.single = (max(table(pheno))==1)
+    if(is.single) {
+        cat("WARNING:: no replicates, duplicating samples...\n")
+        X <- cbind(X,X)
+        pheno <- c(pheno,pheno)
+        if(!is.null(B)) B <- rbind(B,B)
+    }
     
-    ## filter probes and samples
+    ## filter probes and samples??
     ii <- which( rowMeans(is.na(X)) <= max.na )
     jj <- which(!is.na(pheno) )
     if(verbose>0) cat(sum(is.na(pheno)>0),"with missing phenotype\n")
@@ -53,7 +55,7 @@ gx.limma <- function(X, pheno, B=NULL,
     if(verbose>0) {
         cat("analyzing",ncol(X0),"samples\n")
         cat("testing",nrow(X0),"features\n")
-        if(!is.null(B0)) cat("B has",ncol(B0),"batch pars\n")
+        if(!is.null(B0)) cat("including",ncol(B0),"batch covariates\n")
     }
 
     ## auto-detect reference
@@ -91,6 +93,197 @@ gx.limma <- function(X, pheno, B=NULL,
         design <- cbind(design, B0[,sel,drop=FALSE])
     }
 
+    fit <- lmFit( X0, design)
+    fit <- eBayes(fit, trend=trend)
+    top <- topTable(fit, coef=d2, number=nrow(X0))
+    if("ID" %in% colnames(top)) {
+        rownames(top) <- top$ID
+        top$ID <- NULL
+    }
+    top <- top[rownames(X0),]
+    head(top)
+    
+    ## only significant
+    top <- top[ which(top$adj.P.Val <= fdr & abs(top$logFC)>=lfc ), ]
+    if(verbose>0) cat("found",nrow(top),"significant at fdr=",fdr,"and minimal FC=",lfc,"\n")
+
+    if(compute.means && nrow(top)>0 ) {
+        avg <- t(apply(X0[rownames(top),], 1,
+                         function(x) tapply(x, pheno0, mean, na.rm=TRUE)))
+        avg <- avg[,as.character(bb),drop=FALSE]
+        colnames(avg) <- paste0("AveExpr.",colnames(avg))
+        top <- cbind(top, avg)
+    }
+    top$B <- NULL
+
+    if(is.single) {
+        top$P.Value <- NA
+        top$adj.P.Val <- NA
+        top$t <- NA
+    }
+
+    ## reorder on fold change
+    top <- top[ order(abs(top$logFC),decreasing=TRUE),]
+    ##colnames(top) <-   sub("logFC","logR",colnames(top))
+
+    ## unlist???
+    ##top = do.call(cbind, top)
+    return(top)
+}
+
+
+gx.limma.SAVE <- function(X, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
+                          max.na=0.20, ref=REF.CLASS, trend=FALSE, verbose=1 )
+{
+    require(limma)
+    if(0) {
+        fdr=0.05;compute.means=TRUE;lfc=0.20;ref=REF.CLASS
+        max.na=0.2;ref=REF.CLASS;trend=FALSE;verbose=1
+    }
+    if(sum(duplicated(rownames(X)))>0) {
+        cat("WARNING:: matrix has duplicated rownames\n")
+    }
+    ## detect single sample case
+    is.single = (max(table(pheno))==1)
+    if(is.single) {
+        cat("WARNING:: no replicates, no stats...\n")
+        X <- cbind(X,X)
+        pheno <- c(pheno,pheno)
+    }
+
+    ## filter probes and samples
+    ii <- which( rowMeans(is.na(X)) <= max.na )
+    jj <- which(!is.na(pheno) )
+    if(verbose>0) cat(sum(is.na(pheno)>0),"with missing phenotype\n")
+    X0 <- X[ii,jj]
+    pheno0 <- as.character(pheno[jj])
+    X0 <- X0[!(rownames(X0) %in% c(NA,"","NA")),]
+    if(verbose>0) {
+        cat("analyzing",ncol(X0),"samples\n")
+        cat("testing",nrow(X0),"features\n")
+    }
+
+    ## auto-detect reference
+    pheno.ref <- c()
+    ref.detected <- FALSE
+    ref <- toupper(ref)
+    ## is.ref <- grepl(paste(ref,collapse="|"),pheno0)
+    is.ref <- (toupper(pheno0) %in% toupper(ref))
+    ref.detected <- (sum(is.ref)>0 && sum(!is.ref)>0)    
+
+    ##if(!is.null(ref) && sum( toupper(pheno0) %in% ref)>0 ) {
+    if(ref.detected) {
+        pheno.ref <- unique(pheno0[which(toupper(pheno0) %in% toupper(ref))])
+        if(verbose>0) cat("setting reference to y=",pheno.ref,"\n")
+        bb <- c(pheno.ref, sort(setdiff(unique(pheno0),pheno.ref)) )
+    } else {
+        if(verbose>0) cat("WARNING: could not auto-detect reference\n")
+        bb <- as.character(sort(unique(pheno0)))
+        if(verbose>0) cat("setting reference to first class",bb[1],"\n")
+    }
+    if(length(bb)!=2) {
+        stop("gx.limma::fatal error:only two class comparisons")
+        return
+    }
+    design <- cbind(1, pheno0==bb[2])
+    colnames(design) <- c( "WT", "2vs1" )
+    d1 <- colnames(design)[1]
+    d2 <- colnames(design)[2]
+    fit <- lmFit( X0, design)
+    fit <- eBayes(fit, trend=trend)
+    top <- topTable(fit, coef=d2, number=nrow(X0))
+    if("ID" %in% colnames(top)) {
+        rownames(top) <- top$ID
+        top$ID <- NULL
+    }
+    top <- top[rownames(X0),]
+    head(top)
+    
+    ## only significant
+    top <- top[ which(top$adj.P.Val <= fdr & abs(top$logFC)>=lfc ), ]
+    if(verbose>0) cat("found",nrow(top),"significant at fdr=",fdr,"and minimal FC=",lfc,"\n")
+
+    if(compute.means && nrow(top)>0 ) {
+        avg <- t(apply(X0[rownames(top),], 1,
+                         function(x) tapply(x, pheno0, mean, na.rm=TRUE)))
+        avg <- avg[,as.character(bb),drop=FALSE]
+        colnames(avg) <- paste0("AveExpr.",colnames(avg))
+        top <- cbind(top, avg)
+    }
+    top$B <- NULL
+
+    if(is.single) {
+        top$P.Value <- NA
+        top$adj.P.Val <- NA
+        top$t <- NA
+    }
+
+    ## reorder on fold change
+    top <- top[ order(abs(top$logFC),decreasing=TRUE),]
+    ##colnames(top) <-   sub("logFC","logR",colnames(top))
+
+    ## unlist???
+    ##top = do.call(cbind, top)
+    return(top)
+}
+
+gx.limma.SAVE <- function(X, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
+                          max.na=0.20, ref=REF.CLASS, trend=FALSE, verbose=1 )
+{
+    require(limma)
+    if(0) {
+        fdr=0.05;compute.means=TRUE;lfc=0.20;ref=REF.CLASS
+        max.na=0.2;ref=REF.CLASS;trend=FALSE;verbose=1
+    }
+    if(sum(duplicated(rownames(X)))>0) {
+        cat("WARNING:: matrix has duplicated rownames\n")
+    }
+    ## detect single sample case
+    is.single = (max(table(pheno))==1)
+    if(is.single) {
+        cat("WARNING:: no replicates, no stats...\n")
+        X <- cbind(X,X)
+        pheno <- c(pheno,pheno)
+    }
+
+    ## filter probes and samples
+    ii <- which( rowMeans(is.na(X)) <= max.na )
+    jj <- which(!is.na(pheno) )
+    if(verbose>0) cat(sum(is.na(pheno)>0),"with missing phenotype\n")
+    X0 <- X[ii,jj]
+    pheno0 <- as.character(pheno[jj])
+    X0 <- X0[!(rownames(X0) %in% c(NA,"","NA")),]
+    if(verbose>0) {
+        cat("analyzing",ncol(X0),"samples\n")
+        cat("testing",nrow(X0),"features\n")
+    }
+
+    ## auto-detect reference
+    pheno.ref <- c()
+    ref.detected <- FALSE
+    ref <- toupper(ref)
+    ## is.ref <- grepl(paste(ref,collapse="|"),pheno0)
+    is.ref <- (toupper(pheno0) %in% toupper(ref))
+    ref.detected <- (sum(is.ref)>0 && sum(!is.ref)>0)    
+
+    ##if(!is.null(ref) && sum( toupper(pheno0) %in% ref)>0 ) {
+    if(ref.detected) {
+        pheno.ref <- unique(pheno0[which(toupper(pheno0) %in% toupper(ref))])
+        if(verbose>0) cat("setting reference to y=",pheno.ref,"\n")
+        bb <- c(pheno.ref, sort(setdiff(unique(pheno0),pheno.ref)) )
+    } else {
+        if(verbose>0) cat("WARNING: could not auto-detect reference\n")
+        bb <- as.character(sort(unique(pheno0)))
+        if(verbose>0) cat("setting reference to first class",bb[1],"\n")
+    }
+    if(length(bb)!=2) {
+        stop("gx.limma::fatal error:only two class comparisons")
+        return
+    }
+    design <- cbind(1, pheno0==bb[2])
+    colnames(design) <- c( "WT", "2vs1" )
+    d1 <- colnames(design)[1]
+    d2 <- colnames(design)[2]
     fit <- lmFit( X0, design)
     fit <- eBayes(fit, trend=trend)
     top <- topTable(fit, coef=d2, number=nrow(X0))
@@ -168,7 +361,7 @@ gx.limmaF <- function(X, pheno, B=NULL, fdr=0.05, compute.means=TRUE, lfc=0.20,
         cat("analyzing",ncol(X0),"samples\n")
         cat("testing",nrow(X0),"features\n")
         cat("in",length(unique(pheno0)),"groups\n")
-        if(!is.null(B0)) cat("B has",ncol(B0),"batch pars\n")
+        if(!is.null(B0)) cat("including",ncol(B0),"batch covariates\n")
     }
 
     ## auto-detect reference

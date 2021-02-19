@@ -50,10 +50,10 @@ ExpressionBoard <- function(input, output, session, env)
     ## reactive functions from shared environment
     inputData <- env[["load"]][["inputData"]]
 
-    fullH = 730
-    rowH = 345  ## row height of panels
+    fullH = 720
+    rowH = 365  ## row height of panels
     imgH = 300  ## height of images
-    tabH = 160  ## height of tables
+    tabH = 180  ## height of tables
     tabH = "70vh"  ## height of tables
     
     description = "<b>Differential Expression Analysis.</b> Compare expression between
@@ -165,8 +165,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ##========================= FUNCTIONS ============================================
     ##================================================================================
     
-    comparison=1;testmethods=c("trend.limma")
-    getDEGtable <- function(ngs, testmethods, comparison, add.pq) {
+    comparison=1;testmethods=c("trend.limma");add.pq=0
+    getDEGtable <- function(ngs, testmethods, comparison, add.pq,
+                            lfc, fdr, filter.sig) {
         ##ngs = inputData()
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
@@ -175,6 +176,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if(is.null(comparison)) return(NULL)
         if(length(testmethods)==0 || testmethods=="") return(NULL)
         if(length(comparison)==0  || comparison=="") return(NULL)
+
+        message("[getDEGtable] called")
         
         ## build meta table
         mx = ngs$gx.meta$meta[[comparison]]
@@ -186,7 +189,10 @@ two conditions. Determine which genes are significantly downregulated or overexp
         mx.q  = unclass(mx$q[,testmethods,drop=FALSE])
         mx.fc = unclass(mx$fc[,testmethods,drop=FALSE])
         ##mx$score = mx$fc * (-log10(1e-100+mx$q) )    
-
+        rownames(mx.p) <- rownames(mx)
+        rownames(mx.q) <- rownames(mx)
+        rownames(mx.fc) <- rownames(mx)
+        
         mx.fc[ is.infinite(mx.fc) | is.nan(mx.fc) ] <- NA
         mx.p[ is.infinite(mx.p) | is.nan(mx.p) ] <- NA
         mx.q[ is.infinite(mx.q) | is.nan(mx.q) ] <- NA
@@ -196,11 +202,18 @@ two conditions. Determine which genes are significantly downregulated or overexp
         mx$meta.q = apply(mx.q,1,max,na.rm=TRUE)
         mx$meta.fx = rowMeans(mx.fc,na.rm=TRUE)  
         ##mx$meta.score = rowMeans(mx$score,na.rm=TRUE)  
-
-        fdr = 0.05
-        ##fdr = as.numeric(input$gx_fdr)
+        
+        stars.fdr = fdr
+        ##stars.fdr = 0.05  ## fixed otherwisetable will always have three stars..        
         star.symbols = sapply(1:20,function(i) paste(rep("\u2605",i),collapse=""))
-        stars = c("",star.symbols)[ 1 + rowSums(mx.q <= fdr, na.rm=TRUE)]        
+        mx$stars = c("",star.symbols)[ 1 + rowSums(mx.q <= stars.fdr, na.rm=TRUE)]        
+
+        ## reduce to only significant terms? for volcano all gene are necessary...
+        if(filter.sig) {
+            is.sig <- abs(mx$meta.fx) >= lfc & mx$meta.q <= fdr
+            message("[getDEGtable] reducing table to only ",sum(is.sig),"  significant genes")
+            mx <- mx[which(is.sig),,drop=FALSE]
+        }
         
         ## recalculate group averages???
         y0 <- ngs$model.parameters$exp.matrix[,comparison]
@@ -217,24 +230,27 @@ two conditions. Determine which genes are significantly downregulated or overexp
         AveExpr1 <- mean0 + logFC/2
         AveExpr0 <- mean0 - logFC/2
 
+        message("[getDEGtable] creating results table")            
+        
         ##gene.annot = mx[,grep("^gene|^chr",colnames(mx)),drop=FALSE]
         aa <- intersect(c("gene_name","gene_title","chr"), colnames(ngs$genes))
         gene.annot <- ngs$genes[rownames(mx),aa]
-        metaq <- mx[,c("meta.q"),drop=FALSE]    
-        res = data.frame( gene.annot, logFC=logFC, stars, metaq,
+        res = data.frame( gene.annot, logFC = logFC,
+                         stars = mx$stars, meta.q = mx$meta.q,
                          AveExpr0, AveExpr1, check.names=FALSE )
+        rownames(res) = rownames(mx)
         
         if(add.pq) {
+            message("[getDEGtable] adding PQ table")            
             ## add extra columns
             ##res <- cbind( res, q=mx$q, p=mx$p)
             colnames(mx.q) <- paste0("q.",colnames(mx.q))
-            res <- cbind( res, mx.q)
+            res <- cbind( res, mx.q[rownames(mx),])
         }
-        rownames(res) = rownames(mx)
         return(res)
     }
     
-    diffExprTable <- reactive({
+    fullDiffExprTable <- reactive({
         ## return the full DE table 
         ngs = inputData()
         if(is.null(ngs)) return(NULL)
@@ -242,32 +258,100 @@ two conditions. Determine which genes are significantly downregulated or overexp
         comp = input$gx_contrast
         gx.methods = colnames(ngs$gx.meta$meta[[1]]$fc)
         gx.methods
-        test = input$gx_testmethod
+        tests = input$gx_testmethod
+        tests = input$gx_testmethod
+        fdr = as.numeric(input$gx_fdr)
+        lfc = as.numeric(input$gx_lfc)
+        
         if(is.null(comp)) return(NULL)
-        if(is.null(test)) return(NULL)
-
-        res = getDEGtable(ngs, testmethods=test, comparison=comp, add.pq=TRUE)
+        if(is.null(tests)) return(NULL)
+        res = getDEGtable(ngs, testmethods=tests, comparison=comp,
+                          add.pq=TRUE, lfc=lfc, fdr=fdr, filter.sig=FALSE)
+        res <- res[order(-abs(res$logFC)),]
         return(res)
     })
 
-    sigDiffExprTable <- reactive({
+    filteredDiffExprTable <- reactive({
         ##
         ## DE table filtered by FDR and gene family
         ##
         ##
-        dbg("[ExpressionBoard::sigDiffExprTable] reacted")
+        dbg("[ExpressionBoard::filteredDiffExprTable] reacted")
 
         ngs = inputData()
         ##if(is.null(ngs)) return(NULL)
         req(ngs,input$gx_features,input$gx_fdr,input$gx_lfc)
         
+        comp=1;test="trend.limma"
+        comp = input$gx_contrast
+        gx.methods = colnames(ngs$gx.meta$meta[[1]]$fc)
+        gx.methods
+        tests = input$gx_testmethod
+        tests = input$gx_testmethod
+        fdr = as.numeric(input$gx_fdr)
+        lfc = as.numeric(input$gx_lfc)
+
+        ##res = getDEGtable(ngs, testmethods="trend.limma", comparison=1,add.pq=FALSE)
+        res = getDEGtable(ngs, testmethods=tests, comparison=comp,
+                          add.pq=TRUE, lfc=lfc, fdr=fdr, filter.sig=FALSE)
+        ##res = fullDiffExprTable()
+        if(is.null(res) || nrow(res)==0) return(NULL)
+
+        psel <- rownames(res)
         gx_features=1
         gx_features = input$gx_features
-        ##if(is.null(gx_features)) return(NULL)
-        ##res = getDEGtable(ngs, testmethods="trend.limma", comparison=1,add.pq=FALSE)
-        res = diffExprTable()
-        if(is.null(res)) return(NULL)
+        if(gx_features!="<all>") psel = filterProbes(ngs$genes, GSETS[[gx_features]] )
+        res = res[which(rownames(res) %in% psel),,drop=FALSE]
+        dim(res)
+                
+        if(nrow(res)==0) {
+            validate(need(nrow(res) > 0, "warning. no genes passed current filters."))
+            return(NULL)
+        }
 
+        fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]        
+        res = res[order(-abs(res[,fx.col])),]
+        
+        ## just show significant genes
+        if(!is.null(input$gx_sigonly) && input$gx_sigonly) {
+            sel <- which(res$stars != "")
+            res = res[sel,,drop=FALSE]
+        }
+
+        ## just show top 10
+        if(length(input$gx_top10) && input$gx_top10) {
+            fx  = as.numeric(res[,fx.col])
+            names(fx) = rownames(res)
+            pp <- unique(c(head(names(sort(-fx[which(fx>0)])),10),
+                           head(names(sort(fx[which(fx<0)])),10)))
+            res = res[pp,,drop=FALSE]
+            res = res[order(-res[,fx.col]),,drop=FALSE]
+        }
+        
+        ## limit number of rows???
+        ## res <- head(res, 1000)
+
+        dbg("[ExpressionBoard::filteredDiffExprTable] done!")
+        
+        return(res)
+    })
+
+
+    filteredDiffExprTable.SAVE <- reactive({
+        ##
+        ## DE table filtered by FDR and gene family
+        ##
+        ##
+        dbg("[ExpressionBoard::filteredDiffExprTable] reacted")
+
+        ngs = inputData()
+        ##if(is.null(ngs)) return(NULL)
+        req(ngs,input$gx_features,input$gx_fdr,input$gx_lfc)
+        
+        ##res = getDEGtable(ngs, testmethods="trend.limma", comparison=1,add.pq=FALSE)
+        res = fullDiffExprTable()
+        if(is.null(res)) return(NULL)
+        
         fdr=1
         fdr = as.numeric(input$gx_fdr)    
         qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
@@ -277,6 +361,10 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if(is.null(ngs$families)) stop("FATAL:: no families in object")
         psel <- rownames(res)
         ##psel = filterProbes(ngs$genes, ngs$families[[gx_features]] )
+
+        gx_features=1
+        gx_features = input$gx_features
+        ##if(is.null(gx_features)) return(NULL)
         
         if(gx_features!="<all>") psel = filterProbes(ngs$genes, GSETS[[gx_features]] )
         res = res[which(pval <= fdr & rownames(res) %in% psel),,drop=FALSE]
@@ -309,11 +397,11 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ## limit number of rows???
         ## res <- head(res, 1000)
 
-        dbg("[ExpressionBoard::sigDiffExprTable] done!")
+        dbg("[ExpressionBoard::filteredDiffExprTable] done!")
         
         return(res)
     })
-
+    
     ##================================================================================
     ## Plots 
     ##================================================================================
@@ -336,7 +424,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         fdr = 1
         fdr = as.numeric(input$gx_fdr)
         
-        res = diffExprTable()
+        res = fullDiffExprTable()
         if(is.null(res)) return(NULL)
         lfc=1
         lfc = as.numeric(input$gx_lfc)
@@ -375,7 +463,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     expr_plots_volcano.PLOTLY <- reactive({
         
         dbg("[expr_plots_volcano.PLOTLY] reacted")
-
+        
         comp1=1;fdr=0.10
         comp1 = input$gx_contrast
         if(length(comp1)==0) return(NULL)
@@ -389,7 +477,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         fdr = 1
         fdr = as.numeric(input$gx_fdr)
         
-        res = diffExprTable()
+        res = fullDiffExprTable()
         if(is.null(res)) return(NULL)
         lfc=1
         lfc = as.numeric(input$gx_lfc)
@@ -430,7 +518,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         plt <- plotlyVolcano(
             x=x, y=y, names=fc.genes,
             source = "plot1",
-            highlight = sel.genes, label=lab.genes,
+            highlight = sel.genes, label = lab.genes,
             group.names = c("group1","group0"),
             ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
             ##use.fdr=TRUE,
@@ -471,7 +559,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         fdr = as.numeric(input$gx_fdr)    
         lfc = as.numeric(input$gx_lfc)
         
-        res = diffExprTable()
+        res = fullDiffExprTable()
         if(is.null(res)) return(NULL)
         fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
         ##pval = res$P.Value
@@ -519,7 +607,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         fdr = as.numeric(input$gx_fdr)    
         lfc = as.numeric(input$gx_lfc)
         
-        res = diffExprTable()
+        res = fullDiffExprTable()
         if(is.null(res)) return(NULL)
         fc.genes = as.character(res[,grep("^gene$|gene_name",colnames(res))])
         ##pval = res$P.Value
@@ -599,7 +687,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ##sel.row=1;pp=rownames(ngs$X)[1]
         ##sel.row = input$expr_genetable_rows_selected
         
-        res = sigDiffExprTable()        
+        res = filteredDiffExprTable()        
         if(is.null(res)) return(NULL)
 
         ##fc <- res$meta.fx
@@ -621,7 +709,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ## warning A_vs_B or B_vs_A not checked!!!
         groups <- strsplit(comp1,split="[._ ]vs[._ ]")[[1]]
         if(is.POSvsNEG(ngs)) groups <- rev(groups)
-        groups <- gsub("@.*","",groups)
+        groups <- gsub(".*:|@.*","",groups)
         tt <- c( paste("up in",groups[2]), paste("up in",groups[1]) )
         ##tt <- c( paste("up in",groups[1]), paste("down in",groups[1]) )
         legend("topleft", legend=tt, fill=klr.pal, cex=0.9, y.intersp=0.85, bty="n")
@@ -654,7 +742,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         sel = expr_genetable$rows_selected()
         if(is.null(sel)) return(NULL)    
 
-        res = sigDiffExprTable()
+        res = filteredDiffExprTable()
         if(is.null(res) || is.null(sel)) return(NULL)
         psel <- rownames(res)[sel]
         gene <- ngs$genes[psel,"gene_name"]
@@ -714,7 +802,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         sel = expr_genetable$rows_selected()
         if(is.null(sel)) return(NULL)    
 
-        res = sigDiffExprTable()
+        res = filteredDiffExprTable()
         if(is.null(res) || is.null(sel)) return(NULL)
 
         psel <- rownames(res)[sel]
@@ -774,7 +862,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         req(ngs)
         
         ##res=getDEGtable(ngs, testmethods="trend.limma", comparison=6, add.pq=FALSE)
-        res <- sigDiffExprTable()
+        res <- filteredDiffExprTable()
         if(is.null(res) || nrow(res)==0) return(NULL)
 
         ## filter on active rows (using search)
@@ -1143,9 +1231,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
     expr_genetable.RENDER <- reactive({
         
         dbg("[ExpressionBoard::expr_genetable.RENDER] reacted")
-        
-        res <- sigDiffExprTable()
-        ##req(res)
+
+        res <- filteredDiffExprTable()
+        ##res <- fullDiffExprTable()
         dbg("[ExpressionBoard::expr_genetable.RENDER] dim(res)=",dim(res),"\n")
         
         if(is.null(res) || nrow(res)==0) return(NULL)
@@ -1193,13 +1281,16 @@ two conditions. Determine which genes are significantly downregulated or overexp
                                 backgroundSize = '98% 88%',
                                 backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center')
-                                        #}, server=FALSE)
+        ##}, server=FALSE)
     })
 
     expr_genetable_text = "Table <strong>I</strong> shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, <a href='https://en.wikipedia.org/wiki/Student%27s_t-test'>t-test</a> (standard, Welch), <a href='https://www.ncbi.nlm.nih.gov/pubmed/25605792'> limma</a> (no trend, trend, voom), <a href='https://www.ncbi.nlm.nih.gov/pubmed/19910308'> edgeR</a> (QLF, LRT), and <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4302049'> DESeq2</a> (Wald, LRT), and merge the results. 
 <br><br>For a selected comparison under the <code>Contrast</code> setting, the results of the selected methods are combined and reported under the table, where <code>meta.q</code> for a gene represents the highest <code>q</code> value among the methods and the number of stars for a gene indicate how many methods identified significant <code>q</code> values (<code>q < 0.05</code>). The table is interactive (scrollable, clickable); users can sort genes by <code>logFC</code>, <code>meta.q</code>, or average expression in either conditions. Users can filter top N = {10} differently expressed genes in the table by clicking the <code>top 10 genes</code> from the table <i>Settings</i>."
 
     expr_genetable_opts = tagList(
+        tipify(checkboxInput(ns("gx_sigonly"),"only significant",FALSE),
+               "Display only the significant genes (1 or more stars) in the table.", 
+               placement="top", options = list(container = "body")),
         tipify(checkboxInput(ns("gx_top10"),"top 10 genes",FALSE),
                "Display only top 10 differentially (positively and negatively) expressed genes in the table.", 
                placement="top", options = list(container = "body")),
@@ -1215,6 +1306,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         info.text = expr_genetable_text,
         label="I", info.width="500px",
         options = expr_genetable_opts,
+        server = TRUE, 
         title = "Differential expression analysis",
         height = c(265,700)
     )
@@ -1227,7 +1319,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         dbg("[gx_related_genesets] reacted")
         
         ngs <- inputData()
-        res <- sigDiffExprTable()
+        res <- filteredDiffExprTable()
         if(is.null(res) || nrow(res)==0) return(NULL)
         contr <- input$gx_contrast
         if(is.null(contr)) return(NULL)
@@ -1307,7 +1399,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
             height = rowH,
             flex = c(1,NA),
             fillRow(
-                flex = c(2,0.1,1), 
+                flex = c(1.6,0.07,1), 
                 tableWidget(ns("expr_genetable")),
                 br(),
                 tableWidget(ns("expr_gsettable"))
@@ -1323,7 +1415,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     expr_fctable.RENDER <- reactive({
         
         ngs <- inputData()
-        res <- sigDiffExprTable()
+        res <- filteredDiffExprTable()
         if(is.null(res) || nrow(res)==0) return(NULL)
 
         ##F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])

@@ -120,11 +120,14 @@ gx.volcanoPlot.XY <- function(x, pv, gene, ma_plot=FALSE, ma=NULL, p.sig=0.05, l
                        text = tt ) %>%
             layout( xaxis=list(title=xlab, range=xlim),
                    yaxis=list(title=ylab, range=ylim) )
-        if(lab.cex > 0) {
+        if(lab.cex > 0 && nrow(ann.left)>0) {
             plt <- plt  %>%
                 add_annotations(x=ann.left$x, y=ann.left$y, text=ann.left$gene,
                                 xref='x', yref='y', xanchor='right', showarrow=FALSE,
-                                font=list(size=10*lab.cex, color=hi.col) )  %>%
+                                font=list(size=10*lab.cex, color=hi.col) ) 
+        }
+        if(lab.cex > 0  && nrow(ann.right)>0) {
+            plt <- plt  %>%
                 add_annotations(x=ann.right$x, y=ann.right$y, text=ann.right$gene,
                                 xref='x', yref='y', xanchor='left', showarrow=FALSE,
                                 font=list(size=10*lab.cex, color=hi.col) ) 
