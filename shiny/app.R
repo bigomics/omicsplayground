@@ -361,8 +361,8 @@ createUI <- function(tabs)
         waiter_show_on_load(
             html = spin_wave(),
             ##color = "#2780e3",
-            color = "#1967be",            
-            logo = "ready.png"
+            color = "#1967be"            
+            ## logo = "ready.png"
         ) # place at the bottom
     )
 
