@@ -9,9 +9,9 @@
 ##
 ########################################################################
 
-##use.design=TRUE;dist.method="cor";center.x=FALSE;replace=FALSE
+##use.design=TRUE;dist.method="cor";center.x=center.m=replace=FALSE;b.method="new"
+##X=ngs$X;y=ngs$samples$group
 
-##replace=FALSE;center.x=FALSE
 gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
                           center.x=TRUE, center.m=TRUE,
                           b.method="new", replace=FALSE) 
@@ -22,11 +22,10 @@ gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
     
     ## compute distance matrix for NNM-pairing
     ##y <- factor(as.character(y))
-    y <- paste0("y=",y)
+    y1 <- paste0("y=",y)
     dX <- scale(X)
     if(center.x) dX <- dX - rowMeans(dX,na.rm=TRUE)
     if(center.m) {
-        y1 <- paste0("y.",y)
         mX <- tapply(1:ncol(dX),y1,function(i) rowMeans(dX[,i,drop=FALSE]))
         mX <- do.call(cbind, mX)
         dX <- dX - mX[,y1]
@@ -43,7 +42,7 @@ gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
         ##replace=TRUE
         ##replace=FALSE
         maxD <- max(D)
-        grp <- sort(unique(y))
+        grp <- sort(unique(y1))
         ny <- length(grp)
         B <- matrix(NA,nrow=ncol(X),ncol=ny)
         rownames(B) <- colnames(X)
@@ -51,8 +50,8 @@ gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
         i=1;k=2
         for(i in 1:nrow(B)) {
             for(k in 1:ny) {
-                jj <- which(y == grp[k])
-                ii <- which(y == y[i])
+                jj <- which(y1 == grp[k])
+                ii <- which(y1 == y1[i])
                 dd <- D[i,jj]
                 if(!replace) {
                     dd <- dd + maxD*table(factor(B[ii,k],levels=jj)) ## penalty factor???
@@ -70,7 +69,7 @@ gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
     
     ## imputing full paired data set
     kk <- match(as.vector(B), rownames(B))
-    full.y <- y[kk]
+    full.y <- y1[kk]
     full.pairs <- rep(rownames(B),ncol(B))
     full.X <- X[,kk]
     
