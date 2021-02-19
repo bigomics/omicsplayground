@@ -90,7 +90,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
             tipify( selectInput(ns("gx_features"),"Gene family:", choices=NULL, multiple=FALSE),
                    "Choose a specific gene family for the analysis.", placement="top"),
             fillRow( flex=c(1,1),
-                    tipify( selectInput(ns("gx_fdr"),"FDR", choices=FDR.VALUES, selected=1),
+                    tipify( selectInput(ns("gx_fdr"),"FDR", choices=FDR.VALUES, selected=0.2),
                            "Set the false discovery rate (FDR) threshold.", placement="top"),
                     tipify( selectInput(ns("gx_lfc"),"logFC threshold",
                                         choices=c(0,0.2,0.5,1,2,5), selected=0.5),
