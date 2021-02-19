@@ -19,8 +19,6 @@ gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
     ## Nearest-neighbour matching for batch correction. This
     ## implementation creates a fully paired dataset with nearest
     ## matching neighbours when pairs are missing.
-
-    method <- method[1]
     
     ## compute distance matrix for NNM-pairing
     ##y <- factor(as.character(y))

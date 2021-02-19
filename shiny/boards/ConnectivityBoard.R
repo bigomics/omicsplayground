@@ -894,9 +894,9 @@ ConnectivityBoard <- function(input, output, session, env)
         req(F)
 
         MAXF=10
+        NGENES=64
+        
         F <- F[,1:min(MAXF,ncol(F)),drop=FALSE]
-
-        NGENES=70
         if(input$cumFCplot_order=="FC") {
             F <- F[order(-abs(F[,1])),]
             F1 <- head(F,NGENES)
@@ -906,7 +906,7 @@ ConnectivityBoard <- function(input, output, session, env)
             F1 <- F1[order(rowMeans(F1)),,drop=FALSE]
         }
         
-        par(mfrow=c(1,1), mar=c(8,3.5,0.5,0.1), mgp=c(2.4,1,0))
+        par(mfrow=c(1,1), mar=c(8,3.5,0,0), mgp=c(2.4,1,0))
         maxfc <- max(abs(rowSums(F1,na.rm=TRUE)))
         ylim <- c(-1*(min(F1,na.rm=TRUE)<0),1.2)*maxfc
 
@@ -958,7 +958,7 @@ ConnectivityBoard <- function(input, output, session, env)
         ## caption =  cumFCplot.caption,
         options = cumFCplot.opts,
         pdf.height = 6, pdf.width = 9, 
-        height = c(280, 600), width = c('auto',1400),
+        height = c(280, 600), width = c('auto',1300),
         res = c(72,90)
     )    
         
@@ -1031,7 +1031,7 @@ ConnectivityBoard <- function(input, output, session, env)
         maxfc <- max(abs(rowSums(F,na.rm=TRUE)))
         xlim <- c(-1*(min(F,na.rm=TRUE)<0),1.2)*maxfc
         
-        par(mfrow=c(1,2), mar=c(4.5,1,0.4,1), mgp=c(2.4,1,0))
+        par(mfrow=c(1,2), mar=c(4,1,0,0.5), mgp=c(2.4,1,0))
         frame()
         col1 = grey.colors(ncol(F),start=0.15)
         pgx.stackedBarplot(
@@ -2130,8 +2130,8 @@ ConnectivityBoard <- function(input, output, session, env)
         title = "Connectivity Heatmap",
         info.text = connectivityHeatmap_info,
         ##caption = connectivityHeatmap_caption,
-        pdf.width=12, pdf.height=8,
-        height = c(480,600), width = c('auto',1280),
+        pdf.width=14, pdf.height=5.5,
+        height = c(480,550), width = c('auto',1400),
         res = c(90,90)
     )
     

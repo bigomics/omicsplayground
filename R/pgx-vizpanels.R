@@ -1137,7 +1137,8 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
                     show_legend=FALSE, scale="row", 
                     nmax = nmax, show_rownames = 40, 
                     title_cex = 1.1, cexRow=0.7, cexCol=0.78,
-                    annot.ht=2.5, mar=c(4,1,1,10)*1, 
+                    annot.ht=2.5, mar=c(4,1,1,10)*1,
+                    key.offset=c(0.05,1.03),
                     show_colnames = ifelse(ncol(X0)<25,1,0)
                 )
             )
@@ -1152,7 +1153,8 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
                     show_legend=FALSE, scale="row", split=NULL,
                     nmax=nmax, show_rownames=40, 
                     title_cex = 1.1, cexRow=0.7, cexCol=0.78,
-                    annot.ht=2.5, mar=c(4,1,1,10)*1, 
+                    annot.ht=2.5, mar=c(4,1,1,10)*1,
+                    key.offset=c(0.05,1.03),
                     show_colnames = ifelse(ncol(X0)<25,1,0)
                 )
             )
@@ -1203,13 +1205,13 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     plt2 <- cowplot::plot_grid(plotlist=flist, nrow=1, labels=lab2, label_size=15)
     plt3 <- cowplot::plot_grid(plotlist=plist, ncol=1, labels=lab3, label_size=15)
     fig  <- cowplot::plot_grid(
-                         cowplot::plot_grid(plt1, plt2, ncol=1, rel_heights=c(1.6,1)),
+                         cowplot::plot_grid(plt1, plt2, ncol=1, rel_heights=c(1.95,1)),
                          plt3, ncol=2, rel_widths=c(np,1),
                          labels=c("","")
                      )
 
     ##if(is.null(title)) title <- "Batch effect analysis"
-    ##if(is.null(subtitle)) subtitle = "The plots show possible batch effects your experiments."    
+    ##if(is.null(subtitle)) subtitle = "The plots show possible batch effects your experiments."
     ##if(is.null(caption)) caption <- paste0("Project: ",pgx$name)
     viz.showFigure(fig, title=title, subtitle=subtitle, caption=caption, tag=FALSE)    
     

@@ -93,7 +93,7 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 bio.correct <- c()
                 if("<libsize>" %in% bp)  lib.correct <- TRUE
                 if("<mito/ribo>" %in% bp)  bio.correct <- c(bio.correct, c("mito","ribo"))
-                if("<cell_cycle>" %in% bp) bio.correct <- c(bio.correct, c("cc.score"))
+                if("<cell_cycle>" %in% bp) bio.correct <- c(bio.correct, c("cell_cycle"))
                 if("<gender>" %in% bp)     bio.correct <- c(bio.correct, c("gender"))
 
                 cat("outobj: 2\n")                
@@ -176,7 +176,7 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
             })
             
             output$inputsUI <- renderUI({
-
+                
                 ns <- session$ns
                 bc.options = c("PCA","HC","SVA","NNM")
                 bc.selected = ""
@@ -186,7 +186,10 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 bc_info <- "Batch correction can clean your data from 'unwanted variables'. Please specify your parameters of interest.\n"
                 
                 ##pheno.par <- colnames(ngs$samples)
-                pheno.par <- sort(colnames(pheno()))
+                px <- pheno()
+                if(is.null(px)) return(NULL)
+                sel <- apply(px,2,function(x) length(unique(x[!is.na(x)])))
+                pheno.par <- sort(colnames(px)[sel>1])
                 sel.par   <- c(grep("^[.<]",pheno.par,invert=TRUE,value=TRUE),pheno.par)[1]
                 batch.par <- c("*",pheno.par,"<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
                 
@@ -239,8 +242,7 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                         )
                     )
                 )                
-            })
-                
+            })                
 
             return(outobj)  ## pointing to reactive
         } ## end-of-server

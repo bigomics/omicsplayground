@@ -31,9 +31,8 @@ ComputePgxUI <- function(id) {
     uiOutput(ns("UI"))
 }
 
-ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
-                             FILES, enable=TRUE, height=720,
-                             alertready=TRUE,
+ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
+                             FILES, enable=TRUE, height=720, alertready=TRUE, 
                              max.genes = 20000, max.genesets = 10000)
 {
     moduleServer(
@@ -216,10 +215,12 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT,
                 samples   <- data.frame(samples, stringsAsFactors=FALSE,check.names=FALSE)
                 contrasts <- as.matrix(contrastsRT())
                 contrasts[is.na(contrasts)] <- 0
+                batch     <- batchRT() ## batch correction vectors for GLM
                 
                 dbg("[LoadingModule] dim(counts)=",dim(counts))
                 dbg("[LoadingModule] dim(samples)=",dim(samples))
                 dbg("[LoadingModule] dim(contrasts)=",dim(contrasts))
+                dbg("[LoadingModule] dim(batch)=",dim(batch))
                 
                 ##-----------------------------------------------------------
                 ## Set statistical methods and run parameters
