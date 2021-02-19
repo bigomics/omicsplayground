@@ -1008,7 +1008,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         F <- list()
         Q <- list()
         for(i in 1:length(comp)) {
-            res = getDEGtable(ngs, testmethods=test, comparison=i, add.pq=TRUE)            
+            res = getDEGtable(ngs, testmethods=test, comparison=i, 
+                              add.pq=FALSE, lfc=lfc, fdr=fdr, filter.sig=FALSE)            
             fc.gene = res[,grep("^gene$|^gene_name$",colnames(res))]
             ##pv.col = grep("p.val|pval|meta.p",colnames(res),ignore.case=TRUE)[1]
             qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
