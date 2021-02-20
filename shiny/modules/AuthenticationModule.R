@@ -1196,6 +1196,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[22]] = c("Discover New Oceans","Man cannot discover new oceans unless he has the courage to lose sight of the shore &ndash; Andre Gide")
     titles[[23]] = c("Adventurous Life","Love adventurous life. Be passionately curious about exploring new adventures. &ndash; Lailah Gifty Akita")
     titles[[24]] = c("Succes is Exploration","The first thing you have to find is the unknown. Learning is searching; anything else is just waiting. &ndash; Dale Daute")
+    titles[[25]] = c("Look Ma! No help!","I did it without a bioinformagician")
     
     title <- titles[[length(titles)]]
     title <- sample(titles,1)[[1]]
