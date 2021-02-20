@@ -567,7 +567,9 @@ pgx.updateInfoPGX <- function(pgxinfo, ngs, remove.old=TRUE)
 {
 
     cond = grep("title|source|group|batch|sample|patient|donor|repl|clone|cluster|lib.size|^[.]",
-               colnames(ngs$samples),invert=TRUE,value=TRUE)
+                colnames(ngs$samples),invert=TRUE,value=TRUE)
+    cond = grep("title|source|batch|sample|patient|donor|repl|clone|cluster|lib.size|^[.]",
+                colnames(ngs$samples),invert=TRUE,value=TRUE)
     cond
 
     is.mouse = (mean(grepl("[a-z]",ngs$genes$gene_name))>0.8)
