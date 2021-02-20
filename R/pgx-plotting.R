@@ -881,7 +881,9 @@ pgx.plotExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
     } else {
         gx <- ngs$X[probe,rownames(ngs$samples)]
     }
-    if(!logscale) gx <- 2**(gx)
+    if(!logscale) {
+        gx <- 2**(gx)
+    }
     
     ## -------------- remove others
     if(showothers==FALSE && any(grepl("other",xgroup)) ) {
