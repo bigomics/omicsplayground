@@ -167,7 +167,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     
     comparison=1;testmethods=c("trend.limma");add.pq=0
     getDEGtable <- function(ngs, testmethods, comparison, add.pq,
-                            lfc, fdr, filter.sig) {
+                            lfc, fdr) {
         ##ngs = inputData()
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
@@ -206,14 +206,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         stars.fdr = fdr
         ##stars.fdr = 0.05  ## fixed otherwisetable will always have three stars..        
         star.symbols = sapply(1:20,function(i) paste(rep("\u2605",i),collapse=""))
-        mx$stars = c("",star.symbols)[ 1 + rowSums(mx.q <= stars.fdr, na.rm=TRUE)]        
-
-        ## reduce to only significant terms? for volcano all gene are necessary...
-        if(filter.sig) {
-            is.sig <- abs(mx$meta.fx) >= lfc & mx$meta.q <= fdr
-            message("[getDEGtable] reducing table to only ",sum(is.sig),"  significant genes")
-            mx <- mx[which(is.sig),,drop=FALSE]
-        }
+        is.sig <- (mx.q <= stars.fdr & abs(mx.fc) >= lfc)
+        mx$stars = c("",star.symbols)[ 1 + rowSums(is.sig, na.rm=TRUE)]        
         
         ## recalculate group averages???
         y0 <- ngs$model.parameters$exp.matrix[,comparison]
@@ -256,9 +250,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if(is.null(ngs)) return(NULL)
         comp=1;test="trend.limma"
         comp = input$gx_contrast
-        gx.methods = colnames(ngs$gx.meta$meta[[1]]$fc)
-        gx.methods
-        tests = input$gx_testmethod
         tests = input$gx_testmethod
         fdr = as.numeric(input$gx_fdr)
         lfc = as.numeric(input$gx_lfc)
@@ -266,7 +257,16 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if(is.null(comp)) return(NULL)
         if(is.null(tests)) return(NULL)
         res = getDEGtable(ngs, testmethods=tests, comparison=comp,
-                          add.pq=TRUE, lfc=lfc, fdr=fdr, filter.sig=FALSE)
+                          add.pq=TRUE, lfc=lfc, fdr=fdr)
+
+        ## Filter on features/genesets
+        psel <- rownames(res)
+        gx_features=1
+        gx_features = input$gx_features
+        if(gx_features!="<all>") psel = filterProbes(ngs$genes, GSETS[[gx_features]] )
+        res = res[which(rownames(res) %in% psel),,drop=FALSE]
+        dim(res)
+
         res <- res[order(-abs(res$logFC)),]
         return(res)
     })
@@ -284,36 +284,21 @@ two conditions. Determine which genes are significantly downregulated or overexp
         
         comp=1;test="trend.limma"
         comp = input$gx_contrast
-        gx.methods = colnames(ngs$gx.meta$meta[[1]]$fc)
-        gx.methods
-        tests = input$gx_testmethod
         tests = input$gx_testmethod
         fdr = as.numeric(input$gx_fdr)
         lfc = as.numeric(input$gx_lfc)
-
+        
         ##res = getDEGtable(ngs, testmethods="trend.limma", comparison=1,add.pq=FALSE)
-        res = getDEGtable(ngs, testmethods=tests, comparison=comp,
-                          add.pq=TRUE, lfc=lfc, fdr=fdr, filter.sig=FALSE)
-        ##res = fullDiffExprTable()
+        ##res = getDEGtable(ngs, testmethods=tests, comparison=comp,
+        ##add.pq=TRUE, lfc=lfc, fdr=fdr, filter.sig=FALSE)
+        res = fullDiffExprTable()
         if(is.null(res) || nrow(res)==0) return(NULL)
-
-        psel <- rownames(res)
-        gx_features=1
-        gx_features = input$gx_features
-        if(gx_features!="<all>") psel = filterProbes(ngs$genes, GSETS[[gx_features]] )
-        res = res[which(rownames(res) %in% psel),,drop=FALSE]
-        dim(res)
                 
-        if(nrow(res)==0) {
-            validate(need(nrow(res) > 0, "warning. no genes passed current filters."))
-            return(NULL)
-        }
-
-        fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]        
+        fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]
         res = res[order(-abs(res[,fx.col])),]
         
         ## just show significant genes
-        if(!is.null(input$gx_sigonly) && input$gx_sigonly) {
+        if(!is.null(input$gx_showsig) && input$gx_showsig) {
             sel <- which(res$stars != "")
             res = res[sel,,drop=FALSE]
         }
@@ -326,6 +311,11 @@ two conditions. Determine which genes are significantly downregulated or overexp
                            head(names(sort(fx[which(fx<0)])),10)))
             res = res[pp,,drop=FALSE]
             res = res[order(-res[,fx.col]),,drop=FALSE]
+        }
+
+        if(nrow(res)==0) {
+            validate(need(nrow(res) > 0, "warning. no genes passed current filters."))
+            return(NULL)
         }
         
         ## limit number of rows???
@@ -448,7 +438,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         par(mfrow=c(1,1), mar=c(4,3,2,1.5), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
         par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
         gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.genes,
-                          render="canvas", n=5000, nlab=10, 
+                          render="canvas", n=5000, nlab=12, 
                           xlim=xlim, ylim=ylim, ## hi.col="#222222",
                           use.fdr=TRUE, p.sig=fdr, lfc=lfc,
                           cex=0.9, lab.cex=1.4, cex.main=1.0,
@@ -517,7 +507,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ## par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
         plt <- plotlyVolcano(
             x=x, y=y, names=fc.genes,
-            source = "plot1",
+            source = "plot1", marker.type = "scattergl",
             highlight = sel.genes, label = lab.genes,
             group.names = c("group1","group0"),
             ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
@@ -538,16 +528,19 @@ two conditions. Determine which genes are significantly downregulated or overexp
     callModule(
         plotModule,
         id = "expr_plots_volcano", ## ns=ns,
-        ##func = expr_plots_volcano.RENDER,
+        ##func = expr_plots_volcano.RENDER, func2 = expr_plots_volcano.RENDER,
         func = expr_plots_volcano.PLOTLY, plotlib = "plotly",       
-        ##func2 = expr_plots_volcano.RENDER, 
         info.text = expr_plots_volcano_text, 
         title = "Volcano plot", label="a",
         height = imgH,  res=75,
         pdf.width=6, pdf.height=6
     )
     ## output <- attachModule(output, expr_plots_volcano_module)
-
+    
+    ## ------------------------------------------------------
+    ## MA plot
+    ## ------------------------------------------------------
+    
     expr_plots_maplot.RENDER %<a-% reactive({
         comp1 = input$gx_contrast
         if(length(comp1)==0) return(NULL)
@@ -583,7 +576,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         par(mfrow=c(1,1), mar=c(4,3,2,1.5), mgp=c(2,0.8,0), oma=c(1,0,0.5,0))
         par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(0,0,0,0))
         gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.genes, lfc=lfc,
-                          render="canvas", n=5000, nlab=10, 
+                          render="canvas", n=5000, nlab=12, 
                           xlim=xlim, ylim=c(0,15),
                           xlab="average expression (log2CPM)",
                           ylab="effect size (log2FC)",
@@ -642,7 +635,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         highlight=sel.genes;label=lab.genes;names=fc.genes
         plt <- plotlyMA(
             x=x, y=y, names=fc.genes,
-            source = "plot1",
+            source = "plot1", marker.type = "scattergl",
             highlight=sel.genes, label=lab.genes,
             group.names = c("group1","group0"),
             ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
@@ -663,15 +656,13 @@ two conditions. Determine which genes are significantly downregulated or overexp
     callModule( plotModule,
         id="expr_plots_maplot", 
         ##func = expr_plots_maplot.RENDER,
-        func = expr_plots_maplot.PLOTLY, plotlib="plotly",
         ##func2 = expr_plots_maplot.RENDER, 
+        func = expr_plots_maplot.PLOTLY, plotlib="plotly",
         info.text = expr_plots_maplot_text, label="b",
         title = "MA plot",
         height = imgH,
         pdf.width=6, pdf.height=6, res=75
     )
-    ## output <- attachModule(output, expr_plots_maplot_module)
-
     
     expr_plots_topgenesbarplot.RENDER %<a-% reactive({
         require(RColorBrewer)
@@ -693,15 +684,14 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ##fc <- res$meta.fx
         fc <- res$logFC
         names(fc) <- rownames(res)
-        top.up <- head(names(sort(fc[which(fc>0)],decreasing=TRUE)),12)
-        top.dn <- head(names(sort(fc[which(fc<0)],decreasing=FALSE)),12)
+        top.up <- head(names(sort(fc[which(fc>0)],decreasing=TRUE)),10)
+        top.dn <- head(names(sort(fc[which(fc<0)],decreasing=FALSE)),10)
         fc.top <- c(fc[top.up], fc[top.dn])
         klr.pal <- brewer.pal(4,"Paired")[2:1]
         klr <- c( rep(klr.pal[1],length(top.up)), rep(klr.pal[2],length(top.dn)) )
         names(fc.top) <- sub(".*:","",names(fc.top))
         
         ii <- order(fc.top)
-        par(mfrow=c(1,1), mar=c(4,4,2,2)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
         par(mfrow=c(1,1), mar=c(5,3,1,1), mgp=c(2,0.8,0), oma=c(0,0,0,0))
         barplot(fc.top[ii], las=3, cex.names=0.75, ylab="fold change",
                 col=klr[ii], ylim=c(-1.1,1.2)*max(abs(fc.top),na.rm=TRUE) )
@@ -731,6 +721,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     )
     ## output <- attachModule(output, expr_plots_topgenesbarplot_module)
 
+    
     expr_plots_topfoldchange.RENDER %<a-% reactive({
         require(RColorBrewer)
         ngs = inputData()
@@ -815,17 +806,18 @@ two conditions. Determine which genes are significantly downregulated or overexp
         srt <- ifelse(grouped, 0, 30)
 
         par(mfrow=c(1,1), mar=c(6,4,3,0)*1, mgp=c(2,0.8,0), oma=c(1,1,1,0.5)*0.2)
-        par(mfrow=c(1,1), mar=c(4,3,1,1.5), mgp=c(2,0.8,0), oma=c(1,0,0,0))
+        par(mfrow=c(1,1), mar=c(4,3,1.5,1.5), mgp=c(2,0.8,0), oma=c(1,0.5,0,0.5))
         pgx.plotExpression(ngs, gene, comp=comp, grouped=grouped,
                            max.points=2000, names=TRUE,
                            logscale=logscale, srt=srt)    
     })
 
     callModule( plotModule,
-        id = "expr_plots_boxplot", 
+        id = "expr_plots_boxplot", label = "c",
         func = expr_plots_boxplot.RENDER,
         func2 = expr_plots_boxplot.RENDER,
-        info.text = "This is an example",
+        info.text = "Differential expression boxplot for selected gene.",
+        title = "Differential expression", 
         height = imgH,
         pdf.width=6, pdf.height=6, res=75
     )
@@ -843,7 +835,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
                 flex=c(1,1,1,1), ##height = 370,
                 plotWidget(ns("expr_plots_volcano")),
                 plotWidget(ns("expr_plots_maplot")),
-                plotWidget(ns("expr_plots_topgenesbarplot")),
+                ## plotWidget(ns("expr_plots_topgenesbarplot")),
+                plotWidget(ns("expr_plots_boxplot")),
                 plotWidget(ns("expr_plots_topfoldchange"))
             ),
             br(),
@@ -861,7 +854,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ngs <- inputData()
         req(ngs)
         
-        ##res=getDEGtable(ngs, testmethods="trend.limma", comparison=6, add.pq=FALSE)
         res <- filteredDiffExprTable()
         if(is.null(res) || nrow(res)==0) return(NULL)
 
@@ -1009,7 +1001,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         Q <- list()
         for(i in 1:length(comp)) {
             res = getDEGtable(ngs, testmethods=test, comparison=i, 
-                              add.pq=FALSE, lfc=lfc, fdr=fdr, filter.sig=FALSE)            
+                              add.pq=FALSE, lfc=lfc, fdr=fdr)            
             fc.gene = res[,grep("^gene$|^gene_name$",colnames(res))]
             ##pv.col = grep("p.val|pval|meta.p",colnames(res),ignore.case=TRUE)[1]
             qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
@@ -1228,6 +1220,13 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ##================================================================================
     ## Statistics Table
     ##================================================================================
+    gene_selected <- reactive({
+        i = as.integer(expr_genetable$rows_selected())
+        if(is.null(i) || length(i)==0) return(NULL)
+        res <- filteredDiffExprTable()
+        gene = rownames(res)[i]
+        return(gene)
+    })
 
     expr_genetable.RENDER <- reactive({
         
@@ -1289,8 +1288,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
 <br><br>For a selected comparison under the <code>Contrast</code> setting, the results of the selected methods are combined and reported under the table, where <code>meta.q</code> for a gene represents the highest <code>q</code> value among the methods and the number of stars for a gene indicate how many methods identified significant <code>q</code> values (<code>q < 0.05</code>). The table is interactive (scrollable, clickable); users can sort genes by <code>logFC</code>, <code>meta.q</code>, or average expression in either conditions. Users can filter top N = {10} differently expressed genes in the table by clicking the <code>top 10 genes</code> from the table <i>Settings</i>."
 
     expr_genetable_opts = tagList(
-        tipify(checkboxInput(ns("gx_sigonly"),"only significant",FALSE),
-               "Display only the significant genes (1 or more stars) in the table.", 
+        tipify(checkboxInput(ns("gx_showsig"),"show significant only",FALSE),
+               "Display only significant genes (with at least 1 star) in the table.", 
                placement="top", options = list(container = "body")),
         tipify(checkboxInput(ns("gx_top10"),"top 10 genes",FALSE),
                "Display only top 10 differentially (positively and negatively) expressed genes in the table.", 

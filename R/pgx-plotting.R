@@ -2769,7 +2769,8 @@ plotlyMA <- function(x, y, names, source="plot1",
                      xlab = "average expression (log2.CPM)",
                      ylab = "effect size (log2.FC)",
                      lfc=1, psig=0.05, showlegend=TRUE, highlight=NULL,
-                     marker.size = 5, label=NULL, displayModeBar=TRUE )
+                     marker.size = 5, label=NULL, marker.type="scatter",
+                     displayModeBar=TRUE )
 {
 
     require(plotly)
@@ -2779,7 +2780,7 @@ plotlyMA <- function(x, y, names, source="plot1",
     i1 <- which(names %in% highlight)
     
     p <- plot_ly(
-        type='scatter', mode='markers'
+        type = marker.type, mode = 'markers'
         ##type='scattergl', mode='markers',
         ##source=source, key=1:length(x)
     )
@@ -2881,7 +2882,8 @@ plotlyMA <- function(x, y, names, source="plot1",
 plotlyVolcano <- function(x, y, names, source="plot1", group.names=c("group1","group2"),
                           xlab="effect size (logFC)", ylab="significance (-log10p)",
                           lfc=1, psig=0.05, showlegend=TRUE, highlight=NULL,
-                          marker.size = 5, label=NULL, displayModeBar=TRUE )
+                          marker.size = 5, label=NULL, marker.type='scatter',
+                          displayModeBar=TRUE )
 {
 
     require(plotly)
@@ -2891,8 +2893,7 @@ plotlyVolcano <- function(x, y, names, source="plot1", group.names=c("group1","g
     i1 <- which(names %in% highlight)
     
     p <- plot_ly(
-        type='scatter', mode='markers'
-        ##type='scattergl', mode='markers',
+        type = marker.type, mode='markers'
         ##source=source, key=1:length(x)
     )
     

@@ -261,12 +261,24 @@ plotModule <- function(input, output, session, ## ns=NULL,
     if("html" %in% download.fmt) dload.html <- downloadButton(ns("html"), "HTML")
     ##if("csv" %in% download.fmt)  dload.csv  <- downloadButton(ns("csv"), "CSV")
     if(!is.null(csvFunc))  dload.csv  <- downloadButton(ns("csv"), "CSV")
+
+    pdf_size = NULL
+    if(plotlib!="base") {
+        pdf_size <- tagList(
+            fillRow(
+                numericInput(ns("pdf_width"), "PDF width", pdf.width, 1, 20, 1, width='100%'),
+                numericInput(ns("pdf_height"), "height", pdf.height, 1, 20, 1, width='100%')
+            ),
+            br(),br(),br()
+        )
+    }
     
     dload.button <- dropdownButton(
         dload.pdf,
         dload.png,
         dload.csv,
         dload.html,
+        pdf_size,
         circle = TRUE, size = "xs", ## status = "danger",
         icon = icon("download"), width = "40px", right=FALSE,
         tooltip = tooltipOptions(title = "Download", placement = "right")
@@ -333,7 +345,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
     do.html = "html" %in% download.fmt
     ##do.csv  = "csv" %in% download.fmt && !is.null(csvFunc)
     do.csv = !is.null(csvFunc)
-
     
     PNGFILE=PDFFILE=HTMLFILE=CSVFILE=NULL
     if(do.pdf) PDFFILE = paste0(gsub("file","plot",tempfile()),".pdf")
@@ -399,11 +410,13 @@ plotModule <- function(input, output, session, ## ns=NULL,
     ##============================================================
     ## download.pdf = NULL
     ##download.png = download.html = NULL
-
+    
     if(do.png && is.null(download.png)) {
         download.png <- downloadHandler(
             filename = "plot.png",
             content = function(file) {
+                pdf.width  <- input$pdf_width
+                pdf.height <- input$pdf_height                
                 withProgress({
                     ## unlink(PNGFILE) ## do not remove!
                     if(plotlib=="plotly") {
@@ -467,6 +480,8 @@ plotModule <- function(input, output, session, ## ns=NULL,
         download.pdf <- downloadHandler(
             filename = "plot.pdf",
             content = function(file) {
+                pdf.width  <- input$pdf_width
+                pdf.height <- input$pdf_height                
                 withProgress({
                     ## unlink(PDFFILE) ## do not remove!
                     if(plotlib=="plotly") {
@@ -508,7 +523,8 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         ## just here, not anymore in the
                         ## renderPlot. But cannot get it to work (IK 19.10.02)
                         if(0) {
-                            pdf(file=PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
+                            pdf(file=PDFFILE, width=pdf.width, height=pdf.height,
+                                pointsize=pdf.pointsize)
                             func()
                             ##plot(sin)
                             dev.off()  ## important!!
@@ -653,6 +669,11 @@ plotModule <- function(input, output, session, ## ns=NULL,
         ## reason does not work in the downloadHandler...
         ##
         render <- renderPlot({
+            ##pdf.width0  <- isolate(input$pdf_width)
+            ##pdf.height0 <- isolate(input$pdf_height)                
+            pdf.width0  <- pdf.width
+            pdf.height0 <- pdf.height
+
             ## save base render in object
             ##pdf(NULL)
             ##dev.control(displaylist="enable")
@@ -663,7 +684,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
                 suppressWarnings( suppressMessages(
                     if(do.pdf) {
                         ##pdf(file=PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
-                        dev.print(pdf, file=PDFFILE, width=pdf.width, height=pdf.height,
+                        dev.print(pdf, file=PDFFILE, width=pdf.width0, height=pdf.height0,
                                   pointsize=pdf.pointsize)
                         ##p1.base
                         ##dev.off()  ## important!!
@@ -674,7 +695,8 @@ plotModule <- function(input, output, session, ## ns=NULL,
                 suppressWarnings( suppressMessages(
                     if(do.png) {
                         ##png(file=PNGFILE, width=pdf.width*100, height=pdf.height*100,pointsize=pdf.pointsize)
-                        dev.print(png, file=PNGFILE, width=pdf.width*100, height=pdf.height*100,
+                        dev.print(png, file=PNGFILE,
+                                  width=pdf.width0*100, height=pdf.height0*100,
                                   pointsize=pdf.pointsize)
                         ##p1.base
                         ##dev.off()  ## important!!

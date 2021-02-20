@@ -86,11 +86,12 @@ EnrichmentBoard <- function(input, output, session, env)
             tipify( selectInput(ns("gs_features"),"Gene set collection:", choices=NULL, multiple=FALSE),
                    "Choose a specific gene set collection for the analysis.", placement="top"),
             fillRow( flex=c(1,1),
-                    tipify( selectInput(ns("gs_fdr"),"FDR", choices=FDR.VALUES2, selected=1),
+                    tipify( selectInput(ns("gs_fdr"),"FDR", choices=FDR.VALUES2, selected=0.2),
                            "Set the false discovery rate (FDR) threshold.", placement="top"),
-                    tipify( selectInput(ns("gs_lfc"),"logFC threshold", choices=c(0,0.2,0.5,1,2,5),
-                                        selected=0),
-                           "Set the logarithmic fold change (logFC) threshold.", placement="top")
+                    tipify( selectInput(ns("gs_lfc"),"logFC threshold",
+                                        choices=c(0,0.01,0.05,0.1,0.2,0.5,1), selected=0.1),
+                           "Set the logarithmic fold change (logFC) threshold.",
+                           placement="top")
                     ),
             br(),br(),br(),br(),
             tipify(actionLink(ns("gs_options"), "Options", icon=icon("cog", lib = "glyphicon")),
@@ -179,7 +180,7 @@ EnrichmentBoard <- function(input, output, session, env)
         test
     })
 
-    calculateMeta <- function(comparison, methods, ngs) {
+    calcGsetMeta <- function(comparison, methods, ngs) {
         ##ngs <- inputData()
         mx = ngs$gset.meta$meta[[comparison]]
         if(is.null(mx)) return(NULL)
@@ -187,7 +188,7 @@ EnrichmentBoard <- function(input, output, session, env)
         mx.methods
         methods = intersect(methods, mx.methods)
         if(is.null(methods) || length(methods)==0) {
-            cat("ERROR: calculateMeta:: no valid methods\n")
+            cat("ERROR: calcGsetMeta:: no valid methods\n")
             return(NULL)
         }
         
@@ -217,7 +218,8 @@ EnrichmentBoard <- function(input, output, session, env)
         return(meta)
     }
     
-    getGeneSetTable <- reactive({
+    getFullGeneSetTable <- reactive({
+
         ngs <- inputData()
         req(ngs)
         comp=1
@@ -231,6 +233,9 @@ EnrichmentBoard <- function(input, output, session, env)
         gsmethod = colnames(unclass(mx$fc))
         gsmethod <- input$gs_method   
         if(is.null(gsmethod) || length(gsmethod)==0) return(NULL)
+
+        lfc <- input$gs_lfc
+        fdr <- input$gs_fdr
         
         ## filter gene sets for table
         gsfeatures="<all>"
@@ -257,12 +262,13 @@ EnrichmentBoard <- function(input, output, session, env)
             qv[is.na(qv)] = 0.999
             fx[is.na(fx)] = 0
 
+            is.sig <- (qv <= fdr & abs(fx) >= lfc)
             stars.symbols = sapply(1:20,function(i) paste(rep("\u2605",i),collapse=""))
-            stars = c("",stars.symbols)[1+rowSums(qv < 0.05)]                
+            stars = c("",stars.symbols)[1 + rowSums(is.sig)]                
             names(stars) <- rownames(mx)
             
             ##------------ calculate META parameters ----------------
-            meta <- calculateMeta(comp, gsmethod, ngs=ngs)
+            meta <- calcGsetMeta(comp, gsmethod, ngs=ngs)
             meta <- meta[rownames(mx),,drop=FALSE]        
             dim(meta)
             gset.size = Matrix::colSums(ngs$GMT[,rownames(mx),drop=FALSE]!=0)
@@ -270,8 +276,7 @@ EnrichmentBoard <- function(input, output, session, env)
             
             ## ---------- report *average* group expression FOLD CHANGE
             ## THIS SHOULD BETTER GO DIRECTLY WHEN CALCULATING GSET TESTS
-            ##
-            
+            ##            
             s1 <- names(which(ngs$model.parameters$exp.matrix[,comp]>0))
             s0 <- names(which(ngs$model.parameters$exp.matrix[,comp]<0))
             jj <- colnames(ngs$GMT)
@@ -340,43 +345,44 @@ EnrichmentBoard <- function(input, output, session, env)
         }  else {
             ## show original table (single method)
             rpt = outputs[[gsmethod]]
-        }    
+        }
+
+        rpt <- rpt[order(-abs(rpt$logFC)),]
         rpt = data.frame(rpt)
         
-        ## Get the meta q-value column, filter on q-value
-        qv.col = grep("meta.q|fdr|adj.p.val|q.value|adjusted.p|padj|qv",
-                      colnames(rpt),ignore.case=TRUE)[1]
-        if(length(qv.col)==0) stop("could not parse q-value column")
-        qv = rpt[,qv.col]
-        fdr = 1
-        fdr <- input$gs_fdr
-        rpt = rpt[ which( qv <= as.numeric(fdr) ), ,drop=FALSE ]  ## important to cast numeric!
+        return(rpt)
+    })
 
-        ## filter on fold-change    
-        fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(rpt))[1]
-        fx  = as.numeric(rpt[,fx.col])
-        names(fx) = rownames(rpt)
-        lfc = as.numeric(input$gs_lfc)
-        rpt = rpt[which(abs(fx) >= lfc),,drop=FALSE]
-        fx  = rpt[,fx.col]
-        rpt = rpt[order(-abs(fx)),]
+
+    getFilteredGeneSetTable <- reactive({        
+
+        if(is.null(input$gs_showsig) || length(input$gs_showsig)==0) return(NULL)
+        if(is.null(input$gs_top10) || length(input$gs_top10)==0) return(NULL)
+                
+        res <- getFullGeneSetTable()
         
-        ## just show top 10
+        ## just show significant genes
+        if(input$gs_showsig) {
+            sel <- which(res$stars != "")
+            res = res[sel,,drop=FALSE]
+        }
+        
+        ## just show top 10        
         if(length(input$gs_top10) && input$gs_top10==TRUE) {
-            fx  = as.numeric(rpt[,fx.col])
-            names(fx) = rownames(rpt)
+            fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(res))[1]
+            fx  = as.numeric(res[,fx.col])
+            names(fx) = rownames(res)
             pp <- unique(c(head(names(sort(-fx[which(fx>0)])),10),
                            head(names(sort(fx[which(fx<0)])),10)))
-            rpt = rpt[pp,,drop=FALSE]
-            fx  = as.numeric(rpt[,fx.col])
-            rpt = rpt[order(-fx),]
+            res = res[pp,,drop=FALSE]
+            fx  = as.numeric(res[,fx.col])
+            res = res[order(-fx),,drop=FALSE]
         }
 
         ## limit to 1000 rows???
         ## rpt <- head(rpt, 1000)
-        rpt <- data.frame(rpt)
-        
-        return(rpt)
+        res <- data.frame(res)        
+        return(res)
     })
 
 
@@ -386,61 +392,61 @@ EnrichmentBoard <- function(input, output, session, env)
 
     plotTopEnriched <- function(ngs, rpt, comp, ntop, rowcol)
     {
-            gx.meta <- ngs$gx.meta$meta[[comp]]
-            ##rnk0 <- gx.meta[,"fc"][,"trend.limma"]
-            ##names(rnk0) = gx.meta[,"gene_name"]        
-            rnk0 <- gx.meta$meta.fx
-            names(rnk0) = ngs$genes[rownames(gx.meta),"gene_name"]
-            rnk0 = rnk0 - mean(rnk0,na.rm=TRUE)  ## scaling/centering should be done in calculation...                
-            fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(rpt))[1]
-            qv.col = grep("meta.q|q$",colnames(rpt))[1]
-            fx = rpt[,fx.col]
-            qv = rpt[,qv.col]
-            names(qv) <- names(fx) <- rownames(rpt)
-            
-            ##top.up <- names(sort(fx[which(fx>0)],decreasing=TRUE))
-            ##top.dn <- names(sort(fx[which(fx<0)]))
-            top <- rownames(rpt)
-            
-            par(mfrow=rowcol, mar=c(0.5,3.0,2.8,0), mgp=c(1.9,0.8,0))
-            for(i in 1:ntop) {
-                if(i > length(top)) {
-                    frame()
-                } else {
-                    gs <- top[i]
-                    gs1 = breakstring(gs,28,50,force=FALSE)
-                    genes = toupper(names(which(ngs$GMT[,gs]!=0)))
-                    names(rnk0) <- toupper(names(rnk0))
-                    ylab = ""
-                    ## if(i %in% c(1,6)) ylab = "Ranked list metric"
-                    if(i%%rowcol[2] == 1) ylab = "Ranked list metric"
-                    gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
-                                main=gs1, xlab="", ylab=ylab,
+        if(is.null(ngs)) return(NULL)
+        gx.meta <- ngs$gx.meta$meta[[comp]]
+        ##rnk0 <- gx.meta[,"fc"][,"trend.limma"]
+        ##names(rnk0) = gx.meta[,"gene_name"]        
+        rnk0 <- gx.meta$meta.fx
+        names(rnk0) = ngs$genes[rownames(gx.meta),"gene_name"]
+        rnk0 = rnk0 - mean(rnk0,na.rm=TRUE)  ## scaling/centering should be done in calculation...                
+        fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(rpt))[1]
+        qv.col = grep("meta.q|q$",colnames(rpt))[1]
+        fx = rpt[,fx.col]
+        qv = rpt[,qv.col]
+        names(qv) <- names(fx) <- rownames(rpt)
+        top <- rownames(rpt)
+        
+        par(mfrow=rowcol, mar=c(0.5,3.0,2.8,0), mgp=c(1.9,0.8,0))
+        for(i in 1:ntop) {
+            if(i > length(top)) {
+                frame()
+            } else {
+                gs <- top[i]
+                gs1 = breakstring(gs,28,50,force=FALSE)
+                genes = toupper(names(which(ngs$GMT[,gs]!=0)))
+                names(rnk0) <- toupper(names(rnk0))
+                ylab = ""
+                ## if(i %in% c(1,6)) ylab = "Ranked list metric"
+                if(i%%rowcol[2] == 1) ylab = "Ranked list metric"
+                gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
+                            main=gs1, xlab="", ylab=ylab,
                             cex.main=0.78, len.main=80)
-                    qv1 = formatC(qv[gs],format="e", digits=2)
-                    legend("topright", paste("q=",qv1), bty="n",cex=0.85)
-                }
+                qv1 = formatC(qv[gs],format="e", digits=2)
+                legend("topright", paste("q=",qv1), bty="n",cex=0.85)
             }
         }
+    }
     
     ## Top enriched    
     topEnriched.RENDER %<a-% reactive({
-
+        
         ngs <- inputData()
-        alertDataLoaded(session,ngs)
-        rpt <- getGeneSetTable()
+        req(ngs)       
+        ##rpt <- getFullGeneSetTable()
+        rpt <- getFilteredGeneSetTable()
         ##if(is.null(rpt)) return(NULL)
-        req(ngs, rpt, input$gs_contrast)
+        req(rpt, input$gs_contrast)
 
         comp=1
         comp = input$gs_contrast
-        if(is.null(comp)) return(NULL)
         if(!(comp %in% names(ngs$gx.meta$meta))) return(NULL)
 
         ## filter on active rows (using search)
         ##ii <- input$gseatable_rows_all
-        ii <- gseatable$rows_all()
-        rpt <- rpt[ii,,drop=FALSE]
+        ii  <- gseatable$rows_all()
+        if(length(ii)>0) {
+            rpt <- rpt[ii,,drop=FALSE]
+        }
         if(nrow(rpt)==0) return(NULL)
         
         plotTopEnriched(ngs, rpt, comp=comp, ntop=10, rowcol=c(2,5))        
@@ -451,7 +457,7 @@ EnrichmentBoard <- function(input, output, session, env)
 
         ngs <- inputData()
         alertDataLoaded(session,ngs)
-        rpt <- getGeneSetTable()
+        rpt <- getFilteredGeneSetTable()
         ##if(is.null(rpt)) return(NULL)
         req(ngs, rpt, input$gs_contrast)
 
@@ -480,18 +486,51 @@ EnrichmentBoard <- function(input, output, session, env)
         func = topEnriched.RENDER,
         func2 = topEnriched.RENDER2,
         info.text = topEnriched_text,
-        height = c(imgH,720), width = c('auto',1500), res=90,
+        height = c(0.95*imgH,720), width = c('auto',1500), res=90,
         pdf.width = 14, pdf.height = 4, 
         title = "Top enriched gene sets"
         ##caption = topEnriched_caption
     )
 
+            
+    plotEnrichFreq <- function(ngs, rpt, ntop, ngenes, gset.weight, fcweight)
+    {
+        
+        fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(rpt))[1]
+        fx = rpt[,fx.col]
+        names(fx) <- rownames(rpt)
+        
+        top <- rownames(rpt)        
+        top <- head(top,ntop)
+        if(!all(top %in% colnames(ngs$GMT))) return(NULL)
+        
+        F <- 1*(ngs$GMT[,top]>0)
+        wt = FALSE
+        if(gset.weight) {
+            F <- t(t(F)  / colSums(F,na.rm=TRUE))
+            wt = TRUE
+        }
+        F <- t(t(F) * sign(fx[top]))
+        if(fcweight) {
+            F <- t(t(F) * abs(fx[top]))
+            wt = TRUE
+        } 
+        F <- head(F[order(-rowSums(abs(F))),,drop=FALSE], ngenes)
+        F <- F[order(-rowSums(F)),,drop=FALSE]
+        F <- as.matrix(F)
+        
+        par(mfrow=c(1,1), mar=c(6,4,2,0.5), mgp=c(2.2,0.8,0))
+        col1 = grey.colors(ncol(F),start=0.15)
+        ylab = ifelse(wt, "weighted frequency", "frequency")
+        barplot(t(F), beside=FALSE, las=3, cex.names=0.90, col=col1,
+                ylab=ylab)
+    }
 
     topEnrichedFreq.RENDER %<a-% reactive({
 
         ngs <- inputData()
 
-        rpt <- getGeneSetTable()
+        rpt <- getFilteredGeneSetTable()
         ##if(is.null(rpt)) return(NULL)
         req(ngs, rpt, input$gs_contrast)
 
@@ -505,39 +544,41 @@ EnrichmentBoard <- function(input, output, session, env)
         ii <- gseatable$rows_all()
         rpt <- rpt[ii,,drop=FALSE]
         if(nrow(rpt)==0) return(NULL)
-        
-        fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(rpt))[1]
-        fx = rpt[,fx.col]
-        names(fx) <- rownames(rpt)
-
-        top <- rownames(rpt)        
         ntop <- as.integer(input$gs_enrichfreq_ntop)
-        top <- head(top,ntop)
-        if(!all(top %in% colnames(ngs$GMT))) return(NULL)
-        
-        F <- 1*(ngs$GMT[,top]>0)
-        wt = FALSE
-        if(input$gs_enrichfreq_gsetweight) {
-            F <- t(t(F)  / colSums(F,na.rm=TRUE))
-            wt = TRUE
-        }
-        F <- t(t(F) * sign(fx[top]))
-        if(input$gs_enrichfreq_fcweight) {
-            F <- t(t(F) * abs(fx[top]))
-            wt = TRUE
-        } 
-        F <- head(F[order(-rowSums(abs(F))),,drop=FALSE], 32)
-        F <- F[order(-rowSums(F)),,drop=FALSE]
-        F <- as.matrix(F)
-       
-        par(mfrow=c(1,1), mar=c(6,4,2,0.5), mgp=c(2,0.8,0))
-        col1 = grey.colors(ncol(F),start=0.15)
-        ylab = ifelse(wt, "weighted frequency", "frequency")
-        barplot(t(F), beside=FALSE, las=3, cex.names=0.80, col=col1,
-                ylab=ylab)
-        
+        gset.weight <- input$gs_enrichfreq_gsetweight
+        fcweight <- input$gs_enrichfreq_fcweight
+
+        plotEnrichFreq(ngs, rpt, ntop=ntop, ngenes=30, gset.weight, fcweight)
+
     })
 
+    topEnrichedFreq.RENDER2 %<a-% reactive({
+
+        ngs <- inputData()
+
+        rpt <- getFilteredGeneSetTable()
+        ##if(is.null(rpt)) return(NULL)
+        req(ngs, rpt, input$gs_contrast)
+
+        comp=1
+        comp = input$gs_contrast
+        if(is.null(comp)) return(NULL)
+        if(!(comp %in% names(ngs$gx.meta$meta))) return(NULL)
+        
+        ## filter on active rows (using search)
+        ##ii <- input$gseatable_rows_all
+        ii <- gseatable$rows_all()
+        rpt <- rpt[ii,,drop=FALSE]
+        if(nrow(rpt)==0) return(NULL)
+        ntop <- as.integer(input$gs_enrichfreq_ntop)
+        gset.weight <- input$gs_enrichfreq_gsetweight
+        fcweight <- input$gs_enrichfreq_fcweight
+
+        plotEnrichFreq(ngs, rpt, ntop=ntop, ngenes=60, gset.weight, fcweight)
+
+    })
+
+    
     topEnrichedFreq_text = "<strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency. Genes that are frequently shared among the top enriched gene sets may suggest driver genes."
 
     topEnrichedFreq_caption = "<strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency."
@@ -558,11 +599,11 @@ EnrichmentBoard <- function(input, output, session, env)
         plotModule,
         id = "topEnrichedFreq", label="b",
         func = topEnrichedFreq.RENDER,
-        func2 = topEnrichedFreq.RENDER,
+        func2 = topEnrichedFreq.RENDER2,
         options = topEnrichedFreq.opts,
         info.text = topEnrichedFreq_text,
-        height = c(imgH,450), width = c('auto',1000),
-        res = c(72,100),
+        height = c(imgH,450), width = c('auto',1200),
+        res = c(68,100),
         pdf.width = 10, pdf.height = 5, 
         title = "Frequency in top gene sets"
         ##caption = topEnrichedFreq_caption
@@ -768,7 +809,7 @@ EnrichmentBoard <- function(input, output, session, env)
         
         plotlyVolcano(
             x = fx, y = y, names=fc.genes,
-            source = "plot1",
+            source = "plot1", marker.type = "scattergl",
             highlight = sel.genes, label = lab.genes,
             group.names = c("group1","group0"),
             ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
@@ -1122,7 +1163,7 @@ EnrichmentBoard <- function(input, output, session, env)
         i=1
         mx.list <- list()
         for(i in 1:length(meta)) {
-            mx.list[[i]] <- calculateMeta(i, gsmethod, ngs=ngs)
+            mx.list[[i]] <- calcGsetMeta(i, gsmethod, ngs=ngs)
         }
         names(mx.list) <- names(meta)
         
@@ -1354,7 +1395,7 @@ EnrichmentBoard <- function(input, output, session, env)
         }
         
         ## ------------------- compute closests neighbours (gene set)
-        rpt = isolate( getGeneSetTable() )
+        rpt = isolate( getFilteredGeneSetTable() )
         mx = ngs$gset.meta$meta[[comp1]]
         mx = mx[intersect(rownames(mx),rownames(rpt)),]  ## only those currently selected
         mx = mx[intersect(rownames(mx),gsets),]  ## only those that have GMT
@@ -1427,7 +1468,7 @@ EnrichmentBoard <- function(input, output, session, env)
         ##i = as.integer(input$gseatable_rows_selected)
         i = as.integer(gseatable$rows_selected())
         if(is.null(i) || length(i)==0) return(NULL)
-        rpt = getGeneSetTable()
+        rpt = getFilteredGeneSetTable()
         gs = rownames(rpt)[i]
         return(gs)
     })
@@ -1497,7 +1538,6 @@ EnrichmentBoard <- function(input, output, session, env)
 
         ngs <- inputData()
         req(ngs)
-
         i = 1
         ##i = as.integer(input$genetable_rows_selected)
         i = as.integer(genetable$rows_selected())
@@ -1515,7 +1555,8 @@ EnrichmentBoard <- function(input, output, session, env)
 
     gseatable.RENDER <- reactive({
 
-        rpt = getGeneSetTable()
+        ##rpt = getFullGeneSetTable()
+        rpt = getFilteredGeneSetTable()
         if(is.null(rpt)) return(NULL)
         if(nrow(rpt)==0) return(NULL)
         ##cat("dim.rpt=",dim(rpt),"\n")
@@ -1612,6 +1653,9 @@ EnrichmentBoard <- function(input, output, session, env)
     gseatable_text = paste("Similar to the differential gene expression analysis, users can perform differential expression analysis on a geneset level that is referred as gene set enrichment analysis. To ensure statistical reliability, the platform performs the gene set enrichment analysis using multiple methods, including",a_Spearman,", ",a_GSVA,", ",a_ssGSEA,", ",a_Fisher,", ",a_GSEA,", ",a_camera," and ",a_fry,".<br><br>The combined result from the methods is displayed in this table, where for each geneset the <code>meta.q</code> corresponds to the highest <code>q</code> value provided by the methods and the number of <code>stars</code> indicate how many methods identified the geneset as significant (<code>q < 0.05</code>). The table is interactive; users can sort it by <code>logFC</code>, <code>meta.q</code> and <code>starts</code>. Additionally, the list of genes in that geneset are displayed in the second table on the right. Users can filter top N = {10} differently enriched gene sets in the table by clicking the <code>top 10 gene sets</code> from the table <i>Settings</i>.")
 
     gseatable_opts = tagList(
+        tipify(checkboxInput(ns("gs_showsig"),"show significant only",FALSE),
+               "Display only significant genesets (with at least 1 star) in the table.", 
+               placement="top", options = list(container = "body")),
         tipify( checkboxInput(ns('gs_top10'),'top 10 gene sets',FALSE),
                "Display only top 10 differentially enirhced gene sets (positively and negatively) in the <b>enrihcment analysis</b> table.", placement="top", options = list(container = "body")),
         tipify(checkboxInput(ns('gs_showqvalues'),'show q-values',FALSE),
@@ -1651,7 +1695,7 @@ EnrichmentBoard <- function(input, output, session, env)
             flex = c(1, NA),
             fillRow(
                 ## height = 200,
-                flex = c(2,0.1,1), 
+                flex = c(2,0.1,0.8), 
                 tableWidget(ns("gseatable")),
                 br(),
                 tableWidget(ns("genetable"))        
@@ -1679,7 +1723,8 @@ EnrichmentBoard <- function(input, output, session, env)
         F1 <- data.frame( geneset=gs, fc.var=fc.var, round(F,digits=3), check.names=FALSE)
 
         ## get current filtered geneset and extract names of gene sets
-        rpt = getGeneSetTable()
+        ##rpt = getFullGeneSetTable()
+        rpt = getFilteredGeneSetTable()
         F1 <- F1[intersect(rownames(rpt),rownames(F1)),,drop=FALSE]    
         F1$geneset <- wrapHyperLink(F1$geneset, rownames(F1))
         
