@@ -454,7 +454,6 @@ to understand biological functions including GO and KEGG pathway analysis."
         score <- score[ii,jj,drop=FALSE]
         
         rownames(score) = substring(rownames(score),1,50)
-        cex2=0.85
         
         score2 <- score
         if(normalize) score2 <- t(t(score2) / apply(abs(score2),2,max))
@@ -470,7 +469,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         par(mfrow=c(1,1), mar=c(1,1,10,1), oma=c(0,1.5,0,0.5) )
         require(corrplot)
         corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
-                 tl.cex = 0.85*cex2, tl.col="grey20", tl.srt = 90,
+                 tl.cex = 0.85, tl.col="grey20", tl.srt = 90,
                  mar=c(bmar,0,0.5,0) )
 
 
@@ -515,13 +514,13 @@ to understand biological functions including GO and KEGG pathway analysis."
     callModule(
         plotModule,
         id = "kegg_graph", label="a",
+        title = "Kegg pathway map",
         func = kegg_graph.RENDER,
         plotlib = "image",
         ##renderFunc = "renderImage", outputFunc = "imageOutput",
         download.fmt = "png", just.info=TRUE,
         info.text = kegg_info1, info.width="350px",
-        height = c(0.53*rowH,700), width = c("100%",1280),
-        title = "Kegg pathway map"
+        height = c(0.53*rowH,700), width = c("100%",1280)
     )
 
     kegg_table_info = "<strong>Enrichment table.</strong> The table is interactive; enabling user to sort on different variables and select a pathway by clicking on the row in the table. The scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap."
@@ -550,7 +549,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         title = "Activation matrix", label="c",
         info.text = "The <strong>KEGG activation matrix</strong> visualizes the activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         ##options = kegg_actmap.opts,
-        pdf.width=10, pdf.height=10,
+        pdf.height=7, pdf.width=10, 
         height = c(rowH,750), width = c("100%",1400),
         res=72
     )
@@ -817,7 +816,6 @@ to understand biological functions including GO and KEGG pathway analysis."
         
         colnames(score) = substring(colnames(score),1,30)
         rownames(score) = substring(rownames(score),1,50)
-        cex2=0.85
         colnames(score) <- paste0(colnames(score)," ")
         
         ##pdf("module-functional.pdf",w=8,h=12)
@@ -831,7 +829,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1.5,0,0.5))
         require(corrplot)
         corrplot::corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
-                           tl.cex = 0.85*cex2, tl.col="grey20", tl.srt = 90,
+                           tl.cex = 0.85, tl.col="grey20", tl.srt = 90,
                            mar=c(bmar,0,0,0) )
 
 
@@ -901,7 +899,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         info.text = GO_info1,
         download.fmt = c("pdf","png"), ## no.download=TRUE,
         options = GO_network.opts,
-        pdf.width=10, pdf.height=10,
+        pdf.width=10, pdf.height=8,
         height = 0.55*rowH, res=72
     )
     ##output <- attachModule(output, GO_network_module)
@@ -915,7 +913,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         title = "Activation matrix", label="c",
         info.text = "The <b>GO activation matrix</b> visualizes the activation of GO terms across conditions. From this figure, you can easily detect GO terms that are consistently up/down across conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         options = GO_actmap.opts,
-        pdf.width=10, pdf.height=10,
+        pdf.height=7, pdf.width=10, 
         height = c(rowH,750), width = c("100%",1400),
         res=72
     )

@@ -305,7 +305,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
             prm = colnames(row.annot)[i]
             klrs = rev(grey.colors(npar[i],start=0.3, end=0.8))
             if(npar[i]==1) klrs = "#E6E6E6"
-            if(npar[i]>3) klrs = rep(RColorBrewer::brewer.pal(8,"Set2"),99)[1:npar[i]]
+            if(npar[i]>0) klrs = rep(RColorBrewer::brewer.pal(8,"Set2"),99)[1:npar[i]]
             ##if(npar[i]==2) klrs = rep(RColorBrewer::brewer.pal(2,"Paired"),99)[1:npar[i]]
             names(klrs) = sort(unique(row.annot[,i]))
             row.colors[[prm]] = klrs

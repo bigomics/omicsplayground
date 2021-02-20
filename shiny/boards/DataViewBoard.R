@@ -1370,8 +1370,8 @@ DataViewBoard <- function(input, output, session, env)
         title = "Phenotype clustering",
         info.text = data_phenoHeatmap_info,
         options = data_phenoHeatmap_opts,
-        height = c(360,600), width = c('auto',1200), res=c(68,75),
-        pdf.width=10, pdf.height=6 
+        height = c(360,600), width = c('auto',1200),
+        res=c(68,75), pdf.width=10, pdf.height=6 
     )
 
     data_phenotypeAssociation.RENDER %<a-% reactive({
