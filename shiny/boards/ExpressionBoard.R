@@ -815,7 +815,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         tipify( checkboxInput(ns('boxplot_logscale'),'log scale',TRUE),
                "Show logarithmic (log2CPM) expression values.",
                placement="right", options = list(container = "body"))
-        )
+    )
     
     callModule( plotModule,
         id = "plots_boxplot", label = "c",
@@ -823,6 +823,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         func2 = plots_boxplot.RENDER,
         options = plots_boxplot_opts,
         info.text = "Differential expression boxplot for selected gene.",
+        info.width = "150px",
         title = "Differential expression", 
         height = imgH,
         pdf.width=6, pdf.height=6, res=75
