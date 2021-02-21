@@ -153,7 +153,7 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
         i=1
         nplots <- length(surv.p)
         nc=7
-        par(mfrow=c(5,nc), mar=c(3,3,2,0)*0.9, oma=c(4,3,0,0), mgp=c(1.8,0.7,0))
+        par(mfrow=c(5,nc), mar=c(3.0,3,1.6,0)*0.9, oma=c(3,3,0,0), mgp=c(1.7,0.7,0))
         i=1
         for(i in 1:nplots) {
             

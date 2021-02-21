@@ -20,7 +20,7 @@ TcgaUI <- function(id) {
 TcgaBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
-    fullH = 730       # row height of panel 
+    fullH = 750       # row height of panel 
     tabH = '70vh'
     
     ## reactive functions from shared environment
@@ -162,7 +162,7 @@ TcgaBoard <- function(input, output, session, env)
         ## caption = tcga_tcgasurv_info,
         options = tcga_tcgasurv.opts,
         download.fmt = c("pdf","png"),
-        pdf.width = 16, pdf.height = 8,
+        pdf.width = 15, pdf.height = 10,
         height = c(fullH-80, 700), width = c("auto",1350),
         res=c(72,85)
     )
