@@ -15,11 +15,10 @@ FILESX  = file.path(OPG,"libx")
 PGX.DIR = file.path(OPG,"data")
 
 USER_MODE = "pro"
-USER_MODE = "dev"
+## USER_MODE = "dev"
 DEV       = FALSE
 WATERMARK = FALSE
 DEBUG     = FALSE
-DEBUG     = TRUE
 
 if(0) {
     TITLE           = "Omics Playground"
