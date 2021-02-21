@@ -66,8 +66,9 @@ source(file.path(RDIR,"pgx-files.R"), local=src.local)  ## pass local vars
 source(file.path(RDIR,"pgx-init.R"),local=src.local)     ## pass local vars
 
 message("\n")
-message("*********************************************")
-message("*********** parsing OPTIONS file ************")
+message("************************************************")
+message("************* parsing OPTIONS file *************")
+message("************************************************")
 
 options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
