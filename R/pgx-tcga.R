@@ -58,18 +58,18 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
     ## aa.head
 
     if(verbose) cat("[pgx.testTCGAsurvival] extracting expression from H5 matrix file\n")    
-    h5.samples = h5read(matrix_file, "/meta/gdc_cases.submitter_id")
-    h5.genes = h5read(matrix_file, "/meta/genes")            
-    h5.project = h5read(matrix_file, "/meta/gdc_cases.project.project_id")            
+    require(rhdf5)
+    h5.samples = rhdf5::h5read(matrix_file, "/meta/gdc_cases.submitter_id")
+    h5.genes = rhdf5::h5read(matrix_file, "/meta/genes")            
+    h5.project = rhdf5::h5read(matrix_file, "/meta/gdc_cases.project.project_id")            
     
     sample_index <- 1:length(h5.samples)
     gene_index <- 1:length(h5.genes)            
     
     ##sample_index <- which(h5.samples %in% samples)
     gene_index <- which(h5.genes %in% genes)
-    head(gene_index)
-    
-    expression = h5read(
+    head(gene_index)    
+    expression = rhdf5::h5read(
         matrix_file, "data/expression",
         index = list(gene_index, sample_index)
     )
@@ -108,14 +108,17 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
     
     surv.p <- rep(NA,length(all.studies))
     rho.list <- list()
+    sel.list <- list()
     names(surv.p) <- all.studies
     for(study in head(all.studies,99)) {
-        
+
         study
         
         ## calculate correlation with signature        
         sel <- which(surv$cancer_type == study)
-        if(deceased.only) sel <- which(surv$cancer_type == study & surv$status==1) ## only died people
+        if(deceased.only) {
+            sel <- which(surv$cancer_type == study & surv$status==1) ## only died people
+        }
         if(length(sel) < min.cases) next()
         gg <- intersect(rownames(expression),names(sig))
         sel.X <- expression[gg,sel] - rowMeans(expression[gg,sel],na.rm=TRUE)
@@ -128,11 +131,14 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
 
         sdf <- survdiff( Surv(months, status) ~ poscor, data = sel.data)
         p.val <- 1 - pchisq(sdf$chisq, length(sdf$n) - 1)
-
+        p.val
+        
         surv.p[study] <- p.val
         rho.list[[study]] <- rho
+        sel.list[[study]] <- rownames(sel.data)
     }
-
+    surv.p <- surv.p[names(rho.list)]
+        
     if(plot) {
         message("[pgx.testTCGAsurvival] plotting KM curves...\n")    
 
@@ -144,17 +150,18 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
         surv.q <- p.adjust(surv.p)
         names(surv.q) <- names(surv.p)
         
-        par(mfrow=c(5,7), mar=c(2,3,2,1)*0.9, oma=c(0,0,0,0))
-        for(study in names(surv.p)) {
+        i=1
+        nplots <- length(surv.p)
+        nc=7
+        par(mfrow=c(5,nc), mar=c(3,3,2,0)*0.9, oma=c(4,3,0,0), mgp=c(1.8,0.7,0))
+        i=1
+        for(i in 1:nplots) {
             
+            study <- names(surv.p)[i]
             study
             
             ## calculate correlation with signature        
-            sel <- which(surv$cancer_type == study)
-            if(deceased.only)
-                sel <- which(surv$cancer_type == study & surv$status==1) ## only died
-            sel
-            if(length(sel) < min.cases) next()
+            sel <- sel.list[[study]]
             sel.data <- surv[sel,]
             rho <- rho.list[[study]]
             rho <- rho[rownames(sel.data)]
@@ -167,8 +174,19 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
             
             ##legend.labs <- paste(c("negative","positive"),"correlated")
             legend.labs <- paste(c("rho<0","rho>0"))
+            legend.labs <- paste(c("neg.cor","pos.cor"))
             if(1) {
-                plot(fit, col=2:3, lwd=2, main=study, xlab="time   (days)", cex.main=1.1)
+
+                xlab=ylab=""
+                is.first = (i%%nc==1)
+                if(is.first) ylab = "survival probability"
+                
+                last.row = ( (i-1)%/%7 == (nplots-1)%/%7 )
+                if(last.row) xlab = "time (days)"
+                last.row
+                
+                plot(fit, col=2:3, lwd=2, main=study,
+                     xlab = xlab, ylab = ylab,cex.main=1.1)
                 legend("bottomleft", legend.labs, pch="-", lwd=2, col=2:3,
                        cex=0.8, y.intersp=0.85)
                 
@@ -176,6 +194,7 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
                 q.val <- round(surv.q[study], 3)
                 pq <- c(paste("p=",p.val), paste("q=",q.val))
                 legend("topright", pq, bty='n', cex=0.8, y.intersp=0.85)
+                
             } else {
                 library(survminer)
                 ggsurvplot(

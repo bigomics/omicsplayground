@@ -28,18 +28,15 @@ TcgaBoard <- function(input, output, session, env)
     selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
     selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     
-    description = "<b>Tcga analysis</b>. Test your signature for patient survival. ."
+    description = "<b>TCGA analysis</b>. Correlate your signature with the survival probability in (more than 10000) cancer patients of 33 cancer types from the TCGA database."
     output$description <- renderUI(HTML(description))
 
     tcga_infotext =
-        "The <strong>Tcga analysis module</strong> enables users to compare their data to other datasets.
-
-<br><br>For the selected contrasts, the platform provides volcano plots and pairwise correlation plots between the profiles in the <strong>Pairs</strong> panel. Simultaneously, a Venn diagram with the number of intersecting genes between the profiles is plotted in <strong>Venn diagram</strong> panel. Details of intersecting genes are also reported in an interactive table. A more detailed scatter plot of two profiles is possible under the <strong>Two-pairs</strong> panel. Users can check the pairwise correlations of the contrasts under the <b>Contrast heatmap</b> panel. Alternatively, the <strong>Connectivity Map (CMap)</strong> shows the similarity of the contrasts profiles as a t-SNE plot.
-
-<br><br><br><br>
-<center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=5' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>
+        "The <strong>TCGA analysis module</strong> computes the survival probability in (more than 10000) cancer patients of 33 TCGA cancer types, for your selected contrast. Each cohort is dichotomized into positively and negatively correlated with your signature. The survival probabilities are computed and tested using the Kaplan-Meier method.
 
 "
+
+    
     ##================================================================================
     ##========================= INPUTS UI ============================================
     ##================================================================================
