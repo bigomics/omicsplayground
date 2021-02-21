@@ -1406,11 +1406,12 @@ ConnectivityBoard <- function(input, output, session, env)
         func = connectivityMap.RENDER1, plotlib="plotly",
         func2 = connectivityMap.RENDER, 
         options = connectivityMap.opts,
-        download.fmt = c("html"),  ## PDF/PNG does not work???
+        ## download.fmt = c("html"),  ## PDF/PNG does not work???
+        download.fmt = c("pdf","png","html"),  ## PDF/PNG does not work???
         title = "Connectivity map",
         info.text = connectivityMap_info,
         ##caption = connectivityMap_caption,
-        pdf.width=9, pdf.height=8,
+        pdf.width=8, pdf.height=8,
         height = c(fullH-100,750), width = c('auto',1000),
         res=90
     )
@@ -1579,7 +1580,7 @@ ConnectivityBoard <- function(input, output, session, env)
         title = "Leading-edge graph",
         info.text = leadingEdgeGraph_info,
         ## caption = leadingEdgeGraph_caption,
-        pdf.height=7, pdf.width=11, 
+        pdf.height=8, pdf.width=8, 
         height = c(720,720), width=c("auto",1300),
         res = c(90,100)
     )
@@ -1742,7 +1743,7 @@ ConnectivityBoard <- function(input, output, session, env)
         title = "Enrichment graph",
         info.text = enrichmentGraph_info,
         ## caption = enrichmentGraph_caption,
-        pdf.height=7, pdf.width=11, 
+        pdf.height=8, pdf.width=8, 
         height = c(720,720), width=c("auto",1200),
         res = c(90,100)
     )
