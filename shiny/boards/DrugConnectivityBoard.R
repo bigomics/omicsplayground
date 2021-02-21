@@ -196,7 +196,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             nes <- round(res$NES[i],2)
             qv  <- round(res$padj[i],3)
             tt <- c( paste("NES=",nes), paste("q=",qv) )
-            legend("topright", legend=tt, cex=0.85, y.intersp=0.85)
+            legend("topright", legend=tt, cex=0.8, y.intersp=0.85, bty='n')
         }
         
     })    
