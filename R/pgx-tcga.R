@@ -188,12 +188,12 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
                 plot(fit, col=2:3, lwd=2, main=study,
                      xlab = xlab, ylab = ylab,cex.main=1.1)
                 legend("bottomleft", legend.labs, pch="-", lwd=2, col=2:3,
-                       cex=0.8, y.intersp=0.85)
+                       cex=0.9, y.intersp=0.85)
                 
                 p.val <- round(surv.p[study], 3)
                 q.val <- round(surv.q[study], 3)
                 pq <- c(paste("p=",p.val), paste("q=",q.val))
-                legend("topright", pq, bty='n', cex=0.8, y.intersp=0.85)
+                legend("topright", pq, bty='n', cex=0.9, y.intersp=0.85)
                 
             } else {
                 library(survminer)
