@@ -32,7 +32,7 @@ TcgaBoard <- function(input, output, session, env)
     output$description <- renderUI(HTML(description))
 
     tcga_infotext =
-        "This <strong>TCGA analysis module</strong> computes the survival probability in (more than 10000) cancer patients of 33 TCGA cancer types, for your selected contrast. Each cohort is dichotomized into positively and negatively correlated with your signature. The survival probabilities are computed and tested using the Kaplan-Meier method.
+        "This <strong>TCGA analysis module</strong> computes the survival probability in (more than 10000) cancer patients of 32 TCGA cancer types, for your selected contrast. Each cohort is dichotomized into positively and negatively correlated with your signature. The survival probabilities are computed and tested using the Kaplan-Meier method.
 
 "
 
@@ -149,7 +149,7 @@ TcgaBoard <- function(input, output, session, env)
                "Number of top genes for calculating the correlation.", placement="left",
                options = list(container = "body"))        
     )
-    tcga_tcgasurv_info = "<strong>TCGA survival analysis.</strong> Survival probability of cancer patients in 33 TCGA cancer types. Each cohort is dichotomized into positively and negatively correlated with your signature. The survival probabilities are computed and tested using the Kaplan-Meier method."
+    tcga_tcgasurv_info = "<strong>TCGA survival analysis.</strong> Survival probability of cancer patients in 32 TCGA cancer types. Each cohort is dichotomized into positively and negatively correlated with your signature. The survival probabilities are computed and tested using the Kaplan-Meier method."
     tcga_tcgasurv_caption = tcga_tcgasurv_info
     
     callModule(
