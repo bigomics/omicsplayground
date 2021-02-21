@@ -697,7 +697,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     if(do.png) {
                         ##png(file=PNGFILE, width=pdf.width*100, height=pdf.height*100,pointsize=pdf.pointsize)
                         dev.print(png, file=PNGFILE,
-                                  width=pdf.width0*80, height=pdf.height0*80,
+                                  width=pdf.width0*72, height=pdf.height0*72,
                                   pointsize=1.4*pdf.pointsize)
                         ##p1.base
                         ##dev.off()  ## important!!
