@@ -437,7 +437,8 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         webshot(HTMLFILE, vwidth=pdf.width*100,vheight=pdf.height*100,PNGFILE)
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
                         p <- func()
-                        png(PNGFILE, width=pdf.width*100, height=pdf.height*100, pointsize=pdf.pointsize)
+                        png(PNGFILE, width=pdf.width*100, height=pdf.height*100,
+                            pointsize = 1.2*pdf.pointsize)
                         print(p) 
                         dev.off() 
                     } else if(plotlib=="image") {
@@ -696,8 +697,8 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     if(do.png) {
                         ##png(file=PNGFILE, width=pdf.width*100, height=pdf.height*100,pointsize=pdf.pointsize)
                         dev.print(png, file=PNGFILE,
-                                  width=pdf.width0*100, height=pdf.height0*100,
-                                  pointsize=pdf.pointsize)
+                                  width=pdf.width0*80, height=pdf.height0*80,
+                                  pointsize=1.4*pdf.pointsize)
                         ##p1.base
                         ##dev.off()  ## important!!
                     }
