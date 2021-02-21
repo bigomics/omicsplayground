@@ -20,7 +20,7 @@ TcgaUI <- function(id) {
 TcgaBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
-    fullH = 750       # row height of panel 
+    fullH = 730       # row height of panel 
     tabH = '70vh'
     
     ## reactive functions from shared environment
@@ -28,10 +28,7 @@ TcgaBoard <- function(input, output, session, env)
     selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
     selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     
-    description = "<b>Tcga analysis</b>. Compare experiments by intersecting
-their signature genes. The main goal is to identify contrasts showing
-similar profiles. Find genes that are commonly up/down regulated
-between two contrasts."
+    description = "<b>Tcga analysis</b>. Test your signature for patient survival. ."
     output$description <- renderUI(HTML(description))
 
     tcga_infotext =
