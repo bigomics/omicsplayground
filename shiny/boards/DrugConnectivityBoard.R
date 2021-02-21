@@ -524,7 +524,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         title = "Mechanism of action", label="c",
         info.text = "This plot visualizes the <strong>mechanism of action</strong> (MOA) across the enriched drug profiles. On the vertical axis, the number of drugs with the same MOA are plotted. You can switch to visualize between MOA or target gene.",
         options = dsea_moaplot.opts,
-        pdf.width=4, pdf.height=6,
+        pdf.width=6, pdf.height=6,
         height = c(0.54*rowH, 600), width=c('auto',1000),
         res=c(72,100)
     )
@@ -539,9 +539,9 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         title = "Activation matrix", label="d",
         info.text = "The <strong>Activation Matrix</strong> visualizes the activation of drug activation enrichment across the conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         options = dsea_actmap.opts,
-        pdf.width=6, pdf.height=10,
+        pdf.width=6, pdf.height=9,
         height = c(fullH,750), width=c("100%",1400),        
-        res=72
+        res = 72
     )
 
     ##--------buttons for table

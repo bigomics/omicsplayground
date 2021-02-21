@@ -89,7 +89,7 @@ EnrichmentBoard <- function(input, output, session, env)
                     tipify( selectInput(ns("gs_fdr"),"FDR", choices=FDR.VALUES2, selected=0.2),
                            "Set the false discovery rate (FDR) threshold.", placement="top"),
                     tipify( selectInput(ns("gs_lfc"),"logFC threshold",
-                                        choices=c(0,0.1,0.2,0.5,1,2), selected=0.5),
+                                        choices=c(0,0.1,0.2,0.5,1,2), selected=0.2),
                            "Set the logarithmic fold change (logFC) threshold.",
                            placement="top")
                     ),
