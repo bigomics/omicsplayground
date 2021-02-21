@@ -28,7 +28,7 @@ TcgaBoard <- function(input, output, session, env)
     selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
     selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     
-    description = "<b>TCGA analysis</b>. Correlate your signature with the survival probability in (more than 10000) cancer patients of 33 cancer types from the TCGA database."
+    description = "<b>TCGA analysis</b>. Correlate your signature with the survival in cancer patients from the TCGA database. "
     output$description <- renderUI(HTML(description))
 
     tcga_infotext =
@@ -48,21 +48,22 @@ TcgaBoard <- function(input, output, session, env)
                    "Show more information about this module"),
             hr(), br(),             
             tipify( selectInput(ns('tcga_contrast'),'Contrast:', choices=NULL, multiple=FALSE),
-                   "Select the contrast that you want to compare.",
+                   "Select the contrast that you want to correlate with survival.",
                    placement="right", options = list(container = "body")
                    ),
 
-            tipify( actionLink(ns("tcga_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+            tipify( actionLink(ns("tcga_options"), "Options",
+                               icon=icon("cog", lib = "glyphicon")),
                    "Toggle advanced options.",
-                   placement="top", options = list(container = "body")),
-            br(),br(),            
-            conditionalPanel(
-                "input.tcga_options % 2 == 1", ns=ns,
-                tipify( selectInput(ns('tcga_profiledb'),"Profile DB:",
-                                    choices=NULL, multiple=TRUE),
-                       "Select external database for reference profiles.",
-                       placement="top", options = list(container = "body"))
-            )
+                   placement="top", options = list(container = "body"))
+            ## br(),br(),            
+            ## conditionalPanel(
+            ##     "input.tcga_options % 2 == 1", ns=ns,
+            ##     tipify( selectInput(ns('tcga_profiledb'),"Profile DB:",
+            ##                         choices=NULL, multiple=TRUE),
+            ##            "Select external database for reference profiles.",
+            ##            placement="top", options = list(container = "body"))
+            ## )
         )
         ui
     })
