@@ -319,6 +319,12 @@ util.findboxes <- function( df, xcol, ycol,
   return(finaldf)
 }
 
+search_path <- function(paths, file) {
+    dir <- paths[which(file.exists(file.path(paths,file)))]
+    if(length(dir)==0) return(NULL)
+    file.path(dir[1],file)
+}
+
 rowscale <- function(x) {
     x  <- x - Matrix::rowMeans(x,na.rm=TRUE)
     x / (1e-4 + sqrt(rowMeans(x**2,na.rm=TRUE)))
