@@ -33,7 +33,7 @@ if(0) {
     WATERMARK       = TRUE
     ##BOARDS_ENABLED = load,view,clust,expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap
     ##BOARDS_ENABLED = load,view,clust,expr,cor,enrich,func
-    BOARDS_DISABLED = c("tcga","multi")
+    BOARDS_DISABLED = c("system","multi")
     ##BOARDS_DISABLED = tcga,multi,sig,isect,bio
 }
 

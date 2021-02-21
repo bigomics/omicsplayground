@@ -316,9 +316,9 @@ TABVIEWS <- list(
     "bio" = tabView("Find biomarkers", BiomarkerInputs("bio"), BiomarkerUI("bio")),
     "cmap" = tabView("Similar experiments", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
     "scell" = tabView("CellProfiling", SingleCellInputs("scell"), SingleCellUI("scell")),
-    "tcga" = tabView("TCGA survival (beta)", TcgaInputs("tcga"), TcgaUI("tcga")),
-    "system" = tabView("Systems analysis", SystemInputs("system"), SystemUI("system")),
-    "multi" = tabView("Multi-level", MultiLevelInputs("multi"), MultiLevelUI("multi"))
+    "tcga" = tabView("TCGA survival (beta)", TcgaInputs("tcga"), TcgaUI("tcga"))
+    ##"system" = tabView("Systems analysis", SystemInputs("system"), SystemUI("system")),
+    ##"multi" = tabView("Multi-level", MultiLevelInputs("multi"), MultiLevelUI("multi"))
 )
 
 names(TABVIEWS)
