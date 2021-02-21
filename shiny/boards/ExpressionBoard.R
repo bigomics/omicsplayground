@@ -76,7 +76,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     FDR.VALUES = c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
 
-    gx_testmethod_text = "Select a method for the statistical test. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results."
+    gx_statmethod_text = "Select a method for the statistical test. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results."
     GX.DEFAULTTEST="trend.limma"
     GX.DEFAULTTEST=c("trend.limma","edger.qlf","deseq2.wald","edger.lrt")
     
@@ -103,9 +103,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
             conditionalPanel(
                 "input.gx_options % 2 == 1", ns=ns,
                 tagList(
-                    tipify( checkboxGroupInput(ns('gx_testmethod'),'Statistical methods:',
+                    tipify( checkboxGroupInput(ns('gx_statmethod'),'Statistical methods:',
                                                choices=NULL, inline=TRUE),
-                           gx_testmethod_text, placement="right", options = list(container = "body"))
+                           gx_statmethod_text, placement="right", options = list(container = "body"))
                 )
             )
         )
@@ -141,7 +141,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         sel1 = c(intersect(GX.DEFAULTTEST,gx.methods),gx.methods)
         sel1 = head(unique(sel1),3) ## maximum three!!
 
-        updateCheckboxGroupInput(session, 'gx_testmethod',
+        updateCheckboxGroupInput(session, 'gx_statmethod',
                                  choices = sort(gx.methods),
                                  selected = sel1)
 
@@ -156,7 +156,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     selected_gxmethods <- reactive({
         ngs <- inputData()
         gx.methods0 = colnames(ngs$gx.meta$meta[[1]]$fc)
-        test = input$gx_testmethod
+        test = input$gx_statmethod
         test = intersect(test,gx.methods0) ## maximum three
         test
     })
@@ -164,6 +164,10 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ##================================================================================
     ##========================= FUNCTIONS ============================================
     ##================================================================================
+    star.symbols <- function(n) {
+        if(n==0) return("")
+        paste(rep("\u2605",n),collapse="")
+    }
     
     comparison=1;testmethods=c("trend.limma");add.pq=0
     getDEGtable <- function(ngs, testmethods, comparison, add.pq,
@@ -205,10 +209,12 @@ two conditions. Determine which genes are significantly downregulated or overexp
         
         stars.fdr = fdr
         ##stars.fdr = 0.05  ## fixed otherwisetable will always have three stars..        
-        star.symbols = sapply(1:20,function(i) paste(rep("\u2605",i),collapse=""))
-        is.sig <- (mx.q <= stars.fdr & abs(mx.fc) >= lfc)
-        mx$stars = c("",star.symbols)[ 1 + rowSums(is.sig, na.rm=TRUE)]        
-        
+        ##star.symbols = sapply(1:20,function(i) paste(rep("\u2605",i),collapse=""))
+        ##is.sig <- (mx.q <= stars.fdr & abs(mx.fc) >= lfc)
+        is.sig <- 1*(mx.q <= stars.fdr) * (abs(mx$meta.fx) >= lfc)
+        ##mx$stars = c("",star.symbols)[ 1 + rowSums(is.sig, na.rm=TRUE)]        
+        mx$stars <- sapply(rowSums(is.sig, na.rm=TRUE), star.symbols)
+            
         ## recalculate group averages???
         y0 <- ngs$model.parameters$exp.matrix[,comparison]
         names(y0) <- rownames(ngs$model.parameters$exp.matrix)
@@ -250,7 +256,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if(is.null(ngs)) return(NULL)
         comp=1;test="trend.limma"
         comp = input$gx_contrast
-        tests = input$gx_testmethod
+        tests = input$gx_statmethod
         fdr = as.numeric(input$gx_fdr)
         lfc = as.numeric(input$gx_lfc)
         
@@ -284,7 +290,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         
         comp=1;test="trend.limma"
         comp = input$gx_contrast
-        tests = input$gx_testmethod
+        tests = input$gx_statmethod
         fdr = as.numeric(input$gx_fdr)
         lfc = as.numeric(input$gx_lfc)
         
@@ -299,7 +305,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         
         ## just show significant genes
         if(!is.null(input$gx_showsig) && input$gx_showsig) {
-            sel <- which(res$stars != "")
+            n <- length(input$gx_statmethod)
+            sel <- which(res$stars == star.symbols(n))
             res = res[sel,,drop=FALSE]
         }
 
@@ -997,7 +1004,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if(input$gx_features!="<all>") sel.genes = unique(unlist(GSETS[input$gx_features]))
 
         test = colnames(ngs$gx.meta$meta[[1]]$p)
-        test = input$gx_testmethod
+        test = input$gx_statmethod
         if(is.null(test)) return(NULL)
         
         ##comp <- head(comp,75)  ## maximum 75!!!
@@ -1297,8 +1304,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         tipify(checkboxInput(ns("gx_top10"),"top 10 genes",FALSE),
                "Display only top 10 differentially (positively and negatively) expressed genes in the table.", 
                placement="top", options = list(container = "body")),
-        tipify(checkboxInput(ns('gx_showqvalues'),'show q-values',FALSE),
-               "Show each q-values of all statistical methods in the table.", 
+        tipify(checkboxInput(ns('gx_showqvalues'),'show indivivual q-values',FALSE),
+               "Show q-values of each indivivual statistical method in the table.", 
                placement="top", options = list(container = "body"))    
     )
 
@@ -1491,8 +1498,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         dbg("FDRtable.RENDER:: reacted")
         
         methods = GX.DEFAULTTEST
-        methods = input$gx_testmethod
-        ##methods = input$gx_testmethod
+        methods = input$gx_statmethod
+        ##methods = input$gx_statmethod
         if(is.null(methods)) return(NULL)
 
         dbg("FDRtable.RENDER:: 1")

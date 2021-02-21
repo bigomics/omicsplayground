@@ -89,7 +89,7 @@ EnrichmentBoard <- function(input, output, session, env)
                     tipify( selectInput(ns("gs_fdr"),"FDR", choices=FDR.VALUES2, selected=0.2),
                            "Set the false discovery rate (FDR) threshold.", placement="top"),
                     tipify( selectInput(ns("gs_lfc"),"logFC threshold",
-                                        choices=c(0,0.01,0.05,0.1,0.2,0.5,1), selected=0.1),
+                                        choices=c(0,0.1,0.2,0.5,1,2), selected=0.5),
                            "Set the logarithmic fold change (logFC) threshold.",
                            placement="top")
                     ),
@@ -100,7 +100,7 @@ EnrichmentBoard <- function(input, output, session, env)
             conditionalPanel(
                 "input.gs_options % 2 == 1", ns=ns, 
                 tagList(
-                    tipify(checkboxGroupInput(ns('gs_method'),'Statistical methods:', choices=NULL),
+                    tipify(checkboxGroupInput(ns('gs_statmethod'),'Statistical methods:', choices=NULL),
                            gs_testmethod_text, placement="right", options = list(container="body"))
                 )
             )
@@ -141,7 +141,7 @@ EnrichmentBoard <- function(input, output, session, env)
         sel2 = c(intersect(GSET.DEFAULTMETHODS,gset.methods),gset.methods)
         sel2 = head(unique(sel2),3)
 
-        updateCheckboxGroupInput(session, 'gs_method',
+        updateCheckboxGroupInput(session, 'gs_statmethod',
                                  choices = sort(gset.methods),
                                  selected = sel2)
         
@@ -170,12 +170,17 @@ EnrichmentBoard <- function(input, output, session, env)
     ##     sel
     ## })
     
+    star.symbols <- function(n) {
+        if(n==0) return("")
+        paste(rep("\u2605",n),collapse="")
+    }
+
     selected_gsetmethods <- reactive({
         ngs <- inputData()
         req(ngs)
         gset.methods0 = colnames(ngs$gset.meta$meta[[1]]$fc)
         ##test = head(intersect(GSET.DEFAULTMETHODS,gset.methods0),3) ## maximum three
-        test = input$gs_method
+        test = input$gs_statmethod
         test = intersect(test,gset.methods0) ## maximum three
         test
     })
@@ -196,14 +201,21 @@ EnrichmentBoard <- function(input, output, session, env)
         pv = unclass(mx$p)[,methods,drop=FALSE]
         qv = unclass(mx$q)[,methods,drop=FALSE]
         fc = unclass(mx$fc)[,methods,drop=FALSE]
-        pv[is.na(pv)] = 0.999
-        qv[is.na(qv)] = 0.999
+
+        ## !!!! Because the methods have all very difference "fold-change" !!!!
+        ## estimators, we use the meta.fx (average of all genes in gset)
+        fc = do.call(cbind,rep(list(mx$meta.fx),length(methods)))
+        colnames(fc) <- methods
+        
+        pv[is.na(pv)] = 1
+        qv[is.na(qv)] = 1
         fc[is.na(fc)] = 0
         score = fc * (-log10(qv))
         dim(pv)
         if(NCOL(pv)>1) {
             ss.rank <- function(x) scale(sign(x)*rank(abs(x)),center=FALSE)
-            fc = rowMeans(scale(fc,center=FALSE),na.rm=TRUE)  ## REALLY???
+            ##fc = rowMeans(scale(fc,center=FALSE),na.rm=TRUE)  ## REALLY???
+            fc = rowMeans(fc,na.rm=TRUE)  ## NEED RETHINK!!!
             ##pv = apply(pv,1,function(x) metap::allmetap(x,method="sumz")$p[[1]])
             ##pv = apply(pv,1,vec.combinePvalues,method="stouffer")
             ##qv = p.adjust(pv, method="fdr")
@@ -212,6 +224,7 @@ EnrichmentBoard <- function(input, output, session, env)
             ##score = rowMeans(scale(score,center=FALSE),na.rm=TRUE)
             score = rowMeans(apply(score, 2, ss.rank),na.rm=TRUE)
         }
+
         meta = cbind( score=score, fc=fc, pv=pv, qv=qv)
         rownames(meta) <- rownames(mx)
         colnames(meta) = c("score","fc","pv","qv")  ## need
@@ -231,11 +244,11 @@ EnrichmentBoard <- function(input, output, session, env)
         
         outputs = NULL
         gsmethod = colnames(unclass(mx$fc))
-        gsmethod <- input$gs_method   
+        gsmethod <- input$gs_statmethod   
         if(is.null(gsmethod) || length(gsmethod)==0) return(NULL)
 
-        lfc <- input$gs_lfc
-        fdr <- input$gs_fdr
+        lfc <- as.numeric(input$gs_lfc)
+        fdr <- as.numeric(input$gs_fdr)
         
         ## filter gene sets for table
         gsfeatures="<all>"
@@ -258,13 +271,19 @@ EnrichmentBoard <- function(input, output, session, env)
             pv = unclass(mx$p)[,gsmethod,drop=FALSE]
             qv = unclass(mx$q)[,gsmethod,drop=FALSE]
             fx = unclass(mx$fc)[,gsmethod,drop=FALSE]
-            pv[is.na(pv)] = 0.999
-            qv[is.na(qv)] = 0.999
-            fx[is.na(fx)] = 0
 
+            ## !!!! Because the methods have all very difference "fold-change" !!!!
+            ## estimators, we use the meta.fx (average of all genes in gset)
+            fx = do.call(cbind,rep(list(mx$meta.fx),length(gsmethod)))
+            colnames(fx) <- gsmethod
+
+            pv[is.na(pv)] = 1
+            qv[is.na(qv)] = 1
+            fx[is.na(fx)] = 0
+            
             is.sig <- (qv <= fdr & abs(fx) >= lfc)
-            stars.symbols = sapply(1:20,function(i) paste(rep("\u2605",i),collapse=""))
-            stars = c("",stars.symbols)[1 + rowSums(is.sig)]                
+            ##is.sig <- 1*(qv <= fdr) * (abs(mx$meta.fx) >= lfc)            
+            stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols)
             names(stars) <- rownames(mx)
             
             ##------------ calculate META parameters ----------------
@@ -333,7 +352,7 @@ EnrichmentBoard <- function(input, output, session, env)
             rpt = data.frame( size = gset.size[gs],
                              logFC = meta.fc[gs],
                              meta.q = meta[gs,"qv"],
-                             stars = stars[gs],
+                             stars  = stars[gs],
                              AveExpr0=AveExpr0[gs],
                              AveExpr1=AveExpr1[gs])
             
@@ -363,7 +382,8 @@ EnrichmentBoard <- function(input, output, session, env)
         
         ## just show significant genes
         if(input$gs_showsig) {
-            sel <- which(res$stars != "")
+            nmeth <- length(input$gs_statmethod)
+            sel <- which(res$stars == star.symbols(nmeth))
             res = res[sel,,drop=FALSE]
         }
         
@@ -389,7 +409,7 @@ EnrichmentBoard <- function(input, output, session, env)
     ##================================================================================
     ##========================= FUNCTIONS ============================================
     ##================================================================================
-
+    
     plotTopEnriched <- function(ngs, rpt, comp, ntop, rowcol)
     {
         if(is.null(ngs)) return(NULL)
@@ -1149,7 +1169,7 @@ EnrichmentBoard <- function(input, output, session, env)
         
         meta = ngs$gset.meta$meta
         gsmethod = colnames(meta[[1]]$fc)
-        gsmethod <- input$gs_method
+        gsmethod <- input$gs_statmethod
         if(is.null(gsmethod) || length(gsmethod)==0) return(NULL)
 
         fdr=1;lfc=1
@@ -1658,8 +1678,8 @@ EnrichmentBoard <- function(input, output, session, env)
                placement="top", options = list(container = "body")),
         tipify( checkboxInput(ns('gs_top10'),'top 10 gene sets',FALSE),
                "Display only top 10 differentially enirhced gene sets (positively and negatively) in the <b>enrihcment analysis</b> table.", placement="top", options = list(container = "body")),
-        tipify(checkboxInput(ns('gs_showqvalues'),'show q-values',FALSE),
-               "Show q-values of all statistical methods in the table.", 
+        tipify(checkboxInput(ns('gs_showqvalues'),'show indivivual q-values',FALSE),
+               "Show all q-values of each individual statistical method in the table.", 
                placement="top", options = list(container = "body"))    
     )
 
@@ -1786,11 +1806,11 @@ EnrichmentBoard <- function(input, output, session, env)
     FDRtable.RENDER <- reactive({
         
         ngs <- inputData()    
-        req(ngs, input$gs_method)
+        req(ngs, input$gs_statmethod)
         
         meta <- ngs$gset.meta
         test = GSET.DEFAULTMETHODS
-        test <- input$gs_method
+        test <- input$gs_statmethod
         ##if(is.null(test)) return(NULL)
 
         if(length(test)==1) {
