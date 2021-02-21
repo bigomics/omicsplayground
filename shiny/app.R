@@ -126,7 +126,7 @@ if(0) {
 
 BOARDS <- c("load","view","clust","expr","enrich","isect","func",
              "word","drug","sig","scell","cor","bio","cmap",
-             "tcga","bc","multi","qa")
+             "tcga","system","multi","qa")
 if(is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED = BOARDS
 if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
 ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
@@ -141,18 +141,18 @@ for(m in boards) {
     ##source(paste0("boards/",m), local=FALSE)
 }
 
-if(0 && DEV && dir.exists("../../omicsplayground-dev")) {
+ENABLED[c("system","multi")] <- FALSE
+if(1 && DEV && dir.exists("../../omicsplayground-dev")) {
     xboards <- dir("../../omicsplayground-dev/modulesx", pattern="Board.R$")
+    ##xboards <- dir("../../omicsplayground-dev/modulesx", pattern="TcgaBoard.R$")
     xboards
     m=xboards[1]
     for(m in xboards) {
         message("[MAIN] loading extra board ",m)
         source(paste0("../../omicsplayground-dev/modulesx/",m), local=src.local)
     }
-    ENABLED[c("tcga","bc","multi")] <- TRUE
-    boards <- c(boards, xboards)
-} else {
-    ENABLED[c("tcga","bc","multi")] <- FALSE
+    ##ENABLED[c("system","multi")] <- TRUE
+    boards <- unique(c(boards, xboards))
 }
 ENABLED
 
@@ -162,7 +162,7 @@ has.sigdb
 if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
 
 MAINTABS = c("DataView","Clustering","Expression","Enrichment",
-             "Signature","CellProfiling","Development")
+             "Signature","CellProfiling","Dev")
 
 if(0) {
     save.image(file="../cache/image.RData")
@@ -178,7 +178,9 @@ server = function(input, output, session) {
     message("\n========================================================")
     message("===================== SERVER ===========================")
     message("========================================================\n")
+
     message("[MAIN] calling boards...")
+    message("[MAIN] USER_MODE = ", USER_MODE)
     
     library(firebase)
     firebase=firebase2=NULL
@@ -211,9 +213,9 @@ server = function(input, output, session) {
     if(ENABLED["cor"])    env[["cor"]]    <- callModule( CorrelationBoard, "cor", env)
     if(ENABLED["bio"])    env[["bio"]]    <- callModule( BiomarkerBoard, "bio", env)
     if(ENABLED["cmap"])   env[["cmap"]]   <- callModule( ConnectivityBoard, "cmap", env)
+    if(ENABLED["tcga"])   env[["tcga"]]   <- callModule( TcgaBoard, "tcga", env)
     if(1 && DEV) {
-        if(ENABLED["tcga"])   env[["tcga"]]   <- callModule( TcgaBoard, "tcga", env)
-        ##if(ENABLED["bc"])     env[["bc"]]     <- callModule( BatchCorrectBoard, "bc", env)
+        if(ENABLED["system"]) env[["system"]] <- callModule( SystemBoard, "system", env)
         if(ENABLED["multi"])  env[["multi"]]  <- callModule( MultiLevelBoard, "multi", env)
     }
     env[["qa"]] <- callModule( QuestionBoard, "qa", lapse = -1)
@@ -221,7 +223,7 @@ server = function(input, output, session) {
     ## message("[MAIN] all boards called:",paste(names(env),collapse=" "))
     message("[MAIN] boards enabled:",paste(names(which(ENABLED)),collapse=" "))
     ## outputOptions(output, "clust", suspendWhenHidden=FALSE) ## important!!!
-
+    
     output$current_dataset <- renderText({
         pgx <- env[["load"]][["inputData"]]()
         name <- gsub(".*\\/|[.]pgx$","",pgx$name)
@@ -259,7 +261,7 @@ server = function(input, output, session) {
         ## hideTab("cor-tabs","Functional")
         
         if(USER_MODE == "dev" || DEV) {
-            showTab("maintabs","Development")
+            showTab("maintabs","Dev")
             showTab("view-tabs","Resource info")
             showTab("enrich-tabs1","GeneMap")
             showTab("scell-tabs1","CNV")  ## DEV only
@@ -267,17 +269,18 @@ server = function(input, output, session) {
             showTab("cor-tabs","Functional")
         } else {
             hideTab("view-tabs","Resource info")
-            hideTab("maintabs","Development")
+            hideTab("maintabs","Dev")
             hideTab("scell-tabs1","CNV")  ## DEV only
             hideTab("scell-tabs1","Monocle") ## DEV only       
         }
-
+        
         ## Dynamically show upon availability in pgx object
         if(opt$ENABLE_UPLOAD) showTab("load-tabs","Upload data")            
         tabRequire(pgx, "connectivity", "maintabs", "Similar experiments")
         tabRequire(pgx, "drugs", "maintabs", "Drug connectivity")
         tabRequire(pgx, "wordcloud", "maintabs", "Word cloud")
-        tabRequire(pgx, "deconv", "maintabs", "CellProfiling")         
+        tabRequire(pgx, "deconv", "maintabs", "CellProfiling")
+        fileRequire("tcga_matrix.h5", "maintabs", "TCGA survival (beta)")         
         if(!is.null(ACCESS.LOG)) showTab("load-tabs","Visitors map")                    
 
         message("[MAIN] reconfiguring menu done.")        
@@ -312,19 +315,15 @@ TABVIEWS <- list(
     "sig" = tabView("Test signatures", SignatureInputs("sig"), SignatureUI("sig")),
     "bio" = tabView("Find biomarkers", BiomarkerInputs("bio"), BiomarkerUI("bio")),
     "cmap" = tabView("Similar experiments", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
-    "scell" = tabView("CellProfiling", SingleCellInputs("scell"), SingleCellUI("scell"))    
+    "scell" = tabView("CellProfiling", SingleCellInputs("scell"), SingleCellUI("scell")),
+    "tcga" = tabView("TCGA survival (beta)", TcgaInputs("tcga"), TcgaUI("tcga")),
+    "system" = tabView("Systems analysis", SystemInputs("system"), SystemUI("system")),
+    "multi" = tabView("Multi-level", MultiLevelInputs("multi"), MultiLevelUI("multi"))
 )
 
-if(0 && DEV) {
-    TABVIEWS <- c(
-        TABVIEWS,
-        list(
-            "bc" = tabView("Batch-effects analysis", BatchCorrectInputs("bc"), BatchCorrectUI("bc")),
-            "tcga" = tabView("TCGA survival", TcgaInputs("tcga"), TcgaUI("tcga")),
-            "multi" = tabView("Multi-level", MultiLevelInputs("multi"), MultiLevelUI("multi"))
-        )
-    )
-}
+names(TABVIEWS)
+TABVIEWS <- TABVIEWS[names(TABVIEWS) %in% names(which(ENABLED))]
+names(TABVIEWS)
 
 tabs = "load"
 createUI <- function(tabs)
@@ -412,9 +411,9 @@ ui = createUI(
         "Clustering" = "clust",
         "Expression" = c("expr","cor"),
         "Enrichment" = c("enrich","func","word","drug"),
-        "Signature" = c("isect","sig","bio","cmap"),
+        "Signature" = c("isect","sig","bio","cmap","tcga"),
         "CellProfiling" = "scell",
-        "Development" = c("bc","tcga","multi")
+        "Dev" = c("system","multi")
     )
 )
 

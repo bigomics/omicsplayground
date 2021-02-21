@@ -150,7 +150,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
         ## update defaults??
         if(ncol(ngs$X) > 80) {
-            updateCheckboxGroupInput(session,"hm_cexCol", value=0)
+            updateNumericInput(session,"hm_cexCol", value=0)
         }
 
         ## update defaults??
@@ -872,7 +872,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             div(HTML(hm_splitmap_caption), class="caption"),
             br(),
             ##div( plotWidget(ns("hm_splitmap")) %>% withSpinner(), style="overflow-y: auto; max-height: 640px;")
-            plotWidget(ns("hm_splitmap"))  %>% withSpinner()
+            plotWidget(ns("hm_splitmap")) %>% withSpinner()
         )
     })
     outputOptions(output, "hm_heatmap_UI", suspendWhenHidden=FALSE) ## important!!!

@@ -72,6 +72,18 @@ tabRequire <- function(pgx, slot, tabname, subtab) {
     }
 }
 
+fileRequire <- function(file, tabname, subtab) {
+    file1 <- search_path(c(FILES,FILESX),file)
+    has.file <- !is.null(file1) && file.exists(file1)
+    if(!has.file) {
+        message(paste("[MAIN] file ",file," not found. Hiding",subtab,"\n"))
+        hideTab(tabname, subtab)
+    } else {
+        message(paste("[MAIN] file ",file," available. Showing",subtab,"\n"))        
+        showTab(tabname, subtab)
+    }
+}
+
 tabView <- function(title, tab.inputs, tab.ui) {
     tabPanel(title, ## id=title,
              sidebarLayout(
