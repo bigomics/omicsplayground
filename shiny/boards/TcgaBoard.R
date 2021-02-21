@@ -28,11 +28,11 @@ TcgaBoard <- function(input, output, session, env)
     selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
     selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     
-    description = "<b>TCGA analysis</b>. Correlate your signature with the survival in cancer patients from the TCGA database. "
+    description = "<b>TCGA analysis(beta)</b>. Correlate your signature with the survival in cancer patients from the TCGA database. "
     output$description <- renderUI(HTML(description))
 
     tcga_infotext =
-        "The <strong>TCGA analysis module</strong> computes the survival probability in (more than 10000) cancer patients of 33 TCGA cancer types, for your selected contrast. Each cohort is dichotomized into positively and negatively correlated with your signature. The survival probabilities are computed and tested using the Kaplan-Meier method.
+        "This <strong>TCGA analysis module</strong> computes the survival probability in (more than 10000) cancer patients of 33 TCGA cancer types, for your selected contrast. Each cohort is dichotomized into positively and negatively correlated with your signature. The survival probabilities are computed and tested using the Kaplan-Meier method.
 
 "
 
