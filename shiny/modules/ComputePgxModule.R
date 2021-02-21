@@ -171,12 +171,11 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
             observeEvent(enable(), {
                 ## NEED CHECK. not working... 
                 ##
-                cat("[ComputePgxServer:@enable] reacted\n")
                 if(!enable()){
-                    cat("[ComputePgxServer:@enable] disabling compute button\n")
+                    message("[ComputePgxServer:@enable] disabling compute button")
                     shinyjs::disable(ns("compute"))
                 } else {
-                    cat("[ComputePgxServer:@enable] enabling compute button\n")
+                    message("[ComputePgxServer:@enable] enabling compute button")
                     shinyjs::enable(ns("compute"))
                 }
             })
@@ -192,11 +191,11 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
             
             observeEvent( input$compute, {
                 
-                cat("[ComputePgxServer::@compute] reacted!\n")
+                message("[ComputePgxServer::@compute] reacted!")
                 ## req(input$upload_hugo,input$upload_filtergenes)
                 
                 if(!enable()) {
-                    cat("[ComputePgxServer:@compute] *** NOT ENABLED ***\n")
+                    message("[ComputePgxServer:@compute] WARNING:: *** NOT ENABLED ***")
                     return(NULL)
                 }
 
@@ -206,21 +205,19 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     shinyalert("ERROR","You must give a dataset name and description")
                     return(NULL)
                 }
+
                 
                 ##-----------------------------------------------------------
                 ## Retrieve the most recent matrices from reactive values
                 ##-----------------------------------------------------------                
                 counts    <- countsRT()
                 samples   <- samplesRT()
-                samples   <- data.frame(samples, stringsAsFactors=FALSE,check.names=FALSE)
+                samples   <- data.frame(samples, stringsAsFactors=FALSE, check.names=FALSE)
                 contrasts <- as.matrix(contrastsRT())
                 contrasts[is.na(contrasts)] <- 0
-                batch     <- batchRT() ## batch correction vectors for GLM
-                
-                dbg("[LoadingModule] dim(counts)=",dim(counts))
-                dbg("[LoadingModule] dim(samples)=",dim(samples))
-                dbg("[LoadingModule] dim(contrasts)=",dim(contrasts))
-                dbg("[LoadingModule] dim(batch)=",dim(batch))
+
+                ##!!!!!!!!!!!!!! This is blocking the computation !!!!!!!!!!!
+                ##batch     <- batchRT() ## batch correction vectors for GLM
                 
                 ##-----------------------------------------------------------
                 ## Set statistical methods and run parameters
@@ -236,7 +233,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 gx.methods   <- c(input$gene_methods,input$gene_methods2)
                 gset.methods <- c(input$gset_methods,input$gset_methods2)
                 extra.methods <- c(input$extra_methods,input$extra_methods2)
-
+                
                 if(length(gx.methods)==0) {
                     shinyalert("ERROR","You must select at least one gene test method")
                     return(NULL)
@@ -252,6 +249,12 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 ##----------------------------------------------------------------------
                 ## Start computation
                 ##----------------------------------------------------------------------
+                message("[ComputePgxServer:@compute] start computations...")
+
+                message("[ComputePgxServer::@compute] gx.methods = ",paste(gx.methods,collapse=" "))
+                message("[ComputePgxServer::@compute] gset.methods = ",paste(gset.methods,collapse=" "))
+                message("[ComputePgxServer::@compute] extra.methods = ",paste(extra.methods,collapse=" "))
+                
                 start_time <- Sys.time()
                 ## Create a Progress object
                 progress <- shiny::Progress$new()
@@ -303,7 +306,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 run_time  = end_time - start_time
                 run_time
 
-                message("upload_compute :: total processing time of ",run_time," secs")
+                message("[ComputePgxServer:@compute] total processing time of ",run_time," secs")
                 
                 ##----------------------------------------------------------------------
                 ## annotate object
@@ -319,6 +322,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
                 ##ngs$date = date()
                 ngs$date = this.date
+
+                message("[ComputePgxServer:@compute] initialize object")
                 
                 ## initialize and update global PGX object
                 ngs <- pgx.initialize(ngs)
@@ -335,6 +340,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
 
                 ##for(s in names(uploaded)) uploaded[[s]] <- NULL
                 ##uploaded[["pgx"]] <- NULL
+                message("[ComputePgxServer:@compute] finished")
 
             })
 
