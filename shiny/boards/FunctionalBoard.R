@@ -795,14 +795,12 @@ to understand biological functions including GO and KEGG pathway analysis."
     {
         score[is.na(score)] = 0
         rownames(score) = V(go)[rownames(score)]$Term
-        cat("GO_actmap:: dim(score)=",dim(score),"\n")
         
         ## reduce score matrix
         ##score = head(score[order(-rowSums(abs(score))),],40)
         score = score[head(order(-rowSums(score**2)),maxterm),,drop=FALSE] ## max number terms    
         score = score[,head(order(-colSums(score**2)),maxfc),drop=FALSE] ## max comparisons/FC
         if(NCOL(score)==1) score <- cbind(score,score)   
-        cat("GO_actmap:: dim(score)=",dim(score),"\n")
 
         score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
         d1 <- as.dist(1-cor(t(score),use="pairwise"))
