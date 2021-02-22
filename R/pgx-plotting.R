@@ -113,7 +113,7 @@ pgx.ActivationMatrix <- function(pgx, features=NULL, contrasts=NULL,
             xlab(NULL) + ylab(NULL) +
             labs(size=tt.size, color="value") +
             scale_x_discrete(guide=guide_axis(angle=srt)) +
-            theme(plot.margin = margin(5,0,0,10),
+            theme(plot.margin = ggplot2::margin(5,0,0,10),
                   ## legend.title = element_blank(),
                   legend.text = element_text(size=9),
                   legend.key.size = unit(10, "pt"),
@@ -1617,13 +1617,13 @@ ggsplom <- function(F, title_cex=2, no.axes=FALSE, ...)
     }
 
     blankx <- theme(
-        plot.margin = margin(0,0,0,0),
+        plot.margin = ggplot2::margin(0,0,0,0),
         axis.text.x = element_blank(),
         axis.title.x = element_blank(),
         axis.ticks.x = element_blank()
     )
     blanky <- theme(
-        plot.margin = margin(0,0,0,0),
+        plot.margin = ggplot2::margin(0,0,0,0),
         axis.text.y = element_blank(),
         axis.title.y = element_blank(),
         axis.ticks.y = element_blank(),
@@ -1738,10 +1738,10 @@ ggscatter <- function(x, y=NULL, col=NULL, main=NULL,
                       legend.key = element_rect(color="transparent", fill=scales::alpha("white",0.5)),
                       legend.justification = legend.justification,
                       legend.position = legend.position,
-                      legend.margin = margin(1, 3, 2, 1),
+                      legend.margin = ggplot2::margin(1, 3, 2, 1),
                       legend.box.just = "right",
                       legend.box.background = element_rect(color="#888888", size=0.25),
-                      legend.box.margin = margin(1,2,1,1)
+                      legend.box.margin = ggplot2::margin(1,2,1,1)
                   ) +
             guides(
                 color = guide_legend(override.aes = list(size=2.0*cex.legend)),
@@ -2272,10 +2272,10 @@ pgx._scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
                     legend.justification = legend.justification,
                     legend.position = legend.position,
                     legend.background = element_rect(fill=scales::alpha("white",0.5)),
-                    legend.margin = margin(0,4,4,4),
+                    legend.margin = ggplot2::margin(0,4,4,4),
                     legend.box.just = "right",
                     legend.box.background = element_rect(color="#888888", size=0.25),
-                    legend.box.margin = margin(0.8,1,1,1)
+                    legend.box.margin = ggplot2::margin(0.8,1,1,1)
                 ) +
                 guides(color = guide_legend(override.aes=list(size=2.8*cex.legend)))                    
         } else {

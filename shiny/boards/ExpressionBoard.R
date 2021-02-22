@@ -103,6 +103,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
             conditionalPanel(
                 "input.gx_options % 2 == 1", ns=ns,
                 tagList(
+                    tipify(checkboxInput(ns("gx_showsig"),"show significant only",TRUE),
+                           "Enable filtering significant genes. Display only significant genes in the table. Significant genes are one that pass your FDR and logFC thresholds.", 
+               placement="top", options = list(container = "body")),
                     tipify( checkboxGroupInput(ns('gx_statmethod'),'Statistical methods:',
                                                choices=NULL, inline=TRUE),
                            gx_statmethod_text, placement="right", options = list(container = "body"))
@@ -403,7 +406,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## Plots 
     ##================================================================================
 
-    ## ------------------  Info messsages
+    ## ------------------  Info messages
     plots_volcano_text = "A volcano plot of genes for the selected comparison under the <code>Contrast</code> settings plotting fold-change versus significance on the x and y axes, respectively."
     plots_maplot_text = "An application of a Bland-Altman (MA) plot of genes for the selected comparison under the <code>Contrast</code> settings plotting mean intensity versus fold-change on the x and y axes, respectively."
     plots_topgenesbarplot_text = "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> settings."
@@ -1298,9 +1301,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
 <br><br>For a selected comparison under the <code>Contrast</code> setting, the results of the selected methods are combined and reported under the table, where <code>meta.q</code> for a gene represents the highest <code>q</code> value among the methods and the number of stars for a gene indicate how many methods identified significant <code>q</code> values (<code>q < 0.05</code>). The table is interactive (scrollable, clickable); users can sort genes by <code>logFC</code>, <code>meta.q</code>, or average expression in either conditions. Users can filter top N = {10} differently expressed genes in the table by clicking the <code>top 10 genes</code> from the table <i>Settings</i>."
 
     genetable_opts = tagList(
-        tipify(checkboxInput(ns("gx_showsig"),"show significant only",FALSE),
-               "Display only significant genes (with at least 1 star) in the table.", 
-               placement="top", options = list(container = "body")),
         tipify(checkboxInput(ns("gx_top10"),"top 10 genes",FALSE),
                "Display only top 10 differentially (positively and negatively) expressed genes in the table.", 
                placement="top", options = list(container = "body")),

@@ -945,10 +945,10 @@ pgx.createSeurateFigures <- function(obj)
     })
     
     v1 <- v1 + ggtitle("Variable features") + theme0 +
-        theme(plot.margin = margin(0,1,0.5,0, "cm"))
+        theme(plot.margin = ggplot2::margin(0,1,0.5,0, "cm"))
     
     r1 <- r1 + ggtitle("PCA elbow plot") + theme0 +
-        theme(plot.margin = margin(0,0.5,0.5,1, "cm"))
+        theme(plot.margin = ggplot2::margin(0,0.5,0.5,1, "cm"))
         
     fig3 <- (v1 | r1) / r2 + plot_layout(design="A\nB\nB") &
         theme( plot.title = element_text(hjust=0)) 
@@ -981,7 +981,7 @@ pgx.createSeurateFigures <- function(obj)
     vplot2 <- VlnPlot( obj, features = top1$gene, pt.size=0.15, ncol = 5)
     vplot2 <- vplot2 & xlab(NULL)
     vplot2 <- vplot2 & ylab("expression")
-    vplot2 <- vplot2 & theme(plot.margin = margin(1,3,1,3, "mm"))
+    vplot2 <- vplot2 & theme(plot.margin = ggplot2::margin(1,3,1,3, "mm"))
     vplot2 <- vplot2 & theme(axis.text.x=element_text(angle=0))
 
     ntop <- floor(65 / length(unique(obj$seurat_clusters)))
@@ -1044,7 +1044,7 @@ pgx.createSeurateFigures <- function(obj)
     head(top)
     h2 <- DoHeatmap(obj[,sel], features=top$gene, group.by="cell.type",
                     hjust=0.5, angle=0, size=4) + NoLegend()
-    h2 <- h2 + theme(plot.margin = margin(0,0,0,0,"mm"))
+    h2 <- h2 + theme(plot.margin = ggplot2::margin(0,0,0,0,"mm"))
     ##h2x  <- plot_grid(h2, ncol=1)
     
     fig5 <- h2 / (d1 + theme0 | d4 + theme0) + plot_layout(design="A\nA\nB")
@@ -1143,7 +1143,7 @@ pgx.createSeurateFigures <- function(obj)
         vp1  <- vp1 & theme0
         vp1
         
-        theme(plot.margin = margin(0,0,0,0, "cm"))
+        theme(plot.margin = ggplot2::margin(0,0,0,0, "cm"))
         vplot2  <- vplot2 & theme0
         ##vplot2
         

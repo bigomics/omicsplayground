@@ -135,7 +135,7 @@ DataViewBoard <- function(input, output, session, env)
 
 
     ##----------------------------------------------------------------------
-    ##                     Info messsages
+    ##                     Info messages
     ##----------------------------------------------------------------------
     
     data_genePlots_tsne_text=paste0('<b>T-SNE clustering</b> of samples (or cells) colored by an expression of the gene selected in the ',dropdown_search_gene, ' dropdown menu. The red color represents an over-expression of the selected gene across samples (or cells).')
@@ -757,7 +757,7 @@ DataViewBoard <- function(input, output, session, env)
     ##dragula(c("data_genePlots_row1","data_genePlots_row2"))
     
     ##----------------------------------------------------------------------
-    ##                     Info messsages for Counts
+    ##                     Info messages for Counts
     ##----------------------------------------------------------------------
     
     counts_tab_barplot_text=paste0('Barplot of the total number of counts (abundance) for each group. The samples (or cells) can be grouped/ungrouped in the ',menu_grouped, ' setting uder the main <i>Options</i>.')

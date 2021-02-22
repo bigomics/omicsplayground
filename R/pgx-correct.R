@@ -504,7 +504,7 @@ pgx.PC_correlation <- function(X, pheno, nv=3, stat="F", plot=TRUE, main=NULL) {
             ##     legend.text = element_text(size=9),
             ##     legend.justification = c(1,1),
             ##     legend.position = c(0.98,0.98)) +
-            theme(plot.margin = margin(2,2,0,2,"mm"),
+            theme(plot.margin = ggplot2::margin(2,2,0,2,"mm"),
                   plot.title = element_text(size=12)) +
             xlab("") + ggtitle(main)
         ## plt
