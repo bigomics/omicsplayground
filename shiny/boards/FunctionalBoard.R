@@ -549,7 +549,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         title = "Activation matrix", label="c",
         info.text = "The <strong>KEGG activation matrix</strong> visualizes the activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         ##options = kegg_actmap.opts,
-        pdf.height=10, pdf.width=10, 
+        pdf.height = 9, pdf.width = 9 , 
         height = c(rowH,750), width = c("100%",1400),
         res=72
     )
@@ -897,7 +897,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         info.text = GO_info1,
         download.fmt = c("pdf","png"), ## no.download=TRUE,
         options = GO_network.opts,
-        pdf.width=10, pdf.height=8,
+        pdf.width = 10, pdf.height = 8,
         height = 0.55*rowH, res=72
     )
     ##output <- attachModule(output, GO_network_module)
@@ -911,7 +911,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         title = "Activation matrix", label="c",
         info.text = "The <b>GO activation matrix</b> visualizes the activation of GO terms across conditions. From this figure, you can easily detect GO terms that are consistently up/down across conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
         options = GO_actmap.opts,
-        pdf.height=10, pdf.width=10, 
+        pdf.height = 9, pdf.width = 9, 
         height = c(rowH,750), width = c("100%",1400),
         res=72
     )
