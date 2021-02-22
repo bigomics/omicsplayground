@@ -9,19 +9,25 @@
 ##
 ########################################################################
 
+if(0) {
+    load("../data/geiger2016-arginine.pgx")
+    X <- ngs$X
+    pheno <- ngs$samples$time
+}
+
 require(limma)
-REF.CLASS = c("ctrl","ctr","control","dmso","nt","0","non","no","ref",
+REF.CLASS = c("ctrl","ctr","control","dmso","nt","0","0h","0hr",
+              "non","no","not","neg","negative","ref","veh","vehicle",
               "wt","wildtype","untreated","normal","false","healthy")
 
-
-gx.limma <- function(X, pheno, B=NULL, 
+gx.limma <- function(X, pheno, B=NULL, remove.na = TRUE,
                      fdr=0.05, compute.means=TRUE, lfc=0.20,
                      max.na=0.20, ref=REF.CLASS, trend=FALSE, verbose=1 )
 {
     require(limma)
     if(0) {
         fdr=0.05;compute.means=TRUE;lfc=0.20;ref=REF.CLASS
-        max.na=0.2;trend=FALSE;verbose=1
+        max.na=0.2;trend=FALSE;verbose=1;B=NULL
     }
     if(sum(duplicated(rownames(X)))>0) {
         cat("WARNING:: matrix has duplicated rownames\n")
@@ -44,9 +50,12 @@ gx.limma <- function(X, pheno, B=NULL,
     
     ## filter probes and samples??
     ii <- which( rowMeans(is.na(X)) <= max.na )
-    jj <- which(!is.na(pheno) )
-    if(verbose>0) cat(sum(is.na(pheno)>0),"with missing phenotype\n")
-    X0 <- X[ii,jj]
+    jj <- 1:ncol(X)
+    if(remove.na && any(is.na(pheno))) {
+        jj <- which(!is.na(pheno) )
+        if(verbose>0) message(sum(is.na(pheno)>0),"with missing phenotype\n")
+    }
+    X0 <- X[ii,jj,drop=FALSE]
     pheno0 <- as.character(pheno[jj])
     X0 <- X0[!(rownames(X0) %in% c(NA,"","NA")),]
     B0 <- NULL
@@ -54,6 +63,7 @@ gx.limma <- function(X, pheno, B=NULL,
 
     if(verbose>0) {
         cat("analyzing",ncol(X0),"samples\n")
+        cat("table.pheno: ",table(pheno),"samples\n")
         cat("testing",nrow(X0),"features\n")
         if(!is.null(B0)) cat("including",ncol(B0),"batch covariates\n")
     }
@@ -64,8 +74,9 @@ gx.limma <- function(X, pheno, B=NULL,
     ref <- toupper(ref)
     ## is.ref <- grepl(paste(ref,collapse="|"),pheno0)
     is.ref <- (toupper(pheno0) %in% toupper(ref))
-    ref.detected <- (sum(is.ref)>0 && sum(!is.ref)>0)    
-
+    ref.detected <- (sum(is.ref)>0 && sum(!is.ref)>0)
+    ref.detected
+    
     ##if(!is.null(ref) && sum( toupper(pheno0) %in% ref)>0 ) {
     if(ref.detected) {
         pheno.ref <- unique(pheno0[which(toupper(pheno0) %in% toupper(ref))])
@@ -77,7 +88,7 @@ gx.limma <- function(X, pheno, B=NULL,
         if(verbose>0) cat("setting reference to first class",bb[1],"\n")
     }
     if(length(bb)!=2) {
-        stop("gx.limma::fatal error:only two class comparisons")
+        stop("gx.limma::fatal error:only two class comparisons. Please use gx.limmaF().")
         return
     }
 

@@ -159,7 +159,7 @@ viz.PhenoMaps <- function(pgx, phenotypes=NULL, pos=NULL, cex=1,
             posx, var=y, title=ph, cex=cex, legend.pos=legend.pos,
             plotlib="ggplot", theme=theme)
         ## if(!is.null(theme)) { p <- p + theme }
-        p <- p + theme( plot.margin = margin(0,8,0,8) )
+        p <- p + theme( plot.margin = ggplot2::margin(0,8,0,8) )
         plt[[ph]] <- p
     }
 
@@ -381,7 +381,7 @@ viz.PhenoStatsBy <- function(pgx, by.pheno, phenotypes=NULL,
                 scale_color_manual(values=cpal) +
                 scale_fill_manual(values=cpal) +
                 theme(
-                    plot.margin = margin(2,10,5,10),
+                    plot.margin = ggplot2::margin(2,10,5,10),
                     legend.key.size = unit(9, "pt"),
                     legend.key.height = unit(9, "pt")
                 )
@@ -479,10 +479,10 @@ viz.Expression <- function(pgx, pheno, contrast, genes=NULL,
     
     require(grid)
     require(cowplot)
-    p2 <- p2 + theme(plot.margin = margin(5,5,5,25))
+    p2 <- p2 + theme(plot.margin = ggplot2::margin(5,5,5,25))
     row1 <- cowplot::plot_grid(p1, p2, nrow=1, rel_widths=c(1,4), labels=c("a","b"))
     row2 <- cowplot::plot_grid(plotlist=gene_plots, nrow=nrow) +
-        theme(plot.margin = margin(5,5,5,15))
+        theme(plot.margin = ggplot2::margin(5,5,5,15))
     fig <- cowplot::plot_grid(row1, row2, ncol=1, rel_heights=c(1,2), labels=c("","c"))
 
     if(is.null(title)) title = "Gene Expression"
@@ -655,7 +655,7 @@ viz.Contrasts <- function(pgx, contrasts=NULL, ntop=10, dir=1, pos=NULL,
         p1 <- p1 + ## theme_classic(base_size=12) +
             ggtitle(ct) +
             theme(
-                plot.margin = margin(5,10,5,10),
+                plot.margin = ggplot2::margin(5,10,5,10),
                 legend.position = "none",            
                 axis.title=element_text(size=11)
             )
@@ -1042,7 +1042,7 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
                 legend.key.size = unit(9, "pt"),
                 legend.key.height = unit(9, "pt"),
                 ## scale_y_continuous(expand = c(0, 0)),                
-                plot.margin = margin(5,5,20,5)
+                plot.margin = ggplot2::margin(5,5,20,5)
             )
         
         if(nlev==1) {
@@ -1170,7 +1170,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
         f1 <- pgx.PC_correlation(
             xlist[[i]], pheno1, nv=npca, stat="F", plot=TRUE,
             main = paste0("PC variance (",main[i],")"))
-        f1 <- f1 + theme(plot.margin = margin(4,4,0,4,"mm"),
+        f1 <- f1 + theme(plot.margin = ggplot2::margin(4,4,0,4,"mm"),
                          legend.justification = c(0,1),
                          legend.position = c(0.01,1) )        
         flist[[i]] <- f1
@@ -1191,7 +1191,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
             ## theme_classic() +
             xlab("tSNE-1") + ylab("tSNE-2") + 
             ggtitle(paste0(phenotype[1]," (",main[i],")")) +
-            theme(plot.margin = margin(2,2,0,2,"mm"))
+            theme(plot.margin = ggplot2::margin(2,2,0,2,"mm"))
     }
         
     ##-------------------------------------------

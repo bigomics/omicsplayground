@@ -87,8 +87,8 @@ if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
 }
 
 ## copy to global environment
-##WATERMARK      = opt$WATERMARK
 SHOW_QUESTIONS = FALSE
+##WATERMARK      = opt$WATERMARK
 ##USER_MODE      = opt$USER_MODE
 AUTHENTICATION = opt$AUTHENTICATION
 DEV = (USER_MODE=="dev" && dir.exists("../../omicsplayground-dev"))

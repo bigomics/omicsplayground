@@ -345,7 +345,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
 
             output$phenoStats <- renderPlot({
 
-                cat("[phenoStats] renderPlot called \n")
+                message("[phenoStats] renderPlot called \n")
                 ##req(uploaded$samples.csv)                
                 
                 statusTab <- statusTable()
@@ -360,14 +360,22 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     box(lty=2, col="grey60")
                     return(NULL)
                 }
-                
+
                 pheno <- uploaded[["samples.csv"]]
+
+                message("[phenoStats] sample.csv seems OK!")
+                message("[phenoStats] nrow.pheno = ",nrow(pheno))
+                message("[phenoStats] ncol.pheno = ",ncol(pheno))
+                
                 px <- head(colnames(pheno),20)  ## maximum??
                 require(inspectdf)
                 df <- type.convert(pheno[,px,drop=FALSE])
                 vt <- df %>% inspect_types()
                 vt
 
+                message("[phenoStats] nrow.vt = ",nrow(vt))
+                message("[phenoStats] ncol.vt = ",ncol(vt))
+                
                 ## discretized continuous variable into 10 bins
                 ii <- unlist(vt$col_name[c("numeric","integer")])
                 ii
@@ -376,22 +384,29 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     df[,ii] <- apply(df[,ii,drop=FALSE], 2, function(x) cut(x, breaks=10))
                 }
 
-                cat("[UploadModule::phenoStats] dim(df)=",dim(df),"\n")
-                cat("[UploadModule::phenoStats] class(df)=",class(df),"\n")
+                message("[UploadModule::phenoStats] nrow(df)=",nrow(df),"\n")
+                message("[UploadModule::phenoStats] ncol(df)=",ncol(df),"\n")
+                message("[UploadModule::phenoStats] class(df)=",class(df),"\n")
                 
                 p1 <- df %>% inspect_cat() %>% show_plot()
 
-                cat("[UploadModule::phenoStats] class(p1)=",class(p1),"\n")
+                message("[UploadModule::phenoStats] class(p1)=",class(p1))
 
                 tt2 <- paste(nrow(pheno),"samples x",ncol(pheno),"phenotypes")
+                message("[UploadModule::phenoStats] dim(pheno)=",tt2)
+                
                 ## tt2 <- paste(ncol(pheno),"phenotypes")
                 p1 <- p1 + ggtitle("PHENOTYPES", subtitle=tt2) +
                     theme(
                         ##axis.text.x = element_text(size=8, vjust=+5),
-                        axis.text.y = element_text(size = 12,
-                                                   margin = margin(0,0,0,25),
-                                                   hjust = 1)
+                        axis.text.y = element_text(
+                            size = 12,
+                            margin = ggplot2::margin(0,0,0,25),
+                            hjust = 1)
                     )
+
+                message("[UploadModule::phenoStats] done!")
+                
                 p1
             })
             
@@ -445,7 +460,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     theme(
                         ##axis.text.x = element_text(size=8, vjust=+5),
                         axis.text.y = element_text(size = 12,
-                                                   margin = margin(0,0,0,25),
+                                                   margin = ggplot2::margin(0,0,0,25),
                                                    hjust = 1)
                     )
                 p1

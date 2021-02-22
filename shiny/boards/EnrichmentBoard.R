@@ -100,6 +100,10 @@ EnrichmentBoard <- function(input, output, session, env)
             conditionalPanel(
                 "input.gs_options % 2 == 1", ns=ns, 
                 tagList(
+                    tipify(checkboxInput(ns("gs_showsig"),"Filter significant",TRUE),
+                           "Enbale significant genes filtering. Display only significant genesets in the table.", 
+                           placement="top", options = list(container = "body")),
+                    
                     tipify(checkboxGroupInput(ns('gs_statmethod'),'Statistical methods:', choices=NULL),
                            gs_testmethod_text, placement="right", options = list(container="body"))
                 )
@@ -381,14 +385,14 @@ EnrichmentBoard <- function(input, output, session, env)
         res <- getFullGeneSetTable()
         
         ## just show significant genes
-        if(input$gs_showsig) {
+        if(input$gs_showsig && nrow(res)>0 ) {
             nmeth <- length(input$gs_statmethod)
             sel <- which(res$stars == star.symbols(nmeth))
             res = res[sel,,drop=FALSE]
         }
         
         ## just show top 10        
-        if(length(input$gs_top10) && input$gs_top10==TRUE) {
+        if(nrow(res)>10 && length(input$gs_top10) && input$gs_top10==TRUE) {
             fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(res))[1]
             fx  = as.numeric(res[,fx.col])
             names(fx) = rownames(res)
@@ -413,6 +417,7 @@ EnrichmentBoard <- function(input, output, session, env)
     plotTopEnriched <- function(ngs, rpt, comp, ntop, rowcol)
     {
         if(is.null(ngs)) return(NULL)
+ 
         gx.meta <- ngs$gx.meta$meta[[comp]]
         ##rnk0 <- gx.meta[,"fc"][,"trend.limma"]
         ##names(rnk0) = gx.meta[,"gene_name"]        
@@ -425,15 +430,25 @@ EnrichmentBoard <- function(input, output, session, env)
         qv = rpt[,qv.col]
         names(qv) <- names(fx) <- rownames(rpt)
         top <- rownames(rpt)
+        top <- setdiff(top, c(NA,"NA"))
+        if(is.null(top) || is.na(top[1])) return(NULL)
+
+        message("[plotTopEnriched()] dim.rpt = ",paste(dim(rpt),collapse="x"))
+        message("[plotTopEnriched()] rownames.rpt = ",paste(head(rownames(rpt)),collapse=" "))
+        message("[plotTopEnriched()] top = ",paste(head(top),collapse=" "))        
         
-        par(mfrow=rowcol, mar=c(0.5,3.0,2.8,0), mgp=c(1.9,0.8,0))
+        par(mfrow=rowcol, mar=c(0.5,2.6,2.8,0.3), mgp=c(1.9,0.8,0), oma=c(2,2,1,1)*0.5)
         for(i in 1:ntop) {
-            if(i > length(top)) {
+            gs <- top[i]
+            if(i > length(top) || is.na(gs) ) {
                 frame()
             } else {
-                gs <- top[i]
-                gs1 = breakstring(gs,28,50,force=FALSE)
-                genes = toupper(names(which(ngs$GMT[,gs]!=0)))
+                gs1 = breakstring(gs,28,50,force=FALSE)                
+                message("[plotTopEnriched] i = ",i)
+                message("[plotTopEnriched] gs = ",gs)
+                genes = names(which(ngs$GMT[,gs]!=0))
+                message("[plotTopEnriched] genes = ",paste(genes,collapse=" "))
+                genes = toupper(genes)                
                 names(rnk0) <- toupper(names(rnk0))
                 ylab = ""
                 ## if(i %in% c(1,6)) ylab = "Ranked list metric"
@@ -456,7 +471,11 @@ EnrichmentBoard <- function(input, output, session, env)
         rpt <- getFilteredGeneSetTable()
         ##if(is.null(rpt)) return(NULL)
         req(rpt, input$gs_contrast)
+        if(is.null(rpt)) return(NULL)
 
+        message("[plotTopEnriched.RENDER] dim.rpt = ",paste(dim(rpt),collapse="x"))
+        message("[plotTopEnriched.RENDER] rownames.rpt = ",paste(head(rownames(rpt)),collapse=" "))
+        
         comp=1
         comp = input$gs_contrast
         if(!(comp %in% names(ngs$gx.meta$meta))) return(NULL)
@@ -464,10 +483,13 @@ EnrichmentBoard <- function(input, output, session, env)
         ## filter on active rows (using search)
         ##ii <- input$gseatable_rows_all
         ii  <- gseatable$rows_all()
+        if(is.null(ii) || length(ii)==0) return(NULL)
         if(length(ii)>0) {
             rpt <- rpt[ii,,drop=FALSE]
         }
         if(nrow(rpt)==0) return(NULL)
+
+        message("[plotTopEnriched.RENDER] 2 : dim.rpt = ",paste(dim(rpt),collapse="x"))
         
         plotTopEnriched(ngs, rpt, comp=comp, ntop=10, rowcol=c(2,5))        
     })
@@ -489,6 +511,7 @@ EnrichmentBoard <- function(input, output, session, env)
         ## filter on active rows (using search)
         ##ii <- input$gseatable_rows_all
         ii <- gseatable$rows_all()
+        if(is.null(ii) || length(ii)==0) return(NULL)
         rpt <- rpt[ii,,drop=FALSE]
         if(nrow(rpt)==0) return(NULL)
         
@@ -506,8 +529,9 @@ EnrichmentBoard <- function(input, output, session, env)
         func = topEnriched.RENDER,
         func2 = topEnriched.RENDER2,
         info.text = topEnriched_text,
-        height = c(0.95*imgH,720), width = c('auto',1500), res=90,
-        pdf.width = 14, pdf.height = 4, 
+        height = c(0.95*imgH,720), width = c('auto',1500), 
+        pdf.width = 9, pdf.height = 3, ## pdf.pointsize=16,
+        res = c(90, 110),
         title = "Top enriched gene sets"
         ##caption = topEnriched_caption
     )
@@ -1526,21 +1550,31 @@ EnrichmentBoard <- function(input, output, session, env)
         limma1 <- cbind( fc=limma1.fc, q=limma1.pq)
         ##limma  = cbind( ngs$gx.meta$meta[[comp]][,c("gene_name","gene_title")], limma1)
         rownames(limma1) <- rownames(mx)
+
+        if(1 && input$gs_showsig) {
+            lfc=1;fdr=0.05
+            lfc <- input$gs_lfc
+            fdr <- input$gs_fdr
+            is.sig <- abs(limma1[,"fc"]) >= lfc & limma1[,"q"] <= fdr
+            table(is.sig)
+            limma1 <- limma1[is.sig,,drop=FALSE]
+        }
         
         ## in multi-mode we select *common* genes
         ns <- length(gs)
         gmt1 <- ngs$GMT[,gs,drop=FALSE]
         genes = rownames(gmt1)[which(Matrix::rowSums(gmt1!=0)==ns)]
-        genes = intersect(genes, ngs$genes[rownames(mx),"gene_name"])
+        genes = intersect(genes, ngs$genes[rownames(limma1),"gene_name"])
         genes = setdiff(genes, c("",NA,"NA"," "))
 
+        title <- rep(NA,length(genes))
         title = as.character(GENE.TITLE[genes])
         title[is.na(title)] <- " "
         
         rpt <- data.frame("gene_name"=genes, "gene_title"=as.character(title) )
         genes = rpt[,"gene_name"]
         genes1 <- ngs$genes[rownames(limma1),"gene_name"]
-        limma1 = limma1[match(genes, genes1),,drop=FALSE ]    
+        limma1 = limma1[match(genes, genes1),,drop=FALSE ]  ## align limma1  
         avg.rho <- rowMeans(cor(t(ngs$X[rownames(limma1),,drop=FALSE]),
                                 t(ngs$gsetX[gs,,drop=FALSE])))
         
@@ -1673,9 +1707,6 @@ EnrichmentBoard <- function(input, output, session, env)
     gseatable_text = paste("Similar to the differential gene expression analysis, users can perform differential expression analysis on a geneset level that is referred as gene set enrichment analysis. To ensure statistical reliability, the platform performs the gene set enrichment analysis using multiple methods, including",a_Spearman,", ",a_GSVA,", ",a_ssGSEA,", ",a_Fisher,", ",a_GSEA,", ",a_camera," and ",a_fry,".<br><br>The combined result from the methods is displayed in this table, where for each geneset the <code>meta.q</code> corresponds to the highest <code>q</code> value provided by the methods and the number of <code>stars</code> indicate how many methods identified the geneset as significant (<code>q < 0.05</code>). The table is interactive; users can sort it by <code>logFC</code>, <code>meta.q</code> and <code>starts</code>. Additionally, the list of genes in that geneset are displayed in the second table on the right. Users can filter top N = {10} differently enriched gene sets in the table by clicking the <code>top 10 gene sets</code> from the table <i>Settings</i>.")
 
     gseatable_opts = tagList(
-        tipify(checkboxInput(ns("gs_showsig"),"show significant only",FALSE),
-               "Display only significant genesets (with at least 1 star) in the table.", 
-               placement="top", options = list(container = "body")),
         tipify( checkboxInput(ns('gs_top10'),'top 10 gene sets',FALSE),
                "Display only top 10 differentially enirhced gene sets (positively and negatively) in the <b>enrihcment analysis</b> table.", placement="top", options = list(container = "body")),
         tipify(checkboxInput(ns('gs_showqvalues'),'show indivivual q-values',FALSE),
