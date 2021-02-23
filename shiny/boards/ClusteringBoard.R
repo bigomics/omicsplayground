@@ -483,11 +483,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             grp.annot <- annot
 
         }
-
-        message("[getTopMatrix] dim(zx) = ",paste(dim(zx),collapse="x"))
-        message("[getTopMatrix] grp = ",paste(grp,collapse=" "))
-        message("[getTopMatrix] idx = ",paste(idx,collapse=" "))
-        dbg("[getTopMatrix] done!")
         
         ##input$top_terms
         filt <- list(
@@ -623,8 +618,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ngs <- inputData()
         req(ngs)
         
-        message("[ClusteringBoard] hm2_splitmap.RENDER: reacted\n")
-
         ## -------------- variable to split samples        
         scale = ifelse(input$hm_scale=="relative","row.center","none")    
         plt <- NULL
@@ -663,9 +656,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             tooltips = breakstring2(aa, 50, brk="<br>")
         }
         ##genetips = rownames(X)
-        
-        message("[ClusteringBoard] hm2_splitmap.RENDER: plotting\n")
-        
+                
         showNotification('rendering iHeatmap...')
 
         plt <- pgx.splitHeatmapFromMatrix(
@@ -674,7 +665,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             row_annot_width=0.03, rowcex=rowcex,
             colcex=colcex )
        
-        message("[ClusteringBoard] hm2_splitmap.RENDER: done\n")        
         ## DOES NOT WORK...
         ##plt <- plt %>%
         ## config(toImageButtonOptions = list(format='svg', height=800, width=800))
@@ -1425,10 +1415,6 @@ displays the expression levels of selected genes across all conditions in the an
         idx <- filt$idx
         samples <- filt$samples
 
-        message("[getClustAnnotCorrelation] dim(zx)=",dim(zx))
-        message("[getClustAnnotCorrelation] length(idx)=",length(idx))
-        message("[getClustAnnotCorrelation] length(samples)=",length(samples))
-
         if(nrow(zx) <= 1) return(NULL)
         
         ann.level="geneset"
@@ -1476,24 +1462,17 @@ displays the expression levels of selected genes across all conditions in the an
         ##----------- for each gene cluster compute average correlation
         hm_topmode = "sd"
         hm_topmode <- input$hm_topmode
-        message("[getClustAnnotCorrelation] idx=",paste(idx,collapse=" "))
-        
         idxx = setdiff(idx, c(NA," ","   "))    
         rho <- matrix(NA, nrow(ref), length(idxx))
         colnames(rho) <- idxx
         rownames(rho) <- rownames(ref)
-        message("[getClustAnnotCorrelation] len.idx=",length(idx))
-        message("[getClustAnnotCorrelation] len.idxx=",length(idxx))
         
         i=1
         if(nrow(ref)>0) {
             for(i in 1:length(idxx)) {
                 gg = rownames(zx)[which(idx==idxx[i])]
-                message("[getClustAnnotCorrelation] length(gg)=",length(gg))
                 aa <- t(X[gg,samples,drop=FALSE])
                 bb <- t(ref[,samples,drop=FALSE])
-                message("[getClustAnnotCorrelation] dim(aa)=",dim(aa))
-                message("[getClustAnnotCorrelation] dim(bb)=",dim(bb))
                 ##rr = cor(aa , bb, use="pairwise", method="spearman")
                 rr = cor(apply(aa,2,rank), apply(bb,2,rank), use="pairwise")
                 if(hm_topmode=="pca") rr <- abs(rr)
@@ -1506,9 +1485,6 @@ displays the expression levels of selected genes across all conditions in the an
             grp <- tapply( toupper(rownames(zx)), idx, list)  ## toupper for mouse!!
             gmt <- GSETS[rownames(rho)]
             bg.genes <- toupper(rownames(X))
-            dbg("[getClustAnnotCorrelation] bg.genes=",head(bg.genes))
-            dbg("[getClustAnnotCorrelation] head(gmt[[1]])=",head(gmt[[1]]))
-
             P <- c()
             for(i in 1:ncol(rho)) {
                 k <- colnames(rho)[i]
@@ -1527,7 +1503,6 @@ displays the expression levels of selected genes across all conditions in the an
             rho <- rho * (P/max(P))
         }
 
-        message("[getClustAnnotCorrelation] done!")
         ##rho = round(rho, digits=3)
         dim(rho)
         return(rho)
@@ -1730,8 +1705,6 @@ displays the expression levels of selected genes across all conditions in the an
         clust <- hm_getClusterPositions()
         ##pos = ngs$tsne2d
         pos = clust$pos
-
-        message("[clust_phenoplot.RENDER] dim.pos=",dim(pos))
 
         Y <- ngs$Y[rownames(pos),,drop=FALSE]
         pheno = colnames(Y)    
