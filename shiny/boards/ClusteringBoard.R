@@ -271,14 +271,14 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                 }
 
                 gg1 = gg1[toupper(gg1) %in% toupper(genes) | grepl("---",gg1)]
-                idx <- rep("c1",length(gg1))
+                idx <- rep("F1",length(gg1))
                 names(idx) <- gg1
                 if(any(grepl("^---",gg1))) {
                     message("[getFilteredMatrix] <custom> groups detected")
                     kk <- c(1,grep("^---",gg1),length(gg1)+1)
                     for(i in 1:(length(kk)-1)) {
                         ii <- kk[i]:(kk[i+1]-1)
-                        idx[ii] <- paste0("c",i)
+                        idx[ii] <- paste0("F",i)
                     }
                     gg1 <- gg1[grep("---",gg1,invert=TRUE)]
                     idx <- idx[gg1]
