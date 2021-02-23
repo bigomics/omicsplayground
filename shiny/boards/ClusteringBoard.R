@@ -217,8 +217,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ngs <- inputData()
         req(ngs)
 
-        message("[getFilteredMatrix] reacted!")
-
         genes = as.character(ngs$genes[rownames(ngs$X),"gene_name"])
         genesets = rownames(ngs$gsetX)
         
@@ -243,8 +241,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
         idx <- NULL
         if(input$hm_level=="gene") {
-
-            message("[getFilteredMatrix] hm_level==gene")
             
             ##-----------------------------------
             ## Gene level features
@@ -265,7 +261,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                 customfeatures = "CTLA4 GEM HAVCR2 ICOS IDO1 LAG3 PDCD1 TNFSF4 VISTA VTCN1 TIGIT PVR --- CD28 CD40 CD40LG ICOSLG TNFRSF9 TNFSF9 CD70 TNFRSF4 TNFRSF18 --- TNFSF18 SIRPA LGALS9 ARG1 CD86 IDO2 PDCD1LG2 KIR2DL3"
                 customfeatures <- input$hm_customfeatures
                 gg1 = strsplit(customfeatures,split="[, ;\n\t]")[[1]]
-                message("[getFilteredMatrix] 1: length(gg1)=",length(gg1))                
+
                 is.regx <- grepl("[*.?\\[]",gg1[1])
                 if(length(gg1)==1 && is.regx) {
                     gg1 <- grep(gg1,genes,ignore.case=TRUE,value=TRUE)
@@ -273,7 +269,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                 if(length(gg1)==1 && !is.regx) {
                     gg1 <- c(gg1,gg1) ## heatmap does not like single gene
                 }
-                message("[getFilteredMatrix] 2: length(gg1)=",length(gg1))
+
                 gg1 = gg1[toupper(gg1) %in% toupper(genes) | grepl("---",gg1)]
                 idx <- rep("c1",length(gg1))
                 names(idx) <- gg1
@@ -439,7 +435,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         }
 
         CLUSTK = 4  ## number of gene groups (NEED RETHINK)
-        CLUSTK <- input$hm_clustk
+        CLUSTK <- as.integer(input$hm_clustk)
         if(is.null(idx)) {
             D <- as.dist(1 - cor(t(zx),use="pairwise"))
             system.time( hc <- fastcluster::hclust(D, method="ward.D2" ) )
@@ -447,6 +443,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ## system.time( hc <- nclust(D, link="ward") )
             ngrp = min(CLUSTK, nrow(zx))  ## how many default groups???
             idx = paste0("S",cutree(hc, ngrp))
+                            
         }
 
         ## ------------- matched annotation
