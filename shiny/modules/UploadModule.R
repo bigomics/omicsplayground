@@ -254,10 +254,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 ## Monitor for changes in the contrast matrix and if
                 ## so replace the uploaded reactive values.
                 ##
-                message("[UploadModule::modified_ct] reacted!")
                 ct <- modified_ct()
-                message("[UploadModule::modified_ct] updating contrast!")
-                message("[UploadModule::modified_ct] dim(ct)=",dim(ct))
                 uploaded$contrasts.csv <- ct
             })
 
