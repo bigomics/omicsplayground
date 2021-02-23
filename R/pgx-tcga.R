@@ -44,7 +44,9 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
     if(is.null(names(sig))) {
         stop("sig must have names")
     }
-
+    ## !!!!!!!!!! upper case for mouse genes !!!!!
+    names(sig) <- toupper(names(sig))
+    
     ## get the top DE genes
     genes <- c(head(names(sig),ntop),tail(names(sig),ntop))
     head(genes)
@@ -57,7 +59,7 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
     ## names(aa.head) <- aa[ii,2]
     ## aa.head
 
-    if(verbose) cat("[pgx.testTCGAsurvival] extracting expression from H5 matrix file\n")    
+    if(verbose) message("[pgx.testTCGAsurvival] extracting expression from H5 matrix file")    
     require(rhdf5)
     h5.samples = rhdf5::h5read(matrix_file, "/meta/gdc_cases.submitter_id")
     h5.genes = rhdf5::h5read(matrix_file, "/meta/genes")            
@@ -83,7 +85,7 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
     dim(expression)
     
     ## Read the survival data
-    if(verbose) cat("[pgx.testTCGAsurvival] reading TCGA survival data...\n")
+    if(verbose) message("[pgx.testTCGAsurvival] reading TCGA survival data...")
     
     surv.file <- file.path(lib.dir, "rtcga-survival.csv")
     surv <- read.csv(surv.file, row.names=1)
@@ -94,9 +96,14 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
     ## conform expression and surv matrices
     samples <- intersect(colnames(expression), rownames(surv))
     length(samples)    
-    expression <- expression[,samples]
+    expression <- expression[,samples,drop=FALSE]
     surv <- surv[samples,]
 
+    if(verbose) {
+        message("[pgx.testTCGAsurvival] dim(expression) = ", dim(expression))
+        message("[pgx.testTCGAsurvival] dim(surv) = ", dim(surv))
+    }
+    
     ## print KM survival plot for each study/cancertype
     all.studies <- sort(unique(surv$cancer_type))
     length(all.studies)
