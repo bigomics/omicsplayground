@@ -28,7 +28,7 @@ TcgaBoard <- function(input, output, session, env)
     selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
     selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     
-    description = "<b>TCGA analysis (beta)</b>. Correlate your signature with the survival in cancer patients from the TCGA database. "
+    description = "<b>TCGA analysis (beta)</b>. Correlate your signature with the survival in cancer patients from the TCGA database. Warning: EXPERIMENTAL."
     output$description <- renderUI(HTML(description))
 
     tcga_infotext =
