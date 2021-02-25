@@ -966,19 +966,12 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ngs <- inputData()
         req(ngs)
         do3d = ("3D" %in% input$hmpca_options)
-
-        dbg("[hm_PCAplot.RENDER:reactive] reacted")
         
         clust <- hm_getClusterPositions()
-
-        dbg("[hm_PCAplot.RENDER:reactive] 1")
-        
         pos <- clust$pos
         sel <- rownames(pos)
         df <- cbind(pos, ngs$Y[sel,])
         if(!is.null(clust$clust)) df[["<cluster>"]] <- clust$clust
-
-        dbg("[hm_PCAplot.RENDER:reactive] 2")
         
         colvar = shapevar = linevar = textvar = NULL
         if(input$hmpca.colvar %in% colnames(df)) colvar <- factor(df[,input$hmpca.colvar])
