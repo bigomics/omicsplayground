@@ -113,7 +113,8 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                             ## helpText("User file upload"),
                             fileInput(ns("upload_files"), "Choose files",
                                       multiple = TRUE, accept = upload_filetypes),
-                            checkboxInput(ns("load_example"), "load example data"),
+                            ##checkboxInput(ns("load_example"), "load example data"),
+                            shinyWidgets::prettySwitch(ns("load_example"), "load example data"),
                             ##checkboxInput(ns("advanced_mode"),"advanced")
                             ##shinyWidgets::prettySwitch(ns("advanced_mode"),"advanced")
                             shinyWidgets::prettySwitch(ns("advanced_mode"),"batch correction (beta)")                            

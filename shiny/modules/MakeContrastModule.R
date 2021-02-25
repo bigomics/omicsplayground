@@ -81,6 +81,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT=NULL, height=720
                 inline.div <- function(a) {
                     div(style="display: inline-block;vertical-align:top; width: 150px;",a)
                 }
+
                 fillCol(
                     height = 750,
                     flex = c(1,NA,NA,1),
@@ -125,8 +126,12 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT=NULL, height=720
                     fillRow(
                         height = 24,
                         flex = c(NA,1),
-                        actionButton(ns("autocontrast"),"add auto-contrasts", icon=icon("plus"),
-                                     class="small-button"),
+                        tipify(
+                            actionButton(ns("autocontrast"),"add auto-contrasts", icon=icon("plus"),
+                                         class="small-button"),
+                            "If you are feeling lucky, try this to automatically create contrasts.",
+                            placement="top", options = list(container = "body")                            
+                        ),
                         br()
                     ),
                     ##tags$head(tags$style("table.dataTable.compact tbody th, table.dataTable.compact tbody td {padding: 0px 10px;}")),
@@ -419,7 +424,6 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT=NULL, height=720
                 ##info.text = hm_PCAplot_text
                 ##caption = pca_caption_static
             )
-
             
             ##ct <- rv$contr
             return(reactive({rv$contr}))  ## pointing to reactive

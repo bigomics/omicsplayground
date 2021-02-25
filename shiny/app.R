@@ -396,8 +396,7 @@ createUI <- function(tabs)
     
     ## add help menu
     tablist[["helpmenu"]] <- help.tabs
-   
-    
+       
     ##-------------------------------------
     ## create navbarPage
     ##-------------------------------------
@@ -411,6 +410,7 @@ createUI <- function(tabs)
                            footer = tagList(footer),
                            theme = theme))
 }
+
 
 tabs = list(
     "logout",
