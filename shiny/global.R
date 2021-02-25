@@ -38,6 +38,6 @@ if(0) {
 }
 
 ## Determine if we are in ShinyProxy
-SHINYPROXY = Sys.getenv("SHINYPROXY_USERNAME")!=""
+SHINYPROXY = (Sys.getenv("SHINYPROXY_USERNAME")!="" && "omicsplayground" %in% dir("/"))
 
 dbg <- function(msg) if(DEBUG) message(cat(msg))
