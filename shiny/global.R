@@ -37,4 +37,8 @@ if(0) {
     ##BOARDS_DISABLED = tcga,multi,sig,isect,bio
 }
 
+## Determine if we are in ShinyProxy
+shiny.vars <- c("SHINYPROXY_USERNAME","SHINYPROXY_USERGROUPS")
+SHINYPROXY = all(sapply(shiny.vars,Sys.getenv)!="")
+
 dbg <- function(msg) if(DEBUG) message(cat(msg))

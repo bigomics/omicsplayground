@@ -43,16 +43,23 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
             all.methods <- c("none","scale","quantile",
                              "CPM","TMM","RLE","upperquartile")    
             
+            nc_info = "normalization module"
+
             output$UI <- renderUI({
                 ##ns <- NS(id)  ## namespace
                 ##ns <- function(id) id
                 ns <- session$ns
                 sidebarLayout(
                     sidebarPanel(
-                        ##helpText(bc_info), 
+                        helpText(nc_info),
+                        ##br(),                        
                         ##radioButtons(ns("selectmethod"),"Select normalization:",
-                        ##choices=all.methods, selected="CPM"),
-                        ##br(),
+                        ##             choices=all.methods, selected="CPM"),
+                        tipify2(                        
+                            selectInput(ns("selectmethod"),"Select normalization:",
+                                        choices=all.methods, selected="CPM"),
+                            "Select initial normalization method."
+                        ),
                         tipify2(
                             checkboxInput(ns("postqn"),"Post quantile normalization"),
                             "Apply additional quantile normalization after scaling method."
@@ -75,7 +82,7 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
                 pgx <- list(counts=counts())                
                 ## Simulate raw signals
                 if(input$addnoise) {
-                    mult <- 1e3 * runif(ncol(pgx$counts))
+                    mult <- 1e4 * runif(ncol(pgx$counts))
                     pgx$counts <- t( t(pgx$counts) * mult )
                 }
                 pgx
@@ -94,14 +101,16 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
             
             normalized_counts <- reactive({
                 ##req(input$selectmethod)
-                ##method <- input$selectmethod
-                method = "CPM"
+                method <- input$selectmethod
+                ##method = "CPM"
                 norm.counts <- NULL
                 pgx <- pgx()
-                if(method %in% all.methods) {
-                    norm.counts <- pgx.countNormalization(pgx$counts, method)
-                } else {
+                if(method == "none") {
+                    message("[normalized_counts] >>> no normalization")
                     norm.counts <- pgx$counts  ## no-normalization
+                } else {
+                    message("[normalized_counts] >>> normalizing counts with ", method)
+                    norm.counts <- pgx.countNormalization(pgx$counts, method)
                 }
                 norm.counts
             })

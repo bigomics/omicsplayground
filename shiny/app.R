@@ -57,6 +57,7 @@ message("FILESX =",FILESX)
 message("PGX.DIR =",PGX.DIR)
 message("DEBUG = ",DEBUG)
 message("WATERMARK = ",WATERMARK)
+message("SHINYPROXY = ",SHINYPROXY)
 
 src.local=TRUE  ## need???
 src.local=FALSE  ## need???
@@ -326,7 +327,11 @@ names(TABVIEWS)
 TABVIEWS <- TABVIEWS[names(TABVIEWS) %in% names(which(ENABLED))]
 names(TABVIEWS)
 
-tabs = "load"
+TABVIEWS[["logout"]] <- tabPanel(title=HTML("<a id='logout' href='/logout'>Logout"))
+ENABLED["logout"] <- ifelse(SHINYPROXY, TRUE, FALSE)
+## ENABLED["logout"]=TRUE
+
+tabs = list( home=c("load","logout"))
 createUI <- function(tabs)
 {
     message("\n======================================================")
@@ -375,6 +380,7 @@ createUI <- function(tabs)
     }
     ##tablist <- TABVIEWS[tabs]
     tablist <- list()
+    i=1
     for(i in 1:length(tabs)) {
         itab <- tabs[[i]]
         itab <- itab[which(ENABLED[itab])] ## only enabled
@@ -390,12 +396,13 @@ createUI <- function(tabs)
     
     ## add help menu
     tablist[["helpmenu"]] <- help.tabs
-    names(tablist) <- NULL
-
+   
+    
     ##-------------------------------------
     ## create navbarPage
     ##-------------------------------------
     selected = "Home"    
+    names(tablist) <- NULL
     do.call( navbarPage, c(tablist,
                            title=title, id=id,
                            selected=selected,
@@ -405,18 +412,19 @@ createUI <- function(tabs)
                            theme = theme))
 }
 
-ui = createUI(
-    tabs = list(
-        "Home" = "load",
-        "DataView" = "view",
-        "Clustering" = "clust",
-        "Expression" = c("expr","cor"),
-        "Enrichment" = c("enrich","func","word","drug"),
-        "Signature" = c("isect","sig","bio","cmap","tcga"),
-        "CellProfiling" = "scell",
-        "Dev" = c("system","multi")
-    )
+tabs = list(
+    "logout",
+    "Home" = c("load"),
+    "DataView" = "view",
+    "Clustering" = "clust",
+    "Expression" = c("expr","cor"),
+    "Enrichment" = c("enrich","func","word","drug"),
+    "Signature" = c("isect","sig","bio","cmap","tcga"),
+    "CellProfiling" = "scell",
+    "Dev" = c("system","multi")
 )
+ui = createUI(tabs)
+
 
 ## --------------------------------------------------------------------
 ## ------------------------------ RUN ---------------------------------
