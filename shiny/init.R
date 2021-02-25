@@ -39,7 +39,7 @@ if(is.null(ORCA)) {
 ##======================================================================
 
 tipify2 <- function(...) {
-    tipify(..., options = list(container = "body"))
+    shinyBS::tipify(..., placement="top", options = list(container = "body"))
 }
 
 premium.feature <- function(...) {

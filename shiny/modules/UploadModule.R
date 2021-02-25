@@ -116,7 +116,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                             checkboxInput(ns("load_example"), "load example data"),
                             ##checkboxInput(ns("advanced_mode"),"advanced")
                             ##shinyWidgets::prettySwitch(ns("advanced_mode"),"advanced")
-                            shinyWidgets::prettySwitch(ns("advanced_mode"),"batch correction (beta)")
+                            shinyWidgets::prettySwitch(ns("advanced_mode"),"batch correction (beta)")                            
                         ),
                         mainPanel(
                             width = 9,
@@ -189,7 +189,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             
             observeEvent( input$advanced_mode, {
                 if(input$advanced_mode) {
-                    ## showTab("tabs", "Normalize")   ## NOT YET!!!
+                    showTab("tabs", "Normalize")   ## NOT YET!!!
                     showTab("tabs", "BatchCorrect")
                 } else {
                     hideTab("tabs", "Normalize")
@@ -224,7 +224,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             ##=====================================================================
             ##========================= REACTIVES =================================
             ##=====================================================================            
-                        
+
             ##correctedX <- reactive({
             normalized_counts <- NormalizeCountsServerRT(
                 id = "normalize",
@@ -235,8 +235,8 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             ##correctedX <- reactive({
             correctedX <- SuperBatchCorrectServer(
                 id = "batchcorrect",
-                X = reactive(uploaded$counts.csv),
-                ## X = normalized_counts,  ## NOT YET!!!!
+                ##X = reactive(uploaded$counts.csv),
+                X = normalized_counts,  ## NOT YET!!!!
                 is.count = TRUE,
                 ##pheno = reactive(uploaded$samples.csv),
                 pheno = reactive(uploaded$samples.csv),
@@ -250,7 +250,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 contrRT = reactive(uploaded$contrasts.csv),
                 height = height
             )
-
+            
             observeEvent( modified_ct(), {
                 ## Monitor for changes in the contrast matrix and if
                 ## so replace the uploaded reactive values.

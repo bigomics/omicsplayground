@@ -107,6 +107,10 @@ body {
     background: var(--hover-color) !important;
 }
 
+#logout {
+    margin-top: -30px;
+}
+
 /* ---------------------------- playground -------------------------- */
 
 /* value boxes */
@@ -311,6 +315,15 @@ body {
     margin-bottom: 0px;
 }
 
+.radio label, .checkbox label {
+    min-height: 20px;
+    margin: 2px 0 2px 0;    
+}
+
+input[type="checkbox"], input[type="radio"] {
+    margin: 0px 0 0 0px;
+}
+
 .selectize-input {
     padding: 4px 12px 1px 12px !important;    
     min-height: 26px !important;
@@ -327,7 +340,6 @@ body {
 }
 
 /* ------------------- buttons -------------- */
-
 .run-button,.load-button {
     outline: none;
     border-color: #1967be;
@@ -361,13 +373,6 @@ body {
     margin-bottom: -3px;
 }
 
-.btn:hover, .btn:focus, .btn:active, .btn:active:hover {
-    color: #333;
-    /* background-color: #0067c4; */
-    /* border: 1px solid var(--main-color); */
-    border: 1px solid #999;
-}
-
 .dropdown-menu {
     background: #EFEEEE;
     font-size: 0.9em;
@@ -385,11 +390,23 @@ body {
 
 .btn, .btn-default {
     background-color: white;
-    /* background-image: linear-gradient(#f5f5f5, #ffffff 60%, #dcdcdc); */
     padding: 4px 12px;
     font-size: 12px;
     margin: 0px;
     border-radius: 3px;
+}
+
+.modal-footer .btn {
+    margin-left: 5px;
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+.btn:hover, .btn:focus, .btn:active, .btn:active:hover {
+    color: #333;
+    /* background-color: #0067c4; */
+    /* border: 1px solid var(--main-color); */
+    border: 1px solid #999;
 }
 
 /*
