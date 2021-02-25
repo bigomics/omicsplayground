@@ -38,7 +38,6 @@ if(0) {
 }
 
 ## Determine if we are in ShinyProxy
-shiny.vars <- c("SHINYPROXY_USERNAME","SHINYPROXY_USERGROUPS")
-SHINYPROXY = all(sapply(shiny.vars,Sys.getenv)!="")
+SHINYPROXY = Sys.getenv("SHINYPROXY_USERNAME")!=""
 
 dbg <- function(msg) if(DEBUG) message(cat(msg))
