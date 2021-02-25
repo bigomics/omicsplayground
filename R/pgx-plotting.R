@@ -2395,7 +2395,7 @@ pgx._scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
                                       opacity=1, label.clusters=FALSE,
                                       labels=NULL, label.type=NULL, 
                                       tooltip=NULL, theme=NULL, set.par=TRUE,
-                                      title="", nrows=NULL)    
+                                      title="", nrows=NULL, displayModeBar=FALSE)    
 {
     require(viridis)
     require(RColorBrewer)
@@ -2476,15 +2476,18 @@ pgx._scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
         }
         
         ##tooltip <- paste0(pgx$genes$gene_name,"<br>",pgx$genes$gene_name)
-        gg.title <- pgx$genes[rownames(pos),"gene_title"]
+        ##gg.title <- pgx$genes[rownames(pos),"gene_title"]
         ##tooltip <- paste(rownames(pos),"<br>", title,"=",z1,"<br>",gg.title)
         tooltip1 <- paste0(
-            rownames(pos),"<br>x = ",round(pos[,1],2),"; y = ",round(pos[,2],2))
+            rownames(pos),
+            "<br>value = ",var,
+            "<br>x = ",round(pos[,1],2),"; y = ",round(pos[,2],2)
+        )
         if(!is.null(tooltip)) {
             tooltip1 <- paste0(tooltip1,"<br>",tooltip)
         }
         label1 <- rownames(pos)
-        if(!is.null(labels)) label1 <- labels
+        if(!is.null(labels) && labels[1]!=FALSE) label1 <- labels
         
         ## prepare dataframe
         df <- data.frame(x=pos[,1], y=pos[,2], name=rownames(pos),
@@ -2533,6 +2536,10 @@ pgx._scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
         if(nz==1) {
             plt <- plt %>% layout(xaxis = ax, yaxis = ax)
         }
+
+        plt <- plt %>%  config(displayModeBar = displayModeBar)
+
+        plt
     }
     
     ## Plot the continous variables    
@@ -2552,8 +2559,10 @@ pgx._scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
         }
         
         tooltip1 <- paste0(
-            rownames(pos),"<br>x = ",round(pos[,1],2),"; y = ",round(pos[,2],2),
-            "; z = ",round(z,digits=4))
+            rownames(pos),
+            "<br>value = ", format(z,digits=4),
+            "<br>x = ",round(pos[,1],2),"; y = ",round(pos[,2],2)
+        )
         if(!is.null(tooltip)) {
             tooltip1 <- paste0(tooltip1,"<br>",tooltip)
         }

@@ -160,6 +160,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     MakeContrastUI(ns("makecontrast"))
                 )                
             })
+            outputOptions(output, "contrasts_UI", suspendWhenHidden=FALSE) ## important!!!
             
             output$compute_UI <- renderUI({
                 fillCol(
@@ -248,6 +249,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 id = "makecontrast",
                 phenoRT = reactive(uploaded$samples.csv),
                 contrRT = reactive(uploaded$contrasts.csv),
+                countsRT = reactive(uploaded$counts.csv),
                 height = height
             )
             

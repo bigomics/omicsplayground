@@ -274,7 +274,7 @@ body {
 .form-control {
     font-size: 12px !important; 
     line-height: 1.1 !important;
-    padding: 3px 3px;
+    padding: 3px 5px;
 }
 
 .shiny-flow-layout {
@@ -325,7 +325,11 @@ input[type="checkbox"], input[type="radio"] {
 }
 
 .selectize-input {
-    padding: 4px 12px 1px 12px !important;    
+    padding: 0px 4px 0px 4px !important;
+    min-height: 26px !important;
+}
+.selectize-input.has-items {
+    padding: 0px 4px 0px 4px !important;
     min-height: 26px !important;
 }
 

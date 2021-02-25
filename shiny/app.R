@@ -75,8 +75,8 @@ options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
 
-## over-ride options
-opt$AUTHENTICATION = "none"
+## over-ride options (for DEBUG)
+## opt$AUTHENTICATION = "none"
 ## opt$AUTHENTICATION = "password"
 ## opt$AUTHENTICATION = "register"
 ## opt$AUTHENTICATION = "firebase"

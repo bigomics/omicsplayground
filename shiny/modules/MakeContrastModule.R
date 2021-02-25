@@ -47,7 +47,7 @@ MakeContrastUI <- function(id) {
     uiOutput(ns("UI"))
 }
 
-MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
+MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT=NULL, height=720)
 {
     require(DT)
     moduleServer(
@@ -81,32 +81,50 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
                 inline.div <- function(a) {
                     div(style="display: inline-block;vertical-align:top; width: 150px;",a)
                 }
-
                 fillCol(
-                    height = 800,
-                    flex = c(NA,NA,NA,NA,NA,NA),
-                    h4("Create comparisons"),                        
-                    p(help_text),
+                    height = 750,
+                    flex = c(1,NA,NA,1),
                     fillRow(
-                        height = 240,
-                        flex = c(NA,1),
+                        flex = c(3,0.06,1.0),
                         fillCol(
-                            flex = c(NA,NA,NA,1),
-                            selectInput(ns("param"), "Phenotype:", choices=phenotypes,
-                                        selected=psel, multiple=TRUE),
-                            textInput(ns("newname"),"Comparison name:",
-                                      placeholder="e.g. treated_vs_control"),
-                            actionButton(ns("addcontrast"),"add comparison", icon=icon("plus")),
-                            br()
+                            flex = c(NA,NA,1.0),
+                            h4("Create comparisons"),                        
+                            ##p(help_text),
+                            fillRow(
+                                flex = c(1,4),
+                                fillCol(
+                                    flex = c(NA,NA,NA,NA,1),
+                                    tipify2(
+                                        selectInput(ns("param"), "Phenotype:", choices=phenotypes,
+                                                    selected=psel, multiple=TRUE),
+                                        "Select phenotype(s) to create conditions for making your groups."
+                                    ),
+                                    tipify2(
+                                        textInput(ns("newname"), "Comparison name:",
+                                                  placeholder="e.g. treated_vs_control"),
+                                        "Give a name for your contrast. You must include _vs_ in the name to separate the names of the two groups. Try to keep the name short otherwise your plots may get ugly."),
+                                    br(),
+                                    tipify2(
+                                        actionButton(ns("addcontrast"),"add comparison", icon=icon("plus")),
+                                        "After creating the groups, press this button to add the comparison to the table."
+                                    ),
+                                    br()
+                                ),
+                                tipify(
+                                    uiOutput(ns("createcomparison"),
+                                             style="font-size:13px; height: 280px; overflow-y: scroll;"),
+                                    "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add the contrast to the table.",
+                                    placement="top", options = list(container = "body"))
+                            )
                         ),
-                        uiOutput(ns("createcomparison"),
-                                 style="font-size:13px; height: 240px; overflow-y: scroll;")
+                        br(),
+                        ##plotOutput(ns("pcaplot"), height="330px")
+                        plotWidget(ns("pcaplot"))
                     ),
                     h4("Contrast table"),
                     fillRow(
                         height = 24,
-                        flex = c(NA,NA,1),
-                        ##textInput(ns("newname"),NULL,placeholder="comparison name"),
+                        flex = c(NA,1),
                         actionButton(ns("autocontrast"),"add auto-contrasts", icon=icon("plus"),
                                      class="small-button"),
                         br()
@@ -118,7 +136,8 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
                 )
                 
             })
-
+            outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
+            
             sel.conditions <- reactive({
                 req(phenoRT())
                 df <- phenoRT()
@@ -346,6 +365,61 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT=NULL, height=720)
                 ) %>%
                     DT::formatStyle(0, target='row', fontSize='12px', lineHeight='99%')                
             }, server=FALSE)
+            
+
+            pcaplot.RENDER <- reactive({
+
+                ##ngs <- inputData()
+                ##X <- ngs$X
+                pheno <- phenoRT()
+                counts <- countsRT()
+                if(is.null(pheno) || is.null(counts)) return(NULL)
+                if(NCOL(pheno)==0 || NCOL(counts)==0) return(NULL)
+                req(pheno)
+                req(counts)
+                
+                method <- input$pcaplot.method
+                X <- log2(1 + counts)
+                clust <- pgx.clusterMatrix(X, dims=2, method=method)
+                names(clust)
+
+                y <- sel.conditions()
+                
+                par(mar=c(4,1,1,1))
+                pgx.scatterPlotXY(
+                    clust$pos2d, var=y, plotlib="plotly",
+                    legend = FALSE ##, labels=TRUE
+                )
+                
+            })
+            
+            pcaplot.opts = tagList(
+                tipify( selectInput( ns("pcaplot.method"), "Method:",
+                                    choices = c("pca","tsne","umap"),
+                                    width = '100%'),"Choose clustering method.",
+                       placement="right", options = list(container = "body"))
+            )
+
+            observe({
+                req(phenoRT())
+                px <- colnames(phenoRT())
+                message("[MakeContrastModule] px = ", paste(px,collapse=" "))
+                updateSelectInput(session, "pcaplot.colvar", choices=px)
+            })
+            
+            callModule(
+                plotModule, 
+                id = "pcaplot",
+                func = pcaplot.RENDER, ## ns=ns,
+                plotlib = "plotly", 
+                options = pcaplot.opts,
+                height = c(320,700), width=c("auto",800),
+                pdf.width=8, pdf.height=8,
+                title="PCA/tSNE plot",
+                ##info.text = hm_PCAplot_text
+                ##caption = pca_caption_static
+            )
+
             
             ##ct <- rv$contr
             return(reactive({rv$contr}))  ## pointing to reactive
