@@ -200,7 +200,7 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                     tipify2(
                         selectInput(ns("bc_modelpar"), "Model parameters:", pheno.par,
                                     selected=sel.par, multiple=TRUE),
-                        "Please specify your model parameters. These are the parameters of interest that will determine your groupings.", placement="left"),
+                        "Please specify your model parameters. These are the parameters of interest that will determine your groupings."),
                     tipify(                    
                         radioButtons(ns("bc_strength"), NULL,
                                      c("low","medium","strong"), inline=TRUE),
