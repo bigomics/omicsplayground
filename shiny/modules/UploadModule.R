@@ -344,6 +344,13 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     ggtitle("COUNTS", subtitle=tt2)
             })
 
+            if(0) {
+                pheno <- read.csv("~/Projects/GSE155249-covid19/bulk-RNAseq/samples.csv",row.names=1,check.names=FALSE)
+                samples=pheno
+                counts <- read.csv("~/Projects/GSE155249-covid19/bulk-RNAseq/counts.csv",row.names=1,check.names=FALSE)
+
+            }
+
             output$phenoStats <- renderPlot({
 
                 message("[phenoStats] renderPlot called \n")
@@ -381,8 +388,11 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 ii <- unlist(vt$col_name[c("numeric","integer")])
                 ii
                 if(!is.null(ii) && length(ii)) {
-                    cat("[UploadModule::phenoStats] discretizing variables:",colnames(df)[ii],"\n")
-                    df[,ii] <- apply(df[,ii,drop=FALSE], 2, function(x) cut(x, breaks=10))
+                    cat("[UploadModule::phenoStats] discretizing variables:",ii,"\n")
+                    df[,ii] <- apply(df[,ii,drop=FALSE], 2, function(x) {
+                        if(any(is.infinite(x))) x[which(is.infinite(x))] <- NA
+                        cut(x, breaks=10)
+                    })
                 }
 
                 message("[UploadModule::phenoStats] nrow(df)=",nrow(df),"\n")
@@ -591,6 +601,22 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     
                 } else if(!has.pgx) {
                     
+                    ## check rownames of samples.csv
+                    if(status["samples.csv"]=="OK" && status["counts.csv"]=="OK") {
+                        samples1 = uploaded[["samples.csv"]]
+                        counts1 = uploaded[["counts.csv"]]
+                        a1 <- mean(rownames(samples1) %in% colnames(counts1))
+                        a2 <- mean(samples1[,1] %in% colnames(counts1))
+                        message("[UploadModuleServer] a1 =",a1)
+                        message("[UploadModuleServer] a2 =",a2)
+                        
+                        if(a2 > a1 && NCOL(samples1)>1 ) {
+                            message("[UploadModuleServer] setting rownames of samples.csv with first column\n")
+                            rownames(samples1) <- samples1[,1]
+                            uploaded[["samples.csv"]] <- samples1[,-1,drop=FALSE]
+                        }                        
+                    }
+
                     ## check files: matching dimensions
                     if(status["counts.csv"]=="OK" && status["samples.csv"]=="OK") {
                         if(!all( sort(colnames(uploaded[["counts.csv"]])) ==
@@ -621,7 +647,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                             status["samples.csv"] = paste("ERROR: max",MAXSAMPLES,"samples allowed")
                         }
                     }
-                    
+                                        
                     ## check files: must have group column defined
                     if(status["samples.csv"]=="OK" && status["contrasts.csv"]=="OK") {
                         samples1   = uploaded[["samples.csv"]]
@@ -636,6 +662,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                             status["contrasts.csv"] = "ERROR: contrasts do not match samples"
                         }
                     }
+                    
                     
                 } ## end-if-from-pgx
                 

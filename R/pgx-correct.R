@@ -477,7 +477,11 @@ pgx.PC_correlation <- function(X, pheno, nv=3, stat="F", plot=TRUE, main=NULL) {
         } else {
             y <- px[,p]
         }
-        if(length(unique(y[!is.na(y)]))>1) {
+        nlevels <- length(unique(y[!is.na(y)]))
+        nlevels
+        nrep <- max(table(y))
+        nrep
+        if(nlevels>1 && nrep >= 2) {
             if(stat=="cor") {
                 rho[[p]] <- getCor(x=t(V),y)
             }
@@ -486,7 +490,7 @@ pgx.PC_correlation <- function(X, pheno, nv=3, stat="F", plot=TRUE, main=NULL) {
             }
         }
     }
-
+    
     R <- do.call(rbind, rho)
     colnames(R) <- paste0("PC",1:ncol(R))
     if(stat=="F") R <- t(t(R) / colMeans(R)) 
@@ -591,9 +595,9 @@ pgx.countNormalization <- function(x, methods, keep.zero=TRUE)
         } else if(m=="RLE") {
             ## normalization on total counts (linear scale)
             x <- normalizeRLE(x, log=FALSE) ## does RLE on counts (Deseq2)
-        } else if(m %in% c("upperquartile")) {
-            ## normalization on total counts (linear scale)
-            x <- normalizeTMM(x, log=FALSE, method=m) ## does TMM on counts
+##        } else if(m %in% c("upperquartile")) {
+##            ## normalization on total counts (linear scale)
+##            x <- normalizeTMM(x, log=FALSE, method=m) ## does upperquartile on counts
         } else if(m=="quantile") {
             require(preprocessCore)
             new.x <- 0.01 * normalize.quantiles(as.matrix(100*x)) ## shift to avoid clipping
