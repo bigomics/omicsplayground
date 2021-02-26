@@ -452,6 +452,8 @@ mouse2human <- function(x) {
 probe2symbol <- function(probes, type=NULL, org="human")
 {
     require("AnnotationDbi")
+
+    ## strip postfix for ensemble codes
     if(mean(grepl("^ENS",probes))>0.5) {
         probes <- gsub("[.].*","",probes)
     }
