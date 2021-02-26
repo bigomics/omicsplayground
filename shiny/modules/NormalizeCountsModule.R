@@ -40,10 +40,9 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
         id,
         function(input, output, session) {
             
-            all.methods <- c("none","scale","quantile",
-                             "CPM","TMM","RLE","upperquartile")    
-            
+            all.methods <- c("none","scale","quantile", "CPM","TMM","RLE")            
             nc_info = "normalization module"
+            nc_info = ""
 
             output$UI <- renderUI({
                 ##ns <- NS(id)  ## namespace
@@ -79,7 +78,7 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
 
             pgx <- reactive({
                 if(is.null(input$addnoise)) return(NULL)
-                pgx <- list(counts=counts())                
+                pgx <- list(counts=counts()) 
                 ## Simulate raw signals
                 if(input$addnoise) {
                     mult <- 1e4 * runif(ncol(pgx$counts))
@@ -98,6 +97,17 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
                     post.qn = postqn,
                     title=NULL, subtitle=NULL, caption=NULL)
             })
+
+            if(0) {
+                pgx =list(counts=counts)
+                viz.NormalizeCounts(
+                    pgx = pgx,
+                    methods = NULL,
+                    post.qn = FALSE,
+                    title=NULL, subtitle=NULL, caption=NULL)
+                
+
+            }
             
             normalized_counts <- reactive({
                 ##req(input$selectmethod)

@@ -1725,11 +1725,22 @@ ggscatter <- function(x, y=NULL, col=NULL, main=NULL,
     if(!is.null(col)) df$col <- col
     if(!is.null(shape)) df$shape <- shape
     head(df)
-    p <- ggplot(df, aes(y=y, x=x, color=col, shape=shape)) +
-        geom_point(size = 2.0*cex) +
-        scale_color_manual( values=col.scale, name='' ) +
-        ggtitle(main) + xlab(xlab) + ylab(ylab)     
-
+    is.factor <- class(type.convert(as.character(col)))=="factor"
+    if(is.factor) {
+        p <- ggplot(df, aes(y=y, x=x, color=col, shape=shape)) +
+            geom_point(size = 2.0*cex) +
+            scale_color_manual( values=col.scale, name='' ) +
+            ggtitle(main) + xlab(xlab) + ylab(ylab)
+    } else {
+        p <- ggplot(df, aes(y=y, x=x, color=col, shape=shape)) +
+            geom_point(size = 2.0*cex) +
+            ggtitle(main) + xlab(xlab) + ylab(ylab)
+        if(!is.null(col.scale)) {
+            p <- p + scale_color_gradient( low=col.scale[1], high=col.scale[2] ) 
+        }
+    }
+    p
+    
     if(legend) {
         p <- p +  theme(
                       legend.title = element_blank(),

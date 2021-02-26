@@ -793,8 +793,10 @@ viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE,
     plotDensity <- function(xx, main) {
         if(nrow(xx)>1000) xx <- xx[sample(1:nrow(xx),1000),,drop=FALSE]
         if(ncol(xx)>100)  xx <- xx[,sample(1:ncol(xx),100)]
-        dc <- melt(xx)
-        dc$value[dc$value==0] <- NA
+        dc <- reshape2::melt(xx)
+        ##dc$value[dc$value==0] <- NA
+        dc <- dc[dc$value>0,,drop=FALSE]
+        dc$Var2 <- paste0("column.",dc$Var2)  ## colnames
         tt2 <- paste(nrow(counts),"x",ncol(counts))
         xx1 <- xx
         xx1[xx1==0] <- NA  ## non-zero
@@ -810,15 +812,16 @@ viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE,
             geom_vline( xintercept = avgx + sdx*c(-2,2),
                        linetype="dotted",
                        color="grey50", size=0.6)            
+
     }
     
-    counts <- pgx$counts    
+    counts <- as.matrix(pgx$counts)
     ## counts <- t(t(counts) * 1e6*runif(ncol(counts)))
                 
     xlist <- list()
     ##NORMALIZATION.METHODS <- c("none","mean","scale","NC","CPM","TMM","RLE","quantile")
-    NORMALIZATION.METHODS <- c("none","scale","quantile","CPM","TMM","RLE",
-                               "upperquartile")    
+    NORMALIZATION.METHODS <- c("none","scale","quantile","CPM","TMM","RLE")
+
     if(is.null(methods))
         methods <- NORMALIZATION.METHODS
     methods <- intersect(methods, NORMALIZATION.METHODS)
@@ -851,8 +854,7 @@ viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE,
     viz.showFigure(fig, title=title, subtitle=subtitle, caption=caption)
 }
 
-
-by.pheno="isotype";ng=60;nmin=8
+##by.pheno="isotype";ng=60;nmin=8
 viz.VHVLusage <- function(pgx, by.pheno="isotype", ng=30, nmin=1,
                           title=NULL, subtitle=NULL, caption=NULL)
 {
@@ -1087,6 +1089,8 @@ viz.BatchCorrection <- function(pgx, cX, cX2=NULL, phenotype, stat="F",
         main=main, title=title, subtitle=subtitle, caption=caption)    
 }
 
+
+###pos0=pos1=pos2=NULL;npca=3;cex=1;nmax=40;main=c("not-corrected", "corrected","corrected2")
 viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="F", 
                                       pca.heatmap=FALSE, nmax=40, cex=1, 
                                       pos0=NULL, pos1=NULL, pos2=NULL, npca=3,
@@ -1101,6 +1105,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     if(is.null(phenotype))
         phenotype <- colnames(pheno)[1]
     phenotype <- head(intersect(phenotype,colnames(pheno)),4) ## max 4
+    phenotype
     
     ##X1 <- head(X1[order(-apply(X1,1,sd)),],50)
     xlist <- list(X0, cX, cX2)
@@ -1166,6 +1171,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     ##-------------------------------------------    
     flist <- list()
     pheno1 <- pheno[,order(colnames(pheno)),drop=FALSE]
+    i=1
     for(i in 1:length(xlist)) {
         f1 <- pgx.PC_correlation(
             xlist[[i]], pheno1, nv=npca, stat="F", plot=TRUE,
@@ -1198,6 +1204,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     ## Arrange plots
     ##-------------------------------------------
     np <- length(xlist)
+    np
     lab1 <- letters[1:np]
     lab2 <- letters[(np+1):(2*np)]
     lab3 <- letters[(2*np+1):(3*np)]
