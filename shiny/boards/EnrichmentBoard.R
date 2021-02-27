@@ -100,7 +100,7 @@ EnrichmentBoard <- function(input, output, session, env)
             conditionalPanel(
                 "input.gs_options % 2 == 1", ns=ns, 
                 tagList(
-                    tipify(checkboxInput(ns("gs_showsig"),"Filter significant",TRUE),
+                    tipify(checkboxInput(ns("gs_showall"),"Show all genesets",FALSE),
                            "Enbale significant genes filtering. Display only significant genesets in the table.", 
                            placement="top", options = list(container = "body")),
                     
@@ -379,13 +379,13 @@ EnrichmentBoard <- function(input, output, session, env)
 
     getFilteredGeneSetTable <- reactive({        
 
-        if(is.null(input$gs_showsig) || length(input$gs_showsig)==0) return(NULL)
+        if(is.null(input$gs_showall) || length(input$gs_showall)==0) return(NULL)
         if(is.null(input$gs_top10) || length(input$gs_top10)==0) return(NULL)
                 
         res <- getFullGeneSetTable()
         
         ## just show significant genes
-        if(input$gs_showsig && nrow(res)>0 ) {
+        if(!input$gs_showall && nrow(res)>0 ) {
             nmeth <- length(input$gs_statmethod)
             sel <- which(res$stars == star.symbols(nmeth))
             res = res[sel,,drop=FALSE]
@@ -1551,7 +1551,7 @@ EnrichmentBoard <- function(input, output, session, env)
         ##limma  = cbind( ngs$gx.meta$meta[[comp]][,c("gene_name","gene_title")], limma1)
         rownames(limma1) <- rownames(mx)
 
-        if(1 && input$gs_showsig) {
+        if(1 && !input$gs_showall) {
             lfc=1;fdr=0.05
             lfc <- input$gs_lfc
             fdr <- input$gs_fdr

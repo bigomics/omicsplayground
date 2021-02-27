@@ -70,6 +70,12 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                 ##width="100%",
                                 ## width=420,
                                 placeholder="Name of your dataset"),
+                            selectInput(
+                                ns("upload_datatype"),
+                                "Datatype:",
+                                choices = c("RNA-seq","scRNA-seq","proteomics",
+                                            "mRNA microarray","other")
+                            ),
                             br(), 
                             div(textAreaInput(
                                 ns("upload_description"), NULL, ## "Description:",
@@ -317,8 +323,10 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 ##ngs$datatype = input$upload_datatype
                 ##ngs$name = "(uploaded)"
                 ngs$name = gsub("[ ]","_",input$upload_name)
+                ngs$datatype = input$upload_datatype
                 ngs$description = input$upload_description
-
+                ngs$creator <- ""                
+                
                 this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
                 ##ngs$date = date()
                 ngs$date = this.date

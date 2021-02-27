@@ -20,6 +20,11 @@ DEV       = FALSE
 WATERMARK = FALSE
 DEBUG     = FALSE
 
+## Determine if we are in ShinyProxy
+SHINYPROXY = (Sys.getenv("SHINYPROXY_USERNAME")!="" && "omicsplayground" %in% dir("/"))
+USERNAME = "anonymous"
+if(SHINYPROXY) USERNAME = Sys.getenv("SHINYPROXY_USERNAME")
+
 if(0) {
     TITLE           = "Omics Playground"
     AUTHENTICATION  = "none"
@@ -37,7 +42,5 @@ if(0) {
     ##BOARDS_DISABLED = tcga,multi,sig,isect,bio
 }
 
-## Determine if we are in ShinyProxy
-SHINYPROXY = (Sys.getenv("SHINYPROXY_USERNAME")!="" && "omicsplayground" %in% dir("/"))
 
 dbg <- function(msg) if(DEBUG) message(cat(msg))
