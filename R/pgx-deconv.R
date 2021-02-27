@@ -80,18 +80,19 @@ pgx.inferCellType <- function(counts, low.th=0.01, add.unknown=FALSE,
     P <- P / (1e-6 + rowSums(P,na.rm=TRUE))
     pmax <- apply(P,1,max,na.rm=TRUE)
     sel.dodgy <- (pmax < min.prob) ## not reliable
-    cell.type <- colnames(P)[max.col(P)]
-    if(any(sel.dodgy)) cell.type[which(sel.dodgy)] <- NA
+    celltype <- colnames(P)[max.col(P)]
+    if(any(sel.dodgy)) celltype[which(sel.dodgy)] <- NA
     
     ## collapse small groups to 'other_cells'
-    low.ct <- names(which(table(cell.type) < low.th*length(cell.type)))
-    cell.type[cell.type %in% low.ct] <- "other_cells"
+    low.ct <- names(which(table(celltype) < low.th*length(celltype)))
+    celltype[celltype %in% low.ct] <- "other_cells"
+    names(celltype) <- colnames(counts)
 
-    names(cell.type) <- colnames(counts)
-    cell.type    
+    res <- list( celltype=celltype, probs=P)
+    res
 }
 
-##low.th=0.01;add.unknown=0;celltype0=NULL;min.prob=0.2
+##low.th=0.01;add.unknown=0;celltype0=NULL;min.prob=0.2;min.count=3
 pgx.inferCellTypeLM22 <- function(counts, low.th=0.01, add.unknown=FALSE,
                                   normalize.mat = TRUE, method="NNLM",
                                   min.count=3, celltype0=NULL, min.prob=0.2)
@@ -104,52 +105,80 @@ pgx.inferCellTypeLM22 <- function(counts, low.th=0.01, add.unknown=FALSE,
     colnames(M) <- gsub(" ","_",sub(" ",".",sub(" ","_",colnames(M))))
     colnames(M) <- sub("Macrophages_","Macrophages.",colnames(M))
 
+    P0 <- NULL
     if(is.null(celltype0)) {
-        celltype0 <- pgx.inferCellType(counts, low.th=0, add.unknown=add.unknown,
-                                       normalize.mat = TRUE, method="NNLM",
-                                       min.prob=min.prob)
+        res <- pgx.inferCellType(counts, low.th=0, add.unknown=add.unknown,
+                                 normalize.mat = TRUE, method="NNLM",
+                                 min.prob = min.prob)
+        celltype0 <- res$celltype
+        P0 <- res$probs
         table(celltype0)
     }
 
     ## Filter count matrix
     X <- counts
     X <- X[(rowMeans(X >= min.count) > low.th),] ## OK???
-
+    dim(X)
+    
     ## Match matrices
     rownames(X) <- toupper(rownames(X))
     rownames(M) <- toupper(rownames(M))
     gg <- intersect(rownames(X),rownames(M))
     X <- X[gg,]
     M <- M[gg,]
+    dim(X)
     
+    ## 2nd stage
+    table(celltype0)
     celltype <- rep(NA, ncol(X))
+    ct="Macrophages"
+    ct="Monocytes"
     ct="T_cells"
+    P1 <- matrix(NA,nrow=ncol(X),ncol=0)
+    rownames(P1) <- colnames(X)
     for(ct in unique(celltype0)) {
-        M1 <- M[,grep(ct,colnames(M)),drop=FALSE]
+        msel <- grep(ct,colnames(M))
+        M1 <- M[,msel,drop=FALSE]
         jj <- which(celltype0==ct)
+        jj <- 1:length(celltype0)
         ct3 <- celltype0[jj]
         dim(M1)
-        if(ncol(M1)>1) {
+        if(ncol(M1)>0) {
             X1 <- X[,jj,drop=FALSE]
             X1 <- X1 / (1e-3 + rowMeans(X1)) ## center feature means??
             M1 <- M1 / (1e-3 + rowMeans(M1)) ## center feature means??
             res1 <- pgx.deconvolution(
                 X1, ref=M1, methods="NNLM", normalize.mat = TRUE, 
                 add.unknown=FALSE )
-            ct3 <- colnames(M1)[max.col(res1$results[["NNLM"]])]
+            C1 <- res1$results[["NNLM"]]
+            C1 <- C1 / rowSums(C1)
+            ct3 <- colnames(C1)[max.col(C1)]
+            C0 <- P0[colnames(X1),ct]
+            C1 <- C1 * C0
+            C1 <- C1[match(rownames(P1),rownames(C1)),,drop=FALSE]
+            C1[is.na(C1)] <- 0
+            P1 <- cbind(P1, C1)
+        } else {
+            C1 <- P0[,ct]
+            P1 <- cbind(P1, C1)
+            colnames(P1)[ncol(P1)] <- ct
         }
         celltype[jj] <- ct3        
     }
+
+    celltype <- colnames(P1)[max.col(P1)]
     table(celltype0)
     table(celltype)
     table(celltype0, celltype)
-
+    dim(P1)
+    
     ## collapse small groups to 'other_cells'
     low.ct <- names(which(table(celltype) < low.th*length(celltype)))
     celltype[celltype %in% low.ct] <- "other_cells"
-
     names(celltype) <- colnames(counts)
-    celltype    
+
+    res <- list(celltype=celltype, probs=P1)    
+    res
 }
 
 pgx.checkCellTypeMarkers <- function(counts, min.count=3, markers=NULL)
@@ -443,19 +472,25 @@ pgx.inferGender <- function(X, gene_name=NULL) {
 }
 
 ##counts=ngs$counts
-pgx.multiDeconvolution <- function(counts, refmat, methods=DECONV.METHODS)
+pgx.multipleDeconvolution <- function(counts, refmat, methods=DECONV.METHODS)
 {
     methods
     timings <- c()
     results <- list()
+
+    if(class(refmat)!="list") {
+        refmat <- list("reference" = refmat)
+    }
+
     refnames <- names(refmat)
     refnames
     i=1
     for(i in 1:length(refmat)) {
-        message("[pgx.multiDeconvolution] computing for ",refnames[i])
+        message("[pgx.multipleDeconvolution] computing for ",refnames[i])
         ref <- refmat[[i]]
         dim(ref)
         res = pgx.deconvolution(counts[,], ref=ref, methods=methods)
+
         if(!is.null(res)) {
             names(res)
             names(res$results)

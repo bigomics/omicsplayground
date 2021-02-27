@@ -245,7 +245,8 @@ compute.deconvolution <- function(ngs, lib.dir, rna.counts=ngs$counts, full=FALS
     ##counts <- ngs$counts
     counts <- rna.counts
     rownames(counts) <- toupper(ngs$genes[rownames(counts),"gene_name"])
-    res <- pgx.multiDeconvolution(counts, refmat=refmat, method=methods)
+    res <- pgx.multipleDeconvolution(counts, refmat=refmat, method=methods)
+
     ngs$deconv <- res$results
     rownames(res$timings) <- paste0("[deconvolution]",rownames(res$timings))
     res$timings

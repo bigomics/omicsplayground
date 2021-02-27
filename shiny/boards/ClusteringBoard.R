@@ -1597,7 +1597,7 @@ displays the expression levels of selected genes across all conditions in the an
             "input.xann_level == 'geneset'", ns=ns,
             tipify( checkboxInput(ns("xann_odds_weighting"), "Fisher test weighting"),
                    "Enable weighting with Fisher test probability for gene sets. This will effectively penalize small clusters and increase robustness.",
-                   placement="right", options = list(container = "body"))
+                   placement="left", options = list(container = "body"))
         ),
         tipify( selectInput( ns("xann_refset"), "Reference set:", choices="", width='80%'),
                "Specify a reference set to be used in the annotation.",

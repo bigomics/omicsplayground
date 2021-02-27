@@ -449,7 +449,7 @@ mouse2human <- function(x) {
     homologene::mouse2human(x)
 }
 
-probe2symbol <- function(probes, type=NULL, org="human")
+probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
 {
     require("AnnotationDbi")
     if(mean(grepl("^ENS",probes))>0.5) {
@@ -460,30 +460,34 @@ probe2symbol <- function(probes, type=NULL, org="human")
         library(org.Hs.eg.db)
         hs.list <- list(
             "human.ensembl" = unlist(as.list(org.Hs.egENSEMBL)),
-            "human.unigene" =  unlist(as.list(org.Hs.egUNIGENE)),
-            "human.refseq"  =  unlist(as.list(org.Hs.egREFSEQ)),
+            "human.unigene" = unlist(as.list(org.Hs.egUNIGENE)),
+            "human.refseq"  = unlist(as.list(org.Hs.egREFSEQ)),
             "human.accnum"  = unlist(as.list(org.Hs.egACCNUM)),
             "human.uniprot" = unlist(as.list(org.Hs.egUNIPROT)),
-            "human.symbol" = unlist(as.list(org.Hs.egSYMBOL))
+            "human.symbol"  = unlist(as.list(org.Hs.egSYMBOL))
             )
         library(org.Mm.eg.db)
         mm.list <- list(
             "mouse.ensembl" = unlist(as.list(org.Mm.egENSEMBL)),
-            "mouse.unigene" =  unlist(as.list(org.Mm.egUNIGENE)),
-            "mouse.refseq"  =  unlist(as.list(org.Mm.egREFSEQ)),
+            "mouse.unigene" = unlist(as.list(org.Mm.egUNIGENE)),
+            "mouse.refseq"  = unlist(as.list(org.Mm.egREFSEQ)),
             "mouse.accnum"  = unlist(as.list(org.Mm.egACCNUM)),
             "mouse.uniprot" = unlist(as.list(org.Mm.egUNIPROT)),
-            "mouse.symbol" = unlist(as.list(org.Mm.egSYMBOL))
+            "mouse.symbol"  = unlist(as.list(org.Mm.egSYMBOL))
         )
         id.list <- c(hs.list, mm.list)
         mx <- sapply(id.list, function(id) mean(probes %in% id))
         mx
-        type=NULL
-        if(max(mx,na.rm=TRUE) > 0.5) {
-            mx0 <- names(mx)[which.max(mx)]
-            org  <- sub("[.].*","",mx0)
-            type <- sub(".*[.]","",mx0)
-        }
+        org=type=NULL
+        max.mx <- max(mx,na.rm=TRUE)
+
+        mx0 <- names(mx)[which.max(mx)]
+        org  <- sub("[.].*","",mx0)
+        type <- sub(".*[.]","",mx0)        
+        message("[probe2symbol] mapped ",format(100*max.mx,digits=2),"% of probes")
+        if(max.mx < 0.5) {
+            message("[probe2symbol] WARNING! low mapping ratio: r= ",max.mx)
+        }        
         org
         type
     }
@@ -524,11 +528,19 @@ probe2symbol <- function(probes, type=NULL, org="human")
         }
     }
 
+    ## Unrecognize probes
     nna <- which(is.na(names(symbol0)))
-    names(symbol0)[nna] <- paste0("probe.",nna)
+    length(nna)
+    if(length(nna)) names(symbol0)[nna] <- probes[nna]
+
+    ## What to do with unmapped/missing symbols????
     symbol <- sapply(symbol0,"[",1)  ## takes first symbol only!!!
-    isnull <- sapply(symbol,is.null)
+    isnull <- which(sapply(symbol,is.null))
     symbol[isnull] <- NA
+    if(keep.na) {
+        sel.na <- which(is.na(symbol))
+        symbol[sel.na] <- probes[sel.na]
+    }
     symbol <- unlist(symbol)
     names(symbol) <- NULL
     head(symbol)
