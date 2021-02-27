@@ -576,7 +576,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         
         nrownames = 60
         nrownames = 9999
-        if(input$hm_cexCol==0) nrownames <- 0
+        if(input$hm_cexRow==0) nrownames <- 0
         
         if(0) {
             split=splity;splitx=splitx;mar=c(5,25); scale=scale.mode; show_legend=show_legend;
