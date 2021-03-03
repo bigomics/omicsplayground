@@ -134,8 +134,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         
         levels = getLevels(ngs$Y)
 
-        dbg("[ClusteringBoard::observe] updating hm_samplefilter")
-        dbg("[ClusteringBoard::observe] head(levels)=",head(levels))
         updateSelectInput(session, "hm_samplefilter", choices=levels)
         
         if(DEV && !is.null(ngs$gset.meta$matrices) ) {
@@ -194,7 +192,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ###if(is.null(input$hm_level)) return(NULL)
         choices = names(ngs$families)        
         if(input$hm_level=="geneset") {
-            dbg("[ClusteringBoard::observe] change to COLLECTIONS")            
             nk <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))
             choices = names(COLLECTIONS)[nk>=5]
         }
@@ -316,7 +313,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         }
         flt <- list(zx=zx, idx=idx)
 
-        message("[getFilteredMatrix] done!",dim(zx))        
         return(flt)
     })
     
@@ -349,28 +345,33 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         }
 
         if(do.split && splitvar %in% rownames(ngs$X)) {
-            dbg("[ClusteringBoard:getTopMatrix] splitting by gene: ",splitvar)
+
             ##xgene <- rownames(ngs$X)[1]
-            gx <- ngs$X[splitvar,,drop=FALSE]
+            gx <- ngs$X[splitvar,colnames(zx)]
+
             if(ncol(zx)>50) {
-                qq <- quantile(gx, probs=c(0.33,0.66), na.rm=TRUE)
-                grp <- cut(gx, breaks=c(-999,qq,999), label=c("low","medium","high"))
+                km  <- kmeans(gx, centers=3)
+                grp.labels <- c("low","medium","high")[rank(km$centers,ties.method="random")]
+                grp <- grp.labels[km$cluster]                
             } else {
-                qq <- quantile(gx, probs=c(0.50), na.rm=TRUE)
-                grp <- cut(gx, breaks=c(-999,qq,999), label=c("low","high"))
+                km <- kmeans(gx, centers=2)
+                grp.labels <- c("low","high")[rank(km$centers,ties.method="random")]
+                grp <- grp.labels[km$cluster]
             }
             grp <- paste0(splitvar,":",grp)
+            names(grp) <- colnames(zx)
         }
         
         ##if(length(grp)==0) splitby <- 'none'
         if(do.split && length(grp)==0) return(NULL)        
-        
+               
         topmode="specific"
         topmode="sd"
         topmode <- input$hm_topmode
         if(topmode == "specific" && length(table(grp))<=1) {
             topmode <- "sd"
         }
+        
         if(!do.split && topmode=="specific") topmode <- "sd"
         grp.zx <- NULL        
         if(topmode=="pca") {
@@ -428,7 +429,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             zx = head(zx,nmax)
         }
         ##zx = zx / apply(zx,1,sd,na.rm=TRUE)  ## scale??
-        
+
         ## ------------- cluster the genes???
         if(!is.null(flt$idx))  {
             idx <- flt$idx[rownames(zx)]  ## override
@@ -442,23 +443,22 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ## system.time( hc <- flashClust::hclust(D, method="ward" ) )
             ## system.time( hc <- nclust(D, link="ward") )
             ngrp = min(CLUSTK, nrow(zx))  ## how many default groups???
-            idx = paste0("S",cutree(hc, ngrp))
-                            
+            idx = paste0("S",cutree(hc, ngrp))                            
         }
-
+        
         ## ------------- matched annotation
         annot = ngs$Y[colnames(zx),,drop=FALSE]  ## Y or full matrix??
         kk = grep("sample|patient",colnames(annot),invert=TRUE)
         annot = annot[,kk,drop=FALSE]  ## no group??    
         samples = colnames(zx) ## original sample list
-        
+
         ## ----------------------------------------------------
         ## ------------ calculate group summarized ------------
         ## ----------------------------------------------------
         grp.zx <- NULL
         grp.var = "group"
         grp.var <- input$hm_group
-
+        
         if(grp.var %in% colnames(ngs$samples)) { 
             gg.grp <- ngs$samples[colnames(zx),grp.var]
             ## take most frequent term as group annotation value
@@ -473,14 +473,14 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                 unlist(f)
             })
             grp.annot = data.frame(do.call( rbind, grp.annot))
-            grp.annot = grp.annot[colnames(grp.zx),]
+            grp.annot = grp.annot[colnames(grp.zx),,drop=FALSE]
         } else {
 
             grp.zx <- zx
             grp.annot <- annot
 
         }
-        
+
         ##input$top_terms
         filt <- list(
             ## mat=zx, annot=annot, 
@@ -509,7 +509,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         
     ##hm1_splitmap.RENDER %<a-% reactive({
     hm1_splitmap.RENDER <- reactive({    
-
+        
         ##------------------------------------------------------------
         ## ComplexHeatmap based splitted heatmap
         ##------------------------------------------------------------
@@ -551,7 +551,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
         show_legend=show_colnames=TRUE
         if(input$hm_level=="geneset" || !is.null(splitx)) show_legend = FALSE
-        annot$group = NULL  ## no group in annotation
+        annot$group = NULL  ## no group in annotation??
         show_colnames <- (input$hm_cexCol != 0)
         ##if(ncol(zx) > 200) show_colnames <- FALSE ## never...    
         
@@ -587,20 +587,27 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             col.annot=annot; row.annot=NULL; annot.ht=2.2;
             nmax=-1
         }
-        
+
+        if(0) {
+            message("[hm1_splitmap.RENDER] rendering heatmap...")
+            message("[hm1_splitmap.RENDER] dim(annot) = ", paste(dim(annot),collapse="x"))
+            message("[hm1_splitmap.RENDER] rownames(annot) = ", rownames(annot))
+            message("[hm1_splitmap.RENDER] colnames(annot) = ", colnames(annot))
+            message("[hm1_splitmap.RENDER] splitx = ", paste(splitx,collapse=" "))
+            message("[hm1_splitmap.RENDER] splity = ", paste(splity,collapse=" "))
+        }
         showNotification('rendering heatmap...')
         plt <- grid::grid.grabExpr(
                          gx.splitmap(
                              zx, 
                              split = splity, splitx = splitx,
-                             mar = c(8,16),
-                             scale=scale.mode, show_legend=show_legend,
-                             show_colnames = show_colnames, column_title_rot=crot,
-                             show_rownames = nrownames, softmax=0,
+                             scale = scale.mode, show_legend = show_legend,
+                             show_colnames = show_colnames, column_title_rot = crot,
+                             show_rownames = nrownames, softmax = 0,
                              ## side.height.fraction=0.03+0.055*NCOL(annot), 
-                             title_cex=1.05, cexCol=cex1, cexRow=cex2, 
-                             col.annot=annot, row.annot=NULL, annot.ht=2.3,
-                             main=" ", nmax=-1
+                             title_cex = 1.05, cexCol = cex1, cexRow = cex2, 
+                             col.annot = annot, row.annot = NULL, annot.ht = 2.3,
+                             main=" ", nmax = -1, mar = c(8,16)
                          )
                      )
         plt
@@ -729,7 +736,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     
     output$hm1_splitmap <- renderPlot({
         plt <- hm1_splitmap.RENDER()
-        message("[ClusteringBoard:hm1_splitmap:renderPlot] drawing...")
         grid.draw(plt, recording=FALSE)
         ## plot(sin)
     }, res=90)
@@ -739,7 +745,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     })
 
     hm_splitmap.switchRENDER <- reactive({    
-        message("[ClusteringBoard] hm_splitmap.switchRENDER:plotOutput\n")
         ##req(input$hm_plottype)
         p = NULL
         if(input$hm_plottype %in% c("ComplexHeatmap","static") ) {
@@ -764,8 +769,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ##ht <- input$pdf_height
             wd <- input[["hm_splitmap-pdf_width"]]
             ht <- input[["hm_splitmap-pdf_height"]]
-            message("[hm_splitmap_downloadPDF] wd=",wd)
-            message("[hm_splitmap_downloadPDF] ht=",ht)
             
             if(1 && input$hm_plottype %in% c("ComplexHeatmap","static")) {
                 pdf(PDFFILE, width=wd, height=ht)
@@ -794,8 +797,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ##showNotification("exporting to PNG")
             wd <- 100*as.integer(input[["hm_splitmap-pdf_width"]])
             ht <- 100*as.integer(input[["hm_splitmap-pdf_height"]])
-            message("[hm_splitmap_downloadPNG] wd=",wd)
-            message("[hm_splitmap_downloadPNG] ht=",ht)
             if(1 && input$hm_plottype %in% c("ComplexHeatmap","static")) {
                 png(PNGFILE, width=wd, height=ht, pointsize=24)
                 grid.draw(hm1_splitmap.RENDER())
@@ -1712,8 +1713,6 @@ displays the expression levels of selected genes across all conditions in the an
         cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
         cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
 
-        message("[clust_phenoplot.RENDER] start plotting")
-        
         require(RColorBrewer)
         for(i in 1:min(20,length(pheno))) {
 
