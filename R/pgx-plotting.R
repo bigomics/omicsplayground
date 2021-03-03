@@ -2764,8 +2764,8 @@ plotlyMA <- function(x, y, names, source="plot1",
     xrange <- c(0,1)*max(abs(x))*1.05
     xrange <- range(x,na.rm=TRUE)
     yrange <- c(-1,1)*max(abs(y),na.rm=TRUE)*1.05        
-    xaxis = list( title = xlab, range = xrange )
-    yaxis = list( title = ylab, range = yrange )    
+    xaxis = list( title = xlab, range = xrange, gridwidth=0.2, showgrid=FALSE )
+    yaxis = list( title = ylab, range = yrange, gridwidth=0.2, showgrid=FALSE )    
 
     p <- p %>%
         layout(
@@ -2885,8 +2885,8 @@ plotlyVolcano <- function(x, y, names, source="plot1", group.names=c("group1","g
     yrange <- c(0,1)*max.absy*1.05
     ## if(min(y)>=0) yrange <- c(0,1)*max.absy*1.05
         
-    xaxis = list( title = xlab, range = xrange )
-    yaxis  = list( title = ylab, range = yrange )    
+    xaxis = list( title = xlab, range = xrange, gridwidth=0.2, showgrid=FALSE )
+    yaxis  = list( title = ylab, range = yrange, gridwidth=0.2, showgrid=FALSE )    
     p <- p %>%
         layout(
             shapes = list(abline1,abline2,abline3),
