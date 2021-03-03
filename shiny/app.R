@@ -15,18 +15,15 @@ library(shinyWidgets)
 library(waiter)
 library(plotly)
 
-
 message("\n\n")
 message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
 message("###############################################################")
 
-
 message("\n")
 message("************************************************")
 message("********* RUNTIME ENVIRONMENT VARIABLES ********")
 message("************************************************")
-
 
 Sys.setlocale("LC_CTYPE","en_US.UTF-8") 
 Sys.setlocale("LC_TIME","en_US.UTF-8")
@@ -117,6 +114,7 @@ source("modules/UploadModule.R",local=src.local)
 ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 
+
 if(0) {    
     ##PGX.DIR="../test/"
     ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
@@ -129,6 +127,8 @@ if(0) {
 ## --------------------------------------------------------------------
 ## ------------------------ READ BOARDS -------------------------------
 ## --------------------------------------------------------------------
+
+
 
 BOARDS <- c("load","view","clust","expr","enrich","isect","func",
             "word","drug","sig","scell","cor","bio","cmap",

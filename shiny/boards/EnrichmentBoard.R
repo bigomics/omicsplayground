@@ -408,7 +408,7 @@ EnrichmentBoard <- function(input, output, session, env)
         res <- data.frame(res)        
 
         if(nrow(res)==0) {
-            validate(need(nrow(res) > 0, "warning. no genes passed current filters."))
+            validate(need(nrow(res) > 0, "warning. no genesets passed current filters."))
             return(NULL)
         }
 
@@ -1676,8 +1676,6 @@ EnrichmentBoard <- function(input, output, session, env)
             validate(need(nrow(rpt) > 0, "warning. no genes."))
             return(NULL)
         }
-
-
         
         rpt$gene_title <- NULL    
         if(!is.null(rpt) && nrow(rpt)>0 ) {
