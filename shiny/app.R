@@ -21,7 +21,6 @@ message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
 message("###############################################################")
 
-
 message("\n")
 message("************************************************")
 message("********* RUNTIME ENVIRONMENT VARIABLES ********")
@@ -122,9 +121,10 @@ if(0) {
     ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
-    load("../data/plexium-evotec-sva.pgx")    
     ngs = pgx.initialize(ngs)
 }
+
+
 
 ## --------------------------------------------------------------------
 ## ------------------------ READ BOARDS -------------------------------

@@ -421,9 +421,10 @@ to understand biological functions including GO and KEGG pathway analysis."
     })
     
 
+    normalize=1;nterms=40;nfc=10
     plotKEGGactmap <- function(meta, df, normalize, nterms, nfc)
     {
-
+        
         fx <- sapply(meta, function(x) x$meta.fx)
         qv <- sapply(meta, function(x) x$meta.q)    
         rownames(fx) <- rownames(qv) <- rownames(meta[[1]])
@@ -439,7 +440,7 @@ to understand biological functions including GO and KEGG pathway analysis."
             score <- fx[kk,,drop=FALSE] 
         }
         dim(score)
-        if(NCOL(score)==1) score <- cbind(score,score)  ## UGLY...
+        ## if(NCOL(score)==1) score <- cbind(score,score)  ## UGLY...
         
         score <- score[head(order(-rowSums(score**2)),nterms),,drop=FALSE]  ## nr gene sets
         score <- score[,head(order(-colSums(score**2)),nfc),drop=FALSE]  ## max comparisons/FC    
@@ -448,11 +449,16 @@ to understand biological functions including GO and KEGG pathway analysis."
         d2 <- as.dist(1-cor(score,use="pairwise"))
         d1[is.na(d1)] <- 1
         d2[is.na(d2)] <- 1
-        ii=1:nrow(score);jj=1
-        jj <- hclust(d2)$order
-        ii <- hclust(d1)$order
-        score <- score[ii,jj,drop=FALSE]
-        
+        ii=1:nrow(score);jj=1:ncol(score)
+        if(NCOL(score)==1) {
+            score <- score[order(-score[,1]),1,drop=FALSE]
+        } else {
+            ii <- hclust(d1)$order
+            ii <- order(-rowMeans(score))
+            jj <- hclust(d2)$order
+            score <- score[ii,jj,drop=FALSE]
+        }
+        dim(score)
         rownames(score) = substring(rownames(score),1,50)
         
         score2 <- score
@@ -790,9 +796,10 @@ to understand biological functions including GO and KEGG pathway analysis."
                                 backgroundPosition = 'center') 
     })
 
-
+    normalize=1;maxterm=50;maxfc=10
     plotGOactmap <- function(score, go, normalize, maxterm, maxfc)
     {
+
         score[is.na(score)] = 0
         rownames(score) = V(go)[rownames(score)]$Term
         
@@ -800,7 +807,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         ##score = head(score[order(-rowSums(abs(score))),],40)
         score = score[head(order(-rowSums(score**2)),maxterm),,drop=FALSE] ## max number terms    
         score = score[,head(order(-colSums(score**2)),maxfc),drop=FALSE] ## max comparisons/FC
-        if(NCOL(score)==1) score <- cbind(score,score)   
+        ##if(NCOL(score)==1) score <- cbind(score,score)   
 
         score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
         d1 <- as.dist(1-cor(t(score),use="pairwise"))
@@ -808,9 +815,14 @@ to understand biological functions including GO and KEGG pathway analysis."
         d1[is.na(d1)] <- 1
         d2[is.na(d2)] <- 1
         jj=1;ii=1:nrow(score)
-        jj <- hclust(d2)$order
-        ii <- hclust(d1)$order
-        score <- score[ii,jj,drop=FALSE]
+        if(NCOL(score)==1) {
+            score <- score[order(-score[,1]),1,drop=FALSE]
+        } else {
+            ii <- hclust(d1)$order
+            ii <- order(-rowMeans(score))
+            jj <- hclust(d2)$order
+            score <- score[ii,jj,drop=FALSE]
+        }
         
         colnames(score) = substring(colnames(score),1,30)
         rownames(score) = substring(rownames(score),1,50)
@@ -842,9 +854,8 @@ to understand biological functions including GO and KEGG pathway analysis."
             dbg("[FunctionalBoard:GO_actmap.RENDER] no META.GO in pgx object!")
             return(NULL)
         }
-
+        
         score = ngs$meta.go$pathscore
-        ##if(is.null(score)) return(NULL)
         go = ngs$meta.go$graph
 
         plotGOactmap(

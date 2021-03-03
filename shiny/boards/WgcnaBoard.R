@@ -1235,7 +1235,7 @@ WgcnaBoard <- function(input, output, session, env)
         message("[wgcna_eigenCorrelation.RENDER] nr = ", nr)
         message("[wgcna_eigenCorrelation.RENDER] nc = ", nc)
         
-        ntop = 12        
+        ntop = 15        
         par(mfrow=c(nr,nc), mar=c(6,3.1,1,1), oma=c(1,1,1,1)*0, mgp=c(2.1,0.8,0))
         ##par(mfrow=c(nr,nc), mar=c(8,4,3,1)*0, oma=c(1,1,1,1)*0)
         k=1
@@ -1268,7 +1268,7 @@ WgcnaBoard <- function(input, output, session, env)
         options = wgcna_eigenCorrelation_opts,
         info.text = wgcna_eigenCorrelation_info,        
         height = c(fullH,720), width = c('auto',1050),
-        pdf.width=10, pdf.height=6, res=c(85,100)
+        pdf.width=10, pdf.height=6, res=c(90,105)
     )
 
     ##----------------------------------------
@@ -1314,7 +1314,7 @@ WgcnaBoard <- function(input, output, session, env)
         options = wgcna_intraHeatmap_opts,
         info.text = wgcna_intraHeatmap_info,        
         height = c(fullH,720), width = c('auto',1050),
-        pdf.width=10, pdf.height=6, res=c(85,100)
+        pdf.width=6, pdf.height=9, res=c(85,100)
     )
 
 
@@ -1377,8 +1377,8 @@ WgcnaBoard <- function(input, output, session, env)
         download.fmt = c("png","pdf"),
         options = wgcna_intraScatter_opts,
         info.text = wgcna_intraScatter_info,        
-        height = c(fullH,720), width = c('auto',1050),
-        pdf.width=10, pdf.height=6, res=c(85,100)
+        height = c(fullH,720), width = c('auto',1150),
+        pdf.width=12, pdf.height=9, res=c(85,90)
     )
     
     
