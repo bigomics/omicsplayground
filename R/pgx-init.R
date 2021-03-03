@@ -159,11 +159,14 @@ pgx.initialize.SAVE <- function(ngs) {
     ## into numeric, categorical into factors....
     ##----------------------------------------------------------------
     ngs$samples <- tidy.dataframe(ngs$samples)  ## warning!! this converts all to CHR!!
+    ##ngs$samples <- type.convert(ngs$samples)  ## warning!! this converts all to CHR!!
 
     ## clean up: ngs$Y is a cleaned up ngs$samples
     ngs$samples$barcode <- NULL
     ngs$samples <- ngs$samples[,which(colMeans(is.na(ngs$samples))<1),drop=FALSE]
     kk = grep("batch|lib.size|norm.factor|repl|donor|clone|sample|barcode",
+              colnames(ngs$samples),invert=TRUE)
+    kk = grep("lib.size|norm.factor|donor|clone|sample|barcode",
               colnames(ngs$samples),invert=TRUE)
     ##kk <- unique( c(grep("^group$",colnames(ngs$samples)),kk))
     ngs$Y = ngs$samples[colnames(ngs$X),kk,drop=FALSE]

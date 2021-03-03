@@ -447,7 +447,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         }
 
         ## ------------- matched annotation
-        annot = ngs$Y[colnames(zx),,drop=FALSE]
+        annot = ngs$Y[colnames(zx),,drop=FALSE]  ## Y or full matrix??
         kk = grep("sample|patient",colnames(annot),invert=TRUE)
         annot = annot[,kk,drop=FALSE]  ## no group??    
         samples = colnames(zx) ## original sample list
@@ -599,7 +599,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                              show_rownames = nrownames, softmax=0,
                              ## side.height.fraction=0.03+0.055*NCOL(annot), 
                              title_cex=1.05, cexCol=cex1, cexRow=cex2, 
-                             col.annot=annot, row.annot=NULL, annot.ht=2.2,
+                             col.annot=annot, row.annot=NULL, annot.ht=2.3,
                              main=" ", nmax=-1
                          )
                      )

@@ -38,7 +38,7 @@ WgcnaBoard <- function(input, output, session, env)
     rowH1 = 250  ## row 1 height
     rowH2 = 440  ## row 2 height
     
-    description = "<b>WGCNA Analysis.</b> Weighted correlation network analysis (WGCNA) is a data mining method based on pairwise correlations between genes. It allows one to define modules (clusters), intramodular hubs, and network nodes with regard to module membership, to study the relationships between co-expression modules. "
+    description = "<b>WGCNA Analysis.</b> Weighted correlation network analysis (WGCNA) is a gene-level cluster analysis method based on pairwise correlations between genes. It allows one to define modules (clusters), intramodular hubs, and network nodes with regard to module membership, to study the relationships between co-expression modules."
     output$description <- renderUI(HTML(description))
 
     infotext ="Weighted gene co-expression network analysis (WGCNA) is a systems biology method for describing the correlation patterns among genes across microarray samples. Weighted correlation network analysis can be used for finding clusters (modules) of highly correlated genes, for summarizing such clusters using the module eigengene or an intramodular hub gene, for relating modules to one another and to external sample traits (using eigengene network methodology), and for calculating module membership measures. Correlation networks facilitate network based gene screening methods that can be used to identify candidate biomarkers or therapeutic targets."

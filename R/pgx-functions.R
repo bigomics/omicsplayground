@@ -92,6 +92,8 @@ pgx.initialize <- function(pgx) {
     pgx$samples <- pgx$samples[,which(colMeans(is.na(pgx$samples))<1),drop=FALSE]
     kk = grep("batch|lib.size|norm.factor|repl|donor|clone|sample|barcode",
               colnames(pgx$samples),invert=TRUE)
+    kk = grep("lib.size|norm.factor|donor|clone|sample|barcode|patient",
+              colnames(pgx$samples),invert=TRUE)
     pgx$Y = pgx$samples[colnames(pgx$X),kk,drop=FALSE]
     pgx$Y <- type.convert(pgx$Y)   ## autoconvert to datatypes
     
@@ -184,7 +186,7 @@ pgx.initialize <- function(pgx) {
     kk = sort(unique(c(k1,k2)))
     pgx$Y <- pgx$Y[,kk,drop=FALSE]
     colnames(pgx$Y)
-    pgx$samples <- pgx$Y    ## REALLY?
+    pgx$samples <- pgx$Y    ## REALLY? !!!!!!!!!!!!!!!!!!!!
     
     ##-----------------------------------------------------------------------------
     ## Keep compatible with OLD formats
@@ -860,9 +862,10 @@ pgx.getCategoricalPhenotypes <-function(df, min.ncat=2, max.ncat=20, remove.dup=
     
     is.bad = 0
     is.bad1 <- grepl("^sample$|[_.]id$|replic|rep|patient|donor|individ",tolower(colnames(df)))
+    is.bad1 <- grepl("^sample$|[_.]id$|patient|donor|individ",tolower(colnames(df)))
     is.bad2 <- grepl("ratio|year|month|day|^age$|^efs|^dfs|surv|follow",tolower(colnames(df)))    
     ## is.factor <- sapply(sapply(data.frame(df), class), function(s) any(s %in% c("factor","character")))
-    is.bad3 <- apply(df,2,function(x) any(grepl("^sample|patient|replicate|donor|individ",x,ignore.case=TRUE)))    
+    is.bad3 <- apply(df,2,function(x) any(grepl("^sample|patient|donor|individ",x,ignore.case=TRUE)))    
     is.bad <- (is.bad1 | is.bad2 | is.bad3)
     table(is.bad)
 
