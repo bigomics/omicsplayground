@@ -48,7 +48,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##========================= OUTPUT UI ============================================
     ##================================================================================
     
-    wgcna_caption = "<b>WGCNA module detection.</b> <b>(a)</b> Modules are detected as branches of the resulting cluster tree using the dynamic branch cutting approach. Genes inside a given module are summarized with the module eigengene. The module eigengene of a given module is defined as the first principal component of the standardized expression profiles. <b>(b)</b> ... <b>(c)</b> ...  <b>(d)</b> ... <b>(e)</b> ..."
+    wgcna_caption = "<b>WGCNA module detection.</b> <b>(a)</b> Modules are detected as branches of the resulting cluster tree using the dynamic branch cutting approach. Genes inside a given module are summarized with the module eigengene. The module eigengene of a given module is defined as the first principal component of the standardized expression profiles. <b>(b)</b> Scale independence and mean connectivity plots to determine the soft threshold <b>(c)</b> Topological overlap matrix visualized as heatmap <b>(d)</b> Dimensionality reduction maps colored by WGCNA module <b>(e)</b> Graph network of WGCNA modules."
 
     output$wgcna_UI <- renderUI({
         fillCol(
@@ -438,7 +438,7 @@ WgcnaBoard <- function(input, output, session, env)
     callModule(
         plotModule, 
         id = "wgcna_topologyPlots", ##ns=ns,
-        title = "Scale independence and Mean connectivity", label="b",
+        title = "Scale independence and mean connectivity", label="b",
         func = wgcna_topologyPlots.RENDER,
         func2 = wgcna_topologyPlots.RENDER, 
         download.fmt = c("png","pdf"),
