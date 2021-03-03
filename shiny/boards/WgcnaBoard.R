@@ -48,7 +48,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##========================= OUTPUT UI ============================================
     ##================================================================================
     
-    wgcna_caption = "<b>WGCNA module detection.</b> <b>(a)</b> . Modules are defined as branches of the resulting cluster tree using the dynamic branch cutting approach.[11] Next the genes inside a given module are summarize with the module eigengene, which can be considered as the best summary of the standardized module expression data.[4] The module eigengene of a given module is defined as the first principal component of the standardized expression profiles."
+    wgcna_caption = "<b>WGCNA module detection.</b> <b>(a)</b> Modules are detected as branches of the resulting cluster tree using the dynamic branch cutting approach. Genes inside a given module are summarized with the module eigengene. The module eigengene of a given module is defined as the first principal component of the standardized expression profiles. <b>(b)</b> ... <b>(c)</b> ...  <b>(d)</b> ... <b>(e)</b> ..."
 
     output$wgcna_UI <- renderUI({
         fillCol(
