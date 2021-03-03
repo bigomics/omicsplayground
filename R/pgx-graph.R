@@ -917,6 +917,7 @@ pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.25, nterms=500, nt
     V(go_graph)[vinfo$go_id]$foldchange = vinfo$fc
     V(go_graph)[vinfo$go_id]$qvalue = vinfo$qv
 
+    ##!!!!!!!!!!!!!!!!!!! THIS DEFINES THE SCORE !!!!!!!!!!!!!!!!!
     ## Value = "q-weighted fold-change"
     V(go_graph)[vinfo$go_id]$value = vinfo$fc * (1 - vinfo$qv)**1 
 

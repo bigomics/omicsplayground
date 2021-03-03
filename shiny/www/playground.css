@@ -334,9 +334,14 @@ input[type="checkbox"], input[type="radio"] {
     padding: 0px 4px 0px 4px !important;
     min-height: 26px !important;
 }
+
 .selectize-input.has-items {
     padding: 0px 4px 0px 4px !important;
     min-height: 26px !important;
+}
+
+.selectize-input .item {
+    padding: 2px 0px 0px 0px;
 }
 
 .current-data {

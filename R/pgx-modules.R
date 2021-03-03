@@ -299,9 +299,9 @@ plotModule <- function(input, output, session, ## ns=NULL,
     }
     
     ##output$renderbuttons <- renderUI({
-        ## button layout
+    ## button layout
     buttons <- fillRow(
-        flex=c(NA,NA,NA,NA,NA,1),
+        flex = c(NA,NA,NA,NA,NA,1),
         ##flex=c(NA,NA,1),
         label1,
         ##div( class="button-group", style="display: inline-block; float: left;",

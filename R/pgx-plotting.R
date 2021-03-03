@@ -810,11 +810,15 @@ pgx.plotExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
     if(!is.null(group.names) && length(group.names)!=2) stop("group.names must be length=2")
     if(is.null(main)) main <- probe
     comp    
-
+    
     if(grepl("_vs_|_VS_",comp) && is.null(group.names) ) {
         comp1 <- sub(".*:","",comp)  ## remove prefix
         group.names = strsplit(comp1,split="_vs_|_VS_")[[1]]
-        ## determine if notation is A_vs_B or B_vs_A 
+        group.names
+        ## !!!!!!!! NEED RETHINK !!!!!!!! which one is reference
+        ## class???  determine if notation is A_vs_B or B_vs_A (some
+        ## people do different) and in sample-based contrasts we don't
+        ## know group names.
         if(is.POSvsNEG(ngs)) {
             ## A_vs_B or B_vs_A notation !!!
             group.names <- rev(group.names) ## reversed!!
@@ -1376,114 +1380,6 @@ pgx.splitHeatmap <- function(ngs, splitx=NULL, top.mode="specific",
         scale=scale, colors=colors,
         rowcex=rowcex, colcex=colcex)
     return(plt)
-}
-##df=ngs$samples
-pgx.testPhenoCorrelation <- function(df, plot=TRUE, cex=1)
-{
-
-    require(corrplot)
-    
-    cl <- sapply(df,class)
-    cvar <- which(cl %in% c("numeric","integer"))
-    dvar <- which(cl %in% c("factor","character"))    
-    dc <- df[,cvar,drop=FALSE]
-    dd <- df[,dvar,drop=FALSE]
-
-    dim(dc)
-    dim(dd)
-    
-    ## discrete vs discreate -> Fisher test
-    fisher.P <- NULL
-    if(ncol(dd)) {
-        fisher.P <- matrix(NA,ncol(dd),ncol(dd))
-        i=1;j=2
-        for(i in 1:(ncol(dd)-1)) {
-            for(j in (i+1):ncol(dd)) {
-                tb <- table(dd[,i], dd[,j])
-                fisher.P[i,j] <- fisher.test(tb, simulate.p.value=TRUE)$p.value
-            }
-        }
-        rownames(fisher.P) <- colnames(dd)
-        colnames(fisher.P) <- colnames(dd)
-    }
-        
-    ## discrete vs continuous -> ANOVA or Kruskal-Wallace
-    kruskal.P <- NULL
-    if(ncol(dc)>0) {
-        kruskal.P <- matrix(NA,ncol(dd),ncol(dc))
-        i=1;j=2
-        for(i in 1:ncol(dd)) {
-            for(j in 1:ncol(dc)) {
-                kruskal.P[i,j] <- kruskal.test(dc[,j], dd[,i])$p.value
-            }
-        }
-        rownames(kruskal.P) <- colnames(dd)
-        colnames(kruskal.P) <- colnames(dc)
-    }
-    
-    ## continuous vs continuous -> correlation test
-    cor.P <- NULL
-    if(ncol(dc)>1) {
-        cor.P <- matrix(NA,ncol(dc),ncol(dc))
-        i=1;j=2
-        for(i in 1:(ncol(dc)-1)) {
-            for(j in (i+1):ncol(dc)) {
-                cor.P[i,j] <- cor.test(dc[,i], dc[,j])$p.value
-            }
-        }
-        rownames(cor.P) <- colnames(dc)
-        colnames(cor.P) <- colnames(dc)
-    }
-    
-    P <- matrix(NA,ncol(df),ncol(df))
-    rownames(P) <- colnames(P) <- colnames(df)
-
-    if(!is.null(fisher.P)) {
-        ii <- match(rownames(fisher.P),rownames(P))
-        jj <- match(colnames(fisher.P),colnames(P))
-        P[ii,jj] <- fisher.P
-    }
-
-    if(!is.null(kruskal.P)) {
-        ii <- match(rownames(kruskal.P),rownames(P))
-        jj <- match(colnames(kruskal.P),colnames(P))
-        P[ii,jj] <- kruskal.P
-    }
-
-    if(!is.null(cor.P)) {
-        ii <- match(rownames(cor.P),rownames(P))
-        jj <- match(colnames(cor.P),colnames(P))
-        P[ii,jj] <- cor.P
-    }
-    
-    ij <- which(!is.na(P),arr.ind=TRUE)
-    qv <- p.adjust(P[ij], method="BH")
-    Q <- P
-    Q[ij] <- qv
-    
-    P[is.na(P)] <- 0
-    P <- (P + t(P))/2
-    Q[is.na(Q)] <- 0
-    Q <- (Q + t(Q))/2
-    
-    if(plot==TRUE) {
-
-        require(corrplot)    
-        logP <- -log10(P+1e-8)
-        logQ <- -log10(Q+1e-8)
-        diag(logQ) <- 0
-        ##par(oma=c(0,0,0,1))
-        corrplot( logQ, is.corr=FALSE, type="upper",
-                 mar = c(0,0,0,2),
-                 p.mat = Q, sig.level = 0.05, ##insig = "blank",
-                 tl.cex = cex, tl.col="black", tl.offset = 1,
-                 cl.align.text = "l", cl.offset = 0.25, cl.cex = 0.7, 
-                 pch.col = "grey50",
-                 order="hclust")
-
-    }
-
-    return(list(P=P, Q=Q))
 }
 
 ##=================================================================================

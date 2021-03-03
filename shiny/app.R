@@ -15,6 +15,7 @@ library(shinyWidgets)
 library(waiter)
 library(plotly)
 
+
 message("\n\n")
 message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
@@ -75,11 +76,12 @@ options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
 
-## over-ride options (for DEBUG)
+## over-ride options (for DEBUGGING)
 ## opt$AUTHENTICATION = "none"
 ## opt$AUTHENTICATION = "password"
 ## opt$AUTHENTICATION = "register"
 ## opt$AUTHENTICATION = "firebase"
+
 
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
@@ -118,7 +120,7 @@ if(0) {
     ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
-    load("../data/guarda2020-myc-v2.pgx")    
+    load("../data/GSE22886-immune.pgx")    
     ngs = pgx.initialize(ngs)
 }
 
@@ -127,8 +129,8 @@ if(0) {
 ## --------------------------------------------------------------------
 
 BOARDS <- c("load","view","clust","expr","enrich","isect","func",
-             "word","drug","sig","scell","cor","bio","cmap",
-             "tcga","system","multi","qa")
+            "word","drug","sig","scell","cor","bio","cmap",
+            "wgcna", "tcga","system","multi","qa")
 if(is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED = BOARDS
 if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
 ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
@@ -143,6 +145,7 @@ for(m in boards) {
     ##source(paste0("boards/",m), local=FALSE)
 }
 
+##ENABLED[c("wgcna","system","multi")] <- FALSE
 ENABLED[c("system","multi")] <- FALSE
 if(1 && DEV && dir.exists("../../omicsplayground-dev")) {
     xboards <- dir("../../omicsplayground-dev/modulesx", pattern="Board.R$")
@@ -216,6 +219,7 @@ server = function(input, output, session) {
     if(ENABLED["bio"])    env[["bio"]]    <- callModule( BiomarkerBoard, "bio", env)
     if(ENABLED["cmap"])   env[["cmap"]]   <- callModule( ConnectivityBoard, "cmap", env)
     if(ENABLED["tcga"])   env[["tcga"]]   <- callModule( TcgaBoard, "tcga", env)
+    if(ENABLED["wgcna"])  env[["wgcna"]]  <- callModule( WgcnaBoard, "wgcna", env)
     if(1 && DEV) {
         if(ENABLED["system"]) env[["system"]] <- callModule( SystemBoard, "system", env)
         if(ENABLED["multi"])  env[["multi"]]  <- callModule( MultiLevelBoard, "multi", env)
@@ -306,7 +310,8 @@ help.tabs <- navbarMenu(
 TABVIEWS <- list(
     "load" = tabView("Home",LoadingInputs("load"),LoadingUI("load")),
     "view" = tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
-    "clust" = tabView("Clustering",ClusteringInputs("clust"),ClusteringUI("clust")),
+    "clust" = tabView("Unsupervised clustering",ClusteringInputs("clust"),ClusteringUI("clust")),
+    "wgcna" = tabView("WGCNA (beta)",WgcnaInputs("wgcna"),WgcnaUI("wgcna")),
     "expr" = tabView("Differential expression",ExpressionInputs("expr"),ExpressionUI("expr")),
     "cor"  = tabView("Correlation analysis", CorrelationInputs("cor"), CorrelationUI("cor")),
     "enrich" = tabView("Geneset enrichment",EnrichmentInputs("enrich"), EnrichmentUI("enrich")),
@@ -385,11 +390,14 @@ createUI <- function(tabs)
         itab <- tabs[[i]]
         itab <- itab[which(ENABLED[itab])] ## only enabled
         if(length(itab)>1) {
+            message("[MAIN] creating menu items for: ",paste(itab,collapse=" "))
             m <- createNavbarMenu( names(tabs)[i], itab )
             tablist[[i]] <- m
         } else if(length(itab)==1) {
+            message("[MAIN] creating menu item for: ",itab)
             tablist[[i]] <- TABVIEWS[[itab]] 
         } else {
+            
         }
     }
     tablist <- tablist[!sapply(tablist,is.null)]
@@ -411,12 +419,11 @@ createUI <- function(tabs)
                            theme = theme))
 }
 
-
 tabs = list(
     "logout",
     "Home" = c("load"),
     "DataView" = "view",
-    "Clustering" = "clust",
+    "Clustering" = c("clust","wgcna"),
     "Expression" = c("expr","cor"),
     "Enrichment" = c("enrich","func","word","drug"),
     "Signature" = c("isect","sig","bio","cmap","tcga"),
@@ -432,9 +439,9 @@ ui = createUI(tabs)
 
 shiny::shinyApp(ui, server)
 
+
 ##pkgs <- c( sessionInfo()[["basePkgs"]], names(sessionInfo()[["otherPkgs"]]),
 ##          names(sessionInfo()[["loadedOnly"]]) )
-
 
 ## --------------------------------------------------------------------
 ## ------------------------------ EOF----------------------------------

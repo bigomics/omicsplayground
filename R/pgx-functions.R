@@ -341,7 +341,7 @@ add_opacity <- function(hexcol,opacity) {
     rgb(rgba[,1]/255,rgba[,2]/255,rgba[,3]/255,rgba[,4])
 }
 
-logCPM <- function(counts, total=NULL, prior=1) {
+logCPM <- function(counts, total=1e6, prior=1) {
     ## Transform to logCPM (log count-per-million) if total counts is
     ## larger than 1e6, otherwise scale to previous avarage total count.
     ##
@@ -356,11 +356,12 @@ logCPM <- function(counts, total=NULL, prior=1) {
     if(any(class(counts)=="dgCMatrix")) {
         ## fast/sparse calculate CPM
         cpm <- counts
+        cpm[is.na(cpm)] <- 0  ## OK??
         cpm@x <- total * cpm@x / rep.int(Matrix::colSums(cpm), diff(cpm@p))  ## fast divide by columns sum
         cpm@x <- log2(prior + cpm@x)
         return(cpm)
     } else {
-        cpm <- t(t(counts) / Matrix::colSums(counts)) * total
+        cpm <- t(t(counts) / Matrix::colSums(counts,na.rm=TRUE)) * total
         x <- log2(prior + cpm)
         return(x)
     }
@@ -696,10 +697,14 @@ wrapHyperLink <- function(s, gs) {
     return(s1)
 }
 
-reverse.AvsB.1 <- function(comp) {
-    paste(rev(strsplit(comp, split="_vs_|_VS_")[[1]]),collapse="_vs_")
-}
 reverse.AvsB <- function(comp) {
+    reverse.AvsB.1 <- function(comp) {
+        prefix <- sub(":.*","",comp)
+        postfix <- sub(".*@","",comp)
+        comp0 <- gsub(".:|@.*","",comp)
+        ab <- paste(rev(strsplit(comp0, split="_vs_|_VS_")[[1]]),collapse="_vs_")
+        paste0(prefix,":",ab,"@",postfix)
+    }
     sapply(comp,reverse.AvsB.1)
 }
 
@@ -709,20 +714,26 @@ is.POSvsNEG <- function(pgx) {
     ## matrix). Too complicated... maybe we should just require one
     ## definition...
     ##
-    ## We should get rid of this...
-    ##
+    ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ## !!!!!!!!!!!! We should get rid of this... !!!!!!!!!!!!!
+    ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    
     cntrmat <- pgx$model.parameters$contr.matrix
     design <- pgx$model.parameters$design
     ##ct0 <- cntrmat[,comp]        
+
+    ## rely only on contrasts with '_vs_'
     cntrmat <- cntrmat[,grep("_vs_",colnames(cntrmat)),drop=FALSE]
     dim(cntrmat)
     grp1 <- sapply(strsplit(colnames(cntrmat),split="_vs_"),"[",1)
     grp2 <- sapply(strsplit(colnames(cntrmat),split="_vs_"),"[",2)
-    grp1 <- sub(".*[:]","",grp1)
-    grp2 <- sub(".*[:]","",grp2)
+    grp1 <- sub(".*[:]|@.*","",grp1)
+    grp2 <- sub(".*[:]|@.*","",grp2)
     is.null(design)
     is.PosvsNeg1 <- NA
-    if(!is.null(design)) {
+    grp1
+    grp2
+    if(FALSE && !is.null(design)) {
         is.pn <- rep(NA,length(grp1))
         i=1
         for(i in 1:length(grp1)) {
@@ -744,15 +755,23 @@ is.POSvsNEG <- function(pgx) {
         is.pn
         is.PosvsNeg1 <- mean(is.pn,na.rm=TRUE)>0
     } else {
+        ## This uses the experiment matrix (sample-based contrast) and
+        ## the annotation to determine is A_vs_B or B_vs_A was
+        ## intended.
+        ##
+        expmat <- pgx$model.parameters$exp.matrix
         is.pn <- rep(NA,length(grp1))
         i=1
         for(i in 1:length(grp1)) {
-            a1 <- apply(pgx$samples,1,function(a) mean(a %in% grp1[i]))
-            a2 <- apply(pgx$samples,1,function(a) mean(a %in% grp2[i]))
-            j1 <- which(a1 > a2)  ## samples with phenotype  more in grp1
+            ##a1 <- apply(pgx$samples,1,function(a) mean(a %in% grp1[i]))
+            ##a2 <- apply(pgx$samples,1,function(a) mean(a %in% grp2[i]))
+            a1 <- apply(pgx$samples,1,function(a) mean(grepl(grp1[i],a)))
+            a2 <- apply(pgx$samples,1,function(a) mean(grepl(grp2[i],a)))
+            j1 <- which(a1 > a2)   ## samples with phenotype  more in grp1
             j2 <- which(a2 >= a1)  ## samples with phenotype  more in grp2
-            s1 <- rowMeans(cntrmat[j1,i,drop=FALSE] > 0, na.rm=TRUE)
-            s2 <- rowMeans(cntrmat[j2,i,drop=FALSE] > 0, na.rm=TRUE)
+            s1=s2=0
+            if(length(j1)) s1 <- rowMeans(expmat[j1,i,drop=FALSE] > 0, na.rm=TRUE)
+            if(length(j2)) s2 <- rowMeans(expmat[j2,i,drop=FALSE] > 0, na.rm=TRUE)
             mean(s1)
             mean(s2)
             if(mean(s1) > mean(s2)) is.pn[i] <- TRUE
@@ -1361,6 +1380,18 @@ getKeggID <- function(gsets)
 ## Generic helper functions
 ##-----------------------------------------------------------------------------
 
+is.Date <- function(x) {
+    ## From https://stackoverflow.com/questions/18178451/is-there-a-way-to-check-if-a-column-is-a-date-in-r
+    if (!all(is.na(as.Date(
+             as.character(x),
+             format = c("%d/%m/%Y", "%d-%m-%Y", "%Y/%m/%d", "%Y-%m-%d")
+         )))) {
+        return(TRUE)
+    } else{
+        return(FALSE)
+    }
+}
+
 ##mat=ngs$X;group=ngs$samples$group;FUN=mean
 averageByGroup <- function(mat, group, FUN=mean) {
     ##sum(duplicated(ngs$genes$gene_name))
@@ -1586,20 +1617,22 @@ expandAnnotationMatrixSAVE <- function(A) {
     return(M)
 }
 
-expandPhenoMatrix <- function(pheno, collapse=TRUE) {
+expandPhenoMatrix <- function(pheno, collapse=TRUE, drop.ref=TRUE) {
     ## get expanded annotation matrix
     ##a1 <- pheno[,grep("group|sample",colnames(pheno),invert=TRUE),drop=FALSE]
     ##m2 <- expandAnnotationMatrix(a1)
     a1 <- tidy.dataframe(pheno)
     nlevel <- apply(a1,2,function(x) length(setdiff(unique(x),NA)))
     nterms <- colSums(!is.na(a1))
-    y.class <- sapply(a1,class)
+    ##y.class <- sapply(a1,class)
+    y.class <- sapply(type.convert(pheno),class)
     ##y.isnum <- apply(a1,2,is.num)
-    y.isnum <- (y.class == "numeric")
+    y.isnum <- (y.class %in% c("numeric","integer"))
     nlevel
     nratio <- nlevel/nterms
     nratio
     kk <- which(y.isnum | (!y.isnum & nlevel>1 & nratio < 0.66 ))
+    if(length(kk)==0) return(NULL)
     a1 <- a1[,kk,drop=FALSE]
     a1.isnum <- y.isnum[kk]
     head(a1)
@@ -1611,7 +1644,7 @@ expandPhenoMatrix <- function(pheno, collapse=TRUE) {
             suppressWarnings( x <- as.numeric(a1[,i]) )
             m0 <- matrix( (x > median(x,na.rm=TRUE)), ncol=1)
             colnames(m0) <- "high"
-        } else if(nlevel[i]==2) {
+        } else if(drop.ref && nlevel[i]==2) {
             x <- as.character(a1[,i])
             x1 <- tail(sort(x),1)
             m0 <- matrix(x==x1, ncol=1)

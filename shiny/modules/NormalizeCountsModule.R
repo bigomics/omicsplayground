@@ -75,10 +75,16 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
                     )
                 )
             })
-
+            outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
+            
             pgx <- reactive({
                 if(is.null(input$addnoise)) return(NULL)
-                pgx <- list(counts=counts()) 
+                pgx <- list(counts=counts())
+
+                ## Set missing values to zero !!!!!!!!!!!!!!!
+                is.missing <- is.na(pgx$counts) | is.infinite(pgx$counts)
+                pgx$counts[is.missing] <- 0
+
                 ## Simulate raw signals
                 if(input$addnoise) {
                     mult <- 1e4 * runif(ncol(pgx$counts))
@@ -112,6 +118,12 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
             normalized_counts <- reactive({
                 ##req(input$selectmethod)
                 method <- input$selectmethod
+                message("[normalized_counts] length(method) = ",length(method))
+                message("[normalized_counts] method = ",method)
+                if(length(method)==0) {
+                    message("[normalized_counts] setting method to 'none'")
+                    method <- "none"
+                }
                 ##method = "CPM"
                 norm.counts <- NULL
                 pgx <- pgx()

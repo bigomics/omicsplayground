@@ -47,7 +47,7 @@ MakeContrastUI <- function(id) {
     uiOutput(ns("UI"))
 }
 
-MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT=NULL, height=720)
+MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
 {
     require(DT)
     moduleServer(
@@ -68,7 +68,17 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT=NULL, height=720
                 
                 d1 <- dim(isolate(rv$contr))
                 dbg("[MakeContrastServer] dim(rv)=",d1,"\n")
+
             })
+
+            observe({
+                req(phenoRT())
+                px <- colnames(phenoRT())
+                message("[MakeContrastModule] px = ", paste(px,collapse=" "))
+                updateSelectInput(session, "pcaplot.colvar", choices=px)
+                updateSelectInput(session, "strata", choices=c("<none>",px))
+            })
+
             
             output$UI <- renderUI({
                 ns <- session$ns                
@@ -125,13 +135,16 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT=NULL, height=720
                     h4("Contrast table"),
                     fillRow(
                         height = 24,
-                        flex = c(NA,1),
+                        flex = c(NA,0.05,NA,NA,1),
                         tipify(
                             actionButton(ns("autocontrast"),"add auto-contrasts", icon=icon("plus"),
                                          class="small-button"),
                             "If you are feeling lucky, try this to automatically create contrasts.",
                             placement="top", options = list(container = "body")                            
                         ),
+                        br(),
+                        div( HTML("<b>Strata:</b>"), style="padding: 4px 4px;"),
+                        selectInput(ns("strata"), NULL, choices=NULL, width="120px"),
                         br()
                     ),
                     ##tags$head(tags$style("table.dataTable.compact tbody th, table.dataTable.compact tbody td {padding: 0px 10px;}")),
@@ -144,11 +157,12 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT=NULL, height=720
             outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
             
             sel.conditions <- reactive({
-                req(phenoRT())
+                req(phenoRT(),countsRT())
                 df <- phenoRT()
                 df$"<samples>" <- rownames(df)
                 pp <- intersect(input$param, colnames(df))
-                cond <- apply(df[,pp,drop=FALSE],1,paste,collapse="_")
+                ss <- colnames(countsRT())
+                cond <- apply(df[ss,pp,drop=FALSE],1,paste,collapse="_")
                 cond
             })
             
@@ -269,16 +283,21 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT=NULL, height=720
 
                 req(phenoRT())
                 df <- phenoRT()
-                dbg("[MakeContrastServerRT:autocontrast] dim(df)=",dim(df),"\n")                
-                ct <- pgx.makeAutoContrast(
-                    df, mingrp=3, slen=20, ref=NULL, fix.degenerate=FALSE)
-                rownames(ct$exp.matrix) <- rownames(df)
-                ctx <- ct$exp.matrix
+                message("[autocontrast] dim(df)=",paste(dim(df),collapse="x"))
+                strata.var <- input$strata
                 
-                dbg("[MakeContrastServerRT:autocontrast] updating contrasts...\n")
-                dbg("[MakeContrastServerRT:autocontrast] dim(rv$contr)=",dim(rv$contr),"\n")
-                dbg("[MakeContrastServerRT:autocontrast] dim(ctx)=",dim(ctx),"\n")
-
+                if(strata.var=="<none>") {
+                    ct <- pgx.makeAutoContrasts(
+                        df, mingrp=3, slen=20, ref=NULL, fix.degenerate=FALSE)
+                    rownames(ct$exp.matrix) <- rownames(df)
+                    ctx <- ct$exp.matrix
+                } else {
+                    message("[autocontrast] stratified autocontrasts. strata.var = ",strata.var)      
+                    ctx <- pgx.makeAutoContrastsStratified(
+                        df, strata = strata.var,
+                        mingrp = 3, slen = 20, ref=NULL, fix.degenerate=FALSE)
+                }
+                
                 ## update reactive value
                 if(!is.null(rv$contr)) {
                     rv$contr <- cbind(rv$contr, ctx)
@@ -405,12 +424,6 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT=NULL, height=720
                        placement="right", options = list(container = "body"))
             )
 
-            observe({
-                req(phenoRT())
-                px <- colnames(phenoRT())
-                message("[MakeContrastModule] px = ", paste(px,collapse=" "))
-                updateSelectInput(session, "pcaplot.colvar", choices=px)
-            })
             
             callModule(
                 plotModule, 

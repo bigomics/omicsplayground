@@ -64,26 +64,38 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     br(),
                     fluidRow(
                         column(
-                            4, align="center", offset=4,
-                            textInput(
-                                ns("upload_name"),NULL, ##"Dataset:",
-                                ##width="100%",
-                                ## width=420,
-                                placeholder="Name of your dataset"),
-                            selectInput(
-                                ns("upload_datatype"),
-                                "Datatype:",
-                                choices = c("RNA-seq","scRNA-seq","proteomics",
-                                            "mRNA microarray","other")
-                            ),
-                            br(), 
-                            div(textAreaInput(
-                                ns("upload_description"), NULL, ## "Description:",
-                                placeholder="Give a short description of your dataset",
-                                ##width="100%",
-                                ## width=400
-                                height=100, resize='none'),
-                                style="margin-left: 0px;"),
+                            6, align="center", offset=2,
+                            tags$table(
+                                     style="width:100%; vertical-align: top; padding: 4px;",
+                                     tags$tr(
+                                              tags$td("Name"),
+                                              tags$td(textInput(
+                                                       ns("upload_name"),NULL, ##"Dataset:",
+                                                       ##width="100%",
+                                                       ## width=420,
+                                                       placeholder="Name of your dataset")
+                                                      )
+                                          ),
+                                     tags$tr(
+                                              tags$td("Datatype"),
+                                              tags$td(selectInput(
+                                                       ns("upload_datatype"), NULL,
+                                                       choices = c("RNA-seq","scRNA-seq","proteomics",
+                                                                   "mRNA microarray","other"))
+                                                      )
+                                          ),
+                                     tags$tr(
+                                              tags$td("Description"),
+                                              tags$td(div(textAreaInput(
+                                                       ns("upload_description"), NULL, ## "Description:",
+                                                       placeholder="Give a short description of your dataset",
+                                                       ##width="100%",
+                                                       ## width=400
+                                                       height=100, resize='none'),
+                                                       style="margin-left: 0px;"
+                                                       ))
+                                          )
+                                 ),
                             br(),
                             ##textInput(ns("upload_datatype"),"Datatype:"), br(),
                             actionButton(ns("compute"),"Compute!",icon=icon("running"),
@@ -105,7 +117,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                     choiceValues =
                                         c("only.hugo",
                                           "only.proteincoding",
-                                          "excl.rikorf",
+                                          "remove.rikorf",
                                           "remove.notexpressed"
                                           ## "excl.immuno"
                                           ## "excl.xy"
@@ -113,7 +125,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                     choiceNames =
                                         c("convert to HUGO",
                                           "protein-coding only",
-                                          "exclude Rik/ORF",
+                                          "remove Rik/ORF genes",
                                           "remove not-expressed"
                                           ##"Exclude immunogenes",
                                           ##"Exclude X/Y genes"
@@ -121,7 +133,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                     selected = c(
                                         "only.hugo",
                                         "only.proteincoding",
-                                        "excl.rikorf",
+                                        "remove.rikorf",
                                         "remove.notexpressed"
                                     )
                                 )
@@ -211,7 +223,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     shinyalert("ERROR","You must give a dataset name and description")
                     return(NULL)
                 }
-
                 
                 ##-----------------------------------------------------------
                 ## Retrieve the most recent matrices from reactive values
@@ -228,12 +239,17 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 ##-----------------------------------------------------------
                 ## Set statistical methods and run parameters
                 ##-----------------------------------------------------------                
-                max.genes    = as.integer(max.genes)
-                max.genesets = as.integer(max.genesets)
-                
+                max.genes=20000;max.genesets=5000
+                gx.methods   = c("ttest.welch","trend.limma")
+                gset.methods = c("fisher")
+                extra.methods = ""
                 gx.methods   = c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
                 gset.methods = c("fisher","gsva","fgsea","camera","fry")
                 extra.methods = c("deconv","wordcloud","connectivity")
+
+                
+                max.genes    = as.integer(max.genes)
+                max.genesets = as.integer(max.genesets)
 
                 ## get selected methods from input
                 gx.methods   <- c(input$gene_methods,input$gene_methods2)
@@ -255,48 +271,52 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 ##----------------------------------------------------------------------
                 ## Start computation
                 ##----------------------------------------------------------------------
-                message("[ComputePgxServer:@compute] start computations...")
-
+                message("[ComputePgxServer:@compute] start computations...")                
                 message("[ComputePgxServer::@compute] gx.methods = ",paste(gx.methods,collapse=" "))
                 message("[ComputePgxServer::@compute] gset.methods = ",paste(gset.methods,collapse=" "))
                 message("[ComputePgxServer::@compute] extra.methods = ",paste(extra.methods,collapse=" "))
+
+                if(0) {
+                    counts0  <- read.csv("~/Downloads/FemaleLiver/counts.csv")
+                    counts <- as.matrix(counts0[,-1])
+                    rownames(counts) <- counts0[,1]
+                    samples <- read.csv("~/Downloads/FemaleLiver/samples.csv",row.names=1)
+                    ct <- makeDirectContrasts(samples[,"sex",drop=FALSE], ref="1")
+                    contrasts <- ct$exp.matrix
+                }
                 
                 start_time <- Sys.time()
                 ## Create a Progress object
                 progress <- shiny::Progress$new()
                 on.exit(progress$close())    
                 progress$set(message = "Processing", value = 0)
-
                 pgx.showCartoonModal("Computation may take 5-20 minutes...")
-                
+
+                flt=""
                 flt <- input$filter_methods
                 only.hugo <- ("only.hugo" %in% flt)
                 do.protein <- ("proteingenes"   %in% flt)
-                excl.rikorf <- ("excl.rikorf"  %in% flt)
+                excl.rikorf <- ("remove.rikorf"  %in% flt)
                 excl.immuno <- ("excl.immuno"  %in% flt)
                 excl.xy <- ("excl.xy"  %in% flt)
-                only.chrom <- ("only.chrom"  %in% flt)
                 only.proteincoding <- ("only.proteincoding"  %in% flt)
                 filter.genes <- ("remove.notexpressed"  %in% flt)                
                 
                 progress$inc(0.01, detail = "parsing data")            
+                
                 ngs <- pgx.createPGX(
                     counts, samples, contrasts, ## genes,
-                    X = NULL,
+                    X = NULL,   ## should we pass the pre-normalized expresson X ????
                     batch.correct = FALSE,      ## done in UI                        
                     prune.samples = TRUE,
                     filter.genes = filter.genes,
-                    only.chrom = only.chrom,
+                    only.chrom = FALSE,
                     rik.orf = !excl.rikorf,
                     only.proteincoding = only.proteincoding, 
                     only.hugo = only.hugo,
                     convert.hugo = only.hugo
                 )
                 names(ngs)
-
-                if(excl.xy) {
-                    ## fill me
-                }
 
                 ngs <- pgx.computePGX(
                     ngs,
@@ -305,8 +325,10 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     gx.methods = gx.methods,
                     gset.methods = gset.methods,
                     extra.methods = extra.methods,
-                    lib.dir = FILES, do.cluster=TRUE,                
-                    progress = progress)
+                    do.cluster=TRUE,                
+                    progress = progress,
+                    lib.dir = FILES 
+                )
                 
                 end_time <- Sys.time()
                 run_time  = end_time - start_time
@@ -325,7 +347,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 ngs$name = gsub("[ ]","_",input$upload_name)
                 ngs$datatype = input$upload_datatype
                 ngs$description = input$upload_description
-                ngs$creator <- ""                
+                ngs$creator <- "user"                
                 
                 this.date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
                 ##ngs$date = date()

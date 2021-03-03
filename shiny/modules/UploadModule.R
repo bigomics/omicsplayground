@@ -54,7 +54,7 @@ UploadModuleUI <- function(id) {
         ## type = "pills",
         ## type = "hidden",
         tabPanel("Upload", uiOutput(ns("upload_UI"))),
-        tabPanel("Normalize", uiOutput(ns("normalize_UI"))),
+        ## tabPanel("Normalize", uiOutput(ns("normalize_UI"))),
         tabPanel("BatchCorrect", uiOutput(ns("batchcorrect_UI"))),
         tabPanel("Contrasts", uiOutput(ns("contrasts_UI"))),
         tabPanel("Compute", uiOutput(ns("compute_UI")))
@@ -174,6 +174,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             ##============================== TABS =================================
             ##=====================================================================            
 
+            ## !!!!!!!!!!!!! does not work !!!!!!!!!!!!!!!
             observeEvent( uploaded, {
                 files.needed = c("counts.csv","samples.csv","contrasts.csv")
                 if(all(files.needed %in% names(uploaded))) {
@@ -237,8 +238,8 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             ##correctedX <- reactive({
             correctedX <- SuperBatchCorrectServer(
                 id = "batchcorrect",
-                ##X = reactive(uploaded$counts.csv),
-                X = normalized_counts,  ## NOT YET!!!!
+                X = reactive(uploaded$counts.csv),
+                ##X = normalized_counts,  ## NOT YET!!!!
                 is.count = TRUE,
                 ##pheno = reactive(uploaded$samples.csv),
                 pheno = reactive(uploaded$samples.csv),
@@ -265,6 +266,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             upload_ok <- reactive({
                 statusTab <- statusTable()
                 all(statusTab[,"status"]=="OK")
+                all(grepl("ERROR",statusTab[,"status"])==FALSE)
             })
 
             corrected_counts <- reactive({
@@ -363,7 +365,6 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     status.ds <- statusTab["samples.csv","description"]
                     msg <- paste(toupper(status.ok),"\n\n","Please upload 'samples.csv'",
                                  tolower(status.ds))
-                    ##text(0.5,0.5,"Please upload contrast file 'contrast.csv' with conditions on rows, contrasts as columns")
                     text(0.5,0.5,paste(strwrap(msg,30),collapse="\n"),col="grey25")
                     box(lty=2, col="grey60")
                     return(NULL)
@@ -483,19 +484,17 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             ##========================== OBSERVERS ================================
             ##=====================================================================            
 
-            observeEvent( input$autocontrast, {
-                req(uploaded$samples.csv)
-
-                cat("[!autocontrast] >>> creating autocontrast\n")                
-                df <- uploaded$samples.csv
-                cat("[!autocontrast] dim(df)=",dim(df),"\n")                
-                ct <- pgx.makeAutoContrast(
-                    df, mingrp=3, slen=20, ref=NULL, fix.degenerate=FALSE)
-                rownames(ct$exp.matrix) <- rownames(df)
-
-                cat("[!autocontrast] updating contrasts...\n")                                
-                uploaded[["contrasts.csv"]] <- ct$exp.matrix
-            })
+            ## observeEvent( input$autocontrast, {
+            ##     req(uploaded$samples.csv)
+            ##     cat("[!autocontrast] >>> creating autocontrast\n")                
+            ##     df <- uploaded$samples.csv
+            ##     cat("[!autocontrast] dim(df)=",dim(df),"\n")                
+            ##     ct <- pgx.makeAutoContrasts(
+            ##         df, mingrp=3, slen=20, ref=NULL, fix.degenerate=FALSE)
+            ##     rownames(ct$exp.matrix) <- rownames(df)
+            ##     cat("[!autocontrast] updating contrasts...\n")                                
+            ##     uploaded[["contrasts.csv"]] <- ct$exp.matrix
+            ## })
             
             ##------------------------------------------------------------------
             ## Main observer for uploaded data files
@@ -534,23 +533,43 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     ## from the files.
                     ##
                     ii <- grep("csv$",input$upload_files$name)
+                    ii <- grep("samples|counts|contrasts|expression",input$upload_files$name)
                     inputnames  <- input$upload_files$name[ii]
                     uploadnames <- input$upload_files$datapath[ii]
                     if(length(uploadnames)>0) {
                         for(i in 1:length(uploadnames)) {
                             fn1 <- inputnames[i]
                             fn2 <- uploadnames[i]
+                            matname <- NULL
                             df <- NULL
                             if(grepl("counts",fn1)) {
                                 ## allows duplicated rownames
                                 df0 <- read.csv(fn2, check.names=FALSE, stringsAsFactors=FALSE)
                                 df <- as.matrix(df0[,-1])
                                 rownames(df) <- as.character(df0[,1])
-                            } else {
+                                matname <- "counts.csv"
+                            } else if(grepl("expression",fn1)) {
+                                ## allows duplicated rownames
+                                df0 <- read.csv(fn2, check.names=FALSE, stringsAsFactors=FALSE)
+                                df <- as.matrix(df0[,-1])
+                                rownames(df) <- as.character(df0[,1])
+                                ## convert expression to pseudo-counts
+                                message("[UploadModule::upload_files] converting expression to counts...")
+                                df <- 2**df
+                                matname <- "counts.csv"
+                            } else if(grepl("samples",fn1)) {
                                 df <- read.csv(fn2, row.names=1, check.names=FALSE,
                                                stringsAsFactors=FALSE)
+                                matname <- "samples.csv"
+                            } else if(grepl("contrasts",fn1)) {
+                                df <- read.csv(fn2, row.names=1, check.names=FALSE,
+                                               stringsAsFactors=FALSE)
+                                matname <- "contrasts.csv"
                             }
-                            matlist[[ inputnames[i] ]] <- df
+                            if(is.null(matname)) {
+                                stop("[UploadModule::upload_files] FATAL ERROR")
+                            }
+                            matlist[[matname]] <- df
                         }
                     }            
                 }
@@ -603,6 +622,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     
                     ## check rownames of samples.csv
                     if(status["samples.csv"]=="OK" && status["counts.csv"]=="OK") {
+
                         samples1 = uploaded[["samples.csv"]]
                         counts1 = uploaded[["counts.csv"]]
                         a1 <- mean(rownames(samples1) %in% colnames(counts1))
@@ -611,18 +631,34 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                         message("[UploadModuleServer] a2 =",a2)
                         
                         if(a2 > a1 && NCOL(samples1)>1 ) {
-                            message("[UploadModuleServer] setting rownames of samples.csv with first column\n")
+                            message("[UploadModuleServer] getting sample names from first column\n")
                             rownames(samples1) <- samples1[,1]
                             uploaded[["samples.csv"]] <- samples1[,-1,drop=FALSE]
                         }                        
                     }
 
+                    if(0) {
+                        uploaded <- list()
+                        uploaded$counts.csv  <- read.csv("~/Downloads/FemaleLiver/counts.csv")
+                        uploaded$samples.csv <- read.csv("~/Downloads/FemaleLiver/samples.csv")
+                    }
+                    
                     ## check files: matching dimensions
                     if(status["counts.csv"]=="OK" && status["samples.csv"]=="OK") {
-                        if(!all( sort(colnames(uploaded[["counts.csv"]])) ==
-                                 sort(rownames(uploaded[["samples.csv"]])) )) {
-                            status["counts.csv"] = "ERROR: colnames do not match (with samples)"
-                    status["samples.csv"]  = "ERROR: rownames do not match (with counts)"
+                        nsamples   <- ncol(uploaded[["counts.csv"]])
+                        ok.samples <- intersect(rownames(uploaded$samples.csv),
+                                                colnames(uploaded$counts.csv))
+                        n.ok <- length(ok.samples)                        
+                        if(n.ok > 0 && n.ok < nsamples) {
+                            ## status["counts.csv"]  = "WARNING: some samples with missing annotation)"
+                        }
+                        if(n.ok > 0) {
+                            uploaded[["samples.csv"]] <- uploaded$samples.csv[ok.samples,,drop=FALSE]
+                            uploaded[["counts.csv"]]  <- uploaded$counts.csv[,ok.samples,drop=FALSE]
+                        }
+                        if(n.ok == 0) {
+                            status["counts.csv"]  = "ERROR: colnames do not match (with samples)"
+                            status["samples.csv"] = "ERROR: rownames do not match (with counts)"
                         }
                     }
                     

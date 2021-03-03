@@ -76,18 +76,24 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
             
             outobj <- eventReactive(input$bc_compute, {
                 
-                req(input$bc_modelpar)
+                message("[event:bc_compute] reacted...")
+                req(X())
                 ## input$bc_compute
+                message("[event:bc_compute] req(X) OK..")
                 
                 mp="";bp="Chemotherapy"
                 mp="dlbcl.type";bp="*"
-                mp <- isolate(input$bc_modelpar)
-                bp <- isolate(input$bc_batchpar)
-                bc <- isolate(input$bc_methods)
+                mp <- input$bc_modelpar
+                bp <- input$bc_batchpar
+                bc <- input$bc_methods
                 ##bv <- NULL
+                message("[event:bc_compute] 0")
+                message("[event:bc_compute] 0 : mp = ", mp)
+                message("[event:bc_compute] 0 : bp = ", bp)
+                message("[event:bc_compute] 0 : bc = ", bc)
                 
                 if(is.null(mp) && is.null(bp)) return(NULL)
-                cat("outobj: 1\n")
+                message("[event:bc_compute] 1")
 
                 lib.correct <- FALSE
                 bio.correct <- c()
@@ -96,22 +102,33 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 if("<cell_cycle>" %in% bp) bio.correct <- c(bio.correct, c("cell_cycle"))
                 if("<gender>" %in% bp)     bio.correct <- c(bio.correct, c("gender"))
 
-                cat("outobj: 2\n")                
+                message("[event:bc_compute] 2 : bc = ", bc)
+                
                 hc.correct  <- "HC"  %in% bc
                 pca.correct <- "PCA" %in% bc
                 sva.correct <- "SVA" %in% bc
                 ##mnn.correct <- "MNN" %in% bc
                 mnn.correct  <- NULL
                 nnm.correct <- "NNM" %in% bc
-                if(mp[1]=="") mp <- NULL
+
+                message("[event:bc_compute] 3 : mp = ",mp)
+                
+                ## if(length(mp) == 0) mp <- NULL
+                ## if(mp=="") mp <- NULL
+                
+                message("[event:bc_compute] 4" )
                 
                 X0 <- X()
-                cat("[SuperBatchCorrectServer] is.count=",is.count,"\n")
+                message("[event:bc_compute] 4a : dim(X0) =",paste(dim(X0),collapse="x") )
+
                 if(is.count) {
                     X0 <- log2(1 + X0)  ## X0: normalized counts (e.g. CPM)
                 }
                 
-                cat("Performing SuperBatchCorrection\n")
+                message("[event:bc_compute] 5: performing SuperBatchCorrection...")
+                message("[event:bc_compute] 5: dim(pheno) = ",paste(dim(pheno()),collapse="x"))
+                message("[event:bc_compute] 5: dim(X) = ",paste(dim(X0),collapse="x"))
+
                 out <- pgx.superBatchCorrect(
                     X = X0,
                     pheno = pheno(),
@@ -137,6 +154,8 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                     mnn.correct = mnn.correct,
                     nnm.correct = nnm.correct
                 )
+
+                message("[event:bc_compute] done!")
                 
                 out
             }, ignoreInit=FALSE, ignoreNULL=FALSE )
@@ -148,10 +167,10 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 is.valid <- all(dim(out$X)==dim(X()) &&
                                 nrow(out$Y)==ncol(X()))
                 if(!is.valid) {
-                    cat("[SuperBatchCorrectServer] dim(out$X)=",dim(out$X),"\n")
-                    cat("[SuperBatchCorrectServer] dim(out$Y)=",dim(out$Y),"\n")
-                    cat("[SuperBatchCorrectServer] dim(X())=",dim(X()),"\n")                    
-                    cat("[SuperBatchCorrectServer] WARNING: matrices not valid!!\n")
+                    message("[SuperBatchCorrectServer] dim(out$X)=",dim(out$X))
+                    message("[SuperBatchCorrectServer] dim(out$Y)=",dim(out$Y))
+                    message("[SuperBatchCorrectServer] dim(X())=",dim(X()))                    
+                    message("[SuperBatchCorrectServer] WARNING: matrices not valid!!")
                     return(NULL)
                 }
                 
@@ -168,9 +187,13 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                     X0 <- log2(1 + X0)  ## X0: normalized counts (e.g. CPM)
                 }
                 nmax <- as.integer(input$bc_nmax)
+
+                cX <- out$X
+                rownames(X0) <- sub("[;|,].*","",rownames(X0))
+                rownames(cX) <- sub("[;|,].*","",rownames(cX))
                 
                 viz.BatchCorrectionMatrix(
-                    X0=X0, pheno=out$Y, cX=out$X, phenotype=p1,
+                    X0=X0, pheno=out$Y, cX=cX, phenotype=p1,
                     pca.heatmap=do.pca, nmax=nmax, cex=1.8, npca=3, 
                     title=NULL, subtitle=NULL, caption=NULL)
             })
