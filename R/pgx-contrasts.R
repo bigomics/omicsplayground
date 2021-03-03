@@ -379,8 +379,43 @@ pgx.makeSpecificContrasts <- function(df, contrasts, mingrp=3)
     return(res)
 }
 
+## mingrp=3;slen=20;ref=NULL;fix.degenerate=FALSE;skip.hidden=TRUE
+pgx.makeAutoContrastsStratified <- function(df, strata.var, mingrp=3, slen=20, ref=NULL, 
+                                           fix.degenerate=FALSE, skip.hidden=TRUE )
+{
+    df1 <- df[,-match(strata.var,colnames(df)),drop=FALSE]
+    strata <- df[,strata.var]
+    strata.levels <- unique(strata)
+    s=strata.levels[2]
+    s=strata.levels[1]
+    ct.all <- NULL
+    for(s in strata.levels) {
+        sel <- which(strata == s)
+        ct1 <- pgx.makeAutoContrasts( df1[sel,,drop=FALSE], mingrp=mingrp, slen=slen,
+                                    ref=ref, fix.degenerate=fix.degenerate,
+                                    skip.hidden=skip.hidden)
+        ct1x <- ct1$exp.matrix
+        colnames(ct1x) <- paste0(colnames(ct1x),"@",s)
+        ss <- rownames(df1)[sel]
+        if(is.null(ct.all)) {
+            ct.all <- data.frame(sample=ss, ct1x, check.names=FALSE)
+        } else {
+            df2 <- data.frame(sample=ss, ct1x, check.names=FALSE)
+            ct.all <- dplyr::full_join(ct.all, df2, by="sample")
+        }
+    }
+    dim(ct.all)
+    ct.all[is.na(ct.all)] <- 0
+    rownames(ct.all) <- ct.all[,"sample"]
+    ct.all <- as.matrix(ct.all[,-1,drop=FALSE])
+    dim(ct.all)
+    ct.all
+}
+
+
+
 ##mingrp=3;slen=20;ref=NULL;fix.degenerate=FALSE
-pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL, 
+pgx.makeAutoContrasts <- function(df, mingrp=3, slen=20, ref=NULL, 
                                  fix.degenerate=FALSE, skip.hidden=TRUE )
 {
     ## "Automagiccally" parse dataframe and create contrasts using
@@ -450,7 +485,7 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL,
     ## repeat ref if too short
     if(!is.null(ref) && length(ref)<ncol(df)) ref <- head(rep(ref,99),ncol(df))
 
-    cat("[pgx.makeAutoContrast] 1: dim(df)",dim(df),"\n")
+    cat("[pgx.makeAutoContrasts] 1: dim(df)",dim(df),"\n")
     
     ## filter out 'internal/hidden' and 'group' parameters
     ##not.used <- grepl("^[.]|group",colnames(df))
@@ -459,19 +494,19 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL,
         df <- df[,!not.used,drop=FALSE]
     }
 
-    cat("[pgx.makeAutoContrast] 2: dim(df)",dim(df),"\n")
+    cat("[pgx.makeAutoContrasts] 2: dim(df)",dim(df),"\n")
     
     ## first all to characters
     df.rownames <- rownames(df)
     df <- data.frame(df, check.names=FALSE)
     df <- apply(df, 2, as.character)
 
-    cat("[pgx.makeAutoContrast] 3: dim(df)",dim(df),"\n")
+    cat("[pgx.makeAutoContrasts] 3: dim(df)",dim(df),"\n")
     
     ## trim leading/end parts that are equal
     df <- apply(df, 2, trimsame)
 
-    cat("[pgx.makeAutoContrast] 4: dim(df)",dim(df),"\n")
+    cat("[pgx.makeAutoContrasts] 4: dim(df)",dim(df),"\n")
     
     ## try detect (fluffy) comment fields (and remove)
     countSpaces <- function(s) { sapply(gregexpr(" ", s), function(p) { sum(p>=0) } ) }    
@@ -565,7 +600,7 @@ pgx.makeAutoContrast <- function(df, mingrp=3, slen=20, ref=NULL,
     dim(K)
     
     if(is.null(K)) {
-        warning("[pgx.makeAutoContrast] non valid contrasts")
+        warning("[pgx.makeAutoContrasts] non valid contrasts")
         return(NULL)
     }
     

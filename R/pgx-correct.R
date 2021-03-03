@@ -33,6 +33,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
     pheno <- type.convert(pheno)
     
     ## setup model matrix
+    mod1 <- NULL
     if(!is.null(model.par) && length(model.par)>0 ) {
         model.par <- intersect(model.par, colnames(pheno))
         mod1 <- do.call(cbind,lapply(model.par, getModelMatrix))

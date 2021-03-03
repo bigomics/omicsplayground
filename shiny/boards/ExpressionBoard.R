@@ -103,8 +103,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
             conditionalPanel(
                 "input.gx_options % 2 == 1", ns=ns,
                 tagList(
-                    tipify(checkboxInput(ns("gx_showsig"),"show significant only",TRUE),
-                           "Enable filtering significant genes. Display only significant genes in the table. Significant genes are one that pass your FDR and logFC thresholds.", 
+                    tipify(checkboxInput(ns("gx_showall"),"show all genes", FALSE),
+                           "Display all genes in the table. Disable filtering of significant genes.", 
                placement="top", options = list(container = "body")),
                     tipify( checkboxGroupInput(ns('gx_statmethod'),'Statistical methods:',
                                                choices=NULL, inline=TRUE),
@@ -307,7 +307,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         res = res[order(-abs(res[,fx.col])),]
         
         ## just show significant genes
-        if(!is.null(input$gx_showsig) && input$gx_showsig) {
+        if(!is.null(input$gx_showall) && !input$gx_showall) {
             n <- length(input$gx_statmethod)
             sel <- which(res$stars == star.symbols(n))
             res = res[sel,,drop=FALSE]
@@ -901,7 +901,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         logscale <- input$gx_logscale
         showothers <- input$gx_showothers
         
-        srt = 30
         mar1 = 3.5
         ylab = ifelse(logscale, "log2CPM", "CPM")
         show.names <- ifelse(!grouped & ngrp>25, FALSE, TRUE)
@@ -912,7 +911,10 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if( nx <= 3) nc <- 10
         if( nx > 10) nc <- 5
         if( nx > 25) nc <- 4
-
+        srt = 30
+        strlen.grpnames <- max(nchar(strsplit(sub(".*:","",comp),split="_vs_")[[1]]))
+        if(show.names && strlen.grpnames <= 4) srt  <- 0
+        
         ##nc <- 10
         par(mfrow=c(2,nc), mar=c(mar1,3.5,1,1), mgp=c(2,0.8,0), oma=c(0.1,0.6,0,0.6) )
         i=1

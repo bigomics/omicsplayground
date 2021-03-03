@@ -120,8 +120,9 @@ DataViewBoard <- function(input, output, session, env)
         
         grps <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=20)
         grps <- sort(grps)
-        if(ncol(ngs$counts) <= 100) grps <- c("<ungrouped>",grps)
         selgrp <- grps[1]
+        ##if(ncol(ngs$counts) <= 200)
+        grps <- c("<ungrouped>",grps)
         if("group" %in% grps) selgrp = "group"
         if(nrow(ngs$samples)<=20) selgrp = "<ungrouped>"
         updateSelectInput(session,'data_groupby', choices=grps, selected=selgrp)
@@ -1177,7 +1178,6 @@ DataViewBoard <- function(input, output, session, env)
         updateSelectizeInput(session,'search_gene', choices=genes, selected=sel, server=TRUE)
 
     })
-
     
     data_rawdataTable.RENDER <- reactive({
         ## get current view of raw_counts

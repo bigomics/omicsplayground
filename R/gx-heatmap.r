@@ -771,8 +771,8 @@ gx.heatmap <- function(gx, values=NULL,
     ##require(heatmap3)
     if(0) {
         clust.method="ward.D2"; dist.method="pearson"; col.dist.method="euclidean";
-        plot.method="heatmap.2";symm=FALSE;values=NULL;softmax=FALSE
-        col=colorpanel(64,"blue","grey90","red"); scale="row"; verbose=1
+        plot.method="heatmap.2";symm=FALSE;values=NULL;softmax=FALSE;values=NULL
+        col=colorpanel(64,"blue","grey90","red"); scale="row";verbose=3;show_colnames=TRUE
         ## Rowv = NA, Colv = NA
         col.annot=NULL; row.annot=NULL; nmax=1000; cmax=NULL; indent.names=FALSE
     }
@@ -791,10 +791,11 @@ gx.heatmap <- function(gx, values=NULL,
         jj2 <- head(order(-apply(gx,2,sd,na.rm=TRUE)),cmax)
     }
     if(symm && ncol(gx)==nrow(gx)) {
-        gx <- gx[jj1,jj1]
-    } else {
-        gx <- gx[jj1,jj2]
+        jj2 <- jj1
     }
+    gx <- gx[jj1,jj2]
+    if(!is.null(col.annot)) col.annot <- col.annot[jj2,,drop=FALSE]
+    if(!is.null(row.annot)) row.annot <- row.annot[jj1,,drop=FALSE]
     
     fillNA <- function(x) {
         nx <- x
@@ -826,7 +827,9 @@ gx.heatmap <- function(gx, values=NULL,
 
     ## gene dimension (rows)
     h2 <- NULL
-    if(!is.null(clust.method) ) {
+    if(symm && ncol(gx)==nrow(gx)) {
+        h2 <- h1
+    } else if(!is.null(clust.method) ) {
         if(dist.method=="pearson") {
             suppressWarnings( cx <- cor(t(gx),use="pairwise.complete.obs") )
             cx[is.na(cx)] <- 0
@@ -844,10 +847,6 @@ gx.heatmap <- function(gx, values=NULL,
         ##h2 <- as.dendrogram(h2)
     }
     
-    if(symm && ncol(gx)==nrow(gx)) {
-        h2 <- h1
-    }
-    
     dd <- c("both","row","column","none")[1 + 1*is.null(h1) + 2*is.null(h2)]
     if(indent.names > 0) {
         nn.sp <- sapply(floor((1:nrow(gx))/indent.names),function(n) paste(rep(" ",n),collapse=""))
@@ -860,7 +859,7 @@ gx.heatmap <- function(gx, values=NULL,
     if(!is.null(col.annot)) {
         plot.method="heatmap.3"
         ##ry <- apply(col.annot,2,rank,na.last="keep")
-        col.annot = col.annot[,which(colMeans(is.na(col.annot))<1)]
+        col.annot = col.annot[,which(colMeans(is.na(col.annot))<1),drop=FALSE]
         col.annot = as.data.frame(col.annot)
         aa <- col.annot
         is.num = (sapply(aa,class)=="numeric")
@@ -909,12 +908,12 @@ gx.heatmap <- function(gx, values=NULL,
         rownames(cc1) <- colnames(row.annot)
         colnames(cc1) <- rownames(row.annot)
     }
-
+    
     if(verbose>1) cat("dim.gx=",dim(gx),"\n")
     ### following is one BIG ugly switch array because ColSideColors and
     ### RowSideColors dont like NULL/NA...
-    sym=FALSE
-    if(sum(gx<0,na.rm=TRUE)>0 || scale %in% c("row","col")) sym=TRUE
+    sym0=FALSE
+    if(sum(gx<0,na.rm=TRUE)>0 || scale %in% c("row","col")) sym0=TRUE
     ## scaling options
     if("col" %in% scale || "both" %in% scale) {
         ##gx = scale(gx)
@@ -944,23 +943,31 @@ gx.heatmap <- function(gx, values=NULL,
         colnames(gx) <- rep("",ncol(gx))
     }
 
+    symm
+    if(0 && symm && !is.null(cc0)) {
+        cc1 <- t(cc0)
+    }
+    if(!is.null(cc0) && !is.na(cc0)) cc0 <- cc0[colnames(gx),,drop=FALSE]
+    if(!is.null(cc1) && !is.na(cc1)) cc1 <- cc1[,rownames(gx),drop=FALSE]
+
     ## draw heatmap    
     if(plot.method=="heatmap.3" && !is.na(cc0) && !is.na(cc1) ) {
-        if(verbose>1) cat("plotting with heatmap.3 + ColSideColors\n")
+        if(verbose>1) cat("plotting with heatmap.3 + both ColSideColors\n")
         if(is.null(h1) && is.null(h2)) {
             heatmap.3(gx, Colv=NULL, Rowv=NULL,
                       dendrogram=dd, col=col, scale="none",
-                      symkey=sym, symbreaks=sym, trace="none",
+                      symkey=sym0, symbreaks=sym0, trace="none",
                       side.height.fraction=side.height,
                       ColSideColors=cc0,
                       RowSideColors=cc1,
                       ...)
         } else {
             heatmap.3(gx, Colv=as.dendrogram(h1), Rowv=as.dendrogram(h2),
-                      dendrogram=dd, col=col, scale="none",
-                      symkey=sym, symbreaks=sym, trace="none",
-                      side.height.fraction=side.height,
+                      dendrogram = dd, col = col, scale="none",
+                      symkey = sym0, symbreaks = sym0, trace="none",
+                      side.height.fraction = side.height,
                       ColSideColors = cc0,
+                      ##RowSideColors = matrix(cc0[,1],nrow=1) )
                       RowSideColors = cc1,
                       ...)
         }
@@ -969,24 +976,24 @@ gx.heatmap <- function(gx, values=NULL,
         if(is.null(h1) && is.null(h2)) {
             heatmap.3(gx, Colv=NULL, Rowv=NULL,
                       dendrogram=dd, col=col, scale="none",
-                      symkey=sym, symbreaks=sym, trace="none",
+                      symkey=sym0, symbreaks=sym0, trace="none",
                       side.height.fraction=side.height,
                       ColSideColors=cc0, ## RowSideColors=cc1,
                       ...)
         } else {
             heatmap.3(gx, Colv=as.dendrogram(h1), Rowv=as.dendrogram(h2),
                       dendrogram=dd, col=col, scale="none",
-                      symkey=sym, symbreaks=sym, trace="none",
+                      symkey=sym0, symbreaks=sym0, trace="none",
                       side.height.fraction=side.height,
                       ColSideColors=cc0, ## RowSideColors=cc1,
                       ...)
         }
     } else if(plot.method=="heatmap.3" && is.na(cc0) && !is.na(cc1) ) {
-        if(verbose>1) cat("plotting with heatmap.3 + ColSideColors\n")
+        if(verbose>1) cat("plotting with heatmap.3 + RowSideColors\n")
         if(is.null(h1) && is.null(h2)) {
             heatmap.3(gx, Colv=NULL, Rowv=NULL,
                       dendrogram=dd, col=col, scale="none",
-                      symkey=sym, symbreaks=sym, trace="none",
+                      symkey=sym0, symbreaks=sym0, trace="none",
                       side.height.fraction=side.height,
                       ## ColSideColors=cc0,
                       RowSideColors=cc1,
@@ -994,7 +1001,7 @@ gx.heatmap <- function(gx, values=NULL,
         } else {
             heatmap.3(gx, Colv=as.dendrogram(h1), Rowv=as.dendrogram(h2),
                       dendrogram=dd, col=col, scale=scale,
-                      symkey=sym, symbreaks=sym, trace="none",
+                      symkey=sym0, symbreaks=sym0, trace="none",
                       side.height.fraction=side.height,
                       ##ColSideColors=cc0,
                       RowSideColors=cc1,
@@ -1005,13 +1012,13 @@ gx.heatmap <- function(gx, values=NULL,
         if(is.null(h1) && is.null(h2)) {
             heatmap.3(gx, Colv=NULL, Rowv=NULL,
                       dendrogram=dd, col=col, scale="none",
-                      symkey=sym, symbreaks=sym, trace="none",
+                      symkey=sym0, symbreaks=sym0, trace="none",
                       side.height.fraction=side.height,
                       ...)
         } else {
             heatmap.3(gx, Colv=as.dendrogram(h1), Rowv=as.dendrogram(h2),
                       dendrogram=dd, col=col, scale="none",
-                      symkey=sym, symbreaks=sym, trace="none",
+                      symkey=sym0, symbreaks=sym0, trace="none",
                       side.height.fraction=side.height,
                       ...)
         }
@@ -1023,13 +1030,13 @@ gx.heatmap <- function(gx, values=NULL,
                       dendrogram=dd, col=col, scale="none",
                       ##side.height.fraction=side.height,
                       ##symkey=sym, symbreaks=sym, trace="none")
-                      symkey=sym, symbreaks=sym, trace="none", ...)
+                      symkey=sym0, symbreaks=sym0, trace="none", ...)
         } else {
             heatmap.2(gx, Colv=as.dendrogram(h1), Rowv=as.dendrogram(h2),
                       dendrogram=dd, col=col, scale="none",
                       ##side.height.fraction=side.height,
                       ##symkey=sym, symbreaks=sym, trace="none")
-                      symkey=sym, symbreaks=sym, trace="none", ...)
+                      symkey=sym0, symbreaks=sym0, trace="none", ...)
         }
     }
 

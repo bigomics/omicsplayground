@@ -85,7 +85,7 @@ pgx.getGEOseries <- function(id, convert.hugo=TRUE) {
     
     ## automagically create contrast matrix
     mingrp=3;slen=15;ref=NA
-    ct <- pgx.makeAutoContrast(sampleinfo, mingrp=3, slen=20, ref=NA)
+    ct <- pgx.makeAutoContrasts(sampleinfo, mingrp=3, slen=20, ref=NA)
     is.null(ct)
     
     if(!is.null(ct)) {

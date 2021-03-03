@@ -695,7 +695,7 @@ LoadingBoard <- function(input, output, session,
             dbg("[LoadingBoard] observeEvent:savedata reacted")        
             ## -------------- save PGX file/object ---------------
             ##pgx <- currentPGX()
-            pgx$collection <- "uploaded"
+            pgx$collection <- "user"
             pgxname <- sub("[.]pgx$","",pgx$name)
             pgxname <- paste0(gsub("[ \\/]","_",pgxname),".pgx")
             fn  <- file.path(PGX.DIR,pgxname)

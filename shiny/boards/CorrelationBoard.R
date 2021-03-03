@@ -48,7 +48,7 @@ between genes and find coregulated modules."
     ##========================= OUTPUT UI ============================================
     ##================================================================================
 
-    corAnalysis_caption = " <b>(a)</b> <b>Top-ranked correlation.</b> Top correlated features with respect to selected gene. <b>(b)</b> <b>Correlation network</b> around the selected gene. <b>(c)</b> <b>Scatter plots</b> of gene expression of top correlated genes."
+    corAnalysis_caption = "<b>(a)</b> <b>Top-ranked correlation.</b> Top correlated features with respect to selected gene. <b>(b)</b> <b>Correlation network</b> around the selected gene. <b>(c)</b> <b>Scatter plots</b> of gene expression of top correlated genes."
     
     output$corAnalysis_UI <- renderUI({
         fillCol(
@@ -74,7 +74,7 @@ between genes and find coregulated modules."
         )
     })
 
-    corfunctional_caption = "<b>(a)</b> <b>Correlation GSEA.</b> Top enriched gene sets using the correlation as rank metric. The black bars denote the genes in the gene set and their position in the sorted rank metric. <b>(b)</b> <b>Enrichment table.</b> Statistical results from GSEA analysis. <b>(c)</b> <b>Gene frequency.</b> Frequency of leading edge genes in top correlated genesets. <b>(d)</b> <b>Leading edge table.</b> Leading edge genes and rank statistics (rho) of the selected geneset."
+    corfunctional_caption ="<b>(a)</b> <b>Correlation GSEA.</b> Top enriched gene sets using the correlation as rank metric. The black bars denote the genes in the gene set and their position in the sorted rank metric. <b>(b)</b> <b>Enrichment table.</b> Statistical results from GSEA analysis. <b>(c)</b> <b>Gene frequency.</b> Frequency of leading edge genes in top correlated genesets. <b>(d)</b> <b>Leading edge table.</b> Leading edge genes and rank statistics (rho) of the selected geneset."
 
     output$corFunctional_UI <- renderUI({
 
@@ -105,6 +105,7 @@ between genes and find coregulated modules."
         )
     })
     ##outputOptions(output, "hm_annotateUI", suspendWhenHidden=FALSE) ## important!!!
+
     
     ##================================================================================
     ##========================= INPUTS UI ============================================
@@ -660,49 +661,6 @@ between genes and find coregulated modules."
         ##caption = corGSEA_caption
     )
    
-    ##================================================================================
-    ## WGCNA
-    ##================================================================================
 
-    wgcna.plotSampleDendro <- function(X, pheno) {
-        require(WGCNA)
-        ## Cluster samples
-        X1 <- head(X[order(-apply(X,1,sd,na.rm=TRUE)),],1000)
-        sampleTree2 = hclust(dist(t(X1)), method = "average")
-        ipheno <- apply(pheno,2,function(x) as.numeric(factor(x)))
-        colnames(ipheno) <- colnames(pheno)
-        rownames(ipheno) <- rownames(pheno)
-        traitColors = numbers2colors(ipheno, signed = FALSE)
-        ## Plot the sample dendrogram and the colors underneath.
-        plotDendroAndColors(
-            sampleTree2, traitColors[,],
-            groupLabels = colnames(ipheno),
-            cex.colorLabels = 0.8, cex.dendroLabels = 0.9, cex.rowText = 0.8,             
-            main = "Sample dendrogram and trait heatmap")
-
-    }
-
-    wgcna_plotSampleDendro.RENDER %<a-% reactive({
-        ngs <- inputData()
-        X <- ngs$X
-        pheno <- ngs$samples
-        wgcna.plotDendroAndColors(X, pheno)
-    })
-
-    wgcna_plotSampleDendro_opts = tagList()
-    wgcna_plotSampleDendro_info = "<b>Sample dendrogram and trait heatmap.</b>"    
-
-    callModule(
-        plotModule, 
-        id = "wgcna_plotSampleDendro", ##ns=ns,
-        func = wgcna_plotSampleDendro.RENDER,
-        func2 = wgcna_plotSampleDendro.RENDER, 
-        download.fmt = c("png","pdf"),
-        ## options = corGSEA_cumFC_opts,
-        info.text = wgcna_plotSampleDendro_info,        
-        title="Sample dendrogram and trait heatmap", label="a",
-        height = c(280,650), width = c('auto',1000),
-        pdf.width=10, pdf.height=5, res=c(72,90)
-    )
-
+    
 } ## end of Board

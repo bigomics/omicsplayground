@@ -172,7 +172,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             updateSelectizeInput(session, "hm_splitvar", choices=xgenes, server=TRUE)
         }
         if(input$hm_splitby=='phenotype') {
-            cvar <- sort(pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=20))
+            cvar <- sort(pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=999))
             sel <- cvar[1]
             cvar0 <- grep("^[.]",cvar,value=TRUE,invert=TRUE) ## no estimated vars
             sel <- head(c(grep("type|family|class|stat",cvar0,ignore.case=TRUE,value=TRUE),
@@ -1335,7 +1335,6 @@ displays the expression levels of selected genes across all conditions in the an
 
     parcoord_caption = "<b>Parallel Coordinates plot.</b> <b>(a)</b>The Parallel Coordinates plot displays the expression levels of selected genes across all conditions. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap. <b>(b)</b> Average expression of selected genes across conditions."
     
-    ##hm_parcoord_table_module <- tableModule(
     hm_parcoord_table_module <- callModule(
         tableModule, id = "hm_parcoord_table",
         func = hm_parcoord_table.RENDER, ## ns=ns,
@@ -1819,7 +1818,7 @@ displays the expression levels of selected genes across all conditions in the an
         ##samples = getTopMatrix()$samples    
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
         X = X[,samples]
-        cvar <- pgx.getCategoricalPhenotypes(ngs$Y)
+        cvar <- pgx.getCategoricalPhenotypes(ngs$Y, max.ncat=999)
         cvar = grep("group|sample|patient|years|days|months|gender",
                     cvar,invert=TRUE,value=TRUE) ## no sample IDs
         cvar
