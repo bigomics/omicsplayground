@@ -406,6 +406,12 @@ EnrichmentBoard <- function(input, output, session, env)
         ## limit to 1000 rows???
         ## rpt <- head(rpt, 1000)
         res <- data.frame(res)        
+
+        if(nrow(res)==0) {
+            validate(need(nrow(res) > 0, "warning. no genes passed current filters."))
+            return(NULL)
+        }
+
         return(res)
     })
 
@@ -1665,7 +1671,13 @@ EnrichmentBoard <- function(input, output, session, env)
     genetable.RENDER <- reactive({
 
         rpt <- geneDetails()    
-        if(is.null(rpt)) return(NULL)
+        ## if(is.null(rpt)) return(NULL)
+        if(is.null(rpt) || nrow(rpt)==0) {
+            validate(need(nrow(rpt) > 0, "warning. no genes."))
+            return(NULL)
+        }
+
+
         
         rpt$gene_title <- NULL    
         if(!is.null(rpt) && nrow(rpt)>0 ) {
