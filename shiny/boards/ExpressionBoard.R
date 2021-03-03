@@ -257,7 +257,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ## return the full DE table 
         ngs = inputData()
         if(is.null(ngs)) return(NULL)
-        comp=1;test="trend.limma"
+        comp=1;tests="trend.limma";fdr=1;lfc=0
         comp = input$gx_contrast
         tests = input$gx_statmethod
         fdr = as.numeric(input$gx_fdr)
@@ -336,71 +336,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         return(res)
     })
 
-
-    filteredDiffExprTable.SAVE <- reactive({
-        ##
-        ## DE table filtered by FDR and gene family
-        ##
-        ##
-        dbg("[ExpressionBoard::filteredDiffExprTable] reacted")
-
-        ngs = inputData()
-        ##if(is.null(ngs)) return(NULL)
-        req(ngs,input$gx_features,input$gx_fdr,input$gx_lfc)
-        
-        ##res = getDEGtable(ngs, testmethods="trend.limma", comparison=1,add.pq=FALSE)
-        res = fullDiffExprTable()
-        if(is.null(res)) return(NULL)
-        
-        fdr=1
-        fdr = as.numeric(input$gx_fdr)    
-        qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
-        fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]        
-        pval = res[,qv.col]
-
-        if(is.null(ngs$families)) stop("FATAL:: no families in object")
-        psel <- rownames(res)
-        ##psel = filterProbes(ngs$genes, ngs$families[[gx_features]] )
-
-        gx_features=1
-        gx_features = input$gx_features
-        ##if(is.null(gx_features)) return(NULL)
-        
-        if(gx_features!="<all>") psel = filterProbes(ngs$genes, GSETS[[gx_features]] )
-        res = res[which(pval <= fdr & rownames(res) %in% psel),,drop=FALSE]
-        dim(res)
-        
-        ## filter on fold-change    
-        fx.col = grep("fx|fc|sign|NES|logFC",colnames(res))[1]
-        lfc = 1
-        lfc = as.numeric(input$gx_lfc)
-        fx  = as.numeric(res[,fx.col])
-        names(fx) = rownames(res)
-        res = res[which(abs(fx) >= lfc),,drop=FALSE]
-        
-        if(nrow(res)==0) {
-            validate(need(nrow(res) > 0, "warning. no genes passed current filters."))
-            return(NULL)
-        }
-        res = res[order(-abs(res[,fx.col])),]
-        
-        ## just show top 10
-        if(length(input$gx_top10) && input$gx_top10==TRUE) {
-            fx  = as.numeric(res[,fx.col])
-            names(fx) = rownames(res)
-            pp <- unique(c(head(names(sort(-fx[which(fx>0)])),10),
-                           head(names(sort(fx[which(fx<0)])),10)))
-            res = res[pp,,drop=FALSE]
-            res = res[order(-res[,fx.col]),,drop=FALSE]
-        }
-
-        ## limit number of rows???
-        ## res <- head(res, 1000)
-
-        dbg("[ExpressionBoard::filteredDiffExprTable] done!")
-        
-        return(res)
-    })
     
     ##================================================================================
     ## Plots 

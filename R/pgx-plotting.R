@@ -2682,6 +2682,7 @@ myplot_ly <- function(..., theme="default") {
 
 
 ##lfc=1;psig=0.05;showlegend=FALSE;xlab=ylab="";group.names=c("group1","group2")
+##showlegend=TRUE;highlight=NULL;marker.size=5;label=NULL;marker.type="scatter";displayModeBar=TRUE
 plotlyMA <- function(x, y, names, source="plot1",
                      group.names=c("group1","group2"),
                      xlab = "average expression (log2.CPM)",
@@ -2761,9 +2762,10 @@ plotlyMA <- function(x, y, names, source="plot1",
                    line=list(dash='dot', width=1, color="grey"))
         
     xrange <- c(0,1)*max(abs(x))*1.05
-    yrange <- c(-1,1)*max(abs(y))*1.05        
-    xaxis = list( title = xlab, xrange = xrange )
-    yaxis = list( title = ylab, yrange = yrange )    
+    xrange <- range(x,na.rm=TRUE)
+    yrange <- c(-1,1)*max(abs(y),na.rm=TRUE)*1.05        
+    xaxis = list( title = xlab, range = xrange )
+    yaxis = list( title = ylab, range = yrange )    
 
     p <- p %>%
         layout(
@@ -2876,14 +2878,15 @@ plotlyVolcano <- function(x, y, names, source="plot1", group.names=c("group1","g
     abline3 = list(type='line', x0= -xx, x1= +xx, y0=y0, y1=y0,
                    line=list(dash='dot', width=1, color="grey"))
     
-    
-    xrange <- c(-1,1)*max(abs(x))*1.05
-    if(min(x)>=0) xrange <- c(0,1)*max(abs(x))*1.05
-    yrange <- c(-1,1)*max(abs(y))*1.05
-    if(min(y)>=0) yrange <- c(0,1)*max(abs(y))*1.05
+    max.absx <- max(max(abs(x),na.rm=TRUE),lfc*1.2)
+    max.absy <- max(max(abs(y),na.rm=TRUE),y0*1.2)
+    xrange <- c(-1,1)*max.absx*1.05
+    if(min(x)>=0) xrange <- c(0,1)*max.absx*1.05
+    yrange <- c(0,1)*max.absy*1.05
+    ## if(min(y)>=0) yrange <- c(0,1)*max.absy*1.05
         
-    xaxis = list( title = xlab, xrange = xrange )
-    yaxis  = list( title = ylab, yrange = yrange )    
+    xaxis = list( title = xlab, range = xrange )
+    yaxis  = list( title = ylab, range = yrange )    
     p <- p %>%
         layout(
             shapes = list(abline1,abline2,abline3),
