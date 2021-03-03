@@ -48,7 +48,7 @@ LoadingBoard <- function(input, output, session,
     message("[LoadingBoard] USER_MODE = ", USER_MODE)
     
     AUTHENTICATION = authentication
-    message("[LoadingBoard] AUTHENTICATION=",AUTHENTICATION)
+    message("[LoadingBoard] AUTHENTICATION = ",AUTHENTICATION)
 
     auth <- NULL
     if(AUTHENTICATION == "password") {
