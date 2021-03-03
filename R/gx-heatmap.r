@@ -84,6 +84,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     require("fastcluster")
     ht_global_opt(fast_hclust = TRUE)
     ##require(heatmap3)
+    
     if(0) {
         split=5; splitx=NULL;
         clust.method="ward.D2";
@@ -192,10 +193,10 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
 
     if(!is.null(row.annot)) cat("[gx.splitmap] 3: duplicated annot.rownames =",
                                 sum(duplicated(rownames(row.annot))),"\n")    
-
+    
     if(!is.null(split.idx)) {
         row.annot = cbind(row.annot, cluster = split.idx)
-        row.annot = data.frame(row.annot)
+        row.annot = data.frame(row.annot, check.names=FALSE, stringsAsFactors=FALSE)
         colnames(row.annot) = tolower(colnames(row.annot))
         rownames(row.annot) = rownames(gx)
     }
@@ -298,7 +299,8 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     ## row annotation bars
     row.ha = NULL
     if(!is.null(row.annot)) {
-        npar = apply(row.annot,2,function(x) length(unique(x)))
+                
+        npar = apply(row.annot,2,function(x) length(setdiff(x,c(NA,"NA"))))        
         row.colors = list()
         i=1
         for(i in 1:length(npar)) {
@@ -307,11 +309,13 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
             if(npar[i]==1) klrs = "#E6E6E6"
             if(npar[i]>0) klrs = rep(RColorBrewer::brewer.pal(8,"Set2"),99)[1:npar[i]]
             ##if(npar[i]==2) klrs = rep(RColorBrewer::brewer.pal(2,"Paired"),99)[1:npar[i]]
-            names(klrs) = sort(unique(row.annot[,i]))
+            names(klrs) = sort(setdiff(unique(row.annot[,i]),NA))
+            if(any(is.na(x))) klrs = c(klrs, "NA"="grey90")
             row.colors[[prm]] = klrs
         }
         ##row.ha = HeatmapAnnotation(
         ##row.ha = Heatmap(
+        
         row.ha = rowAnnotation(
             df = row.annot,
             col = row.colors,

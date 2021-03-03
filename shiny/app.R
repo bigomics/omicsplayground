@@ -15,7 +15,6 @@ library(shinyWidgets)
 library(waiter)
 library(plotly)
 
-
 message("\n\n")
 message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
@@ -25,7 +24,6 @@ message("\n")
 message("************************************************")
 message("********* RUNTIME ENVIRONMENT VARIABLES ********")
 message("************************************************")
-
 
 Sys.setlocale("LC_CTYPE","en_US.UTF-8") 
 Sys.setlocale("LC_TIME","en_US.UTF-8")
@@ -115,6 +113,7 @@ source("modules/UploadModule.R",local=src.local)
 
 ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
+
 
 if(0) {    
     ##PGX.DIR="../test/"
