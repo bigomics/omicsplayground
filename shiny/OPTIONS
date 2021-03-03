@@ -5,12 +5,12 @@ AUTHENTICATION  = none
 ENABLE_UPLOAD   = TRUE
 ENABLE_SAVE     = TRUE
 ENABLE_DELETE   = TRUE
-MAX_SAMPLES     = 2000
-MAX_COMPARISONS = 200
+MAX_SAMPLES     = 1000
+MAX_COMPARISONS = 100
 MAX_GENES       = 20000
 MAX_GENESETS    = 5000
 #WATERMARK       = TRUE
 #BOARDS_ENABLED = load,view,clust,expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap
 #BOARDS_ENABLED = load,view,clust,expr,cor,enrich,func
-BOARDS_DISABLED = multi,system
-#BOARDS_DISABLED = tcga,multi,sig,isect,bio
+BOARDS_DISABLED = wgcna,tcga,multi,system
+
