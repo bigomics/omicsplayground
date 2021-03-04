@@ -603,13 +603,14 @@ trimsame0 <- function(s, split=" ", summarize=FALSE, rev=FALSE) {
 }
 
 ##s=rep("abc",100)
-dbg <- function(... ) {
+dbg.BAK <- function(... ) {
     if(exists("DEBUG") && DEBUG) {
         ##msg = paste0(ifelse(is.null(module),"",paste0("<",module,"> ")),msg)
         msg = sapply( list(...),paste,collapse=" ")
         message(cat(paste0("[DBG] ",sub("\n$","",paste(msg,collapse=" ")),"\n")))
     }
 }
+
 
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
 fread.csv <- function(file, check.names=FALSE, row.names=1,

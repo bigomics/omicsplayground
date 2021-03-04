@@ -347,16 +347,33 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         if(do.split && splitvar %in% rownames(ngs$X)) {
 
             ##xgene <- rownames(ngs$X)[1]
+            gx <- ngs$X[1,]
             gx <- ngs$X[splitvar,colnames(zx)]
-
-            if(ncol(zx)>50) {
-                km  <- kmeans(gx, centers=3)
-                grp.labels <- c("low","medium","high")[rank(km$centers,ties.method="random")]
-                grp <- grp.labels[km$cluster]                
-            } else {
+            
+            ## estimate best K
+            within.ssratio <- sapply(1:4, function(k) {km=kmeans(gx,k);km$tot.withinss/km$totss})
+            within.ssratio
+            diff(within.ssratio)
+            k.est <- min(which(within.ssratio < 0.10))
+            k.est <- min(which(abs(diff(within.ssratio)) < 0.10))
+            k.est
+            k.est <- pmax(pmin(k.est,3),2)
+            
+            if (k.est==2) {
                 km <- kmeans(gx, centers=2)
-                grp.labels <- c("low","high")[rank(km$centers,ties.method="random")]
+                km.rnk <- rank(km$centers,ties.method="random")
+                grp.labels <- c("low","high")[]
                 grp <- grp.labels[km$cluster]
+            } else if(k.est==3) {
+                km  <- kmeans(gx, centers=3)
+                km.rnk <- rank(km$centers,ties.method="random")                
+                grp.labels <- c("low","mid","high")[km.rnk]
+                grp <- grp.labels[km$cluster]                
+            } else if(k.est==4) {
+                km  <- kmeans(gx, centers=4)
+                km.rnk <- rank(km$centers,ties.method="random")
+                grp.labels <- c("low","mid-low","mid-high","high")[km.rnk]
+                grp <- grp.labels[km$cluster]                
             }
             grp <- paste0(splitvar,":",grp)
             names(grp) <- colnames(zx)

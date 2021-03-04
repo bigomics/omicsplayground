@@ -21,6 +21,7 @@ if(0) {
 
 compute.testGenes <- function(pgx, contr.matrix, max.features=1000, 
                               test.methods=c("trend.limma","deseq2.wald","edger.qlf"),
+                              use.design = TRUE, prune.samples=FALSE,
                               remove.outputs=TRUE )
 {
     single.omics <- mean(grepl("\\[",rownames(pgx$counts))) < 0.1
@@ -35,6 +36,8 @@ compute.testGenes <- function(pgx, contr.matrix, max.features=1000,
             contr.matrix = contr.matrix,
             max.features = max.features,
             test.methods = test.methods,
+            use.design = use.design,
+            prune.samples = prune.samples,
             remove.outputs = remove.outputs
         )
     } else {
@@ -45,6 +48,7 @@ compute.testGenes <- function(pgx, contr.matrix, max.features=1000,
             contr.matrix = contr.matrix,
             max.features = max.features,
             test.methods = test.methods,
+            use.design = use.design,            
             remove.outputs = remove.outputs
         )
     }
@@ -59,9 +63,12 @@ if(0) {
 
 ##contr.matrix=pgx$contrasts
 compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
-                                         filter.low = TRUE, remove.outputs=TRUE, 
+                                         filter.low = TRUE, remove.outputs=TRUE,
+                                         use.design = TRUE, prune.samples=FALSE,
                                          test.methods = c("trend.limma","deseq2.wald","edger.qlf"))
 {
+
+    message("[compute.testGenesSingleOmics] called")
 
     contr.matrix0 <- contr.matrix  ## SAVE
     
@@ -75,6 +82,8 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         stop("cannot find normalized expression X in pgx object")
     }
 
+    message("[compute.testGenesSingleOmics] 1 : ")
+    
     ## detect group column if matching all conditions
     grp <- rownames(contr.matrix)
     group.col <- names(which(apply(pgx$samples, 2, function(x) all(grp %in% x))))
@@ -83,22 +92,45 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         group.col <- group.col[1]
         cat("groups column detected:",group.col,"\n")
     }
+    if(length(group.col)==0) group.col <- NULL
     group.col
+
+    message("[compute.testGenesSingleOmics] 2 : ")
     
     stat.group = NULL
     ##is.expmatrix <- all(rownames(contr.matrix)==rownames(pgx$samples))
     is.expmatrix <- all(rownames(contr.matrix) %in% rownames(pgx$samples))
     is.expmatrix
 
-    if(length(group.col) && !is.na(group.col)) {
+    message("[compute.testGenesSingleOmics] 3 : ")
+    message("[compute.testGenesSingleOmics] 3 : is.expmatrix = ", is.expmatrix)
+    message("[compute.testGenesSingleOmics] 3 : use.design = ", use.design)
+    message("[compute.testGenesSingleOmics] 3 : prune.samples = ", prune.samples)
+    message("[compute.testGenesSingleOmics] 3 : group.col = ", group.col)        
+    
+    if(!use.design && !is.expmatrix && !is.null(group.col)) {        
 
-        cat("contrasts on groups...\n")
+        message("[compute.testGenesSingleOmics] forcing to sample-wise contrasts")
+        grp <- as.character(pgx$samples[,group.col])
+        contr.matrix <- contr.matrix[grp,]
+        rownames(contr.matrix) <- rownames(pgx$samples)
+        group.col <- NULL
+        is.expmatrix <- TRUE
+
+    }
+
+    message("[compute.testGenesSingleOmics] 4 : ")
+
+    
+    if(!is.null(group.col) && length(group.col)>0) {
+
+        message("[compute.testGenesSingleOmics] contrasts on groups")
         stat.group = as.character(pgx$samples[,group.col])
         names(stat.group) <- rownames(pgx$samples)
 
-    } else if(is.expmatrix) {
+    } else if(is.expmatrix && use.design) {
 
-        cat("[compute.testGenesSingleOmics] contrasts on samples...\n")
+        message("[compute.testGenesSingleOmics] contrasts on samples (use design)")
         ##stat.group = rownames(pgx$samples)
         ## convert sample-wise contrasts to group-wise contrasts
         cat("[compute.testGenesSingleOmics] detecting statistical groups...\n")        
@@ -112,6 +144,12 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
             contr.matrix <- contr.matrix[match(stat0,stat.group),,drop=FALSE]
             rownames(contr.matrix) <- stat0
         }                        
+    } else if(is.expmatrix && !use.design) {
+
+        message("[compute.testGenesSingleOmics] contrasts on samples (no design)")
+        stat.group = rownames(contr.matrix)
+        names(stat.group) <- rownames(contr.matrix)
+
     } else {
         stop("[compute.testGenesSingleOmics] FATAL:: could not set statistical groups!")
     }
@@ -122,6 +160,8 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     ##-----------------------------------------------------------------------------
     ## normalize contrast matrix to zero mean and signed sums to one
     ##-----------------------------------------------------------------------------
+
+    message("[compute.testGenesSingleOmics] 5 : ")
     
     ## take out any empty comparisons
     sel <- (colSums(contr.matrix>0) & colSums(contr.matrix<0))
@@ -141,14 +181,20 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     ##-----------------------------------------------------------------------------
     
     no.design <- all(stat.group %in% rownames(pgx$samples))  ## sample-wise design
-    no.design
+    ## no.design <- is.expmatrix && !use.design
     design=NULL
-    
-    if(no.design) {
+
+    if(no.design || !use.design) {
+
+        message("[compute.testGenesSingleOmics] 6 : no design matrix ")
         ## SAMPLE-WISE DESIGN
         design = NULL
         exp.matrix <- contr.matrix
+
     } else {
+
+        message("[compute.testGenesSingleOmics] 6 : using model design matrix ")
+
         ## GROUP DESIGN
         ##stat.group[is.na(stat.group)] <- "_"
         notk <- which(!stat.group %in% rownames(contr.matrix))        
@@ -181,11 +227,14 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         exp.matrix   <- exp.matrix[,keep,drop=FALSE]
     }
 
-    model.parameters <- list(design = design,
-                             contr.matrix = contr.matrix, 
-                             exp.matrix = exp.matrix,
-                             group = stat.group
-                             )
+    message("[compute.testGenesSingleOmics] 7 : ")
+    
+    model.parameters <- list(
+        design = design,
+        contr.matrix = contr.matrix, 
+        exp.matrix = exp.matrix,
+        group = stat.group
+    )
     pgx$model.parameters <- model.parameters
     
     ##-----------------------------------------------------------------------------
@@ -195,6 +244,8 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         stop("[compute.testGenesSingleOmics] FATAL2:: stat.group must have names")
     }
 
+    message("[compute.testGenesSingleOmics] 8 : ")
+    
     ## notice original counts will not be affected
     ss <- names(stat.group)
     gg <- rownames(pgx$counts)
@@ -203,6 +254,8 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     genes   = pgx$genes[gg,]
     samples = pgx$samples[ss,]
 
+    message("[compute.testGenesSingleOmics] 9 : ")
+    
     ## Rescale if too low. Often EdgeR/DeSeq can give errors of total counts
     ## are too low. Happens often with single-cell (10x?). We rescale
     ## to a minimum of 1 million counts (CPM)
@@ -238,6 +291,8 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         cat("filtering out",sum(!keep),"low-expressed genes\n")
         cat("keeping",sum(keep),"expressed genes\n")
     }
+
+    message("[compute.testGenesSingleOmics] 10 : ")
     
     ##-----------------------------------------------------------------------------
     ## Shrink number of genes before testing (highest SD/var)
@@ -267,6 +322,8 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     genes  = genes[,c("gene_name","gene_title")]
     dim(counts)
     
+    message("[compute.testGenesSingleOmics] 11 : ")
+
     ##-----------------------------------------------------------------------------
     ## Do the fitting
     ##-----------------------------------------------------------------------------
@@ -280,6 +337,8 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     X <- pgx$X[rownames(counts),colnames(counts)]
     ##X <- X[rownames(counts),colnames(counts)]
     dim(X)
+
+    message("[compute.testGenesSingleOmics] 12 : start fitting... ")
     
     quantile.normalize=TRUE;remove.batch=FALSE;conform.output=TRUE;do.filter=FALSE;custom=NULL;custom.name=NULL
 
@@ -290,6 +349,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         methods = methods,
         design = design,
         contr.matrix = contr.matrix,
+        prune.samples = prune.samples,
         prior.cpm = PRIOR.CPM,  ## prior count regularization
         quantile.normalize = TRUE,  ## only for logCPM
         remove.batch = FALSE,  ## we do explicit batch correction instead
@@ -299,7 +359,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         custom = NULL, custom.name = NULL
     )
 
-    cat("done!\n")
+    message("[compute.testGenesSingleOmics] 13 : done!")
     
     names(gx.meta)
     names(gx.meta$outputs)
@@ -325,12 +385,15 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         pgx$gx.meta$outputs <- NULL
     }
 
+    message("[compute.testGenesSingleOmics] done!")
+    
     return(pgx)
 }
 
 
 compute.testGenesMultiOmics <- function(pgx, contr.matrix, max.features=1000, 
                                         test.methods=c("trend.limma","deseq2.wald","edger.qlf"),
+                                        use.design=TRUE, prune.samples = FALSE,
                                         remove.outputs=TRUE )
 {
     pgx$gx.meta <- NULL
