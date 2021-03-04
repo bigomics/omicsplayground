@@ -621,8 +621,8 @@ to understand biological functions including GO and KEGG pathway analysis."
         dbg("[FunctionalBoard::GO_network.RENDER] 1: len.V(sub2)=",length(V(sub2)))
         
         score = ngs$meta.go$pathscore[,comparison]        
+        score[is.na(score) | is.infinite(score)] = 0
         score = (score/max(abs(score),na.rm=TRUE))
-        score[is.na(score)] = 0
         V(sub2)$value <- score
         V(sub2)$color <- bluered(32)[16 + round(15*score)]
         V(sub2)$label <- V(sub2)$Term
@@ -743,29 +743,29 @@ to understand biological functions including GO and KEGG pathway analysis."
         if(is.null(comparison)) return(NULL)
 
         go = ngs$meta.go$graph
-        scores <- ngs$meta.go$pathscore[,comparison]        
-        scores <- scores[which(!is.na(scores))]
-        scores <- round(scores, digits=3)
-        scores <- sort(scores, decreasing=TRUE)
-        go.term = V(go)[names(scores)]$Term
+        scores <- ngs$meta.go$pathscore[,comparison]
+
+        message("[GO_table.RENDER] 1: len.scores = ",length(scores))
         
-        ## get FC and q-value (should we match with Enrichment table???)
-        qv=fx=NULL
-        if(0) {
-            if("qvalue" %in% names(ngs$meta.go)) qv = ngs$meta.go$qvalue[names(scores),comparison]
-            if("foldchange" %in% names(ngs$meta.go)) fx = ngs$meta.go$foldchange[names(scores),comparison]
-        } else {
-            ## match with enrichment table
-            gs.meta <- ngs$gset.meta$meta[[comparison]]
-            ii <- matchGOid2gset(names(scores),rownames(gs.meta))
-            gs.meta <- gs.meta[ii,]
-            gs.meta$GO.id <- rownames(scores)
-            
-            mm <- selected_gsetmethods()
-            mm <- intersect(mm, colnames(gs.meta$q))
-            qv <- apply(gs.meta$q[,mm,drop=FALSE],1,max,na.rm=TRUE) ## meta-q
-            fx <- gs.meta$meta.fx
-        }
+        scores <- scores[which(!is.na(scores) & !is.infinite(scores))]
+        scores <- round(scores, digits=3)
+        ##scores <- sort(scores, decreasing=TRUE)
+        scores <- scores[order(-abs(scores))]
+        go.term = V(go)[names(scores)]$Term
+
+        message("[GO_table.RENDER] 2: len.scores = ",length(scores))
+        
+        ## get FC and q-value.  match with enrichment table
+        gs.meta <- ngs$gset.meta$meta[[comparison]]
+        ii <- matchGOid2gset(names(scores),rownames(gs.meta))
+        gs.meta <- gs.meta[ii,,drop=FALSE]
+        gs.meta$GO.id <- rownames(scores)        
+        mm <- selected_gsetmethods()
+        mm <- intersect(mm, colnames(gs.meta$q))
+        qv <- apply(gs.meta$q[,mm,drop=FALSE],1,max,na.rm=TRUE) ## meta-q
+        fx <- gs.meta$meta.fx
+        
+        message("[GO_table.RENDER] 2: dim(gs.meta) = ",paste(dim(gs.meta),collapse="x"))
         
         go.term1 = substring(go.term, 1, 80)
         dt1 = round( cbind(score=scores, logFC=fx, meta.q=qv), digits=4)    
@@ -800,13 +800,22 @@ to understand biological functions including GO and KEGG pathway analysis."
     plotGOactmap <- function(score, go, normalize, maxterm, maxfc)
     {
 
-        score[is.na(score)] = 0
         rownames(score) = V(go)[rownames(score)]$Term
+        
+        message("[plotGOactmap] 0: sum(isna(score)) = ", sum(is.na(score)))
+        message("[plotGOactmap] 0: min(score,na.rm=0) = ", min(score,na.rm=FALSE))
+        message("[plotGOactmap] 0: max(score,na.rm=0) = ", max(score,na.rm=FALSE))
+        message("[plotGOactmap] 0: min(score,na.rm=1) = ", min(score,na.rm=TRUE))
+        message("[plotGOactmap] 0: max(score,na.rm=1) = ", max(score,na.rm=TRUE))
+
+        ## avoid errors!!!
+        score[is.na(score) | is.infinite(score)] <- 0
+        score[is.na(score)] = 0
         
         ## reduce score matrix
         ##score = head(score[order(-rowSums(abs(score))),],40)
-        score = score[head(order(-rowSums(score**2)),maxterm),,drop=FALSE] ## max number terms    
-        score = score[,head(order(-colSums(score**2)),maxfc),drop=FALSE] ## max comparisons/FC
+        score = score[head(order(-rowSums(score**2,na.rm=TRUE)),maxterm),,drop=FALSE] ## max number terms    
+        score = score[,head(order(-colSums(score**2,na.rm=TRUE)),maxfc),drop=FALSE] ## max comparisons/FC
         ##if(NCOL(score)==1) score <- cbind(score,score)   
 
         score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
@@ -814,7 +823,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         d2 <- as.dist(1-cor(score,use="pairwise"))
         d1[is.na(d1)] <- 1
         d2[is.na(d2)] <- 1
-        jj=1;ii=1:nrow(score)
+        ii=1:nrow(score); jj=1:ncol(score)
         if(NCOL(score)==1) {
             score <- score[order(-score[,1]),1,drop=FALSE]
         } else {
@@ -830,12 +839,15 @@ to understand biological functions including GO and KEGG pathway analysis."
         
         ##pdf("module-functional.pdf",w=8,h=12)
         score2 <- score
-        if(normalize) score2 <- t( t(score2) / apply(abs(score2),2,max)) ## column scale???
+        if(normalize) {
+            ## column scale???
+            score2 <- t( t(score2) / (1e-8+apply(abs(score2),2,max,na.rm=TRUE)))
+        }
         ##score2 <- abs(score2)**0.8 * sign(score2)  ## fudging
-        score2 <- sign(score2) * abs(score2/max(abs(score2)))**0.8   ## fudging
+        score2 <- sign(score2) * abs(score2/max(abs(score2),na.rm=TRUE))**0.8   ## fudging
         ## heatmap(score2, scale="none", mar=c(8,20))
-
         bmar <- 0 + pmax((50 - nrow(score2))*0.25,0)
+       
         par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1.5,0,0.5))
         require(corrplot)
         corrplot::corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),

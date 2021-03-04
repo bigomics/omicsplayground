@@ -25,6 +25,7 @@ message("************************************************")
 message("********* RUNTIME ENVIRONMENT VARIABLES ********")
 message("************************************************")
 
+
 Sys.setlocale("LC_CTYPE","en_US.UTF-8") 
 Sys.setlocale("LC_TIME","en_US.UTF-8")
 ##Sys.setlocale("LC_ALL", "C")  ## really??
