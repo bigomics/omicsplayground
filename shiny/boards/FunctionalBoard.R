@@ -75,8 +75,8 @@ to understand biological functions including GO and KEGG pathway analysis."
             conditionalPanel(
                 "input.fa_options % 2 == 1", ns=ns,
                 tagList(
-                    tipify(checkboxInput(ns('fa_normalize'),'normalize activation matrix',TRUE),
-                           "Click to fine-tune the coloring of an activation matrices."),
+                    tipify(checkboxInput(ns('fa_normalize'),'normalize activation matrix',FALSE),
+                           "Click to normalize the columns of the activation matrices."),
                     tipify(checkboxInput(ns('fa_filtertable'),'filter signficant (tables)',FALSE),
                            "Click to filter the significant entries in the tables.")
                 )
@@ -454,7 +454,7 @@ to understand biological functions including GO and KEGG pathway analysis."
             score <- score[order(-score[,1]),1,drop=FALSE]
         } else {
             ii <- hclust(d1)$order
-            ii <- order(-rowMeans(score))
+            ## ii <- order(-rowMeans(score))
             jj <- hclust(d2)$order
             score <- score[ii,jj,drop=FALSE]
         }
@@ -828,7 +828,7 @@ to understand biological functions including GO and KEGG pathway analysis."
             score <- score[order(-score[,1]),1,drop=FALSE]
         } else {
             ii <- hclust(d1)$order
-            ii <- order(-rowMeans(score))
+            ## ii <- order(-rowMeans(score))
             jj <- hclust(d2)$order
             score <- score[ii,jj,drop=FALSE]
         }
@@ -838,6 +838,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         colnames(score) <- paste0(colnames(score)," ")
         
         ##pdf("module-functional.pdf",w=8,h=12)
+        ## normalize colums just for visualization of the heatmap
         score2 <- score
         if(normalize) {
             ## column scale???

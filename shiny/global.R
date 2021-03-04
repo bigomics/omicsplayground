@@ -43,4 +43,11 @@ if(0) {
 }
 
 
-dbg <- function(msg) if(DEBUG) message(cat(msg))
+## dbg <- function(msg) if(DEBUG) message(cat(msg))
+dbg <- function(...) {
+    if(DEBUG) {
+        msg <- list(...)
+        msg <- paste(sapply(msg, function(s) paste(s,collapse=" ")),collapse=" ")
+        message(msg)
+    }
+}

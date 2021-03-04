@@ -269,11 +269,11 @@ WordCloudBoard <- function(input, output, session, env)
         
         par(mar=c(1,1,1,1)*0)
         suppressWarnings( suppressMessages(
-            wordcloud(
-                words = df$word, freq = size,
-                ##colors=brewer.pal(8, "Dark2"),
-                colors = brewer.pal(8, color.pal),
-                scale=c(2,0.1)*0.9, min.freq=minsize)
+            wordcloud::wordcloud(
+                           words = df$word, freq = size,
+                           ##colors=brewer.pal(8, "Dark2"),
+                           colors = brewer.pal(8, color.pal),
+                           scale=c(2,0.1)*0.9, min.freq=minsize)
         ))
         
     })
@@ -534,7 +534,7 @@ WordCloudBoard <- function(input, output, session, env)
     ##------------- modules for WordCloud ---------------------------
     ##---------------------------------------------------------------
     require(wordcloud2)
-    require(rWordCloud)
+    ##require(rWordCloud)
 
     enrich_wordtsne_info = "<strong>Word t-SNE.</strong> T-SNE of keywords that were found in the title/description of gene sets. Keywords that are often found together in title/descriptions are placed close together in the t-SNE. For each keyword we computed enrichment using GSEA on the mean (absolute) enrichment profiles (averaged over all contrasts). Statistically significant gene sets (q<0.05) are colored in red. The sizes of the nodes are proportional to the normalized enrichment score (NES) of the keyword."
 

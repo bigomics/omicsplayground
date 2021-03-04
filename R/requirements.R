@@ -61,7 +61,7 @@ BIG.NOTUSED <- c(
 
 PKG.MANUAL <- c(
     "gputools","Seurat","EPIC","PCSF","NNLM","iTALK",
-    "fpc","grid","gridGraphics","Rgraphviz","rWordCloud",
+    "fpc","grid","gridGraphics","Rgraphviz", ## "rWordCloud",
     "shinyparticles","FastGGM","monocle3","proteus",
     ## "infercnv","pathview",
     "mygene","diptest")
@@ -111,7 +111,7 @@ devtools::install_github("GfellerLab/EPIC", build_vignettes=TRUE)
 ##devtools::install_github("IOR-Bioinformatics/PCSF", dependencies=TRUE, type="source")
 devtools::install_github('linxihui/NNLM')
 devtools::install_github("Coolgenome/iTALK", build_vignettes = TRUE, force=TRUE)
-devtools::install_github('adymimos/rWordCloud', force=TRUE)
+## devtools::install_github('adymimos/rWordCloud', force=TRUE)
 ## remotes::install_github("dreamRs/shinyparticles")
 remotes::install_github("dreamRs/particlesjs")
 remotes::install_github("JohnCoene/waiter")

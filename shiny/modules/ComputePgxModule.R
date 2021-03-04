@@ -56,7 +56,12 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
             EXTRA.NAMES = c("celltype deconvolution", "drugs enrichment",
                             "wordcloud","experiment connectivity")
             EXTRA.SELECTED = c("drugs","wordcloud")
-            
+
+            DEV.METHODS = c("noLM.prune")
+            DEV.NAMES = c("noLM + prune")
+            DEV.SELECTED = c()
+
+
             output$UI <- renderUI({
                 fillCol(
                     height = height,
@@ -64,27 +69,34 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     br(),
                     fluidRow(
                         column(
-                            6, align="center", offset=2,
+                            9, align="center", offset=1,
                             tags$table(
-                                     style="width:100%; vertical-align: top; padding: 4px;",
+                                     style="width:100%;vertical-align:top;padding:4px;",
                                      tags$tr(
-                                              tags$td("Name"),
+                                              tags$td("", width="300"),
+                                              tags$td("Name", width="100"),
                                               tags$td(textInput(
                                                        ns("upload_name"),NULL, ##"Dataset:",
                                                        ##width="100%",
                                                        ## width=420,
-                                                       placeholder="Name of your dataset")
-                                                      )
+                                                       placeholder="Name of your dataset"),
+                                                      width="600"
+                                                      ),
+                                              tags$td("", width="120")
                                           ),
                                      tags$tr(
+                                              tags$td(""),
                                               tags$td("Datatype"),
                                               tags$td(selectInput(
                                                        ns("upload_datatype"), NULL,
-                                                       choices = c("RNA-seq","scRNA-seq","proteomics",
+                                                       choices = c("RNA-seq","scRNA-seq",
+                                                                   "proteomics",
                                                                    "mRNA microarray","other"))
-                                                      )
+                                                      ),
+                                              tags$td("")
                                           ),
                                      tags$tr(
+                                              tags$td(""),
                                               tags$td("Description"),
                                               tags$td(div(textAreaInput(
                                                        ns("upload_description"), NULL, ## "Description:",
@@ -93,7 +105,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                                        ## width=400
                                                        height=100, resize='none'),
                                                        style="margin-left: 0px;"
-                                                       ))
+                                                       )),
+                                              tags$td("")
                                           )
                                  ),
                             br(),
@@ -109,7 +122,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     conditionalPanel(
                         "input.options%2 == 1", ns=ns,
                         fillRow(
-                            div(width=150),
+                            div(width=25),
                             wellPanel(
                                 checkboxGroupInput(
                                     ns('filter_methods'),
@@ -163,7 +176,16 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                     selected = EXTRA.SELECTED
                                 )
                             ),
-                            div(width=150)                            
+                            wellPanel(
+                                checkboxGroupInput(
+                                    ns('dev_options'),
+                                    'Developer options:',
+                                    choiceValues = DEV.METHODS,
+                                    choiceNames = DEV.NAMES,
+                                    selected = DEV.SELECTED
+                                )
+                            ),
+                            div(width=25)                            
                         ) ## end of fillRow
                     ) ## end of conditional panel
                 ) ## end of fill Col
@@ -247,13 +269,12 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 gset.methods = c("fisher","gsva","fgsea","camera","fry")
                 extra.methods = c("deconv","wordcloud","connectivity")
 
-                
                 max.genes    = as.integer(max.genes)
                 max.genesets = as.integer(max.genesets)
 
                 ## get selected methods from input
-                gx.methods   <- c(input$gene_methods,input$gene_methods2)
-                gset.methods <- c(input$gset_methods,input$gset_methods2)
+                gx.methods    <- c(input$gene_methods,input$gene_methods2)
+                gset.methods  <- c(input$gset_methods,input$gset_methods2)
                 extra.methods <- c(input$extra_methods,input$extra_methods2)
                 
                 if(length(gx.methods)==0) {
@@ -301,14 +322,18 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 excl.xy <- ("excl.xy"  %in% flt)
                 only.proteincoding <- ("only.proteincoding"  %in% flt)
                 filter.genes <- ("remove.notexpressed"  %in% flt)                
-                
-                progress$inc(0.01, detail = "parsing data")            
+               
+                use.design <- !("noLM.prune" %in% input$dev_options)
+                prune.samples <- ("noLM.prune" %in% input$dev_options)
+
+                message("[ComputePgxServer:@compute] creating PGX object")                
+                progress$inc(0.01, detail = "creating PGX object")            
                 
                 ngs <- pgx.createPGX(
                     counts, samples, contrasts, ## genes,
                     X = NULL,   ## should we pass the pre-normalized expresson X ????
-                    batch.correct = FALSE,      ## done in UI                        
-                    prune.samples = TRUE,
+                    batch.correct = FALSE, ## done in UI                        
+                    prune.samples = TRUE,  ## always prune
                     filter.genes = filter.genes,
                     only.chrom = FALSE,
                     rik.orf = !excl.rikorf,
@@ -318,6 +343,9 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 )
                 names(ngs)
 
+                message("[ComputePgxServer:@compute] computing PGX object")
+                progress$inc(0.2, detail = "computing PGX object")            
+                
                 ngs <- pgx.computePGX(
                     ngs,
                     max.genes = max.genes,
@@ -325,7 +353,9 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     gx.methods = gx.methods,
                     gset.methods = gset.methods,
                     extra.methods = extra.methods,
-                    do.cluster=TRUE,                
+                    use.design = use.design,        ## no.design+prune are combined 
+                    prune.samples = prune.samples,  ##
+                    do.cluster = TRUE,                
                     progress = progress,
                     lib.dir = FILES 
                 )

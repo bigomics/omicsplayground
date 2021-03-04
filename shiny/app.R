@@ -89,6 +89,7 @@ if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     opt$AUTHENTICATION = auth
 }
 
+
 ## copy to global environment
 SHOW_QUESTIONS = FALSE
 ##WATERMARK      = opt$WATERMARK
@@ -115,7 +116,6 @@ source("modules/UploadModule.R",local=src.local)
 ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 
-
 if(0) {    
     ##PGX.DIR="../test/"
     ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
@@ -123,8 +123,6 @@ if(0) {
     load("../data/GSE10846-dlbcl-nc.pgx")
     ngs = pgx.initialize(ngs)
 }
-
-
 
 ## --------------------------------------------------------------------
 ## ------------------------ READ BOARDS -------------------------------
@@ -312,7 +310,7 @@ help.tabs <- navbarMenu(
 TABVIEWS <- list(
     "load" = tabView("Home",LoadingInputs("load"),LoadingUI("load")),
     "view" = tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
-    "clust" = tabView("Unsupervised clustering",ClusteringInputs("clust"),ClusteringUI("clust")),
+    "clust" = tabView("Clustering",ClusteringInputs("clust"),ClusteringUI("clust")),
     "wgcna" = tabView("WGCNA (beta)",WgcnaInputs("wgcna"),WgcnaUI("wgcna")),
     "expr" = tabView("Differential expression",ExpressionInputs("expr"),ExpressionUI("expr")),
     "cor"  = tabView("Correlation analysis", CorrelationInputs("cor"), CorrelationUI("cor")),
@@ -448,3 +446,4 @@ shiny::shinyApp(ui, server)
 ## --------------------------------------------------------------------
 ## ------------------------------ EOF----------------------------------
 ## --------------------------------------------------------------------
+

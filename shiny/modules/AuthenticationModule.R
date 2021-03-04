@@ -419,18 +419,19 @@ RegisterAuthenticationModule <- function(input, output, session, register.file)
 
     createAccountModal <- function(user) {
         message("[AuthenticationModule::createAccount] user$name = ",user$name)            
+
         m <- modalDialog(
             id = "auth_dialog",
             ##title = "Create an Account",
             tagList(
                 fillRow(
                     flex = c(0.12,0.5,0.2,0.5,0.15),
-                    height = 400,
+                    height = 450,
                     br(),
                     tagList(
                         h3("Try premium?"),
                         HTML("Good news! For limited time, all registered users will receive free access to our <b>Premium plan</b> which includes:<br><br>"),
-                        HTML("<ul><li>Drug enrichment<li>Biomarker analysis<li>Connectivity mapping<li>And more!</ul>"),
+                        HTML("<ul><li>Drug enrichment<li>Biomarker analysis<li>Connectivity mapping<li>WGCNA analysis<li>And more!</ul>"),
                         br(),
                         ##h4("Recommend us to your friends"),
                         ##textAreaInput(ns("register_friends"),"Email(s) of friends:",rows=3)
@@ -440,30 +441,34 @@ RegisterAuthenticationModule <- function(input, output, session, register.file)
                         ##h3("Tell us a bit about yourself"),
                         h3("Create a free account"),                            
                         textInput(ns("register_name"),"First name"),
+                        textInput(ns("register_lastname"),"Last name"),
                         textInput(ns("register_email"),"E-mail",value=USER$email),
-                        selectInput(ns("register_company"),"What kind of company is it?",
+                        textInput(ns("register_organization"),"Organization"),
+                        textInput(ns("register_jobtitle"),"Job title"),                        
+                        selectInput(ns("register_institutiontype"),"Institution type",
                                     ## select=FALSE, selectize=FALSE,
-                                    c("",sort(c("Academia","Hospital",
-                                                "Non-profit organization",
-                                                "Other industry (SME)",
-                                                "Other industry (large)",
-                                                "Pharmaceutical industry","Start-up",
-                                                "Self-employed")),"other")),
-                        selectInput(ns("register_role"),"What is your role there?",
-                                    c("","Biologist","Bioinformatician","Manager","Other")),
+                                    c("",sort(c("Pharma/Biotech",
+                                                "Hospital/Medical Center",
+                                                "Government",
+                                                "Service provider",
+                                                "Start-up")),"other")),
                         selectInput(ns("register_hear"),"How did you hear about us?",
-                                    c("",sort(c("Coworker/friend","Event",
-                                                "Contacted by Sales",
-                                                "Article","Blog","Web search",
-                                                "LinkedIn","Twitter",
-                                                "Newsleter")),"other")),
+                                    c("",sort(c("From coworker/friend",
+                                                "LinkedIn",
+                                                "Twitter",
+                                                "Journal article",
+                                                "Web article/blog",
+                                                "Web search",
+                                                "BigOmics website",
+                                                "Event",
+                                                "Contacted by Sales")), "other")),
                         br(),br()
                     ),
                     br()
                 )
             ),
             footer = tagList(
-                div(textOutput(ns("register_warning")),style="color: red;"),
+                div(textOutput(ns("register_warning")),style="color:red; text-align:center;"),
                 actionLink(ns("register_cancel"), "Cancel"),HTML("&nbsp;&nbsp;"),
                 actionButton(ns("register_submit"), "Register")
             ),                    
@@ -481,11 +486,18 @@ RegisterAuthenticationModule <- function(input, output, session, register.file)
         observeEvent( input$register_submit, {
             
             message("[AuthenticationModule::createAccount] REGISTER pressed")
-            qq <- c(name = input$register_name,
-                    company = input$register_company,
-                    role = input$register_role,
-                    hear = input$register_hear)
-
+            message("[AuthenticationModule::createAccount] REGISTER pressed")
+            qq <- c(
+                name = input$register_name,
+                lastname = input$register_lastname,
+                email = input$register_email,
+                organization = input$register_organization,                
+                jobtitle = input$register_jobtitle,
+                organization = input$register_organization,                    
+                institutiontype = input$register_institutiontype,                    
+                hear = input$register_hear
+            )
+            
             if(any(is.null(qq) | qq=="")) {
                 message("[AuthenticationModule::createAccount] missing fields")
                 output$register_warning = renderText("Please fill in all required fields")
@@ -517,14 +529,8 @@ RegisterAuthenticationModule <- function(input, output, session, register.file)
             USER$password <- ""
             USER$registered <- TRUE
             USER$level <- "free"
-            updateRegister(USER, register.file)                
-            
-            answers <- c(
-                register_company = input$register_company,
-                register_role = input$register_role,
-                register_hear = input$register_hear
-            )
-            updateSurveyLog(USER, answers)                
+            updateRegister(USER, register.file)
+            updateSurveyLog(USER, qq)                
             USER$logged = TRUE
 
             ## success
@@ -867,7 +873,7 @@ FullAuthenticationModule.SAVE <- function(input, output, session,
         )
     })
     
-    createAccountModal <- function(user) {
+    createAccountModal.NOTUSED <- function(user) {
         message("[AuthenticationModule::createAccount] user$name = ",user$name)            
         m <- modalDialog(
             id = "auth_dialog",
@@ -880,7 +886,7 @@ FullAuthenticationModule.SAVE <- function(input, output, session,
                     tagList(
                         h3("Try premium?"),
                         HTML("Good news! For limited time, all registered users will receive free trial of our <b>Premium plan</b> which includes:<br><br>"),
-                        HTML("<ul><li>Drug enrichment<li>Biomarker analysis<li>Connectivity mapping<li>And more!</ul>"),
+                        HTML("<ul><li>Drug enrichment<li>Biomarker analysis<li>Connectivity mapping<li>WGCNA analysis<li>And more!</ul>"),
                         br(),
                         ##h4("Recommend us to your friends"),
                         ##textAreaInput(ns("ask_friends"),"Email(s) of friends:",rows=3)
@@ -889,20 +895,27 @@ FullAuthenticationModule.SAVE <- function(input, output, session,
                     tagList(
                         h3("Tell us a bit about yourself"),                            
                         textInput(ns("ask_name"),"First name"),
+                        textInput(ns("ask_lastname"),"Last name"),
                         textInput(ns("ask_email"),"E-mail",value=USER$email),
-                        selectInput(ns("ask_company"),"What kind of company is it?",
+                        textInput(ns("ask_organization"),"Organization"),
+                        textInput(ns("ask_jobtitle"),"Job title"),                        
+                        selectInput(ns("ask_institutiontype"),"Institution type?",
                                     ## select=FALSE, selectize=FALSE,
-                                    c("",sort(c("Academia","Hospital","Non-profit organization",
-                                      "Other industry (SME)","Other industry (large)",
-                                      "Pharmaceutical industry","Start-up",
-                                      "Self-employed")),"other")),
-                        selectInput(ns("ask_role"),"What is your role there?",
-                                    c("","Biologist","Bioinformatician","Manager","Other")),
+                                    c("",sort(c("Pharma/Biotech",
+                                                "Hospital/Medical Center",
+                                                "Government",
+                                                "Service provider",
+                                                "Start-up")),"other")),
                         selectInput(ns("ask_hear"),"How did you hear about us?",
-                                    c("",sort(c("From coworker/friend","LinkedIn","Twitter",
-                                      "Journal article","Web article/blog",
-                                      "Web search","BigOmics website", "Event",
-                                      "Contacted by Sales")), "other"))
+                                    c("",sort(c("From coworker/friend",
+                                                "LinkedIn",
+                                                "Twitter",
+                                                "Journal article",
+                                                "Web article/blog",
+                                                "Web search",
+                                                "BigOmics website",
+                                                "Event",
+                                                "Contacted by Sales")), "other"))
                     ),
                     br(),br()
                 )
@@ -921,31 +934,32 @@ FullAuthenticationModule.SAVE <- function(input, output, session,
         })
         observeEvent( input$ask_register, {
             message("[AuthenticationModule::createAccount] REGISTER pressed")
-            qq <- c(name = input$ask_name,
-                    company = input$ask_company,
-                    role = input$ask_role,
-                    hear = input$ask_hear)
+            questions <- c(
+                name = input$ask_name,
+                lastname = input$ask_lastname,
+                email = input$ask_email,
+                organization = input$ask_organization,                
+                jobtitle = input$ask_jobtitle,
+                organization = input$ask_organization,                    
+                institutiontype = input$ask_institutiontype,                    
+                hear = input$ask_hear
+            )
 
-            if(any(is.null(qq) | qq=="")) {
+            if(any(is.null(questions) | questions=="")) {
                 message("[AuthenticationModule::createAccount] missing fields")
                 output$ask_warning = renderText("Please fill in all required fields")
                 shinyjs::delay(2000, {output$ask_warning <- renderText("")})                
                 return(NULL)
             } else {
                 message("[AuthenticationModule::createAccount] all answered!")
-                lapply(1:length(qq), function(i) message(names(qq)[i],"=",qq[i]))
+                lapply(1:length(questions),
+                       function(i) message(names(questions)[i],"=",questions[i]))
                 ##
                 ## save somewhere!
                 ##
                 USER$name <- input$ask_name
                 updateCredentials(USER, credentials.file)                
-
-                answers <- c(
-                    ask_company = input$ask_company,
-                    ask_role = input$ask_role,
-                    ask_hear = input$ask_head
-                )
-                updateSurveyLog(USER, answers)                
+                updateSurveyLog(USER, questions)                
             }
             USER$logged = TRUE
         })

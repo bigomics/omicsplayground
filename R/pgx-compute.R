@@ -57,7 +57,13 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
             contrasts <- contrasts.new
         }
     }
-    
+
+    ## sanity check...
+    if( !all(rownames(contrasts)==rownames(samples)) &&
+        !all(rownames(contrasts)==colnames(counts)) ) {
+        stop("[pgx.createPGX] FATAL :: matrices do not match")
+    }
+
     ## prune.samples=FALSE
     used.samples <- names(which(rowSums(contrasts!=0)>0))
     if(prune.samples && length(used.samples) < ncol(counts) ) {
@@ -374,7 +380,7 @@ pgx.computePGX <- function(ngs,
                            max.genes = 19999, max.genesets = 9999, 
                            gx.methods = c("ttest.welch","trend.limma","edger.qlf"),
                            gset.methods = c("fisher","gsva","fgsea"),
-                           do.cluster = TRUE,
+                           do.cluster = TRUE, use.design = TRUE, prune.samples = FALSE,
                            extra.methods = c("meta.go","deconv","infer","drugs","wordcloud"),
                            lib.dir = "../lib", progress=NULL)
 {
@@ -430,7 +436,10 @@ pgx.computePGX <- function(ngs,
     ngs <- compute.testGenes(
         ngs, contr.matrix,
         max.features = max.genes,
-        test.methods = gx.methods)
+        test.methods = gx.methods,
+        use.design = use.design,
+        prune.samples = prune.samples
+    )
     head(ngs$gx.meta$meta[[1]])        
        
     ## ------------------ gene set tests -----------------------
