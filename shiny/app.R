@@ -375,7 +375,7 @@ createUI <- function(tabs)
         )
     )
     footer = waiter_show_on_load(html = spin_wave(),color = "#1967be")
-    if(runif(1) < 1.1) footer = footer.gif ## every now and then show easter egg..
+    if(runif(1) < 0.1) footer = footer.gif ## every now and then show easter egg..
     
     ##-------------------------------------
     ## create TAB list
