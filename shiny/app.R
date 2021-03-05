@@ -14,6 +14,7 @@ library(shinyjs)
 library(shinyWidgets)
 library(waiter)
 library(plotly)
+library(shinybusy)
 
 message("\n\n")
 message("###############################################################")
@@ -72,7 +73,7 @@ message("************************************************")
 message("************* parsing OPTIONS file *************")
 message("************************************************")
 
-options(shiny.maxRequestSize = 999*1024^2)  ##max 999Mb upload
+options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
 
@@ -82,18 +83,16 @@ opt <- pgx.readOptions(file="OPTIONS")
 ## opt$AUTHENTICATION = "register"
 ## opt$AUTHENTICATION = "firebase"
 
-
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
     message("[ENV] overriding PLAYGROUND_AUTHENTICATION = ",auth)
     opt$AUTHENTICATION = auth
 }
 
-
 ## copy to global environment
 SHOW_QUESTIONS = FALSE
-##WATERMARK      = opt$WATERMARK
-##USER_MODE      = opt$USER_MODE
+##WATERMARK  = opt$WATERMARK
+##USER_MODE  = opt$USER_MODE
 AUTHENTICATION = opt$AUTHENTICATION
 DEV = (USER_MODE=="dev" && dir.exists("../../omicsplayground-dev"))
 
@@ -240,7 +239,7 @@ server = function(input, output, session) {
     ## Dynamicall hide/show certain sections depending on USERMODE/object
     observe({
         pgx <- env[["load"]][["inputData"]]() ## trigger on change dataset
-
+        
         ## hide all main tabs until we have an object
         if(is.null(pgx)) {
             lapply(MAINTABS, function(m) hideTab("maintabs",m))
@@ -263,9 +262,8 @@ server = function(input, output, session) {
             hideTab("enrich-tabs2","FDR table")
             ## hideTab("cor-tabs","Functional")
         }
-
-        ## hideTab("cor-tabs","Functional")
         
+        ## hideTab("cor-tabs","Functional")       
         if(USER_MODE == "dev" || DEV) {
             showTab("maintabs","Dev")
             showTab("view-tabs","Resource info")
@@ -364,17 +362,21 @@ createUI <- function(tabs)
         ##QuestionBoard_UI("qa")
     )
     names(header) <- NULL
-   
-    footer = tagList(
-        ##social_buttons(),
-        waiter_show_on_load(
-            html = spin_wave(),
-            ##color = "#2780e3",
-            color = "#1967be"            
-            ## logo = "ready.png"
-        ) # place at the bottom
-    )
 
+    busy.img = sample(dir("www/busy",pattern="gif",full.name=TRUE))[1]
+    busy.img
+    footer.gif = tagList(
+        busy_start_up(
+            text = "\nPrepping your yard for Omics Playground...", mode = "auto",
+            ## background="#1967be", color="#ffffff",
+            loader = img(src=base64enc::dataURI(file=busy.img))
+            ##loader = img(src=base64enc::dataURI(file="www/busy/banana.gif"), width = 250)
+            ##loader = img(src=base64enc::dataURI(file="www/busy/playground.gif"), width=500)
+        )
+    )
+    footer = waiter_show_on_load(html = spin_wave(),color = "#1967be")
+    if(runif(1) < 1.1) footer = footer.gif ## every now and then show easter egg..
+    
     ##-------------------------------------
     ## create TAB list
     ##-------------------------------------

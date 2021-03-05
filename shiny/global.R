@@ -14,7 +14,7 @@ FILES   = file.path(OPG,"lib")
 FILESX  = file.path(OPG,"libx")
 PGX.DIR = file.path(OPG,"data")
 
-USER_MODE = "pro"
+USER_MODE = "expert"
 ## USER_MODE = "dev"
 DEV       = FALSE
 WATERMARK = FALSE

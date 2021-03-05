@@ -613,10 +613,8 @@ FullAuthenticationModule.SAVE <- function(input, output, session,
     }
     CREDENTIALS <- read.csv(credentials.file, colClasses="character",
                             stringsAsFactors=FALSE)
-    head(CREDENTIALS)
-    
+    head(CREDENTIALS)    
     SURVEY.LOG = "../logs/survey.log"
-
     USER <- reactiveValues(logged=FALSE, name="", email="",
                            password=NA, verified=FALSE, level="")
     
