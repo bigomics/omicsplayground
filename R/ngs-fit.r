@@ -557,14 +557,14 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
     dge <- calcNormFactors(dge, method="TMM")
 
     if(is.null(design) && !prune.samples) {
-        message("[ngs.fitContrastsWithLIMMA] fitting EDGER contrasts *without* design matrix")
+        message("[ngs.fitContrastsWithEDGER] fitting EDGER contrasts *without* design matrix")
         res <- .ngs.fitContrastsWithEDGER.nodesign(
             dge=dge, contr.matrix=contr.matrix, method=method, 
             conform.output=conform.output, robust=robust, plot=plot)
         return(res)
     }
     if(is.null(design) && prune.samples) {
-        message("[ngs.fitContrastsWithLIMMA] fitting EDGER contrasts *without* design matrix")
+        message("[ngs.fitContrastsWithEDGER] fitting EDGER contrasts *without* design matrix")
         res <- .ngs.fitContrastsWithEDGER.nodesign.pruned(
             counts=counts, contr.matrix=contr.matrix, method=method, group=group,
             conform.output=conform.output, robust=robust, plot=plot)
@@ -572,7 +572,7 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
     }
 
 
-    message("[ngs.fitContrastsWithLIMMA] fitting EDGER contrasts using design matrix")    
+    message("[ngs.fitContrastsWithEDGER] fitting EDGER contrasts using design matrix")    
     dge <- estimateDisp(dge, design=design, robust=robust)
     if(is.null(X)) X <- edgeR::cpm(counts, log=TRUE)
 
@@ -581,7 +581,7 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
         fit <- glmQLFit(dge, design, robust=robust)
     } else if(method=="lrt") {
         fit <- glmFit(dge, design, robust=robust)
-        lrt <- glmLRT(fit, design)
+        ## lrt <- glmLRT(fit, design)
     } else {
         stop("unknown method")
     }
@@ -660,9 +660,9 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
     dge$trended.dispersion <- dge.disp$trended.dispersion
     dge$tagwise.dispersion <- dge.disp$tagwise.dispersion
     
-    contr.matrix0 <- matrix(c(-1,0,1),nrow=3)
-    rownames(contr.matrix0) <- c("yneg","yo","ypos")
-    colnames(contr.matrix0) <- "pos_vs_neg"
+    contr0 <- matrix(c(-1,0,1),nrow=3)
+    rownames(contr0) <- c("yneg","yo","ypos")
+    colnames(contr0) <- "pos_vs_neg"
 
     tables <- list()
     i=1
@@ -672,14 +672,14 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
         design1 <- model.matrix( ~ 0 + y)
         ##method="qlf";robust=FALSE;plot=FALSE
         if(method=="qlf") {
-            ##message("[ngs.fitContrastsWithLIMMA] fitting using QL F-test")
+            ##message("[ngs.fitContrastsWithEDGER] fitting using QL F-test")
             fit <- glmQLFit(dge, design1, robust=robust)
-            ctx <- contr.matrix0[colnames(coef(fit)),]
+            ctx <- contr0[colnames(coef(fit)),]
             res <- glmQLFTest(fit, contrast=ctx)
         } else if(method=="lrt") {
-            ##message("[ngs.fitContrastsWithLIMMA] fitting using GLM/LRT")
+            ##message("[ngs.fitContrastsWithEDGER] fitting using GLM/LRT")
             fit <- glmFit(dge, design1, robust=robust)
-            ctx <- contr.matrix0[colnames(coef(fit)),]
+            ctx <- contr0[colnames(coef(fit)),]
             res = glmLRT(fit, contrast=ctx)
         } else {
             stop("unknown method: ",method)
@@ -768,15 +768,15 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
         design1 <- model.matrix( ~ 0 + y)
         ##method="qlf";robust=FALSE;plot=FALSE
         if(method=="qlf") {
-            ##message("[ngs.fitContrastsWithLIMMA] fitting using QL F-test")
+            ##message("[ngs.fitContrastsWithEDGER] fitting using QL F-test")
             fit <- glmQLFit(dge1, design1, robust=robust)
             ctx <- M[colnames(coef(fit)),]
             res <- glmQLFTest(fit, contrast=ctx)
         } else if(method=="lrt") {
-            ##message("[ngs.fitContrastsWithLIMMA] fitting using GLM/LRT")
+            ##message("[ngs.fitContrastsWithEDGER] fitting using GLM/LRT")
             fit <- glmFit(dge1, design1, robust=robust)
             ctx <- M[colnames(coef(fit)),]
-            res = glmLRT(fit, contrast=ctx)
+            res <- glmLRT(fit, contrast=ctx)
         } else {
             stop("unknown method: ",method)
         }
@@ -835,16 +835,16 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
     }
 
     if(is.null(design)) {
-        message("[ngs.fitContrastsWithLIMMA] fitting DESEQ2 contrasts *without* design matrix")
+        message("[ngs.fitContrastsWithDESEQ2] fitting DESEQ2 contrasts *without* design matrix")
         out <- .ngs.fitConstrastsWithDESEQ2.nodesign(
             counts=counts, contr.matrix=contr.matrix, test=test,
             prune.samples = prune.samples, conform.output=conform.output)
         return(out)
     }
-    message("[ngs.fitContrastsWithLIMMA] fitting DESEQ2 contrasts using design matrix")
+    message("[ngs.fitContrastsWithDESEQ2] fitting DESEQ2 contrasts using design matrix")
     
     design.formula = formula(" ~ 0 + group")
-    message("[ngs.fitContrastsWithLIMMA] using model design: ",as.character(design.formula))
+    message("[ngs.fitContrastsWithDESEQ2] using model design: ",as.character(design.formula))
 
     rownames.counts <- rownames(counts)
     ##rownames(counts) <- NULL
