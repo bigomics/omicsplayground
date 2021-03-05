@@ -20,7 +20,7 @@ FROM bigomics/omicsplayground:base
 # RUN apt install -y xvfb
 # RUN R -e "devtools::install_version('mnormt', version='1.5-7')" \
 #    && R -e "install.packages(c())"
-RUN R -e "install.packages(c('shinythemes'))"
+RUN R -e "install.packages(c('shinythemes','shinybusy'))"
 RUN R -e "BiocManager::install(c('TxDb.Hsapiens.UCSC.hg19.knownGene','TxDb.Mmusculus.UCSC.mm10.knownGene','WGCNA'))"
 # RUN pip3 install umap-learn
 
