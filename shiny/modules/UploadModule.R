@@ -137,7 +137,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                         plotOutput(ns("contrastStats")) %>% withSpinner()
                     )
                     ##br(), 
-                    ##DT::dataTableOutput(ns("statusTableOutput"))
+                    ##DT::dataTableOutput(ns("checkTablesOutput"))
                 )
             }) ## end-of-renderUI
             
@@ -264,9 +264,9 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             })
 
             upload_ok <- reactive({
-                statusTab <- statusTable()
-                all(statusTab[,"status"]=="OK")
-                all(grepl("ERROR",statusTab[,"status"])==FALSE)
+                check <- checkTables()
+                all(check[,"status"]=="OK")
+                all(grepl("ERROR",check[,"status"])==FALSE)
             })
 
             corrected_counts <- reactive({
@@ -321,11 +321,11 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 cat("[countStats] renderPlot called \n")
                 ##req(uploaded$counts.csv)                
 
-                statusTab <- statusTable()
-                status.ok <- statusTab["counts.csv","status"]                
+                check <- checkTables()
+                status.ok <- check["counts.csv","status"]                
                 if(status.ok!="OK") {
                     frame()
-                    status.ds <- statusTab["counts.csv","description"]
+                    status.ds <- check["counts.csv","description"]
                     msg <- paste(toupper(status.ok),"\n\n","Please upload 'counts.csv'",
                                  tolower(status.ds))
                     ##text(0.5,0.5,"Please upload contrast file 'contrast.csv' with conditions on rows, contrasts as columns")
@@ -358,11 +358,11 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 message("[phenoStats] renderPlot called \n")
                 ##req(uploaded$samples.csv)                
                 
-                statusTab <- statusTable()
-                status.ok <- statusTab["samples.csv","status"]                
+                check <- checkTables()
+                status.ok <- check["samples.csv","status"]                
                 if(status.ok!="OK") {
                     frame()
-                    status.ds <- statusTab["samples.csv","description"]
+                    status.ds <- check["samples.csv","description"]
                     msg <- paste(toupper(status.ok),"\n\n","Please upload 'samples.csv'",
                                  tolower(status.ds))
                     text(0.5,0.5,paste(strwrap(msg,30),collapse="\n"),col="grey25")
@@ -371,19 +371,12 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 }
 
                 pheno <- uploaded[["samples.csv"]]
-
-                message("[phenoStats] sample.csv seems OK!")
-                message("[phenoStats] nrow.pheno = ",nrow(pheno))
-                message("[phenoStats] ncol.pheno = ",ncol(pheno))
                 
                 px <- head(colnames(pheno),20)  ## maximum??
                 require(inspectdf)
                 df <- type.convert(pheno[,px,drop=FALSE])
                 vt <- df %>% inspect_types()
                 vt
-
-                message("[phenoStats] nrow.vt = ",nrow(vt))
-                message("[phenoStats] ncol.vt = ",ncol(vt))
                 
                 ## discretized continuous variable into 10 bins
                 ii <- unlist(vt$col_name[c("numeric","integer")])
@@ -395,18 +388,9 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                         cut(x, breaks=10)
                     })
                 }
-
-                message("[UploadModule::phenoStats] nrow(df)=",nrow(df),"\n")
-                message("[UploadModule::phenoStats] ncol(df)=",ncol(df),"\n")
-                message("[UploadModule::phenoStats] class(df)=",class(df),"\n")
                 
                 p1 <- df %>% inspect_cat() %>% show_plot()
-
-                message("[UploadModule::phenoStats] class(p1)=",class(p1))
-
                 tt2 <- paste(nrow(pheno),"samples x",ncol(pheno),"phenotypes")
-                message("[UploadModule::phenoStats] dim(pheno)=",tt2)
-                
                 ## tt2 <- paste(ncol(pheno),"phenotypes")
                 p1 <- p1 + ggtitle("PHENOTYPES", subtitle=tt2) +
                     theme(
@@ -426,8 +410,8 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 
                 ct <- uploaded$contrasts.csv
                 has.contrasts <- !is.null(ct) && NCOL(ct)>0
-                statusTab <- statusTable()
-                status.ok <- statusTab["contrasts.csv","status"]
+                check <- checkTables()
+                status.ok <- check["contrasts.csv","status"]
 
                 message("[output$contrastStats] status.ok = ",status.ok)
                 message("[output$contrastStats] has.contrasts = ",has.contrasts)
@@ -436,7 +420,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 
                 if( status.ok!="OK" || !has.contrasts) {
                     frame()
-                    status.ds <- statusTab["contrasts.csv","description"]
+                    status.ds <- check["contrasts.csv","description"]
                     msg <- paste(toupper(status.ok),"\n\n","Please upload 'contrasts.csv'",
                                  tolower(status.ds))
                     ##text(0.5,0.5,"Please upload contrast file 'contrast.csv' with conditions on rows, contrasts as columns")
@@ -447,7 +431,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 
                 require(inspectdf)
                 req(uploaded$contrasts.csv, uploaded$samples.csv)
-                pheno <- uploaded$samples.csv
+                pheno     <- uploaded$samples.csv
                 contrasts <- uploaded$contrasts.csv
                 
                 ## convert to experiment matrix if not already...
@@ -455,19 +439,14 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     contrasts <- pgx.expMatrix(pheno, contrasts)
                 }
                 ##contrasts <- sign(contrasts)
-                df <- contrastAsLabels(contrasts)
+                ##df <- contrastAsLabels(contrasts)
+                df <- contrasts
                 px <- head(colnames(df),20)  ## maximum to show??
                 df <- data.frame(df[,px,drop=FALSE],check.names=FALSE)
                 tt2 <- paste(nrow(contrasts),"samples x",ncol(contrasts),"contrasts")
                 ##tt2 <- paste(ncol(contrasts),"contrasts")
 
-                cat("[UploadModule::phenoStats] dim(df)=",dim(df),"\n")
-                cat("[UploadModule::phenoStats] tt2=",tt2,"\n")
-
                 p1 <- df %>% inspect_cat() %>% show_plot()                    
-
-                cat("[UploadModule::phenoStats] class(p1)=",class(p1),"\n")
-                
                 p1 <- p1 + ggtitle("CONTRASTS", subtitle=tt2) +
                     theme(
                         ##axis.text.x = element_text(size=8, vjust=+5),
@@ -593,7 +572,10 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 message("[upload_files] done!\n")
             })
                                     
-            statusTable <- reactive({        
+            checkTables <- reactive({        
+                ##
+                ##
+                ##
                 
                 ## check dimensions
                 status = rep("please upload",3)
@@ -627,20 +609,12 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                         counts1 = uploaded[["counts.csv"]]
                         a1 <- mean(rownames(samples1) %in% colnames(counts1))
                         a2 <- mean(samples1[,1] %in% colnames(counts1))
-                        message("[UploadModuleServer] a1 =",a1)
-                        message("[UploadModuleServer] a2 =",a2)
                         
                         if(a2 > a1 && NCOL(samples1)>1 ) {
                             message("[UploadModuleServer] getting sample names from first column\n")
                             rownames(samples1) <- samples1[,1]
                             uploaded[["samples.csv"]] <- samples1[,-1,drop=FALSE]
                         }                        
-                    }
-
-                    if(0) {
-                        uploaded <- list()
-                        uploaded$counts.csv  <- read.csv("~/Downloads/FemaleLiver/counts.csv")
-                        uploaded$samples.csv <- read.csv("~/Downloads/FemaleLiver/samples.csv")
                     }
                     
                     ## check files: matching dimensions
@@ -662,11 +636,45 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                         }
                     }
                     
+                    if(status["contrasts.csv"]=="OK" && status["samples.csv"]=="OK") {
+                        samples1   <- uploaded[["samples.csv"]]
+                        contrasts1 <- uploaded[["contrasts.csv"]]
+
+                        old1 = ("group" %in% colnames(samples1) &&
+                                nrow(contrasts1) < nrow(samples1))
+                        old2 = all(rownames(contrasts1)==rownames(samples1)) &&
+                            all(unique(as.vector(contrasts1)) %in% c(-1,0,1,NA))
+                        old.style <- old1 || old2
+                        if(old.style  && old1) {
+                            message("[UploadModule] WARNING: converting old style contrast to new format")
+                            new.contrasts <- contrastAsLabels(contrasts1)
+                            new.contrasts <- new.contrasts[samples1$group,,drop=FALSE]
+                            rownames(new.contrasts) <- rownames(samples1)
+                            contrasts1 <- new.contrasts
+                        }
+                        if(old.style  && old2) {
+                            message("[UploadModule] WARNING: converting old style contrast to new format")
+                            new.contrasts <- contrastAsLabels(contrasts1)
+                            contrasts1 <- new.contrasts
+                        }
+
+                        ## always clean up
+                        contrasts1 <- apply(contrasts1,2,as.character)
+                        rownames(contrasts1) <- rownames(samples1)
+                        for(i in 1:ncol(contrasts1)) {
+                            isz = (contrasts1[,i] %in% c(NA,"NA","NA ",""," ","  ","   "," NA"))
+                            if(length(isz)) contrasts1[isz,i] <- NA
+                        }
+
+                        uploaded[["contrasts.csv"]] <- contrasts1
+                        
+                    }
+                    
                     MAXSAMPLES   = 25
                     MAXCONTRASTS = 5
                     MAXSAMPLES   = as.integer(max.limits["samples"])
                     MAXCONTRASTS = as.integer(max.limits["comparisons"])
-                    
+
                     ## check files: maximum contrasts allowed
                     if(status["contrasts.csv"]=="OK") {
                         if( ncol(uploaded[["contrasts.csv"]]) > MAXCONTRASTS ) {
@@ -683,18 +691,12 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                             status["samples.csv"] = paste("ERROR: max",MAXSAMPLES,"samples allowed")
                         }
                     }
-                                        
+                    
                     ## check files: must have group column defined
                     if(status["samples.csv"]=="OK" && status["contrasts.csv"]=="OK") {
                         samples1   = uploaded[["samples.csv"]]
                         contrasts1 = uploaded[["contrasts.csv"]]
-                        has.group <- "group" %in% colnames(samples1)
-                        matching.group <- all(rownames(contrasts1) %in% samples1$group)
-                        matching.samples <- all(rownames(contrasts1) %in% rownames(samples1))
-                        ##if(!has.group) {
-                        ##    status["samples.csv"] = "ERROR: missing 'group' column"
-                        ##}
-                        if(!matching.group && !matching.samples) {
+                        if(!all(rownames(contrasts1) %in% rownames(samples1))) {
                             status["contrasts.csv"] = "ERROR: contrasts do not match samples"
                         }
                     }
@@ -723,11 +725,11 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 return(df)    
             })
             
-            output$statusTableOutput <- DT::renderDataTable({
+            output$checkTablesOutput <- DT::renderDataTable({
                 ## Render the upload status table
                 ##
                 if(!input$advanced_mode) return(NULL)
-                df <- statusTable()
+                df <- checkTables()
                 dt <- datatable(
                     df,
                     rownames=FALSE,

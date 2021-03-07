@@ -14,7 +14,7 @@ USER.GENETEST.METHODS <- NULL
 ##===================    Platform helper functions ============================
 ##=============================================================================
 ##pgx=ngs
-pgx.initialize <- function(pgx) {
+pgx.initialize.MOVED <- function(pgx) {
 
     ##---------------------------------------------------------------------
     ## This function must be called after creation of a PGX object
@@ -97,6 +97,19 @@ pgx.initialize <- function(pgx) {
     pgx$Y = pgx$samples[colnames(pgx$X),kk,drop=FALSE]
     pgx$Y <- type.convert(pgx$Y)   ## autoconvert to datatypes
     
+    ## *****************************************************************
+    ## ******************NEED RETHINK***********************************
+    ## *****************************************************************
+    ## ONLY categorical variables for the moment!!!
+    ny1 <- nrow(pgx$Y)-1
+    k1 = pgx.getCategoricalPhenotypes(pgx$Y, min.ncat=2, max.ncat=ny1)
+    k2 = grep("OS.survival|cluster|condition|group",colnames(pgx$Y),value=TRUE)
+    ##kk = sort(unique(c("group",k1,k2)))
+    kk = sort(unique(c(k1,k2)))
+    pgx$Y <- pgx$Y[,kk,drop=FALSE]
+    colnames(pgx$Y)
+    ## pgx$samples <- pgx$Y    ## REALLY? !!!!!!!!!!!!!!!!!!!!
+
     ##----------------------------------------------------------------
     ## Tidy up genes matrix
     ##----------------------------------------------------------------
@@ -174,20 +187,7 @@ pgx.initialize <- function(pgx) {
         any(c("gender","sex") %in% tolower(colnames(pgx$Y)))) {
         pgx$Y$.gender <- NULL
     }
-    
-    ## *****************************************************************
-    ## ******************NEED RETHINK***********************************
-    ## *****************************************************************
-    ## ONLY categorical variables for the moment!!!
-    n1 <- nrow(pgx$Y)-1
-    k1 = pgx.getCategoricalPhenotypes(pgx$Y, min.ncat=2, max.ncat=9999)
-    k2 = grep("OS.survival",colnames(pgx$Y),value=TRUE)
-    ##kk = sort(unique(c("group",k1,k2)))
-    kk = sort(unique(c(k1,k2)))
-    pgx$Y <- pgx$Y[,kk,drop=FALSE]
-    colnames(pgx$Y)
-    pgx$samples <- pgx$Y    ## REALLY? !!!!!!!!!!!!!!!!!!!!
-    
+        
     ##-----------------------------------------------------------------------------
     ## Keep compatible with OLD formats
     ##-----------------------------------------------------------------------------
@@ -452,6 +452,7 @@ mouse2human <- function(x) {
     homologene::mouse2human(x)
 }
 
+##type=NULL;org="human";keep.na=FALSE
 probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
 {
     require("AnnotationDbi")
@@ -465,6 +466,7 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
         library(org.Hs.eg.db)
         hs.list <- list(
             "human.ensembl" = unlist(as.list(org.Hs.egENSEMBL)),
+            "human.ensemblTRANS" = unlist(as.list(org.Hs.egENSEMBLTRANS)),            
             "human.unigene" = unlist(as.list(org.Hs.egUNIGENE)),
             "human.refseq"  = unlist(as.list(org.Hs.egREFSEQ)),
             "human.accnum"  = unlist(as.list(org.Hs.egACCNUM)),
@@ -474,6 +476,7 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
         library(org.Mm.eg.db)
         mm.list <- list(
             "mouse.ensembl" = unlist(as.list(org.Mm.egENSEMBL)),
+            "mouse.ensemblTRANS" = unlist(as.list(org.Mm.egENSEMBLTRANS)),            
             "mouse.unigene" = unlist(as.list(org.Mm.egUNIGENE)),
             "mouse.refseq"  = unlist(as.list(org.Mm.egREFSEQ)),
             "mouse.accnum"  = unlist(as.list(org.Mm.egACCNUM)),
@@ -485,14 +488,17 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
         mx
         org=type=NULL
         max.mx <- max(mx,na.rm=TRUE)
-
         mx0 <- names(mx)[which.max(mx)]
         org  <- sub("[.].*","",mx0)
         type <- sub(".*[.]","",mx0)        
         message("[probe2symbol] mapped ",format(100*max.mx,digits=2),"% of probes")
-        if(max.mx < 0.5) {
+        if(max.mx < 0.5 && max.mx>0) {
             message("[probe2symbol] WARNING! low mapping ratio: r= ",max.mx)
         }        
+        if(max.mx==0) {
+            message("[probe2symbol] WARNING! zero mapping ratio: r= ")
+            type = NULL
+        }
         org
         type
     }
@@ -500,7 +506,7 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
         cat("probe2symbol: invalid type: ",type,"\n")
         return(NULL)
     }
-    if(!type %in% c("ensembl","unigene","refseq","accnum","uniprot","symbol")) {
+    if(!type %in% c("ensembl","ensemblTRANS","unigene","refseq","accnum","uniprot","symbol")) {
         cat("probe2symbol: invalid type: ",type,"\n")
         return(NULL)
     }
@@ -702,13 +708,14 @@ wrapHyperLink <- function(s, gs) {
 
 reverse.AvsB <- function(comp) {
     reverse.AvsB.1 <- function(comp) {
-        prefix <- sub(":.*","",comp)
-        postfix <- sub(".*@","",comp)
+        prefix=postfix=""
+        if(any(grepl("[:]",comp))) prefix <- sub(":.*","",comp)
+        if(any(grepl("[@]",comp))) postfix <- sub(".*@","",comp)
         comp0 <- gsub(".:|@.*","",comp)
         ab <- paste(rev(strsplit(comp0, split="_vs_|_VS_")[[1]]),collapse="_vs_")
-        paste0(prefix,":",ab,"@",postfix)
+        gsub("^:|@$","",paste0(prefix,":",ab,"@",postfix))
     }
-    sapply(comp,reverse.AvsB.1)
+    as.character(sapply(comp,reverse.AvsB.1))
 }
 
 is.POSvsNEG <- function(pgx) {
@@ -835,6 +842,7 @@ pgx.discretizePhenotypeMatrix <- function(df, min.ncat=2, max.ncat=20, remove.du
     df1 <- df[,0]
     if(length(catpheno)) df1 <- cbind(df1, df[,catpheno,drop=FALSE])
     if(length(numpheno)) df1 <- cbind(df1, df.num)
+    rownames(df1) <- rownames(df)
     df1
 }
 
@@ -847,6 +855,7 @@ pgx.getNumericalPhenotypes <-function(df)
     is.bad <- (is.bad1 | is.bad2 | is.bad3)
     table(is.bad)
     is.bad
+
     numratio <- apply(df,2,function(x)length(unique(x))) / nrow(df)
     numratio
     numpheno <- (apply(df,2,is.num) & !is.bad & numratio>0.5)
@@ -866,8 +875,10 @@ pgx.getCategoricalPhenotypes <-function(df, min.ncat=2, max.ncat=20, remove.dup=
     is.bad1 <- grepl("^sample$|[_.]id$|patient|donor|individ",tolower(colnames(df)))
     is.bad2 <- grepl("ratio|year|month|day|^age$|^efs|^dfs|surv|follow",tolower(colnames(df)))    
     ## is.factor <- sapply(sapply(data.frame(df), class), function(s) any(s %in% c("factor","character")))
-    is.bad3 <- apply(df,2,function(x) any(grepl("^sample|patient|donor|individ",x,ignore.case=TRUE)))    
+    is.bad3 <- apply(df,2,function(x) mean(grepl("^sample|patient|donor|individ",
+                                                 x[!is.na(x)],ignore.case=TRUE))>0.8)    
     is.bad <- (is.bad1 | is.bad2 | is.bad3)
+    is.bad
     table(is.bad)
 
     is.factor <- apply(df, 2, is.categorical)

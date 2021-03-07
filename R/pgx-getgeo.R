@@ -45,38 +45,60 @@ if(0) {
 id="GSE100035"
 id="GSE102908"
 id="GSE102908"
+id="GSE141499"
+##archs.h5 = file.path(FILESX,"human_matrix.h5")
 
-pgx.getGEOseries <- function(id, convert.hugo=TRUE) {
+pgx.getGEOseries <- function(id, archs.h5=NULL, convert.hugo=TRUE)
+{
+    ##
+    ## Highly automagic download of GEO datasets from different
+    ## sources with automatic probe/gene conversion and creating
+    ## autocontrasts. The GEO series is first searched in a locally
+    ## stored ARCHS4 H5 file, then if it is available at the recount
+    ## database, if not it is retrieved from GEO using geoquery.
+    ##
+    ## id:      GEO id
+    ## return:  object with counts, samples, genes.
+    ##
+    
     
     ## get data/pheno matrices
-    archs.h5 = file.path(FILESX,"human_matrix.h5")
-    counts <- pgx.getGEOcounts(id, archs.h5=archs.h5)
+    geo <- pgx.getGEOcounts(id, archs.h5=archs.h5)
+    counts <- geo$expr
     dim(counts)
 
     ## get sample info
     meta <- pgx.getGeoMetadata(id)     
-    dim(meta)
+    names(meta)
     
     ## conform matrices
     samples <- intersect(rownames(meta),colnames(counts))
-    meta <- meta[samples,,drop=FALSE]
-    counts <- counts[,samples,drop=FALSE]    
+    meta    <- meta[samples,,drop=FALSE]
+    counts  <- counts[,samples,drop=FALSE]    
 
     ## convert to latest official HUGO???
     if(convert.hugo) {
-        sum(duplicated(rownames(counts)))
         symbol <- alias2hugo(rownames(counts))  ## auto-detect mouse/human
-        sum(duplicated(symbol))
+        rownames(counts) <- symbol
+    }
+
+    ## sum up values duplicated symbols
+    ndup <- sum(duplicated(rownames(counts)))
+    if(ndup > 0) {
         counts1 <- tapply(1:nrow(counts), symbol, function(i) colSums(counts[i,,drop=FALSE]))
         counts <- do.call(rbind, counts1)
         remove(counts1)
     }
+
+    ## get annotation
     dim(counts)
+    sum(duplicated(rownames(counts)))
     genes <- ngs.getGeneAnnotation(rownames(counts))
         
     ## get categorical phenotypes
     dim(meta)
-    meta1 <- apply(meta,2,trimsame)    
+    meta1 <- apply(meta,2,trimsame)
+    rownames(meta1) <- rownames(meta)
     sampleinfo <- pgx.discretizePhenotypeMatrix(
         meta1, min.ncat=2, max.ncat=20, remove.dup=TRUE)
     sampleinfo <- data.frame(sampleinfo, stringsAsFactors=FALSE, check.names=FALSE)
@@ -84,48 +106,60 @@ pgx.getGEOseries <- function(id, convert.hugo=TRUE) {
     head(sampleinfo)
     
     ## automagically create contrast matrix
-    mingrp=3;slen=15;ref=NA
-    ct <- pgx.makeAutoContrasts(sampleinfo, mingrp=3, slen=20, ref=NA)
-    is.null(ct)
-    
-    if(!is.null(ct)) {
-        if("group" %in% colnames(sampleinfo)) {
-            colnames(sampleinfo) <- sub("group","xgroup",colnames(sampleinfo)) ## backup..
-        }
-        sampleinfo <- cbind(sampleinfo, group=as.character(ct$group))
-    }
-    head(sampleinfo)
-
     contrasts <- NULL
-    if(!is.null(ct$contr.matrix)) {
-        contrasts <- ct$contr.matrix
-    } else {
-        contrasts <- ct$exp.matrix
+    if(NCOL(sampleinfo)>0) {
+        mingrp=3;slen=15;ref=NA
+        ct <- pgx.makeAutoContrasts(sampleinfo, mingrp=3, slen=20, ref=NA)
+        is.null(ct)
+        if(!is.null(ct)) {
+            if("group" %in% colnames(sampleinfo)) {
+                colnames(sampleinfo) <- sub("group","xgroup",colnames(sampleinfo)) ## backup..
+            }
+            sampleinfo <- cbind(sampleinfo, group=as.character(ct$group))
+        }
+        if(!is.null(ct$contr.matrix)) {
+            contrasts <- ct$contr.matrix
+        } else {
+            contrasts <- ct$exp.matrix
+        }
+        head(contrasts)
     }
-    head(contrasts)
-    
-    geo <- list(counts=counts, genes=genes,
-                samples = sampleinfo, meta=meta, 
-                contrasts=contrasts)
-    return(geo)
+
+    info <- pgx.getGeoExperimentInfo(id)    
+
+    out <- list(
+        counts  = counts,
+        genes   = genes,
+        samples = sampleinfo,
+        contrasts = contrasts,
+        meta    = meta, 
+        info    = info,
+        source  = geo$source
+    )
+
+    return(out)
 }
 
 pgx.getGEOcounts <- function(id, archs.h5) {
 
     expr <- NULL
+    src = ""
     
     if(!is.null(archs.h5) && is.null(expr)) {
         ##h5.file = "../libx/human_matrix.h5"
         expr <- pgx.getGEOcounts.archs4(id, archs.h5)
+        if(!is.null(expr)) src = "ARCHS4"
     }
     
     if(is.null(expr)) {
         expr <- pgx.getGEOcounts.recount(id)
+        if(!is.null(expr)) src = "recount"
     }
 
     if(is.null(expr)) {
         ## Try with GEOquery
         expr <- pgx.getGEOcounts.GEOquery(id)
+        if(!is.null(expr)) src = "GEO"        
     }
     
     is.null(expr)
@@ -135,20 +169,23 @@ pgx.getGEOcounts <- function(id, archs.h5) {
     }
     dim(expr)
     max(expr)
-    
-    ## perform linear transformation (unlog) if required
-    qx <- as.numeric(quantile(expr, c(0.0, 0.25, 0.5, 0.75, 0.99, 1.0), na.rm=T))
-    qx
-    is.count <- (qx[5] > 100) || (qx[6]-qx[1] > 50 && qx[2] > 0) ||
-        (qx[2] > 0 && qx[2] < 1 && qx[4] > 1 && qx[4] < 2) ## from GEO2R script
-    is.count
-    if(!is.count) {
-        ## expr[which(expr <= 0 | is.na(expr))] <- 0 ## really???
-        expr <- 2**expr
+
+    if(0) {
+        ## already done in getGEO functions...
+        ## perform linear transformation (unlog) if required
+        qx <- as.numeric(quantile(expr, c(0.0, 0.25, 0.5, 0.75, 0.99, 1.0), na.rm=T))
+        qx
+        is.count <- (qx[5] > 100) || (qx[6]-qx[1] > 50 && qx[2] > 0) ||
+            (qx[2] > 0 && qx[2] < 1 && qx[4] > 1 && qx[4] < 2) ## from GEO2R script
+        is.count
+        if(!is.count) {
+            ## expr[which(expr <= 0 | is.na(expr))] <- 0 ## really???
+            expr <- 2**expr
+        }
     }
     
     dim(expr)
-    expr
+    list( expr=expr, source=src )
 }
 
 pgx.getGeoMetadata <- function(id) {
@@ -166,10 +203,14 @@ pgx.getGeoMetadata <- function(id) {
         pheno <- pgx.getGeoMetadata.fromEset(id) 
     }
 
+    ## Sometimes the phenotype is coded in the title string 
     has.title <- "title" %in% colnames(pheno)
-    if(has.title) {
+    if(has.title && NCOL(pheno)==0) {
         px <- title2pheno(pheno$title, split=NULL, trim=TRUE, summarize=TRUE)
-        if(!is.null(px) && NCOL(px)>0) {
+        if(!is.null(px) && NCOL(px)>0 && is.null(pheno)) {
+            pheno <- px
+        }
+        if(!is.null(px) && NCOL(px)>0 && !is.null(pheno)) {
             pheno <- cbind(pheno, px)
         }
     }
@@ -177,6 +218,11 @@ pgx.getGeoMetadata <- function(id) {
     colnames(pheno) <- gsub("[ ]","_",colnames(pheno)) ## no spaces???
     dim(pheno)
     head(pheno)
+
+    ##
+    ##experimentData(eset)
+    
+
     pheno
 }
 
@@ -233,7 +279,7 @@ pgx.getGEOcounts.recount <- function(id)
     library('recount')
     
     ## Find a project of interest
-    project_info <- abstract_search(id)
+    project_info <- recount::abstract_search(id)
     project_info$project
 
     if(length(project_info$project)==0) {
@@ -243,13 +289,13 @@ pgx.getGEOcounts.recount <- function(id)
     
     ## Download the gene-level RangedSummarizedExperiment data
     outdir <- file.path(tempdir(),project_info$project)
-    download_study(project_info$project, outdir=outdir)
+    recount::download_study(project_info$project, outdir=outdir)
 
     ## Load the data
     load(file.path(outdir,'rse_gene.Rdata'))
     
     ## Scale counts by taking into account the total coverage per sample
-    rse <- scale_counts(rse_gene)
+    rse <- recount::scale_counts(rse_gene)
 
     counts <- assay(rse)
     dim(counts)
@@ -278,13 +324,13 @@ pgx.getGEOcounts.GEOquery <- function(id) {
     dim(exprs(gse[[1]]))
     has.expr <- sapply(gse, function(x) nrow(exprs(x))>0)
     has.expr
-
-    supp_file <- gse[[1]]@experimentData@other$supplementary_file
     
     if(!any(has.expr)) {
         cat("WARNING: dataset has no included expression data\n")
-        if(nchar(supp_file)>5) {
-            cat("Supplementary file available:",supp_file,"\n")
+        supp_file <- sapply(gse, function(g) g@experimentData@other$supplementary_file)
+        supp_file    
+        if(any(nchar(supp_file))>5) {
+            cat("Supplementary file available: ",paste(supp_file,collapse=" "),"\n")
         }
         return(NULL)
     }
@@ -332,21 +378,13 @@ pgx.getGEOcounts.GEOquery <- function(id) {
             dim(fdata)
         }
 
-        ## collapse by symbol
+        ## get symbol from featuredata
         colnames(fdata)
-        head(fdata)
-        probe.col <- grep("symbol|unigene|ensembl|refseq",colnames(fdata),ignore.case=TRUE)[1]
-        probe.col
-        if(length(probe.col)==0 || is.na(probe.col)) {
-            cat("[pgx.getGEOcounts.GEOquery] ERROR: could not determine probe column\n")
-            next()
-        }
+        fsymbol <- pgx.getSymbolFromFeatureData(fdata) 
+        head(fsymbol[!is.na(fsymbol)])
 
-        probe.col <- probe.col[1]
-        ##probes <- fdata[,probe.col]
-        fsymbol <- probe2symbol(fdata[,probe.col])
-        head(fsymbol)
-        jj <- !is.na(fsymbol) & fsymbol!=""
+        ## collapse by symbol
+        jj <- which(!is.na(fsymbol) & fsymbol!="")
         ex <- ex[jj,]
         fsymbol <- fsymbol[jj]
         ## sum intensities (linear)
@@ -362,11 +400,16 @@ pgx.getGEOcounts.GEOquery <- function(id) {
         return(NULL)
     }
    
-    ## collapse all expressions
     if(length(expr.list)>1) {
+        ## merge/join all expressions
         probes <- sort(unique(unlist(lapply(expr.list,rownames))))
-        expr.list <- lapply(expr.list, function(x) x[match(probes,rownames(x)),] )
-        expr <- do.call(rbind, expr.list)
+        samples <- sort(unique(unlist(lapply(expr.list,colnames))))
+        expr.list2 <- lapply(expr.list, function(x)
+            x[match(probes,rownames(x)),match(samples,colnames(x))] )
+        expr.list2 <- lapply(expr.list2, function(x) {x[is.na(x)]=0;x})
+        expr <- Reduce('+', expr.list2)
+        colnames(expr) <- samples
+        rownames(expr) <- probes        
     } else {
         expr <- expr.list[[1]]
     }
@@ -374,7 +417,6 @@ pgx.getGEOcounts.GEOquery <- function(id) {
 
     return(expr) ## return always linear intensities
 }
-
 
 pgx.getGEOcounts.fromSuppl <- function(id) {
     ## Retrieve expression matrix, phenotype and probe annotation
@@ -410,10 +452,92 @@ pgx.getGEOcounts.fromSuppl <- function(id) {
 ## Query GEO metadata
 ##-------------------------------------------------------------------------------------
 
-pgx.getGeoMetadata.fromEset <- function(id) {
+pgx.getSymbolFromFeatureData <- function(fdata) {
 
+    ## extract GENE symbol from featureData. The problem is that we don't
+    ## know the gene column because the column names are not always
+    ## consistent. Also the actual gene symbol may be part of an
+    ## annotation string instead of single symbol column.
+
+    colnames(fdata)
+    symbol <- NULL
+    
+    ## If there is a symbol column, than it is easy
+    SYMBOL <- as.character(unlist(as.list(org.Hs.egSYMBOL)))
+    symbol.col <- grep("symbol|gene|hugo",colnames(fdata),ignore.case=TRUE)
+    symbol.col
+    ok.symbol <- apply( fdata[,symbol.col,drop=FALSE], 2,
+                       function(g) mean(toupper(g[!is.na(g)]) %in% SYMBOL))
+    ok.symbol
+    if(any(ok.symbol > 0.5)) {
+        k <- symbol.col[which.max(ok.symbol)]
+        symbol <- fdata[,k]
+        return(symbol)
+    }
+
+    ## If there is an ENTREZ column, than it is easy
+    ENTREZ <- keys(org.Hs.egSYMBOL)
+    entrez.col <- grep("entrez",colnames(fdata),ignore.case=TRUE)
+    entrez.col
+    entrez.match <- apply( fdata[,entrez.col,drop=FALSE], 2,
+                          function(g) mean(g[!is.na(g)] %in% ENTREZ))
+    entrez.match
+    entrez.ok <- length(entrez.col) && entrez.match > 0.5
+    entrez.ok
+    if(entrez.ok) {
+        k <- entrez.col[which.max(entrez.match)]
+        probes <- as.character(fdata[,k])
+        symbol <- mapIds(org.Hs.eg.db, probes, 'SYMBOL', 'ENTREZID')
+        return(symbol)
+    }
+
+    ## If there is an REFSEQ column
+    REFSEQ <- unlist(as.list(org.Hs.egREFSEQ))
+    refseq.col <- grep("refseq",colnames(fdata),ignore.case=TRUE)
+    refseq.col
+    refseq.match <- apply( fdata[,refseq.col,drop=FALSE], 2,
+                          function(g) mean(sub("[.].*","",g[!is.na(g)]) %in% REFSEQ))
+    refseq.match
+    refseq.ok <- length(refseq.col) && refseq.match > 0.5
+    refseq.ok
+    if(refseq.ok) {
+        k <- refseq.col[which.max(refseq.match)]
+        probes <- sub("[.].*","",as.character(fdata[,k]))
+        symbol <- mapIds(org.Hs.eg.db, probes, 'SYMBOL', 'REFSEQ')
+        return(symbol)
+    }
+    
+    ## Otherwise try Ensemble ID
+    gene.column <- grep("gene|mrna|transcript", colnames(fdata),ignore.case=TRUE)
+    gene.column
+    has.ens <- apply(fdata[,gene.column,drop=FALSE], 2, function(s) mean(grepl("ENS",s)))
+    has.ens
+    if( any(has.ens > 0.3) ) {
+        ens.col = ifelse(max(has.ens)>0, names(which.max(has.ens)), NA)        
+        ens.ann = lapply(fdata[,ens.col], function(a) trimws(strsplit(a,split="//|///")[[1]]))
+        ens.probes <- sapply(ens.ann, function(s) head(grep("^ENS",s,value=TRUE),1))
+        ens.probes[sapply(ens.probes,length)==0] <- NA
+        ens.probes <- unlist(ens.probes)
+        symbol <- probe2symbol(ens.probes)
+        return(symbol)
+    }
+
+    message("WARNING:: could not parse symbol information from featureData!")
+    return(NULL)
+}
+
+pgx.getGeoExperimentInfo <- function(id) {
+    suppressMessages(gse <- try(getGEO(id, GSEMatrix=FALSE, getGPL=FALSE)))
+    info = gse@header
+    ##info <- info[c("geo_accession","title","summary","type")]
+    info
+}
+
+pgx.getGeoMetadata.fromEset <- function(id) {
+    
     ## If not succesful, try with downloading the GSEMatrix
     suppressMessages(gse <- try(getGEO(id, GSEMatrix=TRUE, getGPL=FALSE)))
+    ## suppressMessages(gse <- try(getGEO(id, GSEMatrix=FALSE, getGPL=FALSE)))    
     class(gse)
     if(class(gse)=="try-error") {
         res <- list(error="ERROR: pgx.getGeoMetadata.fromEset() error")
@@ -450,7 +574,8 @@ pgx.getGeoMetadata.fromEset <- function(id) {
     lapply(pheno.list,dim)
     pheno <- do.call(rbind, pheno.list)
     dim(pheno)
-    pheno <- data.frame(pheno,stringsAsFactor=FALSE,check.names=FALSE)
+    pheno <- data.frame(pheno, stringsAsFactors=FALSE, check.names=FALSE)
+    
     return(pheno)
 }
 

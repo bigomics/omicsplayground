@@ -9,6 +9,7 @@
 ##                                                                     ##
 #########################################################################
 
+
 library(shiny)
 library(shinyjs)
 library(shinyWidgets)
@@ -21,11 +22,11 @@ message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
 message("###############################################################")
 
+
 message("\n")
 message("************************************************")
 message("********* RUNTIME ENVIRONMENT VARIABLES ********")
 message("************************************************")
-
 
 Sys.setlocale("LC_CTYPE","en_US.UTF-8") 
 Sys.setlocale("LC_TIME","en_US.UTF-8")
@@ -120,6 +121,7 @@ if(0) {
     ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
+    load("../data/GSE10846-dlbcl-nc.pgx")
     ngs = pgx.initialize(ngs)
 }
 
@@ -132,12 +134,14 @@ BOARDS <- c("load","view","clust","expr","enrich","isect","func",
             "wgcna", "tcga","system","multi","qa")
 if(is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED = BOARDS
 if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
+
 ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
 DISABLED <- array(BOARDS %in% opt$BOARDS_DISABLED, dimnames=list(BOARDS))
 ENABLED  <- ENABLED & !DISABLED
 ENABLED
 
 boards <- dir("boards", pattern="Board.R$")
+boards
 for(m in boards) {
     message("[MAIN] loading board ",m)
     source(paste0("boards/",m), local=src.local)
@@ -204,26 +208,27 @@ server = function(input, output, session) {
         authentication = AUTHENTICATION, enable_delete = opt$ENABLE_DELETE,
         enable_save = opt$ENABLE_SAVE,
         firebase=firebase, firebase2=firebase2)
-    env[["view"]]   <- callModule( DataViewBoard, "view", env)
-    env[["clust"]]  <- callModule( ClusteringBoard, "clust", env)
-    env[["expr"]]   <- callModule( ExpressionBoard, "expr", env)
-    env[["enrich"]] <- callModule( EnrichmentBoard, "enrich", env)
+
+    if(ENABLED["view"])   env[["view"]]   <- callModule( DataViewBoard, "view", env)
+    if(ENABLED["clust"])  env[["clust"]]  <- callModule( ClusteringBoard, "clust", env)
+    if(ENABLED["expr"])   env[["expr"]]   <- callModule( ExpressionBoard, "expr", env)
+    if(ENABLED["enrich"]) env[["enrich"]] <- callModule( EnrichmentBoard, "enrich", env)
     if(ENABLED["func"])   env[["func"]]   <- callModule( FunctionalBoard, "func", env)
     if(ENABLED["word"])   env[["word"]]   <- callModule( WordCloudBoard, "word", env)
     if(ENABLED["drug"])   env[["drug"]]   <- callModule( DrugConnectivityBoard, "drug", env)
     if(ENABLED["isect"])  env[["isect"]]  <- callModule( IntersectionBoard, "isect", env)
     if(ENABLED["sig"])    env[["sig"]]    <- callModule( SignatureBoard, "sig", env)
-    if(ENABLED["scell"])  env[["scell"]]  <- callModule( SingleCellBoard, "scell", env)
     if(ENABLED["cor"])    env[["cor"]]    <- callModule( CorrelationBoard, "cor", env)
     if(ENABLED["bio"])    env[["bio"]]    <- callModule( BiomarkerBoard, "bio", env)
-    if(ENABLED["cmap"])   env[["cmap"]]   <- callModule( ConnectivityBoard, "cmap", env)
-    if(ENABLED["tcga"])   env[["tcga"]]   <- callModule( TcgaBoard, "tcga", env)
-    if(ENABLED["wgcna"])  env[["wgcna"]]  <- callModule( WgcnaBoard, "wgcna", env)
-    if(1 && DEV) {
+    if(1) {            
+        if(ENABLED["cmap"])   env[["cmap"]]   <- callModule( ConnectivityBoard, "cmap", env)
+        if(ENABLED["scell"])  env[["scell"]]  <- callModule( SingleCellBoard, "scell", env)
+        if(ENABLED["tcga"])   env[["tcga"]]   <- callModule( TcgaBoard, "tcga", env)
+        if(ENABLED["wgcna"])  env[["wgcna"]]  <- callModule( WgcnaBoard, "wgcna", env)
         if(ENABLED["system"]) env[["system"]] <- callModule( SystemBoard, "system", env)
         if(ENABLED["multi"])  env[["multi"]]  <- callModule( MultiLevelBoard, "multi", env)
+        env[["qa"]] <- callModule( QuestionBoard, "qa", lapse = -1)
     }
-    env[["qa"]] <- callModule( QuestionBoard, "qa", lapse = -1)
     
     ## message("[MAIN] all boards called:",paste(names(env),collapse=" "))
     message("[MAIN] boards enabled:",paste(names(which(ENABLED)),collapse=" "))
@@ -362,7 +367,7 @@ createUI <- function(tabs)
         ##QuestionBoard_UI("qa")
     )
     names(header) <- NULL
-
+    
     busy.img = sample(dir("www/busy",pattern="gif",full.name=TRUE))[1]
     busy.img
     footer.gif = tagList(

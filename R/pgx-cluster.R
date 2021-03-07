@@ -36,11 +36,17 @@ pgx.clusterSamples2 <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3)
     
     dim(X)
     clust.pos <- pgx.clusterBigMatrix(
-        X, methods=methods, dims=dims, perplexity=perplexity,
-        reduce.sd=-1, reduce.pca=reduce.pca,
-        umap.pkg=umap.pkg )
+        X, methods = methods,
+        dims = dims,
+        perplexity = perplexity,
+        reduce.sd = -1,
+        reduce.pca = reduce.pca,
+        umap.pkg = umap.pkg
+    )
     names(clust.pos)
-    clust.index <- paste0("c",clust.pos$membership)
+    clust.index <- paste0("C",clust.pos$membership)
+    clust.pos$membership <- NULL
+    table(clust.index)
     
     if(replace.orig) {
         message("[pgx.clusterSamples2] update tsne2d/tsne3d and 'cluster' pheno...")
@@ -246,7 +252,9 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
     }
 
     ## impute on row median
-    rX <- imputeMedian(rX)
+    if(any(is.na(rX))) {
+        rX <- imputeMedian(rX)
+    }
     
     if(ncol(rX)<=6) rX <- cbind(rX,rX,rX,rX,rX,rX)
     rX <- rX + 1e-3*matrix(rnorm(length(rX)),nrow(rX),ncol(rX))
@@ -367,8 +375,13 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
         all.pos[["umap3d"]] <- pos
     }
 
-    if(1) {
-        cat("calculating Louvain memberships...\n")
+    length(all.pos)
+    
+    if(0) {
+        ##
+        ##  NEED CHECK:: sometimes results in 1 cluster...
+        ##
+        cat("calculating Louvain memberships (from X)...\n")
         library(igraph)
         d <- min(50,dim(rX)-1)
         d
@@ -376,6 +389,12 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
         idx <- cluster_louvain(gr)$membership
         table(idx)
         idx <- idx[1:ncol(X)]  ## not augmented!!!!
+        all.pos$membership <- idx
+    } else {
+        cat("calculating Louvain memberships (from pos)...\n")
+        posx = scale(do.call(cbind, all.pos))
+        dim(posx)
+        idx <- pgx.findLouvainClusters(posx, level=1, prefix='C', small.zero=0.01)
         all.pos$membership <- idx
     }
     
@@ -486,37 +505,37 @@ pgx.clusterMatrix <- function(X, perplexity=30, dims=c(2,3),
     if(!is.null(pos3)) {
         rownames(pos3) = colnames(X)
     }
-    
-    ## ------------ find t-SNE clusters from graph
-    idx = NULL
-    if(find.clusters && clust.detect=="hclust") {
-        cat("Finding clusters using hclust...\n")
-        hc <- hclust(dist(t(X)))
-        idx2 <- cutree(hc,2)
-        idx3 <- cutree(hc,3)
-        idx4 <- cutree(hc,4)
-        idx5 <- cutree(hc,5)
-        idx <- cutree(hc,kclust)
-    } else if(find.clusters && clust.detect=="louvain") {
-        cat("Finding clusters using Louvain...\n")
-        require(igraph)
-        if(!is.null(pos2)) pos <- pos2
-        if(!is.null(pos3)) pos <- pos3
-        dist = as.dist(dist(scale(pos))) ## use 3D distance??        
-        ##dist = dist + 0.1*mean(dist)
-        gr = graph_from_adjacency_matrix(1.0/dist, diag=FALSE, mode="undirected")
-        ## should we iteratively cluster???
-        hc <- hclustGraph(gr,k=kclust)  ##
-        dim(hc)
-        idx <- hc[,min(kclust,ncol(hc))]
-        ##idx <- cluster_louvain(gr)$membership
-        table(idx)        
-    }
 
-    if(!is.null(idx)) {
+    if(!is.null(pos2)) pos <- pos2
+    if(!is.null(pos3)) pos <- pos3
+    idx <- pgx.findLouvainClusters(pos, level=1, prefix='C', small.zero=0.01)
+
+    res <- list(pos2d=pos2, pos3d=pos3, idx=idx)
+    return(res)
+}
+
+##level=1;prefix='C';gamma=1
+pgx.findLouvainClusters <- function(pos, level=1, prefix='C', gamma=1, small.zero=0.01)
+{
+
+    ## find clusters from t-SNE positions
+    idx = NULL
+    cat("Finding clusters using Louvain...\n")
+    require(igraph)
+    dist = as.dist(dist(scale(pos))) ## use 3D distance??        
+    ##dist = dist + 0.1*mean(dist)
+    gr = graph_from_adjacency_matrix(1.0/dist**gamma, diag=FALSE, mode="undirected")
+    ## should we iteratively cluster???
+    hc <- hclustGraph(gr,k=level)  ##
+    dim(hc)
+    idx <- hc[,min(level,ncol(hc))]
+    ##idx <- cluster_louvain(gr)$membership
+    table(idx)        
+
+    if(!is.null(idx) && small.zero>0) {
         ## ------------ zap small clusters to "0"
         sort(table(idx))
-        min.size <- pmax(3, 0.01*length(idx))
+        min.size <- pmax(3, small.zero*length(idx))
         min.size
         small.clusters <- names(which(table(idx) < min.size))
         idx[which(idx %in% small.clusters)] <- "0"
@@ -528,9 +547,7 @@ pgx.clusterMatrix <- function(X, perplexity=30, dims=c(2,3),
     levels(idx) <- paste0(prefix,1:length(levels(idx)))
     table(idx)
     cat("Found",length(unique(idx)),"clusters...\n")
-
-    res <- list(pos2d=pos2, pos3d=pos3, idx=idx)
-    return(res)
+    return(idx)
 }
 
 

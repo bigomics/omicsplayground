@@ -775,18 +775,16 @@ pgx.plotContrast <- function(pgx, contrast, cex=1, hilight=NULL,
     ##plotlib="base"
 }
 
-pgx.plotExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
-                               level="gene", grouped=FALSE, srt=0,
+pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
+                               level="gene", grouped=FALSE, srt=0, cex=1,
                                collapse.others=TRUE, showothers=TRUE,
                                max.points=-1, group.names=NULL,
                                main=NULL, xlab=NULL, ylab=NULL, names=TRUE)
 {
     if(0) {
-        comp=NULL;
         logscale=TRUE;level="gene";grouped=TRUE;srt=90;collapse.others=1;
         max.points=-1;main=NULL;xlab=NULL;ylab=NULL;names=TRUE;group.names=NULL
-        comp=1;group.names=c("CTRL","treated")
-        probe=ngs$genes$gene_name[1]
+        probe=ngs$genes$gene_name[1];comp=1
     }
 
     if(is.null(probe)) return(NULL)
@@ -810,42 +808,57 @@ pgx.plotExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
     if(!is.null(group.names) && length(group.names)!=2) stop("group.names must be length=2")
     if(is.null(main)) main <- probe
     comp    
+
+    if(!is.null(group.names) ) {
+        message("[pgx.plotExpression] using group names from argument")
+    }
     
-    if(grepl("_vs_|_VS_",comp) && is.null(group.names) ) {
+    ## if a named contrast table is available it is safer
+    if(is.null(group.names) && "contrasts" %in% names(ngs)  ) {
+        message("[pgx.plotExpression] parsing group names from ngs$contrast labels")
+        contr.labels <- ngs$contrasts[,comp]
+        contr.idx    <- expmat[,comp]
+        group1 <- names(which.max(table(contr.labels[contr.idx > 0])))
+        group0 <- names(which.max(table(contr.labels[contr.idx < 0])))
+        group.names <- c(group0, group1)
+    }
+    group.names
+    message("[pgx.plotExpression] 1 : group names = ", paste(group.names,collapse=' '))
+    
+    ## Otherwise we guess from the contrast title but this is dangerous
+    if(is.null(group.names) && grepl("_vs_|_VS_",comp) ) {
+        message("[pgx.plotExpression] parsing group names contrast name (warning!)")        
         comp1 <- sub(".*:","",comp)  ## remove prefix
         group.names = strsplit(comp1,split="_vs_|_VS_")[[1]]
-        group.names
+        group.names = rev(group.names)  ## first is main group
         ## !!!!!!!! NEED RETHINK !!!!!!!! which one is reference
         ## class???  determine if notation is A_vs_B or B_vs_A (some
         ## people do different) and in sample-based contrasts we don't
         ## know group names.
-        if(is.POSvsNEG(ngs)) {
+        if(!is.POSvsNEG(ngs)) {
             ## A_vs_B or B_vs_A notation !!!
+            message("[pgx.plotExpression] WARNING! A_vs_B reversed?")            
             group.names <- rev(group.names) ## reversed!!
         } 
         group.names <- gsub("@.*","",group.names)  ## strip postfix
     }
+    group.names
+
+    message("[pgx.plotExpression] 2 : group names = ", paste(group.names,collapse=' '))
     
-    if(!is.null(comp)) {
-        ct <- expmat[,comp]
-        names(ct) <- rownames(expmat)
-        ct
-        samples <- rownames(expmat)[which(ct!=0)]
-        samples
-        grp0.name=grp1.name=NULL
-        if(!is.null(group.names)) {
-            grp0.name <- group.names[1]
-            grp1.name <- group.names[2]
-        } else {
-            grp1.name <- comp
-            grp0.name <- "REF"
-        }
-        xgroup <- c("other",grp1.name,grp0.name)[1 + 1*(ct>0) + 2*(ct<0)]       
-    } else  {
-        samples <- rownames(expmat)
-        ##xgroup <- ngs$samples$group
-        xgroup <- pgx.getModelGroups(ngs)  ## statistical groups
+    ## create groups
+    ct <- expmat[,comp]
+    names(ct) <- rownames(expmat)
+    samples <- rownames(expmat)[which(ct!=0)]
+    grp0.name=grp1.name=NULL
+    if(!is.null(group.names)) {
+        grp0.name <- group.names[1]
+        grp1.name <- group.names[2]
+    } else {
+        grp1.name <- comp
+        grp0.name <- "REF"
     }
+    xgroup <- c("other",grp1.name,grp0.name)[1 + 1*(ct>0) + 2*(ct<0)]       
     
     ## currently cast to character... :(
     names(xgroup) <- rownames(ngs$samples)
@@ -915,9 +928,9 @@ pgx.plotExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
                      ## offset = 0, ylim=c(gx.min,max(gx)),
                      las=3, ylab=ylab, names.arg=NA, border = NA)
         if(nx<20 && names==TRUE) {
-            y0 <- min(ylim) - 0.08*diff(ylim)
+            y0 <- min(ylim) - 0.03*diff(ylim)
             text( bx[,1], y0, names(gx)[], adj=1, srt=srt,
-                 xpd=TRUE, cex=ifelse(nx>10,0.6,0.9) )
+                 xpd=TRUE, cex=ifelse(nx>10,0.7,0.9)*cex )
         }
         title(main, cex.main=1.0)
 
@@ -937,7 +950,7 @@ pgx.plotExpression <- function(ngs, probe, comp=NULL, logscale=TRUE,
                   col = grp.klr1, ylab=ylab, bee.cex=bee.cex,
                   max.points=max.points, xlab=xlab, names=names,
                   ## sig.stars=TRUE, max.stars=5,
-                  las=3, cex.names=0.75, srt=srt)
+                  las=3, names.cex=cex, srt=srt)
         title(main, cex.main=1.0)
     }
 

@@ -190,6 +190,12 @@ makeDirectContrasts <- function(Y, ref, na.rm=TRUE)
     }
     ii <- which(nlevel>1)
     ii
+    if(length(ii)==0) {
+        message("warning:: no valid phenotypes")
+        return(NULL)
+    }
+
+    
     Y <- Y[,ii,drop=FALSE]
     ref <- ref[ii]
 
@@ -372,8 +378,7 @@ pgx.makeSpecificContrasts <- function(df, contrasts, mingrp=3)
     }
 
     contr.matrix <- K[which(!duplicated(group)),,drop=FALSE]
-    rownames(contr.matrix) <- group[which(!duplicated(group))]
-    
+    rownames(contr.matrix) <- group[which(!duplicated(group))]    
     res <- list(contr.matrix=contr.matrix, group=group)
     
     return(res)
@@ -383,17 +388,21 @@ pgx.makeSpecificContrasts <- function(df, contrasts, mingrp=3)
 pgx.makeAutoContrastsStratified <- function(df, strata.var, mingrp=3, slen=20, ref=NULL, 
                                            fix.degenerate=FALSE, skip.hidden=TRUE )
 {
+
     df1 <- df[,-match(strata.var,colnames(df)),drop=FALSE]
     strata <- df[,strata.var]
     strata.levels <- unique(strata)
-    s=strata.levels[2]
     s=strata.levels[1]
     ct.all <- NULL
     for(s in strata.levels) {
         sel <- which(strata == s)
-        ct1 <- pgx.makeAutoContrasts( df1[sel,,drop=FALSE], mingrp=mingrp, slen=slen,
-                                    ref=ref, fix.degenerate=fix.degenerate,
-                                    skip.hidden=skip.hidden)
+        if(length(sel) < mingrp) next
+        suppressWarnings(
+            ct1 <- pgx.makeAutoContrasts( df1[sel,,drop=FALSE], mingrp=mingrp, slen=slen,
+                                         ref=ref, fix.degenerate=fix.degenerate,
+                                         skip.hidden=skip.hidden)
+        )
+        if(is.null(ct1)) next
         ct1x <- ct1$exp.matrix
         colnames(ct1x) <- paste0(colnames(ct1x),"@",s)
         ss <- rownames(df1)[sel]
@@ -404,17 +413,25 @@ pgx.makeAutoContrastsStratified <- function(df, strata.var, mingrp=3, slen=20, r
             ct.all <- dplyr::full_join(ct.all, df2, by="sample")
         }
     }
+    
     dim(ct.all)
-    ct.all[is.na(ct.all)] <- 0
+    if(is.null(ct.all)) {
+        message("[pgx.makeAutoContrastsStratified] WARNING : no valid contrasts")
+        return(NULL)
+    }
+
+    ## sample-wise contrasts
     rownames(ct.all) <- ct.all[,"sample"]
-    ct.all <- as.matrix(ct.all[,-1,drop=FALSE])
+    ct.all <- as.matrix(ct.all[,-1,drop=FALSE])  ## drop sample column
+    ct.all <- ct.all[match(rownames(df),rownames(ct.all)),]
+    rownames(ct.all) <- rownames(df)
+    ct.all[is.na(ct.all)] <- 0
     dim(ct.all)
     ct.all
 }
 
 
-
-##mingrp=3;slen=20;ref=NULL;fix.degenerate=FALSE
+##mingrp=3;slen=20;ref=NULL;fix.degenerate=FALSE;skip.hidden=TRUE
 pgx.makeAutoContrasts <- function(df, mingrp=3, slen=20, ref=NULL, 
                                  fix.degenerate=FALSE, skip.hidden=TRUE )
 {
@@ -485,28 +502,20 @@ pgx.makeAutoContrasts <- function(df, mingrp=3, slen=20, ref=NULL,
     ## repeat ref if too short
     if(!is.null(ref) && length(ref)<ncol(df)) ref <- head(rep(ref,99),ncol(df))
 
-    cat("[pgx.makeAutoContrasts] 1: dim(df)",dim(df),"\n")
-    
     ## filter out 'internal/hidden' and 'group' parameters
     ##not.used <- grepl("^[.]|group",colnames(df))
     not.used <- grepl("^[.]",colnames(df))    
     if(skip.hidden && sum(not.used)>0 && sum(!not.used)>0 ) {
         df <- df[,!not.used,drop=FALSE]
     }
-
-    cat("[pgx.makeAutoContrasts] 2: dim(df)",dim(df),"\n")
     
     ## first all to characters
     df.rownames <- rownames(df)
     df <- data.frame(df, check.names=FALSE)
     df <- apply(df, 2, as.character)
-
-    cat("[pgx.makeAutoContrasts] 3: dim(df)",dim(df),"\n")
     
     ## trim leading/end parts that are equal
     df <- apply(df, 2, trimsame)
-
-    cat("[pgx.makeAutoContrasts] 4: dim(df)",dim(df),"\n")
     
     ## try detect (fluffy) comment fields (and remove)
     countSpaces <- function(s) { sapply(gregexpr(" ", s), function(p) { sum(p>=0) } ) }    
@@ -728,7 +737,7 @@ makeContrastsFromPairs <- function(main.group, ref.group, groups=NULL, compariso
 contrastAsLabels <- function(contr.matrix) {
     contrastAsLabels.col <- function(contr, contr.name) {
         grp1 <- gsub(".*[:]|_vs_.*","",contr.name)
-        grp0 <- gsub(".*_vs_","",contr.name)
+        grp0 <- gsub(".*_vs_|@.*","",contr.name)
         x <- rep(NA,length(contr))
         x[which(contr<0)] <- grp0
         x[which(contr>0)] <- grp1
@@ -748,6 +757,28 @@ contrastAsLabels <- function(contr.matrix) {
     K    
 }
 
+makeContrastsFromLabelMatrix <- function(lab.matrix) {
+    ct.names <- colnames(lab.matrix)
+    main.grp <- sapply(strsplit(ct.names, split="_vs_"),"[",1)
+    ctrl.grp <- sapply(strsplit(ct.names, split="_vs_"),"[",2)
+    main.grp <- sub(".*:","",main.grp)    
+    ctrl.grp <- sub("@.*","",ctrl.grp)    
+    main.grp
+    ctrl.grp
+    contr.mat <- matrix(0, nrow(lab.matrix), ncol(lab.matrix))
+    rownames(contr.mat) <- rownames(lab.matrix)
+    colnames(contr.mat) <- colnames(lab.matrix)
+    for(i in 1:ncol(lab.matrix)) {
+        lab1 <- trimws(lab.matrix[,i])
+        j1 <- which( lab1 == main.grp[i] )
+        j0 <- which( lab1 == ctrl.grp[i] )        
+        contr.mat[j1,i] <- +1 / length(j1)       
+        contr.mat[j0,i] <- -1 / length(j0)        
+    }
+    contr.mat
+}
+
+    
 ##=====================================================================================
 ##=========================== END OF FILE =============================================
 ##=====================================================================================
