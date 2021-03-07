@@ -89,7 +89,7 @@ EnrichmentBoard <- function(input, output, session, env)
                     tipify( selectInput(ns("gs_fdr"),"FDR", choices=FDR.VALUES2, selected=0.2),
                            "Set the false discovery rate (FDR) threshold.", placement="top"),
                     tipify( selectInput(ns("gs_lfc"),"logFC threshold",
-                                        choices=c(0,0.1,0.2,0.5,1,2), selected=0.2),
+                                        choices=c(0,0.05,0.1,0.2,0.5,1,2), selected=0.1),
                            "Set the logarithmic fold change (logFC) threshold.",
                            placement="top")
                     ),
@@ -554,7 +554,7 @@ EnrichmentBoard <- function(input, output, session, env)
         top <- head(top,ntop)
         if(!all(top %in% colnames(ngs$GMT))) return(NULL)
         
-        F <- 1*(ngs$GMT[,top]>0)
+        F <- 1*(ngs$GMT[,top,drop=FALSE]>0)
         wt = FALSE
         if(gset.weight) {
             F <- t(t(F)  / colSums(F,na.rm=TRUE))
@@ -568,6 +568,9 @@ EnrichmentBoard <- function(input, output, session, env)
         F <- head(F[order(-rowSums(abs(F))),,drop=FALSE], ngenes)
         F <- F[order(-rowSums(F)),,drop=FALSE]
         F <- as.matrix(F)
+
+        sel.zero <- which(rowSums(abs(F)) < 1e-4)
+        if(length(sel.zero)) rownames(F)[sel.zero] = ""
         
         par(mfrow=c(1,1), mar=c(6,4,2,0.5), mgp=c(2.2,0.8,0))
         col1 = grey.colors(ncol(F),start=0.15)

@@ -53,32 +53,33 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
     moduleServer(
         id,
         function(input, output, session) {            
-
-            dbg("*** MakeContrastServer ***\n")
+            
+            message("*** MakeContrastServer ***")
             ns <- session$ns
             rv <- reactiveValues(contr=NULL)
             
             observe({
-                dbg("[MakeContrastServer] obs1 : reacted\n")
                 if(is.null(phenoRT()) || is.null(contrRT())) {
                     rv$contr <- NULL
+                    ## return(NULL)
                 }
                 req(phenoRT(), contrRT())
-                rv$contr <- pgx.expMatrix(phenoRT(), contrRT())
-                
-                d1 <- dim(isolate(rv$contr))
-                dbg("[MakeContrastServer] dim(rv)=",d1,"\n")
-
+                message("[MakeContrastServer] observer1 : reacted")
+                ## rv$contr <- pgx.expMatrix(phenoRT(), contrRT())
+                ## new.contr <- makeContrastsFromLabelMatrix(contrRT())
+                new.contr <- contrRT()                
+                message("[MakeContrastServer] observer1 : ct1 = ", paste(new.contr[,1],collapse=' '))
+                rv$contr <- new.contr
             })
-
+            
             observe({
                 req(phenoRT())
+                message("[MakeContrastServer] observer2 : reacted")
                 px <- colnames(phenoRT())
-                message("[MakeContrastModule] px = ", paste(px,collapse=" "))
                 updateSelectInput(session, "pcaplot.colvar", choices=px)
                 updateSelectInput(session, "strata", choices=c("<none>",px))
             })
-
+            
             
             output$UI <- renderUI({
                 ns <- session$ns                
@@ -112,8 +113,8 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                                     ),
                                     tipify2(
                                         textInput(ns("newname"), "Comparison name:",
-                                                  placeholder="e.g. treated_vs_control"),
-                                        "Give a name for your contrast. You must include _vs_ in the name to separate the names of the two groups. Try to keep the name short otherwise your plots may get ugly."),
+                                                  placeholder="e.g. MAIN_vs_CONTROL"),
+                                        "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups."),
                                     br(),
                                     tipify2(
                                         actionButton(ns("addcontrast"),"add comparison", icon=icon("plus")),
@@ -157,6 +158,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
             
             sel.conditions <- reactive({
+                message("[MakeContrastServer] sel.conditions : reacted")
                 req(phenoRT(),countsRT())
                 df <- phenoRT()
                 df$"<samples>" <- rownames(df)
@@ -173,7 +175,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 cond <- sel.conditions()
                 if(length(cond)==0) return(NULL)
                 items <- c("<others>",sort(unique(cond)))
-                dbg("[MakeContrastServer:createcomparison] items=",items,"\n")
+                message("[MakeContrastServer:createcomparison] items=",items)
                 
                 tagList(
                     tags$head(tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
@@ -232,31 +234,31 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 message('[contrast_delete] clicked on delete contrast',id)
                 if(length(id)==0) return(NULL)
                 ##updateActionButton(session, paste0("contrast_delete_",id),label="XXX")
-                message("[contrast_delete] 1: dim(ct) = ",dim(rv$contr))
                 if(!is.null(rv$contr) && NCOL(rv$contr) <= 1) {
                     rv$contr <- rv$contr[,0,drop=FALSE]
                 } else {
                     rv$contr <- rv$contr[,-id,drop=FALSE] 
                 }
-                message("[contrast_delete] 2: dim(ct) = ",dim(rv$contr))
-                ## invalidateLater(3000, session)
             })
             
             observeEvent( input$addcontrast, {
                 
                 cond <- sel.conditions()
-                in.main <- cond %in% input$group1
-                in.ref1 <- cond %in% input$group2 
-                in.ref2 <- ("<others>" %in% input$group2) &
-                    (!cond %in% input$group1)
-                in.ref <- in.ref1 | in.ref2                
-                ctx <- 1*(in.main) - 1*(in.ref)
-
+                group1 <- input$group1
+                group2 <- input$group2
+                in.main <- 1*(cond %in% group1)
+                in.ref1 <- 1*(cond %in% group2)
+                in.ref2 <- ("<others>" %in% group2) & (!cond %in% group1)
+                in.ref  <- in.ref1 | in.ref2                
+                
+                ## ctx <- 1*(in.main) - 1*(in.ref)
                 ##ct.name <- paste0(input$group1name,"_vs_",input$group2name)
                 ct.name <- input$newname
-                samples <- rownames(phenoRT())
+                gr1 <- gsub(".*:|_vs_.*","",ct.name)  ## first is MAIN group!!!
+                gr2 <- gsub(".*_vs_|@.*","",ct.name)                
+                ctx <- c(gr1, gr2)[1*in.main + 2*in.ref]
 
-                if( sum(ctx<0)==0 || sum(ctx>0)==0 ) {
+                if( sum(in.main)==0 || sum(in.ref)==0 ) {
                     shinyalert("ERROR","Both groups must have samples")
                     return(NULL)
                 }
@@ -264,8 +266,12 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                     shinyalert("ERROR","You must give a contrast name")
                     return(NULL)
                 }
+                if(1 && gr1 == gr2) {
+                    shinyalert("ERROR","Invalid contrast name")
+                    return(NULL)
+                }
                 if(!is.null(rv$contr) && ct.name %in% colnames(rv$contr)) {
-                    shinyalert("ERROR","Contrast name already exists. Please give a different name.")
+                    shinyalert("ERROR","Contrast name already exists.")
                     return(NULL)
                 }
                 
@@ -274,6 +280,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                     rv$contr <- cbind(rv$contr, ctx)
                     colnames(rv$contr)[ncol(rv$contr)] <- ct.name
                 } else {
+                    samples <- rownames(phenoRT())
                     rv$contr <- matrix(ctx, ncol=1, dimnames=list(samples,ct.name))
                 }
                 
@@ -283,45 +290,44 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
 
                 req(phenoRT())
                 df <- phenoRT()
-                message("[autocontrast] dim(df)=",paste(dim(df),collapse="x"))
                 strata.var <- input$strata
-                
+
+                ctx <- NULL
                 if(strata.var=="<none>") {
                     ct <- pgx.makeAutoContrasts(
                         df, mingrp=3, slen=20, ref=NULL, fix.degenerate=FALSE)
-                    rownames(ct$exp.matrix) <- rownames(df)
-                    ctx <- ct$exp.matrix
+                    if(!is.null(ct)) {
+                        ctx <- ct$exp.matrix
+                        rownames(ctx) <- rownames(df)
+                    }
                 } else {
-                    message("[autocontrast] stratified autocontrasts. strata.var = ",strata.var)      
                     ctx <- pgx.makeAutoContrastsStratified(
                         df, strata = strata.var,
                         mingrp = 3, slen = 20, ref=NULL, fix.degenerate=FALSE)
                 }
+                if(is.null(ctx)) return(NULL)
                 
                 ## update reactive value
+                ctx2 <- contrastAsLabels(ctx)
                 if(!is.null(rv$contr)) {
-                    rv$contr <- cbind(rv$contr, ctx)
+                    rv$contr <- cbind(rv$contr, ctx2)
                 } else {
-                    rv$contr <- ctx
+                    rv$contr <- ctx2
                 }
 
             })
 
             output$contrastTable <- DT::renderDataTable({
-
-                message('[contrastTable] >>>> reacted')
-                message('[contrastTable] dim(contr) = ',dim(rv$contr))
                 
                 ct <- rv$contr
-                
                 if(is.null(ct) || NCOL(ct)==0) {
                     df <- data.frame(
                         delete = 0,
                         comparison = "",
                         n1 = 0,
-                        n2 = 0,
-                        samples1 = "",
-                        samples2 = ""
+                        n0 = 0,
+                        "main.group" = "",
+                        "control.group" = ""
                     )[0,]
                 } else {
                     paste.max <- function(x,n=6) {
@@ -331,16 +337,19 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                         }
                         paste(x,collapse=" ")
                     }                    
-                    ct1  <- sign(ct)
+
+                    ct1  <- makeContrastsFromLabelMatrix(ct)
+                    ct1[is.na(ct1)] <- 0
+                    
                     if(NCOL(ct)==1) {
-                        ss1 <- names(which(ct1[,1]==1))
-                        ss2 <- names(which(ct1[,1]==-1))
+                        ss1 <- names(which(ct1[,1] > 0))
+                        ss2 <- names(which(ct1[,1] < 0))
                         ss1 <- paste.max(ss1,6)
                         ss2 <- paste.max(ss2,6)
                     } else {
                         ss0 <- rownames(ct)
-                        ss1 <- apply(ct1,2,function(x) paste.max(ss0[which(x==1)])) 
-                        ss2 <- apply(ct1,2,function(x) paste.max(ss0[which(x==-1)]))
+                        ss1 <- apply(ct1,2,function(x) paste.max(ss0[which(x > 0)])) 
+                        ss2 <- apply(ct1,2,function(x) paste.max(ss0[which(x < 0)]))
                     }
 
                     deleteButtons <- buttonInput(
@@ -361,15 +370,14 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
 
                     df <- data.frame(
                         delete = deleteButtons,
-                        comparison = colnames(ct),
-                        n1 = colSums(ct > 0),
-                        n2 = colSums(ct < 0 ),
-                        samples1 = ss1,
-                        samples2 = ss2
+                        comparison = colnames(ct1),
+                        n1 = colSums(ct1 > 0),
+                        n0 = colSums(ct1 < 0 ),
+                        "main.group" = ss1,
+                        "control.group" = ss2
                     )
                 }
                 rownames(df) <- NULL
-                dbg("[contrastTable] render datatable dim(df) = ",dim(df))
                 
                 datatable(
                     df, rownames=FALSE,
@@ -387,12 +395,12 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                         )                        
                     )
                 ) %>%
-                    DT::formatStyle(0, target='row', fontSize='12px', lineHeight='99%')                
+                    DT::formatStyle(0, target='row', fontSize='12px', lineHeight='99%')
             }, server=FALSE)
             
 
             pcaplot.RENDER <- reactive({
-
+                message("[MakeContrastServer] pcaplot.RENDER : reacted")
                 ##ngs <- inputData()
                 ##X <- ngs$X
                 pheno <- phenoRT()
@@ -407,9 +415,8 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 clust <- pgx.clusterMatrix(X, dims=2, method=method)
                 names(clust)
 
-                y <- sel.conditions()
-                
-                par(mar=c(4,1,1,1))
+                y <- sel.conditions()                
+                ##par(mar=c(4,1,1,1))
                 pgx.scatterPlotXY(
                     clust$pos2d, var=y, plotlib="plotly",
                     legend = FALSE ##, labels=TRUE
@@ -423,7 +430,6 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                                     width = '100%'),"Choose clustering method.",
                        placement="right", options = list(container = "body"))
             )
-
             
             callModule(
                 plotModule, 
@@ -439,7 +445,11 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             )
             
             ##ct <- rv$contr
-            return(reactive({rv$contr}))  ## pointing to reactive
+            return(reactive({
+                if(is.null(rv$contr)) return(NULL)
+                ##contrastAsLabels(rv$contr)
+                rv$contr           ## labeled contrast matrix  
+            }))  ## pointing to reactive
         } ## end-of-server
     )
     

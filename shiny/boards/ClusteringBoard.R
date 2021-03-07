@@ -464,7 +464,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         }
         
         ## ------------- matched annotation
-        annot = ngs$Y[colnames(zx),,drop=FALSE]  ## Y or full matrix??
+        ##annot = ngs$Y[colnames(zx),,drop=FALSE]  ## Y or full matrix??
+        annot = ngs$samples[colnames(zx),,drop=FALSE]  ## Y or full matrix??        
         kk = grep("sample|patient",colnames(annot),invert=TRUE)
         annot = annot[,kk,drop=FALSE]  ## no group??    
         samples = colnames(zx) ## original sample list
@@ -735,10 +736,10 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             height = 50,
             ## checkboxInput(ns("hm_labRow"),NULL),
             tipify( numericInput(ns("hm_cexRow"), "cexRow:", 1, 0, 1.4, 0.1, width='100%'),
-                   "Specify the row label cex.",
+                   "Specify the row label size. Set to 0 to suppress row labels.",
                    placement="right",options = list(container = "body")),
             tipify( numericInput(ns("hm_cexCol"), "cexCol:", 1, 0, 1.4, 0.1, width='100%'),
-                   "Specify the column label cex.",
+                   "Specify the column label size. Set to 0 to suppress column labels.",
                    placement="right", options = list(container = "body"))            
         ),
         br()

@@ -253,8 +253,14 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 samples   <- samplesRT()
                 samples   <- data.frame(samples, stringsAsFactors=FALSE, check.names=FALSE)
                 contrasts <- as.matrix(contrastsRT())
-                contrasts[is.na(contrasts)] <- 0
 
+                
+                message("[ComputePgxServer:@enable] ct1 = ",
+                        paste(contrasts[,1],collapse=' '))
+                
+                ## contrasts[is.na(contrasts)] <- 0
+                ## contrasts[is.na(contrasts)] <- ""
+                
                 ##!!!!!!!!!!!!!! This is blocking the computation !!!!!!!!!!!
                 ##batch     <- batchRT() ## batch correction vectors for GLM
                 
@@ -296,15 +302,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 message("[ComputePgxServer::@compute] gx.methods = ",paste(gx.methods,collapse=" "))
                 message("[ComputePgxServer::@compute] gset.methods = ",paste(gset.methods,collapse=" "))
                 message("[ComputePgxServer::@compute] extra.methods = ",paste(extra.methods,collapse=" "))
-
-                if(0) {
-                    counts0  <- read.csv("~/Downloads/FemaleLiver/counts.csv")
-                    counts <- as.matrix(counts0[,-1])
-                    rownames(counts) <- counts0[,1]
-                    samples <- read.csv("~/Downloads/FemaleLiver/samples.csv",row.names=1)
-                    ct <- makeDirectContrasts(samples[,"sex",drop=FALSE], ref="1")
-                    contrasts <- ct$exp.matrix
-                }
                 
                 start_time <- Sys.time()
                 ## Create a Progress object
@@ -312,8 +309,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 on.exit(progress$close())    
                 progress$set(message = "Processing", value = 0)
                 pgx.showCartoonModal("Computation may take 5-20 minutes...")
-
-                flt=""
+                
+                flt="";use.design=TRUE;prune.samples=FALSE
                 flt <- input$filter_methods
                 only.hugo <- ("only.hugo" %in% flt)
                 do.protein <- ("proteingenes"   %in% flt)
@@ -339,10 +336,12 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     rik.orf = !excl.rikorf,
                     only.proteincoding = only.proteincoding, 
                     only.hugo = only.hugo,
-                    convert.hugo = only.hugo
+                    convert.hugo = only.hugo,
+                    do.cluster = TRUE,
+                    cluster.contrasts = FALSE
                 )
                 names(ngs)
-
+                
                 message("[ComputePgxServer:@compute] computing PGX object")
                 progress$inc(0.2, detail = "computing PGX object")            
                 

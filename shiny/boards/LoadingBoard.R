@@ -264,7 +264,11 @@ LoadingBoard <- function(input, output, session,
             dir.create(tmp <- tempfile())
             tmp2 <- file.path(tmp,pgxname)
             dir.create(tmp2)
+
             exp.matrix <- sign(ngs$model.parameters$exp.matrix)
+            exp.matrix <- contrastAsLabels(exp.matrix) ## new recommended style
+            exp.matrix[is.na(exp.matrix)] <- ""
+            
             write.csv(ngs$counts,  file=file.path(tmp2, "counts.csv"))
             write.csv(ngs$samples, file=file.path(tmp2, "samples.csv"))
             write.csv(exp.matrix, file=file.path(tmp2, "contrasts.csv"))

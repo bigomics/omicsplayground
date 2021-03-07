@@ -16,15 +16,14 @@ if(0) {
 
     counts <- ngs$counts
     samples <- ngs$samples
-    contrasts <- ngs$model.parameters$contr.matrix[,1,drop=FALSE]
-
+    contrasts <- ngs$contrasts
 }
 
 pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
-                          is.logx=NULL, do.cluster=TRUE, batch.correct=TRUE,
+                          is.logx=NULL, batch.correct=TRUE,
                           auto.scale=TRUE, filter.genes=TRUE, prune.samples=FALSE,
-                          only.chrom=TRUE, rik.orf=FALSE,
-                          only.hugo=TRUE, convert.hugo=TRUE,
+                          only.chrom=TRUE, rik.orf=FALSE, only.hugo=TRUE, convert.hugo=TRUE,
+                          do.cluster=TRUE,  cluster.contrasts = FALSE,
                           only.proteincoding=TRUE)
 {
     
@@ -42,11 +41,24 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     ## clean up input files
     ##-------------------------------------------------------------------
     counts <- as.matrix(counts)
-    contrasts <- as.matrix(contrasts)
-    contrasts[is.na(contrasts)] <- 0
+    if(is.null(contrasts))  contrasts <- samples[,0]
+    ## contrasts[is.na(contrasts)] <- 0
+    
+    ## contrast matrix
+    colnames(contrasts)
+    is.numbered <- all(unique(as.vector(contrasts)) %in% c(-1,0,1))
+    is.numbered <- all(sapply(type.convert(data.frame(contrasts)),class) %in% c("numeric","integer"))
+    is.numbered
+    ct.type <- c("labeled (new style)","numbered (old style)")[1 + 1*is.numbered]
+    message("[pgx.createPGX] contrast type :",ct.type)
+    if(is.numbered) {
+        message("[pgx.createPGX] converting numbered contrasts to LABELED")
+        ##contrasts <- makeContrastsFromLabelMatrix(contrasts)
+        contrasts <- contrastAsLabels(contrasts) 
+    }
 
     ## convert group-wise contrast to sample-wise
-    if("group" %in% names(samples) && nrow(contrasts)!=nrow(samples)) {
+    if("group" %in% names(samples) && nrow(contrasts) < nrow(samples) ) {
         is.group.contrast <- all(rownames(contrasts) %in% samples$group)
         is.group.contrast
         if(is.group.contrast) {
@@ -57,20 +69,22 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
             contrasts <- contrasts.new
         }
     }
-
+    
     ## sanity check...
     if( !all(rownames(contrasts)==rownames(samples)) &&
         !all(rownames(contrasts)==colnames(counts)) ) {
         stop("[pgx.createPGX] FATAL :: matrices do not match")
     }
 
-    ## prune.samples=FALSE
-    used.samples <- names(which(rowSums(contrasts!=0)>0))
+    ## prune.samples=FALSE    
+    ##used.samples <- names(which(rowSums(contrasts!=0)>0))
+    contrasts[contrasts==""] <- NA
+    used.samples <- names(which(rowSums(!is.na(contrasts))>0))        
     if(prune.samples && length(used.samples) < ncol(counts) ) {
 
         message("[pgx.createPGX] pruning unused samples...")
-        counts  <- counts[,used.samples,drop=FALSE]
-        samples <- samples[used.samples,,drop=FALSE]
+        counts    <- counts[,used.samples,drop=FALSE]
+        samples   <- samples[used.samples,,drop=FALSE]
         contrasts <- contrasts[used.samples,,drop=FALSE] ## sample-based!!! 
 
         message("[pgx.createPGX] dim(counts) = ",dim(counts))
@@ -78,7 +92,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
         message("[pgx.createPGX] dim(contrasts) = ",dim(contrasts))
         
     }
-    
+
     ##-------------------------------------------------------------------
     ## conform
     ##-------------------------------------------------------------------
@@ -91,7 +105,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     if(all(kk %in% rownames(contrasts))) {
         contrasts <- contrasts[kk,,drop=FALSE]
     }
-    
+
     ##-------------------------------------------------------------------
     ## check counts
     ##-------------------------------------------------------------------
@@ -110,7 +124,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     }
     
     ##-------------------------------------------------------------------
-    ## Missing values??
+    ## How to deal with missing values??
     ##-------------------------------------------------------------------
     if( any(is.na(counts)) || any(is.infinite(counts))) {
         message("[pgx.createPGX] setting missing values to zero")
@@ -199,8 +213,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
 
     ngs$samples = data.frame(samples, check.names=FALSE)
     ngs$counts  = as.matrix(counts)
-    ##ngs$genes   = data.frame(genes)
-    ngs$contrasts = as.matrix(contrasts)
+    ngs$contrasts = contrasts
     ngs$X <- X  ## input normalized log-expression (can be NULL)
     
     ngs$total_counts = totcounts
@@ -342,14 +355,50 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     ##-------------------------------------------------------------------
     if(do.cluster) {
         message("[pgx.createPGX] clustering samples...")        
-        ##if(!is.null(progress)) progress$inc(0.01, detail = "clustering")
+        ## if(!is.null(progress)) progress$inc(0.01, detail = "clustering")
         ## ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, perplexity=NULL)
-        ngs <- pgx.clusterSamples2(ngs, dims=c(2,3), perplexity=NULL,
-                                   methods=c("pca","tsne","umap"))
+        ngs <- pgx.clusterSamples2(
+            ngs, dims = c(2,3),
+            ## replace.orig = FALSE,
+            perplexity = NULL,
+            methods = c("pca","tsne","umap")            
+        )
+
+        ## NEED RETHINK: for the moment we use combination of t-SNE/UMAP
+        posx <- scale(do.call(cbind,ngs$cluster$pos))
+        posx <- scale(cbind(ngs$cluster$pos[["umap2d"]],ngs$cluster$pos[["tsne2d"]]))
+        ##posx <- ngs$cluster$pos[["umap2d"]]
+        ##posx <- ngs$cluster$pos[["tsne2d"]]        
+        idx <- pgx.findLouvainClusters(posx, level=1, prefix='C', gamma=1, small.zero=0.0)
+        table(idx)
+        if(length(unique(idx))==1) {
+            ## try again if single cluster...
+            idx <- pgx.findLouvainClusters(posx, level=2, prefix='C', gamma=0.5, small.zero=0.01)
+        }
+        ngs$samples$cluster <- idx        
         head(ngs$samples)
         table(ngs$samples$cluster)
+
+
     }
 
+    if(cluster.contrasts) {
+        ## Add cluster contrasts
+        message("[pgx.createPGX] adding cluster contrasts...")
+        Y = ngs$samples[,"cluster",drop=FALSE]
+        if(length(unique(Y)) < 2) {
+            message("[pgx.createPGX] warning: only one cluster.")
+        } else {
+            ct <- makeDirectContrasts(Y, ref="others")
+            ctx <- contrastAsLabels(ct$exp.matrix)
+            if(ncol(ngs$contrasts)==0) {
+                ngs$contrasts <- ctx
+            } else {
+                ngs$contrasts <- cbind(ngs$contrasts, ctx)
+            }
+        }
+    }
+    
     ##-------------------------------------------------------------------
     ## Add normalized log-expression
     ##-------------------------------------------------------------------
@@ -364,16 +413,21 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     if(!all(dim(ngs$X) == dim(ngs$counts))) {
         stop("[pgx.createPGX] dimensions of X and counts do not match\n")        
     }
-    
+
     return(ngs)
 }
 
 if(0) {
     max.genes=19999;max.genesets=9999
+    gx.methods = c("trend.limma")
+    gset.methods = c("fisher")
+    extra.methods = c()
+
     gx.methods = c("ttest.welch","trend.limma","edger.qlf")
     gset.methods = c("fisher","gsva","fgsea")
     extra.methods = c("meta.go","deconv","infer","drugs","wordcloud")
-    extra.methods = c("wordcloud")    
+
+    do.cluster=TRUE;use.design=TRUE;prune.samples=FALSE
 }
 
 pgx.computePGX <- function(ngs, 
@@ -392,30 +446,15 @@ pgx.computePGX <- function(ngs,
     if(!"contrasts" %in% names(ngs)) {
         stop("[pgx.computePGX] FATAL:: no contrasts in object")
     }
-
     message("[pgx.computePGX] called.")
-
     
-    ## contrast matrix
-    colnames(ngs$contrasts)
+    ## make proper contrast matrix
     contr.matrix <- ngs$contrasts
-    contr.matrix <- as.matrix(contr.matrix) ## must be numeric matrix...
-
-    ## create groups if not exists. DEPRECATED: maybe not necessary anymore (IK)
-    if(FALSE  && !"group" %in% colnames(ngs$samples)) {
-        ct = apply(ngs$samples,2,function(px) mean(px %in% rownames(ngs$contrasts),na.rm=TRUE))
-        group.col = which(ct > 0.95)
-        group.col
-        if(length(group.col)>0) {
-            grp.var = colnames(ngs$samples)[group.col[1]]
-            cat(paste0("INFO [pgx-upload] assigning '",grp.var,"' variable as 'group' column\n"))
-            ## colnames(ngs$samples)[group.col[1]] <- "group"
-            ngs$samples$group <- ngs$samples[,group.col[1]] 
-        } else {
-            ## stop("sample annotation file must have 'group' column\n")
-            cat("creating statistical groups...\n")
-            ngs$samples$group <- pgx.getConditions(contr.matrix, nmax=1)             
-        }
+    is.numcontrast <- all(unique(as.vector(contr.matrix)) %in% c(NA,-1,0,1))    
+    is.numcontrast
+    if(!is.numcontrast) {
+        contr.matrix <- makeContrastsFromLabelMatrix(contr.matrix)
+        contr.matrix <- sign(contr.matrix) ## sign is fine
     }
     
     ##======================================================================
@@ -432,7 +471,7 @@ pgx.computePGX <- function(ngs,
     ## ------------------ gene level tests ---------------------
     if(!is.null(progress)) progress$inc(0.1, detail = "testing genes")
     message("[pgx.computePGX] testing genes...")
-    
+
     ngs <- compute.testGenes(
         ngs, contr.matrix,
         max.features = max.genes,

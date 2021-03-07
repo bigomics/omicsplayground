@@ -238,6 +238,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ##gene.annot = mx[,grep("^gene|^chr",colnames(mx)),drop=FALSE]
         aa <- intersect(c("gene_name","gene_title","chr"), colnames(ngs$genes))
         gene.annot <- ngs$genes[rownames(mx),aa]
+        gene.annot$chr <- sub("_.*","",gene.annot$chr) ## strip any alt postfix
         res = data.frame( gene.annot, logFC = logFC,
                          stars = mx$stars, meta.q = mx$meta.q,
                          AveExpr0, AveExpr1, check.names=FALSE )
@@ -744,7 +745,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         req(comp)
         grouped  <- input$boxplot_grouped
         logscale <- input$boxplot_logscale
-        srt <- ifelse(grouped, 0, 30)
+        srt <- ifelse(grouped, 0, 35)
 
         par(mfrow=c(1,1), mar=c(4,3,1.5,1.5), mgp=c(2,0.8,0), oma=c(1,0.5,0,0.5))
         pgx.plotExpression(ngs, gene, comp=comp, grouped=grouped,
@@ -846,7 +847,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if( nx <= 3) nc <- 10
         if( nx > 10) nc <- 5
         if( nx > 25) nc <- 4
-        srt = 30
+        srt = 35
         strlen.grpnames <- max(nchar(strsplit(sub(".*:","",comp),split="_vs_")[[1]]))
         if(show.names && strlen.grpnames <= 4) srt  <- 0
         

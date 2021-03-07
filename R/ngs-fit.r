@@ -52,7 +52,7 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
 
     message("[ngs.fitContrastsWithAllMethods] 1 : ")
     message("[ngs.fitContrastsWithAllMethods] calculating methods : ", methods)
-    message("[ngs.fitContrastsWithAllMethods] calculating methods : prune.samples = ", prune.samples)
+    message("[ngs.fitContrastsWithAllMethods] prune.samples = ", prune.samples)
     
     ##cat("dim(X) = ",dim(X),"\n")
     
@@ -374,6 +374,9 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
     names(all.meta) = tests
     
     timings0 <- do.call(rbind, timings)
+    colnames(timings0) <- names(timings[[1]])
+    colnames(timings0) <- c("user.self","sys.self","elapsed","user.child","sys.child")
+    
     res = list( outputs=outputs,  meta=all.meta, sig.counts=sig.counts,
                timings = timings0, X=X )
     return(res)
@@ -557,20 +560,19 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
     dge <- calcNormFactors(dge, method="TMM")
 
     if(is.null(design) && !prune.samples) {
-        message("[ngs.fitContrastsWithEDGER] fitting EDGER contrasts *without* design matrix")
+        message("[ngs.fitContrastsWithEDGER] fitting EDGER contrasts *without* design, no pruning ")
         res <- .ngs.fitContrastsWithEDGER.nodesign(
             dge=dge, contr.matrix=contr.matrix, method=method, 
             conform.output=conform.output, robust=robust, plot=plot)
         return(res)
     }
     if(is.null(design) && prune.samples) {
-        message("[ngs.fitContrastsWithEDGER] fitting EDGER contrasts *without* design matrix")
+        message("[ngs.fitContrastsWithEDGER] fitting EDGER contrasts *without* design, with pruning")
         res <- .ngs.fitContrastsWithEDGER.nodesign.pruned(
             counts=counts, contr.matrix=contr.matrix, method=method, group=group,
             conform.output=conform.output, robust=robust, plot=plot)
         return(res)
     }
-
 
     message("[ngs.fitContrastsWithEDGER] fitting EDGER contrasts using design matrix")    
     dge <- estimateDisp(dge, design=design, robust=robust)
@@ -728,16 +730,20 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
     ## With no design matrix, we must do EdgeR per contrast
     ## one-by-one. Warning this can become very slow.
     ##
+
+
+    message("[.ngs.fitContrastsWithEDGER.nodesign.pruned] called")
+    message("[.ngs.fitContrastsWithEDGER.nodesign.pruned] dim(ct) = ",
+            paste(dim(contr.matrix),collapse="x"))
     
     ##if(class(dge)!="DGEList") stop("dge must be a DGEList object")
     method=method[1]
 
     tables <- list()
     i=1
-    for(i in 1:ncol(contr.matrix)) {
+    for(i in 1:NCOL(contr.matrix)) {
         
         kk <- which(!is.na(contr.matrix[,i]) & contr.matrix[,i]!=0)
-        contr1 <- contr.matrix[kk,]        
         ## X = log2(0.0001+dge$counts)  ## assuming pseudocount already added
         ## counts1 = counts[,kk,drop=FALSE]
         counts1 = counts[,kk,drop=FALSE]
@@ -783,8 +789,9 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
         ##summary(decideTests(ct))
         top = topTags(res, n=1e9)$table
         top = data.frame(top[rownames(X1),])
-        j1 = which( contr1[,i] > 0 )
-        j0 = which( contr1[,i] < 0 )
+        contr1 <- contr.matrix[kk,i]        
+        j1 = which( contr1 > 0 )
+        j0 = which( contr1 < 0 )
         ## if(!( length(cf)==6 || length(cf)==7)) stop("wrong coef format")
         mean1 = rowMeans(X1[,j1,drop=FALSE], na.rm=TRUE)
         mean0 = rowMeans(X1[,j0,drop=FALSE], na.rm=TRUE)
@@ -835,13 +842,13 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
     }
 
     if(is.null(design)) {
-        message("[ngs.fitContrastsWithDESEQ2] fitting DESEQ2 contrasts *without* design matrix")
+        message("[ngs.fitContrastsWithDESEQ2] fitting DESEQ2  *without* design")
         out <- .ngs.fitConstrastsWithDESEQ2.nodesign(
             counts=counts, contr.matrix=contr.matrix, test=test,
             prune.samples = prune.samples, conform.output=conform.output)
         return(out)
     }
-    message("[ngs.fitContrastsWithDESEQ2] fitting DESEQ2 contrasts using design matrix")
+    message("[ngs.fitContrastsWithDESEQ2] fitting DESEQ2 using design matrix")
     
     design.formula = formula(" ~ 0 + group")
     message("[ngs.fitContrastsWithDESEQ2] using model design: ",as.character(design.formula))

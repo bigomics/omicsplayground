@@ -60,13 +60,14 @@ gx.b3plot <- function(x, y, width=1, bar=TRUE, bee=TRUE, sig.stars=FALSE,
 
     ##par(mfrow=c(1,1));srt=60
     ##bx = barplot( mx-xoff, width=0.6666, space=0.5, ylim=ylim, offset=xoff, names.arg=NA)
-    bx = barplot( mx, width=0.6666, space=0.5, ylim=ylim, offset=xoff,  names.arg=NA, col=col, ... )
-    y0 = min(ylim) - diff(ylim)*0.08
+    bx = barplot( mx, width=0.6666, space=0.5, ylim=ylim, offset=xoff,
+                 names.arg=NA, col=col, ... )
     pos <- ifelse(srt==0, 1, 2)
 
     n = length(unique(y))
     if(is.null(srt)) srt <- ifelse(n>3, 30, 0)
     if(names==TRUE) {
+        y0 = min(ylim) - diff(ylim)*0.03
         text( bx[,1], y0, names(mx), cex=names.cex, adj=1, srt=srt, xpd=TRUE,
              pos=pos, offset=0)
     }
