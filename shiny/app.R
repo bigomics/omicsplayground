@@ -9,7 +9,6 @@
 ##                                                                     ##
 #########################################################################
 
-
 library(shiny)
 library(shinyjs)
 library(shinyWidgets)
@@ -21,7 +20,6 @@ message("\n\n")
 message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
 message("###############################################################")
-
 
 message("\n")
 message("************************************************")
@@ -335,11 +333,8 @@ names(TABVIEWS)
 TABVIEWS <- TABVIEWS[names(TABVIEWS) %in% names(which(ENABLED))]
 names(TABVIEWS)
 
-TABVIEWS[["logout"]] <- tabPanel(title=HTML("<a id='logout' href='/logout'>Logout"))
-ENABLED["logout"] <- ifelse(SHINYPROXY, TRUE, FALSE)
-## ENABLED["logout"]=TRUE
+logout.tab <- tabPanel(title=HTML("<a id='logout' href='/logout'>Logout"))
 
-tabs = list( home=c("load","logout"))
 createUI <- function(tabs)
 {
     message("\n======================================================")
@@ -408,10 +403,14 @@ createUI <- function(tabs)
         }
     }
     tablist <- tablist[!sapply(tablist,is.null)]
-    
+   
     ## add help menu
     tablist[["helpmenu"]] <- help.tabs
-       
+    ## if(SHINYPROXY)
+    {
+        tablist[["logout"]] <- logout.tab
+    }
+    
     ##-------------------------------------
     ## create navbarPage
     ##-------------------------------------
@@ -427,7 +426,6 @@ createUI <- function(tabs)
 }
 
 tabs = list(
-    "logout",
     "Home" = c("load"),
     "DataView" = "view",
     "Clustering" = c("clust","wgcna"),
