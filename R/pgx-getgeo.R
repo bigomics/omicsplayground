@@ -111,16 +111,19 @@ pgx.getGEOseries <- function(id, archs.h5=NULL, convert.hugo=TRUE)
         mingrp=3;slen=15;ref=NA
         ct <- pgx.makeAutoContrasts(sampleinfo, mingrp=3, slen=20, ref=NA)
         is.null(ct)
-        if(!is.null(ct)) {
-            if("group" %in% colnames(sampleinfo)) {
-                colnames(sampleinfo) <- sub("group","xgroup",colnames(sampleinfo)) ## backup..
-            }
-            sampleinfo <- cbind(sampleinfo, group=as.character(ct$group))
+        if(is.null(ct)) {
+            ct <- pgx.makeAutoContrasts(sampleinfo, mingrp=2, slen=20, ref=NA)            
         }
-        if(!is.null(ct$contr.matrix)) {
-            contrasts <- ct$contr.matrix
-        } else {
+        ## if(!is.null(ct)) {
+        ##     if("group" %in% colnames(sampleinfo)) {
+        ##         colnames(sampleinfo) <- sub("group","xgroup",colnames(sampleinfo)) ## backup..
+        ##     }
+        ##     sampleinfo <- cbind(sampleinfo, group=as.character(ct$group))
+        ## }
+        if(!is.null(ct$exp.matrix)) {
             contrasts <- ct$exp.matrix
+        } else {
+            contrasts <- ct$design %*% ct$contr.matrix
         }
         head(contrasts)
     }

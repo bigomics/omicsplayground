@@ -242,7 +242,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ##-----------------------------------
             ## Gene level features
             ##-----------------------------------
-            pp = head(rownames(ngs$X),400)
             gg = ngs$families[[1]]
             if(input$hm_features =="<all>") {
                 gg = rownames(ngs$X)
@@ -268,10 +267,11 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                 }
 
                 gg1 = gg1[toupper(gg1) %in% toupper(genes) | grepl("---",gg1)]
-                idx <- rep("F1",length(gg1))
-                names(idx) <- gg1
+                idx <- NULL
                 if(any(grepl("^---",gg1))) {
                     message("[getFilteredMatrix] <custom> groups detected")
+                    idx <- rep("F1",length(gg1))
+                    names(idx) <- gg1
                     kk <- c(1,grep("^---",gg1),length(gg1)+1)
                     for(i in 1:(length(kk)-1)) {
                         ii <- kk[i]:(kk[i+1]-1)
@@ -358,6 +358,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             k.est <- min(which(abs(diff(within.ssratio)) < 0.10))
             k.est
             k.est <- pmax(pmin(k.est,3),2)
+            k.est = 2 ## for now...
             
             if (k.est==2) {
                 km <- kmeans(gx, centers=2)
@@ -389,6 +390,13 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             topmode <- "sd"
         }
         
+        addsplitgene <- function(gg) {
+            if(do.split && splitvar %in% rownames(ngs$X)) {
+                gg <- unique(c(splitvar,gg))
+            }
+            gg
+        }
+        
         if(!do.split && topmode=="specific") topmode <- "sd"
         grp.zx <- NULL        
         if(topmode=="pca") {
@@ -401,6 +409,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             gg <- rownames(zx)
             sv.top <- lapply(1:NPCA,function(i) gg[head(order(-abs(svdres$u[,i])),ntop)] )
             gg.top <- unlist(sv.top)
+            ##gg.top <- addsplitgene(gg.top) 
             for(i in 1:length(sv.top)) {
                 sv.top[[i]] <- paste0("PC",i,":",sv.top[[i]])
             }
@@ -444,9 +453,12 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ii <- order(-apply(zx,1,sd,na.rm=TRUE))
             zx = zx[ii,,drop=FALSE] ## order
             zx = head(zx,nmax)
+            ##gg <- addsplitgene(rownames(zx))
+            ##zx = zx[gg,,drop=FALSE]
+            
         }
         ##zx = zx / apply(zx,1,sd,na.rm=TRUE)  ## scale??
-
+        
         ## ------------- cluster the genes???
         if(!is.null(flt$idx))  {
             idx <- flt$idx[rownames(zx)]  ## override

@@ -34,11 +34,9 @@ ht_global_opt(fast_hclust = TRUE)
 options(shiny.maxRequestSize = 500*1024^2)  ## max 200Mb upload
 
 dbg <- function(... ) {
-    if(DEBUG) {
-        ##msg = paste0(ifelse(is.null(module),"",paste0("<",module,"> ")),msg)
-        msg = sapply( list(...),paste,collapse=" ")
-        message(paste0("DBG ",sub("\n$","",paste(msg,collapse=" "))))
-    }
+    ##msg = paste0(ifelse(is.null(module),"",paste0("<",module,"> ")),msg)
+    msg = sapply( list(...),paste,collapse=" ")
+    message(paste0("DBG ",sub("\n$","",paste(msg,collapse=" "))))
 }
 
 ##source(file.path(RDIR,"pgx-functions.R"), local=TRUE)
