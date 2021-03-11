@@ -79,3 +79,37 @@ Team 2013) and packages from Bioconductor (Huber 2015). Statistical
 computation and visualization have been performed using the Omics
 Playground version vX.X.X (Akhmedov 2020).
 
+
+
+REFERENCES 
+---------------------------
+
+Love MI, Huber W, Anders S (2014). “Moderated estimation of fold
+change and dispersion for RNA-seq data with DESeq2.” Genome Biology,
+15, 550.
+
+Robinson MD, McCarthy DJ, Smyth GK (2010). “edgeR: a Bioconductor
+package for differential expression analysis of digital gene
+expression data.” Bioinformatics, 26(1), 139-140.
+
+Ritchie ME, Phipson B, Wu D, Hu Y, Law CW, Shi W, Smyth GK
+(2015). “limma powers differential expression analyses for
+RNA-sequencing and microarray studies.” Nucleic Acids Research, 43(7)
+
+Ashburner et al. Gene ontology: tool for the unification of
+biology. Nat Genet. May 2000;25(1):25-9.
+
+Kanehisa, M. and Goto, S.; KEGG: Kyoto Encyclopedia of Genes and
+Genomes. Nucleic Acids Res. 28, 27-30 (2000).
+
+Akhmedov M, Martinelli A, Geiger R and Kwee I. Omics Playground: A
+comprehensive self-service platform forvisualization, analytics and
+exploration of Big Omics Data. NAR Genomics and Bioinformatics, Volume
+2, Issue 1, March 2020,
+
+R Core Team (2013). R: A language and environment for statistical
+computing. R Foundation for Statistical Computing, Vienna, Austria.
+URL http://www.R-project.org/.
+
+Huber W, et al. (2015) Orchestrating high-throughput genomic analysis
+with Bioconductor. Nature Methods 12:115-121; doi:10.1038/nmeth.3252
