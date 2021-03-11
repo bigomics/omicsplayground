@@ -44,7 +44,7 @@ pgx.clusterSamples2 <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3)
         umap.pkg = umap.pkg
     )
     names(clust.pos)
-    clust.index <- paste0("C",clust.pos$membership)
+    clust.index <- past e0("C",clust.pos$membership)
     clust.pos$membership <- NULL
     table(clust.index)
     

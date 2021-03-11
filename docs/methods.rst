@@ -49,14 +49,18 @@ Functional analysis
 ---------------------------
 
 Statistical testing of differential enrichment of genesets was
-performed using an aggregation of three statistical methods: fGSEA
-(Korotkevich 2019), Camera (Wu 2012) and GSVA/limma (Hanzelmann 2013,
-Ritchie 2015). The maximum q-value of the selected methods was taken
-as aggregate meta.q value, which corresponds to taking the
-intersection of significant genes from all tests. We used more than
-50000 genesets from various public databases including: MSigDB
-(Subramanian 2005; Liberzon 2015), Gene Ontology (Ashburner 2000), and
-Kyoto Encyclopedia of Genes and Genomes (KEGG) (Kanehisa 2000).
+performed using an aggregation of multiple statistical methods:
+Fisher's exact test, fGSEA (Korotkevich 2019), Camera (Wu 2012) and
+GSVA/limma (Hanzelmann 2013, Ritchie 2015). The maximum q-value of the
+selected methods was taken as aggregate meta.q value, which
+corresponds to taking the intersection of significant genes from all
+tests. As each method uses different estimation parameters (NES for
+GSEA, odd-ratio for fisher, etc.) for the effect size, for
+consistency, we took the average log fold-change of the genes in the
+geneset as sentinel value. We used more than 50000 genesets from
+various public databases including: MSigDB (Subramanian 2005; Liberzon
+2015), Gene Ontology (Ashburner 2000), and Kyoto Encyclopedia of Genes
+and Genomes (KEGG) (Kanehisa 2000).
 
 
 Graph-weighted GO analysis. The enrichment score of a GO term was
