@@ -59,7 +59,6 @@ message("DEBUG = ",DEBUG)
 message("WATERMARK = ",WATERMARK)
 message("SHINYPROXY = ",SHINYPROXY)
 
-
 src.local=TRUE  ## need???
 src.local=FALSE  ## need???
 source(file.path(RDIR,"pgx-include.R"),local=src.local)  ## pass local vars

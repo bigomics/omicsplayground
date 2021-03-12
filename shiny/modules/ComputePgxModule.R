@@ -116,7 +116,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                 br(),br(),
                                 actionLink(ns("options"), "Advanced",
                                            icon=icon("cog", lib="glyphicon")),
-                                style = "padding-right: 30px;"
+                                style = "padding-right: 80px;"
                             )
                         )
                     ),
