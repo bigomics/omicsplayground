@@ -622,9 +622,9 @@ dbg.BAK <- function(... ) {
 read.csv2 <- function(file, ...)
 {
     ## automatically determine seperator
-    line1 <- as.character(read.csv(file, sep=NULL,nrow=1)[1,])
+    line1 <- as.character(read.csv(file, sep='\n',nrow=1)[1,])
     sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))
-    sep
+    message("[read.csv2] sep = ",sep)
     read.csv(file, sep=sep, ...)
 }
 
