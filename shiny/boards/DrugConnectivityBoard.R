@@ -301,8 +301,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         
         if(is.null(ngs$drugs)) return(NULL)
         shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
-
-        dbg("[dsea_moaplot.RENDER] reacted")
         
         comparison=1
         comparison = input$dr_contrast
@@ -420,24 +418,38 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         qv  <- ngs$drugs[[dmethod]]$Q
         score <- nes * (1 - qv)**2
         score[is.na(score)] <- 0
-        if(NCOL(score)==1) score <- cbind(score,score)  ## UGLY....
+        ## if(NCOL(score)==1) score <- cbind(score,score)  ## UGLY....
         
         ## reduce score matrix
-        ##score = head(score[order(-rowSums(abs(score))),],40)
-        ##score = score[head(order(-rowSums(score**2)),50),] ## max number of terms
-        score = score[head(order(-score[,comparison]**2),nterms),,drop=FALSE] ## number of terms    
-        score = score[,head(order(-colSums(score**2)),nfc),drop=FALSE] ## max comparisons/FC
-
-        cat("dsea_actmap:: dim(score)=",dim(score),"\n")
+        score = score[order(-score[,comparison]**2),,drop=FALSE] ## sort by score
+        if(1) {
+            res <- getDseaTable()
+            ## filter with table selection/search
+            ii  <- dsea_table$rows_all()
+            req(ii)
+            if(length(ii)>0) {
+                res <- res[ii,,drop=FALSE]
+                dd <- intersect(res$drug,rownames(score))
+                score = score[dd,,drop=FALSE]
+            }
+        }
+        
+        score = head(score,nterms) ## max number of terms    
+        score = score[,head(order(-colSums(score**2)),nfc),drop=FALSE] ## max comparisons/FC        
         score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
-        d1 <- as.dist(1-cor(t(score),use="pairwise"))
-        d2 <- as.dist(1-cor(score,use="pairwise"))
-        d1[is.na(d1)] <- 1
-        d2[is.na(d2)] <- 1
-        jj=1;ii=1:nrow(score)
-        ii <- hclust(d1)$order
-        jj <- hclust(d2)$order
-        score <- score[ii,jj,drop=FALSE]
+
+        if(NCOL(score)>1) {
+            d1 <- as.dist(1-cor(t(score),use="pairwise"))
+            d2 <- as.dist(1-cor(score,use="pairwise"))
+            d1[is.na(d1)] <- 1
+            d2[is.na(d2)] <- 1
+            jj=1;ii=1:nrow(score)
+            ii <- hclust(d1)$order
+            jj <- hclust(d2)$order
+            score <- score[ii,jj,drop=FALSE]
+        } else {
+            score <- score[order(-score[,1]),,drop=FALSE]
+        }
         
         cex2=1
         colnames(score) = substring(colnames(score),1,30)
@@ -447,7 +459,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         score2 <- score
         if(input$dr_normalize) score2 <- t( t(score2) / apply(abs(score2),2,max)) 
         score2 <- sign(score2) * abs(score2/max(abs(score2)))**3   ## fudging
-
+        
         par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1,0,0))
         require(corrplot)
         corrplot( score2, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
