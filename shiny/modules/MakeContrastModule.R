@@ -84,6 +84,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
 
                 genes <- rownames(countsRT())
                 phenotypes <- c(sort(unique(colnames(phenoRT()))),"<samples>","<gene>")
+                phenotypes <- grep("_vs_",phenotypes,value=TRUE,invert=TRUE) ## no comparisons...
                 psel <- c(grep("sample|patient|name|id|^[.]",phenotypes,value=TRUE,
                                invert=TRUE), phenotypes)[1]
                 psel
