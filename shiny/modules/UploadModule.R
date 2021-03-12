@@ -259,8 +259,20 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 ## Monitor for changes in the contrast matrix and if
                 ## so replace the uploaded reactive values.
                 ##
-                ct <- modified_ct()
-                uploaded$contrasts.csv <- ct
+                modct <- modified_ct()
+                message("[observe:modified_ct()] dim(modct$contr) = ",dim(modct$contr))
+                uploaded$contrasts.csv <- modct$contr
+                uploaded$samples.csv <- modct$pheno
+
+                ## if(0 && !is.null(modct$pheno)) {
+                ##     message("[observe:modified_ct()] updating samples with cond ")
+                ##     jj <- which(!colnames(modct$cond) %in% uploaded$samples.csv)
+                ##     if(length(jj)) {
+                ##         new.samples <- cbind(uploaded$samples.csv, modct$cond[,jj,drop=FALSE])
+                ##         uploaded$samples.csv   <- new.samples
+                ##     }
+                ## }
+
             })
 
             upload_ok <- reactive({
@@ -429,15 +441,17 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     return(NULL)
                 }
                 
-                require(inspectdf)
-                req(uploaded$contrasts.csv, uploaded$samples.csv)
-                pheno     <- uploaded$samples.csv
+                req(uploaded$contrasts.csv)
                 contrasts <- uploaded$contrasts.csv
-                
-                ## convert to experiment matrix if not already...
-                if(!all(rownames(contrasts)==rownames(pheno))) {
-                    contrasts <- pgx.expMatrix(pheno, contrasts)
+                if(0) {
+                    req(uploaded$samples.csv)                
+                    pheno     <- uploaded$samples.csv
+                    ## convert to experiment matrix if not already...
+                    if(!all(rownames(contrasts)==rownames(pheno))) {
+                        contrasts <- pgx.expMatrix(pheno, contrasts)
+                    }
                 }
+
                 ##contrasts <- sign(contrasts)
                 ##df <- contrastAsLabels(contrasts)
                 df <- contrasts
@@ -446,6 +460,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 tt2 <- paste(nrow(contrasts),"samples x",ncol(contrasts),"contrasts")
                 ##tt2 <- paste(ncol(contrasts),"contrasts")
 
+                require(inspectdf)
                 p1 <- df %>% inspect_cat() %>% show_plot()                    
                 p1 <- p1 + ggtitle("CONTRASTS", subtitle=tt2) +
                     theme(
@@ -512,7 +527,9 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     ## from the files.
                     ##
                     ii <- grep("csv$",input$upload_files$name)
-                    ii <- grep("samples|counts|contrasts|expression",input$upload_files$name)
+                    ii <- grep("sample|count|contrast|expression",input$upload_files$name)
+                    if(length(ii)==0) return(NULL)
+                    
                     inputnames  <- input$upload_files$name[ii]
                     uploadnames <- input$upload_files$datapath[ii]
                     if(length(uploadnames)>0) {
@@ -521,34 +538,41 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                             fn2 <- uploadnames[i]
                             matname <- NULL
                             df <- NULL
-                            if(grepl("counts",fn1)) {
+                            if(grepl("count",fn1)) {
                                 ## allows duplicated rownames
-                                df0 <- read.csv(fn2, check.names=FALSE, stringsAsFactors=FALSE)
-                                df <- as.matrix(df0[,-1])
-                                rownames(df) <- as.character(df0[,1])
-                                matname <- "counts.csv"
+                                df0 <- read.csv2(fn2, check.names=FALSE, stringsAsFactors=FALSE)
+                                if(nrow(df0)>1 && NCOL(df0)>1) {
+                                    df <- as.matrix(df0[,-1])
+                                    rownames(df) <- as.character(df0[,1])
+                                    matname <- "counts.csv"
+                                }
                             } else if(grepl("expression",fn1)) {
                                 ## allows duplicated rownames
-                                df0 <- read.csv(fn2, check.names=FALSE, stringsAsFactors=FALSE)
-                                df <- as.matrix(df0[,-1])
-                                rownames(df) <- as.character(df0[,1])
-                                ## convert expression to pseudo-counts
-                                message("[UploadModule::upload_files] converting expression to counts...")
-                                df <- 2**df
-                                matname <- "counts.csv"
-                            } else if(grepl("samples",fn1)) {
-                                df <- read.csv(fn2, row.names=1, check.names=FALSE,
+                                df0 <- read.csv2(fn2, check.names=FALSE, stringsAsFactors=FALSE)
+                                if(nrow(df0)>1 && NCOL(df0)>1) {
+                                    df <- as.matrix(df0[,-1])
+                                    rownames(df) <- as.character(df0[,1])
+                                    ## convert expression to pseudo-counts
+                                    message("[UploadModule::upload_files] converting expression to counts...")
+                                    df <- 2**df
+                                    matname <- "counts.csv"
+                                }
+                            } else if(grepl("sample",fn1)) {
+                                df <- read.csv2(fn2, row.names=1, check.names=FALSE,
                                                stringsAsFactors=FALSE)
-                                matname <- "samples.csv"
-                            } else if(grepl("contrasts",fn1)) {
-                                df <- read.csv(fn2, row.names=1, check.names=FALSE,
-                                               stringsAsFactors=FALSE)
-                                matname <- "contrasts.csv"
+                                if(nrow(df)>1 && NCOL(df)>=1) {
+                                    matname <- "samples.csv"
+                                }
+                            } else if(grepl("contrast",fn1)) {
+                                df <- read.csv2(fn2, row.names=1, check.names=FALSE,
+                                                stringsAsFactors=FALSE)
+                                if(nrow(df)>1 && NCOL(df)>=1) {
+                                    matname <- "contrasts.csv"
+                                }
                             }
-                            if(is.null(matname)) {
-                                stop("[UploadModule::upload_files] FATAL ERROR")
+                            if(!is.null(matname)) {
+                                matlist[[matname]] <- df
                             }
-                            matlist[[matname]] <- df
                         }
                     }            
                 }
@@ -639,31 +663,44 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     if(status["contrasts.csv"]=="OK" && status["samples.csv"]=="OK") {
                         samples1   <- uploaded[["samples.csv"]]
                         contrasts1 <- uploaded[["contrasts.csv"]]
-
                         old1 = ("group" %in% colnames(samples1) &&
                                 nrow(contrasts1) < nrow(samples1))
                         old2 = all(rownames(contrasts1)==rownames(samples1)) &&
                             all(unique(as.vector(contrasts1)) %in% c(-1,0,1,NA))
                         old.style <- old1 || old2
                         if(old.style  && old1) {
-                            message("[UploadModule] WARNING: converting old style contrast to new format")
-                            new.contrasts <- contrastAsLabels(contrasts1)
-                            new.contrasts <- new.contrasts[samples1$group,,drop=FALSE]
-                            rownames(new.contrasts) <- rownames(samples1)
+                            message("[UploadModule] WARNING: converting old1 style contrast to new format")
+                            new.contrasts <- samples1[,0]
+                            if(NCOL(contrasts1)>0) {
+                                new.contrasts <- contrastAsLabels(contrasts1)
+                                new.contrasts <- new.contrasts[samples1$group,,drop=FALSE]
+                                rownames(new.contrasts) <- rownames(samples1)
+                            }
                             contrasts1 <- new.contrasts
                         }
-                        if(old.style  && old2) {
-                            message("[UploadModule] WARNING: converting old style contrast to new format")
-                            new.contrasts <- contrastAsLabels(contrasts1)
+                        if(old.style  && old2 ) {
+                            message("[UploadModule] WARNING: converting old2 style contrast to new format")
+                            new.contrasts <- samples1[,0]
+                            if(NCOL(contrasts1)>0) {
+                                new.contrasts <- contrastAsLabels(contrasts1)
+                                rownames(new.contrasts) <- rownames(samples1)
+                            }
                             contrasts1 <- new.contrasts
                         }
 
-                        ## always clean up
-                        contrasts1 <- apply(contrasts1,2,as.character)
-                        rownames(contrasts1) <- rownames(samples1)
-                        for(i in 1:ncol(contrasts1)) {
-                            isz = (contrasts1[,i] %in% c(NA,"NA","NA ",""," ","  ","   "," NA"))
-                            if(length(isz)) contrasts1[isz,i] <- NA
+                        message("[UploadModule] 1 : dim.contrasts1 = ",dim(contrasts1))
+                        if(NCOL(contrasts1)>0) {
+                            ## always clean up
+                            contrasts1 <- apply(contrasts1,2,as.character)
+                            message("[UploadModule] 2 : dim.contrasts1 = ",dim(contrasts1))
+                            rownames(contrasts1) <- rownames(samples1)
+                            message("[UploadModule] 3 : dim.contrasts1 = ",dim(contrasts1))
+                            for(i in 1:ncol(contrasts1)) {
+                                isz = (contrasts1[,i] %in% c(NA,"NA","NA ",""," ","  ","   "," NA"))
+                                if(length(isz)) contrasts1[isz,i] <- NA
+                            }
+                        } else {
+                            ## contrasts1 <- NULL
                         }
 
                         uploaded[["contrasts.csv"]] <- contrasts1

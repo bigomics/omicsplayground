@@ -619,6 +619,16 @@ dbg.BAK <- function(... ) {
 
 
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
+read.csv2 <- function(file, ...)
+{
+    ## automatically determine seperator
+    line1 <- as.character(read.csv(file, sep=NULL,nrow=1)[1,])
+    sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))
+    sep
+    read.csv(file, sep=sep, ...)
+}
+
+##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
 fread.csv <- function(file, check.names=FALSE, row.names=1,
                       stringsAsFactors=FALSE, header=TRUE, asMatrix=TRUE)
 {
