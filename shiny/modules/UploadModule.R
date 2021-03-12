@@ -741,10 +741,8 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                         
                     }
 
-
                     message("[checkTables] 5 :")
 
-                    
                     MAXSAMPLES   = 25
                     MAXCONTRASTS = 5
                     MAXSAMPLES   = as.integer(max.limits["samples"])
