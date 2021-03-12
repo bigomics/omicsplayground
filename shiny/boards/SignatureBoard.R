@@ -81,6 +81,7 @@ infotext =
                    "Paste a list of signature genes.", placement="top",
                    options = list(container = "body")),
             ## textAreaInput("genelistDN", "Signature (down):", rows=6, placeholder="Paste your gene list")
+            br(),
             tipify(actionButton(ns("example2"),"[apoptosis] ", style=style0),
                    "Use the list of genes involved in apoptosis as a signature."),
             tipify(actionButton(ns("example1"),"[immune_chkpt] ", style=style0),
