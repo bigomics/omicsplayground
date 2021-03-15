@@ -10,8 +10,8 @@ the Omics Playground. These are just examples and you need to extract
 and modify the parts you used and need.
 
 
-Batch correction (only if needed)
-----------------------------------
+Batch correction 
+-----------------
 
 Batch effects, or contamination by unwanted variables, was identified
 by an F-test for the first three principal components. Continuous
@@ -19,8 +19,8 @@ variables were dichotomized into high/low before testing. Highly
 confounding variables would appear as having high relative
 contribution in the first or second principal component, often higher
 than the variable of interest. Batch effects were also visually
-assessed using annotated heatmaps and t-SNE plots colored by
-variables.
+assessed (before and after correction) using annotated heatmaps and
+t-SNE plots colored by variables.
 
 [Setting: 'low'] Batch correction was performed for explicit batch
 variables or unwanted covariates. Parameters with a correlation r>0.3
