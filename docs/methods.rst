@@ -4,9 +4,47 @@
 Methods
 ================================================================================
 
+
 Below are snippets that you can use to describe the methods when using
 the Omics Playground. These are just examples and you need to extract
 and modify the parts you used and need.
+
+
+Batch correction (only if needed)
+----------------------------------
+
+Batch effects, or contamination by unwanted variables, was identified
+by an F-test for the first three principal components. Continuous
+variables were dichotomized into high/low before testing. Highly
+confounding variables would appear as having high relative
+contribution in the first or second principal component, often higher
+than the variable of interest. Batch effects were also visually
+assessed using annotated heatmaps and t-SNE plots colored by
+variables.
+
+[Setting: 'low'] Batch correction was performed for explicit batch
+variables or unwanted covariates. Parameters with a correlation r>0.3
+with any of variables of interest (i.e. the model parameters) were
+omitted from the regression. Correction was performed by regressing
+out the covariate using the 'removeBatchEffect' function in the limma
+R/Bioconductor package.
+
+[Setting: 'medium'] Additional batch correction was performed for for
+intrinsic technical parameters such as library size (i.e. total
+counts), mitochondrial and ribosomal proportions, cell cycle and
+gender. These parameters were estimated from the data. The cell cycle
+was estimated using the Seurat R/Bioconductor package. Gender (if not
+given) was estimated by checking the absence/presence of expression of
+gender specific genes on the X/Y chromosome. Parameters with a
+correlation r>0.3 with any of the model parameters were omitted from
+the regression. Correction was performed by regressing out the
+covariate using the 'removeBatchEffect' function in the limma
+R/Bioconductor package.
+
+[Setting: 'high'] Unsupervised batch correction was performed using
+'surrogate variable analysis' (SVA) (Leek 2007) by estimating the
+latent surrogate variables and regressing out using the
+'removeBatchEffect' function in the limma R/Bioconductor package.
 
 
 Clustering
@@ -45,9 +83,6 @@ was taken as aggregate q-value, which corresponds to taking the
 intersection of significant genes from all three tests.
 
 
-Functional analysis
----------------------------
-
 Statistical testing of differential enrichment of genesets was
 performed using an aggregation of multiple statistical methods:
 Fisher's exact test, fGSEA (Korotkevich 2019), Camera (Wu 2012) and
@@ -63,6 +98,9 @@ various public databases including: MSigDB (Subramanian 2005; Liberzon
 and Genomes (KEGG) (Kanehisa 2000).
 
 
+Functional analysis
+---------------------------
+
 Graph-weighted GO analysis. The enrichment score of a GO term was
 defined as the sum of q-weighted average fold-changes, (1-q)*logFC, of
 the GO term and all its higher order terms along the shortest path to
@@ -73,6 +111,10 @@ term with evidence that is corroborated by its parents in the GO graph
 and therefore provides a more robust estimate of enrichment. The
 activation map visualizes the scores of the top-ranked GO terms for
 multiple contrasts as a heatmap.
+
+KEGG pathway visualization was performed using the Pathview
+R/Bioconductor package using the foldchange as node color.
+
 
 
 Scripting and visualization
@@ -88,32 +130,37 @@ Playground version vX.X.X (Akhmedov 2020).
 REFERENCES 
 ---------------------------
 
-Love MI, Huber W, Anders S (2014). “Moderated estimation of fold
-change and dispersion for RNA-seq data with DESeq2.” Genome Biology,
-15, 550.
-
-Robinson MD, McCarthy DJ, Smyth GK (2010). “edgeR: a Bioconductor
-package for differential expression analysis of digital gene
-expression data.” Bioinformatics, 26(1), 139-140.
-
-Ritchie ME, Phipson B, Wu D, Hu Y, Law CW, Shi W, Smyth GK
-(2015). “limma powers differential expression analyses for
-RNA-sequencing and microarray studies.” Nucleic Acids Research, 43(7)
-
-Ashburner et al. Gene ontology: tool for the unification of
-biology. Nat Genet. May 2000;25(1):25-9.
-
-Kanehisa, M. and Goto, S.; KEGG: Kyoto Encyclopedia of Genes and
-Genomes. Nucleic Acids Res. 28, 27-30 (2000).
-
 Akhmedov M, Martinelli A, Geiger R and Kwee I. Omics Playground: A
 comprehensive self-service platform forvisualization, analytics and
 exploration of Big Omics Data. NAR Genomics and Bioinformatics, Volume
 2, Issue 1, March 2020,
 
+Ashburner et al. Gene ontology: tool for the unification of
+biology. Nat Genet. May 2000;25(1):25-9.
+
+
+Huber W, et al. (2015) Orchestrating high-throughput genomic analysis
+with Bioconductor. Nature Methods 12:115-121; doi:10.1038/nmeth.3252
+
+Kanehisa, M. and Goto, S.; KEGG: Kyoto Encyclopedia of Genes and
+Genomes. Nucleic Acids Res. 28, 27-30 (2000).
+
+Leek J., Storey J. Capturing heterogeneity in gene expression studies
+by ‘surrogate variable analysis’ PLoS Genet. 2007
+
+Love MI, Huber W, Anders S (2014). “Moderated estimation of fold
+change and dispersion for RNA-seq data with DESeq2.” Genome Biology,
+15, 550.
+
 R Core Team (2013). R: A language and environment for statistical
 computing. R Foundation for Statistical Computing, Vienna, Austria.
 URL http://www.R-project.org/.
 
-Huber W, et al. (2015) Orchestrating high-throughput genomic analysis
-with Bioconductor. Nature Methods 12:115-121; doi:10.1038/nmeth.3252
+Ritchie ME, Phipson B, Wu D, Hu Y, Law CW, Shi W, Smyth GK
+(2015). “limma powers differential expression analyses for
+RNA-sequencing and microarray studies.” Nucleic Acids Research, 43(7)
+
+
+Robinson MD, McCarthy DJ, Smyth GK (2010). “edgeR: a Bioconductor
+package for differential expression analysis of digital gene
+expression data.” Bioinformatics, 26(1), 139-140.
