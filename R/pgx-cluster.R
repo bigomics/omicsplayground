@@ -336,8 +336,9 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
             nb = pmax(min(dimx[2]/4,perplexity),2)
             pos <- uwot::umap( t(X[,]),
                               n_components = 2,
-                              local_connectivity = nb,
-                              n_neighbors = nb
+                              n_neighbors = nb,
+                              local_connectivity = ceiling(nb/15),
+                              min_dist = 0.1
                               )
         } else {
             require(umap)
@@ -359,8 +360,10 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
             nb = pmax(min(dimx[2]/4,perplexity),2)
             pos <- uwot::umap( t(X[,]),
                               n_components = 3,
-                              local_connectivity = nb,
-                              n_neighbors = nb )
+                              n_neighbors = nb,                              
+                              local_connectivity = ceiling(nb/15),
+                              min_dist = 0.1
+                              )
             
         } else {
             require(umap)
@@ -468,20 +471,22 @@ pgx.clusterMatrix <- function(X, perplexity=30, dims=c(2,3),
         if(2 %in% dims) {
             pos2 = uwot::umap(
                 t(X),
-                n_neighbors = perplexity,
-                local_connectivity = perplexity,
                 n_components = 2,
-                metric = "euclidean"
-            )
+                metric = "euclidean",
+                n_neighbors = perplexity,                              
+                local_connectivity = ceiling(perplexity/15),
+                min_dist = 0.1
+                )
             colnames(pos2) <- c("umap_1","umap_2")
         }
         if(3 %in% dims) {
             pos3 = uwot::umap(
                 t(X),
-                n_neighbors = perplexity,
-                local_connectivity = perplexity,                
                 n_components = 3,
-                metric = "euclidean"
+                metric = "euclidean",
+                n_neighbors = perplexity,                              
+                local_connectivity = ceiling(perplexity/15),
+                min_dist = 0.1
             )
             colnames(pos3) <- c("umap_1","umap_2","umap_3")
         }
