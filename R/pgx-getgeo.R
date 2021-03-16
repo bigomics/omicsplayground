@@ -275,6 +275,7 @@ pgx.getGEOcounts.archs4 <- function(id, h5.file)
 }
 
 
+id="GSE10846"
 pgx.getGEOcounts.recount <- function(id)
 {
     ## Vignette recount-quickstart.html

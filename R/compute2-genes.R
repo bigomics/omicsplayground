@@ -86,16 +86,9 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     ##is.expmatrix <- all(rownames(contr.matrix)==rownames(pgx$samples))
     is.expmatrix <- all(rownames(contr.matrix) %in% rownames(pgx$samples))
     is.expmatrix
-    message("[compute.testGenesSingleOmics] 3 : is.expmatrix = ", is.expmatrix)
-    message("[compute.testGenesSingleOmics] 3 : contr[,1] = ",
-            paste(contr.matrix[,1],collapse=" "))
-
     if(!is.expmatrix) {
         stop("[compute.testGenesSingleOmics] FATAL: contrast must be sample-wise")
     }
-
-    message("[compute.testGenesSingleOmics] 3 : use.design = ", use.design)
-    message("[compute.testGenesSingleOmics] 3 : prune.samples = ", prune.samples)
 
     stat.group = NULL
     if(use.design) {
@@ -130,14 +123,9 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     ## normalize contrast matrix to zero mean and signed sums to one
     ##-----------------------------------------------------------------------------
     message("[compute.testGenesSingleOmics] pruning unused contrasts")
-    message("[compute.testGenesSingleOmics] dim(ct.mat) = ",
-            paste(dim(contr.matrix),collapse="x"))
     
     ## take out any empty comparisons
     sel <- which(colSums(contr.matrix>0) & colSums(contr.matrix<0))
-
-    message("[compute.testGenesSingleOmics] sel = ", paste(sel,collapse=" "))
-
     contr.matrix <- contr.matrix[,sel,drop=FALSE]
     contr.matrix[is.na(contr.matrix)] <- 0
     
