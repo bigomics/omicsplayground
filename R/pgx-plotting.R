@@ -1795,7 +1795,7 @@ pgx.scatterPlotXY <- function(..., plotlib="base") {
 
 ##col=NULL;cex=NULL;cex.title=1.3;zoom=1;legend=TRUE;bty='n';hilight=NULL
 pgx._scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
-                                    zlim=NULL, zlog=FALSE, softmax=FALSE, pch=20,
+                                    zlim=NULL, zlog=FALSE, zsym=FALSE, softmax=FALSE, pch=20,
                                     cex=NULL, cex.lab=0.8, cex.title=1.2, cex.legend=1,
                                     zoom=1, legend=TRUE, bty='o', legend.ysp=0.85,
                                     xlab = NULL, ylab=NULL, hilight2=hilight,
@@ -1930,7 +1930,12 @@ pgx._scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title=""
             z1 <- (z - min(zlim)) / diff(zlim)
             z1 <- pmin(pmax(z1,0),1) ## clip
         } else {
-            z1 <- (z - min(z,na.rm=TRUE)) / diff(range(z,na.rm=TRUE))
+            if(zsym) {
+                dz <- max(abs(z),na.rm=TRUE)
+                z1 <- (z + dz) / (2*dz)
+            } else {
+                z1 <- (z - min(z,na.rm=TRUE)) / diff(range(z,na.rm=TRUE))
+            }
         }
         if(softmax) z1 <- 0.5*(tanh(4*(z1-0.5))+1)
         cpal <- rev(viridis(11))
@@ -1976,6 +1981,7 @@ pgx._scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title=""
         if(legend) {
             zr <- range(z,na.rm=TRUE)
             if(!is.null(zlim)) zr <- zlim
+            if(zsym) zr <- c(-1,1)*max(abs(z),na.rm=TRUE)
             if(zlog) zr <- round(10**zr-1)  ##???
             zr <- 0.01 * c(ceiling(100*zr[1]), floor(100*zr[2])) ## round
             legend("bottomleft", cex=0.8, ## text.width=2,
@@ -1991,7 +1997,7 @@ pgx._scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title=""
 pgx._scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NULL,
                                    cex.lab=0.7, cex.title=1.2, cex.clust=1.5, cex.legend=1,
                                    zoom=1, legend=TRUE, bty='n', hilight=NULL, 
-                                   zlim=NULL, zlog=FALSE, softmax=FALSE,
+                                   zlim=NULL, zlog=FALSE, softmax=FALSE, zsym=FALSE, 
                                    xlab = NULL, ylab=NULL, hilight2=hilight,
                                    opacity=1, label.clusters=FALSE, labels=NULL,
                                    legend.ysp=0.85, legend.pos = "bottomleft",
@@ -2207,14 +2213,20 @@ pgx._scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
     ## Plot the continous variables    
     if(type=="numeric") {
         z <- as.numeric(var)
-        if(!is.null(zlim)) {
-            z1 <- (z - min(zlim)) / diff(zlim)
-            z1 <- pmin(pmax(z1,0),1) ## clip
-        } else {
-            z1 <- (z - min(z,na.rm=TRUE)) / diff(range(z,na.rm=TRUE))
-        }
-        ## z1 is [0:1] scaled variable
-        if(softmax) z1 <- 0.5*(tanh(4*(z1-0.5))+1)
+        z1 <- NULL
+        ## if(!is.null(zlim)) {
+        ##     z1 <- (z - min(zlim)) / diff(zlim)
+        ##     z1 <- pmin(pmax(z1,0),1) ## clip
+        ## } else {
+        ##     if(zsym) {
+        ##         dz <- max(abs(z),na.rm=TRUE)
+        ##         z1 <- (z + dz) / (2*dz)
+        ##     } else {
+        ##         z1 <- (z - min(z,na.rm=TRUE)) / diff(range(z,na.rm=TRUE))
+        ##     }
+        ## }
+        ## ## z1 is [0:1] scaled variable
+        ## if(softmax) z1 <- 0.5*(tanh(4*(z1-0.5))+1)
         cpal <- rev(viridis(11))
         cpal <- rev(brewer.pal(11,"RdYlBu"))
         if(opacity<1) {
@@ -2285,8 +2297,7 @@ pgx._scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
                       ##legend.position = c(0.22, 0.02),
                       ##legend.background = element_rect(fill=scales::alpha("white",0.5)),
                       legend.background = element_blank(),
-                      legend.key = element_blank()) 
-            
+                      legend.key = element_blank())             
             ##legend("bottomleft", cex=0.8, ## text.width=2,
             ##       y.intersp=0.25, x.intersp=0.5, border=NA, bty=bty,
             ##       fill=rev(cpal), legend=c(xmax,rep(NA,9),xmin), )
@@ -2465,13 +2476,15 @@ pgx._scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
     ## Plot the continous variables    
     if(type=="numeric") {
         z <- as.numeric(var)
-        if(!is.null(zlim)) {
-            z1 <- (z - min(zlim)) / diff(zlim)
-            z1 <- pmin(pmax(z1,0),1) ## clip
-        } else {
-            z1 <- (z - min(z,na.rm=TRUE)) / diff(range(z,na.rm=TRUE))
-        }
-        if(softmax) z1 <- 0.5*(tanh(4*(z1-0.5))+1)
+        z1 <- NULL
+        ## if(!is.null(zlim)) {
+        ##     z1 <- (z - min(zlim)) / diff(zlim)
+        ##     z1 <- pmin(pmax(z1,0),1) ## clip
+        ## } else {
+        ##     z1 <- (z - min(z,na.rm=TRUE)) / diff(range(z,na.rm=TRUE))
+        ## }
+        ## if(softmax) z1 <- 0.5*(tanh(4*(z1-0.5))+1)
+
         cpal <- rev(viridis(11))
         cpal <- rev(brewer.pal(11,"RdYlBu"))
         if(opacity<1) {
