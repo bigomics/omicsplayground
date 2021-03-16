@@ -52,6 +52,7 @@ source(file.path(RDIR,"gx-util.r"))
        
 source(file.path(RDIR,"gset-gsea.r"))
 source(file.path(RDIR,"gset-fisher.r"))
+source(file.path(RDIR,"gset-rankcor.r"))
 source(file.path(RDIR,"gset-meta.r"))
 
 source(file.path(RDIR,"ngs-cook.r"))
