@@ -77,10 +77,11 @@ infotext =
                    "Show more information about this module"),
             hr(), br(),
             tipify(textAreaInput(ns("genelistUP"), "Genes:", value = IMMCHECK.GENES,
-                                 rows=10, placeholder="Paste your gene list"),
+                                 rows=15, placeholder="Paste your gene list"),
                    "Paste a list of signature genes.", placement="top",
                    options = list(container = "body")),
             ## textAreaInput("genelistDN", "Signature (down):", rows=6, placeholder="Paste your gene list")
+            br(),
             tipify(actionButton(ns("example2"),"[apoptosis] ", style=style0),
                    "Use the list of genes involved in apoptosis as a signature."),
             tipify(actionButton(ns("example1"),"[immune_chkpt] ", style=style0),
@@ -530,19 +531,24 @@ infotext =
         gsea <- sigCalculateGSEA()
         if(is.null(gsea)) return(NULL)
         
-        F <- as.matrix(gsea$F)
+
+        ## filter with table selection/search
+        ii  <- enrichmentByContrastTable$rows_all()
+        req(ii)
+        ct <- rownames(gsea$output)[ii]
+        F <- as.matrix(gsea$F[,ct,drop=FALSE])
+        qv <- gsea$output[ct,"q"]
         gset <- gsea$gset
-        qv <- gsea$output[,"q"]
         
         require(gplots)
         cex.main=1.1
-        par(mfrow=c(5,3), mar=c(0.3,4,3,1), mgp=c(2.2,0.8,0) )
-        if(ncol(F)>15) {
-            par(mfrow=c(6,5), mar=c(0.2,2,3,0.6))
+        par(mfrow=c(4,3), mar=c(0.3,4,3,1), mgp=c(2.2,0.8,0) )
+        if(ncol(F)>12) {
+            par(mfrow=c(5,4), mar=c(0.2,2,3,0.6))
             cex.main=0.9
         }
         ## if(ncol(F)>24) par(mfrow=c(7,5), mar=c(1,2,2.5,0.6))
-        for(i in 1:min(30,ncol(F))) {
+        for(i in 1:min(20,ncol(F))) {
             f <- colnames(F)[i]
             tt <- sub(".*\\]","",f)
             tt <- breakstring(substring(tt,1,50),28,force=TRUE)
@@ -570,8 +576,10 @@ infotext =
         plotlib="base",
         info.text = enplots_info,
         options = enplots.opts,
-        pdf.width=8, pdf.height=8,
-        height = c(fullH-80,750), res=c(90,90)
+        pdf.width=10, pdf.height=8,
+        height = c(fullH-80,750),
+        width = c('100%',1000),
+        res=c(90,90)
     )
 
     output$enplots_UI <- renderUI({

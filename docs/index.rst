@@ -43,6 +43,12 @@
     #examples/proteomic_data
 
 .. toctree::
+    :maxdepth: 2
+    :caption: Methods
+
+    methods
+
+.. toctree::
     :maxdepth: 1
     :caption: About
 

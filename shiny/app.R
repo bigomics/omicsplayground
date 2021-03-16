@@ -12,7 +12,6 @@
 library(shiny)
 library(shinyjs)
 library(shinyWidgets)
-library(waiter)
 library(plotly)
 library(shinybusy)
 
@@ -20,6 +19,7 @@ message("\n\n")
 message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
 message("###############################################################")
+
 
 message("\n")
 message("************************************************")
@@ -71,6 +71,7 @@ message("\n")
 message("************************************************")
 message("************* parsing OPTIONS file *************")
 message("************************************************")
+
 
 options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
@@ -292,7 +293,6 @@ server = function(input, output, session) {
 
         message("[MAIN] reconfiguring menu done.")        
     })
-    waiter_hide()
 }
 
 ## --------------------------------------------------------------------
@@ -357,25 +357,23 @@ createUI <- function(tabs)
         firebase::useFirebase(),
         TAGS.JSSCRIPT,
         tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
-        use_waiter(),
         div(textOutput("current_dataset"),class='current-data')
         ##QuestionBoard_UI("qa")
     )
     names(header) <- NULL
     
-    busy.img = sample(dir("www/busy",pattern="gif",full.name=TRUE))[1]
+    busy.img = sample(dir("www/busy",pattern=".gif$",full.name=TRUE))[1]
     busy.img
+    busy.img = "www/busy.gif"
     footer.gif = tagList(
         busy_start_up(
-            text = "\nPrepping your yard for Omics Playground...", mode = "auto",
-            ## background="#1967be", color="#ffffff",
+            text = "\nPrepping your Omics Playground...", mode = "auto",
+            background="#2780e3", color="#ffffff",
             loader = img(src=base64enc::dataURI(file=busy.img))
-            ##loader = img(src=base64enc::dataURI(file="www/busy/banana.gif"), width = 250)
-            ##loader = img(src=base64enc::dataURI(file="www/busy/playground.gif"), width=500)
         )
     )
-    footer = waiter_show_on_load(html = spin_wave(),color = "#1967be")
-    if(runif(1) < 0.1) footer = footer.gif ## every now and then show easter egg..
+    ## if(runif(1) < 0.1)
+    footer = footer.gif ## every now and then show easter egg..
     
     ##-------------------------------------
     ## create TAB list
@@ -406,8 +404,7 @@ createUI <- function(tabs)
    
     ## add help menu
     tablist[["helpmenu"]] <- help.tabs
-    ## if(SHINYPROXY)
-    {
+    if(SHINYPROXY) {
         tablist[["logout"]] <- logout.tab
     }
     

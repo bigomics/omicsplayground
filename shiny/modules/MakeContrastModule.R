@@ -56,7 +56,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             
             message("*** MakeContrastServer ***")
             ns <- session$ns
-            rv <- reactiveValues(contr=NULL)
+            rv <- reactiveValues(contr=NULL, pheno=NULL)
             
             observe({
                 if(is.null(phenoRT()) || is.null(contrRT())) {
@@ -64,17 +64,15 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                     ## return(NULL)
                 }
                 req(phenoRT(), contrRT())
-                message("[MakeContrastServer] observer1 : reacted")
                 ## rv$contr <- pgx.expMatrix(phenoRT(), contrRT())
                 ## new.contr <- makeContrastsFromLabelMatrix(contrRT())
                 new.contr <- contrRT()                
-                message("[MakeContrastServer] observer1 : ct1 = ", paste(new.contr[,1],collapse=' '))
                 rv$contr <- new.contr
+                rv$pheno <- phenoRT()
             })
             
             observe({
                 req(phenoRT())
-                message("[MakeContrastServer] observer2 : reacted")
                 px <- colnames(phenoRT())
                 updateSelectInput(session, "pcaplot.colvar", choices=px)
                 updateSelectInput(session, "strata", choices=c("<none>",px))
@@ -83,10 +81,12 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             
             output$UI <- renderUI({
                 ns <- session$ns                
-                
-                phenotypes <- sort(unique(c(colnames(phenoRT()),"<samples>")))
-                psel <- c(grep("sample|patient|name|id|^[.]",phenotypes,value=TRUE,invert=TRUE),
-                          phenotypes)[1]
+
+                genes <- rownames(countsRT())
+                phenotypes <- c(sort(unique(colnames(phenoRT()))),"<samples>","<gene>")
+                phenotypes <- grep("_vs_",phenotypes,value=TRUE,invert=TRUE) ## no comparisons...
+                psel <- c(grep("sample|patient|name|id|^[.]",phenotypes,value=TRUE,
+                               invert=TRUE), phenotypes)[1]
                 psel
                 help_text = "Create comparisons by dragging conditions into the group boxes on the right."
                 inline.div <- function(a) {
@@ -106,20 +106,27 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                                 flex = c(1,4),
                                 fillCol(
                                     flex = c(NA,NA,NA,NA,1),
-                                    tipify2(
-                                        selectInput(ns("param"), "Phenotype:", choices=phenotypes,
-                                                    selected=psel, multiple=TRUE),
-                                        "Select phenotype(s) to create conditions for making your groups."
+                                    tipifyL(
+                                        selectInput(ns("param"), "Phenotype:",
+                                                    choices = phenotypes, selected= psel,
+                                                    multiple = FALSE),
+                                        "Select the phenotype to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names."
                                     ),
-                                    tipify2(
+                                    conditionalPanel(
+                                        "input.param == '<gene>'", ns=ns,
+                                        ##tipifyL(                                    
+                                        selectInput(ns("gene"), "Gene:", choices=genes, multiple=FALSE),
+                                        ##"Select gene to divide your samples into high and low expression of that gene.")
+                                    ),
+                                    br(),
+                                    tipifyL(
                                         textInput(ns("newname"), "Comparison name:",
                                                   placeholder="e.g. MAIN_vs_CONTROL"),
                                         "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups."),
                                     br(),
-                                    tipify2(
-                                        actionButton(ns("addcontrast"),"add comparison", icon=icon("plus")),
-                                        "After creating the groups, press this button to add the comparison to the table."
-                                    ),
+                                    ## tipifyL(
+                                    actionButton(ns("addcontrast"),"add comparison", icon=icon("plus")),
+                                    ##"After creating the groups, press this button to add the comparison to the table."a),
                                     br()
                                 ),
                                 tipify(
@@ -161,7 +168,14 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 message("[MakeContrastServer] sel.conditions : reacted")
                 req(phenoRT(),countsRT())
                 df <- phenoRT()
-                df$"<samples>" <- rownames(df)
+                if("<samples>" %in% input$param) {                
+                    df$"<samples>" <- rownames(df)
+                }
+                if("<gene>" %in% input$param) {
+                    gene <- input$gene
+                    gx <- log2(1 + countsRT()[gene,])
+                    df$"<gene>" <- c("low","high")[1 + 1*(gx >= mean(gx,na.rm=TRUE))]
+                }
                 pp <- intersect(input$param, colnames(df))
                 ss <- colnames(countsRT())
                 cond <- apply(df[ss,pp,drop=FALSE],1,paste,collapse="_")
@@ -174,6 +188,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 req(input$param)
                 cond <- sel.conditions()
                 if(length(cond)==0) return(NULL)
+
                 items <- c("<others>",sort(unique(cond)))
                 message("[MakeContrastServer:createcomparison] items=",items)
                 
@@ -222,6 +237,9 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 g2 <- substring(g2,1,20)
                 pp <- paste(input$param,collapse=".")
                 pp <- gsub("[-_.,<> ]","",pp)
+                if(any(input$param %in% '<gene>')) {
+                    pp <- sub("gene",input$gene,pp)
+                }
                 tt <- paste0(pp,":",g1,"_vs_",g2)
                 if(g1=="" && g2=="") tt <- ""
                 updateTextInput(session, "newname", value=tt)
@@ -242,6 +260,8 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             })
             
             observeEvent( input$addcontrast, {
+
+                message("[MakeContrastServer:addcontrast] reacted")
                 
                 cond <- sel.conditions()
                 group1 <- input$group1
@@ -275,17 +295,37 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                     return(NULL)
                 }
                 
+                message("[MakeContrastServer:addcontrast] update reactive values : 1")
+
                 ## update reactive value
-                if(!is.null(rv$contr)) {
-                    rv$contr <- cbind(rv$contr, ctx)
-                    colnames(rv$contr)[ncol(rv$contr)] <- ct.name
+                samples = colnames(countsRT())
+                ctx1 <- matrix(ctx, ncol=1, dimnames=list(samples,ct.name))
+                if(is.null(rv$contr)) {
+                    rv$contr <- ctx1
                 } else {
-                    samples <- rownames(phenoRT())
-                    rv$contr <- matrix(ctx, ncol=1, dimnames=list(samples,ct.name))
+                    rv$contr <- cbind(rv$contr, ctx1)
+                }
+
+                message("[MakeContrastServer:addcontrast] update reactive values : 2")
+                message("[MakeContrastServer:addcontrast] ct.name = ",ct.name)
+                message("[MakeContrastServer:addcontrast] ct.name in pheno = ",ct.name %in% colnames(rv$pheno))
+                
+                ##if(any(input$param %in% c('<gene>','<samples>'))) {
+                if(any(input$param %in% c('<gene>'))) {                
+                    if(is.null(rv$pheno) || NCOL(rv$pheno)==0 ) {
+                        rv$pheno <- ctx1
+                    } else {
+                        message("[MakeContrastServer:addcontrast] add to cond : dim(ctx1) = ",dim(ctx1))
+                        if(!ct.name %in% colnames(rv$pheno)) {
+                            rv$pheno <- cbind(rv$pheno, ctx1)
+                        }
+                    }
                 }
                 
+                message("[MakeContrastServer:addcontrast] done!")
+                
             })
-
+            
             observeEvent( input$autocontrast, {
 
                 req(phenoRT())
@@ -442,14 +482,15 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 title="PCA/tSNE plot",
                 ##info.text = hm_PCAplot_text
                 ##caption = pca_caption_static
-            )
+                )
             
-            ##ct <- rv$contr
             return(reactive({
-                if(is.null(rv$contr)) return(NULL)
-                ##contrastAsLabels(rv$contr)
-                rv$contr           ## labeled contrast matrix  
+                if(is.null(rv$contr)) return(NULL)                
+                ##rv$contr           ## labeled contrast matrix
+                ##list( contr=rv$contr, pheno=rv$pheno)
+                rv
             }))  ## pointing to reactive
+            
         } ## end-of-server
     )
     
