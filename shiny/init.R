@@ -41,6 +41,18 @@ if(is.null(ORCA)) {
 tipify2 <- function(...) {
     shinyBS::tipify(..., placement="top", options = list(container = "body"))
 }
+tipifyL <- function(...) {
+    shinyBS::tipify(..., placement="left", options = list(container = "body"))
+}
+tipifyR <- function(...) {
+    shinyBS::tipify(..., placement="right", options = list(container = "body"))
+}
+tipifyT <- function(...) {
+    shinyBS::tipify(..., placement="top", options = list(container = "body"))
+}
+tipifyB <- function(...) {
+    shinyBS::tipify(..., placement="bottom", options = list(container = "body"))
+}
 
 premium.feature <- function(...) {
     message("[premium.feature] USER_MODE = ",USER_MODE)

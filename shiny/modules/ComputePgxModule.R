@@ -69,7 +69,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     br(),
                     fluidRow(
                         column(
-                            9, align="center", offset=1,
+                            12, align="center", offset=0,
                             tags$table(
                                      style="width:100%;vertical-align:top;padding:4px;",
                                      tags$tr(
@@ -110,19 +110,20 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                           )
                                  ),
                             br(),
-                            ##textInput(ns("upload_datatype"),"Datatype:"), br(),
-                            actionButton(ns("compute"),"Compute!",icon=icon("running"),
-                                         class="run-button"),
-                            br(),br(),
-                            actionLink(ns("options"), "Advanced", icon=icon("cog", lib="glyphicon")),
-                            style = ""
+                            div(
+                                actionButton(ns("compute"),"Compute!",icon=icon("running"),
+                                             class="run-button"),
+                                br(),br(),
+                                actionLink(ns("options"), "Advanced",
+                                           icon=icon("cog", lib="glyphicon")),
+                                style = "padding-right: 80px;"
+                            )
                         )
                     ),
                     br(),
                     conditionalPanel(
                         "input.options%2 == 1", ns=ns,
                         fillRow(
-                            div(width=25),
                             wellPanel(
                                 checkboxGroupInput(
                                     ns('filter_methods'),
@@ -184,8 +185,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                     choiceNames = DEV.NAMES,
                                     selected = DEV.SELECTED
                                 )
-                            ),
-                            div(width=25)                            
+                            )
                         ) ## end of fillRow
                     ) ## end of conditional panel
                 ) ## end of fill Col
