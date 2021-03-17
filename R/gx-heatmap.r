@@ -133,7 +133,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         row.annot <- row.annot[jj1,,drop=FALSE]
     }
     if(!is.null(col.annot)) {
-        col.annot <- col.annot[,which(colSums(is.na(col.annot))<1),drop=FALSE]
+        col.annot <- col.annot[,which(colMeans(is.na(col.annot))<1),drop=FALSE]
         col.annot <- col.annot[jj2,,drop=FALSE]
         col.annot <- type.convert(col.annot)
     }

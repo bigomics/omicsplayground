@@ -20,11 +20,11 @@ message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
 message("###############################################################")
 
-
 message("\n")
 message("************************************************")
 message("********* RUNTIME ENVIRONMENT VARIABLES ********")
 message("************************************************")
+
 
 Sys.setlocale("LC_CTYPE","en_US.UTF-8") 
 Sys.setlocale("LC_TIME","en_US.UTF-8")
@@ -108,7 +108,7 @@ source("modules/AuthenticationModule.R",local=src.local)
 source("modules/ComputePgxModule.R",local=src.local)
 source("modules/MakeContrastModule.R",local=src.local)
 source("modules/NormalizeCountsModule.R",local=src.local)
-source("modules/SuperBatchCorrectModule.R",local=src.local)
+source("modules/BatchCorrectModule.R",local=src.local)
 source("modules/UploadModule.R",local=src.local)
 ##source("modules/UsersMapModule.R_")
 

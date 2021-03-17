@@ -12,6 +12,7 @@ viz.PhenoMaps <- function(pgx){}
 viz.PhenoStats <- function(pgx){}
 viz.PhenoStatsBy <- function(pgx, by.pheno){}
 viz.Expression <- function(pgx, pheno, genes){}
+viz.GeneSetEnrichment <- function(pgx, genesets, contrast) {}
 viz.Contrasts <- function(pgx, contrasts){}
 viz.MitoRiboQC <- function(pgx){}
 viz.VHVLusage <- function(pgx) {}
@@ -1090,7 +1091,7 @@ viz.BatchCorrection <- function(pgx, cX, cX2=NULL, phenotype, stat="F",
 }
 
 
-###pos0=pos1=pos2=NULL;npca=3;cex=1;nmax=40;main=c("not-corrected", "corrected","corrected2")
+##cX2=NULL;pos0=pos1=pos2=NULL;npca=3;cex=1;nmax=40;main=c("not-corrected", "corrected","corrected2");pca.heatmap=FALSE
 viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="F", 
                                       pca.heatmap=FALSE, nmax=40, cex=1, 
                                       pos0=NULL, pos1=NULL, pos2=NULL, npca=3,
