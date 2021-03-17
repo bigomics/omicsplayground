@@ -58,18 +58,22 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             ns <- session$ns
             rv <- reactiveValues(contr=NULL, pheno=NULL)
             
+            ##updateSelectizeInput(session, "gene", choices=genes, server=TRUE)
+            
             observe({
-                if(is.null(phenoRT()) || is.null(contrRT())) {
-                    rv$contr <- NULL
-                    ## return(NULL)
-                }
-                req(phenoRT(), contrRT())
-                ## rv$contr <- pgx.expMatrix(phenoRT(), contrRT())
-                ## new.contr <- makeContrastsFromLabelMatrix(contrRT())
-                new.contr <- contrRT()                
-                rv$contr <- new.contr
+                rv$contr <- contrRT()                
+            })
+
+            observe({
                 rv$pheno <- phenoRT()
             })
+            
+            ## observe({
+            ##     counts <- countsRT()
+            ##     if(is.null(counts)) return(NULL)
+            ##     genes <- rownames(counts)
+            ##     updateSelectizeInput(session, "gene", choices=genes, server=TRUE)
+            ## })
             
             observe({
                 req(phenoRT())
@@ -80,9 +84,10 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             
             
             output$UI <- renderUI({
-                ns <- session$ns                
 
-                genes <- rownames(countsRT())
+                ns <- session$ns                
+                genes <- sort(rownames(countsRT()))
+                
                 phenotypes <- c(sort(unique(colnames(phenoRT()))),"<samples>","<gene>")
                 phenotypes <- grep("_vs_",phenotypes,value=TRUE,invert=TRUE) ## no comparisons...
                 psel <- c(grep("sample|patient|name|id|^[.]",phenotypes,value=TRUE,
@@ -115,7 +120,8 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                                     conditionalPanel(
                                         "input.param == '<gene>'", ns=ns,
                                         ##tipifyL(                                    
-                                        selectInput(ns("gene"), "Gene:", choices=genes, multiple=FALSE),
+                                        selectizeInput(ns("gene"), "Gene:", choices=genes,
+                                                       multiple=FALSE),
                                         ##"Select gene to divide your samples into high and low expression of that gene.")
                                     ),
                                     br(),
@@ -166,16 +172,35 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             
             sel.conditions <- reactive({
                 message("[MakeContrastServer] sel.conditions : reacted")
-                req(phenoRT(),countsRT())
+                req(phenoRT(),countsRT())                
                 df <- phenoRT()
+                message("[MakeContrastServer] sel.conditions : dim.df = ",
+                        paste(dim(df),collapse='x'))
+                
                 if("<samples>" %in% input$param) {                
                     df$"<samples>" <- rownames(df)
                 }
                 if("<gene>" %in% input$param) {
                     gene <- input$gene
-                    gx <- log2(1 + countsRT()[gene,])
-                    df$"<gene>" <- c("low","high")[1 + 1*(gx >= mean(gx,na.rm=TRUE))]
+                    if(gene %in% rownames(countsRT())) {
+                        gx <- log2(1 + countsRT()[gene,])
+                        ##df$"<gene>" <- c("low","high")[1 + 1*(gx >= mean(gx,na.rm=TRUE))]
+                        df$"<gene>" <- gx
+                    } else {
+                        return(NULL)
+                    }
                 }
+
+                df <- type.convert(df)
+                ii <- which(sapply(type.convert(df),class) %in% c("numeric","integer"))
+                ii
+                if(length(ii)) {
+                    for(i in ii) {
+                        x = df[,i]
+                        df[,i] <- c("low","high")[1 + 1*(x >= mean(x,na.rm=TRUE))]
+                    }                    
+                }
+                
                 pp <- intersect(input$param, colnames(df))
                 ss <- colnames(countsRT())
                 cond <- apply(df[ss,pp,drop=FALSE],1,paste,collapse="_")
@@ -187,7 +212,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 library(sortable)
                 req(input$param)
                 cond <- sel.conditions()
-                if(length(cond)==0) return(NULL)
+                if(length(cond)==0 || is.null(cond)) return(NULL)
 
                 items <- c("<others>",sort(unique(cond)))
                 message("[MakeContrastServer:createcomparison] items=",items)
@@ -264,6 +289,10 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 message("[MakeContrastServer:addcontrast] reacted")
                 
                 cond <- sel.conditions()
+                message("[MakeContrastServer:addcontrast] len.cond = ",length(cond))
+                message("[MakeContrastServer:addcontrast] cond = ",paste(cond,collapse=' '))
+                if(length(cond)==0 || is.null(cond)) return(NULL)
+                
                 group1 <- input$group1
                 group2 <- input$group2
                 in.main <- 1*(cond %in% group1)
@@ -271,13 +300,15 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 in.ref2 <- ("<others>" %in% group2) & (!cond %in% group1)
                 in.ref  <- in.ref1 | in.ref2                
                 
+                message("[MakeContrastServer:addcontrast] 1 : ")
+
                 ## ctx <- 1*(in.main) - 1*(in.ref)
                 ##ct.name <- paste0(input$group1name,"_vs_",input$group2name)
                 ct.name <- input$newname
                 gr1 <- gsub(".*:|_vs_.*","",ct.name)  ## first is MAIN group!!!
                 gr2 <- gsub(".*_vs_|@.*","",ct.name)                
-                ctx <- c(gr1, gr2)[1*in.main + 2*in.ref]
-
+                ctx <- c(NA,gr1, gr2)[1 + 1*in.main + 2*in.ref]
+                
                 if( sum(in.main)==0 || sum(in.ref)==0 ) {
                     shinyalert("ERROR","Both groups must have samples")
                     return(NULL)
@@ -299,6 +330,11 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
 
                 ## update reactive value
                 samples = colnames(countsRT())
+
+                message("[MakeContrastServer:addcontrast] 1 : samples = ",samples)
+                message("[MakeContrastServer:addcontrast] 1 : ct.name = ",ct.name)
+                message("[MakeContrastServer:addcontrast] 1 : len.ctx = ",length(ctx))
+                
                 ctx1 <- matrix(ctx, ncol=1, dimnames=list(samples,ct.name))
                 if(is.null(rv$contr)) {
                     rv$contr <- ctx1
@@ -307,7 +343,6 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 }
 
                 message("[MakeContrastServer:addcontrast] update reactive values : 2")
-                message("[MakeContrastServer:addcontrast] ct.name = ",ct.name)
                 message("[MakeContrastServer:addcontrast] ct.name in pheno = ",ct.name %in% colnames(rv$pheno))
                 
                 ##if(any(input$param %in% c('<gene>','<samples>'))) {
@@ -358,8 +393,15 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             })
 
             output$contrastTable <- DT::renderDataTable({
+
+                message("[MakeContrastServer:contrastTable] called!")
                 
                 ct <- rv$contr
+
+                message("[MakeContrastServer:contrastTable] is.null(ct) = ",is.null(ct))
+                message("[MakeContrastServer:contrastTable] dim.ct = ",dim(ct))
+                message("[MakeContrastServer:contrastTable] dim.contrRT = ",dim(contrRT()))                
+
                 if(is.null(ct) || NCOL(ct)==0) {
                     df <- data.frame(
                         delete = 0,
@@ -455,10 +497,11 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 clust <- pgx.clusterMatrix(X, dims=2, method=method)
                 names(clust)
 
-                y <- sel.conditions()                
+                cond <- sel.conditions()
+                if(length(cond)==0 || is.null(cond)) return(NULL) 
                 ##par(mar=c(4,1,1,1))
                 pgx.scatterPlotXY(
-                    clust$pos2d, var=y, plotlib="plotly",
+                    clust$pos2d, var=cond, plotlib="plotly",
                     legend = FALSE ##, labels=TRUE
                 )
                 

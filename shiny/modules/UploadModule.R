@@ -241,45 +241,10 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 X = reactive(uploaded$counts.csv),
                 ##X = normalized_counts,  ## NOT YET!!!!
                 is.count = TRUE,
-                ##pheno = reactive(uploaded$samples.csv),
                 pheno = reactive(uploaded$samples.csv),
                 height = height
             )
             
-            ##mkContrast <- reactive({
-            modified_ct <- MakeContrastServerRT(
-                id = "makecontrast",
-                phenoRT = reactive(uploaded$samples.csv),
-                contrRT = reactive(uploaded$contrasts.csv),
-                countsRT = reactive(uploaded$counts.csv),
-                height = height
-            )
-            
-            observeEvent( modified_ct(), {
-                ## Monitor for changes in the contrast matrix and if
-                ## so replace the uploaded reactive values.
-                ##
-                modct <- modified_ct()
-                message("[observe:modified_ct()] dim(modct$contr) = ",dim(modct$contr))
-                uploaded$contrasts.csv <- modct$contr
-                uploaded$samples.csv <- modct$pheno
-                ## if(0 && !is.null(modct$pheno)) {
-                ##     message("[observe:modified_ct()] updating samples with cond ")
-                ##     jj <- which(!colnames(modct$cond) %in% uploaded$samples.csv)
-                ##     if(length(jj)) {
-                ##         new.samples <- cbind(uploaded$samples.csv, modct$cond[,jj,drop=FALSE])
-                ##         uploaded$samples.csv   <- new.samples
-                ##     }
-                ## }
-
-            })
-
-            upload_ok <- reactive({
-                check <- checkTables()
-                all(check[,"status"]=="OK")
-                all(grepl("ERROR",check[,"status"])==FALSE)
-            })
-
             corrected_counts <- reactive({
                 counts <- NULL
                 if(input$advanced_mode) {
@@ -291,6 +256,33 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     counts <- uploaded$counts.csv
                 }
                 counts
+            })
+
+            ##mkContrast <- reactive({
+            modified_ct <- MakeContrastServerRT(
+                id = "makecontrast",
+                phenoRT = reactive(uploaded$samples.csv),
+                contrRT = reactive(uploaded$contrasts.csv),
+                ##countsRT = reactive(uploaded$counts.csv),
+                countsRT = corrected_counts,
+                height = height
+            )
+            
+            observeEvent( modified_ct(), {
+                ## Monitor for changes in the contrast matrix and if
+                ## so replace the uploaded reactive values.
+                ##
+                modct <- modified_ct()
+                message("[observe:modified_ct()] dim(modct$contr) = ",dim(modct$contr))
+                uploaded$contrasts.csv <- modct$contr
+                uploaded$samples.csv   <- modct$pheno
+
+            })
+
+            upload_ok <- reactive({
+                check <- checkTables()
+                all(check[,"status"]=="OK")
+                all(grepl("ERROR",check[,"status"])==FALSE)
             })
 
             batch_vectors <- reactive({
@@ -382,9 +374,8 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     return(NULL)
                 }
                 
-                pheno <- uploaded[["samples.csv"]]
-                
-                px <- head(colnames(pheno),20)  ## maximum??
+                pheno <- uploaded[["samples.csv"]]                
+                px <- head(colnames(pheno),20)  ## show maximum??
                 require(inspectdf)
                 df <- type.convert(pheno[,px,drop=FALSE])
                 vt <- df %>% inspect_types()
@@ -400,9 +391,6 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                         cut(x, breaks=10)
                     })
                 }
-
-                message("[UploadModule::phenoStats] dim(df) = ",dim(df))
-
                 
                 p1 <- df %>% inspect_cat() %>% show_plot()
                 tt2 <- paste(nrow(pheno),"samples x",ncol(pheno),"phenotypes")
@@ -423,6 +411,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             
             output$contrastStats <- renderPlot({
                 
+                ##req(uploaded$contrasts.csv)
                 ct <- uploaded$contrasts.csv
                 has.contrasts <- !is.null(ct) && NCOL(ct)>0
                 check <- checkTables()
@@ -443,17 +432,12 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     box(lty=2, col="grey60")
                     return(NULL)
                 }
+
+                message("[output$contrastStats] 2 : ")
                 
-                req(uploaded$contrasts.csv)
                 contrasts <- uploaded$contrasts.csv
-                if(0) {
-                    req(uploaded$samples.csv)                
-                    pheno     <- uploaded$samples.csv
-                    ## convert to experiment matrix if not already...
-                    if(!all(rownames(contrasts)==rownames(pheno))) {
-                        contrasts <- pgx.expMatrix(pheno, contrasts)
-                    }
-                }
+
+                message("[output$contrastStats] 3 : ")                
 
                 ##contrasts <- sign(contrasts)
                 ##df <- contrastAsLabels(contrasts)
@@ -463,6 +447,8 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 tt2 <- paste(nrow(contrasts),"samples x",ncol(contrasts),"contrasts")
                 ##tt2 <- paste(ncol(contrasts),"contrasts")
 
+                message("[output$contrastStats] 4 : ")
+                
                 require(inspectdf)
                 p1 <- df %>% inspect_cat() %>% show_plot()                    
                 p1 <- p1 + ggtitle("CONTRASTS", subtitle=tt2) +
@@ -472,8 +458,10 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                                                    margin = ggplot2::margin(0,0,0,25),
                                                    hjust = 1)
                     )
-                p1
 
+                message("[output$contrastStats] 5 : ")                
+                
+                p1
             })
             
             
@@ -481,17 +469,6 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             ##========================== OBSERVERS ================================
             ##=====================================================================            
             
-            ## observeEvent( input$autocontrast, {
-            ##     req(uploaded$samples.csv)
-            ##     cat("[!autocontrast] >>> creating autocontrast\n")                
-            ##     df <- uploaded$samples.csv
-            ##     cat("[!autocontrast] dim(df)=",dim(df),"\n")                
-            ##     ct <- pgx.makeAutoContrasts(
-            ##         df, mingrp=3, slen=20, ref=NULL, fix.degenerate=FALSE)
-            ##     rownames(ct$exp.matrix) <- rownames(df)
-            ##     cat("[!autocontrast] updating contrasts...\n")                                
-            ##     uploaded[["contrasts.csv"]] <- ct$exp.matrix
-            ## })
             
             ##------------------------------------------------------------------
             ## Main observer for uploaded data files
@@ -507,6 +484,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 
                 ##for(i in 1:length(uploaded)) uploaded[[i]] <- NULL
                 uploaded[["pgx"]] <- NULL
+                uploaded[["last_uploaded"]] <- NULL
                 
                 ## read uploaded files
                 has.pgx <- any(grepl("[.]pgx$",input$upload_files$name))
@@ -530,6 +508,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     ##uploaded[["pgx"]] <- ngs
                     
                 } else {
+
                     ## If the user uploaded CSV files, we read in the data
                     ## from the files.
                     ##
@@ -544,7 +523,6 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
 
                     message("[upload_files] inputnames = ",inputnames)
                     message("[upload_files] uploadnames = ",uploadnames)                        
-
                     if(length(uploadnames)>0) {
                         for(i in 1:length(uploadnames)) {
                             fn1 <- inputnames[i]
@@ -579,7 +557,8 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                             } else if(grepl("sample",fn1)) {
                                 message("[upload_files] sample csv : fn1 = ",fn1)
                                 df <- read.csv2(fn2, row.names=1, check.names=FALSE,
-                                               stringsAsFactors=FALSE)
+                                                stringsAsFactors=FALSE)
+                                df <- type.convert(df)
                                 if(nrow(df)>1 && NCOL(df)>=1) {
                                     matname <- "samples.csv"
                                 }
@@ -598,11 +577,11 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     }            
                 }
                 
-                message("[upload_files] names(matlist) = ",names(matlist))                        
-                
+                message("[upload_files] names(matlist) = ",names(matlist))                                        
                 ## put the matrices in the reactive values 'uploaded'        
                 files.needed = c("counts.csv","samples.csv","contrasts.csv")
                 matlist = matlist[ which(names(matlist) %in% files.needed) ]
+                
                 if(length(matlist)>0) {
                     for(i in 1:length(matlist)) {
                         colnames(matlist[[i]]) <- gsub("[\n\t ]","_",colnames(matlist[[i]]))
@@ -612,11 +591,11 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                         } else {
                             matlist[[i]] <- type.convert(matlist[[i]])
                         }
-
                         m1 <- names(matlist)[i]
                         message("[upload_files] updating matrix ",m1)                        
                         uploaded[[m1]] <- matlist[[i]]
                     }
+                    uploaded[["last_uploaded"]] <- names(matlist)
                 }
                 
                 message("[upload_files] done!\n")
@@ -698,10 +677,12 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                         samples1   <- uploaded[["samples.csv"]]
                         contrasts1 <- uploaded[["contrasts.csv"]]
                         old1 = ("group" %in% colnames(samples1) &&
-                                nrow(contrasts1) < nrow(samples1))
+                                nrow(contrasts1) < nrow(samples1) &&
+                                all(rownames(contrasts1) %in% samples1$group)
+                        )
                         old2 = all(rownames(contrasts1)==rownames(samples1)) &&
                             all(unique(as.vector(contrasts1)) %in% c(-1,0,1,NA))
-                        old.style <- old1 || old2
+                        old.style <- (old1 || old2)
                         if(old.style  && old1) {
                             message("[UploadModule] WARNING: converting old1 style contrast to new format")
                             new.contrasts <- samples1[,0]
@@ -736,9 +717,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                         } else {
                             ## contrasts1 <- NULL
                         }
-
-                        uploaded[["contrasts.csv"]] <- contrasts1
-                        
+                        uploaded[["contrasts.csv"]] <- contrasts1                        
                     }
 
                     message("[checkTables] 5 :")
@@ -778,7 +757,42 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 } ## end-if-from-pgx
                 
                 message("[checkTables] 10 :")
+                e1 <- grepl("ERROR",status["samples.csv"])
+                e2 <- grepl("ERROR",status["contrasts.csv"]) 
+                e3 <- grepl("ERROR",status["counts.csv"])
+                s1 <- "samples.csv" %in% uploaded$last_uploaded
+                s2 <- "contrasts.csv" %in% uploaded$last_uploaded
+                s3 <- "counts.csv" %in% uploaded$last_uploaded
+                
+                if( e1 || e2 || e3 ) {
+                    message("[checkTables] 10 : ERROR in samples table : e1 = ",e1)
+                    message("[checkTables] 10 : ERROR in contrasts table : e2 = ",e2)
+                    message("[checkTables] 10 : ERROR in counts table : e2 = ",e3)
 
+                    if(e1 && !s1) {
+                        uploaded[["samples.csv"]] <- NULL
+                        status["samples.csv"] = "please upload"
+                    }
+                    if(e2 && !s2) {
+                        uploaded[["contrasts.csv"]] <- NULL
+                        status["contrasts.csv"] = "please upload"
+                    }
+                    if(e3 && !s3) {
+                        uploaded[["counts.csv"]] <- NULL
+                        status["counts.csv"] = "please upload"
+                    }
+                }
+
+
+                if( !is.null(uploaded$contrasts.csv) &&
+                    (is.null(uploaded$counts.csv) ||
+                     is.null(uploaded$samples.csv)) )
+                {
+                    uploaded[["contrasts.csv"]] <- NULL
+                    status["contrasts.csv"] = "please upload"
+                }
+                
+                
                 ## check files
                 description = c(
                     "Count/expression file with gene on rows, samples as columns",
