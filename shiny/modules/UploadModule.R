@@ -144,7 +144,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             output$batchcorrect_UI <- renderUI({
                 fillCol(
                     height = height, ## width = 1200,
-                    SuperBatchCorrectUI(ns("batchcorrect"))
+                    BatchCorrectUI(ns("batchcorrect"))
                 )                
             })
 
@@ -236,7 +236,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             )
             
             ##correctedX <- reactive({
-            correctedX <- SuperBatchCorrectServer(
+            correctedX <- BatchCorrectServer(
                 id = "batchcorrect",
                 X = reactive(uploaded$counts.csv),
                 ##X = normalized_counts,  ## NOT YET!!!!

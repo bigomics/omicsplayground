@@ -11,23 +11,23 @@
 if(0) {
     load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.pgx")    
 
-    SuperBatchCorrectGadget(X=ngs$X, pheno=ngs$samples)
+    BatchCorrectGadget(X=ngs$X, pheno=ngs$samples)
 
     out <- gadgetize2(
-        SuperBatchCorrectUI, SuperBatchCorrectServer,
+        BatchCorrectUI, BatchCorrectServer,
         title = "UploadGadget", height=640, size="l", 
         X = ngs$X, pheno=ngs$samples )
     names(out)
     
 }
 
-SuperBatchCorrectGadget <- function(X, pheno, height=720) {
-    gadgetize(SuperBatchCorrectUI, SuperBatchCorrectServer,
-              title="SuperBatchCorrect",
+BatchCorrectGadget <- function(X, pheno, height=720) {
+    gadgetize(BatchCorrectUI, BatchCorrectServer,
+              title="BatchCorrect",
               X=reactive(X), pheno=reactive(pheno), height=height)
 }
 
-SuperBatchCorrectUI <- function(id, height=720) {
+BatchCorrectUI <- function(id, height=720) {
     ns <- NS(id)
     sidebarLayout(
         sidebarPanel(
@@ -41,17 +41,17 @@ SuperBatchCorrectUI <- function(id, height=720) {
     )
 }
 
-SuperBatchCorrectInputsUI <- function(id) {
+BatchCorrectInputsUI <- function(id) {
     ns <- NS(id)
     uiOutput(ns("inputsUI"))
 }
 
-SuperBatchCorrectCanvas <- function(id, height=720) {
+BatchCorrectCanvas <- function(id, height=720) {
     ns <- NS(id)
     plotOutput(ns("canvas"), width="100%", height=height) %>% withSpinner()
 }
 
-SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
+BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
     moduleServer(
         id,
         function(input, output, session) {
@@ -125,10 +125,6 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                     X0 <- log2(1 + X0)  ## X0: normalized counts (e.g. CPM)
                 }
                 
-                message("[event:bc_compute] 5: performing SuperBatchCorrection...")
-                message("[event:bc_compute] 5: dim(pheno) = ",paste(dim(pheno()),collapse="x"))
-                message("[event:bc_compute] 5: dim(X) = ",paste(dim(X0),collapse="x"))
-
                 out <- pgx.superBatchCorrect(
                     X = X0,
                     pheno = pheno(),
@@ -161,16 +157,17 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
             }, ignoreInit=FALSE, ignoreNULL=FALSE )
             
             output$canvas <- renderPlot({
+
                 out <- outobj()
                 if(is.null(out$X) || length(out$X)==0) return(NULL)
 
                 is.valid <- all(dim(out$X)==dim(X()) &&
                                 nrow(out$Y)==ncol(X()))
                 if(!is.valid) {
-                    message("[SuperBatchCorrectServer] dim(out$X)=",dim(out$X))
-                    message("[SuperBatchCorrectServer] dim(out$Y)=",dim(out$Y))
-                    message("[SuperBatchCorrectServer] dim(X())=",dim(X()))                    
-                    message("[SuperBatchCorrectServer] WARNING: matrices not valid!!")
+                    message("[BatchCorrectServer] dim(out$X)=",dim(out$X))
+                    message("[BatchCorrectServer] dim(out$Y)=",dim(out$Y))
+                    message("[BatchCorrectServer] dim(X())=",dim(X()))                    
+                    message("[BatchCorrectServer] WARNING: matrices not valid!!")
                     return(NULL)
                 }
                 
@@ -196,6 +193,7 @@ SuperBatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                     X0=X0, pheno=out$Y, cX=cX, phenotype=p1,
                     pca.heatmap=do.pca, nmax=nmax, cex=1.8, npca=3, 
                     title=NULL, subtitle=NULL, caption=NULL)
+
             })
             
             output$inputsUI <- renderUI({

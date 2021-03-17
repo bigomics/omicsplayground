@@ -1761,7 +1761,6 @@ ConnectivityBoard <- function(input, output, session, env)
 
     cmapPairsPlot.PLOT <- reactive({
 
-        require(ggplot2)
         require(plotly)
         ##require(GGally)
         

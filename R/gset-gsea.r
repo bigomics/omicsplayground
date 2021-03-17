@@ -1055,7 +1055,7 @@ gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,
     ##par(mgp=c(2.3,0.6,0))
     plot( ii, rnk[ii], type="h", col="grey", ylim=c(y0-dy,y1),
          xlab=NA, ylab=ylab, xaxt='n')
-    mtext(xlab, 1, line=0.75, cex=0.65)
+    mtext(xlab, 1, line=0.75, cex=0.95)
     abline(h=0,lty=2,lwd=0.5)
 
     ## gene set barcode

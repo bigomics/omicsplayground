@@ -823,7 +823,6 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
         group.names <- c(group0, group1)
     }
     group.names
-    message("[pgx.plotExpression] 1 : group names = ", paste(group.names,collapse=' '))
     
     ## Otherwise we guess from the contrast title but this is dangerous
     if(is.null(group.names) && grepl("_vs_|_VS_",comp) ) {
@@ -843,8 +842,6 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
         group.names <- gsub("@.*","",group.names)  ## strip postfix
     }
     group.names
-
-    message("[pgx.plotExpression] 2 : group names = ", paste(group.names,collapse=' '))
     
     ## create groups
     ct <- expmat[,comp]

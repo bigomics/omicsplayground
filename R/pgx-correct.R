@@ -7,7 +7,7 @@
 ##
 ##
 
-## max.rho=0.3;batch.par="*";max.iter=10;hc.top=50;partype=NULL;pca.correct=hc.correct=1;sva.correct=mnn.correct=nnm.correct=0;bio.correct=c("mito","ribo","cc.phase","cc.score","gender")
+## max.rho=0.3;batch.par="*";max.iter=10;hc.top=50;partype=NULL;pca.correct=hc.correct=1;sva.correct=mnn.correct=nnm.correct=0;bio.correct=c("mito","ribo","cell_cycle","gender");lib.correct=TRUE
 pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
                                   batch.par="*", ## batch.cov="*",
                                   lib.correct = TRUE,
@@ -48,7 +48,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
 
     ## add to phenotype matrix
     pheno <- cbind(pheno, Y)
-    not.na <- colSums(is.na(pheno))<1
+    not.na <- colMeans(is.na(pheno))<1
     nlev <- apply(pheno,2,function(x) length(unique(x[!is.na(x)])))
     nlev
     pheno <- pheno[,which(nlev>1 & not.na),drop=FALSE]
@@ -176,7 +176,9 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
         sel
         if(length(sel)) {
             cat("[pgx.superBatchCorrect] Correcting for unwanted library effects:",sel,"\n")
-            exp.pheno <- pheno[,sel,drop=FALSE]
+            exp.pheno <- as.matrix(pheno[,sel,drop=FALSE])
+            exp.pheno <- apply(exp.pheno, 2, function(x) {
+                x[is.na(x)]=median(x,na.rm=TRUE);x})
             cX <- removeBatchEffect(cX, covariates=exp.pheno, design=mod1x)
             B <- cbind(B, exp.pheno)
         }
@@ -192,7 +194,8 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
         if(length(p1)) {
             i=1
             for(i in 1:length(p1)) {
-                b1 <- pheno[,p1[i]]
+                b1 <- as.character(pheno[,p1[i]])
+                b1[is.na(b1)] <- 'NA'  ## NA is third group?? better to impute??
                 cX <- removeBatchEffect(cX, batch=b1, design=mod1x)
                 b1x <- model.matrix( ~b1)[,-1,drop=FALSE]
                 colnames(b1x) <- sub("^b1",paste0(p1[i],"."),colnames(b1x))
@@ -203,7 +206,9 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
         p2 <- intersect(batch.cov,colnames(Y))
         if(length(p2)) {
             cat("[pgx.superBatchCorrect] Correcting for unwanted biological covariates:",p2,"\n")
-            b2 <- pheno[,p2,drop=FALSE]
+            b2 <- as.matrix(pheno[,p2,drop=FALSE])
+            b2 <- apply(b2, 2, function(x) {
+                x[is.na(x)]=median(x,na.rm=TRUE);x})            
             cX <- removeBatchEffect(cX, covariates=b2, design=mod1x)
             B <- cbind(B, b2)
         }
@@ -501,7 +506,7 @@ pgx.PC_correlation <- function(X, pheno, nv=3, stat="F", plot=TRUE, main=NULL) {
         stat0 <- c("correlation","F-statistic")[1 + 1*(stat=="F")]
         tt0   <- c("PC correlation","PC variation")[1 + 1*(stat=="F")]
         if(is.null(main)) main <- tt0
-        R <- R[,ncol(R):1]
+        ## R <- R[,ncol(R):1]
         plt <- ggbarplot(t(R), ylab=stat0, srt=45, group.name="") +
             ## theme(
             ##     legend.key.size = unit(0.65,"lines"),
@@ -677,7 +682,7 @@ pgx.performBatchCorrection <- function(ngs, zx, batchparams,
                 } else {
                     ## treat as factor variable
                     batch0 <- as.character(batch)
-                    batch0[is.na(batch0)] <- "NA" ## NA as separate group??
+                    batch0[is.na(batch0)] <- 'NA' ## NA as separate group??
                     zx <- pgx.removeBatchEffect(zx, batch0, method)
                 }  ## end of iter
 
@@ -879,101 +884,6 @@ pgx.computeBiologicalEffects <- function(X, is.count=FALSE)
     return(pheno)
 }
 
-##max.rho=0.3;force.remove=TRUE;correct.mito=TRUE;correct.ribo=TRUE;correct.cc=TRUE
-pgx.removeBiologicalEffect.DEPRECATED <- function(X, pheno, model.par, 
-                                                  correct = c("mito","ribo","cc.score","gender"),
-                                                  max.rho=0.3, force=FALSE)
-{    
-    ## estimate biological variation
-    message("[pgx.removeBiologicalEffect] Estimating mito/ribo content...")
-    q0 <- quantile(X[X>0], probs=0.01)
-    q0
-    tX <- pmax(X - q0,0)
-    cx <- 2**tX-1  ## counts
-    
-    mt.genes <- grep("^MT-",rownames(X),ignore.case=TRUE,value=TRUE)
-    rb.genes <- grep("^RP[SL]",rownames(X),ignore.case=TRUE,value=TRUE)
-    mito = ribo = 0
-    mt.genes
-    rb.genes
-    if(length(mt.genes)>0) {
-        mito <- Matrix::colSums(tX[mt.genes,,drop=FALSE]) / Matrix::colSums(tX)*100
-    }
-    if(length(rb.genes)>0) {
-        ribo <- Matrix::colSums(tX[rb.genes,,drop=FALSE]) / Matrix::colSums(tX)*100
-    }
-    nfeature <- Matrix::colSums(tX>0)
-    ncounts  <- Matrix::colSums(tX)
-    pheno1 <- data.frame(
-        pheno[,model.par,drop=FALSE],
-        "<mito>" = mito,
-        "<ribo>" = ribo,
-        "<lib.size>" = ncounts,
-        check.names=FALSE)
-    
-    batch.cov <- NULL
-    batch.prm <- NULL
-    if("mito" %in% correct) {
-        batch.cov <- c(batch.cov, "<mito>")
-    }
-    if("ribo" %in% correct) {        
-        batch.cov <- c(batch.cov, "<ribo>")
-    }
-    ## if("cc.phase" %in% correct) {
-    ##     cc.phase <- try(pgx.inferCellCyclePhase(cx))   ## from pgx-deconv.R        
-    ##     if(!any(class(cc.phase)=="try-error")) {
-    ##         batch.prm <- c(batch.prm, "<phase>")
-    ##         pheno1 <- cbind(pheno1, "<phase>"=cc.phase)
-    ##     }    
-    ## }
-    if("cc.score" %in% correct) {
-        message("[pgx.removeBiologicalEffect] Inferring cell cycle...")
-        cc.score <- try(pgx.scoreCellCycle(cx))
-        head(cc.score)
-        if(!any(class(cc.score)=="try-error")) {
-            batch.cov <- c(batch.cov,"<s.score>","<g2m.score>")
-            cc.score$phase <- NULL
-            colnames(cc.score) <- paste0("<",colnames(cc.score),">")
-            pheno1 <- cbind(pheno1, cc.score)
-        }    
-    }
-    if("gender" %in% correct) {
-        if("gender" %in% colnames(pheno)) {
-            gender <- pheno$gender
-        } else {
-            gender <- pgx.inferGender(cx)
-        }
-        if(!all(is.na(gender))) {
-            ## pheno1$gender <- gender
-            batch.prm <- c(batch.prm, "<gender>")
-            pheno1 <- cbind(pheno1, "<gender>"=gender)
-        }
-    }
-    batch.prm
-    batch.cov
-    
-    batch.par2 = unique(c(batch.prm, batch.cov))
-
-    pp <- unique(c(model.par,batch.par2))
-    pheno1 <- pheno1[,pp,drop=FALSE]
-
-    message("[pgx.removeBiologicalEffect] Correcting for unwanted biological variation...")    
-    out <- pgx.superBatchCorrect(
-        X=X, pheno = pheno1,
-        model.par = model.par,
-        batch.par = batch.par2,
-        max.rho=max.rho, bio.correct=NULL,
-        sva.correct=FALSE, pca.correct=FALSE, hc.correct=FALSE,
-        max.iter=10, hc.top=50,
-        force=force)
-
-    cX <- out$X
-    
-    message("[pgx.removeBiologicalEffect] done")    
-    Y1 <- pheno1[,2:ncol(pheno1),drop=FALSE]
-    res <- list(X=cX, Y=Y1)
-    return(res)
-}
 
 pgx.svaCorrect <- function(X, pheno) {
     ## 
