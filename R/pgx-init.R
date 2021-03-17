@@ -228,11 +228,11 @@ pgx.initialize <- function(pgx) {
     ## Tidy up phenotype matrix (important!!!): get numbers/integers
     ## into numeric, categorical into factors....
     ##----------------------------------------------------------------
-    pgx$samples <- tidy.dataframe(pgx$samples)  ## warning!! this converts all to CHR!!
+    ##pgx$samples <- tidy.dataframe(pgx$samples)  ## warning!! this converts all to CHR!!
+    pgx$samples <- type.convert(pgx$samples)    ## autoconvert to datatypes
+    pgx$samples <- pgx$samples[,which(colMeans(is.na(pgx$samples))<1),drop=FALSE]
 
     ## clean up: pgx$Y is a cleaned up pgx$samples
-    pgx$samples$barcode <- NULL
-    pgx$samples <- pgx$samples[,which(colMeans(is.na(pgx$samples))<1),drop=FALSE]
     kk = grep("batch|lib.size|norm.factor|repl|donor|clone|sample|barcode",
               colnames(pgx$samples),invert=TRUE)
     kk = grep("lib.size|norm.factor|donor|clone|sample|barcode|patient",
