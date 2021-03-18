@@ -322,12 +322,14 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             n.sv <- EstDimRMT(X.r, FALSE)$dim + 1
             n.sv
         }
-        sv <- try( sva(cX, mod1x, mod0=mod0x, n.sv=n.sv)$sv )
+        cX1 <- head(cX[order(-apply(cX,1,sd)),],1000) ## top 1000 genes only (faster)
+        sv <- try( sva(cX1, mod1x, mod0=mod0x, n.sv=n.sv)$sv )
         ##sv <- SmartSVA::smartsva.cpp(cX, mod1x, mod0=mod0x, n.sv=n.sv)$sv
         if(any(class(sv)=="try-error")) {
             ## try again with little bit of noise...
             a <- 0.01*mean(apply(cX,1,sd))
             cX1 <- cX + a*matrix(rnorm(length(cX)),nrow(cX),ncol(cX))
+            cX1 <- head(cX1[order(-apply(cX1,1,sd)),],1000) ## top 1000 genes only (faster)
             sv <- try( sva(cX1, mod1x, mod0=mod0x, n.sv=pmax(n.sv-1,1))$sv )
         }
         if(!any(class(sv)=="try-error")) {
@@ -845,15 +847,16 @@ pgx.computeBiologicalEffects <- function(X, is.count=FALSE)
 
     mt.genes <- grep("^MT-",rownames(X),ignore.case=TRUE,value=TRUE)
     rb.genes <- grep("^RP[SL]",rownames(X),ignore.case=TRUE,value=TRUE)
-    mito = ribo = 0
+    mito = ribo = NA
+    pct.mito = pct.ribo = NA
     mt.genes
     rb.genes
-    if(length(mt.genes)>0) {
+    if(length(mt.genes) >= 10) {
         mito <- Matrix::colMeans(tx[mt.genes,,drop=FALSE])
         pct.mito <- Matrix::colSums(cx[mt.genes,,drop=FALSE],na.rm=TRUE) / libsize
     }
-    if(length(rb.genes)>0) {
-        ii <- rb.genes[order(-apply(tx[rb.genes,],1,sd,na.rm=TRUE))]
+    if(length(rb.genes) >= 10) {
+        ii <- rb.genes[order(-apply(tx[rb.genes,,drop=FALSE],1,sd,na.rm=TRUE))]
         sel20 <- head(ii,20)
         ribo <- Matrix::colMeans(tx[rb.genes,,drop=FALSE])
         ribo20 <- Matrix::colMeans(tx[sel20,,drop=FALSE])
@@ -884,8 +887,7 @@ pgx.computeBiologicalEffects <- function(X, is.count=FALSE)
     return(pheno)
 }
 
-
-pgx.svaCorrect <- function(X, pheno) {
+pgx.svaCorrect <- function(X, pheno, nmax=-1) {
     ## 
     ## IK: not sure about this SVA correction stuff... 
     require(sva)
@@ -932,7 +934,11 @@ pgx.svaCorrect <- function(X, pheno) {
     }
     
     message("Calculating SVA...")
-    sv <- sva(X, mod1x, mod0x, n.sv=n.sv)$sv
+    vX = X
+    if(nmax>0) {
+        vX = head(X[order(-apply(X,1,sd)),],nmax)
+    }
+    sv <- sva(vX, mod1x, mod0x, n.sv=n.sv)$sv
     ##sv <- SmartSVA::smartsva.cpp(X, mod1x, mod0=mod0x, n.sv=n.sv)$sv
     
     message("Perform batch correction...")
