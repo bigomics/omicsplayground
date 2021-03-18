@@ -24,6 +24,7 @@ echo docker run --rm -d -p 4000:3838 --name=play1 $image
 
 ## enter bash in the container
 echo docker exec -it play1 /bin/bash
+echo docker run -it --entrypoint /bin/bash bigomics/omicsplayground:testing -s
 
 ## stop the container
 echo docker stop play1
