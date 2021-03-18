@@ -92,7 +92,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         col.dist.method="euclidean";
         plot.method="heatmap.2";
         ## col=bluered(64);
-        scale="row"; softmax=0;
+        scale="row"; softmax=0; order.groups="clust"; symm.scale=FALSE
         ## Rowv = NA; Colv = NA;
         cluster_rows=TRUE; cluster_columns=TRUE; sort_columns=NULL;
         col.annot=NULL; row.annot=NULL; annot.ht=3;
@@ -100,7 +100,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         cexRow=1; cexCol=1; mar=c(5,5,5,5);
         title_cex=1.2; column_title_rot=0;
         show_legend=TRUE; show_key=TRUE;
-        show_rownames=60; lab.len=80; 
+        show_rownames=60; lab.len=80;  key.offset=c(0.05,1.01)
         show_colnames=NULL; use.nclust=FALSE;
     }
     
@@ -229,7 +229,8 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         names(grp)[1] = main  ## title
         ngrp = 1
     }
-
+    names(grp) <- paste0(names(grp),ifelse(names(grp)=='',' ',''))  ## avoid empty names
+    
     isanumber <- function(x) {
         x <- sub("NA",NA,x)
         x[which(x=="")] <- NA
@@ -305,11 +306,12 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         i=1
         for(i in 1:length(npar)) {
             prm = colnames(row.annot)[i]
+            x = row.annot[,i]
             klrs = rev(grey.colors(npar[i],start=0.3, end=0.8))
             if(npar[i]==1) klrs = "#E6E6E6"
             if(npar[i]>0) klrs = rep(RColorBrewer::brewer.pal(8,"Set2"),99)[1:npar[i]]
             ##if(npar[i]==2) klrs = rep(RColorBrewer::brewer.pal(2,"Paired"),99)[1:npar[i]]
-            names(klrs) = sort(setdiff(unique(row.annot[,i]),NA))
+            names(klrs) = sort(setdiff(unique(x),NA))
             if(any(is.na(x))) klrs = c(klrs, "NA"="grey90")
             row.colors[[prm]] = klrs
         }
