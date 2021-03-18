@@ -124,6 +124,10 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 if(is.count) {
                     X0 <- log2(1 + X0)  ## X0: normalized counts (e.g. CPM)
                 }
+
+                ## only top 1000 to make it faster
+                ##X0 = head(X0[order(-apply(X0,1,sd)),], 1000)
+                message("[event:bc_compute] 4b : dim(X0) =",paste(dim(X0),collapse="x") )
                 
                 out <- pgx.superBatchCorrect(
                     X = X0,
