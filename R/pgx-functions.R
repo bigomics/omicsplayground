@@ -275,6 +275,19 @@ text_repel.NOTWORKING <- function( x, y, text, cex=1, force=1e-7, maxiter=20000)
     out[,3:4]
 }
 
+pos.compact <- function(pos, d=0.01) {
+    ## make positions more dense removing white space
+    for(i in 1:ncol(pos)) {
+        x=pos[,i]
+        dr = d*diff(range(x))
+        names(x)=1:nrow(pos)
+        ii <- order(x)
+        x1 = cumsum(c(x[ii[1]],pmin(diff(x[ii]),dr)))
+        pos[,i] = x1[order(as.integer(names(x1)))]
+    }
+    pos
+}
+
 #' Given a Set of Points and Box sizes,
 #' https://github.com/slowkow/ggrepel/issues/24
 util.findboxes <- function( df, xcol, ycol,
@@ -340,6 +353,7 @@ add_opacity <- function(hexcol,opacity) {
     toRGB(hexcol)
     rgba <- strsplit(gsub("rgba\\(|\\)","",toRGB(hexcol,opacity)),split=",")
     rgba <- apply(do.call(rbind, rgba),2,as.numeric)
+    if(length(hexcol)==1) rgba <- matrix(rgba,nrow=1)
     rgb(rgba[,1]/255,rgba[,2]/255,rgba[,3]/255,rgba[,4])
 }
 

@@ -1385,8 +1385,6 @@ between two contrasts."
         id = "cmp_ctheatmap",  label="a",
         func = cmp_ctheatmap.PLOT, plotlib="base",
         func2 = cmp_ctheatmap.PLOT,
-        ##func = cmp_ctheatmap.PLOTLY, plotlib="plotly",
-        ##cmp_ctheatmap.PLOTLY, plotlib="generic", renderFunc="renderPlotly",
         info.text = cmp_ctheatmap_info,
         ##caption = cmp_ctheatmap_caption,
         options = cmp_ctheatmap.opts,

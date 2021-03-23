@@ -182,9 +182,9 @@ a {
 .gene-info-output {
     font-size: 0.9em;
     background-color: #dde6f0BB;
-    padding: 10px 10px 10px 10px;
+    padding: 20px 10px 10px 10px;
     overflow: auto;
-    height: 260px;
+    height: 680px;
 }
 
 .modal-body .gene-info-output {

@@ -187,42 +187,9 @@ WgcnaBoard <- function(input, output, session, env)
     outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
-    ##======================= OBSERVE FUNCTIONS ======================================
+    ##======================= PRECOMPUTE FUNCTION ====================================
     ##================================================================================
-
-    observeEvent( input$info, {
-        showModal(modalDialog(
-            title = HTML("<strong>WGCNA Analysis Board</strong>"),
-            HTML(infotext),
-            easyClose = TRUE ))
-    })
     
-    
-    ##================================================================================
-    ##======================= PLOTTING FUNCTIONS =====================================
-    ##================================================================================
-
-    ##----------------------------------------
-    ##------------ samples dendro ------------
-    ##----------------------------------------
-
-    labels2rainbow <- function(net) {
-        hc <- net$dendrograms[[1]]
-        nc <- length(unique(net$colors))
-        n <- length(net$colors)
-        ii <- hc$order
-        col1 <- labels2colors(net$colors)                
-        col.rnk <- rank(tapply(1:n,col1[ii],mean))
-        new.col <- rainbow(nc)[col.rnk]
-        ## new.col <- heat.colors(nc)[col.rnk]
-        names(new.col) <- names(col.rnk)
-        new.col["grey"] <- "#AAAAAA"
-        new.col
-        new.col <- new.col[col1]
-        names(new.col) <- net$colors
-        new.col
-    }
-        
     ##wgcna.compute <- reactive({
     wgcna.compute <- eventReactive( {
         input$compute
@@ -236,8 +203,7 @@ WgcnaBoard <- function(input, output, session, env)
             message("[wgcna.compute] >>> using pre-computed WGCNA results...")
             return( ngs$wgcna )
         }
-        
-        
+                
         progress <- shiny::Progress$new()
         on.exit(progress$close())    
         progress$set(message = "Calculating WGCNA...", value = 0)
@@ -333,7 +299,7 @@ WgcnaBoard <- function(input, output, session, env)
             if(0) {
                 par(mfrow=c(2,2))
                 me1 <- paste0("ME",net$colors)
-                pgx._scatterPlotXY.BASE(clust[["umap2d"]], var=me1, col=me.colors)
+                pgx.scatterPlotXY.BASE(clust[["umap2d"]], var=me1, col=me.colors)
                 pgx.scatterPlotXY(clust[["umap2d"]], var=me1, col=me.colors)
                 pgx.scatterPlotXY(clust[["tsne2d"]], var=me1, col=me.colors)
                 pgx.scatterPlotXY(clust[["umap3d"]], var=me1, col=me.colors)
@@ -386,7 +352,44 @@ WgcnaBoard <- function(input, output, session, env)
 
         out
     })
+
     
+    ##================================================================================
+    ##======================= OBSERVE FUNCTIONS ======================================
+    ##================================================================================
+    
+    observeEvent( input$info, {
+        showModal(modalDialog(
+            title = HTML("<strong>WGCNA Analysis Board</strong>"),
+            HTML(infotext),
+            easyClose = TRUE ))
+    })
+    
+    
+    ##================================================================================
+    ##======================= PLOTTING FUNCTIONS =====================================
+    ##================================================================================
+
+    ##----------------------------------------
+    ##------------ samples dendro ------------
+    ##----------------------------------------
+
+    labels2rainbow <- function(net) {
+        hc <- net$dendrograms[[1]]
+        nc <- length(unique(net$colors))
+        n <- length(net$colors)
+        ii <- hc$order
+        col1 <- labels2colors(net$colors)                
+        col.rnk <- rank(tapply(1:n,col1[ii],mean))
+        new.col <- rainbow(nc)[col.rnk]
+        ## new.col <- heat.colors(nc)[col.rnk]
+        names(new.col) <- names(col.rnk)
+        new.col["grey"] <- "#AAAAAA"
+        new.col
+        new.col <- new.col[col1]
+        names(new.col) <- net$colors
+        new.col
+    }
 
     ##----------------------------------------
     ##--------- topology analysis ------------
@@ -1130,7 +1133,7 @@ WgcnaBoard <- function(input, output, session, env)
         par(mfrow=c(1,1), mar=c(2,3,1,1))
         me1 <- paste0("ME", out$net$colors)
         pos <- out$clust[[method]]        
-        pgx._scatterPlotXY.BASE(pos, var=me1, col=out$me.colors)
+        pgx.scatterPlotXY.BASE(pos, var=me1, col=out$me.colors)
         ##WGCNA::TOMplot(dissTOM, net$dendrograms[[1]], net$colors)
 
     })
@@ -1236,7 +1239,7 @@ WgcnaBoard <- function(input, output, session, env)
         message("[wgcna_eigenCorrelation.RENDER] nc = ", nc)
         
         ntop = 15        
-        par(mfrow=c(nr,nc), mar=c(6,3.1,1,1), oma=c(1,1,1,1)*0, mgp=c(2.1,0.8,0))
+        par(mfrow=c(nr,nc), mar=c(6,3.1,2.3,1), oma=c(1,1,1,1)*0, mgp=c(2.1,0.8,0))
         ##par(mfrow=c(nr,nc), mar=c(8,4,3,1)*0, oma=c(1,1,1,1)*0)
         k=1
         me <- names(out$me.colors)  ## sorted
@@ -1246,7 +1249,7 @@ WgcnaBoard <- function(input, output, session, env)
             i2 <- tail(order(rho[m,]),ntop)
             barplot( sort(rho[k,c(i1,i2)]),
                     ylab = ylab0, las=3, cex.names=0.90, main=NULL)
-            title(m, line=-0.2)
+            title(m, line=0.3)
         }
         
     })

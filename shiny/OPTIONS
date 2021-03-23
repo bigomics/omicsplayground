@@ -1,5 +1,4 @@
 TITLE           = "Omics Playground"
-#USER_MODE      = basic
 AUTHENTICATION  = none
 #AUTHENTICATION = password
 ENABLE_UPLOAD   = TRUE
@@ -11,6 +10,6 @@ MAX_GENES       = 20000
 MAX_GENESETS    = 5000
 #WATERMARK       = TRUE
 #BOARDS_ENABLED = load,view,clust,expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap
-#BOARDS_ENABLED = load,view,clust,expr,cor,enrich,func
-BOARDS_DISABLED = wgcna,tcga,multi,system
+#BOARDS_DISABLED = wgcna,tcga,multi,system
+BOARDS_DISABLED = corsa,multi,system
 
