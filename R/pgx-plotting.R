@@ -1436,8 +1436,8 @@ plotly2ggplot <- function (plot, width=NULL, height=NULL, scale=1, hjust=0, vjus
     return(gg)
 }
 
-
-ggenplot <- function(fc, gset, lwd=1, main=NULL, xlab=NULL, ylab=NULL)
+gsea.enplotly <- function(fc, gset, cex=1, main=NULL, xlab=NULL,
+                          ylab=NULL, yth=1, tooltips=NULL, cex.text=1)
 {
     if(is.null(xlab))
         xlab <- "Rank in ordered dataset"
@@ -1463,31 +1463,180 @@ ggenplot <- function(fc, gset, lwd=1, main=NULL, xlab=NULL, ylab=NULL)
     rnk.trace <- (r1 - r0)
     rnk.trace <- rnk.trace / max(abs(rnk.trace)) * 0.8
 
-    qq <- quantile(fc,probs=c(0.01,0.99),na.rm=TRUE)
-    qq <- c(min(fc,na.rm=TRUE),max(fc,na.rm=TRUE)) * 0.8
+    qq <- quantile(fc,probs=c(0.005,0.995),na.rm=TRUE)
+    qq <- range(fc)
+    ##qq <- c(min(fc,na.rm=TRUE),max(fc,na.rm=TRUE)) * 0.8
     y1 <- qq[2]
     y0 <- qq[1]
-    ##dy <- 0.25*(y1-y0)
+    dy <- 0.2*(y1-y0)
+    if(max(rnk.trace) >= abs(min(rnk.trace))) rnk.trace <- rnk.trace * abs(y1)
+    if(max(rnk.trace) < abs(min(rnk.trace))) rnk.trace <- rnk.trace * abs(y0)
+    
+    cc <- sign(fc)*rank(abs(fc))
+    df <- data.frame( x=rank(-fc), y=fc, trace=rnk.trace, cc=cc)
+    
+    ## downsample
+    ii <- which(rownames(df) %in% gset)
+    ii <- unique(c(ii,seq(1,nrow(df),round(nrow(df)/1000))))
+    df <- df[ii,]
+    df <- df[order(-df$y),]
+    dim(df)
+    
+    ##dy <- 0.05*diff(range(fc))
+    ##y0 <- min(fc)
+    cpal <- colorspace::diverge_hcl(64, c=60, l=c(30,100), power=1)
+    cpal <- colorspace::diverge_hcl(64)
+    
+    ## colorbar segments
+    db <-  nrow(df)/11
+    bb <- round(seq(1, nrow(df), db))
+    cbar.x    <- df$x[bb]
+    cbar.xend <- df$x[c(bb[-1],nrow(df))]
+
+    fx   <- df$y[bb + round(0.5*db)]
+    ##r <- mean(rnk[kk[c(i,i+1)]])
+    r1 <- (fx/max(abs(fx),na.rm=TRUE))
+    r1 <- abs(r1)**0.66 * sign(r1)
+    cc = gplots::colorpanel(21,"royalblue3","grey90","indianred3")
+    irnk <- 1 + round((length(cc)-1)*(1 + r1)*0.5)
+    ##cat("irnk=",irnk,"\n")    
+    cbar <- data.frame( x=cbar.x, xend=cbar.xend, color=cc[irnk])
+
+    cex.title=1
+    df$text = rownames(df)
+    jj <- which(rownames(df) %in% gset)    
+    tooltips2 = rownames(df)[jj]
+    if(!is.null(tooltips)) {
+        sel.tt <- match(rownames(df)[jj],names(tooltips))
+        tooltips2 <- paste0('<b>',tooltips2,'</b><br>',tooltips[sel.tt])
+    }
+    
+    ii = seq(1,nrow(df),round(nrow(df)/200))
+    fig <- plot_ly() %>%
+        add_trace(
+            x = ~df$x[ii], y = ~df$y[ii],
+            type = 'scatter', fill = 'tozeroy',
+            fillcolor = '#BBBBBB',
+            hoverinfo = 'skip',            
+            mode = 'none' )  %>%
+        add_trace(
+            x = ~df$x, y = ~df$trace,
+            type = 'scatter', mode = 'lines',
+            hoverinfo = 'skip',
+            line = list(
+                color = '#00EE00',
+                width = 4
+            ))  %>%
+        add_trace(
+            ## orange points of genes
+            x = ~df$x[jj], y = ~df$y[jj],
+            type = 'scatter', ## fill = 'toself', ## mode = 'none',
+            marker = list( color = '#FF8C00', size=cex*6 ),
+            text = tooltips2,
+            hoveron = 'points', hoverinfo='text') %>%
+        add_segments(
+            x = df$x[jj], xend = df$x[jj],
+            y = y0 - dy, yend = y0,
+            type = 'scatter', mode='lines',
+            line = list(color = '#444444', width=1.5*cex),
+            text = rownames(df)[jj],
+            hoveron = 'points', hoverinfo='text'
+        )
+
+    for(i in 1:nrow(cbar)) {
+        ## colorbar/color scale
+        fig <- fig %>% add_segments(
+            x = cbar$x[i], xend = cbar$xend[i],
+            y = y0 - 0.85*dy, yend = y0 - 0.85*dy,
+            ##type = 'scatter', mode='lines',
+            line = list(color=cbar$color[i], width=32)
+        )
+    }
+
+    if(!is.null(yth) && yth>=0 ) {
+        ## static labels
+        jj2 = jj[which( abs(df$y[jj]) >= yth )]
+        fig <- fig %>%
+            add_annotations(
+                x = df$x[jj2],
+                y = df$y[jj2],
+                text = rownames(df)[jj2],
+                xref = 'x',
+                yref = 'y',
+                xanchor = 'left',
+                xshift = 4,
+                yshift = 3,
+                showarrow = FALSE
+            )   
+    }
+    
+    fig <- fig %>%
+        layout(
+            font = list(size=12*cex.text),
+            title = list(text=main, y=0.99),
+            xaxis = list(title = xlab),
+            yaxis = list(title = ylab, range=c(y0-1.1*dy,y1) )) %>% 
+        config(toImageButtonOptions = list(format = "svg")) %>% 
+        hide_legend()
+    
+    fig
+    
+}
+
+ggenplot <- function(fc, gset, cex=1, main=NULL, xlab=NULL, ylab=NULL)
+{
+    if(is.null(xlab))
+        xlab <- "Rank in ordered dataset"
+    if(is.null(ylab))
+        ylab <- "Ranked list metric"
+    if(is.null(main))
+        main <- "Enrichment plot"
+
+    ## compute running metrix
+    fc <- sort(fc,decreasing=TRUE)
+    ##in.gset <- 1*(names(fc) %in% gset)
+    ##rnk.trace <- cumsum( c(-1/sum(in.gset==0), 1/sum(in.gset))[1+in.gset])
+    ##rnk.trace <- 0.66 * rnk.trace / max(abs(rnk.trace)) * max(abs(fc))
+
+    ## weighted cumulative random walk
+    x0 <- 1*(names(fc) %in% gset)
+    x0 <- x0 * abs(fc)
+    n0 <- sum(!(names(fc) %in% gset))
+    n1 <- sum(names(fc) %in% gset)
+    r0 <- cumsum(x0==0) / sum(x0==0)
+    r1 <- cumsum(x0) / (1e-4+sum(x0))
+    ##mx <- quantile(abs(fc),probs=1)
+    rnk.trace <- (r1 - r0)
+    rnk.trace <- rnk.trace / max(abs(rnk.trace)) * 0.8
+
+    qq <- quantile(fc,probs=c(0.005,0.995),na.rm=TRUE)
+    qq <- range(fc)
+    ##qq <- c(min(fc,na.rm=TRUE),max(fc,na.rm=TRUE)) * 0.8
+    y1 <- qq[2]
+    y0 <- qq[1]
+    dy <- 0.2*(y1-y0)
     if(max(rnk.trace) >= abs(min(rnk.trace))) rnk.trace <- rnk.trace * abs(y1)
     if(max(rnk.trace) < abs(min(rnk.trace))) rnk.trace <- rnk.trace * abs(y0)
     
     cc <- sign(fc)*rank(abs(fc))
     df <- data.frame(rank=rank(-fc),fc=fc,run=rnk.trace,cc)
     jj <- which(names(fc) %in% gset)
-    dy <- 0.05*diff(range(fc))
-    y0 <- min(fc)
+    ##dy <- 0.05*diff(range(fc))
+    ##y0 <- min(fc)
     cpal <- colorspace::diverge_hcl(64, c=60, l=c(30,100), power=1)
-    cpal <- colorspace::diverge_hcl(64)
+    ii <- 1 + 32 + range(round(32*(fc / max(abs(fc)))))
+    cpal <- colorspace::diverge_hcl(65)[ii[1]:ii[2]]
     
     cex.title=1
 
     ggplot(data=df, aes(x=rank, y=fc, color=cc)) +
         geom_segment(aes(x=rank, y=0, xend=rank, yend=fc), color="grey70") +
-        geom_line(aes(x=rank, y=run), color="green", size=0.8*lwd) +
-        geom_segment(aes(x=rank, y=y0, xend=rank, yend=y0+dy)) +
+        geom_line(aes(x=rank, y=run), color="green", size=0.8) +
+        geom_segment(data=df[jj,], color="black", size=0.3*cex,
+                     aes(x=rank, y=(y0-dy), xend=rank, yend=(y0))) +
+        geom_segment(aes(x=rank, y=y0-1*dy, xend=rank, yend=y0-0.6*dy)) +
         scale_color_gradientn( colors=cpal ) +
-        geom_segment(data=df[jj,], color="black", size=0.3*lwd,
-                     aes(x=rank, y=(y0+dy), xend=rank, yend=(y0+3*dy))) +
+        ylim(y0-1.1*dy,y1) + 
         xlab(xlab) + ylab(ylab) + ggtitle(main) +
         theme_minimal() +
         theme(
@@ -1703,29 +1852,73 @@ ggviolin <- function(x, y, group=NULL, main="", ylim=NULL, add.dots=TRUE,
         ## geom_beeswarm(priority='density',cex=0.9*cex) +
     }
     p
-
 }
 
 ##jitter=TRUE;vcol="lightcyan2";maxbee=200;xth=0
-pgx.violinPlot <- function(x, y, jitter=0.015, vcol="grey85",
-                           xth=0, maxbee=NULL, ...)
+pgx.violinPlot <- function(x, y, group=NULL, xlab='', ylab='',
+                           srt=0, cex.lab=1, cex.main=1.1,
+                           jitter=0.015, vcol="grey85",
+                           plotlib='base', maxbee=NULL, ...)
 {
-    require(vioplot)
-    require(beeswarm)
-    tt <- table(x>xth,y)
-    tt <- tt[2,] / colSums(tt)
-    tt
-    if(is.null(maxbee)) maxbee <- 100*length(setdiff(unique(y),NA))
-    if(jitter>0) x <- x + jitter*diff(range(x))*rnorm(length(x))
-    ##vioplot(x ~ y, col=vcol, main=gene, plotCentre="line")
-    vioplot(x ~ y, col=vcol, main=gene, plotCentre="line", ... )
-    ii <- head(sample(length(x)), maxbee)
-    beeswarm(x[ii]+rx[ii] ~ y[ii], add=TRUE, pch=20, cex=0.6, col="grey10")    
-    pct <- round(100*tt,digits=2)
-    pct
-    legend("topleft",paste0(pct[1],"%"),bty='n',cex=0.85, inset=c(-0.03,0))
-    legend("topright",paste0(pct[2],"%"),bty='n',cex=0.85)
+    fig = NULL
+    if(plotlib=='base') {
+        require(vioplot)
+        require(beeswarm)
+        if(is.null(maxbee)) maxbee <- 100*length(setdiff(unique(y),NA))
+        if(jitter>0) x <- x + jitter*diff(range(x))*rnorm(length(x))
+        ## vioplot(x ~ y, col=vcol, plotCentre="line", xaxt='n' )
+        ## vioplot(x ~ y, col=vcol, plotCentre="line", xaxt='t' )        
+        vioplot(x ~ y, col=vcol, ## cex.main=cex.main,
+                plotCentre="line", xaxt='n', xlab=xlab, ylab=ylab,
+                ... )
+        if(maxbee>0) {
+            ii <- head(sample(length(x)), maxbee)
+            beeswarm(x[ii] ~ y[ii], add=TRUE, pch=20, cex=0.6, col="grey10")
+        }
+        yy <- sort(unique(y))
+        text(x = 1:length(yy),
+             y = par("usr")[3] - 0.03*diff(range(x)),
+             labels = yy,
+             xpd = NA,
+             srt = srt,
+             adj = ifelse(srt==0, 0.5, 0.965),
+             cex = cex.lab)        
+    }
+    if(plotlib=='ggplot') {
+        d1 <- !is.null(maxbee) && maxbee>0
+        fig <- ggviolin( y, x, add.dots=d1, xlab=xlab, ylab=ylab, srt=srt,
+                        main=main, cex.main=cex.main)        
+    }
+    if(plotlib=='plotly') {
+        df = data.frame(x=x, y=y, group=0)
+        if(!is.null(group)) df$group <- group
+        fig <- df %>%
+            plot_ly(
+                x = ~y,
+                y = ~x,
+                ## split = ~group,
+                type = 'violin',
+                box = list(
+                    visible = TRUE
+                ),
+                meanline = list(
+                    visible = TRUE
+                )
+            ) %>%
+            layout(
+                font = list(size=16*cex.lab),
+                xaxis = list(
+                    title = xlab
+                ),
+                yaxis = list(
+                    title = ylab,
+                    zeroline = FALSE
+                )
+            )
+    }
+    fig
 }
+
 
 ##group.name="group";xlab="x";ylab="y";srt=0;main=NULL;base_size=14
 ggbarplot <- function(mat, xlab="x", ylab="y", srt=0, main=NULL, 
@@ -1781,18 +1974,18 @@ ggbarplot <- function(mat, xlab="x", ylab="y", srt=0, main=NULL,
 
 pgx.scatterPlotXY <- function(..., plotlib="base") {
     if(plotlib=="plotly") {
-        pgx._scatterPlotXY.PLOTLY(...)
+        pgx.scatterPlotXY.PLOTLY(...)
     } else if(plotlib=="ggplot") {
-        pgx._scatterPlotXY.GGPLOT(...)
+        pgx.scatterPlotXY.GGPLOT(...)
     } else if(plotlib=="scatterD3") {
-        pgx._scatterPlotXY.D3(...)
+        pgx.scatterPlotXY.D3(...)
     } else {
-        pgx._scatterPlotXY.BASE(...)
+        pgx.scatterPlotXY.BASE(...)
     }
 }
 
 ##col=NULL;cex=NULL;cex.title=1.3;zoom=1;legend=TRUE;bty='n';hilight=NULL
-pgx._scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
+pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
                                     zlim=NULL, zlog=FALSE, zsym=FALSE, softmax=FALSE, pch=20,
                                     cex=NULL, cex.lab=0.8, cex.title=1.2, cex.legend=1,
                                     zoom=1, legend=TRUE, bty='o', legend.ysp=0.85,
@@ -1811,7 +2004,7 @@ pgx._scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title=""
         cex  <- c(2,1.4,1,0.7,0.4)[i]
     }
     if(is.null(var)) {
-        var <- rep("_",nrow(pos))
+        var <- as.character(rep("_",nrow(pos)))
     }
     if(is.null(type)) {
         type <- c("numeric","factor")[1 + class(var) %in% c("factor","character")]
@@ -1891,6 +2084,8 @@ pgx._scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title=""
             if(length(jj)) {
                 points(pos[jj,,drop=FALSE], pch=1, lwd=1.2, cex=cex*0.95)
             }
+        }
+        if(!is.null(hilight2) && length(hilight2)) {
             jj <- which(rownames(pos) %in% hilight2)
             if(length(jj)) {
                 text(pos[jj,1], pos[jj,2], labels=rownames(pos)[jj],
@@ -1959,6 +2154,8 @@ pgx._scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title=""
             if(length(jj)) {
                 points(pos[jj,,drop=FALSE], pch=1, lwd=1.2, cex=cex*0.95)
             }
+        }
+        if(!is.null(hilight2) && length(hilight2)>0) {        
             jj <- which(rownames(pos) %in% hilight2)
             if(length(jj)) {
                 text(pos[jj,1], pos[jj,2], labels=rownames(pos)[jj],
@@ -1992,7 +2189,7 @@ pgx._scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title=""
     }
 }
 
-pgx._scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NULL,
+pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NULL,
                                    cex.lab=0.7, cex.title=1.2, cex.clust=1.5, cex.legend=1,
                                    zoom=1, legend=TRUE, bty='n', hilight=NULL, 
                                    zlim=NULL, zlog=FALSE, softmax=FALSE, zsym=FALSE, 
@@ -2156,31 +2353,31 @@ pgx._scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
         }
         
         if(!is.null(hilight)) {
-            require("ggrepel")            
-            jj <- which(rownames(pos) %in% hilight)
-            ##points(pos[jj,,drop=FALSE], pch='o', lwd=2)
-            ##text(pos[jj,1], pos[jj,2], labels=rownames(pos)[jj], offset=0.4, pos=3)
-            if(label.type=="text")  labelFUN <- geom_text_repel
-            if(label.type=="box") labelFUN <- geom_label_repel
             plt <- plt +
                 geom_point(
                     data = subset(df, name %in% hilight),
                     size = 1.1 * cex,
                     shape = 1, stroke = 0.6,
-                    color = "#000000AA") +
-                ##geom_text_repel(
-                labelFUN(
-                    data = subset(df, name %in% hilight2),
-                    aes(label = label),
-                    size = 4*cex.lab,
-                    color = "black",
-                    ##label.size = 0.10,                
-                    fill = scales::alpha(c("white"),0.6),
-                    segment.color = "grey30",
-                    segment.size = 0.5,                    
-                    box.padding = unit(0.25, "lines"),
-                    point.padding = unit(0.2, "lines")
-                )
+                    color = "#000000AA") 
+        }
+
+        if(!is.null(hilight2)) {
+            require("ggrepel")            
+            if(label.type=="text")  labelFUN <- geom_text_repel
+            if(label.type=="box") labelFUN <- geom_label_repel
+            ##geom_text_repel(
+            plt <- plt + labelFUN(
+                             data = subset(df, name %in% hilight2),
+                             aes(label = label),
+                             size = 4*cex.lab,
+                             color = "black",
+                             ##label.size = 0.10,                
+                             fill = scales::alpha(c("white"),0.6),
+                             segment.color = "grey30",
+                             segment.size = 0.5,                    
+                             box.padding = unit(0.25, "lines"),
+                             point.padding = unit(0.2, "lines")
+                         )
         }
 
         nlev <- length(levels(z1))
@@ -2257,28 +2454,30 @@ pgx._scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
         }
 
         if(!is.null(hilight)) {
-            require("ggrepel")            
-            if(label.type=="text")  labelFUN <- geom_text_repel
-            if(label.type=="box") labelFUN <- geom_label_repel
             plt <- plt +
                 geom_point(
                     data = subset(df, name %in% hilight),
                     size = 1.1 * cex,
                     shape = 1, stroke = 0.6,
-                    color = "#000000AA") +
-                ##geom_text_repel(
-                labelFUN(
-                    data = subset(df, name %in% hilight2),
-                    aes(label = label),
-                    size = 4*cex.lab,
-                    color = "black",
-                    label.size = 0.08,
-                    fill = scales::alpha(c("white"),0.6),
-                    segment.color = "grey30",
-                    segment.size = 0.5,                    
-                    box.padding = unit(0.25, "lines"),
-                    point.padding = unit(0.2, "lines")
-                )
+                    color = "#000000AA")
+        }
+        if(!is.null(hilight2)) {
+            require("ggrepel")            
+            if(label.type=="text")  labelFUN <- geom_text_repel
+            if(label.type=="box") labelFUN <- geom_label_repel            
+            ##geom_text_repel(
+            plt <- plt + labelFUN(
+                             data = subset(df, name %in% hilight2),
+                             aes(label = label),
+                             size = 4*cex.lab,
+                             color = "black",
+                             label.size = 0.08,
+                             fill = scales::alpha(c("white"),0.6),
+                             segment.color = "grey30",
+                             segment.size = 0.5,                    
+                             box.padding = unit(0.25, "lines"),
+                             point.padding = unit(0.2, "lines")
+                         )
         }
         ## colorscale bar
         if(legend) {
@@ -2316,15 +2515,17 @@ pgx._scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
     plt
 }
 
-pgx._scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL, cex=NULL,
-                                      cex.lab=0.8, cex.title=1.2, cex.clust=1.5, cex.legend=1,
-                                      xlab = NULL, ylab = NULL, no.axis=FALSE, 
-                                      zoom=1, legend=TRUE, bty='n', hilight=NULL, hilight2=hilight,
-                                      zlim=NULL, zlog=FALSE, softmax=FALSE, 
-                                      opacity=1, label.clusters=FALSE,
-                                      labels=NULL, label.type=NULL, 
-                                      tooltip=NULL, theme=NULL, set.par=TRUE,
-                                      title="", nrows=NULL, displayModeBar=FALSE)    
+pgx.scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL, cex=NULL,
+                                     cex.lab=0.8, cex.title=1.2, cex.clust=1.5,
+                                     cex.legend = 1,
+                                     xlab = NULL, ylab = NULL, no.axis=FALSE, 
+                                     zoom=1, legend=TRUE, bty='n',
+                                     hilight=NULL, hilight2=hilight,
+                                     zlim=NULL, zlog=FALSE, softmax=FALSE, 
+                                     opacity=1, label.clusters=FALSE,
+                                     labels=NULL, label.type=NULL, 
+                                     tooltip=NULL, theme=NULL, set.par=TRUE,
+                                     title="", nrows=NULL, displayModeBar=FALSE)    
 {
     require(viridis)
     require(RColorBrewer)
@@ -2421,13 +2622,18 @@ pgx._scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
         ## prepare dataframe
         df <- data.frame(x=pos[,1], y=pos[,2], name=rownames(pos),
                          variable=z1, text=tooltip1, label=label1)
-        jj <- order(-table(z1)[z1]) ## plot less frequent points first...            
-        df <- df[jj,]
-        plt <- plot_ly(df, x=~x, y=~y, color=~variable, text=~text,
-                       hoverinfo='text', type="scattergl", colors=col1,
-                       marker = list(size = 7*cex, opacity=opacity),
-                       mode="markers")  
 
+        ## plot less frequent points first... (NEED RETHINK)           
+        jj <- order(-table(z1)[z1]) 
+        df <- df[jj,]
+        
+        plt <- plot_ly()
+        plt <- plt %>%
+            add_markers(data=df, x=~x, y=~y, color=~variable, text=~text,
+                        hoverinfo='text', type="scattergl", colors=col1,
+                        marker = list(size=7*cex, opacity=opacity),
+                        mode = "markers")  
+        
         ## add legend and title
         plt <- plt %>%  layout(showlegend=legend)
         
@@ -2448,14 +2654,19 @@ pgx._scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
         
         if(!is.null(hilight)) {
             jj <- which(rownames(pos) %in% hilight)
-            ##points(pos[jj,,drop=FALSE], pch='o', lwd=2)
-            ##text(pos[jj,1], pos[jj,2], labels=rownames(pos)[jj], offset=0.4, pos=3)
             plt <- plt %>%
+                add_trace(
+                    x = pos[jj,1],  y = pos[jj,2], mode = 'markers',
+                    marker = list(symbol='x', color='transparent', size=8*cex,
+                                  line=list(color='#000000', width=2*cex**0.6)),
+                    showlegend = FALSE                    
+                ) %>%
                 add_annotations(
                     x = pos[jj,1],  y = pos[jj,2], 
                     text = label1[jj],
                     ##textposition = "top center",
                     yanchor="bottom", xanchor="center",
+                    xshift=0, yshift=7*(cex-0.5),
                     showarrow = FALSE,
                     ## arrowhead = 4, arrowsize = 0.5,
                     ## ax = 40*sign(pos[jj,1]), ay = -20*sign(pos[jj,2]),
@@ -2499,11 +2710,19 @@ pgx._scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
         }
         
         df <- data.frame( x=pos[,1], y=pos[,2], variable=z, text=tooltip1 )
+
+        ## plot low values first
         df <- df[order(abs(z)),]
-        plt <- plot_ly(df, x=~x, y=~y, color=~variable, text=~text,
-                       hoverinfo='text', type="scattergl", colors=cpal,
-                       marker = list(size = 7*cex, opacity=opacity),
-                       mode="markers") 
+
+        ###plt <- plot_ly(df,
+        plt <- plot_ly()
+        plt <- plt %>%
+            add_markers(
+                data=df,
+                x=~x, y=~y, color=~variable, text=~text,
+                hoverinfo='text', type="scattergl", colors=cpal,
+                marker = list(size = 7*cex, opacity=opacity),
+                mode="markers") 
 
         ## add legend and title    
         plt <- plt %>%
@@ -2515,6 +2734,14 @@ pgx._scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
             ##points(pos[jj,,drop=FALSE], pch='o', lwd=2)
             ##text(pos[jj,1], pos[jj,2], labels=rownames(pos)[jj], offset=0.4, pos=3)
             plt <- plt %>%
+                add_trace(
+                    x = pos[jj,1],  y = pos[jj,2], mode = 'markers',
+                    marker = list(
+                        symbol='x', color='transparent', size=8*cex,
+                        line=list(color='#000000', width=2*cex**0.6)
+                    ),
+                    showlegend = FALSE
+                ) %>%
                 add_annotations(
                     x = pos[jj,1],  y = pos[jj,2],
                     ##textposition = "top center",
@@ -2546,8 +2773,7 @@ pgx._scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL, cex=NU
     plt
 }
 
-
-pgx._scatterPlotXY.D3 <- function(pos, var=NULL, type=NULL, col=NULL, cex=1,
+pgx.scatterPlotXY.D3 <- function(pos, var=NULL, type=NULL, col=NULL, cex=1,
                                   cex.lab=0.8, cex.title=1.2, cex.clust=1.5, cex.legend=1,
                                   zoom=1, legend=TRUE, bty='n', hilight=NULL, 
                                   zlim=NULL, zlog=FALSE, softmax=FALSE,

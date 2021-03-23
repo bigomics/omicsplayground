@@ -16,7 +16,7 @@ ClusteringInputs <- function(id) {
 ClusteringUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillRow(
-        flex = c(1.4,0.05,1),
+        flex = c(1.6,0.05,1),
         height = 780,
         tabsetPanel(
             id = ns("tabs1"),

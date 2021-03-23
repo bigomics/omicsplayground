@@ -221,8 +221,7 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
             } ## end of if
         } ## end of for
 
-    }
-    
+    }    
     return(surv.p)
 }        
 

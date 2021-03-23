@@ -25,8 +25,8 @@ ExpressionUI.test <- function(id) {
 ExpressionUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillCol(
-        flex = c(1.6,1),
-        height = 750,
+        flex = c(1.8,1),
+        height = 720,
         tabsetPanel(
             id = ns("tabs1"),
             tabPanel("Plot",uiOutput(ns("plots_UI"))),
@@ -54,7 +54,7 @@ ExpressionBoard <- function(input, output, session, env)
     rowH = 365  ## row height of panels
     imgH = 300  ## height of images
     tabH = 180  ## height of tables
-    tabH = "70vh"  ## height of tables
+    tabH = "80vh"  ## height of tables
     
     description = "<b>Differential Expression Analysis.</b> Compare expression between
 two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups."
@@ -1256,7 +1256,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         options = genetable_opts,
         server = TRUE, 
         title = "Differential expression analysis",
-        height = c(265,700)
+        height = c(285,700)
     )
 
     ##output$genetable <- genetable_module$render
@@ -1335,8 +1335,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         id = "gsettable", 
         func = gsettable.RENDER, 
         info.text = gsettable_text, label="II",
-        title="Gene sets",
-        height = c(265,700), width = c('100%',800)        
+        title="Gene sets with gene",
+        height = c(285,700), width = c('100%',800)        
     )
 
     tablesUI_caption = "<b>Differential expression tables</b>. <b>(I)</b> Statistical results of the the differential expression analysis for selected contrast. The number of stars indicate how many statistical methods identified the gene significant. <b>(II)</b> Correlation and enrichment value of gene sets that contain the gene selected in Table I."

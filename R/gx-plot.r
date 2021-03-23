@@ -19,7 +19,9 @@ gx.b3plot <- function(x, y, width=1, bar=TRUE, bee=TRUE, sig.stars=FALSE,
         segments( x0-0.1, bx$conf[2,],  x0+0.1, bx$conf[2,],lwd=lwd)
         segments( x0,     bx$conf[1,],  x0,     bx$conf[2,],lwd=lwd*0.5)
     }
-    y = factor(y)
+    y = as.character(y)
+    y[is.na(y)] <- 'NA'
+    y = factor(y, exclude=NULL)
     mx = tapply(x, y, median)
 
     sig = yc = NULL
@@ -62,13 +64,17 @@ gx.b3plot <- function(x, y, width=1, bar=TRUE, bee=TRUE, sig.stars=FALSE,
     ##bx = barplot( mx-xoff, width=0.6666, space=0.5, ylim=ylim, offset=xoff, names.arg=NA)
     bx = barplot( mx, width=0.6666, space=0.5, ylim=ylim, offset=xoff,
                  names.arg=NA, col=col, ... )
+    if(is.null(srt)) {
+        nnchar <- sum(sapply(unique(y),nchar))
+        srt <- ifelse(nnchar > 24, 30, 0)
+    }
     pos <- ifelse(srt==0, 1, 2)
 
     n = length(unique(y))
-    if(is.null(srt)) srt <- ifelse(n>3, 30, 0)
     if(names==TRUE) {
         y0 = min(ylim) - diff(ylim)*0.03
-        text( bx[,1], y0, names(mx), cex=names.cex, adj=1, srt=srt, xpd=TRUE,
+        text( bx[,1], y0, names(mx), cex=names.cex,
+             srt=srt, adj=ifelse(srt==0,0.5,0.965), xpd=TRUE,
              pos=pos, offset=0)
     }
     if(bee) {

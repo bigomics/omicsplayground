@@ -49,7 +49,7 @@ EnrichmentBoard <- function(input, output, session, env)
     rowH = 365  ## row height of panels
     imgH = 300  ## height of images
     tabH = 160  ## height of tables
-    tabH = "70vh"  ## height of tables
+    tabH = "80vh"  ## height of tables
     
     description = "<b>Geneset enrichment analysis.</b> Perform differential expression analysis on a geneset level, also called geneset enrichment analysis."
     output$description <- renderUI(HTML(description))
@@ -476,6 +476,11 @@ EnrichmentBoard <- function(input, output, session, env)
         comp = input$gs_contrast
         if(!(comp %in% names(ngs$gx.meta$meta))) return(NULL)
 
+        ## selected
+        sel = as.integer(gseatable$rows_selected())
+        sel.gs <- NULL
+        if(!is.null(sel) && length(sel)>0) sel.gs = rownames(rpt)[sel]
+        
         ## filter on active rows (using search)
         ##ii <- input$gseatable_rows_all
         ii  <- gseatable$rows_all()
@@ -484,8 +489,19 @@ EnrichmentBoard <- function(input, output, session, env)
             rpt <- rpt[ii,,drop=FALSE]
         }
         if(nrow(rpt)==0) return(NULL)
+        i = 1
+        if(!is.null(sel.gs) && sel.gs %in% rownames(rpt)) {
+            i <- match(sel.gs, rownames(rpt))
+        }
+        ##jj <- floor(i/10)*10 + 1:10
+        jj <- i:min(nrow(rpt),i+9)
+
+        message("[topEnriched.RENDER] sel = ",sel)
+        message("[topEnriched.RENDER] sel.gs = ",sel.gs)        
+        message("[topEnriched.RENDER] i = ",i)        
+        message("[topEnriched.RENDER] jj = ",paste(jj,collapse=' '))
         
-        plotTopEnriched(ngs, rpt, comp=comp, ntop=10, rowcol=c(2,5))        
+        plotTopEnriched(ngs, rpt[jj,,drop=FALSE], comp=comp, ntop=10, rowcol=c(2,5))
     })
 
     ## Top enriched    
@@ -501,15 +517,29 @@ EnrichmentBoard <- function(input, output, session, env)
         comp = input$gs_contrast
         if(is.null(comp)) return(NULL)
         if(!(comp %in% names(ngs$gx.meta$meta))) return(NULL)
-
+        
+        ## selected
+        sel = as.integer(gseatable$rows_selected())
+        sel.gs <- NULL
+        if(!is.null(sel) && length(sel)>0) sel.gs = rownames(rpt)[sel]
+        
         ## filter on active rows (using search)
         ##ii <- input$gseatable_rows_all
-        ii <- gseatable$rows_all()
+        ii  <- gseatable$rows_all()
         if(is.null(ii) || length(ii)==0) return(NULL)
-        rpt <- rpt[ii,,drop=FALSE]
+        if(length(ii)>0) {
+            rpt <- rpt[ii,,drop=FALSE]
+        }
         if(nrow(rpt)==0) return(NULL)
+        i = 1
+        if(!is.null(sel.gs) && sel.gs %in% rownames(rpt)) {
+            i <- match(sel.gs, rownames(rpt))
+        }
+        jj <- floor(i/10)*10 + 1:10
         
-        plotTopEnriched(ngs=ngs, rpt=rpt, comp=comp, ntop=24, rowcol=c(4,6))        
+        plotTopEnriched(ngs=ngs, rpt=rpt[jj,,drop=FALSE], comp=comp,
+                        ntop=24, rowcol=c(4,6))        
+
     })
     
     
@@ -903,8 +933,7 @@ EnrichmentBoard <- function(input, output, session, env)
     subplot_enplot.RENDER %<a-% reactive({
     ##subplot_enplot.RENDER <- reactive({    
 
-        dbg("[subplot_enplot.RENDER] reacted")
-        
+        dbg("[subplot_enplot.RENDER] reacted")        
         pgx <- inputData()
         req(pgx)
         
@@ -920,13 +949,35 @@ EnrichmentBoard <- function(input, output, session, env)
         gs = gset_selected()
         if(is.null(gs)) return(NULL)
         gs.genes = GSETS[[gs]]
-        top.genes = head(gs.genes[order(-abs(fc[gs.genes]))],10)
         
         par(mfrow=c(1,1), mgp=c(1.95,0.8,0), oma=c(0,0,0.5,0.2)*2 )
         par(mar=subplot.MAR)        
         p1 <- NULL
         ##p1 <- ggenplot(fc, gs.genes, main=gs )
         gsea.enplot(fc, gs.genes, main=gs )
+        return(p1)
+    })
+
+    subplot_enplot.RENDER2 <- reactive({
+
+        dbg("[subplot_enplot.RENDER] reacted")        
+        pgx <- inputData()
+        req(pgx)
+        
+        comp=1;gs=100
+        gs="H:HALLMARK_TNFA_SIGNALING_VIA_NFKB"        
+        comp = input$gs_contrast
+
+        ## !!!!!!!! SHOULD BE SELECTED GX METHODS ONLY???
+        fc <- pgx$gx.meta$meta[[comp]]$meta.fx
+        mq <- pgx$gx.meta$meta[[comp]]$meta.q
+        names(fc) <- names(mq) <- rownames(pgx$gx.meta$meta[[comp]])
+        
+        gs = gset_selected()
+        if(is.null(gs)) return(NULL)
+        gs.genes = GSETS[[gs]]
+
+        p1 <- gsea.enplotly(fc, gs.genes, main=gs )
         return(p1)
     })
 
@@ -1125,8 +1176,8 @@ EnrichmentBoard <- function(input, output, session, env)
         plotModule,
         id = "subplot_enplot", 
         func = subplot_enplot.RENDER,
-        func2 = subplot_enplot.RENDER,         
-        ## plotlib="ggplot",        
+        func2 = subplot_enplot.RENDER2,         
+        plotlib="base", plotlib2="plotly",
         info.text = '',
         pdf.width=6, pdf.height=4,
         res = c(68,110),
@@ -1798,7 +1849,7 @@ EnrichmentBoard <- function(input, output, session, env)
         options = gseatable_opts,
         title="Enrichment analysis",
         info.width="500px",
-        height = c(265, 700)
+        height = c(285, 700)
     )
 
     genetable_text = "By clicking on a gene set in the table <code>I</code>, it is possible to see the gene list of that gene set in this table. By clicking on a gene in this table, users can check the expression status of the gene for the selected contrast in the <code>Expression</code> barplot and its correlation to the gene set in the <code>Gene to gene set correlation</code> scatter plot under the <code>Plots</code> section."
@@ -1809,7 +1860,7 @@ EnrichmentBoard <- function(input, output, session, env)
         func=genetable.RENDER,
         info.text = genetable_text,
         title="Genes in gene set", label="II",
-        height = c(265,700), width = c('100%',800)
+        height = c(285,700), width = c('100%',800)
     )
     
     tables_caption = "<b>Enrichment tables</b>. <b>(I)</b> Table summarizing the statistical results of the gene set enrichment analysis for selected contrast. The number of stars indicate how many methods identified the geneset significant. <b>(II)</b> Table showing the fold-change, statistics and correlation of the genes in the selected gene set."

@@ -222,13 +222,16 @@ plotModule <- function(input, output, session, ## ns=NULL,
                        info.text="Info text", title="", 
                        inputs=NULL, options = NULL, label="",
                        caption="", caption2="", ## header=NULL,
-                       plotlib = "base", renderFunc=NULL, outputFunc=NULL, csvFunc=NULL,
+                       plotlib = "base", plotlib2 = NULL,
+                       renderFunc=NULL, outputFunc=NULL, csvFunc=NULL,
+                       renderFunc2=NULL, outputFunc2=NULL, 
                        no.download = FALSE, download.fmt=c("png","pdf"), 
                        just.info=FALSE, info.width="300px", show.maximize = TRUE,
                        height = c(400,720), width = c("auto",1080), res=c(72,100),
                        download.pdf = NULL, download.png = NULL,
                        download.html = NULL, download.csv = NULL,
-                       pdf.width=8, pdf.height=8, pdf.pointsize=12)
+                       pdf.width=8, pdf.height=6, pdf.pointsize=12,
+                       add.watermark=FALSE )
 {
     ns <- session$ns    
     
@@ -353,58 +356,8 @@ plotModule <- function(input, output, session, ## ns=NULL,
     HTMLFILE = paste0(gsub("file","plot",tempfile()),".html")  ## tempory for webshot
     HTMLFILE
     unlink(HTMLFILE)
-    
-    ##outputFunc = renderFunc = NULL
-    if(plotlib == "generic") {
-        if(is.null(renderFunc)) stop("'generic' class must provide renderFunc")
-        if(is.null(outputFunc)) stop("'generic' class must provide outputFunc")
-    } else if(plotlib == "htmlwidget") {
-        if(is.null(renderFunc)) stop("'htmlwidget' class must provide renderFunc")
-        if(is.null(outputFunc)) stop("'htmlwidget' class must provide outputFunc")
-    } else if(plotlib == "plotly") {
-        ##render <- renderPlotly({ func() })
-        require(plotly)
-        outputFunc = "plotlyOutput"
-        renderFunc = "renderPlotly"
-    } else if(plotlib == "echarts") {
-        ##render <- renderPlotly({ func() })
-        require(plotly)
-        outputFunc = "echarts4rOutput"
-        renderFunc = "renderEcharts4r"
-    } else if(plotlib=="scatterD3") {
-        require(scatterD3)
-        renderFunc="renderScatterD3"
-        outputFunc="scatterD3Output"
-    } else if(plotlib=="pairsD3") {
-        require(pairsD3)
-        renderFunc="renderPairsD3"
-        outputFunc="pairsD3Output"
-    } else if(plotlib == "visnetwork") {
-        require(visNetwork)
-        outputFunc="visNetworkOutput"
-        renderFunc = "renderVisNetwork"
-    } else if(plotlib %in% c("ggplot","ggplot2")) {
-        outputFunc="plotOutput"
-        renderFunc="function(x) renderPlot(plot(x))"
-    } else if(plotlib == "iheatmapr") {
-        require(iheatmapr)
-        outputFunc="iheatmaprOutput"
-        renderFunc="renderIheatmap"
-    } else if(plotlib == "image") {
-        outputFunc="imageOutput"
-        renderFunc="renderImage"
-    } else {
-        ## Base plotting
-        ## render <- renderPlot({
-        ##     par(mar=c(0,0,0,0),oma=c(0,0,0,0))
-        ##     func()
-        ## }, res=res, width=width, height=height)
-        outputFunc="plotOutput"
-        ##renderFunc="renderPlot"
-        ##renderFunc="function(x) renderPlot(x, res=res, width=width, height=height)"
-        renderFunc="renderPlot"
-    }
 
+    
     ##============================================================
     ##=============== Download Handlers ==========================
     ##============================================================
@@ -541,7 +494,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     file.copy(PDFFILE, file, overwrite=TRUE)
 
                     ## ImageMagick or pdftk
-                    if(TRUE && WATERMARK) {
+                    if(TRUE && add.watermark) {
                         message("[plotModule] adding watermark to PDF...")
                         ##addWatermark.PDF(PDFFILE)
                         addWatermark.PDF(file) 
@@ -651,6 +604,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
 
     ##func2 <- func  ## must be pryr  %<a-% to work!!!
     if(is.null(func2)) func2 <- func
+    if(is.null(plotlib2)) plotlib2 <- plotlib    
     if(length(height)==1) height <- c(height,700)
     if(length(width)==1)  width  <- c(width,1200)
     if(length(res)==1)    res    <- c(res, 1.3*res)    
@@ -662,6 +616,81 @@ plotModule <- function(input, output, session, ## ns=NULL,
     width.2 <- ifnotchar.int(width[2])
     height.1 <- ifnotchar.int(height[1])
     height.2 <- ifnotchar.int(height[2])
+    
+    ## This sets the correct render and output functions for different
+    ##plotting libraries.
+    getOutputRenderFunc <- function(plotlib) {
+        outputFunc = renderFunc = NULL
+        if(plotlib == "generic") {
+            if(is.null(renderFunc)) stop("'generic' class must provide renderFunc")
+            if(is.null(outputFunc)) stop("'generic' class must provide outputFunc")
+        } else if(plotlib == "htmlwidget") {
+            if(is.null(renderFunc)) stop("'htmlwidget' class must provide renderFunc")
+            if(is.null(outputFunc)) stop("'htmlwidget' class must provide outputFunc")
+        } else if(plotlib == "plotly") {
+            ##render <- renderPlotly({ func() })
+            require(plotly)
+            outputFunc = "plotlyOutput"
+            renderFunc = "renderPlotly"
+        } else if(plotlib == "echarts") {
+            ##render <- renderPlotly({ func() })
+            require(plotly)
+            outputFunc = "echarts4rOutput"
+            renderFunc = "renderEcharts4r"
+        } else if(plotlib=="scatterD3") {
+            require(scatterD3)
+            renderFunc="renderScatterD3"
+            outputFunc="scatterD3Output"
+        } else if(plotlib=="pairsD3") {
+            require(pairsD3)
+            renderFunc="renderPairsD3"
+            outputFunc="pairsD3Output"
+        } else if(plotlib == "visnetwork") {
+            require(visNetwork)
+            outputFunc="visNetworkOutput"
+            renderFunc = "renderVisNetwork"
+        } else if(plotlib %in% c("ggplot","ggplot2")) {
+            outputFunc="plotOutput"
+            renderFunc="function(x) renderPlot(plot(x))"
+        } else if(plotlib == "iheatmapr") {
+            require(iheatmapr)
+            outputFunc="iheatmaprOutput"
+            renderFunc="renderIheatmap"
+        } else if(plotlib == "image") {
+            outputFunc="imageOutput"
+            renderFunc="renderImage"
+        } else {
+            ## Base plotting
+            ## render <- renderPlot({
+            ##     par(mar=c(0,0,0,0),oma=c(0,0,0,0))
+            ##     func()
+            ## }, res=res, width=width, height=height)
+            outputFunc="plotOutput"
+            ##renderFunc="renderPlot"
+            ##renderFunc="function(x) renderPlot(x, res=res, width=width, height=height)"
+            renderFunc="renderPlot"
+        }
+        list( outputFunc=outputFunc, renderFunc=renderFunc )
+    }
+
+    if(is.null(outputFunc) && is.null(renderFunc)) {
+        out1 <- getOutputRenderFunc(plotlib)
+        outputFunc = out1$outputFunc
+        renderFunc = out1$renderFunc
+    }
+
+    if(is.null(outputFunc2) && is.null(renderFunc2) &&
+       plotlib2 != plotlib ) {    
+        out2 <- getOutputRenderFunc(plotlib2)
+        outputFunc2 = out2$outputFunc
+        renderFunc2 = out2$renderFunc
+    }
+    if(is.null(outputFunc2) && is.null(renderFunc2) &&
+       plotlib2 == plotlib ) {    
+        outputFunc2 = outputFunc
+        renderFunc2 = renderFunc
+    }
+
     
     ##outputFunc <- sub(".*::","",outputFunc)
     render = render2 = NULL   
@@ -706,26 +735,25 @@ plotModule <- function(input, output, session, ## ns=NULL,
             }
             ##p1.base
         }, res=res.1)
+    }
 
-        if(!is.null(func2)) {
-            render2 <- renderPlot({
-                func2()
-            }, res=res.2)            
-            ##render2 <- renderPlot(func2())
-        }
-    } else if(plotlib=="image") {
+    if(!is.null(func2) && plotlib2=="base") {
+        render2 <- renderPlot({
+            func2()
+        }, res=res.2)            
+        ##render2 <- renderPlot(func2())
+    }
+    if(plotlib=="image") {
         render <- renderImage( func(), deleteFile=FALSE)
-        if(!is.null(func2)) {
-            render2 <- renderImage(func2(), deleteFile=FALSE)
-        }
-        if(do.png) {
-            ## file.copy(func()$src, PNGFILE, overwrite=TRUE )
-        }
-    } else {
+    }
+    if(!is.null(func2) && plotlib2=="image") {
+        render2 <- renderImage(func2(), deleteFile=FALSE)
+    }
+    if(is.null(render)) {
         render <- eval(parse(text=renderFunc))(func())
-        if(!is.null(func2)) {
-            render2 <- eval(parse(text=renderFunc))(func2())
-        }
+    }
+    if(is.null(render2) && !is.null(func2)) {
+        render2 <- eval(parse(text=renderFunc2))(func2())
     }
     
     output$renderfigure <- render
@@ -734,7 +762,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
     output$popupfig <- renderUI({
         w <- width.2
         h <- height.2
-        if(plotlib=="image") {
+        if(plotlib2=="image") {
             ## retains aspect ratio
             ##
             img.file <- func()$src
@@ -747,11 +775,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
             h <- img.dim[1]*r
             w <- img.dim[2]*r
         } 
-        if(!is.null(render2)) {
-            r <- eval(parse(text=outputFunc))(ns("renderpopup"), width=w, height=h)
-        } else {
-            r <- eval(parse(text=outputFunc))(ns("renderfigure"), width=w, height=h)
-        }  
+        r <- eval(parse(text=outputFunc2))(ns("renderpopup"), width=w, height=h)
         if(any(class(caption2)=="reactive")) {
             caption2 <- caption2()
         }
@@ -972,13 +996,14 @@ tableModule <- function(input, output, session,
             ##DT::renderDataTable(func()),
             ##verbatimTextOutput(ns("zoomstatus"))
             div(class="popup-table",
-                bsModal(ns("tablePopup"), title, size="l",
-                        ns("zoombutton"),
-                        ##tagList(renderPlot(plot(sin)))
-                        tagList(uiOutput(ns("popuptable")))
-                        )
-                )
-            
+                bsModal(
+                    id = ns("tablePopup"),
+                    title = title,
+                    size="l",
+                    trigger = ns("zoombutton"),
+                    ##tagList(renderPlot(plot(sin)))
+                    tagList(uiOutput(ns("popuptable")))
+                ))            
         )
     })
     ##outputOptions(output, "widget", suspendWhenHidden=FALSE) ## important!!!

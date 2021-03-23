@@ -8,14 +8,15 @@
 ##========================================================================
 
 
-gset.rankcor <- function(rnk, gset , compute.p=FALSE)
+gset.rankcor <- function(rnk, gset , compute.p=FALSE, no.rank=FALSE)
 {
     if(!any(class(gset) %in% c("Matrix","dgCMatrix")) ) {
         stop("gset must be a matrix")
         ##gset = gmt2mat(gset, bg=names(rnk))
     }
     gg <- intersect(rownames(gset),names(rnk))
-    rnk1 <- matrix(rank(rnk[gg]),ncol=1)
+    if(!no.rank) rnk1 <- matrix(rank(rnk[gg]),ncol=1)
+    if(no.rank)  rnk1 <- matrix(rnk[gg],ncol=1)
     rho1 <- qlcMatrix::corSparse( gset[gg,], rnk1)[,1]
     names(rho1) <- colnames(gset)
     

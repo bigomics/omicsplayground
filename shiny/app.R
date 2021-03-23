@@ -19,7 +19,6 @@ message("\n\n")
 message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
 message("###############################################################")
-
 message("\n")
 message("************************************************")
 message("********* RUNTIME ENVIRONMENT VARIABLES ********")
@@ -93,7 +92,8 @@ SHOW_QUESTIONS = FALSE
 ##WATERMARK  = opt$WATERMARK
 ##USER_MODE  = opt$USER_MODE
 AUTHENTICATION = opt$AUTHENTICATION
-DEV = (USER_MODE=="dev" && dir.exists("../../omicsplayground-dev"))
+DEV = (dir.exists("modulesx")) ### !!!!!!! OVERRIDE
+DEV
 
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
@@ -128,7 +128,7 @@ if(0) {
 
 BOARDS <- c("load","view","clust","expr","enrich","isect","func",
             "word","drug","sig","scell","cor","bio","cmap",
-            "wgcna", "tcga","system","multi","qa")
+            "wgcna", "tcga","system","multi","qa","corsa")
 if(is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED = BOARDS
 if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
 
@@ -147,16 +147,17 @@ for(m in boards) {
 
 ##ENABLED[c("wgcna","system","multi")] <- FALSE
 ENABLED[c("system","multi")] <- FALSE
-if(1 && DEV && dir.exists("../../omicsplayground-dev")) {
-    xboards <- dir("../../omicsplayground-dev/modulesx", pattern="Board.R$")
-    ##xboards <- dir("../../omicsplayground-dev/modulesx", pattern="TcgaBoard.R$")
+if(1 && DEV && dir.exists("modulesx")) {
+    ## Very early development modules/boards
+    ##
+    xboards <- dir("modulesx", pattern="Board.R$")
     xboards
     m=xboards[1]
     for(m in xboards) {
-        message("[MAIN] loading extra board ",m)
-        source(paste0("../../omicsplayground-dev/modulesx/",m), local=src.local)
+        message("[MAIN] loading DEVELOPMENT board ",m)
+        source(paste0("modulesx/",m), local=src.local)
     }
-    ##ENABLED[c("system","multi")] <- TRUE
+    ENABLED[] <- TRUE  ## enable all modules
     boards <- unique(c(boards, xboards))
 }
 ENABLED
@@ -167,7 +168,7 @@ has.sigdb
 if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
 
 MAINTABS = c("DataView","Clustering","Expression","Enrichment",
-             "Signature","CellProfiling","Dev")
+             "Signature","CellProfiling","DEV")
 
 if(0) {
     save.image(file="../cache/image.RData")
@@ -222,6 +223,7 @@ server = function(input, output, session) {
         if(ENABLED["scell"])  env[["scell"]]  <- callModule( SingleCellBoard, "scell", env)
         if(ENABLED["tcga"])   env[["tcga"]]   <- callModule( TcgaBoard, "tcga", env)
         if(ENABLED["wgcna"])  env[["wgcna"]]  <- callModule( WgcnaBoard, "wgcna", env)
+        if(ENABLED["corsa"])  env[["corsa"]]  <- callModule( CorsaBoard, "corsa", env)
         if(ENABLED["system"]) env[["system"]] <- callModule( SystemBoard, "system", env)
         if(ENABLED["multi"])  env[["multi"]]  <- callModule( MultiLevelBoard, "multi", env)
         env[["qa"]] <- callModule( QuestionBoard, "qa", lapse = -1)
@@ -256,18 +258,19 @@ server = function(input, output, session) {
         
         if(USER_MODE == "basic") {
             hideTab("maintabs","CellProfiling")
+            hideTab("maintabs","DEV")
             hideTab("enrich-tabs1","GeneMap")
             hideTab("clust-tabs2","Feature ranking")
             hideTab("expr-tabs1","Volcano (methods)")
             hideTab("expr-tabs2","FDR table")
             hideTab("enrich-tabs1","Volcano (methods)")
             hideTab("enrich-tabs2","FDR table")
-            ## hideTab("cor-tabs","Functional")
+            hideTab("cor-tabs","Functional")  ## too slow
         }
         
         ## hideTab("cor-tabs","Functional")       
         if(USER_MODE == "dev" || DEV) {
-            showTab("maintabs","Dev")
+            showTab("maintabs","DEV")
             showTab("view-tabs","Resource info")
             showTab("enrich-tabs1","GeneMap")
             showTab("scell-tabs1","CNV")  ## DEV only
@@ -275,7 +278,7 @@ server = function(input, output, session) {
             showTab("cor-tabs","Functional")
         } else {
             hideTab("view-tabs","Resource info")
-            hideTab("maintabs","Dev")
+            hideTab("maintabs","DEV")
             hideTab("scell-tabs1","CNV")  ## DEV only
             hideTab("scell-tabs1","Monocle") ## DEV only       
         }
@@ -322,9 +325,10 @@ TABVIEWS <- list(
     "bio" = tabView("Find biomarkers", BiomarkerInputs("bio"), BiomarkerUI("bio")),
     "cmap" = tabView("Similar experiments", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
     "scell" = tabView("CellProfiling", SingleCellInputs("scell"), SingleCellUI("scell")),
-    "tcga" = tabView("TCGA survival (beta)", TcgaInputs("tcga"), TcgaUI("tcga"))
-    ##"system" = tabView("Systems analysis", SystemInputs("system"), SystemUI("system")),
-    ##"multi" = tabView("Multi-level", MultiLevelInputs("multi"), MultiLevelUI("multi"))
+    "tcga" = tabView("TCGA survival (beta)", TcgaInputs("tcga"), TcgaUI("tcga")),
+    "corsa" = tabView("CORSA (alpha)",CorsaInputs("corsa"),CorsaUI("corsa")),    
+    "system" = tabView("Systems analysis", SystemInputs("system"), SystemUI("system")),
+    "multi" = tabView("Multi-level", MultiLevelInputs("multi"), MultiLevelUI("multi"))
 )
 
 names(TABVIEWS)
@@ -428,7 +432,7 @@ tabs = list(
     "Enrichment" = c("enrich","func","word","drug"),
     "Signature" = c("isect","sig","bio","cmap","tcga"),
     "CellProfiling" = "scell",
-    "Dev" = c("system","multi")
+    "DEV" = c("corsa","system","multi")
 )
 ui = createUI(tabs)
 

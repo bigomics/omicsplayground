@@ -76,7 +76,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                         cexRow=1, cexCol=1, mar=c(5,5,5,5),
                         title_cex=1.2, column_title_rot=0,
                         show_legend=TRUE, show_key=TRUE, zlim=NULL,
-                        show_rownames=60, lab.len=80, key.offset=c(0.05,1.01),
+                        show_rownames=nmax, lab.len=80, key.offset=c(0.05,1.01),
                         show_colnames=NULL, use.nclust=FALSE)
 {
     require("ComplexHeatmap")

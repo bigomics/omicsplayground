@@ -85,9 +85,10 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             
             output$UI <- renderUI({
 
-                ns <- session$ns                
-                genes <- sort(rownames(countsRT()))
-                
+                ns <- session$ns
+                if(is.null(countsRT())) return(NULL)
+
+                genes <- sort(rownames(countsRT()))                
                 phenotypes <- c(sort(unique(colnames(phenoRT()))),"<samples>","<gene>")
                 phenotypes <- grep("_vs_",phenotypes,value=TRUE,invert=TRUE) ## no comparisons...
                 psel <- c(grep("sample|patient|name|id|^[.]",phenotypes,value=TRUE,
@@ -309,6 +310,10 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 gr2 <- gsub(".*_vs_|@.*","",ct.name)                
                 ctx <- c(NA,gr1, gr2)[1 + 1*in.main + 2*in.ref]
                 
+                if(!grepl('_vs_',ct.name)) {
+                    shinyalert("ERROR","Contrast must include _vs_ in name")
+                    return(NULL)
+                }
                 if( sum(in.main)==0 || sum(in.ref)==0 ) {
                     shinyalert("ERROR","Both groups must have samples")
                     return(NULL)
