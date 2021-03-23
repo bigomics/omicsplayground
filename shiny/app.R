@@ -325,11 +325,15 @@ TABVIEWS <- list(
     "bio" = tabView("Find biomarkers", BiomarkerInputs("bio"), BiomarkerUI("bio")),
     "cmap" = tabView("Similar experiments", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
     "scell" = tabView("CellProfiling", SingleCellInputs("scell"), SingleCellUI("scell")),
-    "tcga" = tabView("TCGA survival (beta)", TcgaInputs("tcga"), TcgaUI("tcga")),
-    "corsa" = tabView("CORSA (alpha)",CorsaInputs("corsa"),CorsaUI("corsa")),    
-    "system" = tabView("Systems analysis", SystemInputs("system"), SystemUI("system")),
-    "multi" = tabView("Multi-level", MultiLevelInputs("multi"), MultiLevelUI("multi"))
+    "tcga" = tabView("TCGA survival (beta)", TcgaInputs("tcga"), TcgaUI("tcga"))
 )
+
+if(DEV) {
+    TABVIEWS$corsa = tabView("CORSA (alpha)",CorsaInputs("corsa"),CorsaUI("corsa"))
+    TABVIEWS$system = tabView("Systems analysis",SystemInputs("system"),SystemUI("system"))
+    TABVIEWS$multi = tabView("Multi-level", MultiLevelInputs("multi"), MultiLevelUI("multi"))
+}
+
 
 names(TABVIEWS)
 TABVIEWS <- TABVIEWS[names(TABVIEWS) %in% names(which(ENABLED))]
