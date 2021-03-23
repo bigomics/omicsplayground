@@ -218,11 +218,11 @@ server = function(input, output, session) {
     if(ENABLED["sig"])    env[["sig"]]    <- callModule( SignatureBoard, "sig", env)
     if(ENABLED["cor"])    env[["cor"]]    <- callModule( CorrelationBoard, "cor", env)
     if(ENABLED["bio"])    env[["bio"]]    <- callModule( BiomarkerBoard, "bio", env)
-    if(1) {            
-        if(ENABLED["cmap"])   env[["cmap"]]   <- callModule( ConnectivityBoard, "cmap", env)
-        if(ENABLED["scell"])  env[["scell"]]  <- callModule( SingleCellBoard, "scell", env)
-        if(ENABLED["tcga"])   env[["tcga"]]   <- callModule( TcgaBoard, "tcga", env)
-        if(ENABLED["wgcna"])  env[["wgcna"]]  <- callModule( WgcnaBoard, "wgcna", env)
+    if(ENABLED["cmap"])   env[["cmap"]]   <- callModule( ConnectivityBoard, "cmap", env)
+    if(ENABLED["scell"])  env[["scell"]]  <- callModule( SingleCellBoard, "scell", env)
+    if(ENABLED["tcga"])   env[["tcga"]]   <- callModule( TcgaBoard, "tcga", env)
+    if(ENABLED["wgcna"])  env[["wgcna"]]  <- callModule( WgcnaBoard, "wgcna", env)
+    if(DEV) {            
         if(ENABLED["corsa"])  env[["corsa"]]  <- callModule( CorsaBoard, "corsa", env)
         if(ENABLED["system"]) env[["system"]] <- callModule( SystemBoard, "system", env)
         if(ENABLED["multi"])  env[["multi"]]  <- callModule( MultiLevelBoard, "multi", env)
