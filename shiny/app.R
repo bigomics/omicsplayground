@@ -95,6 +95,10 @@ AUTHENTICATION = opt$AUTHENTICATION
 DEV = (dir.exists("modulesx")) ### !!!!!!! OVERRIDE
 DEV
 
+if(DEV) {
+    message('****************** DEVELOPER MODE ********************')
+}
+
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
 
