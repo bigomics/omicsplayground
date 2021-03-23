@@ -226,7 +226,7 @@ DataViewBoard <- function(input, output, session, env)
         info.text = genePlots_averageRankPlot_text,
         height = imgH, ## width = '100%',
         pdf.width=6, pdf.height=6, 
-        label="d", title="Average rank"
+        label="c", title="Average rank"
     )
     ##output <- attachModule(output, genePlots_averageRankPlot_module) 
 
@@ -312,7 +312,7 @@ DataViewBoard <- function(input, output, session, env)
         func2 = genePlots_correlationplot.RENDER,
         info.text=genePlots_correlationplot_text,
         height = imgH, pdf.width=6, pdf.height=6,
-        label="c", title="Top correlated genes"
+        label="e", title="Top correlated genes"
     )
     ##output <- attachModule(output, genePlots_correlationplot_module) 
 
@@ -547,7 +547,7 @@ DataViewBoard <- function(input, output, session, env)
         func2 = genePlots_tsne.RENDER,
         info.text = genePlots_tsne_text,
         height = imgH, pdf.width = 6, pdf.height = 6,
-        label = "a", title= "t-SNE clustering"
+        label = "d", title= "t-SNE clustering"
     )
     
     ##----------------------------------------------------------------------
@@ -606,7 +606,7 @@ DataViewBoard <- function(input, output, session, env)
         func2 = data_tissueplot.RENDER,
         info.text = data_tissueplot_text,
         height = imgH, pdf.width=9, pdf.height=6,
-        label="g", title="Tissue expression"
+        label="f", title="Tissue expression"
     )
     
     ##----------------------------------------------------------------------
@@ -750,13 +750,13 @@ DataViewBoard <- function(input, output, session, env)
 
     callModule(
         plotModule, "data_geneInfo",
+        title = "Gene info", label="a", 
         plotlib = "generic",
         func = data_geneInfo.RENDER,
         func2 = data_geneInfo.RENDER,
         renderFunc = "renderUI", outputFunc = "htmlOutput",
         just.info = FALSE, no.download = TRUE,
-        label="e", info.text = data_geneInfo_text,
-        title = "Gene info",
+        info.text = data_geneInfo_text,
         options = tagList(
             tipify( checkboxInput(ns('data_geneinfo'),'fetch gene summary',FALSE),
                    "Provide a summary for the selected gene (requires internet).", placement="top")
@@ -767,8 +767,7 @@ DataViewBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ##                     Interface
     ##----------------------------------------------------------------------
-    dataview_caption1 = "<b>Gene plots.</b> <b>(a)</b> t-SNE of samples colored by expression of selected gene. <b>(b)</b> Abundance/expression of selected gene across groups. <b>(c)</b> Top correlated genes. Darker color corresponds to higher expression of the gene. <b>(d)</b> Average rank of the selected gene compared to other genes. <b>(e)</b> Further information about the selected gene from public databases. <b>(f)</b> Barplot showing cumulative correlation in other datasets. <b>(g)</b> Tissue expression of selected gene."
-
+    dataview_caption1 = "<b>Gene plots.</b> <b>(a)</b> Further information about the selected gene from public databases. <b>(b)</b> Abundance/expression of selected gene across groups. <b>(c)</b> Average rank of the selected gene compared to other genes. <b>(d)</b> t-SNE of samples colored by expression of selected gene. <b>(e)</b> Top correlated genes. Darker color corresponds to higher expression of the gene. <b>(f)</b> Tissue expression of selected gene."
     output$plotsUI <- renderUI({
         fillCol(
             height = fullH,
