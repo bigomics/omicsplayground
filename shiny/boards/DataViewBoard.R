@@ -818,8 +818,8 @@ DataViewBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ##                     Count information barplot
     ##----------------------------------------------------------------------
-    MARGINS2 = c(9,3.5,2,1)
-    MARGINS2 = c(8,3.5,2,1)
+    MARGINS2 = c(9,3.5,2,0.5)
+    MARGINS2 = c(8,3.5,2,0.5)
     
     counts_tab_barplot.RENDER %<a-% reactive({
         res = getCountsTable()
