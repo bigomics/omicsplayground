@@ -14,19 +14,24 @@ pgx.getModelGroups <- function(pgx) {
     group
 }
 
-pgx.getMetaFoldChangeMatrix <- function(pgx, what="meta", level="gene")
+##methods=c("trend.limma","edger.qlf","deseq2.wald")
+pgx.getMetaMatrix <- function(pgx, methods="meta", level="gene")
 {
     fc0 = NULL
     qv0 = NULL
     if(level=="gene") {
         ##pgx <- inputData()
         sel = names(pgx$gx.meta$meta)
-        methods = colnames(unclass(pgx$gx.meta$meta[[1]]$fc))
-        if(what %in% methods) {
-            fc0 = sapply(pgx$gx.meta$meta[sel], function(x) unclass(x$fc)[,what])
-            qv0 = sapply(pgx$gx.meta$meta[sel], function(x) unclass(x$q)[,what])
+        all.methods = colnames(unclass(pgx$gx.meta$meta[[1]]$fc))
+        all.methods
+        if(any(methods %in% all.methods)) {
+            methods = intersect(methods,all.methods)
+            fc0 = sapply(pgx$gx.meta$meta[sel], function(x)
+                rowMeans(unclass(x$fc)[,methods],na.rm=TRUE))
+            qv0 = sapply(pgx$gx.meta$meta[sel], function(x)
+                apply(unclass(x$q)[,methods],1,max))  ## maxQ
             rownames(fc0)=rownames(qv0)=rownames(pgx$gx.meta$meta[[1]])
-        } else if(what=="meta") {
+        } else if(methods[1]=="meta") {
             fc0 = sapply(pgx$gx.meta$meta[sel], function(x) x$meta.fx)
             qv0 = sapply(pgx$gx.meta$meta[sel], function(x) x$meta.q)
             rownames(fc0)=rownames(qv0)=rownames(pgx$gx.meta$meta[[1]])
@@ -38,12 +43,14 @@ pgx.getMetaFoldChangeMatrix <- function(pgx, what="meta", level="gene")
     if(level=="geneset") {
         ##pgx <- inputData()
         sel = names(pgx$gset.meta$meta)
-        methods = colnames(unclass(pgx$gset.meta$meta[[1]]$fc))
-        if(what %in% methods) {
-            fc0 = sapply(pgx$gset.meta$meta[sel], function(x) unclass(x$fc)[,what])
-            qv0 = sapply(pgx$gset.meta$meta[sel], function(x) unclass(x$q)[,what])
+        all.methods = colnames(unclass(pgx$gset.meta$meta[[1]]$fc))
+        if(any(methods %in% all.methods)) {
+            fc0 = sapply(pgx$gset.meta$meta[sel], function(x)
+                rowMeans(unclass(x$fc)[,methods],na.rm=TRUE))
+            qv0 = sapply(pgx$gset.meta$meta[sel], function(x)
+                apply(unclass(x$q)[,methods],1,max))
             rownames(fc0)=rownames(qv0)=rownames(pgx$gset.meta$meta[[1]])
-        } else if(what=="meta") {
+        } else if(methods[1]=="meta") {
             fc0 = sapply(pgx$gset.meta$meta[sel], function(x) x$meta.fx)
             qv0 = sapply(pgx$gset.meta$meta[sel], function(x) x$meta.q)
             rownames(fc0)=rownames(qv0)=rownames(pgx$gset.meta$meta[[1]])
@@ -54,6 +61,12 @@ pgx.getMetaFoldChangeMatrix <- function(pgx, what="meta", level="gene")
     }
     res = list(fc=fc0, qv=qv0)
     return(res)
+}
+
+## old...
+pgx.getMetaFoldChangeMatrix <- function(pgx, what="meta", level="gene")
+{
+    pgx.getMetaMatrix(pgx, methods=what, level=level)
 }
 
 pgx.getContrasts <- function(pgx) {

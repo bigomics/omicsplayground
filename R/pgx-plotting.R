@@ -624,6 +624,7 @@ plot_grid.sharedAxisLabels <- function(plotList, nrow) {
 
 pgx.Volcano <- function(pgx, contrast, level="gene", psig=0.05, fc=1,
                         cex=1, cex.lab=0.85, hilight=NULL, ntop=20,
+                        cpal=c("grey60","red3"), title=NULL,
                         plotlib="base")
 {
     if(is.integer(contrast)) contrast <- names(pgx$gx.meta$meta)[contrast]
@@ -640,24 +641,25 @@ pgx.Volcano <- function(pgx, contrast, level="gene", psig=0.05, fc=1,
         stop("FATAL:: invalid level=",level)
     }
         
-    sig <- (q < 0.05 & abs(f) > fc)
+    sig <- (q < psig & abs(f) > fc)
     xy <- cbind(fc=f, y=-log10(q))
     ##rownames(xy) <- rownames(pgx$gx.meta$meta[[contrast]])
-    ##names(sig) <- rownames(xy) 
-    cpal <- c("grey60","red3")
+    ##names(sig) <- rownames(xy)
+    ##cpal <- c("grey70","red3")
     if(is.null(hilight)) {
         wt <- rowSums(scale(xy,center=FALSE)**2)
         hilight <- rownames(xy)[order(-wt)]
         hilight <- intersect(hilight, names(sig[sig==TRUE]))
         hilight <- head(hilight,ntop)
     }
+    if(is.null(title)) title = contrast
     p <- pgx.scatterPlotXY(
-        xy, var=sig, type="factor", title=contrast,
+        xy, var=sig, type="factor", title=title,
         xlab = "differential expression (log2FC)",
         ylab = "significance (-log10q)",
         hilight = hilight, cex = 0.9*cex,
         cex.lab = cex.lab, cex.title = 1.0,
-        legend = FALSE, col=c("grey70","red3"), opacity=1,
+        legend = FALSE, col=cpal, opacity=1,
         plotlib = plotlib)    
     ##ggplotly(p)
     p
@@ -1988,13 +1990,14 @@ pgx.scatterPlotXY <- function(..., plotlib="base") {
 
 ##col=NULL;cex=NULL;cex.title=1.3;zoom=1;legend=TRUE;bty='n';hilight=NULL
 pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
-                                    zlim=NULL, zlog=FALSE, zsym=FALSE, softmax=FALSE, pch=20,
-                                    cex=NULL, cex.lab=0.8, cex.title=1.2, cex.legend=1,
-                                    zoom=1, legend=TRUE, bty='o', legend.ysp=0.85,
-                                    xlab = NULL, ylab=NULL, hilight2=hilight,
-                                    hilight=NULL, label.clusters=FALSE, cex.clust=1.5,
-                                    tooltip=NULL, theme=NULL, set.par=TRUE, 
-                                    axt='s', labels=NULL, label.type=NULL, opacity=1)    
+                                   zlim=NULL, zlog=FALSE, zsym=FALSE, softmax=FALSE, pch=20,
+                                   cex=NULL, cex.lab=0.8, cex.title=1.2, cex.legend=1,
+                                   zoom=1, legend=TRUE, bty='o', legend.ysp=0.85,
+                                   xlab = NULL, ylab=NULL, hilight2=hilight,
+                                   hilight=NULL, hilight.col='red2',
+                                   label.clusters=FALSE, cex.clust=1.5,
+                                   tooltip=NULL, theme=NULL, set.par=TRUE, 
+                                   axt='s', labels=NULL, label.type=NULL, opacity=1)    
 {
     require(viridis)
     require(RColorBrewer)
@@ -2084,7 +2087,10 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         if(!is.null(hilight) && length(hilight)) {
             jj <- which(rownames(pos) %in% hilight)
             if(length(jj)) {
-                points(pos[jj,,drop=FALSE], pch=1, lwd=1.2, cex=cex*0.95)
+                points(pos[jj,,drop=FALSE], pch=20,
+                       col=hilight.col, cex=cex*0.95)
+                points(pos[jj,,drop=FALSE], pch=1, lwd=1.2,
+                       cex=cex*0.95)
             }
         }
         if(!is.null(hilight2) && length(hilight2)) {
@@ -2154,7 +2160,10 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         if(!is.null(hilight) && length(hilight)>0) {
             jj <- which(rownames(pos) %in% hilight)
             if(length(jj)) {
-                points(pos[jj,,drop=FALSE], pch=1, lwd=1.2, cex=cex*0.95)
+                points(pos[jj,,drop=FALSE], pch=20,
+                       col=hilight.col, cex=cex*0.95)
+                points(pos[jj,,drop=FALSE], pch=1, lwd=1.2,
+                       cex=cex*0.95)
             }
         }
         if(!is.null(hilight2) && length(hilight2)>0) {        
@@ -2195,7 +2204,7 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
                                    cex.lab=0.7, cex.title=1.2, cex.clust=1.5, cex.legend=1,
                                    zoom=1, legend=TRUE, bty='n', hilight=NULL, 
                                    zlim=NULL, zlog=FALSE, softmax=FALSE, zsym=FALSE, 
-                                   xlab = NULL, ylab=NULL, hilight2=hilight,
+                                   xlab = NULL, ylab=NULL, hilight2=hilight, hilight.col='red2',
                                    opacity=1, label.clusters=FALSE, labels=NULL,
                                    legend.ysp=0.85, legend.pos = "bottomleft",
                                    tooltip=NULL, theme=NULL, set.par=TRUE,
@@ -2522,7 +2531,7 @@ pgx.scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
                                      cex.legend = 1,
                                      xlab = NULL, ylab = NULL, no.axis=FALSE, 
                                      zoom=1, legend=TRUE, bty='n',
-                                     hilight=NULL, hilight2=hilight,
+                                     hilight=NULL, hilight2=hilight, hilight.col='red2',
                                      zlim=NULL, zlog=FALSE, softmax=FALSE, 
                                      opacity=1, label.clusters=FALSE,
                                      labels=NULL, label.type=NULL, 
