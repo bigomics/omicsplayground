@@ -669,9 +669,9 @@ infotext =
         info.text = volcanoPlots_info,
         options = volcanoPlots.opts,
         pdf.width=10, pdf.height=8,
-        height = c(fullH-80,750),
-        width = c('100%',1000),
-        res=c(90,90)
+        height = c(fullH-80,780),
+        width = c('100%',1100),
+        res=c(90,100)
     )
 
     output$volcanoPlots_UI <- renderUI({
