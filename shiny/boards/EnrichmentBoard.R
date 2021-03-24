@@ -535,8 +535,7 @@ EnrichmentBoard <- function(input, output, session, env)
         if(!is.null(sel.gs) && sel.gs %in% rownames(rpt)) {
             i <- match(sel.gs, rownames(rpt))
         }
-        jj <- floor(i/10)*10 + 1:10
-        
+        jj <- i:min(nrow(rpt),i+23)        
         plotTopEnriched(ngs=ngs, rpt=rpt[jj,,drop=FALSE], comp=comp,
                         ntop=24, rowcol=c(4,6))        
 

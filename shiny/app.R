@@ -70,7 +70,6 @@ message("************************************************")
 message("************* parsing OPTIONS file *************")
 message("************************************************")
 
-
 options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
