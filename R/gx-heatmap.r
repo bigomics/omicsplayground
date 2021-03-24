@@ -74,7 +74,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                         col.annot=NULL, row.annot=NULL, annot.ht=3,
                         nmax=1000, cmax=NULL, main=" ", verbose=1, denoise = 0,
                         cexRow=1, cexCol=1, mar=c(5,5,5,5),
-                        title_cex=1.2, column_title_rot=0,
+                        title_cex=1.2, column_title_rot=0, column_names_rot=90,
                         show_legend=TRUE, show_key=TRUE, zlim=NULL,
                         show_rownames=nmax, lab.len=80, key.offset=c(0.05,1.01),
                         show_colnames=NULL, use.nclust=FALSE)
@@ -413,6 +413,17 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         grp.title = names(grp)[i]
         ##grp.title = shortstring(names(grp)[i],15)
 
+        gx0.colnames <- NULL
+        if(show_colnames) {
+            gx0.colnames <- HeatmapAnnotation(
+                text = anno_text( colnames(gx0), rot=column_names_rot,
+                                 gp = gpar(fontsize=11*cexCol),                                 
+                                 location = unit(1, "npc"), just = "right"),                
+                annotation_height = max_text_width(
+                    colnames(gx0), gpar(fontsize=11*cexCol)) * sin((column_names_rot/180)*pi)
+            )
+        }
+        
         hmap = hmap + Heatmap( gx0,
                               ##col = col,  ## from input
                               col = col_scale,  ## from input
@@ -427,18 +438,21 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                               ##clustering_method_rows = "average",
                               clustering_method_columns = "ward.D2",
                               show_heatmap_legend = FALSE,
-                              show_row_names=FALSE, show_column_names=show_colnames,
                               split = split.idx,
                               row_title_gp = gpar(fontsize = 11),  ## cluster titles
                               row_names_gp = gpar(fontsize = 10*cexRow),
-                              column_names_gp = gpar(fontsize = 11*cexCol),
                               top_annotation = col.ha[[i]],
                               ## top_annotation_height = unit(annot.ht*ncol(col.annot), "mm"),
                               column_title = grp.title,
                               name = names(grp)[i],
                               column_title_rot = column_title_rot,
-                              column_title_gp = gpar(fontsize = 11*title_cex, fontface='plain')
+                              column_title_gp = gpar(fontsize = 11*title_cex, fontface='plain'),
                               ##column_title_gp = gpar(fontsize = 11*title_cex, fontface='bold')
+                              show_row_names=FALSE,
+                              ##show_column_names=show_colnames,
+                              show_column_names = FALSE,
+                              bottom_annotation = gx0.colnames,
+                              column_names_gp = gpar(fontsize = 11*cexCol)
                               )
     }
 
@@ -1760,51 +1774,4 @@ heatmap.3 <- function(x,
     retval$colorTable <- data.frame(low = retval$breaks[-length(retval$breaks)],
         high = retval$breaks[-1], color = retval$col)
     invisible(retval)
-}
-
-
-if(0) {
-  ##Create a fake dataset
-  prob_matrix=replicate(100, rnorm(20))
-  drug_names=paste("drug",letters[1:20],sep="_")
-  patient_ids=paste("patient",c(1:100),sep="_")
-  rownames(prob_matrix)=drug_names
-  colnames(prob_matrix)=patient_ids
-
-  ##Create fake color side bars
-  drug_colors=sample(c("darkorchid","darkred"), length(drug_names), replace = TRUE, prob = NULL)
-  subtype_colors=sample(c("red","blue","cyan","pink","yellow","green"), length(patient_ids), replace = TRUE, prob = NULL)
-  Mcolors=sample(c("black","white","grey"), length(patient_ids), replace = TRUE, prob = NULL)
-  Ncolors=sample(c("black","white","grey"), length(patient_ids), replace = TRUE, prob = NULL)
-  Tcolors=sample(c("black","white","grey"), length(patient_ids), replace = TRUE, prob = NULL)
-  HER2colors=sample(c("black","white","grey"), length(patient_ids), replace = TRUE, prob = NULL)
-  PRcolors=sample(c("black","white","grey"), length(patient_ids), replace = TRUE, prob = NULL)
-  ERcolors=sample(c("black","white","grey"), length(patient_ids), replace = TRUE, prob = NULL)
-  rlab=cbind(drug_colors,drug_colors) #note, duplicated columns because function expects matrix of at least 2xn
-  clab=cbind(subtype_colors,Mcolors,Ncolors,Tcolors,HER2colors,PRcolors,ERcolors)
-  colnames(rlab)=c("Class","")
-  colnames(clab)=c("Subtype","M","N","T","HER2","PR","ER")
-
-  ##Define custom dist and hclust functions for use with heatmaps
-  mydist=function(c) {dist(c,method="euclidian")}
-  myclust=function(c) {hclust(c,method="average")}
-
-  ##Create heatmap using custom heatmap.3 source code
-  source("heatmap3.R")
-  main_title="Drug Response Predictions"
-  par(cex.main=1)
-  heatmap.3(prob_matrix, hclustfun=myclust, distfun=mydist, na.rm =
-            TRUE, scale="none", dendrogram="both", margins=c(4,10),
-            Rowv=TRUE, Colv=TRUE, ColSideColors=clab,
-            RowSideColors=t(rlab),
-            symbreaks=FALSE, key=TRUE,
-            symkey=FALSE, density.info="none", trace="none",
-            main=main_title, labCol=FALSE, labRow=drug_names,
-            cexRow=1, col=rev(heat.colors(75)), NumColSideColors=7,
-            KeyValueName="Prob. Response")
-            legend("topright",legend=c("Basal","LumA","LumB","Her2","Claudin","Normal","","Positive","Negative","NA","","Targeted","Chemo"),
-            fill=c("red","blue","cyan","pink","yellow","green","white","black","white","grey","white","darkorchid","darkred"),
-            border=FALSE, bty="n", y.intersp = 0.7, cex=0.7)
-
-
 }
