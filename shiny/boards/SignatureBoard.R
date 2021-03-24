@@ -620,8 +620,9 @@ infotext =
         meta <- pgx.getMetaMatrix(ngs, methods=mm)
         F  <- meta$fc[,ct]
         qv <- meta$qv[,ct]
+        score <- abs(F) * -log(qv)
         gset=head(rownames(F),100)
-        gset <- gsea$gset
+        gset <- intersect(gsea$gset,rownames(F))
         
         require(gplots)
         cex.main=1.2
@@ -637,8 +638,19 @@ infotext =
         ## if(ncol(F)>24) par(mfrow=c(7,5), mar=c(1,2,2.5,0.6))
         i=1
         for(i in 1:min(16,length(ct))) {
-            pgx.Volcano(ngs, ct[i], hilight=gset, cex=0.85,
-                        cpal=c("grey80","grey80"), title='')
+            gset2 = head(gset[order(-score[gset,i])],30)
+            ##pgx.Volcano(ngs, ct[i], hilight=gset,
+            ##            hilight2=gset2, cex=0.85,
+            ##            cpal=c("grey80","grey80"), title='')
+            xy <- cbind(fc=F[,i], z=-log10(qv[,i]))
+            pgx.scatterPlotXY.BASE(
+                xy, var=NULL, type="factor", title='',
+                xlab = "differential expression (log2FC)",
+                ylab = "significance (-log10q)",
+                hilight = gset, hilight2 = gset2,
+                cex = 0.9, cex.lab = 0.8, cex.title = 1.0,
+                legend = FALSE, col=c("grey80","grey80"),
+                opacity=1)
             title(ct[i], cex.main=cex.main, line=0.3)
         }
 

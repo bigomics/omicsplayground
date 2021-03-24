@@ -527,13 +527,15 @@ input[type="checkbox"], input[type="radio"] {
 /* ---------- modal dialogs ------------- */
 .modal-dialog {
     width: 900px;
-    top: 50px;
+    top: 100px;
 }
 .modal-dialog.modal-lg {
-    width: 1400px
+    width: 1400px;
+    top: 0px;	       
 }
 .modal-dialog.modal-sm {
-    width: 400px
+    width: 400px;
+    top: 200px;	           
 }
 
 .modal-content {
