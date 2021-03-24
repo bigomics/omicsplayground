@@ -75,7 +75,7 @@ infotext =
     
     output$inputsUI <- renderUI({
         ui <- tagList(
-            tags$head(tags$style("#sig-genelistUP.form-control {font-size:11px;padding:3px;height:100px;}")),
+            tags$head(tags$style("#sig-genelistUP.form-control {font-size:11px;padding:3px;height:200px;}")),
             tipify( actionLink(ns("info"), "Tutorial", icon = icon("youtube")),
                    "Show more information about this module"),
             hr(), br(),
