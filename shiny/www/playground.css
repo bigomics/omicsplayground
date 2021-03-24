@@ -527,7 +527,7 @@ input[type="checkbox"], input[type="radio"] {
 /* ---------- modal dialogs ------------- */
 .modal-dialog {
     width: 900px;
-    top: 100px;
+    top: 0px;
 }
 .modal-dialog.modal-lg {
     width: 1400px;
@@ -535,7 +535,7 @@ input[type="checkbox"], input[type="radio"] {
 }
 .modal-dialog.modal-sm {
     width: 400px;
-    top: 200px;	           
+    top: 100px;	           
 }
 
 .modal-content {
