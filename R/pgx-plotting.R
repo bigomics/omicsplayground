@@ -2029,6 +2029,9 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         xlim0 <- cx + 0.5 * c(-1,1.05) * dx / zoom
         ylim0 <- cy + 0.5 * c(-1,1.05) * dy / zoom
     }
+    ylim0[2] <- ylim0[2] + 0.03*diff(ylim0)
+    xlim0[1] <- xlim0[1] - 0.03*diff(xlim0)
+    xlim0[2] <- xlim0[2] + 0.03*diff(xlim0)
 
     if(is.null(xlab)) xlab <- colnames(pos)[1]
     if(is.null(ylab)) ylab <- colnames(pos)[2]
@@ -2089,7 +2092,7 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
             if(length(jj)) {
                 points(pos[jj,,drop=FALSE], pch=20,
                        col=hilight.col, cex=cex*0.95)
-                points(pos[jj,,drop=FALSE], pch=1, lwd=1.2,
+                points(pos[jj,,drop=FALSE], pch=1, lwd=1.0,
                        cex=cex*0.95)
             }
         }

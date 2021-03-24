@@ -744,8 +744,9 @@ DataViewBoard <- function(input, output, session, env)
         }    
         ##output <- paste0("<div style='background-color: #dde6f0;'>",output,"</div>")
         ##div(HTML(output), class="gene-info-output", style="overflow: auto; height: 260px;")
-        div(HTML(output), class="gene-info-output", style="overflow-y: auto;")
         ##div(HTML(output), class="gene-info-output")
+        ##div(HTML(output), class="gene-info-output", style="overflow-y: auto;")        
+        wellPanel(HTML(output))
     })
 
     callModule(
@@ -775,13 +776,13 @@ DataViewBoard <- function(input, output, session, env)
             div(HTML(dataview_caption1), class="caption"),
             br(),
             fillRow(
-                flex = c(1,0.04,6),
+                flex = c(1,0.06,5),
                 plotWidget(ns("data_geneInfo")),
                 br(),
                 fillCol(
                     flex = c(1,0.2,1),                    
                     fillRow( 
-                        flex = c(1.7,1,1), id = "genePlots_row1",
+                        flex = c(1.5,1,1), id = "genePlots_row1",
                         height = rowH, ## width=1600, 
                         plotWidget(ns("genePlots_barplot")),
                         plotWidget(ns("genePlots_averageRankPlot")),
@@ -789,7 +790,7 @@ DataViewBoard <- function(input, output, session, env)
                     ),
                     br(),
                     fillRow( 
-                        flex = c(1.7,2), id = "genePlots_row2",
+                        flex = c(1.5,2), id = "genePlots_row2",
                         height = rowH, ## width=1600, 
                         plotWidget(ns("genePlots_correlationplot")),                        
                         ##plotWidget(ns("data_corplot")),

@@ -16,14 +16,11 @@ if(0) {
     FILES = file.path(OPG,"lib")
     FILESX = file.path(OPG,"libx")
     PGX.DIR = file.path(OPG,"data")
-    load(file.path(PGX.DIR,"carr2019-jev.pgx"))
-    load(file.path(PGX.DIR,"GSE10846-dlbcl-nc.pgx"))
+    source(file.path(RDIR,"pgx-include.R"))  ## pass local vars
+    source(file.path(RDIR,"pgx-init.R"))  ## pass local vars
+
     load(file.path(PGX.DIR,"geiger2016-arginine.pgx"))
 
-    source(file.path(RDIR,"pgx-init.R"))  ## pass local vars
-    source(file.path(RDIR,"pgx-include.R"))  ## pass local vars
-    source(file.path(RDIR,"pgx-ui.R"))  ## pass local vars  
-    ##source("../../R/pgx-init.R")      ## pass local vars
     source("UploadModule.R")  ## this file...
     
     pgx <- NULL
@@ -350,13 +347,6 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     ggtitle("COUNTS", subtitle=tt2)
             })
 
-            if(0) {
-                pheno <- read.csv("~/Projects/GSE155249-covid19/bulk-RNAseq/samples.csv",row.names=1,check.names=FALSE)
-                samples=pheno
-                counts <- read.csv("~/Projects/GSE155249-covid19/bulk-RNAseq/counts.csv",row.names=1,check.names=FALSE)
-
-            }
-
             output$phenoStats <- renderPlot({
 
                 message("[phenoStats] renderPlot called \n")
@@ -468,7 +458,17 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             ##=====================================================================
             ##========================== OBSERVERS ================================
             ##=====================================================================            
-            
+            if(0) {
+                fn2='~/Projects/goutham-csverror/counts.csv'
+                fn2='~/Projects/goutham-csverror/samples.csv'
+                fn2='~/Projects/goutham-csverror/contrasts.csv'
+                
+                counts=fread.csv('~/Projects/goutham-csverror/counts.csv')
+                samples=read.csv('~/Projects/goutham-csverror/samples.csv',row.names=1)
+                contrasts=read.csv('~/Projects/goutham-csverror/contrasts.csv',row.names=1)
+                contrasts1=contrasts
+                samples1=samples
+            }            
             
             ##------------------------------------------------------------------
             ## Main observer for uploaded data files
@@ -490,7 +490,6 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 has.pgx <- any(grepl("[.]pgx$",input$upload_files$name))
                 matlist <- list()
                 if(has.pgx) {
-
 
                     message("[upload_files] extract matrices from PGX")
                     
@@ -641,7 +640,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     
                     ## check rownames of samples.csv
                     if(status["samples.csv"]=="OK" && status["counts.csv"]=="OK") {
-
+                        
                         samples1 = uploaded[["samples.csv"]]
                         counts1 = uploaded[["counts.csv"]]
                         a1 <- mean(rownames(samples1) %in% colnames(counts1))
@@ -682,18 +681,26 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                         )
                         old2 = all(rownames(contrasts1)==rownames(samples1)) &&
                             all(unique(as.vector(contrasts1)) %in% c(-1,0,1,NA))
+
                         old.style <- (old1 || old2)
-                        if(old.style  && old1) {
+                        if(old.style && old1) {
+
                             message("[UploadModule] WARNING: converting old1 style contrast to new format")
                             new.contrasts <- samples1[,0]
                             if(NCOL(contrasts1)>0) {
                                 new.contrasts <- contrastAsLabels(contrasts1)
-                                new.contrasts <- new.contrasts[samples1$group,,drop=FALSE]
+                                grp = as.character(samples1$group)
+                                new.contrasts <- new.contrasts[grp,,drop=FALSE]
                                 rownames(new.contrasts) <- rownames(samples1)
                             }
+                            message("[UploadModule] old.ct1 = ",paste(contrasts1[,1],collapse=' '))
+                            message("[UploadModule] old.nn = ",paste(rownames(contrasts1),collapse=' '))
+                            message("[UploadModule] new.ct1 = ",paste(new.contrasts[,1],collapse=' '))
+                            message("[UploadModule] new.nn = ",paste(rownames(new.contrasts),collapse=' '))
+                            
                             contrasts1 <- new.contrasts
                         }
-                        if(old.style  && old2 ) {
+                        if(old.style && old2 ) {
                             message("[UploadModule] WARNING: converting old2 style contrast to new format")
                             new.contrasts <- samples1[,0]
                             if(NCOL(contrasts1)>0) {
@@ -751,8 +758,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                         if(!all(rownames(contrasts1) %in% rownames(samples1))) {
                             status["contrasts.csv"] = "ERROR: contrasts do not match samples"
                         }
-                    }
-                    
+                    }                    
                     
                 } ## end-if-from-pgx
                 

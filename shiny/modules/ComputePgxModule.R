@@ -4,6 +4,8 @@
 ##
 
 if(0) {
+
+    source("~/Playground/omicsplayground/R/pgx-include.R")
     load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.pgx")    
 
     PgxComputeGadget(X=ngs$X, pheno=ngs$samples)
@@ -202,7 +204,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     }
                 })
             }
-
             
             observeEvent( input$options, {
                 ## shinyjs::disable(ns("gene_methods2"))
@@ -259,8 +260,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                         paste(contrasts[,1],collapse=' '))
                 
                 ## contrasts[is.na(contrasts)] <- 0
-                ## contrasts[is.na(contrasts)] <- ""
-                
+                ## contrasts[is.na(contrasts)] <- ""                
                 ##!!!!!!!!!!!!!! This is blocking the computation !!!!!!!!!!!
                 ##batch     <- batchRT() ## batch correction vectors for GLM
                 

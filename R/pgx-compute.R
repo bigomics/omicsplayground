@@ -64,7 +64,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
         if(is.group.contrast) {
             ## group
             message("[pgx.createPGX] converting group contrast to sample-wise contrasts...")
-            contrasts.new <- contrasts[samples$group,,drop=FALSE]
+            contrasts.new <- contrasts[as.character(samples$group),,drop=FALSE]
             rownames(contrasts.new) <- rownames(samples)
             contrasts <- contrasts.new
         }
@@ -378,8 +378,6 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
         ngs$samples$cluster <- idx        
         head(ngs$samples)
         table(ngs$samples$cluster)
-
-
     }
 
     if(cluster.contrasts) {
@@ -506,14 +504,14 @@ pgx.computePGX <- function(ngs,
 }
 
 
-pgx.computeObjectPGX <- function(counts, samples, contrasts, ## genes, 
-                                 ##gx.methods = c("trend.limma","edger.qlf","deseq2.wald"),
-                                 max.genes = 9999, max.genesets = 9999, only.hugo=TRUE,
-                                 gx.methods = c("ttest.welch","trend.limma","edger.qlf"),
-                                 gset.methods = c("fisher","gsva","fgsea"),
-                                 extra.methods = c("meta.go","deconv","infer","drugs","wordcloud"),
-                                 lib.dir = "../lib", do.cluster=TRUE,
-                                 progress=NULL)
+pgx.computeObjectPGX.DEPRECATED <- function(counts, samples, contrasts, ## genes, 
+                                            ##gx.methods = c("trend.limma","edger.qlf","deseq2.wald"),
+                                            max.genes = 9999, max.genesets = 9999, only.hugo=TRUE,
+                                            gx.methods = c("ttest.welch","trend.limma","edger.qlf"),
+                                            gset.methods = c("fisher","gsva","fgsea"),
+                                            extra.methods = c("meta.go","deconv","infer","drugs","wordcloud"),
+                                            lib.dir = "../lib", do.cluster=TRUE,
+                                            progress=NULL)
 {
 
     library(org.Hs.eg.db)

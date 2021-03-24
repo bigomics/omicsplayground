@@ -70,6 +70,7 @@ pgx.clusterGenes <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3),
 }
 
 
+##reduce.sd=1000;reduce.pca=50;perplexity=30;dims=c(2,3);center.rows=TRUE;scale.rows=FALSE;umap.pkg="uwot"
 pgx.clusterSamples2 <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3),
                                 reduce.sd=1000, reduce.pca=50, perplexity=30,
                                 center.rows=TRUE, scale.rows=FALSE,
@@ -449,7 +450,7 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
         ##X = X - rowMeans(X)
         idx <- pgx.findLouvainClusters(t(X), level=1, prefix='c', small.zero=0.01)
         table(idx)
-        all.pos$membership <- idx
+        all.pos$membership <- idx[1:dimx[2]]
     }
     
     return(all.pos)

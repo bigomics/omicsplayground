@@ -650,11 +650,11 @@ fread.csv <- function(file, check.names=FALSE, row.names=1,
     df <- fread(file=file, check.names=check.names, header=header)
     x <- data.frame(df[,2:ncol(df)], stringsAsFactors=stringsAsFactors,
                     check.names=check.names)
-    rownames(x) <- df[[row.names]]
     is.num <- all(sapply(x,class)=="numeric")
     is.char <- all(sapply(x,class)=="character")
     is.int <- all(sapply(x,class)=="integer")
     if(asMatrix && (is.num || is.char || is.int)) x <- as.matrix(x)
+    rownames(x) <- df[[row.names]]  ## allow dups if matrix
     return(x)
 }
 
@@ -1014,10 +1014,11 @@ ngs.save <- function(ngs, file, update.date=TRUE, light=TRUE, system=FALSE) {
 }
 
 ##comp=1;level="geneset";probe=rownames(ngs$gsetX)[1]
-
 getLevels <- function(Y) {
-    yy = Y[,grep("group|title|name|sample",colnames(Y),invert=TRUE),drop=FALSE]
-    yy = yy[,which(apply(yy,2,function(x) length(unique(x)))<20),drop=FALSE]
+    yy = Y[,grep("title|name|sample|patient",colnames(Y),invert=TRUE),drop=FALSE]   ## NEED RETHINK!!!!
+    is.grpvar = apply(yy,2,function(y) max(table(y))>1)
+    yy = yy[,is.grpvar,drop=FALSE]
+    ##yy = yy[,which(apply(yy,2,function(x) length(unique(x)))<20),drop=FALSE]
     ##levels = setdiff(unique(as.vector(apply(yy,2,as.character))),c("",NA))
     levels = lapply(1:ncol(yy), function(i) unique(paste0(colnames(yy)[i],"=",yy[,i])))
     levels = sort(unlist(levels))
