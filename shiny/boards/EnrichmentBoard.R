@@ -167,12 +167,6 @@ EnrichmentBoard <- function(input, output, session, env)
     ##================================================================================
     ##========================= REACTIVE FUNCTIONS ===================================
     ##================================================================================
-
-    ## selected_gxmethods <- reactive({
-    ##     sel <- SEL.GXMETHODS()
-    ##     req(sel)
-    ##     sel
-    ## })
     
     star.symbols <- function(n) {
         if(n==0) return("")

@@ -21,6 +21,7 @@ SignatureUI <- function(id) {
         tabsetPanel(
             id = ns("tabs1"),
             tabPanel("Enrichment",uiOutput(ns("enplots_UI"))),
+            tabPanel("Volcano plots",uiOutput(ns("volcanoPlots_UI"))),
             tabPanel("Overlap/similarity",uiOutput(ns("overlapAnalysis_UI"))),
             tabPanel("Markers",uiOutput(ns("markers_UI")))
         ),
@@ -41,6 +42,8 @@ SignatureBoard <- function(input, output, session, env)
     
     ## reactive functions from shared environment
     inputData <- env[["load"]][["inputData"]]
+    selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
+
     
     description = "<b>Signature Analysis.</b> Users can test their gene signature by
 calculating an enrichment score. Upload your own gene list, or select
@@ -67,7 +70,7 @@ infotext =
 
     IMMCHECK.GENES = "ADORA2A ARHGEF5 BTLA CD160 CD244 CD27 CD274 CD276 CD47 CD80 CEACAM1 CTLA4 GEM HAVCR2 ICOS IDO1 LAG3 PDCD1 TNFSF4 VISTA VTCN1 TIGIT PVR CD28 CD40 CD40LG ICOSLG TNFRSF9 TNFSF9 CD70 TNFRSF4 TNFRSF18 TNFSF18 SIRPA LGALS9 ARG1 CD86 IDO2 PDCD1LG2 KIR2DL3"
     APOPTOSIS.GENES = "BAD CRADD AGT FAS BCL2 PPIF S100A9 S100A8 BBC3 BCL2L11 FADD CTSH MLLT11 TRAF7 BCL2L1 HTRA2 BNIP3 BAK1 PMAIP1 LGALS9 BID"
-    CELL.CYCLE.GENES = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA"
+    CELLCYCLE.GENES = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA"
     style0 = "font-size: 0.9em; color: #24A; background-color: #dde6f0; border-style: none; padding:0; margin-top: -15px;"
     
     output$inputsUI <- renderUI({
@@ -76,7 +79,7 @@ infotext =
             tipify( actionLink(ns("info"), "Tutorial", icon = icon("youtube")),
                    "Show more information about this module"),
             hr(), br(),
-            tipify(textAreaInput(ns("genelistUP"), "Genes:", value = IMMCHECK.GENES,
+            tipify(textAreaInput(ns("genelistUP"), "Genes:", value = CELLCYCLE.GENES,
                                  rows=15, placeholder="Paste your gene list"),
                    "Paste a list of signature genes.", placement="top",
                    options = list(container = "body")),
@@ -84,10 +87,10 @@ infotext =
             br(),
             tipify(actionButton(ns("example2"),"[apoptosis] ", style=style0),
                    "Use the list of genes involved in apoptosis as a signature."),
-            tipify(actionButton(ns("example1"),"[immune_chkpt] ", style=style0),
-                   "Use the list of genes involved in immune checkpoint as a signature."),
             tipify(actionButton(ns("example3"),"[cell_cycle] ", style=style0),
                    "Use the list of genes involved in cell cycle as a signature."),
+            tipify(actionButton(ns("example1"),"[immune_chkpt] ", style=style0),
+                   "Use the list of genes involved in immune checkpoint as a signature."),
             br(),br(),
             tipify( actionLink(ns("options"), "Options", icon=icon("cog", lib = "glyphicon")),
                    "Toggle advanced options.", placement="top"),
@@ -148,7 +151,7 @@ infotext =
         updateTextAreaInput(session,"genelistUP", value=APOPTOSIS.GENES)
     })
     observeEvent(input$example3, { 
-        updateTextAreaInput(session,"genelistUP", value=CELL.CYCLE.GENES)
+        updateTextAreaInput(session,"genelistUP", value=CELLCYCLE.GENES)
     })
 
     observe({
@@ -593,6 +596,82 @@ infotext =
     })
     
 
+    ##================================================================================
+    ## Volcano {data-height=800}
+    ##================================================================================
+    
+    volcanoPlots.RENDER %<a-% reactive({
+        ngs <- inputData()
+        alertDataLoaded(session,ngs)
+        if(is.null(ngs)) return(NULL)
+        
+        ##require(shinycssloaders)
+        gsea <- sigCalculateGSEA()
+        if(is.null(gsea)) return(NULL)
+        
+        ## filter with table selection/search
+        ii  <- enrichmentByContrastTable$rows_all()
+        req(ii)
+        ct = colnames(ngs$model.parameters$contr.matrix)
+        ct <- rownames(gsea$output)[ii]
+
+        mm <- 'meta'
+        mm <- selected_gxmethods()
+        meta <- pgx.getMetaMatrix(ngs, methods=mm)
+        F  <- meta$fc[,ct]
+        qv <- meta$qv[,ct]
+        gset=head(rownames(F),100)
+        gset <- gsea$gset
+        
+        require(gplots)
+        cex.main=1.2
+        par(mfrow=c(2,2), mar=c(2,4,3,1), mgp=c(2.2,0.8,0) )
+        if(ncol(F)>4) {        
+            par(mfrow=c(3,3), mar=c(1,4,3,1), mgp=c(2.2,0.8,0) )
+            cex.main=1            
+        }
+        if(ncol(F)>9) {
+            par(mfrow=c(4,4), mar=c(0.2,2,3,0.6))
+            cex.main=0.9
+        }
+        ## if(ncol(F)>24) par(mfrow=c(7,5), mar=c(1,2,2.5,0.6))
+        i=1
+        for(i in 1:min(16,length(ct))) {
+            pgx.Volcano(ngs, ct[i], hilight=gset, cex=0.85,
+                        cpal=c("grey80","grey80"), title='')
+            title(ct[i], cex.main=cex.main, line=0.3)
+        }
+
+    })
+
+    volcanoPlots_caption = "<b>Volcano plots.</b> Visualization of the query signature on the volcano plots of all constrasts. For positive enrichment, genes of the query signature would fall on the upper right of the volcano plot, for negative enrichment, on the upper left."
+    volcanoPlots_info = volcanoPlots_caption
+
+    volcanoPlots.opts = NULL
+    callModule(
+        plotModule,
+        id = "volcanoPlots", 
+        func = volcanoPlots.RENDER,
+        func2 = volcanoPlots.RENDER,
+        plotlib="base",
+        info.text = volcanoPlots_info,
+        options = volcanoPlots.opts,
+        pdf.width=10, pdf.height=8,
+        height = c(fullH-80,750),
+        width = c('100%',1000),
+        res=c(90,90)
+    )
+
+    output$volcanoPlots_UI <- renderUI({
+        fillCol(
+            height = fullH,
+            flex = c(NA,0.03,1),
+            div(HTML(volcanoPlots_caption), class="caption"),
+            br(),
+            plotWidget(ns("volcanoPlots"))
+        )
+    })
+    
     ##================================================================================
     ## Overlap/similarity
     ##================================================================================
@@ -1131,7 +1210,7 @@ infotext =
         func = enrichmentByContrastTable.RENDER,
         info.text = info.text1,
         title = "Enrichment by contrasts", label="a",
-        height = c(290,700)
+        height = c(230,700)
     )
 
     info.text2 = "This table shows the genes of the current signature."
@@ -1141,14 +1220,14 @@ infotext =
         func = enrichmentByContrastGenes.RENDER,
         info.text = info.text2,
         title = "Genes in signature", label="b",
-        height = c(290,700)
+        height = c(360,700)
     )
     
     enrichmentTables_caption = "<b>Enrichment of query signature across all contrasts.</b> <b>(a)</b> Enrichment scores across all contrasts for the selected query signature . The NES corresponds to the normalized enrichment score of the GSEA analysis.  <b>(b)</b> Genes in the query signature sorted by decreasing (absolute) fold-change corresponding to the contrast selected in Table (a)."
 
     output$enrichmentTables_UI <- renderUI({
         fillCol(
-            flex = c(NA,0.04,1.0,0.04,1.0), ## width = 600,
+            flex = c(NA,0.04,1.0,0.04,1.5), ## width = 600,
             height = fullH,
             div(HTML(enrichmentTables_caption), class="caption"),
             br(),
