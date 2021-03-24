@@ -1095,7 +1095,7 @@ pgx.plotOmicsNetwork <- function(ngs, gene=NULL, reduced=NULL, levels=c("gene","
 
 }
 
-##gene1="CD4";gene2="CD8A";col="black";cex=1;k=11;samples=NULL;cex.names=1
+## gene1="TOPORS";gene2="KCNN4";col="black";cex=1;k=11;samples=NULL;cex.names=1;lab.unit=NULL
 pgx.cytoPlot <- function(ngs, gene1, gene2, cex=1, col="grey60",
                          lab.unit=NULL, cex.names=1, samples=NULL, k=11)
 {
@@ -1112,6 +1112,8 @@ pgx.cytoPlot <- function(ngs, gene1, gene2, cex=1, col="grey60",
     samples <- intersect(samples, colnames(ngs$X))
     x1 <- ngs$X[gene1,samples]
     x2 <- ngs$X[gene2,samples]
+    x1 <- x1 + 1e-3*rnorm(length(x1))
+    x2 <- x2 + 1e-3*rnorm(length(x2))
     names(x1) <- samples
     names(x2) <- samples
     m1 <- mean(x1)
