@@ -75,7 +75,7 @@ infotext =
     
     output$inputsUI <- renderUI({
         ui <- tagList(
-            tags$head(tags$style("#sig-genelistUP.form-control {font-size:11px;padding:3px;height:200px;}")),
+            tags$head(tags$style("#sig-genelistUP.form-control {font-size:11px !important;padding:3px;height:200px;}")),
             tipify( actionLink(ns("info"), "Tutorial", icon = icon("youtube")),
                    "Show more information about this module"),
             hr(), br(),
@@ -536,7 +536,7 @@ infotext =
         
 
         ## filter with table selection/search
-        ii  <- enrichmentByContrastTable$rows_all()
+        ii  <- enrichmentContrastTable$rows_all()
         req(ii)
         ct <- rownames(gsea$output)[ii]
         F <- as.matrix(gsea$F[,ct,drop=FALSE])
@@ -610,7 +610,7 @@ infotext =
         if(is.null(gsea)) return(NULL)
         
         ## filter with table selection/search
-        ii  <- enrichmentByContrastTable$rows_all()
+        ii  <- enrichmentContrastTable$rows_all()
         req(ii)
         ct = colnames(ngs$model.parameters$contr.matrix)
         ct <- rownames(gsea$output)[ii]
@@ -624,6 +624,13 @@ infotext =
         gset=head(rownames(F),100)
         gset <- intersect(gsea$gset,rownames(F))
         
+        sel <- enrichmentGeneTable$rows_selected()
+        sel.gene <- NULL
+        if(length(sel)) {
+            df <- getEnrichmentGeneTable()
+            sel.gene <- df$gene[sel]
+        }
+                
         require(gplots)
         cex.main=1.2
         par(mfrow=c(2,2), mar=c(2,4,3,1), mgp=c(2.2,0.8,0) )
@@ -639,6 +646,11 @@ infotext =
         i=1
         for(i in 1:min(16,length(ct))) {
             gset2 = head(gset[order(-score[gset,i])],30)
+            cex2 = 0.8
+            if(!is.null(sel.gene)) {
+                gset2 <- sel.gene
+                cex2 = 1.3
+            }
             ##pgx.Volcano(ngs, ct[i], hilight=gset,
             ##            hilight2=gset2, cex=0.85,
             ##            cpal=c("grey80","grey80"), title='')
@@ -648,9 +660,9 @@ infotext =
                 xlab = "differential expression (log2FC)",
                 ylab = "significance (-log10q)",
                 hilight = gset, hilight2 = gset2,
-                cex = 0.9, cex.lab = 0.8, cex.title = 1.0,
+                cex = 0.9, cex.lab = cex2, cex.title = 1.0,
                 legend = FALSE, col=c("grey80","grey80"),
-                opacity=1)
+                opacity = 1)
             title(ct[i], cex.main=cex.main, line=0.3)
         }
 
@@ -1104,12 +1116,12 @@ infotext =
     ## Enrichment {data-height=800}
     ##================================================================================
     
-    enrichmentByContrastTable.RENDER <- reactive({
+    enrichmentContrastTable.RENDER <- reactive({
         
         gsea <- sigCalculateGSEA()
         if(is.null(gsea)) return(NULL)
 
-        dbg("enrichmentByContrastTable.RENDER: reacted")
+        dbg("enrichmentContrastTable.RENDER: reacted")
         
         output <- as.matrix(gsea$output)
         output <- round(output, digits=4)
@@ -1128,8 +1140,8 @@ infotext =
                       rownames=FALSE,
                       extensions = c('Scroller'),
                       ##selection='none',
-                      ##selection = list(mode='single', target='row', selected=1),
-                      selection = list(target='row', selected=1),
+                      selection = list(mode='single', target='row', selected=1),
+                      ##selection = list(target='row', selected=1),
                       fillContainer=TRUE,                      
                       options = list(
                           dom = 'lrtip',
@@ -1147,22 +1159,22 @@ infotext =
         
     })
 
-    enrichmentByContrastGenes.RENDER <- reactive({
+       
+    getEnrichmentGeneTable <- reactive({
         
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
 
-        dbg("enrichmentByContrastGenes.RENDER: reacted")
+        dbg("enrichmentGeneTable: reacted")
         
         gsea <- sigCalculateGSEA()
         if(is.null(gsea)) return(NULL)
         
         i=1
-        i <- enrichmentByContrastTable$rows_selected()
+        i <- enrichmentContrastTable$rows_selected()
         if(is.null(i) || length(i)==0) return(NULL)
         
-
         meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         fc <- meta$fc
         qv <- meta$qv
@@ -1188,15 +1200,26 @@ infotext =
         names(gene.tt) <- rownames(fc)
         df <- data.frame(gene=rownames(fc), title=gene.tt, fc, check.names=FALSE)
         ##df <- df[order(-abs(df$FC)),]
-        color_fx = as.numeric(fc)
+        df
+
+    })
+
+    enrichmentGeneTable.RENDER <- reactive({
+
+        df <- getEnrichmentGeneTable()
+        req(df)
+        
+        color_fx = as.numeric(df[,3:ncol(df)])
         color_fx[is.na(color_fx)] <- 0  ## yikes...
 
-        numeric.cols <- colnames(df)[which(sapply(df, is.numeric))]
+        numeric.cols <- colnames(df)[3:ncol(df)]
         numeric.cols
         
         DT::datatable(df, class='compact cell-border stripe',
                       rownames=FALSE,
-                      extensions = c('Scroller'), selection='none',
+                      extensions = c('Scroller'),
+                      ## selection='none',
+                      selection = list(mode='single', target='row', selected=NULL),
                       fillContainer=TRUE,
                       options=list(
                           dom = 'lrftip',
@@ -1207,7 +1230,7 @@ infotext =
             formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle(
-                        colnames(fc),
+                        numeric.cols,
                         background = color_from_middle(color_fx,'lightblue','#f5aeae'),
                         backgroundSize = '98% 88%',
                         backgroundRepeat = 'no-repeat',
@@ -1216,20 +1239,20 @@ infotext =
 
 
     info.text1 = "The table summarizes the enrichment statistics of the gene list against all contrasts by running the GSEA algorithm and plots enrichment outputs."
-    enrichmentByContrastTable <- callModule(
+    enrichmentContrastTable <- callModule(
         tableModule,
-        id = "enrichmentByContrastTable", 
-        func = enrichmentByContrastTable.RENDER,
+        id = "enrichmentContrastTable", 
+        func = enrichmentContrastTable.RENDER,
         info.text = info.text1,
         title = "Enrichment by contrasts", label="a",
         height = c(230,700)
     )
 
     info.text2 = "This table shows the genes of the current signature."
-    enrichmentByContrastGenes <- callModule(
+    enrichmentGeneTable <- callModule(
         tableModule,
-        id = "enrichmentByContrastGenes", 
-        func = enrichmentByContrastGenes.RENDER,
+        id = "enrichmentGeneTable", 
+        func = enrichmentGeneTable.RENDER,
         info.text = info.text2,
         title = "Genes in signature", label="b",
         height = c(360,700)
@@ -1243,9 +1266,9 @@ infotext =
             height = fullH,
             div(HTML(enrichmentTables_caption), class="caption"),
             br(),
-            plotWidget(ns("enrichmentByContrastTable")),
+            plotWidget(ns("enrichmentContrastTable")),
             br(),
-            plotWidget(ns("enrichmentByContrastGenes"))
+            plotWidget(ns("enrichmentGeneTable"))
         )
     })
 

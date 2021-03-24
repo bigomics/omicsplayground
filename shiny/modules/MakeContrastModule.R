@@ -403,10 +403,13 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 
                 ct <- rv$contr
 
-                message("[MakeContrastServer:contrastTable] is.null(ct) = ",is.null(ct))
-                message("[MakeContrastServer:contrastTable] dim.ct = ",dim(ct))
-                message("[MakeContrastServer:contrastTable] dim.contrRT = ",dim(contrRT()))                
-
+                message("[contrastTable] is.null(ct) = ",is.null(ct))
+                message("[contrastTable] dim.ct = ",dim(ct))
+                message("[contrastTable] dim.contrRT = ",dim(contrRT()))                
+                
+                message("[contrastTable] ct1 = ",paste(ct[,1],collapse=' '))
+                message("[contrastTable] ct.rownames= ",paste(rownames(ct),collapse=' '))
+                
                 if(is.null(ct) || NCOL(ct)==0) {
                     df <- data.frame(
                         delete = 0,
@@ -454,7 +457,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                         ##onclick = 'Shiny.onInputChange(\"contrast_delete\",this.id)'
                         onclick = paste0('Shiny.onInputChange(\"',ns("contrast_delete"),'\",this.id)')
                     )
-
+                    
                     df <- data.frame(
                         delete = deleteButtons,
                         comparison = colnames(ct1),
@@ -463,6 +466,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                         "main.group" = ss1,
                         "control.group" = ss2
                     )
+
                 }
                 rownames(df) <- NULL
                 

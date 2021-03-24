@@ -133,7 +133,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         req(ngs)
         
         levels = getLevels(ngs$Y)
-
         updateSelectInput(session, "hm_samplefilter", choices=levels)
         
         if(DEV && !is.null(ngs$gset.meta$matrices) ) {
@@ -935,17 +934,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         flt <- getFilteredMatrix()
         zx <- flt$zx
         
-        ntop = 1000
-        ntop = as.integer(input$hm_ntop2)    
-        zx = zx[order(-apply(zx,1,sd)),,drop=FALSE]  ## OK?
-        if(nrow(zx) > ntop) {
-            ##zx = head(zx,ntop)  ## OK?
-            zx = zx[1:ntop,,drop=FALSE]  ## OK?
-        }
-        
-        if("normalize" %in% input$hmpca_options) {
-            zx <- scale(t(scale(t(zx))))
-        }
         clustmethod="tsne";pdim=2
         do3d <- ("3D" %in% input$hmpca_options)
         pdim = c(2,3)[ 1 + 1*do3d]
@@ -964,10 +952,24 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         } else if( clustmethod0 %in% names(ngs$cluster$pos))  {
             showNotification(paste("switching to ",clustmethod0," layout...\n"))
             pos <- ngs$cluster$pos[[clustmethod0]]
-            if(pdim==2) pos <- pos[,1:2]
-            if(pdim==3) pos <- pos[,1:3]
+            if(pdim==2) pos <- pos[colnames(zx),1:2]
+            if(pdim==3) pos <- pos[colnames(zx),1:3]
         } else  {
+            ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ## This should not be necessary anymore as we prefer to
+            ## precompute all clusterings.
             showNotification(paste("computing ",clustmethod,"...\n"))            
+
+            ntop = 1000
+            ntop = as.integer(input$hm_ntop2)    
+            zx = zx[order(-apply(zx,1,sd)),,drop=FALSE]  ## OK?
+            if(nrow(zx) > ntop) {
+                ##zx = head(zx,ntop)  ## OK?
+                zx = zx[1:ntop,,drop=FALSE]  ## OK?
+            }            
+            if("normalize" %in% input$hmpca_options) {
+                zx <- scale(t(scale(t(zx))))
+            }
             perplexity = max(1,min((ncol(zx)-1)/3, 30))	
             perplexity
             res <- pgx.clusterMatrix(
@@ -1021,7 +1023,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                     'triangle-right','+',c(15:0))
 
         require(plotly)
-        Y <- cbind("sample"=rownames(ngs$Y), ngs$Y[sel,])
+        Y <- cbind("sample"=rownames(pos), ngs$Y[sel,])
         ##tt.info <- paste('Sample:', rownames(df),'</br>Group:', df$group)
         tt.info <- apply(Y, 1, function(y) paste0(colnames(Y),": ",y,"</br>",collapse=""))
         tt.info <- as.character(tt.info)
