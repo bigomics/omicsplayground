@@ -146,9 +146,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         updateRadioButtons(session, "hm_splitby", selected='none')
 
         ## update defaults??
-        if(ncol(ngs$X) > 80) {
-            updateNumericInput(session,"hm_cexCol", value=0)
-        }
+        ##if(ncol(ngs$X) > 80) updateNumericInput(session,"hm_cexCol", value=0)
 
         ## update defaults??
         n1 <- nrow(ngs$samples)-1
@@ -632,6 +630,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                              split = splity, splitx = splitx,
                              scale = scale.mode, show_legend = show_legend,
                              show_colnames = show_colnames, column_title_rot = crot,
+                             column_names_rot = 45,                             
                              show_rownames = nrownames, softmax = 0,
                              ## side.height.fraction=0.03+0.055*NCOL(annot), 
                              title_cex = 1.05, cexCol = cex1, cexRow = cex2, 
