@@ -19,21 +19,6 @@ source("../R/pgx-include.R")
 FILES
 
 ##------------------------------------------------------------
-## Set data set information
-##------------------------------------------------------------
-
-rda.file="../data/geiger2016-arginine-test.pgx"
-##rda.file="../data/geiger2016-arginine.pgx"
-rda.file
-
-## load(file=rda.file, verbose=1)
-ngs <- list()  ## empty object
-ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
-ngs$date = date()
-ngs$datatype = "LC/MS proteomics"
-ngs$description = "Proteome profiles of activated  vs resting human naive T cells at different times (Geiger et al., Cell 2016)."
-
-##------------------------------------------------------------
 ## Read data
 ##------------------------------------------------------------
 ##devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data", "--no-manual"), build_vignettes=FALSE)    
@@ -70,44 +55,15 @@ norm.counts <- prot.normalizeCounts(
 ##-------------------------------------------------------------------
 ## create ngs object
 ##-------------------------------------------------------------------
-##ngs$samples = prot$metadata
-ngs$samples = prot$samples
-##colnames(ngs$samples) <- sub("condition","group",colnames(ngs$samples))
-##ngs$counts = data$counts
-ngs$counts = norm.counts
-colnames(ngs$counts)==ngs$samples$sample
-short.name <- sub(".*_tcell_","",colnames(ngs$counts))
-rownames(ngs$samples)=colnames(ngs$counts)=short.name
 
-ngs$X <- log2(ngs$counts + 1)
+samples = prot$samples
+counts = norm.counts
+short.name <- sub(".*_tcell_","",colnames(counts))
+rownames(samples)=colnames(counts)=short.name
 
-## relevel factors??
-##ngs$samples$group <- relevelFactorFirst(ngs$samples$group)
-ngs$samples$condition <- relevelFactorFirst(ngs$samples$condition)
-ngs$samples$activated <- relevelFactorFirst(ngs$samples$activated)
-ngs$samples$time <- relevelFactorFirst(ngs$samples$time)   
 
-require(org.Hs.eg.db)
-GENE.TITLE = unlist(as.list(org.Hs.egGENENAME))
-gene.symbol = unlist(as.list(org.Hs.egSYMBOL))
-names(GENE.TITLE) = gene.symbol
-## ngs$genes = data.frame( gene_name = prot$gene,
-##                        gene_alias = prot$gene.names,
-##                        gene_title = GENE.TITLE[prot$gene] )
-ngs$genes <- prot$genes
-
-##-------------------------------------------------------------------
-## Pre-calculate t-SNE for and get clusters
-##-------------------------------------------------------------------
-ngs <- pgx.clusterSamples(ngs, skipifexists=FALSE, perplexity=3)
-ngs <- pgx.clusterSamples2(ngs, perplexity=3)
-head(ngs$samples)
-table(ngs$samples$cluster)
-
-##-------------------------------------------------------------------
 ## Create contrasts 
-##-------------------------------------------------------------------
-group.levels <- levels(ngs$samples$condition)
+group.levels <- unique(samples$condition)
 group.levels
 ## 10 contrasts in total
 contr.matrix <- makeContrasts(
@@ -117,86 +73,75 @@ contr.matrix <- makeContrasts(
     act48h_vs_notact = act48h - notact,
     act72h_vs_notact = act72h - notact,
     act96h_vs_notact = act96h - notact,
-    act48h_vs_act12h = act48h - act12h,
-    act72h_vs_act12h = act72h - act12h,
-    act72h_vs_act48h = act72h - act48h,
-    act96h_vs_act48h = act96h - act48h,
-    act96h_vs_act72h = act96h - act72h,
     levels = group.levels)
 contr.matrix
 ##contr.matrix = contr.matrix[,1:3]
 
+ngs <- pgx.createPGX(
+    counts = counts,
+    samples = samples,
+    contrasts = contr.matrix,
+    is.logx = FALSE,
+    do.cluster = TRUE,
+    do.clustergenes = TRUE,
+    batch.correct = FALSE,
+    auto.scale = TRUE,
+    filter.genes = TRUE,
+    prune.samples = FALSE,
+    only.chrom = FALSE,
+    rik.orf = FALSE,
+    convert.hugo = FALSE,
+    only.proteincoding = FALSE
+)
+
+gx.methods    = c("trend.limma")
+gset.methods  = c("fisher")
+extra.methods  = c("meta.go","infer")
+
+gx.methods    = c("ttest","ttest.welch","trend.limma","edger.qlf","deseq2.wald")
+gset.methods  = c("fisher","gsva","fgsea","spearman","camera","fry")
+extra.methods  = c("meta.go","infer","drugs","deconv","wordcloud","connectivity")
+
+ngs <- pgx.computePGX(
+    ngs,
+    max.genes = 20000,
+    max.genesets = 5000, 
+    gx.methods = gx.methods,
+    gset.methods = gset.methods,
+    extra.methods = extra.methods,
+    use.design = TRUE,      ## no.design+prune are combined 
+    prune.samples = FALSE,  ##
+    do.cluster = TRUE,                
+    progress = NULL,
+    lib.dir = FILES 
+)
+
 ##-------------------------------------------------------------------
-## Start computations
-##-------------------------------------------------------------------
-source("../R/pgx-include.R")
-
-ngs$timings <- c()
-
-GENE.METHODS=c("trend.limma")
-GENESET.METHODS = c("fisher","fgsea")
-
-GENE.METHODS=c("ttest","ttest.welch", ## "ttest.rank",
-                   "voom.limma","trend.limma","notrend.limma",
-                   "edger.qlf","edger.lrt","deseq2.wald","deseq2.lrt")
-GENESET.METHODS = c("fisher","gsva","ssgsea","spearman",
-                    "camera", "fry","fgsea") ## no GSEA, too slow...
-
-MAX.GENES = 8000
-MAX.GENESETS = 8000
-
-## new callling methods
-ngs <- compute.testGenes(
-    ngs, contr.matrix,
-    max.features = MAX.GENES,
-    test.methods = GENE.METHODS)
-names(ngs)
-head(ngs$gx.meta$meta[[1]])
-
-ngs <- compute.testGenesets (
-    ngs, max.features=MAX.GENES,
-    test.methods = GENESET.METHODS,
-    remove.outputs = FALSE,
-    lib.dir=FILES)
-
-extra <- c("drugs-combo")
-extra <- c("connectivity")
-extra <- c("meta.go","infer","deconv","drugs","wordcloud","connectivity")
-ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
-
-if(0) {
-    sigdb = NULL
-    sigdb = c("../libx/sigdb-lincs.h5","../libx/sigdb-virome.h5")
-    ngs <- compute.extra(ngs, extra, lib.dir=FILES, sigdb=sigdb) 
-    names(ngs$connectivity)
-}
-
-names(ngs)
-names(ngs$gset.meta)
-ngs$timings
-
 ## save PGX object
+##-------------------------------------------------------------------
+
+rda.file="../data/geiger2016-arginine-test.pgx"
+ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
+ngs$date = date()
+ngs$datatype = "LC/MS proteomics"
+ngs$description = "Proteome profiles of activated  vs resting human naive T cells at different times (Geiger et al., Cell 2016)."
+ngs$organism = 'human'
+
 rda.file
 ngs.save(ngs, file=rda.file)
+
 
 if(0) {
 
     load("../data/geiger2016-arginine-test.pgx")
+    names(ngs)
+
     names(ngs$gx.meta$meta)
     dim(ngs$gx.meta$meta[[1]])
     m1 <- ngs$gx.meta$meta[[1]]
     head(m1[order(-m1$meta.fx),])
-    head(sort(ngs$gx.meta$meta[[1]]$meta.avg),50)
-    tail(sort(ngs$gx.meta$meta[[1]]$meta.avg),50)
     head(sort(rowMeans(ngs$X)))
     tail(sort(rowMeans(ngs$X)))
-
-    s0 <- names(which(ngs$model.parameters$exp.matrix[,1]==-1))
-    s1 <- names(which(ngs$model.parameters$exp.matrix[,1]==1))
-    mean(ngs$X["TNIP3",s0])
-    mean(ngs$X["TNIP3",s1])
-    
-    
     
 }
 

@@ -19,10 +19,10 @@ pgx.clusterGenes <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3),
     if(!is.null(X)) {
         message("using provided X matrix...")
     } else if(!is.null(pgx$X)) {
-        message("using pgx$X matrix...")
+        message("using expression X matrix...")
         X <- pgx$X
     } else {
-        message("using logCPM(pgx$counts)...")        
+        message("using logCPM(counts)...")        
         ## X <- log2(1 + pgx$counts)
         X <- logCPM(pgx$counts, total=NULL)
     }    
@@ -32,7 +32,7 @@ pgx.clusterGenes <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3),
     if(scale.rows)  X <- X / (1e-6+apply(X,1,sd))
     if(rank.tf) X <- scale(apply(X,2,rank))  ## works nicely
         
-    clust.pos <- pgx.clusterBigMatrix(
+    clust <- pgx.clusterBigMatrix(
         t(X), methods = methods,
         dims = dims,
         perplexity = perplexity,
@@ -44,25 +44,29 @@ pgx.clusterGenes <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3),
     )
 
     clust.index <- NULL
+    names(clust)
+    ##clust.index <- paste0("c",clust.pos$membership)
+    clust.index <- clust$membership
+    clust$membership <- NULL
+    table(clust.index)        
     if(0) {
-        names(clust.pos)
-        ##clust.index <- paste0("c",clust.pos$membership)
-        clust.index <- clust.pos$membership
-        clust.pos$membership <- NULL
-        table(clust.index)
-        
-        if(0) {
-            X1 = scale(X - rowMeans(X))
-            idx <- pgx.findLouvainClusters(X1, level=1, prefix='c', small.zero=0.01)        
-            table(idx)
-            pgx.scatterPlotXY(clust.pos[[1]], var=idx)
-            
-        }
+        X1 = scale(X - rowMeans(X))
+        idx <- pgx.findLouvainClusters(X1, level=1, prefix='c', small.zero=0.01)        
+        table(idx)
+        pgx.scatterPlotXY(clust[[1]], var=idx)
     }        
 
+    if(0) {
+        library(NNLM)
+        X2 <- X / sqrt(rowMeans(X**2))
+        X2 <- X / apply(X,1,sd)
+        nmf <- nnmf(X2, k=8, rel.tol=1e-8)
+        dim(nmf$W)
+    }
+    
     ## put in slot 'gene cluster'
     pgx$cluster.genes <- NULL
-    pgx$cluster.genes$pos  <- clust.pos
+    pgx$cluster.genes$pos  <- clust
     pgx$cluster.genes$index <- clust.index
     
     message("[pgx.clusterGenes] done!")    
