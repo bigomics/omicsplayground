@@ -296,7 +296,8 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     ## quantile.normalize=TRUE;remove.batch=FALSE;conform.output=TRUE;do.filter=FALSE;custom=NULL;custom.name=NULL
 
     gx.meta <- ngs.fitContrastsWithAllMethods(
-        counts = counts, X=X, ## type = type,
+        counts = counts,
+        X = X, ## type = type,
         samples = samples,
         genes = NULL, ##genes=genes,
         methods = methods,
@@ -304,7 +305,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         contr.matrix = contr.matrix,
         prune.samples = prune.samples,
         prior.cpm = PRIOR.CPM,  ## prior count regularization
-        quantile.normalize = TRUE,  ## only for logCPM
+        ## quantile.normalize = TRUE,  ## only for logCPM???
         remove.batch = FALSE,  ## we do explicit batch correction instead
         conform.output = TRUE,
         do.filter = FALSE,
@@ -324,13 +325,13 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     
     rownames(gx.meta$timings) <- paste0("[test.genes]",rownames(gx.meta$timings))
     pgx$timings <- rbind(pgx$timings, gx.meta$timings)
-    ## pgx$X = gx.meta$X
     gx.meta$timings <- NULL
     gx.meta$X <- NULL
     ##pgx$genes = pgx$genes[rownames(pgx$X),]
     ##pgx$Y = pgx$samples[colnames(pgx$X),]
     pgx$model.parameters <- model.parameters
     pgx$gx.meta <- gx.meta
+    ## pgx$X = gx.meta$X
     pgx$X <- X  ## replace with filtered
     
     ## remove large outputs... (uncomment if needed!!!)

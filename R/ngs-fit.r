@@ -28,7 +28,7 @@ methods
 ##-----------------------------------------------------------------------------
 
 ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, contr.matrix, genes=NULL, 
-                                           prior.cpm=1, quantile.normalize=FALSE, prune.samples=FALSE,
+                                           prior.cpm=1, prune.samples=FALSE,
                                            conform.output=TRUE, do.filter=TRUE, cpm.scale=1e6,
                                            remove.batch=TRUE, methods=ALL.GENETEST.METHODS,
                                            correct.AveExpr=TRUE,custom=NULL, custom.name=NULL )
@@ -40,7 +40,7 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
     require(limma)
     if(0) {
         do.filter=FALSE;conform.output=TRUE;remove.batch=FALSE;prior.cpm=1;
-        custom=NULL;custom.name=NULL;quantile.normalize=FALSE;cpm.scale=1e6
+        custom=NULL;custom.name=NULL;cpm.scale=1e6;prune.samples=FALSE
         counts=ngs$counts;X=ngs$X;samples=ngs$samples;genes=NULL;correct.AveExpr=TRUE
         design=ngs$model.parameters$design;contr.matrix=ngs$model.parameters$contr.matrix
     }
@@ -50,7 +50,6 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
     }
     methods <- intersect(methods, ALL.GENETEST.METHODS)
 
-    message("[ngs.fitContrastsWithAllMethods] 1 : ")
     message("[ngs.fitContrastsWithAllMethods] calculating methods : ", methods)
     message("[ngs.fitContrastsWithAllMethods] prune.samples = ", prune.samples)
     
@@ -72,17 +71,11 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
         message("[ngs.fitContrastsWithAllMethods] prior CPM counts =",prior.cpm)
         message("[ngs.fitContrastsWithAllMethods] CPM scale =",cpm.scale)
         X <- log2(t(t(counts) / colSums(counts)) * cpm.scale + prior.cpm)  ## CPM
+        X <- limma::normalizeQuantiles(X)  ## in linear space
     } else {
         message("[ngs.fitContrastsWithAllMethods] using input log-expression matrix X...")
     }
     
-    ##------------------------------------------------------------------
-    ## Quantile normalize if needed
-    ##------------------------------------------------------------------        
-    if(quantile.normalize)  {
-        message("[ngs.fitContrastsWithAllMethods] applying quantile normalization")
-        X <- limma::normalizeQuantiles(X)  ## in linear space
-    }
     ##------------------------------------------------------------------    
     ## get main grouping variable for modeling
     ##------------------------------------------------------------------
@@ -870,12 +863,30 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
     ##fitType = 'local'
     fitType = 'mean'
     if(test=="LRT") {
-        dds <- DESeq(dds, fitType=fitType, test="LRT", reduced= ~ 1)
+        dds <- try( DESeq(dds, fitType=fitType, test="LRT", reduced= ~ 1) )
         ##dds <- DESeq(dds, test="LRT", reduced= ~ 1)
     } else {
-        dds <- DESeq(dds, fitType=fitType, test="Wald")
+        dds <- try( DESeq(dds, fitType=fitType, test="Wald") )
         ##dds <- DESeq(dds, test="Wald")
     }
+
+    ## sometime DESEQ2 fails and we resort to gene-wise estimates
+    if('try-error' %in% class(dds)) {
+        message("[.ngs.fitConstrastsWithDESEQ2.nodesign] retrying DESEQ2 with gene-wise estimates...")
+        dds <- DESeqDataSetFromMatrix(
+            countData=counts, design=design.formula, colData=data.frame(group))
+        dds <- estimateSizeFactors(dds)
+        dds <- estimateDispersionsGeneEst(dds)
+        dispersions(dds) <- mcols(dds)$dispGeneEst
+        suppressWarnings({
+            if(test=="LRT") {
+                dds <- try( nbinomLRT(dds) )
+            } else {
+                dds <- try( nbinomWaldTest(dds) )
+            }
+        })
+    }
+
     ## we add the gene annotation here (not standard...)
     colnames(rowData(dds))
     if(!is.null(genes)) rowData(dds)$genes = genes
@@ -974,11 +985,31 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
             countData=counts1, design=design.formula, colData=data.frame(y))
         ##fitType = 'parametric'
         fitType ='mean'
-        if(test=="LRT") {
-            suppressWarnings( dds <- DESeq(dds, fitType=fitType, test="LRT", reduced=~1) )
-        } else {
-            suppressWarnings( dds <- DESeq(dds, fitType=fitType, test="Wald") )
+        suppressWarnings({
+            if(test=="LRT") {
+                dds <- try(DESeq(dds, fitType=fitType, test="LRT", reduced=~1))
+            } else {
+                dds <- try(DESeq(dds, fitType=fitType, test="Wald")) 
+            }
+        })
+
+        ## sometime DESEQ2 fails
+        if('try-error' %in% class(dds)) {
+            message("[.ngs.fitConstrastsWithDESEQ2.nodesign] retrying DESEQ2 with gene-wise estimates...")
+            dds <- DESeqDataSetFromMatrix(
+                countData=counts1, design=design.formula, colData=data.frame(y))
+            dds <- estimateSizeFactors(dds)
+            dds <- estimateDispersionsGeneEst(dds)
+            dispersions(dds) <- mcols(dds)$dispGeneEst
+            suppressWarnings({
+                if(test=="LRT") {
+                    dds <- try( nbinomLRT(dds) )
+                } else {
+                    dds <- try( nbinomWaldTest(dds) )
+                }
+            })
         }
+                
         resultsNames(dds)
         ctx <- c("yneg"=-1, "yzero"=0, "ypos"=1)[resultsNames(dds)]
         resx <- results(dds, contrast=ctx, cooksCutoff=FALSE, independentFiltering=FALSE )

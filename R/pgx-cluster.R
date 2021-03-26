@@ -447,7 +447,8 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
     }
 
     length(all.pos)
-
+    ##all.pos <- lapply(all.pos, pos.compact)  ## make more compact
+    
     all.pos$membership <- NULL
     if(find.clusters) {
         message("calculating Louvain memberships (from reduced X)...")

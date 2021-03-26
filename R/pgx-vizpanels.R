@@ -1079,8 +1079,9 @@ viz.BatchCorrection <- function(pgx, cX, cX2=NULL, phenotype, stat="F",
     if(is.null(pheno))  pheno <- pgx$samples
     pos0 <- pgx$tsne2d
     if(0) {
+        phenotype='Treatment'
         viz.BatchCorrectionMatrix(X0=X0, pheno=pheno, cX=cX, cX2=cX2,
-                                  phenotype="group")
+                                  phenotype=phenotype)
     }
     viz.BatchCorrectionMatrix(
         X0=X0, pheno=pheno, cX=cX, cX2=cX2,
@@ -1107,6 +1108,17 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
         phenotype <- colnames(pheno)[1]
     phenotype <- head(intersect(phenotype,colnames(pheno)),4) ## max 4
     phenotype
+
+    if(1) {
+        is.na1=is.na2=is.na3=0
+        is.na1 <- rowMeans(is.na(X0)) > 0.9
+        if(!is.null(cX)) is.na2 <- rowMeans(is.na(cX)) > 0.9
+        if(!is.null(cX2)) is.na3 <- rowMeans(is.na(cX2)) > 0.9
+        sel <- which(!is.na1 & !is.na2 & !is.na3)
+        X0 <- X0[sel,,drop=FALSE]
+        cX <- cX[sel,,drop=FALSE]
+        if(!is.null(cX2)) cX2 <- cX2[sel,,drop=FALSE]
+    }
     
     ##X1 <- head(X1[order(-apply(X1,1,sd)),],50)
     xlist <- list(X0, cX, cX2)
@@ -1157,10 +1169,11 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
                     xlist[[i]], main=main[i],
                     col.annot=pheno, softmax=TRUE,
                     show_legend=FALSE, scale="row", split=NULL,
-                    nmax=nmax, show_rownames=40, 
+                    nmax = nmax, show_rownames = 1, 
                     title_cex = 1.1, cexRow=0.7, cexCol=0.78,
                     annot.ht=2.5, mar=c(4,1,1,10)*1,
                     key.offset=c(0.05,1.03),
+                    rownames_width = 10,
                     show_colnames = ifelse(ncol(X0)<25,1,0)
                 )
             )
@@ -1190,7 +1203,9 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     y1 <- pheno[,phenotype[1]]
     y2 <- NULL
     if(length(phenotype)>1) y2 <- pheno[,phenotype[2]]
-    for(i in 1:length(xlist)) {        
+    for(i in 1:length(xlist)) {
+        lg = 'right'
+        if(length(unique(y1))>20) lg = 'none'
         plist[[i]] <- ggscatter(
             pos[[i]], col=y1, shape=y2,
             cex=0.7*cex) +
@@ -1198,7 +1213,10 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
             ## theme_classic() +
             xlab("tSNE-1") + ylab("tSNE-2") + 
             ggtitle(paste0(phenotype[1]," (",main[i],")")) +
-            theme(plot.margin = ggplot2::margin(2,2,0,2,"mm"))
+            theme(
+                legend.position = lg,
+                plot.margin = ggplot2::margin(2,2,0,2,"mm")
+            )
     }
         
     ##-------------------------------------------

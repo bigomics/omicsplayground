@@ -412,7 +412,8 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     if(is.null(ngs$X)) {
         message("[createPGX] calculating log-expression matrix X...")        
         ##ngs$X <- logCPM(ngs$counts, total=NULL)
-        ngs$X <- logCPM(ngs$counts, total=1e6) 
+        ngs$X <- logCPM(ngs$counts, total=1e6, prior=1) 
+        ## ngs$X <- limma::normalizeQuantiles(ngs$X)  ## Sure ???
         dim(ngs$X)
     } else {
         message("[createPGX] using passed log-expression X...")        
