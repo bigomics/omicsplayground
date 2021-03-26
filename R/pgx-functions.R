@@ -412,7 +412,10 @@ knnMedianFilter <- function(x, pos, k=10)
 }
 
 nmfImpute <- function(x,k=5) {
+    ## Impute missing values with NMF
+    ##
     library(NNLM)
+    k = min(k, dim(x))
     nmf <- nnmf(x, k=k, check.k=FALSE, rel.tol = 1e-2, verbose=0)
     xhat <-  with(nmf, W %*% H);
     x[is.na(x)] <- xhat[is.na(x)]
