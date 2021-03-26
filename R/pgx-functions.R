@@ -411,6 +411,14 @@ knnMedianFilter <- function(x, pos, k=10)
     x1
 }
 
+nmfImpute <- function(x,k=5) {
+    library(NNLM)
+    nmf <- nnmf(x, k=k, check.k=FALSE, rel.tol = 1e-2, verbose=0)
+    xhat <-  with(nmf, W %*% H);
+    x[is.na(x)] <- xhat[is.na(x)]
+    x
+}
+
 knnImputeMissing <- function(x, pos, missing=NA, k=10)
 {
     library(FNN)

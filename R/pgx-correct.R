@@ -529,7 +529,7 @@ pgx.PC_correlation <- function(X, pheno, nv=3, stat="F", plot=TRUE, main=NULL) {
 NORMALIZATION.METHODS <- c("none","mean","scale","NC","CPM","TMM","RLE","quantile")
 ##nparam=NULL;niter=1;resample=1;normalization=NORMALIZATION.METHODS[1:3];show.progress=1
 
-pgx.performNormalization.CHECK <- function(zx, methods)
+pgx.performNormalization.NEEDCHECK <- function(zx, methods)
 {
     ## Column-wise normalization (along samples).
     ##
@@ -608,7 +608,8 @@ pgx.countNormalization <- function(x, methods, keep.zero=TRUE)
 ##            x <- normalizeTMM(x, log=FALSE, method=m) ## does upperquartile on counts
         } else if(m=="quantile") {
             require(preprocessCore)
-            new.x <- 0.01 * normalize.quantiles(as.matrix(100*x)) ## shift to avoid clipping
+            ##new.x <- 0.01 * normalize.quantiles(as.matrix(100*x)) ## shift to avoid clipping
+            new.x <- 0.01 * limma::normalizeQuantiles(as.matrix(100*x)) ## shift to avoid clipping
             rownames(new.x) <- rownames(x)
             colnames(new.x) <- colnames(x)
             x <- new.x  
@@ -834,9 +835,9 @@ pgx.computeBiologicalEffects <- function(X, is.count=FALSE)
 
     ## shift zero to 1% percentile
     if(!is.count) {
-        q0 <- quantile(X[X>0], probs=0.01)
+        q0 <- quantile(X[X>0], probs=0.01, na.rm=TRUE)
         q0
-        tx <- pmax(X - q0,0)
+        tx <- pmax(X - q0,0)  ## log expression
         cx <- pmax(2**tx - 1, 0)  ## counts
     } else {
         cx <- X

@@ -73,7 +73,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                         cluster_rows=TRUE, cluster_columns=TRUE, sort_columns=NULL,
                         col.annot=NULL, row.annot=NULL, annot.ht=3,
                         nmax=1000, cmax=NULL, main=" ", verbose=1, denoise = 0,
-                        cexRow=1, cexCol=1, mar=c(5,5,5,5),
+                        cexRow=1, cexCol=1, mar=c(5,5,5,5), rownames_width = 10,
                         title_cex=1.2, column_title_rot=0, column_names_rot=90,
                         show_legend=TRUE, show_key=TRUE, zlim=NULL,
                         show_rownames=nmax, lab.len=80, key.offset=c(0.05,1.01),
@@ -115,7 +115,8 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     }
     if(!is.null(split) && length(split)==1 && split==1) split <- NULL
     if(!is.null(splitx) && length(splitx)==1 && splitx==1) splitx <- NULL
-    
+    if(is.null(main)) main = '  '
+
     par(xpd=FALSE)
     jj1 <- 1:nrow(gx)
     jj2 <- 1:ncol(gx)
@@ -455,9 +456,11 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                               column_names_gp = gpar(fontsize = 11*cexCol)
                               )
     }
-
-    if( show_rownames < nrow(gx) && show_rownames>0 ) {
-        ## empty matrix just for rownames on the far right
+    
+    rownames.ha <- NULL
+    if( FALSE && show_rownames < nrow(gx) && show_rownames>0 ) {
+        ## Show rownames with linked lines
+        ## !!!!!!! BUGGY!!!!!!!!!!!!!
         if(1 && !is.null(split.idx) && length(unique(split.idx))>1) {
             nshow=10
             nshow <- show_rownames / length(unique(split.idx))
@@ -476,24 +479,37 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                              link_width = unit(0.8,"cm"),
                              labels_gp = gpar(fontsize = 10*cexRow)),
             width = unit(0.8,"cm") + 0.8*max_text_width(lab))
-    } else {
+    }
+   
+    if(1 && is.null(rownames.ha) && show_rownames>0 ) {
         ## empty matrix just for rownames on the far right
         empty.mat = matrix(nrow = nrow(gx), ncol = 0)
-        rownames(empty.mat) = rownames(gx)
-        lab = rownames(gx)
-        if(!is.null(col.annot)) lab <- c(lab, colnames(col.annot))
-        textwidth <- max_text_width(paste0(lab,"XXXXXXXXXXXXX"),
-                                    gp = gpar(fontsize = 10*cexRow))
-        rownames.ha = Heatmap( empty.mat,
-                           row_names_max_width = textwidth,
-                           row_names_gp = gpar(fontsize = 10*cexRow),
-                           show_row_names = show_rownames>0 )
+
+        rowlab = substring(rownames(gx),1,20)
+        rownames(empty.mat) = rowlab
+        if(!is.null(col.annot)) rowlab <- c(rowlab, colnames(col.annot))
+        rowlab = gsub(' ','',rowlab)
+        textwidth <- max_text_width(
+            paste0(rowlab,"XXXXXXXXXX"),
+            gp = gpar(fontsize = 10*cexRow))
+
+        textwidth <- unit(rownames_width,'mm')
+        message("[gx.splitmap] textwidth = ", textwidth)
+        message("[gx.splitmap] max.nchar = ", max(nchar(rowlab)))        
+        
+        rownames.ha = Heatmap(
+            empty.mat,
+            row_names_max_width = textwidth,
+            row_names_gp = gpar(fontsize = 10*cexRow),
+            show_row_names = show_rownames>0 )
     }
 
     if(!is.null(row.ha)) {
+        message("[gx.splitmap] rendering row annotation")        
         hmap = hmap + row.ha
     }
-    if(show_rownames) {
+    if(!is.null(rownames.ha) && show_rownames) {
+        message("[gx.splitmap] rendering rownames")
         hmap = hmap + rownames.ha
     }
 

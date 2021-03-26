@@ -86,7 +86,7 @@ gx.b3plot <- function(x, y, width=1, bar=TRUE, bee=TRUE, sig.stars=FALSE,
         beeswarm(x[jj] ~ y[jj], add=TRUE, at=1:n-0.33, pch=19, cex=bee.cex, col="grey20")
         ## sinaplot( x[jj] ~ y[jj], add=TRUE, pch=19, cex=bee.cex, col="grey20")
     }
-    if(bar) stats.segments(y, x, xoffset=-0.333, lwd=1.2)
+    if(bar) stats.segments(y, x, xoffset=-0.333, lwd=1.4)
 
     if(sig.stars) {
         i=1
