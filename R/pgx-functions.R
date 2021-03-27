@@ -906,13 +906,14 @@ pgx.getCategoricalPhenotypes <-function(df, min.ncat=2, max.ncat=20, remove.dup=
     ##df <- type.convert(df)
     
     is.bad = 0
-    is.bad1 <- grepl("^sample$|[_.]id$|replic|rep|patient|donor|individ",tolower(colnames(df)))
+    ##is.bad1 <- grepl("^sample$|[_.]id$|replic|rep|patient|donor|individ",tolower(colnames(df)))
     is.bad1 <- grepl("^sample$|[_.]id$|patient|donor|individ",tolower(colnames(df)))
     is.bad2 <- grepl("ratio|year|month|day|^age$|^efs|^dfs|surv|follow",tolower(colnames(df)))    
     ## is.factor <- sapply(sapply(data.frame(df), class), function(s) any(s %in% c("factor","character")))
     is.bad3 <- apply(df,2,function(x) mean(grepl("^sample|patient|donor|individ",
                                                  x[!is.na(x)],ignore.case=TRUE))>0.8)    
-    is.bad <- (is.bad1 | is.bad2 | is.bad3)
+    ## is.bad <- (is.bad1 | is.bad2 | is.bad3)
+    is.bad <- (is.bad2 | is.bad3)    
     is.bad
     table(is.bad)
 
@@ -920,7 +921,7 @@ pgx.getCategoricalPhenotypes <-function(df, min.ncat=2, max.ncat=20, remove.dup=
     is.factor
     n.unique <- apply(df,2,function(x) length(unique(setdiff(x,c(NA,"NA","")))))
     n.notna  <- apply(df,2,function(x) length(x[!is.na(x)]))
-    is.id    <- (n.unique > 0.8*n.notna)
+    is.id    <- (n.unique > 0.9*n.notna)
     is.id
     is.factor2 <- (!is.bad & is.factor & !is.id & n.unique>=min.ncat & n.unique<= max.ncat)
     is.factor2

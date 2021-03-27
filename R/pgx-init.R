@@ -235,7 +235,7 @@ pgx.initialize <- function(pgx) {
     ## clean up: pgx$Y is a cleaned up pgx$samples
     kk = grep("batch|lib.size|norm.factor|repl|donor|clone|sample|barcode",
               colnames(pgx$samples),invert=TRUE)
-    kk = grep("lib.size|norm.factor|donor|clone|sample|barcode|patient",
+    kk = grep("lib.size|norm.factor|donor|clone|barcode",
               colnames(pgx$samples),invert=TRUE)
     pgx$Y = pgx$samples[colnames(pgx$X),kk,drop=FALSE]
     pgx$Y <- type.convert(pgx$Y)   ## autoconvert to datatypes

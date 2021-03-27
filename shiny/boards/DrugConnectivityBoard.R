@@ -62,16 +62,13 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             tipify( selectInput(ns('dsea_method'),"Analysis type:", choices = ""),
                    "Select type of drug enrichment analysis: activity or sensitivity (if available).",
                    placement="top"),
-                tipify( actionLink(ns("dr_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                   "Show/hide advanced options", placement="top"),
-            br(),
-            conditionalPanel(
-                "input.dr_options % 2 == 1", ns=ns,
-                tagList(
-                    tipify(checkboxInput(ns('dr_normalize'),'normalize activation matrix',TRUE),
-                           "Click to fine-tune the coloring of an activation matrices.")
-                )
-            )
+            ##tipify( actionLink(ns("dr_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+            ##       "Show/hide advanced options", placement="top"),
+            ## br(),
+            ## conditionalPanel(
+            ##     "input.dr_options % 2 == 1", ns=ns,
+            ##     tagList()
+            ## )
         )
         ui
     })
@@ -437,10 +434,15 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         score = head(score,nterms) ## max number of terms    
         score = score[,head(order(-colSums(score**2)),nfc),drop=FALSE] ## max comparisons/FC        
         score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
-
+        
+        if(input$dr_normalize) score <- t(t(score) / (1e-8+sqrt(colMeans(score**2))))
+        score <- sign(score) * abs(score)**3   ## fudging
+        score <- score / (1e-8 + max(abs(score),na.rm=TRUE))
+        
         if(NCOL(score)>1) {
             d1 <- as.dist(1-cor(t(score),use="pairwise"))
             d2 <- as.dist(1-cor(score,use="pairwise"))
+
             d1[is.na(d1)] <- 1
             d2[is.na(d2)] <- 1
             jj=1;ii=1:nrow(score)
@@ -454,15 +456,10 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         cex2=1
         colnames(score) = substring(colnames(score),1,30)
         rownames(score) = substring(rownames(score),1,50)
-        cex2=0.85
-
-        score2 <- score
-        if(input$dr_normalize) score2 <- t( t(score2) / apply(abs(score2),2,max)) 
-        score2 <- sign(score2) * abs(score2/max(abs(score2)))**3   ## fudging
-        
+        cex2=0.85        
         par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1,0,0))
         require(corrplot)
-        corrplot( score2, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
+        corrplot( score, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
                  tl.cex = 0.9*cex2, tl.col = "grey20", tl.srt = 90)
 
     }      
@@ -503,9 +500,10 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         
     })    
 
-    
+        
     ##--------- DSEA enplot plotting module
-    dsea_enplots.opts = tagList()
+    dsea_enplots.opts = tagList(
+    )
     callModule(
         plotModule,
         id = "dsea_enplots",
@@ -542,7 +540,9 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     )
 
     ##-------- Activation map plotting module
-    dsea_actmap.opts = tagList()
+    dsea_actmap.opts = tagList(
+        tipify(checkboxInput(ns('dr_normalize'),'normalize activation matrix',FALSE), "Normalize columns of the activation matrix.")
+    )
     callModule(
         plotModule,
         id = "dsea_actmap",
@@ -563,7 +563,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         func = dsea_table.RENDER, 
         info.text="<b>Enrichment table.</b> Enrichment is calculated by correlating your signature with known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.", 
         title = "Enrichment table",
-        height = c(240,700)
+        height = c(340,700)
     )
        
     ##-----------------------------------------
@@ -585,7 +585,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
                     flex = c(1.4,0.15,1),
                     height = rowH,
                     fillRow(
-                        flex=c(1.9,1),
+                        flex=c(1.6,1),
                         plotWidget(ns("dsea_enplots")),
                         plotWidget(ns("dsea_moaplot"))
                     ),

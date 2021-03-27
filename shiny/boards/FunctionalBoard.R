@@ -75,8 +75,7 @@ to understand biological functions including GO and KEGG pathway analysis."
             conditionalPanel(
                 "input.fa_options % 2 == 1", ns=ns,
                 tagList(
-                    tipify(checkboxInput(ns('fa_normalize'),'normalize activation matrix',FALSE),
-                           "Click to normalize the columns of the activation matrices."),
+##                    tipify(checkboxInput(ns('fa_normalize'),'normalize activation matrix',FALSE),"Click to normalize the columns of the activation matrices."),
                     tipify(checkboxInput(ns('fa_filtertable'),'filter signficant (tables)',FALSE),
                            "Click to filter the significant entries in the tables.")
                 )
@@ -482,7 +481,6 @@ to understand biological functions including GO and KEGG pathway analysis."
     }
     
     kegg_actmap.RENDER %<a-% reactive({
-
         require(igraph)
         ngs <- inputData()
         req(ngs)
@@ -494,8 +492,7 @@ to understand biological functions including GO and KEGG pathway analysis."
             return(NULL)
         }
         meta <- ngs$gset.meta$meta
-
-        plotKEGGactmap(meta, df, normalize = input$fa_normalize, nterms=50, nfc=25)
+        plotKEGGactmap(meta, df, normalize = input$kegg_normalize, nterms=50, nfc=25)
         
     })    
 
@@ -512,10 +509,13 @@ to understand biological functions including GO and KEGG pathway analysis."
             return(NULL)
         }
         meta <- ngs$gset.meta$meta
-        plotKEGGactmap(meta, df, normalize = input$fa_normalize, nterms=50, nfc=100)        
+        plotKEGGactmap(meta, df, normalize = input$kegg_normalize, nterms=50, nfc=100)        
     })    
 
     kegg_info1 = "<strong>KEGG pathways</strong> are a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. In the pathway map, genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Each pathway is scored for the selected contrast profile and reported in the table below. "
+
+    kegg_graph.opts <- tagList(
+    )
     
     callModule(
         plotModule,
@@ -524,6 +524,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         func = kegg_graph.RENDER,
         plotlib = "image",
         ##renderFunc = "renderImage", outputFunc = "imageOutput",
+        options = kegg_graph.opts,
         download.fmt = "png", just.info=TRUE,
         info.text = kegg_info1, info.width="350px",
         height = c(0.53*rowH,700), width = c("100%",1280)
@@ -546,7 +547,9 @@ to understand biological functions including GO and KEGG pathway analysis."
         height = c(270,700)
     )
 
-    kegg_actmap.opts = tagList()
+    kegg_actmap.opts = tagList(
+        tipify(checkboxInput(ns('kegg_normalize'),'normalize activation matrix',FALSE),"Click to normalize the columns of the activation matrices.")
+    )
     callModule(
         plotModule,
         id = "kegg_actmap",
@@ -554,7 +557,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         func2 = kegg_actmap.RENDER2, 
         title = "Activation matrix", label="c",
         info.text = "The <strong>KEGG activation matrix</strong> visualizes the activation levels of pathways (or pathway keywords) across multiple contrast profiles. This facilitates to quickly see and detect the similarities of certain pathways between contrasts. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
-        ##options = kegg_actmap.opts,
+        options = kegg_actmap.opts,
         pdf.height = 9, pdf.width = 9 , 
         height = c(rowH,750), width = c("100%",1400),
         res=72
@@ -614,28 +617,26 @@ to understand biological functions including GO and KEGG pathway analysis."
                 title = "No GO graph in enrichment results",
                 text="",
                 type = "warning")
-            dbg("[FunctionalBoard::GO_network.RENDER] no META.GO in pgx object!")
+            dbg("[GO_network.RENDER] ***ERROR*** no META.GO in pgx object!")
             return(NULL)
         }
-
-        dbg("[FunctionalBoard::GO_network.RENDER] 1: len.V(sub2)=",length(V(sub2)))
         
         score = ngs$meta.go$pathscore[,comparison]        
         score[is.na(score) | is.infinite(score)] = 0
-        score = (score/max(abs(score),na.rm=TRUE))
+        score = (score / (1e-8+max(abs(score),na.rm=TRUE)))
         V(sub2)$value <- score
         V(sub2)$color <- bluered(32)[16 + round(15*score)]
         V(sub2)$label <- V(sub2)$Term
         V(sub2)$label[which(is.na(score)|score==0)] = ""
         pos = sub2$layout
 
-        dbg("[FunctionalBoard::GO_network.RENDER] 1: all(score=0)=",all(score==0))
+        dbg("[FunctionalBoard::GO_network.RENDER] 1: sum(is.na(score)))=",sum(is.na(score)))
+        dbg("[FunctionalBoard::GO_network.RENDER] 1: all(score=0)=",all(score==0))        
         all.zero <- all(score==0)
         
-        ##if("prune" %in% input$GO_options) {
         if(!all.zero && input$GO_prunetree) {
             ##cat("pruning GO graph\n")
-            vv = V(sub2)[which(!is.na(score) & score!=0)]
+            vv = V(sub2)[which(!is.na(score) & abs(score)>0)]
             sp = shortest_paths(sub2, from="all", to=vv, mode="all", output="vpath")
             sp.vv = unique(unlist(sp$vpath))
             sub2 = induced.subgraph(sub2, sp.vv)
@@ -652,7 +653,6 @@ to understand biological functions including GO and KEGG pathway analysis."
         removeroot=TRUE
         if(removeroot) {
             sub2 <- induced_subgraph(sub2, which(V(sub2)$name!="all"))
-            ##if("prune" %in% input$GO_options) pos = layout_with_fr(sub2)
             if(input$GO_prunetree) pos = layout_with_fr(sub2)
             score <- score[V(sub2)$name]
             ##pos <- pos[V(sub2)$name,]        
@@ -704,7 +704,6 @@ to understand biological functions including GO and KEGG pathway analysis."
 
         ## rendering
         font.size=20; cex=1
-        ##if("prune" %in% input$GO_options) {
         if(input$GO_prunetree) {
             font.size=20; cex=0.6
         }
@@ -817,10 +816,20 @@ to understand biological functions including GO and KEGG pathway analysis."
         score = score[head(order(-rowSums(score**2,na.rm=TRUE)),maxterm),,drop=FALSE] ## max number terms    
         score = score[,head(order(-colSums(score**2,na.rm=TRUE)),maxfc),drop=FALSE] ## max comparisons/FC
         ##if(NCOL(score)==1) score <- cbind(score,score)   
-
         score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
+
+        ## normalize colums
+        if(normalize) {
+            ## column scale???
+            score <- t(t(score) / (1e-8 + sqrt(colMeans(score**2,na.rm=TRUE))))
+        }
+        score <- score / max(abs(score),na.rm=TRUE) ## global normalize
+        score <- sign(score) * abs(score)**0.5   ## fudging for better colors       
+
         d1 <- as.dist(1-cor(t(score),use="pairwise"))
         d2 <- as.dist(1-cor(score,use="pairwise"))
+        d1 <- dist(score)
+        d2 <- dist(t(score))
         d1[is.na(d1)] <- 1
         d2[is.na(d2)] <- 1
         ii=1:nrow(score); jj=1:ncol(score)
@@ -837,21 +846,10 @@ to understand biological functions including GO and KEGG pathway analysis."
         rownames(score) = substring(rownames(score),1,50)
         colnames(score) <- paste0(colnames(score)," ")
         
-        ##pdf("module-functional.pdf",w=8,h=12)
-        ## normalize colums just for visualization of the heatmap
-        score2 <- score
-        if(normalize) {
-            ## column scale???
-            score2 <- t( t(score2) / (1e-8+apply(abs(score2),2,max,na.rm=TRUE)))
-        }
-        ##score2 <- abs(score2)**0.8 * sign(score2)  ## fudging
-        score2 <- sign(score2) * abs(score2/max(abs(score2),na.rm=TRUE))**0.8   ## fudging
-        ## heatmap(score2, scale="none", mar=c(8,20))
-        bmar <- 0 + pmax((50 - nrow(score2))*0.25,0)
-       
+        bmar <- 0 + pmax((50 - nrow(score))*0.25,0)
         par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1.5,0,0.5))
         require(corrplot)
-        corrplot::corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
+        corrplot::corrplot( score, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
                            tl.cex = 0.85, tl.col="grey20", tl.srt = 90,
                            mar=c(bmar,0,0,0) )
 
@@ -873,7 +871,7 @@ to understand biological functions including GO and KEGG pathway analysis."
 
         plotGOactmap(
             score = score, go = go,
-            normalize = input$fa_normalize,
+            normalize = input$go_normalize,
             maxterm = 50,
             maxfc = 25
         )
@@ -896,7 +894,7 @@ to understand biological functions including GO and KEGG pathway analysis."
 
         plotGOactmap(
             score = score, go = go,
-            normalize = input$fa_normalize,
+            normalize = input$go_normalize,
             maxterm = 50,
             maxfc = 100
         )
@@ -908,32 +906,37 @@ to understand biological functions including GO and KEGG pathway analysis."
     GO_network.opts = tagList(
         tipify( checkboxInput(ns("GO_prunetree"), "Prune tree", TRUE),
                "Prune the tree with only significant branches."),
-        tipify( checkboxInput(ns("GO_colorclusters"), "Color clusters", TRUE),
+        tipify( checkboxInput(ns("GO_colorclusters"), "Color clusters", FALSE),
                "Highlight clusters with different colors.")
     )
 
     callModule(
         plotModule,
         id = "GO_network", 
+        title = "Gene Ontology graph", label="a",
         func = GO_network.RENDER,
         plotlib = "visnetwork",
-        title = "Gene Ontology graph", label="a",
         info.text = GO_info1,
         download.fmt = c("pdf","png"), ## no.download=TRUE,
         options = GO_network.opts,
         pdf.width = 10, pdf.height = 8,
-        height = 0.55*rowH, res=72
+        height = c(0.55*rowH,750), width = c("100%",1400),        
+        res=72
     )
     ##output <- attachModule(output, GO_network_module)
 
-    GO_actmap.opts = tagList()
+    GO_actmap.opts = tagList(
+        tipify(checkboxInput(ns('go_normalize'),'normalize activation matrix',FALSE),"Click to normalize the columns of the activation matrices.")
+    )
+    go_info = "The <b>GO activation matrix</b> visualizes the activation of GO terms across conditions. From this figure, you can easily detect GO terms that are consistently up/down across conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile."
+    
     callModule(
         plotModule,
         id = "GO_actmap",
         func = GO_actmap.RENDER,
         func2 = GO_actmap.RENDER2, 
         title = "Activation matrix", label="c",
-        info.text = "The <b>GO activation matrix</b> visualizes the activation of GO terms across conditions. From this figure, you can easily detect GO terms that are consistently up/down across conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile.",
+        info.text = go_info,
         options = GO_actmap.opts,
         pdf.height = 9, pdf.width = 9, 
         height = c(rowH,750), width = c("100%",1400),
