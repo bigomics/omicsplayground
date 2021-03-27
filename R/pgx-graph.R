@@ -777,7 +777,8 @@ pgx.computeCoreGOgraph <- function(ngs, fdr=0.05)
     i=1
     for(i in 1:length(comparisons)) {
         subgraphs[[i]] = pgx.getSigGO(
-            ngs, comparison=comparisons[i], methods=NULL,
+            ngs, comparison=comparisons[i],
+            methods = NULL,  ## should be actual selected methods!!
             fdr=fdr, nterms=200, ntop=20)
     }
     length(subgraphs)
@@ -842,7 +843,7 @@ getGOgraph <- function() {
 
 
 ##comparison=1;methods=c("fisher","gsva","camera");nterms=200;ntop=20;fdr=0.20
-pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.25, nterms=500, ntop=100)
+pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.20, nterms=500, ntop=100)
 {
     require(GO.db)
     require(igraph)
@@ -931,7 +932,7 @@ pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.25, nterms=500, nt
         sum((V(go_graph)[sp]$value))
     }
 
-    ##fdr=0.25;ntop=20;nterms=200
+    ##fdr=0.20;ntop=20;nterms=200
     sig.terms10 = head(rownames(vinfo)[order(vinfo$qv)],10)
     sig.terms = rownames(vinfo)[which(vinfo$qv <= fdr)]
     sig.terms = unique(c(sig.terms, sig.terms10))

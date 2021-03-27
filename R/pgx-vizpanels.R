@@ -37,6 +37,58 @@ if(0) {
     
 }
 
+
+##cX2=NULL;pos0=pos1=pos2=NULL;npca=3;cex=1;nmax=40;main=c("not-corrected", "corrected","corrected2");pca.heatmap=FALSE
+viz.CompareDatasets <- function(pgx1, pgx2, nmax=50, cex=1, 
+                                main=c("heatmap1", "heatmap2"),
+                                title=NULL, subtitle=NULL, caption=NULL)
+{    
+    ##-------------------------------------------
+    ## Heatmaps
+    ##-------------------------------------------    
+    xlist <- list(X0=X0, X1=X1, X2=X2)
+    hlist <- list()        
+    for(i in 1:length(xlist)) {
+        hlist[[i]] <- grid.grabExpr(
+            gx.splitmap(
+                xlist[[i]], main=main[i],
+                col.annot=pheno, softmax=TRUE,
+                show_legend=FALSE, scale="row", split=NULL,
+                nmax = nmax, show_rownames = 1, 
+                title_cex = 1.1, cexRow=0.7, cexCol=0.78,
+                annot.ht=2.5, mar=c(4,1,1,10)*1,
+                    key.offset=c(0.05,1.03),
+                rownames_width = 10,
+                show_colnames = ifelse(ncol(X0)<25,1,0)
+            )
+        )
+    }
+    
+        
+    ##-------------------------------------------
+    ## Arrange plots
+    ##-------------------------------------------
+    np <- length(xlist)
+    np
+    lab1 <- letters[1:np]
+    lab2 <- letters[(np+1):(2*np)]
+    lab3 <- letters[(2*np+1):(3*np)]
+    plt1 <- cowplot::plot_grid(plotlist=hlist, nrow=1, labels=lab1, label_size=15)
+    plt2 <- cowplot::plot_grid(plotlist=flist, nrow=1, labels=lab2, label_size=15)
+    plt3 <- cowplot::plot_grid(plotlist=plist, ncol=1, labels=lab3, label_size=15)
+    fig  <- cowplot::plot_grid(
+                         cowplot::plot_grid(plt1, plt2, ncol=1, rel_heights=c(1.95,1)),
+                         plt3, ncol=2, rel_widths=c(np,1),
+                         labels=c("","")
+                     )
+
+    ##if(is.null(title)) title <- "Batch effect analysis"
+    ##if(is.null(subtitle)) subtitle = "The plots show possible batch effects your experiments."
+    ##if(is.null(caption)) caption <- paste0("Project: ",pgx$name)
+    viz.showFigure(fig, title=title, subtitle=subtitle, caption=caption, tag=FALSE)    
+    
+}
+
 viz.FoldChangeHeatmap <- function(pgx, comparisons=NULL, hilight=NULL,
                                   ntop=10, plot.diag=NULL, cex=1, nrow=NULL,
                                   title=NULL, subtitle=NULL, caption=NULL)                              
@@ -1092,7 +1144,6 @@ viz.BatchCorrection <- function(pgx, cX, cX2=NULL, phenotype, stat="F",
 }
 
 
-##cX2=NULL;pos0=pos1=pos2=NULL;npca=3;cex=1;nmax=40;main=c("not-corrected", "corrected","corrected2");pca.heatmap=FALSE
 viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="F", 
                                       pca.heatmap=FALSE, nmax=40, cex=1, 
                                       pos0=NULL, pos1=NULL, pos2=NULL, npca=3,
@@ -1242,6 +1293,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     viz.showFigure(fig, title=title, subtitle=subtitle, caption=caption, tag=FALSE)    
     
 }
+
 
 viz.System <- function(pgx, contrast, umap, gs.umap)
 {

@@ -44,7 +44,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
     if("meta.go" %in% extra) {
         message(">>> Computing GO core graph...")
         tt <- system.time({
-            ngs$meta.go <- pgx.computeCoreGOgraph(ngs, fdr=0.05)
+            ngs$meta.go <- pgx.computeCoreGOgraph(ngs, fdr=0.20)
         })
         timings <- rbind(timings, c("meta.go", tt))
     }

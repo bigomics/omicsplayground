@@ -8,48 +8,43 @@
 ##========================================================================
 
 
-gset.rankcor <- function(rnk, gset , compute.p=FALSE, no.rank=FALSE)
+gset.rankcor <- function(rnk, gset, compute.p=FALSE, no.rank=FALSE)
 {
-    if(!any(class(gset) %in% c("Matrix","dgCMatrix")) ) {
+    if(!any(class(gset) %in% c("Matrix","dgCMatrix","matrix","array")) ) {
         stop("gset must be a matrix")
         ##gset = gmt2mat(gset, bg=names(rnk))
     }
-    gg <- intersect(rownames(gset),names(rnk))
-    if(!no.rank) rnk1 <- matrix(rank(rnk[gg]),ncol=1)
-    if(no.rank)  rnk1 <- matrix(rnk[gg],ncol=1)
-    rho1 <- qlcMatrix::corSparse( gset[gg,], rnk1)[,1]
-    names(rho1) <- colnames(gset)
+    is.vec <- (NCOL(rnk)==1 && !class(rnk) %in% c('matrix','array','Matrix'))
+    if(is.vec && is.null(names(rnk))) stop("rank vector must be named")
+    if(!is.vec && is.null(rownames(rnk))) stop("rank matrix must have rownames")
+    if(is.vec) rnk <- matrix(rnk,ncol=1,dimnames=list(names(rnk),'rnk'))
+    dim(rnk)
+    head(rnk)
+    
+    gg <- intersect(rownames(gset),rownames(rnk))
+    rnk1 <- rnk[gg,,drop=FALSE]
+    if(!no.rank)
+        rnk1 <- apply(rnk1, 2, rank )
+    rho1 <- qlcMatrix::corSparse( gset[gg,], rnk1)
+    rownames(rho1) <- colnames(gset)
+    colnames(rho1) <- colnames(rnk1)
     
     ## compute p-value by permutation
     pv=qv=NULL
     if(compute.p) {
-
-        if(0) {
-            ## Permutation of the ranking vector
-            R <- sapply(1:1000, function(i) sample(rnk1))
-            rho2 <- qlcMatrix::corSparse( gset[gg,], R)
-            pv <- rowMeans( abs(rho2) >  abs(rho1))
-            pv = pmax(pv,1/ncol(R))
-
-        } else {
-
-            ## Permutation of the GSET matrix
-            idx = which(gset!=0, arr.ind=TRUE)
-            dim(idx)
-            S = sparseMatrix(sample(idx[,1]), sample(idx[,2]), x=rep(1,nrow(idx)),
-                             dims = dim(gset), dimnames=dimnames(gset) )
-            rho2 = qlcMatrix::corSparse(S[gg,], rnk1)[,1]
-            ## hist(rho2,breaks=200)        
-            pv = sapply( rho1, function(r) mean( abs(rho2) > abs(r),na.rm=TRUE))
-            pv = pmax(pv,1/ncol(S))
-            names(pv) = names(rho1)
-        }
-        qv = p.adjust(pv, method='fdr')
-        df = data.frame( rho=rho1, p.value=pv, q.value=qv)
-        df = df[order(df$p.value,-abs(df$rho)),]
+        ## Permutation of the GSET matrix
+        idx = which(gset!=0, arr.ind=TRUE)
+        dim(idx)
+        S = sparseMatrix(sample(idx[,1]), sample(idx[,2]), x=rep(1,nrow(idx)),
+                         dims = dim(gset), dimnames=dimnames(gset) )
+        rho2 = qlcMatrix::corSparse(S[gg,], rnk1)
+        rho1[is.na(rho1)] <- 0
+        z1 = abs(rho1)/sd(rho2,na.rm=TRUE)
+        pv = 2*pnorm(-z1)
+        qv = apply(pv, 2, p.adjust, method='fdr')
+        df = list( rho=rho1, p.value=pv, q.value=qv)
     } else {
-        df = data.frame( rho=rho1, p.value=NA, q.value=NA)
-        df = df[order(-abs(df$rho)),]
+        df = list( rho=rho1, p.value=NA, q.value=NA)
     }    
     df
 }

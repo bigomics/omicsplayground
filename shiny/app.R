@@ -15,7 +15,6 @@ library(shinyWidgets)
 library(plotly)
 library(shinybusy)
 
-
 message("\n\n")
 message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")

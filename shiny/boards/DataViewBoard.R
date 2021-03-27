@@ -129,7 +129,7 @@ DataViewBoard <- function(input, output, session, env)
         updateSelectInput(session,'search_gene', choices=listGenes, selected=selgene)
         ##updateSelectInput(session,'search_gene', choices=listGenes, selected='')        
 
-        grps <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=20)
+        grps <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=999)
         grps <- sort(grps)
         selgrp <- grps[1]
         ##if(ncol(ngs$counts) <= 200)

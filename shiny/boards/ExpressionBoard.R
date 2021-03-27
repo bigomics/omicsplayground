@@ -249,7 +249,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
             ## add extra columns
             ##res <- cbind( res, q=mx$q, p=mx$p)
             colnames(mx.q) <- paste0("q.",colnames(mx.q))
-            res <- cbind( res, mx.q[rownames(mx),])
+            res <- cbind( res, mx.q[rownames(mx),,drop=FALSE])
         }
         return(res)
     }
@@ -277,7 +277,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         res = res[which(rownames(res) %in% psel),,drop=FALSE]
         dim(res)
 
-        res <- res[order(-abs(res$logFC)),]
+        res <- res[order(-abs(res$logFC)),,drop=FALSE]
         return(res)
     })
 
