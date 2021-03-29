@@ -93,6 +93,7 @@ ngs <- pgx.createPGX(
     convert.hugo = FALSE,
     only.proteincoding = FALSE
 )
+names(ngs)
 
 gx.methods    = c("trend.limma")
 gset.methods  = c("fisher")

@@ -9,8 +9,51 @@
 ##
 ########################################################################
 
-##use.design=TRUE;dist.method="cor";center.x=center.m=replace=FALSE;b.method="new"
-##X=ngs$X;y=ngs$samples$group
+
+if(0) {
+    use.design=TRUE;dist.method="cor";center.x=center.m=replace=FALSE;b.method="new"
+    x = ngs$X
+    y = as.character(ngs$samples$rx)
+    ref = 'DMSO'
+}
+
+gx.nearestReferenceCorrection <- function(x, y, ref, k=3, dist.method="cor")
+{
+    ## Nearest-neighbour matching for batch correction. This
+    ## implementation substracts explicitly the nearest matching
+    ## neighbour. It does not work well with multiple groups.
+    
+    ## distance metric for matching
+    x1 = head(x[order(-apply(x,1,sd)),],2000)
+    if(dist.method=="cor") {
+        D <- 1 - cor(x)
+    } else {
+        D <- as.matrix(dist(t(x)))
+    }
+
+    ## masking for not refs
+    diag(D) <- NA
+    i=1
+    for(i in 1:nrow(D)) {
+        jj <- which(!(y %in% ref))
+        D[i,jj] <- NA
+    }
+    
+    dx <- x
+    j=1
+    pairings <- matrix(NA,ncol(x),k)
+    rr <- which(y %in% ref)
+    avgref <- rowMeans(x[,rr,drop=FALSE])
+    for(j in 1:ncol(x)) {
+        nn <- intersect(order(D[j,]),rr)  ## closest ref
+        nn <- head(nn,k)
+        dx[,j] <- x[,j] - rowMeans(x[,nn,drop=FALSE]) + avgref
+        pairings[j,] <- head(c(nn,rep(NA,k)),k)
+    }
+    ##cx <- dx - rowMeans(dx) + rowMeans(x)
+    res <- list(X=dx, pairings=pairings)
+    return(res)
+}
 
 gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
                           center.x=TRUE, center.m=TRUE,
@@ -159,7 +202,6 @@ gx.nnmcorrect.OLD <- function(x, y, k=3, dist.method="cor")
     ## Nearest-neighbour matching for batch correction. This
     ## implementation substracts explicitly the nearest matching
     ## neighbour. It does not work well with multiple groups.
-
     
     ## distance metric for matching
     if(dist.method=="cor") {

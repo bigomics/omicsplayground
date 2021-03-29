@@ -265,6 +265,8 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     ## Filter out not-expressed
     ##-------------------------------------------------------------------
     if(filter.genes) {
+        ## There is second filter in the statistics computation. This
+        ## first filter is primarily to reduce the counts table.
         message("[createPGX] filtering out not-expressed genes...")
         keep <- (Matrix::rowMeans(ngs$counts > 0) > 0) ## at least in one...
         ngs$counts <- ngs$counts[keep,]
@@ -314,7 +316,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     }
     
     ##-------------------------------------------------------------------
-    ## Do infer cell cycle/gender here (before any batchcorrection)
+    ## Infer cell cycle/gender here (before any batchcorrection)
     ##-------------------------------------------------------------------
     ngs <- compute.cellcycle.gender(ngs)
     head(ngs$samples)

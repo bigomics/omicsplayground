@@ -68,8 +68,9 @@ pgx.testPhenoCorrelation <- function(df, plot=TRUE, cex=1)
     require(corrplot)
     
     cl <- sapply(df,class)
-    cvar <- which(cl %in% c("numeric","integer"))
-    dvar <- which(cl %in% c("factor","character"))    
+    nlev = apply(df,2,function(x) length(unique(x[!is.na(x)])))
+    cvar <- which(cl %in% c("numeric","integer")  & nlev>=2 )
+    dvar <- which(cl %in% c("factor","character") & nlev>=2 )    
     dc <- df[,cvar,drop=FALSE]
     dd <- df[,dvar,drop=FALSE]
 
@@ -82,6 +83,8 @@ pgx.testPhenoCorrelation <- function(df, plot=TRUE, cex=1)
         fisher.P <- matrix(NA,ncol(dd),ncol(dd))
         i=1;j=2
         for(i in 1:(ncol(dd)-1)) {
+            kk <- which( !is.na(dd[,i]) & !is.na(dd[,j]) )
+            if(length(unique(dd[kk,i])) < 2 || length(unique(dd[kk,j])) < 2) next            
             for(j in (i+1):ncol(dd)) {
                 tb <- table(dd[,i], dd[,j])
                 fisher.P[i,j] <- fisher.test(tb, simulate.p.value=TRUE)$p.value
@@ -97,8 +100,10 @@ pgx.testPhenoCorrelation <- function(df, plot=TRUE, cex=1)
         kruskal.P <- matrix(NA,ncol(dd),ncol(dc))
         i=1;j=2
         for(i in 1:ncol(dd)) {
+            kk <- which( !is.na(dc[,j]) & !is.na(dd[,i]) )
+            if(length(unique(dd[kk,i])) < 2) next
             for(j in 1:ncol(dc)) {
-                kruskal.P[i,j] <- kruskal.test(dc[,j], dd[,i])$p.value
+                kruskal.P[i,j] <- kruskal.test(dc[kk,j], dd[kk,i])$p.value
             }
         }
         rownames(kruskal.P) <- colnames(dd)
