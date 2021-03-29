@@ -1376,8 +1376,9 @@ DataViewBoard <- function(input, output, session, env)
         annot <- ngs$samples
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
         annot <- annot[samples,,drop=FALSE]
-        annot.ht <- ifelse( ncol(annot) > 10, 3.5, 5)
-        annot.ht <- ifelse( ncol(annot) > 50, 2.5, annot.ht)
+        annot.ht <- ifelse( ncol(annot) > 10, 5, 6)
+        annot.ht <- ifelse( ncol(annot) > 20, 4, annot.ht)
+        annot.ht <- ifelse( ncol(annot) > 30, 3, annot.ht)
         
         do.clust <- input$data_phenoclustsamples
         plt <- pgx.plotPhenotypeMatrix0(

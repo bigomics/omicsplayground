@@ -1224,7 +1224,7 @@ pgx.plotPhenotypeMatrix <- function(annot)
     hc <- hclust(dist(annotX))
     plt <- plt %>% add_col_dendro(hc, size = 20*ncol(annot)/6 )
 
-    col_annot_height = 10
+    col_annot_height = 11
     plt <- plt %>%
         add_col_annotation(
             ##annotF[colnames(X),,drop=FALSE],
@@ -1242,8 +1242,8 @@ pgx.plotPhenotypeMatrix <- function(annot)
 }
 
 ##annot=ngs$Y
-annot.ht=4;cluster.samples=TRUE
-pgx.plotPhenotypeMatrix0 <- function(annot, annot.ht=4, cluster.samples=TRUE)
+annot.ht=5;cluster.samples=TRUE
+pgx.plotPhenotypeMatrix0 <- function(annot, annot.ht=5, cluster.samples=TRUE)
 {
 
     cvar <- pgx.getCategoricalPhenotypes(
