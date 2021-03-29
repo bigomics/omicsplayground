@@ -91,9 +91,9 @@ SHOW_QUESTIONS = FALSE
 ##WATERMARK  = opt$WATERMARK
 ##USER_MODE  = opt$USER_MODE
 AUTHENTICATION = opt$AUTHENTICATION
+
 DEV = (dir.exists("modulesx")) ### !!!!!!! OVERRIDE
 DEV
-
 if(DEV) {
     message('****************** DEVELOPER MODE ********************')
 }
@@ -106,6 +106,21 @@ message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 ## --------------------------------------------------------------------
 
 source("init.R", local=FALSE)
+##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
+pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
+
+if(0) {    
+    ##PGX.DIR="../test/"
+    ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
+    load("../data/geiger2016-arginine-test.pgx")
+    load("../data/GSE10846-dlbcl-nc.pgx")
+    ngs = pgx.initialize(ngs)
+}
+
+## --------------------------------------------------------------------
+## ----------------- READ MODULES/BOARDS ------------------------------
+## --------------------------------------------------------------------
+
 source("modules/AuthenticationModule.R",local=src.local)
 source("modules/ComputePgxModule.R",local=src.local)
 source("modules/MakeContrastModule.R",local=src.local)
@@ -113,22 +128,6 @@ source("modules/NormalizeCountsModule.R",local=src.local)
 source("modules/BatchCorrectModule.R",local=src.local)
 source("modules/UploadModule.R",local=src.local)
 ##source("modules/UsersMapModule.R_")
-
-##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
-pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
-
-if(0) {    
-    ##PGX.DIR="../test/"
-    ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
-    load("../data/geiger2016-arginine.pgx")
-    load("../data/GSE10846-dlbcl-nc.pgx")
-    ngs = pgx.initialize(ngs)
-}
-
-
-## --------------------------------------------------------------------
-## ------------------------ READ BOARDS -------------------------------
-## --------------------------------------------------------------------
 
 BOARDS <- c("load","view","clust","expr","enrich","isect","func",
             "word","drug","sig","scell","cor","bio","cmap",

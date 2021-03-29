@@ -1372,7 +1372,7 @@ DataViewBoard <- function(input, output, session, env)
         ngs = inputData()
         req(ngs)
         dbg("[data_phenoHeatmap.RENDER] reacted")
-
+        
         annot <- ngs$samples
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
         annot <- annot[samples,,drop=FALSE]
@@ -1383,6 +1383,7 @@ DataViewBoard <- function(input, output, session, env)
         plt <- pgx.plotPhenotypeMatrix0(
             annot, annot.ht=annot.ht, cluster.samples=do.clust)
         ## plt <- plt %>% config(displayModeBar = FALSE)
+        dbg("[data_phenoHeatmap.RENDER] reacted] done!")        
         plt
     })
     
@@ -1411,13 +1412,12 @@ DataViewBoard <- function(input, output, session, env)
 
         ngs = inputData()
         req(ngs)
-        dbg("[data_phenoClustering.RENDER] reacted")
-
+        dbg("[data_phenotypeAssociation.RENDER] reacted")
         annot <- ngs$samples
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
         annot <- annot[samples,,drop=FALSE]
         pq <- pgx.testPhenoCorrelation(annot, plot=TRUE)
-
+        dbg("[data_phenotypeAssociation.RENDER] done")        
     })
 
     data_phenotypeAssociation_opts <- tagList(

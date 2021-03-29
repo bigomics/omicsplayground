@@ -494,8 +494,6 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
             gp = gpar(fontsize = 10*cexRow))
 
         textwidth <- unit(rownames_width,'mm')
-        message("[gx.splitmap] textwidth = ", textwidth)
-        message("[gx.splitmap] max.nchar = ", max(nchar(rowlab)))        
         
         rownames.ha = Heatmap(
             empty.mat,
@@ -505,11 +503,11 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     }
 
     if(!is.null(row.ha)) {
-        message("[gx.splitmap] rendering row annotation")        
+        ##message("[gx.splitmap] rendering row annotation")        
         hmap = hmap + row.ha
     }
     if(!is.null(rownames.ha) && show_rownames) {
-        message("[gx.splitmap] rendering rownames")
+        ##message("[gx.splitmap] rendering rownames")
         hmap = hmap + rownames.ha
     }
 

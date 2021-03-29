@@ -40,6 +40,7 @@ pgx.clusterGenes <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3),
         scale.features = FALSE,        
         reduce.sd = -1,
         reduce.pca = reduce.pca,
+        find.clusters = FALSE,
         umap.pkg = umap.pkg
     )
 
@@ -48,21 +49,13 @@ pgx.clusterGenes <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3),
     ##clust.index <- paste0("c",clust.pos$membership)
     clust.index <- clust$membership
     clust$membership <- NULL
-    table(clust.index)        
+
     if(0) {
         X1 = scale(X - rowMeans(X))
         idx <- pgx.findLouvainClusters(X1, level=1, prefix='c', small.zero=0.01)        
         table(idx)
         pgx.scatterPlotXY(clust[[1]], var=idx)
     }        
-
-    if(0) {
-        library(NNLM)
-        X2 <- X / sqrt(rowMeans(X**2))
-        X2 <- X / apply(X,1,sd)
-        nmf <- nnmf(X2, k=8, rel.tol=1e-8)
-        dim(nmf$W)
-    }
     
     ## put in slot 'gene cluster'
     pgx$cluster.genes <- NULL
@@ -106,6 +99,7 @@ pgx.clusterSamples2 <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3)
         scale.features = scale.rows,        
         reduce.sd = reduce.sd,
         reduce.pca = reduce.pca,
+        find.clusters = FALSE,
         umap.pkg = umap.pkg
     )
     names(clust.pos)
@@ -279,7 +273,7 @@ pgx.FindClusters <- function(X, method=c("kmeans","hclust","louvain","meta"),
 pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
                                  perplexity=30, reduce.sd = 1000, reduce.pca = 50,
                                  center.features=TRUE, scale.features=FALSE,
-                                 find.clusters=TRUE, svd.gamma=1, umap.pkg="uwot")
+                                 find.clusters=FALSE, svd.gamma=1, umap.pkg="uwot")
 {
     require(irlba)
     require(Rtsne)
@@ -451,6 +445,7 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
     
     all.pos$membership <- NULL
     if(find.clusters) {
+        message("*** DEPRECATED *** please call seperately")
         message("calculating Louvain memberships (from reduced X)...")
         ##X = X - rowMeans(X)
         idx <- pgx.findLouvainClusters(t(X), level=1, prefix='c', small.zero=0.01)

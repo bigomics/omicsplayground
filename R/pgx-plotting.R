@@ -1249,9 +1249,10 @@ pgx.plotPhenotypeMatrix0 <- function(annot, annot.ht=4, cluster.samples=TRUE)
     cvar <- pgx.getCategoricalPhenotypes(
         annot, min.ncat=2, max.ncat=10, remove.dup=FALSE)
     cvar
-    if(length(unique(annot$group)) > 0.33*nrow(annot)) {
-        cvar <- setdiff(cvar,"group")
-    }
+
+    ##if(length(unique(annot$group)) > 0.33*nrow(annot)) {
+    ##    cvar <- setdiff(cvar,"group")
+    ##}
 
     fvar <- pgx.getNumericalPhenotypes(annot)
     fvar
@@ -2008,6 +2009,9 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         i <- as.integer(cut(nr,breaks=c(0,100,500,1000,5000,Inf)))
         cex  <- c(2,1.4,1,0.7,0.4)[i]
     }
+    if(!is.null(var) && !is.null(ncol(var))) {
+        var <- var[,1]
+    }
     if(is.null(var)) {
         var <- as.character(rep("_",nrow(pos)))
     }
@@ -2064,14 +2068,14 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         col1 <- head(rep(col1,99),nz)
         pt.col <- col1[z1]
         pt.col[is.na(pt.col)] <- "#DDDDDD55"
+        pt.col0 = pt.col
         if(opacity<1) {
             pt.col <- add_opacity(pt.col, opacity)
             col1 <- add_opacity(col1, opacity**0.33)
         }
-        
         jj <- order(-table(pt.col)[pt.col]) ## plot less frequent points first...            
         plot(pos[jj,,drop=FALSE],
-             col=pt.col[jj], pch=20, cex=0.9*cex,
+             col = pt.col[jj], pch=20, cex=0.9*cex,
              xlim = xlim0, ylim = ylim0,
              xlab = xlab, ylab = ylab,
              xaxt = axt, yaxt = axt, bty = 'n' )
@@ -2090,10 +2094,12 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         if(!is.null(hilight) && length(hilight)) {
             jj <- which(rownames(pos) %in% hilight)
             if(length(jj)) {
+                hcol1 = hilight.col
+                if(is.null(hcol1)) hcol1 <- pt.col0[jj]
                 points(pos[jj,,drop=FALSE], pch=20,
-                       col=hilight.col, cex=cex*0.95)
-                points(pos[jj,,drop=FALSE], pch=1, lwd=1.0,
-                       cex=cex*0.95)
+                       col=hcol1, cex=cex*0.95)
+                points(pos[jj,,drop=FALSE], pch=1, lwd=0.9,
+                       cex=cex)
             }
         }
         if(!is.null(hilight2) && length(hilight2)) {
@@ -2144,16 +2150,17 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         if(softmax) z1 <- 0.5*(tanh(4*(z1-0.5))+1)
         cpal <- rev(viridis(11))
         cpal <- rev(brewer.pal(11,"RdYlBu"))
-        cc1 <- cpal[1+round(10*z1)]
-        ##cc1 <- viridis(16)[1+round(15*z1)]
-        ##cc1 <- matlab.like(21)[1+round(20*z1)]
+        pt.col <- cpal[1+round(10*z1)]
+        ##pt.col <- viridis(16)[1+round(15*z1)]
+        ##pt.col <- matlab.like(21)[1+round(20*z1)]        
+        pt.col0 = pt.col
         if(opacity<1) {
-            cc1 <- add_opacity(cc1, opacity)
+            pt.col <- add_opacity(pt.col, opacity)
             cpal <- add_opacity(cpal, opacity**0.33)                
         }
         
         jj <- order(abs(z)) ## higher values last??
-        plot(pos[jj,], col=cc1[jj], pch=20, cex=0.9*cex,
+        plot(pos[jj,], col=pt.col[jj], pch=20, cex=0.9*cex,
              xlim = xlim0, ylim=ylim0, 
              xlab = xlab, ylab = ylab,
              xaxt=axt, yaxt=axt, bty='n' )
@@ -2163,10 +2170,12 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         if(!is.null(hilight) && length(hilight)>0) {
             jj <- which(rownames(pos) %in% hilight)
             if(length(jj)) {
+                hcol1 = hilight.col
+                if(is.null(hcol1)) hcol1 <- pt.col0[jj]
                 points(pos[jj,,drop=FALSE], pch=20,
-                       col=hilight.col, cex=cex*0.95)
-                points(pos[jj,,drop=FALSE], pch=1, lwd=1.2,
-                       cex=cex*0.95)
+                       col=hcol1, cex=cex*0.95)
+                points(pos[jj,,drop=FALSE], pch=1, lwd=0.9,
+                       cex=cex)
             }
         }
         if(!is.null(hilight2) && length(hilight2)>0) {        
@@ -2229,6 +2238,9 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         title=NULL;nrows=NULL; barscale=0.8
     }
 
+    if(!is.null(var) && !is.null(ncol(var))) {
+        var <- var[,1]
+    }
     if(is.null(var)) {
         var <- rep("_",nrow(pos))
     }
@@ -2549,6 +2561,9 @@ pgx.scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         var=pdata[,1];type="numeric"
     }
 
+    if(!is.null(var) && !is.null(ncol(var))) {
+        var <- var[,1]
+    }
     if(is.null(var)) {
         var <- rep("_",nrow(pos))
     }
