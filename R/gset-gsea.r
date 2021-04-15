@@ -1033,18 +1033,21 @@ library(gplots)
 bluered <- function(n=64) gplots::colorpanel(n,"royalblue3","grey90","indianred3")
 
 gsea.barplot <- function(scores, names=NULL, xlab='score',
-                         main='enrichment', n=15)
+                         xlim = NULL,
+                         cex.text=1, main='enrichment', n=16)
 {
     if(!is.null(names)) names(scores) <- names
     scores <- rev(head(scores[order(-abs(scores))],n))
     ##names(gx) <- gs
-    col1 <- c("rosybrown1","lightskyblue1")[1 + 1*(scores>0)]
+    col1 <- c("lightskyblue1","rosybrown1")[1 + 1*(scores>0)]
     barplot( abs(scores), horiz=TRUE, las=1, width=5/6, col=col1,
-            border=NA, xlab=xlab, names.arg=rep('',length(scores)) )
+            border=NA, xlab=xlab, names.arg=rep('',length(scores)),
+            xlim=xlim, cex.axis = 0.9)
     title(main)
     gs = names(scores)
     mx = max(abs(scores))
-    text(0.02*mx, 1:length(scores) - 0.45, gs, adj=0, offset=0, cex=1.05)
+    text(0.02*mx, 1:length(scores) - 0.45, gs, adj=0, offset=0,
+         cex = cex.text)
 }
 
 gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,

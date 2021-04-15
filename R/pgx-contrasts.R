@@ -76,7 +76,7 @@ pgx.makeStratifiedContrastsDF <- function(data, vars, strata, ref) {
     S <- model.matrix( ~ 0 + dstrata)
     colnames(S) <- sub("^dstrata","",colnames(S))
 
-    df <- cbind( data[,vars,drop=FALSE], strata=dstrata)
+    df <- cbind(data[,vars,drop=FALSE], strata=dstrata)
     md <- makeDirectContrasts(df,c(ref,"others"))
 
     M <- md$contr.matrix
@@ -223,14 +223,17 @@ makeDirectContrasts <- function(Y, ref, na.rm=TRUE)
     list(contr.matrix=contr.matrix, group=group, exp.matrix=exp.matrix)
 }
 
+##Y=pgx$samples$celltype;ref='*'
 makeDirectContrasts000 <- function(Y, ref, na.rm=TRUE, warn=FALSE) {
     ## if(warn) warning("makeDirectContrasts is deprectated. please use makeDirectContrasts2()")
     if(NCOL(Y)==1) Y <- data.frame(Y=Y)
 
     ## check
     all <- c("all","other","others","rest")
+    full <- c('*','full')
     has.ref <- rep(NA,ncol(Y))
-    for(i in 1:ncol(Y)) has.ref[i] <- (ref[i] %in% Y[,i] || ref[i] %in% all)
+    for(i in 1:ncol(Y)) has.ref[i] <- (ref[i] %in% Y[,i] || ref[i] %in% c(all,full))
+    has.ref
     if(!all(has.ref)) {
         stop("ERROR:: reference ", which(!has.ref), " not in phenotype matrix\n")
         return(NULL)
@@ -241,10 +244,9 @@ makeDirectContrasts000 <- function(Y, ref, na.rm=TRUE, warn=FALSE) {
     ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$|scrambl|none|dmso|vehicle"
     i=1    
     for(i in 1:ncol(Y)) {
-
         m1 <- NULL
         ref1 <- ref[i]
-        if(ref1 %in% c("*","full")) ref1 <- NA
+        ## if(ref1 %in% c("*","full")) ref1 <- NA  ##???
         x <- as.character(Y[,i])
         x[is.na(x)|x=="NA"] <- "_"
         detect.ref <- any(grepl(ref.pattern,x,ignore.case=TRUE))
@@ -257,8 +259,15 @@ makeDirectContrasts000 <- function(Y, ref, na.rm=TRUE, warn=FALSE) {
         cref <- as.character(ref1)
         m1 <- model.matrix( ~ 0 + x)
         colnames(m1) <- sub("^x","",colnames(m1))
-
-        if(!is.na(ref1) && !(ref1 %in% all) ) {
+        if(ref1 %in% full) {
+            levels <- names(table(x))
+            levels <- setdiff(levels, c(NA,"NA"))
+            levels
+            if(length(levels)>1) {
+                cc <- makeFullContrasts(levels)
+                m1 <- m1[,rownames(cc)] %*% cc
+            }
+        } else if(!is.na(ref1) && !(ref1 %in% all) ) {
             m1 <- m1 - m1[,cref]  ## +1/-1 encoding
             m1 <- m1[,which(colnames(m1)!=cref),drop=FALSE]  ## remove refvsref...
             m1 <- m1[,!colnames(m1) %in% c("NA","_"),drop=FALSE]
@@ -270,13 +279,7 @@ makeDirectContrasts000 <- function(Y, ref, na.rm=TRUE, warn=FALSE) {
             m1 <- m1[,!colnames(m1) %in% c("NA","_"),drop=FALSE]            
             colnames(m1) <- paste0(colnames(m1),"_vs_others")
         } else {
-            levels <- names(table(x))
-            levels <- setdiff(levels, c(NA,"NA"))
-            levels
-            if(length(levels)>1) {
-                cc <- makeFullContrasts(levels)
-                m1 <- m1[,rownames(cc)] %*% cc
-            }
+            stop("[makeDirectContrasts000] FATAL")
         }
         if(!is.null(m1)) {
             mm <- gsub("[: ]","_",colnames(Y)[i])

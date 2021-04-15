@@ -419,6 +419,11 @@ nmfImpute <- function(x,k=5) {
     nmf <- nnmf(x, k=k, check.k=FALSE, rel.tol = 1e-2, verbose=0)
     xhat <-  with(nmf, W %*% H);
     x[is.na(x)] <- xhat[is.na(x)]
+    if(sum(is.na(x))>0) {
+        nmf1 <- nnmf(x, k=1, check.k=FALSE, rel.tol = 1e-2, verbose=0)    
+        xhat1 <-  with(nmf1, W %*% H);    
+        x[is.na(x)] <- xhat1[is.na(x)]
+    }
     x
 }
 
@@ -1028,7 +1033,9 @@ ngs.save <- function(ngs, file, update.date=TRUE, light=TRUE, system=FALSE) {
 ##comp=1;level="geneset";probe=rownames(ngs$gsetX)[1]
 getLevels <- function(Y) {
     yy = Y[,grep("title|name|sample|patient",colnames(Y),invert=TRUE),drop=FALSE]   ## NEED RETHINK!!!!
-    is.grpvar = apply(yy,2,function(y) max(table(y))>1)
+    is.grpvar  = apply(yy,2,function(y) max(table(y))>1)
+    is.numeric = apply(yy,2,function(y) (length(table(y))/length(y)) > 0.5)
+    is.grpvar = is.grpvar & !is.numeric
     yy = yy[,is.grpvar,drop=FALSE]
     ##yy = yy[,which(apply(yy,2,function(x) length(unique(x)))<20),drop=FALSE]
     ##levels = setdiff(unique(as.vector(apply(yy,2,as.character))),c("",NA))

@@ -8,6 +8,8 @@
 
 library(ccmap)
 library(ccdata)
+library(fgsea)
+
 ##data(cmap_es)
 ##dim(cmap_es)
 system.time( data(l1000_es) )
@@ -16,9 +18,7 @@ dim(l1000_es)
 D <- read.csv("../lib/L1000_repurposing_drugs.txt",sep="\t",
               skip=13, header=FALSE,row.names=1)
 
-require(fgsea)
 X <- l1000_es
-
 sum(grepl("_oe_",colnames(X)))
 sum(grepl("_sh_",colnames(X)))
 sum(grepl("_lig_",colnames(X)))
@@ -46,6 +46,9 @@ sum(table(xdrugs)>=20)
 gmt <- tapply(colnames(X), xdrugs, list)
 gmt.size <- sapply(gmt,length)  ## how many profiles per drug
 table(gmt.size)
+
+head(grep("-sh",names(gmt),value=TRUE))
+table(gmt.size[grep("-sh",names(gmt))])
 
 nmin = 15
 nmin = 20

@@ -6,11 +6,9 @@
 require(org.Hs.eg.db)
 source("../R/pgx-functions.R")
 
-
 cat("************************************************************************\n")
 cat("*********************** BUILD ANNOTATIONS START ************************\n")
 cat("************************************************************************\n")
-
 
 cat("===================== BUILDING GENE ANNOTATIONS ======================\n")
 
@@ -20,7 +18,7 @@ getGeneInfo <- function(eg) {
     a2 <- getHSGeneInfo(eg, as.link=FALSE)
     aa <- c(a1, a2[setdiff(names(a2),names(a1))])
     aa <- sapply(aa, paste, collapse=" /// ")
-    aa$entrez <- eg
+    aa['entrez'] <- eg
     kk <- c("entrez","symbol","name","alias","map_location","summary",
       "OMIM","KEGG","GO")
     aa <- aa[match(kk,names(aa))]
@@ -30,12 +28,12 @@ getGeneInfo <- function(eg) {
 
 all.eg <- keys(org.Hs.eg.db)
 length(all.eg)
-info = lapply( all.eg[], getGeneInfo)
+info = lapply( all.eg[1:2], getGeneInfo)
 info = do.call(rbind,info)
 dim(info)
 
 cat("writing to gene-info.csv")
-write.csv(info, file="../../lib/gene-info.csv", row.names=FALSE)
+write.csv(info, file="../lib/gene-info.csv", row.names=FALSE)
 
 ##--------------------------------------------------------
 ## Human to mouse translation

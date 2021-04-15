@@ -398,17 +398,14 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             })
 
             output$contrastTable <- DT::renderDataTable({
-
+                
                 message("[MakeContrastServer:contrastTable] called!")
                 
                 ct <- rv$contr
 
                 message("[contrastTable] is.null(ct) = ",is.null(ct))
                 message("[contrastTable] dim.ct = ",dim(ct))
-                message("[contrastTable] dim.contrRT = ",dim(contrRT()))                
-                
-                message("[contrastTable] ct1 = ",paste(ct[,1],collapse=' '))
-                message("[contrastTable] ct.rownames= ",paste(rownames(ct),collapse=' '))
+                message("[contrastTable] dim.contrRT = ",dim(contrRT()))                   
                 
                 if(is.null(ct) || NCOL(ct)==0) {
                     df <- data.frame(
@@ -420,6 +417,9 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                         "control.group" = ""
                     )[0,]
                 } else {
+                    message("[contrastTable] ct.rownames= ",paste(rownames(ct),collapse=' '))
+                    message("[contrastTable] ct.colnames= ",paste(colnames(ct),collapse=' '))
+                    
                     paste.max <- function(x,n=6) {
                         ##x <- unlist(x)
                         if(length(x)>n) {

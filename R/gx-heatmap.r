@@ -73,7 +73,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                         cluster_rows=TRUE, cluster_columns=TRUE, sort_columns=NULL,
                         col.annot=NULL, row.annot=NULL, annot.ht=3,
                         nmax=1000, cmax=NULL, main=" ", verbose=1, denoise = 0,
-                        cexRow=1, cexCol=1, mar=c(5,5,5,5), rownames_width = 10,
+                        cexRow=1, cexCol=1, mar=c(5,5,5,5), rownames_width = 25,
                         title_cex=1.2, column_title_rot=0, column_names_rot=90,
                         show_legend=TRUE, show_key=TRUE, zlim=NULL,
                         show_rownames=nmax, lab.len=80, key.offset=c(0.05,1.01),
@@ -484,17 +484,14 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     if(1 && is.null(rownames.ha) && show_rownames>0 ) {
         ## empty matrix just for rownames on the far right
         empty.mat = matrix(nrow = nrow(gx), ncol = 0)
-
-        rowlab = substring(rownames(gx),1,20)
+        rowlab = substring(trimws(rownames(gx)),1,20)
+        ## rowlab = paste0(rowlab,'............')
         rownames(empty.mat) = rowlab
         if(!is.null(col.annot)) rowlab <- c(rowlab, colnames(col.annot))
-        rowlab = gsub(' ','',rowlab)
         textwidth <- max_text_width(
             paste0(rowlab,"XXXXXXXXXX"),
-            gp = gpar(fontsize = 10*cexRow))
-
-        textwidth <- unit(rownames_width,'mm')
-        
+            gp = gpar(fontsize = 10*cexRow))        
+        textwidth <- unit(rownames_width,'mm')        
         rownames.ha = Heatmap(
             empty.mat,
             row_names_max_width = textwidth,

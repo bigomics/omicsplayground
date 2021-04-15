@@ -244,7 +244,17 @@ DataViewBoard <- function(input, output, session, env)
         
         ## corr always in log.scale and restricted to selected samples subset
         ## should match exactly the rawtable!!
-        rho = cor(t(ngs$X[,samples]), ngs$X[pp,samples], use="pairwise")[,1]
+        if(pp %in% rownames(ngs$X)) {
+            rho <- cor(t(ngs$X[,samples]), ngs$X[pp,samples], use="pairwise")[,1]
+        } else if(pp %in% rownames(ngs$counts)) {
+            x0 <- logCPM(ngs$counts[,samples])
+            x1 <- x0[pp,]
+            rho <- cor(t(x0), x1, use="pairwise")[,1]
+        } else {
+            rho <- rep(0, nrow(ngs$genes))
+            names(rho) <- rownames(ngs$genes)
+        }
+
         rho[is.na(rho)] <- 0
         jj = head(order(-abs(rho)),30)
         jj <- c( head(order(rho),15), head(order(-rho),15))
@@ -868,15 +878,15 @@ DataViewBoard <- function(input, output, session, env)
         if(is.null(res)) return(NULL)
         ##par(mar=c(3,3,3,3), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )   
         par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
-        par(mar=MARGINS2, mgp=c(2.2,0.8,0))
-        
+        par(mar=MARGINS2, mgp=c(2.2,0.8,0))        
         ## ---- xlab ------ ###
         xaxt="l"
         names.arg = colnames(res$log2counts[res$jj,])
         if( length(names.arg) > 20){ names.arg = rep("",length(names.arg)); xaxt="n"}
         cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
-        boxplot(res$log2counts[res$jj,], col=rgb(0.2,0.5,0.8,0.4), #col=rgb(0.2,0.5,0.8,0.3), #col="grey70", 
-                                        #main="counts distribution", cex.main=1.6,
+        boxplot(res$log2counts[res$jj,], col=rgb(0.2,0.5,0.8,0.4),
+                ##col=rgb(0.2,0.5,0.8,0.3), #col="grey70", 
+                ##main="counts distribution", cex.main=1.6,
                 ## cex.names=res$cx1+0.1,
                 names = names.arg, cex.axis=cex.names,#border=rgb(0.2,0.5,0.8,0.8),
                 border = 	rgb(0.824,0.824,0.824,0.9),xaxt=xaxt, 
