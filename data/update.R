@@ -9,6 +9,8 @@ pgx.files <- dir(".", pattern=".pgx")
 ##pgx.files <- grep("X.pgx$",pgx.files,invert=TRUE,value=TRUE)
 ##pgx.files <- dir("../data.BAK/", pattern=".pgx",full.names=TRUE)
 
+pgx.files <- grep('155249',pgx.files,value=TRUE)
+
 pgx.files
 pgx.file = pgx.files[1]
 pgx.file = pgx.files[9]
@@ -43,17 +45,14 @@ for(pgx.file in pgx.files) {
     if(length(db1)==0) next()    
     sigdb = paste0("../libx/",db1)
 
-    sigdb = c("../libx/sigdb-lincs-cp.h5","../libx/sigdb-lincs-gt.h5")
-    
     ngs <- compute.extra(ngs, extra, lib.dir=FILES, sigdb=sigdb )     
 
-    ngs$connectivity[["sigdb-lincs.h5"]] <- NULL
+    ngs$connectivity[["sigdb-lincs.h5"]] <- NULL  ## old, now split into cp and gt
     names(ngs$connectivity)
     
     ##------------------ save new object -------------------
     names(ngs)
     ngs.save(ngs, file=pgx.file)    
-
     
 }
 

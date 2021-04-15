@@ -627,8 +627,8 @@ viz.GeneSetEnrichment <- function(pgx, genesets, contrast, pos=NULL,
 }
 
 viz.Contrasts <- function(pgx, contrasts=NULL, ntop=10, dir=1, pos=NULL,
-                          psig=0.05, fc=0.20,
-                          cex=1, type = c("pair","MA","volcano"),
+                          psig=0.05, fc=0.20, cex=1, cex.lab=1,
+                          type = c("pair","MA","volcano"), plotlib='ggplot',
                           level="gene", filt=NULL, label.type="box",
                           strip=NULL, plots.only = FALSE, 
                           title=NULL, subtitle=NULL, caption=NULL)
@@ -683,27 +683,37 @@ viz.Contrasts <- function(pgx, contrasts=NULL, ntop=10, dir=1, pos=NULL,
             xlab1 <- paste0("expression ",grpx," (logCPM)")
             p1 <- pgx.plotContrast(
                 pgx, ct, plotlib="ggplot", level=level,
-                psig=psig, fc=fc,
-                hilight=gg, dir=dir, ntop=ntop, cex=cex) 
+                psig = psig, fc = fc,
+                cex = cex , cex.lab = cex.lab, 
+                hilight=gg, dir=dir, ntop=ntop) 
             p1 <- p1 + ## theme_classic(base_size=12) +
                 xlab(xlab1) + ylab(ylab1)
-        } else if(type=="MA") {
-            p1 <- pgx.plotMA(
-                pgx, ct, cex=cex, ntop=ntop, level=level,
-                psig=psig, fc=fc,
-                hilight=gg, plotlib="ggplot")
         } else if(type=="custom") {
+            labels <- rownames(pos)
             p1 <- pgx.scatterPlot(
-                pgx, pos=pos, contrast=ct, hilight=gg,
-                level=level, cex.lab=0.6, cex=cex, 
+                pgx, pos=pos, contrast=ct,
+                hilight=gg, hilight2=gg,
+                level=level, cex.lab=cex.lab, cex=cex, 
                 labels=labels, label.type=label.type,
                 title=NULL, plotlib="ggplot")
+
+            if(0) {
+                pgx.scatterPlotXY(pos, var=NULL)                
+            }
+            
+        } else if(type=="MA") {
+            p1 <- pgx.plotMA(
+                pgx, ct, cex=cex, cex.lab=cex.lab,
+                ntop=ntop, level=level,
+                psig=psig, fc=fc,
+                hilight=gg, plotlib="ggplot")
         } else {
             ## if(type=="volcano") {
             p1 <- pgx.Volcano(
-                pgx, ct, cex=cex, ntop=ntop, level=level,
-                psig=psig, fc=fc,
-                hilight=gg, plotlib="ggplot")            
+                pgx, ct, ntop=ntop, level=level,
+                psig = psig, fc = fc,
+                cex = cex, cex.lab = cex.lab, 
+                hilight = gg, plotlib="ggplot")            
         }
         p1 <- p1 + ## theme_classic(base_size=12) +
             ggtitle(ct) +

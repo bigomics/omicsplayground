@@ -7,6 +7,9 @@
 ##================ rank correlation based geneset testing ================
 ##========================================================================
 
+gset.cor <- function(rnk, gset, compute.p=FALSE) {
+    gset.rankcor(rnk=rnk, gset=gset, compute.p=compute.p, no.rank=FALSE)
+}
 
 gset.rankcor <- function(rnk, gset, compute.p=FALSE, no.rank=FALSE)
 {
@@ -23,8 +26,9 @@ gset.rankcor <- function(rnk, gset, compute.p=FALSE, no.rank=FALSE)
     
     gg <- intersect(rownames(gset),rownames(rnk))
     rnk1 <- rnk[gg,,drop=FALSE]
-    if(!no.rank)
+    if(no.rank==FALSE) {
         rnk1 <- apply(rnk1, 2, rank )
+    }
     rho1 <- qlcMatrix::corSparse( gset[gg,], rnk1)
     rownames(rho1) <- colnames(gset)
     colnames(rho1) <- colnames(rnk1)

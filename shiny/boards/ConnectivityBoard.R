@@ -2193,7 +2193,7 @@ ConnectivityBoard <- function(input, output, session, env)
             div(HTML(cmapHeatmap_caption), class="caption"),
             br(),
             fillRow(
-                flex = c(2,0.06,1),
+                flex = c(1.8,0.06,1),
                 plotWidget(ns("cumFCplot")),
                 br(),
                 plotWidget(ns("cumEnrichmentPlot"))                

@@ -157,15 +157,15 @@ between two contrasts."
         updateSelectInput(session, "cmp_filter", choices=ft, selected="<all>")
     })
     
-    observe({
-        splom.sel <- plotly::event_data("plotly_selected", source="splom")
-        sel.keys <- as.character(splom.sel$key)
-        if(0 && length(sel.keys)>0) {
-            updateSelectInput(session, "cmp_filter", selected="<custom>")
-            sel.keys = paste(sel.keys, collapse=" ")
-            updateTextAreaInput(session, "cmp_customlist", value=sel.keys)
-        }
-    })
+    ## observe({
+    ##     splom.sel <- plotly::event_data("plotly_selected", source="splom")
+    ##     sel.keys <- as.character(splom.sel$key)
+    ##     if(0 && length(sel.keys)>0) {
+    ##         updateSelectInput(session, "cmp_filter", selected="<custom>")
+    ##         sel.keys = paste(sel.keys, collapse=" ")
+    ##         updateTextAreaInput(session, "cmp_customlist", value=sel.keys)
+    ##     }
+    ## })
     
     observeEvent(input$cmp_comparisons, {
         cmp <- input$cmp_comparisons
