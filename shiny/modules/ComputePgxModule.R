@@ -133,7 +133,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                     choiceValues =
                                         c("only.hugo",
                                           "only.proteincoding",
-                                          "remove.rikorf",
+                                          "remove.unknown",
                                           "remove.notexpressed"
                                           ## "excl.immuno"
                                           ## "excl.xy"
@@ -141,7 +141,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                     choiceNames =
                                         c("convert to HUGO",
                                           "protein-coding only",
-                                          "remove Rik/ORF genes",
+                                          "remove Rik/ORF/LOC genes",
                                           "remove not-expressed"
                                           ##"Exclude immunogenes",
                                           ##"Exclude X/Y genes"
@@ -149,7 +149,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                     selected = c(
                                         "only.hugo",
                                         "only.proteincoding",
-                                        "remove.rikorf",
+                                        "remove.unknown",
                                         "remove.notexpressed"
                                     )
                                 )
@@ -314,7 +314,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 flt <- input$filter_methods
                 only.hugo <- ("only.hugo" %in% flt)
                 do.protein <- ("proteingenes"   %in% flt)
-                excl.rikorf <- ("remove.rikorf"  %in% flt)
+                remove.unknown <- ("remove.unknown"  %in% flt)
                 excl.immuno <- ("excl.immuno"  %in% flt)
                 excl.xy <- ("excl.xy"  %in% flt)
                 only.proteincoding <- ("only.proteincoding"  %in% flt)
@@ -333,7 +333,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     prune.samples = TRUE,  ## always prune
                     filter.genes = filter.genes,
                     only.chrom = FALSE,
-                    rik.orf = !excl.rikorf,
+                    ##rik.orf = !excl.rikorf,
+                    only.known = !remove.unknown,
                     only.proteincoding = only.proteincoding, 
                     only.hugo = only.hugo,
                     convert.hugo = only.hugo,

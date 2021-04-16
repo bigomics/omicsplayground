@@ -15,6 +15,7 @@ source(file.path(RDIR,"pgx-functions.R"),local=TRUE)  ## pass local vars
 ## Caching the init files
 INIT.FILE <- file.path(FILES,"global-init.rda")
 INIT.FILE <- "/tmp/global-init.rda" ## avoid rw permission
+##unlink(INIT.FILE)
 INIT.FILE
 file.exists(INIT.FILE)
 
@@ -23,6 +24,7 @@ if(file.exists(INIT.FILE)) {
     load(INIT.FILE, verbose=1)    
 } else {
 
+    message("[INIT] no INIT file! building INIT from scratch.")
     oldvars <- ls()
 
     ## All gene families in Human UPPER CASE
@@ -32,6 +34,8 @@ if(file.exists(INIT.FILE)) {
     names(GENE.TITLE) = GENE.SYMBOL
     ##GSET.PREFIX.REGEX = paste(paste0("^",GSET.PREFIXES,"_"),collapse="|")
     GSET.PREFIX.REGEX="^BIOCARTA_|^C2_|^C3_|^C7_|^CHEA_|^GOBP_|^GOCC_|^GOMF_|^HALLMARK_|^KEA_|^KEGG_|^PID_|^REACTOME_|^ST_"
+    GENE.SUMMARY = read.csv(file.path(FILES,"gene-summary.csv"),row.names=1)
+    GENE.SUMMARY = array(GENE.SUMMARY[,1], dimnames=list(rownames(GENE.SUMMARY)))
     
     ## GENExGENE <- readRDS(file=file.path(FILES,"GENExGENE-cosSparseKNN500-XL.rds"))
     GSETxGENE <- readRDS(file.path(FILES,"gset-sparseG-XL.rds"))
@@ -104,16 +108,9 @@ if(file.exists(INIT.FILE)) {
 
     newvars <- setdiff(ls(), oldvars)
     newvars
+
+    message("[INIT] saving INIT file ", INIT.FILE)    
     save( list=newvars, file=INIT.FILE)
-    
-}
-
-if(0) {
-
-    load("~/Projects/tgemoll/data6-CTII/timo-CTII-noBC.pgx",verbose=1)
-    counts    <- ngs$counts
-    samples   <- ngs$samples
-    contrasts <- ngs$contrasts    
     
 }
 

@@ -737,7 +737,8 @@ DataViewBoard <- function(input, output, session, env)
         if(length(eg)>0 && !is.na(eg)) {
             ##as.list(org.Hs.egSYMBOL)[[eg]]
             info <- getHSGeneInfo(eg)  ## defined in pgx-functions.R
-            if(input$data_geneinfo) {
+            info$summary <- '(no info available)'
+            if(FALSE && input$data_geneinfo) {
                 suppressWarnings(suppressMessages(
                     info2 <- try(getMyGeneInfo(eg, fields="summary"))
                 ))
@@ -745,6 +746,16 @@ DataViewBoard <- function(input, output, session, env)
                     info <- c(info, info2)  ## defined in pgx-functions.R
                 }
             }
+            if(gene %in% names(GENE.SUMMARY)) {
+                info$summary <- GENE.SUMMARY[gene]
+                info$summary <- gsub('Publication Note.*|##.*','',info$summary)
+            }
+
+            ## reorder
+            nn <- intersect(c("symbol","name","map_location","summary",names(info)),names(info))
+            info <- info[nn]
+            info$symbol <- paste0(info$symbol,'<br>')
+            
             output <- c()
             for(i in 1:length(info)) {
                 xx <- paste(info[[i]], collapse=", ")
@@ -768,10 +779,7 @@ DataViewBoard <- function(input, output, session, env)
         renderFunc = "renderUI", outputFunc = "htmlOutput",
         just.info = FALSE, no.download = TRUE,
         info.text = data_geneInfo_text,
-        options = tagList(
-            tipify( checkboxInput(ns('data_geneinfo'),'fetch gene summary',FALSE),
-                   "Provide a summary for the selected gene (requires internet).", placement="top")
-        ),
+        ## options = tagList(),
         height = c(fullH,600), width=c('auto',800)
     )
 
