@@ -93,7 +93,7 @@ SHOW_QUESTIONS = FALSE
 AUTHENTICATION = opt$AUTHENTICATION
 
 DEV = (dir.exists("modulesx")) ### !!!!!!! OVERRIDE
-DEV
+DEV = FALSE
 if(DEV) {
     message('****************** DEVELOPER MODE ********************')
 }
@@ -149,7 +149,7 @@ for(m in boards) {
 }
 
 ##ENABLED[c("wgcna","system","multi")] <- FALSE
-ENABLED[c("system","multi")] <- FALSE
+ENABLED[c("system","multi","corsa")] <- FALSE
 if(1 && DEV && dir.exists("modulesx")) {
     ## Very early development modules/boards
     ##
