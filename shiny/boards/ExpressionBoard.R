@@ -167,10 +167,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ##================================================================================
     ##========================= FUNCTIONS ============================================
     ##================================================================================
-    star.symbols <- function(n) {
-        if(n==0) return("")
-        paste(rep("\u2605",n),collapse="")
-    }
     
     comparison=1;testmethods=c("trend.limma");add.pq=0
     getDEGtable <- function(ngs, testmethods, comparison, add.pq,
@@ -215,8 +211,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ##star.symbols = sapply(1:20,function(i) paste(rep("\u2605",i),collapse=""))
         ##is.sig <- (mx.q <= stars.fdr & abs(mx.fc) >= lfc)
         is.sig <- 1*(mx.q <= stars.fdr) * (abs(mx$meta.fx) >= lfc)
-        ##mx$stars = c("",star.symbols)[ 1 + rowSums(is.sig, na.rm=TRUE)]        
-        mx$stars <- sapply(rowSums(is.sig, na.rm=TRUE), star.symbols)
+        ##stars = c("",star.symbols)[ 1 + rowSums(is.sig, na.rm=TRUE)]        
+        stars <- sapply(rowSums(is.sig, na.rm=TRUE), star.symbols)
             
         ## recalculate group averages???
         y0 <- ngs$model.parameters$exp.matrix[,comparison]
@@ -240,7 +236,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         gene.annot <- ngs$genes[rownames(mx),aa]
         gene.annot$chr <- sub("_.*","",gene.annot$chr) ## strip any alt postfix
         res = data.frame( gene.annot, logFC = logFC,
-                         stars = mx$stars, meta.q = mx$meta.q,
+                         stars = stars, meta.q = mx$meta.q,
                          AveExpr0, AveExpr1, check.names=FALSE )
         rownames(res) = rownames(mx)
         

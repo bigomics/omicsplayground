@@ -48,6 +48,7 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
     names(sig) <- toupper(names(sig))
     
     ## get the top DE genes
+    sig <- sort(sig)
     genes <- c(head(names(sig),ntop),tail(names(sig),ntop))
     head(genes)
 
@@ -64,6 +65,7 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
     h5.samples = rhdf5::h5read(matrix_file, "/meta/gdc_cases.submitter_id")
     h5.genes = rhdf5::h5read(matrix_file, "/meta/genes")            
     h5.project = rhdf5::h5read(matrix_file, "/meta/gdc_cases.project.project_id")            
+    h5ls(matrix_file)
     
     sample_index <- 1:length(h5.samples)
     gene_index <- 1:length(h5.genes)            
@@ -135,7 +137,8 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
         ## fit survival curve on two groups
         poscor <- (rho > median(rho,na.rm=TRUE))
         table(poscor)
-
+        
+        
         sdf <- survdiff( Surv(months, status) ~ poscor, data = sel.data)
         p.val <- 1 - pchisq(sdf$chisq, length(sdf$n) - 1)
         p.val
