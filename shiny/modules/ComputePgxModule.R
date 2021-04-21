@@ -332,7 +332,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     batch.correct = FALSE, ## done in UI                        
                     prune.samples = TRUE,  ## always prune
                     filter.genes = filter.genes,
-                    only.chrom = FALSE,
+                    ##only.chrom = FALSE,
                     ##rik.orf = !excl.rikorf,
                     only.known = !remove.unknown,
                     only.proteincoding = only.proteincoding, 

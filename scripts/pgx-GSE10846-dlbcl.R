@@ -20,6 +20,8 @@ source("../R/pgx-include.R")
 ##source("options.R")
 MAX.GENES = 8000
 MAX.GENESETS = 8000
+MAX.GENES = 999999
+MAX.GENESETS = 999999
 BATCH.CORRECT=FALSE
 BATCH.CORRECT=TRUE
 SUBSAMPLE=TRUE
@@ -30,7 +32,7 @@ GENE.METHODS=c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
 GENESET.METHODS = c("fisher","gsva","camera","fgsea")
 
 
-rda.file="../data/GSE10846-dlbcl-nc.pgx"
+rda.file="../data/GSE10846-dlbcl-fullNC.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -58,7 +60,7 @@ length(gset)
 attr(gset, "names")
 
 pdata = pData(gset[[1]])
-    head(pdata)
+head(pdata)
 clinvar <- pdata[,grep(":ch1$",colnames(pdata))]
 head(clinvar)
 
@@ -207,7 +209,7 @@ ngs <- pgx.clusterSamples( ngs, skipifexists=FALSE, prefix="C",
                           clust.detect="hclust", kclust=3)
 table(ngs$samples$cluster)    
 
-
+ngs$X <- logCPM(ngs$counts, total=1e6, prior=1)
 
 ##-------------------------------------------------------------------
 ## Create contrasts 
@@ -227,7 +229,8 @@ contr.matrix <- makeContrasts(
 res <- makeDirectContrasts2(
     Y = ngs$samples[,c("dlbcl.type","gender","cluster")],
     ref = c("GCB","male","rest"))
-contr.matrix <- res$contr.matrix
+##contr.matrix <- res$contr.matrix
+contr.matrix <- res$exp.matrix
 ngs$samples$group <- res$group
 table(res$group)
 
