@@ -189,7 +189,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             length(gmtdx)
             ##if(length(gmtdx) < 3) { frame(); next }
             dx1 <- substring(dx,1,26)
-            gsea.enplot( rnk, gmtdx, main=dx1, cex.main=1.1, xlab="")
+            gsea.enplot( rnk, gmtdx, main=dx1, cex.main=1.1,
+                        xlab="", ylab="")
             nes <- round(res$NES[i],2)
             qv  <- round(res$padj[i],3)
             tt <- c( paste("NES=",nes), paste("q=",qv) )
