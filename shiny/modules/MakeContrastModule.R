@@ -115,7 +115,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                                     tipifyL(
                                         selectInput(ns("param"), "Phenotype:",
                                                     choices = phenotypes, selected= psel,
-                                                    multiple = FALSE),
+                                                    multiple = TRUE),
                                         "Select the phenotype to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names."
                                     ),
                                     conditionalPanel(
@@ -310,10 +310,6 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 gr2 <- gsub(".*_vs_|@.*","",ct.name)                
                 ctx <- c(NA,gr1, gr2)[1 + 1*in.main + 2*in.ref]
                 
-                if(!grepl('_vs_',ct.name)) {
-                    shinyalert("ERROR","Contrast must include _vs_ in name")
-                    return(NULL)
-                }
                 if( sum(in.main)==0 || sum(in.ref)==0 ) {
                     shinyalert("ERROR","Both groups must have samples")
                     return(NULL)
@@ -328,6 +324,10 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 }
                 if(!is.null(rv$contr) && ct.name %in% colnames(rv$contr)) {
                     shinyalert("ERROR","Contrast name already exists.")
+                    return(NULL)
+                }
+                if(!grepl('_vs_',ct.name)) {
+                    shinyalert("ERROR","Contrast must include _vs_ in name")
                     return(NULL)
                 }
                 
