@@ -1340,7 +1340,8 @@ DataViewBoard <- function(input, output, session, env)
             max.row
             x <- head(x, max.row)
         }
-
+        numcols <- grep('gene|title',colnames(x),value=TRUE,invert=TRUE)
+        
         DT::datatable( x, rownames=FALSE,
                       class = 'compact cell-border stripe hover',
                       extensions = c('Buttons','Scroller'),
@@ -1353,7 +1354,7 @@ DataViewBoard <- function(input, output, session, env)
                       )  ## end of options.list 
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
-                DT::formatStyle(colnames(x),
+                DT::formatStyle(numcols,
                                 background = styleColorBar(c(0,x99), 'lightblue'),
                                 ##background = color_from_middle(x99, 'lightblue', '#f5aeae'),
                                 backgroundSize = '98% 88%',
