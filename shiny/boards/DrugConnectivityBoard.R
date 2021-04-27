@@ -179,8 +179,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         ## ENPLOT TYPE
         ##itop <- c( head(order(-res$NES),10), tail(order(-res$NES),10))
         itop <- 1:min(20,nrow(res))
-        par(oma=c(0,1,0,0))
-        par(mfrow=c(4,5), mar=c(1,1.5,1.8,1))
+        par(oma=c(0,2,0,0))
+        par(mfrow=c(4,5), mar=c(0.5,1.5,1.8,0.4), mgp=c(1.9,0.7,0))
         i=1
         for(i in itop) {
             dx <- rownames(res)[i]
@@ -195,10 +195,15 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             qv  <- round(res$padj[i],3)
             tt <- c( paste("NES=",nes), paste("q=",qv) )
             legend("topright", legend=tt, cex=0.8, y.intersp=0.85, bty='n')
+
+            if(i%%5==1) {
+                mtext('rank metric', side=2, line=1.8, cex=0.7)
+            }
         }
         
     })    
 
+    
     dsea_moaplot.RENDER %<a-% reactive({
 
         ngs <- inputData()
@@ -277,12 +282,12 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             if(moatype=="drug class") {
                 par(mfrow=c(2,1), mar=c(4,3.8,1,0.2), mgp=c(1.9,0.7,0))
                 barplot(moa.top, horiz=FALSE, las=3,
-                        ylab=ylab, cex.names = 0.8 )
+                        ylab=ylab, cex.names = 0.9 )
                 ##title(main="MOA", line=1 )
             } else {
                 par(mfrow=c(2,1), mar=c(0,3.8,1,0.2), mgp=c(1.9,0.7,0))
                 barplot(dtg.top, horiz=FALSE, las=3, ## ylab="drugs (n)",
-                        ylab=ylab, cex.names = 0.8 )
+                        ylab=ylab, cex.names = 0.9 )
                 ##title(main="target gene", line=1 )
             }
         }
@@ -503,8 +508,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
 
         
     ##--------- DSEA enplot plotting module
-    dsea_enplots.opts = tagList(
-    )
+    dsea_enplots.opts = tagList()
+    
     callModule(
         plotModule,
         id = "dsea_enplots",
