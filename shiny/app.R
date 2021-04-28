@@ -93,7 +93,7 @@ SHOW_QUESTIONS = FALSE
 AUTHENTICATION = opt$AUTHENTICATION
 
 DEV = (dir.exists("modulesx")) ### !!!!!!! OVERRIDE
-DEV = FALSE
+## DEV = FALSE
 if(DEV) {
     message('****************** DEVELOPER MODE ********************')
 }

@@ -85,7 +85,7 @@ ngs <- compute.testGenesets (
     lib.dir=FILES)
 
 extra <- c("connectivity")
-extra <- c("drugs-combo")
+extra <- c("drugs")
 extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")
 extra <- c("meta.go","deconv","infer","drugs-combo","wordcloud","connectivity")
 ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
@@ -102,6 +102,8 @@ ngs.save(ngs, file=rda.file)
 if(0) {
     
     source("../R/pgx-include.R")
+    load(rda.file,verbose=1)
+
     extra <- c("connectivity")
     sigdb = NULL
     sigdb = c("../libx/sigdb-l1000.h5")

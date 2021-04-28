@@ -68,12 +68,20 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 rv$pheno <- phenoRT()
             })
             
-            ## observe({
-            ##     counts <- countsRT()
-            ##     if(is.null(counts)) return(NULL)
-            ##     genes <- rownames(counts)
-            ##     updateSelectizeInput(session, "gene", choices=genes, server=TRUE)
-            ## })
+            if(1) {
+                observe({
+                    message('[MakeContrast::observe::countsRT] reacted')
+                    counts <- countsRT()
+                    if(length(counts)==0) return(NULL)
+                    if(is.null(counts)) return(NULL)
+                    message('[observe::countsRT] nrow.counts = ',nrow(counts))
+                    message('[observe::countsRT] ncol.counts = ',ncol(counts))
+                    genes <- rownames(counts)
+                    message('[observe::countsRT] len.genes = ', length(genes))                
+                    message('[MakeContrast::observe::countsRT] updateSelectizeInput')
+                    updateSelectizeInput(session, "gene", choices=genes, server=TRUE)
+                })
+            }
             
             observe({
                 req(phenoRT())
@@ -86,9 +94,13 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             output$UI <- renderUI({
 
                 ns <- session$ns
+                message('[MakeContrast::UI] reacted')
                 if(is.null(countsRT())) return(NULL)
 
-                genes <- sort(rownames(countsRT()))                
+                message('[MakeContrast::UI] called')
+                
+                genes <- sort(rownames(countsRT()))
+                genes <- NULL
                 phenotypes <- c(sort(unique(colnames(phenoRT()))),"<samples>","<gene>")
                 phenotypes <- grep("_vs_",phenotypes,value=TRUE,invert=TRUE) ## no comparisons...
                 psel <- c(grep("sample|patient|name|id|^[.]",phenotypes,value=TRUE,

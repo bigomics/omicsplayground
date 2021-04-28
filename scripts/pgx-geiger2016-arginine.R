@@ -98,6 +98,7 @@ names(ngs)
 gx.methods    = c("trend.limma")
 gset.methods  = c("fisher")
 extra.methods  = c("meta.go","infer")
+extra.methods  = c("drugs")
 
 gx.methods    = c("ttest","ttest.welch","trend.limma","edger.qlf","deseq2.wald")
 gset.methods  = c("fisher","gsva","fgsea","spearman","camera","fry")

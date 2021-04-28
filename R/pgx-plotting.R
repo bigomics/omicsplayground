@@ -2888,8 +2888,8 @@ plotlyMA <- function(x, y, names, source="plot1",
                      xlab = "average expression (log2.CPM)",
                      ylab = "effect size (log2.FC)",
                      lfc=1, psig=0.05, showlegend=TRUE, highlight=NULL,
-                     marker.size = 5, label=NULL, marker.type="scatter",
-                     displayModeBar=TRUE )
+                     marker.size = 5, label = NULL, label.cex = 1,
+                     marker.type="scatter", displayModeBar=TRUE )
 {
 
     require(plotly)
@@ -2929,7 +2929,7 @@ plotlyMA <- function(x, y, names, source="plot1",
                 y = y[i1],
                 text = names[i1],
                 marker = list(
-                    size = 5,
+                    size = marker.size,
                     color = '#1f77b4'
                 ),
                 showlegend = showlegend
@@ -2944,7 +2944,7 @@ plotlyMA <- function(x, y, names, source="plot1",
                 y = y[i2],
                 text = names[i2],
                 font = list(
-                    size = 12,
+                    size = 12 * label.cex,
                     color = '#1f77b4'
                 ),
                 showarrow = FALSE,
@@ -3002,8 +3002,8 @@ plotlyMA <- function(x, y, names, source="plot1",
 plotlyVolcano <- function(x, y, names, source="plot1", group.names=c("group1","group2"),
                           xlab="effect size (logFC)", ylab="significance (-log10p)",
                           lfc=1, psig=0.05, showlegend=TRUE, highlight=NULL,
-                          marker.size = 5, label=NULL, marker.type='scatter',
-                          displayModeBar=TRUE )
+                          marker.size = 5, label=NULL, label.cex = 1,
+                          marker.type='scatter', displayModeBar=TRUE )
 {
 
     require(plotly)
@@ -3057,7 +3057,7 @@ plotlyVolcano <- function(x, y, names, source="plot1", group.names=c("group1","g
                 y = y[i2],
                 text = names[i2],
                 font = list(
-                    size = 12,
+                    size = 12*label.cex,
                     color = '#1f77b4'
                 ),
                 showarrow = FALSE,

@@ -114,7 +114,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                             shinyWidgets::prettySwitch(ns("load_example"), "load example data"),
                             ##checkboxInput(ns("advanced_mode"),"advanced")
                             ##shinyWidgets::prettySwitch(ns("advanced_mode"),"advanced")
-                            shinyWidgets::prettySwitch(ns("advanced_mode"),"batch correction (beta)")                            
+                            shinyWidgets::prettySwitch(ns("advanced_mode"),"batch correction (beta)")
                         ),
                         mainPanel(
                             width = 9,
@@ -244,12 +244,15 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             
             corrected_counts <- reactive({
                 counts <- NULL
-                if(input$advanced_mode) {
-                    cat("[UploadModule::corrected_counts] using CORRECTED counts\n")
+                dbg("[UploadModule::corrected_counts] reacted!\n")                
+                advanced_mode <- ( length(input$advanced_mode)>0 &&
+                                   input$advanced_mode[1]==1 )
+                if(advanced_mode) {
+                    message("[UploadModule::corrected_counts] using CORRECTED counts\n")
                     out <- correctedX()
                     counts <- pmax(2**out$X -1, 0)
                 } else {
-                    cat("[UploadModule::corrected_counts] using UNCORRECTED counts\n")
+                    message("[UploadModule::corrected_counts] using UNCORRECTED counts\n")
                     counts <- uploaded$counts.csv
                 }
                 counts
