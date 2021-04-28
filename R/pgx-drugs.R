@@ -23,9 +23,9 @@ pgx.createComboDrugAnnot <- function(combo, annot0) {
 }
 
 
-##obj=ngs;methods="GSEA";contrast=NULL;nprune=250
+##obj=ngs;methods=c("GSEA","cor");contrast=NULL;nprune=250;nmin=5
 pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
-                                      nprune=250, contrast=NULL )
+                                      nmin=15, nprune=250, contrast=NULL )
 {
     ## 'obj'   : can be ngs object or fold-change matrix
     ## X       : drugs profiles (may have multiple for one drug)
@@ -59,9 +59,13 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
 
     ## create drug meta sets
     meta.gmt <- tapply(colnames(X), xdrugs, list)
-    meta.gmt <- meta.gmt[which(sapply(meta.gmt,length)>=15)]
+    meta.gmt <- meta.gmt[which(sapply(meta.gmt,length)>=nmin)]
     length(meta.gmt)
-
+    if(length(meta.gmt)==0) {
+        cat("WARNING::: pgx.computeDrugEnrichment : no valid genesets!!\n")
+        return(NULL)
+    }
+    
     ## first level (rank) correlation
     cat("Calculating first level correlation ...\n")
     gg <- intersect(rownames(X), rownames(F))
@@ -131,15 +135,16 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
         dim(R1)
         results[["GSEA"]] <- list( X=mNES, Q=mQ, P=mP, size=msize, stats=R1 )
     }
+    names(results)
 
     ## this takes only the top matching drugs for each comparison to
     ## reduce the size of the matrices
+    nprune    
     if(nprune > 0) {
-        names(results)
         k=1
         for(k in 1:length(results)) {
             res <- results[[k]]
-        ## reduce solution set with top-N of each comparison??
+            ## reduce solution set with top-N of each comparison??
             mtop <- apply( abs(res$X), 2, function(x) head(order(-x),nprune))
             mtop <- unique(as.vector(mtop))
             length(mtop)
@@ -157,6 +162,7 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
     meta.X <- list()
     meta.Q <- list()
     meta.P <- list()
+    i=1
     for(i in 1:ncol(F)) {
         meta.X[[i]]<- sapply(results, function(res) res$X[,i,drop=FALSE])
         meta.Q[[i]]<- sapply(results, function(res) res$Q[,i,drop=FALSE])

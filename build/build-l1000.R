@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. A                                        ll rights reserved.
 ##
 
 ##BiocManager::install("crossmeta")
@@ -32,14 +32,15 @@ names(xdrugs) <- colnames(X)
 length(table(xdrugs))
 table(xdrugs %in% rownames(D))
 
-## only with annotation...
 if(0) {
+    ## only with drug annotation???
     sel <- xdrugs %in% rownames(D)
     X <- X[,sel]
 }
 
 xdrugs <- gsub("_.*$","",colnames(X))
 ##sum(table(xdrugs)>=10)
+sum(table(xdrugs)>=10)
 sum(table(xdrugs)>=15)
 sum(table(xdrugs)>=20)
 
@@ -48,27 +49,72 @@ gmt.size <- sapply(gmt,length)  ## how many profiles per drug
 table(gmt.size)
 
 head(grep("-sh",names(gmt),value=TRUE))
+head(grep("-oe",names(gmt),value=TRUE))
+head(grep("-lig",names(gmt),value=TRUE))
 table(gmt.size[grep("-sh",names(gmt))])
+table(gmt.size[grep("-oe",names(gmt))])
+table(gmt.size[grep("-lig",names(gmt))])
 
-nmin = 15
-nmin = 20
-gmt1 <- gmt[which(gmt.size >= nmin)]
-length(gmt1)
-gmt1 <- lapply(gmt1, function(g) head(g,nmin))
+if(0) {
+    nmin = 10
+    nmin = 15
+    nmin = 20
+    sel1 <- grepl("-sh|-oe|-lig",names(gmt))
+    gmt1 <- gmt[which(gmt.size >= nmin & !sel1)]
+    length(gmt1)
+    gmt1 <- lapply(gmt1, function(g) head(g,nmin))
+    gmt1 <- lapply(gmt1, function(g) head(g,20))    
+    length(gmt1)
 
-X1 <- X[,which(colnames(X) %in% unlist(gmt1))]
-dim(X)
-dim(X1)
-length(gmt1)
+    X1 <- X[,which(colnames(X) %in% unlist(gmt1))]
+    dim(X)
+    dim(X1)
+    X1 <- round(X1, digits=3)
+    
+    ## file must be smaller than 100Mb for GitHub
+    saveRDS(X1, file="../lib/l1000_es_n20d1011.rds")
+    write.csv(X1, file=gzfile("../lib/l1000_es_n20d1011.csv.gz")) 
 
-saveRDS( X1[,], file="../lib/l1000_es_n20d1043.rds")
-saveRDS( X1[,], file="../lib/l1000_es_n15d3756.rds")
+    saveRDS(X1, file="../lib/l1000_es_n20a1698.rds")
+    write.csv(X1, file=gzfile("../lib/l1000_es_n20a1698.csv.gz")) 
+
+    saveRDS(X1, file="../lib/l1000_es_n15d3479.rds")
+    write.csv(X1, file=gzfile("../lib/l1000_es_n15d3479.csv.gz"))
+    ##readr::write_csv(data.frame(X1), file="../lib/l1000_es_n15d3479.csv2.gz")
+
+}
+
+
+if(0) {
+    ## GENE PERTURBATIONS
+    nmin = 8
+    nmin = 10
+    sel1 <- grepl("-sh|-oe|-lig",names(gmt))
+    gmt1 <- gmt[which(gmt.size >= nmin & sel1)]
+    length(gmt1)
+    gmt1 <- lapply(gmt1, function(g) head(g,nmin))
+    
+    X1 <- X[,which(colnames(X) %in% unlist(gmt1))]
+    X1 <- round(X1, digits=3)
+    dim(X)
+    dim(X1)
+    length(gmt1)
+    saveRDS( X1, file="../lib/l1000_es_n10g1766.rds")
+    write.csv(X1, file=gzfile("../lib/l1000_es_n10g1766.csv.gz"))
+    ##saveRDS( X1[,], file="../lib/l1000_es_n8g5812.rds")
+    ##write.csv(X1, file=gzfile("../lib/l1000_es_n8g5812.csv.gz"))
+        
+}
 
 if(0) {
     library(data.table)
     X <- readRDS(file="../lib/l1000_es_n15d3756.rds")
     X <- readRDS(file="../lib/l1000_es_n20d1043.rds")
+    X <- readRDS(file="../lib/l1000_es_n8g5812.rds")
+    X <- fread.csv(file="../lib/l1000_es_n20d1011.csv.gz")
+
     dim(X)
+    grep("TGFa",colnames(X),value=TRUE)
     
     system.time( X <- readRDS(file="../lib/l1000_es.rds") )
     system.time( X <- data.table::fread(file="../lib/l1000_es.csv.gz") )

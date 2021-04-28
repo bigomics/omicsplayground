@@ -5,7 +5,7 @@
 
 ##extra <- c("meta.go","deconv","infer","drugs")
 ##extra <- c("wordcloud")
-EXTRA.MODULES = c("meta.go","deconv","infer","drugs","drugs-combo",
+EXTRA.MODULES = c("meta.go","deconv","infer","drugs",
                   "connectivity","graph","wordcloud")
 
 compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
@@ -68,35 +68,29 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
     }
 
     if("drugs" %in% extra) {
-        message(">>> Computing drug enrichment (single)...")
+        message(">>> Computing drug activity enrichment...")
         ngs$drugs <- NULL  ## reset??
 
         tt <- system.time({
-            ngs <- compute.drugActivityEnrichment(ngs, lib.dir=lib.dir, combo=FALSE) 
+            ngs <- compute.drugActivityEnrichment(ngs, lib.dir=lib.dir) 
         })
         timings <- rbind(timings, c("drugs", tt))
-        
+
+        message(">>> Computing drug sensitivity enrichment...")        
         tt <- system.time({
             ngs <- compute.drugSensitivityEnrichment(
-                ngs, lib.dir=lib.dir, combo=FALSE, ref.db=c("CTRPv2","GDSC")) 
+                ngs, lib.dir=lib.dir, ref.db=c("CTRPv2","GDSC")) 
         })
         timings <- rbind(timings, c("drugs-sx", tt))
 
-    }
+        if(1) {
+            message(">>> Computing gene perturbation enrichment...")
+            tt <- system.time({
+                ngs <- compute.genePerturbationEnrichment(ngs, lib.dir=lib.dir)
+            })
+            timings <- rbind(timings, c("drugs-gene", tt))
+        }
 
-    if("drugs-combo" %in% extra) {
-        message(">>> Computing drug enrichment (combo)...")
-        tt <- system.time({
-            ngs <- compute.drugActivityEnrichment(
-                ngs, lib.dir=lib.dir, combo=TRUE) 
-        })
-        timings <- rbind(timings, c("drugs-combo", tt))
-
-        tt <- system.time({
-            ngs <- compute.drugSensitivityEnrichment(
-                ngs, lib.dir=lib.dir, combo=TRUE, ref.db=c("CTRPv2","GDSC")) 
-        })
-        timings <- rbind(timings, c("drugs-sx-combo", tt))
     }
     
     if("graph" %in% extra) {
@@ -294,22 +288,24 @@ compute.cellcycle.gender <- function(ngs, rna.counts=ngs$counts)
 }
 
 
-compute.drugActivityEnrichment <- function(ngs, lib.dir, combo=TRUE ) {
+compute.drugActivityEnrichment <- function(ngs, lib.dir ) {
 
     ## -------------- drug enrichment
-    L1000.FILE = "l1000_es_1451drugs.rds"
-    L1000.FILE = "l1000_es.rds"
-    message("[compute.drugActivityEnrichment] reading L1000 reference file:",L1000.FILE)
-    X <- readRDS(file=file.path(lib.dir,L1000.FILE))
+    L1000.FILE = "l1000_es_n20a1698.csv.gz"
+    L1000.FILE = "l1000_es_n20d1011.csv.gz"
+    L1000.FILE = "l1000_es.csv.gz"
+    message("[compute.drugActivityEnrichment] reading L1000 reference: ",L1000.FILE)
+    ##X <- readRDS(file=file.path(lib.dir,L1000.FILE))
+    X <- fread.csv(file=file.path(lib.dir,L1000.FILE))
     
     xdrugs <- gsub("_.*$","",colnames(X))
     ndrugs <- length(table(xdrugs))
     ndrugs
     message("number of profiles: ",ncol(X))
-    message("number of drugs in database: ",ndrugs)
+    message("number of drugs: ",ndrugs)
     dim(X)
 
-    res.mono = res.combo = NULL    
+    res.mono = NULL    
     NPRUNE=-1
     NPRUNE=250
     res.mono <- pgx.computeDrugEnrichment(
@@ -326,31 +322,12 @@ compute.drugActivityEnrichment <- function(ngs, lib.dir, combo=TRUE ) {
                        sep="\t", comment.char="#")
     annot0$drug <- annot0$pert_iname
     rownames(annot0) <- annot0$pert_iname
-    head(annot0)
-    
-    annot1 <- NULL
-    if(combo==TRUE) {
-        res.combo <- pgx.computeComboEnrichment(
-            ngs, X, xdrugs, res.mono=res.mono,
-            contrasts = NULL,
-            ntop=15, nsample=80, nprune=NPRUNE)
-        names(res.combo)
-                
-        ## create combo annotation table from mono-drug
-        dd.combo <- rownames(res.combo$X)
-        annot1 <- pgx.createComboDrugAnnot(dd.combo, annot0)        
-    }
+    head(annot0)    
     dim(res.mono[["GSEA"]]$X)
 
     ##ngs$drugs <- NULL
     ngs$drugs[["activity/L1000"]]  <- res.mono[["GSEA"]]
     ngs$drugs[["activity/L1000"]][["annot"]] <- annot0[,c("drug","moa","target")]
-    
-    if(!is.null(res.combo)) {
-        ngs$drugs[["activity-combo/L1000"]] <- res.combo
-        ngs$drugs[["activity-combo/L1000"]][["annot"]] <- annot1[,c("drug","moa","target")]
-        names(ngs$drugs)
-    }
 
     remove(X)
     remove(xdrugs)
@@ -358,7 +335,7 @@ compute.drugActivityEnrichment <- function(ngs, lib.dir, combo=TRUE ) {
 }
 
 ##ref="CTRPv2";lib.dir="../lib";combo=FALSE
-compute.drugSensitivityEnrichment <- function(ngs, lib.dir, combo=TRUE, ref.db=c("CTRPv2","GDSC") )
+compute.drugSensitivityEnrichment <- function(ngs, lib.dir, ref.db=c("CTRPv2","GDSC") )
 {
     ref <- ref.db[1]
     for(ref in ref.db) {
@@ -369,7 +346,7 @@ compute.drugSensitivityEnrichment <- function(ngs, lib.dir, combo=TRUE, ref.db=c
         length(table(xdrugs))
         dim(X)
         
-        res.mono = res.combo = NULL
+        res.mono = NULL
         
         NPRUNE=-1
         NPRUNE=250
@@ -388,34 +365,65 @@ compute.drugSensitivityEnrichment <- function(ngs, lib.dir, combo=TRUE, ref.db=c
         annot0 <- read.csv(file.path(lib.dir,paste0("drugSX-",ref,"-drugs.csv")))
         head(annot0)
         rownames(annot0) <- annot0$drug
-        
-        annot1 <- NULL
-        if(combo==TRUE) {
-            
-            res.combo <- pgx.computeComboEnrichment(
-                ngs, X, xdrugs, res.mono=res.mono,
-                contrasts = NULL,
-                ntop=15, nsample=80, nprune=NPRUNE)
-            names(res.combo)
-            
-            ## create combo annotation table from mono-drug
-            dd.combo <- rownames(res.combo$X)
-            annot1 <- pgx.createComboDrugAnnot(dd.combo, annot0)
-        }
-        
+                
         s1 <- paste0("sensitivity/",ref)
         s2 <- paste0("sensitivity-combo/",ref)
         ngs$drugs[[s1]] <- res.mono[["GSEA"]]
         ngs$drugs[[s1]][["annot"]] <- annot0[,c("moa","target")]
-        
-        if(!is.null(res.combo)) {
-            ngs$drugs[[s2]] <- res.combo
-            ngs$drugs[[s2]][["annot"]] <- annot1[,c("moa","target")]
-        }
+
     } ## end of for rr
     
     names(ngs$drugs)
     
+    remove(X)
+    remove(xdrugs)
+    return(ngs)
+}
+
+##ref="CTRPv2";lib.dir="../lib"
+compute.genePerturbationEnrichment <- function(ngs, lib.dir)
+{
+    L1000.FILE = "l1000_gpert_n10g1766.csv.gz"
+    L1000.FILE = "l1000_gpert_n8g5812.csv.gz"
+    L1000.FILE = "l1000_gpert.csv.gz"
+    message("[compute.drugActivityEnrichment] reading L1000 reference: ",L1000.FILE)
+    ##X <- readRDS(file=file.path(lib.dir,L1000.FILE))
+    X <- fread.csv(file=file.path(lib.dir,L1000.FILE))
+
+    ## -------------- drug enrichment    
+    xdrugs <- gsub("_.*$","",colnames(X))
+    ndrugs <- length(table(xdrugs))
+    ndrugs
+    message("number of profiles: ",ncol(X))
+    message("number of gene perturbations: ",ndrugs)
+    dim(X)
+
+    NPRUNE=-1
+    NPRUNE=250
+    res <- pgx.computeDrugEnrichment(
+        ngs, X, xdrugs, methods=c("GSEA","cor"),
+        nmin=3, nprune=NPRUNE, contrast=NULL )
+
+    if(is.null(res)) {
+        cat("[compute.genePerturbationEnrichment] WARNING:: computing failed!\n")
+        return(ngs)
+    }
+
+    ## attach annotation
+    dd <- rownames(res[["GSEA"]]$X)
+    ##d1 <- sub(".*-","",dd)
+    d1 <- dd
+    d2 <- sub("-.*","",dd)
+    annot0 <- data.frame(drug=dd, moa=d1, target=d2)
+    rownames(annot0) <- dd
+    head(annot0)
+        
+    dim(res[["GSEA"]]$X)
+
+    ##ngs$drugs <- NULL
+    ngs$drugs[["gene/L1000"]]  <- res[["GSEA"]]
+    ngs$drugs[["gene/L1000"]][["annot"]] <- annot0[,c("drug","moa","target")]
+
     remove(X)
     remove(xdrugs)
     return(ngs)

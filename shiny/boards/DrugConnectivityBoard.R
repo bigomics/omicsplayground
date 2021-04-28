@@ -109,17 +109,23 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         alertDataLoaded(session,ngs)
         req(ngs)        
         req(input$dr_contrast, input$dsea_method)
+
+        dbg("[getDseaTable] reacted")
         
         comparison=1
         names(ngs$gx.meta$meta)
         comparison = input$dr_contrast
         if(is.null(comparison)) return(NULL)
         
+        dbg("[getDseaTable] 1: ")
+
         names(ngs$drugs)
         dmethod = "activity-combo/L1000"
         dmethod = "activity/L1000"
         dmethod <- input$dsea_method
         if(is.null(dmethod)) return(NULL)
+
+        dbg("[getDseaTable] 2: ")
         
         fc <- ngs$gx.meta$meta[[comparison]]$meta.fx
         names(fc) <- rownames(ngs$gx.meta$meta[[1]])
@@ -134,11 +140,15 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         qv[is.na(qv)] <- 1
         pv[is.na(pv)] <- 1
         
+        dbg("[getDseaTable] 3: ")
+
         ## SHOULD MAYBE BE DONE IN PREPROCESSING???
         if(is.null(annot)) {
             annot <- read.csv(file.path(FILES,"L1000_repurposing_drugs.txt"),
                               sep="\t", comment.char="#")
         }
+
+        dbg("[getDseaTable] 4: ")
         
         jj <- match( toupper(drug), toupper(rownames(annot)) )
         annot <- annot[jj,c("moa","target")]        
@@ -146,6 +156,19 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         ##res <- res[order(-abs(res$NES)),]
         ##res <- res[order(res$pval,-abs(res$NES)),]
         res <- res[order(-res$NES),]
+
+        dbg("[getDseaTable] 5: ")
+
+        ##req(input$dseatable_filter)
+        if(length(input$dseatable_filter) &&
+           !is.null(input$dseatable_filter)) {
+            if(input$dseatable_filter) {
+                sel <- which(res$moa!='' | res$target!='')
+                res <- res[sel,,drop=FALSE]
+            }
+        }
+
+        dbg("[getDseaTable] done: ")
         
         return(res)
     })
@@ -163,11 +186,13 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
 
         res <- getDseaTable()
         ## filter with table selection/search
-        ii  <- dsea_table$rows_all()
-        req(ii)
-        if(length(ii)>0) {
-            res <- res[ii,,drop=FALSE]
+        ii  <- dsea_table$rows_selected()
+        jj  <- dsea_table$rows_all()
+        req(jj)
+        if(length(jj)>0) {
+            res <- res[jj,,drop=FALSE]
         }
+        ii.sel <- rownames(res)[ii]
         
         ## rank vector for enrichment plots
         dmethod <- input$dsea_method
@@ -189,15 +214,14 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             length(gmtdx)
             ##if(length(gmtdx) < 3) { frame(); next }
             dx1 <- substring(dx,1,26)
-            gsea.enplot( rnk, gmtdx, main=dx1, cex.main=1.1,
-                        xlab="", ylab="")
+            gsea.enplot( rnk, gmtdx, main=dx1, cex.main=1.2, xlab="", ylab="")
             nes <- round(res$NES[i],2)
             qv  <- round(res$padj[i],3)
             tt <- c( paste("NES=",nes), paste("q=",qv) )
             legend("topright", legend=tt, cex=0.8, y.intersp=0.85, bty='n')
 
             if(i%%5==1) {
-                mtext('rank metric', side=2, line=1.8, cex=0.7)
+                mtext('rank metric', side=2, line=1.8, cex=0.75)
             }
         }
         
@@ -282,12 +306,12 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             if(moatype=="drug class") {
                 par(mfrow=c(2,1), mar=c(4,3.8,1,0.2), mgp=c(1.9,0.7,0))
                 barplot(moa.top, horiz=FALSE, las=3,
-                        ylab=ylab, cex.names = 0.9 )
+                        ylab=ylab, cex.names=0.92 )
                 ##title(main="MOA", line=1 )
             } else {
                 par(mfrow=c(2,1), mar=c(0,3.8,1,0.2), mgp=c(1.9,0.7,0))
                 barplot(dtg.top, horiz=FALSE, las=3, ## ylab="drugs (n)",
-                        ylab=ylab, cex.names = 0.9 )
+                        ylab=ylab, cex.names=0.92 )
                 ##title(main="target gene", line=1 )
             }
         }
@@ -436,6 +460,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
                 score = score[dd,,drop=FALSE]
             }
         }
+        if(nrow(score) <= 1) return(NULL)
         
         score = head(score,nterms) ## max number of terms    
         score = score[,head(order(-colSums(score**2)),nfc),drop=FALSE] ## max comparisons/FC        
@@ -563,10 +588,15 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     )
 
     ##--------buttons for table
+    dsea_table.opts = tagList(
+        tipify(checkboxInput(ns('dseatable_filter'),'only annotated drugs',FALSE),
+               "Show only annotated drugs.")
+    )  
     dsea_table <- callModule(
         tableModule,
         id = "dsea_table", label="b",
         func = dsea_table.RENDER, 
+        options = dsea_table.opts,
         info.text="<b>Enrichment table.</b> Enrichment is calculated by correlating your signature with known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.", 
         title = "Enrichment table",
         height = c(340,700)

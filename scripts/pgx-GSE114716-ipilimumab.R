@@ -187,7 +187,7 @@ ngs <- compute.testGenesets (
     test.methods = GENESET.METHODS,
     lib.dir=FILES)
 
-extra <- c("drugs-combo")
+extra <- c("drugs")
 extra <- c("connectivity")
 extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")
 ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
@@ -201,6 +201,7 @@ ngs$timings
 rda.file
 ngs.save(ngs, file=rda.file)
 
+## load(rda.file, verbose=TRUE)
 
 
 

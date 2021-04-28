@@ -430,8 +430,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         sig.genes = fc.genes[which(qval <= fdr & abs(x) > lfc )]
         sel.genes = intersect(sig.genes, sel.genes)
         scaled.x <- scale(x,center=FALSE)
-        scaled.y <- scale(y,center=FALSE)
-        
+        scaled.y <- scale(y,center=FALSE)        
         impt <- function(g) {
             j = match(g, fc.genes)
             x1 = scaled.x[j]
@@ -440,9 +439,31 @@ two conditions. Determine which genes are significantly downregulated or overexp
             names(x)=g
             x
         }
-        lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
-                      head(sel.genes[order(-impt(sel.genes))],10) )
 
+        sel1 = genetable$rows_selected()
+        df1 = filteredDiffExprTable()
+        sel2 = gsettable$rows_selected()
+        df2 <- gx_related_genesets()        
+
+        lab.cex = 1
+        gene.selected <- !is.null(sel1) && !is.null(df1)
+        gset.selected <- !is.null(sel2) && !is.null(df2) 
+        if(gene.selected && !gset.selected) {
+            lab.genes = rownames(df1)[sel1]
+            sel.genes = lab.genes
+            lab.cex = 1.9
+        } else if(gene.selected && gset.selected) {
+            gs <- rownames(df2)[sel2]
+            dbg("[plots_volcano.PLOTLY] gs = ",gs)
+            sel.genes = intersect(sel.genes, GSETS[[gs]])
+            lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
+                          head(sel.genes[order(-impt(sel.genes))],10) )
+            lab.cex = 1
+        } else {
+            lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
+                          head(sel.genes[order(-impt(sel.genes))],10) )
+            lab.cex = 1
+        }
         xlim = c(-1,1)*max(abs(x),na.rm=TRUE)
         ylim = c(0, max(12, 1.1*max(-log10(qval),na.rm=TRUE)))
         
@@ -450,7 +471,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         plt <- plotlyVolcano(
             x=x, y=y, names=fc.genes,
             source = "plot1", marker.type = "scattergl",
-            highlight = sel.genes, label = lab.genes,
+            highlight = sel.genes,
+            label = lab.genes,
             group.names = c("group1","group0"),
             ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
             ##use.fdr=TRUE,
@@ -509,8 +531,10 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
         qval = res[,grep("adj.P.Val|meta.q|qval|padj",colnames(res))[1]]
         fx = res[,grep("logFC|meta.fx|fc",colnames(res))[1]]
+
         sig.genes = fc.genes[which(qval <= fdr & abs(fx) > lfc )]
         sel.genes = intersect(sig.genes, sel.genes)    
+
         xlim = c(-1,1)*max(abs(fx),na.rm=TRUE)
         ma = rowMeans(ngs$X[rownames(res),], na.rm=TRUE)
 
@@ -523,9 +547,11 @@ two conditions. Determine which genes are significantly downregulated or overexp
                           ylab="effect size (log2FC)",
                           ma_plot=TRUE, ma = ma, ## hi.col="#222222",
                           use.fdr=TRUE, p.sig=fdr, ##main=comp1,
+                          highlight = sel.genes,
+                          lab.cex = lab.cex,
+                          ## highlight = sel.genes,
                           ## main="MA plot",
-                          cex=0.9, lab.cex=1.4, cex.main=1.0,
-                          highlight=sel.genes)
+                          cex=0.9, lab.cex=1.4, cex.main=1.0 )
     })
 
     plots_maplot.PLOTLY %<a-% reactive({
@@ -557,8 +583,47 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
         qval = res[,grep("adj.P.Val|meta.q|qval|padj",colnames(res))[1]]
         y = res[,grep("logFC|meta.fx|fc",colnames(res))[1]]
+
+        scaled.x <- scale(-log10(qval),center=FALSE)
+        scaled.y <- scale(y,center=FALSE)
+        fc.genes <- rownames(res)
+        impt <- function(g) {
+            j = match(g, fc.genes)
+            x1 = scaled.x[j]
+            y1 = scaled.y[j]
+            x = sign(x1)*(0.25*x1**2 + y1**2)
+            names(x)=g
+            x
+        }
+
         sig.genes = fc.genes[which(qval <= fdr & abs(y) > lfc )]
         sel.genes = intersect(sig.genes, sel.genes)    
+
+        ## are there any genes/genesets selected?
+        sel1 = genetable$rows_selected()
+        df1 = filteredDiffExprTable()
+        sel2 = gsettable$rows_selected()
+        df2 <- gx_related_genesets()        
+        lab.cex = 1
+        gene.selected <- !is.null(sel1) && !is.null(df1)
+        gset.selected <- !is.null(sel2) && !is.null(df2) 
+        if(gene.selected && !gset.selected) {
+            lab.genes = rownames(df1)[sel1]
+            sel.genes = lab.genes
+            lab.cex = 1.9
+        } else if(gene.selected && gset.selected) {
+            gs <- rownames(df2)[sel2]
+            dbg("[plots_maplot.PLOTLY] gs = ",gs)
+            sel.genes = intersect(sel.genes, GSETS[[gs]])
+            lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
+                          head(sel.genes[order(-impt(sel.genes))],10) )
+            lab.cex = 1
+        } else {
+            lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
+                          head(sel.genes[order(-impt(sel.genes))],10) )
+            lab.cex = 1
+        }
+
         ylim = c(-1,1)*max(abs(y),na.rm=TRUE)
         x = rowMeans( ngs$X[rownames(res),], na.rm=TRUE)
 
@@ -577,7 +642,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         plt <- plotlyMA(
             x=x, y=y, names=fc.genes,
             source = "plot1", marker.type = "scattergl",
-            highlight=sel.genes, label=lab.genes,
+            highlight = sel.genes,
+            label = lab.genes,
             group.names = c("group1","group0"),
             ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
             ##use.fdr=TRUE,
@@ -1167,6 +1233,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ##================================================================================
     ## Statistics Table
     ##================================================================================
+
     gene_selected <- reactive({
         i = as.integer(genetable$rows_selected())
         if(is.null(i) || length(i)==0) return(NULL)
@@ -1326,7 +1393,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     gsettable_text = "By clicking on a gene in the Table <code>I</code>, it is possible to see which genesets contain that gene in this table, and check the differential expression status in other comparisons from the <code>Gene in contrasts</code> plot under the <code>Plots</code> tab."
 
-    callModule(
+    gsettable <- callModule(
         tableModule,
         id = "gsettable", 
         func = gsettable.RENDER, 
