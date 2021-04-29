@@ -451,7 +451,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if(gene.selected && !gset.selected) {
             lab.genes = rownames(df1)[sel1]
             sel.genes = lab.genes
-            lab.cex = 1.9
+            lab.cex = 1.3
         } else if(gene.selected && gset.selected) {
             gs <- rownames(df2)[sel2]
             dbg("[plots_volcano.PLOTLY] gs = ",gs)
@@ -472,7 +472,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
             x=x, y=y, names=fc.genes,
             source = "plot1", marker.type = "scattergl",
             highlight = sel.genes,
-            label = lab.genes,
+            label = lab.genes, label.cex = lab.cex,
             group.names = c("group1","group0"),
             ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
             ##use.fdr=TRUE,
@@ -610,7 +610,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if(gene.selected && !gset.selected) {
             lab.genes = rownames(df1)[sel1]
             sel.genes = lab.genes
-            lab.cex = 1.9
+            lab.cex = 1.3
         } else if(gene.selected && gset.selected) {
             gs <- rownames(df2)[sel2]
             dbg("[plots_maplot.PLOTLY] gs = ",gs)
@@ -643,7 +643,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
             x=x, y=y, names=fc.genes,
             source = "plot1", marker.type = "scattergl",
             highlight = sel.genes,
-            label = lab.genes,
+            label = lab.genes, label.cex = lab.cex,
             group.names = c("group1","group0"),
             ##xlim=xlim, ylim=ylim, ## hi.col="#222222",
             ##use.fdr=TRUE,
@@ -1384,7 +1384,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                           scrollY = tabH,
                           scroller=TRUE, deferRender=TRUE
                       ),  ## end of options.list 
-                      selection=list(mode='single', target='row', selected=1)) %>%
+                      selection=list(mode='single', target='row', selected=NULL)) %>%
             ##formatSignif(1:ncol(df),4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
                 DT::formatStyle("fx", background = color_from_middle( df$fx, 'lightblue', '#f5aeae'))
