@@ -775,7 +775,7 @@ pgx.plotContrast <- function(pgx, contrast, hilight=NULL,
 pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
                                level="gene", grouped=FALSE, srt=0, cex=1,
                                collapse.others=TRUE, showothers=TRUE,
-                               max.points=-1, group.names=NULL,
+                               max.points = 200, group.names=NULL,
                                main=NULL, xlab=NULL, ylab=NULL, names=TRUE)
 {
     if(0) {
@@ -820,6 +820,8 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
         group.names <- c(group0, group1)
     }
     group.names
+
+    message("[pgx.plotExpression] 2a: group.names = ", group.names)
     
     ## Otherwise we guess from the contrast title but this is dangerous
     if(is.null(group.names) && grepl("_vs_|_VS_",comp) ) {
@@ -839,6 +841,8 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
         group.names <- gsub("@.*","",group.names)  ## strip postfix
     }
     group.names
+
+    message("[pgx.plotExpression] 2b: group.names = ", group.names)
     
     ## create groups
     ct <- expmat[,comp]
@@ -853,6 +857,8 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
         grp0.name <- "REF"
     }
     xgroup <- c("other",grp1.name,grp0.name)[1 + 1*(ct>0) + 2*(ct<0)]       
+
+    message("[pgx.plotExpression] 3:")
     
     ## currently cast to character... :(
     names(xgroup) <- rownames(ngs$samples)
@@ -872,7 +878,9 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
         if("other" %in% levels0) levels0 <- c(levels0[levels0!="other"],"other")
         xgroup <- factor(xgroup, levels=levels0)
     }
-    
+    table(xgroup)    
+    message("[pgx.plotExpression] 4:")
+
     ## ------------- set color of samples
     require(RColorBrewer)
     grps <- sort(setdiff(unique(xgroup),"other"))
@@ -903,11 +911,14 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
         gx <- gx[jj]
     }
 
+    message("[pgx.plotExpression] 5:")
+    
     ## -------------- plot grouped or ungrouped
     if(is.null(main)) main <- probe
     ##if(ncol(X) <= 20) {
     if(!grouped) {
-
+        message("[pgx.plotExpression] 6: not grouped")
+        
         nx = length(gx)
         if(is.null(ylab)) {
             ylab = "expression (log2CPM)"
@@ -926,9 +937,9 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
             text( bx[,1], y0, names(gx)[], adj=1, srt=srt,
                  xpd=TRUE, cex=ifelse(nx>10,0.7,0.9)*cex )
         }
-        title(main, cex.main=1.0)
-
+        title(main, cex.main=1.0)        
     } else {
+        message("[pgx.plotExpression] 6: grouped")        
         if(is.null(ylab)) {
             ylab = "expression (log2CPM)"
             if(!logscale) ylab = "expression (CPM)"
@@ -939,14 +950,19 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
         grp.klr1 <- grp.klr[as.character(xlevels)]
         grp.klr1[is.na(grp.klr1)] <- "grey90"
         names(grp.klr1) <- as.character(xlevels)
-        grp.klr1
+        
+        message("[pgx.plotExpression] 6a:")        
+        col=grp.klr1;las=3;names.cex=cex;        
         gx.b3plot( gx, xgroup, ##ylim=c(0,max(gx)*1.2),
                   col = grp.klr1, ylab=ylab, bee.cex=bee.cex,
                   max.points=max.points, xlab=xlab, names=names,
                   ## sig.stars=TRUE, max.stars=5,
                   las=3, names.cex=cex, srt=srt)
+        message("[pgx.plotExpression] 6b:")                
         title(main, cex.main=1.0)
     }
+
+    message("[pgx.plotExpression] done!")
 
 }
 

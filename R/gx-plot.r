@@ -3,10 +3,11 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-##x=gx;y=ngs$samples$group;bee=bar=TRUE;offx=3;sig.stars=FALSE;xoff=0;srt=60
+##x=gx;y=ngs$samples$group;
+##bee=bar=TRUE;offx=3;sig.stars=FALSE;xoff=0;srt=60;max.points=-1;ymax=NULL;bee.cex=0.3;max.stars=5
 gx.b3plot <- function(x, y, width=1, bar=TRUE, bee=TRUE, sig.stars=FALSE,
                       ymax=NULL, bee.cex=0.3, max.stars=5, srt=NULL, xoff=0,
-                      names.cex=1, names=TRUE, max.points=1000, col="grey80", ...)
+                      names.cex=1, names=TRUE, max.points=100, col="grey80", ...)
 {
     require(beeswarm)
     ##require(sinaplot)
@@ -22,7 +23,7 @@ gx.b3plot <- function(x, y, width=1, bar=TRUE, bee=TRUE, sig.stars=FALSE,
     y = as.character(y)
     y[is.na(y)] <- 'NA'
     y = factor(y, exclude=NULL)
-    mx = tapply(x, y, median)
+    mx = tapply(x, y, median, na.rm=TRUE)
 
     sig = yc = NULL
     if(sig.stars) {
@@ -72,7 +73,7 @@ gx.b3plot <- function(x, y, width=1, bar=TRUE, bee=TRUE, sig.stars=FALSE,
 
     n = length(unique(y))
     if(names==TRUE) {
-        y0 = min(ylim) - diff(ylim)*0.03
+        y0 = min(ylim) - diff(ylim)*0.05
         text( bx[,1], y0, names(mx), cex=names.cex,
              srt=srt, adj=ifelse(srt==0,0.5,0.965), xpd=TRUE,
              pos=pos, offset=0)
@@ -80,9 +81,13 @@ gx.b3plot <- function(x, y, width=1, bar=TRUE, bee=TRUE, sig.stars=FALSE,
     if(bee) {
         jj <- 1:length(x)
         ##jj <- which(y %in% names(which(table(y)>2)))
-        j1 <- which(table(jj)==1)
-        if(length(j1)) jj <- c(jj,j1)
-        if(max.points>0 && length(jj)>max.points) jj <- sample(jj,max.points)
+        ##j1 <- which(table(jj)==1)
+        ##if(length(j1)) jj <- c(jj,j1)
+        if(max.points>0 && length(jj)>max.points) {
+            ## jj <- sample(jj,max.points)
+            jj <- unlist(tapply(jj, y, function(i) head(sample(i),max.points)))
+        }
+        ## !!!!!!!!! NEED CHECK!! can be very slow if jj is large !!!!!!!!!!!
         beeswarm(x[jj] ~ y[jj], add=TRUE, at=1:n-0.33, pch=19, cex=bee.cex, col="grey20")
         ## sinaplot( x[jj] ~ y[jj], add=TRUE, pch=19, cex=bee.cex, col="grey20")
     }

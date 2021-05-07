@@ -93,7 +93,7 @@ SHOW_QUESTIONS = FALSE
 AUTHENTICATION = opt$AUTHENTICATION
 
 DEV = (dir.exists("modulesx")) ### !!!!!!! OVERRIDE
-## DEV = FALSE
+DEV = FALSE
 if(DEV) {
     message('****************** DEVELOPER MODE ********************')
 }
@@ -114,6 +114,7 @@ if(0) {
     ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
     load("../data/geiger2016-arginine-test.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
+    load("../data/mg2020-sarscov2-s200m4-v4.pgx")    
     ngs = pgx.initialize(ngs)
 }
 
