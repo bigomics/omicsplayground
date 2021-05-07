@@ -811,8 +811,10 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
         par(mfrow=c(1,1), mar=c(4,3,1.5,1.5), mgp=c(2,0.8,0), oma=c(1,0.5,0,0.5))
         pgx.plotExpression(ngs, gene, comp=comp, grouped=grouped,
-                           max.points=2000, names=TRUE,
+                           max.points = 200, ## slow!!
+                           names = TRUE,
                            logscale=logscale, srt=srt)    
+
     })
 
     ##plots_boxplot
@@ -921,7 +923,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
             if(i > length(top.up)) { frame() }
             gene = sub(".*:","",top.up[i])
             pgx.plotExpression(
-                ngs, gene, comp=comp, grouped=grouped, max.points=1000,
+                ngs, gene, comp=comp, grouped=grouped,
+                max.points = 200,  ## slow!!
                 collapse.others=TRUE, showothers=showothers,
                 ylab = ylab, xlab="",
                 logscale=logscale, names=show.names, srt=srt, main="")
@@ -933,7 +936,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
             if(i > length(top.down)) { frame() }
             gene = sub(".*:","",top.down[i])
             pgx.plotExpression(
-                ngs, gene, comp=comp, grouped=grouped,  max.points=1000,
+                ngs, gene, comp=comp, grouped=grouped,
+                max.points = 200,  ## slow!!
                 collapse.others=TRUE, showothers=showothers,
                 ylab = ylab, xlab="",
                 logscale=logscale, names=show.names, srt=srt, main="")
@@ -1276,7 +1280,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         DT::datatable( res, rownames=FALSE,
                       class = 'compact cell-border stripe hover',                  
                       extensions = c('Scroller'),
-                      selection=list(mode='single', target='row', selected=1),
+                      selection=list(mode='single', target='row', selected=NULL),
                       fillContainer = TRUE,
                       options=list(
                           dom = 'lfrtip',

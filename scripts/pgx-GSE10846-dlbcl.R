@@ -11,7 +11,6 @@
 ##
 ##
 
-
 RDIR = "../R"
 FILES = "../lib"
 PGX.DIR = "../data"
@@ -30,7 +29,6 @@ SUBSAMPLE=TRUE
 GENE.METHODS=c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
 ##USER.GENE.METHODS=c("ttest","ttest.welch","ttest.rank","trend.limma")
 GENESET.METHODS = c("fisher","gsva","camera","fgsea")
-
 
 rda.file="../data/GSE10846-dlbcl-fullNC.pgx"
 rda.file
@@ -66,7 +64,8 @@ head(clinvar)
 
 sampleTable <- data.frame(pdata[,0])
 sampleTable$dlbcl.type = gsub(".*:","",pdata[,"characteristics_ch1.6"])
-sampleTable$dlbcl.type <- sub("NA","not.specified",sampleTable$dlbcl.type)
+##sampleTable$dlbcl.type <- sub("NA","not.specified",sampleTable$dlbcl.type)
+sampleTable$dlbcl.type <- sub("NA",NA,sampleTable$dlbcl.type)
 sampleTable$dlbcl.type <- sub(".DLBCL$","",sampleTable$dlbcl.type)
 sampleTable$gender = gsub(".*:","",pdata[,"Gender:ch1"])
 sampleTable$age = gsub(".*:","",pdata[,"Age:ch1"])
@@ -80,7 +79,7 @@ sampleTable <- data.frame(sampleTable)
 ##sampleTable$treatment <- as.character(sampleTable$Chemotherapy)
 ##sampleTable$group <- sampleTable$dlbcl.type
 table(sampleTable$Chemotherapy)
-##table(sampleTable$treatment)
+table(sampleTable$dlbcl.type)
 
 sampleTable$Chemotherapy = gsub("-Like.Regimen","",sampleTable$Chemotherapy)
 sampleTable$Chemotherapy <- sub("NA",NA,as.character(sampleTable$Chemotherapy))
@@ -109,13 +108,17 @@ table(rownames(sampleTable) == colnames(X))
 ##-------------------------------------------------------------------
 ## sample QC filtering
 ##-------------------------------------------------------------------
-kk <- which( !is.na(sampleTable$Chemotherapy) &
-             sampleTable$dlbcl.type %in% c("ABC","GCB") )
-length(kk)
-sampleTable <- sampleTable[kk,]
-sampleTable$dlbcl.type <- as.character(sampleTable$dlbcl.type)
-X  <- X[,kk]
-dim(X)
+table(sampleTable$dlbcl.type, useNA='always')
+if(0) {
+    kk <- which( !is.na(sampleTable$Chemotherapy) &
+                 !is.na(sampleTable$OS.status) &
+                 sampleTable$dlbcl.type %in% c("ABC","GCB","Unclassified") )
+    length(kk)
+    sampleTable <- sampleTable[kk,]
+    sampleTable$dlbcl.type <- as.character(sampleTable$dlbcl.type)
+    X  <- X[,kk]
+    dim(X)
+}
 
 ##-------------------------------------------------------------------
 ## subsample???
@@ -220,7 +223,6 @@ head(ngs$samples)
 ngs$samples$group <- as.character(ngs$samples$dlbcl.type)
 levels = unique(ngs$samples$group)
 levels
-
 contr.matrix <- makeContrasts(
     ABC_vs_GCB = ABC - GCB,
     GCB_vs_ABC = GCB - ABC,
@@ -228,16 +230,18 @@ contr.matrix <- makeContrasts(
 
 res <- makeDirectContrasts2(
     Y = ngs$samples[,c("dlbcl.type","gender","cluster")],
-    ref = c("GCB","male","rest"))
+    ref = c("*","male","rest"))
+colnames(res$contr.matrix)
 ##contr.matrix <- res$contr.matrix
 contr.matrix <- res$exp.matrix
-ngs$samples$group <- res$group
-table(res$group)
+## ngs$samples$group <- res$group  ## not necessary anymore??
+## table(res$group)
 
 dim(contr.matrix)
 head(contr.matrix)
-colnames(contr.matrix) <- sub(".*:","",colnames(contr.matrix))  ## strip prefix 
-head(contr.matrix)
+colnames(contr.matrix) <- sub(".*:","",colnames(contr.matrix))  ## strip prefix
+contr.matrix <- contr.matrix[,grep('__vs_',colnames(contr.matrix),invert=TRUE)]
+colnames(contr.matrix)
 
 ##-------------------------------------------------------------------
 ## Start computations
@@ -261,13 +265,11 @@ extra <- c("meta.go","deconv","infer","drugs","wordcloud")
 extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")    
 ngs <- compute.extra(ngs, extra, lib.dir=FILES) 
 
-
 ##-------------------------------------------------------------------
 ## save object
 ##-------------------------------------------------------------------
 rda.file
 ngs.save(ngs, file=rda.file)
-
 
 ##===================================================================
 ##========================= END OF FILE =============================
