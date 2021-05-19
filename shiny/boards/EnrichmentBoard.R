@@ -280,8 +280,11 @@ EnrichmentBoard <- function(input, output, session, env)
             fx[is.na(fx)] = 0
             
             is.sig <- (qv <= fdr & abs(fx) >= lfc)
-            ##is.sig <- 1*(qv <= fdr) * (abs(mx$meta.fx) >= lfc)            
-            stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols)
+            ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='\u2605')
+            stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='*')
+            stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='★')
+            ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='&#9733;')
+            ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='&#64;')
             names(stars) <- rownames(mx)
             
             ##------------ calculate META parameters ----------------
@@ -351,8 +354,8 @@ EnrichmentBoard <- function(input, output, session, env)
                              logFC = meta.fc[gs],
                              meta.q = meta[gs,"qv"],
                              stars  = stars[gs],
-                             AveExpr0=AveExpr0[gs],
-                             AveExpr1=AveExpr1[gs])
+                             AveExpr0 = AveExpr0[gs],
+                             AveExpr1 = AveExpr1[gs])
             
             ## add extra p/q value columns
             jj <- match(gs, rownames(mx))
@@ -380,8 +383,13 @@ EnrichmentBoard <- function(input, output, session, env)
         
         ## just show significant genes
         if(!input$gs_showall && nrow(res)>0 ) {
-            nmeth <- length(input$gs_statmethod)
-            sel <- which(res$stars == star.symbols(nmeth))
+            ##nmeth <- length(input$gs_statmethod)
+            ##sel <- which(res$stars == star.symbols(nmeth))
+            ##sel <- which(nchar(res$stars) == nmeth)
+            lfc <- input$gs_lfc
+            fdr <- input$gs_fdr
+            is.sig <- (abs(res$logFC) >= lfc & res$meta.q <= fdr)
+            sel <- which(is.sig)
             res = res[sel,,drop=FALSE]
         }
         
@@ -1749,7 +1757,7 @@ EnrichmentBoard <- function(input, output, session, env)
             rpt <- rpt[,grep("^q[.]|^q$",colnames(rpt),invert=TRUE)]
         }
 
-        ## wrap with known links.
+        ## wrap genesets names with known links.
         rpt$GS <- wrapHyperLink(rpt$GS, rownames(rpt))    
         selectmode = "single"
         selectmode
@@ -1761,7 +1769,8 @@ EnrichmentBoard <- function(input, output, session, env)
         ##rpt = format(rpt, digits=4)
         DT::datatable(rpt,
                       class = 'compact cell-border stripe hover',
-                      rownames=FALSE, escape = c(-1,-5),
+                      rownames=FALSE,
+                      escape = c(-1,-5),
                       ##extensions = c('Buttons','Scroller'),
                       extensions = c('Scroller'),                  
                       fillContainer = TRUE,
@@ -1775,8 +1784,8 @@ EnrichmentBoard <- function(input, output, session, env)
                       )) %>%
             formatSignif(numcols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
-                DT::formatStyle(fx.col, 
-                                background = color_from_middle( fx, 'lightblue', '#f5aeae'))
+            DT::formatStyle(fx.col, 
+                            background = color_from_middle( fx, 'lightblue', '#f5aeae'))
     })
 
     genetable.RENDER <- reactive({

@@ -1598,7 +1598,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         F1 <- F1[order(-F1$fc.var),]
         F1 <- F1[intersect(rownames(F1),rownames(res)),]  ## take intersection of current comparison
         
-        DT::datatable( F1, rownames=FALSE,
+        DT::datatable( F1,
+                      rownames=FALSE,
                       class = 'compact cell-border stripe hover',
                       extensions = c('Scroller'),
                       selection=list(mode='single', target='row', selected=c(1)),
@@ -1612,16 +1613,16 @@ two conditions. Determine which genes are significantly downregulated or overexp
                       )  ## end of options.list 
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
-                DT::formatStyle( "fc.var",
-                                ##background = styleColorBar(c(0,3), 'lightblue'),
-                                background = color_from_middle( fc.var, 'lightblue', '#f5aeae'),
-                                backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
-                                backgroundPosition = 'center')  %>%
-                DT::formatStyle( colnames(F),
-                                ##background = styleColorBar(c(0,3), 'lightblue'),
-                                background = color_from_middle(F, 'lightblue', '#f5aeae'),
-                                backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
-                                backgroundPosition = 'center')
+            DT::formatStyle( "fc.var",
+                            ##background = styleColorBar(c(0,3), 'lightblue'),
+                            background = color_from_middle( fc.var, 'lightblue', '#f5aeae'),
+                            backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center')  %>%
+            DT::formatStyle( colnames(F),
+                            ##background = styleColorBar(c(0,3), 'lightblue'),
+                            background = color_from_middle(F, 'lightblue', '#f5aeae'),
+                            backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center')
     })
 
     fctable_text = "The <strong>Foldchange (all)</strong> tab reports the gene fold changes for all contrasts in the selected dataset."
