@@ -607,8 +607,6 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 ##
                 ##
                 ##
-
-                message("[checkTables] called")
                 
                 ## check dimensions
                 status = rep("please upload",3)
@@ -616,8 +614,6 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 names(status) = files.needed
                 files.nrow = rep(NA,3)
                 files.ncol = rep(NA,3)
-
-                message("[checkTables] 1 :")
                 
                 for(i in 1:3) {
                     fn = files.needed[i]
@@ -629,8 +625,6 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     }
                 }
 
-                message("[checkTables] 2 :")
-                
                 has.pgx <- ("pgx" %in% names(uploaded))
                 if(has.pgx) has.pgx <- has.pgx && !is.null(uploaded[["pgx"]])
                 if(has.pgx==TRUE) {
@@ -638,8 +632,6 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     ## Nothing to check. Always OK.            
                     
                 } else if(!has.pgx) {
-
-                    message("[checkTables] 3 :")
                     
                     ## check rownames of samples.csv
                     if(status["samples.csv"]=="OK" && status["counts.csv"]=="OK") {
@@ -730,8 +722,6 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                         uploaded[["contrasts.csv"]] <- contrasts1                        
                     }
 
-                    message("[checkTables] 5 :")
-
                     MAXSAMPLES   = 25
                     MAXCONTRASTS = 5
                     MAXSAMPLES   = as.integer(max.limits["samples"])
@@ -765,7 +755,6 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     
                 } ## end-if-from-pgx
                 
-                message("[checkTables] 10 :")
                 e1 <- grepl("ERROR",status["samples.csv"])
                 e2 <- grepl("ERROR",status["contrasts.csv"]) 
                 e3 <- grepl("ERROR",status["counts.csv"])
@@ -774,9 +763,9 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 s3 <- "counts.csv" %in% uploaded$last_uploaded
                 
                 if( e1 || e2 || e3 ) {
-                    message("[checkTables] 10 : ERROR in samples table : e1 = ",e1)
-                    message("[checkTables] 10 : ERROR in contrasts table : e2 = ",e2)
-                    message("[checkTables] 10 : ERROR in counts table : e2 = ",e3)
+                    message("[checkTables] ERROR in samples table : e1 = ",e1)
+                    message("[checkTables] ERROR in contrasts table : e2 = ",e2)
+                    message("[checkTables] ERROR in counts table : e2 = ",e3)
 
                     if(e1 && !s1) {
                         uploaded[["samples.csv"]] <- NULL

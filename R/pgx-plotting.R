@@ -305,7 +305,6 @@ pgx.SankeyFromMatrixList.PLOTLY <- function(matlist, contrast=NULL)
 
 }
 
-min.rho=0.3;Q=NULL
 pgx.SankeyFromMRF.PLOTLY <- function(M, R, F, fill=TRUE, labels=NULL)
 {    
 
@@ -615,26 +614,25 @@ plot_grid.sharedAxisLabels <- function(plotList, nrow) {
 }
 
 
-pgx.Volcano <- function(pgx, contrast, level="gene", psig=0.05, fc=1,
-                        cex=1, cex.lab=0.85, hilight=NULL, ntop=20,
+pgx.Volcano <- function(pgx, contrast, level="gene", methods='meta',
+                        psig=0.05, fc=1, cex=1, cex.lab=0.85,
+                        p.min=NULL, fc.max=NULL, hilight=NULL, ntop=20,
                         cpal=c("grey60","red3"), title=NULL,
                         plotlib="base")
 {
     if(is.integer(contrast)) contrast <- names(pgx$gx.meta$meta)[contrast]
-
+    res=NULL
     if(level=="gene") {
-        f <- pgx$gx.meta$meta[[contrast]]$meta.fx
-        q <- pgx$gx.meta$meta[[contrast]]$meta.q
-        names(f)=names(q)=rownames(pgx$gx.meta$meta[[contrast]])
+        res <- pgx.getMetaMatrix(pgx, methods, level="gene")
     } else if(level=="geneset") {
-        f <- pgx$gset.meta$meta[[contrast]]$meta.fx
-        q <- pgx$gset.meta$meta[[contrast]]$meta.q
-        names(f)=names(q)=rownames(pgx$gset.meta$meta[[contrast]])
+        res <- pgx.getMetaMatrix(pgx, methods, level="geneset")        
     } else {
         stop("FATAL:: invalid level=",level)
     }
-        
-    sig <- (q < psig & abs(f) > fc)
+    f <- res$fc[,contrast]
+    q <- res$qv[,contrast]    
+    
+    sig <- (q <= psig & abs(f) >= fc)
     xy <- cbind(fc=f, y=-log10(q))
     ##rownames(xy) <- rownames(pgx$gx.meta$meta[[contrast]])
     ##names(sig) <- rownames(xy)
@@ -643,22 +641,31 @@ pgx.Volcano <- function(pgx, contrast, level="gene", psig=0.05, fc=1,
         wt <- rowSums(scale(xy,center=FALSE)**2)
         hilight <- rownames(xy)[order(-wt)]
         hilight <- intersect(hilight, names(sig[sig==TRUE]))
-        hilight <- head(hilight,ntop)
     }
+    hilight2 <- head(hilight,ntop) ## label
+
+    xlim = ylim = NULL
+    if(!is.null(fc.max)) {
+        xlim = c(-1.1,1.1)*fc.max
+    }
+    if(!is.null(p.min)) {
+        ylim = c(0,-log10(p.min))
+    }
+    
     if(is.null(title)) title = contrast
     p <- pgx.scatterPlotXY(
         xy, var=sig, type="factor", title=title,
         xlab = "differential expression (log2FC)",
         ylab = "significance (-log10q)",
-        hilight = hilight, cex = 0.9*cex,
-        cex.lab = cex.lab, cex.title = 1.0,
+        hilight = hilight, hilight2 = hilight2,
+        cex = 0.9*cex, cex.lab = cex.lab, cex.title = 1.0,
+        xlim = xlim, ylim = ylim,
         legend = FALSE, col=cpal, opacity=1,
         plotlib = plotlib)    
     ##ggplotly(p)
     p
 }
 
-contrast="ABC_vs_GCB"
 pgx.plotMA <- function(pgx, contrast, level="gene", psig=0.05, fc=1,
                        cex=1, cex.lab=0.8, hilight=NULL, ntop=20,
                        plotlib="base")
@@ -681,7 +688,7 @@ pgx.plotMA <- function(pgx, contrast, level="gene", psig=0.05, fc=1,
         stop("FATAL:: invalid level=",level)
     }
 
-    sig <- (q < 0.05 & abs(f) > fc)
+    sig <- (q <= psig & abs(f) >= fc)
     table(sig)
     xy <- cbind(x=m, y=f)    
     ##names(sig) <- rownames(xy) <- gg
@@ -2006,7 +2013,8 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
                                    cex=NULL, cex.lab=0.8, cex.title=1.2, cex.legend=1,
                                    zoom=1, legend=TRUE, bty='o', legend.ysp=0.85,
                                    legend.pos = 'bottomleft',
-                                   xlab = NULL, ylab=NULL, hilight2=hilight, hilight.cex = NULL,
+                                   xlab = NULL, ylab=NULL, xlim=NULL, ylim=NULL,
+                                   hilight2=hilight, hilight.cex = NULL,
                                    hilight=NULL, hilight.col=NULL, hilight.lwd=0.8,
                                    label.clusters=FALSE, cex.clust=1.5,
                                    tooltip=NULL, theme=NULL, set.par=TRUE, 
@@ -2107,7 +2115,7 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
                 
         ## discrete parameter legend
         nlev <- length(levels(z1))
-        if(legend && nlev < 30) {
+        if(legend.pos!='none' && legend && nlev < 30) {
             cex1 <- ifelse(length(levels(z1))>=8,0.85,1)
             cex1 <- ifelse(length(levels(z1))>=15,0.75,cex1)
             legend(legend.pos, levels(z1), bty=bty, fill=col1,
@@ -2154,7 +2162,7 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         grid(lwd=0.8)
                 
         ## colorscale bar
-        if(legend) {
+        if(legend.pos!='none' && legend) {
             zr <- range(z,na.rm=TRUE)
             if(!is.null(zlim)) zr <- zlim
             if(zsym) zr <- c(-1,1)*max(abs(z),na.rm=TRUE)
@@ -2171,8 +2179,8 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         if(length(jj)) {
             hcol1 = hilight.col
             if(is.null(hcol1)) hcol1 <- pt.col0[jj]
-            points(pos[jj,,drop=FALSE], pch=20, col=hcol1, cex=0.8*hilight.cex)
-            points(pos[jj,,drop=FALSE], pch=1, lwd=hilight.lwd, cex=0.7*hilight.cex)
+            points(pos[jj,,drop=FALSE], pch=20, col=hcol1, cex=hilight.cex)
+            points(pos[jj,,drop=FALSE], pch=1, lwd=hilight.lwd, cex=0.9*hilight.cex)
         }
     }
     if(!is.null(hilight2) && length(hilight2)>0) {        
@@ -2201,8 +2209,9 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
                                      cex.lab=0.8, cex.title=1.2, cex.clust=1.5, cex.legend=1,
                                      zoom=1, legend=TRUE, bty='n', hilight=NULL, 
                                      zlim=NULL, zlog=FALSE, softmax=FALSE, zsym=FALSE, 
-                                     xlab = NULL, ylab=NULL,
-                                     hilight2=hilight, hilight.col='red2', hilight.lwd=0.8,
+                                     xlab = NULL, ylab=NULL, xlim=NULL, ylim=NULL,
+                                     hilight2=hilight, hilight.col='red2',
+                                     hilight.lwd=0.8, hilight.cex=NULL,
                                      opacity=1, label.clusters=FALSE, labels=NULL,
                                      legend.ysp=0.85, legend.pos = "bottomleft",
                                      tooltip=NULL, theme=NULL, set.par=TRUE,
@@ -2244,17 +2253,19 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         i <- as.integer(cut(nr,breaks=c(0,100,500,1000,5000,Inf)))
         cex  <- c(2,1.4,1,0.7,0.4)[i]
     }
-
+    if(is.null(hilight.cex))
+        hilight.cex = cex
+    
     ## normalize pos
-    xlim0 <- range(pos[,1])
-    ylim0 <- range(pos[,2])
+    if(is.null(xlim)) xlim <- range(pos[,1])
+    if(is.null(ylim)) ylim <- range(pos[,2])
     if(zoom!=1) {
         cx <- mean(range(pos[,1]))
         cy <- mean(range(pos[,2]))
         dx <- diff(range(pos[,1]))
         dy <- diff(range(pos[,2]))
-        xlim0 <- cx + 0.5 * c(-1,1.05) * dx / zoom
-        ylim0 <- cy + 0.5 * c(-1,1.05) * dy / zoom
+        xlim <- cx + 0.5 * c(-1,1.05) * dx / zoom
+        ylim <- cy + 0.5 * c(-1,1.05) * dy / zoom
     }
     
     ax <- list(
@@ -2288,7 +2299,8 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
     ## Plot the discrete variables
     if(type=="factor") {
         require(RColorBrewer)
-        z1 <- factor(var)
+        z1 <- var
+        if(class(z1)!='factor') z1 <- factor(as.character(z1))
         nz <- length(levels(z1))
         col1 <- NULL
         if(!is.null(col)) {
@@ -2308,7 +2320,7 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         pt.col <- col1[z1]
         pt.col[is.na(pt.col)] <- "#DDDDDD55"
         if(opacity<1) {
-            ##pt.col <- add_opacity(pt.col, opacity)
+            pt.col <- add_opacity(pt.col, opacity**0.33)
             col1 <- add_opacity(col1, opacity**0.33)
         }
         
@@ -2319,12 +2331,13 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         label1 <- rownames(pos)
         if(!is.null(labels) && length(labels)==nrow(pos)) label1 <- labels
         df <- data.frame(x=pos[,1], y=pos[,2], name=rownames(pos),
-                         variable=z1, text=tooltip, label=label1)
+                         ## variable=z1,
+                         text=tooltip, label=label1)
         ##jj <- order(-table(z1)[z1]) ## plot less frequent points first...            
         ##df <- df[jj,]
 
-        plt <- ggplot(df, aes(x, y, color=variable), legend=legend) +
-            geom_point( shape=20, alpha=opacity, size=1.8*cex ) +
+        plt <- ggplot(df, aes(x, y), legend=legend) +
+            geom_point( shape=20, alpha=opacity, size=1.8*cex, col=pt.col ) +
             scale_color_manual( values=col1, name=title ) 
         
         ## label cluster
@@ -2359,7 +2372,7 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
             ##plt
         }
         
-
+        
         nlev <- length(levels(z1))
         if(legend && nlev <= 10) {
             ## plt <- plt + theme(legend.position = "bottom") 
@@ -2455,12 +2468,11 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         plt <- plt +
             geom_point(
                 data = subset(df, name %in% hilight),
-                size = 1.2 * cex,
+                size = hilight.cex,
                 shape = 1,
-                stroke = 1.1 * hilight.lwd,
-                ##fill = "#88000088",
-                fill = "red",                    
-                color = "#00000088"
+                stroke = hilight.lwd,
+                fill = hilight.col,                    
+                color = hilight.col                    
             )
     }
 
@@ -2493,11 +2505,15 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
 
     ## additional theme
     plt <- plt + 
+        xlim(xlim[1], xlim[2]) +
+        ylim(ylim[1], ylim[2]) + 
         xlab(xlab) +  ylab(ylab) + ggtitle(title) +
         theme(
             plot.title = element_text(size=11 * cex.title),
-            axis.title.x = element_text(size=9, vjust=+1.5),
-            axis.title.y = element_text(size=9, vjust=-0.5),            
+            axis.text.x = element_text(size=7),
+            axis.text.y = element_text(size=7),            
+            axis.title.x = element_text(size=9, vjust=+2),
+            axis.title.y = element_text(size=9, vjust=+0),            
             panel.border = element_rect(fill=NA, color="grey20", size=0.15)
         ) 
     plt
@@ -2506,8 +2522,8 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
 pgx.scatterPlotXY.PLOTLY <- function(pos, var=NULL, type=NULL, col=NULL,
                                      cex=NULL, cex.lab=0.8, cex.title=1.2,
                                      cex.clust=1.5, cex.legend = 1,
-                                     xlab = NULL, ylab = NULL, axis=TRUE, 
-                                     zoom=1, legend=TRUE, bty='n',
+                                     xlab = NULL, ylab = NULL, xlim=NULL, ylim=NULL,
+                                     axis=TRUE, zoom=1, legend=TRUE, bty='n',
                                      hilight=NULL, hilight2=hilight, hilight.col='red2',
                                      hilight.cex=NULL, hilight.lwd=0.8,
                                      zlim=NULL, zlog=FALSE, softmax=FALSE, 

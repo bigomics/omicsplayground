@@ -550,8 +550,7 @@ viz.Expression <- function(pgx, pheno, contrast, genes=NULL,
 type="volcano";ntop=20
 viz.GeneSetEnrichment <- function(pgx, genesets, contrast, pos=NULL,
                                   fill=NULL, ntop=20, type="volcano",
-                                  plots.only=FALSE, plotlib="ggplot",
-                                  strip=NULL,
+                                  plots.only=FALSE, plotlib="ggplot", strip=NULL,
                                   title=NULL, subtitle=NULL, caption=NULL)
 {
 
@@ -626,12 +625,13 @@ viz.GeneSetEnrichment <- function(pgx, genesets, contrast, pos=NULL,
     viz.showFigure(plist, title=title, subtitle=subtitle, caption=caption)    
 }
 
-viz.Contrasts <- function(pgx, contrasts=NULL, ntop=10, dir=1, pos=NULL,
-                          psig=0.05, fc=0.20, cex=1, cex.lab=1,
+viz.Contrasts <- function(pgx=NULL, contrasts=NULL, ntop=10, dir=0, pos=NULL,
+                          psig=0.05, fc=0.20, cex=1, cex.lab=1, fixed.axis=FALSE,
                           type = c("pair","MA","volcano"), plotlib='ggplot',
-                          level="gene", filt=NULL, label.type="box",
-                          strip=NULL, plots.only = FALSE, 
-                          title=NULL, subtitle=NULL, caption=NULL)
+                          level="gene", methods='meta', label.type="box", 
+                          filt=NULL, strip=NULL, plots.only = FALSE, pgxRT = NULL,
+                          title="Contrast", subtitle="The plots show the contrasts.",
+                          caption=paste0("Project: ",pgx$name))
 {
     ## 
     ##
@@ -641,6 +641,9 @@ viz.Contrasts <- function(pgx, contrasts=NULL, ntop=10, dir=1, pos=NULL,
     if(!is.null(pos)) type <- "custom"
     if(level=="geneset" && is.null(pos)) {
         stop("FATAL:: geneset level requires position vector (for now)")
+    }
+    if(!is.null(pgxRT)) {
+        pgx = pgxRT()
     }
     
     available.ct <- unique(names(pgx$gx.meta$meta))
@@ -655,6 +658,18 @@ viz.Contrasts <- function(pgx, contrasts=NULL, ntop=10, dir=1, pos=NULL,
         return(NULL)
     }
 
+    fc.max <- NULL
+    qv.min <- NULL
+    if(fixed.axis) {
+        meta <- pgx.getMetaMatrix(pgx)        
+        fc.max <- max(abs(meta$fc[,contrasts]),na.rm=TRUE)
+        qv.min <- min(abs(meta$qv[,contrasts]),na.rm=TRUE)
+        fc.max <- quantile(abs(meta$fc[,contrasts]),probs=0.999,na.rm=TRUE)
+        qv.min <- quantile(meta$qv[,contrasts],probs=0.005,na.rm=TRUE)
+    }
+    fc.max
+    -log10(qv.min)
+    
     ##--------------------------------------------------
     ## Scatter plots
     ##--------------------------------------------------
@@ -695,12 +710,7 @@ viz.Contrasts <- function(pgx, contrasts=NULL, ntop=10, dir=1, pos=NULL,
                 hilight=gg, hilight2=gg,
                 level=level, cex.lab=cex.lab, cex=cex, 
                 labels=labels, label.type=label.type,
-                title=NULL, plotlib="ggplot")
-
-            if(0) {
-                pgx.scatterPlotXY(pos, var=NULL)                
-            }
-            
+                title=NULL, plotlib="ggplot")            
         } else if(type=="MA") {
             p1 <- pgx.plotMA(
                 pgx, ct, cex=cex, cex.lab=cex.lab,
@@ -711,7 +721,9 @@ viz.Contrasts <- function(pgx, contrasts=NULL, ntop=10, dir=1, pos=NULL,
             ## if(type=="volcano") {
             p1 <- pgx.Volcano(
                 pgx, ct, ntop=ntop, level=level,
+                methods = methods, 
                 psig = psig, fc = fc,
+                p.min = qv.min, fc.max = fc.max,
                 cex = cex, cex.lab = cex.lab, 
                 hilight = gg, plotlib="ggplot")            
         }
@@ -731,10 +743,6 @@ viz.Contrasts <- function(pgx, contrasts=NULL, ntop=10, dir=1, pos=NULL,
     ##--------------------------------------------------
     ## Arrange
     ##--------------------------------------------------    
-    if(is.null(title)) title = "Contrasts"
-    if(is.null(subtitle)) subtitle = "The plots show the contrasts."    
-    if(is.null(caption)) caption <- paste0("Project: ",pgx$name)
-
     viz.showFigure(plist, title=title, subtitle=subtitle, caption=caption)
     
 }

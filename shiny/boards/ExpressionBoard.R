@@ -25,13 +25,14 @@ ExpressionUI.test <- function(id) {
 ExpressionUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillCol(
-        flex = c(1.8,1),
+        flex = c(1.95,1),
         height = 720,
         tabsetPanel(
             id = ns("tabs1"),
             tabPanel("Plot",uiOutput(ns("plots_UI"))),
             tabPanel("Top genes",uiOutput(ns("topgenesUI"))),
             tabPanel("Volcano (all)",uiOutput(ns("volcanoAll_UI"))),
+            ## tabPanel("Volcano (all2)",uiOutput(ns("volcanoAll2_UI"))),
             tabPanel("Volcano (methods)",uiOutput(ns("volcanoMethodsUI")))
         ),
         tabsetPanel(
@@ -51,10 +52,10 @@ ExpressionBoard <- function(input, output, session, env)
     inputData <- env[["load"]][["inputData"]]
 
     fullH = 720
-    rowH = 365  ## row height of panels
-    imgH = 300  ## height of images
-    tabH = 180  ## height of tables
-    tabH = "80vh"  ## height of tables
+    rowH = 380  ## row height of panels
+    imgH = 330  ## height of images
+    tabV = "70vh"  ## height of tables
+    tabH = 330  ## row height of panels
     
     description = "<b>Differential Expression Analysis.</b> Compare expression between
 two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups."
@@ -93,7 +94,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                     tipify( selectInput(ns("gx_fdr"),"FDR", choices=FDR.VALUES, selected=0.2),
                            "Set the false discovery rate (FDR) threshold.", placement="top"),
                     tipify( selectInput(ns("gx_lfc"),"logFC threshold",
-                                        choices=c(0,0.2,0.5,1,2,5), selected=0.5),
+                                        choices=c(0,0.1,0.2,0.5,1,2,5), selected=0.5),
                            "Set the logarithmic fold change (logFC) threshold.", placement="top")
                     ),
             br(),br(),br(),br(),
@@ -200,6 +201,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         mx.p[ is.infinite(mx.p) | is.nan(mx.p) ] <- NA
         mx.q[ is.infinite(mx.q) | is.nan(mx.q) ] <- NA
 
+        ##!!!!!!!!!!!!!!!!!!!!!!!! NEED RETHINK !!!!!!!!!!!!!!!!!!!!!!!!
         ## must recompute meta parameters (maxQ method)
         mx$meta.p = apply(mx.p,1,max,na.rm=TRUE)
         mx$meta.q = apply(mx.q,1,max,na.rm=TRUE)
@@ -845,7 +847,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     output$plots_UI <- renderUI({
         fillCol(
             height = rowH,
-            flex = c(1,0.25,NA),
+            flex = c(1,0.35,NA),
             fillRow(
                 id = "plots",
                 ##height = rowH,
@@ -993,112 +995,160 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## Volcano (all contrasts)
     ##================================================================================
 
-    volcanoAll.RENDER %<a-% reactive({
+
+    getAllContrasts <- reactive({
 
         ngs = inputData()
-        if( is.null(ngs)) return(NULL)
-        
+        if( is.null(ngs)) return(NULL)        
         comp = names(ngs$gx.meta$meta)
         if(length(comp)==0) return(NULL)
-        if(is.null(input$gx_features)) return(NULL)
+        ## if(is.null(input$gx_features)) return(NULL)
         
-        fdr=1;lfc=0
-        fdr = as.numeric(input$gx_fdr)
-        lfc = as.numeric(input$gx_lfc)
-        
-        sel.genes = GSETS[["<all>"]]
-        sel.genes = rownames(ngs$X)
-        if(input$gx_features!="<all>") sel.genes = unique(unlist(GSETS[input$gx_features]))
-
-        test = colnames(ngs$gx.meta$meta[[1]]$p)
-        test = input$gx_statmethod
-        if(is.null(test)) return(NULL)
+        ##fdr=1;lfc=0
+        ##fdr = as.numeric(input$gx_fdr)
+        ##lfc = as.numeric(input$gx_lfc)                
+        tests = colnames(ngs$gx.meta$meta[[1]]$p)
+        tests = input$gx_statmethod
+        if(is.null(tests)) return(NULL)
         
         ##comp <- head(comp,75)  ## maximum 75!!!
         i=1
         F <- list()
         Q <- list()
-        for(i in 1:length(comp)) {
-            res = getDEGtable(ngs, testmethods=test, comparison=i, 
-                              add.pq=FALSE, lfc=lfc, fdr=fdr)            
-            fc.gene = res[,grep("^gene$|^gene_name$",colnames(res))]
-            ##pv.col = grep("p.val|pval|meta.p",colnames(res),ignore.case=TRUE)[1]
-            qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
-            fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]
-            qval = res[,qv.col]
-            fx   = res[,fx.col]
-            names(qval) <- names(fx) <- fc.gene
-            F[[i]] <- fx
-            Q[[i]] <- qval
-        }        
+        withProgress(message="computing contrasts ...", value=0, {
+
+            for(i in 1:length(comp)) {
+                res = getDEGtable(ngs, testmethods=tests, comparison=comp[i], 
+                                  add.pq=FALSE, lfc=0, fdr=1)            
+                fc.gene = res[,grep("^gene$|^gene_name$",colnames(res))]
+                ##pv.col = grep("p.val|pval|meta.p",colnames(res),ignore.case=TRUE)[1]
+                qv.col = grep("qval|adj.p|padj|fdr|meta.q",colnames(res),ignore.case=TRUE)[1]
+                fx.col = grep("mean.diff|logfc|foldchange|meta.fx",colnames(res),ignore.case=TRUE)[1]
+                qval = res[,qv.col]
+                fx   = res[,fx.col]
+                names(qval) <- names(fx) <- fc.gene
+                F[[i]] <- fx
+                Q[[i]] <- qval
+                
+                if(!interactive()) incProgress( 1/length(comp) )            
+           }
+
+        })
         names(Q) <- names(F) <- comp
 
-        ## select maximum 36 comparisons (because of space...)
-        q.score <- sapply(Q, function(q) mean(tail(sort(-log10(q)),100)))
-        q.top   <- head(names(sort(q.score, decreasing=TRUE)),20)
-        comp <- sort(q.top)
-        ## comp <- comp[comp %in% q.top]
-        Q <- Q[comp]
-        F <- F[comp]
+        if(0) {
+            ## select maximum 36 comparisons (because of space...)        
+            q.score <- sapply(Q, function(q) mean(tail(sort(-log10(q)),100)))
+            q.top   <- head(names(sort(q.score, decreasing=TRUE)),20)
+            comp <- sort(q.top)
+            ## comp <- comp[comp %in% q.top]
+            Q <- Q[comp]
+            F <- F[comp]
+        }
+        
+        ct = list(Q=Q, F=F)
+        ct
+    })
+    
+    volcanoAll.RENDER %<a-% reactive({
+    ##volcanoAll.RENDER <- reactive({    
+
+        ngs = inputData()
+        if(is.null(ngs)) return(NULL)
+
+        dbg("[volcanoAll.RENDER] reacted!")
+
+        ct <- getAllContrasts()
+        F <- ct$F
+        Q <- ct$Q
+        
+        ##comp = names(ngs$gx.meta$meta)
+        comp = names(F)
+        if(length(comp)==0) return(NULL)
+        if(is.null(input$gx_features)) return(NULL)
+
+        fdr=1;lfc=0
+        fdr = as.numeric(input$gx_fdr)
+        lfc = as.numeric(input$gx_lfc)
+
+        sel.genes = GSETS[["<all>"]]
+        sel.genes = rownames(ngs$X)
+        if(input$gx_features!="<all>") {
+            sel.genes = unique(unlist(GSETS[input$gx_features]))
+        }
 
         ##-------------------------------------------------
         ## plot layout
         ##-------------------------------------------------
-
         ng = length(comp)
         nn = c(2, max(ceiling(ng/2),5))
         ##if(ng>12) nn = c(3,8)
         par(mfrow=nn, mar=c(1,1,1,1)*0.2, mgp=c(2.6,1,0), oma=c(1,1,0,0)*2)
+        nr = 2
         nc = ceiling(sqrt(ng))
         if(ng>24) {
             nc = max(ceiling(ng/3),6)
-            par(mfrow=c(3,nc))
-        } else if(FALSE && ng <= 3) {
-            nc = 3
-            par(mfrow=c(1,nc))
+            nr = 3
+        } else if(TRUE && ng <= 4) {
+            nc = 4
+            nr = 1
         } else {
             nc = max(ceiling(ng/2),6)
-            par(mfrow=c(2,nc))
-        }        
-
-        ymax=15
-        ## ymax <- 1.2 * max(-log10(1e-99 + unlist(Q)), na.rm=TRUE)
-        nlq <- -log10(1e-99 + unlist(Q))
-        ymax <- max(3, 1.2 * quantile(nlq, probs=0.999, na.rm=TRUE)[1]) ## y-axis
+            nr = 2
+        }
+        nr
+        nc
+        par(mfrow=c(nr,nc))
         
-        withProgress(message="computing volcano plots ...", value=0, {
-
-            i=1
+        ymax=15
+        nlq  <- -log10(1e-99 + unlist(Q))
+        ymax <- max(1.3, 1.2 * quantile(nlq, probs=0.999, na.rm=TRUE)[1]) ## y-axis
+        xmax <- max(1, 1.2 * quantile(abs(unlist(F)), probs=0.999, na.rm=TRUE)[1]) ## x-axis
+        
+        withProgress(message="rendering volcano plots ...", value=0, {
+            
+            plt <- list()
+            i=1            
             for(i in 1:length(comp)) {
                 qval <- Q[[i]]
                 fx   <- F[[i]]
                 fc.gene <- names(qval)
-                sig.genes = fc.gene[which(qval <= fdr & abs(fx) >= lfc)]
-                ##genes1 = intersect(sig.genes, sel.genes)
+                is.sig = (qval <= fdr & abs(fx) >= lfc)
+                sig.genes = fc.gene[which(is.sig)]
                 genes1 = sig.genes[which(toupper(sig.genes) %in% toupper(sel.genes))]
-                gx.volcanoPlot.XY( x=fx, pv=qval, gene=fc.gene,
-                                  render="canvas", n=1000, nlab=5, 
-                                  xlim=NULL, ylim=c(0,ymax), axes=FALSE, 
-                                  use.fdr=TRUE, p.sig=fdr, lfc=lfc,
-                                  ##main=comp[i], 
-                                  ## ma.plot=TRUE, use.rpkm=TRUE,
-                                  cex=0.6, lab.cex=1.5, highlight=genes1)
+                genes2 = head(genes1[order(-abs(fx[genes1])*(-log10(qval[genes1])))],10)
+                xy <- data.frame(x = fx, y = -log10(qval))
+                is.sig2 <- factor(is.sig, levels=c(FALSE,TRUE))
+                
+                plt[[i]] <- pgx.scatterPlotXY.GGPLOT(
+                    xy, title = comp[i], cex.title = 0.85, 
+                    var = is.sig2, type = 'factor',
+                    col = c('#bbbbbb','#1e60bb'),
+                    legend.pos = 'none', ## plotlib="ggplot", 
+                    hilight = NULL, hilight2 = genes2,
+                    xlim = xmax*c(-1,1), ylim = c(0,ymax),
+                    xlab = 'difference  (log2FC)',
+                    ylab = 'significance  (-log10q)',
+                    hilight.lwd = 0, hilight.col = '#1e60bb', hilight.cex = 1.5,
+                    cex = 0.45, cex.lab = 0.62) 
+                ## theme(legend.position='none')
+                ## theme_bw(base_size=11)
+                
+                if(!interactive()) incProgress( 1 / length(comp) )
+            }            
 
-                box(lwd=1, col="black", lty="solid")
-                is.first = (i%%nc==1)
-                last.row = ( (i-1)%/%nc == (length(comp)-1)%/%nc )
-                if(is.first) axis(2, mgp=c(2,0.7,0), cex.axis=0.8)
-                if(last.row) axis(1, mgp=c(2,0.7,0), cex.axis=0.8)
-                legend("top", legend=comp[i], box.lty=0,
-                       x.intersp = 0.3, y.intersp = 0.5,
-                       cex=1.2, bg="white")
-                incProgress( 1/length(comp) )
-            }
-            
         })  ## progress
 
-    })
+        ##require(patchwork)
+        ##patchwork::wrap_plots(plt, nrow=nr, ncol=nc) &
+        ##    theme_bw(base_size=11) &
+        ##    theme(legend.position='none')        
 
+        require(gridExtra)
+        grid.arrange( grobs=plt, nrow=nr, ncol=nc)         
+
+    })
+    
     volcanoAll_text = "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for genes across all contrasts. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
 
     volcanoAll_caption = "<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings."
@@ -1107,15 +1157,16 @@ two conditions. Determine which genes are significantly downregulated or overexp
         id="volcanoAll", 
         func = volcanoAll.RENDER,
         func2 = volcanoAll.RENDER,
+        ## plotlib = "ggplot",  ## !!!!!!!!!!!!!! reactive does not work properly !!!!!!!!!!!!!!!
         info.text = volcanoAll_text,
         ##caption = volcanoAll_caption,
-        pdf.width=18, pdf.height=6,
+        pdf.width=16, pdf.height=5,
         ##height = imgH, res=75,
-        height = c(imgH,450), width = c('auto',1600),
-        res=c(75,95),
+        height = c(imgH,500), width = c('auto',1600),
+        res = c(75,95),
         title="Volcano plots for all contrasts"
     )
-
+    
     ## library(shinyjqui)
     output$volcanoAll_UI <- renderUI({
         fillCol(
@@ -1127,7 +1178,106 @@ two conditions. Determine which genes are significantly downregulated or overexp
             div(HTML(volcanoAll_caption), class="caption")
         )
     })
+    
 
+    ##================================================================================
+    ## Volcano (all2 contrasts)
+    ##================================================================================
+
+    ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ## PLOTS SEEMS NOT TO REFRESH/DRAW CORRECTLY. Maybe viz.Contrast is isolated????
+    ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    
+    ##volcanoAll2.RENDER %<a-% reactive({
+    volcanoAll2.RENDER <- reactive({
+        
+        ngs = inputData()
+        if(is.null(ngs)) return(NULL)
+
+        dbg("[volcanoAll2.RENDER] reacted!")
+
+        fdr=1;lfc=0
+        fdr = as.numeric(input$gx_fdr)
+        lfc = as.numeric(input$gx_lfc)
+
+        sel.genes = GSETS[["<all>"]]
+        sel.genes = rownames(ngs$X)
+        if(input$gx_features!="<all>") sel.genes = unique(unlist(GSETS[input$gx_features]))
+
+        ##-------------------------------------------------
+        ## plot layout
+        ##-------------------------------------------------
+        comp = names(ngs$gx.meta$meta)
+        ng = length(comp)
+        nn = c(2, max(ceiling(ng/2),5))
+        ##if(ng>12) nn = c(3,8)
+        par(mfrow=nn, mar=c(1,1,1,1)*0.2, mgp=c(2.6,1,0), oma=c(1,1,0,0)*2)
+        nr = 2
+        nc = ceiling(sqrt(ng))
+        if(ng>24) {
+            nc = max(ceiling(ng/3),6)
+            nr = 3
+        } else if(TRUE && ng <= 4) {
+            nc = 4
+            nr = 1
+        } else {
+            nc = max(ceiling(ng/2),6)
+            nr = 2
+        }
+        nr
+        nc
+        ## par(mfrow=c(nr,nc))
+        dbg("[volcanoAll2.RENDER] nr = ",nr)
+        dbg("[volcanoAll2.RENDER] nc = ",nc)
+        
+        tests = 'meta'
+        methods = NULL
+        methods = selected_gxmethods()
+        plist <- viz.Contrasts(
+            pgx=ngs, ## pgxRT=inputData,
+            methods=methods, type='volcano', fixed.axis=TRUE,
+            psig=fdr, fc=lfc, ntop=10, cex=0.5, cex.lab=0.7,
+            plots.only=TRUE, title=NULL, subtitle=NULL, caption=NULL)
+        
+        fig <- viz.showFigure(plist) + plot_layout(nrow=nr, ncol=nc) &
+            theme_bw(base_size=11) &
+            ## theme_bw(base_size=16) &            
+            theme(legend.position='none')        
+
+        fig
+    })
+    
+    volcanoAll2_text = "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for genes across all contrasts. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
+
+    volcanoAll2_caption = "<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings."
+
+    callModule(
+        plotModule,
+        id = "volcanoAll2",
+        func = volcanoAll2.RENDER,
+        func2 = volcanoAll2.RENDER,
+        ## plotlib = 'ggplot',       
+        info.text = volcanoAll2_text,
+        ##caption = volcanoAll_caption,
+        pdf.width=16, pdf.height=5,
+        ##height = imgH, res=75,
+        height = c(imgH,500), width = c('auto',1600),
+        res = c(75,95),
+        title="Volcano plots for all contrasts"
+    )
+
+    ## library(shinyjqui)
+    output$volcanoAll2_UI <- renderUI({
+        fillCol(
+            ## id = ns("topgenes"),
+            height = rowH,
+            flex=c(1,NA,NA), ##height = 370,
+            plotWidget(ns("volcanoAll2")),
+            br(),
+            div(HTML(volcanoAll_caption), class="caption")
+        )
+    })
+    
     ##================================================================================
     ## Volcano (all methods)
     ##================================================================================
@@ -1287,7 +1437,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                           pageLength = 400,
                           ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = TRUE,
-                          scrollY = tabH,
+                          scrollY = tabV,
                           scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
@@ -1323,7 +1473,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         options = genetable_opts,
         server = TRUE, 
         title = "Differential expression analysis",
-        height = c(285,700)
+        height = c(0.85*tabH,700)
     )
 
     ##output$genetable <- genetable_module$render
@@ -1385,7 +1535,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                       options=list(
                           dom = 'lfrtip', 
                           scrollX = TRUE,
-                          scrollY = tabH,
+                          scrollY = tabV,
                           scroller=TRUE, deferRender=TRUE
                       ),  ## end of options.list 
                       selection=list(mode='single', target='row', selected=NULL)) %>%
@@ -1403,21 +1553,22 @@ two conditions. Determine which genes are significantly downregulated or overexp
         func = gsettable.RENDER, 
         info.text = gsettable_text, label="II",
         title="Gene sets with gene",
-        height = c(285,700), width = c('100%',800)        
+        height = c(0.85*tabH,700), width = c('100%',800)        
     )
 
     tablesUI_caption = "<b>Differential expression tables</b>. <b>(I)</b> Statistical results of the the differential expression analysis for selected contrast. The number of stars indicate how many statistical methods identified the gene significant. <b>(II)</b> Correlation and enrichment value of gene sets that contain the gene selected in Table I."
     
     output$tables_UI <- renderUI({
         fillCol(
-            height = rowH,
-            flex = c(1,NA),
+            height = 1.08*tabH,
+            flex = c(1,0.06,NA),
             fillRow(
                 flex = c(1.6,0.07,1), 
                 tableWidget(ns("genetable")),
                 br(),
                 tableWidget(ns("gsettable"))
             ),
+            br(),
             div(HTML(tablesUI_caption),class="caption")
         )
     })
@@ -1455,7 +1606,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                           dom = 'lfrtip', 
                           ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = TRUE,
-                          scrollY = tabH,
+                          scrollY = tabV,
                           scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
@@ -1483,13 +1634,13 @@ two conditions. Determine which genes are significantly downregulated or overexp
         title ="Gene fold changes for all contrasts",
         info.text = fctable_text,
         caption = fctable_caption,
-        height = c(280,700)
+        height = c(0.9*tabH,700)
     )
 
     ## library(shinyjqui)
     output$fctable_UI <- renderUI({
         fillCol(
-            height = rowH,
+            height = tabH,
             tableWidget(ns("fctable"))
         )
     })
@@ -1551,7 +1702,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                           dom = 'lfrtip',
                           pageLength = 999, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = TRUE,
-                          scrollY = tabH,
+                          scrollY = tabV,
                           scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
@@ -1579,13 +1730,13 @@ two conditions. Determine which genes are significantly downregulated or overexp
         info.text = FDRtable_text,
         title = 'Number of significant genes',
         caption = FDRtable_caption,
-        height = c(280, 700)
+        height = c(0.9*tabH, 700)
     )
 
     ## library(shinyjqui)
     output$FDRtable_UI <- renderUI({
         fillCol(
-            height = rowH,
+            height = tabH,
             tableWidget(ns("FDRtable"))
         )
     })

@@ -48,6 +48,12 @@
 
     methods
 
+ .. toctree::
+    :maxdepth: 2
+    :caption: FAQ
+
+    faq
+
 .. toctree::
     :maxdepth: 1
     :caption: About
