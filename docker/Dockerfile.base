@@ -57,9 +57,8 @@ RUN R -e "setwd('R');source('requirements.R')"
 
 ## any missing packages
 RUN R -e "install.packages(c('umap','corrplot','wordcloud', \
-    'metap','brew','Seurat','R.utils','rhdf5', 'mygene', \
-    'qgraph','psych'))"
-RUN R -e "BiocManager::install(c('rhdf5','monocle'))"
+    'metap','brew','Seurat','R.utils', 'qgraph','psych'))"
+RUN R -e "BiocManager::install(c('rhdf5', 'monocle', 'mygene'))"
 
 #------------------------------------------------------------
 # Clone fresh code from GitHub
