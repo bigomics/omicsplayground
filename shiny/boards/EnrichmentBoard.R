@@ -168,10 +168,10 @@ EnrichmentBoard <- function(input, output, session, env)
     ##========================= REACTIVE FUNCTIONS ===================================
     ##================================================================================
     
-    star.symbols <- function(n) {
-        if(n==0) return("")
-        paste(rep("\u2605",n),collapse="")
-    }
+    ##star.symbols <- function(n) {
+    ##    if(n==0) return("")
+    ##    paste(rep("\u2605",n),collapse="")
+    ##}
 
     selected_gsetmethods <- reactive({
         ngs <- inputData()
@@ -1278,7 +1278,7 @@ EnrichmentBoard <- function(input, output, session, env)
     
     callModule(
         plotModule,
-        id="compare",
+        id = "compare",
         func = compare.RENDER,
         func2 = compare.RENDER,
         options = compare_module_opts,
@@ -1761,11 +1761,11 @@ EnrichmentBoard <- function(input, output, session, env)
         ##rpt = format(rpt, digits=4)
         DT::datatable(rpt,
                       class = 'compact cell-border stripe hover',
-                      rownames=FALSE, escape=-1,
+                      rownames=FALSE, escape = c(-1,-5),
                       ##extensions = c('Buttons','Scroller'),
                       extensions = c('Scroller'),                  
                       fillContainer = TRUE,
-                      selection = list(mode=selectmode, target='row', selected=1),                      
+                      selection = list(mode=selectmode, target='row', selected=1),
                       options=list(
                           dom = 'lfrtip',
                           ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
