@@ -284,7 +284,6 @@ EnrichmentBoard <- function(input, output, session, env)
             stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='*')
             ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='★')
             ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='&#9733;')
-            ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='&#64;')
             names(stars) <- rownames(mx)
             
             ##------------ calculate META parameters ----------------
