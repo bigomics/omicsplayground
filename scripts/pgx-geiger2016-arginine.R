@@ -88,8 +88,8 @@ ngs <- pgx.createPGX(
     auto.scale = TRUE,
     filter.genes = TRUE,
     prune.samples = FALSE,
-    only.chrom = FALSE,
-    rik.orf = FALSE,
+    only.known = FALSE,
+    only.hugo = FALSE,
     convert.hugo = FALSE,
     only.proteincoding = FALSE
 )
