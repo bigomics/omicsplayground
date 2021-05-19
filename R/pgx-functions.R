@@ -334,9 +334,9 @@ util.findboxes <- function( df, xcol, ycol,
   return(finaldf)
 }
 
-star.symbols <- function(n) {
+star.symbols <- function(n, pch="\u2605") {
     if(n==0) return("")
-    paste(rep("\u2605",n),collapse="")
+    paste(rep(pch,n),collapse="")
 }
 
 search_path <- function(paths, file) {
