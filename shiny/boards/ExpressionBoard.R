@@ -1427,7 +1427,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         dbg("[ExpressionBoard::genetable.RENDER] numeric.cols=",numeric.cols)
         dbg("[ExpressionBoard::genetable.RENDER] done!")
         
-        DT::datatable( res, rownames=FALSE,
+        DT::datatable( res,
+                      rownames=FALSE,
                       class = 'compact cell-border stripe hover',                  
                       extensions = c('Scroller'),
                       selection=list(mode='single', target='row', selected=NULL),
