@@ -38,8 +38,8 @@ Follow the steps below to set up a running platform from the docker file:
 Run from source code
 --------------------------------------------------------------------------------
 
-Omics Playground is implemented in R using the
-`Shiny <https://shiny.rstudio.com/>`__ web application framework. You
+Omics Playground is implemented using the
+`R/Shiny <https://shiny.rstudio.com/>`__ web application framework. You
 will need R and Shiny Server installed to run Omics Playground. The
 source code of the platform is available on `GitHub
 <https://github.com/bigomics/omicsplayground>`__. You can download the
