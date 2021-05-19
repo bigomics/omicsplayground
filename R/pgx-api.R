@@ -23,6 +23,7 @@ pgx.getMetaMatrix <- function(pgx, methods="meta", level="gene")
         ##pgx <- inputData()
         all.methods = colnames(unclass(pgx$gx.meta$meta[[1]]$fc))
         all.methods
+        if(is.null(methods)) methods <- all.methods
         if(any(methods %in% all.methods)) {
             methods = intersect(methods,all.methods)
             fc0 = sapply(pgx$gx.meta$meta, function(x)
@@ -42,6 +43,7 @@ pgx.getMetaMatrix <- function(pgx, methods="meta", level="gene")
     if(level=="geneset") {
         ##pgx <- inputData()
         all.methods = colnames(unclass(pgx$gset.meta$meta[[1]]$fc))
+        if(is.null(methods)) methods <- all.methods        
         if(any(methods %in% all.methods)) {
             fc0 = sapply(pgx$gset.meta$meta, function(x)
                 rowMeans(unclass(x$fc)[,methods,drop=FALSE],na.rm=TRUE))

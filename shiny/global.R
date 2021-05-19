@@ -18,6 +18,7 @@ USER_MODE = "pro"
 DEV       = FALSE
 WATERMARK = FALSE
 DEBUG     = FALSE
+DEBUG     = TRUE
 
 ## Determine if we are in ShinyProxy
 SHINYPROXY = (Sys.getenv("SHINYPROXY_USERNAME")!="" && "omicsplayground" %in% dir("/"))

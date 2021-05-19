@@ -341,6 +341,9 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
         pv <- pmax(pv, 1e-99)
         pv[is.na(pv)] <- 1
         qv[is.na(qv)] <- 1
+
+
+        ##!!!!!!!!!!!!!!!!!!!!!!!! NEED RETHINK !!!!!!!!!!!!!!!!!!!!!!!!
         ##meta.p = apply(pv, 1, max, na.rm=TRUE ) ## maximum statistic
         ##meta.p = apply(pv, 1, function(p) metap::allmetap(p, method="sumlog")$p[[1]]) ## Fisher's method
         ##meta.p = apply(pv, 1, function(p) metap::sumlog(p)$p) 
@@ -349,7 +352,8 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
         meta.fx = rowMeans(fc, na.rm=TRUE)
         ##p.meta   = apply(pv, 1, function(p) metap::allmetap(p, method="sumlog")$p[[1]])
         ## q.meta = p.adjust(p.meta, method="BH")
-        meta.avg <- rowMeans(mx, na.rm=TRUE)
+
+        meta.avg  <- rowMeans(mx, na.rm=TRUE)
         meta.avg0 <- rowMeans(mx0, na.rm=TRUE)
         meta.avg1 <- rowMeans(mx1, na.rm=TRUE)
 

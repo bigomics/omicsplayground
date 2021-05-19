@@ -324,7 +324,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 prune.samples <- ("noLM.prune" %in% input$dev_options)
 
                 message("[ComputePgxServer:@compute] creating PGX object")                
-                progress$inc(0.01, detail = "creating PGX object")            
+                progress$inc(0.1, detail = "creating PGX object")            
                 
                 ngs <- pgx.createPGX(
                     counts, samples, contrasts, ## genes,
