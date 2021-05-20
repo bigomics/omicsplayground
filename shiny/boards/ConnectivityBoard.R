@@ -6,7 +6,7 @@
 message(">>> sourcing ConnectivityBoard")
 ##source("global.R")
 
-library(rhdf5)
+require(rhdf5)
 
 ConnectivityInputs <- function(id) {
     ns <- NS(id)  ## namespace
