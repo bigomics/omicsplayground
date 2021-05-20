@@ -1119,8 +1119,8 @@ pgx.plotOmicsNetwork <- function(ngs, gene=NULL, reduced=NULL, levels=c("gene","
 pgx.cytoPlot <- function(ngs, gene1, gene2, cex=1, col="grey60",
                          lab.unit=NULL, cex.names=1, samples=NULL, k=11)
 {
-    library(MASS)
-    library(RColorBrewer)
+    require(MASS)
+    require(RColorBrewer)
 
     ## some pretty colors
     ##k <- 9
@@ -1436,9 +1436,9 @@ gghist <- function(x) {
 
 plotly2ggplot <- function (plot, width=NULL, height=NULL, scale=1, hjust=0, vjust=0) 
 {
-    library(png)
-    library(grid)
-    library(plotly)
+    require(png)
+    require(grid)
+    require(plotly)
     tmpfile <- tempfile()
     tmpfile <- "tmp.png"
     unlink(tmpfile)
@@ -1949,8 +1949,8 @@ ggbarplot <- function(mat, xlab="x", ylab="y", srt=0, main=NULL,
                       legend.pos = c(1,1), legend.cex = 1,
                       base_size=12, group.name="group")
 {
-    library(reshape2)
-    library(ggplot2)
+    require(reshape2)
+    require(ggplot2)
     if(NCOL(mat)==1) mat <- rbind(mat)
     mat <- mat[nrow(mat):1,,drop=FALSE]
     df <- reshape2::melt(t(mat), value.name = "value")
@@ -3159,7 +3159,7 @@ corclust <- function(x) {
 ## Override add_col_annotation to be able to suppress titles
 ##
 ##
-library(iheatmapr)
+require(iheatmapr)
 setMethod(add_col_annotation,
           c(p = "Iheatmap"),
           function(p,

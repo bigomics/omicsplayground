@@ -3,8 +3,8 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-library(ggplot2)
-library(patchwork)
+require(ggplot2)
+require(patchwork)
 
 ## just to list functions in this file
 viz.ClusterMarkers <- function(pgx){}

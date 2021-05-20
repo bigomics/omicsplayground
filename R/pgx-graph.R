@@ -3,12 +3,12 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-library(scran)
-library(igraph)
+require(scran)
+require(igraph)
 
 pgx.computePathscores <- function(graph, strict.pos=TRUE)
 {
-    library(igraph)
+    require(igraph)
     if(0) {
         graph <- ngs$omicsnet
         graph <- ngs$omicsnet.reduced
@@ -76,7 +76,7 @@ pgx.computePathscores <- function(graph, strict.pos=TRUE)
 pgx.computeShortestPath <- function(graph, contrast, niter=1, r=0.01,
                                     output="vpath")
 {
-    library(igraph)
+    require(igraph)
     if(0) {
         graph <- ngs$omicsnet
         graph <- ngs$omicsnet.reduced
@@ -312,9 +312,9 @@ pgx.reduceOmicsGraph <- function(ngs)
     ##
     ## make bipartite igraph object
     ##======================================================================
-    library(scran)
-    library(igraph)
-    ##library(threejs)
+    require(scran)
+    require(igraph)
+    ##require(threejs)
 
     ## get full omics graph
     gr <- ngs$omicsnet
