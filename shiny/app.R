@@ -9,11 +9,11 @@
 ##                                                                     ##
 #########################################################################
 
-library(shiny)
-library(shinyjs)
-library(shinyWidgets)
-library(plotly)
-library(shinybusy)
+require(shiny)
+require(shinyjs)
+require(shinyWidgets)
+require(plotly)
+require(shinybusy)
 
 message("\n\n")
 message("###############################################################")
@@ -191,7 +191,7 @@ server = function(input, output, session) {
     message("[MAIN] calling boards...")
     message("[MAIN] USER_MODE = ", USER_MODE)
     
-    library(firebase)
+    require(firebase)
     firebase=firebase2=NULL
     if(AUTHENTICATION=="firebase") {
         firebase  <- FirebaseEmailPassword$new()
