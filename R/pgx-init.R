@@ -14,7 +14,7 @@ source(file.path(RDIR,"pgx-functions.R"),local=TRUE)  ## pass local vars
 
 ## Caching the init files
 INIT.FILE <- file.path(FILES,"global-init.rda")
-INIT.FILE <- "/tmp/global-init.rda" ## avoid rw permission
+INIT.FILE <- "../lib/global-init.rda" ## avoid rw permission
 ##unlink(INIT.FILE)
 INIT.FILE
 file.exists(INIT.FILE)
@@ -94,8 +94,8 @@ if(file.exists(INIT.FILE)) {
     ##-----------------------------------------------------------------------------
     ## Colors
     ##-----------------------------------------------------------------------------
-    library(ggsci)
-    library(RColorBrewer)
+    require(ggsci)
+    require(RColorBrewer)
     COLORS = rep(brewer.pal(8,"Set2"),99)
     COLORS = rep(c(pal_npg("nrc", alpha = 0.7)(10),
                    pal_aaas("default", alpha = 0.7)(10),
