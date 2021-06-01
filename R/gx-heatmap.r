@@ -74,6 +74,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                         col.annot=NULL, row.annot=NULL, annot.ht=3,
                         nmax=1000, cmax=NULL, main=" ", verbose=1, denoise = 0,
                         cexRow=1, cexCol=1, mar=c(5,5,5,5), rownames_width = 25,
+                        rowlab.maxlen = 20,
                         title_cex=1.2, column_title_rot=0, column_names_rot=90,
                         show_legend=TRUE, show_key=TRUE, zlim=NULL,
                         show_rownames=nmax, lab.len=80, key.offset=c(0.05,1.01),
@@ -92,16 +93,18 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         col.dist.method="euclidean";
         plot.method="heatmap.2";
         ## col=bluered(64);
-        scale="row"; softmax=0; order.groups="clust"; symm.scale=FALSE
+        scale="row"; softmax=0; order.groups="clust"; symm.scale=FALSE;
         ## Rowv = NA; Colv = NA;
         cluster_rows=TRUE; cluster_columns=TRUE; sort_columns=NULL;
         col.annot=NULL; row.annot=NULL; annot.ht=3;
         nmax=1000; cmax=NULL; main=" "; verbose=1; denoise = 0;
-        cexRow=1; cexCol=1; mar=c(5,5,5,5);
-        title_cex=1.2; column_title_rot=0;
-        show_legend=TRUE; show_key=TRUE;
-        show_rownames=60; lab.len=80;  key.offset=c(0.05,1.01)
-        show_colnames=NULL; use.nclust=FALSE;
+        cexRow=1; cexCol=1; mar=c(5,5,5,5); rownames_width = 25;
+        rowlab.maxlen = 20;
+        title_cex=1.2; column_title_rot=0; column_names_rot=90;
+        show_legend=TRUE; show_key=TRUE; zlim=NULL;
+        show_rownames=nmax; lab.len=80; key.offset=c(0.05,1.01);
+        show_colnames=NULL; use.nclust=FALSE
+        
     }
     
     if(verbose>1) cat("input.dim.gx=",dim(gx),"\n")
@@ -136,7 +139,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     if(!is.null(col.annot)) {
         col.annot <- col.annot[,which(colMeans(is.na(col.annot))<1),drop=FALSE]
         col.annot <- col.annot[jj2,,drop=FALSE]
-        col.annot <- type.convert(col.annot)
+        ##col.annot <- type.convert(col.annot)
     }
     
     fillNA <- function(x) {
@@ -237,7 +240,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         x[which(x=="")] <- NA
         x <- x[!is.na(x)]
         suppressWarnings(nx <- as.numeric(as.character(x)))
-        (length(nx)>0 && mean(!is.na(nx)) > 0.5)
+        (length(nx)>0 && mean(!is.na(nx)) >= 0.99)
     }
     
     ## column  HeatmapAnnotation objects
@@ -248,7 +251,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         col.pars = lapply(data.frame(col.annot),function(x) sort(unique(x[!is.na(x)])))
         ##npar = apply(col.annot,2,function(x) length(unique(x[!is.na(x)])))
         npar <- sapply(col.pars, length)
-
+        par.type <- sapply(col.annot,class)        
         col.colors = list()
         i=1
         for(i in 1:length(npar)) {
@@ -257,7 +260,8 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
             if(npar[i]==1) klrs = "#E6E6E6"
             names(klrs) <- col.pars[[i]]
             x <- col.annot[,i]
-            is.number <- isanumber(x)
+            ##is.number <- isanumber(x)
+            is.number <- (par.type[i] %in% c("integer","numeric"))
             if(npar[i]>3 & !is.number) {
                 klrs = rep(RColorBrewer::brewer.pal(8,"Set2"),99)[1:npar[i]]
                 names(klrs) <- col.pars[[i]]
@@ -458,7 +462,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     }
     
     rownames.ha <- NULL
-    if( FALSE && show_rownames < nrow(gx) && show_rownames>0 ) {
+    if(FALSE && show_rownames < nrow(gx) && show_rownames>0 ) {
         ## Show rownames with linked lines
         ## !!!!!!! BUGGY!!!!!!!!!!!!!
         if(1 && !is.null(split.idx) && length(unique(split.idx))>1) {
@@ -484,7 +488,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     if(1 && is.null(rownames.ha) && show_rownames>0 ) {
         ## empty matrix just for rownames on the far right
         empty.mat = matrix(nrow = nrow(gx), ncol = 0)
-        rowlab = substring(trimws(rownames(gx)),1,20)
+        rowlab = substring(trimws(rownames(gx)),1,rowlab.maxlen)
         ## rowlab = paste0(rowlab,'............')
         rownames(empty.mat) = rowlab
         if(!is.null(col.annot)) rowlab <- c(rowlab, colnames(col.annot))

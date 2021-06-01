@@ -14,16 +14,21 @@ source(file.path(RDIR,"pgx-functions.R"),local=TRUE)  ## pass local vars
 
 ## Caching the init files
 INIT.FILE <- file.path(FILES,"global-init.rda")
-INIT.FILE <- "../lib/global-init.rda" ## avoid rw permission
+INIT.FILE <- "../cache/global-init.rda" ## avoid rw permission
 ##unlink(INIT.FILE)
 INIT.FILE
+
 file.exists(INIT.FILE)
 
-if(file.exists(INIT.FILE)) {    
-    message("[INIT] loading cached INIT file...")
-    load(INIT.FILE, verbose=1)    
-} else {
+init.start_time = Sys.time()
 
+if(1 && file.exists(INIT.FILE)) {    
+
+    message("[INIT] loading cached INIT file ",INIT.FILE)
+    load(INIT.FILE, verbose=1)    
+
+} else {
+    
     message("[INIT] no INIT file! building INIT from scratch.")
     oldvars <- ls()
 
@@ -43,6 +48,7 @@ if(file.exists(INIT.FILE)) {
     GSETS = gmt.all;remove(gmt.all)
 
     message("[INIT] parsing gene families...")
+
     FAMILIES <- pgx.getGeneFamilies(GENE.SYMBOL, FILES=FILES, min.size=10, max.size=9999)
     ##FAMILIES <- c(FAMILIES, list( "<LM22 markers>"=LM22_MARKERS,"<ImmProt markers>"=IMMPROT_MARKERS))
     fam.file <- file.path(FILES,"custom-families.gmt")
@@ -68,12 +74,12 @@ if(file.exists(INIT.FILE)) {
     ##-----------------------------------------------------------------------------
 
     load(file.path(FILES,"rna_tissue.rda"))  ## TISSUE and TISSUE.grp
-    IMMPROT <- read.csv(file.path(FILES,"ImmProt-signature.csv"),row.names=1)
 
     ##-----------------------------------------------------------------------------
     ## Immune cell markers
     ##-----------------------------------------------------------------------------
 
+    IMMPROT <- read.csv(file.path(FILES,"ImmProt-signature.csv"),row.names=1)
     IMMPROT_MARKERS <- rownames(read.csv(file.path(FILES,"immprot-signature1000.csv"),row.names=1))
     DICE_MARKERS <- rownames(read.csv(file.path(FILES,"DICE-signature1000.csv"),row.names=1))
     LM22 <- read.csv(file.path(FILES,"LM22.txt"),sep="\t",row.names=1)
@@ -109,10 +115,12 @@ if(file.exists(INIT.FILE)) {
     newvars <- setdiff(ls(), oldvars)
     newvars
 
-    message("[INIT] saving INIT file ", INIT.FILE)    
-    save( list=newvars, file=INIT.FILE)
-    
+    ## message("[INIT] saving INIT file ", INIT.FILE)    
+    ## save( list=newvars, file=INIT.FILE)    
 }
+
+init.load_time = round( Sys.time() - init.start_time, digits=3)
+message("[INIT] init load time = ",init.load_time, " ",attr(init.load_time,"units"))
 
 
 pgx.initialize <- function(pgx) {

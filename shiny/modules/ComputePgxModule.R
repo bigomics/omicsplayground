@@ -55,9 +55,9 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
 
             ## batch correction and extrs methods
             EXTRA.METHODS = c("deconv", "drugs", "wordcloud","connectivity")
-            EXTRA.NAMES = c("celltype deconvolution", "drugs enrichment",
-                            "wordcloud","experiment connectivity")
-            EXTRA.SELECTED = c("deconv","drugs","wordcloud")
+            EXTRA.NAMES = c("celltype deconvolution", "drugs connectivity",
+                            "wordcloud","experiment similarity")
+            EXTRA.SELECTED = c("deconv","drugs","wordcloud","connectivity")
 
             DEV.METHODS = c("noLM.prune")
             DEV.NAMES = c("noLM + prune")

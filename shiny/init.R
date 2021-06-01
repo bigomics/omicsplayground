@@ -3,7 +3,6 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-
 message("===============================================================")
 message("======================= init.R ================================")
 message("===============================================================")
@@ -19,20 +18,15 @@ names(ACCESS.LOG)
 sum(ACCESS.LOG$visitors$count)
 
 ##-----------------------------------------------------
-## Orca server
+## Initialize ORCA server
 ##-----------------------------------------------------
-
-message("*****************************************")
-message("***** starting local ORCA server ********")
-message("*****************************************\n")
-
 ## see: pgx-module.R
-# ORCA <- initOrca(launch=TRUE) 
-# class(ORCA)
-# if(is.null(ORCA)) {
-#     warning("##### FATAL:: Could not connect to ORCA server. Please start ORCA. #####")
-#     stop()
-# }
+ORCA <- initOrca(launch=TRUE) 
+class(ORCA)
+if(is.null(ORCA)) {
+    warning("##### FATAL:: Could not connect to ORCA server. Please start ORCA. #####")
+    stop()
+}
 
 ##======================================================================
 ##==================== FUNCTIONS =======================================

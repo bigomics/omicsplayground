@@ -26,13 +26,10 @@ COMPUTE.EXTRA=1
 QCFILTER=FALSE
 BATCHCORRECT=FALSE
 
-COMPARE="group"
-COMPARE="clusters"
-COMPARE="pheno"
 DOWNSAMPLE=0
 DOWNSAMPLE=100
 
-rda.file="../data/GSE72056-scmelanoma-v2.pgx"
+rda.file="../data/GSE72056-scmelanoma.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -234,6 +231,7 @@ if(PROCESS.DATA) {
     table(keep)
     ngs$counts <- ngs$counts[keep,]
     ngs$genes  <- ngs$genes[keep,]
+    ngs$X      <- edgeR::cpm(ngs$counts, log=TRUE)
     dim(ngs$genes)
     
     ##-------------------------------------------------------------------
@@ -249,10 +247,10 @@ if(PROCESS.DATA) {
     MAX.GENES
     if(TRUE && MAX.GENES>0) {
         cat("shrinking data matrices: n=",MAX.GENES,"\n")
-        logcpm = edgeR::cpm(ngs$counts, log=TRUE)
-        jj <- head( order(-apply(logcpm,1,sd)), MAX.GENES )  ## how many genes?
+        jj <- head( order(-apply(ngs$X,1,sd)), MAX.GENES )  ## how many genes?
         head(jj)
         ngs$counts <- ngs$counts[jj,]
+        ngs$X <- ngs$X[jj,]
         ngs$genes  <- ngs$genes[jj,]
     }
 
@@ -262,54 +260,22 @@ if(PROCESS.DATA) {
 
 if(DIFF.EXPRESSION) {
 
-    COMPARE
-
-    ## ----------------- test genes ------------------------------------------
-    if(COMPARE=="pheno") {
-        ## use phenotype directly
-
-        head(ngs$samples)
-        ##table(ngs$samples$cell.type)
-        table(ngs$samples$malignant)
-        head(ngs$samples)
-
-        ##contr.matrix <- makeDirectContrasts(
-        ##    ngs$samples[,c("malignant","cluster","P2RX7","PDCD1","CD274","CD8A")],
-        ##    ref=c("no","cl1","neg","neg","neg","neg") )
-        contr <- makeDirectContrasts(
-            Y = ngs$samples[,c("malignant","cluster","BRAF","cell.type")],
-            ref = c("no","others","neg","others") )
-        head(contr$contr.matrix)
-        contr.matrix = contr$contr.matrix
-        ##colnames(contr.matrix) <- sub(".*:","",colnames(contr.matrix))  ## strip prefix
-        colnames(contr.matrix)
-        ngs$samples$group <- contr$group
-        ##apply(contr.matrix,2,table)
-
-    } else if(COMPARE=="clusters") {
-        
-        ## make model matrix for group vs. rest
-        clusters <- ngs$samples$cluster
-        table(clusters)
-        contr.matrix <- makeClusterContrasts(clusters)
-        contr.matrix
-        ngs$samples$orig.group <- ngs$samples$group
-        ngs$samples$group <- clusters
-        
-    } else if(COMPARE=="groups") {
-
-        levels = unique(as.character(ngs$samples$group))
-        levels
-        table(ngs$samples$group)
-        contr.matrix <- makeFullContrasts(levels)
-        dim(contr.matrix)
-        contr.matrix
-
-        ##contr.matrix = contr.matrix[,1:3]
-    } else {
-        stop("COMPARE error")
-    }
+    table(ngs$samples$malignant)
+    head(ngs$samples)
     
+    ##contr.matrix <- makeDirectContrasts(
+    ##    ngs$samples[,c("malignant","cluster","P2RX7","PDCD1","CD274","CD8A")],
+    ##    ref=c("no","cl1","neg","neg","neg","neg") )
+    contr <- makeDirectContrasts(
+        Y = ngs$samples[,c("malignant","cluster","BRAF","cell.type")],
+        ref = c("no","others","neg","others") )
+    head(contr$contr.matrix)
+    ##contr.matrix = contr$contr.matrix
+    contr.matrix = contr$exp.matrix
+    ##colnames(contr.matrix) <- sub(".*:","",colnames(contr.matrix))  ## strip prefix
+    colnames(contr.matrix)
+    ##ngs$samples$group <- contr$group
+    ##apply(contr.matrix,2,table)    
     head(contr.matrix)
     
     ngs$timings <- c()

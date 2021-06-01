@@ -373,14 +373,13 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
         )
 
         ## NEED RETHINK: for the moment we use combination of t-SNE/UMAP
-        posx <- scale(do.call(cbind,ngs$cluster$pos))
+        ## posx <- scale(do.call(cbind,ngs$cluster$pos))
         posx <- scale(cbind(ngs$cluster$pos[["umap2d"]],ngs$cluster$pos[["tsne2d"]]))
-        ##posx <- ngs$cluster$pos[["umap2d"]]
-        ##posx <- ngs$cluster$pos[["tsne2d"]]        
+        ##posx <- scale(cbind(ngs$cluster$pos[["umap3d"]],ngs$cluster$pos[["tsne3d"]]))
         idx <- pgx.findLouvainClusters(posx, level=1, prefix='c', small.zero=0.0)
         table(idx)
         if(length(unique(idx))==1) {
-            ## try again if single cluster...
+            ## try again with finer settings if single cluster...
             idx <- pgx.findLouvainClusters(posx, level=2, prefix='c', small.zero=0.01)
         }
         ngs$samples$cluster <- idx        

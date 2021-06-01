@@ -187,7 +187,7 @@ viz.ClusterMarkers <- function(pgx, pheno1, pheno2, n=NULL, pos="tsne2d",
 
 
 ##pos="tsne2d";phenotypes=NULL;legend.pos="bottomleft"
-viz.PhenoMaps <- function(pgx, phenotypes=NULL, pos=NULL, cex=1,
+viz.PhenoMaps <- function(pgx, phenotypes=NULL, pos=NULL, cex=1, label=FALSE,
                              legend.pos = "bottomleft", theme=NULL,
                              title=NULL, subtitle=NULL, caption=NULL)
 {
@@ -204,12 +204,15 @@ viz.PhenoMaps <- function(pgx, phenotypes=NULL, pos=NULL, cex=1,
     } else {
         phenotypes <- intersect(phenotypes, colnames(pgx$samples))
     }
-
+    hilight2 = NULL
+    if(label==TRUE) hilight2 = rownames(posx)
+    
     plt <- list()
     for(ph in phenotypes) {
         y <- pgx$samples[,ph]
         p <- pgx.scatterPlotXY(
             posx, var=y, title=ph, cex=cex, legend.pos=legend.pos,
+            hilight2 = hilight2,
             plotlib="ggplot", theme=theme)
         ## if(!is.null(theme)) { p <- p + theme }
         p <- p + theme( plot.margin = ggplot2::margin(0,8,0,8) )
