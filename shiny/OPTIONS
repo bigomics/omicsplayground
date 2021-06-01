@@ -10,6 +10,7 @@ MAX_GENES       = 20000
 MAX_GENESETS    = 5000
 #WATERMARK       = TRUE
 #BOARDS_ENABLED = load,view,clust,expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap
-#BOARDS_DISABLED = wgcna,tcga,multi,system
-BOARDS_DISABLED = corsa,multi,system,wgcna,tcga
+#BOARDS_DISABLED = expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap,corsa,multi,system,wgcna,tcga
+#BOARDS_DISABLED = corsa,multi,system,wgcna,tcga
+BOARDS_DISABLED = corsa,multi,system
 

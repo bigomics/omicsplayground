@@ -11,7 +11,7 @@ gset.cor <- function(rnk, gset, compute.p=FALSE) {
     gset.rankcor(rnk=rnk, gset=gset, compute.p=compute.p, no.rank=FALSE)
 }
 
-gset.rankcor <- function(rnk, gset, compute.p=FALSE, no.rank=FALSE)
+gset.rankcor <- function(rnk, gset, compute.p=FALSE, use.rank=FALSE)
 {
     if(!any(class(gset) %in% c("Matrix","dgCMatrix","matrix","array")) ) {
         stop("gset must be a matrix")
@@ -23,13 +23,16 @@ gset.rankcor <- function(rnk, gset, compute.p=FALSE, no.rank=FALSE)
     if(is.vec) rnk <- matrix(rnk,ncol=1,dimnames=list(names(rnk),'rnk'))
     dim(rnk)
     head(rnk)
+    n1 <- sum(rownames(rnk) %in% colnames(gset), na.rm=TRUE)
+    n2 <- sum(rownames(rnk) %in% rownames(gset), na.rm=TRUE)
+    if( n1 > n2 ) gset <- t(gset)
     
     gg <- intersect(rownames(gset),rownames(rnk))
     rnk1 <- rnk[gg,,drop=FALSE]
-    if(no.rank==FALSE) {
+    if(use.rank) {
         rnk1 <- apply(rnk1, 2, rank )
     }
-    rho1 <- qlcMatrix::corSparse( gset[gg,], rnk1)
+    rho1 <- qlcMatrix::corSparse(gset[gg,], rnk1)
     rownames(rho1) <- colnames(gset)
     colnames(rho1) <- colnames(rnk1)
     
@@ -46,9 +49,9 @@ gset.rankcor <- function(rnk, gset, compute.p=FALSE, no.rank=FALSE)
         z1 = abs(rho1)/sd(rho2,na.rm=TRUE)
         pv = 2*pnorm(-z1)
         qv = apply(pv, 2, p.adjust, method='fdr')
-        df = list( rho=rho1, p.value=pv, q.value=qv)
+        df = list(rho=rho1, p.value=pv, q.value=qv)
     } else {
-        df = list( rho=rho1, p.value=NA, q.value=NA)
+        df = list(rho=rho1, p.value=NA, q.value=NA)
     }    
     df
 }

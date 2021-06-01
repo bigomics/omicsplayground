@@ -15,6 +15,7 @@ require(shinyWidgets)
 require(plotly)
 require(shinybusy)
 
+
 message("\n\n")
 message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
@@ -28,6 +29,7 @@ Sys.setlocale("LC_CTYPE","en_US.UTF-8")
 Sys.setlocale("LC_TIME","en_US.UTF-8")
 ##Sys.setlocale("LC_ALL", "C")  ## really??
 ##Sys.setenv("SHINYPROXY_USERNAME"="Test Person")
+main.start_time <- Sys.time()
 
 envcat <- function(var) message(var," = ",Sys.getenv(var))
 envcat("SHINYPROXY_USERNAME")
@@ -48,7 +50,6 @@ message("*********** SETTING GLOBAL VARIABLES **********")
 message("***********************************************")
 
 source("global.R")
-
 message("OPG =",OPG)
 message("RDIR =",RDIR)
 message("FILES =",FILES)
@@ -58,12 +59,19 @@ message("DEBUG = ",DEBUG)
 message("WATERMARK = ",WATERMARK)
 message("SHINYPROXY = ",SHINYPROXY)
 
-src.local=TRUE  ## need???
-src.local=FALSE  ## need???
-source(file.path(RDIR,"pgx-include.R"),local=src.local)  ## pass local vars
-source(file.path(RDIR,"pgx-functions.R"), local=src.local)  ## pass local vars
-source(file.path(RDIR,"pgx-files.R"), local=src.local)  ## pass local vars
-source(file.path(RDIR,"pgx-init.R"),local=src.local)     ## pass local vars
+src.local=TRUE  ## local or not-local, that's the question...
+src.local=FALSE ## local or not-local, that's the question...
+source(file.path(RDIR,"pgx-include.R"),local=src.local)    ## lots of libraries and source()
+source(file.path(RDIR,"pgx-functions.R"), local=src.local) ## functions...
+source(file.path(RDIR,"pgx-files.R"), local=src.local)     ## file functions
+source(file.path(RDIR,"pgx-init.R"),local=src.local)       ## global variables
+
+if(0) {
+
+    save.image(file="../cache/image.RData")
+    system.time( load(file="../cache/image.RData") )
+
+}
 
 message("\n")
 message("************************************************")
@@ -173,23 +181,23 @@ if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
 MAINTABS = c("DataView","Clustering","Expression","Enrichment",
              "Signature","CellProfiling","DEV")
 
-if(0) {
-    save.image(file="../cache/image.RData")
-    system.time( load(file="../cache/image.RData") )
-}
+main.init_time <- round(Sys.time() - main.start_time,digits=4)
+main.init_time
+message("[MAIN] total init time = ",main.init_time," ",attr(main.init_time,"units"))
 
 ## --------------------------------------------------------------------
 ## --------------------------- SERVER ---------------------------------
 ## --------------------------------------------------------------------
 
 server = function(input, output, session) {
-    
+   
     message("\n========================================================")
     message("===================== SERVER ===========================")
     message("========================================================\n")
-
-    message("[MAIN] calling boards...")
-    message("[MAIN] USER_MODE = ", USER_MODE)
+    
+    message("[SERVER] calling boards...")
+    message("[SERVER] USER_MODE = ", USER_MODE)
+    server.start_time <- Sys.time()
     
     require(firebase)
     firebase=firebase2=NULL
@@ -232,8 +240,8 @@ server = function(input, output, session) {
         env[["qa"]] <- callModule( QuestionBoard, "qa", lapse = -1)
     }
     
-    ## message("[MAIN] all boards called:",paste(names(env),collapse=" "))
-    message("[MAIN] boards enabled:",paste(names(which(ENABLED)),collapse=" "))
+    ## message("[SERVER] all boards called:",paste(names(env),collapse=" "))
+    message("[SERVER] boards enabled:",paste(names(which(ENABLED)),collapse=" "))
     ## outputOptions(output, "clust", suspendWhenHidden=FALSE) ## important!!!
     
     output$current_dataset <- renderText({
@@ -255,7 +263,7 @@ server = function(input, output, session) {
             return(NULL)
         }
 
-        message("[MAIN] dataset changed. reconfiguring menu...")
+        message("[SERVER] dataset changed. reconfiguring menu...")
         ## show all main tabs
         lapply(MAINTABS, function(m) showTab("maintabs",m))
         
@@ -295,8 +303,12 @@ server = function(input, output, session) {
         fileRequire("tcga_matrix.h5", "maintabs", "TCGA survival (beta)")         
         if(!is.null(ACCESS.LOG)) showTab("load-tabs","Visitors map")                    
 
-        message("[MAIN] reconfiguring menu done.")        
+        message("[SERVER] reconfiguring menu done.")        
     })
+
+    server.init_time <- round(Sys.time() - server.start_time, digits=4)    
+    message("[SERVER] server.init_time = ",server.init_time," ",attr(server.init_time,"units"))
+
 }
 
 ## --------------------------------------------------------------------

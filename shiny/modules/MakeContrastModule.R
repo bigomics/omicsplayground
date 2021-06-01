@@ -54,7 +54,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
         id,
         function(input, output, session) {            
             
-            message("*** MakeContrastServer ***")
+            message("[MakeContrastServer] moduleServer called...")
             ns <- session$ns
             rv <- reactiveValues(contr=NULL, pheno=NULL)
             

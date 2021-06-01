@@ -331,7 +331,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 if(status.ok!="OK") {
                     frame()
                     status.ds <- check["counts.csv","description"]
-                    msg <- paste(toupper(status.ok),"\n\n","Please upload 'counts.csv'",
+                    msg <- paste(toupper(status.ok),"\n\n","(Required) Upload 'counts.csv'",
                                  tolower(status.ds))
                     text(0.5,0.5,paste(strwrap(msg,30),collapse="\n"),col="grey25")
                     box(lty=2, col="grey60")
@@ -360,7 +360,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 if(status.ok!="OK") {
                     frame()
                     status.ds <- check["samples.csv","description"]
-                    msg <- paste(toupper(status.ok),"\n\n","Please upload 'samples.csv'",
+                    msg <- paste(toupper(status.ok),"\n\n","(Required) Upload 'samples.csv'",
                                  tolower(status.ds))
                     text(0.5,0.5,paste(strwrap(msg,30),collapse="\n"),col="grey25")
                     box(lty=2, col="grey60")
@@ -418,7 +418,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 if( status.ok!="OK" || !has.contrasts) {
                     frame()
                     status.ds <- check["contrasts.csv","description"]
-                    msg <- paste(toupper(status.ok),"\n\n","Please upload 'contrasts.csv'",
+                    msg <- paste(toupper(status.ok),"\n\n","(Optional) Upload 'contrasts.csv'",
                                  tolower(status.ds))
                     ##text(0.5,0.5,"Please upload contrast file 'contrast.csv' with conditions on rows, contrasts as columns")
                     text(0.5,0.5,paste(strwrap(msg,30),collapse="\n"),col="grey25")
@@ -517,7 +517,8 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     message("[upload_files] getting matrices from CSV")
 
                     ii <- grep("csv$",input$upload_files$name)
-                    ii <- grep("sample|count|contrast|expression",input$upload_files$name)
+                    ii <- grep("sample|count|contrast|expression",
+                               input$upload_files$name, ignore.case=TRUE)
                     if(length(ii)==0) return(NULL)
                     
                     inputnames  <- input$upload_files$name[ii]
@@ -531,7 +532,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                             fn2 <- uploadnames[i]
                             matname <- NULL
                             df <- NULL
-                            if(grepl("count",fn1)) {
+                            if(grepl("count",fn1, ignore.case=TRUE)) {
                                 message("[upload_files] count csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
                                 df0 <- read.csv2(fn2, check.names=FALSE, stringsAsFactors=FALSE)
@@ -544,7 +545,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                                     rownames(df) <- as.character(df0[,1])
                                     matname <- "counts.csv"
                                 }
-                            } else if(grepl("expression",fn1)) {
+                            } else if(grepl("expression",fn1,ignore.case=TRUE)) {
                                 message("[upload_files] expression csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
                                 df0 <- read.csv2(fn2, check.names=FALSE, stringsAsFactors=FALSE)
@@ -556,7 +557,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                                     df <- 2**df
                                     matname <- "counts.csv"
                                 }
-                            } else if(grepl("sample",fn1)) {
+                            } else if(grepl("sample",fn1,ignore.case=TRUE)) {
                                 message("[upload_files] sample csv : fn1 = ",fn1)
                                 df <- read.csv2(fn2, row.names=1, check.names=FALSE,
                                                 stringsAsFactors=FALSE)
@@ -564,7 +565,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                                 if(nrow(df)>1 && NCOL(df)>=1) {
                                     matname <- "samples.csv"
                                 }
-                            } else if(grepl("contrast",fn1)) {
+                            } else if(grepl("contrast",fn1,ignore.case=TRUE)) {
                                 message("[upload_files] contrast csv : fn1 = ",fn1)
                                 df <- read.csv2(fn2, row.names=1, check.names=FALSE,
                                                 stringsAsFactors=FALSE)

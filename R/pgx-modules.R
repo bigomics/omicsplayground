@@ -39,7 +39,7 @@ initOrca <- function(launch=TRUE) {
     responding.process = FALSE
     orca.server = NULL
     
-    ## See if an orca-server docker is running
+    ## See if an orca-server docker is running --------------------------------------
     srv.list <- c("http://orca-server:9091","http://localhost:9091")
     srv.responding <- sapply(srv.list, function(s)
         class(try(httr::POST(s, body=plotly:::to_JSON("")),silent=TRUE))!="try-error")
@@ -51,7 +51,7 @@ initOrca <- function(launch=TRUE) {
     message("[initOrca] dockerized ORCA is responding = ",responding.docker)
     message("[initOrca] dockerized ORCA server = ", paste(orca.server,collapse=" "))
     
-    ## If not, we try to connect to local orca-server at port 5151
+    ## If not, we try to connect to local orca-server at port 5151 -----------------
     if(!responding.docker) {
         res.local <- try(httr::POST("http://localhost:5151", body=plotly:::to_JSON("")),silent=TRUE)
         responding.local <- class(res.local)=="response"
