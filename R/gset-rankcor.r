@@ -8,10 +8,10 @@
 ##========================================================================
 
 gset.cor <- function(rnk, gset, compute.p=FALSE) {
-    gset.rankcor(rnk=rnk, gset=gset, compute.p=compute.p, no.rank=FALSE)
+    gset.rankcor(rnk=rnk, gset=gset, compute.p=compute.p, use.rank=FALSE)
 }
 
-gset.rankcor <- function(rnk, gset, compute.p=FALSE, use.rank=FALSE)
+gset.rankcor <- function(rnk, gset, compute.p=FALSE, use.rank=TRUE)
 {
     if(!any(class(gset) %in% c("Matrix","dgCMatrix","matrix","array")) ) {
         stop("gset must be a matrix")

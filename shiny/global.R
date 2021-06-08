@@ -5,6 +5,13 @@
 
 ## we may eventually migrate all OPTIONS into this file
 
+if(1) {
+    ## being pedantic... (https://adv-r.hadley.nz)
+    options(warnPartialMatchDollar = TRUE)
+    options(warnPartialMatchArgs = TRUE)    
+    Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
+}
+
 message("[MAIN] reading global.R ...")
 
 ##OPG     = "~/Playground/omicsplayground"

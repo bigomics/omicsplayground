@@ -1184,7 +1184,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     if(1) {
         is.na1=is.na2=is.na3=0
         is.na1 <- rowMeans(is.na(X0)) > 0.9
-        if(!is.null(cX)) is.na2 <- rowMeans(is.na(cX)) > 0.9
+        if(!is.null(cX))  is.na2 <- rowMeans(is.na(cX)) > 0.9
         if(!is.null(cX2)) is.na3 <- rowMeans(is.na(cX2)) > 0.9
         sel <- which(!is.na1 & !is.na2 & !is.na3)
         X0 <- X0[sel,,drop=FALSE]

@@ -15,7 +15,6 @@ require(shinyWidgets)
 require(plotly)
 require(shinybusy)
 
-
 message("\n\n")
 message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
@@ -67,10 +66,8 @@ source(file.path(RDIR,"pgx-files.R"), local=src.local)     ## file functions
 source(file.path(RDIR,"pgx-init.R"),local=src.local)       ## global variables
 
 if(0) {
-
     save.image(file="../cache/image.RData")
     system.time( load(file="../cache/image.RData") )
-
 }
 
 message("\n")
@@ -100,8 +97,8 @@ SHOW_QUESTIONS = FALSE
 ##USER_MODE  = opt$USER_MODE
 AUTHENTICATION = opt$AUTHENTICATION
 
-DEV = (dir.exists("modulesx")) ### !!!!!!! OVERRIDE
-DEV = FALSE
+DEV = (DEV && dir.exists("modulesx")) 
+##DEV = FALSE
 if(DEV) {
     message('****************** DEVELOPER MODE ********************')
 }
@@ -139,7 +136,7 @@ source("modules/UploadModule.R",local=src.local)
 
 BOARDS <- c("load","view","clust","expr","enrich","isect","func",
             "word","drug","sig","scell","cor","bio","cmap",
-            "wgcna", "tcga","system","multi","qa","corsa")
+            "wgcna", "tcga","multi","system","qa","corsa")
 if(is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED = BOARDS
 if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
 
@@ -211,7 +208,7 @@ server = function(input, output, session) {
                     "comparisons" = opt$MAX_COMPARISONS,
                     "genes" = opt$MAX_GENES,
                     "genesets" = opt$MAX_GENESETS)
-    env <- list()  ## communication environment
+    env <- list()  ## communication "environment"
     env[["load"]]   <- callModule(
         LoadingBoard, "load", max.limits = max.limits,
         authentication = AUTHENTICATION, enable_delete = opt$ENABLE_DELETE,

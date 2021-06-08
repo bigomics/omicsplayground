@@ -1,0 +1,60 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
+## Start from base image, update git code and add data
+## folder. Create docker ready to be deployed.
+
+#------------------------------------------------------------
+# Start from lastest testing image
+#------------------------------------------------------------
+
+FROM bigomics/omicsplayground:testing
+##FROM bigomics/omicsplayground:v2.3.0
+
+#------------------------------------------------------------
+# Install any extra (forgotten...) packages since base
+#------------------------------------------------------------
+
+# RUN apt install -y xvfb
+# RUN R -e "devtools::install_version('mnormt', version='1.5-7')" \
+#    && R -e "install.packages(c())"
+# RUN R -e "install.packages(c('shinythemes','shinybusy'))"
+# RUN R -e "BiocManager::install(c('TxDb.Hsapiens.UCSC.hg19.knownGene','TxDb.Mmusculus.UCSC.mm10.knownGene','WGCNA'))"
+# RUN pip3 install umap-learn
+
+#------------------------------------------------------------
+# Update code from GitHub
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+#RUN git pull
+COPY omicsplayground/shiny/ shiny/
+COPY omicsplayground/R/ R/
+
+#------------------------------------------------------------
+# Copy developer code
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+COPY omicsplayground-dev/modulesx/ shiny/modulesx/
+COPY omicsplayground-dev/modulesx/global.R shiny/global.R
+
+#------------------------------------------------------------
+# Copy any extra data sets into Docker image
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+## RUN R -e "setwd('scripts');source('build-datasets.R')"
+## COPY data/geiger2016-arginine.pgx data/GSE72056-scmelanoma.pgx \
+##   data/GSE22886-immune.pgx data/
+## RUN R -e "setwd('data');source('init.R')"
+
+#------------------------------------------------------------
+# Update configuration files into the Docker image
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+COPY omicsplayground/docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
+COPY omicsplayground/docker/shiny-server.sh /usr/bin/shiny-server.sh
+RUN chmod ugo+rwX /tmp && chmod o+t /tmp
+
+EXPOSE 3838
+CMD ["/usr/bin/shiny-server.sh"]
