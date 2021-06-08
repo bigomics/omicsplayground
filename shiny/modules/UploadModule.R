@@ -272,6 +272,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 ## Monitor for changes in the contrast matrix and if
                 ## so replace the uploaded reactive values.
                 ##
+                message("[observe:modified_ct()] reacted...")                
                 modct <- modified_ct()
                 message("[observe:modified_ct()] dim(modct$contr) = ",dim(modct$contr))
                 uploaded$contrasts.csv <- modct$contr
@@ -462,9 +463,11 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
             ##========================== OBSERVERS ================================
             ##=====================================================================            
             if(0) {
-                fn2='~/Projects/goutham-csverror/counts.csv'
-                fn2='~/Projects/goutham-csverror/samples.csv'
-                fn2='~/Projects/goutham-csverror/contrasts.csv'
+                fn1='~/Downloads/counts.csv'
+                fn2='~/Downloads/samples.csv'
+                fn3='~/Downloads/contrasts.csv'
+                uploadnames=inputnames=c(fn1,fn2)
+                uploadnames=inputnames=c(fn1,fn2,fn3)
                 
                 counts=fread.csv('~/Projects/goutham-csverror/counts.csv')
                 samples=read.csv('~/Projects/goutham-csverror/samples.csv',row.names=1)
@@ -527,26 +530,27 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     message("[upload_files] inputnames = ",inputnames)
                     message("[upload_files] uploadnames = ",uploadnames)                        
                     if(length(uploadnames)>0) {
+                        i=1
                         for(i in 1:length(uploadnames)) {
                             fn1 <- inputnames[i]
                             fn2 <- uploadnames[i]
                             matname <- NULL
                             df <- NULL
                             if(grepl("count",fn1, ignore.case=TRUE)) {
-                                message("[upload_files] count csv : fn1 = ",fn1)
+                                message("[upload_files] counts.csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
                                 df0 <- read.csv2(fn2, check.names=FALSE, stringsAsFactors=FALSE)
-                                message("[upload_files] count csv : 1 : dim(df0) = ",
+                                message("[upload_files] counts.csv : 1 : dim(df0) = ",
                                         paste(dim(df0),collapse='x'))
                                 if(nrow(df0)>1 && NCOL(df0)>1) {
-                                    message("[upload_files] count csv : 2 : dim(df0) = ",
+                                    message("[upload_files] counts.csv : 2 : dim(df0) = ",
                                             paste(dim(df0),collapse='x'))
                                     df <- as.matrix(df0[,-1])
                                     rownames(df) <- as.character(df0[,1])
                                     matname <- "counts.csv"
                                 }
                             } else if(grepl("expression",fn1,ignore.case=TRUE)) {
-                                message("[upload_files] expression csv : fn1 = ",fn1)
+                                message("[upload_files] expression.csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
                                 df0 <- read.csv2(fn2, check.names=FALSE, stringsAsFactors=FALSE)
                                 if(nrow(df0)>1 && NCOL(df0)>1) {
@@ -558,7 +562,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                                     matname <- "counts.csv"
                                 }
                             } else if(grepl("sample",fn1,ignore.case=TRUE)) {
-                                message("[upload_files] sample csv : fn1 = ",fn1)
+                                message("[upload_files] samples.csv : fn1 = ",fn1)
                                 df <- read.csv2(fn2, row.names=1, check.names=FALSE,
                                                 stringsAsFactors=FALSE)
                                 df <- type.convert(df)
@@ -566,7 +570,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                                     matname <- "samples.csv"
                                 }
                             } else if(grepl("contrast",fn1,ignore.case=TRUE)) {
-                                message("[upload_files] contrast csv : fn1 = ",fn1)
+                                message("[upload_files] contrasts.csv : fn1 = ",fn1)
                                 df <- read.csv2(fn2, row.names=1, check.names=FALSE,
                                                 stringsAsFactors=FALSE)
                                 if(nrow(df)>1 && NCOL(df)>=1) {
@@ -580,11 +584,24 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     }            
                 }
                 
-                message("[upload_files] names(matlist) = ",names(matlist))                                        
+                message("[upload_files] names(matlist) = ",names(matlist))
+                if("counts.csv" %in% names(matlist)) {
+                    ## Convert to gene names (need for biological effects)
+                    message("[upload_files] converting probe names to symbols")
+                    X0 <- matlist[['counts.csv']]
+                    pp <- rownames(X0)
+                    rownames(X0) <- probe2symbol(pp)
+                    sel <- !(rownames(X0) %in% c(NA,'','NA'))
+                    X0 <- X0[sel,]
+                    xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i,,drop=FALSE]))
+                    X0 <- do.call(rbind, xx)
+                    matlist[['counts.csv']] <- X0
+                }
+                
+                
                 ## put the matrices in the reactive values 'uploaded'        
                 files.needed = c("counts.csv","samples.csv","contrasts.csv")
-                matlist = matlist[ which(names(matlist) %in% files.needed) ]
-                
+                matlist = matlist[ which(names(matlist) %in% files.needed) ]                
                 if(length(matlist)>0) {
                     for(i in 1:length(matlist)) {
                         colnames(matlist[[i]]) <- gsub("[\n\t ]","_",colnames(matlist[[i]]))

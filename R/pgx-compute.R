@@ -7,7 +7,7 @@
 source(file.path(RDIR,"ngs-functions.R"))
 
 if(0) {
-    is.logx=NULL;do.cluster=TRUE;auto.scale=TRUE;only.known=TRUE
+    X=NULL;is.logx=NULL;do.cluster=TRUE;auto.scale=TRUE;only.known=TRUE
     max.genes=max.genesets=25000;lib.dir=FILES;progress=NULL;only.hugo=1;
     extra.methods=c("meta.go","deconv","infer","drugs","wordcloud")
     gx.methods=c("ttest.welch","trend.limma");gset.methods=c("fisher","gsva");
@@ -40,6 +40,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     ##-------------------------------------------------------------------
     ## clean up input files
     ##-------------------------------------------------------------------
+    samples <- data.frame(samples)
     counts <- as.matrix(counts)
     if(is.null(contrasts))  contrasts <- samples[,0]
     ## contrasts[is.na(contrasts)] <- 0
@@ -58,9 +59,10 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     }
 
     ## convert group-wise contrast to sample-wise
-    is.group1 <- all(rownames(contrasts) %in% samples$group)
-    is.group2 <- all(rownames(contrasts) %in% samples$condition)
-    is.group.contrast <- is.group1 || is.group2
+    is.group1=is.group2=FALSE
+    if("group" %in% colnames(samples)) is.group1 <- all(rownames(contrasts) %in% samples$group)
+    if("condition" %in% colnames(samples)) is.group2 <- all(rownames(contrasts) %in% samples$condition)
+    is.group.contrast <- (is.group1 || is.group2)
     if(is.group.contrast && nrow(contrasts)<nrow(samples)) {
         ## group
         message("[createPGX] converting group contrast to sample-wise contrasts...")

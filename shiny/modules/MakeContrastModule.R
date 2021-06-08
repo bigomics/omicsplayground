@@ -548,6 +548,8 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 ##caption = pca_caption_static
                 )
             
+            message("[MakeContrastServer] returning...")
+
             return(reactive({
                 if(is.null(rv$contr)) return(NULL)                
                 ##rv$contr           ## labeled contrast matrix

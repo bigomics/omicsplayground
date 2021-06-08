@@ -148,3 +148,13 @@ pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
             size="m", easyClose=FALSE, fade=TRUE))
 
 }
+
+pgx.showSmallModal <- function(msg="Please wait...")
+{    
+    showModal(modalDialog(
+        ##title = HTML("<center><h4>Omics Playground</h4></center>"),
+        title = NULL,
+        HTML("<br><center><p>",msg,"</p></center>"),
+        footer = NULL,
+        size="s", easyClose=FALSE, fade=FALSE))
+}

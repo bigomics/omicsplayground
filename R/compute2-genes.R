@@ -92,28 +92,32 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
 
     stat.group = NULL
     if(use.design) {
-
-        message("[compute.testGenesSingleOmics] contrasts on samples (use design)")
-        ##stat.group = rownames(pgx$samples)
-        ## convert sample-wise contrasts to group-wise contrasts
         message("[compute.testGenesSingleOmics] detecting stat groups...")        
         stat.group <- pgx.getConditions(contr.matrix, nmax=0)  ## !!!
         names(stat.group) <- rownames(contr.matrix)
         nlev <- length(unique(stat.group))
         nlev        
-        if( nlev < nrow(contr.matrix)) {
-            message("replacing contrast matrix...")
-            stat0 <- sort(unique(stat.group))
-            contr.matrix <- contr.matrix[match(stat0,stat.group),,drop=FALSE]
-            rownames(contr.matrix) <- stat0
-        }                        
+        if (nlev >= nrow(contr.matrix)) {
+            message("[compute.testGenesSingleOmics] cannot use groups, switching to no design")
+            use.design = FALSE
+        }
+    }
+    
+    if(use.design) {
+
+        message("[compute.testGenesSingleOmics] contrasts on groups (use design)")
+        ##stat.group = rownames(pgx$samples)
+        ## convert sample-wise contrasts to group-wise contrasts
+        message("replacing contrast matrix...")
+        stat0 <- sort(unique(stat.group))
+        contr.matrix <- contr.matrix[match(stat0,stat.group),,drop=FALSE]
+        rownames(contr.matrix) <- stat0
 
     } else if(!use.design) {
 
         message("[compute.testGenesSingleOmics] contrasts on samples (no design)")
         stat.group = rownames(contr.matrix)
         names(stat.group) <- rownames(contr.matrix)
-
     }
 
     ## table(stat.group)
@@ -343,7 +347,6 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     
     return(pgx)
 }
-
 
 compute.testGenesMultiOmics <- function(pgx, contr.matrix, max.features=1000, 
                                         test.methods=c("trend.limma","deseq2.wald","edger.qlf"),

@@ -110,7 +110,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 ##mnn.correct <- "MNN" %in% bc
                 mnn.correct  <- NULL
                 nnm.correct <- "NNM" %in% bc
-
+                
                 message("[event:bc_compute] 3 : mp = ",mp)
                 
                 ## if(length(mp) == 0) mp <- NULL
@@ -120,13 +120,10 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 
                 X0 <- X()
                 message("[event:bc_compute] 4a : dim(X0) =",paste(dim(X0),collapse="x") )
-
                 if(is.count) {
                     X0 <- log2(1 + X0)  ## X0: normalized counts (e.g. CPM)
                 }
-
-                ## only top 1000 to make it faster
-                ##X0 = head(X0[order(-apply(X0,1,sd)),], 1000)
+                
                 message("[event:bc_compute] 4b : dim(X0) =",paste(dim(X0),collapse="x") )
                 
                 out <- pgx.superBatchCorrect(
@@ -165,15 +162,15 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 out <- outobj()
                 if(is.null(out$X) || length(out$X)==0) return(NULL)
 
-                is.valid <- all(dim(out$X)==dim(X()) &&
-                                nrow(out$Y)==ncol(X()))
-                if(!is.valid) {
-                    message("[BatchCorrectServer] dim(out$X)=",dim(out$X))
-                    message("[BatchCorrectServer] dim(out$Y)=",dim(out$Y))
-                    message("[BatchCorrectServer] dim(X())=",dim(X()))                    
-                    message("[BatchCorrectServer] WARNING: matrices not valid!!")
-                    return(NULL)
-                }
+                ## is.valid <- all(dim(out$X)==dim(X()) &&
+                ##                 nrow(out$Y)==ncol(X()))
+                ## if(!is.valid) {
+                ##     message("[BatchCorrectServer] dim(out$X)=",dim(out$X))
+                ##     message("[BatchCorrectServer] dim(out$Y)=",dim(out$Y))
+                ##     message("[BatchCorrectServer] dim(X())=",dim(X()))                    
+                ##     message("[BatchCorrectServer] WARNING: matrices not valid!!")
+                ##     return(NULL)
+                ## }
                 
                 mp <- isolate(input$bc_modelpar)
                 p1 <- NULL
@@ -192,6 +189,9 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 cX <- out$X
                 rownames(X0) <- sub("[;|,].*","",rownames(X0))
                 rownames(cX) <- sub("[;|,].*","",rownames(cX))
+
+                message("[BatchCorrect] canvas.renderPlot : dim(X0) =",paste(dim(X0),collapse="x") )
+                message("[BatchCorrect] canvas.renderPlot : dim(cX) =",paste(dim(cX),collapse="x") )
                 
                 viz.BatchCorrectionMatrix(
                     X0=X0, pheno=out$Y, cX=cX, phenotype=p1,
