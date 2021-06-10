@@ -466,12 +466,18 @@ pgx.computePGX <- function(ngs,
     
     ## make proper contrast matrix
     contr.matrix <- ngs$contrasts
-    is.numcontrast <- all(unique(as.vector(contr.matrix)) %in% c(NA,-1,0,1))    
+    contr.values <- unique(as.vector(contr.matrix))
+    is.numcontrast <- all(contr.values %in% c(NA,-1,0,1))    
+    is.numcontrast <- is.numcontrast && (-1 %in% contr.values) && (1 %in% contr.values)
     is.numcontrast
     if(!is.numcontrast) {
         contr.matrix <- makeContrastsFromLabelMatrix(contr.matrix)
         contr.matrix <- sign(contr.matrix) ## sign is fine
     }
+
+    ## select valid contrasts
+    sel <- colSums(contr.matrix == -1)>0 & colSums(contr.matrix == 1)>0
+    contr.matrix <- contr.matrix[,sel,drop=FALSE]
     
     ##======================================================================
     ##======================================================================

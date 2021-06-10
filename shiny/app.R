@@ -341,9 +341,9 @@ TABVIEWS <- list(
 )
 
 if(DEV) {
-    TABVIEWS$corsa = tabView("CORSA (alpha)",CorsaInputs("corsa"),CorsaUI("corsa"))
-    TABVIEWS$system = tabView("Systems analysis",SystemInputs("system"),SystemUI("system"))
-    TABVIEWS$multi = tabView("Multi-level", MultiLevelInputs("multi"), MultiLevelUI("multi"))
+    TABVIEWS$corsa = tabView("CORSA (dev)",CorsaInputs("corsa"),CorsaUI("corsa"))
+    TABVIEWS$system = tabView("Systems analysis (dev)",SystemInputs("system"),SystemUI("system"))
+    TABVIEWS$multi = tabView("Multi-level (dev)", MultiLevelInputs("multi"), MultiLevelUI("multi"))
 }
 
 

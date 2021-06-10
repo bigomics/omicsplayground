@@ -288,8 +288,9 @@ pgx.selectTCGAstudies <- function(cancertype, variables)
     return(res)
 }
 
-genes=NULL;study="brca_tcga_pub"
-pgx.getTCGAdataset <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE)
+##genes=NULL;study="brca_tcga_pub";datatype='mrna';matrix_file="../libx/tcga_matrix.h5";from.h5=TRUE
+pgx.getTCGAdataset <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE,
+                               datatype='mrna')
 {
     ## For a specific TCGA study get the expression matrix and
     ## clinical data.
@@ -314,29 +315,35 @@ pgx.getTCGAdataset <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE
     mystudy <-  study[1]
     for(mystudy in study) {
 
-        cat("getting TCGA expression for",mystudy,"...\n")
+        cat("getting TCGA data for",mystudy,"...\n")
         
         mystudy
         ##myprofiles = "ov_tcga_rna_seq_v2_mrna"        
         myprofiles <- getGeneticProfiles(mycgds,mystudy)[,1]
         myprofiles
 
-        ## mrna datatypes
-        mrna.type <- "_mrna"
-        if(any(grepl("rna_seq_v2_mrna$", myprofiles))) mrna.type <- "rna_seq_v2_mrna"
-        if(any(grepl("rna_seq_mrna$", myprofiles))) mrna.type <- "rna_seq_mrna"
-        pr.mrna <- grep( paste0(mrna.type,"$"), myprofiles,value=TRUE)
-        pr.mrna
-        if(length(pr.mrna)==0) {
-            cat("WARNING:: could not find mRNA for",mystudy,"...\n")
-            next()
+        ## datatypes
+        datatype0 = datatype
+        if(datatype0=='mrna') {
+            datatype <- "_mrna"
+            if(any(grepl("rna_seq_v2_mrna$", myprofiles))) datatype <- "rna_seq_v2_mrna"
+            if(any(grepl("rna_seq_mrna$", myprofiles))) datatype <- "rna_seq_mrna"
+            pr.datatype <- grep( paste0(datatype,"$"), myprofiles,value=TRUE)
+            pr.datatype
+            if(length(pr.datatype)==0) {
+                cat("WARNING:: could not find mRNA for",mystudy,"...\n")
+                next()
+            }
+        } else {
+            warning(paste("datatype",datatype0,"not yet supported"))
+            return(NULL)
         }
         
         all.cases <- getCaseLists(mycgds,mystudy)[,1]
         all.cases
         ##if(!any(grepl("complete$",all.cases))) next        
         ##caselist <- grep("complete$",all.cases,value=TRUE)
-        caselist <- grep(paste0(mrna.type,"$"),all.cases,value=TRUE)
+        caselist <- grep(paste0(datatype,"$"),all.cases,value=TRUE)
         caselist
         samples <- NULL
         head(genes)
@@ -344,7 +351,7 @@ pgx.getTCGAdataset <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE
             cat("downloading...\n")
             ## If only a few genes, getProfileData is a faster way
             ##
-            expression <- t(getProfileData(mycgds, genes, pr.mrna, caselist))
+            expression <- t(getProfileData(mycgds, genes, pr.datatype, caselist))
             samples <- gsub("[.]","-",colnames(expression))
             colnames(expression) <- samples            
             dim(expression)
@@ -353,7 +360,7 @@ pgx.getTCGAdataset <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE
             ## For all genes, getProfileData cannot do and we use
             ## locally stored H5 TCGA data file from Archs4.
             ##
-            xx <- getProfileData(mycgds, "---", pr.mrna, caselist)
+            xx <- getProfileData(mycgds, "---", pr.datatype, caselist)
             samples <- gsub("[.]","-",colnames(xx))[3:ncol(xx)]
             head(samples)
 
@@ -497,4 +504,31 @@ pgx.getTCGA.multiomics.TOBEFINISHED <- function(studies, genes=NULL, batch.corre
             all.X[[mystudy]] <- X
         }        
     }
+}
+
+pgx.getTCGAproteomics <- function()
+{
+    ##BiocManager::install('GenomicDataCommons')
+    library(GenomicDataCommons)
+    GenomicDataCommons::status()
+
+    qfiles = files() %>% filter( ~ cases.project.project_id == 'TCGA-BRCA' &
+                            type == 'gene_expression' &
+                            analysis.workflow_type == 'HTSeq - Counts')
+    manifest_df = qfiles %>% manifest()
+    nrow(manifest_df)
+    head(manifest_df)
+    
+    fnames = gdcdata(manifest_df$id[1:2],progress=FALSE)    
+
+    resp = cases() %>% filter(~ project.project_id=='TCGA-BRCA' &
+                                  project.project_id=='TCGA-BRCA' ) %>%
+        facet('samples.sample_type') %>% aggregations()
+    resp$samples.sample_type    
+
+    resp = cases() %>% filter(~ project.project_id=='CPTAC-3' &
+                                  project.project_id=='CPTAC-3' ) %>%
+        facet('samples.sample_type') %>% aggregations()
+    resp$samples.sample_type    
+    
 }

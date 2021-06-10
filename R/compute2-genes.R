@@ -121,18 +121,20 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     }
 
     ## table(stat.group)
-    ## dim(contr.matrix)
+    dim(contr.matrix)
+    
+    if(1) {
+        message("[compute.testGenesSingleOmics] pruning unused contrasts")
+        ## take out any empty comparisons
+        sel <- which(colSums(contr.matrix>0) & colSums(contr.matrix<0))
+        contr.matrix <- contr.matrix[,sel,drop=FALSE]
+        contr.matrix[is.na(contr.matrix)] <- 0
+    }
+    dim(contr.matrix)
     
     ##-----------------------------------------------------------------------------
     ## normalize contrast matrix to zero mean and signed sums to one
     ##-----------------------------------------------------------------------------
-    message("[compute.testGenesSingleOmics] pruning unused contrasts")
-    
-    ## take out any empty comparisons
-    sel <- which(colSums(contr.matrix>0) & colSums(contr.matrix<0))
-    contr.matrix <- contr.matrix[,sel,drop=FALSE]
-    contr.matrix[is.na(contr.matrix)] <- 0
-    
     ## normalize?? why??
     message("[compute.testGenesSingleOmics] normalizing contrasts")
     for(i in 1:ncol(contr.matrix)) {

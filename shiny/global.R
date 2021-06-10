@@ -3,7 +3,7 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-## we may eventually migrate all OPTIONS into this file
+## should we migrate all OPTIONS into this file??
 
 if(1) {
     ## being pedantic... (https://adv-r.hadley.nz)
@@ -23,6 +23,7 @@ PGX.DIR = file.path(OPG,"data")
 
 USER_MODE = "pro"
 DEV       = FALSE
+DEV       = TRUE
 WATERMARK = FALSE
 DEBUG     = FALSE
 DEBUG     = TRUE
@@ -31,23 +32,6 @@ DEBUG     = TRUE
 SHINYPROXY = (Sys.getenv("SHINYPROXY_USERNAME")!="" && "omicsplayground" %in% dir("/"))
 USERNAME = "anonymous"
 if(SHINYPROXY) USERNAME = Sys.getenv("SHINYPROXY_USERNAME")
-
-if(0) {
-    TITLE           = "Omics Playground"
-    AUTHENTICATION  = "none"
-    ##AUTHENTICATION = password
-    ENABLE_UPLOAD   = TRUE
-    ENABLE_SAVE     = FALSE
-    ENABLE_DELETE   = FALSE
-    MAX_SAMPLES     = 20
-    MAX_COMPARISONS = 5
-    MAX_GENES       = 19999
-    WATERMARK       = TRUE
-    ##BOARDS_ENABLED = load,view,clust,expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap
-    ##BOARDS_ENABLED = load,view,clust,expr,cor,enrich,func
-    BOARDS_DISABLED = c("system","multi")
-    ##BOARDS_DISABLED = tcga,multi,sig,isect,bio
-}
 
 ## dbg <- function(msg) if(DEBUG) message(cat(msg))
 dbg <- function(...) {
