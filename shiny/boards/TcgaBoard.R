@@ -20,7 +20,7 @@ TcgaUI <- function(id) {
 TcgaBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
-    fullH = 750       # row height of panel 
+    fullH = 800       # row height of panel 
     tabH = '70vh'
     
     ## reactive functions from shared environment
@@ -35,23 +35,38 @@ TcgaBoard <- function(input, output, session, env)
         "This <strong>TCGA analysis module</strong> computes the survival probability in (more than 10000) cancer patients of 32 TCGA cancer types, for your selected contrast. Each cohort is dichotomized into positively and negatively correlated with your signature. The survival probabilities are computed and tested using the Kaplan-Meier method.
 
 "
-
     
     ##================================================================================
     ##========================= INPUTS UI ============================================
-    ##================================================================================
-    
+    ##================================================================================    
 
     output$inputsUI <- renderUI({
         ui <- tagList(
+            tags$head(tags$style("#tcga-genelist.form-control {font-size:11px !important;padding:3px;height:200px;}")),
             tipify( actionLink(ns("tcga_info"), "Info", icon = icon("info-circle")),
                    "Show more information about this module"),
-            hr(), br(),             
-            tipify( selectInput(ns('tcga_contrast'),'Contrast:', choices=NULL, multiple=FALSE),
+            hr(), br(),
+            tipify( radioButtons( ns('sigtype'),"Signature type:",
+                                 choices=c("contrast","genelist"),
+                                 selected="contrast", inline=TRUE),
+                   "number of top genes to show",
+                    placement="right", options = list(container = "body")),            
+            conditionalPanel(
+                "input.sigtype == 'contrast'", ns=ns,
+                tipify( selectInput(ns('contrast'),NULL, choices=NULL, multiple=FALSE),
                    "Select the contrast that you want to correlate with survival.",
                    placement="right", options = list(container = "body")
                    ),
-
+            ),
+            conditionalPanel(
+                "input.sigtype == 'genelist'", ns=ns,
+                tipify( textAreaInput(ns("genelist"), NULL, value = NULL,
+                                      height = "100px", width = "100%", 
+                                      rows=4, placeholder="Paste your custom gene list"),
+                       "Paste a custom list of genes to be used as features.",
+                       placement="bottom")
+            ),
+            br(),
             tipify( actionLink(ns("tcga_options"), "Options",
                                icon=icon("cog", lib = "glyphicon")),
                    "Toggle advanced options.",
@@ -88,7 +103,7 @@ TcgaBoard <- function(input, output, session, env)
         if(is.null(ngs)) return(NULL)
         comparisons <- colnames(ngs$model.parameters$contr.matrix)
         comparisons <- sort(comparisons)
-        updateSelectInput(session, "tcga_contrast", choices=comparisons,
+        updateSelectInput(session, "contrast", choices=comparisons,
                           selected = head(comparisons,1))
         
     })
@@ -103,16 +118,29 @@ TcgaBoard <- function(input, output, session, env)
         file.path(dir[1],file)
     }
     
-    tcga_tcgasurv.RENDER %<a-% reactive({
+     tcga_tcgasurv.RENDER %<a-% reactive({
 
         ngs <- inputData()
         req(ngs)
-        
-        contrast = 1
-        contrast <- input$tcga_contrast
-        res = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
-        names(res)
-        sig <- res$fc[,contrast]
+
+        if(input$sigtype == 'contrast') {
+            contrast = 1
+            contrast <- input$contrast
+            req(contrast)
+            res = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
+            names(res)
+            sig <- res$fc[,contrast]
+        } else if(input$sigtype == 'genelist') {
+            req(input$genelist)
+            genes <- as.character(input$genelist)
+            genes <- strsplit(genes, split='[\t, \n]')[[1]]
+            genes <- gsub("[ ]","",genes)
+            sig <- rownames(ngs$X) %in% genes 
+            names(sig) <- rownames( ngs$X)
+        } else {
+            stop("[tcga_tcgasurv.RENDER] invalid sigtype")
+        }
+
         ##matrix_file = search.path(c(FILES,ARCHS4.DIR),"tcga_matrix.h5")
         ##FILESX <- sub("lib$","libx",FILES)
         matrix_file = search.path(c(FILES,FILESX),"tcga_matrix.h5")
@@ -163,8 +191,9 @@ TcgaBoard <- function(input, output, session, env)
         options = tcga_tcgasurv.opts,
         download.fmt = c("pdf","png"),
         pdf.width = 15, pdf.height = 10,
-        height = c(fullH-80, 700), width = c("auto",1350),
-        res=c(72,85)
+        height = c(fullH, 750), width = c("auto",1400),
+        res=c(80,85),
+        add.watermark = WATERMARK
     )
 
     
@@ -176,7 +205,7 @@ TcgaBoard <- function(input, output, session, env)
         fillCol(
             ## id = ns("expr_topgenes"),
             height = fullH,
-            flex = c(NA,0.05,1), ##height = 370,
+            flex = c(NA,0.02,1), ##height = 370,
             div(HTML(tcga_tcgasurv_caption), class="caption"),
             br(),
             plotWidget(ns("tcga_tcgasurv"))

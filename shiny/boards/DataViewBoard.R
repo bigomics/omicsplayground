@@ -155,7 +155,6 @@ DataViewBoard <- function(input, output, session, env)
     genePlots_correlationplot_text=paste0('Barplot of the top positively and negatively correlated genes with the selected gene. Absolute expression levels of genes are colored in the barplot, where the low and high expressions range between the light and dark colors, respectively.')
     genePlots_averageRankPlot_text=paste0('Ranking of the average expression of the selected gene.')
     data_geneInfo_text = paste0('To find out more information from the literature, hyperlinks are provide to connect the selected gene to public databases, including ', a_OMIM,', ', a_KEGG, ' and ',a_GO,'.')
-    data_corplot_text = paste0('Top cumulative positively and negatively correlated genes with the selected gene in the current dataset as well as in public datasets such as ',a_ImmProt,' and ',a_HPA,'. The correlations of genes are colored by dataset.')
     data_tissueplot_text = paste0('Tissue expression for the selected gene in the tissue expression ',a_GTEx,' dataset. Colors corresponds to "tissue clusters" as computed by unsupervised clustering.')
     
 
@@ -226,7 +225,8 @@ DataViewBoard <- function(input, output, session, env)
         info.text = genePlots_averageRankPlot_text,
         height = imgH, ## width = '100%',
         pdf.width=6, pdf.height=6, 
-        label="c", title="Average rank"
+        label="c", title="Average rank",
+        add.watermark = WATERMARK
     )
     ##output <- attachModule(output, genePlots_averageRankPlot_module) 
 
@@ -322,7 +322,8 @@ DataViewBoard <- function(input, output, session, env)
         func2 = genePlots_correlationplot.RENDER,
         info.text=genePlots_correlationplot_text,
         height = imgH, pdf.width=6, pdf.height=6,
-        label="e", title="Top correlated genes"
+        label="e", title="Top correlated genes",
+        add.watermark = WATERMARK
     )
     ##output <- attachModule(output, genePlots_correlationplot_module) 
 
@@ -460,7 +461,8 @@ DataViewBoard <- function(input, output, session, env)
         info.text = genePlots_barplot_text,
         height = imgH,
         pdf.width = 7, pdf.height = 5, 
-        label="b", title="Abundance/expression"
+        label="b", title="Abundance/expression",
+        add.watermark = WATERMARK
     )
 
     ##----------------------------------------------------------------------
@@ -557,7 +559,8 @@ DataViewBoard <- function(input, output, session, env)
         func2 = genePlots_tsne.RENDER,
         info.text = genePlots_tsne_text,
         height = imgH, pdf.width = 6, pdf.height = 6,
-        label = "d", title= "t-SNE clustering"
+        label = "d", title= "t-SNE clustering",
+        add.watermark = WATERMARK
     )
     
     ##----------------------------------------------------------------------
@@ -616,98 +619,8 @@ DataViewBoard <- function(input, output, session, env)
         func2 = data_tissueplot.RENDER,
         info.text = data_tissueplot_text,
         height = imgH, pdf.width=9, pdf.height=6,
-        label="f", title="Tissue expression"
-    )
-    
-    ##----------------------------------------------------------------------
-    ##  Cumulative correlation plot (stacked)
-    ##----------------------------------------------------------------------
-    
-    data_corplot_data <- reactive({
-        require(RColorBrewer)
-        ngs <- inputData()
-        req(ngs)	
-        
-        samples=colnames(ngs$X);gene="CD4"
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        gene <- input$search_gene
-        if(is.null(gene)) return(NULL)    
-        
-        ## corr always in log.scale and restricted to selected samples subset
-        zx <- ngs$X
-        dim(zx)
-        ##rownames(zx) <- toupper(sub(".*:","",rownames(zx)))  ## NEED RETHINK!
-        zx.gene <- as.character(ngs$genes[rownames(ngs$X),]$gene_name)
-
-        rownames(zx) <- toupper(zx.gene)        
-        xref <- list("this_data"=zx, HPA_tissue=as.matrix(TISSUE),
-                     ImmProt=as.matrix(IMMPROT))
-        gene0 <- toupper(gene)  ## uppercase mouse
-        R <- pgx.getGeneCorrelation(gene0, xref=xref)    
-        if(is.null(R)) return(NULL)
-        
-        rho.genes = toupper(zx.gene)
-        if("hgnc_symbol" %in% colnames(ngs$genes)) {
-            rho.genes = as.character(ngs$genes$hgnc_symbol)
-        }
-        R <- R[match(rho.genes,rownames(R)),,drop=FALSE]
-        rownames(R) <- rho.genes
-        
-        ## get top correlated genes
-        ##jj = head(order(rowSums(R),decreasing=FALSE),35)
-        rsum <- rowSums(R,na.rm=TRUE)
-        jj = head(order(abs(rsum),decreasing=TRUE),35)
-        jj = head(order(-abs(rsum)),30)
-        jj <- c( head(order(rsum),15), head(order(-rsum),15))
-        jj <- jj[order(-rsum[jj])]
-        head(rsum[jj])
-        Rtop = R[jj,,drop=FALSE]
-        rownames(Rtop) = sub(".*:","",rownames(Rtop))
-        offset = min(Rtop, na.rm=TRUE)*0.95
-        offset=0
-        klr <- grey.colors(ncol(Rtop),start=0.3,end=0.7)
-        
-        ## --- color test -----##
-        klr <- grey.colors(ncol(Rtop),start=0.3,end=0.7)
-        klr <- colorRampPalette(c(rgb(0.2,0.5,0.8,0.8), rgb(0.2,0.5,0.8,0.2)), alpha = TRUE)(ncol(Rtop))
-        
-        dbg("[data_corplot_data()] done!")
-
-        res = list(Rtop=Rtop, offset=offset, klr=klr)
-        return(res)
-    })
-    
-    data_corplot.RENDER %<a-% reactive({
-
-        dbg("[data_corplot.RENDER] reacted")
-        
-        res <- data_corplot_data()
-        if(is.null(res)) return(NULL)
-        
-        par(mar=c(6,4,2,1), mgp=c(2.2,0.8,0))        
-        mar=MARGINS1
-        par(mar=mar, mgp=c(1.5,0.5,0))
-        
-        barplot( t(res$Rtop) - res$offset, col=res$klr, border=NA, ##horiz=TRUE, 
-                las=3, cex.names=0.73, ##names.arg=rep(NA,nrow(R)),
-                offset = res$offset, ylab="cumulative correlation (r)"            
-                ##cex.main=1.2, main="cumulative correlation\nwith other data sets"
-                )
-        if(!is.null(colnames(res$Rtop))) {
-            legend("topright", legend=rev(colnames(res$Rtop)), fill=rev(res$klr),
-                   cex=0.8, y.intersp=0.8)
-        }
-        dbg("[data_corplot.RENDER] done!")
-        
-    })
-    
-    callModule(
-        plotModule, "data_corplot",
-        func = data_corplot.RENDER,
-        func2 = data_corplot.RENDER,
-        info.text = data_corplot_text,
-        height = imgH, pdf.width=8, pdf.height=6,
-        label="f", title="Cumulative correlation"
+        label="f", title="Tissue expression",
+        add.watermark = WATERMARK
     )
     
     ##----------------------------------------------------------------------
@@ -780,7 +693,8 @@ DataViewBoard <- function(input, output, session, env)
         just.info = FALSE, no.download = TRUE,
         info.text = data_geneInfo_text,
         ## options = tagList(),
-        height = c(fullH,600), width=c('auto',800)
+        height = c(fullH,600), width=c('auto',800),
+        add.watermark = WATERMARK
     )
 
     ##----------------------------------------------------------------------
@@ -874,7 +788,8 @@ DataViewBoard <- function(input, output, session, env)
         func2 = counts_tab_barplot.RENDER,        
         info.text = counts_tab_barplot_text,
         height=imgH, pdf.width=7, pdf.height=6, ## res=45,
-        label="a",title='Total counts'
+        label="a",title='Total counts',
+        add.watermark = WATERMARK
     )
 
     ##----------------------------------------------------------------------
@@ -907,7 +822,8 @@ DataViewBoard <- function(input, output, session, env)
         func2 = counts_tab_barplot.RENDER,
         info.text = counts_tab_boxplot_text,
         height=imgH, pdf.width=7, pdf.height=6, ## res=50,
-        label="b", title='Counts distribution'
+        label="b", title='Counts distribution',
+        add.watermark = WATERMARK
     )
 
     ##----------------------------------------------------------------------
@@ -950,7 +866,8 @@ DataViewBoard <- function(input, output, session, env)
         func2 = counts_tab_histplot.RENDER,
         info.text = counts_tab_histplot_text,
         height=imgH, pdf.width=7, pdf.height=6, ## res=50,
-        label="c", title='Counts histogram'
+        label="c", title='Counts histogram',
+        add.watermark = WATERMARK
     )
 
     ##----------------------------------------------------------------------
@@ -1000,7 +917,8 @@ DataViewBoard <- function(input, output, session, env)
         func2 = counts_tab_abundanceplot.RENDER,
         info.text = counts_tab_abundanceplot_text,
         height=imgH, pdf.width=10, pdf.height=6, ## res=50,
-        label="d",title='Abundance of major gene types'
+        label="d", title='Abundance of major gene types',
+        add.watermark = WATERMARK
     )
 
     ##----------------------------------------------------------------------
@@ -1048,7 +966,8 @@ DataViewBoard <- function(input, output, session, env)
         func2 = counts_tab_average_countplot.RENDER,
         info.text = counts_tab_average_countplot_text,
         height=imgH, pdf.width=10, pdf.height=6, ##res=50,
-        label="e",title='Average count by gene type'
+        label="e", title='Average count by gene type',
+        add.watermark = WATERMARK
     )
 
     getCountsTable <- reactive({
@@ -1425,7 +1344,8 @@ DataViewBoard <- function(input, output, session, env)
         info.text = data_phenoHeatmap_info,
         options = data_phenoHeatmap_opts,
         height = c(360,600), width = c('auto',1200),
-        res=c(68,75), pdf.width=10, pdf.height=6 
+        res=c(68,75), pdf.width=10, pdf.height=6,
+        add.watermark = WATERMARK
     )
 
     data_phenotypeAssociation.RENDER %<a-% reactive({
@@ -1459,7 +1379,8 @@ DataViewBoard <- function(input, output, session, env)
         ##info.text = "Sample information table with information about phenotype of samples.",
         options = data_phenotypeAssociation_opts,
         height = c(360,700), width = c('auto',900), res=c(72,75),
-        pdf.width=8, pdf.height=6 
+        pdf.width=8, pdf.height=6,
+        add.watermark = WATERMARK
     )
     
     data_sampleTable.RENDER <- reactive({

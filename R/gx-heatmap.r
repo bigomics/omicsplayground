@@ -63,10 +63,11 @@ gx.imagemap <- function(X, main="", cex=1, clust=TRUE)
 }
 
 gx.splitmap <- function(gx, split=5, splitx=NULL,
-                        clust.method="ward.D2",
-                        dist.method="euclidean",
-                        col.dist.method="euclidean",
-                        plot.method="heatmap.2",
+                        clust.method = "ward.D2",
+                        ##dist.method = "pearson",
+                        dist.method = "euclidean",                       
+                        col.dist.method = "euclidean",
+                        plot.method = "heatmap.2",
                         ## col=bluered(64),
                         scale="row", softmax=0, order.groups="clust", symm.scale=FALSE,
                         ## Rowv = NA, Colv = NA,

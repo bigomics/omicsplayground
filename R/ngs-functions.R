@@ -102,12 +102,13 @@ ngs.getGeneAnnotation <- function(genes)
     annot = data.frame( gene_name = genes,
                        gene_title = gene_title,
                        gene_biotype = gene_biotype,
-                       chr=chrom, pos=loc, 
-                       tx_len = txlen,
+                       chr=chrom,
+                       pos = as.integer(loc), 
+                       tx_len = as.integer(txlen),
                        map=map )
     ##genes = apply(genes,2,as.character)
     head(annot)
-    annot[is.na(annot)] <- ""  ## replace NA with empty string
+    ##annot[is.na(annot)] <- ""  ## replace NA with empty string
     
     rownames(annot) = genes
     annot

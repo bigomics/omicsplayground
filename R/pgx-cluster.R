@@ -50,6 +50,14 @@ pgx.clusterGenes <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3),
     clust.index <- clust$membership
     clust$membership <- NULL
 
+    if(1) {
+        ## remove empty space in tSNE/UMAP
+        ii <- grep("tsne|umap",names(clust))
+        if(length(ii)>0) {
+            clust[ii] <- lapply(clust[ii], pos.compact)  ## make more compact
+        }
+    }    
+    
     if(0) {
         X1 = scale(X - rowMeans(X))
         idx <- pgx.findLouvainClusters(X1, level=1, prefix='c', small.zero=0.01)        

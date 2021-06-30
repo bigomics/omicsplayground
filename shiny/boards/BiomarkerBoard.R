@@ -31,7 +31,7 @@ BiomarkerBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
     inputData <- env[["load"]][["inputData"]]
-    fullH = 750  ## full height of panel
+    fullH = 800  ## full height of panel
     rowH  = 320  ## row height of panel
     imgH  = 260
         
@@ -71,9 +71,11 @@ be multiple categories (classes) or patient survival data."
                     ##selectizeInput("pdx_select","Custom features:", choices=NULL, multiple=TRUE),
                     div(class='gene-list',
                         textAreaInput(ns("pdx_select"), "Custom features:", value = NULL,
-                                      rows=8, placeholder="Paste your gene list")),
+                                      height = "100px", width = "100%",                                       
+                                      rows=5, placeholder="Paste your gene list")),
                     "Paste a custom gene list to be used as features.", placement="top")
             ),
+            br(),
             tipify(actionButton(ns("pdx_runbutton"), label="Compute", class="run-button"),
                    "Click to start biomarker computation.", placement="right")
         )
@@ -413,7 +415,7 @@ be multiple categories (classes) or patient survival data."
 
         } else {
             par(mfrow=c(1,1), oma=c(1,1,1,1)*0.2)
-            par(mar=c(7,4,0,4))
+            par(mar=c(5,4,0,4))
             R.top <- head(R,40)
             barplot( t(R.top), las=3, horiz=FALSE,
                     cex.names=0.75, ylab="cumulative importance" )
@@ -458,7 +460,8 @@ be multiple categories (classes) or patient survival data."
         }
 
         X <- head(X[order(-apply(X,1,sd)),],40)  ## top50
-
+        ## X <- X + 1e-4 * matrix(rnorm(length(X)),nrow(X),ncol(X)) ## add noise...
+        
         splitx <- NULL
         ct <- input$pdx_predicted
         do.survival <- grepl("survival",ct,ignore.case=TRUE)
@@ -473,13 +476,20 @@ be multiple categories (classes) or patient survival data."
         
         rownames(X) <- substring(rownames(X),1,40)    
         annot <- ngs$Y[colnames(X),]
-        dbg("<predict:pdx_heatmap> dim(annot)=",dim(annot),"\n")
+        sdx <- apply(X,1,sd)
+        
+        dbg("[pdx_heatmap] dim(annot)=",dim(annot),"\n")
+        dbg("[pdx_heatmap] sum.NA(X)=",sum(is.na(X)),"\n")
+        dbg("[pdx_heatmap] sum.sdx0=",sum(sdx < 1e-3),"\n")
         
         gx.splitmap( X, split=NULL, splitx=splitx, main="  ",
+                    dist.method = "euclidean",                    
                     show_colnames = FALSE,  ## save space, no sample names
                     show_legend = ifelse(is.null(splitx),TRUE,FALSE),
-                    col.annot=annot, annot.ht=2.5, show_rownames=50,
-                    lab.len=50, cexRow=0.85, mar=c(2,8))
+                    key.offset = c(0.05,1.03),
+                    ## col.annot=annot, annot.ht=2.5,
+                    show_rownames = 99,
+                    lab.len=50, cexRow=0.88, mar=c(2,8))
 
         dbg("<predict:pdx_heatmap> done!\n")
         
@@ -578,8 +588,7 @@ be multiple categories (classes) or patient survival data."
             too.big = (max(nchar(y))>=6 && ny==2) ||
                 (max(nchar(y))>=4 && ny>2 || ny>=6 )
             if(too.big) {
-                dy <- min(gx) - 0.16*diff(range(gx))
-                nn <- max(nchar(y))
+                dy <- min(gx) - 0.1*diff(range(gx))
                 text(1:ny, dy, levels(factor(y)), xpd=NA,
                      cex=cex1, srt=30, adj=1)
             } else {
@@ -599,12 +608,13 @@ be multiple categories (classes) or patient survival data."
         func = pdx_importance.RENDER,
         func2 = pdx_importance.RENDER,
         title = "Variable importance",
-        info.text = "A variable importance score for each feature is calculated using multiple machine learning algorithms, including LASSO, elastic nets, random forests, and extreme gradient boosting. By combining several methods, the platform aims to select the best possible biomarkers. The top features are plotted according to cumulative ranking by the algorithms.",
+        info.text = "<b>Variable importance.</b>. An importance score for each variable is calculated using multiple machine learning algorithms, including LASSO, elastic nets, random forests, and extreme gradient boosting. By combining several methods, the platform aims to select the best possible biomarkers. The top features are plotted according to cumulative ranking by the algorithms.",
         ##options = pdx_importance.opts,
         label="a",
         pdf.width=10, pdf.height=5,
-        height = 270, res=80
-        )
+        height = 235, res = 78,
+        add.watermark = WATERMARK
+    )
     
 
     pdx_heatmap.opts = tagList()
@@ -614,10 +624,11 @@ be multiple categories (classes) or patient survival data."
         func = pdx_heatmap.RENDER,
         func2 = pdx_heatmap.RENDER,
         title = "Heatmap", label="b",
-        info.text = "The heatmap shows the expression of genes of the top most important features.",
+        info.text = "<b>Biomarker heatmap.</b> Expression heatmap of top gene features according to their variable importance.",
         ##options = pdx_heatmap.opts,
         pdf.width=10, pdf.height=10,
-        height = 370, res=72
+        height = 435, res=72,
+        add.watermark = WATERMARK
     )
     
     pdx_decisiontree.opts = tagList()
@@ -630,7 +641,8 @@ be multiple categories (classes) or patient survival data."
         info.text = "The decision tree shows a tree solution for classification based on the top most important features.",
         ##options = pdx_decisiontree.opts,
         pdf.width=10, pdf.height=6,
-        height = 315, res=72
+        height = 315, res=72,
+        add.watermark = WATERMARK
     )
 
     pdx_boxplots.opts = tagList()
@@ -643,7 +655,8 @@ be multiple categories (classes) or patient survival data."
         info.text = "These boxplots shows the expression of genes/samples of the identified features.",
         ##options = pdx_boxplots.opts,
         pdf.width=10, pdf.height=5.5,
-        height = 320, res=90
+        height = 320, res=90,
+        add.watermark = WATERMARK
     )
 
     pdx_biomarker_caption = "<b>Biomarker selection</b>. The expression of certain genes may be used as <i>markers</i> to predict a certain phenotype such as response to a therapy. Finding such <i>biomarkers</i> are of high importance in clinical applications. <b>(a)</b> An importance score for each feature is calculated using multiple machine learning algorithms, including LASSO, elastic nets, random forests, and extreme gradient boosting. The top features are plotted  according to cumulative ranking by the algorithms. <b>(b)</b> The heatmap shows the expression distribution for the top most important features. <b>(c)</b> The decision tree shows (one) tree solution for classification based on the top most important features. <b>(d)</b> Boxplots show the expression of biomarker genes across the groups."
@@ -656,9 +669,9 @@ be multiple categories (classes) or patient survival data."
             br(),
             fillRow(
                 flex = c(1,0.1,1),
-                height = fullH - 100,                
+                height = fullH,                
                 fillCol(
-                    flex = c(0.7,1),
+                    flex = c(0.5,1),
                     plotWidget(ns("pdx_importance")),
                     plotWidget(ns("pdx_heatmap"))
                 ),

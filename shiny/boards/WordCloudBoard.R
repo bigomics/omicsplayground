@@ -554,7 +554,8 @@ WordCloudBoard <- function(input, output, session, env)
         pdf.width=8, pdf.height=8, pdf.pointsize=13,
         height = 0.5*rowH, res=72,
         ##datacsv = enrich_getWordFreq,
-        title = "Word t-SNE"
+        title = "Word t-SNE",
+        add.watermark = WATERMARK
     )
 
 
@@ -579,7 +580,8 @@ WordCloudBoard <- function(input, output, session, env)
         options = enrich_wordcloud_opts,
         pdf.width=6, pdf.height=6, 
         height = 0.5*rowH, res=72,
-        title = "Word cloud"
+        title = "Word cloud",
+        add.watermark = WATERMARK
     )
 
     enrich_gseaplots_info = "<strong>Keyword enrichment analysis.</strong> Computes enrichment of a selected keyword across all contrasts. Select a keyword by clicking a word in the 'Enrichment table'.
@@ -603,7 +605,8 @@ WordCloudBoard <- function(input, output, session, env)
         ## options = enrich_gseaplots_opts,
         pdf.width=6, pdf.height=6,
         height = 0.5*rowH, res=90,
-        title = "Enrichment plots"
+        title = "Enrichment plots",
+        add.watermark = WATERMARK
     )
 
     ##--------buttons for enrichment table
@@ -642,7 +645,8 @@ WordCloudBoard <- function(input, output, session, env)
         options = wordcloud_actmap.opts,
         pdf.width=6, pdf.height=10,
         height = c(rowH,750), width=c("100%",1400),
-        res=72
+        res=72,
+        add.watermark = WATERMARK
     )
 
     ##---------------------------------------------------------------

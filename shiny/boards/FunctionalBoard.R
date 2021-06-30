@@ -527,7 +527,8 @@ to understand biological functions including GO and KEGG pathway analysis."
         options = kegg_graph.opts,
         download.fmt = "png", just.info=TRUE,
         info.text = kegg_info1, info.width="350px",
-        height = c(0.53*rowH,700), width = c("100%",1280)
+        height = c(0.53*rowH,700), width = c("100%",1280),
+        add.watermark = WATERMARK
     )
 
     kegg_table_info = "<strong>Enrichment table.</strong> The table is interactive; enabling user to sort on different variables and select a pathway by clicking on the row in the table. The scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap."
@@ -560,7 +561,8 @@ to understand biological functions including GO and KEGG pathway analysis."
         options = kegg_actmap.opts,
         pdf.height = 9, pdf.width = 9 , 
         height = c(rowH,750), width = c("100%",1400),
-        res=72
+        res=72,
+        add.watermark = WATERMARK
     )
     
     
@@ -921,7 +923,8 @@ to understand biological functions including GO and KEGG pathway analysis."
         options = GO_network.opts,
         pdf.width = 10, pdf.height = 8,
         height = c(0.55*rowH,750), width = c("100%",1400),        
-        res=72
+        res=72,
+        add.watermark = WATERMARK
     )
     ##output <- attachModule(output, GO_network_module)
 
@@ -940,7 +943,8 @@ to understand biological functions including GO and KEGG pathway analysis."
         options = GO_actmap.opts,
         pdf.height = 9, pdf.width = 9, 
         height = c(rowH,750), width = c("100%",1400),
-        res=72
+        res=72,
+        add.watermark = WATERMARK
     )
     
     GO_table <- callModule(

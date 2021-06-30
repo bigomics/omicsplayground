@@ -556,8 +556,9 @@ EnrichmentBoard <- function(input, output, session, env)
         height = c(0.95*imgH,720), width = c('auto',1500), 
         pdf.width = 9, pdf.height = 3, ## pdf.pointsize=16,
         res = c(90, 110),
-        title = "Top enriched gene sets"
-        ##caption = topEnriched_caption
+        title = "Top enriched gene sets",
+        ##caption = topEnriched_caption,
+        add.watermark = WATERMARK
     )
 
             
@@ -676,8 +677,9 @@ EnrichmentBoard <- function(input, output, session, env)
         height = c(imgH,450), width = c('auto',1200),
         res = c(68,100),
         pdf.width = 10, pdf.height = 5, 
-        title = "Frequency in top gene sets"
-        ##caption = topEnrichedFreq_caption
+        title = "Frequency in top gene sets",
+        ##caption = topEnrichedFreq_caption,
+        add.watermark = WATERMARK
     )
     
     ## library(shinyjqui)
@@ -702,11 +704,6 @@ EnrichmentBoard <- function(input, output, session, env)
     ##================================================================================
     ## Plots tab
     ##================================================================================
-
-    subplot_volcano_text = "A volcano plot of genes contained in the gene set that is selected from the enrichment analysis Table <code>I</code>."
-    subplot2_text = "An enrichment barplot per sample group for the gene set that is selected from the enrichment analysis Table <code>I</code>. Samples can be ungrouped in the barplot by selecting <code>ungroup samples</code> from the plot <i>Settings</i>."
-    subplot3_text = "An expression barplot per sample group for the gene that is selected from the genes Table <code>II</code>. Samples can be ungrouped in the barplot by selecting <code>ungroup samples</code> from the plot <i>Settings</i>."
-    subplot4_text = "A scatter plot of enrichment scores versus expression values across the samples for the gene set selected from the enrichment analysis Table <code>I</code> and the gene selected from the genes Table <code>II</code>."
 
     
     ##comp0=colnames(ngs$model.parameters$contr.matrix)[1]
@@ -1054,6 +1051,7 @@ EnrichmentBoard <- function(input, output, session, env)
             grouped=TRUE
             grouped <- !input$gs_ungroup2
             srt <- ifelse(!grouped || ngrp>4, 30, 0)
+            srt <- NULL
             if(!grouped && ncol(ngs$X) > 15) srt <- 60
             pgx.plotExpression(
                 ngs, probe, comp=comp0, logscale=TRUE, level="gene",
@@ -1113,6 +1111,16 @@ EnrichmentBoard <- function(input, output, session, env)
         }    
     })
 
+    ##----------------------------------------------------------------------
+    ## Calling Modules
+    ##----------------------------------------------------------------------
+
+    subplot_volcano_text = "</b>Volcano plot.<b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set that is selected from the enrichment analysis <b>Table I</b> are highlighted in blue."
+    subplot2_text = "An enrichment barplot per sample group for the gene set that is selected from the enrichment analysis Table <code>I</code>. Samples can be ungrouped in the barplot by selecting <code>ungroup samples</code> from the plot <i>Settings</i>."
+    subplot3_text = "An expression barplot per sample group for the gene that is selected from the genes Table <code>II</code>. Samples can be ungrouped in the barplot by selecting <code>ungroup samples</code> from the plot <i>Settings</i>."
+    subplot4_text = "A scatter plot of enrichment scores versus expression values across the samples for the gene set selected from the enrichment analysis Table <code>I</code> and the gene selected from the genes Table <code>II</code>."
+    
+    enrichplots_caption = "<b>Enrichment plots</b> associated with the gene set (selected in <b>Table I</b>) and gene (selected in <b>Table II</b>). <b>(a)</b> Gene set enrichment plot. <b>(b)</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set are highlighted in blue. <b>(c)</b> Barplot of the gene set enrichment in the groups. <b>(d)</b> Scatter plot of the enrichment versus the expression of the selected geneset and gene, on the y and x axes, respectively."
 
     callModule(
         plotModule,
@@ -1124,7 +1132,8 @@ EnrichmentBoard <- function(input, output, session, env)
         pdf.width=6, pdf.height=6,
         res = c(72,100),
         height = imgH, 
-        title="Volcano plot", label="a"
+        title="Volcano plot", label="b",
+        add.watermark = WATERMARK
     )
 
     callModule(
@@ -1141,7 +1150,8 @@ EnrichmentBoard <- function(input, output, session, env)
                 ns('gs_ungroup1'),'ungroup samples',FALSE),
                 "Ungroup samples in the plot", placement="top",
                 options = list(container = "body"))),
-        title="Enrichment barplot", label="b"
+        title="Enrichment barplot", label="c",
+        add.watermark = WATERMARK
     )
 
     callModule(
@@ -1157,7 +1167,8 @@ EnrichmentBoard <- function(input, output, session, env)
             tipify( checkboxInput(ns('gs_ungroup2'),'ungroup samples',FALSE),
                    "Ungroup samples in the plot", placement="top",
                    options = list(container = "body"))),
-        title = "Expression barplot", label="c"
+        title = "Expression barplot", label="c",
+        add.watermark = WATERMARK
     )
 
     callModule(
@@ -1168,9 +1179,9 @@ EnrichmentBoard <- function(input, output, session, env)
         info.text = subplot4_text,
         pdf.width=6, pdf.height=6, res=72,
         height = imgH,
-        title = "Enrichment vs. expression", label="d"
+        title = "Enrichment vs. expression", label="d",
+        add.watermark = WATERMARK
     )
-
 
     callModule(
         plotModule,
@@ -1182,10 +1193,9 @@ EnrichmentBoard <- function(input, output, session, env)
         pdf.width=6, pdf.height=4,
         res = c(68,110),
         height = imgH, 
-        title="Enrichment plot", label="a"
+        title="Enrichment plot", label="a",
+        add.watermark = WATERMARK
     )
-    
-    enrichplots_caption = "<b>Enrichment plots</b> associated with the gene set (selected in <b>Table I</b>) and gene (selected in <b>Table II</b>). <b>(a)</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set are highlighted in blue. <b>(b)</b> Barplot of the gene set enrichment in the groups. <b>(c)</b> Barplot of the gene expression of the gene. <b>(d)</b> Scatter plot of the enrichment versus the expression of the selected geneset and gene, on the y and x axes, respectively."
    
     output$subplots_UI <- renderUI({
         fillCol(
@@ -1292,8 +1302,9 @@ EnrichmentBoard <- function(input, output, session, env)
         height = c(imgH,450), width = c("auto",1500), res=95,
         pdf.width=14, pdf.height=4, 
         title = "Enrichment of gene set across multiple contrasts",
-        info.text = compare_text
-        ##caption = compare_caption
+        info.text = compare_text,
+        ##caption = compare_caption,
+        add.watermark = WATERMARK
     )
 
     output$compare_UI <- renderUI({
@@ -1412,8 +1423,9 @@ EnrichmentBoard <- function(input, output, session, env)
         height = c(imgH,450), width = c("auto",1500), res=c(72,85),
         pdf.width=15, pdf.height=5, 
         title="Volcano plots for all contrasts",
-        info.text = volcanoAll_text
-        ##caption = volcanoAll_caption        
+        info.text = volcanoAll_text,
+        ##caption = volcanoAll_caption,
+        add.watermark = WATERMARK
     )
     
     output$volcanoAll_UI <- renderUI({
@@ -1515,8 +1527,9 @@ EnrichmentBoard <- function(input, output, session, env)
         height = c(imgH,450), width = c('auto',1600), res=c(75,90),
         pdf.width=15, pdf.height=5, 
         title="Volcano plots for all methods",
-        info.text = volcanoMethods_text
-        ##caption = volcanoMethods_caption
+        info.text = volcanoMethods_text,
+        ##caption = volcanoMethods_caption,
+        add.watermark = WATERMARK
     )
 
     output$volcanoMethods_UI <- renderUI({
@@ -1614,8 +1627,9 @@ EnrichmentBoard <- function(input, output, session, env)
         height = c(imgH,450), width = c("auto",1500), res=c(80,80),
         pdf.width=14, pdf.height=4, ## res=65,
         title = "Co-activation heatmap",
-        info.text = genemap_text
-        ##caption = genemap_caption
+        info.text = genemap_text,
+        ##caption = genemap_caption,
+        add.watermark = WATERMARK
     )
 
     output$genemap_UI <- renderUI({

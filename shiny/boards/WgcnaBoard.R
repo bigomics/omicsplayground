@@ -448,7 +448,8 @@ WgcnaBoard <- function(input, output, session, env)
         ## options = wgcna_sampleDendro_opts,
         info.text = wgcna_topologyPlots_info,        
         height = c(rowH1, 600), width = c('auto',1200),
-        pdf.width=10, pdf.height=5, res=c(72,100)
+        pdf.width=10, pdf.height=5, res=c(72,100),
+        add.watermark = WATERMARK
     )
 
     ##----------------------------------------
@@ -566,7 +567,8 @@ WgcnaBoard <- function(input, output, session, env)
         ## options = wgcna_geneDendro_opts,
         info.text = wgcna_TOMplot_info,        
         height = c(rowH2, 650), width = c('auto',1000),
-        pdf.width=10, pdf.height=5, res=c(72,90)
+        pdf.width=10, pdf.height=5, res=c(72,90),
+        add.watermark = WATERMARK
     )
 
 
@@ -613,7 +615,8 @@ WgcnaBoard <- function(input, output, session, env)
         ## options = wgcna_sampleDendro_opts,
         info.text = wgcna_sampleDendro_info,        
         height = c(rowH1, 650), width = c('auto',1000),
-        pdf.width=10, pdf.height=5, res=c(72,90)
+        pdf.width=10, pdf.height=5, res=c(72,90),
+        add.watermark = WATERMARK
     )
 
     ##----------------------------------------
@@ -657,7 +660,8 @@ WgcnaBoard <- function(input, output, session, env)
         ## options = wgcna_geneDendro_opts,
         info.text = wgcna_geneDendro_info,        
         height = c(rowH1, 650), width = c('auto',1000),
-        pdf.width=10, pdf.height=5, res=c(72,90)
+        pdf.width=10, pdf.height=5, res=c(72,90),
+        add.watermark = WATERMARK
     )
 
     ##----------------------------------------
@@ -747,7 +751,8 @@ WgcnaBoard <- function(input, output, session, env)
         options = wgcna_moduleTrait_opts,
         info.text = wgcna_moduleTrait_info, info.width="200px",        
         height = c(420, 650), width = c('auto',1000),
-        pdf.width=10, pdf.height=5, res=c(72,90)
+        pdf.width=10, pdf.height=5, res=c(72,90),
+        add.watermark = WATERMARK
     )
 
     ##----------------------------------------
@@ -821,7 +826,8 @@ WgcnaBoard <- function(input, output, session, env)
         ## options = wgcna_geneDendro_opts,
         info.text = wgcna_moduleGraph_info,        
         height = c(420, 650), width = c('auto',1000),
-        pdf.width=10, pdf.height=5, res=c(72,90)
+        pdf.width=10, pdf.height=5, res=c(72,90),
+        add.watermark = WATERMARK
     )
 
     ##----------------------------------------
@@ -876,7 +882,8 @@ WgcnaBoard <- function(input, output, session, env)
         options = wgcna_eigenHeatmap_opts,
         info.text = wgcna_eigenHeatmap_info,        
         height = c(fullH,650), width = c('auto',650),
-        pdf.width=6, pdf.height=10, res=c(72,90)
+        pdf.width=6, pdf.height=10, res=c(72,90),
+        add.watermark = WATERMARK
     )
 
 
@@ -1037,7 +1044,8 @@ WgcnaBoard <- function(input, output, session, env)
         ##pdf.width = 14, pdf.height = 4, 
         height = c(420,650),
         width = c('auto',800),
-        res = c(72,80)
+        res = c(72,80),
+        add.watermark = WATERMARK
     )
     
     ##-----------------------------------------------------------
@@ -1116,7 +1124,8 @@ WgcnaBoard <- function(input, output, session, env)
         ##pdf.width = 14, pdf.height = 4, 
         height = c(420,650),
         width = c('auto',1000),
-        res = c(72,80)
+        res = c(72,80),
+        add.watermark = WATERMARK
     )
 
     ##-----------------------------------------------------------
@@ -1158,7 +1167,8 @@ WgcnaBoard <- function(input, output, session, env)
         pdf.width=5, pdf.height=10, 
         height = c(420,650),
         width = c('auto',650),
-        res = c(72,80)
+        res = c(72,80),
+        add.watermark = WATERMARK
     )
     
     ##----------------------------------------
@@ -1202,7 +1212,8 @@ WgcnaBoard <- function(input, output, session, env)
         pdf.width = 6, pdf.height = 10, 
         height = c(fullH,700),
         width = c('auto',450),
-        res = c(80,90)
+        res = c(80,90),
+        add.watermark = WATERMARK
     )
     
     ##----------------------------------------
@@ -1271,7 +1282,8 @@ WgcnaBoard <- function(input, output, session, env)
         options = wgcna_eigenCorrelation_opts,
         info.text = wgcna_eigenCorrelation_info,        
         height = c(fullH,720), width = c('auto',1050),
-        pdf.width=10, pdf.height=6, res=c(90,105)
+        pdf.width=10, pdf.height=6, res=c(90,105),
+        add.watermark = WATERMARK
     )
 
     ##----------------------------------------
@@ -1317,7 +1329,8 @@ WgcnaBoard <- function(input, output, session, env)
         options = wgcna_intraHeatmap_opts,
         info.text = wgcna_intraHeatmap_info,        
         height = c(fullH,720), width = c('auto',1050),
-        pdf.width=6, pdf.height=9, res=c(85,100)
+        pdf.width=6, pdf.height=9, res=c(85,100),
+        add.watermark = WATERMARK
     )
 
 
@@ -1381,7 +1394,8 @@ WgcnaBoard <- function(input, output, session, env)
         options = wgcna_intraScatter_opts,
         info.text = wgcna_intraScatter_info,        
         height = c(fullH,720), width = c('auto',1150),
-        pdf.width=12, pdf.height=9, res=c(85,90)
+        pdf.width=12, pdf.height=9, res=c(85,90),
+        add.watermark = WATERMARK
     )
     
     

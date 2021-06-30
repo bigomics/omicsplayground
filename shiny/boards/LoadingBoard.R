@@ -171,7 +171,7 @@ LoadingBoard <- function(input, output, session,
         datatypes <- sort(setdiff(df$datatype,c(NA,"")))
         organisms <- sort(setdiff(df$organism,c(NA,"")))        
         tagList(
-            checkboxGroupInput(ns("flt_datasets"),"datasets", choices = collections),
+            ## checkboxGroupInput(ns("flt_datasets"),"datasets", choices = collections),
             checkboxGroupInput(ns("flt_datatype"),"datatype", choices = datatypes),
             checkboxGroupInput(ns("flt_organism"),"organism", choices = organisms)
             ##checkboxGroupInput("flt_conditions","conditions",
@@ -329,7 +329,7 @@ LoadingBoard <- function(input, output, session,
         ## must be owner and not empty/anonymous
         not.anonymous <- !is.na(auth$name()) && auth$name()!="" 
         
-        is.uploaded <- this.pgxinfo$collection == "uploaded"
+        is.uploaded <- this.pgxinfo$collection %in% c("uploaded","user")
         ##allow.delete <- is.owner && !is.na(owner1) && owner1!="" && 
         ##    !is.na(auth$name() && auth$name()!="" )
         allow.delete <- is.uploaded && !not.anonymous
@@ -363,7 +363,6 @@ LoadingBoard <- function(input, output, session,
     ##=================================================================================
     ##=============================== MODAL DIALOGS ===================================
     ##=================================================================================
-
     
     startup_count=0
     ##require(shinyparticles)
@@ -582,22 +581,29 @@ LoadingBoard <- function(input, output, session,
         ## Apply filters
         f1=f2=f3=rep(TRUE,nrow(df))
         notnull <- function(x) !is.null(x) && length(x)>0 && x[1]!="" && !is.na(x[1])
-        cat("input$flt_datasets = ",input$flt_datasets,"\n")
+        ##cat("input$flt_datasets = ",input$flt_datasets,"\n")
         cat("input$flt_datatype = ",input$flt_datatype,"\n")
         cat("input$flt_organism = ",input$flt_organism,"\n")
-        if(notnull(input$flt_datasets)) f1 <- (df$collection %in% input$flt_datasets)
+        ## if(notnull(input$flt_datasets)) f1 <- (df$collection %in% input$flt_datasets)
         if(notnull(input$flt_datatype)) f2 <- (df$datatype %in% input$flt_datatype)
         if(notnull(input$flt_organism)) f3 <- (df$organism %in% input$flt_organism)
         df <- df[which(f1 & f2 & f3),,drop=FALSE]
         
         ##kk = unique(c("dataset","datatype","organism","description",colnames(df)))
         kk = unique(c("dataset","datatype","description","nsamples",
-                      "ngenes","nsets","conditions","date",
-                      "organism", "collection"))
+                      "ngenes","nsets","conditions","organism",
+                      "date"))
         kk = intersect(kk,colnames(df))
         df = df[,kk]               
-        df = df[order(df$dataset),]   ## sort alphabetically...
-        rownames(df) <- NULL
+
+        df$date <- as.Date(df$date, format='%Y-%m-%d')
+        ## df$date  <- NULL
+        
+        df <- df[order(df$dataset),]   ## sort alphabetically...
+        ##df <- df[order(df$date,decreasing=FALSE),]
+        df <- df[order(df$date,decreasing=TRUE),]
+        rownames(df) <- nrow(df):1
+        
         df
     })
 
@@ -617,9 +623,10 @@ LoadingBoard <- function(input, output, session,
         df$conditions  <- sapply(as.character(df$conditions), andothers, split=" ", n=5)
         df$description <- shortstring(as.character(df$description),200)
         df$nsets <- NULL
-        df$date  <- NULL
+
+        target1 <- grep("date",colnames(df))
         
-        DT::datatable( df,
+        DT::datatable(df,
                       class = 'compact cell-border stripe hover',
                       rownames=TRUE,
                       extensions = c('Scroller'),
@@ -634,20 +641,23 @@ LoadingBoard <- function(input, output, session,
                           scrollX = FALSE,
                           ##scrollY =400, ## scroller=TRUE,
                           scrollY = '100vh', ## scroller=TRUE,
-                          deferRender=TRUE
+                          deferRender=TRUE,
+                          autoWidth = TRUE,
+                          columnDefs = list(list(width='60px', targets=target1))
                       )  ## end of options.list 
                       )  %>%
             DT::formatStyle(0, target='row', fontSize='11.5px', lineHeight='95%')
 
     })
 
-    pgxtable_text = "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the collection date."
+    pgxtable_text = "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date."
 
     pgxtable <- callModule(
         tableModule, id = "pgxtable",
         func = pgxTable.RENDER,
         title = "Datasets",
-        height = 640)
+        height = 640, width = c('100%',1600),
+    )
 
     output$pgxtable_UI <- renderUI({    
         fillCol(
@@ -799,7 +809,8 @@ LoadingBoard <- function(input, output, session,
         pdf.width=12, pdf.height=7, pdf.pointsize=13,
         height = c(450,600), width = c('auto',1000), res=72,
         ##datacsv = enrich_getWordFreq,
-        title = "Number of visitors by country"
+        title = "Number of visitors by country",
+        add.watermark = WATERMARK
     )
 
     ##usersmap_caption = "<b>(a)</b> <b>Geo locate.</b>"

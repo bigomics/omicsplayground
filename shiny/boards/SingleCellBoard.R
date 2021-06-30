@@ -386,8 +386,6 @@ immune cell types, expressed genes and pathway activation."
     )
 
     sc_icp_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
-
-    sc_icp_caption = "<b>Cell type profiling (deconvolution).</b> The cell type can be computationally inferred using so-called deconvolution methods by matching the (absolute) expression profile to a known reference set. This reference set can be a cell type reference database but also cancer types, tissue types or cell lines."
     
     callModule(
         plotModule,
@@ -397,12 +395,13 @@ immune cell types, expressed genes and pathway activation."
         ##title = "Cell type profiling (deconvolution)",
         options = sc_icp.opts,
         info.text = sc_icp_info,
-        ##caption = sc_icp_caption,
-        pdf.width=8, pdf.height=8, 
-        height = c(fullH-80,780), width = c("100%",1000),
-        res = c(85,95)
+        caption2 = sc_icp_info,
+        pdf.width=12, pdf.height=6, 
+        height = c(fullH-80,700), width = c("100%",1400),
+        res = c(85,95),
+        add.watermark = WATERMARK
     )
-
+    
     ##===========================================================================
     ## Phenotypes
     ##===========================================================================
@@ -501,9 +500,7 @@ immune cell types, expressed genes and pathway activation."
                "Select whether you want the group labels to be plotted inside the plots or in a seperate legend.")
     )
 
-    sc_phenoModule_info = "<strong>Phenotypes.</strong> This figure visualizes the distribution of the phenotype information. In the plot options, you can select whether you want the group labels to be plotted inside the plots or in a seperate legend."
-
-    sc_phenoModule_caption = "<b>Phenotype plots.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
+    sc_phenoModule_info = "<b>Phenotype plots.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
    
     callModule(
         plotModule,
@@ -512,10 +509,11 @@ immune cell types, expressed genes and pathway activation."
         func2 = sc_pheno.plotFUNC,
         options = sc_phenoplot.opts,
         info.text = sc_phenoModule_info,
-        ##caption = sc_phenoModule_caption
+        caption2 = sc_phenoModule_info,
         pdf.width=5, pdf.height=8,
         height = c(fullH-100,750), width = c("100%",500),
-        res = c(85,85)
+        res = c(85,85),
+        add.watermark = WATERMARK
     )
 
     
@@ -525,14 +523,14 @@ immune cell types, expressed genes and pathway activation."
             fillCol(
                 height = fullH,
                 flex = c(NA,1),
-                div(HTML(sc_icp_caption),class="caption"),
+                div(HTML(sc_icp_info),class="caption"),
                 plotWidget(ns("sc_icpplot"))
             ),
             br(),
             fillCol(
                 height = fullH,
                 flex = c(NA,1), 
-                div(HTML(sc_phenoModule_caption), class="caption"),
+                div(HTML(sc_phenoModule_info), class="caption"),
                 plotWidget(ns("sc_phenoplot"))
             )
         )
@@ -720,7 +718,8 @@ immune cell types, expressed genes and pathway activation."
         ##caption = sc_icp_caption,
         pdf.width=8, pdf.height=8, 
         height = c(fullH-80,780), width = c("100%",1000),
-        res = c(85,95)
+        res = c(85,95),
+        add.watermark = WATERMARK
     )
     ##output <- attachModule(output, sc_icp_module
     
@@ -969,7 +968,8 @@ immune cell types, expressed genes and pathway activation."
         ##caption = sc_crosstabModule_caption,
         pdf.width=12, pdf.height=8,
         height = c(fullH-80,760), width = c("100%",900),
-        res=c(110,110)
+        res = c(110,110),
+        add.watermark = WATERMARK
     )
 
     observe({
@@ -1176,8 +1176,9 @@ immune cell types, expressed genes and pathway activation."
         info.text = sc_markersplot_info,
         pdf.height = 10, pdf.width=10, 
         height = c(fullH-80,780), width = c("100%",1000),
-        res = c(85,90)
-        ##caption = sc_markersplot_caption
+        res = c(85,90),
+        ##caption = sc_markersplot_caption,
+        add.watermark = WATERMARK
     )
 
     observe({
@@ -1258,7 +1259,8 @@ immune cell types, expressed genes and pathway activation."
         ## caption = sc_cytoModule_caption,
         pdf.width=6, pdf.height=8,
         height = c(fullH-80,780), width = c("100%",600),
-        res = c(80,80)
+        res = c(80,80),
+        add.watermark = WATERMARK
     )
 
     observe({
@@ -1392,7 +1394,8 @@ immune cell types, expressed genes and pathway activation."
         ##caption = sc_cnaModule_caption,
         pdf.width=10, pdf.height=8, 
         height = c(fullH - 60,700), width = c('100%',1000),
-        res=110
+        res = 110,
+        add.watermark = WATERMARK
     )
 
     observe({
@@ -1571,7 +1574,8 @@ a circle plot. The width of the arrow represents the expression level/log fold c
                    placement="top")
         ),
         pdf.width=6, pdf.height=8,
-        height = imgH, res=80
+        height = imgH, res=80,
+        add.watermark = WATERMARK
     )
 
     italk_heatmap_info = "The heatmap visualizes the expression level/log fold change of the ligand/receptor genes. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
@@ -1585,7 +1589,8 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         info.text = italk_heatmap_info,
         options = tagList(),
         pdf.width=6, pdf.height=8,
-        height = imgH, res=80
+        height = imgH, res=80,
+        add.watermark = WATERMARK
     )
     
     italk_netview_info = "The NetView plot visualizes the communication structure of ligand-receptor genes as a graph. The colors represent different types of cells as a structure and the width of edges represent the strength of the communication. Labels on the edges show exactly how many interactions exist between two types of cells. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
@@ -1604,7 +1609,8 @@ a circle plot. The width of the arrow represents the expression level/log fold c
                    placement="top" )
         ),
         pdf.width=6, pdf.height=8, 
-        height = imgH, res=80
+        height = imgH, res=80,
+        add.watermark = WATERMARK
     )
 
     observe({
@@ -1885,7 +1891,8 @@ a circle plot. The width of the arrow represents the expression level/log fold c
             selectInput(ns("monocle_ntop"),"ntop:",choices=c(1,2,3,4,5,10,25),selected=5)
         ),
         pdf.width=5, pdf.height=8,
-        height=imgH, res=c(72,95)
+        height=imgH, res=c(72,95),
+        add.watermark = WATERMARK
     )
 
     ##------- plotTrajectory module -------
@@ -1900,7 +1907,8 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         info.text = "Single-cell trajectory analysis how cells choose between one of several possible end states. Reconstruction algorithms can robustly reveal branching trajectories, along with the genes that cells use to navigate these decisions.",
         options = monocle_plotTrajectory.opts,
         pdf.width=8, pdf.height=8,
-        height = 0.45*imgH, res=c(80,95)
+        height = 0.45*imgH, res=c(80,95),
+        add.watermark = WATERMARK
     )
 
     ##------- plotGene module -------
@@ -1916,7 +1924,8 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         info.text = ".",
         options = monocle_plotGene.opts,
         pdf.width=8, pdf.height=8,
-        height = 0.45*imgH, res = c(80,95)
+        height = 0.45*imgH, res = c(80,95),
+        add.watermark = WATERMARK
     )
     ##output <- attachModule(output, monocle_plotGene.MODULE)
 

@@ -5,12 +5,15 @@
 
 ## should we migrate all OPTIONS into this file??
 
-if(1) {
-    ## being pedantic... (https://adv-r.hadley.nz)
-    options(warnPartialMatchDollar = TRUE)
-    options(warnPartialMatchArgs = TRUE)    
-    Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
-}
+Sys.setlocale("LC_CTYPE","en_US.UTF-8") 
+Sys.setlocale("LC_TIME","en_US.UTF-8")
+##Sys.setlocale("LC_ALL", "C")  ## really??
+Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
+
+## being pedantic... (https://adv-r.hadley.nz)
+options(warnPartialMatchDollar = TRUE)
+options(warnPartialMatchArgs = TRUE)    
+options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload
 
 message("[MAIN] reading global.R ...")
 
@@ -25,6 +28,7 @@ USER_MODE = "pro"
 DEV       = FALSE
 DEV       = TRUE
 WATERMARK = FALSE
+WATERMARK = TRUE
 DEBUG     = FALSE
 DEBUG     = TRUE
 

@@ -577,7 +577,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         splitx = filt$grp
 
         show_legend=show_colnames=TRUE
+        show_legend <- input$hm_legend
         if(input$hm_level=="geneset" || !is.null(splitx)) show_legend = FALSE
+        
         annot$group = NULL  ## no group in annotation??
         show_colnames <- (input$hm_cexCol != 0)
         ##if(ncol(zx) > 200) show_colnames <- FALSE ## never...    
@@ -742,7 +744,10 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         tipify( radioButtons(
             ns('hm_scale'), 'Scale:', choices=c('relative','absolute'), inline=TRUE),
             "Show relative (i.e. mean-centered) or absolute expression values.",
-            placement="bottom"),
+            placement="right", options = list(container = "body")),
+        tipify( checkboxInput(
+            ns('hm_legend'), 'Legend:', value=TRUE), "Show legend.",
+            placement="right", options = list(container = "body")),
         fillRow(
             height = 50,
             ## checkboxInput(ns("hm_labRow"),NULL),
@@ -878,7 +883,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         info.width = "350px",
         download.pdf = hm_splitmap_downloadPDF,
         download.png = hm_splitmap_downloadPNG,
-        download.html = hm_splitmap_downloadHTML
+        download.html = hm_splitmap_downloadHTML,
+        add.watermark = WATERMARK
         ##caption = hm_splitmap_caption
     )
 
@@ -900,7 +906,6 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     
     hm_PCAplot_text = tagsub(paste0(' The <b>PCA/tSNE</b> panel visualizes unsupervised clustering obtained by the principal components analysis (',a_PCA,') or t-distributed stochastic embedding (',a_tSNE,') algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other. 
 <br><br>Users can customise the PCA/tSNE plot in the plot settings, including the {color} and {shape} of points using a phenotype class, choose t-SNE or PCA layout, label the points, or display 2D and 3D visualisation of the PCA/tSNE plot.'))
-
 
     require(plotly)
     require(scatterD3)
@@ -1177,8 +1182,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         height = c(fullH-100,700), width=c("auto",800),
         pdf.width=8, pdf.height=8,
         title="PCA/tSNE plot",
-        info.text = hm_PCAplot_text
-        ##caption = pca_caption_static
+        info.text = hm_PCAplot_text,
+        add.watermark = WATERMARK        
     )
 
     output$hm_pcaUI <- renderUI({
@@ -1335,7 +1340,8 @@ displays the expression levels of selected genes across all conditions in the an
         height = c(0.45*fullH,600), width = c("100%",1000),
         pdf.width=10, pdf.height=6, info.width="350px",
         title = "Parallel coordinates", label = "a",
-        info.text = hm_parcoord_text
+        info.text = hm_parcoord_text,
+        add.watermark = WATERMARK        
         ## caption = hm_parcoord_text,
     )
 
@@ -1647,7 +1653,8 @@ displays the expression levels of selected genes across all conditions in the an
         height = c(360,600), width = c(500,1000),
         pdf.width=8, pdf.height=5, res=80,
         title="Functional annotation of clusters", label="a",
-        info.text = clustannot_plots_text        
+        info.text = clustannot_plots_text,
+        add.watermark = WATERMARK                
     )
     
     clustannot_table.RENDER <- reactive({
@@ -1802,7 +1809,8 @@ displays the expression levels of selected genes across all conditions in the an
         options = clust_phenoplot.opts,
         height = c(fullH-100,700), res = 85,
         pdf.width = 6, pdf.height = 9, 
-        info.text = clust_phenoplot_info
+        info.text = clust_phenoplot_info,
+        add.watermark = WATERMARK        
         ## caption = clust_phenoplot_caption
     )
 
@@ -1980,8 +1988,9 @@ displays the expression levels of selected genes across all conditions in the an
         pdf.width=8, pdf.height=8,
         height = c(fullH-80,700), width=c("auto",800),
         res = c(72,90),
-        info.text = clust_featureRank_info
-        ## caption = clust_featureRank_caption
+        info.text = clust_featureRank_info,
+        ## caption = clust_featureRank_caption,
+        add.watermark = WATERMARK                
     )
     
     output$hm_featurerankUI <- renderUI({
