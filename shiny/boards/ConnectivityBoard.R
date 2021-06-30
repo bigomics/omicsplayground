@@ -681,7 +681,7 @@ ConnectivityBoard <- function(input, output, session, env)
     })
 
     
-    connectivityScoreTable_info = "<b>Similarity scores.</b> Normalized enrichment scores (NES) and Pearson correlation of reference profiles with respect to the currently selected contrast."
+    connectivityScoreTable_info = "<b>Similarity scores.</b> Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The score is calculated as rho^2*NES. "
 
     connectivityScoreTable_opts = tagList(
         selectInput(ns("connectivityScoreTable_qsig"),"threshold (padj)",
@@ -849,7 +849,8 @@ ConnectivityBoard <- function(input, output, session, env)
         ##caption = cmap_connectivitymap_caption,
         pdf.height=4.5, pdf.width=10, 
         height = c(360,600), width=c("auto",1280),
-        res = c(90,110)
+        res = c(90,110),
+        add.watermark = WATERMARK
     )
 
       
@@ -959,7 +960,8 @@ ConnectivityBoard <- function(input, output, session, env)
         options = cumFCplot.opts,
         pdf.height = 6, pdf.width = 9, 
         height = c(280, 600), width = c('auto',1300),
-        res = c(72,90)
+        res = c(72,90),
+        add.watermark = WATERMARK
     )    
         
     ##================================================================================
@@ -1114,7 +1116,8 @@ ConnectivityBoard <- function(input, output, session, env)
         options = cumEnrichmentPlot.opts,
         pdf.height = 8, pdf.width = 12, 
         height = c(280,720), width = c('auto',1000),
-        res = c(72,90)
+        res = c(72,90),
+        add.watermark = WATERMARK
     )    
 
 
@@ -1413,7 +1416,8 @@ ConnectivityBoard <- function(input, output, session, env)
         ##caption = connectivityMap_caption,
         pdf.width=8, pdf.height=8,
         height = c(fullH-100,750), width = c('auto',1000),
-        res=90
+        res=90,
+        add.watermark = WATERMARK
     )
 
     ##-------------------------------------------------------------------------------
@@ -1582,7 +1586,8 @@ ConnectivityBoard <- function(input, output, session, env)
         ## caption = leadingEdgeGraph_caption,
         pdf.height=8, pdf.width=8, 
         height = c(720,720), width=c("auto",1300),
-        res = c(90,100)
+        res = c(90,100),
+        add.watermark = WATERMARK
     )
 
     ##-------------------------------------------------------------------------------
@@ -1745,7 +1750,8 @@ ConnectivityBoard <- function(input, output, session, env)
         ## caption = enrichmentGraph_caption,
         pdf.height=8, pdf.width=8, 
         height = c(720,720), width=c("auto",1200),
-        res = c(90,100)
+        res = c(90,100),
+        add.watermark = WATERMARK
     )
     
 
@@ -2017,8 +2023,9 @@ ConnectivityBoard <- function(input, output, session, env)
         pdf.width=8, pdf.height=8,
         height = c(fullH-80,700), width=c('auto',1000), res = 95,
         ##info.width = "60px",        
-        info.text = cmapPairsPlot_info
-        ##caption = cmapPairsPlot_caption
+        info.text = cmapPairsPlot_info,
+        ##caption = cmapPairsPlot_caption,
+        add.watermark = WATERMARK
     )
     ##output <- attachModule(output, cmapPairsPlot_module)
 
@@ -2132,7 +2139,8 @@ ConnectivityBoard <- function(input, output, session, env)
         ##caption = connectivityHeatmap_caption,
         pdf.width=14, pdf.height=5.5,
         height = c(480,550), width = c('auto',1400),
-        res = c(90,90)
+        res = c(90,90),
+        add.watermark = WATERMARK
     )
     
     

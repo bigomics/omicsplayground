@@ -686,8 +686,9 @@ between two contrasts."
         ## download.fmt = c("html"),
         pdf.width=8, pdf.height=8,
         height = c(fullH-80,700), res=95,
-        info.text = cmp_scatterPlotMatrix_info
-        ##caption = cmp_scatterPlotMatrix_caption
+        info.text = cmp_scatterPlotMatrix_info,
+        ##caption = cmp_scatterPlotMatrix_caption,
+        add.watermark = WATERMARK
     )
     ##output <- attachModule(output, cmp_scatterPlotMatrix_module)
 
@@ -805,7 +806,8 @@ between two contrasts."
         info.text = "The Venn diagram visualizes the number of intersecting genes between the profiles. The list of intersecting genes with further details is also reported in an interactive table below, where users can select and remove a particular contrasts from the intersection analysis.",
         options = cmp_venndiagram.opts,
         pdf.width=8, pdf.height=8,
-        height = 0.40*fullH, res=72
+        height = 0.40*fullH, res=72,
+        add.watermark = WATERMARK
     )
 
     callModule(
@@ -900,7 +902,8 @@ between two contrasts."
         options = cmp_cumFCplot.opts,
         pdf.width = 8, pdf.height = 6,
         height = c(0.45*fullH,550), width=c('auto',1000),
-        res=c(75,110)
+        res=c(75,110),
+        add.watermark = WATERMARK
     )
     
     ##================================================================================
@@ -1104,8 +1107,9 @@ between two contrasts."
         download.fmt = c("html"),
         pdf.width=8, pdf.height=8,
         height = c(fullH-80,700), res=95,
-        info.text = cmp_pairsPlot_info
-        ##caption = cmp_pairsPlot_caption
+        info.text = cmp_pairsPlot_info,
+        ##caption = cmp_pairsPlot_caption,
+        add.watermark = WATERMARK
     )
 
     
@@ -1390,7 +1394,9 @@ between two contrasts."
         options = cmp_ctheatmap.opts,
         download.fmt = c("pdf","html"),
         pdf.width = 11, pdf.height = 10,
-        height = c(fullH-50,720), width = c("auto",1100), res=c(80,85)
+        height = c(fullH-50,720), width = c("auto",1100),
+        res=c(80,85),
+        add.watermark = WATERMARK
     )
     
     ##================================================================================
@@ -1536,8 +1542,9 @@ between two contrasts."
         pdf.width=8, pdf.height=8,
         height = c(fullH-110), res=90,
         title = "Connectivity map",
-        info.text = cmp_connectivitymap_info
+        info.text = cmp_connectivitymap_info,
         ##caption = cmp_connectivitymap_caption,
+        add.watermark = WATERMARK
     )
     
     ##-------------------------------------------------------

@@ -127,7 +127,6 @@ symbol2hugo <- function(genes, remove.non.hugo=TRUE, silent=FALSE,
     ss
 }
 
-
 gx.collapse2symbol <- function(X, symbol) {
     j1 <- order(-apply(X,1,sd))
     X <- X[j1,]

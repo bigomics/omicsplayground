@@ -683,19 +683,6 @@ pgx.makeAutoContrasts <- function(df, mingrp=3, slen=20, ref=NULL,
     list(group = xc, contr.matrix = K2, exp.matrix=K)
 }
 
-normalizeTMM <- function(counts, log=FALSE, method="TMM") {
-    require(edgeR)
-    dge <- DGEList(as.matrix(counts), group=NULL)
-    dge <- calcNormFactors(dge, method=method)
-    edgeR::cpm(dge, log=log)
-}
-normalizeRLE <- function(counts, log=FALSE) {
-    require(edgeR)
-    dge <- DGEList(as.matrix(counts), group=NULL)
-    dge <- calcNormFactors(dge, method="RLE")
-    edgeR::cpm(dge, log=log)
-}
-
 normalizeContrasts <- function(contr.matrix) {
     ## normalize to zero mean and symmetric sum-to-one. Any NA to zero.
     for(i in 1:ncol(contr.matrix)) {

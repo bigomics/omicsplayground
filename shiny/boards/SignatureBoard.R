@@ -37,13 +37,12 @@ SignatureBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
 
-    fullH = 750   ## full height of page
+    fullH = 800   ## full height of page
     tabH = '70vh'
     
     ## reactive functions from shared environment
     inputData <- env[["load"]][["inputData"]]
     selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
-
     
     description = "<b>Signature Analysis.</b> Users can test their gene signature by
 calculating an enrichment score. Upload your own gene list, or select
@@ -112,16 +111,6 @@ infotext =
                 )
             )
         )
-
-        if(DEV) {
-            uix <- tagList(
-                hr(),h6("Developer options:"),
-                radioButtons(ns('ssstats'),'ss-stats:',
-                             c("rho","gsva","grp.gsva","rho+gsva","rho+grp.gsva"),
-                             inline=TRUE)
-            )
-            ui <- c(ui, uix)
-        }
         ui
     })
     outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
@@ -299,33 +288,9 @@ infotext =
         ## for large datasets pre-grouping is faster
         ss.bygroup  <- calcSingleSampleValues(gX, y, method=c("rho","gsva"))
         do.rho   = TRUE
-        do.gsva  = FALSE
-        do.exact = FALSE
-        if(0 && DEV) {
-            if(input$ssstats=="rho") { do.rho=TRUE; do.gsva = FALSE; do.exact=TRUE }
-            if(input$ssstats=="gsva") { do.rho=FALSE; do.gsva = TRUE; do.exact=TRUE }
-            if(input$ssstats=="grp.gsva") { do.rho=FALSE; do.gsva=TRUE; do.exact=FALSE }
-            if(input$ssstats=="rho+gsva") { do.rho=TRUE; do.gsva=TRUE; do.exact=TRUE }
-            if(input$ssstats=="rho+grp.gsva") { do.rho=TRUE; do.gsva=TRUE; do.exact=FALSE }
-        }
-        ss.bysample <- c()
-        if(do.rho) {
-            dbg("getSingleSampleEnrichment:: 2 : do.rho")
-            ss1 <- calcSingleSampleValues(X[,], y, method=c("rho"))
-            ss.bysample <- cbind(ss.bysample, rho=ss1)
-        }
-
-        if(do.gsva) {
-            if(do.exact) {
-                ##ss.bysample <- calcSingleSampleValues(X[,1:250], y, method=c("rho","gsva"))
-                ss1 <- calcSingleSampleValues(X[,], y, method=c("gsva"))
-                ss.bysample <- cbind(ss.bysample, gsva=ss1)
-            } else {
-                ss.bysample <- calcSingleSampleValues(X, y, method=c("rho"))
-                ss1 <- ss.bygroup[,"gsva"][grp]
-                ss.bysample <- cbind(ss.bysample, gsva=ss1)
-            }
-        }
+        dbg("getSingleSampleEnrichment:: 2 : do.rho")
+        ss1 <- calcSingleSampleValues(X[,], y, method=c("rho"))
+        ss.bysample <- cbind(ss.bysample, rho=ss1)
         
         res <- list( by.sample=ss.bysample, by.group=ss.bygroup)
         return(res)
@@ -545,7 +510,7 @@ infotext =
         
         require(gplots)
         cex.main=1.1
-        par(mfrow=c(4,3), mar=c(0.3,4,3,1), mgp=c(2.2,0.8,0) )
+        par(mfrow=c(4,3), mar=c(0.3,3,3,0.5), mgp=c(2.0,0.7,0) )
         if(ncol(F)>12) {
             par(mfrow=c(5,4), mar=c(0.2,2,3,0.6))
             cex.main=0.9
@@ -556,7 +521,7 @@ infotext =
             tt <- sub(".*\\]","",f)
             tt <- breakstring(substring(tt,1,50),28,force=TRUE)
             gsea.enplot(F[,i], gset, main=tt, cex.main=cex.main,
-                        xlab="", ylab="")
+                        xlab="", ylab="rank metrix")
             qv1 <- paste("q=",round(qv[i],digits=3))
             legend("topright",qv1, cex=0.9, bty="n", adj=0)
             if(grepl("^\\[",f)) {
@@ -566,9 +531,8 @@ infotext =
         }
     })
 
-    enplots_info = "The <strong>Enrichment</strong> tab performs the enrichment analysis of the gene list against all contrasts by running the GSEA algorithm and plots enrichment outputs. Enrichment statistics can be found in the corresponding table"
     
-    enplots_caption = "<b>Enrichment plots.</b> Enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature."
+    enplots_info = "<b>Enrichment plots.</b> Enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature."
 
     enplots.opts = NULL
     callModule(
@@ -582,14 +546,15 @@ infotext =
         pdf.width=10, pdf.height=8,
         height = c(fullH-80,750),
         width = c('100%',1000),
-        res=c(90,90)
+        res=c(90,90),
+        add.watermark = WATERMARK
     )
 
     output$enplots_UI <- renderUI({
         fillCol(
             height = fullH,
             flex = c(NA,0.03,1),
-            div(HTML(enplots_caption), class="caption"),
+            div(HTML(enplots_info), class="caption"),
             br(),
             plotWidget(ns("enplots"))
         )
@@ -683,7 +648,8 @@ infotext =
         pdf.width=10, pdf.height=8,
         height = c(fullH-80,780),
         width = c('100%',1100),
-        res=c(90,100)
+        res = c(90,100),
+        add.watermark = WATERMARK
     )
 
     output$volcanoPlots_UI <- renderUI({
@@ -929,7 +895,8 @@ infotext =
         info.text = "Top overlapping gene sets with selected signature. The vertical axis shows the overlap score of the gene set which combines the odds ratio and significance (q-value) of the Fisher's test.",
         options = overlapScorePlot.opts,
         pdf.width = 12, pdf.height = 6,
-        height = 0.45*fullH, res=100
+        height = 0.45*fullH, res=100,
+        add.watermark = WATERMARK
     )
     
     overlapTable <- callModule(
@@ -1099,7 +1066,8 @@ infotext =
         info.text = markers_info,
         options = markers.opts,
         pdf.width=8, pdf.height=8,
-        height = c(fullH-100,750), res=c(100,95)
+        height = c(fullH-100,750), res=c(100,95),
+        add.watermark = WATERMARK
     )
 
     output$markers_UI <- renderUI({
@@ -1237,28 +1205,30 @@ infotext =
                         backgroundPosition = 'center')    
     })
 
+    info.text1 = "<b>Enrichment by contrast.</b> Enrichment scores of query signature across all contrasts. The table summarizes the enrichment statistics of the gene list in all contrasts using the GSEA algorithm. The NES corresponds to the normalized enrichment score of the GSEA analysis.  "
 
-    info.text1 = "The table summarizes the enrichment statistics of the gene list against all contrasts by running the GSEA algorithm and plots enrichment outputs."
     enrichmentContrastTable <- callModule(
         tableModule,
         id = "enrichmentContrastTable", 
         func = enrichmentContrastTable.RENDER,
         info.text = info.text1,
+        caption2 = info.text1,                
         title = "Enrichment by contrasts", label="a",
         height = c(230,700)
     )
 
-    info.text2 = "This table shows the genes of the current signature."
+    info.text2 = "<b>Gene table.</b> Genes of the current signature corresponding to the selected contrast. Genes are sorted by decreasing (absolute) fold-change."
     enrichmentGeneTable <- callModule(
         tableModule,
         id = "enrichmentGeneTable", 
         func = enrichmentGeneTable.RENDER,
         info.text = info.text2,
+        caption2 = info.text2,        
         title = "Genes in signature", label="b",
         height = c(360,700)
     )
     
-    enrichmentTables_caption = "<b>Enrichment of query signature across all contrasts.</b> <b>(a)</b> Enrichment scores across all contrasts for the selected query signature . The NES corresponds to the normalized enrichment score of the GSEA analysis.  <b>(b)</b> Genes in the query signature sorted by decreasing (absolute) fold-change corresponding to the contrast selected in Table (a)."
+    enrichmentTables_caption = "<b>Enrichment of query signature across all contrasts.</b> <b>(a)</b> Enrichment scores across all contrasts for the selected query signature . The NES corresponds to the normalized enrichment score of the GSEA analysis. <b>(b)</b> Genes in the query signature sorted by decreasing (absolute) fold-change corresponding to the selected contrast."
 
     output$enrichmentTables_UI <- renderUI({
         fillCol(

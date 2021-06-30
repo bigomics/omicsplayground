@@ -21,6 +21,11 @@ body {
     font-weight: 400;    
 }
 
+h1, .h1, h2, .h2, h3, .h3 {
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
 .content {
     min-height: 800px;
     /* background: var(--canvas-color); */
@@ -140,7 +145,7 @@ a {
     background: var(--light-color);
     border-radius: 0px;
     font-size: 12px;
-    height: 900px;
+    height: 1200px;
     margin: -8px 0px 0px -5px;
     padding: 30px 15px 30px 15px;
 }
@@ -254,7 +259,8 @@ a {
 }
 
 .caption2 {
-    padding: 10px 20px;
+    padding: 20px 0px 20px 0px;
+    font-size: 17px;    
 }
 
 .table-caption {

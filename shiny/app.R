@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2021 BigOmics Analytics Sagl. All rights reserved.
 ##
 
 #########################################################################
@@ -9,11 +9,11 @@
 ##                                                                     ##
 #########################################################################
 
-require(shiny)
-require(shinyjs)
-require(shinyWidgets)
-require(plotly)
-require(shinybusy)
+library(shiny)
+library(shinyjs)
+library(shinyWidgets)
+library(plotly)
+library(shinybusy)
 
 message("\n\n")
 message("###############################################################")
@@ -24,9 +24,6 @@ message("************************************************")
 message("********* RUNTIME ENVIRONMENT VARIABLES ********")
 message("************************************************")
 
-Sys.setlocale("LC_CTYPE","en_US.UTF-8") 
-Sys.setlocale("LC_TIME","en_US.UTF-8")
-##Sys.setlocale("LC_ALL", "C")  ## really??
 ##Sys.setenv("SHINYPROXY_USERNAME"="Test Person")
 main.start_time <- Sys.time()
 
@@ -75,7 +72,6 @@ message("************************************************")
 message("************* parsing OPTIONS file *************")
 message("************************************************")
 
-options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
 
@@ -84,6 +80,7 @@ opt <- pgx.readOptions(file="OPTIONS")
 ## opt$AUTHENTICATION = "password"
 ## opt$AUTHENTICATION = "register"
 ## opt$AUTHENTICATION = "firebase"
+
 
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
@@ -110,7 +107,7 @@ message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 ## ------------------------ READ FUNCTIONS ----------------------------
 ## --------------------------------------------------------------------
 
-source("init.R", local=FALSE)
+source("app-init.R", local=FALSE)
 ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 
@@ -119,6 +116,7 @@ if(0) {
     ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
     load("../data/geiger2016-arginine-test.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
+    load("../data/GSE22886-immune.pgx")
     ngs = pgx.initialize(ngs)
 }
 
@@ -136,7 +134,7 @@ source("modules/UploadModule.R",local=src.local)
 
 BOARDS <- c("load","view","clust","expr","enrich","isect","func",
             "word","drug","sig","scell","cor","bio","cmap",
-            "wgcna", "tcga","multi","system","qa","corsa")
+            "wgcna", "tcga","multi","system","qa","corsa","comp")
 if(is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED = BOARDS
 if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
 
@@ -230,6 +228,7 @@ server = function(input, output, session) {
     if(ENABLED["scell"])  env[["scell"]]  <- callModule( SingleCellBoard, "scell", env)
     if(ENABLED["tcga"])   env[["tcga"]]   <- callModule( TcgaBoard, "tcga", env)
     if(ENABLED["wgcna"])  env[["wgcna"]]  <- callModule( WgcnaBoard, "wgcna", env)
+    if(ENABLED["comp"])   env[["comp"]]   <- callModule( CompareBoard, "comp", env)
     if(DEV) {            
         if(ENABLED["corsa"])  env[["corsa"]]  <- callModule( CorsaBoard, "corsa", env)
         if(ENABLED["system"]) env[["system"]] <- callModule( SystemBoard, "system", env)
@@ -247,7 +246,7 @@ server = function(input, output, session) {
         if(length(name)==0) name = "(no data)"
         name
     })
-      
+    
     ## Dynamicall hide/show certain sections depending on USERMODE/object
     observe({
         pgx <- env[["load"]][["inputData"]]() ## trigger on change dataset
@@ -274,6 +273,7 @@ server = function(input, output, session) {
             hideTab("enrich-tabs1","Volcano (methods)")
             hideTab("enrich-tabs2","FDR table")
             hideTab("cor-tabs","Functional")  ## too slow
+            hideTab("cor-tabs","Differential")  ## too slow            
         }
         
         ## hideTab("cor-tabs","Functional")       
@@ -285,10 +285,12 @@ server = function(input, output, session) {
             showTab("scell-tabs1","Monocle") ## DEV only
             showTab("cor-tabs","Functional")
         } else {
-            hideTab("view-tabs","Resource info")
             hideTab("maintabs","DEV")
+            hideTab("view-tabs","Resource info")
+            hideTab("enrich-tabs1","GeneMap")
             hideTab("scell-tabs1","CNV")  ## DEV only
-            hideTab("scell-tabs1","Monocle") ## DEV only       
+            hideTab("scell-tabs1","Monocle") ## DEV only
+            hideTab("cor-tabs","Functional")            
         }
         
         ## Dynamically show upon availability in pgx object
@@ -337,7 +339,8 @@ TABVIEWS <- list(
     "bio" = tabView("Find biomarkers", BiomarkerInputs("bio"), BiomarkerUI("bio")),
     "cmap" = tabView("Similar experiments", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
     "scell" = tabView("CellProfiling", SingleCellInputs("scell"), SingleCellUI("scell")),
-    "tcga" = tabView("TCGA survival (beta)", TcgaInputs("tcga"), TcgaUI("tcga"))
+    "tcga" = tabView("TCGA survival (beta)", TcgaInputs("tcga"), TcgaUI("tcga")),
+    "comp" = tabView("Compare datasets (beta)", CompareInputs("comp"), CompareUI("comp"))
 )
 
 if(DEV) {
@@ -345,7 +348,6 @@ if(DEV) {
     TABVIEWS$system = tabView("Systems analysis (dev)",SystemInputs("system"),SystemUI("system"))
     TABVIEWS$multi = tabView("Multi-level (dev)", MultiLevelInputs("multi"), MultiLevelUI("multi"))
 }
-
 
 names(TABVIEWS)
 TABVIEWS <- TABVIEWS[names(TABVIEWS) %in% names(which(ENABLED))]
@@ -446,7 +448,7 @@ tabs = list(
     "Clustering" = c("clust","wgcna"),
     "Expression" = c("expr","cor"),
     "Enrichment" = c("enrich","func","word","drug"),
-    "Signature" = c("isect","sig","bio","cmap","tcga"),
+    "Signature" = c("isect","comp","sig","bio","cmap","tcga"),
     "CellProfiling" = "scell",
     "DEV" = c("corsa","system","multi")
 )
@@ -457,7 +459,6 @@ ui = createUI(tabs)
 ## --------------------------------------------------------------------
 
 shiny::shinyApp(ui, server)
-
 
 ##pkgs <- c( sessionInfo()[["basePkgs"]], names(sessionInfo()[["otherPkgs"]]),
 ##          names(sessionInfo()[["loadedOnly"]]) )

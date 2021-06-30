@@ -300,7 +300,7 @@ pgx.simplifyCellTypes <- function(ct, low.th=0.01)
     ct[grep("hemato",ct)] <- "other_cells"
 
     ## otherCells (from EPIC)
-    ##ct[grep("otherCells",ct)] <- "unknown"
+    ct[grep("otherCells",ct)] <- "other_cells"
     
     ## collapse low frequency celltype to "other"
     low.ct <- names(which(table(ct) < low.th*length(ct)))
@@ -489,7 +489,7 @@ pgx.multipleDeconvolution <- function(counts, refmat, methods=DECONV.METHODS)
         message("[pgx.multipleDeconvolution] computing for ",refnames[i])
         ref <- refmat[[i]]
         dim(ref)
-        res = pgx.deconvolution(counts[,], ref=ref, methods=methods)
+        res = pgx.deconvolution(counts, ref=ref, methods=methods)
 
         if(!is.null(res)) {
             names(res)
@@ -527,7 +527,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     ref <- as.matrix(ref[!duplicated(rownames(ref)),,drop=FALSE])
 
     ## Add "unknown" class to reference matrix
-    if(add.unknown==TRUE) {
+    if(add.unknown) {
         gg <- intersect(rownames(ref),rownames(mat))
         x1 <- log(1+ref[gg,,drop=FALSE])
         y1 <- log(1+rowMeans(mat[gg,,drop=FALSE]))
@@ -544,7 +544,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
         resx <- rep(0,nrow(ref))
         names(resx) <- rownames(ref)
         resx[gg] <- resid
-        ref <- cbind(ref, "unknown"=resx)
+        ref <- cbind(ref, "other_cells"=resx)
     }
     
     ## normalize all matrices to CPM
@@ -607,7 +607,11 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
         library(EPIC)
         out <- NULL
         gg = intersect(rownames(ref),rownames(mat))
-        ref.list = list(refProfiles=ref, sigGenes=gg)
+        ref1 <- ref
+        if("other_cells" %in% colnames(ref1)) {
+            ref1 <- ref1[,setdiff(colnames(ref1),"other_cells")]
+        }
+        ref.list = list(refProfiles=ref1, sigGenes=gg)
         mat1 <- mat
         colnames(mat1) <- 1:ncol(mat)  ## EPIC doesnt like duplicated column names...
         stime <- system.time( try(
@@ -618,6 +622,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
             cat("deconvolution using EPIC took",stime[3],"s\n")
             timings[["EPIC"]] <- stime
             out.mat <- out[["cellFractions"]]
+            colnames(out.mat) <- sub("otherCells","other_cells",colnames(out.mat))
             rownames(out.mat) <- colnames(mat)
             results[["EPIC"]] <- out.mat
         } else {
@@ -711,7 +716,8 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
             return(tmp.F)
         }
         gg <- intersect(rownames(ref),rownames(mat))
-        XX=ref[gg,];YY=mat[gg,]
+        XX = ref[gg,,drop=FALSE]
+        YY = mat[gg,,drop=FALSE]
         res.abbas=NULL
         stime <- system.time(
             res.abbas <- try(apply(YY,2,function(y) GetFractions.Abbas(XX, y, w=NA)))
@@ -766,7 +772,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     if("SingleR" %in% methods) {
         require(SingleR)
         stime <- system.time(
-            sr1 <- SingleR( test=mat, ref=ref, labels=colnames(ref))
+            sr1 <- SingleR(test=mat, ref=ref, labels=colnames(ref))
         )
         timings[["SingleR"]] <- stime
         cat("deconvolution using SingleR took",stime[3],"s\n")

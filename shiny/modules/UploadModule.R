@@ -250,7 +250,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 if(advanced_mode) {
                     message("[UploadModule::corrected_counts] using CORRECTED counts\n")
                     out <- correctedX()
-                    counts <- pmax(2**out$X -1, 0)
+                    counts <- pmax(2**out$X-1, 0)
                 } else {
                     message("[UploadModule::corrected_counts] using UNCORRECTED counts\n")
                     counts <- uploaded$counts.csv

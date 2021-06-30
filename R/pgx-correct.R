@@ -526,54 +526,37 @@ pgx.PC_correlation <- function(X, pheno, nv=3, stat="F", plot=TRUE, main=NULL) {
 }
 
 
-NORMALIZATION.METHODS <- c("none","mean","scale","NC","CPM","TMM","RLE","quantile")
+NORMALIZATION.METHODS <- c("none","mean","scale","NC","CPM","TMM","RLE","RLE2","quantile")
 ##nparam=NULL;niter=1;resample=1;normalization=NORMALIZATION.METHODS[1:3];show.progress=1
 
-pgx.performNormalization.NEEDCHECK <- function(zx, methods)
-{
-    ## Column-wise normalization (along samples).
-    ##
-    ## zx:      log-expression
-    ## method:   single method
 
-    methods <- methods[1]
-    
-    for(mtd in methods) {
-        if(mtd=="none") {
-            ## normalization on individual mean
-            zx <- zx
-        } else if(mtd=="mean") {
-            ## normalization on individual mean
-            zx <- t(t(zx) - Matrix::colMeans(zx)) + mean(zx,na.rm=TRUE)
-        } else if(mtd=="scale") {
-            ## normalization on individual mean
-            zx <- sd(zx)*scale(zx) + mean(zx)
-        } else if(mtd=="CPM") {
-            ## normalization on total counts (linear scale)
-            ##nx <- t(t(nx) / colSums(nx)) * mean(nx,na.rm=TRUE)
-            zx <- logCPM(2**zx, total=1e6)
-        } else if(mtd=="qCPM") {
-            ## normalization on total counts (linear scale)
-            ##nx <- t(t(nx) / colSums(nx)) * mean(nx,na.rm=TRUE)
-            zx <- edgeR::cpm(2**zx, log=TRUE)
-        } else if(mtd=="TMM") {
-            ## normalization on total counts (linear scale)
-            zx <- normalizeTMM(2**zx, log=TRUE) ## does TMM on counts
-        } else if(mtd=="RLE") {
-            ## normalization on total counts (linear scale)
-            zx <- normalizeRLE(2**zx, log=TRUE) ## does TMM on counts
-        } else if(mtd %in% c("upperquartile")) {
-            ## normalization on total counts (linear scale)
-            zx <- normalizeTMM(2**zx, log=TRUE, method=mtd) ## does TMM on counts
-        } else if(mtd=="quantile") {
-            require(preprocessCore)
-            new.zx <- normalize.quantiles(as.matrix(zx))  ## shift to avoid clipping
-            rownames(new.zx) <- rownames(zx)
-            colnames(new.zx) <- colnames(zx)
-            zx <- new.zx
-        }
-    } ## end of for method
-    return(zx)
+normalizeTMM <- function(counts, log=FALSE, method="TMM") {
+    require(edgeR)
+    dge <- DGEList(as.matrix(counts), group=NULL)
+    dge <- calcNormFactors(dge, method=method)
+    edgeR::cpm(dge, log=log)
+}
+
+normalizeRLE <- function(counts, log=FALSE, use='deseq2') {
+    require(edgeR)
+    require(DESeq2)
+    outx <- NULL
+    if(use=='edger') {
+        dge <- DGEList(as.matrix(counts), group=NULL)
+        dge <- calcNormFactors(dge, method="RLE")
+        outx <- edgeR::cpm(dge, log=log)
+    } else if(use=='deseq2') {
+        cts <- counts
+        dds <- DESeq2::DESeqDataSetFromMatrix(
+                           countData = cts,
+                           colData = cbind(colnames(cts),1),
+                           design = ~1)
+        disp <- estimateSizeFactors(dds)
+        outx <- counts(disp, normalized=TRUE)
+    } else {
+        stop("unknown method")
+    }
+    outx
 }
 
 pgx.countNormalization <- function(x, methods, keep.zero=TRUE)
@@ -602,10 +585,13 @@ pgx.countNormalization <- function(x, methods, keep.zero=TRUE)
             x <- normalizeTMM(x, log=FALSE) ## does TMM on counts (edgeR)
         } else if(m=="RLE") {
             ## normalization on total counts (linear scale)
-            x <- normalizeRLE(x, log=FALSE) ## does RLE on counts (Deseq2)
-##        } else if(m %in% c("upperquartile")) {
-##            ## normalization on total counts (linear scale)
-##            x <- normalizeTMM(x, log=FALSE, method=m) ## does upperquartile on counts
+            x <- normalizeRLE(x, log=FALSE, use='deseq2') ## does RLE on counts (Deseq2)
+        } else if(m=="RLE2") {
+            ## normalization on total counts (linear scale)
+            x <- normalizeRLE(x, log=FALSE, use='edger') ## does RLE on counts (Deseq2)
+            ##        } else if(m %in% c("upperquartile")) {
+            ##            ## normalization on total counts (linear scale)
+            ##            x <- normalizeTMM(x, log=FALSE, method=m) ## does upperquartile on counts
         } else if(m=="quantile") {
             require(preprocessCore)
             ##new.x <- 0.01 * normalize.quantiles(as.matrix(100*x)) ## shift to avoid clipping
@@ -804,6 +790,17 @@ pgx.removeBatchEffect <- function(X, batch, model.vars=NULL,
         cat("ERROR! uknown method\n")
     }
     return(X)
+}
+
+
+pgx.removePC <- function(X, nv)
+{
+    ##nv <- min(10,ncol(X)-1)
+    suppressWarnings(suppressMessages(
+        pc <- irlba::irlba(X, nv=nv)$v
+    ))
+    cX <- removeBatchEffect(X, covariates=pc)
+    cX
 }
 
 

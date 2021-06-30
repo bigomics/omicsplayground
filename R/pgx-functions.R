@@ -958,55 +958,6 @@ pgx.getCategoricalPhenotypes <-function(df, min.ncat=2, max.ncat=20, remove.dup=
     colnames(df1)
 }
 
-##gene="CD4"
-pgx.getGeneCorrelation <- function(gene, xref) {
-
-    rho.genes <- unlist(lapply(xref, rownames))
-    rho.genes <- sort(unique(rho.genes))
-    length(rho.genes)
-
-    R <- NULL
-    ## correlation using external datasets
-    k=1
-    for(k in 1:length(xref)) {
-        has.gene <- (toupper(gene) %in% toupper(rownames(xref[[k]])))
-        if( has.gene ) {
-            ## take geometric mean with correlation in TISSUE
-            xx <- log2(1 + xref[[k]])
-            jj <- match(toupper(gene), toupper(rownames(xx)))
-            tx = xx[jj,]
-            if(class(xx)=="dgCMatrix") {
-                suppressWarnings( rho1 <- corSparse(xx, cbind(tx))[,1] )
-            } else {
-                suppressWarnings( rho1 <- cor(t(xx), tx)[,1])
-            }
-            if(sum(is.na(rho1))>0) rho1[which(is.na(rho1))] = 0
-
-            rho1 = rho1[match(rho.genes,names(rho1))]
-            R <- cbind(R, rho1)
-            if(NCOL(R)==1) R <- matrix(R, ncol=1)
-            rownames(R) <- rho.genes
-            colnames(R)[ncol(R)] <- names(xref)[k]
-        }
-    }
-
-    ##if(is.null(R)) return(NULL)
-    dim(R)
-    if(!is.null(R) && NCOL(R)>0) {
-        R[is.na(R)] <- 0
-        R[is.nan(R)] <- 0
-        if(NCOL(R)==1) R <- matrix(R, ncol=1)
-        rownames(R) <- rho.genes
-        R <- R[which(rowSums(R!=0,na.rm=TRUE)>0),,drop=FALSE]
-        ## geneset rho has no sign (=cosine correlation) so we use the sign of others
-        if(ncol(R)>1 && "gene sets" %in% colnames(R)) {
-            k <- which(colnames(R)=="gene sets")
-            R[,"gene sets"] <- R[,"gene sets"] * sign(rowMeans(R[,-k,drop=FALSE],na.rm=TRUE))
-        }
-        head(R)
-    }
-    return(R)
-}
 
 ngs.save <- function(ngs, file, update.date=TRUE, light=TRUE, system=FALSE) {
 

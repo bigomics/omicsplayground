@@ -211,10 +211,10 @@ pgx.initialize <- function(pgx) {
     if("contrasts" %in% names(pgx) && (!is.samplewise || is.numlev)) {
         design <- pgx$model.parameters$design
         expmat <- pgx$model.parameters$exp.matrix
-        contr.mat <- pgx$model.parameters$contr.mat
+        contr.mat <- pgx$model.parameters$contr.matrix
         new.contr <- pgx$contrasts
         is.numlev <- all(unique(new.contr) %in% c(NA,"",-1,0,1))
-        is.numlev
+        is.numlev <- is.numlev && (-1 %in% new.contr)  ## must have -1 !!
         if(is.numlev) {
             new.contr <- contrastAsLabels(new.contr)
         }

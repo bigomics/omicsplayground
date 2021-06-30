@@ -219,15 +219,15 @@ plotWidget <- function(id) {
     
 plotModule <- function(input, output, session, ## ns=NULL,
                        func, func2=NULL, 
-                       info.text="Info text", title="", 
+                       info.text="Figure", title="", 
                        inputs=NULL, options = NULL, label="",
-                       caption="", caption2="", ## header=NULL,
+                       caption="", caption2=info.text, ## header=NULL,
                        plotlib = "base", plotlib2 = NULL,
                        renderFunc=NULL, outputFunc=NULL, csvFunc=NULL,
                        renderFunc2=NULL, outputFunc2=NULL, 
                        no.download = FALSE, download.fmt=c("png","pdf"), 
                        just.info=FALSE, info.width="300px", show.maximize = TRUE,
-                       height = c(400,720), width = c("auto",1080), res=c(72,100),
+                       height = c(640,800), width = c("auto",1400), res=c(72,100),
                        download.pdf = NULL, download.png = NULL,
                        download.html = NULL, download.csv = NULL,
                        pdf.width=8, pdf.height=6, pdf.pointsize=12,
@@ -784,7 +784,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
         }
         tagList(
             r,
-            div( caption2, class="caption2")          
+            div( caption2, class="caption2") 
         )
     })
         
@@ -804,7 +804,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
         if(any(class(caption)=="character")) {
             caption <- HTML(caption)
         }
-
+        
         fillCol(
             flex = c(NA,NA,1,NA,NA,0.001),
             height = height.1,
@@ -866,7 +866,8 @@ tableWidget <- function(id) {
 
 tableModule <- function(input, output, session, 
                         func, func2=NULL, info.text="Info text",
-                        title=NULL, label=NULL, caption=NULL, 
+                        title=NULL, label=NULL,
+                        caption=NULL, caption2=caption,
                         server=TRUE, filename="data.csv", ##inputs=NULL, 
                         ##no.download = FALSE, just.info=FALSE,
                         width="100%", height="auto",
@@ -953,8 +954,8 @@ tableModule <- function(input, output, session,
     if(length(height)==1) height <- c(height,700)
     if(length(width)==1)  width  <- c(width,1280)
     ifnotchar.int <- function(s) ifelse(grepl("[%]|auto",s),s,as.integer(s))
-    width.1 <- ifnotchar.int(width[1])
-    width.2 <- ifnotchar.int(width[2])
+    width.1  <- ifnotchar.int(width[1])
+    width.2  <- ifnotchar.int(width[2])
     height.1 <- ifnotchar.int(height[1])
     height.2 <- ifnotchar.int(height[2])
 
@@ -968,7 +969,16 @@ tableModule <- function(input, output, session,
     })
     
     output$popuptable <- renderUI({
-        dataTableOutput(ns("datatable2"), width=width.2-40, height=height.2-40)
+        if(any(class(caption2)=="reactive")) {
+            caption2 <- caption2()
+        }
+        if(any(class(caption2)=="character")) {
+            caption2 <- HTML(caption2)
+        }
+        tagList(
+            div( caption2, class="caption2"),            
+            dataTableOutput(ns("datatable2"), width=width.2-40, height=height.2-40)
+        )
     })
     
     output$widget <- renderUI({

@@ -545,7 +545,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         options = dsea_enplots.opts,
         pdf.width=11, pdf.height=7,
         height = c(0.54*rowH,650), width=c('auto',1280),
-        res = c(72,90)
+        res = c(72,90),
+        add.watermark = WATERMARK        
     )
     ##outputOptions(output, "dsea_enplots", suspendWhenHidden=FALSE) ## important!!!
 
@@ -567,7 +568,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         options = dsea_moaplot.opts,
         pdf.width=6, pdf.height=6,
         height = c(0.54*rowH, 600), width=c('auto',1000),
-        res=c(72,100)
+        res=c(72,100),
+        add.watermark = WATERMARK
     )
 
     ##-------- Activation map plotting module
@@ -584,7 +586,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         options = dsea_actmap.opts,
         pdf.width=6, pdf.height=9,
         height = c(fullH,750), width=c("100%",1400),        
-        res = 72
+        res = 72,
+        add.watermark = WATERMARK
     )
 
     ##--------buttons for table

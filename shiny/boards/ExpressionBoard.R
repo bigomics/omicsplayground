@@ -109,7 +109,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                placement="top", options = list(container = "body")),
                     tipify( checkboxGroupInput(ns('gx_statmethod'),'Statistical methods:',
                                                choices=NULL, inline=TRUE),
-                           gx_statmethod_text, placement="right", options = list(container = "body"))
+                           gx_statmethod_text, placement="right", options=list(container="body"))
                 )
             )
         )
@@ -499,7 +499,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         info.text = plots_volcano_text, 
         title = "Volcano plot", label="a",
         height = imgH,  res=75,
-        pdf.width=6, pdf.height=6
+        pdf.width=6, pdf.height=6,
+        add.watermark = WATERMARK
     )
     
     ## ------------------------------------------------------
@@ -670,7 +671,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         info.text = plots_maplot_text, label="b",
         title = "MA plot",
         height = imgH,
-        pdf.width=6, pdf.height=6, res=75
+        pdf.width=6, pdf.height=6, res=75,
+        add.watermark = WATERMARK
     )
     
     plots_topgenesbarplot.RENDER %<a-% reactive({
@@ -726,7 +728,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         info.text = plots_topgenesbarplot_text, label="c",
         title = "top DE genes",
         height = c(imgH,500), width=c('auto',800),
-        pdf.width=6, pdf.height=6, res=75
+        pdf.width=6, pdf.height=6, res=75,
+        add.watermark = WATERMARK
     )
     
     plots_topfoldchange.RENDER %<a-% reactive({
@@ -786,7 +789,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         info.text = plots_topfoldchange_text,
         title = "Gene in contrasts", label = "d",
         height = c(imgH,500), width=c('auto',700),
-        pdf.width=6, pdf.height=6, res=74
+        pdf.width=6, pdf.height=6, res=74,
+        add.watermark = WATERMARK
     )
     
     plots_boxplot.RENDER %<a-% reactive({
@@ -838,7 +842,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         info.width = "150px",
         title = "Differential expression", 
         height = imgH,
-        pdf.width=6, pdf.height=6, res=75
+        pdf.width=6, pdf.height=6, res=75,
+        add.watermark = WATERMARK
     )
 
     plots_caption = "<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting fold-change versuson significance the x and y axes, respectively. <b>(b)</b> MA-plot plotting signal intensity versus fold-change on the x and y axes, respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change for selected contrast. <b>(d)</b> Sorted barplot of the differential expression of the selected gene across all contrasts."
@@ -975,7 +980,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ##caption = topgenes_caption,
         height = c(imgH,420), width = c('auto',1600), res=c(85,95),
         pdf.width=14, pdf.height=3.5, 
-        title="Expression of top differentially expressed genes"
+        title="Expression of top differentially expressed genes",
+        add.watermark = WATERMARK
     )
 
     ## library(shinyjqui)
@@ -1164,7 +1170,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ##height = imgH, res=75,
         height = c(imgH,500), width = c('auto',1600),
         res = c(75,95),
-        title="Volcano plots for all contrasts"
+        title="Volcano plots for all contrasts",
+        add.watermark = WATERMARK
     )
     
     ## library(shinyjqui)
@@ -1263,7 +1270,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ##height = imgH, res=75,
         height = c(imgH,500), width = c('auto',1600),
         res = c(75,95),
-        title="Volcano plots for all contrasts"
+        title="Volcano plots for all contrasts",
+        add.watermark = WATERMARK
     )
 
     ## library(shinyjqui)
@@ -1370,7 +1378,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ##caption = volcanoMethods_caption,
         height = c(imgH,450), width = c('auto',1600),
         res=c(75,95),
-        pdf.width=18, pdf.height=6
+        pdf.width=18, pdf.height=6,
+        add.watermark = WATERMARK
     )
 
     ## library(shinyjqui)
@@ -1431,7 +1440,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                       rownames=FALSE,
                       class = 'compact cell-border stripe hover',                  
                       extensions = c('Scroller'),
-                      selection=list(mode='single', target='row', selected=NULL),
+                      selection=list(mode='single', target='row', selected=1),
                       fillContainer = TRUE,
                       options=list(
                           dom = 'lfrtip',

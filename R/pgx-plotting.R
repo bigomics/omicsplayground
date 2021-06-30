@@ -212,36 +212,62 @@ pgx.scatterPlot <- function(pgx, pheno=NULL, gene=NULL,
     plt
 }
 
-pgx.plotFoldchangeSPLOM <- function(pgx, contrasts)
-{
-    F <- sapply(pgx$gx.meta$meta[contrasts],function(m) m$meta.fx)
-    rownames(F) <- rownames(pgx$gx.meta$meta[[1]])
-    avgF <- rowMeans(F)
+pgx.plotFoldchangeSPLOM <- function(pgx, contrasts=NULL) {
 
-    fq <- range(as.vector(apply(F,2,quantile, probs=c(0.01,0.99))))
-    fq
+}
+
+plotSPLOM <- function(F, F2=NULL, hilight=NULL, cex=0.5, cex.axis=1, cex.space=0.2)    
+{
+
+    if(is.null(F2)) F2 <- F    
+    symm <- all(colnames(F) == colnames(F2))
+    dim(F)
+    gg <- intersect(rownames(F),rownames(F2))
+    F <- F[gg,,drop=FALSE]
+    F2 <- F2[gg,,drop=FALSE]
+    
+    x0 <- range(as.vector(apply(F,2,quantile, probs=c(0.001,0.999))))
+    x1 <- range(as.vector(apply(F2,2,quantile, probs=c(0.001,0.999))))    
+    x0 <- range(as.vector(F))
+    x1 <- range(as.vector(F2))
+    x0 <- x0 + c(-1,1)*diff(x0)*0.05
+    x1 <- x1 + c(-1,1)*diff(x1)*0.05    
     
     nr=3;nc=4
-    par(mfrow=c(nr,nc), mar=c(2,0,0,0), oma=c(4,4,4,1), bty='n', xpd=NA)
+    nr = ncol(F2)
+    nc = ncol(F)
+    par(mfrow=c(nr,nc), mar=c(1,1,1,1)*cex.space, oma=c(4,4,0,0),
+        bty='o', xpd=FALSE)
     i=1
-    for(i in 1:(nr*nc)) {
-        if(i <= ncol(F)) {
-            plot( avgF, F[,i], pch=20, cex=0.5,
-                 xaxt=ifelse( (i-1)%/%nc==(nr-1), 's','n'),
-                 yaxt=ifelse( i%%nc==1, 's','n'),
-                 xlab=ifelse( (i-1)%/%nc==(nr-1),"average FC",''),
-                 ylab=ifelse( i%%nc==1,"FC",''),
-                 xlim=fq, ylim=fq)
-            title(colnames(F)[i], cex.main=1, font.main=1, line=0.3)
-        } else {
-            plot( NA, NA, pch="", cex=0.5,
-                 xaxt=ifelse( (i-1)%/%nc==(nr-1), 's','n'),
-                 yaxt=ifelse( i%%nc==1, 's','n'),
-                 xlab=ifelse( (i-1)%/%nc==(nr-1),"average FC",''),
-                 ylab=ifelse( i%%nc==1,colnames(F)[i],''),
-                 xlim=fq, ylim=fq)
+    for(j in ncol(F2):1) {        
+        for(i in 1:ncol(F)) {
+            plot( F[,i], F2[,j], pch=20, col='grey70',
+                 cex=cex, cex.axis=0.95*cex.axis, cex.lab=cex.axis,
+                 xaxt = ifelse( j==1, 's','n'),
+                 yaxt = ifelse( i==1, 's','n'),
+                 xlab = "", ylab = "",
+                 ##xlab = ifelse( j==nr,colnames(F)[i],''),
+                 ##ylab = ifelse( i==1,colnames(F2)[j],''),
+                 xlim=x0, ylim=x1)
+            abline(v=0, h=0, lty=3, lwd=0.6)
+            if(j==1) mtext( colnames(F)[i], 1, line=2.7, cex=0.9*cex.axis)
+            if(i==1) mtext( colnames(F2)[j], 2, line=2.7, cex=0.9*cex.axis)            
+            ## title(colnames(F)[i], cex.main=1, font.main=1, line=0.3)
+            if(!is.null(hilight) && length(hilight)>0) {
+                hilight <- intersect(hilight, rownames(F))
+                ii <- match(hilight, rownames(F))
+                points( F[ii,i], F2[ii,j], pch=20, col='red3' )
+                text( F[ii,i], F2[ii,j], labels=hilight, cex=0.85, pos=3, col='black')
+            }
+            
+            ## write correlation value
+            rho <- cor(F[,i], F2[,j], use='pairwise')
+            rr <- paste("r =",round(rho,digits=3))
+            legend("topleft", legend=rr, bty='n', cex=1)
+            
         }
     }
+
 }
 
 pgx.SankeyFromMatrixList.PLOTLY <- function(matlist, contrast=NULL)
@@ -591,9 +617,9 @@ pgx.SankeyFromPhenotypes.GGPLOT <- function(pgx, phenotypes, mat=NULL, fill=NULL
         scale_color_brewer(type = "qual", palette = "Set1", direction=-1) +
         ggtitle(title) + theme_minimal() +
         theme(
+            ##plot.title = element_text(hjust=0, vjust=3),
             axis.text.x = element_text(size=13, vjust=+7)
         )
- 
     p
 }
 
@@ -614,9 +640,44 @@ plot_grid.sharedAxisLabels <- function(plotList, nrow) {
 }
 
 
+pgx.plotContrast <- function(pgx, contrast=NULL, type='scatter', set.par=TRUE, ...)
+{
+    if(0) {
+        contrast= colnames(pgx$model.parameters$exp.matrix)
+        contrast
+    }
+    if(is.null(contrast)) {
+        contrast <- colnames(pgx$model.parameters$exp.matrix)
+    }
+    
+    if(set.par) {
+        nc <- ceiling(sqrt(length(contrast)))
+        nr <- ceiling(length(contrast)/nc)
+        par(mfrow=c(nr,nc))
+    }
+    
+    plist <- list()
+    for(i in 1:length(contrast)) {
+        ct <- contrast[i]
+        if(type == 'volcano') {
+            p <- pgx.Volcano(pgx, contrast=ct, ...)        
+        } else if(type == 'MA') {
+            p <- pgx.plotMA(pgx, contrast=ct, ...)        
+        } else if(type == 'UMAP') {
+            p <- pgx.plotGeneUMAP(pgx, contrast=ct, set.par=FALSE, ...)        
+        } else {
+            ## scatter
+            p <- pgx.contrastScatter(pgx, contrast=ct, ...)        
+        }
+        plist[[i]] <- p
+    }
+    if(length(contrast)==1) plist <- plist[[1]]
+    plist
+}
+
 pgx.Volcano <- function(pgx, contrast, level="gene", methods='meta',
-                        psig=0.05, fc=1, cex=1, cex.lab=0.85,
-                        p.min=NULL, fc.max=NULL, hilight=NULL, ntop=20,
+                        psig=0.05, fc=1, cex=1, cex.lab=1, ntop=20,
+                        p.min=NULL, fc.max=NULL, hilight=NULL, ## hilight2=NULL, 
                         cpal=c("grey60","red3"), title=NULL,
                         plotlib="base")
 {
@@ -642,7 +703,7 @@ pgx.Volcano <- function(pgx, contrast, level="gene", methods='meta',
         hilight <- rownames(xy)[order(-wt)]
         hilight <- intersect(hilight, names(sig[sig==TRUE]))
     }
-    hilight2 <- head(hilight,ntop) ## label
+    hilight <- head(hilight,ntop) ## label
 
     xlim = ylim = NULL
     if(!is.null(fc.max)) {
@@ -657,8 +718,8 @@ pgx.Volcano <- function(pgx, contrast, level="gene", methods='meta',
         xy, var=sig, type="factor", title=title,
         xlab = "differential expression (log2FC)",
         ylab = "significance (-log10q)",
-        hilight = hilight, hilight2 = hilight2,
-        cex = 0.9*cex, cex.lab = cex.lab, cex.title = 1.0,
+        hilight = hilight, ## hilight2 = hilight2,
+        cex = cex, cex.lab = cex.lab, cex.title = 1.0,
         xlim = xlim, ylim = ylim,
         legend = FALSE, col=cpal, opacity=1,
         plotlib = plotlib)    
@@ -697,8 +758,9 @@ pgx.plotMA <- function(pgx, contrast, level="gene", psig=0.05, fc=1,
         wt <- rowSums(scale(cbind(xy,m),center=FALSE)**2)
         hilight <- rownames(xy)[order(-wt)]
         hilight <- intersect(hilight, names(sig[sig==TRUE]))
-        hilight <- head(hilight,ntop)
-    }    
+    }
+    hilight <- head(hilight,ntop)
+    
     p <- pgx.scatterPlotXY(
         xy, var=sig, type="factor", title=contrast,
         xlab = "average expression  (log2)",
@@ -711,16 +773,16 @@ pgx.plotMA <- function(pgx, contrast, level="gene", psig=0.05, fc=1,
     p
 }
 
-pgx.plotContrast <- function(pgx, contrast, hilight=NULL,
-                             cex=1, cex.lab=1, 
-                             psig=0.05, fc=1, level="gene",
-                             ntop=10, dir=0, plotlib="base")
+pgx.contrastScatter <- function(pgx, contrast, hilight=NULL,
+                                cex=1, cex.lab=0.8, 
+                                psig=0.05, fc=1, level="gene",
+                                ntop=20, dir=0, plotlib="base")
 {
     if(0) {
         contrast= colnames(pgx$model.parameters$exp.matrix)[1]
         contrast
     }
-    if(is.integer(contrast)) contrast <- names(pgx$gx.meta$meta)[contrast]
+    if(is.numeric(contrast)) contrast <- names(pgx$gx.meta$meta)[contrast]
     exp.matrix <- pgx$model.parameters$exp.matrix
     ct <- exp.matrix[,contrast]
     ii <- which(ct < 0)
@@ -762,13 +824,15 @@ pgx.plotContrast <- function(pgx, contrast, hilight=NULL,
         }
         hilight <- top.gg
     }
+    hilight <- head(hilight,ntop)    
 
     sig <- 1*(q < psig & abs(fx) > fc)
     table(sig)
     names(sig) <- gg
     ## hilight <- hilight[which(sig[hilight]==1)]
-    
-    tt <- sub(".*:","",contrast)
+
+    tt <- contrast
+    ## tt <- sub(".*:","",tt)
     pgx.scatterPlotXY(
         xy, var=sig, type="factor", title=tt,
         xlab = xlab, ylab=ylab, 
@@ -779,8 +843,82 @@ pgx.plotContrast <- function(pgx, contrast, hilight=NULL,
     ##plotlib="base"
 }
 
-pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
-                               level="gene", grouped=FALSE, srt=0, cex=1,
+pgx.plotGeneUMAP <- function(pgx, contrast, pos=NULL, ntop=20,
+                             cex=1, cex.lab=0.8,
+                             hilight=NULL, title=NULL, set.par=TRUE,
+                             level="gene", plotlib="ggplot")
+{
+    if(is.numeric(contrast)) contrast <- names(pgx$gx.meta$meta)[contrast]
+    res=NULL
+    if(level=="gene") {
+        res <- pgx.getMetaMatrix(pgx, level="gene")
+    } else if(level=="geneset") {
+        res <- pgx.getMetaMatrix(pgx, level="geneset")        
+    } else {
+        stop("FATAL:: invalid level=",level)
+    }
+    F <- res$fc[,contrast,drop=FALSE]
+    ##q <- res$qv[,contrast]    
+    ##sig <- (q <= psig & abs(f) >= fc)
+    
+    if(!is.null(pos)) {
+        xy <- pos
+    } else if("cluster.genes" %in% names(pgx)) {
+        xy <- pgx$cluster.genes$pos[['umap2d']]
+    } else {
+        message("[WARNING] no cluster.genes in object. please supply positions")
+        return(NULL)
+    }
+
+    F <- F[match(rownames(xy),rownames(F)),,drop=FALSE]
+    ## f = scale(rank(abs(f))**2 * sign(f),center=FALSE)[,1]
+    rownames(F) <- rownames(xy)
+    
+    if(set.par) {
+        nc <- ceiling(sqrt(ncol(F)))
+        nr <- ceiling(ncol(F)/nc)
+        par(mfrow=c(nr,nc))
+    }
+    
+    plist <- list()
+    i=1
+    for(i in 1:ncol(F)) {
+
+        title1 = contrast[i]
+        if(is.null(title)) title1 = paste(title, contrast[i])
+
+        f1 <- F[,i]
+
+        hilight1 <- hilight
+        if(is.null(hilight)) {
+            hilight1 <- names(sort(-abs(f1)))
+            ##hilight <- intersect(hilight, names(sig[sig==TRUE]))
+        }
+        hilight1 <- head(hilight1,ntop) ## label
+        
+        p1 <- pgx.scatterPlotXY(
+            xy, var=f1, type="numeric", 
+            xlab = "UMAP-x  (genes)",
+            ylab = "UMAP-y  (genes)",
+            hilight = hilight1,
+            zsym = TRUE, softmax=1,
+            ## hilight2 = hilight2,
+            cex = cex, cex.lab = cex.lab,
+            title = title1, cex.title = 1.0,
+            ## xlim = xlim, ylim = ylim,
+            legend = TRUE,
+            ## col=cpal, opacity=1,
+            plotlib = plotlib)
+
+        plist[[i]] <- p1
+    }
+    if(plotlib == "base") return()
+    ##ggplotly(p)
+    return(plist)
+}
+
+pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
+                               level="gene", grouped=FALSE, srt=NULL, cex=1,
                                collapse.others=TRUE, showothers=TRUE,
                                max.points = 200, group.names=NULL,
                                main=NULL, xlab=NULL, ylab=NULL, names=TRUE)
@@ -788,25 +926,25 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
     if(0) {
         logscale=TRUE;level="gene";grouped=TRUE;srt=90;collapse.others=1;
         max.points=-1;main=NULL;xlab=NULL;ylab=NULL;names=TRUE;group.names=NULL
-        probe=ngs$genes$gene_name[1];comp=1
+        probe=pgx$genes$gene_name[1];comp=1
     }
 
     if(is.null(probe)) return(NULL)
     if(is.na(probe)) return(NULL)
 
-    if(level=="gene" && !probe %in% rownames(ngs$X)) {
+    if(level=="gene" && !probe %in% rownames(pgx$X)) {
         frame() ## emtpy image
         return(NULL)
     }
-    if(level=="geneset" && !probe %in% rownames(ngs$gsetX)) {
+    if(level=="geneset" && !probe %in% rownames(pgx$gsetX)) {
         frame() ## emtpy image
         return(NULL)
     }
     
     ## ------------- determine groups
-    expmat  <- ngs$model.parameters$exp.matrix
-    cntrmat <- ngs$model.parameters$contr.matrix
-    expmat  <- expmat[rownames(ngs$samples),,drop=FALSE]
+    expmat  <- pgx$model.parameters$exp.matrix
+    cntrmat <- pgx$model.parameters$contr.matrix
+    expmat  <- expmat[rownames(pgx$samples),,drop=FALSE]
     
     if(class(comp)=="numeric") comp <- colnames(expmat)[comp]
     if(!is.null(group.names) && length(group.names)!=2) stop("group.names must be length=2")
@@ -818,17 +956,15 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
     }
     
     ## if a named contrast table is available it is safer
-    if(is.null(group.names) && "contrasts" %in% names(ngs)  ) {
-        message("[pgx.plotExpression] parsing group names from ngs$contrast labels")
-        contr.labels <- ngs$contrasts[,comp]
+    if(is.null(group.names) && "contrasts" %in% names(pgx)  ) {
+        message("[pgx.plotExpression] parsing group names from pgx$contrast labels")
+        contr.labels <- pgx$contrasts[,comp]
         contr.idx    <- expmat[,comp]
         group1 <- names(which.max(table(contr.labels[contr.idx > 0])))
         group0 <- names(which.max(table(contr.labels[contr.idx < 0])))
         group.names <- c(group0, group1)
     }
     group.names
-
-    message("[pgx.plotExpression] 2a: group.names = ", group.names)
     
     ## Otherwise we guess from the contrast title but this is dangerous
     if(is.null(group.names) && grepl("_vs_|_VS_",comp) ) {
@@ -840,7 +976,7 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
         ## class???  determine if notation is A_vs_B or B_vs_A (some
         ## people do different) and in sample-based contrasts we don't
         ## know group names.
-        if(!is.POSvsNEG(ngs)) {
+        if(!is.POSvsNEG(pgx)) {
             ## A_vs_B or B_vs_A notation !!!
             message("[pgx.plotExpression] WARNING! A_vs_B reversed?")            
             group.names <- rev(group.names) ## reversed!!
@@ -849,7 +985,11 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
     }
     group.names
 
-    message("[pgx.plotExpression] 2b: group.names = ", group.names)
+    ## label rotation
+    if(is.null(srt)) {
+        srt = 0
+        if(max(nchar(group.names)) >= 7) srt = 45
+    }
     
     ## create groups
     ct <- expmat[,comp]
@@ -864,11 +1004,9 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
         grp0.name <- "REF"
     }
     xgroup <- c("other",grp1.name,grp0.name)[1 + 1*(ct>0) + 2*(ct<0)]       
-
-    message("[pgx.plotExpression] 3:")
     
     ## currently cast to character... :(
-    names(xgroup) <- rownames(ngs$samples)
+    names(xgroup) <- rownames(pgx$samples)
     table(xgroup)
     jj <- which(!(xgroup %in% xgroup[samples]))
     jj
@@ -878,15 +1016,16 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
     }
     names(xgroup) <- rownames(expmat)
     table(xgroup)
+    class(xgroup)
 
     if(class(xgroup)=="character") {
         xgroup <- as.character(xgroup)
-        levels0 <- xgroup[!duplicated(xgroup)]
-        if("other" %in% levels0) levels0 <- c(levels0[levels0!="other"],"other")
+        ##levels0 <- xgroup[!duplicated(xgroup)]  ## original order??
+        levels0 <- group.names
+        if("other" %in% xgroup) levels0 <- c(levels0,"other")
         xgroup <- factor(xgroup, levels=levels0)
     }
     table(xgroup)    
-    message("[pgx.plotExpression] 4:")
 
     ## ------------- set color of samples
     require(RColorBrewer)
@@ -903,9 +1042,9 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
 
     ## -------------- get expression value
     if(level=="geneset") {
-        gx <- ngs$gsetX[probe,rownames(ngs$samples)]
+        gx <- pgx$gsetX[probe,rownames(pgx$samples)]
     } else {
-        gx <- ngs$X[probe,rownames(ngs$samples)]
+        gx <- pgx$X[probe,rownames(pgx$samples)]
     }
     if(!logscale) {
         gx <- 2**(gx)
@@ -917,15 +1056,11 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
         xgroup <- xgroup[jj]
         gx <- gx[jj]
     }
-
-    message("[pgx.plotExpression] 5:")
     
     ## -------------- plot grouped or ungrouped
     if(is.null(main)) main <- probe
     ##if(ncol(X) <= 20) {
     if(!grouped) {
-        message("[pgx.plotExpression] 6: not grouped")
-        
         nx = length(gx)
         if(is.null(ylab)) {
             ylab = "expression (log2CPM)"
@@ -944,9 +1079,8 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
             text( bx[,1], y0, names(gx)[], adj=1, srt=srt,
                  xpd=TRUE, cex=ifelse(nx>10,0.7,0.9)*cex )
         }
-        title(main, cex.main=1.0)        
+        title(main, cex.main=1.0, line=0)        
     } else {
-        message("[pgx.plotExpression] 6: grouped")        
         if(is.null(ylab)) {
             ylab = "expression (log2CPM)"
             if(!logscale) ylab = "expression (CPM)"
@@ -956,24 +1090,19 @@ pgx.plotExpression <- function(ngs, probe, comp, logscale=TRUE,
         xlevels <- levels(xgroup)
         grp.klr1 <- grp.klr[as.character(xlevels)]
         grp.klr1[is.na(grp.klr1)] <- "grey90"
-        names(grp.klr1) <- as.character(xlevels)
-        
-        message("[pgx.plotExpression] 6a:")        
-        col=grp.klr1;las=3;names.cex=cex;        
+        names(grp.klr1) <- as.character(xlevels)        
+        ##col=grp.klr1;las=3;names.cex=cex;        
         gx.b3plot( gx, xgroup, ##ylim=c(0,max(gx)*1.2),
                   col = grp.klr1, ylab=ylab, bee.cex=bee.cex,
                   max.points=max.points, xlab=xlab, names=names,
                   ## sig.stars=TRUE, max.stars=5,
                   las=3, names.cex=cex, srt=srt)
-        message("[pgx.plotExpression] 6b:")                
-        title(main, cex.main=1.0)
+        title(main, cex.main=1.0, line=0)
     }
-
-    message("[pgx.plotExpression] done!")
 
 }
 
-pgx.plotOmicsNetwork <- function(ngs, gene=NULL, reduced=NULL, levels=c("gene","geneset"),
+pgx.plotOmicsNetwork <- function(pgx, gene=NULL, reduced=NULL, levels=c("gene","geneset"),
                                  contrast=NULL, layout=NULL, colorcluster=FALSE,
                                  hilight=NULL )
 {
@@ -982,14 +1111,14 @@ pgx.plotOmicsNetwork <- function(ngs, gene=NULL, reduced=NULL, levels=c("gene","
     require(gplots) ## for col2hex
     ## return(NULL)
 
-    has.graph <- all(c("omicsnet","omicsnet.reduced") %in% names(ngs))
+    has.graph <- all(c("omicsnet","omicsnet.reduced") %in% names(pgx))
     has.graph
     if(!has.graph) return(NULL)
 
-    ##gr <- ngs$genes_tsne_graph$graph
-    gr <- ngs$omicsnet
+    ##gr <- pgx$genes_tsne_graph$graph
+    gr <- pgx$omicsnet
     if(is.null(gr)) return(NULL)
-    if(is.null(reduced) && is.null(gene)) gr <- ngs$omicsnet.reduced
+    if(is.null(reduced) && is.null(gene)) gr <- pgx$omicsnet.reduced
 
     if(!is.null(gene)) {
         gene0 = paste0("{gene}",gene)
@@ -1038,9 +1167,9 @@ pgx.plotOmicsNetwork <- function(ngs, gene=NULL, reduced=NULL, levels=c("gene","
 
     ## ------------------ highlight selection with labels
     if(!is.null(hilight) && length(hilight)) {
-        ##sel <- ngs$collections[[10]]
+        ##sel <- pgx$collections[[10]]
         sel <- hilight
-        ##mm  <- ngs$genes_tsne_graph$members
+        ##mm  <- pgx$genes_tsne_graph$members
         mm <- V(gr)$name
         if(!is.null(gr$members)) {
             mm <- gr$members[V(gr)$name]
@@ -1116,7 +1245,7 @@ pgx.plotOmicsNetwork <- function(ngs, gene=NULL, reduced=NULL, levels=c("gene","
 }
 
 ## gene1="TOPORS";gene2="KCNN4";col="black";cex=1;k=11;samples=NULL;cex.names=1;lab.unit=NULL
-pgx.cytoPlot <- function(ngs, gene1, gene2, cex=1, col="grey60",
+pgx.cytoPlot <- function(pgx, gene1, gene2, cex=1, col="grey60",
                          lab.unit=NULL, cex.names=1, samples=NULL, k=11)
 {
     require(MASS)
@@ -1128,10 +1257,10 @@ pgx.cytoPlot <- function(ngs, gene1, gene2, cex=1, col="grey60",
     ##gene1 = "CD8A"
     ##gene2 = "CD4"
     if(is.null(samples))
-        samples <- colnames(ngs$X)
-    samples <- intersect(samples, colnames(ngs$X))
-    x1 <- ngs$X[gene1,samples]
-    x2 <- ngs$X[gene2,samples]
+        samples <- colnames(pgx$X)
+    samples <- intersect(samples, colnames(pgx$X))
+    x1 <- pgx$X[gene1,samples]
+    x2 <- pgx$X[gene2,samples]
     x1 <- x1 + 1e-3*rnorm(length(x1))
     x2 <- x2 + 1e-3*rnorm(length(x2))
     names(x1) <- samples
@@ -1182,8 +1311,8 @@ pgx.cytoPlot <- function(ngs, gene1, gene2, cex=1, col="grey60",
     legend( "bottomleft", paste(round(100*length(j4)/N,2),"%"), cex=1.2, col="gray50",
            bty="n", inset=c(-0.05,0), xpd=TRUE )
 
-    if(!is.null(ngs$deconv)) {
-        inferred.celltype <- ngs$deconv[[1]][["meta"]]
+    if(!is.null(pgx$deconv)) {
+        inferred.celltype <- pgx$deconv[[1]][["meta"]]
         dim(inferred.celltype)
         ##cex.names=2
         lab1 <- head(names(sort(-colSums(inferred.celltype[j1,,drop=FALSE]))),3)
@@ -1673,21 +1802,33 @@ ggenplot <- function(fc, gset, cex=1, main=NULL, xlab=NULL, ylab=NULL)
 
 }
 
-ggsplom <- function(F, title_cex=2, no.axes=FALSE, ...)
+ggsplom <- function(F, F2=NULL, title_cex=2, no.axes=FALSE, ...)
 {
+    if(is.null(F2)) {
+        F2 <- F
+    }
     lim0 <- range(F)
-    lim0    
+    lim1 <- range(F2)
+    symm <- all(colnames(F)==colnames(F2))
+
+    gg <- intersect(rownames(F),rownames(F2))
+    F  <- F[gg,]
+    F2 <- F2[gg,]    
+
     plt <- list()
     k=1
     for(i in 1:ncol(F)) {
-        for(j in 1:ncol(F)) {
-            if(i==j) {
+        for(j in 1:ncol(F2)) {
+            if(i==j && symm) {
                 p1 <- ggscatter(0,0,cex=0) +
                     theme_void() +
                     geom_text(x=0,y=0,label=colnames(F)[i],size=title_cex)
             } else {
-                p1 <- ggscatter(F[,i], F[,j], ... ) +
-                    xlim(lim0) + ylim(lim0)
+                p1 <- ggscatter(F[,i], F[,j] ) +
+                ##p1 <- ggscatter(F[,i], F2[,j], ... ) +
+                    xlim(lim0) + ylim(lim1) +
+                    xlab(colnames(F)[i]) +
+                    ylab(colnames(F2)[j]) 
             }
             plt[[k]] <- p1
             k <- k + 1
@@ -1708,16 +1849,19 @@ ggsplom <- function(F, title_cex=2, no.axes=FALSE, ...)
     )
 
     np <- length(plt)
-    ncol <- ncol(F)
-    border.y <- ((0:(np-1) %% ncol)==0)
-    border.x <- ((0:(np-1) %/% ncol)==(ncol-1))
+    nc <- ncol(F)
+    nr <- ncol(F2)    
+    border.y <- ((0:(np-1) %% nc)==0)
+    border.x <- ((0:(np-1) %/% nc)==(nr-1))
     for(i in 1:np) {
         if(no.axes || !border.y[i]) plt[[i]] <- plt[[i]] + blanky
         if(no.axes || !border.x[i]) plt[[i]] <- plt[[i]] + blankx
     }
-    plot_grid(plotlist=plt, ncol=ncol, labels=NA,
-              rel_widths = c(1.15,rep(1,ncol-1)),
-              rel_heights = c(rep(1,ncol-1),1.15) )
+    cowplot::plot_grid(
+                 plotlist=plt, labels=NA,
+                 nrow=nr, ncol=nc, 
+                 rel_widths = c(1.2,rep(1,nc-1)),
+                 rel_heights = c(rep(1,nr-1),1.2) )
     
 }
 
@@ -1946,8 +2090,8 @@ pgx.violinPlot <- function(x, y, group=NULL, xlab='', ylab='',
 ##group.name="group";xlab="x";ylab="y";srt=0;main=NULL;base_size=14
 ggbarplot <- function(mat, xlab="x", ylab="y", srt=0, main=NULL, 
                       las=NULL, col=NULL, beside=FALSE,
-                      legend.pos = c(1,1), legend.cex = 1,
-                      base_size=12, group.name="group")
+                      legend.pos = c(0.016,1), legend.cex = 1,
+                      bar_width=0.7, base_size=12, group.name="group")
 {
     require(reshape2)
     require(ggplot2)
@@ -1962,13 +2106,15 @@ ggbarplot <- function(mat, xlab="x", ylab="y", srt=0, main=NULL,
     if(!is.null(las) && las==3) srt <- 90
 
     cpal <- rev(grey.colors(nrow(mat)))
+    cpal <- grey.colors(nrow(mat))
     if(nrow(mat)==1) cpal <- "grey70"
     if(!is.null(col)) cpal <- rep(col,99)
     posmode <- ifelse(beside, "dodge", "stack")
     
     p <- ggplot(df, aes(x=x, y=value, fill=y)) + 
         ##geom_bar(stat="identity", aes(fill="transparent"), size=1) +
-        geom_bar(stat="identity", color="black", size=0.3, position=posmode) + 
+        geom_bar(stat="identity", color="black", size=0.3,
+                 width=bar_width, position=posmode) + 
         xlab(xlab) + ylab(ylab) + labs(fill=group.name) +
         ggtitle(main) +
         ##scale_fill_grey(start=0.8,end=0.2) +
@@ -1988,7 +2134,8 @@ ggbarplot <- function(mat, xlab="x", ylab="y", srt=0, main=NULL,
                  legend.text = element_text(size=9*legend.cex),
                  legend.position = legend.pos,
                  legend.key.size = unit(9*legend.cex, "pt"),
-                 legend.key.height = unit(7, "pt"))
+                 legend.key.height = unit(7*legend.cex, "pt"))
+
     if(nrow(mat)==1) {
         p <- p + theme(legend.position = 'none')
     }
@@ -2010,7 +2157,7 @@ pgx.scatterPlotXY <- function(..., plotlib="base") {
 ##col=NULL;cex=NULL;cex.title=1.3;zoom=1;legend=TRUE;bty='n';hilight=NULL
 pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
                                    zlim=NULL, zlog=FALSE, zsym=FALSE, softmax=FALSE, pch=20,
-                                   cex=NULL, cex.lab=0.8, cex.title=1.2, cex.legend=1,
+                                   cex=NULL, cex.lab=1, cex.title=1.2, cex.legend=1,
                                    zoom=1, legend=TRUE, bty='o', legend.ysp=0.85,
                                    legend.pos = 'bottomleft',
                                    xlab = NULL, ylab=NULL, xlim=NULL, ylim=NULL,
@@ -2064,8 +2211,8 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
     if(set.par) {
         par.save <- par()
         ##par(mar=c(0.4,0.3,1.7,0.4), mgp=c(1.2,0.4,0),
-        par(mar=c(2.4,2.3,1.7,0.4), mgp=c(1.2,0.4,0),        
-            cex.axis=0.7, cex.lab=0.85, tcl=-0.3, las=1)
+        par(mar=c(2.6,2.8,1.9,0.5), mgp=c(1.5,0.4,0),        
+            cex.axis=1, cex.lab=1, tcl=-0.3, las=1)
     }
 
     if(is.null(labels)) labels <- rownames(pos)
@@ -2187,7 +2334,7 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         jj <- which(rownames(pos) %in% hilight2)
         if(length(jj)) {
             text(pos[jj,1], pos[jj,2], labels=labels[jj],
-                 offset=0.4, pos=3, cex=0.9*cex.lab)
+                 offset=0.4, pos=3, cex=cex.lab)
         }
     }
     
@@ -2195,9 +2342,9 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
     if(!is.null(title) && title!="") {
         ##legend("topleft", legend=title, cex=cex.title, bty=bty, 
         ##       inset=c(0,0), x.intersp=0, y.intersp=0, xpd=NA)
-        legend("topleft", legend=title, cex=cex.title, bty='n',
-               ## inset=c(-0.07,-0.07),
-               y.intersp=0.15, x.intersp=0.0, xpd=TRUE)
+        ##legend("topleft", legend=title, cex=cex.title, bty='n', ## inset=c(-0.07,-0.07),
+        ##       y.intersp=0.10, x.intersp=0.0, xpd=TRUE)
+        mtext(title, 3, adj=0, padj=-0.35, cex=0.9*cex.title)
     }
     
     if(set.par) {
@@ -2433,12 +2580,13 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
 
         zr <- range(z)
         if(!is.null(zlim)) zr <- zlim
+        if(zsym && min(zr,na.rm=TRUE)<0 ) zr <- c(-1,1)*max(abs(zr),na.rm=TRUE)
         zz <- round(c(zr[1], zr[2]),digits=2)
         plt <- ggplot(df, aes(x, y, color=variable)) +
             geom_point( shape=20, alpha=opacity, size=1.8*cex ) +
             scale_color_gradientn( colors=cpal, breaks=zz, labels=c(zz[1],zz[2]) ) +
             ## lims(color = zr) +
-            expand_limits( color = zr + c(-0.01,0.01)) 
+            expand_limits(color = zr + c(-0.01,0.01)) 
 
         ## colorscale bar
         if(legend) {
@@ -2509,7 +2657,7 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         ylim(ylim[1], ylim[2]) + 
         xlab(xlab) +  ylab(ylab) + ggtitle(title) +
         theme(
-            plot.title = element_text(size=11 * cex.title),
+            plot.title = element_text(size=11*cex.title, hjust=0, vjust=+0),
             axis.text.x = element_text(size=7),
             axis.text.y = element_text(size=7),            
             axis.title.x = element_text(size=9, vjust=+2),

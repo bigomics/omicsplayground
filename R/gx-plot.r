@@ -3,6 +3,41 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+
+gx.barplot <- function(x, main="", cex.main=1.2, cex.names=0.85,
+                       cex.legend=0.9, srt=0, xlab='', ylab='',
+                       offset=NULL, voffset=0.05,
+                       group=NULL, legend=TRUE)
+{
+    ##col1 = rev(grey.colors(2))
+    cpal = rep(brewer.pal(12,"Paired"),99)
+    if(is.null(group)) group <- rep(1,ncol(x))
+    group2 <- as.vector(sapply(group,rep,2))
+    col1 <- cpal[(group2-1)*2 + rep(1:2,ncol(x))]
+    ylim <- c(0, 1.15*max(x,na.rm=TRUE))
+    
+    if(is.null(offset)) {
+        offset <- ifelse(ncol(x) >=6, 0.5, 1)
+        ##offset <- ifelse(ncol(x) >=10, 0, offset)
+    }
+
+    barplot(x, beside=TRUE, las=3, col=col1,
+            main=main, cex.main=cex.main,
+            xlab=xlab, ylab=ylab, ylim=ylim,
+            names.arg=rep('',ncol(x)))
+    dx <- max(x)
+    text(3*(1:ncol(x)), -voffset*dx, colnames(x), cex=cex.names, srt=srt,
+         xpd=TRUE, pos=2, offset=offset)
+    
+    if(legend) {
+        legend("topleft", legend=rev(rownames(x)), fill=rev(col1[1:2]),
+               xpd=TRUE, bty='n', inset=c(-0.0,-0.04), cex=cex.legend,
+               y.intersp=0.8, x.intersp=0.3)
+    }
+    
+}
+
+
 ##x=gx;y=ngs$samples$group;
 ##bee=bar=TRUE;offx=3;sig.stars=FALSE;xoff=0;srt=60;max.points=-1;ymax=NULL;bee.cex=0.3;max.stars=5
 gx.b3plot <- function(x, y, width=1, bar=TRUE, bee=TRUE, sig.stars=FALSE,

@@ -640,6 +640,15 @@ viz.Contrasts <- function(pgx=NULL, contrasts=NULL, ntop=10, dir=0, pos=NULL,
     ##
     ##
 
+    if(0) {
+        ntop=10; dir=0; pos=NULL;
+        psig=0.05; fc=0.20; cex=1; cex.lab=1; fixed.axis=FALSE;
+        type = c("pair","MA","volcano"); plotlib='ggplot';
+        level="gene"; methods='meta'; label.type="box"; 
+        filt=NULL; strip=NULL; plots.only = FALSE; pgxRT = NULL
+    }
+
+    
     type <- type[1]
     if(!is.null(pos)) type <- "custom"
     if(level=="geneset" && is.null(pos)) {
@@ -670,8 +679,7 @@ viz.Contrasts <- function(pgx=NULL, contrasts=NULL, ntop=10, dir=0, pos=NULL,
         fc.max <- quantile(abs(meta$fc[,contrasts]),probs=0.999,na.rm=TRUE)
         qv.min <- quantile(meta$qv[,contrasts],probs=0.005,na.rm=TRUE)
     }
-    fc.max
-    -log10(qv.min)
+    ##fc.max;-log10(qv.min)
     
     ##--------------------------------------------------
     ## Scatter plots
@@ -704,8 +712,8 @@ viz.Contrasts <- function(pgx=NULL, contrasts=NULL, ntop=10, dir=0, pos=NULL,
                 psig = psig, fc = fc,
                 cex = cex , cex.lab = cex.lab, 
                 hilight=gg, dir=dir, ntop=ntop) 
-            p1 <- p1 + ## theme_classic(base_size=12) +
-                xlab(xlab1) + ylab(ylab1)
+            p1 <- p1 + xlab(xlab1) + ylab(ylab1)
+
         } else if(type=="custom") {
             labels <- rownames(pos)
             p1 <- pgx.scatterPlot(
@@ -860,8 +868,10 @@ viz.MitoRiboQC <- function(pgx, group, srt=0, pos="tsne2d",
     viz.showFigure(fig, title=title, subtitle=subtitle, caption=caption)
 }
 
-viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE,
-                                title=NULL, subtitle=NULL, caption=NULL)
+viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE, type='histogram',
+                                title="Counts Normalization",
+                                subtitle="",
+                                caption=paste0("Project: ",pgx$name))
 {
 
     plotDensity <- function(xx, main) {
@@ -877,7 +887,8 @@ viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE,
         avgx <- mean(xx1,na.rm=TRUE)
         sdx  <- sd(xx1,na.rm=TRUE)
         ggplot(dc, aes(x=value, color=Var2)) +
-            geom_density() + xlab("log2(counts+1)") +
+            geom_density() +
+            xlab("log2(counts+1)") +
             theme( legend.position = "none") +
             ggtitle(main) +
             geom_vline( xintercept = avgx,
@@ -886,7 +897,26 @@ viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE,
             geom_vline( xintercept = avgx + sdx*c(-2,2),
                        linetype="dotted",
                        color="grey50", size=0.6)            
+    }
 
+    plotBox <- function(xx, main="") {
+        if(nrow(xx)>1000) xx <- xx[sample(1:nrow(xx),1000),,drop=FALSE]
+        if(ncol(xx)>100)  xx <- xx[,sample(1:ncol(xx),100)]
+        ## xx[xx==0] <- NA  ## non-zero
+        dc <- reshape2::melt(xx)
+        ##dc$value[dc$value==0] <- NA
+        dc <- dc[dc$value>0,,drop=FALSE]
+        p <- ggplot(dc, aes(x=Var2, y=value)) +
+            geom_boxplot(fill='grey85') +
+            ylab("log2(counts+1)") + xlab("") +
+            theme(legend.position = "none") +
+            ggtitle(main)         
+
+        p <- p + theme_classic() +
+            theme(
+                axis.text.x = element_text(angle = 45, hjust=1)
+            )
+        p        
     }
     
     counts <- as.matrix(pgx$counts)
@@ -894,7 +924,7 @@ viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE,
                 
     xlist <- list()
     ##NORMALIZATION.METHODS <- c("none","mean","scale","NC","CPM","TMM","RLE","quantile")
-    NORMALIZATION.METHODS <- c("none","scale","quantile","CPM","TMM","RLE")
+    NORMALIZATION.METHODS <- c("none","scale","quantile","CPM","TMM","RLE","RLE2")
 
     if(is.null(methods))
         methods <- NORMALIZATION.METHODS
@@ -902,7 +932,7 @@ viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE,
     for(m in methods) {
         xlist[[m]] <- pgx.countNormalization(counts, m)
     }
-
+    
     if(post.qn) {
         doQN <- function(x) limma::normalizeQuantiles(x)
         doQN <- function(x) pmax(0.01*2**limma::normalizeQuantiles(log2(100*x+1))-1,0)
@@ -914,7 +944,13 @@ viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE,
     plotlist <- list()
     for(i in 1:length(xlist)) {
         x1 <- log2(1 + xlist[[i]])
-        plotlist[[i]] <- plotDensity(x1, names(xlist)[i])
+        if(type=='histogram') {
+            plotlist[[i]] <- plotDensity(x1, names(xlist)[i])
+        }
+        if(type=='boxplot') {
+            plotlist[[i]] <- plotBox(x1, names(xlist)[i])
+        }
+        
     }    
 
     ## ss <- patchwork::wrap_plots(plotlist, nrow=2, ncol=4)
