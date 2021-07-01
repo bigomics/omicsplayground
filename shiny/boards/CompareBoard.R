@@ -435,6 +435,7 @@ CompareBoard <- function(input, output, session, env)
         ct2 <- head(names(ngs2$gx.meta$meta),2)        
         ct1 <- input$contrast1
         ct2 <- input$contrast2
+        req(ct1)
         req(ct2)
         if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
         if(!all(ct2 %in% names(ngs2$gx.meta$meta))) return(NULL)
