@@ -639,7 +639,6 @@ plot_grid.sharedAxisLabels <- function(plotList, nrow) {
     plot_grid(plotlist=plotList, nrow=nrow, labels=NA)
 }
 
-
 pgx.plotContrast <- function(pgx, contrast=NULL, type='scatter', set.par=TRUE, ...)
 {
     if(0) {
@@ -659,6 +658,7 @@ pgx.plotContrast <- function(pgx, contrast=NULL, type='scatter', set.par=TRUE, .
     plist <- list()
     for(i in 1:length(contrast)) {
         ct <- contrast[i]
+        message("[pgx.plotContrast] plotting ct = ",ct)
         if(type == 'volcano') {
             p <- pgx.Volcano(pgx, contrast=ct, ...)        
         } else if(type == 'MA') {
@@ -671,7 +671,8 @@ pgx.plotContrast <- function(pgx, contrast=NULL, type='scatter', set.par=TRUE, .
         }
         plist[[i]] <- p
     }
-    if(length(contrast)==1) plist <- plist[[1]]
+    message("[pgx.plotContrast] length.plist = ",length(plist))
+    if(length(plist)==1) plist <- plist[[1]]
     plist
 }
 
