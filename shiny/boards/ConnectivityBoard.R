@@ -907,7 +907,7 @@ ConnectivityBoard <- function(input, output, session, env)
             F1 <- F1[order(rowMeans(F1)),,drop=FALSE]
         }
         
-        par(mfrow=c(1,1), mar=c(8,3.5,0,0), mgp=c(2.4,1,0))
+        par(mfrow=c(1,1), mar=c(7,3.5,0,0), mgp=c(2.4,1,0))
         maxfc <- max(abs(rowSums(F1,na.rm=TRUE)))
         ylim <- c(-1*(min(F1,na.rm=TRUE)<0),1.2)*maxfc
 
@@ -959,7 +959,7 @@ ConnectivityBoard <- function(input, output, session, env)
         ## caption =  cumFCplot.caption,
         options = cumFCplot.opts,
         pdf.height = 6, pdf.width = 9, 
-        height = c(280, 600), width = c('auto',1300),
+        height = c(300, 600), width = c('auto',1300),
         res = c(72,90),
         add.watermark = WATERMARK
     )    
@@ -1016,7 +1016,7 @@ ConnectivityBoard <- function(input, output, session, env)
             return(NULL)
         }
 
-        NSETS=16
+        NSETS=20
         if(input$cumgsea_order == "FC") {
             F <- F[order(-abs(F[,1])),]
             F <- head(F,NSETS)
@@ -1115,7 +1115,7 @@ ConnectivityBoard <- function(input, output, session, env)
         ## caption =  cumFCplot.caption,
         options = cumEnrichmentPlot.opts,
         pdf.height = 8, pdf.width = 12, 
-        height = c(280,720), width = c('auto',1000),
+        height = c(300,720), width = c('auto',1000),
         res = c(72,90),
         add.watermark = WATERMARK
     )    
@@ -1477,8 +1477,6 @@ ConnectivityBoard <- function(input, output, session, env)
         
         gr <- getLeadingEdgeGraph()
         if(is.null(gr)) return(NULL)
-
-        dbg("[leadingEdgeGraph.VISNETWORK] 1")
         
         max(abs(E(gr)$weight))
         minwt <- 0.5
@@ -1487,25 +1485,14 @@ ConnectivityBoard <- function(input, output, session, env)
         gr <- subgraph.edges(gr, which(abs(E(gr)$weight) >= minwt) )
         if(length(V(gr))==0) return(NULL)
 
-        dbg("[leadingEdgeGraph.VISNETWORK] 2")
-
         fc=cumFC=NULL
-        fc <- getCurrentContrast()$fc
-
-        dbg("[leadingEdgeGraph.VISNETWORK] 2a")
-        
+        fc <- getCurrentContrast()$fc        
         fc <- fc[V(gr)$name]
         cumFC <- cumulativeFCtable()
-
-        dbg("[leadingEdgeGraph.VISNETWORK] 2b")
-        dbg("[leadingEdgeGraph.VISNETWORK] dim(cumFC) = ",dim(cumFC))
-        dbg("[leadingEdgeGraph.VISNETWORK] v.name = ",head(V(gr)$name))
        
         cumFC <- cumFC[V(gr)$name,]
         fontsize = 22
         fc <- fc / max(abs(fc))
-
-        dbg("[leadingEdgeGraph.VISNETWORK] 3")
         
         sizevar <- input$LEgraph_sizevar
         vsize = 15
@@ -1520,8 +1507,6 @@ ConnectivityBoard <- function(input, output, session, env)
             vsize <- 1
         }
         vsize <- 3 + 12 * (abs(vsize) / max(abs(vsize),na.rm=TRUE))**0.5
-
-        dbg("[leadingEdgeGraph.VISNETWORK] 4")
 
         bluered.pal <- colorRampPalette(
             ##colors = c("navyblue","royalblue4","grey90","indianred3","firebrick4")
@@ -1541,8 +1526,6 @@ ConnectivityBoard <- function(input, output, session, env)
         ew = abs(E(gr)$weight)
         E(gr)$width <- 1.5 * (0.2 + 10*(ew/max(ew,na.rm=TRUE))**2)
         E(gr)$color <- "#DDD"  ## lightgrey
-
-        dbg("[leadingEdgeGraph.VISNETWORK] 5")
         
         visdata <- toVisNetworkData(gr, idToLabel=FALSE)
         
@@ -1579,7 +1562,8 @@ ConnectivityBoard <- function(input, output, session, env)
         "leadingEdgeGraph", label = "a",
         ##func = leadingEdgeGraph.RENDER,
         ##func2 = leadingEdgeGraph.RENDER,
-        func = leadingEdgeGraph.VISNETWORK, plotlib="visnetwork",
+        func = leadingEdgeGraph.VISNETWORK,
+        plotlib="visnetwork",
         options = leadingEdgeGraph.opts,
         title = "Leading-edge graph",
         info.text = leadingEdgeGraph_info,
@@ -2111,11 +2095,12 @@ ConnectivityBoard <- function(input, output, session, env)
         F1 <- head(F,80)
         par(mfrow=c(1,1), mar=c(0,0,0,0))
         ##gx.heatmap(t(F1), keysize=0.85, mar=c(6,30))
-        gx.splitmap(t(F1), mar=c(10,10), split=1,
+        gx.splitmap(t(F1), mar=c(8,50), split=1,
                     ##cluster_columns = FALSE,
                     cluster_columns = TRUE,
                     cluster_rows = TRUE,
-                    key.offset = c(0.89, 0.2),
+                    rowlab.maxlen = 80,                    
+                    key.offset = c(0.90, 0.2),
                     cexRow=0.9, cexCol=0.75)
 
     })
@@ -2123,7 +2108,7 @@ ConnectivityBoard <- function(input, output, session, env)
     connectivityHeatmap.opts = tagList(
     )
     
-    connectivityHeatmap_info = "<b>The Connectivity Heatmap</b> shows the similarity of the contrasts profiles as a heatmap. Contrasts that are similar will be clustered close together."
+    connectivityHeatmap_info = "<b>The Connectivity Heatmap</b> shows the most similar profiles as a heatmap. Contrasts that are similar will be clustered close together."
 
     connectivityHeatmap_caption = "<b>Connectivity Heatmap.</b> Similarity of the contrasts profiles as a heatmap. Contrasts that are similar will be clustered close together."
     
@@ -2197,7 +2182,7 @@ ConnectivityBoard <- function(input, output, session, env)
     output$cmapHeatmap_UI <- renderUI({
         fillCol(
             height = fullH,
-            flex=c(NA,0.05,1.3,0.05,2), ##height = 370,
+            flex=c(NA,0.05,1.6,0.05,2), ##height = 370,
             div(HTML(cmapHeatmap_caption), class="caption"),
             br(),
             fillRow(

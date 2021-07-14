@@ -48,7 +48,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
         })
         timings <- rbind(timings, c("meta.go", tt))
     }
-
+    
     if("deconv" %in% extra) {
         message(">>> computing deconvolution")
         tt <- system.time({
@@ -104,7 +104,7 @@ compute.extra <- function(ngs, extra, lib.dir, sigdb=NULL) {
     if("wordcloud" %in% extra) {
         message(">>> computing WordCloud statistics...")
         tt <- system.time({
-            res <- pgx.calculateWordFreq(ngs, progress=NULL, pg.unit=1)        
+            res <- pgx.calculateWordCloud(ngs, progress=NULL, pg.unit=1)        
         })
         timings <- rbind(timings, c("wordcloud", tt))
         ngs$wordcloud <- res
@@ -219,7 +219,7 @@ compute.deconvolution <- function(ngs, lib.dir, rna.counts=ngs$counts, full=FALS
     refmat[["Tissue (HPA)"]]       <- readSIG("rna_tissue_matrix.csv")
     refmat[["Tissue (GTEx)"]]      <- readSIG("GTEx_rna_tissue_tpm.csv")
     refmat[["Cell line (HPA)"]]    <- readSIG("HPA_rna_celline.csv")
-    refmat[["Cell line (CCLE)"]] <- readSIG("CCLE_rna_celline.csv")
+    refmat[["Cell line (CCLE)"]]   <- readSIG("CCLE_rna_celline.csv")
     refmat[["Cancer type (CCLE)"]] <- readSIG("CCLE_rna_cancertype.csv")
 
     ## list of methods to compute
@@ -242,10 +242,11 @@ compute.deconvolution <- function(ngs, lib.dir, rna.counts=ngs$counts, full=FALS
     res <- pgx.multipleDeconvolution(counts, refmat=refmat, method=methods)
 
     ngs$deconv <- res$results
-    rownames(res$timings) <- paste0("[deconvolution]",rownames(res$timings))
-    res$timings
-    ngs$timings <- rbind(ngs$timings, res$timings)
-
+    if(!is.null(res$timings)) {
+        rownames(res$timings) <- paste0("[deconvolution]",rownames(res$timings))
+        res$timings
+        ngs$timings <- rbind(ngs$timings, res$timings)
+    }
     remove(refmat)
     remove(res)
 

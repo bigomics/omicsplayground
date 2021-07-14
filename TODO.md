@@ -17,7 +17,8 @@
 - 
 
 
-
+## Cloud deployment
+- https://github.com/z0ph/ShinyProxyOnEKS
 
 
 

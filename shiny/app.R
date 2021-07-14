@@ -24,7 +24,7 @@ message("************************************************")
 message("********* RUNTIME ENVIRONMENT VARIABLES ********")
 message("************************************************")
 
-##Sys.setenv("SHINYPROXY_USERNAME"="Test Person")
+##Sys.setenv("S HINYPROXY_USERNAME"="Test Person")
 main.start_time <- Sys.time()
 
 envcat <- function(var) message(var," = ",Sys.getenv(var))
@@ -45,14 +45,12 @@ message("***********************************************")
 message("*********** SETTING GLOBAL VARIABLES **********")
 message("***********************************************")
 
-source("global.R")
+source("global.R")  ## global variable
 message("OPG =",OPG)
 message("RDIR =",RDIR)
 message("FILES =",FILES)
 message("FILESX =",FILESX)
 message("PGX.DIR =",PGX.DIR)
-message("DEBUG = ",DEBUG)
-message("WATERMARK = ",WATERMARK)
 message("SHINYPROXY = ",SHINYPROXY)
 
 src.local=TRUE  ## local or not-local, that's the question...
@@ -81,7 +79,6 @@ opt <- pgx.readOptions(file="OPTIONS")
 ## opt$AUTHENTICATION = "register"
 ## opt$AUTHENTICATION = "firebase"
 
-
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
     message("[ENV] overriding PLAYGROUND_AUTHENTICATION = ",auth)
@@ -90,8 +87,6 @@ if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
 
 ## copy to global environment
 SHOW_QUESTIONS = FALSE
-##WATERMARK  = opt$WATERMARK
-##USER_MODE  = opt$USER_MODE
 AUTHENTICATION = opt$AUTHENTICATION
 
 DEV = (DEV && dir.exists("modulesx")) 
@@ -107,6 +102,7 @@ message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 ## ------------------------ READ FUNCTIONS ----------------------------
 ## --------------------------------------------------------------------
 
+
 source("app-init.R", local=FALSE)
 ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
@@ -117,6 +113,7 @@ if(0) {
     load("../data/geiger2016-arginine-test.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
     load("../data/GSE22886-immune.pgx")
+    load("../data/tcga-gtex-n40sva.pgx")
     ngs = pgx.initialize(ngs)
 }
 
@@ -272,8 +269,8 @@ server = function(input, output, session) {
             hideTab("expr-tabs2","FDR table")
             hideTab("enrich-tabs1","Volcano (methods)")
             hideTab("enrich-tabs2","FDR table")
-            hideTab("cor-tabs","Functional")  ## too slow
-            hideTab("cor-tabs","Differential")  ## too slow            
+            hideTab("cor-tabs","Functional")    ## too slow
+            hideTab("cor-tabs","Differential")  ## too complex
         }
         
         ## hideTab("cor-tabs","Functional")       
@@ -324,29 +321,29 @@ help.tabs <- navbarMenu(
 )
 
 TABVIEWS <- list(
-    "load" = tabView("Home",LoadingInputs("load"),LoadingUI("load")),
-    "view" = tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
-    "clust" = tabView("Clustering",ClusteringInputs("clust"),ClusteringUI("clust")),
-    "wgcna" = tabView("WGCNA (beta)",WgcnaInputs("wgcna"),WgcnaUI("wgcna")),
-    "expr" = tabView("Differential expression",ExpressionInputs("expr"),ExpressionUI("expr")),
-    "cor"  = tabView("Correlation analysis", CorrelationInputs("cor"), CorrelationUI("cor")),
+    "load"   = tabView("Home",LoadingInputs("load"),LoadingUI("load")),
+    "view"   = tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
+    "clust"  = tabView("Clustering",ClusteringInputs("clust"),ClusteringUI("clust")),
+    "wgcna"  = tabView("WGCNA (beta)",WgcnaInputs("wgcna"),WgcnaUI("wgcna")),
+    "expr"   = tabView("Differential expression",ExpressionInputs("expr"),ExpressionUI("expr")),
+    "cor"    = tabView("Correlation analysis", CorrelationInputs("cor"), CorrelationUI("cor")),
     "enrich" = tabView("Geneset enrichment",EnrichmentInputs("enrich"), EnrichmentUI("enrich")),
-    "func" = tabView("Pathway analysis", FunctionalInputs("func"), FunctionalUI("func")),
-    "word" = tabView("Word cloud", WordCloudInputs("word"), WordCloudUI("word")),
-    "drug" = tabView("Drug connectivity", DrugConnectivityInputs("drug"), DrugConnectivityUI("drug")),
-    "isect" = tabView("Compare signatures", IntersectionInputs("isect"), IntersectionUI("isect")),
-    "sig" = tabView("Test signatures", SignatureInputs("sig"), SignatureUI("sig")),
-    "bio" = tabView("Find biomarkers", BiomarkerInputs("bio"), BiomarkerUI("bio")),
-    "cmap" = tabView("Similar experiments", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
-    "scell" = tabView("CellProfiling", SingleCellInputs("scell"), SingleCellUI("scell")),
-    "tcga" = tabView("TCGA survival (beta)", TcgaInputs("tcga"), TcgaUI("tcga")),
-    "comp" = tabView("Compare datasets (beta)", CompareInputs("comp"), CompareUI("comp"))
+    "func"   = tabView("Pathway analysis", FunctionalInputs("func"), FunctionalUI("func")),
+    "word"   = tabView("Word cloud", WordCloudInputs("word"), WordCloudUI("word")),
+    "drug"   = tabView("Drug connectivity", DrugConnectivityInputs("drug"), DrugConnectivityUI("drug")),
+    "isect"  = tabView("Compare signatures", IntersectionInputs("isect"), IntersectionUI("isect")),
+    "sig"    = tabView("Test signatures", SignatureInputs("sig"), SignatureUI("sig")),
+    "bio"    = tabView("Find biomarkers", BiomarkerInputs("bio"), BiomarkerUI("bio")),
+    "cmap"   = tabView("Similar experiments", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
+    "scell"  = tabView("CellProfiling", SingleCellInputs("scell"), SingleCellUI("scell")),
+    "tcga"   = tabView("TCGA survival (beta)", TcgaInputs("tcga"), TcgaUI("tcga")),
+    "comp"   = tabView("Compare datasets (beta)", CompareInputs("comp"), CompareUI("comp"))
 )
 
 if(DEV) {
-    TABVIEWS$corsa = tabView("CORSA (dev)",CorsaInputs("corsa"),CorsaUI("corsa"))
+    TABVIEWS$corsa  = tabView("CORSA (dev)",CorsaInputs("corsa"),CorsaUI("corsa"))
     TABVIEWS$system = tabView("Systems analysis (dev)",SystemInputs("system"),SystemUI("system"))
-    TABVIEWS$multi = tabView("Multi-level (dev)", MultiLevelInputs("multi"), MultiLevelUI("multi"))
+    TABVIEWS$multi  = tabView("Multi-level (dev)", MultiLevelInputs("multi"), MultiLevelUI("multi"))
 }
 
 names(TABVIEWS)

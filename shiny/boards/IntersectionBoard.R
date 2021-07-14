@@ -17,22 +17,11 @@ IntersectionUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillCol(
         height = 750,
-        if(DEV) {
-            tabsetPanel(
-                id = ns("tabs1"),
-                tabPanel("Pairs",uiOutput(ns("cmp_scatterPlotMatrix_UI"))),
-                tabPanel("Pairs2",uiOutput(ns("cmp_pairsPlot_UI"))),
-                tabPanel("Contrast heatmap",uiOutput(ns("cmp_ctClustering_UI")))
-                ## tabPanel("Connectivity map",uiOutput(ns("cmp_connectivitymap_UI")))
-            )
-        } else {
-            tabsetPanel(
-                id = ns("tabs1"),
-                tabPanel("Pairs",uiOutput(ns("cmp_scatterPlotMatrix_UI"))),
-                tabPanel("Contrast heatmap",uiOutput(ns("cmp_ctClustering_UI")))
-            )
-
-        }
+        tabsetPanel(
+            id = ns("tabs1"),
+            tabPanel("Scatter plot",uiOutput(ns("scatterPlotMatrix_UI"))),
+            tabPanel("Signature clustering",uiOutput(ns("ctClustering_UI")))
+        )
     )
     
 }
@@ -53,7 +42,7 @@ similar profiles. Find genes that are commonly up/down regulated
 between two contrasts."
     output$description <- renderUI(HTML(description))
 
-    cmp_infotext =
+    infotext =
         "The <strong>Intersection analysis module</strong> enables users to compare multiple contrasts by intersecting the genes of profiles. The main goal is to identify contrasts showing similar profiles.
 
 <br><br>For the selected contrasts, the platform provides volcano plots and pairwise correlation plots between the profiles in the <strong>Pairs</strong> panel. Simultaneously, a Venn diagram with the number of intersecting genes between the profiles is plotted in <strong>Venn diagram</strong> panel. Details of intersecting genes are also reported in an interactive table. A more detailed scatter plot of two profiles is possible under the <strong>Two-pairs</strong> panel. Users can check the pairwise correlations of the contrasts under the <b>Contrast heatmap</b> panel. Alternatively, the <strong>Connectivity Map (CMap)</strong> shows the similarity of the contrasts profiles as a t-SNE plot.
@@ -69,36 +58,36 @@ between two contrasts."
     
     output$inputsUI <- renderUI({
         ui <- tagList(
-            tipify( actionLink(ns("cmp_info"), "Tutorial", icon = icon("youtube")),
+            tipify( actionLink(ns("info"), "Tutorial", icon = icon("youtube")),
                    "Show more information about this module"),
             hr(), br(),             
-            tipify( selectInput(ns('cmp_comparisons'),'Contrasts:', choices=NULL, multiple=TRUE),
+            tipify( selectInput(ns('comparisons'),'Contrasts:', choices=NULL, multiple=TRUE),
                    "Select the contrasts that you want to compare. If you select N=2 contrast a single scatterplot will be drawn. For N>=3 a scatterplot matrix will be drawn.",
                    placement="top"),
 
-            tipify( actionLink(ns("cmp_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+            tipify( actionLink(ns("options"), "Options", icon=icon("cog", lib = "glyphicon")),
                    "Toggle advanced options.", placement="top"),
             br(),br(),
             conditionalPanel(
-                "input.cmp_options % 2 == 1", ns=ns,
-                tipify( selectInput(ns("cmp_filter"),"Filter:", choices=NULL, multiple=FALSE),
+                "input.options % 2 == 1", ns=ns,
+                tipify( radioButtons(ns("level"),"Level:",
+                                     choices=c("gene","geneset"), inline=TRUE),
+                       "Select feature level: gene or geneset", placement="top"),                
+                tipify( selectInput(ns("filter"),"Filter:", choices=NULL, multiple=FALSE),
                        "Filter features", placement="top"),
                 conditionalPanel(
-                    "input.cmp_filter == '<custom>'", ns=ns,
-                    tipify( textAreaInput(ns("cmp_customlist"), NULL, value = NULL,
+                    "input.filter == '<custom>'", ns=ns,
+                    tipify( textAreaInput(ns("customlist"), NULL, value = NULL,
                                           rows=5, placeholder="Paste your custom gene list"),
                            "Paste a custom list of genes to highlight.", placement="bottom")
-                ),
-                tipify( radioButtons(ns("cmp_level"),"Level:",
-                                     choices=c("gene","geneset"), inline=TRUE),
-                       "Select feature level: gene or geneset", placement="top")
+                )
             )
         )
         if(DEV) {
             uix <- tagList(
                 hr(),
                 h5("Developer options:"),
-                radioButtons(ns('cmp_featuretype'),'Feature type:',
+                radioButtons(ns('featuretype'),'Feature type:',
                              choices=c("logFC","logCPM"), inline=TRUE)
             )
             ui <- c(ui, uix)
@@ -108,19 +97,18 @@ between two contrasts."
     outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ## delayed input
-    input_cmp_comparisons <- reactive({
-        input$cmp_comparisons
-    }) %>% debounce(500)
-    
+    input_comparisons <- reactive({
+        input$comparisons
+    }) %>% debounce(500)    
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
     
-    observeEvent( input$cmp_info, {
+    observeEvent( input$info, {
         showModal(modalDialog(
             title = HTML("<strong>Intersection Analysis Board</strong>"),
-            HTML(cmp_infotext),
+            HTML(infotext),
             easyClose = TRUE, size="l" ))
     })
 
@@ -131,19 +119,19 @@ between two contrasts."
         if(is.null(ngs)) return(NULL)
         comparisons <- colnames(ngs$model.parameters$contr.matrix)
         comparisons <- sort(comparisons)
-        updateSelectInput(session, "cmp_comparisons", choices=comparisons,
+        updateSelectInput(session, "comparisons", choices=comparisons,
                           selected=head(comparisons,3))
     })
 
     ## update choices upon change of feature level
-    ##observeEvent( input$cmp_level, {
+    ##observeEvent( input$level, {
     observe({
         ngs <- inputData()
-        ## req(ngs,input$cmp_level)
+        ## req(ngs,input$level)
         if(is.null(ngs)) return(NULL)
-        req(input$cmp_level)
+        req(input$level)
         ##flt.choices = names(ngs$families)
-        if(input$cmp_level=="geneset") {
+        if(input$level=="geneset") {
             ft <- names(COLLECTIONS)
             nn <- sapply(COLLECTIONS, function(x) sum(x %in% rownames(ngs$gsetX)))
             ft <- ft[nn >= 10]
@@ -152,27 +140,27 @@ between two contrasts."
             ft <- pgx.getFamilies(ngs,nmin=10,extended=FALSE)
         }
         ft <- sort(ft)
-        ## if(input$cmp_level=="gene") ft = sort(c("<custom>",ft))
+        ## if(input$level=="gene") ft = sort(c("<custom>",ft))
         ## ft = sort(c("<custom>",ft))        
-        updateSelectInput(session, "cmp_filter", choices=ft, selected="<all>")
+        updateSelectInput(session, "filter", choices=ft, selected="<all>")
     })
     
     ## observe({
     ##     splom.sel <- plotly::event_data("plotly_selected", source="splom")
     ##     sel.keys <- as.character(splom.sel$key)
     ##     if(0 && length(sel.keys)>0) {
-    ##         updateSelectInput(session, "cmp_filter", selected="<custom>")
+    ##         updateSelectInput(session, "filter", selected="<custom>")
     ##         sel.keys = paste(sel.keys, collapse=" ")
-    ##         updateTextAreaInput(session, "cmp_customlist", value=sel.keys)
+    ##         updateTextAreaInput(session, "customlist", value=sel.keys)
     ##     }
     ## })
     
-    observeEvent(input$cmp_comparisons, {
-        cmp <- input$cmp_comparisons
+    observeEvent(input$comparisons, {
+        cmp <- input$comparisons
         if(is.null(cmp)) return(NULL)
         dt.labels = LETTERS[1:length(cmp)]
         updateCheckboxGroupInput(
-            session, "cmp_intersection", choices=dt.labels,
+            session, "intersection", choices=dt.labels,
             ## selected=dt.labels,
             inline=TRUE )    
     })
@@ -201,11 +189,11 @@ between two contrasts."
         req(ngs)
         
         sel = names(ngs$gset.meta$meta)
-        ##sel = input_cmp_comparisons()
+        ##sel = input_comparisons()
         ##sel = intersect(sel, names(ngs$gset.meta$meta))
         ##if(length(sel)==0) return(NULL)
         
-        if(input$cmp_level=="geneset") {
+        if(input$level=="geneset") {
             gsetmethods <- c("gsva","camera","fgsea")
             gsetmethods <- selected_gsetmethods()
             if(length(gsetmethods)<1 || gsetmethods[1]=="") return(NULL)
@@ -220,13 +208,13 @@ between two contrasts."
 
             ## apply user selected filter
             gsets = rownames(fc0)
-            if(input$cmp_filter == "<custom>") {
-                gsets = strsplit( input$cmp_customlist, split="[, ;]")[[1]]
+            if(input$filter == "<custom>") {
+                gsets = strsplit( input$customlist, split="[, ;]")[[1]]
                 if(length(gsets)>0) {
                     gsets = intersect(rownames(ngs$gsetX), gsets)
                 }
-            } else if(input$cmp_filter != "<all>") {
-                gsets = unique(unlist(COLLECTIONS[input$cmp_filter]))
+            } else if(input$filter != "<all>") {
+                gsets = unique(unlist(COLLECTIONS[input$filter]))
             }
             gsets = intersect(gsets, rownames(fc0))
             fc1 = fc0[gsets,,drop=FALSE]
@@ -250,13 +238,13 @@ between two contrasts."
 
             ## filter with active filter
             sel.probes = rownames(fc0) ## default to all probes
-            if(input$cmp_filter == "<custom>") {
-                genes = strsplit( input$cmp_customlist, split="[, ;]")[[1]]
+            if(input$filter == "<custom>") {
+                genes = strsplit( input$customlist, split="[, ;]")[[1]]
                 if(length(genes)>0) {
                     sel.probes = filterProbes(ngs$genes, genes)
                 }
-            } else  if(input$cmp_filter != "<all>") {
-                sel.probes = filterProbes(ngs$genes, GSETS[[input$cmp_filter]])
+            } else  if(input$filter != "<all>") {
+                sel.probes = filterProbes(ngs$genes, GSETS[[input$filter]])
             }
             sel.probes = intersect(sel.probes, rownames(fc0))
             fc1 = fc0[sel.probes,,drop=FALSE]
@@ -278,7 +266,7 @@ between two contrasts."
 
         ## match with selected/active contrasts
         ## comp = head(colnames(res$fc),3)
-        comp = input_cmp_comparisons()
+        comp = input_comparisons()
         kk = match(comp, colnames(res$fc))
         if(length(kk)==0) return(NULL)
         if(length(kk)==1) kk = c(kk,kk)
@@ -301,14 +289,14 @@ between two contrasts."
         ngs <- inputData()
         req(ngs)
         
-        if(input$cmp_level=="geneset") {
+        if(input$level=="geneset") {
             grp <- ngs$samples$group
             mx = tapply(colnames(ngs$gsetX), grp, function(k) rowMeans(ngs$gsetX[,k,drop=FALSE]))
             mx = do.call(cbind, mx)
             mx0 = mx
             gsets = rownames(mx)
-            if(input$cmp_filter != "<all>") {
-                gsets = unique(unlist(COLLECTIONS[input$cmp_filter]))
+            if(input$filter != "<all>") {
+                gsets = unique(unlist(COLLECTIONS[input$filter]))
             }
             gsets = intersect(gsets, rownames(mx))
             mx = mx[gsets,,drop=FALSE]
@@ -318,13 +306,13 @@ between two contrasts."
             mx = do.call(cbind, mx)
             mx0 = mx
             sel.probes = rownames(mx) ## default to all probes
-            if(input$cmp_filter == "<custom>") {
-                genes = strsplit( input$cmp_customlist, split="[, ;]")[[1]]
+            if(input$filter == "<custom>") {
+                genes = strsplit( input$customlist, split="[, ;]")[[1]]
                 if(length(genes)>0) {
                     sel.probes = filterProbes(ngs$genes, genes)
                 }
-            } else if(input$cmp_filter %in% names(GSETS)) {
-                sel.probes = filterProbes(ngs$genes, GSETS[[input$cmp_filter]])
+            } else if(input$filter %in% names(GSETS)) {
+                sel.probes = filterProbes(ngs$genes, GSETS[[input$filter]])
             }
             sel.probes = intersect(sel.probes, rownames(mx))
             mx = mx[sel.probes,,drop=FALSE]
@@ -340,7 +328,7 @@ between two contrasts."
         ngs <- inputData()
 
         sel = names(ngs$gset.meta$meta)
-        sel = input_cmp_comparisons()
+        sel = input_comparisons()
         sel = intersect(sel, names(ngs$gset.meta$meta))
         if(length(sel)==0) return(NULL)        
         res <- getFoldChangeMatrix()    
@@ -348,8 +336,8 @@ between two contrasts."
         qv <- res$qv[,sel,drop=FALSE]
 
         fdr=0.05;lfc=0.2
-        fdr = as.numeric(input$cmp_fdr)
-        lfc = as.numeric(input$cmp_lfc)
+        fdr = as.numeric(input$fdr)
+        lfc = as.numeric(input$lfc)
         dt = sign(fc) * (qv <= fdr & abs(fc) >= lfc)
         dt[is.na(dt)] = 0
         ## add label of venn intersection region
@@ -369,7 +357,7 @@ between two contrasts."
         dt <- getSignificanceCalls()
         req(dt)
 
-        isect = input$cmp_intersection
+        isect = input$intersection
         fc0 = getFoldChangeMatrix()$fc  
         if( length(isect) == 0) {
             fc1 = fc0
@@ -380,7 +368,7 @@ between two contrasts."
             dt = dt[jj,,drop=FALSE]
 
             ## check same sign
-            if(input$cmp_include=="up/down") {
+            if(input$include=="up/down") {
                 kk = 1 + match(c("B","C"),LETTERS[1:10])
                 kk = 1 + match(isect,LETTERS[1:10])
                 kk <- intersect(kk, 1:ncol(dt))
@@ -394,7 +382,7 @@ between two contrasts."
             
             ## only genes in the selected intersection
             intersection="ABC"
-            intersection = paste0(input$cmp_intersection,collapse="")
+            intersection = paste0(input$intersection,collapse="")
             dt = dt[which(dt$intersection == intersection),,drop=FALSE]
 
         }
@@ -433,9 +421,9 @@ between two contrasts."
     ## From: https://plot.ly/r/splom/
     ##======================================================================
     
-    cmp_scatterPlotMatrix.PLOT <- reactive({
+    scatterPlotMatrix.PLOT <- reactive({
 
-        dbg("[IntersectionBoard::cmp_scatterPlotMatrix.PLOT]  reacted\n")
+        dbg("[IntersectionBoard::scatterPlotMatrix.PLOT]  reacted\n")
 
         require(ggplot2)
         require(plotly)
@@ -443,8 +431,8 @@ between two contrasts."
 
         featuretype = "logFC"
         if(DEV) {
-            req(input$cmp_featuretype)
-            featuretype <- input$cmp_featuretype
+            req(input$featuretype)
+            featuretype <- input$featuretype
         }
 
         res=NULL
@@ -479,7 +467,7 @@ between two contrasts."
         df <- data.frame(fc0)
         if(1) {
             ntop = 99999
-            ##ntop <- input$cmp_splom_ntop        
+            ##ntop <- input$splom_ntop        
             jj <- match(sel.genes, rownames(df))
             jj <- c(jj, 1:min(ntop,nrow(df)))
             if(nrow(df)>ntop) {
@@ -495,7 +483,7 @@ between two contrasts."
         ## resort selection so that selected genes are drawn last to avoid
         ## covering them up.
         is.sel = (rownames(df) %in% sel.genes)
-        if(input$cmp_splom_highlight) {
+        if(input$splom_highlight) {
             df.color = c("#00000033","#0066FF")[1 + is.sel]
             df.color = c("#AAAAAA","#1e60BB")[1 + is.sel]
             df.color = c("#CCCCCC22","#1e60BB88")[1 + is.sel]
@@ -519,7 +507,7 @@ between two contrasts."
         ## Tooltip text for all 
         tt <- rownames(df)  ## strip prefix
         ## tt <- sub("","",tt)  ## strip prefix??
-        if(input$cmp_level == "gene") {
+        if(input$level == "gene") {
             ngs <- inputData()
             g <- rownames(df)
             tt <- paste0("<b>",g,"</b> ", ngs$genes[g,"gene_title"])
@@ -662,42 +650,42 @@ between two contrasts."
             config(displaylogo = FALSE) %>% 
             event_register('plotly_selected') 
 
-        dbg("cmp_scatterPlotMatrix:: done\n")
+        dbg("scatterPlotMatrix:: done\n")
         p    
     })
 
-    cmp_scatterPlotMatrix.opts = tagList(
-        tipify( checkboxInput(ns("cmp_splom_highlight"),"Highlight genes",TRUE),
+    scatterPlotMatrix.opts = tagList(
+        tipify( checkboxInput(ns("splom_highlight"),"Highlight genes",TRUE),
                "Enable highlighting genes on the plots. Users can highlight points by selecting them with the mouse, using the box selection or the lasso selection tool.")
-        ##tipify( selectInput(ns("cmp_splom_ntop"),"Number of top genes",c(100,500,1000,2500,999999),selected=1000),
+        ##tipify( selectInput(ns("splom_ntop"),"Number of top genes",c(100,500,1000,2500,999999),selected=1000),
         ##        "Number of top genes ")
     )
 
-    cmp_scatterPlotMatrix_info = "For the selected contrasts, the <strong>Pairs</strong> panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, the Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as '<custom>' selection."
+    scatterPlotMatrix_info = "For the selected contrasts, the <strong>Pairs</strong> panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, the Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as '<custom>' selection."
 
     callModule(
         plotModule,
-        id = "cmp_scatterPlotMatrix", 
-        func = cmp_scatterPlotMatrix.PLOT,
+        id = "scatterPlotMatrix", 
+        func = scatterPlotMatrix.PLOT,
         plotlib = "plotly",
         title = "Scatterplot matrix (pairs)", label="a",
-        options = cmp_scatterPlotMatrix.opts,
+        options = scatterPlotMatrix.opts,
         ## download.fmt = c("pdf","html"),  ## scatterGL does not work for PDF
         ## download.fmt = c("html"),
         pdf.width=8, pdf.height=8,
         height = c(fullH-80,700), res=95,
-        info.text = cmp_scatterPlotMatrix_info,
-        ##caption = cmp_scatterPlotMatrix_caption,
+        info.text = scatterPlotMatrix_info,
+        ##caption = scatterPlotMatrix_caption,
         add.watermark = WATERMARK
     )
-    ##output <- attachModule(output, cmp_scatterPlotMatrix_module)
+    ##output <- attachModule(output, scatterPlotMatrix_module)
 
     
     ##======================================================================
     ## Venn diagram
     ##======================================================================
 
-    cmp_venndiagram.RENDER %<a-% reactive({
+    venndiagram.RENDER %<a-% reactive({
         
         dt = getSignificanceCalls()
         if(is.null(dt) || nrow(dt)==0) return(NULL)
@@ -705,29 +693,69 @@ between two contrasts."
         dt1 = dt[,2:ncol(dt),drop=FALSE]
         label = LETTERS[1:ncol(dt1)]
         colnames(dt1) = label
-        if(ncol(dt1)==1) {
-            dt1 <- cbind(dt1, dt1)
-        }
         include = "both"
-        if(input$cmp_include=="up/down") {
+        if(input$include=="up/down") {
             include = c("up","down")
         }    
-        dt1 = dt1[,1:min(5,ncol(dt1))]
         
         par(mfrow=c(1,1), mar=c(1,1,3,1)*0, bty="n")
         par(oma=c(0.0,0,0,0))
-        limma::vennDiagram(
-                   dt1,  main=NULL, cex.main=0.2, cex=1.2, mar=c(0,0,2,0),
-                   include=include, bty="n", fg=grey(0.7),
-                   circle.col=c("turquoise", "salmon","lightgreen","orange") )
-        tt = paste(label,"=",colnames(dt)[-1])
-        legend("topleft", legend=tt, bty='n', cex=0.9, y.intersp=0.95,
-               inset=c(0.04,-0.01), xpd=TRUE)
+        if(ncol(dt1)==1) {
+            frame()
+            text(0.5, 0.5, "Error: Venn diagram needs at least two groups")
+        } else if(ncol(dt1)>5) {
+            frame()
+            text(0.5, 0.5, "Error: too many groups for Venn diagram")
+        } else {
+            ## dt1 = dt1[,1:min(5,ncol(dt1))]
+            limma::vennDiagram(
+                       dt1,  main=NULL, cex.main=0.2, cex=1.2, mar=c(0,0,2,0),
+                       include=include, bty="n", fg=grey(0.7),
+                       circle.col=c("turquoise", "salmon","lightgreen","orange") )
+            tt = paste(label,"=",colnames(dt)[-1])
+            legend("topleft", legend=tt, bty='n', cex=0.9, y.intersp=0.95,
+                   inset=c(0.04,-0.01), xpd=TRUE)
+        }
         
     })
 
+
+    FDR.VALUES2 <- c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
+    venndiagram.opts = tagList(
+        ##    checkboxGroupInput(ns('intersection'),NULL, choices=c("A","B","C"), inline=TRUE )    
+        fillRow(
+            flex=c(1,1), ## height=80,       
+            tipify( selectInput(ns("fdr"),"FDR", choices=FDR.VALUES2, selected=0.20),
+                   "Threshold for false discovery rate",
+                   placement="top", options = list(container = "body")),
+            tipify( selectInput(ns("lfc"),"logFC threshold",
+                                choices=c(0,0.2,0.5,1,2,5),
+                                selected=0.5),
+                   "Threshold for fold-change (log2 scale)",
+                   placement="top", options = list(container = "body"))
+        ),
+        br(),br(),br(),br(),
+        radioButtons(ns('include'),'Counting:', choices=c("both","up/down"), inline=TRUE)
+    )
+   
+    callModule(
+        plotModule,
+        id = "venndiagram", 
+        func = venndiagram.RENDER,
+        func2 = venndiagram.RENDER,
+        title = "Venn diagram", label="b",
+        ##caption = venntable_buttons,
+        info.text = "The Venn diagram visualizes the number of intersecting genes between the profiles. The list of intersecting genes with further details is also reported in an interactive table below, where users can select and remove a particular contrasts from the intersection analysis.",
+        options = venndiagram.opts,
+        pdf.width = 8, pdf.height = 8,
+        height = c(400,700),
+        width = c('100%',900),
+        res = c(72,90),
+        add.watermark = WATERMARK
+    )
+
     ##output$intersection_table <- DT::renderDataTable({
-    cmp_venntable.RENDER <- reactive({
+    venntable.RENDER <- reactive({
         ngs <- inputData()
         req(ngs)
         
@@ -742,7 +770,7 @@ between two contrasts."
         ##fc0 = data.frame(fc0)
         
         ## add gene name/title
-        if(input$cmp_level == "gene") {
+        if(input$level == "gene") {
             gene = as.character(ngs$genes[rownames(fc0),"gene_name"])
             gene.tt = substring( GENE.TITLE[gene],1,50)
             gene.tt = as.character(gene.tt)
@@ -757,90 +785,53 @@ between two contrasts."
         df = data.frame( fc0, check.names=FALSE)
         ##dt <- dt[rownames(fc0),]    
         ##D <- cbind(intersection=dt$intersection, D)
-        DT::datatable(df, class='compact cell-border stripe',
+        DT::datatable(df,
+                      class='compact cell-border stripe',
                       rownames=FALSE,
                       extensions = c('Scroller'), selection='none',
+                      fillContainer = TRUE,
                       options=list(
-                          ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, ## scrollY = TRUE,
-                          scrollY = 180, scroller=TRUE, deferRender=TRUE,
-                          dom = 'lfrtip'                      
+                          dom = 'lfrtip',
+                          ##buttons = c('copy','csv','pdf'),
+                          ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                          scrollX = TRUE, 
+                          ##scrollY = 150,
+                          scrollY = '70vh',
+                          scroller = TRUE,
+                          deferRender = TRUE
                       )  ## end of options.list 
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  
     })
 
-    FDR.VALUES2 <- c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
-    cmp_venndiagram.opts = tagList(
-        ##    checkboxGroupInput(ns('cmp_intersection'),NULL, choices=c("A","B","C"), inline=TRUE )    
-        fillRow(
-            flex=c(1,1), ## height=80,       
-            tipify( selectInput(ns("cmp_fdr"),"FDR", choices=FDR.VALUES2, selected=0.20),
-                   "Threshold for false discovery rate",
-                   placement="top", options = list(container = "body")),
-            tipify( selectInput(ns("cmp_lfc"),"logFC threshold",
-                                choices=c(0,0.2,0.5,1,2,5),
-                                selected=0.5),
-                   "Threshold for fold-change (log2 scale)",
-                   placement="top", options = list(container = "body"))
-        ),
-        br(),br(),br(),br(),
-        radioButtons(ns('cmp_include'),'Counting:', choices=c("both","up/down"), inline=TRUE)
-    )
-   
-    cmp_venntable_buttons <- inputPanel(
+    venntable_buttons <- inputPanel(
         div(checkboxGroupInput(
-            ns('cmp_intersection'), NULL,
+            ns('intersection'), NULL,
             choices=c("A","B","C"), ## selected=c("A","B","C"),
             inline=TRUE ),
             style="font-size:0.85em; margin-top:-10px;")
     )
 
     callModule(
-        plotModule,
-        id = "cmp_venndiagram", 
-        func = cmp_venndiagram.RENDER,
-        func2 = cmp_venndiagram.RENDER,
-        title = "Venn diagram", label="b",
-        ##caption = cmp_venntable_buttons,
-        info.text = "The Venn diagram visualizes the number of intersecting genes between the profiles. The list of intersecting genes with further details is also reported in an interactive table below, where users can select and remove a particular contrasts from the intersection analysis.",
-        options = cmp_venndiagram.opts,
-        pdf.width=8, pdf.height=8,
-        height = 0.40*fullH, res=72,
-        add.watermark = WATERMARK
-    )
-
-    callModule(
         tableModule,
-        id = "cmp_venntable", 
-        func = cmp_venntable.RENDER,
-        ##caption = cmp_venntable_buttons,
-        title = "Intersecting genes", label="d",
+        id = "venntable", 
+        func = venntable.RENDER,
+        ##caption = venntable_buttons,
+        title = "Intersecting genes",
+        label = "c",
         info.text = "Table of intersecting genes", 
         info.width = "500px",
-        height = 0.4*fullH
+        height = c(200,750),
+        width = c('auto',1200)
     )
 
     ##================================================================================
     ## Cumuative FC
     ##================================================================================
+    
+    plotCumFC <- function(fc, level, NTOP, legend)
+    {
 
-    cmp_cumFCplot.RENDER %<a-% reactive({
-
-        ngs <- inputData()
-        sel = names(ngs$gx.meta$meta)
-        req(input$cmp_comparisons)
-        sel = input_cmp_comparisons()
-        if(is.null(sel) || length(sel)==0 || sel[1]=="") return(NULL)
-        sel = intersect(sel, names(ngs$gx.meta$meta))
-        
-        ##fc = sapply(ngs$gx.meta$meta[1:3], function(x) x$meta.fx)
-        ##rownames(fc) <- rownames(ngs$gx.meta$meta[[1]])    
-        fc = getSignificantFoldChangeMatrix()  ## isolate??xs
-        fc <- fc[,sel,drop=FALSE]
-        if(input$cmp_cumFCplot_abs) {
-            fc <- abs(fc)  
-        }
         fc[is.na(fc)] <- 0
         fc <- fc[order(-rowMeans(fc**2,na.rm=TRUE)),,drop=FALSE]
         
@@ -848,69 +839,179 @@ between two contrasts."
         fc.na <- matrix(0,nrow=100,ncol=ncol(fc))
         fc <- rbind(fc,fc.na)
         col1 = grey.colors(ncol(fc),start=0.15)
+        if(ncol(fc)==1) col1 <- 'grey40'
 
-        if(input$cmp_level=="geneset") {
-            fc.top <- head(fc,24)
+        if(level=="geneset") {
+            fc.top <- head(fc,NTOP)
             fc.top <- fc.top[order(rowMeans(fc.top,na.rm=TRUE)),,drop=FALSE]            
             rownames(fc.top) <- tolower(rownames(fc.top))
             rownames(fc.top) <- gsub(".*[:]","",rownames(fc.top))
             ## rownames(fc.top) <- gsub("[ ]*\\(.*","",rownames(fc.top))
-            par(mar=c(4,4,2,2))
-            par(mfrow=c(1,3), mar=c(7.8,0,0,1), mgp=c(2.1,0.8,0) )
-            par(mfrow=c(1,3), mar=c(5,0,0,1), mgp=c(2.1,0.8,0) )
-            ##barplot(t(fc.top), las=3, cex.names=0.81, col=col1,
-            ##        ylim=ylim, ylab="cumulative logFC")
-            frame()
-            frame()
-            pgx.stackedBarplot(
-                fc.top, cex.names=1.3, col=col1,
-                hz=TRUE,  ## ylim=ylim,
-                xlab="cumulative logFC")
-            legend("topleft", legend=colnames(fc.top),
-                   fill = col1, cex=1.0, y.intersp=0.8)
-        } else {
-            NTOP = 40
+
             fc.top <- head(fc,NTOP)
-            fc.top <- fc.top[order(rowMeans(fc.top,na.rm=TRUE)),,drop=FALSE]            
+            fc.top <- fc.top[order(-rowMeans(fc.top,na.rm=TRUE)),,drop=FALSE]            
             par(mar=c(8,4,2,2))
-            par(mfrow=c(1,1), mar=c(9,4,1,1), mgp=c(2.4,1,0) )
+            par(mfrow=c(1,1), mar=c(14,4,0,0.5), mgp=c(2.4,1,0), oma=c(0,0,0,0))
             ##barplot(t(fc.top), las=3, cex.names=0.81, col=col1,
             ##        ylim=ylim, ylab="cumulative logFC")
-            pgx.stackedBarplot(fc.top, cex.names=0.77, col=col1,
+            pgx.stackedBarplot(fc.top, col=col1,
+                                   cex.names=0.001, cex.text=0.72, srt=55,
+                               ## ylim=ylim,
+                                   ylab="cumulative logFC")
+            if(legend) {
+                legend("topright", legend=colnames(fc.top),
+                       fill = col1, cex=0.75, y.intersp=0.78,
+                       inset=c(0.04,0) )
+            }
+        } else {
+            ##NTOP = 40
+            fc.top <- head(fc,NTOP)
+            fc.top <- fc.top[order(-rowMeans(fc.top,na.rm=TRUE)),,drop=FALSE]            
+            par(mar=c(8,4,2,2))
+            par(mfrow=c(1,1), mar=c(9,4,1,0), mgp=c(2.4,1,0), oma=c(0,0,0,0))
+            ##barplot(t(fc.top), las=3, cex.names=0.81, col=col1,
+            ##        ylim=ylim, ylab="cumulative logFC")
+            pgx.stackedBarplot(fc.top, cex.names=0.77, col=col1, srt=NULL,
                                ## ylim=ylim,
                                ylab="cumulative logFC")        
-            legend("topleft", legend=colnames(fc.top),
-                   fill = col1, cex=0.75, y.intersp=0.78)
+            if(legend) {
+                legend("topright", legend=colnames(fc.top),
+                       fill = col1, cex=0.75, y.intersp=0.78,
+                       inset=c(0.04,0) )
+            }
         }
+
+    }
+    
+    cumFCplot.RENDER %<a-% reactive({
+        ngs <- inputData()
+        sel = names(ngs$gx.meta$meta)
+        req(input$comparisons)
+        sel = input_comparisons()
+        if(is.null(sel) || length(sel)==0 || sel[1]=="") return(NULL)
+        sel = intersect(sel, names(ngs$gx.meta$meta))
         
+        ##fc = sapply(ngs$gx.meta$meta[1:3], function(x) x$meta.fx)
+        ##rownames(fc) <- rownames(ngs$gx.meta$meta[[1]])    
+        fc = getSignificantFoldChangeMatrix()  ## isolate??xs
+        fc <- fc[,sel,drop=FALSE]
+        if(input$cumFC_abs) {
+            fc <- abs(fc)  
+        }
+        level <- input$level
+        legend <- input$cumFC_legend
+        n <- ifelse(level=="geneset", 24, 40)
+        n = 60
+        plotCumFC(fc, level=level, NTOP=n, legend=legend)        
     })
 
-    cmp_cumFCplot.opts = tagList(
-        checkboxInput(ns('cmp_cumFCplot_abs'),'Absolute foldchange')
+    cumFCplot.RENDER2 %<a-% reactive({
+        ngs <- inputData()
+        sel = names(ngs$gx.meta$meta)
+        req(input$comparisons)
+        sel = input_comparisons()
+        if(is.null(sel) || length(sel)==0 || sel[1]=="") return(NULL)
+        sel = intersect(sel, names(ngs$gx.meta$meta))        
+        ##fc = sapply(ngs$gx.meta$meta[1:3], function(x) x$meta.fx)
+        ##rownames(fc) <- rownames(ngs$gx.meta$meta[[1]])    
+        fc = getSignificantFoldChangeMatrix()  ## isolate??xs
+        fc <- fc[,sel,drop=FALSE]
+        if(input$cumFC_abs) {
+            fc <- abs(fc)  
+        }
+        level <- input$level
+        legend <- input$cumFC_legend
+        n <- ifelse(level=="geneset", 30, 70)
+        n=60
+        plotCumFC(fc, level=level, NTOP=n, legend=legend)        
+    })
+
+    cumFCplot.opts = tagList(
+        checkboxInput(ns('cumFC_abs'),'Absolute foldchange',FALSE),
+        checkboxInput(ns('cumFC_legend'),'Show legend',TRUE)
     )
 
     callModule(
         plotModule,
-        id = "cmp_cumFCplot", label="c",
-        func = cmp_cumFCplot.RENDER,
-        func2 = cmp_cumFCplot.RENDER,
+        id = "cumFCplot", label="c",
+        func = cumFCplot.RENDER,
+        func2 = cumFCplot.RENDER2,
         csvFunc = getSignificantFoldChangeMatrix,
         download.fmt = c("pdf","png"),
-        ##caption = cmp_venntable_buttons,
-        title = "Cumulative fold-change", 
-        info.text = "</b>Cumulative fold-change.</b> This plot visualizes the cumulative fold-change of genes shared between the profiles.",
-        options = cmp_cumFCplot.opts,
+        ##caption = venntable_buttons,
+        title = "CUMULATIVE FOLD-CHANGE", 
+        info.text = "<b>Cumulative fold-change barplot.</b> Cumulative fold-change of common genes between the profiles. Genes that are consistently up (or down) in multiple comparisons show higher cumulative fold-change and are indicative to be shared biomarkers.",
+        options = cumFCplot.opts,
         pdf.width = 8, pdf.height = 6,
-        height = c(0.45*fullH,550), width=c('auto',1000),
+        height = c(0.45*fullH,600),
+        width = c('auto',1200),
         res=c(75,110),
         add.watermark = WATERMARK
     )
     
+    ##=============================================================================
+    ## FOLDCHANGE HEATMAP
+    ##=============================================================================
+    
+    FCheatmap.RENDER %<a-% reactive({
+        ##
+        ##
+        ngs <- inputData()
+        if(input$FCheatmap_allfc) {
+            F <- getFoldChangeMatrix()$fc
+        } else {
+            F <- getActiveFoldChangeMatrix()$fc
+        }
+        ##sig.F <- getSignificantFoldChangeMatrix()  ## isolate??xs
+        F <- F[order(-rowMeans(F**2)),]
+
+        if(input$cumFC_abs) {
+            F <- abs(F)  
+        }
+        F1 <- head(F,60)
+
+        par(mfrow=c(1,1), mar=c(0,0,0,0), oma=c(0,0,0,0))
+        ##gx.heatmap(t(F1), keysize=0.85, mar=c(6,30))
+        gx.splitmap(t(F1), mar=c(8,12), split=1,
+                    ##cluster_columns = FALSE,
+                    cluster_columns = TRUE,
+                    cluster_rows = TRUE,
+                    rowlab.maxlen = 80,
+                    key.offset = c(0.90, 0.2),
+                    cexRow=0.9, cexCol=0.75)
+
+    })
+    
+    FCheatmap.opts = tagList(
+        tipify( checkboxInput(ns('FCheatmap_allfc'), "show all contrasts", TRUE),
+               "Show all contrasts or just the selected ones."),
+    )
+    
+    FCheatmap_info = "<b>The Connectivity Heatmap</b> shows the most similar profiles as a heatmap. Contrasts that are similar will be clustered close together."
+
+    FCheatmap_caption = "<b>Connectivity Heatmap.</b> Similarity of the contrasts profiles as a heatmap. Contrasts that are similar will be clustered close together."
+    
+    callModule(
+        plotModule,
+        "FCheatmap", label = "b",
+        func = FCheatmap.RENDER,
+        func2 = FCheatmap.RENDER, 
+        ## plotlib="ggplot",
+        options = FCheatmap.opts,
+        title = "FOLDCHANGE HEATMAP",
+        info.text = FCheatmap_info,
+        ##caption = FCheatmap_caption,
+        pdf.width=14, pdf.height=5.5,
+        height = c(400,700), width = c('auto',1400),
+        res = c(90,110),
+        add.watermark = WATERMARK
+    )
+
     ##================================================================================
     ## Single-pair scatter plot
     ##================================================================================
 
-    cmp_pairsPlot.PLOT <- reactive({
+    pairsPlot.PLOT <- reactive({
         require(ggplot2)
         require(plotly)
         ##require(GGally)
@@ -935,21 +1036,12 @@ between two contrasts."
             sel.genes <- sel.keys
         }
         ## sel.genes <- head(sel.genes,50)
-        
-        ## highlighted genes (color blue)
-        sel.row = pairsEnrichmentTable$rows_selected()
-        hi.genes <- rownames(fc0)
-        if(length(sel.row)>0) {
-            df <- getPairsEnrichmentTable()
-            gs <- rownames(df)[sel.row]
-            hi.genes <- GSETS[[gs]]
-        }
-        
+                
         ## subsample for speed: take top1000 + 1000
         df <- data.frame(fc0)
         if(0) {
             ntop = 99999
-            ##ntop <- input$cmp_splom_ntop                    
+            ##ntop <- input$splom_ntop                    
             jj <- match(c(sel.genes,hi.genes), rownames(df))
             jj <- c(jj, 1:min(ntop,nrow(df)))
             if(nrow(df)>ntop) {
@@ -983,7 +1075,7 @@ between two contrasts."
         label.text <- shortstring(label.text,30)
         if(sum(is.na(label.text))) label.text[is.na(label.text)] <- ""
         width1 <- rep(0,length(is.sel))
-        if(input$cmp_pairsplot_showselected) {
+        if(input$pairsplot_showselected) {
             width1 <- 0.3 + 0.5*is.sel
         }
 
@@ -994,14 +1086,14 @@ between two contrasts."
         width1 <- width1[jj]
 
         sel1 <- NULL
-        if(input$cmp_pairsplot_labelgenes) {
+        if(input$pairsplot_labelgenes) {
             sel1 <- match(label.text0, rownames(df))  ## index for labeled
         }
         
         ## Tooltip text for all 
         tt <- rownames(df)  ## strip prefix
         ## tt <- sub("","",tt)  ## strip prefix??
-        if(input$cmp_level == "gene") {
+        if(input$level == "gene") {
             ngs <- inputData()
             g <- rownames(df)
             tt <- paste0("<b>",g,"</b> ", ngs$genes[g,"gene_title"])
@@ -1085,171 +1177,43 @@ between two contrasts."
         p    
     })
 
-    cmp_pairsPlot.opts = tagList(
-        tipify( checkboxInput(ns("cmp_pairsplot_labelgenes"),"Label genes",TRUE),
+    pairsPlot.opts = tagList(
+        tipify( checkboxInput(ns("pairsplot_labelgenes"),"Label genes",TRUE),
                "Label genes on the plots."),
-        tipify( checkboxInput(ns("cmp_pairsplot_showselected"),"Show selected",TRUE),
+        tipify( checkboxInput(ns("pairsplot_showselected"),"Show selected",TRUE),
                "Show selected genes.")
-        ##tipify( selectInput(ns("cmp_pairs_ntop"),"Number of top genes",c(100,500,1000,2500,999999),selected=1000),
+        ##tipify( selectInput(ns("pairs_ntop"),"Number of top genes",c(100,500,1000,2500,999999),selected=1000),
         ##        "Number of top genes ")
     )
 
-    cmp_pairsPlot_info = "For the selected contrasts, the <strong>Pairs</strong> panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, the Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as '<custom>' selection."
+    pairsPlot_info = "For the selected contrasts, the <strong>Pairs</strong> panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, the Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as '<custom>' selection."
 
     callModule(
         plotModule,
-        id = "cmp_pairsPlot", 
-        func = cmp_pairsPlot.PLOT,
+        id = "pairsPlot", 
+        func = pairsPlot.PLOT,
         plotlib="plotly",
         title = "Scatterplot (pairs)", label="a",
-        options = cmp_pairsPlot.opts,
+        options = pairsPlot.opts,
         ##  download.fmt = c("pdf","html"),  ## scatterGL does not work for PDF
         download.fmt = c("html"),
         pdf.width=8, pdf.height=8,
         height = c(fullH-80,700), res=95,
-        info.text = cmp_pairsPlot_info,
-        ##caption = cmp_pairsPlot_caption,
+        info.text = pairsPlot_info,
+        ##caption = pairsPlot_caption,
         add.watermark = WATERMARK
     )
-
     
-    cmp_pairsSelectedTable.RENDER <- reactive({
-
-        ngs <- inputData()
-        req(ngs)
-        
-        ## get foldchanges
-        ##fc0 = getSignificantFoldChangeMatrix()  ## isolate??
-        fc0 = getActiveFoldChangeMatrix()$fc  ## isolate??        
-        if(is.null(fc0) || nrow(fc0)==0) return(NULL)
-        
-        fc0 <- fc0[order(-rowMeans(fc0)),,drop=FALSE]        
-        fc0 = round(fc0, digits=3)
-        colnames(fc0) = paste0("fc.",LETTERS[1:ncol(fc0)])
-        ##fc0 = data.frame(fc0)
-        
-        pairs.sel <- plotly::event_data("plotly_selected", source="pairs")
-        sel.keys <- as.character(pairs.sel$key)
-        if(0 && length(sel.keys)>0) {
-            updateSelectInput(session, "cmp_filter", selected="<custom>")
-            sel.keys = paste(sel.keys, collapse=" ")
-            updateTextAreaInput(session, "cmp_customlist", value=sel.keys)
-        }
-        
-        df = data.frame( fc0, check.names=FALSE)
-        DT::datatable(df, class='compact cell-border stripe',
-                      rownames = TRUE,
-                      extensions = c('Scroller'),
-                      selection='none',
-                      options=list(
-                          ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, ## scrollY = TRUE,
-                          scrollY = 225, scroller=TRUE, deferRender=TRUE,
-                          dom = 'lfrtip'                      
-                      )  ## end of options.list 
-                      ) %>%
-            ##formatSignif(numeric.cols,4) %>%
-            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  
-    })
-
-      
-    getPairsEnrichmentTable <- reactive({
-
-        ngs <- inputData()
-        req(ngs)
-        
-        ## get foldchanges
-        ##fc0 = getSignificantFoldChangeMatrix()  ## isolate??
-        fc0 = getActiveFoldChangeMatrix()$fc  ## isolate??        
-        if(is.null(fc0) || nrow(fc0)==0) return(NULL)
-
-        ##sel.genes <- names(which(GSETxGENE[42174,]!=0))        
-        pairs.sel <- plotly::event_data("plotly_selected", source="pairs")
-        sel.genes <- as.character(pairs.sel$key)
-        if(length(sel.genes) == 0) return(NULL)
-                    
-        ## fisher test
-        cat("[cmp_pairsEnrichmentTable.RENDER] head(sel.genes)=",head(sel.genes),"\n")
-        ii <- setdiff(match(toupper(sel.genes), colnames(GSETxGENE)),NA)
-        N <- cbind(k1=Matrix::rowSums(GSETxGENE!=0), n1=ncol(GSETxGENE),
-                   k2=Matrix::rowSums(GSETxGENE[,ii]!=0), n2=length(ii) )
-        rownames(N) = rownames(GSETxGENE)
-        ##N <- N[which(!(N[,1]==0 & N[,3]==0)), ]
-        N <- N[which(N[,1]>0 | N[,3]>0), ]
-        odds.ratio = ( N[,3]/ N[,4]) / ( N[,1]/ N[,2]) 
-        dim(N)
-        
-        require(corpora) 
-        pv <- corpora::fisher.pval( N[,1], N[,2], N[,3], N[,4], log.p=FALSE)
-        head(pv)
-        names(pv) <- rownames(N)
-        pv = pv[match(names(odds.ratio),names(pv))]
-        ##qv = p.adjust(pv, method="fdr")
-        qv = p.adjust(pv, method="bonferroni")
-        gset <- substring(names(pv),1,60)
-        df = data.frame( geneset=gset, odds.ratio=odds.ratio, p.fisher=pv, q.fisher=qv)
-        dim(df)
-
-        ##df <- round(df, digits=3)
-        df <- df[order(df$p.fisher),]
-        df
-    })
-    
-    cmp_pairsEnrichmentTable.RENDER <- reactive({
-
-        df <- getPairsEnrichmentTable()
-        req(df)
-        numeric.cols <- 2:ncol(df)
-
-        DT::datatable(
-                df, class='compact cell-border stripe',
-                rownames = FALSE,
-                fillContainer = TRUE,
-                extensions = c('Scroller'), ##selection='none',
-                selection = list(mode='single', target='row', selected=1),                
-                options=list(
-                    ## pageLength = 40, ##lengthMenu = c(20, 30, 40, 60, 100, 250),
-                    scrollX = TRUE, ## scrollY = TRUE,
-                    scrollY = 225, scroller=TRUE, deferRender=TRUE,
-                    dom = 'lfrtip'                      
-                )  ## end of options.list 
-            ) %>%
-            formatSignif(numeric.cols,3) %>%
-            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  
-    })
-    
-    pairsSelectedTable <- callModule(
-        tableModule,
-        id = "cmp_pairsSelectedTable", 
-        func = cmp_pairsSelectedTable.RENDER,
-        ##caption = cmp_pairsSelected_buttons,
-        title = "Selected genes", label="b",
-        info.text = "Table of selected genes", 
-        info.width = "500px",
-        height = 0.45*fullH
-    )
-    
-    pairsEnrichmentTable <- callModule(
-        tableModule,
-        id = "cmp_pairsEnrichmentTable", 
-        func = cmp_pairsEnrichmentTable.RENDER,
-        ##caption = cmp_pairsSelected_buttons,
-        title = "Functional enrichment", label="c",
-        info.text = "Table", 
-        info.width = "500px",
-        height = 0.45*fullH
-    )
-
     
     ##================================================================================
-    ## Contrast heatmap 
+    ## Contrast corrplot 
     ##================================================================================
 
-    cmp_ctheatmap.PLOT %<a-% reactive({
+    ctcorrplot.PLOT %<a-% reactive({
                         
         ngs <- inputData()
         req(ngs)
-        req(input$cmp_comparisons)
+        req(input$comparisons)
         
         ## res <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         res <- getFoldChangeMatrix()
@@ -1262,13 +1226,13 @@ between two contrasts."
         qv0 = res$qv
 
         ntop = 9999
-        ntop <- input$cmp_ctheatmap_ntop
+        ntop <- input$ctcorrplot_ntop
         if(ntop=="all") ntop <- 999999
         ntop <- as.integer(ntop)
 
-        allfc <- input$cmp_ctheatmap_allfc
+        allfc <- input$ctcorrplot_allfc
         if(!allfc) {
-            comp = input_cmp_comparisons()
+            comp = input_comparisons()
             if(length(comp)<2) return(NULL)
             kk = match(comp, colnames(fc0))
             fc0 <- fc0[,kk,drop=FALSE]
@@ -1280,6 +1244,7 @@ between two contrasts."
         ##R <- cor(fc0[jj,], use="pairwise", method="spearman")
         R <- cor(apply(fc0[jj,],2,rank), use="pairwise")
         R <- round(R,digits=2)
+        diag(R) <- 0
         
         notecex=0.001
         notecex=1.1; cex=1.3
@@ -1296,30 +1261,36 @@ between two contrasts."
         col <- BLUERED(16)
         col <- colorpanel(64,"royalblue3","grey90","indianred3")
         ##col <- tail(BLUERED(16),8)
-        if(min(R,na.rm=TRUE)>=0) col <- tail(col,32)
-        if(max(R,na.rm=TRUE)<=0) col <- head(col,32)
+        if(min(R, na.rm=TRUE)>=0) col <- tail(col,32)
+        if(max(R, na.rm=TRUE)<=0) col <- head(col,32)
         cellnote <- NULL
-
 
         col2 <- colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582",
                                    "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE",
-                                   "#4393C3", "#2166AC", "#053061"))        
+                                   "#4393C3", "#2166AC", "#053061"))
+        
         require(corrplot)
         corrplot(R, method = "circle", order="hclust",
-                 col = rev(col2(50)), mar=c(1,0.2,0.2,1) * 0.2*mean(mar1),
-                 tl.cex = 0.65*cex, tl.col="black", tl.srt = 90)
+                 is.corr = FALSE,
+                 cl.lim = c(-1,1)*max(abs(R),na.rm=TRUE),
+                 col = rev(col2(50)),
+                 ## mar = c(1,0.2,0.2,1)*0.2*mean(mar1),
+                 mar = c(0,0,0,0),                 
+                 tl.cex = 0.8*cex,
+                 tl.col = "black",
+                 tl.srt = 90)
         ##corrplot(R, method = "circle", order="AOE")
         ##return(R)
     })
 
-    cmp_ctheatmap.PLOTLY <- reactive({
+    ctcorrplot.PLOTLY <- reactive({
 
         ## install.packages("heatmaply")
         require(heatmaply)
         
         ngs <- inputData()
         req(ngs)
-        ##req(input$cmp_comparisons)
+        ##req(input$comparisons)
         ##res <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         res = getFoldChangeMatrix()
         if(is.null(res)) return(NULL)
@@ -1329,13 +1300,13 @@ between two contrasts."
         qv0 = res$qv
 
         ntop=2000
-        ntop <- input$cmp_ctheatmap_ntop
+        ntop <- input$ctcorrplot_ntop
         if(ntop=="all") ntop <- 999999
         ntop <- as.integer(ntop)
         
-        allfc <- input$cmp_ctheatmap_allfc
+        allfc <- input$ctcorrplot_allfc
         if(!allfc) {
-            comp = input_cmp_comparisons()
+            comp = input_comparisons()
             if(length(comp)<2) return(NULL)
             kk = match(comp, colnames(fc0))
             fc0 <- fc0[,kk,drop=FALSE]
@@ -1356,7 +1327,7 @@ between two contrasts."
 
         bluered.pal <- colorRampPalette(colors = c("royalblue3","grey90","indianred3"))
         cellnote <- NULL
-        ##if(input$cmp_ctheatmap_showrho) cellnote <- R
+        ##if(input$ctcorrplot_showrho) cellnote <- R
 
         plt <- heatmaply(
             R, margins = c(250, 200, NA, 0),
@@ -1369,29 +1340,30 @@ between two contrasts."
         plt
     })
     
-    cmp_ctheatmap.opts = tagList(
-        ##tipify( checkboxInput(ns('cmp_ctheatmap_showrho'), "show correlation values", FALSE),
+    ctcorrplot.opts = tagList(
+        ##tipify( checkboxInput(ns('ctcorrplot_showrho'), "show correlation values", FALSE),
         ##"Show correlation values in cells."),
-        tipify( checkboxInput(ns('cmp_ctheatmap_allfc'), "show all contrasts", TRUE),
+        tipify( checkboxInput(ns('ctcorrplot_allfc'), "show all contrasts", TRUE),
                "Show all contrasts or just the selected ones."),
-        ##tipify( checkboxInput('cmp_ctheatmap_fixed', "fix heatmap", FALSE),
+        ##tipify( checkboxInput('ctcorrplot_fixed', "fix heatmap", FALSE),
         ##       "Fix heatmap layout when changing number of top genes"),
-        tipify( radioButtons(ns('cmp_ctheatmap_ntop'), "number of top genes",
+        tipify( radioButtons(ns('ctcorrplot_ntop'), "number of top genes",
                              c("100","1000","all"),
                              selected="1000", inline=TRUE),
                "Number of top genes to compute correlation values.") 
     )
 
-    cmp_ctheatmap_info = "<strong>Constrast heatmap.</strong> Similarity of the contrasts visualized as a clustered heatmap. Contrasts that are similar will be clustered close together. The numeric value in the cells correspond to the Pearson correlation coefficient between contrast signatures. Red corresponds to positive correlation and blue to negative correlation."
+    ctcorrplot_info = "<strong>Constrast heatmap.</strong> Similarity of the contrasts visualized as a clustered heatmap. Contrasts that are similar will be clustered close together. The numeric value in the cells correspond to the Pearson correlation coefficient between contrast signatures. Red corresponds to positive correlation and blue to negative correlation."
         
     callModule(
         plotModule,
-        id = "cmp_ctheatmap",  label="a",
-        func = cmp_ctheatmap.PLOT, plotlib="base",
-        func2 = cmp_ctheatmap.PLOT,
-        info.text = cmp_ctheatmap_info,
-        ##caption = cmp_ctheatmap_caption,
-        options = cmp_ctheatmap.opts,
+        id = "ctcorrplot",  label="c",
+        func = ctcorrplot.PLOT, plotlib="base",
+        func2 = ctcorrplot.PLOT,
+        title = "CONTRAST CORRELATION",
+        info.text = ctcorrplot_info,
+        ##caption = ctcorrplot_caption,
+        options = ctcorrplot.opts,
         download.fmt = c("pdf","html"),
         pdf.width = 11, pdf.height = 10,
         height = c(fullH-50,720), width = c("auto",1100),
@@ -1420,7 +1392,7 @@ between two contrasts."
         fc0[is.na(fc0)] <- 1e-4 * rnorm(sum(is.na(fc0)))
 
         ngenes = 200
-        ngenes = as.integer(input$cmp_topgenes)
+        ngenes = as.integer(input$topgenes)
         fc0 = head(fc0[order(-apply(fc0,1,sd,na.rm=TRUE)),,drop=FALSE],ngenes)
         
         ## --------- compute correlation distance 
@@ -1431,7 +1403,7 @@ between two contrasts."
         return(res)
     })
 
-    cmp_connectivitymap.RENDER <- reactive({
+    connectivitymap.RENDER <- reactive({
 
         ngs <- inputData()
         req(ngs)
@@ -1448,7 +1420,7 @@ between two contrasts."
         ##add.negative <- ("add negative" %in% input$fc_cmap_options)
         if(add.negative) {
             comparisons=1
-            comparisons = input_cmp_comparisons()
+            comparisons = input_comparisons()
             if(is.null(comparisons)) return(NULL)
             ## add NEGATIVE phenotype node
             kk <- which(colnames(fc) %in% comparisons)
@@ -1460,7 +1432,7 @@ between two contrasts."
         }
         
         ## -------- compute t-SNE
-        if(input$cmp_cmapclust=="tsne") {
+        if(input$cmapclust=="tsne") {
             require(Rtsne)
             perplexity <- pmax(min(ncol(fc)/5,30),2)
             perplexity
@@ -1473,6 +1445,14 @@ between two contrasts."
             pos <- pos[1:ncol(fc),]
             xlab="tSNE-x"
             ylab="tSNE-y"
+        } else if(input$cmapclust=="umap") {
+            sfc <- scale(fc)
+            if(ncol(sfc)<=6) sfc <- cbind(sfc,sfc,sfc,sfc)
+            sfc <- sfc + 1e-2*matrix(rnorm(length(sfc)),nrow(sfc),ncol(sfc))
+            pos <- pgx.clusterBigMatrix(sfc, dims=2, methods='umap')[[1]]
+            pos <- pos[1:ncol(fc),]
+            xlab="UMAP-x"
+            ylab="UMAP-y"
         } else {
             require(irlba)
             sfc <- scale(fc)
@@ -1517,33 +1497,33 @@ between two contrasts."
 
     })
 
-    cmp_connectivitymap.opts = tagList(
-        ##tipify( selectInput(ns('cmp_cmapsets'),"Dataset:", choices=NULL, multiple=TRUE),
+    connectivitymap.opts = tagList(
+        ##tipify( selectInput(ns('cmapsets'),"Dataset:", choices=NULL, multiple=TRUE),
         ##"Select datasets to compare with external contrast profiles."),
-        tipify(radioButtons(ns('cmp_cmapclust'),"Layout:",c("tsne","pca"),inline=TRUE),
-               "Choose the plot layout: t-SNE or PCA"),
+        tipify(radioButtons(ns('cmapclust'),"Layout:",c("tsne","umap","pca"),inline=TRUE),
+               "Choose the plot layout: UMAP, t-SNE or PCA"),
         tipify(radioButtons(
-            ns('cmp_topgenes'),'Top genes:',c(50,200,1000), inline=TRUE,selected=200),
+            ns('topgenes'),'Top genes:',c(50,200,1000), inline=TRUE,selected=200),
             "Specify the number of top genes for calculating the distances.")
         ##checkboxGroupInput('fc_cmap_options',NULL,c('show names','add negative'),
         ##                   selected=c('show names'),inline=TRUE),
     )
 
-    cmp_connectivitymap_info = "<b>The Connectivity Map (CMap)</b> shows the similarity of the contrasts profiles as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away. For comparison with external signatures, users can select multiple public datasets in the settings under 'Dataset'."
+    connectivitymap_info = "<b>The Connectivity Map (CMap)</b> shows the similarity of the contrasts profiles as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away. For comparison with external signatures, users can select multiple public datasets in the settings under 'Dataset'."
 
-    cmp_connectivitymap_caption = "<b>Connectivity Map (CMap).</b> The CMap shows the similarity of the contrasts as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away."
+    connectivitymap_caption = "<b>Connectivity Map (CMap).</b> The CMap shows the similarity of the contrasts as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away."
     
     callModule(
         plotModule,
-        "cmp_connectivitymap", label="b",
-        func = cmp_connectivitymap.RENDER,
+        "connectivitymap", label="b",
+        func = connectivitymap.RENDER,
         plotlib="scatterD3",
-        options = cmp_connectivitymap.opts,
+        options = connectivitymap.opts,
         pdf.width=8, pdf.height=8,
         height = c(fullH-110), res=90,
         title = "Connectivity map",
-        info.text = cmp_connectivitymap_info,
-        ##caption = cmp_connectivitymap_caption,
+        info.text = connectivitymap_info,
+        ##caption = connectivitymap_caption,
         add.watermark = WATERMARK
     )
     
@@ -1551,72 +1531,59 @@ between two contrasts."
     ##---------- UI LAYOUT ----------------------------------
     ##-------------------------------------------------------
     
-    cmp_venn_caption = "<b>(a)</b> <b>Venn diagram</b> showing the number of overlapping genes for multiple contrasts. <b>(b)</b> <b>Cumulative fold-change plot</b> of genes in the selected overlap region."
+    venn_caption = "<b>(a)</b> <b>Venn diagram</b> showing the number of overlapping genes for multiple contrasts. <b>(b)</b> <b>Cumulative fold-change plot</b> of genes in the selected overlap region."
     
-    cmp_scatterPlotMatrix_caption = "<b>(a)</b> <b>Pairs plot.</b> Pairwise scatterplots for two or more differential expression profiles for multiple selected contrasts. Similar profiles will show high correlation with points close to the diagonal.  <b>(b)</b> <b>Venn diagram</b> showing the number of overlapping genes for multiple contrasts. <b>(c)</b> <b>Cumulative fold-change plot</b> of genes in the selected overlap region."
+    scatterPlotMatrix_caption = "<b>(a)</b> <b>Pairs plot.</b> Pairwise scatterplots for two or more differential expression profiles for multiple selected contrasts. Similar profiles will show high correlation with points close to the diagonal.  <b>(b)</b> <b>Venn diagram</b> showing the number of overlapping genes for multiple contrasts. <b>(c)</b> <b>Venn table.</b> Genes in the selected overlap region."
 
-    output$cmp_scatterPlotMatrix_UI <- renderUI({
+    output$scatterPlotMatrix_UI <- renderUI({
         fillCol(
             ## id = ns("expr_topgenes"),
             height = fullH,
             flex=c(NA,0.02,1), ##height = 370,
-            div(HTML(cmp_scatterPlotMatrix_caption),class="caption"),
+            div(HTML(scatterPlotMatrix_caption),class="caption"),
             br(),
             fillRow(
-                flex=c(1.3,0.12,1), ##height = 370,
-                plotWidget(ns("cmp_scatterPlotMatrix")),
+                flex=c(1.8,0.15,1),
+                height = fullH,
+                plotWidget(ns("scatterPlotMatrix")),
                 br(),
                 fillCol(
-                    flex = c(0.9,NA,1),
-                    plotWidget(ns("cmp_venndiagram")),
-                    cmp_venntable_buttons,
-                    plotWidget(ns("cmp_cumFCplot"))
+                    flex = c(1.4,NA,1),
+                    plotWidget(ns("venndiagram")),
+                    venntable_buttons,
+                    ##plotWidget(ns("cumFCplot"))
+                    tableWidget(ns("venntable"))
                 )
             )
         )
     })
-    ##outputOptions(output, "cmp_scatterPlotMatrix_UI", suspendWhenHidden=FALSE) ## important!!!    
-
-    output$cmp_pairsPlot_UI <- renderUI({
-        fillCol(
-            ## id = ns("expr_topgenes"),
-            height = fullH,
-            flex=c(NA,0.02,1), ##height = 370,
-            div(HTML("caption"),class="caption"),
-            br(),
-            fillRow(
-                flex=c(1.1,0.12,1), ##height = 370,
-                plotWidget(ns("cmp_pairsPlot")),
-                br(),
-                fillCol(
-                    flex = c(1,0.1,1),
-                    tableWidget(ns("cmp_pairsSelectedTable")),
-                    br(),
-                    tableWidget(ns("cmp_pairsEnrichmentTable"))
-                )
-            )
-        )
-    })
-    ##outputOptions(output, "cmp_scatterPlotMatrix_UI", suspendWhenHidden=FALSE) ## important!!!
-
-    cmp_ctClusteringUI_caption = "<b>(a)</b> <b>Constrast heatmap.</b> Similarity of the contrasts visualized as a clustered heatmap. The numeric value in the cells correspond to the Pearson correlation coefficient. Red corresponds to positive correlation and blue to negative correlation. <b>(b)</b> <b>Connectivity Map.</b> The CMap shows the similarity of the contrasts as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away."
+    ##outputOptions(output, "scatterPlotMatrix_UI", suspendWhenHidden=FALSE) ## important!!!    
     
-    output$cmp_ctClustering_UI <- renderUI({
+    ctClusteringUI_caption = "<b>Cumulative fold-change plot</b> of genes in the selected overlap region. <b>(a)</b> <b>Constrast heatmap.</b> Similarity of the contrasts visualized as a clustered heatmap. The numeric value in the cells correspond to the Pearson correlation coefficient. Red corresponds to positive correlation and blue to negative correlation.  <b>(b)</b> <b>Connectivity Map.</b> The CMap shows the similarity of the contrasts as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away."
+    ctClusteringUI_caption = "<b>(a)</b> <b>Cumulative fold-change plot</b> of genes in the selected overlap region. <b>(b)</b> <b>Constrast heatmap.</b> Similarity of the contrasts visualized as a clustered heatmap. <b>(c)</b> <b>Contrast correlation plot.</b> The numeric value in the cells correspond to the Pearson correlation coefficient. Red corresponds to positive correlation and blue to negative correlation. "
+    
+    output$ctClustering_UI <- renderUI({
         fillCol(
             ## id = ns("expr_topgenes"),
             height = fullH,
             flex = c(NA,0.035,1), ##height = 370,
-            div(HTML(cmp_ctClusteringUI_caption), class="caption"),
+            div(HTML(ctClusteringUI_caption), class="caption"),
             br(),
             fillRow(
-                flex = c(1.2,0.1,1),
-                height = fullH - 120,
-                plotWidget(ns("cmp_ctheatmap")),
+                flex = c(1.5,0.07,1),
+                height = fullH,
+                fillCol(
+                    flex = c(1,0.1,1.5),
+                    plotWidget(ns("cumFCplot")),
+                    br(),
+                    ##plotWidget(ns("connectivitymap")),
+                    plotWidget(ns("FCheatmap"))
+                ),
                 br(),
-                plotWidget(ns("cmp_connectivitymap"))
+                plotWidget(ns("ctcorrplot"))
             )
         )
     })
-    ##outputOptions(output, "cmp_ctClustering_UI", suspendWhenHidden=FALSE) ## important!!!
+    ##outputOptions(output, "ctClustering_UI", suspendWhenHidden=FALSE) ## important!!!
     
 } ## end-of-Board 

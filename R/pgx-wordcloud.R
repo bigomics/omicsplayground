@@ -7,10 +7,10 @@
 ##------------- Functions for WordCloud ------------------------
 ##---------------------------------------------------------------
 
-pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
+pgx.calculateWordCloud <- function(ngs, progress=NULL, pg.unit=1) {
 
     if(is.null(ngs$gset.meta)) {
-        cat("[pgx.calculateWordFreq] FATAL ERROR: no gset.meta in object\n")
+        cat("[pgx.calculateWordCloud] FATAL ERROR: no gset.meta in object\n")
         return(NULL)
     }
     
@@ -53,11 +53,16 @@ pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
     rownames(W) = names(words2)
     colnames(W) = terms
     
-    ## filter on minimal size and maximum ratio
+    ## filter on minimal size and maximum ratio???
     nn <- Matrix::colSums(W,na.rm=TRUE)
     nr <- nn / nrow(W)
-    W <- W[,which(nn >= 10 & nr <= 0.10),drop=FALSE]
+    W <- W[,which(nn >= 3 & nr <= 0.5),drop=FALSE]
     dim(W)
+
+    if(ncol(W) < 1) {
+        message("[pgx.calculateWordCloud] WARNING:: no valid words left")
+        return(NULL)
+    }
     
     ## align geneset expression matrix
     S <- S[rownames(W),,drop=FALSE]
@@ -106,8 +111,8 @@ pgx.calculateWordFreq <- function(ngs, progress=NULL, pg.unit=1) {
         W <- W + 1e-2*matrix(rnorm(length(W)),nrow(W),ncol(W))
     }
     nb = floor(pmin(pmax(ncol(W)/4,2),10))
-    message("[pgx.calculateWordFreq] dim(W) = ",paste(dim(W),collapse="x"))
-    message("[pgx.calculateWordFreq] setting perplexity = ",nb)
+    message("[pgx.calculateWordCloud] dim(W) = ",paste(dim(W),collapse="x"))
+    message("[pgx.calculateWordCloud] setting perplexity = ",nb)
     pos1 = Rtsne( as.matrix(t(W)), perplexity=nb,
                  ## pca =TRUE, partial_pca =TRUE,
                  check_duplicates=FALSE)$Y

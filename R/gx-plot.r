@@ -3,34 +3,72 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-
 gx.barplot <- function(x, main="", cex.main=1.2, cex.names=0.85,
                        cex.legend=0.9, srt=0, xlab='', ylab='',
-                       offset=NULL, voffset=0.05,
-                       group=NULL, legend=TRUE)
+                       group=NULL, group.names=NULL, bar.names=NULL,
+                       voff=2, legend=TRUE)
 {
     ##col1 = rev(grey.colors(2))
+    if(0) {
+        main="";cex.main=1.2;cex.names=0.85
+        cex.legend=0.9;srt=0;xlab='';ylab='';
+        group=NULL;legend=TRUE
+    }
     cpal = rep(brewer.pal(12,"Paired"),99)
     if(is.null(group)) group <- rep(1,ncol(x))
     group2 <- as.vector(sapply(group,rep,2))
-    col1 <- cpal[(group2-1)*2 + rep(1:2,ncol(x))]
+    col1 <- cpal[(group2-1)*2 + rep(1:2,NCOL(x))]
+    if(NCOL(x)==1) col1 = col1[2]
     ylim <- c(0, 1.15*max(x,na.rm=TRUE))
+    str.ht <- strheight("XXX",cex=cex.names)
+    str.ht <- 0.04*ylim[2]
+    space <- c(0,0.4)
+    is.multi = (NCOL(x)>1)
+    is.multi
+    if(!is.multi) space <- c(0.2,0)
     
-    if(is.null(offset)) {
-        offset <- ifelse(ncol(x) >=6, 0.5, 1)
-        ##offset <- ifelse(ncol(x) >=10, 0, offset)
-    }
-
-    barplot(x, beside=TRUE, las=3, col=col1,
+    barplot(x, beside=TRUE, col=col1,
             main=main, cex.main=cex.main,
             xlab=xlab, ylab=ylab, ylim=ylim,
-            names.arg=rep('',ncol(x)))
-    dx <- max(x)
-    text(3*(1:ncol(x)), -voffset*dx, colnames(x), cex=cex.names, srt=srt,
-         xpd=TRUE, pos=2, offset=offset)
+            ##names.arg = rep('',ncol(x))
+            las=1, space=space,
+            names.arg = rep('',length(x)),
+            ## names.arg = rep(rownames(x),ncol(x)),
+            mgp=c(2,0.9,0) )
+    
+    if(is.multi) {
+        sp0 <- nrow(x)+space[2]
+        tx0 <- sp0*(0:(ncol(x)-1)) + 1
+        tx1 <- tx0 + 0.5*nrow(x) + space[1]
+        tx  <- as.vector(mapply(tx0,tx1,FUN=c))
+        tx2 <- (tx0+tx1)/2
+        if(is.null(bar.names)) {
+            bar.names <- rep(rownames(x),NCOL(x))
+            bar.names <- toupper(substring(bar.names,1,3))
+        }
+        mtext(bar.names, side=1, line=0, at=tx, adj=0.5, cex=0.5, srt=0, xpd=TRUE)
+        if(is.null(group.names)) {
+            group.names <- colnames(x)
+        }
+        if(srt==0) {
+            mtext(group.names, side=1, line=1.5, at=tx2,
+                  adj=0.5, cex=cex.names, srt=0, xpd=TRUE)
+        } else {
+            text( tx2, -voff*str.ht, group.names, cex=cex.names,
+                 srt=srt, xpd=TRUE, pos=2, offset=0)
+        }        
+
+    } else {
+
+        text(1.2*(1:length(x))-0.5, -voff*str.ht, names(x), cex=cex.names,
+             srt=srt, xpd=TRUE, pos=2, offset=0*str.ht)
+
+    }
     
     if(legend) {
-        legend("topleft", legend=rev(rownames(x)), fill=rev(col1[1:2]),
+        nn <- names(x)
+        if(is.multi) nn <- rownames(x)
+        legend("topleft", legend=nn, fill=col1,
                xpd=TRUE, bty='n', inset=c(-0.0,-0.04), cex=cex.legend,
                y.intersp=0.8, x.intersp=0.3)
     }

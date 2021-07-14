@@ -885,6 +885,7 @@ pgx.computeBiologicalEffects <- function(X, is.count=FALSE)
     return(pheno)
 }
 
+nmax=-1
 pgx.svaCorrect <- function(X, pheno, nmax=-1) {
     ## 
     ## IK: not sure about this SVA correction stuff... 
@@ -895,6 +896,10 @@ pgx.svaCorrect <- function(X, pheno, nmax=-1) {
         pheno <- data.frame(pheno=pheno)
     }
     X <- as.matrix(X)
+
+    ## add some random... sometimes necessary
+    ##X <- X + 1e-6*matrix(length(X),nrow(X),ncol(X))  
+    X <- X + 1e-8  ##??
 
     ## setup model matrix
     mod1 <- c()
@@ -930,6 +935,8 @@ pgx.svaCorrect <- function(X, pheno, nmax=-1) {
         n.sv <- EstDimRMT(X.r, FALSE)$dim + 1
         n.sv
     }
+    n.sv <- min(n.sv, min(table(y)))
+    n.sv
     
     message("Calculating SVA...")
     vX = X
@@ -943,6 +950,9 @@ pgx.svaCorrect <- function(X, pheno, nmax=-1) {
     ##sv <- svaseq( 2**X, mod1, mod0, n.sv=NULL)$sv
     cX <- removeBatchEffect(X, covariates=sv, design=mod1x)
     ##cX <- removeBatchEffect(X, covariates=sv)
+
+    ## recenter on old feature means
+    cX <- cX - rowMeans(cX,na.rm=TRUE) + rowMeans(X,na.rm=TRUE)
     
     cX
 }

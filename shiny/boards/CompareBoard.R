@@ -132,14 +132,17 @@ CompareBoard <- function(input, output, session, env)
         pgx.files <- sort(dir("../data",pattern="pgx$"))
         updateSelectInput(session, "dataset2", choices=c("<this>",pgx.files))        
        
-        ##comparisons2 <- names(ngs$gx.meta$meta)
-        ##sel2 <- tail(head(comparisons2,2),1)
-        ##updateSelectInput(session, "contrast2", choices=comparisons2, selected=sel2)        
-
-        pheno <- colnames(ngs$samples)
-        updateSelectInput(session, "colorby", choices=pheno, selected=pheno[1])                
+        ##pheno <- colnames(ngs$samples)
+        ##updateSelectInput(session, "colorby", choices=pheno, selected=pheno[1])                
     })
-        
+
+    observeEvent( input$contrast1, {
+        ## all.comparisons <- names(ngs$gx.meta$meta)
+        ct <- input$contrast1
+        req(ct)
+        updateSelectInput(session, "colorby", choices=ct, selected=ct[1])                
+    })
+    
     ## observeEvent({
     ##     input$contrast1
     ##     input$ntop
@@ -165,7 +168,7 @@ CompareBoard <- function(input, output, session, env)
     observe({
         df <- getOmicsScoreTable()
         if(is.null(df)) return(NULL)
-        message("DBG*** [CompareBoard::observer] updating genelist...")        
+        ## message("DBG*** [CompareBoard::observer] updating genelist...")        
         ntop <- as.integer(input$ntop)
         higenes <- rownames(df)[order(df$score,decreasing=TRUE)]        
         higenes <- head(higenes, ntop)
@@ -203,8 +206,8 @@ CompareBoard <- function(input, output, session, env)
         
         ct1 <- head(names(ngs1$gx.meta$meta),2)
         ct2 <- head(names(ngs2$gx.meta$meta),2)        
-        ct1 <- input$contrast1
-        ct2 <- input$contrast2
+        ct1 <- input.contrast1()
+        ct2 <- input.contrast2()
         req(ct1)
         req(ct2)
         if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
@@ -248,6 +251,13 @@ CompareBoard <- function(input, output, session, env)
         gsub("[ ]","",genes)
     }) ## %>% debounce(1000)
 
+    input.contrast1 <- reactive({
+        input$contrast1
+    }) %>% debounce(2500)
+
+    input.contrast2 <- reactive({
+        input$contrast2
+    }) %>% debounce(2500)
     
     ##============================================================================
     ## ScatterPlot 1
@@ -276,7 +286,7 @@ CompareBoard <- function(input, output, session, env)
         } else {
             p <- pgx.plotContrast(ngs, contrast=ct,
                                   hilight = higenes, ntop=ntop,
-                                  cex.lab = cex.lab,
+                                  cex.lab = cex.lab, ## dlim=0.06,
                                   type=type, plotlib="base")
         }
         p
@@ -288,7 +298,7 @@ CompareBoard <- function(input, output, session, env)
         ngs2 <- dataset2()
         all.ct <- names(ngs1$gx.meta$meta)
         ct1 <- head(all.ct,2)
-        ct1 <- input$contrast1
+        ct1 <- input.contrast1()
         req(ct1)
         if(!all(ct1 %in% all.ct)) return(NULL)
         type <- input$plottype
@@ -331,7 +341,7 @@ CompareBoard <- function(input, output, session, env)
         ngs1 <- inputData()
         ngs2 <- dataset2()
         ##alertDataLoaded(session,ngs)
-        ct2 <- input$contrast2
+        ct2 <- input.contrast2()
         req(ct2)
         if(!all(ct2 %in% names(ngs2$gx.meta$meta))) return(NULL)
         type <- input$plottype
@@ -377,8 +387,8 @@ CompareBoard <- function(input, output, session, env)
         ##alertDataLoaded(session,ngs)
         ct1 <- head(names(ngs1$gx.meta$meta),2)
         ct2 <- head(names(ngs2$gx.meta$meta),2)
-        ct1 <- input$contrast1
-        ct2 <- input$contrast2
+        ct1 <- input.contrast1()
+        ct2 <- input.contrast2()
         req(ct1)
         req(ct2)
         if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
@@ -433,8 +443,8 @@ CompareBoard <- function(input, output, session, env)
 
         ct1 <- head(names(ngs1$gx.meta$meta),2)
         ct2 <- head(names(ngs2$gx.meta$meta),2)        
-        ct1 <- input$contrast1
-        ct2 <- input$contrast2
+        ct1 <- input.contrast1()
+        ct2 <- input.contrast2()
         req(ct1)
         req(ct2)
         if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
@@ -444,25 +454,65 @@ CompareBoard <- function(input, output, session, env)
         F2 <- pgx.getMetaMatrix(ngs2)$fc[,ct2,drop=FALSE]        
 
         gg <- union(rownames(F1),rownames(F2))
+        gg <- intersect(rownames(F1),rownames(F2))
         F1 <- F1[match(gg,rownames(F1)),,drop=FALSE]
         F2 <- F2[match(gg,rownames(F2)),,drop=FALSE]
-        colnames(F1) <- paste0("1:",colnames(F1))
-        colnames(F2) <- paste0("2:",colnames(F2))
+        ##colnames(F1) <- paste0("1:",colnames(F1))
+        ##colnames(F2) <- paste0("2:",colnames(F2))
+        rownames(F1) <- rownames(F2) <- gg
         
         F <- cbind(F1, F2)
-        rownames(F) <- gg        
         F[is.na(F)] <- 0
-        F <- F[order(-rowMeans(F**2)),,drop=FALSE]
-        F <- head(F,40)
-        F <- F[order(rowMeans(F)),,drop=FALSE]
-
         
-        par(mfrow=c(1,1), mar=c(4.5,10,0,2))
-        barplot( t(F), beside=FALSE, las=1, horiz=TRUE,
-                cex.names = 0.9,
-                xlab = "cumulative foldchange", ylab = "" )
-        legend("bottomright", colnames(F), fill=grey.colors(ncol(F)),
-               cex=0.85, y.intersp=0.9, inset=c(0.01,0.02) )
+        if(1) {
+            sel <- head(order(-rowMeans(F**2)),40)
+            sel <- rownames(F)[sel]
+        } else {
+            ## get top genes from score table
+            df <- getOmicsScoreTable()
+            if(is.null(df)) return(NULL)
+            sel <- score_table$rows_all()      ## from module  
+            req(sel)
+            sel <- head(rownames(df)[sel],50)        
+            if(length(sel)==0) return(NULL)
+        }
+
+        sel <- sel[order(rowMeans(F[sel,]))]
+        F  <- F[sel,,drop=FALSE]
+        F1 <- F1[sel,,drop=FALSE]
+        F2 <- F2[sel,,drop=FALSE]
+
+        if(0) {
+            par(mfrow=c(1,1), mar=c(4.5,10,0,2))
+            barplot( t(F), beside=FALSE, las=1, horiz=TRUE,
+                    cex.names = 0.9,
+                    xlab = "cumulative foldchange", ylab = "" )
+            legend("bottomright", colnames(F), fill=grey.colors(ncol(F)),
+                   cex=0.85, y.intersp=0.9, inset=c(0.01,0.02) )
+        }
+        
+        par(mfrow=c(1,1), mar=c(4.5,0,1,2), mgp=c(2.2,0.8,0))
+        layout(matrix(c(1, 2, 3), nrow=1, byrow=T),widths=c(0.5,1,1))
+
+        frame()
+        mtext( rownames(F), cex=0.85, side=2, at=(1:nrow(F)-0.5)/nrow(F),
+              las=1, line=-12)        
+        ##barplot( t(F1), beside=FALSE, las=1, horiz=TRUE, cex.names = 0.01,
+        ##        xlab = "cumulative foldchange", ylab = "" )
+        pgx.stackedBarplot( F1, hz=TRUE, las=1, cex.names = 0.01, cex.lab=1.4,
+                           xlab = "cumulative foldchange", ylab = "" )
+        legend("bottomright", colnames(F1), fill=grey.colors(ncol(F1)),
+               cex=0.9, y.intersp=0.9, inset=c(-0.03,0.02), xpd=TRUE )
+        title("DATASET1", line=-0.35, cex.main=1.2)
+        
+        ##barplot( t(F2), beside=FALSE, las=1, horiz=TRUE, cex.names = 0.01,
+        ##        xlab = "cumulative foldchange", ylab = "" )
+        pgx.stackedBarplot( F2, hz=TRUE, las=1, cex.names = 0.01, cex.lab=1.4,
+                           xlab = "cumulative foldchange", ylab = "" )
+        legend("bottomright", colnames(F2), fill=grey.colors(ncol(F2)),
+               cex=0.9, y.intersp=0.9, inset=c(-0.03,0.02), xpd=TRUE )
+        title("DATASET2", line=-0.35, cex.main=1.2)
+        
         
     })
     
@@ -481,7 +531,7 @@ CompareBoard <- function(input, output, session, env)
         ## caption = scatter2_caption,
         pdf.height=8, pdf.width=8, 
         height = c(700,750), width=c("auto",900),
-        res = c(80,100),
+        res = c(80,98),
         add.watermark = WATERMARK
     )
 
@@ -496,21 +546,25 @@ CompareBoard <- function(input, output, session, env)
         ##alertDataLoaded(session,ngs)
         ct1 <- head(names(ngs1$gx.meta$meta),2)
         ct2 <- head(names(ngs2$gx.meta$meta),2)
-        ct1 <- input$contrast1
-        ct2 <- input$contrast2
+        ct1 <- input.contrast1()
+        ct2 <- input.contrast2()
         req(ct1)
         req(ct2)
         if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
         if(!all(ct2 %in% names(ngs2$gx.meta$meta))) return(NULL)        
 
+        dbg("[genecorr.RENDER] 1:")
+        
         gg <- intersect(rownames(ngs1$X),rownames(ngs2$X))
         kk <- intersect(colnames(ngs1$X),colnames(ngs2$X))
 
+        dbg("[genecorr.RENDER] 2:")
+        
         if(length(kk)==0) {
             par(mfrow=c(1,1))
             frame()
             text(0.5,0.6, "Error: no common samples", col='red3')
-            text(0.5,0.5, "To compute gene correlation both datasets\nneed to have common samples", col='red3')            
+            text(0.5,0.5, "To compute gene correlation both datasets\nneed to have common samples", col='red3')
             return()
         }
         if(length(kk) < 10) {
@@ -521,33 +575,65 @@ CompareBoard <- function(input, output, session, env)
             return()
         }
 
+        dbg("[genecorr.RENDER] 3:")
+        
         ## conform matrices
         X1 <- ngs1$X[gg,kk]
         X2 <- ngs2$X[gg,kk]        
         Y1 <- ngs1$samples[kk,]
         Y2 <- ngs2$samples[kk,]    
         
+        dbg("[genecorr.RENDER] 4:")
+
         dset1 <- paste0("[dataset1]  expression")
         dset2 <- paste0("[dataset2]  expression")
         dset1 <- paste0("1: expression")
         dset2 <- paste0("2: expression")
         ##dset2 <- paste0("[",input$dataset2,"] expression")
 
-        F <- pgx.getMetaMatrix(ngs1)$fc
-        higenes <- names(head(sort(-rowMeans(F**2)),16))
-        higenes <- hilightgenes()
-        higenes <- intersect(higenes,rownames(X1))
-        higenes <- head(higenes, 16)
+        if(0) {
+            F <- pgx.getMetaMatrix(ngs1)$fc
+            higenes <- names(head(sort(-rowMeans(F**2)),16))
+            higenes <- hilightgenes()
+            higenes <- intersect(higenes,rownames(X1))
+            higenes <- head(higenes, 16)
+        }
 
-        if(length(higenes)==0) return(NULL)
+        dbg("[genecorr.RENDER] 5:")
         
+        df <- getOmicsScoreTable()
+        if(is.null(df)) return(NULL)
+        
+        ##sel <- input$score_table_rows_all
+        sel <- score_table$rows_all()      ## from module  
+        req(sel)
+        if(is.null(sel)) return(NULL)        
+
+        dbg("[genecorr.RENDER] 6: dim.df = ",dim(df))
+        
+        higenes <- head(rownames(df)[sel],16)        
+        if(length(higenes)==0) return(NULL)
+
+        dbg("[genecorr.RENDER] 7: higenes = ",higenes)
+        
+        ## Set color for points
         ##C1 <- ngs1$model.parameters$exp.matrix
         ##klr1 <- 2+as.integer(C1[,ct1[1]])
-        colorby="ER_STATUS"
-        colorby <- input$colorby
-        grp <- factor(Y1[,colorby])
         klrpal <- rep(1:7,99)
-        klr1 <- klrpal[as.integer(grp)]
+        klrpal <- rep(brewer.pal(12,"Paired"),99)
+        
+        colorby="ER_STATUS"
+        colorby = ct1[1]
+        ## colorby <- input$colorby
+        if(0) {
+            grp <- factor(Y1[,colorby])
+            klr1 <- klrpal[as.integer(grp)]
+        } else {
+            grp <- pgx.getContrastGroups(ngs1, colorby, as.factor=TRUE)
+            ## grp <- factor(grp)
+            grp <- grp[colnames(X1)]
+            klr1 <- klrpal[as.integer(grp)]            
+        }
         
         nc <- ceiling(sqrt(length(higenes)))
         nr <- (length(higenes)-1) %/% nc
@@ -566,15 +652,16 @@ CompareBoard <- function(input, output, session, env)
             if((i-1)%/%nc==nr) {
                 mtext(dset1, 1, line=2, cex=0.8)
             }
-            if(i==1) {
+            ##if(i==1) {
+            if(i%%nc == 1) {
                 tt <- c("   ",levels(grp))
                 legend("topleft", legend=tt,
                        fill = c(NA,klrpal),
                        border = c(NA,"black","black"), bty='n',
-                       cex=0.9, box.lwd=0, pt.lwd=0,
+                       cex=0.92, box.lwd=0, pt.lwd=0,
                        x.intersp=0.5, y.intersp=0.8)
                 legend("topleft", colorby, x.intersp=-0.2,
-                       cex=0.9, y.intersp=0.45, bty='n')
+                       cex=0.92, y.intersp=0.45, bty='n')
             }
         }
 
@@ -616,8 +703,8 @@ CompareBoard <- function(input, output, session, env)
 
         ct1 <- head(names(ngs1$gx.meta$meta),3)
         ct2 <- head(names(ngs2$gx.meta$meta),3)
-        ct1 <- input$contrast1
-        ct2 <- input$contrast2
+        ct1 <- input.contrast1()
+        ct2 <- input.contrast2()
         req(ct1)
         req(ct2)
         if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
@@ -628,27 +715,50 @@ CompareBoard <- function(input, output, session, env)
         genes = c("ERBB2","ESR1","FOXA1","PGR","ERBB2","ESR1","FOXA1","PGR")
         genes = rownames(ngs1$X)
         genes <- hilightgenes()
+
+        df <- getOmicsScoreTable()
+        if(is.null(df)) return(NULL)        
+        sel <- score_table$rows_all()      ## from module  
+        req(sel)
+        genes <- rownames(df)[sel]
+                
         xgenes <- intersect(rownames(ngs1$X), rownames(ngs2$X))
         genes <- head(intersect(genes, xgenes),8)
         
-        par(mfrow=c(2,4), mar=c(9,4,1,0), mgp=c(2.0,0.7,0), oma=c(0,0,0,0))
+        par(mfrow=c(2,4), mar=c(6,4,1,0), mgp=c(2.0,0.7,0), oma=c(0,0,0,0))
         for(gene in genes) {
             x1 <- ngs1$X[gene,]
             x2 <- ngs2$X[gene,]
-            e1 <- ngs1$model.parameters$exp.matrix[,ct1,drop=FALSE]
-            e2 <- ngs2$model.parameters$exp.matrix[,ct2,drop=FALSE]        
-            m1 <- apply(e1, 2, function(y) tapply(x1, sign(y), mean)[c("-1","1")])
-            m2 <- apply(e2, 2, function(y) tapply(x2, sign(y), mean)[c("-1","1")])    
-            
+            e1 <- contrastAsLabels(ngs1$model.parameters$exp.matrix[,ct1,drop=FALSE])
+            e2 <- contrastAsLabels(ngs2$model.parameters$exp.matrix[,ct2,drop=FALSE])
+            m1 <- lapply(e1, function(y) tapply(x1, y, mean))
+            m2 <- lapply(e2, function(y) tapply(x2, y, mean))
+
             ##gx.barplot(m1, srt=45, main=gene);gx.barplot(m2, srt=45, main=gene)
-            colnames(m1) <- paste0("[1] ",colnames(m1))
-            colnames(m2) <- paste0("[2] ",colnames(m2))
-            mm <- cbind(m1, m2)
-            mm.group <- c( rep(1,ncol(m1)), rep(2,ncol(m2)) )
-            gx.barplot(mm, srt=60, main=gene, cex.main=1.0,
+            grp1 <- paste0("1:",sub(":.*","",names(m1)))
+            grp2 <- paste0("2:",sub(":.*","",names(m2)))
+            grp.names <- c(grp1, grp2)
+
+            b1 <- as.vector(sapply(m1,names))
+            b2 <- as.vector(sapply(m2,names))
+            bar.names <- c(b1,b2)
+            bar.names <- toupper(substring(bar.names,1,1))
+            
+            srt=10
+            srt=0
+            srt <- ifelse(max(nchar(grp.names)) <= 5, 0, 25)
+            
+            mm <- cbind(do.call(cbind, m1), do.call(cbind, m2))
+            mm.group <- c(rep(1,length(m1)), rep(2,length(m2)) )
+            ##gx.barplot(mm, legend=FALSE, srt=15)
+            gx.barplot(mm,
+                       srt=srt, main=gene, cex.main=1.0,
                        group=mm.group, cex.names=0.85,
-                       legend=FALSE, cex.legend=0.9,
+                       group.names = grp.names,
+                       bar.names = bar.names, voff=3.5,
+                       legend=FALSE, cex.legend=0.9,                       
                        ylab="expression")
+            
         }
 
     })
@@ -697,7 +807,8 @@ CompareBoard <- function(input, output, session, env)
                     scrollX = TRUE, ##scrollY = TRUE,
                     ##scrollY = 170,
                     scrollY = '70vh',
-                    scroller=TRUE, deferRender=TRUE
+                    scroller = TRUE,
+                    deferRender = TRUE
                 )  ## end of options.list 
             ) %>%
             formatSignif(numeric.cols,3) %>%
@@ -707,12 +818,13 @@ CompareBoard <- function(input, output, session, env)
 
     score_table_info = "In this table, users can check mean expression values of features across the conditions for the selected genes."
     
-    score_table_module <- callModule(
+    score_table <- callModule(
         tableModule, id = "score_table",
         func = score_table.RENDER, ## ns=ns,
         info.text = score_table_info,
-        title = "CORRELATION SCORE", label="b",
-        height = c(220,750),
+        title = "CORRELATION SCORE",
+        label = "b",
+        height = c(235,750),
         width = c("auto",1600)
         ## caption = parcoord_caption
     )
@@ -744,7 +856,7 @@ CompareBoard <- function(input, output, session, env)
             )
         )
     })
-    ##outputOptions(output, "compareScatter_UI", suspendWhenHidden=FALSE) ## important!!!
+    outputOptions(output, "compareScatter_UI", suspendWhenHidden=FALSE) ## important!!!
 
     ## ------------------------------------------------------
     ## --------------------- tab2 ---------------------------
@@ -768,7 +880,7 @@ CompareBoard <- function(input, output, session, env)
             )
         )
     })
-    ##outputOptions(output, "FCcorrelation_UI", suspendWhenHidden=FALSE) ## important!!!
+    outputOptions(output, "FCcorrelation_UI", suspendWhenHidden=FALSE) ## important!!!
 
     ## ------------------------------------------------------
     ## --------------------- tab3 ---------------------------
@@ -787,7 +899,7 @@ CompareBoard <- function(input, output, session, env)
             fillRow(
                 flex = c(1.0,0.05,1),
                 fillCol(
-                    flex = c(2.5,0.07,1),
+                    flex = c(2.2,0.01,1),
                     plotWidget(ns("multibarplot")),                    
                     br(),
                     tableWidget(ns("score_table"))
@@ -805,11 +917,6 @@ CompareBoard <- function(input, output, session, env)
 if(0) {
     source(file.path(RDIR,"pgx-include.R"))    ## lots of libraries and source()
     
-    load("../data/geiger2016-arginine.pgx")
-    ngs1 = pgx.initialize(ngs)
-    load("../data/GSE22886-immune.pgx")
-    ngs2 = pgx.initialize(ngs)
-
     load("../data/tcga-brca2-gx.pgx")
     ngs1 = pgx.initialize(ngs)
     load("../data/tcga-brca2-px.pgx")

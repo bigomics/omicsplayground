@@ -62,6 +62,9 @@ NoAuthenticationModule <- function(input, output, session, username=NULL)
     )
     return(rt)
 }
+##================================================================================
+## FirebaseAuthenticationModule
+##================================================================================
 
 FirebaseAuthenticationModule <- function(input, output, session,
                                          firebase=NULL, firebase2=NULL)
@@ -247,6 +250,10 @@ FirebaseAuthenticationModule <- function(input, output, session,
     return(rt)
 }
 
+##================================================================================
+## PasswordAuthenticationModule (ask login.name + password)
+##================================================================================
+
 PasswordAuthenticationModule <- function(input, output, session,
                                          credentials.file)
 {
@@ -329,6 +336,10 @@ PasswordAuthenticationModule <- function(input, output, session,
     )
     return(rt)
 }
+
+##================================================================================
+## RegisterAuthenticationModule (just ask email)
+##================================================================================
 
 register.file="../logs/register.log"
 RegisterAuthenticationModule <- function(input, output, session, register.file)
@@ -594,6 +605,11 @@ RegisterAuthenticationModule <- function(input, output, session, register.file)
     )
     return(res)
 }
+
+
+##================================================================================
+## FullAuthenticationModule (ask login.name + password + CAPTCHA verification)
+##================================================================================
 
 credentials.file="./CREDENTIALS"
 FullAuthenticationModule.SAVE <- function(input, output, session,
@@ -1137,6 +1153,12 @@ FullAuthenticationModule.SAVE <- function(input, output, session,
     return(res)
 }
 
+
+
+##================================================================================
+## HELPER FUNCTIONS
+##================================================================================
+
 splashHelloModal <- function(name, msg=NULL, ns=NULL, duration=3500)
 {
     if(is.null(ns)) ns <- function(e) return(e)
@@ -1209,6 +1231,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[23]] = c("Adventurous Life","Love adventurous life. Be passionately curious about exploring new adventures. &ndash; Lailah Gifty Akita")
     titles[[24]] = c("Succes is Exploration","The first thing you have to find is the unknown. Learning is searching; anything else is just waiting. &ndash; Dale Daute")
     titles[[25]] = c("Look Ma! No help!","I did it without a bioinformagician")
+    titles[[26]] = c("May the Omics Force be with you","Train hard youngling, one day a master you become")
     
     title <- titles[[length(titles)]]
     title <- sample(titles,1)[[1]]

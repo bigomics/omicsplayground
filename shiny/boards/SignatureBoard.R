@@ -510,18 +510,22 @@ infotext =
         
         require(gplots)
         cex.main=1.1
-        par(mfrow=c(4,3), mar=c(0.3,3,3,0.5), mgp=c(2.0,0.7,0) )
+        nc=3
+        par(mfrow=c(4,3), mar=c(0.3,3,3,0.5), mgp=c(1.9,0.7,0), oma=c(0,1,0,0) )
         if(ncol(F)>12) {
             par(mfrow=c(5,4), mar=c(0.2,2,3,0.6))
             cex.main=0.9
+            nc=4
         }
         ## if(ncol(F)>24) par(mfrow=c(7,5), mar=c(1,2,2.5,0.6))
         for(i in 1:min(20,ncol(F))) {
             f <- colnames(F)[i]
             tt <- sub(".*\\]","",f)
             tt <- breakstring(substring(tt,1,50),28,force=TRUE)
+            ylab <- ""
+            if(i%%nc==1) ylab <- "rank metric"
             gsea.enplot(F[,i], gset, main=tt, cex.main=cex.main,
-                        xlab="", ylab="rank metrix")
+                        xlab="", ylab=ylab)
             qv1 <- paste("q=",round(qv[i],digits=3))
             legend("topright",qv1, cex=0.9, bty="n", adj=0)
             if(grepl("^\\[",f)) {
@@ -803,6 +807,7 @@ infotext =
         df1 = df1[jj,]
 
         df1$idx = factor(1:nrow(df1), levels=1:nrow(df1))
+        df1$idx <- as.integer(df1$idx)
         klr = rep(brewer.pal(8,"Set2"),10)[as.integer(df1$db)]
         
         plt <- plot_ly(

@@ -80,27 +80,28 @@ if(0) {
 
     saveRDS(X1, file="../lib/l1000_es_n15d3479.rds")
     write.csv(X1, file=gzfile("../lib/l1000_es_n15d3479.csv.gz"))
-    ##readr::write_csv(data.frame(X1), file="../lib/l1000_es_n15d3479.csv2.gz")
-
+    ##readr::write_csv(data.frame(X1), file="../lib/l1000_es_n15d3479.csv2.gz")      
 }
 
 
 if(0) {
     ## GENE PERTURBATIONS
     nmin = 8
-    nmin = 10
+    ##nmin=10;nmax=10
+    nmin=8;nmax=20
     sel1 <- grepl("-sh|-oe|-lig",names(gmt))
     gmt1 <- gmt[which(gmt.size >= nmin & sel1)]
     length(gmt1)
-    gmt1 <- lapply(gmt1, function(g) head(g,nmin))
-    
+    gmt1 <- lapply(gmt1, function(g) head(g,nmax))    
     X1 <- X[,which(colnames(X) %in% unlist(gmt1))]
     X1 <- round(X1, digits=3)
     dim(X)
     dim(X1)
     length(gmt1)
-    saveRDS( X1, file="../lib/l1000_es_n10g1766.rds")
-    write.csv(X1, file=gzfile("../lib/l1000_es_n10g1766.csv.gz"))
+    ##saveRDS( X1, file="../lib/l1000_gpert_n10g1766.rds")
+    ##write.csv(X1, file=gzfile("../lib/l1000_gpert_n10g1766.csv.gz"))
+    saveRDS(X1, file="../lib/l1000_gpert_n8m20g5812.rds")
+    write.csv(X1, file=gzfile("../lib/l1000_gpert_n8m20g5812.csv.gz"))
     ##saveRDS( X1[,], file="../lib/l1000_es_n8g5812.rds")
     ##write.csv(X1, file=gzfile("../lib/l1000_es_n8g5812.csv.gz"))
         
