@@ -24,12 +24,10 @@ FILES   = file.path(OPG,"lib")
 FILESX  = file.path(OPG,"libx")
 PGX.DIR = file.path(OPG,"data")
 
-USER_MODE = "pro"
-DEV       = FALSE
 WATERMARK = FALSE
-#WATERMARK = TRUE
-DEBUG     = FALSE
-#DEBUG=TRUE;DEV=TRUE
+USER_MODE = "pro"
+DEV     = TRUE
+DEBUG   = TRUE
 
 ## Determine if we are in ShinyProxy
 SHINYPROXY = (Sys.getenv("SHINYPROXY_USERNAME")!="" && "omicsplayground" %in% dir("/"))

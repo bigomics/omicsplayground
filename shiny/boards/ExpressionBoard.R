@@ -881,7 +881,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if(is.null(res) || nrow(res)==0) return(NULL)
 
         ## filter on active rows (using search)
-        ##ii <- input$genetable_rows_all
         ii  <- genetable$rows_all()
         res <- res[ii,,drop=FALSE]
         if(nrow(res)==0) return(NULL)
@@ -962,7 +961,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         tipify( checkboxInput(ns('gx_ungroup'),'ungroup samples',FALSE),
                "Ungroup samples in the plot",
                placement="right", options = list(container = "body")),
-        tipify( checkboxInput(ns('gx_showothers'),'show others',TRUE),
+        tipify( checkboxInput(ns('gx_showothers'),'show others',FALSE),
                "Show the 'others' class (if any)",
                placement="right", options = list(container = "body"))
         )

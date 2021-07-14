@@ -237,6 +237,14 @@ pgx.initialize <- function(pgx) {
     pgx$samples <- type.convert(pgx$samples)    ## autoconvert to datatypes
     pgx$samples <- pgx$samples[,which(colMeans(is.na(pgx$samples))<1),drop=FALSE]
 
+    is.num  <- sapply(pgx$samples,class) %in% c('numeric','integer')
+    numlev  <- apply(pgx$samples,2,function(x) length(unique(x[!is.na(x)])))
+    is.numfac <- (is.num & numlev <= 3)
+    is.numfac
+    if(any(is.numfac)) {
+        for(i in which(is.numfac)) pgx$samples[,i] <- as.character(pgx$samples[,i])
+    }
+    
     ## clean up: pgx$Y is a cleaned up pgx$samples
     kk = grep("batch|lib.size|norm.factor|repl|donor|clone|sample|barcode",
               colnames(pgx$samples),invert=TRUE)

@@ -483,7 +483,6 @@ EnrichmentBoard <- function(input, output, session, env)
         if(!is.null(sel) && length(sel)>0) sel.gs = rownames(rpt)[sel]
         
         ## filter on active rows (using search)
-        ##ii <- input$gseatable_rows_all
         ii  <- gseatable$rows_all()
         if(is.null(ii) || length(ii)==0) return(NULL)
         if(length(ii)>0) {
@@ -525,7 +524,6 @@ EnrichmentBoard <- function(input, output, session, env)
         if(!is.null(sel) && length(sel)>0) sel.gs = rownames(rpt)[sel]
         
         ## filter on active rows (using search)
-        ##ii <- input$gseatable_rows_all
         ii  <- gseatable$rows_all()
         if(is.null(ii) || length(ii)==0) return(NULL)
         if(length(ii)>0) {
@@ -612,7 +610,6 @@ EnrichmentBoard <- function(input, output, session, env)
         if(!(comp %in% names(ngs$gx.meta$meta))) return(NULL)
         
         ## filter on active rows (using search)
-        ##ii <- input$gseatable_rows_all
         ii <- gseatable$rows_all()
         rpt <- rpt[ii,,drop=FALSE]
         if(nrow(rpt)==0) return(NULL)
@@ -638,7 +635,6 @@ EnrichmentBoard <- function(input, output, session, env)
         if(!(comp %in% names(ngs$gx.meta$meta))) return(NULL)
         
         ## filter on active rows (using search)
-        ##ii <- input$gseatable_rows_all
         ii <- gseatable$rows_all()
         rpt <- rpt[ii,,drop=FALSE]
         if(nrow(rpt)==0) return(NULL)

@@ -33,10 +33,10 @@ pgx.computeGlassoAroundGene <- function(X, gene, nmax=100)
     return(res)
 }
 
-gr <- pgx.plotPartialCorrelationGraph <-
+pgx.plotPartialCorrelationGraph <-
     function(res, gene, rho.min=0.1, nsize=-1, main="",
              vsize=10, edge.width=10, label.cex=0.8,
-             layout="fr")
+             radius=-1, plot=TRUE, layout="fr")
 {    
     require(igraph)
     ## GLASSO object
@@ -57,40 +57,56 @@ gr <- pgx.plotPartialCorrelationGraph <-
 
     ##P = P * (abs(P)>0.1)    
     G <- graph_from_adjacency_matrix(
-        abs(P), mode="undirected", diag=FALSE,
-        weighted=TRUE)
-    L = layout_with_fr(G)
-    
+        abs(P), mode="undirected", diag=FALSE, weighted=TRUE)
+        
     ee <- get.edges(G, E(G))
     ew <- (abs(P[ee])/max(abs(P[ee])))
     E(G)$rho <- P[ee]
     V(G)$name
-    V(G)$size <- vsize * c(1,1.4)[1 + 1*(V(G)$name==gene)]
+    V(G)$size <- vsize * c(1,1.8)[1 + 1*(V(G)$name==gene)]
     V(G)$label.cex <- label.cex * c(1,1.4)[1 + 1*(V(G)$name==gene)]    
+    V(G)$color <- c('lightskyblue',"salmon")[1 + 1*(V(G)$name==gene)]    
     
     E(G)$width <- edge.width * ew**1.5
     E(G)$color <- c("red","darkgreen")[1 + 1*(sign(R[ee])>0)]
     E(G)$color <- c("#FF000033","#44444433")[1 + 1*(sign(R[ee])>0)]    
-    
-    G1 <- delete_edges(G, which(abs(E(G)$weight) < rho.min))
-    isolated = which(degree(G1)==0)
-    G1 = delete.vertices(G1, isolated)
-    L1 = L[-isolated,,drop=FALSE]
 
-    if(length(V(G1))==0) {
-        frame()
-        return()
+    ## delete weak edges
+    G1 <- delete_edges(G, which(abs(E(G)$weight) < rho.min))
+    if(length(V(G1)) <= 1)  return()
+    
+    ## delete orphans
+    isolated = which(degree(G1)==0 & V(G)$name!=gene)
+    G1 = delete.vertices(G1, isolated)
+
+    dbg("[pgx.plotPartialCorrelationGraph] len.VG = ",length(V(G1)))
+    if(length(V(G1)) <= 1)  return()
+
+    ## get only nodes within radius
+    dist <- distances(G1, v=gene, mode='all', weights=NA)[1,]
+    vv <- V(G1)
+    if(radius > 0) {
+        vv <- names(which(dist <= radius))
+    }
+    G1 <- induced_subgraph(G1, vv)
+
+    ##L1 = L[-isolated,,drop=FALSE]
+    L1 = layout_with_fr(G1)
+
+    if(length(V(G1)) == 0) return()
+
+    if(plot==TRUE) {
+        par(mar=c(1,1,1,1)*0)
+        plot(G1,
+             ##layout = L1,
+             ##vertex.label.cex = label.cex,
+             ##vertex.size = 12,
+             vertex.color = 'lightskyblue1',
+             vertex.frame.color = 'skyblue'
+             )
     }
     
-    par(mar=c(1,1,1,1)*0)
-    plot(G1,
-         ##layout = L1,
-         ##vertex.label.cex = label.cex,
-         ##vertex.size = 12,
-         vertex.color = 'lightskyblue1',
-         vertex.frame.color = 'skyblue'
-         )
-    
+    return(G1)
 }
 
 ##X=topX
@@ -305,7 +321,8 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
 ##rho.min=0.7;nsize=20;main="";what="graph";edge.width=5;layout="fr"
 
 pgx.plotPartialCorrelationAroundGene <-
-    function(res, gene, rho.min=0.8, nsize=-1, main="",
+    function(res, gene, rho.min=0.8, pcor.min=0, 
+             nsize=-1, main="",
              what=c("cor","pcor","graph"),
              edge.width=10, layout="fr")
 {    
@@ -374,24 +391,26 @@ pgx.plotPartialCorrelationAroundGene <-
             P[is.nan(P)] <- 0
             E(gr1)$pcor <- P[ee]
         }
-        if(is.null(rho.min)) {
-            rho.min <- rev(head(sort(R[gene,],decreasing=TRUE),4))[1]
-            rho.min
-        }
+        if(is.null(rho.min)) rho.min <- 0
 
-        ## calculate layout
-        gr2 <- subgraph.edges(gr1, which( abs(E(gr1)$rho) >= rho.min),
-                              delete.vertices = FALSE )           
+        ## threshold edges
+        sel.ee <- (abs(E(gr1)$rho) >= rho.min)
+        if(has.pcor) sel.ee <- sel.ee & (abs(E(gr1)$pcor) >= pcor.min)
+        gr2 <- subgraph.edges(
+            gr1, which(sel.ee), delete.vertices = FALSE )           
         subgraphs <- decompose.graph(gr2)
         k <- which(sapply(sapply(subgraphs, function(g) V(g)$name),function(vv) gene %in% vv))
         gr2 <- subgraphs[[k]]
-                
+
+        ## set edge width
         V(gr2)$name
         E(gr2)$width <- edge.width * 1.0
         if(has.pcor) {
             pw <- abs(E(gr2)$pcor) / mean(abs(E(gr2)$pcor),na.rm=TRUE)
             E(gr2)$width <- edge.width * pw
         }
+
+        ## calculate layout
         ly = switch( layout,
                     "fr" = layout_with_fr(gr2),
                     "kk" = layout_with_kk(gr2, weights=1/E(gr2)$weight),
@@ -613,7 +632,6 @@ pgx.testPhenoCorrelation <- function(df, plot=TRUE, cex=1)
 
     return(list(P=P, Q=Q))
 }
-
 
 ##gene="CD4"
 pgx.getGeneCorrelation <- function(gene, xref) {

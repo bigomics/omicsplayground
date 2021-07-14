@@ -124,8 +124,8 @@ be multiple categories (classes) or patient survival data."
         req(ngs)
         dbg("[BiomarkerBoard::observe1] reacted")
         ct <- colnames(ngs$Y)
-        ##ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
-        ct <- grep("sample|patient|donor",ct,value=TRUE,invert=TRUE)
+        ## ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
+        ## ct <- grep("sample|patient|donor",ct,value=TRUE,invert=TRUE)
         updateSelectInput(session, "pdx_predicted", choices=ct )
     })
 
@@ -585,10 +585,11 @@ be multiple categories (classes) or patient survival data."
             cex1 <- ifelse( ny >= 8, 0.65, 0.8)
             title(g, cex.main=ifelse(nchar(g)>20,0.85,1))
             nchar(y)
-            too.big = (max(nchar(y))>=6 && ny==2) ||
-                (max(nchar(y))>=4 && ny>2 || ny>=6 )
+            too.big = (max(nchar(y))>=8 && ny==2) ||
+                (max(nchar(y))>=5 && ny %in% c(3,4) ||
+                 ny>=5 )
             if(too.big) {
-                dy <- min(gx) - 0.1*diff(range(gx))
+                dy <- min(gx) - 0.12*diff(range(gx))
                 text(1:ny, dy, levels(factor(y)), xpd=NA,
                      cex=cex1, srt=30, adj=1)
             } else {

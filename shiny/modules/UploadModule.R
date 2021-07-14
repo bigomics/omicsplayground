@@ -67,7 +67,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
         id,
         function(input, output, session) {
 
-            message("[UploadModuleServer] called\n")
+            dbg("[UploadModuleServer] called\n")
             ns <- session$ns
             ## ns <- NS(id)
             
@@ -272,9 +272,9 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 ## Monitor for changes in the contrast matrix and if
                 ## so replace the uploaded reactive values.
                 ##
-                message("[observe:modified_ct()] reacted...")                
+                dbg("[observe:modified_ct()] reacted...")                
                 modct <- modified_ct()
-                message("[observe:modified_ct()] dim(modct$contr) = ",dim(modct$contr))
+                dbg("[observe:modified_ct()] dim(modct$contr) = ",dim(modct$contr))
                 uploaded$contrasts.csv <- modct$contr
                 uploaded$samples.csv   <- modct$pheno
 
@@ -322,12 +322,12 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
 
             output$countStats <- renderPlot({
 
-                message("[countStats] renderPlot called")
+                dbg("[countStats] renderPlot called")
                 ##req(uploaded$counts.csv)                
 
                 check <- checkTables()
                 status.ok <- check["counts.csv","status"]                
-                message("[countStats] status.ok = ",status.ok)
+                dbg("[countStats] status.ok = ",status.ok)
 
                 if(status.ok!="OK") {
                     frame()
@@ -353,7 +353,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
 
             output$phenoStats <- renderPlot({
 
-                message("[phenoStats] renderPlot called \n")
+                dbg("[phenoStats] renderPlot called \n")
                 ##req(uploaded$samples.csv)                
                 
                 check <- checkTables()
@@ -398,7 +398,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                             hjust = 1)
                     )
 
-                message("[UploadModule::phenoStats] done!")
+                dbg("[UploadModule::phenoStats] done!")
                 
                 p1
             })
@@ -411,9 +411,9 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 check <- checkTables()
                 status.ok <- check["contrasts.csv","status"]
 
-                message("[output$contrastStats] status.ok = ",status.ok)
-                message("[output$contrastStats] has.contrasts = ",has.contrasts)
-                message("[output$contrastStats] dim(uploaded$contrasts.csv) = ",
+                dbg("[output$contrastStats] status.ok = ",status.ok)
+                dbg("[output$contrastStats] has.contrasts = ",has.contrasts)
+                dbg("[output$contrastStats] dim(uploaded$contrasts.csv) = ",
                         dim(uploaded$contrasts.csv))
                 
                 if( status.ok!="OK" || !has.contrasts) {
@@ -427,11 +427,11 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     return(NULL)
                 }
 
-                message("[output$contrastStats] 2 : ")
+                dbg("[output$contrastStats] 2 : ")
                 
                 contrasts <- uploaded$contrasts.csv
 
-                message("[output$contrastStats] 3 : ")                
+                dbg("[output$contrastStats] 3 : ")                
 
                 ##contrasts <- sign(contrasts)
                 ##df <- contrastAsLabels(contrasts)
@@ -441,7 +441,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                 tt2 <- paste(nrow(contrasts),"samples x",ncol(contrasts),"contrasts")
                 ##tt2 <- paste(ncol(contrasts),"contrasts")
 
-                message("[output$contrastStats] 4 : ")
+                dbg("[output$contrastStats] 4 : ")
                 
                 require(inspectdf)
                 p1 <- df %>% inspect_cat() %>% show_plot()                    
@@ -453,7 +453,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                                                    hjust = 1)
                     )
 
-                message("[output$contrastStats] 5 : ")                
+                dbg("[output$contrastStats] 5 : ")                
                 
                 p1
             })
@@ -527,8 +527,8 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     inputnames  <- input$upload_files$name[ii]
                     uploadnames <- input$upload_files$datapath[ii]
 
-                    message("[upload_files] inputnames = ",inputnames)
-                    message("[upload_files] uploadnames = ",uploadnames)                        
+                    dbg("[upload_files] inputnames = ",inputnames)
+                    dbg("[upload_files] uploadnames = ",uploadnames)                        
                     if(length(uploadnames)>0) {
                         i=1
                         for(i in 1:length(uploadnames)) {
@@ -537,20 +537,20 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                             matname <- NULL
                             df <- NULL
                             if(grepl("count",fn1, ignore.case=TRUE)) {
-                                message("[upload_files] counts.csv : fn1 = ",fn1)
+                                dbg("[upload_files] counts.csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
                                 df0 <- read.csv2(fn2, check.names=FALSE, stringsAsFactors=FALSE)
-                                message("[upload_files] counts.csv : 1 : dim(df0) = ",
+                                dbg("[upload_files] counts.csv : 1 : dim(df0) = ",
                                         paste(dim(df0),collapse='x'))
                                 if(nrow(df0)>1 && NCOL(df0)>1) {
-                                    message("[upload_files] counts.csv : 2 : dim(df0) = ",
+                                    dbg("[upload_files] counts.csv : 2 : dim(df0) = ",
                                             paste(dim(df0),collapse='x'))
                                     df <- as.matrix(df0[,-1])
                                     rownames(df) <- as.character(df0[,1])
                                     matname <- "counts.csv"
                                 }
                             } else if(grepl("expression",fn1,ignore.case=TRUE)) {
-                                message("[upload_files] expression.csv : fn1 = ",fn1)
+                                dbg("[upload_files] expression.csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
                                 df0 <- read.csv2(fn2, check.names=FALSE, stringsAsFactors=FALSE)
                                 if(nrow(df0)>1 && NCOL(df0)>1) {
@@ -562,7 +562,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                                     matname <- "counts.csv"
                                 }
                             } else if(grepl("sample",fn1,ignore.case=TRUE)) {
-                                message("[upload_files] samples.csv : fn1 = ",fn1)
+                                dbg("[upload_files] samples.csv : fn1 = ",fn1)
                                 df <- read.csv2(fn2, row.names=1, check.names=FALSE,
                                                 stringsAsFactors=FALSE)
                                 df <- type.convert(df)
@@ -570,7 +570,7 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                                     matname <- "samples.csv"
                                 }
                             } else if(grepl("contrast",fn1,ignore.case=TRUE)) {
-                                message("[upload_files] contrasts.csv : fn1 = ",fn1)
+                                dbg("[upload_files] contrasts.csv : fn1 = ",fn1)
                                 df <- read.csv2(fn2, row.names=1, check.names=FALSE,
                                                 stringsAsFactors=FALSE)
                                 if(nrow(df)>1 && NCOL(df)>=1) {
@@ -584,10 +584,10 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                     }            
                 }
                 
-                message("[upload_files] names(matlist) = ",names(matlist))
+                dbg("[upload_files] names(matlist) = ",names(matlist))
                 if("counts.csv" %in% names(matlist)) {
                     ## Convert to gene names (need for biological effects)
-                    message("[upload_files] converting probe names to symbols")
+                    dbg("[upload_files] converting probe names to symbols")
                     X0 <- matlist[['counts.csv']]
                     pp <- rownames(X0)
                     rownames(X0) <- probe2symbol(pp)
@@ -706,10 +706,10 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                                 new.contrasts <- new.contrasts[grp,,drop=FALSE]
                                 rownames(new.contrasts) <- rownames(samples1)
                             }
-                            message("[UploadModule] old.ct1 = ",paste(contrasts1[,1],collapse=' '))
-                            message("[UploadModule] old.nn = ",paste(rownames(contrasts1),collapse=' '))
-                            message("[UploadModule] new.ct1 = ",paste(new.contrasts[,1],collapse=' '))
-                            message("[UploadModule] new.nn = ",paste(rownames(new.contrasts),collapse=' '))
+                            dbg("[UploadModule] old.ct1 = ",paste(contrasts1[,1],collapse=' '))
+                            dbg("[UploadModule] old.nn = ",paste(rownames(contrasts1),collapse=' '))
+                            dbg("[UploadModule] new.ct1 = ",paste(new.contrasts[,1],collapse=' '))
+                            dbg("[UploadModule] new.nn = ",paste(rownames(new.contrasts),collapse=' '))
                             
                             contrasts1 <- new.contrasts
                         }
@@ -723,13 +723,13 @@ UploadModuleServer <- function(id, height=720, FILES = "../lib",
                             contrasts1 <- new.contrasts
                         }
 
-                        message("[UploadModule] 1 : dim.contrasts1 = ",dim(contrasts1))
+                        dbg("[UploadModule] 1 : dim.contrasts1 = ",dim(contrasts1))
                         if(NCOL(contrasts1)>0) {
                             ## always clean up
                             contrasts1 <- apply(contrasts1,2,as.character)
-                            message("[UploadModule] 2 : dim.contrasts1 = ",dim(contrasts1))
+                            dbg("[UploadModule] 2 : dim.contrasts1 = ",dim(contrasts1))
                             rownames(contrasts1) <- rownames(samples1)
-                            message("[UploadModule] 3 : dim.contrasts1 = ",dim(contrasts1))
+                            dbg("[UploadModule] 3 : dim.contrasts1 = ",dim(contrasts1))
                             for(i in 1:ncol(contrasts1)) {
                                 isz = (contrasts1[,i] %in% c(NA,"NA","NA ",""," ","  ","   "," NA"))
                                 if(length(isz)) contrasts1[isz,i] <- NA

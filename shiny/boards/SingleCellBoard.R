@@ -20,19 +20,19 @@ SingleCellUI <- function(id) {
         height = 780,
         tabsetPanel(
             id = ns("tabs1"),
-            tabPanel("Cell type",uiOutput(ns("sc_icp_UI"))),
-            tabPanel("Mapping",uiOutput(ns("sc_mapping_UI"))),
-            tabPanel("Markers",uiOutput(ns("sc_markersplot_UI"))),
-            tabPanel("CNV",uiOutput(ns("sc_cnaModule_UI"))),
+            tabPanel("Cell type",uiOutput(ns("icp_UI"))),
+            tabPanel("Mapping",uiOutput(ns("mapping_UI"))),
+            tabPanel("Markers",uiOutput(ns("markersplot_UI"))),
+            tabPanel("CNV",uiOutput(ns("cnaModule_UI"))),
             tabPanel("iTALK",uiOutput(ns("italk_panel_UI"))),
             tabPanel("Monocle",uiOutput(ns("monocle_panel_UI")))            
         )
         ## br(),
         ## tabsetPanel(
         ##     id = ns("tabs2"),
-        ##     tabPanel("Phenotypes",uiOutput(ns("sc_phenoModule_UI"))),
-        ##     tabPanel("Proportions",uiOutput(ns("sc_crosstabModule_UI"))),
-        ##     tabPanel("CytoPlot",uiOutput(ns("sc_cytoModule_UI")))      
+        ##     tabPanel("Phenotypes",uiOutput(ns("phenoModule_UI"))),
+        ##     tabPanel("Proportions",uiOutput(ns("crosstabModule_UI"))),
+        ##     tabPanel("CytoPlot",uiOutput(ns("cytoModule_UI")))      
         ## )
     )
 }
@@ -49,7 +49,7 @@ SingleCellBoard <- function(input, output, session, env)
 immune cell types, expressed genes and pathway activation."
     output$description <- renderUI(HTML(description))
 
-    sc_infotext =
+    infotext =
         "The <strong>Cell Profiling Board</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types.
 
 <br><br>The <strong>Proportions tab</strong> visualizes the interrelationships between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method.
@@ -62,23 +62,23 @@ immune cell types, expressed genes and pathway activation."
 
     output$inputsUI <- renderUI({
         ui <- tagList(
-            ##actionLink("sc_info", "More details ...")
-            tipify(actionLink(ns("sc_info"), "Info", icon=icon("info-circle")),
+            ##actionLink("info", "More details ...")
+            tipify(actionLink(ns("info"), "Info", icon=icon("info-circle")),
                    "Show more information about this module."),
             hr(),br(),
-            tipify( actionLink(ns("sc_options"), "Options",
+            tipify( actionLink(ns("options"), "Options",
                                icon=icon("cog", lib = "glyphicon")),
                    "Toggle options", placement="top"),
             br(),br(),
             conditionalPanel(
-                "input.sc_options % 2 == 1", ns=ns, 
+                "input.options % 2 == 1", ns=ns, 
                 tagList(
-                    tipify(selectInput(ns("sc_samplefilter"),"Filter samples:",
+                    tipify(selectInput(ns("samplefilter"),"Filter samples:",
                                        choices=NULL, multiple=TRUE),
                            "Filter relevant samples (cells).",
                            placement="top", options = list(container = "body")),
                     
-                    tipify(selectInput(ns('sc_clustmethod'),"Layout", c("default","pca"),
+                    tipify(selectInput(ns('clustmethod'),"Layout", c("default","pca"),
                                        selected="default"),
                            "Specify a layout for the figures: t-SNE or PCA-based layout.",
                            placement="top", options = list(container = "body"))
@@ -93,10 +93,10 @@ immune cell types, expressed genes and pathway activation."
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
 
-    observeEvent(input$sc_info, {
+    observeEvent(input$info, {
         showModal(modalDialog(
             title = HTML("<strong>Single Cell Board</strong>"),
-            HTML(sc_infotext),
+            HTML(infotext),
             easyClose = TRUE, size="l" ))
     })
 
@@ -106,13 +106,13 @@ immune cell types, expressed genes and pathway activation."
         req(ngs)
         ## levels for sample filter
         levels <- getLevels(ngs$Y)
-        updateSelectInput(session, "sc_samplefilter", choices=levels)
+        updateSelectInput(session, "samplefilter", choices=levels)
 
         ## update cluster methods if available in object
         if("cluster" %in% names(ngs)) {
             clustmethods <- names(ngs$cluster$pos)
             clustmethods <- c("default",clustmethods)
-            updateSelectInput(session, "sc_clustmethod",
+            updateSelectInput(session, "clustmethod",
                               choices=clustmethods )
         }
         
@@ -124,35 +124,35 @@ immune cell types, expressed genes and pathway activation."
         refsets = "LM22"
         refsets <- sort(names(ngs$deconv))
         refsel <- unique(c(grep("LM22",refsets,value=TRUE),refsets))[1]
-        updateSelectInput(session,"sc_refset",choices=refsets, selected=refsel)
-        updateSelectInput(session,"sc_refset2",choices=refsets, selected=refsel)
+        updateSelectInput(session,"refset",choices=refsets, selected=refsel)
+        updateSelectInput(session,"refset2",choices=refsets, selected=refsel)
         
         ## dcmethods <- names(ngs$deconv[[1]])
         ## dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
-        ## updateSelectInput(session, "sc_dcmethod", choices=dcmethods, selected=dcsel)
-        ## updateSelectInput(session, "sc_dcmethod2", choices=dcmethods, selected=dcsel)
+        ## updateSelectInput(session, "dcmethod", choices=dcmethods, selected=dcsel)
+        ## updateSelectInput(session, "dcmethod2", choices=dcmethods, selected=dcsel)
 
         grpvars <- c("<ungrouped>",colnames(ngs$samples))
         sel <- grpvars[1]
         if(ncol(ngs$X) > 30) sel <- grpvars[2]
-        updateSelectInput(session, "sc_group2", choices=grpvars, selected=sel)        
+        updateSelectInput(session, "group2", choices=grpvars, selected=sel)        
         
     })
 
-    observeEvent( input$sc_refset, {
-        req(input$sc_refset)
+    observeEvent( input$refset, {
+        req(input$refset)
         ngs <- inputData()
-        dcmethods <- names(ngs$deconv[[input$sc_refset]])
+        dcmethods <- names(ngs$deconv[[input$refset]])
         dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
-        updateSelectInput(session, "sc_dcmethod", choices=dcmethods, selected=dcsel)
+        updateSelectInput(session, "dcmethod", choices=dcmethods, selected=dcsel)
     })
 
-    observeEvent( input$sc_refset2, {
-        req(input$sc_refset2)
+    observeEvent( input$refset2, {
+        req(input$refset2)
         ngs <- inputData()
-        dcmethods <- names(ngs$deconv[[input$sc_refset2]])
+        dcmethods <- names(ngs$deconv[[input$refset2]])
         dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
-        updateSelectInput(session, "sc_dcmethod2", choices=dcmethods, selected=dcsel)
+        updateSelectInput(session, "dcmethod2", choices=dcmethods, selected=dcsel)
     })
         
     
@@ -169,7 +169,7 @@ immune cell types, expressed genes and pathway activation."
         ##zx <- filtered_matrix1()
         zx = ngs$X
         kk = colnames(zx)
-        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$sc_samplefilter)
+        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
         if(length(kk)==0) return(NULL)        
         zx <- zx[,kk,drop=FALSE]
         zx = head(zx[order(-apply(zx,1,sd)),],1000)
@@ -177,7 +177,7 @@ immune cell types, expressed genes and pathway activation."
 
         pos = NULL
         m = "tsne"
-        m <- input$sc_clustmethod
+        m <- input$clustmethod
         has.clust <- ("cluster" %in% names(ngs) && m %in% names(ngs$cluster$pos))
         has.clust
         if(!has.clust && m=="pca") {
@@ -207,7 +207,7 @@ immune cell types, expressed genes and pathway activation."
         ##zx <- filtered_matrix1()
         zx = ngs$X
         kk = colnames(zx)
-        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$sc_samplefilter)
+        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
         if(length(kk)==0) return(NULL)        
         zx <- zx[,kk,drop=FALSE]
         zx = head(zx[order(-apply(zx,1,sd)),],1000)
@@ -215,7 +215,7 @@ immune cell types, expressed genes and pathway activation."
 
         pos = NULL
         m = "tsne"
-        m <- input$sc_clustmethod
+        m <- input$clustmethod
         has.clust <- ("cluster" %in% names(ngs) && m %in% names(ngs$cluster$pos))
         has.clust
         if(!has.clust && m=="pca") {
@@ -264,9 +264,9 @@ immune cell types, expressed genes and pathway activation."
         req(ngs)
         dbg("[SingleCellBoard:getDeconvResults] called")
         method="meta";refset = "LM22"
-        method <- input$sc_dcmethod
+        method <- input$dcmethod
         if(is.null(method)) return(NULL)               
-        refset <- input$sc_refset
+        refset <- input$refset
         if(!("deconv" %in% names(ngs))) return(NULL)
         results <- ngs$deconv[[refset]][[method]]
         ## threshold everything (because DCQ can be negative!!!)
@@ -279,7 +279,7 @@ immune cell types, expressed genes and pathway activation."
         return(results)
     })
 
-    sc_icp.plotFUNC %<a-% reactive({
+    icp.plotFUNC %<a-% reactive({
         require(RColorBrewer)
         
         ngs <- inputData()
@@ -287,7 +287,7 @@ immune cell types, expressed genes and pathway activation."
         req(ngs)        
         clust.pos <- pfGetClusterPositions()
         if(is.null(clust.pos)) return(NULL)
-        dbg("[SingleCellBoard:sc_icp.plotFUNC] called")
+        dbg("[SingleCellBoard:icp.plotFUNC] called")
         pos <- ngs$tsne2d
         pos <- clust.pos        
         score <- ngs$deconv[[1]][["meta"]]
@@ -318,7 +318,7 @@ immune cell types, expressed genes and pathway activation."
         pos <- pos[rownames(score),]
         b0 <- 1 + 0.85*pmax(30 - ncol(score), 0)
         
-        ##if(input$sc_view=="distribution")
+        ##if(input$view=="distribution")
         {
             cex1 = 1.2
             cex1 <- 0.9*c(2.2,1.1,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
@@ -326,7 +326,7 @@ immune cell types, expressed genes and pathway activation."
             ##klrpal = paste0(col2hex(klrpal),"AA")    
             klrpal = paste0(col2hex(klrpal),"66")
             
-            lyo <- input$sc_layout
+            lyo <- input$layout
             ntop = 25
             par(mfrow=c(5,5), mar=c(0.2,0.2,1.8,0.2), oma=c(1,1,1,1)*0.8 )
             par(mfrow=c(5,5), mar=c(0,0.2,0.5,0.2), oma=c(1,1,6,1)*0.5)
@@ -343,7 +343,7 @@ immune cell types, expressed genes and pathway activation."
             i=1    
             jj <- NULL
             jj <- head(order(-colMeans(score**2)),ntop)                
-            if(input$sc_sortby=="name") {
+            if(input$sortby=="name") {
                 jj <- jj[order(colnames(score)[jj])]
             }            
             colnames(score)[jj]
@@ -361,41 +361,41 @@ immune cell types, expressed genes and pathway activation."
                        cex=1.2, text.font=1, y.intersp=0.8, bty="n",
                        inset=c(-0.05,-0.0) )
             }
-            refset <- input$sc_refset
+            refset <- input$refset
             mtext(refset, outer=TRUE, line=0.5, cex=1.0)            
         }
         
     })
 
-    sc_icp.opts = tagList(
-        tipify(selectInput(ns("sc_refset"), "Reference:", choices=NULL),
+    icp.opts = tagList(
+        tipify(selectInput(ns("refset"), "Reference:", choices=NULL),
                "Select a reference dataset for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("sc_dcmethod"),"Method:", choices=NULL),
+        tipify(selectInput(ns("dcmethod"),"Method:", choices=NULL),
                "Choose a method for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        tipify(radioButtons(ns("sc_sortby"),"Sort by:",
+        tipify(radioButtons(ns("sortby"),"Sort by:",
                             choices=c("probability","name"), inline=TRUE),
                "Sort by name or probability.", placement="top",
                options = list(container = "body")),
-        tipify(radioButtons(ns("sc_layout"),"Layout:", choices=c("4x4","6x6"),
+        tipify(radioButtons(ns("layout"),"Layout:", choices=c("4x4","6x6"),
                             ## selected="6x6",
                             inline=TRUE),
                "Choose layout.", 
                placement="top", options = list(container = "body"))        
     )
 
-    sc_icp_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
+    icp_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
     
     callModule(
         plotModule,
-        id = "sc_icpplot",
-        func = sc_icp.plotFUNC,
-        func2 = sc_icp.plotFUNC,
+        id = "icpplot",
+        func = icp.plotFUNC,
+        func2 = icp.plotFUNC,
         ##title = "Cell type profiling (deconvolution)",
-        options = sc_icp.opts,
-        info.text = sc_icp_info,
-        caption2 = sc_icp_info,
+        options = icp.opts,
+        info.text = icp_info,
+        caption2 = icp_info,
         pdf.width=12, pdf.height=6, 
         height = c(fullH-80,700), width = c("100%",1400),
         res = c(85,95),
@@ -406,14 +406,14 @@ immune cell types, expressed genes and pathway activation."
     ## Phenotypes
     ##===========================================================================
 
-    ##output$sc_phenoplot <- renderPlot({
-    sc_pheno.plotFUNC %<a-% reactive({
+    ##output$phenoplot <- renderPlot({
+    pheno.plotFUNC %<a-% reactive({
         ##if(!input$tsne.all) return(NULL)
         require(RColorBrewer)
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
-        dbg("[SingleCellBoard:sc_pheno.plotFUNC] called")
+        dbg("[SingleCellBoard:pheno.plotFUNC] called")
         clust.pos <- pfGetClusterPositions()
         if(is.null(clust.pos)) return(NULL)
         
@@ -423,7 +423,8 @@ immune cell types, expressed genes and pathway activation."
         pheno = colnames(ngs$Y)
 
         ## layout
-        par(mfrow = c(3,2), mar=c(0.3,0.7,2.8,0.7))
+        par(mfrow = c(2,2), mar=c(0.3,0.7,2.8,0.7))
+        if(length(pheno)>4) par(mfrow = c(3,2), mar=c(0.3,0.7,2.8,0.7))
         if(length(pheno)>6) par(mfrow = c(4,3), mar=c(0.3,0.4,2.8,0.4)*0.8)
         if(length(pheno)>12) par(mfrow = c(5,4), mar=c(0.2,0.2,2.5,0.2)*0.8)
         
@@ -466,7 +467,7 @@ immune cell types, expressed genes and pathway activation."
                  xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
 
             if(!is.num(y)) {
-                if(input$sc_labelmode=="legend") {
+                if(input$labelmode=="legend") {
                     legend("bottomright", legend=levels(y), fill=klrpal,
                            cex=0.9, y.intersp=0.8, bg="white")
                 } else {
@@ -495,21 +496,21 @@ immune cell types, expressed genes and pathway activation."
     })
 
 
-    sc_phenoplot.opts <- tagList(
-        tipify( radioButtons(ns('sc_labelmode'),'Label:',c("groups","legend"), inline=TRUE),
+    phenoplot.opts <- tagList(
+        tipify( radioButtons(ns('labelmode'),'Label:',c("groups","legend"), inline=TRUE),
                "Select whether you want the group labels to be plotted inside the plots or in a seperate legend.")
     )
 
-    sc_phenoModule_info = "<b>Phenotype plots.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
+    phenoModule_info = "<b>Phenotype plots.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
    
     callModule(
         plotModule,
-        id = "sc_phenoplot",
-        func = sc_pheno.plotFUNC,
-        func2 = sc_pheno.plotFUNC,
-        options = sc_phenoplot.opts,
-        info.text = sc_phenoModule_info,
-        caption2 = sc_phenoModule_info,
+        id = "phenoplot",
+        func = pheno.plotFUNC,
+        func2 = pheno.plotFUNC,
+        options = phenoplot.opts,
+        info.text = phenoModule_info,
+        caption2 = phenoModule_info,
         pdf.width=5, pdf.height=8,
         height = c(fullH-100,750), width = c("100%",500),
         res = c(85,85),
@@ -517,25 +518,25 @@ immune cell types, expressed genes and pathway activation."
     )
 
     
-    output$sc_icp_UI <- renderUI({
+    output$icp_UI <- renderUI({
         fillRow(
             flex = c(1.5,0.08,1),
             fillCol(
                 height = fullH,
                 flex = c(NA,1),
-                div(HTML(sc_icp_info),class="caption"),
-                plotWidget(ns("sc_icpplot"))
+                div(HTML(icp_info),class="caption"),
+                plotWidget(ns("icpplot"))
             ),
             br(),
             fillCol(
                 height = fullH,
                 flex = c(NA,1), 
-                div(HTML(sc_phenoModule_info), class="caption"),
-                plotWidget(ns("sc_phenoplot"))
+                div(HTML(phenoModule_info), class="caption"),
+                plotWidget(ns("phenoplot"))
             )
         )
     })
-    outputOptions(output, "sc_icp_UI", suspendWhenHidden=FALSE) ## important!!!
+    outputOptions(output, "icp_UI", suspendWhenHidden=FALSE) ## important!!!
 
     
     ##=========================================================================
@@ -547,13 +548,13 @@ immune cell types, expressed genes and pathway activation."
         req(ngs)
 
         method = "meta"
-        method <- input$sc_dcmethod2
+        method <- input$dcmethod2
         if(is.null(method)) return(NULL)
-        req(input$sc_refset2)
+        req(input$refset2)
         dbg("[SingleCellBoard:getDeconvResults2] called")
         
         refset = "LM22"
-        refset <- input$sc_refset2
+        refset <- input$refset2
         if(!("deconv" %in% names(ngs))) return(NULL)
         results <- ngs$deconv[[refset]][[method]]
         ## threshold everything (because DCQ can be negative!!!)
@@ -563,14 +564,14 @@ immune cell types, expressed genes and pathway activation."
         return(results)
     })
     
-    sc_mapping.plotFUNC %<a-% reactive({
+    mapping.plotFUNC %<a-% reactive({
         require(RColorBrewer)
         
         ngs <- inputData()
         alertDataLoaded(session,ngs)
         req(ngs)
-        req(input$sc_refset2)
-        dbg("[SingleCellBoard:sc_mapping.plotFUNC] called")
+        req(input$refset2)
+        dbg("[SingleCellBoard:mapping.plotFUNC] called")
         
         clust.pos <- pfGetClusterPositions()
         if(is.null(clust.pos)) return(NULL)
@@ -603,8 +604,8 @@ immune cell types, expressed genes and pathway activation."
         score0 <- score
         pos <- pos[rownames(score),]
         
-        grpvar <- input$sc_group2
-        refset <- input$sc_refset2
+        grpvar <- input$group2
+        refset <- input$refset2
 
         if(grpvar!="<ungrouped>" && grpvar %in% colnames(ngs$samples))
         {
@@ -617,16 +618,16 @@ immune cell types, expressed genes and pathway activation."
         }    
         b0 <- 0.1 + 0.70*pmax(30 - ncol(score), 0)
         
-        if(input$sc_view2 == "dotmap") {
+        if(input$view2 == "dotmap") {
             require(corrplot)
             ##gx.heatmap(score)
-            par(mfrow=c(1,1), mar=c(0,0,8,1), oma=c(1,1,1,1)*0.5 )
+            par(mfrow=c(1,1), mar=c(0,0,8,1), oma=c(1,1,1,1)*0.25 )
             score3 <- score**1.5
             rownames(score3) <- paste("",rownames(score3),"  ")
             tl.srt=90
             tl.cex=ifelse(nrow(score)>60,0.7,0.85)
             if(max(sapply(rownames(score3),nchar))>30) tl.srt=45
-            corrplot( t(score3), mar=c(b0,1,4,1),
+            corrplot( t(score3), mar=c(b0,1,4,0.5),
                      cl.lim = c(0,max(score3)), cl.pos = "n",
                      tl.cex = tl.cex, tl.col = "grey20",
                      tl.srt = tl.srt )
@@ -636,14 +637,14 @@ immune cell types, expressed genes and pathway activation."
             ##mtext(refset, side=4, line=0.5)            
         }
 
-        if(input$sc_view2 == "heatmap") {
+        if(input$view2 == "heatmap") {
             usermode = "PRO"
             if(!is.null(usermode) && usermode >= 'PRO') {            
                 kk <- head(colnames(score)[order(-colMeans(score**2))],18)
                 kk <- intersect(colnames(score),kk)
                 all.scores <- ngs$deconv[["LM22"]]
-                all.scores <- ngs$deconv[[input$sc_refset2]]
-                grpvar <- input$sc_group2
+                all.scores <- ngs$deconv[[input$refset2]]
+                grpvar <- input$group2
                 if(grpvar!="<ungrouped>" && grpvar %in% colnames(ngs$samples)) {
                     grp <- ngs$samples[rownames(all.scores[[1]]),grpvar]
                     for(i in 1:length(all.scores)) {
@@ -685,67 +686,67 @@ immune cell types, expressed genes and pathway activation."
         }    
     })
 
-    SC_VIEWTYPES2 = c("dotmap"="dotmap","heatmap (by method)"="heatmap")    
-    message("[SingleCellBoard::sc_mapping.plotFUNC] 1")
+    VIEWTYPES2 = c("dotmap"="dotmap","heatmap (by method)"="heatmap")    
+    message("[SingleCellBoard::mapping.plotFUNC] 1")
     
-    sc_mapping.opts = tagList(
-        tipify(selectInput(ns("sc_view2"),"plot type:",SC_VIEWTYPES2),
+    mapping.opts = tagList(
+        tipify(selectInput(ns("view2"),"plot type:",VIEWTYPES2),
                "Specify the plot type: dotmap, or heatmap.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("sc_refset2"), "reference:", choices=NULL),
+        tipify(selectInput(ns("refset2"), "reference:", choices=NULL),
                "Select a reference dataset for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("sc_dcmethod2"),"method:", choices=NULL),
+        tipify(selectInput(ns("dcmethod2"),"method:", choices=NULL),
                "Choose a method for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("sc_group2"), "group by:", "group", selected = NULL),
+        tipify(selectInput(ns("group2"), "group by:", "group", selected = NULL),
                "Group the samples/cells by grouping factor.",
                placement="top", options=list(container="body"))
     )
 
-    sc_mapping_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
+    mapping_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
 
-    sc_mapping_caption = "<b>Cell type mapping.</b> The inferred cell types can be by matched to the phenotype variable of the data set. The reference set can be a cell type reference database but also cancer types, tissue types or cell lines."
+    mapping_caption = "<b>Cell type mapping.</b> The inferred cell types can be by matched to the phenotype variable of the data set. The reference set can be a cell type reference database but also cancer types, tissue types or cell lines."
     
     callModule(
         plotModule,
-        id = "sc_mappingplot",
-        func = sc_mapping.plotFUNC,
-        func2 = sc_mapping.plotFUNC,
+        id = "mappingplot",
+        func = mapping.plotFUNC,
+        func2 = mapping.plotFUNC,
         ##title = "Cell type profiling (deconvolution)",
-        options = sc_mapping.opts,
-        info.text = sc_mapping_info,
-        ##caption = sc_icp_caption,
+        options = mapping.opts,
+        info.text = mapping_info,
+        ##caption = icp_caption,
         pdf.width=8, pdf.height=8, 
         height = c(fullH-80,780), width = c("100%",1000),
         res = c(85,95),
         add.watermark = WATERMARK
     )
-    ##output <- attachModule(output, sc_icp_module
+    ##output <- attachModule(output, icp_module
     
     ##======================================================================
     ## Proportions
     ##======================================================================
 
     ##output$statsplot <- renderPlot({
-    sc_crosstab.plotFUNC %<a-% reactive({
+    crosstab.plotFUNC %<a-% reactive({
         ##if(!input$tsne.all) return(NULL)
         require(RColorBrewer)
         ngs <- inputData()
 
         req(ngs)
-        req(input$sc_crosstabpheno, input$sc_crosstabvar, input$sc_crosstabgene)
+        req(input$crosstabpheno, input$crosstabvar, input$crosstabgene)
 
-        dbg("[SingleCellBoard::sc_crosstab.plotFUNC] called")
+        dbg("[SingleCellBoard::crosstab.plotFUNC] called")
         
         scores = ngs$deconv[[1]][[1]]  ## just an example...
-        if(input$sc_crosstabvar == "<cell type>") {
+        if(input$crosstabvar == "<cell type>") {
             scores <- getDeconvResults2()
             if(is.null(scores)) return(NULL)
             scores <- pmax(scores,0) ## ??
         } else {
             x <- as.character(ngs$Y[,1])
-            x <- as.character(ngs$Y[,input$sc_crosstabvar])
+            x <- as.character(ngs$Y[,input$crosstabvar])
             x[is.na(x)] <- "_"
             scores <- model.matrix( ~ 0 + x )
             rownames(scores) <- rownames(ngs$Y)
@@ -753,13 +754,13 @@ immune cell types, expressed genes and pathway activation."
         }
         
         dim(scores)
-        message("[SingleCellBoard::sc_crosstab.plotFUNC] 1 : dim(scores) = ",
+        message("[SingleCellBoard::crosstab.plotFUNC] 1 : dim(scores) = ",
                 paste(dim(scores),collapse="x"),"\n")
         
         ## restrict to selected sample set
         kk <- head(1:nrow(scores),1000)
         kk <- 1:nrow(scores)
-        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$sc_samplefilter)
+        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
         scores <- scores[kk,,drop=FALSE]
         scores <- scores[,which(colSums(scores)>0),drop=FALSE]
         scores[which(is.na(scores))] <- 0    
@@ -769,10 +770,10 @@ immune cell types, expressed genes and pathway activation."
         topsel <- head(order(-colSums(scores)),25)
         scores <- scores[,topsel]
         
-        message("[SingleCellBoard::sc_crosstab.plotFUNC] 2 : dim(scores) = ",
+        message("[SingleCellBoard::crosstab.plotFUNC] 2 : dim(scores) = ",
                 paste(dim(scores),collapse="x"),"\n")
 
-        message("[SingleCellBoard::sc_crosstab.plotFUNC] 2 : length(kk) = ",
+        message("[SingleCellBoard::crosstab.plotFUNC] 2 : length(kk) = ",
                 length(kk),"\n")
 
         ## expected counts per stat level
@@ -783,7 +784,7 @@ immune cell types, expressed genes and pathway activation."
         getProportionsTable <- function(pheno, is.gene=FALSE) {    
             dbg("[SingleCellBoard::getProportionsTable()] called")
             y <- NULL
-            ##if("gene" %in% input$sc_crosstaboptions) {
+            ##if("gene" %in% input$crosstaboptions) {
             if( is.gene ) {
                 xgene <- ngs$genes[rownames(ngs$X),]$gene_name
                 gx <- ngs$X[which(xgene == pheno),kk,drop=FALSE]
@@ -876,14 +877,14 @@ immune cell types, expressed genes and pathway activation."
         pheno="activated"
         pheno="cell.type"
         pheno="<cell type>"
-        pheno <- input$sc_crosstabpheno
+        pheno <- input$crosstabpheno
         if(is.null(pheno)) return(NULL)
 
         ##pheno="cluster"
         grp.score1 <- getProportionsTable(pheno, is.gene=FALSE)    
         grp.score2 <- NULL
         gene = ngs$genes$gene_name[1]
-        gene = input$sc_crosstabgene
+        gene = input$crosstabgene
         if(gene != "<none>") {
             grp.score2 <- getProportionsTable(pheno=gene, is.gene=TRUE)
             kk <- colnames(grp.score2)[order(grp.score2[1,])]
@@ -939,33 +940,33 @@ immune cell types, expressed genes and pathway activation."
     })
 
 
-    sc_crosstab.opts <- tagList(
-        tipify(selectInput(ns("sc_crosstabvar"),label="x-axis:", choices=NULL, multiple=FALSE),
+    crosstab.opts <- tagList(
+        tipify(selectInput(ns("crosstabvar"),label="x-axis:", choices=NULL, multiple=FALSE),
                            "Choose a predefined phenotype group on the x-axis.",
                            placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("sc_crosstabpheno"),label="y-axis:", choices=NULL, multiple=FALSE),
+        tipify(selectInput(ns("crosstabpheno"),label="y-axis:", choices=NULL, multiple=FALSE),
                "Choose a predefined phenotype group on the y-axis.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("sc_crosstabgene"),label="gene:", choices=NULL, multiple=FALSE),
+        tipify(selectInput(ns("crosstabgene"),label="gene:", choices=NULL, multiple=FALSE),
                "Visualize the expression barplot of a gene by specifying the gene name.",
                placement="top", options = list(container = "body"))
-        ##checkboxGroupInput('sc_crosstaboptions','',c("gene"), inline=TRUE, width='50px')
-        ##selectInput("sc_crosstabgene",label=NULL, choices=NULL, multiple=FALSE),
+        ##checkboxGroupInput('crosstaboptions','',c("gene"), inline=TRUE, width='50px')
+        ##selectInput("crosstabgene",label=NULL, choices=NULL, multiple=FALSE),
         ##br(), cellArgs=list(width='80px')
     )
 
-    sc_crosstabModule_info = "The <strong>Proportions tab</strong> visualizes the interrelationships between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
+    crosstabModule_info = "The <strong>Proportions tab</strong> visualizes the interrelationships between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
     
-    sc_crosstabModule_caption = "<b>Proportion plot.</b> Plot visualizing the overlap between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
+    crosstabModule_caption = "<b>Proportion plot.</b> Plot visualizing the overlap between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
    
     callModule(
         plotModule,
-        id = "sc_crosstabPlot",
-        func = sc_crosstab.plotFUNC,
-        func2 = sc_crosstab.plotFUNC,
-        options = sc_crosstab.opts,
-        info.text = sc_crosstabModule_info,
-        ##caption = sc_crosstabModule_caption,
+        id = "crosstabPlot",
+        func = crosstab.plotFUNC,
+        func2 = crosstab.plotFUNC,
+        options = crosstab.opts,
+        info.text = crosstabModule_info,
+        ##caption = crosstabModule_caption,
         pdf.width=12, pdf.height=8,
         height = c(fullH-80,760), width = c("100%",900),
         res = c(110,110),
@@ -977,47 +978,47 @@ immune cell types, expressed genes and pathway activation."
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
 
-        ##if(is.null(input$sc_crosstaboptions)) return(NULL)
+        ##if(is.null(input$crosstaboptions)) return(NULL)
         pheno0 <- grep("group|sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
         pheno0 <- grep("sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
-        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$sc_samplefilter)
+        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)
         nphenolevel <- apply(ngs$samples[kk,pheno0,drop=FALSE],2,function(v) length(unique(v)))
         pheno0 = pheno0[which(nphenolevel>1)]
         genes <- sort(as.character(ngs$genes$gene_name))
         pheno1 <- c("<cell type>",pheno0)
         genes1 <- c("<none>",genes)
-        updateSelectInput(session, "sc_crosstabvar", choices=pheno1)
-        updateSelectInput(session, "sc_crosstabpheno", choices=pheno1)
-        updateSelectizeInput(session, "sc_crosstabgene", choices=genes1, server=TRUE)
+        updateSelectInput(session, "crosstabvar", choices=pheno1)
+        updateSelectInput(session, "crosstabpheno", choices=pheno1)
+        updateSelectizeInput(session, "crosstabgene", choices=genes1, server=TRUE)
 
     })
 
-    output$sc_mapping_UI <- renderUI({
+    output$mapping_UI <- renderUI({
         fillRow(
             flex = c(1.3,0.08,1),
             fillCol(
                 height = fullH,
                 flex = c(NA,1),
-                div(HTML(sc_mapping_caption),class="caption"),
-                plotWidget(ns("sc_mappingplot"))
+                div(HTML(mapping_caption),class="caption"),
+                plotWidget(ns("mappingplot"))
             ),
             br(),
             fillCol(
                 height = fullH,
                 flex = c(NA,1),
-                div(HTML(sc_crosstabModule_caption), class="caption"),
-                plotWidget(ns("sc_crosstabPlot"))
+                div(HTML(crosstabModule_caption), class="caption"),
+                plotWidget(ns("crosstabPlot"))
             )
         )
     })
-    outputOptions(output, "sc_mapping_UI", suspendWhenHidden=FALSE) ## important!
+    outputOptions(output, "mapping_UI", suspendWhenHidden=FALSE) ## important!
     
     ##==========================================================================
     ## Markers
     ##==========================================================================
     
-    ##output$sc_markersplot <- renderPlot({
-    sc_markers.plotFUNC %<a-% reactive({
+    ##output$markersplot <- renderPlot({
+    markers.plotFUNC %<a-% reactive({
         ##if(!input$tsne.all) return(NULL)
         require(RColorBrewer)        
         ngs <- inputData()
@@ -1029,20 +1030,20 @@ immune cell types, expressed genes and pathway activation."
         pos <- clust.pos
         
         ##markers <- ngs$families[["CD family"]]
-        if(is.null(input$sc_mrk_features)) return(NULL)
-        if(input$sc_mrk_features=="") return(NULL)
+        if(is.null(input$mrk_features)) return(NULL)
+        if(input$mrk_features=="") return(NULL)
 
         term = ""
-        if(input$sc_mrk_level=="gene") {
+        if(input$mrk_level=="gene") {
             markers <- ngs$families[["Transcription factors (ChEA)"]]
-            if(input$sc_mrk_search!="") {
-                term = input$sc_mrk_search
+            if(input$mrk_search!="") {
+                term = input$mrk_search
                 jj <- grep(term, ngs$genes$gene_name, ignore.case=TRUE )
                 markers <- ngs$genes$gene_name[jj]
                 term = paste("filter:",term)
-            } else if(input$sc_mrk_features %in% names(ngs$families)) {
-                markers <- ngs$families[[input$sc_mrk_features]]
-                term = input$sc_mrk_features
+            } else if(input$mrk_features %in% names(ngs$families)) {
+                markers <- ngs$families[[input$mrk_features]]
+                term = input$mrk_features
             } else {
                 markers <- ngs$genes$gene_name
             }
@@ -1052,17 +1053,17 @@ immune cell types, expressed genes and pathway activation."
             pmarkers <- intersect(rownames(ngs$genes)[jj],rownames(ngs$X))
             gx <- ngs$X[pmarkers,rownames(pos),drop=FALSE]
 
-        } else if(input$sc_mrk_level=="geneset") {
+        } else if(input$mrk_level=="geneset") {
             ##markers <- ngs$families[["Immune checkpoint (custom)"]]
             markers <- COLLECTIONS[[1]]
-            if(is.null(input$sc_mrk_features)) return(NULL)
-            ft <- input$sc_mrk_features
-            if(input$sc_mrk_search=="" && ft %in% names(COLLECTIONS)) {
-                markers <- COLLECTIONS[[input$sc_mrk_features]]
+            if(is.null(input$mrk_features)) return(NULL)
+            ft <- input$mrk_features
+            if(input$mrk_search=="" && ft %in% names(COLLECTIONS)) {
+                markers <- COLLECTIONS[[input$mrk_features]]
                 markers <- intersect(markers, rownames(ngs$gsetX))
-                term = input$sc_mrk_features
-            } else if(input$sc_mrk_search!="") {
-                term = input$sc_mrk_search
+                term = input$mrk_features
+            } else if(input$mrk_search!="") {
+                term = input$mrk_search
                 jj <- grep(term, rownames(ngs$gsetX), ignore.case=TRUE )
                 markers <- rownames(ngs$gsetX)[jj]
                 term = paste("filter:",term)
@@ -1076,7 +1077,7 @@ immune cell types, expressed genes and pathway activation."
         }
 
         if(!"group" %in% names(ngs$model.parameters)) {
-            stop("[sc_markers.plotFUNC] FATAL: no group in model.parameters")
+            stop("[markers.plotFUNC] FATAL: no group in model.parameters")
         }
                
         ## prioritize gene with large variance (groupwise)
@@ -1095,9 +1096,9 @@ immune cell types, expressed genes and pathway activation."
         klrpal = paste0(col2hex(klrpal),"66")
 
         NP=25
-        if(input$sc_mrk_level=="gene") NP=36
+        if(input$mrk_level=="gene") NP=36
         top.gx = head(gx,NP)  ## match number of plot below!
-        if(input$sc_mrk_sortby=="name") {
+        if(input$mrk_sortby=="name") {
             top.gx = top.gx[order(rownames(top.gx)),,drop=FALSE]
         } else {
             top.gx = top.gx[order(-rowMeans(top.gx)),,drop=FALSE]
@@ -1106,7 +1107,7 @@ immune cell types, expressed genes and pathway activation."
         ##top.gx <- tanh(top.gx/mean(top.gx))
 
         plevel="gene"
-        plevel <- input$sc_mrk_level
+        plevel <- input$mrk_level
         
         par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,1,1)*0.5)
         par(mfrow=c(1,1)*sqrt(NP), mar=c(0,0.2,0.5,0.2)*0.6, oma=c(1,1,6,1)*0.5)
@@ -1145,64 +1146,64 @@ immune cell types, expressed genes and pathway activation."
         
     })
 
-    sc_markersplot.opts = tagList(
-        tipify(selectInput(ns("sc_mrk_level"),"Level:", choices=c("gene","geneset")),
+    markersplot.opts = tagList(
+        tipify(selectInput(ns("mrk_level"),"Level:", choices=c("gene","geneset")),
                "Specify the level of the marker analysis: gene or gene set level.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("sc_mrk_features"),"Feature set:", choices=NULL,
+        tipify(selectInput(ns("mrk_features"),"Feature set:", choices=NULL,
                            multiple=FALSE),
                "Select a particular functional group for the analysis.",
                placement="top", options = list(container = "body")),
-        tipify(textInput(ns("sc_mrk_search"),"Filter:"),
+        tipify(textInput(ns("mrk_search"),"Filter:"),
                "Filter markers by a specific keywords.",
                placement="top", options = list(container = "body")),
-        tipify(radioButtons(ns("sc_mrk_sortby"),"Sort by:",
+        tipify(radioButtons(ns("mrk_sortby"),"Sort by:",
                             choices=c("intensity","name"), inline=TRUE),
                "Sort by name or intensity.", placement="top",
                options = list(container = "body"))
     )
 
-    sc_markersplot_info = "The Markers section produces for the top marker genes, a t-SNE with samples colored in red when the gene is overexpressed in corresponding samples. The top genes (N=36) with the highest standard deviation are plotted. <p>In the plotting options, users can also restrict the marker analysis by selecting a particular functional group in which genes are divided into 89 groups, such as chemokines, transcription factors, genes involved in immune checkpoint inhibition, and so on."
+    markersplot_info = "The Markers section produces for the top marker genes, a t-SNE with samples colored in red when the gene is overexpressed in corresponding samples. The top genes (N=36) with the highest standard deviation are plotted. <p>In the plotting options, users can also restrict the marker analysis by selecting a particular functional group in which genes are divided into 89 groups, such as chemokines, transcription factors, genes involved in immune checkpoint inhibition, and so on."
 
-    sc_markersplot_caption = "<b>T-SNE distribution of expression of marker genes.</b> Good biomarkers will show a distribution pattern strongly correlated with some phenotype. The top genes with the highest standard deviation are shown. The red color shading is proportional to the (absolute) expression of the gene in corresponding samples." 
+    markersplot_caption = "<b>T-SNE distribution of expression of marker genes.</b> Good biomarkers will show a distribution pattern strongly correlated with some phenotype. The top genes with the highest standard deviation are shown. The red color shading is proportional to the (absolute) expression of the gene in corresponding samples." 
 
     callModule(
         plotModule,
-        id = "sc_markersplot",
-        func = sc_markers.plotFUNC,
-        func2 = sc_markers.plotFUNC,        
+        id = "markersplot",
+        func = markers.plotFUNC,
+        func2 = markers.plotFUNC,        
         ##title = "Distribution of marker genes",
-        options = sc_markersplot.opts,
-        info.text = sc_markersplot_info,
+        options = markersplot.opts,
+        info.text = markersplot_info,
         pdf.height = 10, pdf.width=10, 
         height = c(fullH-80,780), width = c("100%",1000),
         res = c(85,90),
-        ##caption = sc_markersplot_caption,
+        ##caption = markersplot_caption,
         add.watermark = WATERMARK
     )
 
     observe({
         ngs <- inputData()
-        req(ngs,input$sc_mrk_level)    
+        req(ngs,input$mrk_level)    
         
         choices <- names(ngs$families)
         selected = grep("^CD",choices,ignore.case=TRUE,value=TRUE)[1]
-        if(input$sc_mrk_level=="geneset") {
+        if(input$mrk_level=="geneset") {
             nn <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))
             choices <- names(COLLECTIONS)[nn>=5]
             selected = grep("HALLMARK",names(COLLECTIONS),ignore.case=TRUE,value=TRUE)
         }
-        updateSelectInput(session, "sc_features", choices=choices, selected=selected)
-        updateSelectInput(session, "sc_mrk_features", choices=choices, selected=selected)
+        updateSelectInput(session, "features", choices=choices, selected=selected)
+        updateSelectInput(session, "mrk_features", choices=choices, selected=selected)
 
     })
     
-    ## output$sc_markersplot_UI <- renderUI({
+    ## output$markersplot_UI <- renderUI({
     ##     fillCol(
     ##         height = fullH,
     ##         flex = c(NA,1),
-    ##         div(HTML(sc_markersplot_caption),class="caption"),
-    ##         plotWidget(ns("sc_markersplot")) 
+    ##         div(HTML(markersplot_caption),class="caption"),
+    ##         plotWidget(ns("markersplot")) 
     ##     )
     ## })
 
@@ -1211,24 +1212,24 @@ immune cell types, expressed genes and pathway activation."
     ## CytoPlot
     ##======================================================================
 
-    ##output$sc_cytoplot <- renderPlot({
-    sc_cyto.plotFUNC %<a-% reactive({
+    ##output$cytoplot <- renderPlot({
+    cyto.plotFUNC %<a-% reactive({
         ##if(!input$tsne.all) return(NULL)
         require(RColorBrewer)
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
         
-        if(is.null(input$sc_cytovar1)) return(NULL)
-        if(is.null(input$sc_cytovar2)) return(NULL)
-        if(input$sc_cytovar1=="") return(NULL)
-        if(input$sc_cytovar2=="") return(NULL)
+        if(is.null(input$cytovar1)) return(NULL)
+        if(is.null(input$cytovar2)) return(NULL)
+        if(input$cytovar1=="") return(NULL)
+        if(input$cytovar2=="") return(NULL)
         
-        dbg("[SingleCellBoard::sc_cyto.plotFUNC] called")
+        dbg("[SingleCellBoard::cyto.plotFUNC] called")
 
-        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$sc_samplefilter)    
-        gene1 <- input$sc_cytovar1
-        gene2 <- input$sc_cytovar2
+        kk <- selectSamplesFromSelectedLevels(ngs$Y, input$samplefilter)    
+        gene1 <- input$cytovar1
+        gene2 <- input$cytovar2
         ##if(gene1 == gene2) return(NULL)
         par(mfrow=c(1,1), mar=c(10,5,4,1))
         pgx.cytoPlot( ngs, gene1, gene2, samples=kk, cex=0.8,
@@ -1236,27 +1237,27 @@ immune cell types, expressed genes and pathway activation."
         
     })
 
-    sc_cyto.opts = tagList(
-        tipify(selectInput(ns("sc_cytovar1"),label="x-axis:", choices=NULL, multiple=FALSE),
+    cyto.opts = tagList(
+        tipify(selectInput(ns("cytovar1"),label="x-axis:", choices=NULL, multiple=FALSE),
                "Select your prefered gene on the x-axis.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("sc_cytovar2"),label="y-axis:", choices=NULL, multiple=FALSE),
+        tipify(selectInput(ns("cytovar2"),label="y-axis:", choices=NULL, multiple=FALSE),
                "Choose your prefered gene on the y-axis.",
                placement="top", options = list(container = "body"))
     )
 
-    sc_cytoModule_info = "For each combination of gene pairs, the platform can generate a cytometry-like plot of samples under the Cytoplot tab. The aim of this feature is to observe the distribution of samples in relation to the selected gene pairs. For instance, when applied to single-cell sequencing data from immunological cells, it can mimic flow cytometry analysis and distinguish T helper cells from the other T cells by selecting the CD4 and CD8 gene combination."
+    cytoModule_info = "For each combination of gene pairs, the platform can generate a cytometry-like plot of samples under the Cytoplot tab. The aim of this feature is to observe the distribution of samples in relation to the selected gene pairs. For instance, when applied to single-cell sequencing data from immunological cells, it can mimic flow cytometry analysis and distinguish T helper cells from the other T cells by selecting the CD4 and CD8 gene combination."
     
-    sc_cytoModule_caption = "<b>Cyto plot.</b> This plot shows the distribution of samples in relation to the expression of selected gene pairs. It mimics the scatter plots used for gating in flow cytometry analysis."    
+    cytoModule_caption = "<b>Cyto plot.</b> This plot shows the distribution of samples in relation to the expression of selected gene pairs. It mimics the scatter plots used for gating in flow cytometry analysis."    
     
     callModule(
         plotModule,
-        id = "sc_cytoplot",
-        func = sc_cyto.plotFUNC,
-        func2 = sc_cyto.plotFUNC,
-        options = sc_cyto.opts,
-        info.text = sc_cytoModule_info,
-        ## caption = sc_cytoModule_caption,
+        id = "cytoplot",
+        func = cyto.plotFUNC,
+        func2 = cyto.plotFUNC,
+        options = cyto.opts,
+        info.text = cytoModule_info,
+        ## caption = cytoModule_caption,
         pdf.width=6, pdf.height=8,
         height = c(fullH-80,780), width = c("100%",600),
         res = c(80,80),
@@ -1286,30 +1287,30 @@ immune cell types, expressed genes and pathway activation."
         if(length(g1)==0) g1 <- genes[1]
         if(length(g2)==0) g2 <- genes[2]
 
-        updateSelectizeInput(session, "sc_cytovar1", choices=genes, selected=g1, server=TRUE)
-        updateSelectizeInput(session, "sc_cytovar2", choices=genes, selected=g2, server=TRUE)
+        updateSelectizeInput(session, "cytovar1", choices=genes, selected=g1, server=TRUE)
+        updateSelectizeInput(session, "cytovar2", choices=genes, selected=g2, server=TRUE)
     })
    
     
-    output$sc_markersplot_UI <- renderUI({
+    output$markersplot_UI <- renderUI({
         fillRow(
             flex = c(1.3,0.08,1),
             fillCol(
                 height = fullH,
                 flex = c(NA,1),
-                div(HTML(sc_markersplot_caption),class="caption"),
-                plotWidget(ns("sc_markersplot")) 
+                div(HTML(markersplot_caption),class="caption"),
+                plotWidget(ns("markersplot")) 
             ),
             br(),
             fillCol(
                 height = fullH,
                 flex = c(NA,1),
-                div(HTML(sc_cytoModule_caption), class="caption"),
-                plotWidget(ns("sc_cytoplot"))
+                div(HTML(cytoModule_caption), class="caption"),
+                plotWidget(ns("cytoplot"))
             )
         )
     })
-    outputOptions(output, "sc_markersplot_UI", suspendWhenHidden=FALSE) ## important!!!
+    outputOptions(output, "markersplot_UI", suspendWhenHidden=FALSE) ## important!!!
 
     
     ##==========================================================================
@@ -1342,25 +1343,25 @@ immune cell types, expressed genes and pathway activation."
         return(res)
     })
 
-    ##output$sc_cnaplot <- renderPlot({
-    sc_cna.plotFUNC %<a-% reactive({
+    ##output$cnaplot <- renderPlot({
+    cna.plotFUNC %<a-% reactive({
         require(RColorBrewer)
         ##return(NULL)    
         ngs <- inputData()
-        req(ngs,input$sc_cna_method,input$sc_cna_annotvar,input$sc_cna_orderby)
+        req(ngs,input$cna_method,input$cna_annotvar,input$cna_orderby)
 
-        dbg("[SingleCellBoard:sc_cna.plotFUNC] reacted")
+        dbg("[SingleCellBoard:cna.plotFUNC] reacted")
         
-        if(input$sc_cna_method=="inferCNV") {
+        if(input$cna_method=="inferCNV") {
             res <- getCNAfromExpression.inferCNV()
             par(mfrow=c(1,1))
             grid::grid.raster(res$png)
         } else {
             res <- getCNAfromExpression()
             annotvar=NA
-            annotvar <- input$sc_cna_annotvar
+            annotvar <- input$cna_annotvar
             if(annotvar=="<none>") annotvar <- NULL
-            order.by <- input$sc_cna_orderby
+            order.by <- input$cna_orderby
             pgx.plotCNAHeatmap(
                 ngs, res, annot=annotvar, order.by=order.by,
                 downsample=10 )
@@ -1368,30 +1369,30 @@ immune cell types, expressed genes and pathway activation."
         
     })
 
-    sc_cna.opts = tagList(
-        tipify(radioButtons(ns("sc_cna_method"),label="Method:", choices=c("sma40","inferCNV"),inline=TRUE),
+    cna.opts = tagList(
+        tipify(radioButtons(ns("cna_method"),label="Method:", choices=c("sma40","inferCNV"),inline=TRUE),
                "Select the computational method for CNV inference. The <tt>sma40</tt> method uses a fast moving average of the relative expression values with a window of 40 genes. <tt>inferCNV</tt> uses the method inferCNV of the Trinity CTAT Project (warning: this method is very slow!)."),
-        tipify(selectInput(ns("sc_cna_annotvar"),label="Annotate with:", choices=NULL, multiple=FALSE),
+        tipify(selectInput(ns("cna_annotvar"),label="Annotate with:", choices=NULL, multiple=FALSE),
                "Select what annotation variable to show together with the heatmap", placement = "top"),
-        ##checkboxGroupInput('sc_cnaoptions','',c("bin20"), inline=TRUE),
-        ##radioButtons('sc_cnaplottype',NULL,c("image","heatmap","splitmap"), inline=TRUE),
-        tipify(radioButtons(ns("sc_cna_orderby"),"Order samples by:",c("clust","pc1"), inline=TRUE),
+        ##checkboxGroupInput('cnaoptions','',c("bin20"), inline=TRUE),
+        ##radioButtons('cnaplottype',NULL,c("image","heatmap","splitmap"), inline=TRUE),
+        tipify(radioButtons(ns("cna_orderby"),"Order samples by:",c("clust","pc1"), inline=TRUE),
                "Select how to order the vertical (sample) axis: clustering or according the loading of the first principal component.")
     )
 
-    sc_cnaModule_info = "<strong>Copy number variation (CNV)</strong> analysis. The copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. CNV generates a heatmap of samples versus chromosomes, where samples can be annotated further with a phenotype class provided in the data."
+    cnaModule_info = "<strong>Copy number variation (CNV)</strong> analysis. The copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. CNV generates a heatmap of samples versus chromosomes, where samples can be annotated further with a phenotype class provided in the data."
 
-    sc_cnaModule_caption = "<b>Inferred copy number variation (CNV)</b>. Genomic copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. The heatmap shows the inferred copy number of the samples versus chromosomes. The samples are annotated further with phenotype information on the right side of the figure."
+    cnaModule_caption = "<b>Inferred copy number variation (CNV)</b>. Genomic copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. The heatmap shows the inferred copy number of the samples versus chromosomes. The samples are annotated further with phenotype information on the right side of the figure."
 
     callModule(
         plotModule,
-        id = "sc_cnaplot",
-        func = sc_cna.plotFUNC,
-        func2 = sc_cna.plotFUNC,
-        options = sc_cna.opts,
+        id = "cnaplot",
+        func = cna.plotFUNC,
+        func2 = cna.plotFUNC,
+        options = cna.opts,
         title = "Inferred copy number variation (CNV)",
-        info.text = sc_cnaModule_info,
-        ##caption = sc_cnaModule_caption,
+        info.text = cnaModule_info,
+        ##caption = cnaModule_caption,
         pdf.width=10, pdf.height=8, 
         height = c(fullH - 60,700), width = c('100%',1000),
         res = 110,
@@ -1403,22 +1404,22 @@ immune cell types, expressed genes and pathway activation."
         ##if(is.null(ngs)) return(NULL)
         req(ngs)        
         ## levels for sample filter
-        dbg("[SingleCellBoard:sc_cna:observe] reacted")
+        dbg("[SingleCellBoard:cna:observe] reacted")
         
         annotvar <- c(colnames(ngs$Y),"<none>")
-        updateSelectInput(session, "sc_cna_annotvar", choices=annotvar)
+        updateSelectInput(session, "cna_annotvar", choices=annotvar)
         
     })
 
-    output$sc_cnaModule_UI <- renderUI({
+    output$cnaModule_UI <- renderUI({
         fillCol(
             height = fullH,
             flex = c(NA,1),
-            div(HTML(sc_cnaModule_caption),class="caption"),
-            plotWidget(ns("sc_cnaplot"))
+            div(HTML(cnaModule_caption),class="caption"),
+            plotWidget(ns("cnaplot"))
         )
     })
-    outputOptions(output, "sc_cnaModule_UI", suspendWhenHidden=FALSE) ## important!!!
+    outputOptions(output, "cnaModule_UI", suspendWhenHidden=FALSE) ## important!!!
     
     ##===========================================================================
     ## iTALK

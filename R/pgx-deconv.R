@@ -500,7 +500,10 @@ pgx.multipleDeconvolution <- function(counts, refmat, methods=DECONV.METHODS)
         }
     }
     timings
-    timings0 <- apply(timings, 2, function(x) tapply(x, rownames(timings), sum))
+    timings0 <- NULL
+    if(!is.null(timings)) {
+        timings0 <- apply(timings, 2, function(x) tapply(x, rownames(timings), sum))
+    }
     res2 <- list(results=results, timings=timings0)
     return(res2)
 }

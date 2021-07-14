@@ -20,8 +20,9 @@ CorrelationUI <- function(id) {
         tabsetPanel(
             id = ns("tabs"),
             tabPanel("Correlation",uiOutput(ns("corAnalysis_UI"))),
-            tabPanel("Functional",uiOutput(ns("corFunctional_UI"))),
-            tabPanel("Differential",uiOutput(ns("corDiff_UI")))            
+            ## tabPanel("Functional",uiOutput(ns("corFunctional_UI"))),
+            tabPanel("Graph",uiOutput(ns("corGraph_UI"))),            
+            tabPanel("Differential",uiOutput(ns("corDiff_UI")))
         )
     )
     ui
@@ -44,7 +45,7 @@ CorrelationBoard <- function(input, output, session, env)
     
     require(RColorBrewer)
     COL <- brewer.pal(12,"Paired")[seq(1,12,2)]
-    COL <- brewer.pal(9,"Set1")
+    COL <- brewer.pal(9,"Set1")[c(2,1,3:9)]
     COL2 <- rev(grey.colors(2))
     COL2 <- brewer.pal(2,"Paired")[1:2]
     COL2 <- COL[1:2]
@@ -53,7 +54,7 @@ CorrelationBoard <- function(input, output, session, env)
     ##========================= OUTPUT UI ============================================
     ##================================================================================
 
-    corAnalysis_caption = "<b>(a)</b> <b>Top-ranked correlation.</b> Top correlated features with respect to selected gene. <b>(b)</b> <b>Correlation network</b> around the selected gene. <b>(c)</b> <b>Scatter plots</b> of gene expression of top correlated genes."
+    corAnalysis_caption = "<h3>Gene Correlation Analysis</h3><b>(a)</b> <b>Top-ranked correlation.</b> Top correlated features with respect to selected gene. <b>(b)</b> <b>Correlation table</b> of correlation and partial correlation with respect to selected gene. <b>(c)</b> <b>Scatter plots</b> of gene expression of top correlated genes."
     
     output$corAnalysis_UI <- renderUI({
         fillCol(
@@ -67,7 +68,8 @@ CorrelationBoard <- function(input, output, session, env)
                     flex = c(1,1),
                     height = fullH-80,
                     plotWidget(ns('cor_barplot')),
-                    plotWidget(ns('cor_graph'))
+                    ##plotWidget(ns('cor_graph'))
+                    tableWidget(ns('cor_table'))
                 ),	
                 br(), ## spacer
                 fillCol(
@@ -84,7 +86,6 @@ CorrelationBoard <- function(input, output, session, env)
     corfunctional_caption ="<b>(a)</b> <b>Correlation GSEA.</b> Top enriched gene sets using the correlation as rank metric. The black bars denote the genes in the gene set and their position in the sorted rank metric. <b>(b)</b> <b>Enrichment table.</b> Statistical results from GSEA analysis. <b>(c)</b> <b>Gene frequency.</b> Frequency of leading edge genes in top correlated genesets. <b>(d)</b> <b>Leading edge table.</b> Leading edge genes and rank statistics (rho) of the selected geneset."
 
     output$corFunctional_UI <- renderUI({
-
         fillCol(
             flex = c(NA,0.025,1),
             height = fullH,
@@ -94,7 +95,7 @@ CorrelationBoard <- function(input, output, session, env)
                 flex = c(1.8,0.11,1),
                 height = fullH - 60,
                 fillCol(
-                    flex = c(1,0.07,0.5),
+                    flex = c(1,0.07,0.6),
                     plotWidget(ns("corGSEA_plots")),
                     br(),
                     tableWidget(ns("corGSEA_table"))
@@ -113,7 +114,6 @@ CorrelationBoard <- function(input, output, session, env)
     })
     ##outputOptions(output, "hm_annotateUI", suspendWhenHidden=FALSE) ## important!!!
 
-
     corDiff_caption = "<h3>Differential Gene Correlation Analysis (DGCA)</h3>Compute and analyze differential correlations between gene pairs across multiple conditions."
     
     output$corDiff_UI <- renderUI({
@@ -128,7 +128,7 @@ CorrelationBoard <- function(input, output, session, env)
                     flex = c(1.3,1),
                     height = fullH-80,
                     plotWidget(ns('dgca_barplot')),
-                    plotWidget(ns('dgca_table'))
+                    tableWidget(ns('dgca_table'))
                 ),	
                 br(), ## spacer
                 fillCol(
@@ -141,6 +141,24 @@ CorrelationBoard <- function(input, output, session, env)
     })
     outputOptions(output, "corDiff_UI", suspendWhenHidden=FALSE) ## important!!!    
 
+    corGraph_caption = "<h3>Gene Correlation Network</h3>Visualization of gene correlation as network or UMAP. <b>(a)</b> <b>Partial correlation network</b> around the selected gene. <b>(b)</b> <b>Correlation UMAP</b>."
+    
+    output$corGraph_UI <- renderUI({
+        fillCol(
+            flex = c(NA,0.035,1),
+            height = fullH,
+            div(HTML(corGraph_caption), class="caption"),
+            br(),
+            fillRow(
+                flex = c(1,0.05,1),
+                plotWidget(ns('cor_graph')),
+                br(),
+                plotWidget(ns('cor_umap'))
+            )
+        )
+    })
+    outputOptions(output, "corGraph_UI", suspendWhenHidden=FALSE) ## important!!!    
+    
     
     ##================================================================================
     ##========================= INPUTS UI ============================================
@@ -156,9 +174,8 @@ CorrelationBoard <- function(input, output, session, env)
             tipify( selectInput(ns("cor_gene"),"Gene:", choices=NULL),
                    "Choose a gene for the correlation analysis.", placement="top"),
             br(),
-            tipify( selectInput(ns("cor_group"),"Split group:",
-                                choices=NULL, multiple=FALSE),
-                   "Variable to split into groups", placement="top"),
+            tipify( selectInput(ns("cor_group"),"Color by:", choices=NULL, multiple=FALSE),
+                   "Variable to split and color by groups.", placement="top"),
             br(),
             actionLink(ns("cor_options"), "Options", icon=icon("cog", lib = "glyphicon")),
             br(),br(),
@@ -265,28 +282,19 @@ CorrelationBoard <- function(input, output, session, env)
         X
     })
     
-    getPartialCorrelation <- reactive({
+    getPartialCorrelationMatrix <- reactive({
         ngs <- inputData()
         req(ngs,input$cor_gene)
 
+        gene = rownames(ngs$X)[1]
         gene <- input$cor_gene
-
-        ## methods = "cor"
-        ## if(input$cor_partialpc == "fast") {
-        ##     methods = PCOR.FAST
-        ## }
-        ## if(input$cor_partialpc == "all methods") {
-        ##     methods = PCOR.METHODS
-        ## }
 
         ## filter gene expression matrix
         X <- getFilteredExpression()        
-        ##kk <- selectSamplesFromSelectedLevels(ngs$Y, input$cor_samplefilter)
-        ##X <- X[,kk,drop=FALSE]
         
         showNotification(paste("computing correlation...\n"))        
         NTOP = 50
-        NTOP = as.integer(input$cor_ntop)
+        NTOP = as.integer(input$pcor_ntop)
         ##res <- pgx.computePartialCorrelationAroundGene(
         ##    X, gene, method=methods, nmax=NTOP, fast=FALSE)
         res <- pgx.computeGlassoAroundGene(X, gene, nmax=NTOP)    
@@ -295,7 +303,7 @@ CorrelationBoard <- function(input, output, session, env)
         j <- which(rownames(res$pcor)==gene)
         P <- res$pcor
         diag(P) <- 0
-        rho1 <- min(head(sort(P,decreasing=TRUE),40))
+        rho1 <- min(head(sort(P,decreasing=TRUE),200))
         max1 <- round(max(P),digits=3)
         updateSliderInput(session, "cor_graph_threshold", value=rho1, max=max1)
         updateSliderInput(session, "dcga_graph_threshold", value=rho1, max=max1)        
@@ -303,8 +311,8 @@ CorrelationBoard <- function(input, output, session, env)
         res
     })
     
-    getCorrelationValues <- reactive({
-        res <- getPartialCorrelation()
+    getPartialCorrelation <- reactive({
+        res <- getPartialCorrelationMatrix()
         gene <- rownames(res$cor)[1]
         gene <- input$cor_gene
         rho <- res$cor[gene,]
@@ -312,6 +320,61 @@ CorrelationBoard <- function(input, output, session, env)
         df <- data.frame(cor=rho, pcor=prho)
         df
     })
+
+    getGeneCorr <- reactive({
+        require(RColorBrewer)
+        ngs <- inputData()
+        req(ngs)	
+        
+        dbg("[getGeneCorr] reacted!")
+
+        samples=colnames(ngs$X);gene="CD4"
+        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+        gene <- input$cor_gene
+        dbg("[getGeneCorr] 1a: gene = ",gene)        
+        if(is.null(gene)) return(NULL)    
+
+        dbg("[getGeneCorr] 1b:")
+        
+        ## corr always in log.scale and restricted to selected samples subset
+        zx <- ngs$X
+        zx <- getFilteredExpression()        
+        dim(zx)
+        zx.genes0 <- rownames(zx)
+        ##rownames(zx) <- toupper(sub(".*:","",rownames(zx)))  ## NEED RETHINK!
+        zx.genes <- as.character(ngs$genes[rownames(zx),]$gene_name)
+        rownames(zx) <- toupper(zx.genes)        
+        xref <- list("cor" = 2**zx,
+                     "cor.HPA" = as.matrix(TISSUE),
+                     "cor.ImmProt" = as.matrix(IMMPROT))
+        gene0 <- toupper(gene)  ## uppercase mouse
+
+        dbg("[getGeneCorr] 2: gene0 = ", gene0)
+        
+        R <- pgx.getGeneCorrelation(gene0, xref=xref)    
+        if(is.null(R)) return(NULL)        
+        R <- R[rownames(zx),]
+        
+        zx <- zx - rowMeans(zx, na.rm=TRUE)
+        sdx <- sqrt(rowMeans(zx**2))
+        R <- cbind(R, cov=R[,"cor"] * sdx * sdx[gene])
+        
+        dbg("[getGeneCorr] 3: dim.R = ",dim(R))
+        
+        rho.genes = rownames(zx)
+        if("hgnc_symbol" %in% colnames(ngs$genes)) {
+            rho.genes = as.character(ngs$genes[zx.genes0,]$hgnc_symbol)
+        }
+        R <- R[match(rho.genes,rownames(R)),,drop=FALSE]
+        rownames(R) <- zx.genes0
+
+        dbg("[getGeneCorr] 4: dim.R = ",dim(R))
+
+        R <- R[order(R[,"cor"],decreasing=TRUE),]
+        
+        R
+    })
+    
 
     ##================================================================================
     ##======================= PLOTTING FUNCTIONS =====================================
@@ -324,24 +387,35 @@ CorrelationBoard <- function(input, output, session, env)
     
     cor_barplot.PLOTFUN %<a-% reactive({
 
-        df <- getCorrelationValues()
+        df <- getPartialCorrelation()
         
-        rho <- df$cor
-        names(rho) <- rownames(df)
-        rho <- rho[order(-rho)]
+        ##rho <- df$cor
+        ##names(rho) <- rownames(df)
+        ##rho <- rho[order(-rho)]
 
+        R <- getGeneCorr()            
+        dbg("[cor_barplot.PLOTFUN] 1: dim.R = ",dim(R))
+        sel <- cor_table$rows_all()
+        req(sel)
+        NTOP=50
+        sel <- head(sel,NTOP)
+        rho <- R[sel,"cor"]
+        if(length(sel)==1) names(rho) <- rownames(R)[sel]
+        
         prho <- df$pcor
         names(prho) <- rownames(df)
         prho <- prho[match(names(rho),names(prho))]
         names(prho) <- names(rho)
-        prho[is.na(prho)] <- 0            
-        
+        ##prho[is.na(prho)] <- 0            
+
+        ylim0 <- c(-1,1)*max(abs(rho))*1.05
+            
         par(mfrow=c(1,1), mar=c(10,4,1,0.5))
         barplot(rho, beside=FALSE, las=3,
+                ylim = ylim0,
                 ylab = "correlation",
-                cex.names=0.85 )
-        
-        barplot(prho, beside=FALSE, add=TRUE,
+                cex.names=0.85 )        
+        barplot(prho, beside=FALSE, add=TRUE,                
                 col="grey40", names.arg="")
         legend("topright", cex=0.85, y.intersp=0.85,
                inset = c(0.035,0),
@@ -354,8 +428,8 @@ CorrelationBoard <- function(input, output, session, env)
         ##radioButtons(ns('cor_partialpc'),'partial correlation',
         ##             c("none","fast","all methods"), selected="none",
         ##             inline=TRUE)
-        radioButtons(ns('cor_ntop'),'number of top genes',
-                     c(50,100,200), selected=50, inline=TRUE)
+        radioButtons(ns('pcor_ntop'),'nr of top genes to compute partial correlation.',
+                     c(50,100,250), selected=100, inline=TRUE)
     )
 
     cor_barplot.info = "<b>Top correlated genes.</b> Highest correlated genes in respect to the selected gene. The height of the bars correspond to the Pearson correlation value. The dark grey bars correspond to the 'partial correlation' which essentially corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction."
@@ -365,7 +439,7 @@ CorrelationBoard <- function(input, output, session, env)
         id = "cor_barplot", 
         func = cor_barplot.PLOTFUN,
         func2 = cor_barplot.PLOTFUN,        
-        csvFunc = getCorrelationValues,
+        csvFunc = getPartialCorrelation,
         info.text = cor_barplot.info,
         options = cor_barplot.opts,
         title = "Top correlated genes", label = "a",
@@ -377,63 +451,6 @@ CorrelationBoard <- function(input, output, session, env)
         add.watermark = WATERMARK        
     )
 
-    ##-----------------------------------------------------------
-    ## Correlation network
-    ##-----------------------------------------------------------
-    
-    cor_graph.PLOTFUN %<a-% reactive({
-
-        req(input$cor_gene)
-        res <- getPartialCorrelation()
-        gene="XIST";rho.min=0.3;layout="kk"
-        gene <- input$cor_gene
-        rho.min <- input$cor_graph_threshold
-        layout <- input$cor_graph_layout
-        ##fixed <- input$cor_graph_fixed
-
-        par(mfrow=c(1,1))
-        ##        gr <- pgx.plotPartialCorrelationAroundGene(
-        ##            res, gene, what="graph", ## degree=deg,
-        ##            rho.min = rho.min, nsize = -1,
-        ##            layout = layout, edge.width = 3,
-        ##            main= "correlation graph")
-        gr <- pgx.plotPartialCorrelationGraph(
-            res, gene, ##what="graph", ## degree=deg,
-            rho.min = rho.min, nsize = -1,
-            layout = layout,
-            vsize = 10, edge.width = 8,
-            main= "partial correlation graph")
-
-    })
-
-    GRAPH.LAYOUTS = c("Fruchterman-Reingold"="fr", "Kamada-Kawai"="kk",
-                      "graphopt"="graphopt","tree layout"="tree")
-
-    cor_graph.opts <- tagList(
-        sliderInput(ns('cor_graph_threshold'),'rho:', 0, 1, 0.90),
-        selectInput(ns('cor_graph_layout'),'layout:', choices=GRAPH.LAYOUTS)
-        )
-
-    cor_graph_info <- "<b>Correlation network.</b> Correlation graph centered on selected gene with top most correlated features. Red edges correspond to negative (marginal) correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation of the gene pair."
-    cor_graph_info <- "<b>Partial correlation network.</b> Partial correlation graph centered on selected gene with top most correlated features. Red edges correspond to negative correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation value of the gene pair."
-    
-    callModule(
-        plotModule,
-        id = "cor_graph", label = "b",
-        func = cor_graph.PLOTFUN,
-        func2 = cor_graph.PLOTFUN,        
-        info.text = cor_graph_info,
-        options = cor_graph.opts,
-        title = "Partial correlation network",
-        ## caption = topEnriched_caption
-        caption2 = cor_graph_info,
-        ##pdf.width = 14, pdf.height = 4, 
-        height = c(0.45*fullH,720),
-        width = c('auto',1000),
-        res = c(72,80),
-        add.watermark = WATERMARK
-    )
-
     ##-----------------------------------------------------------------------------
     ## Correlation scatter plots
     ##-----------------------------------------------------------------------------
@@ -442,17 +459,33 @@ CorrelationBoard <- function(input, output, session, env)
 
         ngs <- inputData()
         req(input$cor_gene)
-        res <- getPartialCorrelation()
         X <- getFilteredExpression()
 
         this.gene=rownames(ngs$X)[1]
         this.gene <- input$cor_gene
 
+        dbg("[cor_scatter.PLOTFUN] 0:")
+        
         NTOP = 25
-        j <- which(rownames(res$cor) == this.gene)
-        rho <- res$cor[j,-j]
-        rho <- head(rho[order(-abs(rho))],NTOP)
-        rho <- rho[order(-rho)]
+        if(0) {
+            res <- getPartialCorrelationMatrix()
+            j <- which(rownames(res$cor) == this.gene)
+            rho <- res$cor[j,-j]
+            rho <- head(rho[order(-abs(rho))],NTOP)
+            rho <- rho[order(-rho)]
+        } else {
+            R <- getGeneCorr()            
+            dbg("[cor_scatter.PLOTFUN] 1: dim.R = ",dim(R))
+            sel <- cor_table$rows_all()
+            req(sel)
+            rho <- head(R[sel,"cor"],NTOP)
+            if(length(sel)==1) names(rho) <- rownames(R)[sel]
+        }
+
+        dbg("[cor_scatter.PLOTFUN] 2: len.rho = ",length(rho))
+        if(length(rho)==0) return(NULL)
+
+        dbg("[cor_scatter.PLOTFUN] 2: head.names.rho = ",head(names(rho)))
         
         colorby=1
         colorby <- input$cor_group
@@ -462,7 +495,7 @@ CorrelationBoard <- function(input, output, session, env)
         klrpal <- rep(COL,99)
         klr <- klrpal[as.integer(ph)]
 
-        message("[cor_scatter.PLOTFUN] levels.ph = ",paste(levels(ph),collapse=' '))
+        dbg("[cor_scatter.PLOTFUN] 2: levels.ph = ",paste(levels(ph),collapse=' '))
         
         ndim <- ncol(ngs$X)
         cex = 1.2
@@ -473,17 +506,23 @@ CorrelationBoard <- function(input, output, session, env)
         par(mfrow=c(5,5), mar=c(4,3.5,0.3,0),
             mgp=c(1.9,0.7,0), oma=c(0,0,0.5,0.5))
         par(mfrow=c(5,5), mar=c(3,3.5,0.5,0),
-            mgp=c(1.8,0.6,0), oma=c(0,0,0.5,0.5))
+            mgp=c(1.7,0.6,0), oma=c(0,0,0.5,0.5))
 
+        dbg("[cor_scatter.PLOTFUN] 3:")
+        
         swapaxis = FALSE
         swapaxis = TRUE
         swapaxis <- input$corscatter.swapaxis
         ylab = gene2
         xlab = this.gene
+
+        dbg("[cor_scatter.PLOTFUN] 4: this.gene = ", this.gene)
         
         i=1
         for(i in 1:min(25,length(rho))) {
             gene2 <- names(rho)[i]                       
+            ##dbg("[cor_scatter.PLOTFUN] 4: gene2 = ", gene2)
+            ##dbg("[cor_scatter.PLOTFUN] 4: gene2.in.X = ", gene2 %in% rownames(ngs$X))
             if(swapaxis) {
                 x <- ngs$X[gene2,]
                 y <- ngs$X[this.gene,]
@@ -502,14 +541,14 @@ CorrelationBoard <- function(input, output, session, env)
             x <- x + 1e-3*rnorm(length(x))            
             abline(lm(y ~ x), col="black", lty=2)
 
-            if(i==1) {
+            if(i%%5==1) {
                 ##legend("topleft", legend=levels(ph),
                 ##       fill=klrpal, cex=0.85,
                 ##       x.intersp=0.8, y.intersp=0.8)
                 tt <- c("   ",levels(ph))
                 legend("topleft", legend=tt,
-                       fill = c(NA,klrpal),
-                       border = c(NA,"black","black"),
+                       fill = c(NA,klrpal), inset=c(0.02,0.02),
+                       border = c(NA,rep("black",99)),
                        cex=0.9, box.lwd=0, pt.lwd=0,
                        x.intersp=0.5, y.intersp=0.8)
                 legend("topleft", colorby, x.intersp=-0.2,
@@ -548,36 +587,12 @@ CorrelationBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ##  Cumulative correlation plot (stacked)
     ##----------------------------------------------------------------------
-    
+
     cum_corplot_data <- reactive({
-        require(RColorBrewer)
+        
         ngs <- inputData()
         req(ngs)	
-        
-        samples=colnames(ngs$X);gene="CD4"
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        gene <- input$search_gene
-        if(is.null(gene)) return(NULL)    
-        
-        ## corr always in log.scale and restricted to selected samples subset
-        zx <- ngs$X
-        dim(zx)
-        ##rownames(zx) <- toupper(sub(".*:","",rownames(zx)))  ## NEED RETHINK!
-        zx.gene <- as.character(ngs$genes[rownames(ngs$X),]$gene_name)
-
-        rownames(zx) <- toupper(zx.gene)        
-        xref <- list("this_data"=zx, HPA_tissue=as.matrix(TISSUE),
-                     ImmProt=as.matrix(IMMPROT))
-        gene0 <- toupper(gene)  ## uppercase mouse
-        R <- pgx.getGeneCorrelation(gene0, xref=xref)    
-        if(is.null(R)) return(NULL)
-        
-        rho.genes = toupper(zx.gene)
-        if("hgnc_symbol" %in% colnames(ngs$genes)) {
-            rho.genes = as.character(ngs$genes$hgnc_symbol)
-        }
-        R <- R[match(rho.genes,rownames(R)),,drop=FALSE]
-        rownames(R) <- rho.genes
+        R <- getGeneCorr()
         
         ## get top correlated genes
         ##jj = head(order(rowSums(R),decreasing=FALSE),35)
@@ -638,6 +653,281 @@ CorrelationBoard <- function(input, output, session, env)
         pdf.width=8, pdf.height=6,
         label="f",
         title="Cumulative correlation",
+        add.watermark = WATERMARK
+    )
+    
+    ##--------------------------------------------------------------------------------
+    ## Correlation table
+    ##--------------------------------------------------------------------------------
+
+    cor_table.RENDER <- reactive({
+
+        ngs <- inputData()
+        req(ngs)
+
+        dbg("[cor_table.RENDER] reacted!")
+
+        R <- getGeneCorr()
+        dbg("[cor_table.RENDER] nrow.R = ", nrow(R))        
+        if(is.null(R)) return(NULL)
+        
+        P <- getPartialCorrelation()        
+        pcor <- P[match(rownames(R),rownames(P)),"pcor"]
+        
+        title <- ngs$genes[rownames(R),"gene_title"]
+        title <- substring(title, 1, 80)
+        df <- data.frame(gene=rownames(R), title=title, cor=R[,"cor"], pcor=pcor)
+        
+        numeric.cols = colnames(df)[3:ncol(df)]
+        ##selectmode <- ifelse(input$corGSEAtable_multiselect,'multiple','single')
+
+        dbg("[cor_table.RENDER] dim.df = ",dim(df))
+        dbg("[cor_table.RENDER] colnames.df = ",colnames(df))
+        dbg("[cor_table.RENDER] rendering...")
+        
+        DT::datatable(
+                df, rownames=FALSE, ## escape = c(-1),
+                extensions = c('Buttons','Scroller'),
+                ##selection=list(mode='multiple', target='row', selected=c(1)),
+                selection=list(mode='single', target='row', selected=c(1)),
+                class = 'compact cell-border stripe hover',
+                fillContainer = TRUE,
+                options=list(
+                    dom = 'lfrtip', 
+                    ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                    scrollX = TRUE, ##scrollY = TRUE,
+                    ##scrollY = 170,
+                    scrollY = '70vh',
+                    scroller=TRUE,
+                    deferRender=TRUE
+                )  ## end of options.list 
+            )  %>%
+            formatSignif(numeric.cols,4)  %>%
+            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
+            DT::formatStyle("cor",
+                            background = color_from_middle(
+                                df[,"cor"],'lightblue', '#f5aeae'),
+                            backgroundSize = '98% 88%',
+                            backgroundRepeat = 'no-repeat',
+                            backgroundPosition = 'center')
+        
+    })
+
+    cor_table.info = "<b>DGCA table.</b> Statistical results from the DGCA computation for differentially correlated gene pairs."
+
+    cor_table.opts <- tagList(
+        ##checkboxInput(ns("cor_table.full"),"full table")
+    )
+    
+    cor_table <- callModule(
+        tableModule, 
+        id = "cor_table", 
+        func = cor_table.RENDER,
+        options = cor_table.opts,
+        info.text = cor_table.info,
+        caption2 = cor_table.info,
+        title = "Correlation table", label="b",
+        height = c(360,700), width=c('auto',1400)
+        ##caption = dgca_caption
+    )    
+
+
+    ##-----------------------------------------------------------
+    ## Correlation network
+    ##-----------------------------------------------------------
+    
+    getCorGraph <- reactive({
+
+        req(input$cor_gene)
+
+        dbg("[getCorGraph] reacted!")
+        
+        res <- getPartialCorrelationMatrix()
+        gene="XIST";rho.min=0.3;layout="kk"
+        gene <- input$cor_gene        
+        dbg("[getCorGraph] gene = ",gene)
+
+        rho.min <- input$cor_graph_threshold
+        dbg("[getCorGraph] rho.min = ",rho.min)        
+        
+        layout <- input$cor_graph_layout
+        ##fixed <- input$cor_graph_fixed
+        numnodes <- nrow(res$cor)
+        vsize = ifelse(numnodes > 50, 10, 12)
+        vsize = ifelse(numnodes > 100, 8, vsize)
+        
+        radius = as.integer(input$cor_graph_radius)
+
+        dbg("[getCorGraph] compiling...")        
+        gr <- pgx.plotPartialCorrelationGraph(
+            res, gene, ##what="graph", ## degree=deg,
+            plot = FALSE,
+            rho.min = rho.min, nsize = -1,
+            layout = layout, radius = radius,
+            vsize = vsize, edge.width = 10)
+        gr
+    })
+
+    cor_graph.PLOTFUN %<a-% reactive({
+        gr <- getCorGraph()
+        par(mar=c(1,1,1,1)*0)
+        plot(gr,
+             ##layout = L1,
+             ##vertex.label.cex = label.cex,
+             ##vertex.size = 12,
+             vertex.color = 'lightskyblue1',
+             vertex.frame.color = 'skyblue'
+             )
+    })
+
+    cor_graph.VISNETWORK <- reactive({
+        require(visNetwork)
+        gr <- getCorGraph()
+        if(is.null(gr)) return(NULL)                
+        
+        visdata <- toVisNetworkData(gr, idToLabel=FALSE)
+        visdata$edges$width <- 2*visdata$edges$width 
+        
+        graph <- visNetwork::visNetwork(
+                                 nodes = visdata$nodes,
+                                 edges = visdata$edges) %>%
+            visNodes(font = list(size = 12))  %>%
+            visEdges(hidden=FALSE, width=4, color=list(opacity=0.9))  %>%
+            visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)) %>%
+            ## visPhysics(enabled=TRUE)  %>%
+            ## visInteraction(hideEdgesOnDrag = TRUE) %>%
+            ## visIgraphLayout(layout="layout.norm", layoutMatrix=pos)
+            visIgraphLayout(layout="layout_nicely")
+        graph
+
+    })
+    
+    GRAPH.LAYOUTS = c("Fruchterman-Reingold"="fr", "Kamada-Kawai"="kk",
+                      "graphopt"="graphopt","tree layout"="tree")
+
+    cor_graph.opts <- tagList(
+        sliderInput(ns('cor_graph_radius'),'radius:', 1, 8, 3, 1),
+        sliderInput(ns('cor_graph_threshold'),'pcor threshold:', 0, 1, 0.90),        
+        selectInput(ns('cor_graph_layout'),'layout:', choices=GRAPH.LAYOUTS)
+    )
+
+    cor_graph_info <- "<b>Gene correlation network.</b> Correlation graph centered on selected gene with top most correlated features. Red edges correspond to negative (marginal) correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation of the gene pair."
+    cor_graph_info <- "<b>Partial correlation network.</b> Partial correlation graph centered on selected gene with top most correlated features. Red edges correspond to negative correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation value of the gene pair."
+    
+    callModule(
+        plotModule,
+        id = "cor_graph", label = "a",
+        ##func = cor_graph.PLOTFUN,
+        func = cor_graph.VISNETWORK,        
+        ##func2 = cor_graph.PLOTFUN,        
+        plotlib = 'visnetwork',
+        info.text = cor_graph_info,
+        options = cor_graph.opts,
+        title = "PARTIAL CORRELATION NETWORK",
+        ## caption = topEnriched_caption
+        caption2 = cor_graph_info,
+        ##pdf.width = 14, pdf.height = 4, 
+        height = c(700,720),
+        width = c('auto',1000),
+        res = c(72,80),
+        add.watermark = WATERMARK
+    )
+
+    ##-----------------------------------------------------------
+    ## Correlation UMAP
+    ##-----------------------------------------------------------
+    
+    ##cor_umap.PLOTFUN %<a-% reactive({
+    cor_umap.PLOTFUN <- reactive({    
+
+        ngs <- inputData()
+        req(ngs)
+        req(input$cor_gene)
+        
+        dbg("[cor_umap.PLOTFUN] reacted!")
+        if(!"cluster.genes" %in% names(ngs)) {
+            par(mfrow=c(1,1))
+            frame()
+            text(0.5,0.6, "Error: gene cluster position in PGX object", col='red3')
+            return(NULL)
+        }
+        
+        R <- getGeneCorr()
+        dbg("[cor_table.RENDER] nrow.R = ", nrow(R))        
+        if(is.null(R)) return(NULL)
+        gene='ESR1'
+        gene <- input$cor_gene
+        pos <- ngs$cluster.genes$pos[['umap2d']]
+        if(input$umap_param=='cov') {
+            rho <- R[,'cov']
+        } else {
+            rho <- R[,"cor"]
+        }
+        rho <- rho[match(rownames(pos),names(rho))]
+        names(rho) <- rownames(pos)
+        ##rho[is.na(rho)] <- 0
+        
+        higenes <- c(gene)
+        higenes <- names(tail(sort(rho**2),20))
+        higenes <- unique(names(c(head(sort(rho),10),tail(sort(rho),10))))
+        cexlab <- ifelse(length(higenes)==1, 2.5, 1.6)
+
+        if(0) {
+
+            rho = R[,1]
+            rho = c("neg","yes")[1+1*(sign(rho)==1)]
+            names(rho) <- rownames(R)
+
+            rho <- rho[match(rownames(pos),names(rho))]
+            names(rho) <- rownames(pos)
+            rho[is.na(rho)] <- 0
+            
+            pgx.scatterPlotXY(
+                pos, var=rho, ##type="factor", col=c("blue","red"),
+                hilight = higenes, hilight.cex=1.2,
+                zsym = TRUE, softmax=1,
+                ## hilight2 = hilight2,
+                cex = 1, cex.lab = 2.0,
+                legend = TRUE, plotlib="plotly")
+            
+        }
+       
+        dbg("[cor_umap.PLOTFUN] dim.pos =",dim(pos))
+        dbg("[cor_umap.PLOTFUN] len.rho =",length(rho))        
+        
+        p <- pgx.plotGeneUMAP(
+            ngs, pos = pos, ##contrast=ct,
+            value = rho, title='',
+            cex = 0.9, cex.lab = cexlab, 
+            hilight = higenes, ntop = 20,
+            plotlib = "plotly")
+
+        ##p
+        if(!is.null(p)) return(p)
+    })
+
+    cor_umap.opts <- tagList(
+        radioButtons(ns('umap_param'),'parameter:', choices=c("cor","cov"), inline=TRUE)
+    )
+
+    cor_umap_info <- "<b>Gene UMAP.</b> Partial correlation graph centered on selected gene with top most correlated features. Red edges correspond to negative correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation value of the gene pair."
+    
+    callModule(
+        plotModule,
+        id = "cor_umap", label = "b",
+        func = cor_umap.PLOTFUN,
+        ##func2 = cor_umap.PLOTFUN,
+        plotlib = 'plotly',
+        ##plotlib = 'ggplot',
+        info.text = cor_umap_info,
+        options = cor_umap.opts,
+        title = "CORRELATION UMAP",
+        ## caption = topEnriched_caption
+        caption2 = cor_umap_info,
+        ##pdf.width = 14, pdf.height = 4, 
+        height = c(700,750),
+        width = c('auto',900),
+        res = c(72,80),
         add.watermark = WATERMARK
     )
     
@@ -1036,7 +1326,7 @@ CorrelationBoard <- function(input, output, session, env)
                 beside=TRUE, las=3,
                 xlab = "",
                 ylab = "p-weighted correlation",
-                cex.names = 0.9 )
+                cex.names = 0.95 )
 
         grp=""
         grp <- input$cor_group
@@ -1071,7 +1361,7 @@ CorrelationBoard <- function(input, output, session, env)
     )
 
     ##-----------------------------------------------------------
-    ## Table
+    ## DGCA Table
     ##-----------------------------------------------------------
 
     dgca_table.RENDER <- reactive({
@@ -1132,12 +1422,12 @@ CorrelationBoard <- function(input, output, session, env)
         info.text = dgca_table.info,
         caption2 = dgca_table.info,
         title = "DGCA table", label="b",
-        height = c(300,700), width=c('auto',1400)
+        height = c(305,700), width=c('auto',1400)
         ##caption = dgca_caption
     )    
 
     ##-----------------------------------------------------------------------------
-    ## Correlation scatter plots
+    ## DGCA Correlation scatter plots
     ##-----------------------------------------------------------------------------
             
     gene1="MKI67"

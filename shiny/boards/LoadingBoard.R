@@ -625,12 +625,13 @@ LoadingBoard <- function(input, output, session,
         df$nsets <- NULL
 
         target1 <- grep("date",colnames(df))
+        target2 <- grep("description",colnames(df))
         
         DT::datatable(df,
                       class = 'compact cell-border stripe hover',
                       rownames=TRUE,
                       extensions = c('Scroller'),
-                      selection = list(mode='single', target='row', selected=NULL ),
+                      selection = list(mode='single', target='row', selected=1),
                       ## filter = "top",
                       fillContainer = TRUE,
                       options=list(
@@ -643,7 +644,10 @@ LoadingBoard <- function(input, output, session,
                           scrollY = '100vh', ## scroller=TRUE,
                           deferRender=TRUE,
                           autoWidth = TRUE,
-                          columnDefs = list(list(width='60px', targets=target1))
+                          columnDefs = list(
+                              list(width='50px', targets=target1),
+                              list(width='260px', targets=target2)
+                          )
                       )  ## end of options.list 
                       )  %>%
             DT::formatStyle(0, target='row', fontSize='11.5px', lineHeight='95%')

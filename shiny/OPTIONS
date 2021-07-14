@@ -1,4 +1,4 @@
-TITLE           = "Omics Playground"
+TITLE           = 'Omics Playground'
 AUTHENTICATION  = none
 #AUTHENTICATION = password
 ENABLE_UPLOAD   = TRUE
@@ -8,7 +8,10 @@ MAX_SAMPLES     = 1000
 MAX_COMPARISONS = 100
 MAX_GENES       = 20000
 MAX_GENESETS    = 5000
-#WATERMARK       = TRUE
+USER_MODE       = pro
+WATERMARK       = TRUE
+##DEBUG           = TRUE
+
 #BOARDS_ENABLED = load,view,clust,expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap
 #BOARDS_DISABLED = expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap,corsa,multi,system,wgcna,tcga
 #BOARDS_DISABLED = corsa,multi,system,wgcna,tcga

@@ -9,6 +9,16 @@
 ## Auto-detection helper functions
 ##----------------------------------------------------------------------
 
+pgx.getContrastGroups <- function(pgx, contrast, as.factor=TRUE) {
+    exp.matrix <- pgx$model.parameters$exp.matrix
+    grp <- contrastAsLabels(exp.matrix[,contrast,drop=FALSE],as.factor=as.factor)     
+    if(NCOL(grp)==1) {
+        grp <- grp[,1]
+        names(grp) <- rownames(exp.matrix)
+    }
+    grp    
+}
+
 pgx.detect_batch_params <- function(Y) {
     grep("batch|cell.line|patient|mouse|sample|repl|strain", colnames(Y), value=TRUE)
 }
@@ -724,21 +734,22 @@ makeContrastsFromPairs <- function(main.group, ref.group, groups=NULL, compariso
     contr.matrix
 }
 
-contrastAsLabels <- function(contr.matrix) {
+contrastAsLabels <- function(contr.matrix, as.factor=FALSE) {
     contrastAsLabels.col <- function(contr, contr.name) {
         grp1 <- gsub(".*[:]|_vs_.*","",contr.name)
         grp0 <- gsub(".*_vs_|@.*","",contr.name)
         x <- rep(NA,length(contr))
         x[which(contr<0)] <- grp0
         x[which(contr>0)] <- grp1
+        if(as.factor) x <- factor(x, levels=c(grp0,grp1))
         x
     }
-    K <- c()
+    K <- data.frame(contr.matrix[,0])
     i=1
     for(i in 1:ncol(contr.matrix)) {
         contr <- contr.matrix[,i]
         contr.name <- colnames(contr.matrix)[i]
-        k1 <- contrastAsLabels.col( contr, contr.name)
+        k1 <- contrastAsLabels.col(contr, contr.name)
         K <- cbind(K, k1)
     }
     ##colnames(K) <- sub("[:].*",colnames(contr.matrix))
