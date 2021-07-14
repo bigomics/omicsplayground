@@ -26,7 +26,8 @@ PGX.DIR = file.path(OPG,"data")
 
 WATERMARK = FALSE
 USER_MODE = "pro"
-DEV     = TRUE
+DEV     = FALSE
+##DEV     = TRUE
 DEBUG   = TRUE
 
 ## Determine if we are in ShinyProxy

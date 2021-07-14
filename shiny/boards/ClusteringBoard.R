@@ -34,7 +34,6 @@ ClusteringUI <- function(id) {
     )
 }
 
-
 ClusteringBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
@@ -53,8 +52,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
 <br><br>EXPERT MODE ONLY: The <strong>Feature ranking</strong> panel computes a discriminant score for gene (or geneset) families. This allows to investigate what family of genes (or gene sets) can best discriminate the groups. 
 
-<br><br><br><br>
-<center><iframe width="500" height="333" src="https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=2" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
+<br><br><br>
+<center><iframe width="560" height="315" src="https://www.youtube.com/embed/hyDEk_MCaTk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
 
 ')
 
@@ -1854,12 +1853,12 @@ displays the expression levels of selected genes across all conditions in the an
         dbg("[calcFeatureRanking] length(features)=",length(features))
         
         ## ------------ Just to get current samples
-        ##samples = getTopMatrix()$samples    
+        ##samples = colnames(X)
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input_hm_samplefilter() )
         X = X[,samples]
         cvar <- pgx.getCategoricalPhenotypes(ngs$Y, max.ncat=999)
-        cvar = grep("group|sample|patient|years|days|months|gender",
-                    cvar,invert=TRUE,value=TRUE) ## no sample IDs
+        cvar <- grep("sample|patient|years|days|months|gender",
+                     cvar,invert=TRUE,value=TRUE) ## no sample IDs
         cvar
         Y = ngs$Y[colnames(X),cvar,drop=FALSE]
         kk = which(apply(Y,2,function(y) length(unique(y))>1))
@@ -1877,16 +1876,18 @@ displays the expression levels of selected genes across all conditions in the an
         colnames(S) = colnames(Y)
 
         ## ------------ Create a Progress object
-        progress <- shiny::Progress$new()
-        on.exit(progress$close())    
-        progress$set(message = "Calculating feature-set scores", value = 0)
+        if(!interactive())  {
+            progress <- shiny::Progress$new()
+            on.exit(progress$close())    
+            progress$set(message = "Calculating feature-set scores", value = 0)
+        }
         
         gene.level = TRUE
         gene.level = (input$hm_level=="gene")
         i=1
         for(i in 1:ncol(Y)) {
 
-            progress$inc(1/ncol(Y))
+            if(!interactive()) progress$inc(1/ncol(Y))
 
             grp = Y[,i]
             grp = as.character(grp)
@@ -1982,11 +1983,12 @@ displays the expression levels of selected genes across all conditions in the an
         plotModule, 
         id="clust_featureRank",
         title="Feature-set ranking", 
-        func = clust_featureRank.RENDER,
+        func  = clust_featureRank.RENDER,
         func2 = clust_featureRank.RENDER,
         options = clust_featureRank.opts,
         pdf.width=8, pdf.height=8,
-        height = c(fullH-80,700), width=c("auto",800),
+        height = c(fullH-80,700),
+        width=c("auto",800),
         res = c(72,90),
         info.text = clust_featureRank_info,
         ## caption = clust_featureRank_caption,

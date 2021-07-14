@@ -116,8 +116,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         if(is.null(comparison)) return(NULL)
         
         names(ngs$drugs)
-        dmethod = "activity-combo/L1000"
-        dmethod = "activity/L1000"
+        dmethod="activity/L1000";comparison=1
+        dmethod="gene/L1000";comparison=1        
         dmethod <- input$dsea_method
         if(is.null(dmethod)) return(NULL)
 
@@ -189,6 +189,9 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         dctype <- sub("_.*$","",names(rnk))
         ##table(rownames(res) %in% dctype)
         ##table(sapply(rownames(res), function(g) sum(grepl(g,names(rnk),fixed=TRUE))))
+
+        dbg("[dsea_enplots.RENDER] len.rnk = ", length(rnk))
+        if(length(rnk)==0) return(NULL)
         
         ## ENPLOT TYPE
         ##itop <- c( head(order(-res$NES),10), tail(order(-res$NES),10))

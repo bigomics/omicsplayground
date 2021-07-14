@@ -8,7 +8,9 @@ message(">>> sourcing LoadingBoard")
 LoadingInputs <- function(id) {
     ns <- NS(id)  ## namespace
     tagList(
-        uiOutput(ns("description"))
+        uiOutput(ns("description")),
+        tipify( actionLink(ns("module_info"), "Tutorial", icon = icon("youtube")),
+               "Show more information about this module.")
         ## uiOutput(ns("inputsUI"))
         ## uiOutput(ns("socialButtons"))
     )
@@ -47,26 +49,26 @@ LoadingBoard <- function(input, output, session,
     message("[LoadingBoard] SHINYPROXY_USERGROUPS = ",Sys.getenv("SHINYPROXY_USERGROUPS"))
     message("[LoadingBoard] USER_MODE = ", USER_MODE)
     
-    AUTHENTICATION = authentication
-    message("[LoadingBoard] AUTHENTICATION = ",AUTHENTICATION)
+    message("[LoadingBoard] authentication = ",authentication)
 
-    auth <- NULL
-    if(AUTHENTICATION == "password") {
+    auth <- NULL   ## shared in module
+
+    if(authentication == "password") {
         auth <- callModule(
             PasswordAuthenticationModule, "auth",
             credentials.file = "CREDENTIALS")
-    } else if(AUTHENTICATION == "firebase") {
+    } else if(authentication == "firebase") {
         require(firebase)
         ##firebase <- FirebaseEmailPassword$new()
         auth <- callModule(
             ##FirebaseAuthenticationModule, "auth")
             FirebaseAuthenticationModule, "auth",
             firebase = firebase, firebase2 = firebase2)
-    } else if(AUTHENTICATION == "register") {
+    } else if(authentication == "register") {
         auth <- callModule(
             RegisterAuthenticationModule, "auth",
             register.file = "../logs/register.log")
-    } else if(AUTHENTICATION == "shinyproxy" && in.shinyproxy()) {
+    } else if(authentication == "shinyproxy" && in.shinyproxy()) {
         username <- NULL
         is.anonymous <- Sys.getenv("SHINYPROXY_USERGROUPS")=="ANONYMOUS"
         if(!is.anonymous) username <- Sys.getenv("SHINYPROXY_USERNAME")
@@ -83,6 +85,32 @@ LoadingBoard <- function(input, output, session,
     
     output$description <- renderUI(HTML(description))
 
+    observeEvent( input$module_info, {
+        showModal(modalDialog(
+            title = HTML("<strong>Data View Board</strong>"),
+            HTML(module_infotext),
+            easyClose = TRUE, size="l" ))
+    })
+
+    module_infotext =paste0(
+        'The platform starts running from the <strong>Home panel</strong>. This panel shows the available datasets within the platform. The table reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the collection date.
+
+<br><br><b>Selecting the dataset:</b> Users can select a dataset in the table. The Dataset info shows the information of the dataset of interest and users can load the data by clicking the Load dataset button.
+
+<br><br><b>Upload data:</b> Under the Upload data panel users can upload their transcriptomics and proteomics data to the platform. The platform requires 3 data files as listed below: a data file containing counts/expression (counts.csv), a sample information file (samples.csv) and a file specifying the statistical comparisons as contrasts (contrasts.csv). It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, row names and column names match for all files. On the left side of the panel, users need to provide a unique name and brief description for the dataset while uploading. N.B. Users can now create contrasts from the platform itself, so the contrasts.csv file is optional.
+
+<br><br>
+<ol>
+<li>counts.csv: Count/expression file with gene on rows, samples as columns.
+<li>samples.csv: Samples file with samples on rows, phenotypes as columns.
+<li>contrasts.csv: Contrast file with conditions on rows, contrasts as columns.
+</ol>
+
+<br><br><br>
+<center><iframe width="560" height="315" src="https://www.youtube.com/embed/elwT6ztt3Fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><center>
+
+')
+    
     ##-----------------------------------------------------------------------------
     ## Show current dataset on each page
     ##-----------------------------------------------------------------------------
@@ -374,7 +402,7 @@ LoadingBoard <- function(input, output, session,
             dbg("[showStartupModal] UI not ready. skipping")
             ##delay(8000, selectRows(proxy = dataTableProxy("pgxtable"), selected=1))
             ##delay(8000, shinyjs::click("loadbutton"))
-            return(NULL)  ## UI not ready???
+            return(NULL)  ## UI not ready???rt
         }
         if(once && startup_count>0) return(NULL)
         
@@ -411,7 +439,6 @@ LoadingBoard <- function(input, output, session,
         sub("section-","",cdata[["url_hash"]])
     })
 
-
     ##=================================================================================
     ##========================= USER AUTHENTICATION ===================================
     ##=================================================================================
@@ -430,7 +457,7 @@ LoadingBoard <- function(input, output, session,
         ## checks if the user is logged in.
         ##  
         dbg("[LoadingBoard::inputData] ---------- reacted ---------------\n")
-        dbg("[LoadingBoard::inputData] AUTHENTICATION=",AUTHENTICATION,"\n")
+        dbg("[LoadingBoard::inputData] authentication=",authentication,"\n")
         dbg("[LoadingBoard::inputData] auth$logged=",auth$logged(),"\n")
         
         ## authenicate user if needed
@@ -438,7 +465,7 @@ LoadingBoard <- function(input, output, session,
         ## if(AUTHENTICATION!="none" && USER$logged) showLogin()
         ##if(AUTHENTICATION!="none" && !auth$logged()) return(NULL)
         if(!auth$logged()) return(NULL)
-
+        
         pgx <- currentPGX()
         dbg("[LoadingBoard::inputData] is.null(pgx)=",is.null(pgx),"\n")
         dbg("[LoadingBoard::inputData] pgx$name = ",pgx$name,"\n")        
@@ -689,7 +716,9 @@ LoadingBoard <- function(input, output, session,
     })
 
     uploaded_pgx <- UploadModuleServer(
-        id = "upload_panel", height = 720,
+        id = "upload_panel",
+        auth = auth,
+        height = 720,
         ## max.limits = c(samples=20, comparisons=20, genes=8000),
         max.limits = max.limits,
         FILES = FILES        
@@ -701,6 +730,8 @@ LoadingBoard <- function(input, output, session,
         pgx <- uploaded_pgx()
         pgx$collection <- "uploaded"
         ## pgx$owner <- "user"
+
+        ## update CurrentPGX
         currentPGX(pgx)
         selectRows(proxy=dataTableProxy(ns("pgxtable")), selected=NULL)
         
@@ -891,7 +922,8 @@ LoadingBoard <- function(input, output, session,
     ## Board return object
     ##------------------------------------------------
     res <- list(
-        inputData = inputData
+        inputData = inputData,
+        auth = auth
         ##inputData = currentPGX,
         ##usermode = reactive({ USERMODE() })
     )

@@ -113,7 +113,7 @@ if(0) {
     load("../data/geiger2016-arginine-test.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
     load("../data/GSE22886-immune.pgx")
-    load("../data/tcga-gtex-n40sva.pgx")
+    load("../data/gtex-aging-n40svaNnm.pgx")
     ngs = pgx.initialize(ngs)
 }
 
@@ -182,7 +182,7 @@ message("[MAIN] total init time = ",main.init_time," ",attr(main.init_time,"unit
 ## --------------------------------------------------------------------
 
 server = function(input, output, session) {
-   
+    
     message("\n========================================================")
     message("===================== SERVER ===========================")
     message("========================================================\n")
@@ -204,12 +204,14 @@ server = function(input, output, session) {
                     "genes" = opt$MAX_GENES,
                     "genesets" = opt$MAX_GENESETS)
     env <- list()  ## communication "environment"
-    env[["load"]]   <- callModule(
+    env[["load"]]  <- callModule(
         LoadingBoard, "load", max.limits = max.limits,
         authentication = AUTHENTICATION, enable_delete = opt$ENABLE_DELETE,
-        enable_save = opt$ENABLE_SAVE,
-        firebase=firebase, firebase2=firebase2)
-
+        enable_save = opt$ENABLE_SAVE, firebase=firebase, firebase2=firebase2)
+    
+    ##auth <- env[["load"]][['auth']]
+    
+    ## load other modules if 
     if(ENABLED["view"])   env[["view"]]   <- callModule( DataViewBoard, "view", env)
     if(ENABLED["clust"])  env[["clust"]]  <- callModule( ClusteringBoard, "clust", env)
     if(ENABLED["expr"])   env[["expr"]]   <- callModule( ExpressionBoard, "expr", env)
