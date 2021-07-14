@@ -58,19 +58,24 @@ UploadModuleUI <- function(id) {
     )
 }
 
-UploadModuleServer <- function(id, height=720, FILES = "../lib", 
-                               max.limits = c(samples=100, comparisons=20,
-                                              genes=20000, genesets=10000)
+UploadModuleServer <- function(id, auth,
+                               height=720, FILES = "../lib", 
+                               max.limits = c(
+                                   samples = 100,
+                                   comparisons = 20,
+                                   genes = 20000,
+                                   genesets = 10000)
                                )
 {
     moduleServer(
         id,
         function(input, output, session) {
 
-            dbg("[UploadModuleServer] called\n")
             ns <- session$ns
             ## ns <- NS(id)
             
+            dbg("[UploadModuleServer] called\n")
+
             ## Some 'global' reactive variables used in this file
             uploaded <- reactiveValues()
 

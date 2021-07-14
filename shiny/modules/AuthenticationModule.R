@@ -36,7 +36,8 @@ NoAuthenticationModule <- function(input, output, session, username=NULL)
     message("[NoAuthenticationModule] >>>> using no authentication <<<<")
     ns <- session$ns    
     USER <- reactiveValues(logged=FALSE, name="", email="",
-                           password=NA, registered=NA, level="")    
+                           password=NA, registered=NA,
+                           level="")    
     USER$name <- username
     
     output$showLogin <- renderUI({
@@ -56,9 +57,10 @@ NoAuthenticationModule <- function(input, output, session, username=NULL)
     })
     
     rt <- list(
-        level  = reactive(USER$level),
         name   = reactive(USER$name),
-        logged = reactive(USER$logged)
+        level  = reactive(USER$level),
+        logged = reactive(USER$logged),
+        limit  = reactive(USER$limit)
     )
     return(rt)
 }
@@ -242,33 +244,36 @@ FirebaseAuthenticationModule <- function(input, output, session,
     })    
     
     rt <- list(
-        level  = reactive(USER$level),
         name   = reactive(USER$name),
-        email  = reactive(USER$email),
-        logged = reactive(USER$logged)
+        level  = reactive(USER$level),
+        ## email  = reactive(USER$email),
+        logged = reactive(USER$logged),
+        limit = reactive(USER$limit)
     )
     return(rt)
 }
+
 
 ##================================================================================
 ## PasswordAuthenticationModule (ask login.name + password)
 ##================================================================================
 
+credentials.file='CREDENTIALS'
 PasswordAuthenticationModule <- function(input, output, session,
                                          credentials.file)
 {
     message("[NoAuthenticationModule] >>>> using local Email+Password authentication <<<<")
 
     ns <- session$ns    
-    USER <- reactiveValues(logged=FALSE, username=NA, password=NA, level=NA)    
-    credentials <- read.csv(credentials.file,colClasses="character")
-    head(credentials)
+    USER <- reactiveValues(logged=FALSE, username=NA, password=NA, level=NA, limit=NA)    
+    CREDENTIALS <- read.csv(credentials.file,colClasses="character")
+    head(CREDENTIALS)
 
     output$showLogin <- renderUI({
         m <- splashLoginModal(
             ns=ns,
-            with.email=FALSE,
-            with.username=TRUE,
+            with.email=TRUE,
+            with.username=FALSE,
             with.password=TRUE)
         ## shinyjs::delay(2000, {output$login_warning <- renderText("")})
         showModal(m)
@@ -276,47 +281,63 @@ PasswordAuthenticationModule <- function(input, output, session,
 
     output$login_warning = renderText("")
 
-    observeEvent( input$login_btn, {           
-
-        cat("name=",input$login_username,"\n")
-        cat("email=",input$login_email,"\n")
-        cat("password=",input$login_password,"\n")
-        cat("Logged=",USER$logged,"\n")
-
+    observeEvent( input$login_btn, {
+        
         login.OK   = FALSE
         valid.date = FALSE
         valid.user = FALSE
         
-        if( is.null(input$login_username) || is.null(input$login_password)) return(NULL)
-        if( input$login_username=="" || input$login_password=="") return(NULL)    
-        username <- input$login_username
-        sel <- tail(which( credentials$username == username),1)
-        valid.user <- isTRUE(username %in% credentials$username)
-        valid.pw   <- isTRUE(credentials[sel,"password"]==input$login_password)
-        valid.date <- isTRUE( Sys.Date() < as.Date(credentials[sel,"expiry"]) )
+        login_username <- input$login_username
+        if(is.null(login_username) || login_username =="") {
+            login_username <- input$login_email
+        }
+        login_password <- input$login_password
+
+        if( is.null(login_username) || is.null(login_password)) return(NULL)
+        if( login_username=="" || login_password=="") return(NULL)            
+        sel <- tail(which( CREDENTIALS$username == login_username),1)       
+        valid.user <- isTRUE(login_username %in% CREDENTIALS$username)
+        valid.pw   <- isTRUE(CREDENTIALS[sel,"password"]==input$login_password)
+        valid.date <- isTRUE(Sys.Date() < as.Date(CREDENTIALS[sel,"expiry"]) )
         login.OK = (valid.user && valid.pw && valid.date)
+        
         message("--------- password login ---------")
-        message("input.username=",input$login_username)
-        message("input.password=",input$login_password)
-        message("user.password=",credentials[sel,"password"])
-        message("user.expiry=",credentials[sel,"expiry"])
-        message("user.name=",credentials[sel,"name"])
-        message("valid.user=",valid.user)
-        message("valid.date=",valid.date)
-        message("valid.pw=",valid.pw)
+        message("input.username = ",input$login_username)
+        message("input.email    = ",input$login_email)
+        message("input.password = ",input$login_password)
+        message("user.password  = ",CREDENTIALS[sel,"password"])
+        message("user.expiry    = ",CREDENTIALS[sel,"expiry"])
+        message("user.name      = ",CREDENTIALS[sel,"username"])
+        message("user.limit     = ",CREDENTIALS[sel,"limit"])
+        message("valid.user     = ",valid.user)
+        message("valid.date     = ",valid.date)
+        message("valid.pw       = ",valid.pw)
         message("----------------------------------")
         
         if (login.OK) {
+
+            message("[PasswordAuthenticationModule::login] PASSED : login OK! ")
+            
             output$login_warning = renderText("")
             removeModal()
             ##USER$name   <- input$login_username
-            ##USER$email <- credentials[sel,"email"]
-            USER$name  <- username
+            ##USER$email <- CREDENTIALS[sel,"email"]
+            cred <- CREDENTIALS[sel,]
+            USER$username  <- cred$username
+            USER$level     <- cred$level
+            USER$limit     <- cred$limit
+            ##USER$expiry    <- cred$expiry
+            ##USER$password  <- cred$password
+            
             ## Here you can perform some user-specific functions, or site news
             showModal(splashHelloModal(USER$name,ns=ns))
             ##removeModal()
             USER$logged <- TRUE            
+
         } else {
+
+            message("[PasswordAuthenticationModule::login] REFUSED : invalid login! ")
+
             if(!valid.date) {
                 output$login_warning = renderText("Registration expired")
             } else {
@@ -329,16 +350,19 @@ PasswordAuthenticationModule <- function(input, output, session,
         ##hide("login_warning")
     })
 
+
+    ## module reactive return value
     rt <- list(
-        level  = reactive(USER$level),
         name   = reactive(USER$username),
-        logged = reactive(USER$logged)
+        level  = reactive(USER$level),
+        logged = reactive(USER$logged),
+        limit  = reactive(USER$limit)        
     )
     return(rt)
 }
 
 ##================================================================================
-## RegisterAuthenticationModule (just ask email)
+## RegisterAuthenticationModule (just ask email, no password)
 ##================================================================================
 
 register.file="../logs/register.log"
@@ -378,7 +402,10 @@ RegisterAuthenticationModule <- function(input, output, session, register.file)
         alt <- actionLink(ns("create_account"),"or create an account",
                           style="color:white;", class="white-link")
         showModal(splashLoginModal(
-            ns=ns, with.password=FALSE, with.username=FALSE,
+            ns=ns,
+            with.password = FALSE,
+            with.username = FALSE,
+            with.email = TRUE,
             alt = alt))
     }
     
@@ -599,24 +626,25 @@ RegisterAuthenticationModule <- function(input, output, session, register.file)
     output$login_warning = renderText("")
     output$register_warning = renderText("")
     res <- list(
-        level  = reactive(USER$level),
         name   = reactive(USER$name),
-        logged = reactive(USER$logged)
+        level  = reactive(USER$level),
+        logged = reactive(USER$logged),
+        limit = reactive(USER$limit)
     )
     return(res)
 }
 
 
 ##================================================================================
-## FullAuthenticationModule (ask login.name + password + CAPTCHA verification)
+## EmailAuthenticationModule (ask login.name + password + CAPTCHA verification)
 ##================================================================================
 
 credentials.file="./CREDENTIALS"
-FullAuthenticationModule.SAVE <- function(input, output, session,
-                                          credentials.file,
-                                          type="splash")
+EmailAuthenticationModule.SAVE <- function(input, output, session,
+                                           credentials.file,
+                                           type="splash")
 {
-    message("[NoAuthenticationModule] >>>> using Full authentication <<<<")
+    message("[NoAuthenticationModule] >>>> using Email authentication <<<<")
 
     ns <- session$ns
     dir.create("../logs",showWarnings=FALSE)            
@@ -768,7 +796,7 @@ FullAuthenticationModule.SAVE <- function(input, output, session,
     
     showDialog <- function(stage, data=NULL)
     {
-        message("[AuthenticationModule::showModalDialog] stage = ",stage)
+        message("[AuthenticationModule::showDialog] stage = ",stage)
         ##removeModal()
 
         output$verify_warning = renderText("")
@@ -1225,7 +1253,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[18]] = c("Ich bin doch nicht blöd!","Of course I use Omics Playground")
     titles[[19]] = c("Non sono mica scemo!","Of course I use Omics Playground")
     ## below from https://www.quotesweekly.com/keep-exploring-quotes/
-    titles[[20]] = c("The Unexplored Plan","When you get into the whole field of exploring, you realize that we live on a relatively unexplored plan. &ndash; E. O. Wilson")
+    titles[[20]] = c("The Unexplored Plan","When you get into exploring, you realize that we live on a relatively unexplored plan. &ndash; E. O. Wilson")
     titles[[21]] = c("Explore More","The more you explore, the more you learn and grow<br>&ndash; Nitesh Nishad")
     titles[[22]] = c("Discover New Oceans","Man cannot discover new oceans unless he has the courage to lose sight of the shore &ndash; Andre Gide")
     titles[[23]] = c("Adventurous Life","Love adventurous life. Be passionately curious about exploring new adventures. &ndash; Lailah Gifty Akita")
@@ -1287,7 +1315,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
         div.email,
         div.password,
         div.alt,
-        br(),br(),
+        br(),
         div.button
     )
     body <- tagList(
@@ -1312,7 +1340,7 @@ particlesSplashModal <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
             actionButton(ns("action1"),"Read-the-docs", icon=icon("book"),
                          onclick="window.open('https://omicsplayground.readthedocs.io','_blank')"),
             actionButton(ns("action2"),"Watch tutorials", icon=icon("youtube"),
-                         onclick="window.open('https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-','_blank')"),
+                         onclick="window.open('https://www.youtube.com/channel/UChGASaLbr63pxmDOeXTQu_A','_blank')"),
             actionButton(ns("action3"),"Get the source", icon=icon("github"),
                          onclick="window.open('https://github.com/bigomics/omicsplayground','_blank')"),
             actionButton(ns("action4"),"Docker image", icon=icon("docker"),
@@ -1342,7 +1370,8 @@ particlesSplashModal <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
             div(id="splash-logo", img(src=base64enc::dataURI(file="www/logo.png"),
                                       width=32,height=32)),
             body,
-            div(id="splash-warning", textOutput(ns("login_warning")),style="color: red;"),
+            br(),
+            div(id="splash-warning",textOutput(ns("login_warning")),style="color:red;"),
             style="height: 500px; width: 100%;"                
         ),
         footer = div.footer,

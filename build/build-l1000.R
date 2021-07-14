@@ -75,7 +75,7 @@ if(0) {
     saveRDS(X1, file="../lib/l1000_es_n20d1011.rds")
     write.csv(X1, file=gzfile("../lib/l1000_es_n20d1011.csv.gz")) 
 
-    saveRDS(X1, file="../lib/l1000_es_n20a1698.rds")
+    saveRDS(X1, file="../lib/l1000_es_n20a1698.rds")  ## a???
     write.csv(X1, file=gzfile("../lib/l1000_es_n20a1698.csv.gz")) 
 
     saveRDS(X1, file="../lib/l1000_es_n15d3479.rds")
