@@ -26,11 +26,10 @@ DataViewUI <- function(id) {
     )
 }
 
-DataViewBoard <- function(input, output, session, env)
+DataViewBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
-    inputData <- env[["load"]][["inputData"]]
-    
+
     rowH = 355  ## row height of panels
     imgH = 315  ## height of images
     fullH = 750 ## full height of panel

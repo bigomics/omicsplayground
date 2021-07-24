@@ -29,7 +29,8 @@ function(input, output, session) {
 	##auth <- env[["load"]][['auth']]
 	
 	## load other modules if 
-	if(ENABLED["view"])   env[["view"]]   <- callModule( DataViewBoard, "view", env)
+	if(ENABLED["view"])   env[["view"]]   <- callModule( DataViewBoard, "view", 
+																											 inputData = env[["load"]][["inputData"]])
 	if(ENABLED["clust"])  env[["clust"]]  <- callModule( ClusteringBoard, "clust", env)
 	if(ENABLED["expr"])   env[["expr"]]   <- callModule( ExpressionBoard, "expr", env)
 	if(ENABLED["enrich"]) env[["enrich"]] <- callModule( EnrichmentBoard, "enrich", env)
