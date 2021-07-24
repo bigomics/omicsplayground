@@ -28,8 +28,6 @@ require(org.Hs.eg.db)
 ## require(Cairo)
 require(dragulaR)
     
-##useShinyjs(rmd=TRUE)  
-useShinyjs()
 ht_global_opt(fast_hclust = TRUE)
 options(shiny.maxRequestSize = 500*1024^2)  ## max 200Mb upload
 

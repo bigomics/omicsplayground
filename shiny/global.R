@@ -26,7 +26,7 @@ message("************************************************")
 message("********* RUNTIME ENVIRONMENT VARIABLES ********")
 message("************************************************")
 
-##Sys.setenv("S HINYPROXY_USERNAME"="Test Person")
+##Sys.setenv("SHINYPROXY_USERNAME"="Test Person")
 main.start_time <- Sys.time()
 
 envcat("SHINYPROXY_USERNAME")
@@ -83,8 +83,7 @@ message("FILESX =",FILESX)
 message("PGX.DIR =",PGX.DIR)
 message("SHINYPROXY = ",SHINYPROXY)
 
-src.local=TRUE  ## local or not-local, that's the question...
-src.local=FALSE ## local or not-local, that's the question...
+src.local <- TRUE
 source(file.path(RDIR,"pgx-include.R"),local=src.local)    ## lots of libraries and source()
 source(file.path(RDIR,"pgx-functions.R"), local=src.local) ## functions...
 source(file.path(RDIR,"pgx-files.R"), local=src.local)     ## file functions
@@ -133,7 +132,7 @@ message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 ## --------------------------------------------------------------------
 
 
-source("app-init.R", local=FALSE)
+source("app-init.R", local=TRUE)
 ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 
@@ -168,10 +167,8 @@ if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
 ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
 DISABLED <- array(BOARDS %in% opt$BOARDS_DISABLED, dimnames=list(BOARDS))
 ENABLED  <- ENABLED & !DISABLED
-ENABLED
 
 boards <- dir("boards", pattern="Board.R$")
-boards
 for(m in boards) {
     message("[MAIN] loading board ",m)
     source(paste0("boards/",m), local=src.local)
@@ -193,16 +190,13 @@ if(1 && DEV && dir.exists("modulesx")) {
     ENABLED[] <- TRUE  ## enable all modules
     boards <- unique(c(boards, xboards))
 }
-ENABLED
 
 ## disable connectivity map if we have no signature database folder
 has.sigdb <- length(dir(FILESX,pattern="sigdb.*h5")>0)
-has.sigdb
 if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
 
 MAINTABS = c("DataView","Clustering","Expression","Enrichment",
              "Signature","CellProfiling","DEV")
 
 main.init_time <- round(Sys.time() - main.start_time,digits=4)
-main.init_time
 message("[MAIN] total init time = ",main.init_time," ",attr(main.init_time,"units"))

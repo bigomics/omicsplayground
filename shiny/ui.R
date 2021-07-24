@@ -158,12 +158,12 @@ createUI <- function(tabs) {
 												 title=title, id=id,
 												 selected=selected,
 												 windowTitle = windowTitle,
-												 header = tagList(header),
-												 footer = tagList(footer),
+												 header = header,
+												 footer = footer,
 												 theme = theme))
 }
 
-tabs = list(
+tabs <- list(
 	"Home" = c("load"),
 	"DataView" = "view",
 	"Clustering" = c("clust","wgcna"),
