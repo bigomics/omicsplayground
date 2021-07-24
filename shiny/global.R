@@ -15,6 +15,8 @@ library(shinyWidgets)
 library(plotly)
 library(shinybusy)
 
+source("utils.R", local = TRUE)
+
 message("\n\n")
 message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
@@ -27,7 +29,6 @@ message("************************************************")
 ##Sys.setenv("S HINYPROXY_USERNAME"="Test Person")
 main.start_time <- Sys.time()
 
-envcat <- function(var) message(var," = ",Sys.getenv(var))
 envcat("SHINYPROXY_USERNAME")
 envcat("SHINYPROXY_USERGROUPS")
 envcat("PLAYGROUND_AUTHENTICATION")
@@ -74,15 +75,6 @@ DEBUG   = TRUE
 SHINYPROXY = (Sys.getenv("SHINYPROXY_USERNAME")!="" && "omicsplayground" %in% dir("/"))
 USERNAME = "anonymous"
 if(SHINYPROXY) USERNAME = Sys.getenv("SHINYPROXY_USERNAME")
-
-## dbg <- function(msg) if(DEBUG) message(cat(msg))
-dbg <- function(...) {
-    if(DEBUG) {
-        msg <- list(...)
-        msg <- paste(sapply(msg, function(s) paste(s,collapse=" ")),collapse=" ")
-        message(msg)
-    }
-}
 
 message("OPG =",OPG)
 message("RDIR =",RDIR)

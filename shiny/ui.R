@@ -1,3 +1,51 @@
+# TODO: this function is not being used
+social_buttons <- function() {
+	div(
+		id="social-buttons",
+		tagList(
+			tipify( tags$a( href="https://omicsplayground.readthedocs.io", icon("book"), target="_blank"),
+							"Read our online documentation at Read-the-docs", placement="top"),
+			tipify( tags$a( href="https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-",
+											icon("youtube"), target="_blank"),
+							"Watch our tutorials on YouTube", placement="top"),
+			tipify( tags$a( href="https://github.com/bigomics/omicsplayground",
+											icon("github"), target="_blank"),
+							"Get the source code or report a bug at GitHub", placement="top"),
+			tipify( tags$a( href="https://hub.docker.com/r/bigomics/omicsplayground",
+											icon("docker"), target="_blank"),
+							"Pull our docker from Docker", placement="top"),
+			tipify( tags$a( href="https://groups.google.com/d/forum/omicsplayground",
+											icon("users"), target="_blank"),
+							"Get help at our user forum", placement="top")            
+		)
+	)
+}
+
+# TODO: this isn't being used
+TAGS.JSSCRIPT =
+	## https://stackoverflow.com/questions/36995142/get-the-size-of-the-window-in-shiny
+	tags$head(tags$script('
+    var dimension = [0, 0];
+    $(document).on("shiny:connected", function(e) {
+        dimension[0] = window.innerWidth;
+        dimension[1] = window.innerHeight;
+        Shiny.onInputChange("dimension", dimension);
+    });
+    $(window).resize(function(e) {
+        dimension[0] = window.innerWidth;
+        dimension[1] = window.innerHeight;
+        Shiny.onInputChange("dimension", dimension);
+    });
+'))
+
+tabView <- function(title, tab.inputs, tab.ui) {
+	tabPanel(title, ## id=title,
+					 sidebarLayout(
+					 	sidebarPanel( width=2, tab.inputs, id="sidebar"),
+					 	mainPanel( width=10, tab.ui)
+					 ))
+}
+
 help.tabs <- navbarMenu(
 	"Help",
 	tabPanel(title=HTML("<a href='https://omicsplayground.readthedocs.io' target='_blank'>Documentation")),
@@ -27,7 +75,7 @@ TABVIEWS <- list(
 	"comp"   = tabView("Compare datasets (beta)", CompareInputs("comp"), CompareUI("comp"))
 )
 
-if(DEV) {
+if (DEV) {
 	TABVIEWS$corsa  = tabView("CORSA (dev)",CorsaInputs("corsa"),CorsaUI("corsa"))
 	TABVIEWS$system = tabView("Systems analysis (dev)",SystemInputs("system"),SystemUI("system"))
 	TABVIEWS$multi  = tabView("Multi-level (dev)", MultiLevelInputs("multi"), MultiLevelUI("multi"))
@@ -39,8 +87,7 @@ names(TABVIEWS)
 
 logout.tab <- tabPanel(title=HTML("<a id='logout' href='/logout'>Logout"))
 
-createUI <- function(tabs)
-{
+createUI <- function(tabs) {
 	message("\n======================================================")
 	message("======================= UI ===========================")
 	message("======================================================\n")
@@ -82,29 +129,19 @@ createUI <- function(tabs)
 	##-------------------------------------
 	## create TAB list
 	##-------------------------------------
-	createNavbarMenu <- function(title, tabs, icon=NULL) {
-		tablist <- TABVIEWS[tabs]
-		names(tablist) <- NULL
-		do.call( navbarMenu, c(tablist, title=title, icon=icon) )
-	}
-	##tablist <- TABVIEWS[tabs]
-	tablist <- list()
-	i=1
-	for(i in 1:length(tabs)) {
-		itab <- tabs[[i]]
-		itab <- itab[which(ENABLED[itab])] ## only enabled
-		if(length(itab)>1) {
-			message("[MAIN] creating menu items for: ",paste(itab,collapse=" "))
-			m <- createNavbarMenu( names(tabs)[i], itab )
-			tablist[[i]] <- m
-		} else if(length(itab)==1) {
-			message("[MAIN] creating menu item for: ",itab)
-			tablist[[i]] <- TABVIEWS[[itab]] 
+	createNavbarItem <- function(title, tabs) {
+		selected_tabs <- tabs[[title]]
+		if (length(selected_tabs) == 1) {
+			TABVIEWS[[selected_tabs]]
 		} else {
-			
+			do.call(navbarMenu, c(unname(TABVIEWS[selected_tabs]), title = title))
 		}
 	}
-	tablist <- tablist[!sapply(tablist,is.null)]
+	
+	viewable_tabs <- lapply(tabs, function(tab) tab[ENABLED[tab]])
+	viewable_tabs <- viewable_tabs[vapply(viewable_tabs, length, numeric(1)) > 0]
+	
+	tablist <- lapply(names(viewable_tabs), createNavbarItem, tabs = viewable_tabs)
 	
 	## add help menu
 	tablist[["helpmenu"]] <- help.tabs
