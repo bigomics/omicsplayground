@@ -107,7 +107,7 @@ createUI <- function(tabs) {
 	)
 	names(header) <- NULL
 	
-	busy.img = sample(dir("www/busy",pattern=".gif$",full.name=TRUE))[1]
+	busy.img = sample(dir("www/busy",pattern=".gif$",full.names=TRUE))[1]
 	busy.img
 	busy.img = "www/busy.gif"
 	footer.gif = tagList(

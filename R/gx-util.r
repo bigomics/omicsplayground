@@ -38,12 +38,12 @@ mat2hugo <- function(x) {
 ##s=symbol    
 alias2hugo.SAVE <- function(s) {
     require(org.Hs.eg.db,quietly=TRUE)
-    ##eg <- sapply(lapply(s, get, env=org.Hs.egALIAS2EG),"[",1)
+    ##eg <- sapply(lapply(s, get, envir=org.Hs.egALIAS2EG),"[",1)
     s.na = which(!is.na(s) & s!="" & s!=" ")
     s1 <- s[s.na]
-    eg <- sapply(mget(s1, env=org.Hs.egALIAS2EG, ifnotfound=NA),"[",1)
+    eg <- sapply(mget(s1, envir=org.Hs.egALIAS2EG, ifnotfound=NA),"[",1)
     eg[is.na(eg)] <- "unknown"
-    symb <- sapply(mget(eg, env=org.Hs.egSYMBOL, ifnotfound=NA),"[",1)
+    symb <- sapply(mget(eg, envir=org.Hs.egSYMBOL, ifnotfound=NA),"[",1)
     jj <- which(is.na(symb))
     if(length(jj)) symb[jj] <- s1[jj]
     symb

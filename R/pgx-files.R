@@ -392,7 +392,7 @@ pgx.initDatasetFolder1 <- function( pgx.dir1,
     allFC <-NULL
     if(!force && file.exists(allfc.file1)) {
         if(verbose) message("[initDatasetFolder1] checking which pgx files already done in allFC...")
-        allFC <- read.csv(allfc.file1,row.names=1,check.names=FALSE,nrow=5)  ## just HEADER!!!
+        allFC <- read.csv(allfc.file1,row.names=1,check.names=FALSE,nrows=5)  ## just HEADER!!!
         dim(allFC)
         files.done <- gsub("\\[|\\].*","",colnames(allFC))
         files.done <- unique(paste0(files.done,".pgx"))
