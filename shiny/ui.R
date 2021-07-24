@@ -24,7 +24,7 @@ social_buttons <- function() {
 # TODO: this isn't being used
 TAGS.JSSCRIPT =
 	## https://stackoverflow.com/questions/36995142/get-the-size-of-the-window-in-shiny
-	tags$head(tags$script('
+	tags$script('
     var dimension = [0, 0];
     $(document).on("shiny:connected", function(e) {
         dimension[0] = window.innerWidth;
@@ -36,7 +36,7 @@ TAGS.JSSCRIPT =
         dimension[1] = window.innerHeight;
         Shiny.onInputChange("dimension", dimension);
     });
-'))
+')
 
 tabView <- function(title, tab.inputs, tab.ui) {
 	tabPanel(title, ## id=title,
@@ -102,12 +102,6 @@ createUI <- function(tabs) {
 	id = "maintabs"
 	##selected = "Home"    
 	header = tagList(
-		tags$head(tags$link(rel = "stylesheet", href = "playground.css")),
-		tags$head(tags$link(rel="shortcut icon", href="favicon.ico")),
-		shinyjs::useShinyjs(),
-		firebase::useFirebase(),
-		TAGS.JSSCRIPT,
-		tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
 		div(textOutput("current_dataset"),class='current-data')
 		##QuestionBoard_UI("qa")
 	)
@@ -154,13 +148,26 @@ createUI <- function(tabs) {
 	##-------------------------------------
 	selected = "Home"    
 	names(tablist) <- NULL
-	do.call( navbarPage, c(tablist,
-												 title=title, id=id,
-												 selected=selected,
-												 windowTitle = windowTitle,
-												 header = header,
-												 footer = footer,
-												 theme = theme))
+	page <- do.call( navbarPage, c(tablist,
+																 title = title,
+																 id = id,
+																 selected = selected,
+																 windowTitle = windowTitle,
+																 header = tagList(header),
+																 footer = tagList(footer),
+																 theme = theme))
+	
+	tagList(
+		page,
+		shinyjs::useShinyjs(),
+		firebase::useFirebase(),
+		tags$head(
+			tags$link(rel = "stylesheet", href = "playground.css"),
+			tags$link(rel="shortcut icon", href="favicon.ico"),
+			TAGS.JSSCRIPT,
+			tags$script(async=NA, src="https://platform.twitter.com/widgets.js")
+		)
+	)
 }
 
 tabs <- list(
