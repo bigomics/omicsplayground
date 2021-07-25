@@ -89,6 +89,8 @@ if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
 ## copy to global environment
 SHOW_QUESTIONS = FALSE
 AUTHENTICATION = opt$AUTHENTICATION
+USER_MODE      = opt$USER_MODE
+WATERMARK      = opt$WATERMARK
 
 DEV = (DEV && dir.exists("modulesx")) 
 ##DEV = FALSE
