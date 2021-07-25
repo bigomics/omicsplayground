@@ -12,25 +12,30 @@ if(0) {
 }
 
 pgx.clusterGenes <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3),
-                             reduce.pca=50, perplexity=30,
+                             reduce.pca=50, perplexity=30, level='gene',
                              rank.tf=FALSE, center.rows=TRUE, scale.rows=FALSE,
                              X=NULL, umap.pkg="uwot" )
-{
+{    
     if(!is.null(X)) {
         message("using provided X matrix...")
-    } else if(!is.null(pgx$X)) {
-        message("using expression X matrix...")
+    } else if(!is.null(pgx$X) && level=='gene') {
+        message("using expression gene X matrix...")
         X <- pgx$X
+    } else if(!is.null(pgx$gsetX) && level=='geneset') {
+        message("using expression geneset X matrix...")
+        X <- pgx$gsetX
     } else {
-        message("using logCPM(counts)...")        
-        ## X <- log2(1 + pgx$counts)
-        X <- logCPM(pgx$counts, total=NULL)
+        message("WARNING:: could not find matrix X")        
+        return(pgx)
     }    
     dim(X)
     ## X <- limma::normalizeQuantiles(X)  ##??    
-    if(center.rows) X <- X  - rowMeans(X)
-    if(scale.rows)  X <- X / (1e-6+apply(X,1,sd))
-    if(rank.tf) X <- scale(apply(X,2,rank))  ## works nicely
+    if(center.rows)
+        X <- X  - rowMeans(X)
+    if(scale.rows)
+        X <- X / (1e-6+apply(X,1,sd))
+    if(rank.tf)
+        X <- scale(apply(X,2,rank))  ## works nicely
         
     clust <- pgx.clusterBigMatrix(
         t(X), methods = methods,
@@ -58,17 +63,17 @@ pgx.clusterGenes <- function(pgx, methods=c("pca","tsne","umap"), dims=c(2,3),
         }
     }    
     
-    if(0) {
-        X1 = scale(X - rowMeans(X))
-        idx <- pgx.findLouvainClusters(X1, level=1, prefix='c', small.zero=0.01)        
-        table(idx)
-        pgx.scatterPlotXY(clust[[1]], var=idx)
-    }        
-    
-    ## put in slot 'gene cluster'
-    pgx$cluster.genes <- NULL
-    pgx$cluster.genes$pos  <- clust
-    pgx$cluster.genes$index <- clust.index
+   ## put in slot 'gene cluster'
+    if(level=='gene') {
+        pgx$cluster.genes <- NULL
+        pgx$cluster.genes$pos  <- clust
+        pgx$cluster.genes$index <- clust.index
+    }
+    if(level=='geneset') {
+        pgx$cluster.gsets <- NULL
+        pgx$cluster.gsets$pos  <- clust
+        pgx$cluster.gsets$index <- clust.index
+    }
     
     message("[pgx.clusterGenes] done!")    
     pgx
@@ -576,7 +581,7 @@ pgx.clusterMatrix <- function(X, perplexity=30, dims=c(2,3),
     if(!is.null(pos2)) pos <- pos2
     if(!is.null(pos3)) pos <- pos3
     idx <- pgx.findLouvainClusters(pos, level=1, prefix='c', small.zero=0.01)
-
+    
     res <- list(pos2d=pos2, pos3d=pos3, idx=idx)
     return(res)
 }
@@ -592,10 +597,14 @@ pgx.findLouvainClusters.SNN <- function(X, prefix='c', level=1, gamma=1, small.z
     require(igraph)
     library(scran)
     if(level==1) {
-        suppressMessages( suppressWarnings( gr <- scran::buildSNNGraph(t(X), d=50) ))
+        suppressMessages( suppressWarnings(
+            gr <- scran::buildSNNGraph(t(X), d=50)
+        ))
     } else {
         ## finer clusters
-        suppressMessages( suppressWarnings( gr <- scran::buildSNNGraph(t(X), d=50, k=2) )) 
+        suppressMessages( suppressWarnings(
+            gr <- scran::buildSNNGraph(t(X), d=50, k=2)
+        )) 
     }
 
     idx <- igraph::cluster_louvain(gr)$membership

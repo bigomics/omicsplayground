@@ -204,6 +204,7 @@ WgcnaBoard <- function(input, output, session, env)
             return( ngs$wgcna )
         }
                 
+        pgx.showSmallModal("Calculating WGCNA...<br>please wait")        
         progress <- shiny::Progress$new()
         on.exit(progress$close())    
         progress$set(message = "Calculating WGCNA...", value = 0)
@@ -290,20 +291,14 @@ WgcnaBoard <- function(input, output, session, env)
             ##pos <- Rtsne::Rtsne(X1)$Y
 
             ##dissTOM <- 1 - abs(cor(datExpr))**6
-            dissTOM  <- 1 - TOMsimilarityFromExpr(datExpr, power=power)
+            dissTOM  <- 1 - WGCNA::TOMsimilarityFromExpr(datExpr, power=power)
             rownames(dissTOM) <- colnames(dissTOM) <- colnames(datExpr)            
             clust <- pgx.clusterBigMatrix(dissTOM, methods=c("umap","tsne","pca"), dims=c(2))
             ##pos <- pgx.clusterBigMatrix(t(X1), methods="tsne", dims=2)[[1]]
             ##pos <- pgx.clusterBigMatrix(dissTOM, methods="pca", dims=2)[[1]]
             names(clust)
-            if(0) {
-                par(mfrow=c(2,2))
-                me1 <- paste0("ME",net$colors)
-                pgx.scatterPlotXY.BASE(clust[["umap2d"]], var=me1, col=me.colors)
-                pgx.scatterPlotXY(clust[["umap2d"]], var=me1, col=me.colors)
-                pgx.scatterPlotXY(clust[["tsne2d"]], var=me1, col=me.colors)
-                pgx.scatterPlotXY(clust[["umap3d"]], var=me1, col=me.colors)
-                ##WGCNA::TOMplot(dissTOM, net$dendrograms[[1]], net$colors)
+            if("cluster.genes" %in% names(ngs)) {
+                clust[['umap2d']] <- ngs$cluster.genes$pos[['umap2d']]
             }
             progress$inc(0.2)                    
 
@@ -347,9 +342,11 @@ WgcnaBoard <- function(input, output, session, env)
         )
 
         updateSelectInput(session, "selected_module", choices = names(me.genes), sel="ME1" )
-
+        
         message("[wgcna.compute] >>> done!")
-
+        beepr::beep(2)  ## short beep
+        removeModal()
+        
         out
     })
 

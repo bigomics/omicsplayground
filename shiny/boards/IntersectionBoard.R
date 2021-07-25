@@ -19,8 +19,9 @@ IntersectionUI <- function(id) {
         height = 750,
         tabsetPanel(
             id = ns("tabs1"),
-            tabPanel("Scatter plot",uiOutput(ns("scatterPlotMatrix_UI"))),
+            tabPanel("Pairwise scatter",uiOutput(ns("scatterPlotMatrix_UI"))),
             tabPanel("Signature clustering",uiOutput(ns("ctClustering_UI")))
+            ## tabPanel("Signature UMAP",uiOutput(ns("ctUMAP_UI")))
         )
     )
     
@@ -29,18 +30,16 @@ IntersectionUI <- function(id) {
 IntersectionBoard <- function(input, output, session, env)
 {
     ns <- session$ns ## NAMESPACE
-    fullH = 750       # row height of panel 
+    fullH = 800       # row height of panel 
     
     ## reactive functions from shared environment
     inputData <- env[["load"]][["inputData"]]
     selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
     selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     
-    description = "<b>Intersection analysis</b>. Compare experiments by intersecting
-their signature genes. The main goal is to identify contrasts showing
-similar profiles. Find genes that are commonly up/down regulated
-between two contrasts."
-    output$description <- renderUI(HTML(description))
+    description =
+"<h3>Compare signatures</h3>Find genes that are commonly up/down regulated between two or more signatures. Compute similarity between contrasts."
+output$description <- renderUI(HTML(description))
 
     infotext =
         "The <strong>Intersection analysis module</strong> enables users to compare multiple contrasts by intersecting the genes of profiles. The main goal is to identify contrasts showing similar profiles.
@@ -83,15 +82,6 @@ between two contrasts."
                 )
             )
         )
-        if(DEV) {
-            uix <- tagList(
-                hr(),
-                h5("Developer options:"),
-                radioButtons(ns('featuretype'),'Feature type:',
-                             choices=c("logFC","logCPM"), inline=TRUE)
-            )
-            ui <- c(ui, uix)
-        }
         ui
     })
     outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
@@ -155,15 +145,6 @@ between two contrasts."
     ##     }
     ## })
     
-    observeEvent(input$comparisons, {
-        cmp <- input$comparisons
-        if(is.null(cmp)) return(NULL)
-        dt.labels = LETTERS[1:length(cmp)]
-        updateCheckboxGroupInput(
-            session, "intersection", choices=dt.labels,
-            ## selected=dt.labels,
-            inline=TRUE )    
-    })
     
     ##================================================================================
     ##========================= REACTIVE FUNCTIONS ===================================
@@ -278,59 +259,17 @@ between two contrasts."
         return(res)
     })
     
-    getCPMMatrix <- reactive({
-        ## 
-        ## Get full foldchange matrix from ngs object.
-        ##
-        ##
-        ##
-        ##dbg("[IntersectionBoard::getCPMMatrix] reacted\n")
-
-        ngs <- inputData()
-        req(ngs)
-        
-        if(input$level=="geneset") {
-            grp <- ngs$samples$group
-            mx = tapply(colnames(ngs$gsetX), grp, function(k) rowMeans(ngs$gsetX[,k,drop=FALSE]))
-            mx = do.call(cbind, mx)
-            mx0 = mx
-            gsets = rownames(mx)
-            if(input$filter != "<all>") {
-                gsets = unique(unlist(COLLECTIONS[input$filter]))
-            }
-            gsets = intersect(gsets, rownames(mx))
-            mx = mx[gsets,,drop=FALSE]
-        } else {
-            grp <- ngs$samples$group
-            mx = tapply(colnames(ngs$X), grp, function(k) rowMeans(ngs$X[,k,drop=FALSE]))
-            mx = do.call(cbind, mx)
-            mx0 = mx
-            sel.probes = rownames(mx) ## default to all probes
-            if(input$filter == "<custom>") {
-                genes = strsplit( input$customlist, split="[, ;]")[[1]]
-                if(length(genes)>0) {
-                    sel.probes = filterProbes(ngs$genes, genes)
-                }
-            } else if(input$filter %in% names(GSETS)) {
-                sel.probes = filterProbes(ngs$genes, GSETS[[input$filter]])
-            }
-            sel.probes = intersect(sel.probes, rownames(mx))
-            mx = mx[sel.probes,,drop=FALSE]
-        }    
-        mx <- mx[,!duplicated(colnames(mx)),drop=FALSE]
-        res = list(mx=mx, mx.full=mx0)
-        return(res) 
-    })
     
     getSignificanceCalls <- reactive({
         ## Gets the matrix of significance calls.
         ##
         ngs <- inputData()
 
-        sel = names(ngs$gset.meta$meta)
+        sel = head(names(ngs$gset.meta$meta),7)
         sel = input_comparisons()
         sel = intersect(sel, names(ngs$gset.meta$meta))
         if(length(sel)==0) return(NULL)        
+
         res <- getFoldChangeMatrix()    
         fc <- res$fc[,sel,drop=FALSE]
         qv <- res$qv[,sel,drop=FALSE]
@@ -346,6 +285,18 @@ between two contrasts."
         venn.intersection = apply( 1*(dt!=0), 1, function(x)
             paste(dt.labels[which(x==1)],collapse=""))
         dt = data.frame( intersection=venn.intersection, dt, check.names=FALSE )
+
+        ## update filter
+        choices <- c("<all>",sort(unique(venn.intersection)))
+        selected <- venn.intersection[which.max(nchar(venn.intersection))]
+        dbg("[getSignificanceCalls] choiced = ",choices)
+        updateSelectInput(
+            session, "venntable_intersection",
+            choices = choices,
+            ##selected = "<all>"
+            selected = selected
+        )
+        
         return(dt)
     })
 
@@ -356,7 +307,7 @@ between two contrasts."
         ## intersection region.
         dt <- getSignificanceCalls()
         req(dt)
-
+        
         isect = input$intersection
         fc0 = getFoldChangeMatrix()$fc  
         if( length(isect) == 0) {
@@ -407,14 +358,97 @@ between two contrasts."
         sel = colnames(dt)[-1]
         kk = match(sel,gsub(" \\(-\\)","",colnames(fc1)))
         fc1 = fc1[,kk,drop=FALSE]
+
+        ## order
+        fc1 <- fc1[order(-rowMeans(fc1)),,drop=FALSE]        
+        fc1 <- round(fc1, digits=3)
+        colnames(fc1) = LETTERS[1:ncol(fc1)]
+        ##fc0 = data.frame(fc0)
         
+        ## add intersection code
+        sel <- match(rownames(fc1),rownames(dt))
+        fc1 <- data.frame(intersection=dt$intersection[sel], fc=fc1)
+        
+        ## filter on user selection
+        vv <- input$venntable_intersection
+        if(vv != "<all>") {
+            sel <- which(fc1$intersection == vv)
+            fc1 <- fc1[sel,,drop=FALSE]
+        }
         return(fc1)
     })
 
-    ##======================================================================    
-    ## Pairs (SPLOM)
-    ##======================================================================
+    
+    getCurrentSig <- reactive({
+        ## Switch between FC profile or NMF vectors
+        ##
+        ##
+        ngs <- inputData()
+        req(ngs)
+        progress <- shiny::Progress$new()
+        on.exit(progress$close())
+        
+        ##------------ UMAP clustering (genes) -----------------
+        dbg("[getCurrentSig] calculating UMAP for genes...")
+        progress$inc(0.33,"calculating UMAP for genes...")
+        if("cluster.genes" %in% names(ngs)) {
+            pos <- ngs$cluster.genes$pos[['umap2d']]
+        } else {
+            X1 <- ngs$X
+            X1 <- (X1 - rowMeans(X1)) / mean(apply(X1,1,sd,na.rm=TRUE))
+            pos <- pgx.clusterBigMatrix(
+                t(X1), methods='umap', dims=2, reduce.sd=-1)[[1]]
+            pos <- pos.compact(pos)
+        }
 
+        ##------------ UMAP clustering (genesets) -----------------
+        dbg("[getCurrentSig] calculating UMAP for genesets...")
+        progress$inc(0.33,"calculating UMAP for genesets...")
+        if("cluster.gsets" %in% names(ngs)) {
+            gsea.pos <- ngs$cluster.gsets$pos[['umap2d']]
+        } else {
+            X2 <- ngs$gsetX
+            X2 <- (X2 - rowMeans(X2)) / mean(apply(X2,1,sd,na.rm=TRUE))
+            gsea.pos <- pgx.clusterBigMatrix(
+                t(X2), methods='umap', dims=2, reduce.sd=-1)[[1]]
+            gsea.pos <- pos.compact(gsea.pos)
+            dim(gsea.pos)
+        }
+
+        ##------------ get signature matrices -----------------
+        F <- pgx.getMetaMatrix(ngs, level='gene')
+        G <- pgx.getMetaMatrix(ngs, level='geneset')
+        ##f.score <- F$fc * -log10(F$qv)
+        ##g.score <- G$fc * -log10(G$qv)
+        f.score <- F$fc * (1 - F$qv)**4  ## q-weighted FC
+        g.score <- G$fc * (1 - G$qv)**4
+        
+        ii <- intersect(rownames(pos),rownames(f.score))            
+        sig  <- f.score[ii,,drop=FALSE]
+        pos  <- pos[ii,]                        
+        ii <- order(-rowMeans(sig))
+        sig <- sig[ii,,drop=FALSE]
+        pos <- pos[ii,]
+        
+        ii <- intersect(rownames(gsea.pos),rownames(g.score))            
+        gsea  <- g.score[ii,,drop=FALSE]
+        gsea.pos  <- gsea.pos[ii,]                        
+        ii <- order(-rowMeans(gsea))
+        gsea <- gsea[ii,,drop=FALSE]
+        gsea.pos <- gsea.pos[ii,]
+        
+        out <- list(sig=sig, pos=pos, gsea=gsea, gsea.pos=gsea.pos)
+
+        dbg("[getCurrentSig] done")                        
+        progress$close()
+        out
+    })
+
+    
+    ##======================================================================
+    ## PLOTTING MODULES
+    ##======================================================================
+    
     ##======================================================================
     ## Scatterplot matrix in plotly
     ##
@@ -429,26 +463,11 @@ between two contrasts."
         require(plotly)
         ##require(GGally)
 
-        featuretype = "logFC"
-        if(DEV) {
-            req(input$featuretype)
-            featuretype <- input$featuretype
-        }
-
-        res=NULL
-        if(featuretype=="logCPM") {
-            ##res = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
-            res = getCPMMatrix()
-            ##if(is.null(res)) return(NULL)
-            req(res)    
-            fc0 = res$mx.full
-            fc1 = res$mx
-        } else if(featuretype=="logFC") {
-            ##res = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
-            res = getActiveFoldChangeMatrix()
-            fc0 = res$fc.full
-            fc1 = res$fc
-        }
+        ##res = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
+        res = getActiveFoldChangeMatrix()
+        fc0 = res$fc.full
+        fc1 = res$fc
+        
         dim(fc0)
         if(is.null(res)) return(NULL)
         
@@ -523,7 +542,73 @@ between two contrasts."
                     ticklen=4
                     )
         
-        if(ncol(df)>=3) {
+        if(ncol(df)<=2) {
+
+            ## ----------------------------------------------------
+            ## Single pairs plot
+            ## ----------------------------------------------------
+            
+            rho = cor(df[,1], df[,2])        
+            annot.rho <- list(
+                text = paste("r=",round(rho,4)),
+                font = list(size=14),
+                align = 'left',
+                showarrow = FALSE,
+                xref = 'paper',
+                yref = 'paper',
+                x = 0.03,
+                y = 0.97,
+                borderpad = 8, 
+                bordercolor = 'black',
+                borderwidth = 0.6)
+
+            p <- plot_ly( data=df[,1:2], x = df[,1], y= df[,2],
+                         type = 'scattergl', mode = 'markers',
+                         source='splom', key = rownames(df),
+                         ##type = 'scatter', mode = 'markers',
+                         text = tt,
+                         hovertemplate = paste0("<br>%{text}<br>x: %{x}<br>y: %{y}<extra></extra>"),
+                         marker = list(
+                             color = df.color,
+                             size = 8,
+                             line = list(
+                                 width = 0.3,
+                                 ##color = 'rgb(230,230,230)'
+                                 color = 'rgb(0,0,0)'
+                             ))
+                         ) %>%
+                add_annotations(
+                    x = df[sel1,1],
+                    y = df[sel1,2],
+                    text = as.character(label.text),
+                    ##text = rep("mylabel",length(sel1)),
+                    ##xanchor = 'left',
+                    xanchor = 'center',
+                    yanchor = 'top',
+                    font = list(size=14),
+                    xref = "x",
+                    yref = "y",
+                    showarrow = FALSE,
+                    ax = 20,
+                    ay = -40
+                ) %>%
+                layout(
+                    ## title= 'Scatterplot',
+                    annotations = annot.rho,
+                    hovermode = 'closest',
+                    dragmode= 'select',
+                    ##plot_bgcolor='rgba(240,240,240, 0.95)',
+                    ## template = "plotly_dark",
+                    xaxis = c(title = paste(colnames(df)[1],"   (logFC)"), axis),
+                    yaxis = c(title = paste(colnames(df)[2],"   (logFC)"), axis)
+                ) 
+            
+        } else  {
+
+            ## ----------------------------------------------------
+            ## Scatter pairs matrix plot
+            ## ----------------------------------------------------
+
             dimensions = lapply(colnames(df), function(a) list(label=a, values = df[,a]))
 
             ## compute correlations 
@@ -581,64 +666,8 @@ between two contrasts."
                 )
             ## %>% style(diagonal = list(visible = F))
 
-        } else {
-
-            rho = cor(df[,1], df[,2])        
-            annot.rho <- list(
-                text = paste("r=",round(rho,4)),
-                font = list(size=14),
-                align = 'left',
-                showarrow = FALSE,
-                xref = 'paper',
-                yref = 'paper',
-                x = 0.03,
-                y = 0.97,
-                borderpad = 8, 
-                bordercolor = 'black',
-                borderwidth = 0.6)
-
-            p <- plot_ly( data=df[,1:2], x = df[,1], y= df[,2],
-                         type = 'scattergl', mode = 'markers',
-                         source='splom', key = rownames(df),
-                         ##type = 'scatter', mode = 'markers',
-                         text = tt,
-                         hovertemplate = paste0("<br>%{text}<br>x: %{x}<br>y: %{y}<extra></extra>"),
-                         marker = list(
-                             color = df.color,
-                             size = 8,
-                             line = list(
-                                 width = 0.3,
-                                 ##color = 'rgb(230,230,230)'
-                                 color = 'rgb(0,0,0)'
-                             ))
-                         ) %>%
-                add_annotations(
-                    x = df[sel1,1],
-                    y = df[sel1,2],
-                    text = as.character(label.text),
-                    ##text = rep("mylabel",length(sel1)),
-                    ##xanchor = 'left',
-                    xanchor = 'center',
-                    yanchor = 'top',
-                    font = list(size=14),
-                    xref = "x",
-                    yref = "y",
-                    showarrow = FALSE,
-                    ax = 20,
-                    ay = -40
-                ) %>%
-                layout(
-                    ## title= 'Scatterplot',
-                    annotations = annot.rho,
-                    hovermode = 'closest',
-                    dragmode= 'select',
-                    ##plot_bgcolor='rgba(240,240,240, 0.95)',
-                    ## template = "plotly_dark",
-                    xaxis = c(title = paste(colnames(df)[1],"   (logFC)"), axis),
-                    yaxis = c(title = paste(colnames(df)[2],"   (logFC)"), axis)
-                ) 
         }
-
+        
         p <- p %>%
             layout(margin = list(80,80,80,80) )  ## l,r,b,t
 
@@ -668,12 +697,13 @@ between two contrasts."
         id = "scatterPlotMatrix", 
         func = scatterPlotMatrix.PLOT,
         plotlib = "plotly",
-        title = "Scatterplot matrix (pairs)", label="a",
+        title = "SCATTERPLOT PAIRS", label="a",
         options = scatterPlotMatrix.opts,
         ## download.fmt = c("pdf","html"),  ## scatterGL does not work for PDF
         ## download.fmt = c("html"),
         pdf.width=8, pdf.height=8,
-        height = c(fullH-80,700), res=95,
+        height = c(740,750), width = c('100%',1000),
+        res=95,
         info.text = scatterPlotMatrix_info,
         ##caption = scatterPlotMatrix_caption,
         add.watermark = WATERMARK
@@ -686,6 +716,7 @@ between two contrasts."
     ##======================================================================
 
     venndiagram.RENDER %<a-% reactive({
+    ## venndiagram.RENDER <- reactive({    
         
         dt = getSignificanceCalls()
         if(is.null(dt) || nrow(dt)==0) return(NULL)
@@ -703,10 +734,16 @@ between two contrasts."
         if(ncol(dt1)==1) {
             frame()
             text(0.5, 0.5, "Error: Venn diagram needs at least two groups")
-        } else if(ncol(dt1)>5) {
+            return(NULL)            
+        } 
+        if(ncol(dt1)>7) {
             frame()
             text(0.5, 0.5, "Error: too many groups for Venn diagram")
-        } else {
+            return(NULL)
+        } 
+
+        p <- NULL
+        if(0) {
             ## dt1 = dt1[,1:min(5,ncol(dt1))]
             limma::vennDiagram(
                        dt1,  main=NULL, cex.main=0.2, cex=1.2, mar=c(0,0,2,0),
@@ -714,11 +751,59 @@ between two contrasts."
                        circle.col=c("turquoise", "salmon","lightgreen","orange") )
             tt = paste(label,"=",colnames(dt)[-1])
             legend("topleft", legend=tt, bty='n', cex=0.9, y.intersp=0.95,
-                   inset=c(0.04,-0.01), xpd=TRUE)
-        }
-        
-    })
+                       inset=c(0.04,-0.01), xpd=TRUE)       
+            
+        } else {
+            require(ggVennDiagram)
+            ##colnames(dt1) <- colnames(dt)[-1]
+            
+            x <- apply(dt1, 2, function(x) rownames(dt1)[which(x!=0)])
+            ##venntable <- ggVennDiagram::process_region_data(Venn(x))
+            xlen <- sapply(x,length) 
+            dbg("[venndiagram.RENDER] list.len = ",xlen)
+            
+            if(length(x)==0 || all(xlen==0)) {
+                frame()
+                text(0.5, 0.5, "Error: no valid genes. Please adjust thresholds.",
+                     col='red')
+                return(NULL)
+            }            
+            
+            p <- ggVennDiagram(
+                x,
+                label = "count",
+                edge_size = 0.4
+            ) +
+                scale_fill_gradient(low="grey90",high = "red") +
+                theme( legend.position = "none", 
+                      plot.margin = unit(c(1,1,1,1)*0.3, "cm"))
+            
+            ## legend
+            tt = paste(label,"=",colnames(dt)[-1])
+            n1  <- ceiling(length(tt)/2)
+            tt1 <- tt[1:n1]
+            tt2 <- tt[(n1+1):length(tt)]
+            if(length(tt2) < length(tt1)) tt2 <- c(tt2,"   ")
+            tt1 <- paste(tt1, collapse='\n')
+            tt2 <- paste(tt2, collapse='\n')            
+            
+            xlim <- ggplot_build(p)$layout$panel_scales_x[[1]]$range$range
+            ylim <- ggplot_build(p)$layout$panel_scales_y[[1]]$range$range
+            x1 = xlim[1] - 0.1*diff(xlim)
+            x2 = xlim[1] + 0.6*diff(xlim)
+            y1 = ylim[2] + 0.12*diff(xlim)
+            
+            p <- p +
+                annotate("text", x = x1, y = y1, hjust="left",
+                         label = tt1, size=4, lineheight=0.83) +
+                annotate("text", x = x2, y = y1, hjust="left",
+                             label = tt2, size=4, lineheight=0.83) +
+                coord_sf(clip="off")
 
+            grid.draw(p)
+        }        
+        ##p
+    })
 
     FDR.VALUES2 <- c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
     venndiagram.opts = tagList(
@@ -727,12 +812,12 @@ between two contrasts."
             flex=c(1,1), ## height=80,       
             tipify( selectInput(ns("fdr"),"FDR", choices=FDR.VALUES2, selected=0.20),
                    "Threshold for false discovery rate",
-                   placement="top", options = list(container = "body")),
+                   placement="right", options = list(container = "body")),
             tipify( selectInput(ns("lfc"),"logFC threshold",
-                                choices=c(0,0.2,0.5,1,2,5),
-                                selected=0.5),
+                                choices = c(0,0.1,0.2,0.5,1,2,5),
+                                selected = 0.2),
                    "Threshold for fold-change (log2 scale)",
-                   placement="top", options = list(container = "body"))
+                   placement="right", options = list(container = "body"))
         ),
         br(),br(),br(),br(),
         radioButtons(ns('include'),'Counting:', choices=c("both","up/down"), inline=TRUE)
@@ -743,7 +828,8 @@ between two contrasts."
         id = "venndiagram", 
         func = venndiagram.RENDER,
         func2 = venndiagram.RENDER,
-        title = "Venn diagram", label="b",
+        ## plotlib = "ggplot",
+        title = "VENN DIAGRAM", label="b",
         ##caption = venntable_buttons,
         info.text = "The Venn diagram visualizes the number of intersecting genes between the profiles. The list of intersecting genes with further details is also reported in an interactive table below, where users can select and remove a particular contrasts from the intersection analysis.",
         options = venndiagram.opts,
@@ -760,22 +846,16 @@ between two contrasts."
         req(ngs)
         
         ## get foldchanges
-        fc0 = getSignificantFoldChangeMatrix()  ## isolate??
-        
+        fc0 = getSignificantFoldChangeMatrix()  ## isolate??        
         if(is.null(fc0) || nrow(fc0)==0) return(NULL)
-        
-        fc0 <- fc0[order(-rowMeans(fc0)),,drop=FALSE]        
-        fc0 = round(fc0, digits=3)
-        colnames(fc0) = paste0("fc.",LETTERS[1:ncol(fc0)])
-        ##fc0 = data.frame(fc0)
-        
+                
         ## add gene name/title
         if(input$level == "gene") {
             gene = as.character(ngs$genes[rownames(fc0),"gene_name"])
             gene.tt = substring( GENE.TITLE[gene],1,50)
             gene.tt = as.character(gene.tt)
             ##fc0 = data.frame( name=name, title=gene.tt, fc0)
-            fc0 = data.frame( name=gene, fc0, check.names=FALSE)
+            fc0 = data.frame(name=gene, fc0, check.names=FALSE)
         } else {
             name = substring(rownames(fc0),1,50)
             name[is.na(name)] = "NA"
@@ -783,6 +863,7 @@ between two contrasts."
         }
         
         df = data.frame( fc0, check.names=FALSE)
+        nsc = setdiff(1:ncol(df),2)
         ##dt <- dt[rownames(fc0),]    
         ##D <- cbind(intersection=dt$intersection, D)
         DT::datatable(df,
@@ -791,9 +872,11 @@ between two contrasts."
                       extensions = c('Scroller'), selection='none',
                       fillContainer = TRUE,
                       options=list(
-                          dom = 'lfrtip',
-                          ##buttons = c('copy','csv','pdf'),
-                          ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                          ##dom = 'lfrtip',
+                          dom = 'tip',                          
+                          ## buttons = c('copy','csv','pdf'),
+                          ## pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                          ## columnDefs = list(list(targets=nsc, searchable = FALSE)),
                           scrollX = TRUE, 
                           ##scrollY = 150,
                           scrollY = '70vh',
@@ -807,206 +890,30 @@ between two contrasts."
     venntable_buttons <- inputPanel(
         div(checkboxGroupInput(
             ns('intersection'), NULL,
-            choices=c("A","B","C"), ## selected=c("A","B","C"),
+            choices = c("A","B","C"), ## selected=c("A","B","C"),
             inline=TRUE ),
             style="font-size:0.85em; margin-top:-10px;")
     )
 
+    venntable_opts <- tagList(
+        selectInput(ns('venntable_intersection'),'Filter intersection:', choices=NULL)        
+    )
+    
     callModule(
         tableModule,
         id = "venntable", 
         func = venntable.RENDER,
         ##caption = venntable_buttons,
-        title = "Intersecting genes",
+        options = venntable_opts,
+        title = "INTERSECTION",
         label = "c",
-        info.text = "Table of intersecting genes", 
-        info.width = "500px",
-        height = c(200,750),
+        info.text = "Table of genes in selected intersection.", 
+        ## info.width = "400px",
+        height = c(260,750),
         width = c('auto',1200)
     )
-
-    ##================================================================================
-    ## Cumuative FC
-    ##================================================================================
     
-    plotCumFC <- function(fc, level, NTOP, legend)
-    {
-
-        fc[is.na(fc)] <- 0
-        fc <- fc[order(-rowMeans(fc**2,na.rm=TRUE)),,drop=FALSE]
-        
-        ## add some empty rows (keeps barplot bar-widths equal)
-        fc.na <- matrix(0,nrow=100,ncol=ncol(fc))
-        fc <- rbind(fc,fc.na)
-        col1 = grey.colors(ncol(fc),start=0.15)
-        if(ncol(fc)==1) col1 <- 'grey40'
-
-        if(level=="geneset") {
-            fc.top <- head(fc,NTOP)
-            fc.top <- fc.top[order(rowMeans(fc.top,na.rm=TRUE)),,drop=FALSE]            
-            rownames(fc.top) <- tolower(rownames(fc.top))
-            rownames(fc.top) <- gsub(".*[:]","",rownames(fc.top))
-            ## rownames(fc.top) <- gsub("[ ]*\\(.*","",rownames(fc.top))
-
-            fc.top <- head(fc,NTOP)
-            fc.top <- fc.top[order(-rowMeans(fc.top,na.rm=TRUE)),,drop=FALSE]            
-            par(mar=c(8,4,2,2))
-            par(mfrow=c(1,1), mar=c(14,4,0,0.5), mgp=c(2.4,1,0), oma=c(0,0,0,0))
-            ##barplot(t(fc.top), las=3, cex.names=0.81, col=col1,
-            ##        ylim=ylim, ylab="cumulative logFC")
-            pgx.stackedBarplot(fc.top, col=col1,
-                                   cex.names=0.001, cex.text=0.72, srt=55,
-                               ## ylim=ylim,
-                                   ylab="cumulative logFC")
-            if(legend) {
-                legend("topright", legend=colnames(fc.top),
-                       fill = col1, cex=0.75, y.intersp=0.78,
-                       inset=c(0.04,0) )
-            }
-        } else {
-            ##NTOP = 40
-            fc.top <- head(fc,NTOP)
-            fc.top <- fc.top[order(-rowMeans(fc.top,na.rm=TRUE)),,drop=FALSE]            
-            par(mar=c(8,4,2,2))
-            par(mfrow=c(1,1), mar=c(9,4,1,0), mgp=c(2.4,1,0), oma=c(0,0,0,0))
-            ##barplot(t(fc.top), las=3, cex.names=0.81, col=col1,
-            ##        ylim=ylim, ylab="cumulative logFC")
-            pgx.stackedBarplot(fc.top, cex.names=0.77, col=col1, srt=NULL,
-                               ## ylim=ylim,
-                               ylab="cumulative logFC")        
-            if(legend) {
-                legend("topright", legend=colnames(fc.top),
-                       fill = col1, cex=0.75, y.intersp=0.78,
-                       inset=c(0.04,0) )
-            }
-        }
-
-    }
     
-    cumFCplot.RENDER %<a-% reactive({
-        ngs <- inputData()
-        sel = names(ngs$gx.meta$meta)
-        req(input$comparisons)
-        sel = input_comparisons()
-        if(is.null(sel) || length(sel)==0 || sel[1]=="") return(NULL)
-        sel = intersect(sel, names(ngs$gx.meta$meta))
-        
-        ##fc = sapply(ngs$gx.meta$meta[1:3], function(x) x$meta.fx)
-        ##rownames(fc) <- rownames(ngs$gx.meta$meta[[1]])    
-        fc = getSignificantFoldChangeMatrix()  ## isolate??xs
-        fc <- fc[,sel,drop=FALSE]
-        if(input$cumFC_abs) {
-            fc <- abs(fc)  
-        }
-        level <- input$level
-        legend <- input$cumFC_legend
-        n <- ifelse(level=="geneset", 24, 40)
-        n = 60
-        plotCumFC(fc, level=level, NTOP=n, legend=legend)        
-    })
-
-    cumFCplot.RENDER2 %<a-% reactive({
-        ngs <- inputData()
-        sel = names(ngs$gx.meta$meta)
-        req(input$comparisons)
-        sel = input_comparisons()
-        if(is.null(sel) || length(sel)==0 || sel[1]=="") return(NULL)
-        sel = intersect(sel, names(ngs$gx.meta$meta))        
-        ##fc = sapply(ngs$gx.meta$meta[1:3], function(x) x$meta.fx)
-        ##rownames(fc) <- rownames(ngs$gx.meta$meta[[1]])    
-        fc = getSignificantFoldChangeMatrix()  ## isolate??xs
-        fc <- fc[,sel,drop=FALSE]
-        if(input$cumFC_abs) {
-            fc <- abs(fc)  
-        }
-        level <- input$level
-        legend <- input$cumFC_legend
-        n <- ifelse(level=="geneset", 30, 70)
-        n=60
-        plotCumFC(fc, level=level, NTOP=n, legend=legend)        
-    })
-
-    cumFCplot.opts = tagList(
-        checkboxInput(ns('cumFC_abs'),'Absolute foldchange',FALSE),
-        checkboxInput(ns('cumFC_legend'),'Show legend',TRUE)
-    )
-
-    callModule(
-        plotModule,
-        id = "cumFCplot", label="c",
-        func = cumFCplot.RENDER,
-        func2 = cumFCplot.RENDER2,
-        csvFunc = getSignificantFoldChangeMatrix,
-        download.fmt = c("pdf","png"),
-        ##caption = venntable_buttons,
-        title = "CUMULATIVE FOLD-CHANGE", 
-        info.text = "<b>Cumulative fold-change barplot.</b> Cumulative fold-change of common genes between the profiles. Genes that are consistently up (or down) in multiple comparisons show higher cumulative fold-change and are indicative to be shared biomarkers.",
-        options = cumFCplot.opts,
-        pdf.width = 8, pdf.height = 6,
-        height = c(0.45*fullH,600),
-        width = c('auto',1200),
-        res=c(75,110),
-        add.watermark = WATERMARK
-    )
-    
-    ##=============================================================================
-    ## FOLDCHANGE HEATMAP
-    ##=============================================================================
-    
-    FCheatmap.RENDER %<a-% reactive({
-        ##
-        ##
-        ngs <- inputData()
-        if(input$FCheatmap_allfc) {
-            F <- getFoldChangeMatrix()$fc
-        } else {
-            F <- getActiveFoldChangeMatrix()$fc
-        }
-        ##sig.F <- getSignificantFoldChangeMatrix()  ## isolate??xs
-        F <- F[order(-rowMeans(F**2)),]
-
-        if(input$cumFC_abs) {
-            F <- abs(F)  
-        }
-        F1 <- head(F,60)
-
-        par(mfrow=c(1,1), mar=c(0,0,0,0), oma=c(0,0,0,0))
-        ##gx.heatmap(t(F1), keysize=0.85, mar=c(6,30))
-        gx.splitmap(t(F1), mar=c(8,12), split=1,
-                    ##cluster_columns = FALSE,
-                    cluster_columns = TRUE,
-                    cluster_rows = TRUE,
-                    rowlab.maxlen = 80,
-                    key.offset = c(0.90, 0.2),
-                    cexRow=0.9, cexCol=0.75)
-
-    })
-    
-    FCheatmap.opts = tagList(
-        tipify( checkboxInput(ns('FCheatmap_allfc'), "show all contrasts", TRUE),
-               "Show all contrasts or just the selected ones."),
-    )
-    
-    FCheatmap_info = "<b>The Connectivity Heatmap</b> shows the most similar profiles as a heatmap. Contrasts that are similar will be clustered close together."
-
-    FCheatmap_caption = "<b>Connectivity Heatmap.</b> Similarity of the contrasts profiles as a heatmap. Contrasts that are similar will be clustered close together."
-    
-    callModule(
-        plotModule,
-        "FCheatmap", label = "b",
-        func = FCheatmap.RENDER,
-        func2 = FCheatmap.RENDER, 
-        ## plotlib="ggplot",
-        options = FCheatmap.opts,
-        title = "FOLDCHANGE HEATMAP",
-        info.text = FCheatmap_info,
-        ##caption = FCheatmap_caption,
-        pdf.width=14, pdf.height=5.5,
-        height = c(400,700), width = c('auto',1400),
-        res = c(90,110),
-        add.watermark = WATERMARK
-    )
-
     ##================================================================================
     ## Single-pair scatter plot
     ##================================================================================
@@ -1203,8 +1110,84 @@ between two contrasts."
         ##caption = pairsPlot_caption,
         add.watermark = WATERMARK
     )
+        
+    ##=============================================================================
+    ## FOLDCHANGE HEATMAP
+    ##=============================================================================
     
+    FoldchangeHeatmap.RENDER %<a-% reactive({
+        ##
+        ##
+        ngs <- inputData()
+        if(input$FoldchangeHeatmap_allfc) {
+            F <- getFoldChangeMatrix()$fc
+        } else {
+            F <- getActiveFoldChangeMatrix()$fc
+        }
+        ##sig.F <- getSignificantFoldChangeMatrix()  ## isolate??xs
+        F <- F[order(-rowMeans(F**2)),]
+        F <- F[order(-abs(rowMeans(F))),]
+
+        ##if(input$cumEnrichment_abs) {
+        ##    F <- abs(F)  
+        ## }
+        F1 <- head(F,80)
+        F1 <- F1[order(rowMeans(F1)),]
+        bh=5;mh=6;bm=4;cclust = TRUE
+        mh = min( max(ncol(F1)*0.35, 0.8), 8)
+        cclust = input$FoldchangeHeatmap_cluster
+        if(input$level=='geneset') {
+            bh = 3
+            ## mh = min(max(ncol(F1)*0.35, 0.8), 8)
+        }
+        bm = 10 - mh  ## bottom margin
+        at <- input$FoldchangeHeatmap_annotype
+        
+        par(mfrow=c(1,1), mar=c(0,0,0,0), oma=c(0,0,0,0))
+        plt <- grid::grid.grabExpr({
+            frame()
+            heatmapWithAnnot(
+                F1, anno.type=at,
+                bar.height=bh, map.height=mh,
+                mar = c(bm,0.5,0.5,1),
+                cluster_columns = cclust,
+                ##column_dend_height = unit(10,"mm"),
+                inset = c(0.01,0.01))            
+        })
+        grid.draw(plt)
+        ## plt
+    })
     
+    FoldchangeHeatmap.opts = tagList(
+        tipify( checkboxInput(ns('FoldchangeHeatmap_allfc'), "show all contrasts", TRUE),
+               "Show all contrasts or just the selected ones."),
+        tipify( checkboxInput(ns('FoldchangeHeatmap_cluster'), "cluster genes", FALSE),
+               "Cluster genes (columns)."),
+        tipify( radioButtons(ns('FoldchangeHeatmap_annotype'), "annotation type",
+                             c("boxplot","barplot"), inline=TRUE),
+               "Plot type of column annotation.")
+        )
+    
+    FoldchangeHeatmap_info = "<b>The Connectivity Heatmap</b> shows the most similar profiles as a heatmap. Contrasts that are similar will be clustered close together."
+
+    FoldchangeHeatmap_caption = "<b>Connectivity Heatmap.</b> Similarity of the contrasts profiles as a heatmap. Contrasts that are similar will be clustered close together."
+    
+    callModule(
+        plotModule,
+        "FoldchangeHeatmap", label = "a",
+        func = FoldchangeHeatmap.RENDER,
+        func2 = FoldchangeHeatmap.RENDER, 
+        ## plotlib="ggplot",
+        options = FoldchangeHeatmap.opts,
+        title = "FOLDCHANGE HEATMAP",
+        info.text = FoldchangeHeatmap_info,
+        ##caption = FoldchangeHeatmap_caption,
+        pdf.width=14, pdf.height=5.5,
+        height = c(750,750), width = c('auto',1600),
+        res = c(90,110),
+        add.watermark = WATERMARK
+    )
+
     ##================================================================================
     ## Contrast corrplot 
     ##================================================================================
@@ -1272,7 +1255,7 @@ between two contrasts."
         require(corrplot)
         corrplot(R, method = "circle", order="hclust",
                  is.corr = FALSE,
-                 cl.lim = c(-1,1)*max(abs(R),na.rm=TRUE),
+                 cl.lim = c(-1.02,1.02)*max(abs(R),na.rm=TRUE),
                  col = rev(col2(50)),
                  ## mar = c(1,0.2,0.2,1)*0.2*mean(mar1),
                  mar = c(0,0,0,0),                 
@@ -1357,7 +1340,7 @@ between two contrasts."
         
     callModule(
         plotModule,
-        id = "ctcorrplot",  label="c",
+        id = "ctcorrplot",  label="b",
         func = ctcorrplot.PLOT, plotlib="base",
         func2 = ctcorrplot.PLOT,
         title = "CONTRAST CORRELATION",
@@ -1366,174 +1349,416 @@ between two contrasts."
         options = ctcorrplot.opts,
         download.fmt = c("pdf","html"),
         pdf.width = 11, pdf.height = 10,
-        height = c(fullH-50,720), width = c("auto",1100),
+        height = c(550,720), width = c("auto",1100),
         res=c(80,85),
         add.watermark = WATERMARK
     )
     
     ##================================================================================
-    ## CONNECTIVITY MAP
+    ## Gene/geneset UMAP plots
     ##================================================================================
-    
-    ##ntop=1000;nb=100
-    getNeighbourhoodFoldChangeMatrix <- reactive({
 
-        ngs <- inputData()
-        ##res = pgx.getMetaFoldChangeMatrix(ngs, what="trend.limma")
-        res = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
-        ##fc0 = sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
-        fc0 <- res$fc
-        rownames(fc0) <- toupper(gsub(".*:","",rownames(fc0)))
-
-        ## normalize???
-        fc0 <- scale(fc0, center=TRUE)
-
-        ## set missing values are set to nearly zero
-        fc0[is.na(fc0)] <- 1e-4 * rnorm(sum(is.na(fc0)))
-
-        ngenes = 200
-        ngenes = as.integer(input$topgenes)
-        fc0 = head(fc0[order(-apply(fc0,1,sd,na.rm=TRUE)),,drop=FALSE],ngenes)
+    ctGeneUMAP.RENDER %<a-% reactive({
         
-        ## --------- compute correlation distance 
-        fc0 <- apply(fc0,2,rank,na.last="keep")  ## rank correlation??
-        rho <- cor(fc0, use="pairwise")
-
-        res <- list(fc=fc0, rho=rho)
-        return(res)
-    })
-
-    connectivitymap.RENDER <- reactive({
-
-        ngs <- inputData()
-        req(ngs)
+        dbg("[ctGeneUMAP.RENDER] reacted!")
+        out <- getCurrentSig()
+        pos <- out$pos
         
-        ## get the fold-changes of selected comparison and neighbourhood
-        res <- getNeighbourhoodFoldChangeMatrix()
-        fc  <- res$fc
-        fc[is.na(fc)] <- 0
+        W <- out$sig
+        sel0 <- input_comparisons()
+        req(sel0)
+        if(!all(sel0 %in% colnames(W))) return(NULL)
+        W <- W[,sel0,drop=FALSE]        
+        dim(W)
 
-        ##validate(need(NCOL(fc)>=2, "warning. need multiple comparisons."))
-        if(NCOL(fc)<2) return(NULL)        
+        sel1=sel2=1
+        sel1 <- ctGeneTable_module$rows_selected()
+        sel2 <- ctGseaTable_module$rows_selected()
+
+        dbg("[ctGeneUMAP.RENDER] 1: ")
         
-        add.negative=FALSE
-        ##add.negative <- ("add negative" %in% input$fc_cmap_options)
-        if(add.negative) {
-            comparisons=1
-            comparisons = input_comparisons()
-            if(is.null(comparisons)) return(NULL)
-            ## add NEGATIVE phenotype node
-            kk <- which(colnames(fc) %in% comparisons)
-            neg.fc <- -fc[,kk]
-            colnames(neg.fc) <- paste0("NEG:",colnames(neg.fc))
-            fc <- cbind(fc, neg.fc)
-            ##k <- which(rownames(pos)==comparison)
-            ##rho <- cor(fc[,], fc[,k])[,1]  ## correlation to QUERY node
+        is.single = (NCOL(W)==1)
+        hilight = NULL
+        hilight2 = NULL
+        cexlab = 1.2
+        cex = ifelse(ncol(W)>9, 0.5, 0.8)
+        gset = NULL
+        
+        if(length(sel1)>0) {
+            df <- getGeneTable()
+            sel.gene = rownames(df)[1]            
+            sel.gene = rownames(df)[sel1]
+            hilight2 = sel.gene
+            hilight = c(hilight,sel.gene)
+            cexlab = 1.8
         }
-        
-        ## -------- compute t-SNE
-        if(input$cmapclust=="tsne") {
-            require(Rtsne)
-            perplexity <- pmax(min(ncol(fc)/5,30),2)
-            perplexity
-            sfc <- scale(fc)
-            if(ncol(sfc)<=6) sfc <- cbind(sfc,sfc,sfc,sfc)
-            sfc <- sfc + 1e-2*matrix(rnorm(length(sfc)),nrow(sfc),ncol(sfc))
-            pos <- Rtsne( t(sfc), is_distance=FALSE, check_duplicates=FALSE,
-                         ## pca = TRUE, partial_pca = TRUE,
-                         perplexity=perplexity, num_threads=4)$Y
-            pos <- pos[1:ncol(fc),]
-            xlab="tSNE-x"
-            ylab="tSNE-y"
-        } else if(input$cmapclust=="umap") {
-            sfc <- scale(fc)
-            if(ncol(sfc)<=6) sfc <- cbind(sfc,sfc,sfc,sfc)
-            sfc <- sfc + 1e-2*matrix(rnorm(length(sfc)),nrow(sfc),ncol(sfc))
-            pos <- pgx.clusterBigMatrix(sfc, dims=2, methods='umap')[[1]]
-            pos <- pos[1:ncol(fc),]
-            xlab="UMAP-x"
-            ylab="UMAP-y"
-        } else {
-            require(irlba)
-            sfc <- scale(fc)
-            if(ncol(sfc)<=3) sfc <- cbind(sfc,sfc,sfc)
-            pos <- irlba(sfc, nv=2)$v
-            pos <- pos[1:ncol(fc),]
-            xlab="PC1"
-            ylab="PC2"
+        if(length(sel2)>0) {
+            gse <- out$gsea
+            gset = rownames(gse)[sel2]
+            hilight = c(hilight,GSETS[[gset]])
+            hilight2 = c(hilight2,hilight)
         }
-        rownames(pos) = colnames(fc)
-        dim(pos)
-        pos = scale(pos) ## scale 
-        
-        ## prepare plotting
-        lab <- rownames(pos)
-        ##if(input$fc_cmapshownames) lab <- rownames(pos)
-        ##if(!("show names" %in% input$fc_cmap_options)) lab <- rep("",nrow(pos))
-        jj <- grep("\\]",rownames(pos))
-        grp <- rep("[this_data]",nrow(pos))
-        grp[jj] <- sub("].*","]",rownames(pos)[jj])
-        table(grp)
-        ##rr <- abs(rho)**2
-        ##sign<- c("-","+")[1 + 1*(sign(rho)>0)]
-        ##sign[k] <- "*"
-        ##tt <- paste0(rownames(pos)," (",sign,")")
-        tt <- rownames(pos)
-        stype <- (1 + 1*(grp=="[this_data]"))
-        labels_size <- ifelse( nrow(pos) < 20, 20, 15)
-        labels_size <- ifelse( nrow(pos) > 400, 12, labels_size)
-        labels_size <- 0.7 * labels_size
-        
-        require(scatterD3)
-        scatterD3( pos[,1], pos[,2], transitions=TRUE,
-                  xlab = xlab, ylab = ylab,
-                  legend_width=0, tooltip_text=tt,
-                  lab=lab, labels_size = labels_size, point_opacity = 0.8,
-                  size_var=stype, size_range = c(30,150), size_lab="type",
-                  ## size_var=rr, size_range = c(20,200)*2.2,
-                  ## size_lab="connectivity score",
-                  ## symbol_var=sign, symbol_lab="type",
-                  col_var=grp, col_lab="data set")
 
+        dbg("[ctGeneUMAP.RENDER] 2: length.hilight = ",length(hilight))
+        dbg("[ctGeneUMAP.RENDER] 2: length.hilight2 = ",length(hilight2))
+        
+        no.hilight = (length(hilight)==0)
+        is.nmf <- all(grepl("NMF",colnames(W)))
+        ntop <- as.integer(input$ntop_genes)
+        lab.pos <- NULL
+        
+        ## Spectral NMF vectors
+        nc = ceiling(sqrt(ncol(W)))
+        nr = ceiling(ncol(W)/nc)
+        par(mfrow=c(nr,nc))
+        par(mar=c(2.7,2.8,0.7,0.2), mgp=c(1.4,0.5,0), cex.axis=0.9, cex.lab=0.9)
+        i=1
+        for(i in 1:ncol(W)) {
+
+            dbg("[ctGeneUMAP.RENDER] 3: i = ",i)
+            dbg("[ctGeneUMAP.RENDER] 3: w.name = ",colnames(W)[i])
+
+            jj <- match(rownames(pos), rownames(W))
+            fc = W[jj,i]
+            fc[is.na(fc)] <- 0
+            
+            if(no.hilight) {
+                ## no selected gene or geneset
+                sorted.fc <- sort(fc)
+                hilight = c(head(names(sorted.fc),ntop/2),tail(names(sorted.fc),ntop/2))
+                hilight2 = hilight
+            }
+            sorted.h2 <- hilight2[order(-fc[hilight2]**2)] 
+            ## hilight2 = c(head(sorted.h2,ntop),tail(sorted.h2,ntop))
+            hilight2 = head(sorted.h2,ntop)
+            opacity = ifelse(length(hilight)>0 || length(hilight2)>0, 0.15, 1)
+            zsym <- ifelse(is.nmf,FALSE,TRUE)
+            if(min(fc,na.rm=TRUE)>=0) zsym <- FALSE
+            
+            dbg("[ctGeneUMAP.RENDER] 3: hilight = ",hilight)
+            dbg("[ctGeneUMAP.RENDER] 3: hilight2 = ",hilight2)
+            dbg("[ctGeneUMAP.RENDER] 3: length.hilight = ",length(hilight))
+            dbg("[ctGeneUMAP.RENDER] 3: length.hilight2 = ",length(hilight2))
+            dbg("[ctGeneUMAP.RENDER] 3: length.fc = ",length(fc))
+            
+            plt <- pgx.scatterPlotXY.BASE(
+                pos, var=fc,
+                lab.pos = lab.pos,
+                softmax = 1,
+                zsym = zsym,
+                cex.lab = cexlab,
+                opacity = opacity,
+                cex = cex,
+                cex.legend = 0.9,
+                hilight.cex = 1.3*cex,
+                hilight.col = NULL,
+                hilight.lwd = 0.5,
+                hilight = hilight,
+                hilight2 = hilight2,
+                set.par = FALSE,
+                lab.xpd = FALSE,  ## clip repel
+                dlim = c(0.05,0.05),
+                bty = 'n',
+                xlab = "UMAP-y  (genes)",
+                ylab = "UMAP-y  (genes)",                
+                legend.pos = 'bottomleft'
+            )
+            title(colnames(W)[i], cex.main=1.1, line=-0.5)
+            if(!is.null(gset)) {
+                tt <- substring(tolower(gset),1,80)
+                title(tt, cex.main=0.8, line=-1.3, font.main=1)                
+                lab.pos <- plt$lab.pos
+            }
+        }
+
+        dbg("[ctGeneUMAP.RENDER] done!")
+        
     })
+        
+    ctGeneUMAP_info = "<b>CORSA module analysis.</b> Functional analysis of NMF modules."
 
-    connectivitymap.opts = tagList(
-        ##tipify( selectInput(ns('cmapsets'),"Dataset:", choices=NULL, multiple=TRUE),
-        ##"Select datasets to compare with external contrast profiles."),
-        tipify(radioButtons(ns('cmapclust'),"Layout:",c("tsne","umap","pca"),inline=TRUE),
-               "Choose the plot layout: UMAP, t-SNE or PCA"),
-        tipify(radioButtons(
-            ns('topgenes'),'Top genes:',c(50,200,1000), inline=TRUE,selected=200),
-            "Specify the number of top genes for calculating the distances.")
-        ##checkboxGroupInput('fc_cmap_options',NULL,c('show names','add negative'),
-        ##                   selected=c('show names'),inline=TRUE),
+    ctGeneUMAP_opts = tagList(
+        radioButtons(ns("ntop_genes"),"Gene labels:",
+                     choices = c(0,10,30,100), selected = 10, inline=TRUE)
     )
-
-    connectivitymap_info = "<b>The Connectivity Map (CMap)</b> shows the similarity of the contrasts profiles as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away. For comparison with external signatures, users can select multiple public datasets in the settings under 'Dataset'."
-
-    connectivitymap_caption = "<b>Connectivity Map (CMap).</b> The CMap shows the similarity of the contrasts as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away."
     
     callModule(
-        plotModule,
-        "connectivitymap", label="b",
-        func = connectivitymap.RENDER,
-        plotlib="scatterD3",
-        options = connectivitymap.opts,
-        pdf.width=8, pdf.height=8,
-        height = c(fullH-110), res=90,
-        title = "Connectivity map",
-        info.text = connectivitymap_info,
-        ##caption = connectivitymap_caption,
+        plotModule, 
+        id = "ctGeneUMAP", ##ns=ns,
+        title = "GENE SIGNATURE", label="a",
+        func = ctGeneUMAP.RENDER,
+        func2 = ctGeneUMAP.RENDER, 
+        download.fmt = c("png","pdf"),
+        options = ctGeneUMAP_opts,
+        info.text = ctGeneUMAP_info,        
+        height = c(480, 780), width = c('auto',1200),
+        pdf.height = 8, pdf.width =12, 
+        res = c(75,95),
         add.watermark = WATERMARK
     )
+
+    ##-----------------------------------------------------------------
+    ##----------------------  NMF gsea --------------------------------
+    ##-----------------------------------------------------------------
     
+    ctGseaUMAP.RENDER %<a-% reactive({
+
+        dbg("[ctGseaUMAP.RENDER] reacted")
+        out <- getCurrentSig()
+        gse <- out$gsea
+
+        sel0=1:4
+        sel0 <- input_comparisons()
+        req(sel0)
+        if(!all(sel0 %in% colnames(gse))) return(NULL)        
+        gse <- gse[,sel0,drop=FALSE]        
+        gse0 <- gse
+
+        sel2 <- ctGseaTable_module$rows_selected()
+        gset <- NULL
+        if(length(sel2)>0) {
+            gset <- rownames(gse)[sel2]
+        }
+        
+        ii <- grep("HALLMARK",rownames(gse))
+        ii <- ctGseaTable_module$rows_all()
+        req(ii)
+        gse <- gse[ii,,drop=FALSE]
+
+        ## multiple group layout 
+        gse.scores <- lapply(1:ncol(gse), function(i) gse[,i])
+        names(gse.scores) <- colnames(gse)            
+
+        ## layout
+        ngse <- length(gse.scores)
+        nc = ceiling(sqrt(ngse))
+        nr = ceiling(ngse/nc)
+        cex1 = 1.15
+        if(nc==2 && nr>1) cex1 = 0.9
+        if(nr==1) cex1 = 0.8
+        par(mfrow=c(nr,nc))
+
+        gstype <- input$gstype
+        if(gstype=='bar') {
+            par(oma=c(0,0,0,0))
+            par(mar=c(2.8,2,1.8,3), mgp=c(1.6,0.6,0))            
+            ntop = round(28/nr)
+            ## maximum 24 terms
+            gse.scores <- lapply(gse.scores, function(x)
+                head(sort(x,decreasing=TRUE),ntop))
+            xlim = c(0,max(abs(unlist(gse.scores))))        
+            
+            i=1
+            for(i in 1:ngse) {
+                gsea.barplot(
+                    gse.scores[[i]],
+                    names=names(gse.scores[[i]]),
+                    n = ntop, xlim = xlim,
+                    main='', cex.text=cex1)
+                title(names(gse.scores)[i], cex.main=1.1, line=+0.3)            
+            }
+        } 
+
+        if(gstype=='umap') {
+            par(mar=c(2.7,2.8,0.7,0.2), mgp=c(1.4,0.5,0), cex.axis=0.9, cex.lab=0.9)
+            pos  <- out$gsea.pos
+            ntop <- as.integer(input$ntop_gsets)
+            cex = ifelse(ngse>9, 0.5, 0.8)
+            
+            i=1
+            for(i in 1:length(gse.scores)) {                
+                k <- names(gse.scores)[i]
+                if(ncol(gse)==1) {
+                    var <- gse0[,1]
+                } else {
+                    var <- gse0[,k]
+                }                
+                if(!is.null(gset)) {
+                    hmarks <- gset
+                } else {
+                    var1 <- gse.scores[[i]]
+                    ss <- names(sort(var))
+                    ss <- intersect(ss, names(var1))
+                    hmarks <- c(head(ss,ntop/2),tail(ss,ntop/2))
+                }
+                var <- var[match(rownames(pos),names(var))]                
+                opacity = ifelse(length(hmarks)>0, 0.15, 1)
+                zsym <- ifelse(min(var,na.rm=TRUE)>=0, FALSE, TRUE)
+
+                pgx.scatterPlotXY(
+                    pos, var=var, 
+                    zsym=zsym, set.par=FALSE, softmax=1,
+                    cex=cex, cex.legend = 0.9, cex.lab=1.2, bty='n',
+                    plotlib='base', col='grey70', dlim=c(0.2,0.08),
+                    hilight=hmarks, hilight.col=NULL, opacity=opacity,
+                    xlab = "UMAP-y  (genesets)", ylab="UMAP-y  (genesets)",
+                    hilight.lwd=0.5, hilight.cex=1.3)
+                title(k, cex.main=1.1, line=-0.5)                                
+            }
+        } 
+
+        
+    })
+    
+    ctGseaUMAP.info = "<b>Functional signature.</b> Functional enrichment signatures for selected comparisons are shown as barplots or UMAP plots."
+
+    ctGseaUMAP.opts = tagList(
+        radioButtons(ns("gstype"),"Geneset plot type:",
+                     choices = c('bar','umap'),
+                     selected = 'bar', inline=TRUE),
+        radioButtons(ns("ntop_gsets"),"Geneset labels:",
+                     choices = c(0,6,10,30,100), selected = 6, inline=TRUE)
+    )
+    
+    callModule(
+        plotModule, 
+        id = "ctGseaUMAP", ##ns=ns,
+        title = "FUNCTIONAL SIGNATURE", label="b",
+        func  = ctGseaUMAP.RENDER,
+        func2 = ctGseaUMAP.RENDER, 
+        download.fmt = c("png","pdf"),
+        options = ctGseaUMAP.opts,
+        info.text = ctGseaUMAP.info,        
+        height = c(480, 780), width = c('auto',1200),
+        pdf.height = 8, pdf.width =12,
+        res = c(75,95),
+        add.watermark = WATERMARK
+    )    
+
+    ##-------------------------------------------
+    ##--------------gene table ------------------
+    ##-------------------------------------------
+
+    getGeneTable <- reactive({
+
+        ngs <- inputData()
+        out <- getCurrentSig()        
+
+        W <- out$sig
+        sel0 <- 1:ncol(W)
+        sel0 <- input_comparisons()
+        req(sel0)
+        if(length(sel0)==0) return(NULL)
+        if(!all(sel0 %in% colnames(W))) return(NULL)
+
+        ## only genes
+        W <- W[rownames(W) %in% rownames(ngs$X),,drop=FALSE]
+        W <- W[,sel0,drop=FALSE]
+
+        tt <- NA
+        tt <- GENE.TITLE[rownames(W)]
+        tt <- substring(tt,1,80)
+        df <- data.frame( gene=rownames(W), title = tt, W, check.names=FALSE)
+        sel1 <- ctGseaTable_module$rows_selected()
+        if(length(sel1)>0) {
+            gset <- rownames(out$gsea)[sel1]
+            gg <- intersect(rownames(df),GSETS[[gset]])
+            df <- df[gg,,drop=FALSE]
+        }        
+        df
+    })
+    
+    ctGeneTable.RENDER <- reactive({
+
+        df <- getGeneTable()
+        req(df)
+        numeric.cols <- colnames(df)[3:ncol(df)]
+        
+        DT::datatable(
+                df, rownames=FALSE, ## escape = c(-1,-2),
+                ## filter = 'top',
+                extensions = c('Buttons','Scroller'),
+                selection = list(mode='single', target='row', selected=NULL),
+                class = 'compact cell-border stripe hover',
+                fillContainer = TRUE,
+                options=list(
+                    dom = 'lfrtip', ##buttons = c('copy','csv','pdf'),
+                    ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                    scrollX = TRUE, ##scrollY = TRUE,
+                    ##scrollY = 170,
+                    scrollY = '70vh',
+                    scroller=TRUE, deferRender=TRUE
+                )  ## end of options.list 
+            ) %>%
+            formatSignif(numeric.cols,3) %>%
+            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
+    })
+
+    ctGeneTable.info = "Genes."
+    ctGeneTable.caption = "<b>Module gene table.</b> <b>(a)</b> ..."    
+    ctGeneTable.opts <- tagList(
+        ##selectInput(ns('wgcna_ctGeneTable_selmodule'),'module:', choices=NULL)
+    )
+    
+    ctGeneTable_module <- callModule(
+        tableModule, id = "ctGeneTable",
+        title = "GENE TABLE", label="I",
+        ## caption = wgcna_ctGeneTable_caption,
+        func  = ctGeneTable.RENDER, ## ns=ns,
+        options = ctGeneTable.opts,
+        info.text = ctGeneTable.info,
+        height = c(225,750), width=c('100%',1500)
+    )
+    
+    ##-------------------------------------------
+    ##-------------- GSEA table --------------
+    ##-------------------------------------------
+    
+    ctGseaTable.RENDER <- reactive({
+
+        ngs <- inputData()
+        out <- getCurrentSig()        
+        df <- out$gsea
+        sel0 <- input_comparisons()
+        req(sel0)
+        if(!all(sel0 %in% colnames(df))) return(NULL)
+        df <- df[,sel0,drop=FALSE]        
+        numeric.cols <- colnames(df)
+        gset <- substring(rownames(df),1,80)
+        df <- data.frame(geneset=gset, df, check.names=FALSE)
+        
+        DT::datatable(
+                df, rownames=FALSE, ## escape = c(-1,-2),
+                ## filter = 'top',
+                extensions = c('Buttons','Scroller'),
+                selection = list(mode='single', target='row', selected=NULL),
+                class = 'compact cell-border stripe hover',
+                fillContainer = TRUE,
+                options=list(
+                    dom = 'lfrtip', ##buttons = c('copy','csv','pdf'),
+                    ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                    scrollX = TRUE, ##scrollY = TRUE,
+                    ##scrollY = 170,
+                    scrollY = '70vh',
+                    scroller=TRUE, deferRender=TRUE
+                )  ## end of options.list 
+            ) %>%
+            formatSignif(numeric.cols,3) %>%
+            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
+    })
+
+    ctGseaTable.info = "NMF GSEA."
+    ctGseaTable.caption = "<b>Module enrichment table.</b> <b>(a)</b> ..."    
+    ctGseaTable.opts <- tagList(
+        ##selectInput(ns('wgcna_ctGseaTable_selmodule'),'module:', choices=NULL)
+    )
+    
+    ctGseaTable_module <- callModule(
+        tableModule, id = "ctGseaTable",
+        title = "ENRICHMENT TABLE", label="II",
+        ## caption = ctGseaTable_caption,
+        func = ctGseaTable.RENDER, ## ns=ns,
+        options = ctGseaTable.opts,
+        info.text = ctGseaTable.info,
+        height = c(225,750), width=c('100%',1500)
+    )
+
+
     ##-------------------------------------------------------
     ##---------- UI LAYOUT ----------------------------------
     ##-------------------------------------------------------
     
-    venn_caption = "<b>(a)</b> <b>Venn diagram</b> showing the number of overlapping genes for multiple contrasts. <b>(b)</b> <b>Cumulative fold-change plot</b> of genes in the selected overlap region."
-    
-    scatterPlotMatrix_caption = "<b>(a)</b> <b>Pairs plot.</b> Pairwise scatterplots for two or more differential expression profiles for multiple selected contrasts. Similar profiles will show high correlation with points close to the diagonal.  <b>(b)</b> <b>Venn diagram</b> showing the number of overlapping genes for multiple contrasts. <b>(c)</b> <b>Venn table.</b> Genes in the selected overlap region."
+    scatterPlotMatrix_caption = "<h4>Pairwise scatter & Venn diagram</h4> <b>(a)</b> <b>Pairs plot.</b> Pairwise scatterplots for two or more differential expression profiles for multiple selected contrasts. Similar profiles will show high correlation with points close to the diagonal.  <b>(b)</b> <b>Venn diagram</b> showing the number of overlapping genes for multiple contrasts. <b>(c)</b> <b>Venn table.</b> Genes in the selected overlap region."
 
     output$scatterPlotMatrix_UI <- renderUI({
         fillCol(
@@ -1543,24 +1768,25 @@ between two contrasts."
             div(HTML(scatterPlotMatrix_caption),class="caption"),
             br(),
             fillRow(
-                flex=c(1.8,0.15,1),
+                flex=c(1.7,0.15,1),
                 height = fullH,
                 plotWidget(ns("scatterPlotMatrix")),
                 br(),
                 fillCol(
-                    flex = c(1.4,NA,1),
+                    flex = c(1.4,1),
                     plotWidget(ns("venndiagram")),
-                    venntable_buttons,
+                    ## venntable_buttons,
                     ##plotWidget(ns("cumFCplot"))
                     tableWidget(ns("venntable"))
                 )
             )
         )
     })
-    ##outputOptions(output, "scatterPlotMatrix_UI", suspendWhenHidden=FALSE) ## important!!!    
+    ## outputOptions(output, "venntable", suspendWhenHidden=FALSE) ## important!!!
+    outputOptions(output, "scatterPlotMatrix_UI", suspendWhenHidden=FALSE) ## important!!!    
+
     
-    ctClusteringUI_caption = "<b>Cumulative fold-change plot</b> of genes in the selected overlap region. <b>(a)</b> <b>Constrast heatmap.</b> Similarity of the contrasts visualized as a clustered heatmap. The numeric value in the cells correspond to the Pearson correlation coefficient. Red corresponds to positive correlation and blue to negative correlation.  <b>(b)</b> <b>Connectivity Map.</b> The CMap shows the similarity of the contrasts as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away."
-    ctClusteringUI_caption = "<b>(a)</b> <b>Cumulative fold-change plot</b> of genes in the selected overlap region. <b>(b)</b> <b>Constrast heatmap.</b> Similarity of the contrasts visualized as a clustered heatmap. <b>(c)</b> <b>Contrast correlation plot.</b> The numeric value in the cells correspond to the Pearson correlation coefficient. Red corresponds to positive correlation and blue to negative correlation. "
+    ctClusteringUI_caption = "<h4>Signature clustering</h4> <b>(a)</b> <b>Signature heatmap.</b> Similarity of the signatures visualized as a clustered heatmap. The top plot shows the distribution of foldchange values as boxplots. <b>(b)</b> <b>Contrast correlation.</b> The numeric values in the cells correspond to the Pearson correlation coefficient. Red corresponds to positive correlation and blue to negative correlation. "
     
     output$ctClustering_UI <- renderUI({
         fillCol(
@@ -1570,20 +1796,46 @@ between two contrasts."
             div(HTML(ctClusteringUI_caption), class="caption"),
             br(),
             fillRow(
-                flex = c(1.5,0.07,1),
+                flex = c(2.2,0.01,1),
                 height = fullH,
-                fillCol(
-                    flex = c(1,0.1,1.5),
-                    plotWidget(ns("cumFCplot")),
-                    br(),
-                    ##plotWidget(ns("connectivitymap")),
-                    plotWidget(ns("FCheatmap"))
-                ),
+                plotWidget(ns("FoldchangeHeatmap")),
                 br(),
                 plotWidget(ns("ctcorrplot"))
             )
         )
     })
     ##outputOptions(output, "ctClustering_UI", suspendWhenHidden=FALSE) ## important!!!
+
+
+    ctUMAP_caption = "<h4>Signature maps</h4>Visually compare differential expression profiles projected on UMAP clustered maps."
+
+    output$ctUMAP_UI <- renderUI({
+        require(shinycssloaders)
+        fillCol(
+            flex = c(NA,0.02,1,0.1,1.9),
+            height = fullH,
+            div(HTML(ctUMAP_caption), class="caption"),
+            br(),
+            fillRow(
+                flex = c(1,0.04,1),
+                fillCol(
+                    flex = c(2.5,0.1,1),
+                    plotWidget(ns('ctGeneUMAP')),
+                    ##plotWidget(ns('ctGeneUMAP')) %>% shinycssloaders::withSpinner(), ## ERROR: 'margins too large'                   
+                    br(),
+                    tableWidget(ns('ctGeneTable'))
+                ),
+                br(),
+                fillCol(
+                    flex = c(2.5,0.1,1),                    
+                    plotWidget(ns('ctGseaUMAP')),
+                    br(),
+                    tableWidget(ns('ctGseaTable'))
+                )
+            )
+        )
+
+    })
+    ##outputOptions(output, "ctUMAP_UI", suspendWhenHidden=FALSE) ## important!!!
     
 } ## end-of-Board 

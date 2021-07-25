@@ -33,9 +33,10 @@ ComputePgxUI <- function(id) {
     uiOutput(ns("UI"))
 }
 
-ComputePgxServer <- function(id, auth, countsRT, samplesRT, contrastsRT, batchRT,
-                             FILES, enable=TRUE, height=720, alertready=TRUE, 
-                             max.genes = 20000, max.genesets = 10000)
+ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
+                             FILES, enable = TRUE, alertready = TRUE, 
+                             max.genes = 20000, max.genesets = 10000,
+                             max.datasets = 100, height = 720 )
 {
     moduleServer(
         id,
@@ -116,7 +117,7 @@ ComputePgxServer <- function(id, auth, countsRT, samplesRT, contrastsRT, batchRT
                                 actionButton(ns("compute"),"Compute!",icon=icon("running"),
                                              class="run-button"),
                                 br(),br(),
-                                actionLink(ns("options"), "Advanced options",
+                                actionLink(ns("options"), "Computation options",
                                            icon=icon("cog", lib="glyphicon")),
                                 style = "padding-right: 80px;"
                             )
@@ -242,23 +243,14 @@ ComputePgxServer <- function(id, auth, countsRT, samplesRT, contrastsRT, batchRT
                     message("[ComputePgxServer:@compute] WARNING:: *** NOT ENABLED ***")
                     return(NULL)
                 }
-
-                dbg("[ComputePgxServer::@compute] is.null.auth   = ", is.null(auth) )
-                dbg("[ComputePgxServer::@compute] class.auth   = ", class(auth) )
-                dbg("[ComputePgxServer::@compute] names.auth   = ", names(auth) )
-                dbg("[ComputePgxServer::@compute] auth.name   = ", auth$name() )
-                dbg("[ComputePgxServer::@compute] auth.level  = ", auth$level() )
-                dbg("[ComputePgxServer::@compute] auth.logged = ", auth$logged() )
-                dbg("[ComputePgxServer::@compute] auth.limit  = ", auth$limit() )
                 
-                auth.limit <- auth$limit()
                 numpgx <- length(dir(PGX.DIR, pattern="*.pgx$"))
                 dbg("[ComputePgxServer::@compute] numpgx  = ", numpgx )
                
-                if(numpgx >= auth.limit) {
-                    msg = "Your storage is full. You have NUMPGX files in your data folder and your quota is LIMIT datasets. Please delete some datasets or buy extra storage."
+                if(numpgx >= max.datasets) {
+                    msg = "Your storage is full. You have NUMPGX pgx files in your data folder and your quota is LIMIT datasets. Please delete some datasets or consider buying extra storage."
                     msg <- sub("NUMPGX",numpgx,msg)
-                    msg <- sub("LIMIT",auth.limit,msg)
+                    msg <- sub("LIMIT",max.datasets,msg)
                     shinyalert("WARNING",msg)
                     return(NULL)
                 }
@@ -416,6 +408,8 @@ ComputePgxServer <- function(id, auth, countsRT, samplesRT, contrastsRT, batchRT
                 ##----------------------------------------------------------------------
                 ##removeModal()
                 if(alertready) {
+                    ##beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
+                    beepr::beep(2)  ## short beep
                     shinyalert("Ready!","We wish you lots of discoveries!")
                 }
 

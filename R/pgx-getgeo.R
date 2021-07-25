@@ -46,9 +46,9 @@ id="GSE100035"
 id="GSE102908"
 id="GSE102908"
 id="GSE141499"
-##archs.h5 = file.path(FILESX,"human_matrix.h5")
+ARCHSH5 = file.path(FILESX,"human_matrix.h5")
 
-pgx.getGEOseries <- function(id, archs.h5=NULL, convert.hugo=TRUE)
+pgx.getGEOseries <- function(id, archs.h5=ARCHSH5, convert.hugo=TRUE)
 {
     ##
     ## Highly automagic download of GEO datasets from different
@@ -822,8 +822,6 @@ title2pheno <- function(title, split=NULL, trim=TRUE, summarize=TRUE)
     F1
 }
 
-
-
 ##title=title2
 eset.parsePhenoFromTitle <- function(title, split=NULL)
 {
@@ -874,7 +872,7 @@ eset.parsePhenoFromTitle <- function(title, split=NULL)
 
         ff <- apply(F2,1,paste,collapse="")
         names(ff) <- paste0("tt",1:nrow(F2))
-        aln <- as.character(msa(ff,type="protein"))
+        aln <- as.character(msa::msa(ff,type="protein"))
         aln <- aln[names(ff)]
         F.aln <- do.call(rbind,sapply(aln,strsplit,split=""))
         F.aln2 <- apply(F.aln,2,function(x) aa.dict[x])

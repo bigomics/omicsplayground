@@ -1032,14 +1032,16 @@ gseaLeadingEdgeHeatmap <- function(gsea, maxrow=60, maxcol=60, gsets=NULL,
 library(gplots)
 bluered <- function(n=64) gplots::colorpanel(n,"royalblue3","grey90","indianred3")
 
-gsea.barplot <- function(scores, names=NULL, xlab='score',
-                         xlim = NULL,
+gsea.barplot <- function(scores, names=NULL, xlab='score', xlim = NULL,
                          cex.text=1, main='enrichment', n=16)
 {
     if(!is.null(names)) names(scores) <- names
     scores <- rev(head(scores[order(-abs(scores))],n))
     ##names(gx) <- gs
     col1 <- c("lightskyblue1","rosybrown1")[1 + 1*(scores>0)]
+    if(min(scores,na.rm=TRUE)==0 && max(scores,na.rm=TRUE)==0) {
+        xlim <- c(0,1)
+    }
     barplot( abs(scores), horiz=TRUE, las=1, width=5/6, col=col1,
             border=NA, xlab=xlab, names.arg=rep('',length(scores)),
             xlim=xlim, cex.axis = 0.9)
@@ -1052,8 +1054,9 @@ gsea.barplot <- function(scores, names=NULL, xlab='score',
 
 gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,
                         decreasing=TRUE, cex=1, cex.main=0.9, len.main=40,
+                        lab.line=c(0.8,2), cex.lab=0.8, main.line=0.3,
                         xlab="Rank in ordered dataset", res=1200,
-                        ylab="Ranked list metric" )
+                        ylab="Rank metric" )
 {
     if(0) {
         names=NULL;main=NULL;decreasing=TRUE;cex.main=0.9;len.main=40;cex=1
@@ -1072,9 +1075,9 @@ gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,
     dy <- 0.25*(y1-y0)
     ##par(mgp=c(2.3,0.6,0))
     plot( ii, rnk[ii], type="h", col="grey", ylim=c(y0-dy,y1),
-         xlab=NA, ylab=NA, xaxt='n', mgp=c(2,0.8,0))
-    mtext(xlab, 1, line=0.75, cex=0.75)
-    mtext(ylab, 2, line=2.1, cex=0.75)    
+         xlab=NA, ylab=NA, xaxt='n')
+    mtext(xlab, 1, line=lab.line[1], cex=cex.lab)
+    mtext(ylab, 2, line=lab.line[2], cex=cex.lab)    
     abline(h=0,lty=2,lwd=0.5)
 
     ## gene set barcode
@@ -1117,12 +1120,9 @@ gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,
     if(is.null(main)) main="Enrichment plot"
     tt.main <- as.character(main)
     if(nchar(tt.main) > len.main) {
-        tt.main <- paste( substr(tt.main,1,len.main),
-                         substr(tt.main,len.main+1,2*len.main),
-                         substr(tt.main,2*len.main+1,3*len.main),sep="\n" )
-        tt.main <- sub("\n$","",tt.main)
+        tt.main < breakstring(tt.main,len.main)  ## pgx-funtions.R
     }
-    title(main=tt.main, cex.main=cex.main, line=0.3)
+    title(main=tt.main, cex.main=cex.main, line=main.line)
 
 }
 

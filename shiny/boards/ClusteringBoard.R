@@ -40,15 +40,15 @@ ClusteringBoard <- function(input, output, session, env)
 
     inputData <- env[["load"]][["inputData"]]
 
-    fullH = 750  ## full height of page
+    fullH = 850  ## full height of page
     
-    description = "<b>Cluster Analysis.</b> Discover clusters of similar genes or samples using unsupervised machine learning."
+    description = "<h3>Clustering Analysis</h3> Discover clusters of similar genes or samples using unsupervised machine learning."
     output$description <- renderUI(HTML(description))
     
     clust_infotext = paste('
-The <strong>Cluster Analysis</strong> module performs unsupervised clustering analysis of the data. After having done the QC, it is probably the first way to explore your data. The main purpose is to discover patterns and subgroups in the data, show correlation with known phenotypes, detect outliers, or investigate batch effects.
+The <strong>Clustering Analysis</strong> module performs unsupervised clustering analysis of the data. After having done the QC, it is probably the first way to explore your data. The main purpose is to discover patterns and subgroups in the data, show correlation with known phenotypes, detect outliers, or investigate batch effects.
 
-<br><br>In the <strong>Heatmap</strong> panel hierarchical clustering can be performed on gene level or gene set level (selected under the {Level} dropdown list). During the heatmap generation, the platform provides a functional annotation for each feature cluster in <strong>Annotate cluster</strong> panel. Users can select from a variety of annotation databases from the literature, such as ',a_MSigDB,', ',a_KEGG,' and ',a_GO,'. The <strong>PCA/tSNE</strong> panel shows unsupervised clustering of the samples in 2D/3D as obtained by ',a_PCA,' or ',a_tSNE,' algorithms. The <strong>Phenotypes</strong> panel on the right, shows the phenotype distribution as colors on the t-SNE plot. 
+<br><br>In the <strong>Heatmap</strong> panel hierarchical clustering can be performed on gene level or gene set level (selected under the {Level} dropdown list). During the heatmap generation, the platform provides functional annotation for each feature cluster in <strong>Annotate cluster</strong> panel. Users can select from a variety of annotation databases from the literature, such as ',a_MSigDB,', ',a_KEGG,' and ',a_GO,'. The <strong>PCA/tSNE</strong> panel shows unsupervised clustering of the samples in 2D/3D as obtained by ',a_PCA,' or ',a_tSNE,' algorithms. The <strong>Phenotypes</strong> panel on the right, shows the phenotype distribution as colors on the t-SNE plot. 
 
 <br><br>EXPERT MODE ONLY: The <strong>Feature ranking</strong> panel computes a discriminant score for gene (or geneset) families. This allows to investigate what family of genes (or gene sets) can best discriminate the groups. 
 
@@ -77,6 +77,11 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                                       rows=5, placeholder="Paste your custom gene list"),
                        "Paste a custom list of genes to be used as features.",
                        placement="bottom")
+            ),
+            conditionalPanel(
+                "input.hm_features == '<contrast>'", ns=ns,
+                tipifyR( selectInput(ns("hm_contrast"), NULL, choices=NULL),
+                        "Select contrast to be used as signature.")
             ),
             tipify( selectInput(ns('hm_group'),'Group by:',choices=NULL),
                    "Group the samples by condition.", 
@@ -155,6 +160,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         updateSelectInput(session,"hm_group", choices=groupings)        
 
 
+        contrasts <- pgx.getContrasts(ngs)
+        updateSelectInput(session,"hm_contrast", choices=contrasts)                
+
     })
 
     observeEvent( input$hm_splitby, {
@@ -177,7 +185,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     
     input_hm_samplefilter <- reactive({
         input$hm_samplefilter
-    }) %>% debounce(2000)
+    }) %>% debounce(3000)
     
     ## update choices upon change of level
     ##observeEvent(input$hm_level, {
@@ -191,7 +199,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             nk <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))
             choices = names(COLLECTIONS)[nk>=5]
         }
-        choices <- c("<custom>",choices)
+        choices <- c("<custom>","<contrast>",choices)
         choices <- sort(unique(choices))
         updateSelectInput(session, "hm_features", choices=choices)
     })
@@ -212,14 +220,16 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
 
         genes = as.character(ngs$genes[rownames(ngs$X),"gene_name"])
         genesets = rownames(ngs$gsetX)
+        ft <- input$hm_features
+        req(ft)
         
         if(input$hm_level=="geneset") {
             ##-----------------------------------
             ## Gene set level features
             ##-----------------------------------
             gsets = rownames(ngs$gsetX)
-            ##gsets = unique(unlist(COLLECTIONS[input$hm_features]))
-            gsets = unique(COLLECTIONS[[input$hm_features]])
+            ##gsets = unique(unlist(COLLECTIONS[ft]))
+            gsets = unique(COLLECTIONS[[ft]])
             zx = ngs$gsetX
             if(FALSE && !is.null(ngs$gset.meta$matrices) ) {
                 k <- input$hm_gsetmatrix
@@ -239,15 +249,18 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             ## Gene level features
             ##-----------------------------------
             gg = ngs$families[[1]]
-            if(input$hm_features =="<all>") {
+            if(ft =="<all>") {
                 gg = rownames(ngs$X)
-            } else if(input$hm_features %in% names(ngs$families)) {
-                gg = ngs$families[[input$hm_features]]
-            } else {
-                gg = rownames(ngs$X)
-            }
-
-            if(input$hm_features =="<custom>" && input$hm_customfeatures!="") {
+            } else if(ft =="<contrast>") {
+                ct <- input$hm_contrast
+                req(ct)
+                req(input$hm_ntop)
+                fc <- names(sort(pgx.getMetaMatrix(ngs)$fc[,ct]))
+                n1 <- floor(as.integer(input$hm_ntop)/2)
+                gg <- unique(c(head(fc,n1),tail(fc,n1)))
+            } else if(ft %in% names(ngs$families)) {
+                gg = ngs$families[[ft]]
+            } else if(ft =="<custom>" && ft!="") {
                 message("[getFilteredMatrix] selecting for <custom> features")
                 customfeatures = "ADORA2A ARHGEF5 BTLA CD160 CD244 CD27 CD274 CD276 CD47 CD80 CEACAM1 CTLA4 GEM HAVCR2 ICOS IDO1 LAG3"
                 customfeatures = "CTLA4 GEM HAVCR2 ICOS IDO1 LAG3 PDCD1 TNFSF4 VISTA VTCN1 TIGIT PVR --- CD28 CD40 CD40LG ICOSLG TNFRSF9 TNFSF9 CD70 TNFRSF4 TNFRSF18 --- TNFSF18 SIRPA LGALS9 ARG1 CD86 IDO2 PDCD1LG2 KIR2DL3"
@@ -278,6 +291,10 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                 }
                 gg <- gg1
                 ##if(length(gg1)>1) gg = gg1
+            } else {
+                message("[getFilteredMatrix] ERROR!!:: switch error : ft= ",ft)
+                gg <- NULL
+                return(NULL)
             }
             
             gg <- gg[which(toupper(gg) %in% toupper(genes))]
@@ -334,12 +351,14 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         if(splitby=="phenotype" && !splitvar %in% colnames(ngs$samples)) return(NULL)
 
         grp <- NULL
+        ## split on a phenotype variable
         if(do.split && splitvar %in% colnames(ngs$samples)) {
             dbg("[ClusteringBoard:getTopMatrix] splitting by phenotype: ",splitvar)
             grp <- ngs$samples[colnames(zx),splitvar]
             table(grp)
         }
 
+        ## split on gene expression value: hi vs. low
         if(do.split && splitvar %in% rownames(ngs$X)) {
 
             ##xgene <- rownames(ngs$X)[1]
@@ -374,11 +393,26 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             }
             grp <- paste0(splitvar,":",grp)
             names(grp) <- colnames(zx)
-        }
-        
+        }        
         ##if(length(grp)==0) splitby <- 'none'
         if(do.split && length(grp)==0) return(NULL)        
-               
+
+        ##------------------------------------------------------------
+        ## Any BMC scaling??
+        ##------------------------------------------------------------
+        if(do.split && input$hm_scale=="BMC") {
+            dbg("[ClusteringBoard:getTopMatrix] batch-mean centering...")            
+            for(g in unique(grp)) {
+                jj <- which(grp == g)
+                zx1 <- zx[,jj,drop=FALSE]
+                zx[,jj] <- zx1 - rowMeans(zx1,na.rm=TRUE)
+            }
+        }        
+        
+        ##------------------------------------------------------------
+        ## Create reduced matrix according to topmode
+        ##------------------------------------------------------------
+        
         topmode="specific"
         topmode="sd"
         topmode <- input$hm_topmode
@@ -562,8 +596,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         cex1 = ifelse(ncol(zx)>100,0.5,cex1)
         cex1 = ifelse(ncol(zx)>200,0,cex1)
         
-        scale.mode = "row.center"
-        scale.mode = ifelse(input$hm_scale=="relative","row.center","none")
+        scale.mode = "none"
+        if(input$hm_scale=="relative") scale.mode <- "row.center"
+        if(input$hm_scale=="BMC") scale.mode <- "row.bmc"        
         scale.mode
         
         ## split genes dimension in 5 groups
@@ -595,7 +630,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         cex2 <- ifelse( nrow(zx) > 60, 0.8, 0.9)    
         cex1 <- as.numeric(input$hm_cexCol)*0.85
         cex2 <- as.numeric(input$hm_cexRow)*0.75
-        
+        cex0 <- ifelse(!is.null(splitx) && length(splitx)<=10, 1.05, 0.85)  ## title
+                       
         crot <- 0
         totnchar <- nchar(paste0(unique(splitx),collapse=""))
         totnchar
@@ -616,13 +652,13 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             nmax=-1
         }
 
-        if(0) {
-            message("[hm1_splitmap.RENDER] rendering heatmap...")
-            message("[hm1_splitmap.RENDER] dim(annot) = ", paste(dim(annot),collapse="x"))
-            message("[hm1_splitmap.RENDER] rownames(annot) = ", rownames(annot))
-            message("[hm1_splitmap.RENDER] colnames(annot) = ", colnames(annot))
-            message("[hm1_splitmap.RENDER] splitx = ", paste(splitx,collapse=" "))
-            message("[hm1_splitmap.RENDER] splity = ", paste(splity,collapse=" "))
+        if(1) {
+            dbg("[hm1_splitmap.RENDER] rendering heatmap...")
+            dbg("[hm1_splitmap.RENDER] dim(annot) = ", paste(dim(annot),collapse="x"))
+            dbg("[hm1_splitmap.RENDER] rownames(annot) = ", rownames(annot))
+            dbg("[hm1_splitmap.RENDER] colnames(annot) = ", colnames(annot))
+            dbg("[hm1_splitmap.RENDER] splitx = ", paste(splitx,collapse=" "))
+            dbg("[hm1_splitmap.RENDER] splity = ", paste(splity,collapse=" "))
         }
         showNotification('rendering heatmap...')
         plt <- grid::grid.grabExpr(
@@ -635,8 +671,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
                              show_rownames = nrownames, rownames_width = 40,
                              softmax = 0,
                              ## side.height.fraction=0.03+0.055*NCOL(annot), 
-                             title_cex = 1.05, cexCol = cex1, cexRow = cex2, 
+                             title_cex = cex0, cexCol = cex1, cexRow = cex2, 
                              col.annot = annot, row.annot = NULL, annot.ht = 2.3,
+                             key.offset = c(0.89,1.01),
                              main=" ", nmax = -1, mar = c(8,16)
                          )
                      )
@@ -653,7 +690,12 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         req(ngs)
         
         ## -------------- variable to split samples        
-        scale = ifelse(input$hm_scale=="relative","row.center","none")    
+        ##scale = ifelse(input$hm_scale=="relative","row.center","none")    
+        scale = "none"
+        if(input$hm_scale=="relative") scale <- "row.center"
+        if(input$hm_scale=="BMC") scale <- "row.bmc"        
+        scale
+
         plt <- NULL
 
         filt <- getTopMatrix()
@@ -741,8 +783,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ),
         ##br(),
         tipify( radioButtons(
-            ns('hm_scale'), 'Scale:', choices=c('relative','absolute'), inline=TRUE),
-            "Show relative (i.e. mean-centered) or absolute expression values.",
+            ns('hm_scale'), 'Scale:', choices=c('relative','absolute','BMC'), inline=TRUE),
+            ## ns('hm_scale'), 'Scale:', choices=c('relative','absolute'), inline=TRUE),
+            "Show relative (i.e. mean-centered), absolute expression values or batch-mean-centered.",
             placement="right", options = list(container = "body")),
         tipify( checkboxInput(
             ns('hm_legend'), 'Legend:', value=TRUE), "Show legend.",
@@ -781,9 +824,9 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         ##req(input$hm_plottype)
         p = NULL
         if(input$hm_plottype %in% c("ComplexHeatmap","static") ) {
-            p = plotOutput(ns("hm1_splitmap"), height=fullH-100)  ## height defined here!!
+            p = plotOutput(ns("hm1_splitmap"), height=fullH-80)  ## height defined here!!
         } else {
-            p = iheatmaprOutput(ns("hm2_splitmap"), height=fullH-100) ## height defined here!!
+            p = iheatmaprOutput(ns("hm2_splitmap"), height=fullH-80) ## height defined here!!
         }
         return(p)
     })
@@ -875,7 +918,8 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         outputFunc = "uiOutput",
         download.fmt = c("pdf","png"),
         options = hm_splitmap_opts,
-        height = 2*fullH-100, width = '100%',
+        height = 2*fullH-80, ##???
+        width = '100%',
         pdf.width = 10, pdf.height = 8, 
         title ="Clustered Heatmap",
         info.text = hm_splitmap_text,
@@ -965,7 +1009,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
             showNotification(paste("computing ",clustmethod,"...\n"))            
 
             ntop = 1000
-            ntop = as.integer(input$hm_ntop2)    
+            ## ntop = as.integer(input$hm_ntop2)    
             zx = zx[order(-apply(zx,1,sd)),,drop=FALSE]  ## OK?
             if(nrow(zx) > ntop) {
                 ##zx = head(zx,ntop)  ## OK?
@@ -1135,28 +1179,19 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
     })
 
     hm_PCAplot_opts = tagList(
-        tipify( selectInput( ns("hmpca.colvar"), "Color/label:", choices=NULL, width='100%'),
-               "Set colors/labels according to a given phenotype.",
-               placement="right", options = list(container = "body")),
-        tipify( selectInput( ns("hmpca.shapevar"), "Shape:", choices=NULL, width='100%'),
-               "Set shapes according to a given phenotype.",
-               placement="right", options = list(container = "body")),
-        tipify( checkboxGroupInput( ns('hmpca_options'),"Other:",
+        tipifyR( selectInput( ns("hmpca.colvar"), "Color/label:", choices=NULL, width='100%'),
+               "Set colors/labels according to a given phenotype."),
+        tipifyR( selectInput( ns("hmpca.shapevar"), "Shape:", choices=NULL, width='100%'),
+               "Set shapes according to a given phenotype."),
+        tipifyR( checkboxGroupInput( ns('hmpca_options'),"Other:",
                                    choices=c('label','3D','normalize'), inline=TRUE),
-               "Normalize matrix before calculating distances.",
-               placement="right", options = list(container = "body")),
-      
-        ## NEED RETINK!!!: Would like to (dynamically) hide this in
-        ## BASIC version. How to do conditional panel for BASIC/PRO in
-        ## non-reactive env????
-        ##
-        ## conditionalPanel("input.hm_features == '<custom>'", ns=ns,
-        tipify( radioButtons( ns('hm_clustmethod'),"Layout:",c("default","tsne","pca","umap"),inline=TRUE),
-               "Choose the layout method for clustering to visualise.",
-               placement="right", options = list(container = "body")),
-        tipify( radioButtons( ns('hm_ntop2'),"Ntop:",c(100,1000,4000,9999),inline=TRUE,selected=1000),
-               "Number of top genes for dimensionality reduction.",
-               placement="right", options = list(container = "body"))
+                "Normalize matrix before calculating distances."),
+        tipifyR( radioButtons( ns('hm_clustmethod'),"Layout:",
+                              c("default","tsne","pca","umap"),inline=TRUE),
+                "Choose the layout method for clustering to visualise.")
+        ## tipify( radioButtons( ns('hm_ntop2'),"Ntop:",c(100,1000,4000,9999),inline=TRUE,selected=1000),
+        ##        "Number of top genes for dimensionality reduction.",
+        ##        placement="right", options = list(container = "body"))
     )
     
     hm_PCAplot_caption <- reactive({
@@ -1178,7 +1213,7 @@ The <strong>Cluster Analysis</strong> module performs unsupervised clustering an
         func = hm_PCAplot.RENDER, ## ns=ns,
         plotlib = "plotly", 
         options = hm_PCAplot_opts,
-        height = c(fullH-100,700), width=c("auto",800),
+        height = c(fullH-80,700), width=c("auto",800),
         pdf.width=8, pdf.height=8,
         title="PCA/tSNE plot",
         info.text = hm_PCAplot_text,
@@ -1806,7 +1841,7 @@ displays the expression levels of selected genes across all conditions in the an
         func  = clust_phenoplot.RENDER, ## plotlib="base",
         func2 = clust_phenoplot.RENDER, ## plotlib="base",
         options = clust_phenoplot.opts,
-        height = c(fullH-100,700), res = 85,
+        height = c(fullH-80,700), res = 85,
         pdf.width = 6, pdf.height = 9, 
         info.text = clust_phenoplot_info,
         add.watermark = WATERMARK        

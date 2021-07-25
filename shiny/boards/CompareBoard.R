@@ -41,7 +41,7 @@ CompareBoard <- function(input, output, session, env)
     ## selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     
     description =
-    "<b>Compare Datasets.</b> Compare expression and signatures between two datasets, from similar experiments or from different datatypes, e.g. transcriptomics and proteomics."
+    "<h3>Compare Datasets</h3> Compare expression and signatures between two datasets, from similar experiments or from different datatypes, e.g. transcriptomics and proteomics."
     
     output$description <- renderUI(HTML(description))
 
@@ -271,10 +271,11 @@ CompareBoard <- function(input, output, session, env)
             } else if(type=='UMAP2') {
                 pos = ngs2$cluster.genes$pos[['umap2d']]
             }
-            p <- pgx.plotGeneUMAP(ngs, contrast=ct, pos=pos,
-                                  cex = 0.9, cex.lab = cex.lab,
-                                  hilight = higenes, ntop=ntop,
-                                  plotlib="base")
+            p <- pgx.plotGeneUMAP(
+                ngs, contrast=ct, pos=pos,
+                cex = 0.9, cex.lab = cex.lab,
+                hilight = higenes, ntop=ntop,
+                plotlib="base")
         } else if(type == 'heatmap') {
             gg <- intersect(higenes, rownames(ngs$X))
             if(length(gg)>1) {
@@ -284,10 +285,11 @@ CompareBoard <- function(input, output, session, env)
                             softmax=TRUE, show_legend=FALSE)
             }
         } else {
-            p <- pgx.plotContrast(ngs, contrast=ct,
-                                  hilight = higenes, ntop=ntop,
-                                  cex.lab = cex.lab, ## dlim=0.06,
-                                  type=type, plotlib="base")
+            p <- pgx.plotContrast(
+                ngs, contrast=ct,
+                hilight = higenes, ntop=ntop,
+                cex.lab = cex.lab, ## dlim=0.06,
+                type=type, plotlib="base")
         }
         p
     }
@@ -304,7 +306,7 @@ CompareBoard <- function(input, output, session, env)
         type <- input$plottype
         higenes <- hilightgenes()
         cex.lab = 1.3
-        cex.lab = 0.9
+        cex.lab = 1.0
         ntop = 9999
         ##ntop = as.integer(input$ntop)
         if(length(higenes) <= 3) cex.lab = 1.3
@@ -347,7 +349,7 @@ CompareBoard <- function(input, output, session, env)
         type <- input$plottype
         higenes <- hilightgenes()
         cex.lab = 1.3
-        cex.lab = 0.9
+        cex.lab = 1.0
         ntop = 9999
         ##ntop = as.integer(input$ntop)
         if(length(higenes) <= 3) cex.lab = 1.3
@@ -465,7 +467,7 @@ CompareBoard <- function(input, output, session, env)
         F[is.na(F)] <- 0
         
         if(1) {
-            sel <- head(order(-rowMeans(F**2)),40)
+            sel <- head(order(-rowMeans(F**2)),50)
             sel <- rownames(F)[sel]
         } else {
             ## get top genes from score table
@@ -495,11 +497,14 @@ CompareBoard <- function(input, output, session, env)
         layout(matrix(c(1, 2, 3), nrow=1, byrow=T),widths=c(0.5,1,1))
 
         frame()
-        mtext( rownames(F), cex=0.85, side=2, at=(1:nrow(F)-0.5)/nrow(F),
+        mtext( rownames(F), cex=0.80, side=2, at=(1:nrow(F)-0.5)/nrow(F),
               las=1, line=-12)        
         ##barplot( t(F1), beside=FALSE, las=1, horiz=TRUE, cex.names = 0.01,
         ##        xlab = "cumulative foldchange", ylab = "" )
-        pgx.stackedBarplot( F1, hz=TRUE, las=1, cex.names = 0.01, cex.lab=1.4,
+        col1 <- grey.colors(ncol(F1))
+        if(ncol(F1)==1) col1 <- "grey50"
+        pgx.stackedBarplot( F1, hz=TRUE, las=1, col=col1,
+                           cex.names = 0.01, cex.lab=1.4, space=0.25,
                            xlab = "cumulative foldchange", ylab = "" )
         legend("bottomright", colnames(F1), fill=grey.colors(ncol(F1)),
                cex=0.9, y.intersp=0.9, inset=c(-0.03,0.02), xpd=TRUE )
@@ -507,7 +512,10 @@ CompareBoard <- function(input, output, session, env)
         
         ##barplot( t(F2), beside=FALSE, las=1, horiz=TRUE, cex.names = 0.01,
         ##        xlab = "cumulative foldchange", ylab = "" )
-        pgx.stackedBarplot( F2, hz=TRUE, las=1, cex.names = 0.01, cex.lab=1.4,
+        col2 <- grey.colors(ncol(F2))
+        if(ncol(F2)==1) col2 <- "grey50"
+        pgx.stackedBarplot( F2, hz=TRUE, las=1, col=col2,
+                           cex.names = 0.01, cex.lab=1.4, space=0.25,
                            xlab = "cumulative foldchange", ylab = "" )
         legend("bottomright", colnames(F2), fill=grey.colors(ncol(F2)),
                cex=0.9, y.intersp=0.9, inset=c(-0.03,0.02), xpd=TRUE )
@@ -837,7 +845,7 @@ CompareBoard <- function(input, output, session, env)
     ## --------------------- tab1 ---------------------------
     ## ------------------------------------------------------
     
-    compareScatter_title = "<h2>Compare Expression</h2>"
+    compareScatter_title = "<h4>Compare Expression</h4>"
     
     output$compareScatter_UI <- renderUI({
         ##req(input$dimensions)
@@ -862,7 +870,7 @@ CompareBoard <- function(input, output, session, env)
     ## --------------------- tab2 ---------------------------
     ## ------------------------------------------------------
     
-    FCcorrelation_title = "<h2>Compare Foldchange</h2>"
+    FCcorrelation_title = "<h4>Compare Foldchange</h4>"
     
     output$FCcorrelation_UI <- renderUI({
         ##req(input$dimensions)
@@ -886,7 +894,7 @@ CompareBoard <- function(input, output, session, env)
     ## --------------------- tab3 ---------------------------
     ## ------------------------------------------------------
     
-    GeneCorrelation_title = "<h2>Gene Correlation</h2>"
+    GeneCorrelation_title = "<h4>Gene Correlation</h4>"
     
     output$GeneCorrelation_UI <- renderUI({
         ##req(input$dimensions)

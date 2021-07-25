@@ -58,13 +58,14 @@ UploadModuleUI <- function(id) {
     )
 }
 
-UploadModuleServer <- function(id, auth,
+UploadModuleServer <- function(id, 
                                height=720, FILES = "../lib", 
-                               max.limits = c(
+                               limits = c(
                                    samples = 100,
                                    comparisons = 20,
                                    genes = 20000,
-                                   genesets = 10000)
+                                   genesets = 10000,
+                                   datasets = 10 )
                                )
 {
     moduleServer(
@@ -74,7 +75,13 @@ UploadModuleServer <- function(id, auth,
             ns <- session$ns
             ## ns <- NS(id)
             
-            dbg("[UploadModuleServer] called\n")
+            dbg("[UploadModuleServer] called!")
+            
+            dbg("[UploadModuleServer] limits.samples = ",limits['samples'])
+            dbg("[UploadModuleServer] limits.comparisons = ",limits['comparisons'])
+            dbg("[UploadModuleServer] limits.genes   = ",limits['genes'])
+            dbg("[UploadModuleServer] limits.genesets = ",limits['genesets'])
+            dbg("[UploadModuleServer] limits.datasets = ",limits['datasets'])
 
             ## Some 'global' reactive variables used in this file
             uploaded <- reactiveValues()
@@ -94,9 +101,10 @@ UploadModuleServer <- function(id, auth,
             ##upload_filetypes = c("text/csv","text/comma-separated-values,text/plain",".csv")
             upload_filetypes = c(".csv",".pgx")                
 
-            limits <- paste(max.limits["samples"],"samples and",
-                            max.limits["comparisons"],"comparisons")
-            upload_info = sub("LIMITS", limits, upload_info)
+            limits0 <- paste(limits["datasets"],"datasets (with each up to",
+                             limits["samples"],"samples and",
+                             limits["comparisons"],"comparisons)")
+            upload_info = sub("LIMITS", limits0, upload_info)
             
             ##========================================================================
             ##================================= UI ===================================
@@ -297,7 +305,7 @@ UploadModuleServer <- function(id, auth,
             
             ##computed_pgx <- ComputePgxServer(
             computed_pgx  <- ComputePgxServer(
-                id = "compute",
+                id = "compute", 
                 ##countsRT = reactive(uploaded$counts.csv),
                 countsRT = corrected_counts,
                 samplesRT = reactive(uploaded$samples.csv),
@@ -306,8 +314,9 @@ UploadModuleServer <- function(id, auth,
                 enable = upload_ok,
                 alertready = FALSE,
                 FILES = FILES,
-                max.genes = as.integer(max.limits["genes"]),
-                max.genesets = as.integer(max.limits["genesets"]),
+                max.genes = as.integer(limits["genes"]),
+                max.genesets = as.integer(limits["genesets"]),
+                max.datasets = as.integer(limits["datasets"]),
                 height = height
             )
 
@@ -747,8 +756,8 @@ UploadModuleServer <- function(id, auth,
 
                     MAXSAMPLES   = 25
                     MAXCONTRASTS = 5
-                    MAXSAMPLES   = as.integer(max.limits["samples"])
-                    MAXCONTRASTS = as.integer(max.limits["comparisons"])
+                    MAXSAMPLES   = as.integer(limits["samples"])
+                    MAXCONTRASTS = as.integer(limits["comparisons"])
 
                     ## check files: maximum contrasts allowed
                     if(status["contrasts.csv"]=="OK") {

@@ -364,6 +364,7 @@ infotext =
         
         if(enrich_method=="fgsea") {
             i=1
+            dbg("sigCalculateGSEA:: starting fgsea...\n")            
             withProgress(message="computing GSEA ...", value=0.8, {
                 res <- lapply(1:ncol(F), function(i) {
                     suppressWarnings( suppressMessages(
@@ -1139,25 +1140,32 @@ infotext =
         ##if(is.null(ngs)) return(NULL)
         req(ngs)
 
-        dbg("enrichmentGeneTable: reacted")
+        dbg("[getEnrichmentGeneTable] reacted!")
         
         gsea <- sigCalculateGSEA()
         if(is.null(gsea)) return(NULL)
+
+        dbg("[getEnrichmentGeneTable] 1:")
         
         i=1
         i <- enrichmentContrastTable$rows_selected()
         if(is.null(i) || length(i)==0) return(NULL)
+
+        dbg("[getEnrichmentGeneTable] 2:")
         
         meta <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         fc <- meta$fc
         qv <- meta$qv
         rownames(fc) <- toupper(rownames(fc))
         rownames(qv) <- toupper(rownames(qv))
+
+        dbg("[getEnrichmentGeneTable] 3:")
         
         contr <- rownames(gsea$output)[i]
-
         fc <- fc[,contr,drop=FALSE]
         ##qv <- qv[,contr,drop=FALSE]
+
+        dbg("[getEnrichmentGeneTable] 4:")
         
         gset <- getCurrentMarkers()
         if(is.null(gset)) return(NULL)
@@ -1168,11 +1176,16 @@ infotext =
         dd2 <- setdiff(genes,rownames(qv))        
         fc <- fc[genes,,drop=FALSE]
         qv <- qv[genes,,drop=FALSE]
+
+        dbg("[getEnrichmentGeneTable] 5:")
         
         gene.tt <- substring(GENE.TITLE[toupper(rownames(fc))],1,40)
         names(gene.tt) <- rownames(fc)
         df <- data.frame(gene=rownames(fc), title=gene.tt, fc, check.names=FALSE)
         ##df <- df[order(-abs(df$FC)),]
+
+        dbg("[getEnrichmentGeneTable] done!")
+        
         df
 
     })

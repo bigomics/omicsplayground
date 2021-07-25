@@ -13,6 +13,7 @@
 
 RDIR = "../R"
 FILES = "../lib"
+FILESX = "../libx"
 PGX.DIR = "../data"
 source("../R/pgx-include.R")
 ##source("options.R")
@@ -61,12 +62,11 @@ counts = norm.counts
 short.name <- sub(".*_tcell_","",colnames(counts))
 rownames(samples)=colnames(counts)=short.name
 
-
 ## Create contrasts 
 group.levels <- unique(samples$condition)
 group.levels
 ## 10 contrasts in total
-contr.matrix <- makeContrasts(
+contrasts <- makeContrasts(
     act_vs_notact = (act96h + act72h + act48h + act24h + act12h)/5 - notact,
     act12h_vs_notact = act12h - notact,
     act24h_vs_notact = act24h - notact,
@@ -74,31 +74,19 @@ contr.matrix <- makeContrasts(
     act72h_vs_notact = act72h - notact,
     act96h_vs_notact = act96h - notact,
     levels = group.levels)
-contr.matrix
-##contr.matrix = contr.matrix[,1:3]
+contrasts
+##contrasts = contrasts[,1:3]
 
 ngs <- pgx.createPGX(
     counts = counts,
     samples = samples,
-    contrasts = contr.matrix,
-    is.logx = FALSE,
-    do.cluster = TRUE,
-    do.clustergenes = TRUE,
-    batch.correct = FALSE,
-    auto.scale = TRUE,
-    filter.genes = TRUE,
-    prune.samples = FALSE,
-    only.known = FALSE,
-    only.hugo = FALSE,
-    convert.hugo = FALSE,
-    only.proteincoding = FALSE
+    contrasts = contrasts
 )
 names(ngs)
 
 gx.methods    = c("trend.limma")
 gset.methods  = c("fisher")
-extra.methods  = c("meta.go","infer")
-extra.methods  = c("drugs")
+extra.methods  = c("meta.go","infer","connectivity")
 
 gx.methods    = c("ttest","ttest.welch","trend.limma","edger.qlf","deseq2.wald")
 gset.methods  = c("fisher","gsva","fgsea","spearman","camera","fry")
@@ -115,12 +103,24 @@ ngs <- pgx.computePGX(
     prune.samples = FALSE,  ##
     do.cluster = TRUE,                
     progress = NULL,
-    lib.dir = FILES 
+    lib.dir = FILES
 )
+
+if(0) {
+    extra <- c("drugs","connectivity")
+    extra <- c("connectivity")    
+    ngs <- pgx.computeExtra(ngs, extra=extra, lib.dir=FILES)
+
+    names(ngs)
+    names(ngs$connectivity)
+    names(ngs$drugs[[1]])
+}
+
 
 ##-------------------------------------------------------------------
 ## save PGX object
 ##-------------------------------------------------------------------
+names(ngs)
 
 rda.file="../data/geiger2016-arginine-test.pgx"
 ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
@@ -134,7 +134,8 @@ ngs.save(ngs, file=rda.file)
 
 
 if(0) {
-
+    
+    source("../R/pgx-include.R")    
     load("../data/geiger2016-arginine-test.pgx")
     names(ngs)
 

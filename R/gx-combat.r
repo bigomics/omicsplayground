@@ -56,8 +56,8 @@ gx.nearestReferenceCorrection <- function(x, y, ref, k=3, dist.method="cor")
 }
 
 gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
-                          center.x=TRUE, center.m=TRUE,
-                          b.method="new", replace=FALSE) 
+                          center.x=TRUE, center.m=TRUE, sdtop=1000,
+                          replace=FALSE) 
 {
     ## Nearest-neighbour matching for batch correction. This
     ## implementation creates a fully paired dataset with nearest
@@ -66,8 +66,11 @@ gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
     ## compute distance matrix for NNM-pairing
     ##y <- factor(as.character(y))
     y1 <- paste0("y=",y)
-    dX <- scale(X)
-    if(center.x) dX <- dX - rowMeans(dX,na.rm=TRUE)
+    dX <- X
+    ## dX <- scale(X)
+    if(center.x) {
+        dX <- dX - rowMeans(dX,na.rm=TRUE)
+    }
     if(center.m) {
         mX <- tapply(1:ncol(dX),y1,function(i) rowMeans(dX[,i,drop=FALSE]))
         mX <- do.call(cbind, mX)
@@ -75,38 +78,20 @@ gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
     }
 
     if(dist.method=="cor") {
-        D <- 1 - cor(dX)
+        message("[gx.nnmcorrect] computing correlation matrix D...")
+        sdx <- apply(dX,1,sd)
+        ii <- head(order(-sdx),sdtop)
+        ## D <- 1 - cor(dX[ii,])
+        D <- 1 - crossprod(scale(dX[ii,])) / (length(ii)-1)  ## faster        
     } else {
+        message("[gx.nnmcorrect] computing distance matrix D...\n")        
         D <- as.matrix(dist(t(dX)))
     }
     remove(dX)
 
-    if(b.method=="old") {
-        ##replace=TRUE
-        ##replace=FALSE
-        maxD <- max(D)
-        grp <- sort(unique(y1))
-        ny <- length(grp)
-        B <- matrix(NA,nrow=ncol(X),ncol=ny)
-        rownames(B) <- colnames(X)
-        colnames(B) <- grp
-        i=1;k=2
-        for(i in 1:nrow(B)) {
-            for(k in 1:ny) {
-                jj <- which(y1 == grp[k])
-                ii <- which(y1 == y1[i])
-                dd <- D[i,jj]
-                if(!replace) {
-                    dd <- dd + maxD*table(factor(B[ii,k],levels=jj)) ## penalty factor???
-                }
-                B[i,k] <- jj[which.min(dd)]
-            }
-        }
-        B <- apply(B,2,function(i)rownames(B)[i])
-    } else {
-        ## should be faster...
-        B <- t(apply(D,1,function(r) tapply(r,y1,function(s)names(which.min(s)))))
-    }
+    ## find neighbours
+    message("[gx.nnmcorrect] finding nearest neighbours...")        
+    B <- t(apply(D,1,function(r) tapply(r,y1,function(s)names(which.min(s)))))   
     rownames(B) <- colnames(X)
     head(B)
     
@@ -115,10 +100,12 @@ gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
     full.y <- y1[kk]
     full.pairs <- rep(rownames(B),ncol(B))
     full.X <- X[,kk]
+    dim(full.X)
     
     ## remove pairing effect
+    message("[gx.nnmcorrect] remove pairing effect...")
     if(use.design) {
-        design <- model.matrix( ~ full.y )
+        design <- model.matrix( ~full.y )
         full.X <- limma::removeBatchEffect(full.X, batch=full.pairs,
                                            design=design)
     } else {
@@ -126,6 +113,7 @@ gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
     }
     
     ## now contract to original samples
+    message("[gx.nnmcorrect] matching result...")    
     full.idx <- rownames(B)[kk]
     cX <- do.call(cbind, tapply(1:ncol(full.X), full.idx,
                                 function(i) rowMeans(full.X[,i,drop=FALSE])))

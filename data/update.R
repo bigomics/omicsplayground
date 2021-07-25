@@ -10,7 +10,9 @@ pgx.files <- dir(".", pattern=".pgx$")
 ##pgx.files <- dir("../data.BAK/", pattern=".pgx",full.names=TRUE)
 
 ##pgx.files <- grep('155249',pgx.files,value=TRUE)
-pgx.files <- grep('plexium',pgx.files,value=TRUE)
+##pgx.files <- grep('birabresib',pgx.files,value=TRUE)
+##pgx.files <- grep('Nnm.pgx',pgx.files,value=TRUE)
+grep('ibet',pgx.files)
 
 pgx.files
 pgx.file = pgx.files[1]
@@ -27,18 +29,21 @@ for(pgx.file in pgx.files) {
     names(ngs)
     names(ngs$connectivity)
     names(ngs$drugs)
+
+    has.r <- ("clust" %in% names(ngs$drugs[[1]]))
+    has.r
+    if(has.r) next()
     
-    if(1 && "cluster.genes" %in% names(ngs)) {
+    if(0 && "cluster.genes" %in% names(ngs)) {
         cat("already done. skipping...\n")
         next()
     }
 
-    if(1) {
+    if(0) {
         message("clustering genes...")
-        ngs = pgx.clusterGenes(ngs, methods='umap', dims=c(2,3))
+        ngs = pgx.clusterGenes(ngs, methods='umap', dims=c(2,3), level='gene')
+        ngs = pgx.clusterGenes(ngs, methods='umap', dims=c(2,3), level='geneset')
         names(ngs$cluster.genes$pos)
-        pos1 = lapply( ngs$cluster.genes$pos, pos.compact )
-        ngs$cluster.genes$pos <- pos1
     }
 
     if(0) {
@@ -46,7 +51,6 @@ for(pgx.file in pgx.files) {
         extra <- c("drugs","connectivity")
         extra <- c("drugs-combo")
         extra <- c("connectivity")
-        extra <- c("drugs")    
         ##ngs$connectivity <- NULL
         ##ngs$drugs <- NULL
         sigdb = "../libx/sigdb-gtex.h5"
@@ -57,15 +61,22 @@ for(pgx.file in pgx.files) {
         ## if(length(db1)==0) next()    
         sigdb = paste0("../libx/",db1)
         sigdb = NULL
-        ngs <- compute.extra(ngs, extra, lib.dir=FILES, sigdb=sigdb)     
-
+        ngs <- compute.extra(ngs, extra, lib.dir=FILES, sigdb=sigdb) 
         ngs$connectivity[["sigdb-lincs.h5"]] <- NULL  ## old, now split into cp and gt
         names(ngs$connectivity)
     }
-
+    
+    if(1) {
+        extra <- c("drugs")    
+        ngs <- compute.extra(ngs, extra, lib.dir=FILES, libx.dir=FILESX)     
+        names(ngs$drugs)
+        names(ngs$drugs[[1]])
+        lapply(ngs$drugs, names)
+    }
     
     ##------------------ save new object -------------------
     names(ngs)
+    pgx.file    
     ngs.save(ngs, file=pgx.file)    
     
 }

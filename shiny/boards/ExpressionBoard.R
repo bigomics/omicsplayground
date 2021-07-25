@@ -25,8 +25,8 @@ ExpressionUI.test <- function(id) {
 ExpressionUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillCol(
-        flex = c(1.95,1),
-        height = 720,
+        flex = c(1.5,1),
+        height = 780,
         tabsetPanel(
             id = ns("tabs1"),
             tabPanel("Plot",uiOutput(ns("plots_UI"))),
@@ -51,11 +51,11 @@ ExpressionBoard <- function(input, output, session, env)
     ## reactive functions from shared environment
     inputData <- env[["load"]][["inputData"]]
 
-    fullH = 720
-    rowH = 380  ## row height of panels
-    imgH = 330  ## height of images
+    fullH = 780
+    rowH = 390  ## row height of panels
+    imgH = 340  ## height of images
     tabV = "70vh"  ## height of tables
-    tabH = 330  ## row height of panels
+    tabH = 320  ## row height of panels
     
     description = "<b>Differential Expression Analysis.</b> Compare expression between
 two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups."
@@ -94,7 +94,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                     tipify( selectInput(ns("gx_fdr"),"FDR", choices=FDR.VALUES, selected=0.2),
                            "Set the false discovery rate (FDR) threshold.", placement="top"),
                     tipify( selectInput(ns("gx_lfc"),"logFC threshold",
-                                        choices=c(0,0.1,0.2,0.5,1,2,5), selected=0.5),
+                                        choices=c(0,0.1,0.2,0.5,1,2,5), selected=0.2),
                            "Set the logarithmic fold change (logFC) threshold.", placement="top")
                     ),
             br(),br(),br(),br(),
@@ -444,6 +444,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
         sel1 = genetable$rows_selected()
         df1 = filteredDiffExprTable()
+
         sel2 = gsettable$rows_selected()
         df2 <- gx_related_genesets()        
 
@@ -739,7 +740,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         
         ## get table
         ##sel=1;pp=rownames(ngs$X)[1]
-        ##sel = input$genetable_rows_selected
         sel = genetable$rows_selected()
         if(is.null(sel)) return(NULL)    
 
@@ -753,13 +753,13 @@ two conditions. Determine which genes are significantly downregulated or overexp
         comp = input$gx_contrast
         if(is.null(comp) || length(comp)==0) return(NULL)
         fc <- sapply( ngs$gx.meta$meta, function(x) x[psel,"meta.fx"])
-
         top.up <- head(names(sort(fc[which(fc>0)],decreasing=TRUE)),10)
         top.dn <- head(names(sort(fc[which(fc<0)],decreasing=FALSE)),10)
         fc.top <- c(fc[top.up], fc[top.dn])
         fc.top <- fc.top[head(order(-abs(fc.top)),15)]
         fc.top <- sort(fc.top)
         fc.top <- head(c(fc.top, rep(NA,99)),15)
+
         klr.pal <- brewer.pal(4,"Paired")[2:1]
         ##klr.pal <- BLUERED(16)[c(3,14)]
         klr <- klr.pal[1 + 1*(sign(fc.top)<0)]
@@ -881,26 +881,11 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if(is.null(res) || nrow(res)==0) return(NULL)
 
         ## filter on active rows (using search)
-        ii  <- genetable$rows_all()
+        ##ii  <- genetable$rows_all()
+        ii  <- genetable$rows_current()        
         res <- res[ii,,drop=FALSE]
         if(nrow(res)==0) return(NULL)
-        
-        fx.col = grep("fc|fx|mean.diff|logfc|foldchange",tolower(colnames(res)))[1]
-        fx.col
-        fx = res[,fx.col]
-        names(fx) <- rownames(res)
-        top.up=top.down=rownames(ngs$X)
-        top.up   <- names(sort(fx[fx>0],decreasing=TRUE))
-        top.down <- names(sort(fx[fx<0]))
-        head(top.up)
-        head(top.down)
-        
-        y <- ngs$samples$group
-        ngrp = length(unique(y))
-        las = ifelse(ngrp>3, 3, 0)
-        mar1 = ifelse(las==3, 4, 3)
-        mar1 = ifelse(las==3, 3.5, 2.5)
-        
+                        
         comp=1;grouped=0;logscale=1
         comp = input$gx_contrast
         grouped <- !input$gx_ungroup
@@ -909,51 +894,37 @@ two conditions. Determine which genes are significantly downregulated or overexp
         
         mar1 = 3.5
         ylab = ifelse(logscale, "log2CPM", "CPM")
-        show.names <- ifelse(!grouped & ngrp>25, FALSE, TRUE)
+
+        ny <- nrow(ngs$samples)  ## ???!!
+        show.names <- ifelse(!grouped & ny>25, FALSE, TRUE)
         ##nx = ifelse(grouped, ngrp, length(y))
-        nx = ifelse(grouped, 3, length(y))
+        nx = ifelse(grouped, 3, ny)
         nc = 4
         nc = 8
         if( nx <= 3) nc <- 10
         if( nx > 10) nc <- 5
         if( nx > 25) nc <- 4
         srt = 35
-        strlen.grpnames <- max(nchar(strsplit(sub(".*:","",comp),split="_vs_")[[1]]))
-        if(show.names && strlen.grpnames <= 4) srt  <- 0
+        sumlen.grpnames <- sum(nchar(strsplit(sub(".*:","",comp),split="_vs_")[[1]]))
+        if(show.names && sumlen.grpnames <= 20) srt <- 0
         
-        ##nc <- 10
+        nc <- 8
         par(mfrow=c(2,nc), mar=c(mar1,3.5,1,1), mgp=c(2,0.8,0), oma=c(0.1,0.6,0,0.6) )
         i=1
-        for(i in 1:nc) {
-
-            if(i > length(top.up)) { frame() }
-            gene = sub(".*:","",top.up[i])
+        for(i in 1:nrow(res)) {
+            ## if(i > length(top.up)) { frame() }
+            ##gene = sub(".*:","",top.up[i])
+            gene = rownames(res)[i]
             pgx.plotExpression(
                 ngs, gene, comp=comp, grouped=grouped,
                 max.points = 200,  ## slow!!
                 collapse.others=TRUE, showothers=showothers,
-                ylab = ylab, xlab="",
-                logscale=logscale, names=show.names, srt=srt, main="")
+                ylab = ylab, xlab="", srt=srt, 
+                logscale=logscale, names=show.names, main="")
             title( gene, cex.main=1, line=-0.6)
-
-        }
-
-        for(i in 1:nc) {
-            if(i > length(top.down)) { frame() }
-            gene = sub(".*:","",top.down[i])
-            pgx.plotExpression(
-                ngs, gene, comp=comp, grouped=grouped,
-                max.points = 200,  ## slow!!
-                collapse.others=TRUE, showothers=showothers,
-                ylab = ylab, xlab="",
-                logscale=logscale, names=show.names, srt=srt, main="")
-            title( gene, cex.main=1, line=-0.6)
-            ##qv1 = formatC(qv[gs],format="e", digits=2)
-            ##legend("topright", paste("q=",qv1), bty="n",cex=1)
-        }
-        
+        }        
     })
-
+        
     topgenes_opts = tagList(
         tipify( checkboxInput(ns('gx_logscale'),'log scale',TRUE),
                "Logarithmic scale the counts (abundance levels).",
@@ -977,7 +948,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         options = topgenes_opts,
         info.text = topgenes_text,
         ##caption = topgenes_caption,
-        height = c(imgH,420), width = c('auto',1600), res=c(85,95),
+        height = c(imgH,420), width = c('auto',1600),
+        res = c(90,105),
         pdf.width=14, pdf.height=3.5, 
         title="Expression of top differentially expressed genes",
         add.watermark = WATERMARK
@@ -1168,7 +1140,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         pdf.width=16, pdf.height=5,
         ##height = imgH, res=75,
         height = c(imgH,500), width = c('auto',1600),
-        res = c(75,95),
+        res = c(70,90),
         title="Volcano plots for all contrasts",
         add.watermark = WATERMARK
     )
@@ -1441,13 +1413,27 @@ two conditions. Determine which genes are significantly downregulated or overexp
                       extensions = c('Scroller'),
                       selection=list(mode='single', target='row', selected=1),
                       fillContainer = TRUE,
+                      ## options=list(
+                      ##     dom = 'lfrtip',
+                      ##     ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                      ##     scrollX = TRUE,
+                      ##     scrollY = tabV,
+                      ##     scroller=TRUE,
+                      ##     deferRender=TRUE
+                      ## )
                       options=list(
-                          dom = 'lfrtip',
-                          pageLength = 400,
-                          ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                          dom = 'frtip',                          
+                          paging = TRUE,
+                          pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = TRUE,
-                          scrollY = tabV,
-                          scroller=TRUE, deferRender=TRUE
+                          scrollY = FALSE,                          
+                          scroller = FALSE,
+                          deferRender=TRUE,
+                          search = list(
+                              regex = TRUE,
+                              caseInsensitive = TRUE
+                            ##, search = 'M[ae]'
+                          )
                       )  ## end of options.list 
                       ) %>%
             formatSignif(numeric.cols,4) %>%
@@ -1461,11 +1447,11 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ##}, server=FALSE)
     })
 
-    genetable_text = "Table <strong>I</strong> shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, <a href='https://en.wikipedia.org/wiki/Student%27s_t-test'>t-test</a> (standard, Welch), <a href='https://www.ncbi.nlm.nih.gov/pubmed/25605792'> limma</a> (no trend, trend, voom), <a href='https://www.ncbi.nlm.nih.gov/pubmed/19910308'> edgeR</a> (QLF, LRT), and <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4302049'> DESeq2</a> (Wald, LRT), and merge the results. 
+    genetable_text = "Table <strong>I</strong> shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, T-test (standard, Welch), <a href='https://www.ncbi.nlm.nih.gov/pubmed/25605792'> limma</a> (no trend, trend, voom), <a href='https://www.ncbi.nlm.nih.gov/pubmed/19910308'> edgeR</a> (QLF, LRT), and <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4302049'> DESeq2</a> (Wald, LRT), and merge the results. 
 <br><br>For a selected comparison under the <code>Contrast</code> setting, the results of the selected methods are combined and reported under the table, where <code>meta.q</code> for a gene represents the highest <code>q</code> value among the methods and the number of stars for a gene indicate how many methods identified significant <code>q</code> values (<code>q < 0.05</code>). The table is interactive (scrollable, clickable); users can sort genes by <code>logFC</code>, <code>meta.q</code>, or average expression in either conditions. Users can filter top N = {10} differently expressed genes in the table by clicking the <code>top 10 genes</code> from the table <i>Settings</i>."
 
     genetable_opts = tagList(
-        tipify(checkboxInput(ns("gx_top10"),"top 10 genes",FALSE),
+        tipify(checkboxInput(ns("gx_top10"),"top 10 up/down genes",FALSE),
                "Display only top 10 differentially (positively and negatively) expressed genes in the table.", 
                placement="top", options = list(container = "body")),
         tipify(checkboxInput(ns('gx_showqvalues'),'show indivivual q-values',FALSE),
@@ -1482,7 +1468,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         options = genetable_opts,
         server = TRUE, 
         title = "Differential expression analysis",
-        height = c(0.85*tabH,700)
+        height = c(tabH-10,700)
     )
 
     ##output$genetable <- genetable_module$render
@@ -1542,10 +1528,20 @@ two conditions. Determine which genes are significantly downregulated or overexp
                       extensions = c('Scroller'),
                       fillContainer = TRUE,
                       options=list(
-                          dom = 'lfrtip', 
+                          ##dom = 'lfrtip',
+                          dom = 'frtip',                          
+                          paging = TRUE,
+                          pageLength = 16, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = TRUE,
-                          scrollY = tabV,
-                          scroller=TRUE, deferRender=TRUE
+                          ## scrollY = tabV,
+                          scrollY = FALSE,                          
+                          scroller = FALSE,
+                          deferRender=TRUE,
+                          search = list(
+                              regex = TRUE,
+                              caseInsensitive = TRUE,
+                              search = 'GOBP:'                              
+                          )
                       ),  ## end of options.list 
                       selection=list(mode='single', target='row', selected=NULL)) %>%
             ##formatSignif(1:ncol(df),4) %>%
@@ -1562,23 +1558,23 @@ two conditions. Determine which genes are significantly downregulated or overexp
         func = gsettable.RENDER, 
         info.text = gsettable_text, label="II",
         title="Gene sets with gene",
-        height = c(0.85*tabH,700), width = c('100%',800)        
+        height = c(tabH-10,700), width = c('100%',800)        
     )
 
     tablesUI_caption = "<b>Differential expression tables</b>. <b>(I)</b> Statistical results of the the differential expression analysis for selected contrast. The number of stars indicate how many statistical methods identified the gene significant. <b>(II)</b> Correlation and enrichment value of gene sets that contain the gene selected in Table I."
     
     output$tables_UI <- renderUI({
         fillCol(
-            height = 1.08*tabH,
-            flex = c(1,0.06,NA),
+            height = 1.15*tabH,
+            flex = c(NA,0.06,1),
+            div(HTML(tablesUI_caption),class="caption"),
+            br(),
             fillRow(
                 flex = c(1.6,0.07,1), 
                 tableWidget(ns("genetable")),
                 br(),
                 tableWidget(ns("gsettable"))
-            ),
-            br(),
-            div(HTML(tablesUI_caption),class="caption")
+            )
         )
     })
 
@@ -1644,7 +1640,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         title ="Gene fold changes for all contrasts",
         info.text = fctable_text,
         caption = fctable_caption,
-        height = c(0.9*tabH,700)
+        height = c(tabH,700)
     )
 
     ## library(shinyjqui)
@@ -1740,7 +1736,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         info.text = FDRtable_text,
         title = 'Number of significant genes',
         caption = FDRtable_caption,
-        height = c(0.9*tabH, 700)
+        height = c(tabH, 700)
     )
 
     ## library(shinyjqui)

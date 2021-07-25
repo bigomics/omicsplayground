@@ -1239,7 +1239,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[4]] = c("Do-it-yourself Analytics","Yes you can!")
     titles[[5]] = c("Twenty-Four Seven","Your Playground doesn't go on coffee breaks")
     titles[[6]] = c("Analyze with confidence","Be a data rockstar, a Freddie Mercury of omics!")
-    titles[[7]] = c("Play, Explore, Discover","Get deeper insights with Omics Playground")
+    titles[[7]] = c("Play-Explore-Discover","Get deeper insights with Omics Playground")
     titles[[8]] = c("Skip the Queue","Take the fast lane. Self-service analytics.")
     titles[[9]] = c("Look Ma! No help!","I did it without a bioinformatician")
     titles[[10]] = c("Easy-peasy insight!","Get insight from your data the easy way")
@@ -1254,15 +1254,17 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[19]] = c("Non sono mica scemo!","Of course I use Omics Playground")
     ## below from https://www.quotesweekly.com/keep-exploring-quotes/
     titles[[20]] = c("The Unexplored Plan","When you get into exploring, you realize that we live on a relatively unexplored plan. &ndash; E. O. Wilson")
-    titles[[21]] = c("Explore More","The more you explore, the more you learn and grow<br>&ndash; Nitesh Nishad")
-    titles[[22]] = c("Discover New Oceans","Man cannot discover new oceans unless he has the courage to lose sight of the shore &ndash; Andre Gide")
+    titles[[21]] = c("Explore More","The more you explore, the more you learn and grow.<br>&ndash; Nitesh Nishad")
+    titles[[22]] = c("Discover New Oceans","Man cannot discover new oceans unless he has the courage to lose sight of the shore. &ndash; Andre Gide")
     titles[[23]] = c("Adventurous Life","Love adventurous life. Be passionately curious about exploring new adventures. &ndash; Lailah Gifty Akita")
-    titles[[24]] = c("Succes is Exploration","The first thing you have to find is the unknown. Learning is searching; anything else is just waiting. &ndash; Dale Daute")
+    titles[[24]] = c("Succes is Exploration","The first thing you have to find is the unknown. Learning is searching. Anything else is just waiting. &ndash; Dale Daute")
     titles[[25]] = c("Look Ma! No help!","I did it without a bioinformagician")
-    titles[[26]] = c("May the Omics Force be with you","Train hard youngling, one day a master you become")
-    
+    titles[[26]] = c("May the Omics Force be with you","Train hard youngling, one day a master you become")    
     title <- titles[[length(titles)]]
     title <- sample(titles,1)[[1]]
+    title.len <- nchar(paste(title,collapse=' '))
+    if(title.len < 80) title[1] <- paste0("<br>",title[1])
+    ##if(title.len < 40) title[1] <- paste0("<br>",title[1])
     splash.title <- div(
         br(),br(),
         div(HTML(title[1]),style="font-size:70px;font-weight:700;line-height:1em;"),

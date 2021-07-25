@@ -917,7 +917,7 @@ pgx.svaCorrect <- function(X, pheno, nmax=-1) {
     ##mod0x = model.matrix( ~1, data=df)
 
     mod1x <- cbind(1, mod1)
-    mod0x = mod1x[,1,drop=FALSE]
+    mod0x <- mod1x[,1,drop=FALSE]
     ##mod0 = NULL
 
     message("Estimating number of surrogate variables...")

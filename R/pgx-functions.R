@@ -355,11 +355,14 @@ strwrap2 <- function(str,n ) {
 }
 
 add_opacity <- function(hexcol,opacity) {
-    toRGB(hexcol)
-    rgba <- strsplit(gsub("rgba\\(|\\)","",toRGB(hexcol,opacity)),split=",")
+    ##toRGB(hexcol)
+    col1 <- rep(NA,length(hexcol))
+    ii <- which(!is.na(hexcol))
+    rgba <- strsplit(gsub("rgba\\(|\\)","",toRGB(hexcol[ii],opacity)),split=",")   
     rgba <- apply(do.call(rbind, rgba),2,as.numeric)
     if(length(hexcol)==1) rgba <- matrix(rgba,nrow=1)
-    rgb(rgba[,1]/255,rgba[,2]/255,rgba[,3]/255,rgba[,4])
+    col1[ii] <- rgb(rgba[,1]/255,rgba[,2]/255,rgba[,3]/255,rgba[,4])
+    col1
 }
 
 logCPM <- function(counts, total=1e6, prior=1) {
