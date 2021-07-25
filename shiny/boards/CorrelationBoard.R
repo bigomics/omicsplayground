@@ -941,7 +941,7 @@ CorrelationBoard <- function(input, output, session, env)
         alertDataLoaded(session,ngs)
         req(ngs)
 
-        pgx.showSmallModal("Calculating GSEA...<br>please wait")
+        pgx.showSmallModal("Calculating correlation GSEA...<br>please wait")
         
         gene = "CD4"
         gene = rownames(ngs$X)[1]
@@ -958,7 +958,9 @@ CorrelationBoard <- function(input, output, session, env)
         gsea <- gsea[order(-gsea$NES),]
         head(gsea)
 
+        ## done!
         removeModal()
+        beepr::beep(10)  ## short beep
         
         res <- list(gsea=gsea, rho=rho)
         return(res)

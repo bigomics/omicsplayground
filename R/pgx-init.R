@@ -50,7 +50,6 @@ if(1 && file.exists(INIT.FILE)) {
     message("[INIT] parsing gene families...")
 
     FAMILIES <- pgx.getGeneFamilies(GENE.SYMBOL, FILES=FILES, min.size=10, max.size=9999)
-    ##FAMILIES <- c(FAMILIES, list( "<LM22 markers>"=LM22_MARKERS,"<ImmProt markers>"=IMMPROT_MARKERS))
     fam.file <- file.path(FILES,"custom-families.gmt")
     if(file.exists(fam.file)) {
         custom.gmt = read.gmt(file.path(FILES,"custom-families.gmt"),add.source=TRUE)
@@ -72,17 +71,17 @@ if(1 && file.exists(INIT.FILE)) {
     ##-----------------------------------------------------------------------------
     ## TISSUE/REFERENCE data sets
     ##-----------------------------------------------------------------------------
-
-    load(file.path(FILES,"rna_tissue.rda"))  ## TISSUE and TISSUE.grp
+    load(file.path(FILES,"sig/rna_tissue.rda"))  ## TISSUE and TISSUE.grp
 
     ##-----------------------------------------------------------------------------
     ## Immune cell markers
     ##-----------------------------------------------------------------------------
 
-    IMMPROT <- read.csv(file.path(FILES,"ImmProt-signature.csv"),row.names=1)
-    IMMPROT_MARKERS <- rownames(read.csv(file.path(FILES,"immprot-signature1000.csv"),row.names=1))
-    DICE_MARKERS <- rownames(read.csv(file.path(FILES,"DICE-signature1000.csv"),row.names=1))
-    LM22 <- read.csv(file.path(FILES,"LM22.txt"),sep="\t",row.names=1)
+    ## Really needed???
+    IMMPROT <- read.csv(file.path(FILES,"sig/ImmProt-signature.csv"),row.names=1)
+    IMMPROT_MARKERS <- rownames(read.csv(file.path(FILES,"sig/immprot-signature1000.csv"),row.names=1))
+    DICE_MARKERS <- rownames(read.csv(file.path(FILES,"sig/DICE-signature1000.csv"),row.names=1))
+    LM22 <- read.csv(file.path(FILES,"sig/LM22.txt"),sep="\t",row.names=1)
     LM22_MARKERS <- rownames(LM22)
 
     ##-----------------------------------------------------------------------------
@@ -331,9 +330,24 @@ pgx.initialize <- function(pgx) {
 
     ## cBioportal coding
     if(("OS_MONTHS" %in% pheno && "OS_STATUS" %in% pheno)) {
-        cat("found OS survival data\n")
+        message("[pgx.initialize] found OS survival data\n")
         event <- ( pgx$Y$OS_STATUS %in% c("DECEASED","DEAD","1","yes","YES","dead"))
         pgx$Y$OS.survival <- ifelse(event, pgx$Y$OS_MONTHS, -pgx$Y$OS_MONTHS)            
+    }
+
+    ##-----------------------------------------------------------------------------
+    ## Check if clustering is done
+    ##-----------------------------------------------------------------------------
+
+    if(!"cluster.genes" %in% names(pgx)) {
+        message("[pgx.initialize]  clustering genes...")
+        pgx <- pgx.clusterGenes(pgx, methods='umap', dims=c(2), level='gene')
+        pgx$cluster.genes$pos <- lapply( pgx$cluster.genes$pos, pos.compact )
+    }
+    if(!"cluster.gsets" %in% names(pgx)) {
+        message("[pgx.initialize]  clustering genesets...")
+        pgx <- pgx.clusterGenes(pgx, methods='umap', dims=c(2), level='geneset')
+        pgx$cluster.gsets$pos  <- lapply( pgx$cluster.gsets$pos, pos.compact )
     }
 
     ##-----------------------------------------------------------------------------

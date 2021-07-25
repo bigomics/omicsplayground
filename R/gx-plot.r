@@ -78,9 +78,11 @@ gx.barplot <- function(x, main="", cex.main=1.2, cex.names=0.85,
 
 ##x=gx;y=ngs$samples$group;
 ##bee=bar=TRUE;offx=3;sig.stars=FALSE;xoff=0;srt=60;max.points=-1;ymax=NULL;bee.cex=0.3;max.stars=5
-gx.b3plot <- function(x, y, width=1, bar=TRUE, bee=TRUE, sig.stars=FALSE,
+gx.b3plot <- function(x, y, first=NULL,
+                      width=1, bar=TRUE, bee=TRUE, sig.stars=FALSE,
                       ymax=NULL, bee.cex=0.3, max.stars=5, srt=NULL, xoff=0,
-                      names.cex=1, names=TRUE, max.points=100, col="grey80", ...)
+                      names.cex=1, names=TRUE, max.points=100, col="grey80",
+                      ...)
 {
     require(beeswarm)
     ##require(sinaplot)
@@ -96,6 +98,7 @@ gx.b3plot <- function(x, y, width=1, bar=TRUE, bee=TRUE, sig.stars=FALSE,
     y = as.character(y)
     y[is.na(y)] <- 'NA'
     y = factor(y, exclude=NULL)
+    if(!is.null(first)) y <- relevel(y, ref=first)
     mx = tapply(x, y, median, na.rm=TRUE)
 
     sig = yc = NULL

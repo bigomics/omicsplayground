@@ -3,38 +3,14 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-if(0) {
-
-    FILES="../lib"
-    RDIR="../R"
-    source(file.path(RDIR,"pgx-include.R"))
-    source(file.path(RDIR,"pgx-files.R"))
-
-    library(rhdf5)
-    h5.file = "../libx/sigdb-archs4.h5"
-    X <- h5read(h5.file, "data/matrix")
-    rownames(X) <- h5read(h5.file, "data/rownames")
-    colnames(X) <- h5read(h5.file, "data/colnames")
-    dim(X)
-    object.size(X)/1e6
-    
-    fx <- X["RFX7",]
-    head(sort(fx),50)
-    tail(sort(fx),50)
-    
-    
-    load("../data/tcga-brca_pub.pgx")
-    F <- sapply(ngs$gx.meta$meta, function(m) m$meta.fx)
-    rownames(F) <- rownames(ngs$gx.meta$meta[[1]])
-    dim(F)
-    query <- F[,1]
-    
-}
-
 ##================================================================================
 ##========================= CONNECTIVITY FUNCTIONS ===============================
 ##================================================================================
 ##ntop=1000;contrasts=NULL;remove.le=FALSE;inmemory=TRUE
+
+if(!exists("SIGDB.DIR") && exists("FILESX")) {
+    SIGDB.DIR <- c(FILESX,file.path(FILESX,"sigdb"))
+}
 
 pgx.computeConnectivityScores <- function(ngs, sigdb, ntop=1000, contrasts=NULL,
                                           remove.le=FALSE, inmemory=FALSE )
@@ -899,7 +875,7 @@ pgx.computeGeneSetExpression <- function(X, gmt, method=NULL,
 ##================================================================================
 
 sigdb.getConnectivityFullPath <- function(sigdb) {
-    db.exists <- sapply( c(FILES,FILESX,PGX.DIR), function(d) file.exists(file.path(d,sigdb)))
+    db.exists <- sapply(SIGDB.DIR, function(d) file.exists(file.path(d,sigdb)))
     db.exists
     db.dir <- names(which(db.exists))[1]
     db.dir
@@ -934,7 +910,7 @@ sigdb.getConnectivityMatrix <- function(sigdb, select=NULL, genes=NULL)
     if(!is.null(select)) dbg("[getConnectivityMatrix] length(select)=",length(select))
     if(!is.null(genes))  dbg("[getConnectivityMatrix] length(genes)=",length(genes))
     
-    db.exists <- sapply( c(FILES,FILESX,PGX.DIR), function(d) file.exists(file.path(d,sigdb)))
+    db.exists <- sapply( SIGDB.DIR, function(d) file.exists(file.path(d,sigdb)))
     db.exists
     X <- NULL
     if(any(db.exists)) {
@@ -996,7 +972,7 @@ sigdb.getEnrichmentMatrix <- function(sigdb, select=NULL, nc=-1)
         obj %in% gsub("^/|^//","",xobjs)
     }
     
-    db.exists <- sapply(c(FILES,FILESX,PGX.DIR), function(d) file.exists(file.path(d,sigdb)))
+    db.exists <- sapply( SIGDB.DIR, function(d) file.exists(file.path(d,sigdb)))
     db.exists
     Y <- NULL
     if(any(db.exists)) {            
@@ -1057,7 +1033,7 @@ sigdb.getSignatureMatrix <- function(sigdb) {
         stop("getEnrichmentMatrix:: only for H5 database files")
     }
     
-    db.exists <- sapply(c(FILES,FILESX,PGX.DIR), function(d) file.exists(file.path(d,sigdb)))
+    db.exists <- sapply( SIGDB.DIR, function(d) file.exists(file.path(d,sigdb)))
     db.exists
     up=dn=NULL
     if(any(db.exists)) {            

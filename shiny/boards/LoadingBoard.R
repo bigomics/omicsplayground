@@ -31,8 +31,9 @@ LoadingUI <- function(id) {
 }
 
 LoadingBoard <- function(input, output, session, 
-                         max.limits = c("samples"=1000,"comparisons"=20,
-                                        "genes"=20000, "genesets"=10000),
+                         limits = c("samples"=1000,"comparisons"=20,
+                                    "genes"=20000, "genesets"=10000,
+                                    "datasets"=10),
                          enable_delete = TRUE, enable_save = TRUE,
                          authentication="none", firebase=NULL, firebase2=NULL)
 {
@@ -369,7 +370,8 @@ LoadingBoard <- function(input, output, session,
         
         allow.delete = TRUE
         if(!allow.delete) {
-            message("[LoadingBoard::@deletebutton] WARNING:: ",pgxfile," not owned by ",auth$name()," \n")
+            message("[LoadingBoard::@deletebutton] WARNING:: ",pgxfile,
+                    " not owned by ",auth$name()," \n")
             shinyalert::shinyalert(
                             title = "Error!",
                             text = "You do not have permission to delete this dataset",
@@ -496,6 +498,7 @@ LoadingBoard <- function(input, output, session,
 
         if(is.null(pgx)) {
             cat("[LoadingBoard::<loadbutton>] ERROR file not found : ",pgxfile,"\n")
+            beepr::beep(10)
             removeModal()
             return(NULL)
         }
@@ -505,6 +508,7 @@ LoadingBoard <- function(input, output, session,
         pgx <- pgx.initialize(pgx)
         if(is.null(pgx)) {
             cat("[LoadingBoard::<loadbutton>] ERROR in object initialization\n")
+            beepr::beep(10)
             showNotification("ERROR in object initialization!\n")
             removeModal()
             return(NULL)
@@ -717,10 +721,9 @@ LoadingBoard <- function(input, output, session,
 
     uploaded_pgx <- UploadModuleServer(
         id = "upload_panel",
-        auth = auth,
         height = 720,
-        ## max.limits = c(samples=20, comparisons=20, genes=8000),
-        max.limits = max.limits,
+        ## limits = c(samples=20, comparisons=20, genes=8000),
+        limits = limits,
         FILES = FILES        
     )
 
@@ -768,10 +771,11 @@ LoadingBoard <- function(input, output, session,
             ##sleep(1)
             ##removeModal()
         }
-
         
         ## removeModal()
         msg1 <- "<b>Ready!</b>"
+        beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
+
         if(enable_save) {
             msg1 <- "<b>Ready!</b><br>Your data is ready and has been saved in your library. You can now start exploring your data."
         } else {

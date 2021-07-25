@@ -33,6 +33,7 @@ envcat("SHINYPROXY_USERGROUPS")
 envcat("PLAYGROUND_AUTHENTICATION")
 envcat("PLAYGROUND_USERID")
 envcat("PLAYGROUND_EXPIRY")
+envcat("PLAYGROUND_QUOTA")
 envcat("PLAYGROUND_LEVEL")
 envcat("PLAYGROUND_HELLO")
 
@@ -102,7 +103,6 @@ message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 ## ------------------------ READ FUNCTIONS ----------------------------
 ## --------------------------------------------------------------------
 
-
 source("app-init.R", local=FALSE)
 ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
@@ -112,7 +112,7 @@ if(0) {
     ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
     load("../data/geiger2016-arginine-test.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
-    load("../data/GSE22886-immune.pgx")
+    load("../data/GSE102908-ibet.pgx")
     load("../data/gtex-aging-n40svaNnm.pgx")
     ngs = pgx.initialize(ngs)
 }
@@ -130,9 +130,9 @@ source("modules/UploadModule.R",local=src.local)
 ##source("modules/UsersMapModule.R_")
 
 BOARDS <- c("load","view","clust","expr","enrich","isect","func",
-            "word","drug","sig","scell","cor","bio","cmap",
+            "word","drug","sig","scell","cor","bio","cmap","ftmap",
             "wgcna", "tcga","multi","system","qa","corsa","comp")
-if(is.null(opt$BOARDS_ENABLED)) opt$BOARDS_ENABLED = BOARDS
+if(is.null(opt$BOARDS_ENABLED))  opt$BOARDS_ENABLED = BOARDS
 if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
 
 ENABLED  <- array(BOARDS %in% opt$BOARDS_ENABLED, dimnames=list(BOARDS))
@@ -150,14 +150,14 @@ for(m in boards) {
 
 ##ENABLED[c("wgcna","system","multi")] <- FALSE
 ENABLED[c("system","multi","corsa")] <- FALSE
-if(1 && DEV && dir.exists("modulesx")) {
-    ## Very early development modules/boards
+if(0 && DEV && dir.exists("modulesx")) {
+    ## Very early development modules/boards (ALWAYS SHOW FOR DEV)
     ##
     xboards <- dir("modulesx", pattern="Board.R$")
     xboards
     m=xboards[1]
     for(m in xboards) {
-        message("[MAIN] loading DEVELOPMENT board ",m)
+        message("[MAIN] loading DEVELOPMENT modules ",m)
         source(paste0("modulesx/",m), local=src.local)
     }
     ENABLED[] <- TRUE  ## enable all modules
@@ -166,7 +166,7 @@ if(1 && DEV && dir.exists("modulesx")) {
 ENABLED
 
 ## disable connectivity map if we have no signature database folder
-has.sigdb <- length(dir(FILESX,pattern="sigdb.*h5")>0)
+has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5")>0)
 has.sigdb
 if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
 
@@ -199,21 +199,21 @@ server = function(input, output, session) {
     }
     
     ## firebase <- NULL
-    max.limits <- c("samples" = opt$MAX_SAMPLES,
-                    "comparisons" = opt$MAX_COMPARISONS,
-                    "genes" = opt$MAX_GENES,
-                    "genesets" = opt$MAX_GENESETS)
+    limits <- c("samples" = opt$MAX_SAMPLES,
+                "comparisons" = opt$MAX_COMPARISONS,
+                "genes" = opt$MAX_GENES,
+                "genesets" = opt$MAX_GENESETS,
+                "datasets" = opt$MAX_DATASETS)
     env <- list()  ## communication "environment"
     env[["load"]]  <- callModule(
-        LoadingBoard, "load", max.limits = max.limits,
+        LoadingBoard, "load", limits = limits,
         authentication = AUTHENTICATION, enable_delete = opt$ENABLE_DELETE,
-        enable_save = opt$ENABLE_SAVE, firebase=firebase, firebase2=firebase2)
-    
-    ##auth <- env[["load"]][['auth']]
+        enable_save = opt$ENABLE_SAVE, firebase=firebase, firebase2=firebase2)   
     
     ## load other modules if 
     if(ENABLED["view"])   env[["view"]]   <- callModule( DataViewBoard, "view", env)
     if(ENABLED["clust"])  env[["clust"]]  <- callModule( ClusteringBoard, "clust", env)
+    if(ENABLED["ftmap"])  env[["ftmap"]]  <- callModule( FeatureMapBoard, "ftmap", env)    
     if(ENABLED["expr"])   env[["expr"]]   <- callModule( ExpressionBoard, "expr", env)
     if(ENABLED["enrich"]) env[["enrich"]] <- callModule( EnrichmentBoard, "enrich", env)
     if(ENABLED["func"])   env[["func"]]   <- callModule( FunctionalBoard, "func", env)
@@ -265,7 +265,6 @@ server = function(input, output, session) {
         if(USER_MODE == "basic") {
             hideTab("maintabs","CellProfiling")
             hideTab("maintabs","DEV")
-            hideTab("enrich-tabs1","GeneMap")
             hideTab("clust-tabs2","Feature ranking")
             hideTab("expr-tabs1","Volcano (methods)")
             hideTab("expr-tabs2","FDR table")
@@ -279,14 +278,12 @@ server = function(input, output, session) {
         if(USER_MODE == "dev" || DEV) {
             showTab("maintabs","DEV")
             showTab("view-tabs","Resource info")
-            showTab("enrich-tabs1","GeneMap")
             showTab("scell-tabs1","CNV")  ## DEV only
             showTab("scell-tabs1","Monocle") ## DEV only
             showTab("cor-tabs","Functional")
         } else {
             hideTab("maintabs","DEV")
             hideTab("view-tabs","Resource info")
-            hideTab("enrich-tabs1","GeneMap")
             hideTab("scell-tabs1","CNV")  ## DEV only
             hideTab("scell-tabs1","Monocle") ## DEV only
             hideTab("cor-tabs","Functional")            
@@ -325,7 +322,8 @@ help.tabs <- navbarMenu(
 TABVIEWS <- list(
     "load"   = tabView("Home",LoadingInputs("load"),LoadingUI("load")),
     "view"   = tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
-    "clust"  = tabView("Clustering",ClusteringInputs("clust"),ClusteringUI("clust")),
+    "clust"  = tabView("Cluster samples",ClusteringInputs("clust"),ClusteringUI("clust")),
+    "ftmap"  = tabView("Feature maps (beta)",FeatureMapInputs("ftmap"),FeatureMapUI("ftmap")),    
     "wgcna"  = tabView("WGCNA (beta)",WgcnaInputs("wgcna"),WgcnaUI("wgcna")),
     "expr"   = tabView("Differential expression",ExpressionInputs("expr"),ExpressionUI("expr")),
     "cor"    = tabView("Correlation analysis", CorrelationInputs("cor"), CorrelationUI("cor")),
@@ -343,9 +341,12 @@ TABVIEWS <- list(
 )
 
 if(DEV) {
-    TABVIEWS$corsa  = tabView("CORSA (dev)",CorsaInputs("corsa"),CorsaUI("corsa"))
-    TABVIEWS$system = tabView("Systems analysis (dev)",SystemInputs("system"),SystemUI("system"))
-    TABVIEWS$multi  = tabView("Multi-level (dev)", MultiLevelInputs("multi"), MultiLevelUI("multi"))
+    if(ENABLED["corsa"]) TABVIEWS$corsa = tabView("CORSA (dev)",CorsaInputs("corsa"),
+                                                  CorsaUI("corsa"))
+    if(ENABLED["system"]) TABVIEWS$system = tabView("Systems analysis (dev)",
+                                                    SystemInputs("system"),SystemUI("system"))
+    if(ENABLED["multi"]) TABVIEWS$multi = tabView("Multi-level (dev)", MultiLevelInputs("multi"),
+                                                  MultiLevelUI("multi"))
 }
 
 names(TABVIEWS)
@@ -444,10 +445,10 @@ createUI <- function(tabs)
 tabs = list(
     "Home" = c("load"),
     "DataView" = "view",
-    "Clustering" = c("clust","wgcna"),
+    "Clustering" = c("clust","ftmap","wgcna"),
     "Expression" = c("expr","cor"),
     "Enrichment" = c("enrich","func","word","drug"),
-    "Signature" = c("isect","comp","sig","bio","cmap","tcga"),
+    "Signature" = c("isect","sig","bio","cmap","comp","tcga"),
     "CellProfiling" = "scell",
     "DEV" = c("corsa","system","multi")
 )

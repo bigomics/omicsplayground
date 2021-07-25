@@ -1019,7 +1019,8 @@ tableModule <- function(input, output, session,
     ##outputOptions(output, "widget", suspendWhenHidden=FALSE) ## important!!!
 
     module <- list(
-        rows_selected = reactive(input$datatable_rows_selected),
+        rows_current = reactive(input$datatable_rows_current),
+        rows_selected = reactive(input$datatable_rows_selected),        
         rows_all = reactive(input$datatable_rows_all)
     )
     return(module)

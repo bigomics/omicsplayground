@@ -124,7 +124,7 @@ ConnectivityBoard <- function(input, output, session, env)
                           selected = head(comparisons,1))
 
         sigdb <- c("A","B","C")
-        sigdb0 <- dir(c(FILES,FILESX,PGX.DIR), pattern="sigdb-.*h5")
+        sigdb0 <- dir(SIGDB.DIR, pattern="sigdb-.*h5")
         sigdb <- names(ngs$connectivity)  ## only precomputed inside PGX object??
         sigdb <- sort(intersect(sigdb, sigdb0))
         sigdb
@@ -180,7 +180,7 @@ ConnectivityBoard <- function(input, output, session, env)
     ##================================================================================
 
     getConnectivityFullPath <- function(sigdb) {
-        db.exists <- sapply( c(FILES,FILESX,PGX.DIR), function(d) file.exists(file.path(d,sigdb)))
+        db.exists <- sapply( SIGDB.DIR, function(d) file.exists(file.path(d,sigdb)))
         db.exists
         db.dir <- names(which(db.exists))[1]
         db.dir
@@ -221,7 +221,7 @@ ConnectivityBoard <- function(input, output, session, env)
         if(!is.null(select)) dbg("[getConnectivityMatrix] length(select)=",length(select))
         if(!is.null(genes))  dbg("[getConnectivityMatrix] length(genes)=",length(genes))
                 
-        db.exists <- sapply( c(FILES,FILESX,PGX.DIR), function(d) file.exists(file.path(d,sigdb)))
+        db.exists <- sapply( SIGDB.DIR, function(d) file.exists(file.path(d,sigdb)))
         db.exists
         X <- NULL
         if(any(db.exists)) {
@@ -283,7 +283,7 @@ ConnectivityBoard <- function(input, output, session, env)
             obj %in% gsub("^/|^//","",xobjs)
         }
                 
-        db.exists <- sapply(c(FILES,FILESX,PGX.DIR), function(d) file.exists(file.path(d,sigdb)))
+        db.exists <- sapply(SIGDB.DIR, function(d) file.exists(file.path(d,sigdb)))
         db.exists
         Y <- NULL
         if(any(db.exists)) {            
@@ -344,7 +344,7 @@ ConnectivityBoard <- function(input, output, session, env)
             stop("getEnrichmentMatrix:: only for H5 database files")
         }
         
-        db.exists <- sapply(c(FILES,FILESX,PGX.DIR), function(d) file.exists(file.path(d,sigdb)))
+        db.exists <- sapply(SIGDB.DIR, function(d) file.exists(file.path(d,sigdb)))
         db.exists
         up=dn=NULL
         if(any(db.exists)) {
@@ -400,7 +400,7 @@ ConnectivityBoard <- function(input, output, session, env)
             
         h5.file = "/home/kwee/Playground/omicsplayground/libx/sigdb-archs4.h5"
         h5.file
-        db.exists <- sapply( c(FILES,FILESX,PGX.DIR), function(d) file.exists(file.path(d,sigdb)))
+        db.exists <- sapply(SIGDB.DIR, function(d) file.exists(file.path(d,sigdb)))
         db.exists
         if(!any(db.exists)) {
             cat("*** WARNING *** cannot locate signature matrix file")
@@ -2095,11 +2095,14 @@ ConnectivityBoard <- function(input, output, session, env)
         F1 <- head(F,80)
         par(mfrow=c(1,1), mar=c(0,0,0,0))
         ##gx.heatmap(t(F1), keysize=0.85, mar=c(6,30))
-        gx.splitmap(t(F1), mar=c(8,50), split=1,
+        gx.splitmap(t(F1), split=1,
                     ##cluster_columns = FALSE,
                     cluster_columns = TRUE,
                     cluster_rows = TRUE,
                     rowlab.maxlen = 80,                    
+                    ## zsym = TRUE,
+                    symm.scale = TRUE,
+                    mar = c(15,0,0,60), 
                     key.offset = c(0.90, 0.2),
                     cexRow=0.9, cexCol=0.75)
 
@@ -2127,8 +2130,7 @@ ConnectivityBoard <- function(input, output, session, env)
         res = c(90,90),
         add.watermark = WATERMARK
     )
-    
-    
+        
     ##================================================================================
     ##========================= OUTPUT UI ============================================
     ##================================================================================

@@ -10,10 +10,10 @@ if(0) {
     X=NULL;is.logx=NULL;do.cluster=TRUE;auto.scale=TRUE;only.known=TRUE
     max.genes=max.genesets=25000;lib.dir=FILES;progress=NULL;only.hugo=1;
     extra.methods=c("meta.go","deconv","infer","drugs","wordcloud")
-    gx.methods=c("ttest.welch","trend.limma");gset.methods=c("fisher","gsva");
-    only.hugo=TRUE;only.proteincoding=TRUE;rik.orf=FALSE;prune.samples=FALSE
-    batch.correct=TRUE
-
+    gx.methods=c("trend.limma");gset.methods=c("fisher","gsva");
+    only.hugo=TRUE;only.proteincoding=TRUE;rik.orf=FALSE;prune.samples=FALSE    
+    do.clustergenes=cluster.contrasts=batch.correct=TRUE
+    
     counts <- ngs$counts
     samples <- ngs$samples
     contrasts <- ngs$contrasts
@@ -358,6 +358,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
         }
         remove(cX)
     }
+
     
     ##-------------------------------------------------------------------
     ## Pre-calculate t-SNE for and get clusters early so we can use it
@@ -387,8 +388,8 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
         ngs$samples$cluster <- idx        
         head(ngs$samples)
         table(ngs$samples$cluster)
-    }
-    
+    }    
+
     if(cluster.contrasts) {
         ## Add cluster contrasts
         message("[createPGX] adding cluster contrasts...")
@@ -405,14 +406,6 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
             }
         }
     }
-    
-    if(do.clustergenes) {
-        message("[createPGX] clustering genes...")
-        ngs = pgx.clusterGenes(ngs, methods='umap', dims=c(2,3))
-        names(ngs$cluster.genes$pos)
-        pos1 = lapply( ngs$cluster.genes$pos, pos.compact )
-        ngs$cluster.genes$pos <- pos1
-    }
 
     ##-------------------------------------------------------------------
     ## Add normalized log-expression
@@ -426,10 +419,17 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     } else {
         message("[createPGX] using passed log-expression X...")        
     }
+
     if(!all(dim(ngs$X) == dim(ngs$counts))) {
         stop("[createPGX] dimensions of X and counts do not match\n")        
     }
-
+    
+    if(do.clustergenes) {
+        message("[createPGX] clustering genes...")
+        ngs <- pgx.clusterGenes(ngs, methods='umap', dims=c(2,3), level='gene')
+        ##ngs <- pgx.clusterGenes(ngs, methods='umap', dims=c(2,3), level='geneset')  ## gsetX not ready!!
+    }
+    
     return(ngs)
 }
 
@@ -513,6 +513,14 @@ pgx.computePGX <- function(ngs,
         test.methods = gset.methods,
         lib.dir = lib.dir )
     head(ngs$gset.meta$meta[[1]])
+
+    
+    if(do.cluster) {
+        message("[pgx.computePGX] clustering genes...")
+        ##ngs <- pgx.clusterGenes(ngs, methods='umap', dims=c(2,3), level='gene') 
+        ngs <- pgx.clusterGenes(ngs, methods='umap', dims=c(2,3), level='geneset')  ## gsetX not ready!!
+    }
+
     
     ## ------------------ extra analyses ---------------------
     if(!is.null(progress)) progress$inc(0.3, detail = "extra modules")

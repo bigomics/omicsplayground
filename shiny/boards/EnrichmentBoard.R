@@ -16,16 +16,15 @@ EnrichmentInputs <- function(id) {
 EnrichmentUI <- function(id) {
     ns <- NS(id)  ## namespace
     fillCol(
-        flex = c(1.6,1),
-        height = 750,
+        flex = c(1.75,1),
+        height = 800,
         tabsetPanel(
             id = ns("tabs1"),
             tabPanel("Top enriched",uiOutput(ns("topEnriched_UI"))),
             tabPanel("Plots",uiOutput(ns("subplots_UI"))),
             tabPanel("Compare",uiOutput(ns("compare_UI"))),
             tabPanel("Volcano (all)",uiOutput(ns("volcanoAll_UI"))),
-            tabPanel("Volcano (methods)",uiOutput(ns("volcanoMethods_UI"))),
-            tabPanel("GeneMap",uiOutput(ns("genemap_UI")))
+            tabPanel("Volcano (methods)",uiOutput(ns("volcanoMethods_UI")))
         ),
         tabsetPanel(
             id = ns("tabs2"),
@@ -45,10 +44,11 @@ EnrichmentBoard <- function(input, output, session, env)
     inputData <- env[["load"]][["inputData"]]
     selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
 
-    fullH = 720
-    rowH = 365  ## row height of panels
-    imgH = 300  ## height of images
-    tabH = 160  ## height of tables
+    fullH = 800
+    rowH = 420  ## row height of panels
+    imgH = 340  ## height of images
+    tabV = "70vh"  ## height of tables
+    tabH = 340  ## row height of panels
     tabH = "80vh"  ## height of tables
     
     description = "<b>Geneset enrichment analysis.</b> Perform differential expression analysis on a geneset level, also called geneset enrichment analysis."
@@ -109,18 +109,127 @@ EnrichmentBoard <- function(input, output, session, env)
                 )
             )
         )
-        if(DEV) {
-            uix <- tagList(
-                hr(),h6("Developer options:"),
-                tipify( radioButtons(ns('gs_lfcmethod'),'Score method: (dev)', choices=c("fc","gs")),
-                       "Select reporting method for differential expression of gene sets. FC=average foldchange of genes in genest. GS= differential score derived from meta-score from single-sample geneset methods.", placement="right", options = list(container="body"))
-            )
-            ui <- c(ui, uix)
-        }
         ui
     })
     outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
+    ##================================================================================
+    ##=========================== TABS UI ============================================
+    ##================================================================================
+
+    ## library(shinyjqui)
+    topEnriched_caption = "<b>Top enriched gene sets.</b> Enrichment plots of the top differentially enriched gene sets. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score."
+    
+    topEnrichedFreq_caption = "<strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency."
+
+    topEnriched_captionALL <- paste(
+        "<b>(a)</b>",topEnriched_caption,
+        "<b>(b)</b>",topEnrichedFreq_caption)
+    
+    output$topEnriched_UI <- renderUI({
+        fillCol(
+            height = rowH,
+            flex = c(1,NA),
+            fillRow(
+                flex = c(1.8,0.05,1),
+                plotWidget(ns("topEnriched")),
+                br(),
+                plotWidget(ns("topEnrichedFreq"))
+            ),
+            div(HTML(topEnriched_captionALL), class="caption")
+        )
+    })
+
+    enrichplots_caption = "<b>Enrichment plots</b> associated with the gene set (selected in <b>Table I</b>) and gene (selected in <b>Table II</b>). <b>(a)</b> Gene set enrichment plot. <b>(b)</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set are highlighted in blue. <b>(c)</b> Barplot of the gene set enrichment in the groups. <b>(d)</b> Scatter plot of the enrichment versus the expression of the selected geneset and gene, on the y and x axes, respectively."
+
+    output$subplots_UI <- renderUI({
+        fillCol(
+            height = rowH,
+            flex = c(1,0.05,NA),
+            fillRow(
+                id = ns("subplots"),
+                height = imgH,
+                flex=c(1,1,1,1), ##height = 370,
+                plotWidget(ns("subplot_enplot")),
+                plotWidget(ns("subplot_volcano")),                
+                plotWidget(ns("subplot_barplot")),
+                ## plotWidget(ns("subplot3")),
+                plotWidget(ns("subplot_scatter"))
+            ),
+            br(),
+            div(HTML(enrichplots_caption),class="caption")
+        )
+    })
+    dragula(ns("subplots"))
+
+    compare_caption = "<b>Enrichment across contrasts.</b> Enrichment plots for the selected gene set (in <b>Table I</b>) across multiple contrasts. The figure allows to quickly compare the enrichment of a certain gene set across all other comparisons."
+
+    output$compare_UI <- renderUI({
+        fillCol(
+            height = rowH,
+            flex=c(1,NA), ##height = 370,
+            plotWidget( ns("compare")),
+            div(HTML(compare_caption),class="caption")
+        )
+    })
+
+
+
+    volcanoAll_caption = "<b>Volcano plots for all contrasts.</b> Simultaneous visualisation of volcano plots of gene set enrichment across all contrasts. Volcano-plot are plotting enrichment score versus significance on the x and y axes, respectively. Experimental contrasts showing better statistical significance will show volcano plots with 'higher' wings."
+
+    output$volcanoAll_UI <- renderUI({
+        fillCol(
+            height = rowH,
+            flex=c(1,NA), ##height = 370,
+            plotWidget(ns("volcanoAll")),
+            div(HTML(volcanoAll_caption), class="caption")
+        )
+    })
+
+
+    volcanoMethods_caption = "<b>Volcano plots for all methods.</b> Simultaneous visualisation of volcano plots of gene sets for different enrichment methods. Methods showing better statistical significance will show volcano plots with 'higher' wings."
+    
+    output$volcanoMethods_UI <- renderUI({
+        fillCol(
+            height = rowH,
+            flex=c(1,NA), ##height = 370,
+            plotWidget(ns("volcanoMethods")),
+            div(HTML(volcanoMethods_caption), class="caption")
+        )
+    })
+
+    tables_caption = "<b>Enrichment tables</b>. <b>(I)</b> Table summarizing the statistical results of the gene set enrichment analysis for selected contrast. The number of stars indicate how many methods identified the geneset significant. <b>(II)</b> Table showing the fold-change, statistics and correlation of the genes in the selected gene set."
+
+    output$tables_UI <- renderUI({
+        fillCol(
+            height = rowH,
+            flex = c(NA,0.05,1),
+            div(HTML(tables_caption),class="caption"),
+            br(),
+            fillRow(
+                ## height = 200,
+                flex = c(1.82,0.08,1),
+                tableWidget(ns("gseatable")),
+                br(),
+                tableWidget(ns("genetable"))        
+            )
+        )
+    })
+
+    output$fctable_UI <- renderUI({
+        fillCol(
+            height = rowH,
+            plotWidget(ns("fctable"))
+        )
+    })
+
+    output$FDRtable_UI <- renderUI({
+        fillCol(
+            height = rowH,
+            tableWidget(ns("FDRtable"))
+        )
+    })
+    
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
@@ -302,7 +411,6 @@ EnrichmentBoard <- function(input, output, session, env)
             jj <- rownames(mx)
             
             gsdiff.method <- "fc"  ## OLD default
-            if(DEV) gsdiff.method <- input$gs_lfcmethod
             if(gsdiff.method=="gs") {
                 AveExpr1 <- rowMeans(ngs$gsetX[jj,s1])
                 AveExpr0 <- rowMeans(ngs$gsetX[jj,s0])
@@ -366,7 +474,8 @@ EnrichmentBoard <- function(input, output, session, env)
             rpt = outputs[[gsmethod]]
         }
 
-        rpt <- rpt[order(-abs(rpt$logFC)),]
+        ##rpt <- rpt[order(-abs(rpt$logFC)),]
+        rpt <- rpt[order(-rpt$logFC),] ## positive        
         rpt = data.frame(rpt)
         
         return(rpt)
@@ -407,7 +516,7 @@ EnrichmentBoard <- function(input, output, session, env)
         ## limit to 1000 rows???
         ## rpt <- head(rpt, 1000)
         res <- data.frame(res)        
-
+        
         if(nrow(res)==0) {
             validate(need(nrow(res) > 0, "warning. no genesets passed current filters."))
             return(NULL)
@@ -440,7 +549,9 @@ EnrichmentBoard <- function(input, output, session, env)
         top <- setdiff(top, c(NA,"NA"))
         if(is.null(top) || is.na(top[1])) return(NULL)
         
-        par(mfrow=rowcol, mar=c(0.5,2.6,2.8,0.3), mgp=c(1.9,0.8,0), oma=c(2,2,1,1)*0.5)
+        par(mar=c(0.2,1.8,2.3,0.1), mgp=c(1.6,0.6,0), oma=c(0.1,1,0,0.1))
+        par(mfrow=rowcol)
+
         for(i in 1:ntop) {
             gs <- top[i]
             if(i > length(top) || is.na(gs) ) {
@@ -452,10 +563,11 @@ EnrichmentBoard <- function(input, output, session, env)
                 names(rnk0) <- toupper(names(rnk0))
                 ylab = ""
                 ## if(i %in% c(1,6)) ylab = "Ranked list metric"
-                if(i%%rowcol[2] == 1) ylab = "Ranked list metric"
+                if(i%%rowcol[2] == 1) ylab = "Rank metric"
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
                             main=gs1, xlab="", ylab=ylab,
-                            cex.main=0.78, len.main=80)
+                            lab.line = c(0,1.8), cex.lab=0.75,
+                            cex.main=0.78, len.main=72)
                 qv1 = formatC(qv[gs],format="e", digits=2)
                 legend("topright", paste("q=",qv1), bty="n",cex=0.85)
             }
@@ -483,77 +595,23 @@ EnrichmentBoard <- function(input, output, session, env)
         if(!is.null(sel) && length(sel)>0) sel.gs = rownames(rpt)[sel]
         
         ## filter on active rows (using search)
-        ii  <- gseatable$rows_all()
-        if(is.null(ii) || length(ii)==0) return(NULL)
-        if(length(ii)>0) {
-            rpt <- rpt[ii,,drop=FALSE]
-        }
-        if(nrow(rpt)==0) return(NULL)
-        i = 1
-        if(!is.null(sel.gs) && sel.gs %in% rownames(rpt)) {
-            i <- match(sel.gs, rownames(rpt))
-        }
-        ##jj <- floor(i/10)*10 + 1:10
-        jj <- i:min(nrow(rpt),i+9)
-
-        message("[topEnriched.RENDER] sel = ",sel)
-        message("[topEnriched.RENDER] sel.gs = ",sel.gs)        
-        message("[topEnriched.RENDER] i = ",i)        
-        message("[topEnriched.RENDER] jj = ",paste(jj,collapse=' '))
-        
-        plotTopEnriched(ngs, rpt[jj,,drop=FALSE], comp=comp, ntop=10, rowcol=c(2,5))
+        ##ii  <- gseatable$rows_all()
+        ii  <- gseatable$rows_current()        
+        if(is.null(ii) || length(ii)==0) return(NULL)        
+        plotTopEnriched(ngs, rpt[ii,,drop=FALSE], comp=comp, ntop=15, rowcol=c(3,5))
     })
-
-    ## Top enriched    
-    topEnriched.RENDER2 %<a-% reactive({
-
-        ngs <- inputData()
-        alertDataLoaded(session,ngs)
-        rpt <- getFilteredGeneSetTable()
-        ##if(is.null(rpt)) return(NULL)
-        req(ngs, rpt, input$gs_contrast)
-
-        comp=1
-        comp = input$gs_contrast
-        if(is.null(comp)) return(NULL)
-        if(!(comp %in% names(ngs$gx.meta$meta))) return(NULL)
         
-        ## selected
-        sel = as.integer(gseatable$rows_selected())
-        sel.gs <- NULL
-        if(!is.null(sel) && length(sel)>0) sel.gs = rownames(rpt)[sel]
-        
-        ## filter on active rows (using search)
-        ii  <- gseatable$rows_all()
-        if(is.null(ii) || length(ii)==0) return(NULL)
-        if(length(ii)>0) {
-            rpt <- rpt[ii,,drop=FALSE]
-        }
-        if(nrow(rpt)==0) return(NULL)
-        i = 1
-        if(!is.null(sel.gs) && sel.gs %in% rownames(rpt)) {
-            i <- match(sel.gs, rownames(rpt))
-        }
-        jj <- i:min(nrow(rpt),i+23)        
-        plotTopEnriched(ngs=ngs, rpt=rpt[jj,,drop=FALSE], comp=comp,
-                        ntop=24, rowcol=c(4,6))        
-
-    })
-    
-    
     topEnriched_text = "This plot shows the <strong>top enriched</strong> gene sets for the selected comparison in the <code>Contrast</code> settings. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score (ES). The more the green ES curve is shifted to the upper left of the graph, the more the gene set is enriched in the first group. Conversely, a shift of the ES curve to the lower right, corresponds to more enrichment in the second group."
-
-    topEnriched_caption = "<b>Top enriched gene sets.</b> Enrichment plots of the top differentially enriched gene sets. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score."
 
     callModule(
         plotModule,
         id = "topEnriched", label="a",
         func = topEnriched.RENDER,
-        func2 = topEnriched.RENDER2,
+        func2 = topEnriched.RENDER,
         info.text = topEnriched_text,
-        height = c(0.95*imgH,720), width = c('auto',1500), 
-        pdf.width = 9, pdf.height = 3, ## pdf.pointsize=16,
-        res = c(90, 110),
+        height = c(imgH,720), width = c('auto',1500), 
+        pdf.height = 6, pdf.width = 12, ## pdf.pointsize=16,
+        res = c(90, 120),
         title = "Top enriched gene sets",
         ##caption = topEnriched_caption,
         add.watermark = WATERMARK
@@ -610,7 +668,7 @@ EnrichmentBoard <- function(input, output, session, env)
         if(!(comp %in% names(ngs$gx.meta$meta))) return(NULL)
         
         ## filter on active rows (using search)
-        ii <- gseatable$rows_all()
+        ii <- gseatable$rows_current()
         rpt <- rpt[ii,,drop=FALSE]
         if(nrow(rpt)==0) return(NULL)
         ntop <- as.integer(input$gs_enrichfreq_ntop)
@@ -635,7 +693,8 @@ EnrichmentBoard <- function(input, output, session, env)
         if(!(comp %in% names(ngs$gx.meta$meta))) return(NULL)
         
         ## filter on active rows (using search)
-        ii <- gseatable$rows_all()
+        ##ii <- gseatable$rows_all()
+        ii <- gseatable$rows_current()        
         rpt <- rpt[ii,,drop=FALSE]
         if(nrow(rpt)==0) return(NULL)
         ntop <- as.integer(input$gs_enrichfreq_ntop)
@@ -648,8 +707,6 @@ EnrichmentBoard <- function(input, output, session, env)
 
     
     topEnrichedFreq_text = "<strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency. Genes that are frequently shared among the top enriched gene sets may suggest driver genes."
-
-    topEnrichedFreq_caption = "<strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency."
     
     topEnrichedFreq.opts = tagList(
         tipify( radioButtons(ns('gs_enrichfreq_ntop'),"Number of top sets",
@@ -670,7 +727,7 @@ EnrichmentBoard <- function(input, output, session, env)
         func2 = topEnrichedFreq.RENDER2,
         options = topEnrichedFreq.opts,
         info.text = topEnrichedFreq_text,
-        height = c(imgH,450), width = c('auto',1200),
+        height = c(imgH,500), width = c('auto',1200),
         res = c(68,100),
         pdf.width = 10, pdf.height = 5, 
         title = "Frequency in top gene sets",
@@ -678,24 +735,6 @@ EnrichmentBoard <- function(input, output, session, env)
         add.watermark = WATERMARK
     )
     
-    ## library(shinyjqui)
-    topEnriched_captionALL <- paste(
-        "<b>(a)</b>",topEnriched_caption,
-        "<b>(b)</b>",topEnrichedFreq_caption)
-    
-    output$topEnriched_UI <- renderUI({
-        fillCol(
-            height = rowH,
-            flex = c(1,NA),
-            fillRow(
-                flex = c(2.1,0.05,1),
-                plotWidget(ns("topEnriched")),
-                br(),
-                plotWidget(ns("topEnrichedFreq"))
-            ),
-            div(HTML(topEnriched_captionALL), class="caption")
-        )
-    })
 
     ##================================================================================
     ## Plots tab
@@ -740,12 +779,13 @@ EnrichmentBoard <- function(input, output, session, env)
     ## 0: Volcano plot in gene space
     ##----------------------------------------------------------------------
     subplot.MAR = c(3,3.5,1.5,0.5)
-    subplot.MAR = c(3.8,4,1.9,0.8)
-
+    subplot.MAR = c(2.8,4,4,0.8)
+    
     subplot_volcano.RENDER %<a-% reactive({
 
-        par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0.5,0.2)*2 )
-        par(mar=subplot.MAR)
+        par(mfrow=c(1,1), mgp=c(1.2,0.4,0), oma=c(0,0,0,0.4) )
+        par(mar= subplot.MAR)
+        ## par(mar= c(2.3,4,1.9,0))
         
         ngs <- inputData()    
         req(ngs)
@@ -792,7 +832,8 @@ EnrichmentBoard <- function(input, output, session, env)
                           render="canvas", n=5000, nlab=10, 
                           xlim=xlim, ylim=ylim, ## hi.col="#222222",
                           use.fdr=TRUE, p.sig=fdr, lfc=lfc,
-                          cex=0.9, lab.cex=1.3, cex.main=0.8,
+                          cex=0.9, lab.cex=1.3,
+                          cex.main=0.8, cex.axis=0.9,
                           xlab="fold change (log2)",
                           ylab="significance (log10q)",
                           highlight=sel.genes)
@@ -803,7 +844,7 @@ EnrichmentBoard <- function(input, output, session, env)
     
     subplot_volcano2.RENDER %<a-% reactive({
         
-        par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0.5,0.2)*2 )
+        par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0,0.4) )
         par(mar=subplot.MAR)
 
         pgx <- inputData()
@@ -827,22 +868,21 @@ EnrichmentBoard <- function(input, output, session, env)
         rownames(pos1) <- rownames(pgx$gx.meta$meta[[comp]])
         colnames(pos1) <- c("difference (log2FC)","significance (-log10q)")        
                 
-        p1 <- pgx.scatterPlotXY(
+        pgx.scatterPlotXY(
             pos=pos1, var=fc, 
             cex=1, cex.title=0.8,
             hilight = gs.genes,
             ##hilight2 = NULL,
             hilight2 = top.genes,
+            zsym = TRUE,
             title = gs,
             plotlib= 'base',
             set.par=FALSE            
         )
-        p1
-        
-        return(p1)
+
     })
     
-    subplot_volcano.PLOTLY %<a-% reactive({
+    subplot_volcano.PLOTLY <- reactive({
         
         ##par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0.5,0.2)*2 )
         ##par(mar=subplot.MAR)
@@ -943,11 +983,12 @@ EnrichmentBoard <- function(input, output, session, env)
         if(is.null(gs)) return(NULL)
         gs.genes = GSETS[[gs]]
         
-        par(mfrow=c(1,1), mgp=c(1.95,0.8,0), oma=c(0,0,0.5,0.2)*2 )
-        par(mar=subplot.MAR)        
+        par(mfrow=c(1,1), mgp=c(1.95,0.8,0), oma=c(0,0,0.4,0.4) )
+        par(mar =  c(2.8,4,3.8,0.8))        
         p1 <- NULL
         ##p1 <- ggenplot(fc, gs.genes, main=gs )
-        gsea.enplot(fc, gs.genes, main=gs )
+        gsea.enplot(fc, gs.genes, main=gs, cex.lab=0.9,
+                    len.main=65, main.line=1.7)
         return(p1)
     })
 
@@ -970,7 +1011,7 @@ EnrichmentBoard <- function(input, output, session, env)
         if(is.null(gs)) return(NULL)
         gs.genes = GSETS[[gs]]
 
-        p1 <- gsea.enplotly(fc, gs.genes, main=gs )
+        p1 <- gsea.enplotly(fc, gs.genes, main=gs)
         return(p1)
     })
 
@@ -978,9 +1019,9 @@ EnrichmentBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ## 1: Gene set activation {data-width=200}
     ##----------------------------------------------------------------------
-    subplot2.RENDER %<a-% reactive({
+    subplot_barplot.RENDER %<a-% reactive({
         
-        par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0.5,0.2)*2 )
+        par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0,0.4) )
         par(mar=subplot.MAR)
         
         ngs <- inputData()    
@@ -1019,7 +1060,7 @@ EnrichmentBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     subplot3.RENDER %<a-% reactive({
 
-        par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0.5,0.2)*2 )
+        par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0,0.4) )
         par(mar=subplot.MAR)
         
         ngs <- inputData()    
@@ -1061,9 +1102,9 @@ EnrichmentBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ## 3: Gene - gene set correlation
     ##----------------------------------------------------------------------
-    subplot4.RENDER %<a-% reactive({
+    subplot_scatter.RENDER %<a-% reactive({
 
-        par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0.5,0.2)*2 )
+        par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0,0.4) )
         par(mar=subplot.MAR)
         
         ngs <- inputData()    
@@ -1112,35 +1153,37 @@ EnrichmentBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
 
     subplot_volcano_text = "</b>Volcano plot.<b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set that is selected from the enrichment analysis <b>Table I</b> are highlighted in blue."
-    subplot2_text = "An enrichment barplot per sample group for the gene set that is selected from the enrichment analysis Table <code>I</code>. Samples can be ungrouped in the barplot by selecting <code>ungroup samples</code> from the plot <i>Settings</i>."
+    subplot_barplot_text = "An enrichment barplot per sample group for the gene set that is selected from the enrichment analysis Table <code>I</code>. Samples can be ungrouped in the barplot by selecting <code>ungroup samples</code> from the plot <i>Settings</i>."
     subplot3_text = "An expression barplot per sample group for the gene that is selected from the genes Table <code>II</code>. Samples can be ungrouped in the barplot by selecting <code>ungroup samples</code> from the plot <i>Settings</i>."
-    subplot4_text = "A scatter plot of enrichment scores versus expression values across the samples for the gene set selected from the enrichment analysis Table <code>I</code> and the gene selected from the genes Table <code>II</code>."
+    subplot_scatter_text = "A scatter plot of enrichment scores versus expression values across the samples for the gene set selected from the enrichment analysis Table <code>I</code> and the gene selected from the genes Table <code>II</code>."
     
-    enrichplots_caption = "<b>Enrichment plots</b> associated with the gene set (selected in <b>Table I</b>) and gene (selected in <b>Table II</b>). <b>(a)</b> Gene set enrichment plot. <b>(b)</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set are highlighted in blue. <b>(c)</b> Barplot of the gene set enrichment in the groups. <b>(d)</b> Scatter plot of the enrichment versus the expression of the selected geneset and gene, on the y and x axes, respectively."
 
     callModule(
         plotModule,
         id = "subplot_volcano", 
-        func = subplot_volcano.PLOTLY, plotlib="plotly",
-        ## func = subplot_volcano2.RENDER, plotlib="base",        
-        ## func2 = subplot_volcano2.RENDER, 
-        info.text = subplot_volcano_text,
-        pdf.width=6, pdf.height=6,
-        res = c(72,100),
-        height = imgH, 
+        func = subplot_volcano.RENDER,
+        plotlib = "base",
+        func2 = subplot_volcano.PLOTLY,
+        plotlib2 = "plotly",
+        ##info.text = subplot_volcano_text,
+        ##pdf.width=6, pdf.height=6,
+        ##options = tagList(),
+        ##res = c(72,100),
+        height = c(imgH,750), width=c('auto',900),
         title="Volcano plot", label="b",
         add.watermark = WATERMARK
     )
 
     callModule(
         plotModule,
-        id="subplot2", 
-        func = subplot2.RENDER,
-        func2 = subplot2.RENDER,
-        info.text = subplot2_text,
+        id="subplot_barplot", 
+        func = subplot_barplot.RENDER,
+        func2 = subplot_barplot.RENDER,
+        info.text = subplot_barplot_text,
         pdf.width=6, pdf.height=6,
         res = c(72,100),
-        height = imgH,
+        height = c(imgH,750),
+        width = c('auto',900),        
         options = tagList(
             tipify( checkboxInput(
                 ns('gs_ungroup1'),'ungroup samples',FALSE),
@@ -1169,10 +1212,10 @@ EnrichmentBoard <- function(input, output, session, env)
 
     callModule(
         plotModule,
-        id="subplot4",
-        func = subplot4.RENDER,
-        func2 = subplot4.RENDER,
-        info.text = subplot4_text,
+        id="subplot_scatter",
+        func = subplot_scatter.RENDER,
+        func2 = subplot_scatter.RENDER,
+        info.text = subplot_scatter_text,
         pdf.width=6, pdf.height=6, res=72,
         height = imgH,
         title = "Enrichment vs. expression", label="d",
@@ -1193,25 +1236,6 @@ EnrichmentBoard <- function(input, output, session, env)
         add.watermark = WATERMARK
     )
    
-    output$subplots_UI <- renderUI({
-        fillCol(
-            height = rowH,
-            flex = c(1,0.05,NA),
-            fillRow(
-                id = ns("subplots"),
-                height = imgH,
-                flex=c(1,1,1,1), ##height = 370,
-                plotWidget(ns("subplot_enplot")),
-                plotWidget(ns("subplot_volcano")),                
-                plotWidget(ns("subplot2")),
-                ## plotWidget(ns("subplot3")),
-                plotWidget(ns("subplot4"))
-            ),
-            br(),
-            div(HTML(enrichplots_caption),class="caption")
-        )
-    })
-    dragula(ns("subplots"))
 
     ##================================================================================
     ## Compare
@@ -1251,11 +1275,10 @@ EnrichmentBoard <- function(input, output, session, env)
                 names(rnk0) <- toupper(sub(".*:","",names(rnk0)))
                 qv0 <- ngs$gset.meta$meta[[cmp]][gset,"meta.q"]
                 gs1 = breakstring(gset,28,50,force=FALSE)
-                cmp <- paste0("@",cmp)
-                if(i==1) cmp <- paste0(gset,"\n",cmp)
+                cmp <- paste0(gset,"\n@",cmp)
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
                             main=cmp, xlab="",
-                            cex.main=0.80, len.main=80)
+                            cex.main=0.80, len.main=72)
                 qv1 = formatC(qv0,format="e", digits=2)
                 legend("topright", paste("q=",qv1), bty="n",cex=0.85)
             }
@@ -1270,11 +1293,10 @@ EnrichmentBoard <- function(input, output, session, env)
                 names(rnk0) <- toupper(sub(".*:","",names(rnk0)))
                 qv0 <- ngs$gset.meta$meta[[cmp]][gset,"meta.q"]
                 gs1 = breakstring(gset,28,50,force=FALSE)
-                cmp <- paste0("@",cmp)
-                if(i==1) cmp <- paste0(gset,"\n",cmp)
+                cmp <- paste0(gset,"\n@",cmp)
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
                             main=cmp, xlab="",
-                            cex.main=0.80, len.main=80)
+                            cex.main=0.80, len.main=72)
                 qv1 = formatC(qv0,format="e", digits=2)
                 legend("topright", paste("q=",qv1), bty="n",cex=0.85)
             }
@@ -1284,8 +1306,6 @@ EnrichmentBoard <- function(input, output, session, env)
 
 
     compare_text = "Under the <strong>Compare</strong> tab, enrichment profiles of the selected geneset in enrichment Table <code>I</code> can be visualised against all available contrasts."
-
-    compare_caption = "<b>Enrichment across contrasts.</b> Enrichment plots for the selected gene set (in <b>Table I</b>) across multiple contrasts. The figure allows to quickly compare the enrichment of a certain gene set across all other comparisons."
 
     compare_module_opts = tagList()
     
@@ -1303,14 +1323,6 @@ EnrichmentBoard <- function(input, output, session, env)
         add.watermark = WATERMARK
     )
 
-    output$compare_UI <- renderUI({
-        fillCol(
-            height = rowH,
-            flex=c(1,NA), ##height = 370,
-            plotWidget( ns("compare")),
-            div(HTML(compare_caption),class="caption")
-        )
-    })
 
     ##================================================================================
     ## Volcano (all)
@@ -1408,9 +1420,6 @@ EnrichmentBoard <- function(input, output, session, env)
     
     volcanoAll_text = "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for gene sets across all contrasts. This provides users an overview of the statistics across all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
 
-
-    volcanoAll_caption = "<b>Volcano plots for all contrasts.</b> Simultaneous visualisation of volcano plots of gene set enrichment across all contrasts. Volcano-plot are plotting enrichment score versus significance on the x and y axes, respectively. Experimental contrasts showing better statistical significance will show volcano plots with 'higher' wings."
-
     callModule(
         plotModule,
         id = "volcanoAll",
@@ -1424,14 +1433,6 @@ EnrichmentBoard <- function(input, output, session, env)
         add.watermark = WATERMARK
     )
     
-    output$volcanoAll_UI <- renderUI({
-        fillCol(
-            height = rowH,
-            flex=c(1,NA), ##height = 370,
-            plotWidget(ns("volcanoAll")),
-            div(HTML(volcanoAll_caption), class="caption")
-        )
-    })
 
     ##================================================================================
     ## Volcano (methods)
@@ -1513,8 +1514,6 @@ EnrichmentBoard <- function(input, output, session, env)
 
     volcanoMethods_text = "The <strong>Volcano (methods)</strong> panel displays the volcano plots provided by different enrichment calculation methods. This provides users an quick overview of the sensitivity of the statistical methods at once. Methods showing better statistical significance will show volcano plots with 'higher' wings."
 
-    volcanoMethods_caption = "<b>Volcano plots for all methods.</b> Simultaneous visualisation of volcano plots of gene sets for different enrichment methods. Methods showing better statistical significance will show volcano plots with 'higher' wings."
-
     callModule(
         plotModule,
         id="volcanoMethods",
@@ -1527,115 +1526,7 @@ EnrichmentBoard <- function(input, output, session, env)
         ##caption = volcanoMethods_caption,
         add.watermark = WATERMARK
     )
-
-    output$volcanoMethods_UI <- renderUI({
-        fillCol(
-            height = rowH,
-            flex=c(1,NA), ##height = 370,
-            plotWidget(ns("volcanoMethods")),
-            div(HTML(volcanoMethods_caption), class="caption")
-        )
-    })
     
-    ##================================================================================
-    ## GeneMap (dev)
-    ##================================================================================
-
-    genemap.RENDER %<a-% reactive({
-        
-        require(Matrix)
-
-        ngs <- inputData()
-        req(ngs, input$gs_contrast)
-        
-        ## -------------- get the gene-centric fold-changes (default LIMMA)
-        comp1=1
-        comp1 = input$gs_contrast
-        gx.meta <- ngs$gx.meta$meta[[comp1]]
-        ##limma1 = sapply(gx.meta[,c("fc","p","q")],function(x) x[,"trend.limma"])
-        limma1 = data.frame( fc=gx.meta$meta.fx, meta.q=gx.meta$meta.q)        
-        ##limma = cbind( ngs$gx.meta$meta[[comp1]][,c("gene_name","gene_title")], limma1)
-        gx.annot <- ngs$genes[rownames(gx.meta),c("gene_name","gene_title")]
-        ##limma = cbind( gx.meta[,c("gene_name","gene_title")], limma1)
-        limma = cbind(gx.annot, limma1)
-        
-        gs = rownames(ngs$gsetX)[1]
-        gs = gset_selected()
-        if(is.null(gs)) return(NULL)
-        gs <- gs[1]
-        
-        gsets = colnames(ngs$GMT)
-        if(!(gs %in% gsets)) {
-            cat("warning:: geneset",gs,"not in GSETS!!\n")
-            return(NULL)
-        }
-        
-        ## ------------------- compute closests neighbours (gene set)
-        rpt = isolate( getFilteredGeneSetTable() )
-        mx = ngs$gset.meta$meta[[comp1]]
-        mx = mx[intersect(rownames(mx),rownames(rpt)),]  ## only those currently selected
-        mx = mx[intersect(rownames(mx),gsets),]  ## only those that have GMT
-
-        ##genes = rownames(ngs$X)
-        ##genes = ngs$genes$gene_name
-        kk <- intersect(rownames(ngs$gsetX), colnames(ngs$GMT))    
-        G = ngs$GMT[,kk]    
-        colnames(G) = kk
-        gg = intersect(rownames(G),as.character(limma$gene_name))
-        fc = abs(limma[match(gg,limma$gene_name),"fc"])    
-        g1 = as.matrix(G[gg,rownames(mx)])*fc
-        g2 = G[gg,gs]*fc
-        suppressWarnings( rho1 <- cor(g1, g2)[,1] )
-        
-        ## ----------- create map with closest neigbours (what crappy coding...)
-        gs.top = head(names(sort(-abs(rho1))),25)  ## how many gene sets
-        fx = mx[gs.top,"meta.fx"]
-        M = t(G[,gs.top]) * fx
-        rownames(M) = gs.top
-        M = M[,intersect(colnames(M),limma$gene_name)]
-        fc = limma[match(colnames(M),limma$gene_name),"fc"]
-        M = t(t(M) * abs(fc))
-        jj = head(order(-Matrix::colSums(abs(M))), 80)  ## how many genes
-        M = M[,jj]
-        M = 1*(M!=0)
-        fx = mx[rownames(M),"meta.fx"]
-        fc = limma[match(colnames(M),limma$gene_name),"fc"]
-        fc[is.na(fc)] = 0
-        fx[is.na(fx)] = 0    
-        M = t( t(M * rank(abs(fx)) ) * fc )
-        M = sign(M) * abs(M)**0.33
-        M = as.matrix(M)
-        ##d3heatmap(M, scale="none", colors="Spectral", cexRow=0.7, cexCol=0.6 )
-        hc <- gx.heatmap(M-1e-8, mar=c(6,38), cexRow=1.00, cexCol=0.95,
-                         scale='none', keysize=0.3, key=FALSE)
-        
-    })
-
-    genemap_text = "Co-activation heatmap of top N = {25} enriched gene sets and their common genes."
-
-    genemap_caption = "<b>Co-activation heatmap.</b> Clustered heatmap of top most correlated gene sets and their shared genes. The top gene sets most correlated with the selected gene set (in Table I) are shown. Red corresponds to overexpression, blue to downregulation of the gene." 
-
-    callModule(
-        plotModule,
-        id = "genemap",
-        func = genemap.RENDER,
-        func2 = genemap.RENDER,
-        height = c(imgH,450), width = c("auto",1500), res=c(80,80),
-        pdf.width=14, pdf.height=4, ## res=65,
-        title = "Co-activation heatmap",
-        info.text = genemap_text,
-        ##caption = genemap_caption,
-        add.watermark = WATERMARK
-    )
-
-    output$genemap_UI <- renderUI({
-        fillCol(
-            height = rowH,
-            flex=c(1,NA), ##height = 370,
-            plotWidget(ns("genemap")),
-            div(HTML(genemap_caption), class="caption")
-        )
-    })
 
     ##================================================================================
     ## Enrichment table
@@ -1765,7 +1656,7 @@ EnrichmentBoard <- function(input, output, session, env)
         if(!input$gs_showqvalues) {
             rpt <- rpt[,grep("^q[.]|^q$",colnames(rpt),invert=TRUE)]
         }
-
+        
         ## wrap genesets names with known links.
         rpt$GS <- wrapHyperLink(rpt$GS, rownames(rpt))    
         selectmode = "single"
@@ -1774,6 +1665,8 @@ EnrichmentBoard <- function(input, output, session, env)
         is.numcol <- sapply(rpt, is.numeric)
         numcols <- which( is.numcol & !colnames(rpt) %in% c("size"))
         numcols <- colnames(rpt)[numcols]
+
+        colnames(rpt) <- sub("GS","geneset",colnames(rpt))
 
         ##rpt = format(rpt, digits=4)
         DT::datatable(rpt,
@@ -1784,13 +1677,29 @@ EnrichmentBoard <- function(input, output, session, env)
                       extensions = c('Scroller'),                  
                       fillContainer = TRUE,
                       selection = list(mode=selectmode, target='row', selected=1),
+                      ## options=list(
+                      ##     dom = 'lfrtip',
+                      ##     ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                      ##     scrollX = TRUE,
+                      ##     scrollY = tabH,
+                      ##     scroller=TRUE,
+                      ##     deferRender=TRUE
+                      ## )
                       options=list(
-                          dom = 'lfrtip',
-                          ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                          dom = 'frtip',                          
+                          paging = TRUE,
+                          pageLength = 15, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
                           scrollX = TRUE,
-                          scrollY = tabH,
-                          scroller=TRUE, deferRender=TRUE
-                      )) %>%
+                          scrollY = FALSE,                          
+                          scroller = FALSE,
+                          deferRender=TRUE,
+                          search = list(
+                              regex = TRUE,
+                              caseInsensitive = TRUE
+                            ##, search = 'HALLMARK'
+                          )
+                      )  ## end of options.list 
+                      ) %>%
             formatSignif(numcols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
             DT::formatStyle(fx.col, 
@@ -1826,11 +1735,29 @@ EnrichmentBoard <- function(input, output, session, env)
                              extensions = c('Scroller'),
                              selection = list(mode="single", target='row', selected=1),
                              fillContainer = TRUE,
+                             ## options=list(
+                             ##     dom = 'lfrtip',
+                             ##     ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                             ##     scrollX = TRUE,
+                             ##     scrollY = tabH,
+                             ##     scroller=TRUE,
+                             ##     deferRender=TRUE
+                             ## )
                              options=list(
-                                 dom = 'lfrtip',
-                                 ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                                 scrollX = TRUE, scrollY = tabH, scroller=TRUE, deferRender=TRUE
-                             )) %>%
+                                 dom = 'frtip',                          
+                                 paging = TRUE,
+                                 pageLength = 15, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                                 scrollX = TRUE,
+                                 scrollY = FALSE,                          
+                                 scroller = FALSE,
+                                 deferRender=TRUE,
+                                 search = list(
+                                     regex = TRUE,
+                                     caseInsensitive = TRUE
+                                     ##, search = 'HALLMARK'
+                                 )
+                      )  ## end of options.list 
+                             ) %>%
             formatSignif(numeric.cols,4)
         
         if( nrow(rpt)>0 && ("fc" %in% colnames(rpt)) ) {
@@ -1871,25 +1798,9 @@ EnrichmentBoard <- function(input, output, session, env)
         func=genetable.RENDER,
         info.text = genetable_text,
         title="Genes in gene set", label="II",
-        height = c(285,700), width = c('100%',800)
+        height = c(285,700), width = c('auto',800)
     )
     
-    tables_caption = "<b>Enrichment tables</b>. <b>(I)</b> Table summarizing the statistical results of the gene set enrichment analysis for selected contrast. The number of stars indicate how many methods identified the geneset significant. <b>(II)</b> Table showing the fold-change, statistics and correlation of the genes in the selected gene set."
-
-    output$tables_UI <- renderUI({
-        fillCol(
-            height = rowH,
-            flex = c(1, NA),
-            fillRow(
-                ## height = 200,
-                flex = c(2,0.1,0.8), 
-                tableWidget(ns("gseatable")),
-                br(),
-                tableWidget(ns("genetable"))        
-            ),
-            div(HTML(tables_caption),class="caption")
-        )
-    })
 
     ##================================================================================
     ## Enrichment (all)
@@ -1923,7 +1834,10 @@ EnrichmentBoard <- function(input, output, session, env)
                       options=list(
                           dom = 'frtip', 
                           ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, scrollY = tabH, scroller=TRUE, deferRender=TRUE
+                          scrollX = TRUE,
+                          scrollY = tabH,
+                          scroller=TRUE,
+                          deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
@@ -1951,17 +1865,9 @@ EnrichmentBoard <- function(input, output, session, env)
         title ="Gene set enrichment for all contrasts",
         info.text = gx_fctable_text,
         caption = gx_fctable_caption,
-        height = c(280,750),
+        height = c(295,750),
         width = c('100%',1600)
     )
-
-    ## library(shinyjqui)
-    output$fctable_UI <- renderUI({
-        fillCol(
-            height = rowH,
-            plotWidget(ns("fctable"))
-        )
-    })
 
     
     ##================================================================================
@@ -2029,8 +1935,10 @@ EnrichmentBoard <- function(input, output, session, env)
                       options=list(
                           dom = 'frtip',
                           pageLength = 999,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE, scrollY = tabH,
-                          scroller=TRUE, deferRender=TRUE
+                          scrollX = TRUE,
+                          scrollY = tabH,
+                          scroller=TRUE,
+                          deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
@@ -2055,18 +1963,9 @@ EnrichmentBoard <- function(input, output, session, env)
         title = 'Number of significant gene sets',
         info.text = FDRtable_text,
         caption = FDRtable_caption,
-        height = c(280,750),
+        height = c(295,750),
         width = c('100%',1600)
     )
-
-    ## library(shinyjqui)
-    output$FDRtable_UI <- renderUI({
-        fillCol(
-            height = rowH,
-            tableWidget(ns("FDRtable"))
-        )
-    })
-
 
     ## reactive values to return to parent environment
     outx <- list(selected_gsetmethods=selected_gsetmethods)
