@@ -49,7 +49,6 @@ FeatureMapBoard <- function(input, output, session, env)
     ##================================================================================
     
     umap_caption = "<h4>Gene maps</h4>"
-
     output$geneUMAP_UI <- renderUI({
         fillCol(
             flex = c(NA,0.02,1,0.3),
@@ -68,23 +67,23 @@ FeatureMapBoard <- function(input, output, session, env)
     })
     ## important for plot options to be updated correctly...
     outputOptions(output, "geneUMAP_UI", suspendWhenHidden=FALSE) 
-    
-    gset_caption = "<h4>Geneset maps</h4>"
-    
+
+
+    ##----------------------------------------------
+    gset_caption = "<h4>Geneset maps</h4>"    
     output$gsetUMAP_UI <- renderUI({
         fillCol(
-            flex = c(NA,0.02,1),
-            height = fullH,
+            flex = c(NA,0.02,1,0.3),
+            height = 1.1*fullH,
             div(HTML(gset_caption), class="caption"),
             br(),
             fillRow(
                 flex = c(1,0.03,1.2),
                 plotWidget(ns('gsetUMAP')),
-                ##plotWidget(ns('gsetUMAP')) %>% withSpinner(),  ## not working...              
                 br(),
                 plotWidget(ns('gsetTopPlots')) ##  %>% withSpinner()
-            )
-            ##tableWidget(ns('gsetTable'))
+            ),
+            tableWidget(ns('gsetTable'))
         )
 
     })
@@ -613,11 +612,12 @@ FeatureMapBoard <- function(input, output, session, env)
         title = "GENESET UMAP", label="a",
         func = gsetUMAP.RENDER,
         func2 = gsetUMAP.RENDER2,
+        outputFunc = sub("XXX",ns("gsetUMAP_brush"),"function(x,...)plotOutput(x,brush='XXX',...)"),
         plotlib2 = 'plotly',
         download.fmt = c("png","pdf"),
         options = gsetUMAP.opts,
         info.text = gsetUMAP_info,        
-        height = c(700, 750), width = c('auto',1200),
+        height = c(600, 750), width = c('auto',1200),
         pdf.width=8, pdf.height=8,
         res = c(72,80),
         add.watermark = WATERMARK
@@ -689,7 +689,7 @@ FeatureMapBoard <- function(input, output, session, env)
         download.fmt = c("png","pdf"),
         options = gsetTopPlots.opts,
         info.text = gsetTopPlots.info,        
-        height = c(700, 750),
+        height = c(600, 750),
         width = c('auto',1200),
         pdf.width = 11, pdf.height = 9, 
         res = c(80,90),
@@ -771,11 +771,9 @@ FeatureMapBoard <- function(input, output, session, env)
                 ##                 backgroundPosition = 'center') 
     })
 
+    
     ##--------buttons for table
-    geneTable.opts = tagList(
-        tipify(checkboxInput(ns('dseatable_filter'),'only annotated drugs',TRUE),
-               "Show only annotated drugs.")
-    )  
+    geneTable.opts = tagList()  
     geneTable <- callModule(
         tableModule,
         id = "geneTable", label="c",
@@ -785,6 +783,96 @@ FeatureMapBoard <- function(input, output, session, env)
         title = "Gene table",
         height = c(280,750), width=c('auto',1400)
     )
+
+    ##--------------------------------------------------------------------------------
+    ##---------------------------- GENESET -------------------------------------------
+    ##--------------------------------------------------------------------------------    
+    
+    gsetTable.RENDER <- reactive({
+        ngs <- inputData()
+        req(ngs)
+        if(is.null(ngs$drugs)) return(NULL)
+        
+        pos <- getGsetUMAP()
+
+        ## detect brush
+        sel.gsets <- NULL
+        ##b <- input$ftmap-geneUMAP_brush  ## ugly??
+        dbg("[gsetTable.RENDER] names.input = ",names(input))        
+        b <- input[['gsetUMAP_brush']]  ## ugly??        
+        dbg("[gsetTable.RENDER] is.null(b) = ",is.null(b))
+        dbg("[gsetTable.RENDER] length(b) = ",length(b))
+        dbg("[gsetTable.RENDER] names(b) = ",names(b))
+        
+        if(!is.null(b) & length(b)) {
+            sel <- which( pos[,1] > b$xmin & pos[,1] < b$xmax &
+                          pos[,2] > b$ymin & pos[,2] < b$ymax )
+            sel.gsets <- rownames(pos)[sel]
+        }
+        dbg("[gsetTable.RENDER] sel.gsets = ",sel.gsets)
+        
+        pheno='tissue'
+        pheno <- input$sigvar
+        is.fc=FALSE
+        if(pheno %in% colnames(ngs$samples)) {
+            X <- ngs$gsetX - rowMeans(ngs$gsetX)
+            y <- ngs$samples[,pheno]
+            F <- do.call(cbind,tapply(1:ncol(X),y,function(i)
+                rowMeans(X[,i,drop=FALSE])))
+            is.fc=FALSE            
+        } else {
+            F <- pgx.getMetaMatrix(ngs, level='geneset')$fc
+            is.fc=TRUE
+        }
+        
+        if(!is.null(sel.gsets)) {
+            sel.gsets <- intersect(sel.gsets,rownames(F))
+            F <- F[sel.gsets,]
+        }
+        F <- F[order(-rowMeans(F**2)),]
+        
+        ## tt <- shortstring(ngs$genes[rownames(F),'gene_title'],60)
+        F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
+        if(is.fc) colnames(F)[1] = "sd.FC"
+        F  <- round(F, digits=3)
+        gs <- substring(rownames(F),1,100)
+        df <- data.frame(geneset=gs, F, check.names=FALSE)
+        
+        DT::datatable( df, rownames=FALSE,
+                      class = 'compact cell-border stripe hover',                  
+                      extensions = c('Scroller'),
+                      selection=list(mode='single', target='row', selected=NULL),
+                      fillContainer = TRUE,
+                      options=list(
+                          ##dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
+                          dom = 'lfrtip', 
+                          scrollX = TRUE, ##scrollY = TRUE,
+                          scrollY = '70vh',
+                          scroller = TRUE,
+                          deferRender = TRUE
+                      )  ## end of options.list 
+                      ) %>%
+            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') ## %>% 
+                ## DT::formatStyle( "NES",
+                ##                 background = color_from_middle( res[,"NES"], 'lightblue', '#f5aeae'),
+                ##                 backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
+                ##                 backgroundPosition = 'center') 
+    })
+
+    ##--------buttons for table
+    gsetTable.opts = tagList(
+    )  
+    gsetTable <- callModule(
+        tableModule,
+        id = "gsetTable", label="c",
+        func = gsetTable.RENDER, 
+        options = gsetTable.opts,
+        info.text="<b>Gene table.</b>", 
+        title = "Geneset table",
+        height = c(280,750), width=c('auto',1400)
+    )
+    
+
     
     ## ========================================================================
     ## ========================================================================
