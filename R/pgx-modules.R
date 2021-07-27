@@ -619,8 +619,8 @@ plotModule <- function(input, output, session, ## ns=NULL,
     
     ## This sets the correct render and output functions for different
     ##plotting libraries.
-    getOutputRenderFunc <- function(plotlib) {
-        outputFunc = renderFunc = NULL
+    getOutputRenderFunc <- function(plotlib, outputFunc, renderFunc)
+    {        
         if(plotlib == "generic") {
             if(is.null(renderFunc)) stop("'generic' class must provide renderFunc")
             if(is.null(outputFunc)) stop("'generic' class must provide outputFunc")
@@ -630,58 +630,58 @@ plotModule <- function(input, output, session, ## ns=NULL,
         } else if(plotlib == "plotly") {
             ##render <- renderPlotly({ func() })
             require(plotly)
-            outputFunc = "plotlyOutput"
-            renderFunc = "renderPlotly"
+            if(is.null(outputFunc)) outputFunc = "plotlyOutput"
+            if(is.null(renderFunc)) renderFunc = "renderPlotly"
         } else if(plotlib == "echarts") {
             ##render <- renderPlotly({ func() })
             require(plotly)
-            outputFunc = "echarts4rOutput"
-            renderFunc = "renderEcharts4r"
+            if(is.null(outputFunc)) outputFunc = "echarts4rOutput"
+            if(is.null(renderFunc)) renderFunc = "renderEcharts4r"
         } else if(plotlib=="scatterD3") {
             require(scatterD3)
-            renderFunc="renderScatterD3"
-            outputFunc="scatterD3Output"
+            if(is.null(renderFunc)) renderFunc="renderScatterD3"
+            if(is.null(outputFunc)) outputFunc="scatterD3Output"
         } else if(plotlib=="pairsD3") {
             require(pairsD3)
-            renderFunc="renderPairsD3"
-            outputFunc="pairsD3Output"
+            if(is.null(renderFunc)) renderFunc="renderPairsD3"
+            if(is.null(outputFunc)) outputFunc="pairsD3Output"
         } else if(plotlib == "visnetwork") {
             require(visNetwork)
-            outputFunc="visNetworkOutput"
-            renderFunc = "renderVisNetwork"
+            if(is.null(outputFunc)) outputFunc="visNetworkOutput"
+            if(is.null(renderFunc)) renderFunc = "renderVisNetwork"
         } else if(plotlib %in% c("ggplot","ggplot2")) {
-            outputFunc="plotOutput"
-            renderFunc="function(x) renderPlot(plot(x))"
+            if(is.null(outputFunc)) outputFunc="plotOutput"
+            if(is.null(renderFunc)) renderFunc="function(x) renderPlot(plot(x))"
         } else if(plotlib == "iheatmapr") {
             require(iheatmapr)
-            outputFunc="iheatmaprOutput"
-            renderFunc="renderIheatmap"
+            if(is.null(outputFunc)) outputFunc="iheatmaprOutput"
+            if(is.null(renderFunc)) renderFunc="renderIheatmap"
         } else if(plotlib == "image") {
-            outputFunc="imageOutput"
-            renderFunc="renderImage"
+            if(is.null(outputFunc)) outputFunc="imageOutput"
+            if(is.null(renderFunc)) renderFunc="renderImage"
         } else {
             ## Base plotting
             ## render <- renderPlot({
             ##     par(mar=c(0,0,0,0),oma=c(0,0,0,0))
             ##     func()
             ## }, res=res, width=width, height=height)
-            outputFunc="plotOutput"
+            if(is.null(outputFunc)) outputFunc="plotOutput"
             ##renderFunc="renderPlot"
             ##renderFunc="function(x) renderPlot(x, res=res, width=width, height=height)"
-            renderFunc="renderPlot"
+            if(is.null(renderFunc)) renderFunc="renderPlot"
         }
         list( outputFunc=outputFunc, renderFunc=renderFunc )
     }
 
     if(is.null(outputFunc) && is.null(renderFunc)) {
-        out1 <- getOutputRenderFunc(plotlib)
+        out1 <- getOutputRenderFunc(plotlib, outputFunc, renderFunc)
         outputFunc = out1$outputFunc
         renderFunc = out1$renderFunc
     }
 
     if(is.null(outputFunc2) && is.null(renderFunc2) &&
        plotlib2 != plotlib ) {    
-        out2 <- getOutputRenderFunc(plotlib2)
+        out2 <- getOutputRenderFunc(plotlib2, outputFunc2, renderFunc2)
         outputFunc2 = out2$outputFunc
         renderFunc2 = out2$renderFunc
     }
@@ -819,7 +819,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
             ##render,
             eval(parse(text=outputFunc))(ns("renderfigure"), width=width.1, height=height.1),
             br(),
-            div( caption, class="caption"),          
+            div(caption, class="caption"),          
             div(class="popup-plot",
                 bsModal(ns("plotPopup"), title, size="l",
                         ns("zoombutton"),

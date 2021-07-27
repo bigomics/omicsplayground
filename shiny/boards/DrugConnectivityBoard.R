@@ -105,62 +105,67 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     ##================================================================================
     ## Reactive functions
     ##================================================================================
+    
+    ## getDseaTable <- reactive({
 
-    getDseaTable <- reactive({
+    getActiveDSEA <- reactive({
+        
         ngs <- inputData()
         alertDataLoaded(session,ngs)
         req(ngs)        
         req(input$dsea_contrast, input$dsea_method)
         
-        dbg("[getDseaTable] reacted")
-        
-        dmethod="CTRPv2/sensitivity";comparison=1
-        dmethod="L1000/activity";comparison=1        
-        dmethod="L1000/gene";comparison=1        
-
-        names(ngs$gx.meta$meta)
-        comparison = input$dsea_contrast
-        if(is.null(comparison)) return(NULL)
-
-        dbg("[getDseaTable] 1: ")
+        dbg("[getActiveDSEA] reacted")
         
         names(ngs$drugs)
+        dmethod="CTRPv2/sensitivity"
+        dmethod="L1000/activityXL"
+        dmethod="L1000/gene"
+        colnames(ngs$contrasts)
+        contr="treatment:Gefitinib_vs_CT" 
+        
+        contr = input$dsea_contrast
+        if(is.null(contr)) return(NULL)
+
+        dbg("[getActiveDSEA] 1: contr = ", contr)
+        
         dmethod <- input$dsea_method
         if(is.null(dmethod)) return(NULL)
 
-        dbg("[getDseaTable] 2: ")
+        dbg("[getActiveDSEA] 2: dmethod = ",dmethod)
         
-        dr <- ngs$drugs[[dmethod]]
-        nes <- round(dr$X[,comparison],4)
-        pv  <- round(dr$P[,comparison],4)
-        qv  <- round(dr$Q[,comparison],4)
-        drug <- rownames(dr$X)
-        stats <- dr$stats
+        dr    <- ngs$drugs[[dmethod]]
+        nes   <- round(dr$X[,contr],4)
+        pv    <- round(dr$P[,contr],4)
+        qv    <- round(dr$Q[,contr],4)
+        drug  <- rownames(dr$X)
+        stats <- dr$stats[,contr]
         annot <- dr$annot
         nes[is.na(nes)] <- 0
         qv[is.na(qv)] <- 1
         pv[is.na(pv)] <- 1
 
-        dbg("[getDseaTable] 3: dim.annot = ",dim(annot))        
+        dbg("[getActiveDSEA] 3: dim.annot = ",dim(annot))        
         
         ## !!!SHOULD MAYBE BE DONE IN PREPROCESSING???
         if(is.null(annot)) {
-            message("[getDseaTable] WARNING:: missing drug annotation in PGX file!")
+            message("[getActiveDSEA] WARNING:: missing drug annotation in PGX file!")
             annot <- read.csv(file.path(FILESX,"sig/L1000_repurposing_drugs.txt"),
                               sep="\t", comment.char="#")
             rownames(annot) <- annot$pert_iname
         }
 
-        dbg("[getDseaTable] 4: ")
+        dbg("[getActiveDSEA] 4: ")
 
+        ## compile results matrix
         jj <- match(toupper(drug), toupper(rownames(annot)))
         annot <- annot[jj,c("moa","target")]        
         dt <- data.frame( drug=drug, NES=nes, pval=pv, padj=qv, annot)
         ##dt <- dt[order(-abs(dt$NES)),]
         ##dt <- dt[order(dt$pval,-abs(dt$NES)),]
         dt <- dt[order(-dt$NES),]
-
-        dbg("[getDseaTable] 5: ")
+        
+        dbg("[getActiveDSEA] 5: ")
         
         req(input$dseatable_filter)
         if(input$dseatable_filter) {
@@ -168,15 +173,17 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             dt <- dt[sel,,drop=FALSE]
         }
 
-        dbg("[getDseaTable] done!")
-        
-        return(dt)
+        dbg("[getActiveDSEA] done!")
+        dsea <- list(table=dt, clust=dr$clust, stats=stats)        
+
+        return(dsea)
     })
 
     getMOA.target <- reactive({
         ## meta-GSEA on molecular targets
-        dt <- getDseaTable()
-        require(dt)        
+        dsea <- getActiveDSEA()
+        dt <- dsea$table
+        req(dt)        
         targets.list <- lapply(as.character(dt$target),
                                function(s) trimws(strsplit(s,split="[\\|;,]")[[1]]) )
         names(targets.list) <- rownames(dt)
@@ -188,16 +195,18 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         rnk <- dt$NES
         names(rnk) <- rownames(dt)
         suppressWarnings(
-            res <- fgsea( gmt, rnk, nperm=20000)
+            moa.target <- fgsea( gmt, rnk, nperm=20000)
         )
-        res <- res[order(res$pval),]
-        return(res)
+        moa.target <- moa.target[order(-abs(moa.target$NES)),]
+        ##head(moa.target)
+        return(moa.target)
     })
     
     getMOA.class <- reactive({
         ## meta-GSEA on MOA terms
-        dt <- getDseaTable()
-        require(dt)
+        dsea <- getActiveDSEA()
+        dt <- dsea$table
+        req(dt)
         moa.list <- lapply(as.character(dt$moa),
                            function(s) trimws(strsplit(s,split="[\\|;,]")[[1]]))
         names(moa.list) <- rownames(dt)
@@ -207,23 +216,23 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         rnk <- dt$NES
         names(rnk) <- rownames(dt)
         suppressWarnings(
-            res <- fgsea( gmt, rnk, nperm=20000)
+            moa.class <- fgsea( gmt, rnk, nperm=20000)
         )
-        res <- res[order(res$pval),]
-        return(res)
+        moa.class <- moa.class[order(-abs(moa.class$NES)),]        
+        return(moa.class)
     })
 
     getMOA <- reactive({
         moatype <- input$dsea_moatype
+        res <- NULL
         if(moatype=='target gene') res <- getMOA.target()
         if(moatype=='drug class')  res <- getMOA.class()
         res
     })
-
+    
     ##================================================================================
     ## PLOTTING
     ##================================================================================
-
     
     dsea_enplots.RENDER %<a-% reactive({
 
@@ -234,13 +243,11 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
 
         dbg("[dsea_enplots.RENDER] called!")
         
-        comparison=1
-        comparison = input$dsea_contrast
-        if(is.null(comparison)) return(NULL)
+        dsea <- getActiveDSEA()
+        dt <- dsea$table
 
         dbg("[dsea_enplots.RENDER] 1:")
         
-        dt <- getDseaTable()
         ## filter with table selection/search
         ii  <- dsea_table$rows_selected()
         jj  <- dsea_table$rows_all()
@@ -255,28 +262,36 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         ## rank vector for enrichment plots
         dmethod <- input$dsea_method        
         dbg("[dsea_enplots.RENDER] dmethod = ",dmethod)
-        dbg("[dsea_enplots.RENDER] comparison = ",comparison)
 
-        stats <- ngs$drugs[[dmethod]]$stats
-        dbg("[dsea_enplots.RENDER] dim(stats) = ",dim(stats))
-        dbg("[dsea_enplots.RENDER] colnames(stats) = ",colnames(stats))        
-
-        rnk <- stats[,comparison]
-        dctype <- sub("_.*$","",names(rnk))
-        ##table(rownames(dt) %in% dctype)
-        ##table(sapply(rownames(dt), function(g) sum(grepl(g,names(rnk),fixed=TRUE))))
-
+        rnk <- dsea$stats
         dbg("[dsea_enplots.RENDER] len.rnk = ", length(rnk))
         if(length(rnk)==0) return(NULL)
         
-        ## ENPLOT TYPE
-        ##itop <- c( head(order(-dt$NES),10), tail(order(-dt$NES),10))
-        itop <- 1:min(16,nrow(dt))
-        par(oma=c(0,1.6,0,0))
-        par(mfrow=c(4,4), mar=c(0.3,1.0,1.3,0), mgp=c(1.9,0.6,0))
+        ## ENPLOT TYPE        
+        if(length(ii)>0) {
+            itop = ii[1]
+        } else {
+            ##itop <- c( head(order(-dt$NES),10), tail(order(-dt$NES),10))        
+            itop <- 1:min(16,nrow(dt))
+        }
+        if(length(itop)==1) {
+            par(oma=c(1,1,1,1))
+            par(mfrow=c(1,1), mar=c(4,4,1,2), mgp=c(2.3,0.9,0))
+            lab.cex = 1            
+            xlab="Rank in ordered dataset"
+            ylab="Rank metric"
+            nc=1
+        } else {
+            lab.cex = 0.75
+            xlab=''
+            ylab=""
+            nc = ceiling(sqrt(length(itop)))           
+            par(oma=c(0,1.6,0,0))
+            par(mfrow=c(nc,nc), mar=c(0.3,1.0,1.3,0), mgp=c(1.9,0.6,0))
+        }
+        
         i=1
         for(i in itop) {
-
             dx <- rownames(dt)[i]
             dx
             gmtdx <- grep(dx,names(rnk),fixed=TRUE,value=TRUE)  ## L1000 naming
@@ -284,22 +299,22 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             ##if(length(gmtdx) < 3) { frame(); next }
             dx1 <- substring(dx,1,26)
             par(cex.axis=0.001)
-            if(i%%4==1) par(cex.axis=0.98)
+            if(i%%nc==1) par(cex.axis=0.98)
             suppressWarnings(
-                gsea.enplot( rnk, gmtdx, main=dx1, cex.main=1.2, xlab="", ylab="")
+                gsea.enplot( rnk, gmtdx, main=dx1, cex.main=1.2,
+                            xlab=xlab, ylab=ylab)
             )
             nes <- round(dt$NES[i],2)
             qv  <- round(dt$padj[i],3)
             tt <- c( paste("NES=",nes), paste("q=",qv) )
             legend("topright", legend=tt, cex=0.8, y.intersp=0.85, bty='n')
-            if(i%%4==1) {
-                mtext('rank metric', side=2, line=1.8, cex=0.75)
+            if(i%%nc==1 && length(itop)>1) {
+                mtext('rank metric', side=2, line=1.8, cex=lab.cex)
             }
         }
         
     })    
     
-
     ##dsea_moaplot.RENDER %<a-% reactive({
     dsea_moaplot.RENDER <- reactive({    
 
@@ -317,10 +332,10 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         jj <- unique(c(head(order(-res$NES),ntop),tail(order(-res$NES),ntop)))
         moa.top <- res$NES[jj]
         names(moa.top) <- res$pathway[jj]
-        
         par(mfrow=c(2,1), mar=c(4,3.5,0.1,0), mgp=c(1.7,0.65,0))
         barplot(moa.top, horiz=FALSE, las=3,
-                ylab="enrichment  (NES)", cex.names=cex )
+                ylab="enrichment  (NES)",
+                cex.names=0.96 )
         
     })    
 
@@ -341,10 +356,10 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         jj <- unique(c(head(order(-res$NES),ntop),tail(order(-res$NES),ntop)))
         moa.top <- res$NES[jj]
         names(moa.top) <- res$pathway[jj]
-        
         par(mfrow=c(2,1), mar=c(4,3.5,0.1,0), mgp=c(1.7,0.65,0))
         barplot(moa.top, horiz=FALSE, las=3,
-                ylab="enrichment  (NES)", cex.names=cex )
+                ylab="enrichment  (NES)",
+                cex.names=1 )
         
     })    
         
@@ -353,8 +368,9 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         req(ngs)
         if(is.null(ngs$drugs)) return(NULL)
         
-        res <- getDseaTable()
-        req(res)
+        dsea <- getActiveDSEA()
+        req(dsea)
+        res <- dsea$table
         res$moa <- shortstring(res$moa,60)
         res$target <- shortstring(res$target,30)
         res$drug   <- shortstring(res$drug,60)
@@ -363,7 +379,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         DT::datatable( res, rownames=FALSE,
                       class = 'compact cell-border stripe hover',                  
                       extensions = c('Scroller'),
-                      selection=list(mode='single', target='row', selected=1),
+                      selection=list(mode='single', target='row', selected=NULL),
                       fillContainer = TRUE,
                       options=list(
                           ##dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
@@ -380,10 +396,10 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
                                 backgroundPosition = 'center') 
     })
 
-    dseaPlotActmap <- function(ngs, dmethod, comparison, nterms, nfc) {
+    dseaPlotActmap <- function(ngs, dmethod, contr, nterms, nfc) {
 
         if(is.null(ngs$drugs)) return(NULL)
-        ##dmethod="activity/L1000";comparison=1        
+        ##dmethod="activity/L1000";contr=1        
         nes <- ngs$drugs[[dmethod]]$X
         qv  <- ngs$drugs[[dmethod]]$Q
         score <- nes * (1 - qv)**2
@@ -391,22 +407,21 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         ## if(NCOL(score)==1) score <- cbind(score,score)  ## UGLY....
         
         ## reduce score matrix
-        score = score[order(-score[,comparison]**2),,drop=FALSE] ## sort by score
-        if(1) {
-            res <- getDseaTable()
-            ## filter with table selection/search
-            ii  <- dsea_table$rows_all()
-            req(ii)
-            if(length(ii)>0) {
-                res <- res[ii,,drop=FALSE]
-                dd <- intersect(res$drug,rownames(score))
-                score = score[dd,,drop=FALSE]
-            }
+        score = score[order(-score[,contr]**2),,drop=FALSE] ## sort by score
+        dsea <- getActiveDSEA()
+        res <- dsea$table
+        ## filter with table selection/search
+        ii  <- dsea_table$rows_all()
+        req(ii)
+        if(length(ii)>0) {
+            res <- res[ii,,drop=FALSE]
+            dd <- intersect(res$drug,rownames(score))
+            score = score[dd,,drop=FALSE]
         }
         if(nrow(score) <= 1) return(NULL)
         
         score = head(score,nterms) ## max number of terms    
-        score = score[,head(order(-colSums(score**2)),nfc),drop=FALSE] ## max comparisons/FC        
+        score = score[,head(order(-colSums(score**2)),nfc),drop=FALSE] ## max contrs/FC        
         score <- score + 1e-3*matrix(rnorm(length(score)),nrow(score),ncol(score))
         
         if(input$dsea_normalize) score <- t(t(score) / (1e-8+sqrt(colMeans(score**2))))
@@ -447,12 +462,12 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
         if(is.null(ngs$drugs)) return(NULL)
         
-        dmethod="activity/L1000";comparison=1
+        dmethod="activity/L1000";contr=1
         dmethod <- input$dsea_method        
-        comparison = input$dsea_contrast
-        if(is.null(comparison)) return(NULL)
+        contr = input$dsea_contrast
+        if(is.null(contr)) return(NULL)
 
-        dseaPlotActmap(ngs, dmethod, comparison, nterms=50, nfc=20)
+        dseaPlotActmap(ngs, dmethod, contr, nterms=50, nfc=20)
 
     })    
 
@@ -465,12 +480,12 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
         if(is.null(ngs$drugs)) return(NULL)
         
-        dmethod="activity/L1000";comparison=1
+        dmethod="activity/L1000";contr=1
         dmethod <- input$dsea_method        
-        comparison = input$dsea_contrast
-        if(is.null(comparison)) return(NULL)
+        contr = input$dsea_contrast
+        if(is.null(contr)) return(NULL)
 
-        dseaPlotActmap(ngs, dmethod, comparison, nterms=50, nfc=100)
+        dseaPlotActmap(ngs, dmethod, contr, nterms=50, nfc=100)
         
     })    
 
@@ -559,14 +574,10 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     cmap_enplot.RENDER <- reactive({
         
         pgx <- inputData()
-        
-        method="L1000/activity"
-        method <- input$dsea_method
-        res <- pgx$drugs[[method]]
-        names(res)
-
+                
         ## get selected drug (from table)
-        dt <- getDseaTable()
+        dsea <- getActiveDSEA()
+        dt <- dsea$table
         ii <- 1:nrow(dt)
         ii <- 1
         ii <- cmap_table$rows_selected()
@@ -577,10 +588,8 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
 
         ## draw enrichemtn plot
         d <- dt$drug[ii[1]]        
-        contr=colnames(res$stats)[1]
-        contr <- input$dsea_contrast        
-        rnk <- res$stats[,contr]
-        dtype <- sub("_.*$","",names(rnk))
+        rnk <- dsea$stats
+        dtype <- sub("[@_].*$","",names(rnk))
         gmt = names(rnk)[dtype==d]
         ## gsea.enplot(rnk, gmt, main=d)
         p1 <- gsea.enplotly(rnk, gmt, main=d)        
@@ -610,62 +619,31 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     ## Enrichment UMAP
     ##---------------------------------------------------------------------
     
-    getCmapHilights <- reactive({
-
-        dt <- getDseaTable()
-        dt.nes <- array(dt$NES, dimnames=list(dt$drug))       
-
-        ii <- 1:nrow(dt)
-        ii <- 1
-        ii <- cmap_table$rows_selected()
-        is.sel = (length(ii) >0)
-        ltype <- input$cmap_labeltype
-        if(!is.sel && ltype=='drugs') {
-            ## show the top 20 drugs (drug level)
-            ii <- cmap_table$rows_all()
-            nes <- dt.nes[ii]
-            nes <- nes[order(-abs(nes))]            
-            d1 = d2 = nes
-        } else if(!is.sel && ltype=='MOA') {
-            ## show the top 20 drugs (drug level)
-            ii <- cmap_table$rows_all()
-            mm <- unlist(strsplit(dt$moa[ii],split='\\|'))
-            moa <- getMOA.class()
-            nes <- array(moa$NES, dimnames=list(moa$pathway))
-            nes <- nes[intersect(mm,names(nes))]
-            nes <- nes[order(-abs(nes))]
-            d1 = d2 = nes              
-        } else if(!is.sel && ltype=='target') {
-            ## show the top 20 drugs (drug level)
-            ii <- cmap_table$rows_all()
-            mm <- unlist(strsplit(dt$target[ii],split='\\|'))
-            moa <- getMOA.target()
-            nes <- array(moa$NES, dimnames=list(moa$pathway))
-            nes <- nes[intersect(mm,names(nes))]
-            nes <- nes[order(-abs(nes))]            
-            d1 = d2 = nes
-        } else {
-            ## show the replicates of selected drug (replicate level)            
-            ii <- ii[1]
-            d1 = d2 = dt.nes[ii]
-        }
-        ht <- list(d1=d1, d2=d2, is.sel=is.sel)
-        ht
-    })
-    
-    plotCMAP <- function(pgx, db, contr, ht, label, wt.font, plotlib)
+    plotCMAP <- function(pgx, db, contr, moa.target, moa.class,
+                         labtype = 'drugs', showlabel=TRUE,  
+                         npoints=100, nlabel=10,
+                         lab.wt=TRUE, lab.gamma=1, lab.cex=1,
+                         opacity = 0.15, softmax=1, 
+                         title=NULL, plotlib='base')
     {     
-        res <- pgx$drugs[[db]]
-        names(res)
         if(0) {
             db="L1000/activity"
+            res <- pgx$drugs[[db]]
             contr=colnames(res$stats)[1]
-            g = array(1, dimnames=list(rownames(res$X)[1]))
-            ht=list(d1=g, d2=g, is.sel=FALSE)
-            label=wt.font=TRUE
-            plotlib='base'
+            top = array(1, dimnames=list(rownames(res$X)[1]))
+            showlabel=lab.wt=TRUE;opacity=0.9;
+            lab.wt=lab.gamma=1;lab.cex=1
+            npoints=100;nlabel=10
+            labtype = 'drugs';plotlib='base'
         }
-        
+
+        if(!"drugs" %in% names(pgx)) {
+            frame()
+            text(0.5,0.5,"Error: PGX object does not have CMAP results",col='red3')
+            return(NULL)
+        }
+
+        res <- pgx$drugs[[db]]
         if(!"clust" %in% names(res)) {
             frame()
             text(0.5,0.5,"Error: PGX object does not have CMAP cluster positions",col='red3')
@@ -675,179 +653,239 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         pos <- res$clust
         var <- res$stats[,contr]
         ## highlight genes from table
-        x1 <- res$X[,contr]
-        xdrugs <- gsub("_.*","",rownames(pos))
-
-        h1=h2=head(rownames(res$X))        
-        h1 <- names(ht$d1)
-        h2 <- names(ht$d2)
-        if(ht$is.sel) {
-            j1 <- which(xdrugs %in% h1)
-            h1 <- rownames(pos)[j1]
-            j2 <- which(xdrugs %in% h2)
-            h2 <- rownames(pos)[j2]
-        }
-
-        ## limit number of labels/points
-        h1 <- head(h1,100)
-        h2 <- head(h2,20)
+        nes1  <- res$X[,contr]  ## NES for drugs
         
-        if(!label) {
-            h2 <- NULL
-        }
-        
-        dbg("[plotCMAP] dim.pos = ", dim(pos) )
-        dbg("[plotCMAP] len.xdrugs = ", length(xdrugs) )
+        dbg("[plotCMAP] dim.pos = ", dim(pos) )        
         dbg("[plotCMAP] len.var = ", length(var) )                
-        var <- var[match(rownames(pos),names(var))]
-        names(var) <- rownames(pos)
-        dbg("[plotCMAP] 2: len.var = ", length(var) )
         
         ## compute median position of drugs
-        xdrugs <- sub("_.*","",rownames(pos))
+        xdrugs <- gsub("[_@].*","",rownames(pos))
         pos1 <- apply(pos,2,function(x) tapply(x,xdrugs,median))
-        var1 <- tapply(var, xdrugs, median, na.rm=TRUE)
-
+        pos1 <- pos1[names(nes1),]
+        var1 <- nes1
+        
         ## compute median position of moa class
         xmoa <- res$annot[xdrugs,"moa"]
-        xmoa <- strsplit(xmoa, split="\\|")
+        xmoa <- strsplit(xmoa, split="[\\|;,]")
         nmoa <- sapply(xmoa, length)
         ii   <- unlist(mapply(rep, 1:nrow(pos), nmoa))
         pos2 <- apply(pos[ii,],2,function(x) tapply(x,unlist(xmoa),median))
         ##var2 <- tapply(var[ii], unlist(xmoa), median, na.rm=TRUE)
-        moa2 <- getMOA.class()
+        moa2 <- moa.class
         nes2 <- array(moa2$NES, dimnames=list(moa2$pathway))               
         var2 <- nes2[rownames(pos2)]
         
-        ## compute median position of moa targets
+        ## compute median position of targets
         xtarget <- res$annot[xdrugs,"target"]
-        xtarget <- strsplit(xtarget, split="\\|")
+        xtarget <- strsplit(xtarget, split="[\\|;,]")
         ntarget <- sapply(xtarget, length)
         ii   <- unlist(mapply(rep, 1:nrow(pos), ntarget))
         pos3 <- apply(pos[ii,],2,function(x) tapply(x,unlist(xtarget),median))
         ##var3 <- tapply(var[ii], unlist(xtarget), median, na.rm=TRUE)
-        moa3 <- getMOA.target()
+        moa3 <- moa.target
         nes3 <- array(moa3$NES, dimnames=list(moa3$pathway))               
         var3 <- nes3[rownames(pos3)]
         dbg("[plotCMAP] head.var3 = ", head(var3))
         
         ## create extended positions and variable (drugs, moa, target)
+        var  <- var / max(abs(var),na.rm=TRUE)     ## replicate level
+        var1 <- var1 / max(abs(var1),na.rm=TRUE)   ## drug level
+        var2 <- var2 / max(abs(var2),na.rm=TRUE)   ## MOA class level
+        var3 <- var3 / max(abs(var3),na.rm=TRUE)   ## target level                     
+        
+        rownames(pos)  <- paste0("0:",rownames(pos))
+        rownames(pos1) <- paste0("1:",rownames(pos1))
+        rownames(pos2) <- paste0("2:",rownames(pos2))
+        rownames(pos3) <- paste0("3:",rownames(pos3))        
+        names(var)  <- paste0("0:",names(var))
+        names(var1) <- paste0("1:",names(var1))
+        names(var2) <- paste0("2:",names(var2))
+        names(var3) <- paste0("3:",names(var3))        
+        
         xpos <- rbind(pos, pos1, pos2, pos3)
-        var <- var / max(abs(var),na.rm=TRUE)
-        var1 <- var1 / max(abs(var1),na.rm=TRUE)
-        var2 <- var2 / max(abs(var2),na.rm=TRUE)
-        var3 <- var3 / max(abs(var3),na.rm=TRUE)                        
         xvar <- c(var, var1, var2, var3)
-
+        sum(duplicated(names(xvar)))
+        
         dbg("[plotCMAP] len.xvar = ", length(xvar))
         dbg("[plotCMAP] dim.xpos = ", dim(xpos))
         dbg("[plotCMAP] names.xvar = ", head(names(xvar)))
         dbg("[plotCMAP] names.var1 = ", head(names(var1)))
         dbg("[plotCMAP] names.var2 = ", head(names(var2)))        
         dbg("[plotCMAP] names.var3 = ", head(names(var3)))
-        dbg("[plotCMAP] xvar.h2 = ", head(xvar[h2]))            
-
-        dbg("[plotCMAP] h1 = ", h1)
-        dbg("[plotCMAP] h2 = ", h2)
-        dbg("[plotCMAP] length.h1 = ", length(h1))
-        dbg("[plotCMAP] length.h2 = ", length(h2))
+        
+        ##nlabel=10
+        h1=h2=NULL
+        ## limit number of labels/points
+        labtype        
+        if(labtype=='replicate') {
+            xx <- res$stats[,contr]
+            names(xx) <- paste0("0:",names(xx))
+        } else if(labtype=='drugs') {
+            xx <- res$X[,contr]
+            names(xx) <- paste0("1:",names(xx))            
+        } else if(toupper(labtype)=='MOA') {
+            xx <- moa.class$NES
+            names(xx) <- moa.class$pathway
+            names(xx) <- paste0("2:",names(xx))            
+        } else if(labtype=='target') {
+            xx <- moa.target$NES
+            names(xx) <- moa.target$pathway
+            names(xx) <- paste0("3:",names(xx))            
+        } else {
+            message("ERROR:: labtype switch error")
+            return(NULL)
+        }
+        xx <- xx[order(-abs(xx))]
+        h1 <- head(names(xx),npoints)
+        h2 <- head(h1,nlabel)
+        if(!showlabel) {
+            h2 <- NULL
+        }
+        
+        dbg("[plotCMAP] len.h1 = ", length(h1) )
+        dbg("[plotCMAP] len.h2 = ", length(h2) )        
+        dbg("[plotCMAP] h1 = ", head(h1))
+        dbg("[plotCMAP] h2 = ", head(h2))
         dbg("[plotCMAP] h2.in.pos1 = ", table(h2 %in% rownames(xpos) ))
         
-        cex.lab <- ifelse(length(h2) > 10, 1.05, 1.2)
-        cex.lab <- ifelse(length(h2) > 20, 0.95, cex.lab)
-        cex.lab
+        if(is.null(title)) title <- contr
         
         plt <- NULL
         if(plotlib=='base') {
             
-            wcex.lab = cex.lab 
-            if(wt.font) {
-                wcex <- 1.2*(abs(xvar)/max(abs(xvar),na.rm=TRUE))**0.3
-                if(!ht$is.sel) wcex <- 1.3*wcex
-                wcex.lab = wcex.lab * wcex
-                names(wcex.lab) <- names(xvar)
+            wcex = lab.cex 
+            if(lab.wt) {
+                wcex <- 1.2*(abs(xvar)/max(abs(xvar),na.rm=TRUE))**lab.gamma
+                wcex = lab.cex * wcex
+                names(wcex) <- names(xvar)
             }
-            wcex.lab[is.na(wcex.lab)] <- 1
-
-            dbg("[plotCMAP] len.wcexlab = ", length(wcex.lab))
-            dbg("[plotCMAP] min.wcexlab = ", min(wcex.lab,na.rm=TRUE))
-            dbg("[plotCMAP] max.wcexlab = ", max(wcex.lab,na.rm=TRUE))                        
-            dbg("[plotCMAP] head.wcexlab = ", head(wcex.lab))
-            dbg("[plotCMAP] head.wcexlab.h2 = ", head(wcex.lab[h2]))                        
-            dbg("[plotCMAP] sum.isna.wcexlab = ", sum(is.na(wcex.lab)))
+            wcex[is.na(wcex)] <- 1
             
+            dbg("[plotCMAP] len.wcexlab = ", length(wcex))
+            dbg("[plotCMAP] min.wcexlab = ", min(wcex,na.rm=TRUE))
+            dbg("[plotCMAP] max.wcexlab = ", max(wcex,na.rm=TRUE))                        
+            dbg("[plotCMAP] head.wcexlab = ", head(wcex))
+            dbg("[plotCMAP] head.wcexlab.h2 = ", head(wcex[h2]))                        
+            dbg("[plotCMAP] sum.isna.wcexlab = ", sum(is.na(wcex)))
+
             pgx.scatterPlotXY.BASE(
-                xpos, var=xvar, title = contr,
+                xpos, var=xvar, title = title,
                 xlab = "UMAP-x", ylab = "UMAP-y",
+                labels = sub(".*:","",rownames(xpos)),
                 hilight = h1, hilight2 = h2, hilight.cex=1.1,
-                cex = 1, cex.lab = wcex.lab, cex.title = 1.0,
+                cex = 1, cex.lab = wcex, cex.title = 0.95,
                 legend = TRUE, zsym = TRUE,
-                rstep=0.2, dlim=0.01,
-                ## col=c("grey80","grey80"),
-                softmax=0, opacity = 0.2)
+                rstep = 0.2, dlim = 0.01,
+                softmax=softmax, opacity = opacity )
             ## title(contr, cex.main=1, line=0.3)
 
         } else {
             plt <- pgx.scatterPlotXY(
-                xpos, var=xvar, plotlib=plotlib,
-                title = contr,
+                xpos, var=xvar, plotlib=plotlib, title = title,
+                ##labels = sub(".*:","",rownames(xpos))
                 xlab = "UMAP-x", ylab = "UMAP-y",
                 hilight = h1, hilight2 = h2, hilight.cex=1.1,
                 cex = 1, cex.lab = cex.lab, cex.title = 1.0,
                 legend = TRUE, zsym = TRUE,
                 ##rstep=0.2, dlim=0.01
-                softmax=0, opacity = 0.2)
+                softmax=1, opacity = opacity)
         }        
         plt
     }
     
-    dsea_cmap.RENDER <- reactive({
+    dsea_cmap.RENDER %<a-% reactive({
+
+        dbg("[dsea_cmap.RENDER] reacted!")
+        
         pgx <- inputData()
-        ht <- getCmapHilights()
-        req(pgx,ht)
+        req(pgx)
+        db="L1000/gene";contr="treatment:Gefitinib_vs_CT"
+
         db <- input$dsea_method
         contr <- input$dsea_contrast
-        lab <- input$cmap_showlabels
-        wt.font <- !input$cmap_fixedlabel
-        plotCMAP(pgx, db, contr, ht, lab, wt.font, plotlib='base')        
-    })
-    
-    dsea_cmap.RENDER2 <- reactive({
-        pgx <- inputData()
-        ht <- getCmapHilights()
-        req(pgx,ht)
-        db <- input$dsea_method
-        contr <- input$dsea_contrast
-        lab <- input$cmap_showlabels
-        wt.font <- FALSE
-        ## wt.font <- input$cmap_wtfont
-        plotCMAP(pgx, db, contr, ht, lab, wt.font, plotlib='plotly')        
+        req(db)
+        req(contr)
+
+        dbg("[dsea_cmap.RENDER] 1:")
+        dsea <- getActiveDSEA()
+        
+        ## get reactive values
+        rows_selected=1;rows_all=1:nrow(dsea$table)
+        rows_selected <- cmap_table$rows_selected()
+        rows_all <- cmap_table$rows_all()                
+        dbg("[dsea_cmap.RENDER] 1: rows_selected = ", head(rows_selected))
+        dbg("[dsea_cmap.RENDER] 1: rows_all = ", head(rows_all))
+        
+        if(is.null(rows_all) || length(rows_all)==0) {
+            return(NULL)
+        }
+
+        drugs_all <- rownames(dsea$table)[rows_all]
+        
+        dbg("[dsea_cmap.RENDER] 2:")
+        labtype='moa';nlabel=10;showlab=lab.wt=1
+
+        moa.class  <- getMOA.class()
+        moa.target <- getMOA.target()    
+
+        dbg("[dsea_cmap.RENDER] 3:")
+               
+        labtype <- input$cmap_labeltype
+        nlabel  <- as.integer(input$cmap_nlabel)
+        showlab <- ("show" %in% input$cmap_labeloptions)
+        lab.wt <- !("fixed" %in% input$cmap_labeloptions)
+        
+        dbg("[dsea_cmap.RENDER] 4:")
+        
+        ##---------------  plot -------------------
+        all.contr <- colnames(pgx$contrasts)
+        all.contr
+        contr <- all.contr[1]
+        
+        nr <- ceiling(sqrt(length(all.contr)))
+        par(mfrow=c(nr,nr))            
+        for(contr in all.contr) {                
+            tt <- paste0(contr," (",toupper(labtype),")")
+            ##tt <- toupper(labtype)                
+            plotCMAP(pgx, db, contr,
+                     moa.target, moa.class,
+                     labtype=labtype, showlabel=showlab,
+                     lab.wt=lab.wt, lab.gamma=1, lab.cex=1.6,
+                     opacity=0.15, softmax=0, 
+                     npoints=nlabel, nlabel=nlabel,
+                     title=tt, plotlib='base')                           
+        }
+            
+        dbg("[dsea_cmap.RENDER] done!")
+        
     })
     
     dsea_cmap.info = "<strong>Connectivity map.</strong> correlates your signature with known drug profiles from the L1000 database, and shows similar and opposite profiles by running the GSEA algorithm on the drug profile correlation space."
 
     dsea_cmap.opts = tagList(
-        tipify(radioButtons(ns('cmap_labeltype'),'label type:',
-                            c("drugs","MOA","target"),inline=TRUE),
-               "Label point with drugs, MOA terms or targets (if no drug selected)."),                
-        tipify(checkboxInput(ns('cmap_showlabels'),'show labels',TRUE),
-               "Show/hide labels."),
-        tipify(checkboxInput(ns('cmap_fixedlabel'),'fixed label size',FALSE),
-               "Fix size of labels (not proportional to enrichment score).")
+        tipifyL(radioButtons(
+            ns('cmap_labeltype'),'label type:',
+            c("drugs","MOA","target"),inline=TRUE),
+            "Label point with drugs, MOA terms or targets (if no drug selected)."),
+        tipifyL(radioButtons(ns('cmap_nlabel'),'number of labels:',c(3,10,20,100),
+                            selected=10, inline=TRUE),
+               "Number of labels to show."),
+        tipifyL(checkboxGroupInput(
+            ns('cmap_labeloptions'),'label options:',  choices=c("show","fixed"),
+            selected=c("show"), inline=TRUE ), "Other labels options.")
     )
     
     callModule(
         plotModule,
         id = "dsea_cmap",
         func = dsea_cmap.RENDER,
-        func2 = dsea_cmap.RENDER2,
-        ##plotlib = "plotly",
-        plotlib2 = "plotly",
+        func2 = dsea_cmap.RENDER,
+        ##plotlib2 = "plotly",
         title = "CONNECTIVITY MAP", label="b",
         info.text = dsea_cmap.info,
         options = dsea_cmap.opts,
         pdf.height = 8, pdf.width = 8, 
-        height = c(700,750), width=c('auto',900),
+        height = c(750,750), width=c('auto',900),
         res = c(80,105),
         add.watermark = WATERMARK        
     )
@@ -861,8 +899,9 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         req(pgx)
         if(is.null(pgx$drugs)) return(NULL)
         
-        res <- getDseaTable()
-        req(res)
+        dsea <- getActiveDSEA()
+        req(dsea)
+        res <- dsea$table
         res$moa    <- shortstring(res$moa,30)
         res$target <- shortstring(res$target,80)
         res$drug   <- shortstring(res$drug,60)
@@ -897,7 +936,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         ## options = cmap_table.opts,
         info.text="<b>Enrichment table.</b> Enrichment is calculated by correlating your signature with known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.", 
         title = "CONNECTIVITY TABLE",
-        height = c(350,740)
+        height = c(380,740)
     )
     
     ##=======================================================================================
@@ -914,13 +953,14 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             br(),
             fillRow(
                 height = rowH,
-                flex = c(2.8,1), 
+                flex = c(2.6,1), 
                 fillCol(
-                    flex = c(1.4,0.15,1),
+                    flex = c(1.5,0.15,1),
                     height = rowH,
                     fillRow(
-                        flex=c(1.1,1),
+                        flex=c(1.2,0.04,1),
                         plotWidget(ns("dsea_enplots")),
+                        br(),
                         plotWidget(ns("dsea_moaplot"))
                     ),
                     br(),  ## vertical space
@@ -942,9 +982,9 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             br(),
             fillRow(
                 height = rowH,
-                flex = c(1,0.06,1.5),
+                flex = c(1,0.05,1.5),
                 fillCol(
-                    flex = c(1.1,0.05,1),                    
+                    flex = c(1.15,0.05,1),                    
                     plotWidget(ns("cmap_enplot")),
                     br(),
                     tableWidget(ns("cmap_table"))                    

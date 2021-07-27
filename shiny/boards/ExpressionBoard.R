@@ -741,7 +741,11 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ## get table
         ##sel=1;pp=rownames(ngs$X)[1]
         sel = genetable$rows_selected()
-        if(is.null(sel)) return(NULL)    
+        if(is.null(sel) || length(sel)==0) {
+            frame()
+            text(0.5,0.5, "No gene selected", col='black')            
+            return(NULL)
+        }
 
         res = filteredDiffExprTable()
         if(is.null(res) || is.null(sel)) return(NULL)
@@ -801,7 +805,11 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ## get table
         ##sel=1
         sel = genetable$rows_selected()
-        if(is.null(sel)) return(NULL)    
+        if(is.null(sel) || length(sel)==0) {
+            frame()
+            text(0.5,0.5, "No gene selected", col='black')            
+            return(NULL)
+        }
 
         res = filteredDiffExprTable()
         if(is.null(res) || is.null(sel)) return(NULL)

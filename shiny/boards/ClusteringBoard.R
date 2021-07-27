@@ -843,8 +843,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             ##ht <- input$hm_pdfheight
             ##wd <- input$pdf_width
             ##ht <- input$pdf_height
-            wd <- input[["hm_splitmap-pdf_width"]]
-            ht <- input[["hm_splitmap-pdf_height"]]
+            wd <- input[["hm_splitmap-pdf_width"]]  ## ugly!!
+            ht <- input[["hm_splitmap-pdf_height"]] ## ugly!!
             
             if(1 && input$hm_plottype %in% c("ComplexHeatmap","static")) {
                 pdf(PDFFILE, width=wd, height=ht)

@@ -571,8 +571,9 @@ CompareBoard <- function(input, output, session, env)
         if(length(kk)==0) {
             par(mfrow=c(1,1))
             frame()
-            text(0.5,0.6, "Error: no common samples", col='red3')
-            text(0.5,0.5, "To compute gene correlation both datasets\nneed to have common samples", col='red3')
+            text(0.5,0.6, "Warning: no common samples", col='black')
+            text(0.5,0.5, "To compute gene correlation both datasets\nneed to have common samples",
+                 col='black')
             return()
         }
         if(length(kk) < 10) {
