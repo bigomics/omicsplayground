@@ -775,7 +775,7 @@ LoadingBoard <- function(input, output, session,
         ## removeModal()
         msg1 <- "<b>Ready!</b>"
         beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
-
+        
         if(enable_save) {
             msg1 <- "<b>Ready!</b><br>Your data is ready and has been saved in your library. You can now start exploring your data."
         } else {

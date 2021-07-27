@@ -107,10 +107,10 @@ ngs <- pgx.computePGX(
 )
 
 if(0) {
-    extra <- c("drugs","connectivity")
+    extra <- c("drugs")
+    extra <- c("drugs","connectivity")    
     extra <- c("connectivity")    
     ngs <- pgx.computeExtra(ngs, extra=extra, lib.dir=FILES)
-
     names(ngs)
     names(ngs$connectivity)
     names(ngs$drugs[[1]])

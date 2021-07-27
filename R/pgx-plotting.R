@@ -1848,7 +1848,7 @@ gsea.enplotly <- function(fc, gset, cex=1, main=NULL, xlab=NULL,
             hoveron = 'points', hoverinfo='text') %>%
         add_segments(
             x = df$x[jj], xend = df$x[jj],
-            y = y0 - dy, yend = y0,
+            y = y0 - 0.98*dy, yend = y0,
             type = 'scatter', mode='lines',
             line = list(color = '#444444', width=1.5*cex),
             text = rownames(df)[jj],
@@ -1860,9 +1860,9 @@ gsea.enplotly <- function(fc, gset, cex=1, main=NULL, xlab=NULL,
         fig <- fig %>%
             add_segments(
                 x = cbar$x[i], xend = cbar$xend[i],
-                y = y0 - 0.8*dy, yend = y0 - 0.8*dy,
+                y = y0 - 0.9*dy, yend = y0 - 0.9*dy,
                 ##type = 'scatter', mode='lines',
-                line = list(color=cbar$color[i], width=30)
+                line = list(color=cbar$color[i], width=32)
         )
     }
 
@@ -2328,7 +2328,8 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
                                    hilight=NULL, hilight.col=NULL, hilight.lwd=0.8,
                                    label.clusters=FALSE, cex.clust=1.5, rstep=0.1,
                                    tooltip=NULL, theme=NULL, set.par=TRUE, 
-                                   axt='s', labels=NULL, label.type=NULL, opacity=1)    
+                                   axt='s', xaxs=TRUE, yaxs=TRUE, 
+                                   labels=NULL, label.type=NULL, opacity=1)    
 {
     require(viridis)
     require(RColorBrewer)
@@ -2435,8 +2436,12 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
              col = pt.col[jj], pch=20, cex=cex,
              xlim = xlim0, ylim = ylim0,
              xlab = xlab, ylab = ylab,
-             xaxt = axt, yaxt = axt, bty = 'n' )
+             ##xaxt = axt, yaxt = axt,
+             axes = FALSE,
+             bty = 'n' )
         if(bty!='n') box(lwd=0.8, bty=bty, col="black")
+        Axis(side=1, labels=xaxs)
+        Axis(side=2, labels=yaxs)
         grid(lwd=0.8)
         
         ## label cluster
@@ -2499,8 +2504,12 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         plot(pos[jj,], col=pt.col[jj], pch=20, cex=cex,
              xlim = xlim0, ylim=ylim0, 
              xlab = xlab, ylab = ylab,
-             xaxt=axt, yaxt=axt, bty='n' )
+             ##xaxt=axt, yaxt=axt,
+             axes = FALSE, ## later
+             bty = 'n' )
         if(bty!='n') box(lwd=0.8, bty=bty, col="black")
+        Axis(side=1, labels=xaxs)
+        Axis(side=2, labels=yaxs)
         grid(lwd=0.8)
 
         ## colorscale bar
@@ -2533,15 +2542,10 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         jj <- which(rownames(pos) %in% hilight2)
         if(length(jj)) {
             if(length(cex.lab)==1) cex.lab <- rep(cex.lab,nrow(pos))
-            if(is.null(labels)) labels <- rownames(pos)
             df <- data.frame(x=pos[jj,1], y=pos[jj,2], z=labels[jj], cex=cex.lab[jj])
             if(is.null(lab.pos)) {
                 dbg("[pgx.scatterPlotXY.BASE] 6: repelling labels using wordlayout...")
-                ## repelled text using wordcloud package
-                ##
-                ##par(mfrow=c(1,1))
-                ##plot(df$x, df$y, type="n", pch=19)
-                ##text( df$x, df$y, labels=df$z, offset=0.4, pos=3, cex=cex.lab)
+                ## repelling text using wordcloud package
                 df2 <- rbind(df, df)
                 df2$z[1:nrow(df)] <- "x"
                 xlim1 = ylim1 = c(-Inf, Inf)

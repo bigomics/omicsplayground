@@ -338,6 +338,9 @@ compute.drugActivityEnrichment <- function(ngs, lib.dir) {
             head(annot0)
         }
 
+
+
+
         ## --------------- attach results to object
         db <- names(ref.db)[i]
         ## ngs$drugs[["activity/L1000"]]  <- res.mono[["GSEA"]]
@@ -367,7 +370,7 @@ compute.drugSensitivityEnrichment <- function(ngs, lib.dir)
         ##X <- readRDS(file=file.path(lib.dir,"drugSX-GDSC-t25-g1000.rds"))
         ##X <- readRDS(file=file.path(lib.dir,"drugSX-CTRPv2-t25-g1000.rds"))
         X <- readRDS(file=file.path(lib.dir,ref))
-        xdrugs <- gsub("@.*$","",colnames(X))
+        xdrugs <- gsub("[@_].*$","",colnames(X))
         length(table(xdrugs))
         dim(X)
         

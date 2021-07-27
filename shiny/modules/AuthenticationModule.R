@@ -1259,7 +1259,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
     titles[[23]] = c("Adventurous Life","Love adventurous life. Be passionately curious about exploring new adventures. &ndash; Lailah Gifty Akita")
     titles[[24]] = c("Succes is Exploration","The first thing you have to find is the unknown. Learning is searching. Anything else is just waiting. &ndash; Dale Daute")
     titles[[25]] = c("Look Ma! No help!","I did it without a bioinformagician")
-    titles[[26]] = c("May the Omics Force be with you","Train hard youngling, one day a master you become")    
+    titles[[26]] = c("May the Force of Omics be with you","Train hard youngling, one day a master you become")    
     title <- titles[[length(titles)]]
     title <- sample(titles,1)[[1]]
     title.len <- nchar(paste(title,collapse=' '))
