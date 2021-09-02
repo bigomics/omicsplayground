@@ -21,11 +21,14 @@ sum(ACCESS.LOG$visitors$count)
 ## Initialize ORCA server
 ##-----------------------------------------------------
 ## see: pgx-module.R
-ORCA <- initOrca(launch=TRUE) 
-class(ORCA)
-if(is.null(ORCA)) {
-    warning("##### FATAL:: Could not connect to ORCA server. Please start ORCA. #####")
-    stop()
+ORCA <- NULL
+if(getOption("OMICS_RUN_ORCA", TRUE)){
+    ORCA <- initOrca(launch=TRUE) 
+    class(ORCA)
+
+    if(is.null(ORCA)) {
+        stop("##### FATAL:: Could not connect to ORCA server. Please start ORCA. #####")
+    }
 }
 
 ##======================================================================
