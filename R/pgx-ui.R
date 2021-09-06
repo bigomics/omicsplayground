@@ -9,24 +9,24 @@ gadgetize <- function(moduleUI, moduleSERVER, title="shiny gadget", ...)
     ## applets for a single task that can be run from the R command
     ## line. It is not to be used inside Shiny programs themselves.
     ##
-    require(miniUI)
+    
     id = sub(".*file","gadget",tempfile())  ## random ID
-    ui = miniPage(
+    ui = miniUI::miniPage(
         tags$head(tags$style(".modal-dialog{width:900px}")),
         tags$head(tags$style(".modal-dialog.modal-lg{width:1400px}")),
         tags$head(tags$style(".modal-dialog.modal-sm{width:400px}")),        
-        useShinyalert(),
-        gadgetTitleBar(title),
-        miniContentPanel(moduleUI(id))
+        shinyalert::useShinyalert(),
+        miniUI::gadgetTitleBar(title),
+        miniUI::miniContentPanel(moduleUI(id))
     )
     server = function(input, output, session) {
         return_obj <- moduleSERVER(id, ...)
         ##return_obj <- moduleSERVER(id)    
-        observeEvent( input$done, {
-            stopApp(return_obj())
+        shiny::observeEvent( input$done, {
+            shiny::stopApp(return_obj())
         })
     }
-    X <- runGadget(ui, server)
+    X <- shiny::runGadget(ui, server)
     cat("[gadgetize] names(X)=",names(X),"\n")
     cat("[gadgetize] *** closing gadget ***\n")
     X
@@ -39,37 +39,37 @@ gadgetize2 <- function(moduleUI, moduleSERVER, title="shiny gadget",
     ## Creates modalDialog from a Shiny module similar as used inside
     ## Shiny programs.
     ##
-    require(shiny)
-    require(shinyalert)
+    
+    
     id = sub(".*file","gadget",tempfile())  ## random ID
-    ui = fluidPage(
+    ui = shiny::fluidPage(
         tags$head(tags$style(".modal-dialog{width:900px}")),
         tags$head(tags$style(".modal-dialog.modal-lg{width:1400px}")),
         tags$head(tags$style(".modal-dialog.modal-sm{width:400px}")),
-        useShinyalert()
+        shinyalert::useShinyalert()
     )    
     server = function(input, output, session)
     {
         return_obj <- moduleSERVER(id, ...)
         ## return_obj <- moduleSERVER(id)
-        showModal( modalDialog(
+        shiny::showModal( shiny::modalDialog(
             moduleUI(id),
-            footer = tagList(
-                ## modalButton("Cancel"),
-                actionButton("gdgt_close","X")
+            footer = shiny::tagList(
+                ## shiny::modalButton("Cancel"),
+                shiny::actionButton("gdgt_close","X")
             ),
             size = size,
             easyClose = FALSE,
             fade = FALSE
         ))
-        observeEvent( input$gdgt_close, {
+        shiny::observeEvent( input$gdgt_close, {
             cat("[gadgetize2] *** closing gadget ***\n")
-            stopApp(return_obj())
+            shiny::stopApp(return_obj())
         })
     }
     
-    pgx <- runGadget(ui, server)
-    ## shinyApp(ui, server)
+    pgx <- shiny::runGadget(ui, server)
+    ## shiny::shinyApp(ui, server)
     cat(names(pgx))
     pgx
 }
@@ -82,7 +82,7 @@ this.style <- function(id, css, ns=NULL) {
 
 alertDataLoaded <- function(session, ngs) {
     if(!is.null(ngs)) return()
-    sendSweetAlert(
+    shinyWidgets::sendSweetAlert(
         session = session,
         ##title = "No dataset loaded",
         title = NULL,
@@ -104,7 +104,7 @@ pgx.randomCartoon <- function() {
         list(slogan="Big Friendly Omics", img="big-friendly-omics1.jpg"),
         list(slogan="Big Data meets Biology", img="bigdata-meets.png")
     )
-    ##randomCartoon <- reactive({
+    ##randomCartoon <- shiny::reactive({
     ##invalidateLater(20000)
     cartoon <- sample(cartoon_list,1)[[1]]
     cartoon$img2 = file.path("cartoons",cartoon$img)
@@ -136,25 +136,25 @@ pgx.showCartoonModal <- function(msg="Loading data...", img.path="www/cartoons")
     }
     
     toon <- randomCartoon()
-    showModal(modalDialog(
-        ##title = HTML("<center><h4>Omics Playground</h4></center>"),
-        title = HTML("<center><h2>",toon$slogan,"</h2><h4>with Omics Playground</h4></center>"),
-        fillRow(
-            flex=c(1,NA,1), br(),
-            img(src = base64enc::dataURI(file=toon$img), width="auto", height="300px"),
-            br()
+    shiny::showModal(shiny::modalDialog(
+        ##title = shiny::HTML("<center><h4>Omics Playground</h4></center>"),
+        title = shiny::HTML("<center><h2>",toon$slogan,"</h2><h4>with Omics Playground</h4></center>"),
+        shiny::fillRow(
+            flex=c(1,NA,1), shiny::br(),
+            shiny::img(src = base64enc::dataURI(file=toon$img), width="auto", height="300px"),
+            shiny::br()
         ),
-        footer = HTML("<center><p>",msg,"  &nbsp; Please wait</p></center>"),
+        footer = shiny::HTML("<center><p>",msg,"  &nbsp; Please wait</p></center>"),
             size="m", easyClose=FALSE, fade=TRUE))
 
 }
 
 pgx.showSmallModal <- function(msg="Please wait...")
 {    
-    showModal(modalDialog(
-        ##title = HTML("<center><h4>Omics Playground</h4></center>"),
+    shiny::showModal(shiny::modalDialog(
+        ##title = shiny::HTML("<center><h4>Omics Playground</h4></center>"),
         title = NULL,
-        HTML("<br><center><p>",msg,"</p></center>"),
+        shiny::HTML("<br><center><p>",msg,"</p></center>"),
         footer = NULL,
         size="s", easyClose=FALSE, fade=FALSE))
 }

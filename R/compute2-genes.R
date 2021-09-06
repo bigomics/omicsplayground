@@ -178,7 +178,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
             stop("[compute.testGenesSingleOmics] FATAL:: stat.group must have names")
         }
         rownames(design) <- names(stat.group)
-        head(design)
+        Matrix::head(design)
         
         ## make sure matrix align and compute experiment matrix
         design <- design[,match(rownames(contr.matrix),colnames(design)),drop=FALSE]
@@ -266,7 +266,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         ##logcpm <- log2(PRIOR.CPM + edgeR::cpm(counts, log=FALSE))
         logcpm <- logCPM(counts, total=NULL)
         sdx <- apply(logcpm,1,sd)
-        jj <- head( order(-sdx), max.features )  ## how many genes?
+        jj <- Matrix::head( order(-sdx), max.features )  ## how many genes?
         ## always add immune genes??
         if(FALSE && "gene_biotype" %in% colnames(genes)) {
             imm.gene <- grep("^TR_|^IG_",genes$gene_biotype)
@@ -279,7 +279,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         counts <- counts[jj,]
         genes <- genes[jj,]
     }
-    head(genes)
+    Matrix::head(genes)
     genes  = genes[,c("gene_name","gene_title")]
     dim(counts)
     

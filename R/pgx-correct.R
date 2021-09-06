@@ -44,7 +44,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
     ## get technical/biological effects
     Y <- pgx.computeBiologicalEffects(X)
     colnames(Y) <- paste0(".",colnames(Y))
-    head(Y)
+    Matrix::head(Y)
 
     ## add to phenotype matrix
     pheno <- cbind(pheno, Y)
@@ -116,7 +116,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
     ##--------------------------------------------------------------------
     if(!is.null(batch.prm) && !is.null(mod1)) {
         mod0 <- do.call(cbind,lapply(batch.prm, getModelMatrix))        
-        rho <- cor(mod0,mod1)
+        rho <- WGCNA::cor(mod0,mod1)
         rho
         rho[is.na(rho)] <- 0
         if(max(abs(rho),na.rm=TRUE) > max.rho) {
@@ -137,7 +137,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
 
     if(!is.null(batch.cov) && !is.null(mod1)) {
         cvar <- data.matrix(pheno[,batch.cov])
-        rho1 <- cor(cvar,mod1,use="pairwise")
+        rho1 <- WGCNA::cor(cvar,mod1,use="pairwise")
         rho1
         rho1[is.na(rho1)] <- 0        
         if(max(abs(rho1),na.rm=TRUE) > max.rho) {
@@ -179,7 +179,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             exp.pheno <- as.matrix(pheno[,sel,drop=FALSE])
             exp.pheno <- apply(exp.pheno, 2, function(x) {
                 x[is.na(x)]=median(x,na.rm=TRUE);x})
-            cX <- removeBatchEffect(cX, covariates=exp.pheno, design=mod1x)
+            cX <- limma::removeBatchEffect(cX, covariates=exp.pheno, design=mod1x)
             B <- cbind(B, exp.pheno)
         }
     }
@@ -196,7 +196,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             for(i in 1:length(p1)) {
                 b1 <- as.character(pheno[,p1[i]])
                 b1[is.na(b1)] <- 'NA'  ## NA is third group?? better to impute??
-                cX <- removeBatchEffect(cX, batch=b1, design=mod1x)
+                cX <- limma::removeBatchEffect(cX, batch=b1, design=mod1x)
                 b1x <- model.matrix( ~b1)[,-1,drop=FALSE]
                 colnames(b1x) <- sub("^b1",paste0(p1[i],"."),colnames(b1x))
                 B <- cbind(B, b1x)
@@ -209,7 +209,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             b2 <- as.matrix(pheno[,p2,drop=FALSE])
             b2 <- apply(b2, 2, function(x) {
                 x[is.na(x)]=median(x,na.rm=TRUE);x})            
-            cX <- removeBatchEffect(cX, covariates=b2, design=mod1x)
+            cX <- limma::removeBatchEffect(cX, covariates=b2, design=mod1x)
             B <- cbind(B, b2)
         }
         
@@ -237,7 +237,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             }
             mod1x <- matrix(1,ncol(cX),1)
             if(!is.null(mod1)) mod1x <- cbind(1, mod1)
-            cX <- removeBatchEffect(cX, batch=batch, design=mod1x)
+            cX <- limma::removeBatchEffect(cX, batch=batch, design=mod1x)
             
             b1x <- model.matrix( ~batch)[,-1,drop=FALSE]
             colnames(b1x) <- sub("^batch",paste0(b,"."),colnames(b1x))
@@ -260,7 +260,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             }
             mod1x <- matrix(1,ncol(cX),1)
             if(!is.null(mod1)) mod1x <- cbind(1, mod1)
-            cX <- removeBatchEffect(cX, covariates=batch, design=mod1x)
+            cX <- limma::removeBatchEffect(cX, covariates=batch, design=mod1x)
             B <- cbind(B, batch)
         }
     }
@@ -273,7 +273,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
         if(length(mnn.correct)==0) mnn.correct <- NULL
     }
     if(!is.null(mnn.correct)) {
-        require(batchelor)
+        
         cat("[pgx.superBatchCorrect] Mutual Nearest Neighbour (MNN) correction on",mnn.correct,"\n")
         b <- pheno[,mnn.correct]
         out <- batchelor::mnnCorrect(cX, batch=b, cos.norm.out=FALSE)
@@ -296,7 +296,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
     ##--------------------------------------------------------------------
     if(sva.correct && !is.null(mod1)) {
         message("[pgx.superBatchCorrect] Calculating SVA...")
-        require(SmartSVA)
+        
         ##
         ## This is a combination of methods from SVA and SmartSVA
         ## because of speed. 
@@ -322,14 +322,14 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             n.sv <- EstDimRMT(X.r, FALSE)$dim + 1
             n.sv
         }
-        cX1 <- head(cX[order(-apply(cX,1,sd)),],1000) ## top 1000 genes only (faster)
+        cX1 <- Matrix::head(cX[order(-apply(cX,1,sd)),],1000) ## top 1000 genes only (faster)
         sv <- try( sva(cX1, mod1x, mod0=mod0x, n.sv=n.sv)$sv )
         ##sv <- SmartSVA::smartsva.cpp(cX, mod1x, mod0=mod0x, n.sv=n.sv)$sv
         if(any(class(sv)=="try-error")) {
             ## try again with little bit of noise...
             a <- 0.01*mean(apply(cX,1,sd))
             cX1 <- cX + a*matrix(rnorm(length(cX)),nrow(cX),ncol(cX))
-            cX1 <- head(cX1[order(-apply(cX1,1,sd)),],1000) ## top 1000 genes only (faster)
+            cX1 <- Matrix::head(cX1[order(-apply(cX1,1,sd)),],1000) ## top 1000 genes only (faster)
             sv <- try( sva(cX1, mod1x, mod0=mod0x, n.sv=pmax(n.sv-1,1))$sv )
         }
         if(!any(class(sv)=="try-error")) {
@@ -337,8 +337,8 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             ##sv <- svaseq( 2**X, mod1, mod0, n.sv=NULL)$sv
             rownames(sv) <- colnames(cX)
             colnames(sv) <- paste0("SV.",1:ncol(sv))
-            cX <- removeBatchEffect(cX, covariates=sv, design=mod1x)
-            ##cX <- removeBatchEffect(X, covariates=sv)
+            cX <- limma::removeBatchEffect(cX, covariates=sv, design=mod1x)
+            ##cX <- limma::removeBatchEffect(X, covariates=sv)
             B <- cbind(B, sv)
         }
     }
@@ -358,7 +358,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             suppressWarnings(suppressMessages(
                 pc <- irlba::irlba(cX, nv=nv)$v
             ))
-            pc.rho <- cor(pc,mod1)
+            pc.rho <- WGCNA::cor(pc,mod1)
             pc.rho
             pc.rho <- apply(abs(pc.rho),1,max)
             ii <- which(pc.rho < max.rho)
@@ -366,7 +366,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             ii
             if(length(ii)>0) {
                 mod1x <- cbind(1, mod1)
-                cX <- removeBatchEffect(cX, covariates=pc[,ii], design=mod1x)
+                cX <- limma::removeBatchEffect(cX, covariates=pc[,ii], design=mod1x)
                 pX <- cbind( pX, pc[,ii,drop=FALSE] )
                 nremove = nremove +1
             }
@@ -394,10 +394,10 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
         nremove=0
         pX <- NULL
         while(length(ii)>0 && niter<max.iter) {
-            xx <- head(cX[order(-apply(cX,1,sd)),], hc.top)
-            hc <- cutree(hclust(dist(t(xx)),method="ward.D2"),2)
+            xx <- Matrix::head(cX[order(-apply(cX,1,sd)),], hc.top)
+            hc <- cutree(fastcluster::hclust(dist(t(xx)),method="ward.D2"),2)
             table(hc)
-            hc.rho <- cor(hc,mod1)
+            hc.rho <- WGCNA::cor(hc,mod1)
             hc.rho
             hc.rho <- apply(abs(hc.rho),1,max)
             ii <- which(hc.rho < max.rho)
@@ -405,7 +405,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             if(length(ii)>0) {
                 mod1x <- cbind(1,mod1)
                 hc <- scale(hc)
-                cX <- removeBatchEffect(cX, covariates=hc, design=mod1x)
+                cX <- limma::removeBatchEffect(cX, covariates=hc, design=mod1x)
                 pX <- cbind(pX, hc) 
                 nremove = nremove + 1
             }
@@ -451,14 +451,14 @@ pgx.PC_correlation <- function(X, pheno, nv=3, stat="F", plot=TRUE, main=NULL) {
             y1 <- (y1 > median(y1))
         }
         design <- model.matrix(~ 1 + y1)
-        fit <- lmFit( x[,ii], design)
-        suppressWarnings( fit <- try( eBayes(fit, trend=FALSE) ) )
+        fit <- limma::lmFit( x[,ii], design)
+        suppressWarnings( fit <- try( limma::eBayes(fit, trend=FALSE) ) )
         class(fit)
         if(class(fit)[1]=="try-error") {
             return(NULL)
         }
-        suppressMessages( top <- topTableF(fit, number=nrow(x)) )
-        ##top <- topTable(fit, number=nrow(x), coef=NULL)
+        suppressMessages( top <- limma::topTableF(fit, number=nrow(x)) )
+        ##top <- limma::topTable(fit, number=nrow(x), coef=NULL)
         return(top$F)
     }
     getCor <- function(x,y) {
@@ -466,8 +466,8 @@ pgx.PC_correlation <- function(X, pheno, nv=3, stat="F", plot=TRUE, main=NULL) {
         y1 <- y[ii]
         if(class(y1)=="factor") y1 <- factor(as.character(y1))
         design <- model.matrix(~ 0 + y1)
-        ##r1 <- cor(t(x[,ii]), design[,-1,drop=FALSE])
-        r1 <- cor(t(x[,ii]), design)
+        ##r1 <- WGCNA::cor(t(x[,ii]), design[,-1,drop=FALSE])
+        r1 <- WGCNA::cor(t(x[,ii]), design)
         rowMeans(abs(r1))
     }
 
@@ -509,16 +509,16 @@ pgx.PC_correlation <- function(X, pheno, nv=3, stat="F", plot=TRUE, main=NULL) {
         tt0   <- c("PC correlation","PC variation")[1 + 1*(stat=="F")]
         if(is.null(main)) main <- tt0
         ## R <- R[,ncol(R):1]
-        plt <- ggbarplot(t(R), ylab=stat0, srt=45, group.name="") +
-            ## theme(
-            ##     legend.key.size = unit(0.65,"lines"),
-            ##     legend.key.height = unit(0.35,"lines"),
-            ##     legend.text = element_text(size=9),
+        plt <- ggpubr::ggbarplot(t(R), ylab=stat0, srt=45, group.name="") +
+            ## ggplot2::theme(
+            ##     legend.key.size = grid::unit(0.65,"lines"),
+            ##     legend.key.height = grid::unit(0.35,"lines"),
+            ##     legend.text = ggplot2::element_text(size=9),
             ##     legend.justification = c(1,1),
             ##     legend.position = c(0.98,0.98)) +
-            theme(plot.margin = ggplot2::margin(2,2,0,2,"mm"),
-                  plot.title = element_text(size=12)) +
-            xlab("") + ggtitle(main)
+            ggplot2::theme(plot.margin = ggplot2::margin(2,2,0,2,"mm"),
+                  plot.title = ggplot2::element_text(size=12)) +
+            ggplot2::xlab("") + ggplot2::ggtitle(main)
         ## plt
         return(plt)
     }
@@ -531,19 +531,19 @@ NORMALIZATION.METHODS <- c("none","mean","scale","NC","CPM","TMM","RLE","RLE2","
 
 
 normalizeTMM <- function(counts, log=FALSE, method="TMM") {
-    require(edgeR)
-    dge <- DGEList(as.matrix(counts), group=NULL)
-    dge <- calcNormFactors(dge, method=method)
+    
+    dge <- edgeR::DGEList(as.matrix(counts), group=NULL)
+    dge <- edgeR::calcNormFactors(dge, method=method)
     edgeR::cpm(dge, log=log)
 }
 
 normalizeRLE <- function(counts, log=FALSE, use='deseq2') {
-    require(edgeR)
-    require(DESeq2)
+    
+    
     outx <- NULL
     if(use=='edger') {
-        dge <- DGEList(as.matrix(counts), group=NULL)
-        dge <- calcNormFactors(dge, method="RLE")
+        dge <- edgeR::DGEList(as.matrix(counts), group=NULL)
+        dge <- edgeR::calcNormFactors(dge, method="RLE")
         outx <- edgeR::cpm(dge, log=log)
     } else if(use=='deseq2') {
         cts <- counts
@@ -551,8 +551,8 @@ normalizeRLE <- function(counts, log=FALSE, use='deseq2') {
                            countData = cts,
                            colData = cbind(colnames(cts),1),
                            design = ~1)
-        disp <- estimateSizeFactors(dds)
-        outx <- counts(disp, normalized=TRUE)
+        disp <- DESeq2::estimateSizeFactors(dds)
+        outx <- DESeq2::counts(disp, normalized=TRUE)
     } else {
         stop("unknown method")
     }
@@ -593,8 +593,8 @@ pgx.countNormalization <- function(x, methods, keep.zero=TRUE)
             ##            ## normalization on total counts (linear scale)
             ##            x <- normalizeTMM(x, log=FALSE, method=m) ## does upperquartile on counts
         } else if(m=="quantile") {
-            require(preprocessCore)
-            ##new.x <- 0.01 * normalize.quantiles(as.matrix(100*x)) ## shift to avoid clipping
+            
+            ##new.x <- 0.01 * preprocessCore::normalize.quantiles(as.matrix(100*x)) ## shift to avoid clipping
             new.x <- 0.01 * limma::normalizeQuantiles(as.matrix(100*x)) ## shift to avoid clipping
             rownames(new.x) <- rownames(x)
             colnames(new.x) <- colnames(x)
@@ -614,13 +614,13 @@ pgx.countNormalization <- function(x, methods, keep.zero=TRUE)
 pgx.performBatchCorrection <- function(ngs, zx, batchparams,
                                        method=c("ComBat","BMC","limma","MNN","fastMNN"))
 {
-    require(limma)
-    require(irlba)
-    require(qlcMatrix)
+    
+    
+    
 
     ## precompute PCA
     suppressWarnings(suppressMessages(
-        svd <- irlba(zx - Matrix::rowMeans(zx), nv=3)
+        svd <- irlba::irlba(zx - Matrix::rowMeans(zx), nv=3)
     ))
     Y <- ngs$samples[colnames(zx),]
 
@@ -676,7 +676,7 @@ pgx.performBatchCorrection <- function(ngs, zx, batchparams,
                 }  ## end of iter
 
             } else if(batchpar=="<SVA>") {
-                require(sva)
+                
                 ##group <- ngs$samples$group                
                 ##mod1 = model.matrix( ~ group, data=ngs$samples)
                 mod1 = model.matrix( ~group)                
@@ -685,7 +685,7 @@ pgx.performBatchCorrection <- function(ngs, zx, batchparams,
                 ##mod0 = model.matrix( ~ 1, data=ngs$samples)
                 sv <- sva( 0.0001+zx, mod1, mod0, n.sv=NULL)$sv
                 ##sv <- svaseq( 2**zx, mod1, mod0, n.sv=NULL)$sv
-                zx <- removeBatchEffect(zx, covariates=sv, design=mod1)
+                zx <- limma::removeBatchEffect(zx, covariates=sv, design=mod1)
             } else if(batchpar=="<NNM>") {
                 ##y <- ngs$samples$group
                 y <- group
@@ -756,7 +756,7 @@ pgx.removeBatchEffect <- function(X, batch, model.vars=NULL,
     batch0 <- as.character(batch)
     batch0[is.na(batch0)] <- "NA" ## NA as separate group??
     if(method=="MNN") {
-        require(scran)
+        
         matlist <- tapply(1:ncol(X), batch0, function(i) X[,i,drop=FALSE])
         ##out <- mnnCorrect( matlist[[1]], matlist[[2]])
         suppressWarnings( out <- do.call( scran::mnnCorrect,
@@ -765,7 +765,7 @@ pgx.removeBatchEffect <- function(X, batch, model.vars=NULL,
         colnames(new.X) <- unlist(lapply(matlist,colnames))
         X <- new.X[,colnames(X)]
     } else if(method=="fastMNN") {
-        require(scran)
+        
         d = min(50,ncol(X)/2)
         matlist <- tapply(1:ncol(X), batch0, function(i) X[,i,drop=FALSE])
         out <- do.call(fastMNN, c(matlist,d=d))
@@ -774,10 +774,10 @@ pgx.removeBatchEffect <- function(X, batch, model.vars=NULL,
         colnames(cor.exp) <- unlist(lapply(matlist,colnames))
         X <- cor.exp[,colnames(X)]
     } else if(method=="limma") {
-        require(limma)
+        
         X <- limma::removeBatchEffect(X, batch=batch0)
     } else if(method=="ComBat") {
-        require(sva)
+        
         X <- ComBat(X, batch = batch0)
     } else if(method=="BMC") {
         ## batch mean center
@@ -799,7 +799,7 @@ pgx.removePC <- function(X, nv)
     suppressWarnings(suppressMessages(
         pc <- irlba::irlba(X, nv=nv)$v
     ))
-    cX <- removeBatchEffect(X, covariates=pc)
+    cX <- limma::removeBatchEffect(X, covariates=pc)
     cX
 }
 
@@ -815,7 +815,7 @@ pgx.plotMitoRibo <- function(counts, percentage=TRUE) {
     ##df <- cbind( ribo=ribo.counts, mito=mito.counts, other=other.counts )
     df <- cbind( ribo=ribo.counts, mito=mito.counts )
     if(percentage) df <- round((df / tot.counts) * 100, digits=2)
-    head(df)
+    Matrix::head(df)
     barplot( t(df), beside=FALSE, las=3 )
     
 }
@@ -855,7 +855,7 @@ pgx.computeBiologicalEffects <- function(X, is.count=FALSE)
     }
     if(length(rb.genes) >= 10) {
         ii <- rb.genes[order(-apply(tx[rb.genes,,drop=FALSE],1,sd,na.rm=TRUE))]
-        sel20 <- head(ii,20)
+        sel20 <- Matrix::head(ii,20)
         ribo <- Matrix::colMeans(tx[rb.genes,,drop=FALSE])
         ribo20 <- Matrix::colMeans(tx[sel20,,drop=FALSE])
         pct.ribo <- Matrix::colSums(cx[rb.genes,,drop=FALSE],na.rm=TRUE) / libsize
@@ -872,7 +872,7 @@ pgx.computeBiologicalEffects <- function(X, is.count=FALSE)
     )
     
     cc.score <- try(pgx.scoreCellCycle(cx))
-    head(cc.score)
+    Matrix::head(cc.score)
     if(!any(class(cc.score)=="try-error")) {
         ##cc.score <- cc.score[,c("s_score","g2m_score","diff_score")]
         cc.score <- cc.score[,c("s_score","g2m_score")]
@@ -881,7 +881,7 @@ pgx.computeBiologicalEffects <- function(X, is.count=FALSE)
     }
     pheno$gender <- pgx.inferGender(cx)
 
-    head(pheno)    
+    Matrix::head(pheno)    
     return(pheno)
 }
 
@@ -889,8 +889,8 @@ nmax=-1
 pgx.svaCorrect <- function(X, pheno, nmax=-1) {
     ## 
     ## IK: not sure about this SVA correction stuff... 
-    require(sva)
-    require(SmartSVA)
+    
+    
 
     if(NCOL(pheno)==1) {
         pheno <- data.frame(pheno=pheno)
@@ -941,15 +941,15 @@ pgx.svaCorrect <- function(X, pheno, nmax=-1) {
     message("Calculating SVA...")
     vX = X
     if(nmax>0) {
-        vX = head(X[order(-apply(X,1,sd)),],nmax)
+        vX = Matrix::head(X[order(-apply(X,1,sd)),],nmax)
     }
     sv <- sva(vX, mod1x, mod0x, n.sv=n.sv)$sv
     ##sv <- SmartSVA::smartsva.cpp(X, mod1x, mod0=mod0x, n.sv=n.sv)$sv
     
     message("Perform batch correction...")
     ##sv <- svaseq( 2**X, mod1, mod0, n.sv=NULL)$sv
-    cX <- removeBatchEffect(X, covariates=sv, design=mod1x)
-    ##cX <- removeBatchEffect(X, covariates=sv)
+    cX <- limma::removeBatchEffect(X, covariates=sv, design=mod1x)
+    ##cX <- limma::removeBatchEffect(X, covariates=sv)
 
     ## recenter on old feature means
     cX <- cX - rowMeans(cX,na.rm=TRUE) + rowMeans(X,na.rm=TRUE)
@@ -967,7 +967,7 @@ pgx.optimizeBatchCorrection.NOTREADY <- function(ngs, batch, contrast, nparam=NU
                                                 normalization=NORMALIZATION.METHODS,
                                                 niter=1, resample=0.9, show.progress=1)
 {
-    require(parallel)
+    
 
     ct <- ngs$model.parameters$contr.matrix
     if(is.null(contrast))  contrast <- colnames(ct)
@@ -1001,7 +1001,7 @@ pgx.optimizeBatchCorrection.NOTREADY <- function(ngs, batch, contrast, nparam=NU
     if(niter==1) resample=-1
     if(niter!=1) show.progress=0
     niter
-    out1 <- mclapply(1:niter, function(i)
+    out1 <- parallel::mclapply(1:niter, function(i)
         pgx._runComputeNumSig(ngs, parcomb, contrast=contrast,
                               normalization=normalization,
                               resample=resample,
@@ -1009,7 +1009,7 @@ pgx.optimizeBatchCorrection.NOTREADY <- function(ngs, batch, contrast, nparam=NU
         )
     numsig <- unlist(out1)
     numsig <- tapply( numsig, names(numsig), mean, na.rm=TRUE)
-    tail(sort(numsig),200)
+    Matrix::tail(sort(numsig),200)
 
     ## make nice data.frame
     numsig.details <- strsplit(names(numsig),split=":")
@@ -1039,7 +1039,7 @@ pgx._runComputeNumSig <- function(ngs, parcomb, contrast, resample=-1,
                                   normalization=NORMALIZATION.METHODS,
                                   show.progress=1)
 {
-    require(limma)
+    
     k="cpm"
     numsig <- c()
     ##NORMALIZATION.METHODS <- c("none","cpm","TMM","RLE","quantile","SVA")
@@ -1049,15 +1049,15 @@ pgx._runComputeNumSig <- function(ngs, parcomb, contrast, resample=-1,
         if(k=="cpm") aX <- edgeR::cpm(ngs$counts, log=TRUE)
         if(k=="TMM") aX <- log2(1+normalizeTMM(ngs$counts))
         if(k=="RLE") aX <- log2(1+normalizeRLE(ngs$counts))
-        if(k=="quantile") aX <- normalizeQuantiles(log2(1+ngs$counts))
+        if(k=="quantile") aX <- limma::normalizeQuantiles(log2(1+ngs$counts))
         if(k=="SVA") {
-            require(sva)
+            
             mod1 = model.matrix( ~ group, data=ngs$samples)
             mod0 = cbind(mod1[,1])
             logcpm <- edgeR::cpm(ngs$counts, log=TRUE) ## perform SVA on logCPM
             log <- capture.output({
                 suppressWarnings(sv <- sva(logcpm, mod1, mod0, n.sv=NULL)$sv)
-                suppressWarnings(aX <- removeBatchEffect( logcpm, covariates=sv, design=mod1))
+                suppressWarnings(aX <- limma::removeBatchEffect( logcpm, covariates=sv, design=mod1))
             })
             dim(aX)
         }
@@ -1081,7 +1081,7 @@ pgx._runComputeNumSig <- function(ngs, parcomb, contrast, resample=-1,
                 group <- ngs$samples[colnames(aX),"group"]
                 design <- model.matrix( ~ group)
                 log <- capture.output({
-                    suppressWarnings(bX <- removeBatchEffect(aX, covariates=bvar, design=design))
+                    suppressWarnings(bX <- limma::removeBatchEffect(aX, covariates=bvar, design=design))
                 })
             } else {
                 bX <- aX
@@ -1100,7 +1100,7 @@ pgx._runComputeNumSig <- function(ngs, parcomb, contrast, resample=-1,
 
 ##X=bX;fc=0;qv=0.05
 pgx._computeNumSig <- function(ngs, X, contrast=NULL, fc=0, qv=0.05) {
-    require(preprocessCore)
+    
     samples <- colnames(X)
     design <- ngs$model.parameters$design[samples,]
     contr.matrix <- ngs$model.parameters$contr.matrix

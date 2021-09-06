@@ -19,12 +19,12 @@ prot.readProteinGroups <- function(file, meta=NULL, sep="\t", collapse.gene=TRUE
     message("reading proteinGroups file ",file)
     ## D = read.csv(file, sep=sep, check.names=FALSE)
     ## D = read.csv(file, sep="\t", check.names=FALSE)
-    D = fread(file, check.names=FALSE)
+    D = data.table::fread(file, check.names=FALSE)
     D = data.frame(D, check.names=FALSE)
     ## D = data.frame(D, check.names=TRUE) ## need dots????
     dim(D)
     colnames(D)
-    head(D)[,1:10]
+    Matrix::head(D)[,1:10]
 
     ##col.required <- c("Gene.names","Protein.names")
     ## Filter contaminants
@@ -41,7 +41,7 @@ prot.readProteinGroups <- function(file, meta=NULL, sep="\t", collapse.gene=TRUE
     
     ## parse gene annotation
     genes = D[,c("Majority protein IDs","Gene names","Protein names")]
-    head(genes)
+    Matrix::head(genes)
     colnames(genes) = c("protein_id","gene_name","gene_title")
     gg = as.character(genes$gene_name)
     gg = sapply(gg, function(x) strsplit(x,split=";")[[1]][1]) ## take just FIRST gene
@@ -116,8 +116,8 @@ proteus.readProteinGroups <- function(file="proteinGroups.txt", meta="meta.txt",
                                       unit="intensity", use.LFQ=FALSE, is.log2=FALSE,
                                       collapse.gene=FALSE, na.zero=FALSE) 
 {
-    require(proteus)
-    library(data.table)
+    
+    
 
     ##------------------------------------------------------------
     ## Read protein data
@@ -138,7 +138,7 @@ proteus.readProteinGroups <- function(file="proteinGroups.txt", meta="meta.txt",
         stop("metadata file must have 'condition' column")
     }
 
-    samples_with_data <- sub("Intensity ","",grep("^Intensity ",colnames(fread(file,nrow=5)),value=TRUE))
+    samples_with_data <- sub("Intensity ","",grep("^Intensity ",colnames(data.table::fread(file,nrow=5)),value=TRUE))
     samples_in_meta <- meta$sample
 
     if(any(!samples_in_meta %in% samples_with_data)) {
@@ -174,7 +174,7 @@ proteus.readProteinGroups <- function(file="proteinGroups.txt", meta="meta.txt",
     ##------------------------------------------------------------
     ## create protein2gene translation vector
     ##------------------------------------------------------------
-    pfile <- as.data.frame(fread(file))
+    pfile <- as.data.frame(data.table::fread(file))
     rownames(pfile) <- pfile[,"Majority protein IDs"]
     table(rownames(pdat$tab) %in% rownames(pfile))
     pfile <- pfile[rownames(pdat$tab),]
@@ -335,11 +335,11 @@ prot.testTwoGroups <- function(X, group1, group2, method="limma",
         out1$Gene <- NULL
         colnames(out1) <- c("logFC","P.Value")
         dim(out1)
-        head(out1)
+        Matrix::head(out1)
 
     } else if(method %in% c("t.welch","t.equalvar")) {
         ## faster t-test
-        require(matrixTests)
+        
         j1 <- which( colnames(X) %in% group1)
         j2 <- which( colnames(X) %in% group2)
         if(method=="t.welch")
@@ -350,22 +350,22 @@ prot.testTwoGroups <- function(X, group1, group2, method="limma",
         out0$qvalue <- p.adjust(out0$pvalue, method="fdr")
         out1 <- out0[,c("mean.diff","pvalue","qvalue")]
         colnames(out1) <- c("logFC","P.Value","adj.P.Val")
-        head(out1)
+        Matrix::head(out1)
 
     } else if(method == "limma" && is.null(labels) ) {
         ## See e.g. https://bioconductor.org/help/course-materials/2010/BioC2010/limma2.pdf
-        require(limma)
+        
         jj <- which( colnames(X) %in% c(group1,group2))
         y <- 1*(colnames(X)[jj] %in% group1)
         design <- model.matrix( ~ y )
         colnames(design) <- c("Intercept","group1_vs_group2")
-        fit <- eBayes(lmFit(X[,jj], design), trend=TRUE, robust=TRUE)
-        out1 <- topTable(fit, coef=2, sort.by="none", number=Inf)
+        fit <- limma::eBayes(limma::lmFit(X[,jj], design), trend=TRUE, robust=TRUE)
+        out1 <- limma::topTable(fit, coef=2, sort.by="none", number=Inf)
         out1 <- out1[,c("logFC","P.Value","adj.P.Val")]
 
     } else if(method == "limma" && !is.null(labels) ) {
         ## Same as above but we retain all samples in the model
-        require(limma)
+        
         design <- model.matrix( ~ 0 + labels)
         colnames(design) <- sub("labels","", colnames(design))
         rownames(design) <- colnames(X)        
@@ -373,7 +373,7 @@ prot.testTwoGroups <- function(X, group1, group2, method="limma",
         level1 <- unique(labels[match(group1,colnames(X))])
         level2 <- unique(labels[match(group2,colnames(X))])
         ##aa0 <- paste0(level1," - ",level2)
-        ##contr <- makeContrasts( aa0, levels=design)
+        ##contr <- limma::makeContrasts( aa0, levels=design)
         levels <- colnames(design)
         contr <- matrix( 1*(levels %in% level1) - 1*(levels %in% level2), ncol=1)
         rownames(contr) <- levels
@@ -382,14 +382,14 @@ prot.testTwoGroups <- function(X, group1, group2, method="limma",
         rownames(contr) <- colnames(design)
         colnames(contr)[1] <- "contrast1"
         contr[is.na(contr)] <- 0
-        fit1 <- lmFit(X[,], design)
-        fit2 <- contrasts.fit(fit1, contr)
-        fit2 <- eBayes(fit2, trend=TRUE, robust=TRUE)        
-        out1 <- topTable(fit2, coef=1, sort.by="none", number=Inf)
+        fit1 <- limma::lmFit(X[,], design)
+        fit2 <- limma::contrasts.fit(fit1, contr)
+        fit2 <- limma::eBayes(fit2, trend=TRUE, robust=TRUE)        
+        out1 <- limma::topTable(fit2, coef=1, sort.by="none", number=Inf)
         out1 <- out1[,c("logFC","P.Value","adj.P.Val")]
         
     } else if(method == "msms.edgeR") {
-        require(msmsTests)
+        
         s <- colnames(X)
         grp <- c(NA,"group1","group2")[1 + 1*(s %in% group1) + 2*(s %in% group2) ]
         pd <- data.frame( sample=colnames(X), group=grp)
@@ -435,7 +435,7 @@ prot.testTwoGroups <- function(X, group1, group2, method="limma",
 prot.plotVolcano <- function(res, use.q=TRUE, psig=0.05, lfc=1, pmin=1e-12,
                              pcex=0.7, cex=0.7, plot.type="default", ...)
 {
-    require(manhattanly)
+    
     pdata <- cbind( res[,c("logFC","P.Value")], res$gene)
     colnames(pdata) <- c("EFFECTSIZE", "P", "Gene")
     if(use.q) pdata$P <- res$adj.P.Val
@@ -444,7 +444,7 @@ prot.plotVolcano <- function(res, use.q=TRUE, psig=0.05, lfc=1, pmin=1e-12,
     pdata$P <- pmin + pdata$P    
 
     if(plot.type=="volcanoly") {
-        require(manhattanly)
+        
         volcanoly( pdata[,], snp="Gene", highlight=highlight,
                   effect_size_line = c(-1,1)*lfc,
                   genomewideline = -log10(pig) )
@@ -529,7 +529,7 @@ prot.nmfImpute <- function(X, groups, k=10, r=0.5) {
     sum(is.na(X))
     impX <- t(apply(X,1,setZERO,y=groups))
     sum(is.na(impX))
-    out <- nnmf(impX[,],k=k,check.k=0)
+    out <- NNLM::nnmf(impX[,],k=k,check.k=0)
     hatX <- (out$W %*% out$H)
     impX[is.na(impX)] <- hatX[is.na(impX)]
     return(impX)    
@@ -706,7 +706,7 @@ silac.readDataFile <- function(datafile, remove.outliers=TRUE) {
     samples$mass.pg[which(samples$state %in% c("Act23h","Act48h") )] <- 75
 
     dim(samples)
-    head(samples)
+    Matrix::head(samples)
     apply(samples,2,table)
 
     ## ------------ define groups
@@ -779,29 +779,29 @@ silac.ttest <- function(X, group1, group2, method="limma") {
         out1$Gene <- NULL
         colnames(out1) <- c("logFC","P.Value")
         dim(out1)
-        head(out1)
+        Matrix::head(out1)
         p1 <- out1
     } else if(method == "genefilter") {
         ## faster t-test
-        require(genefilter)
+        
         jj <- which( colnames(X) %in% c(group1,group2))
         y <- 1*(colnames(X)[jj] %in% group1) + 2*(colnames(X)[jj] %in% group2)
         out1 <- genefilter::rowttests( X[,jj], factor(y) )
         out1$statistic <- NULL
         colnames(out1) <- c("logFC","P.Value")
-        head(out1)
+        Matrix::head(out1)
         p2 <- out1
     } else if(method == "limma") {
         ## See e.g. https://bioconductor.org/help/course-materials/2010/BioC2010/limma2.pdf
-        require(limma)
+        
         jj <- which( colnames(X) %in% c(group1,group2))
         y <- 1*(colnames(X)[jj] %in% group1)
         design <- model.matrix( ~ y )
         colnames(design) <- c("Intercept","group1_vs_group2")
-        fit <- eBayes(lmFit(X[,jj], design))
-        out1 <- topTable(fit, coef=2, sort.by="none", number=Inf)
+        fit <- limma::eBayes(limma::lmFit(X[,jj], design))
+        out1 <- limma::topTable(fit, coef=2, sort.by="none", number=Inf)
         out1 <- out1[,c("logFC","P.Value","adj.P.Val")]
-        head(out1)
+        Matrix::head(out1)
         p3 <- out1
     } else {
         stop("ERROR:: unknown method")

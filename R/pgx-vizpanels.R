@@ -3,8 +3,8 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-require(ggplot2)
-require(patchwork)
+
+
 
 ## just to list functions in this file
 viz.ClusterMarkers <- function(pgx){}
@@ -49,7 +49,7 @@ viz.CompareDatasets <- function(pgx1, pgx2, nmax=50, cex=1,
     xlist <- list(X0=X0, X1=X1, X2=X2)
     hlist <- list()        
     for(i in 1:length(xlist)) {
-        hlist[[i]] <- grid.grabExpr(
+        hlist[[i]] <- grid::grid.grabExpr(
             gx.splitmap(
                 xlist[[i]], main=main[i],
                 col.annot=pheno, softmax=TRUE,
@@ -105,21 +105,21 @@ viz.FoldChangeHeatmap <- function(pgx, comparisons=NULL, hilight=NULL,
     F <- out$fc
     Q <- out$qv
 
-    ii <- head(order(-rowMeans(F**2)),60)
+    ii <- Matrix::head(order(-rowMeans(F**2)),60)
     F1 <- F[ii,]
     F1 <- F1[order(rowMeans(F1)),]
     
-    hm <- Heatmap( t(F1),
+    hm <- ComplexHeatmap::Heatmap( t(F1),
                   cluster_rows = TRUE,
                   cluster_columns = FALSE)
 
-    p1 <- ggbarplot( t(F1), las=3,
+    p1 <- ggpubr::ggbarplot( t(F1), las=3,
                     legend.pos=c(1.2,1.05), legend.cex=0.9,
                     xlab="", ylab="cumulative fold-change") +
-        theme(
-            plot.margin = unit(c(0.3,5.6,0,0), "cm")
+        ggplot2::theme(
+            plot.margin = grid::unit(c(0.3,5.6,0,0), "cm")
         )
-    p2 <- grid.grabExpr(draw(hm))
+    p2 <- grid::grid.grabExpr(ComplexHeatmap::draw(hm))
     
     ##--------------------------------------------------
     ## Arrange
@@ -164,19 +164,19 @@ viz.ClusterMarkers <- function(pgx, pheno1, pheno2, n=NULL, pos="tsne2d",
             title=pheno2, cex.clust=1.1)
         if(!is.null(theme)) { p2 <- p2 + theme }        
     } else {
-        p2 <- plot_spacer()
+        p2 <- patchwork::plot_spacer()
     }
     
     if(is.null(n)) n <- floor(65 / length(unique(ph1)))
-    sel <- tapply(1:ncol(X), ph1, function(i) head(sample(i),subsample))
+    sel <- tapply(1:ncol(X), ph1, function(i) Matrix::head(sample(i),subsample))
     sel <- unlist(sel)
-    p3 <- grid.grabExpr(
+    p3 <- grid::grid.grabExpr(
         gx.markermap(
             X[,sel], splitx=ph1[sel], n=n,
             scale=scale, softmax=TRUE, title_cex=1,
             show_rownames=100, cexRow=0.8)
     )
-    fig <- ((p1 / p2) | p3) + plot_layout(widths=c(1,2.5))
+    fig <- ((p1 / p2) | p3) + patchwork::plot_layout(widths=c(1,2.5))
     
     if(is.null(title)) title = "Cluster markers"
     if(is.null(subtitle)) subtitle = "The heatmap shows the top markers genes for each phenotype."
@@ -215,7 +215,7 @@ viz.PhenoMaps <- function(pgx, phenotypes=NULL, pos=NULL, cex=1, label=FALSE,
             hilight2 = hilight2,
             plotlib="ggplot", theme=theme)
         ## if(!is.null(theme)) { p <- p + theme }
-        p <- p + theme( plot.margin = ggplot2::margin(0,8,0,8) )
+        p <- p + ggplot2::theme( plot.margin = ggplot2::margin(0,8,0,8) )
         plt[[ph]] <- p
     }
 
@@ -268,25 +268,25 @@ viz.PhenoStats <- function(pgx, phenotypes=NULL,
             ##-----------------------------------------
             ## get expression per group
             if(dtype=="bar") {
-                plt <- ggplot(df, aes_string(x=p, fill=p)) +
-                    geom_bar(width=0.85, position='dodge')
+                plt <- ggplot2::ggplot(df, ggplot2::aes_string(x=p, fill=p)) +
+                    ggplot2::geom_bar(width=0.85, position='dodge')
             } else if(dtype=="pie") {
-                plt <- ggplot(df, aes_string(x=factor(1), fill=p)) +
-                    geom_bar(width=1) + coord_polar("y")
+                plt <- ggplot2::ggplot(df, ggplot2::aes_string(x=factor(1), fill=p)) +
+                    ggplot2::geom_bar(width=1) + ggplot2::coord_polar("y")
             } else {
                 stop("FATAL:: unknown dtype=",dtype)
             }
             if(!is.null(theme)) {
                 plt <- plt + theme
             }
-            plt <- plt + xlab("") + ggtitle(p) +
-                ## scale_fill_brewer(palette="Dark2") + 
-                theme(
+            plt <- plt + ggplot2::xlab("") + ggplot2::ggtitle(p) +
+                ## ggplot2::scale_fill_brewer(palette="Dark2") + 
+                ggplot2::theme(
                     legend.position='none',
-                    legend.title = element_blank()
+                    legend.title = ggplot2::element_blank()
                 )            
             if(length(unique(df[,p]))>10) {
-                plt <- plt + theme(legend.position='none')
+                plt <- plt + ggplot2::theme(legend.position='none')
             }
             plotlist[[i]] <- plt
         } else {
@@ -295,13 +295,13 @@ viz.PhenoStats <- function(pgx, phenotypes=NULL,
             ##-----------------------------------------
             df1 <- data.frame(x=df[,p])
             if(ctype=="density") {
-                plt <- ggplot(data=df1, aes(x=x)) + 
-                    geom_density(fill="grey50", alpha=0.35, size=0.8) +
-                    labs(title=paste("Density for ",p), x=p, y="density") 
+                plt <- ggplot2::ggplot(data=df1, ggplot2::aes(x=x)) + 
+                    ggplot2::geom_density(fill="grey50", alpha=0.35, size=0.8) +
+                    ggplot2::labs(title=paste("Density for ",p), x=p, y="density") 
             } else if(ctype=="histogram") {
-                plt <- ggplot(data=df1, aes(x=x)) + 
-                    geom_histogram(col="grey30", fill="grey70", size=0.4, alpha=0.8) + 
-                    labs(title=paste("Histogram for ",p), x=p, y="count") 
+                plt <- ggplot2::ggplot(data=df1, ggplot2::aes(x=x)) + 
+                    ggplot2::geom_histogram(col="grey30", fill="grey70", size=0.4, alpha=0.8) + 
+                    ggplot2::labs(title=paste("Histogram for ",p), x=p, y="count") 
             } else {
                 stop("FATAL:: unknown ctype=",ctype)
             }
@@ -375,13 +375,13 @@ viz.PhenoStatsBy <- function(pgx, by.pheno, phenotypes=NULL,
                 xlab0 <- "percentage  (%)"
             }
             rownames(F) <- paste0(" ",rownames(F)," ")
-            plt <- ggbarplot((F), base_size=12,
+            plt <- ggpubr::ggbarplot((F), base_size=12,
                              legend.pos = "right",
                              ylab = "counts  (N)", srt=srt,
                              xlab = "") 
-            ## scale_x_discrete(guide=guide_axis(n.dodge=2)) +                        
+            ## ggplot2::scale_x_discrete(guide=guide_axis(n.dodge=2)) +                        
             if(length(unique(y))>10) {
-                plt <- plt + theme(legend.position='none')
+                plt <- plt + ggplot2::theme(legend.position='none')
             }
         } else {
             ##-----------------------------------------
@@ -391,55 +391,55 @@ viz.PhenoStatsBy <- function(pgx, by.pheno, phenotypes=NULL,
             df <- data.frame(x=x, y=y)       
             if(ctype=="box") {
                 suppressWarnings(
-                    plt <- ggplot(df, aes(x=x, y=y, fill=x)) +
-                        geom_boxplot() +
-                        theme(
+                    plt <- ggplot2::ggplot(df, ggplot2::aes(x=x, y=y, fill=x)) +
+                        ggplot2::geom_boxplot() +
+                        ggplot2::theme(
                             ##legend.position = 'none'
                             legend.position = 'right',
-                            legend.title = element_blank()
+                            legend.title = ggplot2::element_blank()
                         ) +
-                        xlab("") + ylab(p) +
-                        labs(fill=element_blank())
+                        ggplot2::xlab("") + ggplot2::ylab(p) +
+                        ggplot2::labs(fill=element_blank())
                 )
             } else if(ctype=="violin") {
                 suppressWarnings(
-                    plt <- ggviolin(
+                    plt <- ggpubr::ggviolin(
                         df$x, df$y, group=df$group, base_size=13,
                         srt=srt, pdodge=0.6, cex=cex, main=title) +
-                        xlab("") + ylab(p)
+                        ggplot2::xlab("") + ggplot2::ylab(p)
                 )
             } else if(ctype=="density") {
-                plt <- ggplot(data=df, aes(x=y, color=x, fill=x)) + 
-                    geom_density(alpha=0.15, size=1, position="stack") +
-                    guides(fill=FALSE) +
-                    labs(title=paste("Density for ",p),
+                plt <- ggplot2::ggplot(data=df, ggplot2::aes(x=y, color=x, fill=x)) + 
+                    ggplot2::geom_density(alpha=0.15, size=1, position="stack") +
+                    ggplot2::guides(fill=FALSE) +
+                    ggplot2::labs(title=paste("Density for ",p),
                          x=p, y="density", color=by.pheno) 
             } else if(ctype=="histogram") {
-                plt <- ggplot(data=df, aes(x=y, color=x, fill=x)) + 
-                    geom_histogram(alpha=0.25, size=0.5, position="stack") +
-                    guides(fill=FALSE) +
-                    labs(title=paste("Histogram for ",p),
+                plt <- ggplot2::ggplot(data=df, ggplot2::aes(x=y, color=x, fill=x)) + 
+                    ggplot2::geom_histogram(alpha=0.25, size=0.5, position="stack") +
+                    ggplot2::guides(fill=FALSE) +
+                    ggplot2::labs(title=paste("Histogram for ",p),
                          x=p, y="counts", color=by.pheno) 
             } else {
                 stop("FATAL:: unknown ctype=",ctype)
             }
             
             plt <- plt + 
-                theme_classic(base_size=12) 
-            ## theme(legend.position = 'none')
+                ggplot2::theme_classic(base_size=12) 
+            ## ggplot2::theme(legend.position = 'none')
             plt
         }
 
-        cpal <- rep(brewer.pal(12, "Set3"),99)
-        cpal <- rep(brewer.pal(12, "Paired"),99)
+        cpal <- rep(RColorBrewer::brewer.pal(12, "Set3"),99)
+        cpal <- rep(RColorBrewer::brewer.pal(12, "Paired"),99)
         suppressWarnings( suppressMessages(
-            plt <- plt + ggtitle(p) +
-                scale_color_manual(values=cpal) +
-                scale_fill_manual(values=cpal) +
-                theme(
+            plt <- plt + ggplot2::ggtitle(p) +
+                ggplot2::scale_color_manual(values=cpal) +
+                ggplot2::scale_fill_manual(values=cpal) +
+                ggplot2::theme(
                     plot.margin = ggplot2::margin(2,10,5,10),
-                    legend.key.size = unit(9, "pt"),
-                    legend.key.height = unit(9, "pt")
+                    legend.key.size = grid::unit(9, "pt"),
+                    legend.key.height = grid::unit(9, "pt")
                 )
         ))
 
@@ -460,18 +460,18 @@ viz.Expression <- function(pgx, pheno, contrast, genes=NULL,
                            title=NULL, subtitle=NULL, caption=NULL)
 {
     ## get cluster markers (only works if vs_others is defined!!)
-    require(ggpubr)       
+           
     if(is.null(genes) && !is.null(contrast)) {
         px.markers <- pgx.getMarkerGenes(pgx, n=ngenes, dir=0)
         genes <- px.markers[[contrast]]
     } else if(!is.null(genes) && is.null(contrast)) {
-        genes <- head(genes, ngenes)
+        genes <- Matrix::head(genes, ngenes)
     } else {
         sdx <- apply(pgx$X, 1, sd)
-        genes <- head(rownames(pgx$X)[order(-sdx)],ngenes)
+        genes <- Matrix::head(rownames(pgx$X)[order(-sdx)],ngenes)
     }
     genes <- intersect(genes, rownames(pgx$X))
-    genes <- head(genes,ngenes)    
+    genes <- Matrix::head(genes,ngenes)    
 
     ## phenoplot
     pos <- pgx$tsne2d
@@ -479,34 +479,34 @@ viz.Expression <- function(pgx, pheno, contrast, genes=NULL,
                      pheno = pgx$samples[,pheno] )
     p1 <- ggpubr::ggscatter(df, "x", "y", color="pheno",
                             size=1.2*cex ) +
-        xlab(colnames(pos)[1]) + ylab(colnames(pos)[2]) +
-        theme(legend.title = element_blank())
+        ggplot2::xlab(colnames(pos)[1]) + ggplot2::ylab(colnames(pos)[2]) +
+        ggplot2::theme(legend.title = ggplot2::element_blank())
     ##p1
     
     ## violin plot or barplot
     ## get expression per group
-    df <- melt(pgx$X[genes,])
+    df <- data.table::melt(pgx$X[genes,])
     cpal <- "grey70"
     if(!is.null(pheno)) {
         df$pheno <- pgx$samples[df$Var2,pheno]
         np <- length(unique(df$pheno))
         cpal <-  rep(c("#00AFBB", "#E7B800"),99)[1:np]
-        cpal <-  rep(brewer.pal(12,"Paired"),99)[1:np]
-        cpal <-  rep(brewer.pal(12,"Set3"),99)[1:np]
-        cpal <-  rep(brewer.pal(8,"Dark2"),99)[1:np]
+        cpal <-  rep(RColorBrewer::brewer.pal(12,"Paired"),99)[1:np]
+        cpal <-  rep(RColorBrewer::brewer.pal(12,"Set3"),99)[1:np]
+        cpal <-  rep(RColorBrewer::brewer.pal(8,"Dark2"),99)[1:np]
     }
     p2 <- ggpubr::ggbarplot(
                       df, x = "Var1", y = "value", fill = "pheno",
                       add = "mean_sd", palette = cpal,
-                      position = position_dodge(width=0.8)) +
-        scale_x_discrete(guide=guide_axis(angle=srt)) +
-        xlab(NULL) + ylab("expression   (log2)") +  
-        theme(
-            axis.text.x = element_text(angle=srt, vjust=0, size=10),
+                      position = ggplot2::position_dodge(width=0.8)) +
+        ggplot2::scale_x_discrete(guide=guide_axis(angle=srt)) +
+        ggplot2::xlab(NULL) + ggplot2::ylab("expression   (log2)") +  
+        ggplot2::theme(
+            axis.text.x = ggplot2::element_text(angle=srt, vjust=0, size=10),
             legend.justification = c(1,1),
             legend.position = c(1,1),
-            legend.key.size = unit(9, "pt"),
-            legend.key.height = unit(9, "pt")
+            legend.key.size = grid::unit(9, "pt"),
+            legend.key.height = grid::unit(9, "pt")
         )
     ##p2
 
@@ -524,21 +524,21 @@ viz.Expression <- function(pgx, pheno, contrast, genes=NULL,
             legend = ifelse(i==1,TRUE,FALSE),
             cex.legend=0.7, legend.ysp=1.8, 
             zlim=zlim, opacity=0.8, plotlib="ggplot") 
-        m1 <- m1 + theme(
-                       axis.text.x = element_blank(),
-                       axis.text.y = element_blank(),
-                       axis.ticks.x = element_blank(),
-                       axis.ticks.y = element_blank()
+        m1 <- m1 + ggplot2::theme(
+                       axis.text.x = ggplot2::element_blank(),
+                       axis.text.y = ggplot2::element_blank(),
+                       axis.ticks.x = ggplot2::element_blank(),
+                       axis.ticks.y = ggplot2::element_blank()
                    )        
         gene_plots[[i]] <- m1
     }
     
-    require(grid)
-    require(cowplot)
-    p2 <- p2 + theme(plot.margin = ggplot2::margin(5,5,5,25))
+    
+    
+    p2 <- p2 + ggplot2::theme(plot.margin = ggplot2::margin(5,5,5,25))
     row1 <- cowplot::plot_grid(p1, p2, nrow=1, rel_widths=c(1,4), labels=c("a","b"))
     row2 <- cowplot::plot_grid(plotlist=gene_plots, nrow=nrow) +
-        theme(plot.margin = ggplot2::margin(5,5,5,15))
+        ggplot2::theme(plot.margin = ggplot2::margin(5,5,5,15))
     fig <- cowplot::plot_grid(row1, row2, ncol=1, rel_heights=c(1,2), labels=c("","c"))
 
     if(is.null(title)) title = "Gene Expression"
@@ -712,7 +712,7 @@ viz.Contrasts <- function(pgx=NULL, contrasts=NULL, ntop=10, dir=0, pos=NULL,
                 psig = psig, fc = fc,
                 cex = cex , cex.lab = cex.lab, 
                 hilight=gg, dir=dir, ntop=ntop) 
-            p1 <- p1 + xlab(xlab1) + ylab(ylab1)
+            p1 <- p1 + ggplot2::xlab(xlab1) + ggplot2::ylab(ylab1)
 
         } else if(type=="custom") {
             labels <- rownames(pos)
@@ -738,9 +738,9 @@ viz.Contrasts <- function(pgx=NULL, contrasts=NULL, ntop=10, dir=0, pos=NULL,
                 cex = cex, cex.lab = cex.lab, 
                 hilight = gg, plotlib="ggplot")            
         }
-        p1 <- p1 + ## theme_classic(base_size=12) +
-            ggtitle(ct) +
-            theme(
+        p1 <- p1 + ## ggplot2::theme_classic(base_size=12) +
+            ggplot2::ggtitle(ct) +
+            ggplot2::theme(
                 plot.margin = ggplot2::margin(5,10,5,10),
                 legend.position = "none",            
                 axis.title=element_text(size=11)
@@ -774,8 +774,8 @@ viz.FoldChangePairs <- function(pgx, comparisons=NULL, hilight=NULL,
 
     if(is.null(comparisons)) {
         ct <- names(pgx$gx.meta$meta)
-        comparisons <- t(combn(head(ct,5),m=2))  ## restrict
-        comparisons <- head(comparisons, 24)
+        comparisons <- t(combn(Matrix::head(ct,5),m=2))  ## restrict
+        comparisons <- Matrix::head(comparisons, 24)
     }
 
     out <- pgx.getMetaFoldChangeMatrix(pgx)
@@ -791,7 +791,7 @@ viz.FoldChangePairs <- function(pgx, comparisons=NULL, hilight=NULL,
         top.gg <- hilight
         if(is.null(hilight)) {
             df <- sort(rowSums(pos**2))
-            top.gg <- names(tail(df,ntop))
+            top.gg <- names(Matrix::tail(df,ntop))
         }
         sig <- c("","top")[1 + 1*(rownames(pos) %in% top.gg)]
         sig <- c("","sig1","sig2")[1 + rowSums(qq < 0.05)]        
@@ -799,19 +799,19 @@ viz.FoldChangePairs <- function(pgx, comparisons=NULL, hilight=NULL,
         p2 <- pgx.scatterPlotXY(
             pos, var=sig, plotlib="ggplot", cex=1.0*cex,
             hilight=top.gg, legend=FALSE) +
-            scale_fill_manual(values=cpal) +
-            scale_color_manual(values=cpal)
+            ggplot2::scale_fill_manual(values=cpal) +
+            ggplot2::scale_color_manual(values=cpal)
         p2 <- p2 +
-            geom_hline(yintercept=0, size=0.3, color="grey70") +
-            geom_vline(xintercept=0, size=0.3, color="grey70") 
+            ggplot2::geom_hline(yintercept=0, size=0.3, color="grey70") +
+            ggplot2::geom_vline(xintercept=0, size=0.3, color="grey70") 
 
-        rho <- cor(pos[,1],pos[,2])
+        rho <- WGCNA::cor(pos[,1],pos[,2])
         plot.diag1 <- ((is.null(plot.diag) && rho>0.3) || plot.diag==TRUE)
         if(plot.diag1) {
             p2 <- p2 + 
-                geom_abline(slope=1, intercept=0, linetype='dotted', size=0.4) +
-                geom_abline(slope=1, intercept=+1, linetype='dashed', size=0.4) +
-                geom_abline(slope=1, intercept=-1, linetype='dashed', size=0.4)             
+                ggplot2::geom_abline(slope=1, intercept=0, linetype='dotted', size=0.4) +
+                ggplot2::geom_abline(slope=1, intercept=+1, linetype='dashed', size=0.4) +
+                ggplot2::geom_abline(slope=1, intercept=-1, linetype='dashed', size=0.4)             
         }
         plotlist[[i]] <- p2
     }
@@ -842,13 +842,13 @@ viz.MitoRiboQC <- function(pgx, group, srt=0, pos="tsne2d",
     percent.ribo <- colSums(pgx$counts[sel.ribo,]) / nCounts_RNA * 100
 
     y <- pgx$samples[,group]
-    v1 <- ggviolin(y, nCounts_RNA, group=NULL, srt=srt,
+    v1 <- ggpubr::ggviolin(y, nCounts_RNA, group=NULL, srt=srt,
                    main="ncounts", ylab="counts")
-    v2 <- ggviolin(y, nFeature_RNA, group=NULL, srt=srt,
+    v2 <- ggpubr::ggviolin(y, nFeature_RNA, group=NULL, srt=srt,
                    main="nfeature", ylab="number")
-    v3 <- ggviolin(y, percent.mito, group=NULL, srt=srt,
+    v3 <- ggpubr::ggviolin(y, percent.mito, group=NULL, srt=srt,
                    main="percent.mito", ylab="percentage")
-    v4 <- ggviolin(y, percent.ribo, group=NULL, srt=srt,
+    v4 <- ggpubr::ggviolin(y, percent.ribo, group=NULL, srt=srt,
                    main="percent.ribo", ylab="percentage")
     vv <- patchwork::wrap_plots(v1, v2, v3, v4, nrow=1)
 
@@ -858,7 +858,7 @@ viz.MitoRiboQC <- function(pgx, group, srt=0, pos="tsne2d",
     s3 <- ggscatterFILL(x, col=percent.mito, barscale=0.5, main="percent.mito", gamma=1)
     s4 <- ggscatterFILL(x, col=percent.ribo, barscale=0.5, main="percent.ribo", gamma=2)
     ss <- patchwork::wrap_plots(s1, s2, s3 ,s4, nrow=1) 
-    ##ss <- ss & theme_minimal()
+    ##ss <- ss & ggplot2::theme_minimal()
     
     fig <- (vv / ss)
     
@@ -886,15 +886,15 @@ viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE, type='histogra
         xx1[xx1==0] <- NA  ## non-zero
         avgx <- mean(xx1,na.rm=TRUE)
         sdx  <- sd(xx1,na.rm=TRUE)
-        ggplot(dc, aes(x=value, color=Var2)) +
-            geom_density() +
-            xlab("log2(counts+1)") +
-            theme( legend.position = "none") +
-            ggtitle(main) +
-            geom_vline( xintercept = avgx,
+        ggplot2::ggplot(dc, ggplot2::aes(x=value, color=Var2)) +
+            ggplot2::geom_density() +
+            ggplot2::xlab("log2(counts+1)") +
+            ggplot2::theme( legend.position = "none") +
+            ggplot2::ggtitle(main) +
+            ggplot2::geom_vline( xintercept = avgx,
                        linetype="dashed",
                        color="grey40", size=0.3) +
-            geom_vline( xintercept = avgx + sdx*c(-2,2),
+            ggplot2::geom_vline( xintercept = avgx + sdx*c(-2,2),
                        linetype="dotted",
                        color="grey50", size=0.6)            
     }
@@ -906,15 +906,15 @@ viz.NormalizeCounts <- function(pgx, methods=NULL, post.qn=FALSE, type='histogra
         dc <- reshape2::melt(xx)
         ##dc$value[dc$value==0] <- NA
         dc <- dc[dc$value>0,,drop=FALSE]
-        p <- ggplot(dc, aes(x=Var2, y=value)) +
-            geom_boxplot(fill='grey85') +
-            ylab("log2(counts+1)") + xlab("") +
-            theme(legend.position = "none") +
-            ggtitle(main)         
+        p <- ggplot2::ggplot(dc, ggplot2::aes(x=Var2, y=value)) +
+            ggplot2::geom_boxplot(fill='grey85') +
+            ggplot2::ylab("log2(counts+1)") + ggplot2::xlab("") +
+            ggplot2::theme(legend.position = "none") +
+            ggplot2::ggtitle(main)         
 
-        p <- p + theme_classic() +
-            theme(
-                axis.text.x = element_text(angle = 45, hjust=1)
+        p <- p + ggplot2::theme_classic() +
+            ggplot2::theme(
+                axis.text.x = ggplot2::element_text(angle = 45, hjust=1)
             )
         p        
     }
@@ -1005,11 +1005,11 @@ viz.VHVLusage <- function(pgx, by.pheno="isotype", ng=30, nmin=1,
     VH.avg <- VH.avg[order(-rowSums(abs(VH.avg))),]
     VL.avg <- VL.avg[order(-rowSums(abs(VL.avg))),]        
 
-    B1 <- ggbarplot( t(head(VH.avg,ng)),
+    B1 <- ggpubr::ggbarplot( t(Matrix::head(VH.avg,ng)),
                     col=brewer.pal(12,"Set3"), las=3,
                     beside=FALSE, xlab="", ylab="cumulative log-expression",
                     main=paste("VH usage by",by.pheno)) 
-    B2 <- ggbarplot( t(head(VL.avg,ng)), col=brewer.pal(12,"Set3"), las=3,
+    B2 <- ggpubr::ggbarplot( t(Matrix::head(VL.avg,ng)), col=brewer.pal(12,"Set3"), las=3,
                     beside=FALSE, xlab="", ylab="cumulative log-expression",
                     main=paste("VL usage by",by.pheno)) 
 
@@ -1018,25 +1018,25 @@ viz.VHVLusage <- function(pgx, by.pheno="isotype", ng=30, nmin=1,
     pgx$samples$isotype0 <- substring(pgx$samples$isotype,1,3)
     pgx$samples$VH  <- rownames(VH)[max.col(t(VH))]
     pgx$samples$VL  <- rownames(VL)[max.col(t(VL))]
-    head(pgx$samples)
+    Matrix::head(pgx$samples)
     
     T1 <- unclass(table(pgx$samples$VL, y))
     T2 <- unclass(table(pgx$samples$VH, y))
-    T1 <- head(T1[order(-rowSums(T1)),], ng)
-    T2 <- head(T2[order(-rowSums(T2)),], ng)        
+    T1 <- Matrix::head(T1[order(-rowSums(T1)),], ng)
+    T2 <- Matrix::head(T2[order(-rowSums(T2)),], ng)        
 
     VH.avg <- VH.avg[order(-rowSums(abs(VH.avg))),]
     VL.avg <- VL.avg[order(-rowSums(abs(VL.avg))),]        
     VH.avg <- VH.avg[order(-apply(VH.avg,1,sd)),]
     VL.avg <- VL.avg[order(-apply(VL.avg,1,sd)),]
-    T1 <- head(VL.avg,ng)
-    T2 <- head(VH.avg,ng)
+    T1 <- Matrix::head(VL.avg,ng)
+    T2 <- Matrix::head(VH.avg,ng)
     
-    H1 <- grid.grabExpr(
+    H1 <- grid::grid.grabExpr(
         gx.splitmap(t(T1), split=NULL, cexCol=0.85, scale="none",
                     main=paste("VL usage by",by.pheno))
     )
-    H2 <- grid.grabExpr(
+    H2 <- grid::grid.grabExpr(
         gx.splitmap(t(T2), split=NULL, cexCol=0.85,
                     main=paste("VH usage by",by.pheno))
     )
@@ -1076,7 +1076,7 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
                              sort="avg", mode="pct", lab.cex=1)
 {
     if(is.null(gset)) {
-        fam <- gsub("[0-9]","",names(tail(sort(table(substring(rownames(pgx$X),1,3))),100)))   
+        fam <- gsub("[0-9]","",names(Matrix::tail(sort(table(substring(rownames(pgx$X),1,3))),100)))   
         fam <- setdiff(c(fam,"S100"),c("S"))
         fam <- sort(unique(fam))
         gset <- lapply(fam, function(f) grep(paste0("^",f),rownames(pgx$counts),value=TRUE))
@@ -1113,8 +1113,8 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
     }
 
 
-    ## barplot(log2(1+rowMeans(head(fx,50))), las=3, ylim=c() )
-    df <- reshape2::melt(head(fx,ntop))
+    ## barplot(log2(1+rowMeans(Matrix::head(fx,50))), las=3, ylim=c() )
+    df <- reshape2::melt(Matrix::head(fx,ntop))
     ##by.pheno = "Chemotherapy"
     df$pheno <- ""
     if(!is.null(by.pheno)) {
@@ -1137,28 +1137,28 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
         plt <- ggpubr::ggbarplot(
                           df, x = "gene family", y = "value", fill = "pheno",
                           add = "mean_se", ## palette = c("#00AFBB", "#E7B800"),
-                          position = position_dodge(width=0.8)) +
+                          position = ggplot2::position_dodge(width=0.8)) +
             ##scale_x_discrete(guide=guide_axis(angle=srt)) +
-            xlab("gene family") + ylab(ylab) + 
-            labs(fill = by.pheno, color = by.pheno) +
-            scale_x_discrete(guide=guide_axis(angle=srt)) +
-            ## xlim(c(min(df$value), max(df$value))) +
-            scale_y_continuous(breaks=xbreaks, labels=round(xbreaks+xoff,2)) +
-            theme(
-                axis.text.x = element_text(angle=srt, vjust=0.2, size=10*lab.cex),
-                ## axis.text.y = element_text(angle=srt, vjust=0.2, size=10*lab.cex),
-                axis.text.y = element_text(size=10*lab.cex),
-                legend.title = element_text(by.pheno),
+            ggplot2::xlab("gene family") + ggplot2::ylab(ylab) + 
+            ggplot2::labs(fill = by.pheno, color = by.pheno) +
+            ggplot2::scale_x_discrete(guide=guide_axis(angle=srt)) +
+            ## ggplot2::xlim(c(min(df$value), max(df$value))) +
+            ggplot2::scale_y_continuous(breaks=xbreaks, labels=round(xbreaks+xoff,2)) +
+            ggplot2::theme(
+                axis.text.x = ggplot2::element_text(angle=srt, vjust=0.2, size=10*lab.cex),
+                ## axis.text.y = ggplot2::element_text(angle=srt, vjust=0.2, size=10*lab.cex),
+                axis.text.y = ggplot2::element_text(size=10*lab.cex),
+                legend.title = ggplot2::element_text(by.pheno),
                 legend.justification = c(1,1),
                 legend.position = c(1,1),
-                legend.key.size = unit(9, "pt"),
-                legend.key.height = unit(9, "pt"),
-                ## scale_y_continuous(expand = c(0, 0)),                
+                legend.key.size = grid::unit(9, "pt"),
+                legend.key.height = grid::unit(9, "pt"),
+                ## ggplot2::scale_y_continuous(expand = c(0, 0)),                
                 plot.margin = ggplot2::margin(5,5,20,5)
             )
         
         if(nlev==1) {
-            plt <- plt + theme(legend.position = 'none')
+            plt <- plt + ggplot2::theme(legend.position = 'none')
         }
     } else {
         plt <- ggpubr::ggbarplot(
@@ -1166,14 +1166,14 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
                            x = "pheno", y = "value", fill = "gene family",
                            add = "mean",
                            ## palette = c("#00AFBB", "#E7B800"),
-                           position = position_stack()) +
-            scale_y_continuous(breaks=xbreaks, labels=round(xbreaks + xoff,1)) +            
-            xlab(by.pheno) + ylab(ylab)            
+                           position = ggplot2::position_stack()) +
+            ggplot2::scale_y_continuous(breaks=xbreaks, labels=round(xbreaks + xoff,1)) +            
+            ggplot2::xlab(by.pheno) + ggplot2::ylab(ylab)            
     }
     if(nlev==1) {
-        plt <- plt + ggtitle("Gene families")
+        plt <- plt + ggplot2::ggtitle("Gene families")
     } else {
-        plt <- plt + ggtitle(paste("Gene families by",by.pheno))
+        plt <- plt + ggplot2::ggtitle(paste("Gene families by",by.pheno))
     }
     plt
 }
@@ -1214,7 +1214,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     ##pheno <- pgx$samples
     if(is.null(phenotype))
         phenotype <- colnames(pheno)[1]
-    phenotype <- head(intersect(phenotype,colnames(pheno)),4) ## max 4
+    phenotype <- Matrix::head(intersect(phenotype,colnames(pheno)),4) ## max 4
     phenotype
 
     if(1) {
@@ -1228,7 +1228,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
         if(!is.null(cX2)) cX2 <- cX2[sel,,drop=FALSE]
     }
     
-    ##X1 <- head(X1[order(-apply(X1,1,sd)),],50)
+    ##X1 <- Matrix::head(X1[order(-apply(X1,1,sd)),],50)
     xlist <- list(X0, cX, cX2)
     pos <- list()
     pos[[1]] <- pos0
@@ -1254,7 +1254,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     if(pca.heatmap) {
 
         for(i in 1:length(xlist)) {
-            hlist[[i]] <- grid.grabExpr(
+            hlist[[i]] <- grid::grid.grabExpr(
                 ##gx.splitmap(
                 gx.PCAheatmap( 
                     X=xlist[[i]], main=main[i],
@@ -1272,7 +1272,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
         
     } else {
         for(i in 1:length(xlist)) {
-            hlist[[i]] <- grid.grabExpr(
+            hlist[[i]] <- grid::grid.grabExpr(
                 gx.splitmap(
                     xlist[[i]], main=main[i],
                     col.annot=pheno, softmax=TRUE,
@@ -1298,7 +1298,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
         f1 <- pgx.PC_correlation(
             xlist[[i]], pheno1, nv=npca, stat="F", plot=TRUE,
             main = paste0("PC variance (",main[i],")"))
-        f1 <- f1 + theme(plot.margin = ggplot2::margin(4,4,0,4,"mm"),
+        f1 <- f1 + ggplot2::theme(plot.margin = ggplot2::margin(4,4,0,4,"mm"),
                          legend.justification = c(0,1),
                          legend.position = c(0.01,1) )        
         flist[[i]] <- f1
@@ -1314,14 +1314,14 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     for(i in 1:length(xlist)) {
         lg = 'right'
         if(length(unique(y1))>20) lg = 'none'
-        plist[[i]] <- ggscatter(
+        plist[[i]] <- ggpubr::ggscatter(
             pos[[i]], col=y1, shape=y2,
             cex=0.7*cex) +
-            ## theme(legend.position="top") +
-            ## theme_classic() +
-            xlab("tSNE-1") + ylab("tSNE-2") + 
-            ggtitle(paste0(phenotype[1]," (",main[i],")")) +
-            theme(
+            ## ggplot2::theme(legend.position="top") +
+            ## ggplot2::theme_classic() +
+            ggplot2::xlab("tSNE-1") + ggplot2::ylab("tSNE-2") + 
+            ggplot2::ggtitle(paste0(phenotype[1]," (",main[i],")")) +
+            ggplot2::theme(
                 legend.position = lg,
                 plot.margin = ggplot2::margin(2,2,0,2,"mm")
             )
@@ -1392,8 +1392,8 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
         p6 <- pgx.scatterPlot(
             pgx, contrast=contrast, plotlib=plotlib, title="sample")
 
-        plot_grid(p1, p2, p3, p4, p5, p6, nrow=2)        
-        ##p1 + p2 + p3 + p4 + p5 + p6 + plot_layout(nrow=2)
+        cowplot::plot_grid(p1, p2, p3, p4, p5, p6, nrow=2)        
+        ##p1 + p2 + p3 + p4 + p5 + p6 + patchwork::plot_layout(nrow=2)
     }
     
     ##----------------------------------------------
@@ -1422,9 +1422,9 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
     rownames(P2) <- sub("^y2","",rownames(P2))
     colnames(P2) <- rownames(pgx$samples)
     
-    M1.top <- tapply( rownames(X1), cl1, function(i) head(names(sort(rowMeans(-X1[i,])))))
+    M1.top <- tapply( rownames(X1), cl1, function(i) Matrix::head(names(sort(rowMeans(-X1[i,])))))
     M2.top <- tapply( rownames(X2), cl2, function(i)
-        head(grep("HALLMARK",names(sort(rowMeans(-X2[i,]))),value=TRUE)) )
+        Matrix::head(grep("HALLMARK",names(sort(rowMeans(-X2[i,]))),value=TRUE)) )
     M2.top <- lapply(M2.top, function(s) gsub(".*:|.*HALLMARK_","",s))
     M1.top <- as.character(sapply(M1.top,paste,collapse="\n"))
     M2.top <- as.character(sapply(M2.top,paste,collapse="\n"))
@@ -1445,7 +1445,7 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
     fc.plots <- function(contrast, dir) {
         ##dir <- as.numeric(dir)
         y0 <- pgx$model.parameters$exp.matrix[,contrast]
-        ##rho <- lapply(xlist, function(x) cor(x,y0)[,1])
+        ##rho <- lapply(xlist, function(x) WGCNA::cor(x,y0)[,1])
         fc1 <- rowMeans(X1[,y0>0]) - rowMeans(X1[,y0<0])
         fc2 <- rowMeans(X2[,y0>0]) - rowMeans(X2[,y0<0])
         fc3 <- rowMeans(P1[,y0>0]) - rowMeans(P1[,y0<0])
@@ -1454,28 +1454,28 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
         fc2 <- fc2[grep("HALLMARK",names(fc2))]
         names(fc2) <- gsub(".*HALLMARK_","",names(fc2))    
         if(dir=="both") {
-            i1 <- head(order(-abs(fc1)),20)
-            i2 <- head(order(-abs(fc2)),20)
-            i3 <- head(order(-abs(fc3)),20)
-            i4 <- head(order(-abs(fc4)),20)
+            i1 <- Matrix::head(order(-abs(fc1)),20)
+            i2 <- Matrix::head(order(-abs(fc2)),20)
+            i3 <- Matrix::head(order(-abs(fc3)),20)
+            i4 <- Matrix::head(order(-abs(fc4)),20)
         } else {
             xdir <- ifelse(dir=="up",1,-1)
-            i1 <- head(order(-xdir*fc1),20)
-            i2 <- head(order(-xdir*fc2),20)
-            i3 <- head(order(-xdir*fc3),20)
-            i4 <- head(order(-xdir*fc4),20)
+            i1 <- Matrix::head(order(-xdir*fc1),20)
+            i2 <- Matrix::head(order(-xdir*fc2),20)
+            i3 <- Matrix::head(order(-xdir*fc3),20)
+            i4 <- Matrix::head(order(-xdir*fc4),20)
         }
-        f1 <- ggbarplot(sort(fc1[i1]),col="grey80",main="gene",ylab="logFC",xlab="") 
-        f2 <- ggbarplot(sort(fc2[i2]),col="grey80",main="geneset",ylab="logFC",xlab="") 
-        f3 <- ggbarplot(sort(fc3[i3]),col="grey80",main="cluster",ylab="logFC",xlab="") 
-        f4 <- ggbarplot(sort(fc4[i4]),col="grey80",main="cell.type",ylab="logFC",xlab="") 
+        f1 <- ggpubr::ggbarplot(sort(fc1[i1]),col="grey80",main="gene",ylab="logFC",xlab="") 
+        f2 <- ggpubr::ggbarplot(sort(fc2[i2]),col="grey80",main="geneset",ylab="logFC",xlab="") 
+        f3 <- ggpubr::ggbarplot(sort(fc3[i3]),col="grey80",main="cluster",ylab="logFC",xlab="") 
+        f4 <- ggpubr::ggbarplot(sort(fc4[i4]),col="grey80",main="cell.type",ylab="logFC",xlab="") 
         
-        fc.plots <- f1 + f2 + f3 + f4 + plot_layout(ncol=4) &
-            coord_flip() & ## xlab("") & ylab("logFC") &
-            theme_minimal() & theme(legend.position="none") &
-            theme(
-                axis.title.x = element_text(size=9),
-                axis.title.y = element_text(size=9)
+        fc.plots <- f1 + f2 + f3 + f4 + patchwork::plot_layout(ncol=4) &
+            ggplot2::coord_flip() & ## ggplot2::xlab("") & ggplot2::ylab("logFC") &
+            ggplot2::theme_minimal() & ggplot2::theme(legend.position="none") &
+            ggplot2::theme(
+                axis.title.x = ggplot2::element_text(size=9),
+                axis.title.y = ggplot2::element_text(size=9)
             ) 
             
         fc.plots
@@ -1497,7 +1497,7 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
     ## Correlation
     R <- list()
     for(i in 1:(length(matlist)-1)) {
-        r1 <- cor( matlist[[i]], matlist[[i+1]] )
+        r1 <- WGCNA::cor( matlist[[i]], matlist[[i+1]] )
         R[[i]] <- pmax(r1,0)
     }
 
@@ -1507,7 +1507,7 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
     plot.sk <- function(contrast, fill=TRUE) {
         F = R
         cty <- sign(pgx$model.parameters$exp.matrix[,contrast])        
-        fc <- lapply(matlist, function(m) cor(m,cty)[,1])
+        fc <- lapply(matlist, function(m) WGCNA::cor(m,cty)[,1])
         i=1
         for(i in 1:length(R)) {
             if(cty.mode==1) node.wt <- outer(pmax(fc[[i]],0), pmax(fc[[i+1]],0))
@@ -1567,7 +1567,7 @@ viz.showFigure <- function(fig, widths=NULL, heights=NULL, page.height=NULL,
                            ncol=NULL, plotlib=NULL, sort=FALSE, scale=1, 
                            title=NULL, subtitle=NULL, caption=NULL, tag=FALSE)
 {
-    require(cowplot)    
+        
     is.plot <- any(class(fig[[1]]) %in% c("ggplot","plotly"))
     is.plot
     if(class(fig)=="list" && is.plot && (is.null(plotlib) || plotlib!="shiny"))
@@ -1625,8 +1625,8 @@ n=8;ncol=12;widths=3;heights=1
 autolayout.GREEDY <- function(n, ncol=12, widths=3, heights=1)
 {
     M <- matrix("#",ncol,10)
-    widths  <- head(rep(widths,n),n)
-    heights <- head(rep(heights,n),n)    
+    widths  <- Matrix::head(rep(widths,n),n)
+    heights <- Matrix::head(rep(heights,n),n)    
     k=2
     k=1
     for(k in 1:n) {
@@ -1676,7 +1676,7 @@ autoarrange_plots.UNIFORM <- function(plotlist, ncol=NULL, page.height=NULL,
         fig <- cowplot::plot_grid(plotlist=subrows, nrow=length(subrows))
     } else if(plotlib=="plotly") {
         subrows <- lapply(idx, function(i) do.call(subplot, plotlist[i]))
-        fig <- subplot(subrows, nrows=length(subrows), margin=0.04)
+        fig <- plotly::subplot(subrows, nrows=length(subrows), margin=0.04)
     } else if(plotlib %in% c("shiny","shiny-plotly")) {
         plotnames <- names(plotlist)
         plotnames <- paste0("plot_",1:length(plotlist))
@@ -1695,7 +1695,7 @@ autoarrange_plots.UNIFORM <- function(plotlist, ncol=NULL, page.height=NULL,
             paste0("fillRow(",s,",height=",ht,")")) ## height important!!
         ##subrows <- sapply(subrows, function(s) paste0("fillRow(",s,")"))
         subrows <- lapply(subrows, function(s) eval(parse(text=s)))
-        fig <- tagList(subrows)
+        fig <- shiny::tagList(subrows)
     } else {
         stop("FATAL:: unknown plotlib",plotlib)
     }
@@ -1714,7 +1714,7 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
     ## detects the type of the plot objects.
     ## ---------------------------------------------------------------------    
     
-    require(shiny)
+    
     if(class(plots)!="list") plots <- list(plots)    
     if(!is.null(params) && length(params)!=length(plots)) {
         stop("ERROR:: length of params must be equal to number of plots")
@@ -1752,8 +1752,8 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
             if(class(plots[[i]])[[1]]=="function") {
                 np <- length(params[[i]])
                 if(np>0) {
-                    plotFUN <- reactive({
-                        ## req(input$input_1_1)
+                    plotFUN <- shiny::reactive({
+                        ## shiny::req(input$input_1_1)
                         inputVALUES <- list()
                         for(j in 1:np) {
                             if(params[[i]][j]=="*") {
@@ -1767,20 +1767,20 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
                         do.call(plots[[i]], as.list(inputVALUES))
                     })
                 } else {
-                    ##plotFUN <- reactive({ plots[[1]]()})
+                    ##plotFUN <- shiny::reactive({ plots[[1]]()})
                     ##plotFUN <- function(){ plots[[i]] }
                     plotFUN = plots[[i]]
                 }
             } else {
-                ##plotFUN <- reactive({ plots[[i]] })
+                ##plotFUN <- shiny::reactive({ plots[[i]] })
                 plotFUN <- function(){ plots[[i]] }
             }
             pclass <- types[i]
             ##pclass = "ggplot"
             r <- NULL
-            if(any(pclass=="ggplot")) r <- renderPlot({plotFUN()},res=90)
-            if(any(pclass=="plotly")) r <- renderPlotly(plotFUN())
-            if(any(pclass=="scatterD3"))  r <- renderScatterD3(plotFUN())
+            if(any(pclass=="ggplot")) r <- shiny::renderPlot({plotFUN()},res=90)
+            if(any(pclass=="plotly")) r <- plotly::renderPlotly(plotFUN())
+            if(any(pclass=="scatterD3"))  r <- scatterD3::renderScatterD3(plotFUN())
             plotname <- paste0("plot_",i)
             output[[plotname]] <- r
         })
@@ -1800,9 +1800,9 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
                         ititle <- names(inputPAR)[j]
                         npar <- length(inputPAR[[j]])
                         if(npar<=10) {
-                            ww[[j]] <- radioButtons(iname, ititle, inputPAR[[j]], inline=TRUE)
+                            ww[[j]] <- shiny::radioButtons(iname, ititle, inputPAR[[j]], inline=TRUE)
                         } else {
-                            ww[[j]] <- selectInput(iname, ititle, inputPAR[[j]])
+                            ww[[j]] <- shiny::selectInput(iname, ititle, inputPAR[[j]])
                         }
                     } else {
                         ww[[j]] <- NULL
@@ -1821,9 +1821,9 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
                 ititle <- names(shared.params)[j]
                 npar <- length(shared.params[[j]])
                 if(npar<=10) {
-                    sharedWIDGET[[j]] <- radioButtons(iname, ititle, shared.params[[j]], inline=TRUE)
+                    sharedWIDGET[[j]] <- shiny::radioButtons(iname, ititle, shared.params[[j]], inline=TRUE)
                 } else {
-                    sharedWIDGET[[j]] <- selectInput(iname, ititle, shared.params[[j]])
+                    sharedWIDGET[[j]] <- shiny::selectInput(iname, ititle, shared.params[[j]])
                 }
             }
         }
@@ -1834,36 +1834,36 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
             ## pclass = "ggplot"
             plotname <- paste0("plot_",i)
             if(any(pclass=="ggplot")) {
-                return(plotOutput(plotname, height=ht))
+                return(shiny::plotOutput(plotname, height=ht))
             }
             if(any(pclass=="plotly")) {
-                return(plotlyOutput(plotname, height=ht))
+                return(plotly::plotlyOutput(plotname, height=ht))
             }
             if(any(pclass=="scatterD3")) {
-                return(scatterD3Output(plotname, height=ht))
+                return(scatterD3::scatterD3Output(plotname, height=ht))
             }
             return(NULL)
         }
         
-        output$plotsUI <- renderUI({
+        output$plotsUI <- shiny::renderUI({
             np <- length(plots)
             wd <- rep(widths,np)[1:np]
             ht <- rep(heights,np)[1:np]
             outs <- lapply(1:np, function(i) {
                 title <- names(plots)[i]
-                title <- HTML(paste0("<h4>",title,"</h4>"))                
-                column(width=wd[i], title, plot_output(i,ht=100*ht[i]))
+                title <- shiny::HTML(paste0("<h4>",title,"</h4>"))                
+                shiny::column(width=wd[i], title, plot_output(i,ht=100*ht[i]))
             })
             outs <- do.call(tagList, outs)
-            outs <- jqui_sortable(div(outs)) ## make the boxes sortable..
+            outs <- shinyjqui::jqui_sortable(shiny::div(outs)) ## make the boxes sortable..
             outs
         })        
 
-        output$parametersUI <- renderUI({
+        output$parametersUI <- shiny::renderUI({
             if(is.null(params)) return(NULL)
-            require(shinydashboardPlus)
-            require(shinyWidgets)
-            useShinydashboardPlus()
+            
+            
+            shinyWidgets::useShinydashboardPlus()
             i=1
             make.accordion <- function(i) {
                 if(i==0 && !is.null(sharedWIDGET)) {
@@ -1882,30 +1882,30 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
                 for(j in 1:length(ww)) {
                     if(!is.null(ww[[j]])) {
                         a <- paste0("input_",i,"_",j)
-                        items[[j]] <- column(width=12, ww[[j]]) ## width inside sidebar
+                        items[[j]] <- shiny::column(width=12, ww[[j]]) ## width inside sidebar
                     } else {
                         items[[j]]  <- NULL
                     }
                 }
                 items <- items[!sapply(items,is.null)]
                 length(items)
-                acc <- accordion(
+                acc <- shinydashboardPlus::accordion(
                     inputId=acc.id,
-                    accordionItem( title=acc.name,
-                                  fluidRow(jqui_sortable(div(items))),
+                    shinydashboardPlus::accordionItem( title=acc.name,
+                                  shiny::fluidRow(shinyjqui::jqui_sortable(shiny::div(items))),
                                   collapsed=FALSE))
-                ##acc <- accordion(inputId=a, do.call(tagList,items))
+                ##acc <- shinydashboardPlus::accordion(inputId=a, do.call(tagList,items))
                 ##acc <- do.call(accordion, c(do.call(tagList,items),inputId=a))
                 ##acc <- do.call(accordion, do.call(tagList,c(items,inputId=a)))
-                column(width=12, acc)
+                shiny::column(width=12, acc)
             }
             aa <- lapply(0:length(params), function(i) make.accordion(i))
             ##eval(call("accordion", list(tags, inputId="accordion1")))
-            fluidRow(jqui_sortable(div(do.call(tagList,aa))))
+            shiny::fluidRow(shinyjqui::jqui_sortable(shiny::div(do.call(tagList,aa))))
         })      
-        outputOptions(output, "plotsUI", suspendWhenHidden=FALSE) ## important!!!
-        outputOptions(output, "parametersUI", suspendWhenHidden=FALSE) ## important!!!        
-        observeEvent(input$done,{stopApp()})
+        shiny::outputOptions(output, "plotsUI", suspendWhenHidden=FALSE) ## important!!!
+        shiny::outputOptions(output, "parametersUI", suspendWhenHidden=FALSE) ## important!!!        
+        shiny::observeEvent(input$done,{shiny::stopApp()})
 
         message("viz._showShiny:: server : done")
 
@@ -1914,88 +1914,88 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
     ##--------------------------------------------------------------------
     ## UI
     ##--------------------------------------------------------------------
-    require(miniUI)
+    
 
-    full.ui <- fluidPage(
-        div(titlePanel(title), style="color: darkblue;"),
-        HTML(subtitle,"<br><br>"),
-        uiOutput("plotsUI"),
-        div(HTML("<br>",caption), style="text-align:right; font-size:small;")
+    full.ui <- shiny::fluidPage(
+        shiny::div(shiny::titlePanel(title), style="color: darkblue;"),
+        shiny::HTML(subtitle,"<br><br>"),
+        shiny::uiOutput("plotsUI"),
+        shiny::div(shiny::HTML("<br>",caption), style="text-align:right; font-size:small;")
     )    
 
-    sidebar.ui <- fluidPage(
-        div(titlePanel(title), style="color: darkblue;"),
-        HTML(subtitle,"<br><br>"),
-        jqui_sortable(
-            sidebarLayout(
-                sidebarPanel(width=3, NULL, uiOutput("parametersUI")),
-                mainPanel(uiOutput("plotsUI"),width=9)
+    sidebar.ui <- shiny::fluidPage(
+        shiny::div(shiny::titlePanel(title), style="color: darkblue;"),
+        shiny::HTML(subtitle,"<br><br>"),
+        shinyjqui::jqui_sortable(
+            shiny::sidebarLayout(
+                shiny::sidebarPanel(width=3, NULL, shiny::uiOutput("parametersUI")),
+                shiny::mainPanel(shiny::uiOutput("plotsUI"),width=9)
             )
         ),
-        div(HTML("<br>",caption), style="text-align:right; font-size:small;")
+        shiny::div(shiny::HTML("<br>",caption), style="text-align:right; font-size:small;")
     )    
 
-    gadget.ui <- miniPage(
-        gadgetTitleBar(title, left=NULL),
-        miniContentPanel(sidebar.ui)
+    gadget.ui <- miniUI::miniPage(
+        miniUI::gadgetTitleBar(title, left=NULL),
+        miniUI::miniContentPanel(sidebar.ui)
     )    
 
     ##runGadget(mini.ui, server)
     if(!is.null(params)) {
-        runGadget(sidebar.ui, server)
+        shiny::runGadget(sidebar.ui, server)
         ##shinyApp(sidebar.ui, server)
     } else {
-        runGadget(full.ui, server)
+        shiny::runGadget(full.ui, server)
         ##shinyApp(full.ui, server)
     }
 }
 
 viz._showGGplot <- function(fig, title="", subtitle="", caption="", tag=FALSE)
 {
-    require(patchwork)
+    
     class(fig)
     if(class(fig)[1]=="list" && "ggplot" %in% class(fig[[1]]) ) {
         fig <- patchwork::wrap_plots(fig)
     }
     tag1 <- NULL
     if(tag) tag1="a"
-    fig <- fig + plot_annotation(
+    fig <- fig + patchwork::plot_annotation(
                      title = title,
                      subtitle = subtitle,
                      caption = caption,
                      tag_levels = tag1,
-                     theme = theme(
-                         plot.title = element_text(
+                     theme = ggplot2::theme(
+                         plot.title = ggplot2::element_text(
                              size=18, face='bold', color="royalblue4")
                      ))
-    fig <- fig & theme(plot.tag = element_text(face='bold'))    
+    fig <- fig & ggplot2::theme(plot.tag = ggplot2::element_text(face='bold'))    
     if(0) {
         logo <- magick::image_read("~/Playground/logo/bigomics-logo-blue.png")
         grid::grid.raster(logo, x = 0.99, y = 0.99, just = c('right', 'top'),
-                          width = unit(1.2, 'cm'))
+                          width = grid::unit(1.2, 'cm'))
     }
     fig
 }
 
 viz._showPlotly <- function(fig, title="", subtitle="", caption="", tag=FALSE)
 {
-    require(plotly)
-    require(patchwork)    
+    
+        
 
     if(class(fig)=="list" &&
        ( "ggplot" %in% class(fig[[1]]) ||
          "plotly" %in% class(fig[[1]]) ))
     {
         nr <- floor(sqrt(length(fig)+1))
-        fig <- subplot(fig, nrows=nr, margin=0.06)
+        fig <- plotly::subplot(fig, nrows=nr, margin=0.06)
     }
 
-    header <- plotly_empty()
-    caption <- plotly_empty()        
+    header <- plotly::plotly_empty()
+    caption <- plotly::plotly_empty()        
 
     if(!is.null(subtitle)) {
         header <- header %>%
-            add_annotations(
+            plotly::add_annotations(
                 x = 0.0, y = 1,
                 yshift = -3, ## xshift = 12, 
                 ##align= "right",
@@ -2008,7 +2008,7 @@ viz._showPlotly <- function(fig, title="", subtitle="", caption="", tag=FALSE)
 
     if(!is.null(caption)) {    
         caption <- caption %>% 
-            add_annotations(
+            plotly::add_annotations(
                 x= 1.0, y=0.0, align= "right",
                 yshift = -20, ## xshift = 80, 
                 xref = "paper", yref = "paper",
@@ -2021,17 +2021,17 @@ viz._showPlotly <- function(fig, title="", subtitle="", caption="", tag=FALSE)
         plt <- fig
     } else {
         ht <- c(0.08,0.90,0.02)
-        plt <- subplot(header, fig, caption, nrows=3, heights=ht, margin=0.0) %>%
-            layout(showlegend = FALSE)
+        plt <- plotly::subplot(header, fig, caption, nrows=3, heights=ht, margin=0.0) %>%
+            plotly::layout(showlegend = FALSE)
     }
 
     if(!is.null(title)) {
         btitle <- paste0("<b>",title,"</b>")
         plt <- plt %>%
-            layout(title = list(text=btitle, x=0.001, y=0.99, font=list(size=24))) 
+            plotly::layout(title = list(text=btitle, x=0.001, y=0.99, font=list(size=24))) 
     }
     plt <- plt %>%
-        config(toImageButtonOptions = list(format='svg', height=900, width=1500))
+        plotly::config(toImageButtonOptions = list(format='svg', height=900, width=1500))
     plt
 
 }
