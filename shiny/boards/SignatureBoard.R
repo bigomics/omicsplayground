@@ -6,29 +6,29 @@
 message(">>> sourcing SignatureBoard")
 
 SignatureInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shiny::uiOutput(ns("inputsUI"))
     )
 }
 
 SignatureUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    fillRow(
+    ns <- shiny::NS(id)  ## namespace
+    shiny::fillRow(
         flex = c(1.5,0.05,1),
         height = 780,
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs1"),
-            tabPanel("Enrichment",uiOutput(ns("enplots_UI"))),
-            tabPanel("Volcano plots",uiOutput(ns("volcanoPlots_UI"))),
-            tabPanel("Overlap/similarity",uiOutput(ns("overlapAnalysis_UI"))),
-            tabPanel("Markers",uiOutput(ns("markers_UI")))
+            shiny::tabPanel("Enrichment",uiOutput(ns("enplots_UI"))),
+            shiny::tabPanel("Volcano plots",uiOutput(ns("volcanoPlots_UI"))),
+            shiny::tabPanel("Overlap/similarity",uiOutput(ns("overlapAnalysis_UI"))),
+            shiny::tabPanel("Markers",uiOutput(ns("markers_UI")))
         ),
-        br(),
-        tabsetPanel(
+        shiny::br(),
+        shiny::tabsetPanel(
             id = ns("tabs2"),
-            tabPanel("Enrichment table",uiOutput(ns("enrichmentTables_UI")))
+            shiny::tabPanel("Enrichment table",uiOutput(ns("enrichmentTables_UI")))
         )
     )
 }
@@ -48,7 +48,7 @@ SignatureBoard <- function(input, output, session, env)
 calculating an enrichment score. Upload your own gene list, or select
 a contrast which then takes the top differentially expressed genes as
 signature."
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
     
 infotext =
     "In the <strong>Signature Analysis module</strong>, users can test their gene signature by calculating an enrichment score. They can use a sample list provided on the platform or upload their own gene list. Instead of a short list, a profile can also be selected, which is a complete gene list resulted from one of the contrasts in the analysis.
@@ -72,38 +72,38 @@ infotext =
     CELLCYCLE.GENES = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA"
     style0 = "font-size: 0.9em; color: #24A; background-color: #dde6f0; border-style: none; padding:0; margin-top: -15px;"
     
-    output$inputsUI <- renderUI({
-        ui <- tagList(
+    output$inputsUI <- shiny::renderUI({
+        ui <- shiny::tagList(
             tags$head(tags$style("#sig-genelistUP.form-control {font-size:11px !important;padding:3px;height:200px;}")),
-            tipify( actionLink(ns("info"), "Tutorial", icon = icon("youtube")),
+            shinyBS::tipify( shiny::actionLink(ns("info"), "Tutorial", icon = shiny::icon("youtube")),
                    "Show more information about this module"),
-            hr(), br(),
-            tipify(textAreaInput(ns("genelistUP"), "Genes:", value = CELLCYCLE.GENES,
+            shiny::hr(), shiny::br(),
+            shinyBS::tipify(shiny::textAreaInput(ns("genelistUP"), "Genes:", value = CELLCYCLE.GENES,
                                  rows=15, placeholder="Paste your gene list"),
                    "Paste a list of signature genes.", placement="top",
                    options = list(container = "body")),
-            ## textAreaInput("genelistDN", "Signature (down):", rows=6, placeholder="Paste your gene list")
-            br(),
-            tipify(actionButton(ns("example2"),"[apoptosis] ", style=style0),
+            ## shiny::textAreaInput("genelistDN", "Signature (down):", rows=6, placeholder="Paste your gene list")
+            shiny::br(),
+            shinyBS::tipify(shiny::actionButton(ns("example2"),"[apoptosis] ", style=style0),
                    "Use the list of genes involved in apoptosis as a signature."),
-            tipify(actionButton(ns("example3"),"[cell_cycle] ", style=style0),
+            shinyBS::tipify(shiny::actionButton(ns("example3"),"[cell_cycle] ", style=style0),
                    "Use the list of genes involved in cell cycle as a signature."),
-            tipify(actionButton(ns("example1"),"[immune_chkpt] ", style=style0),
+            shinyBS::tipify(shiny::actionButton(ns("example1"),"[immune_chkpt] ", style=style0),
                    "Use the list of genes involved in immune checkpoint as a signature."),
-            br(),br(),
-            tipify( actionLink(ns("options"), "Options", icon=icon("cog", lib = "glyphicon")),
+            shiny::br(),br(),
+            shinyBS::tipify( shiny::actionLink(ns("options"), "Options", icon=icon("cog", lib = "glyphicon")),
                    "Toggle advanced options.", placement="top"),
-            br(),
-            conditionalPanel(
+            shiny::br(),
+            shiny::conditionalPanel(
                 "input.options % 2 == 1", ns=ns,
-                tagList(
-                    tipify(selectInput(ns("type"), label="Signature type:",
+                shiny::tagList(
+                    shinyBS::tipify(shiny::selectInput(ns("type"), label="Signature type:",
                                        choices=c("<custom>","contrast","hallmark","KEGG")),
                            "Specify the type of signature of an interest. Users can choose between custom signature, a contrast profile, or some predefined gene sets including Hallmark and KEGG pathways.",
                            placement="top", options = list(container = "body")),
-                    conditionalPanel(
+                    shiny::conditionalPanel(
                         "input.type != '<custom>'", ns=ns,
-                        tipify(selectInput(ns("feature"),"Signature:",
+                        shinyBS::tipify(shiny::selectInput(ns("feature"),"Signature:",
                                            choices="<custom>", selected="<custom>"),
                                "Select a specific signature group.", placement="top",
                                options = list(container = "body"))
@@ -113,37 +113,37 @@ infotext =
         )
         ui
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
     
-    observeEvent( input$info, {
-        showModal(modalDialog(
-            title = HTML("<strong>Signature Analysis Board</strong>"),
-            HTML(infotext),
+    shiny::observeEvent( input$info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>Signature Analysis Board</strong>"),
+            shiny::HTML(infotext),
             easyClose = TRUE, size="l"))
     })
 
     ##------------------------ observe/reactive function  -----------------------------
-    require(visNetwork)
-    require(igraph)
-    require(parallel)
-    require(fgsea)
-    require(GSVA)
 
-    observeEvent(input$example1, { 
-        updateTextAreaInput(session,"genelistUP", value=IMMCHECK.GENES)
+
+
+
+
+
+    shiny::observeEvent(input$example1, { 
+        shiny::updateTextAreaInput(session,"genelistUP", value=IMMCHECK.GENES)
     })
-    observeEvent(input$example2, { 
-        updateTextAreaInput(session,"genelistUP", value=APOPTOSIS.GENES)
+    shiny::observeEvent(input$example2, { 
+        shiny::updateTextAreaInput(session,"genelistUP", value=APOPTOSIS.GENES)
     })
-    observeEvent(input$example3, { 
-        updateTextAreaInput(session,"genelistUP", value=CELLCYCLE.GENES)
+    shiny::observeEvent(input$example3, { 
+        shiny::updateTextAreaInput(session,"genelistUP", value=CELLCYCLE.GENES)
     })
 
-    observe({
+    shiny::observe({
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
         type="contrast"
@@ -152,22 +152,22 @@ infotext =
 
         if(type=="contrast") {
             contr <- sort(names(ngs$gx.meta$meta))
-            updateSelectInput(session, "feature", choices=contr, selected=contr[1])
+            shiny::updateSelectInput(session, "feature", choices=contr, selected=contr[1])
         } else if(type=="hallmark") {
             ## collection
             gsets <- sort(grep("HALLMARK",names(GSETS),value=TRUE))
-            updateSelectInput(session, "feature", choices=gsets, selected=gsets[1])
+            shiny::updateSelectInput(session, "feature", choices=gsets, selected=gsets[1])
         } else if(type=="KEGG") {
             ## collection
             gsets <- sort(grep("KEGG",names(GSETS),value=TRUE))
-            updateSelectInput(session, "feature", choices=gsets, selected=gsets[1])
+            shiny::updateSelectInput(session, "feature", choices=gsets, selected=gsets[1])
         } else if(type=="geneset") {
             ## all genesets... this is a bit too much for selectInput (DO NOT USE!!)
             gsets <- sort(names(GSETS))
-            updateSelectizeInput(session, "feature", choices=gsets, selected=gsets[1], server=TRUE)
+            shiny::updateSelectizeInput(session, "feature", choices=gsets, selected=gsets[1], server=TRUE)
         } else {
             ## custom
-            updateSelectInput(session, "feature", choices="<custom>", selected="<custom>")
+            shiny::updateSelectInput(session, "feature", choices="<custom>", selected="<custom>")
         }
     })
 
@@ -176,16 +176,16 @@ infotext =
     ##======================= REACTIVE FUNCTIONS =====================================
     ##================================================================================
 
-    input_genelistUP <- reactive({
+    input_genelistUP <- shiny::reactive({
         gg <- input$genelistUP
         if(is.null(gg)) return(NULL)
         gg <- strsplit(as.character(gg), split="[, \n\t]")[[1]]
         if(length(gg)==1 && gg[1]!="") gg <- c(gg,gg)  ## hack to allow single gene....
         return(gg)
-    }) %>% debounce(1000)
+    }) %>% shiny::debounce(1000)
 
     
-    getCurrentMarkers <- reactive({
+    getCurrentMarkers <- shiny::reactive({
         ##
         ## Get current selection of markers/genes 
         ##
@@ -200,7 +200,7 @@ infotext =
         ##if(is.null(type)) return(NULL)
         ##if(is.null(input$contrast)) return(NULL)
         ##if(is.null(input$feature)) return(NULL)
-        req(input$type, input$feature)
+        shiny::req(input$type, input$feature)
         
         dbg("<signature:getCurrentMarkers> called\n")
         
@@ -236,12 +236,12 @@ infotext =
             top.genes <- genes[order(-fx)]
             top.genes <- head(top.genes,100)
             top.genes0 <- paste(top.genes,collapse=" ")
-            updateTextAreaInput(session,"genelistUP", value=top.genes0)
+            shiny::updateTextAreaInput(session,"genelistUP", value=top.genes0)
             gset <- top.genes
         } else if(input$feature %in% names(GSETS)) {
             gset <- toupper(GSETS[[input$feature]])
             gset0 <- paste(gset, collapse=" ")
-            updateTextAreaInput(session,"genelistUP", value=gset0)
+            shiny::updateTextAreaInput(session,"genelistUP", value=gset0)
         } else {
             return(NULL)
         }
@@ -249,7 +249,7 @@ infotext =
         return(gset)
     })
     
-    getSingleSampleEnrichment <- reactive({
+    getSingleSampleEnrichment <- shiny::reactive({
         ##
         ## Calls calcSingleSampleValues() and calculates single-sample
         ## enrichment values for complete data matrix and reduced data by
@@ -297,14 +297,14 @@ infotext =
     })
 
 
-    sigCalculateGSEA <- reactive({
+    sigCalculateGSEA <- shiny::reactive({
         ## 
         ## Calculate fgsea for current marker selection and active
         ## datasets.
         ##
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
-        require(fgsea)
+
         
         ## observe input list
         gset = head(rownames(ngs$X),100)
@@ -334,7 +334,7 @@ infotext =
         }
         
         ## ------------ prioritize with quick correlation
-        ##require(wCorr)
+
         y = 1*(toupper(rownames(F)) %in% toupper(gset))
         ss.rank <- function(x) scale(sign(x)*rank(abs(x)),center=FALSE)[,1]
         rho = cor(apply(F,2,ss.rank), y, use="pairwise")[,1]
@@ -354,8 +354,8 @@ infotext =
         dim(F)
         
         ## ------------- do fast GSEA
-        require(parallel)
-        require(fgsea)
+
+
         gmt = list("gset"=unique(gset))
         res <- NULL
         enrich_method="rcor"
@@ -365,10 +365,10 @@ infotext =
         if(enrich_method=="fgsea") {
             i=1
             dbg("sigCalculateGSEA:: starting fgsea...\n")            
-            withProgress(message="computing GSEA ...", value=0.8, {
+            shiny::withProgress(message="computing GSEA ...", value=0.8, {
                 res <- lapply(1:ncol(F), function(i) {
                     suppressWarnings( suppressMessages(
-                        res <- fgsea(gmt, stats=F[,i], nperm=1000)
+                        res <- fgsea::fgsea(gmt, stats=F[,i], nperm=1000)
                     ))
                     res <- as.data.frame(res[,c("pval","padj","ES","NES")])
                     rownames(res)[1] = colnames(F)[i]
@@ -460,8 +460,8 @@ infotext =
         
         ## calculate GSVA
         if("gsva" %in% method) {
-            require(GSVA)
-            require(parallel)
+
+
             gset = names(y)[which(y!=0)]
             gmt <- list("gmt"=gset)
             res.gsva <- GSVA::gsva( X, gmt, method="gsva", parallel.sz=1) ## parallel=buggy
@@ -491,25 +491,25 @@ infotext =
     ## Enrichment {data-height=800}
     ##================================================================================
     
-    enplots.RENDER %<a-% reactive({
+    enplots.RENDER %<a-% shiny::reactive({
         ngs <- inputData()
         alertDataLoaded(session,ngs)
         if(is.null(ngs)) return(NULL)
         
-        ##require(shinycssloaders)
+
         gsea <- sigCalculateGSEA()
         if(is.null(gsea)) return(NULL)
         
 
         ## filter with table selection/search
         ii  <- enrichmentContrastTable$rows_all()
-        req(ii)
+        shiny::req(ii)
         ct <- rownames(gsea$output)[ii]
         F <- as.matrix(gsea$F[,ct,drop=FALSE])
         qv <- gsea$output[ct,"q"]
         gset <- gsea$gset
         
-        require(gplots)
+
         cex.main=1.1
         nc=3
         par(mfrow=c(4,3), mar=c(0.3,3,3,0.5), mgp=c(1.9,0.7,0), oma=c(0,1,0,0) )
@@ -540,7 +540,7 @@ infotext =
     enplots_info = "<b>Enrichment plots.</b> Enrichment of the query signature in all constrasts. Positive enrichment means that this particular contrast shows similar expression changes as the query signature."
 
     enplots.opts = NULL
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "enplots", 
         func = enplots.RENDER,
@@ -555,12 +555,12 @@ infotext =
         add.watermark = WATERMARK
     )
 
-    output$enplots_UI <- renderUI({
-        fillCol(
+    output$enplots_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = fullH,
             flex = c(NA,0.03,1),
-            div(HTML(enplots_info), class="caption"),
-            br(),
+            shiny::div(shiny::HTML(enplots_info), class="caption"),
+            shiny::br(),
             plotWidget(ns("enplots"))
         )
     })
@@ -570,18 +570,18 @@ infotext =
     ## Volcano {data-height=800}
     ##================================================================================
     
-    volcanoPlots.RENDER %<a-% reactive({
+    volcanoPlots.RENDER %<a-% shiny::reactive({
         ngs <- inputData()
         alertDataLoaded(session,ngs)
         if(is.null(ngs)) return(NULL)
         
-        ##require(shinycssloaders)
+
         gsea <- sigCalculateGSEA()
         if(is.null(gsea)) return(NULL)
         
         ## filter with table selection/search
         ii  <- enrichmentContrastTable$rows_all()
-        req(ii)
+        shiny::req(ii)
         ct = colnames(ngs$model.parameters$contr.matrix)
         ct <- rownames(gsea$output)[ii]
 
@@ -601,7 +601,7 @@ infotext =
             sel.gene <- df$gene[sel]
         }
                 
-        require(gplots)
+
         cex.main=1.2
         par(mfrow=c(2,2), mar=c(2,4,3,1), mgp=c(2.2,0.8,0) )
         if(ncol(F)>4) {        
@@ -642,7 +642,7 @@ infotext =
     volcanoPlots_info = volcanoPlots_caption
 
     volcanoPlots.opts = NULL
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "volcanoPlots", 
         func = volcanoPlots.RENDER,
@@ -657,12 +657,12 @@ infotext =
         add.watermark = WATERMARK
     )
 
-    output$volcanoPlots_UI <- renderUI({
-        fillCol(
+    output$volcanoPlots_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = fullH,
             flex = c(NA,0.03,1),
-            div(HTML(volcanoPlots_caption), class="caption"),
-            br(),
+            shiny::div(shiny::HTML(volcanoPlots_caption), class="caption"),
+            shiny::br(),
             plotWidget(ns("volcanoPlots"))
         )
     })
@@ -671,7 +671,7 @@ infotext =
     ## Overlap/similarity
     ##================================================================================
 
-    getOverlapTable <- reactive({
+    getOverlapTable <- shiny::reactive({
         ##
         ##
         ##
@@ -704,7 +704,7 @@ infotext =
         odds.ratio = ( N[,3]/ N[,4]) / ( N[,1]/ N[,2]) 
         dim(N)
         
-        require(corpora) 
+
         dbg("computing p-values...")
         pv <- corpora::fisher.pval( N[,1], N[,2], N[,3], N[,4], log.p=FALSE)
         dbg("done!\n")
@@ -728,13 +728,13 @@ infotext =
             ## Gene set clustering so that similar gene sets are shown
             ## together??? Bit like Gprofiler
             ##
-            require(qlcMatrix)
-            require(nclust)
+
+
             G = GSETxGENE[rownames(A),]
             G = G[which(Matrix::rowSums(G!=0) > 10), ] ## at least 10 genes
 ###G = G[, which(Matrix::colSums(G!=0) >= 10) ] ## at least 10 genesets
             dim(G)        
-            hc <- fastcluster::hclust(as.dist(cosSparse(t(G))))
+            hc <- fastcluster::hclust(as.dist(qlcMatrix::cosSparse(t(G))))
             ##hc <- nclust(as.matrix(G))
             A <- A[rownames(G)[hc$order],]
         }
@@ -754,7 +754,7 @@ infotext =
         G1 = GSETxGENE[aa,which(y!=0)]
         commongenes <- apply(G1, 1, function(x) colnames(G1)[which(x!=0)])
         ##commongenes <- lapply(commongenes, function(x) x[order(-fx[x])])
-        ##commongenes <- mclapply(commongenes, function(x) x[order(-fx[x])])
+        ##commongenes <- parallel::mclapply(commongenes, function(x) x[order(-fx[x])])
         for(i in 1:length(commongenes)) {
             gg <- commongenes[[i]]
             gg <- gg[order(-abs(fx[gg]))]
@@ -788,14 +788,14 @@ infotext =
         return(df)
     })
 
-    overlapScorePlot.RENDER <- reactive({
+    overlapScorePlot.RENDER <- shiny::reactive({
 
-        require(RColorBrewer)
+
 
         df <- getOverlapTable()
         sel <- 1:nrow(df)
         sel<- overlapTable$rows_all()
-        req(df,sel)
+        shiny::req(df,sel)
 
         df1 <- df[sel,]
         df1$geneset = as.character(rownames(df1))
@@ -809,16 +809,16 @@ infotext =
 
         df1$idx = factor(1:nrow(df1), levels=1:nrow(df1))
         df1$idx <- as.integer(df1$idx)
-        klr = rep(brewer.pal(8,"Set2"),10)[as.integer(df1$db)]
+        klr = rep(RColorBrewer::brewer.pal(8,"Set2"),10)[as.integer(df1$db)]
         
-        plt <- plot_ly(
+        plt <- plotly::plot_ly(
             df1, x = ~idx, y = ~score,
             type='bar',  ## orientation='v',
             text = ~geneset, hoverinfo = 'text',
             hovertemplate = paste0("%{text}<br>score: %{y}<extra>",df1$db,"</extra>"),
             ##hovertemplate = "%{y}",
             marker = list( color=klr ) ) %>%
-            layout(
+            plotly::layout(
                 showlegend = FALSE,
                 dragmode= 'select',
                 ##annotations = anntitle(colnames(rho)[i]),
@@ -839,7 +839,7 @@ infotext =
         if( min(nrow(df1),ntop) < 100 && input$overlapScorePlot_shownames) {
             ## labeling the y-axis inside bars
             plt <- plt %>%
-                add_annotations( yref='paper', xref = 'x',
+                plotly::add_annotations( yref='paper', xref = 'x',
                                 x = ~idx, y=0.005, yanchor='bottom',
                                 text = substring(df1$geneset,1,35),
                                 textangle = -90,
@@ -850,10 +850,10 @@ infotext =
         plt    
     })
 
-    overlapTable.RENDER <- reactive({
+    overlapTable.RENDER <- shiny::reactive({
 
         df <- getOverlapTable()
-        req(df)    
+        shiny::req(df)    
 
         df$geneset <- wrapHyperLink(df$geneset, df$geneset)
 
@@ -871,7 +871,7 @@ infotext =
                           scrollX = TRUE, scrollY = tabH, scroller=TRUE ## deferRender=TRUE,
                       )  ## end of options.list 
                       ) %>%
-            formatSignif(numeric.cols,4) %>%
+            DT::formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle("score",
                                 background = color_from_middle( df$score, 'lightblue', '#f5aeae'),
@@ -881,18 +881,18 @@ infotext =
 
     })
 
-    overlapScorePlot.opts = tagList(
-        tipify(radioButtons(ns("overlapScorePlot_ntop"),
+    overlapScorePlot.opts = shiny::tagList(
+        shinyBS::tipify(shiny::radioButtons(ns("overlapScorePlot_ntop"),
                             "Number of features",c(60,120,250),inline=TRUE),
                "Specify the number to top features to show.",
                placement="top", options = list(container = "body")),
-        tipify(checkboxInput(ns("overlapScorePlot_shownames"),
+        shinyBS::tipify(shiny::checkboxInput(ns("overlapScorePlot_shownames"),
                              "Show feature names",TRUE),
                "Select to show/hide the feature names in the plot.",
                placement="top", options = list(container = "body"))
     )
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "overlapScorePlot", 
         func = overlapScorePlot.RENDER,
@@ -905,7 +905,7 @@ infotext =
         add.watermark = WATERMARK
     )
     
-    overlapTable <- callModule(
+    overlapTable <- shiny::callModule(
         tableModule,
         id = "overlapTable",
         func = overlapTable.RENDER,
@@ -918,14 +918,14 @@ infotext =
 
     overlap_caption = "<b>Overlap/Similarity table.</b><b>(a)</b> Top overlapping gene sets with selected signature. The vertical axis shows the overlap score of the gene set which combines the odds ratio and significance (q-value) of the Fisher's test. <b>(b)</b> Table summarizing the results of the Fishers's test for overlap. The column \'common genes\' reports the shared gene in order of largest fold-change."
         
-    output$overlapAnalysis_UI <- renderUI({
-        fillCol(
+    output$overlapAnalysis_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.035,1,0.04,1),
             height = fullH,
-            div(HTML(overlap_caption), class="caption"),
-            br(),
+            shiny::div(shiny::HTML(overlap_caption), class="caption"),
+            shiny::br(),
             plotWidget(ns("overlapScorePlot")),
-            br(),
+            shiny::br(),
             tableWidget(ns("overlapTable"))
         )
     })
@@ -934,10 +934,10 @@ infotext =
     ## Markers {data-height=800}
     ##================================================================================
 
-    markers.RENDER %<a-% reactive({
+    markers.RENDER %<a-% shiny::reactive({
         ##if(!input$tsne.all) return(NULL)
-        require(RColorBrewer)
-        require(gplots)
+
+
         
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
@@ -1030,9 +1030,9 @@ infotext =
                 tt <- breakstring(gene, n=20, force=TRUE)
                 jj <- order(abs(top.gx[i,]))
             }
-            klr1 = paste0(col2hex(klr1),"99")
+            klr1 = paste0(gplots::col2hex(klr1),"99")
             
-            plot( pos[jj,], pch=19, cex=cex1, col=klr1[jj],
+            KEGGgraph::plot( pos[jj,], pch=19, cex=cex1, col=klr1[jj],
                  xlim=1.2*range(pos[,1]), ylim=1.2*range(pos[,2]),
                  fg = gray(ifelse(i==0,0.1,0.8)), bty = "o",
                  xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
@@ -1050,19 +1050,19 @@ infotext =
 
     markers_caption = "<b>Markers t-SNE plot</b>. T-SNE plot for each gene, where the dot (corresponding to samples) are colored depending on the upregulation (in red) or downregulation (in blue) of that particular gene."
     
-    markers.opts = tagList(
-        tipify(radioButtons(ns("markers_sortby"),"Sort by:",
+    markers.opts = shiny::tagList(
+        shinyBS::tipify(shiny::radioButtons(ns("markers_sortby"),"Sort by:",
                             choices=c("correlation","probability","name"), inline=TRUE),
                "Sort by correlation, probability or name.", placement="top",
                options = list(container = "body")),
-        tipify(radioButtons(ns("markers_layout"),"Layout:", choices=c("4x4","6x6"),
+        shinyBS::tipify(shiny::radioButtons(ns("markers_layout"),"Layout:", choices=c("4x4","6x6"),
                             ## selected="6x6",
                             inline=TRUE),
                "Choose layout.", 
                placement="top", options = list(container = "body")),
     )
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "markers",
         title = "Markers plot", 
@@ -1076,12 +1076,12 @@ infotext =
         add.watermark = WATERMARK
     )
 
-    output$markers_UI <- renderUI({
-        fillCol(
+    output$markers_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.025,1),
             height = fullH,
-            div(HTML(markers_caption), class="caption"),
-            br(),            
+            shiny::div(shiny::HTML(markers_caption), class="caption"),
+            shiny::br(),            
             plotWidget(ns("markers"))
         )
     })
@@ -1090,7 +1090,7 @@ infotext =
     ## Enrichment {data-height=800}
     ##================================================================================
     
-    enrichmentContrastTable.RENDER <- reactive({
+    enrichmentContrastTable.RENDER <- shiny::reactive({
         
         gsea <- sigCalculateGSEA()
         if(is.null(gsea)) return(NULL)
@@ -1123,7 +1123,7 @@ infotext =
                           scrollX = TRUE, scrollY = tabH, scroller=TRUE,
                           deferRender=FALSE)
                       ) %>%  ## end of options.list 
-            formatSignif(numeric.cols,4) %>%
+            DT::formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle("NES",
                                 background = color_from_middle(color_fx,'lightblue','#f5aeae'),
@@ -1134,11 +1134,11 @@ infotext =
     })
 
        
-    getEnrichmentGeneTable <- reactive({
+    getEnrichmentGeneTable <- shiny::reactive({
         
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
-        req(ngs)
+        shiny::req(ngs)
 
         dbg("[getEnrichmentGeneTable] reacted!")
         
@@ -1190,10 +1190,10 @@ infotext =
 
     })
 
-    enrichmentGeneTable.RENDER <- reactive({
+    enrichmentGeneTable.RENDER <- shiny::reactive({
 
         df <- getEnrichmentGeneTable()
-        req(df)
+        shiny::req(df)
         
         color_fx = as.numeric(df[,3:ncol(df)])
         color_fx[is.na(color_fx)] <- 0  ## yikes...
@@ -1213,7 +1213,7 @@ infotext =
                           scrollX = TRUE, scrollY = tabH, scroller=TRUE,
                           deferRender=FALSE
                       )) %>%  ## end of options.list 
-            formatSignif(numeric.cols,4) %>%
+            DT::formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle(
                         numeric.cols,
@@ -1225,7 +1225,7 @@ infotext =
 
     info.text1 = "<b>Enrichment by contrast.</b> Enrichment scores of query signature across all contrasts. The table summarizes the enrichment statistics of the gene list in all contrasts using the GSEA algorithm. The NES corresponds to the normalized enrichment score of the GSEA analysis.  "
 
-    enrichmentContrastTable <- callModule(
+    enrichmentContrastTable <- shiny::callModule(
         tableModule,
         id = "enrichmentContrastTable", 
         func = enrichmentContrastTable.RENDER,
@@ -1236,7 +1236,7 @@ infotext =
     )
 
     info.text2 = "<b>Gene table.</b> Genes of the current signature corresponding to the selected contrast. Genes are sorted by decreasing (absolute) fold-change."
-    enrichmentGeneTable <- callModule(
+    enrichmentGeneTable <- shiny::callModule(
         tableModule,
         id = "enrichmentGeneTable", 
         func = enrichmentGeneTable.RENDER,
@@ -1248,14 +1248,14 @@ infotext =
     
     enrichmentTables_caption = "<b>Enrichment of query signature across all contrasts.</b> <b>(a)</b> Enrichment scores across all contrasts for the selected query signature . The NES corresponds to the normalized enrichment score of the GSEA analysis. <b>(b)</b> Genes in the query signature sorted by decreasing (absolute) fold-change corresponding to the selected contrast."
 
-    output$enrichmentTables_UI <- renderUI({
-        fillCol(
+    output$enrichmentTables_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.04,1.0,0.04,1.5), ## width = 600,
             height = fullH,
-            div(HTML(enrichmentTables_caption), class="caption"),
-            br(),
+            shiny::div(shiny::HTML(enrichmentTables_caption), class="caption"),
+            shiny::br(),
             plotWidget(ns("enrichmentContrastTable")),
-            br(),
+            shiny::br(),
             plotWidget(ns("enrichmentGeneTable"))
         )
     })

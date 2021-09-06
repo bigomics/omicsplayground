@@ -6,26 +6,26 @@
 message(">>> sourcing LoadingBoard")
 
 LoadingInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        tipify( actionLink(ns("module_info"), "Tutorial", icon = icon("youtube")),
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shinyBS::tipify( shiny::actionLink(ns("module_info"), "Tutorial", icon = shiny::icon("youtube")),
                "Show more information about this module.")
-        ## uiOutput(ns("inputsUI"))
-        ## uiOutput(ns("socialButtons"))
+        ## shiny::uiOutput(ns("inputsUI"))
+        ## shiny::uiOutput(ns("socialButtons"))
     )
 }
 
 LoadingUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    fillCol(
+    ns <- shiny::NS(id)  ## namespace
+    shiny::fillCol(
         height = 750,
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs"),
-            tabPanel("Datasets",uiOutput(ns("pgxtable_UI"))),
-            tabPanel("Upload data",uiOutput(ns("upload_UI"))),
-            tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
-            ## tabPanel("Community forum",uiOutput(ns("forum_UI")))
+            shiny::tabPanel("Datasets",uiOutput(ns("pgxtable_UI"))),
+            shiny::tabPanel("Upload data",uiOutput(ns("upload_UI"))),
+            shiny::tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
+            ## shiny::tabPanel("Community forum",uiOutput(ns("forum_UI")))
         )
     )
 }
@@ -40,8 +40,8 @@ LoadingBoard <- function(input, output, session,
     ns <- session$ns ## NAMESPACE
     
     ##useShinyjs(rmd=TRUE)
-    useShinyjs()
-    useSweetAlert()
+    shinyjs::useShinyjs()
+    shinyWidgets::useSweetAlert()
     SHOWSPLASH=TRUE
     ## SHOWSPLASH=FALSE
 
@@ -55,28 +55,28 @@ LoadingBoard <- function(input, output, session,
     auth <- NULL   ## shared in module
 
     if(authentication == "password") {
-        auth <- callModule(
+        auth <- shiny::callModule(
             PasswordAuthenticationModule, "auth",
             credentials.file = "CREDENTIALS")
     } else if(authentication == "firebase") {
-        require(firebase)
+
         ##firebase <- FirebaseEmailPassword$new()
-        auth <- callModule(
+        auth <- shiny::callModule(
             ##FirebaseAuthenticationModule, "auth")
             FirebaseAuthenticationModule, "auth",
             firebase = firebase, firebase2 = firebase2)
     } else if(authentication == "register") {
-        auth <- callModule(
+        auth <- shiny::callModule(
             RegisterAuthenticationModule, "auth",
             register.file = "../logs/register.log")
     } else if(authentication == "shinyproxy" && in.shinyproxy()) {
         username <- NULL
         is.anonymous <- Sys.getenv("SHINYPROXY_USERGROUPS")=="ANONYMOUS"
         if(!is.anonymous) username <- Sys.getenv("SHINYPROXY_USERNAME")
-        auth <- callModule(NoAuthenticationModule, "auth", username=username)
+        auth <- shiny::callModule(NoAuthenticationModule, "auth", username=username)
     } else {
         ## none
-        auth <- callModule(NoAuthenticationModule, "auth")
+        auth <- shiny::callModule(NoAuthenticationModule, "auth")
     } 
     
     ##-----------------------------------------------------------------------------
@@ -84,12 +84,12 @@ LoadingBoard <- function(input, output, session,
     ##-----------------------------------------------------------------------------
     description = "<b>Omics Playground</b> is a self-service bioinformatics platform for interactive analysis, visualization and interpretation of transcriptomics and proteomics data. Life scientists can easily perform complex data analysis and visualization without coding, and significantly reduce the time to discovery."
     
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
 
-    observeEvent( input$module_info, {
-        showModal(modalDialog(
-            title = HTML("<strong>Data View Board</strong>"),
-            HTML(module_infotext),
+    shiny::observeEvent( input$module_info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>Data View Board</strong>"),
+            shiny::HTML(module_infotext),
             easyClose = TRUE, size="l" ))
     })
 
@@ -115,15 +115,15 @@ LoadingBoard <- function(input, output, session,
     ##-----------------------------------------------------------------------------
     ## Show current dataset on each page
     ##-----------------------------------------------------------------------------
-    curDataSet <- reactive({
+    curDataSet <- shiny::reactive({
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
         ##HTML("<b>dataset :</b>",ngs$name,"")
         ##HTML("<h3>",ngs$name,"</h3>")
         dname <- gsub("^.*/|[.]pgx","",ngs$name)
-        HTML("<div class='current-data'>",dname,"</div>")
+        shiny::HTML("<div class='current-data'>",dname,"</div>")
     })
-    output$current_dataset <- renderText({ curDataSet() })
+    output$current_dataset <- shiny::renderText({ curDataSet() })
 
     ##-----------------------------------------------------------------------------
     ## User interface
@@ -132,77 +132,77 @@ LoadingBoard <- function(input, output, session,
         aTag <- tags$a(id = outputId,
                        class = paste("btn btn-default shiny-download-link", class),
                        href = "", target = "_blank", download = NA, 
-                       icon("file-csv"), label, ...)
+                       shiny::icon("file-csv"), label, ...)
     }
     
-    output$inputsUI <- renderUI({        
+    output$inputsUI <- shiny::renderUI({        
 
         delete_button <- NULL
         if(enable_delete) {
-            delete_button <- tipify( actionButton(
+            delete_button <- shinyBS::tipify( shiny::actionButton(
                 ns("deletebutton"), label=NULL, icon=icon("trash"),
                 style='padding:2px 1px 1px 1px; font-size:140%; color: #B22222; width:30px;'
             ),"Delete the selected dataset.", placement="bottom")
         }
 
-        ui <- tagList(
-            useShinyalert(),  # Set up shinyalert
-            p(strong("Dataset info:")),
-            div( htmlOutput(ns("dataset_info")), id="datainfo"),
-            br(),
-            conditionalPanel(
+        ui <- shiny::tagList(
+            shinyalert::useShinyalert(),  # Set up shinyalert
+            shiny::p(shiny::strong("Dataset info:")),
+            shiny::div( shiny::htmlOutput(ns("dataset_info")), id="datainfo"),
+            shiny::br(),
+            shiny::conditionalPanel(
                 "output.rowselected != 0", ns=ns,
-                tipify( actionButton(ns("loadbutton"),label="Load",class="load-button"),
+                shinyBS::tipify( shiny::actionButton(ns("loadbutton"),label="Load",class="load-button"),
                    "Click to load the selected dataset.", placement="bottom"),
-                tipify( downloadButton(
+                shinyBS::tipify( shiny::downloadButton(
                     ns("downloadpgx"), label=NULL, ## icon=icon("download"),
                     style='padding:2px 1px 1px 1px; font-size:140%; width:30px;'
                 ),"Download PGX file (binary).", placement="bottom"),
-                tipify( downloadButton2(
+                shinyBS::tipify( downloadButton2(
                     ns("downloadzip"), label=NULL, icon=icon("file-csv"),
                     style='padding:2px 1px 1px 1px; font-size:140%; width:30px;'
                 ),"Download CSV files (counts.csv, samples.csv, contrasts.csv).",
                 placement="bottom"),
                 delete_button
             ),
-            br(),br(),
-            tipify( actionLink(ns("showfilter"), "show filters", icon=icon("cog", lib = "glyphicon")),
+            shiny::br(),br(),
+            shinyBS::tipify( shiny::actionLink(ns("showfilter"), "show filters", icon=icon("cog", lib = "glyphicon")),
                    "Show dataset filters.", placement="top"),
-            br(),br(),
-            conditionalPanel(
+            shiny::br(),br(),
+            shiny::conditionalPanel(
                 "input.showfilter % 2 == 1", ns=ns,
-                uiOutput(ns("dataset_filter"))
+                shiny::uiOutput(ns("dataset_filter"))
             )
         )
         ui
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE)
-    output$rowselected <- reactive({ !is.null(selectedPGX()) })
-    outputOptions(output, "rowselected", suspendWhenHidden=FALSE)
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE)
+    output$rowselected <- shiny::reactive({ !is.null(selectedPGX()) })
+    shiny::outputOptions(output, "rowselected", suspendWhenHidden=FALSE)
     
-    output$dataset_info <- renderText({
+    output$dataset_info <- shiny::renderText({
         sec <- currentSection()
         inf <- selectedDataSetInfo()
         inf["conditions"] <- gsub("[,]"," ",inf["conditions"])
         inf <- sapply(inf, function(s) substring(s,1,500)) 
         if(sec=="upload-data") {
-            HTML(paste("<p>Please upload dataset<br>"))
+            shiny::HTML(paste("<p>Please upload dataset<br>"))
         } else if(length(inf)==0) {
-            HTML(paste("<p>Please select a dataset<br>"))
+            shiny::HTML(paste("<p>Please select a dataset<br>"))
         } else {
-            HTML(paste("<p><b>",names(inf),"</b>:", inf,""))
+            shiny::HTML(paste("<p><b>",names(inf),"</b>:", inf,""))
         }
     })
 
-    output$dataset_filter <- renderUI({
+    output$dataset_filter <- shiny::renderUI({
         df <- PGXINFO()
         collections <- sort(setdiff(df$collection,c(NA,"")))
         datatypes <- sort(setdiff(df$datatype,c(NA,"")))
         organisms <- sort(setdiff(df$organism,c(NA,"")))        
-        tagList(
-            ## checkboxGroupInput(ns("flt_datasets"),"datasets", choices = collections),
-            checkboxGroupInput(ns("flt_datatype"),"datatype", choices = datatypes),
-            checkboxGroupInput(ns("flt_organism"),"organism", choices = organisms)
+        shiny::tagList(
+            ## shiny::checkboxGroupInput(ns("flt_datasets"),"datasets", choices = collections),
+            shiny::checkboxGroupInput(ns("flt_datatype"),"datatype", choices = datatypes),
+            shiny::checkboxGroupInput(ns("flt_organism"),"organism", choices = organisms)
             ##checkboxGroupInput("flt_conditions","conditions",
             ##choices=c("treatment","sex","activated"))
         )
@@ -215,7 +215,7 @@ LoadingBoard <- function(input, output, session,
     ##PGXINFO <- pgx.updateInfoFile(PGX.DIR, file="datasets-info.csv", 
     ##                           force=FALSE, verbose=TRUE )
     PGXINFO.FILE <- file.path(PGX.DIR[1], "datasets-info.csv")  ## first folder!!
-    PGXINFO  <- reactiveVal(NULL)    
+    PGXINFO  <- shiny::reactiveVal(NULL)    
     infofile <- pgx.scanInfoFile(PGX.DIR, file="datasets-info.csv", verbose=TRUE )
     cat("[LoadingBoard] dim.infofile = ",dim(infofile),"\n")
     if(!is.null(infofile) && nrow(infofile)) {
@@ -227,7 +227,7 @@ LoadingBoard <- function(input, output, session,
     }
     PGXINFO(infofile)
 
-    selectedPGX <- reactive({
+    selectedPGX <- shiny::reactive({
         ##sel <- input$pgxtable_rows_selected
         sel <- pgxtable$rows_selected()
         if(is.null(sel) || length(sel)==0) return(NULL)
@@ -261,7 +261,7 @@ LoadingBoard <- function(input, output, session,
         if(!is.null(pgx)) return(pgx)
     }
     
-    output$downloadpgx <- downloadHandler(
+    output$downloadpgx <- shiny::downloadHandler(
         ##filename = "userdata.pgx",
         filename = function() {
             selectedPGX()
@@ -278,7 +278,7 @@ LoadingBoard <- function(input, output, session,
         }
     )
 
-    output$downloadzip <- downloadHandler(
+    output$downloadzip <- shiny::downloadHandler(
         ##filename = "userdata.zip",
         filename = function() {
             sub("pgx$","zip",selectedPGX())
@@ -311,9 +311,9 @@ LoadingBoard <- function(input, output, session,
         }
     )
 
-    touchtable <- reactiveVal(0)
+    touchtable <- shiny::reactiveVal(0)
     
-    observeEvent( input$deletebutton, {
+    shiny::observeEvent( input$deletebutton, {
                 
         ##pgxfile <- currentPGX()$name
         pgxfile <- selectedPGX()
@@ -341,7 +341,7 @@ LoadingBoard <- function(input, output, session,
                 newpgx <- PGXINFO()[all.pgx != this.pgx,]
                 PGXINFO(newpgx)
 
-                selectRows(proxy=dataTableProxy(ns("pgxtable")), selected=sel)
+                DT::selectRows(proxy=dataTableProxy(ns("pgxtable")), selected=sel)
             } else {
                 cat(">>> deletion cancelled\n")
             }
@@ -395,14 +395,14 @@ LoadingBoard <- function(input, output, session,
     ##=================================================================================
     
     startup_count=0
-    ##require(shinyparticles)
-    require(particlesjs)
+
+
     particlesjs.conf <- rjson::fromJSON(file="resources/particlesjs-config.json")
 
     showStartupModal <- function(once=FALSE) {    
         if(length(input$loadbutton)==0) {
             dbg("[showStartupModal] UI not ready. skipping")
-            ##delay(8000, selectRows(proxy = dataTableProxy("pgxtable"), selected=1))
+            ##delay(8000, DT::selectRows(proxy = DT::dataTableProxy("pgxtable"), selected=1))
             ##delay(8000, shinyjs::click("loadbutton"))
             return(NULL)  ## UI not ready???rt
         }
@@ -415,20 +415,20 @@ LoadingBoard <- function(input, output, session,
         dbg("showStartupModal done!\n")
     }
 
-    ## observeEvent( input$action_beer, {
+    ## shiny::observeEvent( input$action_beer, {
     ##     dbg("buy beer button action\n")
     ##     startup_count <<- startup_count + 1    
     ##     USER$logged <- TRUE
     ##     USER$name   <- "beer buddy"
-    ##     removeModal()
+    ##     shiny::removeModal()
     ##     ##alert("Wow. Thanks buddy!")
-    ##     sendSweetAlert(
+    ##     shinyWidgets::sendSweetAlert(
     ##         session=session, title="Wow. Thanks buddy!",
     ##         text = "Free entrance for you!", type = "info")
     ##     ##Sys.sleep(4);removeModal()
     ## })
 
-    selectedDataSetInfo <- reactive({
+    selectedDataSetInfo <- shiny::reactive({
         ##sel <- input$pgxtable_rows_selected
         sel <- pgxtable$rows_selected()
         if(is.null(sel) || length(sel)==0) return(NULL)
@@ -436,7 +436,7 @@ LoadingBoard <- function(input, output, session,
         unlist(lapply(df[sel,],as.character))
     })
 
-    currentSection <- reactive({
+    currentSection <- shiny::reactive({
         cdata <- session$clientData
         sub("section-","",cdata[["url_hash"]])
     })
@@ -445,16 +445,16 @@ LoadingBoard <- function(input, output, session,
     ##========================= USER AUTHENTICATION ===================================
     ##=================================================================================
 
-    ## USER <- reactiveValues( logged = FALSE, name="anonymous")
+    ## USER <- shiny::reactiveValues( logged = FALSE, name="anonymous")
     
     ##================================================================================
     ##====================== INPUT DATA REACTIVE OBJECT ==============================
     ##================================================================================
 
-    currentPGX <- reactiveVal(NULL)
+    currentPGX <- shiny::reactiveVal(NULL)
     
-    ##inputData <- eventReactive( reload(), {
-    inputData <- reactive({
+    ##inputData <- shiny::eventReactive( reload(), {
+    inputData <- shiny::reactive({
         ## This is wrapper function that loads the ngs object. It also
         ## checks if the user is logged in.
         ##  
@@ -474,12 +474,12 @@ LoadingBoard <- function(input, output, session,
         return(pgx)
     })
 
-    observeEvent( input$loadbutton, {
+    shiny::observeEvent( input$loadbutton, {
 
         ## Observe button press
-        btn <- isolate(input$loadbutton)
+        btn <- shiny::isolate(input$loadbutton)
         pgxfile = NULL
-        pgxfile = isolate(selectedPGX())
+        pgxfile = shiny::isolate(selectedPGX())
         
         dbg("[LoadingBoard::<loadbutton>] loadbutton=",btn,"\n")
         dbg("[LoadingBoard::<loadbutton>] pgx.selected=",pgxfile)
@@ -499,7 +499,7 @@ LoadingBoard <- function(input, output, session,
         if(is.null(pgx)) {
             cat("[LoadingBoard::<loadbutton>] ERROR file not found : ",pgxfile,"\n")
             beepr::beep(10)
-            removeModal()
+            shiny::removeModal()
             return(NULL)
         }
         
@@ -509,8 +509,8 @@ LoadingBoard <- function(input, output, session,
         if(is.null(pgx)) {
             cat("[LoadingBoard::<loadbutton>] ERROR in object initialization\n")
             beepr::beep(10)
-            showNotification("ERROR in object initialization!\n")
-            removeModal()
+            shiny::showNotification("ERROR in object initialization!\n")
+            shiny::removeModal()
             return(NULL)
         }
         if(is.null(pgx$name)) pgx$name <- sub("[.]pgx$","",pgxfile)
@@ -518,7 +518,7 @@ LoadingBoard <- function(input, output, session,
         ##----------------- remove modal??
         if(startup_count>0) {
             Sys.sleep(4)
-            removeModal()
+            shiny::removeModal()
         }
         
         currentPGX(pgx)
@@ -532,36 +532,36 @@ LoadingBoard <- function(input, output, session,
     ## =============================== VALUE BOXES UI =================================
     ## ================================================================================
 
-    require(shinydashboard)
-    ## useShinydashboard()
+
+    ## shinyWidgets::useShinydashboard()
     vbox <- function(value, label) {
-        box(
-            h1(value, style="font-weight: 800; color: white; padding: 16px 0 0 0; margin: 0 0 0 20px;"),
-            h5(label, style="margin: 0 0 0 20px; font-weight: 400; color: white; padding-bottom: 25px"),
+        shinydashboard::box(
+            shiny::h1(value, style="font-weight: 800; color: white; padding: 16px 0 0 0; margin: 0 0 0 20px;"),
+            shiny::h5(label, style="margin: 0 0 0 20px; font-weight: 400; color: white; padding-bottom: 25px"),
             ##h1(value, style="font-weight: 800; padding: 16px 0 0 0; margin: 0 0 0 20px;"),
             ##h5(label, style="margin: 0 0 0 20px; font-weight: 400; padding-bottom: 25px"),
             width="100%", class="vbox")
     }
 
-    output$valuebox1 <- renderUI({
+    output$valuebox1 <- shiny::renderUI({
         pgx <- getPGXTable()
-        req(pgx)
+        shiny::req(pgx)
         ndatasets = "..."
         ndatasets <- nrow(pgx)
         vbox( ndatasets, "data sets")     
     })
 
-    output$valuebox2 <- renderUI({
+    output$valuebox2 <- shiny::renderUI({
         pgx <- getPGXTable()
-        req(pgx)
+        shiny::req(pgx)
         ##dbg("valuebox2:: pgx$nsamples=",pgx$nsamples)
         nsamples <- sum(as.integer(pgx$nsamples),na.rm=TRUE)
         vbox( nsamples, "number of samples")     
     })
 
-    output$valuebox3 <- renderUI({
+    output$valuebox3 <- shiny::renderUI({
         pgx <- getPGXTable()
-        req(pgx)
+        shiny::req(pgx)
         ##dbg("valuebox3:: pgx$nsamples=",pgx$nsamples)
         nvalues <- sum(as.integer(pgx$nsamples) * (as.integer(pgx$ngenes)
             + as.integer(pgx$nsets)),na.rm=TRUE)
@@ -569,12 +569,12 @@ LoadingBoard <- function(input, output, session,
         vbox( nvalues1, "data points") 
     })
 
-    output$valueboxes_UI <- renderUI({
-        fillRow(
+    output$valueboxes_UI <- shiny::renderUI({
+        shiny::fillRow(
             height=115,
-            uiOutput(ns("valuebox1")),
-            uiOutput(ns("valuebox2")), 
-            uiOutput(ns("valuebox3"))
+            shiny::uiOutput(ns("valuebox1")),
+            shiny::uiOutput(ns("valuebox2")), 
+            shiny::uiOutput(ns("valuebox3"))
         )
     })
 
@@ -593,7 +593,7 @@ LoadingBoard <- function(input, output, session,
         paste(paste(head(s1,n), collapse=" "),"(+",n2,"others)")
     }
 
-    getPGXTable <- reactive({ ## reactive 
+    getPGXTable <- shiny::reactive({ ## reactive 
         
         ## get table of data sets
         ##
@@ -639,14 +639,14 @@ LoadingBoard <- function(input, output, session,
     })
 
 
-    pgxTable.RENDER <- reactive({
+    pgxTable.RENDER <- shiny::reactive({
 
         if(SHOWSPLASH) showStartupModal(once=TRUE)
         
         dbg("[pgxTable.RENDER] reacted")
 
         df <- getPGXTable()
-        req(df)
+        shiny::req(df)
         dbg("[pgxTable.RENDER] dim(df)=",dim(df))
         
         df$dataset  <- gsub("[.]pgx$"," ",df$dataset)
@@ -687,35 +687,35 @@ LoadingBoard <- function(input, output, session,
 
     pgxtable_text = "This table contains a general information about all available datasets within the platform. For each dataset, it reports a brief description as well as the total number of samples, genes, gene sets (or pathways), corresponding phenotypes and the creation date."
 
-    pgxtable <- callModule(
+    pgxtable <- shiny::callModule(
         tableModule, id = "pgxtable",
         func = pgxTable.RENDER,
         title = "Datasets",
         height = 640, width = c('100%',1600),
     )
 
-    output$pgxtable_UI <- renderUI({    
-        fillCol(
+    output$pgxtable_UI <- shiny::renderUI({    
+        shiny::fillCol(
             height = 750,
             flex = c(NA,1),
-            uiOutput(ns("valueboxes_UI")),
-            fillRow(
+            shiny::uiOutput(ns("valueboxes_UI")),
+            shiny::fillRow(
                 flex = c(1,0.1,4.5),
-                wellPanel(
-                    uiOutput(ns("inputsUI"))
+                shiny::wellPanel(
+                    shiny::uiOutput(ns("inputsUI"))
                 ),
-                br(), 
+                shiny::br(), 
                 tableWidget(ns("pgxtable"))
             )
         )        
     })
-    outputOptions(output, "pgxtable_UI", suspendWhenHidden=FALSE) ## important!
+    shiny::outputOptions(output, "pgxtable_UI", suspendWhenHidden=FALSE) ## important!
 
     ##================================================================================
     ## Upload data (new)
     ##================================================================================
 
-    output$upload_UI <- renderUI({    
+    output$upload_UI <- shiny::renderUI({    
         UploadModuleUI(ns("upload_panel"))
     })
 
@@ -727,7 +727,7 @@ LoadingBoard <- function(input, output, session,
         FILES = FILES        
     )
 
-    observeEvent( uploaded_pgx(), {
+    shiny::observeEvent( uploaded_pgx(), {
 
         cat("uploaded PGX detected! [LoadingBoard:observe:uploaded_pgx]\n")
         pgx <- uploaded_pgx()
@@ -736,12 +736,12 @@ LoadingBoard <- function(input, output, session,
 
         ## update CurrentPGX
         currentPGX(pgx)
-        selectRows(proxy=dataTableProxy(ns("pgxtable")), selected=NULL)
+        DT::selectRows(proxy=dataTableProxy(ns("pgxtable")), selected=NULL)
         
         savedata_button <- NULL
         if(enable_save) {
             
-            ##savedata_button <- actionButton(ns("savedata"), "Save my data", icon=icon("save"))
+            ##savedata_button <- shiny::actionButton(ns("savedata"), "Save my data", icon=icon("save"))
             ##observeEvent( input$savedata, {
 
             dbg("[LoadingBoard] observeEvent:savedata reacted")        
@@ -772,7 +772,7 @@ LoadingBoard <- function(input, output, session,
             ##removeModal()
         }
         
-        ## removeModal()
+        ## shiny::removeModal()
         msg1 <- "<b>Ready!</b>"
         beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
         
@@ -781,18 +781,18 @@ LoadingBoard <- function(input, output, session,
         } else {
             msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
         }
-        showModal( modalDialog(
-            HTML(msg1),
+        shiny::showModal( shiny::modalDialog(
+            shiny::HTML(msg1),
             title = NULL,
             size = "s",
-            footer = tagList(
+            footer = shiny::tagList(
                 ##savedata_button,
-                ## actionButton(ns("sharedata"), "Share with others", icon=icon("share-alt")),
-                modalButton("Start!")
+                ## shiny::actionButton(ns("sharedata"), "Share with others", icon=icon("share-alt")),
+                shiny::modalButton("Start!")
             )
         ))
 
-        updateTabsetPanel(session, "tabs",  selected = "Datasets")
+        shiny::updateTabsetPanel(session, "tabs",  selected = "Datasets")
 
     })
 
@@ -803,10 +803,10 @@ LoadingBoard <- function(input, output, session,
     ##--------------------- modules for UsersMap --------------------
     ##---------------------------------------------------------------
     
-    usersmap.RENDER %<a-% reactive({
+    usersmap.RENDER %<a-% shiny::reactive({
         
-        require(rworldmap)
-        require(RColorBrewer)
+
+
 
         df <- ACCESS.LOG$visitors
         
@@ -837,7 +837,7 @@ LoadingBoard <- function(input, output, session,
     
     usersmap_info = "<strong>Visitors map.</strong> The world map shows the number of users visiting this site by unique IP."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "usersmap", ## label="a", 
         plotlib = "baseplot",
@@ -853,7 +853,7 @@ LoadingBoard <- function(input, output, session,
     )
 
     ##usersmap_caption = "<b>(a)</b> <b>Geo locate.</b>"
-    output$usersmapInfo <- renderUI({
+    output$usersmapInfo <- shiny::renderUI({
 
         u <- ACCESS.LOG
         df <- u$visitors
@@ -864,19 +864,19 @@ LoadingBoard <- function(input, output, session,
         top.countries <- head(sort(freq,dec=TRUE),10)
         top.countriesTT <- paste("<li>",names(top.countries),top.countries,collapse=" ")
         
-        HTML(
+        shiny::HTML(
             "<b>Total visitors:</b>",tot.users,"<br><br>",
             "<b>Top 10 countries:</b><br><ol>",top.countriesTT,"</ol><br>",
             "<b>Period:</b><br>",u$period,"<br><br>"
         )
     })
     
-    output$usersmap_UI <- renderUI({
-        fillCol(
+    output$usersmap_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = 600,
-            fillRow(
+            shiny::fillRow(
                 flex = c(1,4.5),
-                wellPanel( uiOutput(ns("usersmapInfo"))),
+                shiny::wellPanel( shiny::uiOutput(ns("usersmapInfo"))),
                 plotWidget(ns("usersmap"))
             )
         )
@@ -887,7 +887,7 @@ LoadingBoard <- function(input, output, session,
     ##----------------- modules for Forum ---------------------------
     ##---------------------------------------------------------------
     
-    output$forum <- renderUI({
+    output$forum <- shiny::renderUI({
         parenturl <- paste0(session$clientData$url_protocol,
                             "//",session$clientData$url_hostname,
                             ":",session$clientData$url_port,
@@ -904,19 +904,19 @@ LoadingBoard <- function(input, output, session,
         ##HTML(src)
     })
          
-    output$tweet <- renderUI({
+    output$tweet <- shiny::renderUI({
         ## NOT WORKING YET...
         tags$a(class="twitter-timeline",
                href="https://twitter.com/bigomics?ref_src=twsrc%5Etfw")
         ##tags$script('twttr.widgets.load(document.getElementById("tweet"));')
     })
             
-    output$forum_UI <- renderUI({
-        fillCol(
+    output$forum_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = 550,
-            fillRow(
+            shiny::fillRow(
                 flex=c(4,0),
-                htmlOutput(ns("forum"))
+                shiny::htmlOutput(ns("forum"))
                 ##uiOutput("tweet")
             )
         )
@@ -929,7 +929,7 @@ LoadingBoard <- function(input, output, session,
         inputData = inputData,
         auth = auth
         ##inputData = currentPGX,
-        ##usermode = reactive({ USERMODE() })
+        ##usermode = shiny::reactive({ USERMODE() })
     )
     return(res)
 }
