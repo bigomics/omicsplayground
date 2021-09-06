@@ -36,8 +36,8 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
     ##--------------------------------------------------------------
     ## Run all tests on raw counts
     ##--------------------------------------------------------------
-    require(edgeR)
-    require(limma)
+    
+    
     if(0) {
         do.filter=FALSE;conform.output=TRUE;remove.batch=FALSE;prior.cpm=1;
         custom=NULL;custom.name=NULL;cpm.scale=1e6;prune.samples=FALSE
@@ -324,7 +324,7 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
     ## meta analysis, aggregate p-values
     ##--------------------------------------------------
     message("[ngs.fitContrastsWithAllMethods] aggregating p-values...")
-    require(metap)
+    
     all.meta <- list()
     i=1
     for(i in 1:ntest) {
@@ -390,8 +390,8 @@ ngs.fitContrastsWithTTEST <- function( X, contr.matrix, design, method="welch",
     ##if(class(dge)!="DGEList") stop("dge must be a DGEList object")
     ##install.packages("gmodels")
     ##install.packages("lsmeans")
-    require(gmodels)
-    require(matrixTests)
+    
+    
 
     tables <- list()
     i=1
@@ -401,9 +401,9 @@ ngs.fitContrastsWithTTEST <- function( X, contr.matrix, design, method="welch",
         j1 = which(exp.matrix[,i] > 0)
         j0 = which(exp.matrix[,i] < 0)
         if(method=="welch") {
-            suppressWarnings( rt <- row_t_welch( X[,j1,drop=FALSE], X[,j0,drop=FALSE] ) )
+            suppressWarnings( rt <- matrixTests::row_t_welch( X[,j1,drop=FALSE], X[,j0,drop=FALSE] ) )
         } else {
-            suppressWarnings( rt <- row_t_equalvar( X[,j1,drop=FALSE], X[,j0,drop=FALSE] ) )
+            suppressWarnings( rt <- matrixTests::row_t_equalvar( X[,j1,drop=FALSE], X[,j0,drop=FALSE] ) )
         }
         kk <- c("mean.x","mean.y","mean.diff","stderr","df","statistic","pvalue")
         rt = rt[,kk]
@@ -449,21 +449,21 @@ ngs.fitContrastsWithLIMMA <- function( X, contr.matrix, design, method=c("voom",
         X1 <- X[,kk,drop=FALSE]
         contr1 <- contr.matrix        
         if(method=="voom") {
-            v <- voom(2**X1, design1, plot=plot, normalize.method="none")
-            vfit <- lmFit(v, design1)
+            v <- limma::voom(2**X1, design1, plot=plot, normalize.method="none")
+            vfit <- limma::lmFit(v, design1)
             trend = FALSE  ## no need
         } else  {
-            vfit <- lmFit(X1, design1)
+            vfit <- limma::lmFit(X1, design1)
         }
-        vfit <- contrasts.fit(vfit, contrasts=contr1)
-        efit <- eBayes(vfit, trend=trend, robust=robust)  ## robust YES
-        if(plot==TRUE) plotSA(efit)
+        vfit <- limma::contrasts.fit(vfit, contrasts=contr1)
+        efit <- limma::eBayes(vfit, trend=trend, robust=robust)  ## robust YES
+        if(plot==TRUE) limma::plotSA(efit)
         tables <- list()
         i=1
         exp1 = (design1 %*% contr1)
         for(i in 1:ncol(contr1)) {
             ##coef = colnames(contr.matrix)[i]
-            top = topTable(efit, coef=i, sort.by="none",number=Inf, adjust.method="BH")
+            top = limma::topTable(efit, coef=i, sort.by="none",number=Inf, adjust.method="BH")
             j1 = which( exp1[,i] > 0 )
             j2 = which( exp1[,i] < 0 )
             ## if(!( length(cf)==6 || length(cf)==7)) stop("wrong coef format")
@@ -471,7 +471,7 @@ ngs.fitContrastsWithLIMMA <- function( X, contr.matrix, design, method=c("voom",
             mean0 = rowMeans(X1[,j2,drop=FALSE], na.rm=TRUE)
             top = top[rownames(X1),]
             top = cbind(top, "AveExpr0"=mean0, "AveExpr1" = mean1)
-            head(top,10)
+            Matrix::head(top,10)
             tables[[i]] = top
         }
         names(tables) <- colnames(contr1)
@@ -492,27 +492,27 @@ ngs.fitContrastsWithLIMMA <- function( X, contr.matrix, design, method=c("voom",
             X1 <- X[,kk,drop=FALSE]
             if(method=="voom") {
                 ##message("lmFit using voom")
-                v <- voom(2**X1, design1, plot=FALSE)
-                suppressMessages( vfit <- lmFit(v, design1) )
+                v <- limma::voom(2**X1, design1, plot=FALSE)
+                suppressMessages( vfit <- limma::lmFit(v, design1) )
                 trend=FALSE  ## no need
             } else {
-                suppressMessages( vfit <- lmFit(X1, design1) )
+                suppressMessages( vfit <- limma::lmFit(X1, design1) )
             }
             contr1 <- matrix(c(-1,0,1),nrow=3)
             rownames(contr1) <- c("yneg","yo","ypos")
             colnames(contr1) <- "pos_vs_neg"
             contr1 <- contr1[colnames(vfit),,drop=FALSE]
-            vfit <- contrasts.fit(vfit, contrasts=contr1)
-            efit <- eBayes(vfit, trend=trend, robust=robust)
-            top = topTable(efit, coef=1, sort.by="none",number=Inf, adjust.method="BH")
-            head(top)
+            vfit <- limma::contrasts.fit(vfit, contrasts=contr1)
+            efit <- limma::eBayes(vfit, trend=trend, robust=robust)
+            top = limma::topTable(efit, coef=1, sort.by="none",number=Inf, adjust.method="BH")
+            Matrix::head(top)
             j1 = which( ct > 0 )
             j0 = which( ct < 0 )
             mean1 = rowMeans(X1[,j1,drop=FALSE], na.rm=TRUE)
             mean0 = rowMeans(X1[,j0,drop=FALSE], na.rm=TRUE)
             top = top[rownames(X1),]
             top = cbind(top, "AveExpr0"=mean0, "AveExpr1" = mean1 )
-            head(top,10)
+            Matrix::head(top,10)
             tables[[i]] = top
         }
         names(tables) <- colnames(exp0)
@@ -535,8 +535,8 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
                                       method=c("qlf","lrt"), prune.samples=FALSE, X=NULL, 
                                       conform.output=FALSE, robust=TRUE, plot=TRUE)
 {
-    require(limma)
-    require(edgeR)
+    
+    
 
     method=method[1]
 
@@ -552,9 +552,9 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
         if(!is.null(group))  group <- group[kk]
     }
     
-    dge <- DGEList( round(counts), group=NULL)  ## we like integer counts...
+    dge <- edgeR::DGEList( round(counts), group=NULL)  ## we like integer counts...
     dge$samples$group <- group
-    dge <- calcNormFactors(dge, method="TMM")
+    dge <- edgeR::calcNormFactors(dge, method="TMM")
 
     if(is.null(design) && !prune.samples) {
         message("[ngs.fitContrastsWithEDGER] fitting EDGER contrasts *without* design, no pruning ")
@@ -572,15 +572,15 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
     }
 
     message("[ngs.fitContrastsWithEDGER] fitting EDGER contrasts using design matrix")    
-    dge <- estimateDisp(dge, design=design, robust=robust)
+    dge <- edgeR::estimateDisp(dge, design=design, robust=robust)
     if(is.null(X)) X <- edgeR::cpm(counts, log=TRUE)
 
     ##method="qlf";robust=FALSE;plot=FALSE
     if(method=="qlf") {
-        fit <- glmQLFit(dge, design, robust=robust)
+        fit <- edgeR::glmQLFit(dge, design, robust=robust)
     } else if(method=="lrt") {
-        fit <- glmFit(dge, design, robust=robust)
-        ## lrt <- glmLRT(fit, design)
+        fit <- edgeR::glmFit(dge, design, robust=robust)
+        ## lrt <- edgeR::glmLRT(fit, design)
     } else {
         stop("unknown method")
     }
@@ -593,14 +593,14 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
         ##coef = colnames(contr.matrix)[i]
         cntr = contr.matrix[,i]
         if(method=="qlf") {
-            ct = glmQLFTest(fit, contrast=cntr)
+            ct = edgeR::glmQLFTest(fit, contrast=cntr)
         } else if(method=="lrt") {
-            ct = glmLRT(fit, contrast=cntr)
+            ct = edgeR::glmLRT(fit, contrast=cntr)
         } else {
             stop("unknown method")
         }
-        ##summary(decideTests(ct))
-        ##if(plot) plotMD(ct)
+        ##summary(limma::decideTests(ct))
+        ##if(plot) limma::plotMD(ct)
         top = edgeR::topTags(ct, n=Inf, sort.by="none")$table
         top = data.frame(top[rownames(X),])
 
@@ -652,8 +652,8 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
 
     ##X = log2(0.0001+dge$counts)  ## assuming pseudocount already added
     if(is.null(X)) X <- edgeR::cpm(dge$counts, log=TRUE)
-    dge <- estimateDisp(dge, design=NULL, robust=robust)  ## fails...
-    dge.disp <- estimateDisp(dge$counts, design=NULL, robust=robust) 
+    dge <- edgeR::estimateDisp(dge, design=NULL, robust=robust)  ## fails...
+    dge.disp <- edgeR::estimateDisp(dge$counts, design=NULL, robust=robust) 
     ##dge@.Data <- c(dge@.Data, dge.disp)
     dge$common.dispersion  <- dge.disp$common.dispersion
     dge$trended.dispersion <- dge.disp$trended.dispersion
@@ -672,19 +672,19 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
         ##method="qlf";robust=FALSE;plot=FALSE
         if(method=="qlf") {
             ##message("[ngs.fitContrastsWithEDGER] fitting using QL F-test")
-            fit <- glmQLFit(dge, design1, robust=robust)
+            fit <- edgeR::glmQLFit(dge, design1, robust=robust)
             ctx <- contr0[colnames(coef(fit)),]
-            res <- glmQLFTest(fit, contrast=ctx)
+            res <- edgeR::glmQLFTest(fit, contrast=ctx)
         } else if(method=="lrt") {
             ##message("[ngs.fitContrastsWithEDGER] fitting using GLM/LRT")
-            fit <- glmFit(dge, design1, robust=robust)
+            fit <- edgeR::glmFit(dge, design1, robust=robust)
             ctx <- contr0[colnames(coef(fit)),]
-            res = glmLRT(fit, contrast=ctx)
+            res = edgeR::glmLRT(fit, contrast=ctx)
         } else {
             stop("unknown method: ",method)
         }
-        ##summary(decideTests(ct))
-        top = topTags(res, n=1e9)$table
+        ##summary(limma::decideTests(ct))
+        top = edgeR::topTags(res, n=1e9)$table
         top = data.frame(top[rownames(X),])
         j1 = which( contr.matrix[,i] > 0 )
         j0 = which( contr.matrix[,i] < 0 )
@@ -695,7 +695,7 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
         if(conform.output) top$logFC <- (mean1 - mean0)
 
         top = cbind(top, "AveExpr0"=mean0, "AveExpr1" = mean1 )
-        head(top)
+        Matrix::head(top)
         tables[[i]] = top
     }
     names(tables) <- colnames(contr.matrix)
@@ -752,11 +752,11 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
         }        
         group1 <- group
         if(!is.null(group)) group1 <- group[kk]
-        dge1 <- DGEList(round(counts1), group=NULL)  ## we like integer counts...
+        dge1 <- edgeR::DGEList(round(counts1), group=NULL)  ## we like integer counts...
         dge1$samples$group <- group1
-        dge1 <- calcNormFactors(dge1, method="TMM")
-        ##dge1 <- estimateDisp(dge1, design=NULL, robust=robust)  ## fails...
-        dge.disp <- estimateDisp(dge1$counts, design=NULL, robust=robust) 
+        dge1 <- edgeR::calcNormFactors(dge1, method="TMM")
+        ##dge1 <- edgeR::estimateDisp(dge1, design=NULL, robust=robust)  ## fails...
+        dge.disp <- edgeR::estimateDisp(dge1$counts, design=NULL, robust=robust) 
         ##dge@.Data <- c(dge@.Data, dge.disp)
         dge1$common.dispersion  <- dge.disp$common.dispersion
         dge1$trended.dispersion <- dge.disp$trended.dispersion
@@ -772,19 +772,19 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
         ##method="qlf";robust=FALSE;plot=FALSE
         if(method=="qlf") {
             ##message("[ngs.fitContrastsWithEDGER] fitting using QL F-test")
-            fit <- glmQLFit(dge1, design1, robust=robust)
+            fit <- edgeR::glmQLFit(dge1, design1, robust=robust)
             ctx <- M[colnames(coef(fit)),]
-            res <- glmQLFTest(fit, contrast=ctx)
+            res <- edgeR::glmQLFTest(fit, contrast=ctx)
         } else if(method=="lrt") {
             ##message("[ngs.fitContrastsWithEDGER] fitting using GLM/LRT")
-            fit <- glmFit(dge1, design1, robust=robust)
+            fit <- edgeR::glmFit(dge1, design1, robust=robust)
             ctx <- M[colnames(coef(fit)),]
-            res <- glmLRT(fit, contrast=ctx)
+            res <- edgeR::glmLRT(fit, contrast=ctx)
         } else {
             stop("unknown method: ",method)
         }
-        ##summary(decideTests(ct))
-        top = topTags(res, n=1e9)$table
+        ##summary(limma::decideTests(ct))
+        top = edgeR::topTags(res, n=1e9)$table
         top = data.frame(top[rownames(X1),])
         contr1 <- contr.matrix[kk,i]        
         j1 = which( contr1 > 0 )
@@ -795,7 +795,7 @@ ngs.fitContrastsWithEDGER <- function( counts, group, contr.matrix, design,
         ## logFC of edgeR is not really reliable..
         if(conform.output) top$logFC <- (mean1 - mean0)
         top = cbind(top, "AveExpr0"=mean0, "AveExpr1" = mean1 )
-        head(top)
+        Matrix::head(top)
         tables[[i]] = top
     }
     names(tables) <- colnames(contr.matrix)
@@ -825,7 +825,7 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
                                         X=NULL, genes=NULL, test="Wald", prune.samples=FALSE,
                                         conform.output=FALSE)
 {
-    require(DESeq2)
+    
     exp0 = contr.matrix
     if(!is.null(design)) exp0 = design %*% contr.matrix
 
@@ -859,7 +859,7 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
         jmax <- which.max(rowSums(counts))
         counts[jmax,] <- pmax(counts[jmax,],1)
     }
-    dds <- DESeqDataSetFromMatrix(
+    dds <- DESeq2::DESeqDataSetFromMatrix(
         countData=counts, design=design.formula, colData=data.frame(group))
     rownames(counts) <- rownames.counts
     ##Run DESeq : Modeling counts with generic 'group'
@@ -867,26 +867,26 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
     ##fitType = 'local'
     fitType = 'mean'
     if(test=="LRT") {
-        dds <- try( DESeq(dds, fitType=fitType, test="LRT", reduced= ~ 1) )
-        ##dds <- DESeq(dds, test="LRT", reduced= ~ 1)
+        dds <- try( DESeq2::DESeq(dds, fitType=fitType, test="LRT", reduced= ~ 1) )
+        ##dds <- DESeq2::DESeq(dds, test="LRT", reduced= ~ 1)
     } else {
-        dds <- try( DESeq(dds, fitType=fitType, test="Wald") )
-        ##dds <- DESeq(dds, test="Wald")
+        dds <- try( DESeq2::DESeq(dds, fitType=fitType, test="Wald") )
+        ##dds <- DESeq2::DESeq(dds, test="Wald")
     }
 
     ## sometime DESEQ2 fails and we resort to gene-wise estimates
     if('try-error' %in% class(dds)) {
         message("[.ngs.fitConstrastsWithDESEQ2.nodesign] retrying DESEQ2 with gene-wise estimates...")
-        dds <- DESeqDataSetFromMatrix(
+        dds <- DESeq2::DESeqDataSetFromMatrix(
             countData=counts, design=design.formula, colData=data.frame(group))
-        dds <- estimateSizeFactors(dds)
-        dds <- estimateDispersionsGeneEst(dds)
-        dispersions(dds) <- mcols(dds)$dispGeneEst
+        dds <- DESeq2::estimateSizeFactors(dds)
+        dds <- DESeq2::estimateDispersionsGeneEst(dds)
+        DESeq2::dispersions(dds) <- mcols(dds)$dispGeneEst
         suppressWarnings({
             if(test=="LRT") {
-                dds <- try( nbinomLRT(dds) )
+                dds <- try( DESeq2::nbinomLRT(dds) )
             } else {
-                dds <- try( nbinomWaldTest(dds) )
+                dds <- try( DESeq2::nbinomWaldTest(dds) )
             }
         })
     }
@@ -896,7 +896,7 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
     if(!is.null(genes)) rowData(dds)$genes = genes
 
     ## logCPM for calculating means
-    ##X <- edgeR::cpm(counts(dds),log=TRUE,prior.count=0.000001)
+    ##X <- edgeR::cpm(DESeq2::counts(dds),log=TRUE,prior.count=0.000001)
     if(is.null(X)) X <- edgeR::cpm(counts, log=TRUE)
     dim(X)
     exp.matrix = contr.matrix
@@ -909,17 +909,17 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
         contr = contr.matrix[,i]
         contr[is.na(contr)] <- 0
         contr <- (contr>0)/sum(contr>0) - (contr<0)/sum(contr<0) ## mean zero, signed sum to one.
-        resultsNames(dds)
+        DESeq2::resultsNames(dds)
         if(any(grepl("group",resultsNames(dds))) ) {
             grp.contr = contr
             names(grp.contr) = paste0("group",names(contr))
-            contr = rep(0,length(resultsNames(dds)))
-            names(contr) <- resultsNames(dds)
+            contr = rep(0,length(DESeq2::resultsNames(dds)))
+            names(contr) <- DESeq2::resultsNames(dds)
             contr[names(grp.contr)] <- grp.contr
         }
-        ##resx <- results(dds, contrast=contr )
+        ##resx <- DESeq2::results(dds, contrast=contr )
         ## do no set p values to NA
-        resx <- results(dds, contrast=contr, cooksCutoff=FALSE, independentFiltering=FALSE)
+        resx <- DESeq2::results(dds, contrast=contr, cooksCutoff=FALSE, independentFiltering=FALSE)
         ## resx = dds.result[rownames(dds),]  ## seems not
         pos.samples = which(exp.matrix[,i] > 0)
         neg.samples = which(exp.matrix[,i] < 0)
@@ -951,8 +951,8 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
                                                   prune.samples = FALSE,
                                                   conform.output=FALSE, X=NULL)
 {
-    require(DESeq2)
-    require(edgeR)
+    
+    
     ##if(class(dds)!="DESeqDataSet") stop("argument must be a DESeqDataSet object")
     ##if(!is.null(design)) stop("design must be NULL")
     counts <- round(counts)
@@ -985,38 +985,38 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
         counts1 <- counts[,kk,drop=FALSE]
         ##rownames.counts <- rownames(counts)
         colnames(counts1) <- NULL
-        dds <- DESeqDataSetFromMatrix(
+        dds <- DESeq2::DESeqDataSetFromMatrix(
             countData=counts1, design=design.formula, colData=data.frame(y))
         ##fitType = 'parametric'
         fitType ='mean'
         suppressWarnings({
             if(test=="LRT") {
-                dds <- try(DESeq(dds, fitType=fitType, test="LRT", reduced=~1))
+                dds <- try(DESeq2::DESeq(dds, fitType=fitType, test="LRT", reduced=~1))
             } else {
-                dds <- try(DESeq(dds, fitType=fitType, test="Wald")) 
+                dds <- try(DESeq2::DESeq(dds, fitType=fitType, test="Wald")) 
             }
         })
 
         ## sometime DESEQ2 fails
         if('try-error' %in% class(dds)) {
             message("[.ngs.fitConstrastsWithDESEQ2.nodesign] retrying DESEQ2 with gene-wise estimates...")
-            dds <- DESeqDataSetFromMatrix(
+            dds <- DESeq2::DESeqDataSetFromMatrix(
                 countData=counts1, design=design.formula, colData=data.frame(y))
-            dds <- estimateSizeFactors(dds)
-            dds <- estimateDispersionsGeneEst(dds)
-            dispersions(dds) <- mcols(dds)$dispGeneEst
+            dds <- DESeq2::estimateSizeFactors(dds)
+            dds <- DESeq2::estimateDispersionsGeneEst(dds)
+            DESeq2::dispersions(dds) <- mcols(dds)$dispGeneEst
             suppressWarnings({
                 if(test=="LRT") {
-                    dds <- try( nbinomLRT(dds) )
+                    dds <- try( DESeq2::nbinomLRT(dds) )
                 } else {
-                    dds <- try( nbinomWaldTest(dds) )
+                    dds <- try( DESeq2::nbinomWaldTest(dds) )
                 }
             })
         }
                 
-        resultsNames(dds)
+        DESeq2::resultsNames(dds)
         ctx <- c("yneg"=-1, "yzero"=0, "ypos"=1)[resultsNames(dds)]
-        resx <- results(dds, contrast=ctx, cooksCutoff=FALSE, independentFiltering=FALSE )
+        resx <- DESeq2::results(dds, contrast=ctx, cooksCutoff=FALSE, independentFiltering=FALSE )
 
         ## we add the gene annotation here (not standard...)
         rownames(resx) <- rownames(rowData(dds))

@@ -14,7 +14,7 @@ gset.fisher2 <- function(genes.up, genes.dn, genesets, background=NULL,
                          min.genes=15, max.genes=500, method="fast.fisher",
                          check.background=TRUE, common.genes=TRUE )
 {
-    require(parallel)
+    
     ft.up = gset.fisher(genes=genes.up, genesets=genesets, background=background,
                         fdr=1, mc=mc, sort.by=sort.by, nmin=nmin, verbose=verbose,
                         min.genes=min.genes, max.genes=max.genes, method=method,
@@ -39,7 +39,7 @@ gset.fisher <- function(genes, genesets, background=NULL,
                         check.background=TRUE,  common.genes=TRUE, verbose=1)
 {
     ## NEED RETHINK
-    require(parallel)
+    
     if(0) {
         min.genes=-10;max.genes=500;background=NULL;fdr=1;mc=TRUE;sort.by="zratio";nmin=3;verbose=1
         genesets=readRDS("../files/gmt-all.rds")
@@ -55,7 +55,7 @@ gset.fisher <- function(genes, genesets, background=NULL,
     if(check.background) {
         ## restrict on background
         genes <- intersect(genes, background)
-        genesets <- mclapply( genesets, function(s) intersect(s, background))
+        genesets <- parallel::mclapply( genesets, function(s) intersect(s, background))
     }
     
     ## select
@@ -88,11 +88,11 @@ gset.fisher <- function(genes, genesets, background=NULL,
     nbackground1 = length(bg0)
 
     ## this can become slow... PLEASE OPTIMIZE!!!!
-    a <- unlist(mclapply(genesets, function(x) sum(x %in% genes)))
-    ##b <- unlist(mclapply(genesets, function(x) sum(!(x %in% genes))))
+    a <- unlist(parallel::mclapply(genesets, function(x) sum(x %in% genes)))
+    ##b <- unlist(parallel::mclapply(genesets, function(x) sum(!(x %in% genes))))
     b <- (n.size - a)
-    c <- unlist(mclapply(genesets, function(x) sum(!(genes %in% x))))
-    ##d <- unlist(mclapply(genesets, function(x) sum(!(bg0 %in% x))))
+    c <- unlist(parallel::mclapply(genesets, function(x) sum(!(genes %in% x))))
+    ##d <- unlist(parallel::mclapply(genesets, function(x) sum(!(bg0 %in% x))))
     d <- (nbackground1 - b)
     odd.ratio <- (a/c) / (b/d)    ## note: not exactly same as from fishertest
 
@@ -115,12 +115,12 @@ gset.fisher <- function(genes, genesets, background=NULL,
     pv <- rep(NA, length(genesets))
     names(pv) <- names(genesets)
     if(method=="fast.fisher") {
-        ## require(corpora)
+        ## 
         pv <- corpora::fisher.pval( a, (a+b), c, (c+d), alternative="greater")
     } else if(method=="fisher") {
         if(mc) {
             ##cat("multicore testing\n")
-            pv <- unlist(mclapply( genesets, test.fisher ))
+            pv <- unlist(parallel::mclapply( genesets, test.fisher ))
         } else {
             i=1
             for(i in 1:length(genesets)) {
@@ -130,7 +130,7 @@ gset.fisher <- function(genes, genesets, background=NULL,
     } else if(method=="chisq") {
         if(mc) {
             ##cat("multicore testing\n")
-            pv <- unlist(mclapply( genesets, test.chisq ))
+            pv <- unlist(parallel::mclapply( genesets, test.chisq ))
         } else {
             for(i in 1:length(genesets)) {
                 pv[i] <- test.chisq( genesets[[i]] )

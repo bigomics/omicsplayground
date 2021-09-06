@@ -22,7 +22,7 @@ gset.rankcor <- function(rnk, gset, compute.p=FALSE, use.rank=TRUE)
     if(!is.vec && is.null(rownames(rnk))) stop("rank matrix must have rownames")
     if(is.vec) rnk <- matrix(rnk,ncol=1,dimnames=list(names(rnk),'rnk'))
     dim(rnk)
-    head(rnk)
+    Matrix::head(rnk)
     n1 <- sum(rownames(rnk) %in% colnames(gset), na.rm=TRUE)
     n2 <- sum(rownames(rnk) %in% rownames(gset), na.rm=TRUE)
     if( n1 > n2 ) gset <- t(gset)
@@ -42,7 +42,7 @@ gset.rankcor <- function(rnk, gset, compute.p=FALSE, use.rank=TRUE)
         ## Permutation of the GSET matrix
         idx = which(gset!=0, arr.ind=TRUE)
         dim(idx)
-        S = sparseMatrix(sample(idx[,1]), sample(idx[,2]), x=rep(1,nrow(idx)),
+        S = Matrix::sparseMatrix(sample(idx[,1]), sample(idx[,2]), x=rep(1,nrow(idx)),
                          dims = dim(gset), dimnames=dimnames(gset) )
         rho2 = qlcMatrix::corSparse(S[gg,], rnk1)
         rho1[is.na(rho1)] <- 0

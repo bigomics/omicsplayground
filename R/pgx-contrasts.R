@@ -250,7 +250,7 @@ makeDirectContrasts000 <- function(Y, ref, na.rm=TRUE, warn=FALSE) {
     }
 
     contr.matrix <- c()
-    if(length(ref)<ncol(Y)) ref <- head(rep(ref,99),ncol(Y))
+    if(length(ref)<ncol(Y)) ref <- Matrix::head(rep(ref,99),ncol(Y))
     ref.pattern <- "wt|contr|ctr|untreat|normal|^neg|ref|^no$|^0$|^0h$|scrambl|none|dmso|vehicle"
     i=1    
     for(i in 1:ncol(Y)) {
@@ -513,7 +513,7 @@ pgx.makeAutoContrasts <- function(df, mingrp=3, slen=20, ref=NULL,
     }
     
     ## repeat ref if too short
-    if(!is.null(ref) && length(ref)<ncol(df)) ref <- head(rep(ref,99),ncol(df))
+    if(!is.null(ref) && length(ref)<ncol(df)) ref <- Matrix::head(rep(ref,99),ncol(df))
 
     ## filter out 'internal/hidden' and 'group' parameters
     ##not.used <- grepl("^[.]|group",colnames(df))
@@ -581,11 +581,11 @@ pgx.makeAutoContrasts <- function(df, mingrp=3, slen=20, ref=NULL,
                     dt <- cbind(dt, paste(df1[,vars.bytime[i]], time, sep="_"))
                 }
                 colnames(dt) <- paste0(vars.bytime,"_",colnames(df)[time.col])
-                head(dt)
+                Matrix::head(dt)
                 df <- cbind(df, dt)
             }
         }
-        head(df)
+        Matrix::head(df)
     }
     
     ## emergency bail out...
@@ -627,7 +627,7 @@ pgx.makeAutoContrasts <- function(df, mingrp=3, slen=20, ref=NULL,
     }
     
     rownames(K) <- df.rownames
-    head(K)
+    Matrix::head(K)
     dim(K)
 
     ## Now try to infer the underlying "conditions"
@@ -640,7 +640,7 @@ pgx.makeAutoContrasts <- function(df, mingrp=3, slen=20, ref=NULL,
     K2 <- K[jj,colnames(K1),drop=FALSE]
     rownames(K2) <- xc[jj]
     dim(K2)
-    head(K2)
+    Matrix::head(K2)
     is.degenerate = (length(jj) > 0.9*nrow(K1) || mean(table(xc)==1)>0.5 )
     is.degenerate
     
@@ -674,7 +674,7 @@ pgx.makeAutoContrasts <- function(df, mingrp=3, slen=20, ref=NULL,
         length(jj)    
         K2 <- K[jj,colnames(K1),drop=FALSE]
         rownames(K2) <- xc[jj]
-        head(K2)
+        Matrix::head(K2)
     } else if(!fix.degenerate && is.degenerate) {
         cat("WARNING:: contrast matrix looks degenerate. going for NULL design...\n")
         ## Go for zero design (no-replicates)

@@ -13,8 +13,8 @@ gmt2mat <- function(gmt, max.genes=-1, ntop=-1, sparse=TRUE,
                     bg=NULL, use.multicore=TRUE)
 {
     ##max.genes=-1;ntop=-1;sparse=TRUE;bg=NULL;normalize=FALSE;r=0.01;use.multicore=TRUE
-    require(Matrix)
-    require(parallel)
+    
+    
     gmt <- gmt[order(-sapply(gmt,length))]
     gmt <- gmt[!duplicated(names(gmt))]
     if(ntop>0) {
@@ -27,11 +27,11 @@ gmt2mat <- function(gmt, max.genes=-1, ntop=-1, sparse=TRUE,
     ##bg <- setdiff(bg,c(NA,""))
     if(max.genes<0) max.genes <- length(bg)
     gg <- bg
-    gg <- head(bg, n=max.genes)
+    gg <- Matrix::head(bg, n=max.genes)
     gmt <- lapply(gmt, function(s) intersect(gg,s))
     kk <- unique(names(gmt))
     if(sparse) {
-        D <- Matrix(0, nrow=length(gg),ncol=length(kk), sparse=TRUE)
+        D <- Matrix::Matrix(0, nrow=length(gg),ncol=length(kk), sparse=TRUE)
     } else {
         D <- matrix(0, nrow=length(gg),ncol=length(kk))
     }
@@ -40,7 +40,7 @@ gmt2mat <- function(gmt, max.genes=-1, ntop=-1, sparse=TRUE,
     colnames(D) <- kk
     j=1
     if(use.multicore) {
-        idx <- mclapply(gmt, function(s) match(s,gg))
+        idx <- parallel::mclapply(gmt, function(s) match(s,gg))
         idx[sapply(idx,length)==0] <- 0
         idx <- sapply(1:length(idx), function(i) rbind(idx[[i]],i))
         idx <- matrix(unlist(idx[]),byrow=TRUE,ncol=2)
@@ -266,7 +266,7 @@ run.GSEA <- function( X, y, gmt, output.dir=NULL, fdr=0.25, set.min=15,
         sd1 <- pmax(sd1, 0.2*pmax(mu1,1))
         rnk <- (mu1 - mu0) / (sd0 + sd1)
     } else {
-        rnk <- cor( t(X), y, use="pairwise")[,1]
+        rnk <- WGCNA::cor( t(X), y, use="pairwise")[,1]
     }
 
     if(!(permute %in% c("phenotype","gene_set"))) {
@@ -430,8 +430,8 @@ run.GSEA <- function( X, y, gmt, output.dir=NULL, fdr=0.25, set.min=15,
             if(!is.na(nes)) {
                 ri <- res[i,"RANK AT MAX"]
                 sorted.rnk = sort(rnk)
-                if(nes < 0) topgenes <- head(names(sorted.rnk),ri)
-                if(nes > 0) topgenes <- head(rev(names(sorted.rnk)),ri)
+                if(nes < 0) topgenes <- Matrix::head(names(sorted.rnk),ri)
+                if(nes > 0) topgenes <- Matrix::head(rev(names(sorted.rnk)),ri)
                 k <- names(gmt.origname)[ match(rownames(res)[i], gmt.origname) ]
                 gg <- intersect(topgenes, gmt[[k]])
                 rnk0 = rnk - median(rnk)
@@ -685,7 +685,7 @@ gsea.LeadingEdgeAnalysis <- function(output.dir, ntop=100, gsea.program=GSEA.JAR
     res.file <- dir(output.dir,"gsea_report.txt",full.names=TRUE)
     res.file
     res <- read.csv(res.file,sep="\t",row.names=1)
-    head(res)[,1:4]
+    Matrix::head(res)[,1:4]
     rpt.prefix <- gsub(".gsea_report.txt","",res.file)
     rpt.prefix <- gsub(output.dir,"",rpt.prefix)
     rpt.prefix <- gsub("/","",rpt.prefix)
@@ -711,7 +711,7 @@ gsea.LeadingEdgeAnalysis <- function(output.dir, ntop=100, gsea.program=GSEA.JAR
     rpt.label <- gsub(output.dir,"",rpt.label)
     rpt.label <- gsub("^/","",rpt.label)
     rpt.label
-    gmt.top <- head(rownames(res),ntop)
+    gmt.top <- Matrix::head(rownames(res),ntop)
     run.GSEA.LeadingEdge(rpt.path=rpt.dir, gmt=gmt.top,
                          rpt.label=rpt.label, xmx=xmx,
                          gsea.program=gsea.program,
@@ -962,9 +962,9 @@ getGseaOutput <- function(path, i=1, raster.png=FALSE) {
 
     if(raster.png) {
         cat("rastering PNG images...\n")
-        require(png)
-        require(grid)
-        rasterPNG <- function(p) rasterGrob(as.raster(readPNG(p)),interpolate=FALSE)
+        
+        
+        rasterPNG <- function(p) grid::rasterGrob(as.raster(png::readPNG(p)),interpolate=FALSE)
         output$heatmaps <- lapply( output$heatmaps, rasterPNG)
         output$enplots  <- lapply( output$enplots, rasterPNG)
         output$LE_heatmap <- rasterPNG(output$LE_heatmap)
@@ -975,13 +975,13 @@ getGseaOutput <- function(path, i=1, raster.png=FALSE) {
 }
 
 gseaPlotEnplots <- function(gsea, gsets=NULL, ncol=5) {
-    require(png, quietly=TRUE)
-    require(grid, quietly=TRUE)
-    require(gridExtra, quietly=TRUE)
+    
+    
+    
     enplots = gsea$enplots
     kk = 1:length(enplots)
     if(!is.null(gsets)) kk = match(gsets, names(enplots))
-    imgs = lapply( enplots[kk], function(p) rasterGrob(as.raster(readPNG(p)),
+    imgs = lapply( enplots[kk], function(p) grid::rasterGrob(as.raster(png::readPNG(p)),
                                                        interpolate=TRUE))
     grid.arrange(grobs=imgs, ncol=ncol)
 }
@@ -1013,10 +1013,10 @@ gseaLeadingEdgeHeatmap <- function(gsea, maxrow=60, maxcol=60, gsets=NULL,
     if(nrow(LEmat) <= 1 || ncol(LEmat) <= 1) return(NULL)
 
     if(render=="d3heatmap") {
-        require(d3heatmap)
+        
         d3heatmap(LEmat, yaxis_width=600)
     } else  if(render=="heatmaply") {
-        require(heatmaply)
+        
         heatmaply(LEmat)
     } else {
         gx.heatmap( LEmat-1e-8, scale="none", ##col= rev(heat.colors(16)),
@@ -1029,14 +1029,14 @@ gseaLeadingEdgeHeatmap <- function(gsea, maxrow=60, maxcol=60, gsets=NULL,
 ##========================================================================
 ##=========================== PLOTTING ===================================
 ##========================================================================
-library(gplots)
+
 bluered <- function(n=64) gplots::colorpanel(n,"royalblue3","grey90","indianred3")
 
 gsea.barplot <- function(scores, names=NULL, xlab='score', xlim = NULL,
                          cex.text=1, main='enrichment', n=16)
 {
     if(!is.null(names)) names(scores) <- names
-    scores <- rev(head(scores[order(-abs(scores))],n))
+    scores <- rev(Matrix::head(scores[order(-abs(scores))],n))
     ##names(gx) <- gs
     col1 <- c("lightskyblue1","rosybrown1")[1 + 1*(scores>0)]
     if(min(scores,na.rm=TRUE)==0 && max(scores,na.rm=TRUE)==0) {
@@ -1098,7 +1098,7 @@ gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,
         r1 <- abs(r1)**0.66 * sign(r1)
         irnk <- 1 + round((length(kk)-1)*(1 + r1))
         ##cat("irnk=",irnk,"\n")
-        cc <- bluered(length(kk)-1)[1 + floor(irnk/2)]
+        cc <- gplots::bluered(length(kk)-1)[1 + floor(irnk/2)]
         rect(kk[i], y0 - 1.05*dy, kk[i+1], y0 - 0.65*dy, col=cc, border=NA)
     }
 
@@ -1172,7 +1172,7 @@ gsea.enplot.UPDN <- function(rnk, gset.up, gset.dn, names=NULL, main=NULL,
         r1 <- abs(r1)**0.66 * sign(r1)
         irnk <- round(10 + 10*r1)
         ##cat("irnk=",irnk,"\n")
-        cc <- bluered(20)[irnk]
+        cc <- gplots::bluered(20)[irnk]
         rect(kk[i], y0-1.30*dy, kk[i+1], y0-1.05*dy, col=cc, border=NA)
     }
 
@@ -1275,10 +1275,10 @@ gsea.ftplot <- function(x, rft="var", cft="var",
     ii <- 1:nrow(x)
     jj <- 1:ncol(x)
     if(nrow(x) > rmax) {
-        ii <- ii[ii %in% head(order(-abs(rft)),rmax)]
+        ii <- ii[ii %in% Matrix::head(order(-abs(rft)),rmax)]
     }
     if(ncol(x) > cmax) {
-        jj <- jj[jj %in% head(order(-abs(cft)),rmax)]
+        jj <- jj[jj %in% Matrix::head(order(-abs(cft)),rmax)]
     }
     x <- x[ii,jj]
     rft <- rft[ii]
@@ -1287,7 +1287,7 @@ gsea.ftplot <- function(x, rft="var", cft="var",
     ynames <- ynames[jj]
     order.sign <- c(1,-1)[1+(sort.decreasing==TRUE)]
     if(rsort=="hclust") {
-        rc <- hclust(as.dist(1 - cor(t(x),use="pairwise")))
+        rc <- fastcluster::hclust(as.dist(1 - WGCNA::cor(t(x),use="pairwise")))
         rc.order <- rc$order
     } else if(rsort=="metric") {
         rc.order <- order(-rft * order.sign)
@@ -1296,9 +1296,9 @@ gsea.ftplot <- function(x, rft="var", cft="var",
         rc.order <- 1:length(rft)
     }
     if(csort=="hclust") {
-        cc <- hclust(as.dist(1 - cor(x,use="pairwise")))
-        ##rc <- hclust(multi.dist(x))
-        ##cc <- hclust(multi.dist(t(x)))
+        cc <- fastcluster::hclust(as.dist(1 - WGCNA::cor(x,use="pairwise")))
+        ##rc <- fastcluster::hclust(multi.dist(x))
+        ##cc <- fastcluster::hclust(multi.dist(t(x)))
         cc.order <- cc$order
     } else if(csort=="metric") {
         cc.order <- order(cft * order.sign)
@@ -1313,7 +1313,7 @@ gsea.ftplot <- function(x, rft="var", cft="var",
     ##if(rsort!="hclust") layout.widths[1] <- 0.05
     ##if(csort!="hclust") layout.heights[1] <- 0.05
 
-    layout(matrix(c(6,6,1,6,6,2,5,4,3), 3, 3, byrow=TRUE),
+    plotly::layout(matrix(c(6,6,1,6,6,2,5,4,3), 3, 3, byrow=TRUE),
            widths=layout.widths, heights=layout.heights)
     ## upper dendrogram (or skip)
     if(csort=="hclust") {
@@ -1345,7 +1345,7 @@ gsea.ftplot <- function(x, rft="var", cft="var",
     if(scale=="col") xx <- scale(xx,center=TRUE)
     zlim1 = c(-1,1)*max(abs(xx**p),na.rm=TRUE)
     ##if(min(xx,na.rm=TRUE)>=0) zlim1[1] <- 0
-    image(1:ncol(xx), 1:nrow(xx), t(abs(xx)**p * sign(xx)),
+    Matrix::image(1:ncol(xx), 1:nrow(xx), t(abs(xx)**p * sign(xx)),
           col=col, zlim=zlim1, xaxt="n", xlab="", ylab="", yaxt="n")
     if(!is.null(xnames)) {
         mtext(xnames[rc.order], 4, at=(1:length(xnames)), adj=0,
@@ -1405,7 +1405,7 @@ gsea.quick_report <- function(output.dir, pattern=NULL) {
     tt <- gsub("^metagsva_|^metagsea_|^gsea_","",tt)
     tt
     rr <- lapply(gg, read.csv, sep="\t", header=TRUE, row.names=1, nrow=-2000)
-    head(rr[[1]])[,1:7]
+    Matrix::head(rr[[1]])[,1:7]
     n.set <- sapply(rr, function(x) nrow(x))
     np.pos <- sapply(rr, function(x) sum( x$NOM.p.val < 0.05 & x$NES > 0))
     np.neg <- sapply(rr, function(x) sum( x$NOM.p.val < 0.05 & x$NES < 0))
@@ -1439,8 +1439,8 @@ gsea.radarplot <- function( values, names=NULL, mar=c(2,5,3,5)*2,
     colnames(M) <- names(values)
     rownames(M) <- c("neg","pos","unit")
     jj <- 1:ncol(M)
-    ##jj <- hclust(as.dist(1-cor(M,use="pairwise")))$order
-    if(clust) jj <- hclust(dist(t(M)))$order
+    ##jj <- fastcluster::hclust(as.dist(1-cor(M,use="pairwise")))$order
+    if(clust) jj <- fastcluster::hclust(dist(t(M)))$order
     M <- M[,jj]
     ii <- 1:3
     if(sum(mx<0)==0) ii <- c(2,3)

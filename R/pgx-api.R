@@ -86,7 +86,7 @@ pgx.getTopGeneSets <- function(pgx, n=10, ng=100, dir=0, sym=FALSE, filt=NULL) {
     }
     if(dir==0) G <- abs(G)
     if(dir<0) G <- -1*(G)
-    topgs <- apply(G,2,function(x) list(names(head(sort(-x),n))))
+    topgs <- apply(G,2,function(x) list(names(Matrix::head(sort(-x),n))))
     topgs <- unlist(topgs, recursive=FALSE)
     gs.genes <- lapply(topgs, function(gs)
         lapply(apply(pgx$GMT[,gs]!=0,2,which),names))
@@ -112,11 +112,11 @@ pgx.getMarkerGenes <- function(pgx, n=10, dir=0, sym=FALSE, filt=NULL) {
     if(sym==TRUE) {
         n2 <- round(n/2)
         markers <- apply(F,2,function(x)
-            list(c(names(head(sort(x),n2)),rev(names(tail(sort(x),n2)))) ))
+            list(c(names(Matrix::head(sort(x),n2)),rev(names(Matrix::tail(sort(x),n2)))) ))
     } else {
         if(dir==0) F <- abs(F)
         if(dir<0) F <- -1*(F)
-        markers <- apply(F,2,function(x) list(names(head(sort(-x),n))))
+        markers <- apply(F,2,function(x) list(names(Matrix::head(sort(-x),n))))
     }
     markers <- unlist(markers, recursive=FALSE)
     markers

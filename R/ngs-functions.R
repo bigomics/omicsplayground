@@ -5,8 +5,8 @@
 
 ngs.getGeneAnnotation <- function(genes)
 {
-    require(org.Hs.eg.db)
-    require(org.Mm.eg.db)
+    
+    
     hs.genes <- unique(unlist(as.list(org.Hs.egSYMBOL)))
     mm.genes <- unique(unlist(as.list(org.Mm.egSYMBOL)))
 
@@ -34,17 +34,17 @@ ngs.getGeneAnnotation <- function(genes)
         names(MAP) = SYMBOL
         
         ##BiocManager::install("TxDb.Hsapiens.UCSC.hg19.knownGene")
-        require("TxDb.Hsapiens.UCSC.hg19.knownGene")
+        
         txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
-        tx <- transcriptLengths(txdb)
+        tx <- GenomicFeatures::transcriptLengths(txdb)
         TXLEN <- tapply( tx$tx_len, tx$gene_id, mean, na.rm=TRUE)
         TXLEN <- TXLEN[match(names(SYMBOL),names(TXLEN))]
         names(TXLEN) <- SYMBOL        
-        head(TXLEN)
+        Matrix::head(TXLEN)
 
         ## get gene biotype
-        require("EnsDb.Hsapiens.v86")
-        daf <- transcripts(EnsDb.Hsapiens.v86,
+        
+        daf <- GenomicFeatures::transcripts(EnsDb.Hsapiens.v86,
                            columns = c("gene_name", "gene_biotype"),
                            return.type="DataFrame")
         GENE.BIOTYPE = daf$gene_biotype
@@ -62,16 +62,16 @@ ngs.getGeneAnnotation <- function(genes)
         MAP <- NULL ## no map for mouse???
 
         ##BiocManager::install("TxDb.Mmusculus.UCSC.mm10.knownGene")       
-        require("TxDb.Mmusculus.UCSC.mm10.knownGene")               
+                       
         txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
-        tx <- transcriptLengths(txdb)
+        tx <- GenomicFeatures::transcriptLengths(txdb)
         TXLEN <- tapply( tx$tx_len, tx$gene_id, mean, na.rm=TRUE)
         TXLEN <- TXLEN[match(names(SYMBOL),names(TXLEN))]
         names(TXLEN) <- SYMBOL        
-        head(TXLEN)
+        Matrix::head(TXLEN)
 
-        require("EnsDb.Mmusculus.v79")
-        daf <- transcripts(EnsDb.Mmusculus.v79,
+        
+        daf <- GenomicFeatures::transcripts(EnsDb.Mmusculus.v79,
                            columns = c("gene_name", "gene_biotype"),
                            return.type="DataFrame")
         GENE.BIOTYPE = daf$gene_biotype
@@ -107,7 +107,7 @@ ngs.getGeneAnnotation <- function(genes)
                        tx_len = as.integer(txlen),
                        map=map )
     ##genes = apply(genes,2,as.character)
-    head(annot)
+    Matrix::head(annot)
     ##annot[is.na(annot)] <- ""  ## replace NA with empty string
     
     rownames(annot) = genes

@@ -33,7 +33,7 @@ if(1 && file.exists(INIT.FILE)) {
     oldvars <- ls()
 
     ## All gene families in Human UPPER CASE
-    require(org.Hs.eg.db)
+    
     GENE.TITLE  = unlist(as.list(org.Hs.egGENENAME))
     GENE.SYMBOL = unlist(as.list(org.Hs.egSYMBOL))
     names(GENE.TITLE) = GENE.SYMBOL
@@ -99,12 +99,12 @@ if(1 && file.exists(INIT.FILE)) {
     ##-----------------------------------------------------------------------------
     ## Colors
     ##-----------------------------------------------------------------------------
-    require(ggsci)
-    require(RColorBrewer)
-    COLORS = rep(brewer.pal(8,"Set2"),99)
-    COLORS = rep(c(pal_npg("nrc", alpha = 0.7)(10),
-                   pal_aaas("default", alpha = 0.7)(10),
-                   pal_d3("category10", alpha = 0.7)(10)),99)
+    
+    
+    COLORS = rep(RColorBrewer::brewer.pal(8,"Set2"),99)
+    COLORS = rep(c(ggsci::pal_npg("nrc", alpha = 0.7)(10),
+                   ggsci::pal_aaas("default", alpha = 0.7)(10),
+                   ggsci::pal_d3("category10", alpha = 0.7)(10)),99)
     BLUERED <- colorRampPalette(
         rev(c("#67001F", "#B2182B", "#D6604D", "#F4A582", "#FDDBC7", "#EEEEEE",
               "#D1E5F0", "#92C5DE", "#4393C3", "#2166AC", "#053061")))
@@ -139,7 +139,7 @@ pgx.initialize <- function(pgx) {
     if(!all(obj.needed %in% names(pgx))) {
         obj.missing <- setdiff(obj.needed, names(pgx))
         msg <- paste("invalid pgx object. missing parts in object: ",obj.missing)
-        showNotification(msg,duration=NULL,type="error")
+        shiny::showNotification(msg,duration=NULL,type="error")
         ##stop(msg)
         return(NULL)
     }
@@ -148,7 +148,7 @@ pgx.initialize <- function(pgx) {
     if(FALSE && !all(vars.needed %in% colnames(pgx$samples))) {
         vars.missing <- setdiff(vars.needed, colnames(pgx$samples))
         msg <- paste("invalid pgx object. missing variables in object: ",vars.missing)
-        showNotification(msg,duration=NULL,type="error")
+        shiny::showNotification(msg,duration=NULL,type="error")
         ##stop(msg)
         return(NULL)
     }

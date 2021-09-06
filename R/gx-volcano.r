@@ -69,8 +69,8 @@ gx.volcanoPlot.XY <- function(x, pv, gene, ma_plot=FALSE, ma=NULL, p.sig=0.05, l
     ## add labels for some
     ##jj = which( pv <= p.sig)
     ##if(!is.null(highlight)) jj = which( pv <= p.sig & gene %in% highlight)
-    j0 = head(ii[order(impt(gene[ii]))],nlab)
-    j1 = head(ii[order(-impt(gene[ii]))],nlab)
+    j0 = Matrix::head(ii[order(impt(gene[ii]))],nlab)
+    j1 = Matrix::head(ii[order(-impt(gene[ii]))],nlab)
     jj = unique(c(j0,j1))
     lab[jj] = gene[jj]
 
@@ -93,13 +93,13 @@ gx.volcanoPlot.XY <- function(x, pv, gene, ma_plot=FALSE, ma=NULL, p.sig=0.05, l
     plt <- NULL
     
     if(render=="scatterD3") {
-        require(scatterD3)
+        
         tooltip_text = paste(gene,"<br>x=",round(x,digits=3),
                              "<br>p=",round(pv,digits=4) )
         jj = order(klr)
         labjj=NULL
         if(lab.cex>0) labjj=lab[jj]
-        plt <- scatterD3(
+        plt <- scatterD3::scatterD3(
             x=x[jj], y=y[jj],
             ##point_size = cex*10*cex.wt,
             point_size = cex*10,
@@ -110,25 +110,25 @@ gx.volcanoPlot.XY <- function(x, pv, gene, ma_plot=FALSE, ma=NULL, p.sig=0.05, l
             tooltips = TRUE, colors = c("2"=hi.col,"1"="#BBBBBB") )
         
     } else if(render=="plotly") {
-        require(plotly)
+        
         gene2 = paste0("  ",gene.txt, "  ")
         ann = data.frame(gene=gene2, x=x, y=y)[jj,,drop=FALSE]
         ann.left  = ann[which(ann$x<0),]
         ann.right = ann[which(ann$x>=0),]
-        plt <- plot_ly(x=x, y=y, type="scattergl", mode="markers",
+        plt <- plotly::plot_ly(x=x, y=y, type="scattergl", mode="markers",
                        marker = list(size=5*cex, color="#BBBBBB"), hoverinfo='text',
                        text = tt ) %>%
-            layout( xaxis=list(title=xlab, range=xlim),
+            plotly::layout( xaxis=list(title=xlab, range=xlim),
                    yaxis=list(title=ylab, range=ylim) )
         if(lab.cex > 0 && nrow(ann.left)>0) {
             plt <- plt  %>%
-                add_annotations(x=ann.left$x, y=ann.left$y, text=ann.left$gene,
+                plotly::add_annotations(x=ann.left$x, y=ann.left$y, text=ann.left$gene,
                                 xref='x', yref='y', xanchor='right', showarrow=FALSE,
                                 font=list(size=10*lab.cex, color=hi.col) ) 
         }
         if(lab.cex > 0  && nrow(ann.right)>0) {
             plt <- plt  %>%
-                add_annotations(x=ann.right$x, y=ann.right$y, text=ann.right$gene,
+                plotly::add_annotations(x=ann.right$x, y=ann.right$y, text=ann.right$gene,
                                 xref='x', yref='y', xanchor='left', showarrow=FALSE,
                                 font=list(size=10*lab.cex, color=hi.col) ) 
         }
@@ -237,8 +237,8 @@ gx.volcanoPlot.LIMMA <- function(tab, render="scatterD3", n=1000, highlight=NULL
             ii = which( tab$adj.P.Val < p.sig)
         }
     }
-    j0 = head(ii[order(impt(gene[ii]))],nlab)
-    j1 = head(ii[order(-impt(gene[ii]))],nlab)
+    j0 = Matrix::head(ii[order(impt(gene[ii]))],nlab)
+    j1 = Matrix::head(ii[order(-impt(gene[ii]))],nlab)
     jj = unique(c(j0,j1))
 
     lab=rep(NA, nrow(tab))
@@ -261,29 +261,29 @@ gx.volcanoPlot.LIMMA <- function(tab, render="scatterD3", n=1000, highlight=NULL
                "<br>adj.P.Val=",round(tab$adj.P.Val,digits=4))
 
     if(render=="scatterD3") {
-        require(scatterD3)
-        scatterD3(x=x, y=y, point_size = cex*10, point_opacity=0.66,
+        
+        scatterD3::scatterD3(x=x, y=y, point_size = cex*10, point_opacity=0.66,
                   xlab=xlab, ylab=ylab, col_var=klr, legend_width=0,
                   lab = lab, labels_size = lab.cex*8.5, tooltip_text = tt,
                   tooltips = TRUE, colors = c("2"="#1e60bb","1"="#BBBBBB"),
                   caption=main )
 
     } else if(render=="plotly") {
-        require(plotly)
+        
         gene2 = paste0("  ",gene, "  ")
         ann = data.frame(gene=gene2, x=x, y=y)[jj,,drop=FALSE]
         ann.left  = ann[which(ann$x<0),]
         ann.right = ann[which(ann$x>=0),]
-        plot_ly(x=x, y=y, type="scattergl", mode="markers",
+        plotly::plot_ly(x=x, y=y, type="scattergl", mode="markers",
                 marker = list(size=5*cex, color="#BBBBBB"), hoverinfo='text',
                 text = tt ) %>%
-            add_annotations(x=ann.left$x, y=ann.left$y, text=ann.left$gene,
+            plotly::add_annotations(x=ann.left$x, y=ann.left$y, text=ann.left$gene,
                             xref='x', yref='y', xanchor='right', showarrow=FALSE,
                             font=list(size=10*lab.cex, color="#1e60bb") )  %>%
-            add_annotations(x=ann.right$x, y=ann.right$y, text=ann.right$gene,
+            plotly::add_annotations(x=ann.right$x, y=ann.right$y, text=ann.right$gene,
                             xref='x', yref='y', xanchor='left', showarrow=FALSE,
                             font=list(size=10*lab.cex, color="#1e60bb") )  %>%
-            layout( xaxis=list(title=xlab, range=xlim),
+            plotly::layout( xaxis=list(title=xlab, range=xlim),
                    yaxis=list(title=ylab, range=ylim) )
 
     } else {

@@ -24,9 +24,9 @@ gx.nearestReferenceCorrection <- function(x, y, ref, k=3, dist.method="cor")
     ## neighbour. It does not work well with multiple groups.
     
     ## distance metric for matching
-    x1 = head(x[order(-apply(x,1,sd)),],2000)
+    x1 = Matrix::head(x[order(-apply(x,1,sd)),],2000)
     if(dist.method=="cor") {
-        D <- 1 - cor(x)
+        D <- 1 - WGCNA::cor(x)
     } else {
         D <- as.matrix(dist(t(x)))
     }
@@ -46,9 +46,9 @@ gx.nearestReferenceCorrection <- function(x, y, ref, k=3, dist.method="cor")
     avgref <- rowMeans(x[,rr,drop=FALSE])
     for(j in 1:ncol(x)) {
         nn <- intersect(order(D[j,]),rr)  ## closest ref
-        nn <- head(nn,k)
+        nn <- Matrix::head(nn,k)
         dx[,j] <- x[,j] - rowMeans(x[,nn,drop=FALSE]) + avgref
-        pairings[j,] <- head(c(nn,rep(NA,k)),k)
+        pairings[j,] <- Matrix::head(c(nn,rep(NA,k)),k)
     }
     ##cx <- dx - rowMeans(dx) + rowMeans(x)
     res <- list(X=dx, pairings=pairings)
@@ -80,8 +80,8 @@ gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
     if(dist.method=="cor") {
         message("[gx.nnmcorrect] computing correlation matrix D...")
         sdx <- apply(dX,1,sd)
-        ii <- head(order(-sdx),sdtop)
-        ## D <- 1 - cor(dX[ii,])
+        ii <- Matrix::head(order(-sdx),sdtop)
+        ## D <- 1 - WGCNA::cor(dX[ii,])
         D <- 1 - crossprod(scale(dX[ii,])) / (length(ii)-1)  ## faster        
     } else {
         message("[gx.nnmcorrect] computing distance matrix D...\n")        
@@ -93,7 +93,7 @@ gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
     message("[gx.nnmcorrect] finding nearest neighbours...")        
     B <- t(apply(D,1,function(r) tapply(r,y1,function(s)names(which.min(s)))))   
     rownames(B) <- colnames(X)
-    head(B)
+    Matrix::head(B)
     
     ## imputing full paired data set
     kk <- match(as.vector(B), rownames(B))
@@ -133,8 +133,8 @@ gx.nnmcorrect2.NOTWORKING <- function(X, y, pairs=NULL, use.design=TRUE,
     ## Nearest-neighbour matching for batch correction. This
     ## implementation creates a fully paired dataset with nearest
     ## matching neighbours when pairs are missing.
-    require(sva)
-    require(limma)
+    
+    
     y1  <- paste0("y=",y)
     dX  <- scale(X)
     if(center.x)
@@ -145,7 +145,7 @@ gx.nnmcorrect2.NOTWORKING <- function(X, y, pairs=NULL, use.design=TRUE,
         dX <- dX - mX[,y1]
     }
     if(dist.method=="cor") {
-        D <- 1 - cor(dX)
+        D <- 1 - WGCNA::cor(dX)
     } else {
         D <- as.matrix(dist(t(dX)))
     }
@@ -193,7 +193,7 @@ gx.nnmcorrect.OLD <- function(x, y, k=3, dist.method="cor")
     
     ## distance metric for matching
     if(dist.method=="cor") {
-        D <- 1 - cor(x)
+        D <- 1 - WGCNA::cor(x)
     } else {
         D <- as.matrix(dist(t(x)))
     }
@@ -212,9 +212,9 @@ gx.nnmcorrect.OLD <- function(x, y, k=3, dist.method="cor")
     for(j in 1:ncol(x)) {
         nj <- which(y!=y[j])
         nn <- intersect(order(D[j,]),nj)
-        nn <- head(nn,k)
+        nn <- Matrix::head(nn,k)
         dx[,j] <- x[,j] - rowMeans(x[,nn,drop=FALSE])
-        pairings[j,] <- head(c(nn,rep(NA,k)),k)
+        pairings[j,] <- Matrix::head(c(nn,rep(NA,k)),k)
     }
     cx <- rowMeans(x) + dx / 2    
     res <- list(X=cx, pairings=pairings)
@@ -225,14 +225,14 @@ gx.nnmcorrect.SAVE <- function(x, y, k=3) {
     ##-----------------------------------------------------
     ## nearest-neighbour matching for batch correction
     ##-----------------------------------------------------
-    xcor <- cor(x)
+    xcor <- WGCNA::cor(x)
     diag(xcor) <- 0
     nx <- x
     j=1
     for(j in 1:ncol(x)) {
         nj <- which(y!=y[j])
         nn <- intersect(order(-xcor[j,]),nj)
-        nn <- head(nn,k)
+        nn <- Matrix::head(nn,k)
         nx[,j] <- x[,j] - rowMeans(x[,nn,drop=FALSE])
     }
     nx <- nx + rowMeans(x)
@@ -243,7 +243,7 @@ gx.qnormalize <- function(X) {
     ##-----------------------------------------------------
     ## quantile normalization
     ##-----------------------------------------------------
-    require(affy)
+    
     if( max(X, na.rm=TRUE) < 40 && min(X, na.rm=TRUE) > 0) {
         tmp <- normalize.qspline( 2**X, na.rm=TRUE, verbose=FALSE)
         tmp <- log2(tmp)

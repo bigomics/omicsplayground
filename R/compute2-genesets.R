@@ -27,10 +27,10 @@ compute.testGenesets <- function(pgx, max.features=1000, lib.dir="../lib",
     ##-----------------------------------------------------------
 
     ## filter genes only in dataset
-    require(Matrix)
-    ##require(org.Hs.eg.db)
+    
+    ##
     ##GENE.TITLE = unlist(as.list(org.Hs.egGENENAME))
-    ##genes = head(as.character(unlist(as.list(org.Hs.egSYMBOL))),1000)
+    ##genes = Matrix::head(as.character(unlist(as.list(org.Hs.egSYMBOL))),1000)
     genes = unique(as.character(pgx$genes$gene_name))
     genes <- toupper(genes)  ## handle mouse genes...
     G <- G[rownames(G) %in% genes,]
@@ -80,7 +80,7 @@ compute.testGenesets <- function(pgx, max.features=1000, lib.dir="../lib",
     ii <- intersect(gg,rownames(G))
     G <- G[ii,]
     xx <- setdiff(gg,rownames(G))
-    matX <- Matrix(0, nrow=length(xx), ncol=ncol(G), sparse=TRUE)
+    matX <- Matrix::Matrix(0, nrow=length(xx), ncol=ncol(G), sparse=TRUE)
     rownames(matX) <- xx
     colnames(matX) <- colnames(G)
     G <- rbind(G, matX)
@@ -98,7 +98,7 @@ compute.testGenesets <- function(pgx, max.features=1000, lib.dir="../lib",
     
     if(max.features > 0) {
         cat("Reducing gene set matrix...\n")
-        require(limma)
+        
         ## Reduce gene sets by selecting top varying genesets. We use the
         ## very fast sparse rank-correlation for approximate single sample
         ## geneset activation.
@@ -116,7 +116,7 @@ compute.testGenesets <- function(pgx, max.features=1000, lib.dir="../lib",
             sdx <- apply(gsetX,1,sd)
         }
         names(sdx) <- colnames(G)
-        jj = head(order(-sdx), max.features) 
+        jj = Matrix::head(order(-sdx), max.features) 
         must.include <- "hallmark|kegg|^go|^celltype"
         jj = unique( c(jj, grep(must.include,colnames(G),ignore.case=TRUE)))
         jj = jj[order(colnames(G)[jj])]
@@ -169,7 +169,7 @@ compute.testGenesets <- function(pgx, max.features=1000, lib.dir="../lib",
         n2 <- Matrix::rowMeans(abs(pgx$X) > 1)
         table( n1 > 20 & n2 > 0.05 )
         ##ii  <- which( n1 > 20 & n2 > 0.05 ) ## make faster...
-        ii <- head(order( -1*n1*n2 ),4000) ## make faster...
+        ii <- Matrix::head(order( -1*n1*n2 ),4000) ## make faster...
         G1 <- t(G[ii,]!=0)
         X1 <- pgx$X[ii,]
         ng <- Matrix::colSums(G[ii,]!=0)
