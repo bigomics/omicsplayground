@@ -28,15 +28,15 @@ NormalizeCountsGadget <- function(X, pheno, height=720) {
 }
 
 NormalizeCountsUI <- function(id) {
-    ns <- NS(id)
-    uiOutput(ns("UI"))
+    ns <- shiny::NS(id)
+    shiny::uiOutput(ns("UI"))
 }
 
 NormalizeCountsServerRT <- function(id, counts, height=720) {
     ##
     ## counts:  reactive input object
     ##
-    moduleServer(
+    shiny::moduleServer(
         id,
         function(input, output, session) {
             
@@ -44,40 +44,40 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
             nc_info = "normalization module"
             nc_info = ""
 
-            output$UI <- renderUI({
-                ##ns <- NS(id)  ## namespace
+            output$UI <- shiny::renderUI({
+                ##ns <- shiny::NS(id)  ## namespace
                 ##ns <- function(id) id
                 ns <- session$ns
-                sidebarLayout(
-                    sidebarPanel(
-                        helpText(nc_info),
+                shiny::sidebarLayout(
+                    shiny::sidebarPanel(
+                        shiny::helpText(nc_info),
                         ##br(),                        
                         ##radioButtons(ns("selectmethod"),"Select normalization:",
                         ##             choices=all.methods, selected="CPM"),
                         tipify2(                        
-                            selectInput(ns("selectmethod"),"Select normalization:",
+                            shiny::selectInput(ns("selectmethod"),"Select normalization:",
                                         choices=all.methods, selected="CPM"),
                             "Select initial normalization method."
                         ),
                         tipify2(
-                            checkboxInput(ns("postqn"),"Post quantile normalization"),
+                            shiny::checkboxInput(ns("postqn"),"Post quantile normalization"),
                             "Apply additional quantile normalization after scaling method."
                         ),
                         tipify2(
-                            checkboxInput(ns("addnoise"),"Simulate unnormalized"),
+                            shiny::checkboxInput(ns("addnoise"),"Simulate unnormalized"),
                             "Simulated unnormalized data by adding random scaling to raw data"
                         ),
                         width = 2
                     ),
-                    mainPanel(
-                        plotOutput(ns("canvas"), width="100%", height=height) %>% withSpinner(),
+                    shiny::mainPanel(
+                        shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% shinycssloaders::withSpinner(),
                         width = 10
                     )
                 )
             })
-            outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
+            shiny::outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
             
-            pgx <- reactive({
+            pgx <- shiny::reactive({
                 if(is.null(input$addnoise)) return(NULL)
                 pgx <- list(counts=counts())
 
@@ -93,8 +93,8 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
                 pgx
             })
             
-            output$canvas <- renderPlot({
-                req(counts())
+            output$canvas <- shiny::renderPlot({
+                shiny::req(counts())
                 ## Show all methods
                 postqn <- input$postqn                
                 viz.NormalizeCounts(
@@ -115,7 +115,7 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
 
             }
             
-            normalized_counts <- reactive({
+            normalized_counts <- shiny::reactive({
                 ##req(input$selectmethod)
                 method <- input$selectmethod
                 message("[normalized_counts] length(method) = ",length(method))

@@ -6,23 +6,23 @@
 message(">>> sourcing WgcnaBoard")
 
 WgcnaInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shiny::uiOutput(ns("inputsUI"))
     )
 }
 
 WgcnaUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    ui <- fillCol(
+    ns <- shiny::NS(id)  ## namespace
+    ui <- shiny::fillCol(
         height = 750,
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs"),
-            tabPanel("WGCNA",uiOutput(ns("wgcna_UI"))),
-            tabPanel("Modules",uiOutput(ns("modules_UI"))),
-            tabPanel("Eigengenes",uiOutput(ns("eigen_UI"))),
-            tabPanel("Intramodular",uiOutput(ns("intra_UI")))
+            shiny::tabPanel("WGCNA",uiOutput(ns("wgcna_UI"))),
+            shiny::tabPanel("Modules",uiOutput(ns("modules_UI"))),
+            shiny::tabPanel("Eigengenes",uiOutput(ns("eigen_UI"))),
+            shiny::tabPanel("Intramodular",uiOutput(ns("intra_UI")))
         )
     )
     ui
@@ -39,7 +39,7 @@ WgcnaBoard <- function(input, output, session, env)
     rowH2 = 440  ## row 2 height
     
     description = "<b>WGCNA Analysis.</b> Weighted correlation network analysis (WGCNA) is a gene-level cluster analysis method based on pairwise correlations between genes. It allows one to define modules (clusters), intramodular hubs, and network nodes with regard to module membership, to study the relationships between co-expression modules."
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
 
     infotext ="Weighted gene co-expression network analysis (WGCNA) is a systems biology method for describing the correlation patterns among genes across microarray samples. Weighted correlation network analysis can be used for finding clusters (modules) of highly correlated genes, for summarizing such clusters using the module eigengene or an intramodular hub gene, for relating modules to one another and to external sample traits (using eigengene network methodology), and for calculating module membership measures. Correlation networks facilitate network based gene screening methods that can be used to identify candidate biomarkers or therapeutic targets."
     
@@ -50,20 +50,20 @@ WgcnaBoard <- function(input, output, session, env)
     
     wgcna_caption = "<b>WGCNA module detection.</b> <b>(a)</b> Modules are detected as branches of the resulting cluster tree using the dynamic branch cutting approach. Genes inside a given module are summarized with the module eigengene. The module eigengene of a given module is defined as the first principal component of the standardized expression profiles. <b>(b)</b> Scale independence and mean connectivity plots to determine the soft threshold <b>(c)</b> Topological overlap matrix visualized as heatmap <b>(d)</b> Dimensionality reduction maps colored by WGCNA module <b>(e)</b> Graph network of WGCNA modules."
 
-    output$wgcna_UI <- renderUI({
-        fillCol(
+    output$wgcna_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.02,0.75,0.08,1),
             height = fullH,
-            div(HTML(wgcna_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(wgcna_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1,1),                
                 plotWidget(ns('wgcna_geneDendro')),
                 ##plotWidget(ns('wgcna_sampleDendro')),
                 plotWidget(ns('wgcna_topologyPlots'))                
             ),
-            br(),
-            fillRow(
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1.3,1,0.8),
                 plotWidget(ns('wgcna_TOMplot')),
                 plotWidget(ns('wgcna_umap')),
@@ -73,72 +73,72 @@ WgcnaBoard <- function(input, output, session, env)
         )
         
     })
-    outputOptions(output, "wgcna_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "wgcna_UI", suspendWhenHidden=FALSE) ## important!!!
 
     modules_caption =
 "<b>WGCNA functional analysis.</b> <b>(a)</b> Module–trait analysis identifies modules that are significantly associated with the measured clinical traits by quantifying the association as the correlation of the eigengenes with external traits. <b>(b)</b> Partial correlation network of genes most correlated to the eigengene. <b>(c)</b> Module enrichment plot of top most enriched genesets. <b>(d)</b> Table of genes in the selected module. <b>(e)</b> Functional enrichment of the module calculated using Fisher's exact test."
     
-    output$modules_UI <- renderUI({
-        fillCol(
+    output$modules_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA, 0.05, 2, 0.07, 1),
             ##flex = c(2,1),
             height = fullH,
-            div(HTML(modules_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(modules_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1.2, 1.1, 0.9),
                 plotWidget(ns('wgcna_moduleTrait')),                
                 plotWidget(ns('wgcna_corGraph')),
                 plotWidget(ns('wgcna_enrichPlot'))
             ),
-            br(),
-            fillRow(
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1, 0.08, 2.3),
                 tableWidget(ns("wgcna_geneTable")),
-                br(),
+                shiny::br(),
                 tableWidget(ns("wgcna_enrichTable"))
             )
         )
         
     })
-    outputOptions(output, "modules_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "modules_UI", suspendWhenHidden=FALSE) ## important!!!
 
 
     eigen_caption =
 "<b>WGCNA eigengene analysis.</b> <b>(a)</b> It is often interesting to visualizing the network of eigengenes and study the relationships among the found modules. One can use the eigengenes as represen- tative profiles and quantify module similarity by eigengene correlation. <b>(b)</b> For each module, we also define a quantitative measure of 'module membership' (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes to every module."
     
-    output$eigen_UI <- renderUI({
-        fillCol(
+    output$eigen_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.04,2),
             height = fullH,
-            div(HTML(eigen_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(eigen_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex=c(1,0.06,2.5),
                 ## plotWidget(ns('wgcna_eigenHeatmap')),
                 plotWidget(ns('wgcna_eigenClustering')),
-                br(),
+                shiny::br(),
                 plotWidget(ns('wgcna_eigenCorrelation'))
             )
         )
         
     })
-    outputOptions(output, "eigen_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "eigen_UI", suspendWhenHidden=FALSE) ## important!!!
 
     intra_caption =
         "<b>WGCNA intramodular analysis.</b> We quantify associations of individual genes with our trait of interest (weight) by defining Gene Significance GS as (the absolute value of) the correlation between the gene and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules."
     
-    output$intra_UI <- renderUI({
-        fillCol(
+    output$intra_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.04,2,1),
             height = fullH,
-            div(HTML(intra_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(intra_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex=c(1,0.06,2.5),
                 ## plotWidget(ns('wgcna_eigenHeatmap')),
                 plotWidget(ns('wgcna_intraHeatmap')),
-                br(),
+                shiny::br(),
                 plotWidget(ns('wgcna_intraScatter'))
             )
         )
@@ -150,33 +150,33 @@ WgcnaBoard <- function(input, output, session, env)
     ##================================================================================
     ##========================= INPUTS UI ============================================
     ##================================================================================
-    require(htmltools)
+
     
-    output$inputsUI <- renderUI({
-        ui <- tagList(
-            actionLink(ns("info"), "Info", icon=icon("info-circle")),
-            hr(), br(),             
+    output$inputsUI <- shiny::renderUI({
+        ui <- shiny::tagList(
+            shiny::actionLink(ns("info"), "Info", icon=icon("info-circle")),
+            shiny::hr(), shiny::br(),             
             
             ## data set parameters
-            selectInput(ns('selected_module'),'select module', choices=NULL),
-            actionButton(ns("compute"),"Compute!",icon=icon("running"),
+            shiny::selectInput(ns('selected_module'),'select module', choices=NULL),
+            shiny::actionButton(ns("compute"),"Compute!",icon=icon("running"),
                          class="run-button"),            
-            br(),
-            br(),
-            actionLink(ns("options"), "Options", icon=icon("cog", lib = "glyphicon")),
-            br(),br(),br(),
-            conditionalPanel(
+            shiny::br(),
+            shiny::br(),
+            shiny::actionLink(ns("options"), "Options", icon=icon("cog", lib = "glyphicon")),
+            shiny::br(),br(),br(),
+            shiny::conditionalPanel(
                 "input.options % 2 == 1", ns=ns,
-                tagList(
-                    selectInput(ns("ngenes"),"Number genes:",
+                shiny::tagList(
+                    shiny::selectInput(ns("ngenes"),"Number genes:",
                                 choices = c(500,1000,2000,4000,8000),
                                 selected = 1000),
-                    selectInput(ns("minmodsize"),"Min. module size",
+                    shiny::selectInput(ns("minmodsize"),"Min. module size",
                                 choices = c(10,30,100,250),
                                 selected = 30 ),
-                    selectInput(ns("power"),"Power", c(2,4,6,10), selected=6),
-                    selectInput(ns("deepsplit"),"deepsplit", 0:4, selected=2),
-                    selectInput(ns("cutheight"),"Merge cut height",
+                    shiny::selectInput(ns("power"),"Power", c(2,4,6,10), selected=6),
+                    shiny::selectInput(ns("deepsplit"),"deepsplit", 0:4, selected=2),
+                    shiny::selectInput(ns("cutheight"),"Merge cut height",
                                 choices = c(0.05, 0.10, 0.25, 0.5, 0.9, 0.999),
                                 selected = 0.25)
                 )
@@ -184,14 +184,14 @@ WgcnaBoard <- function(input, output, session, env)
         )
 
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##======================= PRECOMPUTE FUNCTION ====================================
     ##================================================================================
     
-    ##wgcna.compute <- reactive({
-    wgcna.compute <- eventReactive( {
+    ##wgcna.compute <- shiny::reactive({
+    wgcna.compute <- shiny::eventReactive( {
         input$compute
         ngs <- inputData()
         1
@@ -210,13 +210,13 @@ WgcnaBoard <- function(input, output, session, env)
         progress$set(message = "Calculating WGCNA...", value = 0)
         message("[wgcna.compute] >>> calculating WGCNA...")
         if(0) {
-            shinyalert(
+            shinyalert::shinyalert(
                 title = "",
                 text = "No WGCNA data found in PGX object. Computing now.. "
             )
         }
         
-        require(WGCNA)
+
         WGCNA::enableWGCNAThreads()
         
         if(0) {
@@ -341,11 +341,11 @@ WgcnaBoard <- function(input, output, session, env)
             me.colors = me.colors
         )
 
-        updateSelectInput(session, "selected_module", choices = names(me.genes), sel="ME1" )
+        shiny::updateSelectInput(session, "selected_module", choices = names(me.genes), sel="ME1" )
         
         message("[wgcna.compute] >>> done!")
         beepr::beep(2)  ## short beep
-        removeModal()
+        shiny::removeModal()
         
         out
     })
@@ -355,10 +355,10 @@ WgcnaBoard <- function(input, output, session, env)
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
     
-    observeEvent( input$info, {
-        showModal(modalDialog(
-            title = HTML("<strong>WGCNA Analysis Board</strong>"),
-            HTML(infotext),
+    shiny::observeEvent( input$info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>WGCNA Analysis Board</strong>"),
+            shiny::HTML(infotext),
             easyClose = TRUE ))
     })
     
@@ -392,10 +392,10 @@ WgcnaBoard <- function(input, output, session, env)
     ##--------- topology analysis ------------
     ##----------------------------------------
 
-    wgcna_topologyPlots.RENDER %<a-% reactive({
+    wgcna_topologyPlots.RENDER %<a-% shiny::reactive({
 
         message("[wgcna_topologyPlots.RENDER] reacted")
-        require(WGCNA)
+
         out <- wgcna.compute()
 
         ## Choose a set of soft-thresholding powers
@@ -408,7 +408,7 @@ WgcnaBoard <- function(input, output, session, env)
         par(mfrow = c(1,2), mar=c(3.3,3,1,1), mgp=c(2,0.8,0))
         cex1 = 0.9;
         ## Scale-free topology fit index as a function of the soft-thresholding power
-        plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+        KEGGgraph::plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
              type="n",
              xlab = "Soft threshold (power)",
              ylab = "SFT model fit (signed R^2)",
@@ -422,7 +422,7 @@ WgcnaBoard <- function(input, output, session, env)
         abline(h=0.90,col="red")
 
         ## Mean connectivity as a function of the soft-thresholding power
-        plot(sft$fitIndices[,1], sft$fitIndices[,5], type="n",
+        KEGGgraph::plot(sft$fitIndices[,1], sft$fitIndices[,5], type="n",
              xlab="Soft threshold (power)",
              ylab="Mean connectivity", 
              ##main = paste("Mean connectivity")
@@ -431,11 +431,11 @@ WgcnaBoard <- function(input, output, session, env)
         text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
     })
     
-    wgcna_topologyPlots_opts = tagList()
+    wgcna_topologyPlots_opts = shiny::tagList()
 
     wgcna_topologyPlots_info = "<b>WGCNA topology analysis.</b> Analysis of network topology for various soft-thresholding powers. The left panel shows the scale-free fit index (y-axis) as a function of the soft-thresholding power (x-axis). The right panel displays the mean connectivity (degree, y-axis) as a function of the soft-thresholding power (x-axis)."
 
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "wgcna_topologyPlots", ##ns=ns,
         title = "Scale independence and mean connectivity", label="b",
@@ -453,7 +453,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##-------------- TOM plot ----------------
     ##----------------------------------------
     
-    wgcna_TOMplot.RENDER %<a-% reactive({
+    wgcna_TOMplot.RENDER %<a-% shiny::reactive({
         
         message("[wgcna_TOMplot.RENDER] reacted")
         
@@ -469,7 +469,7 @@ WgcnaBoard <- function(input, output, session, env)
         ## more efficiently by saving the TOM calculated during
         ## module detection, but let us do it again here.
         power = 6
-        power  <- as.numeric(isolate(input$power))
+        power  <- as.numeric(shiny::isolate(input$power))
         dissTOM = 1 - TOMsimilarityFromExpr(datExpr, power = power)
         rownames(dissTOM) <- colnames(dissTOM) <- colnames(datExpr)
         
@@ -490,11 +490,11 @@ WgcnaBoard <- function(input, output, session, env)
         ## plot
         plotDiss = selectTOM^7;
         diag(plotDiss) = NA;
-        myheatcol = colorpanel(250,'red','orange','lemonchiffon')
-        myheatcol = colorpanel(250,'lemonchiffon','orange','red')
+        myheatcol = gplots::colorpanel(250,'red','orange','lemonchiffon')
+        myheatcol = gplots::colorpanel(250,'lemonchiffon','orange','red')
 
         par(oma=c(2,0,0,0))
-        layout(matrix(c(0, 0, 5, 0,
+        plotly::layout(matrix(c(0, 0, 5, 0,
                         0, 0, 2, 0,
                         4, 1, 3, 6), nr=3, byrow=T),
                widths  = c(2.3,0.5,10,1.8),
@@ -551,10 +551,10 @@ WgcnaBoard <- function(input, output, session, env)
         
     })
 
-    wgcna_TOMplot_opts = tagList()
+    wgcna_TOMplot_opts = shiny::tagList()
     wgcna_TOMplot_info = "<b>WGCNA Topological Overlap Matrix (TOM) heatmap.</b>"    
 
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "wgcna_TOMplot", ##ns=ns,
         title="TOM heatmap", label="c",
@@ -573,10 +573,10 @@ WgcnaBoard <- function(input, output, session, env)
     ##------------ samples dendro ------------
     ##----------------------------------------
 
-    wgcna_sampleDendro.RENDER %<a-% reactive({
+    wgcna_sampleDendro.RENDER %<a-% shiny::reactive({
 
         message("[wgcna_sampleDendro.RENDER] reacted")
-        require(WGCNA)
+
         out <- wgcna.compute()
         datExpr <- out$datExpr
         pheno <- out$datTraits
@@ -599,10 +599,10 @@ WgcnaBoard <- function(input, output, session, env)
 
     })
     
-    wgcna_sampleDendro_opts = tagList()
+    wgcna_sampleDendro_opts = shiny::tagList()
     wgcna_sampleDendro_info = "<b>WGCNA sample dendrogram and trait heatmap.</b>"    
 
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "wgcna_sampleDendro", ##ns=ns,
         title = "Sample dendrogram and trait heatmap", label="b",
@@ -620,7 +620,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##------------ gene dendro ---------------
     ##----------------------------------------
     
-    wgcna_geneDendro.RENDER %<a-% reactive({
+    wgcna_geneDendro.RENDER %<a-% shiny::reactive({
 
         message("[wgcna_geneDendro.RENDER] reacted")
 
@@ -644,10 +644,10 @@ WgcnaBoard <- function(input, output, session, env)
 
     })
 
-    wgcna_geneDendro_opts = tagList()
+    wgcna_geneDendro_opts = shiny::tagList()
     wgcna_geneDendro_info = "<b>WGCNA gene dendrogram and gene modules.</b>"    
 
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "wgcna_geneDendro", ##ns=ns,
         title="Gene dendrogram and gene modules", label="a",
@@ -665,7 +665,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##------------ module-trait --------------
     ##----------------------------------------
     
-    wgcna_moduleTrait.RENDER %<a-% reactive({
+    wgcna_moduleTrait.RENDER %<a-% shiny::reactive({
         
         message("[wgcna_moduleTrait.RENDER] reacted")
 
@@ -733,12 +733,12 @@ WgcnaBoard <- function(input, output, session, env)
         
     })
 
-    wgcna_moduleTrait_opts = tagList(
-        checkboxInput(ns("traits_binarize"),"binarize continuous vars", FALSE)
+    wgcna_moduleTrait_opts = shiny::tagList(
+        shiny::checkboxInput(ns("traits_binarize"),"binarize continuous vars", FALSE)
     )
     wgcna_moduleTrait_info = "<b>WGCNA module and trait relationship.</b>"    
     
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "wgcna_moduleTrait", ##ns=ns,
         title="Module-Trait relationships", label="a",
@@ -756,7 +756,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##------------ module-graph --------------
     ##----------------------------------------
     
-    wgcna_moduleGraph.RENDER %<a-% reactive({
+    wgcna_moduleGraph.RENDER %<a-% shiny::reactive({
 
         message("[wgcna_moduleGraph.RENDER] reacted")
 
@@ -781,7 +781,7 @@ WgcnaBoard <- function(input, output, session, env)
         clust <- hclust(dist(t(MEs)))
         clust
         phylo <- ape::as.phylo(clust)
-        gr <- as.igraph(phylo, directed=FALSE)
+        gr <- igraph::as.igraph(phylo, directed=FALSE)
 
         is.tip <- grepl("^ME",V(gr)$name)
         module.nr   <- as.integer(sub("^ME|Node.*","",V(gr)$name))
@@ -789,15 +789,15 @@ WgcnaBoard <- function(input, output, session, env)
         module.size <- module.size / mean(module.size)
         module.size
         
-        V(gr)$label <- V(gr)$name
-        V(gr)$label[!is.tip] <- NA
+        igraph::V(gr)$label <- igraph::V(gr)$name
+        igraph::V(gr)$label[!is.tip] <- NA
         ##V(gr)$color <- WGCNA::labels2colors(module.nr)
-        V(gr)$color <- me.colors[as.character(module.nr)]
-        V(gr)$size  <- 24 * (module.size[as.character(module.nr)])**0.5
-        V(gr)$size[is.na(V(gr)$size)] <- 0
+        igraph::V(gr)$color <- me.colors[as.character(module.nr)]
+        igraph::V(gr)$size  <- 24 * (module.size[as.character(module.nr)])**0.5
+        igraph::V(gr)$size[is.na(igraph::V(gr)$size)] <- 0
 
         par(mfrow=c(1,1), mar=c(1,1,1,1)*0)
-        plot(
+        KEGGgraph::plot(
             gr,
             layout=layout.kamada.kawai,
             ##vertex.color = "lightblue",
@@ -810,10 +810,10 @@ WgcnaBoard <- function(input, output, session, env)
         
     })
 
-    wgcna_moduleGraph_opts = tagList()
+    wgcna_moduleGraph_opts = shiny::tagList()
     wgcna_moduleGraph_info = "<b>WGCNA module graph.</b>"    
 
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "wgcna_moduleGraph", ##ns=ns,
         title="Module graph", label="e",
@@ -831,7 +831,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##--------- Eigengenes heatmap --------------
     ##----------------------------------------
     
-    wgcna_eigenHeatmap.RENDER %<a-% reactive({
+    wgcna_eigenHeatmap.RENDER %<a-% shiny::reactive({
 
         message("[wgcna_eigenHeatmap.RENDER] reacted")
 
@@ -864,12 +864,12 @@ WgcnaBoard <- function(input, output, session, env)
         
     })
 
-    wgcna_eigenHeatmap_opts = tagList(
-        checkboxInput(ns("mask_markers"),"mask_markers", TRUE)
+    wgcna_eigenHeatmap_opts = shiny::tagList(
+        shiny::checkboxInput(ns("mask_markers"),"mask_markers", TRUE)
     )
     wgcna_eigenHeatmap_info = "<b>WGCNA Eigengene correlation heatmap.</b> The heatmap shows the correlation of genes to the module eigengenes."    
 
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "wgcna_eigenHeatmap", ##ns=ns,
         title="Eigengene correlation heatmap", label="a",
@@ -888,7 +888,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##--------------- gene table -------------
     ##----------------------------------------
     
-    wgcna_geneTable.RENDER <- reactive({
+    wgcna_geneTable.RENDER <- shiny::reactive({
 
         out <- wgcna.compute()
         
@@ -916,17 +916,17 @@ WgcnaBoard <- function(input, output, session, env)
                     scroller=TRUE, deferRender=TRUE
                 )  ## end of options.list 
             ) %>%
-            formatSignif(numeric.cols,3) %>%
+            DT::formatSignif(numeric.cols,3) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
     })
 
     wgcna_geneTable_info = "Genes in the selected WGCNA module."
     wgcna_geneTable_caption = "<b>Module gene table.</b> <b>(a)</b> ..."    
-    wgcna_geneTable.opts <- tagList(
+    wgcna_geneTable.opts <- shiny::tagList(
         ##selectInput(ns('wgcna_geneTable_selmodule'),'module:', choices=NULL)
     )
     
-    wgcna_geneTable_module <- callModule(
+    wgcna_geneTable_module <- shiny::callModule(
         tableModule, id = "wgcna_geneTable",
         ## caption = wgcna_geneTable_caption,
         func  = wgcna_geneTable.RENDER, ## ns=ns,
@@ -941,7 +941,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##--------- enrichment table -------------
     ##----------------------------------------
     
-    wgcna_enrich_table <- reactive({
+    wgcna_enrich_table <- shiny::reactive({
         out <- wgcna.compute()
         df  <- out$gse
         k <- input$selected_module
@@ -958,7 +958,7 @@ WgcnaBoard <- function(input, output, session, env)
         df
     })
 
-    wgcna_enrichTable.RENDER <- reactive({
+    wgcna_enrichTable.RENDER <- shiny::reactive({
 
         df <- wgcna_enrich_table()
         numeric.cols <- grep("score|value|ratio",colnames(df))
@@ -979,17 +979,17 @@ WgcnaBoard <- function(input, output, session, env)
                     scroller=TRUE, deferRender=TRUE
                 )  ## end of options.list 
             ) %>%
-            formatSignif(numeric.cols,3) %>%
+            DT::formatSignif(numeric.cols,3) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
     })
 
     wgcna_enrichTable_info = "In this table, users can check mean expression values of features across the conditions for the selected genes."
     wgcna_enrichTable_caption = "<b>Module enrichment table.</b> <b>(a)</b> ..."    
-    wgcna_enrichTable.opts <- tagList(
+    wgcna_enrichTable.opts <- shiny::tagList(
         ##selectInput(ns('wgcna_enrichTable_selmodule'),'module:', choices=NULL)
     )
     
-    wgcna_enrichTable_module <- callModule(
+    wgcna_enrichTable_module <- shiny::callModule(
         tableModule, id = "wgcna_enrichTable",
         ## caption = wgcna_enrichTable_caption,
         func  = wgcna_enrichTable.RENDER, ## ns=ns,
@@ -1003,12 +1003,12 @@ WgcnaBoard <- function(input, output, session, env)
     ##--------- enrichment plot --------------
     ##----------------------------------------
     
-    wgcna_enrichPlot.RENDER %<a-% reactive({
+    wgcna_enrichPlot.RENDER %<a-% shiny::reactive({
 
         df <- wgcna_enrich_table()
         if(is.null(df) || nrow(df)==0) return(NULL)        
         ii <- wgcna_enrichTable_module$rows_all()
-        req(ii)
+        shiny::req(ii)
         df <- df[ii,,drop=FALSE]        
         df <- head(df, 20)
         gs.top <- df$geneset
@@ -1023,12 +1023,12 @@ WgcnaBoard <- function(input, output, session, env)
 
     wgcna_enrichPlot_info = "Module enrichment plot."
     wgcna_enrichPlot_caption = "<b>Module enrichment plot.</b> <b>(a)</b> ..."    
-    wgcna_enrichPlot.opts <- tagList(
+    wgcna_enrichPlot.opts <- shiny::tagList(
         ##selectInput(ns('wgcna_enrichPlot_selmodule'),'module:', choices=NULL)
     )
     
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "wgcna_enrichPlot", label = "c",
         func = wgcna_enrichPlot.RENDER,
@@ -1049,13 +1049,13 @@ WgcnaBoard <- function(input, output, session, env)
     ## Correlation network
     ##-----------------------------------------------------------
     
-    wgcna_corGraph.RENDER %<a-% reactive({
+    wgcna_corGraph.RENDER %<a-% shiny::reactive({
 
         out <- wgcna.compute()
 
         k = "ME1"
         k <- input$selected_module
-        req(k)
+        shiny::req(k)
         message("[wgcna_corGraph.RENDER] k = ",k)
         genes <- out$me.genes[[k]]
         
@@ -1080,8 +1080,8 @@ WgcnaBoard <- function(input, output, session, env)
         message("[wgcna_corGraph.RENDER] len.topgg = ",length(topgg))
         
         ##rho <- cor(xx[,topgg])
-        ##rho <- try( cor_auto(xx[,topgg], forcePD=TRUE) )
-        ##rho <- cor_auto(xx, forcePD=TRUE)
+        ##rho <- try( qgraph::cor_auto(xx[,topgg], forcePD=TRUE) )
+        ##rho <- qgraph::cor_auto(xx, forcePD=TRUE)
         rho <- Matrix::nearPD(cor(xx[,topgg]))$mat
         me.color <- out$me.colors[k]
         color1 <- me.color
@@ -1091,8 +1091,8 @@ WgcnaBoard <- function(input, output, session, env)
         
         message("[wgcna_corGraph.RENDER] nrow(rho) = ",nrow(rho))
         
-        library("qgraph")
-        qgraph(rho, graph="glasso", layout="spring", sampleSize=nrow(xx),
+
+        qgraph::qgraph(rho, graph="glasso", layout="spring", sampleSize=nrow(xx),
                labels = rownames(rho), color=color1,
                tuning = 0,  ## gamma for EBIClasso. 0.5=default, 0=BIC
                vsize = size1, cut=0, maximum=.45,
@@ -1102,13 +1102,13 @@ WgcnaBoard <- function(input, output, session, env)
         
     })
 
-    wgcna_corGraph.opts <- tagList(
+    wgcna_corGraph.opts <- shiny::tagList(
         ##selectInput(ns('wgcna_corGraph_selmodule'),'module:', choices=NULL)
     )
 
     wgcna_corGraph_info <- "<b>Correlation network.</b> Partial correlation graph centered on module eigen-gene with top most correlated features. Green edges correspond to positive (partial) correlation, red edges to negative (partial) correlation. Width of the edges is proportional to the correlation strength of the gene pair. The regularized partial correlation matrix is computed using the 'graphical lasso' (Glasso) with BIC model selection."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "wgcna_corGraph", label = "b",
         func = wgcna_corGraph.RENDER,
@@ -1129,7 +1129,7 @@ WgcnaBoard <- function(input, output, session, env)
     ## TOM UMAP/t-SNE
     ##-----------------------------------------------------------
     
-    wgcna_umap.RENDER %<a-% reactive({
+    wgcna_umap.RENDER %<a-% shiny::reactive({
 
         out <- wgcna.compute()
 
@@ -1144,13 +1144,13 @@ WgcnaBoard <- function(input, output, session, env)
 
     })
 
-    wgcna_umap.opts <- tagList(
-        selectInput(ns('clust_method'),'method:', choices=c("tsne2d","umap2d","pca2d"))
+    wgcna_umap.opts <- shiny::tagList(
+        shiny::selectInput(ns('clust_method'),'method:', choices=c("tsne2d","umap2d","pca2d"))
     )
 
     wgcna_umap_info <- "<b>TOM umap.</b> UMAP visualization of TOM correlation of genes."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "wgcna_umap", label = "d",
         func = wgcna_umap.RENDER,
@@ -1172,7 +1172,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##--------- enrichment plot --------------
     ##----------------------------------------
     
-    wgcna_eigenClustering.RENDER %<a-% reactive({
+    wgcna_eigenClustering.RENDER %<a-% shiny::reactive({
         
         out <- wgcna.compute()
         
@@ -1192,11 +1192,11 @@ WgcnaBoard <- function(input, output, session, env)
 
     wgcna_eigenClustering_info = "eigenClustering."
     wgcna_eigenClustering_caption = "<b>eigenClustering</b> <b>(a)</b> ..."    
-    wgcna_eigenClustering.opts <- tagList(
+    wgcna_eigenClustering.opts <- shiny::tagList(
         ##selectInput(ns('wgcna_enrichPlot_selmodule'),'module:', choices=NULL)
     )
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "wgcna_eigenClustering", label = "a",
         func = wgcna_eigenClustering.RENDER,
@@ -1217,8 +1217,8 @@ WgcnaBoard <- function(input, output, session, env)
     ##--------- eigen barplots ---------------
     ##----------------------------------------
     
-    wgcna_eigenCorrelation.RENDER %<a-% reactive({
-    ##wgcna_eigenCorrelation.RENDER <- reactive({
+    wgcna_eigenCorrelation.RENDER %<a-% shiny::reactive({
+    ##wgcna_eigenCorrelation.RENDER <- shiny::reactive({
 
         message("[wgcna_eigenCorrelation.RENDER] reacted")
         
@@ -1262,14 +1262,14 @@ WgcnaBoard <- function(input, output, session, env)
         
     })
 
-    wgcna_eigenCorrelation_opts = tagList(
-        checkboxInput(ns("eigen_cov"),"covariance", FALSE)
+    wgcna_eigenCorrelation_opts = shiny::tagList(
+        shiny::checkboxInput(ns("eigen_cov"),"covariance", FALSE)
     )
 
     wgcna_eigenCorrelation_info =
         "<b>WGCNA Module membership (eigengene correlation).</b> For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module."
 
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "wgcna_eigenCorrelation", ##ns=ns,
         title="Module membership (eigengene correlation)", label="b",
@@ -1287,8 +1287,8 @@ WgcnaBoard <- function(input, output, session, env)
     ##------ intramodular analysis -----------
     ##----------------------------------------
     
-    wgcna_intraHeatmap.RENDER %<a-% reactive({
-    ##wgcna_intraHeatmap.RENDER <- reactive({
+    wgcna_intraHeatmap.RENDER %<a-% shiny::reactive({
+    ##wgcna_intraHeatmap.RENDER <- shiny::reactive({
 
         message("[wgcna_intraHeatmap.RENDER] reacted")
         
@@ -1309,14 +1309,14 @@ WgcnaBoard <- function(input, output, session, env)
         
     })
 
-    wgcna_intraHeatmap_opts = tagList(
-        checkboxInput(ns("eigen_cov"),"covariance", FALSE)
+    wgcna_intraHeatmap_opts = shiny::tagList(
+        shiny::checkboxInput(ns("eigen_cov"),"covariance", FALSE)
     )
 
     wgcna_intraHeatmap_info =
         "<b>WGCNA Module membership (eigengene correlation).</b> For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module."
 
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "wgcna_intraHeatmap", ##ns=ns,
         title="Membership-trait heatmap", label="a",
@@ -1335,8 +1335,8 @@ WgcnaBoard <- function(input, output, session, env)
     ##------ intramodular scatter ------------
     ##----------------------------------------
     
-    wgcna_intraScatter.RENDER %<a-% reactive({
-    ##wgcna_intraScatter.RENDER <- reactive({
+    wgcna_intraScatter.RENDER %<a-% shiny::reactive({
+    ##wgcna_intraScatter.RENDER <- shiny::reactive({
 
         message("[wgcna_intraScatter.RENDER] reacted")
         
@@ -1366,7 +1366,7 @@ WgcnaBoard <- function(input, output, session, env)
         par(mfrow=mfrow0, mar=c(4,4,2,1), mgp=c(2.0,0.8,0))
         i=top.px[1]
         for(i in top.px) {
-            plot( rho1[k,], rho2[i,], pch=20, cex=0.7, col=col1,
+            KEGGgraph::plot( rho1[k,], rho2[i,], pch=20, cex=0.7, col=col1,
                  xlab = "Module membership (eigengene cor)",
                  ylab = "Gene significance (trait cor)")
             title(paste(k,"vs.",paste(rownames(rho2)[i])), cex=1)                  
@@ -1374,14 +1374,14 @@ WgcnaBoard <- function(input, output, session, env)
         
     })
 
-    wgcna_intraScatter_opts = tagList(
-        ## checkboxInput(ns("eigen_cov"),"covariance", FALSE)
+    wgcna_intraScatter_opts = shiny::tagList(
+        ## shiny::checkboxInput(ns("eigen_cov"),"covariance", FALSE)
     )
 
     wgcna_intraScatter_info =
         "<b>WGCNA Module membership (eigengene correlation).</b> For each module, we also define a quantitative measure of module membership (MM) as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module."
 
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "wgcna_intraScatter", ##ns=ns,
         title="Membership vs. trait correlation", label="b",

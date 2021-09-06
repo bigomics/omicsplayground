@@ -6,26 +6,26 @@
 message(">>> sourcing ConnectivityBoard")
 ##source("global.R")
 
-require(rhdf5)
+
 
 ConnectivityInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shiny::uiOutput(ns("inputsUI"))
     )
 }
 
 ConnectivityUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    fillCol(
+    ns <- shiny::NS(id)  ## namespace
+    shiny::fillCol(
         height = 750,
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs1"),
-            tabPanel("FC correlation", uiOutput(ns("cmapCorrelation_UI"))),
-            tabPanel("FC heatmap", uiOutput(ns("cmapHeatmap_UI"))),            
-            tabPanel("Meta-graph", uiOutput(ns("cmapMetaAnalysis_UI"))),
-            tabPanel("Experiment clustering", uiOutput(ns("cmapClustering_UI")))
+            shiny::tabPanel("FC correlation", shiny::uiOutput(ns("cmapCorrelation_UI"))),
+            shiny::tabPanel("FC heatmap", shiny::uiOutput(ns("cmapHeatmap_UI"))),            
+            shiny::tabPanel("Meta-graph", shiny::uiOutput(ns("cmapMetaAnalysis_UI"))),
+            shiny::tabPanel("Experiment clustering", shiny::uiOutput(ns("cmapClustering_UI")))
         )
     )
 }
@@ -44,7 +44,7 @@ ConnectivityBoard <- function(input, output, session, env)
     selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     
     description = "<b>Similar Experiments.</b> Find similar experiments by correlating their signatures. The main goal is to identify experiments showing similar signatures and find genes that are commonly up/down regulated between experiments."
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
 
     cmap_infotext =
         "The <strong>Experiment connectivity</strong> module enables users to compare their data to other datasets. For the selected contrast, this module provides pairwise correlation plots and/or enrichment plots with signatures from other data sets. The <strong>Connectivity map</strong> shows the similarity of the contrasts profiles as a t-SNE plot.
@@ -57,41 +57,41 @@ ConnectivityBoard <- function(input, output, session, env)
     ##========================= INPUTS UI ============================================
     ##================================================================================
     
-    output$inputsUI <- renderUI({
-        ui <- tagList(
-            tipify( actionLink(ns("cmap_info"), "Info", icon = icon("info-circle")),
+    output$inputsUI <- shiny::renderUI({
+        ui <- shiny::tagList(
+            shinyBS::tipify( shiny::actionLink(ns("cmap_info"), "Info", icon = shiny::icon("info-circle")),
                    "Show more information about this module"),
-            hr(), br(),             
-            tipify( selectInput(ns('cmap_contrast'),'Contrast:',
+            shiny::hr(), shiny::br(),             
+            shinyBS::tipify( shiny::selectInput(ns('cmap_contrast'),'Contrast:',
                                 choices=NULL, multiple=FALSE),
                    "Select the contrast that you want to compare.",
                    placement="right", options = list(container = "body")
                    ),
-            tipify( selectInput(ns('cmap_sigdb'),"Signature DB:", choices=NULL),
+            shinyBS::tipify( shiny::selectInput(ns('cmap_sigdb'),"Signature DB:", choices=NULL),
                    "Select reference signature database.",
                    placement="right", options = list(container = "body")),
-            br(),
-            tipify( actionLink(ns("cmap_options"), "Options", icon=icon("cog", lib="glyphicon")),
+            shiny::br(),
+            shinyBS::tipify( shiny::actionLink(ns("cmap_options"), "Options", icon=icon("cog", lib="glyphicon")),
                    "Toggle advanced options.",
                    placement="right", options = list(container = "body")),
-            br(),
-            conditionalPanel(
+            shiny::br(),
+            shiny::conditionalPanel(
                 "input.cmap_options % 2 == 1", ns=ns,
-                tipify(
-                    checkboxInput( ns('cmap_hideclustcontrasts'),"hide cluster contrasts", TRUE),
+                shinyBS::tipify(
+                    shiny::checkboxInput( ns('cmap_hideclustcontrasts'),"hide cluster contrasts", TRUE),
                     "Hide cluster contrasts.",
                     placement="right", options = list(container = "body")),
-                tipify(
-                    checkboxInput(ns("cmap_abs_score"),"abs.score",TRUE),
+                shinyBS::tipify(
+                    shiny::checkboxInput(ns("cmap_abs_score"),"abs.score",TRUE),
                     "Use absolute score value",
                     placement="right", options = list(container = "body"))
-                ## tipify(
-                ##     checkboxInput(ns("cmap_dogenelist"),"custom gene list"),
+                ## shinyBS::tipify(
+                ##     shiny::checkboxInput(ns("cmap_dogenelist"),"custom gene list"),
                 ##     "Custom gene list",
                 ##     placement="right", options = list(container = "body")),
-                ## conditionalPanel(
+                ## shiny::conditionalPanel(
                 ##     "input.cmap_dogenelist == true", ns=ns,
-                ##     tipify( textAreaInput(ns("cmap_genelist"),NULL,value=NULL,rows=5,
+                ##     shinyBS::tipify( shiny::textAreaInput(ns("cmap_genelist"),NULL,value=NULL,rows=5,
                 ##                           placeholder="Paste your custom gene list"),
                 ##            "Paste a custom list of genes to be used as features.",
                 ##            placement="bottom")
@@ -100,27 +100,27 @@ ConnectivityBoard <- function(input, output, session, env)
         )
         ui
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
     
-    observeEvent( input$cmap_info, {
-        showModal(modalDialog(
-            title = HTML("<strong>Connectivity Analysis Board</strong>"),
-            HTML(cmap_infotext),
+    shiny::observeEvent( input$cmap_info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>Connectivity Analysis Board</strong>"),
+            shiny::HTML(cmap_infotext),
             easyClose = TRUE, size="l" ))
     })
 
     ## update choices upon change of data set 
-    observe({
+    shiny::observe({
         ngs <- inputData()
         ##req(ngs)
         if(is.null(ngs)) return(NULL)
         comparisons <- colnames(ngs$model.parameters$contr.matrix)
         comparisons <- sort(comparisons)
-        updateSelectInput(session, "cmap_contrast", choices=comparisons,
+        shiny::updateSelectInput(session, "cmap_contrast", choices=comparisons,
                           selected = head(comparisons,1))
 
         sigdb <- c("A","B","C")
@@ -130,41 +130,41 @@ ConnectivityBoard <- function(input, output, session, env)
         sigdb
         sel <- sigdb[1]
         ##if(any(grepl("sigdb",sigdb))) sel <- grep("sigdb",sigdb,value=TRUE)[1]
-        updateSelectInput(session, "cmap_sigdb", choices=sigdb, selected=sel)
+        shiny::updateSelectInput(session, "cmap_sigdb", choices=sigdb, selected=sel)
     })
     
-    observe({
+    shiny::observe({
         ## reset CMap threshold zero/max
         res <- getConnectivityScores()
-        req(res)
+        shiny::req(res)
         dbg("[observe:ngs] dim(res)=",dim(res))
         max <- round(0.999*max(abs(res$score),na.rm=TRUE),digits=1)
         max <- round(0.999*tail(sort(abs(res$score)),10)[1],digits=1)
-        updateSliderInput(session, 'cmap_scorethreshold', value=0, max=max)
+        shiny::updateSliderInput(session, 'cmap_scorethreshold', value=0, max=max)
         
     })
     
     ## update choices upon change of chosen contrast
     ##observeEvent( input$cmap_level, {
-    observeEvent( input$cmap_contrast, {
+    shiny::observeEvent( input$cmap_contrast, {
 
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         ## reset CMap threshold zero/max
         res <- getConnectivityScores()  ## result gets cached
-        req(res)
+        shiny::req(res)
         dbg("[observe:cmap_contrast] dim(res)=",dim(res))        
         max <- round(0.999*max(abs(res$score),na.rm=TRUE),digits=1)
         dbg("[observe:cmap_contrast] head(res$score)=",head(res$score))
         dbg("[observe:cmap_contrast] max=",max)
-        updateSliderInput(session, 'cmap_scorethreshold', value=0, max=max)
+        shiny::updateSliderInput(session, 'cmap_scorethreshold', value=0, max=max)
                                
     })
     
-    getCurrentContrast <- reactive({
+    getCurrentContrast <- shiny::reactive({
         ngs <- inputData()
-        req(ngs, input$cmap_contrast)        
+        shiny::req(ngs, input$cmap_contrast)        
         ct=1
         ct <- input$cmap_contrast
         fc <- ngs$gx.meta$meta[[ct]]$meta.fx
@@ -195,21 +195,21 @@ ConnectivityBoard <- function(input, output, session, env)
         dbg("[getConnectivityContrasts] db=",db)
         cn <- NULL
         if(file.exists(db)) {
-            require(rhdf5)
-            cn <- h5read(db, "data/colnames")
+
+            cn <- rhdf5::h5read(db, "data/colnames")
         }
         cn
     }
     
     getConnectivityMatrix <- function(sigdb, select=NULL, genes=NULL)
     {
-        require(rhdf5)        
+
         if(0) {
             dbg("[getConnectivityMatrix] reacted")
             sigdb = "sigdb-archs4.h5"
             sigdb = "sigdb-creeds.h5"
             sigdb <- input$cmap_sigdb
-            req(sigdb)
+            shiny::req(sigdb)
         }
         dbg("[getConnectivityMatrix] called")
         dbg("[getConnectivityMatrix] sigdb=",sigdb)
@@ -236,8 +236,8 @@ ConnectivityBoard <- function(input, output, session, env)
             }
             if(grepl("h5$",sigdb)) {
                 h5.file <- file.path(db.dir, sigdb)                
-                cn <- h5read(h5.file, "data/colnames")
-                rn <- h5read(h5.file, "data/rownames")
+                cn <- rhdf5::h5read(h5.file, "data/colnames")
+                rn <- rhdf5::h5read(h5.file, "data/rownames")
                 rowidx <- 1:length(rn)
                 colidx <- 1:length(cn)
                 if(!is.null(genes)) rowidx <- match(intersect(genes,rn),rn)                
@@ -247,7 +247,7 @@ ConnectivityBoard <- function(input, output, session, env)
                 nc <- length(colidx)
                 dbg("*** WARNING *** reading large H5 file:",nr,"x",nc,"")
 
-                X  <- h5read(h5.file, "data/matrix", index = list(rowidx,colidx) )
+                X  <- rhdf5::h5read(h5.file, "data/matrix", index = list(rowidx,colidx) )
                 rownames(X) <- rn[rowidx]
                 colnames(X) <- cn[colidx]
             }
@@ -264,7 +264,7 @@ ConnectivityBoard <- function(input, output, session, env)
 
     getEnrichmentMatrix <- function(sigdb, select=NULL, nc=-1)
     {
-        require(rhdf5)
+
         if(sigdb=="" || is.null(sigdb)) {
             dbg("[getEnrichmentMatrix] ***WARNING*** sigdb=",sigdb)
             return(NULL)
@@ -279,7 +279,7 @@ ConnectivityBoard <- function(input, output, session, env)
         }
 
         h5exists <- function(h5.file, obj) {
-            xobjs <- apply(h5ls(h5.file)[,1:2],1,paste,collapse="/")
+            xobjs <- apply(rhdf5::h5ls(h5.file)[,1:2],1,paste,collapse="/")
             obj %in% gsub("^/|^//","",xobjs)
         }
                 
@@ -290,7 +290,7 @@ ConnectivityBoard <- function(input, output, session, env)
             db.dir <- names(which(db.exists))[1]
             db.dir
             h5.file <- file.path(db.dir, sigdb)                
-            cn <- h5read(h5.file, "data/colnames")
+            cn <- rhdf5::h5read(h5.file, "data/colnames")
 
             has.gs   <- h5exists(h5.file, "enrichment/genesets")
             has.gsea <- h5exists(h5.file, "enrichment/GSEA") 
@@ -299,11 +299,11 @@ ConnectivityBoard <- function(input, output, session, env)
                 return(NULL)
             }
 
-            rn <- h5read(h5.file, "enrichment/genesets")
+            rn <- rhdf5::h5read(h5.file, "enrichment/genesets")
             rowidx <- 1:length(rn)
             colidx <- 1:length(cn)
             if(!is.null(select)) colidx <- match(intersect(select,cn),cn)
-            Y  <- h5read(h5.file, "enrichment/GSEA", index = list(rowidx,colidx) )
+            Y  <- rhdf5::h5read(h5.file, "enrichment/GSEA", index = list(rowidx,colidx) )
             rownames(Y) <- rn[rowidx]
             colnames(Y) <- cn[colidx]
             dim(Y)            
@@ -333,7 +333,7 @@ ConnectivityBoard <- function(input, output, session, env)
     }
     
     getSignatureMatrix <- function(sigdb) {
-        require(rhdf5)
+
         if(sigdb=="" || is.null(sigdb)) {
             dbg("[getEnrichmentMatrix] ***WARNING*** sigdb=",sigdb)
             return(NULL)
@@ -348,24 +348,24 @@ ConnectivityBoard <- function(input, output, session, env)
         db.exists
         up=dn=NULL
         if(any(db.exists)) {
-            require(rhdf5)
+
             db.dir <- names(which(db.exists))[1]
             db.dir
             h5.file <- file.path(db.dir, sigdb)
-            h5ls(h5.file)
-            cn <- h5read(h5.file, "data/colnames")
-            dn <- h5read(h5.file, "signature/sig100.dn")
-            up <- h5read(h5.file, "signature/sig100.up")
+            rhdf5::h5ls(h5.file)
+            cn <- rhdf5::h5read(h5.file, "data/colnames")
+            dn <- rhdf5::h5read(h5.file, "signature/sig100.dn")
+            up <- rhdf5::h5read(h5.file, "signature/sig100.up")
             colnames(dn) <- cn
             colnames(up) <- cn
         }
         list(up=up, dn=dn)
     }
     
-    getConnectivityPositions <- reactive({
+    getConnectivityPositions <- shiny::reactive({
 
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         ## get the foldchanges of selected comparison and neighbourhood
         method="umap";dims=2
@@ -389,7 +389,7 @@ ConnectivityBoard <- function(input, output, session, env)
 
         sigdb = "sigdb-archs4.h5"
         sigdb <- input$cmap_sigdb
-        req(sigdb)
+        shiny::req(sigdb)
         h5.ref <- grepl("h5$",sigdb)
         h5.file <- NULL
         pos <- NULL                
@@ -410,24 +410,24 @@ ConnectivityBoard <- function(input, output, session, env)
         h5.file <- file.path(db.dir, sigdb)
         h5.file
 
-        require(rhdf5)
-        h5closeAll()
-        h5ls(h5.file)
+
+        rhdf5::h5closeAll()
+        rhdf5::h5ls(h5.file)
         
         pos <- NULL
-        if(method == "pca" && dims==2) try(pos  <- h5read(h5.file, "clustering/pca2d"))
-        if(method == "pca" && dims==3) try(pos  <- h5read(h5.file, "clustering/pca3d"))
-        if(method == "tsne" && dims==2) try(pos <- h5read(h5.file, "clustering/tsne2d"))
-        if(method == "tsne" && dims==3) try(pos <- h5read(h5.file, "clustering/tsne3d"))
-        if(method == "umap" && dims==2) try(pos <- h5read(h5.file, "clustering/umap2d"))
-        if(method == "umap" && dims==3) try(pos <- h5read(h5.file, "clustering/umap3d"))
+        if(method == "pca" && dims==2) try(pos  <- rhdf5::h5read(h5.file, "clustering/pca2d"))
+        if(method == "pca" && dims==3) try(pos  <- rhdf5::h5read(h5.file, "clustering/pca3d"))
+        if(method == "tsne" && dims==2) try(pos <- rhdf5::h5read(h5.file, "clustering/tsne2d"))
+        if(method == "tsne" && dims==3) try(pos <- rhdf5::h5read(h5.file, "clustering/tsne3d"))
+        if(method == "umap" && dims==2) try(pos <- rhdf5::h5read(h5.file, "clustering/umap2d"))
+        if(method == "umap" && dims==3) try(pos <- rhdf5::h5read(h5.file, "clustering/umap3d"))
         dim(pos)
 
         ## normalize
         pos <- scale(pos)
 
         ## set row/colnames
-        cn <- h5read(h5.file, "data/colnames")
+        cn <- rhdf5::h5read(h5.file, "data/colnames")
         rownames(pos) <- cn
         xyz <- c("x","y","z")
         colnames(pos) <- paste0(toupper(method),"-",xyz[1:ncol(pos)])
@@ -436,11 +436,11 @@ ConnectivityBoard <- function(input, output, session, env)
         return(pos)
     })
     
-    getConnectivityScores <- reactive({
+    getConnectivityScores <- shiny::reactive({
 
         ngs <- inputData()
-        req(ngs, input$cmap_contrast)
-        shiny::validate(need("connectivity" %in% names(ngs), "no 'connectivity' in object."))
+        shiny::req(ngs, input$cmap_contrast)
+        shiny::validate(shiny::need("connectivity" %in% names(ngs), "no 'connectivity' in object."))
         
         ntop = 1000
         sigdb = "sigdb-gtex.h5"
@@ -449,7 +449,7 @@ ConnectivityBoard <- function(input, output, session, env)
         sigdb = "sigdb-creeds.h5"
         sigdb = "sigdb-archs4.h5"
         sigdb <- input$cmap_sigdb
-        req(sigdb)
+        shiny::req(sigdb)
 
         all.scores <- NULL
         if(sigdb %in% names(ngs$connectivity)) {
@@ -563,7 +563,7 @@ ConnectivityBoard <- function(input, output, session, env)
     })
 
 
-    getThresholdedConnectivityScores <- reactive({
+    getThresholdedConnectivityScores <- shiny::reactive({
 
         dbg("[getThresholdedConnectivityScores] reacted")
         
@@ -581,7 +581,7 @@ ConnectivityBoard <- function(input, output, session, env)
 
         ## select on minimum score
         minscore <- input$cmap_scorethreshold
-        req(input$cmap_scorethreshold)
+        shiny::req(input$cmap_scorethreshold)
         minscore <- min(minscore, 0.999*max(abs(res$score),na.rm=TRUE))
         sel <- which(abs(res$score) >= minscore)
         if(length(sel)==0) return(NULL)
@@ -619,7 +619,7 @@ ConnectivityBoard <- function(input, output, session, env)
         PERTINFO <- read.csv(pert_info.file,sep="\t",row.names=1)
     }
     
-    connectivityScoreTable.RENDER <- reactive({
+    connectivityScoreTable.RENDER <- shiny::reactive({
         
         df <- getConnectivityScores()
         if(is.null(df)) return(NULL)
@@ -664,10 +664,10 @@ ConnectivityBoard <- function(input, output, session, env)
                           scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       )  %>%
-            formatSignif(numcols,3) %>%
+            DT::formatSignif(numcols,3) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
                 DT::formatStyle( "score",
-                                ##background = styleColorBar( score.col, 'lightblue'),
+                                ##background = DT::styleColorBar( score.col, 'lightblue'),
                                 background = color_from_middle(
                                     df[,"score"], 'lightblue', '#f5aeae'),
                                 backgroundSize = '98% 88%',
@@ -675,7 +675,7 @@ ConnectivityBoard <- function(input, output, session, env)
                                 backgroundPosition = 'center')
     })
 
-    connectivityScoreTable.RENDER2 <- reactive({
+    connectivityScoreTable.RENDER2 <- shiny::reactive({
         connectivityScoreTable.RENDER() %>%
             DT::formatStyle(0, target='row', fontSize='13px', lineHeight='90%')
     })
@@ -683,12 +683,12 @@ ConnectivityBoard <- function(input, output, session, env)
     
     connectivityScoreTable_info = "<b>Similarity scores.</b> Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The score is calculated as rho^2*NES. "
 
-    connectivityScoreTable_opts = tagList(
-        selectInput(ns("connectivityScoreTable_qsig"),"threshold (padj)",
+    connectivityScoreTable_opts = shiny::tagList(
+        shiny::selectInput(ns("connectivityScoreTable_qsig"),"threshold (padj)",
                     c(0.01,0.05,0.2,1),selected=1)
     )
     
-    connectivityScoreTable <- callModule(
+    connectivityScoreTable <- shiny::callModule(
         tableModule,
         id = "connectivityScoreTable", label = "b",
         func = connectivityScoreTable.RENDER,
@@ -730,7 +730,7 @@ ConnectivityBoard <- function(input, output, session, env)
             ##ct1x <- substring(sub("[:]",":\n",ct1),1,50)
             nna <- (is.na(fc) | is.na(F0[,ct1]))
             col <- c("grey15","grey70")[1 + nna]            
-            plot( F[,ct1], fc, pch=20, cex=0.5,
+            KEGGgraph::plot( F[,ct1], fc, pch=20, cex=0.5,
                  cex.lab=0.9, cex.axis=0.9,
                  xlab = ct1x, ylab = "", col=col)
             abline(v=0, h=0, lty=2, lwd=0.5)
@@ -773,7 +773,7 @@ ConnectivityBoard <- function(input, output, session, env)
         }
     }
     
-    getTopProfiles <- reactive({
+    getTopProfiles <- shiny::reactive({
         ## Get profiles of top-enriched contrasts (not all genes...)
         ##
         ##        
@@ -784,12 +784,12 @@ ConnectivityBoard <- function(input, output, session, env)
         ii=1:100;sigdb="sigdb-archs4.h5"        
 
         ii <- connectivityScoreTable$rows_all()
-        req(ii,input$cmap_sigdb)        
+        shiny::req(ii,input$cmap_sigdb)        
         ii <- head(ii,50)  ## 50??
         pw <- df$pathway[ii]
         
         sigdb <- input$cmap_sigdb
-        req(sigdb)
+        shiny::req(sigdb)
         
         fc <- getCurrentContrast()$fc
         ngenes = 1000
@@ -804,12 +804,12 @@ ConnectivityBoard <- function(input, output, session, env)
         return(F)        
     })
     
-    cmap_FCFCplots.RENDER %<a-% reactive({        
+    cmap_FCFCplots.RENDER %<a-% shiny::reactive({        
 
         ngs <- inputData()
         alertDataLoaded(session,ngs)
 
-        req(ngs, input$cmap_contrast)        
+        shiny::req(ngs, input$cmap_contrast)        
         ##ct <- input$cmap_contrast
         ##fc <- ngs$gx.meta$meta[[ct]]$meta.fx
         ##names(fc) <- rownames(ngs$gx.meta$meta[[ct]])
@@ -831,14 +831,14 @@ ConnectivityBoard <- function(input, output, session, env)
         
     })
     
-    cmap_FCFCplots.opts <- tagList(        
-        radioButtons(ns("fcfc_plottype"),"Plot type:",c("scatter","enrichment"),
+    cmap_FCFCplots.opts <- shiny::tagList(        
+        shiny::radioButtons(ns("fcfc_plottype"),"Plot type:",c("scatter","enrichment"),
                      inline=TRUE)
     )
     
     cmap_FCFCplots_caption = "<b>FC scatter plots.</b> Scatter plots of gene expression foldchange values between two contrasts. Foldchanges that are similar show high correlation, i.e. are close to the diagonal."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         "cmap_FCFCplots", label = "a",
         func = cmap_FCFCplots.RENDER,
@@ -858,7 +858,7 @@ ConnectivityBoard <- function(input, output, session, env)
     ## Cumulative FC barplot
     ##================================================================================
 
-    cumulativeFCtable <- reactive({
+    cumulativeFCtable <- shiny::reactive({
         
         F <- getTopProfiles()
         F[is.na(F)] <- 0
@@ -875,7 +875,7 @@ ConnectivityBoard <- function(input, output, session, env)
         
         ## add current contrast
         cc <- getCurrentContrast()
-        req(cc)
+        shiny::req(cc)
         fc <- cc$fc[rownames(F)]
         fc[is.na(fc)] <- 0
         F <- cbind(fc[rownames(F)], F)
@@ -889,10 +889,10 @@ ConnectivityBoard <- function(input, output, session, env)
         F
     })
     
-    cumFCplot.RENDER %<a-% reactive({
+    cumFCplot.RENDER %<a-% shiny::reactive({
         ##
         F <- cumulativeFCtable()
-        req(F)
+        shiny::req(F)
 
         MAXF=10
         NGENES=64
@@ -920,7 +920,7 @@ ConnectivityBoard <- function(input, output, session, env)
         F1
     })
 
-    cumFCplot.RENDER2 <- reactive({
+    cumFCplot.RENDER2 <- shiny::reactive({
         F1 <- cumFCplot.RENDER()
         col1 = grey.colors(ncol(F1),start=0.15)
         legend("topleft", legend = rev(colnames(F1)),
@@ -928,17 +928,17 @@ ConnectivityBoard <- function(input, output, session, env)
         
     })
 
-    cumFCplot.opts = tagList(
-        tipify( checkboxInput(ns('cumFCplot_absfc'),'Absolute foldchange',FALSE),
+    cumFCplot.opts = shiny::tagList(
+        shinyBS::tipify( shiny::checkboxInput(ns('cumFCplot_absfc'),'Absolute foldchange',FALSE),
                "Take the absolute foldchange for calculating the cumulative sum.",
                placement="right", options = list(container = "body")),
-        tipify( radioButtons(ns('cumFCplot_order'),'Order:',
+        shinyBS::tipify( shiny::radioButtons(ns('cumFCplot_order'),'Order:',
                              choiceValues = c("FC","cumFC"),
                              choiceNames = c("this FC","cumFC"),
                              selected="cumFC", inline=TRUE),
                "How to order the cumulative barplot.",
                placement="right", options = list(container = "body"))
-        ## tipify( radioButtons(ns('cumFCplot_ntop'),'N-best:', c(5,10,20),
+        ## shinyBS::tipify( shiny::radioButtons(ns('cumFCplot_ntop'),'N-best:', c(5,10,20),
         ##                      selected=10, inline=TRUE),
         ##        "How many closest profiles to consider for calculating the cumulative sum.",
         ##        placement="right", options = list(container = "body"))
@@ -948,7 +948,7 @@ ConnectivityBoard <- function(input, output, session, env)
 
     cumFCplot.info = "<b>Meta-foldchange.</b> The barplot visualizes the cumulative foldchange between the top-10 most similar profiles. Genes that are frequently shared with high foldchange will show a higher cumulative score. You can choose between signed or absolute foldchange in the options."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "cumFCplot",
         title="Cumulative foldchange", label="a",
@@ -968,15 +968,15 @@ ConnectivityBoard <- function(input, output, session, env)
     ## Cumulative enrichment barplot
     ##================================================================================
     
-    cumEnrichmentTable <- reactive({
+    cumEnrichmentTable <- shiny::reactive({
 
-        req(input$cmap_sigdb)        
+        shiny::req(input$cmap_sigdb)        
         if(!grepl(".h5$",input$cmap_sigdb)) return(NULL)
         
         df <- getConnectivityScores()
         if(is.null(df)) return(NULL)        
         ii <- connectivityScoreTable$rows_all()
-        req(ii)
+        shiny::req(ii)
         dbg("[cumEnrichmentTable] length(ii)=",length(ii))
         
         sel <- head(df$pathway[ii],10)
@@ -1007,7 +1007,7 @@ ConnectivityBoard <- function(input, output, session, env)
         F
     })
     
-    cumEnrichmentPlot.RENDER %<a-% reactive({
+    cumEnrichmentPlot.RENDER %<a-% shiny::reactive({
         
         ##
         F <- cumEnrichmentTable()
@@ -1045,7 +1045,7 @@ ConnectivityBoard <- function(input, output, session, env)
         
     })
 
-    cumEnrichmentPlot.RENDER2 %<a-% reactive({
+    cumEnrichmentPlot.RENDER2 %<a-% shiny::reactive({
         
         ##
         F <- cumEnrichmentTable()
@@ -1084,17 +1084,17 @@ ConnectivityBoard <- function(input, output, session, env)
     })
     
     
-    cumEnrichmentPlot.opts = tagList(
-        tipify( checkboxInput(ns('cumgsea_absfc'),'Absolute foldchange',FALSE),
+    cumEnrichmentPlot.opts = shiny::tagList(
+        shinyBS::tipify( shiny::checkboxInput(ns('cumgsea_absfc'),'Absolute foldchange',FALSE),
                "Take the absolute foldchange for calculating the cumulative sum.",
                placement="right", options = list(container = "body")),
-        tipify( radioButtons(ns('cumgsea_order'),'Order:',
+        shinyBS::tipify( shiny::radioButtons(ns('cumgsea_order'),'Order:',
                              choiceValues = c("FC","cumFC"),
                              choiceNames = c("this FC","cumFC"),
                              selected="cumFC", inline=TRUE),
                "How to order the cumulative barplot.",
                placement="right", options = list(container = "body"))        
-        ## tipify( radioButtons(ns('cumFCplot_ntop'),'N-best:', c(5,10,20),
+        ## shinyBS::tipify( shiny::radioButtons(ns('cumFCplot_ntop'),'N-best:', c(5,10,20),
         ##                      selected=10, inline=TRUE),
         ##        "How many closest profiles to consider for calculating the cumulative sum.",
         ##        placement="right", options = list(container = "body"))
@@ -1104,7 +1104,7 @@ ConnectivityBoard <- function(input, output, session, env)
 
     cumEnrichmentPlot.info = "<b>Meta-enrichment.</b> The barplot visualizes the cumulative enrichment of the top-10 most similar profiles. Gene sets that are frequently shared with high enrichment will show a higher cumulative scores. You can choose between signed or absolute enrichment in the options."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "cumEnrichmentPlot",
         title="Cumulative enrichment", label="b",
@@ -1125,12 +1125,12 @@ ConnectivityBoard <- function(input, output, session, env)
     ## CONNECTIVITY MAP
     ##=============================================================================
            
-    connectivityMap.RENDER <- reactive({
+    connectivityMap.RENDER <- shiny::reactive({
         
         ngs <- inputData()
-        req(ngs, input$cmap_contrast)
+        shiny::req(ngs, input$cmap_contrast)
         
-        require(RColorBrewer)
+
         dbg("[connectivityMap.RENDER] reacted")
 
         ## get positions
@@ -1186,7 +1186,7 @@ ConnectivityBoard <- function(input, output, session, env)
         showlabels <- "label" %in% input$cmap_plotoptions
         if(showlabels) ann.text = df$name
 
-        require(plotly)
+
         tt.info <- paste(
             'Contrast:', df$contrast,
             '</br>Dataset:', df$dataset,
@@ -1221,7 +1221,7 @@ ConnectivityBoard <- function(input, output, session, env)
             ## dataset
             colorvar <- dset  ## [GSE1234-xxx]
             marker.col <- list()
-            colorpal <- rep(brewer.pal(8,"Set2"),99)
+            colorpal <- rep(RColorBrewer::brewer.pal(8,"Set2"),99)
 
         } else if(colorby == "hallmark") {
             Y <- t(getEnrichmentMatrix(input$cmap_sigdb,nc=15))
@@ -1229,7 +1229,7 @@ ConnectivityBoard <- function(input, output, session, env)
             colorvar <- colnames(Y)[max.col(Y)]
             colorvar <- shortstring(colorvar,40) ## too long!!!
             marker.col <- list()
-            colorpal <- rep(brewer.pal(8,"Set2"),99)
+            colorpal <- rep(RColorBrewer::brewer.pal(8,"Set2"),99)
 
         } else if(colorby == "score") {
             dbg("*** SCORE ***\n")
@@ -1256,7 +1256,7 @@ ConnectivityBoard <- function(input, output, session, env)
             sizeref
             if("large" %in% input$cmap_plotoptions) sizeref <- 0.25*sizeref
             
-            plt <- plot_ly(
+            plt <- plotly::plot_ly(
                 df, x = df[,1], y = df[,2], z = df[,3], 
                 mode = 'markers', type="scatter3d",
                 ##mode = 'markers', type = "pointcloud",
@@ -1272,14 +1272,14 @@ ConnectivityBoard <- function(input, output, session, env)
             if(FALSE && showlabels && nrow(pos)<100) {
                 ## slow...
                 plt <- plt %>%
-                    add_annotations(
+                    plotly::add_annotations(
                         x = pos[,1], y = pos[,2], z = pos[,3],
                         text = ann.text,
                         ##xref = "x", yref = "y",
                         showarrow = FALSE)
             }
             plt <- plt %>%
-                layout(
+                plotly::layout(
                     xaxis = list(title=colnames(pos)[1]),
                     yaxis = list(title=colnames(pos)[2]),
                     zaxis = list(title=colnames(pos)[3]) ) 
@@ -1291,7 +1291,7 @@ ConnectivityBoard <- function(input, output, session, env)
             sizeref
             if("large" %in% input$cmap_plotoptions) sizeref <- 0.85*sizeref
 
-            plt <- plot_ly(
+            plt <- plotly::plot_ly(
                 df, x = df[,1], y = df[,2],
                 source="cmap2d", key=rownames(df),
                 mode = 'markers', type = "scattergl",
@@ -1310,7 +1310,7 @@ ConnectivityBoard <- function(input, output, session, env)
                 ## this is slow if not careful. too many annotation labels slows down
                 ##
                 plt <- plt  %>%
-                    add_annotations(
+                    plotly::add_annotations(
                         x = pos[,1], y = pos[,2],
                         text = ann.text,
                         ##xref = "x", yref = "y",
@@ -1320,7 +1320,7 @@ ConnectivityBoard <- function(input, output, session, env)
                         showarrow = FALSE)
             }
             plt <- plt %>%
-                layout(
+                plotly::layout(
                     xaxis = list(title=colnames(pos)[1]),
                     yaxis = list(title=colnames(pos)[2]) ) 
             
@@ -1333,7 +1333,7 @@ ConnectivityBoard <- function(input, output, session, env)
         yrng <- yrng + 0.15*c(-1,1)*diff(yrng)
         if(0 && ncol(pos)==2) {
             plt <- plt %>%
-                layout(
+                plotly::layout(
                     xaxis = list(range = xrng),
                     yaxis = list(range = yrng) ) 
         }
@@ -1341,16 +1341,16 @@ ConnectivityBoard <- function(input, output, session, env)
             zrng <- quantile( pos[,3], probs=c(0.025,0.975))
             zrng <- zrng + 0.15*c(-1,1)*diff(zrng)
             plt <- plt %>%
-                layout(
+                plotly::layout(
                     xaxis = list(range = xrng),
                     yaxis = list(range = yrng),
                     zaxis = list(range = zrng) ) 
         }
         
         plt <- plt %>%
-            config( toImageButtonOptions =
+            plotly::config( toImageButtonOptions =
                         list(format='svg', height=800, width=800, scale=1.1)) %>%
-            event_register('plotly_selected')
+            plotly::event_register('plotly_selected')
 
         if("dark" %in% input$cmap_plotoptions) {
             plt <- darkmode(plt, dim=ncol(pos) )
@@ -1359,32 +1359,32 @@ ConnectivityBoard <- function(input, output, session, env)
         return(plt)
     })
 
-    connectivityMap.RENDER1 <- reactive({
+    connectivityMap.RENDER1 <- shiny::reactive({
         ## Hide colorbar
         ##
         plt <- connectivityMap.RENDER() 
         if(is.null(plt)) return(NULL)
-        plt <- plt %>% layout(showlegend = FALSE) %>% hide_colorbar()
+        plt <- plt %>% plotly::layout(showlegend = FALSE) %>% plotly::hide_colorbar()
         return(plt)
     })
     
-    connectivityMap.opts = tagList(
-        tipify(radioButtons(
+    connectivityMap.opts = shiny::tagList(
+        shinyBS::tipify(shiny::radioButtons(
             ##"Choose the plot layout: t-SNE, PCA or UMAP",
             ns('cmap_layout'),"Layout:",c("pca","tsne","volcano"), selected="tsne", inline=TRUE),
             "Choose the plot layout: t-SNE, PCA, or volcano-type",
             placement="right", options = list(container = "body")),
-        tipify(sliderInput(ns('cmap_scorethreshold'),"Score threshold:", 0, 1, 0, step=0.01),
+        shinyBS::tipify(shiny::sliderInput(ns('cmap_scorethreshold'),"Score threshold:", 0, 1, 0, step=0.01),
                "Threshold the points by minimum score",
                placement="right", options = list(container = "body")),
-        tipify(radioButtons(
+        shinyBS::tipify(shiny::radioButtons(
             ns('cmap_cmapcolorby'),"Color by:", c("score","dataset","hallmark"),
             inline=TRUE), "Color the points by score, dataset or hallmark",
             placement="right", options = list(container = "body")),
-        tipify(sliderInput(ns('cmap_scoregamma'),"Color gamma:", 0.1, 2, 0.5, step=0.1),
+        shinyBS::tipify(shiny::sliderInput(ns('cmap_scoregamma'),"Color gamma:", 0.1, 2, 0.5, step=0.1),
                "Gamma for color adjustments",
                placement="right", options = list(container = "body")),
-        tipify( checkboxGroupInput(
+        shinyBS::tipify( shiny::checkboxGroupInput(
             ns('cmap_plotoptions'),"Other options:",
             choiceValues = c("label","grouped","3D","dark","large"),
             choiceNames = c("show label","group by dataset","3D plot", "dark mode",
@@ -1392,9 +1392,9 @@ ConnectivityBoard <- function(input, output, session, env)
             selected = c("label","3D") ),
             "Show labels, group by dataset, show 3D plot, dark mode.",
             placement="top", options = list(container = "body"))        
-        ##tipify( checkboxInput(ns('cmap_showlabel'), 'show label'), "Show labels in plot"),
-        ##tipify( checkboxInput(ns('cmap_3d'), '3D'), "Show 3D plot")
-        ## tipify(radioButtons(ns('cmap_topgenes'),'Top genes:',c(50,200,1000),
+        ##tipify( shiny::checkboxInput(ns('cmap_showlabel'), 'show label'), "Show labels in plot"),
+        ##tipify( shiny::checkboxInput(ns('cmap_3d'), '3D'), "Show 3D plot")
+        ## shinyBS::tipify(shiny::radioButtons(ns('cmap_topgenes'),'Top genes:',c(50,200,1000),
         ##                     inline=TRUE,selected=1000),
         ##            "Specify the number of top genes to determine similarity."),
     )
@@ -1403,7 +1403,7 @@ ConnectivityBoard <- function(input, output, session, env)
 
     connectivityMap_caption = "<b>Connectivity Map.</b> The CMap shows the similarity of the contrasts as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         "connectivityMap", label = "a",
         func = connectivityMap.RENDER1, plotlib="plotly",
@@ -1424,7 +1424,7 @@ ConnectivityBoard <- function(input, output, session, env)
     ## Leading-edge graph 
     ##-------------------------------------------------------------------------------    
     
-    getLeadingEdgeGraph <- reactive({
+    getLeadingEdgeGraph <- shiny::reactive({
             
         dbg("[getLeadingEdgeGraph] reacted")
 
@@ -1440,7 +1440,7 @@ ConnectivityBoard <- function(input, output, session, env)
         ntop <- as.integer(input$LEgraph_ntop)
         ##ii <- order(-df$score)
         ii <- connectivityScoreTable$rows_all()
-        req(ii)
+        shiny::req(ii)
         ii <- head(order(-abs(df$score)),25)
         ii <- head(ii,ntop)
         df <- df[ii,,drop=FALSE]
@@ -1453,24 +1453,24 @@ ConnectivityBoard <- function(input, output, session, env)
         ##adjM <- pmax( cor(t(A)), 0)  ## only positive correlation???
         adjM <- (A %*% t(A))
         adjM <- adjM / max(adjM,na.rm=TRUE)
-        require(igraph)
-        gr <- graph_from_adjacency_matrix(
+
+        gr <- igraph::graph_from_adjacency_matrix(
             adjM, mode="undirected", weighted=TRUE, diag=FALSE)
 
         ## set graph threshold to some sensible value [0,1]
-        wt0 <- tail(sort(abs(E(gr)$weight)),150)[1] ## about 150 edges
+        wt0 <- tail(sort(abs(igraph::E(gr)$weight)),150)[1] ## about 150 edges
         ##dbg("[getLeadingEdgeGraph] setting edge threshold to wt=",wt0)
         ##updateSliderInput(session, "LEgraph_threshold", value = 0.99*wt0)
-        updateSliderInput(session, "LEgraph_threshold", value = 0)
+        shiny::updateSliderInput(session, "LEgraph_threshold", value = 0)
         
         return(gr)
     })
 
-    leadingEdgeGraph.VISNETWORK <- reactive({
+    leadingEdgeGraph.VISNETWORK <- shiny::reactive({
 
-        require(igraph)
-        require(visNetwork)
-        require(gplots) ## for col2hex
+
+
+
         ## return(NULL)
 
         dbg("[leadingEdgeGraph.VISNETWORK] reacted")
@@ -1478,12 +1478,12 @@ ConnectivityBoard <- function(input, output, session, env)
         gr <- getLeadingEdgeGraph()
         if(is.null(gr)) return(NULL)
         
-        max(abs(E(gr)$weight))
+        max(abs(igraph::E(gr)$weight))
         minwt <- 0.5
         minwt <- input$LEgraph_threshold
-        minwt <- min(c(minwt, 0.99*max(abs(E(gr)$weight),na.rm=TRUE)))
-        gr <- subgraph.edges(gr, which(abs(E(gr)$weight) >= minwt) )
-        if(length(V(gr))==0) return(NULL)
+        minwt <- min(c(minwt, 0.99*max(abs(igraph::E(gr)$weight),na.rm=TRUE)))
+        gr <- igraph::subgraph.edges(gr, which(abs(igraph::E(gr)$weight) >= minwt) )
+        if(length(igraph::V(gr))==0) return(NULL)
 
         fc=cumFC=NULL
         fc <- getCurrentContrast()$fc        
@@ -1500,9 +1500,9 @@ ConnectivityBoard <- function(input, output, session, env)
             vsize <- log(1+betweenness(gr))
         } else if(sizevar=="cumFC") {
             fc1 <- rowMeans(cumFC)
-            vsize <- abs(fc1[match(V(gr)$name,names(fc1))])**2
+            vsize <- abs(fc1[match(igraph::V(gr)$name,names(fc1))])**2
         } else if(sizevar=="FC") {
-            vsize <- abs(fc[match(V(gr)$name,names(fc))])**2
+            vsize <- abs(fc[match(igraph::V(gr)$name,names(fc))])**2
         } else {
             vsize <- 1
         }
@@ -1516,40 +1516,40 @@ ConnectivityBoard <- function(input, output, session, env)
         vcolor <- paste0(vcolor,"AA") ## add transparency
         
         ## defaults graph parameters
-        gene <- V(gr)$name
-        V(gr)$label <- V(gr)$name
-        V(gr)$title <- paste0("<b>",gene,"</b><br>",GENE.TITLE[toupper(gene)])
-        V(gr)$size  <- vsize      ## rather small
+        gene <- igraph::V(gr)$name
+        igraph::V(gr)$label <- igraph::V(gr)$name
+        igraph::V(gr)$title <- paste0("<b>",gene,"</b><br>",GENE.TITLE[toupper(gene)])
+        igraph::V(gr)$size  <- vsize      ## rather small
         ##V(gr)$color  <- c("skyblue","salmon")[1 + 1*(sign(fc)>0)]       ## rather small
-        V(gr)$color  <- vcolor
+        igraph::V(gr)$color  <- vcolor
 
-        ew = abs(E(gr)$weight)
-        E(gr)$width <- 1.5 * (0.2 + 10*(ew/max(ew,na.rm=TRUE))**2)
-        E(gr)$color <- "#DDD"  ## lightgrey
+        ew = abs(igraph::E(gr)$weight)
+        igraph::E(gr)$width <- 1.5 * (0.2 + 10*(ew/max(ew,na.rm=TRUE))**2)
+        igraph::E(gr)$color <- "#DDD"  ## lightgrey
         
-        visdata <- toVisNetworkData(gr, idToLabel=FALSE)
+        visdata <- visNetwork::toVisNetworkData(gr, idToLabel=FALSE)
         
         ## ------------------ plot using visNetwork (zoomable) -----------------
-        graph <- visNetwork(
+        graph <- visNetwork::visNetwork(
             nodes = visdata$nodes,
             edges = visdata$edges) %>%
-            visNodes(font = list(size = fontsize))  %>%
-            ## visEdges(hidden=FALSE, width=2, color=list(opacity=0.9))  %>%
-            visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)) %>%
-            ## visPhysics(enabled=TRUE)  %>%
-            ## visInteraction(hideEdgesOnDrag = TRUE) %>%
-            ## visIgraphLayout(layout="layout.norm", layoutMatrix=pos)
-            visIgraphLayout(layout="layout_nicely")
+            visNetwork::visNodes(font = list(size = fontsize))  %>%
+            ## visNetwork::visEdges(hidden=FALSE, width=2, color=list(opacity=0.9))  %>%
+            visNetwork::visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)) %>%
+            ## visNetwork::visPhysics(enabled=TRUE)  %>%
+            ## visNetwork::visInteraction(hideEdgesOnDrag = TRUE) %>%
+            ## visNetwork::visIgraphLayout(layout="layout.norm", layoutMatrix=pos)
+            visNetwork::visIgraphLayout(layout="layout_nicely")
         graph
         
     })
     
-    leadingEdgeGraph.opts <- tagList(
-        tipify( sliderInput(ns("LEgraph_threshold"),"edge threshold:",0, 1, 0, 0.01),
+    leadingEdgeGraph.opts <- shiny::tagList(
+        shinyBS::tipify( shiny::sliderInput(ns("LEgraph_threshold"),"edge threshold:",0, 1, 0, 0.01),
                "Threshold value for edges."),
-        tipify( radioButtons(ns("LEgraph_ntop"),"N-neighbours:",c(5,10,25,100),selected=10,inline=TRUE),
+        shinyBS::tipify( shiny::radioButtons(ns("LEgraph_ntop"),"N-neighbours:",c(5,10,25,100),selected=10,inline=TRUE),
                "Number of simlar experiments to consider."),
-        tipify( radioButtons(ns("LEgraph_sizevar"),"Size:",c("FC","cumFC","centrality"),
+        shinyBS::tipify( shiny::radioButtons(ns("LEgraph_sizevar"),"Size:",c("FC","cumFC","centrality"),
                              selected="cumFC", inline=TRUE),
                "Parameter for node size.")        
     )
@@ -1557,7 +1557,7 @@ ConnectivityBoard <- function(input, output, session, env)
     leadingEdgeGraph_caption = "<b>Leading-edge graph.</b> Network of shared leading-edge genes between top-N most similar signatures. The edge width corresponds to the number of signatures that share that pair of genes in their top differentially expressed genes."
     leadingEdgeGraph_info = "<b>Leading-edge graph.</b> Network of shared leading-edge genes between top-N most similar signatures. The edge width corresponds to the number of signatures that share that pair of genes in their top differentially expressed genes. In the plot options you can set the threshold of the edges."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         "leadingEdgeGraph", label = "a",
         ##func = leadingEdgeGraph.RENDER,
@@ -1578,7 +1578,7 @@ ConnectivityBoard <- function(input, output, session, env)
     ## Enrichment graph 
     ##-------------------------------------------------------------------------------    
     
-    getEnrichmentGraph <- reactive({
+    getEnrichmentGraph <- shiny::reactive({
         
         dbg("[getEnrichmentGraph] reacted")
                 
@@ -1587,7 +1587,7 @@ ConnectivityBoard <- function(input, output, session, env)
 
         if(input$enrichGraph_oddweighting) {
             gr2 <- getLeadingEdgeGraph()
-            le.genes <- V(gr2)$name
+            le.genes <- igraph::V(gr2)$name
             gsets <- GSETS[rownames(F)]
             ##gsets <- lapply(gsets, function(x) intersect(x,le.genes))
             gsets <- gsets[sapply(gsets,length)>=5]
@@ -1612,42 +1612,42 @@ ConnectivityBoard <- function(input, output, session, env)
         ##adjM <- pmax( cor(t(A)), 0)  ## only positive correlation???
         adjM <- (A %*% t(A))
         adjM <- adjM / max(adjM,na.rm=TRUE)
-        require(igraph)
-        gr <- graph_from_adjacency_matrix(
+
+        gr <- igraph::graph_from_adjacency_matrix(
             adjM, mode="undirected", weighted=TRUE, diag=FALSE)
 
         ## set graph threshold to some sensible value [0,1]
-        wt0 <- tail(sort(abs(E(gr)$weight)),100)[1] ## about 80 edges
+        wt0 <- tail(sort(abs(igraph::E(gr)$weight)),100)[1] ## about 80 edges
         ##dbg("[getEnrichmentGraph] setting edge threshold to wt=",wt0)
         ##updateSliderInput(session, "enrichGraph_threshold", value = 0.99*wt0)
-        updateSliderInput(session, "enrichGraph_threshold", value = 0)
+        shiny::updateSliderInput(session, "enrichGraph_threshold", value = 0)
         
         return(gr)
     })
     
-    enrichmentGraph.VISNETWORK <- reactive({
+    enrichmentGraph.VISNETWORK <- shiny::reactive({
 
-        require(igraph)
-        require(visNetwork)
-        require(gplots) ## for col2hex
+
+
+
         ## return(NULL)
 
         gr <- getEnrichmentGraph()
         if(is.null(gr)) return(NULL)
                 
         gr2 <- getLeadingEdgeGraph()
-        pw <- V(gr)$name
-        le.genes <- V(gr2)$name
+        pw <- igraph::V(gr)$name
+        le.genes <- igraph::V(gr2)$name
         
         pw.genes <- sapply( GSETS[pw], function(gs) intersect(gs,le.genes))
         pw.genes <- sapply(pw.genes, paste, collapse=" ")
         
-        max(abs(E(gr)$weight))
+        max(abs(igraph::E(gr)$weight))
         minwt <- 0.5
         minwt <- input$enrichGraph_threshold
-        minwt <- min(c(minwt, 0.99*max(abs(E(gr)$weight),na.rm=TRUE)))
-        gr <- subgraph.edges(gr, which(abs(E(gr)$weight) >= minwt) )
-        if(length(V(gr))==0) return(NULL)
+        minwt <- min(c(minwt, 0.99*max(abs(igraph::E(gr)$weight),na.rm=TRUE)))
+        gr <- igraph::subgraph.edges(gr, which(abs(igraph::E(gr)$weight) >= minwt) )
+        if(length(igraph::V(gr))==0) return(NULL)
 
         fc=cumFC=NULL
         cumFC <- cumEnrichmentTable()
@@ -1662,9 +1662,9 @@ ConnectivityBoard <- function(input, output, session, env)
             vsize <- log(1+betweenness(gr))
         } else if(sizevar=="cumFC") {
             fc1 <- rowMeans(cumFC)
-            vsize <- abs(fc1[match(V(gr)$name,names(fc1))])**2
+            vsize <- abs(fc1[match(igraph::V(gr)$name,names(fc1))])**2
         } else if(sizevar=="FC") {
-            vsize <- abs(fc[match(V(gr)$name,names(fc))])**2
+            vsize <- abs(fc[match(igraph::V(gr)$name,names(fc))])**2
         } else {
             vsize <- 1
         }
@@ -1679,42 +1679,42 @@ ConnectivityBoard <- function(input, output, session, env)
         
         ## defaults graph parameters
         vname <- sub("H:HALLMARK_|C2:KEGG_","",V(gr)$name)
-        V(gr)$label <- vname
-        V(gr)$title <- paste0("<b>",vname,"</b><br>",pw.genes)
-        V(gr)$size  <- vsize      ## rather small
+        igraph::V(gr)$label <- vname
+        igraph::V(gr)$title <- paste0("<b>",vname,"</b><br>",pw.genes)
+        igraph::V(gr)$size  <- vsize      ## rather small
         ##V(gr)$color  <- c("skyblue","salmon")[1 + 1*(sign(fc)>0)]       ## rather small
-        V(gr)$color  <- vcolor
+        igraph::V(gr)$color  <- vcolor
 
-        ew = abs(E(gr)$weight)
-        E(gr)$width <- 1.5 * (0.2 + 10*(ew/max(ew,na.rm=TRUE))**2)
-        E(gr)$color <- "#DDD"  ## lightgrey
+        ew = abs(igraph::E(gr)$weight)
+        igraph::E(gr)$width <- 1.5 * (0.2 + 10*(ew/max(ew,na.rm=TRUE))**2)
+        igraph::E(gr)$color <- "#DDD"  ## lightgrey
 
-        visdata <- toVisNetworkData(gr, idToLabel=FALSE)
+        visdata <- visNetwork::toVisNetworkData(gr, idToLabel=FALSE)
         
         ## ------------------ plot using visNetwork (zoomable) -----------------
-        graph <- visNetwork(
+        graph <- visNetwork::visNetwork(
             nodes = visdata$nodes,
             edges = visdata$edges) %>%
-            visNodes(font = list(size = fontsize))  %>%
-            ## visEdges(hidden=FALSE, width=2, color=list(opacity=0.9))  %>%
-            visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)) %>%
-            ## visPhysics(enabled=TRUE)  %>%
-            ## visInteraction(hideEdgesOnDrag = TRUE) %>%
-            ## visIgraphLayout(layout="layout.norm", layoutMatrix=pos)
-            visIgraphLayout(layout="layout_nicely")
+            visNetwork::visNodes(font = list(size = fontsize))  %>%
+            ## visNetwork::visEdges(hidden=FALSE, width=2, color=list(opacity=0.9))  %>%
+            visNetwork::visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)) %>%
+            ## visNetwork::visPhysics(enabled=TRUE)  %>%
+            ## visNetwork::visInteraction(hideEdgesOnDrag = TRUE) %>%
+            ## visNetwork::visIgraphLayout(layout="layout.norm", layoutMatrix=pos)
+            visNetwork::visIgraphLayout(layout="layout_nicely")
         graph
         
     })
     
-    enrichmentGraph.opts <- tagList(
-        tipify( sliderInput(ns("enrichGraph_threshold"),"edge threshold:",0, 1, 0, 0.01),
+    enrichmentGraph.opts <- shiny::tagList(
+        shinyBS::tipify( shiny::sliderInput(ns("enrichGraph_threshold"),"edge threshold:",0, 1, 0, 0.01),
                "Threshold value for edges."),
-        tipify( radioButtons(ns("enrichGraph_ntop"),"N-neighbours:",c(5,10,25,100),
+        shinyBS::tipify( shiny::radioButtons(ns("enrichGraph_ntop"),"N-neighbours:",c(5,10,25,100),
                              selected=10, inline=TRUE),
                "Number of simlar experiments to consider."),
-        tipify( checkboxInput(ns("enrichGraph_oddweighting"),"Odd ratio weighting",FALSE),
+        shinyBS::tipify( shiny::checkboxInput(ns("enrichGraph_oddweighting"),"Odd ratio weighting",FALSE),
                "Odds ratio weighting."),
-        tipify( radioButtons(ns("enrichGraph_sizevar"),"Size:",c("FC","cumFC","centrality"),
+        shinyBS::tipify( shiny::radioButtons(ns("enrichGraph_sizevar"),"Size:",c("FC","cumFC","centrality"),
                              selected="cumFC", inline=TRUE),
                "Parameter for node size.")        
     )
@@ -1722,7 +1722,7 @@ ConnectivityBoard <- function(input, output, session, env)
     enrichmentGraph_caption = "<b>Enrichment graph.</b> Network of shared enrichmed genesets between top-N most similar signatures. The edge width corresponds to the number of signatures that share that pair of genesets in their top enriched genesets."
     enrichmentGraph_info = "<b>Enrichment graph.</b> Network of shared enriched genesets between top-N most similar signatures. The edge width corresponds to the number of signatures that share that pair of genesets in their top enriched genesets. In the plot options you can set the threshold the edges."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         "enrichmentGraph", label = "b",
         ##func = enrichmentGraph.RENDER,
@@ -1749,16 +1749,16 @@ ConnectivityBoard <- function(input, output, session, env)
     ## From: https://plot.ly/r/splom/
     ##----------------------------------------------------------------------
 
-    cmapPairsPlot.PLOT <- reactive({
+    cmapPairsPlot.PLOT <- shiny::reactive({
 
-        require(plotly)
-        ##require(GGally)
+
+
         
         ##res = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         ##fc1 <- getCurrentContrast()$fc
 
         ngs <- inputData()
-        req(ngs, input$cmap_contrast)        
+        shiny::req(ngs, input$cmap_contrast)        
         ##ct <- input$cmap_contrast
         sigdb = "sigdb-archs4.h5"
         sigdb <- input$cmap_sigdb
@@ -1772,11 +1772,11 @@ ConnectivityBoard <- function(input, output, session, env)
         ct1 <- getCurrentContrast()$name
 
         sigdb <- input$cmap_sigdb
-        req(sigdb)        
+        shiny::req(sigdb)        
         ct2 = all.ct[1]
         ##sel.row <- connectivityScoreTable2$rows_selected()
         sel.row <- connectivityScoreTable$rows_selected()
-        req(sel.row)        
+        shiny::req(sel.row)        
         df <- getConnectivityScores()
         df <- df[abs(df$score)>0,,drop=FALSE]
         ct2 <- rownames(df)[sel.row]
@@ -1868,8 +1868,8 @@ ConnectivityBoard <- function(input, output, session, env)
             yann = 1.08*(as.vector(rep(seq(1,0.02,-1/n),n)) - 0.15*1/n - 0.04)
             ##yann = as.vector(rep(seq(1,0.0,-1/(n-1)),n))
             
-            p <- plot_ly(df, source="cmapSPLOM", key=rownames(df) ) %>%
-                add_trace(
+            p <- plotly::plot_ly(df, source="cmapSPLOM", key=rownames(df) ) %>%
+                plotly::add_trace(
                     type = 'splom',
                     dimensions = dimensions,
                     text = tt,
@@ -1885,7 +1885,7 @@ ConnectivityBoard <- function(input, output, session, env)
                         )
                     )
                 ) %>%
-                add_annotations(
+                plotly::add_annotations(
                     x = xann,
                     y = yann,
                     text = rho.text,
@@ -1898,7 +1898,7 @@ ConnectivityBoard <- function(input, output, session, env)
                     borderpad = 3, 
                     bordercolor = 'black',
                     borderwidth = 0.6) %>%
-                layout(
+                plotly::layout(
                     ##title= 'Scatterplot matrix',
                     hovermode='closest',
                     dragmode= 'select',
@@ -1910,7 +1910,7 @@ ConnectivityBoard <- function(input, output, session, env)
                     xaxis2=axis, xaxis3=axis, xaxis4=axis, xaxis5=axis, xaxis6=axis, xaxis7=axis,
                     yaxis2=axis, yaxis3=axis, yaxis4=axis, yaxis5=axis, yaxis6=axis, yaxis7=axis
                 )
-            ## %>% style(diagonal = list(visible = F))
+            ## %>% plotly::style(diagonal = list(visible = F))
 
         } else {
 
@@ -1929,7 +1929,7 @@ ConnectivityBoard <- function(input, output, session, env)
                 bordercolor = 'black',
                 borderwidth = 0.6)
 
-            p <- plot_ly( data=df[,1:2], x = df[,1], y= df[,2],
+            p <- plotly::plot_ly( data=df[,1:2], x = df[,1], y= df[,2],
                          type = 'scattergl', mode = 'markers',
                          source='cmapSPLOM', key = rownames(df),
                          text = tt,
@@ -1945,7 +1945,7 @@ ConnectivityBoard <- function(input, output, session, env)
                          )
             if(length(sel1)>0) {
                 p <- p %>%
-                    add_annotations(
+                    plotly::add_annotations(
                         x = df[sel1,1],
                         y = df[sel1,2],
                         text = as.character(label.text),
@@ -1959,7 +1959,7 @@ ConnectivityBoard <- function(input, output, session, env)
             }
             
             p <- p %>%
-                layout(
+                plotly::layout(
                     ## title= 'Scatterplot',
                     annotations = annot.rho,
                     hovermode = 'closest',
@@ -1972,19 +1972,19 @@ ConnectivityBoard <- function(input, output, session, env)
         }
 
         p <- p %>%
-            ## config(displayModeBar = FALSE) %>% ## disable buttons
-            config( toImageButtonOptions = list(format='svg', height=800, width=800, scale=1.1)) %>%
-            event_register('plotly_selected')
+            ## plotly::config(displayModeBar = FALSE) %>% ## disable buttons
+            plotly::config( toImageButtonOptions = list(format='svg', height=800, width=800, scale=1.1)) %>%
+            plotly::event_register('plotly_selected')
 
         dbg("cmapPairsPlot:: done\n")
         p    
     })
     
-    cmapPairsPlot.opts = tagList(
-        ##tipify( checkboxInput(ns("cmap_splom_highlight"),"Highlight genes",TRUE),
+    cmapPairsPlot.opts = shiny::tagList(
+        ##tipify( shiny::checkboxInput(ns("cmap_splom_highlight"),"Highlight genes",TRUE),
         ##       "Enable highlighting genes on the plots.",
         ##       placement="right", options = list(container = "body")),
-        tipify( selectInput(ns("cmap_logFC"),"logFC threshold:",c(0,0.5,1,2,3,4),selected=1), "Threshold for (log) foldchange to highlight in plot.",  placement="right", options = list(container = "body"))
+        shinyBS::tipify( shiny::selectInput(ns("cmap_logFC"),"logFC threshold:",c(0,0.5,1,2,3,4),selected=1), "Threshold for (log) foldchange to highlight in plot.",  placement="right", options = list(container = "body"))
     )
 
     cmapPairsPlot_info = "For the selected contrasts, the <strong>Pairs</strong> panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, The Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as '<custom>' selection."
@@ -1995,7 +1995,7 @@ ConnectivityBoard <- function(input, output, session, env)
 
     cmapPairsPlot_caption = "<b>Pairs plot.</b> Pairwise scatterplots of two differential expression profiles for selected contrasts. Similar profiles will show high correlation with points close to the diagonal."
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "cmapPairsPlot", label="c",
         func = cmapPairsPlot.PLOT,
@@ -2014,7 +2014,7 @@ ConnectivityBoard <- function(input, output, session, env)
     ##output <- attachModule(output, cmapPairsPlot_module)
 
 
-    connectivityScoreTable2.RENDER <- reactive({
+    connectivityScoreTable2.RENDER <- shiny::reactive({
         
         df <- getConnectivityScores()
         if(is.null(df)) return(NULL)
@@ -2053,10 +2053,10 @@ ConnectivityBoard <- function(input, output, session, env)
                           scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       )  %>%
-            formatSignif(numcols,3) %>%
+            DT::formatSignif(numcols,3) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
                 DT::formatStyle( "score",
-                                ##background = styleColorBar( score.col, 'lightblue'),
+                                ##background = DT::styleColorBar( score.col, 'lightblue'),
                                 background = color_from_middle(
                                     df[,"score"], 'lightblue', '#f5aeae'),
                                 backgroundSize = '98% 88%',
@@ -2064,12 +2064,12 @@ ConnectivityBoard <- function(input, output, session, env)
                                 backgroundPosition = 'center')
     })
     
-    connectivityScoreTable2_opts = tagList(
-        selectInput(ns("connectivityScoreTable2_qsig"),"threshold (padj)",
+    connectivityScoreTable2_opts = shiny::tagList(
+        shiny::selectInput(ns("connectivityScoreTable2_qsig"),"threshold (padj)",
                     c(0.01,0.05,0.2,1),selected=1)
     )
     
-    connectivityScoreTable2 <- callModule(
+    connectivityScoreTable2 <- shiny::callModule(
         tableModule,
         id = "connectivityScoreTable2", label = "b",
         func = connectivityScoreTable2.RENDER, 
@@ -2084,10 +2084,10 @@ ConnectivityBoard <- function(input, output, session, env)
     ## CONNECTIVITY HEATMAP
     ##=============================================================================
 
-    connectivityHeatmap.RENDER %<a-% reactive({
+    connectivityHeatmap.RENDER %<a-% shiny::reactive({
         ##
         F <- cumulativeFCtable()
-        req(F)
+        shiny::req(F)
         F <- F[,1:min(NCOL(F),25),drop=FALSE]
         if(input$cumFCplot_order=="FC") {
             F <- F[order(-abs(F[,1])),]
@@ -2108,14 +2108,14 @@ ConnectivityBoard <- function(input, output, session, env)
 
     })
     
-    connectivityHeatmap.opts = tagList(
+    connectivityHeatmap.opts = shiny::tagList(
     )
     
     connectivityHeatmap_info = "<b>The Connectivity Heatmap</b> shows the most similar profiles as a heatmap. Contrasts that are similar will be clustered close together."
 
     connectivityHeatmap_caption = "<b>Connectivity Heatmap.</b> Similarity of the contrasts profiles as a heatmap. Contrasts that are similar will be clustered close together."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         "connectivityHeatmap", label = "c",
         func = connectivityHeatmap.RENDER,
@@ -2145,29 +2145,29 @@ ConnectivityBoard <- function(input, output, session, env)
         "<b>(c)</b>", cmapPairsPlot_caption
     )
     
-    output$cmapCorrelation_UI <- renderUI({
+    output$cmapCorrelation_UI <- shiny::renderUI({
         ##req(input$dimensions)
-        fillCol(
+        shiny::fillCol(
             height = fullH,
             ## height = input$dimensions[2], ## dynamics with JS  
             flex = c(NA,0.015,1),
-            div(HTML(cmapCorrelation_caption,"<br><br>"), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(cmapCorrelation_caption,"<br><br>"), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1.2,0.05,1),
-                fillCol(
+                shiny::fillCol(
                     flex = c(1.3,0.03,1),                    
                     plotWidget(ns("cmap_FCFCplots")),
-                    br(),
+                    shiny::br(),
                     tableWidget(ns("connectivityScoreTable"))
                 ),
-                br(),
+                shiny::br(),
                 ##plotWidget(ns("connectivityMap"))
                 plotWidget(ns("cmapPairsPlot"))
             )
         )
     })
-    outputOptions(output, "cmapCorrelation_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "cmapCorrelation_UI", suspendWhenHidden=FALSE) ## important!!!
 
     ## ------------------------------------------------------
     ## --------------------- tab2 ---------------------------
@@ -2179,25 +2179,25 @@ ConnectivityBoard <- function(input, output, session, env)
         "<b>(c)</b>",connectivityHeatmap_caption
     )
 
-    require(sortable)
+
     
-    output$cmapHeatmap_UI <- renderUI({
-        fillCol(
+    output$cmapHeatmap_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = fullH,
             flex=c(NA,0.05,1.6,0.05,2), ##height = 370,
-            div(HTML(cmapHeatmap_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(cmapHeatmap_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1.8,0.06,1),
                 plotWidget(ns("cumFCplot")),
-                br(),
+                shiny::br(),
                 plotWidget(ns("cumEnrichmentPlot"))                
             ),
-            br(),
+            shiny::br(),
             plotWidget(ns("connectivityHeatmap"))
         )
     })
-    outputOptions(output, "cmapHeatmap_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "cmapHeatmap_UI", suspendWhenHidden=FALSE) ## important!!!
     
     ## ------------------------------------------------------
     ## --------------------- tab3 ---------------------------
@@ -2208,22 +2208,22 @@ ConnectivityBoard <- function(input, output, session, env)
         "<b>(b)</b>", enrichmentGraph_caption
     )
     
-    output$cmapMetaAnalysis_UI <- renderUI({
-        fillCol(
+    output$cmapMetaAnalysis_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = fullH,
             flex = c(NA,0.02,1),
-            div(HTML(cmapMetaAnalysis_caption,"<br>"), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(cmapMetaAnalysis_caption,"<br>"), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1,0.06,1),
                 plotWidget(ns("leadingEdgeGraph")),
-                br(),
+                shiny::br(),
                 plotWidget(ns("enrichmentGraph"))
                 ##tableWidget(ns("connectivityScoreTable2"))
             )
         )
     })
-    outputOptions(output,"cmapMetaAnalysis_UI", suspendWhenHidden=FALSE) ## important!!!    
+    shiny::outputOptions(output,"cmapMetaAnalysis_UI", suspendWhenHidden=FALSE) ## important!!!    
     
     ## ------------------------------------------------------
     ## --------------------- tab4 ---------------------------
@@ -2234,19 +2234,19 @@ ConnectivityBoard <- function(input, output, session, env)
         "<b>(b)</b>",connectivityScoreTable_info
     )
 
-    require(sortable)
+
     
-    output$cmapClustering_UI <- renderUI({
-        fillCol(
+    output$cmapClustering_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = fullH,
             flex=c(NA,0.025,1), ##height = 370,
-            div(HTML(cmapClustering_caption),class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(cmapClustering_caption),class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex=c(1.3,0.05,1), 
                 plotWidget(ns("connectivityMap")),
                 ##plotWidget(ns("cmapPairsPlot")),
-                br(),
+                shiny::br(),
                 tableWidget(ns("connectivityScoreTable2"))
             )
         )

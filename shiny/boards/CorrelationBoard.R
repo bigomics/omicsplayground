@@ -6,23 +6,23 @@
 message(">>> sourcing CorrelationBoard")
 
 CorrelationInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shiny::uiOutput(ns("inputsUI"))
     )
 }
 
 CorrelationUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    ui <- fillCol(
+    ns <- shiny::NS(id)  ## namespace
+    ui <- shiny::fillCol(
         height = 750,
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs"),
-            tabPanel("Correlation",uiOutput(ns("corAnalysis_UI"))),
-            ## tabPanel("Functional",uiOutput(ns("corFunctional_UI"))),
-            tabPanel("Graph",uiOutput(ns("corGraph_UI"))),            
-            tabPanel("Differential",uiOutput(ns("corDiff_UI")))
+            shiny::tabPanel("Correlation",uiOutput(ns("corAnalysis_UI"))),
+            ## shiny::tabPanel("Functional",uiOutput(ns("corFunctional_UI"))),
+            shiny::tabPanel("Graph",uiOutput(ns("corGraph_UI"))),            
+            shiny::tabPanel("Differential",uiOutput(ns("corDiff_UI")))
         )
     )
     ui
@@ -38,16 +38,16 @@ CorrelationBoard <- function(input, output, session, env)
     rowH  = 340  ## full height of page
     
     description = "<b>Correlation Analysis.</b> Compute the correlation between genes and find coregulated modules."
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
 
 
     cor_infotext ="The <strong>Correlation Analysis Board</strong> provides statistical correlation analysis on gene level with visualisations. During the visual analysis, users can filter out some samples or collapse the samples by predetermined groups. The dark shaded area in the barplot estimates the partial correlation."
     
-    require(RColorBrewer)
-    COL <- brewer.pal(12,"Paired")[seq(1,12,2)]
-    COL <- brewer.pal(9,"Set1")[c(2,1,3:9)]
+
+    COL <- RColorBrewer::brewer.pal(12,"Paired")[seq(1,12,2)]
+    COL <- RColorBrewer::brewer.pal(9,"Set1")[c(2,1,3:9)]
     COL2 <- rev(grey.colors(2))
-    COL2 <- brewer.pal(2,"Paired")[1:2]
+    COL2 <- RColorBrewer::brewer.pal(2,"Paired")[1:2]
     COL2 <- COL[1:2]
     
     ##================================================================================
@@ -56,23 +56,23 @@ CorrelationBoard <- function(input, output, session, env)
 
     corAnalysis_caption = "<h3>Gene Correlation Analysis</h3><b>(a)</b> <b>Top-ranked correlation.</b> Top correlated features with respect to selected gene. <b>(b)</b> <b>Correlation table</b> of correlation and partial correlation with respect to selected gene. <b>(c)</b> <b>Scatter plots</b> of gene expression of top correlated genes."
     
-    output$corAnalysis_UI <- renderUI({
-        fillCol(
+    output$corAnalysis_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.035,1),
             height = fullH,
-            div(HTML(corAnalysis_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(corAnalysis_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1,0.01,1.2),
-                fillCol(
+                shiny::fillCol(
                     flex = c(1,1),
                     height = fullH-80,
                     plotWidget(ns('cor_barplot')),
                     ##plotWidget(ns('cor_graph'))
                     tableWidget(ns('cor_table'))
                 ),	
-                br(), ## spacer
-                fillCol(
+                shiny::br(), ## spacer
+                shiny::fillCol(
                     flex = c(NA,1),
                     height = fullH-80,
                     plotWidget(ns('cor_scatter'))
@@ -80,34 +80,34 @@ CorrelationBoard <- function(input, output, session, env)
             )
         )
     })
-    outputOptions(output, "corAnalysis_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "corAnalysis_UI", suspendWhenHidden=FALSE) ## important!!!
 
     
     corfunctional_caption ="<b>(a)</b> <b>Correlation GSEA.</b> Top enriched gene sets using the correlation as rank metric. The black bars denote the genes in the gene set and their position in the sorted rank metric. <b>(b)</b> <b>Enrichment table.</b> Statistical results from GSEA analysis. <b>(c)</b> <b>Gene frequency.</b> Frequency of leading edge genes in top correlated genesets. <b>(d)</b> <b>Leading edge table.</b> Leading edge genes and rank statistics (rho) of the selected geneset."
 
-    output$corFunctional_UI <- renderUI({
-        fillCol(
+    output$corFunctional_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.025,1),
             height = fullH,
-            div(HTML(corfunctional_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(corfunctional_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1.8,0.11,1),
                 height = fullH - 60,
-                fillCol(
+                shiny::fillCol(
                     flex = c(1,0.07,0.6),
                     plotWidget(ns("corGSEA_plots")),
-                    br(),
+                    shiny::br(),
                     tableWidget(ns("corGSEA_table"))
                 ),
-                br(),
-                fillCol(
+                shiny::br(),
+                shiny::fillCol(
                     flex = c(1,0.04,1.3),
                     ##flex = c(1),
                     plotWidget(ns("corGSEA_cumFC")),
-                    br(),
+                    shiny::br(),
                     tableWidget(ns("corGSEA_LeadingEdgeTable"))
-                    ##div(HTML("caption"), class="caption")
+                    ##div(shiny::HTML("caption"), class="caption")
                 )
             )
         )
@@ -116,22 +116,22 @@ CorrelationBoard <- function(input, output, session, env)
 
     corDiff_caption = "<h3>Differential Gene Correlation Analysis (DGCA)</h3>Compute and analyze differential correlations between gene pairs across multiple conditions."
     
-    output$corDiff_UI <- renderUI({
-        fillCol(
+    output$corDiff_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.035,1),
             height = fullH,
-            div(HTML(corDiff_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(corDiff_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1,0.01,1.2),
-                fillCol(
+                shiny::fillCol(
                     flex = c(1.3,1),
                     height = fullH-80,
                     plotWidget(ns('dgca_barplot')),
                     tableWidget(ns('dgca_table'))
                 ),	
-                br(), ## spacer
-                fillCol(
+                shiny::br(), ## spacer
+                shiny::fillCol(
                     flex = c(NA,1),
                     height = fullH-80,
                     plotWidget(ns('dgca_scatter'))
@@ -139,85 +139,85 @@ CorrelationBoard <- function(input, output, session, env)
             )
         )
     })
-    outputOptions(output, "corDiff_UI", suspendWhenHidden=FALSE) ## important!!!    
+    shiny::outputOptions(output, "corDiff_UI", suspendWhenHidden=FALSE) ## important!!!    
 
     corGraph_caption = "<h3>Gene Correlation Network</h3>Visualization of gene correlation as network or UMAP. <b>(a)</b> <b>Partial correlation network</b> around the selected gene. <b>(b)</b> <b>Correlation UMAP</b>."
     
-    output$corGraph_UI <- renderUI({
-        fillCol(
+    output$corGraph_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.035,1),
             height = fullH,
-            div(HTML(corGraph_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(corGraph_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1,0.05,1),
                 plotWidget(ns('cor_graph')),
-                br(),
+                shiny::br(),
                 plotWidget(ns('cor_umap'))
             )
         )
     })
-    outputOptions(output, "corGraph_UI", suspendWhenHidden=FALSE) ## important!!!    
+    shiny::outputOptions(output, "corGraph_UI", suspendWhenHidden=FALSE) ## important!!!    
     
     
     ##================================================================================
     ##========================= INPUTS UI ============================================
     ##================================================================================
-    require(htmltools)
+
     
-    output$inputsUI <- renderUI({
-        ui <- tagList(
-            actionLink(ns("cor_info"), "Info", icon=icon("info-circle")),
-            hr(), br(),             
+    output$inputsUI <- shiny::renderUI({
+        ui <- shiny::tagList(
+            shiny::actionLink(ns("cor_info"), "Info", icon=icon("info-circle")),
+            shiny::hr(), shiny::br(),             
 
             ## data set parameters
-            tipify( selectInput(ns("cor_gene"),"Gene:", choices=NULL),
+            shinyBS::tipify( shiny::selectInput(ns("cor_gene"),"Gene:", choices=NULL),
                    "Choose a gene for the correlation analysis.", placement="top"),
-            br(),
-            tipify( selectInput(ns("cor_group"),"Color by:", choices=NULL, multiple=FALSE),
+            shiny::br(),
+            shinyBS::tipify( shiny::selectInput(ns("cor_group"),"Color by:", choices=NULL, multiple=FALSE),
                    "Variable to split and color by groups.", placement="top"),
-            br(),
-            actionLink(ns("cor_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-            br(),br(),
-            conditionalPanel(
+            shiny::br(),
+            shiny::actionLink(ns("cor_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+            shiny::br(),br(),
+            shiny::conditionalPanel(
                 "input.cor_options % 2 == 1", ns=ns,
-                tagList(
-                    tipify( selectInput(ns("cor_features"),"Filter genes:", choices=NULL, multiple=FALSE),
+                shiny::tagList(
+                    shinyBS::tipify( shiny::selectInput(ns("cor_features"),"Filter genes:", choices=NULL, multiple=FALSE),
                            "Filter gene features.", placement="top"),
-                    conditionalPanel(
+                    shiny::conditionalPanel(
                         "input.cor_features == '<custom>'", ns=ns,
-                        tipify( textAreaInput(ns("cor_customfeatures"),
+                        shinyBS::tipify( shiny::textAreaInput(ns("cor_customfeatures"),
                                               NULL, value = NULL,
                                               height = "100px", width = "100%", 
                                               rows=5, placeholder="Paste your custom gene list"),
                                "Paste a custom list of genes to be used as features.",
                                placement="top")
                     ),                    
-                    ##tipify( selectInput(ns("cor_samplefilter"),"Filter samples",
+                    ##tipify( shiny::selectInput(ns("cor_samplefilter"),"Filter samples",
                     ##                    choices=NULL, multiple=TRUE),
                     ##       "Filter (include) samples for the analysis", placement="top"),
-                    tipify( checkboxInput(ns("dgca.allpairs"),"All pairs for DGCA"),
+                    shinyBS::tipify( shiny::checkboxInput(ns("dgca.allpairs"),"All pairs for DGCA"),
                            "Compute all DGCA pairs", placement="top")
                 )
             )
         )
 
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
 
-    observeEvent( input$cor_info, {
-        showModal(modalDialog(
-            title = HTML("<strong>Correlation Analysis Board</strong>"),
-            HTML(cor_infotext),
+    shiny::observeEvent( input$cor_info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>Correlation Analysis Board</strong>"),
+            shiny::HTML(cor_infotext),
             easyClose = TRUE ))
     })
     
     ## update filter choices upon change of data set 
-    observe({
+    shiny::observe({
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
         
@@ -228,22 +228,22 @@ CorrelationBoard <- function(input, output, session, env)
         genes <- sort(ngs$genes[rownames(ngs$X),]$gene_name)
         sel = genes[1]  ## most var gene
         sel = names(head(sort(-rowMeans(pgx.getMetaMatrix(ngs)$fc**2)),1))
-        updateSelectizeInput(session,'cor_gene', choices=genes, selected=sel, server=TRUE)
+        shiny::updateSelectizeInput(session,'cor_gene', choices=genes, selected=sel, server=TRUE)
 
         fam <- pgx.getFamilies(ngs,nmin=10,extended=FALSE)
         fam <- sort(c("<custom>",fam))
-        updateSelectInput(session, "cor_features", choices=fam)
+        shiny::updateSelectInput(session, "cor_features", choices=fam)
         
         px <- colnames(ngs$Y)
-        updateSelectInput(session, "cor_group", choices=px)
+        shiny::updateSelectInput(session, "cor_group", choices=px)
         
     })
 
 
-    getFilteredExpression <- reactive({
+    getFilteredExpression <- shiny::reactive({
 
         ngs <- inputData()
-        req(ngs,input$cor_gene)
+        shiny::req(ngs,input$cor_gene)
         X <- ngs$X    
         gene <- rownames(X)[1]
         gene <- input$cor_gene
@@ -282,9 +282,9 @@ CorrelationBoard <- function(input, output, session, env)
         X
     })
     
-    getPartialCorrelationMatrix <- reactive({
+    getPartialCorrelationMatrix <- shiny::reactive({
         ngs <- inputData()
-        req(ngs,input$cor_gene)
+        shiny::req(ngs,input$cor_gene)
 
         gene = rownames(ngs$X)[1]
         gene <- input$cor_gene
@@ -292,7 +292,7 @@ CorrelationBoard <- function(input, output, session, env)
         ## filter gene expression matrix
         X <- getFilteredExpression()        
         
-        showNotification(paste("computing correlation...\n"))        
+        shiny::showNotification(paste("computing correlation...\n"))        
         NTOP = 50
         NTOP = as.integer(input$pcor_ntop)
         ##res <- pgx.computePartialCorrelationAroundGene(
@@ -305,13 +305,13 @@ CorrelationBoard <- function(input, output, session, env)
         diag(P) <- 0
         rho1 <- min(head(sort(P,decreasing=TRUE),200))
         max1 <- round(max(P),digits=3)
-        updateSliderInput(session, "cor_graph_threshold", value=rho1, max=max1)
-        updateSliderInput(session, "dcga_graph_threshold", value=rho1, max=max1)        
+        shiny::updateSliderInput(session, "cor_graph_threshold", value=rho1, max=max1)
+        shiny::updateSliderInput(session, "dcga_graph_threshold", value=rho1, max=max1)        
 
         res
     })
     
-    getPartialCorrelation <- reactive({
+    getPartialCorrelation <- shiny::reactive({
         res <- getPartialCorrelationMatrix()
         gene <- rownames(res$cor)[1]
         gene <- input$cor_gene
@@ -321,10 +321,10 @@ CorrelationBoard <- function(input, output, session, env)
         df
     })
 
-    getGeneCorr <- reactive({
-        require(RColorBrewer)
+    getGeneCorr <- shiny::reactive({
+
         ngs <- inputData()
-        req(ngs)	
+        shiny::req(ngs)	
         
         dbg("[getGeneCorr] reacted!")
 
@@ -385,7 +385,7 @@ CorrelationBoard <- function(input, output, session, env)
     ## Correlation barplot
     ##-----------------------------------------------------------
     
-    cor_barplot.PLOTFUN %<a-% reactive({
+    cor_barplot.PLOTFUN %<a-% shiny::reactive({
 
         df <- getPartialCorrelation()
         
@@ -396,7 +396,7 @@ CorrelationBoard <- function(input, output, session, env)
         R <- getGeneCorr()            
         dbg("[cor_barplot.PLOTFUN] 1: dim.R = ",dim(R))
         sel <- cor_table$rows_all()
-        req(sel)
+        shiny::req(sel)
         NTOP=50
         sel <- head(sel,NTOP)
         rho <- R[sel,"cor"]
@@ -424,17 +424,17 @@ CorrelationBoard <- function(input, output, session, env)
         
     })
 
-    cor_barplot.opts <- tagList(
+    cor_barplot.opts <- shiny::tagList(
         ##radioButtons(ns('cor_partialpc'),'partial correlation',
         ##             c("none","fast","all methods"), selected="none",
         ##             inline=TRUE)
-        radioButtons(ns('pcor_ntop'),'nr of top genes to compute partial correlation.',
+        shiny::radioButtons(ns('pcor_ntop'),'nr of top genes to compute partial correlation.',
                      c(50,100,250), selected=100, inline=TRUE)
     )
 
     cor_barplot.info = "<b>Top correlated genes.</b> Highest correlated genes in respect to the selected gene. The height of the bars correspond to the Pearson correlation value. The dark grey bars correspond to the 'partial correlation' which essentially corrects the correlation value for indirect effects and tries to estimate the amount of direct interaction."
    
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "cor_barplot", 
         func = cor_barplot.PLOTFUN,
@@ -455,10 +455,10 @@ CorrelationBoard <- function(input, output, session, env)
     ## Correlation scatter plots
     ##-----------------------------------------------------------------------------
     
-    cor_scatter.PLOTFUN %<a-% reactive({
+    cor_scatter.PLOTFUN %<a-% shiny::reactive({
 
         ngs <- inputData()
-        req(input$cor_gene)
+        shiny::req(input$cor_gene)
         X <- getFilteredExpression()
 
         this.gene=rownames(ngs$X)[1]
@@ -477,7 +477,7 @@ CorrelationBoard <- function(input, output, session, env)
             R <- getGeneCorr()            
             dbg("[cor_scatter.PLOTFUN] 1: dim.R = ",dim(R))
             sel <- cor_table$rows_all()
-            req(sel)
+            shiny::req(sel)
             rho <- head(R[sel,"cor"],NTOP)
             if(length(sel)==1) names(rho) <- rownames(R)[sel]
         }
@@ -489,7 +489,7 @@ CorrelationBoard <- function(input, output, session, env)
         
         colorby=1
         colorby <- input$cor_group
-        req(colorby)
+        shiny::req(colorby)
         
         ph <- factor(ngs$samples[,colorby])
         klrpal <- rep(COL,99)
@@ -534,7 +534,7 @@ CorrelationBoard <- function(input, output, session, env)
                 ylab = gene2
                 xlab = this.gene
             }
-            plot(x, y, pch=19, cex=cex, col = klr,
+            KEGGgraph::plot(x, y, pch=19, cex=cex, col = klr,
                  ylab=ylab, xlab=xlab)
             
             y <- y + 1e-3*rnorm(length(y))
@@ -560,14 +560,14 @@ CorrelationBoard <- function(input, output, session, env)
 
     })
 
-    cor_scatter.opts <- tagList(
-        checkboxInput(ns("corscatter.swapaxis"),"swap axes")
-        ## selectInput(ns("corscatter.colorby"),"color by:", choices=NULL),        
+    cor_scatter.opts <- shiny::tagList(
+        shiny::checkboxInput(ns("corscatter.swapaxis"),"swap axes")
+        ## shiny::selectInput(ns("corscatter.colorby"),"color by:", choices=NULL),        
     )
 
     cor_scatter.info = "<b>Correlation scatter plots.</b> Pairwise scatter plots for the co-expression of correlated gene pairs across the samples. The straight line correspond to the (linear) regression fit."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "cor_scatter", label = "c",
         func = cor_scatter.PLOTFUN,
@@ -588,10 +588,10 @@ CorrelationBoard <- function(input, output, session, env)
     ##  Cumulative correlation plot (stacked)
     ##----------------------------------------------------------------------
 
-    cum_corplot_data <- reactive({
+    cum_corplot_data <- shiny::reactive({
         
         ngs <- inputData()
-        req(ngs)	
+        shiny::req(ngs)	
         R <- getGeneCorr()
         
         ## get top correlated genes
@@ -618,7 +618,7 @@ CorrelationBoard <- function(input, output, session, env)
         return(res)
     })
     
-    cum_corplot.RENDER %<a-% reactive({
+    cum_corplot.RENDER %<a-% shiny::reactive({
 
         dbg("[cum_corplot.RENDER] reacted")
         
@@ -644,7 +644,7 @@ CorrelationBoard <- function(input, output, session, env)
 
     cum_corplot_text = paste0('Top cumulative positively and negatively correlated genes with the selected gene in the current dataset as well as in public datasets such as ',a_ImmProt,' and ',a_HPA,'. The correlations of genes are colored by dataset.')
     
-    callModule(
+    shiny::callModule(
         plotModule, "cum_corplot",
         func = cum_corplot.RENDER,
         func2 = cum_corplot.RENDER,
@@ -660,10 +660,10 @@ CorrelationBoard <- function(input, output, session, env)
     ## Correlation table
     ##--------------------------------------------------------------------------------
 
-    cor_table.RENDER <- reactive({
+    cor_table.RENDER <- shiny::reactive({
 
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         dbg("[cor_table.RENDER] reacted!")
 
@@ -702,7 +702,7 @@ CorrelationBoard <- function(input, output, session, env)
                     deferRender=TRUE
                 )  ## end of options.list 
             )  %>%
-            formatSignif(numeric.cols,4)  %>%
+            DT::formatSignif(numeric.cols,4)  %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
             DT::formatStyle("cor",
                             background = color_from_middle(
@@ -715,11 +715,11 @@ CorrelationBoard <- function(input, output, session, env)
 
     cor_table.info = "<b>DGCA table.</b> Statistical results from the DGCA computation for differentially correlated gene pairs."
 
-    cor_table.opts <- tagList(
+    cor_table.opts <- shiny::tagList(
         ##checkboxInput(ns("cor_table.full"),"full table")
     )
     
-    cor_table <- callModule(
+    cor_table <- shiny::callModule(
         tableModule, 
         id = "cor_table", 
         func = cor_table.RENDER,
@@ -736,9 +736,9 @@ CorrelationBoard <- function(input, output, session, env)
     ## Correlation network
     ##-----------------------------------------------------------
     
-    getCorGraph <- reactive({
+    getCorGraph <- shiny::reactive({
 
-        req(input$cor_gene)
+        shiny::req(input$cor_gene)
 
         dbg("[getCorGraph] reacted!")
         
@@ -768,10 +768,10 @@ CorrelationBoard <- function(input, output, session, env)
         gr
     })
 
-    cor_graph.PLOTFUN %<a-% reactive({
+    cor_graph.PLOTFUN %<a-% shiny::reactive({
         gr <- getCorGraph()
         par(mar=c(1,1,1,1)*0)
-        plot(gr,
+        KEGGgraph::plot(gr,
              ##layout = L1,
              ##vertex.label.cex = label.cex,
              ##vertex.size = 12,
@@ -780,24 +780,24 @@ CorrelationBoard <- function(input, output, session, env)
              )
     })
 
-    cor_graph.VISNETWORK <- reactive({
-        require(visNetwork)
+    cor_graph.VISNETWORK <- shiny::reactive({
+
         gr <- getCorGraph()
         if(is.null(gr)) return(NULL)                
         
-        visdata <- toVisNetworkData(gr, idToLabel=FALSE)
+        visdata <- visNetwork::toVisNetworkData(gr, idToLabel=FALSE)
         visdata$edges$width <- 2*visdata$edges$width 
         
         graph <- visNetwork::visNetwork(
                                  nodes = visdata$nodes,
                                  edges = visdata$edges) %>%
-            visNodes(font = list(size = 12))  %>%
-            visEdges(hidden=FALSE, width=4, color=list(opacity=0.9))  %>%
-            visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)) %>%
-            ## visPhysics(enabled=TRUE)  %>%
-            ## visInteraction(hideEdgesOnDrag = TRUE) %>%
-            ## visIgraphLayout(layout="layout.norm", layoutMatrix=pos)
-            visIgraphLayout(layout="layout_nicely")
+            visNetwork::visNodes(font = list(size = 12))  %>%
+            visNetwork::visEdges(hidden=FALSE, width=4, color=list(opacity=0.9))  %>%
+            visNetwork::visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)) %>%
+            ## visNetwork::visPhysics(enabled=TRUE)  %>%
+            ## visNetwork::visInteraction(hideEdgesOnDrag = TRUE) %>%
+            ## visNetwork::visIgraphLayout(layout="layout.norm", layoutMatrix=pos)
+            visNetwork::visIgraphLayout(layout="layout_nicely")
         graph
 
     })
@@ -805,16 +805,16 @@ CorrelationBoard <- function(input, output, session, env)
     GRAPH.LAYOUTS = c("Fruchterman-Reingold"="fr", "Kamada-Kawai"="kk",
                       "graphopt"="graphopt","tree layout"="tree")
 
-    cor_graph.opts <- tagList(
-        sliderInput(ns('cor_graph_radius'),'radius:', 1, 8, 3, 1),
-        sliderInput(ns('cor_graph_threshold'),'pcor threshold:', 0, 1, 0.90),        
-        selectInput(ns('cor_graph_layout'),'layout:', choices=GRAPH.LAYOUTS)
+    cor_graph.opts <- shiny::tagList(
+        shiny::sliderInput(ns('cor_graph_radius'),'radius:', 1, 8, 3, 1),
+        shiny::sliderInput(ns('cor_graph_threshold'),'pcor threshold:', 0, 1, 0.90),        
+        shiny::selectInput(ns('cor_graph_layout'),'layout:', choices=GRAPH.LAYOUTS)
     )
 
     cor_graph_info <- "<b>Gene correlation network.</b> Correlation graph centered on selected gene with top most correlated features. Red edges correspond to negative (marginal) correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation of the gene pair."
     cor_graph_info <- "<b>Partial correlation network.</b> Partial correlation graph centered on selected gene with top most correlated features. Red edges correspond to negative correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation value of the gene pair."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "cor_graph", label = "a",
         ##func = cor_graph.PLOTFUN,
@@ -837,12 +837,12 @@ CorrelationBoard <- function(input, output, session, env)
     ## Correlation UMAP
     ##-----------------------------------------------------------
     
-    ##cor_umap.PLOTFUN %<a-% reactive({
-    cor_umap.PLOTFUN <- reactive({    
+    ##cor_umap.PLOTFUN %<a-% shiny::reactive({
+    cor_umap.PLOTFUN <- shiny::reactive({    
 
         ngs <- inputData()
-        req(ngs)
-        req(input$cor_gene)
+        shiny::req(ngs)
+        shiny::req(input$cor_gene)
         
         dbg("[cor_umap.PLOTFUN] reacted!")
         if(!"cluster.genes" %in% names(ngs)) {
@@ -906,13 +906,13 @@ CorrelationBoard <- function(input, output, session, env)
         if(!is.null(p)) return(p)
     })
 
-    cor_umap.opts <- tagList(
-        radioButtons(ns('umap_param'),'parameter:', choices=c("cor","cov"), inline=TRUE)
+    cor_umap.opts <- shiny::tagList(
+        shiny::radioButtons(ns('umap_param'),'parameter:', choices=c("cor","cov"), inline=TRUE)
     )
 
     cor_umap_info <- "<b>Gene UMAP.</b> Partial correlation graph centered on selected gene with top most correlated features. Red edges correspond to negative correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation value of the gene pair."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "cor_umap", label = "b",
         func = cor_umap.PLOTFUN,
@@ -935,11 +935,11 @@ CorrelationBoard <- function(input, output, session, env)
     ## Correlation GSEA
     ##--------------------------------------------------------------------------------
 
-    getCorrelationGSEA <- reactive({
+    getCorrelationGSEA <- shiny::reactive({
 
         ngs <- inputData()
         alertDataLoaded(session,ngs)
-        req(ngs)
+        shiny::req(ngs)
 
         pgx.showSmallModal("Calculating correlation GSEA...<br>please wait")
         
@@ -954,12 +954,12 @@ CorrelationBoard <- function(input, output, session, env)
         
         gmt <- GSETS[colnames(ngs$GMT)]
         ## gmt <- GSETS  ## all???
-        gsea <- fgsea(gmt, rho, minSize=15, maxSize=1000)
+        gsea <- fgsea::fgsea(gmt, rho, minSize=15, maxSize=1000)
         gsea <- gsea[order(-gsea$NES),]
         head(gsea)
 
         ## done!
-        removeModal()
+        shiny::removeModal()
         beepr::beep(10)  ## short beep
         
         res <- list(gsea=gsea, rho=rho)
@@ -967,13 +967,13 @@ CorrelationBoard <- function(input, output, session, env)
     })
 
     
-    corGSEA_plots.RENDER %<a-% reactive({
-        require(RColorBrewer)
+    corGSEA_plots.RENDER %<a-% shiny::reactive({
+
         res = getCorrelationGSEA()
         ##if(is.null(rho)) return(NULL)
 
         ii <- corGSEA_table$rows_all()
-        req(ii)
+        shiny::req(ii)
         gsea <- res$gsea[ii,,drop=FALSE]
         
         ## ENPLOT TYPE
@@ -1000,8 +1000,8 @@ CorrelationBoard <- function(input, output, session, env)
         
     })
 
-    corGSEA_plots_opts = tagList(
-        tipify( selectInput( ns("xann.refset"), "Reference set:", choices="", width='80%'),
+    corGSEA_plots_opts = shiny::tagList(
+        shinyBS::tipify( shiny::selectInput( ns("xann.refset"), "Reference set:", choices="", width='80%'),
                "Specify a reference set to be used in the annotation.",
                placement="left",options = list(container = "body"))
     )
@@ -1010,7 +1010,7 @@ CorrelationBoard <- function(input, output, session, env)
 
     
     ##corGSEA_plots_module <- plotModule(
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "corGSEA_plots", ##ns=ns,
         func = corGSEA_plots.RENDER,
@@ -1025,7 +1025,7 @@ CorrelationBoard <- function(input, output, session, env)
     )
     ## output <- attachModule(output, corGSEA_plots_module)
     
-    corGSEA_table.RENDER <- reactive({
+    corGSEA_table.RENDER <- shiny::reactive({
         
         res = getCorrelationGSEA()
         
@@ -1056,7 +1056,7 @@ CorrelationBoard <- function(input, output, session, env)
                     deferRender=TRUE
                 )  ## end of options.list 
             )  %>%
-            formatSignif(numeric.cols,4)  %>%
+            DT::formatSignif(numeric.cols,4)  %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle("NES",
                                 background = color_from_middle(df[,"NES"], 'lightblue', '#f5aeae'),
@@ -1068,11 +1068,11 @@ CorrelationBoard <- function(input, output, session, env)
 
     corGSEA_table_info = "<b>Enrichment table.</b> Statistical results from the GSEA computation for functional enrichment of correlated genes. The column 'pval' and 'padj' correspond to the p-value and (multiple testing) adjusted p-value of the GSEA test, respectively. The 'NES' column reports the normalized enrichment score."
 
-    corGSEA_table_opts <- tagList(
-        checkboxInput(ns("corGSEAtable_multiselect"),"enable multi-select")
+    corGSEA_table_opts <- shiny::tagList(
+        shiny::checkboxInput(ns("corGSEAtable_multiselect"),"enable multi-select")
     )
     
-    corGSEA_table <- callModule(
+    corGSEA_table <- shiny::callModule(
         tableModule, 
         id = "corGSEA_table", 
         func = corGSEA_table.RENDER,
@@ -1083,15 +1083,15 @@ CorrelationBoard <- function(input, output, session, env)
         ##caption = corGSEA_caption
     )    
 
-    corGSEA_cumFC.RENDER %<a-% reactive({
+    corGSEA_cumFC.RENDER %<a-% shiny::reactive({
 
-        require(RColorBrewer)
+
         res = getCorrelationGSEA()
         ##if(is.null(rho)) return(NULL)
 
         ii <- 1:nrow(res$gsea)
         ii <- corGSEA_table$rows_all()
-        req(ii)
+        shiny::req(ii)
         ii <- head(ii,20)
         le.genes <- res$gsea[ii,]$leadingEdge
         names(le.genes) <- res$gsea[ii,]$pathway
@@ -1121,11 +1121,11 @@ CorrelationBoard <- function(input, output, session, env)
         
     })
 
-    corGSEA_cumFC.opts = tagList()
+    corGSEA_cumFC.opts = shiny::tagList()
     corGSEA_cumFC.info = "<b>Leading-edge gene frequency.</b> Number of genesets that include the gene in their leading-edge. Genes with higher frequency are shared more often among the top genesets and may indicate a driver gene."    
 
     ##corGSEA_cumFC_module <- plotModule(
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "corGSEA_cumFC", ##ns=ns,
         func = corGSEA_cumFC.RENDER,
@@ -1141,12 +1141,12 @@ CorrelationBoard <- function(input, output, session, env)
     )
 
     
-    corGSEA_LeadingEdgeTable.RENDER <- reactive({
+    corGSEA_LeadingEdgeTable.RENDER <- shiny::reactive({
         
         res = getCorrelationGSEA()
         sel=1
         sel <- corGSEA_table$rows_selected()
-        req(sel)
+        shiny::req(sel)
         le.genes <- res$gsea[sel[1],]$leadingEdge[[1]]
         if(length(sel)>1) {
             for(i in 2:length(sel)) {
@@ -1178,7 +1178,7 @@ CorrelationBoard <- function(input, output, session, env)
                     deferRender=TRUE
                 )  ## end of options.list 
             )  %>%
-            formatSignif(numeric.cols,4)  %>%
+            DT::formatSignif(numeric.cols,4)  %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle("rho",
                                 background = color_from_middle(df[,"rho"], 'lightblue', '#f5aeae'),
@@ -1190,7 +1190,7 @@ CorrelationBoard <- function(input, output, session, env)
 
     corGSEA_LeadingEdgeTable.info = "<b>Leading-edge table</b> Leading edge genes as reported by GSEA corresponding to the selected geneset. The 'rho' column reports the correlation with respect to the query gene."
     
-    corGSEA_LeadingEdgeTable <- callModule(
+    corGSEA_LeadingEdgeTable <- shiny::callModule(
         tableModule, 
         id = "corGSEA_LeadingEdgeTable", 
         func = corGSEA_LeadingEdgeTable.RENDER,
@@ -1205,7 +1205,7 @@ CorrelationBoard <- function(input, output, session, env)
     ## Function for Differential Gene Correlation Analysis
     ##-----------------------------------------------------------
 
-    dgca.output <- reactive({
+    dgca.output <- shiny::reactive({
         
         ngs <- inputData()
         gene=NULL
@@ -1218,8 +1218,8 @@ CorrelationBoard <- function(input, output, session, env)
         
         gene <- input$cor_gene
         ph   <- input$cor_group
-        req(gene)
-        req(ph)        
+        shiny::req(gene)
+        shiny::req(ph)        
         if(input$dgca.allpairs) gene <- NULL
         
         message("[dgca.output] gene= ",gene)
@@ -1253,7 +1253,7 @@ CorrelationBoard <- function(input, output, session, env)
         message("[dgca.output] gene.inX= ",gene %in% rownames(X))
         message("[dgca.output] dimD= ",paste(dim(D),collapse='x'))
         
-        require(DGCA)
+
         res = DGCA::ddcorAll(inputMat = X,
                              splitSet = gene,
                              design = D,
@@ -1288,7 +1288,7 @@ CorrelationBoard <- function(input, output, session, env)
     })
 
     
-    dgca_barplot.PLOTFUN %<a-% reactive({
+    dgca_barplot.PLOTFUN %<a-% shiny::reactive({
 
         res <- dgca.output()        
 
@@ -1319,7 +1319,7 @@ CorrelationBoard <- function(input, output, session, env)
         }
 
         ##klr.pal = rev(grey.colors(2)),
-        klr.pal <- brewer.pal(4,"Paired")[1:2]
+        klr.pal <- RColorBrewer::brewer.pal(4,"Paired")[1:2]
         klr.pal <- COL2
         
         par(mfrow=c(1,1), mar=c(12,4,1,1))
@@ -1340,13 +1340,13 @@ CorrelationBoard <- function(input, output, session, env)
         
     })
 
-    dgca_barplot.opts <- tagList(
-        checkboxInput(ns("dgca_barplot.meansort"),"sort on mean correlation")
+    dgca_barplot.opts <- shiny::tagList(
+        shiny::checkboxInput(ns("dgca_barplot.meansort"),"sort on mean correlation")
     )
 
     dgca_barplot.info = "<b>Differentially correlated gene pairs.</b> The height of the bars correspond to the Pearson correlation value of a gene pair in each group. Differentially correlated gene pairs show different correlation value in each group.."
    
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "dgca_barplot", 
         func = dgca_barplot.PLOTFUN,
@@ -1366,7 +1366,7 @@ CorrelationBoard <- function(input, output, session, env)
     ## DGCA Table
     ##-----------------------------------------------------------
 
-    dgca_table.RENDER <- reactive({
+    dgca_table.RENDER <- shiny::reactive({
         
         res <- dgca.output()        
         
@@ -1399,7 +1399,7 @@ CorrelationBoard <- function(input, output, session, env)
                     deferRender=TRUE
                 )  ## end of options.list 
             )  %>%
-            formatSignif(numeric.cols,4)  %>%
+            DT::formatSignif(numeric.cols,4)  %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle("zScoreDiff",
                                 background = color_from_middle(df[,"zScoreDiff"],
@@ -1412,11 +1412,11 @@ CorrelationBoard <- function(input, output, session, env)
 
     dgca_table.info = "<b>DGCA table.</b> Statistical results from the DGCA computation for differentially correlated gene pairs."
 
-    dgca_table.opts <- tagList(
-        checkboxInput(ns("dgca_table.full"),"full table")
+    dgca_table.opts <- shiny::tagList(
+        shiny::checkboxInput(ns("dgca_table.full"),"full table")
     )
     
-    dgca_table <- callModule(
+    dgca_table <- shiny::callModule(
         tableModule, 
         id = "dgca_table", 
         func = dgca_table.RENDER,
@@ -1445,13 +1445,13 @@ CorrelationBoard <- function(input, output, session, env)
         x2 <- X[gene1,which(grp==grp.levels[2])]
         y2 <- X[gene2,which(grp==grp.levels[2])]
 
-        col1 <- paste0(col2hex(col),"AA") ## add opacity
+        col1 <- paste0(gplots::col2hex(col),"AA") ## add opacity
         rgb2col <- function(cc) rgb(cc[1],cc[2],cc[3],maxColorValue=255)
         col2 <- apply( 0.66*col2rgb(col),2,rgb2col)
         
         ##par(mfrow=c(2,2), mar=c(4,4,2,2), oma=c(0,0,0,0))
         par(mgp=c(1.6,0.6,0))
-        plot(x1, y1, col=col1[1], pch=19, cex=cex,
+        KEGGgraph::plot(x1, y1, col=col1[1], pch=19, cex=cex,
              xlim=range(c(x1,x2)), ylim=range(c(y1,y2)),
              ##main = 'differential correlation',
              xlab=gene1, ylab=gene2)
@@ -1482,11 +1482,11 @@ CorrelationBoard <- function(input, output, session, env)
         }
     }
     
-    dgca_scatter.PLOTFUN %<a-% reactive({
+    dgca_scatter.PLOTFUN %<a-% shiny::reactive({
         
         message("[dgca_scatter.PLOTFUN] reacted!")
 
-        req(input$cor_gene)
+        shiny::req(input$cor_gene)
         res <- dgca.output()
 
         ii  <- dgca_table$rows_all()
@@ -1497,7 +1497,7 @@ CorrelationBoard <- function(input, output, session, env)
         ph='ER_STATUS';
         ngs <- inputData()
         ph  <- input$cor_group
-        req(ph)
+        shiny::req(ph)
         
         grp  <- factor(ngs$samples[,ph])
         ndim <- nrow(ngs$samples)
@@ -1550,14 +1550,14 @@ CorrelationBoard <- function(input, output, session, env)
         
     })
 
-    dgca_scatter.opts <- tagList(
+    dgca_scatter.opts <- shiny::tagList(
         ##checkboxInput(ns("dgcascatter.swapaxis"),"swap axes"),
         ##selectInput(ns("dgcascatter.colorby"),"color by:", choices=NULL),        
     )
 
     dgca_scatter.info = "<b>DGCA scatter plots.</b> Pairwise scatter plots for the co-expression of the gene pairs in two different conditions. Differentially correlated gene pairs will show different correlation values measured by the difference in their z-score ('zScoreDiff'). The straight lines correspond to the linear regression fits. "
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "dgca_scatter", label = "c",
         func = dgca_scatter.PLOTFUN,

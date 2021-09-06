@@ -7,7 +7,7 @@
 ## Upload data Module
 ##================================================================================
 
-require(shinyalert)
+
 
 if(0) {
 
@@ -34,9 +34,9 @@ if(0) {
     pgx <- gadgetize2(
         ComputePgxUI, ComputePgxServer,
         title = "ComputePgxGadget", height=640, size="l", 
-        countsRT = reactive(ngs$counts),
-        samplesRT = reactive(ngs$samples),
-        contrastsRT = reactive(ngs$model.parameters$exp.matrix),
+        countsRT = shiny::reactive(ngs$counts),
+        samplesRT = shiny::reactive(ngs$samples),
+        contrastsRT = shiny::reactive(ngs$model.parameters$exp.matrix),
         alertready = TRUE
     )
     pgx <- ComputePgxGadget(ngs$counts, ngs$samples, ngs$model.parameters$exp.matrix)
@@ -45,16 +45,16 @@ if(0) {
 }
 
 UploadModuleUI <- function(id) {
-    ns <- NS(id)
-    tabsetPanel(
+    ns <- shiny::NS(id)
+    shiny::tabsetPanel(
         id = ns("tabs"),
         ## type = "pills",
         ## type = "hidden",
-        tabPanel("Upload", uiOutput(ns("upload_UI"))),
-        ## tabPanel("Normalize", uiOutput(ns("normalize_UI"))),
-        tabPanel("BatchCorrect", uiOutput(ns("batchcorrect_UI"))),
-        tabPanel("Contrasts", uiOutput(ns("contrasts_UI"))),
-        tabPanel("Compute", uiOutput(ns("compute_UI")))
+        shiny::tabPanel("Upload", shiny::uiOutput(ns("upload_UI"))),
+        ## shiny::tabPanel("Normalize", shiny::uiOutput(ns("normalize_UI"))),
+        shiny::tabPanel("BatchCorrect", shiny::uiOutput(ns("batchcorrect_UI"))),
+        shiny::tabPanel("Contrasts", shiny::uiOutput(ns("contrasts_UI"))),
+        shiny::tabPanel("Compute", shiny::uiOutput(ns("compute_UI")))
     )
 }
 
@@ -68,12 +68,12 @@ UploadModuleServer <- function(id,
                                    datasets = 10 )
                                )
 {
-    moduleServer(
+    shiny::moduleServer(
         id,
         function(input, output, session) {
 
             ns <- session$ns
-            ## ns <- NS(id)
+            ## ns <- shiny::NS(id)
             
             dbg("[UploadModuleServer] called!")
             
@@ -84,9 +84,9 @@ UploadModuleServer <- function(id,
             dbg("[UploadModuleServer] limits.datasets = ",limits['datasets'])
 
             ## Some 'global' reactive variables used in this file
-            uploaded <- reactiveValues()
+            uploaded <- shiny::reactiveValues()
 
-            output$downloadExampleData <- downloadHandler(
+            output$downloadExampleData <- shiny::downloadHandler(
                 filename = "exampledata.zip",
                 content = function(file) {
                     zip = file.path(FILES,"exampledata.zip")
@@ -95,7 +95,7 @@ UploadModuleServer <- function(id,
             )
             
             upload_info = "<h4>User file upload</h4><p>Please prepare the data files in CSV format as listed below. It is important to name the files exactly as shown. The file format must be comma-separated-values (CSV) text. Be sure the dimensions, rownames and column names match for all files. You can download a zip file with example files here: EXAMPLEZIP. You can upload a maximum of <u>LIMITS</u>."
-            DLlink = downloadLink(ns("downloadExampleData"),"exampledata.zip")
+            DLlink = shiny::downloadLink(ns("downloadExampleData"),"exampledata.zip")
             upload_info = sub("EXAMPLEZIP", DLlink, upload_info)
             
             ##upload_filetypes = c("text/csv","text/comma-separated-values,text/plain",".csv")
@@ -110,18 +110,18 @@ UploadModuleServer <- function(id,
             ##================================= UI ===================================
             ##========================================================================
 
-            output$upload_UI <- renderUI({
-                require(shinyalert)
-                useShinyalert()
-                fillCol(
+            output$upload_UI <- shiny::renderUI({
+
+                shinyalert::useShinyalert()
+                shiny::fillCol(
                     height = height,
                     ##flex = c(NA,0.05,1.6,0.05,NA),
                     flex = c(NA,0.05,1.6),
-                    sidebarLayout(
-                        sidebarPanel(
+                    shiny::sidebarLayout(
+                        shiny::sidebarPanel(
                             width = 3,
-                            ## helpText("User file upload"),
-                            fileInput(ns("upload_files"), "Choose files",
+                            ## shiny::helpText("User file upload"),
+                            shiny::fileInput(ns("upload_files"), "Choose files",
                                       multiple = TRUE, accept = upload_filetypes),
                             ##checkboxInput(ns("load_example"), "load example data"),
                             shinyWidgets::prettySwitch(ns("load_example"), "load example data"),
@@ -129,52 +129,52 @@ UploadModuleServer <- function(id,
                             ##shinyWidgets::prettySwitch(ns("advanced_mode"),"advanced")
                             shinyWidgets::prettySwitch(ns("advanced_mode"),"batch correction (beta)")
                         ),
-                        mainPanel(
+                        shiny::mainPanel(
                             width = 9,
-                            fillRow(
+                            shiny::fillRow(
                                 flex = c(0.04,1),
-                                br(),
-                                ##div(HTML(upload_info),style="font-size: 14px;")
-                                div(HTML(upload_info))
+                                shiny::br(),
+                                ##div(shiny::HTML(upload_info),style="font-size: 14px;")
+                                shiny::div(shiny::HTML(upload_info))
                             )
                         )
                     ),
-                    br(),
-                    fillRow(
+                    shiny::br(),
+                    shiny::fillRow(
                         flex = c(0.75,1,1),
-                        plotOutput(ns("countStats")) %>% withSpinner(),
-                        plotOutput(ns("phenoStats")) %>% withSpinner(),
-                        plotOutput(ns("contrastStats")) %>% withSpinner()
+                        shiny::plotOutput(ns("countStats")) %>% shinycssloaders::withSpinner(),
+                        shiny::plotOutput(ns("phenoStats")) %>% shinycssloaders::withSpinner(),
+                        shiny::plotOutput(ns("contrastStats")) %>% shinycssloaders::withSpinner()
                     )
                     ##br(), 
                     ##DT::dataTableOutput(ns("checkTablesOutput"))
                 )
             }) ## end-of-renderUI
             
-            output$batchcorrect_UI <- renderUI({
-                fillCol(
+            output$batchcorrect_UI <- shiny::renderUI({
+                shiny::fillCol(
                     height = height, ## width = 1200,
                     BatchCorrectUI(ns("batchcorrect"))
                 )                
             })
 
-            output$normalize_UI <- renderUI({
-                fillCol(
+            output$normalize_UI <- shiny::renderUI({
+                shiny::fillCol(
                     height = height, ## width = 1200,
                     NormalizeCountsUI(ns("normalize"))                    
                 )                
             })
             
-            output$contrasts_UI <- renderUI({
-                fillCol(
+            output$contrasts_UI <- shiny::renderUI({
+                shiny::fillCol(
                     height = height, ## width = 1200,
                     MakeContrastUI(ns("makecontrast"))
                 )                
             })
-            outputOptions(output, "contrasts_UI", suspendWhenHidden=FALSE) ## important!!!
+            shiny::outputOptions(output, "contrasts_UI", suspendWhenHidden=FALSE) ## important!!!
             
-            output$compute_UI <- renderUI({
-                fillCol(
+            output$compute_UI <- shiny::renderUI({
+                shiny::fillCol(
                     height = height, ## width = 1200,
                     ComputePgxUI(ns("compute"))                    
                 )                
@@ -185,14 +185,14 @@ UploadModuleServer <- function(id,
             ##=====================================================================            
 
             ## !!!!!!!!!!!!! does not work !!!!!!!!!!!!!!!
-            observeEvent( uploaded, {
+            shiny::observeEvent( uploaded, {
                 files.needed = c("counts.csv","samples.csv","contrasts.csv")
                 if(all(files.needed %in% names(uploaded))) {
-                    showTab("tabs", "Contrasts")
-                    showTab("tabs", "Compute")                    
+                    shiny::showTab("tabs", "Contrasts")
+                    shiny::showTab("tabs", "Compute")                    
                 } else {
-                    hideTab("tabs", "Contrasts")
-                    hideTab("tabs", "Compute")                    
+                    shiny::hideTab("tabs", "Contrasts")
+                    shiny::hideTab("tabs", "Compute")                    
                 }                
             })
             
@@ -200,17 +200,17 @@ UploadModuleServer <- function(id,
             ##========================= OBSERVERS =================================
             ##=====================================================================            
             
-            observeEvent( input$advanced_mode, {
+            shiny::observeEvent( input$advanced_mode, {
                 if(input$advanced_mode) {
-                    showTab("tabs", "Normalize")   ## NOT YET!!!
-                    showTab("tabs", "BatchCorrect")
+                    shiny::showTab("tabs", "Normalize")   ## NOT YET!!!
+                    shiny::showTab("tabs", "BatchCorrect")
                 } else {
-                    hideTab("tabs", "Normalize")
-                    hideTab("tabs", "BatchCorrect")
+                    shiny::hideTab("tabs", "Normalize")
+                    shiny::hideTab("tabs", "BatchCorrect")
                 }
             })
 
-            observeEvent( input$load_example, {
+            shiny::observeEvent( input$load_example, {
                 if(input$load_example) {
                     zipfile = file.path(FILES,"exampledata.zip")
                     readfromzip1 <- function(file) {
@@ -238,24 +238,24 @@ UploadModuleServer <- function(id,
             ##========================= REACTIVES =================================
             ##=====================================================================            
 
-            ##correctedX <- reactive({
+            ##correctedX <- shiny::reactive({
             normalized_counts <- NormalizeCountsServerRT(
                 id = "normalize",
-                counts  = reactive(uploaded$counts.csv),
+                counts  = shiny::reactive(uploaded$counts.csv),
                 height = height
             )
             
-            ##correctedX <- reactive({
+            ##correctedX <- shiny::reactive({
             correctedX <- BatchCorrectServer(
                 id = "batchcorrect",
-                X = reactive(uploaded$counts.csv),
+                X = shiny::reactive(uploaded$counts.csv),
                 ##X = normalized_counts,  ## NOT YET!!!!
                 is.count = TRUE,
-                pheno = reactive(uploaded$samples.csv),
+                pheno = shiny::reactive(uploaded$samples.csv),
                 height = height
             )
             
-            corrected_counts <- reactive({
+            corrected_counts <- shiny::reactive({
                 counts <- NULL
                 dbg("[UploadModule::corrected_counts] reacted!\n")                
                 advanced_mode <- ( length(input$advanced_mode)>0 &&
@@ -271,17 +271,17 @@ UploadModuleServer <- function(id,
                 counts
             })
 
-            ##mkContrast <- reactive({
+            ##mkContrast <- shiny::reactive({
             modified_ct <- MakeContrastServerRT(
                 id = "makecontrast",
-                phenoRT = reactive(uploaded$samples.csv),
-                contrRT = reactive(uploaded$contrasts.csv),
-                ##countsRT = reactive(uploaded$counts.csv),
+                phenoRT = shiny::reactive(uploaded$samples.csv),
+                contrRT = shiny::reactive(uploaded$contrasts.csv),
+                ##countsRT = shiny::reactive(uploaded$counts.csv),
                 countsRT = corrected_counts,
                 height = height
             )
             
-            observeEvent( modified_ct(), {
+            shiny::observeEvent( modified_ct(), {
                 ## Monitor for changes in the contrast matrix and if
                 ## so replace the uploaded reactive values.
                 ##
@@ -293,23 +293,23 @@ UploadModuleServer <- function(id,
 
             })
 
-            upload_ok <- reactive({
+            upload_ok <- shiny::reactive({
                 check <- checkTables()
                 all(check[,"status"]=="OK")
                 all(grepl("ERROR",check[,"status"])==FALSE)
             })
 
-            batch_vectors <- reactive({
+            batch_vectors <- shiny::reactive({
                 correctedX()$B
             })
             
             ##computed_pgx <- ComputePgxServer(
             computed_pgx  <- ComputePgxServer(
                 id = "compute", 
-                ##countsRT = reactive(uploaded$counts.csv),
+                ##countsRT = shiny::reactive(uploaded$counts.csv),
                 countsRT = corrected_counts,
-                samplesRT = reactive(uploaded$samples.csv),
-                contrastsRT = reactive(uploaded$contrasts.csv),
+                samplesRT = shiny::reactive(uploaded$samples.csv),
+                contrastsRT = shiny::reactive(uploaded$contrasts.csv),
                 batchRT = batch_vectors, 
                 enable = upload_ok,
                 alertready = FALSE,
@@ -320,7 +320,7 @@ UploadModuleServer <- function(id,
                 height = height
             )
 
-            observeEvent( computed_pgx(), {
+            shiny::observeEvent( computed_pgx(), {
                 ## Monitor for changes in the computed PGX.
                 cat("[UploadModule::computed_pgx] reacted!\n")
                 pgx <- computed_pgx()
@@ -334,7 +334,7 @@ UploadModuleServer <- function(id,
             ##============================= PLOTS =================================
             ##=====================================================================            
 
-            output$countStats <- renderPlot({
+            output$countStats <- shiny::renderPlot({
 
                 dbg("[countStats] renderPlot called")
                 ##req(uploaded$counts.csv)                
@@ -349,7 +349,7 @@ UploadModuleServer <- function(id,
                     msg <- paste(toupper(status.ok),"\n\n","(Required) Upload 'counts.csv'",
                                  tolower(status.ds))
                     text(0.5,0.5,paste(strwrap(msg,30),collapse="\n"),col="grey25")
-                    box(lty=2, col="grey60")
+                    shinydashboard::box(lty=2, col="grey60")
                     return(NULL)
                 }
                 
@@ -359,13 +359,13 @@ UploadModuleServer <- function(id,
                 dc <- melt(xx)
                 dc$value[dc$value==0] <- NA
                 tt2 <- paste(nrow(counts),"genes x",ncol(counts),"samples")
-                ggplot(dc, aes(x=value, color=Var2)) +
-                    geom_density() + xlab("log2(1+counts)") +
-                    theme( legend.position = "none") +
-                    ggtitle("COUNTS", subtitle=tt2)
+                ggplot2::ggplot(dc, ggplot2::aes(x=value, color=Var2)) +
+                    ggplot2::geom_density() + ggplot2::xlab("log2(1+counts)") +
+                    ggplot2::theme( legend.position = "none") +
+                    ggplot2::ggtitle("COUNTS", subtitle=tt2)
             })
 
-            output$phenoStats <- renderPlot({
+            output$phenoStats <- shiny::renderPlot({
 
                 dbg("[phenoStats] renderPlot called \n")
                 ##req(uploaded$samples.csv)                
@@ -378,13 +378,13 @@ UploadModuleServer <- function(id,
                     msg <- paste(toupper(status.ok),"\n\n","(Required) Upload 'samples.csv'",
                                  tolower(status.ds))
                     text(0.5,0.5,paste(strwrap(msg,30),collapse="\n"),col="grey25")
-                    box(lty=2, col="grey60")
+                    shinydashboard::box(lty=2, col="grey60")
                     return(NULL)
                 }
                 
                 pheno <- uploaded[["samples.csv"]]                
                 px <- head(colnames(pheno),20)  ## show maximum??
-                require(inspectdf)
+
                 df <- type.convert(pheno[,px,drop=FALSE])
                 vt <- df %>% inspect_types()
                 vt
@@ -403,10 +403,10 @@ UploadModuleServer <- function(id,
                 p1 <- df %>% inspect_cat() %>% show_plot()
                 tt2 <- paste(nrow(pheno),"samples x",ncol(pheno),"phenotypes")
                 ## tt2 <- paste(ncol(pheno),"phenotypes")
-                p1 <- p1 + ggtitle("PHENOTYPES", subtitle=tt2) +
-                    theme(
-                        ##axis.text.x = element_text(size=8, vjust=+5),
-                        axis.text.y = element_text(
+                p1 <- p1 + ggplot2::ggtitle("PHENOTYPES", subtitle=tt2) +
+                    ggplot2::theme(
+                        ##axis.text.x = ggplot2::element_text(size=8, vjust=+5),
+                        axis.text.y = ggplot2::element_text(
                             size = 12,
                             margin = ggplot2::margin(0,0,0,25),
                             hjust = 1)
@@ -417,7 +417,7 @@ UploadModuleServer <- function(id,
                 p1
             })
             
-            output$contrastStats <- renderPlot({
+            output$contrastStats <- shiny::renderPlot({
                 
                 ##req(uploaded$contrasts.csv)
                 ct <- uploaded$contrasts.csv
@@ -437,7 +437,7 @@ UploadModuleServer <- function(id,
                                  tolower(status.ds))
                     ##text(0.5,0.5,"Please upload contrast file 'contrast.csv' with conditions on rows, contrasts as columns")
                     text(0.5,0.5,paste(strwrap(msg,30),collapse="\n"),col="grey25")
-                    box(lty=2, col="grey60")
+                    shinydashboard::box(lty=2, col="grey60")
                     return(NULL)
                 }
 
@@ -457,12 +457,12 @@ UploadModuleServer <- function(id,
 
                 dbg("[output$contrastStats] 4 : ")
                 
-                require(inspectdf)
+
                 p1 <- df %>% inspect_cat() %>% show_plot()                    
-                p1 <- p1 + ggtitle("CONTRASTS", subtitle=tt2) +
-                    theme(
-                        ##axis.text.x = element_text(size=8, vjust=+5),
-                        axis.text.y = element_text(size = 12,
+                p1 <- p1 + ggplot2::ggtitle("CONTRASTS", subtitle=tt2) +
+                    ggplot2::theme(
+                        ##axis.text.x = ggplot2::element_text(size=8, vjust=+5),
+                        axis.text.y = ggplot2::element_text(size = 12,
                                                    margin = ggplot2::margin(0,0,0,25),
                                                    hjust = 1)
                     )
@@ -493,7 +493,7 @@ UploadModuleServer <- function(id,
             ##------------------------------------------------------------------
             ## Main observer for uploaded data files
             ## ------------------------------------------------------------------
-            observeEvent( input$upload_files, {
+            shiny::observeEvent( input$upload_files, {
                 
                 ## Reads in the data files from the file names, checks and
                 ## puts in the reactive values object 'uploaded'.
@@ -635,7 +635,7 @@ UploadModuleServer <- function(id,
                 message("[upload_files] done!\n")
             })
                                     
-            checkTables <- reactive({        
+            checkTables <- shiny::reactive({        
                 ##
                 ##
                 ##
@@ -840,7 +840,7 @@ UploadModuleServer <- function(id,
                 rownames(df) <- files.needed
                 
                 ## deselect
-                ## selectRows(proxy = dataTableProxy("pgxtable"), selected=NULL)
+                ## DT::selectRows(proxy = DT::dataTableProxy("pgxtable"), selected=NULL)
                 return(df)    
             })
             
@@ -849,7 +849,7 @@ UploadModuleServer <- function(id,
                 ##
                 if(!input$advanced_mode) return(NULL)
                 df <- checkTables()
-                dt <- datatable(
+                dt <- DT::datatable(
                     df,
                     rownames=FALSE,
                     selection = 'none',
@@ -864,7 +864,7 @@ UploadModuleServer <- function(id,
             ##========================================================================
             ## return results as reactive object
             ##========================================================================            
-            ## return(reactive(uploaded$pgx))  ## pointing to reactive results object
+            ## return(shiny::reactive(uploaded$pgx))  ## pointing to reactive results object
             return(computed_pgx)
             
         }  ## end function
