@@ -1,6 +1,3 @@
-.. image:: docs/figures/we-are-hiring.png
-
-
 
 Omics Playground: Explore Omics Data Freely
 ================================================================================
@@ -97,8 +94,4 @@ quality filtering and/or translation of probe names.
 
 More detailed information and feature explanation of Omics Playground is 
 available in the `online documentation <https://omicsplayground.readthedocs.io>`__.
-
-.. figure:: docs/figures/overview.png
-    :align: center
-    :width: 90%
 
