@@ -100,7 +100,7 @@ ConnectivityBoard <- function(input, output, session, env)
         )
         ui
     })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
@@ -2167,7 +2167,7 @@ ConnectivityBoard <- function(input, output, session, env)
             )
         )
     })
-    shiny::outputOptions(output, "cmapCorrelation_UI", suspendWhenHidden=FALSE) ## important!!!
+    # shiny::outputOptions(output, "cmapCorrelation_UI", suspendWhenHidden=FALSE) ## important!!!
 
     ## ------------------------------------------------------
     ## --------------------- tab2 ---------------------------
@@ -2197,7 +2197,7 @@ ConnectivityBoard <- function(input, output, session, env)
             plotWidget(ns("connectivityHeatmap"))
         )
     })
-    shiny::outputOptions(output, "cmapHeatmap_UI", suspendWhenHidden=FALSE) ## important!!!
+    # shiny::outputOptions(output, "cmapHeatmap_UI", suspendWhenHidden=FALSE) ## important!!!
     
     ## ------------------------------------------------------
     ## --------------------- tab3 ---------------------------
@@ -2223,7 +2223,7 @@ ConnectivityBoard <- function(input, output, session, env)
             )
         )
     })
-    shiny::outputOptions(output,"cmapMetaAnalysis_UI", suspendWhenHidden=FALSE) ## important!!!    
+    # shiny::outputOptions(output,"cmapMetaAnalysis_UI", suspendWhenHidden=FALSE) ## important!!!    
     
     ## ------------------------------------------------------
     ## --------------------- tab4 ---------------------------

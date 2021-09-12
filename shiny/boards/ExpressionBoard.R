@@ -115,7 +115,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         )
         return(ui)
     })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
@@ -974,7 +974,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
             shiny::div(shiny::HTML(topgenes_caption),class="caption")
         )
     })
-    shiny::outputOptions(output, "topgenesUI", suspendWhenHidden=FALSE) ## important!!!
+    # shiny::outputOptions(output, "topgenesUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ## Volcano (all contrasts)

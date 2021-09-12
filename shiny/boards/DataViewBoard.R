@@ -94,7 +94,7 @@ DataViewBoard <- function(input, output, session, env)
         )
         ui
     })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##========================= OBSERVE ==============================================
@@ -117,7 +117,7 @@ DataViewBoard <- function(input, output, session, env)
         levels = getLevels(ngs$Y)
         shiny::updateSelectInput(session, "data_samplefilter", choices=levels)
         genes <- sort(ngs$genes[rownames(ngs$X),]$gene_name)
-        listGenes <- as.data.table(genes)
+        listGenes <- data.table::as.data.table(genes)
         names(listGenes) = '(type gene if missing!)'
         fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(ngs)$fc**2)
         selgene = names(sort(-fc2))[1] ## most var gene??

@@ -84,7 +84,7 @@ output$description <- shiny::renderUI(shiny::HTML(description))
         )
         ui
     })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ## delayed input
     input_comparisons <- shiny::reactive({
@@ -1782,7 +1782,7 @@ output$description <- shiny::renderUI(shiny::HTML(description))
             )
         )
     })
-    shiny::outputOptions(output, "scatterPlotMatrix_UI", suspendWhenHidden=FALSE) ## important!!!    
+    # shiny::outputOptions(output, "scatterPlotMatrix_UI", suspendWhenHidden=FALSE) ## important!!!    
 
     
     ctClusteringUI_caption = "<h4>Signature clustering</h4> <b>(a)</b> <b>Signature heatmap.</b> Similarity of the signatures visualized as a clustered heatmap. The top plot shows the distribution of foldchange values as boxplots. <b>(b)</b> <b>Contrast correlation.</b> The numeric values in the cells correspond to the Pearson correlation coefficient. Red corresponds to positive correlation and blue to negative correlation. "
