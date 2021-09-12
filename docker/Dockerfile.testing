@@ -44,8 +44,7 @@ RUN git pull
 #------------------------------------------------------------
 WORKDIR /omicsplayground
 ## RUN R -e "setwd('scripts');source('build-datasets.R')"
-COPY data/geiger2016-arginine.pgx data/GSE72056-scmelanoma.pgx \
-   data/GSE22886-immune.pgx data/
+COPY data/geiger2016-arginine.pgx data/
 RUN R -e "setwd('data');source('init.R')"
 
 #------------------------------------------------------------

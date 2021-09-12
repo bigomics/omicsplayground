@@ -455,10 +455,12 @@ UploadModuleServer <- function(id,
                 tt2 <- paste(nrow(contrasts),"samples x",ncol(contrasts),"contrasts")
                 ##tt2 <- paste(ncol(contrasts),"contrasts")
 
-                dbg("[output$contrastStats] 4 : ")
+                dbg("[output$contrastStats] 4a : dim.df=",dim(df))
                 
                 require(inspectdf)
                 p1 <- df %>% inspect_cat() %>% show_plot()                    
+                dbg("[output$contrastStats] 4b : ")
+                
                 p1 <- p1 + ggtitle("CONTRASTS", subtitle=tt2) +
                     theme(
                         ##axis.text.x = element_text(size=8, vjust=+5),

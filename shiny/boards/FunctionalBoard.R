@@ -276,7 +276,7 @@ to understand biological functions including GO and KEGG pathway analysis."
     }
 
     if(1) {
-        require(pathview)
+        suppressMessages(require(pathview))
         unlockBinding("geneannot.map", as.environment("package:pathview"))
         assignInNamespace("geneannot.map", my.geneannot.map, ns="pathview", as.environment("package:pathview"))
         assign("geneannot.map", my.geneannot.map, as.environment("package:pathview"))
@@ -294,7 +294,7 @@ to understand biological functions including GO and KEGG pathway analysis."
 
         require(KEGGgraph)
         require(KEGG.db)
-        require(pathview)
+        suppressMessages(require(pathview))
 
         comparison=1
         comparison = input$fa_contrast
