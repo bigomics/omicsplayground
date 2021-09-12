@@ -21,7 +21,7 @@ DrugConnectivityUI <- function(id) {
         tabsetPanel(
             id = ns("tabs"),
             tabPanel("Drug enrichment",uiOutput(ns("DSEA_enrichment_UI"))),
-            tabPanel("Connectivity map",uiOutput(ns("DSEA_cmap_UI")))            
+            tabPanel("Connectivity map (beta)",uiOutput(ns("DSEA_cmap_UI")))            
             ## tabPanel("Fire plot (dev)",uiOutput(ns("fireplot_UI")))            
         )
     )
