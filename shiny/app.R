@@ -239,7 +239,6 @@ server = function(input, output, session) {
     
     ## message("[SERVER] all boards called:",paste(names(env),collapse=" "))
     message("[SERVER] boards enabled:",paste(names(which(ENABLED)),collapse=" "))
-    ## shiny::outputOptions(output, "clust", suspendWhenHidden=FALSE) ## important!!!
     
     output$current_dataset <- shiny::renderText({
         pgx <- env[["load"]][["inputData"]]()
