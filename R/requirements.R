@@ -90,7 +90,6 @@ pkg.used <- c(pkg.used, pkg.needed)
 pkg.used <- sort(unique(pkg.used))
 install.pkgs( setdiff(pkg.used, c(PKG.MANUAL,BIG.NOTUSED)) )
 
-
 r.pkg <- c('TxDb.Hsapiens.UCSC.hg19.knownGene',
            'TxDb.Mmusculus.UCSC.mm10.knownGene')
 install.pkgs(r.pkg)
