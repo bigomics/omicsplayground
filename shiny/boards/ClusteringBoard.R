@@ -1857,7 +1857,6 @@ displays the expression levels of selected genes across all conditions in the an
             plotWidget(ns("clust_phenoplot"))
         )
     })
-    ## shiny::outputOptions(output, "hm_phenoplotUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##=============================================================================
     ## Feature ranking

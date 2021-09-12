@@ -1782,7 +1782,6 @@ output$description <- shiny::renderUI(shiny::HTML(description))
             )
         )
     })
-    ## shiny::outputOptions(output, "venntable", suspendWhenHidden=FALSE) ## important!!!
     shiny::outputOptions(output, "scatterPlotMatrix_UI", suspendWhenHidden=FALSE) ## important!!!    
 
     
