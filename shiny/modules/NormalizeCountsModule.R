@@ -75,7 +75,7 @@ NormalizeCountsServerRT <- function(id, counts, height=720) {
                     )
                 )
             })
-            shiny::outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
+            # shiny::outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
             
             pgx <- shiny::reactive({
                 if(is.null(input$addnoise)) return(NULL)

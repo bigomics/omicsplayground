@@ -83,7 +83,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         )
         ui
     })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================

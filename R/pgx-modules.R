@@ -829,7 +829,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
                 )
         )
     })
-    shiny::outputOptions(output, "widget", suspendWhenHidden=FALSE) ## important!!!
+    # shiny::outputOptions(output, "widget", suspendWhenHidden=FALSE) ## important!!!
     
     ##--------------------------------------------------------------------------------
     ##---------------------------- RETURN VALUE --------------------------------------

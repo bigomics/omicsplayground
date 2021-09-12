@@ -82,7 +82,7 @@ TcgaBoard <- function(input, output, session, env)
         )
         ui
     })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
         
     
     ##================================================================================
@@ -211,6 +211,6 @@ TcgaBoard <- function(input, output, session, env)
             plotWidget(ns("tcga_tcgasurv"))
         )
     })
-    shiny::outputOptions(output, "TCGAanalysis_UI", suspendWhenHidden=FALSE) 
+    # shiny::outputOptions(output, "TCGAanalysis_UI", suspendWhenHidden=FALSE) 
     
 } ## end-of-Board 

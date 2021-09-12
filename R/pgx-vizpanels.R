@@ -1903,8 +1903,8 @@ viz._showShiny <- function(plots, params=NULL, types=NULL, shared.params=NULL,
             ##eval(call("accordion", list(tags, inputId="accordion1")))
             shiny::fluidRow(shinyjqui::jqui_sortable(shiny::div(do.call(tagList,aa))))
         })      
-        shiny::outputOptions(output, "plotsUI", suspendWhenHidden=FALSE) ## important!!!
-        shiny::outputOptions(output, "parametersUI", suspendWhenHidden=FALSE) ## important!!!        
+        # shiny::outputOptions(output, "plotsUI", suspendWhenHidden=FALSE) ## important!!!
+        # shiny::outputOptions(output, "parametersUI", suspendWhenHidden=FALSE) ## important!!!        
         shiny::observeEvent(input$done,{shiny::stopApp()})
 
         message("viz._showShiny:: server : done")

@@ -181,7 +181,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 )
                 
             })
-            shiny::outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
+            # shiny::outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
             
             sel.conditions <- shiny::reactive({
                 message("[MakeContrastServer] sel.conditions : reacted")
