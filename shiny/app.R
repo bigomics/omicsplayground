@@ -61,11 +61,6 @@ source(file.path(RDIR,"pgx-functions.R"), local=src.local) ## functions...
 source(file.path(RDIR,"pgx-files.R"), local=src.local)     ## file functions
 source(file.path(RDIR,"pgx-init.R"),local=src.local)       ## global variables
 
-if(0) {
-    save.image(file="../cache/image.RData")
-    system.time( load(file="../cache/image.RData") )
-}
-
 message("\n")
 message("************************************************")
 message("************* parsing OPTIONS file *************")
@@ -112,7 +107,7 @@ pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
 if(0) {    
     ##PGX.DIR="../test/"
     ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
-    load("../data/geiger2016-arginine-test.pgx")
+    load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
     load("../data/GSE157905-lenvatinib-bc.pgx")
     load("../data/gtex-aging-n40svaNnm.pgx")
