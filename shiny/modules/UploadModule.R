@@ -294,12 +294,14 @@ UploadModuleServer <- function(id,
             })
 
             upload_ok <- shiny::reactive({
+                dbg("upload_ok reactive")
                 check <- checkTables()
                 all(check[,"status"]=="OK")
                 all(grepl("ERROR",check[,"status"])==FALSE)
             })
 
             batch_vectors <- shiny::reactive({
+                dbg("batch_vectors reactive")
                 correctedX()$B
             })
             

@@ -43,6 +43,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
         function(input, output, session) {
             ns <- session$ns
 
+            dbg("ComputePgxServer init")
+
             ## statistical method for GENE level testing
             GENETEST.METHODS = c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma",
                                  "deseq2.wald","deseq2.lrt","edger.qlf","edger.lrt")
@@ -193,6 +195,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     ) ## end of conditional panel
                 ) ## end of fill Col
             })
+            
+            dbg("ComputePgxServer rendered UI")
 
             if(FALSE) {
                 shiny::observeEvent( input$gene_methods, {
@@ -418,6 +422,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 message("[ComputePgxServer:@compute] finished")
 
             })
+
+            dbg("ComputePgxServer done")
 
             return(computedPGX)  ## pointing to reactive
         } ## end-of-server
