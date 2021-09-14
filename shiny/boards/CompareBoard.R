@@ -109,7 +109,7 @@ CompareBoard <- function(input, output, session, env)
         )
         ui
     })
-    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
@@ -865,7 +865,7 @@ CompareBoard <- function(input, output, session, env)
             )
         )
     })
-    # shiny::outputOptions(output, "compareScatter_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "compareScatter_UI", suspendWhenHidden=FALSE) ## important!!!
 
     ## ------------------------------------------------------
     ## --------------------- tab2 ---------------------------
@@ -889,7 +889,7 @@ CompareBoard <- function(input, output, session, env)
             )
         )
     })
-    # shiny::outputOptions(output, "FCcorrelation_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "FCcorrelation_UI", suspendWhenHidden=FALSE) ## important!!!
 
     ## ------------------------------------------------------
     ## --------------------- tab3 ---------------------------
@@ -918,7 +918,7 @@ CompareBoard <- function(input, output, session, env)
             )
         )
     })
-    # shiny::outputOptions(output, "GeneCorrelation_UI", suspendWhenHidden=FALSE) ## important!!!         
+    shiny::outputOptions(output, "GeneCorrelation_UI", suspendWhenHidden=FALSE) ## important!!!         
     
 } ## end-of-Board 
 

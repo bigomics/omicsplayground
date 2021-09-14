@@ -171,7 +171,7 @@ UploadModuleServer <- function(id,
                     MakeContrastUI(ns("makecontrast"))
                 )                
             })
-            # shiny::outputOptions(output, "contrasts_UI", suspendWhenHidden=FALSE) ## important!!!
+            shiny::outputOptions(output, "contrasts_UI", suspendWhenHidden=FALSE) ## important!!!
             
             output$compute_UI <- shiny::renderUI({
                 shiny::fillCol(

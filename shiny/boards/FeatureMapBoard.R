@@ -66,7 +66,7 @@ FeatureMapBoard <- function(input, output, session, env)
         )
     })
     ## important for plot options to be updated correctly...
-    # shiny::outputOptions(output, "geneUMAP_UI", suspendWhenHidden=FALSE) 
+    shiny::outputOptions(output, "geneUMAP_UI", suspendWhenHidden=FALSE) 
 
 
     ##----------------------------------------------
@@ -87,7 +87,7 @@ FeatureMapBoard <- function(input, output, session, env)
         )
 
     })
-    # shiny::outputOptions(output, "gsetUMAP_UI", suspendWhenHidden=FALSE)     
+    shiny::outputOptions(output, "gsetUMAP_UI", suspendWhenHidden=FALSE)     
     
     ##================================================================================
     ##========================= INPUTS UI ============================================
@@ -122,7 +122,7 @@ FeatureMapBoard <- function(input, output, session, env)
         )
         
     })
-    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##======================= PRECOMPUTE FUNCTION ====================================

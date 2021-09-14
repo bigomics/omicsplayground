@@ -118,7 +118,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         }
         ui
     })
-    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
@@ -941,7 +941,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             plotWidget(ns("hm_splitmap")) %>% shinycssloaders::withSpinner()
         )
     })
-    # shiny::outputOptions(output, "hm_heatmap_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "hm_heatmap_UI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##================================ PCA/tSNE ======================================
@@ -1229,7 +1229,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             plotWidget(ns("hm_PCAplot"))
         )
     })
-    # shiny::outputOptions(output, "hm_pcaUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "hm_pcaUI", suspendWhenHidden=FALSE) ## important!!!
     
     
     ##================================================================================
@@ -1428,7 +1428,7 @@ displays the expression levels of selected genes across all conditions in the an
             tableWidget(ns("hm_parcoord_table"))
         )
     })
-    # shiny::outputOptions(output, "hm_parcoordUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "hm_parcoordUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ## Annotate clusters
@@ -1751,7 +1751,7 @@ displays the expression levels of selected genes across all conditions in the an
             plotWidget(ns("clustannot_table"))
         )
     })
-    # shiny::outputOptions(output, "hm_annotateUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "hm_annotateUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ## Phenotypes {data-height=800}

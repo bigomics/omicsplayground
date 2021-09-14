@@ -89,7 +89,7 @@ be multiple categories (classes) or patient survival data."
         }
         ui
     })
-    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ##======================= REACTIVE/OBSERVE FUNCTIONS =============================
@@ -685,7 +685,7 @@ be multiple categories (classes) or patient survival data."
             )
         )
     })
-    # shiny::outputOptions(output, "pdx_biomarker_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "pdx_biomarker_UI", suspendWhenHidden=FALSE) ## important!!!
 
 
     ## return(NULL)

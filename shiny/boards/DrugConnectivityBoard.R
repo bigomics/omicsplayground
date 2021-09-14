@@ -74,7 +74,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         )
         ui
     })
-    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
     shiny::observe({
         ngs <- inputData()
@@ -506,7 +506,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         res = c(78,110),
         add.watermark = WATERMARK        
     )
-    ##outputOptions(output, "dsea_enplots", suspendWhenHidden=FALSE) ## important!!!
     
     ##---------- DSEA Activation map plotting module
     dsea_moaplot.opts = shiny::tagList(
@@ -970,7 +969,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             )
         )
     })
-    # shiny::outputOptions(output, "DSEA_enrichment_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "DSEA_enrichment_UI", suspendWhenHidden=FALSE) ## important!!!
 
     dsea_cmap_caption = "<b>(a)</b> <b>Enrichment plot.</b> Enrichment of the selected drug perturbation profile with your signature. <b>(b)</b> <b>Enrichment table</b> summarizing the statistical results of the drug enrichment analysis. <b>(c)</b> <b>Connectivity map.</b> Plot showing the top signatures as UMAP. Each point is one L1000 experiment. The color corresponds to the rank correlation between the drug signatures and your selected contrast." 
 
@@ -994,7 +993,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             )
         )
     })
-    # shiny::outputOptions(output, "DSEA_cmap_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "DSEA_cmap_UI", suspendWhenHidden=FALSE) ## important!!!
     
 
 }

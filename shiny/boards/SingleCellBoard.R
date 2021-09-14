@@ -87,7 +87,7 @@ immune cell types, expressed genes and pathway activation."
         )
         ui
     })
-    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
@@ -536,7 +536,7 @@ immune cell types, expressed genes and pathway activation."
             )
         )
     })
-    # shiny::outputOptions(output, "icp_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "icp_UI", suspendWhenHidden=FALSE) ## important!!!
 
     
     ##=========================================================================
@@ -1011,7 +1011,7 @@ immune cell types, expressed genes and pathway activation."
             )
         )
     })
-    # shiny::outputOptions(output, "mapping_UI", suspendWhenHidden=FALSE) ## important!
+    shiny::outputOptions(output, "mapping_UI", suspendWhenHidden=FALSE) ## important!
     
     ##==========================================================================
     ## Markers
@@ -1310,7 +1310,7 @@ immune cell types, expressed genes and pathway activation."
             )
         )
     })
-    # shiny::outputOptions(output, "markersplot_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "markersplot_UI", suspendWhenHidden=FALSE) ## important!!!
 
     
     ##==========================================================================
@@ -1419,7 +1419,7 @@ immune cell types, expressed genes and pathway activation."
             plotWidget(ns("cnaplot"))
         )
     })
-    # shiny::outputOptions(output, "cnaModule_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "cnaModule_UI", suspendWhenHidden=FALSE) ## important!!!
     
     ##===========================================================================
     ## iTALK
@@ -1653,7 +1653,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
             )
         )
     })
-    # shiny::outputOptions(output, "italk_panel_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "italk_panel_UI", suspendWhenHidden=FALSE) ## important!!!
         
     ##==========================================================================
     ## Trajectory (dev)
@@ -1950,7 +1950,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
             )
         )
     })
-    # shiny::outputOptions(output, "monocle_panel_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "monocle_panel_UI", suspendWhenHidden=FALSE) ## important!!!
     
     
     return(NULL)
