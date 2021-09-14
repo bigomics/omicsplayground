@@ -829,7 +829,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
                 )
         )
     })
-    # shiny::outputOptions(output, "widget", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "widget", suspendWhenHidden=FALSE) ## important!!!
     
     ##--------------------------------------------------------------------------------
     ##---------------------------- RETURN VALUE --------------------------------------
@@ -1016,7 +1016,6 @@ tableModule <- function(input, output, session,
                 ))            
         )
     })
-    ##outputOptions(output, "widget", suspendWhenHidden=FALSE) ## important!!!
 
     module <- list(
         rows_current = shiny::reactive(input$datatable_rows_current),

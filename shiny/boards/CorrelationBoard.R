@@ -80,7 +80,7 @@ CorrelationBoard <- function(input, output, session, env)
             )
         )
     })
-    # shiny::outputOptions(output, "corAnalysis_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "corAnalysis_UI", suspendWhenHidden=FALSE) ## important!!!
 
     
     corfunctional_caption ="<b>(a)</b> <b>Correlation GSEA.</b> Top enriched gene sets using the correlation as rank metric. The black bars denote the genes in the gene set and their position in the sorted rank metric. <b>(b)</b> <b>Enrichment table.</b> Statistical results from GSEA analysis. <b>(c)</b> <b>Gene frequency.</b> Frequency of leading edge genes in top correlated genesets. <b>(d)</b> <b>Leading edge table.</b> Leading edge genes and rank statistics (rho) of the selected geneset."
@@ -112,7 +112,6 @@ CorrelationBoard <- function(input, output, session, env)
             )
         )
     })
-    ##outputOptions(output, "hm_annotateUI", suspendWhenHidden=FALSE) ## important!!!
 
     corDiff_caption = "<h3>Differential Gene Correlation Analysis (DGCA)</h3>Compute and analyze differential correlations between gene pairs across multiple conditions."
     
@@ -139,7 +138,7 @@ CorrelationBoard <- function(input, output, session, env)
             )
         )
     })
-    # shiny::outputOptions(output, "corDiff_UI", suspendWhenHidden=FALSE) ## important!!!    
+    shiny::outputOptions(output, "corDiff_UI", suspendWhenHidden=FALSE) ## important!!!    
 
     corGraph_caption = "<h3>Gene Correlation Network</h3>Visualization of gene correlation as network or UMAP. <b>(a)</b> <b>Partial correlation network</b> around the selected gene. <b>(b)</b> <b>Correlation UMAP</b>."
     
@@ -157,7 +156,7 @@ CorrelationBoard <- function(input, output, session, env)
             )
         )
     })
-    # shiny::outputOptions(output, "corGraph_UI", suspendWhenHidden=FALSE) ## important!!!    
+    shiny::outputOptions(output, "corGraph_UI", suspendWhenHidden=FALSE) ## important!!!    
     
     
     ##================================================================================
@@ -203,7 +202,7 @@ CorrelationBoard <- function(input, output, session, env)
         )
 
     })
-    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================

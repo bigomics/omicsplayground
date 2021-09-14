@@ -25,7 +25,9 @@ init.start_time = Sys.time()
 if(1 && file.exists(INIT.FILE)) {    
 
     message("[INIT] loading cached INIT file ",INIT.FILE)
-    load(INIT.FILE, verbose=1)    
+    t <- Sys.time()
+    load(INIT.FILE, verbose=1)
+    message("Loading cache took: ", round(Sys.time() - t), " seconds")
 
 } else {
     

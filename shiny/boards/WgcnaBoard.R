@@ -73,7 +73,7 @@ WgcnaBoard <- function(input, output, session, env)
         )
         
     })
-    # shiny::outputOptions(output, "wgcna_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "wgcna_UI", suspendWhenHidden=FALSE) ## important!!!
 
     modules_caption =
 "<b>WGCNA functional analysis.</b> <b>(a)</b> Module–trait analysis identifies modules that are significantly associated with the measured clinical traits by quantifying the association as the correlation of the eigengenes with external traits. <b>(b)</b> Partial correlation network of genes most correlated to the eigengene. <b>(c)</b> Module enrichment plot of top most enriched genesets. <b>(d)</b> Table of genes in the selected module. <b>(e)</b> Functional enrichment of the module calculated using Fisher's exact test."
@@ -101,7 +101,7 @@ WgcnaBoard <- function(input, output, session, env)
         )
         
     })
-    # shiny::outputOptions(output, "modules_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "modules_UI", suspendWhenHidden=FALSE) ## important!!!
 
 
     eigen_caption =
@@ -123,7 +123,7 @@ WgcnaBoard <- function(input, output, session, env)
         )
         
     })
-    # shiny::outputOptions(output, "eigen_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "eigen_UI", suspendWhenHidden=FALSE) ## important!!!
 
     intra_caption =
         "<b>WGCNA intramodular analysis.</b> We quantify associations of individual genes with our trait of interest (weight) by defining Gene Significance GS as (the absolute value of) the correlation between the gene and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules."
@@ -144,8 +144,6 @@ WgcnaBoard <- function(input, output, session, env)
         )
         
     })
-    ##outputOptions(output, "intra_UI", suspendWhenHidden=FALSE) ## important!!!
-    
     
     ##================================================================================
     ##========================= INPUTS UI ============================================
@@ -184,7 +182,7 @@ WgcnaBoard <- function(input, output, session, env)
         )
 
     })
-    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##======================= PRECOMPUTE FUNCTION ====================================

@@ -115,7 +115,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         )
         return(ui)
     })
-    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
@@ -126,7 +126,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
             title = shiny::HTML("<strong>Differential Expression Analysis Board</strong>"),
             shiny::HTML(gx_infotext),
             easyClose = TRUE, size="l"))
-    })
+    }, ignoreInit = TRUE)
     
     ## update choices upon change of data set 
     shiny::observe({
@@ -393,6 +393,16 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
 
     })
+
+    # not input$gx_fdr
+    # not inputData()
+    # not input$gx_features
+    # not input$gx_contrast
+    # not genetable$rows_selected
+    # not fullDiffExprTable()
+
+    # it's: gx_related_genesets()
+
 
     plots_volcano.PLOTLY <- shiny::reactive({
         
@@ -974,7 +984,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
             shiny::div(shiny::HTML(topgenes_caption),class="caption")
         )
     })
-    # shiny::outputOptions(output, "topgenesUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "topgenesUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ## Volcano (all contrasts)
@@ -1481,6 +1491,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     ##output$genetable <- genetable_module$render
 
+    # reacts too often
     gx_related_genesets <- shiny::reactive({
 
         dbg("[gx_related_genesets] reacted")

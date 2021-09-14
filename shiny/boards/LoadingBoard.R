@@ -176,9 +176,9 @@ LoadingBoard <- function(input, output, session,
         )
         ui
     })
-    # shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE)
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE)
     output$rowselected <- shiny::reactive({ !is.null(selectedPGX()) })
-    # shiny::outputOptions(output, "rowselected", suspendWhenHidden=FALSE)
+    shiny::outputOptions(output, "rowselected", suspendWhenHidden=FALSE)
     
     output$dataset_info <- shiny::renderText({
         sec <- currentSection()
@@ -709,7 +709,7 @@ LoadingBoard <- function(input, output, session,
             )
         )        
     })
-    # shiny::outputOptions(output, "pgxtable_UI", suspendWhenHidden=FALSE) ## important!
+    shiny::outputOptions(output, "pgxtable_UI", suspendWhenHidden=FALSE) ## important!
 
     ##================================================================================
     ## Upload data (new)
