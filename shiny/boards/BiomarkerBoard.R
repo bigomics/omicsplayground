@@ -7,21 +7,21 @@ message(">>> sourcing BiomarkerModule")
 ## source("global.R")
 
 BiomarkerInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shiny::uiOutput(ns("inputsUI"))
     )
 }
 
 BiomarkerUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    ui <- fillCol(
+    ns <- shiny::NS(id)  ## namespace
+    ui <- shiny::fillCol(
         flex = c(1),
         height = 760,
-        tabsetPanel(
+        shiny::tabsetPanel(
             id=ns("tabs"),
-            tabPanel("Importance", uiOutput(ns("pdx_biomarker_UI")))
+            shiny::tabPanel("Importance", shiny::uiOutput(ns("pdx_biomarker_UI")))
         )
     )
     ui
@@ -38,7 +38,7 @@ BiomarkerBoard <- function(input, output, session, env)
     description = "<b>Biomarker Board.</b> Select biomarkers that can be used for
 classification or prediction purposes. The phenotype of interest can
 be multiple categories (classes) or patient survival data."
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
 
     pdx_infotext =
         "The <strong>Biomarker Board</strong> performs the biomarker selection that can be used for classification or prediction purposes.
@@ -54,60 +54,60 @@ be multiple categories (classes) or patient survival data."
     ##========================= INPUTS UI ============================================
     ##================================================================================
 
-    output$inputsUI <- renderUI({
-        ui <- tagList(
-            tipify( actionLink(ns("pdx_info"), "Info", icon = icon("info-circle")),
+    output$inputsUI <- shiny::renderUI({
+        ui <- shiny::tagList(
+            shinyBS::tipify( shiny::actionLink(ns("pdx_info"), "Info", icon = shiny::icon("info-circle")),
                    "Show more information about this module."),
-            hr(), br(),             
-            tipify(selectInput(ns("pdx_predicted"),"Predicted target:", choices=NULL),
+            shiny::hr(), shiny::br(),             
+            shinyBS::tipify(shiny::selectInput(ns("pdx_predicted"),"Predicted target:", choices=NULL),
                    "Select the target variable for biomarker selection.",placement="top"),
-            ##tipify( selectInput(ns("pdx_level"),"Feature level:", choices=c("gene","geneset")),
+            ##tipify( shiny::selectInput(ns("pdx_level"),"Feature level:", choices=c("gene","geneset")),
             ##       "Select feature level: gene or geneset", placement="top"),
-            tipify( selectInput(ns("pdx_filter"),"Feature filter:", choices=NULL),
+            shinyBS::tipify( shiny::selectInput(ns("pdx_filter"),"Feature filter:", choices=NULL),
                    "Select a filter for the features.", placement="top"),
-            conditionalPanel(
+            shiny::conditionalPanel(
                 "input.pdx_filter == '<custom>'", ns=ns,
-                tipify(
+                shinyBS::tipify(
                     ##selectizeInput("pdx_select","Custom features:", choices=NULL, multiple=TRUE),
-                    div(class='gene-list',
-                        textAreaInput(ns("pdx_select"), "Custom features:", value = NULL,
+                    shiny::div(class='gene-list',
+                        shiny::textAreaInput(ns("pdx_select"), "Custom features:", value = NULL,
                                       height = "100px", width = "100%",                                       
                                       rows=5, placeholder="Paste your gene list")),
                     "Paste a custom gene list to be used as features.", placement="top")
             ),
-            br(),
-            tipify(actionButton(ns("pdx_runbutton"), label="Compute", class="run-button"),
+            shiny::br(),
+            shinyBS::tipify(shiny::actionButton(ns("pdx_runbutton"), label="Compute", class="run-button"),
                    "Click to start biomarker computation.", placement="right")
         )
         if(DEV) {
-            uix <- tagList(
-                hr(),br(),
-                h6("Developer options:"),
-                checkboxInput(ns('pdx_multiomics'),'multi-omics weighting',FALSE)
+            uix <- shiny::tagList(
+                shiny::hr(),br(),
+                shiny::h6("Developer options:"),
+                shiny::checkboxInput(ns('pdx_multiomics'),'multi-omics weighting',FALSE)
             )
             ui <- c(ui, uix)
         }
         ui
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ##======================= REACTIVE/OBSERVE FUNCTIONS =============================
     ##================================================================================
     
-    observeEvent( input$pdx_info, {
+    shiny::observeEvent( input$pdx_info, {
         dbg("<module-biomarker::observe pdxinfo> reacted")
-        showModal(modalDialog(
-            title = HTML("<strong>Biomarker Board</strong>"),
-            HTML(pdx_infotext),
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>Biomarker Board</strong>"),
+            shiny::HTML(pdx_infotext),
             easyClose = TRUE, size="l"))
     })
 
-    ##input_pdx_select <- reactive({
+    ##input_pdx_select <- shiny::reactive({
     ##    input$pdx_select
-    ##}) %>% debounce(3000)
+    ##}) %>% shiny::debounce(3000)
 
-    input_pdx_select <- reactive({
+    input_pdx_select <- shiny::reactive({
         dbg("[BiomarkerBoard:<input_pdx_select>]  reacted")
         gg <- input$pdx_select
         if(is.null(gg)) return(NULL)
@@ -116,26 +116,26 @@ be multiple categories (classes) or patient survival data."
         if(length(gg)==0) return(NULL)
         if(length(gg)==1 && gg[1]!="") gg <- c(gg,gg)  ## hack to allow single gene....
         return(gg)
-    }) %>% debounce(1000)
+    }) %>% shiny::debounce(1000)
 
-    observe({
+    shiny::observe({
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
-        req(ngs)
+        shiny::req(ngs)
         dbg("[BiomarkerBoard::observe1] reacted")
         ct <- colnames(ngs$Y)
         ## ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
         ## ct <- grep("sample|patient|donor",ct,value=TRUE,invert=TRUE)
-        updateSelectInput(session, "pdx_predicted", choices=ct )
+        shiny::updateSelectInput(session, "pdx_predicted", choices=ct )
     })
 
-    observe({
+    shiny::observe({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         ## input$pdx_runbutton
         dbg("[BiomarkerBoard::observe2] reacted")
 
-        if(FALSE && isolate(input$pdx_level=="geneset")) {
+        if(FALSE && shiny::isolate(input$pdx_level=="geneset")) {
             ft <- names(COLLECTIONS)
             nn <- sapply(COLLECTIONS, function(x) sum(x %in% rownames(ngs$gsetX)))
             ft <- ft[nn >= 10]
@@ -146,10 +146,10 @@ be multiple categories (classes) or patient survival data."
         ft <- sort(ft)
         ##if(input$pdx_level == "gene") ft = sort(c("<custom>",ft))
         ft = sort(c("<custom>",ft))
-        updateSelectInput(session, "pdx_filter", choices=ft, selected="<all>")    
+        shiny::updateSelectInput(session, "pdx_filter", choices=ft, selected="<all>")    
     })
 
-    calcVariableImportance <- eventReactive( input$pdx_runbutton, {
+    calcVariableImportance <- shiny::eventReactive( input$pdx_runbutton, {
         ## 
         ## This code also features a progress indicator.
         ##
@@ -159,12 +159,12 @@ be multiple categories (classes) or patient survival data."
         
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
-        req(ngs, input$pdx_predicted)
+        shiny::req(ngs, input$pdx_predicted)
         
         ct=2
         ct=12
         colnames(ngs$Y)    
-        isolate(ct <- input$pdx_predicted)
+        shiny::isolate(ct <- input$pdx_predicted)
         
         do.survival <- grepl("survival",ct,ignore.case=TRUE)
         if(is.null(ct)) return(NULL)
@@ -192,7 +192,7 @@ be multiple categories (classes) or patient survival data."
         ## select features
         ##-------------------------------------------
         ## group prediction
-        if(FALSE && isolate(input$pdx_level)=="geneset") {
+        if(FALSE && shiny::isolate(input$pdx_level)=="geneset") {
             X <- ngs$gsetX[,names(y)]
         } else {
             X <- ngs$X[,names(y)]
@@ -205,11 +205,11 @@ be multiple categories (classes) or patient survival data."
         progress$inc(1/10, detail = "Filtering features")
         
         ft="<all>"
-        ft <- isolate(input$pdx_filter)
+        ft <- shiny::isolate(input$pdx_filter)
         if(is.null(ft)) return(NULL)
         
         pp <- rownames(X)
-        if(FALSE && isolate(input$pdx_level=="geneset")) {
+        if(FALSE && shiny::isolate(input$pdx_level=="geneset")) {
             if(!(ft %in% names(COLLECTIONS))) return(NULL)
             pp <- COLLECTIONS[[ft]]
         } else {
@@ -230,7 +230,7 @@ be multiple categories (classes) or patient survival data."
         
         ## ------------- filter with user selection
         ##sel <- input$pdx_select
-        isolate(sel <- input_pdx_select())
+        shiny::isolate(sel <- input_pdx_select())
         if(ft=='<custom>' && !is.null(sel) && length(sel)>0) {
             if(sel[1]!="") {
                 ##pp <- intersect(rownames(X),sel)
@@ -286,7 +286,7 @@ be multiple categories (classes) or patient survival data."
         if(DEV) {
             is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]",rownames(R)))
             is.multiomics    
-            do.multiomics <- (is.multiomics && isolate(input$pdx_multiomics))
+            do.multiomics <- (is.multiomics && shiny::isolate(input$pdx_multiomics))
             if(do.multiomics) {
                 dbg("calcVariableImportance:: 5: EXPERIMENTAL: multi-omics weighting")
                 ## EXPERIMENTAL: multi-omics weighting 
@@ -322,7 +322,7 @@ be multiple categories (classes) or patient survival data."
         ##------------------------------
         ## create partition tree
         ##------------------------------
-        require(rpart)
+
         R <- R[order(-rowSums(R)),,drop=FALSE]
         sel <- head(rownames(R),100)
         sel <- intersect(sel,rownames(X))
@@ -341,16 +341,16 @@ be multiple categories (classes) or patient survival data."
         ##if(length(jj) < ny*20) jj <- c(jj,jj,jj)
         
         if(do.survival) {
-            require(survival)
+
             time <- abs(y)
             status <- (y>0)    ## dead if positive time
             df <- data.frame( time=time+0.001, status=status, tx)
             ##df <- df[jj,]
-            rf <- rpart( Surv(time,status) ~ ., data=df)
+            rf <- rpart::rpart( survival::Surv(time,status) ~ ., data=df)
         } else {
             df <- data.frame( y=y, tx)
             ##df <- df[jj,]
-            rf <- rpart( y ~ ., data=df)
+            rf <- rpart::rpart( y ~ ., data=df)
         }
         table(rf$where)
         rf$cptable
@@ -367,8 +367,8 @@ be multiple categories (classes) or patient survival data."
         if( max(rf.nsplit) > MAXSPLIT) {
             cp.idx <- max(which(rf.nsplit <= MAXSPLIT))
             cp0 <- rf$cptable[cp.idx,"CP"]
-            ##rf <- prune(rf, cp=0.05)
-            rf <- prune(rf, cp=cp0)
+            ##rf <- rpart::prune(rf, cp=0.05)
+            rf <- rpart::prune(rf, cp=cp0)
         }
         table(rf$where) 
         
@@ -388,7 +388,7 @@ be multiple categories (classes) or patient survival data."
     ##==================================== PLOTS =====================================
     ##================================================================================
     
-    pdx_importance.RENDER %<a-% reactive({
+    pdx_importance.RENDER %<a-% shiny::reactive({
         
         res <- calcVariableImportance()
         if(is.null(res)) return(NULL)
@@ -399,7 +399,7 @@ be multiple categories (classes) or patient survival data."
         R <- R[order(-rowSums(R,na.rm=TRUE)),,drop=FALSE]
         R <- pmax(R,0.05)
 
-        if(FALSE && isolate(input$pdx_level=="geneset")) {
+        if(FALSE && shiny::isolate(input$pdx_level=="geneset")) {
             par(mfrow=c(1,2), oma=c(1,1,1,1)*0.5, mgp=c(2.2,0.8,0))
             par(mar=c(4,8,2,4))
             frame()
@@ -428,19 +428,19 @@ be multiple categories (classes) or patient survival data."
     })
 
 
-    pdx_heatmap.RENDER %<a-% reactive({
+    pdx_heatmap.RENDER %<a-% shiny::reactive({
 
         dbg("[BiomarkerBoard::pdx_heatmap] reacted\n")
         
         ngs <- inputData()
         alertDataLoaded(session, ngs) 
-        req(ngs)
+        shiny::req(ngs)
 
         dbg("[BiomarkerBoard::pdx_heatmap] called\n")
         
         res <- calcVariableImportance()
         if(is.null(res)) {
-            sendSweetAlert(session=session, title = NULL,
+            shinyWidgets::sendSweetAlert(session=session, title = NULL,
                            text="Please select a target variable to predict, then hit compute.")
             return(NULL)
         }
@@ -448,7 +448,7 @@ be multiple categories (classes) or patient survival data."
         cat("<predict:pdx_heatmap> called\n")
         
         gg <- NULL
-        if(FALSE && isolate(input$pdx_level=="geneset")) {
+        if(FALSE && shiny::isolate(input$pdx_level=="geneset")) {
             gg <- rownames(res$X)
             gg <- intersect(gg, rownames(ngs$gsetX))
             X <- ngs$gsetX[gg,]
@@ -495,44 +495,44 @@ be multiple categories (classes) or patient survival data."
         
     })    
 
-    pdx_decisiontree.RENDER %<a-% reactive({
+    pdx_decisiontree.RENDER %<a-% shiny::reactive({
 
         dbg("[BiomarkerBoard::pdx_decisiontree] reacted")
         
         res <- calcVariableImportance()
         if(is.null(res)) return(NULL)
 
-        require(rpart)
-        require(rpart.plot)
+
+
         par(mfrow=c(1,1), mar=c(1,0,2,0))
 
         is.surv <- grepl("Surv",res$rf$call)[2]
         is.surv
         if(is.surv) {
-            require(survival)
-            require("partykit")
-            (rf <- as.party(res$rf))
-            ##(rf <- as.party(prune(res$rf, cp=0.05)))
-            plot(rf)
+
+
+            (rf <- partykit::as.party(res$rf))
+            ##(rf <- partykit::as.party(rpart::prune(res$rf, cp=0.05)))
+            KEGGgraph::plot(rf)
             ##title("Survival tree",cex=1.2,line=0.9,adj=0.35)
             ##table(res$rf$where)
         } else {
             ##visNetworkOutput("pdx_decisiontreeClass")
             ##plotOutput("pdx_decisiontreeClass")
-            ##require(visNetwork)
+
             if(1) {
                 rpart.plot(res$rf)
                 title("Classification tree",cex=1.2,line=3,adj=0.35)
             } else {
-                visTree(res$rf, main="Classification tree",width="100%",legend=FALSE) %>%
-                    visInteraction(tooltipStyle='position:fixed;visibility:hidden;padding:5px;white-space:nowrap;font-family:helvetica;font-size:10px;background-color:lightgrey;')
+                visNetwork::visTree(res$rf, main="Classification tree",width="100%",legend=FALSE) %>%
+                    visNetwork::visInteraction(tooltipStyle='position:fixed;visibility:hidden;padding:5px;white-space:nowrap;font-family:helvetica;font-size:10px;background-color:lightgrey;')
             }
         } 
         dbg("[BiomarkerBoard::pdx_decisiontree] done")
         
     })
     
-    pdx_boxplots.RENDER %<a-% reactive({
+    pdx_boxplots.RENDER %<a-% shiny::reactive({
 
         res <- calcVariableImportance()
         if(is.null(res)) return(NULL)
@@ -544,7 +544,7 @@ be multiple categories (classes) or patient survival data."
         
         ##vars0 <- setdiff(vars,rownames(res$X))
         ##dbg("pdx_boxplots:: vars0=",vars0,"\n")
-        if(FALSE && isolate(input$pdx_level=="geneset")) {
+        if(FALSE && shiny::isolate(input$pdx_level=="geneset")) {
             ##xvars <- res$rf$orig.names[vars]
             vars <- intersect(vars,rownames(res$X))
         } else {
@@ -602,8 +602,8 @@ be multiple categories (classes) or patient survival data."
     })
 
 
-    pdx_importance.opts = tagList()
-    callModule(
+    pdx_importance.opts = shiny::tagList()
+    shiny::callModule(
         plotModule,
         id = "pdx_importance",
         func = pdx_importance.RENDER,
@@ -618,8 +618,8 @@ be multiple categories (classes) or patient survival data."
     )
     
 
-    pdx_heatmap.opts = tagList()
-    callModule(
+    pdx_heatmap.opts = shiny::tagList()
+    shiny::callModule(
         plotModule,
         id = "pdx_heatmap",
         func = pdx_heatmap.RENDER,
@@ -632,8 +632,8 @@ be multiple categories (classes) or patient survival data."
         add.watermark = WATERMARK
     )
     
-    pdx_decisiontree.opts = tagList()
-    callModule(
+    pdx_decisiontree.opts = shiny::tagList()
+    shiny::callModule(
         plotModule,
         "pdx_decisiontree",
         func = pdx_decisiontree.RENDER,
@@ -646,8 +646,8 @@ be multiple categories (classes) or patient survival data."
         add.watermark = WATERMARK
     )
 
-    pdx_boxplots.opts = tagList()
-    callModule(
+    pdx_boxplots.opts = shiny::tagList()
+    shiny::callModule(
         plotModule,
         id = "pdx_boxplots",
         func = pdx_boxplots.RENDER,
@@ -662,22 +662,22 @@ be multiple categories (classes) or patient survival data."
 
     pdx_biomarker_caption = "<b>Biomarker selection</b>. The expression of certain genes may be used as <i>markers</i> to predict a certain phenotype such as response to a therapy. Finding such <i>biomarkers</i> are of high importance in clinical applications. <b>(a)</b> An importance score for each feature is calculated using multiple machine learning algorithms, including LASSO, elastic nets, random forests, and extreme gradient boosting. The top features are plotted  according to cumulative ranking by the algorithms. <b>(b)</b> The heatmap shows the expression distribution for the top most important features. <b>(c)</b> The decision tree shows (one) tree solution for classification based on the top most important features. <b>(d)</b> Boxplots show the expression of biomarker genes across the groups."
 
-    output$pdx_biomarker_UI <- renderUI({
-        fillCol(
+    output$pdx_biomarker_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = fullH,
             flex = c(NA,0.05,1),
-            div(HTML(pdx_biomarker_caption),class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(pdx_biomarker_caption),class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1,0.1,1),
                 height = fullH,                
-                fillCol(
+                shiny::fillCol(
                     flex = c(0.5,1),
                     plotWidget(ns("pdx_importance")),
                     plotWidget(ns("pdx_heatmap"))
                 ),
-                br(), ## spacer
-                fillCol(
+                shiny::br(), ## spacer
+                shiny::fillCol(
                     flex = c(1,0.9), 
                     plotWidget(ns("pdx_decisiontree")),
                     plotWidget(ns("pdx_boxplots"))
@@ -685,7 +685,7 @@ be multiple categories (classes) or patient survival data."
             )
         )
     })
-    outputOptions(output, "pdx_biomarker_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "pdx_biomarker_UI", suspendWhenHidden=FALSE) ## important!!!
 
 
     ## return(NULL)

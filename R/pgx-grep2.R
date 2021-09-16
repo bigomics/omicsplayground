@@ -18,7 +18,7 @@ if(0) {
 }
 
 options(warn=-1)
-library(GREP2)
+
 ## Sys.setenv(PATH="/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/opt/sratoolkit/bin")
 
 if(0) {
@@ -46,7 +46,7 @@ pgx.fastq2counts <- function(fastq_dir, destdir, indexdir, nthread=4, do.qc=FALS
                              trimming=TRUE, trimmethod="trimmomatic",
                              instrument="HiSeq", library_layout="SINGLE")
 {
-    require(GREP2)
+    
     species <- species[1]
     
     run_fastqc1 <- function (destdir, fastq_dir, nthread) 
@@ -507,8 +507,8 @@ trimgalore_fastq <- function(fastq1, fastq2 = NULL, adapter1 = NULL, adapter2 = 
                        threads = NULL, do.fastqc=FALSE,
                        trimgalore = "trim_galore")
 {
-    require(doParallel)
-    registerDoParallel(cores=2)
+    
+    doParallel::registerDoParallel(cores=2)
     ##foreach(i=1:3) %dopar% sqrt(i)
 
     cmd <- trimgalore

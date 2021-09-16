@@ -6,8 +6,8 @@
 ngs.hiveplot <- function(ngs, pheno, level=1, ntop=400, main="", axis.lab=c("GX","CN","ME"),
                          bkgnd="white", rx=2.2, cex=1, slen=-1)
 {
-    require(HiveR, quietly=TRUE)
-    require(grid, quietly=TRUE)
+    
+    
     res <- omx$zstats[[level]]
     res <- cbind(res, omx$stats[[pheno]][[level]])
     res <- res[!grepl("^PHENO",rownames(res)),]
@@ -18,14 +18,14 @@ ngs.hiveplot <- function(ngs, pheno, level=1, ntop=400, main="", axis.lab=c("GX"
     hpd <- omx.makeHivePlotData_( res, rho.min=0.15, ntop=ntop, rx=rx,
                                  cxi=(0.05+ann.cex/7) )
     write.csv(hpd$nodes.ann, file="/tmp/annode.csv", row.names=FALSE)
-    grid.newpage()
+    grid::grid.newpage()
     axlab.col <- ifelse(bkgnd=="black", "grey90","grey15")
     plotHive( hpd, np=FALSE, ch=1.4, bkgnd = bkgnd,
              axLabs = c(paste0(main,"\n",axis.lab[1]),axis.lab[2],axis.lab[3]),
              axLab.pos = c(0.4,0.33,0.33),
-             axLab.gpar = gpar(col=axlab.col,cex=cex*1.3),
+             axLab.gpar = grid::gpar(col=axlab.col,cex=cex*1.3),
              anNodes = "/tmp/annode.csv",
-             anNode.gpar = gpar(cex=0.7*cex,col=axlab.col,lwd=0.50))
+             anNode.gpar = grid::gpar(cex=0.7*cex,col=axlab.col,lwd=0.50))
 }
 
 omx.makeHivePlotData_ <- function( res, rho.min=0.15, cxi=0.11, use.alpha=TRUE,
@@ -34,7 +34,7 @@ omx.makeHivePlotData_ <- function( res, rho.min=0.15, cxi=0.11, use.alpha=TRUE,
     ##rho.min=0.15;cxi=0.13;use.alpha=TRUE;ew=4;nv=10;ntop=1000;dx.dir=c(-1,1)
     ## omics score
     res <- res[order(-abs(res[,"score"])),]
-    if(ntop>0) res <- head(res, ntop)
+    if(ntop>0) res <- Matrix::head(res, ntop)
 
     ## stuff...
     dx <- res[,"gx.rho"]
@@ -100,8 +100,8 @@ omx.makeHivePlotData_ <- function( res, rho.min=0.15, cxi=0.11, use.alpha=TRUE,
     ## node annotation matrix
     rr0 <- res[which(dx>0 & abs(res[,"score"])>0),]  ## upregulated
     rr1 <- res[which(dx<0 & abs(res[,"score"])>0),]  ## downregulated
-    rr0 <- head(rr0, nv)
-    rr1 <- head(rr1, nv)
+    rr0 <- Matrix::head(rr0, nv)
+    rr1 <- Matrix::head(rr1, nv)
     rr0 <- rr0[order(-rr0[,"gx.rho"]),]
     rr1 <- rr1[order(+rr1[,"gx.rho"]),]
     yy0 <- seq(1,1-nv*cxi,-cxi)[1:nrow(rr0)]

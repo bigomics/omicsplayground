@@ -4,9 +4,9 @@
 ##
 
 if(0) {
-    library("devtools")
-    install_github("broadinstitute/inferCNV")
-    library(infercnv)
+    
+    devtools::install_github("broadinstitute/inferCNV")
+    
 
     CreateInfercnvObject(raw_counts_matrix, gene_order_file, annotations_file,
                          ref_group_names, delim = "\t")
@@ -26,8 +26,8 @@ pgx.inferCNV <- function(ngs, refgroup=NULL, progress=NULL ) {
     ##
     ## BiocManager::install("infercnv")
     ##devtools::install_github("broadinstitute/infercnv", ref="RELEASE_3_9")
-    require(infercnv)
-    require(org.Hs.eg.db)
+    
+    
     
     symbol <- as.vector(as.list(org.Hs.egSYMBOL))
     chrloc <- as.list(org.Hs.egCHRLOC)
@@ -41,7 +41,7 @@ pgx.inferCNV <- function(ngs, refgroup=NULL, progress=NULL ) {
                         start=pos-1000,
                         stop=pos-1000) ## fake start/stop
     rownames(genes) <- ngs$genes$gene_name
-    head(genes)
+    Matrix::head(genes)
 
     ## filter known genes
     jj <- which( genes$chr %in% paste0("chr",c(1:22,"X","Y")) &
@@ -99,11 +99,11 @@ pgx.inferCNV <- function(ngs, refgroup=NULL, progress=NULL ) {
                                   num_threads = 4,
                                   no_plot = FALSE)
 
-    require(data.table)
+    
     ##dir(out_dir)
     img.file <- paste0(out_dir,"/infercnv.png")
     ##cnv <- read.table(file.path(out_dir,"expr.infercnv.dat"),check.names=FALSE)
-    suppressWarnings(cnv <- fread(file.path(out_dir,"expr.infercnv.dat"),check.names=FALSE))
+    suppressWarnings(cnv <- data.table::fread(file.path(out_dir,"expr.infercnv.dat"),check.names=FALSE))
     symbol = cnv[[1]]
     cnv <- as.data.frame(cnv, check.names=FALSE)[2:ncol(cnv)]
     cnv <- as.matrix(cnv)
@@ -121,8 +121,8 @@ pgx.inferCNV <- function(ngs, refgroup=NULL, progress=NULL ) {
     logcnv = log2(cnv[jj,]/mean(cnv,na.rm=TRUE))  ## logarithmic
 
 
-    library(png)
-    img <- readPNG(img.file)
+    
+    img <- png::readPNG(img.file)
 
     res <- list(cna=logcnv, chr=chr, pos=pos, png=img)
 
@@ -178,8 +178,8 @@ pgx.CNAfromExpression <- function(ngs, nsmooth=40)
     ## values.
     ##
     ##
-    require(org.Hs.eg.db)
-    head(ngs$genes)
+    
+    Matrix::head(ngs$genes)
 
     symbol <- as.vector(as.list(org.Hs.egSYMBOL))
     chrloc <- as.list(org.Hs.egCHRLOC)
@@ -194,7 +194,7 @@ pgx.CNAfromExpression <- function(ngs, nsmooth=40)
 
     sel <- which(!is.na(genes$chr) & !is.na(genes$pos))
     genes <- genes[sel,]
-    head(genes)
+    Matrix::head(genes)
 
     if(!is.null(ngs$counts)) {
         cna <- log2(100 + edgeR::cpm(ngs$counts))  ## moderated log2
@@ -238,7 +238,7 @@ pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=-1, lwd=1,
                                downsample=10,
                                order.by="clust", clip=0, lab.cex=0.6 )
 {
-    require(irlba)
+    
     cna <- res$cna
     chr <- res$chr
     chr <- as.character(chr)
@@ -290,7 +290,7 @@ pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=-1, lwd=1,
         k=pca.filter
         ##plot(sv$d)
         k <- ceiling(min(0.33*ncol(cna),k))
-        sv <- irlba(cna, nv=k)
+        sv <- irlba::irlba(cna, nv=k)
         cna2 <- sv$u[,1:k] %*% diag(sv$d[1:k]) %*% t(sv$v[,1:k])
         colnames(cna2) <- colnames(cna)
         rownames(cna2) <- rownames(cna)
@@ -302,14 +302,14 @@ pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=-1, lwd=1,
     sv1 <- NULL
     if(order.by=="pc1") {
         ## by default order on SV1
-        sv1 <- irlba(cna,nv=1)$v[,1]
+        sv1 <- irlba::irlba(cna,nv=1)$v[,1]
         jj <- order(sv1)
         cna <- cna[,jj]
         sv1 <- sv1[jj]
     } else {
         ## order by hierarchical clustering
-        jj <- head(order(-apply(cna,1,sd)),1000)
-        hc <- hclust(dist(t(cna[jj,])), method="ward.D2")
+        jj <- Matrix::head(order(-apply(cna,1,sd)),1000)
+        hc <- fastcluster::hclust(dist(t(cna[jj,])), method="ward.D2")
         cna <- cna[,hc$order]
     }
 
@@ -342,7 +342,7 @@ pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=-1, lwd=1,
     par(mgp=c(0.8,0.4,0))
     wa <- 0.1
     if(!is.null(ann.mat)) wa <- 0.05 + 0.016*ncol(ann.mat)
-    layout( matrix(1:3,1,3), widths=c(0.2,0.7,wa))
+    plotly::layout( matrix(1:3,1,3), widths=c(0.2,0.7,wa))
 
     if(!is.null(hc)) {
         par(mar=c(8,2,12,0))
@@ -362,7 +362,7 @@ pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=-1, lwd=1,
     cna0 <- cna
     cna0 <- tanh( 3*cna0 )
     cna0[which(abs(cna0) < clip)] <- NA
-    image( 1:nrow(cna), 1:ncol(cna), cna0[,], col=BLUERED2(16),
+    Matrix::image( 1:nrow(cna), 1:ncol(cna), cna0[,], col=BLUERED2(16),
           ylab="samples", xlab="DNA copy number  (log2R)",
           yaxt="n", yaxs="i", xaxt="n", xaxs="i",
           zlim=c(-1,1)*1.0 )
@@ -380,7 +380,7 @@ pgx.plotCNAHeatmap <- function(ngs, res, annot=NA, pca.filter=-1, lwd=1,
     if(!is.null(ann.mat)) {
         dim(ann.mat)
         par(mar=c(8,0.5,12,2))
-        image( 1:ncol(ann.mat), 1:nrow(ann.mat), t(ann.mat),
+        Matrix::image( 1:ncol(ann.mat), 1:nrow(ann.mat), t(ann.mat),
               col = rev(grey.colors(2)), xlab="", ylab="",
               yaxt="n", yaxs="i", xaxt="n", xaxs="i")
         mtext( colnames(ann.mat), side=3, at=1:ncol(ann.mat),

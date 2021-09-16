@@ -268,7 +268,7 @@ compute.cellcycle.gender <- function(ngs, rna.counts=ngs$counts)
         } else {
             message("gender already estimated. skipping...")
         }
-        head(ngs$samples)
+        Matrix::head(ngs$samples)
     }
     return(ngs)
 }
@@ -335,7 +335,7 @@ compute.drugActivityEnrichment <- function(ngs, lib.dir) {
         if(1) {
             annot0 <- annot0[match(rownames(out1[["GSEA"]]$X),rownames(annot0)),]
             rownames(annot0) <- rownames(out1[["GSEA"]]$X)
-            head(annot0)
+            Matrix::head(annot0)
         }
 
 
@@ -384,7 +384,7 @@ compute.drugSensitivityEnrichment <- function(ngs, lib.dir)
             ## attach annotation
             db <- sub("-.*","",ref)
             annot0 <- read.csv(file.path(lib.dir,paste0(db,"-drugs.csv")))
-            head(annot0)
+            Matrix::head(annot0)
             rownames(annot0) <- annot0$drug            
             annot0 <- annot0[match(rownames(out1[["GSEA"]]$X),rownames(annot0)),]
             rownames(annot0) <- rownames(out1[["GSEA"]]$X)
@@ -443,7 +443,7 @@ compute.genePerturbationEnrichment.DEPRECATED <- function(ngs, lib.dir)
     d2 <- sub("-.*","",dd)
     annot0 <- data.frame(drug=dd, moa=d1, target=d2)
     rownames(annot0) <- dd
-    head(annot0)
+    Matrix::head(annot0)
         
     dim(res[["GSEA"]]$X)
 

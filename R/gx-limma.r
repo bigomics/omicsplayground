@@ -15,7 +15,7 @@ if(0) {
     pheno <- ngs$samples$time
 }
 
-require(limma)
+
 REF.CLASS = c("ctrl","ctr","control","dmso","nt","0","0h","0hr",
               "non","no","not","neg","negative","ref","veh","vehicle",
               "wt","wildtype","untreated","normal","false","healthy")
@@ -24,7 +24,7 @@ gx.limma <- function(X, pheno, B=NULL, remove.na = TRUE,
                      fdr=0.05, compute.means=TRUE, lfc=0.20,
                      max.na=0.20, ref=REF.CLASS, trend=FALSE, verbose=1 )
 {
-    require(limma)
+    
     if(0) {
         fdr=0.05;compute.means=TRUE;lfc=0.20;ref=REF.CLASS
         max.na=0.2;trend=FALSE;verbose=1;B=NULL
@@ -104,15 +104,15 @@ gx.limma <- function(X, pheno, B=NULL, remove.na = TRUE,
         design <- cbind(design, B0[,sel,drop=FALSE])
     }
 
-    fit <- lmFit( X0, design)
-    fit <- eBayes(fit, trend=trend)
-    top <- topTable(fit, coef=d2, number=nrow(X0))
+    fit <- limma::lmFit( X0, design)
+    fit <- limma::eBayes(fit, trend=trend)
+    top <- limma::topTable(fit, coef=d2, number=nrow(X0))
     if("ID" %in% colnames(top)) {
         rownames(top) <- top$ID
         top$ID <- NULL
     }
     top <- top[rownames(X0),]
-    head(top)
+    Matrix::head(top)
     
     ## only significant
     top <- top[ which(top$adj.P.Val <= fdr & abs(top$logFC)>=lfc ), ]
@@ -146,7 +146,7 @@ gx.limma <- function(X, pheno, B=NULL, remove.na = TRUE,
 gx.limma.SAVE <- function(X, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
                           max.na=0.20, ref=REF.CLASS, trend=FALSE, verbose=1 )
 {
-    require(limma)
+    
     if(0) {
         fdr=0.05;compute.means=TRUE;lfc=0.20;ref=REF.CLASS
         max.na=0.2;ref=REF.CLASS;trend=FALSE;verbose=1
@@ -200,15 +200,15 @@ gx.limma.SAVE <- function(X, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
     colnames(design) <- c( "WT", "2vs1" )
     d1 <- colnames(design)[1]
     d2 <- colnames(design)[2]
-    fit <- lmFit( X0, design)
-    fit <- eBayes(fit, trend=trend)
-    top <- topTable(fit, coef=d2, number=nrow(X0))
+    fit <- limma::lmFit( X0, design)
+    fit <- limma::eBayes(fit, trend=trend)
+    top <- limma::topTable(fit, coef=d2, number=nrow(X0))
     if("ID" %in% colnames(top)) {
         rownames(top) <- top$ID
         top$ID <- NULL
     }
     top <- top[rownames(X0),]
-    head(top)
+    Matrix::head(top)
     
     ## only significant
     top <- top[ which(top$adj.P.Val <= fdr & abs(top$logFC)>=lfc ), ]
@@ -241,7 +241,7 @@ gx.limma.SAVE <- function(X, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
 gx.limma.SAVE <- function(X, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
                           max.na=0.20, ref=REF.CLASS, trend=FALSE, verbose=1 )
 {
-    require(limma)
+    
     if(0) {
         fdr=0.05;compute.means=TRUE;lfc=0.20;ref=REF.CLASS
         max.na=0.2;ref=REF.CLASS;trend=FALSE;verbose=1
@@ -295,15 +295,15 @@ gx.limma.SAVE <- function(X, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
     colnames(design) <- c( "WT", "2vs1" )
     d1 <- colnames(design)[1]
     d2 <- colnames(design)[2]
-    fit <- lmFit( X0, design)
-    fit <- eBayes(fit, trend=trend)
-    top <- topTable(fit, coef=d2, number=nrow(X0))
+    fit <- limma::lmFit( X0, design)
+    fit <- limma::eBayes(fit, trend=trend)
+    top <- limma::topTable(fit, coef=d2, number=nrow(X0))
     if("ID" %in% colnames(top)) {
         rownames(top) <- top$ID
         top$ID <- NULL
     }
     top <- top[rownames(X0),]
-    head(top)
+    Matrix::head(top)
     
     ## only significant
     top <- top[ which(top$adj.P.Val <= fdr & abs(top$logFC)>=lfc ), ]
@@ -337,7 +337,7 @@ gx.limma.SAVE <- function(X, pheno, fdr=0.05, compute.means=TRUE, lfc=0.20,
 gx.limmaF <- function(X, pheno, B=NULL, fdr=0.05, compute.means=TRUE, lfc=0.20,
                       max.na=0.20, ref=REF.CLASS, trend=FALSE, verbose=1 )
 {
-    require(limma)
+    
     if(0) {
         fdr=0.05;compute.means=TRUE;lfc=0.20;ref=REF.CLASS;max.na=0.20;
         trend=TRUE;verbose=1
@@ -413,11 +413,11 @@ gx.limmaF <- function(X, pheno, B=NULL, fdr=0.05, compute.means=TRUE, lfc=0.20,
         design <- cbind(design, B0[,sel,drop=FALSE])
     }
 
-    fit <- lmFit( X0, design)
-    fit <- eBayes(fit, trend=trend)
-    ##top <- topTable(fit, coef=NULL, number=nrow(X0))
-    top <- topTableF(fit, number=nrow(X0))
-    head(top)
+    fit <- limma::lmFit( X0, design)
+    fit <- limma::eBayes(fit, trend=trend)
+    ##top <- limma::topTable(fit, coef=NULL, number=nrow(X0))
+    top <- limma::topTableF(fit, number=nrow(X0))
+    Matrix::head(top)
     top$B <- NULL
     if("ID" %in% colnames(top)) {
         rownames(top) <- top$ID
@@ -471,9 +471,9 @@ gx.meanFstats <- function(X, pheno) {
         y1 <- y[ii]
         if(class(y1)=="factor") y1 <- factor(as.character(y1))
         design <- model.matrix(~y1)
-        fit <- lmFit( x[,ii], design)
-        fit <- eBayes(fit, trend=TRUE)
-        top <- topTableF(fit, number=nrow(x))
+        fit <- limma::lmFit( x[,ii], design)
+        fit <- limma::eBayes(fit, trend=TRUE)
+        top <- limma::topTableF(fit, number=nrow(x))
         mean(top$F)
     }
     fstat <- c()
@@ -498,7 +498,7 @@ gx.limma.paired <- function(X, pheno, pair, fdr=0.05, lfc=0.20, ref=REF.CLASS,
 {
     ##fdr=0.05;lfc=0.20;ref=REF.CLASS;compute.means=TRUE
     ## LIMMA
-    require(limma)
+    
     cat("Paired LIMMA\n")
     cat("analyzing",ncol(X),"samples\n")
     X <- X[!(rownames(X) %in% c(NA,"","NA")),]
@@ -540,12 +540,12 @@ gx.limma.paired <- function(X, pheno, pair, fdr=0.05, lfc=0.20, ref=REF.CLASS,
     design <- model.matrix( ~ a + b)
 
     ## perform fitting
-    fit0 <- lmFit( X, design)
-    fit2 <- eBayes(fit0, trend=trend)
+    fit0 <- limma::lmFit( X, design)
+    fit2 <- limma::eBayes(fit0, trend=trend)
 
     ## extract toptable
     bcoef <- grep("^b",colnames(fit2$coefficients))
-    top <- topTable(fit2, coef=bcoef, number=nrow(X))
+    top <- limma::topTable(fit2, coef=bcoef, number=nrow(X))
     if(colnames(top)[1]=="ID") {  ## old style
         rownames(top) <- top[,"ID"]
         top$ID <- NULL
@@ -592,7 +592,7 @@ gx.limma.two.factorial <- function(X, factors, fdr=0.05, lfc=0.20, trend=FALSE,
 {
 
     ## LIMMA
-    require(limma)
+    
     cat("Two-factorial LIMMA\n")
     cat("analyzing",ncol(X),"samples\n")
     X <- X[!(rownames(X) %in% c(NA,"","NA")),]
@@ -631,27 +631,27 @@ gx.limma.two.factorial <- function(X, factors, fdr=0.05, lfc=0.20, trend=FALSE,
     colnames(design)[4] <- paste(colnames(factors)[1],colnames(factors)[2],sep="*")
 
     ## perform fitting
-    fit0 <- lmFit( X, design)
+    fit0 <- limma::lmFit( X, design)
     cc0 <- paste(v1[1],".",paste(rev(levels(fct[[2]])),collapse="vs"),sep="")
     cc1 <- paste(v1[2],".",paste(rev(levels(fct[[2]])),collapse="vs"),sep="")
     cont.matrix <- cbind( c(0,0,1,0), c(0,0,1,1), diff=c(0,0,0,1) )
     colnames(cont.matrix) <- c(cc0, cc1, "Diff")
     rownames(cont.matrix) <- colnames(fit0$coefficients)
-    fit1 <- contrasts.fit( fit0, cont.matrix )
-    fit2 <- eBayes(fit1, trend=trend)
+    fit1 <- limma::contrasts.fit( fit0, cont.matrix )
+    fit2 <- limma::eBayes(fit1, trend=trend)
 
     ## extract toptable
-    top1 <- topTable(fit2, coef=colnames(cont.matrix)[1], number=nrow(X))
-    top2 <- topTable(fit2, coef=colnames(cont.matrix)[2], number=nrow(X))
-    top3 <- topTable(fit2, coef=colnames(cont.matrix)[3], number=nrow(X))
+    top1 <- limma::topTable(fit2, coef=colnames(cont.matrix)[1], number=nrow(X))
+    top2 <- limma::topTable(fit2, coef=colnames(cont.matrix)[2], number=nrow(X))
+    top3 <- limma::topTable(fit2, coef=colnames(cont.matrix)[3], number=nrow(X))
     top1 <- top1[rownames(X),]
     top2 <- top2[rownames(X),]
     top3 <- top3[rownames(X),]
 
     ## only significant
     kk <- rownames(X)
-    sig <- decideTests(fit2, p.value=fdr, lfc=lfc )
-    vennDiagram(sig, cex=0.8)
+    sig <- limma::decideTests(fit2, p.value=fdr, lfc=lfc )
+    limma::vennDiagram(sig, cex=0.8)
     title(sub=paste("fdr=",fdr,sep=""))
     if(fdr < 1) {
         sig.up   <- which( sig[,1] > 0 & sig[,2] > 0 & sig[,3]==0)
@@ -736,15 +736,15 @@ gx.test.groups <- function(sig, class.label, fdr=0.20,
     names(pv) <- rownames(sig)
     if(test.method=="limma") {
         cat("performing Limma test\n")
-        require(limma)
+        
         design <- cbind( 1, class.label==bb[2])
         if(is.null(running.name)) running.name <-  paste(bb[2],bb[1],sep="vs")
         colnames(design) <- c( "WT", running.name )
         d1 <- colnames(design)[1]
         d2 <- colnames(design)[2]
-        fit <- lmFit( sig, design)
-        fit <- eBayes(fit)
-        tt <- topTable(fit, coef=d2, number=nrow(sig))
+        fit <- limma::lmFit( sig, design)
+        fit <- limma::eBayes(fit)
+        tt <- limma::topTable(fit, coef=d2, number=nrow(sig))
         pv <- tt$P.Value[match(names(pv), tt$ID)]
     } else if(test.method=="wilcox") {
         cat("performing Wilcox rank test\n")
@@ -769,10 +769,10 @@ gx.test.groups <- function(sig, class.label, fdr=0.20,
     }
 
     ## qvalue
-    library(qvalue)
+    
     qv <- rep(NA, nrow(sig))
     kk <- which(!is.na(pv))
-    qv[kk] <- qvalue(pv[kk])$qvalue
+    qv[kk] <- qvalue::qvalue(pv[kk])$qvalue
 
     ## return object
     rr <- data.frame( ID=rownames(sig) )
@@ -818,7 +818,7 @@ gx.snrtest <- function(X,y,ref.class,nperm=200) {
     }
     pv <- pmax(pv,1.0/nperm)
     cat("\n")
-    head(sort(pv))
+    Matrix::head(sort(pv))
     pos.class <- setdiff(y,ref.class)[1]
     logFC <- ma - mb
     qv <- p.adjust(pv, method="fdr")
@@ -831,17 +831,17 @@ gx.snrtest <- function(X,y,ref.class,nperm=200) {
 
 seq.limma <- function(countdata, y, method="edgeR") {
     ## https://bioinformatics-core-shared-training.github.io/RNAseq-R/rna-seq-de.nb.html
-    library(edgeR)
-    library(limma)
-    library(Glimma)
-    library(gplots)
+    
+    
+    
+    
 
     if( min(countdata)<0 || !all(countdata%%1==0) ) {
         cat("WARNING:: input X should be integer counts! Proceed on own risk\n")
     }
 
     ## Identify genes with at least 0.5 CPM in at least 2 samples
-    myCPM <- cpm(countdata)
+    myCPM <- edgeR::cpm(countdata)
     thresh <- myCPM > 0.5
     keep <- rowSums(thresh) >= 2
     ## Subset the rows of countdata to keep the more highly expressed genes
@@ -849,46 +849,46 @@ seq.limma <- function(countdata, y, method="edgeR") {
 
     ## Convert to an edgeR object
     group = factor(y)
-    dgeObj <- DGEList(counts.keep, group=group)
+    dgeObj <- edgeR::DGEList(counts.keep, group=group)
 
     ## Perform TMM normalisation
-    dgeObj <- calcNormFactors(dgeObj, method="TMM")
+    dgeObj <- edgeR::calcNormFactors(dgeObj, method="TMM")
 
     ## Define design matrix
     design <- model.matrix( ~ group)
 
     ## Estimating the dispersion
-    ##dgeObj <- estimateCommonDisp(dgeObj)
-    dgeObj <- estimateGLMCommonDisp(dgeObj, design)
-    dgeObj <- estimateGLMTrendedDisp(dgeObj)
-    dgeObj <- estimateTagwiseDisp(dgeObj)
+    ##dgeObj <- edgeR::estimateCommonDisp(dgeObj)
+    dgeObj <- edgeR::estimateGLMCommonDisp(dgeObj, design)
+    dgeObj <- edgeR::estimateGLMTrendedDisp(dgeObj)
+    dgeObj <- edgeR::estimateTagwiseDisp(dgeObj)
 
     ## Fit the linear model
-    fit <- glmFit(dgeObj, design)
+    fit <- edgeR::glmFit(dgeObj, design)
     names(fit)
 
     ##Conduct likelihood ratio tests
-    res.test <- glmLRT(fit, coef=2)
-    toptable = topTags(res.test, n=nrow(countdata))@.Data[[1]]
-    head(toptable)
+    res.test <- edgeR::glmLRT(fit, coef=2)
+    toptable = edgeR::topTags(res.test, n=nrow(countdata))@.Data[[1]]
+    Matrix::head(toptable)
 
 
 
     ## calculate means
-    logcpm <- cpm(dgeObj,log=TRUE)
+    logcpm <- edgeR::cpm(dgeObj,log=TRUE)
     xmean = c()
     for(y0 in unique(y)) {
         m1 = rowMeans( logcpm[,which(y==y0)], na.rm=TRUE)
         xmean = cbind(xmean, m1)
     }
     colnames(xmean) = paste0("mean.",unique(y))
-    head(xmean)
+    Matrix::head(xmean)
     xmean = cbind( mean=rowMeans(xmean), xmean )
 
     if(0) {
-        PvsV <- makeContrasts(statuspregnant - statusvirgin, levels=design)
-        lrt.pVsV <- glmLRT(fit, contrast=PvsV)
-        topTags(lrt.pVsV)
+        PvsV <- limma::makeContrasts(statuspregnant - statusvirgin, levels=design)
+        lrt.pVsV <- edgeR::glmLRT(fit, contrast=PvsV)
+        edgeR::topTags(lrt.pVsV)
     }
 
 

@@ -28,58 +28,58 @@ BatchCorrectGadget <- function(X, pheno, height=720) {
 }
 
 BatchCorrectUI <- function(id, height=720) {
-    ns <- NS(id)
-    sidebarLayout(
-        sidebarPanel(
-            uiOutput(ns("inputsUI")),
+    ns <- shiny::NS(id)
+    shiny::sidebarLayout(
+        shiny::sidebarPanel(
+            shiny::uiOutput(ns("inputsUI")),
             width = 2
         ),
-        mainPanel(
-            plotOutput(ns("canvas"), width="100%", height=height) %>% withSpinner(),
+        shiny::mainPanel(
+            shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% shinycssloaders::withSpinner(),
             width = 10
         )
     )
 }
 
 BatchCorrectInputsUI <- function(id) {
-    ns <- NS(id)
-    uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)
+    shiny::uiOutput(ns("inputsUI"))
 }
 
 BatchCorrectCanvas <- function(id, height=720) {
-    ns <- NS(id)
-    plotOutput(ns("canvas"), width="100%", height=height) %>% withSpinner()
+    ns <- shiny::NS(id)
+    shiny::plotOutput(ns("canvas"), width="100%", height=height) %>% shinycssloaders::withSpinner()
 }
 
 BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
-    moduleServer(
+    shiny::moduleServer(
         id,
         function(input, output, session) {
 
-            observeEvent( input$bc_strength, {
+            shiny::observeEvent( input$bc_strength, {
                 if(input$bc_strength=="low") {
-                    updateSelectInput(session,"bc_batchpar",selected="*")
-                    updateCheckboxGroupInput(session, "bc_methods", selected="")
+                    shiny::updateSelectInput(session,"bc_batchpar",selected="*")
+                    shiny::updateCheckboxGroupInput(session, "bc_methods", selected="")
                 }
                 if(input$bc_strength=="medium") {
                     sel <- c("*","<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
-                    updateSelectInput(session,"bc_batchpar",selected=sel)
-                    updateCheckboxGroupInput(session,"bc_methods", selected=c("PCA","HC"))
+                    shiny::updateSelectInput(session,"bc_batchpar",selected=sel)
+                    shiny::updateCheckboxGroupInput(session,"bc_methods", selected=c("PCA","HC"))
                 }
                 if(input$bc_strength=="strong") {
                     sel <- c("*","<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
-                    updateSelectInput(session,"bc_batchpar",selected=sel)
-                    updateCheckboxGroupInput(session, "bc_methods", selected="SVA")
+                    shiny::updateSelectInput(session,"bc_batchpar",selected=sel)
+                    shiny::updateCheckboxGroupInput(session, "bc_methods", selected="SVA")
                 }
 
             })
             
-            outobj <- eventReactive(input$bc_compute, {
+            outobj <- shiny::eventReactive(input$bc_compute, {
                 
                 message("[event:bc_compute] reacted...")
-                req(X())
+                shiny::req(X())
                 ## input$bc_compute
-                message("[event:bc_compute] req(X) OK..")
+                message("[event:bc_compute] shiny::req(X) OK..")
                 
                 mp="";bp="Chemotherapy"
                 mp="dlbcl.type";bp="*"
@@ -157,7 +157,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 out
             }, ignoreInit=FALSE, ignoreNULL=FALSE )
             
-            output$canvas <- renderPlot({
+            output$canvas <- shiny::renderPlot({
 
                 out <- outobj()
                 if(is.null(out$X) || length(out$X)==0) return(NULL)
@@ -172,7 +172,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 ##     return(NULL)
                 ## }
                 
-                mp <- isolate(input$bc_modelpar)
+                mp <- shiny::isolate(input$bc_modelpar)
                 p1 <- NULL
                 if(!is.null(mp)) p1 <- mp[1]
 
@@ -200,7 +200,7 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
 
             })
             
-            output$inputsUI <- renderUI({
+            output$inputsUI <- shiny::renderUI({
                 
                 ns <- session$ns
                 bc.options = c("PCA","HC","SVA","NNM")
@@ -218,49 +218,49 @@ BatchCorrectServer <- function(id, X, pheno, is.count=FALSE, height=720) {
                 sel.par   <- c(grep("^[.<]",pheno.par,invert=TRUE,value=TRUE),pheno.par)[1]
                 batch.par <- c("*",pheno.par,"<cell_cycle>","<gender>","<libsize>","<mito/ribo>")
                 
-                tagList(
+                shiny::tagList(
                     ##helpText(bc_info),
-                    p(bc_info),
+                    shiny::p(bc_info),
                     ## shinyWidgets::prettySwitch(ns("on_off"),"on/off", inputId="s1"),
                     tipify2(
-                        selectInput(ns("bc_modelpar"), "Model parameters:", pheno.par,
+                        shiny::selectInput(ns("bc_modelpar"), "Model parameters:", pheno.par,
                                     selected=sel.par, multiple=TRUE),
                         "Please specify your model parameters. These are the parameters of interest that will determine your groupings."),
-                    tipify(                    
-                        radioButtons(ns("bc_strength"), NULL,
+                    shinyBS::tipify(                    
+                        shiny::radioButtons(ns("bc_strength"), NULL,
                                      c("low","medium","strong"), inline=TRUE),
                         "Choose the strength of batch correction: <b>low</b> corrects only for explicit batch parameters, <b>medium</b> corrects for additional unwanted biological effects (inferred from your data), <b>strong</b> applies SVA or NNM (nearest neighbour matching). You can tune the selection under the advanced options.", 
                         placement="left", options=list(container="body")),                    
-                    actionButton(ns("bc_compute"),"Batch correct",
+                    shiny::actionButton(ns("bc_compute"),"Batch correct",
                                  ## icon=icon("exclamation-triangle"),
                                  class="run-button"),
-                    br(), br(),
-                    tipify( actionLink(ns("bc_options"), "Advanced",
+                    shiny::br(), shiny::br(),
+                    shinyBS::tipify( shiny::actionLink(ns("bc_options"), "Advanced",
                                        icon=icon("cog", lib = "glyphicon")),
                            "Toggle advanced options.", 
                            placement="left", options=list(container="body")),
-                    br(),
-                    conditionalPanel(
+                    shiny::br(),
+                    shiny::conditionalPanel(
                         "input.bc_options%2 == 1", ns=ns,
-                        tagList(
-                            tipify(
-                                selectInput(ns("bc_batchpar"), "Batch parameters:", batch.par,
+                        shiny::tagList(
+                            shinyBS::tipify(
+                                shiny::selectInput(ns("bc_batchpar"), "Batch parameters:", batch.par,
                                             selected="*", multiple=TRUE),
                                 "Specifiy the batch parameters that you want to correct for. The <b>star</b> stands for all remaining (unwanted) parameters not specified as parameter of interest. Bracketed parameters are technical/biological summaries computed from your data.",
                                 placement="left", options=list(container="body")
                             ),
-                            tipify(
-                                checkboxGroupInput(
+                            shinyBS::tipify(
+                                shiny::checkboxGroupInput(
                                     ns('bc_methods'),'Correction methods:',
                                     choices=bc.options, bc.selected, inline=FALSE),
                                 "Advanced batch correction methods. <b>PCA</b> corrects PC components not correlated to any model parameters; <b>HC</b> iteratively corrects hierarchical clustering; <b>SVA</b> applies surrogate variable analysis (Leek et al.); <b>NNM</b> applies nearest neighbour matching, a quasi-pairing approach for incomplete matched data.",
                                 placement="left", options=list(container="body")
                             ),
-                            tipify( radioButtons(ns("bc_nmax"), "Nmax:",c(40,200,1000),
+                            shinyBS::tipify( shiny::radioButtons(ns("bc_nmax"), "Nmax:",c(40,200,1000),
                                                  inline=TRUE),
                                    "Maximum number of genes in heatmap",
                                    placement="left", options=list(container = "body")),
-                            tipify( radioButtons(ns("bc_maptype"), "Heatmap type:",
+                            shinyBS::tipify( shiny::radioButtons(ns("bc_maptype"), "Heatmap type:",
                                                  c("topSD","PCA"), inline=TRUE),
                                    "Type of heatmap: top SD or PCA.",
                                    placement="left", options=list(container="body"))

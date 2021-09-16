@@ -9,8 +9,8 @@ if(0) {
     devtools::install_github("mensxmachina/BioDataome")
     
         
-    library(GEOquery)
-    res <- getGEO(id)
+    
+    res <- GEOquery::getGEO(id)
     
     a1 <- (parsePhenoFromName(geo.getTitle(geo[[1]])))
     a2 <- (parsePhenoFromName(geo.getTitle(geo[[2]])))    
@@ -22,7 +22,7 @@ if(0) {
     source(file.path(RDIR,"pgx-include.R"))
 
 
-    fd <- fread("~/Downloads/GSE56192_GeneLevel_Raw_data.csv")
+    fd <- data.table::fread("~/Downloads/GSE56192_GeneLevel_Raw_data.csv")
     X <- as.matrix(fd[,3:ncol(fd)])
     rownames(X) <- fd$gene_symbol
     dim(X)
@@ -103,7 +103,7 @@ pgx.getGEOseries <- function(id, archs.h5=ARCHSH5, convert.hugo=TRUE)
         meta1, min.ncat=2, max.ncat=20, remove.dup=TRUE)
     sampleinfo <- data.frame(sampleinfo, stringsAsFactors=FALSE, check.names=FALSE)
     dim(sampleinfo)
-    head(sampleinfo)
+    Matrix::head(sampleinfo)
     
     ## automagically create contrast matrix
     contrasts <- NULL
@@ -125,7 +125,7 @@ pgx.getGEOseries <- function(id, archs.h5=ARCHSH5, convert.hugo=TRUE)
         } else {
             contrasts <- ct$design %*% ct$contr.matrix
         }
-        head(contrasts)
+        Matrix::head(contrasts)
     }
 
     info <- pgx.getGeoExperimentInfo(id)    
@@ -220,7 +220,7 @@ pgx.getGeoMetadata <- function(id) {
 
     colnames(pheno) <- gsub("[ ]","_",colnames(pheno)) ## no spaces???
     dim(pheno)
-    head(pheno)
+    Matrix::head(pheno)
 
     ##
     ##experimentData(eset)
@@ -237,9 +237,9 @@ h5.file = "../libx/human_matrix.h5"
 id
 pgx.getGEOcounts.archs4 <- function(id, h5.file)
 {
-    require(rhdf5)
-    h5ls(h5.file)
-    sample.series <- h5read(h5.file, "meta/Sample_series_id")
+    
+    rhdf5::h5ls(h5.file)
+    sample.series <- rhdf5::h5read(h5.file, "meta/Sample_series_id")
     sample.series <- strsplit(as.character(sample.series), split="Xx-xX")
 
     gse.series <- sort(unique(unlist(sample.series)))
@@ -252,11 +252,11 @@ pgx.getGEOcounts.archs4 <- function(id, h5.file)
         cat("WARNING: series",id,"not in ARCHS4 matrix file\n")
         return(NULL)
     }
-    X <- h5read(h5.file,"data/expression", index = list(NULL, idx))
+    X <- rhdf5::h5read(h5.file,"data/expression", index = list(NULL, idx))
 
-    sample.acc <- h5read(h5.file, "meta/Sample_geo_accession")
-    gene_name  <- h5read(h5.file, "meta/genes")
-    head(gene_name)
+    sample.acc <- rhdf5::h5read(h5.file, "meta/Sample_geo_accession")
+    gene_name  <- rhdf5::h5read(h5.file, "meta/genes")
+    Matrix::head(gene_name)
     colnames(X) <- sample.acc[idx]
     rownames(X) <- gene_name
     sum(duplicated(gene_name))
@@ -280,7 +280,7 @@ pgx.getGEOcounts.recount <- function(id)
 {
     ## Vignette recount-quickstart.html
     ## Load library
-    library('recount')
+    
     
     ## Find a project of interest
     project_info <- recount::abstract_search(id)
@@ -301,7 +301,7 @@ pgx.getGEOcounts.recount <- function(id)
     ## Scale counts by taking into account the total coverage per sample
     rse <- recount::scale_counts(rse_gene)
 
-    counts <- assay(rse)
+    counts <- MultiAssayExperiment::assay(rse)
     dim(counts)
     return(counts)
 }
@@ -310,16 +310,16 @@ pgx.getGEOcounts.GEOquery <- function(id) {
     ## Retrieve expression matrix, phenotype and probe annotation
     ## matrices for a certain GEO id.
     ##
-    require(GEOquery)
+    
 
     ## load series and platform data from GEO
     id
-    ##dat <- getGEO(id, GSEMatrix=FALSE, getGPL=FALSE)
-    gse <- try( getGEO(id, GSEMatrix=TRUE, getGPL=TRUE) )
-    ##gse <- try( getGEO(id, GSEMatrix=TRUE, getGPL=FALSE) )
+    ##dat <- GEOquery::getGEO(id, GSEMatrix=FALSE, getGPL=FALSE)
+    gse <- try( GEOquery::getGEO(id, GSEMatrix=TRUE, getGPL=TRUE) )
+    ##gse <- try( GEOquery::getGEO(id, GSEMatrix=TRUE, getGPL=FALSE) )
     class(gse)
     if(class(gse)=="try-error") {
-        cat("ERROR: getGEO() error\n")
+        cat("ERROR: GEOquery::getGEO() error\n")
         return(NULL)
     }
     length(gse)
@@ -376,8 +376,8 @@ pgx.getGEOcounts.GEOquery <- function(id) {
             fdata <- fData(eset)
         } else {
             eset@annotation
-            gpl.annot <- getGEO(eset@annotation)
-            fdata <- Table(gpl.annot)
+            gpl.annot <- GEOquery::getGEO(eset@annotation)
+            fdata <- GEOquery::Table(gpl.annot)
             fdata <- fdata[match(rownames(ex),fdata$ID),]
             dim(fdata)
         }
@@ -385,7 +385,7 @@ pgx.getGEOcounts.GEOquery <- function(id) {
         ## get symbol from featuredata
         colnames(fdata)
         fsymbol <- pgx.getSymbolFromFeatureData(fdata) 
-        head(fsymbol[!is.na(fsymbol)])
+        Matrix::head(fsymbol[!is.na(fsymbol)])
 
         ## collapse by symbol
         jj <- which(!is.na(fsymbol) & fsymbol!="")
@@ -426,15 +426,15 @@ pgx.getGEOcounts.fromSuppl <- function(id) {
     ## Retrieve expression matrix, phenotype and probe annotation
     ## matrices for a certain GEO id.
     ##
-    require(GEOquery)
+    
 
     ## load series and platform data from GEO
     id
-    ##dat <- getGEO(id, GSEMatrix=FALSE, getGPL=FALSE)
-    gse <- try( getGEO(id, GSEMatrix=FALSE, getGPL=FALSE) )
+    ##dat <- GEOquery::getGEO(id, GSEMatrix=FALSE, getGPL=FALSE)
+    gse <- try( GEOquery::getGEO(id, GSEMatrix=FALSE, getGPL=FALSE) )
     class(gse)
     if(class(gse)=="try-error") {
-        cat("ERROR: getGEO() error\n")
+        cat("ERROR: GEOquery::getGEO() error\n")
         return(NULL)
     }
     length(gse)
@@ -480,7 +480,7 @@ pgx.getSymbolFromFeatureData <- function(fdata) {
     }
 
     ## If there is an ENTREZ column, than it is easy
-    ENTREZ <- keys(org.Hs.egSYMBOL)
+    ENTREZ <- biomaRt::keys(org.Hs.egSYMBOL)
     entrez.col <- grep("entrez",colnames(fdata),ignore.case=TRUE)
     entrez.col
     entrez.match <- apply( fdata[,entrez.col,drop=FALSE], 2,
@@ -491,7 +491,7 @@ pgx.getSymbolFromFeatureData <- function(fdata) {
     if(entrez.ok) {
         k <- entrez.col[which.max(entrez.match)]
         probes <- as.character(fdata[,k])
-        symbol <- mapIds(org.Hs.eg.db, probes, 'SYMBOL', 'ENTREZID')
+        symbol <- AnnotationDbi::mapIds(org.Hs.eg.db, probes, 'SYMBOL', 'ENTREZID')
         return(symbol)
     }
 
@@ -507,7 +507,7 @@ pgx.getSymbolFromFeatureData <- function(fdata) {
     if(refseq.ok) {
         k <- refseq.col[which.max(refseq.match)]
         probes <- sub("[.].*","",as.character(fdata[,k]))
-        symbol <- mapIds(org.Hs.eg.db, probes, 'SYMBOL', 'REFSEQ')
+        symbol <- AnnotationDbi::mapIds(org.Hs.eg.db, probes, 'SYMBOL', 'REFSEQ')
         return(symbol)
     }
     
@@ -519,7 +519,7 @@ pgx.getSymbolFromFeatureData <- function(fdata) {
     if( any(has.ens > 0.3) ) {
         ens.col = ifelse(max(has.ens)>0, names(which.max(has.ens)), NA)        
         ens.ann = lapply(fdata[,ens.col], function(a) trimws(strsplit(a,split="//|///")[[1]]))
-        ens.probes <- sapply(ens.ann, function(s) head(grep("^ENS",s,value=TRUE),1))
+        ens.probes <- sapply(ens.ann, function(s) Matrix::head(grep("^ENS",s,value=TRUE),1))
         ens.probes[sapply(ens.probes,length)==0] <- NA
         ens.probes <- unlist(ens.probes)
         symbol <- probe2symbol(ens.probes)
@@ -531,7 +531,7 @@ pgx.getSymbolFromFeatureData <- function(fdata) {
 }
 
 pgx.getGeoExperimentInfo <- function(id) {
-    suppressMessages(gse <- try(getGEO(id, GSEMatrix=FALSE, getGPL=FALSE)))
+    suppressMessages(gse <- try(GEOquery::getGEO(id, GSEMatrix=FALSE, getGPL=FALSE)))
     info = gse@header
     ##info <- info[c("geo_accession","title","summary","type")]
     info
@@ -540,8 +540,8 @@ pgx.getGeoExperimentInfo <- function(id) {
 pgx.getGeoMetadata.fromEset <- function(id) {
     
     ## If not succesful, try with downloading the GSEMatrix
-    suppressMessages(gse <- try(getGEO(id, GSEMatrix=TRUE, getGPL=FALSE)))
-    ## suppressMessages(gse <- try(getGEO(id, GSEMatrix=FALSE, getGPL=FALSE)))    
+    suppressMessages(gse <- try(GEOquery::getGEO(id, GSEMatrix=TRUE, getGPL=FALSE)))
+    ## suppressMessages(gse <- try(GEOquery::getGEO(id, GSEMatrix=FALSE, getGPL=FALSE)))    
     class(gse)
     if(class(gse)=="try-error") {
         res <- list(error="ERROR: pgx.getGeoMetadata.fromEset() error")
@@ -597,15 +597,15 @@ pgx.getGeoMetadata.fromEset1 <- function(eset) {
     gsm.title <- as.character(pdata$title)
     gsm.source <- as.character(pdata$source_name_ch1)
     gsm.samples <- as.character(pdata$geo_accession)
-    head(gsm.samples)
+    Matrix::head(gsm.samples)
     
     ## Base sample_info from characteristics (ch1) column
     ch1_info <- eset.getCH1(eset)
     dim(ch1_info)
-    head(ch1_info)
+    Matrix::head(ch1_info)
     
     ## We can get extra information from title
-    head(gsm.title)
+    Matrix::head(gsm.title)
     is.underscored <- length(gsm.title) && all(grepl("_",gsm.title))
     is.underscored
     title_info <- NULL
@@ -615,7 +615,7 @@ pgx.getGeoMetadata.fromEset1 <- function(eset) {
         ##title2 <- gsub("[\\(\\),-]","",title2)
         ##title2 <- gsub("[ ]","_",title2)
         title_info <- eset.parsePhenoFromTitle(title2,split="_")
-        head(title_info)
+        Matrix::head(title_info)
     }
     
     ## All sample_info: from characterisctis_ch1 and title
@@ -636,10 +636,10 @@ pgx.getGeoMetadata.fromGSM <- function(id) {
     ## load series and platform data from GEO
     ##
     id
-    suppressMessages(gse <- try(getGEO(id, GSEMatrix=FALSE, getGPL=FALSE)))
+    suppressMessages(gse <- try(GEOquery::getGEO(id, GSEMatrix=FALSE, getGPL=FALSE)))
     class(gse)
     if(class(gse)=="try-error") {
-        res <- list(error="ERROR: getGEO() error")
+        res <- list(error="ERROR: GEOquery::getGEO() error")
         return(res)
     }
     length(gse)
@@ -657,7 +657,7 @@ pgx.getGeoMetadata.fromGSM <- function(id) {
     summary <- gse@header$summary
     gsm.samples <- gse@header$sample_id
     ##gsm.samples <- names(dat@gsms)
-    head(gsm.samples)
+    Matrix::head(gsm.samples)
     
     ## Get sample_info from characteristics (ch1) column
     ch1_info <- lapply(gse@gsms, function(g) g@header$characteristics_ch1)
@@ -676,14 +676,14 @@ pgx.getGeoMetadata.fromGSM <- function(id) {
         ch1_info <- do.call( rbind, ch1_info )
         dim(ch1_info)
         colnames(ch1_info) <- ch1_vars
-        head(ch1_info)
+        Matrix::head(ch1_info)
     }
     
     ## We can get more information from title??
     gsm.title  <- sapply(gse@gsms, function(g) g@header$title)
     gsm.source <- sapply(gse@gsms, function(g) g@header$source_name_ch1)
     gsm.gpl    <- sapply(gse@gsms, function(g) g@header$platform_id)    
-    head(gsm.title)
+    Matrix::head(gsm.title)
     is.underscored <- length(gsm.title) && all(grepl("_",gsm.title))
     is.underscored
     title_info <- NULL
@@ -695,7 +695,7 @@ pgx.getGeoMetadata.fromGSM <- function(id) {
         ##title2 <- gsub("[ ]","_",title2)
         title_info <- eset.parsePhenoFromTitle(title2,split="_")
         dim(title_info)
-        head(title_info)
+        Matrix::head(title_info)
     }
     
     ## All sample_info: from characterisctis_ch1 and title
@@ -828,8 +828,8 @@ eset.parsePhenoFromTitle <- function(title, split=NULL)
     ##
     ##
     ##
-    require(Biostrings)
-    require(msa)
+    
+    
     ##title <- as.character(pData(phenoData(eset))$title)
 
     if(!all(grepl(split,title))) {
@@ -844,7 +844,7 @@ eset.parsePhenoFromTitle <- function(title, split=NULL)
     tt <- gsub(paste0(split,split),split,tt)
     ff <- sapply(as.character(tt), strsplit, split=split)
     nf <- max(sapply(ff,length))
-    ff <- lapply(ff, function(x) head(c(x,rep(NA,nf)),nf))
+    ff <- lapply(ff, function(x) Matrix::head(c(x,rep(NA,nf)),nf))
 
     ## cleanup
     ff <- lapply(ff, trimws)  ## trim whitespace

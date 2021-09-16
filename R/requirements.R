@@ -9,8 +9,8 @@
 
 install.packages("devtools")
 install.packages("BiocManager", version="3.10")
-library(devtools)
-library(BiocManager)
+
+
 
 LOCAL.PKGS <- sub("_.*","",dir("../ext/packages"))
 LOCAL.PKGS
@@ -26,7 +26,7 @@ install.pkg <- function(pkg, force=FALSE) {
             cat("installing",pkg,"from CRAN/BioConductor...\n")
             try(BiocManager::install(pkg, dependencies=NA,
                                      ask=FALSE, update=FALSE))
-            if(!require(pkg, character.only=TRUE)) {
+            if(! {
                 cat("retrying to install",pkg,"from CRAN...\n")
                 try(install.packages(pkg, dependencies=NA,
                                      ask=FALSE, update=FALSE))
@@ -78,7 +78,7 @@ install.pkgs(base.pkg)
 ## Automatically scan all used packages and install
 ##---------------------------------------------------------------------
 
-pkg.used <- system("grep 'library(\\|require(' *R *r ../shiny/*R ../shiny/modules/*R", intern=TRUE)
+pkg.used <- system("grep '
 pkg.used <- gsub(".*require\\(|.*library\\(","",pkg.used)
 pkg.used <- gsub("\"|\'|\\).*","",pkg.used)
 pkg.used <- grep("[ ]|quietly",pkg.used,value=TRUE,invert=TRUE)
@@ -101,7 +101,7 @@ install.pkgs(beta.pkg)
 ## reinstall problematics ones
 ##---------------------------------------------------------------------
 
-require(devtools)
+
 ##install.pkg("grid", force=TRUE)
 install.pkgs(c("gridGraphics","Rgraphviz","fastcluster", "mygene",
                "diptest", "fpc", "webshot"))

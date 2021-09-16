@@ -21,11 +21,14 @@ sum(ACCESS.LOG$visitors$count)
 ## Initialize ORCA server
 ##-----------------------------------------------------
 ## see: pgx-module.R
-ORCA <- initOrca(launch=TRUE) 
-class(ORCA)
-if(is.null(ORCA)) {
-    warning("##### FATAL:: Could not connect to ORCA server. Please start ORCA. #####")
-    stop()
+ORCA <- NULL
+if(getOption("OMICS_ORCA_RUN", TRUE)){
+    ORCA <- initOrca(launch=TRUE) 
+    class(ORCA)
+
+    if(is.null(ORCA)) {
+        stop("##### FATAL:: Could not connect to ORCA server. Please start ORCA. #####")
+    }
 }
 
 ##======================================================================
@@ -53,7 +56,7 @@ premium.feature <- function(...) {
     message("[premium.feature] DEV = ",DEV)        
     el <- list(...)
     if(USER_MODE %in% c("pro","premium","dev")) return(el)
-    tipify(disabled(...),
+    shinyBS::tipify(shinyjs::disabled(...),
            "This is a Premium feature. Upgrade to enable this feature."
            )    
 
@@ -72,9 +75,9 @@ in.shinyproxy <- function() {
 tabRequire <- function(pgx, slot, tabname, subtab) {
     if(!slot %in% names(pgx)) {
         cat(paste("[MAIN] object has no ",slot," results. hiding tab.\n"))
-        hideTab(tabname, subtab)
+        shiny::hideTab(tabname, subtab)
     } else {
-        showTab(tabname, subtab)
+        shiny::showTab(tabname, subtab)
     }
 }
 
@@ -83,18 +86,18 @@ fileRequire <- function(file, tabname, subtab) {
     has.file <- !is.null(file1) && file.exists(file1)
     if(!has.file) {
         message(paste("[MAIN] file ",file," not found. Hiding",subtab,"\n"))
-        hideTab(tabname, subtab)
+        shiny::hideTab(tabname, subtab)
     } else {
         message(paste("[MAIN] file ",file," available. Showing",subtab,"\n"))        
-        showTab(tabname, subtab)
+        shiny::showTab(tabname, subtab)
     }
 }
 
 tabView <- function(title, tab.inputs, tab.ui) {
-    tabPanel(title, ## id=title,
-             sidebarLayout(
-                 sidebarPanel( width=2, tab.inputs, id="sidebar"),
-                 mainPanel( width=10, tab.ui)
+    shiny::tabPanel(title, ## id=title,
+             shiny::sidebarLayout(
+                 shiny::sidebarPanel( width=2, tab.inputs, id="sidebar"),
+                 shiny::mainPanel( width=10, tab.ui)
              ))
 }
 
@@ -104,26 +107,26 @@ tabView <- function(title, tab.inputs, tab.ui) {
 ## }
 ## dev.tabPanel <- function(id, ui) {
 ##     if(!DEV.MODE) return(NULL)
-##     tabPanel(id, ui)
+##     shiny::tabPanel(id, ui)
 ## }
 
 social_buttons <- function() {
-    div(
+    shiny::div(
         id="social-buttons",
-        tagList(
-            tipify( tags$a( href="https://omicsplayground.readthedocs.io", icon("book"), target="_blank"),
+        shiny::tagList(
+            shinyBS::tipify( tags$a( href="https://omicsplayground.readthedocs.io", shiny::icon("book"), target="_blank"),
                    "Read our online documentation at Read-the-docs", placement="top"),
-            tipify( tags$a( href="https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-",
-                           icon("youtube"), target="_blank"),
+            shinyBS::tipify( tags$a( href="https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-",
+                           shiny::icon("youtube"), target="_blank"),
                    "Watch our tutorials on YouTube", placement="top"),
-            tipify( tags$a( href="https://github.com/bigomics/omicsplayground",
-                           icon("github"), target="_blank"),
+            shinyBS::tipify( tags$a( href="https://github.com/bigomics/omicsplayground",
+                           shiny::icon("github"), target="_blank"),
                    "Get the source code or report a bug at GitHub", placement="top"),
-            tipify( tags$a( href="https://hub.docker.com/r/bigomics/omicsplayground",
-                           icon("docker"), target="_blank"),
+            shinyBS::tipify( tags$a( href="https://hub.docker.com/r/bigomics/omicsplayground",
+                           shiny::icon("docker"), target="_blank"),
                    "Pull our docker from Docker", placement="top"),
-            tipify( tags$a( href="https://groups.google.com/d/forum/omicsplayground",
-                           icon("users"), target="_blank"),
+            shinyBS::tipify( tags$a( href="https://groups.google.com/d/forum/omicsplayground",
+                           shiny::icon("users"), target="_blank"),
                    "Get help at our user forum", placement="top")            
         )
     )
