@@ -276,7 +276,8 @@ to understand biological functions including GO and KEGG pathway analysis."
     }
 
     if(1) {
-        library(pathview)
+        suppressMessages(require(pathview))
+
         unlockBinding("geneannot.map", as.environment("package:pathview"))
         assignInNamespace("geneannot.map", my.geneannot.map, ns="pathview", as.environment("package:pathview"))
         assign("geneannot.map", my.geneannot.map, as.environment("package:pathview"))
@@ -291,9 +292,6 @@ to understand biological functions including GO and KEGG pathway analysis."
         ##NULL.IMG <- list(src=NA, contentType = 'image/png')
         NULL.IMG <- list(src="", contentType = 'image/png')
         if(is.null(ngs)) return(NULL.IMG)
-
-
-
 
 
         comparison=1

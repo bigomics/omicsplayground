@@ -1373,9 +1373,7 @@ getKeggID <- function(gsets)
 {
     ## Guess KEGG id from gene set name
     ##
-    
-    
-    
+
     kegg.names <- unlist(as.list(KEGG.db::KEGGPATHID2NAME))
     kegg.ids <- names(kegg.names)
     kegg.namesUPPERCASE <- toupper(gsub("[- ]","_",gsub("[)(/,.']","",kegg.names)))
