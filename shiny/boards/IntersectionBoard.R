@@ -800,7 +800,7 @@ output$description <- shiny::renderUI(shiny::HTML(description))
                              label = tt2, size=4, lineheight=0.83) +
                 ggplot2::coord_sf(clip="off")
 
-            grid.draw(p)
+            grid::grid.draw(p)
         }        
         ##p
     })
@@ -1154,7 +1154,7 @@ output$description <- shiny::renderUI(shiny::HTML(description))
                 ##column_dend_height = ggplot2::unit(10,"mm"),
                 inset = c(0.01,0.01))            
         })
-        grid.draw(plt)
+        grid::grid.draw(plt)
         ## plt
     })
     
