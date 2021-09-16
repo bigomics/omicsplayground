@@ -1063,7 +1063,8 @@ pgx.plotGeneUMAP <- function(pgx, contrast=NULL, value=NULL,
             title = title1, cex.title = 1.0,
             ## xlim = xlim, ylim = ylim,
             legend = TRUE,
-            ## col=cpal, opacity=1,
+            ## col=cpal,
+            opacity = 0.5,
             plotlib = plotlib)
 
         plist[[i]] <- p1

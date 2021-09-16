@@ -871,29 +871,6 @@ CorrelationBoard <- function(input, output, session, env)
         higenes <- names(tail(sort(rho**2),20))
         higenes <- unique(names(c(head(sort(rho),10),tail(sort(rho),10))))
         cexlab <- ifelse(length(higenes)==1, 2.5, 1.6)
-
-        if(0) {
-
-            rho = R[,1]
-            rho = c("neg","yes")[1+1*(sign(rho)==1)]
-            names(rho) <- rownames(R)
-
-            rho <- rho[match(rownames(pos),names(rho))]
-            names(rho) <- rownames(pos)
-            rho[is.na(rho)] <- 0
-            
-            pgx.scatterPlotXY(
-                pos, var=rho, ##type="factor", col=c("blue","red"),
-                hilight = higenes, hilight.cex=1.2,
-                zsym = TRUE, softmax=1,
-                ## hilight2 = hilight2,
-                cex = 1, cex.lab = 2.0,
-                legend = TRUE, plotlib="plotly")
-            
-        }
-       
-        dbg("[cor_umap.PLOTFUN] dim.pos =",dim(pos))
-        dbg("[cor_umap.PLOTFUN] len.rho =",length(rho))        
         
         p <- pgx.plotGeneUMAP(
             ngs, pos = pos, ##contrast=ct,
