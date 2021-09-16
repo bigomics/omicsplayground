@@ -40,15 +40,15 @@ pgx.calculateWordCloud <- function(ngs, progress=NULL, pg.unit=1) {
     terms <- terms[sapply(terms,nchar)>2]
     terms <- grep("[0-9]|^\\(",terms,invert=TRUE,value=TRUE)        
     length(terms)
-    terms <- head(terms,1000)
+    terms <- Matrix::head(terms,1000)
     
     ## Calculate incidence matrix
     words2 <- lapply(words, function(w) intersect(w, terms))
     words2 <- words2[sapply(words2,length)>0]
     idx <- lapply(1:length(words2), function(i) cbind(i,match(words2[[i]],terms)))
     idx <- do.call(rbind, idx)
-    library(qlcMatrix)
-    W <- sparseMatrix(idx[,1], idx[,2], x=1)
+    
+    W <- Matrix::sparseMatrix(idx[,1], idx[,2], x=1)
     dim(W)
     rownames(W) = names(words2)
     colnames(W) = terms
@@ -70,7 +70,7 @@ pgx.calculateWordCloud <- function(ngs, progress=NULL, pg.unit=1) {
     if(!is.null(progress)) progress$inc(0.3*pg.unit, detail="computing GSEA")        
     
     ## compute for average contrast
-    require(fgsea)
+    
     rms.FC <- Matrix::rowMeans(S**2)**0.5
     rms.FC <- rms.FC + 0.01*rnorm(length(rms.FC))
     gmt <- apply(W,2,function(x) names(which(x!=0)))
@@ -102,9 +102,9 @@ pgx.calculateWordCloud <- function(ngs, progress=NULL, pg.unit=1) {
     
     if(!is.null(progress)) progress$inc(0.25*pg.unit, detail="clustering")
     
-    require(Rtsne)
-    library(umap)
-    require(uwot)
+    
+    
+    
     if(NCOL(W) <= 3) {
         ## t-SNE doesn't like 1-2 columns...
         W <- cbind(W, W, W, W, W)
@@ -113,7 +113,7 @@ pgx.calculateWordCloud <- function(ngs, progress=NULL, pg.unit=1) {
     nb = floor(pmin(pmax(ncol(W)/4,2),10))
     message("[pgx.calculateWordCloud] dim(W) = ",paste(dim(W),collapse="x"))
     message("[pgx.calculateWordCloud] setting perplexity = ",nb)
-    pos1 = Rtsne( as.matrix(t(W)), perplexity=nb,
+    pos1 = Rtsne::Rtsne( as.matrix(t(W)), perplexity=nb,
                  ## pca =TRUE, partial_pca =TRUE,
                  check_duplicates=FALSE)$Y
     ##pos2 = umap::umap(as.matrix(t(W)))$layout

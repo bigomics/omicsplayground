@@ -9,7 +9,7 @@
 pgx.parseAccessLogs <- function(logs.dir, from=NULL, to=NULL,
                                 filter.get=NULL, unique = TRUE)
 {
-    require(data.table)
+    
     ##logs.dir <- c(FILESX, file.path(FILESX,"apache2"),"/var/www/html/logs","/var/log/apache2")
     logs.dir <- "../../omicsplayground-dev/logs/covid"
     logs.dir <- logs.dir[dir.exists(logs.dir)]
@@ -25,7 +25,7 @@ pgx.parseAccessLogs <- function(logs.dir, from=NULL, to=NULL,
     access.logs <- lapply(access.files, function(f)
         suppressMessages(suppressWarnings(try(read.table(f)))))
     ##access.logs <- lapply(access.files, function(f)
-    ##    suppressMessages(suppressWarnings(try(fread(f,sep=" ")))))
+    ##    suppressMessages(suppressWarnings(try(data.table::fread(f,sep=" ")))))
     access.logs <- access.logs[sapply(access.logs,class)!="try-error"]
     access.logs <- access.logs[sapply(access.logs,nrow)>0]
     length(access.logs)
@@ -52,7 +52,7 @@ pgx.parseAccessLogs <- function(logs.dir, from=NULL, to=NULL,
         acc <- acc[sel,]
     }
     dim(acc)
-    head(acc)
+    Matrix::head(acc)
     
     ## Extract visiting period
     Sys.setlocale("LC_TIME","en_US.UTF-8")    
@@ -61,8 +61,8 @@ pgx.parseAccessLogs <- function(logs.dir, from=NULL, to=NULL,
     acc$date <- as.Date(acc$date, format = "%d/%b/%Y")
     acc <- acc[order(acc$date),]
 
-    from.date <- head(acc$date,1)
-    to.date <- tail(acc$date,1)
+    from.date <- Matrix::head(acc$date,1)
+    to.date <- Matrix::tail(acc$date,1)
     from.to <- paste(from.date,"-",to.date)
     from.to
     
@@ -74,7 +74,7 @@ pgx.parseAccessLogs <- function(logs.dir, from=NULL, to=NULL,
     ## names(unique.hostname)  <- unique.ip
     
     ## create lookup-table for IP to country
-    require(rgeolocate)
+    
     file <- system.file("extdata","GeoLite2-Country.mmdb", package = "rgeolocate")
     loc  <- maxmind(unique.ip, file, c("country_code","country_name"))
     loc$ip <- unique.ip
@@ -93,15 +93,15 @@ pgx.parseAccessLogs <- function(logs.dir, from=NULL, to=NULL,
     acc$country_name <- loc$country_name[match(acc.ip,loc$ip)]
     acc$country_code[is.na(acc$country_code)] <- "(unknown)"
     acc$country_name[is.na(acc$country_name)] <- "(unknown)"
-    tail(sort(table(acc$country_code)),40)
+    Matrix::tail(sort(table(acc$country_code)),40)
 
     if(0) {
         getDodgy <- function(acc0,n=100) {
             ii <- grep("omicsplayground",acc0[,"get"],invert=TRUE)
             ii <- ii[which(nchar(as.character(acc0[ii,"get"])) > 20)]
-            head(acc0[ii,],n=n)
+            Matrix::head(acc0[ii,],n=n)
         }
-        tail(sort(table(acc$country_code)),40)
+        Matrix::tail(sort(table(acc$country_code)),40)
         ii <- which(acc.cc=="US")
         getDodgy(acc[ii,],100)
         ii <- which(acc.cc=="CN")
@@ -170,36 +170,36 @@ pgx.parseAccessLogs <- function(logs.dir, from=NULL, to=NULL,
 }
 
 h5exists <- function(h5.file, obj) {
-    require(rhdf5)    
-    xobjs <- apply(h5ls(h5.file)[,1:2],1,paste,collapse="/")
+        
+    xobjs <- apply(rhdf5::h5ls(h5.file)[,1:2],1,paste,collapse="/")
     obj %in% gsub("^/|^//","",xobjs)
 }
 
 ##h5.file="test.h5";chunk=100
 pgx.saveMatrixH5 <- function(X, h5.file, chunk=NULL, del=TRUE )
 {   
-    require(rhdf5)
+    
     if(del) unlink(h5.file)
     
     if(is.null(chunk)) {
-        if(del) h5createFile(h5.file)    
-        ## h5createGroup("myhdf5file.h5","foo")
+        if(del) rhdf5::h5createFile(h5.file)    
+        ## rhdf5::h5createGroup("myhdf5file.h5","foo")
         ## A = matrix(1:10,nr=5,nc=2)
-        ## h5write(A, "myhdf5file.h5","foo/A")    
-        h5createGroup(h5.file,"data")    
-        h5write( X, h5.file, "data/matrix")
+        ## rhdf5::h5write(A, "myhdf5file.h5","foo/A")    
+        rhdf5::h5createGroup(h5.file,"data")    
+        rhdf5::h5write( X, h5.file, "data/matrix")
     } else {
-        if(del) h5createFile(h5.file)    
-        if(del) h5createGroup(h5.file,"data")
-        if(h5exists(h5.file,"data/matrix")) h5delete(h5.file, "data/matrix")        
-        h5createDataset(
+        if(del) rhdf5::h5createFile(h5.file)    
+        if(del) rhdf5::h5createGroup(h5.file,"data")
+        if(h5exists(h5.file,"data/matrix")) rhdf5::h5delete(h5.file, "data/matrix")        
+        rhdf5::h5createDataset(
             h5.file, "data/matrix",
             c(nrow(X),ncol(X)),
             ##storage.mode = "integer",
             chunk = chunk,
             level = 7
         )
-        h5write(
+        rhdf5::h5write(
             X,
             file = h5.file,
             name = "data/matrix",
@@ -207,10 +207,10 @@ pgx.saveMatrixH5 <- function(X, h5.file, chunk=NULL, del=TRUE )
         )
     }
 
-    h5write( rownames(X), h5.file, "data/rownames")
-    h5write( colnames(X), h5.file, "data/colnames")    
+    rhdf5::h5write( rownames(X), h5.file, "data/rownames")
+    rhdf5::h5write( colnames(X), h5.file, "data/colnames")    
     
-    h5closeAll()
+    rhdf5::h5closeAll()
 }
 
 pgx.readOptions <- function(file = "./OPTIONS") {
@@ -264,10 +264,10 @@ pgx.initDatasetFolder <- function(pgx.dir, verbose=TRUE, force=FALSE)
 if(0) {
     ##h5ls(h5.file)
     pgx.createSignatureDatabaseH5( pgx.files, h5.file, update.only=FALSE)
-    h5ls(h5.file)
+    rhdf5::h5ls(h5.file)
     pgx.addEnrichmentSignaturesH5(h5.file, X=NULL, mc.cores=8,
                                   lib.dir=FILES, methods=c("gsea"))
-    h5ls(h5.file)
+    rhdf5::h5ls(h5.file)
 }
 
 
@@ -312,7 +312,7 @@ pgx.readDatasetProfiles1 <- function(pgx.dir, file="datasets-allFC.csv",
     } else {
         if(verbose) message("[readDatasetProfiles1] Found existing dataset profiles matrix")
     }
-    require(data.table)
+    
     allFC <- fread.csv(file=file.path(pgx.dir, file),
                            row.names=1, check.names=FALSE)
     allFC <- as.matrix(allFC)
@@ -478,7 +478,7 @@ pgx.initDatasetFolder1 <- function( pgx.dir1,
         ## compile the info for update
         ##---------------------------------------------
         pgxinfo <- pgx.updateInfoPGX(pgxinfo, ngs)
-        tail(pgxinfo)
+        Matrix::tail(pgxinfo)
         ## pgxinfo <- rbind( pgxinfo, this.info)
 
     }
@@ -549,7 +549,7 @@ pgx.initDatasetFolder1 <- function( pgx.dir1,
     ## restrict to 8000 genes
     allfc.sd <- apply(allFC, 1, sd, na.rm=TRUE)
     allfc.nna <- rowMeans(!is.na(allFC))
-    jj <- head( order(-allfc.sd * allfc.nna), 8000)
+    jj <- Matrix::head( order(-allfc.sd * allfc.nna), 8000)
     allFC <- allFC[jj,,drop=FALSE]
     dim(allFC)
     

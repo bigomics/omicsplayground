@@ -315,29 +315,29 @@ pgx.purify <- function( X, ref, k=3, method=2) {
 
     if(0) {
         X <- 2**ngs$X
-        X <- head(X[order(-apply(ngs$X,1,sd)),],1000)
+        X <- Matrix::head(X[order(-apply(ngs$X,1,sd)),],1000)
         ref = "hepatocyte"
     }
 
     ##----------------------------------------------------------------------
     ## Using NNLM
     ##----------------------------------------------------------------------
-    require(NNLM)
+    
     if(method==1) {
         ## contaminating profiles (e.g. stromal, normal cells)
         normalX <- cbind(const=1, X[,ref,drop=FALSE])  ## contamination (e.g. stromal, normal cells)
         colnames(normalX) <- paste0("N",1:ncol(normalX))
 
         ## compute proportion of tumour content using NNMF
-        res.nmf <- nnmf( X, k=k, init = list(W0 = normalX), check.k=FALSE)
+        res.nmf <- NNLM::nnmf( X, k=k, init = list(W0 = normalX), check.k=FALSE)
         alpha <- with(res.nmf, colSums(W[,1:k]%*%H[1:k,]) / colSums(W %*% H))
         str(alpha)
 
         ## estimate "pure" matrix
         x.total <- res.nmf$W[,] %*% res.nmf$H[,]
         x.purified <- res.nmf$W[,1:k] %*% res.nmf$H[1:k,]
-        head(X)[,1:4]
-        head(x.purified)[,1:4]
+        Matrix::head(X)[,1:4]
+        Matrix::head(x.purified)[,1:4]
 
         x.contaminant <- pmax(X - x.purified,0)
 
@@ -349,7 +349,7 @@ pgx.purify <- function( X, ref, k=3, method=2) {
         colnames(tumorX) <- paste0("T",1:ncol(tumorX))
 
         ## compute proportion of contaminant content using NNMF
-        res.nmf <- nnmf( X, k=k, init = list(W0 = tumorX), check.k=FALSE)
+        res.nmf <- NNLM::nnmf( X, k=k, init = list(W0 = tumorX), check.k=FALSE)
         beta <- with(res.nmf, colSums(W[,1:k]%*%H[1:k,]) / colSums(W %*% H))
         str(beta)
         alpha <- (1 - beta)
@@ -372,7 +372,7 @@ pgx.purify <- function( X, ref, k=3, method=2) {
 ##counts=ngs$counts
 pgx.inferCellCyclePhase <- function(counts)
 {
-    require(Seurat)
+    
 
     ## List of cell cycle markers, from Tirosh et al, 2015
     ##
@@ -384,9 +384,9 @@ pgx.inferCellCyclePhase <- function(counts)
     ## Create our Seurat object and complete the initalization steps
     rownames(counts) <- toupper(rownames(counts))  ## mouse...
     ##counts1 <- cbind(counts,counts,counts,counts,counts,counts)
-    obj <- CreateSeuratObject(counts)
-    obj <- NormalizeData(obj, verbose=0)
-    suppressWarnings( obj <- CellCycleScoring(obj, s.features=s_genes,
+    obj <- Seurat::CreateSeuratObject(counts)
+    obj <- Seurat::NormalizeData(obj, verbose=0)
+    suppressWarnings( obj <- Seurat::CellCycleScoring(obj, s.features=s_genes,
                                               g2m.features=g2m_genes, set.ident=TRUE))
     ## view cell cycle scores and phase assignments
     ##head(x = obj@meta.data)
@@ -401,7 +401,7 @@ pgx.inferCellCyclePhase <- function(counts)
 ##counts=ngs$counts
 pgx.scoreCellCycle <- function(counts)
 {
-    require(Seurat)
+    
 
     ## List of cell cycle markers, from Tirosh et al, 2015
     ##
@@ -415,9 +415,9 @@ pgx.scoreCellCycle <- function(counts)
     ## Create our Seurat object and complete the initalization steps
     rownames(counts) <- toupper(rownames(counts))  ## mouse...
     ##counts1 <- cbind(counts,counts,counts,counts,counts,counts)
-    obj <- CreateSeuratObject(counts)
-    obj <- NormalizeData(obj, verbose=0)
-    suppressWarnings( obj <- CellCycleScoring(obj, s_genes, g2m_genes, set.ident=TRUE))
+    obj <- Seurat::CreateSeuratObject(counts)
+    obj <- Seurat::NormalizeData(obj, verbose=0)
+    suppressWarnings( obj <- Seurat::CellCycleScoring(obj, s_genes, g2m_genes, set.ident=TRUE))
     ## view cell cycle scores and phase assignments
     ##head(x = obj@meta.data)
     ##table(obj@meta.data$Phase)
@@ -538,10 +538,10 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
 
         ## compute residual matrix by substracting all possible linear
         ## combinations of reference.
-        require(NNLM)
+        
         x1 <- ref[gg,,drop=FALSE]
         y1 <- rowMeans(mat[gg,,drop=FALSE])
-        cf <- nnlm(x1,cbind(y1))$coefficients
+        cf <- NNLM::nnlm(x1,cbind(y1))$coefficients
         cf[is.na(cf)] <- 0
         resid <- pmax(y1 - x1 %*% cf,0) ## residual vector           
         resx <- rep(0,nrow(ref))
@@ -563,7 +563,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     mat <- pmax(mat,0)
         
     gg <- intersect(rownames(ref),rownames(mat))
-    head(gg)
+    Matrix::head(gg)
     if(length(gg) < 10) {
         message("WARNING:: pgx.deconvolution: no enough marker genes")
         return(NULL)
@@ -571,7 +571,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
 
     ## conform??
     if(0) {
-        require(limma)
+        
         length(gg)
         ##ref <- ref[gg,]
         ##mat <- mat[gg,]
@@ -607,7 +607,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     if("EPIC" %in% methods) {
         ## EPIC
         ##devtools::install_github("GfellerLab/EPIC", build_vignettes=TRUE)
-        library(EPIC)
+        
         out <- NULL
         gg = intersect(rownames(ref),rownames(mat))
         ref1 <- ref
@@ -638,11 +638,11 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
         ##BiocManager::install("DeconRNASeq", version = "3.8")
         ##BiocManager::install("DeconRNASeq")
         if("package:Seurat" %in% search()) detach("package:Seurat", unload=TRUE)
-        library(DeconRNASeq)
-        ## uses pca() from pcaMethods
+        
+        ## uses psych::pca() from pcaMethods
         drs <- NULL
         stime <- system.time(suppressMessages(suppressWarnings(
-            drs <- try(DeconRNASeq(data.frame(mat, check.names=FALSE),
+            drs <- try(DeconRNASeq::DeconRNASeq(data.frame(mat, check.names=FALSE),
                                    data.frame(ref, check.names=FALSE))$out.all)
         )))
         timings[["DeconRNAseq"]] <- stime
@@ -661,11 +661,11 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     if("DCQ" %in% methods) {
         ## DCQ seems to work in logX, so we use log-transform
         ##install.packages("ComICS")
-        require(ComICS)
+        
         res.dcq=NULL
         stime <- system.time(
             res.dcq <- try(
-                dcq(reference_data = log2(1+as.matrix(ref)),
+                ComICS::dcq(reference_data = log2(1+as.matrix(ref)),
                     mix_data = log2(1+as.matrix(mat)),  ## log data OK??
                     ##marker_set = matrix(rownames(ref),ncol=1),
                     marker_set = cbind(intersect(rownames(ref),rownames(mat))),
@@ -737,35 +737,35 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     if("NNLM" %in% methods) {
         ## NNLM
         ##install.packages("NNLM")
-        require(NNLM)
+        
         x1 <- log2(1+ref[gg,,drop=FALSE])
         x2 <- log2(1+mat[gg,,drop=FALSE])
         x1 <- cbind(offset=1, x1)
         stime <- system.time(
-            cf <- nnlm(x1,x2)$coefficients[-1,,drop=FALSE]
+            cf <- NNLM::nnlm(x1,x2)$coefficients[-1,,drop=FALSE]
         )
         timings[["NNLM"]] <- stime
         cat("deconvolution using NNLM took",stime[3],"s\n")
         results[["NNLM"]] <- t(cf)
 
         ## very much the same as I-NNLS
-        results[["NNLM.lin"]] <- t(nnlm(ref[gg,,drop=FALSE], mat[gg,,drop=FALSE])$coefficients)
+        results[["NNLM.lin"]] <- t(NNLM::nnlm(ref[gg,,drop=FALSE], mat[gg,,drop=FALSE])$coefficients)
 
         r1 <- apply(ref[gg,,drop=FALSE],2,rank,na.last="keep")
         r2 <- apply(mat[gg,,drop=FALSE],2,rank,na.last="keep")
         r1 <- cbind(offset=1, r1)
-        cf <- nnlm(r1,r2)$coefficients[-1,,drop=FALSE]
+        cf <- NNLM::nnlm(r1,r2)$coefficients[-1,,drop=FALSE]
         results[["NNLM.rnk"]] <- t(cf)
 
     }
 
     ## Simple (rank) correlation
     if("cor" %in% methods) {
-        ##results[["cor"]] <- cor(log2(1+mat[gg,]), log2(1+ref[gg,]))
+        ##results[["cor"]] <- WGCNA::cor(log2(1+mat[gg,]), log2(1+ref[gg,]))
         r1 <- apply(mat[gg,,drop=FALSE],2,rank,na.last="keep")
         r2 <- apply(ref[gg,,drop=FALSE],2,rank,na.last="keep")
         stime <- system.time(
-            cf <- cor(r1,r2,use="pairwise")
+            cf <- WGCNA::cor(r1,r2,use="pairwise")
         )
         timings[["cor"]] <- stime
         cat("deconvolution using COR took",stime[3],"s\n")
@@ -773,7 +773,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     }
 
     if("SingleR" %in% methods) {
-        require(SingleR)
+        
         stime <- system.time(
             sr1 <- SingleR(test=mat, ref=ref, labels=colnames(ref))
         )

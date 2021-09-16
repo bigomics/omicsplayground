@@ -214,7 +214,7 @@ build.createSparseGenesetMatrix <- function(gmt.all) {
     ## ----------- Get all official gene symbols
     library(org.Hs.eg.db)
     ##library(org.Mm.eg.db)
-    symbol <- as.list( org.Hs.egSYMBOL)
+    symbol <- as.list(org.Hs.egSYMBOL)
     known.symbols <- sort(unique(unlist(symbol)))
     ##mm.symbol <- as.list( org.Mm.egSYMBOL)
     ##mm.symbol <- sort(unique(unlist(mm.symbol)))

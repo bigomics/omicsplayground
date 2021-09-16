@@ -37,7 +37,7 @@ mat2hugo <- function(x) {
 
 ##s=symbol    
 alias2hugo.SAVE <- function(s) {
-    require(org.Hs.eg.db,quietly=TRUE)
+    
     ##eg <- sapply(lapply(s, get, env=org.Hs.egALIAS2EG),"[",1)
     s.na = which(!is.na(s) & s!="" & s!=" ")
     s1 <- s[s.na]
@@ -65,7 +65,7 @@ gx.hist <- function(gx, main="",ylim=NULL) {
 ## from http://menugget.blogspot.ch/2011/09/converting-values-to-color-levels.html
 #this function converts a vector of values("z") to a vector of color
 #levels. One must define the number of colors. The limits of the color
-#scale("zlim") or the break points for the color changes("breaks") can 
+#scale("zlim") or the break points for the color dplyr::changes("breaks") can 
 #also be defined. when breaks and zlim are defined, breaks overrides zlim.
 val2col<-function(z, zlim, col = heat.colors(12), breaks){
     if(!missing(breaks)){
@@ -93,7 +93,7 @@ symbol2hugo <- function(genes, remove.non.hugo=TRUE, silent=FALSE,
                         take.only.first=FALSE, split.char=";", unknown="unknown_gene")
 {
     ##remove.non.hugo=TRUE;silent=FALSE;take.only.first=FALSE;split.char=";";unknown="unknown_gene"
-    require(org.Hs.eg.db)
+    
     HUGO.SYMBOLS <- unique(unlist(as.list(org.Hs.egSYMBOL)))
     ss <- as.character(genes)
     ss <- gsub("Sep 0","SEPT",ss)  # typical XLS error

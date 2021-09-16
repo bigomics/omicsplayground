@@ -43,33 +43,33 @@ MakeContrastGadget <- function(X, pheno, height=720) {
 }
 
 MakeContrastUI <- function(id) {
-    ns <- NS(id)
-    uiOutput(ns("UI"))
+    ns <- shiny::NS(id)
+    shiny::uiOutput(ns("UI"))
 }
 
 MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
 {
-    require(DT)
-    moduleServer(
+
+    shiny::moduleServer(
         id,
         function(input, output, session) {            
             
             message("[MakeContrastServer] moduleServer called...")
             ns <- session$ns
-            rv <- reactiveValues(contr=NULL, pheno=NULL)
+            rv <- shiny::reactiveValues(contr=NULL, pheno=NULL)
             
             ##updateSelectizeInput(session, "gene", choices=genes, server=TRUE)
             
-            observe({
+            shiny::observe({
                 rv$contr <- contrRT()                
             })
 
-            observe({
+            shiny::observe({
                 rv$pheno <- phenoRT()
             })
             
             if(1) {
-                observe({
+                shiny::observe({
                     message('[MakeContrast::observe::countsRT] reacted')
                     counts <- countsRT()
                     if(length(counts)==0) return(NULL)
@@ -79,19 +79,19 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                     genes <- rownames(counts)
                     message('[observe::countsRT] len.genes = ', length(genes))                
                     message('[MakeContrast::observe::countsRT] updateSelectizeInput')
-                    updateSelectizeInput(session, "gene", choices=genes, server=TRUE)
+                    shiny::updateSelectizeInput(session, "gene", choices=genes, server=TRUE)
                 })
             }
             
-            observe({
-                req(phenoRT())
+            shiny::observe({
+                shiny::req(phenoRT())
                 px <- colnames(phenoRT())
-                updateSelectInput(session, "pcaplot.colvar", choices=px)
-                updateSelectInput(session, "strata", choices=c("<none>",px))
+                shiny::updateSelectInput(session, "pcaplot.colvar", choices=px)
+                shiny::updateSelectInput(session, "strata", choices=c("<none>",px))
             })
             
             
-            output$UI <- renderUI({
+            output$UI <- shiny::renderUI({
 
                 ns <- session$ns
                 message('[MakeContrast::UI] reacted')
@@ -108,84 +108,84 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 psel
                 help_text = "Create comparisons by dragging conditions into the group boxes on the right."
                 inline.div <- function(a) {
-                    div(style="display: inline-block;vertical-align:top; width: 150px;",a)
+                    shiny::div(style="display: inline-block;vertical-align:top; width: 150px;",a)
                 }
 
-                fillCol(
+                shiny::fillCol(
                     height = 750,
                     flex = c(1,NA,NA,1),
-                    fillRow(
+                    shiny::fillRow(
                         flex = c(3,0.06,1.0),
-                        fillCol(
+                        shiny::fillCol(
                             flex = c(NA,NA,1.0),
-                            h4("Create comparisons"),                        
+                            shiny::h4("Create comparisons"),                        
                             ##p(help_text),
-                            fillRow(
+                            shiny::fillRow(
                                 flex = c(1,4),
-                                fillCol(
+                                shiny::fillCol(
                                     flex = c(NA,NA,NA,NA,1),
                                     tipifyL(
-                                        selectInput(ns("param"), "Phenotype:",
+                                        shiny::selectInput(ns("param"), "Phenotype:",
                                                     choices = phenotypes, selected= psel,
                                                     multiple = TRUE),
                                         "Select the phenotype to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names."
                                     ),
-                                    conditionalPanel(
+                                    shiny::conditionalPanel(
                                         "input.param == '<gene>'", ns=ns,
                                         ##tipifyL(                                    
-                                        selectizeInput(ns("gene"), "Gene:", choices=genes,
+                                        shiny::selectizeInput(ns("gene"), "Gene:", choices=genes,
                                                        multiple=FALSE),
                                         ##"Select gene to divide your samples into high and low expression of that gene.")
                                     ),
-                                    br(),
+                                    shiny::br(),
                                     tipifyL(
-                                        textInput(ns("newname"), "Comparison name:",
+                                        shiny::textInput(ns("newname"), "Comparison name:",
                                                   placeholder="e.g. MAIN_vs_CONTROL"),
                                         "Give a name for your contrast as MAIN_vs_CONTROL, with the name of the main group first. You must keep _vs_ in the name to separate the names of the two groups."),
-                                    br(),
+                                    shiny::br(),
                                     ## tipifyL(
-                                    actionButton(ns("addcontrast"),"add comparison", icon=icon("plus")),
+                                    shiny::actionButton(ns("addcontrast"),"add comparison", icon=icon("plus")),
                                     ##"After creating the groups, press this button to add the comparison to the table."a),
-                                    br()
+                                    shiny::br()
                                 ),
-                                tipify(
-                                    uiOutput(ns("createcomparison"),
+                                shinyBS::tipify(
+                                    shiny::uiOutput(ns("createcomparison"),
                                              style="font-size:13px; height: 280px; overflow-y: scroll;"),
                                     "Create comparisons by dragging conditions into the main or control groups on the right. Then press add comparison to add the contrast to the table.",
                                     placement="top", options = list(container = "body"))
                             )
                         ),
-                        br(),
+                        shiny::br(),
                         ##plotOutput(ns("pcaplot"), height="330px")
                         plotWidget(ns("pcaplot"))
                     ),
-                    h4("Contrast table"),
-                    fillRow(
+                    shiny::h4("Contrast table"),
+                    shiny::fillRow(
                         height = 24,
                         flex = c(NA,0.05,NA,NA,1),
-                        tipify(
-                            actionButton(ns("autocontrast"),"add auto-contrasts", icon=icon("plus"),
+                        shinyBS::tipify(
+                            shiny::actionButton(ns("autocontrast"),"add auto-contrasts", icon=icon("plus"),
                                          class="small-button"),
                             "If you are feeling lucky, try this to automatically create contrasts.",
                             placement="top", options = list(container = "body")                            
                         ),
-                        br(),
-                        div( HTML("<b>Strata:</b>"), style="padding: 4px 4px;"),
-                        selectInput(ns("strata"), NULL, choices=NULL, width="120px"),
-                        br()
+                        shiny::br(),
+                        shiny::div( shiny::HTML("<b>Strata:</b>"), style="padding: 4px 4px;"),
+                        shiny::selectInput(ns("strata"), NULL, choices=NULL, width="120px"),
+                        shiny::br()
                     ),
                     ##tags$head(tags$style("table.dataTable.compact tbody th, table.dataTable.compact tbody td {padding: 0px 10px;}")),
                     ## this.style(ns("contrastTable"), "table.dataTable.compact tbody th, table.dataTable.compact tbody td {padding: 0px 10px;}"),                    
-                    div(DT::dataTableOutput(ns("contrastTable")),
+                    shiny::div(DT::dataTableOutput(ns("contrastTable")),
                         style="font-size:13px; height: 300px; margin-top: 10px;overflow-y: scroll;")
                 )
                 
             })
-            outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
+            shiny::outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!
             
-            sel.conditions <- reactive({
+            sel.conditions <- shiny::reactive({
                 message("[MakeContrastServer] sel.conditions : reacted")
-                req(phenoRT(),countsRT())                
+                shiny::req(phenoRT(),countsRT())                
                 df <- phenoRT()
                 message("[MakeContrastServer] sel.conditions : dim.df = ",
                         paste(dim(df),collapse='x'))
@@ -220,20 +220,20 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 cond
             })
             
-            output$createcomparison <- renderUI({
+            output$createcomparison <- shiny::renderUI({
 
-                library(sortable)
-                req(input$param)
+
+                shiny::req(input$param)
                 cond <- sel.conditions()
                 if(length(cond)==0 || is.null(cond)) return(NULL)
 
                 items <- c("<others>",sort(unique(cond)))
                 message("[MakeContrastServer:createcomparison] items=",items)
                 
-                tagList(
+                shiny::tagList(
                     tags$head(tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
                     bucket_list(
-                        ##header = h4("Create comparison:"),
+                        ##header = shiny::h4("Create comparison:"),
                         header = NULL,
                         add_rank_list(
                             text = "Conditions:",
@@ -260,7 +260,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 inputs
             }    
 
-            observeEvent( c(input$group1, input$group2), {
+            shiny::observeEvent( c(input$group1, input$group2), {
                 g1 <- gsub("[-_.,<> ]",".",input$group1)
                 g2 <- gsub("[-_.,<> ]",".",input$group2)
                 g1 <- gsub("[.]+",".",g1)
@@ -280,10 +280,10 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 }
                 tt <- paste0(pp,":",g1,"_vs_",g2)
                 if(g1=="" && g2=="") tt <- ""
-                updateTextInput(session, "newname", value=tt)
+                shiny::updateTextInput(session, "newname", value=tt)
             })
             
-            observeEvent( input$contrast_delete, {
+            shiny::observeEvent( input$contrast_delete, {
                 ## Observe if a contrast is to be deleted
                 ##
                 id <- as.numeric(gsub(".*_","",input$contrast_delete))
@@ -297,7 +297,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 }
             })
             
-            observeEvent( input$addcontrast, {
+            shiny::observeEvent( input$addcontrast, {
 
                 message("[MakeContrastServer:addcontrast] reacted")
                 
@@ -323,23 +323,23 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 ctx <- c(NA,gr1, gr2)[1 + 1*in.main + 2*in.ref]
                 
                 if( sum(in.main)==0 || sum(in.ref)==0 ) {
-                    shinyalert("ERROR","Both groups must have samples")
+                    shinyalert::shinyalert("ERROR","Both groups must have samples")
                     return(NULL)
                 }
                 if(ct.name %in% c(NA,""," ")) {
-                    shinyalert("ERROR","You must give a contrast name")
+                    shinyalert::shinyalert("ERROR","You must give a contrast name")
                     return(NULL)
                 }
                 if(1 && gr1 == gr2) {
-                    shinyalert("ERROR","Invalid contrast name")
+                    shinyalert::shinyalert("ERROR","Invalid contrast name")
                     return(NULL)
                 }
                 if(!is.null(rv$contr) && ct.name %in% colnames(rv$contr)) {
-                    shinyalert("ERROR","Contrast name already exists.")
+                    shinyalert::shinyalert("ERROR","Contrast name already exists.")
                     return(NULL)
                 }
                 if(!grepl('_vs_',ct.name)) {
-                    shinyalert("ERROR","Contrast must include _vs_ in name")
+                    shinyalert::shinyalert("ERROR","Contrast must include _vs_ in name")
                     return(NULL)
                 }
                 
@@ -378,9 +378,9 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 
             })
             
-            observeEvent( input$autocontrast, {
+            shiny::observeEvent( input$autocontrast, {
 
-                req(phenoRT())
+                shiny::req(phenoRT())
                 df <- phenoRT()
                 strata.var <- input$strata
 
@@ -463,7 +463,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                         ##size = "mini",
                         width = "50px",
                         inline = TRUE,
-                        icon = icon("trash-alt"),
+                        icon = shiny::icon("trash-alt"),
                         class = "btn-inline",
                         style='padding:2px; margin:2px; font-size:95%; color: #B22222;',
                         ##onclick = 'Shiny.onInputChange(\"contrast_delete\",this.id)'
@@ -482,7 +482,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 }
                 rownames(df) <- NULL
                 
-                datatable(
+                DT::datatable(
                     df, rownames=FALSE,
                     escape = c(-1),
                     selection = 'none',
@@ -502,7 +502,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             }, server=FALSE)
             
 
-            pcaplot.RENDER <- reactive({
+            pcaplot.RENDER <- shiny::reactive({
                 message("[MakeContrastServer] pcaplot.RENDER : reacted")
                 ##ngs <- inputData()
                 ##X <- ngs$X
@@ -510,8 +510,8 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 counts <- countsRT()
                 if(is.null(pheno) || is.null(counts)) return(NULL)
                 if(NCOL(pheno)==0 || NCOL(counts)==0) return(NULL)
-                req(pheno)
-                req(counts)
+                shiny::req(pheno)
+                shiny::req(counts)
                 
                 method <- input$pcaplot.method
                 X <- log2(1 + counts)
@@ -528,14 +528,14 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 
             })
             
-            pcaplot.opts = tagList(
-                tipify( selectInput( ns("pcaplot.method"), "Method:",
+            pcaplot.opts = shiny::tagList(
+                shinyBS::tipify( shiny::selectInput( ns("pcaplot.method"), "Method:",
                                     choices = c("pca","tsne","umap"),
                                     width = '100%'),"Choose clustering method.",
                        placement="right", options = list(container = "body"))
             )
             
-            callModule(
+            shiny::callModule(
                 plotModule, 
                 id = "pcaplot",
                 func = pcaplot.RENDER, ## ns=ns,
@@ -550,7 +550,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
             
             message("[MakeContrastServer] returning...")
 
-            return(reactive({
+            return(shiny::reactive({
                 if(is.null(rv$contr)) return(NULL)                
                 ##rv$contr           ## labeled contrast matrix
                 ##list( contr=rv$contr, pheno=rv$pheno)

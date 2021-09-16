@@ -13,7 +13,7 @@ QUESTIONS.ANSWERS <- list(
 )
 
 QuestionBoard_UI <- function(id) {
-    ##ns <- NS(id)  ## namespace
+    ##ns <- shiny::NS(id)  ## namespace
 }
 
 QuestionBoard <- function(input, output, session, lapse=5)
@@ -21,7 +21,7 @@ QuestionBoard <- function(input, output, session, lapse=5)
     ns <- session$ns ## NAMESPACE
     
     ##qa = QUESTIONS.ANSWERS[[1]]
-    cur_question <- reactiveVal("")
+    cur_question <- shiny::reactiveVal("")
     
     showQuestion <- function(qa=NULL) {
         dbg("[QuestionBoard:showQuestion] reacted")
@@ -30,32 +30,32 @@ QuestionBoard <- function(input, output, session, lapse=5)
         cur_question(qa[1])
         choices <- strsplit(qa[2],split="\\|")[[1]]
         if(choices[1]=="<text>") {
-            answer.tags <- textInput(ns("answer"),NULL, value="")
+            answer.tags <- shiny::textInput(ns("answer"),NULL, value="")
         } else {
-            answer.tags <- radioButtons(ns("answer"),NULL, choices=choices)
+            answer.tags <- shiny::radioButtons(ns("answer"),NULL, choices=choices)
         }
 
-        showModal( modalDialog(
+        shiny::showModal( shiny::modalDialog(
             title = question,
             answer.tags,
-            footer = tagList(
+            footer = shiny::tagList(
                 ##modalButton("Cancel"),
-                actionButton(ns("question_submit"),"Continue", icon=NULL)
+                shiny::actionButton(ns("question_submit"),"Continue", icon=NULL)
             ),
             size = "m"
         ))
     }
 
     nmesg = 0
-    observe({
+    shiny::observe({
         if(lapse>0 && nmesg >= 1) {
             showQuestion(qa=NULL)
         }
-        if(lapse>0) invalidateLater(1000*60*lapse)  ## every 10 minutes??
+        if(lapse>0) shiny::invalidateLater(1000*60*lapse)  ## every 10 minutes??
         nmesg <<- nmesg + 1
     })
 
-    observeEvent( input$question_submit, {
+    shiny::observeEvent( input$question_submit, {
         dbg("[QuestionBoard$:observeEvent] input$question_submit")
         question <- cur_question()
         answer <- input$answer
@@ -64,7 +64,7 @@ QuestionBoard <- function(input, output, session, lapse=5)
         dbg("[QuestionBoard$:observeEvent] updating answer.csv file...")
         write.table( qa, file="answers.csv", sep=",", append=TRUE,
                     row.names=FALSE, col.names=FALSE)
-        removeModal()        
+        shiny::removeModal()        
     }) 
     
     

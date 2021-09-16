@@ -31,7 +31,7 @@ pgx.initialize.MOVED <- function(pgx) {
     if(!all(obj.needed %in% names(pgx))) {
         obj.missing <- setdiff(obj.needed, names(pgx))
         msg <- paste("invalid pgx object. missing parts in object: ",obj.missing)
-        showNotification(msg,duration=NULL,type="error")
+        shiny::showNotification(msg,duration=NULL,type="error")
         ##stop(msg)
         return(NULL)
     }
@@ -40,7 +40,7 @@ pgx.initialize.MOVED <- function(pgx) {
     if(FALSE && !all(vars.needed %in% colnames(pgx$samples))) {
         vars.missing <- setdiff(vars.needed, colnames(pgx$samples))
         msg <- paste("invalid pgx object. missing variables in object: ",vars.missing)
-        showNotification(msg,duration=NULL,type="error")
+        shiny::showNotification(msg,duration=NULL,type="error")
         ##stop(msg)
         return(NULL)
     }
@@ -237,9 +237,9 @@ cex=1
 text_repel.NOTWORKING <- function( x, y, text, cex=1, force=1e-7, maxiter=20000)
 {    
     if(0) {
-        ggplot(mtcars, aes(wt, mpg, label=rownames(mtcars))) +
-            geom_point() +
-            geom_text_repel()
+        ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, label=rownames(mtcars))) +
+            ggplot2::geom_point() +
+            ggrepel::geom_text_repel()
         
         x=mtcars[,"wt"]
         y=mtcars[,"mpg"]
@@ -247,9 +247,9 @@ text_repel.NOTWORKING <- function( x, y, text, cex=1, force=1e-7, maxiter=20000)
         
         labx <- out[,3]
         laby <- out[,4]
-        ggplot(mtcars, aes(wt, mpg)) +
-            geom_point() +
-            geom_text(x = labx, y = laby, label=rownames(mtcars))
+        ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+            ggplot2::geom_point() +
+            ggplot2::geom_text(x = labx, y = laby, label=rownames(mtcars))
                       
 
     }
@@ -297,8 +297,8 @@ util.findboxes <- function( df, xcol, ycol,
                            force = 1e-7, maxiter = 20000
                            )
 {
-    library(ggrepel)
-    library(ggimage)
+    
+    
   # x and y posiitons as a dataframe
   posdf <- df[c(xcol, ycol)]
 
@@ -411,8 +411,8 @@ matGroupMeans <- function(X, group, FUN=rowMeans, dir=1) {
 
 knnMedianFilter <- function(x, pos, k=10)
 {
-    library(FNN)
-    nb <- get.knn(pos[,], k=k)$nn.index
+    
+    nb <- FNN::get.knn(pos[,], k=k)$nn.index
     fx <- factor(x)
     mx <- matrix(fx[as.vector(nb)],nrow=nrow(nb),ncol=ncol(nb))
     x1 <- apply(mx,1,function(x) names(which.max(table(x))))
@@ -422,13 +422,13 @@ knnMedianFilter <- function(x, pos, k=10)
 nmfImpute <- function(x,k=5) {
     ## Impute missing values with NMF
     ##
-    library(NNLM)
+    
     k = min(k, dim(x))
-    nmf <- nnmf(x, k=k, check.k=FALSE, rel.tol = 1e-2, verbose=0)
+    nmf <- NNLM::nnmf(x, k=k, check.k=FALSE, rel.tol = 1e-2, verbose=0)
     xhat <-  with(nmf, W %*% H);
     x[is.na(x)] <- xhat[is.na(x)]
     if(sum(is.na(x))>0) {
-        nmf1 <- nnmf(x, k=1, check.k=FALSE, rel.tol = 1e-2, verbose=0)    
+        nmf1 <- NNLM::nnmf(x, k=1, check.k=FALSE, rel.tol = 1e-2, verbose=0)    
         xhat1 <-  with(nmf1, W %*% H);    
         x[is.na(x)] <- xhat1[is.na(x)]
     }
@@ -437,7 +437,7 @@ nmfImpute <- function(x,k=5) {
 
 knnImputeMissing <- function(x, pos, missing=NA, k=10)
 {
-    library(FNN)
+    
     k0 <- which(x==missing)    
     k1 <- which(x!=missing)
     if(length(k0)==0) {
@@ -445,7 +445,7 @@ knnImputeMissing <- function(x, pos, missing=NA, k=10)
     }
     pos0 <- pos[k0,]
     pos1 <- pos[k1,]
-    nb <- get.knnx(pos1, pos0, k=k)$nn.index
+    nb <- FNN::get.knnx(pos1, pos0, k=k)$nn.index
     fx <- factor(x[k1])
     mx <- matrix(fx[as.vector(nb)],nrow=nrow(nb),ncol=ncol(nb))
     x.imp <- apply(mx,1,function(x) names(which.max(table(x))))
@@ -466,10 +466,10 @@ randomImputeMissing <- function(x) {
 }
 
 human2mouse.SLLOWWW <- function(x){
-    require("biomaRt")
-    human = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-    mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl")
-    genesV2 = getLDS(attributes = c("hgnc_symbol"),
+    
+    human = biomaRt::useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+    mouse = biomaRt::useMart("ensembl", dataset = "mmusculus_gene_ensembl")
+    genesV2 = biomaRt::getLDS(attributes = c("hgnc_symbol"),
                      filters = "hgnc_symbol",
                      values = x , mart = human,
                      attributesL = c("mgi_symbol"),
@@ -477,23 +477,23 @@ human2mouse.SLLOWWW <- function(x){
                      uniqueRows=T)
     genesx <- unique(genesV2[, 2])
     ## Print the first 6 genes found to the screen
-    print(head(genesx))
+    print(Matrix::head(genesx))
     return(genesx)
 }
 
 human2mouse <- function(x) {
-    require(homologene)
+    
     homologene::human2mouse(x)
 }
 mouse2human <- function(x) {
-    require(homologene)
+    
     homologene::mouse2human(x)
 }
 
 ##type=NULL;org="human";keep.na=FALSE
 probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
 {
-    require("AnnotationDbi")
+    
 
     ## strip postfix for ensemble codes
     if(mean(grepl("^ENS",probes))>0.5) {
@@ -501,7 +501,7 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
     }
     
     if(is.null(type)) {
-        library(org.Hs.eg.db)
+        
         hs.list <- list(
             "human.ensembl" = unlist(as.list(org.Hs.egENSEMBL)),
             "human.ensemblTRANS" = unlist(as.list(org.Hs.egENSEMBLTRANS)),            
@@ -511,7 +511,7 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
             "human.uniprot" = unlist(as.list(org.Hs.egUNIPROT)),
             "human.symbol"  = unlist(as.list(org.Hs.egSYMBOL))
             )
-        library(org.Mm.eg.db)
+        
         mm.list <- list(
             "mouse.ensembl" = unlist(as.list(org.Mm.egENSEMBL)),
             "mouse.ensemblTRANS" = unlist(as.list(org.Mm.egENSEMBLTRANS)),            
@@ -570,10 +570,10 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
     } else {
         org
         if(org=="human") {
-            symbol0 <- mapIds(org.Hs.eg.db, probes, 'SYMBOL', toupper(type))
+            symbol0 <- AnnotationDbi::mapIds(org.Hs.eg.db, probes, 'SYMBOL', toupper(type))
         }
         if(org=="mouse") {
-            symbol0 <- mapIds(org.Mm.eg.db, probes, 'SYMBOL', toupper(type))
+            symbol0 <- AnnotationDbi::mapIds(org.Mm.eg.db, probes, 'SYMBOL', toupper(type))
         }
     }
 
@@ -592,7 +592,7 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
     }
     symbol <- unlist(symbol)
     names(symbol) <- NULL
-    head(symbol)
+    Matrix::head(symbol)
 
     symbol    
 }
@@ -670,8 +670,8 @@ read.csv2 <- function(file, ...)
 fread.csv <- function(file, check.names=FALSE, row.names=1,
                       stringsAsFactors=FALSE, header=TRUE, asMatrix=TRUE)
 {
-    require(data.table)
-    df <- fread(file=file, check.names=check.names, header=header)
+    
+    df <- data.table::fread(file=file, check.names=check.names, header=header)
     x <- data.frame(df[,2:ncol(df)], stringsAsFactors=stringsAsFactors,
                     check.names=check.names)
     is.num <- all(sapply(x,class)=="numeric")
@@ -1022,15 +1022,15 @@ selectSamplesFromSelectedLevels <- function(Y, levels)
 ##fields=c("symbol","name","alias","map_location","summary")
 getMyGeneInfo <- function(eg, fields=c("symbol","name","alias","map_location","summary"))
 {
-    require(mygene)
-    ##res = getGene(eg, fields="all")[[1]]
+    
+    ##res = biomaRt::getGene(eg, fields="all")[[1]]
     ##fields = c("symbol","name","alias","map_location","summary")
-    info = lapply(fields, function(f) getGene(eg, fields=f)[[1]] )
+    info = lapply(fields, function(f) biomaRt::getGene(eg, fields=f)[[1]] )
     names(info) <- fields
     info = lapply(info, function(x) ifelse(length(x)==3,x[[3]],"(not available)") )
     info = sapply(info, paste, collapse=",")
     if(0) {
-        rifs = getGene(eg, fields="generif")[[1]]
+        rifs = biomaRt::getGene(eg, fields="generif")[[1]]
         collapse.rif <- function(r) paste0(r$text," (PMID=",r$pubmed,")")
         rifs = rifs[which(sapply(rifs,length)>2)]
         xrif = sapply(rifs[[3]], function(rr) collapse.rif(rr))
@@ -1040,9 +1040,9 @@ getMyGeneInfo <- function(eg, fields=c("symbol","name","alias","map_location","s
 
 ## much faster and off-line
 getHSGeneInfo <- function(eg, as.link=TRUE) {
-    require(org.Hs.eg.db)
-    require(KEGG.db)
-    require(GO.db)
+    
+    
+    
 
     env.list <- c("symbol"=org.Hs.egSYMBOL,
                   "name"=org.Hs.egGENENAME,
@@ -1094,13 +1094,13 @@ getHSGeneInfo <- function(eg, as.link=TRUE) {
         info[["GO"]] <- info[["GO"]][sel]
 
         ## sometimes GO.db is broken...
-        suppressWarnings( try.out <- try(Term(mget("GO:0000001", env=GOTERM, ifnotfound=NA)[[1]])))
+        suppressWarnings( try.out <- try(AnnotationDbi::Term(mget("GO:0000001", env=GOTERM, ifnotfound=NA)[[1]])))
         go.ok <- (class(try.out) !="try-error")
         if(go.ok && length(sel)>0) {
             i=1
             for(i in 1:length(info[["GO"]])) {
                 go_id = info[["GO"]][[i]][[1]]
-                go_term = Term(mget(go_id, env=GOTERM, ifnotfound=NA)[[1]])
+                go_term = AnnotationDbi::Term(mget(go_id, env=GOTERM, ifnotfound=NA)[[1]])
                 if(as.link) {
                     info[["GO"]][[i]] = gsub("GOTERM",go_term,gsub("GOID",go_id,amigo.link))
                 } else {
@@ -1216,7 +1216,7 @@ pgx.getGeneFamilies <- function(genes, FILES="../files", min.size=10, max.size=5
 
     ## add pathways?
     ##kk = grep("^BIOCARTA_",names(ngs$gmt.all))
-    ##kk = head(kk,5) ## just try
+    ##kk = Matrix::head(kk,5) ## just try
     ##pathways = ngs$gmt.all[kk]
     ##families = c(families, pathways)
 
@@ -1224,10 +1224,10 @@ pgx.getGeneFamilies <- function(genes, FILES="../files", min.size=10, max.size=5
     is.mouse = (mean(grepl("[a-z]",sub(".*:","",genes))) > 0.8)
     is.mouse
     if(is.mouse) {
-        library(org.Mm.eg.db)
+        
         mouse.genes = as.character(unlist(as.list(org.Mm.egSYMBOL)))
         names(mouse.genes) = toupper(mouse.genes)
-        families <- mclapply(families, function(s) setdiff(as.character(mouse.genes[toupper(s)]),NA),
+        families <- parallel::mclapply(families, function(s) setdiff(as.character(mouse.genes[toupper(s)]),NA),
                              mc.cores=16)
     }
 
@@ -1310,7 +1310,7 @@ pgx.getGeneSetCollections <- function(gsets, min.size=10, max.size=500)
 ##-----------------------------------------------------------------------------
 
 filterFamily <- function(genes, family, ngs) {
-    ##ngs <- isolate(inputData())
+    ##ngs <- shiny::isolate(inputData())
     gg = ngs$families[[10]]
     gg = ngs$families[[family]]
     ## check probe name, short probe name or gene name for match
@@ -1351,10 +1351,10 @@ computeFeatureScore <- function(X, Y, features)
         for(i in 1:length(features)) {
             pp = features[[i]]
             ## if(input$cl_level=="gene") pp = filterProbes(ngs$GENES, features[[i]])
-            pp = head(pp[order(-sdx[pp])],100)
+            pp = Matrix::head(pp[order(-sdx[pp])],100)
             mx = t(apply(X[pp,], 1, function(x) tapply(x,grp,mean)))
             ##D = as.matrix(dist(t(mx)))
-            D = 1 - cor(mx, use="pairwise")
+            D = 1 - WGCNA::cor(mx, use="pairwise")
             diag(D) = NA
             score[i] = mean(D,na.rm=TRUE)
         }
@@ -1373,9 +1373,7 @@ getKeggID <- function(gsets)
 {
     ## Guess KEGG id from gene set name
     ##
-    require(KEGGgraph)
-    require(KEGG.db)
-    suppressMessages(require(pathview))
+
     kegg.names <- unlist(as.list(KEGG.db::KEGGPATHID2NAME))
     kegg.ids <- names(kegg.names)
     kegg.namesUPPERCASE <- toupper(gsub("[- ]","_",gsub("[)(/,.']","",kegg.names)))
@@ -1435,9 +1433,9 @@ relevelFactorFirst <- function(f) {
 extremeCorrelation <- function(query_sig, ref_set, n=200) {
     gg <- intersect(rownames(ref_set), names(query_sig))
     if(n>0) {
-        gg <- gg[unique(c(head(order(query_sig),n),head(order(-query_sig),n)))]
+        gg <- gg[unique(c(Matrix::head(order(query_sig),n),head(order(-query_sig),n)))]
     }
-    rho <- cor( ref_set[gg,], query_sig[gg], use="pairwise")
+    rho <- WGCNA::cor( ref_set[gg,], query_sig[gg], use="pairwise")
     rho <- rho[order(-rowMeans(rho**2,na.rm=TRUE)),,drop=FALSE]
     if(NCOL(rho)==1) rho <- rho[,1]
     return(rho)
@@ -1445,8 +1443,8 @@ extremeCorrelation <- function(query_sig, ref_set, n=200) {
 
 ##s=symbol;org="hs"
 alias2hugo <- function(s, org=NULL, na.orig=TRUE) {
-    require(org.Hs.eg.db,quietly=TRUE)
-    require(org.Mm.eg.db,quietly=TRUE)
+    
+    
     hs.symbol <- unlist(as.list(org.Hs.egSYMBOL))
     mm.symbol <- unlist(as.list(org.Mm.egSYMBOL))
     if(is.null(org)) {
@@ -1565,7 +1563,7 @@ color_from_middle <- function (data, color1,color2) {
 }
 
 tidy.dataframe <- function(Y) {
-    require(tidyverse)
+    
     ##as_tibble(Y)
     Y <- Y[,which(colMeans(is.na(Y))<1),drop=FALSE]
     Y <- apply(Y,2,function(x) sub("^NA$",NA,x)) ## all characters
@@ -1610,7 +1608,7 @@ expandAnnotationMatrixSAVE <- function(A) {
     y.isnum <- apply(A,2,is.num)
     ##kk <- (y.isnum | (!y.isnum & nlevel>1 & nlevel<=5))
     ##A <- A[,which(kk),drop=FALSE]
-    head(A)
+    Matrix::head(A)
     i=1
     m1 <- list()
     for(i in 1:ncol(A)) {
@@ -1653,7 +1651,7 @@ expandPhenoMatrix <- function(pheno, collapse=TRUE, drop.ref=TRUE) {
     if(length(kk)==0) return(NULL)
     a1 <- a1[,kk,drop=FALSE]
     a1.isnum <- y.isnum[kk]
-    head(a1)
+    Matrix::head(a1)
     i=1
     m1 <- list()
     for(i in 1:ncol(a1)) {
@@ -1664,7 +1662,7 @@ expandPhenoMatrix <- function(pheno, collapse=TRUE, drop.ref=TRUE) {
             colnames(m0) <- "high"
         } else if(drop.ref && nlevel[i]==2) {
             x <- as.character(a1[,i])
-            x1 <- tail(sort(x),1)
+            x1 <- Matrix::tail(sort(x),1)
             m0 <- matrix(x==x1, ncol=1)
             colnames(m0) <- x1
         } else {
@@ -1697,7 +1695,7 @@ correctMarchSeptemberGenes <- function(gg) {
     mar.from <- c( paste0("0",1:9,"-Mar"), paste0(1:19,"-Mar"))
     mar.to <- c( paste0("MARCH",1:9), paste0("MARCH",1:19))
 
-    require(plyr)
+    
     from <- c(sep.from, mar.from)
     to <- c(sep.to, mar.to)
     gg1 <- sub("[.-]Sep$|[.-]SEP$","-Sep",gg)
@@ -1708,7 +1706,7 @@ correctMarchSeptemberGenes <- function(gg) {
         cat("Found ",length(jj),"Sept/Mar genes!\n")
         length(jj)
         from[jj]
-        gg2 <- mapvalues(gg1, from[jj], to[jj])
+        gg2 <- plyr::mapvalues(gg1, from[jj], to[jj])
     }
     return(gg2)
 }

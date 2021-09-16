@@ -6,23 +6,23 @@
 message(">>> sourcing FunctionalBoard")
 
 FunctionalInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shiny::uiOutput(ns("inputsUI"))
     )
 }
 
 FunctionalUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    fillCol(
+    ns <- shiny::NS(id)  ## namespace
+    shiny::fillCol(
         flex = c(1),
         height = 780,
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs"),
-            tabPanel("KEGG",uiOutput(ns("kegg_analysis_UI"))),
-            tabPanel("GO graph",uiOutput(ns("GO_analysis_UI")))
-            ## tabPanel("Fire plot (dev)",uiOutput(ns("fireplot_UI")))            
+            shiny::tabPanel("KEGG",uiOutput(ns("kegg_analysis_UI"))),
+            shiny::tabPanel("GO graph",uiOutput(ns("GO_analysis_UI")))
+            ## shiny::tabPanel("Fire plot (dev)",uiOutput(ns("fireplot_UI")))            
         )
     )
 }
@@ -42,11 +42,11 @@ FunctionalBoard <- function(input, output, session, env)
 
     description = "<b>Functional analysis</b>. <br> Perform specialized functional analysis
 to understand biological functions including GO, KEGG, and drug connectivity mapping."
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
     
     description = "<b>Functional analysis</b>. <br> Perform specialized functional analysis
 to understand biological functions including GO and KEGG pathway analysis."
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
 
     fa_infotext = paste("This module performs specialized pathway analysis. <br><br>",a_KEGG," is a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. In the <strong>KEGG pathway</strong> panel, each pathway is scored for the selected contrast profile and reported in the table. A unique feature of the platform is that it provides an activation-heatmap comparing the activation levels of pathways across multiple contrast profiles. This facilitates to quickly see and detect the similarities between profiles in certain pathways.
 
@@ -61,48 +61,48 @@ to understand biological functions including GO and KEGG pathway analysis."
     ##========================= INPUTS UI ============================================
     ##================================================================================
 
-    output$inputsUI <- renderUI({
-        ui <- tagList(
-            tipify( actionLink(ns("fa_info"), "Youtube", icon = icon("youtube") ),
+    output$inputsUI <- shiny::renderUI({
+        ui <- shiny::tagList(
+            shinyBS::tipify( shiny::actionLink(ns("fa_info"), "Youtube", icon = shiny::icon("youtube") ),
                    "Show more information about this module."),
-            hr(), br(),             
-            tipify( selectInput(ns("fa_contrast"),"Contrast:", choices=NULL),
+            shiny::hr(), shiny::br(),             
+            shinyBS::tipify( shiny::selectInput(ns("fa_contrast"),"Contrast:", choices=NULL),
                    "Select the contrast corresponding to the comparison of interest.",
                    placement="top"),
-            tipify( actionLink(ns("fa_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+            shinyBS::tipify( shiny::actionLink(ns("fa_options"), "Options", icon=icon("cog", lib = "glyphicon")),
                    "Show/hide advanced options", placement="top"),
-            br(),
-            conditionalPanel(
+            shiny::br(),
+            shiny::conditionalPanel(
                 "input.fa_options % 2 == 1", ns=ns,
-                tagList(
-##                    tipify(checkboxInput(ns('fa_normalize'),'normalize activation matrix',FALSE),"Click to normalize the columns of the activation matrices."),
-                    tipify(checkboxInput(ns('fa_filtertable'),'filter signficant (tables)',FALSE),
+                shiny::tagList(
+##                    shinyBS::tipify(shiny::checkboxInput(ns('fa_normalize'),'normalize activation matrix',FALSE),"Click to normalize the columns of the activation matrices."),
+                    shinyBS::tipify(shiny::checkboxInput(ns('fa_filtertable'),'filter signficant (tables)',FALSE),
                            "Click to filter the significant entries in the tables.")
                 )
             )
         )
         ui
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
     
-    observeEvent( input$fa_info, {
-        showModal(modalDialog(
-            title = HTML("<strong>Functional Analysis Board</strong>"),
-            HTML(fa_infotext),
+    shiny::observeEvent( input$fa_info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>Functional Analysis Board</strong>"),
+            shiny::HTML(fa_infotext),
             easyClose = TRUE, size="l" ))
     })
     
-    observe({
+    shiny::observe({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         ct <- colnames(ngs$model.parameters$contr.matrix)
         ##ct <- c(ct,"<sd>")
         ct <- sort(ct)
-        updateSelectInput(session, "fa_contrast", choices=ct )
+        shiny::updateSelectInput(session, "fa_contrast", choices=ct )
     })
     
 
@@ -110,11 +110,11 @@ to understand biological functions including GO and KEGG pathway analysis."
     ## KEGG pathways
     ##================================================================================
 
-    getKeggTable <- reactive({
+    getKeggTable <- shiny::reactive({
 
         ngs = inputData()
-        req(ngs)
-        req(input$fa_contrast)
+        shiny::req(ngs)
+        shiny::req(input$fa_contrast)
         
         ## ----- get comparison
         comparison=2
@@ -129,7 +129,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         kegg.ids    
         ## sometimes no KEGG in genesets...
         if(length(kegg.ids)==0) {
-            sendSweetAlert(
+            shinyWidgets::sendSweetAlert(
                 session=session,
                 title = "No KEGG terms in enrichment results",
                 text="",
@@ -162,7 +162,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         return(df)
     })
     
-    getFilteredKeggTable <- reactive({
+    getFilteredKeggTable <- shiny::reactive({
         df <- getKeggTable()
         do.filter = FALSE
         do.filter <- input$fa_filtertable
@@ -171,7 +171,7 @@ to understand biological functions including GO and KEGG pathway analysis."
     })
 
     ## There is a bug in pathview::geneannot.map so we have to override
-    ## "Error in mol.sum(gene.data, gene.idmap) : no ID can be mapped!"
+    ## "Error in pathview::mol.sum(gene.data, gene.idmap) : no ID can be mapped!"
     my.geneannot.map <- function(in.ids, in.type, out.type, org = "Hs", pkg.name = NULL, 
                                  unique.map = TRUE, na.rm = TRUE, keep.order = TRUE) 
     {
@@ -224,7 +224,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         in.ids0 = in.ids
         in.ids <- unique(as.character(in.ids))
         out.ids = character(length(in.ids))
-###res <- try(suppressWarnings( select(db.obj, keys = in.ids, 
+###res <- try(suppressWarnings( plotly::select(db.obj, keys = in.ids, 
         res <- try(suppressWarnings( AnnotationDbi::select(db.obj, keys = in.ids, 
                                                            keytype = in.type, columns = c(in.type, out.type))))
         if (class(res) == "data.frame") {
@@ -277,13 +277,14 @@ to understand biological functions including GO and KEGG pathway analysis."
 
     if(1) {
         suppressMessages(require(pathview))
+
         unlockBinding("geneannot.map", as.environment("package:pathview"))
         assignInNamespace("geneannot.map", my.geneannot.map, ns="pathview", as.environment("package:pathview"))
         assign("geneannot.map", my.geneannot.map, as.environment("package:pathview"))
         lockBinding("geneannot.map", as.environment("package:pathview"))
     }
 
-    kegg_graph.RENDER <- reactive({
+    kegg_graph.RENDER <- shiny::reactive({
 
         ngs <- inputData()
         alertDataLoaded(session,ngs)
@@ -292,9 +293,6 @@ to understand biological functions including GO and KEGG pathway analysis."
         NULL.IMG <- list(src="", contentType = 'image/png')
         if(is.null(ngs)) return(NULL.IMG)
 
-        require(KEGGgraph)
-        require(KEGG.db)
-        suppressMessages(require(pathview))
 
         comparison=1
         comparison = input$fa_contrast
@@ -346,7 +344,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         tmpdir
         dbg("[FunctionalBoard::kegg_graph] switch to /tmp folder=",tmpdir,"\n")        
         setwd(tmpdir)
-        pv.out <- pathview(
+        pv.out <- pathview::pathview(
             gene.data = fc, pathway.id=pathway.id, gene.idtype="SYMBOL",
             gene.annotpkg = "org.Hs.eg.db", species = "hsa",
             out.suffix="pathview", limit = list(gene=2, cpd=1),
@@ -377,11 +375,11 @@ to understand biological functions including GO and KEGG pathway analysis."
         ##    }, deleteFile = TRUE)
     })        
 
-    ##output$kegg_table <- renderDataTable({
-    kegg_table.RENDER <- reactive({
+    ##output$kegg_table <- shiny::renderDataTable({
+    kegg_table.RENDER <- shiny::reactive({
         
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         if(is.null(ngs$meta.go)) return(NULL)
         
         comparison=1
@@ -410,10 +408,10 @@ to understand biological functions including GO and KEGG pathway analysis."
                           scrollY = tabH, scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
-            formatSignif(numeric.cols,4) %>%
+            DT::formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>% 
                 DT::formatStyle( "logFC",
-                                ##background = styleColorBar(c(0,3), 'lightblue'),
+                                ##background = DT::styleColorBar(c(0,3), 'lightblue'),
                                 background = color_from_middle( df[,"logFC"], 'lightblue', '#f5aeae'),
                                 backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center') 
@@ -472,18 +470,18 @@ to understand biological functions including GO and KEGG pathway analysis."
         ## heatmap(score2, scale="none", mar=c(8,20))
         bmar <- 0 + pmax(50 - nrow(score2),0)*0.3
         par(mfrow=c(1,1), mar=c(1,1,10,1), oma=c(0,1.5,0,0.5) )
-        require(corrplot)
-        corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
+
+        corrplot::corrplot( score2, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
                  tl.cex = 0.85, tl.col="grey20", tl.srt = 90,
                  mar=c(bmar,0,0.5,0) )
 
 
     }
     
-    kegg_actmap.RENDER %<a-% reactive({
-        require(igraph)
+    kegg_actmap.RENDER %<a-% shiny::reactive({
+
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         df <- getKeggTable()
         if(is.null(df) || nrow(df)==0) {
             dbg("[FunctionalBoard::kegg_actmap.RENDER] emtpy KEGG table")
@@ -496,11 +494,11 @@ to understand biological functions including GO and KEGG pathway analysis."
         
     })    
 
-    kegg_actmap.RENDER2 %<a-% reactive({
+    kegg_actmap.RENDER2 %<a-% shiny::reactive({
 
-        require(igraph)
+
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         df <- getKeggTable()
         if(is.null(df) || nrow(df)==0) {
             dbg("[FunctionalBoard::kegg_actmap.RENDER] emtpy KEGG table")
@@ -514,10 +512,10 @@ to understand biological functions including GO and KEGG pathway analysis."
 
     kegg_info1 = "<strong>KEGG pathways</strong> are a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. In the pathway map, genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. Each pathway is scored for the selected contrast profile and reported in the table below. "
 
-    kegg_graph.opts <- tagList(
+    kegg_graph.opts <- shiny::tagList(
     )
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "kegg_graph", label="a",
         title = "Kegg pathway map",
@@ -533,11 +531,11 @@ to understand biological functions including GO and KEGG pathway analysis."
 
     kegg_table_info = "<strong>Enrichment table.</strong> The table is interactive; enabling user to sort on different variables and select a pathway by clicking on the row in the table. The scoring is performed by considering the total number of genes in the pathway (n), the number of genes in the pathway supported by the contrast profile (k), the ratio of k/n, and the ratio of |upregulated or downregulated genes|/k. Additionally, the table contains the list of the upregulated and downregulated genes for each pathway and a q value from the Fisher’s test for the overlap."
 
-    kegg_table_opts <- tagList(
+    kegg_table_opts <- shiny::tagList(
         ##selectInput(ns("kegg_table_logfc"),"logFC threshold for Fisher-test",c(0.2,0.5,1))
     )
     
-    kegg_table <- callModule(
+    kegg_table <- shiny::callModule(
         tableModule,
         id = "kegg_table", label="b",
         func = kegg_table.RENDER,
@@ -548,10 +546,10 @@ to understand biological functions including GO and KEGG pathway analysis."
         height = c(270,700)
     )
 
-    kegg_actmap.opts = tagList(
-        tipify(checkboxInput(ns('kegg_normalize'),'normalize activation matrix',FALSE),"Click to normalize the columns of the activation matrices.")
+    kegg_actmap.opts = shiny::tagList(
+        shinyBS::tipify(shiny::checkboxInput(ns('kegg_normalize'),'normalize activation matrix',FALSE),"Click to normalize the columns of the activation matrices.")
     )
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "kegg_actmap",
         func  = kegg_actmap.RENDER,
@@ -570,23 +568,23 @@ to understand biological functions including GO and KEGG pathway analysis."
 
     kegg_analysis_caption = "<b>(a)</b> <b>KEGG pathway map.</b> Genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. <b>(b)</b> <b>Enrichment table</b> reporting enrichment score for each pathway for the selected contrast profile. <b>(c)</b> <b>Activation matrix</b> visualizing the activation levels of pathways across contrasts." 
 
-    output$kegg_analysis_UI <- renderUI({
-        fillCol(
+    output$kegg_analysis_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = fullH,
             flex = c(NA,0.035,1),
-            div(HTML(kegg_analysis_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(kegg_analysis_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1.3,0.1,1),
                 height = rowH,
-                fillCol(
+                shiny::fillCol(
                     flex = c(1.8,0.1,1),
                     height = 0.9*rowH,
                     plotWidget(ns("kegg_graph")),
-                    br(),
+                    shiny::br(),
                     tableWidget(ns("kegg_table"))
                 ),
-                br(),  ## horizontal space
+                shiny::br(),  ## horizontal space
                 plotWidget(ns("kegg_actmap"))
             )
         )
@@ -596,25 +594,25 @@ to understand biological functions including GO and KEGG pathway analysis."
     ## GO graph
     ##================================================================================
     
-    require(visNetwork)
 
-    GO_network.RENDER <- reactive({
 
-        require(igraph)
-        require(RColorBrewer)
-        require(visNetwork)
+    GO_network.RENDER <- shiny::reactive({
+
+
+
+
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         comparison=1;methods=c("fisher","gsva","camera")
         comparison = input$fa_contrast
-        req(input$fa_contrast)
+        shiny::req(input$fa_contrast)
         if(is.null(comparison)) return(NULL)
         
         ##sub2 <- getSigGO(comparison, methods, nterms=250, ntop=25, ngs=ngs)
         sub2 <- go <- ngs$meta.go$graph
         if(is.null(go)) {
-            sendSweetAlert(
+            shinyWidgets::sendSweetAlert(
                 session=session,
                 title = "No GO graph in enrichment results",
                 text="",
@@ -626,10 +624,10 @@ to understand biological functions including GO and KEGG pathway analysis."
         score = ngs$meta.go$pathscore[,comparison]        
         score[is.na(score) | is.infinite(score)] = 0
         score = (score / (1e-8+max(abs(score),na.rm=TRUE)))
-        V(sub2)$value <- score
-        V(sub2)$color <- bluered(32)[16 + round(15*score)]
-        V(sub2)$label <- V(sub2)$Term
-        V(sub2)$label[which(is.na(score)|score==0)] = ""
+        igraph::V(sub2)$value <- score
+        igraph::V(sub2)$color <- gplots::bluered(32)[16 + round(15*score)]
+        igraph::V(sub2)$label <- igraph::V(sub2)$Term
+        igraph::V(sub2)$label[which(is.na(score)|score==0)] = ""
         pos = sub2$layout
 
         dbg("[FunctionalBoard::GO_network.RENDER] 1: sum(is.na(score)))=",sum(is.na(score)))
@@ -638,54 +636,54 @@ to understand biological functions including GO and KEGG pathway analysis."
         
         if(!all.zero && input$GO_prunetree) {
             ##cat("pruning GO graph\n")
-            vv = V(sub2)[which(!is.na(score) & abs(score)>0)]
-            sp = shortest_paths(sub2, from="all", to=vv, mode="all", output="vpath")
+            vv = igraph::V(sub2)[which(!is.na(score) & abs(score)>0)]
+            sp = igraph::shortest_paths(sub2, from="all", to=vv, mode="all", output="vpath")
             sp.vv = unique(unlist(sp$vpath))
-            sub2 = induced.subgraph(sub2, sp.vv)
-            pos = layout_with_fr(sub2)
+            sub2 = igraph::induced.subgraph(sub2, sp.vv)
+            pos = igraph::layout_with_fr(sub2)
             score = score[V(sub2)$name]
         }
 
-        dbg("[FunctionalBoard::GO_network.RENDER] 2: len.V(sub2)=",length(V(sub2)))
-        if(length(V(sub2))==0) {
+        dbg("[FunctionalBoard::GO_network.RENDER] 2: len.V(sub2)=",length(igraph::V(sub2)))
+        if(length(igraph::V(sub2))==0) {
             ## return(NULL)
         }
         
         ## remove root?
         removeroot=TRUE
         if(removeroot) {
-            sub2 <- induced_subgraph(sub2, which(V(sub2)$name!="all"))
-            if(input$GO_prunetree) pos = layout_with_fr(sub2)
+            sub2 <- igraph::induced_subgraph(sub2, which(igraph::V(sub2)$name!="all"))
+            if(input$GO_prunetree) pos = igraph::layout_with_fr(sub2)
             score <- score[V(sub2)$name]
             ##pos <- pos[V(sub2)$name,]        
         }
-        roots <- c("all",neighbors(go, V(go)["all"], mode="all" )$name)
-        roots <- intersect(roots, V(sub2)$name)
+        roots <- c("all",neighbors(go, igraph::V(go)["all"], mode="all" )$name)
+        roots <- intersect(roots, igraph::V(sub2)$name)
         
         astree = TRUE
         if(astree) {
-            if("all" %in% V(sub2)$name) {
-                pos = layout_as_tree(sub2, root="all", mode="all")
+            if("all" %in% igraph::V(sub2)$name) {
+                pos = igraph::layout_as_tree(sub2, root="all", mode="all")
             } else {
-                pos = layout_as_tree(sub2, root=roots, mode="all")
+                pos = igraph::layout_as_tree(sub2, root=roots, mode="all")
             }
             pos[,2] = -pos[,2]
         }
 
         ## color clusters
         if(input$GO_colorclusters) {
-            ##clust = cluster_louvain(as.undirected(sub2))$membership
-            clust = cluster_louvain(as.undirected(go))$membership
-            names(clust) = V(go)$name
-            cc = c(brewer.pal(12,"Set3"),brewer.pal(8,"Set2"),brewer.pal(8,"Set1"))
-            V(sub2)$color = rep(cc,99)[clust[V(sub2)$name]]
+            ##clust = igraph::cluster_louvain(igraph::as.undirected(sub2))$membership
+            clust = igraph::cluster_louvain(igraph::as.undirected(go))$membership
+            names(clust) = igraph::V(go)$name
+            cc = c(RColorBrewer::brewer.pal(12,"Set3"),brewer.pal(8,"Set2"),brewer.pal(8,"Set1"))
+            igraph::V(sub2)$color = rep(cc,99)[clust[V(sub2)$name]]
             jj = which(is.na(score) | score==0)
-            if(length(jj)>0) V(sub2)$color[jj] = NA
+            if(length(jj)>0) igraph::V(sub2)$color[jj] = NA
         }
         
-        require(visNetwork)
+
         ##pos <- pos[V(sub2)$name,]
-        gr = toVisNetworkData(sub2)
+        gr = visNetwork::toVisNetworkData(sub2)
         gr$nodes$color[is.na(gr$nodes$color)] = "#F9F9F9"
         gr$nodes$value = pmax(abs(gr$nodes$value),0.001)
         gr$nodes$x = pos[,1]*60
@@ -710,19 +708,19 @@ to understand biological functions including GO and KEGG pathway analysis."
             font.size=20; cex=0.6
         }
 
-        visNetwork(gr$nodes, gr$edges) %>%
-            visEdges(smooth = FALSE, hidden=FALSE, arrows=list(enabled=TRUE),
+        visNetwork::visNetwork(gr$nodes, gr$edges) %>%
+            visNetwork::visEdges(smooth = FALSE, hidden=FALSE, arrows=list(enabled=TRUE),
                      scaling=list(min=10*cex, max=30*cex), width=5*cex )  %>%
-            visNodes(font = list( size=font.size*cex, vadjust=0),
+            visNetwork::visNodes(font = list( size=font.size*cex, vadjust=0),
                      scaling=list(min=1*cex, max=80*cex))  %>%
-            visPhysics(stabilization = FALSE)  %>%
+            visNetwork::visPhysics(stabilization = FALSE)  %>%
             ##visInteraction(hideEdgesOnDrag = TRUE) %>%
             ##visInteraction(navigationButtons = TRUE) %>%
             ##visOptions(nodesIdSelection = TRUE) %>%
             ##visOptions(selectedBy="component") %>%
-            visOptions(highlightNearest = list(enabled=T, degree=1, hover=TRUE)) %>%
+            visNetwork::visOptions(highlightNearest = list(enabled=T, degree=1, hover=TRUE)) %>%
             ##visEvents(select="function(nodes){Shiny.onInputChange('current_node_id',nodes.nodes);;}") %>%
-            visPhysics(enabled=FALSE) 
+            visNetwork::visPhysics(enabled=FALSE) 
     })    
 
     matchGOid2gset <- function(id,gsets) {
@@ -730,9 +728,9 @@ to understand biological functions including GO and KEGG pathway analysis."
         match(id,gsets.id)
     }
 
-    GO_table.RENDER <- reactive({
+    GO_table.RENDER <- shiny::reactive({
         ngs <- inputData()
-        req(ngs, input$fa_contrast)
+        shiny::req(ngs, input$fa_contrast)
         if(is.null(ngs$meta.go)) {
             dbg("[FunctionalBoard::GO_table.RENDER] no META.GO in pgx object!")
             return(NULL)
@@ -752,7 +750,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         scores <- round(scores, digits=3)
         ##scores <- sort(scores, decreasing=TRUE)
         scores <- scores[order(-abs(scores))]
-        go.term = V(go)[names(scores)]$Term
+        go.term = igraph::V(go)[names(scores)]$Term
 
         message("[GO_table.RENDER] 2: len.scores = ",length(scores))
         
@@ -788,10 +786,10 @@ to understand biological functions including GO and KEGG pathway analysis."
                           scrollY = tabH, scroller=TRUE, deferRender=TRUE
                       )  ## end of options.list 
                       ) %>%
-            formatSignif(numeric.cols,4) %>%
+            DT::formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>% 
                 DT::formatStyle( "score",
-                                ##background = styleColorBar(c(0,3), 'lightblue'),
+                                ##background = DT::styleColorBar(c(0,3), 'lightblue'),
                                 background = color_from_middle( dt1[,"score"], 'lightblue', '#f5aeae'),
                                 backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center') 
@@ -801,7 +799,7 @@ to understand biological functions including GO and KEGG pathway analysis."
     plotGOactmap <- function(score, go, normalize, maxterm, maxfc)
     {
 
-        rownames(score) = V(go)[rownames(score)]$Term
+        rownames(score) = igraph::V(go)[rownames(score)]$Term
         
         message("[plotGOactmap] 0: sum(isna(score)) = ", sum(is.na(score)))
         message("[plotGOactmap] 0: min(score,na.rm=0) = ", min(score,na.rm=FALSE))
@@ -850,7 +848,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         
         bmar <- 0 + pmax((50 - nrow(score))*0.25,0)
         par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1.5,0,0.5))
-        require(corrplot)
+
         corrplot::corrplot( score, is.corr=FALSE, cl.pos="n", col=BLUERED(100),
                            tl.cex = 0.85, tl.col="grey20", tl.srt = 90,
                            mar=c(bmar,0,0,0) )
@@ -858,10 +856,10 @@ to understand biological functions including GO and KEGG pathway analysis."
 
     }
 
-    GO_actmap.RENDER %<a-% reactive({
-        require(igraph)
+    GO_actmap.RENDER %<a-% shiny::reactive({
+
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         if(is.null(ngs$meta.go)) {
             dbg("[FunctionalBoard:GO_actmap.RENDER] no META.GO in pgx object!")
@@ -880,10 +878,10 @@ to understand biological functions including GO and KEGG pathway analysis."
                     
     })    
 
-    GO_actmap.RENDER2 %<a-% reactive({
-        require(igraph)
+    GO_actmap.RENDER2 %<a-% shiny::reactive({
+
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         if(is.null(ngs$meta.go)) {
             dbg("[FunctionalBoard:GO_actmap.RENDER] no META.GO in pgx object!")
@@ -905,14 +903,14 @@ to understand biological functions including GO and KEGG pathway analysis."
 
     GO_info1 = "The <strong>Gene Ontology</strong> (GO) provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. The structure of GO can be described in terms of a graph, where each GO term is a node, and the relationships between the terms are edges between the nodes. GO is loosely hierarchical, with ‘child’ terms being more specialized than their ‘parent’ terms. The graph is interactive. You can move the graph and zoom in using the mouse."
 
-    GO_network.opts = tagList(
-        tipify( checkboxInput(ns("GO_prunetree"), "Prune tree", TRUE),
+    GO_network.opts = shiny::tagList(
+        shinyBS::tipify( shiny::checkboxInput(ns("GO_prunetree"), "Prune tree", TRUE),
                "Prune the tree with only significant branches."),
-        tipify( checkboxInput(ns("GO_colorclusters"), "Color clusters", FALSE),
+        shinyBS::tipify( shiny::checkboxInput(ns("GO_colorclusters"), "Color clusters", FALSE),
                "Highlight clusters with different colors.")
     )
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "GO_network", 
         title = "Gene Ontology graph", label="a",
@@ -928,12 +926,12 @@ to understand biological functions including GO and KEGG pathway analysis."
     )
     ##output <- attachModule(output, GO_network_module)
 
-    GO_actmap.opts = tagList(
-        tipify(checkboxInput(ns('go_normalize'),'normalize activation matrix',FALSE),"Click to normalize the columns of the activation matrices.")
+    GO_actmap.opts = shiny::tagList(
+        shinyBS::tipify(shiny::checkboxInput(ns('go_normalize'),'normalize activation matrix',FALSE),"Click to normalize the columns of the activation matrices.")
     )
     go_info = "The <b>GO activation matrix</b> visualizes the activation of GO terms across conditions. From this figure, you can easily detect GO terms that are consistently up/down across conditions. The size of the circles correspond to their relative activation, and are colored according to their upregulation (red) or downregulation (blue) in the contrast profile."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "GO_actmap",
         func = GO_actmap.RENDER,
@@ -947,7 +945,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         add.watermark = WATERMARK
     )
     
-    GO_table <- callModule(
+    GO_table <- shiny::callModule(
         tableModule,
         id = "GO_table", label="b",
         func = GO_table.RENDER,
@@ -958,16 +956,16 @@ to understand biological functions including GO and KEGG pathway analysis."
 
     GO_analysis_caption = "<b>(a)</b> <b>Gene Ontology graph.</b> The graph represents the enrichment of the GO terms as a tree structure. <b>(b)</b> <b>GO score table.</b> The score of a GO term is the cumulative score of all higher order terms. <b>(c)</b> <b>Activation matrix</b> visualizing the enrichment of GO terms across multiple contrast profiles."
     
-    output$GO_analysis_UI <- renderUI({
-        fillCol(
+    output$GO_analysis_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex=c(NA,0.035,1),
             height = fullH,
-            div(HTML(GO_analysis_caption),class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(GO_analysis_caption),class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 height = rowH,
                 flex = c(1.2,1),
-                fillCol(
+                shiny::fillCol(
                     flex = c(2,1),
                     height = 0.9*rowH,
                     plotWidget(ns("GO_network")),
@@ -1017,7 +1015,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         ii <- order(abs(dx))
         par(mfrow=c(2,1), mar=c(0,3.5,2,2), mgp=c(2.1,0.8,0))
         dy <- 0.02*diff(range(yy0))
-        plot( xx0[ii], yy0[ii] + dy, col=klr[ii],
+        KEGGgraph::plot( xx0[ii], yy0[ii] + dy, col=klr[ii],
              xaxs="i", xlim=c(-2, max(xx0)+3), 
              xaxt="n", xlab="", ylab="expression (log2.CPM)", 
              pch=19, cex=1.66*abs(dx)[ii], ylim=c(-4,max(yy0)*1.05) )
@@ -1077,10 +1075,10 @@ to understand biological functions including GO and KEGG pathway analysis."
         }
     } ## end of firePlot()
 
-    output$fa_fireplot <- renderPlot({
-        require(igraph)
+    output$fa_fireplot <- shiny::renderPlot({
+
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         ##df <- getFilteredKeggTable()
         
         cmp=1
@@ -1100,21 +1098,21 @@ to understand biological functions including GO and KEGG pathway analysis."
         
     }, res=85)
 
-    output$fireplot_UI <- renderUI({
-        fillRow(
+    output$fireplot_UI <- shiny::renderUI({
+        shiny::fillRow(
             height = fullH,
             flex = c(2,1),
-            fillCol(
+            shiny::fillCol(
                 flex = c(NA,1), 
-                inputPanel(
-                    selectInput(ns("fire_xpcollection"),NULL,
+                shiny::inputPanel(
+                    shiny::selectInput(ns("fire_xpcollection"),NULL,
                                 choices=setdiff(names(COLLECTIONS),"<all>") ),
-                    checkboxInput(ns('fire_shownames'),'shownames',TRUE),            
+                    shiny::checkboxInput(ns('fire_shownames'),'shownames',TRUE),            
                     cellArgs=list(width='100%')
                 ),
-                plotOutput('fa_fireplot')
+                shiny::plotOutput('fa_fireplot')
             ),
-            br()
+            shiny::br()
         )
     })
 

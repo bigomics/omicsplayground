@@ -78,7 +78,7 @@ matrix.prodSPARSE <- function( ..., na.fill=1) {
     jj <- which(p==0,arr.ind=TRUE)
     if(sparse) {
         xprod[is.na(xprod)] <- 0
-        xprod = Matrix(xprod, sparse=TRUE)
+        xprod = Matrix::Matrix(xprod, sparse=TRUE)
     }
     if(length(jj)>0) {
         if(sparse) jj <- jj[which(jj[,2]==1 | jj[,1]==1),]
@@ -94,7 +94,7 @@ merge.similarities <- function(S.list, sparse=NULL)
     if(is.null(sparse)) sparse = is(S.list[[1]], "sparseMatrix")
     if( length(S.list)>1 && sparse) {
         ## merge similarities (i.e. multiply) but allow for missing values
-        S.list = lapply(S.list, function(m) Matrix(m,sparse=TRUE))
+        S.list = lapply(S.list, function(m) Matrix::Matrix(m,sparse=TRUE))
         cat("merge similarities...(sparse)\n")
         idx = Matrix::which(S.list[[1]]!=0, arr.ind=TRUE)
         x = S.list[[1]][idx]
@@ -111,7 +111,7 @@ merge.similarities <- function(S.list, sparse=NULL)
         table(x!=0)
         jj = which(x!=0)
         n = nrow(S.list[[1]])
-        Q = sparseMatrix(i=idx[jj,1], j=idx[jj,2], x=x[jj],
+        Q = Matrix::sparseMatrix(i=idx[jj,1], j=idx[jj,2], x=x[jj],
                          use.last.ij=TRUE, dims=c(n,n))
         ## set NA??
         jj <- which(Matrix::rowMeans(Q==0)==1)
@@ -123,7 +123,7 @@ merge.similarities <- function(S.list, sparse=NULL)
     } else if(length(vars)>1 && !sparse) {
         ## merge similarities (i.e. multiply) but allow for missing values
         cat("merge similarities... (full)\n")
-        S.list = lapply(S.list, function(m) Matrix(m,sparse=FALSE))
+        S.list = lapply(S.list, function(m) Matrix::Matrix(m,sparse=FALSE))
         Q = as.matrix(S.list[[1]])
         p = matrix(1,nrow(Q),ncol(Q))
         p = 1*(!is.na(Q))
@@ -155,7 +155,7 @@ tcosine.similarity <- function(X, Y=NULL, method=NULL) {
 
 cosine.similarity <- function(X, Y=NULL, method=NULL)
 {
-    require(Matrix)
+    
     ## sparse cosine: A.B / (|A||B|)
     ## handles sparse matrix and missing values
     X <- as(X, "dgCMatrix")
@@ -202,15 +202,15 @@ tcosine.sparse <- function(X, k=100, th=0.01, block=100, ties.method="random",
         jj = j0:j1
         ##rho = tcosine.similarity( X[jj,], X[,] )
         if(gpu==TRUE) {
-            require(gputools)
+            
             rho <- gpuTcrossprod(X[jj,], X[,])
         } else {
             rho <- tcrossprod( X[jj,], X[,] )
         }
         if(ties.method=="random") {
-            idx.j = apply( rho,1,function(x) head(order(x,rnorm(length(x)),decreasing=TRUE),k) )
+            idx.j = apply( rho,1,function(x) Matrix::head(order(x,rnorm(length(x)),decreasing=TRUE),k) )
         } else {
-            idx.j = apply( rho,1,function(x) head(order(x,decreasing=TRUE),k) )
+            idx.j = apply( rho,1,function(x) Matrix::head(order(x,decreasing=TRUE),k) )
         }
         idx.j = as.vector(idx.j)
         idx.i = as.vector(sapply(1:nrow(rho), rep, k))
@@ -225,7 +225,7 @@ tcosine.sparse <- function(X, k=100, th=0.01, block=100, ties.method="random",
             idx <- rbind( idx, x1)
         }
     }
-    S <- sparseMatrix( i=idx[,1], j=idx[,2], x=idx[,3],
+    S <- Matrix::sparseMatrix( i=idx[,1], j=idx[,2], x=idx[,3],
                       dims=c(nrow(X),nrow(X)), use.last.ij=TRUE )
     dim(S)
     rownames(S) = colnames(S) = rownames(X)
@@ -255,10 +255,10 @@ tcosine.sparse.paral <- function(X, th=0.01, k=100, mc.cores=4, blocksize=100,
         up = min(i*blocksize,nrow(X))
         if(verbose) print(paste0(down," - ",up))
         j=1
-        s <- mclapply(down:up, function(j) {
+        s <- parallel::mclapply(down:up, function(j) {
             cr = tcrossprod(X[j,], X)[1,];
             jj = as.vector(which(cr>=th))
-            jj = head(jj[order(cr[jj], decreasing=TRUE)],k)
+            jj = Matrix::head(jj[order(cr[jj], decreasing=TRUE)],k)
             if(length(jj)>0) {
                 ##data.frame(from=rep(rownames(X)[j],length(cr)),to=names(cr),val=as.numeric(cr))
                 data.frame(from=rep(j,length(jj)), to=jj, val=as.numeric(cr[jj]))
@@ -268,10 +268,10 @@ tcosine.sparse.paral <- function(X, th=0.01, k=100, mc.cores=4, blocksize=100,
         }, mc.cores = mc.cores)
         sim[down:up] <- s
     }
-    ##sim1 <- rbindlist(sim)
+    ##sim1 <- data.table::rbindlist(sim)
     sim1 <- do.call(rbind, sim)
     dim(sim1)
-    S <- sparseMatrix( i=sim1[,1], j=sim1[,2], x=sim1[,3])
+    S <- Matrix::sparseMatrix( i=sim1[,1], j=sim1[,2], x=sim1[,3])
     if(verbose) {
         sp = round(100*mean(S!=0,na.rm=TRUE),digits=2)
         sp.na = round(100*mean(is.na(S),na.rm=TRUE),digits=2)
@@ -298,7 +298,7 @@ seq.similarity.paral.SAVE <- function(aln, th=0.75, k=500, mc.core=100, blocksiz
         print(paste0(down," - ",up))
         s<-mclapply(down:up, function(j){
             cr = tcrossprod(y[j,], y);
-            cr = head(sort(cr[1,],decreasing = TRUE),k)
+            cr = Matrix::head(sort(cr[1,],decreasing = TRUE),k)
             cr = cr[which(cr>=th)];
             if(length(cr)>0) {data.frame(from=rep(rownames(y)[j],length(cr)),to=names(cr),val=as.numeric(cr))} else {data.frame(from="",to="",val="")[0,]}
         }, mc.cores = mc.core)
@@ -326,13 +326,13 @@ cosine.similarity.EXACT <- function(X) {
 
 jaccard_similarity <- function(m)
 {
-    require(Matrix)
+    
     A <- tcrossprod(m)
     im <- which(A > 0, arr.ind=TRUE, useNames = F)
     b <- rowSums(m)
     Aim <- A[im]
     x = Aim / (b[im[,1]] + b[im[,2]] - Aim)
-    sp = sparseMatrix( i=im[,1], j=im[,2], x=x, dims=dim(A) )
+    sp = Matrix::sparseMatrix( i=im[,1], j=im[,2], x=x, dims=dim(A) )
     rownames(sp) <- colnames(sp) <- rownames(m)
     sp
 }
@@ -356,7 +356,7 @@ length.similaritySPARSE <- function(x,r=0.1)
 
 length.encode <- function(x, r=0.1, a=0.25)
 {
-    require(Matrix)
+    
     x0 = x
     x = x[which(!is.na(x))]
     logx = log(x)
@@ -371,7 +371,7 @@ length.encode <- function(x, r=0.1, a=0.25)
     M0 = model.matrix( ~ 0 + factor(ix, levels=1:endx) )
     M = matrix(NA, nrow=length(x0), ncol=ncol(M0))
     M[which(!is.na(x0)),] <- M0
-    M = Matrix(M, sparse=TRUE)
+    M = Matrix::Matrix(M, sparse=TRUE)
     colnames(M) <- NULL
     rownames(M) <- NULL
     if(r==0) {
@@ -380,7 +380,7 @@ length.encode <- function(x, r=0.1, a=0.25)
     }
     n = ceiling(r/dx)
     n = 2  ## alway 2 for now..
-    X = Matrix(M)
+    X = Matrix::Matrix(M)
     i = 1
     for(i in 1:n) {
         dM = cbind( M[,-i:-1], matrix(0,nrow(M),ncol=i))
@@ -426,7 +426,7 @@ clustering.score <- function(xy, labels, kinter=NULL) {
     if(!is.null(kinter)) {
         d1 = inter.dist*NA
         for(i in 1:nrow(inter.dist)) {
-            jj <- head(order(inter.dist[i,]),kinter)
+            jj <- Matrix::head(order(inter.dist[i,]),kinter)
             d1[i,jj] <- d1[jj,i] <- inter.dist[i,jj]
         }
         d1
@@ -447,8 +447,8 @@ clustering.score <- function(xy, labels, kinter=NULL) {
 ##pred.var="antigen.epitope";K=5;ntest=1000;x.var=c("cdr3.alpha","cdr3.beta")
 knn.predict <- function(data, pred.var, x.var=NULL, K, samples=NULL, ntest=0.33 )
 {
-    require(gputools)
-    require(qlcMatrix)
+    
+    
     qvars = names(data$Q)
     x.var0 = x.var
     if( is.null(x.var) || "<all others>" %in% x.var ) {
@@ -462,7 +462,7 @@ knn.predict <- function(data, pred.var, x.var=NULL, K, samples=NULL, ntest=0.33 
     dim(X)
 
     if(class(X)=="matrix") {
-        X <- Matrix(X, sparse=TRUE)
+        X <- Matrix::Matrix(X, sparse=TRUE)
     }
 
     ## random split into prediction and training samples
@@ -477,16 +477,16 @@ knn.predict <- function(data, pred.var, x.var=NULL, K, samples=NULL, ntest=0.33 
 
     ## distance calculations for test-set (superfast!)
     pos = dist.xy = NULL
-    ##system.time( dist.xy <- 1 - corSparse( t(X[j1,]), t(X[j0,]) ) )
+    ##system.time( dist.xy <- 1 - qlcMatrix::corSparse( t(X[j1,]), t(X[j0,]) ) )
     if(sum(is.na(X))>0) {
         system.time( dist.xy <- 1 - cosine.similarity( t(X[j1,]), t(X[j0,]) ) )
     } else {
-        system.time( dist.xy <- 1 - cosSparse( t(X[j1,]), t(X[j0,]) ) )
+        system.time( dist.xy <- 1 - qlcMatrix::cosSparse( t(X[j1,]), t(X[j0,]) ) )
     }
     dim(dist.xy)
 
     ## Get best prediction from K-nearest neighbours
-    knn <- apply(dist.xy, 1, function(x) head(order(x),K))
+    knn <- apply(dist.xy, 1, function(x) Matrix::head(order(x),K))
     if(NCOL(knn)==1) {
         pred.yy  <- matrix(Y[j0][knn],ncol=1)
     } else {
@@ -594,7 +594,7 @@ fastcorSAVE <- function(x){
 }
 
 fastcor <- function(a) {
-    a = Matrix(a) ## automatically switch to sparse
+    a = Matrix::Matrix(a) ## automatically switch to sparse
     ##a <- as(a, "dgCMatrix")
     ##b <- as(b, "dgCMatrix")
     n <- nrow(a)
@@ -607,7 +607,7 @@ fastcor <- function(a) {
 
 
 mat2sp.DEPRECATED <- function(x) {
-    require(Matrix)
+    
     idx = which(x!=0, arr.ind=TRUE)
     dn=list( rownames(x), colnames(x))
     spX <- Matrix::sparseMatrix( i=idx[,1], j=idx[,2], x=x[idx],
@@ -617,7 +617,7 @@ mat2sp.DEPRECATED <- function(x) {
 
 sparse.corDEPRECATED <- function(a,b=NULL){
     ## see also corSparse in package 'qlcMatrix'
-    require(Matrix)
+    
     if(is.null(b)) b=a
     a=Matrix(a, sparse=TRUE)
     b=Matrix(b, sparse=TRUE) ## make sure it is sparse coded

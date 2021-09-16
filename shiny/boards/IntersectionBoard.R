@@ -6,22 +6,22 @@
 message(">>> sourcing IntersectionBoard")
 
 IntersectionInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shiny::uiOutput(ns("inputsUI"))
     )
 }
 
 IntersectionUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    fillCol(
+    ns <- shiny::NS(id)  ## namespace
+    shiny::fillCol(
         height = 750,
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs1"),
-            tabPanel("Pairwise scatter",uiOutput(ns("scatterPlotMatrix_UI"))),
-            tabPanel("Signature clustering",uiOutput(ns("ctClustering_UI")))
-            ## tabPanel("Signature UMAP",uiOutput(ns("ctUMAP_UI")))
+            shiny::tabPanel("Pairwise scatter",uiOutput(ns("scatterPlotMatrix_UI"))),
+            shiny::tabPanel("Signature clustering",uiOutput(ns("ctClustering_UI")))
+            ## shiny::tabPanel("Signature UMAP",uiOutput(ns("ctUMAP_UI")))
         )
     )
     
@@ -39,7 +39,7 @@ IntersectionBoard <- function(input, output, session, env)
     
     description =
 "<h3>Compare signatures</h3>Find genes that are commonly up/down regulated between two or more signatures. Compute similarity between contrasts."
-output$description <- renderUI(HTML(description))
+output$description <- shiny::renderUI(shiny::HTML(description))
 
     infotext =
         "The <strong>Intersection analysis module</strong> enables users to compare multiple contrasts by intersecting the genes of profiles. The main goal is to identify contrasts showing similar profiles.
@@ -55,28 +55,28 @@ output$description <- renderUI(HTML(description))
     ##========================= INPUTS UI ============================================
     ##================================================================================
     
-    output$inputsUI <- renderUI({
-        ui <- tagList(
-            tipify( actionLink(ns("info"), "Tutorial", icon = icon("youtube")),
+    output$inputsUI <- shiny::renderUI({
+        ui <- shiny::tagList(
+            shinyBS::tipify( shiny::actionLink(ns("info"), "Tutorial", icon = shiny::icon("youtube")),
                    "Show more information about this module"),
-            hr(), br(),             
-            tipify( selectInput(ns('comparisons'),'Contrasts:', choices=NULL, multiple=TRUE),
+            shiny::hr(), shiny::br(),             
+            shinyBS::tipify( shiny::selectInput(ns('comparisons'),'Contrasts:', choices=NULL, multiple=TRUE),
                    "Select the contrasts that you want to compare. If you select N=2 contrast a single scatterplot will be drawn. For N>=3 a scatterplot matrix will be drawn.",
                    placement="top"),
 
-            tipify( actionLink(ns("options"), "Options", icon=icon("cog", lib = "glyphicon")),
+            shinyBS::tipify( shiny::actionLink(ns("options"), "Options", icon=icon("cog", lib = "glyphicon")),
                    "Toggle advanced options.", placement="top"),
-            br(),br(),
-            conditionalPanel(
+            shiny::br(),br(),
+            shiny::conditionalPanel(
                 "input.options % 2 == 1", ns=ns,
-                tipify( radioButtons(ns("level"),"Level:",
+                shinyBS::tipify( shiny::radioButtons(ns("level"),"Level:",
                                      choices=c("gene","geneset"), inline=TRUE),
                        "Select feature level: gene or geneset", placement="top"),                
-                tipify( selectInput(ns("filter"),"Filter:", choices=NULL, multiple=FALSE),
+                shinyBS::tipify( shiny::selectInput(ns("filter"),"Filter:", choices=NULL, multiple=FALSE),
                        "Filter features", placement="top"),
-                conditionalPanel(
+                shiny::conditionalPanel(
                     "input.filter == '<custom>'", ns=ns,
-                    tipify( textAreaInput(ns("customlist"), NULL, value = NULL,
+                    shinyBS::tipify( shiny::textAreaInput(ns("customlist"), NULL, value = NULL,
                                           rows=5, placeholder="Paste your custom gene list"),
                            "Paste a custom list of genes to highlight.", placement="bottom")
                 )
@@ -84,42 +84,42 @@ output$description <- renderUI(HTML(description))
         )
         ui
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ## delayed input
-    input_comparisons <- reactive({
+    input_comparisons <- shiny::reactive({
         input$comparisons
-    }) %>% debounce(500)    
+    }) %>% shiny::debounce(500)    
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
     
-    observeEvent( input$info, {
-        showModal(modalDialog(
-            title = HTML("<strong>Intersection Analysis Board</strong>"),
-            HTML(infotext),
+    shiny::observeEvent( input$info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>Intersection Analysis Board</strong>"),
+            shiny::HTML(infotext),
             easyClose = TRUE, size="l" ))
     })
 
     ## update choices upon change of data set 
-    observe({
+    shiny::observe({
         ngs <- inputData()
         ##req(ngs)
         if(is.null(ngs)) return(NULL)
         comparisons <- colnames(ngs$model.parameters$contr.matrix)
         comparisons <- sort(comparisons)
-        updateSelectInput(session, "comparisons", choices=comparisons,
+        shiny::updateSelectInput(session, "comparisons", choices=comparisons,
                           selected=head(comparisons,3))
     })
 
     ## update choices upon change of feature level
     ##observeEvent( input$level, {
-    observe({
+    shiny::observe({
         ngs <- inputData()
-        ## req(ngs,input$level)
+        ## shiny::req(ngs,input$level)
         if(is.null(ngs)) return(NULL)
-        req(input$level)
+        shiny::req(input$level)
         ##flt.choices = names(ngs$families)
         if(input$level=="geneset") {
             ft <- names(COLLECTIONS)
@@ -132,16 +132,16 @@ output$description <- renderUI(HTML(description))
         ft <- sort(ft)
         ## if(input$level=="gene") ft = sort(c("<custom>",ft))
         ## ft = sort(c("<custom>",ft))        
-        updateSelectInput(session, "filter", choices=ft, selected="<all>")
+        shiny::updateSelectInput(session, "filter", choices=ft, selected="<all>")
     })
     
-    ## observe({
+    ## shiny::observe({
     ##     splom.sel <- plotly::event_data("plotly_selected", source="splom")
     ##     sel.keys <- as.character(splom.sel$key)
     ##     if(0 && length(sel.keys)>0) {
-    ##         updateSelectInput(session, "filter", selected="<custom>")
+    ##         shiny::updateSelectInput(session, "filter", selected="<custom>")
     ##         sel.keys = paste(sel.keys, collapse=" ")
-    ##         updateTextAreaInput(session, "customlist", value=sel.keys)
+    ##         shiny::updateTextAreaInput(session, "customlist", value=sel.keys)
     ##     }
     ## })
     
@@ -150,13 +150,13 @@ output$description <- renderUI(HTML(description))
     ##========================= REACTIVE FUNCTIONS ===================================
     ##================================================================================
 
-    ## selected_gxmethods <- reactive({
+    ## selected_gxmethods <- shiny::reactive({
     ##     ##sel <- SEL.GXMETHODS()
-    ##     req(sel)
+    ##     shiny::req(sel)
     ##     sel
     ## })
     
-    getFoldChangeMatrix <- reactive({
+    getFoldChangeMatrix <- shiny::reactive({
         ## 
         ## Get full foldchange matrix from ngs object.
         ##
@@ -167,7 +167,7 @@ output$description <- renderUI(HTML(description))
         qv0 = NULL
         ngs <- inputData()
         alertDataLoaded(session,ngs)        
-        req(ngs)
+        shiny::req(ngs)
         
         sel = names(ngs$gset.meta$meta)
         ##sel = input_comparisons()
@@ -239,11 +239,11 @@ output$description <- renderUI(HTML(description))
     })
 
     
-    getActiveFoldChangeMatrix <- reactive({
+    getActiveFoldChangeMatrix <- shiny::reactive({
         
         res = getFoldChangeMatrix()
         ##if(is.null(res)) return(NULL)
-        req(res)            
+        shiny::req(res)            
 
         ## match with selected/active contrasts
         ## comp = head(colnames(res$fc),3)
@@ -260,7 +260,7 @@ output$description <- renderUI(HTML(description))
     })
     
     
-    getSignificanceCalls <- reactive({
+    getSignificanceCalls <- shiny::reactive({
         ## Gets the matrix of significance calls.
         ##
         ngs <- inputData()
@@ -290,7 +290,7 @@ output$description <- renderUI(HTML(description))
         choices <- c("<all>",sort(unique(venn.intersection)))
         selected <- venn.intersection[which.max(nchar(venn.intersection))]
         dbg("[getSignificanceCalls] choiced = ",choices)
-        updateSelectInput(
+        shiny::updateSelectInput(
             session, "venntable_intersection",
             choices = choices,
             ##selected = "<all>"
@@ -301,12 +301,12 @@ output$description <- renderUI(HTML(description))
     })
 
 
-    getSignificantFoldChangeMatrix <- reactive({
+    getSignificantFoldChangeMatrix <- shiny::reactive({
         ##
         ## Filters FC matrix with significance and user-defined
         ## intersection region.
         dt <- getSignificanceCalls()
-        req(dt)
+        shiny::req(dt)
         
         isect = input$intersection
         fc0 = getFoldChangeMatrix()$fc  
@@ -379,12 +379,12 @@ output$description <- renderUI(HTML(description))
     })
 
     
-    getCurrentSig <- reactive({
+    getCurrentSig <- shiny::reactive({
         ## Switch between FC profile or NMF vectors
         ##
         ##
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         progress <- shiny::Progress$new()
         on.exit(progress$close())
         
@@ -455,13 +455,13 @@ output$description <- renderUI(HTML(description))
     ## From: https://plot.ly/r/splom/
     ##======================================================================
     
-    scatterPlotMatrix.PLOT <- reactive({
+    scatterPlotMatrix.PLOT <- shiny::reactive({
 
         dbg("[IntersectionBoard::scatterPlotMatrix.PLOT]  reacted\n")
 
-        require(ggplot2)
-        require(plotly)
-        ##require(GGally)
+
+
+
 
         ##res = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         res = getActiveFoldChangeMatrix()
@@ -562,7 +562,7 @@ output$description <- renderUI(HTML(description))
                 bordercolor = 'black',
                 borderwidth = 0.6)
 
-            p <- plot_ly( data=df[,1:2], x = df[,1], y= df[,2],
+            p <- plotly::plot_ly( data=df[,1:2], x = df[,1], y= df[,2],
                          type = 'scattergl', mode = 'markers',
                          source='splom', key = rownames(df),
                          ##type = 'scatter', mode = 'markers',
@@ -577,7 +577,7 @@ output$description <- renderUI(HTML(description))
                                  color = 'rgb(0,0,0)'
                              ))
                          ) %>%
-                add_annotations(
+                plotly::add_annotations(
                     x = df[sel1,1],
                     y = df[sel1,2],
                     text = as.character(label.text),
@@ -592,7 +592,7 @@ output$description <- renderUI(HTML(description))
                     ax = 20,
                     ay = -40
                 ) %>%
-                layout(
+                plotly::layout(
                     ## title= 'Scatterplot',
                     annotations = annot.rho,
                     hovermode = 'closest',
@@ -622,8 +622,8 @@ output$description <- renderUI(HTML(description))
             yann = 1.08*(as.vector(rep(seq(1,0.02,-1/n),n)) - 0.15*1/n - 0.04)
             ##yann = as.vector(rep(seq(1,0.0,-1/(n-1)),n))
             
-            p <- plot_ly(df, source="splom", key=rownames(df) ) %>%
-                add_trace(
+            p <- plotly::plot_ly(df, source="splom", key=rownames(df) ) %>%
+                plotly::add_trace(
                     type = 'splom',
                     dimensions = dimensions,
                     text = tt,
@@ -639,7 +639,7 @@ output$description <- renderUI(HTML(description))
                         )
                     )
                 ) %>%
-                add_annotations(
+                plotly::add_annotations(
                     x = xann,
                     y = yann,
                     text = rho.text,
@@ -652,7 +652,7 @@ output$description <- renderUI(HTML(description))
                     borderpad = 3, 
                     bordercolor = 'black',
                     borderwidth = 0.6) %>%
-                layout(
+                plotly::layout(
                     ##title= 'Scatterplot matrix',
                     hovermode='closest',
                     dragmode= 'select',
@@ -664,35 +664,35 @@ output$description <- renderUI(HTML(description))
                     xaxis2=axis, xaxis3=axis, xaxis4=axis, xaxis5=axis, xaxis6=axis, xaxis7=axis,
                     yaxis2=axis, yaxis3=axis, yaxis4=axis, yaxis5=axis, yaxis6=axis, yaxis7=axis
                 )
-            ## %>% style(diagonal = list(visible = F))
+            ## %>% plotly::style(diagonal = list(visible = F))
 
         }
         
         p <- p %>%
-            layout(margin = list(80,80,80,80) )  ## l,r,b,t
+            plotly::layout(margin = list(80,80,80,80) )  ## l,r,b,t
 
         p <- p %>%
             ##config(displayModeBar = FALSE) %>% ## disable buttons
-            config(modeBarButtonsToRemove = setdiff(all.plotly.buttons,"toImage") ) %>%
-            config(toImageButtonOptions = list(format='svg',
+            plotly::config(modeBarButtonsToRemove = setdiff(all.plotly.buttons,"toImage") ) %>%
+            plotly::config(toImageButtonOptions = list(format='svg',
                                                height=800, width=800, scale=1.1)) %>%
-            config(displaylogo = FALSE) %>% 
-            event_register('plotly_selected') 
+            plotly::config(displaylogo = FALSE) %>% 
+            plotly::event_register('plotly_selected') 
 
         dbg("scatterPlotMatrix:: done\n")
         p    
     })
 
-    scatterPlotMatrix.opts = tagList(
-        tipify( checkboxInput(ns("splom_highlight"),"Highlight genes",TRUE),
+    scatterPlotMatrix.opts = shiny::tagList(
+        shinyBS::tipify( shiny::checkboxInput(ns("splom_highlight"),"Highlight genes",TRUE),
                "Enable highlighting genes on the plots. Users can highlight points by selecting them with the mouse, using the box selection or the lasso selection tool.")
-        ##tipify( selectInput(ns("splom_ntop"),"Number of top genes",c(100,500,1000,2500,999999),selected=1000),
+        ##tipify( shiny::selectInput(ns("splom_ntop"),"Number of top genes",c(100,500,1000,2500,999999),selected=1000),
         ##        "Number of top genes ")
     )
 
     scatterPlotMatrix_info = "For the selected contrasts, the <strong>Pairs</strong> panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, the Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as '<custom>' selection."
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "scatterPlotMatrix", 
         func = scatterPlotMatrix.PLOT,
@@ -715,8 +715,8 @@ output$description <- renderUI(HTML(description))
     ## Venn diagram
     ##======================================================================
 
-    venndiagram.RENDER %<a-% reactive({
-    ## venndiagram.RENDER <- reactive({    
+    venndiagram.RENDER %<a-% shiny::reactive({
+    ## venndiagram.RENDER <- shiny::reactive({    
         
         dt = getSignificanceCalls()
         if(is.null(dt) || nrow(dt)==0) return(NULL)
@@ -754,7 +754,7 @@ output$description <- renderUI(HTML(description))
                        inset=c(0.04,-0.01), xpd=TRUE)       
             
         } else {
-            require(ggVennDiagram)
+
             ##colnames(dt1) <- colnames(dt)[-1]
             
             x <- apply(dt1, 2, function(x) rownames(dt1)[which(x!=0)])
@@ -769,14 +769,14 @@ output$description <- renderUI(HTML(description))
                 return(NULL)
             }            
             
-            p <- ggVennDiagram(
+            p <- ggVennDiagram::ggVennDiagram(
                 x,
                 label = "count",
                 edge_size = 0.4
             ) +
-                scale_fill_gradient(low="grey90",high = "red") +
-                theme( legend.position = "none", 
-                      plot.margin = unit(c(1,1,1,1)*0.3, "cm"))
+                ggplot2::scale_fill_gradient(low="grey90",high = "red") +
+                ggplot2::theme( legend.position = "none", 
+                      plot.margin = ggplot2::unit(c(1,1,1,1)*0.3, "cm"))
             
             ## legend
             tt = paste(label,"=",colnames(dt)[-1])
@@ -787,18 +787,18 @@ output$description <- renderUI(HTML(description))
             tt1 <- paste(tt1, collapse='\n')
             tt2 <- paste(tt2, collapse='\n')            
             
-            xlim <- ggplot_build(p)$layout$panel_scales_x[[1]]$range$range
-            ylim <- ggplot_build(p)$layout$panel_scales_y[[1]]$range$range
+            xlim <- ggplot2::ggplot_build(p)$layout$panel_scales_x[[1]]$range$range
+            ylim <- ggplot2::ggplot_build(p)$layout$panel_scales_y[[1]]$range$range
             x1 = xlim[1] - 0.1*diff(xlim)
             x2 = xlim[1] + 0.6*diff(xlim)
             y1 = ylim[2] + 0.12*diff(xlim)
             
             p <- p +
-                annotate("text", x = x1, y = y1, hjust="left",
+                ggplot2::annotate("text", x = x1, y = y1, hjust="left",
                          label = tt1, size=4, lineheight=0.83) +
-                annotate("text", x = x2, y = y1, hjust="left",
+                ggplot2::annotate("text", x = x2, y = y1, hjust="left",
                              label = tt2, size=4, lineheight=0.83) +
-                coord_sf(clip="off")
+                ggplot2::coord_sf(clip="off")
 
             grid.draw(p)
         }        
@@ -806,24 +806,24 @@ output$description <- renderUI(HTML(description))
     })
 
     FDR.VALUES2 <- c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
-    venndiagram.opts = tagList(
-        ##    checkboxGroupInput(ns('intersection'),NULL, choices=c("A","B","C"), inline=TRUE )    
-        fillRow(
+    venndiagram.opts = shiny::tagList(
+        ##    shiny::checkboxGroupInput(ns('intersection'),NULL, choices=c("A","B","C"), inline=TRUE )    
+        shiny::fillRow(
             flex=c(1,1), ## height=80,       
-            tipify( selectInput(ns("fdr"),"FDR", choices=FDR.VALUES2, selected=0.20),
+            shinyBS::tipify( shiny::selectInput(ns("fdr"),"FDR", choices=FDR.VALUES2, selected=0.20),
                    "Threshold for false discovery rate",
                    placement="right", options = list(container = "body")),
-            tipify( selectInput(ns("lfc"),"logFC threshold",
+            shinyBS::tipify( shiny::selectInput(ns("lfc"),"logFC threshold",
                                 choices = c(0,0.1,0.2,0.5,1,2,5),
                                 selected = 0.2),
                    "Threshold for fold-change (log2 scale)",
                    placement="right", options = list(container = "body"))
         ),
-        br(),br(),br(),br(),
-        radioButtons(ns('include'),'Counting:', choices=c("both","up/down"), inline=TRUE)
+        shiny::br(),br(),br(),br(),
+        shiny::radioButtons(ns('include'),'Counting:', choices=c("both","up/down"), inline=TRUE)
     )
    
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "venndiagram", 
         func = venndiagram.RENDER,
@@ -841,9 +841,9 @@ output$description <- renderUI(HTML(description))
     )
 
     ##output$intersection_table <- DT::renderDataTable({
-    venntable.RENDER <- reactive({
+    venntable.RENDER <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         ## get foldchanges
         fc0 = getSignificantFoldChangeMatrix()  ## isolate??        
@@ -887,19 +887,19 @@ output$description <- renderUI(HTML(description))
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  
     })
 
-    venntable_buttons <- inputPanel(
-        div(checkboxGroupInput(
+    venntable_buttons <- shiny::inputPanel(
+        shiny::div(shiny::checkboxGroupInput(
             ns('intersection'), NULL,
             choices = c("A","B","C"), ## selected=c("A","B","C"),
             inline=TRUE ),
             style="font-size:0.85em; margin-top:-10px;")
     )
 
-    venntable_opts <- tagList(
-        selectInput(ns('venntable_intersection'),'Filter intersection:', choices=NULL)        
+    venntable_opts <- shiny::tagList(
+        shiny::selectInput(ns('venntable_intersection'),'Filter intersection:', choices=NULL)        
     )
     
-    callModule(
+    shiny::callModule(
         tableModule,
         id = "venntable", 
         func = venntable.RENDER,
@@ -918,15 +918,15 @@ output$description <- renderUI(HTML(description))
     ## Single-pair scatter plot
     ##================================================================================
 
-    pairsPlot.PLOT <- reactive({
-        require(ggplot2)
-        require(plotly)
-        ##require(GGally)
+    pairsPlot.PLOT <- shiny::reactive({
+
+
+
         
         ##res = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         res = getActiveFoldChangeMatrix()
         ##if(is.null(res)) return(NULL)
-        req(res)    
+        shiny::req(res)    
         fc0 = res$fc.full[,1:2]  
         fc1 = res$fc[,1:2]  
         
@@ -1027,7 +1027,7 @@ output$description <- renderUI(HTML(description))
             bordercolor = 'black',
             borderwidth = 0.6)
         
-        p <- plot_ly( data=df[,1:2], x = df[,1], y= df[,2],
+        p <- plotly::plot_ly( data=df[,1:2], x = df[,1], y= df[,2],
                      type = 'scattergl', mode = 'markers',
                      source='pairs', key = rownames(df),
                      ##type = 'scatter', mode = 'markers',
@@ -1045,7 +1045,7 @@ output$description <- renderUI(HTML(description))
 
         if(!is.null(sel1)) {
             p <- p %>%
-                add_annotations(
+                plotly::add_annotations(
                     x = df[sel1,1],
                     y = df[sel1,2],
                     text = as.character(label.text),
@@ -1063,7 +1063,7 @@ output$description <- renderUI(HTML(description))
         }
 
         p <- p %>%
-            layout(
+            plotly::layout(
                 ## title= 'Scatterplot',
                 annotations = annot.rho,
                 hovermode = 'closest',
@@ -1075,27 +1075,27 @@ output$description <- renderUI(HTML(description))
             )    
 
         p <- p %>%
-            layout(margin = list(80,80,80,80) )  ## l,r,b,t
+            plotly::layout(margin = list(80,80,80,80) )  ## l,r,b,t
         
         p <- p %>%
-            ## config(displayModeBar = FALSE) %>% ## disable buttons
-            config( toImageButtonOptions = list(format='svg', height=800, width=800, scale=1.1)) %>%
-            event_register('plotly_selected') 
+            ## plotly::config(displayModeBar = FALSE) %>% ## disable buttons
+            plotly::config( toImageButtonOptions = list(format='svg', height=800, width=800, scale=1.1)) %>%
+            plotly::event_register('plotly_selected') 
         p    
     })
 
-    pairsPlot.opts = tagList(
-        tipify( checkboxInput(ns("pairsplot_labelgenes"),"Label genes",TRUE),
+    pairsPlot.opts = shiny::tagList(
+        shinyBS::tipify( shiny::checkboxInput(ns("pairsplot_labelgenes"),"Label genes",TRUE),
                "Label genes on the plots."),
-        tipify( checkboxInput(ns("pairsplot_showselected"),"Show selected",TRUE),
+        shinyBS::tipify( shiny::checkboxInput(ns("pairsplot_showselected"),"Show selected",TRUE),
                "Show selected genes.")
-        ##tipify( selectInput(ns("pairs_ntop"),"Number of top genes",c(100,500,1000,2500,999999),selected=1000),
+        ##tipify( shiny::selectInput(ns("pairs_ntop"),"Number of top genes",c(100,500,1000,2500,999999),selected=1000),
         ##        "Number of top genes ")
     )
 
     pairsPlot_info = "For the selected contrasts, the <strong>Pairs</strong> panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, the Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as '<custom>' selection."
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "pairsPlot", 
         func = pairsPlot.PLOT,
@@ -1115,7 +1115,7 @@ output$description <- renderUI(HTML(description))
     ## FOLDCHANGE HEATMAP
     ##=============================================================================
     
-    FoldchangeHeatmap.RENDER %<a-% reactive({
+    FoldchangeHeatmap.RENDER %<a-% shiny::reactive({
         ##
         ##
         ngs <- inputData()
@@ -1151,19 +1151,19 @@ output$description <- renderUI(HTML(description))
                 bar.height=bh, map.height=mh,
                 mar = c(bm,0.5,0.5,1),
                 cluster_columns = cclust,
-                ##column_dend_height = unit(10,"mm"),
+                ##column_dend_height = ggplot2::unit(10,"mm"),
                 inset = c(0.01,0.01))            
         })
         grid.draw(plt)
         ## plt
     })
     
-    FoldchangeHeatmap.opts = tagList(
-        tipify( checkboxInput(ns('FoldchangeHeatmap_allfc'), "show all contrasts", TRUE),
+    FoldchangeHeatmap.opts = shiny::tagList(
+        shinyBS::tipify( shiny::checkboxInput(ns('FoldchangeHeatmap_allfc'), "show all contrasts", TRUE),
                "Show all contrasts or just the selected ones."),
-        tipify( checkboxInput(ns('FoldchangeHeatmap_cluster'), "cluster genes", FALSE),
+        shinyBS::tipify( shiny::checkboxInput(ns('FoldchangeHeatmap_cluster'), "cluster genes", FALSE),
                "Cluster genes (columns)."),
-        tipify( radioButtons(ns('FoldchangeHeatmap_annotype'), "annotation type",
+        shinyBS::tipify( shiny::radioButtons(ns('FoldchangeHeatmap_annotype'), "annotation type",
                              c("boxplot","barplot"), inline=TRUE),
                "Plot type of column annotation.")
         )
@@ -1172,7 +1172,7 @@ output$description <- renderUI(HTML(description))
 
     FoldchangeHeatmap_caption = "<b>Connectivity Heatmap.</b> Similarity of the contrasts profiles as a heatmap. Contrasts that are similar will be clustered close together."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         "FoldchangeHeatmap", label = "a",
         func = FoldchangeHeatmap.RENDER,
@@ -1192,17 +1192,17 @@ output$description <- renderUI(HTML(description))
     ## Contrast corrplot 
     ##================================================================================
 
-    ctcorrplot.PLOT %<a-% reactive({
+    ctcorrplot.PLOT %<a-% shiny::reactive({
                         
         ngs <- inputData()
-        req(ngs)
-        req(input$comparisons)
+        shiny::req(ngs)
+        shiny::req(input$comparisons)
         
         ## res <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         res <- getFoldChangeMatrix()
 
         if(is.null(res)) return(NULL)
-        ##validate(need(NCOL(res$fc)<2, "warning. need multiple comparisons."))
+        ##validate(shiny::need(NCOL(res$fc)<2, "warning. need multiple comparisons."))
         if(NCOL(res$fc)<2) return(NULL)        
         
         fc0 = res$fc
@@ -1242,7 +1242,7 @@ output$description <- renderUI(HTML(description))
         if(nrow(R) > 80) { mar1=c(16,18)*0.6 }    
         
         col <- BLUERED(16)
-        col <- colorpanel(64,"royalblue3","grey90","indianred3")
+        col <- gplots::colorpanel(64,"royalblue3","grey90","indianred3")
         ##col <- tail(BLUERED(16),8)
         if(min(R, na.rm=TRUE)>=0) col <- tail(col,32)
         if(max(R, na.rm=TRUE)<=0) col <- head(col,32)
@@ -1252,8 +1252,8 @@ output$description <- renderUI(HTML(description))
                                    "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE",
                                    "#4393C3", "#2166AC", "#053061"))
         
-        require(corrplot)
-        corrplot(R, method = "circle", order="hclust",
+
+        corrplot::corrplot(R, method = "circle", order="hclust",
                  is.corr = FALSE,
                  cl.lim = c(-1.02,1.02)*max(abs(R),na.rm=TRUE),
                  col = rev(col2(50)),
@@ -1266,13 +1266,13 @@ output$description <- renderUI(HTML(description))
         ##return(R)
     })
 
-    ctcorrplot.PLOTLY <- reactive({
+    ctcorrplot.PLOTLY <- shiny::reactive({
 
         ## install.packages("heatmaply")
-        require(heatmaply)
+
         
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         ##req(input$comparisons)
         ##res <- pgx.getMetaFoldChangeMatrix(ngs, what="meta")
         res = getFoldChangeMatrix()
@@ -1303,7 +1303,7 @@ output$description <- renderUI(HTML(description))
         R <- round(R,digits=2)
         
         col <- BLUERED(16)
-        col <- colorpanel(64,"royalblue3","grey90","indianred3")
+        col <- gplots::colorpanel(64,"royalblue3","grey90","indianred3")
         ##col <- tail(BLUERED(16),8)
         if(min(R,na.rm=TRUE)>=0) col <- tail(col,32)
         if(max(R,na.rm=TRUE)<=0) col <- head(col,32)
@@ -1323,14 +1323,14 @@ output$description <- renderUI(HTML(description))
         plt
     })
     
-    ctcorrplot.opts = tagList(
-        ##tipify( checkboxInput(ns('ctcorrplot_showrho'), "show correlation values", FALSE),
+    ctcorrplot.opts = shiny::tagList(
+        ##tipify( shiny::checkboxInput(ns('ctcorrplot_showrho'), "show correlation values", FALSE),
         ##"Show correlation values in cells."),
-        tipify( checkboxInput(ns('ctcorrplot_allfc'), "show all contrasts", TRUE),
+        shinyBS::tipify( shiny::checkboxInput(ns('ctcorrplot_allfc'), "show all contrasts", TRUE),
                "Show all contrasts or just the selected ones."),
-        ##tipify( checkboxInput('ctcorrplot_fixed', "fix heatmap", FALSE),
+        ##tipify( shiny::checkboxInput('ctcorrplot_fixed', "fix heatmap", FALSE),
         ##       "Fix heatmap layout when changing number of top genes"),
-        tipify( radioButtons(ns('ctcorrplot_ntop'), "number of top genes",
+        shinyBS::tipify( shiny::radioButtons(ns('ctcorrplot_ntop'), "number of top genes",
                              c("100","1000","all"),
                              selected="1000", inline=TRUE),
                "Number of top genes to compute correlation values.") 
@@ -1338,7 +1338,7 @@ output$description <- renderUI(HTML(description))
 
     ctcorrplot_info = "<strong>Constrast heatmap.</strong> Similarity of the contrasts visualized as a clustered heatmap. Contrasts that are similar will be clustered close together. The numeric value in the cells correspond to the Pearson correlation coefficient between contrast signatures. Red corresponds to positive correlation and blue to negative correlation."
         
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "ctcorrplot",  label="b",
         func = ctcorrplot.PLOT, plotlib="base",
@@ -1358,7 +1358,7 @@ output$description <- renderUI(HTML(description))
     ## Gene/geneset UMAP plots
     ##================================================================================
 
-    ctGeneUMAP.RENDER %<a-% reactive({
+    ctGeneUMAP.RENDER %<a-% shiny::reactive({
         
         dbg("[ctGeneUMAP.RENDER] reacted!")
         out <- getCurrentSig()
@@ -1366,7 +1366,7 @@ output$description <- renderUI(HTML(description))
         
         W <- out$sig
         sel0 <- input_comparisons()
-        req(sel0)
+        shiny::req(sel0)
         if(!all(sel0 %in% colnames(W))) return(NULL)
         W <- W[,sel0,drop=FALSE]        
         dim(W)
@@ -1477,12 +1477,12 @@ output$description <- renderUI(HTML(description))
         
     ctGeneUMAP_info = "<b>CORSA module analysis.</b> Functional analysis of NMF modules."
 
-    ctGeneUMAP_opts = tagList(
-        radioButtons(ns("ntop_genes"),"Gene labels:",
+    ctGeneUMAP_opts = shiny::tagList(
+        shiny::radioButtons(ns("ntop_genes"),"Gene labels:",
                      choices = c(0,10,30,100), selected = 10, inline=TRUE)
     )
     
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "ctGeneUMAP", ##ns=ns,
         title = "GENE SIGNATURE", label="a",
@@ -1501,7 +1501,7 @@ output$description <- renderUI(HTML(description))
     ##----------------------  NMF gsea --------------------------------
     ##-----------------------------------------------------------------
     
-    ctGseaUMAP.RENDER %<a-% reactive({
+    ctGseaUMAP.RENDER %<a-% shiny::reactive({
 
         dbg("[ctGseaUMAP.RENDER] reacted")
         out <- getCurrentSig()
@@ -1509,7 +1509,7 @@ output$description <- renderUI(HTML(description))
 
         sel0=1:4
         sel0 <- input_comparisons()
-        req(sel0)
+        shiny::req(sel0)
         if(!all(sel0 %in% colnames(gse))) return(NULL)        
         gse <- gse[,sel0,drop=FALSE]        
         gse0 <- gse
@@ -1522,7 +1522,7 @@ output$description <- renderUI(HTML(description))
         
         ii <- grep("HALLMARK",rownames(gse))
         ii <- ctGseaTable_module$rows_all()
-        req(ii)
+        shiny::req(ii)
         gse <- gse[ii,,drop=FALSE]
 
         ## multiple group layout 
@@ -1602,15 +1602,15 @@ output$description <- renderUI(HTML(description))
     
     ctGseaUMAP.info = "<b>Functional signature.</b> Functional enrichment signatures for selected comparisons are shown as barplots or UMAP plots."
 
-    ctGseaUMAP.opts = tagList(
-        radioButtons(ns("gstype"),"Geneset plot type:",
+    ctGseaUMAP.opts = shiny::tagList(
+        shiny::radioButtons(ns("gstype"),"Geneset plot type:",
                      choices = c('bar','umap'),
                      selected = 'bar', inline=TRUE),
-        radioButtons(ns("ntop_gsets"),"Geneset labels:",
+        shiny::radioButtons(ns("ntop_gsets"),"Geneset labels:",
                      choices = c(0,6,10,30,100), selected = 6, inline=TRUE)
     )
     
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "ctGseaUMAP", ##ns=ns,
         title = "FUNCTIONAL SIGNATURE", label="b",
@@ -1629,7 +1629,7 @@ output$description <- renderUI(HTML(description))
     ##--------------gene table ------------------
     ##-------------------------------------------
 
-    getGeneTable <- reactive({
+    getGeneTable <- shiny::reactive({
 
         ngs <- inputData()
         out <- getCurrentSig()        
@@ -1637,7 +1637,7 @@ output$description <- renderUI(HTML(description))
         W <- out$sig
         sel0 <- 1:ncol(W)
         sel0 <- input_comparisons()
-        req(sel0)
+        shiny::req(sel0)
         if(length(sel0)==0) return(NULL)
         if(!all(sel0 %in% colnames(W))) return(NULL)
 
@@ -1658,10 +1658,10 @@ output$description <- renderUI(HTML(description))
         df
     })
     
-    ctGeneTable.RENDER <- reactive({
+    ctGeneTable.RENDER <- shiny::reactive({
 
         df <- getGeneTable()
-        req(df)
+        shiny::req(df)
         numeric.cols <- colnames(df)[3:ncol(df)]
         
         DT::datatable(
@@ -1680,17 +1680,17 @@ output$description <- renderUI(HTML(description))
                     scroller=TRUE, deferRender=TRUE
                 )  ## end of options.list 
             ) %>%
-            formatSignif(numeric.cols,3) %>%
+            DT::formatSignif(numeric.cols,3) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
     })
 
     ctGeneTable.info = "Genes."
     ctGeneTable.caption = "<b>Module gene table.</b> <b>(a)</b> ..."    
-    ctGeneTable.opts <- tagList(
+    ctGeneTable.opts <- shiny::tagList(
         ##selectInput(ns('wgcna_ctGeneTable_selmodule'),'module:', choices=NULL)
     )
     
-    ctGeneTable_module <- callModule(
+    ctGeneTable_module <- shiny::callModule(
         tableModule, id = "ctGeneTable",
         title = "GENE TABLE", label="I",
         ## caption = wgcna_ctGeneTable_caption,
@@ -1704,13 +1704,13 @@ output$description <- renderUI(HTML(description))
     ##-------------- GSEA table --------------
     ##-------------------------------------------
     
-    ctGseaTable.RENDER <- reactive({
+    ctGseaTable.RENDER <- shiny::reactive({
 
         ngs <- inputData()
         out <- getCurrentSig()        
         df <- out$gsea
         sel0 <- input_comparisons()
-        req(sel0)
+        shiny::req(sel0)
         if(!all(sel0 %in% colnames(df))) return(NULL)
         df <- df[,sel0,drop=FALSE]        
         numeric.cols <- colnames(df)
@@ -1733,17 +1733,17 @@ output$description <- renderUI(HTML(description))
                     scroller=TRUE, deferRender=TRUE
                 )  ## end of options.list 
             ) %>%
-            formatSignif(numeric.cols,3) %>%
+            DT::formatSignif(numeric.cols,3) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
     })
 
     ctGseaTable.info = "NMF GSEA."
     ctGseaTable.caption = "<b>Module enrichment table.</b> <b>(a)</b> ..."    
-    ctGseaTable.opts <- tagList(
+    ctGseaTable.opts <- shiny::tagList(
         ##selectInput(ns('wgcna_ctGseaTable_selmodule'),'module:', choices=NULL)
     )
     
-    ctGseaTable_module <- callModule(
+    ctGseaTable_module <- shiny::callModule(
         tableModule, id = "ctGseaTable",
         title = "ENRICHMENT TABLE", label="II",
         ## caption = ctGseaTable_caption,
@@ -1760,19 +1760,19 @@ output$description <- renderUI(HTML(description))
     
     scatterPlotMatrix_caption = "<h4>Pairwise scatter & Venn diagram</h4> <b>(a)</b> <b>Pairs plot.</b> Pairwise scatterplots for two or more differential expression profiles for multiple selected contrasts. Similar profiles will show high correlation with points close to the diagonal.  <b>(b)</b> <b>Venn diagram</b> showing the number of overlapping genes for multiple contrasts. <b>(c)</b> <b>Venn table.</b> Genes in the selected overlap region."
 
-    output$scatterPlotMatrix_UI <- renderUI({
-        fillCol(
+    output$scatterPlotMatrix_UI <- shiny::renderUI({
+        shiny::fillCol(
             ## id = ns("expr_topgenes"),
             height = fullH,
             flex=c(NA,0.02,1), ##height = 370,
-            div(HTML(scatterPlotMatrix_caption),class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(scatterPlotMatrix_caption),class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex=c(1.7,0.15,1),
                 height = fullH,
                 plotWidget(ns("scatterPlotMatrix")),
-                br(),
-                fillCol(
+                shiny::br(),
+                shiny::fillCol(
                     flex = c(1.4,1),
                     plotWidget(ns("venndiagram")),
                     ## venntable_buttons,
@@ -1782,60 +1782,56 @@ output$description <- renderUI(HTML(description))
             )
         )
     })
-    ## outputOptions(output, "venntable", suspendWhenHidden=FALSE) ## important!!!
-    outputOptions(output, "scatterPlotMatrix_UI", suspendWhenHidden=FALSE) ## important!!!    
+    shiny::outputOptions(output, "scatterPlotMatrix_UI", suspendWhenHidden=FALSE) ## important!!!    
 
     
     ctClusteringUI_caption = "<h4>Signature clustering</h4> <b>(a)</b> <b>Signature heatmap.</b> Similarity of the signatures visualized as a clustered heatmap. The top plot shows the distribution of foldchange values as boxplots. <b>(b)</b> <b>Contrast correlation.</b> The numeric values in the cells correspond to the Pearson correlation coefficient. Red corresponds to positive correlation and blue to negative correlation. "
     
-    output$ctClustering_UI <- renderUI({
-        fillCol(
+    output$ctClustering_UI <- shiny::renderUI({
+        shiny::fillCol(
             ## id = ns("expr_topgenes"),
             height = fullH,
             flex = c(NA,0.035,1), ##height = 370,
-            div(HTML(ctClusteringUI_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(ctClusteringUI_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(2.2,0.01,1),
                 height = fullH,
                 plotWidget(ns("FoldchangeHeatmap")),
-                br(),
+                shiny::br(),
                 plotWidget(ns("ctcorrplot"))
             )
         )
     })
-    ##outputOptions(output, "ctClustering_UI", suspendWhenHidden=FALSE) ## important!!!
-
 
     ctUMAP_caption = "<h4>Signature maps</h4>Visually compare differential expression profiles projected on UMAP clustered maps."
 
-    output$ctUMAP_UI <- renderUI({
-        require(shinycssloaders)
-        fillCol(
+    output$ctUMAP_UI <- shiny::renderUI({
+
+        shiny::fillCol(
             flex = c(NA,0.02,1,0.1,1.9),
             height = fullH,
-            div(HTML(ctUMAP_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(ctUMAP_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1,0.04,1),
-                fillCol(
+                shiny::fillCol(
                     flex = c(2.5,0.1,1),
                     plotWidget(ns('ctGeneUMAP')),
                     ##plotWidget(ns('ctGeneUMAP')) %>% shinycssloaders::withSpinner(), ## ERROR: 'margins too large'                   
-                    br(),
+                    shiny::br(),
                     tableWidget(ns('ctGeneTable'))
                 ),
-                br(),
-                fillCol(
+                shiny::br(),
+                shiny::fillCol(
                     flex = c(2.5,0.1,1),                    
                     plotWidget(ns('ctGseaUMAP')),
-                    br(),
+                    shiny::br(),
                     tableWidget(ns('ctGseaTable'))
                 )
             )
         )
 
     })
-    ##outputOptions(output, "ctUMAP_UI", suspendWhenHidden=FALSE) ## important!!!
     
 } ## end-of-Board 

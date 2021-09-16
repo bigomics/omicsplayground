@@ -33,13 +33,13 @@ ngs.rawSalmon <- function(sampleTable, gencode, txi=NULL)
 
     ## we like this..
     probegene = paste0(rownames(geneTable),":",geneTable$gene_name)
-    head(probegene)
+    Matrix::head(probegene)
     rownames(txi$counts) = probegene
     rownames(txi$abundance) = probegene
     rownames(geneTable) = probegene
     all(rownames(txi$counts) == rownames(geneTable))
 
-    raw <- DGEList( round(txi$counts), group=NULL)  ## we like integer counts...
+    raw <- edgeR::DGEList( round(txi$counts), group=NULL)  ## we like integer counts...
     raw$group = NULL
     raw$samples = sampleTable
     raw$genes = geneTable
@@ -58,17 +58,17 @@ ngs.tximportSalmon <- function(sf.files, count.type="lengthScaledTPM", organism=
     ##biocLite("ensembldb")
     ##biocLite("EnsDb.Hsapiens.v86")
     ##biocLite("EnsDb.Mmusculus.v79")
-    require(tximport)
-    require("ensembldb")
+    
+    
     if(organism=="Hsapiens") {
-        require("EnsDb.Hsapiens.v86")
-        require("org.Hs.eg.db")
+        
+        
         edb <- EnsDb.Hsapiens.v86
         org <- org.Hs.eg.db
     }
     if(organism=="mouse") {
-        require("EnsDb.Mmusculus.v79")
-        require("org.Mm.eg.db")
+        
+        
         edb <- EnsDb.Mmusculus.v79
         org <- org.Mm.eg.db
     }
@@ -78,37 +78,37 @@ ngs.tximportSalmon <- function(sf.files, count.type="lengthScaledTPM", organism=
     ##------------------------------------------------------------
     ##then the transcript to gene file from Ensembl
     listColumns(edb)
-    daf <- transcripts(edb, columns = c( ## listColumns(edb ,"tx"),
+    daf <- GenomicFeatures::transcripts(edb, columns = c( ## listColumns(edb ,"tx"),
                                 "tx_id", "gene_id", "entrezid",
                                 "gene_name", "gene_biotype", "name"),
                        ##filter = ~ gene_biotype == "protein_coding",
                        ##filter = ~ tx_biotype == "protein_coding",
                        return.type="DataFrame")
     dim(daf)
-    head(daf)
+    Matrix::head(daf)
     annot_genes <- AnnotationDbi::select( org, keytype = "ENSEMBL", keys = daf$gene_id,
                                          columns = c("SYMBOL","REFSEQ","ENTREZID","GENENAME"))
     if(1) {
         ## Add REFSEQ????
         cat("quering biomaRt...\n")
-        library("biomaRt")
-        ensembl <- useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
-        bm.res <- getBM(
+        
+        ensembl <- biomaRt::useEnsembl(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
+        bm.res <- biomaRt::getBM(
             attributes = c("refseq_mrna","ensembl_gene_id", "ensembl_transcript_id", "external_gene_name"),
             filters = "ensembl_transcript_id",
             values = daf$tx_id,
             mart = ensembl)
-        head(bm.res)
+        Matrix::head(bm.res)
         dim(bm.res)
         daf$refseq2 <- NULL
         daf$refseq <- bm.res[match(daf$tx_id, bm.res[,"ensembl_transcript_id"]),"refseq_mrna"]
-        head(daf)
+        Matrix::head(daf)
     }
 
     dim(annot_genes)
-    head(annot_genes)
+    Matrix::head(annot_genes)
     daf$gene_title <- annot_genes$GENENAME[match(daf$gene_id,annot_genes$ENSEMBL)]
-    head(daf,200)
+    Matrix::head(daf,200)
 
     ##------------------------------------------------------------
     ## Import Salmon files using tximport
@@ -116,10 +116,10 @@ ngs.tximportSalmon <- function(sf.files, count.type="lengthScaledTPM", organism=
     if(1) {
         tx2gene <- daf[,c("tx_id","gene_id")]  ## map to Ensemble gene ID
         ##tx2gene <- daf[, c("tx_id","gene_name")]  ## directly to gene symbol
-        head(tx2gene)
+        Matrix::head(tx2gene)
         dim(tx2gene)
     } else {
-        txdf <- transcripts( edb, return.type="DataFrame")
+        txdf <- GenomicFeatures::transcripts( edb, return.type="DataFrame")
         tx2gene <- as.data.frame(txdf[,c("tx_id","gene_id")])
         dim(tx2gene)
     }
@@ -128,7 +128,7 @@ ngs.tximportSalmon <- function(sf.files, count.type="lengthScaledTPM", organism=
     ## is essential for LIMMA/VOOM and Deseq2 handles this fine (see
     ## code for DESeqDataSetFromTximport)
     ##count.type="lengthScaledTPM"
-    require(tximport)
+    
     if(txOut==FALSE) {
         ## collapse gene level
         txi <- tximport(sf.files, type="salmon",
@@ -155,7 +155,7 @@ ngs.tximportSalmon <- function(sf.files, count.type="lengthScaledTPM", organism=
 
     }
     names(txi)
-    head(txi$counts)[,1:6]
+    Matrix::head(txi$counts)[,1:6]
     dim(txi$counts)
 
     ## add gene name suffix??
@@ -182,12 +182,12 @@ ngs.getGeneAnnot <- function(keys, keytype, gencode)
     ##gencode$gene_id = sub("[.].*$","",gencode$gene_id)  ## strip suffix???
 
     ## add annotation using org.Hs.eg.db (NEED RETHINK ON MULTIPLE MATCHES)
-    require(org.Hs.eg.db)
-    require(AnnotationDbi)
-    columns(org.Hs.eg.db)
+    
+    
+    biomaRt::columns(org.Hs.eg.db)
     ##sel.keys = c("ENTREZID","SYMBOL","GENENAME")
     sel.keys = c("ENTREZID","GENENAME")
-    org.annot <- select(org.Hs.eg.db, keys=keys, keytype=keytype, columns=sel.keys)
+    org.annot <- plotly::select(org.Hs.eg.db, keys=keys, keytype=keytype, columns=sel.keys)
     dim(org.annot)
     idx = match( keys, org.annot$ENSEMBL)  ## assumes single match
     org.annot = org.annot[idx,]
@@ -195,7 +195,7 @@ ngs.getGeneAnnot <- function(keys, keytype, gencode)
 
     genes = data.frame(gencode, org.annot)
     rownames(genes) <- keys
-    head(genes)
+    Matrix::head(genes)
     return(genes)
 }
 

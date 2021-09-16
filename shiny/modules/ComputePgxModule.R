@@ -22,15 +22,15 @@ ComputePgxGadget <- function(counts, samples, contrasts, height=720) {
     gadgetize(
         ComputePgxUI, ComputePgxServer,
         title = "ComputePGX",
-        countsRT = reactive(counts),
-        samplesRT = reactive(samples),
-        contrastsRT = reactive(contrasts)
+        countsRT = shiny::reactive(counts),
+        samplesRT = shiny::reactive(samples),
+        contrastsRT = shiny::reactive(contrasts)
     )
 }
 
 ComputePgxUI <- function(id) {
-    ns <- NS(id)
-    uiOutput(ns("UI"))
+    ns <- shiny::NS(id)
+    shiny::uiOutput(ns("UI"))
 }
 
 ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
@@ -38,10 +38,12 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                              max.genes = 20000, max.genesets = 10000,
                              max.datasets = 100, height = 720 )
 {
-    moduleServer(
+    shiny::moduleServer(
         id,
         function(input, output, session) {
             ns <- session$ns
+
+            dbg("ComputePgxServer init")
 
             ## statistical method for GENE level testing
             GENETEST.METHODS = c("ttest","ttest.welch","voom.limma","trend.limma","notrend.limma",
@@ -65,20 +67,20 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
             DEV.SELECTED = c()
 
 
-            output$UI <- renderUI({
-                fillCol(
+            output$UI <- shiny::renderUI({
+                shiny::fillCol(
                     height = height,
                     flex = c(0.2,NA,0.05,1.3),
-                    br(),
-                    fluidRow(
-                        column(
+                    shiny::br(),
+                    shiny::fluidRow(
+                        shiny::column(
                             12, align="center", offset=0,
                             tags$table(
                                      style="width:100%;vertical-align:top;padding:4px;",
                                      tags$tr(
                                               tags$td("", width="300"),
                                               tags$td("Name", width="100"),
-                                              tags$td(textInput(
+                                              tags$td(shiny::textInput(
                                                        ns("upload_name"),NULL, ##"Dataset:",
                                                        ##width="100%",
                                                        ## width=420,
@@ -90,7 +92,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                      tags$tr(
                                               tags$td(""),
                                               tags$td("Datatype"),
-                                              tags$td(selectInput(
+                                              tags$td(shiny::selectInput(
                                                        ns("upload_datatype"), NULL,
                                                        choices = c("RNA-seq","scRNA-seq",
                                                                    "proteomics",
@@ -101,7 +103,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                      tags$tr(
                                               tags$td(""),
                                               tags$td("Description"),
-                                              tags$td(div(textAreaInput(
+                                              tags$td(shiny::div(shiny::textAreaInput(
                                                        ns("upload_description"), NULL, ## "Description:",
                                                        placeholder="Give a short description of your dataset",
                                                        ##width="100%",
@@ -112,23 +114,23 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                               tags$td("")
                                           )
                                  ),
-                            br(),
-                            div(
-                                actionButton(ns("compute"),"Compute!",icon=icon("running"),
+                            shiny::br(),
+                            shiny::div(
+                                shiny::actionButton(ns("compute"),"Compute!",icon=icon("running"),
                                              class="run-button"),
-                                br(),br(),
-                                actionLink(ns("options"), "Computation options",
+                                shiny::br(),br(),
+                                shiny::actionLink(ns("options"), "Computation options",
                                            icon=icon("cog", lib="glyphicon")),
                                 style = "padding-right: 80px;"
                             )
                         )
                     ),
-                    br(),
-                    conditionalPanel(
+                    shiny::br(),
+                    shiny::conditionalPanel(
                         "input.options%2 == 1", ns=ns,
-                        fillRow(
-                            wellPanel(
-                                checkboxGroupInput(
+                        shiny::fillRow(
+                            shiny::wellPanel(
+                                shiny::checkboxGroupInput(
                                     ns('filter_methods'),
                                     'Feature filtering:',
                                     choiceValues =
@@ -155,24 +157,24 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                     )
                                 )
                             ),
-                            wellPanel(
-                                checkboxGroupInput(
+                            shiny::wellPanel(
+                                shiny::checkboxGroupInput(
                                     ns('gene_methods'),
                                     'Gene tests:',
                                     GENETEST.METHODS,
                                     selected = GENETEST.SELECTED
                                 )
                             ),
-                            wellPanel(
-                                checkboxGroupInput(
+                            shiny::wellPanel(
+                                shiny::checkboxGroupInput(
                                     ns('gset_methods'),
                                     'Enrichment methods:',
                                     GENESET.METHODS,
                                     selected = GENESET.SELECTED
                                 ),
                             ),
-                            wellPanel(
-                                checkboxGroupInput(
+                            shiny::wellPanel(
+                                shiny::checkboxGroupInput(
                                     ns('extra_methods'),
                                     'Extra analysis:',
                                     choiceValues = EXTRA.METHODS,
@@ -180,8 +182,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                     selected = EXTRA.SELECTED
                                 )
                             ),
-                            wellPanel(
-                                checkboxGroupInput(
+                            shiny::wellPanel(
+                                shiny::checkboxGroupInput(
                                     ns('dev_options'),
                                     'Developer options:',
                                     choiceValues = DEV.METHODS,
@@ -193,24 +195,26 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     ) ## end of conditional panel
                 ) ## end of fill Col
             })
+            
+            dbg("ComputePgxServer rendered UI")
 
             if(FALSE) {
-                observeEvent( input$gene_methods, {
+                shiny::observeEvent( input$gene_methods, {
                     if(length(input$gene_methods) > 3){
-                        updateCheckboxGroupInput(session, "gene_methods",
+                        shiny::updateCheckboxGroupInput(session, "gene_methods",
                                                  selected= tail(input$gene_methods,3))
                     }
                     if(length(input$gene_methods) < 1){
-                        updateCheckboxGroupInput(session, "gene_methods", selected= "ttest")
+                        shiny::updateCheckboxGroupInput(session, "gene_methods", selected= "ttest")
                     }
                 })
             }
             
-            observeEvent( input$options, {
+            shiny::observeEvent( input$options, {
                 ## shinyjs::disable(ns("gene_methods2"))
             })
             
-            observeEvent(enable(), {
+            shiny::observeEvent(shinyjs::enable(), {
                 ## NEED CHECK. not working... 
                 ##
                 if(!enable()){
@@ -222,19 +226,19 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 }
             })
 
-            output$correction_summary <- renderText({                
+            output$correction_summary <- shiny::renderText({                
             })
                         
             ##------------------------------------------------------------------
             ## After confirmation is received, start computing the PGX
             ## object from the uploaded files
             ## ------------------------------------------------------------------
-            computedPGX  <- reactiveVal(NULL)
+            computedPGX  <- shiny::reactiveVal(NULL)
             
-            observeEvent( input$compute, {
+            shiny::observeEvent( input$compute, {
                 
                 message("[ComputePgxServer::@compute] reacted!")
-                ## req(input$upload_hugo,input$upload_filtergenes)
+                ## shiny::req(input$upload_hugo,input$upload_filtergenes)
                 
                 ##-----------------------------------------------------------
                 ## Check validity 
@@ -251,14 +255,14 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     msg = "Your storage is full. You have NUMPGX pgx files in your data folder and your quota is LIMIT datasets. Please delete some datasets or consider buying extra storage."
                     msg <- sub("NUMPGX",numpgx,msg)
                     msg <- sub("LIMIT",max.datasets,msg)
-                    shinyalert("WARNING",msg)
+                    shinyalert::shinyalert("WARNING",msg)
                     return(NULL)
                 }
 
                 has.name <- input$upload_name != ""
                 has.description <- input$upload_description != ""
                 if(!has.name || !has.description) {
-                    shinyalert("ERROR","You must give a dataset name and description")
+                    shinyalert::shinyalert("ERROR","You must give a dataset name and description")
                     return(NULL)
                 }
                 
@@ -297,11 +301,11 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 extra.methods <- c(input$extra_methods,input$extra_methods2)
                 
                 if(length(gx.methods)==0) {
-                    shinyalert("ERROR","You must select at least one gene test method")
+                    shinyalert::shinyalert("ERROR","You must select at least one gene test method")
                     return(NULL)
                 }
                 if(length(gset.methods)==0) {
-                    shinyalert("ERROR","You must select at least one geneset test method")
+                    shinyalert::shinyalert("ERROR","You must select at least one geneset test method")
                     return(NULL)
                 }
 
@@ -410,7 +414,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 if(alertready) {
                     ##beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
                     beepr::beep(2)  ## short beep
-                    shinyalert("Ready!","We wish you lots of discoveries!")
+                    shinyalert::shinyalert("Ready!","We wish you lots of discoveries!")
                 }
 
                 ##for(s in names(uploaded)) uploaded[[s]] <- NULL
@@ -418,6 +422,8 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 message("[ComputePgxServer:@compute] finished")
 
             })
+
+            dbg("ComputePgxServer done")
 
             return(computedPGX)  ## pointing to reactive
         } ## end-of-server
