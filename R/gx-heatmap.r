@@ -1222,7 +1222,7 @@ heatmap.3 <- function(x,
             c("both", "row"))) {
             if (is.logical(Colv) && (Colv))
                 dendrogram <- "column"
-            else dedrogram <- "none"
+            else dendrogram <- "none"
             warning("Discrepancy: Rowv is FALSE, while dendrogram is `",
                 dendrogram, "'. Omitting row dendogram.")
         }

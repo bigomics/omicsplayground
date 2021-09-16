@@ -20,8 +20,8 @@ FROM bigomics/omicsplayground:base
 # RUN apt install -y xvfb
 # RUN R -e "devtools::install_version('mnormt', version='1.5-7')" \
 #    && R -e "install.packages(c())"
-RUN R -e "install.packages(c('shinythemes','shinybusy','beepr'))"
-RUN R -e "BiocManager::install(c('TxDb.Hsapiens.UCSC.hg19.knownGene','TxDb.Mmusculus.UCSC.mm10.knownGene','WGCNA'))"
+RUN R -e "install.packages(c('shinythemes','shinybusy','beepr','ggVennDiagram'))"
+RUN R -e "BiocManager::install(c('TxDb.Hsapiens.UCSC.hg19.knownGene','TxDb.Mmusculus.UCSC.mm10.knownGene','WGCNA','DGCA'))"
 # RUN pip3 install umap-learn
 
 #------------------------------------------------------------
@@ -44,8 +44,7 @@ RUN git pull
 #------------------------------------------------------------
 WORKDIR /omicsplayground
 ## RUN R -e "setwd('scripts');source('build-datasets.R')"
-COPY data/geiger2016-arginine.pgx data/GSE72056-scmelanoma.pgx \
-   data/GSE22886-immune.pgx data/
+COPY data/geiger2016-arginine.pgx data/
 RUN R -e "setwd('data');source('init.R')"
 
 #------------------------------------------------------------

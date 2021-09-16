@@ -290,7 +290,8 @@ infotext =
         do.rho   = TRUE
         dbg("getSingleSampleEnrichment:: 2 : do.rho")
         ss1 <- calcSingleSampleValues(X[,], y, method=c("rho"))
-        ss.bysample <- cbind(ss.bysample, rho=ss1)
+        ##ss.bysample <- cbind(ss.bysample, rho=ss1)
+        ss.bysample <- cbind(rho=ss1)        
         
         res <- list( by.sample=ss.bysample, by.group=ss.bygroup)
         return(res)

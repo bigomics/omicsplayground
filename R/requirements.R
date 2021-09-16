@@ -84,10 +84,18 @@ pkg.used <- gsub("\"|\'|\\).*","",pkg.used)
 pkg.used <- grep("[ ]|quietly",pkg.used,value=TRUE,invert=TRUE)
 
 pkg.needed <- c('umap','corrplot','wordcloud','wordcloud2',"optparse","docopt",
-                'kableExtra',"randomForest",'rhdf5','qgraph','psych')
+                'kableExtra',"randomForest",'rhdf5','qgraph','psych',
+                'ggVennDiagram', 'shinythemes','shinybusy','beepr')
 pkg.used <- c(pkg.used, pkg.needed)
 pkg.used <- sort(unique(pkg.used))
 install.pkgs( setdiff(pkg.used, c(PKG.MANUAL,BIG.NOTUSED)) )
+
+r.pkg <- c('TxDb.Hsapiens.UCSC.hg19.knownGene',
+           'TxDb.Mmusculus.UCSC.mm10.knownGene')
+install.pkgs(r.pkg)
+
+beta.pkg <- c('WGCNA', 'DGCA')
+install.pkgs(beta.pkg)
 
 ##---------------------------------------------------------------------
 ## reinstall problematics ones
