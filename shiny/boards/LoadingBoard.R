@@ -38,6 +38,7 @@ LoadingBoard <- function(input, output, session,
                          authentication="none", firebase=NULL, firebase2=NULL)
 {
     ns <- session$ns ## NAMESPACE
+    loadedDataset <- reactiveVal(FALSE)
     
     ##useShinyjs(rmd=TRUE)
     shinyjs::useShinyjs()
@@ -521,6 +522,7 @@ LoadingBoard <- function(input, output, session,
             shiny::removeModal()
         }
         
+        loadedDataset(TRUE)
         currentPGX(pgx)
         dbg("[LoadingBoard::<loadbutton>] ready! \n")
     })
@@ -781,6 +783,7 @@ LoadingBoard <- function(input, output, session,
         } else {
             msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
         }
+        loadedDataset(TRUE)
         shiny::showModal( shiny::modalDialog(
             shiny::HTML(msg1),
             title = NULL,
@@ -926,6 +929,7 @@ LoadingBoard <- function(input, output, session,
     ## Board return object
     ##------------------------------------------------
     res <- list(
+        loaded = loadedDataset,
         inputData = inputData,
         auth = auth
         ##inputData = currentPGX,
@@ -933,6 +937,3 @@ LoadingBoard <- function(input, output, session,
     )
     return(res)
 }
-
-
-
