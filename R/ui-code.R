@@ -2,13 +2,13 @@
 ##textInput <- function(inputId, label, value = "") {
 myTextInput <- function(inputId, label, value = "") {
     ##singleton(tags$head(tags$script(src = "/temp/mytextinput.js"))),
-    tagList(tags$label(label, `for` = inputId),
+    shiny::tagList(tags$label(label, `for` = inputId),
             tags$input(id = inputId, type = "text", value = value,
                        class="myTextInput form-control shiny-bound-input"))
 }
 
-## shinyUI(
-##     basicPage(
+## shiny::shinyUI(
+##     shiny::basicPage(
 ##         code
 ##        ,myTextInput("myTextInput","My text input","On enter or focus out")
 ##        ,textOutput("meh")
@@ -16,7 +16,7 @@ myTextInput <- function(inputId, label, value = "") {
 ##     ))
 
 ## from https://gist.github.com/xiaodaigh/7150112
-code.textInput = HTML(" <script> var myTextInputBinding = new Shiny.InputBinding();
+code.textInput = shiny::HTML(" <script> var myTextInputBinding = new Shiny.InputBinding();
             $.extend(myTextInputBinding, {
             find: function(scope) {
             return $(scope).find('.myTextInput');
@@ -70,21 +70,21 @@ code.textInput = HTML(" <script> var myTextInputBinding = new Shiny.InputBinding
 
 inlineTextInput <- function (inputId, label, value = "")
 {
-    div(style="display:inline-block",
+    shiny::div(style="display:inline-block",
         tags$label(label, "for"=inputId),
         tags$input(id=inputId, type="text", value=value, class="input-small"))
 }
 
 inlineSelectInput <- function (inputId, label, value = "")
 {
-    div(style="display:inline-block",
+    shiny::div(style="display:inline-block",
         tags$label(label, "for"=inputId),
         tags$input(id=inputId, type="select", value=value))
 }
 
 if(0) {
-    runApp(list(
-        ui = bootstrapPage(
+    shiny::runApp(list(
+        ui = shiny::bootstrapPage(
             textInputRow(inputId="xlimitsmin", label="x-min", value = 0.0),
             textInputRow(inputId="xlimitsmax", label="x-max", value = 0.5)
         ),

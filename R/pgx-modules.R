@@ -29,11 +29,11 @@ addWatermark.PDF <- function(file) {
 ##================================================================================
 
 ## prepare ORCA server if we are not in a Docker
-library(plotly)
+
 
 initOrca <- function(launch=TRUE) {
 
-    require(plotly)
+    
     responding.local = FALSE
     responding.docker = FALSE
     responding.process = FALSE
@@ -108,7 +108,7 @@ initOrca <- function(launch=TRUE) {
     return(orca.server)
 }
 
-##require(plotly);p=plot_ly(x=1:3,y=1:3,mode="markers",type="scattergl");format="pdf";width=height=800;scale=1;file="plot.pdf";server=NULL
+##;format="pdf";width=height=800;scale=1;file="plot.pdf";server=NULL
 plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file), 
                          scale = NULL, width = NULL, height = NULL, server=NULL)
 {
@@ -155,7 +155,7 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
     message("[plotlyExport] using orca server = ",server)
         
     if(!is.null(server)) {
-        bod <- list(figure = plotly_build(p)$x[c("data", "layout")],
+        bod <- list(figure = plotly::plotly_build(p)$x[c("data", "layout")],
                     format = format, width = width, height = height, 
                     scale = scale)
         res <- httr::POST(server, body = plotly:::to_JSON(bod))
@@ -168,10 +168,10 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
     }
     
     ## if(0 && has.orca.bin && !export.ok) {
-    ##     ## BUG: currently orca() cannot write to /tmp folder
-    ##     err <- try(orca(p, file=file, format=format, width=width, height=height))
+    ##     ## BUG: currently plotly::orca() cannot write to /tmp folder
+    ##     err <- try(plotly::orca(p, file=file, format=format, width=width, height=height))
     ##     export.ok <- class(err)!="try-error"
-    ##     if(export.ok) message("[plotlyExport] --> exported with orca()")
+    ##     if(export.ok) message("[plotlyExport] --> exported with plotly::orca()")
     ## }
     
     if(1 && has.orca.proc && !export.ok) {
@@ -182,17 +182,17 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
     
     if(1 && !export.ok) {
         ## works only for non-GL plots
-        err <- try(export(p, file))
+        err <- try(plotly::export(p, file))
         export.ok <- class(err)!="try-error"
-        if(export.ok) message("[plotlyExport] --> exported with export() (deprecated)")        
+        if(export.ok) message("[plotlyExport] --> exported with plotly::export() (deprecated)")        
     }
     if(0 && !export.ok) {
-        require(webshot)
+        
         tmp = paste0(tempfile(),".html")
         htmlwidgets::saveWidget(p, tmp) 
         err <- try(webshot::webshot(url=tmp,file=file,vwidth=width*100, vheight=height*100))
         export.ok <- class(err)!="try-error"        
-        if(export.ok) message("[plotlyExport] --> exported with webshot()")
+        if(export.ok) message("[plotlyExport] --> exported with webshot::webshot()")
     }
     if(!export.ok) {
         message("[plotlyExport] WARNING: export failed!")
@@ -213,8 +213,8 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
 ##================================================================================
 
 plotWidget <- function(id) {
-    ns <- NS(id)
-    uiOutput(ns("widget"))
+    ns <- shiny::NS(id)
+    shiny::uiOutput(ns("widget"))
 }
     
 plotModule <- function(input, output, session, ## ns=NULL,
@@ -243,84 +243,84 @@ plotModule <- function(input, output, session, ## ns=NULL,
     options.button <- ""
     
     if(!just.info && !is.null(options) && length(options)>0) {
-        options.button <- dropdownButton(
+        options.button <- shinyWidgets::dropdownButton(
             ##tags$h3("Options"),
             options,
             ##br(),
             ##dload,
             circle = TRUE, size = "xs", ## status = "danger",
-            ##icon = icon("gear"),
-            ##icon = icon("align-justify"),
-            icon = icon("bars"),
+            ##icon = shiny::icon("gear"),
+            ##icon = shiny::icon("align-justify"),
+            icon = shiny::icon("bars"),
             width = "250px",
             inputId = ns("options"),
-            tooltip = tooltipOptions(title = "Settings", placement = "right")
+            tooltip = shinyWidgets::tooltipOptions(title = "Settings", placement = "right")
         )
     }
     
     dload.csv = dload.pdf = dload.png = dload.html = NULL
-    if("pdf" %in% download.fmt)  dload.pdf  <- downloadButton(ns("pdf"), "PDF")
-    if("png" %in% download.fmt)  dload.png  <- downloadButton(ns("png"), "PNG")
-    if("html" %in% download.fmt) dload.html <- downloadButton(ns("html"), "HTML")
-    ##if("csv" %in% download.fmt)  dload.csv  <- downloadButton(ns("csv"), "CSV")
-    if(!is.null(csvFunc))  dload.csv  <- downloadButton(ns("csv"), "CSV")
+    if("pdf" %in% download.fmt)  dload.pdf  <- shiny::downloadButton(ns("pdf"), "PDF")
+    if("png" %in% download.fmt)  dload.png  <- shiny::downloadButton(ns("png"), "PNG")
+    if("html" %in% download.fmt) dload.html <- shiny::downloadButton(ns("html"), "HTML")
+    ##if("csv" %in% download.fmt)  dload.csv  <- shiny::downloadButton(ns("csv"), "CSV")
+    if(!is.null(csvFunc))  dload.csv  <- shiny::downloadButton(ns("csv"), "CSV")
 
     pdf_size = NULL
     if(plotlib!="base") {
-        pdf_size <- tagList(
-            fillRow(
-                numericInput(ns("pdf_width"), "PDF width", pdf.width, 1, 20, 1, width='100%'),
-                numericInput(ns("pdf_height"), "height", pdf.height, 1, 20, 1, width='100%')
+        pdf_size <- shiny::tagList(
+            shiny::fillRow(
+                shiny::numericInput(ns("pdf_width"), "PDF width", pdf.width, 1, 20, 1, width='100%'),
+                shiny::numericInput(ns("pdf_height"), "height", pdf.height, 1, 20, 1, width='100%')
             ),
-            br(),br(),br()
+            shiny::br(),br(),br()
         )
     }
     
-    dload.button <- dropdownButton(
+    dload.button <- shinyWidgets::dropdownButton(
         dload.pdf,
         dload.png,
         dload.csv,
         dload.html,
         pdf_size,
         circle = TRUE, size = "xs", ## status = "danger",
-        icon = icon("download"), width = "40px", right=FALSE,
-        tooltip = tooltipOptions(title = "Download", placement = "right")
+        icon = shiny::icon("download"), width = "40px", right=FALSE,
+        tooltip = shinyWidgets::tooltipOptions(title = "Download", placement = "right")
     )
 
     if(no.download || length(download.fmt)==0 ) dload.button <- ""
-    label1 = HTML(paste0("<span class='module-label'>",label,"</span>"))
+    label1 = shiny::HTML(paste0("<span class='module-label'>",label,"</span>"))
     
-    require(shinyWidgets)
-    ##zoom.button <- prettyCheckbox(inputId=ns("zoom"),label=NULL,value=FALSE)
+    
+    ##zoom.button <- shinyWidgets::prettyCheckbox(inputId=ns("zoom"),label=NULL,value=FALSE)
     zoom.button <- NULL
     if(show.maximize) {
-        require(shinyBS)
-        zoom.button <- actionButton(inputId=ns("zoombutton"),label=NULL,
+        
+        zoom.button <- shiny::actionButton(inputId=ns("zoombutton"),label=NULL,
                                     icon=icon("window-maximize"),
                                     class="btn-circle-xs")
-        zoom.button <- tipify(zoom.button, "Maximize", placement="right")
+        zoom.button <- shinyBS::tipify(zoom.button, "Maximize", placement="right")
     }
     
-    ##output$renderbuttons <- renderUI({
+    ##output$renderbuttons <- shiny::renderUI({
     ## button layout
-    buttons <- fillRow(
+    buttons <- shiny::fillRow(
         flex = c(NA,NA,NA,NA,NA,1),
         ##flex=c(NA,NA,1),
         label1,
         ##div( class="button-group", style="display: inline-block; float: left;",
-        dropdownButton(
-            tags$p(HTML(info.text)),
-            br(),
+        shinyWidgets::dropdownButton(
+            tags$p(shiny::HTML(info.text)),
+            shiny::br(),
             circle = TRUE, size = "xs", ## status = "danger",
-            icon = icon("info"), width = info.width,
+            icon = shiny::icon("info"), width = info.width,
             inputId = ns("info"), right=FALSE,
-            tooltip = tooltipOptions(title = "Info", placement = "right")
+            tooltip = shinyWidgets::tooltipOptions(title = "Info", placement = "right")
         ),
         options.button,
-        div(class='download-button', dload.button),
-        div(class='zoom-button', zoom.button),
+        shiny::div(class='download-button', dload.button),
+        shiny::div(class='zoom-button', zoom.button),
         ##),
-        HTML(paste("<center>",title,"</center>"))
+        shiny::HTML(paste("<center>",title,"</center>"))
         ##HTML(paste("<center><strong>",title,"</strong></center>"))
         ##br()
         ##inputs
@@ -333,10 +333,10 @@ plotModule <- function(input, output, session, ## ns=NULL,
     ##------------------------ FIGURE ------------------------------------------------
     ##--------------------------------------------------------------------------------
     
-    require(shinyWidgets)
-    require(shinyBS)
-    require(webshot)
-    require(plotly)
+    
+    
+    
+    
     
     ## these engines cannot (yet) provide html
     if(plotlib %in% c("base")) {    
@@ -365,12 +365,12 @@ plotModule <- function(input, output, session, ## ns=NULL,
     ##download.png = download.html = NULL
     
     if(do.png && is.null(download.png)) {
-        download.png <- downloadHandler(
+        download.png <- shiny::downloadHandler(
             filename = "plot.png",
             content = function(file) {
                 pdf.width  <- input$pdf_width
                 pdf.height <- input$pdf_height                
-                withProgress({
+                shiny::withProgress({
                     ## unlink(PNGFILE) ## do not remove!
                     if(plotlib=="plotly") {
                         p <- func()
@@ -379,15 +379,15 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         plotlyExport(p, PNGFILE, width=p$width, height=p$height)
                     } else if(plotlib=="iheatmapr") {
                         p <- func()
-                        save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PNGFILE)
+                        iheatmapr::save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PNGFILE)
                     } else if(plotlib=="visnetwork") {
                         p <- func()
-                        visSave(p, HTMLFILE)
-                        webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PNGFILE)
+                        visNetwork::visSave(p, HTMLFILE)
+                        webshot::webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PNGFILE)
                     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
                         p <- func()
                         htmlwidgets::saveWidget(p, HTMLFILE)
-                        webshot(HTMLFILE, vwidth=pdf.width*100,vheight=pdf.height*100,PNGFILE)
+                        webshot::webshot(HTMLFILE, vwidth=pdf.width*100,vheight=pdf.height*100,PNGFILE)
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
                         p <- func()
                         png(PNGFILE, width=pdf.width*100, height=pdf.height*100,
@@ -431,32 +431,32 @@ plotModule <- function(input, output, session, ## ns=NULL,
     } ## end if do.png
 
     if(do.pdf && is.null(download.pdf) ) {        
-        download.pdf <- downloadHandler(
+        download.pdf <- shiny::downloadHandler(
             filename = "plot.pdf",
             content = function(file) {
                 pdf.width  <- input$pdf_width
                 pdf.height <- input$pdf_height                
-                withProgress({
+                shiny::withProgress({
                     ## unlink(PDFFILE) ## do not remove!
                     if(plotlib=="plotly") {
                         p <- func()
                         p$width = pdf.width * 80
                         p$height = pdf.height * 80
-                        ##err <- try(export(p, PDFFILE))  ## deprecated
-                        ##err <- try(orca(p, PDFFILE))
+                        ##err <- try(plotly::export(p, PDFFILE))  ## deprecated
+                        ##err <- try(plotly::orca(p, PDFFILE))
                         ##err <- try(ORCA$export(p, PDFFILE, width=p$width, height=p$height))
                         plotlyExport(p, PDFFILE, width=p$width, height=p$height)
                     } else if(plotlib=="iheatmapr") {
                         p <- func()
-                        save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PDFFILE)
+                        iheatmapr::save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PDFFILE)
                     } else if(plotlib=="visnetwork") {
                         p <- func()
-                        visSave(p, HTMLFILE)
-                        webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
+                        visNetwork::visSave(p, HTMLFILE)
+                        webshot::webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
                     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
                         p <- func()
                         htmlwidgets::saveWidget(p, HTMLFILE)
-                        webshot(HTMLFILE, vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
+                        webshot::webshot(HTMLFILE, vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
                         p <- func()
                         ##p = addSignature(p)                             
@@ -515,14 +515,14 @@ plotModule <- function(input, output, session, ## ns=NULL,
             htmlwidgets::saveWidget(p, HTMLFILE) 
         } else if(plotlib == "iheatmapr") {
             p <- func()
-            save_iheatmap(p, HTMLFILE)
+            iheatmapr::save_iheatmap(p, HTMLFILE)
         } else if(plotlib == "visnetwork") {
             p <- func()
-            visSave(p, HTMLFILE)
+            visNetwork::visSave(p, HTMLFILE)
         } else if(plotlib %in% c("ggplot","ggplot2")) {
             p <- func()
             ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
-            saveWidget( ggplotly(p), file = HTMLFILE);
+            DT::saveWidget( plotly::ggplotly(p), file = HTMLFILE);
         } else if(plotlib=="image") {
             write("<body>image cannot export to HTML</body>",HTMLFILE)
         } else if(plotlib=="generic") {
@@ -537,10 +537,10 @@ plotModule <- function(input, output, session, ## ns=NULL,
     }
     
     if(do.html && is.null(download.html) )  {
-        download.html <- downloadHandler(
+        download.html <- shiny::downloadHandler(
             filename = "plot.html",
             content = function(file) {
-                withProgress({
+                shiny::withProgress({
                     ## unlink(HTMLFILE) ## do not remove!
                     if(plotlib == "plotly" ) {
                         p <- func()
@@ -550,14 +550,14 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         htmlwidgets::saveWidget(p, HTMLFILE) 
                     } else if(plotlib == "iheatmapr") {
                         p <- func()
-                        save_iheatmap(p, HTMLFILE)
+                        iheatmapr::save_iheatmap(p, HTMLFILE)
                     } else if(plotlib == "visnetwork") {
                         p <- func()
-                        visSave(p, HTMLFILE)
+                        visNetwork::visSave(p, HTMLFILE)
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
                         p <- func()
                         ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
-                        saveWidget( ggplotly(p), file = HTMLFILE);
+                        DT::saveWidget( plotly::ggplotly(p), file = HTMLFILE);
                     } else if(plotlib=="generic") {
                         ## generic function should produce PDF inside plot func()
                         ##
@@ -577,10 +577,10 @@ plotModule <- function(input, output, session, ## ns=NULL,
 
     ##if(do.csv && is.null(download.csv) )  {
     if(do.csv)  {
-        download.csv <- downloadHandler(
+        download.csv <- shiny::downloadHandler(
             filename = "data.csv",
             content = function(file) {
-                withProgress({
+                shiny::withProgress({
                     data <- csvFunc()                    
                     ##file.copy(CSVFILE, file, overwrite=TRUE)
                     write.csv(data, file=file)
@@ -628,46 +628,46 @@ plotModule <- function(input, output, session, ## ns=NULL,
             if(is.null(renderFunc)) stop("'htmlwidget' class must provide renderFunc")
             if(is.null(outputFunc)) stop("'htmlwidget' class must provide outputFunc")
         } else if(plotlib == "plotly") {
-            ##render <- renderPlotly({ func() })
-            require(plotly)
-            if(is.null(outputFunc)) outputFunc = "plotlyOutput"
-            if(is.null(renderFunc)) renderFunc = "renderPlotly"
+            ##render <- plotly::renderPlotly({ func() })
+            
+            if(is.null(outputFunc)) outputFunc = "plotly::plotlyOutput"
+            if(is.null(renderFunc)) renderFunc = "plotly::renderPlotly"
         } else if(plotlib == "echarts") {
-            ##render <- renderPlotly({ func() })
-            require(plotly)
-            if(is.null(outputFunc)) outputFunc = "echarts4rOutput"
-            if(is.null(renderFunc)) renderFunc = "renderEcharts4r"
+            ##render <- plotly::renderPlotly({ func() })
+            
+            if(is.null(outputFunc)) outputFunc = "echarts4r::echarts4rOutput"
+            if(is.null(renderFunc)) renderFunc = "echarts4r::renderEcharts4r"
         } else if(plotlib=="scatterD3") {
-            require(scatterD3)
-            if(is.null(renderFunc)) renderFunc="renderScatterD3"
-            if(is.null(outputFunc)) outputFunc="scatterD3Output"
+            
+            if(is.null(renderFunc)) renderFunc="scatterD3::renderScatterD3"
+            if(is.null(outputFunc)) outputFunc="scatterD3::scatterD3Output"
         } else if(plotlib=="pairsD3") {
-            require(pairsD3)
+            
             if(is.null(renderFunc)) renderFunc="renderPairsD3"
             if(is.null(outputFunc)) outputFunc="pairsD3Output"
         } else if(plotlib == "visnetwork") {
-            require(visNetwork)
-            if(is.null(outputFunc)) outputFunc="visNetworkOutput"
-            if(is.null(renderFunc)) renderFunc = "renderVisNetwork"
+            
+            if(is.null(outputFunc)) outputFunc="visNetwork::visNetworkOutput"
+            if(is.null(renderFunc)) renderFunc = "visNetwork::renderVisNetwork"
         } else if(plotlib %in% c("ggplot","ggplot2")) {
-            if(is.null(outputFunc)) outputFunc="plotOutput"
-            if(is.null(renderFunc)) renderFunc="function(x) renderPlot(plot(x))"
+            if(is.null(outputFunc)) outputFunc="shiny::plotOutput"
+            if(is.null(renderFunc)) renderFunc="function(x) shiny::renderPlot(plot(x))"
         } else if(plotlib == "iheatmapr") {
-            require(iheatmapr)
-            if(is.null(outputFunc)) outputFunc="iheatmaprOutput"
-            if(is.null(renderFunc)) renderFunc="renderIheatmap"
+            
+            if(is.null(outputFunc)) outputFunc="iheatmapr::iheatmaprOutput"
+            if(is.null(renderFunc)) renderFunc="iheatmapr::renderIheatmap"
         } else if(plotlib == "image") {
-            if(is.null(outputFunc)) outputFunc="imageOutput"
-            if(is.null(renderFunc)) renderFunc="renderImage"
+            if(is.null(outputFunc)) outputFunc="shiny::imageOutput"
+            if(is.null(renderFunc)) renderFunc="shiny::renderImage"
         } else {
             ## Base plotting
-            ## render <- renderPlot({
+            ## render <- shiny::renderPlot({
             ##     par(mar=c(0,0,0,0),oma=c(0,0,0,0))
             ##     func()
             ## }, res=res, width=width, height=height)
             if(is.null(outputFunc)) outputFunc="plotOutput"
             ##renderFunc="renderPlot"
-            ##renderFunc="function(x) renderPlot(x, res=res, width=width, height=height)"
+            ##renderFunc="function(x) shiny::renderPlot(x, res=res, width=width, height=height)"
             if(is.null(renderFunc)) renderFunc="renderPlot"
         }
         list( outputFunc=outputFunc, renderFunc=renderFunc )
@@ -698,9 +698,9 @@ plotModule <- function(input, output, session, ## ns=NULL,
         ## For base plots we need to export PDF/PNG here. For some
         ## reason does not work in the downloadHandler...
         ##
-        render <- renderPlot({
-            ##pdf.width0  <- isolate(input$pdf_width)
-            ##pdf.height0 <- isolate(input$pdf_height)                
+        render <- shiny::renderPlot({
+            ##pdf.width0  <- shiny::isolate(input$pdf_width)
+            ##pdf.height0 <- shiny::isolate(input$pdf_height)                
             pdf.width0  <- pdf.width
             pdf.height0 <- pdf.height
 
@@ -738,16 +738,16 @@ plotModule <- function(input, output, session, ## ns=NULL,
     }
 
     if(!is.null(func2) && plotlib2=="base") {
-        render2 <- renderPlot({
+        render2 <- shiny::renderPlot({
             func2()
         }, res=res.2)            
-        ##render2 <- renderPlot(func2())
+        ##render2 <- shiny::renderPlot(func2())
     }
     if(plotlib=="image") {
-        render <- renderImage( func(), deleteFile=FALSE)
+        render <- shiny::renderImage( func(), deleteFile=FALSE)
     }
     if(!is.null(func2) && plotlib2=="image") {
-        render2 <- renderImage(func2(), deleteFile=FALSE)
+        render2 <- shiny::renderImage(func2(), deleteFile=FALSE)
     }
     if(is.null(render)) {
         render <- eval(parse(text=renderFunc))(func())
@@ -759,18 +759,18 @@ plotModule <- function(input, output, session, ## ns=NULL,
     output$renderfigure <- render
     output$renderpopup  <- render2
 
-    output$popupfig <- renderUI({
+    output$popupfig <- shiny::renderUI({
         w <- width.2
         h <- height.2
         if(plotlib2=="image") {
             ## retains aspect ratio
             ##
             img.file <- func()$src
-            require(png)
-            require(jpeg)
+            
+            
             img.dim <- c(h,w)
-            if(grepl("png|PNG",img.file)) img.dim <- dim(readPNG(img.file))[1:2]
-            if(grepl("jpg|JPG",img.file)) img.dim <- dim(readJPEG(img.file))[1:2]
+            if(grepl("png|PNG",img.file)) img.dim <- dim(png::readPNG(img.file))[1:2]
+            if(grepl("jpg|JPG",img.file)) img.dim <- dim(jpeg::readJPEG(img.file))[1:2]
             r <- min( width.2 / img.dim[2], height.2 / img.dim[1])
             h <- img.dim[1]*r
             w <- img.dim[2]*r
@@ -780,15 +780,15 @@ plotModule <- function(input, output, session, ## ns=NULL,
             caption2 <- caption2()
         }
         if(any(class(caption2)=="character")) {
-            caption2 <- HTML(caption2)
+            caption2 <- shiny::HTML(caption2)
         }
-        tagList(
+        shiny::tagList(
             r,
-            div( caption2, class="caption2") 
+            shiny::div( caption2, class="caption2") 
         )
     })
         
-    output$widget <- renderUI({
+    output$widget <- shiny::renderUI({
 
         ##cat("[output$widget::renderUI] ns.zoombutton = ",ns("zoombutton"),"\n")
         mtop <- paste0("margin: 400px 20px 20px 20px;")
@@ -802,13 +802,13 @@ plotModule <- function(input, output, session, ## ns=NULL,
             caption <- caption()
         }
         if(any(class(caption)=="character")) {
-            caption <- HTML(caption)
+            caption <- shiny::HTML(caption)
         }
         
-        fillCol(
+        shiny::fillCol(
             flex = c(NA,NA,1,NA,NA,0.001),
             height = height.1,
-            tagList(
+            shiny::tagList(
                 tags$head(tags$style(modaldialog.style)),
                 tags$head(tags$style(modalbody.style)),            
                 tags$head(tags$style(modalfooter.none))
@@ -818,18 +818,18 @@ plotModule <- function(input, output, session, ## ns=NULL,
             buttons,
             ##render,
             eval(parse(text=outputFunc))(ns("renderfigure"), width=width.1, height=height.1),
-            br(),
-            div(caption, class="caption"),          
-            div(class="popup-plot",
-                bsModal(ns("plotPopup"), title, size="l",
+            shiny::br(),
+            shiny::div(caption, class="caption"),          
+            shiny::div(class="popup-plot",
+                shinyBS::bsModal(ns("plotPopup"), title, size="l",
                         ns("zoombutton"),
-                        ##tagList(renderPlot(plot(sin)))
-                        tagList(uiOutput(ns("popupfig")))
+                        ##tagList(shiny::renderPlot(plot(sin)))
+                        shiny::tagList(shiny::uiOutput(ns("popupfig")))
                         )
                 )
         )
     })
-    outputOptions(output, "widget", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "widget", suspendWhenHidden=FALSE) ## important!!!
     
     ##--------------------------------------------------------------------------------
     ##---------------------------- RETURN VALUE --------------------------------------
@@ -860,8 +860,8 @@ plotModule <- function(input, output, session, ## ns=NULL,
 
 
 tableWidget <- function(id) {
-    ns <- NS(id)
-    uiOutput(ns("widget"))
+    ns <- shiny::NS(id)
+    shiny::uiOutput(ns("widget"))
 }
 
 tableModule <- function(input, output, session, 
@@ -874,8 +874,8 @@ tableModule <- function(input, output, session,
                         options = NULL, info.width="300px"
                         )
 {
-    require(shinyWidgets)
-    require(shinyBS)
+    
+    
 
     ns <- session$ns
     
@@ -883,55 +883,55 @@ tableModule <- function(input, output, session,
         caption <- caption()
     }
     if(class(caption)=="character") {
-        caption <- HTML(caption)
+        caption <- shiny::HTML(caption)
     }
     
     options.button <- ""    
     if(!is.null(options) && length(options)>0) {
-        options.button <- dropdownButton(
+        options.button <- shinyWidgets::dropdownButton(
             options,
             ##br(),
             ##dload,
             circle = TRUE, size = "xs", ## status = "danger",
-            ## icon = icon("gear"),
-            icon = icon("bars"),
+            ## icon = shiny::icon("gear"),
+            icon = shiny::icon("bars"),
             width = "250px",
             inputId = ns("options"),
-            tooltip = tooltipOptions(title = "Settings", placement = "right")
+            tooltip = shinyWidgets::tooltipOptions(title = "Settings", placement = "right")
         )
     }
-    label1 = HTML(paste0("<span class='module-label'>",label,"</span>"))
+    label1 = shiny::HTML(paste0("<span class='module-label'>",label,"</span>"))
 
-    require(shinyWidgets)
-    zoom.button <- actionButton(inputId=ns("zoombutton"),label=NULL,
+    
+    zoom.button <- shiny::actionButton(inputId=ns("zoombutton"),label=NULL,
                                 icon=icon("window-maximize"),
                                 class="btn-circle-xs")    
     
-    buttons <- fillRow(
+    buttons <- shiny::fillRow(
         ##flex=c(NA,NA,NA,NA,1),
         flex=c(NA,NA,NA,NA,NA,1),
-        ##actionLink(options_id, label=NULL, icon = icon("info")),
+        ##actionLink(options_id, label=NULL, icon = shiny::icon("info")),
         label1,
-        dropdownButton(
-            tags$p(HTML(info.text)),
-            br(),
+        shinyWidgets::dropdownButton(
+            tags$p(shiny::HTML(info.text)),
+            shiny::br(),
             circle = TRUE, size = "xs", ## status = "danger",
-            icon = icon("info"), width = info.width,
+            icon = shiny::icon("info"), width = info.width,
             inputId = ns("info"), right=FALSE,
-            tooltip = tooltipOptions(title = "Info", placement = "right")
+            tooltip = shinyWidgets::tooltipOptions(title = "Info", placement = "right")
         ),
         options.button,
-        div(class='download-button',
-            dropdownButton(
-                downloadButton(ns("csv"), "CSV"),
+        shiny::div(class='download-button',
+            shinyWidgets::dropdownButton(
+                shiny::downloadButton(ns("csv"), "CSV"),
                 circle = TRUE, size = "xs", ## status = "danger",
-                icon = icon("download"), width = "80px", right=FALSE,
-                tooltip = tooltipOptions(title = "Download", placement = "right")
+                icon = shiny::icon("download"), width = "80px", right=FALSE,
+                tooltip = shinyWidgets::tooltipOptions(title = "Download", placement = "right")
             )),
         zoom.button,
-        HTML(paste("<center>",title,"</center>"))
+        shiny::HTML(paste("<center>",title,"</center>"))
         ##HTML(paste("<center><strong>",title,"</strong></center>"))
-        ## HTML(paste("<center>",title,"</center>"))
+        ## shiny::HTML(paste("<center>",title,"</center>"))
         ##inputs
         ##selectInput("sel123","number",1:10)
     )
@@ -939,8 +939,8 @@ tableModule <- function(input, output, session,
     CSVFILE = paste0(gsub("file","data",tempfile()),".csv")
     CSVFILE    
     
-    ## render2 <- renderPlot({plot_array[[3]]()}, res=res)
-    download.csv <- downloadHandler(
+    ## render2 <- shiny::renderPlot({plot_array[[3]]()}, res=res)
+    download.csv <- shiny::downloadHandler(
         filename = filename,
         content = function(file) {
             dt <- func()
@@ -959,29 +959,29 @@ tableModule <- function(input, output, session,
     height.1 <- ifnotchar.int(height[1])
     height.2 <- ifnotchar.int(height[2])
 
-    output$datatable <- renderDataTable({
+    output$datatable <- DT::renderDT({
         dt <- func()
         ##dt <- dt %>% DT::formatStyle(0, target='row', fontSize='11px', lineHeight='80%')
         dt
     })
-    output$datatable2 <- renderDataTable({
+    output$datatable2 <- DT::renderDT({
         func2() %>% DT::formatStyle(0, target='row', fontSize='12px', lineHeight='90%')
     })
     
-    output$popuptable <- renderUI({
+    output$popuptable <- shiny::renderUI({
         if(any(class(caption2)=="reactive")) {
             caption2 <- caption2()
         }
         if(any(class(caption2)=="character")) {
-            caption2 <- HTML(caption2)
+            caption2 <- shiny::HTML(caption2)
         }
-        tagList(
-            div( caption2, class="caption2"),            
-            dataTableOutput(ns("datatable2"), width=width.2-40, height=height.2-40)
+        shiny::tagList(
+            shiny::div( caption2, class="caption2"),            
+            DT::DTOutput(ns("datatable2"), width=width.2-40, height=height.2-40)
         )
     })
     
-    output$widget <- renderUI({
+    output$widget <- shiny::renderUI({
 
         ##modaldialog.style <- paste0("#",ns("tablePopup")," .modal-dialog {width:",width.2+40,"px;}")
         ##modalbody.style <- paste0("#",ns("tablePopup")," .modal-body {min-height:",height.2+40,"px;}")
@@ -989,9 +989,9 @@ tableModule <- function(input, output, session,
         modalbody.style <- paste0("#",ns("tablePopup")," .modal-body {min-height:",height.2,"px;}")
         modalfooter.none <- paste0("#",ns("tablePopup")," .modal-footer{display:none;}")
         div.caption <- NULL
-        if(!is.null(caption)) div.caption <- div(caption, class="table-caption")
+        if(!is.null(caption)) div.caption <- shiny::div(caption, class="table-caption")
         
-        fillCol(
+        shiny::fillCol(
             flex = c(NA,NA,1,NA),
             ##tags$head(tags$style(".popup-table .modal-dialog {width:1200px;}")),
             ##tags$head(tags$style(".popup-table .modal-body {min-height:700px;}")),
@@ -1002,26 +1002,25 @@ tableModule <- function(input, output, session,
             buttons,
             ##uiOutput(ns("renderbuttons")),
             div.caption,
-            dataTableOutput(ns("datatable"), width=width.1, height=height.1),
+            DT::DTOutput(ns("datatable"), width=width.1, height=height.1),
             ##DT::renderDataTable(func()),
             ##verbatimTextOutput(ns("zoomstatus"))
-            div(class="popup-table",
-                bsModal(
+            shiny::div(class="popup-table",
+                shinyBS::bsModal(
                     id = ns("tablePopup"),
                     title = title,
                     size="l",
                     trigger = ns("zoombutton"),
-                    ##tagList(renderPlot(plot(sin)))
-                    tagList(uiOutput(ns("popuptable")))
+                    ##tagList(shiny::renderPlot(plot(sin)))
+                    shiny::tagList(shiny::uiOutput(ns("popuptable")))
                 ))            
         )
     })
-    ##outputOptions(output, "widget", suspendWhenHidden=FALSE) ## important!!!
 
     module <- list(
-        rows_current = reactive(input$datatable_rows_current),
-        rows_selected = reactive(input$datatable_rows_selected),        
-        rows_all = reactive(input$datatable_rows_all)
+        rows_current = shiny::reactive(input$datatable_rows_current),
+        rows_selected = shiny::reactive(input$datatable_rows_selected),        
+        rows_all = shiny::reactive(input$datatable_rows_all)
     )
     return(module)
 }

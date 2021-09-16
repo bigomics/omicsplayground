@@ -6,33 +6,33 @@
 message(">>> sourcing SingleCellBoard")
 
 SingleCellInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shiny::uiOutput(ns("inputsUI"))
     )
 }
 
 SingleCellUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    fillCol(
+    ns <- shiny::NS(id)  ## namespace
+    shiny::fillCol(
         flex = c(1),
         height = 780,
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs1"),
-            tabPanel("Cell type",uiOutput(ns("icp_UI"))),
-            tabPanel("Mapping",uiOutput(ns("mapping_UI"))),
-            tabPanel("Markers",uiOutput(ns("markersplot_UI"))),
-            tabPanel("CNV",uiOutput(ns("cnaModule_UI"))),
-            tabPanel("iTALK",uiOutput(ns("italk_panel_UI"))),
-            tabPanel("Monocle",uiOutput(ns("monocle_panel_UI")))            
+            shiny::tabPanel("Cell type",uiOutput(ns("icp_UI"))),
+            shiny::tabPanel("Mapping",uiOutput(ns("mapping_UI"))),
+            shiny::tabPanel("Markers",uiOutput(ns("markersplot_UI"))),
+            shiny::tabPanel("CNV",uiOutput(ns("cnaModule_UI"))),
+            shiny::tabPanel("iTALK",uiOutput(ns("italk_panel_UI"))),
+            shiny::tabPanel("Monocle",uiOutput(ns("monocle_panel_UI")))            
         )
-        ## br(),
-        ## tabsetPanel(
+        ## shiny::br(),
+        ## shiny::tabsetPanel(
         ##     id = ns("tabs2"),
-        ##     tabPanel("Phenotypes",uiOutput(ns("phenoModule_UI"))),
-        ##     tabPanel("Proportions",uiOutput(ns("crosstabModule_UI"))),
-        ##     tabPanel("CytoPlot",uiOutput(ns("cytoModule_UI")))      
+        ##     shiny::tabPanel("Phenotypes",uiOutput(ns("phenoModule_UI"))),
+        ##     shiny::tabPanel("Proportions",uiOutput(ns("crosstabModule_UI"))),
+        ##     shiny::tabPanel("CytoPlot",uiOutput(ns("cytoModule_UI")))      
         ## )
     )
 }
@@ -47,7 +47,7 @@ SingleCellBoard <- function(input, output, session, env)
     
     description = "<b>Single-Cell Profiling</b>. Visualize the distribution of (inferred)
 immune cell types, expressed genes and pathway activation."
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
 
     infotext =
         "The <strong>Cell Profiling Board</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types.
@@ -60,25 +60,25 @@ immune cell types, expressed genes and pathway activation."
 
 <br><br>It is also possible to perform a copy number variation analysis under the <strong>CNV tab</strong>. The copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. CNV generates a heatmap of samples versus chromosomes, where samples can be annotated further with a phenotype class provided in the data."
 
-    output$inputsUI <- renderUI({
-        ui <- tagList(
+    output$inputsUI <- shiny::renderUI({
+        ui <- shiny::tagList(
             ##actionLink("info", "More details ...")
-            tipify(actionLink(ns("info"), "Info", icon=icon("info-circle")),
+            shinyBS::tipify(shiny::actionLink(ns("info"), "Info", icon=icon("info-circle")),
                    "Show more information about this module."),
-            hr(),br(),
-            tipify( actionLink(ns("options"), "Options",
+            shiny::hr(),br(),
+            shinyBS::tipify( shiny::actionLink(ns("options"), "Options",
                                icon=icon("cog", lib = "glyphicon")),
                    "Toggle options", placement="top"),
-            br(),br(),
-            conditionalPanel(
+            shiny::br(),br(),
+            shiny::conditionalPanel(
                 "input.options % 2 == 1", ns=ns, 
-                tagList(
-                    tipify(selectInput(ns("samplefilter"),"Filter samples:",
+                shiny::tagList(
+                    shinyBS::tipify(shiny::selectInput(ns("samplefilter"),"Filter samples:",
                                        choices=NULL, multiple=TRUE),
                            "Filter relevant samples (cells).",
                            placement="top", options = list(container = "body")),
                     
-                    tipify(selectInput(ns('clustmethod'),"Layout", c("default","pca"),
+                    shinyBS::tipify(shiny::selectInput(ns('clustmethod'),"Layout", c("default","pca"),
                                        selected="default"),
                            "Specify a layout for the figures: t-SNE or PCA-based layout.",
                            placement="top", options = list(container = "body"))
@@ -87,72 +87,72 @@ immune cell types, expressed genes and pathway activation."
         )
         ui
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
 
-    observeEvent(input$info, {
-        showModal(modalDialog(
-            title = HTML("<strong>Single Cell Board</strong>"),
-            HTML(infotext),
+    shiny::observeEvent(input$info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>Single Cell Board</strong>"),
+            shiny::HTML(infotext),
             easyClose = TRUE, size="l" ))
     })
 
     ## update filter choices upon change of data set 
-    observe({
+    shiny::observe({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         ## levels for sample filter
         levels <- getLevels(ngs$Y)
-        updateSelectInput(session, "samplefilter", choices=levels)
+        shiny::updateSelectInput(session, "samplefilter", choices=levels)
 
         ## update cluster methods if available in object
         if("cluster" %in% names(ngs)) {
             clustmethods <- names(ngs$cluster$pos)
             clustmethods <- c("default",clustmethods)
-            updateSelectInput(session, "clustmethod",
+            shiny::updateSelectInput(session, "clustmethod",
                               choices=clustmethods )
         }
         
     })
 
-    observe({
+    shiny::observe({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         refsets = "LM22"
         refsets <- sort(names(ngs$deconv))
         refsel <- unique(c(grep("LM22",refsets,value=TRUE),refsets))[1]
-        updateSelectInput(session,"refset",choices=refsets, selected=refsel)
-        updateSelectInput(session,"refset2",choices=refsets, selected=refsel)
+        shiny::updateSelectInput(session,"refset",choices=refsets, selected=refsel)
+        shiny::updateSelectInput(session,"refset2",choices=refsets, selected=refsel)
         
         ## dcmethods <- names(ngs$deconv[[1]])
         ## dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
-        ## updateSelectInput(session, "dcmethod", choices=dcmethods, selected=dcsel)
-        ## updateSelectInput(session, "dcmethod2", choices=dcmethods, selected=dcsel)
+        ## shiny::updateSelectInput(session, "dcmethod", choices=dcmethods, selected=dcsel)
+        ## shiny::updateSelectInput(session, "dcmethod2", choices=dcmethods, selected=dcsel)
 
         grpvars <- c("<ungrouped>",colnames(ngs$samples))
         sel <- grpvars[1]
         if(ncol(ngs$X) > 30) sel <- grpvars[2]
-        updateSelectInput(session, "group2", choices=grpvars, selected=sel)        
+        shiny::updateSelectInput(session, "group2", choices=grpvars, selected=sel)        
         
     })
 
-    observeEvent( input$refset, {
-        req(input$refset)
+    shiny::observeEvent( input$refset, {
+        shiny::req(input$refset)
         ngs <- inputData()
         dcmethods <- names(ngs$deconv[[input$refset]])
         dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
-        updateSelectInput(session, "dcmethod", choices=dcmethods, selected=dcsel)
+        shiny::updateSelectInput(session, "dcmethod", choices=dcmethods, selected=dcsel)
     })
 
-    observeEvent( input$refset2, {
-        req(input$refset2)
+    shiny::observeEvent( input$refset2, {
+        shiny::req(input$refset2)
         ngs <- inputData()
         dcmethods <- names(ngs$deconv[[input$refset2]])
         dcsel <- intersect(c("meta.prod","meta"),dcmethods)[1]
-        updateSelectInput(session, "dcmethod2", choices=dcmethods, selected=dcsel)
+        shiny::updateSelectInput(session, "dcmethod2", choices=dcmethods, selected=dcsel)
     })
         
     
@@ -160,9 +160,9 @@ immune cell types, expressed genes and pathway activation."
     ##========================= REACTIVE FUNCTIONS ===================================
     ##================================================================================
     
-    pfGetClusterPositions <- reactive({
+    pfGetClusterPositions <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         dbg("[pfGetClusterPositions] called")
         
@@ -181,8 +181,8 @@ immune cell types, expressed genes and pathway activation."
         has.clust <- ("cluster" %in% names(ngs) && m %in% names(ngs$cluster$pos))
         has.clust
         if(!has.clust && m=="pca") {
-            require(irlba)
-            pos = irlba(zx,nv=3)$v
+
+            pos = irlba::irlba(zx,nv=3)$v
             rownames(pos) <- colnames(zx)
         } else if(has.clust) {
             pos <- ngs$cluster$pos[[m]][,1:2]
@@ -198,9 +198,9 @@ immune cell types, expressed genes and pathway activation."
         return(pos)
     })
 
-    pfGetClusterPositions2 <- reactive({
+    pfGetClusterPositions2 <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         dbg("[pfGetClusterPositions2] called")
         
@@ -219,8 +219,8 @@ immune cell types, expressed genes and pathway activation."
         has.clust <- ("cluster" %in% names(ngs) && m %in% names(ngs$cluster$pos))
         has.clust
         if(!has.clust && m=="pca") {
-            require(irlba)
-            pos = irlba(zx,nv=3)$v
+
+            pos = irlba::irlba(zx,nv=3)$v
             rownames(pos) <- colnames(zx)
         } else if(has.clust) {
             pos <- ngs$cluster$pos[[m]][,1:2]
@@ -234,7 +234,7 @@ immune cell types, expressed genes and pathway activation."
         rownames(pos) = colnames(zx)    
 
         ##if(input$pca.gx=="<cluster>")
-        require(igraph)
+
         dbg("[pfGetClusterPositions2] computing distances and clusters...")
         dbg("[pfGetClusterPositions2] dim(pos) = ",dim(pos))
         
@@ -243,12 +243,12 @@ immune cell types, expressed genes and pathway activation."
 
         dbg("[pfGetClusterPositions2] creating graph")
         
-        gr = graph_from_adjacency_matrix(
+        gr = igraph::graph_from_adjacency_matrix(
             1.0/dist, diag=FALSE, mode="undirected")
 
         dbg("[pfGetClusterPositions2] cluster louvain")
         
-        clust <- cluster_louvain(gr)$membership
+        clust <- igraph::cluster_louvain(gr)$membership
 
         dbg("pfGetClusterPositions2:: done!")
         return( list(pos=pos, clust=clust) )
@@ -259,9 +259,9 @@ immune cell types, expressed genes and pathway activation."
     ## Cell type
     ##==========================================================================
 
-    getDeconvResults <- reactive({
+    getDeconvResults <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         dbg("[SingleCellBoard:getDeconvResults] called")
         method="meta";refset = "LM22"
         method <- input$dcmethod
@@ -279,12 +279,12 @@ immune cell types, expressed genes and pathway activation."
         return(results)
     })
 
-    icp.plotFUNC %<a-% reactive({
-        require(RColorBrewer)
+    icp.plotFUNC %<a-% shiny::reactive({
+
         
         ngs <- inputData()
         alertDataLoaded(session,ngs)
-        req(ngs)        
+        shiny::req(ngs)        
         clust.pos <- pfGetClusterPositions()
         if(is.null(clust.pos)) return(NULL)
         dbg("[SingleCellBoard:icp.plotFUNC] called")
@@ -323,8 +323,8 @@ immune cell types, expressed genes and pathway activation."
             cex1 = 1.2
             cex1 <- 0.9*c(2.2,1.1,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
             klrpal = colorRampPalette(c("grey90", "grey50", "red3"))(16)
-            ##klrpal = paste0(col2hex(klrpal),"AA")    
-            klrpal = paste0(col2hex(klrpal),"66")
+            ##klrpal = paste0(gplots::col2hex(klrpal),"AA")    
+            klrpal = paste0(gplots::col2hex(klrpal),"66")
             
             lyo <- input$layout
             ntop = 25
@@ -353,7 +353,7 @@ immune cell types, expressed genes and pathway activation."
                 klr0 = klrpal[gx]
                 ii <- order(gx)
                 ## ii <- sample(nrow(pos))
-                plot( pos[ii,], pch=19, cex=1*cex1, col=klr0[ii],
+                KEGGgraph::plot( pos[ii,], pch=19, cex=1*cex1, col=klr0[ii],
                      xlim=1.2*range(pos[,1]), ylim=1.2*range(pos[,2]),
                      fg = gray(0.8), bty = "o", xaxt='n', yaxt='n',
                      xlab="", ylab="")
@@ -367,18 +367,18 @@ immune cell types, expressed genes and pathway activation."
         
     })
 
-    icp.opts = tagList(
-        tipify(selectInput(ns("refset"), "Reference:", choices=NULL),
+    icp.opts = shiny::tagList(
+        shinyBS::tipify(shiny::selectInput(ns("refset"), "Reference:", choices=NULL),
                "Select a reference dataset for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("dcmethod"),"Method:", choices=NULL),
+        shinyBS::tipify(shiny::selectInput(ns("dcmethod"),"Method:", choices=NULL),
                "Choose a method for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        tipify(radioButtons(ns("sortby"),"Sort by:",
+        shinyBS::tipify(shiny::radioButtons(ns("sortby"),"Sort by:",
                             choices=c("probability","name"), inline=TRUE),
                "Sort by name or probability.", placement="top",
                options = list(container = "body")),
-        tipify(radioButtons(ns("layout"),"Layout:", choices=c("4x4","6x6"),
+        shinyBS::tipify(shiny::radioButtons(ns("layout"),"Layout:", choices=c("4x4","6x6"),
                             ## selected="6x6",
                             inline=TRUE),
                "Choose layout.", 
@@ -387,7 +387,7 @@ immune cell types, expressed genes and pathway activation."
 
     icp_info = "<strong>Cell type profiling</strong> infers the type of cells using computational deconvolution methods and reference datasets from the literature. Currently, we have implemented a total of 8 methods and 9 reference datasets to predict immune cell types (4 datasets), tissue types (2 datasets), cell lines (2 datasets) and cancer types (1 dataset). However, we plan to expand the collection of methods and databases and to infer other cell types."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "icpplot",
         func = icp.plotFUNC,
@@ -406,13 +406,13 @@ immune cell types, expressed genes and pathway activation."
     ## Phenotypes
     ##===========================================================================
 
-    ##output$phenoplot <- renderPlot({
-    pheno.plotFUNC %<a-% reactive({
+    ##output$phenoplot <- shiny::renderPlot({
+    pheno.plotFUNC %<a-% shiny::reactive({
         ##if(!input$tsne.all) return(NULL)
-        require(RColorBrewer)
+
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
-        req(ngs)
+        shiny::req(ngs)
         dbg("[SingleCellBoard:pheno.plotFUNC] called")
         clust.pos <- pfGetClusterPositions()
         if(is.null(clust.pos)) return(NULL)
@@ -457,13 +457,13 @@ immune cell types, expressed genes and pathway activation."
             } else {
                 y = factor(as.character(y))
                 klrpal = COLORS
-                klrpal <- paste0(col2hex(klrpal),"99")
+                klrpal <- paste0(gplots::col2hex(klrpal),"99")
                 klr0 = klrpal[y]
             }
 
             jj = which(is.na(klr0))
             if(length(jj)) klr0[jj] <- "#AAAAAA22"
-            plot( pos, pch=19, cex=cex1, col=klr0,fg = gray(0.5), bty = "o",
+            KEGGgraph::plot( pos, pch=19, cex=cex1, col=klr0,fg = gray(0.5), bty = "o",
                  xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
 
             if(!is.num(y)) {
@@ -496,14 +496,14 @@ immune cell types, expressed genes and pathway activation."
     })
 
 
-    phenoplot.opts <- tagList(
-        tipify( radioButtons(ns('labelmode'),'Label:',c("groups","legend"), inline=TRUE),
+    phenoplot.opts <- shiny::tagList(
+        shinyBS::tipify( shiny::radioButtons(ns('labelmode'),'Label:',c("groups","legend"), inline=TRUE),
                "Select whether you want the group labels to be plotted inside the plots or in a seperate legend.")
     )
 
     phenoModule_info = "<b>Phenotype plots.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
    
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "phenoplot",
         func = pheno.plotFUNC,
@@ -518,39 +518,39 @@ immune cell types, expressed genes and pathway activation."
     )
 
     
-    output$icp_UI <- renderUI({
-        fillRow(
+    output$icp_UI <- shiny::renderUI({
+        shiny::fillRow(
             flex = c(1.5,0.08,1),
-            fillCol(
+            shiny::fillCol(
                 height = fullH,
                 flex = c(NA,1),
-                div(HTML(icp_info),class="caption"),
+                shiny::div(shiny::HTML(icp_info),class="caption"),
                 plotWidget(ns("icpplot"))
             ),
-            br(),
-            fillCol(
+            shiny::br(),
+            shiny::fillCol(
                 height = fullH,
                 flex = c(NA,1), 
-                div(HTML(phenoModule_info), class="caption"),
+                shiny::div(shiny::HTML(phenoModule_info), class="caption"),
                 plotWidget(ns("phenoplot"))
             )
         )
     })
-    outputOptions(output, "icp_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "icp_UI", suspendWhenHidden=FALSE) ## important!!!
 
     
     ##=========================================================================
     ## Type mapping (heatmap)
     ##=========================================================================
 
-    getDeconvResults2 <- reactive({
+    getDeconvResults2 <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         method = "meta"
         method <- input$dcmethod2
         if(is.null(method)) return(NULL)
-        req(input$refset2)
+        shiny::req(input$refset2)
         dbg("[SingleCellBoard:getDeconvResults2] called")
         
         refset = "LM22"
@@ -564,13 +564,13 @@ immune cell types, expressed genes and pathway activation."
         return(results)
     })
     
-    mapping.plotFUNC %<a-% reactive({
-        require(RColorBrewer)
+    mapping.plotFUNC %<a-% shiny::reactive({
+
         
         ngs <- inputData()
         alertDataLoaded(session,ngs)
-        req(ngs)
-        req(input$refset2)
+        shiny::req(ngs)
+        shiny::req(input$refset2)
         dbg("[SingleCellBoard:mapping.plotFUNC] called")
         
         clust.pos <- pfGetClusterPositions()
@@ -619,7 +619,7 @@ immune cell types, expressed genes and pathway activation."
         b0 <- 0.1 + 0.70*pmax(30 - ncol(score), 0)
         
         if(input$view2 == "dotmap") {
-            require(corrplot)
+
             ##gx.heatmap(score)
             par(mfrow=c(1,1), mar=c(0,0,8,1), oma=c(1,1,1,1)*0.25 )
             score3 <- score**1.5
@@ -627,7 +627,7 @@ immune cell types, expressed genes and pathway activation."
             tl.srt=90
             tl.cex=ifelse(nrow(score)>60,0.7,0.85)
             if(max(sapply(rownames(score3),nchar))>30) tl.srt=45
-            corrplot( t(score3), mar=c(b0,1,4,0.5),
+            corrplot::corrplot( t(score3), mar=c(b0,1,4,0.5),
                      cl.lim = c(0,max(score3)), cl.pos = "n",
                      tl.cex = tl.cex, tl.col = "grey20",
                      tl.srt = tl.srt )
@@ -689,17 +689,17 @@ immune cell types, expressed genes and pathway activation."
     VIEWTYPES2 = c("dotmap"="dotmap","heatmap (by method)"="heatmap")    
     message("[SingleCellBoard::mapping.plotFUNC] 1")
     
-    mapping.opts = tagList(
-        tipify(selectInput(ns("view2"),"plot type:",VIEWTYPES2),
+    mapping.opts = shiny::tagList(
+        shinyBS::tipify(shiny::selectInput(ns("view2"),"plot type:",VIEWTYPES2),
                "Specify the plot type: dotmap, or heatmap.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("refset2"), "reference:", choices=NULL),
+        shinyBS::tipify(shiny::selectInput(ns("refset2"), "reference:", choices=NULL),
                "Select a reference dataset for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("dcmethod2"),"method:", choices=NULL),
+        shinyBS::tipify(shiny::selectInput(ns("dcmethod2"),"method:", choices=NULL),
                "Choose a method for the cell type prediction.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("group2"), "group by:", "group", selected = NULL),
+        shinyBS::tipify(shiny::selectInput(ns("group2"), "group by:", "group", selected = NULL),
                "Group the samples/cells by grouping factor.",
                placement="top", options=list(container="body"))
     )
@@ -708,7 +708,7 @@ immune cell types, expressed genes and pathway activation."
 
     mapping_caption = "<b>Cell type mapping.</b> The inferred cell types can be by matched to the phenotype variable of the data set. The reference set can be a cell type reference database but also cancer types, tissue types or cell lines."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "mappingplot",
         func = mapping.plotFUNC,
@@ -728,14 +728,14 @@ immune cell types, expressed genes and pathway activation."
     ## Proportions
     ##======================================================================
 
-    ##output$statsplot <- renderPlot({
-    crosstab.plotFUNC %<a-% reactive({
+    ##output$statsplot <- shiny::renderPlot({
+    crosstab.plotFUNC %<a-% shiny::reactive({
         ##if(!input$tsne.all) return(NULL)
-        require(RColorBrewer)
+
         ngs <- inputData()
 
-        req(ngs)
-        req(input$crosstabpheno, input$crosstabvar, input$crosstabgene)
+        shiny::req(ngs)
+        shiny::req(input$crosstabpheno, input$crosstabvar, input$crosstabgene)
 
         dbg("[SingleCellBoard::crosstab.plotFUNC] called")
         
@@ -899,9 +899,9 @@ immune cell types, expressed genes and pathway activation."
         ##-------------- plot by estimated cell.type ----------------------
         
         ##par(mar = c(4,6,2,3))
-        layout(matrix(c(1,2,3), 3,1), heights=c(2,4,3))
+        plotly::layout(matrix(c(1,2,3), 3,1), heights=c(2,4,3))
         if(!is.null(grp.score2)) {
-            layout(matrix(c(1,2,3,4), 4,1), heights=c(2.2,1,4,2))
+            plotly::layout(matrix(c(1,2,3,4), 4,1), heights=c(2.2,1,4,2))
         }
         
         ## top bar with counts
@@ -940,14 +940,14 @@ immune cell types, expressed genes and pathway activation."
     })
 
 
-    crosstab.opts <- tagList(
-        tipify(selectInput(ns("crosstabvar"),label="x-axis:", choices=NULL, multiple=FALSE),
+    crosstab.opts <- shiny::tagList(
+        shinyBS::tipify(shiny::selectInput(ns("crosstabvar"),label="x-axis:", choices=NULL, multiple=FALSE),
                            "Choose a predefined phenotype group on the x-axis.",
                            placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("crosstabpheno"),label="y-axis:", choices=NULL, multiple=FALSE),
+        shinyBS::tipify(shiny::selectInput(ns("crosstabpheno"),label="y-axis:", choices=NULL, multiple=FALSE),
                "Choose a predefined phenotype group on the y-axis.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("crosstabgene"),label="gene:", choices=NULL, multiple=FALSE),
+        shinyBS::tipify(shiny::selectInput(ns("crosstabgene"),label="gene:", choices=NULL, multiple=FALSE),
                "Visualize the expression barplot of a gene by specifying the gene name.",
                placement="top", options = list(container = "body"))
         ##checkboxGroupInput('crosstaboptions','',c("gene"), inline=TRUE, width='50px')
@@ -959,7 +959,7 @@ immune cell types, expressed genes and pathway activation."
     
     crosstabModule_caption = "<b>Proportion plot.</b> Plot visualizing the overlap between two categorical variables (so-called cross tabulation). Although this feature is very suitable for a single-cell sequencing data, it provides useful information about the proportion of different cell types in samples obtained by the bulk sequencing method."
    
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "crosstabPlot",
         func = crosstab.plotFUNC,
@@ -973,10 +973,10 @@ immune cell types, expressed genes and pathway activation."
         add.watermark = WATERMARK
     )
 
-    observe({
+    shiny::observe({
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
-        req(ngs)
+        shiny::req(ngs)
 
         ##if(is.null(input$crosstaboptions)) return(NULL)
         pheno0 <- grep("group|sample|donor|id|batch",colnames(ngs$samples),invert=TRUE,value=TRUE)
@@ -987,42 +987,42 @@ immune cell types, expressed genes and pathway activation."
         genes <- sort(as.character(ngs$genes$gene_name))
         pheno1 <- c("<cell type>",pheno0)
         genes1 <- c("<none>",genes)
-        updateSelectInput(session, "crosstabvar", choices=pheno1)
-        updateSelectInput(session, "crosstabpheno", choices=pheno1)
-        updateSelectizeInput(session, "crosstabgene", choices=genes1, server=TRUE)
+        shiny::updateSelectInput(session, "crosstabvar", choices=pheno1)
+        shiny::updateSelectInput(session, "crosstabpheno", choices=pheno1)
+        shiny::updateSelectizeInput(session, "crosstabgene", choices=genes1, server=TRUE)
 
     })
 
-    output$mapping_UI <- renderUI({
-        fillRow(
+    output$mapping_UI <- shiny::renderUI({
+        shiny::fillRow(
             flex = c(1.3,0.08,1),
-            fillCol(
+            shiny::fillCol(
                 height = fullH,
                 flex = c(NA,1),
-                div(HTML(mapping_caption),class="caption"),
+                shiny::div(shiny::HTML(mapping_caption),class="caption"),
                 plotWidget(ns("mappingplot"))
             ),
-            br(),
-            fillCol(
+            shiny::br(),
+            shiny::fillCol(
                 height = fullH,
                 flex = c(NA,1),
-                div(HTML(crosstabModule_caption), class="caption"),
+                shiny::div(shiny::HTML(crosstabModule_caption), class="caption"),
                 plotWidget(ns("crosstabPlot"))
             )
         )
     })
-    outputOptions(output, "mapping_UI", suspendWhenHidden=FALSE) ## important!
+    shiny::outputOptions(output, "mapping_UI", suspendWhenHidden=FALSE) ## important!
     
     ##==========================================================================
     ## Markers
     ##==========================================================================
     
-    ##output$markersplot <- renderPlot({
-    markers.plotFUNC %<a-% reactive({
+    ##output$markersplot <- shiny::renderPlot({
+    markers.plotFUNC %<a-% shiny::reactive({
         ##if(!input$tsne.all) return(NULL)
-        require(RColorBrewer)        
+
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         clust.pos <- pfGetClusterPositions()
         if(is.null(clust.pos)) return(NULL)
@@ -1093,7 +1093,7 @@ immune cell types, expressed genes and pathway activation."
         cex1 <- 0.8*c(2.2,1.1,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]
         klrpal <- colorRampPalette(c("grey90", "grey80", "grey70", "grey60","red4", "red3"))(16)
         klrpal = colorRampPalette(c("grey90", "grey60", "red3"))(16)
-        klrpal = paste0(col2hex(klrpal),"66")
+        klrpal = paste0(gplots::col2hex(klrpal),"66")
 
         NP=25
         if(input$mrk_level=="gene") NP=36
@@ -1121,7 +1121,7 @@ immune cell types, expressed genes and pathway activation."
 
             ii <- order(colvar)
             ##ii <- sample(nrow(pos))
-            plot( pos[ii,], pch=19, cex=cex1, col=klr0[ii],
+            KEGGgraph::plot( pos[ii,], pch=19, cex=cex1, col=klr0[ii],
                  xlim=1.1*range(pos[,1]), ylim=1.1*range(pos[,2]),
                  fg = gray(0.8), bty = "o",
                  xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
@@ -1146,18 +1146,18 @@ immune cell types, expressed genes and pathway activation."
         
     })
 
-    markersplot.opts = tagList(
-        tipify(selectInput(ns("mrk_level"),"Level:", choices=c("gene","geneset")),
+    markersplot.opts = shiny::tagList(
+        shinyBS::tipify(shiny::selectInput(ns("mrk_level"),"Level:", choices=c("gene","geneset")),
                "Specify the level of the marker analysis: gene or gene set level.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("mrk_features"),"Feature set:", choices=NULL,
+        shinyBS::tipify(shiny::selectInput(ns("mrk_features"),"Feature set:", choices=NULL,
                            multiple=FALSE),
                "Select a particular functional group for the analysis.",
                placement="top", options = list(container = "body")),
-        tipify(textInput(ns("mrk_search"),"Filter:"),
+        shinyBS::tipify(shiny::textInput(ns("mrk_search"),"Filter:"),
                "Filter markers by a specific keywords.",
                placement="top", options = list(container = "body")),
-        tipify(radioButtons(ns("mrk_sortby"),"Sort by:",
+        shinyBS::tipify(shiny::radioButtons(ns("mrk_sortby"),"Sort by:",
                             choices=c("intensity","name"), inline=TRUE),
                "Sort by name or intensity.", placement="top",
                options = list(container = "body"))
@@ -1167,7 +1167,7 @@ immune cell types, expressed genes and pathway activation."
 
     markersplot_caption = "<b>T-SNE distribution of expression of marker genes.</b> Good biomarkers will show a distribution pattern strongly correlated with some phenotype. The top genes with the highest standard deviation are shown. The red color shading is proportional to the (absolute) expression of the gene in corresponding samples." 
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "markersplot",
         func = markers.plotFUNC,
@@ -1182,9 +1182,9 @@ immune cell types, expressed genes and pathway activation."
         add.watermark = WATERMARK
     )
 
-    observe({
+    shiny::observe({
         ngs <- inputData()
-        req(ngs,input$mrk_level)    
+        shiny::req(ngs,input$mrk_level)    
         
         choices <- names(ngs$families)
         selected = grep("^CD",choices,ignore.case=TRUE,value=TRUE)[1]
@@ -1193,16 +1193,16 @@ immune cell types, expressed genes and pathway activation."
             choices <- names(COLLECTIONS)[nn>=5]
             selected = grep("HALLMARK",names(COLLECTIONS),ignore.case=TRUE,value=TRUE)
         }
-        updateSelectInput(session, "features", choices=choices, selected=selected)
-        updateSelectInput(session, "mrk_features", choices=choices, selected=selected)
+        shiny::updateSelectInput(session, "features", choices=choices, selected=selected)
+        shiny::updateSelectInput(session, "mrk_features", choices=choices, selected=selected)
 
     })
     
-    ## output$markersplot_UI <- renderUI({
-    ##     fillCol(
+    ## output$markersplot_UI <- shiny::renderUI({
+    ##     shiny::fillCol(
     ##         height = fullH,
     ##         flex = c(NA,1),
-    ##         div(HTML(markersplot_caption),class="caption"),
+    ##         shiny::div(shiny::HTML(markersplot_caption),class="caption"),
     ##         plotWidget(ns("markersplot")) 
     ##     )
     ## })
@@ -1212,13 +1212,13 @@ immune cell types, expressed genes and pathway activation."
     ## CytoPlot
     ##======================================================================
 
-    ##output$cytoplot <- renderPlot({
-    cyto.plotFUNC %<a-% reactive({
+    ##output$cytoplot <- shiny::renderPlot({
+    cyto.plotFUNC %<a-% shiny::reactive({
         ##if(!input$tsne.all) return(NULL)
-        require(RColorBrewer)
+
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
-        req(ngs)
+        shiny::req(ngs)
         
         if(is.null(input$cytovar1)) return(NULL)
         if(is.null(input$cytovar2)) return(NULL)
@@ -1237,11 +1237,11 @@ immune cell types, expressed genes and pathway activation."
         
     })
 
-    cyto.opts = tagList(
-        tipify(selectInput(ns("cytovar1"),label="x-axis:", choices=NULL, multiple=FALSE),
+    cyto.opts = shiny::tagList(
+        shinyBS::tipify(shiny::selectInput(ns("cytovar1"),label="x-axis:", choices=NULL, multiple=FALSE),
                "Select your prefered gene on the x-axis.",
                placement="top", options = list(container = "body")),
-        tipify(selectInput(ns("cytovar2"),label="y-axis:", choices=NULL, multiple=FALSE),
+        shinyBS::tipify(shiny::selectInput(ns("cytovar2"),label="y-axis:", choices=NULL, multiple=FALSE),
                "Choose your prefered gene on the y-axis.",
                placement="top", options = list(container = "body"))
     )
@@ -1250,7 +1250,7 @@ immune cell types, expressed genes and pathway activation."
     
     cytoModule_caption = "<b>Cyto plot.</b> This plot shows the distribution of samples in relation to the expression of selected gene pairs. It mimics the scatter plots used for gating in flow cytometry analysis."    
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "cytoplot",
         func = cyto.plotFUNC,
@@ -1264,10 +1264,10 @@ immune cell types, expressed genes and pathway activation."
         add.watermark = WATERMARK
     )
 
-    observe({
+    shiny::observe({
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
-        req(ngs)
+        shiny::req(ngs)
         ## just at new data load
         genes <- NULL
         g1=g2=NULL
@@ -1287,68 +1287,68 @@ immune cell types, expressed genes and pathway activation."
         if(length(g1)==0) g1 <- genes[1]
         if(length(g2)==0) g2 <- genes[2]
 
-        updateSelectizeInput(session, "cytovar1", choices=genes, selected=g1, server=TRUE)
-        updateSelectizeInput(session, "cytovar2", choices=genes, selected=g2, server=TRUE)
+        shiny::updateSelectizeInput(session, "cytovar1", choices=genes, selected=g1, server=TRUE)
+        shiny::updateSelectizeInput(session, "cytovar2", choices=genes, selected=g2, server=TRUE)
     })
    
     
-    output$markersplot_UI <- renderUI({
-        fillRow(
+    output$markersplot_UI <- shiny::renderUI({
+        shiny::fillRow(
             flex = c(1.3,0.08,1),
-            fillCol(
+            shiny::fillCol(
                 height = fullH,
                 flex = c(NA,1),
-                div(HTML(markersplot_caption),class="caption"),
+                shiny::div(shiny::HTML(markersplot_caption),class="caption"),
                 plotWidget(ns("markersplot")) 
             ),
-            br(),
-            fillCol(
+            shiny::br(),
+            shiny::fillCol(
                 height = fullH,
                 flex = c(NA,1),
-                div(HTML(cytoModule_caption), class="caption"),
+                shiny::div(shiny::HTML(cytoModule_caption), class="caption"),
                 plotWidget(ns("cytoplot"))
             )
         )
     })
-    outputOptions(output, "markersplot_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "markersplot_UI", suspendWhenHidden=FALSE) ## important!!!
 
     
     ##==========================================================================
     ## CNV
     ##==========================================================================
 
-    getCNAfromExpression <- reactive({
+    getCNAfromExpression <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         dbg("[SingleCellBoard:getCNAfromExpression] calculating CNV with SMA40 ...")
         
         ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
-        withProgress( message='calculating CNV (sma40)...', value=0.33, {
+        shiny::withProgress( message='calculating CNV (sma40)...', value=0.33, {
             res <- pgx.CNAfromExpression(ngs, nsmooth=40)
         })
         return(res)
     })
 
-    getCNAfromExpression.inferCNV <- reactive({
+    getCNAfromExpression.inferCNV <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         dbg("[SingleCellBoard:getCNAfromExpression] calculating CNV using inferCNV...")
         ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
         
-        withProgress( message='calculating CNV (inferCNV)...', value=0.33, {
+        shiny::withProgress( message='calculating CNV (inferCNV)...', value=0.33, {
             res <- pgx.inferCNV(ngs, refgroup=NULL)
         })
         return(res)
     })
 
-    ##output$cnaplot <- renderPlot({
-    cna.plotFUNC %<a-% reactive({
-        require(RColorBrewer)
+    ##output$cnaplot <- shiny::renderPlot({
+    cna.plotFUNC %<a-% shiny::reactive({
+
         ##return(NULL)    
         ngs <- inputData()
-        req(ngs,input$cna_method,input$cna_annotvar,input$cna_orderby)
+        shiny::req(ngs,input$cna_method,input$cna_annotvar,input$cna_orderby)
 
         dbg("[SingleCellBoard:cna.plotFUNC] reacted")
         
@@ -1369,14 +1369,14 @@ immune cell types, expressed genes and pathway activation."
         
     })
 
-    cna.opts = tagList(
-        tipify(radioButtons(ns("cna_method"),label="Method:", choices=c("sma40","inferCNV"),inline=TRUE),
+    cna.opts = shiny::tagList(
+        shinyBS::tipify(shiny::radioButtons(ns("cna_method"),label="Method:", choices=c("sma40","inferCNV"),inline=TRUE),
                "Select the computational method for CNV inference. The <tt>sma40</tt> method uses a fast moving average of the relative expression values with a window of 40 genes. <tt>inferCNV</tt> uses the method inferCNV of the Trinity CTAT Project (warning: this method is very slow!)."),
-        tipify(selectInput(ns("cna_annotvar"),label="Annotate with:", choices=NULL, multiple=FALSE),
+        shinyBS::tipify(shiny::selectInput(ns("cna_annotvar"),label="Annotate with:", choices=NULL, multiple=FALSE),
                "Select what annotation variable to show together with the heatmap", placement = "top"),
         ##checkboxGroupInput('cnaoptions','',c("bin20"), inline=TRUE),
         ##radioButtons('cnaplottype',NULL,c("image","heatmap","splitmap"), inline=TRUE),
-        tipify(radioButtons(ns("cna_orderby"),"Order samples by:",c("clust","pc1"), inline=TRUE),
+        shinyBS::tipify(shiny::radioButtons(ns("cna_orderby"),"Order samples by:",c("clust","pc1"), inline=TRUE),
                "Select how to order the vertical (sample) axis: clustering or according the loading of the first principal component.")
     )
 
@@ -1384,7 +1384,7 @@ immune cell types, expressed genes and pathway activation."
 
     cnaModule_caption = "<b>Inferred copy number variation (CNV)</b>. Genomic copy number is estimated from gene expression data by computing a moving average of the relative expression along the chromosomes. The heatmap shows the inferred copy number of the samples versus chromosomes. The samples are annotated further with phenotype information on the right side of the figure."
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "cnaplot",
         func = cna.plotFUNC,
@@ -1399,41 +1399,41 @@ immune cell types, expressed genes and pathway activation."
         add.watermark = WATERMARK
     )
 
-    observe({
+    shiny::observe({
         ngs <- inputData()
         ##if(is.null(ngs)) return(NULL)
-        req(ngs)        
+        shiny::req(ngs)        
         ## levels for sample filter
         dbg("[SingleCellBoard:cna:observe] reacted")
         
         annotvar <- c(colnames(ngs$Y),"<none>")
-        updateSelectInput(session, "cna_annotvar", choices=annotvar)
+        shiny::updateSelectInput(session, "cna_annotvar", choices=annotvar)
         
     })
 
-    output$cnaModule_UI <- renderUI({
-        fillCol(
+    output$cnaModule_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = fullH,
             flex = c(NA,1),
-            div(HTML(cnaModule_caption),class="caption"),
+            shiny::div(shiny::HTML(cnaModule_caption),class="caption"),
             plotWidget(ns("cnaplot"))
         )
     })
-    outputOptions(output, "cnaModule_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "cnaModule_UI", suspendWhenHidden=FALSE) ## important!!!
     
     ##===========================================================================
     ## iTALK
     ##===========================================================================
     
-    italk_getResults <- reactive({
+    italk_getResults <- shiny::reactive({
         ngs <- inputData()
         ## if(is.null(ngs)) return(NULL)
-        req(ngs)
-        req(input$italk_groups)
+        shiny::req(ngs)
+        shiny::req(input$italk_groups)
 
         dbg("[SingleCellBoard:italk_getResults] reacted")
         
-        require(iTALK)
+
         db <- iTALK::database
         db.genes <- unique(c(db$Ligand.ApprovedSymbol,db$Receptor.ApprovedSymbol))
         length(db.genes)
@@ -1487,8 +1487,8 @@ immune cell types, expressed genes and pathway activation."
             ## data1$compare_groups <- group
             ## data1 <- data1[which(data1$compare_groups!=0),]        
             ## ## find DEGenes of regulatory T cells and NK cells between these 2 groups
-            ## deg_t  <- DEG(data %>% filter(cell_type=='CD4Tcells'),method='Wilcox',contrast=c(2,1))
-            ## deg_nk <- DEG(data %>% filter(cell_type=='NKcells'),method='Wilcox',contrast=c(2,1))
+            ## deg_t  <- DEG(data %>% plotly::filter(cell_type=='CD4Tcells'),method='Wilcox',contrast=c(2,1))
+            ## deg_nk <- DEG(data %>% plotly::filter(cell_type=='NKcells'),method='Wilcox',contrast=c(2,1))
             ## ## find significant ligand-receptor pairs and do the plotting
             ## res_cat <- FindLR(deg_t,deg_nk,datatype='DEG',comm_type=comm_type)
             ## res_cat <- res_cat[order(res_cat$cell_from_logFC*res_cat$cell_to_logFC,decreasing=T),]        
@@ -1505,19 +1505,19 @@ immune cell types, expressed genes and pathway activation."
         return(res)
     })
 
-    italk_netview.RENDER %<a-% reactive({
+    italk_netview.RENDER %<a-% shiny::reactive({
         res <- italk_getResults()
-        req(res)
+        shiny::req(res)
         ##if(is.null(res)) return(NULL)
         res_cat <- res$table
         ## Communication graph
         NetView(res_cat, col=res$cell_col, vertex.label.cex=1, arrow.width=1, edge.max.width=5)
     })
 
-    italk_LRPlot.RENDER %<a-% reactive({
+    italk_LRPlot.RENDER %<a-% shiny::reactive({
         ## Circos plot
         res <- italk_getResults()
-        req(res)
+        shiny::req(res)
         ##if(is.null(res)) return(NULL)
         res_cat <- res$table
         if(nrow(res_cat)<1) return(NULL) 
@@ -1528,15 +1528,15 @@ immune cell types, expressed genes and pathway activation."
         LRPlot(res_top, datatype='mean count', cell_col=res$cell_col,
                link.arr.lwd = head(res_cat$cell_from_mean_exprs,ntop),
                link.arr.width = head(res_cat$cell_to_mean_exprs,ntop))
-        comm_type <- isolate(input$italk_category)
+        comm_type <- shiny::isolate(input$italk_category)
         title((paste(comm_type,"genes     ")), line=0.5)
     })
 
-    italk_heatmap.RENDER %<a-% reactive({
+    italk_heatmap.RENDER %<a-% shiny::reactive({
         ## Expression heatmap
         ngs <- inputData()
         res <- italk_getResults()
-        req(ngs,res)
+        shiny::req(ngs,res)
         ##if(is.null(res)) return(NULL)
         
         dbg("[SingleCellBoard:italk_heatmap.RENDER] reacted")
@@ -1556,20 +1556,20 @@ immune cell types, expressed genes and pathway activation."
                    key=FALSE, keysize=0.6)
     })
 
-    require(shinyBS)
+
 
     italk_LRPlot_info = "The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as
 a circle plot. The width of the arrow represents the expression level/log fold change of the ligand; while the width of arrow head represents the expression level/log fold change of the receptor. Different color and the type of the arrow stands for whether the ligand and/or receptor are upregulated or downregulated. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "italk_LRPlot",
         func = italk_LRPlot.RENDER,
         func2 = italk_LRPlot.RENDER,
         title = "Ligand-Receptor plot", label="a",
         info.text = italk_LRPlot_info,
-        options = tagList(
-            tipify( selectInput(ns("italk_LRPlot_ntop"),"ntop pairs",
+        options = shiny::tagList(
+            shinyBS::tipify( shiny::selectInput(ns("italk_LRPlot_ntop"),"ntop pairs",
                                 choices=c(10,15,25,50,75,100),selected=25),
                    "Select the maximum number of LR pairs to include in the LR plot.",
                    placement="top")
@@ -1581,14 +1581,14 @@ a circle plot. The width of the arrow represents the expression level/log fold c
 
     italk_heatmap_info = "The heatmap visualizes the expression level/log fold change of the ligand/receptor genes. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "italk_heatmap",
         func = italk_heatmap.RENDER,
         func2 = italk_heatmap.RENDER,
         title = "Expression heatmap", label="b",
         info.text = italk_heatmap_info,
-        options = tagList(),
+        options = shiny::tagList(),
         pdf.width=6, pdf.height=8,
         height = imgH, res=80,
         add.watermark = WATERMARK
@@ -1596,15 +1596,15 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     
     italk_netview_info = "The NetView plot visualizes the communication structure of ligand-receptor genes as a graph. The colors represent different types of cells as a structure and the width of edges represent the strength of the communication. Labels on the edges show exactly how many interactions exist between two types of cells. For further information, see iTALK R package (Wang et al., BioRxiv 2019)."
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "italk_netview",
         func = italk_netview.RENDER,
         func2 = italk_netview.RENDER,
         title = "NetView", label="c",
         info.text = italk_netview_info,
-        options = tagList(
-            tipify( selectInput(ns("italk_netview_topgenes"),"top genes",
+        options = shiny::tagList(
+            shinyBS::tipify( shiny::selectInput(ns("italk_netview_topgenes"),"top genes",
                                 choices=c(10,25,50,75,100),selected=50),
                    "Select the number of topgenes to search for ligand-receptor pairs.",
                    placement="top" )
@@ -1614,14 +1614,14 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         add.watermark = WATERMARK
     )
 
-    observe({
+    shiny::observe({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         ph <- sort(colnames(ngs$samples))
         sel = ph[1]
         ct <- grep("cell.fam|cell.type|type|cluster",ph,value=TRUE)
         if(length(ct)>0) sel <- ct[1]
-        updateSelectInput(session, "italk_groups", choices=ph, selected=sel)
+        shiny::updateSelectInput(session, "italk_groups", choices=ph, selected=sel)
     })
 
     italk_panel_caption = "<b>Visualization of ligand-receptor interaction.</b> The iTALK R package is designed to profile and visualize the ligand-receptor mediated intercellular cross-talk signals from single-cell RNA sequencing data (scRNA-seq). iTALK uses a manually curated list of ligand-receptor gene pairs further classified into 4 categories based on the primary function of the ligand: cytokines/chemokines, immune checkpoint genes, growth factors, and others. <b>(a)</b> The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as a circle plot. <b>(b)</b> The heatmap visualizes the expression level/log fold change of the ligand/receptor genes." 
@@ -1629,22 +1629,22 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     
     italk_panel_caption = "<b>Visualization of ligand-receptor interaction.</b> The iTALK R package is designed to profile and visualize the ligand-receptor mediated intercellular cross-talk signals from single-cell RNA sequencing data (scRNA-seq). iTALK uses a manually curated list of ligand-receptor gene pairs further classified into 4 categories based on the primary function of the ligand: cytokines/chemokines, immune checkpoint genes, growth factors, and others. <b>(a)</b> The Ligand-Receptor plot visualizes the communication structure of ligand-receptor genes as a circle plot. <b>(b)</b> The heatmap visualizes the expression level/log fold change of the ligand/receptor genes.  <b>(c)</b> The NetView plot visualizes the communication structure of ligand-receptor genes as a graph." 
 
-    output$italk_panel_UI <- renderUI({
-        fillCol(
+    output$italk_panel_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = fullH,
             flex = c(NA,NA,1), 
-            div(HTML(italk_panel_caption),class="caption"),
-            inputPanel(
-                tipify( selectInput(ns("italk_groups"),NULL, choices=""),
+            shiny::div(shiny::HTML(italk_panel_caption),class="caption"),
+            shiny::inputPanel(
+                shinyBS::tipify( shiny::selectInput(ns("italk_groups"),NULL, choices=""),
                        "Select the phenotype parameter to divide samples into groups.",
                        placement="right"),
-                tipify( selectInput(ns("italk_category"),NULL,
+                shinyBS::tipify( shiny::selectInput(ns("italk_category"),NULL,
                                     choices=c('cytokine','growth factor','checkpoint','other')),
                        "Select the gene category for finding L/R pairs.",
                        placement="right")
                 ##radioButtons("italk_mode","Mode", c("absolute","differential"))
             ),
-            fillRow(
+            shiny::fillRow(
                 ##flex = c(1,1,1),
                 flex = c(1,1),
                 plotWidget(ns("italk_LRPlot")),
@@ -1653,18 +1653,18 @@ a circle plot. The width of the arrow represents the expression level/log fold c
             )
         )
     })
-    outputOptions(output, "italk_panel_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "italk_panel_UI", suspendWhenHidden=FALSE) ## important!!!
         
     ##==========================================================================
     ## Trajectory (dev)
     ##==========================================================================
 
-    monocle_getResults <- reactive({
+    monocle_getResults <- shiny::reactive({
 
-        require(monocle3)
+
         
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         ##if(is.null(ngs)) return(NULL)
 
         dbg("[SingleCellBoard:monocle_getResults] reacted")
@@ -1768,9 +1768,9 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         ## After: update selectors
         ##------------------------------------------------------------
         GENES = rownames(cds)
-        updateSelectizeInput(session, "monocle_plotgene", choices=GENES, server=TRUE)
+        shiny::updateSelectizeInput(session, "monocle_plotgene", choices=GENES, server=TRUE)
         grps = setdiff(colnames(cds@colData),c("Size_Factor"))
-        updateSelectInput(session, "monocle_groupby", choices=grps, selected=".cluster" )
+        shiny::updateSelectInput(session, "monocle_groupby", choices=grps, selected=".cluster" )
 
         progress$inc(0.2, detail = "done")
 
@@ -1779,15 +1779,15 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         return(cds)
     })
 
-    ## monocle_topMarkers <- reactive({ })
+    ## monocle_topMarkers <- shiny::reactive({ })
 
-    monocle_plotTopMarkers.RENDER %<a-% reactive({
+    monocle_plotTopMarkers.RENDER %<a-% shiny::reactive({
 
         dbg("[SingleCellBoard:monocle_plotTopMarkers.RENDER] reacted")
         
         cds <- monocle_getResults()
-        require(monocle3)
-        req(cds,input$monocle_groupby)
+
+        shiny::req(cds,input$monocle_groupby)
 
         dbg("[SingleCellBoard:monocle_plotTopMarkers.RENDER] 1")        
         
@@ -1804,8 +1804,8 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         NTOP = 3
         NTOP = as.integer(input$monocle_ntop)
         top_specific_markers = marker_test_res %>%
-            filter(fraction_expressing >= 0.10) %>%
-            group_by(cell_group) %>%
+            plotly::filter(fraction_expressing >= 0.10) %>%
+            plotly::group_by(cell_group) %>%
             top_n(NTOP, specificity)
         ##top_n(1, marker_test_q_value)
         ##top_n(1, pseudo_R2)
@@ -1820,21 +1820,21 @@ a circle plot. The width of the arrow represents the expression level/log fold c
                                            group_cells_by = pheno1,
                                            ##ordering_type="maximal_on_diag",
                                            scale_max = scale_max1, max.size = 5)
-        ## g <- qplot(seq(0,4*pi,0.1), sin(seq(0,4*pi,0.1)))
-        g <- g + theme(plot.margin=unit(c(1,1,1,1)*0.5,"cm"))
+        ## g <- ggplot2::qplot(seq(0,4*pi,0.1), sin(seq(0,4*pi,0.1)))
+        g <- g + ggplot2::theme(plot.margin=unit(c(1,1,1,1)*0.5,"cm"))
 
         dbg("[SingleCellBoard:monocle_plotTopMarkers.RENDER] done!")
 
         return(g)
     })
 
-    monocle_plotTrajectory.RENDER %<a-% reactive({
+    monocle_plotTrajectory.RENDER %<a-% shiny::reactive({
 
         dbg("monocle_plotTrajectory.RENDER: reacted")
 
-        require(monocle3)
+
         cds <- monocle_getResults()
-        req(cds,input$monocle_groupby)    
+        shiny::req(cds,input$monocle_groupby)    
 
         pheno1 = ".cluster"
         pheno1 = input$monocle_groupby
@@ -1854,17 +1854,17 @@ a circle plot. The width of the arrow represents the expression level/log fold c
                                   label_groups_by_cluster=FALSE,
                                   label_leaves=FALSE,
                                   label_branch_points=FALSE)
-        g <- g + theme(plot.margin=unit(c(1,1,1,1)*0.5,"cm"))
+        g <- g + ggplot2::theme(plot.margin=unit(c(1,1,1,1)*0.5,"cm"))
         return(g)
     })
 
-    monocle_plotGene.RENDER %<a-% reactive({
+    monocle_plotGene.RENDER %<a-% shiny::reactive({
 
         dbg("monocle_plotGene.RENDER: reacted")
         
         cds <- monocle_getResults()
-        req(cds, input$monocle_plotgene)   
-        require(monocle3)
+        shiny::req(cds, input$monocle_plotgene)   
+
         genes = "CD14"
         genes = input$monocle_plotgene
         
@@ -1873,13 +1873,13 @@ a circle plot. The width of the arrow represents the expression level/log fold c
                                   cell_size = size1, 
                                   show_trajectory_graph=FALSE,
                                   label_cell_groups=FALSE)
-        g <- g + theme(plot.margin=unit(c(1,1,1,1)*0.5,"cm"))
+        g <- g + ggplot2::theme(plot.margin=unit(c(1,1,1,1)*0.5,"cm"))
         return(g)
     })
 
 
     ##------- plotTopMarkers module -------
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "monocle_plotTopMarkers", 
         func = monocle_plotTopMarkers.RENDER,
@@ -1887,9 +1887,9 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         plotlib = "ggplot",
         title = "Top markers by group", label="a", 
         info.text = "The heatmap visualizes the expression of group-specific markers.",
-        options = tagList(
-            selectInput(ns("monocle_groupby"),"Group by:",choices=NULL),
-            selectInput(ns("monocle_ntop"),"ntop:",choices=c(1,2,3,4,5,10,25),selected=5)
+        options = shiny::tagList(
+            shiny::selectInput(ns("monocle_groupby"),"Group by:",choices=NULL),
+            shiny::selectInput(ns("monocle_ntop"),"ntop:",choices=c(1,2,3,4,5,10,25),selected=5)
         ),
         pdf.width=5, pdf.height=8,
         height=imgH, res=c(72,95),
@@ -1897,8 +1897,8 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     )
 
     ##------- plotTrajectory module -------
-    monocle_plotTrajectory.opts = tagList()
-    callModule(
+    monocle_plotTrajectory.opts = shiny::tagList()
+    shiny::callModule(
         plotModule,
         id = "monocle_plotTrajectory",
         plotlib = "ggplot",
@@ -1913,10 +1913,10 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     )
 
     ##------- plotGene module -------
-    monocle_plotGene.opts = tagList(    
-        selectInput(ns("monocle_plotgene"),"Gene:",choices=NULL)
+    monocle_plotGene.opts = shiny::tagList(    
+        shiny::selectInput(ns("monocle_plotgene"),"Gene:",choices=NULL)
     )
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "monocle_plotGene", plotlib="ggplot",
         func = monocle_plotGene.RENDER,
@@ -1932,17 +1932,17 @@ a circle plot. The width of the arrow represents the expression level/log fold c
 
     monocle_panel_caption = "<b>Single-cell trajectory analysis</b>.  <b>(a)</b> Heatmap visualizing the expression of the group-specific top markers. <b>(b)</b> Single-cell trajectory analysis how cells choose between one of several possible end states. Reconstruction algorithms can robustly reveal branching trajectories, along with the genes that cells use to navigate these decisions. <b>(c)</b> Gene expression distribution for selected marker gene."
 
-    output$monocle_panel_UI <- renderUI({
-        fillCol(
+    output$monocle_panel_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = fullH,
             flex = c(NA,0.05,1), 
-            div(HTML(monocle_panel_caption), class="caption"),
-            br(),
+            shiny::div(shiny::HTML(monocle_panel_caption), class="caption"),
+            shiny::br(),
             ##------- Page layout -------
-            fillRow(
+            shiny::fillRow(
                 flex = c(1.2,1),
                 plotWidget(ns("monocle_plotTopMarkers")),
-                fillCol(
+                shiny::fillCol(
                     flex = c(1,1),
                     plotWidget(ns("monocle_plotTrajectory")),
                     plotWidget(ns("monocle_plotGene"))
@@ -1950,7 +1950,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
             )
         )
     })
-    outputOptions(output, "monocle_panel_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "monocle_panel_UI", suspendWhenHidden=FALSE) ## important!!!
     
     
     return(NULL)

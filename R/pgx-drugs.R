@@ -29,7 +29,7 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
     ## 'obj'   : can be ngs object or fold-change matrix
     ## X       : drugs profiles (may have multiple for one drug)
     ## xdrugs : drug associated with profile
-    require(fgsea)
+    
     names(obj)
     if("gx.meta" %in% names(obj)) {
         F <- pgx.getMetaMatrix(obj)$fc
@@ -75,9 +75,9 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
     }
     rnk1 <- apply(X[gg,,drop=FALSE],2,rank,na.last="keep")
     rnk2 <- apply(F[gg,,drop=FALSE],2,rank,na.last="keep")
-    system.time(R1 <- cor(rnk1, rnk2, use="pairwise"))
+    system.time(R1 <- WGCNA::cor(rnk1, rnk2, use="pairwise"))
     dim(R1)
-    ##require(gputools)
+    ##
     ##system.time(R1 <- gpuCor(rnk1, rnk2, use="pairwise")$coefficients)
     R1 <- R1 + 1e-8*matrix(rnorm(length(R1)),nrow(R1),ncol(R1))
     colnames(R1) <- colnames(F)
@@ -85,14 +85,14 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
     dim(R1)
 
     ## experiment to drug
-    require(Matrix)
+    
 
     results <- list()
     if("cor" %in% methods) {
         message("Calculating drug enrichment using rank correlation ...")
-        require(qlcMatrix)
+        
         ##D <- model.matrix( ~ 0 + xdrugs)
-        D <- sparse.model.matrix( ~ 0 + xdrugs)
+        D <- Matrix::sparse.model.matrix( ~ 0 + xdrugs)
         dim(D)
         colnames(D) <- sub("^xdrugs","",colnames(D))
         rownames(D) <- colnames(X)          ## not necessary..
@@ -111,7 +111,7 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
         res0 <- list()
         i=1
         for(i in 1:ncol(R1)) {
-            suppressWarnings(res0[[i]] <- fgseaSimple( meta.gmt, stats=R1[,i], nperm=1000))
+            suppressWarnings(res0[[i]] <- fgsea::fgseaSimple( meta.gmt, stats=R1[,i], nperm=1000))
         }
         names(res0) <- colnames(R1)
         length(res0)
@@ -143,7 +143,7 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
         for(k in 1:length(results)) {
             res <- results[[k]]
             ## reduce solution set with top-N of each comparison??
-            mtop <- apply(abs(res$X), 2, function(x) head(order(-x),nprune)) ## absolute NES!!
+            mtop <- apply(abs(res$X), 2, function(x) Matrix::head(order(-x),nprune)) ## absolute NES!!
             mtop <- unique(as.vector(mtop))
             length(mtop)
             top.idx <- unique(unlist(meta.gmt[mtop]))
@@ -184,7 +184,7 @@ pgx.computeComboEnrichment <- function(obj, X, xdrugs,
                                        ntop=10, nsample=20, nprune=250,
                                        contrasts=NULL, res.mono=NULL )
 {
-    require(fgsea)
+    
     if(0) {
         X <- readRDS(file=file.path(FILES,"l1000_es.rds"))
         xdrugs <- gsub("_.*$","",colnames(X))
@@ -230,8 +230,8 @@ pgx.computeComboEnrichment <- function(obj, X, xdrugs,
 
     ## determine top-combinations
     ##ntop=10
-    top.mono.up  <- apply(er.mono$X, 2, function(x) head(order(-x),ntop))
-    top.mono.dn  <- apply(er.mono$X, 2, function(x) head(order(x),ntop))
+    top.mono.up  <- apply(er.mono$X, 2, function(x) Matrix::head(order(-x),ntop))
+    top.mono.dn  <- apply(er.mono$X, 2, function(x) Matrix::head(order(x),ntop))
     top.combo.up <- apply(top.mono.up,2,function(idx) list(combn(idx,2)))
     top.combo.dn <- apply(top.mono.dn,2,function(idx) list(combn(idx,2)))
     top.combo.up <- unlist(top.combo.up, recursive=FALSE)
@@ -248,7 +248,7 @@ pgx.computeComboEnrichment <- function(obj, X, xdrugs,
         cmbn.idx <- as.integer(strsplit(top.combo[k],split="-")[[1]])
         cmbn.idx
         cmbn <- sort(rownames(er.mono$X)[cmbn.idx])
-        head(cmbn)
+        Matrix::head(cmbn)
         p1 <- sample(which(xdrugs==cmbn[1]),nsample,replace=TRUE)
         p2 <- sample(which(xdrugs==cmbn[2]),nsample,replace=TRUE)
         pp <- cbind(p1, p2)
@@ -263,7 +263,7 @@ pgx.computeComboEnrichment <- function(obj, X, xdrugs,
     ##colnames(comboX) <- apply(combo.idx, 1, function(ii) paste(colnames(X)[ii],collapse="+"))
     combo.drugs <- apply(sample.pairs, 1, function(ii) paste(sort(xdrugs[ii]),collapse="+"))
 
-    tail(sort(table(combo.drugs)))
+    Matrix::tail(sort(table(combo.drugs)))
     sum(table(combo.drugs)>=15)
     sel.combo <- names(which(table(combo.drugs)>=15))
     jj <- which( combo.drugs %in% sel.combo)

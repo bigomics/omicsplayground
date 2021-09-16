@@ -9,23 +9,23 @@ if(0) {
 
     ## See: https://cran.r-project.org/web/packages/TCGAretriever
     BiocManager::install("TCGAretriever")
-    library(TCGAretriever)
+    
     ## Define a set of genes of interest
     q_genes <- c("TP53", "MDM2", "E2F1", "EZH2")
     q_cases <- "brca_tcga_pub_complete"
     rna_prf <- "brca_tcga_pub_mrna"
     mut_prf <- "brca_tcga_pub_mutations"
     brca_RNA <- TCGAretriever::get_profile_data(case_id = q_cases, gprofile_id = rna_prf, glist = q_genes)
-    head(brca_RNA[, 1:5])
+    Matrix::head(brca_RNA[, 1:5])
 
     BiocManager::install("curatedTCGAData")
     BiocManager::install("TCGAutils")
-    library(curatedTCGAData)
-    library(MultiAssayExperiment)
-    library(TCGAutils)
-    (mae <- curatedTCGAData("DLBC", c("RNASeq2GeneNorm"), FALSE))
-    ##(mae <- curatedTCGAData("DLBC", c("RNASeqGene", "Mutation"), FALSE))
-    counts <- assays(mae)[[1]]
+    
+    
+    
+    (mae <- curatedTCGAData::curatedTCGAData("DLBC", c("RNASeq2GeneNorm"), FALSE))
+    ##(mae <- curatedTCGAData::curatedTCGAData("DLBC", c("RNASeqGene", "Mutation"), FALSE))
+    counts <- MultiAssayExperiment::assays(mae)[[1]]
     dim(counts)
 
 }
@@ -34,8 +34,8 @@ if(0) {
 pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.only=TRUE,
                                  min.cases=10, sortby.p = FALSE, plot=TRUE, verbose=1 )
 {                                          
-    require(survival)
-    require(rhdf5)
+    
+    
 
     ##matrix_file = file.path(ARCHS4.DIR,"tcga_matrix.h5")
     if(!file.exists(matrix_file)) {
@@ -49,30 +49,30 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
     
     ## get the top DE genes
     sig <- sort(sig)
-    genes <- c(head(names(sig),ntop),tail(names(sig),ntop))
-    head(genes)
+    genes <- c(Matrix::head(names(sig),ntop),tail(names(sig),ntop))
+    Matrix::head(genes)
 
     ## Read the H5 matrix file
-    ## aa <- h5ls(matrix_file)[,1:2]
+    ## aa <- rhdf5::h5ls(matrix_file)[,1:2]
     ## aa
     ## ii <- which(aa[,1]=="/meta")[-1]
-    ## aa.head <- lapply(ii,function(i) head(h5read(matrix_file, paste0("/meta/",aa[i,2]))))
+    ## aa.head <- lapply(ii,function(i) Matrix::head(rhdf5::h5read(matrix_file, paste0("/meta/",aa[i,2]))))
     ## names(aa.head) <- aa[ii,2]
     ## aa.head
 
     if(verbose) message("[pgx.testTCGAsurvival] extracting expression from H5 matrix file")    
-    require(rhdf5)
+    
     h5.samples = rhdf5::h5read(matrix_file, "/meta/gdc_cases.submitter_id")
     h5.genes = rhdf5::h5read(matrix_file, "/meta/genes")            
     h5.project = rhdf5::h5read(matrix_file, "/meta/gdc_cases.project.project_id")            
-    h5ls(matrix_file)
+    rhdf5::h5ls(matrix_file)
     
     sample_index <- 1:length(h5.samples)
     gene_index <- 1:length(h5.genes)            
     
     ##sample_index <- which(h5.samples %in% samples)
     gene_index <- which(h5.genes %in% genes)
-    head(gene_index)    
+    Matrix::head(gene_index)    
     expression = rhdf5::h5read(
         matrix_file, "data/expression",
         index = list(gene_index, sample_index)
@@ -91,7 +91,7 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
     
     surv.file <- file.path(lib.dir, "rtcga-survival.csv")
     surv <- read.csv(surv.file, row.names=1)
-    head(surv)
+    Matrix::head(surv)
     surv$months <- round(surv$times/365*12, 2)
     surv$status <- surv$patient.vital_status
 
@@ -119,7 +119,7 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
     rho.list <- list()
     sel.list <- list()
     names(surv.p) <- all.studies
-    for(study in head(all.studies,99)) {
+    for(study in Matrix::head(all.studies,99)) {
 
         study
         
@@ -131,7 +131,7 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
         if(length(sel) < min.cases) next()
         gg <- intersect(rownames(expression),names(sig))
         sel.X <- expression[gg,sel] - rowMeans(expression[gg,sel],na.rm=TRUE)
-        rho <- cor(sel.X, sig[gg], use="pairwise")[,1]
+        rho <- WGCNA::cor(sel.X, sig[gg], use="pairwise")[,1]
         sel.data <- surv[sel,]
         
         ## fit survival curve on two groups
@@ -139,7 +139,7 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
         table(poscor)
         
         
-        sdf <- survdiff( Surv(months, status) ~ poscor, data = sel.data)
+        sdf <- survival::survdiff( survival::Surv(months, status) ~ poscor, data = sel.data)
         p.val <- 1 - pchisq(sdf$chisq, length(sdf$n) - 1)
         p.val
         
@@ -179,8 +179,8 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
             ## fit survival curve on two groups
             poscor <- (rho > median(rho,na.rm=TRUE))
             table(poscor)
-            library(survival)
-            fit <- survfit( Surv(months, status) ~ poscor, data = sel.data )
+            
+            fit <- survival::survfit( survival::Surv(months, status) ~ poscor, data = sel.data )
             
             ##legend.labs <- paste(c("negative","positive"),"correlated")
             legend.labs <- paste(c("rho<0","rho>0"))
@@ -206,8 +206,8 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
                 legend("topright", pq, bty='n', cex=0.9, y.intersp=0.85)
                 
             } else {
-                library(survminer)
-                ggsurvplot(
+                
+                survminer::ggsurvplot(
                     fit, 
                     data = sel.data, 
                     size = 1,                 # change line size
@@ -219,7 +219,7 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
                     ## legend.labs = c("Male", "Female"),    # Change legend labels
                     legend.labs = legend.labs,
                     risk.table.height = 0.20, # Useful to change when you have multiple groups
-                    ggtheme = theme_bw()      # Change ggplot2 theme
+                    ggtheme = ggplot2::theme_bw()      # Change ggplot2 theme
                 )
             } ## end of if
         } ## end of for
@@ -238,9 +238,9 @@ pgx.selectTCGAstudies <- function(cancertype, variables)
     ##
     ##
     ##
-    library(cgdsr)
-    mycgds <- CGDS("http://www.cbioportal.org/")
-    all.studies <- sort(getCancerStudies(mycgds)[,1])
+    
+    mycgds <- cgdsr::CGDS("http://www.cbioportal.org/")
+    all.studies <- sort(cgdsr::getCancerStudies(mycgds)[,1])
     studies <- grep(cancertype, all.studies, value=TRUE)    
     clin <- list()
     samples <- list()
@@ -250,7 +250,7 @@ pgx.selectTCGAstudies <- function(cancertype, variables)
     for(mystudy in studies) {
 
         mystudy
-        myprofiles <- getGeneticProfiles(mycgds,mystudy)[,1]
+        myprofiles <- cgdsr::getGeneticProfiles(mycgds,mystudy)[,1]
         myprofiles
 
         ## mrna datatypes
@@ -261,16 +261,16 @@ pgx.selectTCGAstudies <- function(cancertype, variables)
         pr.mrna
         if(length(pr.mrna)==0) next()
         
-        all.cases <- getCaseLists(mycgds,mystudy)[,1]
+        all.cases <- cgdsr::getCaseLists(mycgds,mystudy)[,1]
         all.cases
         ##if(!any(grepl("complete$",all.cases))) next        
         ##caselist <- grep("complete$",all.cases,value=TRUE)
         caselist <- grep(paste0(mrna.type,"$"),all.cases,value=TRUE)
         caselist
-        clin0 <- getClinicalData(mycgds, caselist)
-        head(clin0)[,1:4]
+        clin0 <- cgdsr::getClinicalData(mycgds, caselist)
+        Matrix::head(clin0)[,1:4]
         rownames(clin0) <- gsub("[.]","-",rownames(clin0)) ## correct names...
-        head(clin0)[,1:4]
+        Matrix::head(clin0)[,1:4]
         clin[[mystudy]] <- clin0
         samples[[mystudy]] <- rownames(clin0)
     }
@@ -300,10 +300,10 @@ pgx.getTCGAdataset <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE
     from.h5 <- (from.h5 && !is.null(matrix_file) && file.exists(matrix_file))
     
     ##BiocManager::install("cgdsr")    
-    library(cgdsr)
-    mycgds <- CGDS("http://www.cbioportal.org/")
+    
+    mycgds <- cgdsr::CGDS("http://www.cbioportal.org/")
 
-    all.studies <- sort(getCancerStudies(mycgds)[,1])
+    all.studies <- sort(cgdsr::getCancerStudies(mycgds)[,1])
     if(!all(study %in% all.studies)) {
         ss <- setdiff(study, all.studies)
         stop(ss,"is not in TCGA studies")
@@ -319,7 +319,7 @@ pgx.getTCGAdataset <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE
         
         mystudy
         ##myprofiles = "ov_tcga_rna_seq_v2_mrna"        
-        myprofiles <- getGeneticProfiles(mycgds,mystudy)[,1]
+        myprofiles <- cgdsr::getGeneticProfiles(mycgds,mystudy)[,1]
         myprofiles
 
         ## datatypes
@@ -339,19 +339,19 @@ pgx.getTCGAdataset <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE
             return(NULL)
         }
         
-        all.cases <- getCaseLists(mycgds,mystudy)[,1]
+        all.cases <- cgdsr::getCaseLists(mycgds,mystudy)[,1]
         all.cases
         ##if(!any(grepl("complete$",all.cases))) next        
         ##caselist <- grep("complete$",all.cases,value=TRUE)
         caselist <- grep(paste0(datatype,"$"),all.cases,value=TRUE)
         caselist
         samples <- NULL
-        head(genes)
+        Matrix::head(genes)
         if(!is.null(genes) && !from.h5) {
             cat("downloading...\n")
             ## If only a few genes, getProfileData is a faster way
             ##
-            expression <- t(getProfileData(mycgds, genes, pr.datatype, caselist))
+            expression <- t(cgdsr::getProfileData(mycgds, genes, pr.datatype, caselist))
             samples <- gsub("[.]","-",colnames(expression))
             colnames(expression) <- samples            
             dim(expression)
@@ -360,13 +360,13 @@ pgx.getTCGAdataset <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE
             ## For all genes, getProfileData cannot do and we use
             ## locally stored H5 TCGA data file from Archs4.
             ##
-            xx <- getProfileData(mycgds, "---", pr.datatype, caselist)
+            xx <- cgdsr::getProfileData(mycgds, "---", pr.datatype, caselist)
             samples <- gsub("[.]","-",colnames(xx))[3:ncol(xx)]
-            head(samples)
+            Matrix::head(samples)
 
-            library("rhdf5")
-            library("preprocessCore")
-            h5closeAll()
+            
+            
+            rhdf5::h5closeAll()
             ##matrix_file = file.path(ARCHS4.DIR, "tcga_matrix.h5")
             has.h5 <- file.exists(matrix_file)
             has.h5
@@ -376,17 +376,17 @@ pgx.getTCGAdataset <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE
             } else {
                 
                 ## Retrieve information from locally stored H5 compressed data            
-                aa <- h5ls(matrix_file)[,1:2]
+                aa <- rhdf5::h5ls(matrix_file)[,1:2]
                 aa
                 ii <- which(aa[,1]=="/meta")[-1]
-                lapply(ii,function(i) head(h5read(matrix_file, paste0("/meta/",aa[i,2]))))
+                lapply(ii,function(i) Matrix::head(rhdf5::h5read(matrix_file, paste0("/meta/",aa[i,2]))))
                 ##h5read(matrix_file, "/meta/gdc_cases.project.project_id")
-                id1 = h5read(matrix_file, "/meta/gdc_cases.samples.portions.submitter_id")
-                id2 = h5read(matrix_file, "/meta/gdc_cases.samples.submitter_id")
-                id3 = h5read(matrix_file, "/meta/gdc_cases.submitter_id")    
+                id1 = rhdf5::h5read(matrix_file, "/meta/gdc_cases.samples.portions.submitter_id")
+                id2 = rhdf5::h5read(matrix_file, "/meta/gdc_cases.samples.submitter_id")
+                id3 = rhdf5::h5read(matrix_file, "/meta/gdc_cases.submitter_id")    
                 id2x <- substring(id2,1,15)
                 
-                h5.genes = h5read(matrix_file, "/meta/genes")            
+                h5.genes = rhdf5::h5read(matrix_file, "/meta/genes")            
                 if(!is.null(genes)) h5.genes <- intersect(genes,h5.genes)
                 samples = intersect(samples, id2x)
                 sample_index <- which(id2x %in% samples)
@@ -396,11 +396,11 @@ pgx.getTCGAdataset <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE
                     return(list(X=NULL, clin=NULL))
                 }
                 
-                expression = h5read(
+                expression = rhdf5::h5read(
                     matrix_file, "data/expression",
                     index = list(gene_index, sample_index)
                 )
-                H5close()
+                rhdf5::H5close()
                 dim(expression)
                 colnames(expression) <- substring(id2[sample_index],1,15)
                 rownames(expression) <- h5.genes
@@ -410,7 +410,7 @@ pgx.getTCGAdataset <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE
             
         }
         dim(expression)
-        this.clin <- getClinicalData(mycgds, caselist)
+        this.clin <- cgdsr::getClinicalData(mycgds, caselist)
         rownames(this.clin) <- gsub("[.]","-",rownames(this.clin))
         this.clin <- this.clin[samples,,drop=FALSE]
         expression <- expression[,samples,drop=FALSE]
@@ -430,10 +430,10 @@ pgx.getTCGA.multiomics.TOBEFINISHED <- function(studies, genes=NULL, batch.corre
     ##
     
     ##BiocManager::install("cgdsr")    
-    library(cgdsr)
-    mycgds <- CGDS("http://www.cbioportal.org/")
+    
+    mycgds <- cgdsr::CGDS("http://www.cbioportal.org/")
     if(0) {
-        all.studies <- sort(getCancerStudies(mycgds)[,1])
+        all.studies <- sort(cgdsr::getCancerStudies(mycgds)[,1])
         tcga.studies <- grep("_tcga$",all.studies, value=TRUE)
         all.studies <- tcga.studies
         all.studies
@@ -443,7 +443,7 @@ pgx.getTCGA.multiomics.TOBEFINISHED <- function(studies, genes=NULL, batch.corre
     }
     ## all.profiles <- list()
     ## for(mystudy in all.studies) {    
-    ##     myprofiles <- getGeneticProfiles(mycgds,mystudy)[,1]
+    ##     myprofiles <- cgdsr::getGeneticProfiles(mycgds,mystudy)[,1]
     ##     all.profiles[[mystudy]] <- myprofiles
     ## }
 
@@ -456,7 +456,7 @@ pgx.getTCGA.multiomics.TOBEFINISHED <- function(studies, genes=NULL, batch.corre
     for(mystudy in studies) {
         mystudy
         ##myprofiles = "ov_tcga_rna_seq_v2_mrna"        
-        myprofiles <- getGeneticProfiles(mycgds,mystudy)[,1]
+        myprofiles <- cgdsr::getGeneticProfiles(mycgds,mystudy)[,1]
         myprofiles
 
         ## prioritize datatypes
@@ -467,18 +467,18 @@ pgx.getTCGA.multiomics.TOBEFINISHED <- function(studies, genes=NULL, batch.corre
         pr.me  <- grep("_methylation_hm450|_methylation_hm27",myprofiles,value=TRUE)[1]
         pr.mut <- grep("_mutations",myprofiles,value=TRUE)[1]    
 
-        all.cases <- getCaseLists(mycgds,mystudy)[,1]
+        all.cases <- cgdsr::getCaseLists(mycgds,mystudy)[,1]
         all.cases
         if(!any(grepl("complete$",all.cases))) next
         
         caselist <- grep("complete$",all.cases,value=TRUE) 
         cna=counts=cna.gistic=me=mut=gx=NULL    
-        counts <- getProfileData(mycgds, genes, pr.mrna, caselist)
-        cna    <- getProfileData(mycgds, GENE, pr.cna, caselist)
-        ##prot <- getProfileData(mycgds, GENE, pr.prot, caselist)
-        cna.gistic <- getProfileData(mycgds, GENE, pr.gistic, caselist)
-        me   <- getProfileData(mycgds, GENE, pr.me, caselist)
-        mut  <- getProfileData(mycgds, GENE, pr.mut, caselist)
+        counts <- cgdsr::getProfileData(mycgds, genes, pr.mrna, caselist)
+        cna    <- cgdsr::getProfileData(mycgds, GENE, pr.cna, caselist)
+        ##prot <- cgdsr::getProfileData(mycgds, GENE, pr.prot, caselist)
+        cna.gistic <- cgdsr::getProfileData(mycgds, GENE, pr.gistic, caselist)
+        me   <- cgdsr::getProfileData(mycgds, GENE, pr.me, caselist)
+        mut  <- cgdsr::getProfileData(mycgds, GENE, pr.mut, caselist)
         mut  <- 1*!is.na(mut)
         gx   <- log2(10 + as.matrix(counts))
         cna[is.na(cna)] <- NA
@@ -509,26 +509,26 @@ pgx.getTCGA.multiomics.TOBEFINISHED <- function(studies, genes=NULL, batch.corre
 pgx.getTCGAproteomics <- function()
 {
     ##BiocManager::install('GenomicDataCommons')
-    library(GenomicDataCommons)
+    
     GenomicDataCommons::status()
 
-    qfiles = files() %>% filter( ~ cases.project.project_id == 'TCGA-BRCA' &
+    qfiles = GenomicDataCommons::files() %>% filter( ~ cases.project.project_id == 'TCGA-BRCA' &
                             type == 'gene_expression' &
                             analysis.workflow_type == 'HTSeq - Counts')
-    manifest_df = qfiles %>% manifest()
+    manifest_df = qfiles %>% GenomicDataCommons::manifest()
     nrow(manifest_df)
-    head(manifest_df)
+    Matrix::head(manifest_df)
     
-    fnames = gdcdata(manifest_df$id[1:2],progress=FALSE)    
+    fnames = GenomicDataCommons::gdcdata(manifest_df$id[1:2],progress=FALSE)    
 
-    resp = cases() %>% filter(~ project.project_id=='TCGA-BRCA' &
+    resp = GenomicDataCommons::cases() %>% filter(~ project.project_id=='TCGA-BRCA' &
                                   project.project_id=='TCGA-BRCA' ) %>%
-        facet('samples.sample_type') %>% aggregations()
+        GenomicDataCommons::facet('samples.sample_type') %>% GenomicDataCommons::aggregations()
     resp$samples.sample_type    
 
-    resp = cases() %>% filter(~ project.project_id=='CPTAC-3' &
+    resp = GenomicDataCommons::cases() %>% filter(~ project.project_id=='CPTAC-3' &
                                   project.project_id=='CPTAC-3' ) %>%
-        facet('samples.sample_type') %>% aggregations()
+        GenomicDataCommons::facet('samples.sample_type') %>% GenomicDataCommons::aggregations()
     resp$samples.sample_type    
     
 }

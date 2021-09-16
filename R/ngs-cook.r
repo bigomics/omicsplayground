@@ -23,7 +23,7 @@ if(0) {
 ngs.cookForEDGER <- function( counts, samples=NULL, genes=NULL, normalization="none",
                              filter=TRUE, prior.cpm=0, remove.batch=TRUE )
 {
-    require(edgeR)
+    
 
     if(all(c("counts","samples","genes") %in% names(counts))) {
         samples = counts$samples
@@ -39,23 +39,23 @@ ngs.cookForEDGER <- function( counts, samples=NULL, genes=NULL, normalization="n
     ##------------------------------------------------------------
     ## Now create an DGEList object (see also tximport Vignette)
     ##------------------------------------------------------------
-    require(limma)
-    require(edgeR)
-    cooked <- DGEList( round(counts), group=NULL)  ## we like integer counts...
+    
+    
+    cooked <- edgeR::DGEList( round(counts), group=NULL)  ## we like integer counts...
     cooked$samples$group <- NULL
     cooked$samples = cbind(cooked$samples, samples)
     if(!is.null(genes)) cooked$genes = genes
 
     ## filter out non-expressed genes (using edgeR standard function)
     if(filter) {
-        keep <- filterByExpr(cooked)
+        keep <- edgeR::filterByExpr(cooked)
         table(keep)
         cooked <- cooked[keep,]
     }
 
     ## normalized for RNA composition (TMM)
-    cooked <- calcNormFactors(cooked, method="TMM")
-    ##cooked <- calcNormFactors(cooked, method="TMM")
+    cooked <- edgeR::calcNormFactors(cooked, method="TMM")
+    ##cooked <- edgeR::calcNormFactors(cooked, method="TMM")
 
     ##------------------------------------------------------------------
     ## prior count regularization
@@ -81,14 +81,14 @@ ngs.cookForEDGER <- function( counts, samples=NULL, genes=NULL, normalization="n
             ##if(batch[1] %in% colnames(cooked$samples)) batch <- cooked$samples[,batch]
             design1 = model.matrix( ~ group, data=cooked$samples)
             batch1 = cooked$samples[,"batch"]
-            xnorm <- removeBatchEffect( xnorm, batch=batch1, design=design1)
+            xnorm <- limma::removeBatchEffect( xnorm, batch=batch1, design=design1)
         } else {
             ##
         }
 
         ## quantile normalize. be careful, may introduce artifacts (e.g. clipping)
         if(normalization=="quantile") {
-            xnorm <- normalizeQuantiles(xnorm)
+            xnorm <- limma::normalizeQuantiles(xnorm)
         }
 
         ## we need to undo log and normalizations for further analysis???
@@ -107,7 +107,7 @@ ngs.cookForEDGER <- function( counts, samples=NULL, genes=NULL, normalization="n
 ngs.cookForDESEQ2 <- function(counts, samples, genes, remove.batch=TRUE,
                               test="Wald", prior.cpm=0, filter=TRUE )
 {
-    require(DESeq2)
+    
 
     if(all(c("counts","samples","genes") %in% names(counts))) {
         samples = counts$samples
@@ -153,8 +153,8 @@ ngs.cookForDESEQ2 <- function(counts, samples, genes, remove.batch=TRUE,
     ##------------------------------------------------------------
     ## Now create an DEseq2 object (see also tximport Vignette)
     ##------------------------------------------------------------
-    head(samples)
-    require(DESeq2)
+    Matrix::head(samples)
+    
     if(!("group" %in% colnames(samples))) {
         stop("samples must have 'group' column for DESeq")
     } else {
@@ -188,10 +188,10 @@ ngs.cookForDESEQ2 <- function(counts, samples, genes, remove.batch=TRUE,
 
     rownames.counts <- rownames(counts)
     rownames(counts) <- NULL
-    dds <- DESeqDataSetFromMatrix(
+    dds <- DESeq2::DESeqDataSetFromMatrix(
         countData=counts, design=design.formula, colData=data.frame(samples))
     rownames(counts) <- rownames.counts
-    ##dds <- DESeqDataSetFromMatrix(
+    ##dds <- DESeq2::DESeqDataSetFromMatrix(
     ##counts, design = ~ 0 + group + batch, colData = samples[,c("group","batch")])
 
     ##------------------------------------------------------------------
@@ -200,20 +200,20 @@ ngs.cookForDESEQ2 <- function(counts, samples, genes, remove.batch=TRUE,
     if(FALSE && "replicate" %in% colnames(samples)) {
         ##repl.id <- factor(paste(dds$clone, dds$strain, dds$treatment,sep="_"))
         repl.id <- samples$replicate
-        dds <- collapseReplicates(dds, repl.id, dds$sample)
+        dds <- DESeq2::collapseReplicates(dds, repl.id, dds$sample)
     }
 
     ##The following code estimates size factors to account for
     ##differences in sequencing depth. So the value are typically
     ##centered around 1. If all the samples have exactly the same
     ##sequencing depth, you expect these numbers to be near 1.
-    ##sf <- estimateSizeFactorsForMatrix(counts(dds))  ## where is it used???
+    ##sf <- DESeq2::estimateSizeFactorsForMatrix(DESeq2::counts(dds))  ## where is it used???
 
     ##Run DESeq : Modeling counts with generic 'group'
     fitType = 'parametric'
     if(prior.cpm!=0) fitType ='local'
-    dds <- DESeq(dds, fitType=fitType, test=test)
-    resultsNames(dds)# lists the coefficients
+    dds <- DESeq2::DESeq(dds, fitType=fitType, test=test)
+    DESeq2::resultsNames(dds)# lists the coefficients
 
     ## we add the gene annotation here (not standard...)
     colnames(rowData(dds))

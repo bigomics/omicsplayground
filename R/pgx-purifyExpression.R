@@ -4,7 +4,7 @@
 ##
 
 if(0) {
-    require(NNLM)
+    
     source(file.path(RDIR,"pgx-deconv.R"))
     source(file.path(RDIR,"gx-heatmap.R"))
 
@@ -19,7 +19,7 @@ if(0) {
     X <- ngs$counts
     ref="hepatocyte"
     X <- t( t(X) / colSums(X)) * 1e6
-    X <- head(X[order(-apply(X[,j1],1,sd)),],1000)
+    X <- Matrix::head(X[order(-apply(X[,j1],1,sd)),],1000)
     dim(X)
 
     ##jj <- which(!(ngs$samples$group %in% ref)) ## samples of interest
@@ -64,8 +64,8 @@ if(0) {
     krt <- grep("^KRT",rownames(logx),value=TRUE)
     fabp <- grep("^FABP",rownames(logx),value=TRUE)
     fc <- rowMeans(logx[,j0]) - rowMeans(logx[,j1])
-    head(sort(fc,decreasing=TRUE),20)
-    topHEPA <- names(head(sort(-fc),200))
+    Matrix::head(sort(fc,decreasing=TRUE),20)
+    topHEPA <- names(Matrix::head(sort(-fc),200))
     markers <- unique(c(topHEPA, krt, fabp))
 
     xhat <- cbind( res$xhat[["nnlm"]], X[,j0])
@@ -84,7 +84,7 @@ if(0) {
                keysize=0.5, key=FALSE, mar=c(14,8),
                main="post-purified (top HEPA markers)")
 
-    topsd <- head(order(-apply( prex,1,sd)),200)
+    topsd <- Matrix::head(order(-apply( prex,1,sd)),200)
     gx.heatmap(prex[topsd,], col.annot=aa, nmax=-1, scale="none",
                keysize=0.5, key=FALSE, mar=c(14,8),
                main="pre-purified (top all SD)")
@@ -93,7 +93,7 @@ if(0) {
                main="post-purified (top all SD)")
 
     kk <- colnames(tumorX)
-    topsd <- head(order(-apply( prex[,kk],1,sd)),200)
+    topsd <- Matrix::head(order(-apply( prex[,kk],1,sd)),200)
     gx.heatmap(prex[topsd,], col.annot=aa, nmax=-1, scale="none",
                keysize=0.5, key=FALSE, mar=c(14,8),
                main="pre-purified (top pre-pure SD)")
@@ -101,7 +101,7 @@ if(0) {
                keysize=0.5, key=FALSE, mar=c(14,8),
                main="post-purified (top pre-pure SD)")
 
-    topsd <- head(order(-apply( purified[,kk],1,sd)),200)
+    topsd <- Matrix::head(order(-apply( purified[,kk],1,sd)),200)
     gx.heatmap(prex[topsd,], col.annot=aa, nmax=-1, scale="none",
                keysize=0.5, key=FALSE, mar=c(14,8),
                main="pre-purified (top pure SD)")
@@ -127,11 +127,11 @@ pgx.purifyExpression <- function( tumorX, normalX, method=PURIFY.METHODS)
         ##----------------------------------------------------------------------
         ## NNLM (BigOmics's own method...)
         ##----------------------------------------------------------------------
-        require(NNLM)
+        
         pen <- rep(0,3)
         ##pen <- c(1,1,1)*0.01
-        res <- nnlm( normalX, tumorX, alpha=pen)
-        ##res <- nnlm( cbind(rowMeans(tumorX), normalX), tumorX, alpha=pen)
+        res <- NNLM::nnlm( normalX, tumorX, alpha=pen)
+        ##res <- NNLM::nnlm( cbind(rowMeans(tumorX), normalX), tumorX, alpha=pen)
         cf <- res$coefficients
         cf
         normal.frac <- (normalX %*% cf)
@@ -147,11 +147,11 @@ pgx.purifyExpression <- function( tumorX, normalX, method=PURIFY.METHODS)
         ##----------------------------------------------------------------------
         ## NNMF (as in vignette)
         ##----------------------------------------------------------------------
-        require(NNLM)
+        
 
         ## compute proportion of contaminant content using NNMF
         k=10
-        res.nmf <- nnmf(tumorX, k=k, init = list(W0 = normalX), check.k=FALSE)
+        res.nmf <- NNLM::nnmf(tumorX, k=k, init = list(W0 = normalX), check.k=FALSE)
 
         x.hat <- res.nmf$W[,1:k,drop=FALSE] %*% res.nmf$H[1:k,,drop=FALSE]
         nnlm.alpha <- with(res.nmf, colSums(x.hat) / colSums(W %*% H))
@@ -168,13 +168,13 @@ pgx.purifyExpression <- function( tumorX, normalX, method=PURIFY.METHODS)
         ##----------------------------------------------------------------------
 
         ##install.packages('ISOpureR', repos = "http://cran.stat.sfu.ca/");
-        library(ISOpureR)
+        
         ##path.to.data <- file.path(system.file(package = 'ISOpureR'), 'extdata/Beer');
         ##load(file.path(path.to.data, 'beer.normaldata.250.transcripts.RData'));
         ##load(file.path(path.to.data, 'beer.tumordata.250.transcripts.30.patients.RData'));
 
-        ISOpureS1model <- ISOpure.step1.CPE(tumorX, normalX)
-        ISOpureS2model <- ISOpure.step2.PPE(tumorX, normalX, ISOpureS1model)
+        ISOpureS1model <- ISOpureR::ISOpure.step1.CPE(tumorX, normalX)
+        ISOpureS2model <- ISOpureR::ISOpure.step2.PPE(tumorX, normalX, ISOpureS1model)
         isopurer.alpha <- ISOpureS2model$alphapurities
         isopurer.alpha
 
@@ -191,18 +191,18 @@ pgx.purifyExpression <- function( tumorX, normalX, method=PURIFY.METHODS)
         ##----------------------------------------------------------------------
 
         ##devtools::install_github("wwylab/DeMixT")
-        library(DeMixT)
+        
         ##data(test.data1)
         ##?DeMixT
         ##head(test.data1$y)
 
-        res <- DeMixT(data.Y=tumorX, data.comp1=normalX, if.filter = FALSE)
+        res <- DeMixT::DeMixT(data.Y=tumorX, data.comp1=normalX, if.filter = FALSE)
         res$pi
 
-        head(res$decovExprT, 3)  ## purified tumor data
-        head(res$decovExprN1, 3)  ## normal contiminant profile
-        head(res$decovMu, 3)
-        head(res$decovSigma, 3)
+        Matrix::head(res$decovExprT, 3)  ## purified tumor data
+        Matrix::head(res$decovExprN1, 3)  ## normal contiminant profile
+        Matrix::head(res$decovMu, 3)
+        Matrix::head(res$decovSigma, 3)
 
         x.hat <- res$decovExprT
 
@@ -218,7 +218,7 @@ pgx.purifyExpression <- function( tumorX, normalX, method=PURIFY.METHODS)
         ##----------------------------------------------------------------------
         ##source("http://bioconductor.org/biocLite.R")
         ##BiocManager::install("UNDO", version = "3.8")
-        library(UNDO)
+        
         ##load tumor stroma mixing tissue samples
         ##data(PureMCF7HS27)
         ##S <- exprs(PureMCF7HS27)
@@ -227,7 +227,7 @@ pgx.purifyExpression <- function( tumorX, normalX, method=PURIFY.METHODS)
         ##    X, lowper=0.4, highper=0.1, epsilon1=0.01,
         ##    epsilon2=0.01, A, S[,1], S[,2], return=0)
 
-        res <- two_source_deconv(
+        res <- UNDO::two_source_deconv(
             tumorX, lowper=0.8, highper=0.1, epsilon1=0.4,
             epsilon2=0, A=NULL, S1=normalX, S2=NULL, return=1)
         str(res)

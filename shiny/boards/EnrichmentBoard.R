@@ -6,31 +6,31 @@
 message(">>> sourcing EnrichmentBoard")
 
 EnrichmentInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shiny::uiOutput(ns("inputsUI"))
     )
 }
 
 EnrichmentUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    fillCol(
+    ns <- shiny::NS(id)  ## namespace
+    shiny::fillCol(
         flex = c(1.75,1),
         height = 800,
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs1"),
-            tabPanel("Top enriched",uiOutput(ns("topEnriched_UI"))),
-            tabPanel("Plots",uiOutput(ns("subplots_UI"))),
-            tabPanel("Compare",uiOutput(ns("compare_UI"))),
-            tabPanel("Volcano (all)",uiOutput(ns("volcanoAll_UI"))),
-            tabPanel("Volcano (methods)",uiOutput(ns("volcanoMethods_UI")))
+            shiny::tabPanel("Top enriched",uiOutput(ns("topEnriched_UI"))),
+            shiny::tabPanel("Plots",uiOutput(ns("subplots_UI"))),
+            shiny::tabPanel("Compare",uiOutput(ns("compare_UI"))),
+            shiny::tabPanel("Volcano (all)",uiOutput(ns("volcanoAll_UI"))),
+            shiny::tabPanel("Volcano (methods)",uiOutput(ns("volcanoMethods_UI")))
         ),
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs2"),
-            tabPanel("Table",uiOutput(ns("tables_UI"))),
-            tabPanel("Foldchange (all)",uiOutput(ns("fctable_UI"))),
-            tabPanel("FDR table",uiOutput(ns("FDRtable_UI")))                       
+            shiny::tabPanel("Table",uiOutput(ns("tables_UI"))),
+            shiny::tabPanel("Foldchange (all)",uiOutput(ns("fctable_UI"))),
+            shiny::tabPanel("FDR table",uiOutput(ns("FDRtable_UI")))                       
         )
     )
 }
@@ -52,7 +52,7 @@ EnrichmentBoard <- function(input, output, session, env)
     tabH = "80vh"  ## height of tables
     
     description = "<b>Geneset enrichment analysis.</b> Perform differential expression analysis on a geneset level, also called geneset enrichment analysis."
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
     
     gs_infotext = paste("Similar to the differential gene expression analysis, users can perform differential expression analysis on a geneset level in this page, which is also referred as gene set enrichment (GSE) analysis. The platform has more than 50.000 genesets (or pathways) in total that are divided into 30 geneset collections such as ",a_Hallmark,", ",a_MSigDB,", ",a_KEGG," and ",a_GO,". Users have to specify which comparison they want to visually analyze employing a certain geneset collection. 
 
@@ -76,48 +76,48 @@ EnrichmentBoard <- function(input, output, session, env)
     GSET.DEFAULTMETHODS = c("fisher","gsva","camera")
     GSET.DEFAULTMETHODS = c("gsva","camera","fgsea","fisher")
     
-    output$inputsUI <- renderUI({
-        ui <- tagList(
-            tipify( actionLink(ns("gs_info"), "Tutorial", icon = icon("youtube")),
+    output$inputsUI <- shiny::renderUI({
+        ui <- shiny::tagList(
+            shinyBS::tipify( shiny::actionLink(ns("gs_info"), "Tutorial", icon = shiny::icon("youtube")),
                    "Show more information about this module."),
-            hr(), br(),             
-            tipify( selectInput(ns("gs_contrast"),"Contrast:", choices=NULL),
+            shiny::hr(), shiny::br(),             
+            shinyBS::tipify( shiny::selectInput(ns("gs_contrast"),"Contrast:", choices=NULL),
                    "Select a contrast of interest for the analysis.", placement="top"),
-            tipify( selectInput(ns("gs_features"),"Gene set collection:", choices=NULL, multiple=FALSE),
+            shinyBS::tipify( shiny::selectInput(ns("gs_features"),"Gene set collection:", choices=NULL, multiple=FALSE),
                    "Choose a specific gene set collection for the analysis.", placement="top"),
-            fillRow( flex=c(1,1),
-                    tipify( selectInput(ns("gs_fdr"),"FDR", choices=FDR.VALUES2, selected=0.2),
+            shiny::fillRow( flex=c(1,1),
+                    shinyBS::tipify( shiny::selectInput(ns("gs_fdr"),"FDR", choices=FDR.VALUES2, selected=0.2),
                            "Set the false discovery rate (FDR) threshold.", placement="top"),
-                    tipify( selectInput(ns("gs_lfc"),"logFC threshold",
+                    shinyBS::tipify( shiny::selectInput(ns("gs_lfc"),"logFC threshold",
                                         choices=c(0,0.05,0.1,0.2,0.5,1,2), selected=0.1),
                            "Set the logarithmic fold change (logFC) threshold.",
                            placement="top")
                     ),
-            br(),br(),br(),br(),
-            tipify(actionLink(ns("gs_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+            shiny::br(),br(),br(),br(),
+            shinyBS::tipify(shiny::actionLink(ns("gs_options"), "Options", icon=icon("cog", lib = "glyphicon")),
                    "Toggle advanced options.", placement="top"),
-            br(),br(),
-            conditionalPanel(
+            shiny::br(),br(),
+            shiny::conditionalPanel(
                 "input.gs_options % 2 == 1", ns=ns, 
-                tagList(
-                    tipify(checkboxInput(ns("gs_showall"),"Show all genesets",FALSE),
+                shiny::tagList(
+                    shinyBS::tipify(shiny::checkboxInput(ns("gs_showall"),"Show all genesets",FALSE),
                            "Enbale significant genes filtering. Display only significant genesets in the table.", 
                            placement="top", options = list(container = "body")),
                     
-                    tipify(checkboxGroupInput(ns('gs_statmethod'),'Statistical methods:', choices=NULL),
+                    shinyBS::tipify(shiny::checkboxGroupInput(ns('gs_statmethod'),'Statistical methods:', choices=NULL),
                            gs_testmethod_text, placement="right", options = list(container="body"))
                 )
             )
         )
         ui
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ##=========================== TABS UI ============================================
     ##================================================================================
 
-    ## library(shinyjqui)
+
     topEnriched_caption = "<b>Top enriched gene sets.</b> Enrichment plots of the top differentially enriched gene sets. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score."
     
     topEnrichedFreq_caption = "<strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency."
@@ -126,27 +126,27 @@ EnrichmentBoard <- function(input, output, session, env)
         "<b>(a)</b>",topEnriched_caption,
         "<b>(b)</b>",topEnrichedFreq_caption)
     
-    output$topEnriched_UI <- renderUI({
-        fillCol(
+    output$topEnriched_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = rowH,
             flex = c(1,NA),
-            fillRow(
+            shiny::fillRow(
                 flex = c(1.8,0.05,1),
                 plotWidget(ns("topEnriched")),
-                br(),
+                shiny::br(),
                 plotWidget(ns("topEnrichedFreq"))
             ),
-            div(HTML(topEnriched_captionALL), class="caption")
+            shiny::div(shiny::HTML(topEnriched_captionALL), class="caption")
         )
     })
 
     enrichplots_caption = "<b>Enrichment plots</b> associated with the gene set (selected in <b>Table I</b>) and gene (selected in <b>Table II</b>). <b>(a)</b> Gene set enrichment plot. <b>(b)</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set are highlighted in blue. <b>(c)</b> Barplot of the gene set enrichment in the groups. <b>(d)</b> Scatter plot of the enrichment versus the expression of the selected geneset and gene, on the y and x axes, respectively."
 
-    output$subplots_UI <- renderUI({
-        fillCol(
+    output$subplots_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = rowH,
             flex = c(1,0.05,NA),
-            fillRow(
+            shiny::fillRow(
                 id = ns("subplots"),
                 height = imgH,
                 flex=c(1,1,1,1), ##height = 370,
@@ -156,20 +156,20 @@ EnrichmentBoard <- function(input, output, session, env)
                 ## plotWidget(ns("subplot3")),
                 plotWidget(ns("subplot_scatter"))
             ),
-            br(),
-            div(HTML(enrichplots_caption),class="caption")
+            shiny::br(),
+            shiny::div(shiny::HTML(enrichplots_caption),class="caption")
         )
     })
-    dragula(ns("subplots"))
+    dragulaR::dragula(ns("subplots"))
 
     compare_caption = "<b>Enrichment across contrasts.</b> Enrichment plots for the selected gene set (in <b>Table I</b>) across multiple contrasts. The figure allows to quickly compare the enrichment of a certain gene set across all other comparisons."
 
-    output$compare_UI <- renderUI({
-        fillCol(
+    output$compare_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = rowH,
             flex=c(1,NA), ##height = 370,
             plotWidget( ns("compare")),
-            div(HTML(compare_caption),class="caption")
+            shiny::div(shiny::HTML(compare_caption),class="caption")
         )
     })
 
@@ -177,54 +177,54 @@ EnrichmentBoard <- function(input, output, session, env)
 
     volcanoAll_caption = "<b>Volcano plots for all contrasts.</b> Simultaneous visualisation of volcano plots of gene set enrichment across all contrasts. Volcano-plot are plotting enrichment score versus significance on the x and y axes, respectively. Experimental contrasts showing better statistical significance will show volcano plots with 'higher' wings."
 
-    output$volcanoAll_UI <- renderUI({
-        fillCol(
+    output$volcanoAll_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = rowH,
             flex=c(1,NA), ##height = 370,
             plotWidget(ns("volcanoAll")),
-            div(HTML(volcanoAll_caption), class="caption")
+            shiny::div(shiny::HTML(volcanoAll_caption), class="caption")
         )
     })
 
 
     volcanoMethods_caption = "<b>Volcano plots for all methods.</b> Simultaneous visualisation of volcano plots of gene sets for different enrichment methods. Methods showing better statistical significance will show volcano plots with 'higher' wings."
     
-    output$volcanoMethods_UI <- renderUI({
-        fillCol(
+    output$volcanoMethods_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = rowH,
             flex=c(1,NA), ##height = 370,
             plotWidget(ns("volcanoMethods")),
-            div(HTML(volcanoMethods_caption), class="caption")
+            shiny::div(shiny::HTML(volcanoMethods_caption), class="caption")
         )
     })
 
     tables_caption = "<b>Enrichment tables</b>. <b>(I)</b> Table summarizing the statistical results of the gene set enrichment analysis for selected contrast. The number of stars indicate how many methods identified the geneset significant. <b>(II)</b> Table showing the fold-change, statistics and correlation of the genes in the selected gene set."
 
-    output$tables_UI <- renderUI({
-        fillCol(
+    output$tables_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = rowH,
             flex = c(NA,0.05,1),
-            div(HTML(tables_caption),class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(tables_caption),class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 ## height = 200,
                 flex = c(1.82,0.08,1),
                 tableWidget(ns("gseatable")),
-                br(),
+                shiny::br(),
                 tableWidget(ns("genetable"))        
             )
         )
     })
 
-    output$fctable_UI <- renderUI({
-        fillCol(
+    output$fctable_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = rowH,
             plotWidget(ns("fctable"))
         )
     })
 
-    output$FDRtable_UI <- renderUI({
-        fillCol(
+    output$FDRtable_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = rowH,
             tableWidget(ns("FDRtable"))
         )
@@ -234,42 +234,42 @@ EnrichmentBoard <- function(input, output, session, env)
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
     
-    observeEvent( input$gs_info, {
-        showModal(modalDialog(
-            title = HTML("<strong>Enrichment Analysis Board</strong>"),
-            HTML(gs_infotext),
+    shiny::observeEvent( input$gs_info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>Enrichment Analysis Board</strong>"),
+            shiny::HTML(gs_infotext),
             easyClose = TRUE, size="l" ))
     })
 
-    observe({
+    shiny::observe({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         meta <- ngs$gset.meta$meta
         comparisons <- colnames(ngs$model.parameters$contr.matrix)
         comparisons = sort(intersect(comparisons, names(meta)))
-        updateSelectInput(session, "gs_contrast", choices=comparisons)
+        shiny::updateSelectInput(session, "gs_contrast", choices=comparisons)
 
         ## get the computed geneset methods
         gset.methods = sort(colnames(meta[[1]]$fc))
         sel2 = c(intersect(GSET.DEFAULTMETHODS,gset.methods),gset.methods)
         sel2 = head(unique(sel2),3)
 
-        updateCheckboxGroupInput(session, 'gs_statmethod',
+        shiny::updateCheckboxGroupInput(session, 'gs_statmethod',
                                  choices = sort(gset.methods),
                                  selected = sel2)
         
     })
     
-    observe({
+    shiny::observe({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         nn <- sapply(COLLECTIONS, function(k) sum(k %in% rownames(ngs$gsetX)))
         gsets.groups <- names(COLLECTIONS)[which(nn>=5)]
         gsets.groups <- c("<all>",sort(gsets.groups))
         sel = "<all>"
         hmark <- grep("^H$|hallmark|",gsets.groups,ignore.case=TRUE,value=TRUE)
         if(length(hmark)>0) sel <- hmark[1]
-        updateSelectInput(session, "gs_features",choices=gsets.groups, selected=sel)
+        shiny::updateSelectInput(session, "gs_features",choices=gsets.groups, selected=sel)
         
     })
 
@@ -282,9 +282,9 @@ EnrichmentBoard <- function(input, output, session, env)
     ##    paste(rep("\u2605",n),collapse="")
     ##}
 
-    selected_gsetmethods <- reactive({
+    selected_gsetmethods <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         gset.methods0 = colnames(ngs$gset.meta$meta[[1]]$fc)
         ##test = head(intersect(GSET.DEFAULTMETHODS,gset.methods0),3) ## maximum three
         test = input$gs_statmethod
@@ -338,10 +338,10 @@ EnrichmentBoard <- function(input, output, session, env)
         return(meta)
     }
     
-    getFullGeneSetTable <- reactive({
+    getFullGeneSetTable <- shiny::reactive({
 
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         comp=1
         comp = input$gs_contrast
         if(is.null(comp)) return(NULL)
@@ -482,7 +482,7 @@ EnrichmentBoard <- function(input, output, session, env)
     })
 
 
-    getFilteredGeneSetTable <- reactive({        
+    getFilteredGeneSetTable <- shiny::reactive({        
 
         if(is.null(input$gs_showall) || length(input$gs_showall)==0) return(NULL)
         if(is.null(input$gs_top10) || length(input$gs_top10)==0) return(NULL)
@@ -518,7 +518,7 @@ EnrichmentBoard <- function(input, output, session, env)
         res <- data.frame(res)        
         
         if(nrow(res)==0) {
-            validate(need(nrow(res) > 0, "warning. no genesets passed current filters."))
+            shiny::validate(shiny::need(nrow(res) > 0, "warning. no genesets passed current filters."))
             return(NULL)
         }
 
@@ -575,14 +575,14 @@ EnrichmentBoard <- function(input, output, session, env)
     }
     
     ## Top enriched    
-    topEnriched.RENDER %<a-% reactive({
+    topEnriched.RENDER %<a-% shiny::reactive({
         
         ngs <- inputData()
-        req(ngs)       
+        shiny::req(ngs)       
         ##rpt <- getFullGeneSetTable()
         rpt <- getFilteredGeneSetTable()
         ##if(is.null(rpt)) return(NULL)
-        req(rpt, input$gs_contrast)
+        shiny::req(rpt, input$gs_contrast)
         if(is.null(rpt)) return(NULL)
         
         comp=1
@@ -603,7 +603,7 @@ EnrichmentBoard <- function(input, output, session, env)
         
     topEnriched_text = "This plot shows the <strong>top enriched</strong> gene sets for the selected comparison in the <code>Contrast</code> settings. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score (ES). The more the green ES curve is shifted to the upper left of the graph, the more the gene set is enriched in the first group. Conversely, a shift of the ES curve to the lower right, corresponds to more enrichment in the second group."
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "topEnriched", label="a",
         func = topEnriched.RENDER,
@@ -654,13 +654,13 @@ EnrichmentBoard <- function(input, output, session, env)
                 ylab=ylab)
     }
 
-    topEnrichedFreq.RENDER %<a-% reactive({
+    topEnrichedFreq.RENDER %<a-% shiny::reactive({
 
         ngs <- inputData()
 
         rpt <- getFilteredGeneSetTable()
         ##if(is.null(rpt)) return(NULL)
-        req(ngs, rpt, input$gs_contrast)
+        shiny::req(ngs, rpt, input$gs_contrast)
 
         comp=1
         comp = input$gs_contrast
@@ -679,13 +679,13 @@ EnrichmentBoard <- function(input, output, session, env)
 
     })
 
-    topEnrichedFreq.RENDER2 %<a-% reactive({
+    topEnrichedFreq.RENDER2 %<a-% shiny::reactive({
 
         ngs <- inputData()
 
         rpt <- getFilteredGeneSetTable()
         ##if(is.null(rpt)) return(NULL)
-        req(ngs, rpt, input$gs_contrast)
+        shiny::req(ngs, rpt, input$gs_contrast)
 
         comp=1
         comp = input$gs_contrast
@@ -708,19 +708,19 @@ EnrichmentBoard <- function(input, output, session, env)
     
     topEnrichedFreq_text = "<strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency. Genes that are frequently shared among the top enriched gene sets may suggest driver genes."
     
-    topEnrichedFreq.opts = tagList(
-        tipify( radioButtons(ns('gs_enrichfreq_ntop'),"Number of top sets",
+    topEnrichedFreq.opts = shiny::tagList(
+        shinyBS::tipify( shiny::radioButtons(ns('gs_enrichfreq_ntop'),"Number of top sets",
                              c(5,10,25,100),inline=TRUE, selected=25),
                "Number of top genesets to consider for counting the gene frequency."),
-        tipify( checkboxInput(ns('gs_enrichfreq_gsetweight'),
+        shinyBS::tipify( shiny::checkboxInput(ns('gs_enrichfreq_gsetweight'),
                               "Weight by geneset size", TRUE),
                "Weight by (inverse) gene set size."), 
-        tipify( checkboxInput(ns('gs_enrichfreq_fcweight'),
+        shinyBS::tipify( shiny::checkboxInput(ns('gs_enrichfreq_fcweight'),
                               "Weight by FC", TRUE),
                "Weight by fold-change of current contrast.")         
     )
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "topEnrichedFreq", label="b",
         func = topEnrichedFreq.RENDER,
@@ -745,7 +745,7 @@ EnrichmentBoard <- function(input, output, session, env)
     getcolors <- function(ngs, comp0) {   
         ## get colors (what a mess...)
         contr.matrix <- ngs$model.parameters$contr.matrix
-        require(RColorBrewer)
+
         exp.matrix <- ngs$model.parameters$exp.matrix        
         xgroup = as.character(ngs$Y$group)
         
@@ -762,7 +762,7 @@ EnrichmentBoard <- function(input, output, session, env)
         xgroup1 <- xgroup[samples]
         table(xgroup1)
         ngrp <- length(unique(xgroup1))
-        grp.klr = c("grey90",rep(brewer.pal(12,"Paired"),99)[1:ngrp])
+        grp.klr = c("grey90",rep(RColorBrewer::brewer.pal(12,"Paired"),99)[1:ngrp])
         names(grp.klr) <- c("other",as.character(sort(unique(xgroup1))))
         grp.klr
         
@@ -781,19 +781,19 @@ EnrichmentBoard <- function(input, output, session, env)
     subplot.MAR = c(3,3.5,1.5,0.5)
     subplot.MAR = c(2.8,4,4,0.8)
     
-    subplot_volcano.RENDER %<a-% reactive({
+    subplot_volcano.RENDER %<a-% shiny::reactive({
 
         par(mfrow=c(1,1), mgp=c(1.2,0.4,0), oma=c(0,0,0,0.4) )
         par(mar= subplot.MAR)
         ## par(mar= c(2.3,4,1.9,0))
         
         ngs <- inputData()    
-        req(ngs)
+        shiny::req(ngs)
         
         comp=1;gs=1
         comp = input$gs_contrast
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         gx.meta <- ngs$gx.meta$meta[[comp]]
         ## limma1 = sapply(gx.meta[,c("fc","p","q")],function(x) x[,"trend.limma"])
@@ -842,13 +842,13 @@ EnrichmentBoard <- function(input, output, session, env)
     })
 
     
-    subplot_volcano2.RENDER %<a-% reactive({
+    subplot_volcano2.RENDER %<a-% shiny::reactive({
         
         par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0,0.4) )
         par(mar=subplot.MAR)
 
         pgx <- inputData()
-        req(pgx)
+        shiny::req(pgx)
         
         comp=1;gs=100
         gs="H:HALLMARK_TNFA_SIGNALING_VIA_NFKB"        
@@ -882,18 +882,18 @@ EnrichmentBoard <- function(input, output, session, env)
 
     })
     
-    subplot_volcano.PLOTLY <- reactive({
+    subplot_volcano.PLOTLY <- shiny::reactive({
         
         ##par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0.5,0.2)*2 )
         ##par(mar=subplot.MAR)
         
         ngs <- inputData()    
-        req(ngs)
+        shiny::req(ngs)
         
         comp=1;gs=1
         comp = input$gs_contrast
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         gx.meta <- ngs$gx.meta$meta[[comp]]
         ##m1 <- intersect(c("trend.limma","notrend.limma","ttest"),colnames(gx.meta$p))[1]
@@ -955,7 +955,7 @@ EnrichmentBoard <- function(input, output, session, env)
             marker.size = 4,
             displayModeBar = FALSE,
             showlegend = FALSE) %>%
-            layout( margin = list(b=60) )        
+            plotly::layout( margin = list(b=60) )        
 
     })
 
@@ -963,12 +963,12 @@ EnrichmentBoard <- function(input, output, session, env)
     ## 0: Single enrichment plot
     ##----------------------------------------------------------------------
     
-    subplot_enplot.RENDER %<a-% reactive({
-    ##subplot_enplot.RENDER <- reactive({    
+    subplot_enplot.RENDER %<a-% shiny::reactive({
+    ##subplot_enplot.RENDER <- shiny::reactive({    
 
         dbg("[subplot_enplot.RENDER] reacted")        
         pgx <- inputData()
-        req(pgx)
+        shiny::req(pgx)
         
         comp=1;gs=100
         gs="H:HALLMARK_TNFA_SIGNALING_VIA_NFKB"        
@@ -992,11 +992,11 @@ EnrichmentBoard <- function(input, output, session, env)
         return(p1)
     })
 
-    subplot_enplot.RENDER2 <- reactive({
+    subplot_enplot.RENDER2 <- shiny::reactive({
 
         dbg("[subplot_enplot.RENDER] reacted")        
         pgx <- inputData()
-        req(pgx)
+        shiny::req(pgx)
         
         comp=1;gs=100
         gs="H:HALLMARK_TNFA_SIGNALING_VIA_NFKB"        
@@ -1019,15 +1019,15 @@ EnrichmentBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ## 1: Gene set activation {data-width=200}
     ##----------------------------------------------------------------------
-    subplot_barplot.RENDER %<a-% reactive({
+    subplot_barplot.RENDER %<a-% shiny::reactive({
         
         par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0,0.4) )
         par(mar=subplot.MAR)
         
         ngs <- inputData()    
-        req(ngs)
+        shiny::req(ngs)
         
-        require(RColorBrewer)
+
         gset = rownames(ngs$gsetX)[1]
         gset = gset_selected()
         if(is.null(gset) || length(gset)==0 ) return(NULL)
@@ -1058,13 +1058,13 @@ EnrichmentBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ## 2: Gene expression {data-width=200}
     ##----------------------------------------------------------------------
-    subplot3.RENDER %<a-% reactive({
+    subplot3.RENDER %<a-% shiny::reactive({
 
         par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0,0.4) )
         par(mar=subplot.MAR)
         
         ngs <- inputData()    
-        req(ngs)
+        shiny::req(ngs)
 
         comp0 = colnames(ngs$model.parameters$contr.matrix)[1]
         comp0 = input$gs_contrast
@@ -1073,7 +1073,7 @@ EnrichmentBoard <- function(input, output, session, env)
         collapse.others <- ifelse(has.design, FALSE, TRUE)
         ##collapse.others=TRUE
 
-        require(RColorBrewer)
+
         sel  = gene_selected()
         if(is.null(sel) || is.na(sel) || length(sel)==0) {
             frame()
@@ -1102,15 +1102,15 @@ EnrichmentBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ## 3: Gene - gene set correlation
     ##----------------------------------------------------------------------
-    subplot_scatter.RENDER %<a-% reactive({
+    subplot_scatter.RENDER %<a-% shiny::reactive({
 
         par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0,0.4) )
         par(mar=subplot.MAR)
         
         ngs <- inputData()    
-        req(ngs)
+        shiny::req(ngs)
         
-        require(RColorBrewer)
+
         gene = rownames(ngs$X)[1]
         sel  = gene_selected()
         gset = gset_selected()
@@ -1134,13 +1134,13 @@ EnrichmentBoard <- function(input, output, session, env)
             comp0 = input$gs_contrast
             klrs = getcolors(ngs, comp0)
             klr = klrs$samples[names(sx)]
-            klr = paste0(col2hex(klr),"99")
+            klr = paste0(gplots::col2hex(klr),"99")
             
             cex1 = c(1.4,0.8,0.3)[cut(length(gx),c(0,100,500,99999))]
             gset1 = breakstring(substring(gset,1,80),32)
                                         #tt = paste( breakstring(gset,40,80), "\nvs.", gene,"expression")
             tt = paste( breakstring(gset,40,80), " vs. ", gene)
-            plot( gx, sx, col=klr, main=tt,
+            KEGGgraph::plot( gx, sx, col=klr, main=tt,
                  ylab = "gene set enrichment",
                  xlab = paste(gene,"expression"),
                  cex.lab=1, pch=19, cex=1.0*cex1, cex.main=0.85)
@@ -1158,7 +1158,7 @@ EnrichmentBoard <- function(input, output, session, env)
     subplot_scatter_text = "A scatter plot of enrichment scores versus expression values across the samples for the gene set selected from the enrichment analysis Table <code>I</code> and the gene selected from the genes Table <code>II</code>."
     
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "subplot_volcano", 
         func = subplot_volcano.RENDER,
@@ -1167,14 +1167,14 @@ EnrichmentBoard <- function(input, output, session, env)
         plotlib2 = "plotly",
         ##info.text = subplot_volcano_text,
         ##pdf.width=6, pdf.height=6,
-        ##options = tagList(),
+        ##options = shiny::tagList(),
         ##res = c(72,100),
         height = c(imgH,750), width=c('auto',900),
         title="Volcano plot", label="b",
         add.watermark = WATERMARK
     )
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id="subplot_barplot", 
         func = subplot_barplot.RENDER,
@@ -1184,8 +1184,8 @@ EnrichmentBoard <- function(input, output, session, env)
         res = c(72,100),
         height = c(imgH,750),
         width = c('auto',900),        
-        options = tagList(
-            tipify( checkboxInput(
+        options = shiny::tagList(
+            shinyBS::tipify( shiny::checkboxInput(
                 ns('gs_ungroup1'),'ungroup samples',FALSE),
                 "Ungroup samples in the plot", placement="top",
                 options = list(container = "body"))),
@@ -1193,7 +1193,7 @@ EnrichmentBoard <- function(input, output, session, env)
         add.watermark = WATERMARK
     )
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id="subplot3", 
         func = subplot3.RENDER,
@@ -1202,15 +1202,15 @@ EnrichmentBoard <- function(input, output, session, env)
         pdf.width=6, pdf.height=6,
         res = c(78,100),
         height = imgH,
-        options = tagList(
-            tipify( checkboxInput(ns('gs_ungroup2'),'ungroup samples',FALSE),
+        options = shiny::tagList(
+            shinyBS::tipify( shiny::checkboxInput(ns('gs_ungroup2'),'ungroup samples',FALSE),
                    "Ungroup samples in the plot", placement="top",
                    options = list(container = "body"))),
         title = "Expression barplot", label="c",
         add.watermark = WATERMARK
     )
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id="subplot_scatter",
         func = subplot_scatter.RENDER,
@@ -1222,7 +1222,7 @@ EnrichmentBoard <- function(input, output, session, env)
         add.watermark = WATERMARK
     )
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "subplot_enplot", 
         func = subplot_enplot.RENDER,
@@ -1241,10 +1241,10 @@ EnrichmentBoard <- function(input, output, session, env)
     ## Compare
     ##================================================================================
 
-    compare.RENDER %<a-% reactive({
+    compare.RENDER %<a-% shiny::reactive({
         
         ngs <- inputData()
-        req(ngs,input$gs_contrast)
+        shiny::req(ngs,input$gs_contrast)
         
         comp=1
         comp = input$gs_contrast
@@ -1307,9 +1307,9 @@ EnrichmentBoard <- function(input, output, session, env)
 
     compare_text = "Under the <strong>Compare</strong> tab, enrichment profiles of the selected geneset in enrichment Table <code>I</code> can be visualised against all available contrasts."
 
-    compare_module_opts = tagList()
+    compare_module_opts = shiny::tagList()
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "compare",
         func = compare.RENDER,
@@ -1328,11 +1328,11 @@ EnrichmentBoard <- function(input, output, session, env)
     ## Volcano (all)
     ##================================================================================
 
-    volcanoAll.RENDER %<a-% reactive({
+    volcanoAll.RENDER %<a-% shiny::reactive({
         ##renderPlotly({
-        require(metap)
+
         ngs = inputData()
-        req(ngs)
+        shiny::req(ngs)
         if(is.null(input$gs_features)) return(NULL)
         
         meta = ngs$gset.meta$meta
@@ -1382,7 +1382,7 @@ EnrichmentBoard <- function(input, output, session, env)
             par(mfrow=c(2,nc))
         }        
         
-        withProgress(message="computing volcano plots ...", value=0, {
+        shiny::withProgress(message="computing volcano plots ...", value=0, {
 
             i=1
             for(i in 1:nplots) {
@@ -1404,7 +1404,7 @@ EnrichmentBoard <- function(input, output, session, env)
                     ylim=c(0,ymax), main="" )
 
                 ## draw axis if first column or last row
-                box(lwd=1, col="black", lty="solid")
+                shinydashboard::box(lwd=1, col="black", lty="solid")
                 is.first = (i%%nc==1)
                 last.row = ( (i-1)%/%nc == (nplots-1)%/%nc )
                 if(is.first) axis(2, mgp=c(2,0.7,0), cex.axis=0.8)
@@ -1412,7 +1412,7 @@ EnrichmentBoard <- function(input, output, session, env)
                 legend("top", legend=names(mx.list)[i], box.lty=0,
                        x.intersp = 0.3, y.intersp = 0.5,
                        cex=1.2, bg="white")
-                incProgress( 1.0/nplots )
+                shiny::incProgress( 1.0/nplots )
             }
             
         })
@@ -1420,7 +1420,7 @@ EnrichmentBoard <- function(input, output, session, env)
     
     volcanoAll_text = "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for gene sets across all contrasts. This provides users an overview of the statistics across all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "volcanoAll",
         func = volcanoAll.RENDER,
@@ -1438,10 +1438,10 @@ EnrichmentBoard <- function(input, output, session, env)
     ## Volcano (methods)
     ##================================================================================
 
-    volcanoMethods.RENDER %<a-% reactive({
+    volcanoMethods.RENDER %<a-% shiny::reactive({
         ##renderPlotly({
         ngs <- inputData()    
-        req(ngs, input$gs_features)
+        shiny::req(ngs, input$gs_features)
         ##if(is.null(input$gs_features)) return(NULL)
         
         cmp = 1
@@ -1472,7 +1472,7 @@ EnrichmentBoard <- function(input, output, session, env)
         nn = c(2, nc)
         par(mfrow=nn, mar=c(1,1,1,1)*0.2, mgp=c(2.6,1,0), oma=c(1,1,0,0)*2)
         
-        withProgress(message="computing volcano plots ...", value=0, {
+        shiny::withProgress(message="computing volcano plots ...", value=0, {
             i=1
             for(i in 1:nplots) {
                 
@@ -1492,7 +1492,7 @@ EnrichmentBoard <- function(input, output, session, env)
                     cex=1, cex.axis=1.3, main="")
                 
                 ##title(mt, line=-1.5, cex.main=1.4)
-                box(lwd=1, col="black", lty="solid")                
+                shinydashboard::box(lwd=1, col="black", lty="solid")                
 
                 ##volcano_plot(limma, render="plotly", n=1000, cex=1, highlight=genes)
                 ## draw axis if first column or last row
@@ -1504,7 +1504,7 @@ EnrichmentBoard <- function(input, output, session, env)
                        x.intersp = 0.3, y.intersp = 0.5,
                        cex=1.2, bg="white")
                 
-                incProgress( 1/nplots )                
+                shiny::incProgress( 1/nplots )                
             }
         })
 
@@ -1514,7 +1514,7 @@ EnrichmentBoard <- function(input, output, session, env)
 
     volcanoMethods_text = "The <strong>Volcano (methods)</strong> panel displays the volcano plots provided by different enrichment calculation methods. This provides users an quick overview of the sensitivity of the statistical methods at once. Methods showing better statistical significance will show volcano plots with 'higher' wings."
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id="volcanoMethods",
         func = volcanoMethods.RENDER,
@@ -1532,7 +1532,7 @@ EnrichmentBoard <- function(input, output, session, env)
     ## Enrichment table
     ##================================================================================
     
-    gset_selected <- reactive({
+    gset_selected <- shiny::reactive({
         ##i = as.integer(input$gseatable_rows_selected)
         i = as.integer(gseatable$rows_selected())
         if(is.null(i) || length(i)==0) return(NULL)
@@ -1541,12 +1541,12 @@ EnrichmentBoard <- function(input, output, session, env)
         return(gs)
     })
 
-    geneDetails <- reactive({
+    geneDetails <- shiny::reactive({
         ## return details of the genes in the selected gene set
         ##
         
         ngs <- inputData()
-        req(ngs,input$gs_contrast)
+        shiny::req(ngs,input$gs_contrast)
         gs=1;comp=1
 
         comp = input$gs_contrast
@@ -1564,7 +1564,7 @@ EnrichmentBoard <- function(input, output, session, env)
         
         ##gxmethods <- c("trend.limma","ttest.welch")
         gxmethods <- selected_gxmethods() ## from module-expression
-        req(gxmethods)
+        shiny::req(gxmethods)
         ##limma1 = sapply(mx[,c("fc","p","q")], function(x) x[,"trend.limma"])
         ##limma1.fc <- rowMeans(mx$fc[,gxmethods,drop=FALSE],na.rm=TRUE)
         limma1.fc <- mx$meta.fx
@@ -1613,10 +1613,10 @@ EnrichmentBoard <- function(input, output, session, env)
         return(rpt)
     })
 
-    gene_selected <- reactive({
+    gene_selected <- shiny::reactive({
 
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         i = 1
         ##i = as.integer(input$genetable_rows_selected)
         i = as.integer(genetable$rows_selected())
@@ -1632,7 +1632,7 @@ EnrichmentBoard <- function(input, output, session, env)
     })
 
 
-    gseatable.RENDER <- reactive({
+    gseatable.RENDER <- shiny::reactive({
 
         ##rpt = getFullGeneSetTable()
         rpt = getFilteredGeneSetTable()
@@ -1700,18 +1700,18 @@ EnrichmentBoard <- function(input, output, session, env)
                           )
                       )  ## end of options.list 
                       ) %>%
-            formatSignif(numcols,4) %>%
+            DT::formatSignif(numcols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
             DT::formatStyle(fx.col, 
                             background = color_from_middle( fx, 'lightblue', '#f5aeae'))
     })
 
-    genetable.RENDER <- reactive({
+    genetable.RENDER <- shiny::reactive({
 
         rpt <- geneDetails()    
         ## if(is.null(rpt)) return(NULL)
         if(is.null(rpt) || nrow(rpt)==0) {
-            validate(need(nrow(rpt) > 0, "warning. no genes."))
+            shiny::validate(shiny::need(nrow(rpt) > 0, "warning. no genes."))
             return(NULL)
         }
         
@@ -1758,7 +1758,7 @@ EnrichmentBoard <- function(input, output, session, env)
                                  )
                       )  ## end of options.list 
                              ) %>%
-            formatSignif(numeric.cols,4)
+            DT::formatSignif(numeric.cols,4)
         
         if( nrow(rpt)>0 && ("fc" %in% colnames(rpt)) ) {
             fx = rpt[,"fc"]
@@ -1771,15 +1771,15 @@ EnrichmentBoard <- function(input, output, session, env)
 
     gseatable_text = paste("Similar to the differential gene expression analysis, users can perform differential expression analysis on a geneset level that is referred as gene set enrichment analysis. To ensure statistical reliability, the platform performs the gene set enrichment analysis using multiple methods, including",a_Spearman,", ",a_GSVA,", ",a_ssGSEA,", ",a_Fisher,", ",a_GSEA,", ",a_camera," and ",a_fry,".<br><br>The combined result from the methods is displayed in this table, where for each geneset the <code>meta.q</code> corresponds to the highest <code>q</code> value provided by the methods and the number of <code>stars</code> indicate how many methods identified the geneset as significant (<code>q < 0.05</code>). The table is interactive; users can sort it by <code>logFC</code>, <code>meta.q</code> and <code>starts</code>. Additionally, the list of genes in that geneset are displayed in the second table on the right. Users can filter top N = {10} differently enriched gene sets in the table by clicking the <code>top 10 gene sets</code> from the table <i>Settings</i>.")
 
-    gseatable_opts = tagList(
-        tipify( checkboxInput(ns('gs_top10'),'top 10 gene sets',FALSE),
+    gseatable_opts = shiny::tagList(
+        shinyBS::tipify( shiny::checkboxInput(ns('gs_top10'),'top 10 gene sets',FALSE),
                "Display only top 10 differentially enirhced gene sets (positively and negatively) in the <b>enrihcment analysis</b> table.", placement="top", options = list(container = "body")),
-        tipify(checkboxInput(ns('gs_showqvalues'),'show indivivual q-values',FALSE),
+        shinyBS::tipify(shiny::checkboxInput(ns('gs_showqvalues'),'show indivivual q-values',FALSE),
                "Show all q-values of each individual statistical method in the table.", 
                placement="top", options = list(container = "body"))    
     )
 
-    gseatable <- callModule(
+    gseatable <- shiny::callModule(
         tableModule, 
         id="gseatable",
         func = gseatable.RENDER,
@@ -1792,7 +1792,7 @@ EnrichmentBoard <- function(input, output, session, env)
 
     genetable_text = "By clicking on a gene set in the table <code>I</code>, it is possible to see the gene list of that gene set in this table. By clicking on a gene in this table, users can check the expression status of the gene for the selected contrast in the <code>Expression</code> barplot and its correlation to the gene set in the <code>Gene to gene set correlation</code> scatter plot under the <code>Plots</code> section."
     
-    genetable <- callModule(
+    genetable <- shiny::callModule(
         tableModule,
         id = "genetable",
         func=genetable.RENDER,
@@ -1806,7 +1806,7 @@ EnrichmentBoard <- function(input, output, session, env)
     ## Enrichment (all)
     ##================================================================================
 
-    fctable.RENDER <- reactive({
+    fctable.RENDER <- shiny::reactive({
         
         ngs <- inputData()
 
@@ -1842,12 +1842,12 @@ EnrichmentBoard <- function(input, output, session, env)
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
                 DT::formatStyle( "fc.var",
-                                ##background = styleColorBar(c(0,3), 'lightblue'),
+                                ##background = DT::styleColorBar(c(0,3), 'lightblue'),
                                 background = color_from_middle(fc.var, 'lightblue', '#f5aeae'),
                                 backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center')  %>%
                 DT::formatStyle( colnames(F),
-                                ##background = styleColorBar(c(0,3), 'lightblue'),
+                                ##background = DT::styleColorBar(c(0,3), 'lightblue'),
                                 background = color_from_middle(F[,], 'lightblue', '#f5aeae'),
                                 backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center')
@@ -1858,7 +1858,7 @@ EnrichmentBoard <- function(input, output, session, env)
     
     gx_fctable_caption = "<b>Enrichment for all contrasts.</b> Table summarizing the enrichment for all gene sets across all contrasts. The column `fc.var` corresponds to the variance of the gene set across all contrasts."
 
-    callModule(
+    shiny::callModule(
         tableModule,
         id = "fctable",
         func = fctable.RENDER,
@@ -1874,12 +1874,12 @@ EnrichmentBoard <- function(input, output, session, env)
     ## FDR table
     ##================================================================================
 
-    require(kableExtra)
+
     
-    FDRtable.RENDER <- reactive({
+    FDRtable.RENDER <- shiny::reactive({
         
         ngs <- inputData()    
-        req(ngs, input$gs_statmethod)
+        shiny::req(ngs, input$gs_statmethod)
         
         meta <- ngs$gset.meta
         test = GSET.DEFAULTMETHODS
@@ -1916,8 +1916,8 @@ EnrichmentBoard <- function(input, output, session, env)
         sigcount = cbind( sig.down, sig.up[rownames(sig.down),] )
         dim(sigcount)    
         maxsig = 0.99 * max(sigcount,na.rm=TRUE)
-        ##gs.up %>% kable("html") %>%
-        ##    kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+        ##gs.up %>% kableExtra::kable("html") %>%
+        ##    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
         ##                  font_size = 10)
 
         contr = sub("::.*","",rownames(sigcount))
@@ -1943,11 +1943,11 @@ EnrichmentBoard <- function(input, output, session, env)
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle(colnames(sig.up),
-                                background = styleColorBar(c(0,maxsig), '#f5aeae'),
+                                background = DT::styleColorBar(c(0,maxsig), '#f5aeae'),
                                 backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center')  %>% 
                 DT::formatStyle(colnames(sig.down),
-                                background = styleColorBar(c(0,maxsig), 'lightblue'),
+                                background = DT::styleColorBar(c(0,maxsig), 'lightblue'),
                                 backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center')  
     })
@@ -1956,7 +1956,7 @@ EnrichmentBoard <- function(input, output, session, env)
 
     FDRtable_caption = "<b>FDR table.</b> Number of significant gene sets versus different FDR thresholds, for all contrasts and all methods. The blue color denote the number of downregulated genes, the red color for upregulated genes."
     
-    callModule(
+    shiny::callModule(
         tableModule,
         id = "FDRtable",
         func = FDRtable.RENDER,

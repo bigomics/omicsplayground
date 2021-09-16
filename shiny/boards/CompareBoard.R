@@ -7,22 +7,22 @@ message(">>> sourcing CompareBoard")
 ##source("global.R")
 
 CompareInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shiny::uiOutput(ns("inputsUI"))
     )
 }
 
 CompareUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    fillCol(
+    ns <- shiny::NS(id)  ## namespace
+    shiny::fillCol(
         height = 750,
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs1"),
-            tabPanel("Compare", uiOutput(ns("compareScatter_UI"))),
-            tabPanel("Foldchange", uiOutput(ns("FCcorrelation_UI"))),
-            tabPanel("Gene Correlation", uiOutput(ns("GeneCorrelation_UI")))            
+            shiny::tabPanel("Compare", shiny::uiOutput(ns("compareScatter_UI"))),
+            shiny::tabPanel("Foldchange", shiny::uiOutput(ns("FCcorrelation_UI"))),
+            shiny::tabPanel("Gene Correlation", shiny::uiOutput(ns("GeneCorrelation_UI")))            
         )
     )
 }
@@ -43,7 +43,7 @@ CompareBoard <- function(input, output, session, env)
     description =
     "<h3>Compare Datasets</h3> Compare expression and signatures between two datasets, from similar experiments or from different datatypes, e.g. transcriptomics and proteomics."
     
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
 
     infotext =
         "The <strong>Compare Datasets</strong> module enables users to compare their dataset to other datasets. This module allows side-by-side comparison of volcano, scatter or gene t-SNE plots. It provides pairwise correlation plots and/or enrichment plots with signatures from other data sets.
@@ -55,53 +55,53 @@ CompareBoard <- function(input, output, session, env)
     ##========================= INPUTS UI ============================================
     ##================================================================================
     
-    output$inputsUI <- renderUI({
-        ui <- tagList(
-            tipify( actionLink(ns("info"), "Info", icon = icon("info-circle")),
+    output$inputsUI <- shiny::renderUI({
+        ui <- shiny::tagList(
+            shinyBS::tipify( shiny::actionLink(ns("info"), "Info", icon = shiny::icon("info-circle")),
                    "Show more information about this module"),
-            hr(), br(),             
-            tipify( selectInput(ns('contrast1'),'Dataset1:',
+            shiny::hr(), shiny::br(),             
+            shinyBS::tipify( shiny::selectInput(ns('contrast1'),'Dataset1:',
                                 choices=NULL, multiple=TRUE),
                    "Select the contrast that you want to compare.",
                    placement="right", options = list(container = "body")
                    ),
-            br(),            
-            tipify( selectInput(ns('dataset2'),"Dataset2:", choices=NULL),
+            shiny::br(),            
+            shinyBS::tipify( shiny::selectInput(ns('dataset2'),"Dataset2:", choices=NULL),
                    "Select second dataset to compare.",
                    placement="right", options = list(container = "body")),
-            tipify( selectInput(ns('contrast2'),NULL, choices=NULL, multiple=TRUE),
+            shinyBS::tipify( shiny::selectInput(ns('contrast2'),NULL, choices=NULL, multiple=TRUE),
                    "Select second contrast to compare.",
                    placement="right", options = list(container = "body")),
-            br(),
-            tipify( actionLink(ns("options"), "Options", icon=icon("cog", lib="glyphicon")),
+            shiny::br(),
+            shinyBS::tipify( shiny::actionLink(ns("options"), "Options", icon=icon("cog", lib="glyphicon")),
                    "Toggle advanced options.",
                    placement="right", options = list(container = "body")),
-            br(),
-            conditionalPanel(
+            shiny::br(),
+            shiny::conditionalPanel(
                 "input.options % 2 == 1", ns=ns,
-                br(),
-                tipify( radioButtons(ns('plottype'),"Plot type:",
+                shiny::br(),
+                shinyBS::tipify( shiny::radioButtons(ns('plottype'),"Plot type:",
                                      choices=c("volcano","MA","scatter","UMAP1","UMAP2","heatmap"),
                                      inline=TRUE),
                        "Select plot type.",
                        placement="right", options = list(container = "body")),
-                br(),
-                tipify( radioButtons(ns('hilighttype'),"Highlight genes:",
+                shiny::br(),
+                shinyBS::tipify( shiny::radioButtons(ns('hilighttype'),"Highlight genes:",
                                      choices=c("top scoring","custom"),
                                      inline=TRUE),
                        "Select highlight type.",
                        placement="right", options = list(container = "body")),
-                conditionalPanel(
+                shiny::conditionalPanel(
                     "input.hilighttype == 'custom'", ns=ns,
-                    tipify( textAreaInput(ns("genelist"),NULL, value = NULL,
+                    shinyBS::tipify( shiny::textAreaInput(ns("genelist"),NULL, value = NULL,
                                           height = "100px", width = "100%", 
                                           rows=5, placeholder="Paste your custom gene list"),
                            "Paste a custom list of genes to highlight.",
                            placement="right")
                 ),
-                br(),            
-                tipify(
-                    radioButtons( ns('ntop'),"ntop", choices=c(10,20,40,100),
+                shiny::br(),            
+                shinyBS::tipify(
+                    shiny::radioButtons( ns('ntop'),"ntop", choices=c(10,20,40,100),
                                  selected=20, inline=TRUE),
                     "number of top genes to show",
                     placement="right", options = list(container = "body"))
@@ -109,52 +109,52 @@ CompareBoard <- function(input, output, session, env)
         )
         ui
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
     
-    observeEvent( input$info, {
-        showModal(modalDialog(
-            title = HTML("<strong>Compare Experiments</strong>"),
-            HTML(infotext),
+    shiny::observeEvent( input$info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>Compare Experiments</strong>"),
+            shiny::HTML(infotext),
             easyClose = TRUE, size="l" ))
     })
 
-    observe({
+    shiny::observe({
         ngs <- inputData()
 
         comparisons1 <- names(ngs$gx.meta$meta)
         sel1 <- comparisons1[1]
-        updateSelectInput(session, "contrast1", choices=comparisons1, selected=sel1)        
+        shiny::updateSelectInput(session, "contrast1", choices=comparisons1, selected=sel1)        
 
         pgx.files <- sort(dir("../data",pattern="pgx$"))
-        updateSelectInput(session, "dataset2", choices=c("<this>",pgx.files))        
+        shiny::updateSelectInput(session, "dataset2", choices=c("<this>",pgx.files))        
        
         ##pheno <- colnames(ngs$samples)
         ##updateSelectInput(session, "colorby", choices=pheno, selected=pheno[1])                
     })
 
-    observeEvent( input$contrast1, {
+    shiny::observeEvent( input$contrast1, {
         ## all.comparisons <- names(ngs$gx.meta$meta)
         ct <- input$contrast1
-        req(ct)
-        updateSelectInput(session, "colorby", choices=ct, selected=ct[1])                
+        shiny::req(ct)
+        shiny::updateSelectInput(session, "colorby", choices=ct, selected=ct[1])                
     })
     
-    ## observeEvent({
+    ## shiny::observeEvent({
     ##     input$contrast1
     ##     input$ntop
     ## }, {
     ##     ngs <- inputData()
-    ##     req(ngs)
+    ##     shiny::req(ngs)
     ##     F <- pgx.getMetaMatrix(ngs)$fc
     ##     ct1 <- input$contrast1
-    ##     req(ct1)
+    ##     shiny::req(ct1)
     ##     if(!all(ct1 %in% colnames(F))) return(NULL)
     ##     ntop <- as.integer(input$ntop)
-    ##     req(ntop)
+    ##     shiny::req(ntop)
     ##     message("DBG [CompareBoard::observer] dimF = ",dim(F))        
     ##     message("DBG [CompareBoard::observer] ntop = ",ntop)
     ##     message("DBG [CompareBoard::observer] ct1 = ",ct1)
@@ -162,10 +162,10 @@ CompareBoard <- function(input, output, session, env)
     ##     message("DBG [CompareBoard::observer] dimF = ",dim(F))
     ##     higenes <- head(names(sort(-rowMeans(F**2))),ntop)
     ##     higenes <- paste(higenes, collapse=' ')
-    ##     updateTextAreaInput(session, "genelist", value=higenes)
+    ##     shiny::updateTextAreaInput(session, "genelist", value=higenes)
     ## })
 
-    observe({
+    shiny::observe({
         df <- getOmicsScoreTable()
         if(is.null(df)) return(NULL)
         ## message("DBG*** [CompareBoard::observer] updating genelist...")        
@@ -173,19 +173,19 @@ CompareBoard <- function(input, output, session, env)
         higenes <- rownames(df)[order(df$score,decreasing=TRUE)]        
         higenes <- head(higenes, ntop)
         higenes <- paste(higenes, collapse=' ')
-        updateTextAreaInput(session, "genelist", value=higenes)
+        shiny::updateTextAreaInput(session, "genelist", value=higenes)
     })
     
     ##================================================================================
     ##========================= REACTIVE FUNCTIONS ===================================
     ##================================================================================
 
-    ##  example <- reactive({
+    ##  example <- shiny::reactive({
     ##      123
     ##  })
     
-    dataset2 <- reactive({
-        req(input$dataset2)
+    dataset2 <- shiny::reactive({
+        shiny::req(input$dataset2)
         if(input$dataset2 == "<this>") {
             ngs <- inputData()
         } else {
@@ -193,30 +193,30 @@ CompareBoard <- function(input, output, session, env)
         }
         comparisons2 <- names(ngs$gx.meta$meta)
         sel2 <- tail(head(comparisons2,2),1)
-        updateSelectInput(session, "contrast2", choices=comparisons2, selected=sel2)
+        shiny::updateSelectInput(session, "contrast2", choices=comparisons2, selected=sel2)
         ngs
     })
 
-    getOmicsScoreTable <- reactive({
-        ## scatter2.RENDER <- reactive({                    
+    getOmicsScoreTable <- shiny::reactive({
+        ## scatter2.RENDER <- shiny::reactive({                    
         ngs1 <- inputData()
         ngs2 <- dataset2()
-        req(ngs1)
-        req(ngs2)
+        shiny::req(ngs1)
+        shiny::req(ngs2)
         
         ct1 <- head(names(ngs1$gx.meta$meta),2)
         ct2 <- head(names(ngs2$gx.meta$meta),2)        
         ct1 <- input.contrast1()
         ct2 <- input.contrast2()
-        req(ct1)
-        req(ct2)
+        shiny::req(ct1)
+        shiny::req(ct2)
         if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
         if(!all(ct2 %in% names(ngs2$gx.meta$meta))) return(NULL)
 
         F1 <- pgx.getMetaMatrix(ngs1)$fc[,ct1,drop=FALSE]
         F2 <- pgx.getMetaMatrix(ngs2)$fc[,ct2,drop=FALSE]        
 
-        ##gg <- union(rownames(F1),rownames(F2))
+        ##gg <- igraph::union(rownames(F1),rownames(F2))
         gg <- intersect(rownames(ngs1$X),rownames(ngs2$X))
         F1 <- F1[match(gg,rownames(F1)),,drop=FALSE]
         F2 <- F2[match(gg,rownames(F2)),,drop=FALSE]
@@ -245,19 +245,19 @@ CompareBoard <- function(input, output, session, env)
         df
     })
 
-    hilightgenes <- reactive({
+    hilightgenes <- shiny::reactive({
         genes <- as.character(input$genelist)
         genes <- strsplit(genes, split='[\t, \n]')[[1]]
         gsub("[ ]","",genes)
-    }) ## %>% debounce(1000)
+    }) ## %>% shiny::debounce(1000)
 
-    input.contrast1 <- reactive({
+    input.contrast1 <- shiny::reactive({
         input$contrast1
-    }) %>% debounce(2500)
+    }) %>% shiny::debounce(2500)
 
-    input.contrast2 <- reactive({
+    input.contrast2 <- shiny::reactive({
         input$contrast2
-    }) %>% debounce(2500)
+    }) %>% shiny::debounce(2500)
     
     ##============================================================================
     ## ScatterPlot 1
@@ -294,14 +294,14 @@ CompareBoard <- function(input, output, session, env)
         p
     }
     
-    scatter1.RENDER %<a-% reactive({
-        ## scatter1.RENDER <- reactive({                    
+    scatter1.RENDER %<a-% shiny::reactive({
+        ## scatter1.RENDER <- shiny::reactive({                    
         ngs1 <- inputData()
         ngs2 <- dataset2()
         all.ct <- names(ngs1$gx.meta$meta)
         ct1 <- head(all.ct,2)
         ct1 <- input.contrast1()
-        req(ct1)
+        shiny::req(ct1)
         if(!all(ct1 %in% all.ct)) return(NULL)
         type <- input$plottype
         higenes <- hilightgenes()
@@ -314,11 +314,11 @@ CompareBoard <- function(input, output, session, env)
         
     })
     
-    scatter1.opts <- tagList()
+    scatter1.opts <- shiny::tagList()
     
     scatter1_caption = "<b>FC scatter plots.</b> Scatter plots of gene expression scatter values between two contrasts. Scatters that are similar show high correlation, i.e. are close to the diagonal."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         "scatter1", label = "a",
         func = scatter1.RENDER,
@@ -338,13 +338,13 @@ CompareBoard <- function(input, output, session, env)
     ## ScatterPlot 2
     ##============================================================================
     
-    scatter2.RENDER %<a-% reactive({
-    ## scatter2.RENDER <- reactive({                    
+    scatter2.RENDER %<a-% shiny::reactive({
+    ## scatter2.RENDER <- shiny::reactive({                    
         ngs1 <- inputData()
         ngs2 <- dataset2()
         ##alertDataLoaded(session,ngs)
         ct2 <- input.contrast2()
-        req(ct2)
+        shiny::req(ct2)
         if(!all(ct2 %in% names(ngs2$gx.meta$meta))) return(NULL)
         type <- input$plottype
         higenes <- hilightgenes()
@@ -358,11 +358,11 @@ CompareBoard <- function(input, output, session, env)
         p
     })
     
-    scatter2.opts <- tagList()
+    scatter2.opts <- shiny::tagList()
     
     scatter2_caption = "<b>FC scatter plots.</b> Scatter plots of gene expression scatter values between two contrasts. Scatters that are similar show high correlation, i.e. are close to the diagonal."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         "scatter2", label = "b",
         func = scatter2.RENDER,
@@ -382,8 +382,8 @@ CompareBoard <- function(input, output, session, env)
     ## FC correlation plot
     ##============================================================================
     
-    fcfcplot.RENDER %<a-% reactive({
-        ## scatter2.RENDER <- reactive({                    
+    fcfcplot.RENDER %<a-% shiny::reactive({
+        ## scatter2.RENDER <- shiny::reactive({                    
         ngs1 <- inputData()
         ngs2 <- dataset2()
         ##alertDataLoaded(session,ngs)
@@ -391,8 +391,8 @@ CompareBoard <- function(input, output, session, env)
         ct2 <- head(names(ngs2$gx.meta$meta),2)
         ct1 <- input.contrast1()
         ct2 <- input.contrast2()
-        req(ct1)
-        req(ct2)
+        shiny::req(ct1)
+        shiny::req(ct2)
         if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
         if(!all(ct2 %in% names(ngs2$gx.meta$meta))) return(NULL)        
 
@@ -414,11 +414,11 @@ CompareBoard <- function(input, output, session, env)
         p
     })
     
-    fcfcplot.opts <- tagList()
+    fcfcplot.opts <- shiny::tagList()
     
     fcfcplot_caption = "<b>FC scatter plots.</b> Scatter plots of gene expression scatter values between two contrasts. Scatters that are similar show high correlation, i.e. are close to the diagonal."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         "fcfcplot", label = "a",
         func = fcfcplot.RENDER,
@@ -438,8 +438,8 @@ CompareBoard <- function(input, output, session, env)
     ## Cumulative foldchange
     ##-----------------------------------------------------------------
 
-    cumfcplot.RENDER %<a-% reactive({
-        ## scatter2.RENDER <- reactive({                    
+    cumfcplot.RENDER %<a-% shiny::reactive({
+        ## scatter2.RENDER <- shiny::reactive({                    
         ngs1 <- inputData()
         ngs2 <- dataset2()
 
@@ -447,15 +447,15 @@ CompareBoard <- function(input, output, session, env)
         ct2 <- head(names(ngs2$gx.meta$meta),2)        
         ct1 <- input.contrast1()
         ct2 <- input.contrast2()
-        req(ct1)
-        req(ct2)
+        shiny::req(ct1)
+        shiny::req(ct2)
         if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
         if(!all(ct2 %in% names(ngs2$gx.meta$meta))) return(NULL)
 
         F1 <- pgx.getMetaMatrix(ngs1)$fc[,ct1,drop=FALSE]
         F2 <- pgx.getMetaMatrix(ngs2)$fc[,ct2,drop=FALSE]        
 
-        gg <- union(rownames(F1),rownames(F2))
+        gg <- igraph::union(rownames(F1),rownames(F2))
         gg <- intersect(rownames(F1),rownames(F2))
         F1 <- F1[match(gg,rownames(F1)),,drop=FALSE]
         F2 <- F2[match(gg,rownames(F2)),,drop=FALSE]
@@ -474,7 +474,7 @@ CompareBoard <- function(input, output, session, env)
             df <- getOmicsScoreTable()
             if(is.null(df)) return(NULL)
             sel <- score_table$rows_all()      ## from module  
-            req(sel)
+            shiny::req(sel)
             sel <- head(rownames(df)[sel],50)        
             if(length(sel)==0) return(NULL)
         }
@@ -494,7 +494,7 @@ CompareBoard <- function(input, output, session, env)
         }
         
         par(mfrow=c(1,1), mar=c(4.5,0,1,2), mgp=c(2.2,0.8,0))
-        layout(matrix(c(1, 2, 3), nrow=1, byrow=T),widths=c(0.5,1,1))
+        plotly::layout(matrix(c(1, 2, 3), nrow=1, byrow=T),widths=c(0.5,1,1))
 
         frame()
         mtext( rownames(F), cex=0.80, side=2, at=(1:nrow(F)-0.5)/nrow(F),
@@ -524,10 +524,10 @@ CompareBoard <- function(input, output, session, env)
         
     })
     
-    cumfcplot.opts <- tagList()    
+    cumfcplot.opts <- shiny::tagList()    
     cumfcplot_caption = "<b>FC scatter plots.</b> Scatter plots of gene expression scatter values between two contrasts. Scatters that are similar show high correlation, i.e. are close to the diagonal."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         "cumfcplot", label = "b",
         func = cumfcplot.RENDER,
@@ -547,8 +547,8 @@ CompareBoard <- function(input, output, session, env)
     ## Gene correlation plot
     ##============================================================================
     
-    genecorr.RENDER %<a-% reactive({
-        ## scatter2.RENDER <- reactive({                    
+    genecorr.RENDER %<a-% shiny::reactive({
+        ## scatter2.RENDER <- shiny::reactive({                    
         ngs1 <- inputData()
         ngs2 <- dataset2()
         ##alertDataLoaded(session,ngs)
@@ -556,8 +556,8 @@ CompareBoard <- function(input, output, session, env)
         ct2 <- head(names(ngs2$gx.meta$meta),2)
         ct1 <- input.contrast1()
         ct2 <- input.contrast2()
-        req(ct1)
-        req(ct2)
+        shiny::req(ct1)
+        shiny::req(ct2)
         if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
         if(!all(ct2 %in% names(ngs2$gx.meta$meta))) return(NULL)        
 
@@ -615,7 +615,7 @@ CompareBoard <- function(input, output, session, env)
         
         ##sel <- input$score_table_rows_all
         sel <- score_table$rows_all()      ## from module  
-        req(sel)
+        shiny::req(sel)
         if(is.null(sel)) return(NULL)        
 
         dbg("[genecorr.RENDER] 6: dim.df = ",dim(df))
@@ -629,7 +629,7 @@ CompareBoard <- function(input, output, session, env)
         ##C1 <- ngs1$model.parameters$exp.matrix
         ##klr1 <- 2+as.integer(C1[,ct1[1]])
         klrpal <- rep(1:7,99)
-        klrpal <- rep(brewer.pal(12,"Paired"),99)
+        klrpal <- rep(RColorBrewer::brewer.pal(12,"Paired"),99)
         
         colorby="ER_STATUS"
         colorby = ct1[1]
@@ -650,7 +650,7 @@ CompareBoard <- function(input, output, session, env)
         i=1
         for(i in 1:length(higenes)) {
             j <- match(higenes[i],rownames(X1))
-            plot( X1[j,], X2[j,],
+            KEGGgraph::plot( X1[j,], X2[j,],
                  ##xlab=dset1, ylab=dset2,
                  xlab="", ylab="",
                  pch=20, col=klr1, cex=1.2)
@@ -676,8 +676,8 @@ CompareBoard <- function(input, output, session, env)
 
     })
     
-    genecorr.opts <- tagList(
-        tipify( selectInput(ns('colorby'),'Color by:',choices=NULL, multiple=FALSE),
+    genecorr.opts <- shiny::tagList(
+        shinyBS::tipify( shiny::selectInput(ns('colorby'),'Color by:',choices=NULL, multiple=FALSE),
                "Color samples by phenotype.",
                placement="right", options = list(container = "body")
                )
@@ -685,7 +685,7 @@ CompareBoard <- function(input, output, session, env)
     
     genecorr_caption = "<b>FC scatter plots.</b> Scatter plots of gene expression scatter values between two contrasts. Scatters that are similar show high correlation, i.e. are close to the diagonal."
     
-    callModule(
+    shiny::callModule(
         plotModule,
         "genecorr", label = "c",
         func = genecorr.RENDER,
@@ -705,7 +705,7 @@ CompareBoard <- function(input, output, session, env)
     ## barplots
     ##============================================================================
 
-    multibarplot.RENDER %<a-% reactive({
+    multibarplot.RENDER %<a-% shiny::reactive({
 
         ngs1 <- inputData()
         ngs2 <- dataset2()
@@ -714,8 +714,8 @@ CompareBoard <- function(input, output, session, env)
         ct2 <- head(names(ngs2$gx.meta$meta),3)
         ct1 <- input.contrast1()
         ct2 <- input.contrast2()
-        req(ct1)
-        req(ct2)
+        shiny::req(ct1)
+        shiny::req(ct2)
         if(!all(ct1 %in% names(ngs1$gx.meta$meta))) return(NULL)
         if(!all(ct2 %in% names(ngs2$gx.meta$meta))) return(NULL)
 
@@ -728,7 +728,7 @@ CompareBoard <- function(input, output, session, env)
         df <- getOmicsScoreTable()
         if(is.null(df)) return(NULL)        
         sel <- score_table$rows_all()      ## from module  
-        req(sel)
+        shiny::req(sel)
         genes <- rownames(df)[sel]
                 
         xgenes <- intersect(rownames(ngs1$X), rownames(ngs2$X))
@@ -772,10 +772,10 @@ CompareBoard <- function(input, output, session, env)
 
     })
     
-    multibarplot.opts <- tagList()    
+    multibarplot.opts <- shiny::tagList()    
     multibarplot_info = "<b>Multi barplots.</b> Barplots of expression values for multiple comparisons in the two datasets (blue and green). "
     
-    callModule(
+    shiny::callModule(
         plotModule,
         "multibarplot", label = "a",
         func = multibarplot.RENDER,
@@ -797,11 +797,11 @@ CompareBoard <- function(input, output, session, env)
     ## Score table
     ##============================================================================
 
-    score_table.RENDER <- reactive({
+    score_table.RENDER <- shiny::reactive({
 
         df <- getOmicsScoreTable()
         if(is.null(df)) return(NULL)
-        req(df)
+        shiny::req(df)
         numeric.cols <- 2:ncol(df)
         
         DT::datatable(
@@ -820,14 +820,14 @@ CompareBoard <- function(input, output, session, env)
                     deferRender = TRUE
                 )  ## end of options.list 
             ) %>%
-            formatSignif(numeric.cols,3) %>%
+            DT::formatSignif(numeric.cols,3) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') 
 
     })
 
     score_table_info = "In this table, users can check mean expression values of features across the conditions for the selected genes."
     
-    score_table <- callModule(
+    score_table <- shiny::callModule(
         tableModule, id = "score_table",
         func = score_table.RENDER, ## ns=ns,
         info.text = score_table_info,
@@ -848,24 +848,24 @@ CompareBoard <- function(input, output, session, env)
     
     compareScatter_title = "<h4>Compare Expression</h4>"
     
-    output$compareScatter_UI <- renderUI({
+    output$compareScatter_UI <- shiny::renderUI({
         ##req(input$dimensions)
-        fillCol(
+        shiny::fillCol(
             height = fullH,
             ## height = input$dimensions[2], ## dynamics with JS  
             flex = c(NA,0.015,1),
-            div(HTML(compareScatter_title), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(compareScatter_title), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1,0.1,1),
                 plotWidget(ns("scatter1")),
-                br(),
+                shiny::br(),
                 ##plotWidget(ns("connectivityMap"))
                 plotWidget(ns("scatter2"))
             )
         )
     })
-    outputOptions(output, "compareScatter_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "compareScatter_UI", suspendWhenHidden=FALSE) ## important!!!
 
     ## ------------------------------------------------------
     ## --------------------- tab2 ---------------------------
@@ -873,23 +873,23 @@ CompareBoard <- function(input, output, session, env)
     
     FCcorrelation_title = "<h4>Compare Foldchange</h4>"
     
-    output$FCcorrelation_UI <- renderUI({
+    output$FCcorrelation_UI <- shiny::renderUI({
         ##req(input$dimensions)
-        fillCol(
+        shiny::fillCol(
             height = fullH,
             ## height = input$dimensions[2], ## dynamics with JS  
             flex = c(NA,0.015,1),
-            div(HTML(FCcorrelation_title), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(FCcorrelation_title), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1,0.05,0.9),
                 plotWidget(ns("fcfcplot")),
-                br(),
+                shiny::br(),
                 plotWidget(ns("cumfcplot"))
             )
         )
     })
-    outputOptions(output, "FCcorrelation_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "FCcorrelation_UI", suspendWhenHidden=FALSE) ## important!!!
 
     ## ------------------------------------------------------
     ## --------------------- tab3 ---------------------------
@@ -897,28 +897,28 @@ CompareBoard <- function(input, output, session, env)
     
     GeneCorrelation_title = "<h4>Gene Correlation</h4>"
     
-    output$GeneCorrelation_UI <- renderUI({
+    output$GeneCorrelation_UI <- shiny::renderUI({
         ##req(input$dimensions)
-        fillCol(
+        shiny::fillCol(
             height = fullH,
             ## height = input$dimensions[2], ## dynamics with JS  
             flex = c(NA,0.015,1),
-            div(HTML(GeneCorrelation_title), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(GeneCorrelation_title), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1.0,0.05,1),
-                fillCol(
+                shiny::fillCol(
                     flex = c(2.2,0.01,1),
                     plotWidget(ns("multibarplot")),                    
-                    br(),
+                    shiny::br(),
                     tableWidget(ns("score_table"))
                 ),
-                br(),
+                shiny::br(),
                 plotWidget(ns("genecorr"))
             )
         )
     })
-    outputOptions(output, "GeneCorrelation_UI", suspendWhenHidden=FALSE) ## important!!!         
+    shiny::outputOptions(output, "GeneCorrelation_UI", suspendWhenHidden=FALSE) ## important!!!         
     
 } ## end-of-Board 
 
@@ -939,7 +939,7 @@ if(0) {
     Y <- ngs1$samples[kk,]
     i <- grep("ERBB2",rownames(X1))
     klr1 <- 1+as.integer(Y$HER2_STATUS)
-    plot(X1[i,], X2[i,], pch=20, col=klr1, cex=1)
+    KEGGgraph::plot(X1[i,], X2[i,], pch=20, col=klr1, cex=1)
 
     pgx.plotExpression(ngs1, "ERBB2", comp="HER2_STATUS:1_vs_0", grouped=TRUE)
     pgx.plotExpression(ngs1, "ESR1", comp="ER_STATUS:1_vs_0", grouped=TRUE)
@@ -978,12 +978,12 @@ if(0) {
               bar_width=0.6, legend.cex=1.5)
 
     legend.cex=2
-    p + theme(
-            legend.title = element_blank(), 
+    p + ggplot2::theme(
+            legend.title = ggplot2::element_blank(), 
             ##legend.justification = legend.pos,
-            legend.text = element_text(size=9*legend.cex),
+            legend.text = ggplot2::element_text(size=9*legend.cex),
             ##legend.position = legend.pos,
-            legend.key.size = unit(9*legend.cex, "pt"),
-            legend.key.height = unit(7*legend.cex, "pt"))
+            legend.key.size = ggplot2::unit(9*legend.cex, "pt"),
+            legend.key.height = ggplot2::unit(7*legend.cex, "pt"))
 
 }

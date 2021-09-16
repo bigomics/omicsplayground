@@ -6,23 +6,23 @@
 message(">>> sourcing DataViewBoard")
 
 DataViewInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shiny::uiOutput(ns("inputsUI"))
     )
 }
 
 DataViewUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    tabsetPanel(
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tabsetPanel(
         id = ns("tabs"),
-        tabPanel("Plots",uiOutput(ns("plotsUI"))),
-        tabPanel("QC",uiOutput(ns("countsUI"))),
-        tabPanel("Counts",uiOutput(ns("genetableUI"))),
-        tabPanel("Samples",uiOutput(ns("sampletableUI"))),
-        tabPanel("Contrasts",uiOutput(ns("contrasttableUI"))),        
-        tabPanel("Resource info",uiOutput(ns("resourceinfoUI")))
+        shiny::tabPanel("Plots",uiOutput(ns("plotsUI"))),
+        shiny::tabPanel("QC",uiOutput(ns("countsUI"))),
+        shiny::tabPanel("Counts",uiOutput(ns("genetableUI"))),
+        shiny::tabPanel("Samples",uiOutput(ns("sampletableUI"))),
+        shiny::tabPanel("Contrasts",uiOutput(ns("contrasttableUI"))),        
+        shiny::tabPanel("Resource info",uiOutput(ns("resourceinfoUI")))
     )
 }
 
@@ -38,7 +38,7 @@ DataViewBoard <- function(input, output, session, env)
     ##tabH = "70vh"  ## height of tables
     
     description = "<b>DataView.</b> Information and descriptive statistics to quickly lookup a gene, check the total counts, or view the data tables."
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
     
     ##----------------------------------------------------------------------
     ## More Info (pop up window)
@@ -60,64 +60,64 @@ DataViewBoard <- function(input, output, session, env)
     ##========================= INPUTS UI ============================================
     ##================================================================================
 
-    require(htmltools)
+
     ## data set parameters
     datatypes <- c("CPM","logCPM")
     datatypes <- c("counts","CPM","logCPM")
     datatypes <- c("counts","logCPM")
 
-    output$inputsUI <- renderUI({
+    output$inputsUI <- shiny::renderUI({
 
-        ui <- tagList(
-            tipify( actionLink(ns("data_info"), "Tutorial", icon = icon("youtube")),
+        ui <- shiny::tagList(
+            shinyBS::tipify( shiny::actionLink(ns("data_info"), "Tutorial", icon = shiny::icon("youtube")),
                    "Show more information about this module."),
-            hr(), br(), 
+            shiny::hr(), shiny::br(), 
             ##textInput("search_gene","Filter genes", value="")
-            tipify( selectInput(ns("search_gene"),"Gene:", choices=NULL),
+            shinyBS::tipify( shiny::selectInput(ns("search_gene"),"Gene:", choices=NULL),
                    ## options = list(maxOptions = 9999999, placeholder='gene')),
                    "Enter a gene of interest for the analysis.", placement="top"),
-            tipify( selectInput(ns("data_samplefilter"),"Filter samples:",
+            shinyBS::tipify( shiny::selectInput(ns("data_samplefilter"),"Filter samples:",
                                 choices=NULL, multiple=TRUE),
                    "Filter the relevant samples for the analysis.", placement="top"),
-            tipify( selectInput(ns('data_groupby'),'Group by:', choices=NULL),
+            shinyBS::tipify( shiny::selectInput(ns('data_groupby'),'Group by:', choices=NULL),
                    "Select phenotype for grouping the samples.", placement="top"),
-            br(),
-            tipify( actionLink(ns("data_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+            shiny::br(),
+            shinyBS::tipify( shiny::actionLink(ns("data_options"), "Options", icon=icon("cog", lib = "glyphicon")),
                    "Toggle advanced options.", placement="top"),
-            br(),br(),
-            conditionalPanel(
+            shiny::br(),br(),
+            shiny::conditionalPanel(
                 "input.data_options % 2 == 1", ns=ns,
-                tipify( radioButtons(ns('data_type'),'Data type:',
+                shinyBS::tipify( shiny::radioButtons(ns('data_type'),'Data type:',
                                      choices=datatypes, selected="logCPM", inline=TRUE),
                        "Choose an input data type for the analysis.", placement="bottom")
             )
         )
         ui
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##========================= OBSERVE ==============================================
     ##================================================================================
 
     ## ------- observe functions -----------
-    observeEvent( input$data_info, {
-        showModal(modalDialog(
-            title = HTML("<strong>Data View Board</strong>"),
-            HTML(data_infotext),
+    shiny::observeEvent( input$data_info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>Data View Board</strong>"),
+            shiny::HTML(data_infotext),
             easyClose = TRUE, size="l" ))
     })
 
     ## update filter choices upon change of data set 
-    observe({
+    shiny::observe({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         ## levels for sample filter
         levels = getLevels(ngs$Y)
-        updateSelectInput(session, "data_samplefilter", choices=levels)
+        shiny::updateSelectInput(session, "data_samplefilter", choices=levels)
         genes <- sort(ngs$genes[rownames(ngs$X),]$gene_name)
-        listGenes <- as.data.table(genes)
+        listGenes <- data.table::as.data.table(genes)
         names(listGenes) = '(type gene if missing!)'
         fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(ngs)$fc**2)
         selgene = names(sort(-fc2))[1] ## most var gene??
@@ -126,7 +126,7 @@ DataViewBoard <- function(input, output, session, env)
         #updateSelectizeInput(session,'search_gene', choices=genes, selected=selgene,
         #                     options = list(maxOptions = 9999999, placeholder='gene'),
         #                     server = TRUE)
-        updateSelectInput(session,'search_gene', choices=listGenes, selected=selgene)
+        shiny::updateSelectInput(session,'search_gene', choices=listGenes, selected=selgene)
         ##updateSelectInput(session,'search_gene', choices=listGenes, selected='')        
 
         grps <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=999)
@@ -136,7 +136,7 @@ DataViewBoard <- function(input, output, session, env)
         grps <- c("<ungrouped>",grps)
         if("group" %in% grps) selgrp = "group"
         if(nrow(ngs$samples)<=20) selgrp = "<ungrouped>"
-        updateSelectInput(session,'data_groupby', choices=grps, selected=selgrp)
+        shiny::updateSelectInput(session,'data_groupby', choices=grps, selected=selgrp)
         
     })
     
@@ -163,12 +163,12 @@ DataViewBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     MARGINS1 = c(7,3.5,2,1)
 
-    genePlots_averageRankPlot.RENDER %<a-% reactive({
-        require(RColorBrewer)
+    genePlots_averageRankPlot.RENDER %<a-% shiny::reactive({
+
         
         ngs <- inputData()
         alertDataLoaded(session,ngs)
-        req(ngs)
+        shiny::req(ngs)
         
         dbg("[genePlots_averageRankPlot.RENDER] reacted")
 
@@ -204,7 +204,7 @@ DataViewBoard <- function(input, output, session, env)
         par(mar=mar, mgp=c(2.1,0.8,0))
         par(mar=c(2.3,3.0,2,2), mgp=c(2.0,0.6,0))
         ##MARGINS1
-        plot( mean.fc, type="h", lwd=0.4,
+        KEGGgraph::plot( mean.fc, type="h", lwd=0.4,
              ## col="#3380CC11", 
              col="#bbd4ee", cex.axis=0.9,
              ##main="average rank", cex.main=1.2,
@@ -218,7 +218,7 @@ DataViewBoard <- function(input, output, session, env)
 
     ##genePlots_averageRankPlot_module <- plotModule(
     ##id="genePlots_averageRankPlot", ns=ns,
-    callModule(
+    shiny::callModule(
         plotModule, id="genePlots_averageRankPlot",
         func = genePlots_averageRankPlot.RENDER,
         func2 = genePlots_averageRankPlot.RENDER,
@@ -277,10 +277,10 @@ DataViewBoard <- function(input, output, session, env)
         return(res)
     }
 
-    genePlots_correlationplot.RENDER %<a-% reactive({
+    genePlots_correlationplot.RENDER %<a-% shiny::reactive({
 
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
@@ -316,7 +316,7 @@ DataViewBoard <- function(input, output, session, env)
     
     ##genePlots_correlationplot_module <- plotModule(
     ##    id="genePlots_correlationplot", ns=ns,
-    callModule(
+    shiny::callModule(
         plotModule, "genePlots_correlationplot",
         func = genePlots_correlationplot.RENDER,
         func2 = genePlots_correlationplot.RENDER,
@@ -331,14 +331,14 @@ DataViewBoard <- function(input, output, session, env)
     ##                     Bar/box plot
     ##---------------------------------------------------------------------- 
     
-    genePlots_barplot.RENDER %<a-% reactive({
-        require(RColorBrewer)
+    genePlots_barplot.RENDER %<a-% shiny::reactive({
+
         
         cat("[dataview] genePlots_barplot.RENDER reacted\n")
         
         ngs <- inputData()
-        req(ngs)
-        req(input$data_groupby,input$search_gene,input$data_type)
+        shiny::req(ngs)
+        shiny::req(input$data_groupby,input$search_gene,input$data_type)
                 
         gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
@@ -448,12 +448,12 @@ DataViewBoard <- function(input, output, session, env)
         }
     })
 
-    genePlots_barplot.opts <- tagList(
-        radioButtons(ns('geneplot_type'),'plot type (grouped)', c('bar','violin','box'),
+    genePlots_barplot.opts <- shiny::tagList(
+        shiny::radioButtons(ns('geneplot_type'),'plot type (grouped)', c('bar','violin','box'),
                      inline=TRUE)
     )
     
-    callModule(
+    shiny::callModule(
         plotModule, "genePlots_barplot",    
         func = genePlots_barplot.RENDER,
         func2 = genePlots_barplot.RENDER,
@@ -469,11 +469,11 @@ DataViewBoard <- function(input, output, session, env)
     ## t-SNE
     ##----------------------------------------------------------------------
     
-    genePlots_tsne.RENDER %<a-% reactive({
-        require(RColorBrewer)
+    genePlots_tsne.RENDER %<a-% shiny::reactive({
+
         
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         dbg("[genePlots_tsne.RENDER] reacted")
         
@@ -504,7 +504,7 @@ DataViewBoard <- function(input, output, session, env)
         }
         
         ##par(mar=c(12,2,2,1), mgp=c(2.1,0.8,0), oma=c(3,0.5,1.5,0.3))
-        require(RColorBrewer)
+
         pos <- ngs$tsne2d[samples,]
         
         cex1 <- 1.8*c(1.6,1.0,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
@@ -516,12 +516,12 @@ DataViewBoard <- function(input, output, session, env)
         ##fc1 <- tanh(0.99 * gx/sd(gx))        
         fc2 <- (fc1 - min(fc1))
         klr1 = klrpal[1 + round(15*fc2/max(abs(fc2)))]
-        klr1 = paste0(col2hex(klr1),"88")
+        klr1 = paste0(gplots::col2hex(klr1),"88")
         
         ##par(mar=c(8,2,2.2,1), mgp=c(1,0.5,0))
         par(mar=c(2.3,2.3,2,2), mgp=c(0.9,0.1,0))
         jj2 <- order(abs(fc1))
-        plot( pos[jj2,], pch=20, cex=cex1, col=klr1[jj2], fg = gray(0.6), bty = "o",
+        KEGGgraph::plot( pos[jj2,], pch=20, cex=cex1, col=klr1[jj2], fg = gray(0.6), bty = "o",
              xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
         
         ## determine how to do grouping for group labels
@@ -553,7 +553,7 @@ DataViewBoard <- function(input, output, session, env)
         
     })
 
-    callModule(
+    shiny::callModule(
         plotModule, "genePlots_tsne",
         func = genePlots_tsne.RENDER,
         func2 = genePlots_tsne.RENDER,
@@ -567,10 +567,10 @@ DataViewBoard <- function(input, output, session, env)
     ##  Tissue expression plot
     ##----------------------------------------------------------------------
     
-    data_tissueplot.RENDER  %<a-% reactive({
+    data_tissueplot.RENDER  %<a-% shiny::reactive({
         
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         if(is.null(input$data_type)) return(NULL)
 
         dbg("[data_tissueplot.RENDER] reacted")
@@ -579,7 +579,7 @@ DataViewBoard <- function(input, output, session, env)
         pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]    
         hgnc.gene = toupper(as.character(ngs$genes[pp,"gene_name"]))
         
-        require(RColorBrewer)
+
         par(mar=c(6,4,1,1), mgp=c(2.2,0.8,0))
         mar=MARGINS1
         par(mar=mar, mgp=c(1.5,0.5,0))
@@ -613,7 +613,7 @@ DataViewBoard <- function(input, output, session, env)
         
     })
     
-    callModule(
+    shiny::callModule(
         plotModule, "data_tissueplot",    
         func = data_tissueplot.RENDER,
         func2 = data_tissueplot.RENDER,
@@ -627,11 +627,11 @@ DataViewBoard <- function(input, output, session, env)
     ## Gene information
     ##----------------------------------------------------------------------
 
-    data_geneInfo.RENDER  %<a-% reactive({
+    data_geneInfo.RENDER  %<a-% shiny::reactive({
 
-        require(KEGG.db)
-        require(GO.db)
-        require(org.Hs.eg.db)
+
+
+
         
         gene="A1BG-AS1"
         gene = "CD4"
@@ -677,13 +677,13 @@ DataViewBoard <- function(input, output, session, env)
             output <- paste(output, collapse="<p>")
         }    
         ##output <- paste0("<div style='background-color: #dde6f0;'>",output,"</div>")
-        ##div(HTML(output), class="gene-info-output", style="overflow: auto; height: 260px;")
-        ##div(HTML(output), class="gene-info-output")
-        ##div(HTML(output), class="gene-info-output", style="overflow-y: auto;")        
-        wellPanel(HTML(output))
+        ##div(shiny::HTML(output), class="gene-info-output", style="overflow: auto; height: 260px;")
+        ##div(shiny::HTML(output), class="gene-info-output")
+        ##div(shiny::HTML(output), class="gene-info-output", style="overflow-y: auto;")        
+        shiny::wellPanel(shiny::HTML(output))
     })
 
-    callModule(
+    shiny::callModule(
         plotModule, "data_geneInfo",
         title = "Gene info", label="a", 
         plotlib = "generic",
@@ -692,7 +692,7 @@ DataViewBoard <- function(input, output, session, env)
         renderFunc = "renderUI", outputFunc = "htmlOutput",
         just.info = FALSE, no.download = TRUE,
         info.text = data_geneInfo_text,
-        ## options = tagList(),
+        ## options = shiny::tagList(),
         height = c(fullH,600), width=c('auto',800),
         add.watermark = WATERMARK
     )
@@ -701,27 +701,27 @@ DataViewBoard <- function(input, output, session, env)
     ##                     Interface
     ##----------------------------------------------------------------------
     dataview_caption1 = "<b>Gene plots.</b> <b>(a)</b> Further information about the selected gene from public databases. <b>(b)</b> Abundance/expression of selected gene across groups. <b>(c)</b> Average rank of the selected gene compared to other genes. <b>(d)</b> t-SNE of samples colored by expression of selected gene. <b>(e)</b> Top correlated genes. Darker color corresponds to higher expression of the gene. <b>(f)</b> Tissue expression of selected gene."
-    output$plotsUI <- renderUI({
-        fillCol(
+    output$plotsUI <- shiny::renderUI({
+        shiny::fillCol(
             height = fullH,
             flex = c(NA,0.03,1),
-            div(HTML(dataview_caption1), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(dataview_caption1), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1,0.06,5),
                 plotWidget(ns("data_geneInfo")),
-                br(),
-                fillCol(
+                shiny::br(),
+                shiny::fillCol(
                     flex = c(1,0.2,1),                    
-                    fillRow( 
+                    shiny::fillRow( 
                         flex = c(1.5,1,1), id = "genePlots_row1",
                         height = rowH, ## width=1600, 
                         plotWidget(ns("genePlots_barplot")),
                         plotWidget(ns("genePlots_averageRankPlot")),
                         plotWidget(ns("genePlots_tsne"))                        
                     ),
-                    br(),
-                    fillRow( 
+                    shiny::br(),
+                    shiny::fillRow( 
                         flex = c(1.5,2), id = "genePlots_row2",
                         height = rowH, ## width=1600, 
                         plotWidget(ns("genePlots_correlationplot")),                        
@@ -754,10 +754,10 @@ DataViewBoard <- function(input, output, session, env)
     MARGINS2 = c(9,3.5,2,0.5)
     MARGINS2 = c(8,3.5,2,0.5)
     
-    counts_tab_barplot.RENDER %<a-% reactive({
+    counts_tab_barplot.RENDER %<a-% shiny::reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
-        req(input$data_groupby)
+        shiny::req(input$data_groupby)
                                         #par(mar=c(20,6,10,6), mgp=c(2.2,0.8,0))
         par(mar=c(8,4,1,2), mgp=c(2.2,0.8,0))
         par(mar=MARGINS2, mgp=c(2.2,0.8,0))
@@ -782,7 +782,7 @@ DataViewBoard <- function(input, output, session, env)
                 names.arg=names.arg)
     })
 
-    callModule(
+    shiny::callModule(
         plotModule, "counts_tab_barplot",
         func = counts_tab_barplot.RENDER,
         func2 = counts_tab_barplot.RENDER,        
@@ -796,7 +796,7 @@ DataViewBoard <- function(input, output, session, env)
     ##                     Count information boxplot
     ##----------------------------------------------------------------------
 
-    counts_tab_boxplot.RENDER %<a-% reactive({
+    counts_tab_boxplot.RENDER %<a-% shiny::reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
         ##par(mar=c(3,3,3,3), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )   
@@ -816,7 +816,7 @@ DataViewBoard <- function(input, output, session, env)
                 las=3, cex.lab=1, ylab="counts (log2)", outline=FALSE, varwidth = FALSE)
     })
 
-    callModule(
+    shiny::callModule(
         plotModule, "counts_tab_boxplot",
         func = counts_tab_boxplot.RENDER,
         func2 = counts_tab_barplot.RENDER,
@@ -830,7 +830,7 @@ DataViewBoard <- function(input, output, session, env)
     ##                     Count information histogram
     ##----------------------------------------------------------------------
 
-    counts_tab_histplot.RENDER %<a-% reactive({
+    counts_tab_histplot.RENDER %<a-% shiny::reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
                                         #par(mfrow=c(2,3), mar=c(9,4,3,1.5), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )  
@@ -860,7 +860,7 @@ DataViewBoard <- function(input, output, session, env)
         gx.hist(gx=res$log2counts[res$jj,], n=2000) #, main="histogram")
     })
 
-    callModule(
+    shiny::callModule(
         plotModule, "counts_tab_histplot",
         func = counts_tab_histplot.RENDER,
         func2 = counts_tab_histplot.RENDER,
@@ -874,7 +874,7 @@ DataViewBoard <- function(input, output, session, env)
     ##  Count information abundance of major gene types
     ##----------------------------------------------------------------------
 
-    counts_tab_abundanceplot.RENDER %<a-% reactive({
+    counts_tab_abundanceplot.RENDER %<a-% shiny::reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
                                         #par(mar=c(6,4,0,4), mgp=c(2.2,0.8,0))
@@ -911,7 +911,7 @@ DataViewBoard <- function(input, output, session, env)
 
     })
 
-    callModule(
+    shiny::callModule(
         plotModule, "counts_tab_abundanceplot",        
         func = counts_tab_abundanceplot.RENDER,
         func2 = counts_tab_abundanceplot.RENDER,
@@ -924,7 +924,7 @@ DataViewBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ## Count information average count by gene type
     ##----------------------------------------------------------------------
-    counts_tab_average_countplot.RENDER %<a-% reactive({
+    counts_tab_average_countplot.RENDER %<a-% shiny::reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
                                         #par(mar=c(6,4,0,4), mgp=c(2.2,0.8,0))
@@ -960,7 +960,7 @@ DataViewBoard <- function(input, output, session, env)
                fill=rev(klr), cex=0.9, y.intersp=0.75, bty="n")
     })
 
-    callModule(
+    shiny::callModule(
         plotModule, "counts_tab_average_countplot",
         func = counts_tab_average_countplot.RENDER,
         func2 = counts_tab_average_countplot.RENDER,
@@ -970,11 +970,11 @@ DataViewBoard <- function(input, output, session, env)
         add.watermark = WATERMARK
     )
 
-    getCountsTable <- reactive({
+    getCountsTable <- shiny::reactive({
         ngs = inputData()
-        req(ngs)
+        shiny::req(ngs)
         
-        validate(need("counts" %in% names(ngs), "no 'counts' in object."))    
+        shiny::validate(shiny::need("counts" %in% names(ngs), "no 'counts' in object."))    
         subtt=NULL
 
         samples = colnames(ngs$X)
@@ -1103,19 +1103,19 @@ DataViewBoard <- function(input, output, session, env)
 
     dataview_counts_caption = "<b>Counts distribution</b>. Plots associated with the counts, abundance or expression levels across the samples/groups.  <b>(a)</b> Total counts per sample or average per group.  <b>(b)</b> Distribution of total counts per sample/group. The center horizontal bar correspond to the median.  <b>(c)</b> Histograms of total counts distribution per sample/group. <b>(d)</b> Abundance of major gene types per sample/group. <b>(e)</b> Average count by gene type per sample/group."
 
-    output$countsUI <- renderUI({
-        fillCol(
+    output$countsUI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.04,1,1),
             height = fullH,
-            div(HTML(dataview_counts_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(dataview_counts_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1,1,1), id = "counts_tab_row1", height=rowH,
                 plotWidget(ns("counts_tab_barplot")),
                 plotWidget(ns("counts_tab_boxplot")),
                 plotWidget(ns("counts_tab_histplot"))
             ),
-            fillRow(
+            shiny::fillRow(
                 flex = c(1,1), id = "counts_tab_row2", height=rowH,
                 plotWidget(ns("counts_tab_abundanceplot")),
                 plotWidget(ns("counts_tab_average_countplot"))
@@ -1134,7 +1134,7 @@ DataViewBoard <- function(input, output, session, env)
     
     data_rawdataTable_text = paste0('Under the <strong>gene table </strong>, the average expression values of genes across the groups can be read. The samples (or cells) can be ungrouped by unclicking the ',menu_grouped, ' in the main <i>Options</i> to see the exact expression values per sample (or cell).', 'The genes in the table are ordered by the correlation (<b>rho</b> column) with respect to the gene selected by users from the ',dropdown_search_gene, ' setting. <b>SD</b> column reports the standard deviation of expression across samples (or cells).')
 
-    observeEvent( input$data_type, {
+    shiny::observeEvent( input$data_type, {
         ngs = inputData()
         if(input$data_type %in% c("counts","CPM")) {
             pp <- rownames(ngs$counts)
@@ -1145,15 +1145,15 @@ DataViewBoard <- function(input, output, session, env)
         ## levels for sample filter
         genes <- sort(ngs$genes[pp,]$gene_name)
         sel = genes[1]  ## most var gene
-        updateSelectizeInput(session,'search_gene', choices=genes, selected=sel, server=TRUE)
+        shiny::updateSelectizeInput(session,'search_gene', choices=genes, selected=sel, server=TRUE)
 
     })
     
-    data_rawdataTable.RENDER <- reactive({
+    data_rawdataTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
         ngs = inputData()
-        req(ngs)
-        req(input$data_groupby)
+        shiny::req(ngs)
+        shiny::req(input$data_groupby)
 
         dbg("[data_rawdataTable.RENDER] reacted")
         
@@ -1274,7 +1274,7 @@ DataViewBoard <- function(input, output, session, env)
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle(numcols,
-                                background = styleColorBar(c(0,x99), 'lightblue'),
+                                background = DT::styleColorBar(c(0,x99), 'lightblue'),
                                 ##background = color_from_middle(x99, 'lightblue', '#f5aeae'),
                                 backgroundSize = '98% 88%',
                                 backgroundRepeat = 'no-repeat',
@@ -1283,7 +1283,7 @@ DataViewBoard <- function(input, output, session, env)
 
     data_rawdataTable_caption = "<b>Gene table.</b> The table shows the gene expression values per sample, or average expression values across the groups. The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar."
 
-    data_rawdataTable <- callModule(
+    data_rawdataTable <- shiny::callModule(
         tableModule, "data_rawdataTable",
         func = data_rawdataTable.RENDER,
         title = "Gene expression table",
@@ -1292,12 +1292,12 @@ DataViewBoard <- function(input, output, session, env)
         ##caption = data_rawdataTable_caption
     )
 
-    output$genetableUI <- renderUI({
-        fillCol(
+    output$genetableUI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.025,1),
             height = fullH,
-            div(HTML(data_rawdataTable_caption), class="caption"),
-            br(),
+            shiny::div(shiny::HTML(data_rawdataTable_caption), class="caption"),
+            shiny::br(),
             tableWidget(ns("data_rawdataTable"))
         )
     })
@@ -1306,9 +1306,9 @@ DataViewBoard <- function(input, output, session, env)
     ##================================= Samples ======================================
     ##================================================================================
 
-    data_phenoHeatmap.RENDER <- reactive({
+    data_phenoHeatmap.RENDER <- shiny::reactive({
         ngs = inputData()
-        req(ngs)
+        shiny::req(ngs)
         dbg("[data_phenoHeatmap.RENDER] reacted")
         
         annot <- ngs$samples
@@ -1321,20 +1321,20 @@ DataViewBoard <- function(input, output, session, env)
         do.clust <- input$data_phenoclustsamples
         plt <- pgx.plotPhenotypeMatrix0(
             annot, annot.ht=annot.ht, cluster.samples=do.clust)
-        ## plt <- plt %>% config(displayModeBar = FALSE)
+        ## plt <- plt %>% plotly::config(displayModeBar = FALSE)
         dbg("[data_phenoHeatmap.RENDER] reacted] done!")        
         plt
     })
     
-    data_phenoHeatmap_opts <- tagList(
-        tipify( checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
+    data_phenoHeatmap_opts <- shiny::tagList(
+        shinyBS::tipify( shiny::checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
                "Cluster samples.", placement="top")        
     )
         
     data_phenoHeatmap_caption = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (i.e. phenotype data)."
     data_phenoHeatmap_info = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (i.e. phenotype data). Column ordering has been performed using hierarchical clustering on a one-hot encoded matrix."
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "data_phenoHeatmap", label="a",
         func = data_phenoHeatmap.RENDER,
@@ -1348,10 +1348,10 @@ DataViewBoard <- function(input, output, session, env)
         add.watermark = WATERMARK
     )
 
-    data_phenotypeAssociation.RENDER %<a-% reactive({
+    data_phenotypeAssociation.RENDER %<a-% shiny::reactive({
 
         ngs = inputData()
-        req(ngs)
+        shiny::req(ngs)
         dbg("[data_phenotypeAssociation.RENDER] reacted")
         annot <- ngs$samples
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
@@ -1360,15 +1360,15 @@ DataViewBoard <- function(input, output, session, env)
         dbg("[data_phenotypeAssociation.RENDER] done")        
     })
 
-    data_phenotypeAssociation_opts <- tagList(
-        tipify( checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
+    data_phenotypeAssociation_opts <- shiny::tagList(
+        shinyBS::tipify( shiny::checkboxInput(ns('data_phenoclustsamples'),'cluster samples',TRUE),
                "Cluster samples.", placement="top")        
     )
     
     data_phenotypeAssociation_caption = "<b>Phenotype association matrix.</b> Clustered heatmap of phenotype association. The values corresponds to the -log10(p) value of the corresponding statistical test between two phenotype variables. A higher value corresponds to stronger 'correlation'."
     data_phenotypeAssociation_info = "<b>Phenotype clustering.</b> Clustered heatmap of sample information (i.e. phenotype data). The values corresponds to the -log10(p) value of the corresponding statistical test between two phenotype variables. A higher value corresponds to stronger 'correlated' variables. For discrete-discrete pairs the Fisher's exact test is used. For continuous-discrete pairs, the Kruskal-Wallis test is used. For continuous-continous pairs, Pearson's correlation test is used."
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "data_phenotypeAssociation", label="b",
         func = data_phenotypeAssociation.RENDER,
@@ -1383,10 +1383,10 @@ DataViewBoard <- function(input, output, session, env)
         add.watermark = WATERMARK
     )
     
-    data_sampleTable.RENDER <- reactive({
+    data_sampleTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
         ngs = inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         dbg("[data_sampleTable.RENDER] reacted")
         
@@ -1407,10 +1407,10 @@ DataViewBoard <- function(input, output, session, env)
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')         
     })
 
-    data_sampleTable.RENDER2 <- reactive({
+    data_sampleTable.RENDER2 <- shiny::reactive({
         ## get current view of raw_counts
         ngs = inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         dbg("[data_sampleTable.RENDER2] reacted")
         
@@ -1435,7 +1435,7 @@ DataViewBoard <- function(input, output, session, env)
     data_sampleTable_caption="<b>Sample information table.</b> Phenotype information about the samples. Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
     data_sampleTable_info = "<b>Sample information table.</b> Phenotype information about the samples. Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
 
-    data_sampleTable <- callModule(
+    data_sampleTable <- shiny::callModule(
         tableModule, "data_sampleTable", label="c",
         func = data_sampleTable.RENDER,
         func2 = data_sampleTable.RENDER2,
@@ -1454,16 +1454,16 @@ DataViewBoard <- function(input, output, session, env)
         "<b>(c)</b>",data_sampleTable_caption
     )
 
-    output$sampletableUI <- renderUI({
-        fillCol(
+    output$sampletableUI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.04,1.2,1),
             height = fullH,
-            div(HTML(sampletableUI_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(sampletableUI_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(2,0.07,1),
-                div(plotWidget(ns("data_phenoHeatmap")), style="overflow-y: auto;"),
-                br(),
+                shiny::div(plotWidget(ns("data_phenoHeatmap")), style="overflow-y: auto;"),
+                shiny::br(),
                 plotWidget(ns("data_phenotypeAssociation"))
             ),
             tableWidget(ns("data_sampleTable"))
@@ -1474,10 +1474,10 @@ DataViewBoard <- function(input, output, session, env)
     ##================================= CONTRASTS ====================================
     ##================================================================================
 
-    data_contrastTable.RENDER <- reactive({
+    data_contrastTable.RENDER <- shiny::reactive({
         ## get current view of raw_counts
         ngs = inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         dbg("[data_contrastTable.RENDER] reacted")
         
@@ -1516,7 +1516,7 @@ DataViewBoard <- function(input, output, session, env)
                       )) %>%
             DT::formatStyle(0, target='row', fontSize='12px', lineHeight='70%') %>%
                 DT::formatStyle(colnames(dt),
-                                ##background = styleColorBar(c(0,3), 'lightblue'),
+                                ##background = DT::styleColorBar(c(0,3), 'lightblue'),
                                 background = color_from_middle(c(-1,1), 'lightblue', '#f5aeae'),
                                 backgroundSize = '98% 88%',
                                 backgroundRepeat = 'no-repeat',
@@ -1529,14 +1529,14 @@ DataViewBoard <- function(input, output, session, env)
     
     data_contrastTable_caption = "<b>Contrast table.</b> summarizing the contrasts of all comparisons. Non-zero entries '+1' and '-1' correspond to the group of interest and control group, respectively. Zero or empty entries denote samples not use for that comparison."
 
-    data_contrastTable_opts = tagList(
-        tipify( radioButtons(ns('data_ctbygroup'),
+    data_contrastTable_opts = shiny::tagList(
+        shinyBS::tipify( shiny::radioButtons(ns('data_ctbygroup'),
                              "Show by:", choices=c("sample","group")),
                "Show contrasts by group or by samples.",
                placement="right", options = list(container = "body"))
     )
     
-    data_contrastTable <- callModule(
+    data_contrastTable <- shiny::callModule(
         tableModule, "data_contrastTable",
         func = data_contrastTable.RENDER,
         options = data_contrastTable_opts,
@@ -1546,11 +1546,11 @@ DataViewBoard <- function(input, output, session, env)
         ##caption = data_contrastTable_caption
     )
 
-    output$contrasttableUI <- renderUI({
-        fillCol(
+    output$contrasttableUI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.03,1), height = fullH,
-            div(HTML(data_contrastTable_caption),class="caption"),
-            br(),
+            shiny::div(shiny::HTML(data_contrastTable_caption),class="caption"),
+            shiny::br(),
             tableWidget(ns("data_contrastTable"))
         )
     })
@@ -1559,9 +1559,9 @@ DataViewBoard <- function(input, output, session, env)
     ## Resource info (dev)
     ##================================================================================
     
-    datatable_timings.RENDER <- reactive({
+    datatable_timings.RENDER <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         dbg("[datatable_timings.RENDER] reacted")
         
@@ -1582,16 +1582,16 @@ DataViewBoard <- function(input, output, session, env)
 
     datatable_timings_text = 'The <b>timings</b> table reports more detailed information about the object dimensions, object sizes and execution times of the methods.'
 
-    datatable_timings <- callModule(
+    datatable_timings <- shiny::callModule(
         tableModule, "datatable_timings",
         func = datatable_timings.RENDER,
         info.text = datatable_timings_text,
         options = NULL, title='Timings'
     )
     
-    datatable_objectdims.RENDER <- reactive({
+    datatable_objectdims.RENDER <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         dims1 <- lapply( ngs, dim)
         lens <- sapply( ngs, length)
@@ -1608,16 +1608,16 @@ DataViewBoard <- function(input, output, session, env)
 
     datatable_objectdims_text = 'This table provides details about the data dimensions of objects.'
 
-    datatable_objectdims <- callModule(
+    datatable_objectdims <- shiny::callModule(
         tableModule, "datatable_objectdims",        
         func = datatable_objectdims.RENDER,
         info.text = datatable_objectdims_text,
         options = NULL, title='Object dimensions'
     )
     
-    datatable_objectsize.RENDER <- reactive({
+    datatable_objectsize.RENDER <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         objsize <- sapply(ngs,object.size)
         objsize <- round( objsize/1e6, digits=2)
         D = data.frame( object=names(ngs), "size.Mb"=objsize, check.names=FALSE)
@@ -1629,7 +1629,7 @@ DataViewBoard <- function(input, output, session, env)
     
     datatable_objectsize_text = "This table provides information about  about the memory sizes of objects"
 
-    datatable_objectsize <- callModule(
+    datatable_objectsize <- shiny::callModule(
         tableModule, "datatable_objectsize",            
         func = datatable_objectsize.RENDER,
         options = NULL, title='Object sizes',
@@ -1639,20 +1639,20 @@ DataViewBoard <- function(input, output, session, env)
 
     resourceinfo_caption="<b>Resource information.</b> Details about the execution times of the methods, dimensions and memory sizes of objects."
     
-    output$resourceinfoUI <- renderUI({    
-        fillCol(
+    output$resourceinfoUI <- shiny::renderUI({    
+        shiny::fillCol(
             flex = c(NA,0.02,1),
             height = fullH,
-            div(HTML(resourceinfo_caption),class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(resourceinfo_caption),class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(5,1, 2,1, 1.5, 2), ## width = 600,
                 tableWidget(ns("datatable_timings")),                
-                br(),
+                shiny::br(),
                 tableWidget(ns("datatable_objectdims")),                
-                br(),
+                shiny::br(),
                 tableWidget(ns("datatable_objectsize")),                
-                br()
+                shiny::br()
             )
         )
     })

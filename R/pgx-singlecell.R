@@ -31,8 +31,8 @@ seurat2pgx <- function(obj, do.cluster=FALSE) {
     rownames(pgx$genes) <- rownames(pgx$counts)
     ##pgx$genes <- cbind(pgx$genes, obj[["RNA"]]@meta.features)
     
-    head(pgx$samples)
-    head(pgx$genes)
+    Matrix::head(pgx$samples)
+    Matrix::head(pgx$genes)
     if(do.cluster) {
         message("[seurat2pgx] clustering samples")
         pgx <- pgx.clusterSamples2(
@@ -63,13 +63,13 @@ pgx.createPGX.10X.DEPRECATED <- function(outs, ncells=2000, aggr.file="aggregati
     ## create PGX file.
     ##
     message("[createPGX.10X] reading 10X data file...")
-    counts.10x <- Read10X(file.path(outs,"filtered_feature_bc_matrix"))
+    counts.10x <- Seurat::Read10X(file.path(outs,"filtered_feature_bc_matrix"))
     dim(counts.10x)
 
     message("[createPGX.10X] reading aggregation meta file...")
     aggr <- read.csv(file.path(outs,aggr.file), comment.char="#")
     aggr$molecule_h5 <- NULL
-    head(aggr)
+    Matrix::head(aggr)
     idx <- as.integer(sub(".*-","",colnames(counts.10x)))
     pheno <- aggr[idx,]
     rownames(pheno) <- colnames(counts.10x)
@@ -110,7 +110,7 @@ pgx.createPGX.10X.DEPRECATED <- function(outs, ncells=2000, aggr.file="aggregati
         counts = counts,  samples = pheno, contrasts = ct$contr.matrix,
         ## batch.correct = FALSE,
         is.logx = FALSE)
-    head(pgx$genes)
+    Matrix::head(pgx$genes)
     names(pgx)
     
     ## We perform single-cell integration/batch correction only to
@@ -187,14 +187,14 @@ pgx.scTestDifferentialExpression <- function(counts, y, is.count=TRUE, samples=N
         X1@x <- cpm.total * X1@x / rep.int(Matrix::colSums(X1), diff(X1@p))  ## fast divide by columns sum
         ## compute log-expression
         X1@x <- log2(1 + X1@x)
-        ##X1 <- normalizeQuantiles(X1)
+        ##X1 <- limma::normalizeQuantiles(X1)
         zth <- log2(1 + zth)
     } else if(is.count) {
         message("input matrix is counts (Matrix)")
         ## normalize to CPM
         X1 <- cpm.total * t(t(counts) / (1e-8 + Matrix::colSums(counts)) )
         X1 <- log2(1 + X1)
-        ##X1 <- normalizeQuantiles(X1)
+        ##X1 <- limma::normalizeQuantiles(X1)
         zth <- log2(1 + zth)
     } else {
         message("input matrix is normalized log-expression")
@@ -217,11 +217,11 @@ pgx.scTestDifferentialExpression <- function(counts, y, is.count=TRUE, samples=N
     Z1[Z1 <= zth] <- NA  ## notice threshold!
     
     ## t-test
-    require(matrixTests)
-    m1 <- row_t_welch(as.matrix(X1)[,y==y1], as.matrix(X1)[,y==y0]) ## all
-    m2 <- row_t_welch(as.matrix(Z1)[,y==y1], as.matrix(Z1)[,y==y0]) ## non-zero
     
-    require(corpora)
+    m1 <- matrixTests::row_t_welch(as.matrix(X1)[,y==y1], as.matrix(X1)[,y==y0]) ## all
+    m2 <- matrixTests::row_t_welch(as.matrix(Z1)[,y==y1], as.matrix(Z1)[,y==y0]) ## non-zero
+    
+    
     pct.x   <- m2$obs.x / m1$obs.x
     pct.y   <- m2$obs.y / m1$obs.y
     pct.tot <- m2$obs.tot / m1$obs.tot
@@ -233,8 +233,8 @@ pgx.scTestDifferentialExpression <- function(counts, y, is.count=TRUE, samples=N
     ##pv <- corpora::fisher.pval( m2$obs.x, m1$obs.x, m2$obs.y, m1$obs.y, alternative="less")
     ##pv <- corpora::fisher.pval( m2$obs.x, m1$obs.x, m2$obs.y, m1$obs.y, alternative="greater")        
     pv <- corpora::fisher.pval( m2$obs.x, m1$obs.x, m2$obs.y, m1$obs.y)
-    ##pv <- chisq.pval( m2$obs.x, m1$obs.x, m2$obs.y, m1$obs.y)
-    head(pv)
+    ##pv <- corpora::chisq.pval( m2$obs.x, m1$obs.x, m2$obs.y, m1$obs.y)
+    Matrix::head(pv)
     if(length(hack.err)>0) m2$obs.x[hack.err] <- 0    
     pct <- cbind(pct.x, pct.y, pct.diff, pct.tot, pct.pvalue=pv)
     
@@ -249,7 +249,7 @@ pgx.scTestDifferentialExpression <- function(counts, y, is.count=TRUE, samples=N
         S1 <- tapply(1:ncol(X1),samples,function(i) rowMeans(X1[,i,drop=FALSE]))
         S1 <- do.call(cbind,S1)
         yb <- tapply(y, samples, function(y1) names(which.max(table(y1))))
-        b1 <- row_t_welch(S1[,yb==y1], S1[,yb==y0]) ## all
+        b1 <- matrixTests::row_t_welch(S1[,yb==y1], S1[,yb==y0]) ## all
         b1 <- b1[,kk]
         colnames(b1) <- paste0("sample.",colnames(b1))
     }
@@ -263,7 +263,7 @@ pgx.scTestDifferentialExpression <- function(counts, y, is.count=TRUE, samples=N
         ##S2 <- t(t(S2) / colSums(S2)) * cpm.total
         S2 <- log2(1 + S2) 
         yb <- tapply(y, samples, function(y1) names(which.max(table(y1))))
-        b2 <- row_t_welch(S2[,yb==y1], S2[,yb==y0]) ## all
+        b2 <- matrixTests::row_t_welch(S2[,yb==y1], S2[,yb==y0]) ## all
         b2 <- b2[,kk]
         colnames(b2) <- paste0("sample2.",colnames(b2))
         remove(C1)
@@ -301,7 +301,7 @@ pgx.scTestDifferentialExpression <- function(counts, y, is.count=TRUE, samples=N
     if(do.nzero) df <- cbind(df, m2)
     if(!is.null(samples)) df <- cbind(df, b1, b2)
 
-    require(metap)
+    
     P <- df[,grep("pvalue",colnames(df))]
     P[is.na(P)] <- 1
     meta.p <- apply(P,1,function(p) metap::sumlog(p)$p)
@@ -345,7 +345,7 @@ pgx.reduceCells <- function(counts, method, ncells, pheno=NULL, group.id=NULL) {
             message(">> Subsampling cells in groups...")
             table(group.id)        
             n1 <- round(ncells / length(unique(group.id)))
-            sel <- tapply(1:ncol(counts), group.id, function(i) head(sample(i),n1))
+            sel <- tapply(1:ncol(counts), group.id, function(i) Matrix::head(sample(i),n1))
             sel <- unlist(sel)
             counts <- counts[,sel]
             if(!is.null(pheno)) {
@@ -415,9 +415,9 @@ pgx.poolCells <- function(counts, ncells, groups=NULL, stats="sum",
         } else if(method=="kmeans") {
             cluster <- kmeans(V,k,iter.max=100)$cluster
         } else if(method=="hclust") {
-            cluster <- cutree(hclust(dist(V)),k)
-            ## cluster <- cutree(hclust(dist(t(X1))),k)
-            ##cluster  <- cutree(hclust(as.dist(1-cor(as.matrix(X1)))),k)
+            cluster <- cutree(fastcluster::hclust(dist(V)),k)
+            ## cluster <- cutree(fastcluster::hclust(dist(t(X1))),k)
+            ##cluster  <- cutree(fastcluster::hclust(as.dist(1-cor(as.matrix(X1)))),k)
         } else {
             stop("ERROR:: unknown clustering method")
         }
@@ -462,7 +462,7 @@ pgx.poolCells <- function(counts, ncells, groups=NULL, stats="sum",
     cluster.id <- cluster.id[colnames(counts)]
     table(cluster.id)            
     ##idx <- tapply(1:ncol(counts), cluster.id, list)
-    ##pool.counts <- mclapply(idx, function(ii) Matrix::rowSums(counts[,ii,drop=FALSE]))   
+    ##pool.counts <- parallel::mclapply(idx, function(ii) Matrix::rowSums(counts[,ii,drop=FALSE]))   
     ##pool.counts <- tapply(1:ncol(counts), cluster.id, function(ii)
     ## Matrix::rowSums(counts[,ii,drop=FALSE]))
     if(stats=="mean") {
@@ -498,13 +498,13 @@ pgx.scBatchIntegrate <- function(X, batch,
     ##pos <- list()
     if("ComBat" %in% method) {
         message("[pgx.scBatchIntegrate] single-cell batch correction using ComBat...")
-        require(sva)
+        
         ## ComBat correction
         res[["ComBat"]] <- sva::ComBat(X, batch=batch, par.prior=TRUE)
     }
     if("limma" %in% method) {
         message("[pgx.scBatchIntegrate] single-cell batch correction using LIMMA...")
-        require(limma)
+        
         ## LIMMA correction
         res[["limma"]] <- limma::removeBatchEffect(X, batch=batch)
     }
@@ -517,13 +517,13 @@ pgx.scBatchIntegrate <- function(X, batch,
     if("MNN" %in% method) {
         message("[pgx.scBatchIntegrate] single-cell batch correction using MNN...")        
         ## MNN correction
-        require(batchelor)
+        
         try( mnn <- mnnCorrect(X, batch=batch, cos.norm.in=TRUE, cos.norm.out=FALSE))
-        res[["MNN"]] <- assays(mnn)[["corrected"]]
+        res[["MNN"]] <- MultiAssayExperiment::assays(mnn)[["corrected"]]
     }
     if("Harmony" %in% method) {
         message("[pgx.scBatchIntegrate] single-cell batch correction using Harmony...")                
-        require(harmony)
+        
         ## Harmony corrections
         nv <- min(floor(dim(X)*0.8),30)
         out <- irlba::irlba(X, nu=nv, nv=nv)
@@ -542,13 +542,13 @@ pgx.scBatchIntegrate <- function(X, batch,
     }
     if("liger" %in% method) {
         message("[pgx.scBatchIntegrate] single-cell batch correction using LIGER...")
-        require(liger)
+        
         xlist <- tapply(1:ncol(X), batch, function(i) pmax(2**X[,i]-1,0))
         liger <- rliger::createLiger(xlist, take.gene.union=TRUE)
         liger <- rliger::normalize(liger)
         ##liger <- liger::selectGenes(liger, var.thresh=1e-8, alpha.thresh=0.999, do.plot=TRUE)
         ##liger <- liger::selectGenes(liger, num.genes=100, tol=1e-2, do.plot=TRUE)        
-        liger@var.genes <- head(rownames(X)[order(-apply(X,1,sd))],100)
+        liger@var.genes <- Matrix::head(rownames(X)[order(-apply(X,1,sd))],100)
         liger <- rliger::scaleNotCenter(liger)        
         vg <- liger@var.genes
         vg
@@ -589,7 +589,7 @@ pgx.SeuratBatchIntegrate <- function(counts, batch, qc.filter=FALSE,
     ## CCA. Note there is no QC filtering for samples on ribo/mito
     ## content. You need to do that before.
     ##
-    library(Seurat)
+    
     dim(counts)
     nbatch <- length(unique(batch))
     message("[pgx.SeuratBatchIntegrate] Processing ",nbatch," batches...")        
@@ -600,16 +600,16 @@ pgx.SeuratBatchIntegrate <- function(counts, batch, qc.filter=FALSE,
     batches
     for(i in 1:length(batches)) {
         sel <- which(batch==batches[i])
-        ##sel <- head(sel,200)
+        ##sel <- Matrix::head(sel,200)
         counts1 <- counts[,sel]
-        obj <- CreateSeuratObject(counts1)
+        obj <- Seurat::CreateSeuratObject(counts1)
         if(sct) {
-            obj <- SCTransform(obj, vars.to.regress = NULL, verbose = FALSE)
-            ##obj <- SCTransform(obj)
+            obj <- Seurat::SCTransform(obj, vars.to.regress = NULL, verbose = FALSE)
+            ##obj <- Seurat::SCTransform(obj)
         } else {
-            obj <- NormalizeData(obj, normalization.method="LogNormalize",
+            obj <- Seurat::NormalizeData(obj, normalization.method="LogNormalize",
                                  scale.factor=10000, verbose=FALSE)
-            obj <- FindVariableFeatures(obj, selection.method="vst", verbose=FALSE)
+            obj <- Seurat::FindVariableFeatures(obj, selection.method="vst", verbose=FALSE)
         }
         obj$batch <- b
         obj.list[[i]] <- obj
@@ -621,9 +621,9 @@ pgx.SeuratBatchIntegrate <- function(counts, batch, qc.filter=FALSE,
         ## See: https://satijalab.org/seurat/v3.0/integration.html
         nfeatures = nrows(counts)
         if(nanchors>0) nfeatures = nanchors 
-        anchor.features <- SelectIntegrationFeatures(
+        anchor.features <- Seurat::SelectIntegrationFeatures(
             object.list = obj.list, nfeatures=nanchors)
-        obj.list <- PrepSCTIntegration(
+        obj.list <- Seurat::PrepSCTIntegration(
             object.list = obj.list,
             anchor.features = anchor.features, 
             verbose = FALSE)        
@@ -644,9 +644,9 @@ pgx.SeuratBatchIntegrate <- function(counts, batch, qc.filter=FALSE,
     normalization.method = ifelse(sct,"SCT","LogNormalize")
     message("[pgx.SeuratBatchIntegrate] NUM.CC = ",NUM.CC)
     message("[pgx.SeuratBatchIntegrate] normalization.method = ",normalization.method)
-    ##anchors <- FindIntegrationAnchors(obj.list, dims = 1:NUM.CC)
+    ##anchors <- Seurat::FindIntegrationAnchors(obj.list, dims = 1:NUM.CC)
     
-    anchors <- FindIntegrationAnchors(
+    anchors <- Seurat::FindIntegrationAnchors(
         obj.list, dims = 1:NUM.CC,
         k.filter = min(200,kmax),
         k.anchor = min(5,kmax),
@@ -659,9 +659,9 @@ pgx.SeuratBatchIntegrate <- function(counts, batch, qc.filter=FALSE,
     len.anchors <- length(anchors@anchor.features)
     message("[pgx.SeuratBatchIntegrate] number of anchors = ",len.anchors)    
 
-    integrated <- IntegrateData(anchorset = anchors)
+    integrated <- Seurat::IntegrateData(anchorset = anchors)
     
-    integrated <- IntegrateData(
+    integrated <- Seurat::IntegrateData(
         anchorset = anchors,
         k.weight = min(100,kmax),  ##  troublesome...
         dims = 1:NUM.CC,
@@ -765,12 +765,12 @@ pgx.scFilterOutliers <- function(counts, a=2.5, plot=FALSE)
 pgx.createSeuratObject <- function(counts, aggr.csv=NULL,
                                    project="SeuratProject", max.cells=2000 )
 {
-    library(Seurat)
-    library(cowplot)
-    library(patchwork)
-    library(multipanelfigure)
     
-    obj <- CreateSeuratObject(counts, min.cells=5, project=project)    
+    
+    
+    
+    
+    obj <- Seurat::CreateSeuratObject(counts, min.cells=5, project=project)    
 
     if(!is.null(aggr.csv)) {        
         aggr <- read.csv(aggr.csv)
@@ -783,13 +783,13 @@ pgx.createSeuratObject <- function(counts, aggr.csv=NULL,
         obj@meta.data <- cbind(obj@meta.data, meta.data)
     }
 
-    DefaultAssay(obj) <- "RNA"
+    Seurat::DefaultAssay(obj) <- "RNA"
     obj@project.name <- project
     
     ## QC filtering of cells
     message("performing QC filtering")        
-    obj$percent.mito <- PercentageFeatureSet(obj, pattern = "^mt-|^Mt-")
-    obj$percent.ribo <- PercentageFeatureSet(obj, pattern = "^RP[LS]|^Rp[ls]")
+    obj$percent.mito <- Seurat::PercentageFeatureSet(obj, pattern = "^mt-|^Mt-")
+    obj$percent.ribo <- Seurat::PercentageFeatureSet(obj, pattern = "^RP[LS]|^Rp[ls]")
     summary(obj$nFeature_RNA)
     obj <- subset(obj, subset = nFeature_RNA > 200 & nFeature_RNA < 2000 & percent.mito < 20)
 
@@ -806,47 +806,47 @@ pgx.createSeuratObject <- function(counts, aggr.csv=NULL,
     colnames(obj@meta.data)    
     if("batch" %in% colnames(obj@meta.data)) {
         message("batch parameter found. integrating batches using MNN.")        
-        split <- SplitObject(obj, split.by = "batch")
+        split <- Seurat::SplitObject(obj, split.by = "batch")
         for(i in 1:length(split)) {
-            split[[i]] <- NormalizeData(split[[i]])
-            split[[i]] <- FindVariableFeatures(split[[i]])
+            split[[i]] <- Seurat::NormalizeData(split[[i]])
+            split[[i]] <- Seurat::FindVariableFeatures(split[[i]])
         }        
-        anchors <- FindIntegrationAnchors(
+        anchors <- Seurat::FindIntegrationAnchors(
             split, dims = 1:30, verbose = FALSE)        
         genes <- rownames(counts)
-        integrated <- IntegrateData(
+        integrated <- Seurat::IntegrateData(
             anchorset = anchors, features.to.integrate = genes,
             dims = 1:30, verbose=FALSE)
         dim(integrated)
         obj <- integrated
-        DefaultAssay(obj) <- "integrated"
+        Seurat::DefaultAssay(obj) <- "integrated"
     } else {
-        obj <- NormalizeData(obj)
-        obj <- FindVariableFeatures(obj)
-        DefaultAssay(obj) <- "RNA"
+        obj <- Seurat::NormalizeData(obj)
+        obj <- Seurat::FindVariableFeatures(obj)
+        Seurat::DefaultAssay(obj) <- "RNA"
     } 
 
     if(ncol(obj)>max.cells) {
         message("Subsampling cells to ",max.cells)        
-        obj <- subset(obj, cells = sample(Cells(obj),max.cells))
+        obj <- subset(obj, cells = sample(Seurat::Cells(obj),max.cells))
     }
     
     ## Dimensionality reductions
     message("Calculating dimensionality reductions...")        
-    obj <- FindVariableFeatures(obj)   
-    ##obj <- ScaleData(obj, vars.to.regress = c("percent.mito","percent.ribo"))
-    obj <- ScaleData(obj, vars.to.regress = c("percent.mito"))
-    obj <- RunPCA(obj, npcs = 30, verbose = FALSE)
-    obj <- RunUMAP(obj, reduction = "pca", dims = 1:30, dim.embed=2)
-    obj <- RunTSNE(obj, reduction = "pca", dims = 1:30, dim.embed=2)    
-    obj <- FindNeighbors(obj, reduction = "pca", dims = 1:30)
-    obj <- FindClusters(obj)
+    obj <- Seurat::FindVariableFeatures(obj)   
+    ##obj <- Seurat::ScaleData(obj, vars.to.regress = c("percent.mito","percent.ribo"))
+    obj <- Seurat::ScaleData(obj, vars.to.regress = c("percent.mito"))
+    obj <- Seurat::RunPCA(obj, npcs = 30, verbose = FALSE)
+    obj <- Seurat::RunUMAP(obj, reduction = "pca", dims = 1:30, dim.embed=2)
+    obj <- Seurat::RunTSNE(obj, reduction = "pca", dims = 1:30, dim.embed=2)    
+    obj <- Seurat::FindNeighbors(obj, reduction = "pca", dims = 1:30)
+    obj <- Seurat::FindClusters(obj)
 
     ## Pre-calculate markers
     if(0) {
         ## cannot store the results somewhere????
-        Idents(obj) <- "seurat_clusters"
-        markers <- FindAllMarkers(obj, only.pos=TRUE, min.pct=0.25, thresh.use=0.25)
+        Seurat::Idents(obj) <- "seurat_clusters"
+        markers <- Seurat::FindAllMarkers(obj, only.pos=TRUE, min.pct=0.25, thresh.use=0.25)
         attributes(obj)$markers <- list()
         attributes(obj)$markers[["seurat_clusters"]] <- markers
     }
@@ -871,63 +871,63 @@ pgx.createSeurateFigures <- function(obj)
     ##----------------------------------------------------------------------
     ## QC 
     ##----------------------------------------------------------------------
-    Idents(obj) <- "library_id"  ## important!!
-    Idents(obj) <- "phenotype"  ## important!!
-    Idents(obj) <- "batch"  ## important!!
-    Idents(obj) <- "orig.indent"  ## important!!
-    vplot <- VlnPlot(
+    Seurat::Idents(obj) <- "library_id"  ## important!!
+    Seurat::Idents(obj) <- "phenotype"  ## important!!
+    Seurat::Idents(obj) <- "batch"  ## important!!
+    Seurat::Idents(obj) <- "orig.indent"  ## important!!
+    vplot <- Seurat::VlnPlot(
         obj, features = c("nCount_RNA", "nFeature_RNA", "percent.mito", "percent.ribo"),
         pt.size=0.15, ncol = 4)
-    vplot <- vplot & xlab(NULL)
+    vplot <- vplot & ggplot2::xlab(NULL)
     if(0) {
         table(obj$library_id)
         vplot
     }
     
-    q1 <- FeaturePlot(obj, features = "nCount_RNA")
-    q2 <- FeaturePlot(obj, features = "nFeature_RNA")
-    q3 <- FeaturePlot(obj, features = "percent.mito")
-    q4 <- FeaturePlot(obj, features = "percent.ribo")
+    q1 <- Seurat::FeaturePlot(obj, features = "nCount_RNA")
+    q2 <- Seurat::FeaturePlot(obj, features = "nFeature_RNA")
+    q3 <- Seurat::FeaturePlot(obj, features = "percent.mito")
+    q4 <- Seurat::FeaturePlot(obj, features = "percent.ribo")
     
-    plot1 <- FeatureScatter(obj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA",
+    plot1 <- Seurat::FeatureScatter(obj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA",
                             pt.size=0.3)
-    plot2 <- FeatureScatter(obj, feature1 = "nCount_RNA", feature2 = "percent.mito",
+    plot2 <- Seurat::FeatureScatter(obj, feature1 = "nCount_RNA", feature2 = "percent.mito",
                             pt.size=0.3)
-    plot3 <- FeatureScatter(obj, feature1 = "nCount_RNA", feature2 = "percent.ribo",
+    plot3 <- Seurat::FeatureScatter(obj, feature1 = "nCount_RNA", feature2 = "percent.ribo",
                             pt.size=0.3)
         
-    theme0 <- theme(
-        plot.title = element_text( size=12, face='bold'),
-        ##legend.key.size = unit(0.45,"lines")            
-        legend.title = element_text(size=11),
-        legend.text = element_text(size=9),
-        legend.key.size = unit(0.55,"lines"),            
-        axis.text.x = element_text(size=10),
-        axis.text.y = element_text(size=10),
-        axis.title.x = element_text(size=11),
-        axis.title.y = element_text(size=11)
+    theme0 <- ggplot2::theme(
+        plot.title = ggplot2::element_text( size=12, face='bold'),
+        ##legend.key.size = grid::unit(0.45,"lines")            
+        legend.title = ggplot2::element_text(size=11),
+        legend.text = ggplot2::element_text(size=9),
+        legend.key.size = grid::unit(0.55,"lines"),            
+        axis.text.x = ggplot2::element_text(size=10),
+        axis.text.y = ggplot2::element_text(size=10),
+        axis.title.x = ggplot2::element_text(size=11),
+        axis.title.y = ggplot2::element_text(size=11)
     )
     ##(vplot / qq / pp) & theme0
         
     qq <- (q1 | q2 | q3 | q4)
-    qq <- qq & guides(color = guide_colourbar(barwidth= 0.5, barheight=3))
+    qq <- qq & ggplot2::guides(color = ggplot2::guide_colourbar(barwidth= 0.5, barheight=3))
     
-    pp <- (plot1 | plot2 | plot3) & ggtitle(NULL)
-    pp <- pp & theme(legend.key.size = unit(0.45,"lines"))
+    pp <- (plot1 | plot2 | plot3) & ggplot2::ggtitle(NULL)
+    pp <- pp & ggplot2::theme(legend.key.size = grid::unit(0.45,"lines"))
     ##pp
     
-    v1 <- plot_grid(vplot & theme0, ncol=1)
-    v2 <- plot_grid(qq & theme0, ncol=1)
-    v3 <- plot_grid(pp & theme0, ncol=1) 
+    v1 <- cowplot::plot_grid(vplot & theme0, ncol=1)
+    v2 <- cowplot::plot_grid(qq & theme0, ncol=1)
+    v3 <- cowplot::plot_grid(pp & theme0, ncol=1) 
 
     fig1 <- (v1 / v2 / v3)
     fig1 <- fig1 +
-        plot_annotation(
+        patchwork::plot_annotation(
             title = 'Seurat QC plots',
             subtitle = 'These plots show the QC of your experiment.',
             ##caption = 'made with Omics Playground',
             caption = caption1,
-            theme = theme(plot.title = element_text(size=16, face='bold')),
+            theme = ggplot2::theme(plot.title = ggplot2::element_text(size=16, face='bold')),
             tag_levels = 'a')
     ##fig1
     fig[["QC"]] <- fig1
@@ -937,34 +937,34 @@ pgx.createSeurateFigures <- function(obj)
     ##----------------------------------------------------------------------
 
     vg  <- obj[["RNA"]]@var.features
-    hvg <- head(VariableFeatures(obj), 20)    
-    v1 <- VariableFeaturePlot(obj) %>% LabelPoints(points=hvg, repel=TRUE)
-    v1 <- v1 & theme(legend.position = c(0.02, 0.95) )
+    hvg <- Matrix::head(Seurat::VariableFeatures(obj), 20)    
+    v1 <- Seurat::VariableFeaturePlot(obj) %>% Seurat::LabelPoints(points=hvg, repel=TRUE)
+    v1 <- v1 & ggplot2::theme(legend.position = c(0.02, 0.95) )
     
     ##JackStrawPlot(obj, dims=1:15)
-    r1 <- ElbowPlot(obj) + ggtitle("PCA elbow plot")
+    r1 <- Seurat::ElbowPlot(obj) + ggplot2::ggtitle("PCA elbow plot")
     r2 <- base2grob::base2grob(~{
         par(mfrow=c(1,1), mar=c(0,0,0,0), oma=c(0,0,1,0))
-        DimHeatmap(obj, dims = 1:9, ncol=3, cells = 500,
+        Seurat::DimHeatmap(obj, dims = 1:9, ncol=3, cells = 500,
                    nfeatures=16, balanced = TRUE)
     })
     
-    v1 <- v1 + ggtitle("Variable features") + theme0 +
-        theme(plot.margin = ggplot2::margin(0,1,0.5,0, "cm"))
+    v1 <- v1 + ggplot2::ggtitle("Variable features") + theme0 +
+        ggplot2::theme(plot.margin = ggplot2::margin(0,1,0.5,0, "cm"))
     
-    r1 <- r1 + ggtitle("PCA elbow plot") + theme0 +
-        theme(plot.margin = ggplot2::margin(0,0.5,0.5,1, "cm"))
+    r1 <- r1 + ggplot2::ggtitle("PCA elbow plot") + theme0 +
+        ggplot2::theme(plot.margin = ggplot2::margin(0,0.5,0.5,1, "cm"))
         
-    fig3 <- (v1 | r1) / r2 + plot_layout(design="A\nB\nB") &
-        theme( plot.title = element_text(hjust=0)) 
+    fig3 <- (v1 | r1) / r2 + patchwork::plot_layout(design="A\nB\nB") &
+        ggplot2::theme( plot.title = ggplot2::element_text(hjust=0)) 
 
     fig3 <- fig3 +
-        plot_annotation(
+        patchwork::plot_annotation(
             title = 'Seurat PCA plots',
             subtitle = 'These plots show the PCA of your experiment.',
             ## caption = 'made with Omics Playground',
             caption = caption1,
-            theme = theme(plot.title = element_text(size = 16, face='bold')),
+            theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 16, face='bold')),
             tag_levels = 'a')
 
     ##fig3    
@@ -973,38 +973,38 @@ pgx.createSeurateFigures <- function(obj)
     ##----------------------------------------------------------------------
     ## Cluster markers
     ##----------------------------------------------------------------------
-    Idents(obj) <- "seurat_clusters"
+    Seurat::Idents(obj) <- "seurat_clusters"
     
-    markers <- FindAllMarkers(obj, only.pos=TRUE, min.pct=0.25, thresh.use=0.25)
+    markers <- Seurat::FindAllMarkers(obj, only.pos=TRUE, min.pct=0.25, thresh.use=0.25)
     ##markers <- markers[order(markers$avg_logFC*log(markers$p_val)),]
     markers$score <- with(markers, -log(p_val) * avg_logFC * pct.1 * (1 - pct.2))
     
     ##markers <-  attributes(obj)$markers[["seurat_clusters"]]
-    top1 <- markers %>% group_by(cluster) %>% top_n(1, -p_val)
-    top1 <- markers %>% group_by(cluster) %>% top_n(1, score)
+    top1 <- markers %>% plotly::group_by(cluster) %>% dplyr::top_n(1, -p_val)
+    top1 <- markers %>% plotly::group_by(cluster) %>% dplyr::top_n(1, score)
     top1$gene
-    vplot2 <- VlnPlot( obj, features = top1$gene, pt.size=0.15, ncol = 5)
-    vplot2 <- vplot2 & xlab(NULL)
-    vplot2 <- vplot2 & ylab("expression")
-    vplot2 <- vplot2 & theme(plot.margin = ggplot2::margin(1,3,1,3, "mm"))
-    vplot2 <- vplot2 & theme(axis.text.x=element_text(angle=0))
+    vplot2 <- Seurat::VlnPlot( obj, features = top1$gene, pt.size=0.15, ncol = 5)
+    vplot2 <- vplot2 & ggplot2::xlab(NULL)
+    vplot2 <- vplot2 & ggplot2::ylab("expression")
+    vplot2 <- vplot2 & ggplot2::theme(plot.margin = ggplot2::margin(1,3,1,3, "mm"))
+    vplot2 <- vplot2 & ggplot2::theme(axis.text.x=element_text(angle=0))
 
     ntop <- floor(65 / length(unique(obj$seurat_clusters)))
-    ##top <- markers %>% group_by(cluster) %>% top_n(ntop, avg_logFC)
-    top <- markers %>% group_by(cluster) %>% top_n(ntop, score)
+    ##top <- markers %>% plotly::group_by(cluster) %>% dplyr::top_n(ntop, avg_logFC)
+    top <- markers %>% plotly::group_by(cluster) %>% dplyr::top_n(ntop, score)
     top
-    h1 <- DoHeatmap(obj, features=top$gene, angle=0, size=4) + NoLegend()
+    h1 <- Seurat::DoHeatmap(obj, features=top$gene, angle=0, size=4) + Seurat::NoLegend()
     
-    vplot2  <- plot_grid(vplot2 & theme0, ncol=1)
-    h1x  <- plot_grid(h1, ncol=1)
-    fig4 <- (vplot2) / h1x + plot_layout(design="A\nB\nB")
+    vplot2  <- cowplot::plot_grid(vplot2 & theme0, ncol=1)
+    h1x  <- cowplot::plot_grid(h1, ncol=1)
+    fig4 <- (vplot2) / h1x + patchwork::plot_layout(design="A\nB\nB")
 
-    fig4 <- fig4 +  plot_annotation(
+    fig4 <- fig4 +  patchwork::plot_annotation(
                         title = 'Seurat cluster markers',
                         subtitle = 'These plots show the clusters of your experiment.',
                         ## caption = 'made with Omics Playground',
                         caption = caption1,
-                        theme = theme(plot.title = element_text(size=16, face='bold')),
+                        theme = ggplot2::theme(plot.title = ggplot2::element_text(size=16, face='bold')),
                         tag_levels = 'a')
     ##fig4
 
@@ -1036,32 +1036,32 @@ pgx.createSeurateFigures <- function(obj)
     obj$cell.type <- ct1x[as.character(obj$seurat_clusters)]
     table(obj$cell.type)
     
-    d1 <- DimPlot(obj, group.by = "seurat_clusters", label=TRUE) +
-        ggtitle("Seurat clusters") + NoLegend()
-    d4 <- DimPlot(obj, group.by = "cell.type", label=TRUE) +
-        ggtitle("Cell type")  + NoLegend()
+    d1 <- Seurat::DimPlot(obj, group.by = "seurat_clusters", label=TRUE) +
+        ggplot2::ggtitle("Seurat clusters") + Seurat::NoLegend()
+    d4 <- Seurat::DimPlot(obj, group.by = "cell.type", label=TRUE) +
+        ggplot2::ggtitle("Cell type")  + Seurat::NoLegend()
 
     sel <- unlist(tapply(1:ncol(obj), obj$cell.type, head, 300))
     markers$cell.type <- ct1x[as.character(markers$cluster)]
     ##markers <- markers[order(markers$cell.type,-markers$avg_logFC),]
     ntop <- floor(45 / length(unique(ct1x)))
-    top <- markers %>% group_by(cell.type) %>% top_n(ntop, score)
-    head(top)
-    h2 <- DoHeatmap(obj[,sel], features=top$gene, group.by="cell.type",
-                    hjust=0.5, angle=0, size=4) + NoLegend()
-    h2 <- h2 + theme(plot.margin = ggplot2::margin(0,0,0,0,"mm"))
-    ##h2x  <- plot_grid(h2, ncol=1)
+    top <- markers %>% plotly::group_by(cell.type) %>% dplyr::top_n(ntop, score)
+    Matrix::head(top)
+    h2 <- Seurat::DoHeatmap(obj[,sel], features=top$gene, group.by="cell.type",
+                    hjust=0.5, angle=0, size=4) + Seurat::NoLegend()
+    h2 <- h2 + ggplot2::theme(plot.margin = ggplot2::margin(0,0,0,0,"mm"))
+    ##h2x  <- cowplot::plot_grid(h2, ncol=1)
     
-    fig5 <- h2 / (d1 + theme0 | d4 + theme0) + plot_layout(design="A\nA\nB")
-    ## plot_grid(d1, d2, d3, d4, ncol=2)
+    fig5 <- h2 / (d1 + theme0 | d4 + theme0) + patchwork::plot_layout(design="A\nA\nB")
+    ## cowplot::plot_grid(d1, d2, d3, d4, ncol=2)
     
-    fig5 <- fig5 +  plot_annotation(
+    fig5 <- fig5 +  patchwork::plot_annotation(
                         title = 'Seurat cell type identification',
                         subtitle = 'Assignment of cell type identity to clusters.',
                         ## caption = 'made with Omics Playground',
                         caption = caption1,
-                        theme = theme(
-                            plot.title = element_text(size = 16, face='bold')),
+                        theme = ggplot2::theme(
+                            plot.title = ggplot2::element_text(size = 16, face='bold')),
                         tag_levels = 'a')
     ##fig5
     fig[["cell.type"]] <- fig5
@@ -1070,25 +1070,25 @@ pgx.createSeurateFigures <- function(obj)
     ## Phenotype dimension plots
     ##----------------------------------------------------------------------
 
-    head(obj@meta.data)
+    Matrix::head(obj@meta.data)
     not.ph <- grep("ident|nCount|nFeat|mito|[.]mt|ribo|_snn|^percent",colnames(obj@meta.data),value=TRUE)
     ph <- setdiff(colnames(obj@meta.data),not.ph)
     ph
     dd <- list()
     for(p in ph) {
-        dd[[p]] <- DimPlot(obj, group.by=p, label=TRUE) +
-            ggtitle(p) + NoLegend() + theme0
+        dd[[p]] <- Seurat::DimPlot(obj, group.by=p, label=TRUE) +
+            ggplot2::ggtitle(p) + Seurat::NoLegend() + theme0
     }
-    ##d4 <- DimPlot(obj, group.by = "cell.type") + ggtitle("cell.type")
-    ##fig2 <- plot_grid(plotlist=dd, nrow=2, ncol=3)
-    fig2 <- wrap_plots(dd)
+    ##d4 <- Seurat::DimPlot(obj, group.by = "cell.type") + ggplot2::ggtitle("cell.type")
+    ##fig2 <- cowplot::plot_grid(plotlist=dd, nrow=2, ncol=3)
+    fig2 <- patchwork::wrap_plots(dd)
 
-    fig2 <- fig2 +  plot_annotation(
+    fig2 <- fig2 +  patchwork::plot_annotation(
                         title = 'Seurat Phenotype plots',
                         subtitle = 'Distribution of phenotypes on the t-SNE/UMAP.',
                         ## caption = 'made with Omics Playground',
                         caption = caption1,
-                        theme = theme(plot.title = element_text(size=16, face='bold')),
+                        theme = ggplot2::theme(plot.title = ggplot2::element_text(size=16, face='bold')),
                         tag_levels = 'a')
     ##fig2
 
@@ -1111,17 +1111,17 @@ pgx.createSeurateFigures <- function(obj)
         obj@meta.data <- cbind(obj@meta.data, percent)
         dd <- list()
         for(p in colnames(percent)) {
-            dd[[p]] <- FeaturePlot(obj, features=p)
+            dd[[p]] <- Seurat::FeaturePlot(obj, features=p)
         }
-        wrap_plots(dd, ncol=3) & theme0
+        patchwork::wrap_plots(dd, ncol=3) & theme0
 
         ## markers with LIMMA (multifactorial)
         y <- obj$cell.type
         design <- model.matrix(~ 1 + y)
-        res <- eBayes(lmFit(obj[["RNA"]]@data, design))
-        top <- topTable(res, number=1000)
+        res <- limma::eBayes(limma::lmFit(obj[["RNA"]]@data, design))
+        top <- limma::topTable(res, number=1000)
         top <- top[order(top$P.Value),]
-        head(top,20)
+        Matrix::head(top,20)
 
 
     }
@@ -1131,28 +1131,28 @@ pgx.createSeurateFigures <- function(obj)
     ##----------------------------------------------------------------------
 
     if(0) {
-        Idents(obj) <- "phenotype"
-        head(obj@meta.data)
-        stats <- FindMarkers(
+        Seurat::Idents(obj) <- "phenotype"
+        Matrix::head(obj@meta.data)
+        stats <- Seurat::FindMarkers(
             obj, ident.1 = "treated", ident.2 = "untreated",
             logfc.threshold = 0.1, ##min.pct = 0.1,
             verbose = FALSE)
-        head(stats)
-        top.deg <- head(rownames(stats),9)
+        Matrix::head(stats)
+        top.deg <- Matrix::head(rownames(stats),9)
         
-        vp1 <- VlnPlot(obj, features = top.deg, split.plot=FALSE,
+        vp1 <- Seurat::VlnPlot(obj, features = top.deg, split.plot=FALSE,
                        split.by = "phenotype", group.by = "cell.type",
                        pt.size=0.15, ncol = 3, log=TRUE)
-        vp1  <- vp1 & xlab("")
-        vp1  <- vp1 & ylab("expression")
+        vp1  <- vp1 & ggplot2::xlab("")
+        vp1  <- vp1 & ggplot2::ylab("expression")
         vp1  <- vp1 & theme0
         vp1
         
-        theme(plot.margin = ggplot2::margin(0,0,0,0, "cm"))
+        ggplot2::theme(plot.margin = ggplot2::margin(0,0,0,0, "cm"))
         vplot2  <- vplot2 & theme0
         ##vplot2
         
-        h1 <- DoHeatmap(obj, features=top$gene, angle=0, size=4) + NoLegend()
+        h1 <- Seurat::DoHeatmap(obj, features=top$gene, angle=0, size=4) + Seurat::NoLegend()
         fig4 <- (vplot2) / h1
     }
    
@@ -1169,29 +1169,29 @@ if(0) {
     ## From Seurat vignette: standard QC filtering
     ##
     ##
-    library(Seurat)
-    obj <- CreateSeuratObject(counts)    
-    obj <- AddMetaData(obj, sample.id, col.name = "Sample.id")    
+    
+    obj <- Seurat::CreateSeuratObject(counts)    
+    obj <- Seurat::AddMetaData(obj, sample.id, col.name = "Sample.id")    
     obj
     slotNames(obj[["RNA"]])
-    table(Idents(obj))    
+    table(Seurat::Idents(obj))    
     
-    head(obj@meta.data)
+    Matrix::head(obj@meta.data)
     mt.genes <- rownames(obj)[grep("^MT-",rownames(obj),ignore.case=TRUE)]
-    C <- GetAssayData(object = obj, slot = "counts")    
+    C <- Seurat::GetAssayData(object = obj, slot = "counts")    
     percent.mito <- colSums(C[mt.genes,])/Matrix::colSums(C)*100
     hist(percent.mito, breaks=100)
-    obj <- AddMetaData(obj, percent.mito, col.name = "percent.mito")
+    obj <- Seurat::AddMetaData(obj, percent.mito, col.name = "percent.mito")
     
     rb.genes <- rownames(obj)[grep("^RP[SL]",rownames(obj),ignore.case=TRUE)]
     percent.ribo <- colSums(C[rb.genes,])/Matrix::colSums(C)*100
-    obj <- AddMetaData(obj, percent.ribo, col.name = "percent.ribo")
+    obj <- Seurat::AddMetaData(obj, percent.ribo, col.name = "percent.ribo")
     
-    VlnPlot(obj, features = c("nFeature_RNA","nCount_RNA","percent.mito","percent.ribo"),
-            group.by = "Sample.id",pt.size = 0.1, ncol=4) + NoLegend()
-    FeatureScatter(obj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
-    FeatureScatter(obj, feature1 = "nFeature_RNA", feature2 = "percent.mito")
-    FeatureScatter(obj, feature1 = "percent.ribo", feature2 = "nFeature_RNA")
+    Seurat::VlnPlot(obj, features = c("nFeature_RNA","nCount_RNA","percent.mito","percent.ribo"),
+            group.by = "Sample.id",pt.size = 0.1, ncol=4) + Seurat::NoLegend()
+    Seurat::FeatureScatter(obj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+    Seurat::FeatureScatter(obj, feature1 = "nFeature_RNA", feature2 = "percent.mito")
+    Seurat::FeatureScatter(obj, feature1 = "percent.ribo", feature2 = "nFeature_RNA")
     
     ## QC select cells
     obj <- subset(obj, subset = nFeature_RNA > 200 & nFeature_RNA < 7500 &
@@ -1200,19 +1200,19 @@ if(0) {
     
     ## total count normalization
     hist(colSums(exp(obj[["RNA"]]@data[,1:1000])),breaks=100)
-    obj <- NormalizeData(obj, normalization.method = "LogNormalize", scale.factor = 10000)    
+    obj <- Seurat::NormalizeData(obj, normalization.method = "LogNormalize", scale.factor = 10000)    
     hist(colSums(exp(obj[["RNA"]]@data[,1:1000])),breaks=100)
     
     ## Find highly variable top 2000 genes
-    obj <- FindVariableFeatures(obj, selection.method = "vst", nfeatures = 2000)
-    VariableFeaturePlot(obj)
+    obj <- Seurat::FindVariableFeatures(obj, selection.method = "vst", nfeatures = 2000)
+    Seurat::VariableFeaturePlot(obj)
     
     ## scale (=standardize????) really??? you will loose fold-change!
     all.genes <- rownames(obj)
-    obj <- ScaleData(obj, features=all.genes)
+    obj <- Seurat::ScaleData(obj, features=all.genes)
     
-    obj <- RunPCA(obj, features=VariableFeatures(object=obj))
-    ElbowPlot(obj)    
+    obj <- Seurat::RunPCA(obj, features=VariableFeatures(object=obj))
+    Seurat::ElbowPlot(obj)    
 }
 
 
@@ -1221,7 +1221,7 @@ if(0) {
     ##
     ## From Seurat vignette: Batch correction
     ##
-    library(Seurat)
+    
 
     batch = c("BioReplicate1", "BioReplicate2", "BioReplicate3","BioReplicate4",
               "Sample1", "Sample2", "Sample3", "Sample4", "Sample5", "Sample6",
@@ -1233,22 +1233,22 @@ if(0) {
     obj.list <- list()
     i=1
     for(i in 1:length(outputs)) {
-        data.10x <- Read10X(data.dir=file.path(outputs[i],"/outs/filtered_feature_bc_matrix"))
+        data.10x <- Seurat::Read10X(data.dir=file.path(outputs[i],"/outs/filtered_feature_bc_matrix"))
         dim(data.10x)
         ## data.10x <- data.10x[,1:1000]  ## just subsample FTM...
-        celseq <- CreateSeuratObject(data.10x, min.cells=5)
+        celseq <- Seurat::CreateSeuratObject(data.10x, min.cells=5)
         ##celseq <- FilterCells(celseq, subset.names = "nGene", low.thresholds = 800)
         celseq <- subset(celseq, subset = nFeature_RNA > 500)
         ##-----
-        celseq[["percent.mt"]] <- PercentageFeatureSet(celseq, pattern = "^mt-")
+        celseq[["percent.mt"]] <- Seurat::PercentageFeatureSet(celseq, pattern = "^mt-")
         celseq <- subset(celseq, subset = percent.mt < 5)
         ##head(celseq@meta.data, 5)
         ##VlnPlot(celseq, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, pt.size = 0.3)
         ##-----
-        ##celseq <- NormalizeData(celseq)
-        celseq <- NormalizeData(object = celseq, normalization.method = "LogNormalize",
+        ##celseq <- Seurat::NormalizeData(celseq)
+        celseq <- Seurat::NormalizeData(object = celseq, normalization.method = "LogNormalize",
                                 scale.factor = 10000)
-        celseq <- FindVariableFeatures(celseq, selection.method="vst",
+        celseq <- Seurat::FindVariableFeatures(celseq, selection.method="vst",
                                        do.plot = F, display.progress = F)
         ##celseq$batch <- gsub(".*/|_scRNA","",outputs[i])
         celseq$batch <- batch[i]
@@ -1257,21 +1257,21 @@ if(0) {
     }
     
     NUM.CC = 20
-    anchors    <- FindIntegrationAnchors(obj.list, dims = 1:NUM.CC,
+    anchors    <- Seurat::FindIntegrationAnchors(obj.list, dims = 1:NUM.CC,
                                          ##anchor.features=9999,
                                          verbose=FALSE)
-    integrated <- IntegrateData(anchorset = anchors,
+    integrated <- Seurat::IntegrateData(anchorset = anchors,
                                 dims = 1:NUM.CC,
                                 verbose=FALSE)
     dim(integrated)
-    DefaultAssay(integrated) <- "integrated"
+    Seurat::DefaultAssay(integrated) <- "integrated"
     dim(integrated)
     
-    ## obj <- CreateSeuratObject(counts)    
-    ## obj <- AddMetaData(obj, sample.id, col.name = "Sample.id")    
+    ## obj <- Seurat::CreateSeuratObject(counts)    
+    ## obj <- Seurat::AddMetaData(obj, sample.id, col.name = "Sample.id")    
     ## obj
     ## slotNames(obj[["RNA"]])
-    ## table(Idents(obj))    
+    ## table(Seurat::Idents(obj))    
 
 }
 
