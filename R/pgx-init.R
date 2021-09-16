@@ -396,4 +396,3 @@ pgx.initialize <- function(pgx) {
     message("[pgx.initialize] done")
     return(pgx)
 }
-

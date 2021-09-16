@@ -500,7 +500,7 @@ LoadingBoard <- function(input, output, session,
         if(is.null(pgx)) {
             cat("[LoadingBoard::<loadbutton>] ERROR file not found : ",pgxfile,"\n")
             beepr::beep(10)
-            shiny::removeModal()
+            if(loadedDataset()) shiny::removeModal()
             return(NULL)
         }
         
@@ -511,7 +511,7 @@ LoadingBoard <- function(input, output, session,
             cat("[LoadingBoard::<loadbutton>] ERROR in object initialization\n")
             beepr::beep(10)
             shiny::showNotification("ERROR in object initialization!\n")
-            shiny::removeModal()
+            if(loadedDataset()) shiny::removeModal()
             return(NULL)
         }
         if(is.null(pgx$name)) pgx$name <- sub("[.]pgx$","",pgxfile)
@@ -519,7 +519,7 @@ LoadingBoard <- function(input, output, session,
         ##----------------- remove modal??
         if(startup_count>0) {
             Sys.sleep(4)
-            shiny::removeModal()
+            if(loadedDataset()) shiny::removeModal()
         }
         
         loadedDataset(TRUE)
