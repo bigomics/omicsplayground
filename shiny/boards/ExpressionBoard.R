@@ -6,40 +6,40 @@
 message(">>> sourcing ExpressionBoard")
 
 ExpressionInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shiny::uiOutput(ns("inputsUI"))
     )
 }
 
 ExpressionUI.test <- function(id) {
-    ns <- NS(id)  ## namespace
-    tabsetPanel(
-        tabPanel("Table",uiOutput(ns("tables_UI"))),
-        tabPanel("Foldchange (all)",uiOutput(ns("fctable_UI"))),
-        tabPanel("FDR table",uiOutput(ns("FDRtable_UI")))                       
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tabsetPanel(
+        shiny::tabPanel("Table",uiOutput(ns("tables_UI"))),
+        shiny::tabPanel("Foldchange (all)",uiOutput(ns("fctable_UI"))),
+        shiny::tabPanel("FDR table",uiOutput(ns("FDRtable_UI")))                       
     )
 }
 
 ExpressionUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    fillCol(
+    ns <- shiny::NS(id)  ## namespace
+    shiny::fillCol(
         flex = c(1.5,1),
         height = 780,
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs1"),
-            tabPanel("Plot",uiOutput(ns("plots_UI"))),
-            tabPanel("Top genes",uiOutput(ns("topgenesUI"))),
-            tabPanel("Volcano (all)",uiOutput(ns("volcanoAll_UI"))),
-            ## tabPanel("Volcano (all2)",uiOutput(ns("volcanoAll2_UI"))),
-            tabPanel("Volcano (methods)",uiOutput(ns("volcanoMethodsUI")))
+            shiny::tabPanel("Plot",uiOutput(ns("plots_UI"))),
+            shiny::tabPanel("Top genes",uiOutput(ns("topgenesUI"))),
+            shiny::tabPanel("Volcano (all)",uiOutput(ns("volcanoAll_UI"))),
+            ## shiny::tabPanel("Volcano (all2)",uiOutput(ns("volcanoAll2_UI"))),
+            shiny::tabPanel("Volcano (methods)",uiOutput(ns("volcanoMethodsUI")))
         ),
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs2"),
-            tabPanel("Table",uiOutput(ns("tables_UI"))),
-            tabPanel("Foldchange (all)",uiOutput(ns("fctable_UI"))),
-            tabPanel("FDR table",uiOutput(ns("FDRtable_UI")))                       
+            shiny::tabPanel("Table",uiOutput(ns("tables_UI"))),
+            shiny::tabPanel("Foldchange (all)",uiOutput(ns("fctable_UI"))),
+            shiny::tabPanel("FDR table",uiOutput(ns("FDRtable_UI")))                       
         )
     )
 }
@@ -59,7 +59,7 @@ ExpressionBoard <- function(input, output, session, env)
     
     description = "<b>Differential Expression Analysis.</b> Compare expression between
 two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups."
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
 
     gx_infotext ="The <strong>Differential Expression Analysis</strong> module compares expression between two conditions (i.e. tumor versus control), which is one of the fundamental analysis in the transcriptomics data analytics workflow. For each comparison of two conditions (also called \'contrast\'), the analysis identifies which genes are significantly downregulated or overexpressed in one of the groups.
 
@@ -81,33 +81,33 @@ two conditions. Determine which genes are significantly downregulated or overexp
     GX.DEFAULTTEST="trend.limma"
     GX.DEFAULTTEST=c("trend.limma","edger.qlf","deseq2.wald","edger.lrt")
     
-    output$inputsUI <- renderUI({
-        ui <- tagList(
-            tipify( actionLink(ns("gx_info"), "Tutorial", icon = icon("youtube")),
+    output$inputsUI <- shiny::renderUI({
+        ui <- shiny::tagList(
+            shinyBS::tipify( shiny::actionLink(ns("gx_info"), "Tutorial", icon = shiny::icon("youtube")),
                    "Show more information about this module."),
-            hr(), br(),             
-            tipify( selectInput(ns("gx_contrast"), "Contrast:", choices=NULL),
+            shiny::hr(), shiny::br(),             
+            shinyBS::tipify( shiny::selectInput(ns("gx_contrast"), "Contrast:", choices=NULL),
                    "Select a contrast of interest for the analysis.", placement="top"),
-            tipify( selectInput(ns("gx_features"),"Gene family:", choices=NULL, multiple=FALSE),
+            shinyBS::tipify( shiny::selectInput(ns("gx_features"),"Gene family:", choices=NULL, multiple=FALSE),
                    "Choose a specific gene family for the analysis.", placement="top"),
-            fillRow( flex=c(1,1),
-                    tipify( selectInput(ns("gx_fdr"),"FDR", choices=FDR.VALUES, selected=0.2),
+            shiny::fillRow( flex=c(1,1),
+                    shinyBS::tipify( shiny::selectInput(ns("gx_fdr"),"FDR", choices=FDR.VALUES, selected=0.2),
                            "Set the false discovery rate (FDR) threshold.", placement="top"),
-                    tipify( selectInput(ns("gx_lfc"),"logFC threshold",
+                    shinyBS::tipify( shiny::selectInput(ns("gx_lfc"),"logFC threshold",
                                         choices=c(0,0.1,0.2,0.5,1,2,5), selected=0.2),
                            "Set the logarithmic fold change (logFC) threshold.", placement="top")
                     ),
-            br(),br(),br(),br(),
-            tipify( actionLink(ns("gx_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+            shiny::br(),br(),br(),br(),
+            shinyBS::tipify( shiny::actionLink(ns("gx_options"), "Options", icon=icon("cog", lib = "glyphicon")),
                    "Toggle advanced options.", placement="top"),
-            br(),br(),
-            conditionalPanel(
+            shiny::br(),br(),
+            shiny::conditionalPanel(
                 "input.gx_options % 2 == 1", ns=ns,
-                tagList(
-                    tipify(checkboxInput(ns("gx_showall"),"show all genes", FALSE),
+                shiny::tagList(
+                    shinyBS::tipify(shiny::checkboxInput(ns("gx_showall"),"show all genes", FALSE),
                            "Display all genes in the table. Disable filtering of significant genes.", 
                placement="top", options = list(container = "body")),
-                    tipify( checkboxGroupInput(ns('gx_statmethod'),'Statistical methods:',
+                    shinyBS::tipify( shiny::checkboxGroupInput(ns('gx_statmethod'),'Statistical methods:',
                                                choices=NULL, inline=TRUE),
                            gx_statmethod_text, placement="right", options=list(container="body"))
                 )
@@ -115,41 +115,41 @@ two conditions. Determine which genes are significantly downregulated or overexp
         )
         return(ui)
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
     
-    observeEvent( input$gx_info, {
-        showModal(modalDialog(
-            title = HTML("<strong>Differential Expression Analysis Board</strong>"),
-            HTML(gx_infotext),
+    shiny::observeEvent( input$gx_info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>Differential Expression Analysis Board</strong>"),
+            shiny::HTML(gx_infotext),
             easyClose = TRUE, size="l"))
-    })
+    }, ignoreInit = TRUE)
     
     ## update choices upon change of data set 
-    observe({
+    shiny::observe({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         contr <- colnames(ngs$model.parameters$contr.matrix)
-        updateSelectInput(session, "gx_contrast", choices=sort(contr))
+        shiny::updateSelectInput(session, "gx_contrast", choices=sort(contr))
         ##fam <- names(ngs$families)
         ##fam <- grep("^TISSUE|^COMPARTMENT|^CELLTYPE|^GOCC|^DISEASE|^CUSTOM",names(GSETS),value=TRUE)
         fam <- pgx.getFamilies(ngs,nmin=10,extended=FALSE)
-        updateSelectInput(session, "gx_features",choices=fam)
+        shiny::updateSelectInput(session, "gx_features",choices=fam)
 
         ## available statistical methods
         gx.methods = colnames(ngs$gx.meta$meta[[1]]$fc) ## available
         sel1 = c(intersect(GX.DEFAULTTEST,gx.methods),gx.methods)
         sel1 = head(unique(sel1),3) ## maximum three!!
 
-        updateCheckboxGroupInput(session, 'gx_statmethod',
+        shiny::updateCheckboxGroupInput(session, 'gx_statmethod',
                                  choices = sort(gx.methods),
                                  selected = sel1)
 
-        updateCheckboxInput(session, "gx_ungroup", value= (ncol(ngs$X)<=8) )        
+        shiny::updateCheckboxInput(session, "gx_ungroup", value= (ncol(ngs$X)<=8) )        
         
     })
 
@@ -157,7 +157,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ##========================= REACTIVE FUNCTIONS ===================================
     ##================================================================================
     
-    selected_gxmethods <- reactive({
+    selected_gxmethods <- shiny::reactive({
         ngs <- inputData()
         gx.methods0 = colnames(ngs$gx.meta$meta[[1]]$fc)
         test = input$gx_statmethod
@@ -174,7 +174,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                             lfc, fdr) {
         ##ngs = inputData()
         ##if(is.null(ngs)) return(NULL)
-        req(ngs)
+        shiny::req(ngs)
         
         if(is.null(testmethods)) return(NULL)
         if(is.null(comparison)) return(NULL)
@@ -252,7 +252,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         return(res)
     }
     
-    fullDiffExprTable <- reactive({
+    fullDiffExprTable <- shiny::reactive({
         ## return the full DE table 
         ngs = inputData()
         if(is.null(ngs)) return(NULL)
@@ -279,7 +279,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         return(res)
     })
 
-    filteredDiffExprTable <- reactive({
+    filteredDiffExprTable <- shiny::reactive({
         ##
         ## DE table filtered by FDR and gene family
         ##
@@ -288,7 +288,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
         ngs = inputData()
         ##if(is.null(ngs)) return(NULL)
-        req(ngs,input$gx_features,input$gx_fdr,input$gx_lfc)
+        shiny::req(ngs,input$gx_features,input$gx_fdr,input$gx_lfc)
         
         comp=1;test="trend.limma"
         comp = input$gx_contrast
@@ -323,7 +323,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         }
 
         if(nrow(res)==0) {
-            validate(need(nrow(res) > 0, "warning. no genes passed current filters."))
+            shiny::validate(shiny::need(nrow(res) > 0, "warning. no genes passed current filters."))
             return(NULL)
         }
         
@@ -346,14 +346,14 @@ two conditions. Determine which genes are significantly downregulated or overexp
     plots_topgenesbarplot_text = "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> settings."
     plots_topfoldchange_text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the <code>Table</code> section."
     
-    plots_volcano.RENDER %<a-% reactive({
+    plots_volcano.RENDER %<a-% shiny::reactive({
         
         comp1=1;fdr=0.10
         comp1 = input$gx_contrast
         if(length(comp1)==0) return(NULL)
         if(is.null(input$gx_features)) return(NULL)
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         fdr = 1
         fdr = as.numeric(input$gx_fdr)
@@ -394,7 +394,17 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     })
 
-    plots_volcano.PLOTLY <- reactive({
+    # not input$gx_fdr
+    # not inputData()
+    # not input$gx_features
+    # not input$gx_contrast
+    # not genetable$rows_selected
+    # not fullDiffExprTable()
+
+    # it's: gx_related_genesets()
+
+
+    plots_volcano.PLOTLY <- shiny::reactive({
         
         dbg("[plots_volcano.PLOTLY] reacted")
         
@@ -404,7 +414,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         if(is.null(input$gx_features)) return(NULL)
         ngs <- inputData()
         alertDataLoaded(session,ngs)
-        req(ngs)
+        shiny::req(ngs)
 
         dbg("[plots_volcano.PLOTLY] 1")
                 
@@ -485,14 +495,14 @@ two conditions. Determine which genes are significantly downregulated or overexp
             marker.size = 4,
             displayModeBar = FALSE,
             showlegend = FALSE) %>%
-            layout( margin = list(b=65) )
+            plotly::layout( margin = list(b=65) )
 
         dbg("[plots_volcano.PLOTLY] done!")
         return(plt)
     })
     
     ##plots_volcano_module <- plotModule(
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "plots_volcano", ## ns=ns,
         ##func = plots_volcano.RENDER, func2 = plots_volcano.RENDER,
@@ -508,12 +518,12 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## MA plot
     ## ------------------------------------------------------
     
-    plots_maplot.RENDER %<a-% reactive({
+    plots_maplot.RENDER %<a-% shiny::reactive({
         comp1 = input$gx_contrast
         if(length(comp1)==0) return(NULL)
 
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         fdr=1;lfc=1
         fdr = as.numeric(input$gx_fdr)    
@@ -558,12 +568,12 @@ two conditions. Determine which genes are significantly downregulated or overexp
                           cex=0.9, lab.cex=1.4, cex.main=1.0 )
     })
 
-    plots_maplot.PLOTLY %<a-% reactive({
+    plots_maplot.PLOTLY %<a-% shiny::reactive({
         comp1 = input$gx_contrast
         if(length(comp1)==0) return(NULL)
 
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         dbg("[plots_maplot.PLOTLY] reacted")
         
@@ -657,14 +667,14 @@ two conditions. Determine which genes are significantly downregulated or overexp
             marker.size = 4,
             displayModeBar = FALSE,
             showlegend = FALSE) %>%
-            layout( margin = list(b=65) )
+            plotly::layout( margin = list(b=65) )
 
         dbg("[plots_maplot.PLOTLY] done!")
         
         return(plt)
     })
     
-    callModule( plotModule,
+    shiny::callModule( plotModule,
         id="plots_maplot", 
         ##func = plots_maplot.RENDER,
         ##func2 = plots_maplot.RENDER, 
@@ -676,10 +686,10 @@ two conditions. Determine which genes are significantly downregulated or overexp
         add.watermark = WATERMARK
     )
     
-    plots_topgenesbarplot.RENDER %<a-% reactive({
-        require(RColorBrewer)
+    plots_topgenesbarplot.RENDER %<a-% shiny::reactive({
+
         ngs = inputData()
-        req(ngs)
+        shiny::req(ngs)
         comp1 = input$gx_contrast
 
         dbg("plots_topgenesbarplot.RENDER: reacted")
@@ -699,7 +709,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         top.up <- head(names(sort(fc[which(fc>0)],decreasing=TRUE)),10)
         top.dn <- head(names(sort(fc[which(fc<0)],decreasing=FALSE)),10)
         fc.top <- c(fc[top.up], fc[top.dn])
-        klr.pal <- brewer.pal(4,"Paired")[2:1]
+        klr.pal <- RColorBrewer::brewer.pal(4,"Paired")[2:1]
         klr <- c( rep(klr.pal[1],length(top.up)), rep(klr.pal[2],length(top.dn)) )
         names(fc.top) <- sub(".*:","",names(fc.top))
         
@@ -721,7 +731,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         
     })
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id="plots_topgenesbarplot", ## ns=ns,
         func = plots_topgenesbarplot.RENDER,
@@ -733,10 +743,10 @@ two conditions. Determine which genes are significantly downregulated or overexp
         add.watermark = WATERMARK
     )
     
-    plots_topfoldchange.RENDER %<a-% reactive({
-        require(RColorBrewer)
+    plots_topfoldchange.RENDER %<a-% shiny::reactive({
+
         ngs = inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         ## get table
         ##sel=1;pp=rownames(ngs$X)[1]
@@ -764,7 +774,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         fc.top <- sort(fc.top)
         fc.top <- head(c(fc.top, rep(NA,99)),15)
 
-        klr.pal <- brewer.pal(4,"Paired")[2:1]
+        klr.pal <- RColorBrewer::brewer.pal(4,"Paired")[2:1]
         ##klr.pal <- BLUERED(16)[c(3,14)]
         klr <- klr.pal[1 + 1*(sign(fc.top)<0)]
         
@@ -786,7 +796,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         
     })
 
-    callModule( plotModule,
+    shiny::callModule( plotModule,
         id = "plots_topfoldchange", 
         func = plots_topfoldchange.RENDER,
         func2 = plots_topfoldchange.RENDER,
@@ -797,10 +807,10 @@ two conditions. Determine which genes are significantly downregulated or overexp
         add.watermark = WATERMARK
     )
     
-    plots_boxplot.RENDER %<a-% reactive({
-        require(RColorBrewer)
+    plots_boxplot.RENDER %<a-% shiny::reactive({
+
         ngs = inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         ## get table
         ##sel=1
@@ -818,7 +828,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         gene=ngs$genes[1,"gene_name"];comp=1;grouped=TRUE;logscale=TRUE;srt=45
         gene = ngs$genes[psel,"gene_name"]
         comp = input$gx_contrast
-        req(comp)
+        shiny::req(comp)
         grouped  <- input$boxplot_grouped
         logscale <- input$boxplot_logscale
         srt <- ifelse(grouped, 0, 35)
@@ -832,16 +842,16 @@ two conditions. Determine which genes are significantly downregulated or overexp
     })
 
     ##plots_boxplot
-    plots_boxplot_opts = tagList(
-        tipify( checkboxInput(ns('boxplot_grouped'),'grouped',TRUE),
+    plots_boxplot_opts = shiny::tagList(
+        shinyBS::tipify( shiny::checkboxInput(ns('boxplot_grouped'),'grouped',TRUE),
                "Group expression values by conditions.",
                placement="right", options = list(container = "body")),
-        tipify( checkboxInput(ns('boxplot_logscale'),'log scale',TRUE),
+        shinyBS::tipify( shiny::checkboxInput(ns('boxplot_logscale'),'log scale',TRUE),
                "Show logarithmic (log2CPM) expression values.",
                placement="right", options = list(container = "body"))
     )
     
-    callModule( plotModule,
+    shiny::callModule( plotModule,
         id = "plots_boxplot", label = "c",
         func = plots_boxplot.RENDER,
         func2 = plots_boxplot.RENDER,
@@ -856,12 +866,12 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     plots_caption = "<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting fold-change versuson significance the x and y axes, respectively. <b>(b)</b> MA-plot plotting signal intensity versus fold-change on the x and y axes, respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change for selected contrast. <b>(d)</b> Sorted barplot of the differential expression of the selected gene across all contrasts."
 
-    ## library(shinyjqui)
-    output$plots_UI <- renderUI({
-        fillCol(
+
+    output$plots_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = rowH,
             flex = c(1,0.35,NA),
-            fillRow(
+            shiny::fillRow(
                 id = "plots",
                 ##height = rowH,
                 flex=c(1,1,1,1), ##height = 370,
@@ -871,8 +881,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
                 plotWidget(ns("plots_boxplot")),
                 plotWidget(ns("plots_topfoldchange"))
             ),
-            br(),
-            div(HTML(plots_caption), class="caption")
+            shiny::br(),
+            shiny::div(shiny::HTML(plots_caption), class="caption")
         )
     })
     
@@ -880,10 +890,10 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## Top genes
     ##================================================================================
 
-    topgenes.RENDER %<a-% reactive({
+    topgenes.RENDER %<a-% shiny::reactive({
 
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         res <- filteredDiffExprTable()
         if(is.null(res) || nrow(res)==0) return(NULL)
@@ -933,14 +943,14 @@ two conditions. Determine which genes are significantly downregulated or overexp
         }        
     })
         
-    topgenes_opts = tagList(
-        tipify( checkboxInput(ns('gx_logscale'),'log scale',TRUE),
+    topgenes_opts = shiny::tagList(
+        shinyBS::tipify( shiny::checkboxInput(ns('gx_logscale'),'log scale',TRUE),
                "Logarithmic scale the counts (abundance levels).",
                placement="right", options = list(container = "body")),
-        tipify( checkboxInput(ns('gx_ungroup'),'ungroup samples',FALSE),
+        shinyBS::tipify( shiny::checkboxInput(ns('gx_ungroup'),'ungroup samples',FALSE),
                "Ungroup samples in the plot",
                placement="right", options = list(container = "body")),
-        tipify( checkboxInput(ns('gx_showothers'),'show others',FALSE),
+        shinyBS::tipify( shiny::checkboxInput(ns('gx_showothers'),'show others',FALSE),
                "Show the 'others' class (if any)",
                placement="right", options = list(container = "body"))
         )
@@ -949,7 +959,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     topgenes_caption = "<b>Top differentially expressed genes.</b> Expression barplots of the top most differentially (both positively and negatively) expressed genes for the selected contrast."
 
-    callModule( plotModule,
+    shiny::callModule( plotModule,
         id = "topgenes", 
         func = topgenes.RENDER,
         func2 = topgenes.RENDER,
@@ -963,25 +973,25 @@ two conditions. Determine which genes are significantly downregulated or overexp
         add.watermark = WATERMARK
     )
 
-    ## library(shinyjqui)
-    output$topgenesUI <- renderUI({
-        fillCol(
+
+    output$topgenesUI <- shiny::renderUI({
+        shiny::fillCol(
             ## id = ns("topgenes"),
             height = rowH,
             flex=c(1,NA,NA), ##height = 370,
             plotWidget(ns("topgenes")),
-            br(),
-            div(HTML(topgenes_caption),class="caption")
+            shiny::br(),
+            shiny::div(shiny::HTML(topgenes_caption),class="caption")
         )
     })
-    outputOptions(output, "topgenesUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "topgenesUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ## Volcano (all contrasts)
     ##================================================================================
 
 
-    getAllContrasts <- reactive({
+    getAllContrasts <- shiny::reactive({
 
         ngs = inputData()
         if( is.null(ngs)) return(NULL)        
@@ -1000,7 +1010,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         i=1
         F <- list()
         Q <- list()
-        withProgress(message="computing contrasts ...", value=0, {
+        shiny::withProgress(message="computing contrasts ...", value=0, {
 
             for(i in 1:length(comp)) {
                 res = getDEGtable(ngs, testmethods=tests, comparison=comp[i], 
@@ -1015,7 +1025,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                 F[[i]] <- fx
                 Q[[i]] <- qval
                 
-                if(!interactive()) incProgress( 1/length(comp) )            
+                if(!interactive()) shiny::incProgress( 1/length(comp) )            
            }
 
         })
@@ -1035,8 +1045,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ct
     })
     
-    volcanoAll.RENDER %<a-% reactive({
-    ##volcanoAll.RENDER <- reactive({    
+    volcanoAll.RENDER %<a-% shiny::reactive({
+    ##volcanoAll.RENDER <- shiny::reactive({    
 
         ngs = inputData()
         if(is.null(ngs)) return(NULL)
@@ -1090,7 +1100,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ymax <- max(1.3, 1.2 * quantile(nlq, probs=0.999, na.rm=TRUE)[1]) ## y-axis
         xmax <- max(1, 1.2 * quantile(abs(unlist(F)), probs=0.999, na.rm=TRUE)[1]) ## x-axis
         
-        withProgress(message="rendering volcano plots ...", value=0, {
+        shiny::withProgress(message="rendering volcano plots ...", value=0, {
             
             plt <- list()
             i=1            
@@ -1116,21 +1126,21 @@ two conditions. Determine which genes are significantly downregulated or overexp
                     ylab = 'significance  (-log10q)',
                     hilight.lwd = 0, hilight.col = '#1e60bb', hilight.cex = 1.5,
                     cex = 0.45, cex.lab = 0.62) 
-                ## theme(legend.position='none')
-                ## theme_bw(base_size=11)
+                ## ggplot2::theme(legend.position='none')
+                ## ggplot2::theme_bw(base_size=11)
                 
-                if(!interactive()) incProgress( 1 / length(comp) )
+                if(!interactive()) shiny::incProgress( 1 / length(comp) )
             }            
 
         })  ## progress
 
-        ##require(patchwork)
-        ##patchwork::wrap_plots(plt, nrow=nr, ncol=nc) &
-        ##    theme_bw(base_size=11) &
-        ##    theme(legend.position='none')        
 
-        require(gridExtra)
-        grid.arrange( grobs=plt, nrow=nr, ncol=nc)         
+        ##patchwork::wrap_plots(plt, nrow=nr, ncol=nc) &
+        ##    ggplot2::theme_bw(base_size=11) &
+        ##    ggplot2::theme(legend.position='none')        
+
+
+        gridExtra::grid.arrange( grobs=plt, nrow=nr, ncol=nc)         
 
     })
     
@@ -1138,7 +1148,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     volcanoAll_caption = "<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings."
 
-    callModule( plotModule,
+    shiny::callModule( plotModule,
         id="volcanoAll", 
         func = volcanoAll.RENDER,
         func2 = volcanoAll.RENDER,
@@ -1153,15 +1163,15 @@ two conditions. Determine which genes are significantly downregulated or overexp
         add.watermark = WATERMARK
     )
     
-    ## library(shinyjqui)
-    output$volcanoAll_UI <- renderUI({
-        fillCol(
+
+    output$volcanoAll_UI <- shiny::renderUI({
+        shiny::fillCol(
             ## id = ns("topgenes"),
             height = rowH,
             flex=c(1,NA,NA), ##height = 370,
             plotWidget(ns("volcanoAll")),
-            br(),
-            div(HTML(volcanoAll_caption), class="caption")
+            shiny::br(),
+            shiny::div(shiny::HTML(volcanoAll_caption), class="caption")
         )
     })
     
@@ -1174,8 +1184,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## PLOTS SEEMS NOT TO REFRESH/DRAW CORRECTLY. Maybe viz.Contrast is isolated????
     ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
-    ##volcanoAll2.RENDER %<a-% reactive({
-    volcanoAll2.RENDER <- reactive({
+    ##volcanoAll2.RENDER %<a-% shiny::reactive({
+    volcanoAll2.RENDER <- shiny::reactive({
         
         ngs = inputData()
         if(is.null(ngs)) return(NULL)
@@ -1226,9 +1236,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
             plots.only=TRUE, title=NULL, subtitle=NULL, caption=NULL)
         
         fig <- viz.showFigure(plist) + plot_layout(nrow=nr, ncol=nc) &
-            theme_bw(base_size=11) &
-            ## theme_bw(base_size=16) &            
-            theme(legend.position='none')        
+            ggplot2::theme_bw(base_size=11) &
+            ## ggplot2::theme_bw(base_size=16) &            
+            ggplot2::theme(legend.position='none')        
 
         fig
     })
@@ -1237,7 +1247,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     volcanoAll2_caption = "<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings."
 
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "volcanoAll2",
         func = volcanoAll2.RENDER,
@@ -1253,15 +1263,15 @@ two conditions. Determine which genes are significantly downregulated or overexp
         add.watermark = WATERMARK
     )
 
-    ## library(shinyjqui)
-    output$volcanoAll2_UI <- renderUI({
-        fillCol(
+
+    output$volcanoAll2_UI <- shiny::renderUI({
+        shiny::fillCol(
             ## id = ns("topgenes"),
             height = rowH,
             flex=c(1,NA,NA), ##height = 370,
             plotWidget(ns("volcanoAll2")),
-            br(),
-            div(HTML(volcanoAll_caption), class="caption")
+            shiny::br(),
+            shiny::div(shiny::HTML(volcanoAll_caption), class="caption")
         )
     })
     
@@ -1269,12 +1279,12 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## Volcano (all methods)
     ##================================================================================
 
-    volcanoMethods.RENDER %<a-% reactive({
+    volcanoMethods.RENDER %<a-% shiny::reactive({
 
         comp = input$gx_contrast
         if(is.null(comp)) return(NULL)
         ngs = inputData()
-        req(ngs)
+        shiny::req(ngs)
         if(is.null(input$gx_features)) return(NULL)
         
         fdr=1;lfc=1;comp=names(ngs$gx.meta$meta)[1]
@@ -1308,7 +1318,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
             nc=8
         }
         
-        withProgress(message="computing volcano plots ...", value=0, {
+        shiny::withProgress(message="computing volcano plots ...", value=0, {
             
             i=1
             for(i in 1:nplots) {
@@ -1333,11 +1343,11 @@ two conditions. Determine which genes are significantly downregulated or overexp
                 last.row
                 if(is.first) axis(2, mgp=c(2,0.7,0), cex.axis=0.8)
                 if(last.row) axis(1, mgp=c(2,0.7,0), cex.axis=0.8)                
-                box(lwd=1, col="black", lty="solid")
+                shinydashboard::box(lwd=1, col="black", lty="solid")
                 legend("top", legend=colnames(fc)[i], cex=1.2,
                        bg="white", box.lty=0,
                        x.intersp = 0.1, y.intersp = 0.1)
-                incProgress( 1/length(nplots) )                
+                shiny::incProgress( 1/length(nplots) )                
             }
 
         })
@@ -1348,7 +1358,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     volcanoMethods_caption = "<b>Volcano plot for all statistical methods.</b> Simultaneous visualisation of volcano plots of genes by multiple differential expression methods for the selected contrast. Methods showing better statistical significance will show volcano plots with 'higher' wings."
 
-    callModule( plotModule,
+    shiny::callModule( plotModule,
         id = "volcanoMethods", 
         func = volcanoMethods.RENDER,
         func2 = volcanoMethods.RENDER,        
@@ -1361,14 +1371,14 @@ two conditions. Determine which genes are significantly downregulated or overexp
         add.watermark = WATERMARK
     )
 
-    ## library(shinyjqui)
-    output$volcanoMethodsUI <- renderUI({
-        fillCol(
+
+    output$volcanoMethodsUI <- shiny::renderUI({
+        shiny::fillCol(
             height = rowH,
             flex=c(1,NA,NA), ##height = 370,
             plotWidget(ns("volcanoMethods")),
-            br(),
-            div(HTML(volcanoMethods_caption), class="caption")
+            shiny::br(),
+            shiny::div(shiny::HTML(volcanoMethods_caption), class="caption")
         )
     })
 
@@ -1376,7 +1386,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## Statistics Table
     ##================================================================================
 
-    gene_selected <- reactive({
+    gene_selected <- shiny::reactive({
         i = as.integer(genetable$rows_selected())
         if(is.null(i) || length(i)==0) return(NULL)
         res <- filteredDiffExprTable()
@@ -1384,7 +1394,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         return(gene)
     })
 
-    genetable.RENDER <- reactive({
+    genetable.RENDER <- shiny::reactive({
         
         dbg("[ExpressionBoard::genetable.RENDER] reacted")
 
@@ -1444,10 +1454,10 @@ two conditions. Determine which genes are significantly downregulated or overexp
                           )
                       )  ## end of options.list 
                       ) %>%
-            formatSignif(numeric.cols,4) %>%
+            DT::formatSignif(numeric.cols,4) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
                 DT::formatStyle(colnames(res)[fx.col],
-                                ##background = styleColorBar(c(0,3), 'lightblue'),
+                                ##background = DT::styleColorBar(c(0,3), 'lightblue'),
                                 background = color_from_middle(fx, 'lightblue', '#f5aeae'),
                                 backgroundSize = '98% 88%',
                                 backgroundRepeat = 'no-repeat',
@@ -1458,16 +1468,16 @@ two conditions. Determine which genes are significantly downregulated or overexp
     genetable_text = "Table <strong>I</strong> shows the results of the statistical tests. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using four commonly accepted methods in the literature, namely, T-test (standard, Welch), <a href='https://www.ncbi.nlm.nih.gov/pubmed/25605792'> limma</a> (no trend, trend, voom), <a href='https://www.ncbi.nlm.nih.gov/pubmed/19910308'> edgeR</a> (QLF, LRT), and <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4302049'> DESeq2</a> (Wald, LRT), and merge the results. 
 <br><br>For a selected comparison under the <code>Contrast</code> setting, the results of the selected methods are combined and reported under the table, where <code>meta.q</code> for a gene represents the highest <code>q</code> value among the methods and the number of stars for a gene indicate how many methods identified significant <code>q</code> values (<code>q < 0.05</code>). The table is interactive (scrollable, clickable); users can sort genes by <code>logFC</code>, <code>meta.q</code>, or average expression in either conditions. Users can filter top N = {10} differently expressed genes in the table by clicking the <code>top 10 genes</code> from the table <i>Settings</i>."
 
-    genetable_opts = tagList(
-        tipify(checkboxInput(ns("gx_top10"),"top 10 up/down genes",FALSE),
+    genetable_opts = shiny::tagList(
+        shinyBS::tipify(shiny::checkboxInput(ns("gx_top10"),"top 10 up/down genes",FALSE),
                "Display only top 10 differentially (positively and negatively) expressed genes in the table.", 
                placement="top", options = list(container = "body")),
-        tipify(checkboxInput(ns('gx_showqvalues'),'show indivivual q-values',FALSE),
+        shinyBS::tipify(shiny::checkboxInput(ns('gx_showqvalues'),'show indivivual q-values',FALSE),
                "Show q-values of each indivivual statistical method in the table.", 
                placement="top", options = list(container = "body"))    
     )
 
-    genetable <- callModule(
+    genetable <- shiny::callModule(
         tableModule,
         id = "genetable",
         func = genetable.RENDER, 
@@ -1481,7 +1491,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     ##output$genetable <- genetable_module$render
 
-    gx_related_genesets <- reactive({
+    # reacts too often
+    gx_related_genesets <- shiny::reactive({
 
         dbg("[gx_related_genesets] reacted")
         
@@ -1523,7 +1534,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         return(df)
     })
 
-    gsettable.RENDER <- reactive({
+    gsettable.RENDER <- shiny::reactive({
 
         df <- gx_related_genesets()        
         if(is.null(df)) return(NULL)
@@ -1560,7 +1571,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     gsettable_text = "By clicking on a gene in the Table <code>I</code>, it is possible to see which genesets contain that gene in this table, and check the differential expression status in other comparisons from the <code>Gene in contrasts</code> plot under the <code>Plots</code> tab."
 
-    gsettable <- callModule(
+    gsettable <- shiny::callModule(
         tableModule,
         id = "gsettable", 
         func = gsettable.RENDER, 
@@ -1571,16 +1582,16 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     tablesUI_caption = "<b>Differential expression tables</b>. <b>(I)</b> Statistical results of the the differential expression analysis for selected contrast. The number of stars indicate how many statistical methods identified the gene significant. <b>(II)</b> Correlation and enrichment value of gene sets that contain the gene selected in Table I."
     
-    output$tables_UI <- renderUI({
-        fillCol(
+    output$tables_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = 1.15*tabH,
             flex = c(NA,0.06,1),
-            div(HTML(tablesUI_caption),class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(tablesUI_caption),class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1.6,0.07,1), 
                 tableWidget(ns("genetable")),
-                br(),
+                shiny::br(),
                 tableWidget(ns("gsettable"))
             )
         )
@@ -1590,7 +1601,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## Foldchange (all)
     ##================================================================================
 
-    fctable.RENDER <- reactive({
+    fctable.RENDER <- shiny::reactive({
         
         ngs <- inputData()
         res <- filteredDiffExprTable()
@@ -1626,12 +1637,12 @@ two conditions. Determine which genes are significantly downregulated or overexp
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
             DT::formatStyle( "fc.var",
-                            ##background = styleColorBar(c(0,3), 'lightblue'),
+                            ##background = DT::styleColorBar(c(0,3), 'lightblue'),
                             background = color_from_middle( fc.var, 'lightblue', '#f5aeae'),
                             backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                             backgroundPosition = 'center')  %>%
             DT::formatStyle( colnames(F),
-                            ##background = styleColorBar(c(0,3), 'lightblue'),
+                            ##background = DT::styleColorBar(c(0,3), 'lightblue'),
                             background = color_from_middle(F, 'lightblue', '#f5aeae'),
                             backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
                             backgroundPosition = 'center')
@@ -1641,7 +1652,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     fctable_caption = "<b>Differential expression (fold-change) across all contrasts.</b> The column `fc.var` corresponds to the variance of the fold-change across all contrasts."
 
-    callModule(
+    shiny::callModule(
         tableModule,
         id="fctable",
         func = fctable.RENDER, 
@@ -1651,9 +1662,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
         height = c(tabH,700)
     )
 
-    ## library(shinyjqui)
-    output$fctable_UI <- renderUI({
-        fillCol(
+
+    output$fctable_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = tabH,
             tableWidget(ns("fctable"))
         )
@@ -1663,7 +1674,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## FDR table
     ##================================================================================
     
-    FDRtable.RENDER <- reactive({
+    FDRtable.RENDER <- shiny::reactive({
 
         dbg("FDRtable.RENDER:: reacted")
         
@@ -1722,12 +1733,12 @@ two conditions. Determine which genes are significantly downregulated or overexp
                       ) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%') %>%
                 DT::formatStyle(colnames(sig.up),
-                                background = styleColorBar(c(0,maxsig), '#f5aeae'),
+                                background = DT::styleColorBar(c(0,maxsig), '#f5aeae'),
                                 backgroundSize = '98% 88%',
                                 backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center')  %>%
                 DT::formatStyle(colnames(sig.down),
-                                background = styleColorBar(c(0,maxsig), 'lightblue'),
+                                background = DT::styleColorBar(c(0,maxsig), 'lightblue'),
                                 backgroundSize = '98% 88%',
                                 backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center')
@@ -1737,7 +1748,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     FDRtable_caption = "<b>Number of significant genes versus FDR.</b> This table reports the number of significant genes at different FDR thresholds for all contrasts and methods. This enables to quickly see which methods are more sensitive. The left part of the table (in blue) correspond to the number of significant down-regulated genes, the right part (in red) correspond to the number of significant overexpressed genes."
     
-    callModule(
+    shiny::callModule(
         tableModule,
         id="FDRtable",
         func = FDRtable.RENDER, 
@@ -1747,9 +1758,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
         height = c(tabH, 700)
     )
 
-    ## library(shinyjqui)
-    output$FDRtable_UI <- renderUI({
-        fillCol(
+
+    output$FDRtable_UI <- shiny::renderUI({
+        shiny::fillCol(
             height = tabH,
             tableWidget(ns("FDRtable"))
         )

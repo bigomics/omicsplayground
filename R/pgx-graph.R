@@ -3,12 +3,12 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-require(scran)
-require(igraph)
+
+
 
 pgx.computePathscores <- function(graph, strict.pos=TRUE)
 {
-    require(igraph)
+    
     if(0) {
         graph <- ngs$omicsnet
         graph <- ngs$omicsnet.reduced
@@ -19,25 +19,25 @@ pgx.computePathscores <- function(graph, strict.pos=TRUE)
 
     ## calculate weights for this particular contrast
     F <- graph$foldchange
-    P <- matrix(NA, nrow=length(V(graph)), ncol=ncol(F))
-    rownames(P) <- V(graph)$name
+    P <- matrix(NA, nrow=length(igraph::V(graph)), ncol=ncol(F))
+    rownames(P) <- igraph::V(graph)$name
     colnames(P) <- colnames(F)
     i=1
     for(i in 1:ncol(F)) {
         
         fc <- graph$foldchange[,i]
-        ee <- get.edges(graph, E(graph))
+        ee <- igraph::get.edges(graph, igraph::E(graph))
         dim(ee)
         if(strict.pos) {
             f1 <- pmax(fc[ee[,1]],0)  ## strictly positive
             f2 <- pmax(fc[ee[,2]],0)
             node.values <- sqrt(abs(f1 * f2)) ## strictly positive
-            edge.rho <- pmax(E(graph)$weight,0)
+            edge.rho <- pmax(igraph::E(graph)$weight,0)
         } else {
             f1 <- fc[ee[,1]]  ## strictly positive
             f2 <- fc[ee[,2]]
             node.values <- sqrt(abs(f1*f2)) ## strictly positive
-            edge.rho <- abs(E(graph)$weight)
+            edge.rho <- abs(igraph::E(graph)$weight)
         }
         score <- node.values * edge.rho  ## always positive
         weights0 <- -log(pmax(score/max(score),1e-8))
@@ -47,13 +47,13 @@ pgx.computePathscores <- function(graph, strict.pos=TRUE)
         ##----------------------------------------------------------
         ## Compute pathscore (solve all distances, 3-point SP)
         ##----------------------------------------------------------
-        dist.source <- distances(graph, v="SOURCE", weights = weights0)
-        dist.sink   <- distances(graph, v="SINK", weights = weights0)
-        w1 <- rep(1, length(E(graph)))
-        ##len.source <- distances(graph, v="SOURCE", weights = w1)
-        ##len.sink   <- distances(graph, v="SINK", weights = w1)
+        dist.source <- igraph::distances(graph, v="SOURCE", weights = weights0)
+        dist.sink   <- igraph::distances(graph, v="SINK", weights = weights0)
+        w1 <- rep(1, length(igraph::E(graph)))
+        ##len.source <- igraph::distances(graph, v="SOURCE", weights = w1)
+        ##len.sink   <- igraph::distances(graph, v="SINK", weights = w1)
         path.score <- exp(-(dist.source + dist.sink))
-        names(path.score) <- V(graph)$name
+        names(path.score) <- igraph::V(graph)$name
         P[,i] <- path.score
     }
     dim(P)
@@ -61,13 +61,13 @@ pgx.computePathscores <- function(graph, strict.pos=TRUE)
     if(0) {
         P1 <- P[grep("\\{gene\\}",rownames(P)),]
         jj <- order(-rowMeans(P1**2))
-        head(P1[jj,])
-        head(graph$members[rownames(P1)[jj]])
+        Matrix::head(P1[jj,])
+        Matrix::head(graph$members[rownames(P1)[jj]])
         
         P2 <- P[grep("\\{geneset\\}",rownames(P)),]
         jj <- order(-rowMeans(P2**2))
-        head(P2[jj,],10)
-        head(graph$members[rownames(P2)[jj]])
+        Matrix::head(P2[jj,],10)
+        Matrix::head(graph$members[rownames(P2)[jj]])
     }
 
     return(P)
@@ -76,7 +76,7 @@ pgx.computePathscores <- function(graph, strict.pos=TRUE)
 pgx.computeShortestPath <- function(graph, contrast, niter=1, r=0.01,
                                     output="vpath")
 {
-    require(igraph)
+    
     if(0) {
         graph <- ngs$omicsnet
         graph <- ngs$omicsnet.reduced
@@ -90,12 +90,12 @@ pgx.computeShortestPath <- function(graph, contrast, niter=1, r=0.01,
 
     ## calculate weights
     fc <- graph$foldchange[,contrast]
-    ee <- get.edges(graph, E(graph))
+    ee <- igraph::get.edges(graph, igraph::E(graph))
     dim(ee)
     f1 <- pmax(fc[ee[,1]],0)
     f2 <- pmax(fc[ee[,2]],0)
     node.values <- sqrt(f1 * f2) ## strictly positive
-    edge.rho <- pmax(E(graph)$weight,0)
+    edge.rho <- pmax(igraph::E(graph)$weight,0)
     score <- node.values * edge.rho
     weights0 <- -log(pmax(score/max(score),1e-8))
     length(weights0)
@@ -112,7 +112,7 @@ pgx.computeShortestPath <- function(graph, contrast, niter=1, r=0.01,
             weights1 <- 0.0 + pmax(weights0 + sd0*rnorm(length(weights0)),0)
             ##weights1 <- weights0
             system.time(
-                sp.out <- shortest_paths(graph, from="SOURCE", to = "SINK", mode = "all",
+                sp.out <- igraph::shortest_paths(graph, from="SOURCE", to = "SINK", mode = "all",
                                          weights = weights1, output = output)
             )
             nv <- length(sp.out$vpath[[1]])
@@ -126,9 +126,9 @@ pgx.computeShortestPath <- function(graph, contrast, niter=1, r=0.01,
 
     ##efreq <- sort(table(unlist(epath)),decreasing=TRUE)
     if(0) {
-        head(vfreq)
+        Matrix::head(vfreq)
         vtop <- names(vfreq)
-        head(graph$members[vtop])
+        Matrix::head(graph$members[vtop])
         fc[vtop]
         graph$members[ends(graph, epath[[2]])]
 
@@ -144,7 +144,7 @@ pgx._addSourceSink <- function(gr) {
     min.level
     max.level
     
-    gr <- add_vertices(gr, 2, name=c("SOURCE","SINK"))
+    gr <- igraph::add_vertices(gr, 2, name=c("SOURCE","SINK"))
     ss.layout <- rbind( "SOURCE"=c(0,0,-999),"SINK"=c(0,0,999))
     gr$layout <- rbind(gr$layout, ss.layout)
     nfc <- ncol(gr$foldchange)
@@ -160,7 +160,7 @@ pgx._addSourceSink <- function(gr) {
     ee1 <- data.frame( from="SOURCE", to=V(gr)$name[i1])
     ee2 <- data.frame( from=V(gr)$name[i2], to="SINK")
     ee <- rbind(ee1, ee2)
-    gr <- add_edges(gr, as.vector(t(ee)), weight=1)
+    gr <- igraph::add_edges(gr, as.vector(t(ee)), weight=1)
     return(gr)
 }
 
@@ -174,17 +174,17 @@ pgx.createOmicsGraph <- function(ngs, do.intersect=TRUE )
     ##
     ## make bipartite igraph object
     ##======================================================================
-    require(scran)
+    
     
     ##----------------------------------------------------------------------
     ## Read in gene/geneset graph structure
     ##----------------------------------------------------------------------
     ##gr <- readRDS(file.path(FILES,"pgx-graph-geneXgset-XL.rds"))
     gr <- readRDS(file.path(FILES,"pgx-graph-geneXgset-XL-snn20.rds"))
-    table(V(gr)$level)
+    table(igraph::V(gr)$level)
 
     ##load(file = file.path(FILES,"gset-sparseG-XL.rda"), verbose=1)
-    ##G <- as_adjacency_matrix(gr)
+    ##G <- igraph::as_adjacency_matrix(gr)
     ##dim(G)
 
     ##----------------------------------------------------------------------
@@ -224,17 +224,17 @@ pgx.createOmicsGraph <- function(ngs, do.intersect=TRUE )
     dim(S)
     remove(F);remove(S)
 
-    ##table(V(gr)$name %in% rownames(xx))
-    table(rownames(xx) %in% V(gr)$name)
-    table(rownames(fc) %in% V(gr)$name)
-    head(setdiff(rownames(xx), V(gr)$name))
-    head(setdiff(rownames(fc), V(gr)$name))
-    tail(V(gr)$name)
-    tail(rownames(fc))
+    ##table(igraph::V(gr)$name %in% rownames(xx))
+    table(rownames(xx) %in% igraph::V(gr)$name)
+    table(rownames(fc) %in% igraph::V(gr)$name)
+    Matrix::head(setdiff(rownames(xx), igraph::V(gr)$name))
+    Matrix::head(setdiff(rownames(fc), igraph::V(gr)$name))
+    Matrix::tail(igraph::V(gr)$name)
+    Matrix::tail(rownames(fc))
 
     sel <- intersect(rownames(xx), rownames(fc))
     sel <- sort(intersect(sel,V(gr)$name))
-    gr1 <- induced_subgraph(gr, sel)
+    gr1 <- igraph::induced_subgraph(gr, sel)
     gr1
     xx <- xx[V(gr1)$name,,drop=FALSE]
     fc <- fc[V(gr1)$name,,drop=FALSE]
@@ -247,36 +247,36 @@ pgx.createOmicsGraph <- function(ngs, do.intersect=TRUE )
     ## should we recreate the SNNgraph in the intralayers????
     ##----------------------------------------------------------------------
     if(1) {
-        table(V(gr1)$level)
+        table(igraph::V(gr1)$level)
         ## this connect all points with at least 3 neighbours
-        sel1 <- which( V(gr1)$level=="gene")
+        sel1 <- which( igraph::V(gr1)$level=="gene")
         pos1 <- gr$layout[V(gr1)[sel1]$name,]
-        head(pos1)
-        r1 <- buildSNNGraph(t(pos1), k=3)
-        V(r1)$name <- V(gr1)[sel1]$name
+        Matrix::head(pos1)
+        r1 <- scran::buildSNNGraph(t(pos1), k=3)
+        igraph::V(r1)$name <- igraph::V(gr1)[sel1]$name
 
-        sel2 <- which( V(gr1)$level=="geneset")
+        sel2 <- which( igraph::V(gr1)$level=="geneset")
         pos2 <- gr$layout[V(gr1)[sel2]$name,]
-        head(pos2)
-        r2 <- buildSNNGraph(t(pos2), k=3)
-        V(r2)$name <- V(gr1)[sel2]$name
-        new.gr <- graph.union(gr1, r1)
-        new.gr <- graph.union(new.gr, r2)
+        Matrix::head(pos2)
+        r2 <- scran::buildSNNGraph(t(pos2), k=3)
+        igraph::V(r2)$name <- igraph::V(gr1)[sel2]$name
+        new.gr <- igraph::graph.union(gr1, r1)
+        new.gr <- igraph::graph.union(new.gr, r2)
         gr1 <- new.gr
     }
     
     ## get rid of all weight attributes
-    attr <- edge_attr_names(gr1)
+    attr <- igraph::edge_attr_names(gr1)
     attr <- attr[grep("weight|rho",attr)]
     attr
     if(length(attr)) {
-        for(i in 1:length(attr)) gr1 <- remove.edge.attribute(gr1,attr[i])
+        for(i in 1:length(attr)) gr1 <- igraph::remove.edge.attribute(gr1,attr[i])
     }
 
     ##----------------------------------------------------------------------
     ##  set correlation on edges
     ##----------------------------------------------------------------------
-    ee <- get.edges(gr1, E(gr1) )
+    ee <- igraph::get.edges(gr1, igraph::E(gr1) )
     dim(ee)
     ee.rho <- rep(NA, nrow(ee))
     bs <- 100000
@@ -290,13 +290,13 @@ pgx.createOmicsGraph <- function(ngs, do.intersect=TRUE )
         ## fast method to compute rowwise-correlation (xx should be row-scaled)
         ee.rho[ii] <- rowMeans( xx[ee[ii,1],] * xx[ee[ii,2],] )  
     }
-    E(gr1)$weight <- ee.rho  ## replace weight with correlation
+    igraph::E(gr1)$weight <- ee.rho  ## replace weight with correlation
     
     ##----------------------------------------------------------------------
     ## cluster graph
     ##----------------------------------------------------------------------
-    idx <- cluster_louvain(gr1, weights=abs(E(gr1)$weight) )$membership
-    V(gr1)$cluster <- idx
+    idx <- igraph::cluster_louvain(gr1, weights=abs(igraph::E(gr1)$weight) )$membership
+    igraph::V(gr1)$cluster <- idx
 
     gr1
     return(gr1)
@@ -312,9 +312,9 @@ pgx.reduceOmicsGraph <- function(ngs)
     ##
     ## make bipartite igraph object
     ##======================================================================
-    require(scran)
-    require(igraph)
-    ##require(threejs)
+    
+    
+    ##
 
     ## get full omics graph
     gr <- ngs$omicsnet
@@ -322,25 +322,25 @@ pgx.reduceOmicsGraph <- function(ngs)
         stop("FATAL ERROR:: no omicsnet in ngs object. first run pgx.createOmicsGraph().")
     }
 
-    summary(E(gr)$weight)
+    summary(igraph::E(gr)$weight)
 
     ##------------------------------------------------------------
     ## conform features
     ##------------------------------------------------------------
-    v1 <- which(V(gr)$level=="gene")
-    v2 <- which(V(gr)$level=="geneset")
-    g1 <- induced_subgraph(gr, v1)
-    g2 <- induced_subgraph(gr, v2)
-    g1 <- delete_edge_attr(g1, "weight")
-    g2 <- delete_edge_attr(g2, "weight")
+    v1 <- which(igraph::V(gr)$level=="gene")
+    v2 <- which(igraph::V(gr)$level=="geneset")
+    g1 <- igraph::induced_subgraph(gr, v1)
+    g2 <- igraph::induced_subgraph(gr, v2)
+    g1 <- igraph::delete_edge_attr(g1, "weight")
+    g2 <- igraph::delete_edge_attr(g2, "weight")
     h1 <- hclust_graph(g1)
     h2 <- hclust_graph(g2)
     apply(h1,2,function(x)length(table(x)))
     apply(h2,2,function(x)length(table(x)))
     hc1 <- paste0("{gene}cluster",h1[,ncol(h1)])
     hc2 <- paste0("{geneset}cluster",h2[,ncol(h2)])
-    names(hc1) <- V(g1)$name
-    names(hc2) <- V(g2)$name
+    names(hc1) <- igraph::V(g1)$name
+    names(hc2) <- igraph::V(g2)$name
 
     ##------------------------------------------------------------
     ## create reduction transform matrix
@@ -350,7 +350,7 @@ pgx.reduceOmicsGraph <- function(ngs)
     R <- t(model.matrix( ~ 0 + idx))
     R <- R / rowSums(R)
     dim(R)
-    colnames(R) <- V(gr)$name
+    colnames(R) <- igraph::V(gr)$name
     rownames(R) <- sub("^idx","",rownames(R))
 
     ## reduce all variable: weights (correlation)
@@ -375,18 +375,18 @@ pgx.reduceOmicsGraph <- function(ngs)
     ##------------------------------------------------------------
     ## create reduced combined graph
     ##------------------------------------------------------------
-    gr1 <- graph_from_adjacency_matrix( as.matrix(rA), mode="undirected",
+    gr1 <- igraph::graph_from_adjacency_matrix( as.matrix(rA), mode="undirected",
                                        weighted=TRUE, diag=FALSE)
 
     ##rpos <- (R %*% gr$layout)
-    ee <- get.edges(gr1, E(gr1))
-    summary(E(gr1)$weight)
-    table( abs(E(gr1)$weight) > 0.01)
-    table( abs(E(gr1)$weight) > 0.05)
-    lev <- V(gr1)$level
+    ee <- igraph::get.edges(gr1, igraph::E(gr1))
+    summary(igraph::E(gr1)$weight)
+    table( abs(igraph::E(gr1)$weight) > 0.01)
+    table( abs(igraph::E(gr1)$weight) > 0.05)
+    lev <- igraph::V(gr1)$level
     ee.type <- c("inter","intra")[ 1 + 1*(lev[ee[,1]]==(lev[ee[,2]]))]
-    gr1 <- delete_edges(gr1, which(  abs(E(gr1)$weight) < 0.01 & ee.type == "inter"))
-    ##gr1 <- subgraph.edges(gr1, which(abs(E(gr1)$weight) > 0.05), delete.vertices=FALSE)
+    gr1 <- igraph::delete_edges(gr1, which(  abs(igraph::E(gr1)$weight) < 0.01 & ee.type == "inter"))
+    ##gr1 <- igraph::subgraph.edges(gr1, which(abs(igraph::E(gr1)$weight) > 0.05), delete.vertices=FALSE)
 
     ##------------------------------------------------------------
     ## compute new layout positions???
@@ -394,7 +394,7 @@ pgx.reduceOmicsGraph <- function(ngs)
     rpos <- lapply( grp.members0, function(m) colMeans(gr$layout[m,,drop=FALSE]))
     rpos <- do.call( rbind, rpos)
     gr1$layout <- scale(rpos)
-    ##gr1 <- buildSNNGraph(t(rpos), k=20)
+    ##gr1 <- scran::buildSNNGraph(t(rpos), k=20)
 
     if(1) {
         ## should we recreate the SNNgraph in the intralayers????
@@ -402,22 +402,22 @@ pgx.reduceOmicsGraph <- function(ngs)
         vtype <- gsub("\\}.*|^\\{","",V(gr1)$name)
         sel1 <- which( vtype=="gene")
         pos1 <- gr1$layout[V(gr1)[sel1]$name,]
-        head(pos1)
-        r1 <- buildSNNGraph(t(pos1), k=3)
-        V(r1)$name <- rownames(pos1)
+        Matrix::head(pos1)
+        r1 <- scran::buildSNNGraph(t(pos1), k=3)
+        igraph::V(r1)$name <- rownames(pos1)
 
         sel2 <- which( vtype=="geneset")
         pos2 <- gr1$layout[V(gr1)[sel2]$name,]
-        head(pos2)
-        r2 <- buildSNNGraph(t(pos2), k=3)
-        V(r2)$name <- rownames(pos2)
-        new.gr <- graph.union(r1, r2)
-        new.gr <- remove.edge.attribute(new.gr,"weight_1")
-        new.gr <- remove.edge.attribute(new.gr,"weight_2")
-        new.gr <- graph.union(gr1, new.gr)
-        edge_attr_names(new.gr)
-        jj <- which(is.na(E(new.gr)$weight))
-        E(new.gr)$weight[jj] <- 0  ## actually we should recompute this....
+        Matrix::head(pos2)
+        r2 <- scran::buildSNNGraph(t(pos2), k=3)
+        igraph::V(r2)$name <- rownames(pos2)
+        new.gr <- igraph::graph.union(r1, r2)
+        new.gr <- igraph::remove.edge.attribute(new.gr,"weight_1")
+        new.gr <- igraph::remove.edge.attribute(new.gr,"weight_2")
+        new.gr <- igraph::graph.union(gr1, new.gr)
+        igraph::edge_attr_names(new.gr)
+        jj <- which(is.na(igraph::E(new.gr)$weight))
+        igraph::E(new.gr)$weight[jj] <- 0  ## actually we should recompute this....
         gr1 <- new.gr
     }
 
@@ -425,10 +425,10 @@ pgx.reduceOmicsGraph <- function(ngs)
     ## add some graph data
     ##------------------------------------------------------------
     ##V(gr1)$members <- grp.idx
-    V(gr1)$label <- grp.label
-    V(gr1)$cluster <- tapply(idx0, idx, median)  ## level 1 cluster index
-    V(gr1)$level <- gsub("\\}.*|^\\{","",V(gr1)$name)
-    table(V(gr1)$level)
+    igraph::V(gr1)$label <- grp.label
+    igraph::V(gr1)$cluster <- tapply(idx0, idx, median)  ## level 1 cluster index
+    igraph::V(gr1)$level <- gsub("\\}.*|^\\{","",V(gr1)$name)
+    table(igraph::V(gr1)$level)
 
     gr1$foldchange <- rF
     gr1$members <- grp.members
@@ -451,8 +451,8 @@ pgx.createVipGeneLayer <- function(gr, genes, z=0, reconnect=40) {
     }
 
     vname <- sub(".*\\}","",V(gr)$name)
-    vip <- V(gr)[which(vname %in% genes)]
-    V(gr)[vip]$level <- "VIP"
+    vip <- igraph::V(gr)[which(vname %in% genes)]
+    igraph::V(gr)[vip]$level <- "VIP"
     gr$layout <- gr$layout[V(gr)$name,]
     gr$layout[V(gr)[vip]$name,3] <- z  ## new layer position
     table(gr$layout[,3])
@@ -460,16 +460,16 @@ pgx.createVipGeneLayer <- function(gr, genes, z=0, reconnect=40) {
     ##----------------------------------------------------------------------
     ## remove "shortcut" links
     ##----------------------------------------------------------------------
-    ee <- get.edges(gr, E(gr))
-    lv1 <- V(gr)$level[ee[,1]]
-    lv2 <- V(gr)$level[ee[,2]]
+    ee <- igraph::get.edges(gr, igraph::E(gr))
+    lv1 <- igraph::V(gr)$level[ee[,1]]
+    lv2 <- igraph::V(gr)$level[ee[,2]]
     ee.type <- c("intralayer","interlayer")[ 1 + 1*(lv1!=lv2)]
     table(ee.type)
     link.dist <- abs(gr$layout[ee[,1],3] - gr$layout[ee[,2],3])
     summary(link.dist)
     ee.delete <- (ee.type=="interlayer" &  link.dist > 1.5 )
     table(ee.delete)
-    gr1 <- delete_edges(gr, which(ee.delete))
+    gr1 <- igraph::delete_edges(gr, which(ee.delete))
 
     ##----------------------------------------------------------------------
     ## Reconnect VIP nodes with more connectsion in next layer
@@ -480,20 +480,20 @@ pgx.createVipGeneLayer <- function(gr, genes, z=0, reconnect=40) {
         vip.level <- gr1$layout[vip,3]
         next.level <- min(sort(setdiff(unique(gr1$layout[,3]),vip.level)))
         next.level
-        next.nodes <- V(gr1)$name[which(level==next.level)]
-        rho1 <- cor( t(gr1$scaled.data[vip,]), t(gr1$scaled.data[next.nodes,]))
+        next.nodes <- igraph::V(gr1)$name[which(level==next.level)]
+        rho1 <- WGCNA::cor( t(gr1$scaled.data[vip,]), t(gr1$scaled.data[next.nodes,]))
         dim(rho1)
         connections <- c()
         i=1
         for(i in 1:nrow(rho1)) {
-            nnb <- head(order(-rho1[i,]),reconnect)
+            nnb <- Matrix::head(order(-rho1[i,]),reconnect)
             cnc <- data.frame( rownames(rho1)[i], colnames(rho1)[nnb], rho1[i,nnb])
             connections <- rbind(connections, cnc)
         }
-        vname1 <- V(gr1)$name
+        vname1 <- igraph::V(gr1)$name
         ee1 <- cbind( match(connections[,1],vname1), match(connections[,2],vname1) )
         jj <- which(rowSums(is.na(ee1))==0)
-        gr1 <- add_edges(gr1, edges=as.vector(t(ee1[jj,])), weight=connections[jj,3])
+        gr1 <- igraph::add_edges(gr1, edges=as.vector(t(ee1[jj,])), weight=connections[jj,3])
     }
     
     ##----------------------------------------------------------------------
@@ -502,16 +502,16 @@ pgx.createVipGeneLayer <- function(gr, genes, z=0, reconnect=40) {
     if(1) {
         cat("createVipGeneLayer:: reconnecting VIP nodes within VIP layer\n")
         pos1 <- gr1$layout[vip,1:2]
-        gr2  <- buildSNNGraph(t(pos1), k=5)
+        gr2  <- scran::buildSNNGraph(t(pos1), k=5)
         ##V(gr2)$name <- sub(".*\\}","",rownames(pos1))
-        V(gr2)$name <- rownames(pos1)
+        igraph::V(gr2)$name <- rownames(pos1)
         gr2$layout <- pos1
-        vv  <- get.edgelist(gr2)
+        vv  <- igraph::get.edgelist(gr2)
         rho <- rowMeans(gr1$scaled.data[vv[,1],] * gr1$scaled.data[vv[,2],]) ## rho
-        vname1 <- V(gr1)$name
+        vname1 <- igraph::V(gr1)$name
         ee1 <- cbind( match(vv[,1],vname1), match(vv[,2],vname1) )
         jj <- which(rowSums(is.na(ee1))==0)
-        gr1 <- add_edges(gr1, edges=as.vector(t(ee1[jj,])), weight=rho[jj])
+        gr1 <- igraph::add_edges(gr1, edges=as.vector(t(ee1[jj,])), weight=rho[jj])
     }
 
     return(gr1)
@@ -525,7 +525,7 @@ pgx.plotDualProjection <- function(gr, gene=NULL, geneset=NULL,
     if( !is.null(gene) && !is.null(geneset) ) {
         stop("either gene or geneset must be non-null!")
     }
-    require(gplots)
+    
 
     dim(gr$layout)
     vtype <- gsub("\\}.*|^\\{","",rownames(gr$layout))
@@ -545,12 +545,12 @@ pgx.plotDualProjection <- function(gr, gene=NULL, geneset=NULL,
     tt="";to=from=NULL
     if(!is.null(geneset)) {
         gs = paste0("{geneset}",geneset)
-        if(0 && "members" %in% graph_attr_names(gr)) {
+        if(0 && "members" %in% igraph::graph_attr_names(gr)) {
             gs <- names(which(sapply(gr$members, function(x) any(x==geneset))))
         }
         ##gg = colnames(G)[which(G[grep(gs,rownames(G)),]!=0)]
-        if(gs %in% V(gr)$name) {
-            nb <- V(gr)[neighbors(gr, gs)]$name
+        if(gs %in% igraph::V(gr)$name) {
+            nb <- igraph::V(gr)[neighbors(gr, gs)]$name
             gg = intersect(nb, rownames(pos2))
             from = pos1[gs,]
             to   = pos2[gg,,drop=FALSE]
@@ -560,11 +560,11 @@ pgx.plotDualProjection <- function(gr, gene=NULL, geneset=NULL,
     if(!is.null(gene)) {
         gg = paste0("{gene}",gene)
         ##gg = colnames(G)[which(G[grep(gs,rownames(G)),]!=0)]
-        if(0 && "members" %in% graph_attr_names(gr)) {
+        if(0 && "members" %in% igraph::graph_attr_names(gr)) {
             gg <- names(which(sapply(gr$members, function(x) any(x==gene))))
         }
-        if(gg %in% V(gr)$name) {
-            nb <- V(gr)[neighbors(gr, gg)]$name
+        if(gg %in% igraph::V(gr)$name) {
+            nb <- igraph::V(gr)[neighbors(gr, gg)]$name
             gs = intersect(nb, rownames(pos1))
             from = pos2[gg,]
             to = pos1[gs,,drop=FALSE]
@@ -576,9 +576,9 @@ pgx.plotDualProjection <- function(gr, gene=NULL, geneset=NULL,
     dim(to)
 
     if(plot==TRUE) {
-        cex1 <- 1 + 1*(rownames(pos1) %in% V(gr)$name)
+        cex1 <- 1 + 1*(rownames(pos1) %in% igraph::V(gr)$name)
         klr1 <- c("grey70","grey10")[cex1]
-        cex2 <- 1 + 1*(rownames(pos2) %in% V(gr)$name)
+        cex2 <- 1 + 1*(rownames(pos2) %in% igraph::V(gr)$name)
         klr2 <- c("grey70","grey10")[cex2]
         if(!is.null(fx)) {
             fx1 <- fx[match(rownames(pos1),names(fx))]
@@ -587,8 +587,8 @@ pgx.plotDualProjection <- function(gr, gene=NULL, geneset=NULL,
             ##fx2[is.na(fx2)] <- 0
             fx1 <- fx1 / max(abs(fx1),na.rm=TRUE)
             fx2 <- fx2 / max(abs(fx2),na.rm=TRUE)
-            klr1 = bluered(32)[16 + round(15*fx1)]
-            klr2 = bluered(32)[16 + round(15*fx2)]
+            klr1 = gplots::bluered(32)[16 + round(15*fx1)]
+            klr2 = gplots::bluered(32)[16 + round(15*fx2)]
             ix1 <- cut(fx1, breaks=c(-99,-0.1,0.1,99))
             ix2 <- cut(fx2, breaks=c(-99,-0.1,0.1,99))
             klr1 = c("blue","gray40","red")[as.integer(ix1)]
@@ -621,7 +621,7 @@ pgx.plotDualProjection <- function(gr, gene=NULL, geneset=NULL,
             points( from[1], from[2], pch=20, cex=1, col="green3")
             points( to[,1], to[,2], pch=20, cex=0.4, col="green3")
             arrows( from[1], from[2], to[,1], to[,2], length=0.05,
-                   lwd=0.5, col = paste0(col2hex("green3"),"33"))
+                   lwd=0.5, col = paste0(gplots::col2hex("green3"),"33"))
             ##text( from[1], from[2], tt, col="blue", pos=3, font=2, cex=0.8, offset=0.2)
         }
         if(!is.null(main)) tt <- main
@@ -634,7 +634,7 @@ pgx.plotDualProjection <- function(gr, gene=NULL, geneset=NULL,
 pgx.plotForwardProjection <- function(gr, gene, cex=1, fx=NULL,
                                       features=NULL, main=NULL, plot=TRUE )
 {
-    require(gplots)
+    
     if(0) {
         cex=4;gene="CDK4";fx=main=NULL;gr=ngs$omicsnet
     }
@@ -666,12 +666,12 @@ pgx.plotForwardProjection <- function(gr, gene, cex=1, fx=NULL,
     tt="";to=from=NULL
     if(!is.null(geneset)) {
         gs = paste0("{geneset}",geneset)
-        if(0 && "members" %in% graph_attr_names(gr)) {
+        if(0 && "members" %in% igraph::graph_attr_names(gr)) {
             gs <- names(which(sapply(gr$members, function(x) any(x==geneset))))
         }
         ##gg = colnames(G)[which(G[grep(gs,rownames(G)),]!=0)]
-        if(gs %in% V(gr)$name) {
-            nb <- V(gr)[neighbors(gr, gs)]$name
+        if(gs %in% igraph::V(gr)$name) {
+            nb <- igraph::V(gr)[neighbors(gr, gs)]$name
             gg = intersect(nb, rownames(pos2))
             from = pos1[gs,]
             to   = pos2[gg,,drop=FALSE]
@@ -682,11 +682,11 @@ pgx.plotForwardProjection <- function(gr, gene, cex=1, fx=NULL,
     if(!is.null(gene)) {
         gg = paste0("{gene}",gene)
         ##gg = colnames(G)[which(G[grep(gs,rownames(G)),]!=0)]
-        if(0 && "members" %in% graph_attr_names(gr)) {
+        if(0 && "members" %in% igraph::graph_attr_names(gr)) {
             gg <- names(which(sapply(gr$members, function(x) any(x==gene))))
         }
-        if(gg %in% V(gr)$name) {
-            nb <- V(gr)[neighbors(gr, gg)]$name
+        if(gg %in% igraph::V(gr)$name) {
+            nb <- igraph::V(gr)[neighbors(gr, gg)]$name
             gs = intersect(nb, rownames(pos1))
             from = pos2[gg,]
             to = pos1[gs,,drop=FALSE]
@@ -699,9 +699,9 @@ pgx.plotForwardProjection <- function(gr, gene, cex=1, fx=NULL,
 
 
     if(plot==TRUE) {
-        cex1 <- 1 + 1*(rownames(pos1) %in% V(gr)$name)
+        cex1 <- 1 + 1*(rownames(pos1) %in% igraph::V(gr)$name)
         klr1 <- c("grey70","grey10")[cex1]
-        cex2 <- 1 + 1*(rownames(pos2) %in% V(gr)$name)
+        cex2 <- 1 + 1*(rownames(pos2) %in% igraph::V(gr)$name)
         klr2 <- c("grey70","grey10")[cex2]
         if(!is.null(fx)) {
             fx1 <- fx[match(rownames(pos1),names(fx))]
@@ -710,8 +710,8 @@ pgx.plotForwardProjection <- function(gr, gene, cex=1, fx=NULL,
             ##fx2[is.na(fx2)] <- 0
             fx1 <- fx1 / max(abs(fx1),na.rm=TRUE)
             fx2 <- fx2 / max(abs(fx2),na.rm=TRUE)
-            klr1 = bluered(32)[16 + round(15*fx1)]
-            klr2 = bluered(32)[16 + round(15*fx2)]
+            klr1 = gplots::bluered(32)[16 + round(15*fx1)]
+            klr2 = gplots::bluered(32)[16 + round(15*fx2)]
             ix1 <- cut(fx1, breaks=c(-99,-0.1,0.1,99))
             ix2 <- cut(fx2, breaks=c(-99,-0.1,0.1,99))
             klr1 = c("blue","gray40","red")[as.integer(ix1)]
@@ -744,7 +744,7 @@ pgx.plotForwardProjection <- function(gr, gene, cex=1, fx=NULL,
             points( from[1], from[2], pch=20, cex=1, col="green3")
             points( to[,1], to[,2], pch=20, cex=0.4, col="green3")
             arrows( from[1], from[2], to[,1], to[,2], length=0.05,
-                   lwd=0.5, col = paste0(col2hex("green3"),"33"))
+                   lwd=0.5, col = paste0(gplots::col2hex("green3"),"33"))
             ##text( from[1], from[2], tt, col="blue", pos=3, font=2, cex=0.8, offset=0.2)
         }
         if(!is.null(main)) tt <- main
@@ -784,12 +784,12 @@ pgx.computeCoreGOgraph <- function(ngs, fdr=0.05)
     length(subgraphs)
 
     sub2 = igraph::graph.union(subgraphs, byname=TRUE)
-    A = data.frame(vertex.attributes(sub2))
+    A = data.frame(igraph::vertex.attributes(sub2))
     rownames(A) = A$name
     colnames(A)
 
     go_graph <- getGOgraph()
-    go_graph <- induced.subgraph( go_graph, V(sub2)$name )
+    go_graph <- igraph::induced.subgraph( go_graph, igraph::V(sub2)$name )
     A = A[V(go_graph)$name,]
     Q = S = V = c()
     j1 = grep("^score",colnames(A))
@@ -806,15 +806,15 @@ pgx.computeCoreGOgraph <- function(ngs, fdr=0.05)
     ## can we match the GO terms with our gsetX values??
     go.sets <- grep("^GO.*\\(GO_",rownames(ngs$gsetX),value=TRUE)
     go.id <- gsub("GO_","GO:",gsub(".*\\(|\\)","",go.sets))
-    matched.gset <- go.sets[ match( V(go_graph)$name, go.id) ]
-    names(matched.gset) <- V(go_graph)$name
+    matched.gset <- go.sets[ match( igraph::V(go_graph)$name, go.id) ]
+    names(matched.gset) <- igraph::V(go_graph)$name
 
     ## compute FR layout
-    layoutFR = layout_with_fr(go_graph)
+    layoutFR = igraph::layout_with_fr(go_graph)
     layoutFR[,1] = 1.33*layoutFR[,1]
-    rownames(layoutFR) = V(go_graph)$name
+    rownames(layoutFR) = igraph::V(go_graph)$name
     go_graph$layout = layoutFR
-    V(go_graph)$label = V(go_graph)$Term
+    igraph::V(go_graph)$label = igraph::V(go_graph)$Term
     go_graph
     res = list( graph=go_graph, pathscore=S, foldchange=V,
                qvalue=Q, match=matched.gset)
@@ -824,20 +824,20 @@ pgx.computeCoreGOgraph <- function(ngs, fdr=0.05)
 
 getGOgraph <- function() {
     ##install.packages(GOSim)
-    ##require(GOSim)
-    require(GO.db)
-    require(igraph)
-    terms <- toTable(GOTERM)[,2:5]
+    ##
+    
+    
+    terms <- AnnotationDbi::toTable(GOTERM)[,2:5]
     terms <- terms[ !duplicated(terms[,1]), ]
     rownames(terms) = terms[,1]
 
     ##terms <- terms[ terms[,1] %in% vv, ]
-    BP <- toTable(GOBPPARENTS)
-    MF <- toTable(GOMFPARENTS)
-    CC <- toTable(GOCCPARENTS)
+    BP <- AnnotationDbi::toTable(GOBPPARENTS)
+    MF <- AnnotationDbi::toTable(GOMFPARENTS)
+    CC <- AnnotationDbi::toTable(GOCCPARENTS)
     bp.terms = unique(c(BP[,1],BP[,2]))
     all.parents = rbind(BP,MF,CC)
-    go_graph <- graph_from_data_frame( all.parents, vertices=terms )
+    go_graph <- igraph::graph_from_data_frame( all.parents, vertices=terms )
     return(go_graph)
 }
 
@@ -845,9 +845,9 @@ getGOgraph <- function() {
 ##comparison=1;methods=c("fisher","gsva","camera");nterms=200;ntop=20;fdr=0.20
 pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.20, nterms=500, ntop=100)
 {
-    require(GO.db)
-    require(igraph)
-    ##if(is.null(ngs)) ngs <- isolate(inputData())
+    
+    
+    ##if(is.null(ngs)) ngs <- shiny::isolate(inputData())
     mx = ngs$gset.meta$meta[[comparison]]
     jj = grep("^GO",rownames(mx))
     if(length(jj)==0) {
@@ -886,10 +886,10 @@ pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.20, nterms=500, nt
     ##sig = cbind( score=score, fx=fc, pv=pv, qv=qv)
     vinfo = data.frame( geneset=rownames(mx), score=score, fc=fc, pv=pv, qv=qv)
     colnames(vinfo) = c("geneset","score","fc","pv","qv")  ## need
-    head(vinfo)
+    Matrix::head(vinfo)
     remove(fc)
 
-    terms <- toTable(GOTERM)[,2:5]
+    terms <- AnnotationDbi::toTable(GOTERM)[,2:5]
     colnames(terms)[1] = "go_id"
     terms <- terms[ !duplicated(terms[,1]), ]
     rownames(terms) = terms[,1]
@@ -914,46 +914,46 @@ pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.20, nterms=500, nt
 
     ## Get full GO graph and assign node prizes
     go_graph <- getGOgraph()
-    V(go_graph)$value = rep(0,length(V(go_graph)))
-    V(go_graph)[vinfo$go_id]$foldchange = vinfo$fc
-    V(go_graph)[vinfo$go_id]$qvalue = vinfo$qv
+    igraph::V(go_graph)$value = rep(0,length(igraph::V(go_graph)))
+    igraph::V(go_graph)[vinfo$go_id]$foldchange = vinfo$fc
+    igraph::V(go_graph)[vinfo$go_id]$qvalue = vinfo$qv
 
     ##!!!!!!!!!!!!!!!!!!! THIS DEFINES THE SCORE !!!!!!!!!!!!!!!!!
     ## Value = "q-weighted fold-change"
-    V(go_graph)[vinfo$go_id]$value = vinfo$fc * (1 - vinfo$qv)**1 
+    igraph::V(go_graph)[vinfo$go_id]$value = vinfo$fc * (1 - vinfo$qv)**1 
 
     ##v1 <- sig.terms[1]
     get.vpath <- function(v1) {
-        shortest_paths(go_graph, v1, "all")$vpath[[1]]
+        igraph::shortest_paths(go_graph, v1, "all")$vpath[[1]]
     }
     get.pathscore <- function(v1) {
-        sp = shortest_paths(go_graph, v1, "all")$vpath[[1]]
+        sp = igraph::shortest_paths(go_graph, v1, "all")$vpath[[1]]
         sp
-        sum((V(go_graph)[sp]$value))
+        sum((igraph::V(go_graph)[sp]$value))
     }
 
     ##fdr=0.20;ntop=20;nterms=200
-    sig.terms10 = head(rownames(vinfo)[order(vinfo$qv)],10)
+    sig.terms10 = Matrix::head(rownames(vinfo)[order(vinfo$qv)],10)
     sig.terms = rownames(vinfo)[which(vinfo$qv <= fdr)]
     sig.terms = unique(c(sig.terms, sig.terms10))
-    sig.terms = head(sig.terms[order(vinfo[sig.terms,"qv"])],nterms)  ## maximum number
+    sig.terms = Matrix::head(sig.terms[order(vinfo[sig.terms,"qv"])],nterms)  ## maximum number
     length(sig.terms)
 
     pathscore = sapply(sig.terms, get.pathscore)  ## SLOW!!!
     length(pathscore)
-    top.terms = head(sig.terms[order(-abs(pathscore))],ntop)
-    head(top.terms)
+    top.terms = Matrix::head(sig.terms[order(-abs(pathscore))],ntop)
+    Matrix::head(top.terms)
 
     ## total subgraph
     vv = unique(unlist(sapply(top.terms, get.vpath)))
-    vv = V(go_graph)$name[vv]
-    sub1 = induced_subgraph(go_graph, vv)
+    vv = igraph::V(go_graph)$name[vv]
+    sub1 = igraph::induced_subgraph(go_graph, vv)
     score1 = (pathscore/max(abs(pathscore),na.rm=TRUE))[V(sub1)$name]
     ##score1[is.na(score1)] = 0
-    V(sub1)$score = pathscore[V(sub1)$name]
-    V(sub1)$color = bluered(32)[16 + round(15*score1)]
-    V(sub1)$label = vinfo[V(sub1)$name,"Term"]
-    ## V(sub1)$size = scale(pathscore[V(sub1)$name],center=FALSE)
+    igraph::V(sub1)$score = pathscore[V(sub1)$name]
+    igraph::V(sub1)$color = gplots::bluered(32)[16 + round(15*score1)]
+    igraph::V(sub1)$label = vinfo[V(sub1)$name,"Term"]
+    ## igraph::V(sub1)$size = scale(pathscore[V(sub1)$name],center=FALSE)
 
     return(sub1)
 }
@@ -969,8 +969,8 @@ hclustGraph <- function(g, k=NULL, mc.cores=2)
     ## clustering on different levels. If k=NULL iterates until
     ## convergences.
     ##
-    require(parallel)
-    idx = rep(1, length(V(g)))
+    
+    idx = rep(1, length(igraph::V(g)))
     K = c()
     maxiter=100
     if(!is.null(k)) maxiter=k
@@ -984,9 +984,9 @@ hclustGraph <- function(g, k=NULL, mc.cores=2)
         if(mc.cores>1 && length(unique(idx))>1) {
             idx.list = tapply(1:length(idx),idx,list)
             mc.cores
-            system.time( newidx0 <- mclapply(idx.list, function(ii) {
-                subg = induced_subgraph(g, ii)
-                subi = cluster_louvain(subg)$membership
+            system.time( newidx0 <- parallel::mclapply(idx.list, function(ii) {
+                subg = igraph::induced_subgraph(g, ii)
+                subi = igraph::cluster_louvain(subg)$membership
                 return(subi)
             }, mc.cores=mc.cores) )
             newidx0 = lapply(1:length(newidx0), function(i) paste0(i,"-",newidx0[[i]]))
@@ -996,8 +996,8 @@ hclustGraph <- function(g, k=NULL, mc.cores=2)
         } else {
             for(i in unique(idx)) {
                 ii = which(idx==i)
-                subg = induced_subgraph(g, ii)
-                subi = cluster_louvain(subg)$membership
+                subg = igraph::induced_subgraph(g, ii)
+                subi = igraph::cluster_louvain(subg)$membership
                 newidx[ii] = paste(i,subi,sep="-")
             }
         }
@@ -1009,7 +1009,7 @@ hclustGraph <- function(g, k=NULL, mc.cores=2)
         iter = iter+1
     }
     if(NCOL(K)==1) K <- matrix(K, ncol=1)
-    rownames(K) = V(g)$name
+    rownames(K) = igraph::V(g)$name
     if(!ok && is.null(k)) K = K[,1:(ncol(K)-1),drop=FALSE]
     dim(K)
     ##K = K[,1:(ncol(K)-1)]

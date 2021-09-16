@@ -6,21 +6,21 @@
 message(">>> sourcing FeatureMapBoard")
 
 FeatureMapInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shiny::uiOutput(ns("inputsUI"))
     )
 }
 
 FeatureMapUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    ui <- fillCol(
+    ns <- shiny::NS(id)  ## namespace
+    ui <- shiny::fillCol(
         height = 750,
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs"),
-            tabPanel("Gene", uiOutput(ns("geneUMAP_UI"))),
-            tabPanel("Geneset", uiOutput(ns("gsetUMAP_UI")))            
+            shiny::tabPanel("Gene", shiny::uiOutput(ns("geneUMAP_UI"))),
+            shiny::tabPanel("Geneset", shiny::uiOutput(ns("gsetUMAP_UI")))            
         )
     )
     ui
@@ -37,7 +37,7 @@ FeatureMapBoard <- function(input, output, session, env)
     rowH2 = 460  ## row 2 height
     
     description = "<h3>Feature Maps</h3> Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). It allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers."
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
     
     infotext ="Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers, to study the relationships between features.
 <br><br>The tabs present Gene Maps and Geneset Maps and are computed for gene and geneset features, respectively. The clustering of features is computed using UMAP from either the normalized log-expression matrix (logCPM) or the log-foldchange matrix (logFC), with the covariance as distance metric. The UMAP from the logCPM is the default, but in cases of strong batch/tissue effects the UMAP from the logFC matrix is a better choice. We prefer the covariance distance metric instead of the correlation because it takes the size of the foldchange into account. Doing so, genes that are close together in corners in the outer rim are those with high pairwise covariance, i.e. have high correlation and high FC.
@@ -49,72 +49,72 @@ FeatureMapBoard <- function(input, output, session, env)
     ##================================================================================
     
     umap_caption = "<h4>Gene maps</h4>"
-    output$geneUMAP_UI <- renderUI({
-        fillCol(
+    output$geneUMAP_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.02,1,0.3),
             height = 1.1*fullH,
-            div(HTML(umap_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(umap_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1,0.03,1.2),
                 height = 0.85*fullH,                
                 plotWidget(ns('geneUMAP')),
-                br(),                
-                plotWidget(ns('geneTopPlots')) ## %>% withSpinner()
+                shiny::br(),                
+                plotWidget(ns('geneTopPlots')) ## %>% shinycssloaders::withSpinner()
             ),
             tableWidget(ns('geneTable'))
         )
     })
     ## important for plot options to be updated correctly...
-    outputOptions(output, "geneUMAP_UI", suspendWhenHidden=FALSE) 
+    shiny::outputOptions(output, "geneUMAP_UI", suspendWhenHidden=FALSE) 
 
 
     ##----------------------------------------------
     gset_caption = "<h4>Geneset maps</h4>"    
-    output$gsetUMAP_UI <- renderUI({
-        fillCol(
+    output$gsetUMAP_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.02,1,0.3),
             height = 1.1*fullH,
-            div(HTML(gset_caption), class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(gset_caption), class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 flex = c(1,0.03,1.2),
                 plotWidget(ns('gsetUMAP')),
-                br(),
-                plotWidget(ns('gsetTopPlots')) ##  %>% withSpinner()
+                shiny::br(),
+                plotWidget(ns('gsetTopPlots')) ##  %>% shinycssloaders::withSpinner()
             ),
             tableWidget(ns('gsetTable'))
         )
 
     })
-    outputOptions(output, "gsetUMAP_UI", suspendWhenHidden=FALSE)     
+    shiny::outputOptions(output, "gsetUMAP_UI", suspendWhenHidden=FALSE)     
     
     ##================================================================================
     ##========================= INPUTS UI ============================================
     ##================================================================================
-    require(htmltools)
+
     
-    output$inputsUI <- renderUI({
-        ui <- tagList(
-            actionLink(ns("info"), "Info", icon=icon("info-circle")),
-            hr(), br(),             
+    output$inputsUI <- shiny::renderUI({
+        ui <- shiny::tagList(
+            shiny::actionLink(ns("info"), "Info", icon=icon("info-circle")),
+            shiny::hr(), shiny::br(),             
             
             ## data set parameters
-            selectInput(ns('sigvar'),'Show phenotype:', choices=NULL, multiple=FALSE),
-            br(),
-            br(),
-            actionLink(ns("options"), "Options", icon=icon("cog", lib = "glyphicon")),
-            br(),br(),
-            conditionalPanel(
+            shiny::selectInput(ns('sigvar'),'Show phenotype:', choices=NULL, multiple=FALSE),
+            shiny::br(),
+            shiny::br(),
+            shiny::actionLink(ns("options"), "Options", icon=icon("cog", lib = "glyphicon")),
+            shiny::br(),br(),
+            shiny::conditionalPanel(
                 "input.options % 2 == 1", ns=ns,
-                tagList(
-                    tipifyR(radioButtons(ns('umap_type'),'UMAP datatype:',
+                shiny::tagList(
+                    tipifyR(shiny::radioButtons(ns('umap_type'),'UMAP datatype:',
                                          choices=c('logCPM','logFC'), inline=TRUE),
                             "The UMAP can be computed from the normalized log-expression (logCPM), or from the log-foldchange matrix (logFC). Clustering based on logCPM is the default, but when batch/tissue effects are present the logFC might be better."),
-                    tipifyR(selectInput(ns('filter_genes'),'Show genes:',
+                    tipifyR(shiny::selectInput(ns('filter_genes'),'Show genes:',
                                         choices=NULL, multiple=FALSE),
                            "Filter the genes to highlight on the map."),
-                    tipifyR(selectInput(ns('filter_gsets'),'Show genesets:',
+                    tipifyR(shiny::selectInput(ns('filter_gsets'),'Show genesets:',
                                         choices=NULL, multiple=FALSE),
                             "Filter the genesets to highlight on the map.")
                 )
@@ -122,7 +122,7 @@ FeatureMapBoard <- function(input, output, session, env)
         )
         
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##======================= PRECOMPUTE FUNCTION ====================================
@@ -138,28 +138,28 @@ FeatureMapBoard <- function(input, output, session, env)
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
 
-    observeEvent( input$info, {
-        showModal(modalDialog(
-            title = HTML("<strong>Feature Map Analysis</strong>"),
-            HTML(infotext),
+    shiny::observeEvent( input$info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>Feature Map Analysis</strong>"),
+            shiny::HTML(infotext),
             easyClose = TRUE ))
     })
 
-    observe({
+    shiny::observe({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         families <- names(FAMILIES)
-        updateSelectInput(session, "filter_genes", choices=families,
+        shiny::updateSelectInput(session, "filter_genes", choices=families,
                           selected = '<all>')
         
         gsetcats <- sort(unique(gsub(":.*","",rownames(ngs$gsetX))))
-        updateSelectInput(session, "filter_gsets", choices=gsetcats,
+        shiny::updateSelectInput(session, "filter_gsets", choices=gsetcats,
                           selected = 'H')        
 
         cvar <- pgx.getCategoricalPhenotypes(ngs$samples, max.ncat=99)
         xpheno <- c("<foldchange>", cvar)
-        updateSelectInput(session, "sigvar", choices=xpheno,
+        shiny::updateSelectInput(session, "sigvar", choices=xpheno,
                           selected = "<foldchange>")        
         
     })
@@ -218,9 +218,9 @@ FeatureMapBoard <- function(input, output, session, env)
 
         if(0) {
             p <- p %>%
-                event_register('plotly_selected') %>%
-                ## config(displayModeBar = TRUE) %>%
-                layout(dragmode= 'select')
+                plotly::event_register('plotly_selected') %>%
+                ## plotly::config(displayModeBar = TRUE) %>%
+                plotly::layout(dragmode= 'select')
         }
         p 
     }
@@ -283,10 +283,10 @@ FeatureMapBoard <- function(input, output, session, env)
         }               
     }
 
-    getGeneUMAP_FC <- reactive({
+    getGeneUMAP_FC <- shiny::reactive({
         ## buffered reactive
         ngs <- inputData()
-        withProgress({            
+        shiny::withProgress({            
             F <- pgx.getMetaMatrix(ngs, level='gene')$fc
             F <- scale(F, center=FALSE)
             pos <- pgx.clusterBigMatrix(t(F), methods='umap', dims=2)[[1]]
@@ -295,7 +295,7 @@ FeatureMapBoard <- function(input, output, session, env)
         pos
     })
        
-    getGeneUMAP <- reactive({
+    getGeneUMAP <- shiny::reactive({
         ngs <- inputData()
         if(input$umap_type=='logFC') {
             message("[getGeneUMAP] computing genes-FC UMAP")
@@ -306,10 +306,10 @@ FeatureMapBoard <- function(input, output, session, env)
         pos
     })
     
-    getGsetUMAP_FC <- reactive({
+    getGsetUMAP_FC <- shiny::reactive({
         ## buffered reactive
         ngs <- inputData()
-        withProgress({
+        shiny::withProgress({
             F <- pgx.getMetaMatrix(ngs, level='geneset')$fc
             F <- scale(F, center=FALSE)
             pos <- pgx.clusterBigMatrix(t(F), methods='umap', dims=2)[[1]]
@@ -318,7 +318,7 @@ FeatureMapBoard <- function(input, output, session, env)
         pos
     })
 
-    getGsetUMAP <- reactive({
+    getGsetUMAP <- shiny::reactive({
         ngs <- inputData()
         if(input$umap_type=='logFC') {
             message("[getGsetUMAP] computing geneset-FC UMAP")            
@@ -333,12 +333,12 @@ FeatureMapBoard <- function(input, output, session, env)
     ## ========================= PLOTTING MODULES =====================================
     ## ================================================================================
     
-    ##geneUMAP.RENDER %<a-% reactive({
-    geneUMAP.RENDER <- reactive({            
+    ##geneUMAP.RENDER %<a-% shiny::reactive({
+    geneUMAP.RENDER <- shiny::reactive({            
 
         dbg("[geneUMAP.RENDER] reacted")
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         pos <- getGeneUMAP()
         hilight <- NULL
@@ -370,11 +370,11 @@ FeatureMapBoard <- function(input, output, session, env)
     })
 
     
-    geneUMAP.RENDER2 <- reactive({        
+    geneUMAP.RENDER2 <- shiny::reactive({        
 
         dbg("[geneUMAP.RENDER] reacted")
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         ##pos <- ngs$cluster.genes$pos[['umap2d']]
         pos <- getGeneUMAP()        
@@ -407,24 +407,24 @@ FeatureMapBoard <- function(input, output, session, env)
     
     geneUMAP_info = "<b>Gene mapping.</b> Analysis of network topology for various soft-thresholding powers. The left panel shows the scale-free fit index (y-axis) as a function of the soft-thresholding power (x-axis). The right panel displays the mean connectivity (degree, y-axis) as a function of the soft-thresholding power (x-axis)."
 
-    geneUMAP.opts <- tagList(
-        selectInput(ns('umap_nlabel'),'nr labels:',
+    geneUMAP.opts <- shiny::tagList(
+        shiny::selectInput(ns('umap_nlabel'),'nr labels:',
                     c(0,10,20,50,100,1000), selected=50),
-        sliderInput(ns('umap_gamma'),'color gamma:',
+        shiny::sliderInput(ns('umap_gamma'),'color gamma:',
                     min=0.2, max=2, value=1, step=0.2),
-        radioButtons(ns('umap_colorby'),'color by:',
+        shiny::radioButtons(ns('umap_colorby'),'color by:',
                      choices = c("var.FC","mean.FC","sd.X"),
                      selected = "mean.FC", inline=TRUE )
     )
 
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "geneUMAP", ##ns=ns,
         ##plotlib = 'plotly',
         ##plotlib = 'ggplot',
         title = "GENE MAP", label="a",
         func = geneUMAP.RENDER,
-        ##outputFunc = "function(x,...) plotOutput(x,brush='geneUMAP_brush',...)",        
+        ##outputFunc = "function(x,...) shiny::plotOutput(x,brush='geneUMAP_brush',...)",        
         outputFunc = sub("XXX",ns("geneUMAP_brush"),"function(x,...)plotOutput(x,brush='XXX',...)"),
         func2 = geneUMAP.RENDER2, 
         plotlib2 = 'plotly',
@@ -436,25 +436,25 @@ FeatureMapBoard <- function(input, output, session, env)
         add.watermark = WATERMARK
     )
     
-    ## getSelectedGenes <- reactive({
-    ##     ev <- event_data("plotly_selected", source='geneUMAP')
+    ## getSelectedGenes <- shiny::reactive({
+    ##     ev <- plotly::event_data("plotly_selected", source='geneUMAP')
     ##     sel <- ev$key
     ##     ##message('[getSelectedGenes] sel = ', paste(sel,collapse=' '))
     ##     sel
     ## })
     
-    selGenes <- reactive({
+    selGenes <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)        
+        shiny::req(ngs)        
         sel <- input$filter_genes
         selgenes <- FAMILIES[[sel]]
         selgenes
-    }) ## %>% debounce(1000)
+    }) ## %>% shiny::debounce(1000)
     
 
-    geneTopPlots.RENDER %<a-% reactive({
+    geneTopPlots.RENDER %<a-% shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         ##pos <- ngs$cluster.genes$pos[['umap2d']]
         pos <- getGeneUMAP()
@@ -493,11 +493,11 @@ FeatureMapBoard <- function(input, output, session, env)
     
     geneTopPlots_info = "<b>Gene signature maps.</b> Analysis of network topology for various soft-thresholding powers. The left panel shows the scale-free fit index (y-axis) as a function of the soft-thresholding power (x-axis). The right panel displays the mean connectivity (degree, y-axis) as a function of the soft-thresholding power (x-axis)."
     
-    geneTopPlots.opts <- tagList(
+    geneTopPlots.opts <- shiny::tagList(
         ##radioButtons(ns('gene_plottype'),'plot type:',c("umap","bar"),inline=TRUE)        
     )
 
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "geneTopPlots", ##ns=ns,
         ##plotlib = 'plotly',
@@ -518,7 +518,7 @@ FeatureMapBoard <- function(input, output, session, env)
     ##----------------------  Geneset UMAP ----------------------------
     ##-----------------------------------------------------------------
         
-    gsetUMAP.RENDER %<a-% reactive({        
+    gsetUMAP.RENDER %<a-% shiny::reactive({        
 
         dbg("[gsetUMAP.RENDER] reacted")
         ngs <- inputData()
@@ -552,7 +552,7 @@ FeatureMapBoard <- function(input, output, session, env)
 
     })
 
-    gsetUMAP.RENDER2 %<a-% reactive({        
+    gsetUMAP.RENDER2 %<a-% shiny::reactive({        
 
         dbg("[gsetUMAP.RENDER] reacted")
         ngs <- inputData()
@@ -586,8 +586,8 @@ FeatureMapBoard <- function(input, output, session, env)
 
     })
         
-    ## getSelectedGsets <- reactive({
-    ##     ev <- event_data("plotly_selected", source='gsetUMAP')
+    ## getSelectedGsets <- shiny::reactive({
+    ##     ev <- plotly::event_data("plotly_selected", source='gsetUMAP')
     ##     sel <- ev$key
     ##     ##message('[getSelectedGenes] sel = ', paste(sel,collapse=' '))
     ##     sel
@@ -595,17 +595,17 @@ FeatureMapBoard <- function(input, output, session, env)
     
     gsetUMAP_info = "<b>Geneset maps.</b> Analysis of network topology for various soft-thresholding powers. The left panel shows the scale-free fit index (y-axis) as a function of the soft-thresholding power (x-axis). The right panel displays the mean connectivity (degree, y-axis) as a function of the soft-thresholding power (x-axis)."
 
-    gsetUMAP.opts <- tagList(
-        selectInput(ns('gsmap_nlabel'),'nr labels:',
+    gsetUMAP.opts <- shiny::tagList(
+        shiny::selectInput(ns('gsmap_nlabel'),'nr labels:',
                     choices=c(0,10,20,50,100,1000),selected=20),        
-        sliderInput(ns('gsmap_gamma'),'color gamma:',
+        shiny::sliderInput(ns('gsmap_gamma'),'color gamma:',
                     min=0.2, max=2, value=1, step=0.2),
-        radioButtons(ns('gsmap_colorby'),'color by:',
+        shiny::radioButtons(ns('gsmap_colorby'),'color by:',
                      choices = c("sd.FC","mean.FC","sd.X"),
                      selected = "sd.FC", inline=TRUE )
     )
 
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "gsetUMAP", ##ns=ns,
         ##plotlib = 'plotly',
@@ -627,21 +627,21 @@ FeatureMapBoard <- function(input, output, session, env)
     ##----------------------  Enrichment plots ------------------------
     ##-----------------------------------------------------------------       
 
-    selGsets <- reactive({
+    selGsets <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         db <- input$filter_gsets
         gsets <- rownames(ngs$gsetX)
         gsets <- grep(paste0("^",db,":"),gsets,value=TRUE)
         gsets
-    }) ## %>% debounce(1000)
+    }) ## %>% shiny::debounce(1000)
     
     
-    gsetTopPlots.RENDER %<a-% reactive({        
+    gsetTopPlots.RENDER %<a-% shiny::reactive({        
 
         dbg("[gsetTopPlots.RENDER] reacted")
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         ## pos <- ngs$cluster.gsets$pos[['umap2d']]
         pos <- getGsetUMAP()        
@@ -676,11 +676,11 @@ FeatureMapBoard <- function(input, output, session, env)
     })
     
     gsetTopPlots.info = "<b>Module enrichment.</b> "
-    gsetTopPlots.opts = tagList(
-        ## radioButtons(ns('gset_plottype'),'plot type:',c("umap","bar"),inline=TRUE)        
+    gsetTopPlots.opts = shiny::tagList(
+        ## shiny::radioButtons(ns('gset_plottype'),'plot type:',c("umap","bar"),inline=TRUE)        
     )
     
-    callModule(
+    shiny::callModule(
         plotModule, 
         id = "gsetTopPlots", ##ns=ns,
         title = "GENESET SIGNATURES", label="b",
@@ -701,9 +701,9 @@ FeatureMapBoard <- function(input, output, session, env)
     ##-------------------------  Tables -------------------------------
     ##-----------------------------------------------------------------       
 
-    geneTable.RENDER <- reactive({
+    geneTable.RENDER <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         if(is.null(ngs$drugs)) return(NULL)
         
         pos <- getGeneUMAP()
@@ -773,8 +773,8 @@ FeatureMapBoard <- function(input, output, session, env)
 
     
     ##--------buttons for table
-    geneTable.opts = tagList()  
-    geneTable <- callModule(
+    geneTable.opts = shiny::tagList()  
+    geneTable <- shiny::callModule(
         tableModule,
         id = "geneTable", label="c",
         func = geneTable.RENDER, 
@@ -788,9 +788,9 @@ FeatureMapBoard <- function(input, output, session, env)
     ##---------------------------- GENESET -------------------------------------------
     ##--------------------------------------------------------------------------------    
     
-    gsetTable.RENDER <- reactive({
+    gsetTable.RENDER <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         if(is.null(ngs$drugs)) return(NULL)
         
         pos <- getGsetUMAP()
@@ -860,9 +860,9 @@ FeatureMapBoard <- function(input, output, session, env)
     })
 
     ##--------buttons for table
-    gsetTable.opts = tagList(
+    gsetTable.opts = shiny::tagList(
     )  
-    gsetTable <- callModule(
+    gsetTable <- shiny::callModule(
         tableModule,
         id = "gsetTable", label="c",
         func = gsetTable.RENDER, 
@@ -886,7 +886,7 @@ if(0) {
 
     x <- 1:20
     y <- runif(20)
-    plot(x, y, axes=FALSE, frame.plot=TRUE)
+    KEGGgraph::plot(x, y, axes=FALSE, frame.plot=TRUE)
     Axis(side=1, labels=FALSE)
     Axis(side=2, labels=TRUE)
     

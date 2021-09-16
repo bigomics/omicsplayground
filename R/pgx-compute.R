@@ -326,7 +326,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     ## Infer cell cycle/gender here (before any batchcorrection)
     ##-------------------------------------------------------------------
     ngs <- compute.cellcycle.gender(ngs)
-    head(ngs$samples)
+    Matrix::head(ngs$samples)
     
     ##-------------------------------------------------------------------
     ## Batch-correction (if requested. WARNING: changes counts )
@@ -386,7 +386,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
             idx <- pgx.findLouvainClusters(posx, level=2, prefix='c', small.zero=0.01)
         }
         ngs$samples$cluster <- idx        
-        head(ngs$samples)
+        Matrix::head(ngs$samples)
         table(ngs$samples$cluster)
     }    
 
@@ -501,7 +501,7 @@ pgx.computePGX <- function(ngs,
         use.design = use.design,
         prune.samples = prune.samples
     )
-    head(ngs$gx.meta$meta[[1]])        
+    Matrix::head(ngs$gx.meta$meta[[1]])        
        
     ## ------------------ gene set tests -----------------------
     if(!is.null(progress)) progress$inc(0.2, detail = "testing gene sets")
@@ -512,7 +512,7 @@ pgx.computePGX <- function(ngs,
         ngs, max.features = max.genesets,
         test.methods = gset.methods,
         lib.dir = lib.dir )
-    head(ngs$gset.meta$meta[[1]])
+    Matrix::head(ngs$gset.meta$meta[[1]])
 
     
     if(do.cluster) {

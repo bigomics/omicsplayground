@@ -9,11 +9,13 @@
 ##                                                                     ##
 #########################################################################
 
-library(shiny)
-library(shinyjs)
-library(shinyWidgets)
-library(plotly)
-library(shinybusy)
+
+library(pryr)
+# we need all these datasets that actually aren't datasets
+# and so cannot be imported by data() function...
+library(org.Hs.eg.db)
+library(grid)
+
 
 message("\n\n")
 message("###############################################################")
@@ -59,7 +61,7 @@ src.local=FALSE ## local or not-local, that's the question...
 source(file.path(RDIR,"pgx-include.R"),local=src.local)    ## lots of libraries and source()
 source(file.path(RDIR,"pgx-functions.R"), local=src.local) ## functions...
 source(file.path(RDIR,"pgx-files.R"), local=src.local)     ## file functions
-source(file.path(RDIR,"pgx-init.R"),local=src.local)       ## global variables
+source(file.path(RDIR,"pgx-init.R"),local=src.local)
 
 message("\n")
 message("************************************************")
@@ -188,7 +190,7 @@ server = function(input, output, session) {
     message("[SERVER] USER_MODE = ", USER_MODE)
     server.start_time <- Sys.time()
     
-    require(firebase)
+
     firebase=firebase2=NULL
     if(AUTHENTICATION=="firebase") {
         firebase  <- FirebaseEmailPassword$new()
@@ -202,41 +204,56 @@ server = function(input, output, session) {
                 "genesets" = opt$MAX_GENESETS,
                 "datasets" = opt$MAX_DATASETS)
     env <- list()  ## communication "environment"
-    env[["load"]]  <- callModule(
+    env[["load"]]  <- shiny::callModule(
         LoadingBoard, "load", limits = limits,
         authentication = AUTHENTICATION, enable_delete = opt$ENABLE_DELETE,
         enable_save = opt$ENABLE_SAVE, firebase=firebase, firebase2=firebase2)   
     
-    ## load other modules if 
-    if(ENABLED["view"])   env[["view"]]   <- callModule( DataViewBoard, "view", env)
-    if(ENABLED["clust"])  env[["clust"]]  <- callModule( ClusteringBoard, "clust", env)
-    if(ENABLED["ftmap"])  env[["ftmap"]]  <- callModule( FeatureMapBoard, "ftmap", env)    
-    if(ENABLED["expr"])   env[["expr"]]   <- callModule( ExpressionBoard, "expr", env)
-    if(ENABLED["enrich"]) env[["enrich"]] <- callModule( EnrichmentBoard, "enrich", env)
-    if(ENABLED["func"])   env[["func"]]   <- callModule( FunctionalBoard, "func", env)
-    if(ENABLED["word"])   env[["word"]]   <- callModule( WordCloudBoard, "word", env)
-    if(ENABLED["drug"])   env[["drug"]]   <- callModule( DrugConnectivityBoard, "drug", env)
-    if(ENABLED["isect"])  env[["isect"]]  <- callModule( IntersectionBoard, "isect", env)
-    if(ENABLED["sig"])    env[["sig"]]    <- callModule( SignatureBoard, "sig", env)
-    if(ENABLED["cor"])    env[["cor"]]    <- callModule( CorrelationBoard, "cor", env)
-    if(ENABLED["bio"])    env[["bio"]]    <- callModule( BiomarkerBoard, "bio", env)
-    if(ENABLED["cmap"])   env[["cmap"]]   <- callModule( ConnectivityBoard, "cmap", env)
-    if(ENABLED["scell"])  env[["scell"]]  <- callModule( SingleCellBoard, "scell", env)
-    if(ENABLED["tcga"])   env[["tcga"]]   <- callModule( TcgaBoard, "tcga", env)
-    if(ENABLED["wgcna"])  env[["wgcna"]]  <- callModule( WgcnaBoard, "wgcna", env)
-    if(ENABLED["comp"])   env[["comp"]]   <- callModule( CompareBoard, "comp", env)
-    if(DEV) {            
-        if(ENABLED["corsa"])  env[["corsa"]]  <- callModule( CorsaBoard, "corsa", env)
-        if(ENABLED["system"]) env[["system"]] <- callModule( SystemBoard, "system", env)
-        if(ENABLED["multi"])  env[["multi"]]  <- callModule( MultiLevelBoard, "multi", env)
-        env[["qa"]] <- callModule( QuestionBoard, "qa", lapse = -1)
-    }
+    already_loaded <- FALSE
+    observeEvent(env[["load"]]$loaded(), {
+        if(!env[["load"]]$loaded()){
+            return()
+        }
+
+        on.exit({
+            shiny::removeModal()
+        })
+
+        if(already_loaded)
+            return()
+
+        already_loaded <<- TRUE
+
+        ## load other modules if 
+        if(ENABLED["view"])   env[["view"]]   <- shiny::callModule( DataViewBoard, "view", env)
+        if(ENABLED["clust"])  env[["clust"]]  <- shiny::callModule( ClusteringBoard, "clust", env)
+        if(ENABLED["ftmap"])  env[["ftmap"]]  <- shiny::callModule( FeatureMapBoard, "ftmap", env)    
+        if(ENABLED["expr"])   env[["expr"]]   <- shiny::callModule( ExpressionBoard, "expr", env)
+        if(ENABLED["enrich"]) env[["enrich"]] <- shiny::callModule( EnrichmentBoard, "enrich", env)
+        if(ENABLED["func"])   env[["func"]]   <- shiny::callModule( FunctionalBoard, "func", env)
+        if(ENABLED["word"])   env[["word"]]   <- shiny::callModule( WordCloudBoard, "word", env)
+        if(ENABLED["drug"])   env[["drug"]]   <- shiny::callModule( DrugConnectivityBoard, "drug", env)
+        if(ENABLED["isect"])  env[["isect"]]  <- shiny::callModule( IntersectionBoard, "isect", env)
+        if(ENABLED["sig"])    env[["sig"]]    <- shiny::callModule( SignatureBoard, "sig", env)
+        if(ENABLED["cor"])    env[["cor"]]    <- shiny::callModule( CorrelationBoard, "cor", env)
+        if(ENABLED["bio"])    env[["bio"]]    <- shiny::callModule( BiomarkerBoard, "bio", env)
+        if(ENABLED["cmap"])   env[["cmap"]]   <- shiny::callModule( ConnectivityBoard, "cmap", env)
+        if(ENABLED["scell"])  env[["scell"]]  <- shiny::callModule( SingleCellBoard, "scell", env)
+        if(ENABLED["tcga"])   env[["tcga"]]   <- shiny::callModule( TcgaBoard, "tcga", env)
+        if(ENABLED["wgcna"])  env[["wgcna"]]  <- shiny::callModule( WgcnaBoard, "wgcna", env)
+        if(ENABLED["comp"])   env[["comp"]]   <- shiny::callModule( CompareBoard, "comp", env)
+        if(DEV) {            
+            if(ENABLED["corsa"])  env[["corsa"]]  <- shiny::callModule( CorsaBoard, "corsa", env)
+            if(ENABLED["system"]) env[["system"]] <- shiny::callModule( SystemBoard, "system", env)
+            if(ENABLED["multi"])  env[["multi"]]  <- shiny::callModule( MultiLevelBoard, "multi", env)
+            env[["qa"]] <- shiny::callModule( QuestionBoard, "qa", lapse = -1)
+        }
+    })
     
     ## message("[SERVER] all boards called:",paste(names(env),collapse=" "))
     message("[SERVER] boards enabled:",paste(names(which(ENABLED)),collapse=" "))
-    ## outputOptions(output, "clust", suspendWhenHidden=FALSE) ## important!!!
     
-    output$current_dataset <- renderText({
+    output$current_dataset <- shiny::renderText({
         pgx <- env[["load"]][["inputData"]]()
         name <- gsub(".*\\/|[.]pgx$","",pgx$name)
         if(length(name)==0) name = "(no data)"
@@ -244,56 +261,56 @@ server = function(input, output, session) {
     })
     
     ## Dynamicall hide/show certain sections depending on USERMODE/object
-    observe({
+    shiny::observe({
         pgx <- env[["load"]][["inputData"]]() ## trigger on change dataset
         
         ## hide all main tabs until we have an object
         if(is.null(pgx)) {
-            lapply(MAINTABS, function(m) hideTab("maintabs",m))
-            if(!opt$ENABLE_UPLOAD)  hideTab("load-tabs","Upload data")
-            if(is.null(ACCESS.LOG)) hideTab("load-tabs","Visitors map")            
+            lapply(MAINTABS, function(m) shiny::hideTab("maintabs",m))
+            if(!opt$ENABLE_UPLOAD)  shiny::hideTab("load-tabs","Upload data")
+            if(is.null(ACCESS.LOG)) shiny::hideTab("load-tabs","Visitors map")            
             return(NULL)
         }
 
         message("[SERVER] dataset changed. reconfiguring menu...")
         ## show all main tabs
-        lapply(MAINTABS, function(m) showTab("maintabs",m))
+        lapply(MAINTABS, function(m) shiny::showTab("maintabs",m))
         
         if(USER_MODE == "basic") {
-            hideTab("maintabs","CellProfiling")
-            hideTab("maintabs","DEV")
-            hideTab("clust-tabs2","Feature ranking")
-            hideTab("expr-tabs1","Volcano (methods)")
-            hideTab("expr-tabs2","FDR table")
-            hideTab("enrich-tabs1","Volcano (methods)")
-            hideTab("enrich-tabs2","FDR table")
-            hideTab("cor-tabs","Functional")    ## too slow
-            hideTab("cor-tabs","Differential")  ## too complex
+            shiny::hideTab("maintabs","CellProfiling")
+            shiny::hideTab("maintabs","DEV")
+            shiny::hideTab("clust-tabs2","Feature ranking")
+            shiny::hideTab("expr-tabs1","Volcano (methods)")
+            shiny::hideTab("expr-tabs2","FDR table")
+            shiny::hideTab("enrich-tabs1","Volcano (methods)")
+            shiny::hideTab("enrich-tabs2","FDR table")
+            shiny::hideTab("cor-tabs","Functional")    ## too slow
+            shiny::hideTab("cor-tabs","Differential")  ## too complex
         }
         
-        ## hideTab("cor-tabs","Functional")       
+        ## shiny::hideTab("cor-tabs","Functional")       
         if(USER_MODE == "dev" || DEV) {
-            showTab("maintabs","DEV")
-            showTab("view-tabs","Resource info")
-            showTab("scell-tabs1","CNV")  ## DEV only
-            showTab("scell-tabs1","Monocle") ## DEV only
-            showTab("cor-tabs","Functional")
+            shiny::showTab("maintabs","DEV")
+            shiny::showTab("view-tabs","Resource info")
+            shiny::showTab("scell-tabs1","CNV")  ## DEV only
+            shiny::showTab("scell-tabs1","Monocle") ## DEV only
+            shiny::showTab("cor-tabs","Functional")
         } else {
-            hideTab("maintabs","DEV")
-            hideTab("view-tabs","Resource info")
-            hideTab("scell-tabs1","CNV")  ## DEV only
-            hideTab("scell-tabs1","Monocle") ## DEV only
-            hideTab("cor-tabs","Functional")            
+            shiny::hideTab("maintabs","DEV")
+            shiny::hideTab("view-tabs","Resource info")
+            shiny::hideTab("scell-tabs1","CNV")  ## DEV only
+            shiny::hideTab("scell-tabs1","Monocle") ## DEV only
+            shiny::hideTab("cor-tabs","Functional")            
         }
         
         ## Dynamically show upon availability in pgx object
-        if(opt$ENABLE_UPLOAD) showTab("load-tabs","Upload data")            
+        if(opt$ENABLE_UPLOAD) shiny::showTab("load-tabs","Upload data")            
         tabRequire(pgx, "connectivity", "maintabs", "Similar experiments")
         tabRequire(pgx, "drugs", "maintabs", "Drug connectivity")
         tabRequire(pgx, "wordcloud", "maintabs", "Word cloud")
         tabRequire(pgx, "deconv", "maintabs", "CellProfiling")
         fileRequire("tcga_matrix.h5", "maintabs", "TCGA survival (beta)")         
-        if(!is.null(ACCESS.LOG)) showTab("load-tabs","Visitors map")                    
+        if(!is.null(ACCESS.LOG)) shiny::showTab("load-tabs","Visitors map")                    
 
         message("[SERVER] reconfiguring menu done.")        
     })
@@ -307,13 +324,13 @@ server = function(input, output, session) {
 ## ------------------------------ UI ----------------------------------
 ## --------------------------------------------------------------------
 
-help.tabs <- navbarMenu(
+help.tabs <- shiny::navbarMenu(
     "Help",
-    tabPanel(title=HTML("<a href='https://omicsplayground.readthedocs.io' target='_blank'>Documentation")),
-    tabPanel(title=HTML("<a href='https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-' target='_blank'>Video tutorials</a>")),
-    tabPanel(title=HTML("<a href='https://github.com/bigomics/omicsplayground' target='_blank'>GitHub")),
-    tabPanel(title=HTML("<a href='https://hub.docker.com/r/bigomics/omicsplayground' target='_blank'>Docker")),
-    tabPanel(title=HTML("<a href='https://groups.google.com/d/forum/omicsplayground' target='_blank'>Google groups"))
+    shiny::tabPanel(title=HTML("<a href='https://omicsplayground.readthedocs.io' target='_blank'>Documentation")),
+    shiny::tabPanel(title=HTML("<a href='https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-' target='_blank'>Video tutorials</a>")),
+    shiny::tabPanel(title=HTML("<a href='https://github.com/bigomics/omicsplayground' target='_blank'>GitHub")),
+    shiny::tabPanel(title=HTML("<a href='https://hub.docker.com/r/bigomics/omicsplayground' target='_blank'>Docker")),
+    shiny::tabPanel(title=HTML("<a href='https://groups.google.com/d/forum/omicsplayground' target='_blank'>Google groups"))
 )
 
 TABVIEWS <- list(
@@ -350,7 +367,7 @@ names(TABVIEWS)
 TABVIEWS <- TABVIEWS[names(TABVIEWS) %in% names(which(ENABLED))]
 names(TABVIEWS)
 
-logout.tab <- tabPanel(title=HTML("<a id='logout' href='/logout'>Logout"))
+logout.tab <- shiny::tabPanel(title=HTML("<a id='logout' href='/logout'>Logout"))
 
 createUI <- function(tabs)
 {
@@ -360,21 +377,21 @@ createUI <- function(tabs)
     
     version <- scan("../VERSION", character())[1]
     TITLE = paste(opt$TITLE,version)
-    LOGO = div(img(src="bigomics-logo-white-48px.png", height="48px"),
+    LOGO = shiny::div(shiny::img(src="bigomics-logo-white-48px.png", height="48px"),
                TITLE, id="navbar-logo", style="margin-top:-13px;")    
-    title = tagList(LOGO)
+    title = shiny::tagList(LOGO)
     windowTitle = TITLE
     theme = shinythemes::shinytheme("cerulean")
     id = "maintabs"
     ##selected = "Home"    
-    header = tagList(
+    header = shiny::tagList(
         tags$head(tags$link(rel = "stylesheet", href = "playground.css")),
         tags$head(tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
         firebase::useFirebase(),
         TAGS.JSSCRIPT,
         tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
-        div(textOutput("current_dataset"),class='current-data')
+        shiny::div(shiny::textOutput("current_dataset"),class='current-data')
         ##QuestionBoard_UI("qa")
     )
     names(header) <- NULL
@@ -382,11 +399,11 @@ createUI <- function(tabs)
     busy.img = sample(dir("www/busy",pattern=".gif$",full.name=TRUE))[1]
     busy.img
     busy.img = "www/busy.gif"
-    footer.gif = tagList(
-        busy_start_up(
+    footer.gif = shiny::tagList(
+        shinybusy::busy_start_up(
             text = "\nPrepping your Omics Playground...", mode = "auto",
             background="#2780e3", color="#ffffff",
-            loader = img(src=base64enc::dataURI(file=busy.img))
+            loader = shiny::img(src=base64enc::dataURI(file=busy.img))
         )
     )
     ## if(runif(1) < 0.1)
@@ -434,8 +451,8 @@ createUI <- function(tabs)
                            title=title, id=id,
                            selected=selected,
                            windowTitle = windowTitle,
-                           header = tagList(header),
-                           footer = tagList(footer),
+                           header = shiny::tagList(header),
+                           footer = shiny::tagList(footer),
                            theme = theme))
 }
 

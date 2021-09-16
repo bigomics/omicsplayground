@@ -6,23 +6,23 @@
 message(">>> sourcing DrugConnectivityBoard")
 
 DrugConnectivityInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shiny::uiOutput(ns("inputsUI"))
     )
 }
 
 DrugConnectivityUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    fillCol(
+    ns <- shiny::NS(id)  ## namespace
+    shiny::fillCol(
         flex = c(1),
         height = 750,
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs"),
-            tabPanel("Drug enrichment",uiOutput(ns("DSEA_enrichment_UI"))),
-            tabPanel("Connectivity map (beta)",uiOutput(ns("DSEA_cmap_UI")))            
-            ## tabPanel("Fire plot (dev)",uiOutput(ns("fireplot_UI")))            
+            shiny::tabPanel("Drug enrichment",uiOutput(ns("DSEA_enrichment_UI"))),
+            shiny::tabPanel("Connectivity map (beta)",uiOutput(ns("DSEA_cmap_UI")))            
+            ## shiny::tabPanel("Fire plot (dev)",uiOutput(ns("fireplot_UI")))            
         )
     )
 }
@@ -37,7 +37,7 @@ DrugConnectivityBoard <- function(input, output, session, env)
     tabH = '60vh'  ## row height of panel    
     description = "<h3>Drug Connectivity</h3> Perform drug connectivity analysis
 to see if certain drug activity or drug sensitivity signatures matches your experimental signatures. Matching drug signatures to your experiments may elicudate biological functions through mechanism-of-action (MOA) and known drug molecular targets."
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
     
     dsea_infotext = paste("<b>This module performs drug enrichment analysis</b> to see if certain drug activity or drug sensitivity signatures matches your experimental signatures. Matching drug signatures to your experiments may elicudate biological functions through mechanism-of-action (MOA) and known drug molecular targets.
 
@@ -53,67 +53,67 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     ##========================= INPUTS UI ============================================
     ##================================================================================
 
-    output$inputsUI <- renderUI({
-        ui <- tagList(
-            tipify( actionLink(ns("dsea_info"), "Youtube", icon = icon("youtube") ),
+    output$inputsUI <- shiny::renderUI({
+        ui <- shiny::tagList(
+            shinyBS::tipify( shiny::actionLink(ns("dsea_info"), "Youtube", icon = shiny::icon("youtube") ),
                    "Show more information about this module."),
-            hr(), br(),             
-            tipify( selectInput(ns("dsea_contrast"),"Contrast:", choices=NULL),
+            shiny::hr(), shiny::br(),             
+            shinyBS::tipify( shiny::selectInput(ns("dsea_contrast"),"Contrast:", choices=NULL),
                    "Select the contrast corresponding to the comparison of interest.",
                    placement="top"),
-            tipify( selectInput(ns('dsea_method'),"Analysis type:", choices = ""),
+            shinyBS::tipify( shiny::selectInput(ns('dsea_method'),"Analysis type:", choices = ""),
                    "Select type of drug enrichment analysis: activity or sensitivity (if available).",
                    placement="top"),
-            ##tipify( actionLink(ns("dsea_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+            ##tipify( shiny::actionLink(ns("dsea_options"), "Options", icon=icon("cog", lib = "glyphicon")),
             ##       "Show/hide advanced options", placement="top"),
-            ## br(),
-            ## conditionalPanel(
+            ## shiny::br(),
+            ## shiny::conditionalPanel(
             ##     "input.dsea_options % 2 == 1", ns=ns,
-            ##     tagList()
+            ##     shiny::tagList()
             ## )
         )
         ui
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
-    observe({
+    shiny::observe({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         ct <- names(ngs$drugs)
-        updateSelectInput(session, "dsea_method", choices=ct)
+        shiny::updateSelectInput(session, "dsea_method", choices=ct)
     })
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
     
-    observeEvent( input$dsea_info, {
-        showModal(modalDialog(
-            title = HTML("<strong>Drug Connectivity Analysis Board</strong>"),
-            HTML(dsea_infotext),
+    shiny::observeEvent( input$dsea_info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>Drug Connectivity Analysis Board</strong>"),
+            shiny::HTML(dsea_infotext),
             easyClose = TRUE, size="l" ))
     })
 
-    observe({
+    shiny::observe({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         ct <- colnames(ngs$model.parameters$contr.matrix)
         ##ct <- c(ct,"<sd>")
-        updateSelectInput(session, "dsea_contrast", choices=sort(ct) )
+        shiny::updateSelectInput(session, "dsea_contrast", choices=sort(ct) )
     })
     
     ##================================================================================
     ## Reactive functions
     ##================================================================================
     
-    ## getDseaTable <- reactive({
+    ## getDseaTable <- shiny::reactive({
 
-    getActiveDSEA <- reactive({
+    getActiveDSEA <- shiny::reactive({
         
         ngs <- inputData()
         alertDataLoaded(session,ngs)
-        req(ngs)        
-        req(input$dsea_contrast, input$dsea_method)
+        shiny::req(ngs)        
+        shiny::req(input$dsea_contrast, input$dsea_method)
         
         dbg("[getActiveDSEA] reacted")
         
@@ -167,7 +167,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         
         dbg("[getActiveDSEA] 5: ")
         
-        req(input$dseatable_filter)
+        shiny::req(input$dseatable_filter)
         if(input$dseatable_filter) {
             sel <- which(dt$moa!='' | dt$target!='')
             dt <- dt[sel,,drop=FALSE]
@@ -179,11 +179,11 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         return(dsea)
     })
 
-    getMOA.target <- reactive({
+    getMOA.target <- shiny::reactive({
         ## meta-GSEA on molecular targets
         dsea <- getActiveDSEA()
         dt <- dsea$table
-        req(dt)        
+        shiny::req(dt)        
         targets.list <- lapply(as.character(dt$target),
                                function(s) trimws(strsplit(s,split="[\\|;,]")[[1]]) )
         names(targets.list) <- rownames(dt)
@@ -195,18 +195,18 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         rnk <- dt$NES
         names(rnk) <- rownames(dt)
         suppressWarnings(
-            moa.target <- fgsea( gmt, rnk, nperm=20000)
+            moa.target <- fgsea::fgsea( gmt, rnk, nperm=20000)
         )
         moa.target <- moa.target[order(-abs(moa.target$NES)),]
         ##head(moa.target)
         return(moa.target)
     })
     
-    getMOA.class <- reactive({
+    getMOA.class <- shiny::reactive({
         ## meta-GSEA on MOA terms
         dsea <- getActiveDSEA()
         dt <- dsea$table
-        req(dt)
+        shiny::req(dt)
         moa.list <- lapply(as.character(dt$moa),
                            function(s) trimws(strsplit(s,split="[\\|;,]")[[1]]))
         names(moa.list) <- rownames(dt)
@@ -216,13 +216,13 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         rnk <- dt$NES
         names(rnk) <- rownames(dt)
         suppressWarnings(
-            moa.class <- fgsea( gmt, rnk, nperm=20000)
+            moa.class <- fgsea::fgsea( gmt, rnk, nperm=20000)
         )
         moa.class <- moa.class[order(-abs(moa.class$NES)),]        
         return(moa.class)
     })
 
-    getMOA <- reactive({
+    getMOA <- shiny::reactive({
         moatype <- input$dsea_moatype
         res <- NULL
         if(moatype=='target gene') res <- getMOA.target()
@@ -234,12 +234,12 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     ## PLOTTING
     ##================================================================================
     
-    dsea_enplots.RENDER %<a-% reactive({
+    dsea_enplots.RENDER %<a-% shiny::reactive({
 
         ngs <- inputData()
         if(is.null(ngs$drugs)) return(NULL)        
-        shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))        
-        req(input$dsea_contrast, input$dsea_method)
+        shiny::validate(shiny::need("drugs" %in% names(ngs), "no 'drugs' in object."))        
+        shiny::req(input$dsea_contrast, input$dsea_method)
 
         dbg("[dsea_enplots.RENDER] called!")
         
@@ -251,7 +251,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         ## filter with table selection/search
         ii  <- dsea_table$rows_selected()
         jj  <- dsea_table$rows_all()
-        req(jj)
+        shiny::req(jj)
         if(length(jj)>0) {
             dt <- dt[jj,,drop=FALSE]
         }
@@ -315,14 +315,14 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         
     })    
     
-    ##dsea_moaplot.RENDER %<a-% reactive({
-    dsea_moaplot.RENDER <- reactive({    
+    ##dsea_moaplot.RENDER %<a-% shiny::reactive({
+    dsea_moaplot.RENDER <- shiny::reactive({    
 
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         
         if(is.null(ngs$drugs)) return(NULL)
-        shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
+        shiny::validate(shiny::need("drugs" %in% names(ngs), "no 'drugs' in object."))    
 
         dbg("[dsea_moaplot.RENDER] reacted")
         
@@ -339,14 +339,14 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         
     })    
 
-    ##dsea_moaplot.RENDER2 %<a-% reactive({
-    dsea_moaplot.RENDER2 <- reactive({    
+    ##dsea_moaplot.RENDER2 %<a-% shiny::reactive({
+    dsea_moaplot.RENDER2 <- shiny::reactive({    
 
         ngs <- inputData()
-        req(ngs, input$dsea_contrast, input$dsea_method)
+        shiny::req(ngs, input$dsea_contrast, input$dsea_method)
         
         if(is.null(ngs$drugs)) return(NULL)
-        shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
+        shiny::validate(shiny::need("drugs" %in% names(ngs), "no 'drugs' in object."))    
 
         dbg("[dsea_moaplot.RENDER2] reacted")
         
@@ -363,13 +363,13 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         
     })    
         
-    dsea_table.RENDER <- reactive({
+    dsea_table.RENDER <- shiny::reactive({
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
         if(is.null(ngs$drugs)) return(NULL)
         
         dsea <- getActiveDSEA()
-        req(dsea)
+        shiny::req(dsea)
         res <- dsea$table
         res$moa <- shortstring(res$moa,60)
         res$target <- shortstring(res$target,30)
@@ -412,7 +412,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         res <- dsea$table
         ## filter with table selection/search
         ii  <- dsea_table$rows_all()
-        req(ii)
+        shiny::req(ii)
         if(length(ii)>0) {
             res <- res[ii,,drop=FALSE]
             dd <- intersect(res$drug,rownames(score))
@@ -447,19 +447,19 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         rownames(score) = substring(rownames(score),1,50)
         cex2=0.85        
         par(mfrow=c(1,1), mar=c(1,1,1,1), oma=c(0,1,0,0))
-        require(corrplot)
-        corrplot( score, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
+
+        corrplot::corrplot( score, is.corr=FALSE, cl.pos = "n", col=BLUERED(100),
                  tl.cex = 0.9*cex2, tl.col = "grey20", tl.srt = 90)
 
     }      
         
-    dsea_actmap.RENDER <- reactive({
+    dsea_actmap.RENDER <- shiny::reactive({
 
-        require(igraph)
+
         ngs <- inputData()
-        req(ngs, input$dsea_contrast, input$dsea_method)
+        shiny::req(ngs, input$dsea_contrast, input$dsea_method)
 
-        shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
+        shiny::validate(shiny::need("drugs" %in% names(ngs), "no 'drugs' in object."))    
         if(is.null(ngs$drugs)) return(NULL)
         
         dmethod="activity/L1000";contr=1
@@ -471,13 +471,13 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
 
     })    
 
-    dsea_actmap.RENDER2 <- reactive({
+    dsea_actmap.RENDER2 <- shiny::reactive({
 
-        require(igraph)
+
         ngs <- inputData()
-        req(ngs, input$dsea_contrast, input$dsea_method)
+        shiny::req(ngs, input$dsea_contrast, input$dsea_method)
 
-        shiny::validate(need("drugs" %in% names(ngs), "no 'drugs' in object."))    
+        shiny::validate(shiny::need("drugs" %in% names(ngs), "no 'drugs' in object."))    
         if(is.null(ngs$drugs)) return(NULL)
         
         dmethod="activity/L1000";contr=1
@@ -491,9 +491,9 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
 
         
     ##--------- DSEA enplot plotting module
-    dsea_enplots.opts = tagList()
+    dsea_enplots.opts = shiny::tagList()
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "dsea_enplots",
         func = dsea_enplots.RENDER,
@@ -506,16 +506,15 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         res = c(78,110),
         add.watermark = WATERMARK        
     )
-    ##outputOptions(output, "dsea_enplots", suspendWhenHidden=FALSE) ## important!!!
     
     ##---------- DSEA Activation map plotting module
-    dsea_moaplot.opts = tagList(
-        tipify( radioButtons(ns('dsea_moatype'),'Plot type:',c("drug class","target gene"),inline=TRUE),
+    dsea_moaplot.opts = shiny::tagList(
+        shinyBS::tipify( shiny::radioButtons(ns('dsea_moatype'),'Plot type:',c("drug class","target gene"),inline=TRUE),
                "Select plot type of MOA analysis: by class description or by target gene.")
-        ##tipify( radioButtons(ns('dsea_moamethod'),'Method:',c("count","enrichment"),inline=TRUE),
+        ##tipify( shiny::radioButtons(ns('dsea_moamethod'),'Method:',c("count","enrichment"),inline=TRUE),
         ##       "Select method of MOA analysis: count significant terms or enrichment test.")
     )
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "dsea_moaplot",
         func = dsea_moaplot.RENDER,
@@ -531,10 +530,10 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     )
 
     ##-------- Activation map plotting module
-    dsea_actmap.opts = tagList(
-        tipify(checkboxInput(ns('dsea_normalize'),'normalize activation matrix',FALSE), "Normalize columns of the activation matrix.")
+    dsea_actmap.opts = shiny::tagList(
+        shinyBS::tipify(shiny::checkboxInput(ns('dsea_normalize'),'normalize activation matrix',FALSE), "Normalize columns of the activation matrix.")
     )
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "dsea_actmap",
         func = dsea_actmap.RENDER,
@@ -549,11 +548,11 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     )
 
     ##--------buttons for table
-    dsea_table.opts = tagList(
-        tipify(checkboxInput(ns('dseatable_filter'),'only annotated drugs',TRUE),
+    dsea_table.opts = shiny::tagList(
+        shinyBS::tipify(shiny::checkboxInput(ns('dseatable_filter'),'only annotated drugs',TRUE),
                "Show only annotated drugs.")
     )  
-    dsea_table <- callModule(
+    dsea_table <- shiny::callModule(
         tableModule,
         id = "dsea_table", label="b",
         func = dsea_table.RENDER, 
@@ -571,7 +570,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     ## Enrichment plot
     ##---------------------------------------------------------------------
     
-    cmap_enplot.RENDER <- reactive({
+    cmap_enplot.RENDER <- shiny::reactive({
         
         pgx <- inputData()
                 
@@ -597,9 +596,9 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     })
         
     cmap_enplot.info = "<strong>Connectivity map.</strong> correlates your signature with known drug profiles from the L1000 database, and shows similar and opposite profiles by running the GSEA algorithm on the drug profile correlation space."
-    cmap_enplot.opts = tagList()
+    cmap_enplot.opts = shiny::tagList()
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "cmap_enplot",
         func = cmap_enplot.RENDER,
@@ -793,18 +792,18 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         plt
     }
     
-    dsea_cmap.RENDER %<a-% reactive({
+    dsea_cmap.RENDER %<a-% shiny::reactive({
 
         dbg("[dsea_cmap.RENDER] reacted!")
         
         pgx <- inputData()
-        req(pgx)
+        shiny::req(pgx)
         db="L1000/gene";contr="treatment:Gefitinib_vs_CT"
 
         db <- input$dsea_method
         contr <- input$dsea_contrast
-        req(db)
-        req(contr)
+        shiny::req(db)
+        shiny::req(contr)
 
         dbg("[dsea_cmap.RENDER] 1:")
         dsea <- getActiveDSEA()
@@ -862,20 +861,20 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     
     dsea_cmap.info = "<strong>Connectivity map.</strong> correlates your signature with known drug profiles from the L1000 database, and shows similar and opposite profiles by running the GSEA algorithm on the drug profile correlation space."
 
-    dsea_cmap.opts = tagList(
-        tipifyL(radioButtons(
+    dsea_cmap.opts = shiny::tagList(
+        tipifyL(shiny::radioButtons(
             ns('cmap_labeltype'),'label type:',
             c("drugs","MOA","target"),inline=TRUE),
             "Label point with drugs, MOA terms or targets (if no drug selected)."),
-        tipifyL(radioButtons(ns('cmap_nlabel'),'number of labels:',c(3,10,20,100),
+        tipifyL(shiny::radioButtons(ns('cmap_nlabel'),'number of labels:',c(3,10,20,100),
                             selected=10, inline=TRUE),
                "Number of labels to show."),
-        tipifyL(checkboxGroupInput(
+        tipifyL(shiny::checkboxGroupInput(
             ns('cmap_labeloptions'),'label options:',  choices=c("show","fixed"),
             selected=c("show"), inline=TRUE ), "Other labels options.")
     )
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "dsea_cmap",
         func = dsea_cmap.RENDER,
@@ -894,13 +893,13 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     ## Enrichment table
     ##---------------------------------------------------------------------
     
-    cmap_table.RENDER <- reactive({
+    cmap_table.RENDER <- shiny::reactive({
         pgx <- inputData()
-        req(pgx)
+        shiny::req(pgx)
         if(is.null(pgx$drugs)) return(NULL)
         
         dsea <- getActiveDSEA()
-        req(dsea)
+        shiny::req(dsea)
         res <- dsea$table
         res$moa    <- shortstring(res$moa,30)
         res$target <- shortstring(res$target,80)
@@ -929,7 +928,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
                             backgroundPosition = 'center') 
     })
     
-    cmap_table <- callModule(
+    cmap_table <- shiny::callModule(
         tableModule,
         id = "cmap_table", label="c",
         func = cmap_table.RENDER, 
@@ -945,56 +944,56 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     
     dsea_enrichment_caption = "<b>(a)</b> <b>Drug connectivity</b> correlates your signature with known drug perturbation profiles from the L1000 database. The figures show the most similar (or opposite) profiles by running the GSEA algorithm on the profile correlation space. <b>(b)</b> <b>Enrichment table</b> summarizing the statistical results of the drug enrichment analysis. <b>(c)</b> <b>Mechanism-of-action</b> plot showing the top most frequent drug class (or target genes) having similar or opposite enrichment compared to the query signature. <b>(d)</b> <b>Activation matrix</b> visualizing enrichment levels of drug signatures across multiple contrast profiles." 
 
-    output$DSEA_enrichment_UI <- renderUI({
-        fillCol(
+    output$DSEA_enrichment_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.035,1),
             height = fullH,            
-            div(HTML(dsea_enrichment_caption),class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(dsea_enrichment_caption),class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 height = rowH,
                 flex = c(2.6,1), 
-                fillCol(
+                shiny::fillCol(
                     flex = c(1.5,0.15,1),
                     height = rowH,
-                    fillRow(
+                    shiny::fillRow(
                         flex=c(1.2,0.04,1),
                         plotWidget(ns("dsea_enplots")),
-                        br(),
+                        shiny::br(),
                         plotWidget(ns("dsea_moaplot"))
                     ),
-                    br(),  ## vertical space
+                    shiny::br(),  ## vertical space
                     tableWidget(ns("dsea_table"))        
                 ),
                 plotWidget(ns("dsea_actmap"))
             )
         )
     })
-    outputOptions(output, "DSEA_enrichment_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "DSEA_enrichment_UI", suspendWhenHidden=FALSE) ## important!!!
 
     dsea_cmap_caption = "<b>(a)</b> <b>Enrichment plot.</b> Enrichment of the selected drug perturbation profile with your signature. <b>(b)</b> <b>Enrichment table</b> summarizing the statistical results of the drug enrichment analysis. <b>(c)</b> <b>Connectivity map.</b> Plot showing the top signatures as UMAP. Each point is one L1000 experiment. The color corresponds to the rank correlation between the drug signatures and your selected contrast." 
 
-    output$DSEA_cmap_UI <- renderUI({
-        fillCol(
+    output$DSEA_cmap_UI <- shiny::renderUI({
+        shiny::fillCol(
             flex = c(NA,0.035,1),
             height = fullH,            
-            div(HTML(dsea_cmap_caption),class="caption"),
-            br(),
-            fillRow(
+            shiny::div(shiny::HTML(dsea_cmap_caption),class="caption"),
+            shiny::br(),
+            shiny::fillRow(
                 height = rowH,
                 flex = c(1,0.05,1.5),
-                fillCol(
+                shiny::fillCol(
                     flex = c(1.15,0.05,1),                    
                     plotWidget(ns("cmap_enplot")),
-                    br(),
+                    shiny::br(),
                     tableWidget(ns("cmap_table"))                    
                 ),
-                br(),
+                shiny::br(),
                 plotWidget(ns("dsea_cmap"))
             )
         )
     })
-    outputOptions(output, "DSEA_cmap_UI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "DSEA_cmap_UI", suspendWhenHidden=FALSE) ## important!!!
     
 
 }

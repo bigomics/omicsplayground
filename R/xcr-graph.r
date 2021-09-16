@@ -12,15 +12,15 @@ graph_from_knn <- function(pos, k=10)
 {
     ## return: edge weight are distances
     if(is.null(rownames(pos))) stop("pos must have rownames")
-    require(parallel)
-    require(Matrix)
-    require(igraph)
+    
+    
+    
     if(ncol(pos)>3 || NCOL(pos)==1)  {
         stop("positions must be 2 or 3 columns\n")
     }
     ## use fast KNN package
-    require(FNN)
-    res = get.knn(pos, k=k)
+    
+    res = FNN::get.knn(pos, k=k)
     idx  = res$nn.index
     xval = res$nn.dist
     xval = as.vector(unlist(xval))
@@ -28,23 +28,23 @@ graph_from_knn <- function(pos, k=10)
     ##xval = exp(- xval / mean(xval) )
     ##xval = 1 / (1 + xval / mean(xval) )
     ##cat("note: edge weights are distances\n")
-    sp = sparseMatrix( i=sp.idx[,1], j=sp.idx[,2], x=xval, dims=c(nrow(pos),nrow(pos))  )
+    sp = Matrix::sparseMatrix( i=sp.idx[,1], j=sp.idx[,2], x=xval, dims=c(nrow(pos),nrow(pos))  )
     sp = (sp + t(sp))/2
     rownames(sp) <- colnames(sp) <- rownames(pos)
-    g = graph_from_adjacency_matrix(sp, mode="undirected", diag=FALSE, weighted=TRUE)
+    g = igraph::graph_from_adjacency_matrix(sp, mode="undirected", diag=FALSE, weighted=TRUE)
     g$layout = pos
     return(g)
 }
 
 graph_from_pos.DEPRECATED <- function(pos, trh) {
-    require(igraph)
+    
     if(ncol(pos)>3 || NCOL(pos)==1)  {
         stop("positions must be 2 or 3 columns\n")
     }
     d <- apply( pos, 1, function(x) colSums((t(pos)-x)**2))  ## huge??
     w <- 1/(1 + d/mean(d))
-    g = graph_from_adjacency_matrix(w,mode="undirected",weighted=TRUE,diag=FALSE)
-    g = subgraph.edges(g, which(E(g)$weight > trh))
+    g = igraph::graph_from_adjacency_matrix(w,mode="undirected",weighted=TRUE,diag=FALSE)
+    g = igraph::subgraph.edges(g, which(igraph::E(g)$weight > trh))
     g$layout = pos
     return(g)
 }
@@ -72,7 +72,7 @@ calc.edge.similarityMC <- function(ee, X, nk=5000, mc.cores=4) {
         idx[[i]] <- j0:j1
     }
     cx <- rep(NA, nrow(ee))
-    require(parallel)
+    
     compute.cx <- function(ii) {
         ## NEED RETHINK!!! can be optimized bit more
         cx0 = rep(NA, length(ii))
@@ -94,7 +94,7 @@ calc.edge.similarityMC <- function(ee, X, nk=5000, mc.cores=4) {
         cx0[which.x] = cx1
         cx0
     }
-    res = mclapply( idx, compute.cx, mc.cores=mc.cores)
+    res = parallel::mclapply( idx, compute.cx, mc.cores=mc.cores)
     cx = as.numeric(unlist(res))
     return(cx)
 }
@@ -139,60 +139,60 @@ calc.edge.similarityKFOLD <- function(ee, X, nk=4000)
 
 kcomp <- function(g,k=3,minsize=0) {
     ## Return  K-largest components
-    cmp = components(g)
+    cmp = igraph::components(g)
     sort(cmp$csize)
     cmp.size = cmp$csize
     names(cmp.size) = 1:length(cmp.size)
     cmp.size = cmp.size[which(cmp.size >= minsize)]
     cmp.top = names(cmp.size)
-    if(!is.null(k)) cmp.top = head(names(sort(-cmp.size)),k) 
+    if(!is.null(k)) cmp.top = Matrix::head(names(sort(-cmp.size)),k) 
     vtx = which( cmp$membership %in% cmp.top)
-    induced_subgraph(g, V(g)[vtx] )
+    igraph::induced_subgraph(g, igraph::V(g)[vtx] )
 }
 
 ##g=G
 cutGraph0 <- function(g, k=3, cut=FALSE)
 {
     ## Cluster graph and cut crossing edges if requested.
-    clust = cluster_louvain(g)
+    clust = igraph::cluster_louvain(g)
     if(cut) {
-        g <- delete_edges(g, E(g)[crossing(clust, g)])
+        g <- igraph::delete_edges(g, igraph::E(g)[crossing(clust, g)])
     }
     cmp = clust$membership
     cmp.size = table(cmp)
-    cmp.top = head(names(cmp.size)[order(-cmp.size)],k)
-    induced_subgraph(g, which( cmp %in% cmp.top ) )
+    cmp.top = Matrix::head(names(cmp.size)[order(-cmp.size)],k)
+    igraph::induced_subgraph(g, which( cmp %in% cmp.top ) )
 }
 
 ##g=G
 graph.cut_crossings <- function(g, idx, max.wt=9999)
 {
     ## Cut graph given indices of membership 
-    ee = get.edgelist(g)
+    ee = igraph::get.edgelist(g)
     dim(ee)
-    jj = which( idx[ee[,1]] != idx[ee[,2]] & E(g)$weight < max.wt)
+    jj = which( idx[ee[,1]] != idx[ee[,2]] & igraph::E(g)$weight < max.wt)
     length(jj)
-    if(length(jj)>0) g = delete.edges(g, E(g)[jj] )
+    if(length(jj)>0) g = igraph::delete.edges(g, igraph::E(g)[jj] )
     return(g)    
 }
 
 itercluster_louvain <- function(g, n=3) {
     i=1
-    idx = rep(1, length(V(g)))
+    idx = rep(1, length(igraph::V(g)))
     K = c()
     for(i in 1:n) {
         k = max(idx)
         newidx = idx
         for(i in 1:k) {
             ii = which(idx==i)
-            g1 = induced_subgraph(g,ii)
+            g1 = igraph::induced_subgraph(g,ii)
             newidx[ii] = paste(i,":",cluster_louvain(g1)$membership)
         }
         levels = names(sort(table(newidx),decreasing=TRUE))
         idx = as.integer(factor(newidx, levels=levels))
         K = cbind(K, idx)
     }
-    rownames(K) = V(g)$name
+    rownames(K) = igraph::V(g)$name
     colnames(K) = NULL
     table(idx)
     return(K)
@@ -204,11 +204,11 @@ cutGraph <- function(g, n=2, k=5, max.wt=9999)
     ## Cluster graph and cut crossing edges if requested.
     idx = itercluster_louvain(g, n=n)
     g = graph.cut_crossings(g, idx, max.wt=9999)
-    clust = cluster_louvain(g)
+    clust = igraph::cluster_louvain(g)
     cmp = clust$membership
     cmp.size = table(cmp)
-    cmp.top = as.integer(head(names(cmp.size)[order(-cmp.size)],k))
-    induced_subgraph(g, which( cmp %in% cmp.top ) )
+    cmp.top = as.integer(Matrix::head(names(cmp.size)[order(-cmp.size)],k))
+    igraph::induced_subgraph(g, which( cmp %in% cmp.top ) )
 }
 
 
@@ -221,8 +221,8 @@ hclust_graph <- function(g, k=NULL, mc.cores=2)
     ## clustering on different levels. If k=NULL iterates until
     ## convergences.
     ##    
-    require(parallel)
-    idx = rep(1, length(V(g)))
+    
+    idx = rep(1, length(igraph::V(g)))
     K = c()
     maxiter=100
     if(!is.null(k)) maxiter=k
@@ -236,9 +236,9 @@ hclust_graph <- function(g, k=NULL, mc.cores=2)
         if(mc.cores>1 && length(unique(idx))>1) {
             idx.list = tapply(1:length(idx),idx,list)
             mc.cores            
-            system.time( newidx0 <- mclapply(idx.list, function(ii) {
-                subg = induced_subgraph(g, ii)
-                subi = cluster_louvain(subg)$membership
+            system.time( newidx0 <- parallel::mclapply(idx.list, function(ii) {
+                subg = igraph::induced_subgraph(g, ii)
+                subi = igraph::cluster_louvain(subg)$membership
                 return(subi)
             }, mc.cores=mc.cores) )
             newidx0 = lapply(1:length(newidx0), function(i) paste0(i,"-",newidx0[[i]]))
@@ -248,8 +248,8 @@ hclust_graph <- function(g, k=NULL, mc.cores=2)
         } else {
             for(i in unique(idx)) {
                 ii = which(idx==i)
-                subg = induced_subgraph(g, ii)
-                subi = cluster_louvain(subg)$membership
+                subg = igraph::induced_subgraph(g, ii)
+                subi = igraph::cluster_louvain(subg)$membership
                 newidx[ii] = paste(i,subi,sep="-")
             }
         }
@@ -260,7 +260,7 @@ hclust_graph <- function(g, k=NULL, mc.cores=2)
         ok = (idx.len > old.len)
         iter = iter+1
     }
-    rownames(K) = V(g)$name
+    rownames(K) = igraph::V(g)$name
     if(!ok && is.null(k)) K = K[,1:(ncol(K)-1)]
     dim(K)
     ##K = K[,1:(ncol(K)-1)]
@@ -276,14 +276,14 @@ decompose_graph <- function(g, grouped=NULL, method="louvain", k=NULL,
     if(is.null(g$layout)) stop("graph must have layout")    
     get.idx <- function(g, method, k) {
         if(method=="louvain") {
-            idx <- rep(1, length(V(g)))
+            idx <- rep(1, length(igraph::V(g)))
             for(k in 1:nlouvain) {
                 idx_new <- rep(0, length(idx))
                 i=1
                 for(i in unique(idx)) {
                     jj = which(idx == i)
-                    g1 = induced_subgraph(g, V(g)[jj] )
-                    idx1 = cluster_louvain(g1, weights=E(g1)$weight)$membership
+                    g1 = igraph::induced_subgraph(g, igraph::V(g)[jj] )
+                    idx1 = igraph::cluster_louvain(g1, weights=E(g1)$weight)$membership
                     idx_new[jj] = max(idx_new) + idx1
                 }
                 idx = idx_new
@@ -293,13 +293,13 @@ decompose_graph <- function(g, grouped=NULL, method="louvain", k=NULL,
             if(is.null(k)) stop("hclust needs k")
             ##D = as.matrix( 1.0 / (1e-8 + g[,]) - 1)
             D = as.matrix( 1.0 - g[,] )
-            ##hc = hclust(as.dist(D), method="ward.D2")
-            hc = hclust(as.dist(D), method="average")
+            ##hc = fastcluster::hclust(as.dist(D), method="ward.D2")
+            hc = fastcluster::hclust(as.dist(D), method="average")
             k1 = max(min(k, nrow(D)/2),1)
             idx = cutree(hc, k1)
             table(idx)
         } else if(method=="nclust") {
-            require(nclust)
+            
             if(is.null(k)) stop("nclust needs k")
             D = as.matrix( 1.0 - g[,] )
             ##hc = nclust(as.matrix(g[,]), link="ward")
@@ -320,7 +320,7 @@ decompose_graph <- function(g, grouped=NULL, method="louvain", k=NULL,
         grouped[is.na(grouped)] = "(missing)"
         groups = unique(grouped)
         table(grouped)
-        ng = length(V(g))
+        ng = length(igraph::V(g))
         idx <- rep(0, ng)
         group.idx <- list()
         i=1
@@ -329,7 +329,7 @@ decompose_graph <- function(g, grouped=NULL, method="louvain", k=NULL,
             sub.idx = rep(1,length(jj))
             length(jj)
             if(length(jj)>3) {
-                subg = induced_subgraph(g, jj )
+                subg = igraph::induced_subgraph(g, jj )
                 k0 = max(ceiling(k * (length(jj)/ng)),2)
                 k0
                 sub.idx = get.idx(subg, method=method, k=k0)
@@ -347,7 +347,7 @@ decompose_graph <- function(g, grouped=NULL, method="louvain", k=NULL,
     
     ## resort indices
     idx = as.integer(factor(idx, levels=order(-table(idx))))    
-    names(idx) = V(g)$name
+    names(idx) = igraph::V(g)$name
     table(idx)
 
     ## adjacency matrix
@@ -367,9 +367,9 @@ decompose_graph <- function(g, grouped=NULL, method="louvain", k=NULL,
     subM[1:4,1:4]
     
     ## create downsamples graph
-    subG = graph_from_adjacency_matrix(
+    subG = igraph::graph_from_adjacency_matrix(
         subM, weighted=TRUE, diag=FALSE, mode="undirected")
-    V(subG)$name <- rownames(subM)
+    igraph::V(subG)$name <- rownames(subM)
     subG$members <- tapply( idx, idx, names)
     names(subG$members) <- rownames(subM)
     
@@ -379,9 +379,9 @@ decompose_graph <- function(g, grouped=NULL, method="louvain", k=NULL,
     subG$layout = avg.pos
     
     subgraphs <- list()
-    for(i in 1:length(V(subG))) {
+    for(i in 1:length(igraph::V(subG))) {
         vv = subG$members[[i]]
-        child <- induced_subgraph(g, vv)
+        child <- igraph::induced_subgraph(g, vv)
         child$layout <- g$layout[vv,]
         subgraphs[[i]] <- child
     }
@@ -392,7 +392,7 @@ decompose_graph <- function(g, grouped=NULL, method="louvain", k=NULL,
             which(sapply(group.idx,function(x) (i %in% x))))
     }
     
-    subG = simplify(subG)
+    subG = igraph::simplify(subG)
     subG$group.idx = group.idx2
     subG$membership = idx
     subG$subgraphs = subgraphs
@@ -437,15 +437,15 @@ downsample_graph.DEPRECATED <- function(g, idx=NULL, grouped=NULL, merge.op="max
     adjM[1:4,1:4]    
     
     ## downsample by taking mean of merge blocks in adjM
-    require(parallel)
+    
     ngrp = length(unique(idx))
     ngrp
     if(merge.op=="mean") {
         subM = tapply(1:ncol(adjM), idx, function(ii) rowMeans(adjM[,ii,drop=FALSE],na.rm=TRUE))
-        subM = mclapply(subM, function(x) tapply(x, idx, mean, na.rm=TRUE))
+        subM = parallel::mclapply(subM, function(x) tapply(x, idx, mean, na.rm=TRUE))
     } else if(merge.op=="max") {
         subM = tapply(1:ncol(adjM), idx, function(ii) apply(adjM[,ii,drop=FALSE],1,max,na.rm=TRUE))
-        subM = mclapply(subM, function(x) tapply(x, idx, max, na.rm=TRUE))
+        subM = parallel::mclapply(subM, function(x) tapply(x, idx, max, na.rm=TRUE))
     } else {
         stop("unknown merge.op",merge.up,"\n")
     }
@@ -467,14 +467,14 @@ downsample_graph.DEPRECATED <- function(g, idx=NULL, grouped=NULL, merge.op="max
     }
 
     ## create downsampled graph
-    subG = graph_from_adjacency_matrix(
+    subG = igraph::graph_from_adjacency_matrix(
         subM, weighted=TRUE, diag=FALSE, mode="undirected")
-    V(subG)$name <- rownames(subM)
-    members <- tapply( V(g)$name, idx, list)
+    igraph::V(subG)$name <- rownames(subM)
+    members <- tapply( igraph::V(g)$name, idx, list)
     names(members) <- rownames(subM)
-    V(subG)$members = members
+    igraph::V(subG)$members = members
     ## subG$members = members
-    ## V(subG)$size = sapply(members, length)
+    ## igraph::V(subG)$size = sapply(members, length)
 
     
     ##avg.pos = apply(g$layout,2,function(x) tapply(x,idx,median))
@@ -482,8 +482,8 @@ downsample_graph.DEPRECATED <- function(g, idx=NULL, grouped=NULL, merge.op="max
     rownames(avg.pos) <- rownames(subM)
     subG$layout = avg.pos
             
-    subG = simplify(subG)
-    names(idx) = V(g)$name
+    subG = igraph::simplify(subG)
+    names(idx) = igraph::V(g)$name
     subG$membership = idx
     return(subG)
 }

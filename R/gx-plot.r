@@ -14,7 +14,7 @@ gx.barplot <- function(x, main="", cex.main=1.2, cex.names=0.85,
         cex.legend=0.9;srt=0;xlab='';ylab='';
         group=NULL;legend=TRUE
     }
-    cpal = rep(brewer.pal(12,"Paired"),99)
+    cpal = rep(RColorBrewer::brewer.pal(12,"Paired"),99)
     if(is.null(group)) group <- rep(1,ncol(x))
     group2 <- as.vector(sapply(group,rep,2))
     col1 <- cpal[(group2-1)*2 + rep(1:2,NCOL(x))]
@@ -84,8 +84,8 @@ gx.b3plot <- function(x, y, first=NULL,
                       names.cex=1, names=TRUE, max.points=100, col="grey80",
                       ...)
 {
-    require(beeswarm)
-    ##require(sinaplot)
+    
+    ##
     stats.segments <- function(x, y, xoffset=0, lwd=2) {
         bx = boxplot(y ~ x, plot=FALSE)
         nx = length(bx$n)
@@ -117,7 +117,7 @@ gx.b3plot <- function(x, y, first=NULL,
         nthree = sum(sig=="***")
         jj = which(sig!="")
         jj = jj[order(pv[jj])]  ## only top 4 ??
-        jj = head(jj,max(max.stars,nthree)) ## only top 5 ??
+        jj = Matrix::head(jj,max(max.stars,nthree)) ## only top 5 ??
         j=1
         yc = apply(yc, 2, as.integer)
         yc
@@ -161,10 +161,10 @@ gx.b3plot <- function(x, y, first=NULL,
         ##if(length(j1)) jj <- c(jj,j1)
         if(max.points>0 && length(jj)>max.points) {
             ## jj <- sample(jj,max.points)
-            jj <- unlist(tapply(jj, y, function(i) head(sample(i),max.points)))
+            jj <- unlist(tapply(jj, y, function(i) Matrix::head(sample(i),max.points)))
         }
         ## !!!!!!!!! NEED CHECK!! can be very slow if jj is large !!!!!!!!!!!
-        beeswarm(x[jj] ~ y[jj], add=TRUE, at=1:n-0.33, pch=19, cex=bee.cex, col="grey20")
+        beeswarm::beeswarm(x[jj] ~ y[jj], add=TRUE, at=1:n-0.33, pch=19, cex=bee.cex, col="grey20")
         ## sinaplot( x[jj] ~ y[jj], add=TRUE, pch=19, cex=bee.cex, col="grey20")
     }
     if(bar) stats.segments(y, x, xoffset=-0.333, lwd=1.4)

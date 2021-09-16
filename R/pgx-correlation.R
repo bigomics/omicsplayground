@@ -13,16 +13,16 @@
 ##gene="CD4";X=ngs$X;nmax=200;method=PCOR.FAST;nmax=100;fast=TRUE
 pgx.computeGlassoAroundGene <- function(X, gene, nmax=100)
 {
-    require(glasso)
-    rho <- cor(t(X), t(X[gene,,drop=FALSE]))
+    
+    rho <- WGCNA::cor(t(X), t(X[gene,,drop=FALSE]))
     dim(rho)
-    jj <- head(order(-rowMeans(rho**2)),nmax)
+    jj <- Matrix::head(order(-rowMeans(rho**2)),nmax)
     tX <- t(X[jj,])
     dim(tX)
-    ##R = cor(tX)
+    ##R = WGCNA::cor(tX)
     vX = var(tX)    
     res <- glasso::glasso(vX, 0.1)
-    res$cor <- cov2cor(vX)
+    res$cor <- Matrix::cov2cor(vX)
     res$sampleSize <- nrow(tX)
 
     res$pcor <- -cov2cor(res$wi)
@@ -38,14 +38,14 @@ pgx.plotPartialCorrelationGraph <-
              vsize=10, edge.width=10, label.cex=0.8,
              radius=-1, plot=TRUE, layout="fr")
 {    
-    require(igraph)
+    
     ## GLASSO object
     nn <- rownames(res$cor)
     ##rho.min=0.1
 
     if(0) {
-        qgraph(res, layout = "spring", labels=nn)
-        qgraph(res, layout = "spring", labels=nn, minimum=0.1)
+        qgraph::qgraph(res, layout = "spring", labels=nn)
+        qgraph::qgraph(res, layout = "spring", labels=nn, minimum=0.1)
         ##qgraph(res, layout = "spring", labels=nn, threshold=rho.min)
         ##qgraph(res, layout = "spring", labels=nn, minimum="sig", sampleSize=25)
     }
@@ -56,44 +56,44 @@ pgx.plotPartialCorrelationGraph <-
     rownames(P)=colnames(P)=nn    
 
     ##P = P * (abs(P)>0.1)    
-    G <- graph_from_adjacency_matrix(
+    G <- igraph::graph_from_adjacency_matrix(
         abs(P), mode="undirected", diag=FALSE, weighted=TRUE)
         
-    ee <- get.edges(G, E(G))
+    ee <- igraph::get.edges(G, igraph::E(G))
     ew <- (abs(P[ee])/max(abs(P[ee])))
-    E(G)$rho <- P[ee]
-    V(G)$name
-    V(G)$size <- vsize * c(1,1.8)[1 + 1*(V(G)$name==gene)]
-    V(G)$label.cex <- label.cex * c(1,1.4)[1 + 1*(V(G)$name==gene)]    
-    V(G)$color <- c('lightskyblue',"salmon")[1 + 1*(V(G)$name==gene)]    
+    igraph::E(G)$rho <- P[ee]
+    igraph::V(G)$name
+    igraph::V(G)$size <- vsize * c(1,1.8)[1 + 1*(igraph::V(G)$name==gene)]
+    igraph::V(G)$label.cex <- label.cex * c(1,1.4)[1 + 1*(igraph::V(G)$name==gene)]    
+    igraph::V(G)$color <- c('lightskyblue',"salmon")[1 + 1*(igraph::V(G)$name==gene)]    
     
-    E(G)$width <- edge.width * ew**1.5
-    E(G)$color <- c("red","darkgreen")[1 + 1*(sign(R[ee])>0)]
-    E(G)$color <- c("#FF000033","#44444433")[1 + 1*(sign(R[ee])>0)]    
+    igraph::E(G)$width <- edge.width * ew**1.5
+    igraph::E(G)$color <- c("red","darkgreen")[1 + 1*(sign(R[ee])>0)]
+    igraph::E(G)$color <- c("#FF000033","#44444433")[1 + 1*(sign(R[ee])>0)]    
 
     ## delete weak edges
-    G1 <- delete_edges(G, which(abs(E(G)$weight) < rho.min))
-    if(length(V(G1)) <= 1)  return()
+    G1 <- igraph::delete_edges(G, which(abs(igraph::E(G)$weight) < rho.min))
+    if(length(igraph::V(G1)) <= 1)  return()
     
     ## delete orphans
-    isolated = which(degree(G1)==0 & V(G)$name!=gene)
-    G1 = delete.vertices(G1, isolated)
+    isolated = which(igraph::degree(G1)==0 & igraph::V(G)$name!=gene)
+    G1 = igraph::delete.vertices(G1, isolated)
 
-    dbg("[pgx.plotPartialCorrelationGraph] len.VG = ",length(V(G1)))
-    if(length(V(G1)) <= 1)  return()
+    dbg("[pgx.plotPartialCorrelationGraph] len.VG = ",length(igraph::V(G1)))
+    if(length(igraph::V(G1)) <= 1)  return()
 
     ## get only nodes within radius
-    dist <- distances(G1, v=gene, mode='all', weights=NA)[1,]
-    vv <- V(G1)
+    dist <- igraph::distances(G1, v=gene, mode='all', weights=NA)[1,]
+    vv <- igraph::V(G1)
     if(radius > 0) {
         vv <- names(which(dist <= radius))
     }
-    G1 <- induced_subgraph(G1, vv)
+    G1 <- igraph::induced_subgraph(G1, vv)
 
     ##L1 = L[-isolated,,drop=FALSE]
-    L1 = layout_with_fr(G1)
+    L1 = igraph::layout_with_fr(G1)
 
-    if(length(V(G1)) == 0) return()
+    if(length(igraph::V(G1)) == 0) return()
 
     if(plot==TRUE) {
         par(mar=c(1,1,1,1)*0)
@@ -119,9 +119,9 @@ PCOR.METHODS = c("cor","pcor","pcor.shrink", "glasso", "huge",
 pgx.computePartialCorrelationAroundGene <-
     function(X, gene, method=PCOR.METHODS, nmax=100, fast=FALSE)
 {
-    rho <- cor(t(X), t(X[gene,,drop=FALSE]))
+    rho <- WGCNA::cor(t(X), t(X[gene,,drop=FALSE]))
     dim(rho)
-    jj <- head(order(-rowMeans(rho**2)),nmax)
+    jj <- Matrix::head(order(-rowMeans(rho**2)),nmax)
     tX <- t(X[jj,])
     dim(tX)
     res <- pgx.computePartialCorrelationMatrix(
@@ -133,22 +133,22 @@ pgx.computePartialCorrelationAroundGene <-
 
 pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FALSE)
 {    
-    ##require(ppcor)
-    require(ggm)
-    require(huge)
-    require(FastGGM)
-    ##require(SILGGM)
-    require(corpcor)
-    ##require(QUIC)
-    ##require(BigQuic)
-    require(qgraph)
-    require(glasso)
-    require(psych)
-    ##require(clime)
-    require(fastclime)
+    ##
+    
+    
+    
+    ##
+    
+    ##
+    ##
+    
+    
+    
+    ##
+    
 
     if(0) {
-        tX <- t(head(ngs$X,500))
+        tX <- t(Matrix::head(ngs$X,500))
     }
 
     if(fast || ncol(tX)>1000) {
@@ -164,12 +164,12 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
     
     if("cor" %in% method) {
         timings[["cor"]] <- system.time(
-            rho[["cor"]] <- cor(tX)
+            rho[["cor"]] <- WGCNA::cor(tX)
         )
     }
 
     if("pcor" %in% method) {
-        require(ppcor)
+        
         timings[["pcor"]] <- system.time(
             suppressWarnings( rho[["pcor"]] <- ppcor::pcor(tX)$estimate )
         )
@@ -177,16 +177,16 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
 
     ##rho[["ppcor::spcor"]] <- ppcor::spcor(tX)$estimate
     if("pcor.shrink" %in% method) {
-        require(corpcor)
+        
         timings[["pcor.shrink"]] <- system.time(
             ##suppressWarnings( rho[["pcor.shrink"]] <- corpcor::pcor.shrink(tX, 1e-3))
             suppressWarnings( rho[["pcor.shrink"]] <- corpcor::pcor.shrink(tX))
         )
     }
-    ##rho[["psych::partial.r"]] <- partial.r(tX) 
+    ##rho[["psych::partial.r"]] <- psych::partial.r(tX) 
 
     if("huge" %in% method) {
-        require(huge)
+        
         timings[["huge.glasso"]] <- system.time(
             ##out <- huge(tX)
             ##out <- huge(tX, method="mb") ## no icov!
@@ -198,11 +198,11 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
         ##which.opt
         c2 <- -out$icov[[length(out$icov)]]
         diag(c2) <- -diag(c2) 
-        rho[["huge"]] <- cov2cor(c2)
+        rho[["huge"]] <- Matrix::cov2cor(c2)
     }
 
     if("FastGGM" %in% method) {
-        require(corpcor)
+        
         timings[["FastGGM"]] <- system.time(
             suppressWarnings( res <- FastGGM_Parallel(tX) )
         )
@@ -210,7 +210,7 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
     }
     
     if("SILGGM" %in% method) {
-        require(SILGGM)
+        
         timings[["SILGGM"]] <- system.time({
             ## these are quite fast
             rho[["SILGGM"]] <- SILGGM(tX)$partialCor  ## default: "D-S_NW_SL"
@@ -222,7 +222,7 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
     }
     
     if("fastclime" %in% method) {
-        require(fastclime)
+        
         timings[["fastclime"]] <- system.time(
             out1 <- fastclime(tX)
         )
@@ -232,14 +232,14 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
     }
 
     if("QUIC" %in% method) {
-        require(QUIC)
+        
         timings[["QUIC"]] <- system.time(
             rho[["QUIC"]] <- {r=-QUIC(cov(tX), 1e-1)$X;diag(r)=-diag(r);r}        
         )
     }
 
     if(0 && "glassoFast" %in% method) {
-        require(glassoFast)
+        
         timings[["glassoFast"]] <- system.time(
             suppressWarnings( res <- glassoFast(cov(tX), 1e-2) )
         )
@@ -249,9 +249,9 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
     }
 
     if("glasso" %in% method) {
-        require(glasso)
+        
         timings[["glasso"]] <- system.time(
-            res <- glasso(cov(tX), 1e-2)
+            res <- glasso::glasso(cov(tX), 1e-2)
         )
         r <- -cov2cor(res$wi)
         diag(r) <- -diag(r)
@@ -259,7 +259,7 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
     }
     
     if("clime" %in% method) {
-        require(clime)
+        
         timings[["clime"]] <- system.time(
             rho[["clime"]] <- {
                 re.cv <- cv.clime(clime(tX))
@@ -269,7 +269,7 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
     }
     
     if("BigQuic" %in% method) {
-        require(BigQuic)
+        
         timings[["BigQuic"]] <- system.time(
             rho[["BigQuic"]] <- {
                 lambda <- seq(from = 0.1, to = 1, by = 0.1) - 0.01
@@ -288,7 +288,7 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
     for(i in 1:length(rho)) {
         rownames(rho[[i]]) <- colnames(rho[[i]]) <- colnames(tX)
         if(sum(diag(rho[[i]]))==0) diag(rho[[i]]) <- 1
-        rho[[i]] <- cov2cor(as.matrix(rho[[i]]))    
+        rho[[i]] <- Matrix::cov2cor(as.matrix(rho[[i]]))    
         ##rho[[i]][is.nan(rho[[i]])] <- NA
     }
 
@@ -304,8 +304,8 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
         flat.prho <- sapply(rho[which(names(rho)!="cor")], as.vector)        
         jj <- which(abs(flat.prho) > abs(flat.rho)) ## not reliable
         flat.prho[jj] <- NA    
-        head(flat.prho)
-        head(flat.rho)
+        Matrix::head(flat.prho)
+        Matrix::head(flat.rho)
         nx <- ncol(tX)
         meta.pcor <- matrix(apply(flat.prho,1,mean,na.rm=TRUE),nx,nx)    
         rownames(meta.pcor)=colnames(meta.pcor)=colnames(tX)    
@@ -335,7 +335,7 @@ pgx.plotPartialCorrelationAroundGene <-
     M[is.infinite(M) | is.nan(M)] <- NA
     M <- M[order(-rowMeans(M**2,na.rm=TRUE)),,drop=FALSE]
     ##M <- M[order(-rowMeans(apply(M,2,rank))),] 
-    head(M)
+    Matrix::head(M)
 
     ##------------------------------------------------------------
     ## Correlation barplots
@@ -344,7 +344,7 @@ pgx.plotPartialCorrelationAroundGene <-
     if("cor" %in% what) {
         par(mar=c(10,4,4,2))
         r1 <- M[,"cor"] ## / ncol(M)
-        if(nsize>0) r1 <- head(r1[order(-abs(r1))],nsize)
+        if(nsize>0) r1 <- Matrix::head(r1[order(-abs(r1))],nsize)
         barplot( sort(r1,decreasing=TRUE), beside=FALSE, las=3,
                 ylab="marginal correlation")
         title(main, cex.main=1.2)
@@ -352,7 +352,7 @@ pgx.plotPartialCorrelationAroundGene <-
 
     if("pcor" %in% what) {
         r2 <- M[,which(colnames(M)!="cor")] ## / ncol(M)
-        if(nsize>0) r2 <- head(r2[order(-rowMeans(r2**2)),],nsize)
+        if(nsize>0) r2 <- Matrix::head(r2[order(-rowMeans(r2**2)),],nsize)
         r2 <- r2[order(-rowMeans(r2)),]
         r2 <- r2 / ncol(r2)
         par(mar=c(10,4,4,2))
@@ -372,14 +372,14 @@ pgx.plotPartialCorrelationAroundGene <-
         ##------------------------------------------------------------
         R <- res$rho[["cor"]]
         if(nsize>0) {
-            top20 <- head(unique(c(gene, rownames(M))), nsize)
+            top20 <- Matrix::head(unique(c(gene, rownames(M))), nsize)
             R <- res$rho[["cor"]][top20,top20]  ## marginal correlation
         }
-        gr1 <- graph_from_adjacency_matrix(
+        gr1 <- igraph::graph_from_adjacency_matrix(
             abs(R), mode="undirected", diag=FALSE,  weighted=TRUE)
-        ee <- get.edges(gr1, E(gr1))
-        E(gr1)$rho <- R[ee]
-        V(gr1)$name
+        ee <- igraph::get.edges(gr1, igraph::E(gr1))
+        igraph::E(gr1)$rho <- R[ee]
+        igraph::V(gr1)$name
 
         has.pcor <- !is.null(res$meta.pcor)
         P <- NULL
@@ -389,37 +389,37 @@ pgx.plotPartialCorrelationAroundGene <-
             P <- res$meta.pcor[ii,ii]
             P[is.na(P)] <- 0
             P[is.nan(P)] <- 0
-            E(gr1)$pcor <- P[ee]
+            igraph::E(gr1)$pcor <- P[ee]
         }
         if(is.null(rho.min)) rho.min <- 0
 
         ## threshold edges
-        sel.ee <- (abs(E(gr1)$rho) >= rho.min)
-        if(has.pcor) sel.ee <- sel.ee & (abs(E(gr1)$pcor) >= pcor.min)
-        gr2 <- subgraph.edges(
+        sel.ee <- (abs(igraph::E(gr1)$rho) >= rho.min)
+        if(has.pcor) sel.ee <- sel.ee & (abs(igraph::E(gr1)$pcor) >= pcor.min)
+        gr2 <- igraph::subgraph.edges(
             gr1, which(sel.ee), delete.vertices = FALSE )           
-        subgraphs <- decompose.graph(gr2)
-        k <- which(sapply(sapply(subgraphs, function(g) V(g)$name),function(vv) gene %in% vv))
+        subgraphs <- igraph::decompose.graph(gr2)
+        k <- which(sapply(sapply(subgraphs, function(g) igraph::V(g)$name),function(vv) gene %in% vv))
         gr2 <- subgraphs[[k]]
 
         ## set edge width
-        V(gr2)$name
-        E(gr2)$width <- edge.width * 1.0
+        igraph::V(gr2)$name
+        igraph::E(gr2)$width <- edge.width * 1.0
         if(has.pcor) {
-            pw <- abs(E(gr2)$pcor) / mean(abs(E(gr2)$pcor),na.rm=TRUE)
-            E(gr2)$width <- edge.width * pw
+            pw <- abs(igraph::E(gr2)$pcor) / mean(abs(igraph::E(gr2)$pcor),na.rm=TRUE)
+            igraph::E(gr2)$width <- edge.width * pw
         }
 
         ## calculate layout
         ly = switch( layout,
-                    "fr" = layout_with_fr(gr2),
-                    "kk" = layout_with_kk(gr2, weights=1/E(gr2)$weight),
-                    "graphopt" = layout_with_graphopt(gr2),
-                    "tree" = layout_as_tree(gr2),
-                    layout_nicely(gr2)
+                    "fr" = igraph::layout_with_fr(gr2),
+                    "kk" = igraph::layout_with_kk(gr2, weights=1/E(gr2)$weight),
+                    "graphopt" = igraph::layout_with_graphopt(gr2),
+                    "tree" = igraph::layout_as_tree(gr2),
+                    igraph::layout_nicely(gr2)
                     )
-        rownames(ly) <- V(gr2)$name
-        head(ly)
+        rownames(ly) <- igraph::V(gr2)$name
+        Matrix::head(ly)
         ly <- ly[V(gr2)$name,,drop=FALSE]
         
         add.alpha <- function(col, alpha){
@@ -427,20 +427,20 @@ pgx.plotPartialCorrelationAroundGene <-
                 rgb(x[1], x[2], x[3], alpha=x[4], maxColorValue=255))  
         }
         ##p1 <- 0.8
-        p1 <- 0.8 * E(gr2)$rho
+        p1 <- 0.8 * igraph::E(gr2)$rho
         klrpal <- colorRampPalette(c("red3", "grey90","grey30"))(64)
         ##klrpal <- rev(grey.colors(64))
         klr <- klrpal[32 + 31*p1]
-        E(gr2)$color <- add.alpha(klr, 64*abs(p1))
+        igraph::E(gr2)$color <- add.alpha(klr, 64*abs(p1))
 
-        j <- which( V(gr2)$name == gene )
-        V(gr2)$label.cex <- 0.8
-        V(gr2)$size <- 10
-        V(gr2)$size[j] <- 16
-        V(gr2)$label.cex[j] <- 1.1
-        V(gr2)$color <- "skyblue"
-        V(gr2)$frame.color <- "grey50"        
-        V(gr2)$frame.color[j] <- "black"
+        j <- which( igraph::V(gr2)$name == gene )
+        igraph::V(gr2)$label.cex <- 0.8
+        igraph::V(gr2)$size <- 10
+        igraph::V(gr2)$size[j] <- 16
+        igraph::V(gr2)$label.cex[j] <- 1.1
+        igraph::V(gr2)$color <- "skyblue"
+        igraph::V(gr2)$frame.color <- "grey50"        
+        igraph::V(gr2)$frame.color[j] <- "black"
         
         par(mar=c(0,0,0,0))
         plot(gr2, layout=ly)
@@ -459,8 +459,8 @@ pgx.plotPartialCorrelationAroundGene <-
 pgx.testTraitRelationship <- function(me, df, plot=TRUE, cex=1)
 {
 
-    require(corrplot)
-    require(WGCNA)
+    
+    
 
     df <- type.convert(df)
     cl <- sapply(df,class)
@@ -477,7 +477,7 @@ pgx.testTraitRelationship <- function(me, df, plot=TRUE, cex=1)
     if(ncol(dc)) {
         rho.P <- matrix(NA,ncol(me),ncol(dc))
         i=1;j=2
-        rho <- cor(me, dc, use="pairwise")
+        rho <- WGCNA::cor(me, dc, use="pairwise")
         rho.P <- cor.pvalue(P, nrow(me))
         dim(rho.P)
     }
@@ -501,11 +501,11 @@ pgx.testTraitRelationship <- function(me, df, plot=TRUE, cex=1)
         
     if(plot==TRUE) {
 
-        require(corrplot)    
+            
         sigP <- -log10(P+1e-8)
         sigP <- (1 - P)**1
         ##par(oma=c(0,0,0,1))
-        corrplot( sigP, is.corr=FALSE, ##type="upper",
+        psych::cor.plot( sigP, is.corr=FALSE, ##type="upper",
                  mar = c(0,0,0,2),
                  ##p.mat = Q, sig.level = 0.05, ##insig = "blank",
                  tl.cex = cex, tl.col="black", tl.offset = 1,
@@ -523,7 +523,7 @@ pgx.testTraitRelationship <- function(me, df, plot=TRUE, cex=1)
 pgx.testPhenoCorrelation <- function(df, plot=TRUE, cex=1)
 {
 
-    require(corrplot)
+    
     
     cl <- sapply(df,class)
     nlev = apply(df,2,function(x) length(unique(x[!is.na(x)])))
@@ -615,12 +615,12 @@ pgx.testPhenoCorrelation <- function(df, plot=TRUE, cex=1)
     
     if(plot==TRUE) {
 
-        require(corrplot)    
+            
         logP <- -log10(P+1e-8)
         logQ <- -log10(Q+1e-8)
         diag(logQ) <- 0
         ##par(oma=c(0,0,0,1))
-        corrplot( logQ, is.corr=FALSE, type="upper",
+        psych::cor.plot( logQ, is.corr=FALSE, type="upper",
                  mar = c(0,0,0,2),
                  p.mat = Q, sig.level = 0.05, ##insig = "blank",
                  tl.cex = cex, tl.col="black", tl.offset = 1,
@@ -651,9 +651,9 @@ pgx.getGeneCorrelation <- function(gene, xref) {
             jj <- match(toupper(gene), toupper(rownames(xx)))
             tx = xx[jj,]
             if("dgCMatrix" %in% class(xx)) {
-                suppressWarnings( rho1 <- corSparse(xx, cbind(tx))[,1] )
+                suppressWarnings( rho1 <- qlcMatrix::corSparse(xx, cbind(tx))[,1] )
             } else {
-                suppressWarnings( rho1 <- cor(t(xx), tx)[,1])
+                suppressWarnings( rho1 <- WGCNA::cor(t(xx), tx)[,1])
             }
             if(sum(is.na(rho1))>0) rho1[which(is.na(rho1))] = 0
 
@@ -678,7 +678,7 @@ pgx.getGeneCorrelation <- function(gene, xref) {
             k <- which(colnames(R)=="gene sets")
             R[,"gene sets"] <- R[,"gene sets"] * sign(rowMeans(R[,-k,drop=FALSE],na.rm=TRUE))
         }
-        head(R)
+        Matrix::head(R)
     }
 
     return(R)

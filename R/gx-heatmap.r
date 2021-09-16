@@ -3,18 +3,18 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-require(gplots)
-require(RColorBrewer)
-bluered <- function(n=64) colorpanel(n,"blue","grey90","red")
-bluered <- function(n=64) colorpanel(n,"dodgerblue4","grey90","indianred3")
-bluered <- function(n=64) colorpanel(n,"royalblue3","grey90","indianred3")
+
+
+bluered <- function(n=64) gplots::colorpanel(n,"blue","grey90","red")
+bluered <- function(n=64) gplots::colorpanel(n,"dodgerblue4","grey90","indianred3")
+bluered <- function(n=64) gplots::colorpanel(n,"royalblue3","grey90","indianred3")
 
 gx.markermap <- function(X, splitx, n=5, ...)
 {
     F <- tapply(1:ncol(X), splitx, function(i) rowMeans(X[,i,drop=FALSE]))
     F <- do.call(cbind,F)
     F <- F - rowMeans(F)
-    topg <- apply(F,2,function(x) head(order(-x),n))
+    topg <- apply(F,2,function(x) Matrix::head(order(-x),n))
     topg <- apply(topg, 2, function(i) rownames(F)[i])
     gg <- as.vector(topg)
     gg.idx <- as.vector(sapply(colnames(topg),rep,n))
@@ -28,7 +28,7 @@ gx.PCAheatmap <- function(X, nv=5, ngenes=10, ...) {
     }
     X <- X - rowMeans(X,na.rm=TRUE)
     res <- irlba::irlba(X, nv=nv)
-    gg <- apply(res$u,2,function(x) head(rownames(X)[order(-abs(x))],ngenes))
+    gg <- apply(res$u,2,function(x) Matrix::head(rownames(X)[order(-abs(x))],ngenes))
     sx <- paste0("PC.",as.vector(sapply(1:nv,rep,10)))
     gx.splitmap( X[gg,], split=sx, ... )
 }
@@ -38,7 +38,7 @@ gx.PCAcomponents <- function(X, nv=20, ngenes) {
     res <- irlba::irlba(X - rowMeans(X), nv=nv)
     ##par(mfrow=c(5,4), mar=c(1,1,2,8))
     for(i in 1:nv) {
-        gg <- head(rownames(X)[order(-abs(res$u[,i]))],ngenes)
+        gg <- Matrix::head(rownames(X)[order(-abs(res$u[,i]))],ngenes)
         X1 <- X[gg,]
         X1 <- (X1 - rowMeans(X1)) / (1e-4 + apply(X1,1,sd)) ## scale??
         colnames(X1) <- NULL
@@ -49,11 +49,11 @@ gx.PCAcomponents <- function(X, nv=20, ngenes) {
 gx.imagemap <- function(X, main="", cex=1, clust=TRUE)
 {
     if(clust) {
-        ii <- hclust(dist(X))$order
-        jj <- hclust(dist(t(X)))$order
+        ii <- fastcluster::hclust(dist(X))$order
+        jj <- fastcluster::hclust(dist(t(X)))$order
         X <- X[ii,jj]
     }
-    image( 1:ncol(X), 1:nrow(X), t(X), xaxt="n", yaxt="n",
+    Matrix::image( 1:ncol(X), 1:nrow(X), t(X), xaxt="n", yaxt="n",
           xlab="", ylab="")
     mtext(colnames(X), side=1, at=1:ncol(X), las=3,
           cex=0.75*cex, line=0.5 )
@@ -81,11 +81,11 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                         show_rownames=nmax, lab.len=80, key.offset=c(0.05,1.01),
                         show_colnames=NULL, use.nclust=FALSE)
 {
-    require("ComplexHeatmap")
-    require("RColorBrewer")
-    require("fastcluster")
-    ht_global_opt(fast_hclust = TRUE)
-    ##require(heatmap3)
+    
+    
+    
+    ComplexHeatmap::ht_global_opt(fast_hclust = TRUE)
+    ##
     par(xpd=FALSE)
     
     if(0) {
@@ -157,11 +157,11 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     }
     if("row.bmc" %in% scale && !is.null(splitx)) {
         if(class(splitx)=="numeric" && length(splitx)==1 ) {
-            ##require(nclust)
-            require(fastcluster)
-            ii <- head(order(-apply(gx,1,sd,na.rm=TRUE)),1000) ## NEED RETHINK!
-            system.time( hc <- fastcluster::hclust(as.dist(1 - cor(gx[ii,])), method="ward.D2" ))
-            ##system.time( hc <- nclust( as.dist(1 - cor(gx)), link="ward" ))
+            ##
+            
+            ii <- Matrix::head(order(-apply(gx,1,sd,na.rm=TRUE)),1000) ## NEED RETHINK!
+            system.time( hc <- fastcluster::hclust(as.dist(1 - WGCNA::cor(gx[ii,])), method="ward.D2" ))
+            ##system.time( hc <- nclust( as.dist(1 - WGCNA::cor(gx)), link="ward" ))
             splitx = paste0("cluster",cutree(hc, splitx))
             names(splitx) <- colnames(gx)
         }
@@ -188,11 +188,11 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     jj2 <- 1:ncol(gx)
     if(!is.null(nmax) && nmax < nrow(gx) && nmax>0 ) {
         ##cat("restricting to top",nmax,"maxSD genes\n")
-        jj1 <- head(order(-apply(gx,1,sd,na.rm=TRUE) ),nmax)
+        jj1 <- Matrix::head(order(-apply(gx,1,sd,na.rm=TRUE) ),nmax)
     }
     if(!is.null(cmax) && cmax < ncol(gx) && cmax>0 ) {
         ##cat("restricting to top",cmax,"maxSD samples\n")
-        jj2 <- head(order(-apply(gx,2,sd,na.rm=TRUE)),cmax)
+        jj2 <- Matrix::head(order(-apply(gx,2,sd,na.rm=TRUE)),cmax)
     }
     gx <- gx[jj1,jj2]
     if(!is.null(row.annot)) {
@@ -211,10 +211,10 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     do.splitx
     idx2 = NULL
     if(do.splitx && class(splitx)=="numeric" && length(splitx)==1 ) {
-        ##require(nclust)
-        require(fastcluster)
-        system.time( hc <- fastcluster::hclust( as.dist(1 - cor(gx)), method="ward.D2" ))
-        ##system.time( hc <- nclust( as.dist(1 - cor(gx)), link="ward" ))
+        ##
+        
+        system.time( hc <- fastcluster::hclust( as.dist(1 - WGCNA::cor(gx)), method="ward.D2" ))
+        ##system.time( hc <- nclust( as.dist(1 - WGCNA::cor(gx)), link="ward" ))
         idx2 = paste0("cluster",cutree(hc, splitx))
     }
     if(do.splitx && class(splitx)=="character" && length(splitx)==1 &&
@@ -242,7 +242,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     do.split
     split.idx = NULL
     if(do.split && class(split)=="numeric" && length(split)==1 ) {
-        cor.gx <- cor(t(gx),use="pairwise")
+        cor.gx <- WGCNA::cor(t(gx),use="pairwise")
         cor.gx[is.na(cor.gx)] <- 0
         hc = fastcluster::hclust( as.dist(1 - cor.gx), method="ward.D2" )
         split.idx = paste0("group",cutree(hc, split))
@@ -281,7 +281,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     if(!cluster_columns && !is.null(sort_columns)) {
         y <- col.annot[,sort_columns,drop=FALSE]
         y1 <- as.integer(factor(y))
-        jj <- hclust(dist(t(gx)),method="ward.D2")$order
+        jj <- fastcluster::hclust(dist(t(gx)),method="ward.D2")$order
         jj <- jj[order(1e6*y1[jj] + 1:length(jj))]
         gx <- gx[,jj]
         col.annot <- col.annot[jj,]
@@ -329,20 +329,20 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         for(i in 1:ngrp) {
             jj = grp[[i]]
             ##ap <- list(labels_gp=gpar(fontsize=6*cexRow))
-            ap <- list( title_gp = gpar(fontsize=3.5*annot.ht),
-                       labels_gp = gpar(fontsize=3.1*annot.ht),
-                       grid_width = unit(1*annot.ht, "mm"),
-                       grid_height = unit(1*annot.ht, "mm"))
+            ap <- list( title_gp = grid::gpar(fontsize=3.5*annot.ht),
+                       labels_gp = grid::gpar(fontsize=3.1*annot.ht),
+                       grid_width = grid::unit(1*annot.ht, "mm"),
+                       grid_height = grid::unit(1*annot.ht, "mm"))
             aa <- rep(list(ap), ncol(col.annot))
             names(aa) <- colnames(col.annot)
-            col.ha[[i]] = HeatmapAnnotation(
+            col.ha[[i]] = ComplexHeatmap::HeatmapAnnotation(
                 df = col.annot[jj,,drop=FALSE],
                 col = col.colors,  na_col='#FCFCFC',
-                ##annotation_height = unit(annot.ht, "mm"),
-                simple_anno_size = unit(0.85*annot.ht,"mm"),  ## BioC 3.8!!
+                ##annotation_height = grid::unit(annot.ht, "mm"),
+                simple_anno_size = grid::unit(0.85*annot.ht,"mm"),  ## BioC 3.8!!
                 show_annotation_name = (i==ngrp),
                 show_legend = show_legend & (npar <= 20),
-                annotation_name_gp = gpar(fontsize=3.1*annot.ht),
+                annotation_name_gp = grid::gpar(fontsize=3.1*annot.ht),
                 annotation_legend_param = aa
             )
         }
@@ -366,19 +366,19 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
             if(any(is.na(x))) klrs = c(klrs, "NA"="grey90")
             row.colors[[prm]] = klrs
         }
-        ##row.ha = HeatmapAnnotation(
-        ##row.ha = Heatmap(
+        ##row.ha = ComplexHeatmap::HeatmapAnnotation(
+        ##row.ha = ComplexHeatmap::Heatmap(
         
-        row.ha = rowAnnotation(
+        row.ha = ComplexHeatmap::rowAnnotation(
             df = row.annot,
             col = row.colors,
             ##show_annotation_name = TRUE,
             show_annotation_name = show_colnames,
             show_legend = FALSE,
-            ##annotation_name_gp = gpar(fontsize=9*cexRow),
-            annotation_name_gp = gpar(fontsize=3.3*annot.ht),
-            simple_anno_size = unit(annot.ht,"mm"),  ## BioC 3.8!!
-            width = unit(annot.ht*ncol(row.annot),"mm")
+            ##annotation_name_gp = grid::gpar(fontsize=9*cexRow),
+            annotation_name_gp = grid::gpar(fontsize=3.3*annot.ht),
+            simple_anno_size = grid::unit(annot.ht,"mm"),  ## BioC 3.8!!
+            width = grid::unit(annot.ht*ncol(row.annot),"mm")
         )
     }
     
@@ -419,9 +419,9 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     if(!is.null(order.groups) && ngrp>1 && order.groups[1] == "clust") {
         ## Reorder cluster indices based on similarity clustering
         mx <- do.call(cbind, lapply(grp, function(i) rowMeans(gx[,i,drop=FALSE])))
-        ##mx <- head(mx[order(-apply(mx,1,sd)),],100)
+        ##mx <- Matrix::head(mx[order(-apply(mx,1,sd)),],100)
         mx <- t(scale(t(mx)))
-        grp.order <- hclust(dist(t(mx)))$order
+        grp.order <- fastcluster::hclust(dist(t(mx)))$order
     }
     if(!is.null(order.groups) && ngrp>1 && length(order.groups) == ngrp) {
         grp.order <- match(order.groups, names(grp))
@@ -435,23 +435,23 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         jj <- grp[[i]]
 
         coldistfun1 <- function(x) dist(x)
-        rowdistfun1 <- function(x,y) 1 - cor(x, y)
+        rowdistfun1 <- function(x,y) 1 - WGCNA::cor(x, y)
         gx0 <- gx[,jj,drop=FALSE]
         grp.title = names(grp)[i]
         ##grp.title = shortstring(names(grp)[i],15)
 
         gx0.colnames <- NULL
         if(show_colnames) {
-            gx0.colnames <- HeatmapAnnotation(
-                text = anno_text( colnames(gx0), rot=column_names_rot,
-                                 gp = gpar(fontsize=11*cexCol),                                 
-                                 location = unit(1, "npc"), just = "right"),                
-                annotation_height = max_text_width(
-                    colnames(gx0), gpar(fontsize=11*cexCol)) * sin((column_names_rot/180)*pi)
+            gx0.colnames <- ComplexHeatmap::HeatmapAnnotation(
+                text = ComplexHeatmap::anno_text( colnames(gx0), rot=column_names_rot,
+                                 gp = grid::gpar(fontsize=11*cexCol),                                 
+                                 location = grid::unit(1, "npc"), just = "right"),                
+                annotation_height = ComplexHeatmap::max_text_width(
+                    colnames(gx0), grid::gpar(fontsize=11*cexCol)) * sin((column_names_rot/180)*pi)
             )
         }
         
-        hmap = hmap + Heatmap( gx0,
+        hmap = hmap + ComplexHeatmap::Heatmap( gx0,
                               ##col = col,  ## from input
                               col = col_scale,  ## from input
                               cluster_rows=cluster_rows,
@@ -466,20 +466,20 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                               clustering_method_columns = "ward.D2",
                               show_heatmap_legend = FALSE,
                               split = split.idx,
-                              row_title_gp = gpar(fontsize = 11),  ## cluster titles
-                              row_names_gp = gpar(fontsize = 10*cexRow),
+                              row_title_gp = grid::gpar(fontsize = 11),  ## cluster titles
+                              row_names_gp = grid::gpar(fontsize = 10*cexRow),
                               top_annotation = col.ha[[i]],
-                              ## top_annotation_height = unit(annot.ht*ncol(col.annot), "mm"),
+                              ## top_annotation_height = grid::unit(annot.ht*ncol(col.annot), "mm"),
                               column_title = grp.title,
                               name = names(grp)[i],
                               column_title_rot = column_title_rot,
-                              column_title_gp = gpar(fontsize = 11*title_cex, fontface='plain'),
-                              ##column_title_gp = gpar(fontsize = 11*title_cex, fontface='bold')
+                              column_title_gp = grid::gpar(fontsize = 11*title_cex, fontface='plain'),
+                              ##column_title_gp = grid::gpar(fontsize = 11*title_cex, fontface='bold')
                               show_row_names=FALSE,
                               ##show_column_names=show_colnames,
                               show_column_names = FALSE,
                               bottom_annotation = gx0.colnames,
-                              column_names_gp = gpar(fontsize = 11*cexCol)
+                              column_names_gp = grid::gpar(fontsize = 11*cexCol)
                               )
     }
     
@@ -495,16 +495,16 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                 ii[head(order(-apply(gx[ii,,drop=FALSE],1,sd,na.rm=TRUE)),nshow)] )
             subset <- unlist(subidx)
         } else {
-            subset = head(order(-apply(gx,1,sd,na.rm=TRUE)), show_rownames )
+            subset = Matrix::head(order(-apply(gx,1,sd,na.rm=TRUE)), show_rownames )
         }
         lab = rownames(gx)[subset]
         lab <- substring(lab,1,lab.len)
-        rownames.ha = rowAnnotation(
+        rownames.ha = ComplexHeatmap::rowAnnotation(
             ##link = row_anno_link(at = subset, labels=lab,
-            link = anno_mark(at = subset, labels=lab,
-                             link_width = unit(0.8,"cm"),
-                             labels_gp = gpar(fontsize = 10*cexRow)),
-            width = unit(0.8,"cm") + 0.8*max_text_width(lab))
+            link = ComplexHeatmap::anno_mark(at = subset, labels=lab,
+                             link_width = grid::unit(0.8,"cm"),
+                             labels_gp = grid::gpar(fontsize = 10*cexRow)),
+            width = grid::unit(0.8,"cm") + 0.8*max_text_width(lab))
     }
    
     if(1 && is.null(rownames.ha) && show_rownames>0 ) {
@@ -514,14 +514,14 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         ## rowlab = paste0(rowlab,'............')
         rownames(empty.mat) = rowlab
         if(!is.null(col.annot)) rowlab <- c(rowlab, colnames(col.annot))
-        textwidth <- max_text_width(
+        textwidth <- ComplexHeatmap::max_text_width(
             paste0(rowlab,"XXXXXXXXXX"),
-            gp = gpar(fontsize = 10*cexRow))        
-        textwidth <- unit(rownames_width,'mm')        
-        rownames.ha = Heatmap(
+            gp = grid::gpar(fontsize = 10*cexRow))        
+        textwidth <- grid::unit(rownames_width,'mm')        
+        rownames.ha = ComplexHeatmap::Heatmap(
             empty.mat,
             row_names_max_width = textwidth,
-            row_names_gp = gpar(fontsize = 10*cexRow),
+            row_names_gp = grid::gpar(fontsize = 10*cexRow),
             show_row_names = show_rownames>0 )
     }
 
@@ -535,18 +535,18 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     }
     
     ##draw(hmap, annotation_legend_side="right")
-    draw(hmap, annotation_legend_side="right",
-         padding = unit(mar, "mm"), gap = unit(1.0,"mm") )
+    ComplexHeatmap::draw(hmap, annotation_legend_side="right",
+         padding = grid::unit(mar, "mm"), gap = grid::unit(1.0,"mm") )
     ##hmap
 
     if(show_key && !is.null(col_scale)) {
         brk <- attr(col_scale,"breaks")
-        lgd = Legend(col_fun = col_scale, at=brk[c(1,3)], labels=round(brk[c(1,3)],2),
-                     border = "transparent", labels_gp = gpar(fontsize = 8), 
-                     legend_width = unit(0.08, "npc"), legend_height = unit(0.01, "npc"),
+        lgd = ComplexHeatmap::Legend(col_fun = col_scale, at=brk[c(1,3)], labels=round(brk[c(1,3)],2),
+                     border = "transparent", labels_gp = grid::gpar(fontsize = 8), 
+                     legend_width = grid::unit(0.08, "npc"), legend_height = grid::unit(0.01, "npc"),
                      title = "\n", direction = "horizontal")
         ##key.offset=c(0.05,1.01)
-        draw(lgd, x=unit(key.offset[1], "npc"), y=unit(key.offset[2], "npc"), just=c("left", "top"))
+        ComplexHeatmap::draw(lgd, x=grid::unit(key.offset[1], "npc"), y=grid::unit(key.offset[2], "npc"), just=c("left", "top"))
     }
     
     ##res <- c()
@@ -561,8 +561,8 @@ gx.heatmap <- function(gx, values=NULL,
                        dist.method="pearson",
                        col.dist.method="euclidean",
                        plot.method="heatmap.2",
-                       col = bluered(), softmax=FALSE,
-                       ##col = colorpanel(64,"blue","grey90","red"),
+                       col = gplots::bluered(), softmax=FALSE,
+                       ##col = gplots::colorpanel(64,"blue","grey90","red"),
                        scale="row", verbose=1, symm=FALSE,
                        ## Rowv = NA, Colv = NA,
                        col.annot=NULL, row.annot=NULL, annot.ht=1,
@@ -579,8 +579,8 @@ gx.heatmap <- function(gx, values=NULL,
         col.annot=NULL; row.annot=NULL; nmax=1000; cmax=NULL; indent.names=FALSE
     }
 
-    require("gplots")
-    ##require(heatmap3)
+    
+    ##
     par(xpd=FALSE)
 
     if(verbose>1) cat("input.dim.gx=",dim(gx),"\n")
@@ -617,11 +617,11 @@ gx.heatmap <- function(gx, values=NULL,
     jj2 <- 1:ncol(gx)
     if(!is.null(nmax) && nmax < nrow(gx) && nmax>0 ) {
         ##cat("restricting to top",nmax,"maxSD genes\n")
-        jj1 <- head(order(-apply(gx,1,sd,na.rm=TRUE) ),nmax)
+        jj1 <- Matrix::head(order(-apply(gx,1,sd,na.rm=TRUE) ),nmax)
     }
     if(!is.null(cmax) && cmax < ncol(gx) && cmax>0 ) {
         ##cat("restricting to top",cmax,"maxSD samples\n")
-        jj2 <- head(order(-apply(gx,2,sd,na.rm=TRUE)),cmax)
+        jj2 <- Matrix::head(order(-apply(gx,2,sd,na.rm=TRUE)),cmax)
     }
     if(symm && ncol(gx)==nrow(gx)) {
         jj2 <- jj1
@@ -644,7 +644,7 @@ gx.heatmap <- function(gx, values=NULL,
     h1 <- NULL
     if(!is.null(clust.method) ) {
         if(col.dist.method=="pearson") {
-            suppressWarnings( cx <- cor(gx,use="pairwise.complete.obs") )
+            suppressWarnings( cx <- WGCNA::cor(gx,use="pairwise.complete.obs") )
             cx[is.na(cx)] <- 0 ## really???
             d1 <- as.dist(1 - cx)
         } else if (col.dist.method %in% c("multi.dist","multidist")) {
@@ -657,7 +657,7 @@ gx.heatmap <- function(gx, values=NULL,
             if(any(is.na(gx0))) gx0 <- fillNA(gx0)
             d1 <- dist(gx0, method=col.dist.method)
         }
-        h1 <- hclust(d1, method=clust.method)
+        h1 <- fastcluster::hclust(d1, method=clust.method)
         ##h1 <- as.dendrogram(h1)
     }
 
@@ -667,7 +667,7 @@ gx.heatmap <- function(gx, values=NULL,
         h2 <- h1
     } else if(!is.null(clust.method) ) {
         if(dist.method=="pearson") {
-            suppressWarnings( cx <- cor(t(gx),use="pairwise.complete.obs") )
+            suppressWarnings( cx <- WGCNA::cor(t(gx),use="pairwise.complete.obs") )
             cx[is.na(cx)] <- 0
             d2 <- as.dist(1 - cx)
         } else if (dist.method %in% c("multi.dist","multidist")) {
@@ -679,7 +679,7 @@ gx.heatmap <- function(gx, values=NULL,
             if(any(is.na(gx0))) gx0 <- fillNA(gx0)
             d2 <- dist(gx0, method=dist.method)
         }
-        h2 <- hclust( d2 , method=clust.method)
+        h2 <- fastcluster::hclust( d2 , method=clust.method)
         ##h2 <- as.dendrogram(h2)
     }
     dd <- c("both","row","column","none")[1 + 1*is.null(h1) + 2*is.null(h2)]
@@ -715,7 +715,7 @@ gx.heatmap <- function(gx, values=NULL,
         cc0 = t(apply(ry,1,function(x) rev(grey.colors(max(x,na.rm=TRUE)))[x]))
         jj = which(apply(cc0,1,function(x) length(unique(x))) > 3 & !is.num)
         if(length(jj)) {
-            require(RColorBrewer)
+            
             klrs = rep(RColorBrewer::brewer.pal(8,"Set2"),99)
             klrs.mat <- matrix(klrs[ry[jj,,drop=FALSE]+1], nrow=length(jj))
             cc0[jj,] <- klrs.mat
@@ -737,7 +737,7 @@ gx.heatmap <- function(gx, values=NULL,
         cc1 = t(apply(ry,1,function(x) rev(grey.colors(max(x,na.rm=TRUE)))[x]))
         jj = which(apply(cc1,1,function(x) length(unique(x))) > 3)
         if(length(jj)) {
-            require(RColorBrewer)
+            
             klrs = rep(RColorBrewer::brewer.pal(8,"Set2"),99)
             cc1[jj,,drop=FALSE] <- matrix(klrs[ry[jj,,drop=FALSE]+1], nrow=length(jj))
         }
@@ -750,8 +750,8 @@ gx.heatmap <- function(gx, values=NULL,
     ##-------------------------------------------------------------    
     if(!is.null(values)) gx <- values[rownames(gx),colnames(gx)]
     if(softmax) gx <- tanh(0.5* gx / sd(gx))  ## just for plotting...
-    ##if(all(gx>=0)) col <- tail(col,length(col)/2)
-    ##if(all(gx<=0)) col <- head(col,length(col)/2)
+    ##if(all(gx>=0)) col <- Matrix::tail(col,length(col)/2)
+    ##if(all(gx<=0)) col <- Matrix::head(col,length(col)/2)
     side.height <- 0.1 * annot.ht * NCOL(cc0)
 
     if(!show_colnames) {
@@ -841,13 +841,13 @@ gx.heatmap <- function(gx, values=NULL,
     }  else {
         if(verbose>1) cat("plotting with heatmap.2\n")
         if(is.null(h1) && is.null(h2))  {
-            heatmap.2(gx, Colv=NULL, Rowv=NULL,
+            gplots::heatmap.2(gx, Colv=NULL, Rowv=NULL,
                       dendrogram=dd, col=col, scale="none",
                       ##side.height.fraction=side.height,
                       ##symkey=sym, symbreaks=sym, trace="none")
                       symkey=sym0, symbreaks=sym0, trace="none", ...)
         } else {
-            heatmap.2(gx, Colv=as.dendrogram(h1), Rowv=as.dendrogram(h2),
+            gplots::heatmap.2(gx, Colv=as.dendrogram(h1), Rowv=as.dendrogram(h2),
                       dendrogram=dd, col=col, scale="none",
                       ##side.height.fraction=side.height,
                       ##symkey=sym, symbreaks=sym, trace="none")
@@ -869,36 +869,36 @@ clustermap <- function(x, nc=6, nr=6, na=4, q=0.80, p=2,
                        labrow=rownames(x), labcol=colnames(x),
                        ...)
 {
-    require(gplots)
-    require(heatmap3)
+    
+    
     ## non-linear transformation
     ## x <- abs(x)**p * sign(x)
     ##x[is.na(x)] <- 0
 
     if(method=="pearson") {
-        ##d1 <- as.dist(1 - cor(t(x),use="pairwise")) ## rows
-        d1 <- as.dist( cor(t(x),use="pairwise")) ## rows:=drugs
-        d2 <- as.dist( cor(x,use="pairwise")) ## cols:=samples
+        ##d1 <- as.dist(1 - WGCNA::cor(t(x),use="pairwise")) ## rows
+        d1 <- as.dist( WGCNA::cor(t(x),use="pairwise")) ## rows:=drugs
+        d2 <- as.dist( WGCNA::cor(x,use="pairwise")) ## cols:=samples
         d1[is.na(d1)] <- mean(d1,na.rm=TRUE)
         d2[is.na(d2)] <- mean(d2,na.rm=TRUE)
         d1 <- (max(d1) - d1)**(p/2)
         d2 <- (max(d2) - d2)**(p/2)
-        h1 <- hclust( d1, method="ward.D2" )
-        h2 <- hclust( d2, method="ward.D2" )
+        h1 <- fastcluster::hclust( d1, method="ward.D2" )
+        h2 <- fastcluster::hclust( d2, method="ward.D2" )
     } else if(method=="minkowski") {
         d1 <- dist( x, method="minkowski",p=p)
         d2 <- dist( t(x), method="minkowski",p=p)
         d1[is.na(d1)] <- mean(d1,na.rm=TRUE)
         d2[is.na(d2)] <- mean(d2,na.rm=TRUE)
-        h1 <- hclust( d1, method="ward.D2" )
-        h2 <- hclust( d2, method="ward.D2" )
+        h1 <- fastcluster::hclust( d1, method="ward.D2" )
+        h2 <- fastcluster::hclust( d2, method="ward.D2" )
     } else if(method %in% c("multi.dist","multidist")) {
         d1 <- multi.dist( x )
         d2 <- multi.dist( t(x) )
         d1[is.na(d1)] <- mean(d1,na.rm=TRUE)
         d2[is.na(d2)] <- mean(d2,na.rm=TRUE)
-        h1 <- hclust( d1, method="ward.D2" )
-        h2 <- hclust( d2, method="ward.D2" )
+        h1 <- fastcluster::hclust( d1, method="ward.D2" )
+        h2 <- fastcluster::hclust( d2, method="ward.D2" )
     } else {
         stop("unknown distance method: ",method)
     }
@@ -936,12 +936,12 @@ clustermap <- function(x, nc=6, nr=6, na=4, q=0.80, p=2,
     ## order annotation
     order.annot <- function(A, kx, c1, n) {
         mkx <- apply( kx, 2, function(x) tapply(x,c1,mean))
-        rho1 <- cor(t(A),t(mkx),use="pairwise")
+        rho1 <- WGCNA::cor(t(A),t(mkx),use="pairwise")
         r <- apply(-abs(rho1),2,order)
         jj <- unique(as.vector(t(r)))
         A <- A[jj,,drop=FALSE]
         A <- A[!duplicated(A),,drop=FALSE]
-        head(A,n)
+        Matrix::head(A,n)
     }
 
     ## create annotation side bars
@@ -958,14 +958,14 @@ clustermap <- function(x, nc=6, nr=6, na=4, q=0.80, p=2,
         col.annot <- (col.annot - rowMeans(col.annot,na.rm=TRUE)) /
             (1e-8+apply(col.annot,1,sd,na.rm=TRUE))
         d3 <- dist(col.annot)
-        d3 <- as.dist(1 - cor(t(col.annot),use="pairwise"))
+        d3 <- as.dist(1 - WGCNA::cor(t(col.annot),use="pairwise"))
         d3[is.na(d3)] <- mean(d3,na.rm=TRUE) ## impute missing...
-        h3 <- hclust(d3,method="ward.D2")
+        h3 <- fastcluster::hclust(d3,method="ward.D2")
         ##h3 <- corclust(ax)
         na0 <- min(na,dim(col.annot))
         col.annot <- kxmap(col.annot, cutree(h3,na0), c2, q=q)
         col.annot <- col.annot[h3$order,,drop=FALSE]
-        ## image( col.annot[,h2$order], col=my.col)
+        ## Matrix::image( col.annot[,h2$order], col=my.col)
         ry <- t(apply(col.annot,1,rank,na.last="keep"))
         ry <- ry - apply(ry,1,min,na.rm=TRUE)
         ry <- (ry / (apply(ry,1,max,na.rm=TRUE) + 1e-8))*31
@@ -977,7 +977,7 @@ clustermap <- function(x, nc=6, nr=6, na=4, q=0.80, p=2,
         cc0 <- t(cc0)
     }
     if(FALSE && !is.null(row.annot)) {
-        jj <- hclust(dist(t(row.annot)))$order
+        jj <- fastcluster::hclust(dist(t(row.annot)))$order
         row.annot <- row.annot[,jj]
         ry <- apply(row.annot,2,rank,na.last="keep")
         ry <- t(t(ry) - apply(ry,2,min,na.rm=TRUE))
@@ -1032,19 +1032,19 @@ frozenmap <- function(x, m=8, n=8, ...) {
         if(dist.method=="multi.dist") {
             d <- multi.dist(x)
         } else if(dist.method=="pearson") {
-            d <- as.dist( 1 - cor(t(x),use="pairwise") )
+            d <- as.dist( 1 - WGCNA::cor(t(x),use="pairwise") )
             d[is.na(d)] <- mean(d,na.rm=TRUE)
         } else {
             d <- dist(x)
         }
-        h <- hclust(d)
+        h <- fastcluster::hclust(d)
         idx <- cutree(h, k=n)
         ordx <- -apply(h$merge,1,min)
         ordx <- ordx[ordx>0]
         sdx <- apply(x,1,sd,na.rm=TRUE)
         midx  <- function(j) j[which.min(match(j,ordx))]
         maxsd  <- function(j) j[which.max(sdx[j])]
-        maxsd2  <- function(j,k) head(j[order(-sdx[j])],k)
+        maxsd2  <- function(j,k) Matrix::head(j[order(-sdx[j])],k)
         ii <- sapply(1:n, function(i) which(idx==i))
         ##jj <- sapply(1:n, function(i) midx(which(idx==i)))
         ##jj <- sapply(1:n, function(i) maxsd(which(idx==i)))
@@ -1075,7 +1075,7 @@ multi.dist <- function(x, p=4, method=c("pearson","euclidean","manhattan"))
     for(this.x in xx) {
         for(m in method) {
             if(m=="pearson") {
-                d1 <- as.dist( 1 - cor(t(this.x),use="pairwise"))
+                d1 <- as.dist( 1 - WGCNA::cor(t(this.x),use="pairwise"))
             } else {
                 d1 <- dist( this.x, method=m, p=p)
             }
@@ -1384,12 +1384,12 @@ heatmap.3 <- function(x,
     op <- par(no.readonly = TRUE)
     on.exit(par(op))
 
-    layout(lmat, widths = lwid, heights = lhei, respect = FALSE)
+    plotly::layout(lmat, widths = lwid, heights = lhei, respect = FALSE)
 
     if (!missing(RowSideColors)) {
         if (!is.matrix(RowSideColors)){
                 par(mar = c(margins[1], 0, 0, 0.5))
-                image(rbind(1:nr), col = RowSideColors[rowInd], axes = FALSE)
+                Matrix::image(rbind(1:nr), col = RowSideColors[rowInd], axes = FALSE)
         } else {
             par(mar = c(margins[1], 0, 0, 0.5))
             rsc = t(RowSideColors[,rowInd, drop=F])
@@ -1402,7 +1402,7 @@ heatmap.3 <- function(x,
                 rsc.i = rsc.i + 1
             }
             rsc = matrix(as.numeric(rsc), nrow = dim(rsc)[1])
-            image(t(rsc), col = as.vector(rsc.colors), axes = FALSE)
+            Matrix::image(t(rsc), col = as.vector(rsc.colors), axes = FALSE)
             if (length(colnames(RowSideColors)) > 0) {
                 axis(1, 0:(dim(rsc)[2] - 1)/(dim(rsc)[2] - 1), colnames(RowSideColors), las = 2, tick = FALSE)
             }
@@ -1413,7 +1413,7 @@ heatmap.3 <- function(x,
 
         if (!is.matrix(ColSideColors)){
             par(mar = c(0.5, 0, 0, margins[2]))
-            image(cbind(1:nc), col = ColSideColors[colInd], axes = FALSE)
+            Matrix::image(cbind(1:nc), col = ColSideColors[colInd], axes = FALSE)
         } else {
             par(mar = c(0.5, 0, 0, margins[2]))
             csc = ColSideColors[colInd, , drop=F]
@@ -1426,7 +1426,7 @@ heatmap.3 <- function(x,
                 csc.i = csc.i + 1
             }
             csc = matrix(as.numeric(csc), nrow = dim(csc)[1])
-            image(csc, col = as.vector(csc.colors), axes = FALSE)
+            Matrix::image(csc, col = as.vector(csc.colors), axes = FALSE)
             if (length(colnames(ColSideColors)) > 0) {
                 axis(2, 0:(dim(csc)[2] - 1)/max(1,(dim(csc)[2] - 1)), colnames(ColSideColors), las = 2, tick = FALSE)
             }
@@ -1444,7 +1444,7 @@ heatmap.3 <- function(x,
         cellnote <- cellnote[, iy]
     }
     else iy <- 1:nr
-    image(1:nc, 1:nr, x, xlim = 0.5 + c(0, nc), ylim = 0.5 + c(0, nr), axes = FALSE, xlab = "", ylab = "", col = col, breaks = breaks, ...)
+    Matrix::image(1:nc, 1:nr, x, xlim = 0.5 + c(0, nc), ylim = 0.5 + c(0, nr), axes = FALSE, xlab = "", ylab = "", col = col, breaks = breaks, ...)
     retval$carpet <- x
     if (exists("ddr"))
         retval$rowDendrogram <- ddr
@@ -1452,9 +1452,9 @@ heatmap.3 <- function(x,
         retval$colDendrogram <- ddc
     retval$breaks <- breaks
     retval$col <- col
-    if (!invalid(na.color) & any(is.na(x))) { # load library(gplots)
+    if (!invalid(na.color) & any(is.na(x))) { # load 
         mmat <- ifelse(is.na(x), 1, NA)
-        image(1:nc, 1:nr, mmat, axes = FALSE, xlab = "", ylab = "",
+        Matrix::image(1:nc, 1:nr, mmat, axes = FALSE, xlab = "", ylab = "",
             col = na.color, add = TRUE)
     }
     axis(1, 1:nc, labels = labCol, las = 2, line = -0.5, tick = 0,
@@ -1531,7 +1531,7 @@ heatmap.3 <- function(x,
         }
 
         z <- seq(min.raw, max.raw, length = length(col))
-        image(z = matrix(z, ncol = 1), col = col, breaks = tmpbreaks,
+        Matrix::image(z = matrix(z, ncol = 1), col = col, breaks = tmpbreaks,
             xaxt = "n", yaxt = "n")
         par(usr = c(0, 1, 0, 1))
         lv <- pretty(breaks)

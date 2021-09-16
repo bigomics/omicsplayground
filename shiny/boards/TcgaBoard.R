@@ -1,18 +1,18 @@
 TcgaInputs <- function(id) {
-    ns <- NS(id)  ## namespace
-    tagList(
-        uiOutput(ns("description")),
-        uiOutput(ns("inputsUI"))
+    ns <- shiny::NS(id)  ## namespace
+    shiny::tagList(
+        shiny::uiOutput(ns("description")),
+        shiny::uiOutput(ns("inputsUI"))
     )
 }
 
 TcgaUI <- function(id) {
-    ns <- NS(id)  ## namespace
-    fillCol(
+    ns <- shiny::NS(id)  ## namespace
+    shiny::fillCol(
         height = 750,
-        tabsetPanel(
+        shiny::tabsetPanel(
             id = ns("tabs1"),
-            tabPanel("TCGA survival", uiOutput(ns("TCGAanalysis_UI")))
+            shiny::tabPanel("TCGA survival", shiny::uiOutput(ns("TCGAanalysis_UI")))
         )
     )
 }
@@ -29,7 +29,7 @@ TcgaBoard <- function(input, output, session, env)
     selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     
     description = "<b>TCGA analysis (beta)</b>. Correlate your signature with the survival in cancer patients from the TCGA database. Warning: EXPERIMENTAL."
-    output$description <- renderUI(HTML(description))
+    output$description <- shiny::renderUI(shiny::HTML(description))
 
     tcga_infotext =
         "This <strong>TCGA analysis module</strong> computes the survival probability in (more than 10000) cancer patients of 32 TCGA cancer types, for your selected contrast. Each cohort is dichotomized into positively and negatively correlated with your signature. The survival probabilities are computed and tested using the Kaplan-Meier method.
@@ -40,41 +40,41 @@ TcgaBoard <- function(input, output, session, env)
     ##========================= INPUTS UI ============================================
     ##================================================================================    
 
-    output$inputsUI <- renderUI({
-        ui <- tagList(
+    output$inputsUI <- shiny::renderUI({
+        ui <- shiny::tagList(
             tags$head(tags$style("#tcga-genelist.form-control {font-size:11px !important;padding:3px;height:200px;}")),
-            tipify( actionLink(ns("tcga_info"), "Info", icon = icon("info-circle")),
+            shinyBS::tipify( shiny::actionLink(ns("tcga_info"), "Info", icon = shiny::icon("info-circle")),
                    "Show more information about this module"),
-            hr(), br(),
-            tipify( radioButtons( ns('sigtype'),"Signature type:",
+            shiny::hr(), shiny::br(),
+            shinyBS::tipify( shiny::radioButtons( ns('sigtype'),"Signature type:",
                                  choices=c("contrast","genelist"),
                                  selected="contrast", inline=TRUE),
                    "number of top genes to show",
                     placement="right", options = list(container = "body")),            
-            conditionalPanel(
+            shiny::conditionalPanel(
                 "input.sigtype == 'contrast'", ns=ns,
-                tipify( selectInput(ns('contrast'),NULL, choices=NULL, multiple=FALSE),
+                shinyBS::tipify( shiny::selectInput(ns('contrast'),NULL, choices=NULL, multiple=FALSE),
                    "Select the contrast that you want to correlate with survival.",
                    placement="right", options = list(container = "body")
                    ),
             ),
-            conditionalPanel(
+            shiny::conditionalPanel(
                 "input.sigtype == 'genelist'", ns=ns,
-                tipify( textAreaInput(ns("genelist"), NULL, value = NULL,
+                shinyBS::tipify( shiny::textAreaInput(ns("genelist"), NULL, value = NULL,
                                       height = "100px", width = "100%", 
                                       rows=4, placeholder="Paste your custom gene list"),
                        "Paste a custom list of genes to be used as features.",
                        placement="bottom")
             ),
-            br(),
-            tipify( actionLink(ns("tcga_options"), "Options",
+            shiny::br(),
+            shinyBS::tipify( shiny::actionLink(ns("tcga_options"), "Options",
                                icon=icon("cog", lib = "glyphicon")),
                    "Toggle advanced options.",
                    placement="top", options = list(container = "body"))
-            ## br(),br(),            
-            ## conditionalPanel(
+            ## shiny::br(),br(),            
+            ## shiny::conditionalPanel(
             ##     "input.tcga_options % 2 == 1", ns=ns,
-            ##     tipify( selectInput(ns('tcga_profiledb'),"Profile DB:",
+            ##     shinyBS::tipify( shiny::selectInput(ns('tcga_profiledb'),"Profile DB:",
             ##                         choices=NULL, multiple=TRUE),
             ##            "Select external database for reference profiles.",
             ##            placement="top", options = list(container = "body"))
@@ -82,28 +82,28 @@ TcgaBoard <- function(input, output, session, env)
         )
         ui
     })
-    outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
         
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
     
-    observeEvent( input$tcga_info, {
-        showModal(modalDialog(
-            title = HTML("<strong>TCGA Analysis Board</strong>"),
-            HTML(tcga_infotext),
+    shiny::observeEvent( input$tcga_info, {
+        shiny::showModal(shiny::modalDialog(
+            title = shiny::HTML("<strong>TCGA Analysis Board</strong>"),
+            shiny::HTML(tcga_infotext),
             easyClose = TRUE, size="l" ))
     })
 
     ## update choices upon change of data set 
-    observe({
+    shiny::observe({
         ngs <- inputData()
         ##req(ngs)
         if(is.null(ngs)) return(NULL)
         comparisons <- colnames(ngs$model.parameters$contr.matrix)
         comparisons <- sort(comparisons)
-        updateSelectInput(session, "contrast", choices=comparisons,
+        shiny::updateSelectInput(session, "contrast", choices=comparisons,
                           selected = head(comparisons,1))
         
     })
@@ -118,20 +118,20 @@ TcgaBoard <- function(input, output, session, env)
         file.path(dir[1],file)
     }
     
-     tcga_tcgasurv.RENDER %<a-% reactive({
+     tcga_tcgasurv.RENDER %<a-% shiny::reactive({
 
         ngs <- inputData()
-        req(ngs)
+        shiny::req(ngs)
 
         if(input$sigtype == 'contrast') {
             contrast = 1
             contrast <- input$contrast
-            req(contrast)
+            shiny::req(contrast)
             res = pgx.getMetaFoldChangeMatrix(ngs, what="meta")
             names(res)
             sig <- res$fc[,contrast]
         } else if(input$sigtype == 'genelist') {
-            req(input$genelist)
+            shiny::req(input$genelist)
             genes <- as.character(input$genelist)
             genes <- strsplit(genes, split='[\t, \n]')[[1]]
             genes <- gsub("[ ]","",genes)
@@ -145,11 +145,11 @@ TcgaBoard <- function(input, output, session, env)
         ##FILESX <- sub("lib$","libx",FILES)
         matrix_file = search.path(c(FILES,FILESX),"tcga_matrix.h5")
         if(!file.exists(matrix_file)) {
-            showNotification("FATAL ERROR: could not find tcga_matrix.h5")
+            shiny::showNotification("FATAL ERROR: could not find tcga_matrix.h5")
             return(NULL)
         }
         dbg("[tcga_tcgasurv.RENDER] reading TCGA data from",matrix_file)
-        showNotification("computing survival probabilities...")
+        shiny::showNotification("computing survival probabilities...")
         sortby="name";ntop=100
         sortby <- input$tcga_tcgasurv_sortby
         ntop <- as.integer(input$tcga_tcgasurv_ntop)
@@ -167,12 +167,12 @@ TcgaBoard <- function(input, output, session, env)
 
     })
     
-    tcga_tcgasurv.opts = tagList(
-        tipify( checkboxInput(ns("tcga_surv_deceasedonly"), "deceased only", FALSE),
+    tcga_tcgasurv.opts = shiny::tagList(
+        shinyBS::tipify( shiny::checkboxInput(ns("tcga_surv_deceasedonly"), "deceased only", FALSE),
                "Only include deceased cases in survival analysis, i.e. exclude censored cases (patients still alive at evaluation time). This compares strictly the deceased cases, early vs late.",
                placement="left", options = list(container = "body")),
-        ## radioButtons(ns("tcga_tcgasurv_sortby"), "sort by:", c("name","p-value"), inline=TRUE),
-        tipify(radioButtons(ns("tcga_tcgasurv_ntop"), "N cor genes:", c(25,100,250,1000),
+        ## shiny::radioButtons(ns("tcga_tcgasurv_sortby"), "sort by:", c("name","p-value"), inline=TRUE),
+        shinyBS::tipify(shiny::radioButtons(ns("tcga_tcgasurv_ntop"), "N cor genes:", c(25,100,250,1000),
                             selected=100, inline=TRUE),
                "Number of top genes for calculating the correlation.", placement="left",
                options = list(container = "body"))        
@@ -180,7 +180,7 @@ TcgaBoard <- function(input, output, session, env)
     tcga_tcgasurv_info = "<strong>TCGA survival analysis.</strong> Survival probability of cancer patients in 32 TCGA cancer types. Each cohort is dichotomized into positively and negatively correlated with your signature. The survival probabilities are computed and tested using the Kaplan-Meier method."
     tcga_tcgasurv_caption = tcga_tcgasurv_info
     
-    callModule(
+    shiny::callModule(
         plotModule,
         id = "tcga_tcgasurv",
         title = "TCGA survival analysis", label="a",
@@ -201,16 +201,16 @@ TcgaBoard <- function(input, output, session, env)
     ##========================= OUTPUT UI ============================================
     ##================================================================================
 
-    output$TCGAanalysis_UI <- renderUI({
-        fillCol(
+    output$TCGAanalysis_UI <- shiny::renderUI({
+        shiny::fillCol(
             ## id = ns("expr_topgenes"),
             height = fullH,
             flex = c(NA,0.02,1), ##height = 370,
-            div(HTML(tcga_tcgasurv_caption), class="caption"),
-            br(),
+            shiny::div(shiny::HTML(tcga_tcgasurv_caption), class="caption"),
+            shiny::br(),
             plotWidget(ns("tcga_tcgasurv"))
         )
     })
-    outputOptions(output, "TCGAanalysis_UI", suspendWhenHidden=FALSE) 
+    shiny::outputOptions(output, "TCGAanalysis_UI", suspendWhenHidden=FALSE) 
     
 } ## end-of-Board 

@@ -3,34 +3,34 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-require(shiny)
-require(shinyjs)
-require(shinyBS)
-require(shinyjqui)
-require(rmarkdown)
-require(shinycssloaders)
-require(dragulaR)
-require(shinyWidgets)
-require(pryr)
-require(survival)
-require(knitr)
-require(scatterD3)
-require(fastcluster)
-require(ComplexHeatmap)
-require(plotly)
-require(Matrix)
-require(igraph)
-require(DT)
-require(ggplot2)
-require(data.table)
-require(dplyr)
-require(org.Hs.eg.db)
-## require(Cairo)
-require(dragulaR)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 
+
     
 ##useShinyjs(rmd=TRUE)  
-useShinyjs()
-ht_global_opt(fast_hclust = TRUE)
+shinyjs::useShinyjs()
+ComplexHeatmap::ht_global_opt(fast_hclust = TRUE)
 options(shiny.maxRequestSize = 500*1024^2)  ## max 200Mb upload
 
 dbg <- function(... ) {
