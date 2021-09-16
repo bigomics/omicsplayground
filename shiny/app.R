@@ -14,7 +14,7 @@ library(pryr)
 # we need all these datasets that actually aren't datasets
 # and so cannot be imported by data() function...
 library(org.Hs.eg.db)
-
+library(grid)
 
 
 message("\n\n")

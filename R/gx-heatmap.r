@@ -546,7 +546,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
                      legend_width = grid::unit(0.08, "npc"), legend_height = grid::unit(0.01, "npc"),
                      title = "\n", direction = "horizontal")
         ##key.offset=c(0.05,1.01)
-        ComplexHeatmap::draw(lgd, x=unit(key.offset[1], "npc"), y=unit(key.offset[2], "npc"), just=c("left", "top"))
+        ComplexHeatmap::draw(lgd, x=grid::unit(key.offset[1], "npc"), y=grid::unit(key.offset[2], "npc"), just=c("left", "top"))
     }
     
     ##res <- c()

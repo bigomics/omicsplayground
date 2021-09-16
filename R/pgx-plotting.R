@@ -2752,8 +2752,8 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
             ##                  label=mlab, size=4.5*cex.clust,
             ##                  lineheight=0.7)
             df1 <- data.frame( x=mpos[,1], y=mpos[,2], name=rownames(mpos))
-            if(label.type=="text")  labelFUN <- geom_text_repel
-            if(label.type=="box") labelFUN <- geom_label_repel
+            if(label.type=="text")  labelFUN <- ggrepel::geom_text_repel
+            if(label.type=="box") labelFUN <- ggrepel::geom_label_repel
             plt <- plt +
                 labelFUN(
                 ##geom_label_repel(

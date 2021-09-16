@@ -812,7 +812,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     
     output$hm1_splitmap <- shiny::renderPlot({
         plt <- hm1_splitmap.RENDER()
-        grid.draw(plt, recording=FALSE)
+        grid::grid.draw(plt, recording=FALSE)
         ## KEGGgraph::plot(sin)
     }, res=90)
     
@@ -848,7 +848,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             
             if(1 && input$hm_plottype %in% c("ComplexHeatmap","static")) {
                 pdf(PDFFILE, width=wd, height=ht)
-                grid.draw(hm1_splitmap.RENDER())
+                grid::grid.draw(hm1_splitmap.RENDER())
                 ##print(hm1_splitmap.RENDER())
                 ##hm1_splitmap.RENDER()
                 dev.off()
@@ -875,7 +875,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             ht <- 100*as.integer(input[["hm_splitmap-pdf_height"]])
             if(1 && input$hm_plottype %in% c("ComplexHeatmap","static")) {
                 png(PNGFILE, width=wd, height=ht, pointsize=24)
-                grid.draw(hm1_splitmap.RENDER())
+                grid::grid.draw(hm1_splitmap.RENDER())
                 ##print(hm1_splitmap.RENDER())  ## should be done inside render for base plot...
                 ##hm1_splitmap.RENDER()  ## should be done inside render for base plot...
                 ##plot(sin)
