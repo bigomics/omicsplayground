@@ -61,6 +61,7 @@ src.local=FALSE ## local or not-local, that's the question...
 source(file.path(RDIR,"pgx-include.R"),local=src.local)    ## lots of libraries and source()
 source(file.path(RDIR,"pgx-functions.R"), local=src.local) ## functions...
 source(file.path(RDIR,"pgx-files.R"), local=src.local)     ## file functions
+source(file.path(RDIR,"pgx-init.R"),local=src.local)
 
 if(0) {
     save.image(file="../cache/image.RData")
@@ -215,17 +216,18 @@ server = function(input, output, session) {
     
     already_loaded <- FALSE
     observeEvent(env[["load"]]$loaded(), {
-        print(env[["load"]]$loaded())
-
         if(!env[["load"]]$loaded()){
             return()
         }
+
+        on.exit({
+            shiny::removeModal()
+        })
 
         if(already_loaded)
             return()
 
         already_loaded <<- TRUE
-        source(file.path(RDIR,"pgx-init.R"),local=src.local)
 
         ## load other modules if 
         if(ENABLED["view"])   env[["view"]]   <- shiny::callModule( DataViewBoard, "view", env)
