@@ -76,7 +76,7 @@ pgx.parseAccessLogs <- function(logs.dir, from=NULL, to=NULL,
     ## create lookup-table for IP to country
     
     file <- system.file("extdata","GeoLite2-Country.mmdb", package = "rgeolocate")
-    loc  <- maxmind(unique.ip, file, c("country_code","country_name"))
+    loc  <- rgeolocate::maxmind(unique.ip, file, c("country_code","country_name"))
     loc$ip <- unique.ip
     ##file <- file.path(lib.dir,"GeoLite2-City.mmdb")
     ##loc <- rgeolocate::maxmind(ip, file, c("country_code", "country_name", "city_name"))

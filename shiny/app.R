@@ -9,13 +9,11 @@
 ##                                                                     ##
 #########################################################################
 
-
 library(pryr)
 # we need all these datasets that actually aren't datasets
 # and so cannot be imported by data() function...
 library(org.Hs.eg.db)
 library(grid)
-
 
 message("\n\n")
 message("###############################################################")
@@ -190,14 +188,12 @@ server = function(input, output, session) {
     message("[SERVER] USER_MODE = ", USER_MODE)
     server.start_time <- Sys.time()
     
-
     firebase=firebase2=NULL
     if(AUTHENTICATION=="firebase") {
         firebase  <- FirebaseEmailPassword$new()
         firebase2 <- FirebaseSocial$new()
     }
     
-    ## firebase <- NULL
     limits <- c("samples" = opt$MAX_SAMPLES,
                 "comparisons" = opt$MAX_COMPARISONS,
                 "genes" = opt$MAX_GENES,
@@ -224,7 +220,8 @@ server = function(input, output, session) {
 
         already_loaded <<- TRUE
 
-        ## load other modules if 
+        ## load other modules if
+        message("[SERVER] --------- calling shiny modules ----------")
         if(ENABLED["view"])   env[["view"]]   <- shiny::callModule( DataViewBoard, "view", env)
         if(ENABLED["clust"])  env[["clust"]]  <- shiny::callModule( ClusteringBoard, "clust", env)
         if(ENABLED["ftmap"])  env[["ftmap"]]  <- shiny::callModule( FeatureMapBoard, "ftmap", env)    

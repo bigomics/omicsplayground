@@ -119,9 +119,9 @@ pgx.initialize.MOVED <- function(pgx) {
 
     ## Add chromosome annotation if not
     if(!("chr" %in% names(pgx$genes))) {
-        symbol = sapply(as.list(org.Hs.egSYMBOL),"[",1)  ## some have multiple chroms..
-        CHR = sapply(as.list(org.Hs.egCHR),"[",1)  ## some have multiple chroms..
-        MAP <- sapply(as.list(org.Hs.egMAP),"[",1)  ## some have multiple chroms..
+        symbol = sapply(as.list(org.Hs.eg.db::org.Hs.egSYMBOL),"[",1)  ## some have multiple chroms..
+        CHR = sapply(as.list(org.Hs.eg.db::org.Hs.egCHR),"[",1)  ## some have multiple chroms..
+        MAP <- sapply(as.list(org.Hs.eg.db::org.Hs.egMAP),"[",1)  ## some have multiple chroms..
         names(CHR) = names(MAP) = symbol
         pgx$genes$chr <- CHR[pgx$genes$gene_name]
         pgx$genes$map <- MAP[pgx$genes$gene_name]
@@ -492,9 +492,7 @@ mouse2human <- function(x) {
 
 ##type=NULL;org="human";keep.na=FALSE
 probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
-{
-    
-
+{   
     ## strip postfix for ensemble codes
     if(mean(grepl("^ENS",probes))>0.5) {
         probes <- gsub("[.].*","",probes)
@@ -503,23 +501,23 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
     if(is.null(type)) {
         
         hs.list <- list(
-            "human.ensembl" = unlist(as.list(org.Hs.egENSEMBL)),
-            "human.ensemblTRANS" = unlist(as.list(org.Hs.egENSEMBLTRANS)),            
-            "human.unigene" = unlist(as.list(org.Hs.egUNIGENE)),
-            "human.refseq"  = unlist(as.list(org.Hs.egREFSEQ)),
-            "human.accnum"  = unlist(as.list(org.Hs.egACCNUM)),
-            "human.uniprot" = unlist(as.list(org.Hs.egUNIPROT)),
-            "human.symbol"  = unlist(as.list(org.Hs.egSYMBOL))
+            "human.ensembl" = unlist(as.list(org.Hs.eg.db::org.Hs.egENSEMBL)),
+            "human.ensemblTRANS" = unlist(as.list(org.Hs.eg.db::org.Hs.egENSEMBLTRANS)),            
+            "human.unigene" = unlist(as.list(org.Hs.eg.db::org.Hs.egUNIGENE)),
+            "human.refseq"  = unlist(as.list(org.Hs.eg.db::org.Hs.egREFSEQ)),
+            "human.accnum"  = unlist(as.list(org.Hs.eg.db::org.Hs.egACCNUM)),
+            "human.uniprot" = unlist(as.list(org.Hs.eg.db::org.Hs.egUNIPROT)),
+            "human.symbol"  = unlist(as.list(org.Hs.eg.db::org.Hs.egSYMBOL))
             )
         
         mm.list <- list(
-            "mouse.ensembl" = unlist(as.list(org.Mm.egENSEMBL)),
-            "mouse.ensemblTRANS" = unlist(as.list(org.Mm.egENSEMBLTRANS)),            
-            "mouse.unigene" = unlist(as.list(org.Mm.egUNIGENE)),
-            "mouse.refseq"  = unlist(as.list(org.Mm.egREFSEQ)),
-            "mouse.accnum"  = unlist(as.list(org.Mm.egACCNUM)),
-            "mouse.uniprot" = unlist(as.list(org.Mm.egUNIPROT)),
-            "mouse.symbol"  = unlist(as.list(org.Mm.egSYMBOL))
+            "mouse.ensembl" = unlist(as.list(org.Mm.eg.db::org.Mm.egENSEMBL)),
+            "mouse.ensemblTRANS" = unlist(as.list(org.Mm.eg.db::org.Mm.egENSEMBLTRANS)),            
+            "mouse.unigene" = unlist(as.list(org.Mm.eg.db::org.Mm.egUNIGENE)),
+            "mouse.refseq"  = unlist(as.list(org.Mm.eg.db::org.Mm.egREFSEQ)),
+            "mouse.accnum"  = unlist(as.list(org.Mm.eg.db::org.Mm.egACCNUM)),
+            "mouse.uniprot" = unlist(as.list(org.Mm.eg.db::org.Mm.egUNIPROT)),
+            "mouse.symbol"  = unlist(as.list(org.Mm.eg.db::org.Mm.egSYMBOL))
         )
         id.list <- c(hs.list, mm.list)
         mx <- sapply(id.list, function(id) mean(probes %in% id))
@@ -563,17 +561,17 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
             symbol0 <- probes
         }
         ## all.symbols <- NULL
-        ## if(org=="human") all.symbols <- unlist(as.list(org.Hs.egSYMBOL))
-        ## if(org=="mouse") all.symbols <- unlist(as.list(org.Mm.egSYMBOL))
+        ## if(org=="human") all.symbols <- unlist(as.list(org.Hs.eg.db::org.Hs.egSYMBOL))
+        ## if(org=="mouse") all.symbols <- unlist(as.list(org.Mm.eg.db::org.Mm.egSYMBOL))
         ## symbol0 <- lapply(symbol0, function(s) intersect(s,all.symbols))
 
     } else {
         org
         if(org=="human") {
-            symbol0 <- AnnotationDbi::mapIds(org.Hs.eg.db, probes, 'SYMBOL', toupper(type))
+            symbol0 <- AnnotationDbi::mapIds(org.Hs.eg.db::org.Hs.eg.db, probes, 'SYMBOL', toupper(type))
         }
         if(org=="mouse") {
-            symbol0 <- AnnotationDbi::mapIds(org.Mm.eg.db, probes, 'SYMBOL', toupper(type))
+            symbol0 <- AnnotationDbi::mapIds(org.Mm.eg.db::org.Mm.eg.db, probes, 'SYMBOL', toupper(type))
         }
     }
 
@@ -1040,21 +1038,18 @@ getMyGeneInfo <- function(eg, fields=c("symbol","name","alias","map_location","s
 
 ## much faster and off-line
 getHSGeneInfo <- function(eg, as.link=TRUE) {
-    
-    
-    
-
-    env.list <- c("symbol"=org.Hs.egSYMBOL,
-                  "name"=org.Hs.egGENENAME,
-                  "map_location"=org.Hs.egMAP,
-                  "OMIM" = org.Hs.egOMIM,
-                  "KEGG"=org.Hs.egPATH,
-                  ##"PMID"=org.Hs.egPMID,
-                  "GO"=org.Hs.egGO)
+         
+    env.list <- c("symbol" = org.Hs.eg.db::org.Hs.egSYMBOL,
+                  "name" = org.Hs.eg.db::org.Hs.egGENENAME,
+                  "map_location" = org.Hs.eg.db::org.Hs.egMAP,
+                  "OMIM" = org.Hs.eg.db::org.Hs.egOMIM,
+                  "KEGG" = org.Hs.eg.db::org.Hs.egPATH,
+                  ##"PMID" = org.Hs.eg.db::org.Hs.egPMID,
+                  "GO" = org.Hs.eg.db::org.Hs.egGO)
 
     info <- lapply(env.list, function(env) mget(eg, env=env, ifnotfound=NA)[[1]])
     names(info) <- names(env.list)
-    gene.symbol <- toupper(mget(as.character(eg), env=org.Hs.egSYMBOL))[1]
+    gene.symbol <- toupper(mget(as.character(eg), env=org.Hs.eg.db::org.Hs.egSYMBOL))[1]
     info[["symbol"]] <- gene.symbol
     
     ## create link to GeneCards
@@ -1225,10 +1220,11 @@ pgx.getGeneFamilies <- function(genes, FILES="../files", min.size=10, max.size=5
     is.mouse
     if(is.mouse) {
         
-        mouse.genes = as.character(unlist(as.list(org.Mm.egSYMBOL)))
+        mouse.genes = as.character(unlist(as.list(org.Mm.eg.db::org.Mm.egSYMBOL)))
         names(mouse.genes) = toupper(mouse.genes)
-        families <- parallel::mclapply(families, function(s) setdiff(as.character(mouse.genes[toupper(s)]),NA),
-                             mc.cores=16)
+        families <- parallel::mclapply(families, function(s)
+            setdiff(as.character(mouse.genes[toupper(s)]),NA),
+            mc.cores=16)
     }
 
     ## sort all
@@ -1445,25 +1441,25 @@ extremeCorrelation <- function(query_sig, ref_set, n=200) {
 alias2hugo <- function(s, org=NULL, na.orig=TRUE) {
     
     
-    hs.symbol <- unlist(as.list(org.Hs.egSYMBOL))
-    mm.symbol <- unlist(as.list(org.Mm.egSYMBOL))
+    hs.symbol <- unlist(as.list(org.Hs.eg.db::org.Hs.egSYMBOL))
+    mm.symbol <- unlist(as.list(org.Mm.eg.db::org.Mm.egSYMBOL))
     if(is.null(org)) {
         is.human <- mean(s %in% hs.symbol,na.rm=TRUE) > mean(s %in% mm.symbol,na.rm=TRUE)
         org <- ifelse(is.human,"hs","mm")
     }
     org    
-    ##eg <- sapply(lapply(s, get, env=org.Hs.egALIAS2EG),"[",1)
+    ##eg <- sapply(lapply(s, get, env=org.Hs.eg.db::org.Hs.egALIAS2EG),"[",1)
     nna = which(!is.na(s) & s!="" & s!=" ")
     s1 <- trimws(s[nna])
     hugo <- NULL
     if(org == "hs") {
-        eg <- sapply(mget(s1, env=org.Hs.egALIAS2EG, ifnotfound=NA),"[",1)
+        eg <- sapply(mget(s1, env=org.Hs.eg.db::org.Hs.egALIAS2EG, ifnotfound=NA),"[",1)
         eg[is.na(eg)] <- "unknown"
-        hugo <- sapply(mget(eg, env=org.Hs.egSYMBOL, ifnotfound=NA),"[",1)
+        hugo <- sapply(mget(eg, env=org.Hs.eg.db::org.Hs.egSYMBOL, ifnotfound=NA),"[",1)
     } else if(org == "mm") {
-        eg <- sapply(mget(s1, env=org.Mm.egALIAS2EG, ifnotfound=NA),"[",1)
+        eg <- sapply(mget(s1, env=org.Mm.eg.db::org.Mm.egALIAS2EG, ifnotfound=NA),"[",1)
         eg[is.na(eg)] <- "unknown"
-        hugo <- sapply(mget(eg, env=org.Mm.egSYMBOL, ifnotfound=NA),"[",1)        
+        hugo <- sapply(mget(eg, env=org.Mm.eg.db::org.Mm.egSYMBOL, ifnotfound=NA),"[",1)        
     } else {
         stop("[alias2hugo] invalid organism")
     }

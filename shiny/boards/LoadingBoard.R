@@ -507,6 +507,7 @@ LoadingBoard <- function(input, output, session,
         ##----------------- update input
         message("[LoadingBoard::<loadbutton>] initializing PGX object")
         pgx <- pgx.initialize(pgx)
+        message("[LoadingBoard::<loadbutton>] initialization done!")        
         if(is.null(pgx)) {
             cat("[LoadingBoard::<loadbutton>] ERROR in object initialization\n")
             beepr::beep(10)
@@ -714,7 +715,7 @@ LoadingBoard <- function(input, output, session,
     shiny::outputOptions(output, "pgxtable_UI", suspendWhenHidden=FALSE) ## important!
 
     ##================================================================================
-    ## Upload data (new)
+    ## Upload new data
     ##================================================================================
 
     output$upload_UI <- shiny::renderUI({    

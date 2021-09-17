@@ -1433,7 +1433,6 @@ immune cell types, expressed genes and pathway activation."
 
         dbg("[SingleCellBoard:italk_getResults] reacted")
         
-
         db <- iTALK::database
         db.genes <- unique(c(db$Ligand.ApprovedSymbol,db$Receptor.ApprovedSymbol))
         length(db.genes)
@@ -1476,8 +1475,8 @@ immune cell types, expressed genes and pathway activation."
         mode = "absolute"
         ##mode <- input$italk_mode
         if(mode=="absolute") {
-            highly_exprs_genes <- rawParse(data1, top_genes=50, stats='mean')    
-            res_cat <- FindLR(highly_exprs_genes, datatype='mean count', comm_type=comm_type)
+            highly_exprs_genes <- iTALK::rawParse(data1, top_genes=50, stats='mean')    
+            res_cat <- iTALK::FindLR(highly_exprs_genes, datatype='mean count', comm_type=comm_type)
             dim(res_cat)
             xx <- res_cat$cell_from_mean_exprs*res_cat$cell_to_mean_exprs
             res_cat <- res_cat[order(xx,decreasing=TRUE),]
@@ -1525,9 +1524,9 @@ immune cell types, expressed genes and pathway activation."
         ntop=25
         ntop = as.integer(input$italk_LRPlot_ntop)
         res_top <- head(res_cat,ntop)
-        LRPlot(res_top, datatype='mean count', cell_col=res$cell_col,
-               link.arr.lwd = head(res_cat$cell_from_mean_exprs,ntop),
-               link.arr.width = head(res_cat$cell_to_mean_exprs,ntop))
+        iTALK::LRPlot(res_top, datatype='mean count', cell_col=res$cell_col,
+                      link.arr.lwd = head(res_cat$cell_from_mean_exprs,ntop),
+                      link.arr.width = head(res_cat$cell_to_mean_exprs,ntop))
         comm_type <- shiny::isolate(input$italk_category)
         title((paste(comm_type,"genes     ")), line=0.5)
     })
@@ -1660,8 +1659,6 @@ a circle plot. The width of the arrow represents the expression level/log fold c
     ##==========================================================================
 
     monocle_getResults <- shiny::reactive({
-
-
         
         ngs <- inputData()
         shiny::req(ngs)

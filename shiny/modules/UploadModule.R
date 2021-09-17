@@ -358,7 +358,8 @@ UploadModuleServer <- function(id,
                 counts <- uploaded[["counts.csv"]]
                 xx <- log2(1 + counts)
                 if(nrow(xx)>1000) xx <- xx[sample(1:nrow(xx),1000),,drop=FALSE]
-                dc <- melt(xx)
+                ##dc <- reshape::melt(xx)
+                suppressWarnings( dc <- data.table::melt(xx) )
                 dc$value[dc$value==0] <- NA
                 tt2 <- paste(nrow(counts),"genes x",ncol(counts),"samples")
                 ggplot2::ggplot(dc, ggplot2::aes(x=value, color=Var2)) +
@@ -388,7 +389,7 @@ UploadModuleServer <- function(id,
                 px <- head(colnames(pheno),20)  ## show maximum??
 
                 df <- type.convert(pheno[,px,drop=FALSE])
-                vt <- df %>% inspect_types()
+                vt <- df %>% inspectdf::inspect_types()
                 vt
                 
                 ## discretized continuous variable into 10 bins
@@ -402,7 +403,7 @@ UploadModuleServer <- function(id,
                     })
                 }
                 
-                p1 <- df %>% inspect_cat() %>% show_plot()
+                p1 <- df %>% inspectdf::inspect_cat() %>% inspectdf::show_plot()
                 tt2 <- paste(nrow(pheno),"samples x",ncol(pheno),"phenotypes")
                 ## tt2 <- paste(ncol(pheno),"phenotypes")
                 p1 <- p1 + ggplot2::ggtitle("PHENOTYPES", subtitle=tt2) +
@@ -457,10 +458,9 @@ UploadModuleServer <- function(id,
                 tt2 <- paste(nrow(contrasts),"samples x",ncol(contrasts),"contrasts")
                 ##tt2 <- paste(ncol(contrasts),"contrasts")
 
-                dbg("[output$contrastStats] 4a : dim.df=",dim(df))
-                
+                dbg("[output$contrastStats] 4a : dim.df=",dim(df))                
 
-                p1 <- df %>% inspect_cat() %>% show_plot()                    
+                p1 <- df %>% inspectdf::inspect_cat() %>% inspectdf::show_plot()                    
                 dbg("[output$contrastStats] 4b : ")
                 
                 p1 <- p1 + ggplot2::ggtitle("CONTRASTS", subtitle=tt2) +

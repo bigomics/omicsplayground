@@ -2888,8 +2888,8 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
 
     if(!is.null(hilight2)) {
                     
-        if(label.type=="text")  labelFUN <- geom_text_repel
-        if(label.type=="box") labelFUN <- geom_label_repel            
+        if(label.type=="text")  labelFUN <- ggrepel::geom_text_repel
+        if(label.type=="box") labelFUN <- ggrepel::geom_label_repel            
         ##geom_text_repel(
         plt <- plt + labelFUN(
                          data = subset(df, name %in% hilight2),
