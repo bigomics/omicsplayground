@@ -628,27 +628,23 @@ DataViewBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
 
     data_geneInfo.RENDER  %<a-% shiny::reactive({
-
-
-
-
         
-        gene="A1BG-AS1"
+        gene = "A1BG-AS1"
         gene = "CD4"
         gene <- input$search_gene
         gene = toupper(sub(".*:","",gene))
 
         eg = "1017"
-        eg = names(which(as.list(org.Hs.egSYMBOL)==gene))
-        eg <- mget(gene, env=org.Hs.egSYMBOL2EG, ifnotfound=NA)[[1]]
-        if(is.na(eg)) eg <- mget(gene, env=org.Hs.egALIAS2EG, ifnotfound=NA)[[1]]
+        eg = names(which(as.list(org.Hs.eg.db::org.Hs.egSYMBOL)==gene))
+        eg <- mget(gene, env=org.Hs.eg.db::org.Hs.egSYMBOL2EG, ifnotfound=NA)[[1]]
+        if(is.na(eg)) eg <- mget(gene, env=org.Hs.eg.db::org.Hs.egALIAS2EG, ifnotfound=NA)[[1]]
         eg
         eg = eg[1]
         if(is.null(eg) || length(eg)==0) return(NULL)
         
         output = "(gene info not available)"
         if(length(eg)>0 && !is.na(eg)) {
-            ##as.list(org.Hs.egSYMBOL)[[eg]]
+            ##as.list(org.Hs.eg.db::org.Hs.egSYMBOL)[[eg]]
             info <- getHSGeneInfo(eg)  ## defined in pgx-functions.R
             info$summary <- '(no info available)'
             if(FALSE && input$data_geneinfo) {

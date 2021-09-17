@@ -232,18 +232,18 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 
                 shiny::tagList(
                     tags$head(tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
-                    bucket_list(
+                    sortable::bucket_list(
                         ##header = shiny::h4("Create comparison:"),
                         header = NULL,
-                        add_rank_list(
+                        sortable::add_rank_list(
                             text = "Conditions:",
                             labels = items
                         ),
-                        add_rank_list(
+                        sortable::add_rank_list(
                             input_id = ns("group1"),
                             text = "Main group:"
                         ),
-                        add_rank_list(
+                        sortable::add_rank_list(
                             input_id = ns("group2"),
                             text = "Control group:"
                         ),

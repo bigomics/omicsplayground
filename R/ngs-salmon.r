@@ -60,17 +60,13 @@ ngs.tximportSalmon <- function(sf.files, count.type="lengthScaledTPM", organism=
     ##biocLite("EnsDb.Mmusculus.v79")
     
     
-    if(organism=="Hsapiens") {
-        
-        
-        edb <- EnsDb.Hsapiens.v86
-        org <- org.Hs.eg.db
+    if(organism=="Hsapiens") {                
+        edb <- EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86
+        org <- org.Hs.eg.db::org.Hs.eg.db
     }
     if(organism=="mouse") {
-        
-        
-        edb <- EnsDb.Mmusculus.v79
-        org <- org.Mm.eg.db
+        edb <- EnsDb.Mmusculus.v79::EnsDb.Mmusculus.v79
+        org <- org.Mm.eg.db::org.Mm.eg.db
     }
 
     ##------------------------------------------------------------
@@ -182,12 +178,11 @@ ngs.getGeneAnnot <- function(keys, keytype, gencode)
     ##gencode$gene_id = sub("[.].*$","",gencode$gene_id)  ## strip suffix???
 
     ## add annotation using org.Hs.eg.db (NEED RETHINK ON MULTIPLE MATCHES)
-    
-    
-    biomaRt::columns(org.Hs.eg.db)
+    biomaRt::columns(org.Hs.eg.db::org.Hs.eg.db)
     ##sel.keys = c("ENTREZID","SYMBOL","GENENAME")
     sel.keys = c("ENTREZID","GENENAME")
-    org.annot <- plotly::select(org.Hs.eg.db, keys=keys, keytype=keytype, columns=sel.keys)
+    org.annot <- plotly::select(org.Hs.eg.db::org.Hs.eg.db,
+                                keys=keys, keytype=keytype, columns=sel.keys)
     dim(org.annot)
     idx = match( keys, org.annot$ENSEMBL)  ## assumes single match
     org.annot = org.annot[idx,]

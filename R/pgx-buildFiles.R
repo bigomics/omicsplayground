@@ -9,14 +9,11 @@ martMMUSCULUS <- function() {
 }
 
 hg19GeneLengths <- function(symbols=NULL) {
-    
-    
-    
-    
     if(is.null(symbols))
-        symbols = as.character(unlist(as.list(org.Hs.egSYMBOL)))
+        symbols = as.character(unlist(as.list(org.Hs.eg.db::org.Hs.egSYMBOL)))
     exons.db = GenomicFeatures::exonsBy(TxDb.Hsapiens.UCSC.hg19.knownGene, by='gene')
-    egs  = unlist(mget(symbols[ symbols %in% biomaRt::keys(org.Hs.egSYMBOL2EG) ],org.Hs.egSYMBOL2EG))
+    egs  = unlist(mget(symbols[ symbols %in% biomaRt::keys(org.Hs.eg.db::org.Hs.egSYMBOL2EG) ],
+                       org.Hs.eg.db::org.Hs.egSYMBOL2EG))
     exons.len = parallel::mclapply(egs[],function(eg) {
         exons = exons.db[[eg]]
         if(is.null(exons)) return(NA)
@@ -36,10 +33,11 @@ mm10GeneLengths <- function(symbols=NULL) {
     
     
     if(is.null(symbols))
-        symbols = as.character(unlist(as.list(org.Mm.egSYMBOL)))
+        symbols = as.character(unlist(as.list(org.Mm.eg.db::org.Mm.egSYMBOL)))
     Matrix::head(symbols)
     exons.db = GenomicFeatures::exonsBy(TxDb.Mmusculus.UCSC.mm10.knownGene, by='gene')
-    egs  = unlist(mget(symbols[ symbols %in% biomaRt::keys(org.Mm.egSYMBOL2EG) ],org.Mm.egSYMBOL2EG))
+    egs  = unlist(mget(symbols[ symbols %in% biomaRt::keys(org.Mm.eg.db::org.Mm.egSYMBOL2EG) ],
+                       org.Mm.eg.db::org.Mm.egSYMBOL2EG))
     exons.len = parallel::mclapply(egs[],function(eg) {
         exons = exons.db[[eg]]
         if(is.null(exons)) return(NA)

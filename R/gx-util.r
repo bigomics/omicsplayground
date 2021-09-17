@@ -35,23 +35,6 @@ mat2hugo <- function(x) {
     return(x)
 }
 
-##s=symbol    
-alias2hugo.SAVE <- function(s) {
-    
-    ##eg <- sapply(lapply(s, get, env=org.Hs.egALIAS2EG),"[",1)
-    s.na = which(!is.na(s) & s!="" & s!=" ")
-    s1 <- s[s.na]
-    eg <- sapply(mget(s1, env=org.Hs.egALIAS2EG, ifnotfound=NA),"[",1)
-    eg[is.na(eg)] <- "unknown"
-    symb <- sapply(mget(eg, env=org.Hs.egSYMBOL, ifnotfound=NA),"[",1)
-    jj <- which(is.na(symb))
-    if(length(jj)) symb[jj] <- s1[jj]
-    symb
-    symb0 <- rep(NA,length(s))
-    symb0[s.na] <- symb
-    return(symb0)
-}
-
 gx.hist <- function(gx, main="",ylim=NULL) {
     h0 <- hist(as.vector(gx), breaks=120, main=main,
                col="grey",freq=FALSE, ylim=ylim, xlab="signal")
@@ -94,7 +77,7 @@ symbol2hugo <- function(genes, remove.non.hugo=TRUE, silent=FALSE,
 {
     ##remove.non.hugo=TRUE;silent=FALSE;take.only.first=FALSE;split.char=";";unknown="unknown_gene"
     
-    HUGO.SYMBOLS <- unique(unlist(as.list(org.Hs.egSYMBOL)))
+    HUGO.SYMBOLS <- unique(unlist(as.list(org.Hs.eg.db::org.Hs.egSYMBOL)))
     ss <- as.character(genes)
     ss <- gsub("Sep 0","SEPT",ss)  # typical XLS error
     ss[is.na(ss)|ss==""] <- unknown
@@ -105,9 +88,9 @@ symbol2hugo <- function(genes, remove.non.hugo=TRUE, silent=FALSE,
     }
     if(!silent) cat("trying to convert",length(ii),"aliases to HUGO\n")
     ss0 <- sapply(ss[ii],strsplit,split=split.char)
-    ee0 <- lapply(ss0, function(s) unlist(mget(s,envir=org.Hs.egALIAS2EG, ifnotfound=NA)))
+    ee0 <- lapply(ss0, function(s) unlist(mget(s,envir=org.Hs.eg.db::org.Hs.egALIAS2EG, ifnotfound=NA)))
     ee0 <- lapply(ee0, function(e) {e[is.na(e)|e==""|is.nan(e)] <- unknown; e})
-    gg  <- lapply(ee0, function(e) unlist(mget(e, envir=org.Hs.egSYMBOL, ifnotfound=NA)))
+    gg  <- lapply(ee0, function(e) unlist(mget(e, envir=org.Hs.eg.db::org.Hs.egSYMBOL, ifnotfound=NA)))
     if(remove.non.hugo)
         gg <- lapply(gg, intersect, HUGO.SYMBOLS)
     gg.len <- lapply(gg,length)
