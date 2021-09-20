@@ -26,7 +26,7 @@ install.pkg <- function(pkg, force=FALSE) {
             cat("installing",pkg,"from CRAN/BioConductor...\n")
             try(BiocManager::install(pkg, dependencies=NA,
                                      ask=FALSE, update=FALSE))
-            if(! {
+            if(! !require(pkg, character.only=TRUE)){
                 cat("retrying to install",pkg,"from CRAN...\n")
                 try(install.packages(pkg, dependencies=NA,
                                      ask=FALSE, update=FALSE))
@@ -57,7 +57,7 @@ BIG.NOTUSED <- c(
     ##"EnsDb.Mmusculus.v79",
     ##"TxDb.Hsapiens.UCSC.hg19.knownGene",  ## need for import
     ##"TxDb.Mmusculus.UCSC.mm10.knownGene"  ## need for import
-)    
+)
 
 PKG.MANUAL <- c(
     "gputools","Seurat","EPIC","PCSF","NNLM","iTALK",
@@ -78,7 +78,7 @@ install.pkgs(base.pkg)
 ## Automatically scan all used packages and install
 ##---------------------------------------------------------------------
 
-pkg.used <- system("grep '
+pkg.used <- system("grep 'library(\\|require(' *R *r ../shiny/*R ../shiny/modules/*R", intern=TRUE)
 pkg.used <- gsub(".*require\\(|.*library\\(","",pkg.used)
 pkg.used <- gsub("\"|\'|\\).*","",pkg.used)
 pkg.used <- grep("[ ]|quietly",pkg.used,value=TRUE,invert=TRUE)
@@ -108,7 +108,7 @@ install.pkgs(c("gridGraphics","Rgraphviz","fastcluster", "mygene",
 webshot::install_phantomjs(force=TRUE)  ## cp to /usr/local/bin !!
 file.copy("~/bin/phantomjs","/usr/local/bin") ## need sudo!!
 
-devtools::install_version("mnormt", version="1.5-7", repos="http://cran.us.r-project.org") 
+devtools::install_version("mnormt", version="1.5-7", repos="http://cran.us.r-project.org")
 install.pkgs(c('umap','corrplot','wordcloud','metap','brew'))
 install.pkgs(c('monocle','Seurat'))
 
