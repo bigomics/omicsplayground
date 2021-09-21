@@ -1510,7 +1510,7 @@ immune cell types, expressed genes and pathway activation."
         ##if(is.null(res)) return(NULL)
         res_cat <- res$table
         ## Communication graph
-        NetView(res_cat, col=res$cell_col, vertex.label.cex=1, arrow.width=1, edge.max.width=5)
+        iTALK::NetView(res_cat, col=res$cell_col, vertex.label.cex=1, arrow.width=1, edge.max.width=5)
     })
 
     italk_LRPlot.RENDER %<a-% shiny::reactive({
@@ -1551,7 +1551,7 @@ immune cell types, expressed genes and pathway activation."
 
         par(oma=c(3,2,3,0))
         gx.heatmap(gx0, scale="none", mar=c(15,8),
-                   cexRow=1, cexCol=1.3,
+                   cexRow=1, cexCol=1.3, col=BLUERED(64),
                    key=FALSE, keysize=0.6)
     })
 
@@ -1704,15 +1704,16 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         expression_data = X
         cell_metadata = ngs$samples
         gene_metadata = G
-        sce <- SingleCellExperiment(
+        sce <- SingleCellExperiment::SingleCellExperiment(
             list(counts = as(expression_data, "dgCMatrix")),
             rowData = gene_metadata,
             colData = cell_metadata )
 
         cds <- methods::new("cell_data_set",
-                            assays = Assays(list(counts = as(expression_data, 
-                                                             "dgCMatrix"))),
-                            colData = colData(sce),
+                            assays = SummarizedExperiment::Assays(
+                                                               list(counts = as(expression_data, 
+                                                                                "dgCMatrix"))),
+                            colData = SingleCellExperiment::colData(sce),
                             int_elementMetadata = sce@int_elementMetadata, 
                             int_colData = sce@int_colData,
                             int_metadata = sce@int_metadata, 
@@ -1722,11 +1723,9 @@ a circle plot. The width of the arrow represents the expression level/log fold c
                             rowRanges = sce@rowRanges)
         
         metadata(cds)$cds_version <- Biobase::package.version("monocle3")
-        clusters <- stats::setNames(SimpleList(), character(0))
-        cds <- estimate_size_factors(cds)
+        clusters <- stats::setNames( S4Vectors::SimpleList(), character(0))
+        cds <- monocle3::estimate_size_factors(cds)
         cds
-
-
         
         ##------------------------------------------------------------
         ## Step 1: Normalize and pre-process the data

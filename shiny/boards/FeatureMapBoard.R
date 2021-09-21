@@ -312,6 +312,7 @@ FeatureMapBoard <- function(input, output, session, env)
         shiny::withProgress({
             F <- pgx.getMetaMatrix(ngs, level='geneset')$fc
             F <- scale(F, center=FALSE)
+            dbg("getGsetUMAP_FC:: dim.F = ",dim(F))
             pos <- pgx.clusterBigMatrix(t(F), methods='umap', dims=2)[[1]]
             pos <- pos.compact(pos)
         }, message="computing geneset-FC UMAP", value=0.5 )

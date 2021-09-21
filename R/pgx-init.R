@@ -106,9 +106,11 @@ if(1 && file.exists(INIT.FILE)) {
     COLORS = rep(c(ggsci::pal_npg("nrc", alpha = 0.7)(10),
                    ggsci::pal_aaas("default", alpha = 0.7)(10),
                    ggsci::pal_d3("category10", alpha = 0.7)(10)),99)
-    BLUERED <- colorRampPalette(
-        rev(c("#67001F", "#B2182B", "#D6604D", "#F4A582", "#FDDBC7", "#EEEEEE",
-              "#D1E5F0", "#92C5DE", "#4393C3", "#2166AC", "#053061")))
+##    BLUERED <- grDevices::colorRampPalette(
+##        rev(c("#67001F", "#B2182B", "#D6604D", "#F4A582", "#FDDBC7", "#EEEEEE",
+##              "#D1E5F0", "#92C5DE", "#4393C3", "#2166AC", "#053061")))
+##    BLUERED <- function(n=64) suppressWarnings(gplots::colorpanel(n,low="royalblue3",mid="grey90",high="indianred3"))
+    BLUERED <- colorRampPalette(c("royalblue3","grey90","indianred3"))
     PURPLEYELLOW <- colorRampPalette(c("purple","purple3","black","yellow3","yellow"))
     PURPLEYELLOW <- colorRampPalette(c("purple","purple4","black","yellow4","yellow"))
 

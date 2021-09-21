@@ -216,8 +216,8 @@ ngs.cookForDESEQ2 <- function(counts, samples, genes, remove.batch=TRUE,
     DESeq2::resultsNames(dds)# lists the coefficients
 
     ## we add the gene annotation here (not standard...)
-    colnames(rowData(dds))
-    rowData(dds)$genes = genes
+    ##colnames(SummarizedExperiment::rowData(dds))
+    SummarizedExperiment::rowData(dds)$genes <- genes   ## does this work??
 
     return(dds)
 }

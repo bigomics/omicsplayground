@@ -598,9 +598,6 @@ to understand biological functions including GO and KEGG pathway analysis."
 
     GO_network.RENDER <- shiny::reactive({
 
-
-
-
         ngs <- inputData()
         shiny::req(ngs)
 
@@ -625,7 +622,8 @@ to understand biological functions including GO and KEGG pathway analysis."
         score[is.na(score) | is.infinite(score)] = 0
         score = (score / (1e-8+max(abs(score),na.rm=TRUE)))
         igraph::V(sub2)$value <- score
-        igraph::V(sub2)$color <- gplots::bluered(32)[16 + round(15*score)]
+        ##igraph::V(sub2)$color <- gplots::bluered(32)[16 + round(15*score)]
+        igraph::V(sub2)$color <- BLUERED(32)[16 + round(15*score)]        
         igraph::V(sub2)$label <- igraph::V(sub2)$Term
         igraph::V(sub2)$label[which(is.na(score)|score==0)] = ""
         pos = sub2$layout
@@ -675,7 +673,9 @@ to understand biological functions including GO and KEGG pathway analysis."
             ##clust = igraph::cluster_louvain(igraph::as.undirected(sub2))$membership
             clust = igraph::cluster_louvain(igraph::as.undirected(go))$membership
             names(clust) = igraph::V(go)$name
-            cc = c(RColorBrewer::brewer.pal(12,"Set3"),brewer.pal(8,"Set2"),brewer.pal(8,"Set1"))
+            cc = c(RColorBrewer::brewer.pal(12,"Set3"),
+                   RColorBrewer::brewer.pal(8,"Set2"),
+                   RColorBrewer::brewer.pal(8,"Set1"))
             igraph::V(sub2)$color = rep(cc,99)[clust[V(sub2)$name]]
             jj = which(is.na(score) | score==0)
             if(length(jj)>0) igraph::V(sub2)$color[jj] = NA
@@ -744,7 +744,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         go = ngs$meta.go$graph
         scores <- ngs$meta.go$pathscore[,comparison]
 
-        message("[GO_table.RENDER] 1: len.scores = ",length(scores))
+        dbg("[GO_table.RENDER] 1: len.scores = ",length(scores))
         
         scores <- scores[which(!is.na(scores) & !is.infinite(scores))]
         scores <- round(scores, digits=3)
@@ -752,7 +752,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         scores <- scores[order(-abs(scores))]
         go.term = igraph::V(go)[names(scores)]$Term
 
-        message("[GO_table.RENDER] 2: len.scores = ",length(scores))
+        dbg("[GO_table.RENDER] 2: len.scores = ",length(scores))
         
         ## get FC and q-value.  match with enrichment table
         gs.meta <- ngs$gset.meta$meta[[comparison]]
@@ -764,7 +764,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         qv <- apply(gs.meta$q[,mm,drop=FALSE],1,max,na.rm=TRUE) ## meta-q
         fx <- gs.meta$meta.fx
         
-        message("[GO_table.RENDER] 2: dim(gs.meta) = ",paste(dim(gs.meta),collapse="x"))
+        dbg("[GO_table.RENDER] 2: dim(gs.meta) = ",paste(dim(gs.meta),collapse="x"))
         
         go.term1 = substring(go.term, 1, 80)
         dt1 = round( cbind(score=scores, logFC=fx, meta.q=qv), digits=4)    
@@ -795,17 +795,17 @@ to understand biological functions including GO and KEGG pathway analysis."
                                 backgroundPosition = 'center') 
     })
 
-    normalize=1;maxterm=50;maxfc=10
+    ## normalize=1;maxterm=50;maxfc=10
     plotGOactmap <- function(score, go, normalize, maxterm, maxfc)
     {
 
         rownames(score) = igraph::V(go)[rownames(score)]$Term
         
-        message("[plotGOactmap] 0: sum(isna(score)) = ", sum(is.na(score)))
-        message("[plotGOactmap] 0: min(score,na.rm=0) = ", min(score,na.rm=FALSE))
-        message("[plotGOactmap] 0: max(score,na.rm=0) = ", max(score,na.rm=FALSE))
-        message("[plotGOactmap] 0: min(score,na.rm=1) = ", min(score,na.rm=TRUE))
-        message("[plotGOactmap] 0: max(score,na.rm=1) = ", max(score,na.rm=TRUE))
+        dbg("[plotGOactmap] 0: sum(isna(score)) = ", sum(is.na(score)))
+        dbg("[plotGOactmap] 0: min(score,na.rm=0) = ", min(score,na.rm=FALSE))
+        dbg("[plotGOactmap] 0: max(score,na.rm=0) = ", max(score,na.rm=FALSE))
+        dbg("[plotGOactmap] 0: min(score,na.rm=1) = ", min(score,na.rm=TRUE))
+        dbg("[plotGOactmap] 0: max(score,na.rm=1) = ", max(score,na.rm=TRUE))
 
         ## avoid errors!!!
         score[is.na(score) | is.infinite(score)] <- 0
