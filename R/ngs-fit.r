@@ -892,8 +892,8 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
     }
 
     ## we add the gene annotation here (not standard...)
-    colnames(rowData(dds))
-    if(!is.null(genes)) rowData(dds)$genes = genes
+    ##colnames(SummarizedExperiment::rowData(dds))
+    if(!is.null(genes)) SummarizedExperiment::rowData(dds)$genes = genes  ## does this work??
 
     ## logCPM for calculating means
     ##X <- edgeR::cpm(DESeq2::counts(dds),log=TRUE,prior.count=0.000001)
@@ -910,7 +910,7 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
         contr[is.na(contr)] <- 0
         contr <- (contr>0)/sum(contr>0) - (contr<0)/sum(contr<0) ## mean zero, signed sum to one.
         DESeq2::resultsNames(dds)
-        if(any(grepl("group",resultsNames(dds))) ) {
+        if(any(grepl("group", DESeq2::resultsNames(dds))) ) {
             grp.contr = contr
             names(grp.contr) = paste0("group",names(contr))
             contr = rep(0,length(DESeq2::resultsNames(dds)))
@@ -938,7 +938,7 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
             k2 = c("logFC","AveExpr","statistic","P.Value","adj.P.Val","AveExpr0","AveExpr1")
             tables[[i]] = tables[[i]][,k1]
             colnames(tables[[i]]) = k2
-            ##genes = rowData(dds)$genes  ## BE SURE TO HAVE THIS!!
+            ##genes = SummarizedExperiment::rowData(dds)$genes  ## BE SURE TO HAVE THIS!!
             ##tables[[i]] = cbind(genes, tables[[i]])
         }
     }
@@ -1015,11 +1015,11 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
         }
                 
         DESeq2::resultsNames(dds)
-        ctx <- c("yneg"=-1, "yzero"=0, "ypos"=1)[resultsNames(dds)]
+        ctx <- c("yneg"=-1, "yzero"=0, "ypos"=1)[DESeq2::resultsNames(dds)]
         resx <- DESeq2::results(dds, contrast=ctx, cooksCutoff=FALSE, independentFiltering=FALSE )
 
         ## we add the gene annotation here (not standard...)
-        rownames(resx) <- rownames(rowData(dds))
+        rownames(resx) <- rownames(SummarizedExperiment::rowData(dds))
         
         ## resx = dds.result[rownames(dds),]  ## seems not
         X1 = X[,kk,drop=FALSE]
@@ -1040,7 +1040,7 @@ ngs.fitConstrastsWithDESEQ2 <- function(counts, group, contr.matrix, design,
             k2 = c("logFC","AveExpr","statistic","P.Value","adj.P.Val","AveExpr0","AveExpr1")
             tables[[i]] = tables[[i]][,k1]
             colnames(tables[[i]]) = k2
-            ##genes = rowData(dds)$genes  ## BE SURE TO HAVE THIS!!
+            ##genes = SummarizedExperiment::rowData(dds)$genes  ## BE SURE TO HAVE THIS!!
             ##tables[[i]] = cbind(genes, tables[[i]])
         }
     }

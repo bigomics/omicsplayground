@@ -1070,7 +1070,7 @@ getHSGeneInfo <- function(eg, as.link=TRUE) {
         kegg.id = info[["KEGG"]][[i]]
         kegg.id = setdiff(kegg.id,NA)
         if(length(kegg.id)>0) {
-            kegg.name = mget(kegg.id, envir=KEGGPATHID2NAME, ifnotfound=NA)[[1]]
+            kegg.name = mget(kegg.id, envir=KEGG.db::KEGGPATHID2NAME, ifnotfound=NA)[[1]]
             if(!is.na(kegg.name) && as.link) {
                 info[["KEGG"]][[i]] <- gsub("KEGGNAME",kegg.name,gsub("KEGGID",kegg.id,kegg.link))
             } else {

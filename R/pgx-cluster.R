@@ -302,9 +302,9 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
         sdx <- apply(X,1,sd,na.rm=TRUE)
         is.constant <- all( abs(sdx-mean(sdx,na.rm=TRUE)) < 1e-8 )    
         if(is.constant) {
-            cat("WARNING:: SD is constant. Skipping SD reduction...\n")                
+            message("WARNING:: SD is constant. Skipping SD reduction...\n")                
         } else {
-            cat("Reducing to ",reduce.sd," max SD features...\n")                
+            message("Reducing to ",reduce.sd," max SD features...\n")                
             X <- X[head(order(-sdx),reduce.sd),]
         }
     }
@@ -324,15 +324,22 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
     }
     
     if(ncol(X)<=6) X <- cbind(X,X,X,X,X,X)
-    X <- X + 1e-3*matrix(rnorm(length(X)),nrow(X),ncol(X))
     dim(X)
+    dbg("[pgx.clusterBigMatrix] 2a: dim(X)=",dim(X),"\n")
+
+    if(nrow(X)<=3) X <- rbind(X,X,X,X)
+    dim(X)
+    dbg("[pgx.clusterBigMatrix] 2b: dim(X)=",dim(X),"\n")    
+
+    ## add small variation...
+    X <- X + 1e-3*matrix(rnorm(length(X)),nrow(X),ncol(X))
     
     ## Further pre-reduce dimensions using SVD
     res.svd <- NULL
     if(reduce.pca>0) {
         reduce.pca <- max(3,min(c(reduce.pca,dim(X)-1)))
         reduce.pca
-        cat("Reducing to ",reduce.pca," PCA dimenstions...\n")        
+        message("Reducing to ",reduce.pca," PCA dimenstions...\n")        
         cnx = colnames(X)
         suppressMessages( suppressWarnings( 
             res.svd <- irlba::irlba(X, nv=reduce.pca)
@@ -341,12 +348,13 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
         colnames(X) <- cnx
     }
     dim(X)
-    cat("dim(X)=",dim(X),"\n")
+
+    dbg("[pgx.clusterBigMatrix] 3: dim(X)=",dim(X),"\n")
     
     all.pos <- list()
 
     if("pca" %in% methods && 2 %in% dims) {
-        cat("calculating PCA 2D/3D...\n")
+        message("calculating PCA 2D/3D...\n")
         
         if(is.null(res.svd)) {
             suppressMessages( suppressWarnings( 
@@ -374,7 +382,7 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
     }
         
     if("tsne" %in% methods && 2 %in% dims) {
-        cat("calculating t-SNE 2D...\n")
+        message("calculating t-SNE 2D...\n")
         
         perplexity <- pmax(min(ncol(X)/4,perplexity),2)
         perplexity        
@@ -389,7 +397,7 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
     }
     
     if("tsne" %in% methods && 3 %in% dims) {
-        cat("calculating t-SNE 3D...\n")
+        message("calculating t-SNE 3D...\n")
         
         perplexity <- pmax(min(dimx[2]/4,perplexity),2)
         perplexity        
@@ -404,7 +412,7 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
     }
     
     if("umap" %in% methods && 2 %in% dims) {
-        cat("calculating UMAP 2D...\n")
+        message("calculating UMAP 2D...\n")
         if(umap.pkg=="uwot") {
             
             nb = ceiling(pmax(min(dimx[2]/4,perplexity),2))
@@ -428,7 +436,7 @@ pgx.clusterBigMatrix <- function(X, methods=c("pca","tsne","umap"), dims=c(2,3),
     }
     
     if("umap" %in% methods && 3 %in% dims) {
-        cat("calculating UMAP 3D...\n")
+        message("calculating UMAP 3D...\n")
         if(umap.pkg=="uwot") {
             
             nb = ceiling(pmax(min(dimx[2]/4,perplexity),2))
@@ -639,7 +647,7 @@ pgx.findLouvainClusters <- function(X, graph.method='dist', level=1, prefix='c',
 
     ## find clusters from t-SNE positions
     idx = NULL
-    cat("Finding clusters using Louvain...\n")
+    message("Finding clusters using Louvain...\n")
     
 
     if(graph.method=='dist') {

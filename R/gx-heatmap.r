@@ -5,9 +5,10 @@
 
 
 
-bluered <- function(n=64) gplots::colorpanel(n,"blue","grey90","red")
-bluered <- function(n=64) gplots::colorpanel(n,"dodgerblue4","grey90","indianred3")
-bluered <- function(n=64) gplots::colorpanel(n,"royalblue3","grey90","indianred3")
+##bluered <- function(n=64) gplots::colorpanel(n,"blue","grey90","red")
+##bluered <- function(n=64) gplots::colorpanel(n,"dodgerblue4","grey90","indianred3")
+##bluered <- function(n=64) gplots::colorpanel(n,"royalblue3","grey90","indianred3")
+BLUERED64 <- colorRampPalette(c("royalblue3","grey90","indianred3"))(64) ## as in pgx-init.R
 
 gx.markermap <- function(X, splitx, n=5, ...)
 {
@@ -561,7 +562,7 @@ gx.heatmap <- function(gx, values=NULL,
                        dist.method="pearson",
                        col.dist.method="euclidean",
                        plot.method="heatmap.2",
-                       col = gplots::bluered(), softmax=FALSE,
+                       col = BLUERED64, softmax=FALSE,
                        ##col = gplots::colorpanel(64,"blue","grey90","red"),
                        scale="row", verbose=1, symm=FALSE,
                        ## Rowv = NA, Colv = NA,
@@ -904,7 +905,8 @@ clustermap <- function(x, nc=6, nr=6, na=4, q=0.80, p=2,
     }
 
     ##my.col=colorpanel(64,"blue","grey90","red")
-    my.col=bluered()
+    ##my.col=bluered()
+    my.col = BLUERED64
     c1 <- cutree(h1,nr)
     c2 <- cutree(h2,nc)
     kxmap <- function(x, c1, c2, q) {

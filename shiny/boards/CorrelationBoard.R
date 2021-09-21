@@ -1198,8 +1198,8 @@ CorrelationBoard <- function(input, output, session, env)
         shiny::req(ph)        
         if(input$dgca.allpairs) gene <- NULL
         
-        message("[dgca.output] gene= ",gene)
-        message("[dgca.output] ph= ",ph)
+        dbg("[dgca.output] gene= ",gene)
+        dbg("[dgca.output] ph= ",ph)
         
         grp = factor(ngs$samples[,ph])
         ii <- which(!is.na(grp))
@@ -1208,16 +1208,17 @@ CorrelationBoard <- function(input, output, session, env)
         colnames(D) <- sub("^grp","",colnames(D))
         rownames(D) <- rownames(ngs$samples)[ii]
         dim(D)
-
+        dbg("[dgca.output] dim.D = ",dim(D))
+        
         X <- ngs$X
         X <- getFilteredExpression()        
         X <- X[,ii,drop=FALSE]
-        sdx1 <- apply(X[,D[,1]==1],1,sd)
-        sdx2 <- apply(X[,D[,2]==1],1,sd)        
+        sdx1 <- apply(X[,D[,1]==1,drop=FALSE],1,sd)
+        sdx2 <- apply(X[,D[,2]==1,drop=FALSE],1,sd)        
         jj <- order(-sdx1*sdx2)
         if(!is.null(gene)) jj <- unique(c(match(gene,rownames(X)),jj))
 
-        message("[dgca.output] length(jj)= ",length(jj))
+        dbg("[dgca.output] length(jj)= ",length(jj))
         X <- X[jj,,drop=FALSE]        
         if(!is.null(gene))  {
             ii <- head(unique(c(gene,rownames(X))),1000)
@@ -1225,9 +1226,9 @@ CorrelationBoard <- function(input, output, session, env)
         } else {
             X <- head(X, 100)
         }
-        message("[dgca.output] dimX= ",paste(dim(X),collapse='x'))
-        message("[dgca.output] gene.inX= ",gene %in% rownames(X))
-        message("[dgca.output] dimD= ",paste(dim(D),collapse='x'))
+        dbg("[dgca.output] dimX= ",paste(dim(X),collapse='x'))
+        dbg("[dgca.output] gene.inX= ",gene %in% rownames(X))
+        dbg("[dgca.output] dimD= ",paste(dim(D),collapse='x'))
         
 
         res = DGCA::ddcorAll(inputMat = X,
@@ -1239,26 +1240,26 @@ CorrelationBoard <- function(input, output, session, env)
                              nPerms = 0
                              )
         dim(res)
-        message("[dgca.output] 1 : dim.res= ",paste(dim(res),collapse='x'))
+        dbg("[dgca.output] 1 : dim.res= ",paste(dim(res),collapse='x'))
         
         ## remove non-valid
         res <- res[rowSums(is.na(res))==0,]
         
-        message("[dgca.output] 2 : dim.res= ",paste(dim(res),collapse='x'))
+        dbg("[dgca.output] 2 : dim.res= ",paste(dim(res),collapse='x'))
         dim(res)
         
         ## filter significant only??
         if(0) {
             sel <- (res$pValDiff_adj < 0.05)
             res <- res[sel,,drop=FALSE]
-            message("[dgca.output] 3 : dim.res= ",paste(dim(res),collapse='x'))
+            dbg("[dgca.output] 3 : dim.res= ",paste(dim(res),collapse='x'))
         }
         
         dim(res)
         res$avg_cor <- rowMeans(res[,c(3,5)])
         
         head(res,20)
-        message("[dgca.output] done!")
+        dbg("[dgca.output] done!")
         res
 
     })
@@ -1460,7 +1461,7 @@ CorrelationBoard <- function(input, output, session, env)
     
     dgca_scatter.PLOTFUN %<a-% shiny::reactive({
         
-        message("[dgca_scatter.PLOTFUN] reacted!")
+        dbg("[dgca_scatter.PLOTFUN] reacted!")
 
         shiny::req(input$cor_gene)
         res <- dgca.output()
@@ -1488,7 +1489,7 @@ CorrelationBoard <- function(input, output, session, env)
             res1 <- res1[order(-abs(score)),]
         }
         
-        message("[dgca_scatter.PLOTFUN] start render")
+        dbg("[dgca_scatter.PLOTFUN] start render")
         nplots <- min(NTOP,nrow(res1))
         nr = ceiling(sqrt(nplots))
         par(mfrow=c(nr,nr), mar=c(3,3.5,0.5,0),
@@ -1522,7 +1523,7 @@ CorrelationBoard <- function(input, output, session, env)
             }
         }
 
-        message("[dgca_scatter.PLOTFUN] done!")
+        dbg("[dgca_scatter.PLOTFUN] done!")
         
     })
 

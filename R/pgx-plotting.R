@@ -2198,9 +2198,9 @@ pgx.violinPlot <- function(x, y, group=NULL, xlab='', ylab='',
         
         if(is.null(maxbee)) maxbee <- 100*length(setdiff(unique(y),NA))
         if(jitter>0) x <- x + jitter*diff(range(x))*rnorm(length(x))
-        ## vioplot(x ~ y, col=vcol, plotCentre="line", xaxt='n' )
-        ## vioplot(x ~ y, col=vcol, plotCentre="line", xaxt='t' )        
-        vioplot(x ~ y, col=vcol, ## cex.main=cex.main,
+        ## vioplot::vioplot(x ~ y, col=vcol, plotCentre="line", xaxt='n' )
+        ## vioplot::vioplot(x ~ y, col=vcol, plotCentre="line", xaxt='t' )        
+        vioplot::vioplot(x ~ y, col=vcol, ## cex.main=cex.main,
                 plotCentre="line", xaxt='n', xlab=xlab, ylab=ylab,
                 ... )
         if(maxbee>0) {
@@ -2411,8 +2411,9 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         z1 <- factor(var)
         nz <- length(levels(z1)) 
         if(is.null(col) && nz>2) {
-            col1 <- c(RColorBrewer::brewer.pal(8,"Dark2"),brewer.pal(12,"Set3"),brewer.pal(8,"Set2"))
-            col1 <- c(RColorBrewer::brewer.pal(8,"Set1"),brewer.pal(8,"Set2"),brewer.pal(12,"Set3"))    
+            col1 <- c(RColorBrewer::brewer.pal(8,"Set1"),
+                      RColorBrewer::brewer.pal(8,"Set2"),
+                      RColorBrewer::brewer.pal(12,"Set3"))    
         } else if(is.null(col) && nz==2) {
             col1 <- rev(grey.colors(2, end=0.8))
             col1 <- c("#AAAAAA55","#555555FF")
@@ -2712,8 +2713,9 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         } else if(nz==1) {
             col1 <- c("#22222255")
         } else {
-            col1 <- c(RColorBrewer::brewer.pal(8,"Dark2"),brewer.pal(12,"Set3"),brewer.pal(8,"Set2"))
-            col1 <- c(RColorBrewer::brewer.pal(8,"Set1"),brewer.pal(8,"Set2"),brewer.pal(12,"Set3"))    
+            col1 <- c(RColorBrewer::brewer.pal(8,"Set1"),
+                      RColorBrewer::brewer.pal(8,"Set2"),
+                      RColorBrewer::brewer.pal(12,"Set3"))    
         }
         col1 <- Matrix::head(rep(col1,99),nz)
         pt.col <- col1[z1]
@@ -3051,8 +3053,9 @@ pgx.scatterPlotXY.PLOTLY <- function(pos,
         } else if(nz==1) {
             cpal <- c("#22222255")
         } else {
-            cpal <- c(RColorBrewer::brewer.pal(8,"Dark2"),brewer.pal(12,"Set3"),brewer.pal(8,"Set2"))
-            cpal <- c(RColorBrewer::brewer.pal(8,"Set1"),brewer.pal(8,"Set2"),brewer.pal(12,"Set3"))    
+            cpal <- c(RColorBrewer::brewer.pal(8,"Set1"),
+                      RColorBrewer::brewer.pal(8,"Set2"),
+                      RColorBrewer::brewer.pal(12,"Set3"))    
         }
         cpal <- Matrix::head(rep(cpal,99),nz)
 

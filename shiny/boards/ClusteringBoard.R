@@ -1958,8 +1958,8 @@ displays the expression levels of selected genes across all conditions in the an
                 if(method %in% c("p-value","meta")) {
                     jj  <- which(!is.na(grp))
                     design = model.matrix( ~ grp[jj])                    
-                    suppressWarnings( fit <- eBayes(lmFit( X1[,jj], design)) )
-                    suppressWarnings( suppressMessages( top <- topTable(fit) ))
+                    suppressWarnings( fit <- limma::eBayes( limma::lmFit( X1[,jj], design)) )
+                    suppressWarnings( suppressMessages( top <- limma::topTable(fit) ))
                     ##s2 = mean(-log10(top$P.Value))  ## as score
                     s2 = mean(-log10(1e-99 + top$adj.P.Val),na.rm=TRUE)  ## as score
                 }
