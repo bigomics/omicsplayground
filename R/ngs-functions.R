@@ -5,7 +5,8 @@
 
 ngs.getGeneAnnotation <- function(genes)
 {
-    
+    require(org.Hs.eg.db)
+    require(org.Mm.eg.db)
     
     hs.genes <- unique(unlist(as.list(org.Hs.egSYMBOL)))
     mm.genes <- unique(unlist(as.list(org.Mm.egSYMBOL)))
@@ -33,20 +34,19 @@ ngs.getGeneAnnotation <- function(genes)
         names(CHRLOC) = SYMBOL
         names(MAP) = SYMBOL
         
-        ##BiocManager::install("TxDb.Hsapiens.UCSC.hg19.knownGene")
-        
-        txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+        ##BiocManager::install("TxDb.Hsapiens.UCSC.hg19.knownGene")        
+        txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene
         tx <- GenomicFeatures::transcriptLengths(txdb)
         TXLEN <- tapply( tx$tx_len, tx$gene_id, mean, na.rm=TRUE)
         TXLEN <- TXLEN[match(names(SYMBOL),names(TXLEN))]
         names(TXLEN) <- SYMBOL        
         Matrix::head(TXLEN)
 
-        ## get gene biotype
-        
-        daf <- GenomicFeatures::transcripts(EnsDb.Hsapiens.v86,
-                           columns = c("gene_name", "gene_biotype"),
-                           return.type="DataFrame")
+        ## get gene biotype        
+        daf <- GenomicFeatures::transcripts(
+                                    EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86,
+                                    columns = c("gene_name", "gene_biotype"),
+                                    return.type="DataFrame")
         GENE.BIOTYPE = daf$gene_biotype
         names(GENE.BIOTYPE) = daf$gene_name
         
@@ -63,17 +63,17 @@ ngs.getGeneAnnotation <- function(genes)
 
         ##BiocManager::install("TxDb.Mmusculus.UCSC.mm10.knownGene")       
                        
-        txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
+        txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene::TxDb.Mmusculus.UCSC.mm10.knownGene
         tx <- GenomicFeatures::transcriptLengths(txdb)
         TXLEN <- tapply( tx$tx_len, tx$gene_id, mean, na.rm=TRUE)
         TXLEN <- TXLEN[match(names(SYMBOL),names(TXLEN))]
         names(TXLEN) <- SYMBOL        
         Matrix::head(TXLEN)
-
         
-        daf <- GenomicFeatures::transcripts(EnsDb.Mmusculus.v79,
-                           columns = c("gene_name", "gene_biotype"),
-                           return.type="DataFrame")
+        daf <- GenomicFeatures::transcripts(
+                                    EnsDb.Mmusculus.v79::EnsDb.Mmusculus.v79,
+                                    columns = c("gene_name", "gene_biotype"),
+                                    return.type="DataFrame")
         GENE.BIOTYPE = daf$gene_biotype
         names(GENE.BIOTYPE) = daf$gene_name
         

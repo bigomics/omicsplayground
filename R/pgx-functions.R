@@ -1047,9 +1047,9 @@ getHSGeneInfo <- function(eg, as.link=TRUE) {
                   ##"PMID" = org.Hs.eg.db::org.Hs.egPMID,
                   "GO" = org.Hs.eg.db::org.Hs.egGO)
 
-    info <- lapply(env.list, function(env) mget(eg, env=env, ifnotfound=NA)[[1]])
+    info <- lapply(env.list, function(env) mget(eg, envir=env, ifnotfound=NA)[[1]])
     names(info) <- names(env.list)
-    gene.symbol <- toupper(mget(as.character(eg), env=org.Hs.eg.db::org.Hs.egSYMBOL))[1]
+    gene.symbol <- toupper(mget(as.character(eg), envir=org.Hs.eg.db::org.Hs.egSYMBOL))[1]
     info[["symbol"]] <- gene.symbol
     
     ## create link to GeneCards
@@ -1070,7 +1070,7 @@ getHSGeneInfo <- function(eg, as.link=TRUE) {
         kegg.id = info[["KEGG"]][[i]]
         kegg.id = setdiff(kegg.id,NA)
         if(length(kegg.id)>0) {
-            kegg.name = mget(kegg.id, env=KEGGPATHID2NAME, ifnotfound=NA)[[1]]
+            kegg.name = mget(kegg.id, envir=KEGGPATHID2NAME, ifnotfound=NA)[[1]]
             if(!is.na(kegg.name) && as.link) {
                 info[["KEGG"]][[i]] <- gsub("KEGGNAME",kegg.name,gsub("KEGGID",kegg.id,kegg.link))
             } else {
@@ -1095,7 +1095,7 @@ getHSGeneInfo <- function(eg, as.link=TRUE) {
             i=1
             for(i in 1:length(info[["GO"]])) {
                 go_id = info[["GO"]][[i]][[1]]
-                go_term = AnnotationDbi::Term(mget(go_id, env=GOTERM, ifnotfound=NA)[[1]])
+                go_term = AnnotationDbi::Term(mget(go_id, envir=GOTERM, ifnotfound=NA)[[1]])
                 if(as.link) {
                     info[["GO"]][[i]] = gsub("GOTERM",go_term,gsub("GOID",go_id,amigo.link))
                 } else {
@@ -1453,13 +1453,13 @@ alias2hugo <- function(s, org=NULL, na.orig=TRUE) {
     s1 <- trimws(s[nna])
     hugo <- NULL
     if(org == "hs") {
-        eg <- sapply(mget(s1, env=org.Hs.eg.db::org.Hs.egALIAS2EG, ifnotfound=NA),"[",1)
+        eg <- sapply(mget(s1, envir=org.Hs.eg.db::org.Hs.egALIAS2EG, ifnotfound=NA),"[",1)
         eg[is.na(eg)] <- "unknown"
-        hugo <- sapply(mget(eg, env=org.Hs.eg.db::org.Hs.egSYMBOL, ifnotfound=NA),"[",1)
+        hugo <- sapply(mget(eg, envir=org.Hs.eg.db::org.Hs.egSYMBOL, ifnotfound=NA),"[",1)
     } else if(org == "mm") {
-        eg <- sapply(mget(s1, env=org.Mm.eg.db::org.Mm.egALIAS2EG, ifnotfound=NA),"[",1)
+        eg <- sapply(mget(s1, envir=org.Mm.eg.db::org.Mm.egALIAS2EG, ifnotfound=NA),"[",1)
         eg[is.na(eg)] <- "unknown"
-        hugo <- sapply(mget(eg, env=org.Mm.eg.db::org.Mm.egSYMBOL, ifnotfound=NA),"[",1)        
+        hugo <- sapply(mget(eg, envir=org.Mm.eg.db::org.Mm.egSYMBOL, ifnotfound=NA),"[",1)        
     } else {
         stop("[alias2hugo] invalid organism")
     }

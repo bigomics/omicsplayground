@@ -9,23 +9,30 @@
 ##                                                                     ##
 #########################################################################
 
-library(pryr)
-# we need all these datasets that actually aren't datasets
-# and so cannot be imported by data() function...
-library(org.Hs.eg.db)
-library(grid)
-
 message("\n\n")
 message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
 message("###############################################################")
 message("\n")
-message("************************************************")
-message("********* RUNTIME ENVIRONMENT VARIABLES ********")
-message("************************************************")
 
 ##Sys.setenv("S HINYPROXY_USERNAME"="Test Person")
 main.start_time <- Sys.time()
+
+message("***********************************************")
+message("*********** LOADING INITIAL LIBS **************")
+message("***********************************************")
+
+library(shiny)
+library(pryr)
+# we need all these datasets that actually aren't datasets
+# and so cannot be imported by data() function...
+library(org.Hs.eg.db) ## better use require inside?
+library(org.Mm.eg.db) ## better use require inside?
+library(grid)
+
+message("***********************************************")
+message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
+message("***********************************************")
 
 envcat <- function(var) message(var," = ",Sys.getenv(var))
 envcat("SHINYPROXY_USERNAME")

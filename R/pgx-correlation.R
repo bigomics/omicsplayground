@@ -505,14 +505,15 @@ pgx.testTraitRelationship <- function(me, df, plot=TRUE, cex=1)
         sigP <- -log10(P+1e-8)
         sigP <- (1 - P)**1
         ##par(oma=c(0,0,0,1))
-        psych::cor.plot( sigP, is.corr=FALSE, ##type="upper",
-                 mar = c(0,0,0,2),
-                 ##p.mat = Q, sig.level = 0.05, ##insig = "blank",
-                 tl.cex = cex, tl.col="black", tl.offset = 1,
-                 cl.align.text = "l", cl.offset = 0.25, cl.cex = 0.7, 
-                 pch.col = "grey50")
-
-
+        ##psych::cor.plot(
+        corrplot::corrplot(                   
+                      sigP, is.corr=FALSE, ##type="upper",
+                      mar = c(0,0,0,2),
+                      ##p.mat = Q, sig.level = 0.05, ##insig = "blank",
+                      tl.cex = cex, tl.col="black", tl.offset = 1,
+                      cl.align.text = "l", cl.offset = 0.25, cl.cex = 0.7, 
+                      pch.col = "grey50")
+        
     }
     return(P)
 }
@@ -522,8 +523,6 @@ pgx.testTraitRelationship <- function(me, df, plot=TRUE, cex=1)
 ##df=ngs$samples
 pgx.testPhenoCorrelation <- function(df, plot=TRUE, cex=1)
 {
-
-    
     
     cl <- sapply(df,class)
     nlev = apply(df,2,function(x) length(unique(x[!is.na(x)])))
@@ -615,19 +614,20 @@ pgx.testPhenoCorrelation <- function(df, plot=TRUE, cex=1)
     
     if(plot==TRUE) {
 
-            
         logP <- -log10(P+1e-8)
         logQ <- -log10(Q+1e-8)
         diag(logQ) <- 0
         ##par(oma=c(0,0,0,1))
-        psych::cor.plot( logQ, is.corr=FALSE, type="upper",
-                 mar = c(0,0,0,2),
-                 p.mat = Q, sig.level = 0.05, ##insig = "blank",
-                 tl.cex = cex, tl.col="black", tl.offset = 1,
-                 cl.align.text = "l", cl.offset = 0.25, cl.cex = 0.7, 
-                 pch.col = "grey50",
-                 order="hclust")
-
+        ##psych::cor.plot( 
+        corrplot::corrplot(
+                      logQ, is.corr=FALSE, type="upper",        
+                      mar = c(0,0,0,2),
+                      p.mat = Q, sig.level = 0.05, ##insig = "blank",
+                      tl.cex = cex, tl.col="black", tl.offset = 1,
+                      cl.align.text = "l", cl.offset = 0.25, cl.cex = 0.7, 
+                      pch.col = "grey50",
+                      order="hclust")
+        
     }
 
     return(list(P=P, Q=Q))

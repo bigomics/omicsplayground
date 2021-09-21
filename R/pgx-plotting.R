@@ -228,7 +228,7 @@ pgx.ActivationMatrix <- function(pgx, features=NULL, contrasts=NULL,
             F2 <- t(F2)
         colnames.f2 <- colnames(F2)
         colnames(F2) <- rep("",ncol(F2))
-        psych::cor.plot(
+        corrplot::corrplot(
             F2, ## p.mat=Q1,
             is.corr=FALSE, col = cpal,
             tl.col = "grey0", tl.cex = 0.8*cex.row,

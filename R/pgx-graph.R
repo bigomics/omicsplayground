@@ -4,8 +4,6 @@
 ##
 
 
-
-
 pgx.computePathscores <- function(graph, strict.pos=TRUE)
 {
     
@@ -139,8 +137,9 @@ pgx.computeShortestPath <- function(graph, contrast, niter=1, r=0.01,
 }
 
 pgx._addSourceSink <- function(gr) {
-    min.level <- min(gr$layout[V(gr)$name,3])
-    max.level <- max(gr$layout[V(gr)$name,3])
+
+    min.level <- min(gr$layout[igraph::V(gr)$name,3])
+    max.level <- max(gr$layout[igraph::V(gr)$name,3])
     min.level
     max.level
     
@@ -154,16 +153,15 @@ pgx._addSourceSink <- function(gr) {
                             "SOURCE"=rep(NA,ncol(gr$scaled.data)),
                             "SINK"=rep(NA,ncol(gr$scaled.data)) )
     
-    level <- gr$layout[V(gr)$name,3]
+    level <- gr$layout[igraph::V(gr)$name,3]
     i1 <- which(level==min.level)
     i2 <- which(level==max.level)
-    ee1 <- data.frame( from="SOURCE", to=V(gr)$name[i1])
-    ee2 <- data.frame( from=V(gr)$name[i2], to="SINK")
+    ee1 <- data.frame( from="SOURCE", to=igraph::V(gr)$name[i1])
+    ee2 <- data.frame( from=igraph::V(gr)$name[i2], to="SINK")
     ee <- rbind(ee1, ee2)
     gr <- igraph::add_edges(gr, as.vector(t(ee)), weight=1)
     return(gr)
 }
-
 
 pgx.createOmicsGraph <- function(ngs, do.intersect=TRUE )
 {
@@ -233,11 +231,11 @@ pgx.createOmicsGraph <- function(ngs, do.intersect=TRUE )
     Matrix::tail(rownames(fc))
 
     sel <- intersect(rownames(xx), rownames(fc))
-    sel <- sort(intersect(sel,V(gr)$name))
+    sel <- sort(intersect(sel,igraph::V(gr)$name))
     gr1 <- igraph::induced_subgraph(gr, sel)
     gr1
-    xx <- xx[V(gr1)$name,,drop=FALSE]
-    fc <- fc[V(gr1)$name,,drop=FALSE]
+    xx <- xx[igraph::V(gr1)$name,,drop=FALSE]
+    fc <- fc[igraph::V(gr1)$name,,drop=FALSE]
 
     ## save the matched foldchange matrix
     gr1$foldchange  <- fc
@@ -250,13 +248,13 @@ pgx.createOmicsGraph <- function(ngs, do.intersect=TRUE )
         table(igraph::V(gr1)$level)
         ## this connect all points with at least 3 neighbours
         sel1 <- which( igraph::V(gr1)$level=="gene")
-        pos1 <- gr$layout[V(gr1)[sel1]$name,]
+        pos1 <- gr$layout[igraph::V(gr1)[sel1]$name,]
         Matrix::head(pos1)
         r1 <- scran::buildSNNGraph(t(pos1), k=3)
         igraph::V(r1)$name <- igraph::V(gr1)[sel1]$name
 
         sel2 <- which( igraph::V(gr1)$level=="geneset")
-        pos2 <- gr$layout[V(gr1)[sel2]$name,]
+        pos2 <- gr$layout[igraph::V(gr1)[sel2]$name,]
         Matrix::head(pos2)
         r2 <- scran::buildSNNGraph(t(pos2), k=3)
         igraph::V(r2)$name <- igraph::V(gr1)[sel2]$name
@@ -276,7 +274,7 @@ pgx.createOmicsGraph <- function(ngs, do.intersect=TRUE )
     ##----------------------------------------------------------------------
     ##  set correlation on edges
     ##----------------------------------------------------------------------
-    ee <- igraph::get.edges(gr1, igraph::E(gr1) )
+    ee <- igraph::get.edges(gr1,igraph::E(gr1) )
     dim(ee)
     ee.rho <- rep(NA, nrow(ee))
     bs <- 100000
@@ -345,8 +343,8 @@ pgx.reduceOmicsGraph <- function(ngs)
     ##------------------------------------------------------------
     ## create reduction transform matrix
     ##------------------------------------------------------------
-    idx0 <- c(h1[,1],h2[,1])[V(gr)$name]
-    idx  <- c(hc1,hc2)[V(gr)$name]
+    idx0 <- c(h1[,1],h2[,1])[igraph::V(gr)$name]
+    idx  <- c(hc1,hc2)[igraph::V(gr)$name]
     R <- t(model.matrix( ~ 0 + idx))
     R <- R / rowSums(R)
     dim(R)
@@ -399,15 +397,15 @@ pgx.reduceOmicsGraph <- function(ngs)
     if(1) {
         ## should we recreate the SNNgraph in the intralayers????
         ## this connect all points with at least 3 neighbours
-        vtype <- gsub("\\}.*|^\\{","",V(gr1)$name)
+        vtype <- gsub("\\}.*|^\\{","",igraph::V(gr1)$name)
         sel1 <- which( vtype=="gene")
-        pos1 <- gr1$layout[V(gr1)[sel1]$name,]
+        pos1 <- gr1$layout[igraph::V(gr1)[sel1]$name,]
         Matrix::head(pos1)
         r1 <- scran::buildSNNGraph(t(pos1), k=3)
         igraph::V(r1)$name <- rownames(pos1)
 
         sel2 <- which( vtype=="geneset")
-        pos2 <- gr1$layout[V(gr1)[sel2]$name,]
+        pos2 <- gr1$layout[igraph::V(gr1)[sel2]$name,]
         Matrix::head(pos2)
         r2 <- scran::buildSNNGraph(t(pos2), k=3)
         igraph::V(r2)$name <- rownames(pos2)
@@ -427,7 +425,7 @@ pgx.reduceOmicsGraph <- function(ngs)
     ##V(gr1)$members <- grp.idx
     igraph::V(gr1)$label <- grp.label
     igraph::V(gr1)$cluster <- tapply(idx0, idx, median)  ## level 1 cluster index
-    igraph::V(gr1)$level <- gsub("\\}.*|^\\{","",V(gr1)$name)
+    igraph::V(gr1)$level <- gsub("\\}.*|^\\{","",igraph::V(gr1)$name)
     table(igraph::V(gr1)$level)
 
     gr1$foldchange <- rF
@@ -450,11 +448,11 @@ pgx.createVipGeneLayer <- function(gr, genes, z=0, reconnect=40) {
         reconnect=100;z=0
     }
 
-    vname <- sub(".*\\}","",V(gr)$name)
+    vname <- sub(".*\\}","",igraph::V(gr)$name)
     vip <- igraph::V(gr)[which(vname %in% genes)]
     igraph::V(gr)[vip]$level <- "VIP"
-    gr$layout <- gr$layout[V(gr)$name,]
-    gr$layout[V(gr)[vip]$name,3] <- z  ## new layer position
+    gr$layout <- gr$layout[igraph::V(gr)$name,]
+    gr$layout[igraph::V(gr)[vip]$name,3] <- z  ## new layer position
     table(gr$layout[,3])
 
     ##----------------------------------------------------------------------
@@ -759,7 +757,8 @@ pgx.plotForwardProjection <- function(gr, gene, cex=1, fx=NULL,
 ##fdr=0.05
 pgx.computeCoreGOgraph <- function(ngs, fdr=0.05)
 {
-
+    require(igraph)
+    
     ## test if there are GO terms
     mx = ngs$gset.meta$meta[[1]]
     jj = grep("^GO",rownames(mx))
@@ -790,7 +789,7 @@ pgx.computeCoreGOgraph <- function(ngs, fdr=0.05)
 
     go_graph <- getGOgraph()
     go_graph <- igraph::induced.subgraph( go_graph, igraph::V(sub2)$name )
-    A = A[V(go_graph)$name,]
+    A = A[igraph::V(go_graph)$name,]
     Q = S = V = c()
     j1 = grep("^score",colnames(A))
     j2 = grep("^foldchange",colnames(A))
@@ -826,15 +825,14 @@ getGOgraph <- function() {
     ##install.packages(GOSim)
     ##
     
-    
-    terms <- AnnotationDbi::toTable(GOTERM)[,2:5]
+    terms <- AnnotationDbi::toTable(GO.db::GOTERM)[,2:5]
     terms <- terms[ !duplicated(terms[,1]), ]
     rownames(terms) = terms[,1]
 
     ##terms <- terms[ terms[,1] %in% vv, ]
-    BP <- AnnotationDbi::toTable(GOBPPARENTS)
-    MF <- AnnotationDbi::toTable(GOMFPARENTS)
-    CC <- AnnotationDbi::toTable(GOCCPARENTS)
+    BP <- AnnotationDbi::toTable(GO.db::GOBPPARENTS)
+    MF <- AnnotationDbi::toTable(GO.db::GOMFPARENTS)
+    CC <- AnnotationDbi::toTable(GO.db::GOCCPARENTS)
     bp.terms = unique(c(BP[,1],BP[,2]))
     all.parents = rbind(BP,MF,CC)
     go_graph <- igraph::graph_from_data_frame( all.parents, vertices=terms )
@@ -889,7 +887,7 @@ pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.20, nterms=500, nt
     Matrix::head(vinfo)
     remove(fc)
 
-    terms <- AnnotationDbi::toTable(GOTERM)[,2:5]
+    terms <- AnnotationDbi::toTable(GO.db::GOTERM)[,2:5]
     colnames(terms)[1] = "go_id"
     terms <- terms[ !duplicated(terms[,1]), ]
     rownames(terms) = terms[,1]
@@ -948,11 +946,11 @@ pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.20, nterms=500, nt
     vv = unique(unlist(sapply(top.terms, get.vpath)))
     vv = igraph::V(go_graph)$name[vv]
     sub1 = igraph::induced_subgraph(go_graph, vv)
-    score1 = (pathscore/max(abs(pathscore),na.rm=TRUE))[V(sub1)$name]
+    score1 = (pathscore/max(abs(pathscore),na.rm=TRUE))[igraph::V(sub1)$name]
     ##score1[is.na(score1)] = 0
-    igraph::V(sub1)$score = pathscore[V(sub1)$name]
+    igraph::V(sub1)$score = pathscore[igraph::V(sub1)$name]
     igraph::V(sub1)$color = gplots::bluered(32)[16 + round(15*score1)]
-    igraph::V(sub1)$label = vinfo[V(sub1)$name,"Term"]
+    igraph::V(sub1)$label = vinfo[igraph::V(sub1)$name,"Term"]
     ## igraph::V(sub1)$size = scale(pathscore[V(sub1)$name],center=FALSE)
 
     return(sub1)
