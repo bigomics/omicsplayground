@@ -29,9 +29,6 @@ hg19GeneLengths <- function(symbols=NULL) {
 mm10GeneLengths <- function(symbols=NULL) {
     ##biocLite("TxDb.Mmusculus.UCSC.mm10.knownGene")
     
-    
-    
-    
     if(is.null(symbols))
         symbols = as.character(unlist(as.list(org.Mm.eg.db::org.Mm.egSYMBOL)))
     Matrix::head(symbols)

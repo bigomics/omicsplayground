@@ -342,7 +342,7 @@ LoadingBoard <- function(input, output, session,
                 newpgx <- PGXINFO()[all.pgx != this.pgx,]
                 PGXINFO(newpgx)
 
-                DT::selectRows(proxy=dataTableProxy(ns("pgxtable")), selected=sel)
+                DT::selectRows(proxy = DT::dataTableProxy(ns("pgxtable")), selected=sel)
             } else {
                 cat(">>> deletion cancelled\n")
             }
@@ -739,7 +739,7 @@ LoadingBoard <- function(input, output, session,
 
         ## update CurrentPGX
         currentPGX(pgx)
-        DT::selectRows(proxy=dataTableProxy(ns("pgxtable")), selected=NULL)
+        DT::selectRows(proxy = DT::dataTableProxy(ns("pgxtable")), selected=NULL)
         
         savedata_button <- NULL
         if(enable_save) {
@@ -809,21 +809,16 @@ LoadingBoard <- function(input, output, session,
     
     usersmap.RENDER %<a-% shiny::reactive({
         
-
-
-
-        df <- ACCESS.LOG$visitors
-        
-        ##sPDF <- getMap()  
-        ##mapCountryData(sPDF, nameColumnToPlot='continent')
-
-        sPDF <- joinCountryData2Map(
+        df <- ACCESS.LOG$visitors        
+        ## sPDF <- rworldmap::getMap()  
+        ## rworldmap::mapCountryData(sPDF, nameColumnToPlot='continent')
+        sPDF <- rworldmap::joinCountryData2Map(
             df,
             joinCode = "ISO2",
             nameJoinColumn = "country_code")
         
         par(mai=c(0,0.4,0.2,1),xaxs="i",yaxs="i")
-        mapParams <- mapCountryData(
+        mapParams <- rworldmap::mapCountryData(
             sPDF, nameColumnToPlot="count",
             ##mapTitle = "Number of unique IPs",
             mapTitle = "", addLegend='FALSE',
@@ -831,7 +826,7 @@ LoadingBoard <- function(input, output, session,
             numCats=9, catMethod="logFixedWidth")   
                    
         ##add a modified legend using the same initial parameters as mapCountryData
-        do.call( addMapLegend,
+        do.call( rworldmap::addMapLegend,
                 c(mapParams, labelFontSize = 0.85, legendWidth = 1.2, legendShrink = 0.5,
                   legendMar = 4, horizontal = FALSE, legendArgs = NULL, tcl = -0.5,
                   sigFigs = 4, digits = 3)
