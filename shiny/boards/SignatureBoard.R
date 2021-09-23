@@ -74,7 +74,7 @@ infotext =
     
     output$inputsUI <- shiny::renderUI({
         ui <- shiny::tagList(
-            tags$head(tags$style("#sig-genelistUP.form-control {font-size:11px !important;padding:3px;height:200px;}")),
+            shiny::tags$head(shiny::tags$style("#sig-genelistUP.form-control {font-size:11px !important;padding:3px;height:200px;}")),
             shinyBS::tipify( shiny::actionLink(ns("info"), "Tutorial", icon = shiny::icon("youtube")),
                    "Show more information about this module"),
             shiny::hr(), shiny::br(),
