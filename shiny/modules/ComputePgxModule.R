@@ -75,35 +75,35 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     shiny::fluidRow(
                         shiny::column(
                             12, align="center", offset=0,
-                            tags$table(
+                            shiny::tags$table(
                                      style="width:100%;vertical-align:top;padding:4px;",
-                                     tags$tr(
-                                              tags$td("", width="300"),
-                                              tags$td("Name", width="100"),
-                                              tags$td(shiny::textInput(
+                                     shiny::tags$tr(
+                                              shiny::tags$td("", width="300"),
+                                              shiny::tags$td("Name", width="100"),
+                                              shiny::tags$td(shiny::textInput(
                                                        ns("upload_name"),NULL, ##"Dataset:",
                                                        ##width="100%",
                                                        ## width=420,
                                                        placeholder="Name of your dataset"),
                                                       width="600"
                                                       ),
-                                              tags$td("", width="120")
+                                              shiny::tags$td("", width="120")
                                           ),
-                                     tags$tr(
-                                              tags$td(""),
-                                              tags$td("Datatype"),
-                                              tags$td(shiny::selectInput(
+                                     shiny::tags$tr(
+                                              shiny::tags$td(""),
+                                              shiny::tags$td("Datatype"),
+                                              shiny::tags$td(shiny::selectInput(
                                                        ns("upload_datatype"), NULL,
                                                        choices = c("RNA-seq","scRNA-seq",
                                                                    "proteomics",
                                                                    "mRNA microarray","other"))
                                                       ),
-                                              tags$td("")
+                                              shiny::tags$td("")
                                           ),
-                                     tags$tr(
-                                              tags$td(""),
-                                              tags$td("Description"),
-                                              tags$td(shiny::div(shiny::textAreaInput(
+                                     shiny::tags$tr(
+                                              shiny::tags$td(""),
+                                              shiny::tags$td("Description"),
+                                              shiny::tags$td(shiny::div(shiny::textAreaInput(
                                                        ns("upload_description"), NULL, ## "Description:",
                                                        placeholder="Give a short description of your dataset",
                                                        ##width="100%",
@@ -111,7 +111,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                                        height=100, resize='none'),
                                                        style="margin-left: 0px;"
                                                        )),
-                                              tags$td("")
+                                              shiny::tags$td("")
                                           )
                                  ),
                             shiny::br(),

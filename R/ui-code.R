@@ -1,9 +1,9 @@
 
 ##textInput <- function(inputId, label, value = "") {
 myTextInput <- function(inputId, label, value = "") {
-    ##singleton(tags$head(tags$script(src = "/temp/mytextinput.js"))),
-    shiny::tagList(tags$label(label, `for` = inputId),
-            tags$input(id = inputId, type = "text", value = value,
+    ##singleton(shiny::tags$head(shiny::tags$script(src = "/temp/mytextinput.js"))),
+    shiny::tagList(shiny::tags$label(label, `for` = inputId),
+            shiny::tags$input(id = inputId, type = "text", value = value,
                        class="myTextInput form-control shiny-bound-input"))
 }
 
@@ -71,15 +71,15 @@ code.textInput = shiny::HTML(" <script> var myTextInputBinding = new Shiny.Input
 inlineTextInput <- function (inputId, label, value = "")
 {
     shiny::div(style="display:inline-block",
-        tags$label(label, "for"=inputId),
-        tags$input(id=inputId, type="text", value=value, class="input-small"))
+        shiny::tags$label(label, "for"=inputId),
+        shiny::tags$input(id=inputId, type="text", value=value, class="input-small"))
 }
 
 inlineSelectInput <- function (inputId, label, value = "")
 {
     shiny::div(style="display:inline-block",
-        tags$label(label, "for"=inputId),
-        tags$input(id=inputId, type="select", value=value))
+        shiny::tags$label(label, "for"=inputId),
+        shiny::tags$input(id=inputId, type="select", value=value))
 }
 
 if(0) {

@@ -12,9 +12,9 @@ gadgetize <- function(moduleUI, moduleSERVER, title="shiny gadget", ...)
     
     id = sub(".*file","gadget",tempfile())  ## random ID
     ui = miniUI::miniPage(
-        tags$head(tags$style(".modal-dialog{width:900px}")),
-        tags$head(tags$style(".modal-dialog.modal-lg{width:1400px}")),
-        tags$head(tags$style(".modal-dialog.modal-sm{width:400px}")),        
+        shiny::tags$head(shiny::tags$style(".modal-dialog{width:900px}")),
+        shiny::tags$head(shiny::tags$style(".modal-dialog.modal-lg{width:1400px}")),
+        shiny::tags$head(shiny::tags$style(".modal-dialog.modal-sm{width:400px}")),        
         shinyalert::useShinyalert(),
         miniUI::gadgetTitleBar(title),
         miniUI::miniContentPanel(moduleUI(id))
@@ -43,9 +43,9 @@ gadgetize2 <- function(moduleUI, moduleSERVER, title="shiny gadget",
     
     id = sub(".*file","gadget",tempfile())  ## random ID
     ui = shiny::fluidPage(
-        tags$head(tags$style(".modal-dialog{width:900px}")),
-        tags$head(tags$style(".modal-dialog.modal-lg{width:1400px}")),
-        tags$head(tags$style(".modal-dialog.modal-sm{width:400px}")),
+        shiny::tags$head(shiny::tags$style(".modal-dialog{width:900px}")),
+        shiny::tags$head(shiny::tags$style(".modal-dialog.modal-lg{width:1400px}")),
+        shiny::tags$head(shiny::tags$style(".modal-dialog.modal-sm{width:400px}")),
         shinyalert::useShinyalert()
     )    
     server = function(input, output, session)
@@ -76,7 +76,7 @@ gadgetize2 <- function(moduleUI, moduleSERVER, title="shiny gadget",
 
 this.style <- function(id, css, ns=NULL) {
     if(!is.null(ns)) id <- ns(id)
-    tags$head(tags$style(paste0("#",id," ",css)))
+    shiny::tags$head(shiny::tags$style(paste0("#",id," ",css)))
 }
 
 

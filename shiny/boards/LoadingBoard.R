@@ -130,7 +130,7 @@ LoadingBoard <- function(input, output, session,
     ## User interface
     ##-----------------------------------------------------------------------------
     downloadButton2 <- function (outputId, label = "Download", class = NULL, ...) {
-        aTag <- tags$a(id = outputId,
+        aTag <- shiny::tags$a(id = outputId,
                        class = paste("btn btn-default shiny-download-link", class),
                        href = "", target = "_blank", download = NA, 
                        shiny::icon("file-csv"), label, ...)
@@ -897,7 +897,7 @@ LoadingBoard <- function(input, output, session,
         src = paste0('https://groups.google.com/forum/embed/?place=forum/omicsplayground',
                      '&showsearch=true&showpopout=true&parenturl=',parenturl)
         cat("src = ",src,"\n")
-        tags$iframe(id="forum_embed", src=src, height=600, width='100%',
+        shiny::tags$iframe(id="forum_embed", src=src, height=600, width='100%',
                     ##seamless="seamless",
                     frameborder='no')
         ##HTML(src)
@@ -905,9 +905,9 @@ LoadingBoard <- function(input, output, session,
          
     output$tweet <- shiny::renderUI({
         ## NOT WORKING YET...
-        tags$a(class="twitter-timeline",
+        shiny::tags$a(class="twitter-timeline",
                href="https://twitter.com/bigomics?ref_src=twsrc%5Etfw")
-        ##tags$script('twttr.widgets.load(document.getElementById("tweet"));')
+        ##shiny::tags$script('twttr.widgets.load(document.getElementById("tweet"));')
     })
             
     output$forum_UI <- shiny::renderUI({

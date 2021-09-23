@@ -244,9 +244,9 @@ plotModule <- function(input, output, session, ## ns=NULL,
     
     if(!just.info && !is.null(options) && length(options)>0) {
         options.button <- shinyWidgets::dropdownButton(
-            ##tags$h3("Options"),
+            ##shiny::tags$h3("Options"),
             options,
-            ##br(),
+            ##shiny::br(),
             ##dload,
             circle = TRUE, size = "xs", ## status = "danger",
             ##icon = shiny::icon("gear"),
@@ -272,7 +272,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
                 shiny::numericInput(ns("pdf_width"), "PDF width", pdf.width, 1, 20, 1, width='100%'),
                 shiny::numericInput(ns("pdf_height"), "height", pdf.height, 1, 20, 1, width='100%')
             ),
-            shiny::br(),br(),br()
+            shiny::br(),shiny::br(),shiny::br()
         )
     }
     
@@ -289,12 +289,10 @@ plotModule <- function(input, output, session, ## ns=NULL,
 
     if(no.download || length(download.fmt)==0 ) dload.button <- ""
     label1 = shiny::HTML(paste0("<span class='module-label'>",label,"</span>"))
-    
-    
+        
     ##zoom.button <- shinyWidgets::prettyCheckbox(inputId=ns("zoom"),label=NULL,value=FALSE)
     zoom.button <- NULL
-    if(show.maximize) {
-        
+    if(show.maximize) {        
         zoom.button <- shiny::actionButton(inputId=ns("zoombutton"),label=NULL,
                                     icon=icon("window-maximize"),
                                     class="btn-circle-xs")
@@ -309,7 +307,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
         label1,
         ##div( class="button-group", style="display: inline-block; float: left;",
         shinyWidgets::dropdownButton(
-            tags$p(shiny::HTML(info.text)),
+            shiny::tags$p(shiny::HTML(info.text)),
             shiny::br(),
             circle = TRUE, size = "xs", ## status = "danger",
             icon = shiny::icon("info"), width = info.width,
@@ -322,7 +320,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
         ##),
         shiny::HTML(paste("<center>",title,"</center>"))
         ##HTML(paste("<center><strong>",title,"</strong></center>"))
-        ##br()
+        ##shiny::br()
         ##inputs
         ##selectInput("sel123","number",1:10)
     )
@@ -332,11 +330,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
     ##--------------------------------------------------------------------------------
     ##------------------------ FIGURE ------------------------------------------------
     ##--------------------------------------------------------------------------------
-    
-    
-    
-    
-    
     
     ## these engines cannot (yet) provide html
     if(plotlib %in% c("base")) {    
@@ -641,19 +634,16 @@ plotModule <- function(input, output, session, ## ns=NULL,
             
             if(is.null(renderFunc)) renderFunc="scatterD3::renderScatterD3"
             if(is.null(outputFunc)) outputFunc="scatterD3::scatterD3Output"
-        } else if(plotlib=="pairsD3") {
-            
-            if(is.null(renderFunc)) renderFunc="renderPairsD3"
-            if(is.null(outputFunc)) outputFunc="pairsD3Output"
-        } else if(plotlib == "visnetwork") {
-            
+        } else if(plotlib=="pairsD3") {            
+            if(is.null(renderFunc)) renderFunc="pairsD3::renderPairsD3"
+            if(is.null(outputFunc)) outputFunc="pairsD3::pairsD3Output"
+        } else if(plotlib == "visnetwork") {            
             if(is.null(outputFunc)) outputFunc="visNetwork::visNetworkOutput"
             if(is.null(renderFunc)) renderFunc = "visNetwork::renderVisNetwork"
         } else if(plotlib %in% c("ggplot","ggplot2")) {
             if(is.null(outputFunc)) outputFunc="shiny::plotOutput"
             if(is.null(renderFunc)) renderFunc="function(x) shiny::renderPlot(plot(x))"
-        } else if(plotlib == "iheatmapr") {
-            
+        } else if(plotlib == "iheatmapr") {            
             if(is.null(outputFunc)) outputFunc="iheatmapr::iheatmaprOutput"
             if(is.null(renderFunc)) renderFunc="iheatmapr::renderIheatmap"
         } else if(plotlib == "image") {
@@ -665,10 +655,10 @@ plotModule <- function(input, output, session, ## ns=NULL,
             ##     par(mar=c(0,0,0,0),oma=c(0,0,0,0))
             ##     func()
             ## }, res=res, width=width, height=height)
-            if(is.null(outputFunc)) outputFunc="plotOutput"
+            if(is.null(outputFunc)) outputFunc="shiny::plotOutput"
             ##renderFunc="renderPlot"
             ##renderFunc="function(x) shiny::renderPlot(x, res=res, width=width, height=height)"
-            if(is.null(renderFunc)) renderFunc="renderPlot"
+            if(is.null(renderFunc)) renderFunc="shiny::renderPlot"
         }
         list( outputFunc=outputFunc, renderFunc=renderFunc )
     }
@@ -766,8 +756,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
             ## retains aspect ratio
             ##
             img.file <- func()$src
-            
-            
             img.dim <- c(h,w)
             if(grepl("png|PNG",img.file)) img.dim <- dim(png::readPNG(img.file))[1:2]
             if(grepl("jpg|JPG",img.file)) img.dim <- dim(jpeg::readJPEG(img.file))[1:2]
@@ -809,10 +797,10 @@ plotModule <- function(input, output, session, ## ns=NULL,
             flex = c(NA,NA,1,NA,NA,0.001),
             height = height.1,
             shiny::tagList(
-                tags$head(tags$style(modaldialog.style)),
-                tags$head(tags$style(modalbody.style)),            
-                tags$head(tags$style(modalfooter.none))
-                ##tags$head(tags$style(".caption { margin: 20px 5px;}"))
+                shiny::tags$head(shiny::tags$style(modaldialog.style)),
+                shiny::tags$head(shiny::tags$style(modalbody.style)),            
+                shiny::tags$head(shiny::tags$style(modalfooter.none))
+                ##shiny::tags$head(shiny::tags$style(".caption { margin: 20px 5px;}"))
             ),
             ##uiOutput(ns("renderbuttons")),
             buttons,
@@ -874,9 +862,6 @@ tableModule <- function(input, output, session,
                         options = NULL, info.width="300px"
                         )
 {
-    
-    
-
     ns <- session$ns
     
     if(any(class(caption)=="reactive")) {
@@ -890,7 +875,7 @@ tableModule <- function(input, output, session,
     if(!is.null(options) && length(options)>0) {
         options.button <- shinyWidgets::dropdownButton(
             options,
-            ##br(),
+            ##shiny::br(),
             ##dload,
             circle = TRUE, size = "xs", ## status = "danger",
             ## icon = shiny::icon("gear"),
@@ -902,10 +887,9 @@ tableModule <- function(input, output, session,
     }
     label1 = shiny::HTML(paste0("<span class='module-label'>",label,"</span>"))
 
-    
     zoom.button <- shiny::actionButton(inputId=ns("zoombutton"),label=NULL,
-                                icon=icon("window-maximize"),
-                                class="btn-circle-xs")    
+                                       icon=icon("window-maximize"),
+                                       class="btn-circle-xs")    
     
     buttons <- shiny::fillRow(
         ##flex=c(NA,NA,NA,NA,1),
@@ -913,21 +897,22 @@ tableModule <- function(input, output, session,
         ##actionLink(options_id, label=NULL, icon = shiny::icon("info")),
         label1,
         shinyWidgets::dropdownButton(
-            tags$p(shiny::HTML(info.text)),
-            shiny::br(),
-            circle = TRUE, size = "xs", ## status = "danger",
-            icon = shiny::icon("info"), width = info.width,
-            inputId = ns("info"), right=FALSE,
-            tooltip = shinyWidgets::tooltipOptions(title = "Info", placement = "right")
-        ),
+                          shiny::tags$p(shiny::HTML(info.text)),
+                          shiny::br(),
+                          circle = TRUE, size = "xs", ## status = "danger",
+                          icon = shiny::icon("info"), width = info.width,
+                          inputId = ns("info"), right=FALSE,
+                          tooltip = shinyWidgets::tooltipOptions(title = "Info", placement = "right")
+                      ),
         options.button,
         shiny::div(class='download-button',
-            shinyWidgets::dropdownButton(
-                shiny::downloadButton(ns("csv"), "CSV"),
-                circle = TRUE, size = "xs", ## status = "danger",
-                icon = shiny::icon("download"), width = "80px", right=FALSE,
-                tooltip = shinyWidgets::tooltipOptions(title = "Download", placement = "right")
-            )),
+                   shinyWidgets::dropdownButton(
+                                     shiny::downloadButton(ns("csv"), "CSV"),
+                                     circle = TRUE, size = "xs", ## status = "danger",
+                                     icon = shiny::icon("download"), width = "80px", right=FALSE,
+                                     tooltip = shinyWidgets::tooltipOptions(title = "Download",
+                                                                            placement = "right")
+                                 )),
         zoom.button,
         shiny::HTML(paste("<center>",title,"</center>"))
         ##HTML(paste("<center><strong>",title,"</strong></center>"))
@@ -986,35 +971,32 @@ tableModule <- function(input, output, session,
         ##modaldialog.style <- paste0("#",ns("tablePopup")," .modal-dialog {width:",width.2+40,"px;}")
         ##modalbody.style <- paste0("#",ns("tablePopup")," .modal-body {min-height:",height.2+40,"px;}")
         modaldialog.style <- paste0("#",ns("tablePopup")," .modal-dialog {width:",width.2,"px;}")
-        modalbody.style <- paste0("#",ns("tablePopup")," .modal-body {min-height:",height.2,"px;}")
-        modalfooter.none <- paste0("#",ns("tablePopup")," .modal-footer{display:none;}")
+        modalbody.style   <- paste0("#",ns("tablePopup")," .modal-body {min-height:",height.2,"px;}")
+        modalfooter.none  <- paste0("#",ns("tablePopup")," .modal-footer{display:none;}")
         div.caption <- NULL
         if(!is.null(caption)) div.caption <- shiny::div(caption, class="table-caption")
         
         shiny::fillCol(
-            flex = c(NA,NA,1,NA),
-            ##tags$head(tags$style(".popup-table .modal-dialog {width:1200px;}")),
-            ##tags$head(tags$style(".popup-table .modal-body {min-height:700px;}")),
-            ##tags$head(tags$style(".popup-table .modal-footer {display:none;}")),            
-            tags$head(tags$style(modaldialog.style)),
-            tags$head(tags$style(modalbody.style)),
-            tags$head(tags$style(modalfooter.none)),
-            buttons,
-            ##uiOutput(ns("renderbuttons")),
-            div.caption,
-            DT::DTOutput(ns("datatable"), width=width.1, height=height.1),
-            ##DT::renderDataTable(func()),
-            ##verbatimTextOutput(ns("zoomstatus"))
-            shiny::div(class="popup-table",
-                shinyBS::bsModal(
-                    id = ns("tablePopup"),
-                    title = title,
-                    size="l",
-                    trigger = ns("zoombutton"),
-                    ##tagList(shiny::renderPlot(plot(sin)))
-                    shiny::tagList(shiny::uiOutput(ns("popuptable")))
-                ))            
-        )
+                   flex = c(NA,NA,1,NA),
+                   shiny::tags$head(shiny::tags$style(modaldialog.style)),
+                   shiny::tags$head(shiny::tags$style(modalbody.style)),
+                   shiny::tags$head(shiny::tags$style(modalfooter.none)),
+                   buttons,
+                   ##uiOutput(ns("renderbuttons")),
+                   div.caption,
+                   DT::DTOutput(ns("datatable"), width=width.1, height=height.1),
+                   ##DT::renderDataTable(func()),
+                   ##verbatimTextOutput(ns("zoomstatus"))
+                   shiny::div(class="popup-table",
+                              shinyBS::bsModal(
+                                           id = ns("tablePopup"),
+                                           title = title,
+                                           size = "l",
+                                           trigger = ns("zoombutton"),
+                                           ##tagList(shiny::renderPlot(plot(sin)))
+                                           shiny::tagList(shiny::uiOutput(ns("popuptable")))
+                                       ))            
+               )
     })
 
     module <- list(

@@ -389,15 +389,15 @@ createUI <- function(tabs)
     id = "maintabs"
     ##selected = "Home"    
     header = shiny::tagList(
-        tags$head(tags$link(rel = "stylesheet", href = "playground.css")),
-        tags$head(tags$link(rel="shortcut icon", href="favicon.ico")),
-        shinyjs::useShinyjs(),
-        firebase::useFirebase(),
-        TAGS.JSSCRIPT,
-        tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
-        shiny::div(shiny::textOutput("current_dataset"),class='current-data')
-        ##QuestionBoard_UI("qa")
-    )
+                        shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
+                        shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
+                        shinyjs::useShinyjs(),
+                        firebase::useFirebase(),
+                        TAGS.JSSCRIPT,
+                        shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
+                        shiny::div(shiny::textOutput("current_dataset"),class='current-data')
+                        ##QuestionBoard_UI("qa")
+                    )
     names(header) <- NULL
     
     busy.img = sample(dir("www/busy",pattern=".gif$",full.name=TRUE))[1]

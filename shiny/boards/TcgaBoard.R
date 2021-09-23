@@ -42,7 +42,7 @@ TcgaBoard <- function(input, output, session, env)
 
     output$inputsUI <- shiny::renderUI({
         ui <- shiny::tagList(
-            tags$head(tags$style("#tcga-genelist.form-control {font-size:11px !important;padding:3px;height:200px;}")),
+            shiny::tags$head(shiny::tags$style("#tcga-genelist.form-control {font-size:11px !important;padding:3px;height:200px;}")),
             shinyBS::tipify( shiny::actionLink(ns("tcga_info"), "Info", icon = shiny::icon("info-circle")),
                    "Show more information about this module"),
             shiny::hr(), shiny::br(),

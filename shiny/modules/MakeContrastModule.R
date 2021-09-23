@@ -174,7 +174,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                         shiny::selectInput(ns("strata"), NULL, choices=NULL, width="120px"),
                         shiny::br()
                     ),
-                    ##tags$head(tags$style("table.dataTable.compact tbody th, table.dataTable.compact tbody td {padding: 0px 10px;}")),
+                    ##shiny::tags$head(shiny::tags$style("table.dataTable.compact tbody th, table.dataTable.compact tbody td {padding: 0px 10px;}")),
                     ## this.style(ns("contrastTable"), "table.dataTable.compact tbody th, table.dataTable.compact tbody td {padding: 0px 10px;}"),                    
                     shiny::div(DT::dataTableOutput(ns("contrastTable")),
                         style="font-size:13px; height: 300px; margin-top: 10px;overflow-y: scroll;")
@@ -231,7 +231,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 message("[MakeContrastServer:createcomparison] items=",items)
                 
                 shiny::tagList(
-                    tags$head(tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
+                    shiny::tags$head(shiny::tags$style(".default-sortable .rank-list-item {padding: 2px 15px;}")),
                     sortable::bucket_list(
                         ##header = shiny::h4("Create comparison:"),
                         header = NULL,
