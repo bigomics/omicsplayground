@@ -307,8 +307,7 @@ WgcnaBoard <- function(input, output, session, env)
             message("[wgcna.compute] >>> calculating WGCNA module enrichments...")
             progress$inc(0,"calculating module enrichment...")
 
-            gmt <- GSETS
-            gmt <- GSETS[grep("HALLMARK|GOBP|^C[1-9]",names(GSETS))]
+            gmt <- getGSETS(grep("HALLMARK|GOBP|^C[1-9]",names(iGSETS),value=TRUE))
             gse <- NULL
             ##bg <- unlist(me.genes)
             bg <- toupper(rownames(ngs$X))

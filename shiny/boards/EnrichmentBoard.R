@@ -390,7 +390,8 @@ EnrichmentBoard <- function(input, output, session, env)
             
             is.sig <- (qv <= fdr & abs(fx) >= lfc)
             ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='\u2605')
-            stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='*')
+            stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols)
+            ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='*')            
             ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='★')
             ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='&#9733;')
             names(stars) <- rownames(mx)
@@ -807,7 +808,9 @@ EnrichmentBoard <- function(input, output, session, env)
         gs <- gs[1]
         
         ##sel.genes = names(which(ngs$GMT[,gs]!=0))
-        jj = match(toupper(GSETS[[gs]]), toupper(limma$gene_name))
+        ##gset <- GSETS[[gs]]
+        gset <- getGSETS(gs)
+        jj = match(toupper(gset), toupper(limma$gene_name))
         sel.genes <- setdiff(limma$gene_name[jj],c(NA,""," "))
         fdr = 1
         fdr = as.numeric(input$gs_fdr)
@@ -861,7 +864,8 @@ EnrichmentBoard <- function(input, output, session, env)
 
         gs = gset_selected()
         if(is.null(gs)) return(NULL)
-        gs.genes = GSETS[[gs]]
+        ##gs.genes = GSETS[[gs]]
+        gs.genes = getGSETS(gs)
         top.genes = head(gs.genes[order(-abs(fc[gs.genes]))],10)
         
         pos1 <- cbind(fc, -log10(mq))
@@ -908,7 +912,9 @@ EnrichmentBoard <- function(input, output, session, env)
         if(is.null(gs)) return(NULL)
         gs <- gs[1]        
         ##sel.genes = names(which(ngs$GMT[,gs]!=0))
-        jj = match(toupper(GSETS[[gs]]), toupper(limma$gene_name))
+        ##gset <- GSETS[[gs]]
+        gset <- getGSETS(gs)
+        jj = match(toupper(gset), toupper(limma$gene_name))
         sel.genes <- setdiff(limma$gene_name[jj],c(NA,""," "))
         fdr = 1
         fdr = as.numeric(input$gs_fdr)
@@ -981,7 +987,8 @@ EnrichmentBoard <- function(input, output, session, env)
 
         gs = gset_selected()
         if(is.null(gs)) return(NULL)
-        gs.genes = GSETS[[gs]]
+        ##gs.genes = GSETS[[gs]]
+        gs.genes = getGSETS(gs)
         
         par(mfrow=c(1,1), mgp=c(1.95,0.8,0), oma=c(0,0,0.4,0.4) )
         par(mar =  c(2.8,4,3.8,0.8))        
@@ -1009,7 +1016,8 @@ EnrichmentBoard <- function(input, output, session, env)
         
         gs = gset_selected()
         if(is.null(gs)) return(NULL)
-        gs.genes = GSETS[[gs]]
+        ##gs.genes = GSETS[[gs]]
+        gs.genes = getGSETS(gs)
 
         p1 <- gsea.enplotly(fc, gs.genes, main=gs)
         return(p1)

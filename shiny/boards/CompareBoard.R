@@ -275,7 +275,7 @@ CompareBoard <- function(input, output, session, env)
                 ngs, contrast=ct, pos=pos,
                 cex = 0.9, cex.lab = cex.lab,
                 hilight = higenes, ntop=ntop,
-                plotlib="base")
+                par.sq = TRUE, plotlib="base")
         } else if(type == 'heatmap') {
             gg <- intersect(higenes, rownames(ngs$X))
             if(length(gg)>1) {
@@ -289,6 +289,7 @@ CompareBoard <- function(input, output, session, env)
                 ngs, contrast=ct,
                 hilight = higenes, ntop=ntop,
                 cex.lab = cex.lab, ## dlim=0.06,
+                par.sq = TRUE, 
                 type=type, plotlib="base")
         }
         p
@@ -409,8 +410,8 @@ CompareBoard <- function(input, output, session, env)
         higenes <- hilightgenes()
         
         p <- NULL
-        ##p <- ggsplom(F1, F2, title_cex=3, no.axes=FALSE)
-        plotSPLOM(F1, F2=F2, cex=0.3, cex.axis=0.95, hilight=higenes)            
+        ##p <- plot.ggsplom(F1, F2, title_cex=3, no.axes=FALSE)
+        plot.SPLOM(F1, F2=F2, cex=0.3, cex.axis=0.95, hilight=higenes)            
         p
     })
     
@@ -970,11 +971,11 @@ if(0) {
     }
     
 
-    ggbarplot(m1[,], srt=45, beside=TRUE, main=gene,
+    plot.ggbarplot(m1[,], srt=45, beside=TRUE, main=gene,
               legend.pos = c(0.016,1), 
               bar_width=0.6, legend.cex=1.5)
 
-    ggbarplot(m2[,], srt=45, beside=TRUE, main=gene,
+    plot.ggbarplot(m2[,], srt=45, beside=TRUE, main=gene,
               bar_width=0.6, legend.cex=1.5)
 
     legend.cex=2

@@ -135,8 +135,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         
         contr <- colnames(ngs$model.parameters$contr.matrix)
         shiny::updateSelectInput(session, "gx_contrast", choices=sort(contr))
-        ##fam <- names(ngs$families)
-        ##fam <- grep("^TISSUE|^COMPARTMENT|^CELLTYPE|^GOCC|^DISEASE|^CUSTOM",names(GSETS),value=TRUE)
         fam <- pgx.getFamilies(ngs,nmin=10,extended=FALSE)
         shiny::updateSelectInput(session, "gx_features",choices=fam)
 
@@ -271,7 +269,11 @@ two conditions. Determine which genes are significantly downregulated or overexp
         psel <- rownames(res)
         gx_features=1
         gx_features = input$gx_features
-        if(gx_features!="<all>") psel = filterProbes(ngs$genes, GSETS[[gx_features]] )
+        if(gx_features!="<all>") {
+            ##gset <- GSETS[[gx_features]]
+            gset <- getGSETS(gx_features)
+            psel = filterProbes(ngs$genes, gset)
+        }
         res = res[which(rownames(res) %in% psel),,drop=FALSE]
         dim(res)
 
@@ -363,10 +365,13 @@ two conditions. Determine which genes are significantly downregulated or overexp
         lfc=1
         lfc = as.numeric(input$gx_lfc)
 
-        fam.genes = unique(unlist(GSETS[8]))
         fam.genes = res$gene_name
         ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
-        if(input$gx_features!="<all>") fam.genes = unique(unlist(GSETS[input$gx_features]))
+        if(input$gx_features!="<all>") {
+            ##gset <- GSETS[input$gx_features]
+            gset <- getGSETS(input$gx_features)
+            fam.genes = unique(unlist(gset))
+        }
         jj <- match(toupper(fam.genes),toupper(res$gene_name))
         sel.genes <- res$gene_name[setdiff(jj,NA)]
         
@@ -426,10 +431,13 @@ two conditions. Determine which genes are significantly downregulated or overexp
         lfc=1
         lfc = as.numeric(input$gx_lfc)
 
-        fam.genes = unique(unlist(GSETS[8]))
         fam.genes = res$gene_name
         ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
-        if(input$gx_features!="<all>") fam.genes = unique(unlist(GSETS[input$gx_features]))
+        if(input$gx_features!="<all>") {
+            ##gset <- GSETS[input$gx_features]
+            gset <- getGSETS(input$gx_features)
+            fam.genes = unique(unlist(gset))
+        }
         jj <- match(toupper(fam.genes),toupper(res$gene_name))
         sel.genes <- res$gene_name[setdiff(jj,NA)]
         
@@ -468,7 +476,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
         } else if(gene.selected && gset.selected) {
             gs <- rownames(df2)[sel2]
             dbg("[plots_volcano.PLOTLY] gs = ",gs)
-            sel.genes = intersect(sel.genes, GSETS[[gs]])
+            ##gset <- GSETS[[gs]]
+            gset <- getGSETS(gs)
+            sel.genes = intersect(sel.genes, gset)
             lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
                           head(sel.genes[order(-impt(sel.genes))],10) )
             lab.cex = 1
@@ -539,7 +549,11 @@ two conditions. Determine which genes are significantly downregulated or overexp
         fam.genes = unique(unlist(ngs$families[10]))
         ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
         fam.genes = res$gene_name
-        if(input$gx_features!="<all>") fam.genes = unique(unlist(GSETS[input$gx_features]))
+        if(input$gx_features!="<all>") {
+            ##gset <- GSETS[input$gx_features]
+            gset <- getGSETS( input$gx_features )
+            fam.genes = unique(unlist(gset))
+        }
         jj <- match(toupper(fam.genes),toupper(res$gene_name))
         sel.genes <- res$gene_name[setdiff(jj,NA)]
 
@@ -591,7 +605,11 @@ two conditions. Determine which genes are significantly downregulated or overexp
         fam.genes = unique(unlist(ngs$families[10]))
         ##fam.genes = unique(unlist(ngs$families[input$gx_features]))
         fam.genes = res$gene_name
-        if(input$gx_features!="<all>") fam.genes = unique(unlist(GSETS[input$gx_features]))
+        if(input$gx_features!="<all>") {
+            ##gset <- GSETS[input$gx_features]
+            gset <- getGSETS( input$gx_features )
+            fam.genes = unique(unlist(gset))
+        }
         jj <- match(toupper(fam.genes),toupper(res$gene_name))
         sel.genes <- res$gene_name[setdiff(jj,NA)]
 
@@ -628,7 +646,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
         } else if(gene.selected && gset.selected) {
             gs <- rownames(df2)[sel2]
             dbg("[plots_maplot.PLOTLY] gs = ",gs)
-            sel.genes = intersect(sel.genes, GSETS[[gs]])
+            ##gset <- GSETS[[gs]]
+            gset <- getGSETS(gs)
+            sel.genes = intersect(sel.genes, gset)
             lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
                           head(sel.genes[order(-impt(sel.genes))],10) )
             lab.cex = 1
@@ -1066,10 +1086,10 @@ two conditions. Determine which genes are significantly downregulated or overexp
         fdr = as.numeric(input$gx_fdr)
         lfc = as.numeric(input$gx_lfc)
 
-        sel.genes = GSETS[["<all>"]]
         sel.genes = rownames(ngs$X)
         if(input$gx_features!="<all>") {
-            sel.genes = unique(unlist(GSETS[input$gx_features]))
+            gset <- getGSETS(input$gx_features)
+            sel.genes = unique(unlist(gset))
         }
 
         ##-------------------------------------------------
@@ -1196,9 +1216,12 @@ two conditions. Determine which genes are significantly downregulated or overexp
         fdr = as.numeric(input$gx_fdr)
         lfc = as.numeric(input$gx_lfc)
 
-        sel.genes = GSETS[["<all>"]]
         sel.genes = rownames(ngs$X)
-        if(input$gx_features!="<all>") sel.genes = unique(unlist(GSETS[input$gx_features]))
+        if(input$gx_features!="<all>") {
+            ##gset <- GSETS[input$gx_features]
+            gset <- getGSETS(input$gx_features)
+            sel.genes = unique(unlist(gset))
+        }
 
         ##-------------------------------------------------
         ## plot layout
@@ -1292,9 +1315,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         lfc = as.numeric(input$gx_lfc)
         genes = NULL
         
-        sel.genes = head(ngs$genes$gene_name,100)
-        ##sel.genes = unique(unlist(ngs$families[input$gx_features]))
-        sel.genes = unique(unlist(GSETS[input$gx_features]))
+        gset <- getGSETS(input$gx_features)
+        sel.genes = unique(unlist(gset))
         
         ## meta tables
         mx = ngs$gx.meta$meta[[comp]]

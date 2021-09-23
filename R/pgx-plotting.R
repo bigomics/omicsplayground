@@ -360,11 +360,7 @@ pgx.scatterPlot <- function(pgx, pheno=NULL, gene=NULL,
     plt
 }
 
-pgx.plotFoldchangeSPLOM <- function(pgx, contrasts=NULL) {
-
-}
-
-plotSPLOM <- function(F, F2=NULL, hilight=NULL, cex=0.5, cex.axis=1, cex.space=0.2)    
+plot.SPLOM <- function(F, F2=NULL, hilight=NULL, cex=0.5, cex.axis=1, cex.space=0.2)    
 {
 
     if(is.null(F2)) F2 <- F    
@@ -415,6 +411,9 @@ plotSPLOM <- function(F, F2=NULL, hilight=NULL, cex=0.5, cex.axis=1, cex.space=0
             
         }
     }
+}
+
+pgx.plotFoldchangeSPLOM <- function(pgx, contrasts=NULL) {
 
 }
 
@@ -787,7 +786,8 @@ plot_grid.sharedAxisLabels <- function(plotList, nrow) {
     cowplot::plot_grid(plotlist=plotList, nrow=nrow, labels=NA)
 }
 
-pgx.plotContrast <- function(pgx, contrast=NULL, type='scatter', set.par=TRUE, ...)
+pgx.plotContrast <- function(pgx, contrast=NULL, type='scatter',
+                             set.par=TRUE, par.sq=FALSE, ...)
 {
     if(0) {
         contrast= colnames(pgx$model.parameters$exp.matrix)
@@ -799,7 +799,8 @@ pgx.plotContrast <- function(pgx, contrast=NULL, type='scatter', set.par=TRUE, .
     
     if(set.par) {
         nc <- ceiling(sqrt(length(contrast)))
-        nr <- ceiling(length(contrast)/nc)
+        nr <- nc
+        if(par.sq) nr <- ceiling(length(contrast)/nc)
         par(mfrow=c(nr,nc))
     }
     
@@ -994,7 +995,8 @@ pgx.contrastScatter <- function(pgx, contrast, hilight=NULL,
 
 pgx.plotGeneUMAP <- function(pgx, contrast=NULL, value=NULL,
                              pos=NULL, ntop=20, cex=1, cex.lab=0.8,
-                             hilight=NULL, title=NULL, set.par=TRUE,
+                             hilight=NULL, title=NULL,
+                             set.par=TRUE, par.sq = FALSE,
                              level="gene", plotlib="ggplot")
 {
     if(!is.null(contrast)) {
@@ -1031,7 +1033,8 @@ pgx.plotGeneUMAP <- function(pgx, contrast=NULL, value=NULL,
     
     if(set.par) {
         nc <- ceiling(sqrt(ncol(F)))
-        nr <- ceiling(ncol(F)/nc)
+        nr <- nc
+        if(par.sq) nr <- ceiling(ncol(F)/nc)
         par(mfrow=c(nr,nc))
     }
     
@@ -1706,7 +1709,7 @@ pgx.splitHeatmap <- function(ngs, splitx=NULL, top.mode="specific",
 ## Lower level R level plotting functions
 ##=================================================================================
 
-gghist <- function(x) {
+plot.gghist <- function(x) {
     
     
     
@@ -1967,7 +1970,7 @@ ggenplot <- function(fc, gset, cex=1, main=NULL, xlab=NULL, ylab=NULL)
 
 }
 
-ggsplom <- function(F, F2=NULL, title_cex=2, no.axes=FALSE, ...)
+plot.ggsplom <- function(F, F2=NULL, title_cex=2, no.axes=FALSE, ...)
 {
     if(is.null(F2)) {
         F2 <- F
@@ -1985,12 +1988,12 @@ ggsplom <- function(F, F2=NULL, title_cex=2, no.axes=FALSE, ...)
     for(i in 1:ncol(F)) {
         for(j in 1:ncol(F2)) {
             if(i==j && symm) {
-                p1 <- ggpubr::ggscatter(0,0,cex=0) +
+                p1 <- plot.ggscatter(0,0,cex=0) +
                     ggplot2::theme_void() +
                     ggplot2::geom_text(x=0,y=0,label=colnames(F)[i],size=title_cex)
             } else {
-                p1 <- ggpubr::ggscatter(F[,i], F[,j] ) +
-                ##p1 <- ggpubr::ggscatter(F[,i], F2[,j], ... ) +
+                p1 <- plot.ggscatter(F[,i], F[,j] ) +
+                ##p1 <- plot.ggscatter(F[,i], F2[,j], ... ) +
                     ggplot2::xlim(lim0) + ggplot2::ylim(lim1) +
                     ggplot2::xlab(colnames(F)[i]) +
                     ggplot2::ylab(colnames(F2)[j]) 
@@ -2031,7 +2034,7 @@ ggsplom <- function(F, F2=NULL, title_cex=2, no.axes=FALSE, ...)
 }
 
 ##col=NULL;pch=20;xlab="";ylab="";cex=1;opacity=1;main=""
-ggscatterFILL <- function(x, y=NULL, col=NULL, shape=NULL,
+plot.ggscatterFILL <- function(x, y=NULL, col=NULL, shape=NULL,
                           main=NULL, cex=1,
                           pch=20, legend=TRUE,  xlab=NULL, ylab=NULL,
                           legend.ysp=0.8, cex.legend=1,
@@ -2081,7 +2084,7 @@ ggscatterFILL <- function(x, y=NULL, col=NULL, shape=NULL,
     p
 }
 
-ggscatter <- function(x, y=NULL, col=NULL, main=NULL, 
+plot.ggscatter <- function(x, y=NULL, col=NULL, main=NULL, 
                       cex=1, col.scale=NULL, shape=NULL, pch=20, 
                       legend=TRUE, legend.ysp=0.8, cex.legend=1,
                       legend.pos = "right",
@@ -2153,7 +2156,7 @@ ggscatter <- function(x, y=NULL, col=NULL, main=NULL,
 }
 
 ##srt=30;xlab=ylab="";n.dodge=1;cex=1;ylab=xlab=""
-ggviolin <- function(x, y, group=NULL, main="", ylim=NULL, add.dots=TRUE,
+plot.ggviolin <- function(x, y, group=NULL, main="", ylim=NULL, add.dots=TRUE,
                      col="#AAAAAA", cex=1, xlab="", ylab="y", srt=0,
                      pdodge=1.5, n.dodge=1, base_size=13)
 {
@@ -2182,6 +2185,63 @@ ggviolin <- function(x, y, group=NULL, main="", ylim=NULL, add.dots=TRUE,
         p <- p +
             ggplot2::geom_jitter(shape=20, size=1.2*cex, position=position_jitter(0.07))
         ## geom_beeswarm(priority='density',cex=0.9*cex) +
+    }
+    p
+}
+
+
+
+##group.name="group";xlab="x";ylab="y";srt=0;main=NULL;base_size=14
+plot.ggbarplot <- function(mat, xlab="x", ylab="y", srt=0, main=NULL, 
+                      las=NULL, col=NULL, beside=FALSE,
+                      legend.pos = c(0.016,1), legend.cex = 1,
+                      bar_width=0.7, base_size=12, group.name="group")
+{
+    require(ggplot2)
+    
+    if(NCOL(mat)==1) mat <- rbind(mat)
+    mat <- mat[nrow(mat):1,,drop=FALSE]
+    df <- reshape2::melt(t(mat), value.name = "value")
+    colnames(df)[1:2] <- c("x","y")
+    ##df$y <- paste0(df$y," ")
+    ##df$x <- paste0(" ",df$x," ")
+    df$y <- factor(df$y, levels=rownames(mat))
+    df$x <- factor(df$x, levels=colnames(mat))
+    if(!is.null(las) && las==3) srt <- 90
+
+    cpal <- rev(grey.colors(nrow(mat)))
+    cpal <- grey.colors(nrow(mat))
+    if(nrow(mat)==1) cpal <- "grey70"
+    if(!is.null(col)) cpal <- rep(col,99)
+    posmode <- ifelse(beside, "dodge", "stack")
+    
+    p <- ggplot(df, aes(x=x, y=value, fill=y)) + 
+        ##geom_bar(stat="identity", aes(fill="transparent"), size=1) +
+        geom_bar(stat="identity", color="black", size=0.3,
+                 width=bar_width, position=posmode) + 
+        xlab(xlab) + ylab(ylab) + labs(fill=group.name) +
+        ggtitle(main) +
+        ##scale_fill_grey(start=0.8,end=0.2) +
+        scale_fill_manual(values=cpal) +
+        theme_classic(base_size=base_size) +
+        scale_x_discrete(guide=guide_axis(angle=srt)) +
+        ## scale_x_discrete(guide=guide_axis(n.dodge=n.dodge)) + 
+        theme(
+            axis.text.x = element_text(angle=srt, vjust=0),
+            axis.title.x = element_text(size=10),
+            axis.title.y = element_text(size=10)
+        ) 
+    
+    p <- p + theme(
+                 legend.title = element_blank(), 
+                 legend.justification = legend.pos,
+                 legend.text = element_text(size=9*legend.cex),
+                 legend.position = legend.pos,
+                 legend.key.size = grid::unit(9*legend.cex, "pt"),
+                 legend.key.height = grid::unit(7*legend.cex, "pt"))
+
+    if(nrow(mat)==1) {
+        p <- p + theme(legend.position = 'none')
     }
     p
 }
@@ -2218,8 +2278,8 @@ pgx.violinPlot <- function(x, y, group=NULL, xlab='', ylab='',
     }
     if(plotlib=='ggplot') {
         d1 <- !is.null(maxbee) && maxbee>0
-        fig <- ggpubr::ggviolin( y, x, add.dots=d1, xlab=xlab, ylab=ylab, srt=srt,
-                        main=main, cex.main=cex.main)        
+        fig <- plot.ggviolin( y, x, add.dots=d1, xlab=xlab, ylab=ylab, srt=srt,
+                             main=main, cex.main=cex.main)        
     }
     if(plotlib=='plotly') {
         df = data.frame(x=x, y=y, group=0)
@@ -2251,62 +2311,6 @@ pgx.violinPlot <- function(x, y, group=NULL, xlab='', ylab='',
     fig
 }
 
-
-##group.name="group";xlab="x";ylab="y";srt=0;main=NULL;base_size=14
-ggbarplot <- function(mat, xlab="x", ylab="y", srt=0, main=NULL, 
-                      las=NULL, col=NULL, beside=FALSE,
-                      legend.pos = c(0.016,1), legend.cex = 1,
-                      bar_width=0.7, base_size=12, group.name="group")
-{
-    
-    
-    if(NCOL(mat)==1) mat <- rbind(mat)
-    mat <- mat[nrow(mat):1,,drop=FALSE]
-    df <- reshape2::melt(t(mat), value.name = "value")
-    colnames(df)[1:2] <- c("x","y")
-    ##df$y <- paste0(df$y," ")
-    ##df$x <- paste0(" ",df$x," ")
-    df$y <- factor(df$y, levels=rownames(mat))
-    df$x <- factor(df$x, levels=colnames(mat))
-    if(!is.null(las) && las==3) srt <- 90
-
-    cpal <- rev(grey.colors(nrow(mat)))
-    cpal <- grey.colors(nrow(mat))
-    if(nrow(mat)==1) cpal <- "grey70"
-    if(!is.null(col)) cpal <- rep(col,99)
-    posmode <- ifelse(beside, "dodge", "stack")
-    
-    p <- ggplot2::ggplot(df, ggplot2::aes(x=x, y=value, fill=y)) + 
-        ##geom_bar(stat="identity", ggplot2::aes(fill="transparent"), size=1) +
-        ggplot2::geom_bar(stat="identity", color="black", size=0.3,
-                 width=bar_width, position=posmode) + 
-        ggplot2::xlab(xlab) + ggplot2::ylab(ylab) + ggplot2::labs(fill=group.name) +
-        ggplot2::ggtitle(main) +
-        ##scale_fill_grey(start=0.8,end=0.2) +
-        ggplot2::scale_fill_manual(values=cpal) +
-        ggplot2::theme_classic(base_size=base_size) +
-        ggplot2::scale_x_discrete(guide=guide_axis(angle=srt)) +
-        ## ggplot2::scale_x_discrete(guide=guide_axis(n.dodge=n.dodge)) + 
-        ggplot2::theme(
-            axis.text.x = ggplot2::element_text(angle=srt, vjust=0),
-            axis.title.x = ggplot2::element_text(size=10),
-            axis.title.y = ggplot2::element_text(size=10)
-        ) 
-    
-    p <- p + ggplot2::theme(
-                 legend.title = ggplot2::element_blank(), 
-                 legend.justification = legend.pos,
-                 legend.text = ggplot2::element_text(size=9*legend.cex),
-                 legend.position = legend.pos,
-                 legend.key.size = grid::unit(9*legend.cex, "pt"),
-                 legend.key.height = grid::unit(7*legend.cex, "pt"))
-
-    if(nrow(mat)==1) {
-        p <- p + ggplot2::theme(legend.position = 'none')
-    }
-    p
-}
-
 pgx.scatterPlotXY <- function(..., plotlib="base") {
     if(plotlib=="plotly") {
         pgx.scatterPlotXY.PLOTLY(...)
@@ -2332,8 +2336,6 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
                                    axt='s', xaxs=TRUE, yaxs=TRUE, 
                                    labels=NULL, label.type=NULL, opacity=1)    
 {
-    
-    
     
     if(0) {
         var=NULL; type=NULL; col=NULL; title="";
@@ -2609,9 +2611,7 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
                                      label.type=c("text","box"), 
                                      title=NULL, nrows=NULL,  barscale=0.8 )    
 {
-    
-    
-    
+    require(ggplot2)
 
     if(0) {
         cex.lab=0.8; cex.title=1.2; cex.clust=1.5; cex.legend=1;
@@ -2739,9 +2739,9 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         jj <- order(-table(pt.col)[pt.col]) ## plot less frequent points last...            
         df <- df[jj,]
         pt.col <- pt.col[jj]
-        plt <- ggplot2::ggplot(df, ggplot2::aes(x,y), legend=legend) +
-            ggplot2::geom_point( shape=20, alpha=opacity, size=1.8*cex, col=pt.col ) +
-            ggplot2::scale_color_manual( values=col1, name=title, na.value="#DDDDDD44") 
+        plt <- ggplot(df, aes(x,y), legend=legend) +
+            geom_point( shape=20, alpha=opacity, size=1.8*cex, col=pt.col ) +
+            scale_color_manual( values=col1, name=title, na.value="#DDDDDD44") 
         
         ## label cluster
         if(label.clusters) {
@@ -2750,7 +2750,7 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
             ## text(med.pos, labels=rownames(med.pos),cex=1.6)
             mlab <- rownames(mpos)
             ##if(!is.null(labels)) mlab <- labels[rownames(mpos)]
-            ## plt <- plt + ggplot2::annotate(
+            ## plt <- plt + annotate(
             ##                  geom="text",x=mpos[,1],  y=mpos[,2],
             ##                  label=mlab, size=4.5*cex.clust,
             ##                  lineheight=0.7)
@@ -2761,7 +2761,7 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
                 labelFUN(
                 ##geom_label_repel(
                     data = df1,
-                    ggplot2::aes(x=x, y=y, label=name),
+                    aes(x=x, y=y, label=name),
                     size = 3.0 * cex.clust,
                     color = "black",
                     label.size = 0.10,
@@ -2778,25 +2778,25 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         
         nlev <- length(levels(z1))
         if(legend && nlev <= 10) {
-            ## plt <- plt + ggplot2::theme(legend.position = "bottom") 
+            ## plt <- plt + theme(legend.position = "bottom") 
             plt <- plt +
-                ggplot2::theme(
-                    legend.title = ggplot2::element_blank(),
-                    legend.text = ggplot2::element_text(size=9*cex.legend),
+                theme(
+                    legend.title = element_blank(),
+                    legend.text = element_text(size=9*cex.legend),
                     legend.key.size = grid::unit(legend.ysp*0.8*cex.legend,"lines"),
                     legend.key.height = grid::unit(legend.ysp*0.8*cex.legend,"lines"),
-                    legend.key = ggplot2::element_rect(color="transparent", fill=scales::alpha("white",0.0)),
+                    legend.key = element_rect(color="transparent", fill=scales::alpha("white",0.0)),
                     legend.justification = legend.justification,
                     legend.position = legend.position,
-                    legend.background = ggplot2::element_rect(fill=scales::alpha("white",0.5)),
-                    legend.margin = ggplot2::margin(0,4,4,4),
+                    legend.background = element_rect(fill=scales::alpha("white",0.5)),
+                    legend.margin = margin(0,4,4,4),
                     legend.box.just = "right",
-                    legend.box.background = ggplot2::element_rect(color="#888888", size=0.25),
-                    legend.box.margin = ggplot2::margin(0.8,1,1,1)
+                    legend.box.background = element_rect(color="#888888", size=0.25),
+                    legend.box.margin = margin(0.8,1,1,1)
                 ) +
-                ggplot2::guides(color = ggplot2::guide_legend(override.aes=list(size=2.8*cex.legend)))                    
+                guides(color = guide_legend(override.aes=list(size=2.8*cex.legend)))                    
         } else {
-            plt <- plt + ggplot2::theme(legend.position = "none") 
+            plt <- plt + theme(legend.position = "none") 
         }
         
     }
@@ -2839,34 +2839,34 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         if(zsym && min(zr,na.rm=TRUE)<0 ) zr <- c(-1,1)*max(abs(zr),na.rm=TRUE)
         zz <- round(c(zr[1], zr[2]),digits=2)
 
-        plt <- ggplot2::ggplot(df, ggplot2::aes(x, y, color=variable)) +
-            ggplot2::geom_point(shape=20, alpha=opacity, size=1.8*cex ) +
-            ggplot2::scale_color_gradientn(colors=cpal, breaks=zz,
+        plt <- ggplot(df, aes(x, y, color=variable)) +
+            geom_point(shape=20, alpha=opacity, size=1.8*cex ) +
+            scale_color_gradientn(colors=cpal, breaks=zz,
                                   labels=c(zz[1],zz[2]),
                                   na.value="#DDDDDD44") +
-            ggplot2::expand_limits(color = zr + c(-0.01,0.01)) 
+            expand_limits(color = zr + c(-0.01,0.01)) 
         
         ## colorscale bar
         if(legend) {
             xmax <- round(max(z,na.rm=TRUE),2)
             xmin <- round(min(z,na.rm=TRUE),2)
             plt <- plt +
-                ggplot2::guides(colour = ggplot2::guide_colourbar(
+                guides(colour = guide_colourbar(
                            barwidth= 0.5*barscale, barheight= 2.2*barscale )) +                
-                ggplot2::theme(legend.title = ggplot2::element_blank(),
-                      legend.text = ggplot2::element_text(size=9*cex.legend),
+                theme(legend.title = element_blank(),
+                      legend.text = element_text(size=9*cex.legend),
                       legend.justification = legend.justification,
                       legend.position = legend.position,
                       ##legend.justification = c(0,0), 
                       ##legend.position = c(0.22, 0.02),
-                      ##legend.background = ggplot2::element_rect(fill=scales::alpha("white",0.5)),
-                      legend.background = ggplot2::element_blank(),
-                      legend.key = ggplot2::element_blank())             
+                      ##legend.background = element_rect(fill=scales::alpha("white",0.5)),
+                      legend.background = element_blank(),
+                      legend.key = element_blank())             
             ##legend("bottomleft", cex=0.8, ## text.width=2,
             ##       y.intersp=0.25, x.intersp=0.5, border=NA, bty=bty,
             ##       fill=rev(cpal), legend=c(xmax,rep(NA,9),xmin), )
         } else {
-            plt <- plt + ggplot2::theme(legend.position="none") 
+            plt <- plt + theme(legend.position="none") 
         }
     }    
     
@@ -2875,10 +2875,10 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         dbg("[pgx.scatterPlotXY.GGPLOT] sel = ",sel)
         if(is.null(hilight.col)) hilight.col <- 'transparent'
         plt <- plt +
-            ggplot2::geom_point(
+            geom_point(
                 ##data = subset(df, name %in% hilight),
                 data = df[sel,],
-                mapping = ggplot2::aes(x,y),                 
+                mapping = aes(x,y),                 
                 size = 2.0 * hilight.cex,
                 shape = 21,
                 stroke = 0.5 * hilight.lwd,
@@ -2895,7 +2895,7 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
         ##geom_text_repel(
         plt <- plt + labelFUN(
                          data = subset(df, name %in% hilight2),
-                         ggplot2::aes(label = label),
+                         aes(label = label),
                          size = 3.0*cex.lab,
                          color = "black",
                          label.size = 0.08,
@@ -2912,21 +2912,21 @@ pgx.scatterPlotXY.GGPLOT <- function(pos, var=NULL, type=NULL, col=NULL, cex=NUL
     if(!is.null(theme)) {
         plt <- plt + theme
     } else {
-        plt <- plt + ggplot2::theme_bw()
+        plt <- plt + theme_bw()
     }
 
     ## additional theme
     plt <- plt + 
-        ggplot2::xlim(xlim[1], xlim[2]) +
-        ggplot2::ylim(ylim[1], ylim[2]) + 
-        ggplot2::xlab(xlab) +  ggplot2::ylab(ylab) + ggplot2::ggtitle(title) +
-        ggplot2::theme(
-            plot.title = ggplot2::element_text(size=11*cex.title, hjust=0, vjust=+0),
-            axis.text.x = ggplot2::element_text(size=7),
-            axis.text.y = ggplot2::element_text(size=7),            
-            axis.title.x = ggplot2::element_text(size=9, vjust=+2),
-            axis.title.y = ggplot2::element_text(size=9, vjust=+0),            
-            panel.border = ggplot2::element_rect(fill=NA, color="grey20", size=0.15)
+        xlim(xlim[1], xlim[2]) +
+        ylim(ylim[1], ylim[2]) + 
+        xlab(xlab) +  ylab(ylab) + ggtitle(title) +
+        theme(
+            plot.title = element_text(size=11*cex.title, hjust=0, vjust=+0),
+            axis.text.x = element_text(size=7),
+            axis.text.y = element_text(size=7),            
+            axis.title.x = element_text(size=9, vjust=+2),
+            axis.title.y = element_text(size=9, vjust=+0),            
+            panel.border = element_rect(fill=NA, color="grey20", size=0.15)
         ) 
     plt
 }

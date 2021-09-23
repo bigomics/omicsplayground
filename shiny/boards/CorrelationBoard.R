@@ -265,17 +265,13 @@ CorrelationBoard <- function(input, output, session, env)
             psel <- intersect(psel,rownames(X))
             X = X[psel,,drop=FALSE]
             
-        } else if(ft!="<all>" && ft %in% names(GSETS)) {
+        } else if(ft!="<all>" && ft %in% names(iGSETS)) {
             ft <- input$cor_features
-            psel = filterProbes(ngs$genes, c(gene,GSETS[[ft]]) )
+            psel = filterProbes(ngs$genes, c(gene, getGSETS(ft) ) )
             ##psel = unique(c(gene, psel))
             psel <- intersect(psel,rownames(X))
             X = X[psel,,drop=FALSE]
         }
-
-        if(0) {
-            TISSUE            
-        }       
         
         X <- X + 1e-3*matrix(rnorm(length(X)),nrow(X),ncol(X))
         X
@@ -928,7 +924,8 @@ CorrelationBoard <- function(input, output, session, env)
         rho <- cor(t(ngs$X), gx, use="pairwise")[,1]         
         names(rho) <- toupper(names(rho))
         
-        gmt <- GSETS[colnames(ngs$GMT)]
+        ##gmt <- GSETS[colnames(ngs$GMT)]
+        gmt <- getGSETS(colnames(ngs$GMT))
         ## gmt <- GSETS  ## all???
         gsea <- fgsea::fgsea(gmt, rho, minSize=15, maxSize=1000)
         gsea <- gsea[order(-gsea$NES),]
@@ -960,7 +957,8 @@ CorrelationBoard <- function(input, output, session, env)
         for(i in 1:min(NTOP,nrow(gsea))) {
             gs <- gsea$pathway[i]
             gs
-            gmt <- GSETS[[gs]]
+            ##gmt <- GSETS[[gs]]
+            gmt <- getGSETS(gs)
             length(gmt)
             ##if(length(gmtdx) < 3) { frame(); next }
             ylab = ""

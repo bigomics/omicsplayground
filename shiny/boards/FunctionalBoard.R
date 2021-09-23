@@ -329,7 +329,8 @@ to understand biological functions including GO and KEGG pathway analysis."
         if(!is.null(sel.row) && length(sel.row)>0) {
             pathway.id <- df[sel.row,"kegg.id"]
             pathway.name <- df[sel.row,"pathway"]
-            pw.genes <- GSETS[[as.character(pathway.name)]]
+            ##pw.genes <- GSETS[[as.character(pathway.name)]]
+            pw.genes <- getGSETS(as.character(pathway.name))
         }
 
         ## folder with predownloaded XML files
@@ -600,7 +601,8 @@ to understand biological functions including GO and KEGG pathway analysis."
 
         ngs <- inputData()
         shiny::req(ngs)
-
+        require(igraph)
+        
         comparison=1;methods=c("fisher","gsva","camera")
         comparison = input$fa_contrast
         shiny::req(input$fa_contrast)
@@ -639,7 +641,7 @@ to understand biological functions including GO and KEGG pathway analysis."
             sp.vv = unique(unlist(sp$vpath))
             sub2 = igraph::induced.subgraph(sub2, sp.vv)
             pos = igraph::layout_with_fr(sub2)
-            score = score[V(sub2)$name]
+            score = score[igraph::V(sub2)$name]
         }
 
         dbg("[FunctionalBoard::GO_network.RENDER] 2: len.V(sub2)=",length(igraph::V(sub2)))
@@ -652,8 +654,8 @@ to understand biological functions including GO and KEGG pathway analysis."
         if(removeroot) {
             sub2 <- igraph::induced_subgraph(sub2, which(igraph::V(sub2)$name!="all"))
             if(input$GO_prunetree) pos = igraph::layout_with_fr(sub2)
-            score <- score[V(sub2)$name]
-            ##pos <- pos[V(sub2)$name,]        
+            score <- score[igraph::V(sub2)$name]
+            ##pos <- pos[igraph::V(sub2)$name,]        
         }
         roots <- c("all",neighbors(go, igraph::V(go)["all"], mode="all" )$name)
         roots <- intersect(roots, igraph::V(sub2)$name)
@@ -682,7 +684,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         }
         
 
-        ##pos <- pos[V(sub2)$name,]
+        ##pos <- pos[igraph::V(sub2)$name,]
         gr = visNetwork::toVisNetworkData(sub2)
         gr$nodes$color[is.na(gr$nodes$color)] = "#F9F9F9"
         gr$nodes$value = pmax(abs(gr$nodes$value),0.001)
@@ -1091,7 +1093,8 @@ to understand biological functions including GO and KEGG pathway analysis."
         sel <- input$fire_xpcollection    
         if(is.null(sel)) return(NULL)
 
-        gsets <- GSETS[ COLLECTIONS[[sel]] ]
+        ##gsets <- GSETS[ COLLECTIONS[[sel]] ]
+        gsets <- getGSETS( COLLECTIONS[[sel]] )     
         ##gsets0 <- gsets0[ intersect( names(gsets0), names(zx)) ]
         shownames <- input$fire_shownames
         pgx.firePlot(ngs, cmp, gsets, shownames=shownames)     

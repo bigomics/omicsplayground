@@ -323,14 +323,14 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             n.sv
         }
         cX1 <- Matrix::head(cX[order(-apply(cX,1,sd)),],1000) ## top 1000 genes only (faster)
-        sv <- try( sva(cX1, mod1x, mod0=mod0x, n.sv=n.sv)$sv )
+        sv <- try( sva::sva(cX1, mod1x, mod0=mod0x, n.sv=n.sv)$sv )
         ##sv <- SmartSVA::smartsva.cpp(cX, mod1x, mod0=mod0x, n.sv=n.sv)$sv
         if(any(class(sv)=="try-error")) {
             ## try again with little bit of noise...
             a <- 0.01*mean(apply(cX,1,sd))
             cX1 <- cX + a*matrix(rnorm(length(cX)),nrow(cX),ncol(cX))
             cX1 <- Matrix::head(cX1[order(-apply(cX1,1,sd)),],1000) ## top 1000 genes only (faster)
-            sv <- try( sva(cX1, mod1x, mod0=mod0x, n.sv=pmax(n.sv-1,1))$sv )
+            sv <- try( sva::sva(cX1, mod1x, mod0=mod0x, n.sv=pmax(n.sv-1,1))$sv )
         }
         if(!any(class(sv)=="try-error")) {
             message("[pgx.superBatchCorrect] Performing SVA correction...")
@@ -509,7 +509,7 @@ pgx.PC_correlation <- function(X, pheno, nv=3, stat="F", plot=TRUE, main=NULL) {
         tt0   <- c("PC correlation","PC variation")[1 + 1*(stat=="F")]
         if(is.null(main)) main <- tt0
         ## R <- R[,ncol(R):1]
-        plt <- ggpubr::ggbarplot(t(R), ylab=stat0, srt=45, group.name="") +
+        plt <- plot.ggbarplot(t(R), ylab=stat0, srt=45, group.name="") +
             ## ggplot2::theme(
             ##     legend.key.size = grid::unit(0.65,"lines"),
             ##     legend.key.height = grid::unit(0.35,"lines"),
@@ -683,7 +683,7 @@ pgx.performBatchCorrection <- function(ngs, zx, batchparams,
                 ## mod1 <- ngs$model.parameters$design
                 mod0 <- cbind(mod1[,1])
                 ##mod0 = model.matrix( ~ 1, data=ngs$samples)
-                sv <- sva( 0.0001+zx, mod1, mod0, n.sv=NULL)$sv
+                sv <- sva::sva( 0.0001+zx, mod1, mod0, n.sv=NULL)$sv
                 ##sv <- svaseq( 2**zx, mod1, mod0, n.sv=NULL)$sv
                 zx <- limma::removeBatchEffect(zx, covariates=sv, design=mod1)
             } else if(batchpar=="<NNM>") {
@@ -778,7 +778,7 @@ pgx.removeBatchEffect <- function(X, batch, model.vars=NULL,
         X <- limma::removeBatchEffect(X, batch=batch0)
     } else if(method=="ComBat") {
         
-        X <- ComBat(X, batch = batch0)
+        X <- sva::ComBat(X, batch = batch0)
     } else if(method=="BMC") {
         ## batch mean center
         matlist <- tapply(1:ncol(X), batch0, function(i) X[,i,drop=FALSE])
@@ -885,13 +885,10 @@ pgx.computeBiologicalEffects <- function(X, is.count=FALSE)
     return(pheno)
 }
 
-nmax=-1
+##nmax=-1
 pgx.svaCorrect <- function(X, pheno, nmax=-1) {
     ## 
-    ## IK: not sure about this SVA correction stuff... 
-    
-    
-
+    ## IK: not sure about this SVA correction stuff...       
     if(NCOL(pheno)==1) {
         pheno <- data.frame(pheno=pheno)
     }
@@ -915,7 +912,6 @@ pgx.svaCorrect <- function(X, pheno, nmax=-1) {
     ##df <- data.frame(var=y)    
     ##mod1x = model.matrix( ~var, data=df)
     ##mod0x = model.matrix( ~1, data=df)
-
     mod1x <- cbind(1, mod1)
     mod0x <- mod1x[,1,drop=FALSE]
     ##mod0 = NULL
@@ -923,7 +919,7 @@ pgx.svaCorrect <- function(X, pheno, nmax=-1) {
     message("Estimating number of surrogate variables...")
     if(0) {
         ## original method using SVA
-        n.sv = num.sv(X, mod1x, method="be")
+        n.sv = sva::num.sv(X, mod1x, method="be")
         n.sv            
     } else {
         ## fast method using SmartSVA
@@ -931,8 +927,8 @@ pgx.svaCorrect <- function(X, pheno, nmax=-1) {
         pp <- paste0(colnames(pheno),collapse="+")
         pp
         lm.expr <- paste0("lm(t(X) ~ ",pp,", data=pheno)")
-        X.r <- t(resid(eval(parse(text=lm.expr))))        
-        n.sv <- EstDimRMT(X.r, FALSE)$dim + 1
+        X.r <- t(stats::resid(eval(parse(text=lm.expr))))        
+        n.sv <- isva::EstDimRMT(X.r, FALSE)$dim + 1
         n.sv
     }
     n.sv <- min(n.sv, min(table(y)))
@@ -943,7 +939,7 @@ pgx.svaCorrect <- function(X, pheno, nmax=-1) {
     if(nmax>0) {
         vX = Matrix::head(X[order(-apply(X,1,sd)),],nmax)
     }
-    sv <- sva(vX, mod1x, mod0x, n.sv=n.sv)$sv
+    sv <- sva::sva(vX, mod1x, mod0x, n.sv=n.sv)$sv
     ##sv <- SmartSVA::smartsva.cpp(X, mod1x, mod0=mod0x, n.sv=n.sv)$sv
     
     message("Perform batch correction...")
@@ -1056,7 +1052,7 @@ pgx._runComputeNumSig <- function(ngs, parcomb, contrast, resample=-1,
             mod0 = cbind(mod1[,1])
             logcpm <- edgeR::cpm(ngs$counts, log=TRUE) ## perform SVA on logCPM
             log <- capture.output({
-                suppressWarnings(sv <- sva(logcpm, mod1, mod0, n.sv=NULL)$sv)
+                suppressWarnings(sv <- sva::sva(logcpm, mod1, mod0, n.sv=NULL)$sv)
                 suppressWarnings(aX <- limma::removeBatchEffect( logcpm, covariates=sv, design=mod1))
             })
             dim(aX)

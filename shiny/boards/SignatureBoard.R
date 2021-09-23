@@ -155,15 +155,15 @@ infotext =
             shiny::updateSelectInput(session, "feature", choices=contr, selected=contr[1])
         } else if(type=="hallmark") {
             ## collection
-            gsets <- sort(grep("HALLMARK",names(GSETS),value=TRUE))
+            gsets <- sort(grep("HALLMARK",names(iGSETS),value=TRUE))
             shiny::updateSelectInput(session, "feature", choices=gsets, selected=gsets[1])
         } else if(type=="KEGG") {
             ## collection
-            gsets <- sort(grep("KEGG",names(GSETS),value=TRUE))
+            gsets <- sort(grep("KEGG",names(iGSETS),value=TRUE))
             shiny::updateSelectInput(session, "feature", choices=gsets, selected=gsets[1])
         } else if(type=="geneset") {
             ## all genesets... this is a bit too much for selectInput (DO NOT USE!!)
-            gsets <- sort(names(GSETS))
+            gsets <- sort(names(iGSETS))
             shiny::updateSelectizeInput(session, "feature", choices=gsets, selected=gsets[1], server=TRUE)
         } else {
             ## custom
@@ -238,8 +238,9 @@ infotext =
             top.genes0 <- paste(top.genes,collapse=" ")
             shiny::updateTextAreaInput(session,"genelistUP", value=top.genes0)
             gset <- top.genes
-        } else if(input$feature %in% names(GSETS)) {
-            gset <- toupper(GSETS[[input$feature]])
+        } else if(input$feature %in% names(iGSETS)) {
+            ##gset <- toupper(GSETS[[input$feature]])
+            gset <- toupper(getGSETS(input$feature))
             gset0 <- paste(gset, collapse=" ")
             shiny::updateTextAreaInput(session,"genelistUP", value=gset0)
         } else {

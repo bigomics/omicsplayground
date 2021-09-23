@@ -1588,7 +1588,8 @@ ConnectivityBoard <- function(input, output, session, env)
         if(input$enrichGraph_oddweighting) {
             gr2 <- getLeadingEdgeGraph()
             le.genes <- igraph::V(gr2)$name
-            gsets <- GSETS[rownames(F)]
+            ##gsets <- GSETS[rownames(F)]
+            gsets <- getGSETS(rownames(F))
             ##gsets <- lapply(gsets, function(x) intersect(x,le.genes))
             gsets <- gsets[sapply(gsets,length)>=5]
             bg <- unique(unlist(gsets))
@@ -1638,8 +1639,10 @@ ConnectivityBoard <- function(input, output, session, env)
         gr2 <- getLeadingEdgeGraph()
         pw <- igraph::V(gr)$name
         le.genes <- igraph::V(gr2)$name
-        
-        pw.genes <- sapply( GSETS[pw], function(gs) intersect(gs,le.genes))
+
+        ##gsets <- GSETS[pw]
+        gsets <- getGSETS(pw)
+        pw.genes <- sapply( gsets, function(gs) intersect(gs,le.genes))
         pw.genes <- sapply(pw.genes, paste, collapse=" ")
         
         max(abs(igraph::E(gr)$weight))

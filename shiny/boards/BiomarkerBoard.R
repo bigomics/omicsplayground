@@ -213,14 +213,13 @@ be multiple categories (classes) or patient survival data."
             if(!(ft %in% names(COLLECTIONS))) return(NULL)
             pp <- COLLECTIONS[[ft]]
         } else {
-            xfam <- c(names(ngs$families),names(GSETS))
+            xfam <- c(names(ngs$families),names(iGSETS))
             if(!ft %in% xfam) return(NULL)
-            gg <- GSETS[[8]]
             gg <- NULL
             if(ft %in% names(ngs$families)) {
                 gg <- ngs$families[[ft]]
-            } else if(ft %in% names(GSETS)) {
-                gg <- GSETS[[ft]]
+            } else if(ft %in% names(iGSETS)) {
+                gg <- getGSETS(ft)
             }
             pp = filterProbes(ngs$genes, gg)
         }

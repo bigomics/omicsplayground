@@ -3,31 +3,6 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-if(0) {
-
-    X <- Matrix::head(ngs$X[order(-apply(ngs$X,1,sd)),],200)
-    y <- ngs$samples[,"dlbcl.type"]
-    time <- ngs$samples[,"OS.years"]
-    status <- ngs$samples[,"OS.status"]=="DEAD"
-    
-    cs <- GSETS[["COMPARTMENTS:Cell_surface"]]
-    pk <- GSETS[["MSIGDB:PROTEIN_KINASES"]]
-    tf <- GSETS[["CUSTOM:Transcription factors"]]
-    gg <- rownames(ngs$X)
-    cs.X <- ngs$X[intersect(cs, gg),]
-    pk.X <- ngs$X[intersect(pk, gg),]
-    tf.X <- ngs$X[intersect(tf, gg),]
-    data <- list(cs.X, pk.X, tf.X)
-    names(data) <- c("CS","PK","TF")
-    remove(gg)
-    
-    Y <- ngs$samples$dlbcl.type
-    nfeat=25;numedge=100
-
-    install.packages("plotrix")
-
-}
-
 ##----------------------------------------------------------------------
 ## mixOmics related functions
 ##----------------------------------------------------------------------
