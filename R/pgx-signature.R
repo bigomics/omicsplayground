@@ -816,9 +816,6 @@ pgx.computeGeneSetExpression <- function(X, gmt, method=NULL,
     ALL.METHODS <- c("gsva","ssgsea","spearman","average")
     if(is.null(method))
         method <- ALL.METHODS
-    if(0){
-        X=ngs$X;gmt=GSETS[grep("HALLMARK",names(GSETS))]
-    }
     ## this is important!!! centering on genes (GSVA does)
     if(center) {
         X <- X - rowMeans(X,na.rm=TRUE)

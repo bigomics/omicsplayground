@@ -4,8 +4,6 @@
 ##
 
 
-
-
 ## just to list functions in this file
 viz.ClusterMarkers <- function(pgx){}
 viz.PhenoMaps <- function(pgx){}
@@ -33,7 +31,6 @@ if(0) {
     source("pgx-include.R")
     load("../data/geiger2016-arginine.pgx")
     viz.Contrasts(ngs, contrasts=NULL)
-    
     
 }
 
@@ -113,7 +110,7 @@ viz.FoldChangeHeatmap <- function(pgx, comparisons=NULL, hilight=NULL,
                   cluster_rows = TRUE,
                   cluster_columns = FALSE)
 
-    p1 <- ggpubr::ggbarplot( t(F1), las=3,
+    p1 <- plot.ggbarplot( t(F1), las=3,
                     legend.pos=c(1.2,1.05), legend.cex=0.9,
                     xlab="", ylab="cumulative fold-change") +
         ggplot2::theme(
@@ -375,7 +372,7 @@ viz.PhenoStatsBy <- function(pgx, by.pheno, phenotypes=NULL,
                 xlab0 <- "percentage  (%)"
             }
             rownames(F) <- paste0(" ",rownames(F)," ")
-            plt <- ggpubr::ggbarplot((F), base_size=12,
+            plt <- plot.ggbarplot((F), base_size=12,
                              legend.pos = "right",
                              ylab = "counts  (N)", srt=srt,
                              xlab = "") 
@@ -403,7 +400,7 @@ viz.PhenoStatsBy <- function(pgx, by.pheno, phenotypes=NULL,
                 )
             } else if(ctype=="violin") {
                 suppressWarnings(
-                    plt <- ggpubr::ggviolin(
+                    plt <- plot.ggviolin(
                         df$x, df$y, group=df$group, base_size=13,
                         srt=srt, pdodge=0.6, cex=cex, main=title) +
                         ggplot2::xlab("") + ggplot2::ylab(p)
@@ -477,8 +474,7 @@ viz.Expression <- function(pgx, pheno, contrast, genes=NULL,
     pos <- pgx$tsne2d
     df <- data.frame( x=pos[,1], y=pos[,2],
                      pheno = pgx$samples[,pheno] )
-    p1 <- ggpubr::ggscatter(df, "x", "y", color="pheno",
-                            size=1.2*cex ) +
+    p1 <- plot.ggscatter(df, "x", "y", color="pheno", size=1.2*cex ) +
         ggplot2::xlab(colnames(pos)[1]) + ggplot2::ylab(colnames(pos)[2]) +
         ggplot2::theme(legend.title = ggplot2::element_blank())
     ##p1
@@ -495,7 +491,7 @@ viz.Expression <- function(pgx, pheno, contrast, genes=NULL,
         cpal <-  rep(RColorBrewer::brewer.pal(12,"Set3"),99)[1:np]
         cpal <-  rep(RColorBrewer::brewer.pal(8,"Dark2"),99)[1:np]
     }
-    p2 <- ggpubr::ggbarplot(
+    p2 <- plot.ggbarplot(
                       df, x = "Var1", y = "value", fill = "pheno",
                       add = "mean_sd", palette = cpal,
                       position = ggplot2::position_dodge(width=0.8)) +
@@ -842,21 +838,21 @@ viz.MitoRiboQC <- function(pgx, group, srt=0, pos="tsne2d",
     percent.ribo <- colSums(pgx$counts[sel.ribo,]) / nCounts_RNA * 100
 
     y <- pgx$samples[,group]
-    v1 <- ggpubr::ggviolin(y, nCounts_RNA, group=NULL, srt=srt,
+    v1 <- plot.ggviolin(y, nCounts_RNA, group=NULL, srt=srt,
                    main="ncounts", ylab="counts")
-    v2 <- ggpubr::ggviolin(y, nFeature_RNA, group=NULL, srt=srt,
+    v2 <- plot.ggviolin(y, nFeature_RNA, group=NULL, srt=srt,
                    main="nfeature", ylab="number")
-    v3 <- ggpubr::ggviolin(y, percent.mito, group=NULL, srt=srt,
+    v3 <- plot.ggviolin(y, percent.mito, group=NULL, srt=srt,
                    main="percent.mito", ylab="percentage")
-    v4 <- ggpubr::ggviolin(y, percent.ribo, group=NULL, srt=srt,
+    v4 <- plot.ggviolin(y, percent.ribo, group=NULL, srt=srt,
                    main="percent.ribo", ylab="percentage")
     vv <- patchwork::wrap_plots(v1, v2, v3, v4, nrow=1)
 
     x <- pgx$tsne2d
-    s1 <- ggscatterFILL(x, col=nCounts_RNA, barscale=0.5,  main="ncounts", gamma=0.7)
-    s2 <- ggscatterFILL(x, col=nFeature_RNA, barscale=0.5, main="nfeature", gamma=0.7)
-    s3 <- ggscatterFILL(x, col=percent.mito, barscale=0.5, main="percent.mito", gamma=1)
-    s4 <- ggscatterFILL(x, col=percent.ribo, barscale=0.5, main="percent.ribo", gamma=2)
+    s1 <- plot.ggscatterFILL(x, col=nCounts_RNA, barscale=0.5,  main="ncounts", gamma=0.7)
+    s2 <- plot.ggscatterFILL(x, col=nFeature_RNA, barscale=0.5, main="nfeature", gamma=0.7)
+    s3 <- plot.ggscatterFILL(x, col=percent.mito, barscale=0.5, main="percent.mito", gamma=1)
+    s4 <- plot.ggscatterFILL(x, col=percent.ribo, barscale=0.5, main="percent.ribo", gamma=2)
     ss <- patchwork::wrap_plots(s1, s2, s3 ,s4, nrow=1) 
     ##ss <- ss & ggplot2::theme_minimal()
     
@@ -1005,11 +1001,11 @@ viz.VHVLusage <- function(pgx, by.pheno="isotype", ng=30, nmin=1,
     VH.avg <- VH.avg[order(-rowSums(abs(VH.avg))),]
     VL.avg <- VL.avg[order(-rowSums(abs(VL.avg))),]        
 
-    B1 <- ggpubr::ggbarplot( t(Matrix::head(VH.avg,ng)),
+    B1 <- plot.ggbarplot( t(Matrix::head(VH.avg,ng)),
                     col=brewer.pal(12,"Set3"), las=3,
                     beside=FALSE, xlab="", ylab="cumulative log-expression",
                     main=paste("VH usage by",by.pheno)) 
-    B2 <- ggpubr::ggbarplot( t(Matrix::head(VL.avg,ng)), col=brewer.pal(12,"Set3"), las=3,
+    B2 <- plot.ggbarplot( t(Matrix::head(VL.avg,ng)), col=brewer.pal(12,"Set3"), las=3,
                     beside=FALSE, xlab="", ylab="cumulative log-expression",
                     main=paste("VL usage by",by.pheno)) 
 
@@ -1134,7 +1130,7 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
     xbreaks
     
     if(nlev<=5) {
-        plt <- ggpubr::ggbarplot(
+        plt <- plot.ggbarplot(
                           df, x = "gene family", y = "value", fill = "pheno",
                           add = "mean_se", ## palette = c("#00AFBB", "#E7B800"),
                           position = ggplot2::position_dodge(width=0.8)) +
@@ -1161,7 +1157,7 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
             plt <- plt + ggplot2::theme(legend.position = 'none')
         }
     } else {
-        plt <- ggpubr::ggbarplot(
+        plt <- plot.ggbarplot(
                            df,
                            x = "pheno", y = "value", fill = "gene family",
                            add = "mean",
@@ -1185,10 +1181,13 @@ viz.BatchCorrection <- function(pgx, cX, cX2=NULL, phenotype, stat="F",
                                 title=NULL, subtitle=NULL, caption=NULL)
 {
     X0 <- pgx$X  ## ???
-    if(is.null(pheno))  pheno <- pgx$samples
+    if(is.null(pheno)) {
+        pheno <- pgx$samples
+    }
     pos0 <- pgx$tsne2d
     if(0) {
-        phenotype='Treatment'
+        phenotype='treatment'
+        cX=X0;cX2=NULL
         viz.BatchCorrectionMatrix(X0=X0, pheno=pheno, cX=cX, cX2=cX2,
                                   phenotype=phenotype)
     }
@@ -1207,17 +1206,18 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
                                       main=c("not-corrected", "corrected","corrected2"),
                                       title=NULL, subtitle=NULL, caption=NULL)
 {
-    ##X0 <<- pgx$X  ## ???
-    ##X0 <- pgx$X  ## ???
-    ## cX <<- cX  ## ???
-    ## cX2 <<- cX2  ## ???
-    ##pheno <- pgx$samples
-    if(is.null(phenotype))
+    if(0) {
+        stat='F';pca.heatmap=FALSE;nmax=40;cex=1;npca=3
+        pos0=pos1=pos2=NULL;main=title=subtitle=caption='';
+    }
+    if(is.null(phenotype)) {
         phenotype <- colnames(pheno)[1]
-    phenotype <- Matrix::head(intersect(phenotype,colnames(pheno)),4) ## max 4
+    }
+    phenotype <- utils::head(intersect(phenotype,colnames(pheno)),4) ## max 4
     phenotype
 
     if(1) {
+        ## take out rows with too many missing values in any of the matrices
         is.na1=is.na2=is.na3=0
         is.na1 <- rowMeans(is.na(X0)) > 0.9
         if(!is.null(cX))  is.na2 <- rowMeans(is.na(cX)) > 0.9
@@ -1252,7 +1252,6 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     ##-------------------------------------------    
     hlist <- list()
     if(pca.heatmap) {
-
         for(i in 1:length(xlist)) {
             hlist[[i]] <- grid::grid.grabExpr(
                 ##gx.splitmap(
@@ -1314,7 +1313,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
     for(i in 1:length(xlist)) {
         lg = 'right'
         if(length(unique(y1))>20) lg = 'none'
-        plist[[i]] <- ggpubr::ggscatter(
+        plist[[i]] <- plot.ggscatter(
             pos[[i]], col=y1, shape=y2,
             cex=0.7*cex) +
             ## ggplot2::theme(legend.position="top") +
@@ -1465,10 +1464,10 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
             i3 <- Matrix::head(order(-xdir*fc3),20)
             i4 <- Matrix::head(order(-xdir*fc4),20)
         }
-        f1 <- ggpubr::ggbarplot(sort(fc1[i1]),col="grey80",main="gene",ylab="logFC",xlab="") 
-        f2 <- ggpubr::ggbarplot(sort(fc2[i2]),col="grey80",main="geneset",ylab="logFC",xlab="") 
-        f3 <- ggpubr::ggbarplot(sort(fc3[i3]),col="grey80",main="cluster",ylab="logFC",xlab="") 
-        f4 <- ggpubr::ggbarplot(sort(fc4[i4]),col="grey80",main="cell.type",ylab="logFC",xlab="") 
+        f1 <- plot.ggbarplot(sort(fc1[i1]),col="grey80",main="gene",ylab="logFC",xlab="") 
+        f2 <- plot.ggbarplot(sort(fc2[i2]),col="grey80",main="geneset",ylab="logFC",xlab="") 
+        f3 <- plot.ggbarplot(sort(fc3[i3]),col="grey80",main="cluster",ylab="logFC",xlab="") 
+        f4 <- plot.ggbarplot(sort(fc4[i4]),col="grey80",main="cell.type",ylab="logFC",xlab="") 
         
         fc.plots <- f1 + f2 + f3 + f4 + patchwork::plot_layout(ncol=4) &
             ggplot2::coord_flip() & ## ggplot2::xlab("") & ggplot2::ylab("logFC") &

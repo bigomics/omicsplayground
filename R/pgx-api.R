@@ -125,13 +125,14 @@ pgx.getMarkerGenes <- function(pgx, n=10, dir=0, sym=FALSE, filt=NULL) {
 pgx.getFamilies <- function(pgx, nmin=10, extended=FALSE) {
     if(extended) {
         fam <- grep("^[<].*|^FAMILY|^TISSUE|^COMPARTMENT|^CELLTYPE|^GOCC|^DISEASE|^CUSTOM",
-                    names(GSETS),value=TRUE)
-        fam <- grep("^[<].*|^FAMILY|^COMPARTMENT|^CUSTOM",names(GSETS),value=TRUE)
+                    names(iGSETS),value=TRUE)
+        fam <- grep("^[<].*|^FAMILY|^COMPARTMENT|^CUSTOM",names(iGSETS),value=TRUE)
     } else {
-        fam <- grep("^[<].*|^FAMILY|^CUSTOM",names(GSETS),value=TRUE)
+        fam <- grep("^[<].*|^FAMILY|^CUSTOM",names(iGSETS),value=TRUE)
     }
     xgenes <- toupper(rownames(pgx$X))
     xgenes <- toupper(pgx$genes$gene_name)
-    jj <- which(sapply(GSETS[fam],function(x) sum(x %in% xgenes)) >= nmin)
+    gg <- getGSETS(fam)
+    jj <- which(sapply(gg,function(x) sum(x %in% xgenes)) >= nmin)
     sort(fam[jj])
 }

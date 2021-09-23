@@ -9,7 +9,11 @@
 ##-----------------------------------------------------------------------------
 ## GLOBAL variables
 ##-----------------------------------------------------------------------------
-
+if(0) {
+    RDIR='~/Playground/omicsplayground/R'
+    FILES='~/Playground/omicsplayground/lib'
+    source(file.path(RDIR,"pgx-include.R"),local=TRUE)  ## pass local vars
+}
 source(file.path(RDIR,"pgx-functions.R"),local=TRUE)  ## pass local vars
 
 ## Caching the init files
@@ -20,23 +24,24 @@ INIT.FILE
 
 file.exists(INIT.FILE)
 
-init.start_time = Sys.time()
-
 if(1 && file.exists(INIT.FILE)) {    
 
     message("[INIT] loading cached INIT file ",INIT.FILE)
-    t <- Sys.time()
+    t0 <- Sys.time()
     load(INIT.FILE, verbose=1)
-    message("Loading cache took: ", round(Sys.time() - t), " seconds")
+    message("Loading cache took: ", round(Sys.time() - t0), " seconds")
 
 } else {
     
     message("[INIT] no INIT file! building INIT from scratch.")
+    message("[INIT] INIT.FILE = ", INIT.FILE)    
+    t0 <- Sys.time()
+
     oldvars <- ls()
 
     ## All gene families in Human UPPER CASE    
     GENE.TITLE  = unlist(as.list(org.Hs.eg.db::org.Hs.egGENENAME))
-    GENE.SYMBOL = unlist(as.list(org.hs.eg.db::org.Hs.egSYMBOL))
+    GENE.SYMBOL = unlist(as.list(org.Hs.eg.db::org.Hs.egSYMBOL))
     names(GENE.TITLE) = GENE.SYMBOL
     ##GSET.PREFIX.REGEX = paste(paste0("^",GSET.PREFIXES,"_"),collapse="|")
     GSET.PREFIX.REGEX="^BIOCARTA_|^C2_|^C3_|^C7_|^CHEA_|^GOBP_|^GOCC_|^GOMF_|^HALLMARK_|^KEA_|^KEGG_|^PID_|^REACTOME_|^ST_"
@@ -49,7 +54,6 @@ if(1 && file.exists(INIT.FILE)) {
     GSETS = gmt.all;remove(gmt.all)
 
     message("[INIT] parsing gene families...")
-
     FAMILIES <- pgx.getGeneFamilies(GENE.SYMBOL, FILES=FILES, min.size=10, max.size=9999)
     fam.file <- file.path(FILES,"custom-families.gmt")
     if(file.exists(fam.file)) {
@@ -63,11 +67,20 @@ if(1 && file.exists(INIT.FILE)) {
     names(f1) <- sub("FAMILY:<all>","<all>",names(f1))
     GSETS <- c(GSETS,f1)
 
+    ## convert to integer list (more efficient)
+    message("[INIT] converting GSETS to list of integers...")
+    GSET.GENES <- sort(unique(unlist(GSETS)))  ## slow...
+    iGSETS <- parallel::mclapply(GSETS, function(a) match(a,GSET.GENES))  ## slow...
+    names(iGSETS) <- names(GSETS)
+    getGSETS <- function(gs) {
+        lapply(iGSETS[gs],function(i) GSET.GENES[i])
+    }
+        
     message("[INIT] parsing collections...")
     COLLECTIONS <- pgx.getGeneSetCollections(names(GSETS), min.size=10, max.size=99999)
     COLLECTIONS <- COLLECTIONS[order(names(COLLECTIONS))]
 
-    remove(list=c("custom.gmt","f1"))
+    remove(list=c("custom.gmt","f1","GSETS"))
 
     ##-----------------------------------------------------------------------------
     ## TISSUE/REFERENCE data sets
@@ -100,8 +113,7 @@ if(1 && file.exists(INIT.FILE)) {
     ##-----------------------------------------------------------------------------
     ## Colors
     ##-----------------------------------------------------------------------------
-    
-    
+        
     COLORS = rep(RColorBrewer::brewer.pal(8,"Set2"),99)
     COLORS = rep(c(ggsci::pal_npg("nrc", alpha = 0.7)(10),
                    ggsci::pal_aaas("default", alpha = 0.7)(10),
@@ -117,13 +129,11 @@ if(1 && file.exists(INIT.FILE)) {
     newvars <- setdiff(ls(), oldvars)
     newvars
 
-    ## message("[INIT] saving INIT file ", INIT.FILE)    
-    ## save( list=newvars, file=INIT.FILE)    
+    message("Creating global init took: ", round(Sys.time() - t0), " seconds")
+    message("[INIT] saving INIT file ", INIT.FILE)    
+    save( list=newvars, file=INIT.FILE)
+    
 }
-
-init.load_time = round( Sys.time() - init.start_time, digits=3)
-message("[INIT] init load time = ",init.load_time, " ",attr(init.load_time,"units"))
-
 
 pgx.initialize <- function(pgx) {
 
