@@ -1089,13 +1089,14 @@ getHSGeneInfo <- function(eg, as.link=TRUE) {
         info[["GO"]] <- info[["GO"]][sel]
 
         ## sometimes GO.db is broken...
-        suppressWarnings( try.out <- try(AnnotationDbi::Term(mget("GO:0000001", env=GOTERM, ifnotfound=NA)[[1]])))
+        suppressWarnings( try.out <- try(AnnotationDbi::Term(mget("GO:0000001", env=GO.db::GOTERM,
+                                                                  ifnotfound=NA)[[1]])))
         go.ok <- (class(try.out) !="try-error")
         if(go.ok && length(sel)>0) {
             i=1
             for(i in 1:length(info[["GO"]])) {
                 go_id = info[["GO"]][[i]][[1]]
-                go_term = AnnotationDbi::Term(mget(go_id, envir=GOTERM, ifnotfound=NA)[[1]])
+                go_term = AnnotationDbi::Term(mget(go_id, envir=GO.db::GOTERM, ifnotfound=NA)[[1]])
                 if(as.link) {
                     info[["GO"]][[i]] = gsub("GOTERM",go_term,gsub("GOID",go_id,amigo.link))
                 } else {

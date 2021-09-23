@@ -799,8 +799,8 @@ pgx.plotContrast <- function(pgx, contrast=NULL, type='scatter',
     
     if(set.par) {
         nc <- ceiling(sqrt(length(contrast)))
-        nr <- nc
-        if(par.sq) nr <- ceiling(length(contrast)/nc)
+        nr <- ceiling(length(contrast)/nc)
+        if(par.sq) nr <- nc
         par(mfrow=c(nr,nc))
     }
     
@@ -1013,7 +1013,8 @@ pgx.plotGeneUMAP <- function(pgx, contrast=NULL, value=NULL,
         ##q <- res$qv[,contrast]    
         ##sig <- (q <= psig & abs(f) >= fc)
     }
-
+    dim(F)
+    
     if(!is.null(value)) {
         F <- cbind(value)
     }
@@ -1033,8 +1034,8 @@ pgx.plotGeneUMAP <- function(pgx, contrast=NULL, value=NULL,
     
     if(set.par) {
         nc <- ceiling(sqrt(ncol(F)))
-        nr <- nc
-        if(par.sq) nr <- ceiling(ncol(F)/nc)
+        nr <- ceiling(ncol(F)/nc)
+        if(par.sq) nr <- nc
         par(mfrow=c(nr,nc))
     }
     

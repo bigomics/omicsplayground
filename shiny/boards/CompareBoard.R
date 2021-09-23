@@ -271,6 +271,7 @@ CompareBoard <- function(input, output, session, env)
             } else if(type=='UMAP2') {
                 pos = ngs2$cluster.genes$pos[['umap2d']]
             }
+            dim(pos)
             p <- pgx.plotGeneUMAP(
                 ngs, contrast=ct, pos=pos,
                 cex = 0.9, cex.lab = cex.lab,
@@ -329,7 +330,7 @@ CompareBoard <- function(input, output, session, env)
         title = "DATASET 1",
         ##info.text = scatter1_info
         ##caption = scatter1_caption,
-        pdf.height=6, pdf.width=6, 
+        pdf.height=8, pdf.width=8, 
         height = c(700,750), width=c("auto",900),
         res = c(90,110),
         add.watermark = WATERMARK
@@ -373,7 +374,7 @@ CompareBoard <- function(input, output, session, env)
         title = "DATASET 2",
         ##info.text = scatter2_info
         ##caption = scatter2_caption,
-        pdf.height=6, pdf.width=6, 
+        pdf.height=8, pdf.width=8, 
         height = c(700,750), width=c("auto",900),
         res = c(90,110),
         add.watermark = WATERMARK
