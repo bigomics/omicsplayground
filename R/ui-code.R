@@ -11,8 +11,8 @@ myTextInput <- function(inputId, label, value = "") {
 ##     shiny::basicPage(
 ##         code
 ##        ,myTextInput("myTextInput","My text input","On enter or focus out")
-##        ,textOutput("meh")
-##        ,HTML('<script src="https://gist.github.com/xiaodaigh/7150112.js"></script>')
+##        ,shiny::textOutput("meh")
+##        ,shiny::HTML('<script src="https://gist.github.com/xiaodaigh/7150112.js"></script>')
 ##     ))
 
 ## from https://gist.github.com/xiaodaigh/7150112
@@ -80,14 +80,4 @@ inlineSelectInput <- function (inputId, label, value = "")
     shiny::div(style="display:inline-block",
         shiny::tags$label(label, "for"=inputId),
         shiny::tags$input(id=inputId, type="select", value=value))
-}
-
-if(0) {
-    shiny::runApp(list(
-        ui = shiny::bootstrapPage(
-            textInputRow(inputId="xlimitsmin", label="x-min", value = 0.0),
-            textInputRow(inputId="xlimitsmax", label="x-max", value = 0.5)
-        ),
-        server = function(input, output) {}
-    ))
 }

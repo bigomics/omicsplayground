@@ -507,7 +507,7 @@ RegisterAuthenticationModule <- function(input, output, session, register.file)
             ),
             footer = shiny::tagList(
                 shiny::div(shiny::textOutput(ns("register_warning")),style="color:red; text-align:center;"),
-                shiny::actionLink(ns("register_cancel"), "Cancel"),HTML("&nbsp;&nbsp;"),
+                shiny::actionLink(ns("register_cancel"), "Cancel"),shiny::HTML("&nbsp;&nbsp;"),
                 shiny::actionButton(ns("register_submit"), "Register")
             ),                    
             ##footer = NULL,
@@ -964,7 +964,7 @@ EmailAuthenticationModule.SAVE <- function(input, output, session,
             ),
             footer = shiny::tagList(
                 shiny::div(shiny::textOutput(ns("ask_warning")),style="color: red;"),
-                shiny::actionLink(ns("ask_btn_skip"), "Skip"),HTML("&nbsp;&nbsp;"),
+                shiny::actionLink(ns("ask_btn_skip"), "Skip"),shiny::HTML("&nbsp;&nbsp;"),
                 shiny::actionButton(ns("ask_register"), "Register")
             ),                    
             ##footer = NULL,
@@ -1051,7 +1051,7 @@ EmailAuthenticationModule.SAVE <- function(input, output, session,
                         )
                     ),
                     shiny::div(
-                        shiny::actionLink(ns("askxp_btn_skip"), "Skip"),HTML("&nbsp;&nbsp;"),
+                        shiny::actionLink(ns("askxp_btn_skip"), "Skip"),shiny::HTML("&nbsp;&nbsp;"),
                         shiny::actionButton(ns("askxp_submit"), "Submit"),
                         style="text-align: right;"
                     )                    
