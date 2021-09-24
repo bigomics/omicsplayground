@@ -13,217 +13,6 @@ USER.GENETEST.METHODS <- NULL
 ##=============================================================================
 ##===================    Platform helper functions ============================
 ##=============================================================================
-##pgx=ngs
-pgx.initialize.MOVED <- function(pgx) {
-
-    ##---------------------------------------------------------------------
-    ## This function must be called after creation of a PGX object
-    ## and include some cleaning up and updating some internal
-    ## structures to keep compatibility with new/old versions.
-    ##---------------------------------------------------------------------
-    message("[pgx.initialize] initializing pgx object")
-
-    ##----------------- check object
-    obj.needed <- c("genes", ## "deconv","collections", "families", "counts",
-                    "GMT","gset.meta","gsetX","gx.meta","model.parameters",
-                    "samples","tsne2d","X")
-    all(obj.needed %in% names(pgx))
-    if(!all(obj.needed %in% names(pgx))) {
-        obj.missing <- setdiff(obj.needed, names(pgx))
-        msg <- paste("invalid pgx object. missing parts in object: ",obj.missing)
-        shiny::showNotification(msg,duration=NULL,type="error")
-        ##stop(msg)
-        return(NULL)
-    }
-
-    vars.needed <- c("group")
-    if(FALSE && !all(vars.needed %in% colnames(pgx$samples))) {
-        vars.missing <- setdiff(vars.needed, colnames(pgx$samples))
-        msg <- paste("invalid pgx object. missing variables in object: ",vars.missing)
-        shiny::showNotification(msg,duration=NULL,type="error")
-        ##stop(msg)
-        return(NULL)
-    }
-    
-    ## for COMPATIBILITY: if no counts, estimate from X
-    if(is.null(pgx$counts)) {
-        cat("WARNING:: no counts table. estimating from X\n")
-        ##pgx$counts <- (2**pgx$X-1) ##
-        pgx$counts = pmax(2**pgx$X - 1,0)
-        k = grep("lib.size|libsize",colnames(pgx$samples))[1]
-        if(length(k)>0) {
-            libsize = pgx$samples[colnames(pgx$counts),k]
-            libsize
-            pgx$counts = t(t(pgx$counts) * libsize)
-        }
-    }
-    pgx$counts <- as.matrix(pgx$counts)
-    if(!is.null(pgx$X)) pgx$X <- as.matrix(pgx$X)
-    
-    ##----------------------------------------------------------------
-    ## model parameters
-    ##----------------------------------------------------------------
-    has.design <- !is.null(pgx$model.parameters$design)
-    has.expmatrix <- !is.null(pgx$model.parameters$exp.matrix)
-    if(!"group" %in% names(pgx$model.parameters) && has.design) {
-        ii <- max.col(pgx$model.parameters$design)
-        group <- colnames(pgx$model.parameters$design)[ii]
-        names(group) <- rownames(pgx$model.parameters$design)
-        pgx$model.parameters$group <- group
-    }
-    if(!"group" %in% names(pgx$model.parameters) && has.expmatrix) {
-        group <- pgx.getConditions(pgx$model.parameters$exp.matrix,nmax=0)
-        names(group) <- rownames(pgx$model.parameters$exp.matrix)
-        pgx$model.parameters$group <- group
-    }
-    
-    if(is.null(pgx$model.parameters$group)) {
-        stop("[pgx.initialize] FATAL: group is null!!!")
-    }
-
-    ##----------------------------------------------------------------
-    ## Tidy up phenotype matrix (important!!!): get numbers/integers
-    ## into numeric, categorical into factors....
-    ##----------------------------------------------------------------
-    pgx$samples <- tidy.dataframe(pgx$samples)  ## warning!! this converts all to CHR!!
-
-    ## clean up: pgx$Y is a cleaned up pgx$samples
-    pgx$samples$barcode <- NULL
-    pgx$samples <- pgx$samples[,which(colMeans(is.na(pgx$samples))<1),drop=FALSE]
-    kk = grep("batch|lib.size|norm.factor|repl|donor|clone|sample|barcode",
-              colnames(pgx$samples),invert=TRUE)
-    kk = grep("lib.size|norm.factor|donor|clone|sample|barcode|patient",
-              colnames(pgx$samples),invert=TRUE)
-    pgx$Y = pgx$samples[colnames(pgx$X),kk,drop=FALSE]
-    pgx$Y <- type.convert(pgx$Y)   ## autoconvert to datatypes
-    
-    ## *****************************************************************
-    ## ******************NEED RETHINK***********************************
-    ## *****************************************************************
-    ## ONLY categorical variables for the moment!!!
-    ny1 <- nrow(pgx$Y)-1
-    k1 = pgx.getCategoricalPhenotypes(pgx$Y, min.ncat=2, max.ncat=ny1)
-    k2 = grep("OS.survival|cluster|condition|group",colnames(pgx$Y),value=TRUE)
-    ##kk = sort(unique(c("group",k1,k2)))
-    kk = sort(unique(c(k1,k2)))
-    pgx$Y <- pgx$Y[,kk,drop=FALSE]
-    colnames(pgx$Y)
-    ## pgx$samples <- pgx$Y    ## REALLY? !!!!!!!!!!!!!!!!!!!!
-
-    ##----------------------------------------------------------------
-    ## Tidy up genes matrix
-    ##----------------------------------------------------------------
-    pgx$genes = pgx$genes[rownames(pgx$counts),,drop=FALSE]
-    pgx$genes$gene_name = as.character(pgx$genes$gene_name)
-    pgx$genes$gene_title = as.character(pgx$genes$gene_title)
-
-    ## Add chromosome annotation if not
-    if(!("chr" %in% names(pgx$genes))) {
-        symbol = sapply(as.list(org.Hs.eg.db::org.Hs.egSYMBOL),"[",1)  ## some have multiple chroms..
-        CHR = sapply(as.list(org.Hs.eg.db::org.Hs.egCHR),"[",1)  ## some have multiple chroms..
-        MAP <- sapply(as.list(org.Hs.eg.db::org.Hs.egMAP),"[",1)  ## some have multiple chroms..
-        names(CHR) = names(MAP) = symbol
-        pgx$genes$chr <- CHR[pgx$genes$gene_name]
-        pgx$genes$map <- MAP[pgx$genes$gene_name]
-    }
-
-    ##-----------------------------------------------------------------------------
-    ## intersect and filter gene families (convert species to human gene sets)
-    ##-----------------------------------------------------------------------------
-    if("hgnc_symbol" %in% colnames(pgx$genes) ) {
-        hgenes <- toupper(pgx$genes$hgnc_symbol)
-        genes  <- pgx$genes$gene_name
-        pgx$families <- lapply(FAMILIES, function(x) setdiff(genes[match(x,hgenes)],NA))
-    } else {
-        genes <- toupper(pgx$genes$gene_name)
-        pgx$families <- lapply(FAMILIES, function(x) intersect(x,genes))
-    }
-    famsize <- sapply(pgx$families, length)
-    pgx$families <- pgx$families[which(famsize>=10)]
-    
-    all.genes <- sort(rownames(pgx$genes))
-    pgx$families[["<all>"]] <- all.genes
-    ## rownames(pgx$GMT) <- toupper(rownames(pgx$GMT)) ## everything to human...
-    
-    ##-----------------------------------------------------------------------------
-    ## Recompute geneset meta.fx as average fold-change of genes
-    ##-----------------------------------------------------------------------------
-    message("[pgx.initialize] Recomputing geneset fold-changes")
-    nc <- length(pgx$gset.meta$meta)
-    i=1
-    for(i in 1:nc) {
-        gs <- pgx$gset.meta$meta[[i]]
-        fc <- pgx$gx.meta$meta[[i]]$meta.fx
-        names(fc) <- rownames(pgx$gx.meta$meta[[i]])
-        fc <- fc[which(toupper(names(fc)) %in% colnames(GSETxGENE))]
-        ## G1 <- GSETxGENE[rownames(gs),toupper(names(fc))]
-        G1 <- t(pgx$GMT[names(fc),rownames(gs)])
-        mx <- (G1 %*% fc)[,1]
-        pgx$gset.meta$meta[[i]]$meta.fx <- mx
-    }
-
-    ##-----------------------------------------------------------------------------
-    ## Recode survival
-    ##-----------------------------------------------------------------------------
-    pheno <- colnames(pgx$Y)
-    ## DLBCL coding
-    if(("OS.years" %in% pheno && "OS.status" %in% pheno)) {
-        message("found OS survival data")
-        event <- ( pgx$Y$OS.status %in% c("DECEASED","DEAD","1","yes","YES","dead"))
-        pgx$Y$OS.survival <- ifelse(event, pgx$Y$OS.years, -pgx$Y$OS.years)            
-    }
-
-    ## cBioportal coding
-    if(("OS_MONTHS" %in% pheno && "OS_STATUS" %in% pheno)) {
-        cat("found OS survival data\n")
-        event <- ( pgx$Y$OS_STATUS %in% c("DECEASED","DEAD","1","yes","YES","dead"))
-        pgx$Y$OS.survival <- ifelse(event, pgx$Y$OS_MONTHS, -pgx$Y$OS_MONTHS)            
-    }
-
-    ##-----------------------------------------------------------------------------
-    ## Remove redundant???
-    ##-----------------------------------------------------------------------------
-    if(".gender" %in% colnames(pgx$Y) &&
-        any(c("gender","sex") %in% tolower(colnames(pgx$Y)))) {
-        pgx$Y$.gender <- NULL
-    }
-        
-    ##-----------------------------------------------------------------------------
-    ## Keep compatible with OLD formats
-    ##-----------------------------------------------------------------------------
-    if( any(c("mono","combo") %in% names(pgx$drugs)) ) {
-        dd <- pgx$drugs[["mono"]]
-        aa1 <- pgx$drugs[["annot"]]
-        if(is.null(aa1)) {
-            aa1 <- read.csv(file.path(FILES,"L1000_repurposing_drugs.txt"),
-                            sep="\t", comment.char="#")
-            aa1$drug <- aa1$pert_iname
-            rownames(aa1) <- aa1$pert_iname
-        }
-        dd[["annot"]] <- aa1
-        pgx$drugs[["activity/L1000"]] <- dd
-        if("combo" %in% names(pgx$drugs)) {
-            dd2 <- pgx$drugs[["combo"]]
-            combo <- rownames(dd2$X)
-            aa2 <- pgx.createComboDrugAnnot(combo, aa1)             
-            dd2[["annot"]] <- aa2
-            pgx$drugs[["activity-combo/L1000"]] <- dd2
-        }
-        pgx$drugs$mono  <- NULL
-        pgx$drugs$annot <- NULL
-        pgx$drugs$combo <- NULL        
-    }
-    
-    ##-----------------------------------------------------------------------------
-    ## remove large deprecated outputs from objects
-    ##-----------------------------------------------------------------------------
-    pgx$gx.meta$outputs <- NULL
-    pgx$gset.meta$outputs <- NULL
-    pgx$gmt.all <- NULL
-
-    message("[pgx.initialize] done")
-    return(pgx)
-}
 
 pgx.phenoMatrix <- function(pgx, phenotype) {
     y <- pgx$samples[,phenotype]
@@ -493,6 +282,9 @@ mouse2human <- function(x) {
 ##type=NULL;org="human";keep.na=FALSE
 probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
 {   
+    require(org.Hs.eg.db)
+    require(org.Mm.eg.db)
+
     ## strip postfix for ensemble codes
     if(mean(grepl("^ENS",probes))>0.5) {
         probes <- gsub("[.].*","",probes)
@@ -501,23 +293,23 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
     if(is.null(type)) {
         
         hs.list <- list(
-            "human.ensembl" = unlist(as.list(org.Hs.eg.db::org.Hs.egENSEMBL)),
-            "human.ensemblTRANS" = unlist(as.list(org.Hs.eg.db::org.Hs.egENSEMBLTRANS)),            
-            "human.unigene" = unlist(as.list(org.Hs.eg.db::org.Hs.egUNIGENE)),
-            "human.refseq"  = unlist(as.list(org.Hs.eg.db::org.Hs.egREFSEQ)),
-            "human.accnum"  = unlist(as.list(org.Hs.eg.db::org.Hs.egACCNUM)),
-            "human.uniprot" = unlist(as.list(org.Hs.eg.db::org.Hs.egUNIPROT)),
-            "human.symbol"  = unlist(as.list(org.Hs.eg.db::org.Hs.egSYMBOL))
+            "human.ensembl" = unlist(as.list(org.Hs.egENSEMBL)),
+            "human.ensemblTRANS" = unlist(as.list(org.Hs.egENSEMBLTRANS)),            
+            "human.unigene" = unlist(as.list(org.Hs.egUNIGENE)),
+            "human.refseq"  = unlist(as.list(org.Hs.egREFSEQ)),
+            "human.accnum"  = unlist(as.list(org.Hs.egACCNUM)),
+            "human.uniprot" = unlist(as.list(org.Hs.egUNIPROT)),
+            "human.symbol"  = unlist(as.list(org.Hs.egSYMBOL))
             )
         
         mm.list <- list(
-            "mouse.ensembl" = unlist(as.list(org.Mm.eg.db::org.Mm.egENSEMBL)),
-            "mouse.ensemblTRANS" = unlist(as.list(org.Mm.eg.db::org.Mm.egENSEMBLTRANS)),            
-            "mouse.unigene" = unlist(as.list(org.Mm.eg.db::org.Mm.egUNIGENE)),
-            "mouse.refseq"  = unlist(as.list(org.Mm.eg.db::org.Mm.egREFSEQ)),
-            "mouse.accnum"  = unlist(as.list(org.Mm.eg.db::org.Mm.egACCNUM)),
-            "mouse.uniprot" = unlist(as.list(org.Mm.eg.db::org.Mm.egUNIPROT)),
-            "mouse.symbol"  = unlist(as.list(org.Mm.eg.db::org.Mm.egSYMBOL))
+            "mouse.ensembl" = unlist(as.list(org.Mm.egENSEMBL)),
+            "mouse.ensemblTRANS" = unlist(as.list(org.Mm.egENSEMBLTRANS)),            
+            "mouse.unigene" = unlist(as.list(org.Mm.egUNIGENE)),
+            "mouse.refseq"  = unlist(as.list(org.Mm.egREFSEQ)),
+            "mouse.accnum"  = unlist(as.list(org.Mm.egACCNUM)),
+            "mouse.uniprot" = unlist(as.list(org.Mm.egUNIPROT)),
+            "mouse.symbol"  = unlist(as.list(org.Mm.egSYMBOL))
         )
         id.list <- c(hs.list, mm.list)
         mx <- sapply(id.list, function(id) mean(probes %in% id))
@@ -561,17 +353,17 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
             symbol0 <- probes
         }
         ## all.symbols <- NULL
-        ## if(org=="human") all.symbols <- unlist(as.list(org.Hs.eg.db::org.Hs.egSYMBOL))
-        ## if(org=="mouse") all.symbols <- unlist(as.list(org.Mm.eg.db::org.Mm.egSYMBOL))
+        ## if(org=="human") all.symbols <- unlist(as.list(org.Hs.egSYMBOL))
+        ## if(org=="mouse") all.symbols <- unlist(as.list(org.Mm.egSYMBOL))
         ## symbol0 <- lapply(symbol0, function(s) intersect(s,all.symbols))
 
     } else {
         org
         if(org=="human") {
-            symbol0 <- AnnotationDbi::mapIds(org.Hs.eg.db::org.Hs.eg.db, probes, 'SYMBOL', toupper(type))
+            symbol0 <- AnnotationDbi::mapIds(org.Hs.eg.db, probes, 'SYMBOL', toupper(type))
         }
         if(org=="mouse") {
-            symbol0 <- AnnotationDbi::mapIds(org.Mm.eg.db::org.Mm.eg.db, probes, 'SYMBOL', toupper(type))
+            symbol0 <- AnnotationDbi::mapIds(org.Mm.eg.db, probes, 'SYMBOL', toupper(type))
         }
     }
 
@@ -1220,8 +1012,8 @@ pgx.getGeneFamilies <- function(genes, FILES="../files", min.size=10, max.size=5
     is.mouse = (mean(grepl("[a-z]",sub(".*:","",genes))) > 0.8)
     is.mouse
     if(is.mouse) {
-        
-        mouse.genes = as.character(unlist(as.list(org.Mm.eg.db::org.Mm.egSYMBOL)))
+        require(org.Mm.eg.db)
+        mouse.genes = as.character(unlist(as.list(org.Mm.egSYMBOL)))
         names(mouse.genes) = toupper(mouse.genes)
         families <- parallel::mclapply(families, function(s)
             setdiff(as.character(mouse.genes[toupper(s)]),NA),
@@ -1441,9 +1233,11 @@ extremeCorrelation <- function(query_sig, ref_set, n=200) {
 ##s=symbol;org="hs"
 alias2hugo <- function(s, org=NULL, na.orig=TRUE) {
     
-    
-    hs.symbol <- unlist(as.list(org.Hs.eg.db::org.Hs.egSYMBOL))
-    mm.symbol <- unlist(as.list(org.Mm.eg.db::org.Mm.egSYMBOL))
+    require(org.Hs.eg.db)
+    require(org.Mm.eg.db)
+
+    hs.symbol <- unlist(as.list(org.Hs.egSYMBOL))
+    mm.symbol <- unlist(as.list(org.Mm.egSYMBOL))
     if(is.null(org)) {
         is.human <- mean(s %in% hs.symbol,na.rm=TRUE) > mean(s %in% mm.symbol,na.rm=TRUE)
         org <- ifelse(is.human,"hs","mm")
@@ -1454,13 +1248,13 @@ alias2hugo <- function(s, org=NULL, na.orig=TRUE) {
     s1 <- trimws(s[nna])
     hugo <- NULL
     if(org == "hs") {
-        eg <- sapply(mget(s1, envir=org.Hs.eg.db::org.Hs.egALIAS2EG, ifnotfound=NA),"[",1)
+        eg <- sapply(mget(s1, envir=org.Hs.egALIAS2EG, ifnotfound=NA),"[",1)
         eg[is.na(eg)] <- "unknown"
-        hugo <- sapply(mget(eg, envir=org.Hs.eg.db::org.Hs.egSYMBOL, ifnotfound=NA),"[",1)
+        hugo <- sapply(mget(eg, envir=org.Hs.egSYMBOL, ifnotfound=NA),"[",1)
     } else if(org == "mm") {
-        eg <- sapply(mget(s1, envir=org.Mm.eg.db::org.Mm.egALIAS2EG, ifnotfound=NA),"[",1)
+        eg <- sapply(mget(s1, envir=org.Mm.egALIAS2EG, ifnotfound=NA),"[",1)
         eg[is.na(eg)] <- "unknown"
-        hugo <- sapply(mget(eg, envir=org.Mm.eg.db::org.Mm.egSYMBOL, ifnotfound=NA),"[",1)        
+        hugo <- sapply(mget(eg, envir=org.Mm.egSYMBOL, ifnotfound=NA),"[",1)        
     } else {
         stop("[alias2hugo] invalid organism")
     }

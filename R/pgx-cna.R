@@ -26,9 +26,7 @@ pgx.inferCNV <- function(ngs, refgroup=NULL, progress=NULL ) {
     ##
     ## BiocManager::install("infercnv")
     ##devtools::install_github("broadinstitute/infercnv", ref="RELEASE_3_9")
-    
-    
-    
+    require(org.Hs.eg.db)
     symbol <- as.vector(as.list(org.Hs.egSYMBOL))
     chrloc <- as.list(org.Hs.egCHRLOC)
     chr <- as.vector(sapply(chrloc,function(x) names(x)[1]))
@@ -178,9 +176,7 @@ pgx.CNAfromExpression <- function(ngs, nsmooth=40)
     ## values.
     ##
     ##
-    
-    Matrix::head(ngs$genes)
-
+    require(org.Hs.eg.db)    
     symbol <- as.vector(as.list(org.Hs.egSYMBOL))
     chrloc <- as.list(org.Hs.egCHRLOC)
     chr <- as.vector(sapply(chrloc,function(x) names(x)[1]))

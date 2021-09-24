@@ -288,6 +288,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     do.filter <- (only.hugo | only.known | only.proteincoding )        
     if(do.filter && org == "mouse") {
         message("[createPGX] filtering genes...")
+        require(org.Mm.eg.db)
         SYMBOL = unlist(as.list(org.Mm.eg.db::org.Mm.egSYMBOL))        
         is.hugo = is.known = is.protcoding = TRUE
         if(only.hugo) is.hugo <- (ngs$genes$gene_name %in% SYMBOL)
@@ -306,6 +307,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     }
     if(do.filter && org == "human") {
         message("[createPGX] filtering genes...")        
+        require(org.Hs.eg.db)
         SYMBOL = unlist(as.list(org.Hs.eg.db::org.Hs.egSYMBOL))
         is.hugo = is.protcoding = is.known = TRUE
         if(only.hugo) is.hugo <- (ngs$genes$gene_name %in% SYMBOL)

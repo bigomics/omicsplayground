@@ -41,12 +41,12 @@ mixHivePlot <- function(res, ngs, ct, showloops=FALSE, numlab=6, cex=1)
     hpd$nodes$degree <- hpd$nodes$radius
     ##hpd <- mineHPD(hpd, option = "axis <- source.man.sink")
     ##hpd <- mineHPD(hpd, option = "remove zero edge")    
-    ##axis <- sub(":.*","",V(res$graph)$name)        
+    ##axis <- sub(":.*","",igraph::V(res$graph)$name)        
     hpd$edges$from <- hpd$nodes$lab[hpd$edges$id1]
     hpd$edges$to   <- hpd$nodes$lab[hpd$edges$id2]
     
     if(is.null(ct) || is.null(ngs)) {
-        fx <- tapply( igraph::V(gr)$importance, sub(".*:","",V(gr)$name), max)        
+        fx <- tapply( igraph::V(gr)$importance, sub(".*:","",igraph::V(gr)$name), max)        
     } else if(ct %in% names(ngs$gx.meta$meta)) {
         ## use fold change as radial layout
         fc <- ngs$gx.meta$meta[[ct]]$meta.fx
@@ -70,7 +70,7 @@ mixHivePlot <- function(res, ngs, ct, showloops=FALSE, numlab=6, cex=1)
         names(fx) <- rownames(ngs$X)
     } else {
         stop("FATAL:: mixHivePlot: unknown contrast/conditions=",ct,"\n")
-        ##fx <- tapply( igraph::V(gr)$importance, sub(".*:","",V(gr)$name), max)        
+        ##fx <- tapply( igraph::V(gr)$importance, sub(".*:","",igraph::V(gr)$name), max)        
     }
     Matrix::head(fx)
     fx <- fx / max(abs(fx),na.rm=TRUE)
@@ -81,7 +81,7 @@ mixHivePlot <- function(res, ngs, ct, showloops=FALSE, numlab=6, cex=1)
     maxgrp <- unlist(lapply(res$W,function(w) max.col(w)))
     ##maxgrp <- colnames(res$W[[1]])[maxgrp]
     names(maxgrp) <- as.vector(sapply(res$W,rownames))
-    ##maxgrp <- maxgrp[V(gr)$name]
+    ##maxgrp <- maxgrp[igraph::V(gr)$name]
     
     ## use importance as node size
     importance <- igraph::V(gr)$importance
@@ -292,8 +292,8 @@ pgx.makeTriSystemGraph <- function(data, Y, nfeat=25, numedge=100, posonly=FALSE
     }
 
     .detectSelfLoops <- function(gr,posonly) {                       
-        v1 = grep("1:",V(gr)$name,value=TRUE)
-        v3 = grep("3:",V(gr)$name,value=TRUE)
+        v1 = grep("1:",igraph::V(gr)$name,value=TRUE)
+        v3 = grep("3:",igraph::V(gr)$name,value=TRUE)
         
         wt <- (igraph::E(gr)$rho * igraph::E(gr)$importance)
         wt <- wt / max(abs(wt))
@@ -382,7 +382,7 @@ pgx.makeTriSystemGraph <- function(data, Y, nfeat=25, numedge=100, posonly=FALSE
         gr <- igraph::graph_from_edgelist(as.matrix(ee[,1:2]), directed=TRUE)
         ww <- lapply(W.list,function(w) rowMeans(w*w)**0.5)  
         names(ww)=NULL; ww=unlist(ww)
-        igraph::V(gr)$importance <- ww[V(gr)$name]  ## node importance  
+        igraph::V(gr)$importance <- ww[igraph::V(gr)$name]  ## node importance  
         
         ## set importance as edge weights
         igraph::E(gr)$rho <- ee$rho    

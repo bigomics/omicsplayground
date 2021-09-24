@@ -3,7 +3,6 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-
 NCORE <- parallel::detectCores(all.tests = FALSE, logical = TRUE)/2
 NCORE
 BLUERED <- colorRampPalette(
@@ -18,10 +17,9 @@ if(0) {
 
 pmid.getGeneContext <- function(gene, keyword)
 {
-    
-    
-    
-    
+    require(org.Hs.eg.db)
+    require(org.Mm.eg.db)    
+
     gene1 <- c(gene,sub("([0-9])","-\\1",gene))
     ##gene1 <- paste0(paste0("^",gene1),"|[\\(, ]",gene1,"[\\)-,\\( ]|",gene1,"$")
     gene1 <- paste0("^",gene1,"$|^",gene1,"[-]")
@@ -83,7 +81,8 @@ pmid.getGeneContext <- function(gene, keyword)
 
 pmid.getPubMedContext <- function(gene, context) {
     ##install.packages("RISmed")
-    
+    require(org.Hs.eg.db)
+    require(org.Mm.eg.db)    
     
     res <- EUtilsSummary(
         paste0(gene,"[sym] AND ",context),
@@ -122,6 +121,9 @@ pmid.getPubMedContext <- function(gene, context) {
 
 pmid.buildMatrix <- function() {
     
+    require(org.Hs.eg.db)
+    ##require(org.Mm.eg.db)    
+    
     pmid   <- as.list(org.Hs.egPMID2EG)
     symbol <- as.list(org.Hs.egSYMBOL)
     eg <- names(symbol)
@@ -138,8 +140,6 @@ pmid.buildMatrix <- function() {
     names(pmid) <- sapply(idx,paste,collapse=",")
     
     ## build PMID2SYMBOL matrix
-    
-    
     
     idx0 <- parallel::mclapply(1:length(pmid), function(i) cbind(i, which(eg %in% pmid[[i]])),
                      mc.cores=NCORE)
@@ -179,10 +179,10 @@ pmid.buildGraph <- function(P) {
     ##gr
     ##saveRDS(gr, file="PMID2SYMBOL_xgraph_01.rds")
     
-    P <- P[V(gr)$name,]
+    P <- P[igraph::V(gr)$name,]
     pmids <- parallel::mclapply(igraph::V(gr)$name,function(x) gsub("PMID:","",strsplit(x,split=",")[[1]]))
     nref <- sapply(pmids,length)
-    ##vgenes <- apply(P[V(gr)$name,],1,function(x) paste(names(which(x!=0)),collapse=","))
+    ##vgenes <- apply(P[igraph::V(gr)$name,],1,function(x) paste(names(which(x!=0)),collapse=","))
     vgenes <- parallel::mclapply(1:nrow(P),function(i) names(which(P[i,]!=0)), mc.cores=NCORE)
     vgenes2 <- unlist(sapply(vgenes,paste,collapse=","))
     igraph::V(gr)$size <- nref

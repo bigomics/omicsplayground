@@ -420,7 +420,7 @@ pgx.plotPartialCorrelationAroundGene <-
                     )
         rownames(ly) <- igraph::V(gr2)$name
         Matrix::head(ly)
-        ly <- ly[V(gr2)$name,,drop=FALSE]
+        ly <- ly[igraph::V(gr2)$name,,drop=FALSE]
         
         add.alpha <- function(col, alpha){
             apply(cbind(t(col2rgb(klr)),alpha),1, function(x)

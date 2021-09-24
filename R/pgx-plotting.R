@@ -532,7 +532,7 @@ pgx.SankeyFromMRF.PLOTLY <- function(M, R, F, fill=TRUE, labels=NULL)
                       "<br>weight=",round(igraph::E(gr)$weight,2))
     
     nodes <- data.frame(label = igraph::V(gr)$name, color=col1)
-    nodes$info  <- paste(igraph::V(gr)$name, unlist(labels)[V(gr)$name])
+    nodes$info  <- paste(igraph::V(gr)$name, unlist(labels)[igraph::V(gr)$name])
     nodes$label <- sub(".*[:]","",nodes$label)
     nodes$x <- (vlevel-1) / max(vlevel-1)
 
@@ -1296,7 +1296,7 @@ pgx.plotOmicsNetwork <- function(pgx, gene=NULL, reduced=NULL, levels=c("gene","
     if(is.null(gr)) return(NULL)
 
     ## ------------- get fold-change for node color and size ------------------
-    fc0 <- gr$foldchange[V(gr)$name,,drop=FALSE]
+    fc0 <- gr$foldchange[igraph::V(gr)$name,,drop=FALSE]
     if(is.null(contrast)) {
         fc <- rowMeans(fc0**2,na.rm=TRUE)**0.5
     } else {
@@ -1314,7 +1314,7 @@ pgx.plotOmicsNetwork <- function(pgx, gene=NULL, reduced=NULL, levels=c("gene","
     vklr = c("blue3","grey70","red3")[2+sign(fc)]
     ##do.colorcluster = FALSE
     if(colorcluster) {
-        vklr <- rep(rainbow(16),99)[V(gr)$cluster]
+        vklr <- rep(rainbow(16),99)[igraph::V(gr)$cluster]
     }
     lab.cex = 1
 
@@ -1334,7 +1334,7 @@ pgx.plotOmicsNetwork <- function(pgx, gene=NULL, reduced=NULL, levels=c("gene","
         ##mm  <- pgx$genes_tsne_graph$members
         mm <- igraph::V(gr)$name
         if(!is.null(gr$members)) {
-            mm <- gr$members[V(gr)$name]
+            mm <- gr$members[igraph::V(gr)$name]
         }
         mm <- sapply(mm, function(s) sub(".*\\}","",s))
         vlabel <- sapply( mm, function(x) intersect(x,sel) )
@@ -1388,7 +1388,7 @@ pgx.plotOmicsNetwork <- function(pgx, gene=NULL, reduced=NULL, levels=c("gene","
     }
 
     visdata <- visNetwork::toVisNetworkData(gr, idToLabel=FALSE)
-    pos <- pos[V(gr)$name,]
+    pos <- pos[igraph::V(gr)$name,]
     pos[,2] <- -pos[,2]
     dim(pos)
 

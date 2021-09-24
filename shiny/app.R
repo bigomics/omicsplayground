@@ -22,13 +22,16 @@ message("***********************************************")
 message("*********** LOADING INITIAL LIBS **************")
 message("***********************************************")
 
+## some libraries that we need often and load fast
 library(shiny)
 library(pryr)
-# we need all these datasets that actually aren't datasets
-# and so cannot be imported by data() function...
-library(org.Hs.eg.db) ## better use require inside?
-library(org.Mm.eg.db) ## better use require inside?
 library(grid)
+
+## we need all these datasets that actually aren't datasets
+## and so cannot be imported by data() function...
+##library(org.Hs.eg.db) ## better use require inside?
+##library(org.Mm.eg.db) ## better use require inside?
+
 
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")

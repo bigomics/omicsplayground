@@ -437,7 +437,7 @@ EnrichmentBoard <- function(input, output, session, env)
                     length(pp)
                 }
                 
-                G <- t(ngs$GMT[pp,jj] != 0)
+                G <- Matrix::t(ngs$GMT[pp,jj] != 0)
                 ngenes <- Matrix::rowSums(G)
                 ## meta.fc <- as.vector(G %*% fc[pp] / ngenes)
                 ## names(meta.fc) <- rownames(G)
@@ -631,21 +631,21 @@ EnrichmentBoard <- function(input, output, session, env)
         if(!all(top %in% colnames(ngs$GMT))) return(NULL)
         
         F <- 1*(ngs$GMT[,top,drop=FALSE]>0)
+        F <- as.matrix(F)
         wt = FALSE
         if(gset.weight) {
-            F <- t(t(F)  / colSums(F,na.rm=TRUE))
+            F <- Matrix::t(Matrix::t(F)  / Matrix::colSums(F,na.rm=TRUE))
             wt = TRUE
         }
-        F <- t(t(F) * sign(fx[top]))
+        F <- Matrix::t( Matrix::t(F) * sign(fx[top]))
         if(fcweight) {
-            F <- t(t(F) * abs(fx[top]))
+            F <- Matrix::t( Matrix::t(F) * abs(fx[top]))
             wt = TRUE
         } 
-        F <- head(F[order(-rowSums(abs(F))),,drop=FALSE], ngenes)
-        F <- F[order(-rowSums(F)),,drop=FALSE]
-        F <- as.matrix(F)
+        F <- head(F[order(-Matrix::rowSums(abs(F))),,drop=FALSE], ngenes)
+        F <- F[order(-Matrix::rowSums(F)),,drop=FALSE]
 
-        sel.zero <- which(rowSums(abs(F)) < 1e-4)
+        sel.zero <- which(Matrix::rowSums(abs(F)) < 1e-4)
         if(length(sel.zero)) rownames(F)[sel.zero] = ""
         
         par(mfrow=c(1,1), mar=c(6,4,2,0.5), mgp=c(2.2,0.8,0))
