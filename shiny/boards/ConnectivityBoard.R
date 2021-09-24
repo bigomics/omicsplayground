@@ -335,10 +335,10 @@ ConnectivityBoard <- function(input, output, session, env)
     getSignatureMatrix <- function(sigdb) {
 
         if(sigdb=="" || is.null(sigdb)) {
-            dbg("[getEnrichmentMatrix] ***WARNING*** sigdb=",sigdb)
+            dbg("[getSignatureMatrix] ***WARNING*** sigdb=",sigdb)
             return(NULL)
         }
-        if(!is.null(select)) dbg("[getEnrichmentMatrix] length(select)=",length(select))
+        ##if(!is.null(select)) dbg("[getEnrichmentMatrix] length(select)=",length(select))
 
         if(!grepl("h5$",sigdb)) {
             stop("getEnrichmentMatrix:: only for H5 database files")
@@ -1487,10 +1487,10 @@ ConnectivityBoard <- function(input, output, session, env)
 
         fc=cumFC=NULL
         fc <- getCurrentContrast()$fc        
-        fc <- fc[V(gr)$name]
+        fc <- fc[igraph::V(gr)$name]
         cumFC <- cumulativeFCtable()
        
-        cumFC <- cumFC[V(gr)$name,]
+        cumFC <- cumFC[igraph::V(gr)$name,]
         fontsize = 22
         fc <- fc / max(abs(fc))
         
@@ -1654,7 +1654,7 @@ ConnectivityBoard <- function(input, output, session, env)
 
         fc=cumFC=NULL
         cumFC <- cumEnrichmentTable()
-        cumFC <- cumFC[V(gr)$name,]
+        cumFC <- cumFC[igraph::V(gr)$name,]
         fc <- cumFC[,1]
         fontsize = 18
         fc <- fc / max(abs(fc))
@@ -1681,7 +1681,7 @@ ConnectivityBoard <- function(input, output, session, env)
         vcolor <- paste0(vcolor,"AA") ## add transparency
         
         ## defaults graph parameters
-        vname <- sub("H:HALLMARK_|C2:KEGG_","",V(gr)$name)
+        vname <- sub("H:HALLMARK_|C2:KEGG_","",igraph::V(gr)$name)
         igraph::V(gr)$label <- vname
         igraph::V(gr)$title <- paste0("<b>",vname,"</b><br>",pw.genes)
         igraph::V(gr)$size  <- vsize      ## rather small

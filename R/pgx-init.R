@@ -39,9 +39,10 @@ if(1 && file.exists(INIT.FILE)) {
 
     oldvars <- ls()
 
-    ## All gene families in Human UPPER CASE    
-    GENE.TITLE  = unlist(as.list(org.Hs.eg.db::org.Hs.egGENENAME))
-    GENE.SYMBOL = unlist(as.list(org.Hs.eg.db::org.Hs.egSYMBOL))
+    ## All gene families in Human UPPER CASE
+    require(org.Hs.eg.db)
+    GENE.TITLE  = unlist(as.list(org.Hs.egGENENAME))
+    GENE.SYMBOL = unlist(as.list(org.Hs.egSYMBOL))
     names(GENE.TITLE) = GENE.SYMBOL
     ##GSET.PREFIX.REGEX = paste(paste0("^",GSET.PREFIXES,"_"),collapse="|")
     GSET.PREFIX.REGEX="^BIOCARTA_|^C2_|^C3_|^C7_|^CHEA_|^GOBP_|^GOCC_|^GOMF_|^HALLMARK_|^KEA_|^KEGG_|^PID_|^REACTOME_|^ST_"
@@ -175,7 +176,7 @@ pgx.initialize <- function(pgx) {
         if(length(k)>0) {
             libsize = pgx$samples[colnames(pgx$counts),k]
             libsize
-            pgx$counts = t(t(pgx$counts) * libsize)
+            pgx$counts = Matrix::t(Matrix::t(pgx$counts) * libsize)
         }
     }
     pgx$counts <- as.matrix(pgx$counts)
@@ -287,9 +288,10 @@ pgx.initialize <- function(pgx) {
 
     ## Add chromosome annotation if not
     if(!("chr" %in% names(pgx$genes))) {
-        symbol = sapply(as.list(org.Hs.eg.db::org.Hs.egSYMBOL),"[",1)  ## some have multiple chroms..
-        CHR = sapply(as.list(org.Hs.eg.db::org.Hs.egCHR),"[",1)  ## some have multiple chroms..
-        MAP <- sapply(as.list(org.Hs.eg.db::org.Hs.egMAP),"[",1)  ## some have multiple chroms..
+        require(org.Hs.eg.db)
+        symbol = sapply(as.list(org.Hs.egSYMBOL),"[",1)  ## some have multiple chroms..
+        CHR = sapply(as.list(org.Hs.egCHR),"[",1)  ## some have multiple chroms..
+        MAP <- sapply(as.list(org.Hs.egMAP),"[",1)  ## some have multiple chroms..
         names(CHR) = names(MAP) = symbol
         pgx$genes$chr <- CHR[pgx$genes$gene_name]
         pgx$genes$map <- MAP[pgx$genes$gene_name]
@@ -325,7 +327,7 @@ pgx.initialize <- function(pgx) {
         names(fc) <- rownames(pgx$gx.meta$meta[[i]])
         fc <- fc[which(toupper(names(fc)) %in% colnames(GSETxGENE))]
         ## G1 <- GSETxGENE[rownames(gs),toupper(names(fc))]
-        G1 <- t(pgx$GMT[names(fc),rownames(gs)])
+        G1 <- Matrix::t(pgx$GMT[names(fc),rownames(gs)])
         mx <- (G1 %*% fc)[,1]
         pgx$gset.meta$meta[[i]]$meta.fx <- mx
     }
@@ -351,14 +353,14 @@ pgx.initialize <- function(pgx) {
     ##-----------------------------------------------------------------------------
     ## Check if clustering is done
     ##-----------------------------------------------------------------------------
-
+    message("[pgx.initialize] Check if clustering is done...")
     if(!"cluster.genes" %in% names(pgx)) {
-        message("[pgx.initialize]  clustering genes...")
+        message("[pgx.initialize] clustering genes...")
         pgx <- pgx.clusterGenes(pgx, methods='umap', dims=c(2), level='gene')
         pgx$cluster.genes$pos <- lapply( pgx$cluster.genes$pos, pos.compact )
     }
     if(!"cluster.gsets" %in% names(pgx)) {
-        message("[pgx.initialize]  clustering genesets...")
+        message("[pgx.initialize] clustering genesets...")
         pgx <- pgx.clusterGenes(pgx, methods='umap', dims=c(2), level='geneset')
         pgx$cluster.gsets$pos  <- lapply( pgx$cluster.gsets$pos, pos.compact )
     }
@@ -366,6 +368,7 @@ pgx.initialize <- function(pgx) {
     ##-----------------------------------------------------------------------------
     ## Remove redundant???
     ##-----------------------------------------------------------------------------
+    message("[pgx.initialize] Remove redundant phenotypes...")
     if(".gender" %in% colnames(pgx$Y) &&
         any(c("gender","sex") %in% tolower(colnames(pgx$Y)))) {
         pgx$Y$.gender <- NULL
@@ -374,6 +377,7 @@ pgx.initialize <- function(pgx) {
     ##-----------------------------------------------------------------------------
     ## Keep compatible with OLD formats
     ##-----------------------------------------------------------------------------
+    message("[pgx.initialize] Keep compatible OLD formats...")
     if( any(c("mono","combo") %in% names(pgx$drugs)) ) {
         dd <- pgx$drugs[["mono"]]
         aa1 <- pgx$drugs[["annot"]]
@@ -400,10 +404,11 @@ pgx.initialize <- function(pgx) {
     ##-----------------------------------------------------------------------------
     ## remove large deprecated outputs from objects
     ##-----------------------------------------------------------------------------
+    message("[pgx.initialize] Removing deprecated objects...")
     pgx$gx.meta$outputs <- NULL
     pgx$gset.meta$outputs <- NULL
     pgx$gmt.all <- NULL
 
-    message("[pgx.initialize] done")
+    message("[pgx.initialize] done!")
     return(pgx)
 }

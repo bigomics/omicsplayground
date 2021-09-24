@@ -8,10 +8,7 @@ if(0) {
 
     devtools::install_github("mensxmachina/BioDataome")
     
-        
-    
-    res <- GEOquery::getGEO(id)
-    
+    res <- GEOquery::getGEO(id)    
     a1 <- (parsePhenoFromName(geo.getTitle(geo[[1]])))
     a2 <- (parsePhenoFromName(geo.getTitle(geo[[2]])))    
     
@@ -462,7 +459,8 @@ pgx.getSymbolFromFeatureData <- function(fdata) {
     ## know the gene column because the column names are not always
     ## consistent. Also the actual gene symbol may be part of an
     ## annotation string instead of single symbol column.
-
+    require(org.Hs.eg.db)
+    
     colnames(fdata)
     symbol <- NULL
     

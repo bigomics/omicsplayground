@@ -432,7 +432,7 @@ pgx.reduceOmicsGraph <- function(ngs)
     gr1$members <- grp.members
     gr1$scaled.data <- rX
     
-    ##klr <- rep(rainbow(24),99)[V(gr1)$cluster]
+    ##klr <- rep(rainbow(24),99)[igraph::V(gr1)$cluster]
     ##graphjs(gr1, vertex.size=0.3, vertex.color=klr)
 
     return(gr1)
@@ -951,7 +951,7 @@ pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.20, nterms=500, nt
     igraph::V(sub1)$score = pathscore[igraph::V(sub1)$name]
     igraph::V(sub1)$color = gplots::bluered(32)[16 + round(15*score1)]
     igraph::V(sub1)$label = vinfo[igraph::V(sub1)$name,"Term"]
-    ## igraph::V(sub1)$size = scale(pathscore[V(sub1)$name],center=FALSE)
+    ## igraph::V(sub1)$size = scale(pathscore[igraph::V(sub1)$name],center=FALSE)
 
     return(sub1)
 }

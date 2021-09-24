@@ -196,7 +196,8 @@ WgcnaBoard <- function(input, output, session, env)
     }, {
 
         ngs <- inputData()
-
+        require(WGCNA)
+        
         if("wgcna" %in% names(ngs)) {
             message("[wgcna.compute] >>> using pre-computed WGCNA results...")
             return( ngs$wgcna )
@@ -756,7 +757,8 @@ WgcnaBoard <- function(input, output, session, env)
     wgcna_moduleGraph.RENDER %<a-% shiny::reactive({
 
         message("[wgcna_moduleGraph.RENDER] reacted")
-
+        require(igraph)
+        
         out <- wgcna.compute()
         net <- out$net
         datExpr <- out$datExpr
@@ -780,8 +782,8 @@ WgcnaBoard <- function(input, output, session, env)
         phylo <- ape::as.phylo(clust)
         gr <- igraph::as.igraph(phylo, directed=FALSE)
 
-        is.tip <- grepl("^ME",V(gr)$name)
-        module.nr   <- as.integer(sub("^ME|Node.*","",V(gr)$name))
+        is.tip <- grepl("^ME", igraph::V(gr)$name)
+        module.nr   <- as.integer(sub("^ME|Node.*","", igraph::V(gr)$name))
         module.size <- table(out$net$colors) 
         module.size <- module.size / mean(module.size)
         module.size
@@ -796,7 +798,7 @@ WgcnaBoard <- function(input, output, session, env)
         par(mfrow=c(1,1), mar=c(1,1,1,1)*0)
         KEGGgraph::plot(
             gr,
-            layout=layout.kamada.kawai,
+            layout = igraph::layout.kamada.kawai,
             ##vertex.color = "lightblue",
             ##vertex.size = 20*is.tip,
             vertex.label.cex = 0.8,
@@ -1087,7 +1089,6 @@ WgcnaBoard <- function(input, output, session, env)
 
         
         message("[wgcna_corGraph.RENDER] nrow(rho) = ",nrow(rho))
-        
 
         qgraph::qgraph(rho, graph="glasso", layout="spring", sampleSize=nrow(xx),
                labels = rownames(rho), color=color1,
@@ -1238,10 +1239,6 @@ WgcnaBoard <- function(input, output, session, env)
         nc <- ceiling(n / nr)
         nr
         nc
-
-        message("[wgcna_eigenCorrelation.RENDER] n  = ", n)
-        message("[wgcna_eigenCorrelation.RENDER] nr = ", nr)
-        message("[wgcna_eigenCorrelation.RENDER] nc = ", nc)
         
         ntop = 15        
         par(mfrow=c(nr,nc), mar=c(6,3.1,2.3,1), oma=c(1,1,1,1)*0, mgp=c(2.1,0.8,0))

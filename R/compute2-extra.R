@@ -458,7 +458,7 @@ compute.genePerturbationEnrichment.DEPRECATED <- function(ngs, lib.dir)
 
 ## ------------------ Omics graphs --------------------------------
 compute.omicsGraphs <- function(ngs) {
-    ## gr1$layout <- gr1$layout[V(gr1)$name,]  ## uncomment to keep entire layout
+    ## gr1$layout <- gr1$layout[igraph::V(gr1)$name,]  ## uncomment to keep entire layout
     ngs$omicsnet <- pgx.createOmicsGraph(ngs)
     ngs$pathscores <- pgx.computePathscores(ngs$omicsnet, strict.pos=FALSE)
 

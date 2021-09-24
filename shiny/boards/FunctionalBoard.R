@@ -678,7 +678,7 @@ to understand biological functions including GO and KEGG pathway analysis."
             cc = c(RColorBrewer::brewer.pal(12,"Set3"),
                    RColorBrewer::brewer.pal(8,"Set2"),
                    RColorBrewer::brewer.pal(8,"Set1"))
-            igraph::V(sub2)$color = rep(cc,99)[clust[V(sub2)$name]]
+            igraph::V(sub2)$color = rep(cc,99)[clust[igraph::V(sub2)$name]]
             jj = which(is.na(score) | score==0)
             if(length(jj)>0) igraph::V(sub2)$color[jj] = NA
         }

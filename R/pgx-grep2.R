@@ -352,12 +352,15 @@ run_tximport_kallisto <- function (srr_id, species = c("human", "mouse", "rat"),
     }
     gene_ensembl = function(species) {
         if (species == "human") {
+            require(org.Hs.eg.db)
             return(org.Hs.eg.db::org.Hs.eg.db)
         }
-        else if (species == "mouse") {
+        else if (species == "mousee") {
+            require(org.Mm.eg.db)
             return(org.Mm.eg.db::org.Mm.eg.db)
         }
         else if (species == "rat") {
+            require(org.Rn.eg.db)            
             return(org.Rn.eg.db::org.Rn.eg.db)
         }
         else {

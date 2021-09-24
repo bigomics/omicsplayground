@@ -475,10 +475,9 @@ downsample_graph.DEPRECATED <- function(g, idx=NULL, grouped=NULL, merge.op="max
     igraph::V(subG)$members = members
     ## subG$members = members
     ## igraph::V(subG)$size = sapply(members, length)
-
     
     ##avg.pos = apply(g$layout,2,function(x) tapply(x,idx,median))
-    avg.pos = apply(g$layout[V(g)$name,],2,function(x) tapply(x,idx,mean))
+    avg.pos = apply(g$layout[igraph::V(g)$name,],2,function(x) tapply(x,idx,mean))
     rownames(avg.pos) <- rownames(subM)
     subG$layout = avg.pos
             
