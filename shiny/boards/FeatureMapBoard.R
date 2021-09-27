@@ -167,8 +167,8 @@ FeatureMapBoard <- function(input, output, session, env)
     ##================================================================================
     ##============================= FUNCTIONS ========================================
     ##================================================================================
-
-    hilight=hilight2=NULL;source="";plotlib='base';cex=0.9
+    
+    ##hilight=hilight2=NULL;source="";plotlib='base';cex=0.9
     plotUMAP <- function(pos, var, hilight=NULL, nlabel=20,  title="",
                          cex=0.9, source="", plotlib='base')
     {        
@@ -269,7 +269,7 @@ FeatureMapBoard <- function(input, output, session, env)
                 cex=cex, cex.legend = 0.9, cex.lab=1.2, bty='n',
                 col='grey70', dlim=c(0.05,0.05),
                 hilight=hmarks, hilight2=NULL,
-                    hilight.col=NULL, opacity=opacity,
+                hilight.col=NULL, opacity=opacity,
                 ##xlab = xlab, ylab = ylab,
                 xlab = '', ylab = '',
                 xaxs = xaxs, yaxs = yaxs,
