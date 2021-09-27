@@ -517,6 +517,9 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
         cat("WARNING:: pgx.deconvolution: is X really counts? (not logarithmic)\n")
     }
 
+    dbg("[pgx.deconvolution] called")
+
+    
     ## clean up matrix, remove duplicate names
     mat <- as.matrix(X)
     rownames(mat) <- gsub(".*:","",rownames(mat)) ## strip prefix
@@ -529,8 +532,11 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     ref <- ref[order(-rowMeans(ref)),,drop=FALSE]
     ref <- as.matrix(ref[!duplicated(rownames(ref)),,drop=FALSE])
 
+    dbg("[pgx.deconvolution] 1:")
+    
     ## Add "unknown" class to reference matrix
     if(add.unknown) {
+        dbg("[pgx.deconvolution] adding unknown group")        
         gg <- intersect(rownames(ref),rownames(mat))
         x1 <- log(1+ref[gg,,drop=FALSE])
         y1 <- log(1+rowMeans(mat[gg,,drop=FALSE]))
@@ -561,7 +567,9 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     mat <- mat + 1e-2*matrix(rnorm(length(mat)),nrow(mat),ncol(mat)) 
     ref <- pmax(ref,0)
     mat <- pmax(mat,0)
-        
+
+    dbg("[pgx.deconvolution] 2:")
+    
     gg <- intersect(rownames(ref),rownames(mat))
     Matrix::head(gg)
     if(length(gg) < 10) {
@@ -607,6 +615,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     if("EPIC" %in% methods) {
         ## EPIC
         ##devtools::install_github("GfellerLab/EPIC", build_vignettes=TRUE)
+        dbg("[pgx.deconvolution] calculating EPIC...")
         
         out <- NULL
         gg = intersect(rownames(ref),rownames(mat))
@@ -622,14 +631,14 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
         ))
         remove(mat1)
         if(!is.null(out)) {
-            cat("deconvolution using EPIC took",stime[3],"s\n")
+            message(paste0("deconvolution using EPIC took",stime[3],"s\n"))
             timings[["EPIC"]] <- stime
             out.mat <- out[["cellFractions"]]
             colnames(out.mat) <- sub("otherCells","other_cells",colnames(out.mat))
             rownames(out.mat) <- colnames(mat)
             results[["EPIC"]] <- out.mat
         } else {
-            cat("WARNING:: EPIC fail (no pun intended...)\n")
+            mssage("WARNING:: EPIC fail (no pun intended...)\n")
         }
     }
 
@@ -638,8 +647,10 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
         ##BiocManager::install("DeconRNASeq", version = "3.8")
         ##BiocManager::install("DeconRNASeq")
         if("package:Seurat" %in% search()) detach("package:Seurat", unload=TRUE)
+        dbg("[pgx.deconvolution] calculating DeconRNAseq...")
         
         ## uses psych::pca() from pcaMethods
+        require(pcaMethods)  ## uses pcaMethods::prep
         drs <- NULL
         stime <- system.time(suppressMessages(suppressWarnings(
             drs <- try(DeconRNASeq::DeconRNASeq(data.frame(mat, check.names=FALSE),
@@ -661,6 +672,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     if("DCQ" %in% methods) {
         ## DCQ seems to work in logX, so we use log-transform
         ##install.packages("ComICS")
+        dbg("[pgx.deconvolution] calculating DCQ...")
         
         res.dcq=NULL
         stime <- system.time(
@@ -684,6 +696,8 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     if("I-NNLS" %in% methods) {
         ## !!!!!!!!!!!!!! WARNING:: needs more testing/validation !!!!!!!!!!!!!
         ##----- Constrained iterative non-negative least squares (Abbas et al. 2009) ----
+        dbg("[pgx.deconvolution] calculating I-NNLS...")
+        
         GetFractions.Abbas <- function(XX, y, w=NA){
             ## XX is immune expression data
             ## y is cancer expression data
@@ -737,6 +751,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     if("NNLM" %in% methods) {
         ## NNLM
         ##install.packages("NNLM")
+        dbg("[pgx.deconvolution] calculating NNLM...")
         
         x1 <- log2(1+ref[gg,,drop=FALSE])
         x2 <- log2(1+mat[gg,,drop=FALSE])
@@ -761,6 +776,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
 
     ## Simple (rank) correlation
     if("cor" %in% methods) {
+        dbg("[pgx.deconvolution] calculating cor...")        
         ##results[["cor"]] <- WGCNA::cor(log2(1+mat[gg,]), log2(1+ref[gg,]))
         r1 <- apply(mat[gg,,drop=FALSE],2,rank,na.last="keep")
         r2 <- apply(ref[gg,,drop=FALSE],2,rank,na.last="keep")
@@ -773,7 +789,7 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     }
 
     if("SingleR" %in% methods) {
-        
+        dbg("[pgx.deconvolution] calculating SingleR...")                
         stime <- system.time(
             sr1 <- SingleR(test=mat, ref=ref, labels=colnames(ref))
         )
@@ -786,6 +802,8 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     results <- results[which(!sapply(results,is.null))]
     results <- lapply(results, function(x) {x[is.na(x)]=0;x})
 
+    dbg("[pgx.deconvolution] calculating meta values...")                
+    
     ## meta
     if(length(results)>1) {
         jj <- colnames(ref)
@@ -799,5 +817,8 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
 
     timings0 <- do.call(rbind, timings)
     res2 <- list(results=results, timings=timings0)
+
+    dbg("[pgx.deconvolution] done!")
+    
     return(res2)
 }

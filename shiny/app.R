@@ -32,7 +32,6 @@ library(grid)
 ##library(org.Hs.eg.db) ## better use require inside?
 ##library(org.Mm.eg.db) ## better use require inside?
 
-
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
 message("***********************************************")
@@ -100,7 +99,9 @@ WATERMARK      = opt$WATERMARK
 DEV = (DEV && dir.exists("modulesx")) 
 ##DEV = FALSE
 if(DEV) {
+    message('******************************************************')
     message('****************** DEVELOPER MODE ********************')
+    message('******************************************************')    
 }
 
 ## show options
@@ -111,12 +112,12 @@ message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 ## --------------------------------------------------------------------
 
 source("app-init.R", local=FALSE)
-##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)
-pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=1)
+##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=TRUE)
+pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=TRUE)
 
 if(0) {    
     ##PGX.DIR="../test/"
-    ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
+    pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
     load("../data/geiger2016-arginine-test.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
     load("../data/GSE157905-lenvatinib-bc.pgx")
@@ -173,7 +174,7 @@ if(0 && DEV && dir.exists("modulesx")) {
 ENABLED
 
 ## disable connectivity map if we have no signature database folder
-has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5")>0)
+has.sigdb <- length(dir(SIGDB.DIR,pattern="sigdb.*h5"))>0
 has.sigdb
 if(has.sigdb==FALSE) ENABLED["cmap"] <- FALSE
 

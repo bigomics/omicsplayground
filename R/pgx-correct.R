@@ -319,7 +319,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             pp
             lm.expr <- paste0("lm(t(cX) ~ ",pp,", data=pheno)")
             X.r <- t(resid(eval(parse(text=lm.expr))))
-            n.sv <- EstDimRMT(X.r, FALSE)$dim + 1
+            n.sv <- isva::EstDimRMT(X.r, FALSE)$dim + 1
             n.sv
         }
         cX1 <- Matrix::head(cX[order(-apply(cX,1,sd)),],1000) ## top 1000 genes only (faster)
@@ -948,7 +948,7 @@ pgx.svaCorrect <- function(X, pheno, nmax=-1) {
     ##cX <- limma::removeBatchEffect(X, covariates=sv)
 
     ## recenter on old feature means
-    cX <- cX - rowMeans(cX,na.rm=TRUE) + rowMeans(X,na.rm=TRUE)
+    cX <- cX - Matrix::rowMeans(cX,na.rm=TRUE) + Matrix::rowMeans(X,na.rm=TRUE)
     
     cX
 }
