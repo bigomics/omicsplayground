@@ -412,7 +412,7 @@ createUI <- function(tabs)
         shinybusy::busy_start_up(
             text = "\nPrepping your Omics Playground...", mode = "auto",
             background="#2780e3", color="#ffffff",
-            loader = shiny::img(src=base64enc::dataURI(file=busy.img))
+            loader = shiny::img(src=base64enc::dataURI(file="www/ready.png"))
         )
     )
     ## if(runif(1) < 0.1)
