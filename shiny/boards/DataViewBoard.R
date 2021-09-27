@@ -154,7 +154,7 @@ DataViewBoard <- function(input, output, session, env)
     genePlots_barplot_text=paste0('Expression barplot of grouped samples (or cells) for the gene selected in the ',dropdown_search_gene,'. Samples (or cells) in the barplot can be ungrouped by setting the ',menu_grouped, ' under the main <i>Options</i>.')
     genePlots_correlationplot_text=paste0('Barplot of the top positively and negatively correlated genes with the selected gene. Absolute expression levels of genes are colored in the barplot, where the low and high expressions range between the light and dark colors, respectively.')
     genePlots_averageRankPlot_text=paste0('Ranking of the average expression of the selected gene.')
-    data_geneInfo_text = paste0('To find out more information from the literature, hyperlinks are provide to connect the selected gene to public databases, including ', a_OMIM,', ', a_KEGG, ' and ',a_GO,'.')
+    data_geneInfo_text = paste0('For more information about the the selected gene, follow the hyperlinks to public databases, including ', a_OMIM,', ', a_KEGG, ' and ',a_GO,'.')
     data_tissueplot_text = paste0('Tissue expression for the selected gene in the tissue expression ',a_GTEx,' dataset. Colors corresponds to "tissue clusters" as computed by unsupervised clustering.')
     
 
