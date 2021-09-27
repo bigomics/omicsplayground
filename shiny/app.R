@@ -22,8 +22,9 @@ message("***********************************************")
 message("*********** LOADING INITIAL LIBS **************")
 message("***********************************************")
 
-## some libraries that we need often and load fast
+## some libraries that we often need and load fast
 library(shiny)
+library(shinyBS)
 library(pryr)
 library(grid)
 
@@ -157,7 +158,7 @@ for(m in boards) {
 }
 
 ##ENABLED[c("wgcna","system","multi")] <- FALSE
-ENABLED[c("system","multi","corsa")] <- FALSE
+ENABLED[c("system","multi","corsa")] <- FALSE 
 if(0 && DEV && dir.exists("modulesx")) {
     ## Very early development modules/boards (ALWAYS SHOW FOR DEV)
     ##
