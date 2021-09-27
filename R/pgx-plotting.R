@@ -2513,9 +2513,9 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
              axes = FALSE, ## later
              bty = 'n' )
         if(bty!='n') shinydashboardPlus::box(lwd=0.8, bty=bty, col="black")
-        Axis(side=1, labels=xaxs)
-        Axis(side=2, labels=yaxs)
-        grid(lwd=0.8)
+        graphics::Axis(side=1, labels=xaxs)
+        graphics::Axis(side=2, labels=yaxs)
+        graphics::grid(lwd=0.8)
 
         ## colorscale bar
         if(legend.pos!='none' && legend) {

@@ -680,7 +680,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
         outputFunc2 = outputFunc
         renderFunc2 = renderFunc
     }
-
     
     ##outputFunc <- sub(".*::","",outputFunc)
     render = render2 = NULL   
