@@ -184,7 +184,7 @@ MAINTABS = c("DataView","Clustering","Expression","Enrichment",
 
 main.init_time <- round(Sys.time() - main.start_time,digits=4)
 main.init_time
-message("[MAIN] total init time = ",main.init_time," ",attr(main.init_time,"units"))
+message("[MAIN] main init time = ",main.init_time," ",attr(main.init_time,"units"))
 
 ## --------------------------------------------------------------------
 ## --------------------------- SERVER ---------------------------------
@@ -196,7 +196,6 @@ server = function(input, output, session) {
     message("===================== SERVER ===========================")
     message("========================================================\n")
     
-    message("[SERVER] calling boards...")
     message("[SERVER] USER_MODE = ", USER_MODE)
     server.start_time <- Sys.time()
     
@@ -326,6 +325,8 @@ server = function(input, output, session) {
 
     server.init_time <- round(Sys.time() - server.start_time, digits=4)    
     message("[SERVER] server.init_time = ",server.init_time," ",attr(server.init_time,"units"))
+    total.lapse_time <- round(Sys.time() - main.start_time,digits=4)
+    message("[SERVER] total lapse time = ",total.lapse_time," ",attr(total.lapse_time,"units"))
 
 }
 
@@ -405,9 +406,6 @@ createUI <- function(tabs)
                     )
     names(header) <- NULL
     
-    busy.img = sample(dir("www/busy",pattern=".gif$",full.name=TRUE))[1]
-    busy.img
-    busy.img = "www/busy.gif"
     footer.gif = shiny::tagList(
         shinybusy::busy_start_up(
             text = "\nPrepping your Omics Playground...", mode = "auto",
