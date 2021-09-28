@@ -350,8 +350,8 @@ UploadModuleServer <- function(id,
                     status.ds <- check["counts.csv","description"]
                     msg <- paste(toupper(status.ok),"\n\n","(Required) Upload 'counts.csv'",
                                  tolower(status.ds))
-                    text(0.5,0.5,paste(strwrap(msg,30),collapse="\n"),col="grey25")
-                    shinydashboard::box(lty=2, col="grey60")
+                    graphics::text(0.5,0.5,paste(strwrap(msg,30),collapse="\n"),col="grey25")
+                    graphics::box(lty=2, col="grey60")
                     return(NULL)
                 }
                 
@@ -380,8 +380,8 @@ UploadModuleServer <- function(id,
                     status.ds <- check["samples.csv","description"]
                     msg <- paste(toupper(status.ok),"\n\n","(Required) Upload 'samples.csv'",
                                  tolower(status.ds))
-                    text(0.5,0.5,paste(strwrap(msg,30),collapse="\n"),col="grey25")
-                    shinydashboard::box(lty=2, col="grey60")
+                    graphics::text(0.5,0.5,paste(strwrap(msg,30),collapse="\n"),col="grey25")
+                    graphics::box(lty=2, col="grey60")
                     return(NULL)
                 }
                 
@@ -439,8 +439,8 @@ UploadModuleServer <- function(id,
                     msg <- paste(toupper(status.ok),"\n\n","(Optional) Upload 'contrasts.csv'",
                                  tolower(status.ds))
                     ##text(0.5,0.5,"Please upload contrast file 'contrast.csv' with conditions on rows, contrasts as columns")
-                    text(0.5,0.5,paste(strwrap(msg,30),collapse="\n"),col="grey25")
-                    shinydashboard::box(lty=2, col="grey60")
+                    graphics::text(0.5,0.5,paste(strwrap(msg,30),collapse="\n"),col="grey25")
+                    graphics::box(lty=2, col="grey60")
                     return(NULL)
                 }
 

@@ -788,7 +788,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             "Show relative (i.e. mean-centered), absolute expression values or batch-mean-centered.",
             placement="right", options = list(container = "body")),
         shinyBS::tipify( shiny::checkboxInput(
-            ns('hm_legend'), 'Legend:', value=TRUE), "Show legend.",
+            ns('hm_legend'), 'show legend', value=TRUE), "Show or hide the legend.",
             placement="right", options = list(container = "body")),
         shiny::fillRow(
             height = 50,
