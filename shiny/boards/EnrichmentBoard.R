@@ -1412,7 +1412,7 @@ EnrichmentBoard <- function(input, output, session, env)
                     ylim=c(0,ymax), main="" )
 
                 ## draw axis if first column or last row
-                shinydashboard::box(lwd=1, col="black", lty="solid")
+                graphics::box(lwd=1, col="black", lty="solid")
                 is.first = (i%%nc==1)
                 last.row = ( (i-1)%/%nc == (nplots-1)%/%nc )
                 if(is.first) axis(2, mgp=c(2,0.7,0), cex.axis=0.8)
@@ -1500,7 +1500,7 @@ EnrichmentBoard <- function(input, output, session, env)
                     cex=1, cex.axis=1.3, main="")
                 
                 ##title(mt, line=-1.5, cex.main=1.4)
-                shinydashboard::box(lwd=1, col="black", lty="solid")                
+                graphics::box(lwd=1, col="black", lty="solid")                
 
                 ##volcano_plot(limma, render="plotly", n=1000, cex=1, highlight=genes)
                 ## draw axis if first column or last row
