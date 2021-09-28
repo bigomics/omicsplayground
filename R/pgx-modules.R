@@ -349,7 +349,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
     HTMLFILE = paste0(gsub("file","plot",tempfile()),".html")  ## tempory for webshot
     HTMLFILE
     unlink(HTMLFILE)
-
     
     ##============================================================
     ##=============== Download Handlers ==========================
@@ -375,12 +374,14 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         iheatmapr::save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PNGFILE)
                     } else if(plotlib=="visnetwork") {
                         p <- func()
+                        dbg("[plotModule] visnetwork download PNG : visSave : HTMLFILE=",HTMLFILE)
                         visNetwork::visSave(p, HTMLFILE)
-                        webshot::webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PNGFILE)
+                        dbg("[plotModule] visnetwork download PNG : webshot : PNGFILE = ",PNGFILE)
+                        webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
                     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
                         p <- func()
                         htmlwidgets::saveWidget(p, HTMLFILE)
-                        webshot::webshot(HTMLFILE, vwidth=pdf.width*100,vheight=pdf.height*100,PNGFILE)
+                        webshot::webshot(url=HTMLFILE,file=PNGFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
                         p <- func()
                         png(PNGFILE, width=pdf.width*100, height=pdf.height*100,
@@ -444,12 +445,14 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         iheatmapr::save_iheatmap(p, vwidth=pdf.width*80,vheight=pdf.height*80,PDFFILE)
                     } else if(plotlib=="visnetwork") {
                         p <- func()
+                        dbg("[plotModule] visnetwork :: download PDF : visSave : HTMLFILE=",HTMLFILE)
                         visNetwork::visSave(p, HTMLFILE)
-                        webshot::webshot(HTMLFILE,vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
+                        dbg("[plotModule] visnetwork :: download PDF : webshot ; PDFFILE=",PDFFILE)
+                        webshot::webshot(url=HTMLFILE,file=PDFFILE,vwidth=pdf.width*100,vheight=pdf.height*100)
                     } else if(plotlib %in% c("htmlwidget","pairsD3","scatterD3")) {
                         p <- func()
                         htmlwidgets::saveWidget(p, HTMLFILE)
-                        webshot::webshot(HTMLFILE, vwidth=pdf.width*100,vheight=pdf.height*100,PDFFILE)
+                        webshot::webshot(url=HTMLFILE, file=PDFFILE, vwidth=pdf.width*100,vheight=pdf.height*100)
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
                         p <- func()
                         ##p = addSignature(p)                             

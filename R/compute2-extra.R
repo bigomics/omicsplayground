@@ -76,19 +76,25 @@ pgx.computeExtra <- function(ngs, extra, lib.dir=FILES, sigdb=NULL) {
     if("drugs" %in% extra) {
         ngs$drugs <- NULL  ## reset??
         cmap.dir <- file.path(libx.dir,"cmap")
-
+        if(!dir.exists(cmap.dir)) {
+            cmap.dir <- file.path(lib.dir,"cmap")  ## look for default lib
+        }
+        if(!dir.exists(cmap.dir)) {
+            message("Warning:: missing CMAP files. Skipping drug connectivity analysis!")            
+        }
+        dbg("[pgx.computeExtra] cmap.dir = ",cmap.dir)
+        
         if(dir.exists(cmap.dir)) {
         
             message(">>> Computing drug activity enrichment...")
             tt <- system.time({
-                ngs <- compute.drugActivityEnrichment(ngs, lib.dir=cmap.dir) 
+                ngs <- compute.drugActivityEnrichment(ngs, cmap.dir) 
             })
             timings <- rbind(timings, c("drugs", tt))
             
             message(">>> Computing drug sensitivity enrichment...")        
             tt <- system.time({
-                ngs <- compute.drugSensitivityEnrichment(
-                    ngs, lib.dir=cmap.dir) 
+                ngs <- compute.drugSensitivityEnrichment(ngs, cmap.dir) 
             })
             timings <- rbind(timings, c("drugs-sx", tt))
             
@@ -97,7 +103,6 @@ pgx.computeExtra <- function(ngs, extra, lib.dir=FILES, sigdb=NULL) {
             ##     ngs <- compute.genePerturbationEnrichment(ngs, lib.dir=cmap.dir)
             ## })
             ##timings <- rbind(timings, c("drugs-gene", tt))
-            
         }
 
     }
@@ -273,18 +278,19 @@ compute.cellcycle.gender <- function(ngs, rna.counts=ngs$counts)
     return(ngs)
 }
 
-compute.drugActivityEnrichment <- function(ngs, lib.dir) {
+compute.drugActivityEnrichment <- function(ngs, cmap.dir) {
     
     ## -------------- drug enrichment
-    L1000.FILE = "l1000_es_n20a1698.csv.gz"
     L1000.FILE = "l1000_es_n20d1011.csv.gz"
     L1000.FILE = "l1000_es.rds"
-    lib.dir
-    dir(lib.dir, pattern='.*rds$')
-    dir(lib.dir, pattern='^L1000-activity.*rds$')
-    ref.db <- dir(lib.dir, pattern='^L1000-activity.*rds$')
-    ref.db <- dir(lib.dir, pattern='^L1000-.*rds$')    
+    cmap.dir
+    dir(cmap.dir, pattern='.*rds$')
+    ref.db <- dir(cmap.dir, pattern='^L1000-.*rds$')    
     ref.db
+    if(length(ref.db)==0) {
+        message("[compute.drugActivityEnrichment] Warning:: missing drug activity database")
+        return(ngs)
+    }
     names(ref.db) <- sub("-","/",gsub("_.*","",ref.db))
     ref.db
     f <- ref.db[1]
@@ -293,8 +299,8 @@ compute.drugActivityEnrichment <- function(ngs, lib.dir) {
     for(i in 1:length(ref.db)) {
         f <- ref.db[i]
         message("[compute.drugActivityEnrichment] reading L1000 reference: ",f)
-        X <- readRDS(file=file.path(lib.dir,f))
-        ##X <- fread.csv(file=file.path(lib.dir,L1000.FILE))    
+        X <- readRDS(file=file.path(cmap.dir,f))
+        ##X <- fread.csv(file=file.path(cmap.dir,L1000.FILE))    
         xdrugs <- gsub("_.*$","",colnames(X))
         ndrugs <- length(table(xdrugs))
         ndrugs
@@ -318,7 +324,7 @@ compute.drugActivityEnrichment <- function(ngs, lib.dir) {
         ## --------------- attach annotation 
         annot0 <- NULL
         if(is.drug) {
-            annot0 <- read.csv(file.path(lib.dir,"L1000_repurposing_drugs.txt"),
+            annot0 <- read.csv(file.path(cmap.dir,"L1000_repurposing_drugs.txt"),
                                sep="\t", comment.char="#")
             annot0$drug <- annot0$pert_iname
             rownames(annot0) <- annot0$pert_iname
@@ -338,9 +344,6 @@ compute.drugActivityEnrichment <- function(ngs, lib.dir) {
             Matrix::head(annot0)
         }
 
-
-
-
         ## --------------- attach results to object
         db <- names(ref.db)[i]
         ## ngs$drugs[["activity/L1000"]]  <- res.mono[["GSEA"]]
@@ -356,20 +359,24 @@ compute.drugActivityEnrichment <- function(ngs, lib.dir) {
     return(ngs)
 }
 
-##ref="CTRPv2";lib.dir="../lib";combo=FALSE
-compute.drugSensitivityEnrichment <- function(ngs, lib.dir)
+##ref="CTRPv2";cmap.dir="../lib";combo=FALSE
+compute.drugSensitivityEnrichment <- function(ngs, cmap.dir)
 {
 
-    ref.db <- dir(lib.dir, pattern='sensitivity.*rds$')
+    ref.db <- dir(cmap.dir, pattern='sensitivity.*rds$')
     ref.db
+    if(length(ref.db)==0) {
+        message("[compute.drugSensitivityEnrichment] Warning:: missing drug sensitivity database")
+        return(ngs)
+    }
     names(ref.db) <- sub("-","/",gsub("_.*","",ref.db))
     ref.db
     ref <- ref.db[1]
     for(i in 1:length(ref.db)) {
         ref <- ref.db[i]
-        ##X <- readRDS(file=file.path(lib.dir,"drugSX-GDSC-t25-g1000.rds"))
-        ##X <- readRDS(file=file.path(lib.dir,"drugSX-CTRPv2-t25-g1000.rds"))
-        X <- readRDS(file=file.path(lib.dir,ref))
+        ##X <- readRDS(file=file.path(cmap.dir,"drugSX-GDSC-t25-g1000.rds"))
+        ##X <- readRDS(file=file.path(cmap.dir,"drugSX-CTRPv2-t25-g1000.rds"))
+        X <- readRDS(file=file.path(cmap.dir,ref))
         xdrugs <- gsub("[@_].*$","",colnames(X))
         length(table(xdrugs))
         dim(X)
@@ -383,7 +390,7 @@ compute.drugSensitivityEnrichment <- function(ngs, lib.dir)
         if(!is.null(out1)) {
             ## attach annotation
             db <- sub("-.*","",ref)
-            annot0 <- read.csv(file.path(lib.dir,paste0(db,"-drugs.csv")))
+            annot0 <- read.csv(file.path(cmap.dir,paste0(db,"-drugs.csv")))
             Matrix::head(annot0)
             rownames(annot0) <- annot0$drug            
             annot0 <- annot0[match(rownames(out1[["GSEA"]]$X),rownames(annot0)),]
