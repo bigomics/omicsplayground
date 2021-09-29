@@ -8,11 +8,11 @@
 EXTRA.MODULES = c("meta.go","deconv","infer","drugs",
                   "connectivity","graph","wordcloud")
 
-compute.extra <- function(ngs, extra, lib.dir=FILES, sigdb=NULL) {
+compute.extra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL) {
     pgx.computeExtra(ngs, extra=extra, lib.dir=lib.dir, sigdb=sigdb) 
 }
 
-pgx.computeExtra <- function(ngs, extra, lib.dir=FILES, sigdb=NULL) {
+pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL) {
         
     timings <- c()
     libx.dir <- paste0(FILES,'x')  ## ../libx

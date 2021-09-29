@@ -113,6 +113,7 @@ message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 ## --------------------------------------------------------------------
 
 source("app-init.R", local=FALSE)
+message('>>>> Initializing data folder')
 ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=TRUE)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=TRUE)
 
