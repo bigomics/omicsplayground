@@ -13,7 +13,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
                                   lib.correct = TRUE,
                                   bio.correct=c("mito","ribo","cell_cycle","gender"),
                                   sva.correct=TRUE, pca.correct=TRUE, hc.correct=TRUE,
-                                  mnn.correct=NULL, nnm.correct=FALSE,
+                                  mnn.correct=NULL, nnm.correct=TRUE,
                                   max.rho=0.3, max.iter=10, hc.top=50)
 {    
 
@@ -931,7 +931,8 @@ pgx.svaCorrect <- function(X, pheno, nmax=-1) {
         n.sv <- isva::EstDimRMT(X.r, FALSE)$dim + 1
         n.sv
     }
-    n.sv <- min(n.sv, min(table(y)))
+    suppressWarnings( min1 <- min(sapply(apply(pheno,2,table),min)) )
+    n.sv <- min(n.sv, min1)
     n.sv
     
     message("Calculating SVA...")

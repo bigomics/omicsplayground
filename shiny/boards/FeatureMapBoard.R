@@ -291,14 +291,14 @@ FeatureMapBoard <- function(input, output, session, env)
             F <- scale(F, center=FALSE)
             pos <- pgx.clusterBigMatrix(t(F), methods='umap', dims=2)[[1]]
             pos <- pos.compact(pos)
-        }, message="computing genes-FC UMAP", value=0.5 )            
+        }, message="computing foldchange UMAP", value=0.5 )            
         pos
     })
        
     getGeneUMAP <- shiny::reactive({
         ngs <- inputData()
         if(input$umap_type=='logFC') {
-            message("[getGeneUMAP] computing genes-FC UMAP")
+            message("[getGeneUMAP] computing foldchange UMAP")
             pos <- getGeneUMAP_FC()
         } else {
             pos <- ngs$cluster.genes$pos[['umap2d']]
@@ -315,14 +315,14 @@ FeatureMapBoard <- function(input, output, session, env)
             dbg("getGsetUMAP_FC:: dim.F = ",dim(F))
             pos <- pgx.clusterBigMatrix(t(F), methods='umap', dims=2)[[1]]
             pos <- pos.compact(pos)
-        }, message="computing geneset-FC UMAP", value=0.5 )
+        }, message="computing foldchange UMAP (genesets)", value=0.5 )
         pos
     })
 
     getGsetUMAP <- shiny::reactive({
         ngs <- inputData()
         if(input$umap_type=='logFC') {
-            message("[getGsetUMAP] computing geneset-FC UMAP")            
+            message("[getGsetUMAP] computing foldchange UMAP (genesets)")            
             pos <- getGsetUMAP_FC()
         } else {
             pos <- ngs$cluster.gsets$pos[['umap2d']]
