@@ -995,7 +995,7 @@ pgx.contrastScatter <- function(pgx, contrast, hilight=NULL,
 
 pgx.plotGeneUMAP <- function(pgx, contrast=NULL, value=NULL,
                              pos=NULL, ntop=20, cex=1, cex.lab=0.8,
-                             hilight=NULL, title=NULL,
+                             hilight=NULL, title=NULL, zfix=FALSE,
                              set.par=TRUE, par.sq = FALSE,
                              level="gene", plotlib="ggplot")
 {
@@ -1039,6 +1039,14 @@ pgx.plotGeneUMAP <- function(pgx, contrast=NULL, value=NULL,
         par(mfrow=c(nr,nc))
     }
     
+    ## z-scale
+    zlim = NULL
+    if(zfix) {
+        zlim <- quantile(F,probs=c(0.01,0.99),na.rm=TRUE)
+        zlim <- quantile(F,probs=c(0.002,0.998),na.rm=TRUE)        
+        zlim
+    }
+    
     plist <- list()
     i=1
     for(i in 1:ncol(F)) {
@@ -1061,7 +1069,7 @@ pgx.plotGeneUMAP <- function(pgx, contrast=NULL, value=NULL,
             xlab = "UMAP-x  (genes)",
             ylab = "UMAP-y  (genes)",
             hilight = hilight1,
-            zsym = TRUE, softmax=1,
+            zlim = zlim, zsym = TRUE, softmax=1,
             ## hilight2 = hilight2,
             cex = cex, cex.lab = cex.lab,
             title = title1, cex.title = 1.0,
@@ -2475,17 +2483,23 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
     if(type=="numeric") {
         ##if(NCOL(cvar)==1) cvar <- cbind(cvar=cvar)
         z <- var
-        if(!is.null(zlim)) {
-            z1 <- (z - min(zlim)) / diff(zlim)
-            z1 <- pmin(pmax(z1,0),1) ## clip
-        } else {
-            if(zsym) {
-                dz <- max(abs(z),na.rm=TRUE)
-                z1 <- (z + dz) / (2*dz)
-            } else {
-                z1 <- (z - min(z,na.rm=TRUE)) / diff(range(z,na.rm=TRUE))
-            }
+
+        if(is.null(zlim)) {
+            ## global zlim
+            qq <- quantile(z,probs=c(0.01,0.99),na.rm=TRUE)
+            qq <- quantile(z,probs=c(0.002,0.998),na.rm=TRUE)        
+            qq
+            zlim = qq
+            ## zlim = NULL
         }
+
+        if(zsym) {
+            zlim <- c(-1,1)*max(abs(zlim))
+        }
+        
+        ## z1 is normalized [0;1] for coloring        
+        z1 <- (z - min(zlim)) / diff(zlim)
+        z1 <- pmin(pmax(z1,0),1) ## clip
         if(softmax) z1 <- 0.5*(tanh(4*(z1-0.5))+1)
 
         ##-------------- set colors
@@ -2521,7 +2535,7 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         if(legend.pos!='none' && legend) {
             zr <- range(z,na.rm=TRUE)
             if(!is.null(zlim)) zr <- zlim
-            if(zsym) zr <- c(-1,1)*max(abs(z),na.rm=TRUE)
+            if(zsym) zr <- c(-1,1)*max(abs(zr),na.rm=TRUE)
             if(zlog) zr <- round(10**zr-1)  ##???
             zr <- 0.01 * c(ceiling(100*zr[1]), floor(100*zr[2])) ## round
             legend(legend.pos, cex=0.8*cex.legend, ## text.width=2,
