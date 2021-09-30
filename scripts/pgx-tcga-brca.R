@@ -186,7 +186,7 @@ levels = setdiff(unique(ngs$samples$group),c("",NA))
 levels
 colnames(ngs$samples)
 
-contr.matrix <- makeContrasts(
+contr.matrix <- limma::makeContrasts(
     LuminalA_vs_normal = LuminalA - Normal,
     LuminalB_vs_normal = LuminalB - Normal,
     LuminalB_vs_LuminalA = LuminalB - LuminalA,

@@ -138,7 +138,7 @@ ngs$samples$group <- grp
 levels = unique(ngs$samples$group)
 levels
 
-contr.matrix <- makeContrasts(                
+contr.matrix <- limma::makeContrasts(                
     H1N1earlyVTLno_vs_control = H1N1_early_no - control,
     H1N1lateVTLno_vs_control = H1N1_late_no - control,
     H1N1earlyVTLyes_vs_control = H1N1_early_yes - control,

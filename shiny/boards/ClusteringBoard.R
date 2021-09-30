@@ -949,9 +949,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     
     hm_PCAplot_text = tagsub(paste0(' The <b>PCA/tSNE</b> panel visualizes unsupervised clustering obtained by the principal components analysis (',a_PCA,') or t-distributed stochastic embedding (',a_tSNE,') algorithms. This plot shows the relationship (or similarity) between the samples for visual analytics, where similarity is visualized as proximity of the points. Samples that are ‘similar’ will be placed close to each other. 
 <br><br>Users can customise the PCA/tSNE plot in the plot settings, including the {color} and {shape} of points using a phenotype class, choose t-SNE or PCA layout, label the points, or display 2D and 3D visualisation of the PCA/tSNE plot.'))
-
-
-
     
     shiny::observe({
         ngs <- inputData()
@@ -1061,7 +1058,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         ##if(input$hmpca.text %in% colnames(df)) textvar = factor(df[,input$hmpca.text])
         mode = "markers"
         ann.text = rep(" ",nrow(df))
-        if(!do3d && "label" %in% input$hmpca_options) ann.text = rownames(df)
+        if(!do3d && "sample label" %in% input$hmpca_options) ann.text = rownames(df)
         if(!is.null(colvar)) {
             colvar = factor(colvar)
             textvar <- factor(df[,input$hmpca.colvar])
@@ -1119,6 +1116,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             }
 
         } else {
+
             ## 2D plot
             j0 = 1:nrow(df)
             j1 = NULL
@@ -1149,20 +1147,30 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             }
 
             ## add group/cluster annotation labels
-            if(!is.null(textvar) && length(unique(textvar))>1) {
-                grp.pos <- apply(pos,2,function(x) tapply(x,as.character(textvar),median))
-                cex2 <- 1
-                if(length(grp.pos)>20) cex2 <- 0.8
-                if(length(grp.pos)>50) cex2 <- 0.6
-                plt <- plt %>% plotly::add_annotations(
-                                   x = grp.pos[,1], y = grp.pos[,2],
-                                   text = paste0("<b>",rownames(grp.pos),"</b>"),
-                                   font = list(size=24*cex2, color='#555'),
-                                   showarrow = FALSE)
+            req(input$hmpca_legend)
+            if(input$hmpca_legend == 'inside') {
+                plt <- plt %>%
+                    plotly::layout(legend = list(x=0.05, y=0.95))
+            } else if(input$hmpca_legend == 'bottom') {
+                plt <- plt %>%
+                    plotly::layout(legend = list(orientation='h'))
+            } else {
+                if(!is.null(textvar) && length(unique(textvar))>1) {
+                    grp.pos <- apply(pos,2,function(x) tapply(x,as.character(textvar),median))
+                    cex2 <- 1
+                    if(length(grp.pos)>20) cex2 <- 0.8
+                    if(length(grp.pos)>50) cex2 <- 0.6
+                    plt <- plt %>% plotly::add_annotations(
+                                               x = grp.pos[,1], y = grp.pos[,2],
+                                               text = paste0("<b>",rownames(grp.pos),"</b>"),
+                                               font = list(size=24*cex2, color='#555'),
+                                               showarrow = FALSE)
+                }
+                plt <- plt %>%
+                    plotly::layout(showlegend = FALSE)
             }
-            plt <- plt %>%
-                plotly::layout(showlegend = FALSE)
-            
+
+
         }
         title = paste0("<b>PCA</b>  (",nrow(pos)," samples)")
         if(input$hm_clustmethod=="tsne") title = paste0("<b>tSNE</b>  (",nrow(pos)," samples)")
@@ -1183,8 +1191,12 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
                "Set colors/labels according to a given phenotype."),
         tipifyR( shiny::selectInput( ns("hmpca.shapevar"), "Shape:", choices=NULL, width='100%'),
                "Set shapes according to a given phenotype."),
+        tipifyR( shiny::radioButtons(
+                            ns('hmpca_legend'), label =  "Legend:",
+                            choices = c('group label','bottom'), inline=TRUE),
+                "Normalize matrix before calculating distances."),
         tipifyR( shiny::checkboxGroupInput( ns('hmpca_options'),"Other:",
-                                   choices=c('label','3D','normalize'), inline=TRUE),
+                                   choices=c('sample label','3D','normalize'), inline=TRUE),
                 "Normalize matrix before calculating distances."),
         tipifyR( shiny::radioButtons( ns('hm_clustmethod'),"Layout:",
                               c("default","tsne","pca","umap"),inline=TRUE),

@@ -103,7 +103,7 @@ table(ngs$samples$group)
 levels = unique(ngs$samples$group)
 levels
 
-contr.matrix <- makeContrasts(
+contr.matrix <- limma::makeContrasts(
     old_tumor_vs_old_normal = old_tumor - old_normal,
     young_tumor_vs_young_normal = young_tumor - young_normal,
     old_normal_vs_young_normal = old_normal - young_normal,

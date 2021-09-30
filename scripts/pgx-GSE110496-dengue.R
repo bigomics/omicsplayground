@@ -252,7 +252,7 @@ if(COMPARE=="pheno") {
     table(ngs$samples$group)
     ##contr.matrix <- makeFullContrasts(levels)
     
-    contr.matrix <- makeContrasts(
+    contr.matrix <- limma::makeContrasts(
         dengue4_vs_ctrl4 = dengue_infected_4 - dengue_ctrl_4,
         dengue12_vs_ctrl12 = dengue_infected_12 - dengue_ctrl_12,
         dengue24_vs_ctrl24 = dengue_infected_24 - dengue_ctrl_24,

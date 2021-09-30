@@ -66,7 +66,7 @@ rownames(samples)=colnames(counts)=short.name
 group.levels <- unique(samples$condition)
 group.levels
 ## 10 contrasts in total
-contrasts <- makeContrasts(
+contrasts <- limma::limma::makeContrasts(
     act_vs_notact = (act96h + act72h + act48h + act24h + act12h)/5 - notact,
     act12h_vs_notact = act12h - notact,
     act24h_vs_notact = act24h - notact,
@@ -90,6 +90,7 @@ extra.methods  = c("meta.go","infer","connectivity")
 
 gx.methods    = c("ttest","ttest.welch","trend.limma","edger.qlf","deseq2.wald")
 gset.methods  = c("fisher","gsva","fgsea","spearman","camera","fry")
+gset.methods  = c("fisher","ssgsea","fgsea","spearman","camera","fry")
 extra.methods  = c("meta.go","infer","drugs","deconv","wordcloud","connectivity")
 
 ngs <- pgx.computePGX(
@@ -122,7 +123,7 @@ if(0) {
 ##-------------------------------------------------------------------
 names(ngs)
 
-rda.file="../data/geiger2016-arginine-test.pgx"
+rda.file="../data/geiger2016-arginine2.pgx"
 ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$date = date()
 ngs$datatype = "LC/MS proteomics"

@@ -125,7 +125,7 @@ ngs$samples$group <- ngs$samples$treatment
 levels = unique(ngs$samples$group)
 levels
 
-contr.matrix <- makeContrasts(
+contr.matrix <- limma::makeContrasts(
     JEV_vs_MOCK = JEV - MOCK,
     WNV_vs_Mock = WNV - Mock,
     levels = levels)

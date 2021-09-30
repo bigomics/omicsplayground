@@ -98,7 +98,7 @@ if(0) {
     levels = unique(ngs$samples$group)
     levels
 
-    ngs$contrasts <- makeContrasts(
+    ngs$contrasts <- limma::makeContrasts(
         
         "NCIH1581:CH5183284FGFR_vs_DMSO" = CH5183284FGFR_NCIH1581 - DMSO_NCIH1581,
         "NCIH1581:AZD4547FGFR_vs_DMSO" = AZD4547FGFR_NCIH1581 - DMSO_NCIH1581,

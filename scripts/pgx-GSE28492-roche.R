@@ -336,7 +336,7 @@ head(ngs$samples)
 levels = levels(ngs$samples$group)
 levels
 
-## contr.matrix <- makeContrasts(
+## contr.matrix <- limma::makeContrasts(
 ##     CD4Tcells_vs_CD14monocytes = CD4Tcells - CD14monocytes,
 ##     CD8Tcells_vs_CD14monocytes = CD8Tcells - CD14monocytes,
 ##     mDCs_vs_CD14monocytes = mDCs - CD14monocytes,

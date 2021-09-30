@@ -209,7 +209,7 @@ head(ngs$samples)
 ## Create contrasts 
 ##-------------------------------------------------------------------
 levels = levels(ngs$samples$group)
-contr.matrix <- makeContrasts(
+contr.matrix <- limma::makeContrasts(
     
     BcellMemoryIgGIgA_vs_Bcellnaive = BcellMemoryIgGIgA - Bcellnaive,
     BcellMemoryIgM_vs_Bcellnaive = BcellMemoryIgM - Bcellnaive,
