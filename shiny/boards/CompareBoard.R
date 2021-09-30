@@ -82,7 +82,7 @@ CompareBoard <- function(input, output, session, env)
                 shiny::br(),
                 shinyBS::tipify( shiny::radioButtons(ns('plottype'),"Plot type:",
                                      choices=c("volcano","MA","scatter","UMAP1","UMAP2","heatmap"),
-                                     inline=TRUE),
+                                     selected='UMAP1', inline=TRUE),
                        "Select plot type.",
                        placement="right", options = list(container = "body")),
                 shiny::br(),
@@ -276,6 +276,7 @@ CompareBoard <- function(input, output, session, env)
                 ngs, contrast=ct, pos=pos,
                 cex = 0.9, cex.lab = cex.lab,
                 hilight = higenes, ntop=ntop,
+                zfix = TRUE,
                 par.sq = TRUE, plotlib="base")
         } else if(type == 'heatmap') {
             gg <- intersect(higenes, rownames(ngs$X))

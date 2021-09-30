@@ -170,7 +170,7 @@ FeatureMapBoard <- function(input, output, session, env)
     
     ##hilight=hilight2=NULL;source="";plotlib='base';cex=0.9
     plotUMAP <- function(pos, var, hilight=NULL, nlabel=20,  title="",
-                         cex=0.9, source="", plotlib='base')
+                         zlim=NULL, cex=0.9, source="", plotlib='base')
     {        
 
         dbg("[plotUMAP] called")
@@ -204,6 +204,7 @@ FeatureMapBoard <- function(input, output, session, env)
             opacity = opacity,
             cex = cex,
             zsym = (min(var,na.rm=TRUE)<0),
+            zlim = zlim,
             hilight.cex = cex,
             ##hilight.col = 'red',
             hilight.col = NULL,
@@ -227,18 +228,34 @@ FeatureMapBoard <- function(input, output, session, env)
     
     plotFeaturesPanel <- function(pos, F, ntop, nr, nc, sel, progress) {        
 
-        dbg("[plotFeatures] called")
-
+        dbg("[plotFeaturesPanel] called")
+        if(0) {
+            pos = ngs$cluster.genes$pos[[1]]
+            F = pgx.getMetaMatrix(ngs)$fc[,1:9]
+            nr = nc = ceiling(sqrt(ncol(F)))
+            sel=progress=NULL
+            dim(F)
+        }
+        
         par(mar=c(1.6,1.5,0.5,0), oma=c(1,1,0,0)*2)
         par(mar=c(1.1,1.0,0.5,0), oma=c(1,1,0,0)*2)
         par(mgp=c(1.35,0.5,0), las=0, cex.axis=0.85, cex.lab=0.9, xpd=TRUE)
         ##ntop <- 10        
         cex = ifelse(nc>3, 0.5, 0.7)
         jj <- 1:nrow(F)
-        if(ncol(F)>4 && nrow(F)>8000) jj <- sample(1:nrow(F),8000)  ## subsample for speed
-        if(ncol(F)>9 && nrow(F)>4000) jj <- sample(1:nrow(F),4000)  ## subsample for speed
+        if(ncol(F)>4 && nrow(F)>8000) jj <- sample(1:nrow(F),8000)   ## subsample for speed
+        if(ncol(F)>9 && nrow(F)>4000) jj <- sample(1:nrow(F),4000)   ## subsample for speed
         if(ncol(F)>16 && nrow(F)>2000) jj <- sample(1:nrow(F),2000)  ## subsample for speed
 
+        ## global zlim
+        qq <- quantile(F,probs=c(0.05,0.95),na.rm=TRUE)
+        qq <- quantile(F,probs=c(0.01,0.99),na.rm=TRUE)
+        qq <- quantile(F,probs=c(0.002,0.998),na.rm=TRUE)        
+        c(min(qq,na.rm=TRUE),max(qq,na.rm=TRUE))
+        qq
+        zlim = qq
+        ## zlim = NULL
+        
         i=1
         for(i in 1:ncol(F)) {                            
             if(!interactive()) progress$inc(1/ncol(F))            
@@ -265,7 +282,7 @@ FeatureMapBoard <- function(input, output, session, env)
 
             pgx.scatterPlotXY.BASE(
                 pos[jj,], var=var[jj], 
-                zsym=zsym, set.par=FALSE, softmax=1,
+                zsym=zsym, zlim=zlim, set.par=FALSE, softmax=1,
                 cex=cex, cex.legend = 0.9, cex.lab=1.2, bty='n',
                 col='grey70', dlim=c(0.05,0.05),
                 hilight=hmarks, hilight2=NULL,

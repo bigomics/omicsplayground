@@ -120,7 +120,7 @@ pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=TRUE)
 if(0) {    
     ##PGX.DIR="../test/"
     pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
-    load("../data/geiger2016-arginine-test.pgx")
+    load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
     load("../data/GSE157905-lenvatinib-bc.pgx")
     load("../data/gtex-aging-n40svaNnm.pgx")
