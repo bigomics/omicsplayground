@@ -128,7 +128,7 @@ ngs$samples$group <- grp
 levels = unique(ngs$samples$group)
 levels
 
-contr.matrix <- makeContrasts(
+contr.matrix <- limma::makeContrasts(
     
     SARSCoV_12H_vs_Mock_12H = SARSCoV_12H - Mock_12H,
     SARSCoV_24H_vs_Mock_24H = SARSCoV_24H - Mock_24H,        

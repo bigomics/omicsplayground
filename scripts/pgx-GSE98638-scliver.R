@@ -199,7 +199,7 @@ if(COMPARE.CLUSTERS) {
     table(ngs$samples$group)
     levels = levels(ngs$samples$group)
     levels
-    contr.matrix <- makeContrasts(
+    contr.matrix <- limma::makeContrasts(
         ## tumor_vs_blood = (TTC + TTH + TTR + TTS)/4 - (PTC + PTH + PTR + PTS)/4,
         ## tumor_vs_normal = (TTC + TTH + TTR + TTS)/4 - (NTC + NTH + NTR)/3,
         ## tumor_vs_joint  = (TTC + TTH + TTR + TTS)/4 - (JTC + JTH + JTS)/3,

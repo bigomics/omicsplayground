@@ -199,7 +199,7 @@ group.levels <- unique(ngs$samples$group)
 group.levels
 
 ## 10 contrasts in total
-contr.matrix <- makeContrasts(
+contr.matrix <- limma::makeContrasts(
     
     Bmem_activation = Bmem_A - Bmem_S,
     Bnav_activation = Bnav_A - Bnav_S,

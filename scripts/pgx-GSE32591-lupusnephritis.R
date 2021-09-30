@@ -165,7 +165,7 @@ ngs$samples$group <- paste0(ngs$samples$tissue,"_",ngs$samples$disease)
 levels = unique(ngs$samples$group)
 levels
 
-contr.matrix <- makeContrasts(
+contr.matrix <- limma::makeContrasts(
     Tubulo_LN_vs_control = Tubulo_LN - Tubulo_control,
     Glomeruli_LN_vs_control = Glomeruli_LN - Glomeruli_control,
     LN_vs_control = (Tubulo_LN + Glomeruli_LN) -

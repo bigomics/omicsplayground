@@ -132,7 +132,7 @@ ngs$samples$group <- grp
 levels = unique(ngs$samples$group)
 sort(levels)
 
-contr.matrix <- makeContrasts(
+contr.matrix <- limma::makeContrasts(
     
     LoCov_0h_vs_mock_0h = LoCov_0h - mock_0h,
     LoCov_3h_vs_mock_3h = LoCov_3h - mock_3h,

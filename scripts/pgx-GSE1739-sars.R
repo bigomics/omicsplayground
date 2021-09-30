@@ -119,7 +119,7 @@ ngs$samples$group <- ngs$samples$infected
 levels = unique(ngs$samples$group)
 levels
     
-contr.matrix <- makeContrasts(
+contr.matrix <- limma::makeContrasts(
     SARS_vs_normal = SARS - normal,
     normal_vs_SARS = normal - SARS,        
     levels = levels)

@@ -125,7 +125,7 @@ ngs$samples$group <- grp
 levels = unique(ngs$samples$group)
 levels
     
-contr.matrix <- makeContrasts(
+contr.matrix <- limma::makeContrasts(
     
     WT_0H_vs_mock_0H = WT_0H - mock_0H,
     WT_3H_vs_mock_3H = WT_3H - mock_3H,

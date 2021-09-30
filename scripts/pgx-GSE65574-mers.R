@@ -129,7 +129,7 @@ ngs$samples$group <- grp
 levels = unique(ngs$samples$group)
 levels
 
-contr.matrix <- makeContrasts(
+contr.matrix <- limma::makeContrasts(
     icMERS_0hr_vs_mock_0hr = icMERS_0hr - mock_0hr,
     icMERS_7hr_vs_mock_7hr = icMERS_7hr - mock_7hr,
     icMERS_12hr_vs_mock_12hr = icMERS_12hr - mock_12hr,

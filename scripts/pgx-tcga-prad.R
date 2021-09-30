@@ -163,7 +163,7 @@ levels = setdiff(unique(ngs$samples$group),NA)
 levels
 colnames(ngs$samples)
 
-## contr.matrix <- makeContrasts(
+## contr.matrix <- limma::makeContrasts(
 ##     T2_vs_T1 = T2 - T1,
 ##     T3_vs_T1 = T3 - T1,
 ##     T4_vs_T1 = T4 - T1,
@@ -171,7 +171,7 @@ colnames(ngs$samples)
 ##     T4_vs_T3 = T4 - T3,
 ##     levels = levels)
 
-contr.matrix <- makeContrasts(
+contr.matrix <- limma::makeContrasts(
     G10_vs_G9 = G10 - G9,
     G9_vs_G8 = G9 - G8,
     G8_vs_G7 = G8 - G7,

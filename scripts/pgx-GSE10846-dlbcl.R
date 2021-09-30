@@ -223,7 +223,7 @@ head(ngs$samples)
 ngs$samples$group <- as.character(ngs$samples$dlbcl.type)
 levels = unique(ngs$samples$group)
 levels
-contr.matrix <- makeContrasts(
+contr.matrix <- limma::makeContrasts(
     ABC_vs_GCB = ABC - GCB,
     GCB_vs_ABC = GCB - ABC,
     levels = c("ABC","GCB"))

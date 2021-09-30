@@ -164,7 +164,7 @@ ngs$samples$group <- ngs$samples$treatment
 levels = unique(ngs$samples$group)
 levels
 
-contr.matrix <- makeContrasts(
+contr.matrix <- limma::makeContrasts(
     Ipi_vs_baseline = Ipi - baseline,
     baseline_vs_Ipi = baseline - Ipi,
     levels = levels)

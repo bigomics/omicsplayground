@@ -126,7 +126,7 @@ ngs$samples$group <- ngs$samples$Status
 levels = unique(ngs$samples$group)
 levels
 
-contr.matrix <- makeContrasts(
+contr.matrix <- limma::makeContrasts(
     prePO2_vs_healthy = pre_pO2 - healthy,
     postPO2_vs_healthy = post_pO2 - healthy,
     postPO2_vs_prePO2 = post_pO2 - pre_pO2,
