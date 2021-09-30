@@ -158,7 +158,7 @@ FeatureMapBoard <- function(input, output, session, env)
                           selected = 'H')        
 
         cvar <- pgx.getCategoricalPhenotypes(ngs$samples, max.ncat=99)
-        cvar <- c("<foldchange>", cvar)
+        ## cvar <- c("<foldchange>", cvar)  ## add foldchange???
         cvar0 <- grep("^[.]",cvar,invert=TRUE,value=TRUE)[1]
         shiny::updateSelectInput(session, "sigvar", choices=cvar,
                                  selected = cvar0)        
