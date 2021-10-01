@@ -403,7 +403,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 message("[ComputePgxServer:@compute] initialize object")
                 
                 ## initialize and update global PGX object
-                ngs <- pgx.initialize(ngs)  ## here???
+                ## ngs <- pgx.initialize(ngs)  ## here or later???
                 ##uploaded$pgx <- ngs
                 computedPGX(ngs)                
 

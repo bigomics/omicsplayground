@@ -241,7 +241,7 @@ UploadModuleServer <- function(id,
             ##correctedX <- shiny::reactive({
             normalized_counts <- NormalizeCountsServerRT(
                 id = "normalize",
-                counts  = shiny::reactive(uploaded$counts.csv),
+                counts = shiny::reactive(uploaded$counts.csv),
                 height = height
             )
             
@@ -320,18 +320,20 @@ UploadModuleServer <- function(id,
                 max.genesets = as.integer(limits["genesets"]),
                 max.datasets = as.integer(limits["datasets"]),
                 height = height
-            )
-
-            shiny::observeEvent( computed_pgx(), {
-                ## Monitor for changes in the computed PGX.
-                cat("[UploadModule::computed_pgx] reacted!\n")
-                pgx <- computed_pgx()
-                if(!is.null(pgx)) {
-                    cat("[UploadModule::computed_pgx] updating PGX!\n")
-                    uploaded$pgx <- pgx
-                }
-            })
+            )          
             
+            uploaded_pgx <- shiny::reactive({
+                dbg("[uploaded_pgx] reacted!")
+                
+                if(!is.null(uploaded$pgx)) {
+                    pgx <- uploaded$pgx
+                    ##pgx <- pgx.initialize(pgx)
+                } else {
+                    pgx <- computed_pgx()
+                }
+                return(pgx)
+            })
+
             ##=====================================================================
             ##============================= PLOTS =================================
             ##=====================================================================            
@@ -511,24 +513,23 @@ UploadModuleServer <- function(id,
                 uploaded[["last_uploaded"]] <- NULL
                 
                 ## read uploaded files
-                has.pgx <- any(grepl("[.]pgx$",input$upload_files$name))
+                pgx.uploaded <- any(grepl("[.]pgx$",input$upload_files$name))
                 matlist <- list()
-                if(has.pgx) {
+                if(pgx.uploaded) {
 
-                    message("[upload_files] extract matrices from PGX")
+                    message("[upload_files] PGX upload detected")
                     
                     ## If the user uploaded a PGX file, we extract the matrix
-                    ## dimensions from the given PGX/NGS object.
+                    ## dimensions from the given PGX/NGS object. Really?
                     ##
                     i <- grep("[.]pgx$",input$upload_files$name)
                     load(input$upload_files$datapath[i])  ## load NGS/PGX
-                    matlist[["counts.csv"]] <- ngs$counts
-                    matlist[["samples.csv"]] <- type.convert(ngs$samples)
-                    ##matlist[["contrasts.csv"]] <- ngs$model.parameters$contr.matrix
-                    matlist[["contrasts.csv"]] <- ngs$model.parameters$exp.matrix
-                    
-                    ##if(is.null(ngs$name)) ngs$name <- sub(".pgx$","",input$upload_files$name[i])
-                    ##uploaded[["pgx"]] <- ngs
+
+                    ##matlist[["counts.csv"]] <- ngs$counts
+                    ##matlist[["samples.csv"]] <- type.convert(ngs$samples)
+                    ##matlist[["contrasts.csv"]] <- ngs$model.parameters$exp.matrix
+
+                    uploaded[["pgx"]] <- ngs
                     
                 } else {
 
@@ -603,6 +604,8 @@ UploadModuleServer <- function(id,
                 }
                 
                 dbg("[upload_files] names(matlist) = ",names(matlist))
+                dbg("[upload_files] pgx.uploaded = ",pgx.uploaded)
+
                 if("counts.csv" %in% names(matlist)) {
                     ## Convert to gene names (need for biological effects)
                     dbg("[upload_files] converting probe names to symbols")
@@ -616,11 +619,10 @@ UploadModuleServer <- function(id,
                     matlist[['counts.csv']] <- X0
                 }
                 
-                
                 ## put the matrices in the reactive values 'uploaded'        
                 files.needed = c("counts.csv","samples.csv","contrasts.csv")
-                matlist = matlist[ which(names(matlist) %in% files.needed) ]                
                 if(length(matlist)>0) {
+                    matlist = matlist[ which(names(matlist) %in% files.needed) ]                
                     for(i in 1:length(matlist)) {
                         colnames(matlist[[i]]) <- gsub("[\n\t ]","_",colnames(matlist[[i]]))
                         rownames(matlist[[i]]) <- gsub("[\n\t ]","_",rownames(matlist[[i]]))
@@ -869,7 +871,8 @@ UploadModuleServer <- function(id,
             ## return results as reactive object
             ##========================================================================            
             ## return(shiny::reactive(uploaded$pgx))  ## pointing to reactive results object
-            return(computed_pgx)
+            ##return(computed_pgx)
+            return(uploaded_pgx)
             
         }  ## end function
     )  ## end moduleServer
