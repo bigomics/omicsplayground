@@ -60,7 +60,7 @@ FeatureMapBoard <- function(input, output, session, env)
                 height = 0.85*fullH,                
                 plotWidget(ns('geneUMAP')),
                 shiny::br(),                
-                plotWidget(ns('geneTopPlots')) ## %>% shinycssloaders::withSpinner()
+                plotWidget(ns('geneSigPlots')) ## %>% shinycssloaders::withSpinner()
             ),
             tableWidget(ns('geneTable'))
         )
@@ -81,7 +81,7 @@ FeatureMapBoard <- function(input, output, session, env)
                 flex = c(1,0.03,1.2),
                 plotWidget(ns('gsetUMAP')),
                 shiny::br(),
-                plotWidget(ns('gsetTopPlots')) ##  %>% shinycssloaders::withSpinner()
+                plotWidget(ns('gsetSigPlots')) ##  %>% shinycssloaders::withSpinner()
             ),
             tableWidget(ns('gsetTable'))
         )
@@ -422,7 +422,6 @@ FeatureMapBoard <- function(input, output, session, env)
                       cex=1.2, source="", plotlib='plotly')        
         p
     })
-
     
     geneUMAP_info = "<b>Gene mapping.</b> Analysis of network topology for various soft-thresholding powers. The left panel shows the scale-free fit index (y-axis) as a function of the soft-thresholding power (x-axis). The right panel displays the mean connectivity (degree, y-axis) as a function of the soft-thresholding power (x-axis)."
 
@@ -471,7 +470,7 @@ FeatureMapBoard <- function(input, output, session, env)
     }) ## %>% shiny::debounce(1000)
     
 
-    geneTopPlots.RENDER %<a-% shiny::reactive({
+    geneSigPlots.RENDER %<a-% shiny::reactive({
         ngs <- inputData()
         shiny::req(ngs)
 
@@ -489,7 +488,7 @@ FeatureMapBoard <- function(input, output, session, env)
             F <- pgx.getMetaMatrix(ngs, level='gene')$fc
         }
         
-        dbg("[geneTopPlots.RENDER] dim.F = ",dim(F))
+        dbg("[geneSigPlots.RENDER] dim.F = ",dim(F))
         if(nrow(F)==0) return(NULL)
         
         ## ntop=15
@@ -510,23 +509,23 @@ FeatureMapBoard <- function(input, output, session, env)
     })
 
     
-    geneTopPlots_info = "<b>Gene signature maps.</b> Analysis of network topology for various soft-thresholding powers. The left panel shows the scale-free fit index (y-axis) as a function of the soft-thresholding power (x-axis). The right panel displays the mean connectivity (degree, y-axis) as a function of the soft-thresholding power (x-axis)."
+    geneSigPlots_info = "<b>Gene signature maps.</b> Analysis of network topology for various soft-thresholding powers. The left panel shows the scale-free fit index (y-axis) as a function of the soft-thresholding power (x-axis). The right panel displays the mean connectivity (degree, y-axis) as a function of the soft-thresholding power (x-axis)."
     
-    geneTopPlots.opts <- shiny::tagList(
+    geneSigPlots.opts <- shiny::tagList(
         ##radioButtons(ns('gene_plottype'),'plot type:',c("umap","bar"),inline=TRUE)        
     )
 
     shiny::callModule(
         plotModule, 
-        id = "geneTopPlots", ##ns=ns,
+        id = "geneSigPlots", ##ns=ns,
         ##plotlib = 'plotly',
         ##plotlib = 'ggplot',
         title = "GENE SIGNATURES", label="b",
-        func = geneTopPlots.RENDER,
-        func2 = geneTopPlots.RENDER, 
+        func = geneSigPlots.RENDER,
+        func2 = geneSigPlots.RENDER, 
         download.fmt = c("png","pdf"),
-        options = geneTopPlots.opts,
-        info.text = geneTopPlots_info,        
+        options = geneSigPlots.opts,
+        info.text = geneSigPlots_info,        
         height = c(600, 750), width = c('auto',1200),
         pdf.width=11, pdf.height=9,
         res=c(80,90),
@@ -656,9 +655,9 @@ FeatureMapBoard <- function(input, output, session, env)
     }) ## %>% shiny::debounce(1000)
     
     
-    gsetTopPlots.RENDER %<a-% shiny::reactive({        
+    gsetSigPlots.RENDER %<a-% shiny::reactive({        
 
-        dbg("[gsetTopPlots.RENDER] reacted")
+        dbg("[gsetSigPlots.RENDER] reacted")
         ngs <- inputData()
         shiny::req(ngs)
         
@@ -694,20 +693,20 @@ FeatureMapBoard <- function(input, output, session, env)
         
     })
     
-    gsetTopPlots.info = "<b>Module enrichment.</b> "
-    gsetTopPlots.opts = shiny::tagList(
+    gsetSigPlots.info = "<b>Module enrichment.</b> "
+    gsetSigPlots.opts = shiny::tagList(
         ## shiny::radioButtons(ns('gset_plottype'),'plot type:',c("umap","bar"),inline=TRUE)        
     )
     
     shiny::callModule(
         plotModule, 
-        id = "gsetTopPlots", ##ns=ns,
+        id = "gsetSigPlots", ##ns=ns,
         title = "GENESET SIGNATURES", label="b",
-        func  = gsetTopPlots.RENDER,
-        func2 = gsetTopPlots.RENDER, 
+        func  = gsetSigPlots.RENDER,
+        func2 = gsetSigPlots.RENDER, 
         download.fmt = c("png","pdf"),
-        options = gsetTopPlots.opts,
-        info.text = gsetTopPlots.info,        
+        options = gsetSigPlots.opts,
+        info.text = gsetSigPlots.info,        
         height = c(600, 750),
         width = c('auto',1200),
         pdf.width = 11, pdf.height = 9, 
