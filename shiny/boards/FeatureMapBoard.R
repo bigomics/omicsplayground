@@ -429,10 +429,10 @@ FeatureMapBoard <- function(input, output, session, env)
         shiny::selectInput(ns('umap_nlabel'),'nr labels:',
                     c(0,10,20,50,100,1000), selected=50),
         shiny::sliderInput(ns('umap_gamma'),'color gamma:',
-                    min=0.2, max=2, value=1, step=0.2),
+                    min=0.1, max=1.2, value=0.4, step=0.1),
         shiny::radioButtons(ns('umap_colorby'),'color by:',
-                     choices = c("var.FC","mean.FC","sd.X"),
-                     selected = "mean.FC", inline=TRUE )
+                     choices = c("sd.X","var.FC","mean.FC"),
+                     selected = "sd.X", inline=TRUE )
     )
 
     shiny::callModule(
@@ -617,10 +617,10 @@ FeatureMapBoard <- function(input, output, session, env)
         shiny::selectInput(ns('gsmap_nlabel'),'nr labels:',
                     choices=c(0,10,20,50,100,1000),selected=20),        
         shiny::sliderInput(ns('gsmap_gamma'),'color gamma:',
-                    min=0.2, max=2, value=1, step=0.2),
+                    min=0.1, max=1.2, value=0.4, step=0.1),
         shiny::radioButtons(ns('gsmap_colorby'),'color by:',
-                     choices = c("sd.FC","mean.FC","sd.X"),
-                     selected = "sd.FC", inline=TRUE )
+                     choices = c("sd.X","sd.FC","mean.FC"),
+                     selected = "sd.X", inline=TRUE )
     )
 
     shiny::callModule(
