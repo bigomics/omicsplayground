@@ -732,10 +732,13 @@ LoadingBoard <- function(input, output, session,
 
     shiny::observeEvent( uploaded_pgx(), {
 
-        cat("uploaded PGX detected! [LoadingBoard:observe:uploaded_pgx]\n")
+        dbg("[observe::uploaded_pgx] uploaded PGX detected!")
         pgx <- uploaded_pgx()
         pgx$collection <- "uploaded"
         ## pgx$owner <- "user"
+
+        dbg("[observe::uploaded_pgx] initializing PGX object")
+        pgx <- pgx.initialize(pgx)
 
         ## update CurrentPGX
         currentPGX(pgx)

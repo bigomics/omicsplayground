@@ -227,8 +227,9 @@ server = function(input, output, session) {
             shiny::removeModal()
         })
 
-        if(already_loaded)
+        if(already_loaded) {
             return()
+        }
 
         already_loaded <<- TRUE
 
@@ -269,7 +270,7 @@ server = function(input, output, session) {
         name
     })
     
-    ## Dynamicall hide/show certain sections depending on USERMODE/object
+    ## Dynamically hide/show certain sections depending on USERMODE/object
     shiny::observe({
         pgx <- env[["load"]][["inputData"]]() ## trigger on change dataset
         
@@ -287,7 +288,6 @@ server = function(input, output, session) {
         
         if(USER_MODE == "basic") {
             shiny::hideTab("maintabs","CellProfiling")
-            shiny::hideTab("maintabs","DEV")
             shiny::hideTab("clust-tabs2","Feature ranking")
             shiny::hideTab("expr-tabs1","Volcano (methods)")
             shiny::hideTab("expr-tabs2","FDR table")
