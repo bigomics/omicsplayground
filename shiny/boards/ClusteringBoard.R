@@ -96,14 +96,18 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             shiny::conditionalPanel(
                 "input.hm_options % 2 == 1", ns=ns,
                 shiny::tagList(
-                    ##tipify( shiny::checkboxInput(ns('hm_group'),'group by condition',FALSE),
-                    ##       "Group the samples by condition.", placement="bottom")
-                    shinyBS::tipify( shiny::selectInput(ns("hm_level"),"Level:", choices=c("gene","geneset")),
-                           "Specify the level analysis: gene or geneset level.",
-                           placement="top", options = list(container = "body")),
-                    shinyBS::tipify( shiny::checkboxInput(ns('hm_filterXY'),'exclude X/Y genes',FALSE),
-                           "Exclude genes on X/Y chromosomes.", 
-                           placement="top", options = list(container = "body")),
+                           ##tipify( shiny::checkboxInput(ns('hm_group'),'group by condition',FALSE),
+                           ##       "Group the samples by condition.", placement="bottom")
+                           shinyBS::tipify( shiny::selectInput(ns("hm_level"),"Level:", choices=c("gene","geneset")),
+                                           "Specify the level analysis: gene or geneset level.",
+                                           placement="top", options = list(container = "body")),
+                           shinyBS::tipify( shiny::checkboxInput(ns('hm_filterXY'),'exclude X/Y genes',FALSE),
+                                           "Exclude genes on X/Y chromosomes.", 
+                                           placement="top", options = list(container = "body")),
+                           shinyBS::tipify( shiny::checkboxInput(ns('hm_filterMitoRibo'),
+                                                                 'exclude mito/ribo genes',FALSE),
+                                           "Exclude mitochondrial (MT) and ribosomal protein (RPS/RPL) genes.", 
+                                           placement="top", options = list(container = "body"))
                     )
             )
         )
@@ -324,6 +328,16 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             zx <- zx[which(not.xy), ]
             if(!is.null(idx)) idx <- idx[rownames(zx)]
         }
+
+        if( input$hm_level=="gene" && input$hm_filterMitoRibo )
+        {
+            ## Filter out X/Y chromosomes before clustering
+            is.ribomito <- grepl("^RP[LS]|^MT-",rownames(zx),ignore.case=TRUE)
+            table(is.ribomito)
+            zx <- zx[which(!is.ribomito),,drop=FALSE]
+            if(!is.null(idx)) idx <- idx[rownames(zx)]
+        }
+
         flt <- list(zx=zx, idx=idx)
 
         return(flt)
