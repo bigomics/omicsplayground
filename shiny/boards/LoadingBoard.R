@@ -35,7 +35,7 @@ LoadingBoard <- function(input, output, session,
                                     "genes"=20000, "genesets"=10000,
                                     "datasets"=10),
                          enable_delete = TRUE, enable_save = TRUE,
-                         authentication="none", firebase=NULL, firebase2=NULL)
+                         authentication="none")
 {
     ns <- session$ns ## NAMESPACE
     loadedDataset <- reactiveVal(FALSE)
@@ -60,12 +60,9 @@ LoadingBoard <- function(input, output, session,
             PasswordAuthenticationModule, "auth",
             credentials.file = "CREDENTIALS")
     } else if(authentication == "firebase") {
-
-        ##firebase <- FirebaseEmailPassword$new()
         auth <- shiny::callModule(
-            ##FirebaseAuthenticationModule, "auth")
-            FirebaseAuthenticationModule, "auth",
-            firebase = firebase, firebase2 = firebase2)
+            FirebaseAuthenticationModule, "auth"
+        )
     } else if(authentication == "register") {
         auth <- shiny::callModule(
             RegisterAuthenticationModule, "auth",
