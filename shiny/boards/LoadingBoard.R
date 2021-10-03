@@ -460,10 +460,6 @@ LoadingBoard <- function(input, output, session,
         dbg("[LoadingBoard::inputData] authentication=",authentication,"\n")
         dbg("[LoadingBoard::inputData] auth$logged=",auth$logged(),"\n")
         
-        ## authenicate user if needed
-        ## if(!USER$logged) showLogin()
-        ## if(AUTHENTICATION!="none" && USER$logged) showLogin()
-        ##if(AUTHENTICATION!="none" && !auth$logged()) return(NULL)
         if(!auth$logged()) return(NULL)
         
         pgx <- currentPGX()
