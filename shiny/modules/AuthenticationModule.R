@@ -68,8 +68,7 @@ NoAuthenticationModule <- function(input, output, session, username=NULL)
 ## FirebaseAuthenticationModule
 ##================================================================================
 
-FirebaseAuthenticationModule <- function(input, output, session,
-                                         firebase=NULL, firebase2=NULL)
+FirebaseAuthenticationModule <- function(input, output, session)
 {
     message("[NoAuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
 
@@ -79,14 +78,8 @@ FirebaseAuthenticationModule <- function(input, output, session,
     ##head(credentials)
     
 
-    if(is.null(firebase)) {
-        ## NEED CHECK!!! THIS SEEMS NOT WORKING
-        firebase <- firebase::FirebaseEmailPassword$new()
-    }
-    if(is.null(firebase2)) {
-        ## NEED CHECK!!! THIS SEEMS NOT WORKING
-        firebase2 <- firebase::FirebaseSocial$new()
-    }
+    firebase <- firebase::FirebaseEmailPassword$new()
+    firebase2 <- firebase::FirebaseSocial$new()
 
     if(!file.exists("firebase.rds")) {
         stop("ERROR: Please install Firebase API.KEY and PROJECT.ID using firebase::firebase_config() ")

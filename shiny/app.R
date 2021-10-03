@@ -200,12 +200,6 @@ server = function(input, output, session) {
     message("[SERVER] USER_MODE = ", USER_MODE)
     server.start_time <- Sys.time()
     
-    firebase=firebase2=NULL
-    if(AUTHENTICATION=="firebase") {
-        firebase  <- firebase::FirebaseEmailPassword$new()
-        firebase2 <- firebase::FirebaseSocial$new()
-    }
-    
     limits <- c("samples" = opt$MAX_SAMPLES,
                 "comparisons" = opt$MAX_COMPARISONS,
                 "genes" = opt$MAX_GENES,
@@ -215,7 +209,7 @@ server = function(input, output, session) {
     env[["load"]]  <- shiny::callModule(
         LoadingBoard, "load", limits = limits,
         authentication = AUTHENTICATION, enable_delete = opt$ENABLE_DELETE,
-        enable_save = opt$ENABLE_SAVE, firebase=firebase, firebase2=firebase2)   
+        enable_save = opt$ENABLE_SAVE)   
     
     already_loaded <- FALSE
     observeEvent(env[["load"]]$loaded(), {
