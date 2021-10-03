@@ -202,8 +202,8 @@ server = function(input, output, session) {
     
     firebase=firebase2=NULL
     if(AUTHENTICATION=="firebase") {
-        firebase  <- FirebaseEmailPassword$new()
-        firebase2 <- FirebaseSocial$new()
+        firebase  <- firebase::FirebaseEmailPassword$new()
+        firebase2 <- firebase::FirebaseSocial$new()
     }
     
     limits <- c("samples" = opt$MAX_SAMPLES,

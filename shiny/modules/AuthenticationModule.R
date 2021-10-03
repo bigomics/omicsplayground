@@ -81,11 +81,11 @@ FirebaseAuthenticationModule <- function(input, output, session,
 
     if(is.null(firebase)) {
         ## NEED CHECK!!! THIS SEEMS NOT WORKING
-        firebase <- FirebaseEmailPassword$new()
+        firebase <- firebase::FirebaseEmailPassword$new()
     }
     if(is.null(firebase2)) {
         ## NEED CHECK!!! THIS SEEMS NOT WORKING
-        firebase2 <- FirebaseSocial$new()
+        firebase2 <- firebase::FirebaseSocial$new()
     }
 
     if(!file.exists("firebase.rds")) {
@@ -107,8 +107,7 @@ FirebaseAuthenticationModule <- function(input, output, session,
         )
         
         shiny::tagList(
-            firebase::useFirebase(),
-            ##useFirebaseUI(),
+            # firebase::useFirebaseUI(),
             shiny::showModal(m)
         )
     })
