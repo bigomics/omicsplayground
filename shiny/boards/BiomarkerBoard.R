@@ -501,18 +501,14 @@ be multiple categories (classes) or patient survival data."
         res <- calcVariableImportance()
         if(is.null(res)) return(NULL)
 
-
-
         par(mfrow=c(1,1), mar=c(1,0,2,0))
-
         is.surv <- grepl("Surv",res$rf$call)[2]
         is.surv
         if(is.surv) {
 
-
             (rf <- partykit::as.party(res$rf))
             ##(rf <- partykit::as.party(rpart::prune(res$rf, cp=0.05)))
-            KEGGgraph::plot(rf)
+            partykit::plot.party(rf)
             ##title("Survival tree",cex=1.2,line=0.9,adj=0.35)
             ##table(res$rf$where)
         } else {
@@ -520,7 +516,7 @@ be multiple categories (classes) or patient survival data."
             ##plotOutput("pdx_decisiontreeClass")
 
             if(1) {
-                rpart.plot(res$rf)
+                rpart.plot::rpart.plot(res$rf)
                 title("Classification tree",cex=1.2,line=3,adj=0.35)
             } else {
                 visNetwork::visTree(res$rf, main="Classification tree",width="100%",legend=FALSE) %>%

@@ -827,7 +827,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     output$hm1_splitmap <- shiny::renderPlot({
         plt <- hm1_splitmap.RENDER()
         grid::grid.draw(plt, recording=FALSE)
-        ## KEGGgraph::plot(sin)
     }, res=90)
     
     output$hm2_splitmap <- renderIheatmap({
@@ -1813,7 +1812,6 @@ displays the expression levels of selected genes across all conditions in the an
         cex1 = cex1 * ifelse(length(pheno)>6, 0.8, 1)
         cex1 = cex1 * ifelse(length(pheno)>12, 0.8, 1)
 
-
         for(i in 1:min(20,length(pheno))) {
 
             ## ------- set colors
@@ -1829,7 +1827,7 @@ displays the expression levels of selected genes across all conditions in the an
             tt = tolower(pheno[i])
 
             ## ------- start plot
-            KEGGgraph::plot( pos[,], pch=19, cex=cex1, col=klr1,
+            base::plot( pos[,], pch=19, cex=cex1, col=klr1,
                  fg = gray(0.5), bty = "o", xaxt='n', yaxt='n',
                  xlab="tSNE1", ylab="tSNE2")
             title( tt, cex.main=1.3, line=0.5, col="grey40")

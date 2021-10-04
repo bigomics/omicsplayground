@@ -2445,6 +2445,7 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         }
 
         jj <- order(-table(pt.col)[pt.col]) ## plot less frequent points last...            
+        if(length(cex)>1) cex <- cex[jj]
         plot(pos[jj,,drop=FALSE],
              col = pt.col[jj], pch=20, cex=cex,
              xlim = xlim0, ylim = ylim0,
@@ -2484,24 +2485,28 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         ##if(NCOL(cvar)==1) cvar <- cbind(cvar=cvar)
         z <- var
 
+        dbg("[pgx.scatterPlotXY.BASE] range.z=",range(z,na.rm=TRUE))
+        
         if(is.null(zlim)) {
             ## global zlim
-            qq <- quantile(z,probs=c(0.01,0.99),na.rm=TRUE)
-            qq <- quantile(z,probs=c(0.002,0.998),na.rm=TRUE)        
-            qq
-            zlim = qq
-            ## zlim = NULL
+            zlim <- range(z, na.rm=TRUE)
+            ##zlim <- quantile(z,probs=c(0.01,0.99),na.rm=TRUE)
+            ##zlim <- quantile(z,probs=c(0.002,0.998),na.rm=TRUE)        
         }
-
+        
         if(zsym) {
-            zlim <- c(-1,1)*max(abs(zlim))
+            zlim <- c(-1,1)*max(abs(zlim),na.rm=TRUE)
         }
         
         ## z1 is normalized [0;1] for coloring        
         z1 <- (z - min(zlim)) / diff(zlim)
         z1 <- pmin(pmax(z1,0),1) ## clip
-        if(softmax) z1 <- 0.5*(tanh(4*(z1-0.5))+1)
+        if(softmax) {
+            z1 <- 0.5*(tanh(4*(z1-0.5))+1)
+        }
 
+        dbg("[pgx.scatterPlotXY.BASE] zlim=",zlim)
+        
         ##-------------- set colors
         ##cpal <- rev(viridis::viridis(11))
         cpal <- colorspace::diverge_hcl(64, c=60, l=c(30,100), power=1)
@@ -2509,7 +2514,7 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         cpal <- colorRampPalette(c("#3136B5","#FFFFDF","#B50026"))(64)                        
         cpal <- sapply(1:length(cpal),function(i) add_opacity(cpal[i],0.2+0.8*abs(i-32.5)/32))        
         ##cpal <- rev(RColorBrewer::brewer.pal(11,"RdYlBu"))
-        pt.col <- cpal[ceiling(z1*length(cpal))]
+        pt.col <- cpal[1+ceiling(z1*(length(cpal)-1))]
         ##pt.col <- viridis::viridis(16)[1+round(15*z1)]
         ##pt.col <- matlab.like(21)[1+round(20*z1)]        
         pt.col0 = pt.col
@@ -2517,10 +2522,14 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
             pt.col <- add_opacity(pt.col, opacity)
             cpal <- add_opacity(cpal, opacity**0.33)                
         }        
-        pt.col[is.na(pt.col)] <- "#DDDDDD33"
-        
+        pt.col[is.na(pt.col)] <- "#DDDDDD33"  ## missing values color
+
+        jj <- 1:nrow(pos)
         jj <- order(abs(z),na.last=FALSE) ## higher values last??        
-        plot(pos[jj,], col=pt.col[jj], pch=20, cex=cex,
+        if(length(cex)>1) cex <- cex[jj]
+        plot(pos[jj,],
+             col=pt.col[jj],
+             pch=20, cex=cex,
              xlim = xlim0, ylim=ylim0, 
              xlab = xlab, ylab = ylab,
              ##xaxt=axt, yaxt=axt,
@@ -2552,8 +2561,10 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         if(length(jj)) {
             hcol1 = hilight.col
             if(is.null(hcol1)) hcol1 <- pt.col0[jj]
-            points(pos[jj,,drop=FALSE], pch=20, col=hcol1, cex=1.05*hilight.cex)
-            points(pos[jj,,drop=FALSE], pch=1, lwd=hilight.lwd, cex=0.85*hilight.cex)
+            hcex <- hilight.cex
+            if(length(hcex)>1) hcex <- hcex[jj]
+            points(pos[jj,,drop=FALSE], pch=20, col=hcol1, cex=1.05*hcex)
+            points(pos[jj,,drop=FALSE], pch=1, lwd=hilight.lwd, cex=0.85*hcex)
         }
     }
 

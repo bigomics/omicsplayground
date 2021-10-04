@@ -904,7 +904,7 @@ if(0) {
 
     x <- 1:20
     y <- runif(20)
-    KEGGgraph::plot(x, y, axes=FALSE, frame.plot=TRUE)
+    base::plot(x, y, axes=FALSE, frame.plot=TRUE)
     Axis(side=1, labels=FALSE)
     Axis(side=2, labels=TRUE)
     

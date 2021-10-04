@@ -406,7 +406,7 @@ WgcnaBoard <- function(input, output, session, env)
         par(mfrow = c(1,2), mar=c(3.3,3,1,1), mgp=c(2,0.8,0))
         cex1 = 0.9;
         ## Scale-free topology fit index as a function of the soft-thresholding power
-        KEGGgraph::plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+        base::plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
              type="n",
              xlab = "Soft threshold (power)",
              ylab = "SFT model fit (signed R^2)",
@@ -420,7 +420,7 @@ WgcnaBoard <- function(input, output, session, env)
         abline(h=0.90,col="red")
 
         ## Mean connectivity as a function of the soft-thresholding power
-        KEGGgraph::plot(sft$fitIndices[,1], sft$fitIndices[,5], type="n",
+        base::plot(sft$fitIndices[,1], sft$fitIndices[,5], type="n",
              xlab="Soft threshold (power)",
              ylab="Mean connectivity", 
              ##main = paste("Mean connectivity")
@@ -796,7 +796,7 @@ WgcnaBoard <- function(input, output, session, env)
         igraph::V(gr)$size[is.na(igraph::V(gr)$size)] <- 0
 
         par(mfrow=c(1,1), mar=c(1,1,1,1)*0)
-        KEGGgraph::plot(
+        igraph::plot.igraph(
             gr,
             layout = igraph::layout.kamada.kawai,
             ##vertex.color = "lightblue",
@@ -1360,7 +1360,7 @@ WgcnaBoard <- function(input, output, session, env)
         par(mfrow=mfrow0, mar=c(4,4,2,1), mgp=c(2.0,0.8,0))
         i=top.px[1]
         for(i in top.px) {
-            KEGGgraph::plot( rho1[k,], rho2[i,], pch=20, cex=0.7, col=col1,
+            base::plot( rho1[k,], rho2[i,], pch=20, cex=0.7, col=col1,
                  xlab = "Module membership (eigengene cor)",
                  ylab = "Gene significance (trait cor)")
             title(paste(k,"vs.",paste(rownames(rho2)[i])), cex=1)                  
