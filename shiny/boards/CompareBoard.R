@@ -653,7 +653,7 @@ CompareBoard <- function(input, output, session, env)
         i=1
         for(i in 1:length(higenes)) {
             j <- match(higenes[i],rownames(X1))
-            KEGGgraph::plot( X1[j,], X2[j,],
+            base::plot( X1[j,], X2[j,],
                  ##xlab=dset1, ylab=dset2,
                  xlab="", ylab="",
                  pch=20, col=klr1, cex=1.2)
@@ -942,7 +942,7 @@ if(0) {
     Y <- ngs1$samples[kk,]
     i <- grep("ERBB2",rownames(X1))
     klr1 <- 1+as.integer(Y$HER2_STATUS)
-    KEGGgraph::plot(X1[i,], X2[i,], pch=20, col=klr1, cex=1)
+    base::plot(X1[i,], X2[i,], pch=20, col=klr1, cex=1)
 
     pgx.plotExpression(ngs1, "ERBB2", comp="HER2_STATUS:1_vs_0", grouped=TRUE)
     pgx.plotExpression(ngs1, "ESR1", comp="ER_STATUS:1_vs_0", grouped=TRUE)

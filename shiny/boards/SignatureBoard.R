@@ -1034,7 +1034,7 @@ infotext =
             }
             klr1 = paste0(gplots::col2hex(klr1),"99")
             
-            KEGGgraph::plot( pos[jj,], pch=19, cex=cex1, col=klr1[jj],
+            base::plot( pos[jj,], pch=19, cex=cex1, col=klr1[jj],
                  xlim=1.2*range(pos[,1]), ylim=1.2*range(pos[,2]),
                  fg = gray(ifelse(i==0,0.1,0.8)), bty = "o",
                  xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")

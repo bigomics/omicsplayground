@@ -204,11 +204,11 @@ DataViewBoard <- function(input, output, session, env)
         par(mar=mar, mgp=c(2.1,0.8,0))
         par(mar=c(2.3,3.0,2,2), mgp=c(2.0,0.6,0))
         ##MARGINS1
-        KEGGgraph::plot( mean.fc, type="h", lwd=0.4,
-             ## col="#3380CC11", 
-             col="#bbd4ee", cex.axis=0.9,
-             ##main="average rank", cex.main=1.2,
-             ylab=ylab, xlab="ordered genes", xaxt="n")
+        base::plot( mean.fc, type="h", lwd=0.4,
+                   ## col="#3380CC11", 
+                   col="#bbd4ee", cex.axis=0.9,
+                   ##main="average rank", cex.main=1.2,
+                   ylab=ylab, xlab="ordered genes", xaxt="n")
         points( j, mean.fc[j], type="h", lwd=2, col="black")
         text( j, mean.fc[j], gene, pos=3, cex=0.9)
 
@@ -521,7 +521,7 @@ DataViewBoard <- function(input, output, session, env)
         ##par(mar=c(8,2,2.2,1), mgp=c(1,0.5,0))
         par(mar=c(2.3,2.3,2,2), mgp=c(0.9,0.1,0))
         jj2 <- order(abs(fc1))
-        KEGGgraph::plot( pos[jj2,], pch=20, cex=cex1, col=klr1[jj2], fg = gray(0.6), bty = "o",
+        base::plot( pos[jj2,], pch=20, cex=cex1, col=klr1[jj2], fg = gray(0.6), bty = "o",
              xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
         
         ## determine how to do grouping for group labels

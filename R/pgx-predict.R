@@ -478,26 +478,24 @@ pgx.survivalVariableImportance <-
     y <- survival::Surv(time+0.0001, status)
     
     if("glmnet" %in% methods) {
-
-        
         
         fam <- "cox"
         
         NFOLD=5
         out0 <- glmnet::cv.glmnet( t(X), y, alpha=0, family=fam,standardize=TRUE, nfolds=NFOLD)
-        cf0 <- coef(out0, s="lambda.min")[,1]
+        cf0 <- glmnet::coef.glmnet(out0, s="lambda.min")[,1]
         ##imp[["coxnet.s0"]] <- cf0 * sdx[names(cf0)]
         
         out1 <- glmnet::cv.glmnet( t(X), y, alpha=1, family=fam,standardize=TRUE, nfolds=NFOLD)
-        cf1 <- coef(out1, s="lambda.min")[,1]
+        cf1 <- glmnet::coef.glmnet(out1, s="lambda.min")[,1]
         ##imp[["coxnet.s1"]] <- cf1 * sdx[names(cf1)]
         
         out0a <- glmnet::cv.glmnet( t(X), y, alpha=0, family=fam, standardize=FALSE, nfolds=NFOLD)
-        cf0a <- coef(out0a, s="lambda.min")[,1]
+        cf0a <- glmnet::coef.glmnet(out0a, s="lambda.min")[,1]
         ##imp[["coxnet.a0"]] <- cf0a * sdx[names(cf0a)]
         
         out1a <- glmnet::cv.glmnet( t(X), y, alpha=1, family=fam, standardize=FALSE, nfolds=NFOLD)
-        cf1a <- coef(out1a, s="lambda.min")[,1]
+        cf1a <- glmnet::coef.glmnet(out1a, s="lambda.min")[,1]
         ##imp[["coxnet.a1"]] <- cf1a * sdx[names(cf1a)]
 
         imp[["coxnet.a0"]] <- (cf0/max(abs(cf0)) + cf0a/max(abs(cf0a))) * sdx[names(cf0)]
@@ -511,12 +509,9 @@ pgx.survivalVariableImportance <-
         ##install.packages("randomForest")
         ##install.packages("randomForestSRC")
         ##
-        
-        
-        
         df <- data.frame(time=time, status=status, t(X))
-        fit_rf <- rfsrc( survival::Surv(time,status) ~ ., data=df)
-        vimp <- vimp(fit_rf)$importance
+        fit_rf <- randomForestSRC::rfsrc( survival::Surv(time,status) ~ ., data=df)
+        vimp <- randomForestSRC::vimp(fit_rf)$importance
         imp[["randomForest"]] <- vimp
 
         if(0) {
@@ -559,14 +554,14 @@ pgx.survivalVariableImportance <-
     
     if("xgboost" %in% methods) {
         ##install.packages("xgboost")
-        
+        require(xgboost)
         yy <- ifelse( !status, -time, time)
-        bst <- xgboost(data = t(X), label = yy, booster = "gbtree", 
-                       max_depth = 2, eta = 1, nthread = 2, nrounds = 2,
-                       verbose=0, objective = "survival:cox")
+        bst <- xgboost::xgboost(data = t(X), label = yy, booster = "gbtree", 
+                                max_depth = 2, eta = 1, nthread = 2, nrounds = 2,
+                                verbose=0, objective = "survival:cox")
         ##pred <- predict(bst, t(X))
         ##table(round(pred),y)
-        xgmat <- xgb.importance(model = bst)
+        xgmat <- xgboost::xgb.importance(model = bst)
         imp5 <- xgmat$Gain ** 0.33
         imp5 <- imp5[match(rownames(X),xgmat$Feature)]
         names(imp5) <- rownames(X)
@@ -575,10 +570,10 @@ pgx.survivalVariableImportance <-
         imp[["xgboost"]] <- imp5
 
         ## linear model
-        bst2 <- xgboost(data = t(X), label = yy, booster = "gblinear", 
-                       max_depth = 2, eta = 1, nthread = 2, nrounds = 2,
-                       verbose=0, objective = "survival:cox")
-        xgmat <- xgb.importance(model = bst2)
+        bst2 <- xgboost::xgboost(data = t(X), label = yy, booster = "gblinear", 
+                                 max_depth = 2, eta = 1, nthread = 2, nrounds = 2,
+                                 verbose=0, objective = "survival:cox")
+        xgmat <- xgboost::xgb.importance(model = bst2)
         imp6 <- xgmat$Weight
         names(imp6) <- xgmat$Feature
         imp6 <- imp6[match(rownames(X),names(imp6))]
@@ -588,16 +583,12 @@ pgx.survivalVariableImportance <-
 
     if("pls" %in% methods) {
         
-        
-        res <- plsRcox(t(X),time=time,event=status,nt=5)
+        res <- pls::plsRcox(t(X),time=time,event=status,nt=5)
         summary(res)
         cf <- res$Coeffs[,1]
         cf[is.na(cf)] <- 0
         cf <- cf * sdx[names(cf)]  ## really?
-        sum(is.na(cf))
-        Matrix::tail(sort(cf))
         imp[["pls.cox"]] <- abs(cf) / max(abs(cf),na.rm=TRUE)
-
     }
 
     
@@ -642,8 +633,7 @@ pgx.multiclassVariableImportance <-
     }
     
     if("glmnet" %in% methods) {
-        
-        
+        require(glmnet)
         fam <- "multinomial"
         ##fam <- "binomial"
         ##if(length(unique(y))>2) fam="multinomial"
@@ -668,14 +658,14 @@ pgx.multiclassVariableImportance <-
         ##install.packages("caret")
         ##install.packages("randomForest")
         ##
-        
+        require(randomForest)
         fit_rf = randomForest::randomForest(t(X), factor(y))
         imp[["randomForest"]] <- fit_rf$importance[,1]
     }
 
     if("boruta" %in% methods) {
         ##install.packages("Boruta")
-        
+        ##require(Boruta)        
         imp4 <- rep(0,nrow(X))
         niter=4
         for(k in 1:niter) {
@@ -696,24 +686,24 @@ pgx.multiclassVariableImportance <-
         
         ny <- length(table(y))
         yy <- as.integer(factor(y))-1
-        bst <- xgboost(data = t(X), label = yy, booster = "gbtree", 
-                       max_depth = 2, eta = 1, nthread = 2, nrounds = 2,
-                       num_class = ny,
-                       verbose=0, objective = "multi:softmax")
+        bst <- xgboost::xgboost(data = t(X), label = yy, booster = "gbtree", 
+                                max_depth = 2, eta = 1, nthread = 2, nrounds = 2,
+                                num_class = ny,
+                                verbose=0, objective = "multi:softmax")
         ##pred <- predict(bst, t(X))
         ##table(round(pred),y)
-        xgmat <- xgb.importance(model = bst)
+        xgmat <- xgboost::xgb.importance(model = bst)
         imp5 <- xgmat$Gain ** 0.2
         imp5 <- imp5[match(rownames(X),xgmat$Feature)]
         names(imp5) <- rownames(X)
         imp[["xgboost"]] <- imp5
 
         ## linear model
-        bst2 <- xgboost(data = t(X), label = yy, booster = "gblinear", 
-                       max_depth = 2, eta = 1, nthread = 2, nrounds = 2,
-                       num_class = ny,
-                       verbose=0, objective = "multi:softmax")
-        xgmat <- xgb.importance(model = bst2)
+        bst2 <- xgboost::xgboost(data = t(X), label = yy, booster = "gblinear", 
+                                 max_depth = 2, eta = 1, nthread = 2, nrounds = 2,
+                                 num_class = ny,
+                                 verbose=0, objective = "multi:softmax")
+        xgmat <- xgboost::xgb.importance(model = bst2)
         imp6 <- xgmat$Weight
         names(imp6) <- xgmat$Feature
         imp6 <- imp6[match(rownames(X),names(imp6))]
@@ -774,7 +764,6 @@ pgx.variableImportance <-
     
     if("glmnet" %in% methods) {
         
-        
         out0 <- glmnet::cv.glmnet( t(X), y, alpha=0, family="binomial",
                           standardize=TRUE)
         cf0 <- coef(out0, s="lambda.min")[-1,1]
@@ -815,7 +804,7 @@ pgx.variableImportance <-
         niter=4
         for(k in 1:niter) {
             jj <- sample(ncol(X),ncol(X)*0.9)
-            out3 <- Boruta(t(X[,jj,drop=FALSE]), y[jj])
+            out3 <- Boruta::Boruta(t(X[,jj,drop=FALSE]), y[jj])
             fd <- factor(out3$finalDecision, levels=c("Rejected","Tentative","Confirmed"))
             fd <- (as.integer(fd)-1)/2
             imp4 <- imp4 + fd/niter
@@ -829,21 +818,21 @@ pgx.variableImportance <-
         ##install.packages("xgboost")
         
         y1 <- as.integer(factor(y))-1
-        bst <- xgboost(data = t(X), label = y1, booster = "gbtree", 
-                       max_depth = 2, eta = 1, nthread = 2, nrounds = 2, 
-                       verbose=0, objective = "binary:logistic")
+        bst <- xgboost::xgboost(data = t(X), label = y1, booster = "gbtree", 
+                                max_depth = 2, eta = 1, nthread = 2, nrounds = 2, 
+                                verbose=0, objective = "binary:logistic")
         ##pred <- predict(bst, t(X))
         ##table(round(pred),y)
-        xgmat <- xgb.importance(model = bst)
+        xgmat <- xgboost::xgb.importance(model = bst)
         imp5 <- xgmat$Gain ** 0.2
         imp5 <- imp5[match(rownames(X),xgmat$Feature)]
         names(imp5) <- rownames(X)
         imp[["xgboost"]] <- imp5
 
-        bst2 <- xgboost(data = t(X), label = y1, booster = "gblinear", 
-                        eta = 0.3, nthread = 1, nrounds = 20,
-                        verbose=0, objective = "binary:logistic")
-        xgmat <- xgb.importance(model = bst2)
+        bst2 <- xgboost::xgboost(data = t(X), label = y1, booster = "gblinear", 
+                                 eta = 0.3, nthread = 1, nrounds = 20,
+                                 verbose=0, objective = "binary:logistic")
+        xgmat <- xgboost::xgb.importance(model = bst2)
         imp6 <- xgmat$Weight
         names(imp6) <- xgmat$Feature
         imp6 <- imp6[match(rownames(X),names(imp6))]
