@@ -610,12 +610,17 @@ pgx.multiclassVariableImportance <-
     
     imp <- list()
     xnames <- rownames(X)
+
+    dbg("[pgx.multiclassVariableImportance] 0: dim.X = ",dim(X))
+    
     if(nrow(X)==1) X <- rbind(X,X)
     sdx <- apply(X,1,sd)    
 
     ## convert to factor
     y <- factor(y)
     table(y)
+
+    dbg("[pgx.multiclassVariableImportance] 1: dim.X = ",dim(X))
     
     ## resample to minimum size to balance groups
     if(1) {
@@ -631,6 +636,9 @@ pgx.multiclassVariableImportance <-
         X <- X[,jj]
         y <- y[jj]
     }
+
+
+    dbg("[pgx.multiclassVariableImportance] 2: dim.X = ",dim(X))
     
     if("glmnet" %in% methods) {
         require(glmnet)
@@ -756,7 +764,7 @@ pgx.variableImportance <-
             if(length(ii)<NSIZE) ii <- sample(ii,NSIZE,replace=TRUE)
             return(ii)
         }))
-        cat("pgx.multiclassVariableImportance:: augmenting data from",
+        cat("pgx.variableImportance:: augmenting data from",
             length(y),"to",length(jj),"\n")
         X <- X[,jj]
         y <- y[jj]
