@@ -98,7 +98,7 @@ heatmapWithAnnot <- function(F, anno.type=c('boxplot','barplot'),
 
 repelwords <- function (x, y, words, cex = 1, rotate90 = FALSE,
                         xlim = c(-Inf, Inf), ylim = c(-Inf, Inf),
-                        tstep = 0.1, rstep = 0.1, maxiter=2000, ...) 
+                        tstep=0.1, rstep = 0.1, maxiter=2000, ...) 
 {
     ## From wordcloud::wordlayout
     tails <- "g|j|p|q|y"
@@ -115,10 +115,12 @@ repelwords <- function (x, y, words, cex = 1, rotate90 = FALSE,
     if (length(rotate90) == 1) 
         rotate90 <- rep(rotate90, n)
     boxes <- list()
+    ##theta <- runif(1, 0, 2*pi)
+    theta <- 0
     for (i in 1:length(words)) {
         rotWord <- rotate90[i]
         r <- 0
-        theta <- runif(1, 0, 2*pi)
+        ## theta <- runif(1, 0, 2*pi)
         ## message("[repelwords] theta0 = ",theta)
         x1 <- xo <- x[i]
         y1 <- yo <- y[i]
@@ -133,20 +135,20 @@ repelwords <- function (x, y, words, cex = 1, rotate90 = FALSE,
             ht <- wid
             wid <- tmp
         }
-        isOverlaped <- TRUE
+        isOverlapped <- TRUE
         iter=1
         ## maxiter=10000
-        while (isOverlaped && iter<maxiter) {
-            if (!wordcloud:::is_overlap(x1 - 0.5 * wid, y1 - 0.5 * ht, wid, 
-                                        ht, boxes) &&
+        while(isOverlapped && iter<maxiter) {
+            if(!wordcloud:::is_overlap(x1 - 0.5 * wid, y1 - 0.5 * ht, wid, 
+                                       ht, boxes) &&
                 x1 - 0.5 * wid > xlim[1] &&
-                y1 - 0.5 * ht > ylim[1] &&
+                y1 - 0.5 * ht > ylim[1]  &&
                 x1 + 0.5 * wid < xlim[2] &&
                 y1 + 0.5 * ht < ylim[2])
             {
                 boxes[[length(boxes) + 1]] <-
                     c(x1 - 0.5 * wid, y1 - 0.5 * ht, wid, ht)
-                isOverlaped <- FALSE
+                isOverlapped <- FALSE
             } else {
                 theta <- theta + tstep
                 r <- r + rstep * tstep / (2*pi)
@@ -2340,7 +2342,8 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
                                    xlab = NULL, ylab=NULL, xlim=NULL, ylim=NULL, dlim=0.05,
                                    hilight2=hilight, hilight.cex = NULL, lab.xpd=TRUE,
                                    hilight=NULL, hilight.col=NULL, hilight.lwd=0.8,
-                                   label.clusters=FALSE, cex.clust=1.5, rstep=0.1,
+                                   label.clusters=FALSE, cex.clust=1.5,
+                                   tstep=0.1, rstep=0.1,
                                    tooltip=NULL, theme=NULL, set.par=TRUE, 
                                    axt='s', xaxs=TRUE, yaxs=TRUE, 
                                    labels=NULL, label.type=NULL, opacity=1)    
@@ -2484,8 +2487,6 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
     if(type=="numeric") {
         ##if(NCOL(cvar)==1) cvar <- cbind(cvar=cvar)
         z <- var
-
-        dbg("[pgx.scatterPlotXY.BASE] range.z=",range(z,na.rm=TRUE))
         
         if(is.null(zlim)) {
             ## global zlim
@@ -2504,8 +2505,6 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         if(softmax) {
             z1 <- 0.5*(tanh(4*(z1-0.5))+1)
         }
-
-        dbg("[pgx.scatterPlotXY.BASE] zlim=",zlim)
         
         ##-------------- set colors
         ##cpal <- rev(viridis::viridis(11))
@@ -2589,7 +2588,7 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
                     ##nc <- wordcloud::wordlayout(df2$x, df2$y, df2$z, 
                     nc <- repelwords(df2$x, df2$y, df2$z, 
                                      xlim = xlim1, ylim = ylim1,
-                                     tstep = 0.1, rstep = rstep,
+                                     tstep = tstep, rstep = rstep,
                                      cex = cex.lab2)
                     nc <- Matrix::tail(nc,nrow(df))                    
                     lab.pos <- data.frame(x=nc[,1]+.5*nc[,3], y=nc[,2]+.5*nc[,4])
