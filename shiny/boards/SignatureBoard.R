@@ -128,11 +128,6 @@ infotext =
 
     ##------------------------ observe/reactive function  -----------------------------
 
-
-
-
-
-
     shiny::observeEvent(input$example1, { 
         shiny::updateTextAreaInput(session,"genelistUP", value=IMMCHECK.GENES)
     })

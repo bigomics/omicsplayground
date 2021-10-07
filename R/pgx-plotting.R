@@ -2573,7 +2573,6 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
             if(length(cex.lab)==1) cex.lab <- rep(cex.lab,nrow(pos))
             df <- data.frame(x=pos[jj,1], y=pos[jj,2], z=labels[jj], cex=cex.lab[jj])
             if(is.null(lab.pos)) {
-                dbg("[pgx.scatterPlotXY.BASE] 6: repelling labels using wordlayout...")
                 ## repelling text using wordcloud package
                 df2 <- rbind(df, df)
                 df2$z[1:nrow(df)] <- "x"
@@ -2583,8 +2582,8 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
                     ylim1 = ylim0
                 }
                 cex.lab2 <- c(rep(1,nrow(df)),df$cex)
-                
                 if(repel) {
+                    dbg("[pgx.scatterPlotXY.BASE] 6: repelling labels...")
                     ##nc <- wordcloud::wordlayout(df2$x, df2$y, df2$z, 
                     nc <- repelwords(df2$x, df2$y, df2$z, 
                                      xlim = xlim1, ylim = ylim1,
@@ -2593,11 +2592,12 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
                     nc <- Matrix::tail(nc,nrow(df))                    
                     lab.pos <- data.frame(x=nc[,1]+.5*nc[,3], y=nc[,2]+.5*nc[,4])
                 } else {
+                    ##dbg("[pgx.scatterPlotXY.BASE] 6: fixed labels...")
                     lab.pos <- data.frame(x=pos[jj,1], y=pos[jj,2])
                 }
                 rownames(lab.pos) <- rownames(pos)[jj]
             } else {
-                dbg("[pgx.scatterPlotXY.BASE] 6: using user labels positions...")                
+                dbg("[pgx.scatterPlotXY.BASE] 6: using user labels positions...")
                 lab.pos <- lab.pos[match(rownames(df),rownames(lab.pos)),]
             }
             segments(df$x, df$y, lab.pos$x, lab.pos$y, col='#222222AA', lwd=0.6)
