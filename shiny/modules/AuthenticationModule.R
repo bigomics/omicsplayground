@@ -82,7 +82,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
     )    
 
     firebase <- firebase::FirebaseUI$
-        new()$ # instantiate
+        new(persistence = "session")$ # instantiate
         set_providers( # define providers
             email_link = TRUE, 
             google = TRUE
@@ -101,6 +101,12 @@ FirebaseAuthenticationModule <- function(input, output, session)
         on.exit({
             firebase$launch()
         })
+
+        # no need to show the modal
+        # if the user is logged
+        # this is due to persistence
+        if(USER$logged)
+            return()
         
         shiny::tagList(
             shiny::showModal(
