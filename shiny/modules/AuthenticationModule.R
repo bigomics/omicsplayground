@@ -84,7 +84,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
     firebase <- firebase::FirebaseUI$
         new()$ # instantiate
         set_providers( # define providers
-            email = TRUE, 
+            email_link = TRUE, 
             google = TRUE
         )
 
