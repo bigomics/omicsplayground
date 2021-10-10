@@ -1148,7 +1148,7 @@ EnrichmentBoard <- function(input, output, session, env)
             gset1 = breakstring(substring(gset,1,80),32)
                                         #tt = paste( breakstring(gset,40,80), "\nvs.", gene,"expression")
             tt = paste( breakstring(gset,40,80), " vs. ", gene)
-            KEGGgraph::plot( gx, sx, col=klr, main=tt,
+            base::plot( gx, sx, col=klr, main=tt,
                  ylab = "gene set enrichment",
                  xlab = paste(gene,"expression"),
                  cex.lab=1, pch=19, cex=1.0*cex1, cex.main=0.85)

@@ -98,7 +98,7 @@ heatmapWithAnnot <- function(F, anno.type=c('boxplot','barplot'),
 
 repelwords <- function (x, y, words, cex = 1, rotate90 = FALSE,
                         xlim = c(-Inf, Inf), ylim = c(-Inf, Inf),
-                        tstep = 0.1, rstep = 0.1, maxiter=2000, ...) 
+                        tstep=0.1, rstep = 0.1, maxiter=2000, ...) 
 {
     ## From wordcloud::wordlayout
     tails <- "g|j|p|q|y"
@@ -115,10 +115,12 @@ repelwords <- function (x, y, words, cex = 1, rotate90 = FALSE,
     if (length(rotate90) == 1) 
         rotate90 <- rep(rotate90, n)
     boxes <- list()
+    ##theta <- runif(1, 0, 2*pi)
+    theta <- 0
     for (i in 1:length(words)) {
         rotWord <- rotate90[i]
         r <- 0
-        theta <- runif(1, 0, 2*pi)
+        ## theta <- runif(1, 0, 2*pi)
         ## message("[repelwords] theta0 = ",theta)
         x1 <- xo <- x[i]
         y1 <- yo <- y[i]
@@ -133,20 +135,20 @@ repelwords <- function (x, y, words, cex = 1, rotate90 = FALSE,
             ht <- wid
             wid <- tmp
         }
-        isOverlaped <- TRUE
+        isOverlapped <- TRUE
         iter=1
         ## maxiter=10000
-        while (isOverlaped && iter<maxiter) {
-            if (!wordcloud:::is_overlap(x1 - 0.5 * wid, y1 - 0.5 * ht, wid, 
-                                        ht, boxes) &&
+        while(isOverlapped && iter<maxiter) {
+            if(!wordcloud:::is_overlap(x1 - 0.5 * wid, y1 - 0.5 * ht, wid, 
+                                       ht, boxes) &&
                 x1 - 0.5 * wid > xlim[1] &&
-                y1 - 0.5 * ht > ylim[1] &&
+                y1 - 0.5 * ht > ylim[1]  &&
                 x1 + 0.5 * wid < xlim[2] &&
                 y1 + 0.5 * ht < ylim[2])
             {
                 boxes[[length(boxes) + 1]] <-
                     c(x1 - 0.5 * wid, y1 - 0.5 * ht, wid, ht)
-                isOverlaped <- FALSE
+                isOverlapped <- FALSE
             } else {
                 theta <- theta + tstep
                 r <- r + rstep * tstep / (2*pi)
@@ -156,7 +158,7 @@ repelwords <- function (x, y, words, cex = 1, rotate90 = FALSE,
             }
             iter <- iter + 1
         }
-        if(iter==maxiter) {
+        if(isOverlapped && iter==maxiter) {
             message("[repelwords] warning maximum iterations reached: iter = ",iter)
             boxes[[length(boxes) + 1]] <-
                 c(x1 - 0.5 * wid, y1 - 0.5 * ht, wid, ht)
@@ -165,6 +167,10 @@ repelwords <- function (x, y, words, cex = 1, rotate90 = FALSE,
         }
     }
     result <- do.call(rbind, boxes)
+
+    message("[repelwords] nrow(results) = ",nrow(result))
+    message("[repelwords] length(words) = ",length(words))
+    
     colnames(result) <- c("x", "y", "width", "ht")
     rownames(result) <- words
     result
@@ -2340,7 +2346,8 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
                                    xlab = NULL, ylab=NULL, xlim=NULL, ylim=NULL, dlim=0.05,
                                    hilight2=hilight, hilight.cex = NULL, lab.xpd=TRUE,
                                    hilight=NULL, hilight.col=NULL, hilight.lwd=0.8,
-                                   label.clusters=FALSE, cex.clust=1.5, rstep=0.1,
+                                   label.clusters=FALSE, cex.clust=1.5,
+                                   tstep=0.1, rstep=0.1,
                                    tooltip=NULL, theme=NULL, set.par=TRUE, 
                                    axt='s', xaxs=TRUE, yaxs=TRUE, 
                                    labels=NULL, label.type=NULL, opacity=1)    
@@ -2445,6 +2452,7 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         }
 
         jj <- order(-table(pt.col)[pt.col]) ## plot less frequent points last...            
+        if(length(cex)>1) cex <- cex[jj]
         plot(pos[jj,,drop=FALSE],
              col = pt.col[jj], pch=20, cex=cex,
              xlim = xlim0, ylim = ylim0,
@@ -2483,25 +2491,25 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
     if(type=="numeric") {
         ##if(NCOL(cvar)==1) cvar <- cbind(cvar=cvar)
         z <- var
-
+        
         if(is.null(zlim)) {
             ## global zlim
-            qq <- quantile(z,probs=c(0.01,0.99),na.rm=TRUE)
-            qq <- quantile(z,probs=c(0.002,0.998),na.rm=TRUE)        
-            qq
-            zlim = qq
-            ## zlim = NULL
+            zlim <- range(z, na.rm=TRUE)
+            ##zlim <- quantile(z,probs=c(0.01,0.99),na.rm=TRUE)
+            ##zlim <- quantile(z,probs=c(0.002,0.998),na.rm=TRUE)        
         }
-
+        
         if(zsym) {
-            zlim <- c(-1,1)*max(abs(zlim))
+            zlim <- c(-1,1)*max(abs(zlim),na.rm=TRUE)
         }
         
         ## z1 is normalized [0;1] for coloring        
         z1 <- (z - min(zlim)) / diff(zlim)
         z1 <- pmin(pmax(z1,0),1) ## clip
-        if(softmax) z1 <- 0.5*(tanh(4*(z1-0.5))+1)
-
+        if(softmax) {
+            z1 <- 0.5*(tanh(4*(z1-0.5))+1)
+        }
+        
         ##-------------- set colors
         ##cpal <- rev(viridis::viridis(11))
         cpal <- colorspace::diverge_hcl(64, c=60, l=c(30,100), power=1)
@@ -2509,7 +2517,7 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         cpal <- colorRampPalette(c("#3136B5","#FFFFDF","#B50026"))(64)                        
         cpal <- sapply(1:length(cpal),function(i) add_opacity(cpal[i],0.2+0.8*abs(i-32.5)/32))        
         ##cpal <- rev(RColorBrewer::brewer.pal(11,"RdYlBu"))
-        pt.col <- cpal[ceiling(z1*length(cpal))]
+        pt.col <- cpal[1+ceiling(z1*(length(cpal)-1))]
         ##pt.col <- viridis::viridis(16)[1+round(15*z1)]
         ##pt.col <- matlab.like(21)[1+round(20*z1)]        
         pt.col0 = pt.col
@@ -2517,10 +2525,14 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
             pt.col <- add_opacity(pt.col, opacity)
             cpal <- add_opacity(cpal, opacity**0.33)                
         }        
-        pt.col[is.na(pt.col)] <- "#DDDDDD33"
-        
+        pt.col[is.na(pt.col)] <- "#DDDDDD33"  ## missing values color
+
+        jj <- 1:nrow(pos)
         jj <- order(abs(z),na.last=FALSE) ## higher values last??        
-        plot(pos[jj,], col=pt.col[jj], pch=20, cex=cex,
+        if(length(cex)>1) cex <- cex[jj]
+        plot(pos[jj,],
+             col=pt.col[jj],
+             pch=20, cex=cex,
              xlim = xlim0, ylim=ylim0, 
              xlab = xlab, ylab = ylab,
              ##xaxt=axt, yaxt=axt,
@@ -2552,8 +2564,10 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
         if(length(jj)) {
             hcol1 = hilight.col
             if(is.null(hcol1)) hcol1 <- pt.col0[jj]
-            points(pos[jj,,drop=FALSE], pch=20, col=hcol1, cex=1.05*hilight.cex)
-            points(pos[jj,,drop=FALSE], pch=1, lwd=hilight.lwd, cex=0.85*hilight.cex)
+            hcex <- hilight.cex
+            if(length(hcex)>1) hcex <- hcex[jj]
+            points(pos[jj,,drop=FALSE], pch=20, col=hcol1, cex=1.05*hcex)
+            points(pos[jj,,drop=FALSE], pch=1, lwd=hilight.lwd, cex=0.85*hcex)
         }
     }
 
@@ -2563,7 +2577,6 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
             if(length(cex.lab)==1) cex.lab <- rep(cex.lab,nrow(pos))
             df <- data.frame(x=pos[jj,1], y=pos[jj,2], z=labels[jj], cex=cex.lab[jj])
             if(is.null(lab.pos)) {
-                dbg("[pgx.scatterPlotXY.BASE] 6: repelling labels using wordlayout...")
                 ## repelling text using wordcloud package
                 df2 <- rbind(df, df)
                 df2$z[1:nrow(df)] <- "x"
@@ -2573,21 +2586,22 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
                     ylim1 = ylim0
                 }
                 cex.lab2 <- c(rep(1,nrow(df)),df$cex)
-                
                 if(repel) {
+                    dbg("[pgx.scatterPlotXY.BASE] 6: repelling labels...")
                     ##nc <- wordcloud::wordlayout(df2$x, df2$y, df2$z, 
                     nc <- repelwords(df2$x, df2$y, df2$z, 
                                      xlim = xlim1, ylim = ylim1,
-                                     tstep = 0.1, rstep = rstep,
+                                     tstep = tstep, rstep = rstep,
                                      cex = cex.lab2)
                     nc <- Matrix::tail(nc,nrow(df))                    
                     lab.pos <- data.frame(x=nc[,1]+.5*nc[,3], y=nc[,2]+.5*nc[,4])
                 } else {
+                    ##dbg("[pgx.scatterPlotXY.BASE] 6: fixed labels...")
                     lab.pos <- data.frame(x=pos[jj,1], y=pos[jj,2])
                 }
                 rownames(lab.pos) <- rownames(pos)[jj]
             } else {
-                dbg("[pgx.scatterPlotXY.BASE] 6: using user labels positions...")                
+                dbg("[pgx.scatterPlotXY.BASE] 6: using user labels positions...")
                 lab.pos <- lab.pos[match(rownames(df),rownames(lab.pos)),]
             }
             segments(df$x, df$y, lab.pos$x, lab.pos$y, col='#222222AA', lwd=0.6)

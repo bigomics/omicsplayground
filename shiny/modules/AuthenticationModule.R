@@ -763,7 +763,7 @@ EmailAuthenticationModule.SAVE <- function(input, output, session,
         aa <- rep(0,length(dd))
         par(mar=c(0,0,0,0))
         empty <- function(i) {
-            KEGGgraph::plot(0,0,pch="",xlim=c(-0.1,0.95),ylim=c(0,1),bty="n",axes=FALSE)
+            base::plot(0,0,pch="",xlim=c(-0.1,0.95),ylim=c(0,1),bty="n",axes=FALSE)
             if(i>1) for(i in 1:(i-1)) graphics::text(xx[i],0.5,dd[i],srt=aa[i],cex=4)
         }
         for(i in 1:length(dd)) {
