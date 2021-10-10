@@ -353,7 +353,7 @@ immune cell types, expressed genes and pathway activation."
                 klr0 = klrpal[gx]
                 ii <- order(gx)
                 ## ii <- sample(nrow(pos))
-                KEGGgraph::plot( pos[ii,], pch=19, cex=1*cex1, col=klr0[ii],
+                base::plot( pos[ii,], pch=19, cex=1*cex1, col=klr0[ii],
                      xlim=1.2*range(pos[,1]), ylim=1.2*range(pos[,2]),
                      fg = gray(0.8), bty = "o", xaxt='n', yaxt='n',
                      xlab="", ylab="")
@@ -463,7 +463,7 @@ immune cell types, expressed genes and pathway activation."
 
             jj = which(is.na(klr0))
             if(length(jj)) klr0[jj] <- "#AAAAAA22"
-            KEGGgraph::plot( pos, pch=19, cex=cex1, col=klr0,fg = gray(0.5), bty = "o",
+            base::plot( pos, pch=19, cex=cex1, col=klr0,fg = gray(0.5), bty = "o",
                  xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
 
             if(!is.num(y)) {
@@ -1121,7 +1121,7 @@ immune cell types, expressed genes and pathway activation."
 
             ii <- order(colvar)
             ##ii <- sample(nrow(pos))
-            KEGGgraph::plot( pos[ii,], pch=19, cex=cex1, col=klr0[ii],
+            base::plot( pos[ii,], pch=19, cex=cex1, col=klr0[ii],
                  xlim=1.1*range(pos[,1]), ylim=1.1*range(pos[,2]),
                  fg = gray(0.8), bty = "o",
                  xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")

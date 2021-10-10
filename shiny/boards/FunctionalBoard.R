@@ -1017,7 +1017,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         ii <- order(abs(dx))
         par(mfrow=c(2,1), mar=c(0,3.5,2,2), mgp=c(2.1,0.8,0))
         dy <- 0.02*diff(range(yy0))
-        KEGGgraph::plot( xx0[ii], yy0[ii] + dy, col=klr[ii],
+        base::plot( xx0[ii], yy0[ii] + dy, col=klr[ii],
              xaxs="i", xlim=c(-2, max(xx0)+3), 
              xaxt="n", xlab="", ylab="expression (log2.CPM)", 
              pch=19, cex=1.66*abs(dx)[ii], ylim=c(-4,max(yy0)*1.05) )

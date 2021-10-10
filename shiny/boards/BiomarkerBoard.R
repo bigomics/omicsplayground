@@ -141,7 +141,8 @@ be multiple categories (classes) or patient survival data."
             ft <- ft[nn >= 10]
         } else {
             ## gene level
-            ft <- pgx.getFamilies(ngs,nmin=10,extended=FALSE)
+            ##ft <- pgx.getFamilies(ngs,nmin=10,extended=FALSE)
+            ft <- names(ngs$families)
         }
         ft <- sort(ft)
         ##if(input$pdx_level == "gene") ft = sort(c("<custom>",ft))
@@ -155,20 +156,23 @@ be multiple categories (classes) or patient survival data."
         ##
         
         ## input$pdx_runbutton
-        dbg("[BiomarkerBoard::calcVariableImportance] reacted on runbutton")
+        dbg("[calcVariableImportance] reacted on runbutton")
         
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
         shiny::req(ngs, input$pdx_predicted)
+
+        dbg("[calcVariableImportance] 0: ")
         
         ct=2
         ct=12
         colnames(ngs$Y)    
-        shiny::isolate(ct <- input$pdx_predicted)
-        
+        shiny::isolate(ct <- input$pdx_predicted)        
         do.survival <- grepl("survival",ct,ignore.case=TRUE)
         if(is.null(ct)) return(NULL)
 
+        dbg("[calcVariableImportance] 1: called!")
+        
         NFEATURES=50
         NFEATURES=60
 
@@ -200,6 +204,8 @@ be multiple categories (classes) or patient survival data."
         dim(X)
         X0 <- X
         length(y)
+
+        dbg("[calcVariableImportance] 1: dim.X = ",dim(X))
         
         ## ----------- filter with selected features
         progress$inc(1/10, detail = "Filtering features")
@@ -207,36 +213,40 @@ be multiple categories (classes) or patient survival data."
         ft="<all>"
         ft <- shiny::isolate(input$pdx_filter)
         if(is.null(ft)) return(NULL)
-        
-        pp <- rownames(X)
-        if(FALSE && shiny::isolate(input$pdx_level=="geneset")) {
-            if(!(ft %in% names(COLLECTIONS))) return(NULL)
-            pp <- COLLECTIONS[[ft]]
-        } else {
-            xfam <- c(names(ngs$families),names(iGSETS))
-            if(!ft %in% xfam) return(NULL)
-            gg <- NULL
-            if(ft %in% names(ngs$families)) {
-                gg <- ngs$families[[ft]]
-            } else if(ft %in% names(iGSETS)) {
-                gg <- getGSETS(ft)
-            }
-            pp = filterProbes(ngs$genes, gg)
-        }
-        pp <- intersect(pp,rownames(X))
-        X <- X[pp,,drop=FALSE]
-        dim(X)
-        
-        ## ------------- filter with user selection
-        ##sel <- input$pdx_select
         shiny::isolate(sel <- input_pdx_select())
+
+        dbg("[calcVariableImportance] 1: len.sel = ",length(sel))
+        dbg("[calcVariableImportance] 1: ft = ",ft)
+
+        is.family <- ft %in% c(names(ngs$families),names(iGSETS))
+        
         if(ft=='<custom>' && !is.null(sel) && length(sel)>0) {
+            ## ------------- filter with user selection
+            dbg("[calcVariableImportance] 2: sel1 = ",sel[1])                            
             if(sel[1]!="") {
+                dbg("[calcVariableImportance] 2: using custom list of variable ")                
                 ##pp <- intersect(rownames(X),sel)
-                pp <- rownames(X)[(toupper(rownames(X)) %in% toupper(sel))]
+                pp <- rownames(X)[which(toupper(rownames(X)) %in% toupper(sel))]
                 X <- X[pp,,drop=FALSE]
             }
+        } else if(is.family) {
+            pp <- rownames(X)
+            if(ft %in% names(ngs$families)) {
+                dbg("[calcVariableImportance] 2: using ngs$families")
+                gg <- ngs$families[[ft]]
+                pp <- filterProbes(ngs$genes, gg)
+            } else if(ft %in% names(iGSETS)) {
+                dbg("[calcVariableImportance] 2: using genesets")                    
+                gg <- getGSETS(ft)
+                pp <- filterProbes(ngs$genes, gg)                
+            }
+            pp <- intersect(pp,rownames(X))
+            X <- X[pp,,drop=FALSE]
+        } else {
+            dbg("[calcVariableImportance] 2: using all features")            
         }
+
+        dbg("[calcVariableImportance] 3: dim.X = ",dim(X))                
         
         ## ----------- restrict to top 100
         dim(X)
@@ -244,6 +254,8 @@ be multiple categories (classes) or patient survival data."
         sdx <- mean(apply(X,1,sd))
         X <- X + 0.25*sdx*matrix(rnorm(length(X)),nrow(X),ncol(X))  ## add some noise
         dim(X)
+
+        dbg("[calcVariableImportance] 4: dim.X = ",dim(X))
         
         progress$inc(4/10, detail = "computing scores")
         
@@ -371,7 +383,7 @@ be multiple categories (classes) or patient survival data."
         }
         table(rf$where) 
         
-        dbg("calcVariableImportance:: *** done!!! ***\n")
+        dbg("[calcVariableImportance] done!!!\n")
         progress$inc(2/10, detail = "done")
 
         ##y <- y[rownames(ngs$samples)]
@@ -380,6 +392,7 @@ be multiple categories (classes) or patient survival data."
         colnames(tx) <- orig.names[colnames(tx)]
         ##res <- list(P=P, R=R, y=y, X=t(tx), rf=rf)
         res <- list(R=R, y=y, X=t(tx), rf=rf)
+
         return(res)
     })
 
@@ -438,14 +451,16 @@ be multiple categories (classes) or patient survival data."
         dbg("[BiomarkerBoard::pdx_heatmap] called\n")
         
         res <- calcVariableImportance()
+
+        dbg("[BiomarkerBoard::pdx_heatmap] is.null(res) = ", is.null(res) )
+        
         if(is.null(res)) {
-            shinyWidgets::sendSweetAlert(session=session, title = NULL,
-                           text="Please select a target variable to predict, then hit compute.")
+            ##shinyWidgets::sendSweetAlert( session=session, title = NULL,
+            ##                             text="Please select a target variable to predict, then hit compute.")
             return(NULL)
         }
 
-        cat("<predict:pdx_heatmap> called\n")
-        
+        cat("<predict:pdx_heatmap> called\n")        
         gg <- NULL
         if(FALSE && shiny::isolate(input$pdx_level=="geneset")) {
             gg <- rownames(res$X)
@@ -501,18 +516,14 @@ be multiple categories (classes) or patient survival data."
         res <- calcVariableImportance()
         if(is.null(res)) return(NULL)
 
-
-
         par(mfrow=c(1,1), mar=c(1,0,2,0))
-
         is.surv <- grepl("Surv",res$rf$call)[2]
         is.surv
         if(is.surv) {
 
-
             (rf <- partykit::as.party(res$rf))
             ##(rf <- partykit::as.party(rpart::prune(res$rf, cp=0.05)))
-            KEGGgraph::plot(rf)
+            partykit::plot.party(rf)
             ##title("Survival tree",cex=1.2,line=0.9,adj=0.35)
             ##table(res$rf$where)
         } else {
@@ -520,7 +531,7 @@ be multiple categories (classes) or patient survival data."
             ##plotOutput("pdx_decisiontreeClass")
 
             if(1) {
-                rpart.plot(res$rf)
+                rpart.plot::rpart.plot(res$rf)
                 title("Classification tree",cex=1.2,line=3,adj=0.35)
             } else {
                 visNetwork::visTree(res$rf, main="Classification tree",width="100%",legend=FALSE) %>%

@@ -730,7 +730,7 @@ ConnectivityBoard <- function(input, output, session, env)
             ##ct1x <- substring(sub("[:]",":\n",ct1),1,50)
             nna <- (is.na(fc) | is.na(F0[,ct1]))
             col <- c("grey15","grey70")[1 + nna]            
-            KEGGgraph::plot( F[,ct1], fc, pch=20, cex=0.5,
+            base::plot( F[,ct1], fc, pch=20, cex=0.5,
                  cex.lab=0.9, cex.axis=0.9,
                  xlab = ct1x, ylab = "", col=col)
             abline(v=0, h=0, lty=2, lwd=0.5)

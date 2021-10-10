@@ -529,7 +529,7 @@ CorrelationBoard <- function(input, output, session, env)
                 ylab = gene2
                 xlab = this.gene
             }
-            KEGGgraph::plot(x, y, pch=19, cex=cex, col = klr,
+            base::plot(x, y, pch=19, cex=cex, col = klr,
                  ylab=ylab, xlab=xlab)
             
             y <- y + 1e-3*rnorm(length(y))
@@ -766,7 +766,7 @@ CorrelationBoard <- function(input, output, session, env)
     cor_graph.PLOTFUN %<a-% shiny::reactive({
         gr <- getCorGraph()
         par(mar=c(1,1,1,1)*0)
-        KEGGgraph::plot(gr,
+        igraph::plot.igraph(gr,
              ##layout = L1,
              ##vertex.label.cex = label.cex,
              ##vertex.size = 12,
@@ -1426,10 +1426,10 @@ CorrelationBoard <- function(input, output, session, env)
         
         ##par(mfrow=c(2,2), mar=c(4,4,2,2), oma=c(0,0,0,0))
         par(mgp=c(1.6,0.6,0))
-        KEGGgraph::plot(x1, y1, col=col1[1], pch=19, cex=cex,
-             xlim=range(c(x1,x2)), ylim=range(c(y1,y2)),
-             ##main = 'differential correlation',
-             xlab=gene1, ylab=gene2)
+        base::plot(x1, y1, col=col1[1], pch=19, cex=cex,
+                   xlim=range(c(x1,x2)), ylim=range(c(y1,y2)),
+                   ##main = 'differential correlation',
+                   xlab=gene1, ylab=gene2)
 
         y1 <- y1 + 1e-3*rnorm(length(y1))
         x1 <- x1 + 1e-3*rnorm(length(x1))            
