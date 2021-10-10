@@ -158,7 +158,7 @@ repelwords <- function (x, y, words, cex = 1, rotate90 = FALSE,
             }
             iter <- iter + 1
         }
-        if(iter==maxiter) {
+        if(isOverlapped && iter==maxiter) {
             message("[repelwords] warning maximum iterations reached: iter = ",iter)
             boxes[[length(boxes) + 1]] <-
                 c(x1 - 0.5 * wid, y1 - 0.5 * ht, wid, ht)
@@ -167,6 +167,10 @@ repelwords <- function (x, y, words, cex = 1, rotate90 = FALSE,
         }
     }
     result <- do.call(rbind, boxes)
+
+    message("[repelwords] nrow(results) = ",nrow(result))
+    message("[repelwords] length(words) = ",length(words))
+    
     colnames(result) <- c("x", "y", "width", "ht")
     rownames(result) <- words
     result

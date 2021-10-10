@@ -26,7 +26,7 @@ install.pkg <- function(pkg, force=FALSE) {
             cat("installing",pkg,"from CRAN/BioConductor...\n")
             try(BiocManager::install(pkg, dependencies=NA,
                                      ask=FALSE, update=FALSE))
-            if(! !require(pkg, character.only=TRUE)){
+            if(!require(pkg, character.only=TRUE)){
                 cat("retrying to install",pkg,"from CRAN...\n")
                 try(install.packages(pkg, dependencies=NA,
                                      ask=FALSE, update=FALSE))
