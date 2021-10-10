@@ -200,12 +200,6 @@ server = function(input, output, session) {
     message("[SERVER] USER_MODE = ", USER_MODE)
     server.start_time <- Sys.time()
     
-    firebase=firebase2=NULL
-    if(AUTHENTICATION=="firebase") {
-        firebase  <- FirebaseEmailPassword$new()
-        firebase2 <- FirebaseSocial$new()
-    }
-    
     limits <- c("samples" = opt$MAX_SAMPLES,
                 "comparisons" = opt$MAX_COMPARISONS,
                 "genes" = opt$MAX_GENES,
@@ -215,7 +209,7 @@ server = function(input, output, session) {
     env[["load"]]  <- shiny::callModule(
         LoadingBoard, "load", limits = limits,
         authentication = AUTHENTICATION, enable_delete = opt$ENABLE_DELETE,
-        enable_save = opt$ENABLE_SAVE, firebase=firebase, firebase2=firebase2)   
+        enable_save = opt$ENABLE_SAVE)   
     
     already_loaded <- FALSE
     observeEvent(env[["load"]]$loaded(), {
@@ -396,15 +390,18 @@ createUI <- function(tabs)
     id = "maintabs"
     ##selected = "Home"    
     header = shiny::tagList(
-                        shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
-                        shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
-                        shinyjs::useShinyjs(),
-                        firebase::useFirebase(),
-                        TAGS.JSSCRIPT,
-                        shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
-                        shiny::div(shiny::textOutput("current_dataset"),class='current-data')
-                        ##QuestionBoard_UI("qa")
-                    )
+        shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
+        shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
+        shinyjs::useShinyjs(),
+        firebase::useFirebase(),
+        TAGS.JSSCRIPT,
+        shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
+        shiny::div(
+            shiny::textOutput("current_dataset"),
+            class='current-data'
+        )
+        ##QuestionBoard_UI("qa")
+    )
     names(header) <- NULL
     
     footer.gif = shiny::tagList(
