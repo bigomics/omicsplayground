@@ -80,7 +80,7 @@ if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
 
 ## over-ride options (for DEBUGGING)
-## opt$AUTHENTICATION = "none"
+##opt$AUTHENTICATION = "none"
 ##opt$AUTHENTICATION = "password"
 ##opt$AUTHENTICATION = "register"
 ##opt$AUTHENTICATION = "firebase"
@@ -224,9 +224,9 @@ server = function(input, output, session) {
         if(already_loaded) {
             return()
         }
-
+        
         already_loaded <<- TRUE
-
+        
         ## load other modules if
         message("[SERVER] --------- calling shiny modules ----------")
         if(ENABLED["view"])   env[["view"]]   <- shiny::callModule( DataViewBoard, "view", env)

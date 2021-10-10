@@ -488,7 +488,7 @@ input[type="checkbox"], input[type="radio"] {
 
 #splash-title {
     position: absolute;
-    top: 70px;
+    top: 40px;
     left: 5%;
     width: 90%;
     font-family: Lato;
@@ -608,6 +608,6 @@ input[type="checkbox"], input[type="radio"] {
 }
 
 .firebaseui-link{
-    color: white;
-    text-decoration: underline;
+    color: white  !important;
+    text-decoration: underline  !important;
 }
