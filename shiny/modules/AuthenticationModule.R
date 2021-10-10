@@ -68,185 +68,71 @@ NoAuthenticationModule <- function(input, output, session, username=NULL)
 ## FirebaseAuthenticationModule
 ##================================================================================
 
-FirebaseAuthenticationModule <- function(input, output, session,
-                                         firebase=NULL, firebase2=NULL)
+FirebaseAuthenticationModule <- function(input, output, session)
 {
     message("[NoAuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
 
     ns <- session$ns    
-    USER <- shiny::reactiveValues(logged=FALSE, name=NA, password=NA, email=NA, level=NA)    
-    ##credentials <- read.csv(credentials.file,colClasses="character")
-    ##head(credentials)
-    
+    USER <- shiny::reactiveValues(
+        logged=FALSE, 
+        name=NA, 
+        password=NA, 
+        email=NA, 
+        level=NA
+    )    
 
-    if(is.null(firebase)) {
-        ## NEED CHECK!!! THIS SEEMS NOT WORKING
-        firebase <- FirebaseEmailPassword$new()
-    }
-    if(is.null(firebase2)) {
-        ## NEED CHECK!!! THIS SEEMS NOT WORKING
-        firebase2 <- FirebaseSocial$new()
-    }
+    firebase <- firebase::FirebaseUI$
+        new(persistence = "session")$ # instantiate
+        set_providers( # define providers
+            email_link = TRUE, 
+            google = TRUE
+        )
 
-    if(!file.exists("firebase.rds")) {
-        stop("ERROR: Please install Firebase API.KEY and PROJECT.ID using firebase::firebase_config() ")
-    }
-    
     output$showLogin <- shiny::renderUI({
 
-        forgot.link <- shiny::actionLink(ns("forgot"),"Forgot password?",
-                                  style='font-size:13px; color: white;')
-        
         m <- splashLoginModal(
             ns = ns,
             with.email = TRUE,
             with.username = FALSE,
             with.password = TRUE,
-            with.register = TRUE,
-            alt = forgot.link
+            with.register = TRUE
         )
+
+        on.exit({
+            firebase$launch()
+        })
+
+        # no need to show the modal
+        # if the user is logged
+        # this is due to persistence
+        if(USER$logged)
+            return()
         
         shiny::tagList(
-            firebase::useFirebase(),
-            ##useFirebaseUI(),
-            shiny::showModal(m)
+            shiny::showModal(
+                m
+            )
         )
     })
-
-    output$login_warning = shiny::renderText("")
-
-    shiny::observeEvent( input$login_btn, {           
-
-        cat("name     =",input$login_username,"\n")
-        cat("email    =",input$login_email,"\n")
-        cat("password =",input$login_password,"\n")
-        cat("Logged   =",USER$logged,"\n")
-        
-        ok1 <- (!is.null(input$login_email) && !is.null(input$login_password))
-        ok2 <- (input$login_email!="" && input$login_password!="")
-        if(!ok1 || !ok2) {
-            cat("[FirebaseEmailPasswordModule::login_btn] Invalid email or password!\n")
-            return(NULL)    
-        }
-        
-        ## SIGNIN USING FIREBASE
-        cat("Signing-in into FireBase server...\n")
-        firebase$sign_in(input$login_email, input$login_password)
-
-        ## WAIT FOR SIGNING
-        ##cat("Waiting for FireBase confirmation...\n")
-        ## firebase$req_sign_in()
-    })
-
-    shiny::observeEvent( input$register_btn, {           
-
-        cat("name     =",input$login_username,"\n")
-        cat("email    =",input$login_email,"\n")
-        cat("password =",input$login_password,"\n")
-        cat("Logged   =",USER$logged,"\n")
-        
-        ok1 <- (!is.null(input$login_email) && !is.null(input$login_password))
-        ok2 <- (input$login_email!="" && input$login_password!="")
-        if(!ok1 || !ok2) {
-            cat("[FirebaseEmailPasswordModule::register_btn] Invalid email or password!\n")
-            return(NULL)    
-        }
-        username <- input$login_username
-
-        ## SIGNIN USING FIREBASE
-        cat("Registering on FireBase server...\n")        
-        firebase$create(input$login_email, input$login_password)
-
-        ## WAIT FOR SIGNING
-        ##cat("Waiting for FireBase confirmation...\n")
-        ## firebase$req_sign_in()
-    })
-
-    shiny::observeEvent( input$forgot, {           
-
-        cat("name     =",input$login_username,"\n")
-        cat("email    =",input$login_email,"\n")
-        cat("password =",input$login_password,"\n")
-        cat("Logged   =",USER$logged,"\n")
-        
-        ok <- (!is.null(input$login_email) && input$login_email!="")
-        if(!ok) {
-            cat("[FirebaseEmailPasswordModule::forgot] Invalid email!\n")
-            return(NULL)    
-        }
-
-        ## SIGNIN USING FIREBASE
-        cat("Reset password on FireBase server...\n")        
-        firebase$reset_password(input$login_email)
-
-        ## WAIT FOR SIGNING
-        ##cat("Waiting for FireBase confirmation...\n")
-        ## firebase$req_sign_in()
-    })
     
-    ## check if creation sucessful
-    shiny::observeEvent(firebase$get_created(), {
-        created <- firebase$get_created()        
-        msg <- created$response$message
-        if(created$success){
-            shiny::showNotification("Account created!", type = "message")
-        } else {
-            shiny::showNotification(paste("Error!",msg), type = "error")
-        }
-        ## print results to the console
-        print(created)
-    })
+    observeEvent(firebase$get_signed_in(), {
+        response <- firebase$get_signed_in()
 
-    shiny::observeEvent(firebase$get_reset(), {
-        reset <- firebase$get_reset()        
-        print(reset)
+        if(!response$success)
+            return()
 
-        if(reset$success){
-            shiny::showNotification("Password reset!", type = "message")
-        } else {
-            shiny::showNotification(paste("Error!",msg), type = "error")
-        }
-    })
-    
-    shiny::observeEvent( firebase$get_signed_in(), {
-
-        ## do somethind
-        signed <- firebase$get_signed_in()
-        cat("names(signed) = ",names(signed),"\n")
-        cat("names(signed$success) = ",names(signed$success),"\n")
-        cat("names(signed$response) = ",names(signed$response),"\n")
-        user  <- signed$user$displayName
-        email <- signed$user$email
-        cat("signed_in = ",signed$signed_in,"\n")
-        cat("user = ",user,"\n")
-        cat("email = ",email,"\n")
-
-        if(signed$success) {
-            cat("Sign in successfull\n")        
-            output$login_warning = shiny::renderText("")
-            shiny::removeModal()
-            USER$name  <- signed$response$displayName
-            USER$email <- signed$response$email
-            ## Here you can perform some user-specific functions, or site news
-            shiny::showModal(splashHelloModal(USER$name,ns=ns))
-            ##removeModal()
-            USER$logged <- TRUE            
-        } else {
-            cat("Warning: could not sign in\n")                    
-            output$login_warning = shiny::renderText("could not sign-in")
-            ##shinyjs::delay(2000, shinyjs::hide("login_warning", anim = TRUE, animType = "fade"))
-            shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
-            USER$logged <- FALSE
-        }
-        ##hide("login_warning")
-        print(signed)
+        on.exit({
+            removeModal()
+        })
         
-    })    
+        USER$logged <- TRUE
+        USER$name <- response$response$displayName
+        USER$email <- response$response$email
+    })
     
     rt <- list(
         name   = shiny::reactive(USER$name),
         level  = shiny::reactive(USER$level),
-        ## email  = shiny::reactive(USER$email),
         logged = shiny::reactive(USER$logged),
         limit = shiny::reactive(USER$limit)
     )
@@ -1272,57 +1158,9 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
         shiny::div(shiny::HTML(title[2]),style="font-size:28px;"),
         shiny::br(),br(),br()
     )
-
-    div.password <- shiny::div()
-    div.email <- shiny::div()
-    div.username <- shiny::div()
-    if(with.email) {
-        div.email <- shiny::div(
-            id="splash-email",
-            shiny::textInput(ns("login_email"),NULL,placeholder="login with your email")
-        )
-    }
-    if(with.username) {
-        div.email <- shiny::div(
-            id="splash-username",
-            shiny::textInput(ns("login_username"),NULL,placeholder="login with your username")
-        )
-    }
-    if(with.password) {
-        div.password <- shiny::div(
-            id="splash-password",
-            shiny::passwordInput(ns("login_password"),NULL,placeholder="enter your password")
-        )
-    }
-    div.alt <- shiny::div()
-    if(!is.null(alt)) div.alt <- alt
-    top <- shiny::HTML(rep("<br>",sum(c(!with.email,!with.username,!with.password))))
-
-    div.button <- shiny::div(
-        id="splash-buttons",
-        shiny::actionButton(ns("login_btn"),login.text,class="red-button")
-    )
-    if(with.register) {
-        div.button <- shiny::div(
-            id="splash-buttons",
-            shiny::actionButton(ns("login_btn"),login.text,class="red-button"),
-            shiny::actionButton(ns("register_btn"),"Register",class="red-button")
-        )
-    }
     
-    ##splash.panel=div();ns=function(x)x
-    splash.panel <- shiny::div(
-        shiny::br(),br(),top,
-        div.username,
-        div.email,
-        div.password,
-        div.alt,
-        shiny::br(),
-        div.button
-    )
     body <- shiny::tagList(
-        shiny::div(id="splash-title",splash.title),
-        shiny::div(id="splash-panel",splash.panel)
+        shiny::div(id="splash-title",splash.title)
     )
     m <- particlesSplashModal(body, ns=ns)
     return(m)
@@ -1372,6 +1210,7 @@ particlesSplashModal <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
             shiny::div(id="splash-logo", shiny::img(src=base64enc::dataURI(file="www/logo.png"),
                                       width=32,height=32)),
             body,
+            firebase::useFirebaseUI(),
             shiny::br(),
             shiny::div(id="splash-warning",textOutput(ns("login_warning")),style="color:red;"),
             style="height: 500px; width: 100%;"                
@@ -1382,34 +1221,4 @@ particlesSplashModal <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
     ) ## end of modalDialog
     
     return(m)
-}
-
-
-if(0) {
-    
-    ui <- shiny::fluidPage(
-        shiny::plotOutput("results")
-    )
-    
-    server <- function(input, output, session) {
-        ##auth <- AuthenticationModule(input, output, session, "password") 
-        auth <- shiny::callModule(AuthenticationModule, "auth", type="password")
-        ## Render the plot
-        output$results <- shiny::renderPlot({
-            ##auth$showLogin()
-            if(auth$logged()==FALSE) {
-                AuthenticationUI("auth")
-                message("[authenticateModule] done! email=",email)
-            } else {
-                base::plot(sin)
-                cat("class(auth)=",class(auth),"\n")
-                cat("names(auth)=",names(auth),"\n")
-                cat("class(auth$name)=",class(auth$name),"\n")
-                title(paste0("hello ",auth$name(),"!"),cex.main=1.5)
-            }
-        })
-    }
-    
-    shiny::shinyApp(ui, server)
-
 }
