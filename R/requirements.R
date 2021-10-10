@@ -10,8 +10,6 @@
 install.packages("devtools")
 install.packages("BiocManager", version="3.10")
 
-
-
 LOCAL.PKGS <- sub("_.*","",dir("../ext/packages"))
 LOCAL.PKGS
 

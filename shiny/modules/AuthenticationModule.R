@@ -36,8 +36,8 @@ NoAuthenticationModule <- function(input, output, session, username=NULL)
     message("[NoAuthenticationModule] >>>> using no authentication <<<<")
     ns <- session$ns    
     USER <- shiny::reactiveValues(logged=FALSE, name="", email="",
-                           password=NA, registered=NA,
-                           level="")    
+                                  password=NA, registered=NA,
+                                  level="")    
     USER$name <- username
     
     output$showLogin <- shiny::renderUI({
@@ -70,59 +70,77 @@ NoAuthenticationModule <- function(input, output, session, username=NULL)
 
 FirebaseAuthenticationModule <- function(input, output, session)
 {
-    message("[NoAuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
+    message("[FirebaseAuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
 
     ns <- session$ns    
     USER <- shiny::reactiveValues(
-        logged=FALSE, 
-        name=NA, 
-        password=NA, 
-        email=NA, 
-        level=NA
+        logged = FALSE, 
+        name = NA, 
+        password = NA, 
+        email = NA, 
+        level = NA
     )    
 
     firebase <- firebase::FirebaseUI$
         new(persistence = "session")$ # instantiate
         set_providers( # define providers
-            email_link = TRUE, 
+            ##email_link = TRUE, 
+            email = TRUE,
             google = TRUE
         )
-
+    firebase$set_tos_url("https://bigomics.ch/terms")
+    firebase$set_privacy_policy_url("https://bigomics.ch/privacy")    
+    
     output$showLogin <- shiny::renderUI({
 
+        message("[FirebaseAuthenticationModule] showLogin... ")
+        
         m <- splashLoginModal(
             ns = ns,
-            with.email = TRUE,
+            with.email = FALSE,
             with.username = FALSE,
-            with.password = TRUE,
-            with.register = TRUE
+            with.password = FALSE,
+            with.register = FALSE,
+            with.firebase = TRUE,            
+            login.text = "Start!"
         )
 
         on.exit({
+            dbg("[FirebaseAuthenticationModule] on.exit")            
             firebase$launch()
         })
 
         # no need to show the modal
         # if the user is logged
         # this is due to persistence
-        if(USER$logged)
+        if(USER$logged) {
+            dbg("[FirebaseAuthenticationModule] USER is already logged in! no modal")                        
             return()
-        
+        }
+
+        dbg("[FirebaseAuthenticationModule] showing Firebase login modal")                                
         shiny::tagList(
-            shiny::showModal(
-                m
-            )
-        )
+                   shiny::showModal(m)
+               )
     })
     
-    observeEvent(firebase$get_signed_in(), {
+    observeEvent( firebase$get_signed_in(), {
+
         response <- firebase$get_signed_in()
 
-        if(!response$success)
+        dbg("[FirebaseAuthenticationModule] get_signed_in() reacted")
+        dbg("[FirebaseAuthenticationModule] response$success = ",response$success)
+        
+        if(!response$success) {
+            dbg("[FirebaseAuthenticationModule] sign in NOT succesful")                        
             return()
+        } else {
+            dbg("[FirebaseAuthenticationModule] sign in SUCCESSFUL!")            
+        }
 
         on.exit({
-            removeModal()
+            dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")            
+            removeModal()            
         })
         
         USER$logged <- TRUE
@@ -1113,6 +1131,7 @@ splashHelloModal <- function(name, msg=NULL, ns=NULL, duration=3500)
 
 splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
                              with.username=FALSE, with.register=FALSE,
+                             with.firebase=FALSE,
                              login.text="Login", alt=NULL)
 {
     if(is.null(ns)) ns <- function(e) return(e)
@@ -1158,11 +1177,73 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
         shiny::div(shiny::HTML(title[2]),style="font-size:28px;"),
         shiny::br(),br(),br()
     )
+
+    div.password <- div()
+    div.email <- div()
+    div.username <- div()
+    div.firebase <- div()
     
-    body <- shiny::tagList(
-        shiny::div(id="splash-title",splash.title)
+    if(with.email) {
+        div.email <- div(
+            id="splash-email",
+            textInput(ns("login_email"),NULL,placeholder="login with your email")
+        )
+    }
+    if(with.username) {
+        div.email <- div(
+            id="splash-username",
+            textInput(ns("login_username"),NULL,placeholder="login with your username")
+        )
+    }
+    if(with.password) {
+        div.password <- div(
+            id="splash-password",
+            passwordInput(ns("login_password"),NULL,placeholder="enter your password")
+        )
+    }
+    if(with.firebase) {
+        div.firebase <- firebase::useFirebaseUI()
+    }
+
+    div.alt <- div()
+    if(!is.null(alt)) div.alt <- alt
+    top <- HTML(rep("<br>",sum(c(!with.email,!with.username,!with.password))))
+
+    div.button <- div(
+        id="splash-buttons",
+        actionButton(ns("login_btn"),login.text,class="red-button")
     )
+    if(with.register) {
+        div.button <- div(
+            id="splash-buttons",
+            actionButton(ns("login_btn"),login.text,class="red-button"),
+            actionButton(ns("register_btn"),"Register",class="red-button")
+        )
+    }
+    
+    ##splash.panel=div();ns=function(x)x
+    if(with.firebase) {
+        splash.panel <- div(div.firebase)
+    } else {
+        splash.panel <- div(
+            id="splash-panel",            
+            br(),br(),top,
+            div.username,
+            div.email,
+            div.password,
+            div.alt,
+            br(),
+            div.button
+        )
+    }
+
+    body <- tagList(
+        div(id="splash-title",splash.title),
+        splash.panel
+    )
+
     m <- particlesSplashModal(body, ns=ns)
+
     return(m)
 }
 
@@ -1210,7 +1291,7 @@ particlesSplashModal <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
             shiny::div(id="splash-logo", shiny::img(src=base64enc::dataURI(file="www/logo.png"),
                                       width=32,height=32)),
             body,
-            firebase::useFirebaseUI(),
+            ##firebase::useFirebaseUI(),
             shiny::br(),
             shiny::div(id="splash-warning",textOutput(ns("login_warning")),style="color:red;"),
             style="height: 500px; width: 100%;"                
