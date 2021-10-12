@@ -1250,8 +1250,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
 particlesSplashModal <- function(body, ns=NULL, easyClose=FALSE, fade=FALSE,
                                  buttons=TRUE, footer=TRUE)
 {
-
-    type <- type[1]    
+    
     if(is.null(ns)) ns <- function(e) return(e)
     message("[AuthenticationModule::splashModal]")
 
