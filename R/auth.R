@@ -16,21 +16,26 @@ google_oauth <- function(){
 
 	httr::oauth2.0_token(
 		httr::oauth_endpoints("google"),
-		cache = TRUE, 
+		cache = TRUE,
 		myapp,
 		scope = "https://www.googleapis.com/auth/datastore"
 	)
 }
 
-google_user_get <- function(credentials, user){
+google_user_get <- function(credentials, email){
 	if(missing(credentials))
 		stop("Missing credentials")
 	
-	url <- sprintf("%s/%s", google_base_url(), user)
+	url <- sprintf("%s/%s", google_base_url(), URLencode(email))
 
 	req <- httr::GET(
 		url,
 		httr::config(token = credentials)
 	)
 	httr::content(req)
+}
+
+google_user_patch <- function(credentials, user){
+	email <- URLencode(user$email)
+	url <- sprintf("%s&document.name=%s", google_base_url(), email)
 }
