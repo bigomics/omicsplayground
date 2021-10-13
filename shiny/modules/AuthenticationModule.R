@@ -124,7 +124,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
                )
     })
     
-    observeEvent( firebase$get_signed_in(), {
+    observeEvent(firebase$get_signed_in(), {
 
         response <- firebase$get_signed_in()
 
@@ -142,7 +142,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
             dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")            
             removeModal()            
         })
-        
+
         USER$logged <- TRUE
         USER$name <- response$response$displayName
         USER$email <- response$response$email
