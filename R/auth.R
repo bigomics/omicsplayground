@@ -22,7 +22,7 @@ google_oauth <- function(){
 	)
 }
 
-google_user_get <- function(credentials, email){
+google_user_get <- function(credential, email){
 	if(missing(credentials))
 		stop("Missing credentials")
 	
@@ -38,4 +38,14 @@ google_user_get <- function(credentials, email){
 google_user_patch <- function(credentials, user){
 	email <- URLencode(user$email)
 	url <- sprintf("%s&document.name=%s", google_base_url(), email)
+}
+
+google_user_get2 <- function(key, email){
+	if(missing(key))
+		stop("Missing key")
+	
+	url <- sprintf("%s/%s?key=%s", google_base_url(), URLencode(email), key)
+
+	req <- httr::GET(url)
+	httr::content(req)
 }

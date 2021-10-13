@@ -146,6 +146,22 @@ FirebaseAuthenticationModule <- function(input, output, session)
         USER$logged <- TRUE
         USER$name <- response$response$displayName
         USER$email <- response$response$email
+        
+        # user logged in we request the id token
+        firebase$request_id_token()
+    })
+
+    observeEvent(firebase$get_id_token(), {
+        results <- firebase$get_id_token()
+        
+        if(!results$success){
+            dbg("[FirebaseAuthenticationModule] token id fetch error")                        
+            return()
+        }
+
+        token <- results$response$idToken
+        res <- google_user_get2(token, USER$email)
+        print(res)
     })
     
     rt <- list(
