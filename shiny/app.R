@@ -70,6 +70,7 @@ source(file.path(RDIR,"pgx-include.R"),local=src.local)    ## lots of libraries 
 source(file.path(RDIR,"pgx-functions.R"), local=src.local) ## functions...
 source(file.path(RDIR,"pgx-files.R"), local=src.local)     ## file functions
 source(file.path(RDIR,"pgx-init.R"),local=src.local)
+source(file.path(RDIR,"auth.R"),local=src.local)
 
 message("\n")
 message("************************************************")
