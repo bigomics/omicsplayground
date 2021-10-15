@@ -2604,7 +2604,7 @@ pgx.scatterPlotXY.BASE <- function(pos, var=NULL, type=NULL, col=NULL, title="",
                 dbg("[pgx.scatterPlotXY.BASE] 6: using user labels positions...")
                 lab.pos <- lab.pos[match(rownames(df),rownames(lab.pos)),]
             }
-            segments(df$x, df$y, lab.pos$x, lab.pos$y, col='#222222AA', lwd=0.6)
+            segments(df$x, df$y, lab.pos$x, lab.pos$y, col='#222222AA', lwd=0.85)
             text(lab.pos$x, lab.pos$y, labels=df$z, cex=0.7*df$cex)
             
         }
