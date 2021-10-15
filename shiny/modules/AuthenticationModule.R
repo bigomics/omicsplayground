@@ -233,7 +233,8 @@ PasswordAuthenticationModule <- function(input, output, session,
             ##USER$expiry    <- cred$expiry
             ##USER$password  <- cred$password
             
-            ## Here you can perform some user-specific functions, or site news
+            ## Here you can perform some user-specific functions, site
+            ## news, or 2nd hello modal...
             shiny::showModal(splashHelloModal(USER$name,ns=ns))
             ##removeModal()
             USER$logged <- TRUE            
