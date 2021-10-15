@@ -83,7 +83,7 @@ opt <- pgx.readOptions(file="OPTIONS")
 ##opt$AUTHENTICATION = "none"
 ##opt$AUTHENTICATION = "password"
 ##opt$AUTHENTICATION = "register"
-opt$AUTHENTICATION = "firebase"
+##opt$AUTHENTICATION = "firebase"
 
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
