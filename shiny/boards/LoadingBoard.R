@@ -49,8 +49,7 @@ LoadingBoard <- function(input, output, session,
     message("[LoadingBoard] in.shinyproxy = ",in.shinyproxy())    
     message("[LoadingBoard] SHINYPROXY_USERNAME = ",Sys.getenv("SHINYPROXY_USERNAME"))
     message("[LoadingBoard] SHINYPROXY_USERGROUPS = ",Sys.getenv("SHINYPROXY_USERGROUPS"))
-    message("[LoadingBoard] USER_MODE = ", USER_MODE)
-    
+    message("[LoadingBoard] USER_MODE = ", USER_MODE)    
     message("[LoadingBoard] authentication = ",authentication)
 
     auth <- NULL   ## shared in module
