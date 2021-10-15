@@ -84,8 +84,8 @@ FirebaseAuthenticationModule <- function(input, output, session)
     firebase <- firebase::FirebaseUI$
         new(persistence = "session")$ # instantiate
         set_providers( # define providers
-            ##email_link = TRUE, 
-            email = TRUE,
+            email_link = TRUE, 
+            ##email = TRUE,
             google = TRUE
         )
     firebase$set_tos_url("https://bigomics.ch/terms")

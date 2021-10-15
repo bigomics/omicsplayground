@@ -516,8 +516,7 @@ pgx.scBatchIntegrate <- function(X, batch,
     }
     if("MNN" %in% method) {
         message("[pgx.scBatchIntegrate] single-cell batch correction using MNN...")        
-        ## MNN correction
-        
+        ## MNN correction        
         try( mnn <- mnnCorrect(X, batch=batch, cos.norm.in=TRUE, cos.norm.out=FALSE))
         res[["MNN"]] <- MultiAssayExperiment::assays(mnn)[["corrected"]]
     }
@@ -765,10 +764,6 @@ pgx.scFilterOutliers <- function(counts, a=2.5, plot=FALSE)
 pgx.createSeuratObject <- function(counts, aggr.csv=NULL,
                                    project="SeuratProject", max.cells=2000 )
 {
-    
-    
-    
-    
     
     obj <- Seurat::CreateSeuratObject(counts, min.cells=5, project=project)    
 
