@@ -391,6 +391,7 @@ createUI <- function(tabs)
     id = "maintabs"
     ##selected = "Home"    
     header = shiny::tagList(
+        shiny::tags$head(shiny::tags$script(src="temp.js")),
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
         shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
@@ -446,6 +447,29 @@ createUI <- function(tabs)
     tablist[["helpmenu"]] <- help.tabs
     if(SHINYPROXY) {
         tablist[["logout"]] <- logout.tab
+    }
+
+    # conditionally add if firebase authentication is enabled
+    if(opt$AUTHENTICATION == "firebase"){
+        login.tabs <- shiny::navbarMenu(
+            "User",
+            shiny::tabPanel(
+                title = shiny::HTML(
+                    "<span class='label label-info' id='authentication-user'></span>"
+                )
+            ),
+            shiny::tabPanel(
+                title = shiny::HTML(
+                    "<a onClick='logout()' id='authentication-logout'>Logout</a>"
+                )
+            ),
+            shiny::tabPanel(
+                title = shiny::HTML(
+                    "<a onClick='upgrade()' style='font-weight:bold;color:darkgreen;' id='authentication-upgrade'>Upgrade</a>"
+                )
+            )
+        )
+        tablist[["login"]] <- login.tabs
     }
     
     ##-------------------------------------
