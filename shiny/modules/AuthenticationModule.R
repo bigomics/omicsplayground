@@ -180,7 +180,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
         }
 
         token <- results$response$idToken
-        res <- google_user_get2(token, USER$email)
+        res <- google_user_get(token, USER$email)
 
         # here we should then create it if it does not exist
         # this means the user has actually created a new account
