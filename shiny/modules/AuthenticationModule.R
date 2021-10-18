@@ -84,7 +84,8 @@ FirebaseAuthenticationModule <- function(input, output, session)
     firebase <- firebase::FirebaseUI$
         new(persistence = "session")$ # instantiate
         set_providers( # define providers
-            email_link = TRUE, 
+            # email_link = TRUE, 
+            email = TRUE,
             google = TRUE
         )
     firebase$set_tos_url("https://bigomics.ch/terms")
@@ -160,9 +161,12 @@ FirebaseAuthenticationModule <- function(input, output, session)
 
         token <- results$response$idToken
         res <- google_user_get2(token, USER$email)
+
         # here we should then create it if it does not exist
         # this means the user has actually created a new account
-        print(res)
+        if(length(res$error)) {
+            res <- google_user_create(token, USER$email)
+        }
     })
     
     rt <- list(

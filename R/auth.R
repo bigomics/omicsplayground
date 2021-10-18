@@ -49,3 +49,31 @@ google_user_get2 <- function(key, email){
 	req <- httr::GET(url)
 	httr::content(req)
 }
+
+google_user_create <- function(key, email, plan = "free"){
+	if(missing(key))
+		stop("Missing key")
+	
+	url <- sprintf(
+		"%s?documentId=%s&key=%s", 
+		google_base_url(), 
+		URLencode(email),
+		key
+	)
+
+	body <- list(
+		fields = list(
+			plan = list(
+				stringValue = plan
+			)
+		)
+	)
+
+	req <- httr::POST(
+		url, 
+		body = body, 
+		encode = "json",
+		httr::content_type_json()
+	)
+	httr::content(req)	
+}
