@@ -105,11 +105,6 @@ FirebaseAuthenticationModule <- function(input, output, session)
             login.text = "Start!"
         )
 
-        on.exit({
-            dbg("[FirebaseAuthenticationModule] on.exit")            
-            firebase$launch()
-        })
-
         # no need to show the modal
         # if the user is logged
         # this is due to persistence
@@ -117,13 +112,38 @@ FirebaseAuthenticationModule <- function(input, output, session)
             dbg("[FirebaseAuthenticationModule] USER is already logged in! no modal")                        
             return()
         }
+        
+        on.exit({
+            dbg("[FirebaseAuthenticationModule] on.exit")            
+            firebase$launch()
+        })
 
         dbg("[FirebaseAuthenticationModule] showing Firebase login modal")                                
         shiny::tagList(
-                   shiny::showModal(m)
-               )
+            shiny::showModal(m)
+        )
     })
-    
+
+    observeEvent(input$firebaseLogout, {
+        m <- splashLoginModal(
+            ns = ns,
+            with.email = FALSE,
+            with.username = FALSE,
+            with.password = FALSE,
+            with.register = FALSE,
+            with.firebase = TRUE,            
+            login.text = "Start!"
+        )
+        
+        on.exit({
+            firebase$launch()
+        })
+
+        firebase$sign_out()
+
+        shiny::showModal(m)
+    })
+
     observeEvent(firebase$get_signed_in(), {
 
         response <- firebase$get_signed_in()
@@ -167,7 +187,8 @@ FirebaseAuthenticationModule <- function(input, output, session)
         if(length(res$error)) {
             res <- google_user_create(token, USER$email)
         }
-        USER$level <- $fields$plan$stringValue
+        USER$level <- res$fields$plan$stringValue
+        session$sendCustomMessage("set-user", list(user = USER$email))
     })
     
     rt <- list(
