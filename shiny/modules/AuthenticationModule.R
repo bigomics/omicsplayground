@@ -167,6 +167,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
         if(length(res$error)) {
             res <- google_user_create(token, USER$email)
         }
+        USER$level <- $fields$plan$stringValue
     })
     
     rt <- list(
