@@ -85,7 +85,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
         new(persistence = "session")$ # instantiate
         set_providers( # define providers
             email_link = TRUE, 
-            ##email = TRUE,
+            email = TRUE,
             google = TRUE
         )
     firebase$set_tos_url("https://bigomics.ch/terms")
@@ -105,11 +105,6 @@ FirebaseAuthenticationModule <- function(input, output, session)
             login.text = "Start!"
         )
 
-        on.exit({
-            dbg("[FirebaseAuthenticationModule] on.exit")            
-            firebase$launch()
-        })
-
         # no need to show the modal
         # if the user is logged
         # this is due to persistence
@@ -117,14 +112,39 @@ FirebaseAuthenticationModule <- function(input, output, session)
             dbg("[FirebaseAuthenticationModule] USER is already logged in! no modal")                        
             return()
         }
+        
+        on.exit({
+            dbg("[FirebaseAuthenticationModule] on.exit")            
+            firebase$launch()
+        })
 
         dbg("[FirebaseAuthenticationModule] showing Firebase login modal")                                
         shiny::tagList(
-                   shiny::showModal(m)
-               )
+            shiny::showModal(m)
+        )
     })
-    
-    observeEvent( firebase$get_signed_in(), {
+
+    observeEvent(input$firebaseLogout, {
+        m <- splashLoginModal(
+            ns = ns,
+            with.email = FALSE,
+            with.username = FALSE,
+            with.password = FALSE,
+            with.register = FALSE,
+            with.firebase = TRUE,            
+            login.text = "Start!"
+        )
+        
+        on.exit({
+            firebase$launch()
+        })
+
+        firebase$sign_out()
+
+        shiny::showModal(m)
+    })
+
+    observeEvent(firebase$get_signed_in(), {
 
         response <- firebase$get_signed_in()
 
@@ -142,10 +162,33 @@ FirebaseAuthenticationModule <- function(input, output, session)
             dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")            
             removeModal()            
         })
-        
+
         USER$logged <- TRUE
         USER$name <- response$response$displayName
         USER$email <- response$response$email
+        
+        # user logged in we request the id token
+        firebase$request_id_token()
+    })
+
+    observeEvent(firebase$get_id_token(), {
+        results <- firebase$get_id_token()
+        
+        if(!results$success){
+            dbg("[FirebaseAuthenticationModule] token id fetch error")                        
+            return()
+        }
+
+        token <- results$response$idToken
+        res <- google_user_get(token, USER$email)
+
+        # here we should then create it if it does not exist
+        # this means the user has actually created a new account
+        if(length(res$error)) {
+            res <- google_user_create(token, USER$email)
+        }
+        USER$level <- res$fields$plan$stringValue
+        session$sendCustomMessage("set-user", list(user = USER$email))
     })
     
     rt <- list(
