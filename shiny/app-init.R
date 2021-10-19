@@ -93,8 +93,8 @@ fileRequire <- function(file, tabname, subtab) {
     }
 }
 
-tabView <- function(title, tab.inputs, tab.ui) {
-    shiny::tabPanel(title, ## id=title,
+tabView <- function(title, tab.inputs, tab.ui, id=title) {
+    shiny::tabPanel(title, id=id,
              shiny::sidebarLayout(
                  shiny::sidebarPanel( width=2, tab.inputs, id="sidebar"),
                  shiny::mainPanel( width=10, tab.ui)

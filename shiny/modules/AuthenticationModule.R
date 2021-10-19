@@ -31,14 +31,18 @@ AuthenticationUI <- function(id) {
 }
 
 
-NoAuthenticationModule <- function(input, output, session, username=NULL)
+NoAuthenticationModule <- function(input, output, session, username="")
 {
     message("[NoAuthenticationModule] >>>> using no authentication <<<<")
     ns <- session$ns    
-    USER <- shiny::reactiveValues(logged=FALSE, name="", email="",
-                                  password=NA, registered=NA,
-                                  level="")    
-    USER$name <- username
+    USER <- shiny::reactiveValues(
+                       logged=FALSE,
+                       name="",
+                       email="",
+                       password=NA,
+                       registered=NA,
+                       level="")    
+    USER$name  <- username
     
     output$showLogin <- shiny::renderUI({
         m <- splashLoginModal(
@@ -58,6 +62,7 @@ NoAuthenticationModule <- function(input, output, session, username=NULL)
     
     rt <- list(
         name   = shiny::reactive(USER$name),
+        email  = shiny::reactive(USER$email),        
         level  = shiny::reactive(USER$level),
         logged = shiny::reactive(USER$logged),
         limit  = shiny::reactive(USER$limit)
@@ -75,10 +80,11 @@ FirebaseAuthenticationModule <- function(input, output, session)
     ns <- session$ns    
     USER <- shiny::reactiveValues(
         logged = FALSE, 
-        name = NA, 
-        password = NA, 
-        email = NA, 
-        level = NA
+        name = "", 
+        password = "", 
+        email = "", 
+        level = "(not set)",
+        limit = "(not set)"
     )    
 
     firebase <- firebase::FirebaseUI$
@@ -92,10 +98,11 @@ FirebaseAuthenticationModule <- function(input, output, session)
     
     resetUSER <- function() {
         USER$logged <- FALSE
-        USER$name <- NA
-        USER$password <- NA
-        USER$email <- NA
-        USER$level <- NA
+        USER$name <- ""
+        USER$password <- ""
+        USER$email <- ""
+        USER$level <- "(not set)"
+        USER$limit <- "(not set)"
     }
     
     output$showLogin <- shiny::renderUI({
@@ -176,8 +183,8 @@ FirebaseAuthenticationModule <- function(input, output, session)
         })
 
         USER$logged <- TRUE
-        USER$name <- response$response$displayName
-        USER$email <- response$response$email
+        USER$name  <- as.character(response$response$displayName)
+        USER$email <- as.character(response$response$email)
         
         # user logged in we request the id token
         firebase$request_id_token()
@@ -203,15 +210,22 @@ FirebaseAuthenticationModule <- function(input, output, session)
         if(length(res$error)) {
             res <- google_user_create(token, USER$email)
         }
-        USER$level <- res$fields$plan$stringValue
+        
+        USER$level <- as.character(res$fields$plan$stringValue)
+        if(length(USER$level)==0) USER$level <- "(not set)"
+        
+        dbg("[FirebaseAuthenticationModule] plan$stringValue = ", USER$level)
+        dbg("[FirebaseAuthenticationModule] str(plan$stringValue) = ", str(USER$level))
+        
         session$sendCustomMessage("set-user", list(user = USER$email))
     })
     
     rt <- list(
         name   = shiny::reactive(USER$name),
+        email  = shiny::reactive(USER$email),        
         level  = shiny::reactive(USER$level),
         logged = shiny::reactive(USER$logged),
-        limit = shiny::reactive(USER$limit)
+        limit  = shiny::reactive(USER$limit)
     )
     return(rt)
 }
@@ -228,7 +242,13 @@ PasswordAuthenticationModule <- function(input, output, session,
     message("[NoAuthenticationModule] >>>> using local Email+Password authentication <<<<")
 
     ns <- session$ns    
-    USER <- shiny::reactiveValues(logged=FALSE, username=NA, password=NA, level=NA, limit=NA)    
+    USER <- shiny::reactiveValues(
+                       logged=FALSE,
+                       username=NA,
+                       password=NA,
+                       level=NA,
+                       limit=NA)    
+
     CREDENTIALS <- read.csv(credentials.file,colClasses="character")
     head(CREDENTIALS)
 
@@ -314,10 +334,10 @@ PasswordAuthenticationModule <- function(input, output, session,
         ##hide("login_warning")
     })
 
-
     ## module reactive return value
     rt <- list(
         name   = shiny::reactive(USER$username),
+        email  = shiny::reactive(""),
         level  = shiny::reactive(USER$level),
         logged = shiny::reactive(USER$logged),
         limit  = shiny::reactive(USER$limit)        
@@ -530,7 +550,7 @@ RegisterAuthenticationModule <- function(input, output, session, register.file)
             USER$email <- input$register_email
             USER$password <- ""
             USER$registered <- TRUE
-            USER$level <- "free"
+            USER$level <- "FREE"
             updateRegister(USER, register.file)
             updateSurveyLog(USER, qq)                
             USER$logged = TRUE
@@ -591,6 +611,7 @@ RegisterAuthenticationModule <- function(input, output, session, register.file)
     output$register_warning = shiny::renderText("")
     res <- list(
         name   = shiny::reactive(USER$name),
+        email  = shiny::reactive(""),
         level  = shiny::reactive(USER$level),
         logged = shiny::reactive(USER$logged),
         limit = shiny::reactive(USER$limit)
