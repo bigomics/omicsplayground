@@ -1367,7 +1367,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                 if(last.row) axis(1, mgp=c(2,0.7,0), cex.axis=0.8)                
                 graphics::box(lwd=1, col="black", lty="solid")
                 legend("top", legend=colnames(fc)[i], cex=1.2,
-                       bg="white", box.lty=0, inset=c(0,0.01),
+                       bg="white", box.lty=0,
                        x.intersp = 0.1, y.intersp = 0.1)
                 shiny::incProgress( 1/length(nplots) )                
             }
