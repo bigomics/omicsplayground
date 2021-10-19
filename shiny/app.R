@@ -28,11 +28,6 @@ library(shinyBS)
 library(pryr)
 library(grid)
 
-## we need all these datasets that actually aren't datasets
-## and so cannot be imported by data() function...
-##library(org.Hs.eg.db) ## better use require inside?
-##library(org.Mm.eg.db) ## better use require inside?
-
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
 message("***********************************************")
@@ -80,12 +75,21 @@ message("************************************************")
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
 
-## over-ride options (for DEBUGGING)
-##opt$AUTHENTICATION = "none"
-##opt$AUTHENTICATION = "password"
-##opt$AUTHENTICATION = "register"
-opt$AUTHENTICATION = "firebase"
-
+DEV = (DEV && dir.exists("modulesx")) 
+##DEV = FALSE
+if(DEV) {
+    message('******************************************************')
+    message('****************** DEVELOPER MODE ********************')
+    message('******************************************************')    
+}
+if(DEV) {
+    ## over-ride options (for DEBUGGING)
+    ##opt$AUTHENTICATION = "none"
+    ##opt$AUTHENTICATION = "password"
+    ##opt$AUTHENTICATION = "register"
+    ##opt$AUTHENTICATION = "firebase"
+}
+    
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
     message("[ENV] overriding PLAYGROUND_AUTHENTICATION = ",auth)
@@ -97,14 +101,6 @@ SHOW_QUESTIONS = FALSE
 AUTHENTICATION = opt$AUTHENTICATION
 USER_MODE      = opt$USER_MODE
 WATERMARK      = opt$WATERMARK
-
-DEV = (DEV && dir.exists("modulesx")) 
-##DEV = FALSE
-if(DEV) {
-    message('******************************************************')
-    message('****************** DEVELOPER MODE ********************')
-    message('******************************************************')    
-}
 
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
