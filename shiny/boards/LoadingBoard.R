@@ -23,7 +23,7 @@ LoadingUI <- function(id) {
         shiny::tabsetPanel(
             id = ns("tabs"),
             shiny::tabPanel("Datasets",uiOutput(ns("pgxtable_UI"))),
-            ##shiny::tabPanel("Upload data",uiOutput(ns("upload_UI"))),
+            shiny::tabPanel("Upload data",uiOutput(ns("upload_UI"))),
             shiny::tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
             ## shiny::tabPanel("Community forum",uiOutput(ns("forum_UI")))
         )
