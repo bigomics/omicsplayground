@@ -81,10 +81,9 @@ if(DEV) {
     message('******************************************************')
     message('****************** DEVELOPER MODE ********************')
     message('******************************************************')    
-}
-if(DEV) {
+
     ## over-ride options (for DEBUGGING)
-    ##opt$AUTHENTICATION = "none"
+    opt$AUTHENTICATION = "none"
     ##opt$AUTHENTICATION = "password"
     ##opt$AUTHENTICATION = "register"
     ##opt$AUTHENTICATION = "firebase"
@@ -211,7 +210,7 @@ server = function(input, output, session) {
                                  enable_delete = opt$ENABLE_DELETE,                                 
                                  enable_save = opt$ENABLE_SAVE)   
     
-
+    
     already_loaded <- FALSE
     observeEvent( env[["load"]]$loaded(), {
 
