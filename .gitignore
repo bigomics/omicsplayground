@@ -1,4 +1,3 @@
-
 # R data
 ######################
 .RData
@@ -17,7 +16,6 @@
 *.out
 *.log
 
-
 # OS generated files #
 ######################
 .DS_Store
@@ -30,3 +28,5 @@ data/*.pgx
 data/*.csv
 
 firebase.rds
+test-firestore.R
+.httr-oauth
