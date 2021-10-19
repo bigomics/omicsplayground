@@ -206,9 +206,6 @@ FirebaseAuthenticationModule <- function(input, output, session)
         USER$level <- res$fields$plan$stringValue
         session$sendCustomMessage("set-user", list(user = USER$email))
     })
-
-    if(0) {
-    }
     
     rt <- list(
         name   = shiny::reactive(USER$name),
