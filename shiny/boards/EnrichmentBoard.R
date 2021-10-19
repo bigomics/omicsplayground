@@ -1419,7 +1419,7 @@ EnrichmentBoard <- function(input, output, session, env)
                 if(last.row) axis(1, mgp=c(2,0.7,0), cex.axis=0.8)
                 legend("top", legend=names(mx.list)[i], box.lty=0,
                        x.intersp = 0.3, y.intersp = 0.5,
-                       inset=c(0,0.01), cex=1.2, bg="white")
+                       cex=1.2, bg="white")
                 shiny::incProgress( 1.0/nplots )
             }
             
@@ -1510,7 +1510,6 @@ EnrichmentBoard <- function(input, output, session, env)
                 if(last.row) axis(1, mgp=c(2,0.7,0), cex.axis=0.8)
                 legend("top", legend=method, box.lty=0,
                        x.intersp = 0.3, y.intersp = 0.5,
-                       inset=c(0,0.01), 
                        cex=1.2, bg="white")
                 
                 shiny::incProgress( 1/nplots )                
