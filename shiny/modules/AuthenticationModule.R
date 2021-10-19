@@ -85,11 +85,18 @@ FirebaseAuthenticationModule <- function(input, output, session)
         new(persistence = "session")$ # instantiate
         set_providers( # define providers
             email_link = TRUE, 
-            ## email = TRUE,
             google = TRUE
         )
     firebase$set_tos_url("https://bigomics.ch/terms")
     firebase$set_privacy_policy_url("https://bigomics.ch/privacy")    
+    
+    resetUSER <- function() {
+        USER$logged <- FALSE
+        USER$name <- NA
+        USER$password <- NA
+        USER$email <- NA
+        USER$level <- NA
+    }
     
     output$showLogin <- shiny::renderUI({
 
@@ -125,6 +132,16 @@ FirebaseAuthenticationModule <- function(input, output, session)
     })
 
     observeEvent(input$firebaseLogout, {
+
+        dbg("[FirebaseAuthenticationModule] observe::input$firebaseLogout() reacted")
+        
+        on.exit({
+            firebase$launch()
+        })
+
+        firebase$sign_out()
+        resetUSER()
+        
         m <- splashLoginModal(
             ns = ns,
             with.email = FALSE,
@@ -135,20 +152,15 @@ FirebaseAuthenticationModule <- function(input, output, session)
             login.text = "Start!"
         )
         
-        on.exit({
-            firebase$launch()
-        })
-
-        firebase$sign_out()
-
         shiny::showModal(m)
     })
 
     observeEvent(firebase$get_signed_in(), {
 
+        dbg("[FirebaseAuthenticationModule] observe::get_signed_in() reacted")
+
         response <- firebase$get_signed_in()
 
-        dbg("[FirebaseAuthenticationModule] get_signed_in() reacted")
         dbg("[FirebaseAuthenticationModule] response$success = ",response$success)
         
         if(!response$success) {
@@ -169,9 +181,13 @@ FirebaseAuthenticationModule <- function(input, output, session)
         
         # user logged in we request the id token
         firebase$request_id_token()
+        
     })
-
+    
     observeEvent(firebase$get_id_token(), {
+
+        dbg("[FirebaseAuthenticationModule] observe::get_id_token() reacted")
+
         results <- firebase$get_id_token()
         
         if(!results$success){
@@ -190,6 +206,9 @@ FirebaseAuthenticationModule <- function(input, output, session)
         USER$level <- res$fields$plan$stringValue
         session$sendCustomMessage("set-user", list(user = USER$email))
     })
+
+    if(0) {
+    }
     
     rt <- list(
         name   = shiny::reactive(USER$name),

@@ -15,7 +15,7 @@ message("##################### OMICS PLAYGROUND ########################")
 message("###############################################################")
 message("\n")
 
-##Sys.setenv("S HINYPROXY_USERNAME"="Test Person")
+##Sys.setenv("SHINYPROXY_USERNAME"="Test Person")
 main.start_time <- Sys.time()
 
 message("***********************************************")
@@ -84,7 +84,7 @@ opt <- pgx.readOptions(file="OPTIONS")
 ##opt$AUTHENTICATION = "none"
 ##opt$AUTHENTICATION = "password"
 ##opt$AUTHENTICATION = "register"
-##opt$AUTHENTICATION = "firebase"
+opt$AUTHENTICATION = "firebase"
 
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
@@ -208,25 +208,44 @@ server = function(input, output, session) {
                 "datasets" = opt$MAX_DATASETS)
     env <- list()  ## communication "environment"
     env[["load"]]  <- shiny::callModule(
-        LoadingBoard, "load", limits = limits,
-        authentication = AUTHENTICATION, enable_delete = opt$ENABLE_DELETE,
-        enable_save = opt$ENABLE_SAVE)   
+                                 LoadingBoard, "load",
+                                 limits = limits,
+                                 authentication = AUTHENTICATION,
+                                 enable_upload = opt$ENABLE_UPLOAD,
+                                 enable_delete = opt$ENABLE_DELETE,                                 
+                                 enable_save = opt$ENABLE_SAVE)   
     
+
     already_loaded <- FALSE
-    observeEvent(env[["load"]]$loaded(), {
+    observeEvent( env[["load"]]$loaded(), {
+
+        env.loaded <- env[["load"]]$loaded()
+        message("[SERVER] env.loaded = ",env.loaded)                                    
+        
         if(!env[["load"]]$loaded()){
-            return()
+            message("[SERVER] env.loaded = FALSE")                                    
+            return(NULL)
         }
 
+        message("[SERVER] env.loaded : 2 ")
+
         on.exit({
+            message("[SERVER] on.exit::removing Modal")                        
             shiny::removeModal()
         })
 
+        message("[SERVER] env.loaded : 2 ")
+
         if(already_loaded) {
-            return()
+            message("[SERVER] modules already loaded!")            
+            return(NULL)
         }
+
+        message("[SERVER] env.loaded : 3 ")
         
         already_loaded <<- TRUE
+
+        message("[SERVER] env.loaded : 4 ")
         
         ## load other modules if
         message("[SERVER] --------- calling shiny modules ----------")
@@ -375,6 +394,7 @@ names(TABVIEWS)
 
 logout.tab <- shiny::tabPanel(title=shiny::HTML("<a id='logout' href='/logout'>Logout"))
 
+
 createUI <- function(tabs)
 {
     message("\n======================================================")
@@ -448,9 +468,9 @@ createUI <- function(tabs)
     if(SHINYPROXY) {
         tablist[["logout"]] <- logout.tab
     }
-
+    
     # conditionally add if firebase authentication is enabled
-    if(opt$AUTHENTICATION == "firebase"){
+    if(opt$AUTHENTICATION == "firebase") {
         login.tabs <- shiny::navbarMenu(
             "User",
             shiny::tabPanel(
@@ -496,7 +516,9 @@ tabs = list(
     "CellProfiling" = "scell",
     "DEV" = c("corsa","system","multi")
 )
+
 ui = createUI(tabs)
+##ui = navbarPage("Hello World!")
 
 ## --------------------------------------------------------------------
 ## ------------------------------ RUN ---------------------------------

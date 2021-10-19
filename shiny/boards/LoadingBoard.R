@@ -23,7 +23,7 @@ LoadingUI <- function(id) {
         shiny::tabsetPanel(
             id = ns("tabs"),
             shiny::tabPanel("Datasets",uiOutput(ns("pgxtable_UI"))),
-            shiny::tabPanel("Upload data",uiOutput(ns("upload_UI"))),
+            ##shiny::tabPanel("Upload data",uiOutput(ns("upload_UI"))),
             shiny::tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
             ## shiny::tabPanel("Community forum",uiOutput(ns("forum_UI")))
         )
@@ -34,7 +34,9 @@ LoadingBoard <- function(input, output, session,
                          limits = c("samples"=1000,"comparisons"=20,
                                     "genes"=20000, "genesets"=10000,
                                     "datasets"=10),
-                         enable_delete = TRUE, enable_save = TRUE,
+                         enable_upload = TRUE,
+                         enable_delete = TRUE,
+                         enable_save = TRUE,
                          authentication="none")
 {
     ns <- session$ns ## NAMESPACE
@@ -60,8 +62,7 @@ LoadingBoard <- function(input, output, session,
             credentials.file = "CREDENTIALS")
     } else if(authentication == "firebase") {
         auth <- shiny::callModule(
-            FirebaseAuthenticationModule, "auth"
-        )
+                           FirebaseAuthenticationModule, "auth")
     } else if(authentication == "register") {
         auth <- shiny::callModule(
             RegisterAuthenticationModule, "auth",
@@ -75,6 +76,8 @@ LoadingBoard <- function(input, output, session,
         ## none
         auth <- shiny::callModule(NoAuthenticationModule, "auth")
     } 
+
+    dbg("[LoadingBoard] print.auth = ",names(auth))
     
     ##-----------------------------------------------------------------------------
     ## Description
@@ -393,7 +396,6 @@ LoadingBoard <- function(input, output, session,
     
     startup_count=0
 
-
     particlesjs.conf <- rjson::fromJSON(file="resources/particlesjs-config.json")
 
     showStartupModal <- function(once=FALSE) {    
@@ -459,11 +461,15 @@ LoadingBoard <- function(input, output, session,
         dbg("[LoadingBoard::inputData] authentication=",authentication,"\n")
         dbg("[LoadingBoard::inputData] auth$logged=",auth$logged(),"\n")
         
-        if(!auth$logged()) return(NULL)
+        if(!auth$logged()) {
+            currentPGX(NULL)  ## set NULL
+        } else {
+            pgx <- currentPGX()            
+            dbg("[LoadingBoard::inputData] pgx$name = ",pgx$name,"\n")        
+        }
         
         pgx <- currentPGX()
         dbg("[LoadingBoard::inputData] is.null(pgx)=",is.null(pgx),"\n")
-        dbg("[LoadingBoard::inputData] pgx$name = ",pgx$name,"\n")        
         return(pgx)
     })
 
@@ -709,94 +715,96 @@ LoadingBoard <- function(input, output, session,
     ##================================================================================
     ## Upload new data
     ##================================================================================
-
-    output$upload_UI <- shiny::renderUI({    
-        UploadModuleUI(ns("upload_panel"))
-    })
-
-    uploaded_pgx <- UploadModuleServer(
-        id = "upload_panel",
-        height = 720,
-        ## limits = c(samples=20, comparisons=20, genes=8000),
-        limits = limits,
-        FILES = FILES        
-    )
-
-    shiny::observeEvent( uploaded_pgx(), {
-
-        dbg("[observe::uploaded_pgx] uploaded PGX detected!")
-        pgx <- uploaded_pgx()
-        pgx$collection <- "uploaded"
-        ## pgx$owner <- "user"
-
-        dbg("[observe::uploaded_pgx] initializing PGX object")
-        pgx <- pgx.initialize(pgx)
-
-        ## update CurrentPGX
-        currentPGX(pgx)
-        DT::selectRows(proxy = DT::dataTableProxy(ns("pgxtable")), selected=NULL)
+    if(enable_upload) {
+        dbg("[LoadingBoard] upload enabled")
         
-        savedata_button <- NULL
-        if(enable_save) {
+        output$upload_UI <- shiny::renderUI({
+            dbg("[LoadingBoard] output$upload_UI::renderUI")
+            UploadModuleUI(ns("upload_panel"))
+        })
+
+        dbg("[LoadingBoard] initializing UploadModule")        
+        uploaded_pgx <- UploadModuleServer(
+            id = "upload_panel",
+            height = 720,
+            ## limits = c(samples=20, comparisons=20, genes=8000),
+            limits = limits,
+            FILES = FILES        
+        )
+        
+        shiny::observeEvent( uploaded_pgx(), {
             
-            ##savedata_button <- shiny::actionButton(ns("savedata"), "Save my data", icon=icon("save"))
-            ##observeEvent( input$savedata, {
-
-            dbg("[LoadingBoard] observeEvent:savedata reacted")        
-            ## -------------- save PGX file/object ---------------
-            ##pgx <- currentPGX()
-            pgx$collection <- "user"
-            pgxname <- sub("[.]pgx$","",pgx$name)
-            pgxname <- paste0(gsub("[ \\/]","_",pgxname),".pgx")
-            fn  <- file.path(PGX.DIR,pgxname)
-
-            ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            ## Note: Currently we use 'ngs' as object name but want to go
-            ## towards 'pgx' as standard name. Actually saving as RDS
-            ## should be better.
-            ngs=pgx
-            save(ngs, file=fn)
-            remove(ngs)
+            dbg("[observe::uploaded_pgx] uploaded PGX detected!")
+            pgx <- uploaded_pgx()
+            pgx$collection <- "uploaded"
+            ## pgx$owner <- "user"
             
-            message("[LoadingBoard::@savedata] updating PGXINFO file")
-            new.info <- pgx.updateInfoPGX(PGXINFO(), pgx, remove.old=TRUE)
-            Sys.chmod(PGXINFO.FILE, mode="0666")
-            write.csv(new.info, file=PGXINFO.FILE)
-            PGXINFO(new.info)
-            message("[LoadingBoard::@savedata] saved PGXINFO file!")
+            dbg("[observe::uploaded_pgx] initializing PGX object")
+            pgx <- pgx.initialize(pgx)
             
-            touchtable(touchtable()+1)
-            ##sleep(1)
-            ##removeModal()
-        }
-        
-        ## shiny::removeModal()
-        msg1 <- "<b>Ready!</b>"
-        beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
-        
-        if(enable_save) {
-            msg1 <- "<b>Ready!</b><br>Your data is ready and has been saved in your library. You can now start exploring your data."
-        } else {
-            msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
-        }
-        loadedDataset(TRUE)
-        shiny::showModal( shiny::modalDialog(
-            shiny::HTML(msg1),
-            title = NULL,
-            size = "s",
-            footer = shiny::tagList(
-                ##savedata_button,
-                ## shiny::actionButton(ns("sharedata"), "Share with others", icon=icon("share-alt")),
-                shiny::modalButton("Start!")
-            )
-        ))
+            ## update CurrentPGX
+            currentPGX(pgx)
+            DT::selectRows(proxy = DT::dataTableProxy(ns("pgxtable")), selected=NULL)
+            
+            savedata_button <- NULL
+            if(enable_save) {
+                
+                ##savedata_button <- shiny::actionButton(ns("savedata"), "Save my data", icon=icon("save"))
+                ##observeEvent( input$savedata, {
+                
+                dbg("[LoadingBoard] observeEvent:savedata reacted")        
+                ## -------------- save PGX file/object ---------------
+                ##pgx <- currentPGX()
+                pgx$collection <- "user"
+                pgxname <- sub("[.]pgx$","",pgx$name)
+                pgxname <- paste0(gsub("[ \\/]","_",pgxname),".pgx")
+                fn  <- file.path(PGX.DIR,pgxname)
+                
+                ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                ## Note: Currently we use 'ngs' as object name but want to go
+                ## towards 'pgx' as standard name. Actually saving as RDS
+                ## should be better.
+                ngs=pgx
+                save(ngs, file=fn)
+                remove(ngs)
+                
+                message("[LoadingBoard::@savedata] updating PGXINFO file")
+                new.info <- pgx.updateInfoPGX(PGXINFO(), pgx, remove.old=TRUE)
+                Sys.chmod(PGXINFO.FILE, mode="0666")
+                write.csv(new.info, file=PGXINFO.FILE)
+                PGXINFO(new.info)
+                message("[LoadingBoard::@savedata] saved PGXINFO file!")
+                
+                touchtable(touchtable()+1)
+                ##sleep(1)
+                ##removeModal()
+            }
+            
+            ## shiny::removeModal()
+            msg1 <- "<b>Ready!</b>"
+            beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
+            
+            if(enable_save) {
+                msg1 <- "<b>Ready!</b><br>Your data is ready and has been saved in your library. You can now start exploring your data."
+            } else {
+                msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
+            }
+            loadedDataset(TRUE)
+            shiny::showModal(
+                       shiny::modalDialog(
+                                  shiny::HTML(msg1),
+                                  title = NULL,
+                                  size = "s",
+                                  footer = shiny::tagList(
+                                                      ## savedata_button,
+                                                      ## shiny::actionButton(ns("sharedata"), "Share with others", icon=icon("share-alt")),
+                                                      shiny::modalButton("Start!")
+                                                  )
+                              ))
+            shiny::updateTabsetPanel(session, "tabs",  selected = "Datasets")
+        })
 
-        shiny::updateTabsetPanel(session, "tabs",  selected = "Datasets")
-
-    })
-
-    
-        
+    }
 
     ##---------------------------------------------------------------
     ##--------------------- modules for UsersMap --------------------
