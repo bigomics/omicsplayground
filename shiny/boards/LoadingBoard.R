@@ -40,6 +40,8 @@ LoadingBoard <- function(input, output, session,
                          authentication="none")
 {
     ns <- session$ns ## NAMESPACE
+    dbg("[LoadingBoard] >>> initializing LoadingBoard...")
+
     loadedDataset <- reactiveVal(FALSE)
     
     ##useShinyjs(rmd=TRUE)

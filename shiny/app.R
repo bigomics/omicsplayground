@@ -137,7 +137,7 @@ source("modules/UploadModule.R",local=src.local)
 
 BOARDS <- c("load","view","clust","expr","enrich","isect","func",
             "word","drug","sig","scell","cor","bio","cmap","ftmap",
-            "wgcna", "tcga","multi","system","qa","corsa","comp")
+            "wgcna", "tcga","multi","system","qa","corsa","comp","user")
 if(is.null(opt$BOARDS_ENABLED))  opt$BOARDS_ENABLED = BOARDS
 if(is.null(opt$BOARDS_DISABLED)) opt$BOARDS_DISABLED = NA
 
@@ -209,6 +209,7 @@ server = function(input, output, session) {
                                  enable_upload = opt$ENABLE_UPLOAD,
                                  enable_delete = opt$ENABLE_DELETE,                                 
                                  enable_save = opt$ENABLE_SAVE)   
+    env[["user"]] <- shiny::callModule( UserBoard, "user", env)        
     
     
     already_loaded <- FALSE
@@ -389,7 +390,6 @@ names(TABVIEWS)
 
 logout.tab <- shiny::tabPanel(title=shiny::HTML("<a id='logout' href='/logout'>Logout"))
 
-
 createUI <- function(tabs)
 {
     message("\n======================================================")
@@ -468,19 +468,18 @@ createUI <- function(tabs)
     if(opt$AUTHENTICATION == "firebase") {
         login.tabs <- shiny::navbarMenu(
             "User",
+            tabView(
+                title = shiny::HTML("<span class='label label-info' id='authentication-user'></span>"),
+                id="user", UserInputs("user"), UserUI("user")    
+            ),
             shiny::tabPanel(
                 title = shiny::HTML(
-                    "<span class='label label-info' id='authentication-user'></span>"
+                    "<a onClick='upgrade()' style='font-weight:bold;color:darkgreen;' id='authentication-upgrade'>Upgrade</a>"
                 )
             ),
             shiny::tabPanel(
                 title = shiny::HTML(
                     "<a onClick='logout()' id='authentication-logout'>Logout</a>"
-                )
-            ),
-            shiny::tabPanel(
-                title = shiny::HTML(
-                    "<a onClick='upgrade()' style='font-weight:bold;color:darkgreen;' id='authentication-upgrade'>Upgrade</a>"
                 )
             )
         )

@@ -1510,7 +1510,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         title = "Differential expression analysis",
         height = c(tabH-10,700)
     )
-
     ##output$genetable <- genetable_module$render
 
     # reacts too often
