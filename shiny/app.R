@@ -86,7 +86,7 @@ if(DEV) {
 ## over-ride options (for DEBUGGING)
 ##opt$AUTHENTICATION = "none"
 ##opt$AUTHENTICATION = "password"
-opt$AUTHENTICATION = "register"
+##opt$AUTHENTICATION = "register"
 ##opt$AUTHENTICATION = "firebase"
     
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
