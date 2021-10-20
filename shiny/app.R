@@ -223,25 +223,16 @@ server = function(input, output, session) {
             return(NULL)
         }
 
-        message("[SERVER] env.loaded : 2 ")
-
         on.exit({
             message("[SERVER] on.exit::removing Modal")                        
             shiny::removeModal()
         })
 
-        message("[SERVER] env.loaded : 2 ")
-
         if(already_loaded) {
             message("[SERVER] modules already loaded!")            
             return(NULL)
         }
-
-        message("[SERVER] env.loaded : 3 ")
-        
         already_loaded <<- TRUE
-
-        message("[SERVER] env.loaded : 4 ")
         
         ## load other modules if
         message("[SERVER] --------- calling shiny modules ----------")
@@ -287,6 +278,7 @@ server = function(input, output, session) {
         ## hide all main tabs until we have an object
         if(is.null(pgx)) {
             lapply(MAINTABS, function(m) shiny::hideTab("maintabs",m))
+            updateTabsetPanel(session, "maintabs", selected = "Home")                        
             if(!opt$ENABLE_UPLOAD)  shiny::hideTab("load-tabs","Upload data")
             if(is.null(ACCESS.LOG)) shiny::hideTab("load-tabs","Visitors map")            
             return(NULL)
