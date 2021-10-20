@@ -45,10 +45,10 @@ NoAuthenticationModule <- function(input, output, session, username="")
 
     resetUSER <- function() {
         USER$logged <- FALSE
-        USER$name <- "(not set)"
-        USER$email <- "(not set)"
-        USER$level <- "(not set)"
-        USER$limit <- "(not set)"
+        USER$name <- ""
+        USER$email <- ""
+        USER$level <- ""
+        USER$limit <- ""
     }
     
     output$showLogin <- shiny::renderUI({
@@ -100,8 +100,8 @@ FirebaseAuthenticationModule <- function(input, output, session)
         name = "", 
         password = "", 
         email = "", 
-        level = "(not set)",
-        limit = "(not set)"
+        level = "",
+        limit = ""
     )    
 
     firebase <- firebase::FirebaseUI$
@@ -118,8 +118,8 @@ FirebaseAuthenticationModule <- function(input, output, session)
         USER$name <- ""
         USER$password <- ""
         USER$email <- ""
-        USER$level <- "(not set)"
-        USER$limit <- "(not set)"
+        USER$level <- ""
+        USER$limit <- ""
     }
     
     output$showLogin <- shiny::renderUI({
@@ -233,7 +233,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
         }
         
         USER$level <- as.character(res$fields$plan$stringValue)
-        if(length(USER$level)==0) USER$level <- "(not set)"
+        if(length(USER$level)==0) USER$level <- ""
         
         dbg("[FirebaseAuthenticationModule] plan$stringValue = ", USER$level)
         dbg("[FirebaseAuthenticationModule] str(plan$stringValue) = ", str(USER$level))
@@ -274,8 +274,8 @@ PasswordAuthenticationModule <- function(input, output, session,
         USER$logged <- FALSE
         USER$username <- NA
         USER$password <- NA
-        USER$level <- "(not set)"
-        USER$limit <- "(not set)"
+        USER$level <- ""
+        USER$limit <- ""
     }
 
     CREDENTIALS <- read.csv(credentials.file,colClasses="character")
@@ -426,7 +426,7 @@ RegisterAuthenticationModule <- function(input, output, session, register.file)
         USER$email <- ""
         USER$password <- NA
         USER$registered <- FALSE
-        USER$level <- "(not set)"
+        USER$level <- ""
     }
 
     output$showLogin <- shiny::renderUI({

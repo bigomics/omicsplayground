@@ -44,8 +44,8 @@ UserBoard <- function(input, output, session, env)
         dbg("[UserBoard::description] user$name = ",user$name() )
         dbg("[UserBoard::description] user$level = ",user$level() )
         
-        description = "Signed in as<h4><b>EMAIL<b></h4><br><br><h2>NAME</h2><h4>LEVEL</h4>"
-        description = "Signed in as<h4><b>EMAIL<b></h4>"        
+        description = "Signed in as<h2><b>NAME<b></h2><h4><b>EMAIL<b></h4><br><h4>LEVEL</h4>"
+        ##description = "Signed in as<h4><b>EMAIL<b></h4>"        
         description <- sub("EMAIL",  as.character(user$email()),  description)
         description <- sub("NAME",  as.character(user$name()),  description)        
         description <- sub("LEVEL", as.character(user$level()), description)     
@@ -68,7 +68,8 @@ UserBoard <- function(input, output, session, env)
             plan   = user$level(),
             ##logged = user$logged(),
             limit  = paste(user$limit(),collapse=';')
-        )        
+        )
+        values[which(values=="")] <- "(not set)"
         df <- data.frame(field=names(values), value=values)
     })
         
