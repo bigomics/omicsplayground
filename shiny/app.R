@@ -31,6 +31,7 @@ library(grid)
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
 message("***********************************************")
+Sys.setenv("OMICS_GOOGLE_PROJECT"="omicsplayground-app")
 
 envcat <- function(var) message(var," = ",Sys.getenv(var))
 envcat("SHINYPROXY_USERNAME")
@@ -41,6 +42,7 @@ envcat("PLAYGROUND_EXPIRY")
 envcat("PLAYGROUND_QUOTA")
 envcat("PLAYGROUND_LEVEL")
 envcat("PLAYGROUND_HELLO")
+envcat("OMICS_GOOGLE_PROJECT")
 
 ## --------------------------------------------------------------------
 ## -------------------------- INIT ------------------------------------
@@ -59,13 +61,11 @@ message("FILESX =",FILESX)
 message("PGX.DIR =",PGX.DIR)
 message("SHINYPROXY = ",SHINYPROXY)
 
-src.local=TRUE  ## local or not-local, that's the question...
-src.local=FALSE ## local or not-local, that's the question...
-source(file.path(RDIR,"pgx-include.R"),local=src.local)    ## lots of libraries and source()
-source(file.path(RDIR,"pgx-functions.R"), local=src.local) ## functions...
-source(file.path(RDIR,"pgx-files.R"), local=src.local)     ## file functions
-source(file.path(RDIR,"pgx-init.R"),local=src.local)
-source(file.path(RDIR,"auth.R"),local=src.local)
+source(file.path(RDIR,"pgx-include.R"))    ## lots of libraries and source()
+source(file.path(RDIR,"pgx-functions.R")) ## functions...
+source(file.path(RDIR,"pgx-files.R"))     ## file functions
+source(file.path(RDIR,"pgx-init.R"))
+source(file.path(RDIR,"auth.R"))
 
 message("\n")
 message("************************************************")
@@ -100,6 +100,7 @@ SHOW_QUESTIONS = FALSE
 AUTHENTICATION = opt$AUTHENTICATION
 USER_MODE      = opt$USER_MODE
 WATERMARK      = opt$WATERMARK
+TIMEOUT        = as.integer(opt$TIMEOUT)  ## in seconds
 
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
@@ -108,7 +109,7 @@ message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 ## ------------------------ READ FUNCTIONS ----------------------------
 ## --------------------------------------------------------------------
 
-source("app-init.R", local=FALSE)
+source("app-init.R")
 message('>>>> Initializing data folder')
 ##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=TRUE)
 pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=TRUE)
@@ -127,13 +128,12 @@ if(0) {
 ## ----------------- READ MODULES/BOARDS ------------------------------
 ## --------------------------------------------------------------------
 
-source("modules/AuthenticationModule.R",local=src.local)
-source("modules/ComputePgxModule.R",local=src.local)
-source("modules/MakeContrastModule.R",local=src.local)
-source("modules/NormalizeCountsModule.R",local=src.local)
-source("modules/BatchCorrectModule.R",local=src.local)
-source("modules/UploadModule.R",local=src.local)
-##source("modules/UsersMapModule.R_")
+modules <- dir("modules", pattern="Module.R$")
+modules
+for(m in modules) {
+    message("[MAIN] loading module ",m)
+    source(paste0("modules/",m))
+}
 
 BOARDS <- c("load","view","clust","expr","enrich","isect","func",
             "word","drug","sig","scell","cor","bio","cmap","ftmap",
@@ -150,8 +150,7 @@ boards <- dir("boards", pattern="Board.R$")
 boards
 for(m in boards) {
     message("[MAIN] loading board ",m)
-    source(paste0("boards/",m), local=src.local)
-    ##source(paste0("boards/",m), local=FALSE)
+    source(paste0("boards/",m))
 }
 
 ##ENABLED[c("wgcna","system","multi")] <- FALSE
@@ -164,7 +163,7 @@ if(0 && DEV && dir.exists("modulesx")) {
     m=xboards[1]
     for(m in xboards) {
         message("[MAIN] loading DEVELOPMENT modules ",m)
-        source(paste0("modulesx/",m), local=src.local)
+        source(paste0("modulesx/",m))
     }
     ENABLED[] <- TRUE  ## enable all modules
     boards <- unique(c(boards, xboards))
@@ -194,7 +193,8 @@ server = function(input, output, session) {
     message("========================================================\n")
     
     message("[SERVER] USER_MODE = ", USER_MODE)
-    server.start_time <- Sys.time()
+    server.start_time  <- Sys.time()
+    session.start_time <- -1
     
     limits <- c("samples" = opt$MAX_SAMPLES,
                 "comparisons" = opt$MAX_COMPARISONS,
@@ -202,16 +202,18 @@ server = function(input, output, session) {
                 "genesets" = opt$MAX_GENESETS,
                 "datasets" = opt$MAX_DATASETS)
     env <- list()  ## communication "environment"
-    env[["load"]]  <- shiny::callModule(
-                                 LoadingBoard, "load",
-                                 limits = limits,
-                                 authentication = AUTHENTICATION,
-                                 enable_upload = opt$ENABLE_UPLOAD,
-                                 enable_delete = opt$ENABLE_DELETE,                                 
-                                 enable_save = opt$ENABLE_SAVE)   
-    env[["user"]] <- shiny::callModule( UserBoard, "user", env)        
+
+    ## Modules needed from the start
+    env[["load"]] <- shiny::callModule(
+                                LoadingBoard, "load",
+                                limits = limits,
+                                authentication = AUTHENTICATION,
+                                enable_upload = opt$ENABLE_UPLOAD,
+                                enable_delete = opt$ENABLE_DELETE,                                 
+                                enable_save = opt$ENABLE_SAVE)   
+    env[["user"]] <- shiny::callModule(UserBoard, "user", env)        
     
-    
+    ## Modules needed after dataset is loaded (deferred)
     already_loaded <- FALSE
     observeEvent( env[["load"]]$loaded(), {
 
@@ -265,15 +267,20 @@ server = function(input, output, session) {
     message("[SERVER] boards enabled:",paste(names(which(ENABLED)),collapse=" "))
     
     output$current_dataset <- shiny::renderText({
+        ## trigger on change dataset
         pgx <- env[["load"]][["inputData"]]()
         name <- gsub(".*\\/|[.]pgx$","",pgx$name)
         if(length(name)==0) name = "(no data)"
         name
     })
     
+    ##--------------------------------------------------------------------------
     ## Dynamically hide/show certain sections depending on USERMODE/object
+    ##--------------------------------------------------------------------------
     shiny::observe({
-        pgx <- env[["load"]][["inputData"]]() ## trigger on change dataset
+
+        ## trigger on change dataset
+        pgx <- env[["load"]][["inputData"]]() 
         
         ## hide all main tabs until we have an object
         if(is.null(pgx)) {
@@ -325,7 +332,71 @@ server = function(input, output, session) {
 
         message("[SERVER] reconfiguring menu done.")        
     })
+    
+    ##-------------------------------------------------------------
+    ## Session Timer (can we put it elsewhere?)
+    ##-------------------------------------------------------------
+    tm <- reactiveValues(timer=reactiveTimer(Inf), start=NULL)
+    tm.warned <- FALSE
+    shiny::observe({
+        ## trigger on change of USER
+        auth <- env[["load"]][["auth"]]
+        level <- auth$level()
+        message("[SERVER] user LEVEL = ",level)
+        logged <- auth$logged()
+        message("[SERVER] logged = ",logged)
+        
+        if(tolower(level)=="free" && TIMEOUT>0 && logged) {
+            message("[SERVER] starting session timer!!!")
+            message("[SERVER] TIMEOUT = ", TIMEOUT)            
+            tm$timer <- reactiveTimer(0.1*TIMEOUT*1000)  ## polling time
+            tm$start <- Sys.time()
+            tm.warned <<- FALSE
+        } else {
+            message("[SERVER] no timer!!!")            
+            tm$timer <- reactiveTimer(Inf)
+            tm$start <- NULL
+            tm.warned <<- FALSE
+        }       
+    })
 
+    ## Logout user after TIMEOUT
+    shiny::observeEvent(tm$timer(), {
+        message("[SERVER] timer reacted")
+        if(is.null(tm$start) || TIMEOUT <=0 ) {
+            message("[SERVER] timer is off")
+            return()
+        }
+        if(!is.null(tm$start)) {
+            secs.lapsed <- as.numeric(Sys.time() - tm$start, units='secs')            
+            message("[SERVER] timer seconds lapsed = ",round(secs.lapsed,digits=2))
+            if(secs.lapsed >= 0.80*TIMEOUT && !tm.warned) {
+                message("[SERVER] timed out warning!!!")
+                shinyalert::closeAlert()
+                shinyalert::shinyalert(
+                                title = "Warning!",
+                                text = "Your FREE session is expiring soon."
+                                ##callbackR = function(x){shinyalert::closeAlert()}
+                            )
+                tm.warned <<- TRUE
+            } else if(secs.lapsed >= TIMEOUT) {
+                message("[SERVER] timed out!!!")
+                shinyalert::closeAlert()
+                shinyalert::shinyalert(
+                                title = "Oh No!",
+                                text = "Your FREE session has expired.",
+                                ##callbackR = function(x){shinyalert::closeAlert()},
+                                callbackJS = "function(x){logout()}"                                
+                            )
+                tm$timer <- reactiveTimer(Inf)                
+                tm$start <- NULL
+                tm.warned <<- FALSE                
+            }
+        }
+    })
+
+
+    ## report server times
     server.init_time <- round(Sys.time() - server.start_time, digits=4)    
     message("[SERVER] server.init_time = ",server.init_time," ",attr(server.init_time,"units"))
     total.lapse_time <- round(Sys.time() - main.start_time,digits=4)
@@ -411,8 +482,6 @@ if(opt$AUTHENTICATION == "firebase") {
 }
 
 
-
-
 createUI <- function(tabs)
 {
     message("\n======================================================")
@@ -430,16 +499,15 @@ createUI <- function(tabs)
     ##selected = "Home"    
     header = shiny::tagList(
         shiny::tags$head(shiny::tags$script(src="temp.js")),
+        shiny::tags$head(shiny::tags$script(src="google-analytics.js")),
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
         shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
+        shinyalert::useShinyalert(),  # Set up shinyalert
         firebase::useFirebase(),
         TAGS.JSSCRIPT,
         shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
-        shiny::div(
-            shiny::textOutput("current_dataset"),
-            class='current-data'
-        )
+        shiny::div(shiny::textOutput("current_dataset"), class='current-data')
         ##QuestionBoard_UI("qa")
     )
     names(header) <- NULL

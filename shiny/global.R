@@ -49,3 +49,4 @@ dbg <- function(...) {
         message(msg)
     }
 }
+envcat <- function(var) message(var," = ",Sys.getenv(var))
