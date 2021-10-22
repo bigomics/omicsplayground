@@ -229,7 +229,11 @@ FirebaseAuthenticationModule <- function(input, output, session)
         # here we should then create it if it does not exist
         # this means the user has actually created a new account
         if(length(res$error)) {
+            dbg("[FirebaseAuthenticationModule] not in database, creating user")                        
             res <- google_user_create(token, USER$email)
+
+            dbg("[FirebaseAuthenticationModule] OMICS_GOOGLE_PROJECT = ",Sys.getenv("OMICS_GOOGLE_PROJECT"))
+            print(res)
         }
         
         USER$level <- as.character(res$fields$plan$stringValue)
