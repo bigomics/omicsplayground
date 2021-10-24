@@ -1,20 +1,22 @@
 let db;
+let pricing;
 Shiny.addCustomMessageHandler('set-user', function(msg) {
 	$('#authentication-user').text(msg.user);
 	db = firebase.firestore();
+	pricing = msg.pricing;
 });
 
 function logout(){
 	Shiny.setInputValue('load-auth-firebaseLogout', 1, {priority: 'event'});
 }
 
-function upgrade(){
+async function upgrade(){
 	const docRef = await db
 		.collection('customers')
 		.doc(firebase.auth().currentUser.uid)
 		.collection('checkout_sessions')
 		.add({
-			price: 'price_1Jo2cULGmSWfyZoW6RUicoX6',
+			price: pricing,
 			success_url: window.location.origin,
 			cancel_url: window.location.origin,
 		});

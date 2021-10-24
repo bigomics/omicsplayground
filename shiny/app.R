@@ -429,11 +429,11 @@ createUI <- function(tabs)
     id = "maintabs"
     ##selected = "Home"    
     header = shiny::tagList(
-        shiny::tags$head(shiny::tags$script(src="temp.js")),
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
         shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
         firebase::useFirebase(firestore = TRUE),
+        shiny::tags$head(shiny::tags$script(src="temp.js", type="text/javascript")),
         TAGS.JSSCRIPT,
         shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
         shiny::div(
