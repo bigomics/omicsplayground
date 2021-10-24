@@ -212,33 +212,34 @@ server = function(input, output, session) {
                                 enable_delete = opt$ENABLE_DELETE,                                 
                                 enable_save = opt$ENABLE_SAVE
                                 )   
-    env[["user"]] <- shiny::callModule(UserBoard, "user", env)        
+    env[["user"]] <- shiny::callModule(UserBoard, "user", env)
+    ##shinyjs::runjs("logout()")    
     
     ## Modules needed after dataset is loaded (deferred)
     already_loaded <- FALSE
     observeEvent( env[["load"]]$loaded(), {
 
         env.loaded <- env[["load"]]$loaded()
-        message("[SERVER] env.loaded = ",env.loaded)                                    
+        message("[SERVER:env.loaded] env.loaded = ",env.loaded)                                    
         
         if(!env[["load"]]$loaded()){
-            message("[SERVER] env.loaded = FALSE")                                    
+            message("[SERVER:env.loaded] env.loaded = FALSE")                                    
             return(NULL)
         }
 
         on.exit({
-            message("[SERVER] on.exit::removing Modal")                        
+            message("[SERVER:env.loaded] on.exit::removing Modal")                        
             shiny::removeModal()
         })
 
         if(already_loaded) {
-            message("[SERVER] modules already loaded!")            
+            message("[SERVER:env.loaded] modules already loaded!")            
             return(NULL)
         }
         already_loaded <<- TRUE
         
         ## load other modules if
-        message("[SERVER] --------- calling shiny modules ----------")
+        message("[SERVER:env.loaded] --------- calling shiny modules ----------")
         if(ENABLED["view"])   env[["view"]]   <- shiny::callModule( DataViewBoard, "view", env)
         if(ENABLED["clust"])  env[["clust"]]  <- shiny::callModule( ClusteringBoard, "clust", env)
         if(ENABLED["ftmap"])  env[["ftmap"]]  <- shiny::callModule( FeatureMapBoard, "ftmap", env)    
