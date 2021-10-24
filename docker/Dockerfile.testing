@@ -54,6 +54,7 @@ WORKDIR /omicsplayground
 COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
 COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
 RUN chmod ugo+rwX /tmp && chmod o+t /tmp
+RUN ln -s /var/log/shiny-server/log /log
 
 EXPOSE 3838
 CMD ["/usr/bin/shiny-server.sh"]
