@@ -52,6 +52,80 @@ Shiny.addCustomMessageHandler('get-permissions', function(msg) {
 		});
 });
 
+Shiny.addCustomMessageHandler('get-subs', function(msg) {
+	if(!db)
+		db = firebase.firestore();
+
+	db
+		.collection('customers')
+		.doc(firebase.auth().currentUser.uid)
+		.collection('subscriptions')
+		.where('status', 'in', ['active', 'inactive'])
+		.onSnapshot(async (snapshot) => {
+			const docs = [];
+
+			snapshot.docs.forEach(function(doc){
+				let docp = doc.data();
+				docs.push({
+					status: docp.status,
+					cancel_at_period_end: docp.cancel_at_period_end,
+					current_period_start: docp.current_period_start.seconds,
+					current_period_end: docp.current_period_end.seconds,
+				});
+			})
+
+			// no past subs
+			if(docs.length == 0){
+				$('#user-subs').html(
+					'<span>No past subscriptions</span>'
+				);
+				return;
+			}
+
+			let content = '';
+			docs.forEach(function(doc) {
+				let cl = 'warning';
+				if(doc.status == 'active')
+					cl = 'success';
+
+				content += `<div class='thumbnail'>
+					<div class='caption'>
+						<div class='row'>
+							<div class='col-md-3'>
+								<br/>
+								Monthly Subscription
+							</div>
+							<div class='col-md-3'>
+								<span style='color:grey;'>Start</span><br/>
+								${new Date(doc.current_period_start * 1000).toLocaleDateString()}
+							</div>
+							<div class='col-md-3'>
+								<span style='color:grey;'>End</span><br/>
+								${new Date(doc.current_period_end * 1000).toLocaleDateString()}
+							</div>
+							<div class='col-md-3'>
+								<span style='color:grey;'>Status</span><br/>
+								<span class='label label-${cl}'>${doc.status}</span>
+							</div>
+						</div>
+					</div>
+				</div>`;
+			});
+
+			$('#user-subs').html(content);
+
+		}, function(error) {
+			Shiny.setInputValue(
+				msg.ns + '-subs', 
+				{ 
+					success: false,
+					response: error
+				},
+				{priority: 'event'}
+			);
+		});
+});
+
 function logout(){
 	Shiny.setInputValue('load-auth-firebaseLogout', 1, {priority: 'event'});
 }

@@ -114,6 +114,12 @@ FirebaseAuthenticationModule <- function(input, output, session)
         set_providers( # define providers
             email_link = TRUE, 
             google = TRUE
+        )$
+        set_privacy_policy_url(
+            "https://bigomics.ch/privacy/"
+        )$
+        set_tos_url(
+            "https://bigomics.ch/terms/"
         )
     firebase$set_tos_url("https://bigomics.ch/terms")
     firebase$set_privacy_policy_url("https://bigomics.ch/privacy")    
