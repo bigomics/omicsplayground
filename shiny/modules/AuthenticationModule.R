@@ -94,6 +94,9 @@ FirebaseAuthenticationModule <- function(input, output, session)
 {
     message("[FirebaseAuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
 
+    firebase_config <- firebase:::read_config("firebase.rds")
+    Sys.setenv(OMICS_GOOGLE_PROJECT = firebase_config$projectId)
+
     ns <- session$ns    
     USER <- shiny::reactiveValues(
         logged = FALSE, 
@@ -101,7 +104,8 @@ FirebaseAuthenticationModule <- function(input, output, session)
         password = "", 
         email = "", 
         level = "",
-        limit = ""
+        limit = "",
+        token = NULL
     )    
 
     firebase <- firebase::FirebaseUI$
@@ -120,6 +124,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
         USER$email <- ""
         USER$level <- ""
         USER$limit <- ""
+        USER$token <- ""
     }
     
     output$showLogin <- shiny::renderUI({
@@ -232,13 +237,19 @@ FirebaseAuthenticationModule <- function(input, output, session)
             res <- google_user_create(token, USER$email)
         }
         
+        USER$token <- as.character(token)
         USER$level <- as.character(res$fields$plan$stringValue)
         if(length(USER$level)==0) USER$level <- ""
         
         dbg("[FirebaseAuthenticationModule] plan$stringValue = ", USER$level)
         dbg("[FirebaseAuthenticationModule] str(plan$stringValue) = ", str(USER$level))
         
-        session$sendCustomMessage("set-user", list(user = USER$email))
+        session$sendCustomMessage(
+            "set-user", 
+            list(
+                user = USER$email
+            )
+        )
     })
     
     rt <- list(
