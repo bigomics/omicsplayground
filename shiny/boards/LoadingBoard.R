@@ -66,11 +66,12 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         auth <- shiny::callModule(
             RegisterAuthenticationModule, "auth",
             register.file = "../logs/register.log")
-    } else if(authentication == "shinyproxy" && in.shinyproxy()) {
-        username <- NULL
-        is.anonymous <- Sys.getenv("SHINYPROXY_USERGROUPS")=="ANONYMOUS"
-        if(!is.anonymous) username <- Sys.getenv("SHINYPROXY_USERNAME")
-        auth <- shiny::callModule(NoAuthenticationModule, "auth", username=username)
+        ##} else if(authentication == "shinyproxy" && in.shinyproxy()) {
+    } else if(authentication == "shinyproxy") {        
+        username <- Sys.getenv("SHINYPROXY_USERNAME")
+        ##email <- Sys.getenv("SHINYPROXY_EMAIL")        
+        auth <- shiny::callModule(NoAuthenticationModule, "auth",
+                                  username=username, email=username)
     } else {
         ## none
         auth <- shiny::callModule(NoAuthenticationModule, "auth")
@@ -319,7 +320,7 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         df <- getFilteredPGXINFO()
         dbg("[LoadingBoard:selectedPGX] isnull.df = ",is.null(df))
         dbg("[LoadingBoard:selectedPGX] dim.df = ",dim(df))                        
-        if(nrow(df)==0) return(NULL)        
+        if(is.null(df) || nrow(df)==0) return(NULL)        
         pgxfile <- as.character(df$dataset[sel])
         pgxfile <- paste0(sub("[.]pgx$","",pgxfile),".pgx") ## add/replace .pgx
         pgxfile
@@ -692,7 +693,7 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
 
         if(nrow(df)==0 && auth$logged()) {
             shinyalert::shinyalert(
-                            title = "Welcome! Are you new?",
+                            title = "Hi There! Are you new?",
                             text = "Your playground looks a bit empty. Please start by uploading some data!",
                             type = "warning",
                             callbackR = updateTab

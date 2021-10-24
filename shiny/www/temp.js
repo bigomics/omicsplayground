@@ -3,9 +3,10 @@ Shiny.addCustomMessageHandler('set-user', function(msg) {
 });
 
 function logout(){
-	Shiny.setInputValue('load-auth-firebaseLogout', 1, {priority: 'event'});
-}
+    Shiny.setInputValue('load-auth-firebaseLogout', 1, {priority: 'event'});
+};
 
 function upgrade(){
-	console.log("Coming soon")
-}
+    console.log("Coming soon");
+    Shiny.setInputValue('load-auth-firebaseUpgrade', 1, {priority: 'event'});    
+};
