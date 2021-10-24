@@ -228,7 +228,7 @@ server = function(input, output, session) {
             message("[SERVER:env.loaded] on.exit::removing Modal")                        
             shiny::removeModal()
         })
-
+        
         if(already_loaded) {
             message("[SERVER:env.loaded] modules already loaded!")            
             return(NULL)
@@ -286,7 +286,7 @@ server = function(input, output, session) {
             lapply(MAINTABS, function(m) shiny::hideTab("maintabs",m))
             updateTabsetPanel(session, "maintabs", selected = "Home")                        
             if(!opt$ENABLE_UPLOAD)  shiny::hideTab("load-tabs","Upload data")
-            if(is.null(ACCESS.LOG)) shiny::hideTab("load-tabs","Visitors map")            
+            if(is.null(ACCESS.LOG)) shiny::hideTab("user-tabs","Visitors map")            
             return(NULL)
         }
 
@@ -327,7 +327,7 @@ server = function(input, output, session) {
         tabRequire(pgx, "wordcloud", "maintabs", "Word cloud")
         tabRequire(pgx, "deconv", "maintabs", "CellProfiling")
         fileRequire("tcga_matrix.h5", "maintabs", "TCGA survival (beta)")         
-        if(!is.null(ACCESS.LOG)) shiny::showTab("load-tabs","Visitors map")                    
+        if(!is.null(ACCESS.LOG)) shiny::showTab("user-tabs","Visitors map")                    
 
         message("[SERVER] reconfiguring menu done.")        
     })
