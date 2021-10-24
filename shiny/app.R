@@ -301,13 +301,13 @@ server = function(input, output, session) {
         
         ## shiny::hideTab("cor-tabs","Functional")       
         if(USER_MODE == "dev" || DEV) {
-            shiny::showTab("maintabs","DEV")
+            # shiny::showTab("maintabs","DEV")
             shiny::showTab("view-tabs","Resource info")
             shiny::showTab("scell-tabs1","CNV")  ## DEV only
             shiny::showTab("scell-tabs1","Monocle") ## DEV only
             shiny::showTab("cor-tabs","Functional")
         } else {
-            shiny::hideTab("maintabs","DEV")
+            # shiny::hideTab("maintabs","DEV")
             shiny::hideTab("view-tabs","Resource info")
             shiny::hideTab("scell-tabs1","CNV")  ## DEV only
             shiny::hideTab("scell-tabs1","Monocle") ## DEV only
@@ -379,7 +379,7 @@ user.tab <-  tabView(
 )
 ##logout.tab <- shiny::tabPanel(title=shiny::HTML("<a id='logout' href='/logout'>Logout"))
 logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
-upgrade.tab <- shiny::tabPanel(shiny::HTML("<a onClick='upgrade()' style='font-weight:bold;color:darkgreen;' id='authentication-upgrade'>Upgrade</a>"))
+upgrade.tab <- shiny::tabPanel(shiny::HTML("<a onClick='upgrade()' style='font-weight:bold;color:#2a9d8f;cursor:pointer;' id='authentication-upgrade'>Upgrade</a>"))
 
 ## conditionally add if firebase authentication is enabled
 if(opt$AUTHENTICATION == "firebase") {
@@ -433,7 +433,7 @@ createUI <- function(tabs)
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
         shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
-        firebase::useFirebase(),
+        firebase::useFirebase(firestore = TRUE),
         TAGS.JSSCRIPT,
         shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
         shiny::div(

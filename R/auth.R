@@ -45,3 +45,7 @@ google_user_create <- function(key, email, plan = "free"){
 	)
 	httr::content(req)	
 }
+
+google_checkout_session_create <- function(token, url){
+
+}
