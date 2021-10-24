@@ -67,9 +67,9 @@ in.shinyproxy <- function() {
     ##
     vars <- c("SHINYPROXY_USERNAME","SHINYPROXY_USERGROUPS",
               "PLAYGROUND_USERID","PLAYGROUND_LEVEL")
-    vars <- c("SHINYPROXY_USERNAME","SHINYPROXY_USERGROUPS")
+    vars <- c("SHINYPROXY_USERNAME")
     vals <- sapply(vars,Sys.getenv)
-    all(vals!="")
+    all(vals!="") && dir.exists("/omicsplayground")
 }
 
 tabRequire <- function(pgx, slot, tabname, subtab) {

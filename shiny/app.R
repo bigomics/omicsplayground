@@ -102,6 +102,7 @@ if(DEV) {
 
 ## over-ride options (for DEBUGGING)
 ##opt$AUTHENTICATION = "none"
+##opt$AUTHENTICATION = "shinyproxy"
 ##opt$AUTHENTICATION = "password"
 ##opt$AUTHENTICATION = "register"
 ##opt$AUTHENTICATION = "firebase"
@@ -450,7 +451,8 @@ user.tab <-  tabView(
 )
 if(opt$AUTHENTICATION == "none") user.tab <- NULL
 logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
-if( opt$AUTHENTICATION == "shinyproxy" && in.shinyproxy() ) {
+##if( opt$AUTHENTICATION == "shinyproxy" && in.shinyproxy() ) {
+if( opt$AUTHENTICATION == "shinyproxy" ) {
     ##logout.tab <- shiny::tabPanel(title=shiny::HTML("<a id='logout' href='/logout'>Logout"))
     logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='logout()' id='authentication-logout'>Logout</a>"))    
 }
