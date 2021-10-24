@@ -223,12 +223,17 @@ FirebaseAuthenticationModule <- function(input, output, session)
     })
     
     observeEvent(input$permissions, {
-        print(input$permissions)
+        perm <- input$permissions
+
+        USER$level <- "free"
+        if(perm$success)
+            USER$level <- "premium"
 
         session$sendCustomMessage(
             "set-user", 
             list(
                 user = USER$email,
+                level = USER$level,
                 pricing = "price_1Jo2cULGmSWfyZoW6RUicoX6"
             )
         )

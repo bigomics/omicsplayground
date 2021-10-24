@@ -3,6 +3,10 @@ let pricing;
 Shiny.addCustomMessageHandler('set-user', function(msg) {
 	$('#authentication-user').text(msg.user);
 	pricing = msg.pricing;
+
+	if(msg.level == "premium"){
+		$('#authentication-upgrade').hide();
+	}
 });
 
 Shiny.addCustomMessageHandler('get-permissions', function(msg) {

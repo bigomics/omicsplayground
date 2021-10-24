@@ -374,8 +374,12 @@ names(TABVIEWS)
 
 ## USERMENU
 user.tab <-  tabView(
-    title = shiny::HTML("<span class='label label-info' id='authentication-user'></span>"),
-    id="user", UserInputs("user"), UserUI("user")    
+    title = shiny::HTML(
+        "<span class='label label-info' id='authentication-user'></span>"
+    ),
+    id = "user", 
+    UserInputs("user"), 
+    UserUI("user")    
 )
 ##logout.tab <- shiny::tabPanel(title=shiny::HTML("<a id='logout' href='/logout'>Logout"))
 logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
