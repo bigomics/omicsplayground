@@ -25,6 +25,10 @@ UserUI <- function(id) {
                 uiOutput(ns("username")),
                 uiOutput(ns("plan"))
             )
+        ),
+        h3("Subscriptions"),
+        shiny::div(
+            id = "user-subs"
         )
     )
 }
@@ -36,6 +40,18 @@ UserBoard <- function(input, output, session, env)
     user <- env[["load"]][["auth"]]
 
     dbg("[UserBoard] >>> initializing UserBoard...")
+
+    observeEvent(user$logged(), {
+        if(!user$logged())
+            return()
+        
+        session$sendCustomMessage(
+            "get-subs",
+            list(
+                ns = ns(NULL)
+            )
+        )
+    })
 
     output$username <- renderUI({
         div(
@@ -50,22 +66,12 @@ UserBoard <- function(input, output, session, env)
             plan_class <- "success"
 
         cl <- sprintf("badge badge-%s", plan_class)
-        span(class = cl, tools::toTitleCase(user$level()))
+        p(
+            span("Subscription level", style="color:grey;"),
+            span(class = cl, tools::toTitleCase(user$level()))
+        )
     })
     
-    output$userdata <- renderTable({
-        dbg("[UserBoard::userdata]  renderDataTable")
-        values <- c(
-            name   = user$name(),
-            email  = user$email(),
-            plan   = user$level(),
-            ##logged = user$logged(),
-            limit  = paste(user$limit(),collapse=';')
-        )
-        values[which(values=="")] <- "(not set)"
-        df <- data.frame(field=names(values), value=values)
-    })
-        
     res <- list()
     return(res)
 }
