@@ -109,9 +109,10 @@ Do you want to remove the 40 minutes time limit? Do you want to be able to save 
 <td><h3><b>Soon!</b></h3></td>
 <td><h3><b>Soon!</b></h3></td>
 <td><h3><b>Contact us!</b></h3></td>
+</tr><tr><td>&nbsp;</tr>
 <tr>
 <td><ul><li>Host up to 3 datasets</li><li>40 minutes time limit</li>
-<li>Up to 20 samples/dataset</li><li>Up to 5 comparisons</li></ul>
+<li>Up to 25 samples/dataset</li><li>Up to 5 comparisons</li></ul>
 <td><ul><li>Host up to 10 datasets</li><li>3 hours time limit</li>
 <li>Up to 100 samples/dataset</li><li>Up to 10 comparisons</li></ul>
 <td><ul><li>Host up to 100 datasets</li><li>8 hours time limit</li>
