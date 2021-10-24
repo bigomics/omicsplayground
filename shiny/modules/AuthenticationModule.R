@@ -31,9 +31,9 @@ AuthenticationUI <- function(id) {
 }
 
 
-NoAuthenticationModule <- function(input, output, session, username="")
+NoAuthenticationModule <- function(input, output, session, username="", email="")
 {
-    message("[NoAuthenticationModule] >>>> using no authentication <<<<")
+    message("[AuthenticationModule] >>>> using no authentication <<<<")
     ns <- session$ns    
     USER <- shiny::reactiveValues(
                        logged=FALSE,
@@ -41,7 +41,6 @@ NoAuthenticationModule <- function(input, output, session, username="")
                        email="",
                        level="",
                        limit="")    
-    USER$name  <- username
 
     resetUSER <- function() {
         USER$logged <- FALSE
@@ -57,6 +56,9 @@ NoAuthenticationModule <- function(input, output, session, username="")
             ns=ns, with.email=FALSE, with.password=FALSE, login.text="Start")
         ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
         shiny::showModal(m)
+
+        USER$name   <- username
+        USER$email  <- email
     })
 
     output$login_warning = shiny::renderText("")
@@ -66,6 +68,7 @@ NoAuthenticationModule <- function(input, output, session, username="")
         ##shiny::showModal(splashHelloModal(name=USER$name,ns=ns))
         USER$logged <- TRUE
         ##Sys.sleep(3);cat("wait 3 seconds to close...\n");removeModal()        
+        session$sendCustomMessage("set-user", list(user = USER$email))
     })
 
     observeEvent( input$firebaseLogout, {
@@ -92,7 +95,7 @@ NoAuthenticationModule <- function(input, output, session, username="")
 
 FirebaseAuthenticationModule <- function(input, output, session)
 {
-    message("[FirebaseAuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
+    message("[AuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
 
     ns <- session$ns    
     USER <- shiny::reactiveValues(
@@ -121,6 +124,8 @@ FirebaseAuthenticationModule <- function(input, output, session)
         USER$level <- ""
         USER$limit <- ""
     }
+
+    first_time = TRUE
     
     output$showLogin <- shiny::renderUI({
         
@@ -139,7 +144,14 @@ FirebaseAuthenticationModule <- function(input, output, session)
         # no need to show the modal
         # if the user is logged
         # this is due to persistence
-        if(USER$logged) {
+        if(USER$logged && first_time) {
+            dbg("[FirebaseAuthenticationModule] USER is already logged in & first time = TRUE")
+            dbg("[FirebaseAuthenticationModule] signing out any previous user")
+            firebase$sign_out()
+            resetUSER()
+            first_time <<- FALSE            
+            ##return()
+        } else if(USER$logged) {
             dbg("[FirebaseAuthenticationModule] USER is already logged in! no modal")                        
             return()
         }
@@ -155,9 +167,9 @@ FirebaseAuthenticationModule <- function(input, output, session)
         )
     })
 
-    observeEvent( input$firebaseLogout, {
+    observeEvent( input$firebaseLogout, {    
 
-        dbg("[FirebaseAuthenticationModule] observe::input$firebaseLogout() reacted")
+        dbg("[FirebaseAuthenticationModule] observe::input$firebaseLogout reacted")        
         
         on.exit({
             firebase$launch()
@@ -245,6 +257,14 @@ FirebaseAuthenticationModule <- function(input, output, session)
         session$sendCustomMessage("set-user", list(user = USER$email))
     })
     
+    observeEvent( input$firebaseUpgrade, {    
+        dbg("[FirebaseAuthenticationModule] observe::firebaseUpgrade reacted")        
+        msg = shiny::HTML("Do you want to remove the 40 minutes time limit? Do you want to be able to save more datasets?")
+        shinyalert::shinyalert(
+                        title = "Coming Soon!",
+                        text = msg, html=TRUE)
+    })
+    
     rt <- list(
         name   = shiny::reactive(USER$name),
         email  = shiny::reactive(USER$email),        
@@ -264,7 +284,7 @@ credentials.file='CREDENTIALS'
 PasswordAuthenticationModule <- function(input, output, session,
                                          credentials.file)
 {
-    message("[NoAuthenticationModule] >>>> using local Email+Password authentication <<<<")
+    message("[AuthenticationModule] >>>> using local Email+Password authentication <<<<")
 
     ns <- session$ns    
     USER <- shiny::reactiveValues(
@@ -401,7 +421,7 @@ PasswordAuthenticationModule <- function(input, output, session,
 register.file="../logs/register.log"
 RegisterAuthenticationModule <- function(input, output, session, register.file)
 {
-    message("[NoAuthenticationModule] >>>> using Register authentication <<<<")
+    message("[AuthenticationModule] >>>> using Register authentication <<<<")
 
     ns <- session$ns
     dir.create("../logs",showWarnings=FALSE)        
@@ -814,7 +834,7 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
 
     div.alt <- div()
     if(!is.null(alt)) div.alt <- alt
-    top <- HTML(rep("<br>",sum(c(!with.email,!with.username,!with.password))))
+    top <- shiny::HTML(rep("<br>",sum(c(!with.email,!with.username,!with.password))))
 
     div.button <- div(
         id="splash-buttons",

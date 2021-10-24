@@ -15,7 +15,6 @@ message("##################### OMICS PLAYGROUND ########################")
 message("###############################################################")
 message("\n")
 
-##Sys.setenv("SHINYPROXY_USERNAME"="Test Person")
 main.start_time <- Sys.time()
 
 message("***********************************************")
@@ -60,6 +59,13 @@ message("FILESX =",FILESX)
 message("PGX.DIR =",PGX.DIR)
 message("SHINYPROXY = ",SHINYPROXY)
 
+DEV = (DEV && dir.exists("modulesx")) 
+##DEV = FALSE
+if(DEV) {
+    message('!!!!!!!!!! DEVELOPER MODE !!!!!!!!!!!!!!')
+}
+
+
 message("\n************************************************")
 message("**************** READ FUNCTIONS ****************")
 message("************************************************")
@@ -69,11 +75,7 @@ source(file.path(RDIR,"pgx-functions.R")) ## functions...
 source(file.path(RDIR,"pgx-files.R"))     ## file functions
 source(file.path(RDIR,"pgx-init.R"))
 source(file.path(RDIR,"auth.R"))
-
 source("app-init.R")
-##message('>>>> Initializing data folder')
-##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=TRUE)
-##pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=TRUE)
 
 if(0) {    
     ##PGX.DIR="../test/"
@@ -92,14 +94,6 @@ message("************************************************")
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
 
-DEV = (DEV && dir.exists("modulesx")) 
-##DEV = FALSE
-if(DEV) {
-    message('******************************************************')
-    message('****************** DEVELOPER MODE ********************')
-    message('******************************************************')    
-}
-
 ## over-ride options (for DEBUGGING)
 ##opt$AUTHENTICATION = "none"
 ##opt$AUTHENTICATION = "shinyproxy"
@@ -111,6 +105,9 @@ if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
     message("[ENV] overriding PLAYGROUND_AUTHENTICATION = ",auth)
     opt$AUTHENTICATION = auth
+}
+if(1 && opt$AUTHENTICATION=="shinyproxy" && !in.shinyproxy()) {
+    Sys.setenv("SHINYPROXY_USERNAME"="Test Person")  ## only for testing!!
 }
 
 ## copy to global environment
@@ -206,7 +203,7 @@ server = function(input, output, session) {
     env[["load"]] <- shiny::callModule(
                                 LoadingBoard, "load",
                                 limits = limits,
-                                enable_userdir = FALSE,                                
+                                enable_userdir = TRUE,                                
                                 authentication = AUTHENTICATION,
                                 enable_upload = opt$ENABLE_UPLOAD,
                                 enable_delete = opt$ENABLE_DELETE,                                 
@@ -443,7 +440,6 @@ if(DEV) {
 names(TABVIEWS)
 TABVIEWS <- TABVIEWS[names(TABVIEWS) %in% names(which(ENABLED))]
 names(TABVIEWS)
-
 
 ## Build USERMENU
 user.tab <-  tabView(
