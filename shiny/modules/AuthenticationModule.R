@@ -247,7 +247,8 @@ FirebaseAuthenticationModule <- function(input, output, session)
         session$sendCustomMessage(
             "set-user", 
             list(
-                user = USER$email
+                user = USER$email,
+                pricing = "price_1Jo2cULGmSWfyZoW6RUicoX6"
             )
         )
     })
