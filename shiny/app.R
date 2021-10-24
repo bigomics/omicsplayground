@@ -122,7 +122,6 @@ TIMEOUT        = as.integer(opt$TIMEOUT)  ## in seconds
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
 
-
 ## --------------------------------------------------------------------
 ## ----------------- READ MODULES/BOARDS ------------------------------
 ## --------------------------------------------------------------------
@@ -444,43 +443,35 @@ TABVIEWS <- TABVIEWS[names(TABVIEWS) %in% names(which(ENABLED))]
 names(TABVIEWS)
 
 
-## USERMENU
+## Build USERMENU
 user.tab <-  tabView(
     title = shiny::HTML("<span class='label label-info' id='authentication-user'></span>"),
     id="user", UserInputs("user"), UserUI("user")    
 )
-##logout.tab <- shiny::tabPanel(title=shiny::HTML("<a id='logout' href='/logout'>Logout"))
+if(opt$AUTHENTICATION == "none") user.tab <- NULL
 logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
-upgrade.tab <- shiny::tabPanel(shiny::HTML("<a onClick='upgrade()' style='font-weight:bold;color:darkgreen;' id='authentication-upgrade'>Upgrade</a>"))
-
-## conditionally add if firebase authentication is enabled
+if( opt$AUTHENTICATION == "shinyproxy" && in.shinyproxy() ) {
+    ##logout.tab <- shiny::tabPanel(title=shiny::HTML("<a id='logout' href='/logout'>Logout"))
+    logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='logout()' id='authentication-logout'>Logout</a>"))    
+}
+upgrade.tab <- NULL
 if(opt$AUTHENTICATION == "firebase") {
-    user.menu <- shiny::navbarMenu(
+    upgrade.tab <- shiny::tabPanel(shiny::HTML("<a onClick='upgrade()' style='font-weight:bold;color:darkgreen;' id='authentication-upgrade'>Upgrade</a>"))
+}
+
+user.menu <- shiny::navbarMenu(
     ##title="User",
     title=icon("user-circle","fa"),                     
     user.tab,
     upgrade.tab,
     "----",
-    shiny::tabPanel(title=shiny::HTML("<a href='https://omicsplayground.readthedocs.io' target='_blank'>Documentation")),
+    shiny::tabPanel(title=shiny::HTML("<a href='https://omicsplayground.readthedocs.io' target='_blank'>Documentation</a>")),
     shiny::tabPanel(title=shiny::HTML("<a href='https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-' target='_blank'>Video tutorials</a>")),
-    shiny::tabPanel(title=shiny::HTML("<a href='https://groups.google.com/d/forum/omicsplayground' target='_blank'>Community Forum")),
-    shiny::tabPanel(title=shiny::HTML("<a href='https://github.com/bigomics/omicsplayground' target='_blank'>GitHub")),
+    shiny::tabPanel(title=shiny::HTML("<a href='https://groups.google.com/d/forum/omicsplayground' target='_blank'>Community Forum</a>")),
+    shiny::tabPanel(title=shiny::HTML("<a href='https://github.com/bigomics/omicsplayground' target='_blank'>GitHub</a>")),
     "----",         
     logout.tab         
-    )
-} else {
-    user.menu <- shiny::navbarMenu(
-    ##title="Help",
-    title=icon("user-circle","fa"),                                                 
-    shiny::tabPanel(title=shiny::HTML("<a href='https://omicsplayground.readthedocs.io' target='_blank'>Documentation")),
-    shiny::tabPanel(title=shiny::HTML("<a href='https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-' target='_blank'>Video tutorials</a>")),
-    shiny::tabPanel(title=shiny::HTML("<a href='https://groups.google.com/d/forum/omicsplayground' target='_blank'>Community Forum")),
-    shiny::tabPanel(title=shiny::HTML("<a href='https://github.com/bigomics/omicsplayground' target='_blank'>GitHub")),
-    ##shiny::tabPanel(title=shiny::HTML("<a href='https://hub.docker.com/r/bigomics/omicsplayground' target='_blank'>Docker")),
-    "----",
-    logout.tab        
-    )
-}
+)
 
 
 createUI <- function(tabs)
