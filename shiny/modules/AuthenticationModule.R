@@ -105,7 +105,8 @@ FirebaseAuthenticationModule <- function(input, output, session)
         email = "", 
         level = "",
         limit = "",
-        token = NULL
+        token = NULL,
+        uid = NULL
     )    
 
     firebase <- firebase::FirebaseUI$
@@ -211,39 +212,19 @@ FirebaseAuthenticationModule <- function(input, output, session)
         USER$logged <- TRUE
         USER$name  <- as.character(response$response$displayName)
         USER$email <- as.character(response$response$email)
+        USER$uid <- as.character(response$response$uid)
         
-        # user logged in we request the id token
-        firebase$request_id_token()
-        
+        session$sendCustomMessage(
+            "get-permissions",
+            list(
+                ns = ns(NULL)
+            )
+        )
     })
     
-    observeEvent(firebase$get_id_token(), {
+    observeEvent(input$permissions, {
+        print(input$permissions)
 
-        dbg("[FirebaseAuthenticationModule] observe::get_id_token() reacted")
-
-        results <- firebase$get_id_token()
-        
-        if(!results$success){
-            dbg("[FirebaseAuthenticationModule] token id fetch error")                        
-            return()
-        }
-
-        token <- results$response$idToken
-        res <- google_user_get(token, USER$email)
-
-        # here we should then create it if it does not exist
-        # this means the user has actually created a new account
-        if(length(res$error)) {
-            res <- google_user_create(token, USER$email)
-        }
-        
-        USER$token <- as.character(token)
-        USER$level <- as.character(res$fields$plan$stringValue)
-        if(length(USER$level)==0) USER$level <- ""
-        
-        dbg("[FirebaseAuthenticationModule] plan$stringValue = ", USER$level)
-        dbg("[FirebaseAuthenticationModule] str(plan$stringValue) = ", str(USER$level))
-        
         session$sendCustomMessage(
             "set-user", 
             list(

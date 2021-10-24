@@ -2,8 +2,50 @@ let db;
 let pricing;
 Shiny.addCustomMessageHandler('set-user', function(msg) {
 	$('#authentication-user').text(msg.user);
-	db = firebase.firestore();
 	pricing = msg.pricing;
+});
+
+Shiny.addCustomMessageHandler('get-permissions', function(msg) {
+	if(!db)
+		db = firebase.firestore();
+
+	db
+		.collection('customers')
+		.doc(firebase.auth().currentUser.uid)
+		.collection('subscriptions')
+		.where('status', '==', 'active')
+		.onSnapshot(async (snapshot) => {
+			const doc = snapshot.docs[0];
+
+			try {
+				Shiny.setInputValue(
+					msg.ns + '-permissions', 
+					{ 
+						success: true,
+						response: doc.data() 
+					},
+					{priority: 'event'}
+				);
+			} catch (error) {
+				Shiny.setInputValue(
+					msg.ns + '-permissions', 
+					{ 
+						success: false,
+						response: error
+					},
+					{priority: 'event'}
+				);
+			}
+		}, function(error) {
+			Shiny.setInputValue(
+				msg.ns + '-permissions', 
+				{ 
+					success: false,
+					response: error
+				},
+				{priority: 'event'}
+			);
+		});
 });
 
 function logout(){
