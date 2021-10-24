@@ -93,6 +93,34 @@ NoAuthenticationModule <- function(input, output, session, username="", email=""
 ## FirebaseAuthenticationModule
 ##================================================================================
 
+
+upgrade.dialog = shiny::HTML("
+Do you want to remove the 40 minutes time limit? Do you want to be able to save more datasets?
+<br><br><center><table width=90% style='background-color:#F4FAFF;'><tr>
+<th>BASIC<br></th>
+<th>STARTER<br></th>
+<th>PRO</th>
+<th>ENTERPRISE</th></tr>
+<tr><td>Try out for free</td>
+<td>Great to start</td>
+<td>For professionals</td>
+<td>Enterprise-Ready</td>
+<tr><td><h3><b>FREE</b></h3></td>
+<td><h3><b>Soon!</b></h3></td>
+<td><h3><b>Soon!</b></h3></td>
+<td><h3><b>Contact us!</b></h3></td>
+<tr>
+<td><ul><li>Host up to 3 datasets</li><li>40 minutes time limit</li>
+<li>Up to 20 samples/dataset</li><li>Up to 5 comparisons</li></ul>
+<td><ul><li>Host up to 10 datasets</li><li>3 hours time limit</li>
+<li>Up to 100 samples/dataset</li><li>Up to 10 comparisons</li></ul>
+<td><ul><li>Host up to 100 datasets</li><li>8 hours time limit</li>
+<li>Up to 2000 samples/dataset</li><li>Up to 100 comparisons</li></ul>
+<td><ul><li>Host unlimited datasets</li><li>No time limit</li>
+<li>Up to 2000 samples/dataset</li><li>Up to 100 comparisons</li></ul>
+</table></center><br><br>
+")
+
 FirebaseAuthenticationModule <- function(input, output, session)
 {
     message("[AuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
@@ -227,9 +255,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
     observeEvent(firebase$get_id_token(), {
 
         dbg("[FirebaseAuthenticationModule] observe::get_id_token() reacted")
-
-        results <- firebase$get_id_token()
-        
+        results <- firebase$get_id_token()        
         if(!results$success){
             dbg("[FirebaseAuthenticationModule] token id fetch error")                        
             return()
@@ -241,9 +267,8 @@ FirebaseAuthenticationModule <- function(input, output, session)
         # here we should then create it if it does not exist
         # this means the user has actually created a new account
         if(length(res$error)) {
-            dbg("[FirebaseAuthenticationModule] not in database, creating user")                        
+            dbg("[FirebaseAuthenticationModule] not in database, creating user")
             res <- google_user_create(token, USER$email)
-
             dbg("[FirebaseAuthenticationModule] OMICS_GOOGLE_PROJECT = ",Sys.getenv("OMICS_GOOGLE_PROJECT"))
             print(res)
         }
@@ -259,10 +284,14 @@ FirebaseAuthenticationModule <- function(input, output, session)
     
     observeEvent( input$firebaseUpgrade, {    
         dbg("[FirebaseAuthenticationModule] observe::firebaseUpgrade reacted")        
-        msg = shiny::HTML("Do you want to remove the 40 minutes time limit? Do you want to be able to save more datasets?")
         shinyalert::shinyalert(
                         title = "Coming Soon!",
-                        text = msg, html=TRUE)
+                        text = upgrade.dialog,
+                        html=TRUE,
+                        animation = FALSE,
+                        size = 'l',
+                        immediate = TRUE
+                    )
     })
     
     rt <- list(

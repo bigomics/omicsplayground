@@ -19,8 +19,8 @@ UserUI <- function(id) {
         height = 750,
         shiny::tabsetPanel(
             id = ns("tabs"),
-            shiny::tabPanel("User profile",uiOutput(ns("userinfo_UI")))
-            ## shiny::tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
+            shiny::tabPanel("User profile",uiOutput(ns("userinfo_UI"))),
+            shiny::tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
             ## shiny::tabPanel("Community forum",uiOutput(ns("forum_UI")))
         )
     )
@@ -67,7 +67,7 @@ UserBoard <- function(input, output, session, env)
             email  = user$email()
         )
         values[which(values=="")] <- "(not set)"
-        data.frame('Personal'=names(values), ' '=values)
+        data.frame('Personal'=names(values), ' '=values, check.names=FALSE)
     })
 
     output$userdata2 <- renderTable({
@@ -78,13 +78,15 @@ UserBoard <- function(input, output, session, env)
             limit  = paste(user$limit(),collapse=';')
         )
         values[which(values=="")] <- "(not set)"
-        data.frame('Account'=names(values), ' '=values)
+        data.frame('Account'=names(values), ' '=values, check.names=FALSE)
     })
         
     output$userinfo_UI <- shiny::renderUI({
-        tableOutput(ns("userdata")),
-        br(),
-        tableOutput(ns("userdata2"))
+        tagList(
+            tableOutput(ns("userdata")),
+            br(),
+            tableOutput(ns("userdata2"))
+        )
     })
     shiny::outputOptions(output, "userinfo_UI", suspendWhenHidden=FALSE) ## important!
 

@@ -23,8 +23,7 @@ LoadingUI <- function(id) {
         shiny::tabsetPanel(
             id = ns("tabs"),
             shiny::tabPanel("Datasets",uiOutput(ns("pgxtable_UI"))),
-            shiny::tabPanel("Upload data",uiOutput(ns("upload_UI"))),
-            shiny::tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
+            shiny::tabPanel("Upload data",uiOutput(ns("upload_UI")))
             ## shiny::tabPanel("Community forum",uiOutput(ns("forum_UI")))
         )
     )
@@ -856,85 +855,6 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         })
 
     }
-
-    ##---------------------------------------------------------------
-    ##--------------------- modules for UsersMap --------------------
-    ##---------------------------------------------------------------
-    
-    usersmap.RENDER %<a-% shiny::reactive({
-        
-        df <- ACCESS.LOG$visitors        
-        ## sPDF <- rworldmap::getMap()  
-        ## rworldmap::mapCountryData(sPDF, nameColumnToPlot='continent')
-        sPDF <- rworldmap::joinCountryData2Map(
-            df,
-            joinCode = "ISO2",
-            nameJoinColumn = "country_code")
-        
-        par(mai=c(0,0.4,0.2,1),xaxs="i",yaxs="i")
-        mapParams <- rworldmap::mapCountryData(
-            sPDF, nameColumnToPlot="count",
-            ##mapTitle = "Number of unique IPs",
-            mapTitle = "", addLegend='FALSE',
-            colourPalette = RColorBrewer::brewer.pal(9,"Blues"),
-            numCats=9, catMethod="logFixedWidth")   
-                   
-        ##add a modified legend using the same initial parameters as mapCountryData
-        do.call( rworldmap::addMapLegend,
-                c(mapParams, labelFontSize = 0.85, legendWidth = 1.2, legendShrink = 0.5,
-                  legendMar = 4, horizontal = FALSE, legendArgs = NULL, tcl = -0.5,
-                  sigFigs = 4, digits = 3)
-                )
-        
-    })
-    
-    usersmap_info = "<strong>Visitors map.</strong> The world map shows the number of users visiting this site by unique IP."
-    
-    shiny::callModule(
-        plotModule,
-        id = "usersmap", ## label="a", 
-        plotlib = "baseplot",
-        func = usersmap.RENDER,
-        func2 = usersmap.RENDER, 
-        info.text = usersmap_info,
-        ##options = usersmap_options,
-        pdf.width=12, pdf.height=7, pdf.pointsize=13,
-        height = c(450,600), width = c('auto',1000), res=72,
-        ##datacsv = enrich_getWordFreq,
-        title = "Number of visitors by country",
-        add.watermark = WATERMARK
-    )
-
-    ##usersmap_caption = "<b>(a)</b> <b>Geo locate.</b>"
-    output$usersmapInfo <- shiny::renderUI({
-
-        u <- ACCESS.LOG
-        df <- u$visitors
-        rownames(df) <-  df$country_name
-        tot.users <- sum(df$count)
-        freq <- df$count
-        names(freq) <- df$country_name
-        top.countries <- head(sort(freq,dec=TRUE),10)
-        top.countriesTT <- paste("<li>",names(top.countries),top.countries,collapse=" ")
-        
-        shiny::HTML(
-            "<b>Total visitors:</b>",tot.users,"<br><br>",
-            "<b>Top 10 countries:</b><br><ol>",top.countriesTT,"</ol><br>",
-            "<b>Period:</b><br>",u$period,"<br><br>"
-        )
-    })
-    
-    output$usersmap_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = 600,
-            shiny::fillRow(
-                flex = c(1,4.5),
-                shiny::wellPanel( shiny::uiOutput(ns("usersmapInfo"))),
-                plotWidget(ns("usersmap"))
-            )
-        )
-    })
-
 
     ##---------------------------------------------------------------
     ##----------------- modules for Forum ---------------------------
