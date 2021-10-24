@@ -45,8 +45,9 @@ UserBoard <- function(input, output, session, env)
         dbg("[UserBoard::description] user$level = ",user$level() )
         
         description = "Signed in as<h2><b>NAME<b></h2><h4><b>EMAIL<b></h4><br><h4>LEVEL</h4>"
+        description = "Signed in as<h2><b>NAME<b></h2><h4><b>EMAIL<b></h4>"
         ##description = "Signed in as<h4><b>EMAIL<b></h4>"        
-        description <- sub("EMAIL",  as.character(user$email()),  description)
+        description <- sub("EMAIL", as.character(user$email()),  description)
         description <- sub("NAME",  as.character(user$name()),  description)        
         description <- sub("LEVEL", as.character(user$level()), description)     
         shiny::HTML(description)
@@ -59,22 +60,31 @@ UserBoard <- function(input, output, session, env)
     output$inputsUI <- shiny::renderUI({        
     })
 
-
     output$userdata <- renderTable({
         dbg("[UserBoard::userdata]  renderDataTable")
         values <- c(
             name   = user$name(),
-            email  = user$email(),
+            email  = user$email()
+        )
+        values[which(values=="")] <- "(not set)"
+        data.frame('Personal'=names(values), ' '=values)
+    })
+
+    output$userdata2 <- renderTable({
+        dbg("[UserBoard::userdata]  renderDataTable")
+        values <- c(
             plan   = user$level(),
             ##logged = user$logged(),
             limit  = paste(user$limit(),collapse=';')
         )
         values[which(values=="")] <- "(not set)"
-        df <- data.frame(field=names(values), value=values)
+        data.frame('Account'=names(values), ' '=values)
     })
         
-    output$userinfo_UI <- shiny::renderUI({        
-        tableOutput(ns("userdata"))
+    output$userinfo_UI <- shiny::renderUI({
+        tableOutput(ns("userdata")),
+        br(),
+        tableOutput(ns("userdata2"))
     })
     shiny::outputOptions(output, "userinfo_UI", suspendWhenHidden=FALSE) ## important!
 
