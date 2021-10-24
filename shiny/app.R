@@ -48,8 +48,7 @@ envcat("OMICS_GOOGLE_PROJECT")
 ## -------------------------- INIT ------------------------------------
 ## --------------------------------------------------------------------
 
-message("\n")
-message("***********************************************")
+message("\n***********************************************")
 message("*********** SETTING GLOBAL VARIABLES **********")
 message("***********************************************")
 
@@ -61,14 +60,32 @@ message("FILESX =",FILESX)
 message("PGX.DIR =",PGX.DIR)
 message("SHINYPROXY = ",SHINYPROXY)
 
+message("\n************************************************")
+message("**************** READ FUNCTIONS ****************")
+message("************************************************")
+
 source(file.path(RDIR,"pgx-include.R"))    ## lots of libraries and source()
 source(file.path(RDIR,"pgx-functions.R")) ## functions...
 source(file.path(RDIR,"pgx-files.R"))     ## file functions
 source(file.path(RDIR,"pgx-init.R"))
 source(file.path(RDIR,"auth.R"))
 
-message("\n")
-message("************************************************")
+source("app-init.R")
+##message('>>>> Initializing data folder')
+##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=TRUE)
+##pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=TRUE)
+
+if(0) {    
+    ##PGX.DIR="../test/"
+    pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
+    load("../data/geiger2016-arginine.pgx")
+    load("../data/GSE10846-dlbcl-nc.pgx")
+    load("../data/GSE157905-lenvatinib-bc.pgx")
+    load("../data/gtex-aging-n40svaNnm.pgx")
+    ngs = pgx.initialize(ngs)
+}
+
+message("\n************************************************")
 message("************* parsing OPTIONS file *************")
 message("************************************************")
 
@@ -88,7 +105,7 @@ if(DEV) {
 ##opt$AUTHENTICATION = "password"
 ##opt$AUTHENTICATION = "register"
 ##opt$AUTHENTICATION = "firebase"
-    
+
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
     message("[ENV] overriding PLAYGROUND_AUTHENTICATION = ",auth)
@@ -105,24 +122,6 @@ TIMEOUT        = as.integer(opt$TIMEOUT)  ## in seconds
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
 
-## --------------------------------------------------------------------
-## ------------------------ READ FUNCTIONS ----------------------------
-## --------------------------------------------------------------------
-
-source("app-init.R")
-message('>>>> Initializing data folder')
-##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=TRUE)
-pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=TRUE)
-
-if(0) {    
-    ##PGX.DIR="../test/"
-    pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
-    load("../data/geiger2016-arginine.pgx")
-    load("../data/GSE10846-dlbcl-nc.pgx")
-    load("../data/GSE157905-lenvatinib-bc.pgx")
-    load("../data/gtex-aging-n40svaNnm.pgx")
-    ngs = pgx.initialize(ngs)
-}
 
 ## --------------------------------------------------------------------
 ## ----------------- READ MODULES/BOARDS ------------------------------
@@ -202,15 +201,17 @@ server = function(input, output, session) {
                 "genesets" = opt$MAX_GENESETS,
                 "datasets" = opt$MAX_DATASETS)
     env <- list()  ## communication "environment"
-
+    
     ## Modules needed from the start
     env[["load"]] <- shiny::callModule(
                                 LoadingBoard, "load",
                                 limits = limits,
+                                enable_userdir = FALSE,                                
                                 authentication = AUTHENTICATION,
                                 enable_upload = opt$ENABLE_UPLOAD,
                                 enable_delete = opt$ENABLE_DELETE,                                 
-                                enable_save = opt$ENABLE_SAVE)   
+                                enable_save = opt$ENABLE_SAVE
+                                )   
     env[["user"]] <- shiny::callModule(UserBoard, "user", env)        
     
     ## Modules needed after dataset is loaded (deferred)
