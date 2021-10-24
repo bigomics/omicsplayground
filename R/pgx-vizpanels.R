@@ -20,21 +20,6 @@ viz._showPlotly <- function(fig){}
 viz._showShiny  <- function(fig){}
 viz._showGGplot  <- function(fig){}
 
-if(0) {
-
-    RDIR = "../R"
-    FILES = "../lib"
-    PGX.DIR = "../data"
-    source("../R/pgx-include.R")
-    ##source("options.R")
-    FILES
-    source("pgx-include.R")
-    load("../data/geiger2016-arginine.pgx")
-    viz.Contrasts(ngs, contrasts=NULL)
-    
-}
-
-
 ##cX2=NULL;pos0=pos1=pos2=NULL;npca=3;cex=1;nmax=40;main=c("not-corrected", "corrected","corrected2");pca.heatmap=FALSE
 viz.CompareDatasets <- function(pgx1, pgx2, nmax=50, cex=1, 
                                 main=c("heatmap1", "heatmap2"),

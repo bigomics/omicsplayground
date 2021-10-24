@@ -269,14 +269,16 @@ PasswordAuthenticationModule <- function(input, output, session,
     ns <- session$ns    
     USER <- shiny::reactiveValues(
                        logged=FALSE,
-                       username=NA,
+                       ## username=NA,
+                       email=NA,                       
                        password=NA,
                        level=NA,
                        limit=NA)    
 
     resetUSER <- function() {
         USER$logged <- FALSE
-        USER$username <- NA
+        ## USER$username <- NA
+        USER$email <- NA        
         USER$password <- NA
         USER$level <- ""
         USER$limit <- ""
@@ -288,10 +290,8 @@ PasswordAuthenticationModule <- function(input, output, session,
     output$showLogin <- shiny::renderUI({
         m <- splashLoginModal(
             ns=ns,
-            ##with.email=TRUE,
-            ##with.username=FALSE,
-            with.email=FALSE,
-            with.username=TRUE,
+            with.email=TRUE,
+            with.username=FALSE,
             with.password=TRUE)
         ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
         shiny::showModal(m)
@@ -305,27 +305,27 @@ PasswordAuthenticationModule <- function(input, output, session,
         valid.date = FALSE
         valid.user = FALSE
         
-        login_username <- input$login_username
-        if(is.null(login_username) || login_username =="") {
-            login_username <- input$login_email
-        }
+        login_email    <- input$login_email
         login_password <- input$login_password
 
-        if( is.null(login_username) || is.null(login_password)) return(NULL)
-        if( login_username=="" || login_password=="") return(NULL)            
-        sel <- tail(which( CREDENTIALS$username == login_username),1)       
-        valid.user <- isTRUE(login_username %in% CREDENTIALS$username)
-        valid.pw   <- isTRUE(CREDENTIALS[sel,"password"]==input$login_password)
+        if( is.null(login_email) || is.null(login_password)) return(NULL)
+        if( login_email=="" || login_password=="") return(NULL)            
+        sel <- tail(which( CREDENTIALS$email == login_email),1)       
+        dbg("[AuthenticationModule:input$login_btn] CREDENTIALS$email = ",CREDENTIALS$email)
+        dbg("[AuthenticationModule:input$login_btn] sel = ",sel)        
+        
+        valid.user <- isTRUE(CREDENTIALS$email[sel] == login_email) && length(sel)>0
+        valid.pw   <- isTRUE(CREDENTIALS[sel,"password"] == input$login_password)
         valid.date <- isTRUE(Sys.Date() < as.Date(CREDENTIALS[sel,"expiry"]) )
         login.OK = (valid.user && valid.pw && valid.date)
         
         message("--------- password login ---------")
-        message("input.username = ",input$login_username)
+        ##message("input.username = ",input$login_username)
         message("input.email    = ",input$login_email)
         message("input.password = ",input$login_password)
         message("user.password  = ",CREDENTIALS[sel,"password"])
         message("user.expiry    = ",CREDENTIALS[sel,"expiry"])
-        message("user.name      = ",CREDENTIALS[sel,"username"])
+        message("user.email     = ",CREDENTIALS[sel,"email"])
         message("user.limit     = ",CREDENTIALS[sel,"limit"])
         message("valid.user     = ",valid.user)
         message("valid.date     = ",valid.date)
@@ -341,11 +341,10 @@ PasswordAuthenticationModule <- function(input, output, session,
             ##USER$name   <- input$login_username
             ##USER$email <- CREDENTIALS[sel,"email"]
             cred <- CREDENTIALS[sel,]
-            USER$username  <- cred$username
+            ##USER$username  <- cred$username
+            USER$email     <- cred$email
             USER$level     <- cred$level
             USER$limit     <- cred$limit
-            ##USER$expiry    <- cred$expiry
-            ##USER$password  <- cred$password
             
             ## Here you can perform some user-specific functions, site
             ## news, or 2nd hello modal...
@@ -353,14 +352,16 @@ PasswordAuthenticationModule <- function(input, output, session,
             ##removeModal()
             USER$logged <- TRUE            
 
-        } else {
-            
+        } else {            
             message("[PasswordAuthenticationModule::login] REFUSED : invalid login! ")
-
             if(!valid.date) {
                 output$login_warning = shiny::renderText("Registration expired")
-            } else {
-                output$login_warning = shiny::renderText("Invalid username or password")
+            }
+            if(!valid.pw) {
+                output$login_warning = shiny::renderText("Invalid password")
+            }
+            if(!valid.user) {
+                output$login_warning = shiny::renderText("Invalid user")
             }
             ##shinyjs::delay(2000, shinyjs::hide("login_warning", anim = TRUE, animType = "fade"))
             shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
@@ -374,8 +375,8 @@ PasswordAuthenticationModule <- function(input, output, session,
         resetUSER()
         m <- splashLoginModal(
             ns=ns,
-            with.email=FALSE,
-            with.username=TRUE,
+            with.email=TRUE,
+            with.username=FALSE,
             with.password=TRUE)
         ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
         shiny::showModal(m)
@@ -383,8 +384,8 @@ PasswordAuthenticationModule <- function(input, output, session,
     
     ## module reactive return value
     rt <- list(
-        name   = shiny::reactive(USER$username),
-        email  = shiny::reactive(""),
+        name   = shiny::reactive(""),
+        email  = shiny::reactive(USER$email),
         level  = shiny::reactive(USER$level),
         logged = shiny::reactive(USER$logged),
         limit  = shiny::reactive(USER$limit)        
@@ -469,7 +470,7 @@ RegisterAuthenticationModule <- function(input, output, session, register.file)
         message("[AuthenticationModule::login] email = ",input$login_email)
         email <- input$login_email
         ## check login
-        email.exists <- email %in% REGISTERED$email
+        email.exists <- (email %in% REGISTERED$email)
         if(!email.exists) {
             output$login_warning = shiny::renderText("invalid email")
             shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")}) 
@@ -681,7 +682,7 @@ RegisterAuthenticationModule <- function(input, output, session, register.file)
     output$register_warning = shiny::renderText("")
     res <- list(
         name   = shiny::reactive(USER$name),
-        email  = shiny::reactive(""),
+        email  = shiny::reactive(USER$email),
         level  = shiny::reactive(USER$level),
         logged = shiny::reactive(USER$logged),
         limit = shiny::reactive(USER$limit)

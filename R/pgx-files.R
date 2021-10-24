@@ -323,16 +323,15 @@ pgx.readDatasetProfiles1 <- function(pgx.dir, file="datasets-allFC.csv",
 }
 
 
-file="datasets-info.csv"
-pgx.scanInfoFile <- function(pgx.dir, file="datasets-info.csv", verbose=TRUE)
+file="datasets-info.csv";force=FALSE
+pgx.scanInfoFile <- function(pgx.dir, file="datasets-info.csv", force=FALSE, verbose=TRUE)
 {
     pgxinfo <- NULL
     i=1
-    for(i in 1:length(pgx.dir)) {
-        
+    for(i in 1:length(pgx.dir)) {        
+        pgx.initDatasetFolder1(pgx.dir[i], force=force, verbose=TRUE)        
         pgxinfo.file <- file.path(pgx.dir[i], file)
-        if(!file.exists(pgxinfo.file)) next()  ## really?? no updating??
-        
+        if(!file.exists(pgxinfo.file)) next()  ## really?? no updating??        
         info = fread.csv(pgxinfo.file, stringsAsFactors=FALSE, row.names=1)
         dim(info)       
         info$path <- pgx.dir[i]

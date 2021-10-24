@@ -137,10 +137,6 @@ pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL
             sigdb
         }
         
-        ## sigdb.list = c(
-        ##     file.path(PGX.DIR,"datasets-allFC.csv"),
-        ##     file.path(FILES,"sigdb-archs4.h5")
-        ## )
         db <- sigdb[1]
         for(db in sigdb) {
             if(file.exists(db)) {
