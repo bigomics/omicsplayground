@@ -351,6 +351,7 @@ PasswordAuthenticationModule <- function(input, output, session,
             ##shiny::showModal(splashHelloModal(USER$name,ns=ns))
             ##removeModal()
             USER$logged <- TRUE            
+            session$sendCustomMessage("set-user", list(user = USER$email))
 
         } else {            
             message("[PasswordAuthenticationModule::login] REFUSED : invalid login! ")
@@ -483,6 +484,7 @@ RegisterAuthenticationModule <- function(input, output, session, register.file)
         USER$email <- email
         USER$registered <- user.registered
         USER$logged <- TRUE
+        session$sendCustomMessage("set-user", list(user = USER$email))
         
         message("[AuthenticationModule::login] email.exists = ",email.exists)
         message("[AuthenticationModule::login] user.registered = ",user.registered)
