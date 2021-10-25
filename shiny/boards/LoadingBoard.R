@@ -780,10 +780,11 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         dbg("[LoadingBoard] initializing UploadModule")        
         uploaded_pgx <- UploadModuleServer(
             id = "upload_panel",
+            FILES = FILES,
+            pgx.dir = shiny::reactive(getPGXDIR()),
             height = 720,
             ## limits = c(samples=20, comparisons=20, genes=8000),
-            limits = limits,
-            FILES = FILES        
+            limits = limits
         )
         
         shiny::observeEvent( uploaded_pgx(), {
@@ -837,7 +838,8 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
             
             ## shiny::removeModal()
             msg1 <- "<b>Ready!</b>"
-            beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
+            ##beepr::beep(sample(c(3,4,5,6,8),1))  ## music!!
+            beepr::beep(10)  ## short beep
             
             if(enable_save) {
                 msg1 <- "<b>Ready!</b><br>Your data is ready and has been saved in your library. You can now start exploring your data."

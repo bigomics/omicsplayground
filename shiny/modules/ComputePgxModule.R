@@ -34,7 +34,7 @@ ComputePgxUI <- function(id) {
 }
 
 ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
-                             FILES, enable = TRUE, alertready = TRUE, 
+                             FILES, pgx.dirRT, enable = TRUE, alertready = TRUE, 
                              max.genes = 20000, max.genesets = 10000,
                              max.datasets = 100, height = 720 )
 {
@@ -247,9 +247,12 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     message("[ComputePgxServer:@compute] WARNING:: *** NOT ENABLED ***")
                     return(NULL)
                 }
-                
-                numpgx <- length(dir(PGX.DIR, pattern="*.pgx$"))
-                dbg("[ComputePgxServer::@compute] numpgx  = ", numpgx )
+
+                pgxdir <- pgx.dirRT()
+                numpgx <- length(dir(pgxdir, pattern="*.pgx$"))
+
+                dbg("[ComputePgxServer::@compute] pgxdir  = ", pgxdir )
+                dbg("[ComputePgxServer::@compute] numpgx  = ", numpgx )                
                
                 if(numpgx >= max.datasets) {
                     msg = "Your storage is full. You have NUMPGX pgx files in your data folder and your quota is LIMIT datasets. Please delete some datasets or consider buying extra storage."

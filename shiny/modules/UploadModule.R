@@ -7,41 +7,6 @@
 ## Upload data Module
 ##================================================================================
 
-
-
-if(0) {
-
-    OPG = "~/Playground/omicsplayground"
-    RDIR = file.path(OPG,"R")
-    FILES = file.path(OPG,"lib")
-    FILESX = file.path(OPG,"libx")
-    PGX.DIR = file.path(OPG,"data")
-    source(file.path(RDIR,"pgx-include.R"))  ## pass local vars
-    source(file.path(RDIR,"pgx-init.R"))  ## pass local vars
-    load(file.path(PGX.DIR,"geiger2016-arginine.pgx"))
-    source("UploadModule.R")  ## this file...    
-    pgx <- NULL
-    pgx <- gadgetize2(
-        UploadModuleUI, UploadModuleServer,
-        title = "UploadGadget", height=640, size="l", 
-        FILES = "~/Playground/omicsplayground/lib"
-    )
-    names(pgx)
-
-    pgx <- gadgetize2(
-        ComputePgxUI, ComputePgxServer,
-        title = "ComputePgxGadget", height=640, size="l", 
-        countsRT = shiny::reactive(ngs$counts),
-        samplesRT = shiny::reactive(ngs$samples),
-        contrastsRT = shiny::reactive(ngs$model.parameters$exp.matrix),
-        alertready = TRUE
-    )
-    pgx <- ComputePgxGadget(ngs$counts, ngs$samples, ngs$model.parameters$exp.matrix)
-    names(pgx)
-
-}
-
-
 UploadModuleUI <- function(id) {
     ns <- shiny::NS(id)
     shiny::tabsetPanel(
@@ -57,7 +22,9 @@ UploadModuleUI <- function(id) {
 }
 
 UploadModuleServer <- function(id, 
-                               height=720, FILES = "../lib", 
+                               FILES,
+                               pgx.dir,
+                               height = 720,
                                limits = c(
                                    samples = 100,
                                    comparisons = 20,
@@ -314,6 +281,7 @@ UploadModuleServer <- function(id,
                 enable = upload_ok,
                 alertready = FALSE,
                 FILES = FILES,
+                pgx.dir = shiny::reactive(pgx.dir()),
                 max.genes = as.integer(limits["genes"]),
                 max.genesets = as.integer(limits["genesets"]),
                 max.datasets = as.integer(limits["datasets"]),
