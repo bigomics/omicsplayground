@@ -147,7 +147,7 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         ui <- shiny::tagList(
             shinyalert::useShinyalert(),  # Set up shinyalert
             shiny::p(shiny::strong("Dataset info:")),
-            shiny::div( shiny::htmlOutput(ns("dataset_info")), id="datainfo"),
+            shiny::div(shiny::htmlOutput(ns("dataset_info")), id="datainfo"),
             shiny::br(),
             shiny::conditionalPanel(
                 "output.rowselected != 0", ns=ns,
@@ -164,8 +164,9 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
                 placement="bottom"),
                 delete_button
             ),
-            shiny::br(),br(),
-            shinyBS::tipify( shiny::actionLink(ns("showfilter"), "show filters", icon=icon("cog", lib = "glyphicon")),
+            shiny::br(),shiny::br(),
+            shinyBS::tipify( shiny::actionLink(ns("showfilter"), "show filters",
+                                               icon=icon("cog", lib = "glyphicon")),
                    "Show dataset filters.", placement="top"),
             shiny::br(),br(),
             shiny::conditionalPanel(
@@ -354,8 +355,9 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         pgx <- NULL
         if(file.exists(pgxfile1)) {
             message("[LoadingBoard::loadPGX] loading ",pgxfile)
-            ##withProgress(message='loading...', value=0.8,
-            load(pgxfile1,verbose=0)
+            shiny::withProgress(message="Loading data...", value=0.33, {            
+                load(pgxfile1,verbose=0)
+            })
         } else {
             cat("[LoadingBoard::loadPGX] error file not found : ",pgxfile)
             return(NULL)
@@ -781,7 +783,7 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         uploaded_pgx <- UploadModuleServer(
             id = "upload_panel",
             FILES = FILES,
-            pgx.dir = shiny::reactive(getPGXDIR()),
+            pgx.dirRT = shiny::reactive(getPGXDIR()),
             height = 720,
             ## limits = c(samples=20, comparisons=20, genes=8000),
             limits = limits
