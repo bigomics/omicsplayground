@@ -394,10 +394,13 @@ server = function(input, output, session) {
         }
     })
     
-    observeEvent( input$sigstop, {
-        dbg("[SERVER] sigstop reacted!")
+    observeEvent( input$quit, {
+        dbg("[SERVER] !!!!! input$quit reacted!")
+        dbg("[SERVER] closing session... ")        
         session$close()
+        dbg("[SERVER] stopping App... ")                
         stopApp()
+        dbg("[SERVER] died... ")                        
     })
     
     ## report server times
@@ -454,7 +457,7 @@ user.tab <-  tabView(
 if(opt$AUTHENTICATION == "none") user.tab <- NULL
 logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
 ##stop.tab    <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='sigstop()'>Stop</a>"))
-stop.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='sigstop()'>Stop session</a>"))
+stop.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='quit()'>Quit</a>"))
 ##if( opt$AUTHENTICATION == "shinyproxy" && in.shinyproxy() ) {
 if(opt$AUTHENTICATION == "shinyproxy") {
     ##logout.tab <- shiny::tabPanel(title=shiny::HTML("<a id='logout' href='/logout'>Logout"))
