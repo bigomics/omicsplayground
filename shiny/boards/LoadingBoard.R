@@ -242,7 +242,7 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
                 dbg("[LoadingBoard:getPGXDIR] userdir does not exists. creating pdir = ",pdir)
                 dir.create(pdir)
                 dbg("[LoadingBoard:getPGXDIR] copy example pgx")                
-                file.copy(file.path(pgx_dir,"geiger2016-arginine.pgx"),pdir)
+                file.copy(file.path(pgx_dir,"example-data.pgx"),pdir)
             }
         }
         dbg("[LoadingBoard:getPGXDIR] pdir = ",pdir)
@@ -692,10 +692,13 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
             updateTabsetPanel(session, "load-tabs", selected = "Upload data")
         }
 
-        if(nrow(df)==0 && auth$logged()) {
+        if(FALSE && nrow(df)==0 && auth$logged()) {
+            ## NEED RETHINK. Sometimes pops up at login...
+            dbg("[pgxTable.RENDER] nrow(df) = ",nrow(df))
+            dbg("[pgxTable.RENDER] auth$logged() = ",auth$logged())            
             shinyalert::shinyalert(
-                            title = "Hi There! Are you new?",
-                            text = "Your playground looks a bit empty. Please start by uploading some data!",
+                            title = "Your playground looks empty...",
+                            text = "Please start by uploading some data!",
                             type = "warning",
                             callbackR = updateTab
                         )
