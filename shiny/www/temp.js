@@ -10,3 +10,7 @@ function upgrade(){
     console.log("Coming soon");
     Shiny.setInputValue('load-auth-firebaseUpgrade', 1, {priority: 'event'});    
 };
+
+function sigstop(){
+    Shiny.setInputValue('sigstop', 1, {priority: 'event'});
+};
