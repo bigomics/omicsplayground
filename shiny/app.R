@@ -203,7 +203,7 @@ server = function(input, output, session) {
     env[["load"]] <- shiny::callModule(
                                 LoadingBoard, "load",
                                 limits = limits,
-                                enable_userdir = TRUE,                                
+                                enable_userdir = opt$ENABLE_USERDIR,                                
                                 authentication = AUTHENTICATION,
                                 enable_upload = opt$ENABLE_UPLOAD,
                                 enable_delete = opt$ENABLE_DELETE,                                 
