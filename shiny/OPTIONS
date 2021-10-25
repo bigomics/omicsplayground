@@ -12,8 +12,8 @@ MAX_GENESETS    = 5000
 MAX_DATASETS    = 100
 USER_MODE       = pro
 WATERMARK       = TRUE
-#TIMEOUT         = 2400
 TIMEOUT         = 0
+#TIMEOUT         = 2400
 ##DEBUG         = TRUE
 
 #BOARDS_ENABLED = load,view,clust,expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap
