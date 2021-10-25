@@ -345,7 +345,8 @@ server = function(input, output, session) {
         logged <- auth$logged()
         message("[SERVER] logged = ",logged)
         
-        if(tolower(level)=="free" && TIMEOUT>0 && logged) {
+        ##if(tolower(level)=="free" && TIMEOUT>0 && logged) {
+        if(TIMEOUT>0 && logged) {        
             message("[SERVER] starting session timer!!!")
             message("[SERVER] TIMEOUT = ", TIMEOUT)            
             tm$timer <- reactiveTimer(0.1*TIMEOUT*1000)  ## polling time
@@ -385,8 +386,9 @@ server = function(input, output, session) {
                                 title = "Oh No!",
                                 text = "Your FREE session has expired.",
                                 ##callbackR = function(x){shinyalert::closeAlert()},
-                                callbackJS = "function(x){logout()}"                                
-                            )
+                                ##callbackJS = "function(x){logout()}" ## logout and/or quit??
+                                callbackJS = "function(x){logout();quit()}" ## logout and/or quit??
+                                )
                 tm$timer <- reactiveTimer(Inf)                
                 tm$start <- NULL
                 tm.warned <<- FALSE                
