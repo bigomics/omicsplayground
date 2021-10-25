@@ -393,8 +393,13 @@ server = function(input, output, session) {
             }
         }
     })
-
-
+    
+    observeEvent( input$sigstop, {
+        dbg("[SERVER] sigstop reacted!")
+        session$close()
+        stopApp()
+    })
+    
     ## report server times
     server.init_time <- round(Sys.time() - server.start_time, digits=4)    
     message("[SERVER] server.init_time = ",server.init_time," ",attr(server.init_time,"units"))
@@ -448,8 +453,10 @@ user.tab <-  tabView(
 )
 if(opt$AUTHENTICATION == "none") user.tab <- NULL
 logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
+##stop.tab    <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='sigstop()'>Stop</a>"))
+stop.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='sigstop()'>Stop session</a>"))
 ##if( opt$AUTHENTICATION == "shinyproxy" && in.shinyproxy() ) {
-if( opt$AUTHENTICATION == "shinyproxy" ) {
+if(opt$AUTHENTICATION == "shinyproxy") {
     ##logout.tab <- shiny::tabPanel(title=shiny::HTML("<a id='logout' href='/logout'>Logout"))
     logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='logout()' id='authentication-logout'>Logout</a>"))    
 }
@@ -469,7 +476,8 @@ user.menu <- shiny::navbarMenu(
     shiny::tabPanel(title=shiny::HTML("<a href='https://groups.google.com/d/forum/omicsplayground' target='_blank'>Community Forum</a>")),
     shiny::tabPanel(title=shiny::HTML("<a href='https://github.com/bigomics/omicsplayground' target='_blank'>GitHub</a>")),
     "----",         
-    logout.tab         
+    logout.tab,
+    stop.tab
 )
 
 
