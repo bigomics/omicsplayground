@@ -94,13 +94,6 @@ message("************************************************")
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
 
-## over-ride options (for DEBUGGING)
-##opt$AUTHENTICATION = "none"
-##opt$AUTHENTICATION = "shinyproxy"
-##opt$AUTHENTICATION = "password"
-##opt$AUTHENTICATION = "register"
-##opt$AUTHENTICATION = "firebase"
-
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
     message("[ENV] overriding PLAYGROUND_AUTHENTICATION = ",auth)
