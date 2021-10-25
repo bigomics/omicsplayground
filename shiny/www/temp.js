@@ -12,5 +12,6 @@ function upgrade(){
 };
 
 function sigstop(){
-    Shiny.setInputValue('sigstop', 1, {priority: 'event'});
+    Shiny.setInputValue('sigstop', 1, {priority: 'event'});  // end session
+    window.close();  // close window??
 };
