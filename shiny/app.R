@@ -230,29 +230,36 @@ server = function(input, output, session) {
         
         ## load other modules if
         message("[SERVER:env.loaded] --------- calling shiny modules ----------")
-        if(ENABLED["view"])   env[["view"]]   <- shiny::callModule( DataViewBoard, "view", env)
-        if(ENABLED["clust"])  env[["clust"]]  <- shiny::callModule( ClusteringBoard, "clust", env)
-        if(ENABLED["ftmap"])  env[["ftmap"]]  <- shiny::callModule( FeatureMapBoard, "ftmap", env)    
-        if(ENABLED["expr"])   env[["expr"]]   <- shiny::callModule( ExpressionBoard, "expr", env)
-        if(ENABLED["enrich"]) env[["enrich"]] <- shiny::callModule( EnrichmentBoard, "enrich", env)
-        if(ENABLED["func"])   env[["func"]]   <- shiny::callModule( FunctionalBoard, "func", env)
-        if(ENABLED["word"])   env[["word"]]   <- shiny::callModule( WordCloudBoard, "word", env)
-        if(ENABLED["drug"])   env[["drug"]]   <- shiny::callModule( DrugConnectivityBoard, "drug", env)
-        if(ENABLED["isect"])  env[["isect"]]  <- shiny::callModule( IntersectionBoard, "isect", env)
-        if(ENABLED["sig"])    env[["sig"]]    <- shiny::callModule( SignatureBoard, "sig", env)
-        if(ENABLED["cor"])    env[["cor"]]    <- shiny::callModule( CorrelationBoard, "cor", env)
-        if(ENABLED["bio"])    env[["bio"]]    <- shiny::callModule( BiomarkerBoard, "bio", env)
-        if(ENABLED["cmap"])   env[["cmap"]]   <- shiny::callModule( ConnectivityBoard, "cmap", env)
-        if(ENABLED["scell"])  env[["scell"]]  <- shiny::callModule( SingleCellBoard, "scell", env)
-        if(ENABLED["tcga"])   env[["tcga"]]   <- shiny::callModule( TcgaBoard, "tcga", env)
-        if(ENABLED["wgcna"])  env[["wgcna"]]  <- shiny::callModule( WgcnaBoard, "wgcna", env)
-        if(ENABLED["comp"])   env[["comp"]]   <- shiny::callModule( CompareBoard, "comp", env)
-        if(DEV) {            
-            if(ENABLED["corsa"])  env[["corsa"]]  <- shiny::callModule( CorsaBoard, "corsa", env)
-            if(ENABLED["system"]) env[["system"]] <- shiny::callModule( SystemBoard, "system", env)
-            if(ENABLED["multi"])  env[["multi"]]  <- shiny::callModule( MultiLevelBoard, "multi", env)
-            env[["qa"]] <- shiny::callModule( QuestionBoard, "qa", lapse = -1)
-        }
+        shiny::withProgress(message="initializing modules ...", value=0, {
+            if(ENABLED["view"])   env[["view"]]   <- shiny::callModule( DataViewBoard, "view", env)
+            if(ENABLED["clust"])  env[["clust"]]  <- shiny::callModule( ClusteringBoard, "clust", env)
+            if(ENABLED["ftmap"])  env[["ftmap"]]  <- shiny::callModule( FeatureMapBoard, "ftmap", env)    
+            shiny::incProgress(0.2)
+            if(ENABLED["expr"])   env[["expr"]]   <- shiny::callModule( ExpressionBoard, "expr", env)
+            if(ENABLED["enrich"]) env[["enrich"]] <- shiny::callModule( EnrichmentBoard, "enrich", env)
+            if(ENABLED["func"])   env[["func"]]   <- shiny::callModule( FunctionalBoard, "func", env)
+            if(ENABLED["word"])   env[["word"]]   <- shiny::callModule( WordCloudBoard, "word", env)
+            shiny::incProgress(0.4)
+            if(ENABLED["drug"])   env[["drug"]]   <- shiny::callModule( DrugConnectivityBoard, "drug", env)
+            if(ENABLED["isect"])  env[["isect"]]  <- shiny::callModule( IntersectionBoard, "isect", env)
+            if(ENABLED["sig"])    env[["sig"]]    <- shiny::callModule( SignatureBoard, "sig", env)
+            if(ENABLED["cor"])    env[["cor"]]    <- shiny::callModule( CorrelationBoard, "cor", env)
+            shiny::incProgress(0.6)            
+            if(ENABLED["bio"])    env[["bio"]]    <- shiny::callModule( BiomarkerBoard, "bio", env)
+            if(ENABLED["cmap"])   env[["cmap"]]   <- shiny::callModule( ConnectivityBoard, "cmap", env)
+            if(ENABLED["scell"])  env[["scell"]]  <- shiny::callModule( SingleCellBoard, "scell", env)
+            shiny::incProgress(0.8)
+            if(ENABLED["tcga"])   env[["tcga"]]   <- shiny::callModule( TcgaBoard, "tcga", env)
+            if(ENABLED["wgcna"])  env[["wgcna"]]  <- shiny::callModule( WgcnaBoard, "wgcna", env)
+            if(ENABLED["comp"])   env[["comp"]]   <- shiny::callModule( CompareBoard, "comp", env)
+            if(DEV) {            
+                if(ENABLED["corsa"])  env[["corsa"]]  <- shiny::callModule( CorsaBoard, "corsa", env)
+                if(ENABLED["system"]) env[["system"]] <- shiny::callModule( SystemBoard, "system", env)
+                if(ENABLED["multi"])  env[["multi"]]  <- shiny::callModule( MultiLevelBoard, "multi", env)
+                env[["qa"]] <- shiny::callModule( QuestionBoard, "qa", lapse = -1)
+            }
+        })
+
     })
     
     ## message("[SERVER] all boards called:",paste(names(env),collapse=" "))
@@ -389,16 +396,37 @@ server = function(input, output, session) {
         }
     })
     
+    ##-------------------------------------------------------------
+    ## Session logout functions
+    ##-------------------------------------------------------------
+
+    ## This code listens to the JS quit signal
     observeEvent( input$quit, {
-        dbg("[SERVER] !!!!! input$quit reacted!")
-        dbg("[SERVER] closing session... ")        
+        dbg("[SERVER:quit] !!!reacted!!!")
+        dbg("[SERVER:quit] closing session... ")        
         session$close()
-        dbg("[SERVER] stopping App... ")                
+        dbg("[SERVER:quit] stopping App... ")                
         stopApp()
-        dbg("[SERVER] died... ")                        
+        dbg("[SERVER:quit] App died... ")                        
     })
+
+    ## This code will be run after the client has disconnected
+    ## Note!!!: Strange behaviour, sudden session ending.
+    if(0) {
+        session$onSessionEnded(function() {
+            dbg("[SERVER:onSessionEnded] !!!reacted!!!")
+            dbg("[SERVER:onSessionEnded] closing session... ")
+            session$close()
+            dbg("[SERVER:onSessionEnded] stopping App... ")                        
+            stopApp()
+            dbg("[SERVER:onSessionEnded] App died... ")                                
+        })
+    }
     
+
+    ##-------------------------------------------------------------
     ## report server times
+    ##-------------------------------------------------------------    
     server.init_time <- round(Sys.time() - server.start_time, digits=4)    
     message("[SERVER] server.init_time = ",server.init_time," ",attr(server.init_time,"units"))
     total.lapse_time <- round(Sys.time() - main.start_time,digits=4)

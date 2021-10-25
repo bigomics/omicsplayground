@@ -23,7 +23,7 @@ UploadModuleUI <- function(id) {
 
 UploadModuleServer <- function(id, 
                                FILES,
-                               pgx.dir,
+                               pgx.dirRT,
                                height = 720,
                                limits = c(
                                    samples = 100,
@@ -281,7 +281,7 @@ UploadModuleServer <- function(id,
                 enable = upload_ok,
                 alertready = FALSE,
                 FILES = FILES,
-                pgx.dir = shiny::reactive(pgx.dir()),
+                pgx.dirRT = shiny::reactive(pgx.dirRT()),
                 max.genes = as.integer(limits["genes"]),
                 max.genesets = as.integer(limits["genesets"]),
                 max.datasets = as.integer(limits["datasets"]),

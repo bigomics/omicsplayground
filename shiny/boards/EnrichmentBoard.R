@@ -1391,7 +1391,6 @@ EnrichmentBoard <- function(input, output, session, env)
         }        
         
         shiny::withProgress(message="computing volcano plots ...", value=0, {
-
             i=1
             for(i in 1:nplots) {
 
