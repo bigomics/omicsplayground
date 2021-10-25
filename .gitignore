@@ -24,7 +24,7 @@ ehthumbs.db
 Icon?
 Thumbs.db
 
-data/*.pgx
+#data/*.pgx
 data/*.csv
 
 firebase.rds

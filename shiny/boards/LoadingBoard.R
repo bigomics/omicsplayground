@@ -241,6 +241,8 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
             if(!dir.exists(pdir)) {
                 dbg("[LoadingBoard:getPGXDIR] userdir does not exists. creating pdir = ",pdir)
                 dir.create(pdir)
+                dbg("[LoadingBoard:getPGXDIR] copy example pgx")                
+                file.copy(file.path(pgx_dir,"geiger2016-arginine.pgx"),pdir)
             }
         }
         dbg("[LoadingBoard:getPGXDIR] pdir = ",pdir)
