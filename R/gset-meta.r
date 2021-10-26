@@ -13,13 +13,13 @@ methods=c("fisher","gsva","fgsea")
 use.multicore=TRUE
 
 mc.threads=1
-##X=ngs$X;Y=ngs$Y;design=ngs$model.parameters$design;contr.matrix=ngs$model.parameters$contr.matrix;mc.cores=4;mc.threads=1;batch.correct=TRUE
+if(0) {
+    X=ngs$X;Y=ngs$samples;design=ngs$model.parameters$design;contr.matrix=ngs$model.parameters$contr.matrix;mc.cores=4;mc.threads=1;batch.correct=TRUE
+    G=ngs$GMT
+}
 gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, methods, 
                                             mc.threads=1, mc.cores=NULL, batch.correct=TRUE)
 {
-    
-    
-    
     timings <- c()
 
     if(is.null(mc.cores)) {
@@ -87,13 +87,13 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
         zx <- scale(limma::normalizeQuantiles(zx))
         return(zx)
     }
-
+    
     all.results <- list()
     ## pre-compute matrices
     zx.gsva = zx.ssgsea = zx.rnkcorr = NULL
     res.gsva = res.ssgsea = res.rnkcorr = NULL
     methods
-
+    
     dim(G)
     table(rownames(X) %in% rownames(G))
     table(colnames(G) %in% names(gmt))
@@ -196,10 +196,9 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
         if("fisher" %in% method) {
 
             ## calculate significant genes with LIMMA (we need all genes for GSEA-PR)
-            ##cat("fisher: determining DE genes...\n")
             lfc = 0
-            lfc05 = 0.2  ## for genes
-            fdr = 0.25
+            lfc05=0.2; fdr=0.25   ## OLD thresholds 
+            lfc05=0.0;  fdr=0.05  ## NEW thresholds (since oct2021)
             suppressWarnings( suppressMessages(
                 limma0 <- gx.limma( xx, yy, fdr=1.0, lfc=0,
                                    ref=ref, trend=TRUE, verbose=0)  ## trend true for NGS
@@ -215,10 +214,12 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
 
             ## at least take first 20
             if(length(genes.dn) < 20) {
-                genes.dn <-  Matrix::head(rownames(limma0)[order(limma0[,"logFC"])],20)
-            }
+                genes.dn0 <-  rownames(limma0)[order(limma0[,"logFC"])]
+                genes.dn <- head(unique(genes.dn,genes.dn0),20)
+                }
             if(length(genes.up) < 20) {
-                genes.up <-  Matrix::head(rownames(limma0)[order(-limma0[,"logFC"])],20)
+                genes.up0 <-  rownames(limma0)[order(-limma0[,"logFC"])]
+                genes.up <- head(unique(genes.up,genes.up0),20)
             }
             
             ##cat("fisher: testing...\n")
@@ -511,7 +512,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
     ## meta analysis, aggregate p-values
     ##--------------------------------------------------
     cat("computing meta-p values... \n")
-    
+
     all.meta <- list()
     i=1
     for(i in 1:ntest) {
@@ -528,7 +529,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
         rownames(fc) <- NULL  ## saves memory...
         rownames(pc) <- NULL
         rownames(qv) <- NULL
-        all.meta[[i]] = data.frame( meta=meta, fc=I(fc), p=I(pv), q=I(qv))
+        all.meta[[i]] = data.frame(meta=meta, fc=I(fc), p=I(pv), q=I(qv))
         rownames(all.meta[[i]]) <- rownames(S[[i]])
     }
     names(all.meta) = tests
