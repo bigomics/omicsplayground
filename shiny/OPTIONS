@@ -1,7 +1,7 @@
 TITLE           = 'Omics Playground'
 AUTHENTICATION  = none
 #AUTHENTICATION  = firebase
-ENABLE_USERDIR  = TRUE
+ENABLE_USERDIR  = FALSE
 ENABLE_UPLOAD   = TRUE
 ENABLE_SAVE     = TRUE
 ENABLE_DELETE   = TRUE
@@ -14,7 +14,7 @@ USER_MODE       = pro
 WATERMARK       = TRUE
 TIMEOUT         = 0
 #TIMEOUT        = 2400
-##DEBUG         = TRUE
+#DEBUG         = TRUE
 
 #BOARDS_ENABLED = load,view,clust,expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap
 #BOARDS_DISABLED = expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap,corsa,multi,system,wgcna,tcga,clust,ftmap,comp,view
