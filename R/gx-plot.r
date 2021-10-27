@@ -95,9 +95,13 @@ gx.b3plot <- function(x, y, first=NULL,
         segments( x0-0.1, bx$conf[2,],  x0+0.1, bx$conf[2,],lwd=lwd)
         segments( x0,     bx$conf[1,],  x0,     bx$conf[2,],lwd=lwd*0.5)
     }
+    ylevel <- levels(y)
     y = as.character(y)
-    y[is.na(y)] <- 'NA'
-    y = factor(y, exclude=NULL)
+    if(any(is.na(y))) {
+        y[is.na(y)] <- 'NA'
+        ylevel <- c(ylevel,'NA')
+    }
+    y = factor(y, levels=ylevel, exclude=NULL)
     if(!is.null(first)) y <- relevel(y, ref=first)
     mx = tapply(x, y, median, na.rm=TRUE)
 
@@ -126,7 +130,7 @@ gx.b3plot <- function(x, y, first=NULL,
         sig = sig[jj]
         yc = yc[,jj,drop=FALSE]
     }
-
+    
     ##dx = (max(x,na.rm=TRUE)-min(x,na.rm=TRUE))*0.11
     dx = max(x,na.rm=TRUE)*0.11
     ylim = c(xoff,max(x)*1.3)
@@ -137,6 +141,14 @@ gx.b3plot <- function(x, y, first=NULL,
         ylim[2] = ylim[2]*1.05 + (2+NCOL(yc))*dx
     }
 
+    if(length(col)==1) {
+        col <- rep(col,length(mx))
+        names(col) <- names(mx)
+    } else {
+        col <- col[match(names(mx),names(col))]
+        col[is.na(col)] <- "grey90"
+    }
+    
     ##par(mfrow=c(1,1));srt=60
     ##bx = barplot( mx-xoff, width=0.6666, space=0.5, ylim=ylim, offset=xoff, names.arg=NA)
     bx = barplot( mx, width=0.6666, space=0.5, ylim=ylim, offset=xoff,

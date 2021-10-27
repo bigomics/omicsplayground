@@ -131,7 +131,7 @@ EnrichmentBoard <- function(input, output, session, env)
             height = rowH,
             flex = c(1,NA),
             shiny::fillRow(
-                flex = c(1.6,0.05,1),
+                flex = c(1.5,0.05,1),
                 plotWidget(ns("topEnriched")),
                 shiny::br(),
                 plotWidget(ns("topEnrichedFreq"))
@@ -556,7 +556,7 @@ EnrichmentBoard <- function(input, output, session, env)
         
         par(mfrow=rowcol)
         if(ntop==1) {
-            par(mar=c(1,5,2,5), mgp=c(1.6,0.6,0), oma=c(0.1,1,0,0.1))
+            par(mar=c(1,6,2,6), mgp=c(1.6,0.6,0), oma=c(0.1,1,0,0.1))
         } else {
             par(mar=c(0.2,1.8,2.3,0.1), mgp=c(1.6,0.6,0), oma=c(0.1,1,0,0.1))
         }
@@ -575,9 +575,9 @@ EnrichmentBoard <- function(input, output, session, env)
                 xlab=""
                 gs1 = breakstring(gs,28,50,force=FALSE)                
                 if(ntop==1) {
-                    xlab="Rank in ordered dataset"
                     gs1 = breakstring(gs,100,200,force=FALSE)                
-                    
+                    xlab = "Rank in ordered dataset"
+                    ylab = "Rank metric"
                 }
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
                             main=gs1, xlab=xlab, ylab=ylab,
@@ -709,7 +709,7 @@ EnrichmentBoard <- function(input, output, session, env)
         gset.weight <- input$gs_enrichfreq_gsetweight
         fcweight <- input$gs_enrichfreq_fcweight
 
-        plotEnrichFreq(ngs, rpt, ntop=ntop, ngenes=30, gset.weight, fcweight)
+        plotEnrichFreq(ngs, rpt, ntop=ntop, ngenes=35, gset.weight, fcweight)
 
     })
 
