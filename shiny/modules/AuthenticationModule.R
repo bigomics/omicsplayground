@@ -138,7 +138,9 @@ FirebaseAuthenticationModule <- function(input, output, session)
         level = "",
         limit = "",
         token = NULL,
-        uid = NULL
+        uid = NULL,
+        stripe_id = NULL,
+        href = NULL
     )    
 
     firebase <- firebase::FirebaseUI$
@@ -279,6 +281,11 @@ FirebaseAuthenticationModule <- function(input, output, session)
             )
         )
     })
+
+    observeEvent(input$stripeId, {
+        USER$stripe_id <- input$stripeId$id
+        USER$href <- input$stripeId$href
+    })
     
     observeEvent(input$permissions, {
         perm <- input$permissions
@@ -292,7 +299,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
             list(
                 user = USER$email,
                 level = USER$level,
-                pricing = "price_1Jo2cULGmSWfyZoW6RUicoX6"
+                pricing = Sys.getenv("OMICS_STRIPE_PREMIUM_PRICE")
             )
         )
     })
@@ -314,7 +321,9 @@ FirebaseAuthenticationModule <- function(input, output, session)
         email  = shiny::reactive(USER$email),        
         level  = shiny::reactive(USER$level),
         logged = shiny::reactive(USER$logged),
-        limit  = shiny::reactive(USER$limit)
+        limit  = shiny::reactive(USER$limit),
+        stripe_id  = shiny::reactive(USER$stripe_id),
+        href  = shiny::reactive(USER$href)
     )
     return(rt)
 }
