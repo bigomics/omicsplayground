@@ -1107,7 +1107,7 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
 
     if(is.null(probe)) return(NULL)
     if(is.na(probe)) return(NULL)
-
+    
     if(level=="gene" && !probe %in% rownames(pgx$X)) {
         frame() ## emtpy image
         return(NULL)
@@ -1204,8 +1204,7 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
     }
     table(xgroup)    
 
-    ## ------------- set color of samples
-    
+    ## ------------- set color of samples    
     ngrp <- length(group.names)
     grp.klr = rep(RColorBrewer::brewer.pal(12,"Paired"),99)[1:ngrp]
     names(grp.klr) <- group.names
@@ -1228,7 +1227,7 @@ pgx.plotExpression <- function(pgx, probe, comp, logscale=TRUE,
     ## -------------- remove others
     if(showothers==FALSE && any(grepl("other",xgroup)) ) {
         jj <- grep("other",xgroup,invert=TRUE)
-        xgroup <- xgroup[jj]
+        xgroup <- factor( xgroup[jj], levels=setdiff(levels(xgroup),"other"))
         gx <- gx[jj]
     }
     
