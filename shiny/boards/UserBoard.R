@@ -19,8 +19,8 @@ UserUI <- function(id) {
         height = 750,
         shiny::tabsetPanel(
             id = ns("tabs"),
-            shiny::tabPanel("User profile",uiOutput(ns("userinfo_UI"))),
-            shiny::tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
+            shiny::tabPanel("User profile",uiOutput(ns("userinfo_UI")))
+            ## shiny::tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
             ## shiny::tabPanel("Community forum",uiOutput(ns("forum_UI")))
         )
     )
