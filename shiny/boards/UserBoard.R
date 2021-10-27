@@ -219,7 +219,7 @@ UserBoard <- function(input, output, session, env)
     ## Board return object
     ##------------------------------------------------
     res <- list(
-        enable_beta = reactive(input$enable_beta)
+        enable_beta = reactive({ as.logical(input$enable_beta) })
     )
     return(res)
 }
