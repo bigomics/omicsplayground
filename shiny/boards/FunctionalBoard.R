@@ -330,7 +330,7 @@ to understand biological functions including GO and KEGG pathway analysis."
             pathway.id <- df[sel.row,"kegg.id"]
             pathway.name <- df[sel.row,"pathway"]
             ##pw.genes <- GSETS[[as.character(pathway.name)]]
-            pw.genes <- getGSETS(as.character(pathway.name))
+            pw.genes <- unlist(getGSETS(as.character(pathway.name)))
         }
 
         ## folder with predownloaded XML files
