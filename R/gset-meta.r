@@ -198,7 +198,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
             ## calculate significant genes with LIMMA (we need all genes for GSEA-PR)
             lfc = 0
             lfc05=0.2; fdr=0.25   ## OLD thresholds 
-            lfc05=0.0;  fdr=0.05  ## NEW thresholds (since oct2021)
+            lfc05=0.0; fdr=0.05  ## NEW thresholds (since oct2021)
             suppressWarnings( suppressMessages(
                 limma0 <- gx.limma( xx, yy, fdr=1.0, lfc=0,
                                    ref=ref, trend=TRUE, verbose=0)  ## trend true for NGS

@@ -89,7 +89,7 @@ EnrichmentBoard <- function(input, output, session, env)
                     shinyBS::tipify( shiny::selectInput(ns("gs_fdr"),"FDR", choices=FDR.VALUES2, selected=0.2),
                            "Set the false discovery rate (FDR) threshold.", placement="top"),
                     shinyBS::tipify( shiny::selectInput(ns("gs_lfc"),"logFC threshold",
-                                        choices=c(0,0.05,0.1,0.2,0.5,1,2), selected=0.1),
+                                        choices=c(0,0.05,0.1,0.2,0.5,1,2), selected=0),
                            "Set the logarithmic fold change (logFC) threshold.",
                            placement="top")
                     ),
@@ -131,7 +131,7 @@ EnrichmentBoard <- function(input, output, session, env)
             height = rowH,
             flex = c(1,NA),
             shiny::fillRow(
-                flex = c(1.8,0.05,1),
+                flex = c(1.6,0.05,1),
                 plotWidget(ns("topEnriched")),
                 shiny::br(),
                 plotWidget(ns("topEnrichedFreq"))
@@ -484,7 +484,7 @@ EnrichmentBoard <- function(input, output, session, env)
 
 
     getFilteredGeneSetTable <- shiny::reactive({        
-
+        
         if(is.null(input$gs_showall) || length(input$gs_showall)==0) return(NULL)
         if(is.null(input$gs_top10) || length(input$gs_top10)==0) return(NULL)
                 
@@ -495,16 +495,19 @@ EnrichmentBoard <- function(input, output, session, env)
             ##nmeth <- length(input$gs_statmethod)
             ##sel <- which(res$stars == star.symbols(nmeth))
             ##sel <- which(nchar(res$stars) == nmeth)
-            lfc <- input$gs_lfc
-            fdr <- input$gs_fdr
+            lfc <- as.numeric(input$gs_lfc)
+            fdr <- as.numeric(input$gs_fdr)
+            dbg("[EnrichmentBoard::getFilteredGeneSetTable] lfc = ",lfc)
+            dbg("[EnrichmentBoard::getFilteredGeneSetTable] fdr = ",fdr)            
             is.sig <- (abs(res$logFC) >= lfc & res$meta.q <= fdr)
-            sel <- which(is.sig)
-            res = res[sel,,drop=FALSE]
+            dbg("[EnrichmentBoard::getFilteredGeneSetTable] is.sig = ",table(is.sig))
+            res <- res[is.sig,,drop=FALSE]
         }
         
         ## just show top 10        
-        if(nrow(res)>10 && length(input$gs_top10) && input$gs_top10==TRUE) {
-            fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(res))[1]
+        if(input$gs_top10 && nrow(res)>10 && length(input$gs_top10) ) {
+            fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(res),value=TRUE)[1]
+            dbg("[EnrichmentBoard::getFilteredGeneSetTable] fx.col = ",fx.col)
             fx  = as.numeric(res[,fx.col])
             names(fx) = rownames(res)
             pp <- unique(c(head(names(sort(-fx[which(fx>0)])),10),
@@ -550,25 +553,35 @@ EnrichmentBoard <- function(input, output, session, env)
         top <- setdiff(top, c(NA,"NA"))
         if(is.null(top) || is.na(top[1])) return(NULL)
         
-        par(mar=c(0.2,1.8,2.3,0.1), mgp=c(1.6,0.6,0), oma=c(0.1,1,0,0.1))
         par(mfrow=rowcol)
-
+        if(ntop==1) {
+            par(mar=c(1,5,2,5), mgp=c(1.6,0.6,0), oma=c(0.1,1,0,0.1))
+        } else {
+            par(mar=c(0.2,1.8,2.3,0.1), mgp=c(1.6,0.6,0), oma=c(0.1,1,0,0.1))
+        }
+        
         for(i in 1:ntop) {
             gs <- top[i]
             if(i > length(top) || is.na(gs) ) {
                 frame()
             } else {
-                gs1 = breakstring(gs,28,50,force=FALSE)                
                 genes = names(which(ngs$GMT[,gs]!=0))
                 genes = toupper(genes)                
                 names(rnk0) <- toupper(names(rnk0))
                 ylab = ""
                 ## if(i %in% c(1,6)) ylab = "Ranked list metric"
                 if(i%%rowcol[2] == 1) ylab = "Rank metric"
+                xlab=""
+                gs1 = breakstring(gs,28,50,force=FALSE)                
+                if(ntop==1) {
+                    xlab="Rank in ordered dataset"
+                    gs1 = breakstring(gs,100,200,force=FALSE)                
+                    
+                }
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
-                            main=gs1, xlab="", ylab=ylab,
+                            main=gs1, xlab=xlab, ylab=ylab,
                             lab.line = c(0,1.8), cex.lab=0.75,
-                            cex.main=0.78, len.main=72)
+                            cex.main=0.78, len.main=200)
                 qv1 = formatC(qv[gs],format="e", digits=2)
                 legend("topright", paste("q=",qv1), bty="n",cex=0.85)
             }
@@ -597,9 +610,28 @@ EnrichmentBoard <- function(input, output, session, env)
         
         ## filter on active rows (using search)
         ##ii  <- gseatable$rows_all()
-        ii  <- gseatable$rows_current()        
-        if(is.null(ii) || length(ii)==0) return(NULL)        
-        plotTopEnriched(ngs, rpt[ii,,drop=FALSE], comp=comp, ntop=15, rowcol=c(3,5))
+        ##ii  <- gseatable$rows_current()        
+        ##if(is.null(ii) || length(ii)==0) return(NULL)        
+        ii  <- gseatable$rows_selected()
+        jj  <- gseatable$rows_all()
+        shiny::req(jj)
+
+        dbg("[topEnriched.RENDER] dim.rpt", dim(rpt))
+        if(nrow(rpt)==0) return(NULL)
+
+        ## ENPLOT TYPE        
+        if(length(ii)>0) {
+            itop = ii[1]
+        } else {
+            itop <- head(jj,15)
+        }
+        if(length(itop)==1) {
+            plotTopEnriched(ngs, rpt[itop,,drop=FALSE], comp=comp, ntop=1, rowcol=c(1,1))
+        } else {
+            plotTopEnriched(ngs, rpt[itop,,drop=FALSE], comp=comp, ntop=15, rowcol=c(3,5))
+        }
+
+
     })
         
     topEnriched_text = "This plot shows the <strong>top enriched</strong> gene sets for the selected comparison in the <code>Contrast</code> settings. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score (ES). The more the green ES curve is shifted to the upper left of the graph, the more the gene set is enriched in the first group. Conversely, a shift of the ES curve to the lower right, corresponds to more enrichment in the second group."
@@ -1605,8 +1637,8 @@ EnrichmentBoard <- function(input, output, session, env)
         ## filter on significance?????
         if(FALSE && !input$gs_showall) {
             lfc=1;fdr=0.05
-            lfc <- input$gs_lfc
-            fdr <- input$gs_fdr
+            lfc <- as.numeric(input$gs_lfc)
+            fdr <- as.numeric(input$gs_fdr)
             is.sig <- abs(limma1[,"fc"]) >= lfc & limma1[,"q"] <= fdr
             table(is.sig)
             limma1 <- limma1[is.sig,,drop=FALSE]
@@ -1703,7 +1735,7 @@ EnrichmentBoard <- function(input, output, session, env)
                       ##extensions = c('Buttons','Scroller'),
                       extensions = c('Scroller'),                  
                       fillContainer = TRUE,
-                      selection = list(mode=selectmode, target='row', selected=1),
+                      selection = list(mode=selectmode, target='row', selected=NULL),
                       ## options=list(
                       ##     dom = 'lfrtip',
                       ##     ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),

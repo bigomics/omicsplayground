@@ -94,7 +94,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                     shinyBS::tipify( shiny::selectInput(ns("gx_fdr"),"FDR", choices=FDR.VALUES, selected=0.2),
                            "Set the false discovery rate (FDR) threshold.", placement="top"),
                     shinyBS::tipify( shiny::selectInput(ns("gx_lfc"),"logFC threshold",
-                                        choices=c(0,0.1,0.2,0.5,1,2,5), selected=0.2),
+                                        choices=c(0,0.1,0.2,0.5,1,2,5), selected=0),
                            "Set the logarithmic fold change (logFC) threshold.", placement="top")
                     ),
             shiny::br(),br(),br(),br(),
