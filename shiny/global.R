@@ -28,8 +28,9 @@ WATERMARK = FALSE
 DEBUG     = FALSE
 DEV       = dir.exists('/home/kwee')
 ##DEV     = FALSE
+DEBUG     = TRUE
 
-if(DEV) {
+if(0 && DEV) {
     ## being pedantic... (https://adv-r.hadley.nz)
     options(warnPartialMatchDollar = TRUE)
     options(warnPartialMatchArgs = TRUE)    
