@@ -518,12 +518,13 @@ createUI <- function(tabs)
     header = shiny::tagList(
         shiny::tags$head(shiny::tags$script(src="temp.js")),
         shiny::tags$head(shiny::tags$script(src="google-analytics.js")),
+        shiny::tags$head(shiny::tags$script(src="chatra.js")),
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
         shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
         shinyalert::useShinyalert(),  # Set up shinyalert
         firebase::useFirebase(),
-        TAGS.JSSCRIPT,
+        TAGS.JSSCRIPT,  ## other stuff
         shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
         shiny::div(shiny::textOutput("current_dataset"), class='current-data'),
         shiny::div(shiny::textOutput("current_user"), class='current-user')
