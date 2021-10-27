@@ -296,7 +296,7 @@ server = function(input, output, session) {
         
         ## Beta features
         toggleTab("maintabs","TCGA survival (beta)",show.beta,req.file="tcga_matrix.h5")
-        toggleTab("maintabs","Cluster features (beta)",show.beta)
+        ##toggleTab("maintabs","Cluster features",show.beta)
         toggleTab("maintabs","WGCNA (beta)",show.beta)
         toggleTab("maintabs","Compare datasets (beta)",show.beta)        
         
@@ -431,7 +431,7 @@ TABVIEWS <- list(
     "load"   = tabView("Home",LoadingInputs("load"),LoadingUI("load")),
     "view"   = tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
     "clust"  = tabView("Cluster samples",ClusteringInputs("clust"),ClusteringUI("clust")),
-    "ftmap"  = tabView("Cluster features (beta)",FeatureMapInputs("ftmap"),FeatureMapUI("ftmap")),    
+    "ftmap"  = tabView("Cluster features",FeatureMapInputs("ftmap"),FeatureMapUI("ftmap")),    
     "wgcna"  = tabView("WGCNA (beta)",WgcnaInputs("wgcna"),WgcnaUI("wgcna")),
     "expr"   = tabView("Differential expression",ExpressionInputs("expr"),ExpressionUI("expr")),
     "cor"    = tabView("Correlation analysis", CorrelationInputs("cor"), CorrelationUI("cor")),
@@ -461,12 +461,16 @@ names(TABVIEWS)
 TABVIEWS <- TABVIEWS[names(TABVIEWS) %in% names(which(ENABLED))]
 names(TABVIEWS)
 
+#-------------------------------------------------------
 ## Build USERMENU
+#-------------------------------------------------------
 user.tab <-  tabView(
     title = shiny::HTML("<span class='label label-info' id='authentication-user'></span>"),
     id="user", UserInputs("user"), UserUI("user")    
 )
-if(opt$AUTHENTICATION == "none") user.tab <- NULL
+if(opt$AUTHENTICATION == "none") {
+    user.tab <-  tabView("Settings", id="user", UserInputs("user"), UserUI("user"))    
+}
 logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
 ##stop.tab    <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='sigstop()'>Stop</a>"))
 stop.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='quit()'>Quit</a>"))

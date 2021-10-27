@@ -173,7 +173,7 @@ FeatureMapBoard <- function(input, output, session, env)
                          zlim=NULL, cex=0.9, source="", plotlib='base')
     {        
 
-        dbg("[plotUMAP] called")
+        dbg("[FeatureMap::plotUMAP] called")
 
         if(!is.null(hilight)) {
             hilight <- intersect(hilight,rownames(pos))
@@ -228,7 +228,7 @@ FeatureMapBoard <- function(input, output, session, env)
     
     plotFeaturesPanel <- function(pos, F, ntop, nr, nc, sel, progress) {        
 
-        dbg("[plotFeaturesPanel] called")
+        dbg("[FeatureMap::plotFeaturesPanel] called")
         if(0) {
             pos = ngs$cluster.genes$pos[[1]]
             F = pgx.getMetaMatrix(ngs)$fc[,1:9]
@@ -354,7 +354,7 @@ FeatureMapBoard <- function(input, output, session, env)
     ##geneUMAP.RENDER %<a-% shiny::reactive({
     geneUMAP.RENDER <- shiny::reactive({            
 
-        dbg("[geneUMAP.RENDER] reacted")
+        dbg("[FeatureMap::geneUMAP.RENDER] reacted")
         ngs <- inputData()
         shiny::req(ngs)
         
@@ -390,7 +390,7 @@ FeatureMapBoard <- function(input, output, session, env)
     
     geneUMAP.RENDER2 <- shiny::reactive({        
 
-        dbg("[geneUMAP.RENDER] reacted")
+        dbg("[FeatureMap::geneUMAP.RENDER] reacted")
         ngs <- inputData()
         shiny::req(ngs)
         
@@ -488,7 +488,7 @@ FeatureMapBoard <- function(input, output, session, env)
             F <- pgx.getMetaMatrix(ngs, level='gene')$fc
         }
         
-        dbg("[geneSigPlots.RENDER] dim.F = ",dim(F))
+        dbg("[FeatureMap::geneSigPlots.RENDER] dim.F = ",dim(F))
         if(nrow(F)==0) return(NULL)
         
         ## ntop=15
@@ -539,7 +539,7 @@ FeatureMapBoard <- function(input, output, session, env)
         
     gsetUMAP.RENDER %<a-% shiny::reactive({        
 
-        dbg("[gsetUMAP.RENDER] reacted")
+        dbg("[FeatureMap::gsetUMAP.RENDER] reacted")
         ngs <- inputData()
 
         ##pos <- ngs$cluster.gsets$pos[['umap2d']]
@@ -573,7 +573,7 @@ FeatureMapBoard <- function(input, output, session, env)
 
     gsetUMAP.RENDER2 %<a-% shiny::reactive({        
 
-        dbg("[gsetUMAP.RENDER] reacted")
+        dbg("[FeatureMap::gsetUMAP.RENDER] reacted")
         ngs <- inputData()
 
         ##pos <- ngs$cluster.gsets$pos[['umap2d']]
@@ -658,7 +658,7 @@ FeatureMapBoard <- function(input, output, session, env)
     
     gsetSigPlots.RENDER %<a-% shiny::reactive({        
 
-        dbg("[gsetSigPlots.RENDER] reacted")
+        dbg("[FeatureMap::gsetSigPlots.RENDER] reacted")
         ngs <- inputData()
         shiny::req(ngs)
         
@@ -732,18 +732,18 @@ FeatureMapBoard <- function(input, output, session, env)
         ## detect brush
         sel.genes <- NULL
         ##b <- input$ftmap-geneUMAP_brush  ## ugly??
-        dbg("[geneTable.RENDER] names.input = ",names(input))        
+        dbg("[FeatureMap::geneTable.RENDER] names.input = ",names(input))        
         b <- input[['geneUMAP_brush']]  ## ugly??        
-        dbg("[geneTable.RENDER] is.null(b) = ",is.null(b))
-        dbg("[geneTable.RENDER] length(b) = ",length(b))
-        dbg("[geneTable.RENDER] names(b) = ",names(b))
+        dbg("[FeatureMap::geneTable.RENDER] is.null(b) = ",is.null(b))
+        dbg("[FeatureMap::geneTable.RENDER] length(b) = ",length(b))
+        dbg("[FeatureMap::geneTable.RENDER] names(b) = ",names(b))
         
         if(!is.null(b) & length(b)) {
             sel <- which( pos[,1] > b$xmin & pos[,1] < b$xmax &
                           pos[,2] > b$ymin & pos[,2] < b$ymax )
             sel.genes <- rownames(pos)[sel]
         }
-        dbg("[geneTable.RENDER] sel.genes = ",sel.genes)
+        dbg("[FeatureMap::geneTable.RENDER] head(sel.genes) = ",head(sel.genes))
         
         pheno='tissue'
         pheno <- input$sigvar
@@ -819,18 +819,18 @@ FeatureMapBoard <- function(input, output, session, env)
         ## detect brush
         sel.gsets <- NULL
         ##b <- input$ftmap-geneUMAP_brush  ## ugly??
-        dbg("[gsetTable.RENDER] names.input = ",names(input))        
+        dbg("[FeatureMap::gsetTable.RENDER] names.input = ",names(input))        
         b <- input[['gsetUMAP_brush']]  ## ugly??        
-        dbg("[gsetTable.RENDER] is.null(b) = ",is.null(b))
-        dbg("[gsetTable.RENDER] length(b) = ",length(b))
-        dbg("[gsetTable.RENDER] names(b) = ",names(b))
+        dbg("[FeatureMap::gsetTable.RENDER] is.null(b) = ",is.null(b))
+        dbg("[FeatureMap::gsetTable.RENDER] length(b) = ",length(b))
+        dbg("[FeatureMap::gsetTable.RENDER] names(b) = ",names(b))
         
         if(!is.null(b) & length(b)) {
             sel <- which( pos[,1] > b$xmin & pos[,1] < b$xmax &
                           pos[,2] > b$ymin & pos[,2] < b$ymax )
             sel.gsets <- rownames(pos)[sel]
         }
-        dbg("[gsetTable.RENDER] sel.gsets = ",sel.gsets)
+        dbg("[FeatureMap::gsetTable.RENDER] head(sel.gsets) = ",head(sel.gsets))
         
         pheno='tissue'
         pheno <- input$sigvar
