@@ -235,7 +235,7 @@ infotext =
             gset <- top.genes
         } else if(input$feature %in% names(iGSETS)) {
             ##gset <- toupper(GSETS[[input$feature]])
-            gset <- toupper(getGSETS(input$feature))
+            gset <- toupper(unlist(getGSETS(input$feature)))
             gset0 <- paste(gset, collapse=" ")
             shiny::updateTextAreaInput(session,"genelistUP", value=gset0)
         } else {

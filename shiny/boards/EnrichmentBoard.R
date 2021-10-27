@@ -141,6 +141,7 @@ EnrichmentBoard <- function(input, output, session, env)
     })
 
     enrichplots_caption = "<b>Enrichment plots</b> associated with the gene set (selected in <b>Table I</b>) and gene (selected in <b>Table II</b>). <b>(a)</b> Gene set enrichment plot. <b>(b)</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set are highlighted in blue. <b>(c)</b> Barplot of the gene set enrichment in the groups. <b>(d)</b> Scatter plot of the enrichment versus the expression of the selected geneset and gene, on the y and x axes, respectively."
+    enrichplots_caption = "<b>Enrichment plots</b> associated with the gene set (selected in <b>Table I</b>) and gene (selected in <b>Table II</b>). <b>(a)</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set are highlighted in blue. <b>(b)</b> Barplot of the gene set enrichment in the groups. <b>(c)</b> Barplot of selected gene in the groups. <b>(d)</b> Scatter plot of the enrichment versus the expression of the selected geneset and gene, on the y and x axes, respectively."
 
     output$subplots_UI <- shiny::renderUI({
         shiny::fillCol(
@@ -150,10 +151,10 @@ EnrichmentBoard <- function(input, output, session, env)
                 id = ns("subplots"),
                 height = imgH,
                 flex=c(1,1,1,1), ##height = 370,
-                plotWidget(ns("subplot_enplot")),
+                ##plotWidget(ns("subplot_enplot")),
                 plotWidget(ns("subplot_volcano")),                
                 plotWidget(ns("subplot_barplot")),
-                ## plotWidget(ns("subplot3")),
+                plotWidget(ns("subplot_geneplot")),
                 plotWidget(ns("subplot_scatter"))
             ),
             shiny::br(),
@@ -613,7 +614,7 @@ EnrichmentBoard <- function(input, output, session, env)
         ##ii  <- gseatable$rows_current()        
         ##if(is.null(ii) || length(ii)==0) return(NULL)        
         ii  <- gseatable$rows_selected()
-        jj  <- gseatable$rows_all()
+        jj  <- gseatable$rows_current()
         shiny::req(jj)
 
         dbg("[topEnriched.RENDER] dim.rpt", dim(rpt))
@@ -815,7 +816,7 @@ EnrichmentBoard <- function(input, output, session, env)
     subplot.MAR = c(2.8,4,4,0.8)
     
     subplot_volcano.RENDER %<a-% shiny::reactive({
-
+        
         par(mfrow=c(1,1), mgp=c(1.2,0.4,0), oma=c(0,0,0,0.4) )
         par(mar= subplot.MAR)
         ## par(mar= c(2.3,4,1.9,0))
@@ -827,7 +828,7 @@ EnrichmentBoard <- function(input, output, session, env)
         comp = input$gs_contrast
         ngs <- inputData()
         shiny::req(ngs)
-
+        
         gxmethods <- selected_gxmethods() ## from module-expression
         shiny::req(gxmethods)
         
@@ -845,12 +846,15 @@ EnrichmentBoard <- function(input, output, session, env)
         
         ##sel.genes = names(which(ngs$GMT[,gs]!=0))
         ##gset <- GSETS[[gs]]
-        gset <- getGSETS(gs)
+        gset <- getGSETS(gs)[[1]]
+        dbg("[subplot_volcano.RENDER] head.gset = ", head(gset,5) )        
         jj = match(toupper(gset), toupper(limma$gene_name))
         sel.genes <- setdiff(limma$gene_name[jj],c(NA,""," "))
+
+        dbg("[subplot_volcano.RENDER] head.sel.genes = ", head(sel.genes,5) )
+
         fdr = 1
-        fdr = as.numeric(input$gs_fdr)
-        
+        fdr = as.numeric(input$gs_fdr)        
         fc.genes = as.character(limma[,grep("^gene$|gene_name",colnames(limma))])
         fx = limma[,grep("logFC|meta.fx|fc",colnames(limma))[1]]
         qval = limma[,grep("^q|adj.P.Val|meta.q|qval|padj",colnames(limma))[1]]
@@ -879,51 +883,7 @@ EnrichmentBoard <- function(input, output, session, env)
         gs = breakstring(gs,50)
         title(gs, cex.main=0.85)        
     })
-
     
-    subplot_volcano2.RENDER %<a-% shiny::reactive({
-        
-        par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0,0.4) )
-        par(mar=subplot.MAR)
-
-        pgx <- inputData()
-        shiny::req(pgx)
-        
-        comp=1;gs=100
-        gs="H:HALLMARK_TNFA_SIGNALING_VIA_NFKB"        
-        comp = input$gs_contrast
-        
-        ## SELECTED GX METHODS ONLY
-        gxmethods <- selected_gxmethods() ## from module-expression
-        shiny::req(gxmethods)
-        fc <- pgx$gx.meta$meta[[comp]]$meta.fx
-        ##mq <- pgx$gx.meta$meta[[comp]]$meta.q
-        mq <- apply(pgx$gx.meta$meta[[comp]]$q[,gxmethods,drop=FALSE],1,max,na.rm=TRUE)
-        names(fc) <- names(mq) <- rownames(pgx$gx.meta$meta[[comp]])
-
-        gs = gset_selected()
-        if(is.null(gs)) return(NULL)
-        ##gs.genes = GSETS[[gs]]
-        gs.genes = getGSETS(gs)
-        top.genes = head(gs.genes[order(-abs(fc[gs.genes]))],10)
-        
-        pos1 <- cbind(fc, -log10(mq))
-        rownames(pos1) <- rownames(pgx$gx.meta$meta[[comp]])
-        colnames(pos1) <- c("difference (log2FC)","significance (-log10q)")        
-                
-        pgx.scatterPlotXY(
-            pos=pos1, var=fc, 
-            cex=1, cex.title=0.8,
-            hilight = gs.genes,
-            ##hilight2 = NULL,
-            hilight2 = top.genes,
-            zsym = TRUE,
-            title = gs,
-            plotlib= 'base',
-            set.par=FALSE            
-        )
-
-    })
     
     subplot_volcano.PLOTLY <- shiny::reactive({
         
@@ -956,9 +916,10 @@ EnrichmentBoard <- function(input, output, session, env)
         gs <- gs[1]        
         ##sel.genes = names(which(ngs$GMT[,gs]!=0))
         ##gset <- GSETS[[gs]]
-        gset <- getGSETS(gs)
+        gset <- getGSETS(gs)[[1]]
         jj = match(toupper(gset), toupper(limma$gene_name))
         sel.genes <- setdiff(limma$gene_name[jj],c(NA,""," "))
+
         fdr = 1
         fdr = as.numeric(input$gs_fdr)
         
@@ -1030,7 +991,7 @@ EnrichmentBoard <- function(input, output, session, env)
         gs = gset_selected()
         if(is.null(gs)) return(NULL)
         ##gs.genes = GSETS[[gs]]
-        gs.genes = getGSETS(gs)
+        gs.genes = getGSETS(gs)[[1]]
         
         par(mfrow=c(1,1), mgp=c(1.95,0.8,0), oma=c(0,0,0.4,0.4) )
         par(mar =  c(2.8,4,3.8,0.8))        
@@ -1058,7 +1019,7 @@ EnrichmentBoard <- function(input, output, session, env)
         gs = gset_selected()
         if(is.null(gs)) return(NULL)
         ##gs.genes = GSETS[[gs]]
-        gs.genes = getGSETS(gs)
+        gs.genes = getGSETS(gs)[[1]]
 
         p1 <- gsea.enplotly(fc, gs.genes, main=gs)
         return(p1)
@@ -1107,7 +1068,7 @@ EnrichmentBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ## 2: Gene expression {data-width=200}
     ##----------------------------------------------------------------------
-    subplot3.RENDER %<a-% shiny::reactive({
+    subplot_geneplot.RENDER %<a-% shiny::reactive({
 
         par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0,0.4) )
         par(mar=subplot.MAR)
@@ -1121,7 +1082,6 @@ EnrichmentBoard <- function(input, output, session, env)
         has.design <- !is.null(ngs$model.parameters$design)
         collapse.others <- ifelse(has.design, FALSE, TRUE)
         ##collapse.others=TRUE
-
 
         sel  = gene_selected()
         if(is.null(sel) || is.na(sel) || length(sel)==0) {
@@ -1137,7 +1097,6 @@ EnrichmentBoard <- function(input, output, session, env)
             grouped=TRUE
             grouped <- !input$gs_ungroup2
             srt <- ifelse(!grouped || ngrp>4, 30, 0)
-            srt <- NULL
             if(!grouped && ncol(ngs$X) > 15) srt <- 60
             pgx.plotExpression(
                 ngs, probe, comp=comp0, logscale=TRUE, level="gene",
@@ -1203,7 +1162,7 @@ EnrichmentBoard <- function(input, output, session, env)
 
     subplot_volcano_text = "</b>Volcano plot.<b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set that is selected from the enrichment analysis <b>Table I</b> are highlighted in blue."
     subplot_barplot_text = "An enrichment barplot per sample group for the gene set that is selected from the enrichment analysis Table <code>I</code>. Samples can be ungrouped in the barplot by selecting <code>ungroup samples</code> from the plot <i>Settings</i>."
-    subplot3_text = "An expression barplot per sample group for the gene that is selected from the genes Table <code>II</code>. Samples can be ungrouped in the barplot by selecting <code>ungroup samples</code> from the plot <i>Settings</i>."
+    subplot_geneplot_text = "An expression barplot per sample group for the gene that is selected from the genes Table <code>II</code>. Samples can be ungrouped in the barplot by selecting <code>ungroup samples</code> from the plot <i>Settings</i>."
     subplot_scatter_text = "A scatter plot of enrichment scores versus expression values across the samples for the gene set selected from the enrichment analysis Table <code>I</code> and the gene selected from the genes Table <code>II</code>."
     
 
@@ -1244,10 +1203,10 @@ EnrichmentBoard <- function(input, output, session, env)
 
     shiny::callModule(
         plotModule,
-        id="subplot3", 
-        func = subplot3.RENDER,
-        func2 = subplot3.RENDER,
-        info.text = subplot3_text,
+        id="subplot_geneplot", 
+        func = subplot_geneplot.RENDER,
+        func2 = subplot_geneplot.RENDER,
+        info.text = subplot_geneplot_text,
         pdf.width=6, pdf.height=6,
         res = c(78,100),
         height = imgH,
