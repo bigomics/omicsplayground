@@ -65,7 +65,6 @@ if(DEV) {
     message('!!!!!!!!!! DEVELOPER MODE !!!!!!!!!!!!!!')
 }
 
-
 message("\n************************************************")
 message("**************** READ FUNCTIONS ****************")
 message("************************************************")
@@ -279,14 +278,15 @@ server = function(input, output, session) {
     shiny::observe({
 
         ## trigger on change dataset
-        pgx <- env[["load"]][["inputData"]]() 
+        pgx  <- env[["load"]]$inputData() 
+        show.beta <- env[["user"]]$enable_beta()
+        dbg("[SERVER] show.beta = ",show.beta)
         
         ## hide all main tabs until we have an object
         if(is.null(pgx)) {
             lapply(MAINTABS, function(m) shiny::hideTab("maintabs",m))
             updateTabsetPanel(session, "maintabs", selected = "Home")                        
-            if(!opt$ENABLE_UPLOAD)  shiny::hideTab("load-tabs","Upload data")
-            if(is.null(ACCESS.LOG)) shiny::hideTab("user-tabs","Visitors map")            
+            toggleTab("load-tabs","Upload data",opt$ENABLE_UPLOAD)
             return(NULL)
         }
         
@@ -294,40 +294,29 @@ server = function(input, output, session) {
         ## show all main tabs
         lapply(MAINTABS, function(m) shiny::showTab("maintabs",m))
         
-        if(USER_MODE == "basic") {
-            shiny::hideTab("maintabs","CellProfiling")
-            shiny::hideTab("clust-tabs2","Feature ranking")
-            shiny::hideTab("expr-tabs1","Volcano (methods)")
-            shiny::hideTab("expr-tabs2","FDR table")
-            shiny::hideTab("enrich-tabs1","Volcano (methods)")
-            shiny::hideTab("enrich-tabs2","FDR table")
-            shiny::hideTab("cor-tabs","Functional")    ## too slow
-            shiny::hideTab("cor-tabs","Differential")  ## too complex
-        }
+        ## Beta features
+        toggleTab("maintabs","TCGA survival (beta)",show.beta,req.file="tcga_matrix.h5")
+        toggleTab("maintabs","Cluster features (beta)",show.beta)
+        toggleTab("maintabs","WGCNA (beta)",show.beta)
+        toggleTab("maintabs","Compare datasets (beta)",show.beta)        
         
-        ## shiny::hideTab("cor-tabs","Functional")       
-        if(USER_MODE == "dev" || DEV) {
-            shiny::showTab("maintabs","DEV")
-            shiny::showTab("view-tabs","Resource info")
-            shiny::showTab("scell-tabs1","CNV")  ## DEV only
-            shiny::showTab("scell-tabs1","Monocle") ## DEV only
-            shiny::showTab("cor-tabs","Functional")
-        } else {
-            shiny::hideTab("maintabs","DEV")
-            shiny::hideTab("view-tabs","Resource info")
-            shiny::hideTab("scell-tabs1","CNV")  ## DEV only
-            shiny::hideTab("scell-tabs1","Monocle") ## DEV only
-            shiny::hideTab("cor-tabs","Functional")            
-        }
+        ## DEVELOPER only tabs (still too alpha)
+        toggleTab("maintabs","DEV",DEV)
+        toggleTab("cor-tabs","Functional",DEV)   ## too slow
+        toggleTab("cor-tabs","Differential",DEV)  
+        toggleTab("view-tabs","Resource info",DEV)
+        toggleTab("scell-tabs","iTALK",DEV)  ## DEV only
+        toggleTab("scell-tabs","CNV",DEV)  ## DEV only        
+        toggleTab("scell-tabs","Monocle",DEV) ## DEV only
+        toggleTab("cor-tabs","Functional",DEV)
         
         ## Dynamically show upon availability in pgx object
-        if(opt$ENABLE_UPLOAD) shiny::showTab("load-tabs","Upload data")            
+        toggleTab("load-tabs","Upload data", opt$ENABLE_UPLOAD)            
         tabRequire(pgx, "connectivity", "maintabs", "Similar experiments")
         tabRequire(pgx, "drugs", "maintabs", "Drug connectivity")
         tabRequire(pgx, "wordcloud", "maintabs", "Word cloud")
         tabRequire(pgx, "deconv", "maintabs", "CellProfiling")
-        fileRequire("tcga_matrix.h5", "maintabs", "TCGA survival (beta)")         
-        if(!is.null(ACCESS.LOG)) shiny::showTab("user-tabs","Visitors map")                    
+        toggleTab("user-tabs","Visitors map",!is.null(ACCESS.LOG))                    
 
         message("[SERVER] reconfiguring menu done.")        
     })

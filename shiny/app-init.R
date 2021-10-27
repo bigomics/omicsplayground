@@ -101,6 +101,21 @@ tabView <- function(title, tab.inputs, tab.ui, id=title) {
              ))
 }
 
+toggleTab <- function(inputId, target, do.show, req.file=NULL ) {
+    if(!is.null(req.file)) {
+        file1 <- search_path(c(FILES,FILESX),req.file)
+        has.file <- any(!is.null(file1) & file.exists(file1))
+        do.show <- do.show && has.file
+    }
+    if(do.show) {
+        shiny::showTab(inputId, target)
+    }
+    if(!do.show) {
+        shiny::hideTab(inputId, target)
+    }
+}
+
+
 ## dev.tabView <- function(title, tab.inputs, tab.ui) {
 ##     if(!DEV.MODE) return(NULL)
 ##     tabView(title, tab.inputs, tab.ui)

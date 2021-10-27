@@ -67,7 +67,7 @@ UserBoard <- function(input, output, session, env)
             email  = user$email()
         )
         values[which(values=="")] <- "(not set)"
-        data.frame('Personal'=names(values), ' '=values, check.names=FALSE)
+        data.frame(' '=names(values), '  '=values, check.names=FALSE)
     })
 
     output$userdata2 <- renderTable({
@@ -78,14 +78,20 @@ UserBoard <- function(input, output, session, env)
             limit  = paste(user$limit(),collapse=';')
         )
         values[which(values=="")] <- "(not set)"
-        data.frame('Account'=names(values), ' '=values, check.names=FALSE)
+        data.frame(' '=names(values), '  '=values, check.names=FALSE)
     })
         
     output$userinfo_UI <- shiny::renderUI({
         tagList(
-            tableOutput(ns("userdata")),
-            br(),
-            tableOutput(ns("userdata2"))
+            shiny::HTML("<h4>Personal</h4>"),
+            shiny::tableOutput(ns("userdata")),
+            shiny::br(),
+            shiny::HTML("<h4>Account</h4>"),            
+            shiny::tableOutput(ns("userdata2")),
+            shiny::br(),            
+            shiny::HTML("<h4>Settings</h4>"),            
+            shinyWidgets::prettySwitch(ns("enable_beta"),"enable beta features")
+            ##shinyWidgets::prettySwitch(ns("enable_alpha"),"enable alpha features")
         )
     })
     shiny::outputOptions(output, "userinfo_UI", suspendWhenHidden=FALSE) ## important!
@@ -212,6 +218,8 @@ UserBoard <- function(input, output, session, env)
     ##------------------------------------------------
     ## Board return object
     ##------------------------------------------------
-    res <- list()
+    res <- list(
+        enable_beta = reactive(input$enable_beta)
+    )
     return(res)
 }
