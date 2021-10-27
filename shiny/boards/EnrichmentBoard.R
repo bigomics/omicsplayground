@@ -841,7 +841,12 @@ EnrichmentBoard <- function(input, output, session, env)
         limma = cbind(gx.annot, limma1)
     
         gs = gset_selected()
-        if(is.null(gs)) return(NULL)
+        ##if(is.null(gs)) return(NULL)
+        if(is.null(gs) || length(gs)==0) {
+            frame()
+            text(0.5,0.5,"Please select a geneset",col="grey30")
+            return()
+        }
         gs <- gs[1]
         
         ##sel.genes = names(which(ngs$GMT[,gs]!=0))
