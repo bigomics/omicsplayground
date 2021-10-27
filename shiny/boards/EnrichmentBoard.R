@@ -844,7 +844,7 @@ EnrichmentBoard <- function(input, output, session, env)
         ##if(is.null(gs)) return(NULL)
         if(is.null(gs) || length(gs)==0) {
             frame()
-            text(0.5,0.5,"Please select a geneset",col="grey30")
+            text(0.5,0.5,"Please select a geneset",col="grey50")
             return()
         }
         gs <- gs[1]
