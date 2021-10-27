@@ -19,7 +19,7 @@ SingleCellUI <- function(id) {
         flex = c(1),
         height = 780,
         shiny::tabsetPanel(
-            id = ns("tabs1"),
+            id = ns("tabs"),
             shiny::tabPanel("Cell type",uiOutput(ns("icp_UI"))),
             shiny::tabPanel("Mapping",uiOutput(ns("mapping_UI"))),
             shiny::tabPanel("Markers",uiOutput(ns("markersplot_UI"))),
@@ -27,13 +27,6 @@ SingleCellUI <- function(id) {
             shiny::tabPanel("iTALK",uiOutput(ns("italk_panel_UI"))),
             shiny::tabPanel("Monocle",uiOutput(ns("monocle_panel_UI")))            
         )
-        ## shiny::br(),
-        ## shiny::tabsetPanel(
-        ##     id = ns("tabs2"),
-        ##     shiny::tabPanel("Phenotypes",uiOutput(ns("phenoModule_UI"))),
-        ##     shiny::tabPanel("Proportions",uiOutput(ns("crosstabModule_UI"))),
-        ##     shiny::tabPanel("CytoPlot",uiOutput(ns("cytoModule_UI")))      
-        ## )
     )
 }
 

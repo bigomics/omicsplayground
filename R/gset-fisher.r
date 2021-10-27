@@ -7,14 +7,13 @@
 ##======================== Fisher test based =============================
 ##========================================================================
 
-##fdr=1.0;mc=TRUE;sort.by="zratio";nmin=3;min.genes=-1;max.genes=500;method="fisher";common.genes=TRUE
+##fdr=1.0;mc=TRUE;sort.by="zratio";nmin=3;min.genes=10;max.genes=500;method="fisher";common.genes=TRUE;check.background=TRUE;verbose=TRUE
 
 gset.fisher2 <- function(genes.up, genes.dn, genesets, background=NULL,
                          fdr=0.05, mc=TRUE, sort.by="zratio", nmin=3, verbose=1,
                          min.genes=15, max.genes=500, method="fast.fisher",
                          check.background=TRUE, common.genes=TRUE )
-{
-    
+{    
     ft.up = gset.fisher(genes=genes.up, genesets=genesets, background=background,
                         fdr=1, mc=mc, sort.by=sort.by, nmin=nmin, verbose=verbose,
                         min.genes=min.genes, max.genes=max.genes, method=method,

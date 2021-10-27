@@ -94,7 +94,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                     shinyBS::tipify( shiny::selectInput(ns("gx_fdr"),"FDR", choices=FDR.VALUES, selected=0.2),
                            "Set the false discovery rate (FDR) threshold.", placement="top"),
                     shinyBS::tipify( shiny::selectInput(ns("gx_lfc"),"logFC threshold",
-                                        choices=c(0,0.1,0.2,0.5,1,2,5), selected=0.2),
+                                        choices=c(0,0.1,0.2,0.5,1,2,5), selected=0),
                            "Set the logarithmic fold change (logFC) threshold.", placement="top")
                     ),
             shiny::br(),br(),br(),br(),
@@ -271,7 +271,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         gx_features = input$gx_features
         if(gx_features!="<all>") {
             ##gset <- GSETS[[gx_features]]
-            gset <- getGSETS(gx_features)
+            gset <- unlist(getGSETS(gx_features))
             psel = filterProbes(ngs$genes, gset)
         }
         res = res[which(rownames(res) %in% psel),,drop=FALSE]
@@ -477,7 +477,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
             gs <- rownames(df2)[sel2]
             dbg("[plots_volcano.PLOTLY] gs = ",gs)
             ##gset <- GSETS[[gs]]
-            gset <- getGSETS(gs)
+            gset <- unlist(getGSETS(gs))
             sel.genes = intersect(sel.genes, gset)
             lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
                           head(sel.genes[order(-impt(sel.genes))],10) )
@@ -647,7 +647,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
             gs <- rownames(df2)[sel2]
             dbg("[plots_maplot.PLOTLY] gs = ",gs)
             ##gset <- GSETS[[gs]]
-            gset <- getGSETS(gs)
+            gset <- unlist(getGSETS(gs))
             sel.genes = intersect(sel.genes, gset)
             lab.genes = c( head(sel.genes[order(impt(sel.genes))],10),
                           head(sel.genes[order(-impt(sel.genes))],10) )
@@ -1579,8 +1579,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
                           deferRender=TRUE,
                           search = list(
                               regex = TRUE,
-                              caseInsensitive = TRUE,
-                              search = 'GOBP:'                              
+                              caseInsensitive = TRUE
+                              ##search = 'GOBP:'                              
                           )
                       ),  ## end of options.list 
                       selection=list(mode='single', target='row', selected=NULL)) %>%

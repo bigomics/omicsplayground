@@ -226,7 +226,7 @@ output$description <- shiny::renderUI(shiny::HTML(description))
                 }
             } else  if(input$filter != "<all>") {
                 ##gset <- GSETS[[input$filter]]
-                gset.genes <- getGSETS(input$filter)
+                gset.genes <- unlist(getGSETS(input$filter))
                 sel.probes = filterProbes(ngs$genes, gset.genes)
             }
             sel.probes = intersect(sel.probes, rownames(fc0))
@@ -1397,7 +1397,7 @@ output$description <- shiny::renderUI(shiny::HTML(description))
         if(length(sel2)>0) {
             gse <- out$gsea
             gset = rownames(gse)[sel2]
-            gset.genes <- getGSETS(gset)
+            gset.genes <- unlist(getGSETS(gset))
             hilight = c(hilight, gset.genes)
             hilight2 = c(hilight2,hilight)
         }
@@ -1655,7 +1655,7 @@ output$description <- shiny::renderUI(shiny::HTML(description))
         sel1 <- ctGseaTable_module$rows_selected()
         if(length(sel1)>0) {
             gset <- rownames(out$gsea)[sel1]
-            gset.genes <- getGSETS(gset)
+            gset.genes <- unlist(getGSETS(gset))
             gg <- intersect(rownames(df),gset.genes)
             df <- df[gg,,drop=FALSE]
         }        

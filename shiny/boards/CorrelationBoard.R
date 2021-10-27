@@ -267,7 +267,7 @@ CorrelationBoard <- function(input, output, session, env)
             
         } else if(ft!="<all>" && ft %in% names(iGSETS)) {
             ft <- input$cor_features
-            psel = filterProbes(ngs$genes, c(gene, getGSETS(ft) ) )
+            psel = filterProbes(ngs$genes, c(gene, unlist(getGSETS(ft)) ) )
             ##psel = unique(c(gene, psel))
             psel <- intersect(psel,rownames(X))
             X = X[psel,,drop=FALSE]
@@ -958,7 +958,7 @@ CorrelationBoard <- function(input, output, session, env)
             gs <- gsea$pathway[i]
             gs
             ##gmt <- GSETS[[gs]]
-            gmt <- getGSETS(gs)
+            gmt <- unlist(getGSETS(gs))
             length(gmt)
             ##if(length(gmtdx) < 3) { frame(); next }
             ylab = ""

@@ -127,8 +127,8 @@ Shiny.addCustomMessageHandler('get-subs', function(msg) {
 });
 
 function logout(){
-	Shiny.setInputValue('load-auth-firebaseLogout', 1, {priority: 'event'});
-}
+    Shiny.setInputValue('load-auth-firebaseLogout', 1, {priority: 'event'});
+};
 
 async function upgrade(){
 	const docRef = await db
@@ -155,3 +155,8 @@ async function upgrade(){
 		}
 	});	
 }
+
+function quit(){
+    Shiny.setInputValue('quit', 1, {priority: 'event'});  // end session
+    window.close();  // close window??
+};

@@ -7,34 +7,6 @@
 ##============================= GADGET UI =============================================
 ##=====================================================================================
 
-if(0) {
-
-    OPG = "~/Playground/omicsplayground"
-    RDIR = file.path(OPG,"R")
-    FILES = file.path(OPG,"lib")
-    FILESX = file.path(OPG,"libx")
-    PGX.DIR = file.path(OPG,"data")    
-
-    source("~/Playground/omicsplayground/R/pgx-include.R")
-    load("~/Playground/omicsplayground/data/GSE10846-dlbcl-nc.pgx")
-    source("~/Playground/omicsplayground/R/pgx-ui.R")
-    source("~/Playground/omicsplayground/R/pgx-contrasts.R")    
-
-    contr_matrix <- ngs$model.parameters$contr.matrix
-    out <- gadgetize(
-        makeContrastUI, makeContrastServer,
-        title = "makeContrastGadget", height = 640, ## size="l", 
-        pheno = ngs$samples, contr_matrix = contr_matrix )
-    names(out)
-
-    ct <- pgx.getContrasts(ngs)
-    viz.Contrasts(ngs, contrasts=ct, type="volcano")
-
-    ## Example of a shiny app
-    app <- system.file("shiny-examples/bucket_list/app.R", package = "sortable")
-    shiny::runApp(app)
-
-}
 
 MakeContrastGadget <- function(X, pheno, height=720) {
     gadgetize(MakeContrastUI, MakeContrastServer,

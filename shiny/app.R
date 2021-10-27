@@ -15,7 +15,6 @@ message("##################### OMICS PLAYGROUND ########################")
 message("###############################################################")
 message("\n")
 
-##Sys.setenv("SHINYPROXY_USERNAME"="Test Person")
 main.start_time <- Sys.time()
 
 message("***********************************************")
@@ -31,6 +30,7 @@ library(grid)
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
 message("***********************************************")
+Sys.setenv("OMICS_GOOGLE_PROJECT"="omicsplayground-app")
 
 envcat <- function(var) message(var," = ",Sys.getenv(var))
 envcat("SHINYPROXY_USERNAME")
@@ -41,13 +41,13 @@ envcat("PLAYGROUND_EXPIRY")
 envcat("PLAYGROUND_QUOTA")
 envcat("PLAYGROUND_LEVEL")
 envcat("PLAYGROUND_HELLO")
+envcat("OMICS_GOOGLE_PROJECT")
 
 ## --------------------------------------------------------------------
 ## -------------------------- INIT ------------------------------------
 ## --------------------------------------------------------------------
 
-message("\n")
-message("***********************************************")
+message("\n***********************************************")
 message("*********** SETTING GLOBAL VARIABLES **********")
 message("***********************************************")
 
@@ -59,40 +59,47 @@ message("FILESX =",FILESX)
 message("PGX.DIR =",PGX.DIR)
 message("SHINYPROXY = ",SHINYPROXY)
 
-src.local=TRUE  ## local or not-local, that's the question...
-src.local=FALSE ## local or not-local, that's the question...
-source(file.path(RDIR,"pgx-include.R"),local=src.local)    ## lots of libraries and source()
-source(file.path(RDIR,"pgx-functions.R"), local=src.local) ## functions...
-source(file.path(RDIR,"pgx-files.R"), local=src.local)     ## file functions
-source(file.path(RDIR,"pgx-init.R"),local=src.local)
-source(file.path(RDIR,"auth.R"),local=src.local)
+DEV = (DEV && dir.exists("modulesx")) 
+##DEV = FALSE
+if(DEV) {
+    message('!!!!!!!!!! DEVELOPER MODE !!!!!!!!!!!!!!')
+}
 
-message("\n")
+message("\n************************************************")
+message("**************** READ FUNCTIONS ****************")
 message("************************************************")
+
+source(file.path(RDIR,"pgx-include.R"))    ## lots of libraries and source()
+source(file.path(RDIR,"pgx-functions.R")) ## functions...
+source(file.path(RDIR,"pgx-files.R"))     ## file functions
+source(file.path(RDIR,"pgx-init.R"))
+source(file.path(RDIR,"auth.R"))
+source("app-init.R")
+
+if(0) {    
+    ##PGX.DIR="../test/"
+    pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
+    load("../data/geiger2016-arginine.pgx")
+    load("../data/GSE10846-dlbcl-nc.pgx")
+    load("../data/bojkova2020-sarscov2-RC2.pgx")
+    load("../data/gtex-aging-n40svaNnm.pgx")
+    ngs = pgx.initialize(ngs)
+}
+
+message("\n************************************************")
 message("************* parsing OPTIONS file *************")
 message("************************************************")
 
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
 
-DEV = (DEV && dir.exists("modulesx")) 
-##DEV = FALSE
-if(DEV) {
-    message('******************************************************')
-    message('****************** DEVELOPER MODE ********************')
-    message('******************************************************')    
-}
-
-## over-ride options (for DEBUGGING)
-##opt$AUTHENTICATION = "none"
-##opt$AUTHENTICATION = "password"
-##opt$AUTHENTICATION = "register"
-##opt$AUTHENTICATION = "firebase"
-    
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
     message("[ENV] overriding PLAYGROUND_AUTHENTICATION = ",auth)
     opt$AUTHENTICATION = auth
+}
+if(1 && opt$AUTHENTICATION=="shinyproxy" && !in.shinyproxy()) {
+    Sys.setenv("SHINYPROXY_USERNAME"="Test Person")  ## only for testing!!
 }
 
 ## copy to global environment
@@ -100,40 +107,21 @@ SHOW_QUESTIONS = FALSE
 AUTHENTICATION = opt$AUTHENTICATION
 USER_MODE      = opt$USER_MODE
 WATERMARK      = opt$WATERMARK
+TIMEOUT        = as.integer(opt$TIMEOUT)  ## in seconds
 
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
 
 ## --------------------------------------------------------------------
-## ------------------------ READ FUNCTIONS ----------------------------
-## --------------------------------------------------------------------
-
-source("app-init.R", local=FALSE)
-message('>>>> Initializing data folder')
-##pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=TRUE)
-pgx.initDatasetFolder(PGX.DIR, force=FALSE, verbose=TRUE)
-
-if(0) {    
-    ##PGX.DIR="../test/"
-    pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
-    load("../data/geiger2016-arginine.pgx")
-    load("../data/GSE10846-dlbcl-nc.pgx")
-    load("../data/GSE157905-lenvatinib-bc.pgx")
-    load("../data/gtex-aging-n40svaNnm.pgx")
-    ngs = pgx.initialize(ngs)
-}
-
-## --------------------------------------------------------------------
 ## ----------------- READ MODULES/BOARDS ------------------------------
 ## --------------------------------------------------------------------
 
-source("modules/AuthenticationModule.R",local=src.local)
-source("modules/ComputePgxModule.R",local=src.local)
-source("modules/MakeContrastModule.R",local=src.local)
-source("modules/NormalizeCountsModule.R",local=src.local)
-source("modules/BatchCorrectModule.R",local=src.local)
-source("modules/UploadModule.R",local=src.local)
-##source("modules/UsersMapModule.R_")
+modules <- dir("modules", pattern="Module.R$")
+modules
+for(m in modules) {
+    message("[MAIN] loading module ",m)
+    source(paste0("modules/",m))
+}
 
 BOARDS <- c("load","view","clust","expr","enrich","isect","func",
             "word","drug","sig","scell","cor","bio","cmap","ftmap",
@@ -150,8 +138,7 @@ boards <- dir("boards", pattern="Board.R$")
 boards
 for(m in boards) {
     message("[MAIN] loading board ",m)
-    source(paste0("boards/",m), local=src.local)
-    ##source(paste0("boards/",m), local=FALSE)
+    source(paste0("boards/",m))
 }
 
 ##ENABLED[c("wgcna","system","multi")] <- FALSE
@@ -164,7 +151,7 @@ if(0 && DEV && dir.exists("modulesx")) {
     m=xboards[1]
     for(m in xboards) {
         message("[MAIN] loading DEVELOPMENT modules ",m)
-        source(paste0("modulesx/",m), local=src.local)
+        source(paste0("modulesx/",m))
     }
     ENABLED[] <- TRUE  ## enable all modules
     boards <- unique(c(boards, xboards))
@@ -194,7 +181,8 @@ server = function(input, output, session) {
     message("========================================================\n")
     
     message("[SERVER] USER_MODE = ", USER_MODE)
-    server.start_time <- Sys.time()
+    server.start_time  <- Sys.time()
+    session.start_time <- -1
     
     limits <- c("samples" = opt$MAX_SAMPLES,
                 "comparisons" = opt$MAX_COMPARISONS,
@@ -202,130 +190,232 @@ server = function(input, output, session) {
                 "genesets" = opt$MAX_GENESETS,
                 "datasets" = opt$MAX_DATASETS)
     env <- list()  ## communication "environment"
-    env[["load"]]  <- shiny::callModule(
-                                 LoadingBoard, "load",
-                                 limits = limits,
-                                 authentication = AUTHENTICATION,
-                                 enable_upload = opt$ENABLE_UPLOAD,
-                                 enable_delete = opt$ENABLE_DELETE,                                 
-                                 enable_save = opt$ENABLE_SAVE)   
-    env[["user"]] <- shiny::callModule( UserBoard, "user", env)        
     
+    ## Modules needed from the start
+    env[["load"]] <- shiny::callModule(
+                                LoadingBoard, "load",
+                                limits = limits,
+                                enable_userdir = opt$ENABLE_USERDIR,                                
+                                authentication = AUTHENTICATION,
+                                enable_upload = opt$ENABLE_UPLOAD,
+                                enable_delete = opt$ENABLE_DELETE,                                 
+                                enable_save = opt$ENABLE_SAVE
+                                )   
+    env[["user"]] <- shiny::callModule(UserBoard, "user", env)
+    ##shinyjs::runjs("logout()")    
     
+    ## Modules needed after dataset is loaded (deferred)
     already_loaded <- FALSE
     observeEvent( env[["load"]]$loaded(), {
 
         env.loaded <- env[["load"]]$loaded()
-        message("[SERVER] env.loaded = ",env.loaded)                                    
+        message("[SERVER:env.loaded] env.loaded = ",env.loaded)                                    
         
         if(!env[["load"]]$loaded()){
-            message("[SERVER] env.loaded = FALSE")                                    
+            message("[SERVER:env.loaded] env.loaded = FALSE")                                    
             return(NULL)
         }
 
         on.exit({
-            message("[SERVER] on.exit::removing Modal")                        
+            message("[SERVER:env.loaded] on.exit::removing Modal")                        
             shiny::removeModal()
         })
-
+        
         if(already_loaded) {
-            message("[SERVER] modules already loaded!")            
+            message("[SERVER:env.loaded] modules already loaded!")            
             return(NULL)
         }
         already_loaded <<- TRUE
         
         ## load other modules if
-        message("[SERVER] --------- calling shiny modules ----------")
-        if(ENABLED["view"])   env[["view"]]   <- shiny::callModule( DataViewBoard, "view", env)
-        if(ENABLED["clust"])  env[["clust"]]  <- shiny::callModule( ClusteringBoard, "clust", env)
-        if(ENABLED["ftmap"])  env[["ftmap"]]  <- shiny::callModule( FeatureMapBoard, "ftmap", env)    
-        if(ENABLED["expr"])   env[["expr"]]   <- shiny::callModule( ExpressionBoard, "expr", env)
-        if(ENABLED["enrich"]) env[["enrich"]] <- shiny::callModule( EnrichmentBoard, "enrich", env)
-        if(ENABLED["func"])   env[["func"]]   <- shiny::callModule( FunctionalBoard, "func", env)
-        if(ENABLED["word"])   env[["word"]]   <- shiny::callModule( WordCloudBoard, "word", env)
-        if(ENABLED["drug"])   env[["drug"]]   <- shiny::callModule( DrugConnectivityBoard, "drug", env)
-        if(ENABLED["isect"])  env[["isect"]]  <- shiny::callModule( IntersectionBoard, "isect", env)
-        if(ENABLED["sig"])    env[["sig"]]    <- shiny::callModule( SignatureBoard, "sig", env)
-        if(ENABLED["cor"])    env[["cor"]]    <- shiny::callModule( CorrelationBoard, "cor", env)
-        if(ENABLED["bio"])    env[["bio"]]    <- shiny::callModule( BiomarkerBoard, "bio", env)
-        if(ENABLED["cmap"])   env[["cmap"]]   <- shiny::callModule( ConnectivityBoard, "cmap", env)
-        if(ENABLED["scell"])  env[["scell"]]  <- shiny::callModule( SingleCellBoard, "scell", env)
-        if(ENABLED["tcga"])   env[["tcga"]]   <- shiny::callModule( TcgaBoard, "tcga", env)
-        if(ENABLED["wgcna"])  env[["wgcna"]]  <- shiny::callModule( WgcnaBoard, "wgcna", env)
-        if(ENABLED["comp"])   env[["comp"]]   <- shiny::callModule( CompareBoard, "comp", env)
-        if(DEV) {            
-            if(ENABLED["corsa"])  env[["corsa"]]  <- shiny::callModule( CorsaBoard, "corsa", env)
-            if(ENABLED["system"]) env[["system"]] <- shiny::callModule( SystemBoard, "system", env)
-            if(ENABLED["multi"])  env[["multi"]]  <- shiny::callModule( MultiLevelBoard, "multi", env)
-            env[["qa"]] <- shiny::callModule( QuestionBoard, "qa", lapse = -1)
-        }
+        message("[SERVER:env.loaded] --------- calling shiny modules ----------")
+        shiny::withProgress(message="initializing modules ...", value=0, {
+            if(ENABLED["view"])   env[["view"]]   <- shiny::callModule( DataViewBoard, "view", env)
+            if(ENABLED["clust"])  env[["clust"]]  <- shiny::callModule( ClusteringBoard, "clust", env)
+            if(ENABLED["ftmap"])  env[["ftmap"]]  <- shiny::callModule( FeatureMapBoard, "ftmap", env)    
+            shiny::incProgress(0.2)
+            if(ENABLED["expr"])   env[["expr"]]   <- shiny::callModule( ExpressionBoard, "expr", env)
+            if(ENABLED["enrich"]) env[["enrich"]] <- shiny::callModule( EnrichmentBoard, "enrich", env)
+            if(ENABLED["func"])   env[["func"]]   <- shiny::callModule( FunctionalBoard, "func", env)
+            if(ENABLED["word"])   env[["word"]]   <- shiny::callModule( WordCloudBoard, "word", env)
+            shiny::incProgress(0.4)
+            if(ENABLED["drug"])   env[["drug"]]   <- shiny::callModule( DrugConnectivityBoard, "drug", env)
+            if(ENABLED["isect"])  env[["isect"]]  <- shiny::callModule( IntersectionBoard, "isect", env)
+            if(ENABLED["sig"])    env[["sig"]]    <- shiny::callModule( SignatureBoard, "sig", env)
+            if(ENABLED["cor"])    env[["cor"]]    <- shiny::callModule( CorrelationBoard, "cor", env)
+            shiny::incProgress(0.6)            
+            if(ENABLED["bio"])    env[["bio"]]    <- shiny::callModule( BiomarkerBoard, "bio", env)
+            if(ENABLED["cmap"])   env[["cmap"]]   <- shiny::callModule( ConnectivityBoard, "cmap", env)
+            if(ENABLED["scell"])  env[["scell"]]  <- shiny::callModule( SingleCellBoard, "scell", env)
+            shiny::incProgress(0.8)
+            if(ENABLED["tcga"])   env[["tcga"]]   <- shiny::callModule( TcgaBoard, "tcga", env)
+            if(ENABLED["wgcna"])  env[["wgcna"]]  <- shiny::callModule( WgcnaBoard, "wgcna", env)
+            if(ENABLED["comp"])   env[["comp"]]   <- shiny::callModule( CompareBoard, "comp", env)
+            if(DEV) {            
+                if(ENABLED["corsa"])  env[["corsa"]]  <- shiny::callModule( CorsaBoard, "corsa", env)
+                if(ENABLED["system"]) env[["system"]] <- shiny::callModule( SystemBoard, "system", env)
+                if(ENABLED["multi"])  env[["multi"]]  <- shiny::callModule( MultiLevelBoard, "multi", env)
+                env[["qa"]] <- shiny::callModule( QuestionBoard, "qa", lapse = -1)
+            }
+        })
+
     })
     
     ## message("[SERVER] all boards called:",paste(names(env),collapse=" "))
     message("[SERVER] boards enabled:",paste(names(which(ENABLED)),collapse=" "))
     
     output$current_dataset <- shiny::renderText({
+        ## trigger on change dataset
         pgx <- env[["load"]][["inputData"]]()
         name <- gsub(".*\\/|[.]pgx$","",pgx$name)
         if(length(name)==0) name = "(no data)"
         name
     })
     
+    ##--------------------------------------------------------------------------
     ## Dynamically hide/show certain sections depending on USERMODE/object
+    ##--------------------------------------------------------------------------
     shiny::observe({
-        pgx <- env[["load"]][["inputData"]]() ## trigger on change dataset
+
+        ## trigger on change dataset
+        pgx  <- env[["load"]]$inputData() 
+        show.beta <- env[["user"]]$enable_beta()
+        dbg("[SERVER] show.beta = ",show.beta)
         
         ## hide all main tabs until we have an object
         if(is.null(pgx)) {
             lapply(MAINTABS, function(m) shiny::hideTab("maintabs",m))
             updateTabsetPanel(session, "maintabs", selected = "Home")                        
-            if(!opt$ENABLE_UPLOAD)  shiny::hideTab("load-tabs","Upload data")
-            if(is.null(ACCESS.LOG)) shiny::hideTab("load-tabs","Visitors map")            
+            toggleTab("load-tabs","Upload data",opt$ENABLE_UPLOAD)
             return(NULL)
         }
-
+        
         message("[SERVER] dataset changed. reconfiguring menu...")
         ## show all main tabs
         lapply(MAINTABS, function(m) shiny::showTab("maintabs",m))
         
-        if(USER_MODE == "basic") {
-            shiny::hideTab("maintabs","CellProfiling")
-            shiny::hideTab("clust-tabs2","Feature ranking")
-            shiny::hideTab("expr-tabs1","Volcano (methods)")
-            shiny::hideTab("expr-tabs2","FDR table")
-            shiny::hideTab("enrich-tabs1","Volcano (methods)")
-            shiny::hideTab("enrich-tabs2","FDR table")
-            shiny::hideTab("cor-tabs","Functional")    ## too slow
-            shiny::hideTab("cor-tabs","Differential")  ## too complex
-        }
+        ## Beta features
+        toggleTab("maintabs","TCGA survival (beta)",show.beta,req.file="tcga_matrix.h5")
+        ##toggleTab("maintabs","Cluster features",show.beta)
+        toggleTab("maintabs","WGCNA (beta)",show.beta)
+        toggleTab("maintabs","Compare datasets (beta)",show.beta)        
         
-        ## shiny::hideTab("cor-tabs","Functional")       
-        if(USER_MODE == "dev" || DEV) {
-            # shiny::showTab("maintabs","DEV")
-            shiny::showTab("view-tabs","Resource info")
-            shiny::showTab("scell-tabs1","CNV")  ## DEV only
-            shiny::showTab("scell-tabs1","Monocle") ## DEV only
-            shiny::showTab("cor-tabs","Functional")
-        } else {
-            # shiny::hideTab("maintabs","DEV")
-            shiny::hideTab("view-tabs","Resource info")
-            shiny::hideTab("scell-tabs1","CNV")  ## DEV only
-            shiny::hideTab("scell-tabs1","Monocle") ## DEV only
-            shiny::hideTab("cor-tabs","Functional")            
-        }
+        ## DEVELOPER only tabs (still too alpha)
+        toggleTab("maintabs","DEV",DEV)
+        toggleTab("cor-tabs","Functional",DEV)   ## too slow
+        toggleTab("cor-tabs","Differential",DEV)  
+        toggleTab("view-tabs","Resource info",DEV)
+        toggleTab("scell-tabs","iTALK",DEV)  ## DEV only
+        toggleTab("scell-tabs","CNV",DEV)  ## DEV only        
+        toggleTab("scell-tabs","Monocle",DEV) ## DEV only
+        toggleTab("cor-tabs","Functional",DEV)
         
         ## Dynamically show upon availability in pgx object
-        if(opt$ENABLE_UPLOAD) shiny::showTab("load-tabs","Upload data")            
+        toggleTab("load-tabs","Upload data", opt$ENABLE_UPLOAD)            
         tabRequire(pgx, "connectivity", "maintabs", "Similar experiments")
         tabRequire(pgx, "drugs", "maintabs", "Drug connectivity")
         tabRequire(pgx, "wordcloud", "maintabs", "Word cloud")
         tabRequire(pgx, "deconv", "maintabs", "CellProfiling")
-        fileRequire("tcga_matrix.h5", "maintabs", "TCGA survival (beta)")         
-        if(!is.null(ACCESS.LOG)) shiny::showTab("load-tabs","Visitors map")                    
+        toggleTab("user-tabs","Visitors map",!is.null(ACCESS.LOG))                    
 
         message("[SERVER] reconfiguring menu done.")        
     })
+    
+    ##-------------------------------------------------------------
+    ## Session Timer (can we put it elsewhere?)
+    ##-------------------------------------------------------------
+    tm <- reactiveValues(timer=reactiveTimer(Inf), start=NULL)
+    tm.warned <- FALSE
+    shiny::observe({
+        ## trigger on change of USER
+        auth <- env[["load"]][["auth"]]
+        level <- auth$level()
+        message("[SERVER] user LEVEL = ",level)
+        logged <- auth$logged()
+        message("[SERVER] logged = ",logged)
+        
+        ##if(tolower(level)=="free" && TIMEOUT>0 && logged) {
+        if(TIMEOUT>0 && logged) {        
+            message("[SERVER] starting session timer!!!")
+            message("[SERVER] TIMEOUT = ", TIMEOUT)            
+            tm$timer <- reactiveTimer(0.1*TIMEOUT*1000)  ## polling time
+            tm$start <- Sys.time()
+            tm.warned <<- FALSE
+        } else {
+            message("[SERVER] no timer!!!")            
+            tm$timer <- reactiveTimer(Inf)
+            tm$start <- NULL
+            tm.warned <<- FALSE
+        }       
+    })
 
+    ## Logout user after TIMEOUT
+    shiny::observeEvent(tm$timer(), {
+        message("[SERVER] timer reacted")
+        if(is.null(tm$start) || TIMEOUT <=0 ) {
+            message("[SERVER] timer is off")
+            return()
+        }
+        if(!is.null(tm$start)) {
+            secs.lapsed <- as.numeric(Sys.time() - tm$start, units='secs')            
+            message("[SERVER] timer seconds lapsed = ",round(secs.lapsed,digits=2))
+            if(secs.lapsed >= 0.80*TIMEOUT && !tm.warned) {
+                message("[SERVER] timed out warning!!!")
+                shinyalert::closeAlert()
+                shinyalert::shinyalert(
+                                title = "Warning!",
+                                text = "Your FREE session is expiring soon."
+                                ##callbackR = function(x){shinyalert::closeAlert()}
+                            )
+                tm.warned <<- TRUE
+            } else if(secs.lapsed >= TIMEOUT) {
+                message("[SERVER] timed out!!!")
+                shinyalert::closeAlert()
+                shinyalert::shinyalert(
+                                title = "Oh No!",
+                                text = "Your FREE session has expired.",
+                                ##callbackR = function(x){shinyalert::closeAlert()},
+                                ##callbackJS = "function(x){logout()}" ## logout and/or quit??
+                                callbackJS = "function(x){logout();quit()}" ## logout and/or quit??
+                                )
+                tm$timer <- reactiveTimer(Inf)                
+                tm$start <- NULL
+                tm.warned <<- FALSE                
+            }
+        }
+    })
+    
+    ##-------------------------------------------------------------
+    ## Session logout functions
+    ##-------------------------------------------------------------
+
+    ## This code listens to the JS quit signal
+    observeEvent( input$quit, {
+        dbg("[SERVER:quit] !!!reacted!!!")
+        dbg("[SERVER:quit] closing session... ")        
+        session$close()
+        dbg("[SERVER:quit] stopping App... ")                
+        stopApp()
+        dbg("[SERVER:quit] App died... ")                        
+    })
+
+    ## This code will be run after the client has disconnected
+    ## Note!!!: Strange behaviour, sudden session ending.
+    if(0) {
+        session$onSessionEnded(function() {
+            dbg("[SERVER:onSessionEnded] !!!reacted!!!")
+            dbg("[SERVER:onSessionEnded] closing session... ")
+            session$close()
+            dbg("[SERVER:onSessionEnded] stopping App... ")                        
+            stopApp()
+            dbg("[SERVER:onSessionEnded] App died... ")                                
+        })
+    }
+    
+
+    ##-------------------------------------------------------------
+    ## report server times
+    ##-------------------------------------------------------------    
     server.init_time <- round(Sys.time() - server.start_time, digits=4)    
     message("[SERVER] server.init_time = ",server.init_time," ",attr(server.init_time,"units"))
     total.lapse_time <- round(Sys.time() - main.start_time,digits=4)
@@ -341,7 +431,7 @@ TABVIEWS <- list(
     "load"   = tabView("Home",LoadingInputs("load"),LoadingUI("load")),
     "view"   = tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
     "clust"  = tabView("Cluster samples",ClusteringInputs("clust"),ClusteringUI("clust")),
-    "ftmap"  = tabView("Feature maps (beta)",FeatureMapInputs("ftmap"),FeatureMapUI("ftmap")),    
+    "ftmap"  = tabView("Cluster features",FeatureMapInputs("ftmap"),FeatureMapUI("ftmap")),    
     "wgcna"  = tabView("WGCNA (beta)",WgcnaInputs("wgcna"),WgcnaUI("wgcna")),
     "expr"   = tabView("Differential expression",ExpressionInputs("expr"),ExpressionUI("expr")),
     "cor"    = tabView("Correlation analysis", CorrelationInputs("cor"), CorrelationUI("cor")),
@@ -371,8 +461,9 @@ names(TABVIEWS)
 TABVIEWS <- TABVIEWS[names(TABVIEWS) %in% names(which(ENABLED))]
 names(TABVIEWS)
 
-
-## USERMENU
+#-------------------------------------------------------
+## Build USERMENU
+#-------------------------------------------------------
 user.tab <-  tabView(
     title = shiny::HTML(
         "<span class='label label-info' id='authentication-user'></span>"
@@ -381,40 +472,37 @@ user.tab <-  tabView(
     UserInputs("user"), 
     UserUI("user")    
 )
-##logout.tab <- shiny::tabPanel(title=shiny::HTML("<a id='logout' href='/logout'>Logout"))
+if(opt$AUTHENTICATION == "none") {
+    user.tab <-  tabView("Settings", id="user", UserInputs("user"), UserUI("user"))    
+}
 logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
-upgrade.tab <- shiny::tabPanel(shiny::HTML("<a onClick='upgrade()' style='font-weight:bold;color:#2a9d8f;cursor:pointer;' id='authentication-upgrade'>Upgrade</a>"))
 
 ## conditionally add if firebase authentication is enabled
+##stop.tab    <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='sigstop()'>Stop</a>"))
+stop.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='quit()'>Quit</a>"))
+##if( opt$AUTHENTICATION == "shinyproxy" && in.shinyproxy() ) {
+if(opt$AUTHENTICATION == "shinyproxy") {
+    ##logout.tab <- shiny::tabPanel(title=shiny::HTML("<a id='logout' href='/logout'>Logout"))
+    logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='logout()' id='authentication-logout'>Logout</a>"))    
+}
 if(opt$AUTHENTICATION == "firebase") {
-    user.menu <- shiny::navbarMenu(
+    upgrade.tab <- shiny::tabPanel(shiny::HTML("<a onClick='upgrade()' style='font-weight:bold;color:#2a9d8f;cursor:pointer;' id='authentication-upgrade'>Upgrade</a>"))
+}
+
+user.menu <- shiny::navbarMenu(
     ##title="User",
     title=icon("user-circle","fa"),                     
     user.tab,
     upgrade.tab,
     "----",
-    shiny::tabPanel(title=shiny::HTML("<a href='https://omicsplayground.readthedocs.io' target='_blank'>Documentation")),
+    shiny::tabPanel(title=shiny::HTML("<a href='https://omicsplayground.readthedocs.io' target='_blank'>Documentation</a>")),
     shiny::tabPanel(title=shiny::HTML("<a href='https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-' target='_blank'>Video tutorials</a>")),
-    shiny::tabPanel(title=shiny::HTML("<a href='https://groups.google.com/d/forum/omicsplayground' target='_blank'>Community Forum")),
-    shiny::tabPanel(title=shiny::HTML("<a href='https://github.com/bigomics/omicsplayground' target='_blank'>GitHub")),
+    shiny::tabPanel(title=shiny::HTML("<a href='https://groups.google.com/d/forum/omicsplayground' target='_blank'>Community Forum</a>")),
+    shiny::tabPanel(title=shiny::HTML("<a href='https://github.com/bigomics/omicsplayground' target='_blank'>GitHub</a>")),
     "----",         
-    logout.tab         
-    )
-} else {
-    user.menu <- shiny::navbarMenu(
-    ##title="Help",
-    title=icon("user-circle","fa"),                                                 
-    shiny::tabPanel(title=shiny::HTML("<a href='https://omicsplayground.readthedocs.io' target='_blank'>Documentation")),
-    shiny::tabPanel(title=shiny::HTML("<a href='https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-' target='_blank'>Video tutorials</a>")),
-    shiny::tabPanel(title=shiny::HTML("<a href='https://groups.google.com/d/forum/omicsplayground' target='_blank'>Community Forum")),
-    shiny::tabPanel(title=shiny::HTML("<a href='https://github.com/bigomics/omicsplayground' target='_blank'>GitHub")),
-    ##shiny::tabPanel(title=shiny::HTML("<a href='https://hub.docker.com/r/bigomics/omicsplayground' target='_blank'>Docker")),
-    "----",
-    logout.tab        
-    )
-}
-
-
+    logout.tab,
+    stop.tab
+)
 
 
 createUI <- function(tabs)
@@ -433,17 +521,16 @@ createUI <- function(tabs)
     id = "maintabs"
     ##selected = "Home"    
     header = shiny::tagList(
+        shiny::tags$head(shiny::tags$script(src="temp.js")),
+        shiny::tags$head(shiny::tags$script(src="google-analytics.js")),
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
         shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
+        shinyalert::useShinyalert(),  # Set up shinyalert
         firebase::useFirebase(firestore = TRUE),
-        shiny::tags$head(shiny::tags$script(src="temp.js", type="text/javascript")),
         TAGS.JSSCRIPT,
         shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
-        shiny::div(
-            shiny::textOutput("current_dataset"),
-            class='current-data'
-        )
+        shiny::div(shiny::textOutput("current_dataset"), class='current-data')
         ##QuestionBoard_UI("qa")
     )
     names(header) <- NULL

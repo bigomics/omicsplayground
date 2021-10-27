@@ -1030,7 +1030,7 @@ gseaLeadingEdgeHeatmap <- function(gsea, maxrow=60, maxcol=60, gsets=NULL,
 ##=========================== PLOTTING ===================================
 ##========================================================================
 
-bluered <- function(n=64) gplots::colorpanel(n,"royalblue3","grey90","indianred3")
+.bluered <- function(n=64) gplots::colorpanel(n,"royalblue3","grey90","indianred3")
 
 gsea.barplot <- function(scores, names=NULL, xlab='score', xlim = NULL,
                          cex.text=1, main='enrichment', n=16)
@@ -1089,16 +1089,15 @@ gsea.enplot <- function(rnk, gset, names=NULL, main=NULL,
     ##arrows(jj, (y0 - 0.66*dy), jj, y0, col="grey30", lwd=1, length=0)
 
     ## red/blue bar at bottom
-    kk <- c(seq(1,length(rnk)*0.99,floor(length(rnk)/11)),length(rnk))
+    kk <- c(seq(1,length(rnk)*0.99,floor(length(rnk)/20)),length(rnk))
     length(kk)
     i=1
     for(i in 1:(length(kk)-1)) {
         r <- mean(rnk[kk[c(i,i+1)]])
         r1 <- (r/max(abs(rnk),na.rm=TRUE))
-        r1 <- abs(r1)**0.66 * sign(r1)
-        irnk <- 1 + round((length(kk)-1)*(1 + r1))
-        ##cat("irnk=",irnk,"\n")
-        cc <- gplots::bluered(length(kk)-1)[1 + floor(irnk/2)]
+        r1 <- abs(r1)**0.5 * sign(r1)
+        irnk <- floor(31*(1 + r1)/2)
+        cc <- gplots::bluered(32)[1 + irnk]
         rect(kk[i], y0 - 1.05*dy, kk[i+1], y0 - 0.65*dy, col=cc, border=NA)
     }
 
@@ -1239,7 +1238,7 @@ gsea.ftplot <- function(x, rft="var", cft="var",
                         cexRow=0.65, cexCol=0.65, scale="rows",
                         rsort="hclust", csort="hclust", p=1,
                         mar=c(8,4,4,2), layout.reset=TRUE,
-                        sort.decreasing=FALSE, col=bluered(64),
+                        sort.decreasing=FALSE, col=gplots::bluered(64),
                         legend=NULL, cex.legend=1,
                         layout.widths=c(0.15,0.15,1),
                         layout.heights=c(0.15,0.15,1) )

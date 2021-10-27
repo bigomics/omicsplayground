@@ -9,7 +9,7 @@ message("===============================================================")
 
 ## Parse access logs
 access.dirs = c("/var/www/html/logs", "/var/log/apache2","/var/log/apache",
-                "/var/log/httpd","/var/log/nginx","../logs")
+                "../logs/html", "/var/log/httpd","/var/log/nginx")
 access.dirs <- access.dirs[dir.exists(access.dirs)]
 access.dirs
 ##ACCESS.LOG <- pgx.parseAccessLogs(access.dirs[], filter.get=NULL)
@@ -67,9 +67,9 @@ in.shinyproxy <- function() {
     ##
     vars <- c("SHINYPROXY_USERNAME","SHINYPROXY_USERGROUPS",
               "PLAYGROUND_USERID","PLAYGROUND_LEVEL")
-    vars <- c("SHINYPROXY_USERNAME","SHINYPROXY_USERGROUPS")
+    vars <- c("SHINYPROXY_USERNAME")
     vals <- sapply(vars,Sys.getenv)
-    all(vals!="")
+    all(vals!="") && dir.exists("/omicsplayground")
 }
 
 tabRequire <- function(pgx, slot, tabname, subtab) {
@@ -100,6 +100,21 @@ tabView <- function(title, tab.inputs, tab.ui, id=title) {
                  shiny::mainPanel( width=10, tab.ui)
              ))
 }
+
+toggleTab <- function(inputId, target, do.show, req.file=NULL ) {
+    if(!is.null(req.file)) {
+        file1 <- search_path(c(FILES,FILESX),req.file)
+        has.file <- any(!is.null(file1) & file.exists(file1))
+        do.show <- do.show && has.file
+    }
+    if(do.show) {
+        shiny::showTab(inputId, target)
+    }
+    if(!do.show) {
+        shiny::hideTab(inputId, target)
+    }
+}
+
 
 ## dev.tabView <- function(title, tab.inputs, tab.ui) {
 ##     if(!DEV.MODE) return(NULL)
