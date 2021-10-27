@@ -218,7 +218,7 @@ be multiple categories (classes) or patient survival data."
         dbg("[calcVariableImportance] 1: len.sel = ",length(sel))
         dbg("[calcVariableImportance] 1: ft = ",ft)
 
-        is.family <- ft %in% c(names(ngs$families),names(iGSETS))
+        is.family <- (ft %in% c(names(ngs$families),names(iGSETS)))
         
         if(ft=='<custom>' && !is.null(sel) && length(sel)>0) {
             ## ------------- filter with user selection
@@ -237,7 +237,7 @@ be multiple categories (classes) or patient survival data."
                 pp <- filterProbes(ngs$genes, gg)
             } else if(ft %in% names(iGSETS)) {
                 dbg("[calcVariableImportance] 2: using genesets")                    
-                gg <- getGSETS(ft)
+                gg <- unlist(getGSETS(ft))
                 pp <- filterProbes(ngs$genes, gg)                
             }
             pp <- intersect(pp,rownames(X))

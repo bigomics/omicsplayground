@@ -79,15 +79,17 @@ this.style <- function(id, css, ns=NULL) {
     shiny::tags$head(shiny::tags$style(paste0("#",id," ",css)))
 }
 
-
 alertDataLoaded <- function(session, ngs) {
     if(!is.null(ngs)) return()
-    shinyWidgets::sendSweetAlert(
-        session = session,
-        ##title = "No dataset loaded",
-        title = NULL,
-        text = "Please first load a dataset"
-    )
+    if(0) {
+        shinyWidgets::sendSweetAlert(
+                          session = session,
+                          ##title = "No dataset loaded",
+                          title = NULL,
+                          text = "Please first load a dataset"
+                      )
+    }
+    message("[alertDataLoaded] WARNING:: no PGX object")
 }
 
 pgx.randomCartoon <- function() {

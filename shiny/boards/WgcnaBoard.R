@@ -241,7 +241,8 @@ WgcnaBoard <- function(input, output, session, env)
         deepsplit  <- as.integer(input$deepsplit)
 
         datExpr <- t(head(X,ngenes))
-        progress$inc(0.1, "computing WGCNA modules...")            
+        progress$inc(0.1, "computing WGCNA modules...")        
+        require(WGCNA)
         net = WGCNA::blockwiseModules(
                          datExpr, power = power,
                          TOMType = "unsigned", minModuleSize = minmodsize,
@@ -288,7 +289,6 @@ WgcnaBoard <- function(input, output, session, env)
             X1 <- t(datExpr)
             X1 <- t(scale(datExpr))
             ##pos <- Rtsne::Rtsne(X1)$Y
-
             ##dissTOM <- 1 - abs(cor(datExpr))**6
             dissTOM  <- 1 - WGCNA::TOMsimilarityFromExpr(datExpr, power=power)
             rownames(dissTOM) <- colnames(dissTOM) <- colnames(datExpr)            
@@ -297,10 +297,9 @@ WgcnaBoard <- function(input, output, session, env)
             ##pos <- pgx.clusterBigMatrix(dissTOM, methods="pca", dims=2)[[1]]
             names(clust)
             if("cluster.genes" %in% names(ngs)) {
-                clust[['umap2d']] <- ngs$cluster.genes$pos[['umap2d']]
+                clust[['umap2d']] <- ngs$cluster.genes$pos[['umap2d']][colnames(datExpr),]
             }
             progress$inc(0.2)                    
-
         }
 
         if(1) {
@@ -1137,6 +1136,10 @@ WgcnaBoard <- function(input, output, session, env)
         par(mfrow=c(1,1), mar=c(2,3,1,1))
         me1 <- paste0("ME", out$net$colors)
         pos <- out$clust[[method]]        
+
+        dbg("[wgcna_umap.RENDER] method = ",method)
+        dbg("[wgcna_umap.RENDER] dim(pos) = ",dim(pos))        
+
         pgx.scatterPlotXY.BASE(pos, var=me1, col=out$me.colors)
         ##WGCNA::TOMplot(dissTOM, net$dendrograms[[1]], net$colors)
 

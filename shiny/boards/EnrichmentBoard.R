@@ -89,7 +89,7 @@ EnrichmentBoard <- function(input, output, session, env)
                     shinyBS::tipify( shiny::selectInput(ns("gs_fdr"),"FDR", choices=FDR.VALUES2, selected=0.2),
                            "Set the false discovery rate (FDR) threshold.", placement="top"),
                     shinyBS::tipify( shiny::selectInput(ns("gs_lfc"),"logFC threshold",
-                                        choices=c(0,0.05,0.1,0.2,0.5,1,2), selected=0.1),
+                                        choices=c(0,0.05,0.1,0.2,0.5,1,2), selected=0),
                            "Set the logarithmic fold change (logFC) threshold.",
                            placement="top")
                     ),
@@ -131,7 +131,7 @@ EnrichmentBoard <- function(input, output, session, env)
             height = rowH,
             flex = c(1,NA),
             shiny::fillRow(
-                flex = c(1.8,0.05,1),
+                flex = c(1.5,0.05,1),
                 plotWidget(ns("topEnriched")),
                 shiny::br(),
                 plotWidget(ns("topEnrichedFreq"))
@@ -141,6 +141,7 @@ EnrichmentBoard <- function(input, output, session, env)
     })
 
     enrichplots_caption = "<b>Enrichment plots</b> associated with the gene set (selected in <b>Table I</b>) and gene (selected in <b>Table II</b>). <b>(a)</b> Gene set enrichment plot. <b>(b)</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set are highlighted in blue. <b>(c)</b> Barplot of the gene set enrichment in the groups. <b>(d)</b> Scatter plot of the enrichment versus the expression of the selected geneset and gene, on the y and x axes, respectively."
+    enrichplots_caption = "<b>Enrichment plots</b> associated with the gene set (selected in <b>Table I</b>) and gene (selected in <b>Table II</b>). <b>(a)</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set are highlighted in blue. <b>(b)</b> Barplot of the gene set enrichment in the groups. <b>(c)</b> Barplot of selected gene in the groups. <b>(d)</b> Scatter plot of the enrichment versus the expression of the selected geneset and gene, on the y and x axes, respectively."
 
     output$subplots_UI <- shiny::renderUI({
         shiny::fillCol(
@@ -150,10 +151,10 @@ EnrichmentBoard <- function(input, output, session, env)
                 id = ns("subplots"),
                 height = imgH,
                 flex=c(1,1,1,1), ##height = 370,
-                plotWidget(ns("subplot_enplot")),
+                ##plotWidget(ns("subplot_enplot")),
                 plotWidget(ns("subplot_volcano")),                
                 plotWidget(ns("subplot_barplot")),
-                ## plotWidget(ns("subplot3")),
+                plotWidget(ns("subplot_geneplot")),
                 plotWidget(ns("subplot_scatter"))
             ),
             shiny::br(),
@@ -303,7 +304,7 @@ EnrichmentBoard <- function(input, output, session, env)
             cat("ERROR: calcGsetMeta:: no valid methods\n")
             return(NULL)
         }
-        
+
         ## recalculate meta values
         pv = unclass(mx$p)[,methods,drop=FALSE]
         qv = unclass(mx$q)[,methods,drop=FALSE]
@@ -484,7 +485,7 @@ EnrichmentBoard <- function(input, output, session, env)
 
 
     getFilteredGeneSetTable <- shiny::reactive({        
-
+        
         if(is.null(input$gs_showall) || length(input$gs_showall)==0) return(NULL)
         if(is.null(input$gs_top10) || length(input$gs_top10)==0) return(NULL)
                 
@@ -495,16 +496,19 @@ EnrichmentBoard <- function(input, output, session, env)
             ##nmeth <- length(input$gs_statmethod)
             ##sel <- which(res$stars == star.symbols(nmeth))
             ##sel <- which(nchar(res$stars) == nmeth)
-            lfc <- input$gs_lfc
-            fdr <- input$gs_fdr
+            lfc <- as.numeric(input$gs_lfc)
+            fdr <- as.numeric(input$gs_fdr)
+            dbg("[EnrichmentBoard::getFilteredGeneSetTable] lfc = ",lfc)
+            dbg("[EnrichmentBoard::getFilteredGeneSetTable] fdr = ",fdr)            
             is.sig <- (abs(res$logFC) >= lfc & res$meta.q <= fdr)
-            sel <- which(is.sig)
-            res = res[sel,,drop=FALSE]
+            dbg("[EnrichmentBoard::getFilteredGeneSetTable] is.sig = ",table(is.sig))
+            res <- res[is.sig,,drop=FALSE]
         }
         
         ## just show top 10        
-        if(nrow(res)>10 && length(input$gs_top10) && input$gs_top10==TRUE) {
-            fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(res))[1]
+        if(input$gs_top10 && nrow(res)>10 && length(input$gs_top10) ) {
+            fx.col = grep("score|fx|fc|sign|NES|logFC",colnames(res),value=TRUE)[1]
+            dbg("[EnrichmentBoard::getFilteredGeneSetTable] fx.col = ",fx.col)
             fx  = as.numeric(res[,fx.col])
             names(fx) = rownames(res)
             pp <- unique(c(head(names(sort(-fx[which(fx>0)])),10),
@@ -550,25 +554,35 @@ EnrichmentBoard <- function(input, output, session, env)
         top <- setdiff(top, c(NA,"NA"))
         if(is.null(top) || is.na(top[1])) return(NULL)
         
-        par(mar=c(0.2,1.8,2.3,0.1), mgp=c(1.6,0.6,0), oma=c(0.1,1,0,0.1))
         par(mfrow=rowcol)
-
+        if(ntop==1) {
+            par(mar=c(1,6,2,6), mgp=c(1.6,0.6,0), oma=c(0.1,1,0,0.1))
+        } else {
+            par(mar=c(0.2,1.8,2.3,0.1), mgp=c(1.6,0.6,0), oma=c(0.1,1,0,0.1))
+        }
+        
         for(i in 1:ntop) {
             gs <- top[i]
             if(i > length(top) || is.na(gs) ) {
                 frame()
             } else {
-                gs1 = breakstring(gs,28,50,force=FALSE)                
                 genes = names(which(ngs$GMT[,gs]!=0))
                 genes = toupper(genes)                
                 names(rnk0) <- toupper(names(rnk0))
                 ylab = ""
                 ## if(i %in% c(1,6)) ylab = "Ranked list metric"
                 if(i%%rowcol[2] == 1) ylab = "Rank metric"
+                xlab=""
+                gs1 = breakstring(gs,28,50,force=FALSE)                
+                if(ntop==1) {
+                    gs1 = breakstring(gs,100,200,force=FALSE)                
+                    xlab = "Rank in ordered dataset"
+                    ylab = "Rank metric"
+                }
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
-                            main=gs1, xlab="", ylab=ylab,
+                            main=gs1, xlab=xlab, ylab=ylab,
                             lab.line = c(0,1.8), cex.lab=0.75,
-                            cex.main=0.78, len.main=72)
+                            cex.main=0.78, len.main=200)
                 qv1 = formatC(qv[gs],format="e", digits=2)
                 legend("topright", paste("q=",qv1), bty="n",cex=0.85)
             }
@@ -597,9 +611,28 @@ EnrichmentBoard <- function(input, output, session, env)
         
         ## filter on active rows (using search)
         ##ii  <- gseatable$rows_all()
-        ii  <- gseatable$rows_current()        
-        if(is.null(ii) || length(ii)==0) return(NULL)        
-        plotTopEnriched(ngs, rpt[ii,,drop=FALSE], comp=comp, ntop=15, rowcol=c(3,5))
+        ##ii  <- gseatable$rows_current()        
+        ##if(is.null(ii) || length(ii)==0) return(NULL)        
+        ii  <- gseatable$rows_selected()
+        jj  <- gseatable$rows_current()
+        shiny::req(jj)
+
+        dbg("[topEnriched.RENDER] dim.rpt", dim(rpt))
+        if(nrow(rpt)==0) return(NULL)
+
+        ## ENPLOT TYPE        
+        if(length(ii)>0) {
+            itop = ii[1]
+        } else {
+            itop <- head(jj,15)
+        }
+        if(length(itop)==1) {
+            plotTopEnriched(ngs, rpt[itop,,drop=FALSE], comp=comp, ntop=1, rowcol=c(1,1))
+        } else {
+            plotTopEnriched(ngs, rpt[itop,,drop=FALSE], comp=comp, ntop=15, rowcol=c(3,5))
+        }
+
+
     })
         
     topEnriched_text = "This plot shows the <strong>top enriched</strong> gene sets for the selected comparison in the <code>Contrast</code> settings. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score (ES). The more the green ES curve is shifted to the upper left of the graph, the more the gene set is enriched in the first group. Conversely, a shift of the ES curve to the lower right, corresponds to more enrichment in the second group."
@@ -676,7 +709,7 @@ EnrichmentBoard <- function(input, output, session, env)
         gset.weight <- input$gs_enrichfreq_gsetweight
         fcweight <- input$gs_enrichfreq_fcweight
 
-        plotEnrichFreq(ngs, rpt, ntop=ntop, ngenes=30, gset.weight, fcweight)
+        plotEnrichFreq(ngs, rpt, ntop=ntop, ngenes=35, gset.weight, fcweight)
 
     })
 
@@ -711,7 +744,7 @@ EnrichmentBoard <- function(input, output, session, env)
     
     topEnrichedFreq.opts = shiny::tagList(
         shinyBS::tipify( shiny::radioButtons(ns('gs_enrichfreq_ntop'),"Number of top sets",
-                             c(5,10,25,100),inline=TRUE, selected=25),
+                             c(5,10,15),inline=TRUE, selected=15),
                "Number of top genesets to consider for counting the gene frequency."),
         shinyBS::tipify( shiny::checkboxInput(ns('gs_enrichfreq_gsetweight'),
                               "Weight by geneset size", TRUE),
@@ -783,7 +816,7 @@ EnrichmentBoard <- function(input, output, session, env)
     subplot.MAR = c(2.8,4,4,0.8)
     
     subplot_volcano.RENDER %<a-% shiny::reactive({
-
+        
         par(mfrow=c(1,1), mgp=c(1.2,0.4,0), oma=c(0,0,0,0.4) )
         par(mar= subplot.MAR)
         ## par(mar= c(2.3,4,1.9,0))
@@ -796,25 +829,37 @@ EnrichmentBoard <- function(input, output, session, env)
         ngs <- inputData()
         shiny::req(ngs)
         
+        gxmethods <- selected_gxmethods() ## from module-expression
+        shiny::req(gxmethods)
+        
         gx.meta <- ngs$gx.meta$meta[[comp]]
         ## limma1 = sapply(gx.meta[,c("fc","p","q")],function(x) x[,"trend.limma"])
-        limma1 = data.frame( meta.fx=gx.meta$meta.fx, meta.q=gx.meta$meta.q)
+        meta.q <- apply(gx.meta$q[,gxmethods,drop=FALSE],1,max)  ## max q-value
+        limma1 = data.frame( meta.fx=gx.meta$meta.fx, meta.q=meta.q)
         gx.annot <- ngs$genes[rownames(gx.meta),c("gene_name","gene_title")]
         ##limma = cbind( gx.meta[,c("gene_name","gene_title")], limma1)
         limma = cbind(gx.annot, limma1)
     
         gs = gset_selected()
-        if(is.null(gs)) return(NULL)
+        ##if(is.null(gs)) return(NULL)
+        if(is.null(gs) || length(gs)==0) {
+            frame()
+            text(0.5,0.5,"Please select a geneset",col="grey50")
+            return()
+        }
         gs <- gs[1]
         
         ##sel.genes = names(which(ngs$GMT[,gs]!=0))
         ##gset <- GSETS[[gs]]
-        gset <- getGSETS(gs)
+        gset <- getGSETS(gs)[[1]]
+        dbg("[subplot_volcano.RENDER] head.gset = ", head(gset,5) )        
         jj = match(toupper(gset), toupper(limma$gene_name))
         sel.genes <- setdiff(limma$gene_name[jj],c(NA,""," "))
+
+        dbg("[subplot_volcano.RENDER] head.sel.genes = ", head(sel.genes,5) )
+
         fdr = 1
-        fdr = as.numeric(input$gs_fdr)
-        
+        fdr = as.numeric(input$gs_fdr)        
         fc.genes = as.character(limma[,grep("^gene$|gene_name",colnames(limma))])
         fx = limma[,grep("logFC|meta.fx|fc",colnames(limma))[1]]
         qval = limma[,grep("^q|adj.P.Val|meta.q|qval|padj",colnames(limma))[1]]
@@ -843,48 +888,7 @@ EnrichmentBoard <- function(input, output, session, env)
         gs = breakstring(gs,50)
         title(gs, cex.main=0.85)        
     })
-
     
-    subplot_volcano2.RENDER %<a-% shiny::reactive({
-        
-        par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0,0.4) )
-        par(mar=subplot.MAR)
-
-        pgx <- inputData()
-        shiny::req(pgx)
-        
-        comp=1;gs=100
-        gs="H:HALLMARK_TNFA_SIGNALING_VIA_NFKB"        
-        comp = input$gs_contrast
-        
-        ## !!!!!!!! SHOULD BE SELECTED GX METHODS ONLY???
-        fc <- pgx$gx.meta$meta[[comp]]$meta.fx
-        mq <- pgx$gx.meta$meta[[comp]]$meta.q
-        names(fc) <- names(mq) <- rownames(pgx$gx.meta$meta[[comp]])
-
-        gs = gset_selected()
-        if(is.null(gs)) return(NULL)
-        ##gs.genes = GSETS[[gs]]
-        gs.genes = getGSETS(gs)
-        top.genes = head(gs.genes[order(-abs(fc[gs.genes]))],10)
-        
-        pos1 <- cbind(fc, -log10(mq))
-        rownames(pos1) <- rownames(pgx$gx.meta$meta[[comp]])
-        colnames(pos1) <- c("difference (log2FC)","significance (-log10q)")        
-                
-        pgx.scatterPlotXY(
-            pos=pos1, var=fc, 
-            cex=1, cex.title=0.8,
-            hilight = gs.genes,
-            ##hilight2 = NULL,
-            hilight2 = top.genes,
-            zsym = TRUE,
-            title = gs,
-            plotlib= 'base',
-            set.par=FALSE            
-        )
-
-    })
     
     subplot_volcano.PLOTLY <- shiny::reactive({
         
@@ -899,11 +903,15 @@ EnrichmentBoard <- function(input, output, session, env)
         ngs <- inputData()
         shiny::req(ngs)
         
+        gxmethods <- selected_gxmethods() ## from module-expression
+        shiny::req(gxmethods)
+
         gx.meta <- ngs$gx.meta$meta[[comp]]
         ##m1 <- intersect(c("trend.limma","notrend.limma","ttest"),colnames(gx.meta$p))[1]
         ##m1
         ##limma1 = sapply(gx.meta[,c("fc","p","q")],function(x) x[,m1])
-        limma1 = data.frame( meta.fx=gx.meta$meta.fx, meta.q=gx.meta$meta.q)
+        meta.q <- apply(gx.meta$q[,gxmethods,drop=FALSE],1,max,na.rm=TRUE)
+        limma1 = data.frame( meta.fx=gx.meta$meta.fx, meta.q=meta.q)
         gx.annot <- ngs$genes[rownames(gx.meta),c("gene_name","gene_title")]
         ##limma = cbind( gx.meta[,c("gene_name","gene_title")], limma1)
         limma = cbind(gx.annot, limma1)
@@ -913,9 +921,10 @@ EnrichmentBoard <- function(input, output, session, env)
         gs <- gs[1]        
         ##sel.genes = names(which(ngs$GMT[,gs]!=0))
         ##gset <- GSETS[[gs]]
-        gset <- getGSETS(gs)
+        gset <- getGSETS(gs)[[1]]
         jj = match(toupper(gset), toupper(limma$gene_name))
         sel.genes <- setdiff(limma$gene_name[jj],c(NA,""," "))
+
         fdr = 1
         fdr = as.numeric(input$gs_fdr)
         
@@ -982,13 +991,12 @@ EnrichmentBoard <- function(input, output, session, env)
 
         ## !!!!!!!! SHOULD BE SELECTED GX METHODS ONLY???
         fc <- pgx$gx.meta$meta[[comp]]$meta.fx
-        mq <- pgx$gx.meta$meta[[comp]]$meta.q
-        names(fc) <- names(mq) <- rownames(pgx$gx.meta$meta[[comp]])
+        names(fc) <- rownames(pgx$gx.meta$meta[[comp]])
 
         gs = gset_selected()
         if(is.null(gs)) return(NULL)
         ##gs.genes = GSETS[[gs]]
-        gs.genes = getGSETS(gs)
+        gs.genes = getGSETS(gs)[[1]]
         
         par(mfrow=c(1,1), mgp=c(1.95,0.8,0), oma=c(0,0,0.4,0.4) )
         par(mar =  c(2.8,4,3.8,0.8))        
@@ -1011,13 +1019,12 @@ EnrichmentBoard <- function(input, output, session, env)
 
         ## !!!!!!!! SHOULD BE SELECTED GX METHODS ONLY???
         fc <- pgx$gx.meta$meta[[comp]]$meta.fx
-        mq <- pgx$gx.meta$meta[[comp]]$meta.q
-        names(fc) <- names(mq) <- rownames(pgx$gx.meta$meta[[comp]])
+        names(fc) <- rownames(pgx$gx.meta$meta[[comp]])
         
         gs = gset_selected()
         if(is.null(gs)) return(NULL)
         ##gs.genes = GSETS[[gs]]
-        gs.genes = getGSETS(gs)
+        gs.genes = getGSETS(gs)[[1]]
 
         p1 <- gsea.enplotly(fc, gs.genes, main=gs)
         return(p1)
@@ -1066,7 +1073,7 @@ EnrichmentBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ## 2: Gene expression {data-width=200}
     ##----------------------------------------------------------------------
-    subplot3.RENDER %<a-% shiny::reactive({
+    subplot_geneplot.RENDER %<a-% shiny::reactive({
 
         par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0,0.4) )
         par(mar=subplot.MAR)
@@ -1080,7 +1087,6 @@ EnrichmentBoard <- function(input, output, session, env)
         has.design <- !is.null(ngs$model.parameters$design)
         collapse.others <- ifelse(has.design, FALSE, TRUE)
         ##collapse.others=TRUE
-
 
         sel  = gene_selected()
         if(is.null(sel) || is.na(sel) || length(sel)==0) {
@@ -1096,7 +1102,6 @@ EnrichmentBoard <- function(input, output, session, env)
             grouped=TRUE
             grouped <- !input$gs_ungroup2
             srt <- ifelse(!grouped || ngrp>4, 30, 0)
-            srt <- NULL
             if(!grouped && ncol(ngs$X) > 15) srt <- 60
             pgx.plotExpression(
                 ngs, probe, comp=comp0, logscale=TRUE, level="gene",
@@ -1162,7 +1167,7 @@ EnrichmentBoard <- function(input, output, session, env)
 
     subplot_volcano_text = "</b>Volcano plot.<b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set that is selected from the enrichment analysis <b>Table I</b> are highlighted in blue."
     subplot_barplot_text = "An enrichment barplot per sample group for the gene set that is selected from the enrichment analysis Table <code>I</code>. Samples can be ungrouped in the barplot by selecting <code>ungroup samples</code> from the plot <i>Settings</i>."
-    subplot3_text = "An expression barplot per sample group for the gene that is selected from the genes Table <code>II</code>. Samples can be ungrouped in the barplot by selecting <code>ungroup samples</code> from the plot <i>Settings</i>."
+    subplot_geneplot_text = "An expression barplot per sample group for the gene that is selected from the genes Table <code>II</code>. Samples can be ungrouped in the barplot by selecting <code>ungroup samples</code> from the plot <i>Settings</i>."
     subplot_scatter_text = "A scatter plot of enrichment scores versus expression values across the samples for the gene set selected from the enrichment analysis Table <code>I</code> and the gene selected from the genes Table <code>II</code>."
     
 
@@ -1203,10 +1208,10 @@ EnrichmentBoard <- function(input, output, session, env)
 
     shiny::callModule(
         plotModule,
-        id="subplot3", 
-        func = subplot3.RENDER,
-        func2 = subplot3.RENDER,
-        info.text = subplot3_text,
+        id="subplot_geneplot", 
+        func = subplot_geneplot.RENDER,
+        func2 = subplot_geneplot.RENDER,
+        info.text = subplot_geneplot_text,
         pdf.width=6, pdf.height=6,
         res = c(78,100),
         height = imgH,
@@ -1270,6 +1275,8 @@ EnrichmentBoard <- function(input, output, session, env)
         genes    <- names(which(ngs$GMT[,gset]!=0))
         genes    <- toupper(sub(".*:","",genes))
         gx.meta  <- ngs$gx.meta$meta
+
+        gsmethods <-  selected_gsetmethods()
         
         par(mfrow=c(2,5), mar=c(0.5,3.2,2.6,0.5), mgp=c(2,0.8,0))
         i=1
@@ -1281,7 +1288,11 @@ EnrichmentBoard <- function(input, output, session, env)
                 rnk0 <- gx.meta[[cmp]]$meta.fx
                 names(rnk0) <- rownames(gx.meta[[1]])
                 names(rnk0) <- toupper(sub(".*:","",names(rnk0)))
-                qv0 <- ngs$gset.meta$meta[[cmp]][gset,"meta.q"]
+
+                ##qv0 <- ngs$gset.meta$meta[[cmp]][gset,"meta.q"]
+                gs.meta <- ngs$gset.meta$meta[[cmp]]
+                qv0 <- max(gs.meta[gset,"q"][,gsmethods],na.rm=TRUE)                
+                
                 gs1 = breakstring(gset,28,50,force=FALSE)
                 cmp <- paste0(gset,"\n@",cmp)
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
@@ -1299,7 +1310,11 @@ EnrichmentBoard <- function(input, output, session, env)
                 rnk0 <- gx.meta[[cmp]]$meta.fx
                 names(rnk0) <- rownames(gx.meta[[1]])
                 names(rnk0) <- toupper(sub(".*:","",names(rnk0)))
-                qv0 <- ngs$gset.meta$meta[[cmp]][gset,"meta.q"]
+
+                ##qv0 <- ngs$gset.meta$meta[[cmp]][gset,"meta.q"]
+                gs.meta <- ngs$gset.meta$meta[[cmp]]
+                qv0 <- max(gs.meta[gset,"q"][,gsmethods],na.rm=TRUE)                
+
                 gs1 = breakstring(gset,28,50,force=FALSE)
                 cmp <- paste0(gset,"\n@",cmp)
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
@@ -1325,7 +1340,7 @@ EnrichmentBoard <- function(input, output, session, env)
         options = compare_module_opts,
         height = c(imgH,450), width = c("auto",1500), res=95,
         pdf.width=14, pdf.height=4, 
-        title = "Enrichment of gene set across multiple contrasts",
+        title = "Enrichment of geneset across multiple contrasts",
         info.text = compare_text,
         ##caption = compare_caption,
         add.watermark = WATERMARK
@@ -1391,7 +1406,6 @@ EnrichmentBoard <- function(input, output, session, env)
         }        
         
         shiny::withProgress(message="computing volcano plots ...", value=0, {
-
             i=1
             for(i in 1:nplots) {
 
@@ -1580,15 +1594,15 @@ EnrichmentBoard <- function(input, output, session, env)
         limma1.pq = sapply(mx[,c("p","q")], function(x) {
             apply(x[,gxmethods,drop=FALSE],1,max,na.rm=TRUE)
         })
-        limma1 <- cbind( fc=limma1.fc, q=limma1.pq)
+        limma1 <- cbind( fc=limma1.fc, limma1.pq)
         ##limma  = cbind( ngs$gx.meta$meta[[comp]][,c("gene_name","gene_title")], limma1)
         rownames(limma1) <- rownames(mx)
 
         ## filter on significance?????
         if(FALSE && !input$gs_showall) {
             lfc=1;fdr=0.05
-            lfc <- input$gs_lfc
-            fdr <- input$gs_fdr
+            lfc <- as.numeric(input$gs_lfc)
+            fdr <- as.numeric(input$gs_fdr)
             is.sig <- abs(limma1[,"fc"]) >= lfc & limma1[,"q"] <= fdr
             table(is.sig)
             limma1 <- limma1[is.sig,,drop=FALSE]
@@ -1685,7 +1699,7 @@ EnrichmentBoard <- function(input, output, session, env)
                       ##extensions = c('Buttons','Scroller'),
                       extensions = c('Scroller'),                  
                       fillContainer = TRUE,
-                      selection = list(mode=selectmode, target='row', selected=1),
+                      selection = list(mode=selectmode, target='row', selected=NULL),
                       ## options=list(
                       ##     dom = 'lfrtip',
                       ##     ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
@@ -1822,9 +1836,7 @@ EnrichmentBoard <- function(input, output, session, env)
         ## get all contrasts
         F <- sapply( ngs$gset.meta$meta, function(x) x[,"meta.fx"])
         colnames(F) <- gsub("_"," ",colnames(F))
-
-        qv <- sapply( ngs$gset.meta$meta, function(x) x[,"meta.q"])
-        rownames(qv) <- rownames(F) <- rownames(ngs$gset.meta$meta[[1]])
+        rownames(F) <- rownames(ngs$gset.meta$meta[[1]])
         fc.var <- round( rowMeans(F**2,na.rm=TRUE), digits=3)
         gs <- substring(rownames(F),1,60)
         F1 <- data.frame( geneset=gs, fc.var=fc.var, round(F,digits=3), check.names=FALSE)

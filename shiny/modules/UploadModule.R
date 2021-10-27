@@ -7,43 +7,6 @@
 ## Upload data Module
 ##================================================================================
 
-
-
-if(0) {
-
-    OPG = "~/Playground/omicsplayground"
-    RDIR = file.path(OPG,"R")
-    FILES = file.path(OPG,"lib")
-    FILESX = file.path(OPG,"libx")
-    PGX.DIR = file.path(OPG,"data")
-    source(file.path(RDIR,"pgx-include.R"))  ## pass local vars
-    source(file.path(RDIR,"pgx-init.R"))  ## pass local vars
-
-    load(file.path(PGX.DIR,"geiger2016-arginine.pgx"))
-
-    source("UploadModule.R")  ## this file...
-    
-    pgx <- NULL
-    pgx <- gadgetize2(
-        UploadModuleUI, UploadModuleServer,
-        title = "UploadGadget", height=640, size="l", 
-        FILES = "~/Playground/omicsplayground/lib"
-    )
-    names(pgx)
-
-    pgx <- gadgetize2(
-        ComputePgxUI, ComputePgxServer,
-        title = "ComputePgxGadget", height=640, size="l", 
-        countsRT = shiny::reactive(ngs$counts),
-        samplesRT = shiny::reactive(ngs$samples),
-        contrastsRT = shiny::reactive(ngs$model.parameters$exp.matrix),
-        alertready = TRUE
-    )
-    pgx <- ComputePgxGadget(ngs$counts, ngs$samples, ngs$model.parameters$exp.matrix)
-    names(pgx)
-
-}
-
 UploadModuleUI <- function(id) {
     ns <- shiny::NS(id)
     shiny::tabsetPanel(
@@ -59,7 +22,9 @@ UploadModuleUI <- function(id) {
 }
 
 UploadModuleServer <- function(id, 
-                               height=720, FILES = "../lib", 
+                               FILES,
+                               pgx.dirRT,
+                               height = 720,
                                limits = c(
                                    samples = 100,
                                    comparisons = 20,
@@ -316,6 +281,7 @@ UploadModuleServer <- function(id,
                 enable = upload_ok,
                 alertready = FALSE,
                 FILES = FILES,
+                pgx.dirRT = shiny::reactive(pgx.dirRT()),
                 max.genes = as.integer(limits["genes"]),
                 max.genesets = as.integer(limits["genesets"]),
                 max.datasets = as.integer(limits["datasets"]),
@@ -324,7 +290,6 @@ UploadModuleServer <- function(id,
             
             uploaded_pgx <- shiny::reactive({
                 dbg("[uploaded_pgx] reacted!")
-                
                 if(!is.null(uploaded$pgx)) {
                     pgx <- uploaded$pgx
                     ##pgx <- pgx.initialize(pgx)
@@ -459,7 +424,6 @@ UploadModuleServer <- function(id,
                 df <- data.frame(df[,px,drop=FALSE],check.names=FALSE)
                 tt2 <- paste(nrow(contrasts),"samples x",ncol(contrasts),"contrasts")
                 ##tt2 <- paste(ncol(contrasts),"contrasts")
-
                 dbg("[output$contrastStats] 4a : dim.df=",dim(df))                
 
                 p1 <- df %>% inspectdf::inspect_cat() %>% inspectdf::show_plot()                    
@@ -482,19 +446,6 @@ UploadModuleServer <- function(id,
             ##=====================================================================
             ##========================== OBSERVERS ================================
             ##=====================================================================            
-            if(0) {
-                fn1='~/Downloads/counts.csv'
-                fn2='~/Downloads/samples.csv'
-                fn3='~/Downloads/contrasts.csv'
-                uploadnames=inputnames=c(fn1,fn2)
-                uploadnames=inputnames=c(fn1,fn2,fn3)
-                
-                counts=fread.csv('~/Projects/goutham-csverror/counts.csv')
-                samples=read.csv('~/Projects/goutham-csverror/samples.csv',row.names=1)
-                contrasts=read.csv('~/Projects/goutham-csverror/contrasts.csv',row.names=1)
-                contrasts1=contrasts
-                samples1=samples
-            }            
             
             ##------------------------------------------------------------------
             ## Main observer for uploaded data files
@@ -546,8 +497,6 @@ UploadModuleServer <- function(id,
                     inputnames  <- input$upload_files$name[ii]
                     uploadnames <- input$upload_files$datapath[ii]
 
-                    dbg("[upload_files] inputnames = ",inputnames)
-                    dbg("[upload_files] uploadnames = ",uploadnames)                        
                     if(length(uploadnames)>0) {
                         i=1
                         for(i in 1:length(uploadnames)) {
@@ -603,9 +552,6 @@ UploadModuleServer <- function(id,
                     }            
                 }
                 
-                dbg("[upload_files] names(matlist) = ",names(matlist))
-                dbg("[upload_files] pgx.uploaded = ",pgx.uploaded)
-
                 if("counts.csv" %in% names(matlist)) {
                     ## Convert to gene names (need for biological effects)
                     dbg("[upload_files] converting probe names to symbols")
