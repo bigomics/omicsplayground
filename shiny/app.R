@@ -82,7 +82,7 @@ if(0) {
     pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
-    load("../data/GSE157905-lenvatinib-bc.pgx")
+    load("../data/bojkova2020-sarscov2-RC2.pgx")
     load("../data/gtex-aging-n40svaNnm.pgx")
     ngs = pgx.initialize(ngs)
 }
@@ -289,7 +289,7 @@ server = function(input, output, session) {
             if(is.null(ACCESS.LOG)) shiny::hideTab("user-tabs","Visitors map")            
             return(NULL)
         }
-
+        
         message("[SERVER] dataset changed. reconfiguring menu...")
         ## show all main tabs
         lapply(MAINTABS, function(m) shiny::showTab("maintabs",m))
@@ -442,7 +442,7 @@ TABVIEWS <- list(
     "load"   = tabView("Home",LoadingInputs("load"),LoadingUI("load")),
     "view"   = tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
     "clust"  = tabView("Cluster samples",ClusteringInputs("clust"),ClusteringUI("clust")),
-    "ftmap"  = tabView("Feature maps (beta)",FeatureMapInputs("ftmap"),FeatureMapUI("ftmap")),    
+    "ftmap"  = tabView("Cluster features (beta)",FeatureMapInputs("ftmap"),FeatureMapUI("ftmap")),    
     "wgcna"  = tabView("WGCNA (beta)",WgcnaInputs("wgcna"),WgcnaUI("wgcna")),
     "expr"   = tabView("Differential expression",ExpressionInputs("expr"),ExpressionUI("expr")),
     "cor"    = tabView("Correlation analysis", CorrelationInputs("cor"), CorrelationUI("cor")),

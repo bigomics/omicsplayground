@@ -1579,8 +1579,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
                           deferRender=TRUE,
                           search = list(
                               regex = TRUE,
-                              caseInsensitive = TRUE,
-                              search = 'GOBP:'                              
+                              caseInsensitive = TRUE
+                              ##search = 'GOBP:'                              
                           )
                       ),  ## end of options.list 
                       selection=list(mode='single', target='row', selected=NULL)) %>%

@@ -535,19 +535,17 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         ## This is wrapper function that loads the ngs object. It also
         ## checks if the user is logged in.
         ##  
-        dbg("[LoadingBoard::inputData] ---------- reacted ---------------\n")
+        dbg("[LoadingBoard::inputData] !!! reacted !!!\n")
         dbg("[LoadingBoard::inputData] authentication=",authentication,"\n")
         dbg("[LoadingBoard::inputData] auth$logged=",auth$logged(),"\n")
         
         if(!auth$logged()) {
             currentPGX(NULL)  ## set NULL
-        } else {
-            pgx <- currentPGX()            
-            dbg("[LoadingBoard::inputData] pgx$name = ",pgx$name,"\n")        
+            return(NULL)
         }
         
-        pgx <- currentPGX()
-        dbg("[LoadingBoard::inputData] is.null(pgx)=",is.null(pgx),"\n")
+        pgx <- currentPGX()            
+        dbg("[LoadingBoard::inputData] pgx$name = ",pgx$name,"\n")        
         return(pgx)
     })
 
