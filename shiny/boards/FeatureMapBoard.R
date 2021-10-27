@@ -36,11 +36,11 @@ FeatureMapBoard <- function(input, output, session, env)
     rowH1 = 220  ## row 1 height
     rowH2 = 460  ## row 2 height
     
-    description = "<h3>Feature Maps</h3> Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). It allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers."
+    description = "<h3>Cluster Features</h3> Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). It allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers."
     output$description <- shiny::renderUI(shiny::HTML(description))
     
     infotext ="Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers, to study the relationships between features.
-<br><br>The tabs present Gene Maps and Geneset Maps and are computed for gene and geneset features, respectively. The clustering of features is computed using UMAP from either the normalized log-expression matrix (logCPM) or the log-foldchange matrix (logFC), with the covariance as distance metric. The UMAP from the logCPM is the default, but in cases of strong batch/tissue effects the UMAP from the logFC matrix is a better choice. We prefer the covariance distance metric instead of the correlation because it takes the size of the foldchange into account. Doing so, genes that are close together in corners in the outer rim are those with high pairwise covariance, i.e. have high correlation and high FC.
+<br><br>The tabs present Gene and Geneset UMAP dimensionality reduction plots and are computed for gene and geneset features, respectively. The clustering of features is computed using UMAP from either the normalized log-expression matrix (logCPM) or the log-foldchange matrix (logFC), with the covariance as distance metric. The UMAP from the logCPM is the default, but in cases of strong batch/tissue effects the UMAP from the logFC matrix is a better choice. We prefer the covariance distance metric instead of the correlation because it takes the size of the foldchange into account. Doing so, genes that are close together in corners in the outer rim are those with high pairwise covariance, i.e. have high correlation and high FC.
 <br><br>The maps can be colored according to the foldchange signature of the group contrasts (i.e. comparisons), or colored by the average relative log-expression according to some phenotype condition. Multiple signatures can then be easily compared by visually inspection of the colors.
 "
     
@@ -48,7 +48,7 @@ FeatureMapBoard <- function(input, output, session, env)
     ##========================= OUTPUT UI ============================================
     ##================================================================================
     
-    umap_caption = "<h4>Gene maps</h4>"
+    umap_caption = "<h4>Gene UMAP</h4>"
     output$geneUMAP_UI <- shiny::renderUI({
         shiny::fillCol(
             flex = c(NA,0.02,1,0.3),
@@ -68,9 +68,8 @@ FeatureMapBoard <- function(input, output, session, env)
     ## important for plot options to be updated correctly...
     shiny::outputOptions(output, "geneUMAP_UI", suspendWhenHidden=FALSE) 
 
-
     ##----------------------------------------------
-    gset_caption = "<h4>Geneset maps</h4>"    
+    gset_caption = "<h4>Geneset UMAP</h4>"    
     output$gsetUMAP_UI <- shiny::renderUI({
         shiny::fillCol(
             flex = c(NA,0.02,1,0.3),
@@ -423,7 +422,8 @@ FeatureMapBoard <- function(input, output, session, env)
         p
     })
     
-    geneUMAP_info = "<b>Gene mapping.</b> Analysis of network topology for various soft-thresholding powers. The left panel shows the scale-free fit index (y-axis) as a function of the soft-thresholding power (x-axis). The right panel displays the mean connectivity (degree, y-axis) as a function of the soft-thresholding power (x-axis)."
+    geneUMAP_info =
+        "<b>Gene map.</b> UMAP clustering of genes colored by standard-deviation (sd.X), variance (var.FC) or mean of fold-change (mean.FC). The distance metric is covariance. Genes that are clustered nearby exihibit high covariance and may have similar biological function."
 
     geneUMAP.opts <- shiny::tagList(
         shiny::selectInput(ns('umap_nlabel'),'nr labels:',
@@ -509,7 +509,8 @@ FeatureMapBoard <- function(input, output, session, env)
     })
 
     
-    geneSigPlots_info = "<b>Gene signature maps.</b> Analysis of network topology for various soft-thresholding powers. The left panel shows the scale-free fit index (y-axis) as a function of the soft-thresholding power (x-axis). The right panel displays the mean connectivity (degree, y-axis) as a function of the soft-thresholding power (x-axis)."
+    geneSigPlots_info =
+    "<b>Gene signature maps.</b> UMAP clustering of genes colored by relative log-expression of the phenotype group. The distance metric is covariance. Genes that are clustered nearby have high covariance."
     
     geneSigPlots.opts <- shiny::tagList(
         ##radioButtons(ns('gene_plottype'),'plot type:',c("umap","bar"),inline=TRUE)        
@@ -611,8 +612,8 @@ FeatureMapBoard <- function(input, output, session, env)
     ##     sel
     ## })
     
-    gsetUMAP_info = "<b>Geneset maps.</b> Analysis of network topology for various soft-thresholding powers. The left panel shows the scale-free fit index (y-axis) as a function of the soft-thresholding power (x-axis). The right panel displays the mean connectivity (degree, y-axis) as a function of the soft-thresholding power (x-axis)."
-
+    gsetUMAP_info = "<b>Geneset UMAP.</b> UMAP clustering of genesets colored by standard-deviation (sd.X), variance (var.FC) or mean of fold-change (mean.FC). The distance metric is covariance. Genesets that are clustered nearby have high covariance."
+    
     gsetUMAP.opts <- shiny::tagList(
         shiny::selectInput(ns('gsmap_nlabel'),'nr labels:',
                     choices=c(0,10,20,50,100,1000),selected=20),        
@@ -693,7 +694,9 @@ FeatureMapBoard <- function(input, output, session, env)
         
     })
     
-    gsetSigPlots.info = "<b>Module enrichment.</b> "
+    gsetSigPlots.info = 
+    "<b>Geneset signature maps.</b> UMAP clustering of genes colored by relative log-expression of the phenotype group. The distance metric is covariance. Genes that are clustered nearby have high covariance."
+
     gsetSigPlots.opts = shiny::tagList(
         ## shiny::radioButtons(ns('gset_plottype'),'plot type:',c("umap","bar"),inline=TRUE)        
     )
@@ -897,7 +900,6 @@ FeatureMapBoard <- function(input, output, session, env)
     ## ========================================================================
 
 } ## end of Board
-
 
 
 if(0) {

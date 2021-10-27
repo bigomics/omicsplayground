@@ -303,7 +303,7 @@ EnrichmentBoard <- function(input, output, session, env)
             cat("ERROR: calcGsetMeta:: no valid methods\n")
             return(NULL)
         }
-        
+
         ## recalculate meta values
         pv = unclass(mx$p)[,methods,drop=FALSE]
         qv = unclass(mx$q)[,methods,drop=FALSE]
@@ -795,10 +795,14 @@ EnrichmentBoard <- function(input, output, session, env)
         comp = input$gs_contrast
         ngs <- inputData()
         shiny::req(ngs)
+
+        gxmethods <- selected_gxmethods() ## from module-expression
+        shiny::req(gxmethods)
         
         gx.meta <- ngs$gx.meta$meta[[comp]]
         ## limma1 = sapply(gx.meta[,c("fc","p","q")],function(x) x[,"trend.limma"])
-        limma1 = data.frame( meta.fx=gx.meta$meta.fx, meta.q=gx.meta$meta.q)
+        meta.q <- apply(gx.meta$q[,gxmethods,drop=FALSE],1,max)  ## max q-value
+        limma1 = data.frame( meta.fx=gx.meta$meta.fx, meta.q=meta.q)
         gx.annot <- ngs$genes[rownames(gx.meta),c("gene_name","gene_title")]
         ##limma = cbind( gx.meta[,c("gene_name","gene_title")], limma1)
         limma = cbind(gx.annot, limma1)
@@ -857,9 +861,12 @@ EnrichmentBoard <- function(input, output, session, env)
         gs="H:HALLMARK_TNFA_SIGNALING_VIA_NFKB"        
         comp = input$gs_contrast
         
-        ## !!!!!!!! SHOULD BE SELECTED GX METHODS ONLY???
+        ## SELECTED GX METHODS ONLY
+        gxmethods <- selected_gxmethods() ## from module-expression
+        shiny::req(gxmethods)
         fc <- pgx$gx.meta$meta[[comp]]$meta.fx
-        mq <- pgx$gx.meta$meta[[comp]]$meta.q
+        ##mq <- pgx$gx.meta$meta[[comp]]$meta.q
+        mq <- apply(pgx$gx.meta$meta[[comp]]$q[,gxmethods,drop=FALSE],1,max,na.rm=TRUE)
         names(fc) <- names(mq) <- rownames(pgx$gx.meta$meta[[comp]])
 
         gs = gset_selected()
@@ -899,11 +906,15 @@ EnrichmentBoard <- function(input, output, session, env)
         ngs <- inputData()
         shiny::req(ngs)
         
+        gxmethods <- selected_gxmethods() ## from module-expression
+        shiny::req(gxmethods)
+
         gx.meta <- ngs$gx.meta$meta[[comp]]
         ##m1 <- intersect(c("trend.limma","notrend.limma","ttest"),colnames(gx.meta$p))[1]
         ##m1
         ##limma1 = sapply(gx.meta[,c("fc","p","q")],function(x) x[,m1])
-        limma1 = data.frame( meta.fx=gx.meta$meta.fx, meta.q=gx.meta$meta.q)
+        meta.q <- apply(gx.meta$q[,gxmethods,drop=FALSE],1,max,na.rm=TRUE)
+        limma1 = data.frame( meta.fx=gx.meta$meta.fx, meta.q=meta.q)
         gx.annot <- ngs$genes[rownames(gx.meta),c("gene_name","gene_title")]
         ##limma = cbind( gx.meta[,c("gene_name","gene_title")], limma1)
         limma = cbind(gx.annot, limma1)
@@ -982,8 +993,7 @@ EnrichmentBoard <- function(input, output, session, env)
 
         ## !!!!!!!! SHOULD BE SELECTED GX METHODS ONLY???
         fc <- pgx$gx.meta$meta[[comp]]$meta.fx
-        mq <- pgx$gx.meta$meta[[comp]]$meta.q
-        names(fc) <- names(mq) <- rownames(pgx$gx.meta$meta[[comp]])
+        names(fc) <- rownames(pgx$gx.meta$meta[[comp]])
 
         gs = gset_selected()
         if(is.null(gs)) return(NULL)
@@ -1011,8 +1021,7 @@ EnrichmentBoard <- function(input, output, session, env)
 
         ## !!!!!!!! SHOULD BE SELECTED GX METHODS ONLY???
         fc <- pgx$gx.meta$meta[[comp]]$meta.fx
-        mq <- pgx$gx.meta$meta[[comp]]$meta.q
-        names(fc) <- names(mq) <- rownames(pgx$gx.meta$meta[[comp]])
+        names(fc) <- rownames(pgx$gx.meta$meta[[comp]])
         
         gs = gset_selected()
         if(is.null(gs)) return(NULL)
@@ -1270,6 +1279,8 @@ EnrichmentBoard <- function(input, output, session, env)
         genes    <- names(which(ngs$GMT[,gset]!=0))
         genes    <- toupper(sub(".*:","",genes))
         gx.meta  <- ngs$gx.meta$meta
+
+        gsmethods <-  selected_gsetmethods()
         
         par(mfrow=c(2,5), mar=c(0.5,3.2,2.6,0.5), mgp=c(2,0.8,0))
         i=1
@@ -1281,7 +1292,11 @@ EnrichmentBoard <- function(input, output, session, env)
                 rnk0 <- gx.meta[[cmp]]$meta.fx
                 names(rnk0) <- rownames(gx.meta[[1]])
                 names(rnk0) <- toupper(sub(".*:","",names(rnk0)))
-                qv0 <- ngs$gset.meta$meta[[cmp]][gset,"meta.q"]
+
+                ##qv0 <- ngs$gset.meta$meta[[cmp]][gset,"meta.q"]
+                gs.meta <- ngs$gset.meta$meta[[cmp]]
+                qv0 <- max(gs.meta[gset,"q"][,gsmethods],na.rm=TRUE)                
+                
                 gs1 = breakstring(gset,28,50,force=FALSE)
                 cmp <- paste0(gset,"\n@",cmp)
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
@@ -1299,7 +1314,11 @@ EnrichmentBoard <- function(input, output, session, env)
                 rnk0 <- gx.meta[[cmp]]$meta.fx
                 names(rnk0) <- rownames(gx.meta[[1]])
                 names(rnk0) <- toupper(sub(".*:","",names(rnk0)))
-                qv0 <- ngs$gset.meta$meta[[cmp]][gset,"meta.q"]
+
+                ##qv0 <- ngs$gset.meta$meta[[cmp]][gset,"meta.q"]
+                gs.meta <- ngs$gset.meta$meta[[cmp]]
+                qv0 <- max(gs.meta[gset,"q"][,gsmethods],na.rm=TRUE)                
+
                 gs1 = breakstring(gset,28,50,force=FALSE)
                 cmp <- paste0(gset,"\n@",cmp)
                 gsea.enplot(rnk0, genes, names=NULL, ##main=gs,
@@ -1325,7 +1344,7 @@ EnrichmentBoard <- function(input, output, session, env)
         options = compare_module_opts,
         height = c(imgH,450), width = c("auto",1500), res=95,
         pdf.width=14, pdf.height=4, 
-        title = "Enrichment of gene set across multiple contrasts",
+        title = "Enrichment of geneset across multiple contrasts",
         info.text = compare_text,
         ##caption = compare_caption,
         add.watermark = WATERMARK
@@ -1579,7 +1598,7 @@ EnrichmentBoard <- function(input, output, session, env)
         limma1.pq = sapply(mx[,c("p","q")], function(x) {
             apply(x[,gxmethods,drop=FALSE],1,max,na.rm=TRUE)
         })
-        limma1 <- cbind( fc=limma1.fc, q=limma1.pq)
+        limma1 <- cbind( fc=limma1.fc, limma1.pq)
         ##limma  = cbind( ngs$gx.meta$meta[[comp]][,c("gene_name","gene_title")], limma1)
         rownames(limma1) <- rownames(mx)
 
@@ -1821,9 +1840,7 @@ EnrichmentBoard <- function(input, output, session, env)
         ## get all contrasts
         F <- sapply( ngs$gset.meta$meta, function(x) x[,"meta.fx"])
         colnames(F) <- gsub("_"," ",colnames(F))
-
-        qv <- sapply( ngs$gset.meta$meta, function(x) x[,"meta.q"])
-        rownames(qv) <- rownames(F) <- rownames(ngs$gset.meta$meta[[1]])
+        rownames(F) <- rownames(ngs$gset.meta$meta[[1]])
         fc.var <- round( rowMeans(F**2,na.rm=TRUE), digits=3)
         gs <- substring(rownames(F),1,60)
         F1 <- data.frame( geneset=gs, fc.var=fc.var, round(F,digits=3), check.names=FALSE)
