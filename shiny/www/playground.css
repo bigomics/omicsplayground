@@ -361,6 +361,16 @@ input[type="checkbox"], input[type="radio"] {
     z-index: 9999;
 }
 
+.current-user {
+    position: fixed;
+    font-weight: 200;
+    font-size: 10px;
+    color: rgba(255,255,255,100);
+    top: 1px;
+    right: 40px;
+    z-index: 9999;
+}
+
 /* ------------------- buttons -------------- */
 .run-button,.load-button {
     outline: none;
