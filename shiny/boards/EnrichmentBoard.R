@@ -744,7 +744,7 @@ EnrichmentBoard <- function(input, output, session, env)
     
     topEnrichedFreq.opts = shiny::tagList(
         shinyBS::tipify( shiny::radioButtons(ns('gs_enrichfreq_ntop'),"Number of top sets",
-                             c(5,10,25,100),inline=TRUE, selected=25),
+                             c(5,10,15),inline=TRUE, selected=15),
                "Number of top genesets to consider for counting the gene frequency."),
         shinyBS::tipify( shiny::checkboxInput(ns('gs_enrichfreq_gsetweight'),
                               "Weight by geneset size", TRUE),
