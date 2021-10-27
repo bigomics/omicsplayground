@@ -9,7 +9,7 @@ message("===============================================================")
 
 ## Parse access logs
 access.dirs = c("/var/www/html/logs", "/var/log/apache2","/var/log/apache",
-                "../logs/html", "/var/log/httpd","/var/log/nginx")
+                "../logs","/var/log/httpd","/var/log/nginx")
 access.dirs <- access.dirs[dir.exists(access.dirs)]
 access.dirs
 ##ACCESS.LOG <- pgx.parseAccessLogs(access.dirs[], filter.get=NULL)
