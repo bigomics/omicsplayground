@@ -271,6 +271,11 @@ server = function(input, output, session) {
         if(length(name)==0) name = "(no data)"
         name
     })
+
+    output$current_user <- shiny::renderText({
+        ## trigger on change dataset
+        env[["load"]][["auth"]]$email()
+    })
     
     ##--------------------------------------------------------------------------
     ## Dynamically hide/show certain sections depending on USERMODE/object
@@ -464,13 +469,8 @@ names(TABVIEWS)
 #-------------------------------------------------------
 ## Build USERMENU
 #-------------------------------------------------------
-user.tab <-  tabView(
-    title = shiny::HTML("<span class='label label-info' id='authentication-user'></span>"),
-    id="user", UserInputs("user"), UserUI("user")    
-)
-if(opt$AUTHENTICATION == "none") {
-    user.tab <-  tabView("Settings", id="user", UserInputs("user"), UserUI("user"))    
-}
+user.tab <-  tabView(title = "Profile", id="user", UserInputs("user"), UserUI("user"))    
+##title = shiny::HTML("<span class='label label-info' id='authentication-user'></span>"),
 logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
 ##stop.tab    <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='sigstop()'>Stop</a>"))
 stop.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='quit()'>Quit</a>"))
@@ -525,7 +525,8 @@ createUI <- function(tabs)
         firebase::useFirebase(),
         TAGS.JSSCRIPT,
         shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
-        shiny::div(shiny::textOutput("current_dataset"), class='current-data')
+        shiny::div(shiny::textOutput("current_dataset"), class='current-data'),
+        shiny::div(shiny::textOutput("current_user"), class='current-user')
         ##QuestionBoard_UI("qa")
     )
     names(header) <- NULL
