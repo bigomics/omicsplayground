@@ -95,7 +95,7 @@ NoAuthenticationModule <- function(input, output, session, username="", email=""
 
 
 upgrade.dialog = shiny::HTML("
-Do you want to remove the 40 minutes time limit? Do you want to be able to save more datasets?
+Do you want to remove the 60 minutes time limit? Do you want to be able to save more datasets?
 <br><br><center><table width=90% style='background-color:#F4FAFF;'><tr>
 <th>BASIC<br></th>
 <th>STARTER<br></th>
@@ -111,7 +111,7 @@ Do you want to remove the 40 minutes time limit? Do you want to be able to save 
 <td><h3><b>Contact us!</b></h3></td>
 </tr><tr><td>&nbsp;</tr>
 <tr>
-<td><ul><li>Host up to 3 datasets</li><li>40 minutes time limit</li>
+<td><ul><li>Host up to 3 datasets</li><li>60 minutes time limit</li>
 <li>Up to 25 samples/dataset</li><li>Up to 5 comparisons</li></ul>
 <td><ul><li>Host up to 10 datasets</li><li>3 hours time limit</li>
 <li>Up to 100 samples/dataset</li><li>Up to 10 comparisons</li></ul>
