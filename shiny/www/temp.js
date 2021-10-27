@@ -9,9 +9,26 @@ Shiny.addCustomMessageHandler('set-user', function(msg) {
 	}
 });
 
+Shiny.addCustomMessageHandler('manage-sub', function(msg) {
+	window.location.assign(msg);
+});
+
 Shiny.addCustomMessageHandler('get-permissions', function(msg) {
 	if(!db)
 		db = firebase.firestore();
+	
+	db
+		.collection('customers')
+		.doc(firebase.auth().currentUser.uid)
+		.get()
+		.then(function(doc){
+			let data = {
+				href: window.location.href,
+				id: doc.data().stripeId
+			}
+			Shiny.setInputValue(`${msg.ns}-stripeId`, data);
+		});
+
 
 	db
 		.collection('customers')

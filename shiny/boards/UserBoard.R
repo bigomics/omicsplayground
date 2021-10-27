@@ -27,6 +27,10 @@ UserUI <- function(id) {
             )
         ),
         h3("Subscriptions"),
+        shiny::actionButton(
+            ns("manage"),
+            "Manage Subscription"
+        ),
         shiny::div(
             id = "user-subs"
         )
@@ -167,6 +171,27 @@ UserBoard <- function(input, output, session, env)
             span("Subscription level", style="color:grey;"),
             span(class = cl, tools::toTitleCase(user$level()))
         )
+    })
+
+    observeEvent(input$manage, {
+        response <- httr::POST(
+            "https://api.stripe.com/v1/billing_portal/sessions",
+            body = list(
+                customer = user$stripe_id(),
+                return_url = user$href()
+            ),
+            httr::authenticate(
+                Sys.getenv("OMICS_STRIPE_KEY"),
+                ""
+            ),
+            encode = "form"
+        )
+
+        httr::warn_for_status(response)
+
+        content <- httr::content(response)
+
+        session$sendCustomMessage('manage-sub', content$url)
     })
     
     ##------------------------------------------------
