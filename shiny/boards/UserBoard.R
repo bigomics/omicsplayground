@@ -40,16 +40,27 @@ UserBoard <- function(input, output, session, env)
     
     output$description <- shiny::renderUI({
 
+        user.name  <- user$name()
+        user.level <- user$level()
+        user.email <- user$email()
         dbg("[UserBoard::description] names(user) = ",names(user) )
-        dbg("[UserBoard::description] user$name = ",user$name() )
-        dbg("[UserBoard::description] user$level = ",user$level() )
+        dbg("[UserBoard::description] user.name = ",user.name )
+        dbg("[UserBoard::description] user.email = ",user.email )
+        dbg("[UserBoard::description] user.level = ",user.level )        
+
+        if(is.null(user.name))  user.name  <- ""
+        if(is.null(user.email)) user.email <- ""
         
         description = "Signed in as<h2><b>NAME<b></h2><h4><b>EMAIL<b></h4><br><h4>LEVEL</h4>"
         description = "Signed in as<h2><b>NAME<b></h2><h4><b>EMAIL<b></h4>"
-        ##description = "Signed in as<h4><b>EMAIL<b></h4>"        
-        description <- sub("EMAIL", as.character(user$email()),  description)
-        description <- sub("NAME",  as.character(user$name()),  description)        
-        description <- sub("LEVEL", as.character(user$level()), description)     
+        ##description = "Signed in as<h4><b>EMAIL<b></h4>"
+        dbg("[UserBoard::description] 1a : " )
+        description <- sub("EMAIL", as.character(user.email), description)
+        dbg("[UserBoard::description] 1b : " )        
+        description <- sub("NAME", as.character(user.name), description)
+        dbg("[UserBoard::description] 1c : " )        
+        description <- sub("LEVEL", as.character(user.level), description)
+        dbg("[UserBoard::description] 1d : " )        
         shiny::HTML(description)
     })
     

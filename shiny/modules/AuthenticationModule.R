@@ -245,8 +245,19 @@ FirebaseAuthenticationModule <- function(input, output, session)
         })
 
         USER$logged <- TRUE
-        USER$name  <- as.character(response$response$displayName)
-        USER$email <- as.character(response$response$email)
+        USER$name  <- response$response$displayName
+        USER$email <- response$response$email
+
+        dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] is.null(user.name) = ",is.null(USER$name) )
+        dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] is.null(user.email) = ",is.null(USER$email) )
+        if(!is.null(USER$name))  USER$name  <- as.character(USER$name)
+        if(!is.null(USER$email)) USER$email <- as.character(USER$email)
+
+        if(is.null(USER$name))  USER$name  <- ""
+        if(is.null(USER$email)) USER$email <- ""
+
+        dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.name==''  = ",USER$name=='' )
+        dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.email=='' = ",USER$email=='' )
         
         # user logged in we request the id token
         firebase$request_id_token()
