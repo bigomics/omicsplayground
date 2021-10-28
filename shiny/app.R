@@ -499,7 +499,6 @@ user.menu <- shiny::navbarMenu(
     stop.tab
 )
 
-
 createUI <- function(tabs)
 {
     message("\n======================================================")
@@ -515,16 +514,17 @@ createUI <- function(tabs)
     theme = shinythemes::shinytheme("cerulean")
     id = "maintabs"
     ##selected = "Home"    
+    
     header = shiny::tagList(
         shiny::tags$head(shiny::tags$script(src="temp.js")),
-        shiny::tags$head(shiny::tags$script(src="google-analytics.js")),
-        shiny::tags$head(shiny::tags$script(src="chatra.js")),
+        shiny::tags$head(shiny::tags$script(src="bigomics-extra.js")),  ## chatra,clarity
+        shiny::tags$head(includeHTML(("www/google-analytics.html"))),   ## GA
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
         shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
         shinyalert::useShinyalert(),  # Set up shinyalert
         firebase::useFirebase(),
-        TAGS.JSSCRIPT,  ## other stuff
+        ##TAGS.JSSCRIPT,  ## window size
         shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
         shiny::div(shiny::textOutput("current_dataset"), class='current-data'),
         shiny::div(shiny::textOutput("current_user"), class='current-user')
