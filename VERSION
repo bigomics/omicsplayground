@@ -1,6 +1,9 @@
 v2.8-beta6
 
-- New (gene/genset) UMAP visualization
-- Beta features: 
-- User authenticion using Google or email
-- Add chat box 
+- Private data folders for users
+- User authentication using Google or email
+- Chat box for online support
+- New gene/geneset UMAP visualization (in Clustering)
+- New Compare Datasets (beta) module
+- Enlarged drug L1000 database  (in Drug Connectivity)
+- Gene-specific perturbation database (in Drug Connectivity)
