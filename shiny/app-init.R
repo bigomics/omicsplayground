@@ -51,16 +51,15 @@ tipifyB <- function(...) {
     shinyBS::tipify(..., placement="bottom", options = list(container = "body"))
 }
 
-premium.feature <- function(...) {
-    message("[premium.feature] USER_MODE = ",USER_MODE)
-    message("[premium.feature] DEV = ",DEV)        
-    el <- list(...)
-    if(USER_MODE %in% c("pro","premium","dev")) return(el)
-    shinyBS::tipify(shinyjs::disabled(...),
-           "This is a Premium feature. Upgrade to enable this feature."
-           )    
-
-}
+## premium.feature <- function(...) {
+##     message("[premium.feature] USER_MODE = ",USER_MODE)
+##     message("[premium.feature] DEV = ",DEV)        
+##     el <- list(...)
+##     if(USER_MODE %in% c("pro","premium","dev")) return(el)
+##     shinyBS::tipify(shinyjs::disabled(...),
+##            "This is a Premium feature. Upgrade to enable this feature."
+##            )    
+## }
 
 in.shinyproxy <- function() {
     ## Determine if we are in ShinyProxy
