@@ -83,6 +83,7 @@ if(0) {
     load("../data/GSE10846-dlbcl-nc.pgx")
     load("../data/bojkova2020-sarscov2-RC2.pgx")
     load("../data/gtex-aging-n40svaNnm.pgx")
+    load("../data/biognosys2020-alzheimer.pgx")        
     ngs = pgx.initialize(ngs)
 }
 
