@@ -511,8 +511,7 @@ createUI <- function(tabs)
     windowTitle = TITLE
     theme = shinythemes::shinytheme("cerulean")
     id = "maintabs"
-    ##selected = "Home"    
-    
+    ##selected = "Home"        
     header = shiny::tagList(
         shiny::tags$head(shiny::tags$script(src="temp.js")),
         shiny::tags$head(shiny::tags$script(src="bigomics-extra.js")),  ## chatra,clarity
