@@ -1,7 +1,7 @@
 ## run from root
 
 ## get version
-version=`cat VERSION`
+version=`head -n1 VERSION`
 image=bigomics/omicsplayground
 echo VERSION=$version
 

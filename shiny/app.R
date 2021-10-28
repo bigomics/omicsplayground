@@ -262,17 +262,18 @@ server = function(input, output, session) {
     ## message("[SERVER] all boards called:",paste(names(env),collapse=" "))
     message("[SERVER] boards enabled:",paste(names(which(ENABLED)),collapse=" "))
     
+    output$current_user <- shiny::renderText({
+        ## trigger on change of user
+        user <- env[["load"]][["auth"]]$email()
+        user
+    })
+
     output$current_dataset <- shiny::renderText({
-        ## trigger on change dataset
+        ## trigger on change of dataset
         pgx <- env[["load"]][["inputData"]]()
         name <- gsub(".*\\/|[.]pgx$","",pgx$name)
         if(length(name)==0) name = "(no data)"
         name
-    })
-
-    output$current_user <- shiny::renderText({
-        ## trigger on change dataset
-        env[["load"]][["auth"]]$email()
     })
     
     ##--------------------------------------------------------------------------
@@ -467,7 +468,7 @@ names(TABVIEWS)
 #-------------------------------------------------------
 ## Build USERMENU
 #-------------------------------------------------------
-user.tab <-  tabView(title = "Profile", id="user", UserInputs("user"), UserUI("user"))    
+user.tab <-  tabView(title = "Settings", id="user", UserInputs("user"), UserUI("user"))    
 ##title = shiny::HTML("<span class='label label-info' id='authentication-user'></span>"),
 logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
 ##stop.tab    <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='sigstop()'>Stop</a>"))

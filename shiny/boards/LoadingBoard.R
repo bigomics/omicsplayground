@@ -75,7 +75,7 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         auth <- shiny::callModule(NoAuthenticationModule, "auth")
     } 
 
-    dbg("[LoadingBoard] print.auth = ",names(auth))
+    dbg("[LoadingBoard] names.auth = ",names(auth))
     
     ##-----------------------------------------------------------------------------
     ## Description
@@ -230,10 +230,6 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         email <- auth$email()
         email <- gsub(".*\\/","",email)
         pdir <- pgx_dir  ## from module input
-        dbg("[LoadingBoard:getPGXDIR] logged = ",auth$logged())
-        dbg("[LoadingBoard:getPGXDIR] email = ",email)        
-        dbg("[LoadingBoard:getPGXDIR] pdir = ",pdir)
-        dbg("[LoadingBoard:getPGXDIR] enable_userdir = ",enable_userdir)        
         ##USERDIR=FALSE
         if(enable_userdir) {
             pdir <- paste0(pdir,"/",email)
@@ -245,7 +241,6 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
                 file.copy(file.path(pgx_dir,"example-data.pgx"),pdir)
             }
         }
-        dbg("[LoadingBoard:getPGXDIR] pdir = ",pdir)
         pdir
     })
     
@@ -280,15 +275,12 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
             return(NULL)
         }
         df <- getPGXINFO()
-        dbg("[LoadingBoard:getFilteredPGXINFO] isnull.df = ",is.null(df))
-        dbg("[LoadingBoard:getFilteredPGXINFO] dim.df = ",dim(df))        
         if(is.null(df)) return(NULL)    
 
         pgxdir <- getPGXDIR()
         pgxfiles = dir(pgxdir, pattern=".pgx$")
         sel <- sub("[.]pgx$","",df$dataset) %in% sub("[.]pgx$","",pgxfiles)
         df  <- df[sel,,drop=FALSE]
-        dbg("[LoadingBoard:getFilteredPGXINFO] dim(df)=",dim(df))
 
         ## Apply filters
         if(nrow(df)>0) {
@@ -316,11 +308,8 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
     selectedPGX <- shiny::reactive({
         ##sel <- input$pgxtable_rows_selected
         sel <- pgxtable$rows_selected()
-        dbg("[LoadingBoard:selectedPGX] sel = ",sel)        
         if(is.null(sel) || length(sel)==0) return(NULL)
         df <- getFilteredPGXINFO()
-        dbg("[LoadingBoard:selectedPGX] isnull.df = ",is.null(df))
-        dbg("[LoadingBoard:selectedPGX] dim.df = ",dim(df))                        
         if(is.null(df) || nrow(df)==0) return(NULL)        
         pgxfile <- as.character(df$dataset[sel])
         pgxfile <- paste0(sub("[.]pgx$","",pgxfile),".pgx") ## add/replace .pgx
@@ -330,11 +319,8 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
     selectedDataSetInfo <- shiny::reactive({
         ##sel <- input$pgxtable_rows_selected
         sel <- pgxtable$rows_selected()
-        dbg("[selectedDataSetInfo] sel = ",sel)
         if(is.null(sel) || length(sel)==0) return(NULL)
         df <- getFilteredPGXINFO()
-        dbg("[selectedDataSetInfo] is.null(df) = ",is.null(df))
-        dbg("[selectedDataSetInfo] dim(df) = ",dim(df))        
         if(is.null(df) || nrow(df)==0) return(NULL)        
         unlist(lapply(df[sel,],as.character))
     })
@@ -555,12 +541,10 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         pgxfile = NULL
         pgxfile = shiny::isolate(selectedPGX())
 
-        dbg("[LoadingBoard::<loadbutton>] pgx.selected=",pgxfile)
         if(is.na(pgxfile) || is.null(pgxfile) || pgxfile=="" || length(pgxfile)==0) {
             return(NULL)
         }
 
-        dbg("[LoadingBoard::<loadbutton>] loadbutton=",btn,"\n")        
         if(!is.null(btn) && btn!=0) {
             ## show loading pop-up
             pgx.showCartoonModal()
@@ -597,7 +581,6 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         
         loadedDataset(TRUE)
         currentPGX(pgx)
-        dbg("[LoadingBoard::<loadbutton>] ready! \n")
     })
     ##}, ignoreNULL=FALSE )
     ##}, ignoreNULL=TRUE )

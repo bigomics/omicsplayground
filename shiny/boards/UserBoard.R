@@ -8,9 +8,10 @@ message(">>> sourcing UserBoard")
 UserInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-        shiny::uiOutput(ns("description"))
-        ## shiny::uiOutput(ns("inputsUI"))
-    )
+               HTML("<h3>User Settings</h3><br><br>"),
+               shiny::uiOutput(ns("description"))
+               ## shiny::uiOutput(ns("inputsUI"))
+           )
 }
 
 UserUI <- function(id) {
@@ -19,7 +20,7 @@ UserUI <- function(id) {
         height = 750,
         shiny::tabsetPanel(
             id = ns("tabs"),
-            shiny::tabPanel("User profile",uiOutput(ns("userinfo_UI")))
+            shiny::tabPanel("User settings",uiOutput(ns("userinfo_UI")))
             ## shiny::tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
             ## shiny::tabPanel("Community forum",uiOutput(ns("forum_UI")))
         )
@@ -50,18 +51,18 @@ UserBoard <- function(input, output, session, env)
 
         if(is.null(user.name))  user.name  <- ""
         if(is.null(user.email)) user.email <- ""
+        user <- user.email
+        if(user=="" || is.na(user)) user <- user.name
         
-        description = "Signed in as<h2><b>NAME<b></h2><h4><b>EMAIL<b></h4><br><h4>LEVEL</h4>"
-        description = "Signed in as<h2><b>NAME<b></h2><h4><b>EMAIL<b></h4>"
+        description = "Signed in as<h2><b>NAME</b></h2><h4>EMAIL</h4><br><h4>LEVEL</h4>"
+        description = "Signed in as<h2><b>NAME</b></h2><h4>EMAIL</h4>"
+        description = "Signed in as<h4>USER</h4>"        
         ##description = "Signed in as<h4><b>EMAIL<b></h4>"
-        dbg("[UserBoard::description] 1a : " )
         description <- sub("EMAIL", as.character(user.email), description)
-        dbg("[UserBoard::description] 1b : " )        
         description <- sub("NAME", as.character(user.name), description)
-        dbg("[UserBoard::description] 1c : " )        
         description <- sub("LEVEL", as.character(user.level), description)
-        dbg("[UserBoard::description] 1d : " )        
-        shiny::HTML(description)
+        description <- sub("USER", as.character(user), description)        
+        shiny::HTML(description)        
     })
     
     ##-----------------------------------------------------------------------------
@@ -79,7 +80,7 @@ UserBoard <- function(input, output, session, env)
         )
         values[which(values=="")] <- "(not set)"
         data.frame(' '=names(values), '  '=values, check.names=FALSE)
-    })
+    }, width='400px', striped=TRUE)
 
     output$userdata2 <- renderTable({
         dbg("[UserBoard::userdata]  renderDataTable")
@@ -90,19 +91,35 @@ UserBoard <- function(input, output, session, env)
         )
         values[which(values=="")] <- "(not set)"
         data.frame(' '=names(values), '  '=values, check.names=FALSE)
+    }, width='400px', striped=TRUE)
+
+    output$news <- renderUI({
+        news <- readLines("../VERSION")
+        news[1] <- paste0("New features in version ",news[1],":<br><ul>")
+        news[-1] <- sub("[*-]","<li>",news[-1])
+        news <- paste0(news,"</ul>",collapse='\n')
+        HTML(news)
     })
-        
+    
     output$userinfo_UI <- shiny::renderUI({
-        tagList(
-            shiny::HTML("<h4>Personal</h4>"),
-            shiny::tableOutput(ns("userdata")),
-            shiny::br(),
-            shiny::HTML("<h4>Account</h4>"),            
-            shiny::tableOutput(ns("userdata2")),
-            shiny::br(),            
-            shiny::HTML("<h4>Settings</h4>"),            
-            shinyWidgets::prettySwitch(ns("enable_beta"),"enable beta features")
-            ##shinyWidgets::prettySwitch(ns("enable_alpha"),"enable alpha features")
+        fillRow(
+            flex=c(0.8,0.2,1,0.2,1),
+            tagList(
+                shiny::HTML("<h4>News</h4>"),            
+                shiny::htmlOutput(ns("news"))
+                ##shinyWidgets::prettySwitch(ns("enable_alpha"),"enable alpha features")
+            ),br(),
+            tagList(
+                shiny::HTML("<h4>Personal</h4>"),
+                shiny::tableOutput(ns("userdata")),
+                shiny::br(),
+                shiny::HTML("<h4>Account</h4>"),            
+                shiny::tableOutput(ns("userdata2"))
+            ),br(),
+            tagList(
+                shiny::HTML("<h4>Settings</h4>"),            
+                shinyWidgets::prettySwitch(ns("enable_beta"),"enable beta features")
+            )
         )
     })
     shiny::outputOptions(output, "userinfo_UI", suspendWhenHidden=FALSE) ## important!
