@@ -511,11 +511,15 @@ createUI <- function(tabs)
     windowTitle = TITLE
     theme = shinythemes::shinytheme("cerulean")
     id = "maintabs"
-    ##selected = "Home"        
+    gtag <- NULL
+    if(0 && file.exists("www/google-tags.html")) {
+        gtag <- shiny::tags$head(includeHTML("www/google-tags.html"))
+    }
+        
     header = shiny::tagList(
         shiny::tags$head(shiny::tags$script(src="temp.js")),
         shiny::tags$head(shiny::tags$script(src="bigomics-extra.js")),  ## chatra,clarity
-        shiny::tags$head(includeHTML(("www/google-analytics.html"))),   ## GA
+        gtag,   ## Google Tags???
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
         shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
