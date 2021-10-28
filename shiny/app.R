@@ -105,7 +105,6 @@ if(1 && opt$AUTHENTICATION=="shinyproxy" && !in.shinyproxy()) {
 ## copy to global environment
 SHOW_QUESTIONS = FALSE
 AUTHENTICATION = opt$AUTHENTICATION
-USER_MODE      = opt$USER_MODE
 WATERMARK      = opt$WATERMARK
 TIMEOUT        = as.integer(opt$TIMEOUT)  ## in seconds
 
@@ -180,7 +179,6 @@ server = function(input, output, session) {
     message("===================== SERVER ===========================")
     message("========================================================\n")
     
-    message("[SERVER] USER_MODE = ", USER_MODE)
     server.start_time  <- Sys.time()
     session.start_time <- -1
     

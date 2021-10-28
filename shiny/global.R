@@ -23,7 +23,6 @@ FILESX    = file.path(OPG,"libx")
 PGX.DIR   = file.path(OPG,"data")
 SIGDB.DIR = file.path(OPG,"libx/sigdb")
 
-USER_MODE = NULL
 WATERMARK = FALSE
 DEBUG     = FALSE
 DEV       = dir.exists('/home/kwee')
