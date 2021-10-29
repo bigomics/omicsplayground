@@ -728,17 +728,13 @@ FeatureMapBoard <- function(input, output, session, env)
         if(is.null(ngs$drugs)) return(NULL)
         
         pos <- getGeneUMAP()
-
+        
         ## detect brush
         sel.genes <- NULL
         ##b <- input$ftmap-geneUMAP_brush  ## ugly??
-        dbg("[FeatureMap::geneTable.RENDER] names.input = ",names(input))        
-        b <- input[['geneUMAP_brush']]  ## ugly??        
-        dbg("[FeatureMap::geneTable.RENDER] is.null(b) = ",is.null(b))
-        dbg("[FeatureMap::geneTable.RENDER] length(b) = ",length(b))
-        dbg("[FeatureMap::geneTable.RENDER] names(b) = ",names(b))
-        
-        if(!is.null(b) & length(b)) {
+        b <- NULL
+        b <- input[['geneUMAP_brush']]  ## ugly??                
+        if(!is.null(b) & length(b)>0) {
             sel <- which( pos[,1] > b$xmin & pos[,1] < b$xmax &
                           pos[,2] > b$ymin & pos[,2] < b$ymax )
             sel.genes <- rownames(pos)[sel]
@@ -761,15 +757,17 @@ FeatureMapBoard <- function(input, output, session, env)
         
         if(!is.null(sel.genes)) {
             sel.genes <- intersect(sel.genes,rownames(F))
-            F <- F[sel.genes,]
+            F <- F[sel.genes,,drop=FALSE]
         }
         F <- F[order(-rowMeans(F**2)),]
         
         tt <- shortstring(ngs$genes[rownames(F),'gene_title'],60)
+        tt <- as.character(tt)
         F <- cbind(sd.X = sqrt(rowMeans(F**2)), F)
         if(is.fc) colnames(F)[1] = "sd.FC"
         F  <- round(F, digits=3)
-        df <- data.frame(gene=rownames(F), title=tt, F, check.names=FALSE)
+        df <- data.frame(gene=rownames(F), title=tt, F,        
+                         check.names=FALSE)
         
         DT::datatable( df, rownames=FALSE,
                       class = 'compact cell-border stripe hover',                  
@@ -815,22 +813,17 @@ FeatureMapBoard <- function(input, output, session, env)
         if(is.null(ngs$drugs)) return(NULL)
         
         pos <- getGsetUMAP()
-
+        
         ## detect brush
         sel.gsets <- NULL
         ##b <- input$ftmap-geneUMAP_brush  ## ugly??
-        dbg("[FeatureMap::gsetTable.RENDER] names.input = ",names(input))        
         b <- input[['gsetUMAP_brush']]  ## ugly??        
-        dbg("[FeatureMap::gsetTable.RENDER] is.null(b) = ",is.null(b))
-        dbg("[FeatureMap::gsetTable.RENDER] length(b) = ",length(b))
-        dbg("[FeatureMap::gsetTable.RENDER] names(b) = ",names(b))
         
         if(!is.null(b) & length(b)) {
             sel <- which( pos[,1] > b$xmin & pos[,1] < b$xmax &
                           pos[,2] > b$ymin & pos[,2] < b$ymax )
             sel.gsets <- rownames(pos)[sel]
         }
-        dbg("[FeatureMap::gsetTable.RENDER] head(sel.gsets) = ",head(sel.gsets))
         
         pheno='tissue'
         pheno <- input$sigvar

@@ -1,7 +1,7 @@
 ## run from root
 
 ## get version
-version=`cat VERSION`
+version=`head -n1 VERSION`
 image=bigomics/omicsplayground
 echo VERSION=$version
 
@@ -18,6 +18,7 @@ echo git push --tags
 ##---------------- docker ----------------------
 echo "nohup docker build -f docker/Dockerfile.base --no-cache -t $image:base . > docker.out &"
 echo "nohup docker build -f docker/Dockerfile.testing --no-cache -t $image:testing . > docker.out &"
+echo "nohup docker build -f docker/Dockerfile.testing2 --no-cache -t $image:testing2 . > docker.out &"
 echo "nohup docker build -f omicsplayground/docker/Dockerfile.dev --no-cache -t $image:dev . > docker.out &"
 
 ## +run in background, remove contained after use, give nice name
