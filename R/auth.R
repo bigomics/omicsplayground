@@ -8,11 +8,19 @@ google_base_url <- function(){
 	)
 }
 
-google_user_get <- function(key, email){
+google_user_get <- function(key, uid){
 	if(missing(key))
 		stop("Missing key")
 	
-	url <- sprintf("%s/%s?key=%s", google_base_url(), URLencode(email), key)
+	if(missing(uid))
+		stop("Missing uid")
+
+	url <- sprintf(
+		"%s/%s?key=%s", 
+		google_base_url(), 
+		URLencode(uid), 
+		key
+	)
 
 	req <- httr::GET(url)
 	httr::content(req)

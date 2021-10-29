@@ -126,6 +126,9 @@ FirebaseAuthenticationModule <- function(input, output, session)
 {
     message("[AuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
 
+    firebase_config <- firebase:::read_config("firebase.rds")
+    Sys.setenv(OMICS_GOOGLE_PROJECT = firebase_config$projectId)
+
     ns <- session$ns    
     USER <- shiny::reactiveValues(
         logged = FALSE, 
@@ -133,7 +136,11 @@ FirebaseAuthenticationModule <- function(input, output, session)
         password = "", 
         email = "", 
         level = "",
-        limit = ""
+        limit = "",
+        token = NULL,
+        uid = NULL,
+        stripe_id = NULL,
+        href = NULL
     )    
 
     firebase <- firebase::FirebaseUI$
@@ -141,6 +148,12 @@ FirebaseAuthenticationModule <- function(input, output, session)
         set_providers( # define providers
             email_link = TRUE, 
             google = TRUE
+        )$
+        set_privacy_policy_url(
+            "https://bigomics.ch/privacy/"
+        )$
+        set_tos_url(
+            "https://bigomics.ch/terms/"
         )
     firebase$set_tos_url("https://bigomics.ch/terms")
     firebase$set_privacy_policy_url("https://bigomics.ch/privacy")    
@@ -152,6 +165,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
         USER$email <- ""
         USER$level <- ""
         USER$limit <- ""
+        USER$token <- ""
     }
 
     first_time = TRUE
@@ -245,6 +259,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
         })
 
         USER$logged <- TRUE
+        USER$uid <- as.character(response$response$uid)
         USER$name  <- response$response$displayName
         USER$email <- response$response$email
 
@@ -259,39 +274,34 @@ FirebaseAuthenticationModule <- function(input, output, session)
         dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.name==''  = ",USER$name=='' )
         dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.email=='' = ",USER$email=='' )
         
-        # user logged in we request the id token
-        firebase$request_id_token()
-        
+        session$sendCustomMessage(
+            "get-permissions",
+            list(
+                ns = ns(NULL)
+            )
+        )
+    })
+
+    observeEvent(input$stripeId, {
+        USER$stripe_id <- input$stripeId$id
+        USER$href <- input$stripeId$href
     })
     
-    observeEvent(firebase$get_id_token(), {
+    observeEvent(input$permissions, {
+        perm <- input$permissions
 
-        dbg("[FirebaseAuthenticationModule] observe::get_id_token() reacted")
-        results <- firebase$get_id_token()        
-        if(!results$success){
-            dbg("[FirebaseAuthenticationModule] token id fetch error")                        
-            return()
-        }
+        USER$level <- "free"
+        if(perm$success)
+            USER$level <- "premium"
 
-        token <- results$response$idToken
-        res <- google_user_get(token, USER$email)
-
-        # here we should then create it if it does not exist
-        # this means the user has actually created a new account
-        if(length(res$error)) {
-            dbg("[FirebaseAuthenticationModule] not in database, creating user")
-            res <- google_user_create(token, USER$email)
-            dbg("[FirebaseAuthenticationModule] OMICS_GOOGLE_PROJECT = ",Sys.getenv("OMICS_GOOGLE_PROJECT"))
-            print(res)
-        }
-        
-        USER$level <- as.character(res$fields$plan$stringValue)
-        if(length(USER$level)==0) USER$level <- ""
-        
-        dbg("[FirebaseAuthenticationModule] plan$stringValue = ", USER$level)
-        dbg("[FirebaseAuthenticationModule] str(plan$stringValue) = ", str(USER$level))
-        
-        session$sendCustomMessage("set-user", list(user = USER$email))
+        session$sendCustomMessage(
+            "set-user", 
+            list(
+                user = USER$email,
+                level = USER$level,
+                pricing = Sys.getenv("OMICS_STRIPE_PREMIUM_PRICE")
+            )
+        )
     })
     
     observeEvent( input$firebaseUpgrade, {    
@@ -311,7 +321,9 @@ FirebaseAuthenticationModule <- function(input, output, session)
         email  = shiny::reactive(USER$email),        
         level  = shiny::reactive(USER$level),
         logged = shiny::reactive(USER$logged),
-        limit  = shiny::reactive(USER$limit)
+        limit  = shiny::reactive(USER$limit),
+        stripe_id  = shiny::reactive(USER$stripe_id),
+        href  = shiny::reactive(USER$href)
     )
     return(rt)
 }
