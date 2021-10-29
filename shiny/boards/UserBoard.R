@@ -31,6 +31,8 @@ UserUI <- function(id) {
             ns("manage"),
             "Manage Subscription"
         ),
+        br(),
+        br(),
         shiny::div(
             id = "user-subs"
         )
