@@ -472,6 +472,8 @@ names(TABVIEWS)
 user.tab <-  tabView(title = "Settings", id="user", UserInputs("user"), UserUI("user"))    
 ##title = shiny::HTML("<span class='label label-info' id='authentication-user'></span>"),
 logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
+
+## conditionally add if firebase authentication is enabled
 ##stop.tab    <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='sigstop()'>Stop</a>"))
 stop.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='quit()'>Quit</a>"))
 ##if( opt$AUTHENTICATION == "shinyproxy" && in.shinyproxy() ) {
@@ -479,9 +481,8 @@ if(opt$AUTHENTICATION == "shinyproxy") {
     ##logout.tab <- shiny::tabPanel(title=shiny::HTML("<a id='logout' href='/logout'>Logout"))
     logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='logout()' id='authentication-logout'>Logout</a>"))    
 }
-upgrade.tab <- NULL
 if(opt$AUTHENTICATION == "firebase") {
-    upgrade.tab <- shiny::tabPanel(shiny::HTML("<a onClick='upgrade()' style='font-weight:bold;color:darkgreen;' id='authentication-upgrade'>Upgrade</a>"))
+    upgrade.tab <- shiny::tabPanel(shiny::HTML("<a onClick='upgrade()' style='font-weight:bold;color:#2a9d8f;cursor:pointer;' id='authentication-upgrade'>Upgrade</a>"))
 }
 
 user.menu <- shiny::navbarMenu(
@@ -526,7 +527,7 @@ createUI <- function(tabs)
         shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
         shinyalert::useShinyalert(),  # Set up shinyalert
-        firebase::useFirebase(),
+        firebase::useFirebase(firestore = TRUE),
         ##TAGS.JSSCRIPT,  ## window size
         shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
         shiny::div(shiny::textOutput("current_dataset"), class='current-data'),
