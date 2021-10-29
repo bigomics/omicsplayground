@@ -5,13 +5,12 @@
 
 ##access.dirs=FILESX
 
-##filter.opg="omicsplayground";from=NULL;to=NULL;unique=TRUE
+##filter.get="omicsplayground";from=NULL;to=NULL;unique=TRUE
 pgx.parseAccessLogs <- function(logs.dir, from=NULL, to=NULL,
                                 filter.get=NULL, unique = TRUE)
 {
     
     ##logs.dir <- c(FILESX, file.path(FILESX,"apache2"),"/var/www/html/logs","/var/log/apache2")
-    logs.dir <- "../../omicsplayground-dev/logs/covid"
     logs.dir <- logs.dir[dir.exists(logs.dir)]
     if(length(logs.dir)==0) return(NULL)
     logs.dir

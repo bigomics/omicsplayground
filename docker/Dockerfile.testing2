@@ -1,0 +1,23 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+##
+
+## Start from base image, update git code and add data
+## folder. Create docker ready to be deployed.
+
+#------------------------------------------------------------
+# Start from lastest base image
+#------------------------------------------------------------
+
+FROM bigomics/omicsplayground:testing
+##FROM bigomics/omicsplayground:v2.3.0
+
+#------------------------------------------------------------
+# Update code from GitHub
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+RUN git pull
+
+EXPOSE 3838
+CMD ["/usr/bin/shiny-server.sh"]

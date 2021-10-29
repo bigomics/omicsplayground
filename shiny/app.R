@@ -83,6 +83,7 @@ if(0) {
     load("../data/GSE10846-dlbcl-nc.pgx")
     load("../data/bojkova2020-sarscov2-RC2.pgx")
     load("../data/gtex-aging-n40svaNnm.pgx")
+    load("../data/biognosys2020-alzheimer.pgx")        
     ngs = pgx.initialize(ngs)
 }
 
@@ -105,7 +106,6 @@ if(1 && opt$AUTHENTICATION=="shinyproxy" && !in.shinyproxy()) {
 ## copy to global environment
 SHOW_QUESTIONS = FALSE
 AUTHENTICATION = opt$AUTHENTICATION
-USER_MODE      = opt$USER_MODE
 WATERMARK      = opt$WATERMARK
 TIMEOUT        = as.integer(opt$TIMEOUT)  ## in seconds
 
@@ -180,7 +180,6 @@ server = function(input, output, session) {
     message("===================== SERVER ===========================")
     message("========================================================\n")
     
-    message("[SERVER] USER_MODE = ", USER_MODE)
     server.start_time  <- Sys.time()
     session.start_time <- -1
     
@@ -264,8 +263,14 @@ server = function(input, output, session) {
     ## message("[SERVER] all boards called:",paste(names(env),collapse=" "))
     message("[SERVER] boards enabled:",paste(names(which(ENABLED)),collapse=" "))
     
+    output$current_user <- shiny::renderText({
+        ## trigger on change of user
+        user <- env[["load"]][["auth"]]$email()
+        user
+    })
+
     output$current_dataset <- shiny::renderText({
-        ## trigger on change dataset
+        ## trigger on change of dataset
         pgx <- env[["load"]][["inputData"]]()
         name <- gsub(".*\\/|[.]pgx$","",pgx$name)
         if(length(name)==0) name = "(no data)"
@@ -464,17 +469,8 @@ names(TABVIEWS)
 #-------------------------------------------------------
 ## Build USERMENU
 #-------------------------------------------------------
-user.tab <-  tabView(
-    title = shiny::HTML(
-        "<span class='label label-info' id='authentication-user'></span>"
-    ),
-    id = "user", 
-    UserInputs("user"), 
-    UserUI("user")    
-)
-if(opt$AUTHENTICATION == "none") {
-    user.tab <-  tabView("Settings", id="user", UserInputs("user"), UserUI("user"))    
-}
+user.tab <-  tabView(title = "Settings", id="user", UserInputs("user"), UserUI("user"))    
+##title = shiny::HTML("<span class='label label-info' id='authentication-user'></span>"),
 logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
 
 ## conditionally add if firebase authentication is enabled
@@ -504,7 +500,6 @@ user.menu <- shiny::navbarMenu(
     stop.tab
 )
 
-
 createUI <- function(tabs)
 {
     message("\n======================================================")
@@ -519,18 +514,24 @@ createUI <- function(tabs)
     windowTitle = TITLE
     theme = shinythemes::shinytheme("cerulean")
     id = "maintabs"
-    ##selected = "Home"    
+    gtag <- NULL
+    if(0 && file.exists("www/google-tags.html")) {
+        gtag <- shiny::tags$head(includeHTML("www/google-tags.html"))
+    }
+        
     header = shiny::tagList(
         shiny::tags$head(shiny::tags$script(src="temp.js")),
-        shiny::tags$head(shiny::tags$script(src="google-analytics.js")),
+        shiny::tags$head(shiny::tags$script(src="bigomics-extra.js")),  ## chatra,clarity
+        gtag,   ## Google Tags???
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
         shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
         shinyalert::useShinyalert(),  # Set up shinyalert
         firebase::useFirebase(firestore = TRUE),
-        TAGS.JSSCRIPT,
+        ##TAGS.JSSCRIPT,  ## window size
         shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
-        shiny::div(shiny::textOutput("current_dataset"), class='current-data')
+        shiny::div(shiny::textOutput("current_dataset"), class='current-data'),
+        shiny::div(shiny::textOutput("current_user"), class='current-user')
         ##QuestionBoard_UI("qa")
     )
     names(header) <- NULL
