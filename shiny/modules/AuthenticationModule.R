@@ -85,7 +85,9 @@ NoAuthenticationModule <- function(input, output, session, username="", email=""
         email  = shiny::reactive(USER$email),        
         level  = shiny::reactive(USER$level),
         logged = shiny::reactive(USER$logged),
-        limit  = shiny::reactive(USER$limit)
+        limit  = shiny::reactive(USER$limit),
+        stripe_id  = shiny::reactive(''),
+        href  = shiny::reactive('')
     )
     return(rt)
 }
@@ -99,7 +101,7 @@ Do you want to remove the 60 minutes time limit? Do you want to be able to save 
 <br><br><center><table width=90% style='background-color:#F4FAFF;'><tr>
 <th>BASIC<br></th>
 <th>STARTER<br></th>
-<th>PRO</th>
+<th>PREMIUM</th>
 <th>ENTERPRISE</th></tr>
 <tr><td>Try out for free</td>
 <td>Great to start</td>
@@ -119,6 +121,12 @@ Do you want to remove the 60 minutes time limit? Do you want to be able to save 
 <li>Up to 2000 samples/dataset</li><li>Up to 100 comparisons</li></ul>
 <td><ul><li>Host unlimited datasets</li><li>No time limit</li>
 <li>Up to 2000 samples/dataset</li><li>Up to 100 comparisons</li></ul>
+
+<tr>
+<td>
+<td><a onClick='upgrade_plan()' style='font-weight:bold;color:#2a9d8f;cursor:pointer;' id='authentication-upgrade'>Get Starter!</a>
+<td><a onClick='upgrade_plan()' style='font-weight:bold;color:#2a9d8f;cursor:pointer;' id='authentication-upgrade'>Get Premium!</a>
+<td><a style='font-weight:bold;color:#2a9d8f' href='mailto:info@bigomics.ch'>Send Email</a>
 </table></center><br><br>
 ")
 
@@ -144,7 +152,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
     )    
 
     firebase <- firebase::FirebaseUI$
-        new(persistence = "session")$ # instantiate
+        new(persistence = "local")$ # instantiate
         set_providers( # define providers
             email_link = TRUE, 
             google = TRUE

@@ -16,35 +16,15 @@ UserInputs <- function(id) {
 
 UserUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::div(
-        style = "padding-left:1rem!important;",
-        shiny::h1("User Profile"),
-        shiny::div(
-            class = "row",
-            shiny::div(
-                class = "col-md-3",
-                uiOutput(ns("username")),
-                uiOutput(ns("plan"))
-            )
-        ),
-        h3("Subscriptions"),
-        shiny::actionButton(
-            ns("manage"),
-            "Manage Subscription"
-        ),
-        br(),
-        br(),
-        shiny::div(
-            id = "user-subs"
-#    shiny::fillCol(
-#        height = 750,
-#        shiny::tabsetPanel(
-#            id = ns("tabs"),
-#            shiny::tabPanel("User settings",uiOutput(ns("userinfo_UI")))
-#            ## shiny::tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
-#            ## shiny::tabPanel("Community forum",uiOutput(ns("forum_UI")))
-        )
-    )
+    shiny::fillCol(
+               height = 750,
+               shiny::tabsetPanel(
+                          id = ns("tabs"),
+                          shiny::tabPanel("User settings",uiOutput(ns("userinfo_UI")))
+                          ## shiny::tabPanel("Visitors map",uiOutput(ns("usersmap_UI")))
+                          ## shiny::tabPanel("Community forum",uiOutput(ns("forum_UI")))
+                      )
+           )
 }
 
 UserBoard <- function(input, output, session, env)
@@ -55,7 +35,7 @@ UserBoard <- function(input, output, session, env)
 
     dbg("[UserBoard] >>> initializing UserBoard...")
 
-    observeEvent(user$logged(), {
+    observeEvent( user$logged(), {
         if(!user$logged())
             return()
         
@@ -64,7 +44,10 @@ UserBoard <- function(input, output, session, env)
             list(
                 ns = ns(NULL)
             )
-        )
+            )
+    })
+
+    output$description <- renderUI({
         user.name  <- user$name()
         user.level <- user$level()
         user.email <- user$email()
@@ -88,35 +71,64 @@ UserBoard <- function(input, output, session, env)
         description <- sub("USER", as.character(user), description)        
         shiny::HTML(description)        
     })
-    
-    ##-----------------------------------------------------------------------------
-    ## User interface
-    ##-----------------------------------------------------------------------------
-    
-    output$inputsUI <- shiny::renderUI({        
+        
+    output$plan <- renderUI({
+        plan_class <- "info"
+        if(user$level() == "premium")
+            plan_class <- "success"
+        cl <- sprintf("badge badge-%s", plan_class)
+        p(
+            span("Subscription level", style="color:grey;"),
+            span(class = cl, tools::toTitleCase(user$level()))
+        )
     })
 
+    observeEvent(input$manage, {        
+        dbg("[UserBoard] !!! input$manage called")
+        dbg("[UserBoard] !!! OMICS_STRIPE_KEY = ", Sys.getenv("OMICS_STRIPE_KEY"))
+        print(user)
+        dbg("[UserBoard] !!! user$email() = ", user$email())
+        dbg("[UserBoard] !!! user$stripe_id() = ", user$stripe_id())        
+        dbg("[UserBoard] !!! user$href = ", user$href())
+        
+        response <- httr::POST(
+            "https://api.stripe.com/v1/billing_portal/sessions",
+            body = list(
+                customer = user$stripe_id(),
+                return_url = user$href()
+            ),
+            httr::authenticate(
+                Sys.getenv("OMICS_STRIPE_KEY"),
+                ""
+            ),
+            encode = "form"
+        )
+
+        httr::warn_for_status(response)        
+        content <- httr::content(response)
+        session$sendCustomMessage('manage-sub', content$url)
+    })
+
+    observeEvent(input$upgrade, {        
+        dbg("[UserBoard] !!! input$upgrade called")
+        ##session$sendCustomMessage('upgrade_plan')   ## firebase/stripe        
+    })
+    
     output$userdata <- renderTable({
         dbg("[UserBoard::userdata]  renderDataTable")
+        cl <- "badge badge-info"
         values <- c(
-            name   = user$name(),
-            email  = user$email()
+            Name   = user$name(),
+            Email  = user$email(),
+            Plan   = user$level(),
+            Start  = '',
+            End    = '',
+            Status = 'active'
         )
         values[which(values=="")] <- "(not set)"
         data.frame(' '=names(values), '  '=values, check.names=FALSE)
     }, width='400px', striped=TRUE)
-
-    output$userdata2 <- renderTable({
-        dbg("[UserBoard::userdata]  renderDataTable")
-        values <- c(
-            plan   = user$level(),
-            ##logged = user$logged(),
-            limit  = paste(user$limit(),collapse=';')
-        )
-        values[which(values=="")] <- "(not set)"
-        data.frame(' '=names(values), '  '=values, check.names=FALSE)
-    }, width='400px', striped=TRUE)
-
+    
     output$news <- renderUI({
         news <- readLines("../VERSION")
         news[1] <- paste0("New features in version ",news[1],":<br><ul>")
@@ -125,30 +137,54 @@ UserBoard <- function(input, output, session, env)
         HTML(news)
     })
     
+
+    ##-----------------------------------------------------------------------------
+    ## User interface
+    ##-----------------------------------------------------------------------------
+    output$inputsUI <- shiny::renderUI({ })
+
     output$userinfo_UI <- shiny::renderUI({
-        fillRow(
-            flex=c(0.8,0.2,1,0.2,1),
-            tagList(
-                shiny::HTML("<h4>News</h4>"),            
-                shiny::htmlOutput(ns("news"))
-                ##shinyWidgets::prettySwitch(ns("enable_alpha"),"enable alpha features")
-            ),br(),
-            tagList(
-                shiny::HTML("<h4>Personal</h4>"),
-                shiny::tableOutput(ns("userdata")),
-                shiny::br(),
-                shiny::HTML("<h4>Account</h4>"),            
-                shiny::tableOutput(ns("userdata2"))
-            ),br(),
-            tagList(
-                shiny::HTML("<h4>Settings</h4>"),            
-                shinyWidgets::prettySwitch(ns("enable_beta"),"enable beta features")
+
+        dbg("[UserBoard::userinfo_UI] !!! userinfo_UI reacted !!!")
+        dbg("[UserBoard::userinfo_UI] !!! user$stripe_id() = ", user$stripe_id() )                
+        manage.subcriptions.ui <- tagList()
+        if( user$stripe_id()!="" ){
+            manage.subcriptions.ui <- tagList(
+                h4("Subscriptions"),
+                shiny::actionButton(ns("manage"),"Manage Subscription"),
+                shiny::actionButton(ns("upgrade"),"Upgrade", onClick='upgrade_plan()'),
+                br(),
+                br(),
+                shiny::div(id = "user-subs")
             )
+        }
+        
+        fillCol(
+            flex = c(1,1),
+            height = 600,
+            fillRow(
+                flex=c(0.8,0.2,1,0.2,1),
+                tagList(
+                    shiny::h4("News"),            
+                    shiny::htmlOutput(ns("news"))
+                    ##shinyWidgets::prettySwitch(ns("enable_alpha"),"enable alpha features")
+                ),br(),
+                tagList(
+                    shiny::h4("Personal"),
+                    uiOutput(ns("plan")),                    
+                    shiny::tableOutput(ns("userdata"))
+                ),br(),
+                tagList(
+                    shiny::h4("Settings"),            
+                    shinyWidgets::prettySwitch(ns("enable_beta"),"enable beta features")
+                )
+            ),
+            manage.subcriptions.ui
         )
     })
     shiny::outputOptions(output, "userinfo_UI", suspendWhenHidden=FALSE) ## important!
 
-    
+
     ##---------------------------------------------------------------
     ##--------------------- modules for UsersMap --------------------
     ##---------------------------------------------------------------
@@ -179,47 +215,55 @@ UserBoard <- function(input, output, session, env)
                 )
         
     })
+    
+    usersmap_info = "<strong>Visitors map.</strong> The world map shows the number of users visiting this site by unique IP."
+    
+    shiny::callModule(
+        plotModule,
+        id = "usersmap", ## label="a", 
+        plotlib = "baseplot",
+        func = usersmap.RENDER,
+        func2 = usersmap.RENDER, 
+        info.text = usersmap_info,
+        ##options = usersmap_options,
+        pdf.width=12, pdf.height=7, pdf.pointsize=13,
+        height = c(450,600), width = c('auto',1000), res=72,
+        ##datacsv = enrich_getWordFreq,
+        title = "Number of visitors by country",
+        add.watermark = WATERMARK
+    )
 
-    output$username <- renderUI({
-        div(
-            h3(user$name()),
-            p(user$email())
+    ##usersmap_caption = "<b>(a)</b> <b>Geo locate.</b>"
+    output$usersmapInfo <- shiny::renderUI({
+
+        u <- ACCESS.LOG
+        df <- u$visitors
+        rownames(df) <-  df$country_name
+        tot.users <- sum(df$count)
+        freq <- df$count
+        names(freq) <- df$country_name
+        top.countries <- head(sort(freq,dec=TRUE),10)
+        top.countriesTT <- paste("<li>",names(top.countries),top.countries,collapse=" ")
+        
+        shiny::HTML(
+            "<b>Total visitors:</b>",tot.users,"<br><br>",
+            "<b>Top 10 countries:</b><br><ol>",top.countriesTT,"</ol><br>",
+            "<b>Period:</b><br>",u$period,"<br><br>"
         )
-    })
-
-    output$plan <- renderUI({
-        plan_class <- "info"
-        if(user$level() == "premium")
-            plan_class <- "success"
-
-        cl <- sprintf("badge badge-%s", plan_class)
-        p(
-            span("Subscription level", style="color:grey;"),
-            span(class = cl, tools::toTitleCase(user$level()))
-        )
-    })
-
-    observeEvent(input$manage, {
-        response <- httr::POST(
-            "https://api.stripe.com/v1/billing_portal/sessions",
-            body = list(
-                customer = user$stripe_id(),
-                return_url = user$href()
-            ),
-            httr::authenticate(
-                Sys.getenv("OMICS_STRIPE_KEY"),
-                ""
-            ),
-            encode = "form"
-        )
-
-        httr::warn_for_status(response)
-
-        content <- httr::content(response)
-
-        session$sendCustomMessage('manage-sub', content$url)
     })
     
+    output$usersmap_UI <- shiny::renderUI({
+        shiny::fillCol(
+            height = 600,
+            shiny::fillRow(
+                flex = c(1,4.5),
+                shiny::wellPanel( shiny::uiOutput(ns("usersmapInfo"))),
+                plotWidget(ns("usersmap"))
+            )
+        )
+    })
+    
+
     ##------------------------------------------------
     ## Board return object
     ##------------------------------------------------

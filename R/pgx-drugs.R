@@ -75,7 +75,7 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
     }
     rnk1 <- apply(X[gg,,drop=FALSE],2,rank,na.last="keep")
     rnk2 <- apply(F[gg,,drop=FALSE],2,rank,na.last="keep")
-    system.time(R1 <- WGCNA::cor(rnk1, rnk2, use="pairwise"))
+    system.time(R1 <- stats::cor(rnk1, rnk2, use="pairwise"))
     dim(R1)
     ##
     ##system.time(R1 <- gpuCor(rnk1, rnk2, use="pairwise")$coefficients)
