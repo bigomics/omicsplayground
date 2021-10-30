@@ -147,7 +147,11 @@ function logout(){
     Shiny.setInputValue('load-auth-firebaseLogout', 1, {priority: 'event'});
 };
 
-async function upgrade(){
+function show_plans(){
+    Shiny.setInputValue('load-auth-firebaseUpgrade', 1, {priority: 'event'});
+};
+
+async function upgrade_plan(){
 	const docRef = await db
 		.collection('customers')
 		.doc(firebase.auth().currentUser.uid)

@@ -17,9 +17,7 @@ message("\n")
 
 main.start_time <- Sys.time()
 
-message("***********************************************")
-message("*********** LOADING INITIAL LIBS **************")
-message("***********************************************")
+message(">>>>> LOADING INITIAL LIBS")
 
 ## some libraries that we often need and load fast
 library(shiny)
@@ -41,7 +39,10 @@ envcat("PLAYGROUND_EXPIRY")
 envcat("PLAYGROUND_QUOTA")
 envcat("PLAYGROUND_LEVEL")
 envcat("PLAYGROUND_HELLO")
+
 envcat("OMICS_GOOGLE_PROJECT")
+envcat("OMICS_STRIPE_KEY")
+envcat("OMICS_STRIPE_PREMIUM_PRICE")
 
 ## --------------------------------------------------------------------
 ## -------------------------- INIT ------------------------------------
@@ -481,8 +482,9 @@ if(opt$AUTHENTICATION == "shinyproxy") {
     ##logout.tab <- shiny::tabPanel(title=shiny::HTML("<a id='logout' href='/logout'>Logout"))
     logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='logout()' id='authentication-logout'>Logout</a>"))    
 }
+upgrade.tab <- NULL
 if(opt$AUTHENTICATION == "firebase") {
-    upgrade.tab <- shiny::tabPanel(shiny::HTML("<a onClick='upgrade()' style='font-weight:bold;color:#2a9d8f;cursor:pointer;' id='authentication-upgrade'>Upgrade</a>"))
+    upgrade.tab <- shiny::tabPanel(shiny::HTML("<a onClick='show_plans()' style='font-weight:bold;color:#2a9d8f;cursor:pointer;' id='authentication-upgrade'>Upgrade</a>"))
 }
 
 user.menu <- shiny::navbarMenu(
