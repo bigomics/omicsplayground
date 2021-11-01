@@ -246,7 +246,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
     })
 
 
-    observeEvent(firebase$get_signed_in(), {
+    observeEvent( firebase$get_signed_in(), {
 
         dbg("[FirebaseAuthenticationModule] observe::get_signed_in() reacted")
 

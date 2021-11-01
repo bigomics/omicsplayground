@@ -148,7 +148,7 @@ UserBoard <- function(input, output, session, env)
         dbg("[UserBoard::userinfo_UI] !!! userinfo_UI reacted !!!")
         dbg("[UserBoard::userinfo_UI] !!! user$stripe_id() = ", user$stripe_id() )                
         manage.subcriptions.ui <- tagList()
-        if( user$stripe_id()!="" ){
+        if( length(user$stripe_id()) && user$stripe_id()!="" ){
             manage.subcriptions.ui <- tagList(
                 h4("Subscriptions"),
                 shiny::actionButton(ns("manage"),"Manage Subscription"),
