@@ -95,6 +95,7 @@ message("************************************************")
 if(!file.exists("OPTIONS")) stop("FATAL ERROR: cannot find OPTIONS file")
 opt <- pgx.readOptions(file="OPTIONS")
 
+## Check and set authentication method
 if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
     auth <- Sys.getenv("PLAYGROUND_AUTHENTICATION")
     message("[ENV] overriding PLAYGROUND_AUTHENTICATION = ",auth)
@@ -103,6 +104,12 @@ if(Sys.getenv("PLAYGROUND_AUTHENTICATION")!="") {
 if(1 && opt$AUTHENTICATION=="shinyproxy" && !in.shinyproxy()) {
     Sys.setenv("SHINYPROXY_USERNAME"="Test Person")  ## only for testing!!
 }
+if(1 && opt$AUTHENTICATION=="firebase" && !file.exists("firebase.rds")) {
+    message("[ENV] WARNING: Missing firebase.rds file!!! reverting authentication to 'none'")    
+    opt$AUTHENTICATION = "none"
+    ## opt$ENABLE_USERDIR = FALSE
+}
+
 
 ## copy to global environment
 SHOW_QUESTIONS = FALSE
