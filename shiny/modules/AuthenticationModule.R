@@ -138,9 +138,30 @@ upgrade.dialog <- function(ns){
         p(
           "Do you want to remove the 60 minutes time limit? Do you want to be able to save more datasets?"
         ),
+        tags$label(
+          class = "radio-inline",
+          tags$input(
+            id = "monthlyCheck",
+            type = "radio",
+            name = "monthly",
+            onclick = "priceChange(name)",
+            checked = TRUE
+          ),
+          "Monthly"
+        ),
+        tags$label(
+          class = "radio-inline",
+          tags$input(
+            id = "yearlyCheck",
+            type = "radio",
+            name = "yearly",
+            onclick = "priceChange(name)"
+          ),
+          "Yearly"
+        ),
         div(
           class = "row",
-          style = "padding-left:5rem;padding-right:5rem;"
+          style = "padding-left:5rem;padding-right:5rem;",
           div(
             class = "col-md-3",
             h3("Basic"),
