@@ -38,6 +38,8 @@ UserBoard <- function(input, output, session, env)
     observeEvent( user$logged(), {
         if(!user$logged())
             return()
+
+        removeModal()
         
         session$sendCustomMessage(
             "get-subs",
