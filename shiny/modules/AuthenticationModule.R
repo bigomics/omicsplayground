@@ -131,6 +131,81 @@ Do you want to remove the 60 minutes time limit? Do you want to be able to save 
 </table></center><br><br>
 ")
 
+upgrade.dialog <- function(ns){
+    modalDialog(
+        title = h2("Upgrade"),
+        size = "l",
+        p(
+          "Do you want to remove the 60 minutes time limit? Do you want to be able to save more datasets?"
+        ),
+        div(
+          class = "row",
+          style = "padding-left:5rem;padding-right:5rem;"
+          div(
+            class = "col-md-3",
+            h3("Basic"),
+            p("Try for free"),
+            h4("Free"),
+            tags$ul(
+              tags$li("Host up to 3 datasets"),
+              tags$li("60 minutes time limit"),
+              tags$li("Up to 25 samples/dataset"),
+              tags$li("Up to 5 comparisons")
+            )
+          ),
+          div(
+            class = "col-md-3",
+            h3("Starter"),
+            p("Great to start"),
+            h4("CHF48/month", id = "starter-pricing"),
+            tags$ul(
+              tags$li("Host up to 10 datasets"),
+              tags$li("3 hours time limit"),
+              tags$li("Up to 100 samples/dataset"),
+              tags$li("Up to 10 comparisons")
+            ),
+            tags$button(
+              class = "btn btn-default",
+              "Get Starter!"
+            )
+          ),
+          div(
+            class = "col-md-3",
+            h3("Premium"),
+            p("For professionals"),
+            h4("CHF480/month", id = "premium-pricing"),
+            tags$ul(
+              tags$li("Host up to 100 datasets"),
+              tags$li("8 hours time limit"),
+              tags$li("Up to 2000 samples/dataset"),
+              tags$li("Up to 100 comparisons")
+            ),
+            tags$button(
+              class = "btn btn-default",
+              "Get Premium!"
+            )
+          ),
+          div(
+            class = "col-md-3",
+            h3("Enterprise"),
+            p("Enterprise-ready"),
+            h4("Contact Us", id = "enterprise-pricing"),
+            tags$ul(
+              tags$li("Host unlimited datasets"),
+              tags$li("No time limit"),
+              tags$li("Up to 2000 samples/dataset"),
+              tags$li("Up to 100 comparisons")
+            ),
+            tags$button(
+              class = "btn btn-default",
+              "Send email",
+              href = "mailto:info@bigomics.com"
+            )
+          )
+        )
+    )
+}
+
 FirebaseAuthenticationModule <- function(input, output, session)
 {
     message("[AuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
@@ -247,6 +322,14 @@ FirebaseAuthenticationModule <- function(input, output, session)
             )
             return()
         }
+
+        session$sendCustomMessage(
+            "email-feedback", 
+            list(
+                type = "success",
+                msg = "Email sent, check your inbox."
+            )
+        )
         firebase2$send_email(input$emailInput)
     })
 
@@ -317,14 +400,17 @@ FirebaseAuthenticationModule <- function(input, output, session)
     
     observeEvent( input$firebaseUpgrade, {    
         dbg("[FirebaseAuthenticationModule] observe::firebaseUpgrade reacted")        
-        shinyalert::shinyalert(
-                        title = "Coming Soon!",
-                        text = upgrade.dialog,
-                        html=TRUE,
-                        animation = FALSE,
-                        size = 'l',
-                        immediate = TRUE
-                    )
+        # shinyalert::shinyalert(
+        #     title = "Coming Soon!",
+        #     text = upgrade.dialog,
+        #     html=TRUE,
+        #     animation = FALSE,
+        #     size = 'l',
+        #     immediate = TRUE
+        # )
+        showModal(
+            upgrade.dialog(ns)
+        )
     })
     
     rt <- list(
