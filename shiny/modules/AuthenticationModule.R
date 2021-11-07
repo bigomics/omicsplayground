@@ -36,11 +36,12 @@ NoAuthenticationModule <- function(input, output, session, username="", email=""
     message("[AuthenticationModule] >>>> using no authentication <<<<")
     ns <- session$ns    
     USER <- shiny::reactiveValues(
-                       logged=FALSE,
-                       name="",
-                       email="",
-                       level="",
-                       limit="")    
+        logged=FALSE,
+        name="",
+        email="",
+        level="",
+        limit=""
+    )    
 
     resetUSER <- function() {
         USER$logged <- FALSE
@@ -151,20 +152,15 @@ FirebaseAuthenticationModule <- function(input, output, session)
         href = NULL
     )    
 
-    firebase <- firebase::FirebaseUI$
-        new(persistence = "local")$ # instantiate
-        set_providers( # define providers
-            email_link = TRUE, 
-            google = TRUE
-        )$
-        set_privacy_policy_url(
-            "https://bigomics.ch/privacy/"
-        )$
-        set_tos_url(
-            "https://bigomics.ch/terms/"
-        )
-    firebase$set_tos_url("https://bigomics.ch/terms")
-    firebase$set_privacy_policy_url("https://bigomics.ch/privacy")    
+    firebase <- firebase::FirebaseSocial$
+        new(persistence = "local")
+    
+    firebase2 <- firebase::FirebaseEmailLink$
+        new(persistence = "local")
+    
+    observeEvent(input$launchGoogle, {
+        firebase$launch_google()
+    })
     
     resetUSER <- function() {
         USER$logged <- FALSE
@@ -207,11 +203,6 @@ FirebaseAuthenticationModule <- function(input, output, session)
             return()
         }
         
-        on.exit({
-            dbg("[FirebaseAuthenticationModule] on.exit")            
-            firebase$launch()
-        })
-
         dbg("[FirebaseAuthenticationModule] showing Firebase login modal")                                
         shiny::tagList(
             shiny::showModal(m)
@@ -245,21 +236,34 @@ FirebaseAuthenticationModule <- function(input, output, session)
         shiny::showModal(m)
     })
 
+    observeEvent( input$emailSubmit, {
+        if(input$emailInput == ""){
+            session$sendCustomMessage(
+                "email-feedback", 
+                list(
+                    type = "error",
+                    msg = "Missing email"
+                )
+            )
+            return()
+        }
+        firebase2$send_email(input$emailInput)
+    })
 
     observeEvent( firebase$get_signed_in(), {
 
         dbg("[FirebaseAuthenticationModule] observe::get_signed_in() reacted")
 
         response <- firebase$get_signed_in()
+        print(response)
 
         dbg("[FirebaseAuthenticationModule] response$success = ",response$success)
         
         if(!response$success) {
             dbg("[FirebaseAuthenticationModule] sign in NOT succesful")                        
             return()
-        } else {
-            dbg("[FirebaseAuthenticationModule] sign in SUCCESSFUL!")            
-        }
+        } 
+        dbg("[FirebaseAuthenticationModule] sign in SUCCESSFUL!")            
 
         on.exit({
             dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")            
@@ -890,7 +894,42 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
         )
     }
     if(with.firebase) {
-        div.firebase <- firebase::useFirebaseUI()
+        div.firebase <- div(
+            id = "firebaseAuth",
+            div(
+                id = "firebaseBtns",
+                actionButton(ns("launchGoogle"), "Google", icon = icon("google"), class = "btn-danger"),
+                "  ",
+                tags$a(class = "btn btn-default", onclick = "toggleEmail()", icon("envelope"), "Email"),
+            ),
+            div(
+                id = "emailLinkWrapper",
+                div(
+                    class = "row",
+                    div(
+                        class = "col-md-9",
+                        textInput(
+                            ns("emailInput"),
+                            "",
+                            placeholder = "Your email",
+                            width = "100%"
+                        )
+                    ),
+                    div(
+                        class = "col-md-3",
+                        br(),
+                        actionButton(
+                            ns("emailSubmit"),
+                            "Send"
+                        )
+                    )
+                ),
+                p(
+                    id = "emailFeedbackShow",
+                    class = "white"
+                )
+            )
+        )
     }
 
     div.alt <- div()
