@@ -181,3 +181,15 @@ function quit(){
     Shiny.setInputValue('quit', 1, {priority: 'event'});  // end session
     window.close();  // close window??
 };
+
+function toggleEmail(){
+	$('#emailLinkWrapper').toggle();
+}
+
+Shiny.addCustomMessageHandler('email-feedback', function(msg) {
+	$('#emailFeedbackShow').html(msg.msg);
+
+	setTimeout(function() {
+		$('#emailFeedbackShow').html('');
+	}, 5000);
+});
