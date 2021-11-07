@@ -255,7 +255,6 @@ FirebaseAuthenticationModule <- function(input, output, session)
         dbg("[FirebaseAuthenticationModule] observe::get_signed_in() reacted")
 
         response <- firebase$get_signed_in()
-        print(response)
 
         dbg("[FirebaseAuthenticationModule] response$success = ",response$success)
         
