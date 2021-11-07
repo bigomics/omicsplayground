@@ -263,7 +263,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
 
         on.exit({
             dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")            
-            removeModal()            
+            removeModal()      
         })
 
         USER$logged <- TRUE
