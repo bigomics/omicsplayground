@@ -50,16 +50,16 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
     message("[LoadingBoard] in.shinyproxy = ",in.shinyproxy())    
     message("[LoadingBoard] SHINYPROXY_USERNAME = ",Sys.getenv("SHINYPROXY_USERNAME"))
     message("[LoadingBoard] SHINYPROXY_USERGROUPS = ",Sys.getenv("SHINYPROXY_USERGROUPS"))
-    message("[LoadingBoard] authentication = ",authentication)
-
+    message("[LoadingBoard] authentication = ",authentication)    
+    dbg("[LoadingBoard] getwd = ",getwd())
+    
     auth <- NULL   ## shared in module
     if(authentication == "password") {
         auth <- shiny::callModule(
             PasswordAuthenticationModule, "auth",
             credentials.file = "CREDENTIALS")
     } else if(authentication == "firebase") {
-        auth <- shiny::callModule(
-                           FirebaseAuthenticationModule, "auth")
+        auth <- shiny::callModule(FirebaseAuthenticationModule, "auth")
     } else if(authentication == "register") {
         auth <- shiny::callModule(
             RegisterAuthenticationModule, "auth",

@@ -17,6 +17,8 @@ message("\n")
 
 main.start_time <- Sys.time()
 
+WORKDIR = getwd()
+message(">>>>> working directory = ",WORKDIR)
 message(">>>>> LOADING INITIAL LIBS")
 
 ## some libraries that we often need and load fast
@@ -110,7 +112,6 @@ if(1 && opt$AUTHENTICATION=="firebase" && !file.exists("firebase.rds")) {
     ## opt$ENABLE_USERDIR = FALSE
 }
 
-
 ## copy to global environment
 SHOW_QUESTIONS = FALSE
 AUTHENTICATION = opt$AUTHENTICATION
@@ -187,6 +188,10 @@ server = function(input, output, session) {
     message("\n========================================================")
     message("===================== SERVER ===========================")
     message("========================================================\n")
+
+    dbg("[SERVER] 0: getwd = ",getwd())
+    setwd(WORKDIR)  ## for some reason it can change!!
+    dbg("[SERVER] 1: getwd = ",getwd())
     
     server.start_time  <- Sys.time()
     session.start_time <- -1
@@ -197,7 +202,7 @@ server = function(input, output, session) {
                 "genesets" = opt$MAX_GENESETS,
                 "datasets" = opt$MAX_DATASETS)
     env <- list()  ## communication "environment"
-    
+
     ## Modules needed from the start
     env[["load"]] <- shiny::callModule(
                                 LoadingBoard, "load",
@@ -210,7 +215,7 @@ server = function(input, output, session) {
                                 )   
     env[["user"]] <- shiny::callModule(UserBoard, "user", env)
     ##shinyjs::runjs("logout()")    
-    
+
     ## Modules needed after dataset is loaded (deferred)
     already_loaded <- FALSE
     observeEvent( env[["load"]]$loaded(), {
@@ -491,6 +496,7 @@ if(opt$AUTHENTICATION == "shinyproxy") {
 }
 upgrade.tab <- NULL
 if(opt$AUTHENTICATION == "firebase") {
+    dbg("[MAIN] adding upgrade menu tab...")
     upgrade.tab <- shiny::tabPanel(shiny::HTML("<a onClick='show_plans()' style='font-weight:bold;color:#2a9d8f;cursor:pointer;' id='authentication-upgrade'>Upgrade</a>"))
 }
 
@@ -514,7 +520,7 @@ createUI <- function(tabs)
     message("\n======================================================")
     message("======================= UI ===========================")
     message("======================================================\n")
-    
+
     version <- scan("../VERSION", character())[1]
     TITLE = paste(opt$TITLE,version)
     LOGO = shiny::div(shiny::img(src="bigomics-logo-white-48px.png", height="48px"),

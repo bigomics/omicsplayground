@@ -230,6 +230,9 @@ FirebaseAuthenticationModule <- function(input, output, session)
 {
     message("[AuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
 
+    dbg("[AuthenticationModule] getwd = ",getwd())
+    dbg("[AuthenticationModule] file.exists('firebase.rds') = ",file.exists("firebase.rds"))    
+
     firebase_config <- firebase:::read_config("firebase.rds")
     Sys.setenv(OMICS_GOOGLE_PROJECT = firebase_config$projectId)
 

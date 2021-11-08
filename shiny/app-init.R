@@ -8,14 +8,17 @@ message("======================= init.R ================================")
 message("===============================================================")
 
 ## Parse access logs
-access.dirs = c("/var/www/html/logs", "/var/log/apache2","/var/log/apache",
-                "../logs","/var/log/httpd","/var/log/nginx")
-access.dirs <- access.dirs[dir.exists(access.dirs)]
-access.dirs
-##ACCESS.LOG <- pgx.parseAccessLogs(access.dirs[], filter.get=NULL)
-ACCESS.LOG <- pgx.parseAccessLogs(access.dirs[], filter.get="playground")
-names(ACCESS.LOG)
-sum(ACCESS.LOG$visitors$count)
+ACCESS.LOG <- NULL
+if(0) {
+    access.dirs = c("/var/www/html/logs", "/var/log/apache2","/var/log/apache",
+                    "../logs","/var/log/httpd","/var/log/nginx")
+    access.dirs <- access.dirs[dir.exists(access.dirs)]
+    access.dirs
+    ##ACCESS.LOG <- pgx.parseAccessLogs(access.dirs[], filter.get=NULL)
+    ACCESS.LOG <- pgx.parseAccessLogs(access.dirs[], filter.get="playground")
+    names(ACCESS.LOG)
+    sum(ACCESS.LOG$visitors$count)
+}
 
 ##-----------------------------------------------------
 ## Initialize ORCA server
