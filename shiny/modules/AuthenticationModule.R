@@ -27,7 +27,6 @@ if(0) {
 
 AuthenticationUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::showModal(shiny::uiOutput(ns("showLogin")))
 }
 
 
@@ -270,7 +269,10 @@ FirebaseAuthenticationModule <- function(input, output, session)
 
     first_time = TRUE
     
-    output$showLogin <- shiny::renderUI({
+    observe({
+
+        if(USER$logged)
+            return()
         
         message("[FirebaseAuthenticationModule] showLogin... ")
         
@@ -300,19 +302,13 @@ FirebaseAuthenticationModule <- function(input, output, session)
         }
         
         dbg("[FirebaseAuthenticationModule] showing Firebase login modal")                                
-        shiny::tagList(
-            shiny::showModal(m)
-        )
+        shiny::showModal(m)
     })
 
     observeEvent( input$firebaseLogout, {    
 
         dbg("[FirebaseAuthenticationModule] observe::input$firebaseLogout reacted")        
         
-        on.exit({
-            firebase$launch()
-        })
-
         dbg("[FirebaseAuthenticationModule] signing out from Firebase")
         firebase$sign_out()
 
