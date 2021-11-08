@@ -177,8 +177,7 @@ to understand biological functions including GO and KEGG pathway analysis."
     {
         if (is.null(pkg.name)) {
             data(bods)
-            ridx = grep(tolower(paste0(org, "[.]")), tolower(bods[, 
-                                                                  1]))
+            ridx = grep(tolower(paste0(org, "[.]")), tolower(bods[,1]))
             if (length(ridx) == 0) {
                 ridx = grep(tolower(org), tolower(bods[, 2:3]))%%nrow(bods)
                 if (length(ridx) == 0) 
@@ -199,7 +198,7 @@ to understand biological functions including GO and KEGG pathway analysis."
                            pkg.name, "!", sep = ""))
         }
         db.obj <- eval(parse(text = paste0(pkg.name, "::", pkg.name)))
-        id.types <- columns(db.obj)
+        id.types <- AnnotationDbi::columns(db.obj)
         in.type = toupper(in.type)
         out.type = toupper(out.type)
         eii = in.type == toupper("entrez") | in.type == toupper("eg")
@@ -225,8 +224,10 @@ to understand biological functions including GO and KEGG pathway analysis."
         in.ids <- unique(as.character(in.ids))
         out.ids = character(length(in.ids))
 ###res <- try(suppressWarnings( plotly::select(db.obj, keys = in.ids, 
-        res <- try(suppressWarnings( AnnotationDbi::select(db.obj, keys = in.ids, 
-                                                           keytype = in.type, columns = c(in.type, out.type))))
+        res <- try(suppressWarnings(
+            AnnotationDbi::select(db.obj, keys = in.ids, 
+                                  keytype = in.type,
+                                  columns = c(in.type, out.type))))
         if (class(res) == "data.frame") {
             res <- res[, c(in.type, out.type)]
             if (nout == 1) 
@@ -246,9 +247,9 @@ to understand biological functions including GO and KEGG pathway analysis."
                 if (length(out.type) == 1) 
                     umaps = tapply(res[, out.type], res[, in.type], 
                                    paste, sep = "", collapse = "; ")
-                else umaps = apply(res[, out.type], 2, function(x) tapply(x, 
-                                                                          res[, in.type], function(y) paste(unique(y), 
-                                                                                                            sep = "", collapse = "; ")))
+                else umaps = apply(res[, out.type], 2, function(x)
+                    tapply(x, res[, in.type], function(y) paste(unique(y),
+                                                                sep = "", collapse = "; ")))
                 umaps = cbind(umaps)
                 res.uniq = cbind(rownames(umaps), umaps)
                 res = res.uniq
@@ -277,7 +278,6 @@ to understand biological functions including GO and KEGG pathway analysis."
 
     if(1) {
         suppressMessages(require(pathview))
-
         unlockBinding("geneannot.map", as.environment("package:pathview"))
         assignInNamespace("geneannot.map", my.geneannot.map, ns="pathview", as.environment("package:pathview"))
         assign("geneannot.map", my.geneannot.map, as.environment("package:pathview"))
