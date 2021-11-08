@@ -181,3 +181,31 @@ function quit(){
     Shiny.setInputValue('quit', 1, {priority: 'event'});  // end session
     window.close();  // close window??
 };
+
+function toggleEmail(){
+	$('#emailLinkWrapper').toggle();
+}
+
+Shiny.addCustomMessageHandler('email-feedback', function(msg) {
+	$('#emailFeedbackShow').html(msg.msg);
+
+	setTimeout(function() {
+		$('#emailFeedbackShow').html('');
+	}, 5000);
+});
+
+function priceChange(name){
+	if(name == 'monthly'){
+		$('#yearlyCheck').prop('checked', false);
+	} else {
+		$('#monthlyCheck').prop('checked', false);
+	}
+		
+	if($('#yearlyCheck').prop('checked')){
+		$('#starter-pricing').text('CHF480/year');
+		$('#premium-pricing').text('CHF4800/year');
+	} else {
+		$('#starter-pricing').text('CHF48/month');
+		$('#premium-pricing').text('CHF480/month');
+	}
+}

@@ -3,6 +3,7 @@
 .RData
 .Rhistory
 *.Rout
+.Renviron
 
 # Backup files
 ######################

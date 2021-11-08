@@ -607,17 +607,22 @@ input[type="checkbox"], input[type="radio"] {
     padding: 0
 }
 
-#fireblaze-signin-ui{
+#firebaseAuth {
     position: absolute;
-    bottom: 1rem;
-    left: 27rem;
+    top:32rem;
+    padding-left: 15rem;
+    padding-right: 15rem;
 }
 
-.firebaseui-tos{
-    color: white !important;
+#firebaseBtns{
+    padding-left: 21rem;
 }
 
-.firebaseui-link{
-    color: white  !important;
-    text-decoration: underline  !important;
+#emailLinkWrapper{
+    display: none;
+    padding-left: 20rem;
+}
+
+.white {
+    color: white;
 }

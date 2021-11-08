@@ -38,13 +38,15 @@ UserBoard <- function(input, output, session, env)
     observeEvent( user$logged(), {
         if(!user$logged())
             return()
+
+        removeModal()
         
         session$sendCustomMessage(
             "get-subs",
             list(
                 ns = ns(NULL)
             )
-            )
+        )
     })
 
     output$description <- renderUI({
@@ -86,7 +88,6 @@ UserBoard <- function(input, output, session, env)
     observeEvent(input$manage, {        
         dbg("[UserBoard] !!! input$manage called")
         dbg("[UserBoard] !!! OMICS_STRIPE_KEY = ", Sys.getenv("OMICS_STRIPE_KEY"))
-        print(user)
         dbg("[UserBoard] !!! user$email() = ", user$email())
         dbg("[UserBoard] !!! user$stripe_id() = ", user$stripe_id())        
         dbg("[UserBoard] !!! user$href = ", user$href())
