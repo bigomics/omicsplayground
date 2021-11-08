@@ -27,7 +27,6 @@ if(0) {
 
 AuthenticationUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::showModal(shiny::uiOutput(ns("showLogin")))
 }
 
 
@@ -36,11 +35,12 @@ NoAuthenticationModule <- function(input, output, session, username="", email=""
     message("[AuthenticationModule] >>>> using no authentication <<<<")
     ns <- session$ns    
     USER <- shiny::reactiveValues(
-                       logged=FALSE,
-                       name="",
-                       email="",
-                       level="",
-                       limit="")    
+        logged=FALSE,
+        name="",
+        email="",
+        level="",
+        limit=""
+    )    
 
     resetUSER <- function() {
         USER$logged <- FALSE
@@ -130,6 +130,102 @@ Do you want to remove the 60 minutes time limit? Do you want to be able to save 
 </table></center><br><br>
 ")
 
+upgrade.dialog <- function(ns){
+    modalDialog(
+        title = h2("Upgrade"),
+        size = "l",
+        p(
+          "Do you want to remove the 60 minutes time limit? Do you want to be able to save more datasets?"
+        ),
+        tags$label(
+          class = "radio-inline",
+          tags$input(
+            id = "monthlyCheck",
+            type = "radio",
+            name = "monthly",
+            onclick = "priceChange(name)",
+            checked = TRUE
+          ),
+          "Monthly"
+        ),
+        tags$label(
+          class = "radio-inline",
+          tags$input(
+            id = "yearlyCheck",
+            type = "radio",
+            name = "yearly",
+            onclick = "priceChange(name)"
+          ),
+          "Yearly"
+        ),
+        div(
+          class = "row",
+          style = "padding-left:5rem;padding-right:5rem;",
+          div(
+            class = "col-md-3",
+            h3("Basic"),
+            p("Try for free"),
+            h4("Free"),
+            tags$ul(
+              tags$li("Host up to 3 datasets"),
+              tags$li("60 minutes time limit"),
+              tags$li("Up to 25 samples/dataset"),
+              tags$li("Up to 5 comparisons")
+            )
+          ),
+          div(
+            class = "col-md-3",
+            h3("Starter"),
+            p("Great to start"),
+            h4("CHF48/month", id = "starter-pricing"),
+            tags$ul(
+              tags$li("Host up to 10 datasets"),
+              tags$li("3 hours time limit"),
+              tags$li("Up to 100 samples/dataset"),
+              tags$li("Up to 10 comparisons")
+            ),
+            tags$button(
+              class = "btn btn-default",
+              "Get Starter!"
+            )
+          ),
+          div(
+            class = "col-md-3",
+            h3("Premium"),
+            p("For professionals"),
+            h4("CHF480/month", id = "premium-pricing"),
+            tags$ul(
+              tags$li("Host up to 100 datasets"),
+              tags$li("8 hours time limit"),
+              tags$li("Up to 2000 samples/dataset"),
+              tags$li("Up to 100 comparisons")
+            ),
+            tags$button(
+              class = "btn btn-default",
+              "Get Premium!"
+            )
+          ),
+          div(
+            class = "col-md-3",
+            h3("Enterprise"),
+            p("Enterprise-ready"),
+            h4("Contact Us", id = "enterprise-pricing"),
+            tags$ul(
+              tags$li("Host unlimited datasets"),
+              tags$li("No time limit"),
+              tags$li("Up to 2000 samples/dataset"),
+              tags$li("Up to 100 comparisons")
+            ),
+            tags$button(
+              class = "btn btn-default",
+              "Send email",
+              href = "mailto:info@bigomics.com"
+            )
+          )
+        )
+    )
+}
+
 FirebaseAuthenticationModule <- function(input, output, session)
 {
     message("[AuthenticationModule] >>>> using FireBase (email+password) authentication <<<<")
@@ -151,20 +247,15 @@ FirebaseAuthenticationModule <- function(input, output, session)
         href = NULL
     )    
 
-    firebase <- firebase::FirebaseUI$
-        new(persistence = "local")$ # instantiate
-        set_providers( # define providers
-            email_link = TRUE, 
-            google = TRUE
-        )$
-        set_privacy_policy_url(
-            "https://bigomics.ch/privacy/"
-        )$
-        set_tos_url(
-            "https://bigomics.ch/terms/"
-        )
-    firebase$set_tos_url("https://bigomics.ch/terms")
-    firebase$set_privacy_policy_url("https://bigomics.ch/privacy")    
+    firebase <- firebase::FirebaseSocial$
+        new(persistence = "local")
+    
+    firebase2 <- firebase::FirebaseEmailLink$
+        new(persistence = "local")
+    
+    observeEvent(input$launchGoogle, {
+        firebase$launch_google()
+    })
     
     resetUSER <- function() {
         USER$logged <- FALSE
@@ -178,7 +269,10 @@ FirebaseAuthenticationModule <- function(input, output, session)
 
     first_time = TRUE
     
-    output$showLogin <- shiny::renderUI({
+    observe({
+
+        if(USER$logged)
+            return()
         
         message("[FirebaseAuthenticationModule] showLogin... ")
         
@@ -207,25 +301,14 @@ FirebaseAuthenticationModule <- function(input, output, session)
             return()
         }
         
-        on.exit({
-            dbg("[FirebaseAuthenticationModule] on.exit")            
-            firebase$launch()
-        })
-
         dbg("[FirebaseAuthenticationModule] showing Firebase login modal")                                
-        shiny::tagList(
-            shiny::showModal(m)
-        )
+        shiny::showModal(m)
     })
 
     observeEvent( input$firebaseLogout, {    
 
         dbg("[FirebaseAuthenticationModule] observe::input$firebaseLogout reacted")        
         
-        on.exit({
-            firebase$launch()
-        })
-
         dbg("[FirebaseAuthenticationModule] signing out from Firebase")
         firebase$sign_out()
 
@@ -245,6 +328,27 @@ FirebaseAuthenticationModule <- function(input, output, session)
         shiny::showModal(m)
     })
 
+    observeEvent( input$emailSubmit, {
+        if(input$emailInput == ""){
+            session$sendCustomMessage(
+                "email-feedback", 
+                list(
+                    type = "error",
+                    msg = "Missing email"
+                )
+            )
+            return()
+        }
+
+        session$sendCustomMessage(
+            "email-feedback", 
+            list(
+                type = "success",
+                msg = "Email sent, check your inbox."
+            )
+        )
+        firebase2$send_email(input$emailInput)
+    })
 
     observeEvent( firebase$get_signed_in(), {
 
@@ -257,13 +361,12 @@ FirebaseAuthenticationModule <- function(input, output, session)
         if(!response$success) {
             dbg("[FirebaseAuthenticationModule] sign in NOT succesful")                        
             return()
-        } else {
-            dbg("[FirebaseAuthenticationModule] sign in SUCCESSFUL!")            
-        }
+        } 
+        dbg("[FirebaseAuthenticationModule] sign in SUCCESSFUL!")            
 
         on.exit({
             dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")            
-            removeModal()            
+            removeModal()      
         })
 
         USER$logged <- TRUE
@@ -314,14 +417,17 @@ FirebaseAuthenticationModule <- function(input, output, session)
     
     observeEvent( input$firebaseUpgrade, {    
         dbg("[FirebaseAuthenticationModule] observe::firebaseUpgrade reacted")        
-        shinyalert::shinyalert(
-                        title = "Coming Soon!",
-                        text = upgrade.dialog,
-                        html=TRUE,
-                        animation = FALSE,
-                        size = 'l',
-                        immediate = TRUE
-                    )
+        # shinyalert::shinyalert(
+        #     title = "Coming Soon!",
+        #     text = upgrade.dialog,
+        #     html=TRUE,
+        #     animation = FALSE,
+        #     size = 'l',
+        #     immediate = TRUE
+        # )
+        showModal(
+            upgrade.dialog(ns)
+        )
     })
     
     rt <- list(
@@ -890,7 +996,42 @@ splashLoginModal <- function(ns=NULL, with.email=TRUE, with.password=TRUE,
         )
     }
     if(with.firebase) {
-        div.firebase <- firebase::useFirebaseUI()
+        div.firebase <- div(
+            id = "firebaseAuth",
+            div(
+                id = "firebaseBtns",
+                actionButton(ns("launchGoogle"), "Google", icon = icon("google"), class = "btn-danger"),
+                "  ",
+                tags$a(class = "btn btn-default", onclick = "toggleEmail()", icon("envelope"), "Email"),
+            ),
+            div(
+                id = "emailLinkWrapper",
+                div(
+                    class = "row",
+                    div(
+                        class = "col-md-9",
+                        textInput(
+                            ns("emailInput"),
+                            "",
+                            placeholder = "Your email",
+                            width = "100%"
+                        )
+                    ),
+                    div(
+                        class = "col-md-3",
+                        br(),
+                        actionButton(
+                            ns("emailSubmit"),
+                            "Send"
+                        )
+                    )
+                ),
+                p(
+                    id = "emailFeedbackShow",
+                    class = "white"
+                )
+            )
+        )
     }
 
     div.alt <- div()
