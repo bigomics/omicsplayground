@@ -131,6 +131,7 @@ Do you want to remove the 60 minutes time limit? Do you want to be able to save 
 ")
 
 upgrade.dialog <- function(ns){
+
     modalDialog(
         title = h2("Upgrade"),
         size = "l",
@@ -310,8 +311,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
 
     observeEvent( input$firebaseLogout, {    
 
-        dbg("[FirebaseAuthenticationModule] observe::input$firebaseLogout reacted")        
-        
+        dbg("[FirebaseAuthenticationModule] observe::input$firebaseLogout reacted")                
         dbg("[FirebaseAuthenticationModule] signing out from Firebase")
         firebase$sign_out()
 
@@ -342,7 +342,6 @@ FirebaseAuthenticationModule <- function(input, output, session)
             )
             return()
         }
-
         session$sendCustomMessage(
             "email-feedback", 
             list(
@@ -376,12 +375,11 @@ FirebaseAuthenticationModule <- function(input, output, session)
         USER$uid <- as.character(response$response$uid)
         USER$name  <- response$response$displayName
         USER$email <- response$response$email
-
+        
         dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] is.null(user.name) = ",is.null(USER$name) )
         dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] is.null(user.email) = ",is.null(USER$email) )
         if(!is.null(USER$name))  USER$name  <- as.character(USER$name)
         if(!is.null(USER$email)) USER$email <- as.character(USER$email)
-
         if(is.null(USER$name))  USER$name  <- ""
         if(is.null(USER$email)) USER$email <- ""
 
@@ -420,14 +418,6 @@ FirebaseAuthenticationModule <- function(input, output, session)
     
     observeEvent( input$firebaseUpgrade, {    
         dbg("[FirebaseAuthenticationModule] observe::firebaseUpgrade reacted")        
-        # shinyalert::shinyalert(
-        #     title = "Coming Soon!",
-        #     text = upgrade.dialog,
-        #     html=TRUE,
-        #     animation = FALSE,
-        #     size = 'l',
-        #     immediate = TRUE
-        # )
         showModal(
             upgrade.dialog(ns)
         )

@@ -352,6 +352,15 @@ server = function(input, output, session) {
         logged <- auth$logged()
         message("[SERVER] logged = ",logged)
         
+        ##--------- force logout callback??? --------------
+        if(opt$AUTHENTICATION!='firebase' && !logged) {
+            ## Forcing logout ensures "clean" sessions. For firebase
+            ## we allow sticky sessions.
+            message("[SERVER] not logged? forcing logout() JS callback...")            
+            shinyjs::runjs("logout()")    
+        }
+        
+        ##--------- start timer --------------
         ##if(tolower(level)=="free" && TIMEOUT>0 && logged) {
         if(TIMEOUT>0 && logged) {        
             message("[SERVER] starting session timer!!!")
@@ -365,6 +374,7 @@ server = function(input, output, session) {
             tm$start <- NULL
             tm.warned <<- FALSE
         }       
+
     })
 
     ## Logout user after TIMEOUT

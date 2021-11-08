@@ -271,7 +271,7 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
 
         req(auth)
         if(!auth$logged()) {
-            dbg("[LoadingBoard:getFilteredPGXINFO] user not logged in!")            
+            dbg("[LoadingBoard:getFilteredPGXINFO] user not logged in! not showing table!")            
             return(NULL)
         }
         df <- getPGXINFO()
@@ -469,22 +469,6 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
 
     particlesjs.conf <- rjson::fromJSON(file="resources/particlesjs-config.json")
 
-    showStartupModal <- function(once=FALSE) {    
-        if(length(input$loadbutton)==0) {
-            dbg("[showStartupModal] UI not ready. skipping")
-            ##delay(8000, DT::selectRows(proxy = DT::dataTableProxy("pgxtable"), selected=1))
-            ##delay(8000, shinyjs::click("loadbutton"))
-            return(NULL)  ## UI not ready???rt
-        }
-        if(once && startup_count>0) return(NULL)
-        
-        dbg("showStartupModal: showing!\n")    
-        AuthenticationUI(ns("auth"))
-        
-        startup_count <<- startup_count + 1    
-        dbg("showStartupModal done!\n")
-    }
-
     ## shiny::observeEvent( input$action_beer, {
     ##     dbg("buy beer button action\n")
     ##     startup_count <<- startup_count + 1    
@@ -655,8 +639,6 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
     }
 
     pgxTable.RENDER <- shiny::reactive({
-
-        if(SHOWSPLASH) showStartupModal(once=TRUE)
         
         dbg("[pgxTable.RENDER] reacted")
 
