@@ -406,12 +406,16 @@ server = function(input, output, session) {
             } else if(secs.lapsed >= TIMEOUT) {
                 message("[SERVER] timed out!!!")
                 shinyalert::closeAlert()
+                js.cb = "function(x){logout();quit()}"
+                if(opt$AUTHENTICATION=="shinyproxy") {
+                    js.cb = "function(x){logout();quit();window.location.assign('/logout')}"                    
+                }
                 shinyalert::shinyalert(
                                 title = "Oh No!",
                                 text = "Your FREE session has expired.",
                                 ##callbackR = function(x){shinyalert::closeAlert()},
                                 ##callbackJS = "function(x){logout()}" ## logout and/or quit??
-                                callbackJS = "function(x){logout();quit()}" ## logout and/or quit??
+                                callbackJS = js.cb ## logout and/or quit??
                                 )
                 tm$timer <- reactiveTimer(Inf)                
                 tm$start <- NULL
@@ -504,7 +508,7 @@ user.tab <-  tabView(title = "Settings", id="user", UserInputs("user"), UserUI("
 logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
 
 ## conditionally add if firebase authentication is enabled
-stop.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='quit()'>Quit</a>"))
+stop.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='logout();quit();'>Quit</a>"))
 if(opt$AUTHENTICATION == "shinyproxy") {
     ## For ShinyProxy we need to redirect to /logout for clean session
     ## logout. Then we need a redirect to the /login page.
