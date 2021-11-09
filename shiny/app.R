@@ -202,7 +202,7 @@ server = function(input, output, session) {
                 "genesets" = opt$MAX_GENESETS,
                 "datasets" = opt$MAX_DATASETS)
     env <- list()  ## communication "environment"
-
+    
     ## Modules needed from the start
     env[["load"]] <- shiny::callModule(
                                 LoadingBoard, "load",
@@ -217,7 +217,7 @@ server = function(input, output, session) {
     ##shinyjs::runjs("logout()")    
 
     ## Modules needed after dataset is loaded (deferred)
-    already_loaded <- FALSE
+    modules_loaded <- FALSE
     observeEvent( env[["load"]]$loaded(), {
 
         env.loaded <- env[["load"]]$loaded()
@@ -227,17 +227,12 @@ server = function(input, output, session) {
             message("[SERVER:env.loaded] env.loaded = FALSE")                                    
             return(NULL)
         }
-
-        on.exit({
-            message("[SERVER:env.loaded] on.exit::removing Modal")                        
-            shiny::removeModal()
-        })
         
-        if(already_loaded) {
+        if(modules_loaded) {
             message("[SERVER:env.loaded] modules already loaded!")            
             return(NULL)
         }
-        already_loaded <<- TRUE
+        modules_loaded <<- TRUE
         
         ## load other modules if
         message("[SERVER:env.loaded] --------- calling shiny modules ----------")
