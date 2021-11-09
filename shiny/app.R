@@ -497,11 +497,10 @@ user.tab <-  tabView(title = "Settings", id="user", UserInputs("user"), UserUI("
 logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
 
 ## conditionally add if firebase authentication is enabled
-##stop.tab    <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='sigstop()'>Stop</a>"))
 stop.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='quit()'>Quit</a>"))
 if(opt$AUTHENTICATION == "shinyproxy") {
-    ##logout.tab <- shiny::tabPanel(shiny::HTML("<a id='logout' href='/logout'>Logout"))
-    ##logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='logout()' id='authentication-logout'>Logout</a>"))
+    ## For ShinyProxy we need to redirect to /logout for clean session
+    ## logout. Then we need a redirect to the /login page.
     logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/login' onClick='logout();quit();window.location.assign(\"/logout\");' id='authentication-logout'>Logout</a>"))    
 }
 
