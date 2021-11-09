@@ -20,9 +20,9 @@ CorrelationUI <- function(id) {
         shiny::tabsetPanel(
             id = ns("tabs"),
             shiny::tabPanel("Correlation",uiOutput(ns("corAnalysis_UI"))),
+            shiny::tabPanel("Graph",uiOutput(ns("corGraph_UI")))            
             ## shiny::tabPanel("Functional",uiOutput(ns("corFunctional_UI"))),
-            shiny::tabPanel("Graph",uiOutput(ns("corGraph_UI"))),            
-            shiny::tabPanel("Differential",uiOutput(ns("corDiff_UI")))
+            ## shiny::tabPanel("Differential",uiOutput(ns("corDiff_UI")))
         )
     )
     ui
@@ -173,32 +173,30 @@ CorrelationBoard <- function(input, output, session, env)
             shinyBS::tipify( shiny::selectInput(ns("cor_gene"),"Gene:", choices=NULL),
                    "Choose a gene for the correlation analysis.", placement="top"),
             shiny::br(),
-            shinyBS::tipify( shiny::selectInput(ns("cor_group"),"Color by:", choices=NULL, multiple=FALSE),
-                   "Variable to split and color by groups.", placement="top"),
-            shiny::br(),
-            shiny::actionLink(ns("cor_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-            shiny::br(),br(),
+            shinyBS::tipify( shiny::selectInput(ns("cor_features"),"Filter genes:", choices=NULL, multiple=FALSE),
+                            "Filter gene features.", placement="top"),
             shiny::conditionalPanel(
-                "input.cor_options % 2 == 1", ns=ns,
-                shiny::tagList(
-                    shinyBS::tipify( shiny::selectInput(ns("cor_features"),"Filter genes:", choices=NULL, multiple=FALSE),
-                           "Filter gene features.", placement="top"),
-                    shiny::conditionalPanel(
-                        "input.cor_features == '<custom>'", ns=ns,
-                        shinyBS::tipify( shiny::textAreaInput(ns("cor_customfeatures"),
-                                              NULL, value = NULL,
-                                              height = "100px", width = "100%", 
-                                              rows=5, placeholder="Paste your custom gene list"),
-                               "Paste a custom list of genes to be used as features.",
-                               placement="top")
-                    ),                    
-                    ##tipify( shiny::selectInput(ns("cor_samplefilter"),"Filter samples",
-                    ##                    choices=NULL, multiple=TRUE),
-                    ##       "Filter (include) samples for the analysis", placement="top"),
-                    shinyBS::tipify( shiny::checkboxInput(ns("dgca.allpairs"),"All pairs for DGCA"),
-                           "Compute all DGCA pairs", placement="top")
-                )
-            )
+                       "input.cor_features == '<custom>'", ns=ns,
+                       shinyBS::tipify( shiny::textAreaInput(ns("cor_customfeatures"),
+                                                             NULL, value = NULL,
+                                                             height = "100px", width = "100%", 
+                                                             rows=5, placeholder="Paste your custom gene list"),
+                                       "Paste a custom list of genes to be used as features.",
+                                       placement="top")
+                   ),                    
+            shiny::br()
+            ##shiny::actionLink(ns("cor_options"), "Options", icon=icon("cog", lib = "glyphicon")),
+            ##shiny::br(),shiny::br(),
+            ## shiny::conditionalPanel(
+            ##     "input.cor_options % 2 == 1", ns=ns,
+            ##     shiny::tagList(
+            ##         ##tipify( shiny::selectInput(ns("cor_samplefilter"),"Filter samples",
+            ##         ##                    choices=NULL, multiple=TRUE),
+            ##         ##       "Filter (include) samples for the analysis", placement="top"),
+            ##         shinyBS::tipify( shiny::checkboxInput(ns("dgca.allpairs"),"All pairs for DGCA"),
+            ##                "Compute all DGCA pairs", placement="top")
+            ##     )
+            ## )
         )
 
     })
@@ -234,7 +232,8 @@ CorrelationBoard <- function(input, output, session, env)
         shiny::updateSelectInput(session, "cor_features", choices=fam)
         
         px <- colnames(ngs$Y)
-        shiny::updateSelectInput(session, "cor_group", choices=px)
+        s1 <- grep("^[.]",px,value=TRUE,invert=TRUE)[1]
+        shiny::updateSelectInput(session, "cor_group", choices=px, selected=s1)
         
     })
 
@@ -534,6 +533,9 @@ CorrelationBoard <- function(input, output, session, env)
             if(length(sel)==1) names(rho) <- rownames(R)[sel]
         }
 
+        ## something wrong...
+        if(length(sel) > nrow(R)) return(NULL)
+
         dbg("[cor_scatter.PLOTFUN] 2: len.rho = ",length(rho))
         if(length(rho)==0) return(NULL)
 
@@ -613,6 +615,8 @@ CorrelationBoard <- function(input, output, session, env)
     })
 
     cor_scatter.opts <- shiny::tagList(
+        shinyBS::tipify( shiny::selectInput(ns("cor_group"),"Color by:", choices=NULL, multiple=FALSE),
+                        "Variable to split and color by groups.", placement="top"),
         shiny::checkboxInput(ns("corscatter.swapaxis"),"swap axes")
         ## shiny::selectInput(ns("corscatter.colorby"),"color by:", choices=NULL),        
     )
