@@ -42,7 +42,7 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
     ns <- session$ns ## NAMESPACE
     dbg("[LoadingBoard] >>> initializing LoadingBoard...")
 
-    loadedDataset <- shiny::reactiveVal(FALSE)
+    loadedDataset <- shiny::reactiveVal(0)
     
     SHOWSPLASH=TRUE
     ## SHOWSPLASH=FALSE
@@ -523,7 +523,7 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         btn <- shiny::isolate(input$loadbutton)
         pgxfile = NULL
         pgxfile = shiny::isolate(selectedPGX())
-
+        
         ## check if file is there
         if(is.na(pgxfile) || is.null(pgxfile) || pgxfile=="" || length(pgxfile)==0) {
             message("[LoadingBoard@loadbutton] ERROR file not found : ",pgxfile,"\n")
@@ -531,7 +531,7 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         }
 
         if(!is.null(btn) && btn!=0) {
-            ## show loading pop-up
+            ## show loading pop-up modal
             pgx.showCartoonModal()
         }
         
@@ -559,19 +559,14 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
             return(NULL)
         }
         if(is.null(pgx$name)) pgx$name <- sub("[.]pgx$","",pgxfile)
-
             
-        loadedDataset(TRUE)   ## notify new data uploaded
+        loadedDataset(loadedDataset()+1)   ## notify new data uploaded
         currentPGX(pgx)
 
         ##----------------- remove modal on exit??
-        Sys.sleep(3)
+        ##Sys.sleep(3)
         ##if(loadedDataset()) shiny::removeModal()
-        shiny::removeModal()            
-##        on.exit({
-##            message("[SERVER:env.loaded] on.exit::removing Modal")                        
-##            shiny::removeModal()  ## what modal??? IK 9.11.21
-##        })
+        ##shiny::removeModal()            
 
     })
     ##}, ignoreNULL=FALSE )
@@ -818,7 +813,7 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
             } else {
                 msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
             }
-            loadedDataset(TRUE)  ## notify new data uploaded
+            loadedDataset(loadedDataset()+1)  ## notify new data uploaded
 
             showModal(
                 modalDialog(
