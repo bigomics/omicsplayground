@@ -143,7 +143,7 @@ UserBoard <- function(input, output, session, env)
     ## User interface
     ##-----------------------------------------------------------------------------
     output$inputsUI <- shiny::renderUI({ })
-
+    
     output$userinfo_UI <- shiny::renderUI({
 
         dbg("[UserBoard::userinfo_UI] !!! userinfo_UI reacted !!!")
