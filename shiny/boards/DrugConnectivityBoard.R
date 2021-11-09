@@ -21,7 +21,7 @@ DrugConnectivityUI <- function(id) {
         shiny::tabsetPanel(
             id = ns("tabs"),
             shiny::tabPanel("Drug enrichment",uiOutput(ns("DSEA_enrichment_UI"))),
-            shiny::tabPanel("Connectivity map (beta)",uiOutput(ns("DSEA_cmap_UI")))            
+            shiny::tabPanel("Connectivity map (beta)",uiOutput(ns("DSEA_cmap_UI")))
             ## shiny::tabPanel("Fire plot (dev)",uiOutput(ns("fireplot_UI")))            
         )
     )
