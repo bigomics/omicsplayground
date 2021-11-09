@@ -1,9 +1,9 @@
-v2.8-beta9
+v2.8
 
 - Private data folders for users
+- New gene/geneset UMAP visualization (in Clustering)
+- New 'Compare Datasets' module (beta)
+- Enlarged drug L1000 database (in Drug Connectivity)
+- Gene-specific perturbation database (in Drug Connectivity)
 - User authentication using Google or email
 - Chat box for online support
-- New gene/geneset UMAP visualization (in Clustering)
-- New Compare Datasets (beta) module
-- Enlarged drug L1000 database  (in Drug Connectivity)
-- Gene-specific perturbation database (in Drug Connectivity)
