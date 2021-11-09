@@ -137,7 +137,6 @@ ConnectivityBoard <- function(input, output, session, env)
         ## reset CMap threshold zero/max
         res <- getConnectivityScores()
         shiny::req(res)
-        dbg("[observe:ngs] dim(res)=",dim(res))
         max <- round(0.999*max(abs(res$score),na.rm=TRUE),digits=1)
         max <- round(0.999*tail(sort(abs(res$score)),10)[1],digits=1)
         shiny::updateSliderInput(session, 'cmap_scorethreshold', value=0, max=max)
@@ -154,10 +153,7 @@ ConnectivityBoard <- function(input, output, session, env)
         ## reset CMap threshold zero/max
         res <- getConnectivityScores()  ## result gets cached
         shiny::req(res)
-        dbg("[observe:cmap_contrast] dim(res)=",dim(res))        
         max <- round(0.999*max(abs(res$score),na.rm=TRUE),digits=1)
-        dbg("[observe:cmap_contrast] head(res$score)=",head(res$score))
-        dbg("[observe:cmap_contrast] max=",max)
         shiny::updateSliderInput(session, 'cmap_scorethreshold', value=0, max=max)
                                
     })
@@ -211,15 +207,10 @@ ConnectivityBoard <- function(input, output, session, env)
             sigdb <- input$cmap_sigdb
             shiny::req(sigdb)
         }
-        dbg("[getConnectivityMatrix] called")
-        dbg("[getConnectivityMatrix] sigdb=",sigdb)
         if(sigdb=="" || is.null(sigdb)) {
             dbg("[getConnectivityMatrix] ***WARNING*** sigdb=",sigdb)
             return(NULL)
         }
-
-        if(!is.null(select)) dbg("[getConnectivityMatrix] length(select)=",length(select))
-        if(!is.null(genes))  dbg("[getConnectivityMatrix] length(genes)=",length(genes))
                 
         db.exists <- sapply( SIGDB.DIR, function(d) file.exists(file.path(d,sigdb)))
         db.exists
@@ -269,10 +260,6 @@ ConnectivityBoard <- function(input, output, session, env)
             dbg("[getEnrichmentMatrix] ***WARNING*** sigdb=",sigdb)
             return(NULL)
         }
-        if(!is.null(select)) {
-            dbg("[getEnrichmentMatrix] length(select)=",length(select))
-            dbg("[getEnrichmentMatrix] head(select)=",head(select))
-        }        
         if(!grepl("h5$",sigdb)) {
             stop("getEnrichmentMatrix:: only for H5 database files")
             return(NULL)
@@ -370,7 +357,6 @@ ConnectivityBoard <- function(input, output, session, env)
         ## get the foldchanges of selected comparison and neighbourhood
         method="umap";dims=2
         method <- input$cmap_layout
-        dbg("[getConnectivityPositions] method=",method)
         ##if(!method %in% c("pca","tsne","umap","volcano")) return(NULL)
 
         if(method=="volcano") {
@@ -431,7 +417,7 @@ ConnectivityBoard <- function(input, output, session, env)
         rownames(pos) <- cn
         xyz <- c("x","y","z")
         colnames(pos) <- paste0(toupper(method),"-",xyz[1:ncol(pos)])
-        dbg("retrieved",nrow(pos),"cluster positions from H5 file")
+        dbg("[getConnectivityPositions] retrieved",nrow(pos),"cluster positions from H5 file")
 
         return(pos)
     })
@@ -498,7 +484,6 @@ ConnectivityBoard <- function(input, output, session, env)
         qsig <- input$connectivityScoreTable_qsig
         scores <- scores[which(scores$padj <= qsig),,drop=FALSE]        
         scores <- scores[order(-scores$score),,drop=FALSE]
-        dbg("[getConnectivityScores] dim(scores) = ",dim(scores))
         
         no.le <- !("leadingEdge" %in% colnames(scores))
         no.le
@@ -512,10 +497,8 @@ ConnectivityBoard <- function(input, output, session, env)
             dbg("[getConnectivityScores] recomputing leading edge")
             ## recreate "leadingEdge" list
             sig <- getSignatureMatrix(sigdb)
-            dbg("[getConnectivityScores] names(sig)=",names(sig) )            
             fc  <- getCurrentContrast()$fc
             fc  <- fc[order(-abs(fc))]
-            dbg("[getConnectivityScores] length(fc)=",length(fc) )
 
             fc.up <- head(names(fc[fc>0]),ntop)
             fc.dn <- head(names(fc[fc<0]),ntop)
@@ -524,8 +507,6 @@ ConnectivityBoard <- function(input, output, session, env)
             e2 <- apply(sig$dn, 2, function(g) intersect(ff,g))
             ee <- mapply(c, e1, e2)
             ee <- ee[match(scores$pathway,names(ee))]
-            dbg("[getConnectivityScores] length(ee)=",length(ee) )
-            if(length(ee)) dbg("[getConnectivityScores] head(ee[[1]])=",head(ee[[1]]))
             scores$leadingEdge <- ee
         }
         if(no.le && abs_score==FALSE) {            
@@ -714,9 +695,6 @@ ConnectivityBoard <- function(input, output, session, env)
         gg <- intersect(names(fc),rownames(F)) ## uppercase for MOUSE
         fc <- fc[gg]
         
-        dbg("[cmap_FCFCscatter] dim.F = ",dim(F))
-        dbg("[cmap_FCFCscatter] length(fc) = ",length(fc))
-        
         nplots <- mfplots[1]*mfplots[2]
         F <- F[gg,1:min(nplots,ncol(F)),drop=FALSE]        
         F0 <- F0[gg,colnames(F),drop=FALSE]        
@@ -862,7 +840,6 @@ ConnectivityBoard <- function(input, output, session, env)
         
         F <- getTopProfiles()
         F[is.na(F)] <- 0
-        dbg("[cumulativeFCtable] dim.F=",dim(F))
 
         ## maximum 10??
         MAXF = 20
@@ -977,13 +954,11 @@ ConnectivityBoard <- function(input, output, session, env)
         if(is.null(df)) return(NULL)        
         ii <- connectivityScoreTable$rows_all()
         shiny::req(ii)
-        dbg("[cumEnrichmentTable] length(ii)=",length(ii))
         
         sel <- head(df$pathway[ii],10)
         sigdb <- input$cmap_sigdb
         F <- getEnrichmentMatrix(sigdb, select=sel)
         if(is.null(F)) return(NULL)
-        dbg("[cumEnrichmentTable] dim(F)=",dim(F))
 
         ## multiply with sign of enrichment
         rho1 <- df$rho[match(colnames(F),df$pathway)]
@@ -1129,10 +1104,7 @@ ConnectivityBoard <- function(input, output, session, env)
         
         ngs <- inputData()
         shiny::req(ngs, input$cmap_contrast)
-        
-
-        dbg("[connectivityMap.RENDER] reacted")
-
+       
         ## get positions
         res0 <- getThresholdedConnectivityScores()
         if(is.null(res0)) return(NULL)        
@@ -1140,8 +1112,6 @@ ConnectivityBoard <- function(input, output, session, env)
         pos0 <- getConnectivityPositions()
         if(is.null(pos0)) return(NULL)
         if(is.null(res0)) return(NULL)
-
-        dbg("[connectivityMap.RENDER] dim(pos0) = ",dim(pos0))
         
         cmap_grouped <- "grouped" %in% input$cmap_plotoptions
         if(cmap_grouped) {
@@ -1467,11 +1437,6 @@ ConnectivityBoard <- function(input, output, session, env)
     })
 
     leadingEdgeGraph.VISNETWORK <- shiny::reactive({
-
-
-
-
-        ## return(NULL)
 
         dbg("[leadingEdgeGraph.VISNETWORK] reacted")
         

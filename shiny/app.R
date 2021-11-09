@@ -223,13 +223,21 @@ server = function(input, output, session) {
         env.loaded <- env[["load"]]$loaded()
         message("[SERVER:env.loaded] env.loaded = ",env.loaded)                                    
         
-        if(!env[["load"]]$loaded()){
+        ## on.exit({
+        ##     message("[SERVER:env.loaded] on.exit::removing Modal")                        
+        ##     Sys.sleep(4*modules_loaded)  
+        ##     shiny::removeModal()  ## remove modal from LoadingBoard            
+        ## })
+
+        if(env[["load"]]$loaded()==0){
             message("[SERVER:env.loaded] env.loaded = FALSE")                                    
             return(NULL)
         }
         
         if(modules_loaded) {
             message("[SERVER:env.loaded] modules already loaded!")            
+            Sys.sleep(4)  
+            shiny::removeModal()  ## remove modal from LoadingBoard            
             return(NULL)
         }
         modules_loaded <<- TRUE
@@ -265,7 +273,9 @@ server = function(input, output, session) {
                 env[["qa"]] <- shiny::callModule( QuestionBoard, "qa", lapse = -1)
             }
         })
-        
+        message("[SERVER:env.loaded] --------- done! ----------")
+        ## remove modal from LoadingBoard            
+        shiny::removeModal()          
     })
 
     
