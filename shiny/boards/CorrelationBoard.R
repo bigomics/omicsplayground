@@ -537,7 +537,6 @@ CorrelationBoard <- function(input, output, session, env)
             if(length(sel)==1) names(rho) <- rownames(R)[sel]
         }
 
-
         dbg("[cor_scatter.PLOTFUN] 2: len.rho = ",length(rho))
         if(length(rho)==0) return(NULL)
 

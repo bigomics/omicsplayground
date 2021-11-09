@@ -465,13 +465,12 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
     ##=============================== MODAL DIALOGS ===================================
     ##=================================================================================
     
-    startup_count=0
-
     particlesjs.conf <- rjson::fromJSON(file="resources/particlesjs-config.json")
 
+    ## beer_count=0
     ## shiny::observeEvent( input$action_beer, {
     ##     dbg("buy beer button action\n")
-    ##     startup_count <<- startup_count + 1    
+    ##     beer_count <<- beer_count + 1    
     ##     USER$logged <- TRUE
     ##     USER$name   <- "beer buddy"
     ##     shiny::removeModal()
@@ -525,7 +524,9 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         pgxfile = NULL
         pgxfile = shiny::isolate(selectedPGX())
 
+        ## check if file is there
         if(is.na(pgxfile) || is.null(pgxfile) || pgxfile=="" || length(pgxfile)==0) {
+            message("[LoadingBoard@loadbutton] ERROR file not found : ",pgxfile,"\n")
             return(NULL)
         }
 
@@ -538,9 +539,10 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         pgx <- loadPGX(pgxfile)
 
         if(is.null(pgx)) {
-            cat("[LoadingBoard::<loadbutton>] ERROR file not found : ",pgxfile,"\n")
+            message("[LoadingBoard@loadbutton] ERROR loading PGX file ",pgxfile,"\n")
             beepr::beep(10)
-            if(loadedDataset()) shiny::removeModal()
+            ##if(loadedDataset()) shiny::removeModal()  ## why??
+            shiny::removeModal()            
             return(NULL)
         }
         
@@ -552,19 +554,25 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
             cat("[LoadingBoard::<loadbutton>] ERROR in object initialization\n")
             beepr::beep(10)
             shiny::showNotification("ERROR in object initialization!\n")
-            if(loadedDataset()) shiny::removeModal()
+            ##if(loadedDataset()) shiny::removeModal()
+            shiny::removeModal()            
             return(NULL)
         }
         if(is.null(pgx$name)) pgx$name <- sub("[.]pgx$","",pgxfile)
 
-        ##----------------- remove modal??
-        if(startup_count>0) {
-            Sys.sleep(4)
-            if(loadedDataset()) shiny::removeModal()
-        }
-        
-        loadedDataset(TRUE)
+            
+        loadedDataset(TRUE)   ## notify new data uploaded
         currentPGX(pgx)
+
+        ##----------------- remove modal on exit??
+        Sys.sleep(3)
+        ##if(loadedDataset()) shiny::removeModal()
+        shiny::removeModal()            
+##        on.exit({
+##            message("[SERVER:env.loaded] on.exit::removing Modal")                        
+##            shiny::removeModal()  ## what modal??? IK 9.11.21
+##        })
+
     })
     ##}, ignoreNULL=FALSE )
     ##}, ignoreNULL=TRUE )
@@ -810,19 +818,20 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
             } else {
                 msg1 <- "<b>Ready!</b><br>Your data is ready. You can now start exploring your data."
             }
-            loadedDataset(TRUE)
-            shiny::showModal(
-                       shiny::modalDialog(
-                                  shiny::HTML(msg1),
-                                  title = NULL,
-                                  size = "s",
-                                  footer = shiny::tagList(
-                                                      ## savedata_button,
-                                                      ## shiny::actionButton(ns("sharedata"), "Share with others", icon=icon("share-alt")),
-                                                      shiny::modalButton("Start!")
-                                                  )
-                              ))
-            shiny::updateTabsetPanel(session, "tabs",  selected = "Datasets")
+            loadedDataset(TRUE)  ## notify new data uploaded
+
+            showModal(
+                modalDialog(
+                    HTML(msg1),
+                    title = NULL,
+                    size = "s",
+                    footer = tagList(
+                        ## savedata_button,
+                        ## shiny::actionButton(ns("sharedata"), "Share with others", icon=icon("share-alt")),
+                        modalButton("Start!")
+                    )
+                ))
+            updateTabsetPanel(session, "tabs",  selected = "Datasets")
         })
 
     }
