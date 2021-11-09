@@ -499,11 +499,10 @@ logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentica
 ## conditionally add if firebase authentication is enabled
 ##stop.tab    <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='sigstop()'>Stop</a>"))
 stop.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='quit()'>Quit</a>"))
-##if( opt$AUTHENTICATION == "shinyproxy" && in.shinyproxy() ) {
 if(opt$AUTHENTICATION == "shinyproxy") {
-    ##logout.tab <- shiny::tabPanel(title=shiny::HTML("<a id='logout' href='/logout'>Logout"))
+    ##logout.tab <- shiny::tabPanel(shiny::HTML("<a id='logout' href='/logout'>Logout"))
     ##logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='logout()' id='authentication-logout'>Logout</a>"))
-    logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/logout' id='authentication-logout'>Logout</a>"))        
+    logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick=\"location.href='/logout'\" id='authentication-logout'>Logout</a>"))
 }
 
 upgrade.tab <- NULL
