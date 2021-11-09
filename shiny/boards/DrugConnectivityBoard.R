@@ -126,13 +126,9 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         
         contr = input$dsea_contrast
         if(is.null(contr)) return(NULL)
-
-        dbg("[getActiveDSEA] 1: contr = ", contr)
         
         dmethod <- input$dsea_method
         if(is.null(dmethod)) return(NULL)
-
-        dbg("[getActiveDSEA] 2: dmethod = ",dmethod)
         
         dr    <- ngs$drugs[[dmethod]]
         nes   <- round(dr$X[,contr],4)
@@ -144,8 +140,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         nes[is.na(nes)] <- 0
         qv[is.na(qv)] <- 1
         pv[is.na(pv)] <- 1
-
-        dbg("[getActiveDSEA] 3: dim.annot = ",dim(annot))        
         
         ## !!!SHOULD MAYBE BE DONE IN PREPROCESSING???
         if(is.null(annot)) {
@@ -155,8 +149,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             rownames(annot) <- annot$pert_iname
         }
 
-        dbg("[getActiveDSEA] 4: ")
-
         ## compile results matrix
         jj <- match(toupper(drug), toupper(rownames(annot)))
         annot <- annot[jj,c("moa","target")]        
@@ -165,9 +157,11 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         ##dt <- dt[order(dt$pval,-abs(dt$NES)),]
         dt <- dt[order(-dt$NES),]
         
-        dbg("[getActiveDSEA] 5: ")
+        if(length(input$dseatable_filter)==0) {
+            ## sometimes UI is not ready
+            return(NULL)
+        }
         
-        shiny::req(input$dseatable_filter)
         if(input$dseatable_filter) {
             sel <- which(dt$moa!='' | dt$target!='')
             dt <- dt[sel,,drop=FALSE]
@@ -244,54 +238,47 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         dbg("[dsea_enplots.RENDER] called!")
         
         dsea <- getActiveDSEA()
-        dt <- dsea$table
-
-        dbg("[dsea_enplots.RENDER] 1:")
+        dt <- dsea$table        
         
         ## filter with table selection/search
         ii  <- dsea_table$rows_selected()
         jj  <- dsea_table$rows_all()
-        shiny::req(jj)
-        if(length(jj)>0) {
+        shiny::req(jj)  ## must have non-empty table
+        
+        if(length(ii)>0) {
+            dt <- dt[ii,,drop=FALSE]
+        }
+        if(length(ii)==0 && length(jj)>0) {
             dt <- dt[jj,,drop=FALSE]
         }
 
-        dbg("[dsea_enplots.RENDER] dim.dt", dim(dt))
         if(nrow(dt)==0) return(NULL)
         
         ## rank vector for enrichment plots
         dmethod <- input$dsea_method        
-        dbg("[dsea_enplots.RENDER] dmethod = ",dmethod)
-
         rnk <- dsea$stats
-        dbg("[dsea_enplots.RENDER] len.rnk = ", length(rnk))
         if(length(rnk)==0) return(NULL)
         
-        ## ENPLOT TYPE        
-        if(length(ii)>0) {
-            itop = ii[1]
-        } else {
-            ##itop <- c( head(order(-dt$NES),10), tail(order(-dt$NES),10))        
-            itop <- 1:min(16,nrow(dt))
-        }
-        if(length(itop)==1) {
+        ## ENPLOT TYPE
+        if(nrow(dt)==1) {
             par(oma=c(1,1,1,1))
-            par(mfrow=c(1,1), mar=c(4,4,1,2), mgp=c(2.3,0.9,0))
+            par(mfrow=c(1,1), mar=c(4,4,1.1,2), mgp=c(2.3,0.9,0))
             lab.cex = 1            
             xlab="Rank in ordered dataset"
             ylab="Rank metric"
             nc=1
         } else {
+            dt <- head(dt, 16)
             lab.cex = 0.75
             xlab=''
             ylab=""
-            nc = ceiling(sqrt(length(itop)))           
+            nc = ceiling(sqrt(nrow(dt)))           
             par(oma=c(0,1.6,0,0))
             par(mfrow=c(nc,nc), mar=c(0.3,1.0,1.3,0), mgp=c(1.9,0.6,0))
         }
         
         i=1
-        for(i in itop) {
+        for(i in 1:nrow(dt)) {
             dx <- rownames(dt)[i]
             dx
             gmtdx <- grep(dx,names(rnk),fixed=TRUE,value=TRUE)  ## L1000 naming
@@ -308,7 +295,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             qv  <- round(dt$padj[i],3)
             tt <- c( paste("NES=",nes), paste("q=",qv) )
             legend("topright", legend=tt, cex=0.8, y.intersp=0.85, bty='n')
-            if(i%%nc==1 && length(itop)>1) {
+            if(i%%nc==1 && nrow(dt)>1) {
                 mtext('rank metric', side=2, line=1.8, cex=lab.cex)
             }
         }
@@ -327,7 +314,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         dbg("[dsea_moaplot.RENDER] reacted")
         
         res <- getMOA()
-        dbg("[dsea_moaplot.RENDER] dim(res)=",dim(res))
         ntop = 16
         jj <- unique(c(head(order(-res$NES),ntop),tail(order(-res$NES),ntop)))
         moa.top <- res$NES[jj]
@@ -348,10 +334,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         if(is.null(ngs$drugs)) return(NULL)
         shiny::validate(shiny::need("drugs" %in% names(ngs), "no 'drugs' in object."))    
 
-        dbg("[dsea_moaplot.RENDER2] reacted")
-        
         res <- getMOA()
-        dbg("[dsea_moaplot.RENDER2] dim(res)=",dim(res))
         ntop = 32
         jj <- unique(c(head(order(-res$NES),ntop),tail(order(-res$NES),ntop)))
         moa.top <- res$NES[jj]
@@ -653,10 +636,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         var <- res$stats[,contr]
         ## highlight genes from table
         nes1  <- res$X[,contr]  ## NES for drugs
-        
-        dbg("[plotCMAP] dim.pos = ", dim(pos) )        
-        dbg("[plotCMAP] len.var = ", length(var) )                
-        
+                
         ## compute median position of drugs
         xdrugs <- gsub("[_@].*","",rownames(pos))
         pos1 <- apply(pos,2,function(x) tapply(x,xdrugs,median))
@@ -684,7 +664,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         moa3 <- moa.target
         nes3 <- array(moa3$NES, dimnames=list(moa3$pathway))               
         var3 <- nes3[rownames(pos3)]
-        dbg("[plotCMAP] head.var3 = ", head(var3))
         
         ## create extended positions and variable (drugs, moa, target)
         var  <- var / max(abs(var),na.rm=TRUE)     ## replicate level
@@ -704,14 +683,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         xpos <- rbind(pos, pos1, pos2, pos3)
         xvar <- c(var, var1, var2, var3)
         sum(duplicated(names(xvar)))
-        
-        dbg("[plotCMAP] len.xvar = ", length(xvar))
-        dbg("[plotCMAP] dim.xpos = ", dim(xpos))
-        dbg("[plotCMAP] names.xvar = ", head(names(xvar)))
-        dbg("[plotCMAP] names.var1 = ", head(names(var1)))
-        dbg("[plotCMAP] names.var2 = ", head(names(var2)))        
-        dbg("[plotCMAP] names.var3 = ", head(names(var3)))
-        
+                
         ##nlabel=10
         h1=h2=NULL
         ## limit number of labels/points
@@ -740,13 +712,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         if(!showlabel) {
             h2 <- NULL
         }
-        
-        dbg("[plotCMAP] len.h1 = ", length(h1) )
-        dbg("[plotCMAP] len.h2 = ", length(h2) )        
-        dbg("[plotCMAP] h1 = ", head(h1))
-        dbg("[plotCMAP] h2 = ", head(h2))
-        dbg("[plotCMAP] h2.in.pos1 = ", table(h2 %in% rownames(xpos) ))
-        
+                
         if(is.null(title)) title <- contr
         
         plt <- NULL
@@ -760,13 +726,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
             }
             wcex[is.na(wcex)] <- 1
             
-            dbg("[plotCMAP] len.wcexlab = ", length(wcex))
-            dbg("[plotCMAP] min.wcexlab = ", min(wcex,na.rm=TRUE))
-            dbg("[plotCMAP] max.wcexlab = ", max(wcex,na.rm=TRUE))                        
-            dbg("[plotCMAP] head.wcexlab = ", head(wcex))
-            dbg("[plotCMAP] head.wcexlab.h2 = ", head(wcex[h2]))                        
-            dbg("[plotCMAP] sum.isna.wcexlab = ", sum(is.na(wcex)))
-
             pgx.scatterPlotXY.BASE(
                 xpos, var=xvar, title = title,
                 xlab = "UMAP-x", ylab = "UMAP-y",
@@ -805,37 +764,28 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         shiny::req(db)
         shiny::req(contr)
 
-        dbg("[dsea_cmap.RENDER] 1:")
         dsea <- getActiveDSEA()
         
         ## get reactive values
         rows_selected=1;rows_all=1:nrow(dsea$table)
         rows_selected <- cmap_table$rows_selected()
         rows_all <- cmap_table$rows_all()                
-        dbg("[dsea_cmap.RENDER] 1: rows_selected = ", head(rows_selected))
-        dbg("[dsea_cmap.RENDER] 1: rows_all = ", head(rows_all))
         
         if(is.null(rows_all) || length(rows_all)==0) {
             return(NULL)
         }
 
         drugs_all <- rownames(dsea$table)[rows_all]
-        
-        dbg("[dsea_cmap.RENDER] 2:")
-        labtype='moa';nlabel=10;showlab=lab.wt=1
+        ##labtype='moa';nlabel=10;showlab=lab.wt=1
 
         moa.class  <- getMOA.class()
         moa.target <- getMOA.target()    
-
-        dbg("[dsea_cmap.RENDER] 3:")
                
         labtype <- input$cmap_labeltype
         nlabel  <- as.integer(input$cmap_nlabel)
         showlab <- ("show" %in% input$cmap_labeloptions)
         lab.wt <- !("fixed" %in% input$cmap_labeloptions)
-        
-        dbg("[dsea_cmap.RENDER] 4:")
-        
+                
         ##---------------  plot -------------------
         all.contr <- colnames(pgx$contrasts)
         all.contr
