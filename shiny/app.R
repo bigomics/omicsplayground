@@ -270,8 +270,9 @@ server = function(input, output, session) {
                 env[["qa"]] <- shiny::callModule( QuestionBoard, "qa", lapse = -1)
             }
         })
-
+        
     })
+
     
     ## message("[SERVER] all boards called:",paste(names(env),collapse=" "))
     message("[SERVER] boards enabled:",paste(names(which(ENABLED)),collapse=" "))
@@ -313,6 +314,7 @@ server = function(input, output, session) {
         lapply(MAINTABS, function(m) shiny::showTab("maintabs",m))
         
         ## Beta features
+        toggleTab("drug-tabs","Connectivity map (beta)",show.beta)                
         toggleTab("maintabs","TCGA survival (beta)",show.beta,req.file="tcga_matrix.h5")
         ##toggleTab("maintabs","Cluster features",show.beta)
         toggleTab("maintabs","WGCNA (beta)",show.beta)

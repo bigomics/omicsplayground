@@ -140,7 +140,7 @@ CorrelationBoard <- function(input, output, session, env)
     })
     shiny::outputOptions(output, "corDiff_UI", suspendWhenHidden=FALSE) ## important!!!    
 
-    corGraph_caption = "<h3>Gene Correlation Network</h3>Visualization of gene correlation as network or UMAP. <b>(a)</b> <b>Partial correlation network</b> around the selected gene. <b>(b)</b> <b>Correlation UMAP</b>."
+    corGraph_caption = "<h3>Gene Correlation Network</h3>Visualization of gene correlation as network or UMAP. <b>(a)</b> <b>Partial correlation network</b> around the selected gene. <b>(b)</b> <b>Correlation UMAP</b>. Clustering of genes  colored by correlation (or covariance)."
     
     output$corGraph_UI <- shiny::renderUI({
         shiny::fillCol(
@@ -323,8 +323,7 @@ CorrelationBoard <- function(input, output, session, env)
         
         dbg("[getGeneCorr] reacted!")
 
-        samples=colnames(ngs$X);gene="CD4"
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+        gene="CD4"
         gene <- input$cor_gene
         dbg("[getGeneCorr] 1a: gene = ",gene)        
         if(is.null(gene)) return(NULL)    
@@ -348,7 +347,7 @@ CorrelationBoard <- function(input, output, session, env)
         
         R <- pgx.getGeneCorrelation(gene0, xref=xref)    
         if(is.null(R)) return(NULL)        
-        R <- R[rownames(zx),]
+        R <- R[rownames(zx),,drop=FALSE]
         
         zx <- zx - rowMeans(zx, na.rm=TRUE)
         sdx <- sqrt(rowMeans(zx**2))
@@ -365,7 +364,56 @@ CorrelationBoard <- function(input, output, session, env)
 
         dbg("[getGeneCorr] 4: dim.R = ",dim(R))
 
-        R <- R[order(R[,"cor"],decreasing=TRUE),]
+        R <- R[order(R[,"cor"],decreasing=TRUE),,drop=FALSE]
+        
+        R
+    })
+
+    getFullGeneCorr <- shiny::reactive({
+
+        ngs <- inputData()
+        shiny::req(ngs)	
+        
+        dbg("[getFullGeneCorr] reacted!")
+
+        gene="CD4"
+        gene <- input$cor_gene
+        dbg("[getGeneCorr] 1a: gene = ",gene)        
+        if(is.null(gene)) return(NULL)    
+
+        dbg("[getGeneCorr] 1b:")
+        
+        ## corr always in log.scale and restricted to selected samples subset
+        zx <- ngs$X
+        zx.genes0 <- rownames(zx)
+        ##rownames(zx) <- toupper(sub(".*:","",rownames(zx)))  ## NEED RETHINK!
+        zx.genes <- as.character(ngs$genes[rownames(zx),]$gene_name)
+        rownames(zx) <- toupper(zx.genes)        
+        xref <- list("cor" = 2**zx,
+                     "cor.HPA" = as.matrix(TISSUE),
+                     "cor.ImmProt" = as.matrix(IMMPROT))
+        gene0 <- toupper(gene)  ## uppercase mouse
+
+        dbg("[getGeneCorr] 2: gene0 = ", gene0)        
+        R <- pgx.getGeneCorrelation(gene0, xref=xref)    
+        if(is.null(R)) return(NULL)        
+        R <- R[rownames(zx),,drop=FALSE]
+        
+        zx <- zx - rowMeans(zx, na.rm=TRUE)
+        sdx <- sqrt(rowMeans(zx**2))
+        R <- cbind(R, cov=R[,"cor"] * sdx * sdx[gene])
+        
+        dbg("[getGeneCorr] 3: dim.R = ",dim(R))
+        
+        rho.genes = rownames(zx)
+        if("hgnc_symbol" %in% colnames(ngs$genes)) {
+            rho.genes = as.character(ngs$genes[zx.genes0,]$hgnc_symbol)
+        }
+        R <- R[match(rho.genes,rownames(R)),,drop=FALSE]
+        rownames(R) <- zx.genes0
+
+        dbg("[getGeneCorr] 4: dim.R = ",dim(R))
+        R <- R[order(R[,"cor"],decreasing=TRUE),,drop=FALSE]
         
         R
     })
@@ -389,22 +437,29 @@ CorrelationBoard <- function(input, output, session, env)
         ##rho <- rho[order(-rho)]
 
         R <- getGeneCorr()            
-        dbg("[cor_barplot.PLOTFUN] 1: dim.R = ",dim(R))
+        dbg("[cor_barplot.PLOTFUN] 1: dim(R) = ",dim(R))
         sel <- cor_table$rows_all()
         shiny::req(sel)
+        
+        dbg("[cor_barplot.PLOTFUN] 1: dim(df) = ",dim(df))        
+        dbg("[cor_barplot.PLOTFUN] 1: length(sel) = ",length(sel))        
+        if(length(sel)>nrow(R)) return(NULL) ## cor_table!=R mismatch!!
+
         NTOP=50
         sel <- head(sel,NTOP)
         rho <- R[sel,"cor"]
         if(length(sel)==1) names(rho) <- rownames(R)[sel]
+
+        dbg("[cor_barplot.PLOTFUN] 1: length(rho) = ",length(rho))        
         
         prho <- df$pcor
         names(prho) <- rownames(df)
         prho <- prho[match(names(rho),names(prho))]
         names(prho) <- names(rho)
         ##prho[is.na(prho)] <- 0            
-
         ylim0 <- c(-1,1)*max(abs(rho))*1.05
-            
+
+        
         par(mfrow=c(1,1), mar=c(10,4,1,0.5))
         barplot(rho, beside=FALSE, las=3,
                 ylim = ylim0,
@@ -454,8 +509,8 @@ CorrelationBoard <- function(input, output, session, env)
 
         ngs <- inputData()
         shiny::req(input$cor_gene)
-        X <- getFilteredExpression()
 
+        X <- getFilteredExpression()
         this.gene=rownames(ngs$X)[1]
         this.gene <- input$cor_gene
 
@@ -472,8 +527,10 @@ CorrelationBoard <- function(input, output, session, env)
             R <- getGeneCorr()            
             dbg("[cor_scatter.PLOTFUN] 1: dim.R = ",dim(R))
             sel <- cor_table$rows_all()
-            shiny::req(sel)
-            rho <- head(R[sel,"cor"],NTOP)
+            shiny::req(sel)  ## wait for table
+            dbg("[cor_scatter.PLOTFUN] 1: length(sel) = ",length(sel))            
+            sel <- head(sel,NTOP)
+            rho <- R[sel,"cor"]
             if(length(sel)==1) names(rho) <- rownames(R)[sel]
         }
 
@@ -684,7 +741,7 @@ CorrelationBoard <- function(input, output, session, env)
                 df, rownames=FALSE, ## escape = c(-1),
                 extensions = c('Buttons','Scroller'),
                 ##selection=list(mode='multiple', target='row', selected=c(1)),
-                selection=list(mode='single', target='row', selected=c(1)),
+                selection = list(mode='single', target='row', selected=c(1)),
                 class = 'compact cell-border stripe hover',
                 fillContainer = TRUE,
                 options=list(
@@ -801,7 +858,7 @@ CorrelationBoard <- function(input, output, session, env)
                       "graphopt"="graphopt","tree layout"="tree")
 
     cor_graph.opts <- shiny::tagList(
-        shiny::sliderInput(ns('cor_graph_radius'),'radius:', 1, 8, 3, 1),
+        shiny::sliderInput(ns('cor_graph_radius'),'radius:', 1, 8, 2, 1),
         shiny::sliderInput(ns('cor_graph_threshold'),'pcor threshold:', 0, 1, 0.90),        
         shiny::selectInput(ns('cor_graph_layout'),'layout:', choices=GRAPH.LAYOUTS)
     )
@@ -847,29 +904,40 @@ CorrelationBoard <- function(input, output, session, env)
             return(NULL)
         }
         
-        R <- getGeneCorr()
-        dbg("[cor_table.RENDER] nrow.R = ", nrow(R))        
-        if(is.null(R)) return(NULL)
+        R0 <- getFullGeneCorr()
+        R1 <- getGeneCorr()
+        dbg("[cor_umap.PLOTFUN] dim(R0) = ", dim(R0))
+        dbg("[cor_umap.PLOTFUN] dim(R1) = ", dim(R1))                
+
+        if(is.null(R1)) return(NULL)
         gene='ESR1'
         gene <- input$cor_gene
         pos <- ngs$cluster.genes$pos[['umap2d']]
         if(input$umap_param=='cov') {
-            rho <- R[,'cov']
+            rho0 <- R0[,'cov']
+            rho1 <- R1[,'cov']
         } else {
-            rho <- R[,"cor"]
+            rho0 <- R0[,"cor"]
+            rho1 <- R1[,"cor"]            
         }
-        rho <- rho[match(rownames(pos),names(rho))]
-        names(rho) <- rownames(pos)
+        rho0 <- rho0[match(rownames(pos),names(rho0))]
+        names(rho0) <- rownames(pos)
         ##rho[is.na(rho)] <- 0
         
         higenes <- c(gene)
-        higenes <- names(tail(sort(rho**2),20))
-        higenes <- unique(names(c(head(sort(rho),10),tail(sort(rho),10))))
-        cexlab <- ifelse(length(higenes)==1, 2.5, 1.6)
+        higenes <- names(tail(sort(rho1**2),20))
+        higenes <- unique(names(c(head(sort(rho1),10),tail(sort(rho1),10))))
+        cexlab <- ifelse(length(higenes)==1, 2.2, 1.3)
+
+        if(1) {
+            ## attenuate genes *not* in current selected geneset
+            ii <- which(!names(rho0) %in% names(rho1))
+            rho0[ii] <- 0.2*rho0[ii]
+        }
         
         p <- pgx.plotGeneUMAP(
             ngs, pos = pos, ##contrast=ct,
-            value = rho, title='',
+            value = rho0, title='',
             cex = 0.9, cex.lab = cexlab, 
             hilight = higenes, ntop = 20,
             plotlib = "plotly")
@@ -879,10 +947,10 @@ CorrelationBoard <- function(input, output, session, env)
     })
 
     cor_umap.opts <- shiny::tagList(
-        shiny::radioButtons(ns('umap_param'),'parameter:', choices=c("cor","cov"), inline=TRUE)
+        shiny::radioButtons(ns('umap_param'),'color by:', choices=c("cor","cov"), inline=TRUE)
     )
 
-    cor_umap_info <- "<b>Gene UMAP.</b> Partial correlation graph centered on selected gene with top most correlated features. Red edges correspond to negative correlation, grey edges to positive correlation. Width of the edges is proportional to the absolute partial correlation value of the gene pair."
+    cor_umap_info <- "<b>Correlation UMAP.</b> UMAP clustering of genes using covariance as distance metric and colored by correlation (or covariance). Genes that are correlated are generally positioned close to each other. Red corresponds to positive correlation/covariance, blue for negative."
     
     shiny::callModule(
         plotModule,
