@@ -3,9 +3,8 @@ let pricing;
 Shiny.addCustomMessageHandler('set-user', function(msg) {
 	$('#authentication-user').text(msg.user);
 	pricing = msg.pricing;
-
 	if(msg.level == "premium"){
-		$('#authentication-upgrade').hide();
+		// $('#authentication-upgrade').hide();  // really?
 	}
 });
 
@@ -199,13 +198,12 @@ function priceChange(name){
 		$('#yearlyCheck').prop('checked', false);
 	} else {
 		$('#monthlyCheck').prop('checked', false);
-	}
-		
+	}		
 	if($('#yearlyCheck').prop('checked')){
-		$('#starter-pricing').text('CHF480/year');
-		$('#premium-pricing').text('CHF4800/year');
+		$('#starter-pricing').text('CHF49 / month');
+		$('#premium-pricing').text('CHF490 / month');
 	} else {
-		$('#starter-pricing').text('CHF48/month');
-		$('#premium-pricing').text('CHF480/month');
+		$('#starter-pricing').text('CHF69 / month');
+		$('#premium-pricing').text('CHF690 / month');
 	}
 }

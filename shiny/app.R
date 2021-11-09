@@ -504,9 +504,9 @@ if(opt$AUTHENTICATION == "shinyproxy") {
     ##logout.tab <- shiny::tabPanel(title=shiny::HTML("<a id='logout' href='/logout'>Logout"))
     logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/logout' onClick='logout()' id='authentication-logout'>Logout</a>"))    
 }
+
 upgrade.tab <- NULL
 if(opt$AUTHENTICATION == "firebase") {
-    dbg("[MAIN] adding upgrade menu tab...")
     upgrade.tab <- shiny::tabPanel(shiny::HTML("<a onClick='show_plans()' style='font-weight:bold;color:#2a9d8f;cursor:pointer;' id='authentication-upgrade'>Upgrade</a>"))
 }
 

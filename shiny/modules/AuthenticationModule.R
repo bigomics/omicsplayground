@@ -96,135 +96,110 @@ NoAuthenticationModule <- function(input, output, session, username="", email=""
 ##================================================================================
 
 
-upgrade.dialog = shiny::HTML("
-Do you want to remove the 60 minutes time limit? Do you want to be able to save more datasets?
-<br><br><center><table width=90% style='background-color:#F4FAFF;'><tr>
-<th>BASIC<br></th>
-<th>STARTER<br></th>
-<th>PREMIUM</th>
-<th>ENTERPRISE</th></tr>
-<tr><td>Try out for free</td>
-<td>Great to start</td>
-<td>For professionals</td>
-<td>Enterprise-Ready</td>
-<tr><td><h3><b>FREE</b></h3></td>
-<td><h3><b>Soon!</b></h3></td>
-<td><h3><b>Soon!</b></h3></td>
-<td><h3><b>Contact us!</b></h3></td>
-</tr><tr><td>&nbsp;</tr>
-<tr>
-<td><ul><li>Host up to 3 datasets</li><li>60 minutes time limit</li>
-<li>Up to 25 samples/dataset</li><li>Up to 5 comparisons</li></ul>
-<td><ul><li>Host up to 10 datasets</li><li>3 hours time limit</li>
-<li>Up to 100 samples/dataset</li><li>Up to 10 comparisons</li></ul>
-<td><ul><li>Host up to 100 datasets</li><li>8 hours time limit</li>
-<li>Up to 2000 samples/dataset</li><li>Up to 100 comparisons</li></ul>
-<td><ul><li>Host unlimited datasets</li><li>No time limit</li>
-<li>Up to 2000 samples/dataset</li><li>Up to 100 comparisons</li></ul>
+upgrade.dialog <- function(ns, current.plan) {
 
-<tr>
-<td>
-<td><a onClick='upgrade_plan()' style='font-weight:bold;color:#2a9d8f;cursor:pointer;' id='authentication-upgrade'>Get Starter!</a>
-<td><a onClick='upgrade_plan()' style='font-weight:bold;color:#2a9d8f;cursor:pointer;' id='authentication-upgrade'>Get Premium!</a>
-<td><a style='font-weight:bold;color:#2a9d8f' href='mailto:info@bigomics.ch'>Send Email</a>
-</table></center><br><br>
-")
-
-upgrade.dialog <- function(ns){
-
+    btn_basic   <- "Go Basic!"
+    btn_starter <- "Get Starter!"
+    btn_premium <- "Get Premium!"    
+    if(current.plan=='free') btn_basic <- "Current Plan"
+    if(current.plan=='starter') btn_starter <- "Current Plan"
+    if(current.plan=='premium') btn_premium <- "Current Plan"    
+    
     modalDialog(
-        title = h2("Upgrade"),
-        size = "l",
-        p(
-          "Do you want to remove the 60 minutes time limit? Do you want to be able to save more datasets?"
-        ),
-        tags$label(
-          class = "radio-inline",
-          tags$input(
-            id = "monthlyCheck",
-            type = "radio",
-            name = "monthly",
-            onclick = "priceChange(name)",
-            checked = TRUE
-          ),
-          "Monthly"
-        ),
-        tags$label(
-          class = "radio-inline",
-          tags$input(
-            id = "yearlyCheck",
-            type = "radio",
-            name = "yearly",
-            onclick = "priceChange(name)"
-          ),
-          "Yearly"
-        ),
+        title = h3("Find the right OmicsPlayground plan for you"),
+        size = "m",
+        ##p("Do you want to remove the 60 minutes time limit? Do you want to be able to save more datasets?"),
         div(
           class = "row",
-          style = "padding-left:5rem;padding-right:5rem;",
+          style = "padding-left:4rem;padding-right:4rem;text-align:center;",
           div(
-            class = "col-md-3",
-            h3("Basic"),
+            class = "col-md-4",
+            style = "background:#F2FAFF;",              
+            HTML("<h4><b>Basic</b></h4>"),            
             p("Try for free"),
-            h4("Free"),
+            h3("Free!"),
             tags$ul(
+              class = "list-unstyled",                     
               tags$li("Host up to 3 datasets"),
-              tags$li("60 minutes time limit"),
-              tags$li("Up to 25 samples/dataset"),
+              tags$li("45 minutes time limit"),
+              tags$li("Up to 25 samples / dataset"),
               tags$li("Up to 5 comparisons")
-            )
+              ),
+            shiny::actionButton(ns("get_basic"),btn_basic),
+            br()
           ),
           div(
-            class = "col-md-3",
-            h3("Starter"),
+            class = "col-md-4",
+            style = "background:#E8F8FF;",              
+            h4(HTML("<b>Starter</b>")),
             p("Great to start"),
-            h4("CHF48/month", id = "starter-pricing"),
+            ##            h3("CHF49 / month", id = "starter-pricing"),
+            h3("Soon!"),            
             tags$ul(
+              class = "list-unstyled",                                          
               tags$li("Host up to 10 datasets"),
               tags$li("3 hours time limit"),
-              tags$li("Up to 100 samples/dataset"),
+              tags$li("Up to 100 samples / dataset"),
               tags$li("Up to 10 comparisons")
             ),
-            tags$button(
-              class = "btn btn-default",
-              "Get Starter!"
-            )
+            shiny::actionButton(ns("get_starter"),btn_starter),
+            ##shiny::actionButton(ns("get_starter"),"Get Starter!", onClick='upgrade_plan()'),
+            br()
           ),
           div(
-            class = "col-md-3",
-            h3("Premium"),
-            p("For professionals"),
-            h4("CHF480/month", id = "premium-pricing"),
-            tags$ul(
-              tags$li("Host up to 100 datasets"),
-              tags$li("8 hours time limit"),
-              tags$li("Up to 2000 samples/dataset"),
-              tags$li("Up to 100 comparisons")
-            ),
-            tags$button(
-              class = "btn btn-default",
-              "Get Premium!"
-            )
-          ),
-          div(
-            class = "col-md-3",
-            h3("Enterprise"),
-            p("Enterprise-ready"),
-            h4("Contact Us", id = "enterprise-pricing"),
-            tags$ul(
-              tags$li("Host unlimited datasets"),
-              tags$li("No time limit"),
-              tags$li("Up to 2000 samples/dataset"),
-              tags$li("Up to 100 comparisons")
-            ),
-            tags$button(
-              class = "btn btn-default",
-              "Send email",
-              href = "mailto:info@bigomics.com"
-            )
+              class = "col-md-4",
+              style = "background:#E2F4FF;",                            
+              HTML("<h4><b>Premium</b></h4>"),            
+              p("For power users or small groups"),
+              ##h3("CHF490 / month", id = "premium-pricing"),
+              h3("Soon!"),
+              tags$ul(
+                       class = "list-unstyled",                                          
+                       tags$li("Host up to 100 datasets"),
+                       tags$li("8 hours time limit"),
+                       tags$li("Up to 2000 samples / dataset"),
+                       tags$li("Up to 100 comparisons")
+                   ),
+              ##shiny::actionButton(ns("get_premium"),"Get Premium!", onClick='get_premium()'),
+              shiny::actionButton(ns("get_premium"),btn_premium),
+              br()
           )
+        ),  ## content div
+        div(
+            style = "margin-top:3rem;text-align:center;",              
+            HTML("Looking for <b>OmicsPlayground Enterprise</b> with data sharing and secured dedicated server? <a href='mailto:info@bigomics.com'>Contact sales for pricing</a>.")
+        ),
+        footer = tagList(
+            fillRow(
+                flex=c(NA,0.03,NA,1,NA,NA),
+                tags$label(
+                         class = "radio-inline",
+                         tags$input(
+                                  id = "yearlyCheck",
+                                  type = "radio",
+                                  name = "yearly",
+                                  onclick = "priceChange(name)",
+                                  checked = TRUE                                  
+                              ),
+                         "Billed yearly"
+                     ),
+                br(),
+                tags$label(
+                         class = "radio-inline",
+                         tags$input(
+                                  id = "monthlyCheck",
+                                  type = "radio",
+                                  name = "monthly",
+                                  onclick = "priceChange(name)"
+                              ),
+                         "Billed monthly"
+                     ),
+                br(),
+                shiny::actionButton(ns("manage"),"Manage Subscription"),
+                modalButton("Dismiss")
+            )
         )
-    )
+    )  ## modalDialog
 }
 
 FirebaseAuthenticationModule <- function(input, output, session)
@@ -418,10 +393,37 @@ FirebaseAuthenticationModule <- function(input, output, session)
     
     observeEvent( input$firebaseUpgrade, {    
         dbg("[FirebaseAuthenticationModule] observe::firebaseUpgrade reacted")        
+        current.plan <- USER$level
         showModal(
-            upgrade.dialog(ns)
+            upgrade.dialog(ns, current.plan)
         )
     })
+
+    observeEvent(input$manage, {        
+        dbg("[UserBoard] !!! input$manage called")
+        dbg("[UserBoard] !!! OMICS_STRIPE_KEY = ", Sys.getenv("OMICS_STRIPE_KEY"))
+        dbg("[UserBoard] !!! user$email() = ", USER$email)
+        dbg("[UserBoard] !!! user$stripe_id() = ", USER$stripe_id)        
+        dbg("[UserBoard] !!! user$href = ", USER$href)
+        
+        response <- httr::POST(
+            "https://api.stripe.com/v1/billing_portal/sessions",
+            body = list(
+                customer = USER$stripe_id,
+                return_url = USER$href
+            ),
+            httr::authenticate(
+                Sys.getenv("OMICS_STRIPE_KEY"),
+                ""
+            ),
+            encode = "form"
+        )
+
+        httr::warn_for_status(response)        
+        content <- httr::content(response)
+        session$sendCustomMessage('manage-sub', content$url)
+    })
+
     
     rt <- list(
         name   = shiny::reactive(USER$name),
