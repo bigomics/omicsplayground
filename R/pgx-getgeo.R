@@ -82,7 +82,7 @@ pgx.getGEOseries <- function(id, archs.h5=ARCHSH5, convert.hugo=TRUE)
     ## sum up values duplicated symbols
     ndup <- sum(duplicated(rownames(counts)))
     if(ndup > 0) {
-        counts1 <- tapply(1:nrow(counts), symbol, function(i) colSums(counts[i,,drop=FALSE]))
+        counts1 <- tapply(1:nrow(counts), symbol, function(i) Matrix::colSums(counts[i,,drop=FALSE]))
         counts <- do.call(rbind, counts1)
         remove(counts1)
     }
@@ -264,7 +264,7 @@ pgx.getGEOcounts.archs4 <- function(id, h5.file)
     gene_name <- gene_name[jj]
     ## sum intensities (linear)
     X2 <- tapply(1:nrow(X),gene_name,function(ii) {
-        colSums(X[ii,,drop=FALSE],na.rm=TRUE)  ## not log!!
+        Matrix::colSums(X[ii,,drop=FALSE],na.rm=TRUE)  ## not log!!
     })
     X2 <- do.call(rbind, X2)
     
@@ -390,7 +390,7 @@ pgx.getGEOcounts.GEOquery <- function(id) {
         fsymbol <- fsymbol[jj]
         ## sum intensities (linear)
         ex2 <- tapply(1:nrow(ex),fsymbol,function(ii) {
-            colSums(ex[ii,,drop=FALSE],na.rm=TRUE)  ## not log!!
+            Matrix::colSums(ex[ii,,drop=FALSE],na.rm=TRUE)  ## not log!!
         })
         ex2 <- do.call(rbind, ex2)
         expr.list[[names(gse)[k]]] <- ex2

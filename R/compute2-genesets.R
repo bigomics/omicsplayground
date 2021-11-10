@@ -19,7 +19,8 @@ compute.testGenesets <- function(pgx, max.features=1000, lib.dir="../lib",
     ##-----------------------------------------------------------
     ## Load huge geneset matrix
     ##-----------------------------------------------------------    
-    G <- t(readRDS(file.path(lib.dir,"gset-sparseG-XL.rds")))
+    G <- readRDS(file.path(lib.dir,"gset-sparseG-XL.rds"))
+    G <- Matrix::t(G)
     dim(G)
     
     ##-----------------------------------------------------------
@@ -42,7 +43,7 @@ compute.testGenesets <- function(pgx, max.features=1000, lib.dir="../lib",
 
     ## filter gene sets on size
     cat("Filtering gene sets on size...\n")
-    gmt.size = colSums(G!=0)
+    gmt.size = Matrix::colSums(G!=0)
     summary(gmt.size)
     size.ok <- (gmt.size >= 15 & gmt.size <= 1000 )
     G <- G[, which(size.ok)]
@@ -110,7 +111,7 @@ compute.testGenesets <- function(pgx, max.features=1000, lib.dir="../lib",
         grp <- pgx$model.parameters$group
         gsetX.bygroup <- NULL
         if(!is.null(grp)) {
-            gsetX.bygroup <- t(apply(gsetX,1,function(x) tapply(x,grp,mean)))
+            gsetX.bygroup <- Matrix::t(apply(gsetX,1,function(x) tapply(x,grp,mean)))
             sdx <- apply(gsetX.bygroup,1,sd)
         } else {
             sdx <- apply(gsetX,1,sd)
@@ -170,7 +171,7 @@ compute.testGenesets <- function(pgx, max.features=1000, lib.dir="../lib",
         table( n1 > 20 & n2 > 0.05 )
         ##ii  <- which( n1 > 20 & n2 > 0.05 ) ## make faster...
         ii <- Matrix::head(order( -1*n1*n2 ),4000) ## make faster...
-        G1 <- t(G[ii,]!=0)
+        G1 <- Matrix::t(G[ii,]!=0)
         X1 <- pgx$X[ii,]
         ng <- Matrix::colSums(G[ii,]!=0)
         meta.matrix <- as.matrix(G1 %*% X1) / ng

@@ -73,7 +73,7 @@ prot.readProteinGroups <- function(file, meta=NULL, sep="\t", collapse.gene=TRUE
     colnames(counts) <- sub("Intensity ","",colnames(counts))
     colnames(counts) <- sub("LFQ intensity ","",colnames(counts))
     sum(is.na(counts))
-    summary(colSums(counts,na.rm=TRUE))
+    summary(Matrix::colSums(counts,na.rm=TRUE))
 
     ## collapse by gene
     if(collapse.gene) {
@@ -160,7 +160,7 @@ proteus.readProteinGroups <- function(file="proteinGroups.txt", meta="meta.txt",
     pdat <- proteus::readProteinGroups(file, meta, measure.cols=measure.cols)
 
     summary(pdat)
-    ##summary(colSums(pdat$tab, na.rm=TRUE))
+    ##summary(Matrix::colSums(pdat$tab, na.rm=TRUE))
 
     if(is.log2) {
         pdat$tab <- 2**pdat$tab
@@ -271,20 +271,20 @@ prot.normalizeCounts <- function(counts, scale=1e6, scaling="by.column",
     ##------------------------------------------------------------
     ##scale=1e6
     if(is.null(scale)) {
-        scale <- mean(colSums(X,na.rm=TRUE))
+        scale <- mean(Matrix::colSums(X,na.rm=TRUE))
         message("set scale parameter to = ",scale)
     }
 
     if(scaling=="by.column") {
         message("scaling by columns to ",scale," total counts")
-        X <- t(t(X) / colSums(X,na.rm=TRUE)) * scale  ## counts-per-million
+        X <- t(t(X) / Matrix::colSums(X,na.rm=TRUE)) * scale  ## counts-per-million
     } else if(scaling=="global") {
         message("global average scaling to ",scale," counts")
-        X <- X / mean(colSums(X,na.rm=TRUE)) * scale  ## counts-per-million
+        X <- X / mean(Matrix::colSums(X,na.rm=TRUE)) * scale  ## counts-per-million
     } else {
         stop("FATAL:: unknown scaling method. scaling = ",scaling)
     }
-    colSums(X, na.rm=TRUE)
+    Matrix::colSums(X, na.rm=TRUE)
     
     ##------------------------------------------------------------
     ## set zero offset
@@ -861,7 +861,7 @@ silac.calcCopyNumber <- function(data, mol.weight, y){
     ## data should be a numeric matrix
     ## mol is the molecular weight
     ## y is the mass of the cell in PICOGRAM (pg)
-    total.intensity <- colSums(data,na.rm=TRUE)
+    total.intensity <- Matrix::colSums(data,na.rm=TRUE)
     mass <- t( t(data) * y / total.intensity) * 1e-12
     ##colnames(mass) = colnames(data)
     ## calculate moles

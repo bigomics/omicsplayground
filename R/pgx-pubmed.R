@@ -66,8 +66,8 @@ pmid.getGeneContext <- function(gene, keyword)
     context1 <- NULL
     if(1) {
         match2 <- ((match0 * match1)>0)
-        m0 <- colSums(match2 * (GENERIF.MATRIX!=0))
-        m1 <- colSums(GENERIF.MATRIX!=0)
+        m0 <- Matrix::colSums(match2 * (GENERIF.MATRIX!=0))
+        m1 <- Matrix::colSums(GENERIF.MATRIX!=0)
         pp <- corpora::fisher.pval(m0, sum(match2)+1, m1, nrow(GENERIF.MATRIX)+1, alternative="greater")
         pp <- sort(pp)
         qq <- p.adjust(pp)

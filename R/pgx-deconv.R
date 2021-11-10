@@ -51,7 +51,7 @@ pgx.inferCellType <- function(counts, low.th=0.01, add.unknown=FALSE,
     gg <- intersect(rownames(M),rownames(X))
     X1 <- X[gg,]
     M1 <- M[gg,]
-    M1 <- M1[,colSums(M1!=0)>0,drop=FALSE]
+    M1 <- M1[,Matrix::colSums(M1!=0)>0,drop=FALSE]
     if(scalex) X1 <- X1 / (1 + rowMeans(X1))
     
     ## run deconvolution algorithm
@@ -233,7 +233,7 @@ pgx.checkCellTypeMarkers <- function(counts, min.count=3, markers=NULL)
         if(length(m.pos)) M[match(m.pos,rownames(M)),k] <- +1
         if(length(m.neg)) M[match(m.neg,rownames(M)),k] <- -1
     }
-    ##M <- M[,colSums(M!=0)>0]
+    ##M <- M[,Matrix::colSums(M!=0)>0]
     M
     X=counts
     ##X <- (counts / rowMeans(counts))**2
@@ -246,8 +246,8 @@ pgx.checkCellTypeMarkers <- function(counts, min.count=3, markers=NULL)
     M1 <- M[gg,,drop=FALSE]
     check.pos <-  t(pmax(M1,0)) %*% X1
     check.neg <-  t(pmin(M1,0)) %*% X1
-    check.pos <-  t(M1 == +1) %*% X1 / colSums(M1 == 1)    
-    check.neg <-  t(M1 == -1) %*% X1 / colSums(M1 == -1)
+    check.pos <-  t(M1 == +1) %*% X1 / Matrix::colSums(M1 == 1)    
+    check.neg <-  t(M1 == -1) %*% X1 / Matrix::colSums(M1 == -1)
     table(check.pos)
     table(check.neg)
     check <- 1*t(check.pos & check.neg)
@@ -330,7 +330,7 @@ pgx.purify <- function( X, ref, k=3, method=2) {
 
         ## compute proportion of tumour content using NNMF
         res.nmf <- NNLM::nnmf( X, k=k, init = list(W0 = normalX), check.k=FALSE)
-        alpha <- with(res.nmf, colSums(W[,1:k]%*%H[1:k,]) / colSums(W %*% H))
+        alpha <- with(res.nmf, Matrix::colSums(W[,1:k]%*%H[1:k,]) / Matrix::colSums(W %*% H))
         str(alpha)
 
         ## estimate "pure" matrix
@@ -350,7 +350,7 @@ pgx.purify <- function( X, ref, k=3, method=2) {
 
         ## compute proportion of contaminant content using NNMF
         res.nmf <- NNLM::nnmf( X, k=k, init = list(W0 = tumorX), check.k=FALSE)
-        beta <- with(res.nmf, colSums(W[,1:k]%*%H[1:k,]) / colSums(W %*% H))
+        beta <- with(res.nmf, Matrix::colSums(W[,1:k]%*%H[1:k,]) / Matrix::colSums(W %*% H))
         str(beta)
         alpha <- (1 - beta)
 
@@ -558,8 +558,8 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     
     ## normalize all matrices to CPM
     if(normalize.mat) {
-        ref <- t(t(ref) / sqrt(1e-6 + colSums(ref**2,na.rm=TRUE))) * 1e6
-        mat <- t(t(mat) / sqrt(1e-6 + colSums(mat**2,na.rm=TRUE))) * 1e6
+        ref <- t(t(ref) / sqrt(1e-6 + Matrix::colSums(ref**2,na.rm=TRUE))) * 1e6
+        mat <- t(t(mat) / sqrt(1e-6 + Matrix::colSums(mat**2,na.rm=TRUE))) * 1e6
     }
     
     ## add small noise, some methods need it...

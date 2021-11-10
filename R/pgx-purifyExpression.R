@@ -18,7 +18,7 @@ if(0) {
     ##X <- 2**ngs$X
     X <- ngs$counts
     ref="hepatocyte"
-    X <- t( t(X) / colSums(X)) * 1e6
+    X <- t( t(X) / Matrix::colSums(X)) * 1e6
     X <- Matrix::head(X[order(-apply(X[,j1],1,sd)),],1000)
     dim(X)
 
@@ -41,8 +41,8 @@ if(0) {
             contamination <- rowMeans(normalX %*% diag(rr/sum(rr)))
             tumorX[,i]  <- (1-a) * tumorX[,i] + a * contamination
         }
-        colSums(tumorX)
-        tumorX <- t( t(tumorX) / colSums(tumorX)) * 1e6
+        Matrix::colSums(tumorX)
+        tumorX <- t( t(tumorX) / Matrix::colSums(tumorX)) * 1e6
     }
 
 
@@ -69,7 +69,7 @@ if(0) {
     markers <- unique(c(topHEPA, krt, fabp))
 
     xhat <- cbind( res$xhat[["nnlm"]], X[,j0])
-    xhat <- t( t(xhat) / colSums(xhat)) * 1e6
+    xhat <- t( t(xhat) / Matrix::colSums(xhat)) * 1e6
     purified <- log2(1+xhat)
     ##purified <- purified[,colnames(X)]
     dim(purified)
@@ -135,7 +135,7 @@ pgx.purifyExpression <- function( tumorX, normalX, method=PURIFY.METHODS)
         cf <- res$coefficients
         cf
         normal.frac <- (normalX %*% cf)
-        alpha0 = (1 - colSums(normal.frac) / colSums(tumorX) )
+        alpha0 = (1 - Matrix::colSums(normal.frac) / Matrix::colSums(tumorX) )
         alpha0
 
         xhat[["nnlm"]] <- pmax(tumorX - normal.frac,0)
@@ -154,7 +154,7 @@ pgx.purifyExpression <- function( tumorX, normalX, method=PURIFY.METHODS)
         res.nmf <- NNLM::nnmf(tumorX, k=k, init = list(W0 = normalX), check.k=FALSE)
 
         x.hat <- res.nmf$W[,1:k,drop=FALSE] %*% res.nmf$H[1:k,,drop=FALSE]
-        nnlm.alpha <- with(res.nmf, colSums(x.hat) / colSums(W %*% H))
+        nnlm.alpha <- with(res.nmf, Matrix::colSums(x.hat) / Matrix::colSums(W %*% H))
         round(nnlm.alpha, 2)
 
         xhat[["nnmf"]] <- x.hat

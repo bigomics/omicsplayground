@@ -1490,15 +1490,15 @@ pgx.cytoPlot <- function(pgx, gene1, gene2, cex=1, col="grey60",
         inferred.celltype <- pgx$deconv[[1]][["meta"]]
         dim(inferred.celltype)
         ##cex.names=2
-        lab1 <- Matrix::head(names(sort(-colSums(inferred.celltype[j1,,drop=FALSE]))),3)
+        lab1 <- Matrix::head(names(sort(-Matrix::colSums(inferred.celltype[j1,,drop=FALSE]))),3)
         pos1 <- apply(cbind(x1, x2)[j1,,drop=FALSE],2,median)
         text( pos1[1], pos1[2], paste(lab1,collapse="\n"),cex=0.9*cex.names, xpd=TRUE)
 
-        lab2 <- Matrix::head(names(sort(-colSums(inferred.celltype[j2,,drop=FALSE]))),3)
+        lab2 <- Matrix::head(names(sort(-Matrix::colSums(inferred.celltype[j2,,drop=FALSE]))),3)
         pos2 <- apply(cbind(x1, x2)[j2,,drop=FALSE],2,median)
         text( pos2[1], pos2[2], paste(lab2,collapse="\n"),cex=0.9*cex.names, xpd=TRUE)
 
-        lab3 <- Matrix::head(names(sort(-colSums(inferred.celltype[j3,,drop=FALSE]))),3)
+        lab3 <- Matrix::head(names(sort(-Matrix::colSums(inferred.celltype[j3,,drop=FALSE]))),3)
         pos3 <- apply(cbind(x1, x2)[j3,,drop=FALSE],2,median)
         text( pos3[1], pos3[2], paste(lab3,collapse="\n"),cex=0.9*cex.names, xpd=TRUE)
 

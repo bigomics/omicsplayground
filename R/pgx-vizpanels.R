@@ -222,7 +222,7 @@ viz.PhenoStats <- function(pgx, phenotypes=NULL,
     }
 
     df <- data.frame(pgx$samples[,phenotypes,drop=FALSE])
-    sel <- which(colSums(!is.na(df))>1)
+    sel <- which(Matrix::colSums(!is.na(df))>1)
     phenotypes <- phenotypes[sel]
     phenotypes
 
@@ -352,7 +352,7 @@ viz.PhenoStatsBy <- function(pgx, by.pheno, phenotypes=NULL,
             F <- table(x,y)
             if(pct) {
                 ##F <- F / rowSums(F)  ## normalize to 100% ??
-                F <- t(t(F) / colSums(F))  ## normalize to 100% ??
+                F <- t(t(F) / Matrix::colSums(F))  ## normalize to 100% ??
                 F <- round(100*F,2)
                 xlab0 <- "percentage  (%)"
             }
@@ -815,12 +815,12 @@ viz.FoldChangePairs <- function(pgx, comparisons=NULL, hilight=NULL,
 viz.MitoRiboQC <- function(pgx, group, srt=0, pos="tsne2d",
                            title=NULL, subtitle=NULL, caption=NULL)
 {
-    nFeature_RNA <- colSums(pgx$counts>0)
-    nCounts_RNA  <- colSums(pgx$counts)
+    nFeature_RNA <- Matrix::colSums(pgx$counts>0)
+    nCounts_RNA  <- Matrix::colSums(pgx$counts)
     sel.mito <- grep("^mt-",rownames(pgx$counts),ignore.case=TRUE)
     sel.ribo <- grep("^rp[ls]",rownames(pgx$counts),ignore.case=TRUE)
-    percent.mito <- colSums(pgx$counts[sel.mito,]) / nCounts_RNA * 100
-    percent.ribo <- colSums(pgx$counts[sel.ribo,]) / nCounts_RNA * 100
+    percent.mito <- Matrix::colSums(pgx$counts[sel.mito,]) / nCounts_RNA * 100
+    percent.ribo <- Matrix::colSums(pgx$counts[sel.ribo,]) / nCounts_RNA * 100
 
     y <- pgx$samples[,group]
     v1 <- plot.ggviolin(y, nCounts_RNA, group=NULL, srt=srt,
@@ -1068,14 +1068,14 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
     gset <- lapply(gset, function(f) intersect(f,genes))
     ylab <- NULL
     if(mode=="pct") {
-        fx <- t(sapply(gset, function(gg) colSums(pgx$counts[gg,])))
+        fx <- t(sapply(gset, function(gg) Matrix::colSums(pgx$counts[gg,])))
         rownames(fx) <- names(gset)
-        fx <- t(t(fx) / colSums(pgx$counts)) * 100
+        fx <- t(t(fx) / Matrix::colSums(pgx$counts)) * 100
         ylab <- "relative abundance  (%)"
     } else if(mode=="avg") {
         fx <- t(sapply(gset, function(gg) colMeans(pgx$X[gg,])))
         rownames(fx) <- names(gset)
-        ## fx <- t(t(fx) / colSums(pgx$counts)) * 100
+        ## fx <- t(t(fx) / Matrix::colSums(pgx$counts)) * 100
         ## fx <- fx - mean(fx)
         ## fx <- fx - rowMeans(fx)
         ylab <- "average expression  (logCPM)"

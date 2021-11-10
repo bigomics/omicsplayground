@@ -579,7 +579,7 @@ pgx.countNormalization <- function(x, methods, keep.zero=TRUE)
             x <- t(t(x) / colMeans(x,na.rm=TRUE)) * mx
         } else if(m=="CPM") {
             ##x <- edgeR::cpm(2**x, log=TRUE)
-            x <- t(t(x) / colSums(x,na.rm=TRUE)) * 1e6            
+            x <- t(t(x) / Matrix::colSums(x,na.rm=TRUE)) * 1e6            
         } else if(m=="TMM") {
             ## normalization on total counts (linear scale)
             x <- normalizeTMM(x, log=FALSE) ## does TMM on counts (edgeR)
@@ -806,11 +806,11 @@ pgx.removePC <- function(X, nv)
 
 pgx.plotMitoRibo <- function(counts, percentage=TRUE) {
 
-    tot.counts <- colSums(counts, na.rm=TRUE)
+    tot.counts <- Matrix::colSums(counts, na.rm=TRUE)
     sel.mt <- grep("^mt-",rownames(counts),ignore.case=TRUE)
     sel.rb <- grep("^rp[ls]",rownames(counts),ignore.case=TRUE)
-    mito.counts <- colSums(counts[sel.mt,,drop=FALSE], na.rm=TRUE)
-    ribo.counts <- colSums(counts[sel.rb,,drop=FALSE], na.rm=TRUE)
+    mito.counts <- Matrix::colSums(counts[sel.mt,,drop=FALSE], na.rm=TRUE)
+    ribo.counts <- Matrix::colSums(counts[sel.rb,,drop=FALSE], na.rm=TRUE)
     other.counts <- tot.counts - mito.counts - ribo.counts
     ##df <- cbind( ribo=ribo.counts, mito=mito.counts, other=other.counts )
     df <- cbind( ribo=ribo.counts, mito=mito.counts )
@@ -1111,8 +1111,8 @@ pgx._computeNumSig <- function(ngs, X, contrast=NULL, fc=0, qv=0.05) {
     names(res$tables)
     fc0 <- sapply(res$tables,function(x) x$logFC)
     qv0 <- sapply(res$tables,function(x) x$adj.P.Val)
-    numsig <- mean(colSums( abs(fc0) >= fc & qv0 <= qv, na.rm=TRUE))
-    ##numsig <- mean(colSums(qv0 < qv))
+    numsig <- mean(Matrix::colSums( abs(fc0) >= fc & qv0 <= qv, na.rm=TRUE))
+    ##numsig <- mean(Matrix::colSums(qv0 < qv))
     numsig
     return(numsig)
 }

@@ -343,42 +343,116 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 use.design <- !("noLM.prune" %in% input$dev_options)
                 prune.samples <- ("noLM.prune" %in% input$dev_options)
 
+
                 message("[ComputePgxServer:@compute] creating PGX object")                
                 progress$inc(0.1, detail = "creating PGX object")            
+
+                USE_FUTURES=1
                 
-                ngs <- pgx.createPGX(
-                    counts, samples, contrasts, ## genes,
-                    X = NULL,   ## should we pass the pre-normalized expresson X ????
-                    batch.correct = FALSE, ## done in UI                        
-                    prune.samples = TRUE,  ## always prune
-                    filter.genes = filter.genes,
-                    ##only.chrom = FALSE,
-                    ##rik.orf = !excl.rikorf,
-                    only.known = !remove.unknown,
-                    only.proteincoding = only.proteincoding, 
-                    only.hugo = only.hugo,
-                    convert.hugo = only.hugo,
-                    do.cluster = TRUE,
-                    cluster.contrasts = FALSE
-                )
-                names(ngs)
+                if(USE_FUTURES) {                    
+
+                    ## !!!TRYING TO USE FUTURES. BUT SEEMS STILL TO BLOCK
+                    ## OTHER SESSIONS!!!!
+                    ##
+                    ## IK 10.11.2021
+
+                    message("[ComputePgxServer:@compute] using futures ")    
+                    f <- future::future({
+                        pgx.createPGX(
+                            counts, samples, contrasts, ## genes,
+                            X = NULL,   ## should we pass the pre-normalized expresson X ????
+                            batch.correct = FALSE, ## done in UI                        
+                            prune.samples = TRUE,  ## always prune
+                            filter.genes = filter.genes,
+                            ##only.chrom = FALSE,
+                            ##rik.orf = !excl.rikorf,
+                            only.known = !remove.unknown,
+                            only.proteincoding = only.proteincoding, 
+                            only.hugo = only.hugo,
+                            convert.hugo = only.hugo,
+                            do.cluster = TRUE,
+                            cluster.contrasts = FALSE
+                        )
+                    })
+                    ## wait until done...
+                    while (!future::resolved(f)) {
+                        ##cat(count, "\n")
+                        message(".",appendLF = FALSE)    
+                        Sys.sleep(15)  ## every 15s
+                    }
+                    message("done!\n")                        
+                    ##value(f)
+                    ngs <- future::value(f)
+                    names(ngs)
+                    
+                } else {
+
+                    ngs <- pgx.createPGX(
+                        counts, samples, contrasts, ## genes,
+                        X = NULL,   ## should we pass the pre-normalized expresson X ????
+                        batch.correct = FALSE, ## done in UI                        
+                        prune.samples = TRUE,  ## always prune
+                        filter.genes = filter.genes,
+                        ##only.chrom = FALSE,
+                        ##rik.orf = !excl.rikorf,
+                        only.known = !remove.unknown,
+                        only.proteincoding = only.proteincoding, 
+                        only.hugo = only.hugo,
+                        convert.hugo = only.hugo,
+                        do.cluster = TRUE,
+                        cluster.contrasts = FALSE
+                    )
+                }
                 
+                names(ngs)                
                 message("[ComputePgxServer:@compute] computing PGX object")
                 progress$inc(0.2, detail = "computing PGX object")            
-                
-                ngs <- pgx.computePGX(
-                    ngs,
-                    max.genes = max.genes,
-                    max.genesets = max.genesets, 
-                    gx.methods = gx.methods,
-                    gset.methods = gset.methods,
-                    extra.methods = extra.methods,
-                    use.design = use.design,        ## no.design+prune are combined 
-                    prune.samples = prune.samples,  ##
-                    do.cluster = TRUE,                
-                    progress = progress,
-                    lib.dir = FILES 
-                )
+
+                if(USE_FUTURES) {                    
+                    
+                    message("[ComputePgxServer:@compute] using futures ")    
+                    f <- future::future({
+                        pgx.computePGX(
+                            ngs,
+                            max.genes = max.genes,
+                            max.genesets = max.genesets, 
+                            gx.methods = gx.methods,
+                            gset.methods = gset.methods,
+                            extra.methods = extra.methods,
+                            use.design = use.design,        ## no.design+prune are combined 
+                            prune.samples = prune.samples,  ##
+                            do.cluster = TRUE,                
+                            progress = progress,
+                            lib.dir = FILES 
+                        )
+                    })
+                    ## wait until done...
+                    while (!future::resolved(f)) {
+                        ##cat(count, "\n")
+                        message(".",appendLF = FALSE)    
+                        Sys.sleep(15)  ## every 15s
+                    }
+                    message("done!\n")                        
+                    ##value(f)
+                    ngs <- future::value(f)
+                    names(ngs)
+
+                } else {
+                    
+                    ngs <- pgx.computePGX(
+                        ngs,
+                        max.genes = max.genes,
+                        max.genesets = max.genesets, 
+                        gx.methods = gx.methods,
+                        gset.methods = gset.methods,
+                        extra.methods = extra.methods,
+                        use.design = use.design,        ## no.design+prune are combined 
+                        prune.samples = prune.samples,  ##
+                        do.cluster = TRUE,                
+                        progress = progress,
+                        lib.dir = FILES 
+                    )
+                }
                 
                 end_time <- Sys.time()
                 run_time  = end_time - start_time

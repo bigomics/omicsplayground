@@ -23,7 +23,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
     timings <- c()
 
     if(is.null(mc.cores)) {
-        mc.cores <- round( 0.5*detectCores(all.tests = TRUE, logical = FALSE) )
+        mc.cores <- round( 0.5 * parallel::detectCores(all.tests = TRUE, logical = FALSE) )
         mc.cores <- pmax(mc.cores,1)
         mc.cores <- pmin(mc.cores,16)
         mc.cores
@@ -212,14 +212,14 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
             ##cat("siggenes.down=",length(genes.dn),"\n")
             ##cat("siggenes.up=",length(genes.up),"\n")
 
-            ## at least take first 20
-            if(length(genes.dn) < 20) {
+            ## Always take at least first 100.. (HACK??!!!)
+            if(length(genes.dn) < 100) {
                 genes.dn0 <-  rownames(limma0)[order(limma0[,"logFC"])]
-                genes.dn <- head(unique(genes.dn,genes.dn0),20)
-                }
-            if(length(genes.up) < 20) {
+                genes.dn <- head(unique(genes.dn,genes.dn0),100)
+            }
+            if(length(genes.up) < 100) {
                 genes.up0 <-  rownames(limma0)[order(-limma0[,"logFC"])]
-                genes.up <- head(unique(genes.up,genes.up0),20)
+                genes.up <- head(unique(genes.up,genes.up0),100)
             }
             
             ##cat("fisher: testing...\n")
@@ -492,10 +492,10 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
         s0 <- sapply( S, function(x) x[,i])
         q0[is.na(q0)] <- 1
         s0[is.na(s0)] <- 0
-        up0 <- sapply( pv.list, function(p) colSums( q0 <= p & s0 > 0, na.rm=TRUE))
-        dn0 <- sapply( pv.list, function(p) colSums( q0 <= p & s0 < 0, na.rm=TRUE))
-        ns0 <- sapply( pv.list, function(p) colSums( q0 > p, na.rm=TRUE))
-        both0 <- sapply( pv.list, function(p) colSums( q0 <= p  & abs(s0) > 0, na.rm=TRUE))
+        up0 <- sapply( pv.list, function(p) Matrix::colSums( q0 <= p & s0 > 0, na.rm=TRUE))
+        dn0 <- sapply( pv.list, function(p) Matrix::colSums( q0 <= p & s0 < 0, na.rm=TRUE))
+        ns0 <- sapply( pv.list, function(p) Matrix::colSums( q0 > p, na.rm=TRUE))
+        both0 <- sapply( pv.list, function(p) Matrix::colSums( q0 <= p  & abs(s0) > 0, na.rm=TRUE))
         if(ncol(q0)==1) {
             up0 = matrix(up0, nrow=1)
             dn0 = matrix(dn0, nrow=1)
@@ -527,7 +527,7 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
         meta.fx = rowMeans( apply(S[[i]], 2, ss.rank), na.rm=TRUE)
         meta = data.frame(fx=meta.fx, p=meta.p, q=meta.q)
         rownames(fc) <- NULL  ## saves memory...
-        rownames(pc) <- NULL
+        rownames(pv) <- NULL
         rownames(qv) <- NULL
         all.meta[[i]] = data.frame(meta=meta, fc=I(fc), p=I(pv), q=I(qv))
         rownames(all.meta[[i]]) <- rownames(S[[i]])
@@ -557,8 +557,8 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
         m[["meta"]] <- meta.matrix
     } else {
         ## average expression of geneset members
-        ng <- colSums(G!=0)
-        meta.matrix <- as.matrix(t(G!=0) %*% X) / ng
+        ng <- Matrix::colSums(G!=0)
+        meta.matrix <- as.matrix(Matrix::t(G!=0) %*% X) / ng
     }
     ## meta.matrix <- meta.matrix - rowMeans(meta.matrix,na.rm=TRUE)  ## center??
     m[["meta"]] <- meta.matrix

@@ -41,7 +41,7 @@ graph_from_pos.DEPRECATED <- function(pos, trh) {
     if(ncol(pos)>3 || NCOL(pos)==1)  {
         stop("positions must be 2 or 3 columns\n")
     }
-    d <- apply( pos, 1, function(x) colSums((t(pos)-x)**2))  ## huge??
+    d <- apply( pos, 1, function(x) Matrix::colSums((t(pos)-x)**2))  ## huge??
     w <- 1/(1 + d/mean(d))
     g = igraph::graph_from_adjacency_matrix(w,mode="undirected",weighted=TRUE,diag=FALSE)
     g = igraph::subgraph.edges(g, which(igraph::E(g)$weight > trh))
