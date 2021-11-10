@@ -754,7 +754,7 @@ pgx.plotForwardProjection <- function(gr, gene, cex=1, fx=NULL,
 ##===================================================================================
 ##================================ GO graph functions ===============================
 ##===================================================================================
-##fdr=0.05
+##fdr=0.25
 pgx.computeCoreGOgraph <- function(ngs, fdr=0.05)
 {
     require(igraph)
@@ -773,6 +773,7 @@ pgx.computeCoreGOgraph <- function(ngs, fdr=0.05)
     comparisons = names(ngs$gset.meta$meta)
     comparisons
     subgraphs <- list()
+    ##nterms=200;ntop=20;comparison=comparisons[1]
     i=1
     for(i in 1:length(comparisons)) {
         subgraphs[[i]] = pgx.getSigGO(
@@ -842,17 +843,16 @@ getGOgraph <- function() {
 
 ##comparison=1;methods=c("fisher","gsva","camera");nterms=200;ntop=20;fdr=0.20
 pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.20, nterms=500, ntop=100)
-{
-    
-    
+{       
     ##if(is.null(ngs)) ngs <- shiny::isolate(inputData())
     mx = ngs$gset.meta$meta[[comparison]]
     jj = grep("^GO",rownames(mx))
+    length(jj)
     if(length(jj)==0) {
         cat("WARNING:: no GO terms in gset.meta$meta!!")
         return(NULL)
     }
-    mx = mx[jj,]
+    mx = mx[jj,,drop=FALSE]
     dim(mx)
 
     ## All methods????
@@ -884,7 +884,9 @@ pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.20, nterms=500, nt
     ##sig = cbind( score=score, fx=fc, pv=pv, qv=qv)
     vinfo = data.frame( geneset=rownames(mx), score=score, fc=fc, pv=pv, qv=qv)
     colnames(vinfo) = c("geneset","score","fc","pv","qv")  ## need
-    Matrix::head(vinfo)
+    rownames(vinfo) = rownames(mx)
+    dim(vinfo)
+    head(vinfo)    
     remove(fc)
 
     terms <- AnnotationDbi::toTable(GO.db::GOTERM)[,2:5]
@@ -892,23 +894,25 @@ pgx.getSigGO <- function(ngs, comparison, methods=NULL, fdr=0.20, nterms=500, nt
     terms <- terms[ !duplicated(terms[,1]), ]
     rownames(terms) = terms[,1]
     has.goid = all(grepl(")$",rownames(vinfo)))
+    has.goid    
     if(has.goid) {
         ## rownames have GO ID at the end
         go_id = gsub(".*\\(|\\)$","",rownames(vinfo))
         go_id = gsub("GO_|GO","",go_id)
         go_id = paste0("GO:",go_id)
         rownames(vinfo) = go_id
-        vinfo = cbind( vinfo, terms[match(go_id, terms$go_id),] )
+        vinfo = cbind( vinfo, terms[match(go_id, terms$go_id),,drop=FALSE] )
     } else {
         ## rownames have no GO ID (downloaded from from MSigDB)
         vv = sub("GO_|GOCC_|GOBP_|GOMF_","",vinfo$geneset)
         idx = match(vv, gsub("[ ]","_",toupper(terms$Term)))
         jj = which(!is.na(idx))
-        vinfo = cbind( vinfo[jj,], terms[idx[jj],] )
+        length(jj)
+        vinfo = cbind( vinfo[jj,,drop=FALSE], terms[idx[jj],,drop=FALSE] )
         rownames(vinfo) = vinfo$go_id
     }
     dim(vinfo)
-    vinfo = vinfo[which(!is.na(vinfo$go_id)),]
+    vinfo = vinfo[which(!is.na(vinfo$go_id)),,drop=FALSE]
 
     ## Get full GO graph and assign node prizes
     go_graph <- getGOgraph()

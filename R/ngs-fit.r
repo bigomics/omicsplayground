@@ -70,7 +70,7 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
     if(is.null(X)) {
         message("[ngs.fitContrastsWithAllMethods] prior CPM counts =",prior.cpm)
         message("[ngs.fitContrastsWithAllMethods] CPM scale =",cpm.scale)
-        X <- log2(t(t(counts) / colSums(counts)) * cpm.scale + prior.cpm)  ## CPM
+        X <- log2(t(t(counts) / Matrix::colSums(counts)) * cpm.scale + prior.cpm)  ## CPM
         X <- limma::normalizeQuantiles(X)  ## in linear space
     } else {
         message("[ngs.fitContrastsWithAllMethods] using input log-expression matrix X...")
@@ -261,10 +261,10 @@ ngs.fitContrastsWithAllMethods <- function(counts, X=NULL, samples, design, cont
         ## count significant terms
         qvalues = c(1e-16,10**seq(-8,-2,2),0.05, 0.1, 0.2, 0.5,1)
         lfc=1
-        sig.both = sapply(qvalues, function(q) colSums( (Q<=q ) * (abs(logFC)>lfc), na.rm=TRUE))
-        sig.up = sapply(qvalues, function(q) colSums( (Q<=q ) * (logFC>lfc), na.rm=TRUE))
-        sig.down = sapply(qvalues, function(q) colSums( (Q<=q ) * (logFC < -lfc), na.rm=TRUE))
-        sig.notsig = sapply(qvalues, function(q) colSums( Q>q | (abs(logFC) < lfc), na.rm=TRUE))
+        sig.both = sapply(qvalues, function(q) Matrix::colSums( (Q<=q ) * (abs(logFC)>lfc), na.rm=TRUE))
+        sig.up = sapply(qvalues, function(q) Matrix::colSums( (Q<=q ) * (logFC>lfc), na.rm=TRUE))
+        sig.down = sapply(qvalues, function(q) Matrix::colSums( (Q<=q ) * (logFC < -lfc), na.rm=TRUE))
+        sig.notsig = sapply(qvalues, function(q) Matrix::colSums( Q>q | (abs(logFC) < lfc), na.rm=TRUE))
         if(NCOL(Q)==1) {
             sig.both <- matrix(sig.both, nrow=1)
             sig.up <- matrix(sig.up, nrow=1)

@@ -176,7 +176,7 @@ pgx.scTestDifferentialExpression <- function(counts, y, is.count=TRUE, samples=N
 {
     X1 <- NULL
     if(FALSE && is.null(cpm.total)) {
-        cpm.total <- mean(colSums(counts > 0)) ## mean number of expressing genes
+        cpm.total <- mean(Matrix::colSums(counts > 0)) ## mean number of expressing genes
         message("setting column sums to total = ",round(cpm.total,2))
     }
 
@@ -260,7 +260,7 @@ pgx.scTestDifferentialExpression <- function(counts, y, is.count=TRUE, samples=N
         C1 <- pmax(2**X1-1,0)
         S2 <- tapply(1:ncol(C1),samples,function(i) rowMeans(C1[,i,drop=FALSE]))
         S2 <- do.call(cbind,S2)
-        ##S2 <- t(t(S2) / colSums(S2)) * cpm.total
+        ##S2 <- t(t(S2) / Matrix::colSums(S2)) * cpm.total
         S2 <- log2(1 + S2) 
         yb <- tapply(y, samples, function(y1) names(which.max(table(y1))))
         b2 <- matrixTests::row_t_welch(S2[,yb==y1], S2[,yb==y0]) ## all
@@ -1099,7 +1099,7 @@ pgx.createSeurateFigures <- function(obj)
         G1 <- pgx$GMT[,grep("HGNC",colnames(pgx$GMT),value=TRUE)]
         hgnc.list <- lapply(apply(G1!=0,2,which),names)
         percent <- lapply(lapply(apply(G1!=0,2,which),names),
-                          function(gg) colSums(obj[["RNA"]]@counts[gg,]/colSums(obj[["RNA"]]@counts)))
+                          function(gg) Matrix::colSums(obj[["RNA"]]@counts[gg,]/Matrix::colSums(obj[["RNA"]]@counts)))
         percent <- round(100*do.call(cbind, percent),digits=2)
         colnames(percent) <- gsub("[ ]",".",sub("HGNC:","percent.",colnames(percent)))
         obj@meta.data <- obj@meta.data[,!colnames(obj@meta.data) %in% colnames(percent)]
@@ -1174,12 +1174,12 @@ if(0) {
     Matrix::head(obj@meta.data)
     mt.genes <- rownames(obj)[grep("^MT-",rownames(obj),ignore.case=TRUE)]
     C <- Seurat::GetAssayData(object = obj, slot = "counts")    
-    percent.mito <- colSums(C[mt.genes,])/Matrix::colSums(C)*100
+    percent.mito <- Matrix::colSums(C[mt.genes,])/Matrix::colSums(C)*100
     hist(percent.mito, breaks=100)
     obj <- Seurat::AddMetaData(obj, percent.mito, col.name = "percent.mito")
     
     rb.genes <- rownames(obj)[grep("^RP[SL]",rownames(obj),ignore.case=TRUE)]
-    percent.ribo <- colSums(C[rb.genes,])/Matrix::colSums(C)*100
+    percent.ribo <- Matrix::colSums(C[rb.genes,])/Matrix::colSums(C)*100
     obj <- Seurat::AddMetaData(obj, percent.ribo, col.name = "percent.ribo")
     
     Seurat::VlnPlot(obj, features = c("nFeature_RNA","nCount_RNA","percent.mito","percent.ribo"),
@@ -1194,9 +1194,9 @@ if(0) {
     dim(obj)
     
     ## total count normalization
-    hist(colSums(exp(obj[["RNA"]]@data[,1:1000])),breaks=100)
+    hist(Matrix::colSums(exp(obj[["RNA"]]@data[,1:1000])),breaks=100)
     obj <- Seurat::NormalizeData(obj, normalization.method = "LogNormalize", scale.factor = 10000)    
-    hist(colSums(exp(obj[["RNA"]]@data[,1:1000])),breaks=100)
+    hist(Matrix::colSums(exp(obj[["RNA"]]@data[,1:1000])),breaks=100)
     
     ## Find highly variable top 2000 genes
     obj <- Seurat::FindVariableFeatures(obj, selection.method = "vst", nfeatures = 2000)

@@ -5,8 +5,8 @@
 
 ##extra <- c("meta.go","deconv","infer","drugs")
 ##extra <- c("wordcloud")
-EXTRA.MODULES = c("meta.go","deconv","infer","drugs",
-                  "connectivity","graph","wordcloud")
+EXTRA.MODULES = c("meta.go","deconv","infer","drugs", ## "graph",
+                  "connectivity","wordcloud")
 
 compute.extra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL) {
     pgx.computeExtra(ngs, extra=extra, lib.dir=lib.dir, sigdb=sigdb) 
@@ -53,6 +53,7 @@ pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL
             ngs$meta.go <- pgx.computeCoreGOgraph(ngs, fdr=0.20)
         })
         timings <- rbind(timings, c("meta.go", tt))
+        message("<<< done!")        
     }
     
     if("deconv" %in% extra) {
@@ -63,6 +64,7 @@ pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL
                 full=FALSE) 
         })
         timings <- rbind(timings, c("deconv", tt))
+        message("<<< done!")                
     }
 
     if("infer" %in% extra) {
@@ -71,6 +73,7 @@ pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL
             ngs <- compute.cellcycle.gender(ngs, rna.counts=rna.counts)
         })
         timings <- rbind(timings, c("infer", tt))
+        message("<<< done!")                
     }
 
     if("drugs" %in% extra) {
@@ -104,7 +107,7 @@ pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL
             ## })
             ##timings <- rbind(timings, c("drugs-gene", tt))
         }
-
+        message("<<< done!")                
     }
     
     if("graph" %in% extra) {
@@ -113,6 +116,7 @@ pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL
             ngs <- compute.omicsGraphs(ngs) 
         })
         timings <- rbind(timings, c("graph", tt))
+        message("<<< done!")                
     }
     
     if("wordcloud" %in% extra) {
@@ -123,6 +127,7 @@ pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL
         timings <- rbind(timings, c("wordcloud", tt))
         ngs$wordcloud <- res
         remove(res)
+        message("<<< done!")                
     }
 
     if("connectivity" %in% extra) {
@@ -186,6 +191,7 @@ pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL
     rownames(timings0) <- paste("[extra]",rownames(timings0))
     
     ngs$timings <- rbind(ngs$timings, timings0)
+    message("<<< done!")
     
     return(ngs)
 }

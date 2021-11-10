@@ -318,16 +318,8 @@ pgx.correlateSignature.matrix <- function(fc, refmat, nsig=100, ntop=1000, nperm
     ## --------------------------------------------------
     
     
-    sel <- Matrix::head(names(sort(-abs(rho))),ntop)
-    
+    sel <- Matrix::head(names(sort(-abs(rho))),ntop)   
     notx <- setdiff(sel,colnames(refmat))
-    if(length(notx)>0) {
-        ## should not happen...   
-        cat("[pgx.correlateSignature.matrix] length(sel)=",length(sel),"\n")
-        cat("[pgx.correlateSignature.matrix] Matrix::head(sel)=",head(sel),"\n")
-        cat("[pgx.correlateSignature.matrix] head.notx=",head(notx),"\n")
-    }
-
     sel <- intersect(sel, colnames(refmat))  
     X <- refmat[,sel,drop=FALSE]
     dim(X)
@@ -660,8 +652,7 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=0, lib.dir,
     }
     
     ##sig100.dn <- rhdf5::h5read(h5.file, "signature/sig100.dn")  
-    ##sig100.up <- rhdf5::h5read(h5.file, "signature/sig100.up")  
-    
+    ##sig100.up <- rhdf5::h5read(h5.file, "signature/sig100.up")      
     G <- readRDS(file.path(lib.dir,"gset-sparseG-XL.rds"))
     dim(G)    
     sel <- grep("HALLMARK|C[1-9]|^GO", rownames(G))
@@ -670,7 +661,7 @@ pgx.addEnrichmentSignaturesH5 <- function(h5.file, X=NULL, mc.cores=0, lib.dir,
     length(sel)
 
     G <- G[sel,,drop=FALSE]
-    gmt <- apply( G, 1, function(x) colnames(G)[which(x!=0)])
+    gmt <- apply(G, 1, function(x) colnames(G)[which(x!=0)])
     ##X <- X[,1:20]
     ##X[is.na(X)] <- 0
 

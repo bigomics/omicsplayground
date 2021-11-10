@@ -126,7 +126,7 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     if(1) {
         message("[compute.testGenesSingleOmics] pruning unused contrasts")
         ## take out any empty comparisons
-        sel <- which(colSums(contr.matrix>0) & colSums(contr.matrix<0))
+        sel <- which(Matrix::colSums(contr.matrix>0) & Matrix::colSums(contr.matrix<0))
         contr.matrix <- contr.matrix[,sel,drop=FALSE]
         contr.matrix[is.na(contr.matrix)] <- 0
     }
@@ -189,8 +189,8 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
         ## check contrasts for sample sizes (at least 2 in each group) and
         ## remove otherwise        
         keep <- rep(TRUE,ncol(contr.matrix))
-        keep = (colSums(exp.matrix > 0) >= 1 & colSums(exp.matrix < 0) >= 1)
-        ##keep = ( colSums(exp.matrix > 0) >= 2 & colSums(exp.matrix < 0) >= 2 )
+        keep = (Matrix::colSums(exp.matrix > 0) >= 1 & Matrix::colSums(exp.matrix < 0) >= 1)
+        ##keep = ( Matrix::colSums(exp.matrix > 0) >= 2 & Matrix::colSums(exp.matrix < 0) >= 2 )
         table(keep)
         contr.matrix <- contr.matrix[,keep,drop=FALSE]
         exp.matrix   <- exp.matrix[,keep,drop=FALSE]
@@ -223,14 +223,14 @@ compute.testGenesSingleOmics <- function(pgx, contr.matrix, max.features=1000,
     ## are too low. Happens often with single-cell (10x?). We rescale
     ## to a minimum of 1 million counts (CPM)
     if(1) {
-        mean.counts <- mean(colSums(counts,na.rm=TRUE))
+        mean.counts <- mean(Matrix::colSums(counts,na.rm=TRUE))
         mean.counts
         if( mean.counts < 1e6) {
             cat("[compute.testGenesSingleOmics] WARNING:: low total counts = ",mean.counts,"\n")        
             cat("[compute.testGenesSingleOmics] applying global mean scaling to 1e6...\n")        
             counts = counts * 1e6 / mean.counts
         }
-        mean(colSums(counts,na.rm=TRUE))
+        mean(Matrix::colSums(counts,na.rm=TRUE))
     }
     
     ## prefiltering for low-expressed genes (recommended for edgeR and

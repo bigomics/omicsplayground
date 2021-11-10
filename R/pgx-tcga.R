@@ -404,7 +404,7 @@ pgx.getTCGAdataset <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE
                 dim(expression)
                 colnames(expression) <- substring(id2[sample_index],1,15)
                 rownames(expression) <- h5.genes
-                expression <- expression[,order(-colSums(expression))]
+                expression <- expression[,order(-Matrix::colSums(expression))]
                 expression <- expression[,samples]
             }
             

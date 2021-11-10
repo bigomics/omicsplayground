@@ -112,8 +112,8 @@ pgx.makeStratifiedContrastsDF <- function(data, vars, strata, ref) {
     rownames(exp.matrix) <- rownames(data)
     
     ## check levels
-    sel <- ( colSums(contr.matrix==-1)>0 &
-             colSums(contr.matrix==+1)>0 )
+    sel <- ( Matrix::colSums(contr.matrix==-1)>0 &
+             Matrix::colSums(contr.matrix==+1)>0 )
     table(sel)
     contr.matrix <- contr.matrix[,sel]
     exp.matrix <- exp.matrix[,sel]
@@ -155,8 +155,8 @@ pgx.makeStratifiedContrasts <- function(Y, strata, ref) {
     rownames(exp.matrix) <- rownames(Y)
     
     ## check levels
-    sel <- ( colSums(contr.matrix==-1)>0 &
-             colSums(contr.matrix==+1)>0 )
+    sel <- ( Matrix::colSums(contr.matrix==-1)>0 &
+             Matrix::colSums(contr.matrix==+1)>0 )
     table(sel)
     contr.matrix <- contr.matrix[,sel]
     exp.matrix <- exp.matrix[,sel]
@@ -284,7 +284,7 @@ makeDirectContrasts000 <- function(Y, ref, na.rm=TRUE, warn=FALSE) {
             colnames(m1) <- paste0(colnames(m1),"_vs_",ref1)
         } else if(!is.na(ref1) && (ref1 %in% all) ) {
             ##m1 <- m1 - m1[,cref]  ## +1/-1 encoding
-            m1 <- t(t(m1==1) / colSums(m1==1) - t(m1==0) / colSums(m1==0))
+            m1 <- t(t(m1==1) / Matrix::colSums(m1==1) - t(m1==0) / Matrix::colSums(m1==0))
             ##m1 <- m1[,which(colnames(m1)!=cref),drop=FALSE]
             m1 <- m1[,!colnames(m1) %in% c("NA","_"),drop=FALSE]            
             colnames(m1) <- paste0(colnames(m1),"_vs_others")
@@ -299,7 +299,7 @@ makeDirectContrasts000 <- function(Y, ref, na.rm=TRUE, warn=FALSE) {
     }
 
     ## take out any empty comparisons
-    contr.matrix <- contr.matrix[,which(colSums(contr.matrix!=0)>0),drop=FALSE]
+    contr.matrix <- contr.matrix[,which(Matrix::colSums(contr.matrix!=0)>0),drop=FALSE]
 
     ## normalize to zero mean and symmetric sum-to-one. Any NA to zero.
     for(i in 1:ncol(contr.matrix)) {
@@ -346,7 +346,7 @@ makeClusterContrasts <- function(clusters, min.freq=0.01, full=FALSE,
     rownames(m1) <- colnames(m1)
     colnames(m1) <- paste0(colnames(m1),"_vs_others")
     ##m1 <- m1 - 1/(nrow(m1)-1)*(m1==0)
-    m1 <- t(t(m1==1) / colSums(m1==1) - t(m1==0) / colSums(m1==0))
+    m1 <- t(t(m1==1) / Matrix::colSums(m1==1) - t(m1==0) / Matrix::colSums(m1==0))
 
     diag(m1) <- 1
     if(full==TRUE) {

@@ -143,7 +143,7 @@ pgx.parseAccessLogs <- function(logs.dir, from=NULL, to=NULL,
     }
     
     if(0) {
-        barplot(colSums(W,na.rm=TRUE),las=3, main="unique.IP")
+        barplot(Matrix::colSums(W,na.rm=TRUE),las=3, main="unique.IP")
     }
     
     ## final table

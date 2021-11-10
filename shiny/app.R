@@ -408,7 +408,7 @@ server = function(input, output, session) {
                 shinyalert::closeAlert()
                 js.cb = "function(x){logout();quit()}"
                 if(opt$AUTHENTICATION=="shinyproxy") {
-                    js.cb = "function(x){logout();quit();window.location.assign('/logout');}"                    
+                    js.cb = "function(x){logout();quit();window.location.assign('/logout');}"
                 }
                 shinyalert::shinyalert(
                                 title = "Oh No!",

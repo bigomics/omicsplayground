@@ -139,7 +139,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     ##-------------------------------------------------------------------
     message("[createPGX] scaling counts...")
     counts_multiplier = 1
-    totcounts = colSums(counts, na.rm=TRUE)
+    totcounts = Matrix::colSums(counts, na.rm=TRUE)
     totcounts
     if(auto.scale) {        
 
@@ -157,7 +157,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
         }
         
         ## check if too big (more than billion reads)
-        mean.counts <- mean(colSums(counts,na.rm=TRUE))
+        mean.counts <- mean(Matrix::colSums(counts,na.rm=TRUE))
         mean.counts
         is.toobig <- log10(mean.counts) > 9
         is.toobig
@@ -241,7 +241,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     if(ndup>0) {
         message("[createPGX:autoscale] duplicated rownames detected: summing up rows (counts).")
         x1 = tapply(1:nrow(ngs$counts), gene1, function(i)
-            colSums(ngs$counts[i,,drop=FALSE]))
+            Matrix::colSums(ngs$counts[i,,drop=FALSE]))
         x1 <- do.call(rbind, x1)
         ngs$counts = x1
         remove(x1)
@@ -249,7 +249,7 @@ pgx.createPGX <- function(counts, samples, contrasts, X=NULL, ## genes,
     if(ndup>0 && !is.null(ngs$X)) {
         ## cat("[createPGX:autoscale] duplicated rownames detected: collapsing rows (X).\n")
         x1 = tapply(1:nrow(ngs$X), gene1, function(i)
-            log2(colSums(2**ngs$X[i,,drop=FALSE])) )
+            log2(Matrix::colSums(2**ngs$X[i,,drop=FALSE])) )
         x1 <- do.call(rbind, x1)
         ngs$X = x1
         remove(x1)
@@ -448,12 +448,14 @@ if(0) {
     do.cluster=TRUE;use.design=TRUE;prune.samples=FALSE
 }
 
+.EXTRA.METHODS = c("meta.go","deconv","infer","drugs","wordcloud")
+
 pgx.computePGX <- function(ngs, 
                            max.genes = 19999, max.genesets = 9999, 
                            gx.methods = c("ttest.welch","trend.limma","edger.qlf"),
                            gset.methods = c("fisher","gsva","fgsea"),
                            do.cluster = TRUE, use.design = TRUE, prune.samples = FALSE,
-                           extra.methods = c("meta.go","deconv","infer","drugs","wordcloud"),
+                           extra.methods = .EXTRA.METHODS,
                            lib.dir = "../lib", progress=NULL)
 {
     
@@ -478,7 +480,7 @@ pgx.computePGX <- function(ngs,
     }
 
     ## select valid contrasts
-    sel <- colSums(contr.matrix == -1)>0 & colSums(contr.matrix == 1)>0
+    sel <- Matrix::colSums(contr.matrix == -1)>0 & Matrix::colSums(contr.matrix == 1)>0
     contr.matrix <- contr.matrix[,sel,drop=FALSE]
     
     ##======================================================================
