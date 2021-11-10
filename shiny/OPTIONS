@@ -11,9 +11,9 @@ MAX_COMPARISONS = 100
 MAX_GENES       = 20000
 MAX_GENESETS    = 5000
 WATERMARK       = TRUE
-TIMEOUT         = 0
+#TIMEOUT         = 0
 #TIMEOUT        = 2700
-#TIMEOUT        = 30
+TIMEOUT        = 30
 #DEBUG         = TRUE
 
 #BOARDS_ENABLED = load,view,clust,expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap
