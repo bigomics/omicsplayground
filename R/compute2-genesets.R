@@ -55,7 +55,7 @@ compute.testGenesets <- function(pgx, max.features=1000, lib.dir="../lib",
     ##-----------------------------------------------------------
 
     single.omics <- !any(grepl("\\[",rownames(pgx$counts)))
-    single.omics
+    single.omics=TRUE  ## !!! for now...
     if(single.omics) {
         ## normalized matrix
         X <- pgx$X
@@ -72,6 +72,7 @@ compute.testGenesets <- function(pgx, max.features=1000, lib.dir="../lib",
     ## if reduced samples
     ss <- rownames(pgx$model.parameters$exp.matrix)
     X <- X[,ss,drop=FALSE]
+    dim(X)
     
     ##-----------------------------------------------------------
     ## create the GENESETxGENE matrix
@@ -79,13 +80,13 @@ compute.testGenesets <- function(pgx, max.features=1000, lib.dir="../lib",
     cat("Matching gene set matrix...\n")
     gg <- toupper(rownames(X)) ## accomodate for mouse...
     ii <- intersect(gg,rownames(G))
-    G <- G[ii,]
+    G <- G[ii,,drop=FALSE]
     xx <- setdiff(gg,rownames(G))
     matX <- Matrix::Matrix(0, nrow=length(xx), ncol=ncol(G), sparse=TRUE)
     rownames(matX) <- xx
     colnames(matX) <- colnames(G)
     G <- rbind(G, matX)
-    G <- G[match(gg,rownames(G)),]
+    G <- G[match(gg,rownames(G)),,drop=FALSE]
     rownames(G) <- rownames(X) ## original name (e.g. mouse)
     dim(G)
     dim(X)
