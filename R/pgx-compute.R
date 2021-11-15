@@ -475,6 +475,7 @@ pgx.computePGX <- function(ngs,
     is.numcontrast <- is.numcontrast && (-1 %in% contr.values) && (1 %in% contr.values)
     is.numcontrast
     if(!is.numcontrast) {
+        message("[pgx.computePGX] converting label to numeric contrast...")        
         contr.matrix <- makeContrastsFromLabelMatrix(contr.matrix)
         contr.matrix <- sign(contr.matrix) ## sign is fine
     }
@@ -511,7 +512,7 @@ pgx.computePGX <- function(ngs,
     if(!is.null(progress)) progress$inc(0.2, detail = "testing gene sets")
 
     message("[pgx.computePGX] testing genesets...")    
-    max.features=max.genes;test.methods=gset.methods
+    ##max.features=max.genes;test.methods=gset.methods
     ngs <- compute.testGenesets(
         ngs, max.features = max.genesets,
         test.methods = gset.methods,

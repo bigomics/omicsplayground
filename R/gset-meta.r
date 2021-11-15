@@ -14,9 +14,13 @@ use.multicore=TRUE
 
 mc.threads=1
 if(0) {
-    X=ngs$X;Y=ngs$samples;design=ngs$model.parameters$design;contr.matrix=ngs$model.parameters$contr.matrix;mc.cores=4;mc.threads=1;batch.correct=TRUE
-    G=ngs$GMT
+    X=ngs$X;Y=ngs$samples;design=ngs$model.parameters$design;G=ngs$GMT
+    gmt <- 
+    contr.matrix=ngs$model.parameters$contr.matrix;
+    mc.cores=1;mc.threads=1;batch.correct=TRUE
+    methods=c("fisher","gsva","fgsea")    
 }
+
 gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, methods, 
                                             mc.threads=1, mc.cores=NULL, batch.correct=TRUE)
 {
@@ -215,11 +219,11 @@ gset.fitContrastsWithAllMethods <- function(gmt, X, Y, G, design, contr.matrix, 
             ## Always take at least first 100.. (HACK??!!!)
             if(length(genes.dn) < 100) {
                 genes.dn0 <-  rownames(limma0)[order(limma0[,"logFC"])]
-                genes.dn <- head(unique(genes.dn,genes.dn0),100)
+                genes.dn <- head(unique(c(genes.dn,genes.dn0)),100)
             }
             if(length(genes.up) < 100) {
                 genes.up0 <-  rownames(limma0)[order(-limma0[,"logFC"])]
-                genes.up <- head(unique(genes.up,genes.up0),100)
+                genes.up <- head(unique(c(genes.up,genes.up0)),100)
             }
             
             ##cat("fisher: testing...\n")
