@@ -23,576 +23,135 @@ Omics Playground is written by:
 
 The project uses the following third-party content:
 
-affy
- * Version: 1.60.0
- * License: LGPL (>= 2.0)
-
-AnnotationDbi
- * Version: 1.44.0
- * License: Artistic-2.0
-
-beeswarm
- * Version: 0.2.3
- * License: Artistic-2.0
-
-BigQuic
- * Version: 1.1-8
- * License: GPL (>= 3) | file LICENSE
-
-BiocManager
- * Version: 1.30.4
- * License: Artistic-2.0
-
-biomaRt
- * Version: 2.38.0
- * License: Artistic-2.0
-
-Boruta
- * Version: 6.0.0
- * License: GPL (>= 2)
-
-Cairo
- * Version: 1.5-10
- * License: GPL-2
-
-caret
- * Version: 6.0-83
- * License: GPL (>= 2)
-
-clime
- * Version: 0.4.1
- * License: GPL-2
-
-ComICS
- * Version: 1.0.4
- * License: GPL-2
-
-ComplexHeatmap
- * Version: 1.20.0
- * License: MIT + file LICENSE
-
-corpcor
- * Version: 1.6.9
- * License: GPL (>= 3)
-
-corpora
- * Version: 0.5
- * License: GPL-3
-
-corrplot
- * Version: 0.84
- * License: GPL
-
-countrycode
- * Version: 1.1.0
- * License: GPL-3
-
-d3heatmap
- * Version: 0.6.1.2
- * License: GPL-3 | file LICENSE
-
-data.table
- * Version: 1.12.2
- * License: MPL-2.0 | file LICENSE
-
-DeconRNASeq
- * Version: 1.24.0
- * License: GPL-2
-
-DeMixT
- * Version: NA
- * License: NA
-
-DESeq2
- * Version: 1.22.2
- * License: LGPL (>= 3)
-
-devtools
- * Version: 2.2.1
- * License: GPL (>= 2)
-
-dragulaR
- * Version: 0.3.1
- * License: GPL-2
-
-DT
- * Version: 0.5
- * License: GPL-3 | file LICENSE
-
-edgeR
- * Version: 3.24.3
- * License: GPL (>=2)
-
-EnsDb.Hsapiens.v86
- * Version: 2.99.0
- * License: Artistic-2.0
-
-EnsDb.Mmusculus.v79
- * Version: 2.99.0
- * License: Artistic-2.0
-
-ensembldb
- * Version: 2.6.8
- * License: LGPL
-
-EPIC
- * Version: 1.1.5
- * License: file LICENSE
-
-FARDEEP
- * Version: 1.0.1
- * License: MIT + file LICENSE
-
-fastclime
- * Version: 1.4.1
- * License: GPL-2
-
-fastcluster
- * Version: 1.1.25
- * License: FreeBSD | GPL-2 | file LICENSE
-
-FastGGM
- * Version: 1.0
- * License: GPL (>= 2)
-
-fgsea
- * Version: 1.8.0
- * License: MIT + file LICENCE
-
-FNN
- * Version: 1.1.3
- * License: GPL (>= 2)
-
-genefilter
- * Version: 1.64.0
- * License: Artistic-2.0
-
-GenomicFeatures
- * Version: 1.34.8
- * License: Artistic-2.0
-
-GGally
- * Version: 1.4.0
- * License: GPL (>= 2.0)
-
-ggm
- * Version: 2.3
- * License: GPL (>= 2)
-
-ggplot2
- * Version: 3.1.1
- * License: GPL-2 | file LICENSE
-
-ggrepel
- * Version: 0.8.0
- * License: GPL-3 | file LICENSE
-
-ggsci
- * Version: 2.9
- * License: GPL-3 | file LICENSE
-
-glasso
- * Version: 1.10
- * License: GPL-2
-
-glassoFast
- * Version: 1.0
- * License: GPL (>= 3)
-
-Glimma
- * Version: 1.10.1
- * License: GPL-3 | file LICENSE
-
-glmnet
- * Version: 2.0-16
- * License: GPL-2
-
-gmodels
- * Version: 2.18.1
- * License: GPL-2
-
-GO.db
- * Version: 3.7.0
- * License: Artistic-2.0
-
-GOSim
- * Version: 1.20.0
- * License: GPL (>= 2)
-
-gplots
- * Version: 3.0.1.1
- * License: GPL-2
-
-gputools
- * Version: 1.1
- * License: GPL-3
-
-grid
- * Version: 3.5.2
- * License: Part of R 3.5.2
-
-GSA
- * Version: 1.03.1
- * License: LGPL
-
-GSVA
- * Version: 1.30.0
- * License: GPL (>= 2)
-
-heatmap3
- * Version: 1.1.6
- * License: GPL (>= 2)
-
-heatmaply
- * Version: 0.16.0
- * License: GPL-2 | GPL-3
-
-HiveR
- * Version: 0.3.42
- * License: GPL-3
-
-htmltools
- * Version: 0.3.6
- * License: GPL (>= 2)
-
-htmlwidgets
- * Version: 1.3
- * License: MIT + file LICENSE
-
-huge
- * Version: 1.3.2
- * License: GPL-2
-
-igraph
- * Version: 1.2.4
- * License: GPL (>= 2)
-
-iheatmapr
- * Version: 0.4.10
- * License: MIT + file LICENSE
-
-infercnv
- * Version: 1.1.3
- * License: BSD_3_clause + file LICENSE
-
-irlba
- * Version: 2.3.3
- * License: GPL-3
-
-ISOpureR
- * Version: 1.1.3
- * License: GPL-2
-
-iTALK
- * Version: 0.1.0
- * License: CC-BY-NC-SA
-
-kableExtra
- * Version: 1.1.0
- * License: MIT + file LICENSE
-
-KEGG.db
- * Version: 3.2.3
- * License: file LICENSE
-
-KEGGgraph
- * Version: 1.42.0
- * License: GPL (>= 2)
-
-knitr
- * Version: 1.22
- * License: GPL
-
-limma
- * Version: 3.38.3
- * License: GPL (>=2)
-
-manhattanly
- * Version: 0.2.0
- * License: MIT + file LICENSE
-
-maptools
- * Version: 0.9-5
- * License: GPL (>= 2)
-
-MASS
- * Version: 7.3-51.3
- * License: GPL-2 | GPL-3
-
-Matrix
- * Version: 1.2-17
- * License: GPL (>= 2) | file LICENCE
-
-matrixTests
- * Version: 0.1.2
- * License: GPL-2
-
-metap
- * Version: 1.1
- * License: GPL-2
-
-mixOmics
- * Version: 6.6.2
- * License: GPL (>= 2)
-
-monocle3
- * Version: 0.1.3
- * License: MIT + file LICENSE
-
-msmsTests
- * Version: NA
- * License: NA
-
-mygene
- * Version: 1.18.0
- * License: Artistic-2.0
-
-nclust
- * Version: 2.1.1
- * License: GPL
-
-NMF
- * Version: NA
- * License: NA
-
-NNLM
- * Version: 0.4.2
- * License: BSD_2_clause + file LICENSE
-
-org.Hs.eg.db
- * Version: 3.7.0
- * License: Artistic-2.0
-
-org.Mm.eg.db
- * Version: 3.7.0
- * License: Artistic-2.0
-
-pairsD3
- * Version: 0.1.0
- * License: GPL (>= 3)
-
-parallel
- * Version: 3.5.2
- * License: Part of R 3.5.2
-
-partykit
- * Version: 1.2-3
- * License: GPL-2 | GPL-3
-
-pathview
- * Version: 1.22.3
- * License: GPL (>=3.0)
- * The pathview downloads and uses KEGG data. Non-academic uses may
-  require a separate KEGG license agreement (details at
-  http://www.kegg.jp/kegg/legal.html).
-
-plotly
- * Version: 4.9.0
- * License: MIT + file LICENSE
-
-plsRcox
- * Version: 1.7.4
- * License: GPL-3
-
-plyr
- * Version: 1.8.4
- * License: MIT + file LICENSE
-
-png
- * Version: 0.1-7
- * License: GPL-2 | GPL-3
-
-ppcor
- * Version: 1.1
- * License: GPL-2
-
-preprocessCore
- * Version: 1.44.0
- * License: LGPL (>= 2)
-
-proteus
- * Version: 0.2.11
- * License: GPL-2
-
-psych
- * Version: 1.8.12
- * License: GPL (>= 2)
-
-qgraph
- * Version: 1.6.2
- * License: GPL-2
-
-qlcMatrix
- * Version: 0.9.7
- * License: GPL-3
-
-QUIC
- * Version: 1.1
- * License: GPL-3
-
-qvalue
- * Version: 2.14.1
- * License: LGPL
-
-randomForest
- * Version: 4.6-14
- * License: GPL (>= 2)
-
-randomForestSRC
- * Version: 2.9.0
- * License: GPL (>= 3)
-
-RColorBrewer
- * Version: 1.1-2
- * License: Apache License 2.0
-
-rintrojs
- * Version: 0.2.2
- * License: AGPL-3
-
-rmarkdown
- * Version: 1.12
- * License: GPL-3
-
-rpart
- * Version: 4.1-15
- * License: GPL-2 | GPL-3
-
-rpart.plot
- * Version: 3.0.7
- * License: GPL-3
-
-Rtsne
- * Version: 0.15
- * License: file LICENSE
-
-Rtsne.multicore
- * Version: 0.0.99
- * License: BSD_3_clause + file LICENSE
-
-rWordCloud
- * Version: 0.1
- * License: file LICENSE
-
-scatterD3
- * Version: 0.9
- * License: GPL (>= 3)
-
-scran
- * Version: 1.10.2
- * License: GPL-3
-
-Seurat
- * Version: 2.3.3
- * License: GPL-3 | file LICENSE
-
-shiny
- * Version: 1.3.2
- * License: GPL-3 | file LICENSE
-
-shinyBS
- * Version: 0.61
- * License: GPL-3
-
-shinycssloaders
- * Version: 0.2.0
- * License: GPL-3
-
-shinydashboard
- * Version: 0.7.1
- * License: GPL (>= 2) | file LICENSE
-
-shinyjqui
- * Version: 0.3.2
- * License: MIT + file LICENSE
-
-shinyjs
- * Version: 1.0.1.9006
- * License: AGPL-3
-
-shinyWidgets
- * Version: 0.4.8
- * License: GPL-3 | file LICENSE
-
-SILGGM
- * Version: 1.0.0
- * License: GPL (>= 2)
-
-sinaplot
- * Version: 1.1.0
- * License: GPL (>= 2)
-
-SNFtool
- * Version: 2.3.0
- * License: GPL
-
-survival
- * Version: 2.44-1.1
- * License: LGPL (>= 2)
-
-sva
- * Version: 3.30.1
- * License: Artistic-2.0
-
-threejs
- * Version: 0.3.1
- * License: MIT + file LICENSE
-
-tidyverse
- * Version: 1.2.1
- * License: GPL-3 | file LICENSE
-
-tippy
- * Version: NA
- * License: NA
-
-TxDb.Hsapiens.UCSC.hg19.knownGene
- * Version: NA
- * License: NA
-
-TxDb.Mmusculus.UCSC.mm10.knownGene
- * Version: NA
- * License: NA
-
-tximport
- * Version: 1.10.1
- * License: GPL (>=2)
-
-umap
- * Version: 0.2.3.1
- * License: MIT + file LICENSE
-
-UNDO
- * Version: NA
- * License: NA
-
-visNetwork
- * Version: 2.0.6
- * License: MIT + file LICENSE
-
-wCorr
- * Version: NA
- * License: NA
-
-webshot
- * Version: 0.5.1
- * License: GPL-2
-
-wordcloud
- * Version: 2.6
- * License: LGPL-2.1
-
-wordcloud2
- * Version: 0.2.2
- * License: GPL-2
-
-xgboost
- * Version: 0.82.1
- * License: Apache License (== 2.0) | file LICENSE
-
-
-
-
-
-
-
+ - AnnotationDbi                        1.52.0          Artistic-2.0                   
+ - base                                 4.0.4           Part of R 4.0.4                
+ - batchelor                            1.6.3           GPL-3                          
+ - beeswarm                             0.4.0           Artistic-2.0                   
+ - BiocManager                          1.30.16         Artistic-2.0                   
+ - biomaRt                              2.46.3          Artistic-2.0                   
+ - Biostrings                           2.58.0          Artistic-2.0                   
+ - Boruta                               7.0.0           GPL (>= 2)                     
+ - cgdsr                                1.3.0           LGPL-3                         
+ - circlize                             0.4.13          MIT + file LICENSE             
+ - colorspace                           2.0-2           BSD_3_clause + file LICENSE    
+ - ComICS                               1.0.4           GPL-2                          
+ - ComplexHeatmap                       2.6.2           MIT + file LICENSE             
+ - corpcor                              1.6.10          GPL (>= 3)                     
+ - corpora                              0.5             GPL-3                          
+ - corrplot                             0.90            MIT + file LICENSE             
+ - cowplot                              1.1.1           GPL-2                          
+ - curatedTCGAData                      1.12.1          Artistic-2.0                   
+ - data.table                           1.14.2          MPL-2.0 | file LICENSE         
+ - DeconRNASeq                          1.32.0          GPL-2                          
+ - DESeq2                               1.30.1          LGPL (>= 3)                    
+ - devtools                             2.4.2           MIT + file LICENSE             
+ - doParallel                           1.0.16          GPL-2                          
+ - dplyr                                1.0.7           MIT + file LICENSE             
+ - DT                                   0.19            GPL-3 | file LICENSE           
+ - edgeR                                3.32.1          GPL (>=2)                      
+ - EnsDb.Hsapiens.v86                   2.99.0          Artistic-2.0                   
+ - EnsDb.Mmusculus.v79                  2.99.0          Artistic-2.0                   
+ - fastcluster                          1.2.3           FreeBSD | GPL-2 | file LICENSE 
+ - fgsea                                1.16.0          MIT + file LICENCE             
+ - FNN                                  1.1.3           GPL (>= 2)                     
+ - genefilter                           1.72.1          Artistic-2.0                   
+ - GenomicDataCommons                   1.14.0          Artistic-2.0                   
+ - GenomicFeatures                      1.42.3          Artistic-2.0                   
+ - GEOquery                             2.58.0          GPL-2                          
+ - ggplot2                              3.3.5           MIT + file LICENSE             
+ - ggrepel                              0.9.1           GPL-3 | file LICENSE           
+ - ggsci                                2.9             GPL-3 | file LICENSE           
+ - glasso                               1.11            GPL-2                          
+ - glmnet                               4.1-2           GPL-2                          
+ - gplots                               3.1.1           GPL-2                          
+ - graphics                             4.0.4           Part of R 4.0.4                
+ - grDevices                            4.0.4           Part of R 4.0.4                
+ - grid                                 4.0.4           Part of R 4.0.4                
+ - GSVA                                 1.38.2          GPL (>= 2)                     
+ - harmony                              1.0             GPL-3 + file LICENSE           
+ - homologene                           1.4.68.19.3.27  MIT + file LICENSE             
+ - htmlwidgets                          1.5.4           MIT + file LICENSE             
+ - httr                                 1.4.2           MIT + file LICENSE             
+ - igraph                               1.2.7           GPL (>= 2)                     
+ - iheatmapr                            0.5.1           MIT + file LICENSE             
+ - irlba                                2.3.3           GPL-3                          
+ - ISOpureR                             1.1.3           GPL-2                          
+ - isva                                 1.9             GPL-2                          
+ - jpeg                                 0.1-9           GPL-2 | GPL-3                  
+ - KEGG.db                              3.2.4           file LICENSE                   
+ - liger                                2.0.1           GPL-3 | file LICENSE           
+ - limma                                3.46.0          GPL (>=2)                      
+ - magick                               2.7.3           MIT + file LICENSE             
+ - maptools                             1.1-2           GPL (>= 2)                     
+ - MASS                                 7.3-53.1        GPL-2 | GPL-3                  
+ - Matrix                               1.3-4           GPL (>= 2) | file LICENCE      
+ - Matrix                               1.3-2           GPL (>= 2) | file LICENCE      
+ - matrixTests                          0.1.9.1         GPL-2                          
+ - metap                                1.5             GPL-2                          
+ - miniUI                               0.1.1.1         GPL-3                          
+ - mixOmics                             6.14.1          GPL (>= 2)                     
+ - MultiAssayExperiment                 1.16.0          Artistic-2.0                   
+ - NNLM                                 0.4.4           BSD_2_clause + file LICENSE    
+ - org.Hs.eg.db                         3.12.0          Artistic-2.0                   
+ - org.Mm.eg.db                         3.12.0          Artistic-2.0                   
+ - parallel                             4.0.4           Part of R 4.0.4                
+ - partykit                             1.2-15          GPL-2 | GPL-3                  
+ - patchwork                            1.1.1           MIT + file LICENSE             
+ - pcaMethods                           1.82.0          GPL (>= 3)                     
+ - plotly                               4.10.0          MIT + file LICENSE             
+ - pls                                  2.8-0           GPL-2                          
+ - plyr                                 1.8.6           MIT + file LICENSE             
+ - png                                  0.1-7           GPL-2 | GPL-3                  
+ - ppcor                                1.1             GPL-2                          
+ - preprocessCore                       1.52.1          LGPL (>= 2)                    
+ - psych                                2.1.9           GPL (>= 2)                     
+ - qgraph                               1.9             GPL-2                          
+ - qlcMatrix                            0.9.7           GPL-3                          
+ - qvalue                               2.22.0          LGPL                           
+ - randomForest                         4.6-14          GPL (>= 2)                     
+ - randomForestSRC                      2.13.0          GPL (>= 3)                     
+ - RColorBrewer                         1.1-2           Apache License 2.0             
+ - recount                              1.16.1          Artistic-2.0                   
+ - remotes                              2.4.1           MIT + file LICENSE             
+ - reshape2                             1.4.4           MIT + file LICENSE             
+ - rgeolocate                           1.4.1           Apache License (== 2.0)        
+ - rhdf5                                2.34.0          Artistic-2.0                   
+ - rliger                               1.0.0           GPL-3                          
+ - rpart                                4.1-15          GPL-2 | GPL-3                  
+ - Rtsne                                0.15            file LICENSE                   
+ - scales                               1.1.1           MIT + file LICENSE             
+ - scatterD3                            1.0.1           GPL (>= 3)                     
+ - scran                                1.18.7          GPL-3                          
+ - Seurat                               4.0.5           GPL-3 | file LICENSE           
+ - shiny                                1.7.1           GPL-3 | file LICENSE           
+ - shinyalert                           2.0.0           MIT + file LICENSE             
+ - shinyBS                              0.61            GPL-3                          
+ - shinydashboard                       0.7.2           GPL (>= 2) | file LICENSE      
+ - shinydashboardPlus                   2.0.3           GPL (>= 2) | file LICENSE      
+ - shinyjqui                            0.4.0           MIT + file LICENSE             
+ - shinyWidgets                         0.6.2           GPL-3                          
+ - signatureSearch                      1.4.6           Artistic-2.0                   
+ - SILGGM                               1.0.0           GPL (>= 2)                     
+ - SmartSVA                             0.1.3           GPL-3                          
+ - stats                                4.0.4           Part of R 4.0.4                
+ - SummarizedExperiment                 1.20.0          Artistic-2.0                   
+ - survival                             3.2-7           LGPL (>= 2)                    
+ - survminer                            0.4.9           GPL-2                          
+ - sva                                  3.38.0          Artistic-2.0                   
+ - TCGAretriever                        1.5             GPL-2                          
+ - tidyr                                1.1.4           MIT + file LICENSE             
+ - tools                                4.0.4           Part of R 4.0.4                
+ - TxDb.Hsapiens.UCSC.hg19.knownGene    3.2.2           Artistic-2.0                   
+ - TxDb.Mmusculus.UCSC.mm10.knownGene   3.10.0          Artistic-2.0                   
+ - tximport                             1.18.0          GPL (>=2)                      
+ - umap                                 0.2.7.0         MIT + file LICENSE             
+ - UNDO                                 1.32.0          GPL-2                          
+ - utils                                4.0.4           Part of R 4.0.4                
+ - uwot                                 0.1.10          GPL (>= 3)                     
+ - vioplot                              0.3.7           BSD_3_clause + file LICENSE    
+ - viridis                              0.6.2           MIT + file LICENSE             
+ - visNetwork                           2.1.0           MIT + file LICENSE             
+ - webshot                              0.5.2           GPL-2                          
+ - WGCNA                                1.70-3          GPL (>= 2)                     
+ - wordcloud                            2.6             LGPL-2.1                       
+ - xgboost                              1.4.1.1         Apache License (== 2.0) | file 

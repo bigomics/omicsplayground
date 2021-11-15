@@ -162,3 +162,39 @@ install.pkgs(c("KEGGREST","pathview"), force=TRUE)
 ##---------------------------------------------------------------------
 BIG.NOTUSED
 ## remove.pkgs(BIG.NOTUSED)
+
+
+if(0) {
+    
+    pkg1 <- system("grep '::' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)
+    pkg2 <- system("grep 'require(' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)
+    pkg3 <- system("grep 'library(' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)    
+    pkg1 <- gsub("[:\"]","",gsub(".*[ ,\\(\\[]","",gsub("::.*","::",pkg1)))
+    pkg2 <- gsub("\\).*","",gsub(".*require\\(","",pkg2))
+    pkg2 <- gsub("\\).*","",gsub(".*library\\(","",pkg2))    
+
+    pkg <- c(pkg1,pkg2,pkg3)
+    installed.pkg <- unique(pkg)
+
+    lisc <- installed.packages(fields = "License")
+    sel <- which(lisc[,"Package"] %in% installed.pkg)
+    ##pkg2 <- c(lisc[sel,"Package"], lisc[sel,"Imports"], lisc[sel,"LinkingTo"])
+    pkg2 <- c(lisc[sel,"Package"])
+    pkg2 <- setdiff(pkg2, c("",NA))
+    pkg2 <- unique(sub("[,]","",unlist(lapply(pkg2, function(p) strsplit(p, split='[ ,]')))))
+
+    pkg2 <- intersect(pkg2,lisc[,"Package"])
+    lisc1 <- lisc[which(lisc[,"Package"] %in% pkg2),]
+    lisc1 <- lisc1[,c(1,3,10)]
+    lisc1 <- lisc1[order(lisc1[,"Package"]),]
+    write.table(lisc1, "RPackageLicenses.txt",sep='\t', quote=FALSE, row.names=FALSE)
+
+    fixstr <- function(s,n=30) {substring(paste0(s,paste(rep(" ",n),collapse='')),1,n) }
+    lisc2 <- cbind(fixstr(lisc1[,1],36),fixstr(lisc1[,2],15),fixstr(lisc1[,3],30))
+    apply(lisc2, 1, function(s) cat(" -",paste0(s),'\n'))
+        
+    lisc1[grep("AGPL|GPL-3",lisc1[,"License"]),]
+
+    
+    
+}
