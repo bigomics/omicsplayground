@@ -348,6 +348,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 progress$inc(0.1, detail = "creating PGX object")            
 
                 USE_FUTURES=1
+                USE_FUTURES=0
                 
                 if(USE_FUTURES) {                    
 
