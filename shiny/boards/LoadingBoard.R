@@ -24,7 +24,6 @@ LoadingUI <- function(id) {
             id = ns("tabs"),
             shiny::tabPanel("Datasets",uiOutput(ns("pgxtable_UI"))),
             shiny::tabPanel("Upload data",uiOutput(ns("upload_UI")))
-            ## shiny::tabPanel("Community forum",uiOutput(ns("forum_UI")))
         )
     )
 }
@@ -50,7 +49,9 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
     message("[LoadingBoard] in.shinyproxy = ",in.shinyproxy())    
     message("[LoadingBoard] SHINYPROXY_USERNAME = ",Sys.getenv("SHINYPROXY_USERNAME"))
     message("[LoadingBoard] SHINYPROXY_USERGROUPS = ",Sys.getenv("SHINYPROXY_USERGROUPS"))
-    message("[LoadingBoard] authentication = ",authentication)    
+    message("[LoadingBoard] authentication = ",authentication)
+    message("[LoadingBoard] pgx_dir = ",pgx_dir)
+    
     dbg("[LoadingBoard] getwd = ",getwd())
     
     auth <- NULL   ## shared in module
@@ -69,10 +70,15 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
         username <- Sys.getenv("SHINYPROXY_USERNAME")
         ##email <- Sys.getenv("SHINYPROXY_EMAIL")        
         auth <- shiny::callModule(NoAuthenticationModule, "auth",
+                                  show_modal=TRUE,
                                   username=username, email=username)
+    } else if(authentication == "none2") {        
+        auth <- shiny::callModule(NoAuthenticationModule, "auth",
+                                  show_modal=FALSE)
     } else {
-        ## none
-        auth <- shiny::callModule(NoAuthenticationModule, "auth")
+        ##} else if(authentication == "none") {
+        auth <- shiny::callModule(NoAuthenticationModule, "auth",
+                                  show_modal=TRUE)
     } 
 
     dbg("[LoadingBoard] names.auth = ",names(auth))
@@ -465,8 +471,7 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
     ##=============================== MODAL DIALOGS ===================================
     ##=================================================================================
     
-    particlesjs.conf <- rjson::fromJSON(file="resources/particlesjs-config.json")
-
+    ## particlesjs.conf <- rjson::fromJSON(file="resources/particlesjs-config.json")
     ## beer_count=0
     ## shiny::observeEvent( input$action_beer, {
     ##     dbg("buy beer button action\n")
@@ -737,13 +742,14 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
     ## Upload new data
     ##================================================================================
     if(enable_upload) {
-        dbg("[LoadingBoard] upload enabled")
+
+        dbg("[LoadingBoard] upload enabled!")
         
         output$upload_UI <- shiny::renderUI({
             dbg("[LoadingBoard] output$upload_UI::renderUI")
             UploadModuleUI(ns("upload_panel"))
         })
-
+        
         dbg("[LoadingBoard] initializing UploadModule")        
         uploaded_pgx <- UploadModuleServer(
             id = "upload_panel",
@@ -772,9 +778,14 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
                 ## -------------- save PGX file/object ---------------
                 ##pgx <- currentPGX()
                 pgxname <- sub("[.]pgx$","",pgx$name)
+                pgxname <- gsub("^[./]*","",pgxname)  ## prevent going to parent folder
                 pgxname <- paste0(gsub("[ \\/]","_",pgxname),".pgx")
+                pgxname
                 pgxdir  <- getPGXDIR()
-                fn  <- file.path(pgxdir,pgxname)
+                fn <- file.path(pgxdir,pgxname)
+
+                ## make "safe" name
+                fn <- iconv(fn, from = '', to = 'ASCII//TRANSLIT')
                 
                 ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 ## Note: Currently we use 'ngs' as object name but want to go
@@ -831,44 +842,6 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
 
     }
 
-    ##---------------------------------------------------------------
-    ##----------------- modules for Forum ---------------------------
-    ##---------------------------------------------------------------
-    
-    output$forum <- shiny::renderUI({
-        parenturl <- paste0(session$clientData$url_protocol,
-                            "//",session$clientData$url_hostname,
-                            ":",session$clientData$url_port,
-                            session$clientData$url_pathname)
-        ## parenturl <- gsub("localhost","127.0.0.1",parenturl)
-        parenturl <- URLencode(parenturl, TRUE)
-        cat("[LoadingBoard:forum] parenturl =",parenturl,"\n")
-        src = paste0('https://groups.google.com/forum/embed/?place=forum/omicsplayground',
-                     '&showsearch=true&showpopout=true&parenturl=',parenturl)
-        cat("src = ",src,"\n")
-        shiny::tags$iframe(id="forum_embed", src=src, height=600, width='100%',
-                    ##seamless="seamless",
-                    frameborder='no')
-        ##HTML(src)
-    })
-         
-    output$tweet <- shiny::renderUI({
-        ## NOT WORKING YET...
-        shiny::tags$a(class="twitter-timeline",
-               href="https://twitter.com/bigomics?ref_src=twsrc%5Etfw")
-        ##shiny::tags$script('twttr.widgets.load(document.getElementById("tweet"));')
-    })
-            
-    output$forum_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = 550,
-            shiny::fillRow(
-                flex=c(4,0),
-                shiny::htmlOutput(ns("forum"))
-                ##uiOutput("tweet")
-            )
-        )
-    })
     
     ##------------------------------------------------
     ## Board return object

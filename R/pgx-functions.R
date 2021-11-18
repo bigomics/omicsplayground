@@ -776,6 +776,7 @@ ngs.save <- function(ngs, file, update.date=TRUE, light=TRUE, system=FALSE) {
     sum(sapply(ngs, object.size)) / 1e9        
     
     cat(">>> saving PGX file to",file,"\n")
+    file <- iconv(file, from = '', to = 'ASCII//TRANSLIT')
     save(ngs, file=file)
 }
 
