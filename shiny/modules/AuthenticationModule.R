@@ -3,28 +3,6 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-if(0) {
-    type="password"
-    CREDENTIALS = data.frame(username=c("ivo","stefan"),
-                             password=c("iii","sss"),
-                             expiry=c("2025-01-01","2020-01-01"),
-                             row.names=1)
-    credentials.file = "CREDENTIALS"
-    .setSmtpServer("~/bigomics/server-conf/smtp_server/infomaniak.env")
-    smtp.env = "~/bigomics/server-conf/smtp_server/infomaniak.env"
-    smtp.env = "~/bigomics/server-conf/smtp_server/mailjet.env"
-}
-
-.setSmtpServer <- function(smtp.env="./smtp-server.env") {
-    if(!file.exists(smtp.env)) return(NULL)
-    settings <- read.table(smtp.env)[,2]
-    smtp <- sapply( as.character(settings), strsplit, split="=")
-    names(smtp) <- sapply(smtp,function(s) s[1])
-    smtp
-    do.call(Sys.setenv, lapply(smtp, function(s) s[2]))
-    Sys.getenv()[grep("SMTP",names(Sys.getenv()))]
-}
-
 AuthenticationUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
 }
@@ -43,15 +21,13 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, user
     )    
 
     resetUSER <- function() {
+
         USER$logged <- FALSE
         USER$name <- ""
         USER$email <- ""
         USER$level <- ""
         USER$limit <- ""
-    }
-    
-    output$showLogin <- shiny::renderUI({
-        resetUSER()
+
         if(show_modal) {
             m <- splashLoginModal(
                 ns=ns, with.email=FALSE, with.password=FALSE, login.text="Start")
@@ -62,6 +38,10 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, user
         }
         USER$name   <- username
         USER$email  <- email
+    }
+    
+    output$showLogin <- shiny::renderUI({
+        resetUSER() 
     })
 
     output$login_warning = shiny::renderText("")
@@ -77,14 +57,6 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, user
     observeEvent( input$firebaseLogout, {
         dbg("[NoAuthenticationModule] observe::input$firebaseLogout() reacted")
         resetUSER()
-        if(show_modal) {        
-            m <- splashLoginModal(
-                ns=ns, with.email=FALSE, with.password=FALSE, login.text="Start")
-            ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
-            shiny::showModal(m)
-        } else {
-            USER$logged <- TRUE            
-        }
     })
     
     rt <- list(
@@ -244,6 +216,9 @@ FirebaseAuthenticationModule <- function(input, output, session)
     })
     
     resetUSER <- function() {
+
+        message("[FirebaseAuthenticationModule] resetting USER... ")
+
         USER$logged <- FALSE
         USER$name <- ""
         USER$password <- ""
@@ -251,16 +226,9 @@ FirebaseAuthenticationModule <- function(input, output, session)
         USER$level <- ""
         USER$limit <- ""
         USER$token <- ""
-    }
 
-    first_time = TRUE
-    
-    observe({
-
-        if(USER$logged)
-            return()
-        
-        message("[FirebaseAuthenticationModule] showLogin... ")
+        ## sign out
+        firebase$sign_out()
         
         m <- splashLoginModal(
             ns = ns,
@@ -272,45 +240,30 @@ FirebaseAuthenticationModule <- function(input, output, session)
             login.text = "Start!"
         )
 
-        # no need to show the modal
-        # if the user is logged
-        # this is due to persistence
-        if(USER$logged && first_time) {
-            dbg("[FirebaseAuthenticationModule] USER is already logged in & first time = TRUE")
-            dbg("[FirebaseAuthenticationModule] signing out any previous user")
-            firebase$sign_out()
-            resetUSER()
-            first_time <<- FALSE            
-            ##return()
-        } else if(USER$logged) {
-            dbg("[FirebaseAuthenticationModule] USER is already logged in! no modal")                        
+        ## login modal
+        shiny::showModal(m)
+    }
+    
+    first_time = TRUE
+    observeEvent(USER$logged, {
+        
+        ## no need to show the modalif the user is logged this is due
+        ## to persistence. But if it is the first time of the session
+        ## we force reset/logout to delete sleeping logins.
+        if(USER$logged && !first_time) {
+            dbg("[FirebaseAuthenticationModule] USER is already logged in! no modal")
             return()
         }
-        
-        dbg("[FirebaseAuthenticationModule] showing Firebase login modal")                                
-        shiny::showModal(m)
+
+        first_time <<- FALSE        
+        message("[FirebaseAuthenticationModule] USER not logged in!")
+        resetUSER() 
+
     })
 
     observeEvent( input$firebaseLogout, {    
-
-        dbg("[FirebaseAuthenticationModule] observe::input$firebaseLogout reacted")                
-        dbg("[FirebaseAuthenticationModule] signing out from Firebase")
-        firebase$sign_out()
-
-        dbg("[FirebaseAuthenticationModule] reset user")        
-        resetUSER()
-        
-        m <- splashLoginModal(
-            ns = ns,
-            with.email = FALSE,
-            with.username = FALSE,
-            with.password = FALSE,
-            with.register = FALSE,
-            with.firebase = TRUE,            
-            login.text = "Start!"
-        )
-        
-        shiny::showModal(m)
+        message("[FirebaseAuthenticationModule] firebaseLogout triggered!")
+        resetUSER() 
     })
 
     observeEvent( input$emailSubmit, {
@@ -335,50 +288,81 @@ FirebaseAuthenticationModule <- function(input, output, session)
     })
 
     observeEvent( firebase$get_signed_in(), {
-
+        
         dbg("[FirebaseAuthenticationModule] observe::get_signed_in() reacted")
 
         response <- firebase$get_signed_in()
-
-        dbg("[FirebaseAuthenticationModule] response$success = ",response$success)
         
         if(!response$success) {
             dbg("[FirebaseAuthenticationModule] sign in NOT succesful")                        
+            resetUSER() 
             return()
         } 
-        dbg("[FirebaseAuthenticationModule] sign in SUCCESSFUL!")            
 
         on.exit({
             dbg("[FirebaseAuthenticationModule] get_signed_in() on.exit")            
             removeModal()      
         })
+        
+        dbg("[FirebaseAuthenticationModule] names(response) = ",names(response))        
+        dbg("[FirebaseAuthenticationModule] names(response$response) = ",names(response$response))
+        for(i in 1:length(response$response)) {
+            dbg("[FirebaseAuthenticationModule] ",names(response$response)[i],"=",response$response[[i]])
+        }
 
+        t1=1637262031144
+        t0 <- response$response[['createdAt']]
+        t1 <- response$response[['lastLoginAt']]
+        if(is.null(t0)) t0 <- 0
+        if(is.null(t1)) t1 <- 0        
+        t0 <- as.POSIXct(as.numeric(t0)/1000, origin="1970-01-01")
+        t1 <- as.POSIXct(as.numeric(t1)/1000, origin="1970-01-01")           
+        dbg("[FirebaseAuthenticationModule] createdAt=",t0)
+        dbg("[FirebaseAuthenticationModule] lastLoginAt=",t1)
+        dbg("[FirebaseAuthenticationModule] TIMEOUT=",TIMEOUT)        
+
+        delta.secs <- as.numeric(Sys.time() - t1 , units='secs')
+        delta.secs
+        WAIT_TIME = 3600
+        WAIT_TIME = TIMEOUT + 60*5
+        WAIT_TIME = 60*5        
+
+        ## NEED RETHINK!!! Not working very well because lastLoginAt
+        ## is often the current login time. We would actually need the
+        ## last logout time instead.
+        ##
+        if( FALSE && TIMEOUT>0 && delta.secs < WAIT_TIME ) {
+            wait.mins <- format((WAIT_TIME - delta.secs)/60, digits=0)
+            msg <- paste("You need to wait",wait.mins,"minutes before you can login again.")
+            msg <- paste(msg,"\nLast login:",t1)
+            shinyalert::shinyalert("Bummer...", msg, callbackR = resetUSER)            
+            return()
+        }
+        
         USER$logged <- TRUE
         USER$uid <- as.character(response$response$uid)
         USER$name  <- response$response$displayName
         USER$email <- response$response$email
-        
-        dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] is.null(user.name) = ",is.null(USER$name) )
-        dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] is.null(user.email) = ",is.null(USER$email) )
+
         if(!is.null(USER$name))  USER$name  <- as.character(USER$name)
         if(!is.null(USER$email)) USER$email <- as.character(USER$email)
-        if(is.null(USER$name))  USER$name  <- ""
-        if(is.null(USER$email)) USER$email <- ""
-
-        dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.name==''  = ",USER$name=='' )
+        if(is.null(USER$name))   USER$name  <- ""
+        if(is.null(USER$email))  USER$email <- ""
+        
+        dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.name=='' = ",USER$name=='' )
         dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.email=='' = ",USER$email=='' )
         
         session$sendCustomMessage(
-            "get-permissions",
-            list(
-                ns = ns(NULL)
-            )
-        )
+                    "get-permissions",
+                    list(
+                        ns = ns(NULL)
+                    )
+                )
     })
 
     observeEvent(input$stripeId, {
         USER$stripe_id <- input$stripeId$id
-        USER$href <- input$stripeId$href
+        USER$href      <- input$stripeId$href
     })
     
     observeEvent(input$permissions, {
@@ -407,6 +391,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
     })
 
     observeEvent(input$manage, {        
+
         dbg("[UserBoard] !!! input$manage called")
         dbg("[UserBoard] !!! OMICS_STRIPE_KEY = ", Sys.getenv("OMICS_STRIPE_KEY"))
         dbg("[UserBoard] !!! user$email() = ", USER$email)
@@ -465,12 +450,22 @@ PasswordAuthenticationModule <- function(input, output, session,
                        limit=NA)    
 
     resetUSER <- function() {
+
         USER$logged <- FALSE
         ## USER$username <- NA
         USER$email <- NA        
         USER$password <- NA
         USER$level <- ""
         USER$limit <- ""
+
+        m <- splashLoginModal(
+            ns=ns,
+            with.email=TRUE,
+            with.username=FALSE,
+            with.password=TRUE)
+        ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
+        shiny::showModal(m)
+        
     }
 
     CREDENTIALS <- read.csv(credentials.file,colClasses="character")
@@ -563,13 +558,6 @@ PasswordAuthenticationModule <- function(input, output, session,
     observeEvent( input$firebaseLogout, {
         dbg("[NoAuthenticationModule] observe::input$firebaseLogout() reacted")
         resetUSER()
-        m <- splashLoginModal(
-            ns=ns,
-            with.email=TRUE,
-            with.username=FALSE,
-            with.password=TRUE)
-        ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
-        shiny::showModal(m)
     })
     
     ## module reactive return value
@@ -582,305 +570,6 @@ PasswordAuthenticationModule <- function(input, output, session,
     )
     return(rt)
 }
-
-##================================================================================
-## RegisterAuthenticationModule (just ask email, no password)
-##================================================================================
-
-register.file="../logs/register.log"
-RegisterAuthenticationModule <- function(input, output, session, register.file)
-{
-    message("[AuthenticationModule] >>>> using Register authentication <<<<")
-
-    ns <- session$ns
-    dir.create("../logs",showWarnings=FALSE)        
-    register.file    
-    if(!file.exists(register.file)) {
-        ee <- data.frame(email="", name="", password="",
-                         date=NA, expiry=NA, registered=FALSE, level="basic")
-        write.table(ee[0,], file=register.file, append=FALSE, sep=",",
-                    row.names=FALSE, col.names=TRUE)
-    }
-    REGISTERED <- read.csv(register.file, colClasses="character",
-                            stringsAsFactors=FALSE)
-    head(REGISTERED)    
-    SURVEY.LOG = "../logs/survey.log"
-    DIALOG_SLEEP = 0.3
-    USER <- shiny::reactiveValues(
-                       logged=FALSE,
-                       name="",
-                       email="",
-                       password=NA,
-                       registered=FALSE,
-                       level="")
-        
-
-    resetUSER <- function() {
-        USER$logged <- FALSE
-        USER$name <- ""
-        USER$email <- ""
-        USER$password <- NA
-        USER$registered <- FALSE
-        USER$level <- ""
-    }
-
-    output$showLogin <- shiny::renderUI({
-        message("[AuthenticationModule::UI] USER$logged = ",USER$logged)
-        ## If login is OK then do nothing
-        if(USER$logged) {
-            return(NULL)
-        } else {
-            showLoginDialog()             
-        }
-    })
-
-    observeEvent( input$firebaseLogout, {
-        dbg("[RegisterAuthenticationModule] observe::input$firebaseLogout() reacted")
-        resetUSER()
-        REGISTERED <<- read.csv(register.file, colClasses="character",
-                               stringsAsFactors=FALSE)
-        showLoginDialog()                     
-    })
-
-    showLoginDialog <- function() {
-        ##removeModal()
-        alt <- shiny::actionLink(ns("create_account"),"or create an account",
-                          style="color:white;", class="white-link")
-        shiny::showModal(splashLoginModal(
-            ns=ns,
-            with.password = FALSE,
-            with.username = FALSE,
-            with.email = TRUE,
-            alt = alt))
-    }
-    
-    shiny::observeEvent( input$login_btn, {           
-        
-        message("[AuthenticationModule::login] login_btn pressed")                
-        message("[AuthenticationModule::login] email = ",input$login_email)
-        email <- input$login_email
-        ## check login
-        email.exists <- (email %in% REGISTERED$email)
-        if(!email.exists) {
-            output$login_warning = shiny::renderText("invalid email")
-            shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")}) 
-            return(NULL)
-        }
-
-        sel <- tail(which(REGISTERED$email == email),1)
-        user.registered <- REGISTERED[sel,"registered"]
-        USER$name <- REGISTERED[sel,"name"]
-        USER$email <- email
-        USER$registered <- user.registered
-        USER$logged <- TRUE
-        session$sendCustomMessage("set-user", list(user = USER$email))
-        
-        message("[AuthenticationModule::login] email.exists = ",email.exists)
-        message("[AuthenticationModule::login] user.registered = ",user.registered)
-        shiny::removeModal()
-        Sys.sleep(DIALOG_SLEEP)
-        shiny::showModal(splashHelloModal(
-            ns = ns,
-            name = USER$name,
-            msg = "Welcome back. We wish you many great discoveries today!"
-        ))
-        
-    })
-        
-    shiny::observeEvent( input$create_account, {
-        shiny::removeModal()
-        Sys.sleep(DIALOG_SLEEP)
-        m <- createAccountModal(USER)
-        shiny::showModal(m)
-    })
-    
-    validEmailFormat <- function(email) {
-        has.atsign <- grep("@",email)
-        domain <- strsplit(email,split='@')[[1]][2]
-        has.dot <- length(strsplit(domain,split="[.]")[[1]]) > 1
-        has.atsign && has.dot
-    }
-
-    createAccountModal <- function(user) {
-        message("[AuthenticationModule::createAccount] user$name = ",user$name)            
-
-        m <- shiny::modalDialog(
-            id = "auth_dialog",
-            ##title = "Create an Account",
-            shiny::tagList(
-                shiny::fillRow(
-                    flex = c(0.12,0.5,0.2,0.5,0.15),
-                    height = 450,
-                    shiny::br(),
-                    shiny::tagList(
-                        shiny::h3("Try premium?"),
-                        shiny::HTML("Good news! For limited time, all registered users will receive free access to our <b>Premium plan</b> which includes:<br><br>"),
-                        shiny::HTML("<ul><li>Drug enrichment<li>Biomarker analysis<li>Connectivity mapping<li>WGCNA analysis<li>And more!</ul>"),
-                        shiny::br(),
-                        ##h4("Recommend us to your friends"),
-                        ##textAreaInput(ns("register_friends"),"Email(s) of friends:",rows=3)
-                        ),
-                    shiny::br(),
-                    shiny::tagList(
-                        ##h3("Tell us a bit about yourself"),
-                        shiny::h3("Create a free account"),                            
-                        shiny::textInput(ns("register_name"),"First name"),
-                        shiny::textInput(ns("register_lastname"),"Last name"),
-                        shiny::textInput(ns("register_email"),"E-mail",value=USER$email),
-                        shiny::textInput(ns("register_organization"),"Organization"),
-                        shiny::textInput(ns("register_jobtitle"),"Job title"),                        
-                        shiny::selectInput(ns("register_institutiontype"),"Institution type",
-                                    ## select=FALSE, selectize=FALSE,
-                                    c("",sort(c("Pharma/Biotech",
-                                                "Hospital/Medical Center",
-                                                "Government",
-                                                "Service provider",
-                                                "Start-up")),"other")),
-                        shiny::selectInput(ns("register_hear"),"How did you hear about us?",
-                                    c("",sort(c("From coworker/friend",
-                                                "LinkedIn",
-                                                "Twitter",
-                                                "Journal article",
-                                                "Web article/blog",
-                                                "Web search",
-                                                "BigOmics website",
-                                                "Event",
-                                                "Contacted by Sales")), "other")),
-                        shiny::br(),br()
-                    ),
-                    shiny::br()
-                )
-            ),
-            footer = shiny::tagList(
-                shiny::div(shiny::textOutput(ns("register_warning")),style="color:red; text-align:center;"),
-                shiny::actionLink(ns("register_cancel"), "Cancel"),shiny::HTML("&nbsp;&nbsp;"),
-                shiny::actionButton(ns("register_submit"), "Register")
-            ),                    
-            ##footer = NULL,
-            easyClose = FALSE,
-            size = "m"
-        )
-
-        shiny::observeEvent( input$register_cancel, {
-            shiny::removeModal()	
-            Sys.sleep(DIALOG_SLEEP)
-            showLoginDialog() 
-        }, once=TRUE, ignoreInit=TRUE)
-
-        shiny::observeEvent( input$register_submit, {
-            
-            message("[AuthenticationModule::createAccount] REGISTER pressed")
-            message("[AuthenticationModule::createAccount] REGISTER pressed")
-            qq <- c(
-                name = input$register_name,
-                lastname = input$register_lastname,
-                email = input$register_email,
-                organization = input$register_organization,                
-                jobtitle = input$register_jobtitle,
-                organization = input$register_organization,                    
-                institutiontype = input$register_institutiontype,                    
-                hear = input$register_hear
-            )
-            
-            if(any(is.null(qq) | qq=="")) {
-                message("[AuthenticationModule::createAccount] missing fields")
-                output$register_warning = shiny::renderText("Please fill in all required fields")
-                shinyjs::delay(2000, {output$register_warning <- shiny::renderText("")})
-                return(NULL)
-            }
-
-            email.ok = validEmailFormat( input$register_email )
-            if(!email.ok) {
-                output$register_warning = shiny::renderText("Error: invalid email format")
-                shinyjs::delay(2000, {output$register_warning <- shiny::renderText("")}) 
-                return(NULL)
-            }
-
-            email.exists <- (input$register_email %in% REGISTERED$email)
-            if(email.exists) {
-                output$register_warning = shiny::renderText("Error: email exists")
-                shinyjs::delay(2000, {output$register_warning <- shiny::renderText("")}) 
-                return(NULL)
-            }
-
-            message("[AuthenticationModule::createAccount] all answered!")
-            lapply(1:length(qq), function(i) message(names(qq)[i],"=",qq[i]))
-            ##
-            ## save somewhere!
-            ##
-            USER$name  <- input$register_name
-            USER$email <- input$register_email
-            USER$password <- ""
-            USER$registered <- TRUE
-            USER$level <- "FREE"
-            updateRegister(USER, register.file)
-            updateSurveyLog(USER, qq)                
-            USER$logged = TRUE
-
-            ## success
-            shiny::removeModal()
-            shiny::showModal(splashHelloModal(
-                ns = ns,                
-                name = USER$name,
-                msg = "Thank you for registering. We wish you many great discoveries today!"
-            ))
-            
-        })
-        m
-    }   
-
-    updateRegister <- function(user, register.file) {
-        ##today = as.character(Sys.Date())
-        today = as.character(Sys.time())
-        ##expiry <- as.character(Sys.Date()+365)
-        expiry <- "2099-01-01"
-        ee <- data.frame(
-            email = user$email,
-            name = user$name,
-            password = user$password,
-            date = today,
-            expiry = expiry,
-            registered = user$registered,
-            level = user$level)
-
-        if(nrow(REGISTERED)>0) {
-            ee <- ee[,match(colnames(REGISTERED),colnames(ee))]            
-            ee
-            REGISTERED <- rbind(REGISTERED, ee)
-        } else {
-            REGISTERED <- ee
-        }
-        suppressWarnings(
-            write.table(ee, file=register.file, append=TRUE, sep=",",
-                        row.names=FALSE, col.names=!file.exists(register.file))
-        )
-    }
-
-    updateSurveyLog <- function(user, answers) {
-        ##qa.list <- list(...)
-        today = as.character(Sys.time())        
-        QA <- cbind(question=names(answers), answer=answers)
-        ee <- data.frame( email = user$email, date = today, QA)
-        rownames(ee) <- NULL        
-        suppressWarnings(
-            write.table(ee, file=SURVEY.LOG, append=TRUE, sep=",",
-                        row.names=FALSE,
-                        col.names=!file.exists(SURVEY.LOG))
-        )        
-    }    
-    ##hide("login_warning")
-    output$login_warning = shiny::renderText("")
-    output$register_warning = shiny::renderText("")
-    res <- list(
-        name   = shiny::reactive(USER$name),
-        email  = shiny::reactive(USER$email),
-        level  = shiny::reactive(USER$level),
-        logged = shiny::reactive(USER$logged),
-        limit = shiny::reactive(USER$limit)
-    )
-    return(res)
-}
-
 
 
 ##================================================================================

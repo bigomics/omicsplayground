@@ -12,11 +12,11 @@ QUESTIONS.ANSWERS <- list(
     c("Are you a student?","yes|no")
 )
 
-QuestionBoard_UI <- function(id) {
+QuestionModuleUI <- function(id) {
     ##ns <- shiny::NS(id)  ## namespace
 }
 
-QuestionBoard <- function(input, output, session, lapse=5)
+QuestionModule <- function(input, output, session, lapse=5)
 {
     ns <- session$ns ## NAMESPACE
     
@@ -24,7 +24,7 @@ QuestionBoard <- function(input, output, session, lapse=5)
     cur_question <- shiny::reactiveVal("")
     
     showQuestion <- function(qa=NULL) {
-        dbg("[QuestionBoard:showQuestion] reacted")
+        dbg("[QuestionModule:showQuestion] reacted")
         if(is.null(qa)) qa <- sample(QUESTIONS.ANSWERS,1)[[1]]
         question <- qa[1]
         cur_question(qa[1])
@@ -56,12 +56,12 @@ QuestionBoard <- function(input, output, session, lapse=5)
     })
 
     shiny::observeEvent( input$question_submit, {
-        dbg("[QuestionBoard$:observeEvent] input$question_submit")
+        dbg("[QuestionModule$:observeEvent] input$question_submit")
         question <- cur_question()
         answer <- input$answer
         qa <- data.frame(time=date(), question="question", answer="answer")
         qa <- data.frame(time=date(), question=question, answer=answer)
-        dbg("[QuestionBoard$:observeEvent] updating answer.csv file...")
+        dbg("[QuestionModule$:observeEvent] updating answer.csv file...")
         write.table( qa, file="answers.csv", sep=",", append=TRUE,
                     row.names=FALSE, col.names=FALSE)
         shiny::removeModal()        
