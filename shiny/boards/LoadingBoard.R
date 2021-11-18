@@ -778,7 +778,7 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
                 ## -------------- save PGX file/object ---------------
                 ##pgx <- currentPGX()
                 pgxname <- sub("[.]pgx$","",pgx$name)
-                pgxname <- gsub("^[./]*","",pgxname)  ## prevent going to parent folder
+                pgxname <- gsub("^[./-]*","",pgxname)  ## prevent going to parent folder
                 pgxname <- paste0(gsub("[ \\/]","_",pgxname),".pgx")
                 pgxname
                 pgxdir  <- getPGXDIR()
