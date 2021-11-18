@@ -112,11 +112,9 @@ if(1 && opt$AUTHENTICATION=="firebase" && !file.exists("firebase.rds")) {
     ## opt$ENABLE_USERDIR = FALSE
 }
 
-## copy to global environment
-SHOW_QUESTIONS = FALSE
-AUTHENTICATION = opt$AUTHENTICATION
-WATERMARK      = opt$WATERMARK
-TIMEOUT        = as.integer(opt$TIMEOUT)  ## in seconds
+## copy to global.R environment
+WATERMARK <<- opt$WATERMARK
+TIMEOUT   <<- as.integer(opt$TIMEOUT)  ## in seconds
 
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
@@ -209,7 +207,7 @@ server = function(input, output, session) {
                                 pgx_dir = PGX.DIR,
                                 limits = limits,
                                 enable_userdir = opt$ENABLE_USERDIR,                                
-                                authentication = AUTHENTICATION,
+                                authentication = opt$AUTHENTICATION,
                                 enable_upload = opt$ENABLE_UPLOAD,
                                 enable_delete = opt$ENABLE_DELETE,                                 
                                 enable_save = opt$ENABLE_SAVE
@@ -382,9 +380,8 @@ server = function(input, output, session) {
             tm$start <- NULL
             tm.warned <<- FALSE
         }       
-
     })
-
+    
     ## Logout user after TIMEOUT
     shiny::observeEvent(tm$timer(), {
         message("[SERVER] timer reacted")
@@ -407,7 +404,7 @@ server = function(input, output, session) {
             } else if(secs.lapsed >= TIMEOUT) {
                 message("[SERVER] timed out!!!")
                 shinyalert::closeAlert()
-                js.cb = "function(x){logout();quit()}"
+                js.cb = "function(x){logout();}"
                 if(opt$AUTHENTICATION=="shinyproxy") {
                     js.cb = "function(x){logout();quit();window.location.assign('/logout');}"
                 }
@@ -435,7 +432,10 @@ server = function(input, output, session) {
         dbg("[SERVER:quit] closing session... ")        
         session$close()
         dbg("[SERVER:quit] stopping App... ")                
-        stopApp()
+
+        ## Return non-zero value so docker swarm can catch and restart
+        ## the container upon on-failure
+        stopApp(99)  
         dbg("[SERVER:quit] App died... ")                        
     })
     
@@ -443,11 +443,11 @@ server = function(input, output, session) {
     ## Note!!!: Strange behaviour, sudden session ending.
     if(0) {
         session$onSessionEnded(function() {
-            dbg("[SERVER:onSessionEnded] !!!reacted!!!")
+            message("******** doing session cleanup ********")
             dbg("[SERVER:onSessionEnded] closing session... ")
             session$close()
             dbg("[SERVER:onSessionEnded] stopping App... ")                        
-            stopApp()
+            stopApp(99)  ## non-zero return
             dbg("[SERVER:onSessionEnded] App died... ")                                
         })
     }    
@@ -667,7 +667,12 @@ ui = createUI(tabs)
 ## ------------------------------ RUN ---------------------------------
 ## --------------------------------------------------------------------
 
-shiny::shinyApp(ui, server)
+onStop(function() {
+    message("*************** Doing application cleanup ****************")
+    ## Fill me...
+})
+
+shiny::shinyApp(ui, server, onStart=NULL)
 
 ##pkgs <- c( sessionInfo()[["basePkgs"]], names(sessionInfo()[["otherPkgs"]]),
 ##          names(sessionInfo()[["loadedOnly"]]) )

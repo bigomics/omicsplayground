@@ -61,11 +61,6 @@ LoadingBoard <- function(input, output, session, pgx_dir=PGX.DIR,
             credentials.file = "CREDENTIALS")
     } else if(authentication == "firebase") {
         auth <- shiny::callModule(FirebaseAuthenticationModule, "auth")
-    } else if(authentication == "register") {
-        auth <- shiny::callModule(
-            RegisterAuthenticationModule, "auth",
-            register.file = "../logs/register.log")
-        ##} else if(authentication == "shinyproxy" && in.shinyproxy()) {
     } else if(authentication == "shinyproxy") {        
         username <- Sys.getenv("SHINYPROXY_USERNAME")
         ##email <- Sys.getenv("SHINYPROXY_EMAIL")        

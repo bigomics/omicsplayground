@@ -21,11 +21,13 @@ FILESX    = file.path(OPG,"libx")
 PGX.DIR   = file.path(OPG,"data")
 SIGDB.DIR = file.path(OPG,"libx/sigdb")
 
+AUTHENTICATION = "none"
 WATERMARK = FALSE
 DEBUG     = FALSE
 DEV       = dir.exists('/home/kwee')
 ##DEV     = FALSE
 DEBUG     = TRUE
+TIMEOUT   = 0
 
 ALLOW_URL_QUERYSTRING = FALSE
 ##ALLOW_URL_QUERYSTRING = TRUE
