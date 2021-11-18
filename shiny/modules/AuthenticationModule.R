@@ -30,7 +30,7 @@ AuthenticationUI <- function(id) {
 }
 
 
-NoAuthenticationModule <- function(input, output, session, username="", email="")
+NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, username="", email="")
 {
     message("[AuthenticationModule] >>>> using no authentication <<<<")
     ns <- session$ns    
@@ -52,11 +52,14 @@ NoAuthenticationModule <- function(input, output, session, username="", email=""
     
     output$showLogin <- shiny::renderUI({
         resetUSER()
-        m <- splashLoginModal(
-            ns=ns, with.email=FALSE, with.password=FALSE, login.text="Start")
-        ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
-        shiny::showModal(m)
-
+        if(show_modal) {
+            m <- splashLoginModal(
+                ns=ns, with.email=FALSE, with.password=FALSE, login.text="Start")
+            ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
+            shiny::showModal(m)
+        } else {
+            USER$logged <- TRUE
+        }
         USER$name   <- username
         USER$email  <- email
     })
@@ -74,10 +77,14 @@ NoAuthenticationModule <- function(input, output, session, username="", email=""
     observeEvent( input$firebaseLogout, {
         dbg("[NoAuthenticationModule] observe::input$firebaseLogout() reacted")
         resetUSER()
-        m <- splashLoginModal(
-            ns=ns, with.email=FALSE, with.password=FALSE, login.text="Start")
-        ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
-        shiny::showModal(m)
+        if(show_modal) {        
+            m <- splashLoginModal(
+                ns=ns, with.email=FALSE, with.password=FALSE, login.text="Start")
+            ## shinyjs::delay(2000, {output$login_warning <- shiny::renderText("")})
+            shiny::showModal(m)
+        } else {
+            USER$logged <- TRUE            
+        }
     })
     
     rt <- list(
@@ -167,7 +174,7 @@ upgrade.dialog <- function(ns, current.plan) {
         ),  ## content div
         div(
             style = "margin-top:3rem;text-align:center;",              
-            HTML("Looking for <b>OmicsPlayground Enterprise</b> with data sharing and secured dedicated server? <a href='mailto:info@bigomics.com'>Contact sales for pricing</a>.")
+            HTML("Looking for OmicsPlayground for <b>Enterprise</b>? <a href='mailto:info@bigomics.com'>Contact sales for info and pricing</a>.")
         ),
         footer = tagList(
             fillRow(

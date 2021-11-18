@@ -206,6 +206,7 @@ server = function(input, output, session) {
     ## Modules needed from the start
     env[["load"]] <- shiny::callModule(
                                 LoadingBoard, "load",
+                                pgx_dir = PGX.DIR,
                                 limits = limits,
                                 enable_userdir = opt$ENABLE_USERDIR,                                
                                 authentication = AUTHENTICATION,
@@ -287,7 +288,7 @@ server = function(input, output, session) {
         user <- env[["load"]][["auth"]]$email()
         user
     })
-
+   
     output$current_dataset <- shiny::renderText({
         ## trigger on change of dataset
         pgx <- env[["load"]][["inputData"]]()
@@ -437,7 +438,7 @@ server = function(input, output, session) {
         stopApp()
         dbg("[SERVER:quit] App died... ")                        
     })
-
+    
     ## This code will be run after the client has disconnected
     ## Note!!!: Strange behaviour, sudden session ending.
     if(0) {
@@ -449,9 +450,31 @@ server = function(input, output, session) {
             stopApp()
             dbg("[SERVER:onSessionEnded] App died... ")                                
         })
-    }
+    }    
     
-
+    observe({
+        ##-------------------------------------------------------------
+        ## Parse and show URL query string
+        ##-------------------------------------------------------------
+        query <- parseQueryString(session$clientData$url_search)
+        if(length(query)>0) {
+            dbg("[SERVER:parseQueryString] names.query =",names(query))
+            for(i in 1:length(query)) {
+                dbg("[SERVER:parseQueryString]",names(query)[i],"=>",query[[i]])
+            }
+        } else {
+            dbg("[SERVER:parseQueryString] no queryString!")
+        }
+        
+        if(ALLOW_URL_QUERYSTRING && !is.null(query[['data']])) {
+            qdir <- query[['data']]
+            dbg("[SERVER:parseQueryString] *** loading CSV from dir = ",qdir)
+            ## focus on this tab
+            updateTabsetPanel(session, "load-tabs", selected = "Upload data")
+        }
+        
+    })
+    
     ##-------------------------------------------------------------
     ## report server times
     ##-------------------------------------------------------------    
@@ -461,6 +484,7 @@ server = function(input, output, session) {
     message("[SERVER] total lapse time = ",total.lapse_time," ",attr(total.lapse_time,"units"))
 
 }
+
 
 ## --------------------------------------------------------------------
 ## ------------------------------ UI ----------------------------------

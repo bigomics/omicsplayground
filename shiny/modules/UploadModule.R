@@ -77,7 +77,6 @@ UploadModuleServer <- function(id,
 
             output$upload_UI <- shiny::renderUI({
 
-                shinyalert::useShinyalert()
                 shiny::fillCol(
                     height = height,
                     ##flex = c(NA,0.05,1.6,0.05,NA),
@@ -162,7 +161,7 @@ UploadModuleServer <- function(id,
             })
             
             ##=====================================================================
-            ##========================= OBSERVERS =================================
+            ##======================= UI OBSERVERS ================================
             ##=====================================================================            
             
             shiny::observeEvent( input$advanced_mode, {
@@ -174,7 +173,159 @@ UploadModuleServer <- function(id,
                     shiny::hideTab("tabs", "BatchCorrect")
                 }
             })
+            
+            ##=====================================================================
+            ##================== DATA LOADING OBSERVERS ===========================
+            ##=====================================================================            
+            
+            ##------------------------------------------------------------------
+            ## Observer for uploading data files using fileInput widget.
+            ##
+            ## Reads in the data files from the file names, checks and
+            ## puts in the reactive values object 'uploaded'. Then
+            ## uploaded should trigger the computePGX module.
+            ## ------------------------------------------------------------------
+            shiny::observeEvent( input$upload_files, {
+                
+                message("[upload_files] >>> reading uploaded files")
+                message("[upload_files] upload_files$name=",input$upload_files$name)
+                message("[upload_files] upload_files$datapath=",input$upload_files$datapath)
+                
+                ##for(i in 1:length(uploaded)) uploaded[[i]] <- NULL
+                uploaded[["pgx"]] <- NULL
+                uploaded[["last_uploaded"]] <- NULL
+                
+                ## read uploaded files
+                pgx.uploaded <- any(grepl("[.]pgx$",input$upload_files$name))
+                matlist <- list()
 
+                if(pgx.uploaded) {
+                    
+                    message("[upload_files] PGX upload detected")
+                    
+                    ## If the user uploaded a PGX file, we extract the matrix
+                    ## dimensions from the given PGX/NGS object. Really?
+                    ##
+                    i <- grep("[.]pgx$",input$upload_files$name)
+                    load(input$upload_files$datapath[i])  ## load NGS/PGX                    
+                    ##matlist[["counts.csv"]] <- ngs$counts
+                    ##matlist[["samples.csv"]] <- type.convert(ngs$samples)
+                    ##matlist[["contrasts.csv"]] <- ngs$model.parameters$exp.matrix
+                    uploaded[["pgx"]] <- ngs
+                    
+                } else {
+
+                    ## If the user uploaded CSV files, we read in the data
+                    ## from the files.
+                    ##
+                    message("[upload_files] getting matrices from CSV")
+
+                    ii <- grep("csv$",input$upload_files$name)
+                    ii <- grep("sample|count|contrast|expression",
+                               input$upload_files$name, ignore.case=TRUE)
+                    if(length(ii)==0) return(NULL)
+                    
+                    inputnames  <- input$upload_files$name[ii]
+                    uploadnames <- input$upload_files$datapath[ii]
+                    
+                    if(length(uploadnames)>0) {
+                        i=1
+                        for(i in 1:length(uploadnames)) {
+                            fn1 <- inputnames[i]
+                            fn2 <- uploadnames[i]
+                            matname <- NULL
+                            df <- NULL
+                            if(grepl("count",fn1, ignore.case=TRUE)) {
+                                dbg("[upload_files] counts.csv : fn1 = ",fn1)
+                                ## allows duplicated rownames
+                                df0 <- read.csv2(fn2, check.names=FALSE, stringsAsFactors=FALSE)
+                                dbg("[upload_files] counts.csv : 1 : dim(df0) = ",
+                                        paste(dim(df0),collapse='x'))
+                                if(nrow(df0)>1 && NCOL(df0)>1) {
+                                    dbg("[upload_files] counts.csv : 2 : dim(df0) = ",
+                                            paste(dim(df0),collapse='x'))
+                                    df <- as.matrix(df0[,-1])
+                                    rownames(df) <- as.character(df0[,1])
+                                    matname <- "counts.csv"
+                                }
+                            } else if(grepl("expression",fn1,ignore.case=TRUE)) {
+                                dbg("[upload_files] expression.csv : fn1 = ",fn1)
+                                ## allows duplicated rownames
+                                df0 <- read.csv2(fn2, check.names=FALSE, stringsAsFactors=FALSE)
+                                if(nrow(df0)>1 && NCOL(df0)>1) {
+                                    df <- as.matrix(df0[,-1])
+                                    rownames(df) <- as.character(df0[,1])
+                                    ## convert expression to pseudo-counts
+                                    message("[UploadModule::upload_files] converting expression to counts...")
+                                    df <- 2**df
+                                    matname <- "counts.csv"
+                                }
+                            } else if(grepl("sample",fn1,ignore.case=TRUE)) {
+                                dbg("[upload_files] samples.csv : fn1 = ",fn1)
+                                df <- read.csv2(fn2, row.names=1, check.names=FALSE,
+                                                stringsAsFactors=FALSE)
+                                df <- type.convert(df)
+                                if(nrow(df)>1 && NCOL(df)>=1) {
+                                    matname <- "samples.csv"
+                                }
+                            } else if(grepl("contrast",fn1,ignore.case=TRUE)) {
+                                dbg("[upload_files] contrasts.csv : fn1 = ",fn1)
+                                df <- read.csv2(fn2, row.names=1, check.names=FALSE,
+                                                stringsAsFactors=FALSE)
+                                if(nrow(df)>1 && NCOL(df)>=1) {
+                                    matname <- "contrasts.csv"
+                                }
+                            }
+                            if(!is.null(matname)) {
+                                matlist[[matname]] <- df
+                            }
+                        }
+                    }            
+                }
+                
+                if("counts.csv" %in% names(matlist)) {
+                    ## Convert to gene names (need for biological effects)
+                    dbg("[upload_files] converting probe names to symbols")
+                    X0 <- matlist[['counts.csv']]
+                    pp <- rownames(X0)
+                    rownames(X0) <- probe2symbol(pp)
+                    sel <- !(rownames(X0) %in% c(NA,'','NA'))
+                    X0 <- X0[sel,]
+                    xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i,,drop=FALSE]))
+                    X0 <- do.call(rbind, xx)
+                    matlist[['counts.csv']] <- X0
+                }
+                
+                ## put the matrices in the reactive values 'uploaded'        
+                files.needed = c("counts.csv","samples.csv","contrasts.csv")
+                if(length(matlist)>0) {
+                    matlist = matlist[ which(names(matlist) %in% files.needed) ]                
+                    for(i in 1:length(matlist)) {
+                        colnames(matlist[[i]]) <- gsub("[\n\t ]","_",colnames(matlist[[i]]))
+                        rownames(matlist[[i]]) <- gsub("[\n\t ]","_",rownames(matlist[[i]]))
+                        if(names(matlist)[i] %in% c("counts.csv","contrasts.csv")) {
+                            matlist[[i]] <- as.matrix(matlist[[i]])
+                        } else {
+                            matlist[[i]] <- type.convert(matlist[[i]])
+                        }
+                        m1 <- names(matlist)[i]
+                        message("[upload_files] updating matrix ",m1)                        
+                        uploaded[[m1]] <- matlist[[i]]
+                    }
+                    uploaded[["last_uploaded"]] <- names(matlist)
+                }
+                
+                message("[upload_files] done!\n")
+            })
+
+
+            ##------------------------------------------------------------------
+            ## Observer for loading from local exampledata.zip file
+            ##
+            ## Reads in the data files from zip and puts in the
+            ## reactive values object 'uploaded'. Then uploaded should
+            ## trigger the computePGX module.
+            ## ------------------------------------------------------------------
             shiny::observeEvent( input$load_example, {
                 if(input$load_example) {
                     zipfile = file.path(FILES,"exampledata.zip")
@@ -198,9 +349,122 @@ UploadModuleServer <- function(id,
                     uploaded$contrasts.csv <- NULL
                 }
             })
+
+            ##------------------------------------------------------------------
+            ## Observer for loading CSV from local folder on
+            ## host/server using URL. Reads the CSV files from folder
+            ## and puts in the reactive values object 'uploaded'.
+            ## ------------------------------------------------------------------
+
+            if(ALLOW_URL_QUERYSTRING) {
+
+                shiny::observeEvent(session$clientData$url_search, {
+                    ##-------------------------------------------------------------
+                    ## Parse URL query string
+                    ##-------------------------------------------------------------
+                    query <- parseQueryString(session$clientData$url_search)
+                    if(length(query)>0) {
+                        dbg("[UploadModule:parseQueryString] names.query =",names(query))
+                        for(i in 1:length(query)) {
+                            dbg("[UploadModule:parseQueryString]",names(query)[i],"=>",query[[i]])
+                        }
+                    } else {
+                        dbg("[UploadModule:parseQueryString] no queryString!")
+                    }
+                    
+                    if(!is.null(query[['data']])) {
+                        qdir <- query[['data']]
+                        dbg("[UploadModule:parseQueryString] *** parseQueryString ***")
+                        dbg("[UploadModule:parseQueryString] qdir = ",qdir)                         
+
+                        counts_file = file.path(qdir,"counts.csv")
+                        samples_file = file.path(qdir,"samples.csv")
+                        if(!file.exists(counts_file)) {
+                            dbg("[SERVER:parseQueryString] ***ERROR*** missing counts.csv in dir = ",qdir)
+                        }
+                        if(!file.exists(samples_file) ) {
+                            dbg("[SERVER:parseQueryString] ***ERROR*** missing samples.csv in dir = ",qdir)
+                        }
+                        if(!file.exists(counts_file) || !file.exists(samples_file)) {
+                            return(NULL)
+                        }
+                        
+
+                        FUN.readfromdir <- function() {
+                            dbg("[UploadModule:parseQueryString] *** loading CSV from dir = ",qdir,"***")
+                            
+                            readfromdir1 <- function(file) {
+                                read.csv(file, check.names=FALSE, stringsAsFactors=FALSE,
+                                         row.names=1)
+                            }
+                            readfromdir2 <- function(file) {
+                                ## allows for duplicated names
+                                df0 <- read.csv(file, check.names=FALSE, stringsAsFactors=FALSE)
+                                mat <- as.matrix(df0[,-1])
+                                rownames(mat) <- as.character(df0[,1])
+                                mat
+                            }
+                            uploaded$samples.csv <- readfromdir1(samples_file)
+                            uploaded$counts.csv  <- readfromdir2(counts_file)
+                            uploaded$contrasts.csv <- NULL
+
+                            meta_file = file.path(qdir,"meta.txt")
+                            uploaded$meta <- NULL
+                            if(file.exists(meta_file)) {
+                                meta <- read.table(meta_file,sep='\t',header=TRUE,row.names=1)
+                                meta <- as.list(array(meta[,1],dimnames=list(rownames(meta))))
+                                uploaded$meta <- meta
+                            }
+                        }
+                        
+                        shinyalert::shinyalert(
+                                        title= "Load CSV data from folder?",
+                                        text = paste0("folder = ",qdir),
+                                        callbackR = FUN.readfromdir,
+                                        confirmButtonText = "Load!",
+                                        type = "info")
+                        
+                        dbg("[UploadModule:parseQueryString] dim(samples) = ",dim(uploaded$samples.csv))
+                        dbg("[UploadModule:parseQueryString] dim(counts) = ",dim(uploaded$counts.csv))
+
+                        ## focus on this tab
+                        updateTabsetPanel(session, "tabs", selected = "Upload data")
+                    }
+
+                })
+    
+
+                shiny::observeEvent( input$load_example, {
+
+                    if(input$load_example) {
+                        zipfile = file.path(FILES,"exampledata.zip")
+                        readfromzip1 <- function(file) {
+                            read.csv(unz(zipfile, file), check.names=FALSE, stringsAsFactors=FALSE,
+                                     row.names=1)
+                        }
+                        readfromzip2 <- function(file) {
+                            ## allows for duplicated names
+                            df0 <- read.csv(unz(zipfile, file), check.names=FALSE, stringsAsFactors=FALSE)
+                            mat <- as.matrix(df0[,-1])
+                            rownames(mat) <- as.character(df0[,1])
+                            mat
+                        }
+                        uploaded$counts.csv <- readfromzip2("exampledata/counts.csv")
+                        uploaded$samples.csv <- readfromzip1("exampledata/samples.csv")
+                        uploaded$contrasts.csv <- readfromzip1("exampledata/contrasts.csv")
+                    } else {
+                        ## Remove files                        
+                        uploaded$counts.csv <- NULL
+                        uploaded$samples.csv <- NULL
+                        uploaded$contrasts.csv <- NULL
+                    }
+                })
+
+            }
+            
             
             ##=====================================================================
-            ##========================= REACTIVES =================================
+            ##========================= SUBMODULES/SERVERS ========================
             ##=====================================================================            
 
             ##correctedX <- shiny::reactive({
@@ -278,7 +542,8 @@ UploadModuleServer <- function(id,
                 samplesRT = shiny::reactive(uploaded$samples.csv),
                 contrastsRT = shiny::reactive(uploaded$contrasts.csv),
                 batchRT = batch_vectors, 
-                enable = upload_ok,
+                metaRT = shiny::reactive(uploaded$meta),                
+                enable_button = upload_ok,
                 alertready = FALSE,
                 FILES = FILES,
                 pgx.dirRT = shiny::reactive(pgx.dirRT()),
@@ -300,7 +565,7 @@ UploadModuleServer <- function(id,
             })
 
             ##=====================================================================
-            ##============================= PLOTS =================================
+            ##===================== PLOTS AND TABLES ==============================
             ##=====================================================================            
 
             output$countStats <- shiny::renderPlot({
@@ -442,150 +707,6 @@ UploadModuleServer <- function(id,
                 p1
             })
             
-            
-            ##=====================================================================
-            ##========================== OBSERVERS ================================
-            ##=====================================================================            
-            
-            ##------------------------------------------------------------------
-            ## Main observer for uploaded data files
-            ## ------------------------------------------------------------------
-            shiny::observeEvent( input$upload_files, {
-                
-                ## Reads in the data files from the file names, checks and
-                ## puts in the reactive values object 'uploaded'.
-                ##
-                message("[upload_files] >>> reading uploaded files")
-                message("[upload_files] upload_files$name=",input$upload_files$name)
-                message("[upload_files] upload_files$datapath=",input$upload_files$datapath)
-                
-                ##for(i in 1:length(uploaded)) uploaded[[i]] <- NULL
-                uploaded[["pgx"]] <- NULL
-                uploaded[["last_uploaded"]] <- NULL
-                
-                ## read uploaded files
-                pgx.uploaded <- any(grepl("[.]pgx$",input$upload_files$name))
-                matlist <- list()
-                if(pgx.uploaded) {
-
-                    message("[upload_files] PGX upload detected")
-                    
-                    ## If the user uploaded a PGX file, we extract the matrix
-                    ## dimensions from the given PGX/NGS object. Really?
-                    ##
-                    i <- grep("[.]pgx$",input$upload_files$name)
-                    load(input$upload_files$datapath[i])  ## load NGS/PGX
-
-                    ##matlist[["counts.csv"]] <- ngs$counts
-                    ##matlist[["samples.csv"]] <- type.convert(ngs$samples)
-                    ##matlist[["contrasts.csv"]] <- ngs$model.parameters$exp.matrix
-
-                    uploaded[["pgx"]] <- ngs
-                    
-                } else {
-
-                    ## If the user uploaded CSV files, we read in the data
-                    ## from the files.
-                    ##
-                    message("[upload_files] getting matrices from CSV")
-
-                    ii <- grep("csv$",input$upload_files$name)
-                    ii <- grep("sample|count|contrast|expression",
-                               input$upload_files$name, ignore.case=TRUE)
-                    if(length(ii)==0) return(NULL)
-                    
-                    inputnames  <- input$upload_files$name[ii]
-                    uploadnames <- input$upload_files$datapath[ii]
-
-                    if(length(uploadnames)>0) {
-                        i=1
-                        for(i in 1:length(uploadnames)) {
-                            fn1 <- inputnames[i]
-                            fn2 <- uploadnames[i]
-                            matname <- NULL
-                            df <- NULL
-                            if(grepl("count",fn1, ignore.case=TRUE)) {
-                                dbg("[upload_files] counts.csv : fn1 = ",fn1)
-                                ## allows duplicated rownames
-                                df0 <- read.csv2(fn2, check.names=FALSE, stringsAsFactors=FALSE)
-                                dbg("[upload_files] counts.csv : 1 : dim(df0) = ",
-                                        paste(dim(df0),collapse='x'))
-                                if(nrow(df0)>1 && NCOL(df0)>1) {
-                                    dbg("[upload_files] counts.csv : 2 : dim(df0) = ",
-                                            paste(dim(df0),collapse='x'))
-                                    df <- as.matrix(df0[,-1])
-                                    rownames(df) <- as.character(df0[,1])
-                                    matname <- "counts.csv"
-                                }
-                            } else if(grepl("expression",fn1,ignore.case=TRUE)) {
-                                dbg("[upload_files] expression.csv : fn1 = ",fn1)
-                                ## allows duplicated rownames
-                                df0 <- read.csv2(fn2, check.names=FALSE, stringsAsFactors=FALSE)
-                                if(nrow(df0)>1 && NCOL(df0)>1) {
-                                    df <- as.matrix(df0[,-1])
-                                    rownames(df) <- as.character(df0[,1])
-                                    ## convert expression to pseudo-counts
-                                    message("[UploadModule::upload_files] converting expression to counts...")
-                                    df <- 2**df
-                                    matname <- "counts.csv"
-                                }
-                            } else if(grepl("sample",fn1,ignore.case=TRUE)) {
-                                dbg("[upload_files] samples.csv : fn1 = ",fn1)
-                                df <- read.csv2(fn2, row.names=1, check.names=FALSE,
-                                                stringsAsFactors=FALSE)
-                                df <- type.convert(df)
-                                if(nrow(df)>1 && NCOL(df)>=1) {
-                                    matname <- "samples.csv"
-                                }
-                            } else if(grepl("contrast",fn1,ignore.case=TRUE)) {
-                                dbg("[upload_files] contrasts.csv : fn1 = ",fn1)
-                                df <- read.csv2(fn2, row.names=1, check.names=FALSE,
-                                                stringsAsFactors=FALSE)
-                                if(nrow(df)>1 && NCOL(df)>=1) {
-                                    matname <- "contrasts.csv"
-                                }
-                            }
-                            if(!is.null(matname)) {
-                                matlist[[matname]] <- df
-                            }
-                        }
-                    }            
-                }
-                
-                if("counts.csv" %in% names(matlist)) {
-                    ## Convert to gene names (need for biological effects)
-                    dbg("[upload_files] converting probe names to symbols")
-                    X0 <- matlist[['counts.csv']]
-                    pp <- rownames(X0)
-                    rownames(X0) <- probe2symbol(pp)
-                    sel <- !(rownames(X0) %in% c(NA,'','NA'))
-                    X0 <- X0[sel,]
-                    xx <- tapply(1:nrow(X0), rownames(X0), function(i) colSums(X0[i,,drop=FALSE]))
-                    X0 <- do.call(rbind, xx)
-                    matlist[['counts.csv']] <- X0
-                }
-                
-                ## put the matrices in the reactive values 'uploaded'        
-                files.needed = c("counts.csv","samples.csv","contrasts.csv")
-                if(length(matlist)>0) {
-                    matlist = matlist[ which(names(matlist) %in% files.needed) ]                
-                    for(i in 1:length(matlist)) {
-                        colnames(matlist[[i]]) <- gsub("[\n\t ]","_",colnames(matlist[[i]]))
-                        rownames(matlist[[i]]) <- gsub("[\n\t ]","_",rownames(matlist[[i]]))
-                        if(names(matlist)[i] %in% c("counts.csv","contrasts.csv")) {
-                            matlist[[i]] <- as.matrix(matlist[[i]])
-                        } else {
-                            matlist[[i]] <- type.convert(matlist[[i]])
-                        }
-                        m1 <- names(matlist)[i]
-                        message("[upload_files] updating matrix ",m1)                        
-                        uploaded[[m1]] <- matlist[[i]]
-                    }
-                    uploaded[["last_uploaded"]] <- names(matlist)
-                }
-                
-                message("[upload_files] done!\n")
-            })
                                     
             checkTables <- shiny::reactive({        
                 ##
@@ -620,8 +741,8 @@ UploadModuleServer <- function(id,
                     ## check rownames of samples.csv
                     if(status["samples.csv"]=="OK" && status["counts.csv"]=="OK") {
                         
-                        samples1 = uploaded[["samples.csv"]]
-                        counts1 = uploaded[["counts.csv"]]
+                        samples1 <- uploaded[["samples.csv"]]
+                        counts1  <- uploaded[["counts.csv"]]
                         a1 <- mean(rownames(samples1) %in% colnames(counts1))
                         a2 <- mean(samples1[,1] %in% colnames(counts1))
                         
@@ -820,6 +941,6 @@ UploadModuleServer <- function(id,
             ##return(computed_pgx)
             return(uploaded_pgx)
             
-        }  ## end function
-    )  ## end moduleServer
+        })  ## end moduleServer
+
 } ## end UploadModuleServer

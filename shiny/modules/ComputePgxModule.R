@@ -33,8 +33,8 @@ ComputePgxUI <- function(id) {
     shiny::uiOutput(ns("UI"))
 }
 
-ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
-                             FILES, pgx.dirRT, enable = TRUE, alertready = TRUE, 
+ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, metaRT,
+                             FILES, pgx.dirRT, enable_button = TRUE, alertready = TRUE, 
                              max.genes = 20000, max.genesets = 10000,
                              max.datasets = 100, height = 720 )
 {
@@ -66,7 +66,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
             DEV.NAMES = c("noLM + prune")
             DEV.SELECTED = c()
 
-
             output$UI <- shiny::renderUI({
                 shiny::fillCol(
                     height = height,
@@ -82,8 +81,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                               shiny::tags$td("Name", width="100"),
                                               shiny::tags$td(shiny::textInput(
                                                        ns("upload_name"),NULL, ##"Dataset:",
-                                                       ##width="100%",
-                                                       ## width=420,
                                                        placeholder="Name of your dataset"),
                                                       width="600"
                                                       ),
@@ -94,8 +91,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                               shiny::tags$td("Datatype"),
                                               shiny::tags$td(shiny::selectInput(
                                                        ns("upload_datatype"), NULL,
-                                                       choices = c("RNA-seq","scRNA-seq",
-                                                                   "proteomics",
+                                                       choices = c("RNA-seq","scRNA-seq", "proteomics",
                                                                    "mRNA microarray","other"))
                                                       ),
                                               shiny::tags$td("")
@@ -106,8 +102,6 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                                               shiny::tags$td(shiny::div(shiny::textAreaInput(
                                                        ns("upload_description"), NULL, ## "Description:",
                                                        placeholder="Give a short description of your dataset",
-                                                       ##width="100%",
-                                                       ## width=400
                                                        height=100, resize='none'),
                                                        style="margin-left: 0px;"
                                                        )),
@@ -195,14 +189,14 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     ) ## end of conditional panel
                 ) ## end of fill Col
             })
+            shiny::outputOptions(output, "UI", suspendWhenHidden=FALSE) ## important!!!            
             
-            dbg("ComputePgxServer rendered UI")
 
             if(FALSE) {
                 shiny::observeEvent( input$gene_methods, {
                     if(length(input$gene_methods) > 3){
                         shiny::updateCheckboxGroupInput(session, "gene_methods",
-                                                 selected= tail(input$gene_methods,3))
+                                                        selected= tail(input$gene_methods,3))
                     }
                     if(length(input$gene_methods) < 1){
                         shiny::updateCheckboxGroupInput(session, "gene_methods", selected= "ttest")
@@ -214,10 +208,10 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 ## shinyjs::disable(ns("gene_methods2"))
             })
             
-            shiny::observeEvent(shinyjs::enable(), {
+            shiny::observeEvent( enable_button(), {
                 ## NEED CHECK. not working... 
                 ##
-                if(!enable()){
+                if(!enable_button()){
                     message("[ComputePgxServer:@enable] disabling compute button")
                     shinyjs::disable(ns("compute"))
                 } else {
@@ -225,10 +219,27 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                     shinyjs::enable(ns("compute"))
                 }
             })
+            
+            shiny::observeEvent( metaRT(), {
+                
+                dbg("[ComputePgxServer:@metaRT] parsing meta information...")
+                meta <- metaRT()
 
-            output$correction_summary <- shiny::renderText({                
+                dbg("[ComputePgxServer:@metaRT] names.meta =",names(meta))
+                
+                if(!is.null(meta[['name']])) {
+                    dbg("[ComputePgxServer:@metaRT] meta.name => ",meta[['name']])                    
+                    shiny::updateTextInput(session, "upload_name", value=meta[['name']])
+                    shiny::updateTextInput(session, ns("upload_name"), value=meta[['name']])                    
+                }
+                if(!is.null(meta[['description']])) {
+                    dbg("[ComputePgxServer:@metaRT] meta.description => ",meta[['description']])                                        
+                    shiny::updateTextAreaInput(session, "upload_description", placeholder=meta[['description']])
+                    shiny::updateTextAreaInput(session, ns("upload_description"), value=meta[['description']])                    
+                }
+                
             })
-                        
+
             ##------------------------------------------------------------------
             ## After confirmation is received, start computing the PGX
             ## object from the uploaded files
@@ -243,15 +254,15 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 ##-----------------------------------------------------------
                 ## Check validity 
                 ##-----------------------------------------------------------                
-                if(!enable()) {
+                if(!enable_button()) {
                     message("[ComputePgxServer:@compute] WARNING:: *** NOT ENABLED ***")
                     return(NULL)
                 }
 
                 pgxdir <- pgx.dirRT()
-                numpgx <- length(dir(pgxdir, pattern="*.pgx$"))
-
                 dbg("[ComputePgxServer::@compute] pgxdir  = ", pgxdir )
+
+                numpgx <- length(dir(pgxdir, pattern="*.pgx$"))
                 dbg("[ComputePgxServer::@compute] numpgx  = ", numpgx )                
                
                 if(numpgx >= max.datasets) {
@@ -282,7 +293,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 ## contrasts[is.na(contrasts)] <- 0
                 ## contrasts[is.na(contrasts)] <- ""                
                 ##!!!!!!!!!!!!!! This is blocking the computation !!!!!!!!!!!
-                ##batch     <- batchRT() ## batch correction vectors for GLM
+                ##batch  <- batchRT() ## batch correction vectors for GLM
                 
                 ##-----------------------------------------------------------
                 ## Set statistical methods and run parameters
@@ -470,7 +481,7 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT,
                 ##ngs$datatype = input$upload_datatype
                 ##ngs$name = "(uploaded)"
                 ngs$name = gsub("[ ]","_",input$upload_name)
-                ngs$datatype = input$upload_datatype
+                ngs$datatype    = input$upload_datatype
                 ngs$description = input$upload_description
                 ngs$creator <- "user"                
                 

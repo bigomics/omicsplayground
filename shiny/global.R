@@ -12,9 +12,7 @@ Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
 
 options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload    
 
-
 message("[MAIN] reading global.R ...")
-
 ##OPG     = "~/Playground/omicsplayground"
 OPG       = ".."
 RDIR      = file.path(OPG,"R")
@@ -28,6 +26,10 @@ DEBUG     = FALSE
 DEV       = dir.exists('/home/kwee')
 ##DEV     = FALSE
 DEBUG     = TRUE
+
+ALLOW_URL_QUERYSTRING = FALSE
+##ALLOW_URL_QUERYSTRING = TRUE
+
 
 if(0 && DEV) {
     ## being pedantic... (https://adv-r.hadley.nz)
