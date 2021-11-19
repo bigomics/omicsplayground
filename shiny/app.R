@@ -431,26 +431,21 @@ server = function(input, output, session) {
         dbg("[SERVER:quit] !!!reacted!!!")
         dbg("[SERVER:quit] closing session... ")        
         session$close()
-        dbg("[SERVER:quit] stopping App... ")                
-
-        ## Return non-zero value so docker swarm can catch and restart
-        ## the container upon on-failure
-        stopApp(99)  
-        dbg("[SERVER:quit] App died... ")                        
+        if(0) {
+            ## Return non-zero value so docker swarm can catch and restart
+            ## the container upon on-failure
+            dbg("[SERVER:quit] force stopping App... ")                
+            stopApp(99)
+        }
     })
     
     ## This code will be run after the client has disconnected
     ## Note!!!: Strange behaviour, sudden session ending.
-    if(0) {
-        session$onSessionEnded(function() {
-            message("******** doing session cleanup ********")
-            dbg("[SERVER:onSessionEnded] closing session... ")
-            session$close()
-            dbg("[SERVER:onSessionEnded] stopping App... ")                        
-            stopApp(99)  ## non-zero return
-            dbg("[SERVER:onSessionEnded] App died... ")                                
-        })
-    }    
+    session$onSessionEnded(function() {
+        message("******** doing session cleanup ********")
+        ## fill me...
+    })
+
     
     observe({
         ##-------------------------------------------------------------
@@ -668,11 +663,18 @@ ui = createUI(tabs)
 ## --------------------------------------------------------------------
 
 onStop(function() {
-    message("*************** Doing application cleanup ****************")
+    message("*************** onStop:: doing application cleanup ****************")
+    message("[APP] App died... ")
     ## Fill me...
 })
 
-shiny::shinyApp(ui, server, onStart=NULL)
+onStart.FUN <- function() {
+    message("*************** onStart:: preparing application ****************")
+    message("[APP] App start!")                        
+}
+
+
+shiny::shinyApp(ui, server, onStart=onStart.FUN)
 
 ##pkgs <- c( sessionInfo()[["basePkgs"]], names(sessionInfo()[["otherPkgs"]]),
 ##          names(sessionInfo()[["loadedOnly"]]) )
