@@ -177,8 +177,8 @@ async function upgrade_plan(){
 }
 
 function quit(){
-    Shiny.setInputValue('quit', 1, {priority: 'event'});  // end session
-    window.close();  // close window??
+        Shiny.setInputValue('quit', 1, {priority: 'event'});  // trigger shiny quit()
+        // window.close();  // close window??
 };
 
 function toggleEmail(){
