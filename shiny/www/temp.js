@@ -146,6 +146,18 @@ function logout(){
     Shiny.setInputValue('load-auth-firebaseLogout', 1, {priority: 'event'});
 };
 
+function quit(){
+        Shiny.setInputValue('quit', 1, {priority: 'event'});  // trigger shiny quit()
+        // window.close();  // close window??
+};
+
+Shiny.addCustomMessageHandler('shinyproxy-logout', function(msg) {
+    logout();
+    quit();
+    window.location.assign("/logout");
+});
+
+
 function show_plans(){
     Shiny.setInputValue('load-auth-firebaseUpgrade', 1, {priority: 'event'});
 };
@@ -175,11 +187,6 @@ async function upgrade_plan(){
 		}
 	});	
 }
-
-function quit(){
-        Shiny.setInputValue('quit', 1, {priority: 'event'});  // trigger shiny quit()
-        // window.close();  // close window??
-};
 
 function toggleEmail(){
 	$('#emailLinkWrapper').toggle();

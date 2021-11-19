@@ -444,6 +444,9 @@ server = function(input, output, session) {
     session$onSessionEnded(function() {
         message("******** doing session cleanup ********")
         ## fill me...
+        if(opt$AUTHENTICATION == "shinyproxy") {
+            session$sendCustomMessage("shinyproxy-logout", list())            
+        }
     })
 
     
@@ -531,7 +534,7 @@ stop.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='logout();quit();'>Quit</
 if(opt$AUTHENTICATION == "shinyproxy") {
     ## For ShinyProxy we need to redirect to /logout for clean session
     ## logout. Then we need a redirect to the /login page.
-    logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/login' onClick='logout();quit();window.location.assign(\"/logout\");' id='authentication-logout'>Logout</a>"))    
+    logout.tab  <- shiny::tabPanel(shiny::HTML("<a href='/login' onClick='shinyproxy_logout();' id='authentication-logout'>Logout</a>"))    
 }
 
 upgrade.tab <- NULL
