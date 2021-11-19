@@ -352,12 +352,7 @@ FirebaseAuthenticationModule <- function(input, output, session)
         dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.name=='' = ",USER$name=='' )
         dbg("[FirebaseAuthenticationModule@firebase$get_signed_in] user.email=='' = ",USER$email=='' )
         
-        session$sendCustomMessage(
-                    "get-permissions",
-                    list(
-                        ns = ns(NULL)
-                    )
-                )
+        session$sendCustomMessage("get-permissions", list(ns = ns(NULL)))
     })
 
     observeEvent(input$stripeId, {
