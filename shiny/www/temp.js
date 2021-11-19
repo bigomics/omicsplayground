@@ -147,13 +147,11 @@ function logout(){
 };
 
 function quit(){
-        Shiny.setInputValue('quit', 1, {priority: 'event'});  // trigger shiny quit()
-        // window.close();  // close window??
+    Shiny.setInputValue('quit', 1, {priority: 'event'});  // trigger shiny quit()
+    // window.close();  // close window??
 };
 
 Shiny.addCustomMessageHandler('shinyproxy-logout', function(msg) {
-    logout();
-    quit();
     window.location.assign("/logout");
 });
 
