@@ -30,7 +30,6 @@ library(grid)
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
 message("***********************************************")
-Sys.setenv("OMICS_GOOGLE_PROJECT"="omicsplayground-app")
 
 envcat <- function(var) message(var," = ",Sys.getenv(var))
 envcat("SHINYPROXY_USERNAME")
@@ -41,10 +40,6 @@ envcat("PLAYGROUND_EXPIRY")
 envcat("PLAYGROUND_QUOTA")
 envcat("PLAYGROUND_LEVEL")
 envcat("PLAYGROUND_HELLO")
-
-envcat("OMICS_GOOGLE_PROJECT")
-envcat("OMICS_STRIPE_KEY")
-envcat("OMICS_STRIPE_PREMIUM_PRICE")
 
 ## --------------------------------------------------------------------
 ## -------------------------- INIT ------------------------------------
@@ -325,7 +320,7 @@ server = function(input, output, session) {
         toggleTab("maintabs","Compare datasets (beta)",show.beta)        
         
         ## DEVELOPER only tabs (still too alpha)
-        toggleTab("maintabs","DEV",DEV)
+        if(DEV) toggleTab("maintabs","DEV",DEV)
         toggleTab("cor-tabs","Functional",DEV)   ## too slow
         toggleTab("cor-tabs","Differential",DEV)  
         toggleTab("view-tabs","Resource info",DEV)
@@ -425,13 +420,13 @@ server = function(input, output, session) {
     ##-------------------------------------------------------------
     ## Session logout functions
     ##-------------------------------------------------------------
-
+    
     ## This code listens to the JS quit signal
     observeEvent( input$quit, {
         dbg("[SERVER:quit] !!!reacted!!!")
         dbg("[SERVER:quit] closing session... ")        
         session$close()
-        if(0) {
+        if(1) {
             ## Return non-zero value so docker swarm can catch and restart
             ## the container upon on-failure
             dbg("[SERVER:quit] force stopping App... ")                
@@ -447,13 +442,13 @@ server = function(input, output, session) {
         if(opt$AUTHENTICATION == "shinyproxy") {
             session$sendCustomMessage("shinyproxy-logout", list())            
         }
+        
     })
-
     
+    ##-------------------------------------------------------------
+    ## Parse and show URL query string
+    ##-------------------------------------------------------------
     observe({
-        ##-------------------------------------------------------------
-        ## Parse and show URL query string
-        ##-------------------------------------------------------------
         query <- parseQueryString(session$clientData$url_search)
         if(length(query)>0) {
             dbg("[SERVER:parseQueryString] names.query =",names(query))
@@ -472,6 +467,32 @@ server = function(input, output, session) {
         }
         
     })
+
+    ##-------------------------------------------------------------
+    ## customise disconnect screen with sever
+    ##-------------------------------------------------------------    
+    logfile = "/var/log/shiny-server/omicsplayground.log"
+    logfile <- tail(dir("/var/log/shiny-server",pattern="omicsplayground.*log",full.names=1),1)
+    logfile
+    if(length(logfile)==0) {
+        logfile <- tail(dir("/var/log/shiny-server",pattern="playground-shiny.*log",full.names=1),1)
+    }
+    logfile
+    dbg("[SERVER] logfile = ",logfile)
+
+    html.tags <- tagList(
+        tags$h1("Whoops-a-daisy!", style='color:white;'),
+        tags$p(id='sever-msg', "Something went wrong. You have been disconnected."),
+        sever::reload_button("Reload", class = "default")
+    )
+    if(file.exists(logfile)) {
+        html.tags <- tagList(
+            html.tags,
+            br(),br(),br(),
+            actionLink("showlog", "show error log", onClick="toggleErrorLog()", style='color:red;')
+        )
+    }
+    sever2(html=html.tags, logfile=logfile)
     
     ##-------------------------------------------------------------
     ## report server times
@@ -481,6 +502,7 @@ server = function(input, output, session) {
     total.lapse_time <- round(Sys.time() - main.start_time,digits=4)
     message("[SERVER] total lapse time = ",total.lapse_time," ",attr(total.lapse_time,"units"))
 
+    ##log(NULL)  ## force error....
 }
 
 
@@ -583,12 +605,16 @@ createUI <- function(tabs)
         shiny::tags$head(shiny::tags$link(rel = "stylesheet", href = "playground.css")),
         shiny::tags$head(shiny::tags$link(rel="shortcut icon", href="favicon.ico")),
         shinyjs::useShinyjs(),
+        sever::useSever(),
+        tags$script(HTML("function toggleErrorLog(){$('#error-log').toggle();}")),
         shinyalert::useShinyalert(),  # Set up shinyalert
         firebase::useFirebase(firestore = TRUE),
         ##TAGS.JSSCRIPT,  ## window size
         shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
         shiny::div(shiny::textOutput("current_dataset"), class='current-data'),
-        shiny::div(shiny::textOutput("current_user"), class='current-user')
+        ##shiny::div(shiny::textOutput("current_user"), class='current-user')
+        ##shiny::div("<span class='label label-info' class='current-user' id='authentication-user'></span>")
+        shiny::div(class='label label-info current-user',id='authentication-user')        
         ##QuestionBoard_UI("qa")
     )
     names(header) <- NULL
@@ -668,6 +694,7 @@ ui = createUI(tabs)
 onStop(function() {
     message("*************** onStop:: doing application cleanup ****************")
     message("[APP] App died... ")
+    
     ## Fill me...
 })
 
@@ -675,7 +702,6 @@ onStart.FUN <- function() {
     message("*************** onStart:: preparing application ****************")
     message("[APP] App start!")                        
 }
-
 
 shiny::shinyApp(ui, server, onStart=onStart.FUN)
 

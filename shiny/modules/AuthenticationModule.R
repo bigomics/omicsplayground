@@ -70,10 +70,10 @@ NoAuthenticationModule <- function(input, output, session, show_modal=TRUE, user
     )
     return(rt)
 }
+
 ##================================================================================
 ## FirebaseAuthenticationModule
 ##================================================================================
-
 
 upgrade.dialog <- function(ns, current.plan) {
 
@@ -386,12 +386,6 @@ FirebaseAuthenticationModule <- function(input, output, session)
     })
 
     observeEvent(input$manage, {        
-
-        dbg("[UserBoard] !!! input$manage called")
-        dbg("[UserBoard] !!! OMICS_STRIPE_KEY = ", Sys.getenv("OMICS_STRIPE_KEY"))
-        dbg("[UserBoard] !!! user$email() = ", USER$email)
-        dbg("[UserBoard] !!! user$stripe_id() = ", USER$stripe_id)        
-        dbg("[UserBoard] !!! user$href = ", USER$href)
         
         response <- httr::POST(
             "https://api.stripe.com/v1/billing_portal/sessions",
