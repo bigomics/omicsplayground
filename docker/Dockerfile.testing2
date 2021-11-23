@@ -10,8 +10,28 @@
 # Start from lastest base image
 #------------------------------------------------------------
 
-FROM bigomics/omicsplayground:testing
+FROM bigomics/omicsplayground:base
 ##FROM bigomics/omicsplayground:v2.3.0
+
+#------------------------------------------------------------
+# Install any extra (forgotten...) packages since base
+#------------------------------------------------------------
+
+RUN apt update && apt install -y supervisor
+# RUN R -e "devtools::install_version('mnormt', version='1.5-7')"
+RUN R -e "remotes::install_github('JohnCoene/firebase@omics')" 
+RUN R -e "install.packages(c('shinythemes','shinybusy','beepr','ggVennDiagram','rworldmap'))"
+RUN R -e "BiocManager::install(c('TxDb.Hsapiens.UCSC.hg19.knownGene','TxDb.Mmusculus.UCSC.mm10.knownGene','WGCNA','DGCA'))"
+# RUN pip3 install umap-learn
+
+#------------------------------------------------------------
+# Clone fresh code from GitHub
+#------------------------------------------------------------
+# WORKDIR /
+# RUN rm -fr /omicsplayground \
+#     && git clone https://github.com/bigomics/omicsplayground.git \
+# #   && rm -fr /omicsplayground/.git \
+#     && chmod -R ugo+rwX /omicsplayground 
 
 #------------------------------------------------------------
 # Update code from GitHub
@@ -19,5 +39,25 @@ FROM bigomics/omicsplayground:testing
 WORKDIR /omicsplayground
 RUN git pull
 
+#------------------------------------------------------------
+# Copy any extra data sets into Docker image
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+## RUN R -e "setwd('scripts');source('build-datasets.R')"
+COPY data/geiger2016-arginine.pgx data/
+RUN R -e "setwd('data');source('init.R')"
+
+#------------------------------------------------------------
+# Update configuration files into the Docker image
+#------------------------------------------------------------
+WORKDIR /omicsplayground
+COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
+COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
+RUN chmod ugo+rwX /tmp && chmod o+t /tmp
+RUN ln -s /var/log/shiny-server/log /log
+
+COPY docker/supervisord.conf /etc/supervisor/supervisord.conf
+
 EXPOSE 3838
-CMD ["/usr/bin/shiny-server.sh"]
+##CMD ["/usr/bin/shiny-server.sh"]
+CMD ["/usr/bin/supervisord"]
