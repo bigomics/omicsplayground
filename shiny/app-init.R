@@ -39,7 +39,7 @@ if(getOption("OMICS_ORCA_RUN", TRUE)){
 ##======================================================================
 
 ## Modified sever() from sever package to output also the specified logfile.
-##
+## NOT WORKING!!! LOG FILE IS NOT UPDATED!!!!
 sever2 <- function (html = sever_default(), color = "#fff", opacity = 1, 
                     bg_color = "#333e48", bg_image = NULL, session = shiny::getDefaultReactiveDomain(), 
                     box = FALSE, logfile = NULL) 
