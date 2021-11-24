@@ -471,28 +471,33 @@ server = function(input, output, session) {
     ##-------------------------------------------------------------
     ## customise disconnect screen with sever
     ##-------------------------------------------------------------    
-    logfile = "/var/log/shiny-server/omicsplayground.log"
-    logfile <- tail(dir("/var/log/shiny-server",pattern="omicsplayground.*log",full.names=1),1)
-    logfile
-    if(length(logfile)==0) {
-        logfile <- tail(dir("/var/log/shiny-server",pattern="playground-shiny.*log",full.names=1),1)
-    }
-    logfile
-    dbg("[SERVER] logfile = ",logfile)
-
-    html.tags <- tagList(
-        tags$h1("Whoops-a-daisy!", style='color:white;'),
-        tags$p(id='sever-msg', "Something went wrong. You have been disconnected."),
-        sever::reload_button("Reload", class = "default")
-    )
-    if(file.exists(logfile)) {
+    if(0) {
+        ## DOES NOT WORK!!!
+        ##
+        logfile = "/var/log/shiny-server/omicsplayground.log"
+        logfile <- tail(dir("/var/log/shiny-server",pattern="omicsplayground.*log",full.names=1),1)
+        logfile
+        if(length(logfile)==0) {
+            logfile <- tail(dir("/var/log/shiny-server",pattern="playground-shiny.*log",full.names=1),1)
+        }
+        logfile
+        dbg("[SERVER] logfile = ",logfile)
+        
         html.tags <- tagList(
-            html.tags,
-            br(),br(),br(),
-            actionLink("showlog", "show error log", onClick="toggleErrorLog()", style='color:red;')
+            tags$h1("Whoops-a-daisy!", style='color:white;'),
+            tags$p(id='sever-msg', "Something went wrong. You have been disconnected."),
+            sever::reload_button("Reload", class = "default")
         )
+        if(file.exists(logfile)) {
+            html.tags <- tagList(
+                html.tags,
+                br(),br(),br(),
+                actionLink("showlog", "show error log", onClick="toggleErrorLog()", style='color:red;')
+            )
+        }
+        sever2(html=html.tags, logfile=logfile)
     }
-    sever2(html=html.tags, logfile=logfile)
+    sever::sever()
     
     ##-------------------------------------------------------------
     ## report server times
