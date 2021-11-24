@@ -17,25 +17,30 @@ File Names
 File names should end in .R and be meaningful. Some older files still
 end with *.r. Files in the folder R are prefixed by category (gx-,
 ngs-, pgx-) that mostly correspond to the analysis type and base input
-object used.
+object used. Do not use spaces or special characters ( ).
 
-- GOOD: predict_ad_revenue.R
-- BAD: foo.R
+- GOOD: pgx-predictRevenue.R
+- BAD: foo.R, predict_revenue.r
+
 
 Identifiers
 -----------------------
 
-Don't use underscores ( _ ) or hyphens ( - ) in identifiers. Identifiers should be named according to the following conventions. Variable names should have all lower case letters and words separated with dots (.); function names have initial capital letters and no dots (CapWords); constants are named like functions but with an initial _k_.
+Don't use underscores hyphens (-) in
+identifiers. Identifiers should be named according to the following
+conventions. Variable names should have all lower case letters and
+words separated with dots (.) or underscore (_); function names have
+initial capital letters and no dots (CapWords); global constants are 
+all caps (ALLCAPS).
 
 * variables
-  - GOOD: avg.clicks
-  - BAD: foo.R
+  - GOOD: avg.clicks, avg_clicks
+  - BAD: AveClicks
   
 * FunctionNames
-  - GOOD: CalculateAvgClicks
+  - GOOD: CalculateAverageClicks
   - BAD: fcalculate_avg_clicks , calculateAvgClicks
-  
-  
+    
 Make function names verbs.
 Exception: When creating a classed object, 
 the function name (constructor) and class should match (e.g., lm).
@@ -44,63 +49,52 @@ the function name (constructor) and class should match (e.g., lm).
 Syntax
 -----------------------
     
-##### Line Length
 
-The maximum line length is 80 characters.
+##### Indentation
 
-##### Intendation
-
-When indenting your code, use two spaces. Never use tabs or mix tabs and spaces.
-_Exception: When a line break occurs inside parentheses, align the wrapped line with the first character inside the parenthesis._
+When indenting your code, use two spaces. Never use tabs or mix tabs
+and spaces.  _Exception: When a line break occurs inside parentheses,
+align the wrapped line with the first character inside the
+parenthesis._
 
 ##### Spacing
 
 Place spaces around all binary operators (=, +, -, <-, etc.).
-_Exception: Spaces around ='s are optional when passing parameters in a function call._
-
-Do not place a space before a comma, but always place one after a comma.
+_Exception: Spaces around ='s are optional when passing parameters in
+a function call._ Do not place a space before a comma, but always place one after a comma.
 
 GOOD:
 
-```tabPrior <- table(df[df$daysFromOpt < 0, "campaignid"])```
-
-```total <- sum(x[, 1])```
-
-```total <- sum(x[1, ])```
+	tabPrior <- table(df[df$daysFromOpt < 0, "campaignid"])
+	total <- sum(x[, 1])
+	total <- sum(x[1, ])
 
 BAD:
 
-```tabPrior <- table(df[df$daysFromOpt<0, "campaignid"])  # Needs spaces around '<'```
+	tabPrior <- table(df[df$daysFromOpt<0, "campaignid"])  # Needs spaces around '<'
+	tabPrior <- table(df[df$daysFromOpt < 0,"campaignid"])  # Needs a space after the comma
+	tabPrior<- table(df[df$daysFromOpt < 0, "campaignid"])  # Needs a space before <-
+	tabPrior<-table(df[df$daysFromOpt < 0, "campaignid"])  # Needs spaces around <-
+	total <- sum(x[,1])  # Needs a space after the comma
+	total <- sum(x[ ,1])  # Needs a space after the comma, not before
 
-```tabPrior <- table(df[df$daysFromOpt < 0,"campaignid"])  # Needs a space after the comma```
-
-```tabPrior<- table(df[df$daysFromOpt < 0, "campaignid"])  # Needs a space before <-```
-
-```tabPrior<-table(df[df$daysFromOpt < 0, "campaignid"])  # Needs spaces around <-```
-
-```total <- sum(x[,1])  # Needs a space after the comma```
-
-```total <- sum(x[ ,1])  # Needs a space after the comma, not before```
-
-```Place a space before left parenthesis, except in a function call.```
+Place a space before left parenthesis, except in a function call
 
 GOOD:
-```if (debug)```
+
+	if (debug)
 
 BAD:
-```if(debug)```
+
+	if(debug)
 
 Extra spacing (i.e., more than one space in a row) is okay if it improves alignment of equals signs or arrows (<-).
 
-```plot(x = xCoord,``` 
-
-  ``` y = dataMat[, makeColName(metric, ptiles[1], "roiOpt")],```
-   
-   ```ylim = ylim,``` 
-   
-  ```xlab = "dates",```
-  
-  ```ylab = metric, main = (paste(metric, " for 3 samples ", sep="")))```
+	plot(x = xCoord,
+	y = dataMat[, makeColName(metric, ptiles[1], "roiOpt")],
+	ylim = ylim,
+   	xlab = "dates",
+	ylab = metric, main = (paste(metric, " for 3 samples ", sep=""))
 
 Do not place spaces around code in parentheses or square brackets.
 Exception: Always place a space after a comma.
@@ -120,7 +114,12 @@ BAD:
 
 
 ##### Curly Braces
-An opening curly brace should never go on its own line; a closing curly brace should always go on its own line. You may omit curly braces when a block consists of a single statement; however, you must consistently either use or not use curly braces for single statement blocks.
+
+An opening curly brace should never go on its own line; a closing
+curly brace should always go on its own line. You may omit curly
+braces when a block consists of a single statement; however, you must
+consistently either use or not use curly braces for single statement
+blocks.
 
 ```if (is.null(ylim)) {```
   ```ylim <- c(0, 0.06)```
@@ -164,7 +163,6 @@ Organization
 
 ##### General Layout and Ordering
 
-
 If everyone uses the same general ordering, we'll be able to read and understand each other's scripts faster and more easily.
 
   1. Copyright statement comment
@@ -174,6 +172,7 @@ If everyone uses the same general ordering, we'll be able to read and understand
   5. Function definitions
   6. Executed statements, if applicable (e.g., print, plot)
   7. Unit tests should go in a separate file named originalfilename_unittest.R.
+
 
 ##### Commenting Guidelines
 
@@ -194,9 +193,8 @@ Short comments can be placed after code preceded by two spaces, #, and then one 
 ```ylab   = "Frequency (count of campaignids)")```
 
 
-
-
 ##### Function Definitions and Calls
+
 Function definitions should first list arguments without default values, followed by those with default values.
 
 In both function definitions and function calls, multiple arguments per line are allowed; line breaks are only allowed between assignments.
