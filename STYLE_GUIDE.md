@@ -102,8 +102,7 @@ Exception: Always place a space after a comma.
 GOOD:
 
     if (debug)
-    x[1, ]
-
+	    x[1, ]
 
 BAD:
 
