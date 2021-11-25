@@ -101,16 +101,13 @@ Exception: Always place a space after a comma.
 
 GOOD:
 
-	if (debug)
-		x[1, ]
-
+    if (debug)
+	    x[1, ]
 
 BAD:
 
-```if ( debug )  # No spaces around debug```
-
-
-```x[1,]  # Needs a space after the comma``` 
+    if ( debug )  # No spaces around debug
+      x[1,]  # Needs a space after the comma
 
 
 ##### Curly Braces
@@ -121,34 +118,34 @@ braces when a block consists of a single statement; however, you must
 consistently either use or not use curly braces for single statement
 blocks.
 
-```if (is.null(ylim)) {```
-  ```ylim <- c(0, 0.06)```
-```}```
-```xor (but not both)```
+    if (is.null(ylim)) {
+    ylim <- c(0, 0.06)
+    }
+    xor (but not both)
 
-```if (is.null(ylim))```
-  ```ylim <- c(0, 0.06)```
-  
-  
+    if (is.null(ylim))
+      ylim <- c(0, 0.06)
+
+
 Always begin the body of a block on a new line.
 
 BAD:
 
 
 
-```if (is.null(ylim)) ylim <- c(0, 0.06)```
-
-
-```if (is.null(ylim)) {ylim <- c(0, 0.06)}```
+    if (is.null(ylim)) ylim <- c(0, 0.06)
+    if (is.null(ylim)) {ylim <- c(0, 0.06)}
 
 ##### Assignment
 Use <-, not =, for assignment.
 
 GOOD:
-```x <- 5```
+   
+    x <- 5
 
 BAD:
-```x = 5```
+
+    x = 5
 
 ##### Semicolons
 
@@ -180,17 +177,12 @@ Comment your code. Entire commented lines should begin with # and one space.
 
 Short comments can be placed after code preceded by two spaces, #, and then one space.
 
-```# Create histogram of frequency of campaigns by pct budget spent.```
-
-```hist(df$pctSpent,```
-
-```breaks = "scott",# method for choosing number of buckets```
-
-```main   = "Histogram: fraction budget spent by campaignid",```
-     
-```xlab   = "Fraction of budget spent",```
-     
-```ylab   = "Frequency (count of campaignids)")```
+    # Create histogram of frequency of campaigns by pct budget spent.
+    hist(df$pctSpent,
+    breaks = "scott",# method for choosing number of buckets
+    main   = "Histogram: fraction budget spent by campaignid",
+    xlab   = "Fraction of budget spent",
+    ylab   = "Frequency (count of campaignids)")
 
 
 ##### Function Definitions and Calls
@@ -202,18 +194,17 @@ In both function definitions and function calls, multiple arguments per line are
 
 GOOD:
 
-```PredictCTR <- function(query, property, numDays,```
-
-```showPlot = TRUE)```
+    PredictCTR <- function(query, property, numDays,
+    showPlot = TRUE)
 
 
 BAD:
-```PredictCTR <- function(query, property, numDays, showPlot =```
+    
+    PredictCTR <- function(query, property, numDays, showPlot =
+    TRUE)
 
-```TRUE)```
-                       
-                       
-                       
+
+
 Ideally, unit tests should serve as sample function calls (for shared library routines).
 
 Function Documentation
@@ -222,55 +213,32 @@ Functions should contain a comments section immediately below the function defin
 ###### Example Function
 
 
-```CalculateSampleCovariance <- function(x, y, verbose = TRUE) {```
+    CalculateSampleCovariance <- function(x, y, verbose = TRUE) {
+    # Computes the sample covariance between two vectors
+    # Args:
+    #   x: One of two vectors whose sample covariance is to be calculated.
+    #   y: The other vector. x and y must have the same length, greater than one,
+    #      with no missing values.```
+    #   verbose: If TRUE, prints sample covariance; if not, not. Default is TRUE.
+    #
+    # Returns:
+    #   The sample covariance between x and y.
+    n <- length(x)
+    # Error handling
+      if (n <= 1 || n != length(y)) {
+        stop("Arguments x and y have invalid lengths: ",
+        length(x), " and ", length(y), ".")
+      }
+    if (TRUE %in% is.na(x) || TRUE %in% is.na(y)) {
+        stop(" Arguments x and y must not have missing values.")
+        }
+        covariance <- var(x, y)
+      if (verbose)
+      cat("Covariance = ", round(covariance, 4), ".\n", sep = "") 
+      
+      return(covariance)
 
-
-```  # Computes the sample covariance between two vectors.```
-  
-  
-```  # Args:```
-
-```  #   x: One of two vectors whose sample covariance is to be calculated.```
-
-```  #   y: The other vector. x and y must have the same length, greater than one,```
-
-```  #      with no missing values.```
-
-```  #   verbose: If TRUE, prints sample covariance; if not, not. Default is TRUE.```
-
-```  #```
-
-```  # Returns:```
-
-```  #   The sample covariance between x and y.```
-
-```  n <- length(x)```
-
-```  # Error handling```
-
-```  if (n <= 1 || n != length(y)) {```
-
-```    stop("Arguments x and y have invalid lengths: ",```
-
-```         length(x), " and ", length(y), ".")```
-
-```  }```
-
-``` if (TRUE %in% is.na(x) || TRUE %in% is.na(y)) {```
-
-```stop(" Arguments x and y must not have missing values.")```
-
-```  }```
-
-```  covariance <- var(x, y)```
-
-```  if (verbose)```
-
-```cat("Covariance = ", round(covariance, 4), ".\n", sep = "")```
-
-```return(covariance)```
-
-```}```
+    }
 
 
 ###### TODO Style
@@ -313,6 +281,9 @@ Use common sense and BE CONSISTENT.
 
 If you are editing code, take a few minutes to look at the code around you and determine its style. If others use spaces around their if clauses, you should, too. If their comments have little boxes of stars around them, make your comments have little boxes of stars around them, too.
 
+
+
+The point of having style guidelines is to have a common vocabulary of coding so people can concentrate on what you are saying, rather than on how you are saying it. We present global style rules here so people know the vocabulary. But local style is also important. If code you add to a file looks drastically different from the existing code around it, the discontinuity will throw readers out of their rhythm when they go to read it. Try to avoid this. OK, enough writing about writing code; the code itself is much more interesting. Have fun!
 
 
 The point of having style guidelines is to have a common vocabulary of coding so people can concentrate on what you are saying, rather than on how you are saying it. We present global style rules here so people know the vocabulary. But local style is also important. If code you add to a file looks drastically different from the existing code around it, the discontinuity will throw readers out of their rhythm when they go to read it. Try to avoid this. OK, enough writing about writing code; the code itself is much more interesting. Have fun!
