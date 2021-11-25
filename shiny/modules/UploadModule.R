@@ -372,8 +372,8 @@ UploadModuleServer <- function(id,
                         dbg("[UploadModule:parseQueryString] no queryString!")
                     }
                     
-                    if(!is.null(query[['data']])) {
-                        qdir <- query[['data']]
+                    if(!is.null(query[['csv']])) {
+                        qdir <- query[['csv']]
                         dbg("[UploadModule:parseQueryString] *** parseQueryString ***")
                         dbg("[UploadModule:parseQueryString] qdir = ",qdir)                         
 
@@ -387,8 +387,7 @@ UploadModuleServer <- function(id,
                         }
                         if(!file.exists(counts_file) || !file.exists(samples_file)) {
                             return(NULL)
-                        }
-                        
+                        }                        
 
                         FUN.readfromdir <- function() {
                             dbg("[UploadModule:parseQueryString] *** loading CSV from dir = ",qdir,"***")
@@ -429,6 +428,51 @@ UploadModuleServer <- function(id,
 
                         ## focus on this tab
                         updateTabsetPanel(session, "tabs", selected = "Upload data")
+                    }
+                    
+                    if(0 && !is.null(query[['pgx']])) {
+
+                        qdir <- query[['pgx']]
+                        dbg("[UploadModule:parseQueryString] pgx =>",qdir)
+
+                        pgx_file <- "../data/example-data.pgx"
+                        pgx_file <- query[['pgx']]
+                        pgx_file <- paste0(sub("[.]pgx$","",pgx_file),".pgx")
+                        dbg("[UploadModule:parseQueryString] pgx_file = ",pgx_file)                         
+
+                        if(!file.exists(pgx_file)) {
+                            dbg("[SERVER:parseQueryString] ***ERROR*** missing pgx_file",pgx_file)
+                            return(NULL)
+                        }                        
+
+                        dbg("[UploadModule:parseQueryString] 1:")
+                        
+                        FUN.readPGX <- function() {
+                            dbg("[UploadModule:parseQueryString] *** loading PGX file = ",pgx_file,"***")
+
+                            load(pgx_file)  ## load NGS/PGX                    
+                            uploaded$pgx <- ngs
+                            remove(ngs)
+                            
+                            uploaded$meta <- NULL
+                        }
+                        
+                        dbg("[UploadModule:parseQueryString] 2:")
+
+                        shinyalert::shinyalert(
+                                        title= "Load PGX data from folder?",
+                                        text = paste0("folder = ",qdir),
+                                        callbackR = FUN.readPGX,
+                                        confirmButtonText = "Load!",
+                                        type = "info")
+
+                        dbg("[UploadModule:parseQueryString] 3:")
+                        
+                        ## focus on this tab
+                        updateTabsetPanel(session, "tabs", selected = "Upload data")
+
+                        dbg("[UploadModule:parseQueryString] 4:")
+                        
                     }
 
                 })
