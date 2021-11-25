@@ -194,12 +194,43 @@ server = function(input, output, session) {
                 "genes" = opt$MAX_GENES,
                 "genesets" = opt$MAX_GENESETS,
                 "datasets" = opt$MAX_DATASETS)
+    pgx_dir <- PGX.DIR
+    
+    ## Parse and show URL query string
+    if(ALLOW_URL_QUERYSTRING) {
+        observe({
+            query <- parseQueryString(session$clientData$url_search)
+            if(length(query)>0) {
+                dbg("[SERVER:parseQueryString] names.query =",names(query))
+                for(i in 1:length(query)) {
+                    dbg("[SERVER:parseQueryString]",names(query)[i],"=>",query[[i]])
+                }
+            } else {
+                dbg("[SERVER:parseQueryString] no queryString!")
+            }            
+            if(!is.null(query[['csv']])) {
+                ## focus on this tab
+                updateTabsetPanel(session, "load-tabs", selected = "Upload data")
+            }
+
+            ## not yet...
+            ##if(!is.null(query[['pgxdir']])) {
+            ##    pgx_dir <- query[['pgxdir']]
+            ##}
+        
+        })
+    }
+    dbg("[SERVER:parseQueryString] pgx_dir = ",pgx_dir)
+    
+    ##-------------------------------------------------------------
+    ## Call modules
+    ##-------------------------------------------------------------
     env <- list()  ## communication "environment"
     
     ## Modules needed from the start
     env[["load"]] <- shiny::callModule(
                                 LoadingBoard, "load",
-                                pgx_dir = PGX.DIR,
+                                pgx_dir = pgx_dir,
                                 limits = limits,
                                 enable_userdir = opt$ENABLE_USERDIR,                                
                                 authentication = opt$AUTHENTICATION,
@@ -443,31 +474,8 @@ server = function(input, output, session) {
             session$sendCustomMessage("shinyproxy-logout", list())            
         }
         
-    })
+    })    
     
-    ##-------------------------------------------------------------
-    ## Parse and show URL query string
-    ##-------------------------------------------------------------
-    observe({
-        query <- parseQueryString(session$clientData$url_search)
-        if(length(query)>0) {
-            dbg("[SERVER:parseQueryString] names.query =",names(query))
-            for(i in 1:length(query)) {
-                dbg("[SERVER:parseQueryString]",names(query)[i],"=>",query[[i]])
-            }
-        } else {
-            dbg("[SERVER:parseQueryString] no queryString!")
-        }
-        
-        if(ALLOW_URL_QUERYSTRING && !is.null(query[['data']])) {
-            qdir <- query[['data']]
-            dbg("[SERVER:parseQueryString] *** loading CSV from dir = ",qdir)
-            ## focus on this tab
-            updateTabsetPanel(session, "load-tabs", selected = "Upload data")
-        }
-        
-    })
-
     ##-------------------------------------------------------------
     ## customise disconnect screen with sever
     ##-------------------------------------------------------------    
@@ -496,8 +504,9 @@ server = function(input, output, session) {
             )
         }
         sever2(html=html.tags, logfile=logfile)
+        ##sever::sever()
+        log(NULL)  ## force error....
     }
-    sever::sever()
     
     ##-------------------------------------------------------------
     ## report server times
@@ -507,7 +516,6 @@ server = function(input, output, session) {
     total.lapse_time <- round(Sys.time() - main.start_time,digits=4)
     message("[SERVER] total lapse time = ",total.lapse_time," ",attr(total.lapse_time,"units"))
 
-    ##log(NULL)  ## force error....
 }
 
 
