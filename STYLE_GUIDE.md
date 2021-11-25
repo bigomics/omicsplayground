@@ -101,8 +101,8 @@ Exception: Always place a space after a comma.
 
 GOOD:
 
-```if (debug)```
-```x[1, ]```
+	if (debug)
+		x[1, ]
 
 
 BAD:
