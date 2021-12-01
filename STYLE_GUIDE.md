@@ -8,7 +8,7 @@ largely based on the following R Style Guides:
 
 1. [Google's R Style Guide](http://web.stanford.edu/class/cs109l/unrestricted/resources/google-style.html)
 2. [The tidyverse style guide](https://style.tidyverse.org/)
-3. [Hadley Wickahm's style guid](http://adv-r.had.co.nz/Style.html)
+3. [Hadley Wickahm's style guide](http://adv-r.had.co.nz/Style.html)
 
 
 File Names

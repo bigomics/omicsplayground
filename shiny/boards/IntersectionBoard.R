@@ -1126,13 +1126,9 @@ output$description <- shiny::renderUI(shiny::HTML(description))
         } else {
             F <- getActiveFoldChangeMatrix()$fc
         }
-        ##sig.F <- getSignificantFoldChangeMatrix()  ## isolate??xs
         F <- F[order(-rowMeans(F**2)),]
         F <- F[order(-abs(rowMeans(F))),]
 
-        ##if(input$cumEnrichment_abs) {
-        ##    F <- abs(F)  
-        ## }
         F1 <- head(F,80)
         F1 <- F1[order(rowMeans(F1)),]
         bh=5;mh=6;bm=4;cclust = TRUE
@@ -1145,7 +1141,7 @@ output$description <- shiny::renderUI(shiny::HTML(description))
         bm = 10 - mh  ## bottom margin
         at <- input$FoldchangeHeatmap_annotype
         
-        par(mfrow=c(1,1), mar=c(0,0,0,0), oma=c(0,0,0,0))
+        par(mfrow=c(1,1), mar=c(0,0,0,0), oma=c(0,0,3,0))
         plt <- grid::grid.grabExpr({
             frame()
             heatmapWithAnnot(
@@ -1156,8 +1152,8 @@ output$description <- shiny::renderUI(shiny::HTML(description))
                 ##column_dend_height = ggplot2::unit(10,"mm"),
                 inset = c(0.01,0.01))            
         })
-        grid::grid.draw(plt)
-        ## plt
+        ##grid::grid.draw(plt)
+        plt        
     })
     
     FoldchangeHeatmap.opts = shiny::tagList(
@@ -1179,12 +1175,12 @@ output$description <- shiny::renderUI(shiny::HTML(description))
         "FoldchangeHeatmap", label = "a",
         func = FoldchangeHeatmap.RENDER,
         func2 = FoldchangeHeatmap.RENDER, 
-        ## plotlib="ggplot",
+        plotlib="grid",
         options = FoldchangeHeatmap.opts,
         title = "FOLDCHANGE HEATMAP",
         info.text = FoldchangeHeatmap_info,
         ##caption = FoldchangeHeatmap_caption,
-        pdf.width=14, pdf.height=5.5,
+        pdf.width=14, pdf.height=6.5,
         height = c(750,750), width = c('auto',1600),
         res = c(90,110),
         add.watermark = WATERMARK
@@ -1349,7 +1345,7 @@ output$description <- shiny::renderUI(shiny::HTML(description))
         info.text = ctcorrplot_info,
         ##caption = ctcorrplot_caption,
         options = ctcorrplot.opts,
-        download.fmt = c("pdf","html"),
+        download.fmt = c("pdf","png"),
         pdf.width = 11, pdf.height = 10,
         height = c(550,720), width = c("auto",1100),
         res=c(80,85),

@@ -238,7 +238,7 @@ UploadModuleServer <- function(id,
                             if(grepl("count",fn1, ignore.case=TRUE)) {
                                 dbg("[upload_files] counts.csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
-                                df0 <- read.csv2(fn2, check.names=FALSE, stringsAsFactors=FALSE)
+                                df0 <- read.csv3(fn2, check.names=FALSE, stringsAsFactors=FALSE)
                                 dbg("[upload_files] counts.csv : 1 : dim(df0) = ",
                                         paste(dim(df0),collapse='x'))
                                 if(nrow(df0)>1 && NCOL(df0)>1) {
@@ -251,7 +251,7 @@ UploadModuleServer <- function(id,
                             } else if(grepl("expression",fn1,ignore.case=TRUE)) {
                                 dbg("[upload_files] expression.csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
-                                df0 <- read.csv2(fn2, check.names=FALSE, stringsAsFactors=FALSE)
+                                df0 <- read.csv3(fn2, check.names=FALSE, stringsAsFactors=FALSE)
                                 if(nrow(df0)>1 && NCOL(df0)>1) {
                                     df <- as.matrix(df0[,-1])
                                     rownames(df) <- as.character(df0[,1])
@@ -262,7 +262,7 @@ UploadModuleServer <- function(id,
                                 }
                             } else if(grepl("sample",fn1,ignore.case=TRUE)) {
                                 dbg("[upload_files] samples.csv : fn1 = ",fn1)
-                                df <- read.csv2(fn2, row.names=1, check.names=FALSE,
+                                df <- read.csv3(fn2, row.names=1, check.names=FALSE,
                                                 stringsAsFactors=FALSE)
                                 df <- type.convert(df)
                                 if(nrow(df)>1 && NCOL(df)>=1) {
@@ -270,7 +270,7 @@ UploadModuleServer <- function(id,
                                 }
                             } else if(grepl("contrast",fn1,ignore.case=TRUE)) {
                                 dbg("[upload_files] contrasts.csv : fn1 = ",fn1)
-                                df <- read.csv2(fn2, row.names=1, check.names=FALSE,
+                                df <- read.csv3(fn2, row.names=1, check.names=FALSE,
                                                 stringsAsFactors=FALSE)
                                 if(nrow(df)>1 && NCOL(df)>=1) {
                                     matname <- "contrasts.csv"
@@ -403,6 +403,7 @@ UploadModuleServer <- function(id,
                                 rownames(mat) <- as.character(df0[,1])
                                 mat
                             }
+
                             uploaded$samples.csv <- readfromdir1(samples_file)
                             uploaded$counts.csv  <- readfromdir2(counts_file)
                             uploaded$contrasts.csv <- NULL
@@ -567,7 +568,7 @@ UploadModuleServer <- function(id,
             })
 
             upload_ok <- shiny::reactive({
-                dbg("upload_ok reactive")
+                dbg("[UploadModule] upload_ok reactive")
                 check <- checkTables()
                 all(check[,"status"]=="OK")
                 all(grepl("ERROR",check[,"status"])==FALSE)
@@ -751,7 +752,7 @@ UploadModuleServer <- function(id,
                 p1
             })
             
-                                    
+            
             checkTables <- shiny::reactive({        
                 ##
                 ##
@@ -799,21 +800,29 @@ UploadModuleServer <- function(id,
                     
                     ## check files: matching dimensions
                     if(status["counts.csv"]=="OK" && status["samples.csv"]=="OK") {
-                        nsamples   <- ncol(uploaded[["counts.csv"]])
+                        nsamples   <- max( ncol(uploaded[["counts.csv"]]), nrow(uploaded[["samples.csv"]]) )
                         ok.samples <- intersect(rownames(uploaded$samples.csv),
                                                 colnames(uploaded$counts.csv))
-                        n.ok <- length(ok.samples)                        
+                        n.ok <- length(ok.samples)
+                        message("[UploadModule::checkTables] n.ok = ",n.ok)
                         if(n.ok > 0 && n.ok < nsamples) {
                             ## status["counts.csv"]  = "WARNING: some samples with missing annotation)"
                         }
+
                         if(n.ok > 0) {
+                            message("[UploadModule::checkTables] conforming samples/counts...")
                             uploaded[["samples.csv"]] <- uploaded$samples.csv[ok.samples,,drop=FALSE]
                             uploaded[["counts.csv"]]  <- uploaded$counts.csv[,ok.samples,drop=FALSE]
                         }
+
                         if(n.ok == 0) {
                             status["counts.csv"]  = "ERROR: colnames do not match (with samples)"
                             status["samples.csv"] = "ERROR: rownames do not match (with counts)"
                         }
+
+                        dbg("[UploadModule::checkTables] dim(samples.csv) = ",dim(uploaded$samples.csv))
+                        dbg("[UploadModule::checkTables] dim(counts.csv) = ",dim(uploaded$counts.csv))
+                        
                     }
                     
                     if(status["contrasts.csv"]=="OK" && status["samples.csv"]=="OK") {
@@ -855,20 +864,23 @@ UploadModuleServer <- function(id,
                         }
 
                         dbg("[UploadModule] 1 : dim.contrasts1 = ",dim(contrasts1))
-                        if(NCOL(contrasts1)>0) {
+                        dbg("[UploadModule] 1 : dim.samples1   = ",dim(samples1))
+
+                        ok.contrast <- length(intersect(rownames(samples1),rownames(contrasts1)))>0
+                        if(ok.contrast && NCOL(contrasts1)>0) {
                             ## always clean up
                             contrasts1 <- apply(contrasts1,2,as.character)
-                            dbg("[UploadModule] 2 : dim.contrasts1 = ",dim(contrasts1))
                             rownames(contrasts1) <- rownames(samples1)
-                            dbg("[UploadModule] 3 : dim.contrasts1 = ",dim(contrasts1))
                             for(i in 1:ncol(contrasts1)) {
                                 isz = (contrasts1[,i] %in% c(NA,"NA","NA ",""," ","  ","   "," NA"))
                                 if(length(isz)) contrasts1[isz,i] <- NA
                             }
+                            uploaded[["contrasts.csv"]] <- contrasts1
+                            status["contrasts.csv"] <- "OK"
                         } else {
-                            ## contrasts1 <- NULL
+                            uploaded[["contrasts.csv"]] <- NULL
+                            status["contrasts.csv"] <- "ERROR: dimension mismatch"
                         }
-                        uploaded[["contrasts.csv"]] <- contrasts1                        
                     }
 
                     MAXSAMPLES   = 25

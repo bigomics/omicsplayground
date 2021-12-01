@@ -75,8 +75,7 @@ source(file.path(RDIR,"auth.R"))
 source("app-init.R")
 
 if(0) {    
-    ##PGX.DIR="../test/"
-    pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
+    ## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
     load("../data/bojkova2020-sarscov2-RC2.pgx")
@@ -302,7 +301,6 @@ server = function(input, output, session) {
         ## remove modal from LoadingBoard            
         shiny::removeModal()          
     })
-
     
     ## message("[SERVER] all boards called:",paste(names(env),collapse=" "))
     message("[SERVER] boards enabled:",paste(names(which(ENABLED)),collapse=" "))
@@ -517,7 +515,6 @@ server = function(input, output, session) {
     message("[SERVER] total lapse time = ",total.lapse_time," ",attr(total.lapse_time,"units"))
 
 }
-
 
 ## --------------------------------------------------------------------
 ## ------------------------------ UI ----------------------------------
