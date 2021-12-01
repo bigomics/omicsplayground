@@ -187,6 +187,7 @@ server = function(input, output, session) {
     
     server.start_time  <- Sys.time()
     session.start_time <- -1
+    authentication <- opt$AUTHENTICATION
     
     limits <- c("samples" = opt$MAX_SAMPLES,
                 "comparisons" = opt$MAX_COMPARISONS,
@@ -197,6 +198,7 @@ server = function(input, output, session) {
     
     ## Parse and show URL query string
     if(ALLOW_URL_QUERYSTRING) {
+        
         observe({
             query <- parseQueryString(session$clientData$url_search)
             if(length(query)>0) {
@@ -218,6 +220,7 @@ server = function(input, output, session) {
             ##}
         
         })
+
     }
     dbg("[SERVER:parseQueryString] pgx_dir = ",pgx_dir)
     
@@ -227,12 +230,13 @@ server = function(input, output, session) {
     env <- list()  ## communication "environment"
     
     ## Modules needed from the start
+        
     env[["load"]] <- shiny::callModule(
                                 LoadingBoard, "load",
                                 pgx_dir = pgx_dir,
                                 limits = limits,
                                 enable_userdir = opt$ENABLE_USERDIR,                                
-                                authentication = opt$AUTHENTICATION,
+                                authentication = authentication,
                                 enable_upload = opt$ENABLE_UPLOAD,
                                 enable_delete = opt$ENABLE_DELETE,                                 
                                 enable_save = opt$ENABLE_SAVE
@@ -328,6 +332,7 @@ server = function(input, output, session) {
         pgx  <- env[["load"]]$inputData() 
         show.beta <- env[["user"]]$enable_beta()
         dbg("[SERVER] show.beta = ",show.beta)
+        if(is.null(show.beta) || length(show.beta)==0) show.beta=FALSE
         
         ## hide all main tabs until we have an object
         if(is.null(pgx)) {
