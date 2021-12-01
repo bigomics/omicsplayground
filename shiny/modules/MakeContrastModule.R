@@ -100,7 +100,7 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                                         shiny::selectInput(ns("param"), "Phenotype:",
                                                     choices = phenotypes, selected= psel,
                                                     multiple = TRUE),
-                                        "Select the phenotype to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names."
+                                        "Select phenotype(s) to create conditions for your groups. Select &ltgene&gt if you want to split by high/low expression of some gene. Select &ltsamples&gt if you want to group manually on sample names. You can select multiple phenotypes to create combinations."
                                     ),
                                     shiny::conditionalPanel(
                                         "input.param == '<gene>'", ns=ns,
@@ -189,11 +189,11 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 pp <- intersect(input$param, colnames(df))
                 ss <- colnames(countsRT())
                 cond <- apply(df[ss,pp,drop=FALSE],1,paste,collapse="_")
+                cond <- gsub("^_|_$","",cond)
                 cond
             })
             
             output$createcomparison <- shiny::renderUI({
-
 
                 shiny::req(input$param)
                 cond <- sel.conditions()
@@ -245,12 +245,12 @@ MakeContrastServerRT <- function(id, phenoRT, contrRT, countsRT, height=720)
                 if(is.na(g2)) g2 <- ""
                 g1 <- substring(g1,1,20)
                 g2 <- substring(g2,1,20)
-                pp <- paste(input$param,collapse=".")
-                pp <- gsub("[-_.,<> ]","",pp)
+                prm.name <- paste(input$param,collapse=".")
+                prm.name <- gsub("[-_.,<> ]","",prm.name)
                 if(any(input$param %in% '<gene>')) {
-                    pp <- sub("gene",input$gene,pp)
+                    prm.name <- sub("gene",input$gene,prm.name)
                 }
-                tt <- paste0(pp,":",g1,"_vs_",g2)
+                tt <- paste0(prm.name,":",g1,"_vs_",g2)
                 if(g1=="" && g2=="") tt <- ""
                 shiny::updateTextInput(session, "newname", value=tt)
             })
