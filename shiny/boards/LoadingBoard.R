@@ -533,7 +533,13 @@ LoadingBoard <- function(input, output, session, pgx_dir,
     load_react <- reactive({
         btn <- input$loadbutton
         query <- parseQueryString(session$clientData$url_search)
-        (!is.null(btn) || !is.null(query[['pgx']]) > 0) 
+
+        dbg("[LoadingBoard::load_react] btn = ",btn)
+        dbg("[LoadingBoard::load_react] names.query = ",names(query))
+
+        logged <- auth$logged()
+            
+        (!is.null(btn) || !is.null(query[['pgx']])) && logged
     })
     
     shiny::observeEvent( load_react(), {
@@ -557,10 +563,6 @@ LoadingBoard <- function(input, output, session, pgx_dir,
         if(!is.null(btn) && btn!=0) {        
             pgxfile <- selectedPGX()
         }
-
-        dbg("[LoadingBoard::<loadbutton>] btn = ",btn)
-        dbg("[LoadingBoard::<loadbutton>] names.query = ",names(query))
-        dbg("[LoadingBoard::<loadbutton>] query$pgx = ",query$pgx)
         
         ## check if file is there
         if(is.na(pgxfile) || is.null(pgxfile) || pgxfile=="" || length(pgxfile)==0) {
