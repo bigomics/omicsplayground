@@ -2224,7 +2224,7 @@ plot.ggbarplot <- function(mat, xlab="x", ylab="y", srt=0, main=NULL,
     if(!is.null(las) && las==3) srt <- 90
 
     cpal <- rev(grey.colors(nrow(mat)))
-    cpal <- grey.colors(nrow(mat))
+    ## cpal <- grey.colors(nrow(mat))
     if(nrow(mat)==1) cpal <- "grey70"
     if(!is.null(col)) cpal <- rep(col,99)
     posmode <- ifelse(beside, "dodge", "stack")

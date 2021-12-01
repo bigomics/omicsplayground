@@ -1160,7 +1160,7 @@ viz.GeneFamilies <- function(pgx, by.pheno=NULL, gset=NULL, ntop=20, srt=0,
 }
 
 viz.BatchCorrection <- function(pgx, cX, cX2=NULL, phenotype, stat="F", 
-                                pca.heatmap=FALSE, nmax=40, cex=1,
+                                pca.heatmap=FALSE, nmax=40, cex=1, show_rownames=1,
                                 pos1=NULL, pos2=NULL, npca=3, pheno=NULL,
                                 main=c("not-corrected", "corrected","corrected2"),
                                 title=NULL, subtitle=NULL, caption=NULL)
@@ -1178,15 +1178,15 @@ viz.BatchCorrection <- function(pgx, cX, cX2=NULL, phenotype, stat="F",
     }
     viz.BatchCorrectionMatrix(
         X0=X0, pheno=pheno, cX=cX, cX2=cX2,
-        phenotype=phenotype, stat=stat, 
-        pca.heatmap=pca.heatmap, nmax=nmax, cex=cex,
+        phenotype=phenotype, stat=stat,  pca.heatmap=pca.heatmap,
+        nmax=nmax, cex=cex, show_rownames=show_rownames,
         pos0=pos0, pos1=pos1, pos2=pos2, npca=npca,
         main=main, title=title, subtitle=subtitle, caption=caption)    
 }
 
 
 viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="F", 
-                                      pca.heatmap=FALSE, nmax=40, cex=1, 
+                                      pca.heatmap=FALSE, nmax=40, cex=1, show_rownames=1, 
                                       pos0=NULL, pos1=NULL, pos2=NULL, npca=3,
                                       main=c("not-corrected", "corrected","corrected2"),
                                       title=NULL, subtitle=NULL, caption=NULL)
@@ -1261,7 +1261,7 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
                     xlist[[i]], main=main[i],
                     col.annot=pheno, softmax=TRUE,
                     show_legend=FALSE, scale="row", split=NULL,
-                    nmax = nmax, show_rownames = 1, 
+                    nmax = nmax, show_rownames = show_rownames, 
                     title_cex = 1.1, cexRow=0.7, cexCol=0.78,
                     annot.ht=2.5, mar=c(4,1,1,10)*1,
                     key.offset=c(0.05,1.03),
@@ -1282,9 +1282,10 @@ viz.BatchCorrectionMatrix <- function(X0, pheno, cX, cX2=NULL, phenotype, stat="
         f1 <- pgx.PC_correlation(
             xlist[[i]], pheno1, nv=npca, stat="F", plot=TRUE,
             main = paste0("PC variance (",main[i],")"))
-        f1 <- f1 + ggplot2::theme(plot.margin = ggplot2::margin(4,4,0,4,"mm"),
-                         legend.justification = c(0,1),
-                         legend.position = c(0.01,1) )        
+        f1 <- f1 +
+            ggplot2::theme(plot.margin = ggplot2::margin(4,4,0,4,"mm"),
+                           legend.justification = c(0,1),
+                           legend.position = c(0.01,1) )        
         flist[[i]] <- f1
     }
     

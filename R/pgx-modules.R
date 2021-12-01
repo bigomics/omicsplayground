@@ -24,6 +24,17 @@ addWatermark.PDF <- function(file) {
     unlink(tmp)
 }
 
+addWatermark.PNG <- function(file) {
+    if(system("which convert",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
+    tmp <- paste0(gsub("file","plot",tempfile()),".png")
+    cmd = "convert plot.png -font Helvetica -pointsize 14 -extent 100%x105% -draw \"gravity south fill #80808080 text 0,4 'Created using the OmicsPlayground. Developed by BigOmics Analytics in Switzerland.' \"  plot_wmark.png"
+    cmd <- sub("plot.png",file,cmd)
+    cmd <- sub("plot_wmark.png",tmp,cmd)    
+    system(cmd)
+    file.copy(tmp,file,overwrite=TRUE)
+    unlink(tmp)
+}
+
 ##================================================================================
 ##============ Welcome to the ORCA hell .... =====================================
 ##================================================================================
@@ -385,8 +396,14 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
                         p <- func()
                         png(PNGFILE, width=pdf.width*100, height=pdf.height*100,
-                            pointsize = 1.2*pdf.pointsize)
+                            pointsize=1.2*pdf.pointsize)
                         print(p) 
+                        dev.off() 
+                    } else if(plotlib=="grid") {
+                        p <- func()
+                        png(PNGFILE, width=pdf.width*100, height=pdf.height*100,
+                            pointsize=1.2*pdf.pointsize)
+                        grid::grid.draw(p)
                         dev.off() 
                     } else if(plotlib=="image") {
                         p <- func()
@@ -416,8 +433,13 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     }
                     
                     ## finally copy to final exported file
-                    file.copy(PNGFILE, file, overwrite=TRUE)
                     dbg("[downloadHandler.PNG] copy PNGFILE",PNGFILE,"to download file",file )
+                    file.copy(PNGFILE, file, overwrite=TRUE)
+                    ## ImageMagick or pdftk
+                    if(TRUE && add.watermark) {
+                        message("[plotModule] adding watermark to PNG...")
+                        addWatermark.PNG(file) 
+                    }
                     dbg("[downloadHandler.PNG] export to PNG done!")                    
                 }, message="exporting to PNG", value=0.8)
             } ## content 
@@ -455,10 +477,13 @@ plotModule <- function(input, output, session, ## ns=NULL,
                         webshot::webshot(url=HTMLFILE, file=PDFFILE, vwidth=pdf.width*100,vheight=pdf.height*100)
                     } else if(plotlib %in% c("ggplot","ggplot2")) {
                         p <- func()
-                        ##p = addSignature(p)                             
-                        ##ggsave(PDFFILE, width=pdf.width, height=pdf.height)
                         pdf(PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
                         print(p) 
+                        dev.off() 
+                    } else if(plotlib %in% c("grid")) {
+                        p <- func()
+                        pdf(PDFFILE, width=pdf.width, height=pdf.height, pointsize=pdf.pointsize)
+                        grid::grid.draw(p)
                         dev.off() 
                     } else if(plotlib=="image") {
                         p <- func()
@@ -487,12 +512,12 @@ plotModule <- function(input, output, session, ## ns=NULL,
                     }
                     
                     ## finally copy to final exported file
+                    dbg("[downloadHandler.PDF] copy PDFFILE",PDFFILE,"to download file",file )
                     file.copy(PDFFILE, file, overwrite=TRUE)
 
                     ## ImageMagick or pdftk
                     if(TRUE && add.watermark) {
                         message("[plotModule] adding watermark to PDF...")
-                        ##addWatermark.PDF(PDFFILE)
                         addWatermark.PDF(file) 
                     }
                     message("[plotModule] export to PDF done!")
@@ -646,6 +671,9 @@ plotModule <- function(input, output, session, ## ns=NULL,
         } else if(plotlib %in% c("ggplot","ggplot2")) {
             if(is.null(outputFunc)) outputFunc="shiny::plotOutput"
             if(is.null(renderFunc)) renderFunc="function(x) shiny::renderPlot(plot(x))"
+        } else if(plotlib %in% c("grid")) {
+            if(is.null(outputFunc)) outputFunc="shiny::plotOutput"
+            if(is.null(renderFunc)) renderFunc="function(x) shiny::renderPlot(grid::grid.draw(x, recording=FALSE))"
         } else if(plotlib == "iheatmapr") {            
             if(is.null(outputFunc)) outputFunc="iheatmapr::iheatmaprOutput"
             if(is.null(renderFunc)) renderFunc="iheatmapr::renderIheatmap"

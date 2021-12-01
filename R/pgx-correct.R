@@ -31,6 +31,10 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
     ## tidy up pheno matrix?? get correct parameter types
     ##pheno <- tidy.dataframe(pheno)
     pheno <- type.convert(pheno)
+
+    message("[pgx.superBatchCorrect] 1 : dim.pheno = ",paste(dim(pheno),collapse='x'))
+    message("[pgx.superBatchCorrect] 1 : model.par = ",paste(model.par,collapse='x'))
+    message("[pgx.superBatchCorrect] 1 : colnames.pheno = ",paste(colnames(pheno),collapse='x'))    
     
     ## setup model matrix
     mod1 <- NULL
@@ -44,8 +48,9 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
     ## get technical/biological effects
     Y <- pgx.computeBiologicalEffects(X)
     colnames(Y) <- paste0(".",colnames(Y))
-    Matrix::head(Y)
 
+    message("[pgx.superBatchCorrect] 2 : dim.Y = ",paste(dim(Y),collapse='x'))
+    
     ## add to phenotype matrix
     pheno <- cbind(pheno, Y)
     not.na <- colMeans(is.na(pheno))<1
@@ -54,6 +59,8 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
     pheno <- pheno[,which(nlev>1 & not.na),drop=FALSE]
     partype <- sapply(pheno,class)
     partype
+
+    message("[pgx.superBatchCorrect] 3 : dim.pheno = ",paste(dim(pheno),collapse='x'))
     
     ##--------------------------------------------------------------------
     ## select parameters
@@ -125,12 +132,12 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             for(i in 1:nrow(idx)) {
                 v0 <- colnames(mod0)[idx[i,1]]
                 v1 <- colnames(mod1)[idx[i,2]]
-                cat(paste0("WARNING:: '",v0,"' is confounded with '",v1,"' ",
+                dbg(paste0("WARNING:: '",v0,"' is confounded with '",v1,"' ",
                            ": rho= ",round(rho[idx[i,1],idx[i,2]],3),"\n"))
             }
             confounding.pars <- colnames(mod0)[idx[,1]]
             confounding.pars <- unique(gsub("=.*","",confounding.pars))
-            cat("WARNING:: removing confounding batch factors:",confounding.pars,"\n")
+            dbg("WARNING:: removing confounding batch factors:",confounding.pars,"\n")
             batch.prm <- setdiff(batch.prm, confounding.pars)
         }
     }
@@ -146,21 +153,21 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             for(i in 1:nrow(idx)) {
                 v0 <- colnames(cvar)[idx[i,1]]
                 v1 <- colnames(mod1)[idx[i,2]]
-                cat(paste0("WARNING:: '",v0,"' is confounded with '",v1,"' ",
+                dbg(paste0("WARNING:: '",v0,"' is confounded with '",v1,"' ",
                            ": rho= ",round(rho1[idx[i,1],idx[i,2]],3),"\n"))
             }
             confounding.cov <- colnames(cvar)[idx[,1]]
             confounding.cov <- unique(gsub("=.*","",confounding.cov))
             confounding.cov
-            cat("WARNING:: removing confounding batch covariates:",confounding.cov,"\n")
+            dbg("WARNING:: removing confounding batch covariates:",confounding.cov,"\n")
             batch.cov <- setdiff(batch.cov, confounding.cov)
             batch.cov
         }
     }
 
-    cat("[pgx.superBatchCorrect] model.par=",model.par,"\n")
-    cat("[pgx.superBatchCorrect] batch.prm=",batch.prm,"\n")
-    cat("[pgx.superBatchCorrect] batch.cov=",batch.cov,"\n")
+    dbg("[pgx.superBatchCorrect] model.par=",model.par,"\n")
+    dbg("[pgx.superBatchCorrect] batch.prm=",batch.prm,"\n")
+    dbg("[pgx.superBatchCorrect] batch.cov=",batch.cov,"\n")
     
     cX <- X    
     mod1x <- matrix(1,ncol(cX),1)
@@ -175,7 +182,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
         sel <- grep("libsize|nfeature",colnames(pheno),value=TRUE)
         sel
         if(length(sel)) {
-            cat("[pgx.superBatchCorrect] Correcting for unwanted library effects:",sel,"\n")
+            dbg("[pgx.superBatchCorrect] Correcting for unwanted library effects:",sel,"\n")
             exp.pheno <- as.matrix(pheno[,sel,drop=FALSE])
             exp.pheno <- apply(exp.pheno, 2, function(x) {
                 x[is.na(x)]=median(x,na.rm=TRUE);x})
@@ -190,7 +197,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
     if(!is.null(bio.correct) && length(bio.correct)>0 && bio.correct[1]!=FALSE ) {
 
         p1 <- intersect(batch.prm,colnames(Y))
-        cat("[pgx.superBatchCorrect] Correcting for unwanted biological factors:",p1,"\n")        
+        dbg("[pgx.superBatchCorrect] Correcting for unwanted biological factors:",p1,"\n")        
         if(length(p1)) {
             i=1
             for(i in 1:length(p1)) {
@@ -205,7 +212,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
 
         p2 <- intersect(batch.cov,colnames(Y))
         if(length(p2)) {
-            cat("[pgx.superBatchCorrect] Correcting for unwanted biological covariates:",p2,"\n")
+            dbg("[pgx.superBatchCorrect] Correcting for unwanted biological covariates:",p2,"\n")
             b2 <- as.matrix(pheno[,p2,drop=FALSE])
             b2 <- apply(b2, 2, function(x) {
                 x[is.na(x)]=median(x,na.rm=TRUE);x})            
@@ -225,10 +232,10 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
     if(!is.null(batch.prm) && length(batch.prm)>0) {
         batch.prm
         batch.prm1 <- setdiff(batch.prm, colnames(Y))
-        cat("[pgx.superBatchCorrect] Batch correction for factors:",batch.prm1,"\n")
+        dbg("[pgx.superBatchCorrect] Batch correction for factors:",batch.prm1,"\n")
         b <- batch.prm1[1]
         for(b in batch.prm1) {
-            ##cat("Performing batch correction for factor:",b,"\n")            
+            ##dbg("Performing batch correction for factor:",b,"\n")            
             batch <- as.character(pheno[,b])
             nna <- sum(is.na(batch))
             if(nna>0) {
@@ -249,9 +256,9 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
     if(!is.null(batch.cov) && length(batch.cov)>0) {        
         batch.cov
         batch.cov1 <- setdiff(batch.cov, colnames(Y))
-        cat("[pgx.superBatchCorrect] Batch correction for covariates:",batch.cov1,"\n")
+        dbg("[pgx.superBatchCorrect] Batch correction for covariates:",batch.cov1,"\n")
         for(b in batch.cov1) {
-            ##cat("Performing batch correction for covariate:",b,"\n")                        
+            ##dbg("Performing batch correction for covariate:",b,"\n")                        
             batch <- as.numeric(pheno[,b])
             ##batch[is.na(batch)] <- "NA"
             nna <- sum(is.na(batch))
@@ -274,7 +281,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
     }
     if(!is.null(mnn.correct)) {
         
-        cat("[pgx.superBatchCorrect] Mutual Nearest Neighbour (MNN) correction on",mnn.correct,"\n")
+        dbg("[pgx.superBatchCorrect] Mutual Nearest Neighbour (MNN) correction on",mnn.correct,"\n")
         b <- pheno[,mnn.correct]
         out <- batchelor::mnnCorrect(cX, batch=b, cos.norm.out=FALSE)
         cX <- out@assays@data[["corrected"]]
@@ -283,12 +290,20 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
     ##--------------------------------------------------------------------
     ## Nearest-neighbour matching (NNM)
     ##--------------------------------------------------------------------
-    if(nnm.correct) {
-        cat("[pgx.superBatchCorrect] Correcting with nearest-neighbour matching (NNM)\n")        
+    if(0 && nnm.correct) {
+        dbg("[pgx.superBatchCorrect] Correcting with nearest-neighbour matching (NNM)")
+        dbg("[pgx.superBatchCorrect] NNM :: model.par = ",model.par)        
         for(i in 1:length(model.par)) {
             y1 <- pheno[,model.par[i]]
             cX <- gx.nnmcorrect(cX, y1, center.x=TRUE, center.m=TRUE)$X
         }
+    }
+    if(1 && nnm.correct) {
+        dbg("[pgx.superBatchCorrect] Correcting with nearest-neighbour matching (NNM)")
+        dbg("[pgx.superBatchCorrect] NNM :: model.par = ",model.par)        
+        y1 <- pheno[,model.par,drop=FALSE]
+        y1 <- apply(y1,1,paste,collapse=':')
+        cX <- gx.nnmcorrect(cX, y1, center.x=TRUE, center.m=TRUE)$X
     }
 
     ##--------------------------------------------------------------------
@@ -358,7 +373,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             suppressWarnings(suppressMessages(
                 pc <- irlba::irlba(cX, nv=nv)$v
             ))
-            pc.rho <- WGCNA::cor(pc,mod1)
+            pc.rho <- stats::cor(pc,mod1)
             pc.rho
             pc.rho <- apply(abs(pc.rho),1,max)
             ii <- which(pc.rho < max.rho)
@@ -374,9 +389,9 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
         }
         niter
         if(niter==max.iter) {
-            cat("WARNING:: PCA correction did not converge after",nremove,"iterations\n")
+            dbg("WARNING:: PCA correction did not converge after",nremove,"iterations\n")
         } else {
-            cat("Performed",nremove,"iterations of PCA batch correction\n")      
+            dbg("Performed",nremove,"iterations of PCA batch correction\n")      
         }
         if(!is.null(pX)) {
             colnames(pX) <- paste0("PC.",1:ncol(pX))
@@ -413,9 +428,9 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
         }
         niter
         if(niter==max.iter) {
-            cat("WARNING:: HC correction did not converge after",nremove,"iterations\n")
+            dbg("WARNING:: HC correction did not converge after",nremove,"iterations\n")
         } else {
-            cat("Performed",nremove,"iterations of HC batch correction\n")
+            dbg("Performed",nremove,"iterations of HC batch correction\n")
         }
         if(!is.null(pX)) B <- cbind(B, pX)  ## update batch correction matrix
     }
@@ -425,13 +440,13 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
     ##--------------------------------------------------------------------
     cX <- cX - rowMeans(cX) + rowMeans(X) 
 
-    cat("[pgx.superBatchCorrect] almost done!\n")
+    dbg("[pgx.superBatchCorrect] almost done!\n")
 
     ## matrix B contains the active batch correction vectors
     ## B <- type.convert(B)    
     res <- list(X=cX, Y=pheno, B=B)   
 
-    cat("[pgx.superBatchCorrect] done!\n")
+    dbg("[pgx.superBatchCorrect] done!\n")
     
     return(res)
 }
@@ -611,12 +626,9 @@ pgx.countNormalization <- function(x, methods, keep.zero=TRUE)
     return(x)
 }
 
-pgx.performBatchCorrection <- function(ngs, zx, batchparams,
-                                       method=c("ComBat","BMC","limma","MNN","fastMNN"))
+pgx.performBatchCorrection.DEPRECATED <- function(ngs, zx, batchparams,
+                                                  method=c("ComBat","BMC","limma","MNN","fastMNN"))
 {
-    
-    
-    
 
     ## precompute PCA
     suppressWarnings(suppressMessages(
@@ -692,7 +704,7 @@ pgx.performBatchCorrection <- function(ngs, zx, batchparams,
                 ##zx <- gx.nnmcorrect( zx, y)
                 zx <- gx.nnmcorrect( zx, y, center.x=TRUE, center.m=TRUE)$X                
             } else {
-                cat("warning:: unknown batch parameter\n")
+                dbg("warning:: unknown batch parameter\n")
             }
         }
     }
@@ -787,7 +799,7 @@ pgx.removeBatchEffect <- function(X, batch, model.vars=NULL,
         new.X <- new.X + Matrix::rowMeans(X,na.rm=TRUE)
         X <- new.X[,colnames(X)]
     } else {
-        cat("ERROR! uknown method\n")
+        dbg("ERROR! uknown method\n")
     }
     return(X)
 }
@@ -987,11 +999,11 @@ pgx.optimizeBatchCorrection.NOTREADY <- function(ngs, batch, contrast, nparam=NU
     nparam <- min(nparam, length(batch))
     nparam
 
-    cat(">> correcting for",length(batch),"batch parameters: ",
+    dbg(">> correcting for",length(batch),"batch parameters: ",
         paste(batch,collapse=" "),"\n")
 
     parcomb <- makeParameterCombinations(batch, n=nparam)
-    cat(">> optimizing for",length(parcomb),"parameter combinations\n")
+    dbg(">> optimizing for",length(parcomb),"parameter combinations\n")
     ##parcomb <- sample(parcomb,10)
 
     ##contrast=NULL;resample=0.9;niter=1
@@ -1066,9 +1078,9 @@ pgx._runComputeNumSig <- function(ngs, parcomb, contrast, resample=-1,
 
         ## solve for all combinations
         pp <- parcomb[[1]]
-        if(show.progress) cat(paste0("[",k,"]")) ## show progress
+        if(show.progress) dbg(paste0("[",k,"]")) ## show progress
         for(pp in parcomb) {
-            if(show.progress) cat(".") ## show progress
+            if(show.progress) dbg(".") ## show progress
             Y <- ngs$samples[colnames(aX),]
             bX <- NULL
             pp
@@ -1090,7 +1102,7 @@ pgx._runComputeNumSig <- function(ngs, parcomb, contrast, resample=-1,
         }
 
     }
-    if(show.progress) cat("\n") ## show progress
+    if(show.progress) dbg("\n") ## show progress
     return(numsig)
 }
 

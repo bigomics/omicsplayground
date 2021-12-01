@@ -17,7 +17,7 @@ if(0) {
     ref = 'DMSO'
 }
 
-gx.nearestReferenceCorrection <- function(x, y, ref, k=3, dist.method="cor")
+gx.nearestReferenceCorrection.DEPRECATED <- function(x, y, ref, k=3, dist.method="cor")
 {
     ## Nearest-neighbour matching for batch correction. This
     ## implementation substracts explicitly the nearest matching
@@ -72,6 +72,7 @@ gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
         dX <- dX - rowMeans(dX,na.rm=TRUE)
     }
     if(center.m) {
+        ## center per condition group (takes out batch differences)
         mX <- tapply(1:ncol(dX),y1,function(i) rowMeans(dX[,i,drop=FALSE]))
         mX <- do.call(cbind, mX)
         dX <- dX - mX[,y1]
@@ -81,14 +82,15 @@ gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
         message("[gx.nnmcorrect] computing correlation matrix D...")
         sdx <- apply(dX,1,sd)
         ii <- Matrix::head(order(-sdx),sdtop)
-        ## D <- 1 - WGCNA::cor(dX[ii,])
+        ##D <- 1 - WGCNA::cor(dX[ii,])
         D <- 1 - crossprod(scale(dX[ii,])) / (length(ii)-1)  ## faster        
     } else {
         message("[gx.nnmcorrect] computing distance matrix D...\n")        
         D <- as.matrix(dist(t(dX)))
     }
     remove(dX)
-
+    D[is.na(D)] <- 0  ## might have NA
+    
     ## find neighbours
     message("[gx.nnmcorrect] finding nearest neighbours...")        
     B <- t(apply(D,1,function(r) tapply(r,y1,function(s)names(which.min(s)))))   

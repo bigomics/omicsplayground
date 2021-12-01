@@ -18,7 +18,7 @@ install.pkg <- function(pkg, force=FALSE) {
         if(pkg %in% LOCAL.PKGS) {
             ## if available locally, we install local version
             cat("installing",pkg,"from local folder...\n")
-            pkg1 = dir("../ext/packages",pattern=paste0(pkg,"_"),full.name=TRUE)
+            pkg1 = dir("../ext/packages",pattern=paste0(pkg,"_"),full.names=TRUE)
             try(install.packages(pkg1,repos=NULL,type="source"))
         } else {
             cat("installing",pkg,"from CRAN/BioConductor...\n")

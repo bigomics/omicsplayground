@@ -445,14 +445,13 @@ dbg.BAK <- function(... ) {
     }
 }
 
-
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
-read.csv2 <- function(file, ...)
+read.csv3 <- function(file, ...)
 {
-    ## automatically determine seperator
+    ## read delimited table automatically determine seperator
     line1 <- as.character(read.csv(file, sep='\n',nrow=1)[1,])
     sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))
-    message("[read.csv2] sep = ",sep)
+    message("[read.csv3] sep = ",sep)
     read.csv(file, sep=sep, ...)
 }
 
@@ -882,7 +881,7 @@ getHSGeneInfo <- function(eg, as.link=TRUE) {
         info[["GO"]] <- info[["GO"]][sel]
 
         ## sometimes GO.db is broken...
-        suppressWarnings( try.out <- try(AnnotationDbi::Term(mget("GO:0000001", env=GO.db::GOTERM,
+        suppressWarnings( try.out <- try(AnnotationDbi::Term(mget("GO:0000001", envir=GO.db::GOTERM,
                                                                   ifnotfound=NA)[[1]])))
         go.ok <- (class(try.out) !="try-error")
         if(go.ok && length(sel)>0) {
