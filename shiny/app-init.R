@@ -69,29 +69,6 @@ sever_screen <- shiny::tagList(
     sever::reload_button("Reload", class = "default")
 )
 
-res <- getFromNamespace("httpResponse", "shiny")
-
-logHandler <- function(req){
-    print("RECEIVED")
-    if(!req$PATH_INFO == "/log")
-        return()
-
-    query <- shiny::parseQueryString(req$QUERY_STRING)
-    print(query)
-
-    res(200L, "text/plain", "hello")
-}
-
-run_appliation <- function(ui, server, ...){
-  # get handler
-  handlerManager <- getFromNamespace("handlerManager", "shiny")
-
-  # add handler
-  handlerManager$addHandler(logHandler, "/log")
-
-  shiny::shinyApp(ui, server, ...)
-}
-
 tipify2 <- function(...) {
     shinyBS::tipify(..., placement="top", options = list(container = "body"))
 }
