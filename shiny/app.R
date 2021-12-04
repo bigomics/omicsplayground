@@ -181,7 +181,7 @@ server = function(input, output, session) {
     message("===================== SERVER ===========================")
     message("========================================================\n")
 
-    sever::sever(sever_screen)
+    sever::sever(sever_screen, bg_color = "#2780e3")
 
     dbg("[SERVER] 0: getwd = ",getwd())
     setwd(WORKDIR)  ## for some reason it can change!!

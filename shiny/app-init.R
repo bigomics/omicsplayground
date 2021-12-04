@@ -49,14 +49,15 @@ sever_screen <- shiny::tagList(
         id="logSub",
         shiny::tags$textarea(
             class = "form-control",
-            rows = "3",
+            rows = "4",
+            cols = "5",
             id = "logMsg"
         ),
         shiny::br(),
         shiny::tags$a(
             onClick = "sendLog()", 
             class = "btn btn-sm btn-warning", 
-            "Send"
+            "Send Message"
         )
     ),
     shiny::div(
