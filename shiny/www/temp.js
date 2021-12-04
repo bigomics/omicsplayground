@@ -212,3 +212,28 @@ function priceChange(name){
 		$('#premium-pricing').text('CHF690 / month');
 	}
 }
+
+function hideSub() {
+	$('#logSub').hide();
+	$('#logSubbed').show();
+}
+
+function showSub() {
+	$('#logSub').hide();
+	$('#logSubbed').show();
+}
+
+function sendLog() {
+	showSub();
+	let msg = $('#logMsg').val();
+
+	fetch(`/log?msg=${encodeURIComponent(msg)}`)
+		.then(res => {
+			console.info(res);
+			hideSub();
+		})
+		.catch(error => {
+			console.error(error);
+			hideSub();
+		})
+}
