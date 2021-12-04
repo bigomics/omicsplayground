@@ -116,7 +116,6 @@ message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 res <- getFromNamespace("httpResponse", "shiny")
 
 logHandler <- function(req){
-    print("RECEIVED")
     if(!req$PATH_INFO == "/log")
         return()
 
@@ -132,12 +131,12 @@ logHandler <- function(req){
     if(token == "")
         return(res(403L, "application/json", jsonlite::toJSON(FALSE)))
 
-    uri <- sprintf(opt$HONCHO_URL, "/log?token=", token)
+    uri <- sprintf("%s/log?token=%s", opt$HONCHO_URL, token)
     httr::POST(
         uri,
         body = list(
             msg = query$msg,
-            token = token
+            log = "The log!"
         ),
         encode = "json"
     )
