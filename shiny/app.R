@@ -113,6 +113,48 @@ TIMEOUT   <<- as.integer(opt$TIMEOUT)  ## in seconds
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
 
+res <- getFromNamespace("httpResponse", "shiny")
+
+logHandler <- function(req){
+    print("RECEIVED")
+    if(!req$PATH_INFO == "/log")
+        return()
+
+    query <- shiny::parseQueryString(req$QUERY_STRING)
+
+    if(is.null(query$msg))
+        return(res(400L, "application/json", jsonlite::toJSON(FALSE)))
+
+    if(query$msg == "")
+        return(res(400L, "application/json", jsonlite::toJSON(FALSE)))
+
+    token <- Sys.getenv("HONCHO_TOKEN", "")
+    if(token == "")
+        return(res(403L, "application/json", jsonlite::toJSON(FALSE)))
+
+    uri <- sprintf(opt$HONCHO_URL, "/log?token=", token)
+    httr::POST(
+        uri,
+        body = list(
+            msg = query$msg,
+            token = token
+        ),
+        encode = "json"
+    )
+
+    res(400L, "application/json", jsonlite::toJSON(TRUE))
+}
+
+run_appliation <- function(ui, server, ...){
+  # get handler
+  handlerManager <- getFromNamespace("handlerManager", "shiny")
+
+  # add handler
+  handlerManager$addHandler(logHandler, "/log")
+
+  shiny::shinyApp(ui, server, ...)
+}
+
 ## --------------------------------------------------------------------
 ## ----------------- READ MODULES/BOARDS ------------------------------
 ## --------------------------------------------------------------------
