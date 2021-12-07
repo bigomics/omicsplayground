@@ -7,7 +7,9 @@
 ## NOTE: This file is supposed to run in the folder .../R/
 ##
 
-##options(Ncpus = 6);options(pkgType="source")
+## Speed up installation
+options(Ncpus=8L)
+options(pkgType="source")
 
 install.packages("devtools")
 install.packages("BiocManager", version="3.10")
