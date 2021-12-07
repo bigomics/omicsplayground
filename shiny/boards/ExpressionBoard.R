@@ -157,9 +157,11 @@ two conditions. Determine which genes are significantly downregulated or overexp
     
     selected_gxmethods <- shiny::reactive({
         ngs <- inputData()
-        gx.methods0 = colnames(ngs$gx.meta$meta[[1]]$fc)
-        test = input$gx_statmethod
-        test = intersect(test,gx.methods0) ## maximum three
+        req(ngs)
+        dbg("[ExpressionBoard:selected_gxmethods] tracemem(ngs) = ",tracemem(ngs))        
+        gx.methods0 <- colnames(ngs$gx.meta$meta[[1]]$fc)
+        test <- input$gx_statmethod
+        test <- intersect(test,gx.methods0)
         test
     })
 
@@ -1786,8 +1788,32 @@ two conditions. Determine which genes are significantly downregulated or overexp
             tableWidget(ns("FDRtable"))
         )
     })
-    
+
+
+    ##----------------------------------------------------------------------
     ## reactive values to return to parent environment
+    ##----------------------------------------------------------------------
+
+    metaQ <- shiny::reactive({
+        ngs <- inputData()
+        req(ngs)
+        dbg("[ExpressionBoard:selected_gxmethods] tracemem(ngs) = ",tracemem(ngs))        
+        methods <- selected_gxmethods()
+        metaQ <- sapply(ngs$gx.meta$meta, function(m) apply(m$q[,methods,drop=FALSE],1,max,na.rm=TRUE))
+        rownames(metaQ) <- rownames(ngs$gx.meta$meta[[1]])
+        metaQ
+    })
+
+    metaFC <- shiny::reactive({
+        ngs <- inputData()
+        req(ngs)
+        dbg("[ExpressionBoard:selected_gxmethods] tracemem(ngs) = ",tracemem(ngs))        
+        methods <- selected_gxmethods()
+        metaFC <- sapply(ngs$gx.meta$meta, function(m) rowMeans(m$fc[,methods,drop=FALSE]))
+        rownames(metaFC) <- rownames(ngs$gx.meta$meta[[1]])
+        metaFC
+    })
+    
     outx <- list(selected_gxmethods=selected_gxmethods)
     return(outx)
     

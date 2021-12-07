@@ -611,9 +611,8 @@ createUI <- function(tabs)
             loader = shiny::img(src=base64enc::dataURI(file="www/ready.png"))
         )
     )
-    ## if(runif(1) < 0.1)
-    footer = footer.gif ## every now and then show easter egg..
-    
+    footer = footer.gif
+   
     ##-------------------------------------
     ## create TAB list
     ##-------------------------------------

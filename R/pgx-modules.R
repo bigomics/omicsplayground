@@ -27,7 +27,7 @@ addWatermark.PDF <- function(file) {
 addWatermark.PNG <- function(file) {
     if(system("which convert",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
     tmp <- paste0(gsub("file","plot",tempfile()),".png")
-    cmd = "convert plot.png -font Helvetica -pointsize 14 -extent 100%x105% -draw \"gravity south fill #80000080 text 0,4 'Created using the OmicsPlayground. Developed by BigOmics Analytics in Switzerland.' \"  plot_wmark.png"
+    cmd = "convert plot.png -font Helvetica -pointsize 13 -extent 100%x105% -draw \"gravity south fill #80000080 text 0,4 'Created using the OmicsPlayground. Developed by BigOmics Analytics in Switzerland.' \"  plot_wmark.png"
     cmd <- sub("plot.png",file,cmd)
     cmd <- sub("plot_wmark.png",tmp,cmd)    
     system(cmd)
