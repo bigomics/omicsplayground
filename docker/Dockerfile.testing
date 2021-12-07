@@ -40,7 +40,7 @@ WORKDIR /
 
 WORKDIR /
 RUN rm -fr /omicsplayground 
-RUN wget https://github.com/bigomics/omicsplayground/archive/master.zip \
+RUN wget -nv https://github.com/bigomics/omicsplayground/archive/master.zip \
     && unzip master.zip && mv omicsplayground-master omicsplayground \
     && chmod -R ugo+rwX /omicsplayground 
 
