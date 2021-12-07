@@ -792,7 +792,8 @@ infotext =
         plt <- plotly::plot_ly(
             df1, x = ~idx, y = ~score,
             type='bar',  ## orientation='v',
-            text = ~geneset, hoverinfo = 'text',
+            ## text = ~geneset,
+            hoverinfo = 'text',
             hovertemplate = paste0("%{text}<br>score: %{y}<extra>",df1$db,"</extra>"),
             ##hovertemplate = "%{y}",
             marker = list( color=klr ) ) %>%
