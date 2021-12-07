@@ -1635,7 +1635,8 @@ displays the expression levels of selected genes across all conditions in the an
             
             plot_list[[i]] <- plotly::plot_ly(
                 x=x, y=y, type='bar',  orientation='h',
-                text=y, hoverinfo = 'text',
+                ## text=y,
+                hoverinfo = 'text',
                 hovertemplate = paste0("%{y}<extra>",colnames(rho)[i],"</extra>"),
                 ##hovertemplate = "%{y}",
                 marker = list(color=klrpal[i])) %>%

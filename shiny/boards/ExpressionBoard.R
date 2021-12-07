@@ -189,12 +189,12 @@ two conditions. Determine which genes are significantly downregulated or overexp
         mm  = colnames(unclass(mx$p))
         testmethods = intersect(mm, testmethods)
         
-        mx.p  = unclass(mx$p[,testmethods,drop=FALSE]) ## get rid of AsIs
-        mx.q  = unclass(mx$q[,testmethods,drop=FALSE])
-        mx.fc = unclass(mx$fc[,testmethods,drop=FALSE])
+        mx.p  <- unclass(mx$p[,testmethods,drop=FALSE]) ## get rid of AsIs
+        mx.q  <- unclass(mx$q[,testmethods,drop=FALSE])
+        mx.fc <- unclass(mx$fc[,testmethods,drop=FALSE])
         ##mx$score = mx$fc * (-log10(1e-100+mx$q) )    
-        rownames(mx.p) <- rownames(mx)
-        rownames(mx.q) <- rownames(mx)
+        rownames(mx.p)  <- rownames(mx)
+        rownames(mx.q)  <- rownames(mx)
         rownames(mx.fc) <- rownames(mx)
         
         mx.fc[ is.infinite(mx.fc) | is.nan(mx.fc) ] <- NA
@@ -203,9 +203,9 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
         ##!!!!!!!!!!!!!!!!!!!!!!!! NEED RETHINK !!!!!!!!!!!!!!!!!!!!!!!!
         ## must recompute meta parameters (maxQ method)
-        mx$meta.p = apply(mx.p,1,max,na.rm=TRUE)
-        mx$meta.q = apply(mx.q,1,max,na.rm=TRUE)
-        mx$meta.fx = rowMeans(mx.fc,na.rm=TRUE)  
+        mx$meta.p  <- apply(mx.p,1,max,na.rm=TRUE)
+        mx$meta.q  <- apply(mx.q,1,max,na.rm=TRUE)
+        mx$meta.fx <- rowMeans(mx.fc,na.rm=TRUE)  
         ##mx$meta.score = rowMeans(mx$score,na.rm=TRUE)  
         
         stars.fdr = fdr
@@ -407,7 +407,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
     # not input$gx_contrast
     # not genetable$rows_selected
     # not fullDiffExprTable()
-
     # it's: gx_related_genesets()
 
 
@@ -1514,7 +1513,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     )
     ##output$genetable <- genetable_module$render
 
-    # reacts too often
+    ## NEED RETHINK: reacts too often
     gx_related_genesets <- shiny::reactive({
 
         dbg("[gx_related_genesets] reacted")
@@ -1626,61 +1625,96 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     fctable.RENDER <- shiny::reactive({
         
-        ngs <- inputData()
-        res <- filteredDiffExprTable()
-        if(is.null(res) || nrow(res)==0) return(NULL)
-
-        ##F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
-        F <- sapply(ngs$gx.meta$meta, function(x) x$meta.fx)
-        rownames(F) <- rownames(ngs$gx.meta$meta[[1]])
-        colnames(F) <- gsub("_"," ",colnames(F))
-        dim(F)
-        fc.var = F[,1]**2
-        if(NCOL(F)>1) {
-            fc.var <- round( apply(F,1,var), digits=4)
-        }
-
-        F1 <- data.frame( gene=rownames(F), fc.var=fc.var, round(F,digits=3), check.names=FALSE)
-        F1 <- F1[order(-F1$fc.var),]
-        F1 <- F1[intersect(rownames(F1),rownames(res)),]  ## take intersection of current comparison
-        
-        DT::datatable( F1,
-                      rownames=FALSE,
-                      class = 'compact cell-border stripe hover',
-                      extensions = c('Scroller'),
-                      selection=list(mode='single', target='row', selected=c(1)),
-                      fillContainer = TRUE,
-                      options=list(
-                          dom = 'lfrtip', 
-                          ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
-                          scrollX = TRUE,
-                          scrollY = tabV,
-                          scroller=TRUE, deferRender=TRUE
-                      )  ## end of options.list 
-                      ) %>%
-            DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
-            DT::formatStyle( "fc.var",
-                            ##background = DT::styleColorBar(c(0,3), 'lightblue'),
-                            background = color_from_middle( fc.var, 'lightblue', '#f5aeae'),
-                            backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
-                            backgroundPosition = 'center')  %>%
-            DT::formatStyle( colnames(F),
-                            ##background = DT::styleColorBar(c(0,3), 'lightblue'),
-                            background = color_from_middle(F, 'lightblue', '#f5aeae'),
-                            backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
-                            backgroundPosition = 'center')
+      ngs <- inputData()
+      res <- filteredDiffExprTable()
+      if(is.null(res) || nrow(res)==0) return(NULL)
+      
+      ##F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
+      ##Q <- sapply(ngs$gx.meta$meta, function(x) x$meta.q)
+      ##F <- sapply(ngs$gx.meta$meta, function(x) x$meta.fx)        
+      ##rownames(F)=rownames(Q)=rownames(ngs$gx.meta$meta[[1]])
+      F <- metaFC()
+      Q <- metaQ()        
+      
+      fc.rms = sqrt(F[,1]**2)
+      if(NCOL(F)>1) {
+        fc.rms <- round(sqrt(rowMeans(F**2)), digits=4)
+      }
+      
+      show.q = TRUE
+      show.q <- input$fctable_showq
+      df <- NULL
+      if(show.q) {
+        F1 <- do.call(cbind,lapply(1:ncol(F), function(i) cbind(F[,i], Q[,i])))
+        colnames(F1) <- as.vector(rbind(paste0("FC.",colnames(F)), paste0("q.",colnames(Q))))
+        ## colnames(F1) <- sub("q.*","q",colnames(F1))
+        df <- data.frame( gene=rownames(F), rms.FC=fc.rms, F1, check.names=FALSE)
+      } else {
+        F1 <- F
+        colnames(F1) <- paste0("FC.",colnames(F))
+        df <- data.frame(gene=rownames(F), rms.FC=fc.rms, F1, check.names=FALSE)
+      }
+      
+      df <- df[intersect(rownames(df),rownames(res)),]  ## take intersection of current comparison
+      df <- df[order(-df$rms.FC),]
+      colnames(df) <- gsub("_"," ",colnames(df))  ## so it allows wrap line
+      colnames(F1) <- gsub("_"," ",colnames(F1))  ## so it allows wrap line      
+      qv.cols <- grep("^q",colnames(F1))        
+      fc.cols <- setdiff(which(colnames(df) %in% colnames(F1)), qv.cols)
+      ## if(length(qv.cols)==0) qv = 0
+            
+      dt <- DT::datatable( df,
+                          rownames=FALSE,
+                          class = 'compact cell-border stripe hover',
+                          extensions = c('Scroller'),
+                          selection=list(mode='single', target='row', selected=c(1)),
+                          fillContainer = TRUE,
+                          options=list(
+                            dom = 'lfrtip', 
+                            ##pageLength = 20,##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                            scrollX = TRUE,
+                            scrollY = tabV,
+                            scroller=TRUE, deferRender=TRUE
+                          )  ## end of options.list 
+                          )  %>%
+        DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')  %>%
+        DT::formatSignif(columns = fc.cols, digits = 3) %>%
+        DT::formatStyle( "rms.FC",
+                        ##background = DT::styleColorBar(c(0,3), 'lightblue'),
+                        background = color_from_middle( fc.rms, 'lightblue', '#f5aeae'),
+                        backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
+                        backgroundPosition = 'center')  %>%
+        DT::formatStyle( fc.cols,
+                        ##background = DT::styleColorBar(c(0,3), 'lightblue'),
+                        background = color_from_middle(F, 'lightblue', '#f5aeae'),
+                        backgroundSize = '98% 88%', backgroundRepeat = 'no-repeat',
+                        backgroundPosition = 'center')
+      
+      if(length(qv.cols)>0) {
+        dt <- dt %>%
+          DT::formatSignif(columns = qv.cols, digits = 3)
+      }
+      
+      dt
     })
-
+    
     fctable_text = "The <strong>Foldchange (all)</strong> tab reports the gene fold changes for all contrasts in the selected dataset."
 
-    fctable_caption = "<b>Differential expression (fold-change) across all contrasts.</b> The column `fc.var` corresponds to the variance of the fold-change across all contrasts."
-
+    fctable_caption = "<b>Differential expression (fold-change) across all contrasts.</b> The column `rms.FC` corresponds to the root-mean-square fold-change across all contrasts."
+    
+    fctable_opts <- shiny::tagList(
+      shinyBS::tipify( shiny::checkboxInput(ns('fctable_showq'),'show q-values',FALSE),
+                      "Show q-values next to FC values.",
+                      placement="right", options = list(container = "body"))
+    )
+    
     shiny::callModule(
         tableModule,
         id="fctable",
         func = fctable.RENDER, 
         title ="Gene fold changes for all contrasts",
         info.text = fctable_text,
+        options = fctable_opts,        
         caption = fctable_caption,
         height = c(tabH,700)
     )
@@ -1789,7 +1823,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         )
     })
 
-
     ##----------------------------------------------------------------------
     ## reactive values to return to parent environment
     ##----------------------------------------------------------------------
@@ -1809,7 +1842,8 @@ two conditions. Determine which genes are significantly downregulated or overexp
         req(ngs)
         dbg("[ExpressionBoard:selected_gxmethods] tracemem(ngs) = ",tracemem(ngs))        
         methods <- selected_gxmethods()
-        metaFC <- sapply(ngs$gx.meta$meta, function(m) rowMeans(m$fc[,methods,drop=FALSE]))
+        ##metaFC <- sapply(ngs$gx.meta$meta, function(m) rowMeans(m$fc[,methods,drop=FALSE]))
+        metaFC <- sapply(ngs$gx.meta$meta, function(m) m$meta.fx)
         rownames(metaFC) <- rownames(ngs$gx.meta$meta[[1]])
         metaFC
     })
