@@ -206,8 +206,7 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
         export.ok <- class(err)!="try-error"
         if(export.ok) message("[plotlyExport] --> exported with plotly::export() (deprecated)")        
     }
-    if(0 && !export.ok) {
-        
+    if(0 && !export.ok) {        
         tmp = paste0(tempfile(),".html")
         htmlwidgets::saveWidget(p, tmp) 
         err <- try(webshot::webshot(url=tmp,file=file,vwidth=width*100, vheight=height*100))

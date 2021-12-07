@@ -7,6 +7,8 @@
 ## NOTE: This file is supposed to run in the folder .../R/
 ##
 
+##options(Ncpus = 6);options(pkgType="source")
+
 install.packages("devtools")
 install.packages("BiocManager", version="3.10")
 
@@ -44,6 +46,26 @@ remove.pkgs <- function(pkgs, force=FALSE) {
     for(pkg in pkgs) remove.pkg(pkg)
 }
 
+autoscan.pkgs <- function() {
+
+    pkg1 <- system("grep '::' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)
+    pkg2 <- system("grep 'require(' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)
+    pkg3 <- system("grep 'library(' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)    
+
+    pkg <- c(pkg1,pkg2,pkg3)
+    pkg <- grep("message|dbg|cat",pkg,value=TRUE,invert=TRUE)
+    
+    pkg <- gsub("[:\"]","",gsub(".*[ ,\\(\\[]","",gsub("::.*","::",pkg)))
+    pkg <- gsub("\\).*","",gsub(".*require\\(","",pkg))
+    pkg <- gsub("\\).*","",gsub(".*library\\(","",pkg))    
+    pkg <- grep("[=#/*'\\]",pkg,value=TRUE,invert=TRUE)
+
+    pkg <- unique(pkg)
+    pkg
+}
+
+
+
 BIG.NOTUSED <- c(
     "reactome.db", ## >2GB!!!
     "BH","PCSF",
@@ -76,15 +98,17 @@ install.pkgs(base.pkg)
 ## Automatically scan all used packages and install
 ##---------------------------------------------------------------------
 
-pkg.used <- system("grep 'library(\\|require(' *R *r ../shiny/*R ../shiny/modules/*R", intern=TRUE)
-pkg.used <- gsub(".*require\\(|.*library\\(","",pkg.used)
-pkg.used <- gsub("\"|\'|\\).*","",pkg.used)
-pkg.used <- grep("[ ]|quietly",pkg.used,value=TRUE,invert=TRUE)
+## pkg.used <- system("grep 'library(\\|require(' *R *r ../shiny/*R ../shiny/modules/*R", intern=TRUE)
+## pkg.used <- gsub(".*require\\(|.*library\\(","",pkg.used)
+## pkg.used <- gsub("\"|\'|\\).*","",pkg.used)
+## pkg.used <- grep("[ ]|quietly",pkg.used,value=TRUE,invert=TRUE)
+
+pkg.used <- autoscan.pkgs() 
 
 pkg.needed <- c('umap','corrplot','wordcloud','wordcloud2',"optparse","docopt",
                 'kableExtra',"randomForest",'rhdf5','qgraph','psych',
                 'ggVennDiagram', 'shinythemes','shinybusy','beepr',
-                'ggVennDiagram','rworldmap','sever','WGCNA','DGCA')
+                'rworldmap','sever','WGCNA','DGCA')
 
 pkg.used <- c(pkg.used, pkg.needed)
 pkg.used <- sort(unique(pkg.used))
@@ -94,13 +118,9 @@ r.pkg <- c('TxDb.Hsapiens.UCSC.hg19.knownGene',
            'TxDb.Mmusculus.UCSC.mm10.knownGene')
 install.pkgs(r.pkg)
 
-beta.pkg <- c('WGCNA', 'DGCA')
-install.pkgs(beta.pkg)
-
 ##---------------------------------------------------------------------
 ## reinstall problematics ones
 ##---------------------------------------------------------------------
-
 
 ##install.pkg("grid", force=TRUE)
 install.pkgs(c("gridGraphics","Rgraphviz","fastcluster", "mygene",
@@ -181,15 +201,19 @@ if(0) {
     pkg1 <- system("grep '::' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)
     pkg2 <- system("grep 'require(' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)
     pkg3 <- system("grep 'library(' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)    
-    pkg1 <- gsub("[:\"]","",gsub(".*[ ,\\(\\[]","",gsub("::.*","::",pkg1)))
-    pkg2 <- gsub("\\).*","",gsub(".*require\\(","",pkg2))
-    pkg2 <- gsub("\\).*","",gsub(".*library\\(","",pkg2))    
 
     pkg <- c(pkg1,pkg2,pkg3)
-    installed.pkg <- unique(pkg)
+    pkg <- grep("message|dbg|cat",pkg,value=TRUE,invert=TRUE)
+    
+    pkg <- gsub("[:\"]","",gsub(".*[ ,\\(\\[]","",gsub("::.*","::",pkg)))
+    pkg <- gsub("\\).*","",gsub(".*require\\(","",pkg))
+    pkg <- gsub("\\).*","",gsub(".*library\\(","",pkg))    
+    pkg <- grep("[=#/*'\\]",pkg,value=TRUE,invert=TRUE)
 
+    pkg <- unique(pkg)
+    
     lisc <- installed.packages(fields = "License")
-    sel <- which(lisc[,"Package"] %in% installed.pkg)
+    sel <- which(lisc[,"Package"] %in% pkg)
     ##pkg2 <- c(lisc[sel,"Package"], lisc[sel,"Imports"], lisc[sel,"LinkingTo"])
     pkg2 <- c(lisc[sel,"Package"])
     pkg2 <- setdiff(pkg2, c("",NA))
