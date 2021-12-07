@@ -526,7 +526,12 @@ LoadingBoard <- function(input, output, session, pgx_dir,
         }
         
         pgx <- currentPGX()            
-        dbg("[LoadingBoard::inputData] pgx$name = ",pgx$name,"\n")        
+        
+        if(!is.null(pgx)) {
+            dbg("[LoadingBoard::inputData] pgx$name = ",pgx$name)
+            dbg("[LoadingBoard::inputData] tracemem(ngs) = ",tracemem(pgx))
+        }
+        
         return(pgx)
     })
     
