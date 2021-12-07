@@ -24,7 +24,7 @@ message(">>>>> LOADING INITIAL LIBS")
 ## some libraries that we often need and load fast
 library(shiny)
 library(shinyBS)
-## library(pryr)
+library(pryr)
 library(grid)
 
 message("***********************************************")
