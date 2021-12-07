@@ -28,7 +28,6 @@ ORCA <- NULL
 if(getOption("OMICS_ORCA_RUN", TRUE)){
     ORCA <- initOrca(launch=TRUE) 
     class(ORCA)
-
     if(is.null(ORCA)) {
         stop("##### FATAL:: Could not connect to ORCA server. Please start ORCA. #####")
     }
@@ -37,34 +36,6 @@ if(getOption("OMICS_ORCA_RUN", TRUE)){
 ##======================================================================
 ##==================== FUNCTIONS =======================================
 ##======================================================================
-
-## Modified sever() from sever package to output also the specified logfile.
-## NOT WORKING!!! LOG FILE IS NOT UPDATED!!!!
-sever2 <- function (html = sever_default(), color = "#fff", opacity = 1, 
-                    bg_color = "#333e48", bg_image = NULL, session = shiny::getDefaultReactiveDomain(), 
-                    box = FALSE, logfile = NULL) 
-{
-    html <- as.character(html)
-    log.out <- NULL
-    if(!is.null(logfile) && file.exists(logfile)) {
-        ##log.out <- system(paste("tail -n300 ",logfile,"| grep -e error -e Error"),intern=TRUE)
-        log.out <- system(paste("tail -n1000 ",logfile),intern=TRUE)        
-        log.out <- paste(log.out, collapse='\n')
-        log.out <- paste0("=================================================\n",logfile,
-                          "\n=================================================\n\n",log.out)
-        log.out <- pre(id="error-log", class = "shiny-text-output",log.out,
-                       style='text-align:left;width:800px;font-size:10px;overflow-y:scroll;max-height:300px;display:none;')
-    }
-
-    html2 <- paste(html,"<p><p><p>",log.out)
-    msg <- list(content = html2, bg_color = bg_color, color = color, 
-                opacity = opacity, bg_image = bg_image, box = box)
-    is_running_golem <- sever::runs_golem()
-    if (is_running_golem) 
-        session$sendCustomMessage("sever-it", msg)
-    invisible()
-}
-
 
 tipify2 <- function(...) {
     shinyBS::tipify(..., placement="top", options = list(container = "body"))

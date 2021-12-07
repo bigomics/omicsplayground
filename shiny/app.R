@@ -212,6 +212,8 @@ server = function(input, output, session) {
             if(!is.null(query[['csv']])) {
                 ## focus on this tab
                 updateTabsetPanel(session, "load-tabs", selected = "Upload data")
+                updateTextAreaInput(session, "load-upload_panel-compute-upload_description",
+                                    value = "CSV FILE DESCRIPTION")                
             }
 
             ## not yet...
@@ -327,7 +329,7 @@ server = function(input, output, session) {
     ## Dynamically hide/show certain sections depending on USERMODE/object
     ##--------------------------------------------------------------------------
     shiny::observe({
-
+        
         ## trigger on change dataset
         pgx  <- env[["load"]]$inputData() 
         show.beta <- env[["user"]]$enable_beta()
@@ -478,39 +480,7 @@ server = function(input, output, session) {
         }
         
     })    
-    
-    ##-------------------------------------------------------------
-    ## customise disconnect screen with sever
-    ##-------------------------------------------------------------    
-    if(0) {
-        ## DOES NOT WORK!!!
-        ##
-        logfile = "/var/log/shiny-server/omicsplayground.log"
-        logfile <- tail(dir("/var/log/shiny-server",pattern="omicsplayground.*log",full.names=1),1)
-        logfile
-        if(length(logfile)==0) {
-            logfile <- tail(dir("/var/log/shiny-server",pattern="playground-shiny.*log",full.names=1),1)
-        }
-        logfile
-        dbg("[SERVER] logfile = ",logfile)
         
-        html.tags <- tagList(
-            tags$h1("Whoops-a-daisy!", style='color:white;'),
-            tags$p(id='sever-msg', "Something went wrong. You have been disconnected."),
-            sever::reload_button("Reload", class = "default")
-        )
-        if(file.exists(logfile)) {
-            html.tags <- tagList(
-                html.tags,
-                br(),br(),br(),
-                actionLink("showlog", "show error log", onClick="toggleErrorLog()", style='color:red;')
-            )
-        }
-        sever2(html=html.tags, logfile=logfile)
-        ##sever::sever()
-        log(NULL)  ## force error....
-    }
-    
     ##-------------------------------------------------------------
     ## report server times
     ##-------------------------------------------------------------    
