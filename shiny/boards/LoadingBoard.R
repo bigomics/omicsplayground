@@ -533,10 +533,6 @@ LoadingBoard <- function(input, output, session, pgx_dir,
     load_react <- reactive({
         btn <- input$loadbutton
         query <- parseQueryString(session$clientData$url_search)
-
-        dbg("[LoadingBoard::load_react] btn = ",btn)
-        dbg("[LoadingBoard::load_react] names.query = ",names(query))
-
         logged <- auth$logged()
             
         (!is.null(btn) || !is.null(query[['pgx']])) && logged
@@ -570,7 +566,7 @@ LoadingBoard <- function(input, output, session, pgx_dir,
             return(NULL)
         }
 
-        ## show loading pop-up modal
+        ## During loading show loading pop-up modal
         pgx.showCartoonModal()
         
         dbg("[LoadingBoard::<loadbutton>] loading pgxfile = ",pgxfile)

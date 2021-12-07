@@ -18,16 +18,15 @@ FROM bigomics/omicsplayground:base
 #------------------------------------------------------------
 
 # RUN apt install -y xvfb
-# RUN R -e "devtools::install_version('mnormt', version='1.5-7')"
 RUN R -e "remotes::install_github('JohnCoene/firebase@omics')" 
-RUN R -e "install.packages(c('shinythemes','shinybusy','beepr','ggVennDiagram','rworldmap','sever'))"
-RUN R -e "BiocManager::install(c('TxDb.Hsapiens.UCSC.hg19.knownGene','TxDb.Mmusculus.UCSC.mm10.knownGene','WGCNA','DGCA'))"
+#RUN R -e "install.packages(c('shinythemes','shinybusy','beepr','ggVennDiagram','rworldmap','sever'))"
+#RUN R -e "BiocManager::install(c('TxDb.Hsapiens.UCSC.hg19.knownGene','TxDb.Mmusculus.UCSC.mm10.knownGene','WGCNA','DGCA'))"
 # RUN pip3 install umap-learn
 
 #------------------------------------------------------------
 # Clone fresh code from GitHub
 #------------------------------------------------------------
-# WORKDIR /
+WORKDIR /
 # RUN rm -fr /omicsplayground \
 #     && git clone https://github.com/bigomics/omicsplayground.git \
 # #   && rm -fr /omicsplayground/.git \
@@ -36,8 +35,14 @@ RUN R -e "BiocManager::install(c('TxDb.Hsapiens.UCSC.hg19.knownGene','TxDb.Mmusc
 #------------------------------------------------------------
 # Update code from GitHub
 #------------------------------------------------------------
-WORKDIR /omicsplayground
-RUN git pull
+#WORKDIR /omicsplayground
+##RUN git pull
+
+WORKDIR /
+RUN rm -fr /omicsplayground 
+RUN wget https://github.com/bigomics/omicsplayground/archive/master.zip \
+    && unzip master.zip && mv omicsplayground-master omicsplayground \
+    && chmod -R ugo+rwX /omicsplayground 
 
 #------------------------------------------------------------
 # Copy any extra data sets into Docker image

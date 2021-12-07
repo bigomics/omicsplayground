@@ -1,5 +1,6 @@
-v2.8.2
+v2.8.3
 
+- Revamped batch-correction module
 - Private data folders for users
 - New gene/geneset UMAP visualization (in Clustering)
 - New 'Compare Datasets' module (beta)

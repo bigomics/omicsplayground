@@ -83,7 +83,9 @@ pkg.used <- grep("[ ]|quietly",pkg.used,value=TRUE,invert=TRUE)
 
 pkg.needed <- c('umap','corrplot','wordcloud','wordcloud2',"optparse","docopt",
                 'kableExtra',"randomForest",'rhdf5','qgraph','psych',
-                'ggVennDiagram', 'shinythemes','shinybusy','beepr')
+                'ggVennDiagram', 'shinythemes','shinybusy','beepr',
+                'ggVennDiagram','rworldmap','sever','WGCNA','DGCA')
+
 pkg.used <- c(pkg.used, pkg.needed)
 pkg.used <- sort(unique(pkg.used))
 install.pkgs( setdiff(pkg.used, c(PKG.MANUAL,BIG.NOTUSED)) )
@@ -156,6 +158,16 @@ install.pkg("rjags", force=TRUE)
 ##install.packages("../ext/packages/infercnv_1.1.3mod.tar.gz",repos=NULL,type="source")  ## old version
 BiocManager::install("infercnv")
 install.pkgs(c("KEGGREST","pathview"), force=TRUE)
+
+##---------------------------------------------------------------------
+## Install Kaleido for plotly
+##---------------------------------------------------------------------
+
+install.packages('reticulate')
+reticulate::install_miniconda()
+reticulate::conda_install('r-reticulate', 'python-kaleido')
+reticulate::conda_install('r-reticulate', 'plotly', channel = 'plotly')
+reticulate::use_miniconda('r-reticulate')
 
 ##---------------------------------------------------------------------
 ## remove unneccessary big packages??
