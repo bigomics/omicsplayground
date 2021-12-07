@@ -1703,7 +1703,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     fctable_caption = "<b>Differential expression (fold-change) across all contrasts.</b> The column `rms.FC` corresponds to the root-mean-square fold-change across all contrasts."
     
     fctable_opts <- shiny::tagList(
-      shinyBS::tipify( shiny::checkboxInput(ns('fctable_showq'),'show q-values',FALSE),
+      shinyBS::tipify( shiny::checkboxInput(ns('fctable_showq'),'show q-values',TRUE),
                       "Show q-values next to FC values.",
                       placement="right", options = list(container = "body"))
     )
