@@ -674,21 +674,16 @@ infotext =
         ##
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
-        
-        ##markers <- GSETS[[100]]
+
+        markers <- head(rownames(ngs$X),100)
         markers <- getCurrentMarkers()
         if(is.null(markers)) return(NULL)
-        
-        dbg("[getOverlapTable] called")
         
         ## fold change just for ranking of genes
         ##F <- sapply(ngs$gx.meta$meta, function(x) unclass(x$fc)[,"trend.limma"])
         F <- sapply(ngs$gx.meta$meta, function(x) x$meta.fx)
         rownames(F) <- rownames(ngs$gx.meta$meta[[1]])
         fx <- rowMeans(F**2)
-        ##markers=head(names(sort(-abs(fx))),100)
-
-        dbg("[getOverlapTable] settiing up Fisher test")
         
         ## fisher test
         ##ii <- setdiff(match(markers, colnames(GSETxGENE)),NA)
@@ -701,10 +696,8 @@ infotext =
         odds.ratio = ( N[,3]/ N[,4]) / ( N[,1]/ N[,2]) 
         dim(N)
         
-
-        dbg("computing p-values...")
+        ## WOW THIS IS FAST!!!!!!!
         pv <- corpora::fisher.pval( N[,1], N[,2], N[,3], N[,4], log.p=FALSE)
-        dbg("done!\n")
         head(pv)
         names(pv) <- rownames(N)
         pv = pv[match(names(odds.ratio),names(pv))]
@@ -720,32 +713,18 @@ infotext =
         A <- A[which( A$q.fisher < 0.999),]
         ##A <- A[which( A$q.fisher < 0.05),]
         dim(A)
-        
-        if(0) {
-            ## Gene set clustering so that similar gene sets are shown
-            ## together??? Bit like Gprofiler
-            ##
-
-
-            G = GSETxGENE[rownames(A),]
-            G = G[which(Matrix::rowSums(G!=0) > 10), ] ## at least 10 genes
-###G = G[, which(Matrix::colSums(G!=0) >= 10) ] ## at least 10 genesets
-            dim(G)        
-            hc <- fastcluster::hclust(as.dist(qlcMatrix::cosSparse(t(G))))
-            ##hc <- nclust(as.matrix(G))
-            A <- A[rownames(G)[hc$order],]
-        }
 
         ## get shared genes
-        dbg("determining shared genes...\n")
+        dbg("[getOverlapTable] determining shared genes...\n")
         aa = rownames(A)
+
         y <- 1*(colnames(GSETxGENE) %in% toupper(markers))
         names(y) <- colnames(GSETxGENE)
-        ncommon <- Matrix::colSums(t(GSETxGENE[aa,])*as.vector(y)!=0)
-        ntotal  <- Matrix::rowSums(GSETxGENE[aa,]!=0)
+        ncommon <- Matrix::colSums(Matrix::t(GSETxGENE[aa,,drop=FALSE])*as.vector(y)!=0)
+        ntotal  <- Matrix::rowSums(GSETxGENE[aa,,drop=FALSE]!=0)
         A$ratio <- ncommon / ntotal
         ratio.kk <- paste0(ncommon,"/",ntotal)    
-        
+
         gg <- colnames(GSETxGENE)
         gset <- names(y)[which(y!=0)]
         G1 = GSETxGENE[aa,which(y!=0)]
@@ -763,7 +742,7 @@ infotext =
         }
         ##commongenes <- sapply(commongenes,paste,collapse=",")        
         commongenes <- unlist(commongenes)
-
+        
         ## construct results dataframe
         gset.names <- substring(rownames(A),1,72)    
         ##aa <- apply(A, 2, formatC, format="e", digits=3)
@@ -774,6 +753,7 @@ infotext =
         score = (log10(A$odds.ratio) * -log10(A$q.fisher + 1e-40))**0.5
         score = round(score, digits=3)
         df <- cbind(db=db, geneset=gset.names, score=score, "k/K"=ratio.kk, A, common.genes=commongenes)
+        
         if(DEV) {
             df <- df[,c("db","geneset","score","k/K","ratio","odds.ratio","log.OR","q.fisher","common.genes")]
         } else {
@@ -782,6 +762,7 @@ infotext =
         
         ##df <- df[order(-df$odds.ratio),]
         df <- df[order(-df$score),]
+        dbg("[getOverlapTable] done! \n")
         return(df)
     })
 

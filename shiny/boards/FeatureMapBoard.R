@@ -122,15 +122,6 @@ FeatureMapBoard <- function(input, output, session, env)
         
     })
     shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
-    
-    ##================================================================================
-    ##======================= PRECOMPUTE FUNCTION ====================================
-    ##================================================================================
-
-    if(0) {
-        load("~/Playground/omicsplayground/data/geiger2016-arginine-test.pgx")
-        GSETxGENE <- readRDS("~/Playground/omicsplayground/lib/gset-sparseG-XL.rds")
-    }
             
     
     ##================================================================================
