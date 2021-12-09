@@ -110,6 +110,7 @@ if(1 && opt$AUTHENTICATION=="firebase" && !file.exists("firebase.rds")) {
 WATERMARK <<- opt$WATERMARK
 TIMEOUT   <<- as.integer(opt$TIMEOUT)  ## in seconds
 
+
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
 

@@ -228,14 +228,14 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                 dbg("[ComputePgxServer:@metaRT] names.meta =",names(meta))
                 
                 if(!is.null(meta[['name']])) {
-                    dbg("[ComputePgxServer:@metaRT] meta.name => ",meta[['name']])
-                    dbg("[ComputePgxServer:@metaRT] NS.upload_name = ",ns("upload_name"))                                                            
+                    dbg("[ComputePgxServer:@metaRT] NS.upload_name = ",ns("upload_name"))                                                  dbg("[ComputePgxServer:@metaRT] meta.name => ",meta[['name']])
+                              
                     shiny::updateTextInput(session, "upload_name", value=meta[['name']])
                     ## shiny::updateTextInput(session, ns("upload_name"), value=meta[['name']])                    
                 }
                 if(!is.null(meta[['description']])) {
-                    dbg("[ComputePgxServer:@metaRT] meta.description => ",meta[['description']])
-                    dbg("[ComputePgxServer:@metaRT] NS.upload_description = ",ns("upload_description"))                                        
+                    dbg("[ComputePgxServer:@metaRT] NS.upload_description = ",ns("upload_description"))                                    dbg("[ComputePgxServer:@metaRT] meta.description => '",meta[['description']],"'")
+                        
                     shiny::updateTextAreaInput(session, "upload_description", value=meta[['description']])
                     ##shiny::updateTextAreaInput(session, ns("upload_description"), value=meta[['description']])                    
                 }
