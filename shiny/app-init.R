@@ -37,6 +37,38 @@ if(0 && getOption("OMICS_ORCA_RUN", TRUE)){
 ##==================== FUNCTIONS =======================================
 ##======================================================================
 
+sever_screen <- shiny::tagList(
+    shiny::tags$h1(
+        "Whoopsie!",
+        style = "color:white;"
+    ),
+    shiny::p("You have been disconnected"),
+    shiny::br(),
+    shiny::div(
+        id="logSub",
+        shiny::tags$textarea(
+            class = "form-control",
+            rows = "4",
+            cols = "5",
+            id = "logMsg"
+        ),
+        shiny::br(),
+        shiny::tags$a(
+            onClick = "sendLog()", 
+            class = "btn btn-sm btn-warning", 
+            "Send Message"
+        )
+    ),
+    shiny::div(
+        id="logSubbed",
+        style="display:none;",
+        shiny::p("Your message was sent!")
+    ),
+    shiny::br(),
+    sever::reload_button("Reload", class = "default")
+)
+
+
 tipify2 <- function(...) {
     shinyBS::tipify(..., placement="top", options = list(container = "body"))
 }
