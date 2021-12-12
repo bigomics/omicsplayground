@@ -18,12 +18,21 @@ LoadingInputs <- function(id) {
 
 LoadingUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
-    shiny::fillCol(
-        height = 750,
-        shiny::tabsetPanel(
-            id = ns("tabs"),
-            shiny::tabPanel("Datasets",uiOutput(ns("pgxtable_UI"))),
-            shiny::tabPanel("Upload data",uiOutput(ns("upload_UI")))
+
+    close_session <- shiny::span()
+    if(getOption("OMICS_TEST", FALSE)){
+        close_session <- shiny::actionButton(ns("close"), "close")
+    }
+
+    tagList(
+        close_session,
+        shiny::fillCol(
+            height = 750,
+            shiny::tabsetPanel(
+                id = ns("tabs"),
+                shiny::tabPanel("Datasets",uiOutput(ns("pgxtable_UI"))),
+                shiny::tabPanel("Upload data",uiOutput(ns("upload_UI")))
+            )
         )
     )
 }
@@ -53,6 +62,10 @@ LoadingBoard <- function(input, output, session, pgx_dir,
     message("[LoadingBoard] pgx_dir = ",pgx_dir)
     
     dbg("[LoadingBoard] getwd = ",getwd())
+
+    observeEvent(input$close, {
+        session$close()
+    })
     
     auth <- NULL   ## shared in module
     if(authentication == "password") {

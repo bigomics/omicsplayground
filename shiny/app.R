@@ -115,6 +115,47 @@ TIMEOUT   <<- as.integer(opt$TIMEOUT)  ## in seconds
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
 
+res <- getFromNamespace("httpResponse", "shiny")
+
+logHandler <- function(req){
+    if(!req$PATH_INFO == "/log")
+        return()
+
+    query <- shiny::parseQueryString(req$QUERY_STRING)
+
+    if(is.null(query$msg))
+        return(res(400L, "application/json", jsonlite::toJSON(FALSE)))
+
+    if(query$msg == "")
+        return(res(400L, "application/json", jsonlite::toJSON(FALSE)))
+
+    token <- Sys.getenv("HONCHO_TOKEN", "")
+    if(token == "")
+        return(res(403L, "application/json", jsonlite::toJSON(FALSE)))
+
+    uri <- sprintf("%s/log?token=%s", opt$HONCHO_URL, token)
+    httr::POST(
+        uri,
+        body = list(
+            msg = query$msg,
+            log = "The log!"
+        ),
+        encode = "json"
+    )
+
+    res(400L, "application/json", jsonlite::toJSON(TRUE))
+}
+
+run_appliation <- function(ui, server, ...){
+  # get handler
+  handlerManager <- getFromNamespace("handlerManager", "shiny")
+
+  # add handler
+  handlerManager$addHandler(logHandler, "/log")
+
+  shiny::shinyApp(ui, server, ...)
+}
+
 ## --------------------------------------------------------------------
 ## ----------------- READ MODULES/BOARDS ------------------------------
 ## --------------------------------------------------------------------
@@ -182,6 +223,8 @@ server = function(input, output, session) {
     message("\n========================================================")
     message("===================== SERVER ===========================")
     message("========================================================\n")
+
+    sever::sever(sever_screen, bg_color = "#2780e3")
 
     dbg("[SERVER] 0: getwd = ",getwd())
     setwd(WORKDIR)  ## for some reason it can change!!
@@ -482,7 +525,7 @@ server = function(input, output, session) {
         }
         
     })    
-        
+
     ##-------------------------------------------------------------
     ## report server times
     ##-------------------------------------------------------------    
@@ -690,7 +733,8 @@ onStart.FUN <- function() {
     message("[APP] App start!")                        
 }
 
-shiny::shinyApp(ui, server, onStart=onStart.FUN)
+# shiny::shinyApp(ui, server, onStart=onStart.FUN)
+run_appliation(ui, server)
 
 ##pkgs <- c( sessionInfo()[["basePkgs"]], names(sessionInfo()[["otherPkgs"]]),
 ##          names(sessionInfo()[["loadedOnly"]]) )
