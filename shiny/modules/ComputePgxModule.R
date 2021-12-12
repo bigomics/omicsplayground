@@ -275,6 +275,12 @@ ComputePgxServer <- function(id, countsRT, samplesRT, contrastsRT, batchRT, meta
                     return(NULL)
                 }
 
+                has.contrasts <- !is.null(contrastsRT()) && NCOL(as.matrix(contrastsRT()))>0
+                if(!has.contrasts) {
+                    shinyalert::shinyalert("ERROR","You must define at least 1 contrast")
+                    return(NULL)
+                }
+
                 has.name <- input$upload_name != ""
                 has.description <- input$upload_description != ""
                 if(!has.name || !has.description) {
