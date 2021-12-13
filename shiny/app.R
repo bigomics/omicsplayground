@@ -247,10 +247,17 @@ server = function(input, output, session) {
     message("\n========================================================")
     message("===================== SERVER ===========================")
     message("========================================================\n")
-
-    sever::sever(sever_screen, bg_color = "#000000") ## lightblue=2780e3
-
     dbg("[SERVER] 0: getwd = ",getwd())
+    dbg("[SERVER] 0: HONCHO_URL = ",opt$HONCHO_URL)
+    
+    has.honcho <- Sys.getenv("HONCHO_TOKEN","")!="" &&
+        !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!=""
+    if(has.honcho) {
+        sever::sever(sever_screen, bg_color = "#000000") ## lightblue=2780e3
+    } else {
+        sever::sever(sever_screen0, bg_color = "#000000") ## lightblue=2780e3
+    }
+
     setwd(WORKDIR)  ## for some reason it can change!!
     dbg("[SERVER] 1: getwd = ",getwd())
     
