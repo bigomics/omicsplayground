@@ -114,28 +114,30 @@ TIMEOUT   <<- as.integer(opt$TIMEOUT)  ## in seconds
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
 
-res <- getFromNamespace("httpResponse", "shiny")
+http.res <- getFromNamespace("httpResponse", "shiny")
 
-logHandler <- function(req){
-    if(!req$PATH_INFO == "/log")
+logHandler <- function(http.req){
+
+    if(!http.req$PATH_INFO == "/log") {
         return()
+    }
 
-    query <- shiny::parseQueryString(req$QUERY_STRING)
+    query <- shiny::parseQueryString(http.req$QUERY_STRING)
 
     if(is.null(query$msg)) {
         dbg("[MAIN.logHandler] msg is NULL!")
-        return(res(400L, "application/json", jsonlite::toJSON(FALSE)))
+        return(http.res(400L, "application/json", jsonlite::toJSON(FALSE)))
     }
 
     if(query$msg == "") {
         dbg("[MAIN.logHandler] msg is empty!")        
-        return(res(400L, "application/json", jsonlite::toJSON(FALSE)))
+        return(http.res(400L, "application/json", jsonlite::toJSON(FALSE)))
     }
 
     token <- Sys.getenv("HONCHO_TOKEN", "")
     if(token == "") {
         dbg("[MAIN.logHandler] missing HONCHO_TOKEN!")        
-        return(res(403L, "application/json", jsonlite::toJSON(FALSE)))
+        return(http.res(403L, "application/json", jsonlite::toJSON(FALSE)))
     }
     
     uri <- sprintf("%s/log?token=%s", opt$HONCHO_URL, token)
@@ -164,7 +166,7 @@ logHandler <- function(req){
         encode = "json"
     )
 
-    res(400L, "application/json", jsonlite::toJSON(TRUE))
+    http.res(400L, "application/json", jsonlite::toJSON(TRUE))
 }
 
 run_application <- function(ui, server, ...){
