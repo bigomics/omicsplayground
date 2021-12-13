@@ -136,7 +136,8 @@ logHandler <- function(req){
         uri,
         body = list(
             msg = query$msg,
-            log = "The log!"
+            log = "The log!",
+            filename = "the_log.log"
         ),
         encode = "json"
     )
