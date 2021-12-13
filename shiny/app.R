@@ -9,7 +9,6 @@
 ##                                                                     ##
 #########################################################################
 
-
 message("\n\n")
 message("###############################################################")
 message("##################### OMICS PLAYGROUND ########################")
@@ -105,12 +104,12 @@ if(1 && opt$AUTHENTICATION=="firebase" && !file.exists("firebase.rds")) {
     message("[ENV] WARNING: Missing firebase.rds file!!! reverting authentication to 'none'")    
     opt$AUTHENTICATION = "none"
     ## opt$ENABLE_USERDIR = FALSE
+    ## stop("[MAIN] FATAL Missing firebase.rds file")
 }
 
 ## copy to global.R environment
 WATERMARK <<- opt$WATERMARK
 TIMEOUT   <<- as.integer(opt$TIMEOUT)  ## in seconds
-
 
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
@@ -123,22 +122,44 @@ logHandler <- function(req){
 
     query <- shiny::parseQueryString(req$QUERY_STRING)
 
-    if(is.null(query$msg))
+    if(is.null(query$msg)) {
+        dbg("[MAIN.logHandler] msg is NULL!")
         return(res(400L, "application/json", jsonlite::toJSON(FALSE)))
+    }
 
-    if(query$msg == "")
+    if(query$msg == "") {
+        dbg("[MAIN.logHandler] msg is empty!")        
         return(res(400L, "application/json", jsonlite::toJSON(FALSE)))
+    }
 
     token <- Sys.getenv("HONCHO_TOKEN", "")
-    if(token == "")
+    if(token == "") {
+        dbg("[MAIN.logHandler] missing HONCHO_TOKEN!")        
         return(res(403L, "application/json", jsonlite::toJSON(FALSE)))
-
+    }
+    
     uri <- sprintf("%s/log?token=%s", opt$HONCHO_URL, token)
+
+    ## get the correct log file
+    log.file = NULL
+    the.log <- "Could not find log file!"
+    if(dir.exists("~/ShinyApps/log")) {
+        log.file <- tail(dir("~/ShinyApps/log",pattern="log",full.names=TRUE),1)
+    } else if(dir.exists("/var/log/shiny-server")) {
+        log.file <- tail(dir("/var/log/shiny-server/",pattern="log",full.names=TRUE),1)
+    }
+    log.file
+    dbg("[logHandler] reading log.file = ",log.file)
+    if(!is.null(log.file)) the.log <- readr::read_file(log.file)
+
+
+    dbg("[logHandler] sending log file... ")    
     httr::POST(
         uri,
         body = list(
             msg = query$msg,
-            log = "The log!"
+            filename = log.file,
+            log = the.log
         ),
         encode = "json"
     )
@@ -146,14 +167,15 @@ logHandler <- function(req){
     res(400L, "application/json", jsonlite::toJSON(TRUE))
 }
 
-run_appliation <- function(ui, server, ...){
-  # get handler
-  handlerManager <- getFromNamespace("handlerManager", "shiny")
-
-  # add handler
-  handlerManager$addHandler(logHandler, "/log")
-
-  shiny::shinyApp(ui, server, ...)
+run_application <- function(ui, server, ...){
+    ## get handler
+    handlerManager <- getFromNamespace("handlerManager", "shiny")
+    
+    ## add handler
+    handlerManager$removeHandler("/log")
+    handlerManager$addHandler(logHandler, "/log")
+    
+    shiny::shinyApp(ui, server, ...)
 }
 
 ## --------------------------------------------------------------------
@@ -224,7 +246,7 @@ server = function(input, output, session) {
     message("===================== SERVER ===========================")
     message("========================================================\n")
 
-    sever::sever(sever_screen, bg_color = "#2780e3")
+    sever::sever(sever_screen, bg_color = "#000000") ## lightblue=2780e3
 
     dbg("[SERVER] 0: getwd = ",getwd())
     setwd(WORKDIR)  ## for some reason it can change!!
@@ -507,7 +529,7 @@ server = function(input, output, session) {
         dbg("[SERVER:quit] !!!reacted!!!")
         dbg("[SERVER:quit] closing session... ")        
         session$close()
-        if(1) {
+        if(0) {
             ## Return non-zero value so docker swarm can catch and restart
             ## the container upon on-failure
             dbg("[SERVER:quit] force stopping App... ")                
@@ -539,6 +561,7 @@ server = function(input, output, session) {
 ## --------------------------------------------------------------------
 ## ------------------------------ UI ----------------------------------
 ## --------------------------------------------------------------------
+
 
 TABVIEWS <- list(
     "load"   = tabView("Home",LoadingInputs("load"),LoadingUI("load")),
@@ -721,6 +744,7 @@ ui = createUI(tabs)
 ## ------------------------------ RUN ---------------------------------
 ## --------------------------------------------------------------------
 
+
 onStop(function() {
     message("*************** onStop:: doing application cleanup ****************")
     message("[APP] App died... ")
@@ -734,7 +758,7 @@ onStart.FUN <- function() {
 }
 
 # shiny::shinyApp(ui, server, onStart=onStart.FUN)
-run_appliation(ui, server)
+run_application(ui, server)
 
 ##pkgs <- c( sessionInfo()[["basePkgs"]], names(sessionInfo()[["otherPkgs"]]),
 ##          names(sessionInfo()[["loadedOnly"]]) )
