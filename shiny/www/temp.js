@@ -227,7 +227,7 @@ function sendLog() {
 	showSub();
 	let msg = $('#logMsg').val();
 
-	fetch(`/log?msg=${encodeURIComponent(msg)}`)
+	fetch(`log?msg=${encodeURIComponent(msg)}`)
 		.then(res => {
 			console.info(res);
 			hideSub();
