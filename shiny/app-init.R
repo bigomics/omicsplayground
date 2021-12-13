@@ -37,6 +37,19 @@ if(0 && getOption("OMICS_ORCA_RUN", TRUE)){
 ##==================== FUNCTIONS =======================================
 ##======================================================================
 
+sever_screen0 <- shiny::tagList(
+    shiny::tags$h1(
+        "Houston, we have a problem",
+        style = "color:white;font-family:lato;"
+    ),
+    shiny::p("You have been disconnected!"),
+    shiny::br(),
+    shiny::div(shiny::img(src=base64enc::dataURI(file="www/lost-in-space.gif"),
+                          width=500,height=250)),
+    shiny::br(),
+    sever::reload_button("Relaunch", class = "default")
+)
+
 sever_screen <- shiny::tagList(
     shiny::tags$h1(
         "Houston, we have a problem",
