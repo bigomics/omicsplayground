@@ -1,6 +1,6 @@
 TITLE           = 'Omics Playground'
-#AUTHENTICATION  = none
-AUTHENTICATION  = firebase
+AUTHENTICATION  = none
+#AUTHENTICATION  = firebase
 ENABLE_USERDIR  = FALSE
 ENABLE_UPLOAD   = TRUE
 ENABLE_SAVE     = TRUE
@@ -15,7 +15,7 @@ HONCHO_URL = 'http://localhost:8000'
 TIMEOUT         = 0
 #TIMEOUT        = 2700
 #TIMEOUT        = 60
-#DEBUG         = TRUE
+HONCHO_URL      = http://localhost:8000
 
 #BOARDS_ENABLED = load,view,clust,expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap
 #BOARDS_DISABLED = expr,enrich,isect,func,word,drug,sig,scell,cor,bio,cmap,corsa,multi,system,wgcna,tcga,clust,ftmap,comp,view

@@ -1635,7 +1635,8 @@ displays the expression levels of selected genes across all conditions in the an
             
             plot_list[[i]] <- plotly::plot_ly(
                 x=x, y=y, type='bar',  orientation='h',
-                text=y, hoverinfo = 'text',
+                ## text=y,
+                hoverinfo = 'text',
                 hovertemplate = paste0("%{y}<extra>",colnames(rho)[i],"</extra>"),
                 ##hovertemplate = "%{y}",
                 marker = list(color=klrpal[i])) %>%
@@ -1880,8 +1881,6 @@ displays the expression levels of selected genes across all conditions in the an
     ## Feature ranking
     ##=============================================================================
     
-
-    
     calcFeatureRanking <- shiny::reactive({
         ngs <- inputData()
         shiny::req(ngs)
@@ -2038,7 +2037,7 @@ displays the expression levels of selected genes across all conditions in the an
         func  = clust_featureRank.RENDER,
         func2 = clust_featureRank.RENDER,
         options = clust_featureRank.opts,
-        pdf.width=8, pdf.height=8,
+        pdf.width=8, pdf.height=10,
         height = c(fullH-80,700),
         width=c("auto",800),
         res = c(72,90),
