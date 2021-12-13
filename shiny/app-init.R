@@ -39,18 +39,27 @@ if(0 && getOption("OMICS_ORCA_RUN", TRUE)){
 
 sever_screen <- shiny::tagList(
     shiny::tags$h1(
-        "Whoopsie!",
-        style = "color:white;"
+        "Houston, we have a problem",
+        style = "color:white;font-family:lato;"
     ),
-    shiny::p("You have been disconnected"),
+    shiny::p("You have been disconnected!"),
     shiny::br(),
+    shiny::div(shiny::img(src=base64enc::dataURI(file="www/lost-in-space.gif"),
+                          width=500,height=250)),
     shiny::div(
         id="logSub",
-        shiny::tags$textarea(
-            class = "form-control",
-            rows = "4",
-            cols = "5",
-            id = "logMsg"
+##        shiny::tags$textarea(
+##            class = "form-control",
+##            rows = "4",
+##            cols = "5",
+##            id = "logMsg"
+##        ),
+        shiny::textAreaInput(
+                 inputId = "logMsg",
+                 label = "",
+                 ##rows = 4, cols = 5,
+                 width = "100%", height="100px",
+                 value = "If this was a crash, please help us and describe here the last thing you did."
         ),
         shiny::br(),
         shiny::tags$a(
@@ -62,10 +71,14 @@ sever_screen <- shiny::tagList(
     shiny::div(
         id="logSubbed",
         style="display:none;",
-        shiny::p("Your message was sent!")
+        shiny::p("Mission Control has been notified. Thank you!")
     ),
     shiny::br(),
-    sever::reload_button("Reload", class = "default")
+    shiny::div(
+        id="sever-reload-btn",
+        sever::reload_button("Relaunch", class = "default"),
+        style="display:none;"             
+    )
 )
 
 
