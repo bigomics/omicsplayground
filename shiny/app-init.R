@@ -39,61 +39,89 @@ if(0 && getOption("OMICS_ORCA_RUN", TRUE)){
 
 sever_screen0 <- shiny::tagList(
     shiny::tags$h1(
-        "Houston, we have a problem",
-        style = "color:white;font-family:lato;"
+      "Houston, we have a problem", style="color:white;font-family:lato;"
     ),
-    shiny::p("You have been disconnected!"),
+    shiny::p("You have been disconnected!", style="font-size:15px;"),
     shiny::br(),
     shiny::div(shiny::img(src=base64enc::dataURI(file="www/lost-in-space.gif"),
                           width=500,height=250)),
     shiny::br(),
-    sever::reload_button("Relaunch", class = "default")
+    sever::reload_button("Relaunch", class = "info")
 )
 
 sever_screen <- shiny::tagList(
     shiny::tags$h1(
-        "Houston, we have a problem",
-        style = "color:white;font-family:lato;"
+        "Houston, we have a problem", style = "color:white;font-family:lato;"
     ),
-    shiny::p("You have been disconnected!"),
+    shiny::p("You have been disconnected!", style="font-size:15px;"),
     shiny::br(),
     shiny::div(shiny::img(src=base64enc::dataURI(file="www/lost-in-space.gif"),
                           width=500,height=250)),
     shiny::div(
         id="logSub",
-##        shiny::tags$textarea(
-##            class = "form-control",
-##            rows = "4",
-##            cols = "5",
-##            id = "logMsg"
+##        shiny::textAreaInput(
+##               inputId = "logMsg",
+##               label = "",
+##               width = "100%", height="80px",
+##               value = "If this was a crash, please help and describe here the last thing you did."
 ##        ),
-        shiny::textAreaInput(
-                 inputId = "logMsg",
-                 label = "",
-                 ##rows = 4, cols = 5,
-                 width = "100%", height="100px",
-                 value = "If this was a crash, please help us and describe here the last thing you did."
-        ),
         shiny::br(),
         shiny::tags$a(
             onClick = "sendLog()", 
             class = "btn btn-sm btn-warning", 
-            "Send Message"
+            "Send error to developers"
         )
     ),
     shiny::div(
         id="logSubbed",
         style="display:none;",
-        shiny::p("Mission Control has been notified. Thank you!")
+        shiny::p("Mission Control has been notified. Thank you!", style="font-size:15px;")
     ),
     shiny::br(),
     shiny::div(
         id="sever-reload-btn",
-        sever::reload_button("Relaunch", class = "default"),
+        sever::reload_button("Relaunch", class = "info"),
         style="display:none;"             
     )
 )
 
+sever_screen2 <- function(session_id) {
+  shiny::tagList(
+    shiny::tags$h1(
+      "Houston, we have a problem", style = "color:white;font-family:lato;"
+    ),
+    shiny::p("You have been disconnected!", style="font-size:15px;"),
+    shiny::br(),
+    shiny::div(shiny::img(src=base64enc::dataURI(file="www/lost-in-space.gif"),
+                          width=500,height=250)),
+    shiny::div(
+      id="logSub",
+      ##        shiny::textAreaInput(
+      ##               inputId = "logMsg",
+      ##               label = "",
+      ##               width = "100%", height="80px",
+      ##               value = "If this was a crash, please help and describe here the last thing you did."
+      ##        ),
+      shiny::br(),
+      shiny::tags$a(
+        onClick = HTML(paste0("sendLog2('",session_id,"')")),
+        class = "btn btn-sm btn-warning", 
+        "Send error to developers"
+      )
+    ),
+    shiny::div(
+      id="logSubbed",
+      style="display:none;",
+      shiny::p("Mission Control has been notified. Thank you!", style="font-size:15px;")
+    ),
+    shiny::br(),
+    shiny::div(
+      id="sever-reload-btn",
+      sever::reload_button("Relaunch", class = "info"),
+      style="display:none;"             
+    )
+  )
+}
 
 tipify2 <- function(...) {
     shinyBS::tipify(..., placement="top", options = list(container = "body"))
