@@ -119,7 +119,7 @@ http.resp <- getFromNamespace("httpResponse", "shiny")
 logHandler <- function(http.req){
 
     dbg("[MAIN.logHandler] >>>>> called! <<<<<")
-    dbg("[MAIN.logHandler] names(http.req) = ",sort(names(http.req)))
+    ##dbg("[MAIN.logHandler] names(http.req) = ",sort(names(http.req)))
     dbg("[MAIN.logHandler] http.req$PATH_INFO = ",http.req$PATH_INFO)
     
     if(!http.req$PATH_INFO == "/log") {
@@ -585,6 +585,11 @@ server = function(input, output, session) {
     total.lapse_time <- round(Sys.time() - main.start_time,digits=4)
     message("[SERVER] total lapse time = ",total.lapse_time," ",attr(total.lapse_time,"units"))
 
+
+
+    ## log(NULL)  ## force crash!!
+
+    
 }
 
 ## --------------------------------------------------------------------
