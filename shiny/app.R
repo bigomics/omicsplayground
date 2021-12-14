@@ -114,30 +114,36 @@ TIMEOUT   <<- as.integer(opt$TIMEOUT)  ## in seconds
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
 
-http.res <- getFromNamespace("httpResponse", "shiny")
+http.resp <- getFromNamespace("httpResponse", "shiny")
 
 logHandler <- function(http.req){
 
+    dbg("[MAIN.logHandler] >>>>> called! <<<<<")
+    dbg("[MAIN.logHandler] names(http.req) = ",sort(names(http.req)))
+    dbg("[MAIN.logHandler] http.req$PATH_INFO = ",http.req$PATH_INFO)
+    
     if(!http.req$PATH_INFO == "/log") {
         return()
     }
-
+    
     query <- shiny::parseQueryString(http.req$QUERY_STRING)
-
+    dbg("[MAIN.logHandler] names(query) = ",names(query))
+    dbg("[MAIN.logHandler] query$msg = ",query$msg)
+    
     if(is.null(query$msg)) {
         dbg("[MAIN.logHandler] msg is NULL!")
-        return(http.res(400L, "application/json", jsonlite::toJSON(FALSE)))
+        return(http.resp(400L, "application/json", jsonlite::toJSON(FALSE)))
     }
 
     if(query$msg == "") {
         dbg("[MAIN.logHandler] msg is empty!")        
-        return(http.res(400L, "application/json", jsonlite::toJSON(FALSE)))
+        return(http.resp(400L, "application/json", jsonlite::toJSON(FALSE)))
     }
-
+    
     token <- Sys.getenv("HONCHO_TOKEN", "")
     if(token == "") {
         dbg("[MAIN.logHandler] missing HONCHO_TOKEN!")        
-        return(http.res(403L, "application/json", jsonlite::toJSON(FALSE)))
+        return(http.resp(403L, "application/json", jsonlite::toJSON(FALSE)))
     }
     
     uri <- sprintf("%s/log?token=%s", opt$HONCHO_URL, token)
@@ -145,15 +151,25 @@ logHandler <- function(http.req){
     ## get the correct log file
     log.file = NULL
     the.log <- "Could not find log file!"
-    if(dir.exists("~/ShinyApps/log")) {
-        log.file <- tail(dir("~/ShinyApps/log",pattern="log",full.names=TRUE),1)
-    } else if(dir.exists("/var/log/shiny-server")) {
-        log.file <- tail(dir("/var/log/shiny-server/",pattern="log",full.names=TRUE),1)
-    }
-    log.file
-    dbg("[logHandler] reading log.file = ",log.file)
-    if(!is.null(log.file)) the.log <- readr::read_file(log.file)
+    id <- query$msg  ## use session id as message
 
+    log.dirs <- "~/ShinyApps/log/*log /var/log/shiny-server/*log"
+    suppressWarnings( log.file <- system(paste("grep -l -s",id,log.dirs),intern=TRUE) )
+    log.file
+    log.file <- tail(log.file,1)  ## take newest???
+    log.file
+    
+    if(length(log.file)==0) {
+        dbg("[MAIN.logHandler] could not resolve log file for session ID = ",id)
+        return(http.resp(403L, "application/json", jsonlite::toJSON(FALSE)))
+    }
+    
+    dbg("[logHandler] reading log.file = ",log.file)
+    if(!is.null(log.file)) {
+        ##the.log <- readr::read_file(log.file)
+        ## truncate the log file
+        the.log <- paste(system(paste("grep -B100 -A99999",id,log.file),intern=TRUE),collapse='\n')
+    }
 
     dbg("[logHandler] sending log file... ")    
     httr::POST(
@@ -166,7 +182,7 @@ logHandler <- function(http.req){
         encode = "json"
     )
 
-    http.res(400L, "application/json", jsonlite::toJSON(TRUE))
+    http.resp(400L, "application/json", jsonlite::toJSON(TRUE))
 }
 
 run_application <- function(ui, server, ...){
@@ -249,15 +265,19 @@ server = function(input, output, session) {
     message("========================================================\n")
     dbg("[SERVER] 0: getwd = ",getwd())
     dbg("[SERVER] 0: HONCHO_URL = ",opt$HONCHO_URL)
+    dbg("[SERVER] 0: SESSION = ",session$token)
+    ##dbg("[SERVER] 0: names(session) = ",names(session))
     
     has.honcho <- Sys.getenv("HONCHO_TOKEN","")!="" &&
         !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!=""
-    if(has.honcho) {
-        sever::sever(sever_screen, bg_color = "#000000") ## lightblue=2780e3
+    if(1 && has.honcho) {
+        ##sever::sever(sever_screen, bg_color = "#000000") ## lightblue=2780e3
+        sever::sever(sever_screen2(session$token), bg_color = "#000000") 
     } else {
+        ## No honcho, no email....
         sever::sever(sever_screen0, bg_color = "#000000") ## lightblue=2780e3
     }
-
+    
     setwd(WORKDIR)  ## for some reason it can change!!
     dbg("[SERVER] 1: getwd = ",getwd())
     
