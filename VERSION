@@ -1,5 +1,6 @@
-v2.8.3
+v2.8.4
 
+- Sever crash log handler
 - Revamped batch-correction module
 - Private data folders for users
 - New gene/geneset UMAP visualization (in Clustering)
