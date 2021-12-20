@@ -19,26 +19,13 @@ FROM bigomics/omicsplayground:base
 
 # RUN apt install -y xvfb
 RUN R -e "remotes::install_github('JohnCoene/firebase@omics')" 
-#RUN R -e "install.packages(c('shinythemes','shinybusy','beepr','ggVennDiagram','rworldmap','sever'))"
-#RUN R -e "install.packages(c('pryr'))"
-#RUN R -e "BiocManager::install(c('TxDb.Hsapiens.UCSC.hg19.knownGene','TxDb.Mmusculus.UCSC.mm10.knownGene','WGCNA','DGCA'))"
+RUN R -e "install.packages(c('shinylogs'))"
+#RUN R -e "BiocManager::install(c('WGCNA','DGCA'))"
 # RUN pip3 install umap-learn
 
 #------------------------------------------------------------
-# Clone fresh code from GitHub
+# Download fresh code from GitHub
 #------------------------------------------------------------
-WORKDIR /
-# RUN rm -fr /omicsplayground \
-#     && git clone https://github.com/bigomics/omicsplayground.git \
-# #   && rm -fr /omicsplayground/.git \
-#     && chmod -R ugo+rwX /omicsplayground 
-
-#------------------------------------------------------------
-# Update code from GitHub
-#------------------------------------------------------------
-#WORKDIR /omicsplayground
-##RUN git pull
-
 WORKDIR /
 RUN wget -nv https://github.com/bigomics/omicsplayground/archive/master.zip \
     && unzip master.zip \
