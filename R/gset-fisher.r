@@ -105,17 +105,23 @@ gset.fisher <- function(genes, genesets, background=NULL,
     ##gg <- unique(c(unlist(genesets),genes))
     test.fisher <- function(gs) {
         a0 <- table(background %in% gs, background %in% genes)
+        if(NCOL(a0)==1 || colSums(a0)[2]==0) return(NA)
         fisher.test(a0, alternative="greater")$p.value
     }
     test.chisq <- function(gs) {
         a0 <- table(background %in% gs, background %in% genes)
+        if(NCOL(a0)==1 || colSums(a0)[2]==0) return(NA)        
         chisq.test(a0)$p.value
     }
     pv <- rep(NA, length(genesets))
     names(pv) <- names(genesets)
     if(method=="fast.fisher") {
-        ## 
-        pv <- corpora::fisher.pval( a, (a+b), c, (c+d), alternative="greater")
+        ## this is really fast...
+        pv <- rep(NA,length(a))
+        ii <- 1:length(a)
+        ii <- which((a+c)>0)
+        pv1 <- corpora::fisher.pval( a[ii], (a+b)[ii], c[ii], (c+d)[ii], alternative="greater")
+        pv[ii] <- pv1
     } else if(method=="fisher") {
         if(mc) {
             ##cat("multicore testing\n")
