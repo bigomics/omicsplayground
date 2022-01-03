@@ -214,17 +214,18 @@ function priceChange(name){
 }
 
 function hideSub() {
-	$('#logSub').hide();
-	$('#logSubbed').show();
+    $('#logSub').hide();
+    $('#logSubbed').show();
+    $('#sever-reload-btn').show();
 }
 
-function showSub() {
-	$('#logSub').hide();
-	$('#logSubbed').show();
-}
+//function showSub() {
+//	$('#logSub').hide();
+//	$('#logSubbed').show();
+//}
 
 function sendLog() {
-	showSub();
+//	showSub();
 	let msg = $('#logMsg').val();
 
 	fetch(`log?msg=${encodeURIComponent(msg)}`)

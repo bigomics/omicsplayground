@@ -27,7 +27,7 @@ addWatermark.PDF <- function(file) {
 addWatermark.PNG <- function(file) {
     if(system("which convert",ignore.stdout=TRUE)==1) return ## if no pdftk installed...
     tmp <- paste0(gsub("file","plot",tempfile()),".png")
-    cmd = "convert plot.png -font Helvetica -pointsize 14 -extent 100%x105% -draw \"gravity south fill #80808080 text 0,4 'Created using the OmicsPlayground. Developed by BigOmics Analytics in Switzerland.' \"  plot_wmark.png"
+    cmd = "convert plot.png -font Helvetica -pointsize 13 -extent 100%x105% -draw \"gravity south fill #80000080 text 0,4 'Created using the OmicsPlayground. Developed by BigOmics Analytics in Switzerland.' \"  plot_wmark.png"
     cmd <- sub("plot.png",file,cmd)
     cmd <- sub("plot_wmark.png",tmp,cmd)    
     system(cmd)
@@ -44,7 +44,6 @@ addWatermark.PNG <- function(file) {
 
 initOrca <- function(launch=TRUE) {
 
-    
     responding.local = FALSE
     responding.docker = FALSE
     responding.process = FALSE
@@ -125,10 +124,10 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
 {
     is.docker <- file.exists("/.dockerenv")
     has.orca.bin <- file.exists("/usr/local/bin/orca")
-    has.orca.proc <- has.orca.bin && exists("ORCA") && "export" %in% names(ORCA)
+    has.orca.export <- has.orca.bin && exists("ORCA") && "export" %in% names(ORCA)
     is.docker
     has.orca.bin
-    has.orca.proc
+    has.orca.export
     export.ok <- FALSE
     
     message("[plotlyExport] class(p) = ",class(p)[1])
@@ -148,34 +147,44 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
     ## remove old
     unlink(file,force=TRUE)
 
-    ## See if any ORCA server is responding (docker or already local)
-    global.srv  <- exists("ORCA") && class(ORCA)[1]=="character"
-    global.srv
-    if(is.null(server) && !global.srv) {
-        server <- c("http://orca-server:9091","http://localhost:9091","http://localhost:5151")
-    }
-    if(is.null(server) && global.srv) {
-        server <- ORCA
-    }
-    srv.responding <- sapply(server, function(s)
-        class(try(httr::POST(s, body=plotly:::to_JSON("")),silent=TRUE))!="try-error")
-    srv.responding
-    server <- names(srv.responding)[which(srv.responding)][1]
-    if(length(server)==0 || is.na(server[1])) server <- NULL
-    server
-    message("[plotlyExport] using orca server = ",server)
-        
-    if(!is.null(server)) {
-        bod <- list(figure = plotly::plotly_build(p)$x[c("data", "layout")],
-                    format = format, width = width, height = height, 
-                    scale = scale)
-        res <- httr::POST(server, body = plotly:::to_JSON(bod))
-        httr::stop_for_status(res)
-        httr::warn_for_status(res)
-        con <- httr::content(res, as = "raw")
-        writeBin(con, file)
-        message("[plotlyExport] --> exported with ORCA server on ",server)
+    ## See if Kaleido is available
+    if(1 && !export.ok) {
+        err <- try( plotly::save_image(p, file=file, width=width, height=height) )
+        export.ok <- class(err)!="try-error"
+        if(export.ok) message("[plotlyExport] --> exported with plotly::save_image() (kaleido)")
         export.ok <- TRUE
+    }
+    
+    ## See if any ORCA server is responding (docker or already local)
+    if(1 && !export.ok) {
+        global.srv  <- exists("ORCA") && class(ORCA)[1]=="character"
+        global.srv
+        if(is.null(server) && !global.srv) {
+            server <- c("http://orca-server:9091","http://localhost:9091","http://localhost:5151")
+        }
+        if(is.null(server) && global.srv) {
+            server <- ORCA
+        }
+        srv.responding <- sapply(server, function(s)
+            class(try(httr::POST(s, body=plotly:::to_JSON("")),silent=TRUE))!="try-error")
+        srv.responding
+        server <- names(srv.responding)[which(srv.responding)][1]
+        if(length(server)==0 || is.na(server[1])) server <- NULL
+        server
+        message("[plotlyExport] using orca server = ",server)
+        
+        if(!is.null(server)) {
+            bod <- list(figure = plotly::plotly_build(p)$x[c("data", "layout")],
+                        format = format, width = width, height = height, 
+                        scale = scale)
+            res <- httr::POST(server, body = plotly:::to_JSON(bod))
+            httr::stop_for_status(res)
+            httr::warn_for_status(res)
+            con <- httr::content(res, as = "raw")
+            writeBin(con, file)
+            message("[plotlyExport] --> exported with ORCA server on ",server)
+            export.ok <- TRUE
+        }
     }
     
     ## if(0 && has.orca.bin && !export.ok) {
@@ -185,7 +194,7 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
     ##     if(export.ok) message("[plotlyExport] --> exported with plotly::orca()")
     ## }
     
-    if(1 && has.orca.proc && !export.ok) {
+    if(1 && has.orca.export && !export.ok) {
         err <- try(ORCA$export(p, file=file, format=format, width=width, height=height))
         export.ok <- class(err)!="try-error"
         if(export.ok) message("[plotlyExport] --> exported with ORCA$export()")
@@ -193,12 +202,11 @@ plotlyExport <- function(p, file = "plot.pdf", format = tools::file_ext(file),
     
     if(1 && !export.ok) {
         ## works only for non-GL plots
-        err <- try(plotly::export(p, file))
+        err <- try(plotly::export(p, file, width=width, height=height))
         export.ok <- class(err)!="try-error"
         if(export.ok) message("[plotlyExport] --> exported with plotly::export() (deprecated)")        
     }
-    if(0 && !export.ok) {
-        
+    if(0 && !export.ok) {        
         tmp = paste0(tempfile(),".html")
         htmlwidgets::saveWidget(p, tmp) 
         err <- try(webshot::webshot(url=tmp,file=file,vwidth=width*100, vheight=height*100))

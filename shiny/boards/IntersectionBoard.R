@@ -34,7 +34,8 @@ IntersectionBoard <- function(input, output, session, env)
     
     ## reactive functions from shared environment
     inputData <- env[["load"]][["inputData"]]
-    selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
+    selected_gxmethods   <- env[["expr"]][["selected_gxmethods"]]
+    ## gx_metaQ   <- env[["expr"]][["metaQ"]]    
     selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     
     description =
@@ -206,6 +207,11 @@ output$description <- shiny::renderUI(shiny::HTML(description))
             gxmethods <- "trend.limma"
             gxmethods <- c("trend.limma","edger.qlf","deseq2.wald")
             gxmethods <- selected_gxmethods()  ## reactive object from EXPRESSION section
+
+            dbg("[IntersectionBoard:getFoldChangeMatrix] gxmethods = ",gxmethods)
+
+            mq1 <- ngs$gx.meta$meta[[1]]$meta.q
+            dbg("[IntersectionBoard:getFoldChangeMatrix] head.meta.q = ",head(mq1))
             
             if(length(gxmethods)<1 || gxmethods[1]=="") return(NULL)
             
