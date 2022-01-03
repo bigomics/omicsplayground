@@ -104,6 +104,7 @@ if(1 && opt$AUTHENTICATION=="firebase" && !file.exists("firebase.rds")) {
     message("[ENV] WARNING: Missing firebase.rds file!!! reverting authentication to 'none'")    
     opt$AUTHENTICATION = "none"
     ## opt$ENABLE_USERDIR = FALSE
+    ## stop("[MAIN] FATAL Missing firebase.rds file")
 }
 
 ## copy to global.R environment
@@ -113,25 +114,48 @@ TIMEOUT   <<- as.integer(opt$TIMEOUT)  ## in seconds
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
 
-res <- getFromNamespace("httpResponse", "shiny")
+http.res <- getFromNamespace("httpResponse", "shiny")
 
-logHandler <- function(req){
-    if(!req$PATH_INFO == "/log")
+logHandler <- function(http.req){
+
+    if(!http.req$PATH_INFO == "/log") {
         return()
+    }
 
-    query <- shiny::parseQueryString(req$QUERY_STRING)
+    query <- shiny::parseQueryString(http.req$QUERY_STRING)
 
-    if(is.null(query$msg))
-        return(res(400L, "application/json", jsonlite::toJSON(FALSE)))
+    if(is.null(query$msg)) {
+        dbg("[MAIN.logHandler] msg is NULL!")
+        return(http.res(400L, "application/json", jsonlite::toJSON(FALSE)))
+    }
 
-    if(query$msg == "")
-        return(res(400L, "application/json", jsonlite::toJSON(FALSE)))
+    if(query$msg == "") {
+        dbg("[MAIN.logHandler] msg is empty!")        
+        return(http.res(400L, "application/json", jsonlite::toJSON(FALSE)))
+    }
 
     token <- Sys.getenv("HONCHO_TOKEN", "")
-    if(token == "")
-        return(res(403L, "application/json", jsonlite::toJSON(FALSE)))
-
+    if(token == "") {
+        dbg("[MAIN.logHandler] missing HONCHO_TOKEN!")        
+        return(http.res(403L, "application/json", jsonlite::toJSON(FALSE)))
+    }
+    
     uri <- sprintf("%s/log?token=%s", opt$HONCHO_URL, token)
+
+    ## get the correct log file
+    log.file = NULL
+    the.log <- "Could not find log file!"
+    if(dir.exists("~/ShinyApps/log")) {
+        log.file <- tail(dir("~/ShinyApps/log",pattern="log",full.names=TRUE),1)
+    } else if(dir.exists("/var/log/shiny-server")) {
+        log.file <- tail(dir("/var/log/shiny-server/",pattern="log",full.names=TRUE),1)
+    }
+    log.file
+    dbg("[logHandler] reading log.file = ",log.file)
+    if(!is.null(log.file)) the.log <- readr::read_file(log.file)
+
+
+    dbg("[logHandler] sending log file... ")    
     httr::POST(
         uri,
         body = list(
@@ -142,17 +166,18 @@ logHandler <- function(req){
         encode = "json"
     )
 
-    res(400L, "application/json", jsonlite::toJSON(TRUE))
+    http.res(400L, "application/json", jsonlite::toJSON(TRUE))
 }
 
-run_appliation <- function(ui, server, ...){
-  # get handler
-  handlerManager <- getFromNamespace("handlerManager", "shiny")
-
-  # add handler
-  handlerManager$addHandler(logHandler, "/log")
-
-  shiny::shinyApp(ui, server, ...)
+run_application <- function(ui, server, ...){
+    ## get handler
+    handlerManager <- getFromNamespace("handlerManager", "shiny")
+    
+    ## add handler
+    handlerManager$removeHandler("/log")
+    handlerManager$addHandler(logHandler, "/log")
+    
+    shiny::shinyApp(ui, server, ...)
 }
 
 ## --------------------------------------------------------------------
@@ -222,10 +247,17 @@ server = function(input, output, session) {
     message("\n========================================================")
     message("===================== SERVER ===========================")
     message("========================================================\n")
-
-    sever::sever(sever_screen, bg_color = "#2780e3")
-
     dbg("[SERVER] 0: getwd = ",getwd())
+    dbg("[SERVER] 0: HONCHO_URL = ",opt$HONCHO_URL)
+    
+    has.honcho <- Sys.getenv("HONCHO_TOKEN","")!="" &&
+        !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!=""
+    if(has.honcho) {
+        sever::sever(sever_screen, bg_color = "#000000") ## lightblue=2780e3
+    } else {
+        sever::sever(sever_screen0, bg_color = "#000000") ## lightblue=2780e3
+    }
+
     setwd(WORKDIR)  ## for some reason it can change!!
     dbg("[SERVER] 1: getwd = ",getwd())
     
@@ -256,6 +288,8 @@ server = function(input, output, session) {
             if(!is.null(query[['csv']])) {
                 ## focus on this tab
                 updateTabsetPanel(session, "load-tabs", selected = "Upload data")
+                updateTextAreaInput(session, "load-upload_panel-compute-upload_description",
+                                    value = "CSV FILE DESCRIPTION")                
             }
 
             ## not yet...
@@ -371,7 +405,7 @@ server = function(input, output, session) {
     ## Dynamically hide/show certain sections depending on USERMODE/object
     ##--------------------------------------------------------------------------
     shiny::observe({
-
+        
         ## trigger on change dataset
         pgx  <- env[["load"]]$inputData() 
         show.beta <- env[["user"]]$enable_beta()
@@ -708,7 +742,7 @@ server = function(input, output, session) {
         dbg("[SERVER:quit] !!!reacted!!!")
         dbg("[SERVER:quit] closing session... ")        
         session$close()
-        if(1) {
+        if(0) {
             ## Return non-zero value so docker swarm can catch and restart
             ## the container upon on-failure
             dbg("[SERVER:quit] force stopping App... ")                
@@ -726,7 +760,7 @@ server = function(input, output, session) {
         }
         
     })    
-    
+
     ##-------------------------------------------------------------
     ## report server times
     ##-------------------------------------------------------------    
@@ -740,6 +774,7 @@ server = function(input, output, session) {
 ## --------------------------------------------------------------------
 ## ------------------------------ UI ----------------------------------
 ## --------------------------------------------------------------------
+
 
 TABVIEWS <- list(
     "load"   = tabView("Home",LoadingInputs("load"),LoadingUI("load")),
@@ -854,11 +889,11 @@ createUI <- function(tabs)
         shinybusy::busy_start_up(
             text = "\nPrepping your Omics Playground...", mode = "auto",
             background="#2780e3", color="#ffffff",
-            loader = shiny::img(src=base64enc::dataURI(file="www/ready.png"))
+            ##loader = shiny::img(src=base64enc::dataURI(file="www/ready.png"))
+            loader = shiny::img(src=base64enc::dataURI(file="www/monster-hi.png"))            
         )
     )
-    ## if(runif(1) < 0.1)
-    footer = footer.gif ## every now and then show easter egg..
+    footer = footer.gif
     
     ##-------------------------------------
     ## create TAB list
@@ -922,6 +957,7 @@ ui = createUI(tabs)
 ## ------------------------------ RUN ---------------------------------
 ## --------------------------------------------------------------------
 
+
 onStop(function() {
     message("*************** onStop:: doing application cleanup ****************")
     message("[APP] App died... ")
@@ -935,7 +971,7 @@ onStart.FUN <- function() {
 }
 
 # shiny::shinyApp(ui, server, onStart=onStart.FUN)
-run_appliation(ui, server)
+run_application(ui, server)
 
 ##pkgs <- c( sessionInfo()[["basePkgs"]], names(sessionInfo()[["otherPkgs"]]),
 ##          names(sessionInfo()[["loadedOnly"]]) )

@@ -417,14 +417,19 @@ UploadModuleServer <- function(id,
                                 mat
                             }
 
+                            dbg("[UploadModule:parseQueryString] reading samples_csv = ",samples_file)
                             uploaded$samples.csv <- readfromdir1(samples_file)
+
+                            dbg("[UploadModule:parseQueryString] reading samples_csv = ",samples_file)
                             uploaded$counts.csv  <- readfromdir2(counts_file)
                             uploaded$contrasts.csv <- NULL
 
                             meta_file = file.path(qdir,"meta.txt")
                             uploaded$meta <- NULL
                             if(file.exists(meta_file)) {
-                                meta <- read.table(meta_file,sep='\t',header=TRUE,row.names=1)
+                                dbg("[UploadModule:parseQueryString] reading meta file = ",meta_file)
+                                ##meta <- read.table(meta_file,sep='\t',header=TRUE,row.names=1)
+                                meta <- read.table(meta_file,sep='',header=TRUE,row.names=1)
                                 meta <- as.list(array(meta[,1],dimnames=list(rownames(meta))))
                                 uploaded$meta <- meta
                             }
