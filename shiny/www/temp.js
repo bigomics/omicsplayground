@@ -236,4 +236,23 @@ function sendLog() {
 			console.error(error);
 			hideSub();
 		})
-}
+};
+
+Shiny.addCustomMessageHandler('referral-input-error', function(msg) {
+	$(`#${msg.target}`).addClass('error');
+	$(`#${msg.target}`).after(`<small class='text-danger'>${msg.message}</small>`);
+
+	setTimeout(() => {
+		$(`#${msg.target}`).removeClass('error');
+		$(`#${msg.target}`)
+			.siblings('small')
+			.remove();
+	}, 5000);
+});
+
+Shiny.addCustomMessageHandler('referral-global-error', function(msg) {
+	$('#referral-global-error').html(msg.message);
+	setTimeout(() => {
+		$('#referral-global-error').html('');
+	}, 5000);
+});
