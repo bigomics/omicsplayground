@@ -469,10 +469,9 @@ server = function(input, output, session) {
                 message("[SERVER] timed out warning!!!")
                 shinyalert::closeAlert()
                 shinyalert::shinyalert(
-                                title = "Warning!",
-                                text = "Your FREE session is expiring soon."
-                                ##callbackR = function(x){shinyalert::closeAlert()}
-                            )
+                    title = "Warning!",
+                    text = "Your FREE session is expiring soon."
+                )
                 tm.warned <<- TRUE
             } else if(secs.lapsed >= TIMEOUT) {
                 message("[SERVER] timed out!!!")
@@ -481,18 +480,223 @@ server = function(input, output, session) {
                 if(opt$AUTHENTICATION=="shinyproxy") {
                     js.cb = "function(x){logout();quit();window.location.assign('/logout');}"
                 }
-                shinyalert::shinyalert(
-                                title = "Oh No!",
-                                text = "Your FREE session has expired.",
-                                ##callbackR = function(x){shinyalert::closeAlert()},
-                                ##callbackJS = "function(x){logout()}" ## logout and/or quit??
-                                callbackJS = js.cb ## logout and/or quit??
+                showModal(
+                    modalDialog(
+                        title = "Session Expired",
+                        p(
+                            "Please enter three email addresses."
+                        ),
+                        fluidRow(
+                            column(
+                                4,
+                                textInput(
+                                    "name1",
+                                    "Name"
+                                ),
+                                textInput(
+                                    "email1",
+                                    "Email"
                                 )
+                            ),
+                            column(
+                                4,
+                                textInput(
+                                    "name2",
+                                    "Name"
+                                ),
+                                textInput(
+                                    "email2",
+                                    "Email"
+                                )
+                            ),
+                            column(
+                                4,
+                                textInput(
+                                    "name3",
+                                    "Name"
+                                ),
+                                textInput(
+                                    "email3",
+                                    "Email"
+                                )
+                            )
+                        ),
+                        p(
+                            class = "text-danger text-center",
+                            id = "referral-global-error"
+                        ),
+                        footer = tagList(
+                            actionButton(
+                                "sendRefs",
+                                "Send emails",
+                                icon = icon("paper-plane")
+                            ),
+                            tags$a(
+                                class = "btn btn-danger",
+                                icon("times"),
+                                "Close",
+                                onClick = HTML(js.cb)
+                            )
+                        )
+                    )
+                )
                 tm$timer <- reactiveTimer(Inf)                
                 tm$start <- NULL
                 tm.warned <<- FALSE                
             }
         }
+    })
+
+    observeEvent(input$sendRefs, {
+        # check inputs
+        input_errors <- FALSE
+
+        # check emails
+        if(input$email1 == "") {
+            session$sendCustomMessage(
+                "referral-input-error", 
+                list(
+                    target = "email1",
+                    message = "Missing email"
+                )
+            )
+            input_errors <- TRUE
+        }
+
+        if(input$email2 == "") {
+            session$sendCustomMessage(
+                "referral-input-error", 
+                list(
+                    target = "email2",
+                    message = "Missing email"
+                )
+            )
+            input_errors <- TRUE
+        }
+
+        if(input$email3 == "") {
+            session$sendCustomMessage(
+                "referral-input-error", 
+                list(
+                    target = "email3",
+                    message = "Missing email"
+                )
+            )
+            input_errors <- TRUE
+        }
+
+        # check names
+        if(input$name1 == "") {
+            session$sendCustomMessage(
+                "referral-input-error", 
+                list(
+                    target = "name1",
+                    message = "Missing name"
+                )
+            )
+            input_errors <- TRUE
+        }
+        
+        if(input$name2 == "") {
+            session$sendCustomMessage(
+                "referral-input-error", 
+                list(
+                    target = "name2",
+                    message = "Missing name"
+                )
+            )
+            input_errors <- TRUE
+        }
+
+        if(input$name3 == "") {
+            session$sendCustomMessage(
+                "referral-input-error", 
+                list(
+                    target = "name3",
+                    message = "Missing name"
+                )
+            )
+            input_errors <- TRUE
+        }
+
+        emails <- trimws(
+            c(
+                input$email1,
+                input$email2,
+                input$email3
+            )
+        )
+
+
+        if(!all(grepl("\\@", emails))) {
+            session$sendCustomMessage(
+                "referral-global-error", 
+                list(
+                    message = "Must enter valid email addresses"
+                )
+            )
+            input_errors <- TRUE
+        }
+
+        if(length(unique(emails)) < 3) {
+            session$sendCustomMessage(
+                "referral-global-error", 
+                list(
+                    message = "Must enter different email addresses"
+                )
+            )
+            input_errors <- TRUE
+        }
+
+        if(input_errors)
+            return()
+
+        # send emails
+        body <- list(
+            referrer = "The user",
+            referrals = list(
+                list(
+                    name = input$name1,
+                    email = input$email1
+                ),
+                list(
+                    name = input$name2,
+                    email = input$email2
+                ),
+                list(
+                    name = input$name3,
+                    email = input$email3
+                )
+            )
+        )
+        token <- Sys.getenv("HONCHO_TOKEN", "")
+        uri <- sprintf("%s/referral?token=%s", opt$HONCHO_URL, token)
+        response <- httr::POST(
+            uri,
+            body = body,
+            encode = "json"
+        )
+
+        # check response
+        content <- httr::content(response)
+        all_good <- lapply(content, function(ref) {
+            return(ref$success)
+        }) %>% 
+            unlist() %>% 
+            all()
+        
+        if(!all_good) {
+            session$sendCustomMessage(
+                "referral-global-error", 
+                list(
+                    message = "One or more of these email address was erroneous"
+                )
+            )
+            return()
+        }
+
+        # remove modal
+        removeModal()
     })
     
     ##-------------------------------------------------------------
