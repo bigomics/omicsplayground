@@ -226,14 +226,32 @@ function hideSub() {
 
 function sendLog() {
 //	showSub();
-	let msg = $('#logMsg').val();
+        let msg  = $('#logMsg').val();
+//	let user = $('#authentication-user').val();
 
 	fetch(`log?msg=${encodeURIComponent(msg)}`)
 		.then(res => {
 			console.info(res);
 			hideSub();
 		})
-		.catch(error => {
+	        .catch(error => {
+			console.error(error);
+			hideSub();
+		})
+}
+
+function sendLog2(msg){
+//	showSub();
+//      let msg  = $('#logMsg').val();
+//	let user = $('#authentication-user').val();
+
+//    	fetch(`log?session=${id}&msg=${encodeURIComponent(msg)}`)
+    	fetch(`log?msg=${encodeURIComponent(msg)}`)    
+	        .then(res => {
+		        console.info(res);
+			hideSub();
+		})
+	        .catch(error => {
 			console.error(error);
 			hideSub();
 		})
