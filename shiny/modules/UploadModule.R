@@ -9,7 +9,7 @@
 
 UploadModuleUI <- function(id) {
     ns <- shiny::NS(id)
-    shiny::tabsetPanel(
+    ui <- shiny::tabsetPanel(
         id = ns("tabs"),
         ## type = "pills",
         ## type = "hidden",
@@ -19,6 +19,15 @@ UploadModuleUI <- function(id) {
         shiny::tabPanel("Contrasts", shiny::uiOutput(ns("contrasts_UI"))),
         shiny::tabPanel("Compute", shiny::uiOutput(ns("compute_UI")))
     )
+    
+    if(getOption("OMICS_CLOSE", FALSE)){
+        ui <- shiny::tagList(
+            ui,
+            shiny::actionButton(ns("close"), "close")
+        )
+    }
+
+    ui
 }
 
 UploadModuleServer <- function(id, 
@@ -39,6 +48,10 @@ UploadModuleServer <- function(id,
 
             ns <- session$ns
             ## ns <- shiny::NS(id)
+
+            observeEvent(input$close, {
+                session$close()
+            })
             
             dbg("[UploadModuleServer] called!")
             
