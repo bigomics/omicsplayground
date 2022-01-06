@@ -710,9 +710,9 @@ server = function(input, output, session) {
         if(input_errors)
             return()
 
-        # send emails
+        # send emails 
         body <- list(
-            referrer = "The user",
+            referrer = env[["load"]]$auth$name(),
             referrals = list(
                 list(
                     name = input$name1,
