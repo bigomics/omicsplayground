@@ -561,7 +561,7 @@ pgx.initDatasetFolder1 <- function( pgx.dir1,
         write.csv(allFC, file=allfc.file1)
     Sys.chmod(allfc.file1, "0666")
     
-    ##load(file="../files/allFoldChanges.rda", verbose=1)
+    ##load(file="./files/allFoldChanges.rda", verbose=1)
     return(pgxinfo)
 }
 

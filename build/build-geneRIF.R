@@ -4,7 +4,7 @@
 ##
 
 require(org.Hs.eg.db)
-source("../R/pgx-functions.R")
+source("./R/pgx-functions.R")
 
 cat("************************************************************************\n")
 cat("******************* BUILDING GENERIF DATABASE **************************\n")
@@ -18,7 +18,7 @@ cat("************************************************************************\n"
 library(tm)
 library(data.table)
 
-GENERIFS <- fread("../libx/generifs_basic.txt", quote=FALSE, sep="\t")
+GENERIFS <- fread("./libx/generifs_basic.txt", quote=FALSE, sep="\t")
 dim(GENERIFS)
 
 rif.text <- GENERIFS$"GeneRIF text"
@@ -91,7 +91,7 @@ m <- m[,!colnames(m) %in% stop.words]
 dim(m)
 
 cat("writing to geneRIF-matrix.rds")
-saveRDS(m, file="../lib/geneRIF-matrix.rds")
+saveRDS(m, file="./lib/geneRIF-matrix.rds")
 
 if(0) {
 
@@ -100,8 +100,8 @@ if(0) {
     head(d, 10)
     tail(d, 10)
     
-    source("../R/pgx-pubmed.R")
-    GENERIF.MATRIX <- readRDS(file="../lib/geneRIF-matrix.rds")
+    source("./R/pgx-pubmed.R")
+    GENERIF.MATRIX <- readRDS(file="./lib/geneRIF-matrix.rds")
     rif1 <- pmid.getGeneContext(gene="Socs3", context="inflam")
     rif1 <- pmid.getGeneContext(gene="Hmox1", context="inflam")
     gene="Hmox1";context="inflam"

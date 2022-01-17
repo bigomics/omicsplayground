@@ -11,10 +11,10 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 FILES
 MAX.GENES = 8000
 
@@ -22,7 +22,7 @@ COMPARE="group"
 COMPARE="clusters"
 COMPARE="pheno"
 
-rda.file="../data/GSE110496-dengue.pgx"
+rda.file="./data/GSE110496-dengue.pgx"
 ##rda.file = sub(".pgx$",paste0("-vs",COMPARE,".pgx"),rda.file)
 rda.file
 ##load(file=rda.file, verbose=1)

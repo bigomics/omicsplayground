@@ -129,7 +129,7 @@ CompareBoard <- function(input, output, session, env)
         sel1 <- comparisons1[1]
         shiny::updateSelectInput(session, "contrast1", choices=comparisons1, selected=sel1)        
 
-        pgx.files <- sort(dir("../data",pattern="pgx$"))
+        pgx.files <- sort(dir("./data",pattern="pgx$"))
         shiny::updateSelectInput(session, "dataset2", choices=c("<this>",pgx.files))        
        
         ##pheno <- colnames(ngs$samples)
@@ -189,7 +189,7 @@ CompareBoard <- function(input, output, session, env)
         if(input$dataset2 == "<this>") {
             ngs <- inputData()
         } else {
-            load(file.path("../data",input$dataset2))
+            load(file.path("./data",input$dataset2))
         }
         comparisons2 <- names(ngs$gx.meta$meta)
         sel2 <- tail(head(comparisons2,2),1)
@@ -929,9 +929,9 @@ CompareBoard <- function(input, output, session, env)
 if(0) {
     source(file.path(RDIR,"pgx-include.R"))    ## lots of libraries and source()
     
-    load("../data/tcga-brca2-gx.pgx")
+    load("./data/tcga-brca2-gx.pgx")
     ngs1 = pgx.initialize(ngs)
-    load("../data/tcga-brca2-px.pgx")
+    load("./data/tcga-brca2-px.pgx")
     ngs2 = pgx.initialize(ngs)
     
     gg <- intersect(rownames(ngs1$X),rownames(ngs2$X))

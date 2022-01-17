@@ -11,19 +11,19 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-FILESX = "../libx"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
-source("../R/pgx-getgeo.R")
+RDIR = "./R"
+FILES = "./lib"
+FILESX = "./libx"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
+source("./R/pgx-getgeo.R")
 ##source("options.R")
 
 ##------------------------------------------------------------
 ## Set data set name
 ##------------------------------------------------------------
 
-rda.file="../data/GSE73024-debio1437.pgx"
+rda.file="./data/GSE73024-debio1437.pgx"
 rda.file
 ##load(file=rda.file, verbose=1)
 
@@ -43,7 +43,7 @@ ngs$datatype = "mRNA (microarray)"
 ngs$description = "GSE73024 data set (Nakanishi et al, 2015). Transcriptome analysis of response to a selective FGFR inhibitor (CH5183284/Debio1347), a mitogen-activated protein kinase kinase (MEK) inhibitor, or a phosphoinositide 3-kinase (PI3K) inhibitor."
 
 ## get cancertype
-ccle <- read.csv("../lib/CCLE_rna_celline.csv", nrow=10,
+ccle <- read.csv("./lib/CCLE_rna_celline.csv", nrow=10,
                  check.names=FALSE, row.names=1)
 ctype <- sub(".*,[ ]","",colnames(ccle))
 names(ctype) <- toupper(gsub("[- ]","",sub(",[ ].*","",colnames(ccle))))
@@ -174,7 +174,7 @@ extra <- c("drugs")
 extra <- c("meta.go","infer","drugs","wordcloud","connectivity")
 
 sigdb = NULL
-##sigdb = c("../libx/sigdb-lincs-cp.h5","../libx/sigdb-lincs-gt.h5")
+##sigdb = c("./libx/sigdb-lincs-cp.h5","./libx/sigdb-lincs-gt.h5")
 ngs <- compute.extra(ngs, extra, lib.dir=FILES, sigdb=sigdb) 
 
 names(ngs)

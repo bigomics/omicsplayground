@@ -232,7 +232,7 @@ LoadingBoard <- function(input, output, session, pgx_dir,
     getPGXDIR <- shiny::reactive({
         reload_pgxdir()  ## force reload
 
-        email="../me@company.com"
+        email="./me@company.com"
         email <- auth$email()
         email <- gsub(".*\\/","",email)
         pdir <- pgx_dir  ## from module input

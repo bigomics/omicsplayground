@@ -876,9 +876,9 @@ pgx.variableImportance <-
 if(0) {
     
     
-    source("../R/gx-heatmap.r")
-    source("../R/gx-limma.r")    
-    load("../pgx/GSE10846-dlbcl-mRNA-8k.pgx",verbose=1)
+    source("./R/gx-heatmap.r")
+    source("./R/gx-limma.r")    
+    load("./pgx/GSE10846-dlbcl-mRNA-8k.pgx",verbose=1)
     
     y <- factor(ngs$samples$dlbcl.type)
     y1 <- 1*(ngs$samples$dlbcl.type=="GCB")

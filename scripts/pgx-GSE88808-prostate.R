@@ -11,10 +11,10 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 ##source("options.R")
 FILES
 
@@ -22,7 +22,7 @@ FILES
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data/GSE88808-prostate.pgx"
+rda.file="./data/GSE88808-prostate.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)

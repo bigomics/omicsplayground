@@ -11,10 +11,10 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 ##source("options.R")
 FILES
 MAX.GENES = 8000
@@ -24,7 +24,7 @@ MAX.GENESETS = 8000
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data/GSE28492-roche.pgx"
+rda.file="./data/GSE28492-roche.pgx"
 ##if(SMALL>0) rda.file = sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)
 rda.file
 

@@ -30,7 +30,7 @@ if(0) {
 
 }
 
-## matrix_file="../libx/tcga_matrix.h5";lib.dir="../lib";ntop=100;deceased.only=TRUE;sortby.p=FALSE
+## matrix_file="./libx/tcga_matrix.h5";lib.dir="./lib";ntop=100;deceased.only=TRUE;sortby.p=FALSE
 pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.only=TRUE,
                                  min.cases=10, sortby.p = FALSE, plot=TRUE, verbose=1 )
 {                                          
@@ -288,7 +288,7 @@ pgx.selectTCGAstudies <- function(cancertype, variables)
     return(res)
 }
 
-##genes=NULL;study="brca_tcga_pub";datatype='mrna';matrix_file="../libx/tcga_matrix.h5";from.h5=TRUE
+##genes=NULL;study="brca_tcga_pub";datatype='mrna';matrix_file="./libx/tcga_matrix.h5";from.h5=TRUE
 pgx.getTCGAdataset <- function(study, genes=NULL, matrix_file=NULL, from.h5=TRUE,
                                datatype='mrna')
 {

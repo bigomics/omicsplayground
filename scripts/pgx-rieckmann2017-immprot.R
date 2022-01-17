@@ -11,10 +11,10 @@
 ## Date:   2020
 ## 
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 FILES
 
 
@@ -22,7 +22,7 @@ FILES
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data/rieckmann2017-immprot.pgx"
+rda.file="./data/rieckmann2017-immprot.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -37,7 +37,7 @@ ngs$description = "Mass-spectrometry-based proteomics of 28 primary human hemato
 ##------------------------------------------------------------
 
 ## Split data file
-D = read.csv("../ext/immprot/ni.3693-S5-copynumber.csv", check.names=FALSE)
+D = read.csv("./ext/immprot/ni.3693-S5-copynumber.csv", check.names=FALSE)
 D = data.frame(D) ##
 colnames(D)
 

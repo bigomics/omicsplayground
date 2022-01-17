@@ -11,15 +11,15 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-FILESX = "../libx"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
-source("../R/pgx-getgeo.R")
+RDIR = "./R"
+FILES = "./lib"
+FILESX = "./libx"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
+source("./R/pgx-getgeo.R")
 ##source("options.R")
 
-rda.file="../data/GSE102908-ibet.pgx"
+rda.file="./data/GSE102908-ibet.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 
@@ -84,7 +84,7 @@ ngs.save(ngs, file=rda.file)
 
 if(0) {
     
-    source("../R/pgx-include.R")
+    source("./R/pgx-include.R")
     load(rda.file,verbose=1)
 
     extra = "drugs"

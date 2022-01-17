@@ -4,7 +4,7 @@
 ##
 
 require(org.Hs.eg.db)
-source("../R/pgx-functions.R")
+source("./R/pgx-functions.R")
 
 cat("************************************************************************\n")
 cat("*********************** BUILD ANNOTATIONS START ************************\n")
@@ -33,7 +33,7 @@ info = do.call(rbind,info)
 dim(info)
 
 cat("writing to gene-info.csv")
-write.csv(info, file="../lib/gene-info.csv", row.names=FALSE)
+write.csv(info, file="./lib/gene-info.csv", row.names=FALSE)
 
 ##--------------------------------------------------------
 ## Human to mouse translation

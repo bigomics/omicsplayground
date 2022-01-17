@@ -55,12 +55,12 @@ mm10GeneLengths <- function(symbols=NULL) {
 exons.len <- hg19GeneLengths()
 Matrix::head(exons.len)
 write.csv( data.frame(symbol=names(exons.len), exon.length = exons.len),
-          file="../files/hg19GeneExonLengths.csv", row.names=FALSE, quote=FALSE)
+          file="./files/hg19GeneExonLengths.csv", row.names=FALSE, quote=FALSE)
 
 mm10.len <- mm10GeneLengths()
 Matrix::head(mm10.len,100)
 Matrix::tail(mm10.len,100)
 write.csv( data.frame(symbol=names(mm10.len), exon.length = mm10.len),
-          file="../files/mm10GeneExonLengths.csv", row.names=FALSE, quote=FALSE)
+          file="./files/mm10GeneExonLengths.csv", row.names=FALSE, quote=FALSE)
 
 

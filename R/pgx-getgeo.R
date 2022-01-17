@@ -146,7 +146,7 @@ pgx.getGEOcounts <- function(id, archs.h5) {
     src = ""
     
     if(!is.null(archs.h5) && is.null(expr)) {
-        ##h5.file = "../libx/human_matrix.h5"
+        ##h5.file = "./libx/human_matrix.h5"
         expr <- pgx.getGEOcounts.archs4(id, archs.h5)
         if(!is.null(expr)) src = "ARCHS4"
     }
@@ -230,7 +230,7 @@ pgx.getGeoMetadata <- function(id) {
 ##-------------------------------------------------------------------------------------
 ## Query GEO expression
 ##-------------------------------------------------------------------------------------
-h5.file = "../libx/human_matrix.h5"
+h5.file = "./libx/human_matrix.h5"
 id
 pgx.getGEOcounts.archs4 <- function(id, h5.file)
 {

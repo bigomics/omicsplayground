@@ -11,9 +11,9 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
 source(file.path(RDIR,"pgx-include.R"))
 source(file.path(RDIR,"pgx-getgeo.R"))
 ##source("options.R")
@@ -22,7 +22,7 @@ source(file.path(RDIR,"pgx-getgeo.R"))
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data/GSE93156-idelalisib.pgx"
+rda.file="./data/GSE93156-idelalisib.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 

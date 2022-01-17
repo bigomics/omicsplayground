@@ -77,11 +77,11 @@ source("app-init.R")
 
 if(0) {    
     ## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
-    load("../data/geiger2016-arginine.pgx")
-    load("../data/GSE10846-dlbcl-nc.pgx")
-    load("../data/bojkova2020-sarscov2-RC2.pgx")
-    load("../data/gtex-aging-n40svaNnm.pgx")
-    load("../data/biognosys2020-alzheimer.pgx")        
+    load("./data/geiger2016-arginine.pgx")
+    load("./data/GSE10846-dlbcl-nc.pgx")
+    load("./data/bojkova2020-sarscov2-RC2.pgx")
+    load("./data/gtex-aging-n40svaNnm.pgx")
+    load("./data/biognosys2020-alzheimer.pgx")        
     ngs = pgx.initialize(ngs)
 }
 
@@ -271,7 +271,7 @@ server = function(input, output, session) {
 
     ## Logging of input/output events
     ##shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
-    shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = "../logs/"))
+    shinylogs::track_usage(storage_mode = shinylogs::store_rds(path = "./logs/"))
     
     has.honcho <- Sys.getenv("HONCHO_TOKEN","")!="" &&
         !is.null(opt$HONCHO_URL) && opt$HONCHO_URL!=""
@@ -881,7 +881,7 @@ createUI <- function(tabs)
     message("======================= UI ===========================")
     message("======================================================\n")
 
-    version <- scan("../VERSION", character())[1]
+    version <- scan("./VERSION", character())[1]
     TITLE = paste(opt$TITLE,version)
     LOGO = shiny::div(shiny::img(src="bigomics-logo-white-48px.png", height="48px"),
                TITLE, id="navbar-logo", style="margin-top:-13px;")    

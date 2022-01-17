@@ -33,10 +33,10 @@ source(file.path(RDIR,"pgx-functions.R"))
 source(file.path(RDIR,"pgx-deconv.R"))
 source(file.path(RDIR,"pgx-drugs.R"))
 
-##FILES = "../files"
+##FILES = "./files"
 ##EXTRA.STUFF=1
-##rda.file="../files/geiger2018-liver-fltBC.pgx"
-##rda.file="../files/rieckmann2017-immprot.pgx"
+##rda.file="./files/geiger2018-liver-fltBC.pgx"
+##rda.file="./files/rieckmann2017-immprot.pgx"
 
 ##--------------------  cleanup deprecated objects --------------------
 ngs$tsne2d.genes <- NULL

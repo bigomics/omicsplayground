@@ -1,5 +1,5 @@
-RDIR="../R"
-FILES="../lib"
+RDIR="./R"
+FILES="./lib"
 PGX.DIR="."
 dir.exists(PGX.DIR)
 

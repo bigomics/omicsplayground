@@ -11,16 +11,16 @@
 ## Date:   2020
 ## 
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 
 ##------------------------------------------------------------
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data/tcga-prad.pgx"
+rda.file="./data/tcga-prad.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -34,7 +34,7 @@ ngs$description = "TCGA prostate cancer data set. Gene expression from patients 
 ##------------------------------------------------------------
 
 ## Please download from https://amp.pharm.mssm.edu/archs4/download.html
-TCGA_MATRIX = "../libx/tcga_matrix.h5"
+TCGA_MATRIX = "./libx/tcga_matrix.h5"
 if(file.exists(TCGA_MATRIX)) {
     
     tcga <- pgx.getTCGAdataset(study="prad_tcga", genes=NULL,

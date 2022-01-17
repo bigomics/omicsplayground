@@ -15,7 +15,7 @@ if(0) {
 }
 
 ##nsmooth=80;downsample=10
-##load("../pgx/tcga-prad-gx.pgx")
+##load("./pgx/tcga-prad-gx.pgx")
 refgroup=NULL
 pgx.inferCNV <- function(ngs, refgroup=NULL, progress=NULL ) {
 
@@ -153,7 +153,7 @@ pgx.inferCNV <- function(ngs, refgroup=NULL, progress=NULL ) {
         xtips=ytips=NULL
         scale="row.center"
 
-        source("../R/pgx-plotting.R")
+        source("./R/pgx-plotting.R")
         pgx.splitHeatmapX(
             X = res$cna[jj,], lmar=200, 
             annot = annot, row_clust=FALSE,

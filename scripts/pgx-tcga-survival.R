@@ -12,18 +12,18 @@
 ##
 
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
-source("../R/pgx-tcga.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
+source("./R/pgx-tcga.R")
 ##source("options.R")
 
 library('rhdf5')
-h5ls("../libx/tcga_matrix.h5")
-X = h5read("../libx/tcga_matrix.h5",'data/expression')
-genes = h5read("../libx/tcga_matrix.h5",'meta/genes')
-case.id = h5read("../libx/tcga_matrix.h5",'meta/gdc_cases.submitter_id')
+h5ls("./libx/tcga_matrix.h5")
+X = h5read("./libx/tcga_matrix.h5",'data/expression')
+genes = h5read("./libx/tcga_matrix.h5",'meta/genes')
+case.id = h5read("./libx/tcga_matrix.h5",'meta/gdc_cases.submitter_id')
 colnames(X) = case.id
 rownames(X) = genes
 
@@ -105,7 +105,7 @@ pgx <- pgx.computePGX(
 ## save PGX object
 ##-------------------------------------------------------------------
 
-rda.file = "../data/tcga-survival.pgx"
+rda.file = "./data/tcga-survival.pgx"
 ngs = pgx   ## still old...
 ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$datatype = geo$info$type

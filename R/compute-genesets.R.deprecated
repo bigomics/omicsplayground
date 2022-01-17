@@ -4,12 +4,12 @@
 ##
 
 ## library(limma)
-## source("../R/gx-heatmap.r")
-## source("../R/gx-limma.r")
-## source("../R/gx-util.r")
-## source("../R/gset-fisher.r")
-## source("../R/gset-gsea.r")
-## source("../R/gset-meta.r")
+## source("./R/gx-heatmap.r")
+## source("./R/gx-limma.r")
+## source("./R/gx-util.r")
+## source("./R/gset-fisher.r")
+## source("./R/gset-gsea.r")
+## source("./R/gset-meta.r")
 
 SAVE.PARAMS <- ls()
 

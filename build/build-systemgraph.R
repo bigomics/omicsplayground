@@ -8,7 +8,7 @@
 ##install.packages("biganalytics")
 ##install.packages("bigpca")
 
-source("../R/gx-util.r")
+source("./R/gx-util.r")
 
 library(Rtsne)
 library(qlcMatrix)
@@ -22,7 +22,7 @@ dir("~")
 ## From geneset GMT file, create large sparse 0/1 matrix.
 ##----------------------------------------------------------------------
 
-load(file="../lib/gmt-all.rda",verbose=1)
+load(file="./lib/gmt-all.rda",verbose=1)
 G <- build.createSparseGenesetMatrix(gmt.all)
 dim(G)
 save(G, file="gset-sparseG-XL2.rda")
@@ -39,7 +39,7 @@ build.computeGeneGenesetTSNE <- function(X, G) {
     ##
     ##
     
-    ##load(file="../files/gset-sparseG-XL.rda",verbose=1)
+    ##load(file="./files/gset-sparseG-XL.rda",verbose=1)
     ##head(G)[,1:5]
     dim(G)
     cat("dim(G)=",dim(G),"\n")
@@ -99,9 +99,9 @@ if(0) {
     library(igraph)
     require(gplots)
     
-    G <- readRDS(file="../lib/gset-sparseG-XL.rds")
-    tsne_gsets <- read.csv(file="../lib/tsne-all-genesets-XL.csv",row.names=1)
-    tsne_genes <- read.csv(file="../lib/tsne-all-genes-XL.csv",row.names=1)
+    G <- readRDS(file="./lib/gset-sparseG-XL.rds")
+    tsne_gsets <- read.csv(file="./lib/tsne-all-genesets-XL.csv",row.names=1)
+    tsne_genes <- read.csv(file="./lib/tsne-all-genes-XL.csv",row.names=1)
     ##tsne_gsets <- read.csv(file="tsne-all-genesets-wXL.csv",row.names=1)
     ##tsne_genes <- read.csv(file="tsne-all-genes-wXL.csv",row.names=1)
     dim(tsne_gsets)
@@ -170,20 +170,20 @@ if(0) {
     gr$layout <- pos3
 
     ##save(gr, file="pgx-graph-geneXgset-XL.rda")
-    saveRDS(gr, file="../files/pgx-graph-geneXgset-XL-snn20.rds")
+    saveRDS(gr, file="./files/pgx-graph-geneXgset-XL-snn20.rds")
     ##g1 <- loadRDS(file="pgx-graph-geneXgset.rds")
 
     if(0) {
         library(igraph)
-        gr1 <- readRDS(file="../files/pgx-graph-geneXgset-XL.rds")
-        gr2 <- readRDS(file="../files/pgx-graph-geneXgset-XL-snn20.rds")
-        gr3 <- readRDS(file="../files/pgx-graph-geneXgset-wXL-snn20.rds")
-        gr4 <- readRDS(file="../files/pgx-graph-geneXgset.rds")
+        gr1 <- readRDS(file="./files/pgx-graph-geneXgset-XL.rds")
+        gr2 <- readRDS(file="./files/pgx-graph-geneXgset-XL-snn20.rds")
+        gr3 <- readRDS(file="./files/pgx-graph-geneXgset-wXL-snn20.rds")
+        gr4 <- readRDS(file="./files/pgx-graph-geneXgset.rds")
 
         table( V(gr3)$level)
         table( V(gr4)$level)
 
-        load("../pgx/geiger2018-arginine-4k.pgx",verbose=1)
+        load("./pgx/geiger2018-arginine-4k.pgx",verbose=1)
         k=3
         names(ngs$gx.meta$meta)
         fx1 <- unclass(ngs$gx.meta$meta[[k]]$fc)[,"trend.limma"]
@@ -192,7 +192,7 @@ if(0) {
         names(fx2) <- paste0("{geneset}",names(fx2))
         fx <- c(fx1,fx2)
 
-        source("../R/pgx-graph.R")
+        source("./R/pgx-graph.R")
         par(mfrow=c(4,1), mar=c(1,1,1,1))
         pgx.plotDualProjection(gr1, fx=fx)
         pgx.plotDualProjection(gr2, fx=fx)

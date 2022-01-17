@@ -904,7 +904,7 @@ getHSGeneInfo <- function(eg, as.link=TRUE) {
 }
 
 ##levels="gene";contrast="Bmem_activation";layout=NULL;gene="IRF4";layout="layout_with_fr";hilight=NULL
-pgx.getGeneFamilies <- function(genes, FILES="../files", min.size=10, max.size=500)
+pgx.getGeneFamilies <- function(genes, FILES="./files", min.size=10, max.size=500)
 {
 
     ##dir="/home/share/datasets/gmt/";nrows=-1

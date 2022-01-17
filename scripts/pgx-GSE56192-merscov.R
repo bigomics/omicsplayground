@@ -11,16 +11,16 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 
 ##------------------------------------------------------------
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data/GSE56192-mers.pgx"
+rda.file="./data/GSE56192-mers.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -41,7 +41,7 @@ library(hgu133plus2.db)
 geo <- getGEO("GSE56192", GSEMatrix=TRUE, getGPL=TRUE)
 attr(geo, "names")
 
-df <- fread("../data/GSE56192_GeneLevel_Raw_data.csv")
+df <- fread("./data/GSE56192_GeneLevel_Raw_data.csv")
 head(df)[,1:4]
 X <- as.matrix(df[,3:ncol(df)])
 rownames(X) <- df$gene_symbol

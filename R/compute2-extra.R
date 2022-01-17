@@ -15,7 +15,7 @@ compute.extra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL) {
 pgx.computeExtra <- function(ngs, extra=EXTRA.MODULES, lib.dir=FILES, sigdb=NULL) {
         
     timings <- c()
-    libx.dir <- paste0(FILES,'x')  ## ../libx
+    libx.dir <- paste0(FILES,'x')  ## ./libx
     libx.dir
     
     extra <- intersect(extra, EXTRA.MODULES)
@@ -361,7 +361,7 @@ compute.drugActivityEnrichment <- function(ngs, cmap.dir) {
     return(ngs)
 }
 
-##ref="CTRPv2";cmap.dir="../lib";combo=FALSE
+##ref="CTRPv2";cmap.dir="./lib";combo=FALSE
 compute.drugSensitivityEnrichment <- function(ngs, cmap.dir)
 {
 
@@ -415,7 +415,7 @@ compute.drugSensitivityEnrichment <- function(ngs, cmap.dir)
     return(ngs)
 }
 
-##ref="CTRPv2";lib.dir="../lib"
+##ref="CTRPv2";lib.dir="./lib"
 compute.genePerturbationEnrichment.DEPRECATED <- function(ngs, lib.dir)
 {
     L1000.FILE = "l1000_gpert_n10g1766.csv.gz"

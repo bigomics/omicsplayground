@@ -126,7 +126,7 @@ UserBoard <- function(input, output, session, env)
     }, width='400px', striped=TRUE)
     
     output$news <- renderUI({
-        news <- readLines("../VERSION")
+        news <- readLines("./VERSION")
         news[1] <- paste0("New features in version ",news[1],":<br><ul>")
         news[-1] <- sub("[*-]","<li>",news[-1])
         news <- paste0(news,"</ul>",collapse='\n')

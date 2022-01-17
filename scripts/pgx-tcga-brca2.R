@@ -11,19 +11,19 @@
 ## Date:   2020
 ## 
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
-source("../R/pgx-tcga.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
+source("./R/pgx-tcga.R")
 ##source("options.R")
 
 ##------------------------------------------------------------
 ## Set data set information
 ##------------------------------------------------------------
 
-##rda.file = "../data/tcga-brca_pub2.pgx"
-rda.file = "../data/tcga-brca_pub.pgx"
+##rda.file = "./data/tcga-brca_pub2.pgx"
+rda.file = "./data/tcga-brca_pub.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -37,7 +37,7 @@ ngs$description = "TCGA breast cancer data set. Gene expression from 526 patient
 ## Read data
 ##------------------------------------------------------------
 
-load("../../omxp5/omxdata/tcga/brca_tcga_pub-omx.rda",verbose=TRUE)
+load("././omxp5/omxdata/tcga/brca_tcga_pub-omx.rda",verbose=TRUE)
 gx <- omx$level[[1]]$mat$gx
 px <- omx$level[[1]]$mat$px
 samples <- omx$pheno
@@ -91,7 +91,7 @@ for(dtype in c("px")) {
     ## save PGX object
     ##-------------------------------------------------------------------
     
-    rda.file = paste0("../data/tcga-brca2-",dtype,".pgx")
+    rda.file = paste0("./data/tcga-brca2-",dtype,".pgx")
     ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
     ngs$date = date()
     ngs$datatype = "proteomics"

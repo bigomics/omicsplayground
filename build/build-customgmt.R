@@ -3,12 +3,12 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-source("../R/gx-heatmap.r")
-source("../R/gx-limma.r")
-source("../R/gx-util.r")
-source("../R/gset-fisher.r")
-source("../R/gset-gsea.r")
-source("../R/gset-meta.r")
+source("./R/gx-heatmap.r")
+source("./R/gx-limma.r")
+source("./R/gx-util.r")
+source("./R/gset-fisher.r")
+source("./R/gset-gsea.r")
+source("./R/gset-meta.r")
 
 ## HUGO gene families
 G = read.csv("hgnc-genefamilies.txt",sep="\t")

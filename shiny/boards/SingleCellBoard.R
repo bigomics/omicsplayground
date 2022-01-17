@@ -1316,7 +1316,7 @@ immune cell types, expressed genes and pathway activation."
 
         dbg("[SingleCellBoard:getCNAfromExpression] calculating CNV with SMA40 ...")
         
-        ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
+        ##source("./R/pgx-cna.R");source("./R/gx-heatmap.r")
         shiny::withProgress( message='calculating CNV (sma40)...', value=0.33, {
             res <- pgx.CNAfromExpression(ngs, nsmooth=40)
         })
@@ -1328,7 +1328,7 @@ immune cell types, expressed genes and pathway activation."
         shiny::req(ngs)
 
         dbg("[SingleCellBoard:getCNAfromExpression] calculating CNV using inferCNV...")
-        ##source("../R/pgx-cna.R");source("../R/gx-heatmap.r")
+        ##source("./R/pgx-cna.R");source("./R/gx-heatmap.r")
         
         shiny::withProgress( message='calculating CNV (inferCNV)...', value=0.33, {
             res <- pgx.inferCNV(ngs, refgroup=NULL)

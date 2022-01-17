@@ -10,7 +10,7 @@
 ########################################################################
 
 if(0) {
-    load("../data/geiger2016-arginine.pgx")
+    load("./data/geiger2016-arginine.pgx")
     X <- ngs$X
     pheno <- ngs$samples$time
 }

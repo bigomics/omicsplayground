@@ -11,17 +11,17 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 ##source("options.R")
 
 ##------------------------------------------------------------
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data/GSE30589-sarscov.pgx"
+rda.file="./data/GSE30589-sarscov.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 

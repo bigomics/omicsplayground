@@ -41,7 +41,7 @@ gset.fisher <- function(genes, genesets, background=NULL,
     
     if(0) {
         min.genes=-10;max.genes=500;background=NULL;fdr=1;mc=TRUE;sort.by="zratio";nmin=3;verbose=1
-        genesets=readRDS("../files/gmt-all.rds")
+        genesets=readRDS("./files/gmt-all.rds")
         genes=head(rownames(ngs$X),300);genesets=ngs$gmt.all;background=rownames(ngs$X)
     }
     if( is.null(background) ) {

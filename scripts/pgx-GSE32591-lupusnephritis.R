@@ -11,10 +11,10 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 ##source("options.R")
 FILES
 BATCH.CORRECT=1
@@ -24,7 +24,7 @@ BATCH.CORRECT=1
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data/GSE32591-lupusnephritis.pgx"
+rda.file="./data/GSE32591-lupusnephritis.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)

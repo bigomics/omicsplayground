@@ -9,17 +9,17 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 ##source("options.R")
 
 ##------------------------------------------------------------
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data/GSE17400-sarscov.pgx"
+rda.file="./data/GSE17400-sarscov.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 
@@ -173,7 +173,7 @@ ngs <- compute.testGenesets (
 extra <- c("connectivity")
 extra <- c("meta.go","deconv","infer","drugs","wordcloud","connectivity")
 
-##FILESX <- "../libx"
+##FILESX <- "./libx"
 ngs <- compute.extra(ngs, extra, lib.dir=FILES)
 
 names(ngs)

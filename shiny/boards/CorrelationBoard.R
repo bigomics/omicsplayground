@@ -1628,8 +1628,8 @@ CorrelationBoard <- function(input, output, session, env)
 if(0) {
     source(file.path(RDIR,"pgx-include.R"))    ## lots of libraries and source()
 
-    load("../data/tcga-brca2-gx.pgx")
-    load("../data/geiger2016-arginine.pgx")
+    load("./data/tcga-brca2-gx.pgx")
+    load("./data/geiger2016-arginine.pgx")
     colnames(ngs$samples)
     grp = ngs$samples[,"ER_STATUS"]
     table(grp)

@@ -11,19 +11,19 @@
 ## Date:   2020
 ## 
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
-source("../R/pgx-tcga.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
+source("./R/pgx-tcga.R")
 ##source("options.R")
 
 ##------------------------------------------------------------
 ## Set data set information
 ##------------------------------------------------------------
 
-##rda.file = "../data/tcga-brca_pub2.pgx"
-rda.file = "../data/tcga-brca_pub.pgx"
+##rda.file = "./data/tcga-brca_pub2.pgx"
+rda.file = "./data/tcga-brca_pub.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -38,7 +38,7 @@ ngs$description = "TCGA breast cancer data set. Gene expression from 526 patient
 ##------------------------------------------------------------
 
 ## Please download from https://amp.pharm.mssm.edu/archs4/download.html
-TCGA_MATRIX = "../libx/tcga_matrix.h5"
+TCGA_MATRIX = "./libx/tcga_matrix.h5"
 if(file.exists(TCGA_MATRIX)) {
     tcga <- pgx.getTCGAdataset(study="brca_tcga_pub", genes=NULL,
                                matrix_file=TCGA_MATRIX, from.h5=TRUE)

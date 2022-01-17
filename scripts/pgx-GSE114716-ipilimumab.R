@@ -9,10 +9,10 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 ##source("options.R")
 FILES
 MAX.GENES = 8000
@@ -23,7 +23,7 @@ BATCH.CORRECT=1
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data/GSE114716-ipilimumab.pgx"
+rda.file="./data/GSE114716-ipilimumab.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 

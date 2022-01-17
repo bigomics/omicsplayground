@@ -7,9 +7,9 @@
 require(org.Hs.eg.db)
 symbol <- unlist(as.list(org.Hs.egSYMBOL))
 NGENES = 1000
-FILES = "../files"
-source("../R/gx-util.r")
-source("../R/pgx-include.R")
+FILES = "./files"
+source("./R/gx-util.r")
+source("./R/pgx-include.R")
 
 
 cat("************************************************************************\n")
@@ -133,7 +133,7 @@ write.csv(gtex, file.path(FILES,"GTEx_rna_tissue_tpm.csv"))
 ##----------------------------------------------------------------------
 ## ------------------------ DICE signature -----------------------------
 ##----------------------------------------------------------------------
-load("../pgx/schmiedel2018-DICE-mRNA-8k-LT.pgx",verbose=1)
+load("./pgx/schmiedel2018-DICE-mRNA-8k-LT.pgx",verbose=1)
 grp <- ngs$samples$group
 table(grp)
 sum(is.na(ngs$counts))
@@ -148,7 +148,7 @@ write.csv(sigx, file=file.path(FILES,"DICE-signature.csv"))
 ## --------------------- ImmProt signature -----------------------------
 ##----------------------------------------------------------------------
 
-load("../pgx/rieckmann2017-immprot-8k.ngs",verbose=1)
+load("./pgx/rieckmann2017-immprot-8k.ngs",verbose=1)
 grp <- ngs$samples$group
 table(grp)
 sum(is.na(ngs$counts))

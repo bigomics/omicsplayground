@@ -896,7 +896,7 @@ justGCEA <- function(X, sets, concepts, Y=NULL, fdr=1, set.min=15, set.max=500,
 ##========================================================================
 
 ##path=all.outputs[7]
-path="../analysis_v1b/output_GSEA/Th17_mut_2h_VS_mut_ut"
+path="./analysis_v1b/output_GSEA/Th17_mut_2h_VS_mut_ut"
 
 getGseaOutput <- function(path, i=1, raster.png=FALSE) {
     ## untangle Gsea subfolder

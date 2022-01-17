@@ -4,7 +4,7 @@
 ##
 
 ##
-## NOTE: This file is supposed to run in the folder .../R/
+## NOTE: This file is supposed to run in the folder ./R/
 ##
 
 ## Speed up installation
@@ -15,7 +15,7 @@ options(repos = c(CRAN = "http://cran.rstudio.com"))
 install.packages("devtools")
 install.packages("BiocManager", version="3.10")
 
-LOCAL.PKGS <- sub("_.*","",dir("../ext/packages"))
+LOCAL.PKGS <- sub("_.*","",dir("./ext/packages"))
 LOCAL.PKGS
 
 install.pkg <- function(pkg, force=FALSE) {
@@ -23,7 +23,7 @@ install.pkg <- function(pkg, force=FALSE) {
         if(pkg %in% LOCAL.PKGS) {
             ## if available locally, we install local version
             cat("installing",pkg,"from local folder...\n")
-            pkg1 = dir("../ext/packages",pattern=paste0(pkg,"_"),full.names=TRUE)
+            pkg1 = dir("./ext/packages",pattern=paste0(pkg,"_"),full.names=TRUE)
             try(install.packages(pkg1,repos=NULL,type="source"))
         } else {
             cat("installing",pkg,"from CRAN/BioConductor...\n")
@@ -39,21 +39,24 @@ install.pkg <- function(pkg, force=FALSE) {
         cat("package",pkg,"already installed\n")
     }
 }
+
 install.pkgs <- function(pkgs, force=FALSE) {
     for(pkg in pkgs) install.pkg(pkg, force=force)
 }
+
 remove.pkg <- function(pkg) {
     if(pkg %in% installed.packages()) remove.packages(pkg)
 }
+
 remove.pkgs <- function(pkgs, force=FALSE) {
     for(pkg in pkgs) remove.pkg(pkg)
 }
 
 autoscan.pkgs <- function() {
 
-    pkg1 <- system("grep '::' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)
-    pkg2 <- system("grep 'require(' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)
-    pkg3 <- system("grep 'library(' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)    
+    pkg1 <- system("grep '::' *.r *.R ./shiny/boards/*R ./shiny/modules/*R", intern=TRUE)
+    pkg2 <- system("grep 'require(' *.r *.R ./shiny/boards/*R ./shiny/modules/*R", intern=TRUE)
+    pkg3 <- system("grep 'library(' *.r *.R ./shiny/boards/*R ./shiny/modules/*R", intern=TRUE)    
 
     pkg <- c(pkg1,pkg2,pkg3)
     pkg <- grep("message|dbg|cat",pkg,value=TRUE,invert=TRUE)
@@ -101,7 +104,7 @@ install.pkgs(base.pkg)
 ## Automatically scan all used packages and install
 ##---------------------------------------------------------------------
 
-## pkg.used <- system("grep 'library(\\|require(' *R *r ../shiny/*R ../shiny/modules/*R", intern=TRUE)
+## pkg.used <- system("grep 'library(\\|require(' *R *r ./shiny/*R ./shiny/modules/*R", intern=TRUE)
 ## pkg.used <- gsub(".*require\\(|.*library\\(","",pkg.used)
 ## pkg.used <- gsub("\"|\'|\\).*","",pkg.used)
 ## pkg.used <- grep("[ ]|quietly",pkg.used,value=TRUE,invert=TRUE)
@@ -138,10 +141,10 @@ install.pkgs(c('monocle','Seurat'))
 ##---------------------------------------------------------------------
 ## Install latest from GITHUB
 ##---------------------------------------------------------------------
-devtools::install_github("GfellerLab/EPIC", build_vignettes=TRUE)
+devtools::install_github("GfellerLab/EPIC", build_vignettes=FALSE)
 ##devtools::install_github("IOR-Bioinformatics/PCSF", dependencies=TRUE, type="source")
 devtools::install_github('linxihui/NNLM')
-devtools::install_github("Coolgenome/iTALK", build_vignettes = TRUE, force=TRUE)
+devtools::install_github("Coolgenome/iTALK", build_vignettes = FALSE, force=TRUE)
 ## devtools::install_github('adymimos/rWordCloud', force=TRUE)
 ## remotes::install_github("dreamRs/shinyparticles")
 remotes::install_github("dreamRs/particlesjs")
@@ -167,7 +170,7 @@ devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data"
 ##---------------------------------------------------------------------
 ## install.pkgs(c("ROCR", "mixtools", "lars", "ica", "tsne", "ape", "dtw", "SDMTools", "ggridges", "fitdistrplus", "doSNOW","diffusionMap","fpc","hdf5r"))
 ## install.pkgs(c('cowplot', 'Rtsne', 'pbapply', 'RANN', 'dplyr', 'irlba', 'plotly', 'Hmisc', 'tidyr', 'metap', 'lmtest', 'png', 'reticulate', 'RcppEigen', 'RcppProgress'))
-## install.packages("../ext/packages/Seurat_v2.3.3.tar.gz",repos=NULL,type="source")  ## old version
+## install.packages("./ext/packages/Seurat_v2.3.3.tar.gz",repos=NULL,type="source")  ## old version
 
 ##---------------------------------------------------------------------
 ## make sure local ones are preferred
@@ -178,9 +181,21 @@ install.pkgs(c("RcppParallel"))
 devtools::install_github('wt2015-github/FastGGM', force=TRUE)
 install.pkgs(c("HiddenMarkov","coin","rjags","future","argparse"))
 install.pkg("rjags", force=TRUE)
-##install.packages("../ext/packages/infercnv_1.1.3mod.tar.gz",repos=NULL,type="source")  ## old version
+##install.packages("./ext/packages/infercnv_1.1.3mod.tar.gz",repos=NULL,type="source")  ## old version
 BiocManager::install("infercnv")
+BiocManager::install("ComplexHeatmap")
 install.pkgs(c("KEGGREST","pathview"), force=TRUE)
+devtools::install_github("ropensci/iheatmapr")
+BiocManager::install("GEOquery")
+BiocManager::install("org.Mm.eg.db")
+install.packages("matrixTests")
+install.packages("statmod")
+install.packages("shinyBS")
+install.packages("ComICS")
+BiocManager::install("GSVA")
+devtools::install_github("ctlab/fgsea")
+BiocManager::install("DeconRNASeq")
+BiocManager::install("KEGG.db")
 
 ##---------------------------------------------------------------------
 ## Install Kaleido for plotly
@@ -201,9 +216,9 @@ BIG.NOTUSED
 
 if(0) {
     
-    pkg1 <- system("grep '::' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)
-    pkg2 <- system("grep 'require(' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)
-    pkg3 <- system("grep 'library(' *.r *.R ../shiny/boards/*R ../shiny/modules/*R", intern=TRUE)    
+    pkg1 <- system("grep '::' *.r *.R ./shiny/boards/*R ./shiny/modules/*R", intern=TRUE)
+    pkg2 <- system("grep 'require(' *.r *.R ./shiny/boards/*R ./shiny/modules/*R", intern=TRUE)
+    pkg3 <- system("grep 'library(' *.r *.R ./shiny/boards/*R ./shiny/modules/*R", intern=TRUE)    
 
     pkg <- c(pkg1,pkg2,pkg3)
     pkg <- grep("message|dbg|cat",pkg,value=TRUE,invert=TRUE)

@@ -12,10 +12,10 @@
 ##
 
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 ##source("options.R")
 FILES
 
@@ -28,7 +28,7 @@ FILTER.GENES=TRUE
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data/GSE92332-scintestine.pgx"
+rda.file="./data/GSE92332-scintestine.pgx"
 ##if(COMPARE.CLUSTERS) rda.file <- sub(".pgx$",paste0("-vsCLUST.pgx"),rda.file)
 ##if(DOWNSAMPLE>0) rda.file <- sub(".pgx$",paste0("-s",DOWNSAMPLE,".pgx"),rda.file)
 ##if(SMALL>0) rda.file <- sub(".pgx$",paste0("-",EXT,".pgx"),rda.file)

@@ -11,11 +11,11 @@
 ## Date:   2020
 ## 
 
-RDIR = "../R"
-FILES = "../lib"
-FILESX = "../libx"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+FILESX = "./libx"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 ##source("options.R")
 FILES
 
@@ -25,8 +25,8 @@ FILES
 ##devtools::install_github("bartongroup/Proteus", build_opts= c("--no-resave-data", "--no-manual"), build_vignettes=FALSE)    
 library(org.Hs.eg.db)
 ##library(proteus)    
-meta=metadataFile="../ext/arginine/meta.txt"
-file=proteinGroupsFile="../ext/arginine/proteinGroups.txt"
+meta=metadataFile="./ext/arginine/meta.txt"
+file=proteinGroupsFile="./ext/arginine/proteinGroups.txt"
 ## Read the proteinGroups file
 prot <- prot.readProteinGroups(
     proteinGroupsFile, meta=metadataFile,
@@ -66,7 +66,7 @@ rownames(samples)=colnames(counts)=short.name
 group.levels <- unique(samples$condition)
 group.levels
 ## 10 contrasts in total
-contrasts <- limma::limma::makeContrasts(
+contrasts <- limma::makeContrasts(
     act_vs_notact = (act96h + act72h + act48h + act24h + act12h)/5 - notact,
     act12h_vs_notact = act12h - notact,
     act24h_vs_notact = act24h - notact,
@@ -123,7 +123,7 @@ if(0) {
 ##-------------------------------------------------------------------
 names(ngs)
 
-rda.file="../data/geiger2016-arginine2.pgx"
+rda.file="./data/geiger2016-arginine2.pgx"
 ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$date = date()
 ngs$datatype = "LC/MS proteomics"
@@ -136,8 +136,8 @@ ngs.save(ngs, file=rda.file)
 
 if(0) {
     
-    source("../R/pgx-include.R")    
-    load("../data/geiger2016-arginine-test.pgx")
+    source("./R/pgx-include.R")    
+    load("./data/geiger2016-arginine-test.pgx")
     names(ngs)
 
     names(ngs$gx.meta$meta)

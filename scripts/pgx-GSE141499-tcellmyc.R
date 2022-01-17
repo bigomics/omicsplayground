@@ -64,7 +64,7 @@ pgx <- compute.extra(pgx, extra.methods, lib.dir=FILES)
 ## save PGX object
 ##-------------------------------------------------------------------
 
-rda.file="../data/GSE141499-tcellmyc.pgx"
+rda.file="./data/GSE141499-tcellmyc.pgx"
 ngs=pgx   ## still old...
 ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$datatype = "mRNA (microarray)"

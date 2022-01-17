@@ -3,41 +3,41 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-source("../R/gx-util.r")
-source("../R/gset-gsea.r")
-source("../R/gset-fisher.r")
+source("./R/gx-util.r")
+source("./R/gset-gsea.r")
+source("./R/gset-fisher.r")
 
 ##----------------------------------------------------------------------
 ##--------------- cell type signatures from ImSig ----------------------
 ##----------------------------------------------------------------------
-S <- read.csv("../opt/imsig-signatures-genes.csv", skip=2)
+S <- read.csv("./opt/imsig-signatures-genes.csv", skip=2)
 imsig.gmt <- tapply( S$Gene.Symbol, S$ImSig.cell.type, list)
 imsig.gmt <- lapply(imsig.gmt, as.character)
-write.gmt(imsig.gmt, file="../files/gmt/celltype_imsig.gmt")
-write.gmt(imsig.gmt, file="../files/gmt0/celltype_imsig.gmt")
+write.gmt(imsig.gmt, file="./files/gmt/celltype_imsig.gmt")
+write.gmt(imsig.gmt, file="./files/gmt0/celltype_imsig.gmt")
 
 
 ##----------------------------------------------------------------------
 ##----------- cell type signatures from xCELL (collapsed) --------------
 ##----------------------------------------------------------------------
 
-xcell.data <- read.gmt("../opt/xCell_celltype_signatures.txt")
+xcell.data <- read.gmt("./opt/xCell_celltype_signatures.txt")
 cell.type <- sub("_.*","",names(xcell.data))
 table(cell.type)
 xcell.gmt <- tapply( xcell.data, cell.type, function(s) sort(unique(unlist(s))))
-write.gmt(xcell.gmt, file="../files/gmt/celltype_xcell.gmt")
-write.gmt(xcell.gmt, file="../files/gmt0/celltype_xcell.gmt")
+write.gmt(xcell.gmt, file="./files/gmt/celltype_xcell.gmt")
+write.gmt(xcell.gmt, file="./files/gmt0/celltype_xcell.gmt")
 
 
 ##----------------------------------------------------------------------
 ##----------- build the GMT-all object (all gene sets) -----------------
 ##----------------------------------------------------------------------
 
-##tt = read.gmt("../../Data/Enrichr/Tissue_Jensen.txt")
+##tt = read.gmt("././Data/Enrichr/Tissue_Jensen.txt")
 ##head(sapply(tt,length),100)
 
 require(parallel)
-gmt.files2 = dir("../files/gmt0", pattern=".gmt$|.txt$", full.names=TRUE)
+gmt.files2 = dir("./files/gmt0", pattern=".gmt$|.txt$", full.names=TRUE)
 gmt.all = mclapply(gmt.files2, read.gmt)
 names(gmt.all) = gmt.files2
 names(gmt.all) = gsub(".*/|.txt$|.gmt$", "", names(gmt.all))
@@ -74,8 +74,8 @@ gmt.all <- gmt.all[!duplicated(names(gmt.all))]
 ## save
 gmt.all <- gmt.all[order(names(gmt.all))]
 table(sub(":.*","",names(gmt.all)))
-save(gmt.all, file="../files/gmt-all.rda")
-saveRDS(gmt.all, file="../files/gmt-all.rds")
+save(gmt.all, file="./files/gmt-all.rda")
+saveRDS(gmt.all, file="./files/gmt-all.rds")
 
 
 ## NEED RETHINK!!!! this should be improved using BioMart...
@@ -84,8 +84,8 @@ library(org.Mm.eg.db)
 mouse.genes = as.character(unlist(as.list(org.Mm.egSYMBOL)))
 names(mouse.genes) = toupper(mouse.genes)
 gmt.all <- mclapply(gmt.all[], function(s) setdiff(as.character(mouse.genes[s]),NA), mc.cores=4)
-save(gmt.all, file="../files/gmt-all-mouse.rda")
-saveRDS(gmt.all, file="../files/gmt-all-mouse.rds")
+save(gmt.all, file="./files/gmt-all-mouse.rda")
+saveRDS(gmt.all, file="./files/gmt-all-mouse.rds")
 remove(gmt.all)
 
 

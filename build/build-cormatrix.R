@@ -3,9 +3,9 @@
 ## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-source("../R/pgx-functions.R")
-source("../R/pgx-graph.R")
-source("../R/xcr-math.r")
+source("./R/pgx-functions.R")
+source("./R/pgx-graph.R")
+source("./R/xcr-math.r")
 
 n=100
 ##G <- head(R1,100)
@@ -44,7 +44,7 @@ KNNreduceCorMatrix <- function(G, n=100) {
 
 if(0) {
     require(qlcMatrix)
-    load("../files/gset-sparseG-XL.rda",verbose=1)
+    load("./files/gset-sparseG-XL.rda",verbose=1)
 
     cat("computing GENES cosSparse...\n")
     R1 <- cosSparse( G!=0 )
@@ -74,7 +74,7 @@ if(0) {
 
 if(0) {
     require(qlcMatrix)
-    load("../files/gset-sparseG-XL.rda",verbose=1)
+    load("./files/gset-sparseG-XL.rda",verbose=1)
 
     ##X=G[1:1000,]
     ##system.time( R3  <- tcosine.sparse(X, k=100, th=0.01, block=1000, ties.method="") )

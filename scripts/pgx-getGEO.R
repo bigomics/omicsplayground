@@ -91,7 +91,7 @@ for(id in geo.ids) {
     ## save PGX object
     ##-------------------------------------------------------------------
     
-    rda.file = paste0("../data/",id,".pgx")
+    rda.file = paste0("./data/",id,".pgx")
     ngs = pgx   ## still old...
     ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
     ngs$datatype = geo$info$type

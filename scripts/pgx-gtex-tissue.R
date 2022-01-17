@@ -11,10 +11,10 @@
 ## Date:   2020
 ## 
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 ##source("options.R")
 
 
@@ -22,7 +22,7 @@ source("../R/pgx-include.R")
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data/gtex-tissue.pgx"
+rda.file="./data/gtex-tissue.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 
@@ -41,7 +41,7 @@ library(rhdf5)
 
 ## load series and platform data from GEO
 h5.file = "/data/PublicData/archs4data/gtex_matrix.h5"
-##h5.file = "../../data/archs4data/gtex_matrix.h5"
+##h5.file = "././data/archs4data/gtex_matrix.h5"
 h5ls(h5.file)
 
 X0 <- h5read(h5.file, "data/expression")

@@ -8,7 +8,7 @@
 ##
 
 ## all scripts
-all.scripts <- dir("../scripts", pattern="pgx-.*R$")
+all.scripts <- dir("./scripts", pattern="pgx-.*R$")
 
 ## These are some default example scripts (uncomment if you really want to do all)
 all.scripts <- c("pgx-geiger2016-arginine.R","pgx-GSE72056-scmelanoma.R")
@@ -19,11 +19,11 @@ for(script in all.scripts) {
 
     ## skip if already done
     pgx.file <- gsub("pgx-|[.]R$","",script)
-    ##if(any(grepl(pgx.file, dir("../data")))) next
+    ##if(any(grepl(pgx.file, dir("./data")))) next
 
     ## run script
     cat(">>>>>>>>>>>>>>>>>> processing",script,"<<<<<<<<<<<<<<<\n")
-    script1 <- paste0("../scripts/",script)
+    script1 <- paste0("./scripts/",script)
     try.err <- try(source(script1, local=FALSE))
     if(class(try.err)=="try-error") {
         cat("WARNING:: Error in source",script,"\n")

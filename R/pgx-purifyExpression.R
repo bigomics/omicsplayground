@@ -8,12 +8,12 @@ if(0) {
     source(file.path(RDIR,"pgx-deconv.R"))
     source(file.path(RDIR,"gx-heatmap.R"))
 
-    load("../pgx/geiger2018b-liver2-asis-8k.pgx", verbose=1)
-    load("../pgx/geiger2018b-liver2-bc-8k.pgx", verbose=1)
-    load("../pgx/geiger2018b-liver2-sc-8k.pgx", verbose=1)
-    load("../pgx/geiger2018b-liver2-bcsc-8k.pgx", verbose=1)
-    load("../pgx/geiger2018b-liver2-qc-8k.pgx", verbose=1)
-    load("../pgx/geiger2018b-liver2-qcbc-8k.pgx", verbose=1)
+    load("./pgx/geiger2018b-liver2-asis-8k.pgx", verbose=1)
+    load("./pgx/geiger2018b-liver2-bc-8k.pgx", verbose=1)
+    load("./pgx/geiger2018b-liver2-sc-8k.pgx", verbose=1)
+    load("./pgx/geiger2018b-liver2-bcsc-8k.pgx", verbose=1)
+    load("./pgx/geiger2018b-liver2-qc-8k.pgx", verbose=1)
+    load("./pgx/geiger2018b-liver2-qcbc-8k.pgx", verbose=1)
 
     ##X <- 2**ngs$X
     X <- ngs$counts
@@ -76,7 +76,7 @@ if(0) {
     prex <- logx[,colnames(purified)]
 
 
-    pdf("../plots/pgx-geiger2018b-liver-topHEPA3.pdf", w=16,h=20)
+    pdf("./plots/pgx-geiger2018b-liver-topHEPA3.pdf", w=16,h=20)
     gx.heatmap(prex[markers,], col.annot=aa, nmax=-1, scale="none",
                keysize=0.5, key=FALSE, mar=c(14,8),
                main="pre-purified (top HEPA markers)")

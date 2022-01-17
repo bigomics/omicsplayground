@@ -11,10 +11,10 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 
 ##source("options.R")
 MAX.GENES = 8000
@@ -29,7 +29,7 @@ SUBSAMPLE=TRUE
 GENE.METHODS=c("trend.limma","edger.qlf","deseq2.wald")
 GENESET.METHODS = c("fisher","gsva","fgsea")
 
-rda.file="../data/GSE98588-dlbcl.pgx"
+rda.file="./data/GSE98588-dlbcl.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -139,7 +139,7 @@ ngs <- pgx.computePGX(
 ## save PGX object
 ##-------------------------------------------------------------------
 
-rda.file="../data/geiger2016-arginine-test.pgx"
+rda.file="./data/geiger2016-arginine-test.pgx"
 ngs$name = gsub("^.*/|[.]pgx$","",rda.file)
 ngs$date = date()
 ngs$datatype = "LC/MS proteomics"

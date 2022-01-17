@@ -11,10 +11,10 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 ##source("options.R")
 FILES
 MAX.GENES = 8000
@@ -29,7 +29,7 @@ BATCHCORRECT=FALSE
 DOWNSAMPLE=0
 DOWNSAMPLE=100
 
-rda.file="../data/GSE72056-scmelanoma.pgx"
+rda.file="./data/GSE72056-scmelanoma.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -279,9 +279,9 @@ if(DIFF.EXPRESSION) {
     head(contr.matrix)
     
     ngs$timings <- c()
-    ##source("../R/compute-genes.R")
-    ##source("../R/compute-genesets.R")
-    ##source("../R/compute-extra.R")
+    ##source("./R/compute-genes.R")
+    ##source("./R/compute-genesets.R")
+    ##source("./R/compute-extra.R")
 
     GENE.METHODS=c("trend.limma","edger.qlf","edger.lrt")
     GENE.METHODS=c("ttest","ttest.welch","notrend.limma") ## fastest methods

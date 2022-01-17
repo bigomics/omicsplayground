@@ -9,10 +9,10 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 ##source("options.R")
 FILES
 MAX.GENES = 8000
@@ -23,7 +23,7 @@ MAX.GENESETS = 8000
 ## Set data set information
 ##------------------------------------------------------------
 
-rda.file="../data/GSE22886-immune.pgx"
+rda.file="./data/GSE22886-immune.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
@@ -247,9 +247,9 @@ t(contr.matrix)
 ##-------------------------------------------------------------------
 
 ##contr.matrix = contr.matrix[,1:3]
-##source("../R/compute-genes.R")
-##source("../R/compute-genesets.R")
-##source("../R/compute-extra.R")
+##source("./R/compute-genes.R")
+##source("./R/compute-genesets.R")
+##source("./R/compute-extra.R")
 
 GENE.METHODS=c("trend.limma","edger.qlf","edger.lrt")
 GENESET.METHODS=c("gsva","fisher","camera","fgsea")

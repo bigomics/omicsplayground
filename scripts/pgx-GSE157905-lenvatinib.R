@@ -11,12 +11,12 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-FILESX = "../libx"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
-source("../R/pgx-getgeo.R")
+RDIR = "./R"
+FILES = "./lib"
+FILESX = "./libx"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
+source("./R/pgx-getgeo.R")
 ##source("options.R")
 
 ##------------------------------------------------------------
@@ -118,7 +118,7 @@ names(ngs$drugs[[1]])
 ## save object
 ##-------------------------------------------------------------------
 
-rda.file="../data/GSE157905-lenvatinib-bc.pgx"
+rda.file="./data/GSE157905-lenvatinib-bc.pgx"
 ##if(BATCH.CORRECT) rda.file = sub(".pgx$",paste0("-BC.pgx"),rda.file)
 rda.file
 

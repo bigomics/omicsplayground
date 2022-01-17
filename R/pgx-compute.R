@@ -456,7 +456,7 @@ pgx.computePGX <- function(ngs,
                            gset.methods = c("fisher","gsva","fgsea"),
                            do.cluster = TRUE, use.design = TRUE, prune.samples = FALSE,
                            extra.methods = .EXTRA.METHODS,
-                           lib.dir = "../lib", progress=NULL)
+                           lib.dir = "./lib", progress=NULL)
 {
     
     ##======================================================================

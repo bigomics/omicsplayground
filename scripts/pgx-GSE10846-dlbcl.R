@@ -11,10 +11,10 @@
 ##
 ##
 
-RDIR = "../R"
-FILES = "../lib"
-PGX.DIR = "../data"
-source("../R/pgx-include.R")
+RDIR = "./R"
+FILES = "./lib"
+PGX.DIR = "./data"
+source("./R/pgx-include.R")
 
 ##source("options.R")
 MAX.GENES = 8000
@@ -30,7 +30,7 @@ GENE.METHODS=c("ttest.welch","trend.limma","edger.qlf","deseq2.wald")
 ##USER.GENE.METHODS=c("ttest","ttest.welch","ttest.rank","trend.limma")
 GENESET.METHODS = c("fisher","gsva","camera","fgsea")
 
-rda.file="../data/GSE10846-dlbcl-fullNC.pgx"
+rda.file="./data/GSE10846-dlbcl-fullNC.pgx"
 rda.file
 
 ##load(file=rda.file, verbose=1)
