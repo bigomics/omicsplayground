@@ -411,7 +411,7 @@ plot.SPLOM <- function(F, F2=NULL, hilight=NULL, cex=0.5, cex.axis=1, cex.space=
             }
             
             ## write correlation value
-            rho <- WGCNA::cor(F[,i], F2[,j], use='pairwise')
+            rho <- stats::cor(F[,i], F2[,j], use='pairwise')
             rr <- paste("r =",round(rho,digits=3))
             legend("topleft", legend=rr, bty='n', cex=1)
             
@@ -459,7 +459,7 @@ pgx.SankeyFromMatrixList.PLOTLY <- function(matlist, contrast=NULL)
     ## Correlation
     R <- list()
     for(i in 1:(length(X)-1)) {
-        r1 <- WGCNA::cor( t(X[[i]]), t(X[[i+1]]) )
+        r1 <- stats::cor( t(X[[i]]), t(X[[i+1]]) )
         R[[i]] <- pmax(r1,0)
     }
 
@@ -467,7 +467,7 @@ pgx.SankeyFromMatrixList.PLOTLY <- function(matlist, contrast=NULL)
     cty.mode=1
     F = R
     if(!is.null(contrast)) {
-        fc <- lapply(X, function(m) WGCNA::cor(t(m),contrast)[,1])
+        fc <- lapply(X, function(m) stats::cor(t(m),contrast)[,1])
         i=1
         for(i in 1:length(R)) {
             if(cty.mode==1) node.wt <- outer(pmax(fc[[i]],0), pmax(fc[[i+1]],0))
@@ -1688,7 +1688,7 @@ pgx.splitHeatmap <- function(ngs, splitx=NULL, top.mode="specific",
         idx <- paste0("M",as.vector(mapply(rep,1:ncol(grpX),ntop1)))
     } else {
         X1 <- Matrix::head(X0[order(-apply(X0,1,sd)),],ntop)
-        hc = fastcluster::hclust( as.dist(1 - WGCNA::cor(t(X1),use="pairwise")), method="ward.D2" )
+        hc = fastcluster::hclust( as.dist(1 - stats::cor(t(X1),use="pairwise")), method="ward.D2" )
         idx = paste0("S",cutree(hc, 5))
     }
     table(idx)
@@ -3683,7 +3683,7 @@ plotlyVolcano <- function(x, y, names, source="plot1", group.names=c("group1","g
 }
 
 corclust <- function(x) {
-    dd <- as.dist(1 - WGCNA::cor(t(x),use="pairwise"))
+    dd <- as.dist(1 - stats::cor(t(x),use="pairwise"))
     hc <- fastcluster::hclust(dd, method="ward.D2" )
     hc
 }
@@ -3792,7 +3792,7 @@ pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL,
     
     ## ------ split Y-axis (genes) by factor
     hc.order <- function(x) {
-        suppressWarnings( dd <- as.dist(1 - WGCNA::cor(t(x),use="pairwise")) )
+        suppressWarnings( dd <- as.dist(1 - stats::cor(t(x),use="pairwise")) )
         ## cat("DBG >pgx-plotting:pgx.splitHeatmapX> sum.is.na.dd=",sum(is.na(dd)),"\n")
         if(sum(is.na(dd))) dd[is.na(dd)] <- 1
         hc <- fastcluster::hclust(dd, method="ward.D2" )
@@ -3855,7 +3855,7 @@ pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL,
     mar <- list(l = lmar, r = 0, b = 5, t = 0, pad = 3)
 
     ex <- ncol(X)/ncol(xx[[1]])  ## expansion factor
-    hc <- fastcluster::hclust(as.dist(1 - WGCNA::cor(xx[[1]],use="pairwise")))
+    hc <- fastcluster::hclust(as.dist(1 - stats::cor(xx[[1]],use="pairwise")))
     dd <- 0.08 * ex ## left dendrogram width
 
     hovertemplate = "Row: %{y} <br>Column: %{x}<br>Value: %{z}<extra> </extra>"
@@ -3904,7 +3904,7 @@ pgx.splitHeatmapFromMatrix <- function(X, annot, idx=NULL, splitx=NULL,
             x1 <- xx[[i]]
             if(ncol(x1)==1) x1 <- cbind(x1,x1)
             ##x1 <- x1[nrow(x1):1,]
-            hc <- fastcluster::hclust(as.dist(1 - WGCNA::cor(x1,use="pairwise")))
+            hc <- fastcluster::hclust(as.dist(1 - stats::cor(x1,use="pairwise")))
 
             plt <- plt %>%
                 iheatmapr::add_main_heatmap(

@@ -448,11 +448,11 @@ dbg.BAK <- function(... ) {
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
 read.csv3 <- function(file, ...)
 {
-    ## read delimited table automatically determine seperator
-    line1 <- as.character(read.csv(file, sep='\n',nrow=1)[1,])
+    ## read delimited table automatically determine separator
+    line1 <- as.character(read.csv(file, comment.char='#', sep='\n',nrow=1)[1,])
     sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))
     message("[read.csv3] sep = ",sep)
-    read.csv(file, sep=sep, ...)
+    read.csv(file, comment.char='#', sep=sep, ...)
 }
 
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
@@ -708,10 +708,18 @@ pgx.getCategoricalPhenotypes <-function(df, min.ncat=2, max.ncat=20, remove.dup=
     ##df <- type.convert(df)
     
     is.bad = 0
+
+    ## ... exclude sample IDs
     ##is.bad1 <- grepl("^sample$|[_.]id$|replic|rep|patient|donor|individ",tolower(colnames(df)))
     is.bad1 <- grepl("^sample$|[_.]id$|patient|donor|individ",tolower(colnames(df)))
+
+    ## ... exclude numerical dates/age/year
     is.bad2 <- grepl("ratio|year|month|day|^age$|^efs|^dfs|surv|follow",tolower(colnames(df)))    
-    ## is.factor <- sapply(sapply(data.frame(df), class), function(s) any(s %in% c("factor","character")))
+    ## is.factor <- sapply(sapply(df, class), function(s) any(s %in% c("factor","character")))
+    is.num  <- sapply(df,class) == "numeric"
+    is.bad2 <- (is.bad2 & is.num)  ## no numeric
+
+    ## ... exclude any sample ID coded in columns...
     is.bad3 <- apply(df,2,function(x) mean(grepl("^sample|patient|donor|individ",
                                                  x[!is.na(x)],ignore.case=TRUE))>0.8)    
     ## is.bad <- (is.bad1 | is.bad2 | is.bad3)
@@ -719,20 +727,24 @@ pgx.getCategoricalPhenotypes <-function(df, min.ncat=2, max.ncat=20, remove.dup=
     is.bad
     table(is.bad)
 
+    ## auto-determine which are factors
     is.factor <- apply(df, 2, is.categorical)
     is.factor
     n.unique <- apply(df,2,function(x) length(unique(setdiff(x,c(NA,"NA","")))))
-    n.notna  <- apply(df,2,function(x) length(x[!is.na(x)]))
-    is.id    <- (n.unique > 0.9*n.notna)
+    n.notna <- apply(df,2,function(x) length(x[!is.na(x)]))
+    is.id <- (n.unique > 0.9*n.notna)
     is.id
     is.factor2 <- (!is.bad & is.factor & !is.id & n.unique>=min.ncat & n.unique<= max.ncat)
     is.factor2
+
+    ## take reduced matrix
     df1 <- df[,which(is.factor2),drop=FALSE]
     dim(df1)
     nlevel <- apply(df1,2,function(x) length(unique(x)))
     nchars <- apply(df1,2,function(x) max(nchar(iconv(x, "latin1", "ASCII", sub=""))))
     df1 <- df1[,order(nlevel,-nchars),drop=FALSE]
     dim(df1)
+
     ##head(df1)
     if(remove.dup && ncol(df1)>1) {
         i=1
@@ -1143,7 +1155,7 @@ computeFeatureScore <- function(X, Y, features)
             pp = Matrix::head(pp[order(-sdx[pp])],100)
             mx = t(apply(X[pp,], 1, function(x) tapply(x,grp,mean)))
             ##D = as.matrix(dist(t(mx)))
-            D = 1 - WGCNA::cor(mx, use="pairwise")
+            D = 1 - stats::cor(mx, use="pairwise")
             diag(D) = NA
             score[i] = mean(D,na.rm=TRUE)
         }
@@ -1224,7 +1236,7 @@ extremeCorrelation <- function(query_sig, ref_set, n=200) {
     if(n>0) {
         gg <- gg[unique(c(Matrix::head(order(query_sig),n),head(order(-query_sig),n)))]
     }
-    rho <- WGCNA::cor( ref_set[gg,], query_sig[gg], use="pairwise")
+    rho <- stats::cor( ref_set[gg,], query_sig[gg], use="pairwise")
     rho <- rho[order(-rowMeans(rho**2,na.rm=TRUE)),,drop=FALSE]
     if(NCOL(rho)==1) rho <- rho[,1]
     return(rho)

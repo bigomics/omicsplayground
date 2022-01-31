@@ -81,7 +81,7 @@ if(0) {
     load("../data/GSE10846-dlbcl-nc.pgx")
     load("../data/bojkova2020-sarscov2-RC2.pgx")
     load("../data/gtex-aging-n40svaNnm.pgx")
-    load("../data/biognosys2020-alzheimer.pgx")        
+    load("../data/axel-test3.pgx")        
     ngs = pgx.initialize(ngs)
 }
 
@@ -468,7 +468,7 @@ server = function(input, output, session) {
         
         ## Dynamically show upon availability in pgx object
         toggleTab("load-tabs","Upload data", opt$ENABLE_UPLOAD)            
-        tabRequire(pgx, "connectivity", "maintabs", "Similar experiments")
+        tabRequire(pgx, "connectivity", "maintabs", "Find similar experiments")
         tabRequire(pgx, "drugs", "maintabs", "Drug connectivity")
         tabRequire(pgx, "wordcloud", "maintabs", "Word cloud")
         tabRequire(pgx, "deconv", "maintabs", "CellProfiling")
@@ -601,7 +601,6 @@ server = function(input, output, session) {
 ## ------------------------------ UI ----------------------------------
 ## --------------------------------------------------------------------
 
-
 TABVIEWS <- list(
     "load"   = tabView("Home",LoadingInputs("load"),LoadingUI("load")),
     "view"   = tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
@@ -617,7 +616,7 @@ TABVIEWS <- list(
     "isect"  = tabView("Compare signatures", IntersectionInputs("isect"), IntersectionUI("isect")),
     "sig"    = tabView("Test signatures", SignatureInputs("sig"), SignatureUI("sig")),
     "bio"    = tabView("Find biomarkers", BiomarkerInputs("bio"), BiomarkerUI("bio")),
-    "cmap"   = tabView("Similar experiments", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
+    "cmap"   = tabView("Find similar experiments", ConnectivityInputs("cmap"), ConnectivityUI("cmap")),
     "scell"  = tabView("CellProfiling", SingleCellInputs("scell"), SingleCellUI("scell")),
     "tcga"   = tabView("TCGA survival (beta)", TcgaInputs("tcga"), TcgaUI("tcga")),
     "comp"   = tabView("Compare datasets (beta)", CompareInputs("comp"), CompareUI("comp"))

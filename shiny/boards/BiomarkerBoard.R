@@ -123,6 +123,7 @@ be multiple categories (classes) or patient survival data."
         ##if(is.null(ngs)) return(NULL)
         shiny::req(ngs)
         dbg("[BiomarkerBoard::observe1] reacted")
+        dbg("[BiomarkerBoard::observe1] dim(ngs$Y) = ",dim(ngs$Y))
         ct <- colnames(ngs$Y)
         ## ct <- grep("group|sample|patient|donor",ct,value=TRUE,invert=TRUE)
         ## ct <- grep("sample|patient|donor",ct,value=TRUE,invert=TRUE)
@@ -204,8 +205,6 @@ be multiple categories (classes) or patient survival data."
         dim(X)
         X0 <- X
         length(y)
-
-        dbg("[calcVariableImportance] 1: dim.X = ",dim(X))
         
         ## ----------- filter with selected features
         progress$inc(1/10, detail = "Filtering features")
@@ -215,14 +214,10 @@ be multiple categories (classes) or patient survival data."
         if(is.null(ft)) return(NULL)
         shiny::isolate(sel <- input_pdx_select())
 
-        dbg("[calcVariableImportance] 1: len.sel = ",length(sel))
-        dbg("[calcVariableImportance] 1: ft = ",ft)
-
         is.family <- (ft %in% c(names(ngs$families),names(iGSETS)))
         
         if(ft=='<custom>' && !is.null(sel) && length(sel)>0) {
             ## ------------- filter with user selection
-            dbg("[calcVariableImportance] 2: sel1 = ",sel[1])                            
             if(sel[1]!="") {
                 dbg("[calcVariableImportance] 2: using custom list of variable ")                
                 ##pp <- intersect(rownames(X),sel)

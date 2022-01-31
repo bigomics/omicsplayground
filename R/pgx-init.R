@@ -260,9 +260,9 @@ pgx.initialize <- function(pgx) {
     
     ## clean up: pgx$Y is a cleaned up pgx$samples
     kk = grep("batch|lib.size|norm.factor|repl|donor|clone|sample|barcode",
-              colnames(pgx$samples),invert=TRUE)
+              colnames(pgx$samples),invert=TRUE,value=TRUE)
     kk = grep("lib.size|norm.factor|donor|clone|barcode",
-              colnames(pgx$samples),invert=TRUE)
+              colnames(pgx$samples),invert=TRUE,value=TRUE)
     pgx$Y = pgx$samples[colnames(pgx$X),kk,drop=FALSE]
     pgx$Y <- type.convert(pgx$Y)   ## autoconvert to datatypes
     
@@ -271,8 +271,8 @@ pgx.initialize <- function(pgx) {
     ## *****************************************************************
     ## ONLY categorical variables for the moment!!!
     ny1 <- nrow(pgx$Y)-1
-    k1 = pgx.getCategoricalPhenotypes(pgx$Y, min.ncat=2, max.ncat=ny1)
-    k2 = grep("OS.survival|cluster|condition|group",colnames(pgx$Y),value=TRUE)
+    k1 = pgx.getCategoricalPhenotypes(pgx$Y, min.ncat=2, max.ncat=ny1)  ## exclude
+    k2 = grep("OS.survival|cluster|condition|group",colnames(pgx$Y),value=TRUE) ## must include
     ##kk = sort(unique(c("group",k1,k2)))
     kk = sort(unique(c(k1,k2)))
     pgx$Y <- pgx$Y[,kk,drop=FALSE]

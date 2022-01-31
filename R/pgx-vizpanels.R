@@ -786,7 +786,7 @@ viz.FoldChangePairs <- function(pgx, comparisons=NULL, hilight=NULL,
             ggplot2::geom_hline(yintercept=0, size=0.3, color="grey70") +
             ggplot2::geom_vline(xintercept=0, size=0.3, color="grey70") 
 
-        rho <- WGCNA::cor(pos[,1],pos[,2])
+        rho <- stats::cor(pos[,1],pos[,2])
         plot.diag1 <- ((is.null(plot.diag) && rho>0.3) || plot.diag==TRUE)
         if(plot.diag1) {
             p2 <- p2 + 
@@ -1430,7 +1430,7 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
     fc.plots <- function(contrast, dir) {
         ##dir <- as.numeric(dir)
         y0 <- pgx$model.parameters$exp.matrix[,contrast]
-        ##rho <- lapply(xlist, function(x) WGCNA::cor(x,y0)[,1])
+        ##rho <- lapply(xlist, function(x) stats::cor(x,y0)[,1])
         fc1 <- rowMeans(X1[,y0>0]) - rowMeans(X1[,y0<0])
         fc2 <- rowMeans(X2[,y0>0]) - rowMeans(X2[,y0<0])
         fc3 <- rowMeans(P1[,y0>0]) - rowMeans(P1[,y0<0])
@@ -1482,7 +1482,7 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
     ## Correlation
     R <- list()
     for(i in 1:(length(matlist)-1)) {
-        r1 <- WGCNA::cor( matlist[[i]], matlist[[i+1]] )
+        r1 <- stats::cor( matlist[[i]], matlist[[i+1]] )
         R[[i]] <- pmax(r1,0)
     }
 
@@ -1492,7 +1492,7 @@ viz.System <- function(pgx, contrast, umap, gs.umap)
     plot.sk <- function(contrast, fill=TRUE) {
         F = R
         cty <- sign(pgx$model.parameters$exp.matrix[,contrast])        
-        fc <- lapply(matlist, function(m) WGCNA::cor(m,cty)[,1])
+        fc <- lapply(matlist, function(m) stats::cor(m,cty)[,1])
         i=1
         for(i in 1:length(R)) {
             if(cty.mode==1) node.wt <- outer(pmax(fc[[i]],0), pmax(fc[[i+1]],0))

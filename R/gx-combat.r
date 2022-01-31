@@ -26,7 +26,7 @@ gx.nearestReferenceCorrection.DEPRECATED <- function(x, y, ref, k=3, dist.method
     ## distance metric for matching
     x1 = Matrix::head(x[order(-apply(x,1,sd)),],2000)
     if(dist.method=="cor") {
-        D <- 1 - WGCNA::cor(x)
+        D <- 1 - stats::cor(x)
     } else {
         D <- as.matrix(dist(t(x)))
     }
@@ -82,7 +82,7 @@ gx.nnmcorrect <- function(X, y, use.design=TRUE, dist.method="cor",
         message("[gx.nnmcorrect] computing correlation matrix D...")
         sdx <- apply(dX,1,sd)
         ii <- Matrix::head(order(-sdx),sdtop)
-        ##D <- 1 - WGCNA::cor(dX[ii,])
+        ##D <- 1 - stats::cor(dX[ii,])
         D <- 1 - crossprod(scale(dX[ii,])) / (length(ii)-1)  ## faster        
     } else {
         message("[gx.nnmcorrect] computing distance matrix D...\n")        
@@ -147,7 +147,7 @@ gx.nnmcorrect2.NOTWORKING <- function(X, y, pairs=NULL, use.design=TRUE,
         dX <- dX - mX[,y1]
     }
     if(dist.method=="cor") {
-        D <- 1 - WGCNA::cor(dX)
+        D <- 1 - stats::cor(dX)
     } else {
         D <- as.matrix(dist(t(dX)))
     }
@@ -195,7 +195,7 @@ gx.nnmcorrect.OLD <- function(x, y, k=3, dist.method="cor")
     
     ## distance metric for matching
     if(dist.method=="cor") {
-        D <- 1 - WGCNA::cor(x)
+        D <- 1 - stats::cor(x)
     } else {
         D <- as.matrix(dist(t(x)))
     }
@@ -227,7 +227,7 @@ gx.nnmcorrect.SAVE <- function(x, y, k=3) {
     ##-----------------------------------------------------
     ## nearest-neighbour matching for batch correction
     ##-----------------------------------------------------
-    xcor <- WGCNA::cor(x)
+    xcor <- stats::cor(x)
     diag(xcor) <- 0
     nx <- x
     j=1
