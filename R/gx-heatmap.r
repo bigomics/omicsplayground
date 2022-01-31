@@ -161,8 +161,8 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
             ##
             
             ii <- Matrix::head(order(-apply(gx,1,sd,na.rm=TRUE)),1000) ## NEED RETHINK!
-            system.time( hc <- fastcluster::hclust(as.dist(1 - WGCNA::cor(gx[ii,])), method="ward.D2" ))
-            ##system.time( hc <- nclust( as.dist(1 - WGCNA::cor(gx)), link="ward" ))
+            system.time( hc <- fastcluster::hclust(as.dist(1 - stats::cor(gx[ii,])), method="ward.D2" ))
+            ##system.time( hc <- nclust( as.dist(1 - stats::cor(gx)), link="ward" ))
             splitx = paste0("cluster",cutree(hc, splitx))
             names(splitx) <- colnames(gx)
         }
@@ -214,8 +214,8 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     if(do.splitx && class(splitx)=="numeric" && length(splitx)==1 ) {
         ##
         
-        system.time( hc <- fastcluster::hclust( as.dist(1 - WGCNA::cor(gx)), method="ward.D2" ))
-        ##system.time( hc <- nclust( as.dist(1 - WGCNA::cor(gx)), link="ward" ))
+        system.time( hc <- fastcluster::hclust( as.dist(1 - stats::cor(gx)), method="ward.D2" ))
+        ##system.time( hc <- nclust( as.dist(1 - stats::cor(gx)), link="ward" ))
         idx2 = paste0("cluster",cutree(hc, splitx))
     }
     if(do.splitx && class(splitx)=="character" && length(splitx)==1 &&
@@ -243,7 +243,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
     do.split
     split.idx = NULL
     if(do.split && class(split)=="numeric" && length(split)==1 ) {
-        cor.gx <- WGCNA::cor(t(gx),use="pairwise")
+        cor.gx <- stats::cor(t(gx),use="pairwise")
         cor.gx[is.na(cor.gx)] <- 0
         hc = fastcluster::hclust( as.dist(1 - cor.gx), method="ward.D2" )
         split.idx = paste0("group",cutree(hc, split))
@@ -436,7 +436,7 @@ gx.splitmap <- function(gx, split=5, splitx=NULL,
         jj <- grp[[i]]
 
         coldistfun1 <- function(x) dist(x)
-        rowdistfun1 <- function(x,y) 1 - WGCNA::cor(x, y)
+        rowdistfun1 <- function(x,y) 1 - stats::cor(x, y)
         gx0 <- gx[,jj,drop=FALSE]
         grp.title = names(grp)[i]
         ##grp.title = shortstring(names(grp)[i],15)
@@ -645,7 +645,7 @@ gx.heatmap <- function(gx, values=NULL,
     h1 <- NULL
     if(!is.null(clust.method) ) {
         if(col.dist.method=="pearson") {
-            suppressWarnings( cx <- WGCNA::cor(gx,use="pairwise.complete.obs") )
+            suppressWarnings( cx <- stats::cor(gx,use="pairwise.complete.obs") )
             cx[is.na(cx)] <- 0 ## really???
             d1 <- as.dist(1 - cx)
         } else if (col.dist.method %in% c("multi.dist","multidist")) {
@@ -668,7 +668,7 @@ gx.heatmap <- function(gx, values=NULL,
         h2 <- h1
     } else if(!is.null(clust.method) ) {
         if(dist.method=="pearson") {
-            suppressWarnings( cx <- WGCNA::cor(t(gx),use="pairwise.complete.obs") )
+            suppressWarnings( cx <- stats::cor(t(gx),use="pairwise.complete.obs") )
             cx[is.na(cx)] <- 0
             d2 <- as.dist(1 - cx)
         } else if (dist.method %in% c("multi.dist","multidist")) {
@@ -877,9 +877,9 @@ clustermap <- function(x, nc=6, nr=6, na=4, q=0.80, p=2,
     ##x[is.na(x)] <- 0
 
     if(method=="pearson") {
-        ##d1 <- as.dist(1 - WGCNA::cor(t(x),use="pairwise")) ## rows
-        d1 <- as.dist( WGCNA::cor(t(x),use="pairwise")) ## rows:=drugs
-        d2 <- as.dist( WGCNA::cor(x,use="pairwise")) ## cols:=samples
+        ##d1 <- as.dist(1 - stats::cor(t(x),use="pairwise")) ## rows
+        d1 <- as.dist( stats::cor(t(x),use="pairwise")) ## rows:=drugs
+        d2 <- as.dist( stats::cor(x,use="pairwise")) ## cols:=samples
         d1[is.na(d1)] <- mean(d1,na.rm=TRUE)
         d2[is.na(d2)] <- mean(d2,na.rm=TRUE)
         d1 <- (max(d1) - d1)**(p/2)
@@ -938,7 +938,7 @@ clustermap <- function(x, nc=6, nr=6, na=4, q=0.80, p=2,
     ## order annotation
     order.annot <- function(A, kx, c1, n) {
         mkx <- apply( kx, 2, function(x) tapply(x,c1,mean))
-        rho1 <- WGCNA::cor(t(A),t(mkx),use="pairwise")
+        rho1 <- stats::cor(t(A),t(mkx),use="pairwise")
         r <- apply(-abs(rho1),2,order)
         jj <- unique(as.vector(t(r)))
         A <- A[jj,,drop=FALSE]
@@ -960,7 +960,7 @@ clustermap <- function(x, nc=6, nr=6, na=4, q=0.80, p=2,
         col.annot <- (col.annot - rowMeans(col.annot,na.rm=TRUE)) /
             (1e-8+apply(col.annot,1,sd,na.rm=TRUE))
         d3 <- dist(col.annot)
-        d3 <- as.dist(1 - WGCNA::cor(t(col.annot),use="pairwise"))
+        d3 <- as.dist(1 - stats::cor(t(col.annot),use="pairwise"))
         d3[is.na(d3)] <- mean(d3,na.rm=TRUE) ## impute missing...
         h3 <- fastcluster::hclust(d3,method="ward.D2")
         ##h3 <- corclust(ax)
@@ -1034,7 +1034,7 @@ frozenmap <- function(x, m=8, n=8, ...) {
         if(dist.method=="multi.dist") {
             d <- multi.dist(x)
         } else if(dist.method=="pearson") {
-            d <- as.dist( 1 - WGCNA::cor(t(x),use="pairwise") )
+            d <- as.dist( 1 - stats::cor(t(x),use="pairwise") )
             d[is.na(d)] <- mean(d,na.rm=TRUE)
         } else {
             d <- dist(x)
@@ -1077,7 +1077,7 @@ multi.dist <- function(x, p=4, method=c("pearson","euclidean","manhattan"))
     for(this.x in xx) {
         for(m in method) {
             if(m=="pearson") {
-                d1 <- as.dist( 1 - WGCNA::cor(t(this.x),use="pairwise"))
+                d1 <- as.dist( 1 - stats::cor(t(this.x),use="pairwise"))
             } else {
                 d1 <- dist( this.x, method=m, p=p)
             }

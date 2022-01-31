@@ -742,7 +742,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ## warning A_vs_B or B_vs_A not checked!!!
         groups <- strsplit(comp1,split="[._ ]vs[._ ]")[[1]]
         if(is.POSvsNEG(ngs)) groups <- rev(groups)
-        groups <- gsub(".*:|@.*","",groups)
+        groups <- gsub("@.*","",gsub(".*[:]","",groups))
         tt <- c( paste("up in",groups[2]), paste("up in",groups[1]) )
         ##tt <- c( paste("up in",groups[1]), paste("down in",groups[1]) )
         legend("topleft", legend=tt, fill=klr.pal, cex=0.9, y.intersp=0.85, bty="n")

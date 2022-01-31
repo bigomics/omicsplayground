@@ -266,7 +266,7 @@ run.GSEA <- function( X, y, gmt, output.dir=NULL, fdr=0.25, set.min=15,
         sd1 <- pmax(sd1, 0.2*pmax(mu1,1))
         rnk <- (mu1 - mu0) / (sd0 + sd1)
     } else {
-        rnk <- WGCNA::cor( t(X), y, use="pairwise")[,1]
+        rnk <- stats::cor( t(X), y, use="pairwise")[,1]
     }
 
     if(!(permute %in% c("phenotype","gene_set"))) {
@@ -1286,7 +1286,7 @@ gsea.ftplot <- function(x, rft="var", cft="var",
     ynames <- ynames[jj]
     order.sign <- c(1,-1)[1+(sort.decreasing==TRUE)]
     if(rsort=="hclust") {
-        rc <- fastcluster::hclust(as.dist(1 - WGCNA::cor(t(x),use="pairwise")))
+        rc <- fastcluster::hclust(as.dist(1 - stats::cor(t(x),use="pairwise")))
         rc.order <- rc$order
     } else if(rsort=="metric") {
         rc.order <- order(-rft * order.sign)
@@ -1295,7 +1295,7 @@ gsea.ftplot <- function(x, rft="var", cft="var",
         rc.order <- 1:length(rft)
     }
     if(csort=="hclust") {
-        cc <- fastcluster::hclust(as.dist(1 - WGCNA::cor(x,use="pairwise")))
+        cc <- fastcluster::hclust(as.dist(1 - stats::cor(x,use="pairwise")))
         ##rc <- fastcluster::hclust(multi.dist(x))
         ##cc <- fastcluster::hclust(multi.dist(t(x)))
         cc.order <- cc$order

@@ -777,11 +777,11 @@ pgx.deconvolution <- function(X, ref, methods=DECONV.METHODS,
     ## Simple (rank) correlation
     if("cor" %in% methods) {
         dbg("[pgx.deconvolution] calculating cor...")        
-        ##results[["cor"]] <- WGCNA::cor(log2(1+mat[gg,]), log2(1+ref[gg,]))
+        ##results[["cor"]] <- stats::cor(log2(1+mat[gg,]), log2(1+ref[gg,]))
         r1 <- apply(mat[gg,,drop=FALSE],2,rank,na.last="keep")
         r2 <- apply(ref[gg,,drop=FALSE],2,rank,na.last="keep")
         stime <- system.time(
-            cf <- WGCNA::cor(r1,r2,use="pairwise")
+            cf <- stats::cor(r1,r2,use="pairwise")
         )
         timings[["cor"]] <- stime
         cat("deconvolution using COR took",stime[3],"s\n")

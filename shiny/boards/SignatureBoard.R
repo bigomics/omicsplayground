@@ -351,8 +351,6 @@ infotext =
         dim(F)
         
         ## ------------- do fast GSEA
-
-
         gmt = list("gset"=unique(gset))
         res <- NULL
         enrich_method="rcor"
