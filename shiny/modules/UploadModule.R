@@ -251,41 +251,35 @@ UploadModuleServer <- function(id,
                             if(grepl("count",fn1, ignore.case=TRUE)) {
                                 dbg("[upload_files] counts.csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
-                                df0 <- read.csv3(fn2, check.names=FALSE, stringsAsFactors=FALSE)
+                                df0 <- read.csv3(fn2)
                                 dbg("[upload_files] counts.csv : 1 : dim(df0) = ",
                                         paste(dim(df0),collapse='x'))
                                 if(nrow(df0)>1 && NCOL(df0)>1) {
-                                    dbg("[upload_files] counts.csv : 2 : dim(df0) = ",
-                                            paste(dim(df0),collapse='x'))
-                                    df <- as.matrix(df0[,-1])
-                                    rownames(df) <- as.character(df0[,1])
+                                    df <- as.matrix(df0)
                                     matname <- "counts.csv"
                                 }
                             } else if(grepl("expression",fn1,ignore.case=TRUE)) {
                                 dbg("[upload_files] expression.csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
-                                df0 <- read.csv3(fn2, check.names=FALSE, stringsAsFactors=FALSE)
+                                df0 <- read.csv3(fn2)
                                 if(nrow(df0)>1 && NCOL(df0)>1) {
-                                    df <- as.matrix(df0[,-1])
-                                    rownames(df) <- as.character(df0[,1])
-                                    ## convert expression to pseudo-counts
+                                    df <- as.matrix(df0)
                                     message("[UploadModule::upload_files] converting expression to counts...")
                                     df <- 2**df
                                     matname <- "counts.csv"
                                 }
                             } else if(grepl("sample",fn1,ignore.case=TRUE)) {
                                 dbg("[upload_files] samples.csv : fn1 = ",fn1)
-                                df <- read.csv3(fn2, row.names=1, check.names=FALSE,
-                                                stringsAsFactors=FALSE)
+                                df <- read.csv3(fn2)
                                 df <- type.convert(df)
                                 if(nrow(df)>1 && NCOL(df)>=1) {
                                     matname <- "samples.csv"
                                 }
                             } else if(grepl("contrast",fn1,ignore.case=TRUE)) {
                                 dbg("[upload_files] contrasts.csv : fn1 = ",fn1)
-                                df <- read.csv3(fn2, row.names=1, check.names=FALSE,
-                                                stringsAsFactors=FALSE)
+                                df <- read.csv3(fn2)
                                 if(nrow(df)>1 && NCOL(df)>=1) {
+                                    df <- as.matrix(df)
                                     matname <- "contrasts.csv"
                                 }
                             }

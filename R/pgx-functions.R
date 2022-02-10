@@ -446,13 +446,26 @@ dbg.BAK <- function(... ) {
 }
 
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
-read.csv3 <- function(file, ...)
+read.csv3 <- function(file)
 {
-    ## read delimited table automatically determine separator
+    ## read delimited table automatically determine separator. Avoid
+    ## duplicated rownames.
     line1 <- as.character(read.csv(file, comment.char='#', sep='\n',nrow=1)[1,])
     sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))
-    message("[read.csv3] sep = ",sep)
-    read.csv(file, comment.char='#', sep=sep, ...)
+    ##message("[read.csv3] sep = ",sep)
+    ##x <- read.csv(file, comment.char='#', sep=sep)
+    x <- read.csv(file, comment.char='#', sep=sep, check.names=FALSE, stringsAsFactors=FALSE)
+    ##dim(x)
+    xnames <- as.character(x[,1])
+    sel <- which(xnames!="")
+    x <- x[sel,-1,drop=FALSE]
+    ##x <- as.matrix(x)
+    if(length(sel)) {
+        rownames(x) <- xnames[sel]
+    }
+    ##x <- type.convert(x)
+    ##dim(x)
+    x
 }
 
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
