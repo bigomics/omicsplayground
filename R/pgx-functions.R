@@ -295,7 +295,7 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
         hs.list <- list(
             "human.ensembl" = unlist(as.list(org.Hs.egENSEMBL)),
             "human.ensemblTRANS" = unlist(as.list(org.Hs.egENSEMBLTRANS)),            
-            "human.unigene" = unlist(as.list(org.Hs.egUNIGENE)),
+            #"human.unigene" = unlist(as.list(org.Hs.egUNIGENE)),
             "human.refseq"  = unlist(as.list(org.Hs.egREFSEQ)),
             "human.accnum"  = unlist(as.list(org.Hs.egACCNUM)),
             "human.uniprot" = unlist(as.list(org.Hs.egUNIPROT)),
@@ -305,7 +305,7 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
         mm.list <- list(
             "mouse.ensembl" = unlist(as.list(org.Mm.egENSEMBL)),
             "mouse.ensemblTRANS" = unlist(as.list(org.Mm.egENSEMBLTRANS)),            
-            "mouse.unigene" = unlist(as.list(org.Mm.egUNIGENE)),
+            #"mouse.unigene" = unlist(as.list(org.Mm.egUNIGENE)),
             "mouse.refseq"  = unlist(as.list(org.Mm.egREFSEQ)),
             "mouse.accnum"  = unlist(as.list(org.Mm.egACCNUM)),
             "mouse.uniprot" = unlist(as.list(org.Mm.egUNIPROT)),
