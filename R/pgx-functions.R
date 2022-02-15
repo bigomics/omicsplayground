@@ -446,7 +446,7 @@ dbg.BAK <- function(... ) {
 }
 
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
-read.csv3 <- function(file)
+read.csv3 <- function(file, as_matrix=FALSE)
 {
     ## read delimited table automatically determine separator. Avoid
     ## duplicated rownames.
@@ -454,12 +454,16 @@ read.csv3 <- function(file)
     sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))
     ##message("[read.csv3] sep = ",sep)
     ##x <- read.csv(file, comment.char='#', sep=sep)
-    x <- read.csv(file, comment.char='#', sep=sep, check.names=FALSE, stringsAsFactors=FALSE)
-    ##dim(x)
+    sep
+    ##x <- read.csv(file, comment.char='#', sep=sep, check.names=FALSE, stringsAsFactors=FALSE)
+    x <- data.table::fread(file, sep=sep, check.names=FALSE, stringsAsFactors=FALSE, header=TRUE)
+    x <- as.data.frame(x)
+    x <- x[grep("^#",x[[1]],invert=TRUE),,drop=FALSE]  ## drop comments
+    dim(x)
     xnames <- as.character(x[,1])
-    sel <- which(xnames!="")
+    sel <- which(xnames!="" & !duplicated(xnames))
     x <- x[sel,-1,drop=FALSE]
-    ##x <- as.matrix(x)
+    if(as_matrix) x <- as.matrix(x)
     if(length(sel)) {
         rownames(x) <- xnames[sel]
     }
