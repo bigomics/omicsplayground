@@ -448,22 +448,18 @@ dbg.BAK <- function(... ) {
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
 read.csv3 <- function(file, ...)
 {
-  ## read delimited table automatically determine separator. Avoid
-  ## duplicated rownames.
+  ## read delimited table automatically determine separator. allow duplicated rownames.
   line1 <- as.character(read.csv(file, comment.char='#', sep='\n',nrow=1)[1,])
   sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))
   
-  x <- read.csv(file, comment.char='#', sep=sep, check.names=FALSE, stringsAsFactors=FALSE)
+  x0 <- read.csv(file, comment.char='#', sep=sep, check.names=FALSE, stringsAsFactors=FALSE)
   
-  xnames <- as.character(x[,1])
-  sel <- which(xnames!="")
-  #x <- x[sel,-1,drop=FALSE]
-  x <-x[sel, ,drop=FALSE]
-  x<- with(x, aggregate(list(x[,2:ncol(x)]), list(toupper(x[,1])), sum))
+  sel <- which(x0[,1] != "")
   if(length(sel)) {
-    rownames(x) <- x[,1]
-    x<-x[,-1]
+    x <- as.matrix(x0[sel, -1 ,drop=FALSE])
+    row.names(x) <- x0[,1]
   }
+  return(x)
 }
 
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
