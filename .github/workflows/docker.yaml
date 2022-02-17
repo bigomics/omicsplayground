@@ -14,4 +14,4 @@ jobs:
     steps:
       - name: Docker build testing
         run: |
-        docker build -f docker/Dockerfile.testing -t bigomics/omicsplayground:testing .
+          docker build -f docker/Dockerfile.testing -t bigomics/omicsplayground:testing .
