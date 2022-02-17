@@ -10,6 +10,7 @@
 ## Speed up installation
 options(Ncpus=8L)
 options(pkgType="source")
+options(repos = c(CRAN = "http://cran.rstudio.com"))
 
 install.packages("devtools")
 install.packages("BiocManager", version="3.10")

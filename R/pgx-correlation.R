@@ -14,12 +14,12 @@
 pgx.computeGlassoAroundGene <- function(X, gene, nmax=100)
 {
     
-    rho <- WGCNA::cor(t(X), t(X[gene,,drop=FALSE]))
+    rho <- stats::cor(t(X), t(X[gene,,drop=FALSE]))
     dim(rho)
     jj <- Matrix::head(order(-rowMeans(rho**2)),nmax)
     tX <- t(X[jj,])
     dim(tX)
-    ##R = WGCNA::cor(tX)
+    ##R = stats::cor(tX)
     vX = var(tX)    
     res <- glasso::glasso(vX, 0.1)
     res$cor <- Matrix::cov2cor(vX)
@@ -119,7 +119,7 @@ PCOR.METHODS = c("cor","pcor","pcor.shrink", "glasso", "huge",
 pgx.computePartialCorrelationAroundGene <-
     function(X, gene, method=PCOR.METHODS, nmax=100, fast=FALSE)
 {
-    rho <- WGCNA::cor(t(X), t(X[gene,,drop=FALSE]))
+    rho <- stats::cor(t(X), t(X[gene,,drop=FALSE]))
     dim(rho)
     jj <- Matrix::head(order(-rowMeans(rho**2)),nmax)
     tX <- t(X[jj,])
@@ -164,7 +164,7 @@ pgx.computePartialCorrelationMatrix <- function(tX, method=PCOR.METHODS, fast=FA
     
     if("cor" %in% method) {
         timings[["cor"]] <- system.time(
-            rho[["cor"]] <- WGCNA::cor(tX)
+            rho[["cor"]] <- stats::cor(tX)
         )
     }
 
@@ -477,7 +477,7 @@ pgx.testTraitRelationship <- function(me, df, plot=TRUE, cex=1)
     if(ncol(dc)) {
         rho.P <- matrix(NA,ncol(me),ncol(dc))
         i=1;j=2
-        rho <- WGCNA::cor(me, dc, use="pairwise")
+        rho <- stats::cor(me, dc, use="pairwise")
         rho.P <- cor.pvalue(P, nrow(me))
         dim(rho.P)
     }
@@ -653,7 +653,7 @@ pgx.getGeneCorrelation <- function(gene, xref) {
             if("dgCMatrix" %in% class(xx)) {
                 suppressWarnings( rho1 <- qlcMatrix::corSparse(xx, cbind(tx))[,1] )
             } else {
-                suppressWarnings( rho1 <- WGCNA::cor(t(xx), tx)[,1])
+                suppressWarnings( rho1 <- stats::cor(t(xx), tx)[,1])
             }
             if(sum(is.na(rho1))>0) rho1[which(is.na(rho1))] = 0
 

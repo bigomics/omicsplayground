@@ -129,8 +129,14 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         
         dmethod <- input$dsea_method
         if(is.null(dmethod)) return(NULL)
-        
+
         dr    <- ngs$drugs[[dmethod]]
+
+        dbg("[getActiveDSEA] dim(dr$X) = ",dim(dr$X))
+        dbg("[getActiveDSEA] dim(dr$P) = ",dim(dr$P))
+        dbg("[getActiveDSEA] dim(dr$Q) = ",dim(dr$Q))
+        dbg("[getActiveDSEA] dim(dr$stats) = ",dim(dr$stats))                
+        
         nes   <- round(dr$X[,contr],4)
         pv    <- round(dr$P[,contr],4)
         qv    <- round(dr$Q[,contr],4)

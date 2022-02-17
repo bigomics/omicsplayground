@@ -131,7 +131,7 @@ pgx.testTCGAsurvival <- function(sig, matrix_file, lib.dir, ntop=100, deceased.o
         if(length(sel) < min.cases) next()
         gg <- intersect(rownames(expression),names(sig))
         sel.X <- expression[gg,sel] - rowMeans(expression[gg,sel],na.rm=TRUE)
-        rho <- WGCNA::cor(sel.X, sig[gg], use="pairwise")[,1]
+        rho <- stats::cor(sel.X, sig[gg], use="pairwise")[,1]
         sel.data <- surv[sel,]
         
         ## fit survival curve on two groups

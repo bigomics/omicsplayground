@@ -123,7 +123,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
     ##--------------------------------------------------------------------
     if(!is.null(batch.prm) && !is.null(mod1)) {
         mod0 <- do.call(cbind,lapply(batch.prm, getModelMatrix))        
-        rho <- WGCNA::cor(mod0,mod1)
+        rho <- stats::cor(mod0,mod1)
         rho
         rho[is.na(rho)] <- 0
         if(max(abs(rho),na.rm=TRUE) > max.rho) {
@@ -144,7 +144,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
 
     if(!is.null(batch.cov) && !is.null(mod1)) {
         cvar <- data.matrix(pheno[,batch.cov])
-        rho1 <- WGCNA::cor(cvar,mod1,use="pairwise")
+        rho1 <- stats::cor(cvar,mod1,use="pairwise")
         rho1
         rho1[is.na(rho1)] <- 0        
         if(max(abs(rho1),na.rm=TRUE) > max.rho) {
@@ -412,7 +412,7 @@ pgx.superBatchCorrect <- function(X, pheno, model.par, partype=NULL,
             xx <- Matrix::head(cX[order(-apply(cX,1,sd)),], hc.top)
             hc <- cutree(fastcluster::hclust(dist(t(xx)),method="ward.D2"),2)
             table(hc)
-            hc.rho <- WGCNA::cor(hc,mod1)
+            hc.rho <- stats::cor(hc,mod1)
             hc.rho
             hc.rho <- apply(abs(hc.rho),1,max)
             ii <- which(hc.rho < max.rho)
@@ -481,8 +481,8 @@ pgx.PC_correlation <- function(X, pheno, nv=3, stat="F", plot=TRUE, main=NULL) {
         y1 <- y[ii]
         if(class(y1)=="factor") y1 <- factor(as.character(y1))
         design <- model.matrix(~ 0 + y1)
-        ##r1 <- WGCNA::cor(t(x[,ii]), design[,-1,drop=FALSE])
-        r1 <- WGCNA::cor(t(x[,ii]), design)
+        ##r1 <- stats::cor(t(x[,ii]), design[,-1,drop=FALSE])
+        r1 <- stats::cor(t(x[,ii]), design)
         rowMeans(abs(r1))
     }
 

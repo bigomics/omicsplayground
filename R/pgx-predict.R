@@ -357,7 +357,7 @@ pgx.makeTriSystemGraph <- function(data, Y, nfeat=25, numedge=100, posonly=FALSE
             p1 <- rownames(W.list[[k]])
             m <- ifelse( k<3, k+1, 1)
             p2 <- rownames(W.list[[m]])
-            rho <- WGCNA::cor(res.pls$X[[k]][,p1], res.pls$X[[m]][,p2])  
+            rho <- stats::cor(res.pls$X[[k]][,p1], res.pls$X[[m]][,p2])  
             ##rho <- cov( res.pls$X[[k]][,p1], res.pls$X[[m]][,p2])  ## COV better?
             if(posonly) rho <- pmax(rho,0)
             q0 = -1
