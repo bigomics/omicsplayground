@@ -8,10 +8,14 @@ on:
       - main
       - master
 
+defaults:
+ run:
+  working-directory: ./docker
+
 jobs:
   test-actions:
     runs-on: ubuntu-latest
     steps:
       - name: Docker build testing
         run: |
-          docker build -f docker/Dockerfile.testing -t bigomics/omicsplayground:testing .
+          docker build -f Dockerfile.testing -t bigomics/omicsplayground:testing .
