@@ -7,4 +7,4 @@ jobs:
       - uses: actions/checkout@v2
       - name: Docker build testing
         run: |
-          docker build -f Dockerfile.testing -t bigomics/omicsplayground:testing .
+          docker build -f docker/Dockerfile.testing -t bigomics/omicsplayground:testing .
