@@ -1,16 +1,4 @@
-on:
-  push:
-    branches:
-      - main
-      - master
-  pull_request:
-    branches:
-      - main
-      - master
-
-defaults:
- run:
-  working-directory: docker
+on: push
 
 jobs:
   test-actions:
@@ -19,4 +7,4 @@ jobs:
       - uses: actions/checkout@v2
       - name: Docker build testing
         run: |
-          docker build -f Dockerfile.testing -t bigomics/omicsplayground:testing .
+          docker build -f Dockerfile.testing -t bigomics/omicsplayground:${GITHUB_REF/refs\/tags\//} .
