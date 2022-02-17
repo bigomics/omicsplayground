@@ -1,0 +1,21 @@
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+defaults:
+ run:
+  working-directory: ./docker
+
+jobs:
+  test-actions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Docker build testing
+        run: |
+          docker build -f Dockerfile.testing -t bigomics/omicsplayground:testing .
