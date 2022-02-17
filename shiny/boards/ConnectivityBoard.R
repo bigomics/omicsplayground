@@ -7,7 +7,6 @@ message(">>> sourcing ConnectivityBoard")
 ##source("global.R")
 
 
-
 ConnectivityInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
@@ -662,7 +661,7 @@ ConnectivityBoard <- function(input, output, session, env)
     })
 
     
-    connectivityScoreTable_info = "<b>Similarity scores.</b> Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The score is calculated as rho^2*NES. "
+    connectivityScoreTable_info = "<b>Similarity scores.</b> Normalized enrichment scores (NES) and Pearson correlation (rho) of reference profiles with respect to the currently selected contrast. The top 100 up/down genes are considered for the calculation of rho or NES. The score is calculated as rho^2*NES. "
 
     connectivityScoreTable_opts = shiny::tagList(
         shiny::selectInput(ns("connectivityScoreTable_qsig"),"threshold (padj)",
@@ -676,7 +675,7 @@ ConnectivityBoard <- function(input, output, session, env)
         ##func2 = connectivityScoreTable.RENDER2, 
         info.text = connectivityScoreTable_info,
         options = connectivityScoreTable_opts,
-        info.width = "150px",
+        info.width = "300px",
         title = "Similarity scores",
         height = c(260,720), width = c('auto',1280)
     )
@@ -814,6 +813,8 @@ ConnectivityBoard <- function(input, output, session, env)
                      inline=TRUE)
     )
     
+    cmap_FCFCplots_info = "<b>FC scatter plots.</b> Scatter plots of gene expression foldchange values between two contrasts. Foldchanges that are similar show high correlation, i.e. are close to the diagonal. You can switch to enrichment type plots in the plot settings."
+
     cmap_FCFCplots_caption = "<b>FC scatter plots.</b> Scatter plots of gene expression foldchange values between two contrasts. Foldchanges that are similar show high correlation, i.e. are close to the diagonal."
     
     shiny::callModule(
@@ -823,7 +824,7 @@ ConnectivityBoard <- function(input, output, session, env)
         func2 = cmap_FCFCplots.RENDER,
         options = cmap_FCFCplots.opts,
         title = "FC scatter plots",
-        ##info.text = cmap_connectivitymap_info
+        info.text = cmap_FCFCplots_info,
         ##caption = cmap_connectivitymap_caption,
         pdf.height=4.5, pdf.width=10, 
         height = c(360,600), width=c("auto",1280),

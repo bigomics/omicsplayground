@@ -38,7 +38,7 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
         is.multiomics
         if(is.multiomics) {
             jj <- grep("\\[gx\\]|\\[mrna\\]",rownames(F))
-            F <- F[jj,]
+            F <- F[jj,,drop=FALSE]
         }
         rownames(F) <- toupper(sub(".*:|.*\\]","",rownames(F)))
         ##colnames(F) <- names(obj$gx.meta$meta)
@@ -167,7 +167,7 @@ pgx.computeDrugEnrichment <- function(obj, X, xdrugs, methods=c("GSEA","cor"),
     dim(pos)
     rownames(pos) <- colnames(cX)
     results$clust <- pos
-    results$stats <- R1[rownames(pos),]
+    results$stats <- R1[rownames(pos),,drop=FALSE]
     
     if(0) {
         pgx.scatterPlotXY.BASE(pos, var=2**R1[rownames(pos),1])
@@ -201,7 +201,7 @@ pgx.computeComboEnrichment <- function(obj, X, xdrugs,
         is.multiomics
         if(is.multiomics) {
             jj <- grep("\\[gx\\]|\\[mrna\\]",rownames(F))
-            F <- F[jj,]
+            F <- F[jj,,drop=FALSE]
         }
         rownames(F) <- toupper(sub(".*:|.*\\]","",rownames(F)))
         F <- F[order(-rowMeans(F**2)),,drop=FALSE]

@@ -80,7 +80,6 @@ pgx.correlateSignatureH5.inmemory <- function(F, h5.file, nsig=100, ntop=1000, n
     ##
     ##
     
-
     if(NCOL(F)==1 && class(F)=="numeric") {
         rn <- names(F)
         F <- matrix(F,ncol=1)
@@ -129,10 +128,10 @@ pgx.correlateSignatureH5.inmemory <- function(F, h5.file, nsig=100, ntop=1000, n
         fc <- F[,i]                        
         ##rG  <- apply( G[gg,], 2, rank, na.last="keep" )
         rfc <- rank( fc[gg], na.last="keep" ) ## rank correlation??
-        ##rho <- WGCNA::cor(rG, rfc, use="pairwise")[,1]
+        ##rho <- stats::cor(rG, rfc, use="pairwise")[,1]
         rG[is.na(rG)] <- 0  ## NEED RETHINK: are missing values to be treated as zero???
         rfc[is.na(rfc)] <- 0
-        rho <- WGCNA::cor(rG, rfc, use="pairwise")[,1]
+        rho <- stats::cor(rG, rfc, use="pairwise")[,1]
     
         remove(rG,rfc)
         
@@ -167,7 +166,7 @@ pgx.correlateSignatureH5.inmemory <- function(F, h5.file, nsig=100, ntop=1000, n
         res1$score <- (res1$R2 * res1$NES)
 
         fn <- colnames(F)[i]
-        res[[fn]] <- res1[order(res1$score, decreasing=TRUE),]
+        res[[fn]] <- res1[order(res1$score, decreasing=TRUE),,drop=FALSE]
 
         gc()
         
@@ -225,10 +224,10 @@ pgx.correlateSignatureH5 <- function(fc, h5.file, nsig=100, ntop=1000, nperm=100
     ## rank correlation??
     rG  <- apply( G[gg,], 2, rank, na.last="keep" )
     rfc <- rank( fc[gg], na.last="keep" )
-    ##rho <- WGCNA::cor(rG, rfc, use="pairwise")[,1]
+    ##rho <- stats::cor(rG, rfc, use="pairwise")[,1]
     rG[is.na(rG)] <- 0  ## NEED RETHINK: are missing values to be treated as zero???
     rfc[is.na(rfc)] <- 0
-    suppressWarnings( rho <- WGCNA::cor(rG, rfc, use="pairwise")[,1] )
+    suppressWarnings( rho <- stats::cor(rG, rfc, use="pairwise")[,1] )
     
     remove(G,rG,rfc)
     
@@ -305,11 +304,11 @@ pgx.correlateSignature.matrix <- function(fc, refmat, nsig=100, ntop=1000, nperm
     ## rank correlation??
     rG  <- apply( G[gg,], 2, rank, na.last="keep" )
     rfc <- rank( fc[gg], na.last="keep" )
-    ##rho <- WGCNA::cor(rG, rfc, use="pairwise")[,1]
+    ##rho <- stats::cor(rG, rfc, use="pairwise")[,1]
 
     rG[is.na(rG)] <- 0  ## NEED RETHINK: are missing values to be treated as zero???
     rfc[is.na(rfc)] <- 0
-    rho <- WGCNA::cor(rG, rfc, use="pairwise")[,1]
+    rho <- stats::cor(rG, rfc, use="pairwise")[,1]
     
     remove(G,rG,rfc)
         
@@ -828,13 +827,13 @@ pgx.computeGeneSetExpression <- function(X, gmt, method=NULL,
         gg <- rownames(X)
         G <- gmt2mat(gmt, bg=gg)
         if("spearman" %in% method) {
-            ##rho <- WGCNA::cor(as.matrix(G[gg,]), apply(X[gg,],2,rank))
+            ##rho <- stats::cor(as.matrix(G[gg,]), apply(X[gg,],2,rank))
             rho <- t(G[gg,]) %*% scale(apply(X[gg,],2,rank)) / sqrt(nrow(X)-1)
             rho[is.na(rho)] <- 0
             S[["spearman"]] <- rho
         }
         if("average" %in% method) {
-            ##rho <- WGCNA::cor(as.matrix(G[gg,]), apply(G[gg,],2,rank))
+            ##rho <- stats::cor(as.matrix(G[gg,]), apply(G[gg,],2,rank))
             avg.X <- t(G[gg,]) %*% X[gg,] / Matrix::colSums(G[gg,])
             avg.X[is.na(avg.X)] <- 0
             S[["average"]] <- avg.X

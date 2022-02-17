@@ -479,7 +479,7 @@ pgx.createVipGeneLayer <- function(gr, genes, z=0, reconnect=40) {
         next.level <- min(sort(setdiff(unique(gr1$layout[,3]),vip.level)))
         next.level
         next.nodes <- igraph::V(gr1)$name[which(level==next.level)]
-        rho1 <- WGCNA::cor( t(gr1$scaled.data[vip,]), t(gr1$scaled.data[next.nodes,]))
+        rho1 <- stats::cor( t(gr1$scaled.data[vip,]), t(gr1$scaled.data[next.nodes,]))
         dim(rho1)
         connections <- c()
         i=1
