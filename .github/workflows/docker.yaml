@@ -10,7 +10,7 @@ on:
 
 defaults:
  run:
-  working-directory: ./docker
+  working-directory: docker
 
 jobs:
   test-actions:
