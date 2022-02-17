@@ -12,6 +12,6 @@ jobs:
   test-actions:
     runs-on: ubuntu-latest
     steps:
-      - run:
-        name: Docker build testing
+      - name: Docker build testing
+        run: |
         docker build -f docker/Dockerfile.testing -t bigomics/omicsplayground:testing .
