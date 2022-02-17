@@ -454,10 +454,10 @@ read.csv3 <- function(file, ...)
   
   x0 <- read.csv(file, comment.char='#', sep=sep, check.names=FALSE, stringsAsFactors=FALSE)
   
-  sel <- which(x0[,1] != "")
+  sel <- which(as.character(x0[,1]) != "")
   if(length(sel)) {
     x <- as.matrix(x0[sel, -1 ,drop=FALSE])
-    row.names(x) <- x0[,1]
+    rownames(x) <- x0[,1]
   }
   return(x)
 }
