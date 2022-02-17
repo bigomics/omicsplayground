@@ -310,7 +310,7 @@ UploadModuleServer <- function(id,
                                   )
                                   
                                 } else if(nrow(df0)>1 && NCOL(df0)>=1) {
-                                  df <- as.matrix(df0)
+                                  df <- as.data.frame(df0)
                                   matname <- "samples.csv"
                                }
                               
