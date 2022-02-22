@@ -272,7 +272,7 @@ immune cell types, expressed genes and pathway activation."
         return(results)
     })
 
-    icp.plotFUNC %<a-% shiny::reactive({
+    icp.plotFUNC <- shiny::reactive({
 
         
         ngs <- inputData()
@@ -400,7 +400,7 @@ immune cell types, expressed genes and pathway activation."
     ##===========================================================================
 
     ##output$phenoplot <- shiny::renderPlot({
-    pheno.plotFUNC %<a-% shiny::reactive({
+    pheno.plotFUNC <- shiny::reactive({
         ##if(!input$tsne.all) return(NULL)
 
         ngs <- inputData()
@@ -557,7 +557,7 @@ immune cell types, expressed genes and pathway activation."
         return(results)
     })
     
-    mapping.plotFUNC %<a-% shiny::reactive({
+    mapping.plotFUNC <- shiny::reactive({
 
         
         ngs <- inputData()
@@ -722,7 +722,7 @@ immune cell types, expressed genes and pathway activation."
     ##======================================================================
 
     ##output$statsplot <- shiny::renderPlot({
-    crosstab.plotFUNC %<a-% shiny::reactive({
+    crosstab.plotFUNC <- shiny::reactive({
         ##if(!input$tsne.all) return(NULL)
 
         ngs <- inputData()
@@ -1011,7 +1011,7 @@ immune cell types, expressed genes and pathway activation."
     ##==========================================================================
     
     ##output$markersplot <- shiny::renderPlot({
-    markers.plotFUNC %<a-% shiny::reactive({
+    markers.plotFUNC <- shiny::reactive({
         ##if(!input$tsne.all) return(NULL)
 
         ngs <- inputData()
@@ -1206,7 +1206,7 @@ immune cell types, expressed genes and pathway activation."
     ##======================================================================
 
     ##output$cytoplot <- shiny::renderPlot({
-    cyto.plotFUNC %<a-% shiny::reactive({
+    cyto.plotFUNC <- shiny::reactive({
         ##if(!input$tsne.all) return(NULL)
 
         ngs <- inputData()
@@ -1337,7 +1337,7 @@ immune cell types, expressed genes and pathway activation."
     })
 
     ##output$cnaplot <- shiny::renderPlot({
-    cna.plotFUNC %<a-% shiny::reactive({
+    cna.plotFUNC <- shiny::reactive({
 
         ##return(NULL)    
         ngs <- inputData()
@@ -1497,7 +1497,7 @@ immune cell types, expressed genes and pathway activation."
         return(res)
     })
 
-    italk_netview.RENDER %<a-% shiny::reactive({
+    italk_netview.RENDER <- shiny::reactive({
         res <- italk_getResults()
         shiny::req(res)
         ##if(is.null(res)) return(NULL)
@@ -1506,7 +1506,7 @@ immune cell types, expressed genes and pathway activation."
         iTALK::NetView(res_cat, col=res$cell_col, vertex.label.cex=1, arrow.width=1, edge.max.width=5)
     })
 
-    italk_LRPlot.RENDER %<a-% shiny::reactive({
+    italk_LRPlot.RENDER <- shiny::reactive({
         ## Circos plot
         res <- italk_getResults()
         shiny::req(res)
@@ -1524,7 +1524,7 @@ immune cell types, expressed genes and pathway activation."
         title((paste(comm_type,"genes     ")), line=0.5)
     })
 
-    italk_heatmap.RENDER %<a-% shiny::reactive({
+    italk_heatmap.RENDER <- shiny::reactive({
         ## Expression heatmap
         ngs <- inputData()
         res <- italk_getResults()
@@ -1770,7 +1770,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
 
     ## monocle_topMarkers <- shiny::reactive({ })
 
-    monocle_plotTopMarkers.RENDER %<a-% shiny::reactive({
+    monocle_plotTopMarkers.RENDER <- shiny::reactive({
 
         dbg("[SingleCellBoard:monocle_plotTopMarkers.RENDER] reacted")
         
@@ -1817,7 +1817,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         return(g)
     })
 
-    monocle_plotTrajectory.RENDER %<a-% shiny::reactive({
+    monocle_plotTrajectory.RENDER <- shiny::reactive({
 
         dbg("monocle_plotTrajectory.RENDER: reacted")
 
@@ -1847,7 +1847,7 @@ a circle plot. The width of the arrow represents the expression level/log fold c
         return(g)
     })
 
-    monocle_plotGene.RENDER %<a-% shiny::reactive({
+    monocle_plotGene.RENDER <- shiny::reactive({
 
         dbg("monocle_plotGene.RENDER: reacted")
         

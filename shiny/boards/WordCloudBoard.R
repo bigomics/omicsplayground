@@ -278,7 +278,7 @@ WordCloudBoard <- function(input, output, session, env)
         
     })
 
-    enrich_gseaplots.RENDER %<a-% shiny::reactive({
+    enrich_gseaplots.RENDER <- shiny::reactive({
         
         dbg("enrich_gseaplots.RENDER: reacted")
         ngs <- inputData()
@@ -491,7 +491,7 @@ WordCloudBoard <- function(input, output, session, env)
                  mar=c(bmar,0,0,0) )
     }
     
-    wordcloud_actmap.RENDER %<a-% shiny::reactive({
+    wordcloud_actmap.RENDER <- shiny::reactive({
 
         cat("<wordcloud_actmap> called\n")
         
@@ -510,7 +510,7 @@ WordCloudBoard <- function(input, output, session, env)
                     
     })    
 
-    wordcloud_actmap.RENDER2 %<a-% shiny::reactive({
+    wordcloud_actmap.RENDER2 <- shiny::reactive({
 
         cat("<wordcloud_actmap> called\n")
         

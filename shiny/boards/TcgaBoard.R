@@ -118,7 +118,7 @@ TcgaBoard <- function(input, output, session, env)
         file.path(dir[1],file)
     }
     
-     tcga_tcgasurv.RENDER %<a-% shiny::reactive({
+     tcga_tcgasurv.RENDER <- shiny::reactive({
 
         ngs <- inputData()
         shiny::req(ngs)

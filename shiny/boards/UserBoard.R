@@ -181,7 +181,7 @@ UserBoard <- function(input, output, session, env)
     ##--------------------- modules for UsersMap --------------------
     ##---------------------------------------------------------------
     
-    usersmap.RENDER %<a-% shiny::reactive({
+    usersmap.RENDER <- shiny::reactive({
         
         df <- ACCESS.LOG$visitors        
         ## sPDF <- rworldmap::getMap()  
