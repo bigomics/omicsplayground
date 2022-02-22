@@ -23,6 +23,10 @@
 ######################
 logs/*.rds
 
+# Output files
+######################
+shiny/*.pdf
+
 # OS generated files #
 ######################
 .DS_Store

@@ -234,7 +234,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     ## PLOTTING
     ##================================================================================
     
-    dsea_enplots.RENDER %<a-% shiny::reactive({
+    dsea_enplots.RENDER <- shiny::reactive({
 
         ngs <- inputData()
         if(is.null(ngs$drugs)) return(NULL)        
@@ -308,7 +308,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         
     })    
     
-    ##dsea_moaplot.RENDER %<a-% shiny::reactive({
+    ##dsea_moaplot.RENDER <- shiny::reactive({
     dsea_moaplot.RENDER <- shiny::reactive({    
 
         ngs <- inputData()
@@ -331,7 +331,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         
     })    
 
-    ##dsea_moaplot.RENDER2 %<a-% shiny::reactive({
+    ##dsea_moaplot.RENDER2 <- shiny::reactive({
     dsea_moaplot.RENDER2 <- shiny::reactive({    
 
         ngs <- inputData()
@@ -757,7 +757,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         plt
     }
     
-    dsea_cmap.RENDER %<a-% shiny::reactive({
+    dsea_cmap.RENDER <- shiny::reactive({
 
         dbg("[dsea_cmap.RENDER] reacted!")
         

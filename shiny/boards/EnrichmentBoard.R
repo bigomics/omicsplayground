@@ -590,7 +590,7 @@ EnrichmentBoard <- function(input, output, session, env)
     }
     
     ## Top enriched    
-    topEnriched.RENDER %<a-% shiny::reactive({
+    topEnriched.RENDER <- shiny::reactive({
         
         ngs <- inputData()
         shiny::req(ngs)       
@@ -688,7 +688,7 @@ EnrichmentBoard <- function(input, output, session, env)
                 ylab=ylab)
     }
 
-    topEnrichedFreq.RENDER %<a-% shiny::reactive({
+    topEnrichedFreq.RENDER <- shiny::reactive({
 
         ngs <- inputData()
 
@@ -713,7 +713,7 @@ EnrichmentBoard <- function(input, output, session, env)
 
     })
 
-    topEnrichedFreq.RENDER2 %<a-% shiny::reactive({
+    topEnrichedFreq.RENDER2 <- shiny::reactive({
 
         ngs <- inputData()
 
@@ -815,7 +815,7 @@ EnrichmentBoard <- function(input, output, session, env)
     subplot.MAR = c(3,3.5,1.5,0.5)
     subplot.MAR = c(2.8,4,4,0.8)
     
-    subplot_volcano.RENDER %<a-% shiny::reactive({
+    subplot_volcano.RENDER <- shiny::reactive({
         
         par(mfrow=c(1,1), mgp=c(1.2,0.4,0), oma=c(0,0,0,0.4) )
         par(mar= subplot.MAR)
@@ -978,7 +978,7 @@ EnrichmentBoard <- function(input, output, session, env)
     ## 0: Single enrichment plot
     ##----------------------------------------------------------------------
     
-    subplot_enplot.RENDER %<a-% shiny::reactive({
+    subplot_enplot.RENDER <- shiny::reactive({
     ##subplot_enplot.RENDER <- shiny::reactive({    
 
         dbg("[subplot_enplot.RENDER] reacted")        
@@ -1034,7 +1034,7 @@ EnrichmentBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ## 1: Gene set activation {data-width=200}
     ##----------------------------------------------------------------------
-    subplot_barplot.RENDER %<a-% shiny::reactive({
+    subplot_barplot.RENDER <- shiny::reactive({
         
         par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0,0.4) )
         par(mar=subplot.MAR)
@@ -1073,7 +1073,7 @@ EnrichmentBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ## 2: Gene expression {data-width=200}
     ##----------------------------------------------------------------------
-    subplot_geneplot.RENDER %<a-% shiny::reactive({
+    subplot_geneplot.RENDER <- shiny::reactive({
 
         par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0,0.4) )
         par(mar=subplot.MAR)
@@ -1115,7 +1115,7 @@ EnrichmentBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ## 3: Gene - gene set correlation
     ##----------------------------------------------------------------------
-    subplot_scatter.RENDER %<a-% shiny::reactive({
+    subplot_scatter.RENDER <- shiny::reactive({
 
         par(mfrow=c(1,1), mgp=c(1.8,0.8,0), oma=c(0,0,0,0.4) )
         par(mar=subplot.MAR)
@@ -1254,7 +1254,7 @@ EnrichmentBoard <- function(input, output, session, env)
     ## Compare
     ##================================================================================
 
-    compare.RENDER %<a-% shiny::reactive({
+    compare.RENDER <- shiny::reactive({
         
         ngs <- inputData()
         shiny::req(ngs,input$gs_contrast)
@@ -1351,7 +1351,7 @@ EnrichmentBoard <- function(input, output, session, env)
     ## Volcano (all)
     ##================================================================================
 
-    volcanoAll.RENDER %<a-% shiny::reactive({
+    volcanoAll.RENDER <- shiny::reactive({
         ##renderPlotly({
 
         ngs = inputData()
@@ -1460,7 +1460,7 @@ EnrichmentBoard <- function(input, output, session, env)
     ## Volcano (methods)
     ##================================================================================
 
-    volcanoMethods.RENDER %<a-% shiny::reactive({
+    volcanoMethods.RENDER <- shiny::reactive({
         ##renderPlotly({
         ngs <- inputData()    
         shiny::req(ngs, input$gs_features)

@@ -573,8 +573,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 
     hm_splitmap_text = tagsub("Under the <strong>Heatmap</strong> panel, hierarchical clustering can be performed on gene level or gene set level expression in which users have to specify it under the {Level} dropdown list. <p>Under the plot configuration {{Settings}}, users can split the samples by a phenotype class (e.g., tissue, cell type, or gender) using the {split by} setting. In addition, users can specify the top N = (50, 150, 500) features to be used in the heatmap. The ordering of top features is selected under {top mode}. The criteria to select the top features are: <ol><li>SD - features with the highest standard deviation across all the samples, </li><li>specific - features that are overexpressed in each phenotype class compared to the rest, or by </li><li>PCA - by principal components.<br></ol> <br><p>Users can also choose between 'relative' or 'absolute' expression scale. Under the {cexCol} and {cexRow} settings, it is also possible to adjust the cex for the column and row labels.")
 
-        
-    ##hm1_splitmap.RENDER %<a-% shiny::reactive({
     hm1_splitmap.RENDER <- shiny::reactive({    
         
         ##------------------------------------------------------------
@@ -687,7 +685,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         plt
     })
 
-    ##hm2_splitmap.RENDER %<a-% shiny::reactive({
     hm2_splitmap.RENDER <- shiny::reactive({
 
         ##------------------------------------------------------------
@@ -1777,9 +1774,7 @@ displays the expression levels of selected genes across all conditions in the an
     ## Phenotypes {data-height=800}
     ##================================================================================
 
-    clust_phenoplot.RENDER %<a-% shiny::reactive({
-        ##if(!input$tsne.all) return(NULL)
-
+    clust_phenoplot.RENDER <- shiny::reactive({
         
         ngs <- inputData()
         shiny::req(ngs)
@@ -1992,7 +1987,7 @@ displays the expression levels of selected genes across all conditions in the an
         return(S)
     })
     
-    clust_featureRank.RENDER %<a-% shiny::reactive({
+    clust_featureRank.RENDER <- shiny::reactive({
 
         S <- calcFeatureRanking()
         

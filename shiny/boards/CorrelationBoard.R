@@ -427,7 +427,7 @@ CorrelationBoard <- function(input, output, session, env)
     ## Correlation barplot
     ##-----------------------------------------------------------
     
-    cor_barplot.PLOTFUN %<a-% shiny::reactive({
+    cor_barplot.PLOTFUN <- shiny::reactive({
 
         df <- getPartialCorrelation()
         
@@ -504,7 +504,7 @@ CorrelationBoard <- function(input, output, session, env)
     ## Correlation scatter plots
     ##-----------------------------------------------------------------------------
     
-    cor_scatter.PLOTFUN %<a-% shiny::reactive({
+    cor_scatter.PLOTFUN <- shiny::reactive({
 
         ngs <- inputData()
         shiny::req(input$cor_gene)
@@ -675,7 +675,7 @@ CorrelationBoard <- function(input, output, session, env)
         return(res)
     })
     
-    cum_corplot.RENDER %<a-% shiny::reactive({
+    cum_corplot.RENDER <- shiny::reactive({
 
         dbg("[cum_corplot.RENDER] reacted")
         
@@ -825,7 +825,7 @@ CorrelationBoard <- function(input, output, session, env)
         gr
     })
 
-    cor_graph.PLOTFUN %<a-% shiny::reactive({
+    cor_graph.PLOTFUN <- shiny::reactive({
         gr <- getCorGraph()
         par(mar=c(1,1,1,1)*0)
         igraph::plot.igraph(gr,
@@ -894,7 +894,6 @@ CorrelationBoard <- function(input, output, session, env)
     ## Correlation UMAP
     ##-----------------------------------------------------------
     
-    ##cor_umap.PLOTFUN %<a-% shiny::reactive({
     cor_umap.PLOTFUN <- shiny::reactive({    
 
         ngs <- inputData()
@@ -1013,7 +1012,7 @@ CorrelationBoard <- function(input, output, session, env)
     })
 
     
-    corGSEA_plots.RENDER %<a-% shiny::reactive({
+    corGSEA_plots.RENDER <- shiny::reactive({
 
         res = getCorrelationGSEA()
         ##if(is.null(rho)) return(NULL)
@@ -1130,7 +1129,7 @@ CorrelationBoard <- function(input, output, session, env)
         ##caption = corGSEA_caption
     )    
 
-    corGSEA_cumFC.RENDER %<a-% shiny::reactive({
+    corGSEA_cumFC.RENDER <- shiny::reactive({
 
 
         res = getCorrelationGSEA()
@@ -1336,7 +1335,7 @@ CorrelationBoard <- function(input, output, session, env)
     })
 
     
-    dgca_barplot.PLOTFUN %<a-% shiny::reactive({
+    dgca_barplot.PLOTFUN <- shiny::reactive({
 
         res <- dgca.output()        
 
@@ -1530,7 +1529,7 @@ CorrelationBoard <- function(input, output, session, env)
         }
     }
     
-    dgca_scatter.PLOTFUN %<a-% shiny::reactive({
+    dgca_scatter.PLOTFUN <- shiny::reactive({
         
         dbg("[dgca_scatter.PLOTFUN] reacted!")
 
