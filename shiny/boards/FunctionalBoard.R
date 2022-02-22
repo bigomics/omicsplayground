@@ -479,7 +479,7 @@ to understand biological functions including GO and KEGG pathway analysis."
 
     }
     
-    kegg_actmap.RENDER %<a-% shiny::reactive({
+    kegg_actmap.RENDER <- shiny::reactive({
 
         ngs <- inputData()
         shiny::req(ngs)
@@ -495,7 +495,7 @@ to understand biological functions including GO and KEGG pathway analysis."
         
     })    
 
-    kegg_actmap.RENDER2 %<a-% shiny::reactive({
+    kegg_actmap.RENDER2 <- shiny::reactive({
 
 
         ngs <- inputData()
@@ -858,7 +858,7 @@ to understand biological functions including GO and KEGG pathway analysis."
 
     }
 
-    GO_actmap.RENDER %<a-% shiny::reactive({
+    GO_actmap.RENDER <- shiny::reactive({
 
         ngs <- inputData()
         shiny::req(ngs)
@@ -880,7 +880,7 @@ to understand biological functions including GO and KEGG pathway analysis."
                     
     })    
 
-    GO_actmap.RENDER2 %<a-% shiny::reactive({
+    GO_actmap.RENDER2 <- shiny::reactive({
 
         ngs <- inputData()
         shiny::req(ngs)

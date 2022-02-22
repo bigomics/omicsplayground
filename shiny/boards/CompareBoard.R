@@ -297,7 +297,7 @@ CompareBoard <- function(input, output, session, env)
         p
     }
     
-    scatter1.RENDER %<a-% shiny::reactive({
+    scatter1.RENDER <- shiny::reactive({
         ## scatter1.RENDER <- shiny::reactive({                    
         ngs1 <- inputData()
         ngs2 <- dataset2()
@@ -341,7 +341,7 @@ CompareBoard <- function(input, output, session, env)
     ## ScatterPlot 2
     ##============================================================================
     
-    scatter2.RENDER %<a-% shiny::reactive({
+    scatter2.RENDER <- shiny::reactive({
     ## scatter2.RENDER <- shiny::reactive({                    
         ngs1 <- inputData()
         ngs2 <- dataset2()
@@ -385,7 +385,7 @@ CompareBoard <- function(input, output, session, env)
     ## FC correlation plot
     ##============================================================================
     
-    fcfcplot.RENDER %<a-% shiny::reactive({
+    fcfcplot.RENDER <- shiny::reactive({
         ## scatter2.RENDER <- shiny::reactive({                    
         ngs1 <- inputData()
         ngs2 <- dataset2()
@@ -441,7 +441,7 @@ CompareBoard <- function(input, output, session, env)
     ## Cumulative foldchange
     ##-----------------------------------------------------------------
 
-    cumfcplot.RENDER %<a-% shiny::reactive({
+    cumfcplot.RENDER <- shiny::reactive({
         ## scatter2.RENDER <- shiny::reactive({                    
         ngs1 <- inputData()
         ngs2 <- dataset2()
@@ -550,7 +550,7 @@ CompareBoard <- function(input, output, session, env)
     ## Gene correlation plot
     ##============================================================================
     
-    genecorr.RENDER %<a-% shiny::reactive({
+    genecorr.RENDER <- shiny::reactive({
         ## scatter2.RENDER <- shiny::reactive({                    
         ngs1 <- inputData()
         ngs2 <- dataset2()
@@ -708,7 +708,7 @@ CompareBoard <- function(input, output, session, env)
     ## barplots
     ##============================================================================
 
-    multibarplot.RENDER %<a-% shiny::reactive({
+    multibarplot.RENDER <- shiny::reactive({
 
         ngs1 <- inputData()
         ngs2 <- dataset2()

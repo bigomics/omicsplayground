@@ -781,7 +781,7 @@ ConnectivityBoard <- function(input, output, session, env)
         return(F)        
     })
     
-    cmap_FCFCplots.RENDER %<a-% shiny::reactive({        
+    cmap_FCFCplots.RENDER <- shiny::reactive({        
 
         ngs <- inputData()
         alertDataLoaded(session,ngs)
@@ -867,8 +867,8 @@ ConnectivityBoard <- function(input, output, session, env)
         F
     })
     
-    cumFCplot.RENDER %<a-% shiny::reactive({
-        ##
+    cumFCplot.RENDER <- shiny::reactive({
+        
         F <- cumulativeFCtable()
         shiny::req(F)
 
@@ -983,7 +983,7 @@ ConnectivityBoard <- function(input, output, session, env)
         F
     })
     
-    cumEnrichmentPlot.RENDER %<a-% shiny::reactive({
+    cumEnrichmentPlot.RENDER <- shiny::reactive({
         
         ##
         F <- cumEnrichmentTable()
@@ -1021,7 +1021,7 @@ ConnectivityBoard <- function(input, output, session, env)
         
     })
 
-    cumEnrichmentPlot.RENDER2 %<a-% shiny::reactive({
+    cumEnrichmentPlot.RENDER2 <- shiny::reactive({
         
         ##
         F <- cumEnrichmentTable()
@@ -2053,7 +2053,7 @@ ConnectivityBoard <- function(input, output, session, env)
     ## CONNECTIVITY HEATMAP
     ##=============================================================================
 
-    connectivityHeatmap.RENDER %<a-% shiny::reactive({
+    connectivityHeatmap.RENDER <- shiny::reactive({
         ##
         F <- cumulativeFCtable()
         shiny::req(F)

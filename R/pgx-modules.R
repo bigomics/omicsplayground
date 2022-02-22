@@ -631,7 +631,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
     ##---------------------------- UI ------------------------------------------------
     ##--------------------------------------------------------------------------------
 
-    ##func2 <- func  ## must be pryr  %<a-% to work!!!
     if(is.null(func2)) func2 <- func
     if(is.null(plotlib2)) plotlib2 <- plotlib    
     if(length(height)==1) height <- c(height,700)

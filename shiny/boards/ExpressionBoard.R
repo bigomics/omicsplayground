@@ -350,7 +350,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     plots_topgenesbarplot_text = "The top N = {12} differentially (both positively and negatively) expressed gene barplot for the selected comparison under the <code>Contrast</code> settings."
     plots_topfoldchange_text = "The fold change summary barplot across all contrasts for a gene that is selected from the differential expression analysis table under the <code>Table</code> section."
     
-    plots_volcano.RENDER %<a-% shiny::reactive({
+    plots_volcano.RENDER <- shiny::reactive({
         
         comp1=1;fdr=0.10
         comp1 = input$gx_contrast
@@ -529,7 +529,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## MA plot
     ## ------------------------------------------------------
     
-    plots_maplot.RENDER %<a-% shiny::reactive({
+    plots_maplot.RENDER <- shiny::reactive({
         comp1 = input$gx_contrast
         if(length(comp1)==0) return(NULL)
 
@@ -583,7 +583,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
                           cex=0.9, lab.cex=1.4, cex.main=1.0 )
     })
 
-    plots_maplot.PLOTLY %<a-% shiny::reactive({
+    plots_maplot.PLOTLY <- shiny::reactive({
         comp1 = input$gx_contrast
         if(length(comp1)==0) return(NULL)
 
@@ -707,7 +707,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         add.watermark = WATERMARK
     )
     
-    plots_topgenesbarplot.RENDER %<a-% shiny::reactive({
+    plots_topgenesbarplot.RENDER <- shiny::reactive({
 
         ngs = inputData()
         shiny::req(ngs)
@@ -764,7 +764,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         add.watermark = WATERMARK
     )
     
-    plots_topfoldchange.RENDER %<a-% shiny::reactive({
+    plots_topfoldchange.RENDER <- shiny::reactive({
 
         ngs = inputData()
         shiny::req(ngs)
@@ -828,7 +828,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         add.watermark = WATERMARK
     )
     
-    plots_boxplot.RENDER %<a-% shiny::reactive({
+    plots_boxplot.RENDER <- shiny::reactive({
 
         ngs = inputData()
         shiny::req(ngs)
@@ -911,7 +911,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## Top genes
     ##================================================================================
 
-    topgenes.RENDER %<a-% shiny::reactive({
+    topgenes.RENDER <- shiny::reactive({
 
         ngs <- inputData()
         shiny::req(ngs)
@@ -1066,7 +1066,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
         ct
     })
     
-    volcanoAll.RENDER %<a-% shiny::reactive({
+    volcanoAll.RENDER <- shiny::reactive({
     ##volcanoAll.RENDER <- shiny::reactive({    
 
         ngs = inputData()
@@ -1205,7 +1205,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## PLOTS SEEMS NOT TO REFRESH/DRAW CORRECTLY. Maybe viz.Contrast is isolated????
     ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
-    ##volcanoAll2.RENDER %<a-% shiny::reactive({
+    ##volcanoAll2.RENDER <- shiny::reactive({
     volcanoAll2.RENDER <- shiny::reactive({
         
         ngs = inputData()
@@ -1303,7 +1303,7 @@ two conditions. Determine which genes are significantly downregulated or overexp
     ## Volcano (all methods)
     ##================================================================================
 
-    volcanoMethods.RENDER %<a-% shiny::reactive({
+    volcanoMethods.RENDER <- shiny::reactive({
 
         comp = input$gx_contrast
         if(is.null(comp)) return(NULL)

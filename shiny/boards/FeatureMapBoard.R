@@ -342,7 +342,6 @@ FeatureMapBoard <- function(input, output, session, env)
     ## ========================= PLOTTING MODULES =====================================
     ## ================================================================================
     
-    ##geneUMAP.RENDER %<a-% shiny::reactive({
     geneUMAP.RENDER <- shiny::reactive({            
 
         dbg("[FeatureMap::geneUMAP.RENDER] reacted")
@@ -461,7 +460,7 @@ FeatureMapBoard <- function(input, output, session, env)
     }) ## %>% shiny::debounce(1000)
     
 
-    geneSigPlots.RENDER %<a-% shiny::reactive({
+    geneSigPlots.RENDER <- shiny::reactive({
         ngs <- inputData()
         shiny::req(ngs)
 
@@ -528,7 +527,7 @@ FeatureMapBoard <- function(input, output, session, env)
     ##----------------------  Geneset UMAP ----------------------------
     ##-----------------------------------------------------------------
         
-    gsetUMAP.RENDER %<a-% shiny::reactive({        
+    gsetUMAP.RENDER <- shiny::reactive({        
 
         dbg("[FeatureMap::gsetUMAP.RENDER] reacted")
         ngs <- inputData()
@@ -562,7 +561,7 @@ FeatureMapBoard <- function(input, output, session, env)
 
     })
 
-    gsetUMAP.RENDER2 %<a-% shiny::reactive({        
+    gsetUMAP.RENDER2 <- shiny::reactive({        
 
         dbg("[FeatureMap::gsetUMAP.RENDER] reacted")
         ngs <- inputData()
@@ -647,7 +646,7 @@ FeatureMapBoard <- function(input, output, session, env)
     }) ## %>% shiny::debounce(1000)
     
     
-    gsetSigPlots.RENDER %<a-% shiny::reactive({        
+    gsetSigPlots.RENDER <- shiny::reactive({        
 
         dbg("[FeatureMap::gsetSigPlots.RENDER] reacted")
         ngs <- inputData()

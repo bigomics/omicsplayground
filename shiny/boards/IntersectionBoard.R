@@ -723,8 +723,7 @@ output$description <- shiny::renderUI(shiny::HTML(description))
     ## Venn diagram
     ##======================================================================
 
-    venndiagram.RENDER %<a-% shiny::reactive({
-    ## venndiagram.RENDER <- shiny::reactive({    
+    venndiagram.RENDER <- shiny::reactive({
         
         dt = getSignificanceCalls()
         if(is.null(dt) || nrow(dt)==0) return(NULL)
@@ -1123,7 +1122,7 @@ output$description <- shiny::renderUI(shiny::HTML(description))
     ## FOLDCHANGE HEATMAP
     ##=============================================================================
     
-    FoldchangeHeatmap.RENDER %<a-% shiny::reactive({
+    FoldchangeHeatmap.RENDER <- shiny::reactive({
         ##
         ##
         ngs <- inputData()
@@ -1196,7 +1195,7 @@ output$description <- shiny::renderUI(shiny::HTML(description))
     ## Contrast corrplot 
     ##================================================================================
 
-    ctcorrplot.PLOT %<a-% shiny::reactive({
+    ctcorrplot.PLOT <- shiny::reactive({
                         
         ngs <- inputData()
         shiny::req(ngs)
@@ -1362,7 +1361,7 @@ output$description <- shiny::renderUI(shiny::HTML(description))
     ## Gene/geneset UMAP plots
     ##================================================================================
 
-    ctGeneUMAP.RENDER %<a-% shiny::reactive({
+    ctGeneUMAP.RENDER <- shiny::reactive({
         
         dbg("[ctGeneUMAP.RENDER] reacted!")
         out <- getCurrentSig()
@@ -1506,7 +1505,7 @@ output$description <- shiny::renderUI(shiny::HTML(description))
     ##----------------------  NMF gsea --------------------------------
     ##-----------------------------------------------------------------
     
-    ctGseaUMAP.RENDER %<a-% shiny::reactive({
+    ctGseaUMAP.RENDER <- shiny::reactive({
 
         dbg("[ctGseaUMAP.RENDER] reacted")
         out <- getCurrentSig()

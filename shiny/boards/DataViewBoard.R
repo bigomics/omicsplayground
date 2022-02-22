@@ -163,7 +163,7 @@ DataViewBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     MARGINS1 = c(7,3.5,2,1)
 
-    genePlots_averageRankPlot.RENDER %<a-% shiny::reactive({
+    genePlots_averageRankPlot.RENDER <- shiny::reactive({
 
         
         ngs <- inputData()
@@ -277,7 +277,7 @@ DataViewBoard <- function(input, output, session, env)
         return(res)
     }
 
-    genePlots_correlationplot.RENDER %<a-% shiny::reactive({
+    genePlots_correlationplot.RENDER <- shiny::reactive({
 
         ngs <- inputData()
         shiny::req(ngs)
@@ -331,7 +331,7 @@ DataViewBoard <- function(input, output, session, env)
     ##                     Bar/box plot
     ##---------------------------------------------------------------------- 
     
-    genePlots_barplot.RENDER %<a-% shiny::reactive({
+    genePlots_barplot.RENDER <- shiny::reactive({
 
         
         cat("[dataview] genePlots_barplot.RENDER reacted\n")
@@ -469,7 +469,7 @@ DataViewBoard <- function(input, output, session, env)
     ## t-SNE
     ##----------------------------------------------------------------------
     
-    genePlots_tsne.RENDER %<a-% shiny::reactive({
+    genePlots_tsne.RENDER <- shiny::reactive({
 
         
         ngs <- inputData()
@@ -567,7 +567,7 @@ DataViewBoard <- function(input, output, session, env)
     ##  Tissue expression plot
     ##----------------------------------------------------------------------
     
-    data_tissueplot.RENDER  %<a-% shiny::reactive({
+    data_tissueplot.RENDER  <- shiny::reactive({
         
         ngs <- inputData()
         shiny::req(ngs)
@@ -627,7 +627,7 @@ DataViewBoard <- function(input, output, session, env)
     ## Gene information
     ##----------------------------------------------------------------------
 
-    data_geneInfo.RENDER  %<a-% shiny::reactive({
+    data_geneInfo.RENDER  <- shiny::reactive({
         require(org.Hs.eg.db)
         gene = "A1BG-AS1"
         gene = "CD4"
@@ -750,7 +750,7 @@ DataViewBoard <- function(input, output, session, env)
     MARGINS2 = c(9,3.5,2,0.5)
     MARGINS2 = c(8,3.5,2,0.5)
     
-    counts_tab_barplot.RENDER %<a-% shiny::reactive({
+    counts_tab_barplot.RENDER <- shiny::reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
         shiny::req(input$data_groupby)
@@ -792,7 +792,7 @@ DataViewBoard <- function(input, output, session, env)
     ##                     Count information boxplot
     ##----------------------------------------------------------------------
 
-    counts_tab_boxplot.RENDER %<a-% shiny::reactive({
+    counts_tab_boxplot.RENDER <- shiny::reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
         ##par(mar=c(3,3,3,3), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )   
@@ -826,7 +826,7 @@ DataViewBoard <- function(input, output, session, env)
     ##                     Count information histogram
     ##----------------------------------------------------------------------
 
-    counts_tab_histplot.RENDER %<a-% shiny::reactive({
+    counts_tab_histplot.RENDER <- shiny::reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
                                         #par(mfrow=c(2,3), mar=c(9,4,3,1.5), mgp=c(2.4,0.7,0), oma=c(1,1,1,1)*0.2 )  
@@ -870,7 +870,7 @@ DataViewBoard <- function(input, output, session, env)
     ##  Count information abundance of major gene types
     ##----------------------------------------------------------------------
 
-    counts_tab_abundanceplot.RENDER %<a-% shiny::reactive({
+    counts_tab_abundanceplot.RENDER <- shiny::reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
                                         #par(mar=c(6,4,0,4), mgp=c(2.2,0.8,0))
@@ -920,7 +920,7 @@ DataViewBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ## Count information average count by gene type
     ##----------------------------------------------------------------------
-    counts_tab_average_countplot.RENDER %<a-% shiny::reactive({
+    counts_tab_average_countplot.RENDER <- shiny::reactive({
         res = getCountsTable()
         if(is.null(res)) return(NULL)
                                         #par(mar=c(6,4,0,4), mgp=c(2.2,0.8,0))
@@ -1344,7 +1344,7 @@ DataViewBoard <- function(input, output, session, env)
         add.watermark = WATERMARK
     )
 
-    data_phenotypeAssociation.RENDER %<a-% shiny::reactive({
+    data_phenotypeAssociation.RENDER <- shiny::reactive({
 
         ngs = inputData()
         shiny::req(ngs)

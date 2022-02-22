@@ -395,7 +395,7 @@ be multiple categories (classes) or patient survival data."
     ##==================================== PLOTS =====================================
     ##================================================================================
     
-    pdx_importance.RENDER %<a-% shiny::reactive({
+    pdx_importance.RENDER <- shiny::reactive({
         
         res <- calcVariableImportance()
         if(is.null(res)) return(NULL)
@@ -435,7 +435,7 @@ be multiple categories (classes) or patient survival data."
     })
 
 
-    pdx_heatmap.RENDER %<a-% shiny::reactive({
+    pdx_heatmap.RENDER <- shiny::reactive({
 
         dbg("[BiomarkerBoard::pdx_heatmap] reacted\n")
         
@@ -504,7 +504,7 @@ be multiple categories (classes) or patient survival data."
         
     })    
 
-    pdx_decisiontree.RENDER %<a-% shiny::reactive({
+    pdx_decisiontree.RENDER <- shiny::reactive({
 
         dbg("[BiomarkerBoard::pdx_decisiontree] reacted")
         
@@ -537,7 +537,7 @@ be multiple categories (classes) or patient survival data."
         
     })
     
-    pdx_boxplots.RENDER %<a-% shiny::reactive({
+    pdx_boxplots.RENDER <- shiny::reactive({
 
         res <- calcVariableImportance()
         if(is.null(res)) return(NULL)
