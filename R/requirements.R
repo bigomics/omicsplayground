@@ -93,7 +93,7 @@ PKG.MANUAL <- c(
 ## Install base packages
 ##---------------------------------------------------------------------
 
-base.pkg = c("shiny","flexdashboard","shinydashboard",'pryr',
+base.pkg = c("shiny","flexdashboard","shinydashboard",
              "shinydashboardPlus",'R.utils','shinythemes')
 install.pkgs(base.pkg)
 

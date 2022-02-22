@@ -389,7 +389,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##--------- topology analysis ------------
     ##----------------------------------------
 
-    topologyPlots.RENDER %<a-% shiny::reactive({
+    topologyPlots.RENDER <- shiny::reactive({
 
         message("[topologyPlots.RENDER] reacted")
 
@@ -450,7 +450,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##-------------- TOM plot ----------------
     ##----------------------------------------
     
-    TOMplot.RENDER %<a-% shiny::reactive({
+    TOMplot.RENDER <- shiny::reactive({
         
         message("[TOMplot.RENDER] reacted")
         
@@ -570,7 +570,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##------------ samples dendro ------------
     ##----------------------------------------
 
-    sampleDendro.RENDER %<a-% shiny::reactive({
+    sampleDendro.RENDER <- shiny::reactive({
 
         message("[sampleDendro.RENDER] reacted")
 
@@ -617,7 +617,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##------------ gene dendro ---------------
     ##----------------------------------------
     
-    geneDendro.RENDER %<a-% shiny::reactive({
+    geneDendro.RENDER <- shiny::reactive({
 
         message("[geneDendro.RENDER] reacted")
 
@@ -662,7 +662,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##------------ module-trait --------------
     ##----------------------------------------
     
-    moduleTrait.RENDER %<a-% shiny::reactive({
+    moduleTrait.RENDER <- shiny::reactive({
         
         message("[moduleTrait.RENDER] reacted")
 
@@ -753,7 +753,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##------------ module-graph --------------
     ##----------------------------------------
     
-    moduleGraph.RENDER %<a-% shiny::reactive({
+    moduleGraph.RENDER <- shiny::reactive({
 
         message("[moduleGraph.RENDER] reacted")
         require(igraph)
@@ -829,7 +829,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##--------- Eigengenes heatmap --------------
     ##----------------------------------------
     
-    eigenHeatmap.RENDER %<a-% shiny::reactive({
+    eigenHeatmap.RENDER <- shiny::reactive({
 
         message("[eigenHeatmap.RENDER] reacted")
 
@@ -1001,7 +1001,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##--------- enrichment plot --------------
     ##----------------------------------------
     
-    enrichPlot.RENDER %<a-% shiny::reactive({
+    enrichPlot.RENDER <- shiny::reactive({
 
         df <- enrich_table()
         if(is.null(df) || nrow(df)==0) return(NULL)        
@@ -1047,7 +1047,7 @@ WgcnaBoard <- function(input, output, session, env)
     ## Correlation network
     ##-----------------------------------------------------------
     
-    corGraph.RENDER %<a-% shiny::reactive({
+    corGraph.RENDER <- shiny::reactive({
 
         out <- wgcna.compute()
 
@@ -1126,7 +1126,7 @@ WgcnaBoard <- function(input, output, session, env)
     ## TOM UMAP/t-SNE
     ##-----------------------------------------------------------
     
-    umap.RENDER %<a-% shiny::reactive({
+    umap.RENDER <- shiny::reactive({
 
         out <- wgcna.compute()
 
@@ -1173,7 +1173,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##--------- enrichment plot --------------
     ##----------------------------------------
     
-    eigenClustering.RENDER %<a-% shiny::reactive({
+    eigenClustering.RENDER <- shiny::reactive({
         
         out <- wgcna.compute()
         
@@ -1218,7 +1218,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##--------- eigen barplots ---------------
     ##----------------------------------------
     
-    eigenCorrelation.RENDER %<a-% shiny::reactive({
+    eigenCorrelation.RENDER <- shiny::reactive({
     ##eigenCorrelation.RENDER <- shiny::reactive({
 
         message("[eigenCorrelation.RENDER] reacted")
@@ -1284,7 +1284,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##------ intramodular analysis -----------
     ##----------------------------------------
     
-    intraHeatmap.RENDER %<a-% shiny::reactive({
+    intraHeatmap.RENDER <- shiny::reactive({
     ##intraHeatmap.RENDER <- shiny::reactive({
 
         message("[intraHeatmap.RENDER] reacted")
@@ -1332,7 +1332,7 @@ WgcnaBoard <- function(input, output, session, env)
     ##------ intramodular scatter ------------
     ##----------------------------------------
     
-    intraScatter.RENDER %<a-% shiny::reactive({
+    intraScatter.RENDER <- shiny::reactive({
     ##intraScatter.RENDER <- shiny::reactive({
 
         message("[intraScatter.RENDER] reacted")

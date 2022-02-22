@@ -486,7 +486,7 @@ infotext =
     ## Enrichment {data-height=800}
     ##================================================================================
     
-    enplots.RENDER %<a-% shiny::reactive({
+    enplots.RENDER <- shiny::reactive({
         ngs <- inputData()
         alertDataLoaded(session,ngs)
         if(is.null(ngs)) return(NULL)
@@ -565,7 +565,7 @@ infotext =
     ## Volcano {data-height=800}
     ##================================================================================
     
-    volcanoPlots.RENDER %<a-% shiny::reactive({
+    volcanoPlots.RENDER <- shiny::reactive({
         ngs <- inputData()
         alertDataLoaded(session,ngs)
         if(is.null(ngs)) return(NULL)
@@ -911,7 +911,7 @@ infotext =
     ## Markers {data-height=800}
     ##================================================================================
 
-    markers.RENDER %<a-% shiny::reactive({
+    markers.RENDER <- shiny::reactive({
         ##if(!input$tsne.all) return(NULL)
 
 
