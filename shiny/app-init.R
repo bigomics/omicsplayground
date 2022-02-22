@@ -123,42 +123,6 @@ sever_screen2 <- function(session_id) {
   )
 }
 
-tipify2 <- function(...) {
-    shinyBS::tipify(..., placement="top", options = list(container = "body"))
-}
-tipifyL <- function(...) {
-    shinyBS::tipify(..., placement="left", options = list(container = "body"))
-}
-tipifyR <- function(...) {
-    shinyBS::tipify(..., placement="right", options = list(container = "body"))
-}
-tipifyT <- function(...) {
-    shinyBS::tipify(..., placement="top", options = list(container = "body"))
-}
-tipifyB <- function(...) {
-    shinyBS::tipify(..., placement="bottom", options = list(container = "body"))
-}
-
-## premium.feature <- function(...) {
-##     message("[premium.feature] USER_MODE = ",USER_MODE)
-##     message("[premium.feature] DEV = ",DEV)        
-##     el <- list(...)
-##     if(USER_MODE %in% c("pro","premium","dev")) return(el)
-##     shinyBS::tipify(shinyjs::disabled(...),
-##            "This is a Premium feature. Upgrade to enable this feature."
-##            )    
-## }
-
-in.shinyproxy <- function() {
-    ## Determine if we are in ShinyProxy
-    ##
-    vars <- c("SHINYPROXY_USERNAME","SHINYPROXY_USERGROUPS",
-              "PLAYGROUND_USERID","PLAYGROUND_LEVEL")
-    vars <- c("SHINYPROXY_USERNAME")
-    vals <- sapply(vars,Sys.getenv)
-    all(vals!="") && dir.exists("/omicsplayground")
-}
-
 tabRequire <- function(pgx, slot, tabname, subtab) {
     if(!slot %in% names(pgx)) {
         cat(paste("[MAIN] object has no ",slot," results. hiding tab.\n"))
@@ -248,27 +212,4 @@ TAGS.JSSCRIPT =
         dimension[1] = window.innerHeight;
         Shiny.onInputChange("dimension", dimension);
     });
-')) 
-
-
-## From https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
-all.plotly.buttons = c(
-    "toImage",
-    "senDataToCloud","editInChartStudio","zoom2d","pan2d","select2d",
-    "lasso2d","drawclosedpath","drawopenpath","drawline","drawrect",
-    "drawcircle","eraseshape","zoomIn2d","zoomOut2d",
-    "autoScale2d","resetScale2d","zoom3d","pan3d",
-    "orbitRotation","tableRotation","resetCameraDefault3d",
-    "resetCameraLastSave3d","hoverClosest3d","zoomInGeo",
-    "zoomOutGeo","resetGeo","hoverClosestGeo","hoverClosestGl2d",
-    "hoverClosestPie","resetViewSankey","toggleHover",
-    "hoverClosestCartesian","hoverCompareCartesian",
-    "resetViews","toggleSpikelines",
-    "resetViewMapbox","zoomInMapbox","zoomOutMapbox")
-
-
-
-
-##======================================================================
-##==================== END-OF-FILE =====================================
-##======================================================================
+'))
