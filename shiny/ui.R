@@ -87,7 +87,6 @@ createUI <- function(tabs)
     }
         
     header = shiny::tagList(
-        waiter::autoWaiter(),
         shiny::tags$head(shiny::tags$script(src="temp.js")),
         shiny::tags$head(shiny::tags$script(src="bigomics-extra.js")),  ## chatra,clarity
         gtag,   ## Google Tags???
