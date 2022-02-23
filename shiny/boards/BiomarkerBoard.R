@@ -4,7 +4,6 @@
 ##
 
 message(">>> sourcing BiomarkerModule")
-## source("global.R")
 
 BiomarkerInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace

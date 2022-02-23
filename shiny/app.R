@@ -71,7 +71,7 @@ source(file.path(RDIR,"pgx-functions.R")) ## functions...
 source(file.path(RDIR,"pgx-files.R"))     ## file functions
 source(file.path(RDIR,"pgx-init.R"))
 source(file.path(RDIR,"auth.R"))
-source("app-init.R")
+#source("app-init.R")
 
 if(0) {    
     ## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
