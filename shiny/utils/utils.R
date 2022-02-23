@@ -117,8 +117,13 @@ fileRequire <- function(file, tabname, subtab) {
 	}
 }
 
+# theming for the loading spinner
+waiter::waiter_set_theme(html = waiter::spin_3(), color = waiter::transparent(.5))
+
 tabView <- function(title, tab.inputs, tab.ui, id=title) {
     shiny::tabPanel(title, id=id,
+        # enabkle loading spinner for plots etc.
+        waiter::autoWaiter(color = waiter::transparent()),
              shiny::sidebarLayout(
                  shiny::sidebarPanel( width=2, tab.inputs, id="sidebar"),
                  shiny::mainPanel( width=10, tab.ui)
