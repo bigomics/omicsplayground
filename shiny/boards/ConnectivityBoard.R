@@ -4,8 +4,6 @@
 ##
 
 message(">>> sourcing ConnectivityBoard")
-##source("global.R")
-
 
 ConnectivityInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace

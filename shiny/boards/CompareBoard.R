@@ -4,7 +4,6 @@
 ##
 
 message(">>> sourcing CompareBoard")
-##source("global.R")
 
 CompareInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace

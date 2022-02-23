@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2021 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
 #########################################################################
@@ -57,7 +57,6 @@ SHINYPROXY = (Sys.getenv("SHINYPROXY_USERNAME")!="" && "omicsplayground" %in% di
 USERNAME   = "anonymous"
 if(SHINYPROXY) USERNAME = Sys.getenv("SHINYPROXY_USERNAME")
 
-
 main.start_time <- Sys.time()
 
 WORKDIR = getwd()
@@ -70,7 +69,6 @@ library(shinyBS)
 library(grid)
 
 source("utils/utils.R", local = TRUE)
-source("app-init.R", local = TRUE)
 
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
