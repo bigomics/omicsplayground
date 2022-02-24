@@ -27,16 +27,10 @@ IntersectionUI <- function(id) {
     
 }
 
-IntersectionBoard <- function(input, output, session, env)
+IntersectionBoard <- function(input, output, session, inputData, selected_gxmethods, selected_gsetmethods)
 {
     ns <- session$ns ## NAMESPACE
     fullH = 800       # row height of panel 
-    
-    ## reactive functions from shared environment
-    inputData <- env[["load"]][["inputData"]]
-    selected_gxmethods   <- env[["expr"]][["selected_gxmethods"]]
-    ## gx_metaQ   <- env[["expr"]][["metaQ"]]    
-    selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     
     description =
 "<h3>Compare signatures</h3>Find genes that are commonly up/down regulated between two or more signatures. Compute similarity between contrasts."

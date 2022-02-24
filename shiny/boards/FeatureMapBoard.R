@@ -26,11 +26,9 @@ FeatureMapUI <- function(id) {
     ui
 }
 
-FeatureMapBoard <- function(input, output, session, env)
+FeatureMapBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
-
-    inputData <- env[["load"]][["inputData"]]
 
     fullH = 800  ## full height of page
     rowH1 = 220  ## row 1 height

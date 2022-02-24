@@ -27,18 +27,13 @@ ConnectivityUI <- function(id) {
     )
 }
 
-ConnectivityBoard <- function(input, output, session, env)
+ConnectivityBoard <- function(input, output, session, inputData, selected_gxmethods)
 {
     ns <- session$ns ## NAMESPACE
     ## fullH = session$clientdata$output_foo_height
     fullH = 750       # row height of panel
     ## fullH = input$dimensions[2]
     tabH = '70vh'
-    
-    ## reactive functions from shared environment
-    inputData <- env[["load"]][["inputData"]]
-    selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
-    selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     
     description = "<b>Similar Experiments.</b> Find similar experiments by correlating their signatures. The main goal is to identify experiments showing similar signatures and find genes that are commonly up/down regulated between experiments."
     output$description <- shiny::renderUI(shiny::HTML(description))

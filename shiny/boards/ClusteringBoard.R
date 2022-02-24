@@ -34,12 +34,10 @@ ClusteringUI <- function(id) {
     )
 }
 
-ClusteringBoard <- function(input, output, session, env)
+ClusteringBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
-
-    inputData <- env[["load"]][["inputData"]]
-
+    
     fullH = 850  ## full height of page
     
     description = "<h3>Clustering Analysis</h3> Discover clusters of similar genes or samples using unsupervised machine learning."

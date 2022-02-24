@@ -36,14 +36,10 @@ EnrichmentUI <- function(id) {
 }
 
 
-EnrichmentBoard <- function(input, output, session, env)
+EnrichmentBoard <- function(input, output, session, inputData, selected_gxmethods)
 {
     ns <- session$ns ## NAMESPACE
-
-    ## reactive functions from shared environment
-    inputData <- env[["load"]][["inputData"]]
-    selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
-
+    
     fullH = 800
     rowH = 420  ## row height of panels
     imgH = 340  ## height of images

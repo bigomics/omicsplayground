@@ -30,10 +30,10 @@ SingleCellUI <- function(id) {
     )
 }
 
-SingleCellBoard <- function(input, output, session, env)
+SingleCellBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
-    inputData <- env[["load"]][["inputData"]]
+    
     fullH = 750  ## full height of panel
     imgH  = 680  ## row height of panel
     tabH  = 200  ## row height of panel    

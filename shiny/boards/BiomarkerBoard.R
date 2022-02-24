@@ -26,10 +26,10 @@ BiomarkerUI <- function(id) {
     ui
 }
 
-BiomarkerBoard <- function(input, output, session, env)
+BiomarkerBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
-    inputData <- env[["load"]][["inputData"]]
+    
     fullH = 800  ## full height of panel
     rowH  = 320  ## row height of panel
     imgH  = 260

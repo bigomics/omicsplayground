@@ -28,12 +28,9 @@ WgcnaUI <- function(id) {
     ui
 }
 
-WgcnaBoard <- function(input, output, session, env)
+WgcnaBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
-
-    inputData <- env[["load"]][["inputData"]]
-
     fullH = 700  ## full height of page
     rowH1 = 250  ## row 1 height
     rowH2 = 440  ## row 2 height

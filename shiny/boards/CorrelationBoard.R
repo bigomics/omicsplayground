@@ -28,12 +28,10 @@ CorrelationUI <- function(id) {
     ui
 }
 
-CorrelationBoard <- function(input, output, session, env)
+CorrelationBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
-
-    inputData <- env[["load"]][["inputData"]]
-
+    
     fullH = 800  ## full height of page
     rowH  = 340  ## full height of page
     
