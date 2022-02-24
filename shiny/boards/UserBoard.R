@@ -27,12 +27,9 @@ UserUI <- function(id) {
            )
 }
 
-UserBoard <- function(input, output, session, env)
+UserBoard <- function(input, output, session, user)
 {
     ns <- session$ns ## NAMESPACE
-
-    user <- env[["load"]][["auth"]]
-
     dbg("[UserBoard] >>> initializing UserBoard...")
 
     observeEvent( user$logged(), {

@@ -27,14 +27,9 @@ FunctionalUI <- function(id) {
     )
 }
 
-FunctionalBoard <- function(input, output, session, env)
+FunctionalBoard <- function(input, output, session, inputData, selected_gxmethods, selected_gsetmethods)
 {
     ns <- session$ns ## NAMESPACE
-
-    inputData <- env[["load"]][["inputData"]]
-    selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
-    selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
-
     fullH = 750
     rowH = 660  ## row height of panel
     tabH = 200  ## row height of panel

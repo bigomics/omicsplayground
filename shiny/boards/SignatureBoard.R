@@ -33,16 +33,12 @@ SignatureUI <- function(id) {
     )
 }
 
-SignatureBoard <- function(input, output, session, env)
+SignatureBoard <- function(input, output, session, inputData, selected_gxmethods)
 {
     ns <- session$ns ## NAMESPACE
 
     fullH = 800   ## full height of page
     tabH = '70vh'
-    
-    ## reactive functions from shared environment
-    inputData <- env[["load"]][["inputData"]]
-    selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
     
     description = "<b>Signature Analysis.</b> Users can test their gene signature by
 calculating an enrichment score. Upload your own gene list, or select

@@ -27,10 +27,10 @@ DrugConnectivityUI <- function(id) {
     )
 }
 
-DrugConnectivityBoard <- function(input, output, session, env)
+DrugConnectivityBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
-    inputData <- env[["load"]][["inputData"]]
+    
     fullH = 750
     rowH = 660  ## row height of panel
     tabH = 200  ## row height of panel

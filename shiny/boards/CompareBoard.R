@@ -26,7 +26,7 @@ CompareUI <- function(id) {
     )
 }
 
-CompareBoard <- function(input, output, session, env)
+CompareBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
     ## fullH = session$clientdata$output_foo_height
@@ -35,7 +35,6 @@ CompareBoard <- function(input, output, session, env)
     tabH = '70vh'
     
     ## reactive functions from shared environment
-    inputData <- env[["load"]][["inputData"]]
     ## selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
     ## selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     

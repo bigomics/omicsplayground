@@ -44,13 +44,10 @@ ExpressionUI <- function(id) {
     )
 }
 
-ExpressionBoard <- function(input, output, session, env)
+ExpressionBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
-
-    ## reactive functions from shared environment
-    inputData <- env[["load"]][["inputData"]]
-
+    
     fullH = 780
     rowH = 390  ## row height of panels
     imgH = 340  ## height of images

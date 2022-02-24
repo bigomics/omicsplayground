@@ -17,16 +17,11 @@ TcgaUI <- function(id) {
     )
 }
 
-TcgaBoard <- function(input, output, session, env)
+TcgaBoard <- function(input, output, session, inputData, selected_gxmethods, selected_gsetmethods)
 {
     ns <- session$ns ## NAMESPACE
     fullH = 800       # row height of panel 
     tabH = '70vh'
-    
-    ## reactive functions from shared environment
-    inputData <- env[["load"]][["inputData"]]
-    selected_gxmethods <- env[["expr"]][["selected_gxmethods"]]
-    selected_gsetmethods <- env[["enrich"]][["selected_gsetmethods"]]
     
     description = "<b>TCGA analysis (beta)</b>. Correlate your signature with the survival in cancer patients from the TCGA database. Warning: EXPERIMENTAL."
     output$description <- shiny::renderUI(shiny::HTML(description))
