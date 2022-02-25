@@ -253,11 +253,10 @@ DataViewBoard <- function(input, output, session, inputData)
             rho <- rep(0, nrow(ngs$genes))
             names(rho) <- rownames(ngs$genes)
         }
-
+       
         rho[is.na(rho)] <- 0
         jj = head(order(-abs(rho)),30)
-        jj <- c( head(order(rho),15), head(order(-rho),15))
-        jj <- jj[order(-rho[jj])]
+        jj <- c(head(order(-rho),15), tail(order(-rho),15))
         top.rho = rho[jj]
         
         gx1 <- sqrt(rowSums(ngs$X[names(top.rho),samples]**2,na.rm=TRUE))
@@ -1492,31 +1491,23 @@ DataViewBoard <- function(input, output, session, inputData)
         colnames(dt) <- sub("[_. ]vs[_. ]","\nvs ",colnames(dt))
         dt[dt==0] <- NA
 
-        ## looks better this way
-        dt1 <- dt
-        if(ncol(dt)<8) {
-            dt1 <- cbind(dt,NA,NA,NA,NA,NA,NA,NA,NA)[,1:8]
-        }
-        
-        DT::datatable( dt1,
+        DT::datatable( dt,
                       class = 'compact cell-border stripe hover',
                       rownames = TRUE,
                       extensions = c('Buttons','Scroller'),
                       selection = list(mode='single', target='row', selected=1),
                       options=list(
-                          dom = 'lfrtip', 
-                          ##pageLength = 60, ##  lengthMenu = c(20, 30, 40, 60, 100, 250),
+                          dom = 'lfrtip',
                           scroller=TRUE, scrollX = TRUE, scrollY = tabH,
-                          deferRender=TRUE
+                          deferRender=TRUE,
+                          autoWidth = TRUE
                       )) %>%
             DT::formatStyle(0, target='row', fontSize='12px', lineHeight='70%') %>%
                 DT::formatStyle(colnames(dt),
-                                ##background = DT::styleColorBar(c(0,3), 'lightblue'),
                                 background = color_from_middle(c(-1,1), 'lightblue', '#f5aeae'),
                                 backgroundSize = '98% 88%',
                                 backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center')
-        
         
     })
 

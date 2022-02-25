@@ -105,8 +105,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     ##================================================================================
     ## Reactive functions
     ##================================================================================
-    
-    ## getDseaTable <- shiny::reactive({
 
     getActiveDSEA <- shiny::reactive({
         
