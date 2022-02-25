@@ -607,6 +607,7 @@ DataViewBoard <- function(input, output, session, env)
         data <- data.frame(names = row.names(pos[jj2,]), pos[jj2,])
         data$act <- ifelse(substr(data$names, 0, 3) == "act", "active", "not\nactive")
         
+        ## TODO: does currently not render in app, throws `need finite 'xlim' values` error
         ggplot(data, aes(tSNE.x, tSNE.y)) + 
           ggforce::geom_mark_ellipse(
             aes(fill = act, label = act), 
@@ -615,41 +616,10 @@ DataViewBoard <- function(input, output, session, env)
           geom_point() + 
           scale_x_continuous(expand = c(.15, .15)) +
           scale_y_continuous(expand = c(.15, .15)) +
-          #scale_color_manual(values = klr1[jj2], guide = "none") +
+          #scale_color_manual(values = klr1[jj2], guide = "none") + ## for now I have removed the individual color to sue colors for the ellipses
           scale_fill_manual(values = klr1[c(1,18)], guide = "none") +
           labs(x = "tSNE1", y = "tSNE2") +
           theme_bw(base_size = 16)
-        
-        ##par(mar=c(8,2,2.2,1), mgp=c(1,0.5,0))
-        # par(mar=c(2.3,2.3,2,2), mgp=c(0.9,0.1,0))
-        # jj2 <- order(abs(fc1))
-        # base::plot( pos[jj2,], pch=20, cex=cex1, col=klr1[jj2], fg = gray(0.6), bty = "o",
-        #      xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
-        # 
-        # ## determine how to do grouping for group labels
-        # groupby <- input$data_groupby
-        # grp <- NULL
-        # if(groupby != "<ungrouped>") {
-        #     grp <- factor(ngs$samples[samples,groupby])
-        # }
-        #         
-        # cex2 = ifelse(nrow(pos) < 50, 1.5, 1.1)
-        # cex2 = ifelse(nrow(pos) > 200, 0.8, cex2)
-        # if(!is.null(grp)) {
-        #     ##grp.pos <- apply(pos,2,function(x) tapply(x,grp,mean))
-        #     grp.pos <- apply(pos,2,function(x) tapply(x,grp,median))
-        #     if(length(unique(grp))==1) {
-        #         grp.pos <- matrix(grp.pos,ncol=2)
-        #         rownames(grp.pos) <- unique(grp)
-        #     }
-        #     labels = rownames(grp.pos)
-        #     cex3 <- c(1.4,1.2,1,0.8)[cut(length(labels),breaks=c(-1,5,10,20,999))]
-        #     boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
-        #     ##text( grp.pos, labels=boxes, cex=0.9*cex3, col="#CCCCCC88")
-        #     text( grp.pos, labels=boxes, cex=0.65*cex3, col="#CCCC00BB")
-        #     text( grp.pos, labels=labels, font=2, cex=0.65*cex3, col="black")
-        #     ##text( grp.pos[,], labels=rownames(grp.pos), font=2, cex=cex1**0.5)
-        # }
 
         dbg("[genePlots_tsne.RENDER] done")
         
