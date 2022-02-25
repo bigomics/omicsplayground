@@ -33,3 +33,6 @@ test-firestore.R
 .httr-oauth
 bigomics-extra.js
 google-analytics.html
+.Rproj.user
+omicsplayground.Rproj
+/logs/
