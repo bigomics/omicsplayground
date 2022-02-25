@@ -604,20 +604,28 @@ DataViewBoard <- function(input, output, session, env)
         
         jj2 <- order(abs(fc1))
         
-        data <- data.frame(names = row.names(pos[jj2,]), pos[jj2,])
-        data$act <- ifelse(substr(data$names, 0, 3) == "act", "active", "not\nactive")
+        ## determine how to do grouping for group labels
+        groupby <- input$data_groupby
+        grp <- NULL
+        if(groupby != "<ungrouped>") {
+            grp <- factor(ngs$samples[samples,groupby])
+        }
+        
+        data <- data.frame(pos[jj2,])
+        data$grp <- grp
         
         ## TODO: does currently not render in app, throws `need finite 'xlim' values` error
-        ggplot(data, aes(tSNE.x, tSNE.y)) + 
+        ## NOTE: for now I have removed the individual color to use colors for the ellipses
+        ggplot(data, aes(tSNE.x, tSNE.y, color = grp)) + 
           ggforce::geom_mark_ellipse(
-            aes(fill = act, label = act), 
+            aes(fill = grp, label = grp), alpha = .15,
             expand = unit(3, "mm"), con.cap = unit(.01, "mm")
           ) +
           geom_point() + 
           scale_x_continuous(expand = c(.15, .15)) +
           scale_y_continuous(expand = c(.15, .15)) +
-          #scale_color_manual(values = klr1[jj2], guide = "none") + ## for now I have removed the individual color to sue colors for the ellipses
-          scale_fill_manual(values = klr1[c(1,18)], guide = "none") +
+          scale_color_discrete(guide = "none") +
+          scale_fill_discrete(guide = "none") +
           labs(x = "tSNE1", y = "tSNE2") +
           theme_bw(base_size = 16)
 
