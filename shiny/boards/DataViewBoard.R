@@ -330,137 +330,16 @@ DataViewBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ##                     Bar/box plot
     ##---------------------------------------------------------------------- 
-    genePlots_barplot.RENDER.SAVE %<a-% shiny::reactive({
-      
-      
-      cat("[dataview] genePlots_barplot.RENDER reacted\n")
-      
-      ngs <- inputData()
-      shiny::req(ngs)
-      shiny::req(input$data_groupby,input$search_gene,input$data_type)
-      
-      gene = "KCNN4"
-      gene = ngs$genes$gene_name[1]
-      if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
-      samples = colnames(ngs$X)
-      if(!is.null(input$data_samplefilter)) {
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-      }
-      nsamples = length(samples)
-      
-      grpvar=1
-      grpvar <- input$data_groupby
-      ##grp  = factor(ngs$Y[samples,grpvar])
-      grp  = factor(as.character(ngs$Y[samples,grpvar]))
-      klr0 = COLORS
-      klr  = klr0[as.integer(grp)]
-      
-      ## precompute
-      pp=rownames(ngs$genes)[1]
-      pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
-      
-      gx = NULL
-      ylab = NULL
-      if(input$data_type=="counts") {
-        gx = ngs$counts[pp,samples]
-        ylab="expression (counts)"
-      } else if(input$data_type=="CPM") {
-        gx = 2**ngs$X[pp,samples]
-        ylab="expression (CPM)"
-      } else if(input$data_type=="logCPM") {
-        gx = ngs$X[pp,samples]
-        ylab="expression (log2CPM)"
-      }
-      
-      mar=MARGINS1
-      par(mar=mar, mgp=c(2.1,0.8,0))
-      
-      BLUE = col=rgb(0.2,0.5,0.8,0.8)
-      bee.cex = ifelse(length(gx)>500,0.1,0.2)
-      bee.cex = c(0.3,0.1,0.05)[cut(length(gx),c(0,100,500,99999))]
-      
-      fig <- NULL
-      
-      ##if(input$data_grouped) {
-      if(input$data_groupby != "<ungrouped>") {
-        nnchar = nchar(paste(unique(grp),collapse=''))
-        srt = ifelse(nnchar < 20, 0, 35)
-        srt
-        ngrp <- length(unique(grp))
-        cx1 = ifelse( ngrp < 10, 1, 0.8)
-        cx1 = ifelse( ngrp > 20, 0.6, cx1)
-        ##cx1 = ifelse( ngrp > 10, 0.6, 0.9)
-        if(0 && input$geneplot_type == 'bar') {
-          gx.b3plot(
-            gx, grp, las=3, main=gene, ylab=ylab, 
-            cex.main=1, col.main="#7f7f7f",
-            bar=TRUE, border=NA, ## bee = ifelse(length(gx) < 500,TRUE,FALSE), 
-            bee.cex = bee.cex, ## sig.stars=TRUE, max.stars=5,
-            xlab="", names.cex=cx1, srt=srt,
-            ## col=klr0[ii], 
-            col = rgb(0.4,0.6,0.85,0.85)
-          )
-          ##            } else if(input$geneplot_type == 'violin') {
-        } else if(1==1 || input$geneplot_type == 'violin') {
-          
-          ##vioplot::vioplot( gx ~ grp, main = gene, cex.main=1.0,
-          ##                 ylab = ylab, xlab='', 
-          ##                 col = rgb(0.2,0.5,0.8,0.8))
-          fig <- pgx.violinPlot(gx, grp, main = gene, cex.main=1,
-                                xlab = '', ylab = ylab,
-                                ##vcol = rgb(0.2,0.5,0.8,0.8),
-                                vcol = rgb(0.4,0.6,0.85,0.85),
-                                srt = srt)
-          
-        } else {
-          boxplot(
-            gx ~ grp, main = gene, cex.main=1.0,
-            ylab = ylab, xlab='', xaxt='n',
-            col =  rgb(0.4,0.6,0.85,0.85)
-          ) 
-          yy <- sort(unique(grp))
-          text(x = 1:length(yy),
-               y = par("usr")[3] - 0.03*diff(range(gx)),
-               labels = yy,
-               xpd = NA,
-               srt = srt,
-               adj = ifelse(srt==0, 0.5, 0.965),
-               cex = cx1)                        
-        }
-        
-      }  else {
-        jj <- 1:length(gx)            
-        sorting="no"
-        if(sorting == "decr")  jj <- order(-gx)
-        if(sorting == "inc")  jj <- order(gx)
-        tt=""
-        barplot(gx[jj], col=BLUE, ##col=klr[jj],
-                las = 3, cex.names = 0.8,
-                ylab = ylab, xlab = tt,
-                main = gene, cex.main=1, col.main="#7f7f7f", border=NA,
-                names.arg = rep(NA,length(gx)) )
-        if(length(gx)<100) {
-          cx1 = ifelse(length(gx) > 20, 0.8, 0.9)
-          cx1 = ifelse(length(gx) > 40, 0.6, cx1)
-          cx1 = ifelse(length(gx) < 10, 1, cx1)
-          text((1:length(gx)-0.5)*1.2, -0.04*max(gx), names(gx)[jj], 
-               las=3, cex=cx1, pos=2, adj=0, offset=0, srt=45, xpd=TRUE)
-        }
-      }
-      
-      fig
-    })
-    
     
     genePlots_barplot.RENDER %<a-% shiny::reactive({
 
         
         cat("[dataview] genePlots_barplot.RENDER reacted\n")
-       
+        
         ngs <- inputData()
         shiny::req(ngs)
         shiny::req(input$data_groupby,input$search_gene,input$data_type)
-           
+                
         gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
         if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
@@ -501,8 +380,6 @@ DataViewBoard <- function(input, output, session, env)
         bee.cex = ifelse(length(gx)>500,0.1,0.2)
         bee.cex = c(0.3,0.1,0.05)[cut(length(gx),c(0,100,500,99999))]
         
-        fig <- NULL
-        
         ##if(input$data_grouped) {
         if(input$data_groupby != "<ungrouped>") {
             nnchar = nchar(paste(unique(grp),collapse=''))
@@ -512,7 +389,7 @@ DataViewBoard <- function(input, output, session, env)
             cx1 = ifelse( ngrp < 10, 1, 0.8)
             cx1 = ifelse( ngrp > 20, 0.6, cx1)
             ##cx1 = ifelse( ngrp > 10, 0.6, 0.9)
-            if(0 && input$geneplot_type == 'bar') {
+            if(input$geneplot_type == 'bar') {
                 gx.b3plot(
                     gx, grp, las=3, main=gene, ylab=ylab, 
                     cex.main=1, col.main="#7f7f7f",
@@ -522,13 +399,11 @@ DataViewBoard <- function(input, output, session, env)
                     ## col=klr0[ii], 
                     col = rgb(0.4,0.6,0.85,0.85)
                 )
-##            } else if(input$geneplot_type == 'violin') {
-              } else if(1==1 || input$geneplot_type == 'violin') {
-            
+            } else if(input$geneplot_type == 'violin') {
                 ##vioplot::vioplot( gx ~ grp, main = gene, cex.main=1.0,
                 ##                 ylab = ylab, xlab='', 
                 ##                 col = rgb(0.2,0.5,0.8,0.8))
-                fig <- pgx.violinPlot(gx, grp, main = gene, cex.main=1,
+                pgx.violinPlot(gx, grp, main = gene, cex.main=1,
                                xlab = '', ylab = ylab,
                                ##vcol = rgb(0.2,0.5,0.8,0.8),
                                vcol = rgb(0.4,0.6,0.85,0.85),
@@ -550,6 +425,8 @@ DataViewBoard <- function(input, output, session, env)
                      cex = cx1)                        
             }
 
+            
+
         }  else {
             jj <- 1:length(gx)            
             sorting="no"
@@ -569,8 +446,6 @@ DataViewBoard <- function(input, output, session, env)
                      las=3, cex=cx1, pos=2, adj=0, offset=0, srt=45, xpd=TRUE)
             }
         }
-        
-        fig
     })
 
     genePlots_barplot.opts <- shiny::tagList(
@@ -579,8 +454,7 @@ DataViewBoard <- function(input, output, session, env)
     )
     
     shiny::callModule(
-        plotModule, "genePlots_barplot",  
-        plotlib = "ggplot",
+        plotModule, "genePlots_barplot",    
         func = genePlots_barplot.RENDER,
         func2 = genePlots_barplot.RENDER,
         options = genePlots_barplot.opts,
@@ -594,6 +468,90 @@ DataViewBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ## t-SNE
     ##----------------------------------------------------------------------
+    
+    genePlots_tsne.RENDER.save %<a-% shiny::reactive({
+      
+      
+      ngs <- inputData()
+      shiny::req(ngs)
+      
+      dbg("[genePlots_tsne.RENDER] reacted")
+      
+      gene = "KCNN4"
+      gene = ngs$genes$gene_name[1]
+      if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+      samples = colnames(ngs$X)
+      if(!is.null(input$data_samplefilter)) {
+        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+      }
+      nsamples = length(samples)
+      
+      ## precompute
+      pp=rownames(ngs$genes)[1]
+      pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
+      
+      gx = NULL
+      ylab = NULL
+      if(input$data_type=="counts") {
+        gx = ngs$counts[pp,samples]
+        ylab="expression (counts)"
+      } else if(input$data_type=="CPM") {
+        gx = 2**ngs$X[pp,samples]
+        ylab="expression (CPM)"
+      } else if(input$data_type=="logCPM") {
+        gx = ngs$X[pp,samples]
+        ylab="expression (log2CPM)"
+      }
+      
+      ##par(mar=c(12,2,2,1), mgp=c(2.1,0.8,0), oma=c(3,0.5,1.5,0.3))
+      
+      pos <- ngs$tsne2d[samples,]
+      
+      cex1 <- 1.8*c(1.6,1.0,0.6,0.3)[cut(nrow(pos),breaks=c(-1,40,200,1000,1e10))]    
+      klrpal = colorRampPalette(c("blue3", "aliceblue", "grey85", "lavenderblush", "red3"))(16)
+      klrpal = colorRampPalette(c("grey80", "grey50", "red3"))(16)
+      
+      fc1 <- tanh(0.99 * scale(gx)[,1])
+      fc1 <- tanh(0.99 * scale(gx,center=FALSE)[,1])
+      ##fc1 <- tanh(0.99 * gx/sd(gx))        
+      fc2 <- (fc1 - min(fc1))
+      klr1 = klrpal[1 + round(15*fc2/max(abs(fc2)))]
+      klr1 = paste0(gplots::col2hex(klr1),"88")
+      
+      ##par(mar=c(8,2,2.2,1), mgp=c(1,0.5,0))
+      par(mar=c(2.3,2.3,2,2), mgp=c(0.9,0.1,0))
+      jj2 <- order(abs(fc1))
+      base::plot( pos[jj2,], pch=20, cex=cex1, col=klr1[jj2], fg = gray(0.6), bty = "o",
+                  xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
+      
+      ## determine how to do grouping for group labels
+      groupby <- input$data_groupby
+      grp <- NULL
+      if(groupby != "<ungrouped>") {
+        grp <- factor(ngs$samples[samples,groupby])
+      }
+      
+      cex2 = ifelse(nrow(pos) < 50, 1.5, 1.1)
+      cex2 = ifelse(nrow(pos) > 200, 0.8, cex2)
+      if(!is.null(grp)) {
+        ##grp.pos <- apply(pos,2,function(x) tapply(x,grp,mean))
+        grp.pos <- apply(pos,2,function(x) tapply(x,grp,median))
+        if(length(unique(grp))==1) {
+          grp.pos <- matrix(grp.pos,ncol=2)
+          rownames(grp.pos) <- unique(grp)
+        }
+        labels = rownames(grp.pos)
+        cex3 <- c(1.4,1.2,1,0.8)[cut(length(labels),breaks=c(-1,5,10,20,999))]
+        boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
+        ##text( grp.pos, labels=boxes, cex=0.9*cex3, col="#CCCCCC88")
+        text( grp.pos, labels=boxes, cex=0.65*cex3, col="#CCCC00BB")
+        text( grp.pos, labels=labels, font=2, cex=0.65*cex3, col="black")
+        ##text( grp.pos[,], labels=rownames(grp.pos), font=2, cex=cex1**0.5)
+      }
+      
+      dbg("[genePlots_tsne.RENDER] done")
+      
+    })
     
     genePlots_tsne.RENDER %<a-% shiny::reactive({
 
@@ -644,36 +602,54 @@ DataViewBoard <- function(input, output, session, env)
         klr1 = klrpal[1 + round(15*fc2/max(abs(fc2)))]
         klr1 = paste0(gplots::col2hex(klr1),"88")
         
-        ##par(mar=c(8,2,2.2,1), mgp=c(1,0.5,0))
-        par(mar=c(2.3,2.3,2,2), mgp=c(0.9,0.1,0))
         jj2 <- order(abs(fc1))
-        base::plot( pos[jj2,], pch=20, cex=cex1, col=klr1[jj2], fg = gray(0.6), bty = "o",
-             xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
         
-        ## determine how to do grouping for group labels
-        groupby <- input$data_groupby
-        grp <- NULL
-        if(groupby != "<ungrouped>") {
-            grp <- factor(ngs$samples[samples,groupby])
-        }
-                
-        cex2 = ifelse(nrow(pos) < 50, 1.5, 1.1)
-        cex2 = ifelse(nrow(pos) > 200, 0.8, cex2)
-        if(!is.null(grp)) {
-            ##grp.pos <- apply(pos,2,function(x) tapply(x,grp,mean))
-            grp.pos <- apply(pos,2,function(x) tapply(x,grp,median))
-            if(length(unique(grp))==1) {
-                grp.pos <- matrix(grp.pos,ncol=2)
-                rownames(grp.pos) <- unique(grp)
-            }
-            labels = rownames(grp.pos)
-            cex3 <- c(1.4,1.2,1,0.8)[cut(length(labels),breaks=c(-1,5,10,20,999))]
-            boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
-            ##text( grp.pos, labels=boxes, cex=0.9*cex3, col="#CCCCCC88")
-            text( grp.pos, labels=boxes, cex=0.65*cex3, col="#CCCC00BB")
-            text( grp.pos, labels=labels, font=2, cex=0.65*cex3, col="black")
-            ##text( grp.pos[,], labels=rownames(grp.pos), font=2, cex=cex1**0.5)
-        }
+        data <- data.frame(names = row.names(pos[jj2,]), pos[jj2,])
+        data$act <- ifelse(substr(data$names, 0, 3) == "act", "active", "not\nactive")
+        
+        ggplot(data, aes(tSNE.x, tSNE.y)) + 
+          ggforce::geom_mark_ellipse(
+            aes(fill = act, label = act), 
+            expand = unit(3, "mm"), con.cap = unit(.01, "mm")
+          ) +
+          geom_point() + 
+          scale_x_continuous(expand = c(.15, .15)) +
+          scale_y_continuous(expand = c(.15, .15)) +
+          #scale_color_manual(values = klr1[jj2], guide = "none") +
+          scale_fill_manual(values = klr1[c(1,18)], guide = "none") +
+          labs(x= "tSNE1", ylab = "tSNE2") +
+          theme_bw(base_size = 16)
+        
+        ##par(mar=c(8,2,2.2,1), mgp=c(1,0.5,0))
+        # par(mar=c(2.3,2.3,2,2), mgp=c(0.9,0.1,0))
+        # jj2 <- order(abs(fc1))
+        # base::plot( pos[jj2,], pch=20, cex=cex1, col=klr1[jj2], fg = gray(0.6), bty = "o",
+        #      xaxt='n', yaxt='n', xlab="tSNE1", ylab="tSNE2")
+        # 
+        # ## determine how to do grouping for group labels
+        # groupby <- input$data_groupby
+        # grp <- NULL
+        # if(groupby != "<ungrouped>") {
+        #     grp <- factor(ngs$samples[samples,groupby])
+        # }
+        #         
+        # cex2 = ifelse(nrow(pos) < 50, 1.5, 1.1)
+        # cex2 = ifelse(nrow(pos) > 200, 0.8, cex2)
+        # if(!is.null(grp)) {
+        #     ##grp.pos <- apply(pos,2,function(x) tapply(x,grp,mean))
+        #     grp.pos <- apply(pos,2,function(x) tapply(x,grp,median))
+        #     if(length(unique(grp))==1) {
+        #         grp.pos <- matrix(grp.pos,ncol=2)
+        #         rownames(grp.pos) <- unique(grp)
+        #     }
+        #     labels = rownames(grp.pos)
+        #     cex3 <- c(1.4,1.2,1,0.8)[cut(length(labels),breaks=c(-1,5,10,20,999))]
+        #     boxes = sapply(nchar(labels),function(n) paste(rep("\u2588",n),collapse=""))
+        #     ##text( grp.pos, labels=boxes, cex=0.9*cex3, col="#CCCCCC88")
+        #     text( grp.pos, labels=boxes, cex=0.65*cex3, col="#CCCC00BB")
+        #     text( grp.pos, labels=labels, font=2, cex=0.65*cex3, col="black")
+        #     ##text( grp.pos[,], labels=rownames(grp.pos), font=2, cex=cex1**0.5)
+        # }
 
         dbg("[genePlots_tsne.RENDER] done")
         
@@ -681,6 +657,7 @@ DataViewBoard <- function(input, output, session, env)
 
     shiny::callModule(
         plotModule, "genePlots_tsne",
+        plotlib = "ggplot",
         func = genePlots_tsne.RENDER,
         func2 = genePlots_tsne.RENDER,
         info.text = genePlots_tsne_text,
