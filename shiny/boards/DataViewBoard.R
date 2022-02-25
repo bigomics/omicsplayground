@@ -617,7 +617,7 @@ DataViewBoard <- function(input, output, session, env)
           scale_y_continuous(expand = c(.15, .15)) +
           #scale_color_manual(values = klr1[jj2], guide = "none") +
           scale_fill_manual(values = klr1[c(1,18)], guide = "none") +
-          labs(x= "tSNE1", ylab = "tSNE2") +
+          labs(x = "tSNE1", y = "tSNE2") +
           theme_bw(base_size = 16)
         
         ##par(mar=c(8,2,2.2,1), mgp=c(1,0.5,0))
