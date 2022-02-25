@@ -330,16 +330,137 @@ DataViewBoard <- function(input, output, session, env)
     ##----------------------------------------------------------------------
     ##                     Bar/box plot
     ##---------------------------------------------------------------------- 
+    genePlots_barplot.RENDER.SAVE %<a-% shiny::reactive({
+      
+      
+      cat("[dataview] genePlots_barplot.RENDER reacted\n")
+      
+      ngs <- inputData()
+      shiny::req(ngs)
+      shiny::req(input$data_groupby,input$search_gene,input$data_type)
+      
+      gene = "KCNN4"
+      gene = ngs$genes$gene_name[1]
+      if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+      samples = colnames(ngs$X)
+      if(!is.null(input$data_samplefilter)) {
+        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+      }
+      nsamples = length(samples)
+      
+      grpvar=1
+      grpvar <- input$data_groupby
+      ##grp  = factor(ngs$Y[samples,grpvar])
+      grp  = factor(as.character(ngs$Y[samples,grpvar]))
+      klr0 = COLORS
+      klr  = klr0[as.integer(grp)]
+      
+      ## precompute
+      pp=rownames(ngs$genes)[1]
+      pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
+      
+      gx = NULL
+      ylab = NULL
+      if(input$data_type=="counts") {
+        gx = ngs$counts[pp,samples]
+        ylab="expression (counts)"
+      } else if(input$data_type=="CPM") {
+        gx = 2**ngs$X[pp,samples]
+        ylab="expression (CPM)"
+      } else if(input$data_type=="logCPM") {
+        gx = ngs$X[pp,samples]
+        ylab="expression (log2CPM)"
+      }
+      
+      mar=MARGINS1
+      par(mar=mar, mgp=c(2.1,0.8,0))
+      
+      BLUE = col=rgb(0.2,0.5,0.8,0.8)
+      bee.cex = ifelse(length(gx)>500,0.1,0.2)
+      bee.cex = c(0.3,0.1,0.05)[cut(length(gx),c(0,100,500,99999))]
+      
+      fig <- NULL
+      
+      ##if(input$data_grouped) {
+      if(input$data_groupby != "<ungrouped>") {
+        nnchar = nchar(paste(unique(grp),collapse=''))
+        srt = ifelse(nnchar < 20, 0, 35)
+        srt
+        ngrp <- length(unique(grp))
+        cx1 = ifelse( ngrp < 10, 1, 0.8)
+        cx1 = ifelse( ngrp > 20, 0.6, cx1)
+        ##cx1 = ifelse( ngrp > 10, 0.6, 0.9)
+        if(0 && input$geneplot_type == 'bar') {
+          gx.b3plot(
+            gx, grp, las=3, main=gene, ylab=ylab, 
+            cex.main=1, col.main="#7f7f7f",
+            bar=TRUE, border=NA, ## bee = ifelse(length(gx) < 500,TRUE,FALSE), 
+            bee.cex = bee.cex, ## sig.stars=TRUE, max.stars=5,
+            xlab="", names.cex=cx1, srt=srt,
+            ## col=klr0[ii], 
+            col = rgb(0.4,0.6,0.85,0.85)
+          )
+          ##            } else if(input$geneplot_type == 'violin') {
+        } else if(1==1 || input$geneplot_type == 'violin') {
+          
+          ##vioplot::vioplot( gx ~ grp, main = gene, cex.main=1.0,
+          ##                 ylab = ylab, xlab='', 
+          ##                 col = rgb(0.2,0.5,0.8,0.8))
+          fig <- pgx.violinPlot(gx, grp, main = gene, cex.main=1,
+                                xlab = '', ylab = ylab,
+                                ##vcol = rgb(0.2,0.5,0.8,0.8),
+                                vcol = rgb(0.4,0.6,0.85,0.85),
+                                srt = srt)
+          
+        } else {
+          boxplot(
+            gx ~ grp, main = gene, cex.main=1.0,
+            ylab = ylab, xlab='', xaxt='n',
+            col =  rgb(0.4,0.6,0.85,0.85)
+          ) 
+          yy <- sort(unique(grp))
+          text(x = 1:length(yy),
+               y = par("usr")[3] - 0.03*diff(range(gx)),
+               labels = yy,
+               xpd = NA,
+               srt = srt,
+               adj = ifelse(srt==0, 0.5, 0.965),
+               cex = cx1)                        
+        }
+        
+      }  else {
+        jj <- 1:length(gx)            
+        sorting="no"
+        if(sorting == "decr")  jj <- order(-gx)
+        if(sorting == "inc")  jj <- order(gx)
+        tt=""
+        barplot(gx[jj], col=BLUE, ##col=klr[jj],
+                las = 3, cex.names = 0.8,
+                ylab = ylab, xlab = tt,
+                main = gene, cex.main=1, col.main="#7f7f7f", border=NA,
+                names.arg = rep(NA,length(gx)) )
+        if(length(gx)<100) {
+          cx1 = ifelse(length(gx) > 20, 0.8, 0.9)
+          cx1 = ifelse(length(gx) > 40, 0.6, cx1)
+          cx1 = ifelse(length(gx) < 10, 1, cx1)
+          text((1:length(gx)-0.5)*1.2, -0.04*max(gx), names(gx)[jj], 
+               las=3, cex=cx1, pos=2, adj=0, offset=0, srt=45, xpd=TRUE)
+        }
+      }
+      
+      fig
+    })
+    
     
     genePlots_barplot.RENDER %<a-% shiny::reactive({
 
         
         cat("[dataview] genePlots_barplot.RENDER reacted\n")
-        
+       
         ngs <- inputData()
         shiny::req(ngs)
         shiny::req(input$data_groupby,input$search_gene,input$data_type)
-                
+           
         gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
         if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
@@ -380,6 +501,8 @@ DataViewBoard <- function(input, output, session, env)
         bee.cex = ifelse(length(gx)>500,0.1,0.2)
         bee.cex = c(0.3,0.1,0.05)[cut(length(gx),c(0,100,500,99999))]
         
+        fig <- NULL
+        
         ##if(input$data_grouped) {
         if(input$data_groupby != "<ungrouped>") {
             nnchar = nchar(paste(unique(grp),collapse=''))
@@ -389,7 +512,7 @@ DataViewBoard <- function(input, output, session, env)
             cx1 = ifelse( ngrp < 10, 1, 0.8)
             cx1 = ifelse( ngrp > 20, 0.6, cx1)
             ##cx1 = ifelse( ngrp > 10, 0.6, 0.9)
-            if(input$geneplot_type == 'bar') {
+            if(0 && input$geneplot_type == 'bar') {
                 gx.b3plot(
                     gx, grp, las=3, main=gene, ylab=ylab, 
                     cex.main=1, col.main="#7f7f7f",
@@ -399,15 +522,17 @@ DataViewBoard <- function(input, output, session, env)
                     ## col=klr0[ii], 
                     col = rgb(0.4,0.6,0.85,0.85)
                 )
-            } else if(input$geneplot_type == 'violin') {
+##            } else if(input$geneplot_type == 'violin') {
+              } else if(1==1 || input$geneplot_type == 'violin') {
+            
                 ##vioplot::vioplot( gx ~ grp, main = gene, cex.main=1.0,
                 ##                 ylab = ylab, xlab='', 
                 ##                 col = rgb(0.2,0.5,0.8,0.8))
-                pgx.violinPlot( gx, grp, main = gene, cex.main=1,
-                               xlab= '', ylab=ylab,
+                fig <- pgx.violinPlot(gx, grp, main = gene, cex.main=1,
+                               xlab = '', ylab = ylab,
                                ##vcol = rgb(0.2,0.5,0.8,0.8),
                                vcol = rgb(0.4,0.6,0.85,0.85),
-                               srt=srt )
+                               srt = srt)
                 
             } else {
                 boxplot(
@@ -424,8 +549,6 @@ DataViewBoard <- function(input, output, session, env)
                      adj = ifelse(srt==0, 0.5, 0.965),
                      cex = cx1)                        
             }
-
-            
 
         }  else {
             jj <- 1:length(gx)            
@@ -446,6 +569,8 @@ DataViewBoard <- function(input, output, session, env)
                      las=3, cex=cx1, pos=2, adj=0, offset=0, srt=45, xpd=TRUE)
             }
         }
+        
+        fig
     })
 
     genePlots_barplot.opts <- shiny::tagList(
@@ -454,7 +579,8 @@ DataViewBoard <- function(input, output, session, env)
     )
     
     shiny::callModule(
-        plotModule, "genePlots_barplot",    
+        plotModule, "genePlots_barplot",  
+        plotlib = "ggplot",
         func = genePlots_barplot.RENDER,
         func2 = genePlots_barplot.RENDER,
         options = genePlots_barplot.opts,
