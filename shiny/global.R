@@ -158,6 +158,7 @@ message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),colla
 http.resp <- getFromNamespace("httpResponse", "shiny")
 
 logHandler <- function(http.req){
+  
 
     dbg("[MAIN.logHandler] >>>>> called! <<<<<")
     ##dbg("[MAIN.logHandler] names(http.req) = ",sort(names(http.req)))
@@ -222,20 +223,17 @@ logHandler <- function(http.req){
         ),
         encode = "json"
     )
+    
 
     http.resp(400L, "application/json", jsonlite::toJSON(TRUE))
 }
 
-run_application <- function(ui, server, ...){
-    ## get handler
-    handlerManager <- getFromNamespace("handlerManager", "shiny")
-    
-    ## add handler
-    handlerManager$removeHandler("/log")
-    handlerManager$addHandler(logHandler, "/log")
-    
-    shiny::shinyApp(ui, server, ...)
-}
+handlerManager <- getFromNamespace("handlerManager", "shiny")
+
+## add handler
+handlerManager$removeHandler("/log")
+handlerManager$addHandler(logHandler, "/log")
+
 
 ## --------------------------------------------------------------------
 ## ----------------- READ MODULES/BOARDS ------------------------------
