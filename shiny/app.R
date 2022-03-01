@@ -27,7 +27,6 @@ library(shinyBS)
 library(pryr)
 library(grid)
 
-
 message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
 message("***********************************************")
