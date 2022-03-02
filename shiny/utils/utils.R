@@ -44,7 +44,7 @@ if(0) {
 }
 
 ##-----------------------------------------------------
-## Initialize ORCA server
+## Initialize ORCA server (DEPRECATED)
 ##-----------------------------------------------------
 ## see: pgx-module.R
 ORCA <- NULL
