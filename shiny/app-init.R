@@ -25,7 +25,7 @@ if(0) {
 ##-----------------------------------------------------
 ## see: pgx-module.R
 ORCA <- NULL
-if(0 && getOption("OMICS_ORCA_RUN", TRUE)){
+if(getOption("OMICS_ORCA_RUN", TRUE)){
     ORCA <- initOrca(launch=TRUE) 
     class(ORCA)
     if(is.null(ORCA)) {
