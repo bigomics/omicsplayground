@@ -534,7 +534,7 @@ server = function(input, output, session) {
             } else if(secs.lapsed >= TIMEOUT) {
                 message("[SERVER] timed out!!!")
                 shinyalert::closeAlert()
-                js.cb = "function(x){logout();}"
+                js.cb = "logout()"                
                 if(opt$AUTHENTICATION=="shinyproxy") {
                     js.cb = "function(x){logout();quit();window.location.assign('/logout');}"
                 }
