@@ -155,6 +155,12 @@ TIMEOUT   <<- as.integer(opt$TIMEOUT)  ## in seconds
 ## show options
 message("\n",paste(paste(names(opt),"\t= ",sapply(opt,paste,collapse=" ")),collapse="\n"),"\n")
 
+
+## --------------------------------------------------------------------
+## add handlerManager for log/crash reports
+## --------------------------------------------------------------------
+
+
 http.resp <- getFromNamespace("httpResponse", "shiny")
 
 logHandler <- function(http.req){
@@ -229,11 +235,8 @@ logHandler <- function(http.req){
 }
 
 handlerManager <- getFromNamespace("handlerManager", "shiny")
-
-## add handler
 handlerManager$removeHandler("/log")
 handlerManager$addHandler(logHandler, "/log")
-
 
 ## --------------------------------------------------------------------
 ## ----------------- READ MODULES/BOARDS ------------------------------

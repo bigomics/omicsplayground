@@ -27,7 +27,7 @@ ConnectivityUI <- function(id) {
     )
 }
 
-ConnectivityBoard <- function(input, output, session, inputData, selected_gxmethods)
+ConnectivityBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
     ## fullH = session$clientdata$output_foo_height

@@ -17,7 +17,7 @@ TcgaUI <- function(id) {
     )
 }
 
-TcgaBoard <- function(input, output, session, inputData, selected_gxmethods, selected_gsetmethods)
+TcgaBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
     fullH = 800       # row height of panel 

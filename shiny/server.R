@@ -1,4 +1,4 @@
-function(input, output, session) {
+server <- function(input, output, session) {
     
     message("\n========================================================")
     message("===================== SERVER ===========================")
@@ -144,16 +144,12 @@ function(input, output, session) {
             if(ENABLED["bio"])    env[["bio"]]    <- shiny::callModule( BiomarkerBoard, "bio", inputData = env[["load"]][["inputData"]])
             if(ENABLED["cmap"])   env[["cmap"]]   <- shiny::callModule( ConnectivityBoard,
                                                                         "cmap",
-                                                                        inputData = env[["load"]][["inputData"]],
-                                                                        selected_gxmethods = env[["expr"]][["selected_gxmethods"]],
-                                                                        selected_gsetmethods = env[["enrich"]][["selected_gsetmethods"]])
+                                                                        inputData = env[["load"]][["inputData"]])
             if(ENABLED["scell"])  env[["scell"]]  <- shiny::callModule( SingleCellBoard, "scell", inputData <- env[["load"]][["inputData"]])
             shiny::incProgress(0.8)
             if(ENABLED["tcga"])   env[["tcga"]]   <- shiny::callModule( TcgaBoard,
                                                                         "tcga",
-                                                                        inputData = env[["load"]][["inputData"]],
-                                                                        selected_gxmethods = env[["expr"]][["selected_gxmethods"]],
-                                                                        selected_gsetmethods = env[["enrich"]][["selected_gsetmethods"]])
+                                                                        inputData = env[["load"]][["inputData"]])
             if(ENABLED["wgcna"])  env[["wgcna"]]  <- shiny::callModule( WgcnaBoard, "wgcna", inputData = env[["load"]][["inputData"]])
             if(ENABLED["comp"])   env[["comp"]]   <- shiny::callModule( CompareBoard, "comp", inputData = env[["load"]][["inputData"]])
             if(DEV) {            
