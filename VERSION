@@ -1,12 +1,6 @@
-v2.8.5
+v2.8
 
-- Add Shinylogs code 
-- Sever crash log handler
-- Revamped batch-correction module
-- Private data folders for users
-- New gene/geneset UMAP visualization (in Clustering)
-- New 'Compare Datasets' module (beta)
-- Enlarged drug L1000 database (in Drug Connectivity)
-- Gene-specific perturbation database (in Drug Connectivity)
-- User authentication using Google or email
-- Chat box for online support
+- Referral modal (v2.8.6)
+- Add Shinylogs code (v2.8.5)
+- Sever crash log handler (v2.8.5)
+- Revamped batch-correction module (v2.8.5)
