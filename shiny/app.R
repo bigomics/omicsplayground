@@ -533,7 +533,7 @@ server = function(input, output, session) {
             } else if(secs.lapsed >= TIMEOUT) {
                 message("[SERVER] timed out!!!")
                 shinyalert::closeAlert()
-                js.cb = "function(x){logout();}"
+                js.cb = "logout()"                
                 if(opt$AUTHENTICATION=="shinyproxy") {
                     js.cb = "function(x){logout();quit();window.location.assign('/logout');}"
                 }
@@ -708,9 +708,9 @@ server = function(input, output, session) {
         if(input_errors)
             return()
 
-        # send emails
+        # send emails 
         body <- list(
-            referrer = "The user",
+            referrer = env[["load"]]$auth$name(),
             referrals = list(
                 list(
                     name = input$name1,
