@@ -445,6 +445,15 @@ dbg.BAK <- function(... ) {
     }
 }
 
+read.csv3.BAK <- function(file, ...)
+{
+    ## read delimited table automatically determine separator
+    line1 <- as.character(read.csv(file, comment.char='#', sep='\n',nrow=1)[1,])
+    sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))
+    message("[read.csv3] sep = ",sep)
+    read.csv(file, comment.char='#', sep=sep, ...)
+}
+
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
 read.csv3 <- function(file, as_matrix=FALSE)
 {
@@ -468,8 +477,22 @@ read.csv3 <- function(file, as_matrix=FALSE)
         rownames(x) <- xnames[sel]
     }
     ##x <- type.convert(x)
-    ##dim(x)
     x
+}
+
+read.as_matrix <- function(file)
+{
+    ## read delimited table automatically determine separator. allow duplicated rownames.
+    line1 <- as.character(read.csv(file, comment.char='#', sep='\n',nrow=1)[1,])
+    sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))    
+    x0 <- read.csv(file, comment.char='#', sep=sep, check.names=FALSE, stringsAsFactors=FALSE)
+    x <- NULL
+    sel <- which(as.character(x0[,1]) != "")
+    if(length(sel)) {
+        x <- as.matrix(x0[sel, -1 ,drop=FALSE])  ## always as matrix
+        rownames(x) <- x0[,1]
+    }
+    return(x)
 }
 
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
