@@ -357,8 +357,8 @@ UploadModuleServer <- function(id,
                             if(grepl("count",fn1, ignore.case=TRUE)) {
                                 dbg("[upload_files] counts.csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
-                                df0 <- read.csv3(fn2)
-                                if(any(duplicated(rownames(df0)))) {
+                                df0 <- read.as_matrix(fn2)
+                                if(TRUE && any(duplicated(rownames(df0)))) {
                                   #df0 <- with(df0, aggregate(list(df0[,1:ncol(df0)]), list(toupper(rownames(df0))), sum))
                                   shinyWidgets::sendSweetAlert(
                                     session=session,
@@ -380,7 +380,7 @@ UploadModuleServer <- function(id,
                             } else if(grepl("expression",fn1,ignore.case=TRUE)) {
                                 dbg("[upload_files] expression.csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
-                                df0 <- read.csv3(fn2)
+                                df0 <- read.as_matrix(fn2)
                                 if(TRUE && any(duplicated(rownames(df0)))) {
                                   shinyWidgets::sendSweetAlert(
                                     session=session,
@@ -400,7 +400,7 @@ UploadModuleServer <- function(id,
                                 
                             } else if(grepl("sample",fn1,ignore.case=TRUE)) {
                                 dbg("[upload_files] samples.csv : fn1 = ",fn1)
-                                df0 <- read.csv3(fn2)
+                                df0 <- read.as_matrix(fn2)
                                 if(any(duplicated(rownames(df0)))) {
                                   dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
                                   msg <- paste("Your samples phenotype matrix has duplicate entries: ", 
@@ -422,7 +422,7 @@ UploadModuleServer <- function(id,
                               
                             } else if(grepl("contrast",fn1,ignore.case=TRUE)) {
                                 dbg("[upload_files] contrasts.csv : fn1 = ",fn1)
-                                df0 <- read.csv3(fn2)
+                                df0 <- read.as_matrix(fn2)
                                 if(any(duplicated(rownames(df0)))) {
                                   dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
                                   msg <- paste("Your contrasts file has duplicate entries: ", 
