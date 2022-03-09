@@ -446,20 +446,30 @@ dbg.BAK <- function(... ) {
 }
 
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
-read.csv3 <- function(file, ...)
+read.csv3 <- function(file, as_matrix=FALSE)
 {
-  ## read delimited table automatically determine separator. allow duplicated rownames.
-  line1 <- as.character(read.csv(file, comment.char='#', sep='\n',nrow=1)[1,])
-  sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))
-  
-  x0 <- read.csv(file, comment.char='#', sep=sep, check.names=FALSE, stringsAsFactors=FALSE)
-  
-  sel <- which(as.character(x0[,1]) != "")
-  if(length(sel)) {
-    x <- as.matrix(x0[sel, -1 ,drop=FALSE])
-    rownames(x) <- x0[,1]
-  }
-  return(x)
+    ## read delimited table automatically determine separator. Avoid
+    ## duplicated rownames.
+    line1 <- as.character(read.csv(file, comment.char='#', sep='\n',nrow=1)[1,])
+    sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))
+    ##message("[read.csv3] sep = ",sep)
+    ##x <- read.csv(file, comment.char='#', sep=sep)
+    sep
+    ##x <- read.csv(file, comment.char='#', sep=sep, check.names=FALSE, stringsAsFactors=FALSE)
+    x <- data.table::fread(file, sep=sep, check.names=FALSE, stringsAsFactors=FALSE, header=TRUE)
+    x <- as.data.frame(x)
+    x <- x[grep("^#",x[[1]],invert=TRUE),,drop=FALSE]  ## drop comments
+    dim(x)
+    xnames <- as.character(x[,1])
+    sel <- which(xnames!="" & !duplicated(xnames))
+    x <- x[sel,-1,drop=FALSE]
+    if(as_matrix) x <- as.matrix(x)
+    if(length(sel)) {
+        rownames(x) <- xnames[sel]
+    }
+    ##x <- type.convert(x)
+    ##dim(x)
+    x
 }
 
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE

@@ -190,6 +190,112 @@ UploadModuleServer <- function(id,
             ##=====================================================================
             ##================== DATA LOADING OBSERVERS ===========================
             ##=====================================================================            
+
+            fn="../../exampledata/counts.csv"
+            fn="../../exampledata/counts2.csv"
+            fn="../../exampledata/samples.csv"
+            fn="../../exampledata/contrasts.csv"
+            
+            checkDupRows <- function(F, fn, alert=TRUE) {
+                rn <- setdiff(F[[1]],c("","NA",NA))
+                sum(duplicated(rn))
+                t1 <- sum(duplicated(rn))==0
+                if(alert && !t1) {
+                    shinyalert::shinyalert(
+                                    title= paste(fn,"file has duplicated row names"),
+                                    text = "Please correct input file",
+                                    type = "error")
+                }
+                return(t1)
+            }
+            checkEmptyRows <- function(F, fn, alert=TRUE) {
+                t1 <- nrow(F)>0
+                if(alert && !t1) {
+                    shinyalert::shinyalert(
+                                    title= paste(fn,"file is empty!"),
+                                    text = "Please correct input file",
+                                    type = "error")
+                }
+                return(t1)
+            }
+
+            checkDupCols <- function(F, fn, alert=TRUE) {            
+                t1 <- sum(duplicated(colnames(F))) == 0
+                if(alert && !t1) {
+                    shinyalert::shinyalert(
+                                    title= paste(fn,"file has duplicated column names"),
+                                    text = "Please correct input file",
+                                    type = "error")
+                    return(FALSE)
+                }
+                return(t1)                
+            }
+
+            checkMaxSamples <- function(F, alert=TRUE) {                        
+                MAXSAMPLES = as.integer(limits["samples"])
+                t1 <- (ncol(F)-1) <= MAXSAMPLES
+                if(alert && !t1) {
+                    shinyalert::shinyalert(
+                                    title= "Too many samples",
+                                    text = paste("Please decrease number of samples. You can upload maximum",MAXSAMPLES,"samples"),  
+                                    type = "error")
+                }
+                t1
+            }
+
+            checkMaxContrasts <- function(F, alert=TRUE) {                        
+                MAXCONTRASTS = as.integer(limits["comparisons"])
+                t1 <- (ncol(F)-1) <= MAXCONTRASTS
+                if(alert && !t1) {
+                    shinyalert::shinyalert(
+                        title= "Too many contrasts",
+                        text = paste("Please decrease number of contrasts. You can upload maximum",MAXCONTRASTS,"contrasts"),  
+                        type = "error")
+                    return(FALSE)
+                }
+                t1
+            }           
+
+            checkCountsCSV <- function(fn) {
+                F  <- data.table::fread(fn)
+                t1 <- checkDupRows(F, fn, alert=FALSE)
+                t2 <- checkEmptyRows(F, fn)                
+                if(!t1) {
+                    shinyalert::shinyalert(
+                       title= paste(fn,"file has duplicated rows"),
+                       text = "Warning. Duplicated intensities will be summed (linear).",
+                       type = "warning")
+                }
+                t3 <- checkDupCols(F, fn)                                
+                return(t2 && t3)
+            }
+
+            checkSamplesCSV <- function(fn) {
+                F <- data.table::fread(fn,header=TRUE)
+                t1 <- checkDupRows(F, fn)
+                t2 <- checkEmptyRows(F, fn)
+                t3 <- checkDupCols(F, fn)
+                t4 <- checkMaxSamples(F)
+                return(t1 & t2 & t3 & t4)                
+            }
+
+            checkContrastsCSV <- function(fn) {
+                F  <- data.table::fread(fn)
+                t1 <- checkDupRows(F, fn)
+                t2 <- checkEmptyRows(F, fn)                
+                t3 <- checkDupCols(F, fn)
+                checkMaxContrasts                
+                vs.names <- colnames(F)[-1]
+                t4 <- all(grepl("_vs_",vs.names))
+                if(!t4) {
+                    shinyalert::shinyalert(
+                        title= paste(fn,"file has errors"),
+                        text = "Contrast names must include '_vs_'. Must be of the form 'MAIN_vs_REF' or 'VAR:MAIN_vs_REF'. Please correct contrast names.",
+                        type = "error")
+                    return(FALSE)                                        
+                }                
+                return(t1 & t2 & t3 & t4)                
+            }
             
             ##------------------------------------------------------------------
             ## Observer for uploading data files using fileInput widget.
@@ -275,7 +381,7 @@ UploadModuleServer <- function(id,
                                 dbg("[upload_files] expression.csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
                                 df0 <- read.csv3(fn2)
-                                if(any(duplicated(rownames(df0)))) {
+                                if(TRUE && any(duplicated(rownames(df0)))) {
                                   shinyWidgets::sendSweetAlert(
                                     session=session,
                                     title = "Duplicated gene name",
@@ -892,9 +998,10 @@ UploadModuleServer <- function(id,
                     if(status["contrasts.csv"]=="OK" && status["samples.csv"]=="OK") {
                         samples1   <- uploaded[["samples.csv"]]
                         contrasts1 <- uploaded[["contrasts.csv"]]
-                        old1 = ("group" %in% colnames(samples1) &&
+                        group.col <- grep("group", tolower(colnames(samples1)))
+                        old1 = (length(group.col)>0 &&
                                 nrow(contrasts1) < nrow(samples1) &&
-                                all(rownames(contrasts1) %in% samples1$group)
+                                all(rownames(contrasts1) %in% samples1[,group.col])
                         )
                         old2 = all(rownames(contrasts1)==rownames(samples1)) &&
                             all(unique(as.vector(contrasts1)) %in% c(-1,0,1,NA))
@@ -906,7 +1013,7 @@ UploadModuleServer <- function(id,
                             new.contrasts <- samples1[,0]
                             if(NCOL(contrasts1)>0) {
                                 new.contrasts <- contrastAsLabels(contrasts1)
-                                grp = as.character(samples1$group)
+                                grp = as.character(samples1[,group.col])
                                 new.contrasts <- new.contrasts[grp,,drop=FALSE]
                                 rownames(new.contrasts) <- rownames(samples1)
                             }
@@ -969,7 +1076,7 @@ UploadModuleServer <- function(id,
                         }
                     }
                     
-                    ## check files: must have group column defined
+                    ## check samples.csv: must have group column defined
                     if(status["samples.csv"]=="OK" && status["contrasts.csv"]=="OK") {
                         samples1   = uploaded[["samples.csv"]]
                         contrasts1 = uploaded[["contrasts.csv"]]

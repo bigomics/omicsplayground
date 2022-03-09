@@ -1,6 +1,6 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
 message("===============================================================")
@@ -21,11 +21,11 @@ if(0) {
 }
 
 ##-----------------------------------------------------
-## Initialize ORCA server
+## Initialize ORCA server (DEPRECATED)
 ##-----------------------------------------------------
 ## see: pgx-module.R
 ORCA <- NULL
-if(0 && getOption("OMICS_ORCA_RUN", TRUE)){
+if(FALSE && getOption("OMICS_ORCA_RUN", TRUE)){
     ORCA <- initOrca(launch=TRUE) 
     class(ORCA)
     if(is.null(ORCA)) {
