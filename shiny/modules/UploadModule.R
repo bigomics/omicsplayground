@@ -359,13 +359,13 @@ UploadModuleServer <- function(id,
                                 ## allows duplicated rownames
                                 df0 <- read.as_matrix(fn2)
                                 if(TRUE && any(duplicated(rownames(df0)))) {
-                                  #df0 <- with(df0, aggregate(list(df0[,1:ncol(df0)]), list(toupper(rownames(df0))), sum))
+                                  ndup <- sum(duplicated(rownames(df0)))
                                   shinyWidgets::sendSweetAlert(
                                     session=session,
-                                    title = "Duplicated gene name",
-                                    text = "Your counts matrix has duplicate gene names \n We merged the counts of those gene-names ",
-                                    type = "info",
-                                    btn_labels = c("Cancel","Continue"),
+                                    title = "Duplicated gene names",
+                                    text = paste("Your counts matrix has",ndup,"duplicated gene names.\nCounts of those genes will be merged."),
+                                    type = "warning",
+                                    btn_labels = "OK",
                                     closeOnClickOutside = FALSE,
                                   )
                                 }
@@ -382,12 +382,13 @@ UploadModuleServer <- function(id,
                                 ## allows duplicated rownames
                                 df0 <- read.as_matrix(fn2)
                                 if(TRUE && any(duplicated(rownames(df0)))) {
+                                  ndup <- sum(duplicated(rownames(df0)))                                    
                                   shinyWidgets::sendSweetAlert(
                                     session=session,
-                                    title = "Duplicated gene name",
-                                    text = "Your counts matrix has duplicate gene names \n We merged the counts of those gene-names ",
-                                    type = "info",
-                                    btn_labels = c("Cancel","Continue"),
+                                    title = "Duplicated gene names",
+                                    text = paste("Your counts matrix has",ndup,"duplicated gene names.\nCounts of those genes will be merged."),
+                                    type = "warning",
+                                    btn_labels = "OK",
                                     closeOnClickOutside = FALSE,
                                   )
                                 }
@@ -403,15 +404,15 @@ UploadModuleServer <- function(id,
                                 df0 <- read.as_matrix(fn2)
                                 if(any(duplicated(rownames(df0)))) {
                                   dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
-                                  msg <- paste("Your samples phenotype matrix has duplicate entries: ", 
-                                               dup.rows, ". This is not allowed , please correct it")
+                                  msg <- paste("Your samples file has duplicated entries: ", 
+                                               dup.rows, ". This is not allowed, please correct.")
                                   shinyWidgets::sendSweetAlert(
                                     session=session,
                                     title = "Duplicated sample name",
-                                    text = h5(msg),
-                                    type = "Error",
+                                    text = msg,
+                                    type = "error",
                                     btn_labels = "OK",
-                                    btn_colors = "red",
+                                    ##btn_colors = "red",
                                     closeOnClickOutside = FALSE,
                                   )
                                   
@@ -425,15 +426,15 @@ UploadModuleServer <- function(id,
                                 df0 <- read.as_matrix(fn2)
                                 if(any(duplicated(rownames(df0)))) {
                                   dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
-                                  msg <- paste("Your contrasts file has duplicate entries: ", 
-                                               dup.rows, ". This is not allowed , please correct it")
+                                  msg <- paste("Your contrasts file has duplicated entries: ", 
+                                               dup.rows, ". This is not allowed, please correct.")
                                   shinyWidgets::sendSweetAlert(
                                     session=session,
                                     title = "Duplicated contrast name",
                                     text = msg,
-                                    type = "Error",
+                                    type = "error",
                                     btn_labels = "OK",
-                                    btn_colors = "red",
+                                    ## btn_colors = "red",
                                     closeOnClickOutside = FALSE,
                                   )
                                 } else if(nrow(df0)>1 && NCOL(df0)>=1) {
