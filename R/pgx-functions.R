@@ -487,10 +487,10 @@ read.as_matrix.SAVE <- function(file)
     sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))    
     x0 <- read.csv(file, comment.char='#', sep=sep, check.names=FALSE, stringsAsFactors=FALSE)
     x <- NULL
-    sel <- which(as.character(x0[,1]) != "")
+    sel <- which(! as.character(x0[,1]) %in% c(""," ","NA","na",NA))        
     if(length(sel)) {
         x <- as.matrix(x0[sel, -1 ,drop=FALSE])  ## always as matrix
-        rownames(x) <- x0[,1]
+        rownames(x) <- x0[sel,1]
     }
     return(x)
 }
@@ -502,10 +502,11 @@ read.as_matrix <- function(file)
     x0 <- data.table::fread(file=file, check.names=FALSE, header=TRUE,
                             blank.lines.skip=TRUE, stringsAsFactors=FALSE)
     x <- NULL
-    sel <- which(as.character(x0[[1]]) != "")    
+    sel <- which(!as.character(x0[[1]]) %in% c(""," ","NA","na",NA))
+    length(sel)    
     if(length(sel)) {
         x <- as.matrix(x0[sel, -1 ,drop=FALSE])  ## always as matrix
-        rownames(x) <- x0[[1]]
+        rownames(x) <- x0[[1]][sel]
     }
     return(x)
 }
