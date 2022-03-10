@@ -480,7 +480,7 @@ read.csv3 <- function(file, as_matrix=FALSE)
     x
 }
 
-read.as_matrix <- function(file)
+read.as_matrix.SAVE <- function(file)
 {
     ## read delimited table automatically determine separator. allow duplicated rownames.
     line1 <- as.character(read.csv(file, comment.char='#', sep='\n',nrow=1)[1,])
@@ -491,6 +491,21 @@ read.as_matrix <- function(file)
     if(length(sel)) {
         x <- as.matrix(x0[sel, -1 ,drop=FALSE])  ## always as matrix
         rownames(x) <- x0[,1]
+    }
+    return(x)
+}
+
+read.as_matrix <- function(file)
+{
+    ## read delimited table automatically determine separator. allow
+    ## duplicated rownames. This implements with faster fread.
+    x0 <- data.table::fread(file=file, check.names=FALSE, header=TRUE,
+                            blank.lines.skip=TRUE, stringsAsFactors=FALSE)
+    x <- NULL
+    sel <- which(as.character(x0[[1]]) != "")    
+    if(length(sel)) {
+        x <- as.matrix(x0[sel, -1 ,drop=FALSE])  ## always as matrix
+        rownames(x) <- x0[[1]]
     }
     return(x)
 }
