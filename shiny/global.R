@@ -267,9 +267,23 @@ for(m in boards) {
     source(paste0("boards/",m))
 }
 
-
+# load ui for each board
+source("./boards/ui/biomarker_ui.R", encoding = "UTF-8")
+source("./boards/ui/clustering_ui.R", encoding = "UTF-8")
+source("./boards/ui/compare_ui.R", encoding = "UTF-8")
+source("./boards/ui/connectivity_ui.R", encoding = "UTF-8")
+source("./boards/ui/correlation_ui.R", encoding = "UTF-8")
 source("./boards/ui/dataview_ui.R", encoding = "UTF-8")
+source("./boards/ui/drugconnectivity_ui.R", encoding = "UTF-8")
+
+# load server for each board
+source("./boards/server/biomarker_server.R", encoding = "UTF-8")
+source("./boards/server/clustering_server.R", encoding = "UTF-8")
+source("./boards/server/compare_server.R", encoding = "UTF-8")
+source("./boards/server/connectivity_server.R", encoding = "UTF-8")
+source("./boards/server/correlation_server.R", encoding = "UTF-8")
 source("./boards/server/dataview_server.R", encoding = "UTF-8")
+source("./boards/server/drugconnectivity_server.R", encoding = "UTF-8")
 
 ##ENABLED[c("wgcna","system","multi")] <- FALSE
 ENABLED[c("system","multi","corsa")] <- FALSE 
