@@ -267,6 +267,10 @@ for(m in boards) {
     source(paste0("boards/",m))
 }
 
+
+source("./boards/ui/dataview_ui.R", encoding = "UTF-8")
+source("./boards/server/dataview_server.R", encoding = "UTF-8")
+
 ##ENABLED[c("wgcna","system","multi")] <- FALSE
 ENABLED[c("system","multi","corsa")] <- FALSE 
 if(0 && DEV && dir.exists("modulesx")) {
