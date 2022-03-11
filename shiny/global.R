@@ -275,6 +275,13 @@ source("./boards/ui/connectivity_ui.R", encoding = "UTF-8")
 source("./boards/ui/correlation_ui.R", encoding = "UTF-8")
 source("./boards/ui/dataview_ui.R", encoding = "UTF-8")
 source("./boards/ui/drugconnectivity_ui.R", encoding = "UTF-8")
+source("./boards/ui/enrichment_ui.R", encoding = "UTF-8")
+source("./boards/ui/expression_ui.R", encoding = "UTF-8")
+source("./boards/ui/featuremap_ui.R", encoding = "UTF-8")
+source("./boards/ui/functional_ui.R", encoding = "UTF-8")
+source("./boards/ui/intersection_ui.R", encoding = "UTF-8")
+source("./boards/ui/loading_ui.R", encoding = "UTF-8")
+
 
 # load server for each board
 source("./boards/server/biomarker_server.R", encoding = "UTF-8")
@@ -284,6 +291,13 @@ source("./boards/server/connectivity_server.R", encoding = "UTF-8")
 source("./boards/server/correlation_server.R", encoding = "UTF-8")
 source("./boards/server/dataview_server.R", encoding = "UTF-8")
 source("./boards/server/drugconnectivity_server.R", encoding = "UTF-8")
+source("./boards/server/enrichment_server.R", encoding = "UTF-8")
+source("./boards/server/expression_server.R", encoding = "UTF-8")
+source("./boards/server/featuremap_server.R", encoding = "UTF-8")
+source("./boards/server/functional_server.R", encoding = "UTF-8")
+source("./boards/server/intersection_server.R", encoding = "UTF-8")
+source("./boards/server/loading_server.R", encoding = "UTF-8")
+
 
 ##ENABLED[c("wgcna","system","multi")] <- FALSE
 ENABLED[c("system","multi","corsa")] <- FALSE 
