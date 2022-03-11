@@ -44,7 +44,7 @@ LoadingBoard <- function(input, output, session, pgx_dir,
                          enable_upload = TRUE,
                          enable_delete = TRUE,
                          enable_save = TRUE,
-                         enable_userdir = TRUE,                         
+                         enable_userdir = TRUE,
                          authentication="none")
 {
     ns <- session$ns ## NAMESPACE
