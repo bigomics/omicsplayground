@@ -5,16 +5,11 @@
 DataViewBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
-   
     rowH = 355  ## row height of panels
     imgH = 315  ## height of images
     fullH = 750 ## full height of panel
     tabH = 600  ## height of tables
-    ##tabH = "70vh"  ## height of tables
-    
-    description = "<b>DataView.</b> Information and descriptive statistics to quickly lookup a gene, check the total counts, or view the data tables."
-    output$description <- shiny::renderUI(shiny::HTML(description))
-    
+
     ##----------------------------------------------------------------------
     ## More Info (pop up window)
     ##----------------------------------------------------------------------
@@ -22,68 +17,33 @@ DataViewBoard <- function(input, output, session, inputData)
     menu_grouped='<code>Group by</code>'
     
     data_infotext =paste0(
-        'The <strong>DataView module</strong> provides information and visualisations of the dataset to quickly lookup a gene, check the counts, or view the data tables. 
-
-<br><br>The <strong>Plots</strong> panel displays figures related to the expression level of the selected gene, correlation, and average expression ranking within the dataset. More information about the gene and hyperlinks to external databases are provided. Furthermore, it displays the correlation and tissue expression for a selected gene in external reference datasets. In the <strong>Counts</strong> panel, the total number of counts (abundance) per sample and their distribution among the samples are displayed. This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes. In <strong>Gene Table</strong> panel, the exact expression values across the samples can be looked up, where genes are ordered by the correlation with respect to the first gene. Gene-wise average expression of a phenotype sample grouping is also presented in this table. In the <strong>Samples</strong> panel, more complete information about samples can be found. Finally, the <strong>Contrasts</strong> panel, shows information about the phenotype comparisons.
-
-<br><br><br>
-<center><iframe width="560" height="315" src="https://www.youtube.com/embed/S32SPINqO8E" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
-
-')
-
-    ##================================================================================
-    ##========================= INPUTS UI ============================================
-    ##================================================================================
-
-
-    ## data set parameters
-    datatypes <- c("CPM","logCPM")
-    datatypes <- c("counts","CPM","logCPM")
-    datatypes <- c("counts","logCPM")
-
-    output$inputsUI <- shiny::renderUI({
-
-        ui <- shiny::tagList(
-            shinyBS::tipify( shiny::actionLink(ns("data_info"), "Tutorial", icon = shiny::icon("youtube")),
-                   "Show more information about this module."),
-            shiny::hr(), shiny::br(), 
-            ##textInput("search_gene","Filter genes", value="")
-            shinyBS::tipify( shiny::selectInput(ns("search_gene"),"Gene:", choices=NULL),
-                   ## options = list(maxOptions = 9999999, placeholder='gene')),
-                   "Enter a gene of interest for the analysis.", placement="top"),
-            shinyBS::tipify( shiny::selectInput(ns("data_samplefilter"),"Filter samples:",
-                                choices=NULL, multiple=TRUE),
-                   "Filter the relevant samples for the analysis.", placement="top"),
-            shinyBS::tipify( shiny::selectInput(ns('data_groupby'),'Group by:', choices=NULL),
-                   "Select phenotype for grouping the samples.", placement="top"),
-            shiny::br(),
-            shinyBS::tipify( shiny::actionLink(ns("data_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                   "Toggle advanced options.", placement="top"),
-            shiny::br(),br(),
-            shiny::conditionalPanel(
-                "input.data_options % 2 == 1", ns=ns,
-                shinyBS::tipify( shiny::radioButtons(ns('data_type'),'Data type:',
-                                     choices=datatypes, selected="logCPM", inline=TRUE),
-                       "Choose an input data type for the analysis.", placement="bottom")
-            )
-        )
-        ui
-    })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
-    
-    ##================================================================================
-    ##========================= OBSERVE ==============================================
-    ##================================================================================
+        'The <strong>DataView module</strong> provides information and visualisations of the dataset to quickly lookup a gene,
+        check the counts, or view the data tables.<br><br>
+        The <strong>Plots</strong> panel displays figures related to the expression level of the selected gene,
+        correlation, and average expression ranking within the dataset.
+        More information about the gene and hyperlinks to external databases are provided. Furthermore,
+        it displays the correlation and tissue expression for a selected gene in external reference datasets.
+        In the <strong>Counts</strong> panel, the total number of counts (abundance) per sample and their distribution among the samples are displayed.
+        This is most useful to check the technical quality of the dataset, such as total read counts or abundance of ribosomal genes.
+        In <strong>Gene Table</strong> panel, the exact expression values across the samples can be looked up,
+        where genes are ordered by the correlation with respect to the first gene. Gene-wise average expression of a phenotype sample grouping
+        is also presented in this table. In the <strong>Samples</strong> panel, more complete information about samples can be found.
+        Finally, the <strong>Contrasts</strong> panel, shows information about the phenotype comparisons.
+        <br><br><br>
+        <center><iframe width="560" height="315" src="https://www.youtube.com/embed/S32SPINqO8E"
+        title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen></iframe></center>
+    ')
 
     ## ------- observe functions -----------
     shiny::observeEvent( input$data_info, {
         shiny::showModal(shiny::modalDialog(
             title = shiny::HTML("<strong>Data View Board</strong>"),
             shiny::HTML(data_infotext),
-            easyClose = TRUE, size="l" ))
+            easyClose = TRUE, size="l"))
     })
 
-    ## update filter choices upon change of data set 
+    ## update filter choices upon change of data set
     shiny::observe({
         ngs <- inputData()
         shiny::req(ngs)
@@ -96,23 +56,15 @@ DataViewBoard <- function(input, output, session, inputData)
         names(listGenes) = '(type gene if missing!)'
         fc2 = rowMeans(pgx.getMetaFoldChangeMatrix(ngs)$fc**2)
         selgene = names(sort(-fc2))[1] ## most var gene??
-        ##selgene = genes[1] ## first alphabetical 
         sel1 = which(genes==selgene)
-        #updateSelectizeInput(session,'search_gene', choices=genes, selected=selgene,
-        #                     options = list(maxOptions = 9999999, placeholder='gene'),
-        #                     server = TRUE)
         shiny::updateSelectInput(session,'search_gene', choices=listGenes, selected=selgene)
-        ##updateSelectInput(session,'search_gene', choices=listGenes, selected='')        
-
         grps <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=999)
         grps <- sort(grps)
         selgrp <- grps[1]
-        ##if(ncol(ngs$counts) <= 200)
         grps <- c("<ungrouped>",grps)
         if("group" %in% grps) selgrp = "group"
         if(nrow(ngs$samples)<=20) selgrp = "<ungrouped>"
         shiny::updateSelectInput(session,'data_groupby', choices=grps, selected=selgrp)
-        
     })
     
 
@@ -161,7 +113,6 @@ DataViewBoard <- function(input, output, session, inputData)
             ylab="expression (counts)"
         }
         if(input$data_type=="CPM") {
-            ##cpm <- edgeR::cpm(ngs$counts[,samples])
             cpm = 2**ngs$X[,samples,drop=FALSE]
             mean.fc <- sort(rowMeans(cpm),decreasing=TRUE)
             ylab="expression (CPM)"
@@ -172,17 +123,14 @@ DataViewBoard <- function(input, output, session, inputData)
         }
         
         j <- which(sub(".*:","",names(mean.fc))==gene)
-        ##j <- which(ngs$genes$gene_name==gene)
-        
+
         mar = MARGINS1
         mar[4] = 0
         par(mar=mar, mgp=c(2.1,0.8,0))
         par(mar=c(2.3,3.0,2,2), mgp=c(2.0,0.6,0))
         ##MARGINS1
         base::plot( mean.fc, type="h", lwd=0.4,
-                   ## col="#3380CC11", 
                    col="#bbd4ee", cex.axis=0.9,
-                   ##main="average rank", cex.main=1.2,
                    ylab=ylab, xlab="ordered genes", xaxt="n")
         points( j, mean.fc[j], type="h", lwd=2, col="black")
         text( j, mean.fc[j], gene, pos=3, cex=0.9)
@@ -1587,6 +1535,4 @@ DataViewBoard <- function(input, output, session, inputData)
             )
         )
     })
-
-
 }
