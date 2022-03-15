@@ -111,7 +111,7 @@ server <- function(input, output, session) {
             return(NULL)
         }
         modules_loaded <<- TRUE
-        
+
         ## load other modules if
         message("[SERVER:env.loaded] --------- calling shiny modules ----------")
         shiny::withProgress(message="initializing modules ...", value=0, {
@@ -160,8 +160,8 @@ server <- function(input, output, session) {
             }
         })
         message("[SERVER:env.loaded] --------- done! ----------")
-        ## remove modal from LoadingBoard            
-        shiny::removeModal()          
+        ## remove modal from LoadingBoard
+        shiny::removeModal()
     })
     
     ## message("[SERVER] all boards called:",paste(names(env),collapse=" "))
