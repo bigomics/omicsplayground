@@ -281,6 +281,11 @@ source("./boards/ui/featuremap_ui.R", encoding = "UTF-8")
 source("./boards/ui/functional_ui.R", encoding = "UTF-8")
 source("./boards/ui/intersection_ui.R", encoding = "UTF-8")
 source("./boards/ui/loading_ui.R", encoding = "UTF-8")
+source("./boards/ui/signature_ui.R", encoding = "UTF-8")
+source("./boards/ui/singlecell_ui.R", encoding = "UTF-8")
+source("./boards/ui/user_ui.R", encoding = "UTF-8")
+source("./boards/ui/wgcna_ui.R", encoding = "UTF-8")
+source("./boards/ui/wordcloud_ui.R", encoding = "UTF-8")
 
 
 # load server for each board
@@ -297,6 +302,11 @@ source("./boards/server/featuremap_server.R", encoding = "UTF-8")
 source("./boards/server/functional_server.R", encoding = "UTF-8")
 source("./boards/server/intersection_server.R", encoding = "UTF-8")
 source("./boards/server/loading_server.R", encoding = "UTF-8")
+source("./boards/server/signature_server.R", encoding = "UTF-8")
+source("./boards/server/singlecell_server.R", encoding = "UTF-8")
+source("./boards/server/user_server.R", encoding = "UTF-8")
+source("./boards/server/wgcna_server.R", encoding = "UTF-8")
+source("./boards/server/wordcloud_server.R", encoding = "UTF-8")
 
 
 ##ENABLED[c("wgcna","system","multi")] <- FALSE
