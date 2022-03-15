@@ -950,10 +950,6 @@ tableModule <- function(input, output, session,
                                  )),
         zoom.button,
         shiny::HTML(paste("<center>",title,"</center>"))
-        ##HTML(paste("<center><strong>",title,"</strong></center>"))
-        ## shiny::HTML(paste("<center>",title,"</center>"))
-        ##inputs
-        ##selectInput("sel123","number",1:10)
     )
     
     CSVFILE = paste0(gsub("file","data",tempfile()),".csv")
