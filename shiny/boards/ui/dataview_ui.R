@@ -19,7 +19,7 @@ DataViewUI <- function(id) {
         shiny::tabPanel("QC",uiOutput(ns("countsUI"))),
         shiny::tabPanel("Counts",uiOutput(ns("genetableUI"))),
         shiny::tabPanel("Samples",uiOutput(ns("sampletableUI"))),
-        shiny::tabPanel("Contrasts",uiOutput(ns("contrasttableUI"))),        
+        shiny::tabPanel("Contrasts",uiOutput(ns("contrasttableUI"))),
         shiny::tabPanel("Resource info",uiOutput(ns("resourceinfoUI")))
     )
 }
