@@ -646,10 +646,6 @@ DataViewBoard <- function(input, output, session, inputData)
             }
             output <- paste(output, collapse="<p>")
         }    
-        ##output <- paste0("<div style='background-color: #dde6f0;'>",output,"</div>")
-        ##div(shiny::HTML(output), class="gene-info-output", style="overflow: auto; height: 260px;")
-        ##div(shiny::HTML(output), class="gene-info-output")
-        ##div(shiny::HTML(output), class="gene-info-output", style="overflow-y: auto;")        
         shiny::wellPanel(shiny::HTML(output))
     })
 
@@ -1249,7 +1245,8 @@ DataViewBoard <- function(input, output, session, inputData)
                                 backgroundSize = '98% 88%',
                                 backgroundRepeat = 'no-repeat',
                                 backgroundPosition = 'center')
-    })
+    }) %>%
+    bindCache(input$search_gene, input$data_type, input$data_groupby)
 
     data_rawdataTable_caption = "<b>Gene table.</b> The table shows the gene expression values per sample, or average expression values across the groups. The column 'rho' reports the correlation with the gene selected in 'Search gene' in the left side bar."
 
@@ -1259,7 +1256,6 @@ DataViewBoard <- function(input, output, session, inputData)
         title = "Gene expression table",
         filename = "counts.csv",
         info.text = data_rawdataTable_text
-        ##caption = data_rawdataTable_caption
     )
 
     output$genetableUI <- shiny::renderUI({
@@ -1360,7 +1356,6 @@ DataViewBoard <- function(input, output, session, inputData)
 
         dbg("[data_sampleTable.RENDER] reacted")
         
-        ##if(is.null(input$data_samplefilter)) return(NULL)    
         dt <- NULL
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
         dt <- ngs$samples[samples,,drop=FALSE]    
@@ -1375,32 +1370,8 @@ DataViewBoard <- function(input, output, session, inputData)
                           deferRender=TRUE
                       )) %>%
             DT::formatStyle(0, target='row', fontSize='11px', lineHeight='70%')         
-    })
-
-    data_sampleTable.RENDER2 <- shiny::reactive({
-        ## get current view of raw_counts
-        ngs = inputData()
-        shiny::req(ngs)
-
-        dbg("[data_sampleTable.RENDER2] reacted")
-        
-        ##if(is.null(input$data_samplefilter)) return(NULL)    
-        dt <- NULL
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        dt <- ngs$samples[samples,,drop=FALSE]    
-        DT::datatable( dt,
-                      class = 'compact cell-border stripe hover',
-                      rownames = TRUE,
-                      extensions = c('Buttons','Scroller'),
-                      selection = list(mode='single', target='row', selected=1),
-                      options=list(
-                          dom = 'lfrtip', 
-                          scroller=TRUE, scrollX = TRUE, scrollY = 600,
-                          deferRender=TRUE
-                      )) %>%
-            DT::formatStyle(0, target='row', fontSize='12px', lineHeight='70%')         
-    })
-
+    }) %>%
+    bindCache(input$data_samplefilter)
     
     data_sampleTable_caption="<b>Sample information table.</b> Phenotype information about the samples. Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
     data_sampleTable_info = "<b>Sample information table.</b> Phenotype information about the samples. Phenotype variables starting with a 'dot' (e.g. '.cell cycle' and '.gender' ) have been estimated from the data."
@@ -1408,13 +1379,11 @@ DataViewBoard <- function(input, output, session, inputData)
     data_sampleTable <- shiny::callModule(
         tableModule, "data_sampleTable", label="c",
         func = data_sampleTable.RENDER,
-        func2 = data_sampleTable.RENDER2,
+        func2 = data_sampleTable.RENDER,
         title = "Sample information",
         filename = "samples.csv",
         info.text = data_sampleTable_info,
-        height = c(280,750), width=c('auto',1280),
-        ##options = data_sampleTable_opts,
-        ## caption = data_sampleTable_caption
+        height = c(280,750), width=c('auto',1280)
     )
 
     sampletableUI_caption <- paste(
