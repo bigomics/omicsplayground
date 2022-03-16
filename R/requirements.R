@@ -88,7 +88,7 @@ PKG.MANUAL <- c(
     "fpc","grid","gridGraphics","Rgraphviz", ## "rWordCloud",
     "shinyparticles","FastGGM","monocle3","proteus",
     ## "infercnv","pathview",
-    "mygene","diptest")
+    "mygene","diptest","edgeR","DESeq2")
 
 ##---------------------------------------------------------------------
 ## Install base packages
