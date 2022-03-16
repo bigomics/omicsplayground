@@ -822,18 +822,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         download.html = hm_splitmap_downloadHTML,
         add.watermark = WATERMARK
     )
-
-    output$hm_heatmap_UI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.025,1),
-            height = fullH,
-            shiny::div(shiny::HTML(hm_splitmap_caption), class="caption"),
-            shiny::br(),
-            ##div( plotWidget(ns("hm_splitmap")) %>% shinycssloaders::withSpinner(), style="overflow-y: auto; max-height: 640px;")
-            plotWidget(ns("hm_splitmap")) %>% shinycssloaders::withSpinner()
-        )
-    })
-    shiny::outputOptions(output, "hm_heatmap_UI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##================================ PCA/tSNE ======================================
@@ -1654,7 +1642,6 @@ displays the expression levels of selected genes across all conditions in the an
             plotWidget(ns("clustannot_table"))
         )
     })
-    shiny::outputOptions(output, "hm_annotateUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ## Phenotypes {data-height=800}
