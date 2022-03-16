@@ -822,7 +822,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         download.html = hm_splitmap_downloadHTML,
         add.watermark = WATERMARK
     )
-    
+
     ##================================================================================
     ##================================ PCA/tSNE ======================================
     ##================================================================================
@@ -1108,18 +1108,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         info.text = hm_PCAplot_text,
         add.watermark = WATERMARK        
     )
-
-    output$hm_pcaUI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.02,1),
-            height = fullH,
-            shiny::div(shiny::HTML(pca_caption_static), class="caption"),
-            shiny::br(),
-            plotWidget(ns("hm_PCAplot"))
-        )
-    })
-    shiny::outputOptions(output, "hm_pcaUI", suspendWhenHidden=FALSE) ## important!!!
-    
     
     ##================================================================================
     ## Parallel coordinates

@@ -3,8 +3,6 @@
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
 
-message(">>> sourcing FeatureMapBoard")
-
 FeatureMapInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(

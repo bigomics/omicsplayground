@@ -66,10 +66,21 @@ ClusteringUI <- function(id) {
             id = ns("tabs1"),
             shiny::tabPanel("Heatmap", 
                 tags$div(
-                HTML("<b>Clustered heatmap.</b> Heatmap showing gene expression sorted by 2-way hierarchical clustering. Red corresponds to overexpression, blue to underexpression of the gene. At the same time, gene clusters are functionally annotated in the 'Annotate clusters' panel on the right.")
+                HTML("<b>Clustered heatmap.</b> Heatmap showing gene expression sorted by 2-way hierarchical
+                 clustering. Red corresponds to overexpression, blue to underexpression of the gene.
+                 At the same time, gene clusters are functionally annotated in the
+                'Annotate clusters' panel on the right.")
                 ),
                 plotWidget(ns("hm_splitmap"))),
-            shiny::tabPanel("PCA/tSNE",uiOutput(ns("hm_pcaUI"))),
+            shiny::tabPanel("PCA/tSNE",
+                tags$div(
+                    HTML("<b>PCA/tSNE plot.</b> The plot visualizes the similarity in expression of
+                     samples as a scatterplot in reduced dimension (2D or 3D).
+                     Samples that are similar are clustered near to each other, while samples with different
+                     expression are positioned farther away. Groups of samples with similar profiles
+                     will appear as <i>clusters</i> in the plot.")
+                    ),
+                plotWidget(ns("hm_PCAplot"))),
             shiny::tabPanel("Parallel",uiOutput(ns("hm_parcoordUI")))
             
         ),
