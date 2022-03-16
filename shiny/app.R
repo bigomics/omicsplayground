@@ -24,6 +24,7 @@ message(">>>>> LOADING INITIAL LIBS")
 ## some libraries that we often need and load fast
 library(shiny)
 library(shinyBS)
+library(pryr)
 library(grid)
 
 message("***********************************************")
@@ -71,7 +72,7 @@ source(file.path(RDIR,"pgx-functions.R")) ## functions...
 source(file.path(RDIR,"pgx-files.R"))     ## file functions
 source(file.path(RDIR,"pgx-init.R"))
 source(file.path(RDIR,"auth.R"))
-#source("app-init.R")
+source("app-init.R")
 
 if(0) {    
     ## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
@@ -1004,4 +1005,3 @@ run_application(ui, server)
 ## --------------------------------------------------------------------
 ## ------------------------------ EOF----------------------------------
 ## --------------------------------------------------------------------
-

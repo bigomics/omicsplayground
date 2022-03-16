@@ -267,6 +267,50 @@ for(m in boards) {
     source(paste0("boards/",m))
 }
 
+# load ui for each board
+source("./boards/ui/biomarker_ui.R", encoding = "UTF-8")
+source("./boards/ui/clustering_ui.R", encoding = "UTF-8")
+source("./boards/ui/compare_ui.R", encoding = "UTF-8")
+source("./boards/ui/connectivity_ui.R", encoding = "UTF-8")
+source("./boards/ui/correlation_ui.R", encoding = "UTF-8")
+source("./boards/ui/dataview_ui.R", encoding = "UTF-8")
+source("./boards/ui/drugconnectivity_ui.R", encoding = "UTF-8")
+source("./boards/ui/enrichment_ui.R", encoding = "UTF-8")
+source("./boards/ui/expression_ui.R", encoding = "UTF-8")
+source("./boards/ui/featuremap_ui.R", encoding = "UTF-8")
+source("./boards/ui/functional_ui.R", encoding = "UTF-8")
+source("./boards/ui/intersection_ui.R", encoding = "UTF-8")
+source("./boards/ui/loading_ui.R", encoding = "UTF-8")
+source("./boards/ui/signature_ui.R", encoding = "UTF-8")
+source("./boards/ui/singlecell_ui.R", encoding = "UTF-8")
+source("./boards/ui/tcga_ui.R", encoding = "UTF-8")
+source("./boards/ui/user_ui.R", encoding = "UTF-8")
+source("./boards/ui/wgcna_ui.R", encoding = "UTF-8")
+source("./boards/ui/wordcloud_ui.R", encoding = "UTF-8")
+
+
+# load server for each board
+source("./boards/server/biomarker_server.R", encoding = "UTF-8")
+source("./boards/server/clustering_server.R", encoding = "UTF-8")
+source("./boards/server/compare_server.R", encoding = "UTF-8")
+source("./boards/server/connectivity_server.R", encoding = "UTF-8")
+source("./boards/server/correlation_server.R", encoding = "UTF-8")
+source("./boards/server/dataview_server.R", encoding = "UTF-8")
+source("./boards/server/drugconnectivity_server.R", encoding = "UTF-8")
+source("./boards/server/enrichment_server.R", encoding = "UTF-8")
+source("./boards/server/expression_server.R", encoding = "UTF-8")
+source("./boards/server/featuremap_server.R", encoding = "UTF-8")
+source("./boards/server/functional_server.R", encoding = "UTF-8")
+source("./boards/server/intersection_server.R", encoding = "UTF-8")
+source("./boards/server/loading_server.R", encoding = "UTF-8")
+source("./boards/server/signature_server.R", encoding = "UTF-8")
+source("./boards/server/singlecell_server.R", encoding = "UTF-8")
+source("./boards/server/tcga_server.R", encoding = "UTF-8")
+source("./boards/server/user_server.R", encoding = "UTF-8")
+source("./boards/server/wgcna_server.R", encoding = "UTF-8")
+source("./boards/server/wordcloud_server.R", encoding = "UTF-8")
+
+
 ##ENABLED[c("wgcna","system","multi")] <- FALSE
 ENABLED[c("system","multi","corsa")] <- FALSE 
 if(0 && DEV && dir.exists("modulesx")) {
