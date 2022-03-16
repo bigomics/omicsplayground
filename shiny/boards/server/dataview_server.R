@@ -98,24 +98,18 @@ DataViewBoard <- function(input, output, session, inputData)
         shiny::req(ngs)
         
         dbg("[genePlots_averageRankPlot.RENDER] reacted")
-
-        gene = "KCNN4"
-        gene = ngs$genes$gene_name[1]
+        
+        gene <- ngs$genes$gene_name[1]
         if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
-        samples = colnames(ngs$X)
+        samples <- colnames(ngs$X)
         if(!is.null(input$data_samplefilter)) {
             samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
         }
-        nsamples = length(samples)
+        nsamples <- length(samples)
         
         if(input$data_type=="counts") {
             mean.fc <- sort(rowMeans(ngs$counts[,samples,drop=FALSE]),decreasing=TRUE)
             ylab="expression (counts)"
-        }
-        if(input$data_type=="CPM") {
-            cpm = 2**ngs$X[,samples,drop=FALSE]
-            mean.fc <- sort(rowMeans(cpm),decreasing=TRUE)
-            ylab="expression (CPM)"
         }
         if(input$data_type=="logCPM") {
             mean.fc <- sort(rowMeans(ngs$X[,samples,drop=FALSE]),decreasing=TRUE)
@@ -124,8 +118,8 @@ DataViewBoard <- function(input, output, session, inputData)
         
         j <- which(sub(".*:","",names(mean.fc))==gene)
 
-        mar = MARGINS1
-        mar[4] = 0
+        mar <- MARGINS1
+        mar[4] <- 0
         par(mar=mar, mgp=c(2.1,0.8,0))
         par(mar=c(2.3,3.0,2,2), mgp=c(2.0,0.6,0))
         ##MARGINS1
@@ -138,9 +132,7 @@ DataViewBoard <- function(input, output, session, inputData)
         dbg("[genePlots_averageRankPlot.RENDER] done")
 
     })
-
-    ##genePlots_averageRankPlot_module <- plotModule(
-    ##id="genePlots_averageRankPlot", ns=ns,
+   
     shiny::callModule(
         plotModule, id="genePlots_averageRankPlot",
         func = genePlots_averageRankPlot.RENDER,
@@ -151,8 +143,7 @@ DataViewBoard <- function(input, output, session, inputData)
         label="c", title="Average rank",
         add.watermark = WATERMARK
     )
-    ##output <- attachModule(output, genePlots_averageRankPlot_module) 
-
+    
     ##----------------------------------------------------------------------
     ##                     Correlation plot
     ##----------------------------------------------------------------------
