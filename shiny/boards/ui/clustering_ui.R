@@ -79,9 +79,21 @@ ClusteringUI <- function(id) {
                      Samples that are similar are clustered near to each other, while samples with different
                      expression are positioned farther away. Groups of samples with similar profiles
                      will appear as <i>clusters</i> in the plot.")
-                    ),
+                ),
                 plotWidget(ns("hm_PCAplot"))),
-            shiny::tabPanel("Parallel",uiOutput(ns("hm_parcoordUI")))
+            shiny::tabPanel("Parallel",
+                tags$div(
+                    HTML("<b>Parallel Coordinates plot.</b> <b>(a)</b>The Parallel Coordinates plot displays
+                        the expression levels of selected genes across all conditions.
+                        On the x-axis the experimental conditions are plotted. The y-axis shows the expression level
+                        of the genes grouped by condition. The colors correspond to the gene groups as
+                        defined by the hierarchical clustered heatmap. <b>(b)</b>
+                        Average expression of selected genes across conditions."
+                    )
+                ),
+                plotWidget(ns("hm_parcoord")),
+                tableWidget(ns("hm_parcoord_table"))
+            )
             
         ),
         shiny::br(),

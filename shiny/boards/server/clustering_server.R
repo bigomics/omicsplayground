@@ -1283,29 +1283,14 @@ displays the expression levels of selected genes across all conditions in the an
 
     hm_parcoord_table_info = "In this table, users can check mean expression values of features across the conditions for the selected genes."
 
-    parcoord_caption = "<b>Parallel Coordinates plot.</b> <b>(a)</b>The Parallel Coordinates plot displays the expression levels of selected genes across all conditions. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap. <b>(b)</b> Average expression of selected genes across conditions."
-    
+
     hm_parcoord_table_module <- shiny::callModule(
         tableModule, id = "hm_parcoord_table",
         func = hm_parcoord_table.RENDER, ## ns=ns,
         info.text = hm_parcoord_table_info,
         title = "Selected genes", label="b",
         height = c(270,700)
-        ## caption = parcoord_caption
     )
-
-    output$hm_parcoordUI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.02,1.2,0.05,1),
-            height = fullH,
-            shiny::div(shiny::HTML(parcoord_caption), class="caption"),
-            shiny::br(),
-            plotWidget(ns("hm_parcoord")),
-            shiny::br(),
-            tableWidget(ns("hm_parcoord_table"))
-        )
-    })
-    shiny::outputOptions(output, "hm_parcoordUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ## Annotate clusters
