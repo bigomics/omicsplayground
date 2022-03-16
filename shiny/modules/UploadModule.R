@@ -357,39 +357,91 @@ UploadModuleServer <- function(id,
                             if(grepl("count",fn1, ignore.case=TRUE)) {
                                 dbg("[upload_files] counts.csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
-                                df0 <- read.csv3(fn2, as_matrix=TRUE)
+                                df0 <- read.as_matrix(fn2)
+                                if(TRUE && any(duplicated(rownames(df0)))) {
+                                  ndup <- sum(duplicated(rownames(df0)))
+                                  shinyWidgets::sendSweetAlert(
+                                    session=session,
+                                    title = "Duplicated gene names",
+                                    text = paste("Your counts matrix has",ndup,"duplicated gene names.\nCounts of those genes will be merged."),
+                                    type = "warning",
+                                    btn_labels = "OK",
+                                    closeOnClickOutside = FALSE,
+                                  )
+                                }
                                 dbg("[upload_files] counts.csv : 1 : dim(df0) = ",
                                     paste(dim(df0),collapse='x'))
+                                
                                 if(nrow(df0)>1 && NCOL(df0)>1) {
-
-                                    df <- as.matrix(df0)
-                                    matname <- "counts.csv"
+                                  df <- as.matrix(df0)
+                                  matname <- "counts.csv"
                                 }
+                                
                             } else if(grepl("expression",fn1,ignore.case=TRUE)) {
                                 dbg("[upload_files] expression.csv : fn1 = ",fn1)
                                 ## allows duplicated rownames
-                                df0 <- read.csv3(fn2, as_matrix=TRUE)
+                                df0 <- read.as_matrix(fn2)
+                                if(TRUE && any(duplicated(rownames(df0)))) {
+                                  ndup <- sum(duplicated(rownames(df0)))                                    
+                                  shinyWidgets::sendSweetAlert(
+                                    session=session,
+                                    title = "Duplicated gene names",
+                                    text = paste("Your counts matrix has",ndup,"duplicated gene names.\nCounts of those genes will be merged."),
+                                    type = "warning",
+                                    btn_labels = "OK",
+                                    closeOnClickOutside = FALSE,
+                                  )
+                                }
                                 if(nrow(df0)>1 && NCOL(df0)>1) {
                                     df <- as.matrix(df0)
                                     message("[UploadModule::upload_files] converting expression to counts...")
                                     df <- 2**df
                                     matname <- "counts.csv"
                                 }
+                                
                             } else if(grepl("sample",fn1,ignore.case=TRUE)) {
                                 dbg("[upload_files] samples.csv : fn1 = ",fn1)
-                                df <- read.csv3(fn2)
-                                df <- type.convert(df)
-                                if(nrow(df)>1 && NCOL(df)>=1) {
-                                    matname <- "samples.csv"
-                                }
+                                df0 <- read.as_matrix(fn2)
+                                if(any(duplicated(rownames(df0)))) {
+                                  dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
+                                  msg <- paste("Your samples file has duplicated entries: ", 
+                                               dup.rows, ". This is not allowed, please correct.")
+                                  shinyWidgets::sendSweetAlert(
+                                    session=session,
+                                    title = "Duplicated sample name",
+                                    text = msg,
+                                    type = "error",
+                                    btn_labels = "OK",
+                                    ##btn_colors = "red",
+                                    closeOnClickOutside = FALSE,
+                                  )
+                                  
+                                } else if(nrow(df0)>1 && NCOL(df0)>=1) {
+                                  df <- as.data.frame(df0)
+                                  matname <- "samples.csv"
+                               }
+                              
                             } else if(grepl("contrast",fn1,ignore.case=TRUE)) {
                                 dbg("[upload_files] contrasts.csv : fn1 = ",fn1)
-                                df <- read.csv3(fn2)
-                                if(nrow(df)>1 && NCOL(df)>=1) {
-                                    df <- as.matrix(df)
+                                df0 <- read.as_matrix(fn2)
+                                if(any(duplicated(rownames(df0)))) {
+                                  dup.rows <- rownames(df0)[which(duplicated(rownames(df0)))]
+                                  msg <- paste("Your contrasts file has duplicated entries: ", 
+                                               dup.rows, ". This is not allowed, please correct.")
+                                  shinyWidgets::sendSweetAlert(
+                                    session=session,
+                                    title = "Duplicated contrast name",
+                                    text = msg,
+                                    type = "error",
+                                    btn_labels = "OK",
+                                    ## btn_colors = "red",
+                                    closeOnClickOutside = FALSE,
+                                  )
+                                } else if(nrow(df0)>1 && NCOL(df0)>=1) {
+                                    df <- as.matrix(df0)
                                     matname <- "contrasts.csv"
                                 }
-                            }
+                          }
                             if(!is.null(matname)) {
                                 matlist[[matname]] <- df
                             }

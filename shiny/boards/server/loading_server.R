@@ -1,41 +1,7 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2020 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
-
-message(">>> sourcing LoadingBoard")
-
-LoadingInputs <- function(id) {
-    ns <- shiny::NS(id)  ## namespace
-    shiny::tagList(
-        shiny::uiOutput(ns("description")),
-        shinyBS::tipify( shiny::actionLink(ns("module_info"), "Tutorial", icon = shiny::icon("youtube")),
-               "Show more information about this module.")
-        ## shiny::uiOutput(ns("inputsUI"))
-        ## shiny::uiOutput(ns("socialButtons"))
-    )
-}
-
-LoadingUI <- function(id) {
-    ns <- shiny::NS(id)  ## namespace
-
-    close_session <- shiny::span()
-    if(getOption("OMICS_TEST", FALSE)){
-        close_session <- shiny::actionButton(ns("close"), "close")
-    }
-
-    tagList(
-        close_session,
-        shiny::fillCol(
-            height = 750,
-            shiny::tabsetPanel(
-                id = ns("tabs"),
-                shiny::tabPanel("Datasets",uiOutput(ns("pgxtable_UI"))),
-                shiny::tabPanel("Upload data",uiOutput(ns("upload_UI")))
-            )
-        )
-    )
-}
 
 LoadingBoard <- function(input, output, session, pgx_dir, 
                          limits = c("samples"=1000,"comparisons"=20,
@@ -44,7 +10,7 @@ LoadingBoard <- function(input, output, session, pgx_dir,
                          enable_upload = TRUE,
                          enable_delete = TRUE,
                          enable_save = TRUE,
-                         enable_userdir = TRUE,                         
+                         enable_userdir = TRUE,
                          authentication="none")
 {
     ns <- session$ns ## NAMESPACE

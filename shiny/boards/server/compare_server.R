@@ -1,30 +1,7 @@
 ##
 ## This file is part of the Omics Playground project.
-## Copyright (c) 2018-2021 BigOmics Analytics Sagl. All rights reserved.
+## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
-
-message(">>> sourcing CompareBoard")
-
-CompareInputs <- function(id) {
-    ns <- shiny::NS(id)  ## namespace
-    shiny::tagList(
-        shiny::uiOutput(ns("description")),
-        shiny::uiOutput(ns("inputsUI"))
-    )
-}
-
-CompareUI <- function(id) {
-    ns <- shiny::NS(id)  ## namespace
-    shiny::fillCol(
-        height = 750,
-        shiny::tabsetPanel(
-            id = ns("tabs1"),
-            shiny::tabPanel("Compare", shiny::uiOutput(ns("compareScatter_UI"))),
-            shiny::tabPanel("Foldchange", shiny::uiOutput(ns("FCcorrelation_UI"))),
-            shiny::tabPanel("Gene Correlation", shiny::uiOutput(ns("GeneCorrelation_UI")))            
-        )
-    )
-}
 
 CompareBoard <- function(input, output, session, inputData)
 {
@@ -922,69 +899,3 @@ CompareBoard <- function(input, output, session, inputData)
     shiny::outputOptions(output, "GeneCorrelation_UI", suspendWhenHidden=FALSE) ## important!!!         
     
 } ## end-of-Board 
-
-
-if(0) {
-    source(file.path(RDIR,"pgx-include.R"))    ## lots of libraries and source()
-    
-    load("../data/tcga-brca2-gx.pgx")
-    ngs1 = pgx.initialize(ngs)
-    load("../data/tcga-brca2-px.pgx")
-    ngs2 = pgx.initialize(ngs)
-    
-    gg <- intersect(rownames(ngs1$X),rownames(ngs2$X))
-    kk <- intersect(colnames(ngs1$X),colnames(ngs2$X))
-    X1 <- ngs1$X[gg,kk]
-    X2 <- ngs2$X[gg,kk]
-
-    Y <- ngs1$samples[kk,]
-    i <- grep("ERBB2",rownames(X1))
-    klr1 <- 1+as.integer(Y$HER2_STATUS)
-    base::plot(X1[i,], X2[i,], pch=20, col=klr1, cex=1)
-
-    pgx.plotExpression(ngs1, "ERBB2", comp="HER2_STATUS:1_vs_0", grouped=TRUE)
-    pgx.plotExpression(ngs1, "ESR1", comp="ER_STATUS:1_vs_0", grouped=TRUE)
-    pgx.plotExpression(ngs, "ESR1", comp="ER_STATUS:1_vs_0", grouped=TRUE)    
-
-    all.ct = names(ngs$gx.meta$meta)
-    pgx.Volcano(ngs, contrast=all.ct[2], plotlib='ggplot')
-    
-    gene="ESR1"
-    gene="ERBB2"
-    genes = c("ERBB2","ESR1","FOXA1","PGR","CA12","FABP7")
-    par(mfrow=c(2,4), mar=c(10,4,4,2))
-    for(gene in genes) {
-        x1 <- ngs1$X[gene,]
-        x2 <- ngs2$X[gene,]
-        e1 <- ngs1$model.parameters$exp.matrix[,c(2,5,7,8)]
-        e2 <- ngs2$model.parameters$exp.matrix[,c(2,5,7,8)]        
-        m1 <- apply(e1, 2, function(y) tapply(x1, sign(y), mean)[c("-1","1")])
-        m2 <- apply(e2, 2, function(y) tapply(x2, sign(y), mean)[c("-1","1")])    
-    
-        ##gx.barplot(m1, srt=45, main=gene);gx.barplot(m2, srt=45, main=gene)
-        colnames(m1) <- paste0("[1] ",colnames(m1))
-        colnames(m2) <- paste0("[2] ",colnames(m2))
-        mm <- cbind(m1, m2)
-        mm.group <- c( rep(1,ncol(m1)), rep(2,ncol(m2)) )
-        gx.barplot(mm, srt=45, main=gene, group=mm.group,
-                   cex.names=0.8, voffset=0.06, offset=NULL)
-    }
-    
-
-    plot.ggbarplot(m1[,], srt=45, beside=TRUE, main=gene,
-              legend.pos = c(0.016,1), 
-              bar_width=0.6, legend.cex=1.5)
-
-    plot.ggbarplot(m2[,], srt=45, beside=TRUE, main=gene,
-              bar_width=0.6, legend.cex=1.5)
-
-    legend.cex=2
-    p + ggplot2::theme(
-            legend.title = ggplot2::element_blank(), 
-            ##legend.justification = legend.pos,
-            legend.text = ggplot2::element_text(size=9*legend.cex),
-            ##legend.position = legend.pos,
-            legend.key.size = ggplot2::unit(9*legend.cex, "pt"),
-            legend.key.height = ggplot2::unit(7*legend.cex, "pt"))
-
-}
