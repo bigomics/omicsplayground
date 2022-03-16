@@ -187,9 +187,12 @@ be multiple categories (classes) or patient survival data."
         y0 <- as.character(ngs$Y[,ct])
         names(y0) <- rownames(ngs$Y)
         y <- y0[!is.na(y0)]
-        
+
+
+        ## augment to 100 samples        
         table(y)
-        if(length(y)<40) y <- head(rep(y,10),100)  ## augment to 100 samples
+        ##if(length(y)<40) y <- head(rep(y,10),100)
+        if(length(y)<100) y <- head(rep(y,100),100)  
         table(y)
         
         ##-------------------------------------------
@@ -288,7 +291,7 @@ be multiple categories (classes) or patient survival data."
             head(R)
         }
         
-        if(DEV) {
+        if(FALSE && DEV) {
             is.multiomics <- any(grepl("\\[gx\\]|\\[mrna\\]",rownames(R)))
             is.multiomics    
             do.multiomics <- (is.multiomics && shiny::isolate(input$pdx_multiomics))
@@ -346,7 +349,6 @@ be multiple categories (classes) or patient survival data."
         ##if(length(jj) < ny*20) jj <- c(jj,jj,jj)
         
         if(do.survival) {
-
             time <- abs(y)
             status <- (y>0)    ## dead if positive time
             df <- data.frame( time=time+0.001, status=status, tx)
