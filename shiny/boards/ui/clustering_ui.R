@@ -101,7 +101,15 @@ ClusteringUI <- function(id) {
             id = ns("tabs2"),
             shiny::tabPanel("Annotate clusters",
                 uiOutput(ns("hm_annotateUI"))),
-            shiny::tabPanel("Phenotypes",uiOutput(ns("hm_phenoplotUI"))),
+            shiny::tabPanel("Phenotypes",
+                tags$div(
+                        HTML("<b>Phenotype distribution.</b> The plots show the distribution of the phenotypes
+                        superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be
+                        driven by the particular phenotype that is controlled by the experimental condition
+                        or unwanted batch effects."
+                        )
+                ,
+                plotWidget(ns("clust_phenoplot")))),
             shiny::tabPanel("Feature ranking",uiOutput(ns("hm_featurerankUI")))      
         )
     )

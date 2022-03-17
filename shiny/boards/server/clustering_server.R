@@ -1692,8 +1692,6 @@ displays the expression levels of selected genes across all conditions in the an
 
     clust_phenoplot_info = tagsub("<strong>Phenotype distribution.</strong> This figure visualizes the distribution of the available phenotype data. You can choose to put the group labels in the figure or as separate legend in the {Label} setting, in the plot {{settings}}")
     
-    clust_phenoplot_caption = "<b>Phenotype distribution.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
-
     ## clust_phenoplot.module <- plotModule(
     shiny::callModule(
         plotModule,         
@@ -1704,8 +1702,7 @@ displays the expression levels of selected genes across all conditions in the an
         height = c(fullH-80,700), res = 85,
         pdf.width = 6, pdf.height = 9, 
         info.text = clust_phenoplot_info,
-        add.watermark = WATERMARK        
-        ## caption = clust_phenoplot_caption
+        add.watermark = WATERMARK
     )
 
     output$hm_phenoplotUI <- shiny::renderUI({
