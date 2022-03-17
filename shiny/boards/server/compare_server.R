@@ -6,15 +6,17 @@
 CompareBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
-    fullH = 770       # row height of panel
+    fullH = 770 # row height of panel
     tabH = '70vh'
 
     infotext =
-        "The <strong>Compare Datasets</strong> module enables users to compare their dataset to other datasets. This module allows side-by-side comparison of volcano, scatter or gene t-SNE plots. It provides pairwise correlation plots and/or enrichment plots with signatures from other data sets.
+        "The <strong>Compare Datasets</strong> module enables users to compare their dataset to other datasets.
+         This module allows side-by-side comparison of volcano, scatter or gene t-SNE plots.
+         It provides pairwise correlation plots and/or enrichment plots with signatures from other data sets.
+        <br><br><br><br>
+        <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=5'
+        frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
 
-<br><br><br><br>
-<center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=5' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>
-"
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
@@ -45,9 +47,9 @@ CompareBoard <- function(input, output, session, inputData)
     
     shiny::observe({
         df <- getOmicsScoreTable()
-        if(is.null(df)) return(NULL)  
+        if(is.null(df)) return(NULL)
         ntop <- as.integer(input$ntop)
-        higenes <- rownames(df)[order(df$score,decreasing=TRUE)]        
+        higenes <- rownames(df)[order(df$score,decreasing=TRUE)]  
         higenes <- head(higenes, ntop)
         higenes <- paste(higenes, collapse=' ')
         shiny::updateTextAreaInput(session, "genelist", value=higenes)
@@ -121,7 +123,7 @@ CompareBoard <- function(input, output, session, inputData)
         genes <- as.character(input$genelist)
         genes <- strsplit(genes, split='[\t, \n]')[[1]]
         gsub("[ ]","",genes)
-    }) ## %>% shiny::debounce(1000)
+    })
 
     input.contrast1 <- shiny::reactive({
         input$contrast1
@@ -162,8 +164,8 @@ CompareBoard <- function(input, output, session, inputData)
             p <- pgx.plotContrast(
                 ngs, contrast=ct,
                 hilight = higenes, ntop=ntop,
-                cex.lab = cex.lab, ## dlim=0.06,
-                par.sq = TRUE, 
+                cex.lab = cex.lab,
+                par.sq = TRUE,
                 type=type, plotlib="base")
         }
         p
@@ -250,10 +252,10 @@ CompareBoard <- function(input, output, session, inputData)
     ##============================================================================
     
     fcfcplot.RENDER <- shiny::reactive({
-        ## scatter2.RENDER <- shiny::reactive({                    
+                          
         ngs1 <- inputData()
         ngs2 <- dataset2()
-        ##alertDataLoaded(session,ngs)
+     
         ct1 <- head(names(ngs1$gx.meta$meta),2)
         ct2 <- head(names(ngs2$gx.meta$meta),2)
         ct1 <- input.contrast1()
@@ -273,7 +275,7 @@ CompareBoard <- function(input, output, session, inputData)
         higenes <- hilightgenes()
         
         p <- NULL
-        plot.SPLOM(F1, F2=F2, cex=0.3, cex.axis=0.95, hilight=higenes)            
+        plot.SPLOM(F1, F2=F2, cex=0.3, cex.axis=0.95, hilight=higenes)
         p
     })
     
@@ -298,7 +300,7 @@ CompareBoard <- function(input, output, session, inputData)
     ##-----------------------------------------------------------------
 
     cumfcplot.RENDER <- shiny::reactive({
-        ## scatter2.RENDER <- shiny::reactive({                    
+                        
         ngs1 <- inputData()
         ngs2 <- dataset2()
 
@@ -375,8 +377,6 @@ CompareBoard <- function(input, output, session, inputData)
         legend("bottomright", colnames(F2), fill=grey.colors(ncol(F2)),
                cex=0.9, y.intersp=0.9, inset=c(-0.03,0.02), xpd=TRUE )
         title("DATASET2", line=-0.35, cex.main=1.2)
-        
-        
     })
     
     cumfcplot.opts <- shiny::tagList()    
@@ -399,7 +399,7 @@ CompareBoard <- function(input, output, session, inputData)
     ##============================================================================
     
     genecorr.RENDER <- shiny::reactive({
-                  
+        
         ngs1 <- inputData()
         ngs2 <- dataset2()
     
@@ -486,7 +486,6 @@ CompareBoard <- function(input, output, session, inputData)
             klr1 <- klrpal[as.integer(grp)]
         } else {
             grp <- pgx.getContrastGroups(ngs1, colorby, as.factor=TRUE)
-            ## grp <- factor(grp)
             grp <- grp[colnames(X1)]
             klr1 <- klrpal[as.integer(grp)]            
         }
@@ -498,7 +497,6 @@ CompareBoard <- function(input, output, session, inputData)
         for(i in 1:length(higenes)) {
             j <- match(higenes[i],rownames(X1))
             base::plot( X1[j,], X2[j,],
-                 ##xlab=dset1, ylab=dset2,
                  xlab="", ylab="",
                  pch=20, col=klr1, cex=1.2)
             title(higenes[i], line=0.4, cex.main=1.1)
@@ -508,7 +506,7 @@ CompareBoard <- function(input, output, session, inputData)
             if((i-1)%/%nc==nr) {
                 mtext(dset1, 1, line=2, cex=0.8)
             }
-            ##if(i==1) {
+            
             if(i%%nc == 1) {
                 tt <- c("   ",levels(grp))
                 legend("topleft", legend=tt,
@@ -571,7 +569,7 @@ CompareBoard <- function(input, output, session, inputData)
 
         df <- getOmicsScoreTable()
         if(is.null(df)) return(NULL)        
-        sel <- score_table$rows_all()      ## from module  
+        sel <- score_table$rows_all() ## from module  
         shiny::req(sel)
         genes <- rownames(df)[sel]
                 
@@ -610,9 +608,7 @@ CompareBoard <- function(input, output, session, inputData)
                        bar.names = bar.names, voff=3.5,
                        legend=FALSE, cex.legend=0.9,                       
                        ylab="expression")
-            
         }
-
     })
     
     multibarplot.opts <- shiny::tagList()    
@@ -631,7 +627,6 @@ CompareBoard <- function(input, output, session, inputData)
         res = c(95,130),
         add.watermark = WATERMARK
     )
-
     
     ##============================================================================
     ## Score table
@@ -678,54 +673,7 @@ CompareBoard <- function(input, output, session, inputData)
     ##================================================================================
     ##========================= OUTPUT UI ============================================
     ##================================================================================
-
-    ## ------------------------------------------------------
-    ## --------------------- tab1 ---------------------------
-    ## ------------------------------------------------------
-    
-    compareScatter_title = "<h4>Compare Expression</h4>"
-    
-    output$compareScatter_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = fullH,
-            ## height = input$dimensions[2], ## dynamics with JS  
-            flex = c(NA,0.015,1),
-            shiny::div(shiny::HTML(compareScatter_title), class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1,0.1,1),
-                plotWidget(ns("scatter1")),
-                shiny::br(),
-                ##plotWidget(ns("connectivityMap"))
-                plotWidget(ns("scatter2"))
-            )
-        )
-    })
-    shiny::outputOptions(output, "compareScatter_UI", suspendWhenHidden=FALSE) ## important!!!
-
-    ## ------------------------------------------------------
-    ## --------------------- tab2 ---------------------------
-    ## ------------------------------------------------------
-    
-    FCcorrelation_title = "<h4>Compare Foldchange</h4>"
-    
-    output$FCcorrelation_UI <- shiny::renderUI({
-        ##req(input$dimensions)
-        shiny::fillCol(
-            height = fullH,
-            ## height = input$dimensions[2], ## dynamics with JS  
-            flex = c(NA,0.015,1),
-            shiny::div(shiny::HTML(FCcorrelation_title), class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1,0.05,0.9),
-                plotWidget(ns("fcfcplot")),
-                shiny::br(),
-                plotWidget(ns("cumfcplot"))
-            )
-        )
-    })
-    shiny::outputOptions(output, "FCcorrelation_UI", suspendWhenHidden=FALSE) ## important!!!
+   
 
     ## ------------------------------------------------------
     ## --------------------- tab3 ---------------------------
@@ -756,4 +704,4 @@ CompareBoard <- function(input, output, session, inputData)
     })
     shiny::outputOptions(output, "GeneCorrelation_UI", suspendWhenHidden=FALSE) ## important!!!         
     
-} ## end-of-Board 
+} ## end-of-Board
