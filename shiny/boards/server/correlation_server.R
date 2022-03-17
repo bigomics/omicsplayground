@@ -9,171 +9,78 @@ CorrelationBoard <- function(input, output, session, inputData)
     
     fullH = 800  ## full height of page
     rowH  = 340  ## full height of page
-    
-    description = "<b>Correlation Analysis.</b> Compute the correlation between genes and find coregulated modules."
-    output$description <- shiny::renderUI(shiny::HTML(description))
-
 
     cor_infotext ="The <strong>Correlation Analysis Board</strong> provides statistical correlation analysis on gene level with visualisations. During the visual analysis, users can filter out some samples or collapse the samples by predetermined groups. The dark shaded area in the barplot estimates the partial correlation."
     
-
     COL <- RColorBrewer::brewer.pal(12,"Paired")[seq(1,12,2)]
     COL <- RColorBrewer::brewer.pal(9,"Set1")[c(2,1,3:9)]
     COL2 <- rev(grey.colors(2))
     COL2 <- RColorBrewer::brewer.pal(2,"Paired")[1:2]
     COL2 <- COL[1:2]
     
-    ##================================================================================
-    ##========================= OUTPUT UI ============================================
-    ##================================================================================
 
-    corAnalysis_caption = "<h3>Gene Correlation Analysis</h3><b>(a)</b> <b>Top-ranked correlation.</b> Top correlated features with respect to selected gene. <b>(b)</b> <b>Correlation table</b> of correlation and partial correlation with respect to selected gene. <b>(c)</b> <b>Scatter plots</b> of gene expression of top correlated genes."
+    ## Currently not used Stefan 17.03.22
+
+    # corfunctional_caption ="<b>(a)</b> <b>Correlation GSEA.</b> Top enriched gene sets using the correlation as rank metric. The black bars denote the genes in the gene set and their position in the sorted rank metric. <b>(b)</b> <b>Enrichment table.</b> Statistical results from GSEA analysis. <b>(c)</b> <b>Gene frequency.</b> Frequency of leading edge genes in top correlated genesets. <b>(d)</b> <b>Leading edge table.</b> Leading edge genes and rank statistics (rho) of the selected geneset."
+
+    # output$corFunctional_UI <- shiny::renderUI({
+    #     shiny::fillCol(
+    #         flex = c(NA,0.025,1),
+    #         height = fullH,
+    #         shiny::div(shiny::HTML(corfunctional_caption), class="caption"),
+    #         shiny::br(),
+    #         shiny::fillRow(
+    #             flex = c(1.8,0.11,1),
+    #             height = fullH - 60,
+    #             shiny::fillCol(
+    #                 flex = c(1,0.07,0.6),
+    #                 plotWidget(ns("corGSEA_plots")),
+    #                 shiny::br(),
+    #                 tableWidget(ns("corGSEA_table"))
+    #             ),
+    #             shiny::br(),
+    #             shiny::fillCol(
+    #                 flex = c(1,0.04,1.3),
+    #                 ##flex = c(1),
+    #                 plotWidget(ns("corGSEA_cumFC")),
+    #                 shiny::br(),
+    #                 tableWidget(ns("corGSEA_LeadingEdgeTable"))
+    #                 ##div(shiny::HTML("caption"), class="caption")
+    #             )
+    #         )
+    #     )
+    # })
+
+    ## Currently not used Stefan 17.03.22
+
+    # corDiff_caption = "<h3>Differential Gene Correlation Analysis (DGCA)</h3>Compute and analyze differential correlations between gene pairs across multiple conditions."
     
-    output$corAnalysis_UI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.035,1),
-            height = fullH,
-            shiny::div(shiny::HTML(corAnalysis_caption), class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1,0.01,1.2),
-                shiny::fillCol(
-                    flex = c(1,1),
-                    height = fullH-80,
-                    plotWidget(ns('cor_barplot')),
-                    ##plotWidget(ns('cor_graph'))
-                    tableWidget(ns('cor_table'))
-                ),	
-                shiny::br(), ## spacer
-                shiny::fillCol(
-                    flex = c(NA,1),
-                    height = fullH-80,
-                    plotWidget(ns('cor_scatter'))
-                )
-            )
-        )
-    })
-    shiny::outputOptions(output, "corAnalysis_UI", suspendWhenHidden=FALSE) ## important!!!
+    # output$corDiff_UI <- shiny::renderUI({
+    #     shiny::fillCol(
+    #         flex = c(NA,0.035,1),
+    #         height = fullH,
+    #         shiny::div(shiny::HTML(corDiff_caption), class="caption"),
+    #         shiny::br(),
+    #         shiny::fillRow(
+    #             flex = c(1,0.01,1.2),
+    #             shiny::fillCol(
+    #                 flex = c(1.3,1),
+    #                 height = fullH-80,
+    #                 plotWidget(ns('dgca_barplot')),
+    #                 tableWidget(ns('dgca_table'))
+    #             ),	
+    #             shiny::br(), ## spacer
+    #             shiny::fillCol(
+    #                 flex = c(NA,1),
+    #                 height = fullH-80,
+    #                 plotWidget(ns('dgca_scatter'))
+    #             )
+    #         )
+    #     )
+    # })
+    # shiny::outputOptions(output, "corDiff_UI", suspendWhenHidden=FALSE) ## important!!!    
 
-    
-    corfunctional_caption ="<b>(a)</b> <b>Correlation GSEA.</b> Top enriched gene sets using the correlation as rank metric. The black bars denote the genes in the gene set and their position in the sorted rank metric. <b>(b)</b> <b>Enrichment table.</b> Statistical results from GSEA analysis. <b>(c)</b> <b>Gene frequency.</b> Frequency of leading edge genes in top correlated genesets. <b>(d)</b> <b>Leading edge table.</b> Leading edge genes and rank statistics (rho) of the selected geneset."
-
-    output$corFunctional_UI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.025,1),
-            height = fullH,
-            shiny::div(shiny::HTML(corfunctional_caption), class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1.8,0.11,1),
-                height = fullH - 60,
-                shiny::fillCol(
-                    flex = c(1,0.07,0.6),
-                    plotWidget(ns("corGSEA_plots")),
-                    shiny::br(),
-                    tableWidget(ns("corGSEA_table"))
-                ),
-                shiny::br(),
-                shiny::fillCol(
-                    flex = c(1,0.04,1.3),
-                    ##flex = c(1),
-                    plotWidget(ns("corGSEA_cumFC")),
-                    shiny::br(),
-                    tableWidget(ns("corGSEA_LeadingEdgeTable"))
-                    ##div(shiny::HTML("caption"), class="caption")
-                )
-            )
-        )
-    })
-
-    corDiff_caption = "<h3>Differential Gene Correlation Analysis (DGCA)</h3>Compute and analyze differential correlations between gene pairs across multiple conditions."
-    
-    output$corDiff_UI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.035,1),
-            height = fullH,
-            shiny::div(shiny::HTML(corDiff_caption), class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1,0.01,1.2),
-                shiny::fillCol(
-                    flex = c(1.3,1),
-                    height = fullH-80,
-                    plotWidget(ns('dgca_barplot')),
-                    tableWidget(ns('dgca_table'))
-                ),	
-                shiny::br(), ## spacer
-                shiny::fillCol(
-                    flex = c(NA,1),
-                    height = fullH-80,
-                    plotWidget(ns('dgca_scatter'))
-                )
-            )
-        )
-    })
-    shiny::outputOptions(output, "corDiff_UI", suspendWhenHidden=FALSE) ## important!!!    
-
-    corGraph_caption = "<h3>Gene Correlation Network</h3>Visualization of gene correlation as network or UMAP. <b>(a)</b> <b>Partial correlation network</b> around the selected gene. <b>(b)</b> <b>Correlation UMAP</b>. Clustering of genes  colored by correlation (or covariance)."
-    
-    output$corGraph_UI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.035,1),
-            height = fullH,
-            shiny::div(shiny::HTML(corGraph_caption), class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1,0.05,1),
-                plotWidget(ns('cor_graph')),
-                shiny::br(),
-                plotWidget(ns('cor_umap'))
-            )
-        )
-    })
-    shiny::outputOptions(output, "corGraph_UI", suspendWhenHidden=FALSE) ## important!!!    
-    
-    
-    ##================================================================================
-    ##========================= INPUTS UI ============================================
-    ##================================================================================
-
-    
-    output$inputsUI <- shiny::renderUI({
-        ui <- shiny::tagList(
-            shiny::actionLink(ns("cor_info"), "Info", icon=icon("info-circle")),
-            shiny::hr(), shiny::br(),             
-
-            ## data set parameters
-            shinyBS::tipify( shiny::selectInput(ns("cor_gene"),"Gene:", choices=NULL),
-                   "Choose a gene for the correlation analysis.", placement="top"),
-            shiny::br(),
-            shinyBS::tipify( shiny::selectInput(ns("cor_features"),"Filter genes:", choices=NULL, multiple=FALSE),
-                            "Filter gene features.", placement="top"),
-            shiny::conditionalPanel(
-                       "input.cor_features == '<custom>'", ns=ns,
-                       shinyBS::tipify( shiny::textAreaInput(ns("cor_customfeatures"),
-                                                             NULL, value = NULL,
-                                                             height = "100px", width = "100%", 
-                                                             rows=5, placeholder="Paste your custom gene list"),
-                                       "Paste a custom list of genes to be used as features.",
-                                       placement="top")
-                   ),                    
-            shiny::br()
-            ##shiny::actionLink(ns("cor_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-            ##shiny::br(),shiny::br(),
-            ## shiny::conditionalPanel(
-            ##     "input.cor_options % 2 == 1", ns=ns,
-            ##     shiny::tagList(
-            ##         ##tipify( shiny::selectInput(ns("cor_samplefilter"),"Filter samples",
-            ##         ##                    choices=NULL, multiple=TRUE),
-            ##         ##       "Filter (include) samples for the analysis", placement="top"),
-            ##         shinyBS::tipify( shiny::checkboxInput(ns("dgca.allpairs"),"All pairs for DGCA"),
-            ##                "Compute all DGCA pairs", placement="top")
-            ##     )
-            ## )
-        )
-
-    })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+   
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
