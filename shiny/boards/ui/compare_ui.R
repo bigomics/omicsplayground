@@ -6,7 +6,7 @@
 CompareInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
-         tags$div(
+        tags$div(
          HTML("<h3>Compare Datasets</h3> Compare expression and signatures between two datasets,
           from similar experiments or from different datatypes, e.g. transcriptomics and proteomics.")
         ),
@@ -97,7 +97,6 @@ CompareUI <- function(id) {
             shiny::tabPanel("Gene Correlation", 
                 shiny::fillCol(
                     height = 770,
-                    ## height = input$dimensions[2], ## dynamics with JS  
                     flex = c(NA,0.015,1),
                     tags$div(
                         HTML("<h4>Compare Correlation</h4>"
