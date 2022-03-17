@@ -70,7 +70,18 @@ CompareUI <- function(id) {
         height = 750,
         shiny::tabsetPanel(
             id = ns("tabs1"),
-            shiny::tabPanel("Compare", shiny::uiOutput(ns("compareScatter_UI"))),
+            shiny::tabPanel("Compare",
+                tags$div(
+                        HTML("<h4>Compare Expression</h4>"
+                        )
+                ),
+                shiny::fillRow(
+                    flex = c(1,0.1,1),
+                    plotWidget(ns("scatter1")),
+                    shiny::br(),
+                    plotWidget(ns("scatter2"))
+                )
+            ),
             shiny::tabPanel("Foldchange", shiny::uiOutput(ns("FCcorrelation_UI"))),
             shiny::tabPanel("Gene Correlation", shiny::uiOutput(ns("GeneCorrelation_UI")))            
         )
