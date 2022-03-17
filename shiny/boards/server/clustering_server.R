@@ -1705,15 +1705,6 @@ displays the expression levels of selected genes across all conditions in the an
         add.watermark = WATERMARK
     )
 
-    output$hm_phenoplotUI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.025,1),
-            height = fullH,
-            shiny::div(shiny::HTML(clust_phenoplot_caption),class="caption"),
-            shiny::br(),
-            plotWidget(ns("clust_phenoplot"))
-        )
-    })
     
     ##=============================================================================
     ## Feature ranking
@@ -1856,7 +1847,6 @@ displays the expression levels of selected genes across all conditions in the an
 
     clust_featureRank_info = "Ranked discriminant score for top feature sets. The plot ranks the discriminitive power of the feature set (genes) as a cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family/set) can explain the variance in the data the best. <p>Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner."
 
-    clust_featureRank_caption = "<b>Feature-set ranking.</b> Ranked discriminant score for top feature sets. The plot ranks the discriminative power of feature sets (or gene sets) as the cumulative discriminant score for all phenotype variables."
 
     clust_featureRank.opts =  shiny::tagList(
         shinyBS::tipify( shiny::radioButtons( ns('clust_featureRank_method'),'Method:',
@@ -1866,8 +1856,6 @@ displays the expression levels of selected genes across all conditions in the an
                placement="right", options = list(container = "body") )
     )
 
-##    clust_featureRank_module <- plotModule(
-##        title="Feature-set ranking", ns=ns,
     shiny::callModule(
         plotModule, 
         id="clust_featureRank",
@@ -1880,19 +1868,6 @@ displays the expression levels of selected genes across all conditions in the an
         width=c("auto",800),
         res = c(72,90),
         info.text = clust_featureRank_info,
-        ## caption = clust_featureRank_caption,
         add.watermark = WATERMARK                
     )
-    
-    output$hm_featurerankUI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.035,1),
-            height = fullH,
-            shiny::div(shiny::HTML(clust_featureRank_caption),class="caption"),
-            shiny::br(),
-            plotWidget(ns("clust_featureRank"))
-        )
-    })
-
-
 } ## end of Board

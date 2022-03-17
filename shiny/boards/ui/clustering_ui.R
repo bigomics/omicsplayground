@@ -108,9 +108,17 @@ ClusteringUI <- function(id) {
                         driven by the particular phenotype that is controlled by the experimental condition
                         or unwanted batch effects."
                         )
-                ,
-                plotWidget(ns("clust_phenoplot")))),
-            shiny::tabPanel("Feature ranking",uiOutput(ns("hm_featurerankUI")))      
+                ),
+                plotWidget(ns("clust_phenoplot"))),
+            shiny::tabPanel("Feature ranking",
+                tags$div(
+                        HTML("<b>Feature-set ranking.</b> Ranked discriminant score for top feature sets.
+                         The plot ranks the discriminative power of feature sets (or gene sets) as the
+                         cumulative discriminant score for all phenotype variables."
+                        )
+                ),
+                plotWidget(ns("clust_featureRank"))      
+            )
         )
     )
 }
