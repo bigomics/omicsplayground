@@ -686,7 +686,6 @@ CompareBoard <- function(input, output, session, inputData)
     compareScatter_title = "<h4>Compare Expression</h4>"
     
     output$compareScatter_UI <- shiny::renderUI({
-        ##req(input$dimensions)
         shiny::fillCol(
             height = fullH,
             ## height = input$dimensions[2], ## dynamics with JS  
