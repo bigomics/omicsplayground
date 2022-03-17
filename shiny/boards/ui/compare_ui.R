@@ -82,8 +82,41 @@ CompareUI <- function(id) {
                     plotWidget(ns("scatter2"))
                 )
             ),
-            shiny::tabPanel("Foldchange", shiny::uiOutput(ns("FCcorrelation_UI"))),
-            shiny::tabPanel("Gene Correlation", shiny::uiOutput(ns("GeneCorrelation_UI")))            
+            shiny::tabPanel("Foldchange",
+                tags$div(
+                        HTML("<h4>Compare Foldchange</h4>"
+                        )
+                ),
+                shiny::fillRow(
+                    flex = c(1,0.05,0.9),
+                    plotWidget(ns("fcfcplot")),
+                    shiny::br(),
+                    plotWidget(ns("cumfcplot"))
+                ) 
+            ),
+            shiny::tabPanel("Gene Correlation", 
+                shiny::fillCol(
+                    height = 770,
+                    ## height = input$dimensions[2], ## dynamics with JS  
+                    flex = c(NA,0.015,1),
+                    tags$div(
+                        HTML("<h4>Compare Correlation</h4>"
+                        )
+                    ),
+                    shiny::br(),
+                    shiny::fillRow(
+                        flex = c(1.0,0.05,1),
+                        shiny::fillCol(
+                            flex = c(2.2,0.01,1),
+                            plotWidget(ns("multibarplot")),                    
+                            shiny::br(),
+                            tableWidget(ns("score_table"))
+                        ),
+                        shiny::br(),
+                        plotWidget(ns("genecorr"))
+                    )
+                )
+            )            
         )
     )
 }
