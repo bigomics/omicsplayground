@@ -669,39 +669,4 @@ CompareBoard <- function(input, output, session, inputData)
         height = c(235,750),
         width = c("auto",1600)
     )
-    
-    ##================================================================================
-    ##========================= OUTPUT UI ============================================
-    ##================================================================================
-   
-
-    ## ------------------------------------------------------
-    ## --------------------- tab3 ---------------------------
-    ## ------------------------------------------------------
-    
-    GeneCorrelation_title = "<h4>Gene Correlation</h4>"
-    
-    output$GeneCorrelation_UI <- shiny::renderUI({
-        ##req(input$dimensions)
-        shiny::fillCol(
-            height = fullH,
-            ## height = input$dimensions[2], ## dynamics with JS  
-            flex = c(NA,0.015,1),
-            shiny::div(shiny::HTML(GeneCorrelation_title), class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1.0,0.05,1),
-                shiny::fillCol(
-                    flex = c(2.2,0.01,1),
-                    plotWidget(ns("multibarplot")),                    
-                    shiny::br(),
-                    tableWidget(ns("score_table"))
-                ),
-                shiny::br(),
-                plotWidget(ns("genecorr"))
-            )
-        )
-    })
-    shiny::outputOptions(output, "GeneCorrelation_UI", suspendWhenHidden=FALSE) ## important!!!         
-    
 } ## end-of-Board
