@@ -295,7 +295,7 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
         hs.list <- list(
             "human.ensembl" = unlist(as.list(org.Hs.egENSEMBL)),
             "human.ensemblTRANS" = unlist(as.list(org.Hs.egENSEMBLTRANS)),            
-            "human.unigene" = unlist(as.list(org.Hs.egUNIGENE)),
+            #"human.unigene" = unlist(as.list(org.Hs.egUNIGENE)),
             "human.refseq"  = unlist(as.list(org.Hs.egREFSEQ)),
             "human.accnum"  = unlist(as.list(org.Hs.egACCNUM)),
             "human.uniprot" = unlist(as.list(org.Hs.egUNIPROT)),
@@ -305,7 +305,7 @@ probe2symbol <- function(probes, type=NULL, org="human", keep.na=FALSE)
         mm.list <- list(
             "mouse.ensembl" = unlist(as.list(org.Mm.egENSEMBL)),
             "mouse.ensemblTRANS" = unlist(as.list(org.Mm.egENSEMBLTRANS)),            
-            "mouse.unigene" = unlist(as.list(org.Mm.egUNIGENE)),
+            #"mouse.unigene" = unlist(as.list(org.Mm.egUNIGENE)),
             "mouse.refseq"  = unlist(as.list(org.Mm.egREFSEQ)),
             "mouse.accnum"  = unlist(as.list(org.Mm.egACCNUM)),
             "mouse.uniprot" = unlist(as.list(org.Mm.egUNIPROT)),
@@ -445,14 +445,70 @@ dbg.BAK <- function(... ) {
     }
 }
 
-##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
-read.csv3 <- function(file, ...)
+read.csv3.BAK <- function(file, ...)
 {
     ## read delimited table automatically determine separator
     line1 <- as.character(read.csv(file, comment.char='#', sep='\n',nrow=1)[1,])
     sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))
     message("[read.csv3] sep = ",sep)
     read.csv(file, comment.char='#', sep=sep, ...)
+}
+
+##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE
+read.csv3 <- function(file, as_matrix=FALSE)
+{
+    ## read delimited table automatically determine separator. Avoid
+    ## duplicated rownames.
+    line1 <- as.character(read.csv(file, comment.char='#', sep='\n',nrow=1)[1,])
+    sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))
+    ##message("[read.csv3] sep = ",sep)
+    ##x <- read.csv(file, comment.char='#', sep=sep)
+    sep
+    ##x <- read.csv(file, comment.char='#', sep=sep, check.names=FALSE, stringsAsFactors=FALSE)
+    x <- data.table::fread(file, sep=sep, check.names=FALSE, stringsAsFactors=FALSE, header=TRUE)
+    x <- as.data.frame(x)
+    x <- x[grep("^#",x[[1]],invert=TRUE),,drop=FALSE]  ## drop comments
+    dim(x)
+    xnames <- as.character(x[,1])
+    sel <- which(xnames!="" & !duplicated(xnames))
+    x <- x[sel,-1,drop=FALSE]
+    if(as_matrix) x <- as.matrix(x)
+    if(length(sel)) {
+        rownames(x) <- xnames[sel]
+    }
+    ##x <- type.convert(x)
+    x
+}
+
+read.as_matrix.SAVE <- function(file)
+{
+    ## read delimited table automatically determine separator. allow duplicated rownames.
+    line1 <- as.character(read.csv(file, comment.char='#', sep='\n',nrow=1)[1,])
+    sep = names(which.max(sapply(c('\t',',',';'),function(s) length(strsplit(line1,split=s)[[1]]))))    
+    x0 <- read.csv(file, comment.char='#', sep=sep, check.names=FALSE, stringsAsFactors=FALSE)
+    x <- NULL
+    sel <- which(! as.character(x0[,1]) %in% c(""," ","NA","na",NA))        
+    if(length(sel)) {
+        x <- as.matrix(x0[sel, -1 ,drop=FALSE])  ## always as matrix
+        rownames(x) <- x0[sel,1]
+    }
+    return(x)
+}
+
+read.as_matrix <- function(file)
+{
+    ## read delimited table automatically determine separator. allow
+    ## duplicated rownames. This implements with faster fread.
+    x0 <- data.table::fread(file=file, check.names=FALSE, header=TRUE,
+                            blank.lines.skip=TRUE, stringsAsFactors=FALSE)
+    x <- NULL
+    sel <- which(!as.character(x0[[1]]) %in% c(""," ","NA","na",NA))
+    length(sel)    
+    if(length(sel)) {
+        x <- as.matrix(x0[sel, -1 ,drop=FALSE])  ## always as matrix
+        rownames(x) <- x0[[1]][sel]
+    }
+    return(x)
 }
 
 ##check.names=FALSE;row.names=1;stringsAsFactors=FALSE;header=TRUE

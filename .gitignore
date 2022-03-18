@@ -4,6 +4,8 @@
 .Rhistory
 *.Rout
 .Renviron
+.Rproj.user
+*.Rproj
 
 # Backup files
 ######################
@@ -16,6 +18,14 @@
 *.save
 *.out
 *.log
+
+# Log files
+######################
+logs/*.rds
+
+# Output files
+######################
+shiny/*.pdf
 
 # OS generated files #
 ######################

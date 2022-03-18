@@ -631,7 +631,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
     ##---------------------------- UI ------------------------------------------------
     ##--------------------------------------------------------------------------------
 
-    ##func2 <- func  ## must be pryr  %<a-% to work!!!
     if(is.null(func2)) func2 <- func
     if(is.null(plotlib2)) plotlib2 <- plotlib    
     if(length(height)==1) height <- c(height,700)
@@ -768,8 +767,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
     if(!is.null(func2) && plotlib2=="base") {
         render2 <- shiny::renderPlot({
             func2()
-        }, res=res.2)            
-        ##render2 <- shiny::renderPlot(func2())
+        }, res=res.2)
     }
     if(plotlib=="image") {
         render <- shiny::renderImage( func(), deleteFile=FALSE)
@@ -785,7 +783,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
     }
     
     output$renderfigure <- render
-    output$renderpopup  <- render2
+    output$renderpopup  <- render
 
     output$popupfig <- shiny::renderUI({
         w <- width.2
@@ -802,6 +800,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
             w <- img.dim[2]*r
         } 
         r <- eval(parse(text=outputFunc2))(ns("renderpopup"), width=w, height=h)
+        
         if(any(class(caption2)=="reactive")) {
             caption2 <- caption2()
         }
@@ -838,9 +837,8 @@ plotModule <- function(input, output, session, ## ns=NULL,
                 shiny::tags$head(shiny::tags$style(modaldialog.style)),
                 shiny::tags$head(shiny::tags$style(modalbody.style)),            
                 shiny::tags$head(shiny::tags$style(modalfooter.none))
-                ##shiny::tags$head(shiny::tags$style(".caption { margin: 20px 5px;}"))
             ),
-            ##uiOutput(ns("renderbuttons")),
+            
             buttons,
             ##render,
             eval(parse(text=outputFunc))(ns("renderfigure"), width=width.1, height=height.1),
@@ -849,7 +847,6 @@ plotModule <- function(input, output, session, ## ns=NULL,
             shiny::div(class="popup-plot",
                 shinyBS::bsModal(ns("plotPopup"), title, size="l",
                         ns("zoombutton"),
-                        ##tagList(shiny::renderPlot(plot(sin)))
                         shiny::tagList(shiny::uiOutput(ns("popupfig")))
                         )
                 )
