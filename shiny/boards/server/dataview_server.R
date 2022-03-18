@@ -544,7 +544,7 @@ DataViewBoard <- function(input, output, session, inputData)
 
     })
 
-    genePlots_tsne_max.RENDER %<a-% shiny::reactive({
+    genePlots_tsne_max.RENDER <- shiny::reactive({
 
 
       ngs <- inputData()
