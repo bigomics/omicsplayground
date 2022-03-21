@@ -48,15 +48,6 @@ ExpressionInputs <- function(id) {
     )
 }
 
-ExpressionUI.test <- function(id) {
-    ns <- shiny::NS(id)  ## namespace
-    shiny::tabsetPanel(
-        shiny::tabPanel("Table",uiOutput(ns("tables_UI"))),
-        shiny::tabPanel("Foldchange (all)",uiOutput(ns("fctable_UI"))),
-        shiny::tabPanel("FDR table",uiOutput(ns("FDRtable_UI")))                       
-    )
-}
-
 ExpressionUI <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::fillCol(
@@ -64,7 +55,27 @@ ExpressionUI <- function(id) {
         height = 780,
         shiny::tabsetPanel(
             id = ns("tabs1"),
-            shiny::tabPanel("Plot",uiOutput(ns("plots_UI"))),
+            shiny::tabPanel("Plot",
+                shiny::fillCol(
+                height = 390,
+                flex = c(1,0.35,NA),
+                    shiny::fillRow(
+                        id = "plots",
+                        flex=c(1,1,1,1),
+                        plotWidget(ns("plots_volcano")),
+                        plotWidget(ns("plots_maplot")),
+                        plotWidget(ns("plots_boxplot")),
+                        plotWidget(ns("plots_topfoldchange"))
+                    ),
+                    shiny::br(),
+                    tags$div(
+                        HTML("<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting fold-change versuson
+                            significance the x and y axes, respectively. <b>(b)</b> MA-plot plotting signal intensity versus fold-change on the x and y axes,
+                            respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change
+                            for selected contrast. <b>(d)</b> Sorted barplot of the differential expression of the selected gene across all contrasts.")
+                    ),
+                )
+            ),
             shiny::tabPanel("Top genes",uiOutput(ns("topgenesUI"))),
             shiny::tabPanel("Volcano (all)",uiOutput(ns("volcanoAll_UI"))),
             ## shiny::tabPanel("Volcano (all2)",uiOutput(ns("volcanoAll2_UI"))),
@@ -72,7 +83,23 @@ ExpressionUI <- function(id) {
         ),
         shiny::tabsetPanel(
             id = ns("tabs2"),
-            shiny::tabPanel("Table",uiOutput(ns("tables_UI"))),
+            shiny::tabPanel("Table",
+                shiny::fillCol(
+                    height = 1.15*320,
+                    flex = c(NA,0.06,1),
+                    tags$div(
+                        HTML("<b>Differential Expression Analysis.</b> Compare expression between
+                        two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups.")
+                    ),
+                    shiny::br(),
+                    shiny::fillRow(
+                        flex = c(1.6,0.07,1), 
+                        tableWidget(ns("genetable")),
+                        shiny::br(),
+                        tableWidget(ns("gsettable"))
+                    )
+                )
+            ),
             shiny::tabPanel("Foldchange (all)",uiOutput(ns("fctable_UI"))),
             shiny::tabPanel("FDR table",uiOutput(ns("FDRtable_UI")))                       
         )

@@ -26,19 +26,9 @@ ExpressionBoard <- function(input, output, session, inputData)
      The <strong>FDR table</strong> panel reports the number of significant genes at different FDR thresholds for all contrasts.<br><br><br><br>
      <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=3'
      frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
-
-
-    ##================================================================================
-    ##========================= INPUTS UI ============================================
-    ##================================================================================
-
-    
-
    
     GX.DEFAULTTEST="trend.limma"
     GX.DEFAULTTEST=c("trend.limma","edger.qlf","deseq2.wald","edger.lrt")
-    
-    
 
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
@@ -323,15 +313,6 @@ ExpressionBoard <- function(input, output, session, inputData)
 
 
     })
-
-    # not input$gx_fdr
-    # not inputData()
-    # not input$gx_features
-    # not input$gx_contrast
-    # not genetable$rows_selected
-    # not fullDiffExprTable()
-    # it's: gx_related_genesets()
-
 
     plots_volcano.PLOTLY <- shiny::reactive({
         
@@ -807,28 +788,6 @@ ExpressionBoard <- function(input, output, session, inputData)
         pdf.width=6, pdf.height=6, res=75,
         add.watermark = WATERMARK
     )
-
-    plots_caption = "<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting fold-change versuson significance the x and y axes, respectively. <b>(b)</b> MA-plot plotting signal intensity versus fold-change on the x and y axes, respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change for selected contrast. <b>(d)</b> Sorted barplot of the differential expression of the selected gene across all contrasts."
-
-
-    output$plots_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex = c(1,0.35,NA),
-            shiny::fillRow(
-                id = "plots",
-                ##height = rowH,
-                flex=c(1,1,1,1), ##height = 370,
-                plotWidget(ns("plots_volcano")),
-                plotWidget(ns("plots_maplot")),
-                ## plotWidget(ns("plots_topgenesbarplot")),
-                plotWidget(ns("plots_boxplot")),
-                plotWidget(ns("plots_topfoldchange"))
-            ),
-            shiny::br(),
-            shiny::div(shiny::HTML(plots_caption), class="caption")
-        )
-    })
     
     ##================================================================================
     ## Top genes
@@ -1524,23 +1483,6 @@ ExpressionBoard <- function(input, output, session, inputData)
         title="Gene sets with gene",
         height = c(tabH-10,700), width = c('100%',800)        
     )
-
-    tablesUI_caption = "<b>Differential expression tables</b>. <b>(I)</b> Statistical results of the the differential expression analysis for selected contrast. The number of stars indicate how many statistical methods identified the gene significant. <b>(II)</b> Correlation and enrichment value of gene sets that contain the gene selected in Table I."
-    
-    output$tables_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = 1.15*tabH,
-            flex = c(NA,0.06,1),
-            shiny::div(shiny::HTML(tablesUI_caption),class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1.6,0.07,1), 
-                tableWidget(ns("genetable")),
-                shiny::br(),
-                tableWidget(ns("gsettable"))
-            )
-        )
-    })
 
     ##================================================================================
     ## Foldchange (all)
