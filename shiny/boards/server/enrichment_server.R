@@ -36,49 +36,8 @@ EnrichmentBoard <- function(input, output, session, inputData, selected_gxmethod
     )
     
     GSET.DEFAULTMETHODS = c("gsva","camera","fgsea","fisher")
-
-    ##================================================================================
-    ##=========================== TABS UI ============================================
-    ##================================================================================
-
-
     # I have no idea what this is // Stefan 21.03.2022
     dragulaR::dragula(ns("subplots"))
-
-    ##================================================================================
-
-
-    tables_caption = "<b>Enrichment tables</b>. <b>(I)</b> Table summarizing the statistical results of the gene set enrichment analysis for selected contrast. The number of stars indicate how many methods identified the geneset significant. <b>(II)</b> Table showing the fold-change, statistics and correlation of the genes in the selected gene set."
-
-    output$tables_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex = c(NA,0.05,1),
-            shiny::div(shiny::HTML(tables_caption),class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                ## height = 200,
-                flex = c(1.82,0.08,1),
-                tableWidget(ns("gseatable")),
-                shiny::br(),
-                tableWidget(ns("genetable"))        
-            )
-        )
-    })
-
-    output$fctable_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            plotWidget(ns("fctable"))
-        )
-    })
-
-    output$FDRtable_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            tableWidget(ns("FDRtable"))
-        )
-    })
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================

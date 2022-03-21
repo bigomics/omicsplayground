@@ -124,9 +124,34 @@ EnrichmentUI <- function(id) {
         ),
         shiny::tabsetPanel(
             id = ns("tabs2"),
-            shiny::tabPanel("Table",uiOutput(ns("tables_UI"))),
-            shiny::tabPanel("Foldchange (all)",uiOutput(ns("fctable_UI"))),
-            shiny::tabPanel("FDR table",uiOutput(ns("FDRtable_UI")))                       
+            shiny::tabPanel("Table",
+                shiny::fillCol(
+                height = 420,
+                flex = c(NA,0.05,1),
+                tags$div(
+                    HTML("<b>Enrichment tables</b>. <b>(I)</b> Table summarizing the statistical results of the gene
+                    set enrichment analysis for selected contrast. The number of stars indicate how many methods
+                    identified the geneset significant. <b>(II)</b> Table showing the fold-change,
+                    statistics and correlation of the genes in the selected gene set.")
+                ),
+                shiny::br(),
+                shiny::fillRow(
+                    flex = c(1.82,0.08,1),
+                    tableWidget(ns("gseatable")),
+                    shiny::br(),
+                    tableWidget(ns("genetable"))        
+                )
+            )),
+            shiny::tabPanel("Foldchange (all)",
+                shiny::fillCol(
+                height = 420,
+                plotWidget(ns("fctable"))
+            )),
+            shiny::tabPanel("FDR table",
+                shiny::fillCol(
+                height = 420,
+                tableWidget(ns("FDRtable"))
+            ))                       
         )
     )
 }
