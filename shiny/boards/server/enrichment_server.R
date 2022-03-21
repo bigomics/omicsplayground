@@ -42,86 +42,11 @@ EnrichmentBoard <- function(input, output, session, inputData, selected_gxmethod
     ##================================================================================
 
 
-    topEnriched_caption = "<b>Top enriched gene sets.</b> Enrichment plots of the top differentially enriched gene sets. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score."
-    
-    topEnrichedFreq_caption = "<strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency."
-
-    topEnriched_captionALL <- paste(
-        "<b>(a)</b>",topEnriched_caption,
-        "<b>(b)</b>",topEnrichedFreq_caption)
-    
-    output$topEnriched_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex = c(1,NA),
-            shiny::fillRow(
-                flex = c(1.5,0.05,1),
-                plotWidget(ns("topEnriched")),
-                shiny::br(),
-                plotWidget(ns("topEnrichedFreq"))
-            ),
-            shiny::div(shiny::HTML(topEnriched_captionALL), class="caption")
-        )
-    })
-
-    enrichplots_caption = "<b>Enrichment plots</b> associated with the gene set (selected in <b>Table I</b>) and gene (selected in <b>Table II</b>). <b>(a)</b> Gene set enrichment plot. <b>(b)</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set are highlighted in blue. <b>(c)</b> Barplot of the gene set enrichment in the groups. <b>(d)</b> Scatter plot of the enrichment versus the expression of the selected geneset and gene, on the y and x axes, respectively."
-    enrichplots_caption = "<b>Enrichment plots</b> associated with the gene set (selected in <b>Table I</b>) and gene (selected in <b>Table II</b>). <b>(a)</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set are highlighted in blue. <b>(b)</b> Barplot of the gene set enrichment in the groups. <b>(c)</b> Barplot of selected gene in the groups. <b>(d)</b> Scatter plot of the enrichment versus the expression of the selected geneset and gene, on the y and x axes, respectively."
-
-    output$subplots_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex = c(1,0.05,NA),
-            shiny::fillRow(
-                id = ns("subplots"),
-                height = imgH,
-                flex=c(1,1,1,1), ##height = 370,
-                ##plotWidget(ns("subplot_enplot")),
-                plotWidget(ns("subplot_volcano")),                
-                plotWidget(ns("subplot_barplot")),
-                plotWidget(ns("subplot_geneplot")),
-                plotWidget(ns("subplot_scatter"))
-            ),
-            shiny::br(),
-            shiny::div(shiny::HTML(enrichplots_caption),class="caption")
-        )
-    })
+    # I have no idea what this is // Stefan 21.03.2022
     dragulaR::dragula(ns("subplots"))
 
-    compare_caption = "<b>Enrichment across contrasts.</b> Enrichment plots for the selected gene set (in <b>Table I</b>) across multiple contrasts. The figure allows to quickly compare the enrichment of a certain gene set across all other comparisons."
+    ##================================================================================
 
-    output$compare_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex=c(1,NA), ##height = 370,
-            plotWidget( ns("compare")),
-            shiny::div(shiny::HTML(compare_caption),class="caption")
-        )
-    })
-
-
-
-    volcanoAll_caption = "<b>Volcano plots for all contrasts.</b> Simultaneous visualisation of volcano plots of gene set enrichment across all contrasts. Volcano-plot are plotting enrichment score versus significance on the x and y axes, respectively. Experimental contrasts showing better statistical significance will show volcano plots with 'higher' wings."
-
-    output$volcanoAll_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex=c(1,NA), ##height = 370,
-            plotWidget(ns("volcanoAll")),
-            shiny::div(shiny::HTML(volcanoAll_caption), class="caption")
-        )
-    })
-
-
-    volcanoMethods_caption = "<b>Volcano plots for all methods.</b> Simultaneous visualisation of volcano plots of gene sets for different enrichment methods. Methods showing better statistical significance will show volcano plots with 'higher' wings."
-    
-    output$volcanoMethods_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex=c(1,NA), ##height = 370,
-            plotWidget(ns("volcanoMethods")),
-            shiny::div(shiny::HTML(volcanoMethods_caption), class="caption")
-        )
-    })
 
     tables_caption = "<b>Enrichment tables</b>. <b>(I)</b> Table summarizing the statistical results of the gene set enrichment analysis for selected contrast. The number of stars indicate how many methods identified the geneset significant. <b>(II)</b> Table showing the fold-change, statistics and correlation of the genes in the selected gene set."
 
