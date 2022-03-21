@@ -51,7 +51,20 @@ EnrichmentUI <- function(id) {
         height = 800,
         shiny::tabsetPanel(
             id = ns("tabs1"),
-            shiny::tabPanel("Top enriched",uiOutput(ns("topEnriched_UI"))),
+            shiny::tabPanel("Top enriched",
+                shiny::fillCol(
+                height = 420,
+                flex = c(1,NA),
+                shiny::fillRow(
+                    flex = c(1.5,0.05,1),
+                    plotWidget(ns("topEnriched")),
+                    shiny::br(),
+                    plotWidget(ns("topEnrichedFreq"))
+                ),
+                tags$div(
+                    HTML("<b>(a)</b> <b>Top enriched gene sets.</b> Enrichment plots of the top differentially enriched gene sets. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score.",
+                        "<b>(b)</b> <strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency.")
+                ))),
             shiny::tabPanel("Plots",uiOutput(ns("subplots_UI"))),
             shiny::tabPanel("Compare",uiOutput(ns("compare_UI"))),
             shiny::tabPanel("Volcano (all)",uiOutput(ns("volcanoAll_UI"))),
