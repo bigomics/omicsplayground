@@ -12,66 +12,33 @@ ExpressionBoard <- function(input, output, session, inputData)
     imgH = 340  ## height of images
     tabV = "70vh"  ## height of tables
     tabH = 320  ## row height of panels
-    
-    description = "<b>Differential Expression Analysis.</b> Compare expression between
-two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups."
-    output$description <- shiny::renderUI(shiny::HTML(description))
 
-    gx_infotext ="The <strong>Differential Expression Analysis</strong> module compares expression between two conditions (i.e. tumor versus control), which is one of the fundamental analysis in the transcriptomics data analytics workflow. For each comparison of two conditions (also called \'contrast\'), the analysis identifies which genes are significantly downregulated or overexpressed in one of the groups.
-
-<br><br>The <strong>Plots</strong> panel shows volcano and MA plots for the chosen contrast. It also shows the so-called \'signature\', i.e. the top downregulated and overexpressed genes, for that contrast. The <strong>Top genes</strong> panel shows the average expression plots across the samples for top differentially expressed genes within the selected comparison. A very useful feature of the platform is that it can display volcano plots for all comparisons simultaneously under the <strong>Volcano (all)</strong> panel. This provides users an overview of the statistics of all comparisons. The <strong>Table</strong> panel on the bottom shows the results of the statistical tests. The <strong>Foldchange (all)</strong> panel reports the gene fold changes for all contrasts.
-
-<br><br>EXPERT MODE ONLY: To compare the different statistical methods, the <strong>Volcano (methods)</strong> panel shows volcano plots of all methods. The <strong>FDR table</strong> panel reports the number of significant genes at different FDR thresholds for all contrasts.
-
-<br><br><br><br>
-<center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=3' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
+    gx_infotext ="The <strong>Differential Expression Analysis</strong> module compares expression between two conditions (i.e. tumor versus control),
+     which is one of the fundamental analysis in the transcriptomics data analytics workflow. For each comparison of two conditions (also called \'contrast\'),
+     the analysis identifies which genes are significantly downregulated or overexpressed in one of the groups.<br><br>
+     The <strong>Plots</strong> panel shows volcano and MA plots for the chosen contrast. It also shows the so-called \'signature\',
+     i.e. the top downregulated and overexpressed genes, for that contrast. The <strong>Top genes</strong> panel shows the average expression
+     plots across the samples for top differentially expressed genes within the selected comparison. A very useful feature of the platform is
+     that it can display volcano plots for all comparisons simultaneously under the <strong>Volcano (all)</strong> panel.
+     This provides users an overview of the statistics of all comparisons. The <strong>Table</strong> panel on the bottom shows the results
+     of the statistical tests. The <strong>Foldchange (all)</strong> panel reports the gene fold changes for all contrasts.
+     <br><br>EXPERT MODE ONLY: To compare the different statistical methods, the <strong>Volcano (methods)</strong> panel shows volcano plots of all methods.
+     The <strong>FDR table</strong> panel reports the number of significant genes at different FDR thresholds for all contrasts.<br><br><br><br>
+     <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=3'
+     frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
 
 
     ##================================================================================
     ##========================= INPUTS UI ============================================
     ##================================================================================
 
-    FDR.VALUES = c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
+    
 
-    gx_statmethod_text = "Select a method for the statistical test. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results."
+   
     GX.DEFAULTTEST="trend.limma"
     GX.DEFAULTTEST=c("trend.limma","edger.qlf","deseq2.wald","edger.lrt")
     
-    output$inputsUI <- shiny::renderUI({
-        ui <- shiny::tagList(
-            shinyBS::tipify( shiny::actionLink(ns("gx_info"), "Tutorial", icon = shiny::icon("youtube")),
-                   "Show more information about this module."),
-            shiny::hr(), shiny::br(),             
-            shinyBS::tipify( shiny::selectInput(ns("gx_contrast"), "Contrast:", choices=NULL),
-                   "Select a contrast of interest for the analysis.", placement="top"),
-            shinyBS::tipify( shiny::selectInput(ns("gx_features"),"Gene family:", choices=NULL, multiple=FALSE),
-                   "Choose a specific gene family for the analysis.", placement="top"),
-            shiny::fillRow( flex=c(1,1),
-                    shinyBS::tipify( shiny::selectInput(ns("gx_fdr"),"FDR", choices=FDR.VALUES, selected=0.2),
-                           "Set the false discovery rate (FDR) threshold.", placement="top"),
-                    shinyBS::tipify( shiny::selectInput(ns("gx_lfc"),"logFC threshold",
-                                        choices=c(0,0.1,0.2,0.5,1,2,5), selected=0),
-                           "Set the logarithmic fold change (logFC) threshold.", placement="top")
-                    ),
-            shiny::br(),br(),br(),br(),
-            shinyBS::tipify( shiny::actionLink(ns("gx_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                   "Toggle advanced options.", placement="top"),
-            shiny::br(),br(),
-            shiny::conditionalPanel(
-                "input.gx_options % 2 == 1", ns=ns,
-                shiny::tagList(
-                    shinyBS::tipify(shiny::checkboxInput(ns("gx_showall"),"show all genes", FALSE),
-                           "Display all genes in the table. Disable filtering of significant genes.", 
-               placement="top", options = list(container = "body")),
-                    shinyBS::tipify( shiny::checkboxGroupInput(ns('gx_statmethod'),'Statistical methods:',
-                                               choices=NULL, inline=TRUE),
-                           gx_statmethod_text, placement="right", options=list(container="body"))
-                )
-            )
-        )
-        return(ui)
-    })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    
 
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
