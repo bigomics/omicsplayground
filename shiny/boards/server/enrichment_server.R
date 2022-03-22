@@ -356,7 +356,7 @@ EnrichmentBoard <- function(input, output, session, inputData, selected_gxmethod
             ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='\u2605')
             stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols)
             ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='*')            
-            ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='★')
+            ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='+')
             ##stars <- sapply(rowSums(is.sig,na.rm=TRUE), star.symbols, pch='&#9733;')
             names(stars) <- rownames(mx)
             
