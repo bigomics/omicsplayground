@@ -94,8 +94,6 @@ LoadingBoard <- function(input, output, session, pgx_dir,
     curDataSet <- shiny::reactive({
         ngs <- inputData()
         if(is.null(ngs)) return(NULL)
-        ##HTML("<b>dataset :</b>",ngs$name,"")
-        ##HTML("<h3>",ngs$name,"</h3>")
         dname <- gsub("^.*/|[.]pgx","",ngs$name)
         shiny::HTML("<div class='current-data'>",dname,"</div>")
     })

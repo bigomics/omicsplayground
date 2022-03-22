@@ -10,9 +10,6 @@ downloadButton2 <- function (outputId, label = "Download", class = NULL, ...) {
                        shiny::icon("file-csv"), label, ...)
 }
 
-    
-
-
 LoadingInputs <- function(id) {
     ns <- shiny::NS(id)  ## namespace
     shiny::tagList(
@@ -35,7 +32,7 @@ LoadingUI <- function(id) {
         close_session <- shiny::actionButton(ns("close"), "close")
     }
 
-    tagList(
+    shiny::tagList(
         close_session,
         shiny::fillCol(
             height = 750,
@@ -55,7 +52,7 @@ LoadingUI <- function(id) {
                             flex = c(1,0.1,4.5),
                             shiny::wellPanel(
                                 shiny::tagList(
-                                    shinyalert::useShinyalert(),  # Set up shinyalert
+                                    shinyalert::useShinyalert(),
                                     shiny::p(shiny::strong("Dataset info:")),
                                     shiny::div(shiny::htmlOutput(ns("dataset_info")), id="datainfo"),
                                     shiny::br(),

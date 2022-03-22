@@ -236,9 +236,9 @@ plotWidget <- function(id) {
     shiny::uiOutput(ns("widget"))
 }
     
-plotModule <- function(input, output, session, ## ns=NULL,
-                       func, func2=NULL, 
-                       info.text="Figure", title="", 
+plotModule <- function(input, output, session,
+                       func, func2=NULL,
+                       info.text="Figure", title="",
                        inputs=NULL, options = NULL, label="",
                        caption="", caption2=info.text, ## header=NULL,
                        plotlib = "base", plotlib2 = NULL,
@@ -1054,11 +1054,3 @@ tableModule <- function(input, output, session,
     )
     return(module)
 }
-
-
-
-
-
-########################################################################
-########################################################################
-########################################################################
