@@ -876,19 +876,6 @@ ExpressionBoard <- function(input, output, session, inputData)
         add.watermark = WATERMARK
     )
 
-
-    output$topgenesUI <- shiny::renderUI({
-        shiny::fillCol(
-            ## id = ns("topgenes"),
-            height = rowH,
-            flex=c(1,NA,NA), ##height = 370,
-            plotWidget(ns("topgenes")),
-            shiny::br(),
-            shiny::div(shiny::HTML(topgenes_caption),class="caption")
-        )
-    })
-    shiny::outputOptions(output, "topgenesUI", suspendWhenHidden=FALSE) ## important!!!
-    
     ##================================================================================
     ## Volcano (all contrasts)
     ##================================================================================
@@ -1049,35 +1036,17 @@ ExpressionBoard <- function(input, output, session, inputData)
     
     volcanoAll_text = "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for genes across all contrasts. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
 
-    volcanoAll_caption = "<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings."
-
     shiny::callModule( plotModule,
         id="volcanoAll", 
         func = volcanoAll.RENDER,
         func2 = volcanoAll.RENDER,
-        ## plotlib = "ggplot",  ## !!!!!!!!!!!!!! reactive does not work properly !!!!!!!!!!!!!!!
         info.text = volcanoAll_text,
-        ##caption = volcanoAll_caption,
         pdf.width=16, pdf.height=5,
-        ##height = imgH, res=75,
         height = c(imgH,500), width = c('auto',1600),
         res = c(70,90),
         title="Volcano plots for all contrasts",
         add.watermark = WATERMARK
     )
-    
-
-    output$volcanoAll_UI <- shiny::renderUI({
-        shiny::fillCol(
-            ## id = ns("topgenes"),
-            height = rowH,
-            flex=c(1,NA,NA), ##height = 370,
-            plotWidget(ns("volcanoAll")),
-            shiny::br(),
-            shiny::div(shiny::HTML(volcanoAll_caption), class="caption")
-        )
-    })
-    
 
     ##================================================================================
     ## Volcano (all2 contrasts)
@@ -1261,8 +1230,6 @@ ExpressionBoard <- function(input, output, session, inputData)
 
     volcanoMethods_text = "Under the <strong>Volcano (methods)</strong> tab, the platform displays the volcano plots provided by multiple differential expression calculation methods for the selected contrast. This provides users an overview of the statistics of all methods at the same time."
 
-    volcanoMethods_caption = "<b>Volcano plot for all statistical methods.</b> Simultaneous visualisation of volcano plots of genes by multiple differential expression methods for the selected contrast. Methods showing better statistical significance will show volcano plots with 'higher' wings."
-
     shiny::callModule( plotModule,
         id = "volcanoMethods", 
         func = volcanoMethods.RENDER,
@@ -1275,17 +1242,6 @@ ExpressionBoard <- function(input, output, session, inputData)
         pdf.width=18, pdf.height=6,
         add.watermark = WATERMARK
     )
-
-
-    output$volcanoMethodsUI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex=c(1,NA,NA), ##height = 370,
-            plotWidget(ns("volcanoMethods")),
-            shiny::br(),
-            shiny::div(shiny::HTML(volcanoMethods_caption), class="caption")
-        )
-    })
 
     ##================================================================================
     ## Statistics Table
@@ -1584,14 +1540,6 @@ ExpressionBoard <- function(input, output, session, inputData)
         height = c(tabH,700)
     )
 
-
-    output$fctable_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = tabH,
-            tableWidget(ns("fctable"))
-        )
-    })
-
     ##================================================================================
     ## FDR table
     ##================================================================================
@@ -1679,14 +1627,6 @@ ExpressionBoard <- function(input, output, session, inputData)
         caption = FDRtable_caption,
         height = c(tabH, 700)
     )
-
-
-    output$FDRtable_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = tabH,
-            tableWidget(ns("FDRtable"))
-        )
-    })
 
     ##----------------------------------------------------------------------
     ## reactive values to return to parent environment
