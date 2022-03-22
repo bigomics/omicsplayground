@@ -11,92 +11,10 @@ FeatureMapBoard <- function(input, output, session, inputData)
     rowH1 = 220  ## row 1 height
     rowH2 = 460  ## row 2 height
     
-    description = "<h3>Cluster Features</h3> Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). It allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers."
-    output$description <- shiny::renderUI(shiny::HTML(description))
-    
     infotext ="Visually explore and compare expression signatures on UMAP plots. Feature-level clustering is based on pairwise co-expression between genes (or genesets). This is in contrast to sample-level clustering which clusters samples by similarity of their expression profile. Feature-level clustering allows one to detect gene modules, explore gene neighbourhoods, and identify potential drivers, to study the relationships between features.
 <br><br>The tabs present Gene and Geneset UMAP dimensionality reduction plots and are computed for gene and geneset features, respectively. The clustering of features is computed using UMAP from either the normalized log-expression matrix (logCPM) or the log-foldchange matrix (logFC), with the covariance as distance metric. The UMAP from the logCPM is the default, but in cases of strong batch/tissue effects the UMAP from the logFC matrix is a better choice. We prefer the covariance distance metric instead of the correlation because it takes the size of the foldchange into account. Doing so, genes that are close together in corners in the outer rim are those with high pairwise covariance, i.e. have high correlation and high FC.
 <br><br>The maps can be colored according to the foldchange signature of the group contrasts (i.e. comparisons), or colored by the average relative log-expression according to some phenotype condition. Multiple signatures can then be easily compared by visually inspection of the colors.
 "
-    
-    ##================================================================================
-    ##========================= OUTPUT UI ============================================
-    ##================================================================================
-    
-    umap_caption = "<h4>Gene UMAP</h4>"
-    output$geneUMAP_UI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.02,1,0.3),
-            height = 1.1*fullH,
-            shiny::div(shiny::HTML(umap_caption), class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1,0.03,1.2),
-                height = 0.85*fullH,                
-                plotWidget(ns('geneUMAP')),
-                shiny::br(),                
-                plotWidget(ns('geneSigPlots')) ## %>% shinycssloaders::withSpinner()
-            ),
-            tableWidget(ns('geneTable'))
-        )
-    })
-    ## important for plot options to be updated correctly...
-    shiny::outputOptions(output, "geneUMAP_UI", suspendWhenHidden=FALSE) 
-
-    ##----------------------------------------------
-    gset_caption = "<h4>Geneset UMAP</h4>"    
-    output$gsetUMAP_UI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.02,1,0.3),
-            height = 1.1*fullH,
-            shiny::div(shiny::HTML(gset_caption), class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1,0.03,1.2),
-                plotWidget(ns('gsetUMAP')),
-                shiny::br(),
-                plotWidget(ns('gsetSigPlots')) ##  %>% shinycssloaders::withSpinner()
-            ),
-            tableWidget(ns('gsetTable'))
-        )
-
-    })
-    shiny::outputOptions(output, "gsetUMAP_UI", suspendWhenHidden=FALSE)     
-    
-    ##================================================================================
-    ##========================= INPUTS UI ============================================
-    ##================================================================================
-
-    
-    output$inputsUI <- shiny::renderUI({
-        ui <- shiny::tagList(
-            shiny::actionLink(ns("info"), "Info", icon=icon("info-circle")),
-            shiny::hr(), shiny::br(),             
-            
-            ## data set parameters
-            shiny::selectInput(ns('sigvar'),'Show phenotype:', choices=NULL, multiple=FALSE),
-            shiny::br(),
-            shiny::br(),
-            shiny::actionLink(ns("options"), "Options", icon=icon("cog", lib = "glyphicon")),
-            shiny::br(),br(),
-            shiny::conditionalPanel(
-                "input.options % 2 == 1", ns=ns,
-                shiny::tagList(
-                    tipifyR(shiny::radioButtons(ns('umap_type'),'UMAP datatype:',
-                                         choices=c('logCPM','logFC'), inline=TRUE),
-                            "The UMAP can be computed from the normalized log-expression (logCPM), or from the log-foldchange matrix (logFC). Clustering based on logCPM is the default, but when batch/tissue effects are present the logFC might be better."),
-                    tipifyR(shiny::selectInput(ns('filter_genes'),'Show genes:',
-                                        choices=NULL, multiple=FALSE),
-                           "Filter the genes to highlight on the map."),
-                    tipifyR(shiny::selectInput(ns('filter_gsets'),'Show genesets:',
-                                        choices=NULL, multiple=FALSE),
-                            "Filter the genesets to highlight on the map.")
-                )
-            )
-        )
-        
-    })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
             
     
     ##================================================================================
