@@ -7,10 +7,6 @@ IntersectionBoard <- function(input, output, session, inputData, selected_gxmeth
 {
     ns <- session$ns ## NAMESPACE
     fullH = 800       # row height of panel 
-    
-    description =
-"<h3>Compare signatures</h3>Find genes that are commonly up/down regulated between two or more signatures. Compute similarity between contrasts."
-output$description <- shiny::renderUI(shiny::HTML(description))
 
     infotext =
         "The <strong>Intersection analysis module</strong> enables users to compare multiple contrasts by intersecting the genes of profiles. The main goal is to identify contrasts showing similar profiles.
@@ -22,41 +18,6 @@ output$description <- shiny::renderUI(shiny::HTML(description))
 
 "
 
-    ##================================================================================
-    ##========================= INPUTS UI ============================================
-    ##================================================================================
-    
-    output$inputsUI <- shiny::renderUI({
-        ui <- shiny::tagList(
-            shinyBS::tipify( shiny::actionLink(ns("info"), "Tutorial", icon = shiny::icon("youtube")),
-                   "Show more information about this module"),
-            shiny::hr(), shiny::br(),             
-            shinyBS::tipify( shiny::selectInput(ns('comparisons'),'Contrasts:', choices=NULL, multiple=TRUE),
-                   "Select the contrasts that you want to compare. If you select N=2 contrast a single scatterplot will be drawn. For N>=3 a scatterplot matrix will be drawn.",
-                   placement="top"),
-
-            shinyBS::tipify( shiny::actionLink(ns("options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                   "Toggle advanced options.", placement="top"),
-            shiny::br(),br(),
-            shiny::conditionalPanel(
-                "input.options % 2 == 1", ns=ns,
-                shinyBS::tipify( shiny::radioButtons(ns("level"),"Level:",
-                                     choices=c("gene","geneset"), inline=TRUE),
-                       "Select feature level: gene or geneset", placement="top"),                
-                shinyBS::tipify( shiny::selectInput(ns("filter"),"Filter:", choices=NULL, multiple=FALSE),
-                       "Filter features", placement="top"),
-                shiny::conditionalPanel(
-                    "input.filter == '<custom>'", ns=ns,
-                    shinyBS::tipify( shiny::textAreaInput(ns("customlist"), NULL, value = NULL,
-                                          rows=5, placeholder="Paste your custom gene list"),
-                           "Paste a custom list of genes to highlight.", placement="bottom")
-                )
-            )
-        )
-        ui
-    })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
-    
     ## delayed input
     input_comparisons <- shiny::reactive({
         input$comparisons
@@ -1727,86 +1688,5 @@ output$description <- shiny::renderUI(shiny::HTML(description))
         info.text = ctGseaTable.info,
         height = c(225,750), width=c('100%',1500)
     )
-
-
-    ##-------------------------------------------------------
-    ##---------- UI LAYOUT ----------------------------------
-    ##-------------------------------------------------------
-    
-    scatterPlotMatrix_caption = "<h4>Pairwise scatter & Venn diagram</h4> <b>(a)</b> <b>Pairs plot.</b> Pairwise scatterplots for two or more differential expression profiles for multiple selected contrasts. Similar profiles will show high correlation with points close to the diagonal.  <b>(b)</b> <b>Venn diagram</b> showing the number of overlapping genes for multiple contrasts. <b>(c)</b> <b>Venn table.</b> Genes in the selected overlap region."
-
-    output$scatterPlotMatrix_UI <- shiny::renderUI({
-        shiny::fillCol(
-            ## id = ns("expr_topgenes"),
-            height = fullH,
-            flex=c(NA,0.02,1), ##height = 370,
-            shiny::div(shiny::HTML(scatterPlotMatrix_caption),class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex=c(1.7,0.15,1),
-                height = fullH,
-                plotWidget(ns("scatterPlotMatrix")),
-                shiny::br(),
-                shiny::fillCol(
-                    flex = c(1.4,1),
-                    plotWidget(ns("venndiagram")),
-                    ## venntable_buttons,
-                    ##plotWidget(ns("cumFCplot"))
-                    tableWidget(ns("venntable"))
-                )
-            )
-        )
-    })
-    shiny::outputOptions(output, "scatterPlotMatrix_UI", suspendWhenHidden=FALSE) ## important!!!    
-
-    
-    ctClusteringUI_caption = "<h4>Signature clustering</h4> <b>(a)</b> <b>Signature heatmap.</b> Similarity of the signatures visualized as a clustered heatmap. The top plot shows the distribution of foldchange values as boxplots. <b>(b)</b> <b>Contrast correlation.</b> The numeric values in the cells correspond to the Pearson correlation coefficient. Red corresponds to positive correlation and blue to negative correlation. "
-    
-    output$ctClustering_UI <- shiny::renderUI({
-        shiny::fillCol(
-            ## id = ns("expr_topgenes"),
-            height = fullH,
-            flex = c(NA,0.035,1), ##height = 370,
-            shiny::div(shiny::HTML(ctClusteringUI_caption), class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(2.2,0.01,1),
-                height = fullH,
-                plotWidget(ns("FoldchangeHeatmap")),
-                shiny::br(),
-                plotWidget(ns("ctcorrplot"))
-            )
-        )
-    })
-
-    ctUMAP_caption = "<h4>Signature maps</h4>Visually compare differential expression profiles projected on UMAP clustered maps."
-
-    output$ctUMAP_UI <- shiny::renderUI({
-
-        shiny::fillCol(
-            flex = c(NA,0.02,1,0.1,1.9),
-            height = fullH,
-            shiny::div(shiny::HTML(ctUMAP_caption), class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1,0.04,1),
-                shiny::fillCol(
-                    flex = c(2.5,0.1,1),
-                    plotWidget(ns('ctGeneUMAP')),
-                    ##plotWidget(ns('ctGeneUMAP')) %>% shinycssloaders::withSpinner(), ## ERROR: 'margins too large'                   
-                    shiny::br(),
-                    tableWidget(ns('ctGeneTable'))
-                ),
-                shiny::br(),
-                shiny::fillCol(
-                    flex = c(2.5,0.1,1),                    
-                    plotWidget(ns('ctGseaUMAP')),
-                    shiny::br(),
-                    tableWidget(ns('ctGseaTable'))
-                )
-            )
-        )
-
-    })
     
 } ## end-of-Board 
