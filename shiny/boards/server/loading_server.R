@@ -60,9 +60,7 @@ LoadingBoard <- function(input, output, session, pgx_dir,
     ##-----------------------------------------------------------------------------
     ## Description
     ##-----------------------------------------------------------------------------
-    description = "<b>Omics Playground</b> is a self-service bioinformatics platform for interactive analysis, visualization and interpretation of transcriptomics and proteomics data. Life scientists can easily perform complex data analysis and visualization without coding, and significantly reduce the time to discovery."
-    
-    output$description <- shiny::renderUI(shiny::HTML(description))
+   
 
     shiny::observeEvent( input$module_info, {
         shiny::showModal(shiny::modalDialog(
@@ -106,56 +104,7 @@ LoadingBoard <- function(input, output, session, pgx_dir,
     ##-----------------------------------------------------------------------------
     ## User interface
     ##-----------------------------------------------------------------------------
-    downloadButton2 <- function (outputId, label = "Download", class = NULL, ...) {
-        aTag <- shiny::tags$a(id = outputId,
-                       class = paste("btn btn-default shiny-download-link", class),
-                       href = "", target = "_blank", download = NA, 
-                       shiny::icon("file-csv"), label, ...)
-    }
-    
-    output$inputsUI <- shiny::renderUI({        
 
-        delete_button <- NULL
-        if(enable_delete) {
-            delete_button <- shinyBS::tipify( shiny::actionButton(
-                ns("deletebutton"), label=NULL, icon=icon("trash"),
-                style='padding:2px 1px 1px 1px; font-size:140%; color: #B22222; width:30px;'
-            ),"Delete the selected dataset.", placement="bottom")
-        }
-
-        ui <- shiny::tagList(
-            shinyalert::useShinyalert(),  # Set up shinyalert
-            shiny::p(shiny::strong("Dataset info:")),
-            shiny::div(shiny::htmlOutput(ns("dataset_info")), id="datainfo"),
-            shiny::br(),
-            shiny::conditionalPanel(
-                "output.rowselected != 0", ns=ns,
-                shinyBS::tipify( shiny::actionButton(ns("loadbutton"),label="Load",class="load-button"),
-                   "Click to load the selected dataset.", placement="bottom"),
-                shinyBS::tipify( shiny::downloadButton(
-                    ns("downloadpgx"), label=NULL, ## icon=icon("download"),
-                    style='padding:2px 1px 1px 1px; font-size:140%; width:30px;'
-                ),"Download PGX file (binary).", placement="bottom"),
-                shinyBS::tipify( downloadButton2(
-                    ns("downloadzip"), label=NULL, icon=icon("file-csv"),
-                    style='padding:2px 1px 1px 1px; font-size:140%; width:30px;'
-                ),"Download CSV files (counts.csv, samples.csv, contrasts.csv).",
-                placement="bottom"),
-                delete_button
-            ),
-            shiny::br(),shiny::br(),
-            shinyBS::tipify( shiny::actionLink(ns("showfilter"), "show filters",
-                                               icon=icon("cog", lib = "glyphicon")),
-                   "Show dataset filters.", placement="top"),
-            shiny::br(),br(),
-            shiny::conditionalPanel(
-                "input.showfilter % 2 == 1", ns=ns,
-                shiny::uiOutput(ns("dataset_filter"))
-            )
-        )
-        ui
-    })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE)
     output$rowselected <- shiny::reactive({
         !is.null(selectedPGX()) && length(selectedPGX())>0
     })
@@ -182,8 +131,7 @@ LoadingBoard <- function(input, output, session, pgx_dir,
         shiny::tagList(
             shiny::checkboxGroupInput(ns("flt_datatype"),"datatype", choices = datatypes),
             shiny::checkboxGroupInput(ns("flt_organism"),"organism", choices = organisms)
-            ##checkboxGroupInput("flt_conditions","conditions",
-            ##choices=c("treatment","sex","activated"))
+            
         )
 
     })
@@ -632,16 +580,7 @@ LoadingBoard <- function(input, output, session, pgx_dir,
         nvalues1 <- format(nvalues, nsmall=, big.mark=" ")  # 1,000.6
         vbox( nvalues1, "data points") 
     })
-
-    output$valueboxes_UI <- shiny::renderUI({
-        shiny::fillRow(
-            height=115,
-            shiny::uiOutput(ns("valuebox1")),
-            shiny::uiOutput(ns("valuebox2")), 
-            shiny::uiOutput(ns("valuebox3"))
-        )
-    })
-
+   
     ##================================================================================
     ## Data sets
     ##================================================================================
@@ -735,36 +674,11 @@ LoadingBoard <- function(input, output, session, pgx_dir,
         height = 640, width = c('100%',1600),
     )
 
-    output$pgxtable_UI <- shiny::renderUI({    
-        shiny::fillCol(
-            height = 750,
-            flex = c(NA,1),
-            shiny::uiOutput(ns("valueboxes_UI")),
-            shiny::fillRow(
-                flex = c(1,0.1,4.5),
-                shiny::wellPanel(
-                    shiny::uiOutput(ns("inputsUI"))
-                ),
-                shiny::br(), 
-                tableWidget(ns("pgxtable"))
-            )
-        )        
-    })
-    shiny::outputOptions(output, "pgxtable_UI", suspendWhenHidden=FALSE) ## important!
-
     ##================================================================================
     ## Upload new data
     ##================================================================================
     if(enable_upload) {
 
-        dbg("[LoadingBoard] upload enabled!")
-        
-        output$upload_UI <- shiny::renderUI({
-            dbg("[LoadingBoard] output$upload_UI::renderUI")
-            UploadModuleUI(ns("upload_panel"))
-        })
-        
-        dbg("[LoadingBoard] initializing UploadModule")        
         uploaded_pgx <- UploadModuleServer(
             id = "upload_panel",
             FILES = FILES,
