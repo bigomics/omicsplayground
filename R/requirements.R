@@ -109,10 +109,10 @@ install.pkgs(base.pkg)
 
 pkg.used <- autoscan.pkgs() 
 
-pkg.needed <- c('umap','corrplot','wordcloud','wordcloud2',"optparse","docopt",
-                'kableExtra',"randomForest",'rhdf5','qgraph','psych',
-                'ggVennDiagram', 'shinythemes','shinybusy','beepr',
-                'rworldmap','sever','WGCNA','DGCA')
+pkg.needed <- c('umap', 'corrplot', 'wordcloud', 'wordcloud2', 'optparse', 'docopt',
+                'kableExtra', 'randomForest', 'rhdf5', 'qgraph', 'psych',
+                'ggVennDiagram', 'shinythemes', 'shinybusy', 'beepr',
+                'rworldmap', 'sever', 'WGCNA', 'DGCA', 'ggforce')
 
 pkg.used <- c(pkg.used, pkg.needed)
 pkg.used <- sort(unique(pkg.used))

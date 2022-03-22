@@ -67,6 +67,7 @@ message(">>>>> LOADING INITIAL LIBS")
 library(shiny)
 library(shinyBS)
 library(grid)
+library(ggplot2)
 
 source("utils/utils.R", local = TRUE)
 
