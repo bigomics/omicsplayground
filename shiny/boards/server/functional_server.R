@@ -11,14 +11,6 @@ FunctionalBoard <- function(input, output, session, inputData, selected_gxmethod
     tabH = 200  ## row height of panel
     tabH = '70vh'  ## row height of panel    
 
-    description = "<b>Functional analysis</b>. <br> Perform specialized functional analysis
-to understand biological functions including GO, KEGG, and drug connectivity mapping."
-    output$description <- shiny::renderUI(shiny::HTML(description))
-    
-    description = "<b>Functional analysis</b>. <br> Perform specialized functional analysis
-to understand biological functions including GO and KEGG pathway analysis."
-    output$description <- shiny::renderUI(shiny::HTML(description))
-
     fa_infotext = paste("This module performs specialized pathway analysis. <br><br>",a_KEGG," is a collection of manually curated pathways representing the current knowledge of molecular interactions, reactions and relation networks as pathway maps. In the <strong>KEGG pathway</strong> panel, each pathway is scored for the selected contrast profile and reported in the table. A unique feature of the platform is that it provides an activation-heatmap comparing the activation levels of pathways across multiple contrast profiles. This facilitates to quickly see and detect the similarities between profiles in certain pathways.
 
 <br><br>In the <strong>GO</strong> panel, users can perform ",a_GO," (GO) analysis. GO defines functional concepts/classes and their relationships as a hierarchical graph. The GO database provides a computational representation of the current knowledge about roles of genes for many organisms in terms of molecular functions, cellular components and biological processes. All the features described under the KEGG pathway tab, such as scoring the gene sets and drawing an activation-heatmap, can be performed for the GO database under the GO graph tab. Instead of pathway maps, an annotated graph structure provided by the GO database is potted for every selected gene set.
@@ -28,33 +20,6 @@ to understand biological functions including GO and KEGG pathway analysis."
 ")
 
     
-    ##================================================================================
-    ##========================= INPUTS UI ============================================
-    ##================================================================================
-
-    output$inputsUI <- shiny::renderUI({
-        ui <- shiny::tagList(
-            shinyBS::tipify( shiny::actionLink(ns("fa_info"), "Youtube", icon = shiny::icon("youtube") ),
-                   "Show more information about this module."),
-            shiny::hr(), shiny::br(),             
-            shinyBS::tipify( shiny::selectInput(ns("fa_contrast"),"Contrast:", choices=NULL),
-                   "Select the contrast corresponding to the comparison of interest.",
-                   placement="top"),
-            shinyBS::tipify( shiny::actionLink(ns("fa_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                   "Show/hide advanced options", placement="top"),
-            shiny::br(),
-            shiny::conditionalPanel(
-                "input.fa_options % 2 == 1", ns=ns,
-                shiny::tagList(
-##                    shinyBS::tipify(shiny::checkboxInput(ns('fa_normalize'),'normalize activation matrix',FALSE),"Click to normalize the columns of the activation matrices."),
-                    shinyBS::tipify(shiny::checkboxInput(ns('fa_filtertable'),'filter signficant (tables)',FALSE),
-                           "Click to filter the significant entries in the tables.")
-                )
-            )
-        )
-        ui
-    })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
@@ -536,31 +501,6 @@ to understand biological functions including GO and KEGG pathway analysis."
     )
     
     
-    ##----------------------------------------------------------------------
-
-    kegg_analysis_caption = "<b>(a)</b> <b>KEGG pathway map.</b> Genes are colored according to their upregulation (red) or downregulation (blue) in the contrast profile. <b>(b)</b> <b>Enrichment table</b> reporting enrichment score for each pathway for the selected contrast profile. <b>(c)</b> <b>Activation matrix</b> visualizing the activation levels of pathways across contrasts." 
-
-    output$kegg_analysis_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = fullH,
-            flex = c(NA,0.035,1),
-            shiny::div(shiny::HTML(kegg_analysis_caption), class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1.3,0.1,1),
-                height = rowH,
-                shiny::fillCol(
-                    flex = c(1.8,0.1,1),
-                    height = 0.9*rowH,
-                    plotWidget(ns("kegg_graph")),
-                    shiny::br(),
-                    tableWidget(ns("kegg_table"))
-                ),
-                shiny::br(),  ## horizontal space
-                plotWidget(ns("kegg_actmap"))
-            )
-        )
-    })
 
     ##================================================================================
     ## GO graph
@@ -926,28 +866,6 @@ to understand biological functions including GO and KEGG pathway analysis."
         title = "GO score table",
         height = c(270,700)        
     )
-
-    GO_analysis_caption = "<b>(a)</b> <b>Gene Ontology graph.</b> The graph represents the enrichment of the GO terms as a tree structure. <b>(b)</b> <b>GO score table.</b> The score of a GO term is the cumulative score of all higher order terms. <b>(c)</b> <b>Activation matrix</b> visualizing the enrichment of GO terms across multiple contrast profiles."
-    
-    output$GO_analysis_UI <- shiny::renderUI({
-        shiny::fillCol(
-            flex=c(NA,0.035,1),
-            height = fullH,
-            shiny::div(shiny::HTML(GO_analysis_caption),class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                height = rowH,
-                flex = c(1.2,1),
-                shiny::fillCol(
-                    flex = c(2,1),
-                    height = 0.9*rowH,
-                    plotWidget(ns("GO_network")),
-                    tableWidget(ns("GO_table"))
-                ),
-                plotWidget(ns("GO_actmap"))
-            )
-        )
-    })
 
     ##================================================================================
     ## Fire plot (dev)
