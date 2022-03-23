@@ -1,16 +1,3 @@
-## Fonts for Shiny server
-dir.create('~/.fonts')
-file.copy("serverfonts/ClearSans-Regular.ttf", "~/.fonts")
-file.copy("serverfonts/ClearSans-Bold.ttf", "~/.fonts")
-file.copy("serverfonts/ClearSans-Italic.ttf", "~/.fonts")
-file.copy("serverfonts/ClearSans-BoldItalic.ttf", "~/.fonts")
-file.copy("serverfonts/ClearSans-Medium.ttf", "~/.fonts")
-file.copy("serverfonts/ClearSans-MediumItalic.ttf", "~/.fonts")
-file.copy("serverfonts/FiraCode-Regular.otf", "~/.fonts")
-file.copy("serverfonts/FiraCode-Bold.otf", "~/.fonts")
-file.copy("serverfonts/FiraCode-Medium.otf", "~/.fonts")
-file.copy("serverfonts/NotoColorEmoji_WindowsCompatible.ttf", "~/.fonts")
-system('fc-cache -f ~/.fonts')
 
 #library(systemfonts)
 
