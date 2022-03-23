@@ -21,12 +21,17 @@ system('fc-cache -f ~/.fonts')
 #' @param base_size (integer) Base point size
 #' @param grid (string) Grid lines. Options include  "none" or
 #' any combination of "X", "Y", "x" and "y".
-#' @param axisline (string) Axis lines. Options include "none" or
-#' any combination of "X", "Y", "x" and "y".
 #' @param axistitle (string) Axis titles. Options include "none" or
 #' any combination of "X", "Y", "x" and "y".
 #' @param axistext (string) Axis text labels for values or groups.
 #' Options include "none" or any combination of "X", "Y", "x" and "y".
+#' @param axis_num (string) Should axis text be formatted as monospaced? Set 
+#' to  x and y, respectively, in case numeric values are displayed. Options 
+#' include "none" or any combination of "X", "Y", "x" and "y". 
+#' @param legend_num (logical) Should legend text be formatted as monospaced?
+#' Defaults to FALSE (no monospace font). Set to TRUE in case of numeric values.
+#' #' @param panelborder (logical) Should a panel border be drawn?
+#' Defaults to FALSE (no border). If TRUE it also adds tick marks to both axes.
 #' @param margin (numeric) Should a margin of x be added to the plot?
 #' Defaults to 0 (no margin by default).
 #' @param ... Other arguments passed to ggplot methods.
@@ -45,13 +50,15 @@ system('fc-cache -f ~/.fonts')
 #' @export
 theme_omics <- function(style = "default", base_size = 15,
                         grid = "xy", axistitle = "xy", 
-                        axistext = "xy", axistextnum = "none",
-                        panelborder = FALSE, margin = 0, ...) {
+                        axistext = "xy", axis_num = "none",
+                        legend_num = FALSE, panelborder = FALSE, 
+                        margin = 0, ...) {
   if(!style %in% c("default", "light")) stop('style must be either "default" or "light"')
   if(!is.character(grid)) stop('grid must be a character: "none" or any combination of "X", "Y", "x" and "y"')
   if(!is.character(axistitle)) stop('axistitle must be a character: "none" or any combination of "X", "Y", "x" and "y"')
   if(!is.character(axistext)) stop('axistext must be a character: "none" or any combination of "X", "Y", "x" and "y"')
-  if(!is.character(axistextnum)) stop('axistextnum must be a character: "none" or any combination of "X", "Y", "x" and "y"')
+  if(!is.character(axis_num)) stop('axis_num must be a character: "none" or any combination of "X", "Y", "x" and "y"')
+  if(!is.logical(legendmum)) stop('legend_num must be a logical variable')
   if(!is.logical(panelborder)) stop('panelborder must be a logical variable')
   if(!is.numeric(margin)) stop('margin must be a numeric value')
   
@@ -162,8 +169,8 @@ theme_omics <- function(style = "default", base_size = 15,
                      axis.title.y = ggplot2::element_blank())
   }
   
-  if (axistextnum != "none") {
-    if (!stringr::str_detect(axistextnum, "X|x")) {
+  if (axis_num != "none") {
+    if (!stringr::str_detect(axis_num, "X|x")) {
       out <- out +
         ggplot2::theme(axis.text.x = ggplot2::element_text(
           family = fontfamily_mono,
@@ -171,7 +178,7 @@ theme_omics <- function(style = "default", base_size = 15,
           margin = ggplot2::margin(t = base_size / 4, r = 1, b = 1, l = 1)
         ))
     }
-    if (!stringr::str_detect(axistextnum, "Y|y")) {
+    if (!stringr::str_detect(axis_num, "Y|y")) {
       out <- out +
         ggplot2::theme(axis.text.x = ggplot2::element_text(
           family = fontfamily_mono,
@@ -244,7 +251,10 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
         title.position = "top",
         keywidth = grid::unit(1.4, "lines"),
         keyheight = grid::unit(1.4, "lines")
-    ))
+    )) +
+      ggplot2::theme(
+        legend.position = "top"
+      )
   }
   if (aes == "fill") {
     out <- ggplot2::guides(
@@ -253,7 +263,10 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
         title.position = "top",
         keywidth = grid::unit(1.4, "lines"),
         keyheight = grid::unit(1.4, "lines")
-    ))
+    )) +
+      ggplot2::theme(
+        legend.position = "top"
+      )
   }
   if (aes == "shape") {
     out <- ggplot2::guides(
@@ -262,7 +275,10 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
         title.position = "top",
         keywidth = grid::unit(1.4, "lines"),
         keyheight = grid::unit(1.4, "lines")
-      ))
+      )) +
+      ggplot2::theme(
+        legend.position = "top"
+      )
   }
   if (aes == "size") {
     out <- ggplot2::guides(
@@ -271,7 +287,10 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
         title.position = "top",
         keywidth = grid::unit(1.4, "lines"),
         keyheight = grid::unit(1.4, "lines")
-    ))
+    )) +
+      ggplot2::theme(
+        legend.position = "top"
+      )
   }
   if (aes == "alpha") {
     out <- ggplot2::guides(
@@ -280,7 +299,10 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
         title.position = "top",
         keywidth = grid::unit(1.4, "lines"),
         keyheight = grid::unit(1.4, "lines")
-    ))
+    )) +
+      ggplot2::theme(
+        legend.position = "top"
+      )
   }
 
   return(out)
@@ -313,7 +335,10 @@ guide_continuous <- function(aes = "color", ...) {
         label.position = "bottom", label.hjust = .5,
         barwidth = grid::unit(25, "lines"),
         barheight = grid::unit(.7, "lines")
-      ))
+      )) +
+      ggplot2::theme(
+        legend.position = "top"
+      )
   }
   if (aes == "fill") {
     out <- ggplot2::guides(
@@ -322,7 +347,10 @@ guide_continuous <- function(aes = "color", ...) {
         label.position = "bottom", label.hjust = .5,
         barwidth = grid::unit(25, "lines"),
         barheight = grid::unit(.7, "lines")
-    ))
+    )) +
+      ggplot2::theme(
+        legend.position = "top"
+      )
   }
   if (aes == "alpha") {
     out <- ggplot2::guides(
@@ -331,7 +359,10 @@ guide_continuous <- function(aes = "color", ...) {
         label.position = "bottom", label.hjust = .5,
         barwidth = grid::unit(25, "lines"),
         barheight = grid::unit(.7, "lines")
-    ))
+    )) +
+    ggplot2::theme(
+      legend.position = "top"
+    )
   }
 
   return(out)
