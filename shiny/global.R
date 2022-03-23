@@ -68,6 +68,7 @@ library(shiny)
 library(shinyBS)
 library(grid)
 library(ggplot2)
+library(concaveman)
 
 source("utils/utils.R", local = TRUE)
 
