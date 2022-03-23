@@ -25,10 +25,10 @@ system('fc-cache -f ~/.fonts')
 #' any combination of "X", "Y", "x" and "y".
 #' @param axistext (string) Axis text labels for values or groups.
 #' Options include "none" or any combination of "X", "Y", "x" and "y".
-#' @param axistextnum (string) Should axis text be formatted as monospaced? Set 
+#' @param axis_num (string) Should axis text be formatted as monospaced? Set 
 #' to  x and y, respectively, in case numeric values are displayed. Options 
 #' include "none" or any combination of "X", "Y", "x" and "y". 
-#' @param legendnum (logical) Should legend text be formatted as monospaced?
+#' @param legend_num (logical) Should legend text be formatted as monospaced?
 #' Defaults to FALSE (no monospace font). Set to TRUE in case of numeric values.
 #' #' @param panelborder (logical) Should a panel border be drawn?
 #' Defaults to FALSE (no border). If TRUE it also adds tick marks to both axes.
@@ -50,15 +50,15 @@ system('fc-cache -f ~/.fonts')
 #' @export
 theme_omics <- function(style = "default", base_size = 15,
                         grid = "xy", axistitle = "xy", 
-                        axistext = "xy", axistextnum = "none",
-                        legendnum = FALSE, panelborder = FALSE, 
+                        axistext = "xy", axis_num = "none",
+                        legend_num = FALSE, panelborder = FALSE, 
                         margin = 0, ...) {
   if(!style %in% c("default", "light")) stop('style must be either "default" or "light"')
   if(!is.character(grid)) stop('grid must be a character: "none" or any combination of "X", "Y", "x" and "y"')
   if(!is.character(axistitle)) stop('axistitle must be a character: "none" or any combination of "X", "Y", "x" and "y"')
   if(!is.character(axistext)) stop('axistext must be a character: "none" or any combination of "X", "Y", "x" and "y"')
-  if(!is.character(axistextnum)) stop('axistextnum must be a character: "none" or any combination of "X", "Y", "x" and "y"')
-  if(!is.logical(legendmum)) stop('legendnum must be a logical variable')
+  if(!is.character(axis_num)) stop('axis_num must be a character: "none" or any combination of "X", "Y", "x" and "y"')
+  if(!is.logical(legendmum)) stop('legend_num must be a logical variable')
   if(!is.logical(panelborder)) stop('panelborder must be a logical variable')
   if(!is.numeric(margin)) stop('margin must be a numeric value')
   
@@ -169,8 +169,8 @@ theme_omics <- function(style = "default", base_size = 15,
                      axis.title.y = ggplot2::element_blank())
   }
   
-  if (axistextnum != "none") {
-    if (!stringr::str_detect(axistextnum, "X|x")) {
+  if (axis_num != "none") {
+    if (!stringr::str_detect(axis_num, "X|x")) {
       out <- out +
         ggplot2::theme(axis.text.x = ggplot2::element_text(
           family = fontfamily_mono,
@@ -178,7 +178,7 @@ theme_omics <- function(style = "default", base_size = 15,
           margin = ggplot2::margin(t = base_size / 4, r = 1, b = 1, l = 1)
         ))
     }
-    if (!stringr::str_detect(axistextnum, "Y|y")) {
+    if (!stringr::str_detect(axis_num, "Y|y")) {
       out <- out +
         ggplot2::theme(axis.text.x = ggplot2::element_text(
           family = fontfamily_mono,
