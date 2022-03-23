@@ -589,7 +589,6 @@ ConnectivityBoard <- function(input, output, session, inputData)
         tableModule,
         id = "connectivityScoreTable", label = "b",
         func = connectivityScoreTable.RENDER,
-        ##func2 = connectivityScoreTable.RENDER2, 
         info.text = connectivityScoreTable_info,
         options = connectivityScoreTable_opts,
         info.width = "300px",
@@ -742,7 +741,6 @@ ConnectivityBoard <- function(input, output, session, inputData)
         options = cmap_FCFCplots.opts,
         title = "FC scatter plots",
         info.text = cmap_FCFCplots_info,
-        ##caption = cmap_connectivitymap_caption,
         pdf.height=4.5, pdf.width=10, 
         height = c(360,600), width=c("auto",1280),
         res = c(90,110),
@@ -1279,17 +1277,11 @@ ConnectivityBoard <- function(input, output, session, inputData)
                             "larger points"),
             selected = c("label","3D") ),
             "Show labels, group by dataset, show 3D plot, dark mode.",
-            placement="top", options = list(container = "body"))        
-        ##tipify( shiny::checkboxInput(ns('cmap_showlabel'), 'show label'), "Show labels in plot"),
-        ##tipify( shiny::checkboxInput(ns('cmap_3d'), '3D'), "Show 3D plot")
-        ## shinyBS::tipify(shiny::radioButtons(ns('cmap_topgenes'),'Top genes:',c(50,200,1000),
-        ##                     inline=TRUE,selected=1000),
-        ##            "Specify the number of top genes to determine similarity."),
+            placement="top", options = list(container = "body"))
     )
 
     connectivityMap_info = "<b>The Connectivity Map</b> shows the similarity of the contrasts profiles as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away."
 
-    connectivityMap_caption = "<b>Connectivity Map.</b> The CMap shows the similarity of the contrasts as a t-SNE plot. Contrasts that are similar will be clustered close together, contrasts that are different are placed farther away."
     
     shiny::callModule(
         plotModule,
@@ -1297,11 +1289,9 @@ ConnectivityBoard <- function(input, output, session, inputData)
         func = connectivityMap.RENDER1, plotlib="plotly",
         func2 = connectivityMap.RENDER, 
         options = connectivityMap.opts,
-        ## download.fmt = c("html"),  ## PDF/PNG does not work???
         download.fmt = c("pdf","png","html"),  ## PDF/PNG does not work???
         title = "Connectivity map",
         info.text = connectivityMap_info,
-        ##caption = connectivityMap_caption,
         pdf.width=8, pdf.height=8,
         height = c(fullH-100,750), width = c('auto',1000),
         res=90,
@@ -1392,7 +1382,6 @@ ConnectivityBoard <- function(input, output, session, inputData)
         vsize <- 3 + 12 * (abs(vsize) / max(abs(vsize),na.rm=TRUE))**0.5
 
         bluered.pal <- colorRampPalette(
-            ##colors = c("navyblue","royalblue4","grey90","indianred3","firebrick4")
             colors = c("royalblue4","royalblue2","grey90","indianred3","firebrick4")
         )       
         vcolor <- bluered.pal(65)[ 33 + round(32*fc) ]
@@ -1403,7 +1392,6 @@ ConnectivityBoard <- function(input, output, session, inputData)
         igraph::V(gr)$label <- igraph::V(gr)$name
         igraph::V(gr)$title <- paste0("<b>",gene,"</b><br>",GENE.TITLE[toupper(gene)])
         igraph::V(gr)$size  <- vsize      ## rather small
-        ##V(gr)$color  <- c("skyblue","salmon")[1 + 1*(sign(fc)>0)]       ## rather small
         igraph::V(gr)$color  <- vcolor
 
         ew = abs(igraph::E(gr)$weight)
@@ -1417,11 +1405,7 @@ ConnectivityBoard <- function(input, output, session, inputData)
             nodes = visdata$nodes,
             edges = visdata$edges) %>%
             visNetwork::visNodes(font = list(size = fontsize))  %>%
-            ## visNetwork::visEdges(hidden=FALSE, width=2, color=list(opacity=0.9))  %>%
             visNetwork::visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)) %>%
-            ## visNetwork::visPhysics(enabled=TRUE)  %>%
-            ## visNetwork::visInteraction(hideEdgesOnDrag = TRUE) %>%
-            ## visNetwork::visIgraphLayout(layout="layout.norm", layoutMatrix=pos)
             visNetwork::visIgraphLayout(layout="layout_nicely")
         graph
         
@@ -1437,20 +1421,16 @@ ConnectivityBoard <- function(input, output, session, inputData)
                "Parameter for node size.")        
     )
     
-    leadingEdgeGraph_caption = "<b>Leading-edge graph.</b> Network of shared leading-edge genes between top-N most similar signatures. The edge width corresponds to the number of signatures that share that pair of genes in their top differentially expressed genes."
     leadingEdgeGraph_info = "<b>Leading-edge graph.</b> Network of shared leading-edge genes between top-N most similar signatures. The edge width corresponds to the number of signatures that share that pair of genes in their top differentially expressed genes. In the plot options you can set the threshold of the edges."
     
     shiny::callModule(
         plotModule,
         "leadingEdgeGraph", label = "a",
-        ##func = leadingEdgeGraph.RENDER,
-        ##func2 = leadingEdgeGraph.RENDER,
         func = leadingEdgeGraph.VISNETWORK,
         plotlib="visnetwork",
         options = leadingEdgeGraph.opts,
         title = "Leading-edge graph",
         info.text = leadingEdgeGraph_info,
-        ## caption = leadingEdgeGraph_caption,
         pdf.height=8, pdf.width=8, 
         height = c(720,720), width=c("auto",1300),
         res = c(90,100),
@@ -1605,19 +1585,15 @@ ConnectivityBoard <- function(input, output, session, inputData)
                "Parameter for node size.")        
     )
     
-    enrichmentGraph_caption = "<b>Enrichment graph.</b> Network of shared enrichmed genesets between top-N most similar signatures. The edge width corresponds to the number of signatures that share that pair of genesets in their top enriched genesets."
     enrichmentGraph_info = "<b>Enrichment graph.</b> Network of shared enriched genesets between top-N most similar signatures. The edge width corresponds to the number of signatures that share that pair of genesets in their top enriched genesets. In the plot options you can set the threshold the edges."
     
     shiny::callModule(
         plotModule,
         "enrichmentGraph", label = "b",
-        ##func = enrichmentGraph.RENDER,
-        ##func2 = enrichmentGraph.RENDER,
         func = enrichmentGraph.VISNETWORK, plotlib="visnetwork",
         options = enrichmentGraph.opts,
         title = "Enrichment graph",
         info.text = enrichmentGraph_info,
-        ## caption = enrichmentGraph_caption,
         pdf.height=8, pdf.width=8, 
         height = c(720,720), width=c("auto",1200),
         res = c(90,100),
@@ -1867,15 +1843,8 @@ ConnectivityBoard <- function(input, output, session, inputData)
     })
     
     cmapPairsPlot.opts = shiny::tagList(
-        ##tipify( shiny::checkboxInput(ns("cmap_splom_highlight"),"Highlight genes",TRUE),
-        ##       "Enable highlighting genes on the plots.",
-        ##       placement="right", options = list(container = "body")),
         shinyBS::tipify( shiny::selectInput(ns("cmap_logFC"),"logFC threshold:",c(0,0.5,1,2,3,4),selected=1), "Threshold for (log) foldchange to highlight in plot.",  placement="right", options = list(container = "body"))
     )
-
-    cmapPairsPlot_info = "For the selected contrasts, the <strong>Pairs</strong> panel provides pairwise scatterplots for the differential expression profiles corresponding to multiple contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. When K >= 3 contrasts are selected, the figure shows a KxK scatterplot matrix. When K <= 2, The Pairs panel provides an interactive pairwise scatterplots for the differential expression profiles of the two selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over. Users can also select a number points by selecting points with the mouse, using the box selection or the lasso selection tool. Note that the selected genes will appear in input panel on the left sidebar as '<custom>' selection."
-
-    cmapPairsPlot_caption = "<b>Pairs plot.</b> Pairwise scatterplots for two or more differential expression profiles for multiple selected contrasts. Similar profiles will show high correlation with points close to the diagonal. For <i>N>=3</i>, also volcano plots are shown on the diagonal with points in blue if significant with respect to the chosen FDR (significance) and logFC thresholds."
 
     cmapPairsPlot_info = "The <strong>Pairs</strong> panel provides pairwise scatterplots of differential expression profiles for the selected contrasts. The main purpose of this panel is to identify similarity or dissimilarity between selected contrasts. The pairs plot is interactive and shows information of each gene with a mouse hover-over."
 
@@ -1888,17 +1857,12 @@ ConnectivityBoard <- function(input, output, session, inputData)
         plotlib="plotly",
         title = "Scatterplot matrix (pairs)",
         options = cmapPairsPlot.opts,
-        ##  download.fmt = c("pdf","html"),  ## scatterGL does not work for PDF
         download.fmt = c("html"),
         pdf.width=8, pdf.height=8,
         height = c(fullH-80,700), width=c('auto',1000), res = 95,
-        ##info.width = "60px",        
         info.text = cmapPairsPlot_info,
-        ##caption = cmapPairsPlot_caption,
         add.watermark = WATERMARK
     )
-    ##output <- attachModule(output, cmapPairsPlot_module)
-
 
     connectivityScoreTable2.RENDER <- shiny::reactive({
         
@@ -2005,138 +1969,13 @@ ConnectivityBoard <- function(input, output, session, inputData)
         plotModule,
         "connectivityHeatmap", label = "c",
         func = connectivityHeatmap.RENDER,
-        func2 = connectivityHeatmap.RENDER, 
-        ## plotlib="ggplot",
+        func2 = connectivityHeatmap.RENDER,
         options = connectivityHeatmap.opts,
         title = "Connectivity Heatmap",
         info.text = connectivityHeatmap_info,
-        ##caption = connectivityHeatmap_caption,
         pdf.width=14, pdf.height=5.5,
         height = c(480,550), width = c('auto',1400),
         res = c(90,90),
         add.watermark = WATERMARK
     )
-        
-    ##================================================================================
-    ##========================= OUTPUT UI ============================================
-    ##================================================================================
-
-    ## ------------------------------------------------------
-    ## --------------------- tab1 ---------------------------
-    ## ------------------------------------------------------
-    
-    cmapCorrelation_caption = paste(
-        "<b>(a)</b>", cmap_FCFCplots_caption,
-        "<b>(b)</b>", connectivityScoreTable_info,
-        "<b>(c)</b>", cmapPairsPlot_caption
-    )
-    
-    output$cmapCorrelation_UI <- shiny::renderUI({
-        ##req(input$dimensions)
-        shiny::fillCol(
-            height = fullH,
-            ## height = input$dimensions[2], ## dynamics with JS  
-            flex = c(NA,0.015,1),
-            shiny::div(shiny::HTML(cmapCorrelation_caption,"<br><br>"), class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1.2,0.05,1),
-                shiny::fillCol(
-                    flex = c(1.3,0.03,1),                    
-                    plotWidget(ns("cmap_FCFCplots")),
-                    shiny::br(),
-                    tableWidget(ns("connectivityScoreTable"))
-                ),
-                shiny::br(),
-                ##plotWidget(ns("connectivityMap"))
-                plotWidget(ns("cmapPairsPlot"))
-            )
-        )
-    })
-    shiny::outputOptions(output, "cmapCorrelation_UI", suspendWhenHidden=FALSE) ## important!!!
-
-    ## ------------------------------------------------------
-    ## --------------------- tab2 ---------------------------
-    ## ------------------------------------------------------
-
-    cmapHeatmap_caption = paste(
-        "<b>(a)</b>",cumFCplot.caption,
-        "<b>(b)</b>",cumEnrichmentPlot.caption,
-        "<b>(c)</b>",connectivityHeatmap_caption
-    )
-
-
-    
-    output$cmapHeatmap_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = fullH,
-            flex=c(NA,0.05,1.6,0.05,2), ##height = 370,
-            shiny::div(shiny::HTML(cmapHeatmap_caption), class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1.8,0.06,1),
-                plotWidget(ns("cumFCplot")),
-                shiny::br(),
-                plotWidget(ns("cumEnrichmentPlot"))                
-            ),
-            shiny::br(),
-            plotWidget(ns("connectivityHeatmap"))
-        )
-    })
-    shiny::outputOptions(output, "cmapHeatmap_UI", suspendWhenHidden=FALSE) ## important!!!
-    
-    ## ------------------------------------------------------
-    ## --------------------- tab3 ---------------------------
-    ## ------------------------------------------------------
-
-    cmapMetaAnalysis_caption = paste(
-        "<b>(a)</b>", leadingEdgeGraph_caption,
-        "<b>(b)</b>", enrichmentGraph_caption
-    )
-    
-    output$cmapMetaAnalysis_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = fullH,
-            flex = c(NA,0.02,1),
-            shiny::div(shiny::HTML(cmapMetaAnalysis_caption,"<br>"), class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1,0.06,1),
-                plotWidget(ns("leadingEdgeGraph")),
-                shiny::br(),
-                plotWidget(ns("enrichmentGraph"))
-                ##tableWidget(ns("connectivityScoreTable2"))
-            )
-        )
-    })
-    shiny::outputOptions(output,"cmapMetaAnalysis_UI", suspendWhenHidden=FALSE) ## important!!!    
-    
-    ## ------------------------------------------------------
-    ## --------------------- tab4 ---------------------------
-    ## ------------------------------------------------------
-
-    cmapClustering_caption = paste(
-        "<b>(a)</b>",connectivityMap_caption,
-        "<b>(b)</b>",connectivityScoreTable_info
-    )
-
-
-    
-    output$cmapClustering_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = fullH,
-            flex=c(NA,0.025,1), ##height = 370,
-            shiny::div(shiny::HTML(cmapClustering_caption),class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex=c(1.3,0.05,1), 
-                plotWidget(ns("connectivityMap")),
-                ##plotWidget(ns("cmapPairsPlot")),
-                shiny::br(),
-                tableWidget(ns("connectivityScoreTable2"))
-            )
-        )
-    })
-    
-    
 } ## end-of-Board 
