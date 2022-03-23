@@ -501,7 +501,7 @@ DataViewBoard <- function(input, output, session, inputData)
             labs(x = "tSNE1", y = "tSNE2") +
             scale_color_continuous(name = "Expression") +
             guides(color = guide_colorbar(barwidth = unit(.4, "lines"))) +
-            theme_omics()
+            theme_omics(axis_num = "xy", legendnum = TRUE)
 
         if (!is.null(grp)) {
           fig <- fig +
@@ -524,8 +524,7 @@ DataViewBoard <- function(input, output, session, inputData)
         } else {
           fig <- fig +
             geom_point(aes(color = fc2), size = 2) +
-            guides(color = guide_colorbar(barwidth = unit(.4, "lines"))) +
-            theme(legend.title = element_text(size = 12))
+            guides(color = guide_colorbar(barwidth = unit(.4, "lines")))
        }
 
        gridExtra::grid.arrange(fig)
@@ -593,8 +592,7 @@ DataViewBoard <- function(input, output, session, inputData)
         labs(x = "tSNE1", y = "tSNE2") +
         scale_color_continuous(name = "Expression") +
         guides(color = guide_colorbar(barwidth = unit(.7, "lines"))) +
-        theme_omics(base_size = 20) +
-        theme(legend.title = element_text(size = 18, margin = margin(b = 15)))
+        theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
 
       if (!is.null(grp)) {
         fig <- fig +
