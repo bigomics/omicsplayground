@@ -1,7 +1,13 @@
-##
-## This file is part of the Omics Playground project.
-## Copyright (c) 2020 BigOmics Analytics Sagl. All rights reserved.
-##
+@font-face {
+    font-family: 'Clear Sans';
+    font-style: normal;
+    font-weight: 400;
+    src: local("Clear Sans Regular"),
+      local("ClearSans-Regular"),
+      url(/fonts/ClearSans-Regular.ttf) format("ttf");
+}
+
+
 
 :root {
     --hover-color:  rgb(26,110,204);
@@ -13,14 +19,14 @@
 }
 
 body {
-//    font-family: "DINOT",sans-serif;
+     font-family: "Clear Sans",sans-serif;
     font-size: 13px;
     font-weight: 400;
-//    letter-spacing: normal;
+    letter-spacing: normal;
 }
 
 h1, h2, h3, h4, h5, h6 {
-//    font-family: "DINAlternate-Bold",serif;
+    /*font-family: "DINAlternate-Bold",serif;*/
     font-weight: bold;
     line-height: normal;
 }
