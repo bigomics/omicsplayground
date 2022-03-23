@@ -501,8 +501,7 @@ DataViewBoard <- function(input, output, session, inputData)
             labs(x = "tSNE1", y = "tSNE2") +
             scale_color_continuous(name = "Expression") +
             guides(color = guide_colorbar(barwidth = unit(.4, "lines"))) +
-            theme_bw(base_size = 13) +
-            theme(legend.title = element_text(size = 12, margin = margin(b = 10)))
+            theme_omics()
 
         if (!is.null(grp)) {
           fig <- fig +
@@ -594,7 +593,7 @@ DataViewBoard <- function(input, output, session, inputData)
         labs(x = "tSNE1", y = "tSNE2") +
         scale_color_continuous(name = "Expression") +
         guides(color = guide_colorbar(barwidth = unit(.7, "lines"))) +
-        theme_bw(base_size = 20) +
+        theme_omics(base_size = 20) +
         theme(legend.title = element_text(size = 18, margin = margin(b = 15)))
 
       if (!is.null(grp)) {
