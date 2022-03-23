@@ -114,6 +114,7 @@ source(file.path(RDIR,"pgx-functions.R")) ## functions...
 source(file.path(RDIR,"pgx-files.R"))     ## file functions
 source(file.path(RDIR,"pgx-init.R"))
 source(file.path(RDIR,"auth.R"))
+source(file.path(RDIR,"ggplot-theme.R"))
 
 
 if(0) {    
