@@ -45,7 +45,7 @@ theme_omics <- function(style = "default", base_size = 15,
   if(!is.character(axistitle)) stop('axistitle must be a character: "none" or any combination of "X", "Y", "x" and "y"')
   if(!is.character(axistext)) stop('axistext must be a character: "none" or any combination of "X", "Y", "x" and "y"')
   if(!is.character(axis_num)) stop('axis_num must be a character: "none" or any combination of "X", "Y", "x" and "y"')
-  if(!is.logical(legendmum)) stop('legend_num must be a logical variable')
+  if(!is.logical(legend_num)) stop('legend_num must be a logical variable')
   if(!is.logical(panelborder)) stop('panelborder must be a logical variable')
   if(!is.numeric(margin)) stop('margin must be a numeric value')
   
