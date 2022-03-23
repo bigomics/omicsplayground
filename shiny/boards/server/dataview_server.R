@@ -1418,8 +1418,6 @@ DataViewBoard <- function(input, output, session, inputData)
         ## get current view of raw_counts
         ngs = inputData()
         shiny::req(ngs)
-
-        dbg("[data_sampleTable.RENDER] reacted")
         
         dt <- NULL
         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
