@@ -499,7 +499,10 @@ DataViewBoard <- function(input, output, session, inputData)
         fig <-
           ggplot(data, aes(tSNE.x, tSNE.y)) +
             labs(x = "tSNE1", y = "tSNE2") +
-            theme_bw(base_size = 13)
+            scale_color_continuous(name = "Expression") +
+            guides(color = guide_colorbar(barwidth = unit(.4, "lines"))) +
+            theme_bw(base_size = 13) +
+            theme(legend.title = element_text(size = 12, margin = margin(b = 10)))
 
         if (!is.null(grp)) {
           fig <- fig +
@@ -518,11 +521,12 @@ DataViewBoard <- function(input, output, session, inputData)
             geom_point(aes(color = fc2), size = 1.5) +
             scale_x_continuous(expand = c(.4, .4)) +
             scale_y_continuous(expand = c(.4, .4)) +
-            scale_color_continuous(guide = "none") +
             scale_fill_discrete(guide = "none")
         } else {
           fig <- fig +
-            geom_point(aes(color = fc2), size = 2)
+            geom_point(aes(color = fc2), size = 2) +
+            guides(color = guide_colorbar(barwidth = unit(.4, "lines"))) +
+            theme(legend.title = element_text(size = 12))
        }
 
        gridExtra::grid.arrange(fig)
@@ -588,7 +592,10 @@ DataViewBoard <- function(input, output, session, inputData)
       fig <-
         ggplot(data, aes(tSNE.x, tSNE.y)) +
         labs(x = "tSNE1", y = "tSNE2") +
-        theme_bw(base_size = 13)
+        scale_color_continuous(name = "Expression") +
+        guides(color = guide_colorbar(barwidth = unit(.7, "lines"))) +
+        theme_bw(base_size = 20) +
+        theme(legend.title = element_text(size = 18, margin = margin(b = 15)))
 
       if (!is.null(grp)) {
         fig <- fig +
@@ -607,7 +614,6 @@ DataViewBoard <- function(input, output, session, inputData)
           geom_point(aes(color = fc2), size = 3.5) +
           scale_x_continuous(expand = c(.15, .15)) +
           scale_y_continuous(expand = c(.15, .15)) +
-          scale_color_continuous(guide = "none") +
           scale_fill_discrete(guide = "none")
         
       } else {
