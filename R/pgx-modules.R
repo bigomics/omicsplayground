@@ -783,7 +783,7 @@ plotModule <- function(input, output, session, ## ns=NULL,
     }
     
     output$renderfigure <- render
-    output$renderpopup  <- render
+    output$renderpopup  <- render2
 
     output$popupfig <- shiny::renderUI({
         w <- width.2
