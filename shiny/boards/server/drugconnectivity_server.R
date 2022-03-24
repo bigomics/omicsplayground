@@ -10,47 +10,19 @@ DrugConnectivityBoard <- function(input, output, session, inputData)
     fullH = 750
     rowH = 660  ## row height of panel
     tabH = 200  ## row height of panel
-    tabH = '60vh'  ## row height of panel    
-    description = "<h3>Drug Connectivity</h3> Perform drug connectivity analysis
-to see if certain drug activity or drug sensitivity signatures matches your experimental signatures. Matching drug signatures to your experiments may elicudate biological functions through mechanism-of-action (MOA) and known drug molecular targets."
-    output$description <- shiny::renderUI(shiny::HTML(description))
+    tabH = '60vh'  ## row height of panel  
     
-    dsea_infotext = paste("<b>This module performs drug enrichment analysis</b> to see if certain drug activity or drug sensitivity signatures matches your experimental signatures. Matching drug signatures to your experiments may elicudate biological functions through mechanism-of-action (MOA) and known drug molecular targets.
-
-<br><br> In the <a href='https://portals.broadinstitute.org/cmap/'>Drug Connectivity Map</a> panel, you can correlate your signature with known drug profiles from the L1000 database. An activation-heatmap compares drug activation profiles across multiple contrasts. This facilitates to quickly see and detect the similarities between contrasts for certain drugs.
-
-
-<br><br><br><br>
-<center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=6' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>
-")
-
-    
-    ##================================================================================
-    ##========================= INPUTS UI ============================================
-    ##================================================================================
-
-    output$inputsUI <- shiny::renderUI({
-        ui <- shiny::tagList(
-            shinyBS::tipify( shiny::actionLink(ns("dsea_info"), "Youtube", icon = shiny::icon("youtube") ),
-                   "Show more information about this module."),
-            shiny::hr(), shiny::br(),             
-            shinyBS::tipify( shiny::selectInput(ns("dsea_contrast"),"Contrast:", choices=NULL),
-                   "Select the contrast corresponding to the comparison of interest.",
-                   placement="top"),
-            shinyBS::tipify( shiny::selectInput(ns('dsea_method'),"Analysis type:", choices = ""),
-                   "Select type of drug enrichment analysis: activity or sensitivity (if available).",
-                   placement="top"),
-            ##tipify( shiny::actionLink(ns("dsea_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-            ##       "Show/hide advanced options", placement="top"),
-            ## shiny::br(),
-            ## shiny::conditionalPanel(
-            ##     "input.dsea_options % 2 == 1", ns=ns,
-            ##     shiny::tagList()
-            ## )
-        )
-        ui
-    })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
+    dsea_infotext = paste("<b>This module performs drug enrichment analysis</b> to see if certain drug activity or drug
+        sensitivity signatures matches your experimental signatures. Matching drug signatures to your experiments may elicudate
+        biological functions through mechanism-of-action (MOA) and known drug molecular targets.<br><br>
+        In the <a href='https://portals.broadinstitute.org/cmap/'>Drug Connectivity Map</a> panel,
+        you can correlate your signature with known drug profiles from the L1000 database.
+        An activation-heatmap compares drug activation profiles across multiple contrasts.
+        This facilitates to quickly see and detect the similarities between contrasts for certain drugs.<br><br><br><br>
+        <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=6'
+        frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'
+        allowfullscreen></iframe></center>"
+    )
 
     shiny::observe({
         ngs <- inputData()
@@ -67,14 +39,14 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         shiny::showModal(shiny::modalDialog(
             title = shiny::HTML("<strong>Drug Connectivity Analysis Board</strong>"),
             shiny::HTML(dsea_infotext),
-            easyClose = TRUE, size="l" ))
+            easyClose = TRUE, size="l" )
+        )
     })
 
     shiny::observe({
         ngs <- inputData()
         shiny::req(ngs)
         ct <- colnames(ngs$model.parameters$contr.matrix)
-        ##ct <- c(ct,"<sd>")
         shiny::updateSelectInput(session, "dsea_contrast", choices=sort(ct) )
     })
     
@@ -474,8 +446,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     dsea_moaplot.opts = shiny::tagList(
         shinyBS::tipify( shiny::radioButtons(ns('dsea_moatype'),'Plot type:',c("drug class","target gene"),inline=TRUE),
                "Select plot type of MOA analysis: by class description or by target gene.")
-        ##tipify( shiny::radioButtons(ns('dsea_moamethod'),'Method:',c("count","enrichment"),inline=TRUE),
-        ##       "Select method of MOA analysis: count significant terms or enrichment test.")
     )
     shiny::callModule(
         plotModule,
@@ -629,7 +599,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         nmoa <- sapply(xmoa, length)
         ii   <- unlist(mapply(rep, 1:nrow(pos), nmoa))
         pos2 <- apply(pos[ii,],2,function(x) tapply(x,unlist(xmoa),median))
-        ##var2 <- tapply(var[ii], unlist(xmoa), median, na.rm=TRUE)
         moa2 <- moa.class
         nes2 <- array(moa2$NES, dimnames=list(moa2$pathway))               
         var2 <- nes2[rownames(pos2)]
@@ -663,8 +632,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         xpos <- rbind(pos, pos1, pos2, pos3)
         xvar <- c(var, var1, var2, var3)
         sum(duplicated(names(xvar)))
-                
-        ##nlabel=10
+          
         h1=h2=NULL
         ## limit number of labels/points
         labtype        
@@ -714,18 +682,16 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
                 cex = 1, cex.lab = wcex, cex.title = 0.95,
                 legend = TRUE, zsym = TRUE,
                 rstep = 0.2, dlim = 0.01,
-                softmax=softmax, opacity = opacity )
-            ## title(contr, cex.main=1, line=0.3)
+                softmax=softmax, opacity = opacity 
+            )
 
         } else {
             plt <- pgx.scatterPlotXY(
                 xpos, var=xvar, plotlib=plotlib, title = title,
-                ##labels = sub(".*:","",rownames(xpos))
                 xlab = "UMAP-x", ylab = "UMAP-y",
                 hilight = h1, hilight2 = h2, hilight.cex=1.1,
                 cex = 1, cex.lab = cex.lab, cex.title = 1.0,
                 legend = TRUE, zsym = TRUE,
-                ##rstep=0.2, dlim=0.01
                 softmax=1, opacity = opacity)
         }        
         plt
@@ -756,8 +722,7 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         }
 
         drugs_all <- rownames(dsea$table)[rows_all]
-        ##labtype='moa';nlabel=10;showlab=lab.wt=1
-
+       
         moa.class  <- getMOA.class()
         moa.target <- getMOA.target()    
                
@@ -809,7 +774,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         id = "dsea_cmap",
         func = dsea_cmap.RENDER,
         func2 = dsea_cmap.RENDER,
-        ##plotlib2 = "plotly",
         title = "CONNECTIVITY MAP", label="b",
         info.text = dsea_cmap.info,
         options = dsea_cmap.opts,
@@ -834,7 +798,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
         res$moa    <- shortstring(res$moa,30)
         res$target <- shortstring(res$target,80)
         res$drug   <- shortstring(res$drug,60)
-        ## res$target <- NULL
         res$pval   <- NULL
         res$padj   <- NULL                
         
@@ -845,7 +808,6 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
                       selection=list(mode='single', target='row', selected=NULL),
                       fillContainer = TRUE,
                       options=list(
-                          ##dom = 'Blfrtip', buttons = c('copy','csv','pdf'),
                           dom = 'lfrtip', 
                           scrollX = TRUE, ##scrollY = TRUE,
                           scrollY = '70vh', scroller=TRUE, deferRender=TRUE
@@ -861,69 +823,9 @@ to see if certain drug activity or drug sensitivity signatures matches your expe
     cmap_table <- shiny::callModule(
         tableModule,
         id = "cmap_table", label="c",
-        func = cmap_table.RENDER, 
-        ## options = cmap_table.opts,
+        func = cmap_table.RENDER,
         info.text="<b>Enrichment table.</b> Enrichment is calculated by correlating your signature with known drug profiles from the L1000 database. Because the L1000 has multiple perturbation experiment for a single drug, drugs are scored by running the GSEA algorithm on the contrast-drug profile correlation space. In this way, we obtain a single score for multiple profiles of a single drug.", 
         title = "CONNECTIVITY TABLE",
         height = c(380,740)
     )
-    
-    ##=======================================================================================
-    ## PAGE LAYOUT
-    ##=======================================================================================
-    
-    dsea_enrichment_caption = "<b>(a)</b> <b>Drug connectivity</b> correlates your signature with known drug perturbation profiles from the L1000 database. The figures show the most similar (or opposite) profiles by running the GSEA algorithm on the profile correlation space. <b>(b)</b> <b>Enrichment table</b> summarizing the statistical results of the drug enrichment analysis. <b>(c)</b> <b>Mechanism-of-action</b> plot showing the top most frequent drug class (or target genes) having similar or opposite enrichment compared to the query signature. <b>(d)</b> <b>Activation matrix</b> visualizing enrichment levels of drug signatures across multiple contrast profiles." 
-
-    output$DSEA_enrichment_UI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.035,1),
-            height = fullH,            
-            shiny::div(shiny::HTML(dsea_enrichment_caption),class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                height = rowH,
-                flex = c(2.6,1), 
-                shiny::fillCol(
-                    flex = c(1.5,0.15,1),
-                    height = rowH,
-                    shiny::fillRow(
-                        flex=c(1.2,0.04,1),
-                        plotWidget(ns("dsea_enplots")),
-                        shiny::br(),
-                        plotWidget(ns("dsea_moaplot"))
-                    ),
-                    shiny::br(),  ## vertical space
-                    tableWidget(ns("dsea_table"))        
-                ),
-                plotWidget(ns("dsea_actmap"))
-            )
-        )
-    })
-    shiny::outputOptions(output, "DSEA_enrichment_UI", suspendWhenHidden=FALSE) ## important!!!
-
-    dsea_cmap_caption = "<b>(a)</b> <b>Enrichment plot.</b> Enrichment of the selected drug perturbation profile with your signature. <b>(b)</b> <b>Enrichment table</b> summarizing the statistical results of the drug enrichment analysis. <b>(c)</b> <b>Connectivity map.</b> Plot showing the top signatures as UMAP. Each point is one L1000 experiment. The color corresponds to the rank correlation between the drug signatures and your selected contrast." 
-
-    output$DSEA_cmap_UI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.035,1),
-            height = fullH,            
-            shiny::div(shiny::HTML(dsea_cmap_caption),class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                height = rowH,
-                flex = c(1,0.05,1.5),
-                shiny::fillCol(
-                    flex = c(1.15,0.05,1),                    
-                    plotWidget(ns("cmap_enplot")),
-                    shiny::br(),
-                    tableWidget(ns("cmap_table"))                    
-                ),
-                shiny::br(),
-                plotWidget(ns("dsea_cmap"))
-            )
-        )
-    })
-    shiny::outputOptions(output, "DSEA_cmap_UI", suspendWhenHidden=FALSE) ## important!!!
-    
-
 }

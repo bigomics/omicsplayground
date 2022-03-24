@@ -10,11 +10,7 @@ BiomarkerBoard <- function(input, output, session, inputData)
     fullH = 800  ## full height of panel
     rowH  = 320  ## row height of panel
     imgH  = 260
-        
-    description = "<b>Biomarker Board.</b> Select biomarkers that can be used for
-classification or prediction purposes. The phenotype of interest can
-be multiple categories (classes) or patient survival data."
-    output$description <- shiny::renderUI(shiny::HTML(description))
+
 
     pdx_infotext =
         "The <strong>Biomarker Board</strong> performs the biomarker selection that can be used for classification or prediction purposes.
@@ -24,48 +20,6 @@ be multiple categories (classes) or patient survival data."
 <br><br>The phenotype of interest can be multi-categorical classes or patient survival data. Instead of choosing a phenotype, users can also specify a particular contrast from the analysis and perform biomarker selection. The platform also provides a heatmap of samples based on identified top features. 
 
 <br><br>In addition, it generates a classification tree using top features and provides expression boxplots by phenotype classes for features present in the tree. The platform can also provide a survival tree analysis using top features and provides expression boxplots by phenotype classes for features present in the tree."
-
-
-    ##================================================================================
-    ##========================= INPUTS UI ============================================
-    ##================================================================================
-
-    output$inputsUI <- shiny::renderUI({
-        ui <- shiny::tagList(
-            shinyBS::tipify( shiny::actionLink(ns("pdx_info"), "Info", icon = shiny::icon("info-circle")),
-                   "Show more information about this module."),
-            shiny::hr(), shiny::br(),             
-            shinyBS::tipify(shiny::selectInput(ns("pdx_predicted"),"Predicted target:", choices=NULL),
-                   "Select the target variable for biomarker selection.",placement="top"),
-            ##tipify( shiny::selectInput(ns("pdx_level"),"Feature level:", choices=c("gene","geneset")),
-            ##       "Select feature level: gene or geneset", placement="top"),
-            shinyBS::tipify( shiny::selectInput(ns("pdx_filter"),"Feature filter:", choices=NULL),
-                   "Select a filter for the features.", placement="top"),
-            shiny::conditionalPanel(
-                "input.pdx_filter == '<custom>'", ns=ns,
-                shinyBS::tipify(
-                    ##selectizeInput("pdx_select","Custom features:", choices=NULL, multiple=TRUE),
-                    shiny::div(class='gene-list',
-                        shiny::textAreaInput(ns("pdx_select"), "Custom features:", value = NULL,
-                                      height = "100px", width = "100%",                                       
-                                      rows=5, placeholder="Paste your gene list")),
-                    "Paste a custom gene list to be used as features.", placement="top")
-            ),
-            shiny::br(),
-            shinyBS::tipify(shiny::actionButton(ns("pdx_runbutton"), label="Compute", class="run-button"),
-                   "Click to start biomarker computation.", placement="right")
-        )
-        if(DEV) {
-            uix <- shiny::tagList(
-                shiny::hr(),br(),
-                shiny::h6("Developer options:"),
-                shiny::checkboxInput(ns('pdx_multiomics'),'multi-omics weighting',FALSE)
-            )
-            ui <- c(ui, uix)
-        }
-        ui
-    })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ##======================= REACTIVE/OBSERVE FUNCTIONS =============================
@@ -79,15 +33,11 @@ be multiple categories (classes) or patient survival data."
             easyClose = TRUE, size="l"))
     })
 
-    ##input_pdx_select <- shiny::reactive({
-    ##    input$pdx_select
-    ##}) %>% shiny::debounce(3000)
-
     input_pdx_select <- shiny::reactive({
         dbg("[BiomarkerBoard:<input_pdx_select>]  reacted")
         gg <- input$pdx_select
         if(is.null(gg)) return(NULL)
-        ##req(gg)
+     
         gg <- strsplit(as.character(gg), split="[, \n\t]")[[1]]
         if(length(gg)==0) return(NULL)
         if(length(gg)==1 && gg[1]!="") gg <- c(gg,gg)  ## hack to allow single gene....
@@ -642,34 +592,4 @@ be multiple categories (classes) or patient survival data."
         height = 320, res=90,
         add.watermark = WATERMARK
     )
-
-    pdx_biomarker_caption = "<b>Biomarker selection</b>. The expression of certain genes may be used as <i>markers</i> to predict a certain phenotype such as response to a therapy. Finding such <i>biomarkers</i> are of high importance in clinical applications. <b>(a)</b> An importance score for each feature is calculated using multiple machine learning algorithms, including LASSO, elastic nets, random forests, and extreme gradient boosting. The top features are plotted  according to cumulative ranking by the algorithms. <b>(b)</b> The heatmap shows the expression distribution for the top most important features. <b>(c)</b> The decision tree shows (one) tree solution for classification based on the top most important features. <b>(d)</b> Boxplots show the expression of biomarker genes across the groups."
-
-    output$pdx_biomarker_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = fullH,
-            flex = c(NA,0.05,1),
-            shiny::div(shiny::HTML(pdx_biomarker_caption),class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1,0.1,1),
-                height = fullH,                
-                shiny::fillCol(
-                    flex = c(0.5,1),
-                    plotWidget(ns("pdx_importance")),
-                    plotWidget(ns("pdx_heatmap"))
-                ),
-                shiny::br(), ## spacer
-                shiny::fillCol(
-                    flex = c(1,0.9), 
-                    plotWidget(ns("pdx_decisiontree")),
-                    plotWidget(ns("pdx_boxplots"))
-                )
-            )
-        )
-    })
-    shiny::outputOptions(output, "pdx_biomarker_UI", suspendWhenHidden=FALSE) ## important!!!
-
-
-    ## return(NULL)
 } ## end-of-Board
