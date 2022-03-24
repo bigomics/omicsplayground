@@ -12,66 +12,23 @@ ExpressionBoard <- function(input, output, session, inputData)
     imgH = 340  ## height of images
     tabV = "70vh"  ## height of tables
     tabH = 320  ## row height of panels
-    
-    description = "<b>Differential Expression Analysis.</b> Compare expression between
-two conditions. Determine which genes are significantly downregulated or overexpressed in one of the groups."
-    output$description <- shiny::renderUI(shiny::HTML(description))
 
-    gx_infotext ="The <strong>Differential Expression Analysis</strong> module compares expression between two conditions (i.e. tumor versus control), which is one of the fundamental analysis in the transcriptomics data analytics workflow. For each comparison of two conditions (also called \'contrast\'), the analysis identifies which genes are significantly downregulated or overexpressed in one of the groups.
-
-<br><br>The <strong>Plots</strong> panel shows volcano and MA plots for the chosen contrast. It also shows the so-called \'signature\', i.e. the top downregulated and overexpressed genes, for that contrast. The <strong>Top genes</strong> panel shows the average expression plots across the samples for top differentially expressed genes within the selected comparison. A very useful feature of the platform is that it can display volcano plots for all comparisons simultaneously under the <strong>Volcano (all)</strong> panel. This provides users an overview of the statistics of all comparisons. The <strong>Table</strong> panel on the bottom shows the results of the statistical tests. The <strong>Foldchange (all)</strong> panel reports the gene fold changes for all contrasts.
-
-<br><br>EXPERT MODE ONLY: To compare the different statistical methods, the <strong>Volcano (methods)</strong> panel shows volcano plots of all methods. The <strong>FDR table</strong> panel reports the number of significant genes at different FDR thresholds for all contrasts.
-
-<br><br><br><br>
-<center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=3' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
-
-
-    ##================================================================================
-    ##========================= INPUTS UI ============================================
-    ##================================================================================
-
-    FDR.VALUES = c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
-
-    gx_statmethod_text = "Select a method for the statistical test. To increase the statistical reliability of the Omics Playground, we perform the DE analysis using commonly accepted methods in the literature, including t-test (standard, Welch), limma (no trend, trend, voom), edgeR (QLF, LRT), and DESeq2 (Wald, LRT), and merge the results."
+    gx_infotext ="The <strong>Differential Expression Analysis</strong> module compares expression between two conditions (i.e. tumor versus control),
+     which is one of the fundamental analysis in the transcriptomics data analytics workflow. For each comparison of two conditions (also called \'contrast\'),
+     the analysis identifies which genes are significantly downregulated or overexpressed in one of the groups.<br><br>
+     The <strong>Plots</strong> panel shows volcano and MA plots for the chosen contrast. It also shows the so-called \'signature\',
+     i.e. the top downregulated and overexpressed genes, for that contrast. The <strong>Top genes</strong> panel shows the average expression
+     plots across the samples for top differentially expressed genes within the selected comparison. A very useful feature of the platform is
+     that it can display volcano plots for all comparisons simultaneously under the <strong>Volcano (all)</strong> panel.
+     This provides users an overview of the statistics of all comparisons. The <strong>Table</strong> panel on the bottom shows the results
+     of the statistical tests. The <strong>Foldchange (all)</strong> panel reports the gene fold changes for all contrasts.
+     <br><br>EXPERT MODE ONLY: To compare the different statistical methods, the <strong>Volcano (methods)</strong> panel shows volcano plots of all methods.
+     The <strong>FDR table</strong> panel reports the number of significant genes at different FDR thresholds for all contrasts.<br><br><br><br>
+     <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=3'
+     frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>"
+   
     GX.DEFAULTTEST="trend.limma"
     GX.DEFAULTTEST=c("trend.limma","edger.qlf","deseq2.wald","edger.lrt")
-    
-    output$inputsUI <- shiny::renderUI({
-        ui <- shiny::tagList(
-            shinyBS::tipify( shiny::actionLink(ns("gx_info"), "Tutorial", icon = shiny::icon("youtube")),
-                   "Show more information about this module."),
-            shiny::hr(), shiny::br(),             
-            shinyBS::tipify( shiny::selectInput(ns("gx_contrast"), "Contrast:", choices=NULL),
-                   "Select a contrast of interest for the analysis.", placement="top"),
-            shinyBS::tipify( shiny::selectInput(ns("gx_features"),"Gene family:", choices=NULL, multiple=FALSE),
-                   "Choose a specific gene family for the analysis.", placement="top"),
-            shiny::fillRow( flex=c(1,1),
-                    shinyBS::tipify( shiny::selectInput(ns("gx_fdr"),"FDR", choices=FDR.VALUES, selected=0.2),
-                           "Set the false discovery rate (FDR) threshold.", placement="top"),
-                    shinyBS::tipify( shiny::selectInput(ns("gx_lfc"),"logFC threshold",
-                                        choices=c(0,0.1,0.2,0.5,1,2,5), selected=0),
-                           "Set the logarithmic fold change (logFC) threshold.", placement="top")
-                    ),
-            shiny::br(),br(),br(),br(),
-            shinyBS::tipify( shiny::actionLink(ns("gx_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                   "Toggle advanced options.", placement="top"),
-            shiny::br(),br(),
-            shiny::conditionalPanel(
-                "input.gx_options % 2 == 1", ns=ns,
-                shiny::tagList(
-                    shinyBS::tipify(shiny::checkboxInput(ns("gx_showall"),"show all genes", FALSE),
-                           "Display all genes in the table. Disable filtering of significant genes.", 
-               placement="top", options = list(container = "body")),
-                    shinyBS::tipify( shiny::checkboxGroupInput(ns('gx_statmethod'),'Statistical methods:',
-                                               choices=NULL, inline=TRUE),
-                           gx_statmethod_text, placement="right", options=list(container="body"))
-                )
-            )
-        )
-        return(ui)
-    })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
@@ -356,15 +313,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
 
     })
-
-    # not input$gx_fdr
-    # not inputData()
-    # not input$gx_features
-    # not input$gx_contrast
-    # not genetable$rows_selected
-    # not fullDiffExprTable()
-    # it's: gx_related_genesets()
-
 
     plots_volcano.PLOTLY <- shiny::reactive({
         
@@ -840,28 +788,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         pdf.width=6, pdf.height=6, res=75,
         add.watermark = WATERMARK
     )
-
-    plots_caption = "<b>Expression plots</b> associated with the selected contrast. <b>(a)</b> Volcano-plot plotting fold-change versuson significance the x and y axes, respectively. <b>(b)</b> MA-plot plotting signal intensity versus fold-change on the x and y axes, respectively. <b>(c)</b> Sorted barplot of the top diffentially expressed genes with largest (absolute) fold-change for selected contrast. <b>(d)</b> Sorted barplot of the differential expression of the selected gene across all contrasts."
-
-
-    output$plots_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex = c(1,0.35,NA),
-            shiny::fillRow(
-                id = "plots",
-                ##height = rowH,
-                flex=c(1,1,1,1), ##height = 370,
-                plotWidget(ns("plots_volcano")),
-                plotWidget(ns("plots_maplot")),
-                ## plotWidget(ns("plots_topgenesbarplot")),
-                plotWidget(ns("plots_boxplot")),
-                plotWidget(ns("plots_topfoldchange"))
-            ),
-            shiny::br(),
-            shiny::div(shiny::HTML(plots_caption), class="caption")
-        )
-    })
     
     ##================================================================================
     ## Top genes
@@ -950,19 +876,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         add.watermark = WATERMARK
     )
 
-
-    output$topgenesUI <- shiny::renderUI({
-        shiny::fillCol(
-            ## id = ns("topgenes"),
-            height = rowH,
-            flex=c(1,NA,NA), ##height = 370,
-            plotWidget(ns("topgenes")),
-            shiny::br(),
-            shiny::div(shiny::HTML(topgenes_caption),class="caption")
-        )
-    })
-    shiny::outputOptions(output, "topgenesUI", suspendWhenHidden=FALSE) ## important!!!
-    
     ##================================================================================
     ## Volcano (all contrasts)
     ##================================================================================
@@ -1123,35 +1036,17 @@ two conditions. Determine which genes are significantly downregulated or overexp
     
     volcanoAll_text = "Under the <strong>Volcano (all)</strong> tab, the platform simultaneously displays multiple volcano plots for genes across all contrasts. This provides users an overview of the statistics for all comparisons. By comparing multiple volcano plots, the user can immediately see which comparison is statistically weak or strong."
 
-    volcanoAll_caption = "<b>Volcano plot for all contrasts.</b> Simultaneous visualisation of volcano plots of genes for all contrasts. Experimental contrasts with better statistical significance will show volcano plots with 'higher' wings."
-
     shiny::callModule( plotModule,
         id="volcanoAll", 
         func = volcanoAll.RENDER,
         func2 = volcanoAll.RENDER,
-        ## plotlib = "ggplot",  ## !!!!!!!!!!!!!! reactive does not work properly !!!!!!!!!!!!!!!
         info.text = volcanoAll_text,
-        ##caption = volcanoAll_caption,
         pdf.width=16, pdf.height=5,
-        ##height = imgH, res=75,
         height = c(imgH,500), width = c('auto',1600),
         res = c(70,90),
         title="Volcano plots for all contrasts",
         add.watermark = WATERMARK
     )
-    
-
-    output$volcanoAll_UI <- shiny::renderUI({
-        shiny::fillCol(
-            ## id = ns("topgenes"),
-            height = rowH,
-            flex=c(1,NA,NA), ##height = 370,
-            plotWidget(ns("volcanoAll")),
-            shiny::br(),
-            shiny::div(shiny::HTML(volcanoAll_caption), class="caption")
-        )
-    })
-    
 
     ##================================================================================
     ## Volcano (all2 contrasts)
@@ -1335,8 +1230,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
 
     volcanoMethods_text = "Under the <strong>Volcano (methods)</strong> tab, the platform displays the volcano plots provided by multiple differential expression calculation methods for the selected contrast. This provides users an overview of the statistics of all methods at the same time."
 
-    volcanoMethods_caption = "<b>Volcano plot for all statistical methods.</b> Simultaneous visualisation of volcano plots of genes by multiple differential expression methods for the selected contrast. Methods showing better statistical significance will show volcano plots with 'higher' wings."
-
     shiny::callModule( plotModule,
         id = "volcanoMethods", 
         func = volcanoMethods.RENDER,
@@ -1349,17 +1242,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         pdf.width=18, pdf.height=6,
         add.watermark = WATERMARK
     )
-
-
-    output$volcanoMethodsUI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex=c(1,NA,NA), ##height = 370,
-            plotWidget(ns("volcanoMethods")),
-            shiny::br(),
-            shiny::div(shiny::HTML(volcanoMethods_caption), class="caption")
-        )
-    })
 
     ##================================================================================
     ## Statistics Table
@@ -1558,23 +1440,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         height = c(tabH-10,700), width = c('100%',800)        
     )
 
-    tablesUI_caption = "<b>Differential expression tables</b>. <b>(I)</b> Statistical results of the the differential expression analysis for selected contrast. The number of stars indicate how many statistical methods identified the gene significant. <b>(II)</b> Correlation and enrichment value of gene sets that contain the gene selected in Table I."
-    
-    output$tables_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = 1.15*tabH,
-            flex = c(NA,0.06,1),
-            shiny::div(shiny::HTML(tablesUI_caption),class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                flex = c(1.6,0.07,1), 
-                tableWidget(ns("genetable")),
-                shiny::br(),
-                tableWidget(ns("gsettable"))
-            )
-        )
-    })
-
     ##================================================================================
     ## Foldchange (all)
     ##================================================================================
@@ -1675,14 +1540,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         height = c(tabH,700)
     )
 
-
-    output$fctable_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = tabH,
-            tableWidget(ns("fctable"))
-        )
-    })
-
     ##================================================================================
     ## FDR table
     ##================================================================================
@@ -1770,14 +1627,6 @@ two conditions. Determine which genes are significantly downregulated or overexp
         caption = FDRtable_caption,
         height = c(tabH, 700)
     )
-
-
-    output$FDRtable_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = tabH,
-            tableWidget(ns("FDRtable"))
-        )
-    })
 
     ##----------------------------------------------------------------------
     ## reactive values to return to parent environment

@@ -6,12 +6,7 @@
 ClusteringBoard <- function(input, output, session, inputData)
 {
     ns <- session$ns ## NAMESPACE
-    
     fullH = 850  ## full height of page
-    
-    description = "<h3>Clustering Analysis</h3> Discover clusters of similar genes or samples using unsupervised machine learning."
-    output$description <- shiny::renderUI(shiny::HTML(description))
-    
     clust_infotext = paste('
 The <strong>Clustering Analysis</strong> module performs unsupervised clustering analysis of the data. After having done the QC, it is probably the first way to explore your data. The main purpose is to discover patterns and subgroups in the data, show correlation with known phenotypes, detect outliers, or investigate batch effects.
 
@@ -22,75 +17,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
 <br><br><br>
 <center><iframe width="560" height="315" src="https://www.youtube.com/embed/hyDEk_MCaTk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
 
-')
-
-    ##================================================================================
-    ##========================= INPUTS UI ============================================
-    ##================================================================================
-
-    output$inputsUI <- shiny::renderUI({        
-        ui <- shiny::tagList(
-            ##tipify( shiny::actionLink(ns("clust_info"), "Info", icon = shiny::icon("info-circle")),
-            ##       "Show more information about this module."),
-            shinyBS::tipify( shiny::actionLink(ns("clust_info"), "Tutorial", icon = shiny::icon("youtube")),
-                   "Show more information and video tutorial about this module."),
-            shiny::hr(), shiny::br(),             
-            shinyBS::tipify( shiny::selectInput(ns("hm_features"),"Features:", choices=NULL, multiple=FALSE),
-                   "Select a family of features.", placement="top"),
-            shiny::conditionalPanel(
-                "input.hm_features == '<custom>'", ns=ns,
-                shinyBS::tipify( shiny::textAreaInput(ns("hm_customfeatures"), NULL, value = NULL,
-                                      height = "150px", width = "100%", 
-                                      rows=5, placeholder="Paste your custom gene list"),
-                       "Paste a custom list of genes to be used as features.",
-                       placement="bottom")
-            ),
-            shiny::conditionalPanel(
-                "input.hm_features == '<contrast>'", ns=ns,
-                tipifyR( shiny::selectInput(ns("hm_contrast"), NULL, choices=NULL),
-                        "Select contrast to be used as signature.")
-            ),
-            shinyBS::tipify( shiny::selectInput(ns('hm_group'),'Group by:',choices=NULL),
-                   "Group the samples by condition.", 
-                   placement="top", options = list(container = "body")),
-            shinyBS::tipify( shiny::selectInput(ns("hm_samplefilter"),"Filter samples:",
-                                choices=NULL, multiple=TRUE),
-                   "Filter the relevant samples for the analysis.",
-                   placement="top", options = list(container = "body")),            
-            shinyBS::tipify( shiny::actionLink(ns("hm_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                   "Toggle advanced options.", placement="top"),
-            shiny::br(),
-            shiny::conditionalPanel(
-                "input.hm_options % 2 == 1", ns=ns,
-                shiny::tagList(
-                           ##tipify( shiny::checkboxInput(ns('hm_group'),'group by condition',FALSE),
-                           ##       "Group the samples by condition.", placement="bottom")
-                           shinyBS::tipify( shiny::selectInput(ns("hm_level"),"Level:", choices=c("gene","geneset")),
-                                           "Specify the level analysis: gene or geneset level.",
-                                           placement="top", options = list(container = "body")),
-                           shinyBS::tipify( shiny::checkboxInput(ns('hm_filterXY'),'exclude X/Y genes',FALSE),
-                                           "Exclude genes on X/Y chromosomes.", 
-                                           placement="top", options = list(container = "body")),
-                           shinyBS::tipify( shiny::checkboxInput(ns('hm_filterMitoRibo'),
-                                                                 'exclude mito/ribo genes',FALSE),
-                                           "Exclude mitochondrial (MT) and ribosomal protein (RPS/RPL) genes.", 
-                                           placement="top", options = list(container = "body"))
-                    )
-            )
-        )
-        if(0) {
-            ui1 <- shiny::tagList(
-                shiny::br(),hr(),
-                shiny::h5("Developer options:"),
-                shiny::radioButtons(ns('hm_gsetmatrix'),'Gene set matrix (dev):',
-                             choices=c("meta"), inline=TRUE)
-            )
-            ui <- c(ui, ui1)
-        }
-        ui
-    })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
-    
+') 
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
     ##================================================================================
@@ -114,8 +41,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
             jj = which(!sapply(ngs$gset.meta$matrices,is.null))
             mat.names = names(ngs$gset.meta$matrices)[jj]
             shiny::updateRadioButtons(session, "hm_gsetmatrix", choices=mat.names,
-                               selected="meta", inline=TRUE)    
-            ##updateRadioButtons(session, "hm_gsetmatrix", choices=c("meta"), inline=TRUE)    
+                               selected="meta", inline=TRUE)
         }
         
         shiny::updateRadioButtons(session, "hm_splitby", selected='none')
@@ -128,9 +54,7 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         groupings <- colnames(ngs$samples)
         ## groupings <- pgx.getCategoricalPhenotypes(ngs$samples, min.ncat=2, max.ncat=n1)
         groupings <- c("<ungrouped>",sort(groupings))
-        shiny::updateSelectInput(session,"hm_group", choices=groupings)        
-
-
+        shiny::updateSelectInput(session,"hm_group", choices=groupings)
         contrasts <- pgx.getContrasts(ngs)
         shiny::updateSelectInput(session,"hm_contrast", choices=contrasts)                
 
@@ -159,7 +83,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
     }) %>% shiny::debounce(3000)
     
     ## update choices upon change of level
-    ##observeEvent(input$hm_level, {
     shiny::observe({
         ngs = inputData()
         shiny::req(ngs)
@@ -875,8 +798,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         }
     )
     
-    ##    hm_splitmap_module <- plotModule(
-    ##        "hm_splitmap",
+    
+    ## call plotModule
     hm_splitmap_module <- shiny::callModule(
         plotModule,
         id = "hm_splitmap",
@@ -898,21 +821,8 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         download.png = hm_splitmap_downloadPNG,
         download.html = hm_splitmap_downloadHTML,
         add.watermark = WATERMARK
-        ##caption = hm_splitmap_caption
     )
 
-    output$hm_heatmap_UI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.025,1),
-            height = fullH,
-            shiny::div(shiny::HTML(hm_splitmap_caption), class="caption"),
-            shiny::br(),
-            ##div( plotWidget(ns("hm_splitmap")) %>% shinycssloaders::withSpinner(), style="overflow-y: auto; max-height: 640px;")
-            plotWidget(ns("hm_splitmap")) %>% shinycssloaders::withSpinner()
-        )
-    })
-    shiny::outputOptions(output, "hm_heatmap_UI", suspendWhenHidden=FALSE) ## important!!!
-    
     ##================================================================================
     ##================================ PCA/tSNE ======================================
     ##================================================================================
@@ -1171,9 +1081,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         tipifyR( shiny::radioButtons( ns('hm_clustmethod'),"Layout:",
                               c("default","tsne","pca","umap"),inline=TRUE),
                 "Choose the layout method for clustering to visualise.")
-        ## shinyBS::tipify( shiny::radioButtons( ns('hm_ntop2'),"Ntop:",c(100,1000,4000,9999),inline=TRUE,selected=1000),
-        ##        "Number of top genes for dimensionality reduction.",
-        ##        placement="right", options = list(container = "body"))
     )
     
     hm_PCAplot_caption <- shiny::reactive({
@@ -1201,18 +1108,6 @@ The <strong>Clustering Analysis</strong> module performs unsupervised clustering
         info.text = hm_PCAplot_text,
         add.watermark = WATERMARK        
     )
-
-    output$hm_pcaUI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.02,1),
-            height = fullH,
-            shiny::div(shiny::HTML(pca_caption_static), class="caption"),
-            shiny::br(),
-            plotWidget(ns("hm_PCAplot"))
-        )
-    })
-    shiny::outputOptions(output, "hm_pcaUI", suspendWhenHidden=FALSE) ## important!!!
-    
     
     ##================================================================================
     ## Parallel coordinates
@@ -1388,29 +1283,14 @@ displays the expression levels of selected genes across all conditions in the an
 
     hm_parcoord_table_info = "In this table, users can check mean expression values of features across the conditions for the selected genes."
 
-    parcoord_caption = "<b>Parallel Coordinates plot.</b> <b>(a)</b>The Parallel Coordinates plot displays the expression levels of selected genes across all conditions. On the x-axis the experimental conditions are plotted. The y-axis shows the expression level of the genes grouped by condition. The colors correspond to the gene groups as defined by the hierarchical clustered heatmap. <b>(b)</b> Average expression of selected genes across conditions."
-    
+
     hm_parcoord_table_module <- shiny::callModule(
         tableModule, id = "hm_parcoord_table",
         func = hm_parcoord_table.RENDER, ## ns=ns,
         info.text = hm_parcoord_table_info,
         title = "Selected genes", label="b",
         height = c(270,700)
-        ## caption = parcoord_caption
     )
-
-    output$hm_parcoordUI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.02,1.2,0.05,1),
-            height = fullH,
-            shiny::div(shiny::HTML(parcoord_caption), class="caption"),
-            shiny::br(),
-            plotWidget(ns("hm_parcoord")),
-            shiny::br(),
-            tableWidget(ns("hm_parcoord_table"))
-        )
-    })
-    shiny::outputOptions(output, "hm_parcoordUI", suspendWhenHidden=FALSE) ## important!!!
 
     ##================================================================================
     ## Annotate clusters
@@ -1735,7 +1615,6 @@ displays the expression levels of selected genes across all conditions in the an
             plotWidget(ns("clustannot_table"))
         )
     })
-    shiny::outputOptions(output, "hm_annotateUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ## Phenotypes {data-height=800}
@@ -1813,8 +1692,6 @@ displays the expression levels of selected genes across all conditions in the an
 
     clust_phenoplot_info = tagsub("<strong>Phenotype distribution.</strong> This figure visualizes the distribution of the available phenotype data. You can choose to put the group labels in the figure or as separate legend in the {Label} setting, in the plot {{settings}}")
     
-    clust_phenoplot_caption = "<b>Phenotype distribution.</b> The plots show the distribution of the phenotypes superposed on the t-SNE clustering. Often, we can expect the t-SNE distribution to be driven by the particular phenotype that is controlled by the experimental condition or unwanted batch effects."
-
     ## clust_phenoplot.module <- plotModule(
     shiny::callModule(
         plotModule,         
@@ -1825,19 +1702,9 @@ displays the expression levels of selected genes across all conditions in the an
         height = c(fullH-80,700), res = 85,
         pdf.width = 6, pdf.height = 9, 
         info.text = clust_phenoplot_info,
-        add.watermark = WATERMARK        
-        ## caption = clust_phenoplot_caption
+        add.watermark = WATERMARK
     )
 
-    output$hm_phenoplotUI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.025,1),
-            height = fullH,
-            shiny::div(shiny::HTML(clust_phenoplot_caption),class="caption"),
-            shiny::br(),
-            plotWidget(ns("clust_phenoplot"))
-        )
-    })
     
     ##=============================================================================
     ## Feature ranking
@@ -1980,7 +1847,6 @@ displays the expression levels of selected genes across all conditions in the an
 
     clust_featureRank_info = "Ranked discriminant score for top feature sets. The plot ranks the discriminitive power of the feature set (genes) as a cumulative discriminant score for all phenotype variables. In this way, we can find which feature set (or gene family/set) can explain the variance in the data the best. <p>Correlation-based discriminative power is calculated as the average '(1-cor)' between the groups. Thus, a feature set is highly discriminative if the between-group correlation is low. P-value based scoring is computed as the average negative log p-value from the ANOVA. The 'meta' method combines the score of the former methods in a multiplicative manner."
 
-    clust_featureRank_caption = "<b>Feature-set ranking.</b> Ranked discriminant score for top feature sets. The plot ranks the discriminative power of feature sets (or gene sets) as the cumulative discriminant score for all phenotype variables."
 
     clust_featureRank.opts =  shiny::tagList(
         shinyBS::tipify( shiny::radioButtons( ns('clust_featureRank_method'),'Method:',
@@ -1990,8 +1856,6 @@ displays the expression levels of selected genes across all conditions in the an
                placement="right", options = list(container = "body") )
     )
 
-##    clust_featureRank_module <- plotModule(
-##        title="Feature-set ranking", ns=ns,
     shiny::callModule(
         plotModule, 
         id="clust_featureRank",
@@ -2004,19 +1868,6 @@ displays the expression levels of selected genes across all conditions in the an
         width=c("auto",800),
         res = c(72,90),
         info.text = clust_featureRank_info,
-        ## caption = clust_featureRank_caption,
         add.watermark = WATERMARK                
     )
-    
-    output$hm_featurerankUI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.035,1),
-            height = fullH,
-            shiny::div(shiny::HTML(clust_featureRank_caption),class="caption"),
-            shiny::br(),
-            plotWidget(ns("clust_featureRank"))
-        )
-    })
-
-
 } ## end of Board

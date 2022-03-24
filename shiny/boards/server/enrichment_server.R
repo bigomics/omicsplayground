@@ -14,185 +14,30 @@ EnrichmentBoard <- function(input, output, session, inputData, selected_gxmethod
     tabH = 340  ## row height of panels
     tabH = "80vh"  ## height of tables
     
-    description = "<b>Geneset enrichment analysis.</b> Perform differential expression analysis on a geneset level, also called geneset enrichment analysis."
-    output$description <- shiny::renderUI(shiny::HTML(description))
+    gs_infotext = paste("Similar to the differential gene expression analysis, users can perform differential
+        expression analysis on a geneset level in this page, which is also referred as gene set enrichment (GSE) analysis.
+        The platform has more than 50.000 genesets (or pathways) in total that are divided into 30 geneset collections
+        such as ",a_Hallmark,", ",a_MSigDB,", ",a_KEGG," and ",a_GO,". Users have to specify which comparison they want to
+        visually analyze employing a certain geneset collection.<br><br>
+        To ensure the statistical reliability, the platform performs Enrichment Analyses using multiple methods.
+        The result from the statistical methods is displayed in <strong>Enrichment table</strong> panel.
+        In the <strong>Top enriched</strong> panel, the top 10 differentially enriched geneses (pathways) are displayed. 
+        In the <strong>Plots</strong> panel, a volcano plot of genes contained in the selected geneset and a barplot 
+        of expressions per sample group are displayed. In the <strong>Compare</strong> panel, users can compare the
+        differential expression status of that geneset for all other comparisons. Finally, volcano plots of genesets
+        for all comparisons are displayed under the <strong>Volcano (all) </strong> tab. This allows users to have
+        an overall picture across comparisons at the same time.<br><br>
+        EXPERT MODE ONLY: To compare the different statistical methods, the <strong>Volcano (methods)</strong> 
+        panel shows volcano plots of all methods. The <strong>FDR table</strong> panel reports the number of
+        significant gene sets at different FDR thresholds for all contrasts.<br><br><br><br>
+        <center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=4' 
+        frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' 
+        allowfullscreen></iframe></center>"
+    )
     
-    gs_infotext = paste("Similar to the differential gene expression analysis, users can perform differential expression analysis on a geneset level in this page, which is also referred as gene set enrichment (GSE) analysis. The platform has more than 50.000 genesets (or pathways) in total that are divided into 30 geneset collections such as ",a_Hallmark,", ",a_MSigDB,", ",a_KEGG," and ",a_GO,". Users have to specify which comparison they want to visually analyze employing a certain geneset collection. 
-
-<br><br>To ensure the statistical reliability, the platform performs Enrichment Analyses using multiple methods. The result from the statistical methods is displayed in <strong>Enrichment table</strong> panel. In the <strong>Top enriched</strong> panel, the top 10 differentially enriched geneses (pathways) are displayed. In the <strong>Plots</strong> panel, a volcano plot of genes contained in the selected geneset and a barplot of expressions per sample group are displayed. In the <strong>Compare</strong> panel, users can compare the differential expression status of that geneset for all other comparisons. Finally, volcano plots of genesets for all comparisons are displayed under the <strong>Volcano (all) </strong> tab. This allows users to have an overall picture across comparisons at the same time.
-
-<br><br>EXPERT MODE ONLY: To compare the different statistical methods, the <strong>Volcano (methods)</strong> panel shows volcano plots of all methods. The <strong>FDR table</strong> panel reports the number of significant gene sets at different FDR thresholds for all contrasts.
-
-<br><br><br><br>
-<center><iframe width='500' height='333' src='https://www.youtube.com/embed/watch?v=qCNcWRKj03w&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-&index=4' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe></center>
-")
-    
-    ##================================================================================
-    ##========================= INPUTS UI ============================================
-    ##================================================================================
-    
-    FDR.VALUES2 = c(1e-9,1e-6,1e-3,0.01,0.05,0.1,0.2,0.5,1)
-    gs_testmethod_text = paste("Select a method for the statistical test. To ensure the statistical reliability, the platform performs the gene set enrichment analysis using multiple methods, including",a_Spearman,", ",a_GSVA,", ",a_ssGSEA,", ",a_Fisher,", ",a_GSEA,", ",a_camera," and ",a_fry,".")  ## does not work (tipify cannot handle HTML?)
-    gs_testmethod_text = paste("Select a method or multiple methos for the statistical test.")
-    
-    GSET.DEFAULTMETHODS = c("fisher","gsva","camera","fgsea")
-    GSET.DEFAULTMETHODS = c("fisher","gsva","camera")
     GSET.DEFAULTMETHODS = c("gsva","camera","fgsea","fisher")
-    
-    output$inputsUI <- shiny::renderUI({
-        ui <- shiny::tagList(
-            shinyBS::tipify( shiny::actionLink(ns("gs_info"), "Tutorial", icon = shiny::icon("youtube")),
-                   "Show more information about this module."),
-            shiny::hr(), shiny::br(),             
-            shinyBS::tipify( shiny::selectInput(ns("gs_contrast"),"Contrast:", choices=NULL),
-                   "Select a contrast of interest for the analysis.", placement="top"),
-            shinyBS::tipify( shiny::selectInput(ns("gs_features"),"Gene set collection:", choices=NULL, multiple=FALSE),
-                   "Choose a specific gene set collection for the analysis.", placement="top"),
-            shiny::fillRow( flex=c(1,1),
-                    shinyBS::tipify( shiny::selectInput(ns("gs_fdr"),"FDR", choices=FDR.VALUES2, selected=0.2),
-                           "Set the false discovery rate (FDR) threshold.", placement="top"),
-                    shinyBS::tipify( shiny::selectInput(ns("gs_lfc"),"logFC threshold",
-                                        choices=c(0,0.05,0.1,0.2,0.5,1,2), selected=0),
-                           "Set the logarithmic fold change (logFC) threshold.",
-                           placement="top")
-                    ),
-            shiny::br(),br(),br(),br(),
-            shinyBS::tipify(shiny::actionLink(ns("gs_options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                   "Toggle advanced options.", placement="top"),
-            shiny::br(),br(),
-            shiny::conditionalPanel(
-                "input.gs_options % 2 == 1", ns=ns, 
-                shiny::tagList(
-                    shinyBS::tipify(shiny::checkboxInput(ns("gs_showall"),"Show all genesets",FALSE),
-                           "Enbale significant genes filtering. Display only significant genesets in the table.", 
-                           placement="top", options = list(container = "body")),
-                    
-                    shinyBS::tipify(shiny::checkboxGroupInput(ns('gs_statmethod'),'Statistical methods:', choices=NULL),
-                           gs_testmethod_text, placement="right", options = list(container="body"))
-                )
-            )
-        )
-        ui
-    })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
-
-    ##================================================================================
-    ##=========================== TABS UI ============================================
-    ##================================================================================
-
-
-    topEnriched_caption = "<b>Top enriched gene sets.</b> Enrichment plots of the top differentially enriched gene sets. Black vertical bars indicate the rank of genes in the gene set in the sorted list metric. The green curve corresponds to the 'running statistics' of the enrichment score."
-    
-    topEnrichedFreq_caption = "<strong>Gene frequency.</strong> The plot shows the number of times a gene is present in the top-N genesets sorted by frequency."
-
-    topEnriched_captionALL <- paste(
-        "<b>(a)</b>",topEnriched_caption,
-        "<b>(b)</b>",topEnrichedFreq_caption)
-    
-    output$topEnriched_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex = c(1,NA),
-            shiny::fillRow(
-                flex = c(1.5,0.05,1),
-                plotWidget(ns("topEnriched")),
-                shiny::br(),
-                plotWidget(ns("topEnrichedFreq"))
-            ),
-            shiny::div(shiny::HTML(topEnriched_captionALL), class="caption")
-        )
-    })
-
-    enrichplots_caption = "<b>Enrichment plots</b> associated with the gene set (selected in <b>Table I</b>) and gene (selected in <b>Table II</b>). <b>(a)</b> Gene set enrichment plot. <b>(b)</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set are highlighted in blue. <b>(c)</b> Barplot of the gene set enrichment in the groups. <b>(d)</b> Scatter plot of the enrichment versus the expression of the selected geneset and gene, on the y and x axes, respectively."
-    enrichplots_caption = "<b>Enrichment plots</b> associated with the gene set (selected in <b>Table I</b>) and gene (selected in <b>Table II</b>). <b>(a)</b> Volcano-plot showing significance versus fold-change on the y and x axes, respectively. Genes in the gene set are highlighted in blue. <b>(b)</b> Barplot of the gene set enrichment in the groups. <b>(c)</b> Barplot of selected gene in the groups. <b>(d)</b> Scatter plot of the enrichment versus the expression of the selected geneset and gene, on the y and x axes, respectively."
-
-    output$subplots_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex = c(1,0.05,NA),
-            shiny::fillRow(
-                id = ns("subplots"),
-                height = imgH,
-                flex=c(1,1,1,1), ##height = 370,
-                ##plotWidget(ns("subplot_enplot")),
-                plotWidget(ns("subplot_volcano")),                
-                plotWidget(ns("subplot_barplot")),
-                plotWidget(ns("subplot_geneplot")),
-                plotWidget(ns("subplot_scatter"))
-            ),
-            shiny::br(),
-            shiny::div(shiny::HTML(enrichplots_caption),class="caption")
-        )
-    })
+    # I have no idea what this is // Stefan 21.03.2022
     dragulaR::dragula(ns("subplots"))
-
-    compare_caption = "<b>Enrichment across contrasts.</b> Enrichment plots for the selected gene set (in <b>Table I</b>) across multiple contrasts. The figure allows to quickly compare the enrichment of a certain gene set across all other comparisons."
-
-    output$compare_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex=c(1,NA), ##height = 370,
-            plotWidget( ns("compare")),
-            shiny::div(shiny::HTML(compare_caption),class="caption")
-        )
-    })
-
-
-
-    volcanoAll_caption = "<b>Volcano plots for all contrasts.</b> Simultaneous visualisation of volcano plots of gene set enrichment across all contrasts. Volcano-plot are plotting enrichment score versus significance on the x and y axes, respectively. Experimental contrasts showing better statistical significance will show volcano plots with 'higher' wings."
-
-    output$volcanoAll_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex=c(1,NA), ##height = 370,
-            plotWidget(ns("volcanoAll")),
-            shiny::div(shiny::HTML(volcanoAll_caption), class="caption")
-        )
-    })
-
-
-    volcanoMethods_caption = "<b>Volcano plots for all methods.</b> Simultaneous visualisation of volcano plots of gene sets for different enrichment methods. Methods showing better statistical significance will show volcano plots with 'higher' wings."
-    
-    output$volcanoMethods_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex=c(1,NA), ##height = 370,
-            plotWidget(ns("volcanoMethods")),
-            shiny::div(shiny::HTML(volcanoMethods_caption), class="caption")
-        )
-    })
-
-    tables_caption = "<b>Enrichment tables</b>. <b>(I)</b> Table summarizing the statistical results of the gene set enrichment analysis for selected contrast. The number of stars indicate how many methods identified the geneset significant. <b>(II)</b> Table showing the fold-change, statistics and correlation of the genes in the selected gene set."
-
-    output$tables_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            flex = c(NA,0.05,1),
-            shiny::div(shiny::HTML(tables_caption),class="caption"),
-            shiny::br(),
-            shiny::fillRow(
-                ## height = 200,
-                flex = c(1.82,0.08,1),
-                tableWidget(ns("gseatable")),
-                shiny::br(),
-                tableWidget(ns("genetable"))        
-            )
-        )
-    })
-
-    output$fctable_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            plotWidget(ns("fctable"))
-        )
-    })
-
-    output$FDRtable_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = rowH,
-            tableWidget(ns("FDRtable"))
-        )
-    })
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================

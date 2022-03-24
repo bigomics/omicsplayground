@@ -236,9 +236,9 @@ plotWidget <- function(id) {
     shiny::uiOutput(ns("widget"))
 }
     
-plotModule <- function(input, output, session, ## ns=NULL,
-                       func, func2=NULL, 
-                       info.text="Figure", title="", 
+plotModule <- function(input, output, session,
+                       func, func2=NULL,
+                       info.text="Figure", title="",
                        inputs=NULL, options = NULL, label="",
                        caption="", caption2=info.text, ## header=NULL,
                        plotlib = "base", plotlib2 = NULL,
@@ -950,10 +950,6 @@ tableModule <- function(input, output, session,
                                  )),
         zoom.button,
         shiny::HTML(paste("<center>",title,"</center>"))
-        ##HTML(paste("<center><strong>",title,"</strong></center>"))
-        ## shiny::HTML(paste("<center>",title,"</center>"))
-        ##inputs
-        ##selectInput("sel123","number",1:10)
     )
     
     CSVFILE = paste0(gsub("file","data",tempfile()),".csv")
@@ -1058,11 +1054,3 @@ tableModule <- function(input, output, session,
     )
     return(module)
 }
-
-
-
-
-
-########################################################################
-########################################################################
-########################################################################

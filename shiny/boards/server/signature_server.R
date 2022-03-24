@@ -10,12 +10,6 @@ SignatureBoard <- function(input, output, session, inputData, selected_gxmethods
     fullH = 800   ## full height of page
     tabH = '70vh'
     
-    description = "<b>Signature Analysis.</b> Users can test their gene signature by
-calculating an enrichment score. Upload your own gene list, or select
-a contrast which then takes the top differentially expressed genes as
-signature."
-    output$description <- shiny::renderUI(shiny::HTML(description))
-    
 infotext =
     "In the <strong>Signature Analysis module</strong>, users can test their gene signature by calculating an enrichment score. They can use a sample list provided on the platform or upload their own gene list. Instead of a short list, a profile can also be selected, which is a complete gene list resulted from one of the contrasts in the analysis.
 
@@ -35,51 +29,6 @@ infotext =
 
     IMMCHECK.GENES = "ADORA2A ARHGEF5 BTLA CD160 CD244 CD27 CD274 CD276 CD47 CD80 CEACAM1 CTLA4 GEM HAVCR2 ICOS IDO1 LAG3 PDCD1 TNFSF4 VISTA VTCN1 TIGIT PVR CD28 CD40 CD40LG ICOSLG TNFRSF9 TNFSF9 CD70 TNFRSF4 TNFRSF18 TNFSF18 SIRPA LGALS9 ARG1 CD86 IDO2 PDCD1LG2 KIR2DL3"
     APOPTOSIS.GENES = "BAD CRADD AGT FAS BCL2 PPIF S100A9 S100A8 BBC3 BCL2L11 FADD CTSH MLLT11 TRAF7 BCL2L1 HTRA2 BNIP3 BAK1 PMAIP1 LGALS9 BID"
-    CELLCYCLE.GENES = "MCM5 PCNA TYMS FEN1 MCM2 MCM4 RRM1 UNG GINS2 MCM6 CDCA7 DTL PRIM1 UHRF1 MLF1IP HELLS RFC2 RPA2 NASP RAD51AP1 GMNN WDR76 SLBP CCNE2 UBR7 POLD3 MSH2 ATAD2 RAD51 RRM2 CDC45 CDC6 EXO1 TIPIN DSCC1 BLM CASP8AP2 USP1 CLSPN POLA1 CHAF1B BRIP1 E2F8 HMGB2 CDK1 NUSAP1 UBE2C BIRC5 TPX2 TOP2A NDC80 CKS2 NUF2 CKS1B MKI67 TMPO CENPF TACC3 FAM64A SMC4 CCNB2 CKAP2L CKAP2 AURKB BUB1 KIF11 ANP32E TUBB4B GTSE1 KIF20B HJURP CDCA3 HN1 CDC20 TTK CDC25C KIF2C RANGAP1 NCAPD2 DLGAP5 CDCA2 CDCA8 ECT2 KIF23 HMMR AURKA PSRC1 ANLN LBR CKAP5 CENPE CTCF NEK2 G2E3 GAS2L3 CBX5 CENPA"
-    style0 = "font-size: 0.9em; color: #24A; background-color: #dde6f0; border-style: none; padding:0; margin-top: -15px;"
-    
-    output$inputsUI <- shiny::renderUI({
-        ui <- shiny::tagList(
-            shiny::tags$head(shiny::tags$style("#sig-genelistUP.form-control {font-size:11px !important;padding:3px;height:200px;}")),
-            shinyBS::tipify( shiny::actionLink(ns("info"), "Tutorial", icon = shiny::icon("youtube")),
-                   "Show more information about this module"),
-            shiny::hr(), shiny::br(),
-            shinyBS::tipify(shiny::textAreaInput(ns("genelistUP"), "Genes:", value = CELLCYCLE.GENES,
-                                 rows=15, placeholder="Paste your gene list"),
-                   "Paste a list of signature genes.", placement="top",
-                   options = list(container = "body")),
-            ## shiny::textAreaInput("genelistDN", "Signature (down):", rows=6, placeholder="Paste your gene list")
-            shiny::br(),
-            shinyBS::tipify(shiny::actionButton(ns("example2"),"[apoptosis] ", style=style0),
-                   "Use the list of genes involved in apoptosis as a signature."),
-            shinyBS::tipify(shiny::actionButton(ns("example3"),"[cell_cycle] ", style=style0),
-                   "Use the list of genes involved in cell cycle as a signature."),
-            shinyBS::tipify(shiny::actionButton(ns("example1"),"[immune_chkpt] ", style=style0),
-                   "Use the list of genes involved in immune checkpoint as a signature."),
-            shiny::br(),br(),
-            shinyBS::tipify( shiny::actionLink(ns("options"), "Options", icon=icon("cog", lib = "glyphicon")),
-                   "Toggle advanced options.", placement="top"),
-            shiny::br(),
-            shiny::conditionalPanel(
-                "input.options % 2 == 1", ns=ns,
-                shiny::tagList(
-                    shinyBS::tipify(shiny::selectInput(ns("type"), label="Signature type:",
-                                       choices=c("<custom>","contrast","hallmark","KEGG")),
-                           "Specify the type of signature of an interest. Users can choose between custom signature, a contrast profile, or some predefined gene sets including Hallmark and KEGG pathways.",
-                           placement="top", options = list(container = "body")),
-                    shiny::conditionalPanel(
-                        "input.type != '<custom>'", ns=ns,
-                        shinyBS::tipify(shiny::selectInput(ns("feature"),"Signature:",
-                                           choices="<custom>", selected="<custom>"),
-                               "Select a specific signature group.", placement="top",
-                               options = list(container = "body"))
-                    )
-                )
-            )
-        )
-        ui
-    })
-    shiny::outputOptions(output, "inputsUI", suspendWhenHidden=FALSE) ## important!!!
     
     ##================================================================================
     ##======================= OBSERVE FUNCTIONS ======================================
@@ -516,17 +465,6 @@ infotext =
         add.watermark = WATERMARK
     )
 
-    output$enplots_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = fullH,
-            flex = c(NA,0.03,1),
-            shiny::div(shiny::HTML(enplots_info), class="caption"),
-            shiny::br(),
-            plotWidget(ns("enplots"))
-        )
-    })
-    
-
     ##================================================================================
     ## Volcano {data-height=800}
     ##================================================================================
@@ -617,16 +555,6 @@ infotext =
         res = c(90,100),
         add.watermark = WATERMARK
     )
-
-    output$volcanoPlots_UI <- shiny::renderUI({
-        shiny::fillCol(
-            height = fullH,
-            flex = c(NA,0.03,1),
-            shiny::div(shiny::HTML(volcanoPlots_caption), class="caption"),
-            shiny::br(),
-            plotWidget(ns("volcanoPlots"))
-        )
-    })
     
     ##================================================================================
     ## Overlap/similarity
@@ -853,25 +781,10 @@ infotext =
         id = "overlapTable",
         func = overlapTable.RENDER,
         title = "Overlap with other signatures", label="b",
-        ## just.info=TRUE, no.download=TRUE,
         info.text = "Under the <strong>Overlap/similarity tab</strong>, users can find the similarity of their gene list with all the gene sets and pathways in the platform, including statistics such as the total number of genes in the gene set (K), the number of intersecting genes between the list and the gene set (k), the overlapping ratio of k/K, logarithm of the  odds ratio (log.OR), as well as the p and q values by the Fisher’s test for the overlap test.",
-        ##options = overlapTable.opts,
         height = 0.4*fullH
     )
 
-    overlap_caption = "<b>Overlap/Similarity table.</b><b>(a)</b> Top overlapping gene sets with selected signature. The vertical axis shows the overlap score of the gene set which combines the odds ratio and significance (q-value) of the Fisher's test. <b>(b)</b> Table summarizing the results of the Fishers's test for overlap. The column \'common genes\' reports the shared gene in order of largest fold-change."
-        
-    output$overlapAnalysis_UI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.035,1,0.04,1),
-            height = fullH,
-            shiny::div(shiny::HTML(overlap_caption), class="caption"),
-            shiny::br(),
-            plotWidget(ns("overlapScorePlot")),
-            shiny::br(),
-            tableWidget(ns("overlapTable"))
-        )
-    })
 
     ##================================================================================
     ## Markers {data-height=800}
@@ -1018,16 +931,6 @@ infotext =
         height = c(fullH-100,750), res=c(100,95),
         add.watermark = WATERMARK
     )
-
-    output$markers_UI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.025,1),
-            height = fullH,
-            shiny::div(shiny::HTML(markers_caption), class="caption"),
-            shiny::br(),            
-            plotWidget(ns("markers"))
-        )
-    })
     
     ##================================================================================
     ## Enrichment {data-height=800}
@@ -1188,19 +1091,4 @@ infotext =
         title = "Genes in signature", label="b",
         height = c(360,700)
     )
-    
-    enrichmentTables_caption = "<b>Enrichment of query signature across all contrasts.</b> <b>(a)</b> Enrichment scores across all contrasts for the selected query signature . The NES corresponds to the normalized enrichment score of the GSEA analysis. <b>(b)</b> Genes in the query signature sorted by decreasing (absolute) fold-change corresponding to the selected contrast."
-
-    output$enrichmentTables_UI <- shiny::renderUI({
-        shiny::fillCol(
-            flex = c(NA,0.04,1.0,0.04,1.5), ## width = 600,
-            height = fullH,
-            shiny::div(shiny::HTML(enrichmentTables_caption), class="caption"),
-            shiny::br(),
-            plotWidget(ns("enrichmentContrastTable")),
-            shiny::br(),
-            plotWidget(ns("enrichmentGeneTable"))
-        )
-    })
-
 }  ## end-of-Board
