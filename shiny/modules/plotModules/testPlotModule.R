@@ -1,7 +1,19 @@
 testPlotModuleUI <- function(id) {
   ns <- NS(id)
   
-    plotOutput(ns("plot"))
+    tagList(
+      shiny::actionButton(inputId=ns("zoombutton"),label="BUTTON",
+                          icon=icon("window-maximize"),
+                          class="btn-circle-xs"),
+      plotOutput(ns("plot")),
+      shiny::div(class="popup-plot",
+                shinyBS::bsModal(ns("plotPopup"), title, size="l",
+                        ns("zoombutton"),
+                        plotOutput(ns("modal_plot"))
+                        )
+      )
+    )  
+    
   
 }
 
@@ -99,10 +111,54 @@ testPlotModuleServer <- function(id, filterStates, data) {
         }
         
         gridExtra::grid.arrange(fig)
-       
+
+      }, res = 96)
+
+
+      output$modal_plot <- renderPlot({
         
+        fig <-
+        ggplot(plot_data(), aes(tSNE.x, tSNE.y)) +
+        labs(x = "tSNE1", y = "tSNE2") +
+        scale_color_continuous(name = "Expression") +
+        guides(color = guide_colorbar(barwidth = unit(.7, "lines"))) +
+        theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
+
+      if (!is.null(plot_data()$grp)) {
+        fig <- fig +
+          ggforce::geom_mark_hull(
+            aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
+            color = "grey33", 
+            size = .8,
+            alpha = .33 / length(unique(data$grp)),
+            expand = unit(3.4, "mm"), 
+            con.cap = unit(.01, "mm"), 
+            con.colour = "grey33", 
+            label.buffer = unit(3, "mm"),
+            label.fontsize = 22, 
+            label.fontface = "plain"
+          ) +
+          geom_point(aes(color = fc2), size = 3.5) +
+          scale_x_continuous(expand = c(.15, .15)) +
+          scale_y_continuous(expand = c(.15, .15)) +
+          scale_fill_discrete(guide = "none")
+        
+      } else {
+        fig <- fig +
+          geom_point(aes(color = fc2), size = 4.5)
+      }
+
+      gridExtra::grid.arrange(fig)
+
       }, res = 96)
         
     }
   )
 }
+
+
+
+
+
+
+
