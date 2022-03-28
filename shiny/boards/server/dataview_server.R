@@ -2,7 +2,7 @@
 ## This file is part of the Omics Playground project.
 ## Copyright (c) 2018-2022 BigOmics Analytics Sagl. All rights reserved.
 ##
-DataViewBoard <- function(input, output, session, inputData)
+DataViewBoard <- function(input, output, session, inputData, filterStates)
 {
     ns <- session$ns ## NAMESPACE
     rowH = 355  ## row height of panels
@@ -35,6 +35,23 @@ DataViewBoard <- function(input, output, session, inputData)
         allowfullscreen></iframe></center>
     ')
 
+    ngs <- inputData()
+    
+    # observe inputs
+    shiny::observeEvent(input$search_gene, {
+        filterStates$search_gene <- input$search_gene
+    })
+    shiny::observeEvent(input$sample_filter, {
+        filterStates$sample_filter <- input$sample_filter
+    })
+    shiny::observeEvent(input$data_groupby, {
+        filterStates$data_groupby <- input$data_groupby
+    })
+    shiny::observeEvent(input$data_type, {
+        filterStates$data_type <- input$data_type
+    })
+
+   
     ## ------- observe functions -----------
     shiny::observeEvent( input$data_info, {
         shiny::showModal(shiny::modalDialog(
@@ -42,7 +59,7 @@ DataViewBoard <- function(input, output, session, inputData)
             shiny::HTML(data_infotext),
             easyClose = TRUE, size="l"))
     })
-
+    
     ## update filter choices upon change of data set
     shiny::observe({
         ngs <- inputData()
@@ -68,7 +85,6 @@ DataViewBoard <- function(input, output, session, inputData)
         shiny::updateSelectInput(session,'data_groupby', choices=grps, selected=selgrp)
     })
 
-
     ##================================================================================
     ##========================= FUNCTIONS ============================================
     ##================================================================================
@@ -84,7 +100,6 @@ DataViewBoard <- function(input, output, session, inputData)
     genePlots_averageRankPlot_text=paste0('Ranking of the average expression of the selected gene.')
     data_geneInfo_text = paste0('For more information about the the selected gene, follow the hyperlinks to public databases, including ', a_OMIM,', ', a_KEGG, ' and ',a_GO,'.')
     data_tissueplot_text = paste0('Tissue expression for the selected gene in the tissue expression ',a_GTEx,' dataset. Colors corresponds to "tissue clusters" as computed by unsupervised clustering.')
-
 
     ##----------------------------------------------------------------------
     ##                     Average Rank plot
@@ -144,6 +159,8 @@ DataViewBoard <- function(input, output, session, inputData)
         label="c", title="Average rank",
         add.watermark = WATERMARK
     )
+
+    
     
     ##----------------------------------------------------------------------
     ##                     Correlation plot
@@ -196,7 +213,6 @@ DataViewBoard <- function(input, output, session, inputData)
         ngs <- inputData()
         shiny::req(ngs)
 
-        gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
         if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
 
@@ -254,7 +270,6 @@ DataViewBoard <- function(input, output, session, inputData)
         shiny::req(ngs)
         shiny::req(input$data_groupby,input$search_gene,input$data_type)
 
-        gene = "KCNN4"
         gene = ngs$genes$gene_name[1]
         if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
         samples = colnames(ngs$X)
@@ -391,7 +406,6 @@ DataViewBoard <- function(input, output, session, inputData)
 
         dbg("[genePlots_tsne.RENDER] reacted")
 
-        gene <- "KCNN4"
         gene <- ngs$genes$gene_name[1]
         if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
         samples <- colnames(ngs$X)
@@ -564,16 +578,18 @@ DataViewBoard <- function(input, output, session, inputData)
 
     })
 
-    shiny::callModule(
-        plotModule, "genePlots_tsne",
-        #plotlib = "ggplot",
-        func = genePlots_tsne.RENDER,
-        func2 = genePlots_tsne_max.RENDER,
-        info.text = genePlots_tsne_text,
-        height = imgH, pdf.width = 6, pdf.height = 6,
-        label = "d", title = "t-SNE clustering",
-        add.watermark = WATERMARK
-    )
+    # shiny::callModule(
+    #     plotModule, "genePlots_tsne",
+    #     #plotlib = "ggplot",
+    #     func = genePlots_tsne.RENDER,
+    #     func2 = genePlots_tsne_max.RENDER,
+    #     info.text = genePlots_tsne_text,
+    #     height = imgH, pdf.width = 6, pdf.height = 6,
+    #     label = "d", title = "t-SNE clustering",
+    #     add.watermark = WATERMARK
+    # )
+
+    testPlotModuleServer("testPlot", filterStates, ngs)
 
     ##----------------------------------------------------------------------
     ##  Tissue expression plot
