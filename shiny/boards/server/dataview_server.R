@@ -589,7 +589,7 @@ DataViewBoard <- function(input, output, session, inputData, filterStates)
     #     add.watermark = WATERMARK
     # )
 
-    dataviewtSNEModuleServer("testPlot", filterStates, ngs)
+    dataviewtSNEModuleServer("t-SNEPlot", filterStates, ngs)
 
     ##----------------------------------------------------------------------
     ##  Tissue expression plot
