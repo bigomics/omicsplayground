@@ -2,7 +2,16 @@ testPlotModuleUI <- function(id) {
   ns <- NS(id)
   
     tagList(
-      shiny::actionButton(inputId=ns("zoombutton"),label="BUTTON",
+      downloadButton(ns('downloadPlot'),'Download Plot'),
+      shinyWidgets::dropdownButton(
+        shiny::tags$p(shiny::HTML("Figure")),
+        shiny::br(),
+        circle = TRUE, size = "xs", inline = TRUE,
+        icon = shiny::icon("info"), width = "300px",
+        inputId = ns("info"), right=FALSE,
+        tooltip = shinyWidgets::tooltipOptions(title = "Info", placement = "right")
+      ), 
+      shiny::actionButton(inputId=ns("zoombutton"),label=NULL,
                           icon=icon("window-maximize"),
                           class="btn-circle-xs"),
       plotOutput(ns("plot")),
@@ -12,15 +21,15 @@ testPlotModuleUI <- function(id) {
                         plotOutput(ns("modal_plot"))
                         )
       )
-    )  
-    
-  
+    )
 }
 
 testPlotModuleServer <- function(id, filterStates, data) {
   moduleServer(
     id,
     function(input, output, session) {
+      
+      plot_dl <- reactiveValues()
 
       plot_data <- shiny::reactive({
         
@@ -78,7 +87,7 @@ testPlotModuleServer <- function(id, filterStates, data) {
         return(data)
       })
 
-      output$plot <- renderPlot({
+      output$plot <-  renderCachedPlot({
         
         fig <- ggplot(plot_data(), aes(tSNE.x, tSNE.y)) +
                labs(x = "tSNE1", y = "tSNE2") +
@@ -111,8 +120,10 @@ testPlotModuleServer <- function(id, filterStates, data) {
         }
         
         gridExtra::grid.arrange(fig)
+        
+        plot_dl$plot <- fig
 
-      }, res = 96)
+      }, res = 96, cacheKeyExpr = { list(plot_data()) },)
 
 
       output$modal_plot <- renderPlot({
@@ -151,6 +162,13 @@ testPlotModuleServer <- function(id, filterStates, data) {
       gridExtra::grid.arrange(fig)
 
       }, res = 96)
+     
+     output$downloadPlot <- downloadHandler(
+         filename = function(){paste("bigomics-tSNE",'.png',sep='')},
+         content = function(file){
+          ggsave(file, plot = plot_dl$plot)
+        }
+      ) 
         
     }
   )
