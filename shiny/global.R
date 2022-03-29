@@ -110,7 +110,6 @@ message("**************** READ FUNCTIONS ****************")
 message("************************************************")
 
 source(file.path(RDIR,"pgx-include.R"))    ## lots of libraries and source()
-source(file.path(RDIR,"pgx-functions.R")) ## functions...
 source(file.path(RDIR,"pgx-files.R"))     ## file functions
 source(file.path(RDIR,"pgx-init.R"))
 source(file.path(RDIR,"auth.R"))
