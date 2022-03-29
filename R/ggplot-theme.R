@@ -1,5 +1,5 @@
 
-#library(systemfonts)
+library(systemfonts)
 
 #' The plot theme to be used for figures in the OmicsPlayground app.
 #'
@@ -28,10 +28,10 @@
 #' library(ggplot2)
 #' ggplot(mpg, aes(class)) + geom_bar() + theme_omics()
 #' ggplot(mpg, aes(class)) + geom_bar() +
-#'   theme_omics(style = "light", grid = "xy", axisline = "xy")
+#'   theme_omics(style = "light", grid = "xy", margin = 20)
 #' ggplot(mpg, aes(class)) + geom_bar() +
-#'   theme_omics(grid = "none", axisline = "none",
-#'              axistext = "x", axistitle = "none")
+#'   theme_omics(grid = "none", axistext = "x", 
+#'               axistitle = "none", panelborder = TRUE)
 #' }
 #'
 #' @export
@@ -49,7 +49,7 @@ theme_omics <- function(style = "default", base_size = 15,
   if(!is.logical(panelborder)) stop('panelborder must be a logical variable')
   if(!is.numeric(margin)) stop('margin must be a numeric value')
   
-  fontfamily <- "" ## Clear Sans
+  fontfamily <- "Clear Sans" ## Clear Sans
   fontfamily_mono <- "" ## Fira Code
 
   if (style == "default") { base_col <- "black"; light_col <- "grey15" }
@@ -157,7 +157,7 @@ theme_omics <- function(style = "default", base_size = 15,
   }
   
   if (axis_num != "none") {
-    if (!stringr::str_detect(axis_num, "X|x")) {
+    if (stringr::str_detect(axis_num, "X|x")) {
       out <- out +
         ggplot2::theme(axis.text.x = ggplot2::element_text(
           family = fontfamily_mono,
@@ -165,29 +165,14 @@ theme_omics <- function(style = "default", base_size = 15,
           margin = ggplot2::margin(t = base_size / 4, r = 1, b = 1, l = 1)
         ))
     }
-    if (!stringr::str_detect(axis_num, "Y|y")) {
+    if (stringr::str_detect(axis_num, "Y|y")) {
       out <- out +
-        ggplot2::theme(axis.text.x = ggplot2::element_text(
+        ggplot2::theme(axis.text.y = ggplot2::element_text(
           family = fontfamily_mono,
           color = light_col,
           margin = ggplot2::margin(t = base_size / 4, r = 1, b = 1, l = 1)
         ))
     }
-  }
-  
-  if (axistext != "none") {
-    if (!stringr::str_detect(axistext, "X|x")) {
-      out <- out +
-        ggplot2::theme(axis.text.x = ggplot2::element_blank())
-    }
-    if (!stringr::str_detect(axistext, "Y|y")) {
-      out <- out +
-        ggplot2::theme(axis.text.y = ggplot2::element_blank())
-    }
-  } else {
-    out <- out +
-      ggplot2::theme(axis.text.x = ggplot2::element_blank(),
-                     axis.text.y = ggplot2::element_blank())
   }
   
   if (panelborder == TRUE) {
@@ -203,6 +188,34 @@ theme_omics <- function(style = "default", base_size = 15,
           color = "grey70"
         ) 
       )
+  }
+  
+  if (axistext != "none") {
+    if (!stringr::str_detect(axistext, "X|x")) {
+      out <- out +
+        ggplot2::theme(axis.text.x = ggplot2::element_blank(),
+                       axis.ticks.x = ggplot2::element_blank())
+    }
+    if (!stringr::str_detect(axistext, "Y|y")) {
+      out <- out +
+        ggplot2::theme(axis.text.y = ggplot2::element_blank(),
+                       axis.ticks.y = ggplot2::element_blank())
+    }
+  } else {
+    out <- out +
+      ggplot2::theme(axis.text.x = ggplot2::element_blank(),
+                     axis.ticks.x = ggplot2::element_blank(),
+                     axis.text.y = ggplot2::element_blank(),
+                     axis.ticks.y = ggplot2::element_blank())
+  }
+  
+  if (legend_num == TRUE) {
+    out <- out +
+      ggplot2::theme(legend.text = ggplot2::element_text(
+        family = fontfamily_mono,
+        color = light_col,
+        size = base_size * .75
+      ))
   }
 
   return(out)
