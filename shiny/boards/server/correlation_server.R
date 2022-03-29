@@ -428,10 +428,10 @@ CorrelationBoard <- function(input, output, session, inputData)
         dbg("[cor_scatter.PLOTFUN] 2: levels.ph = ",paste(levels(ph),collapse=' '))
         
         ndim <- ncol(ngs$X)
-        cex = 1.2
-        cex = ifelse( ndim > 40, 0.8, 1.2)
-        cex = ifelse( ndim > 100, 0.5, cex)
-        cex = ifelse( ndim > 200, 0.2, cex)                
+
+        cex_levels <- c(1.2, 0.8, 0.5, 0.2)
+        dim_cuts <- c(0, 40, 100, 200, Inf) 
+        cex <- cex_levels[findInterval(ndim, dim_cuts)]          
 
         par(mfrow=c(5,5), mar=c(4,3.5,0.3,0),
             mgp=c(1.9,0.7,0), oma=c(0,0,0.5,0.5))
@@ -1437,10 +1437,10 @@ CorrelationBoard <- function(input, output, session, inputData)
         par(mfrow=c(nr,nr), mar=c(3,3.5,0.5,0),
             mgp=c(1.9,0.7,0), oma=c(0,0,0.5,0.5))
 
-        cex = 1.2
-        cex = ifelse( ndim > 40, 0.8, cex)
-        cex = ifelse( ndim > 100, 0.5, cex)
-        cex = ifelse( ndim > 200, 0.2, cex)                
+        cex_levels <- c(1.2, 0.8, 0.5, 0.2) 
+        dim_cuts <- c(0, 40, 100, 200, Inf) 
+        cex <- cex_levels[findInterval(ndim, dim_cuts)]
+
         klrpal = c("grey30","red2")
         klrpal = COL2
         klrpal = COL  ## more colors        
