@@ -169,7 +169,6 @@ dataviewtSNEModuleServer <- function(id, filterStates, data) {
           ggsave(file, plot = plot_dl$plot)
         }
       ) 
-        
     }
   )
 }
