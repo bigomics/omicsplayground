@@ -1,8 +1,10 @@
-testPlotModuleUI <- function(id) {
+dataviewtSNEModuleUI <- function(id) {
   ns <- NS(id)
   
     tagList(
-      downloadButton(ns('downloadPlot'),'Download Plot'),
+      shiny::HTML(paste("<center>t-SNE clustering</center>")),
+      shiny::HTML(paste0("<span class='module-label'>d</span>")),
+      downloadButton(ns('downloadPlot'),'PNG'),
       shinyWidgets::dropdownButton(
         shiny::tags$p(shiny::HTML("Figure")),
         shiny::br(),
@@ -24,7 +26,7 @@ testPlotModuleUI <- function(id) {
     )
 }
 
-testPlotModuleServer <- function(id, filterStates, data) {
+dataviewtSNEModuleServer <- function(id, filterStates, data) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -34,8 +36,6 @@ testPlotModuleServer <- function(id, filterStates, data) {
       plot_data <- shiny::reactive({
         
         ngs <- data
-        
-        shiny::req(ngs) # replace by validate
         
         gene <- ngs$genes$gene_name[1]
         
@@ -126,7 +126,7 @@ testPlotModuleServer <- function(id, filterStates, data) {
       }, res = 96, cacheKeyExpr = { list(plot_data()) },)
 
 
-      output$modal_plot <- renderPlot({
+      output$modal_plot <- renderCachedPlot({
         
         fig <-
         ggplot(plot_data(), aes(tSNE.x, tSNE.y)) +
@@ -161,7 +161,7 @@ testPlotModuleServer <- function(id, filterStates, data) {
 
       gridExtra::grid.arrange(fig)
 
-      }, res = 96)
+      }, res = 96, cacheKeyExpr = { list(plot_data()) },)
      
      output$downloadPlot <- downloadHandler(
          filename = function(){paste("bigomics-tSNE",'.png',sep='')},
@@ -173,10 +173,3 @@ testPlotModuleServer <- function(id, filterStates, data) {
     }
   )
 }
-
-
-
-
-
-
-
