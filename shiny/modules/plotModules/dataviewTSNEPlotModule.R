@@ -2,20 +2,29 @@ dataviewtSNEModuleUI <- function(id) {
   ns <- NS(id)
   
     tagList(
-      shiny::HTML(paste("<center>t-SNE clustering</center>")),
-      shiny::HTML(paste0("<span class='module-label'>d</span>")),
-      downloadButton(ns('downloadPlot'),'PNG'),
-      shinyWidgets::dropdownButton(
-        shiny::tags$p(shiny::HTML("Figure")),
-        shiny::br(),
-        circle = TRUE, size = "xs", inline = TRUE,
-        icon = shiny::icon("info"), width = "300px",
-        inputId = ns("info"), right=FALSE,
-        tooltip = shinyWidgets::tooltipOptions(title = "Info", placement = "right")
-      ), 
-      shiny::actionButton(inputId=ns("zoombutton"),label=NULL,
-                          icon=icon("window-maximize"),
-                          class="btn-circle-xs"),
+      shiny::fillRow(
+        flex = c(NA,NA,NA,NA,NA,1), height = "10%",
+        shiny::HTML(paste0("<span class='module-label'>d</span>")),
+        shinyWidgets::dropdownButton(
+            downloadButton(ns('downloadPlotPNG'),'PNG'),
+            downloadButton(ns('downloadPlotPDF'),'PDF'),
+            circle = TRUE, size = "xs", ## status = "danger",
+            icon = shiny::icon("download"), width = "40px", right=FALSE,
+            tooltip = shinyWidgets::tooltipOptions(title = "Download", placement = "right")
+        ),
+        shinyWidgets::dropdownButton(
+          shiny::tags$p(shiny::HTML("Figure")),
+          shiny::br(),
+          circle = TRUE, size = "xs", inline = TRUE,
+          icon = shiny::icon("info"), width = "300px",
+          inputId = ns("info"), right=FALSE,
+          tooltip = shinyWidgets::tooltipOptions(title = "Info", placement = "right")
+        ), 
+        shiny::actionButton(inputId=ns("zoombutton"),label=NULL,
+                            icon=icon("window-maximize"),
+                            class="btn-circle-xs"),
+        shiny::HTML(paste("<center>t-SNE clustering</center>")),
+      ),
       plotOutput(ns("plot")),
       shiny::div(class="popup-plot",
                 shinyBS::bsModal(ns("plotPopup"), title, size="l",
@@ -163,12 +172,20 @@ dataviewtSNEModuleServer <- function(id, filterStates, data) {
 
       }, res = 96, cacheKeyExpr = { list(plot_data()) },)
      
-     output$downloadPlot <- downloadHandler(
+     output$downloadPlotPNG <- downloadHandler(
          filename = function(){paste("bigomics-tSNE",'.png',sep='')},
          content = function(file){
           ggsave(file, plot = plot_dl$plot)
         }
-      ) 
+      )
+     output$downloadPlotPDF <- downloadHandler(
+       filename = function(){paste("bigomics-tSNE",'.pdf',sep='')},
+       content = function(file){
+         pdf(file, width = 6, height = 6)
+         print(plot_dl$plot)
+         dev.off()
+       }
+     ) 
     }
   )
 }
