@@ -398,185 +398,185 @@ DataViewBoard <- function(input, output, session, inputData, filterStates)
     ## t-SNE
     ##----------------------------------------------------------------------
 
-    genePlots_tsne.RENDER <- shiny::reactive({
+    # genePlots_tsne.RENDER <- shiny::reactive({
 
 
-        ngs <- inputData()
-        shiny::req(ngs)
+    #     ngs <- inputData()
+    #     shiny::req(ngs)
 
-        dbg("[genePlots_tsne.RENDER] reacted")
+    #     dbg("[genePlots_tsne.RENDER] reacted")
 
-        gene <- ngs$genes$gene_name[1]
-        if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
-        samples <- colnames(ngs$X)
-        if(!is.null(input$data_samplefilter)) {
-            samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-        }
-        nsamples = length(samples)
+    #     gene <- ngs$genes$gene_name[1]
+    #     if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+    #     samples <- colnames(ngs$X)
+    #     if(!is.null(input$data_samplefilter)) {
+    #         samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+    #     }
+    #     nsamples = length(samples)
 
-        ## precompute
-        pp <- rownames(ngs$genes)[1]
-        pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
+    #     ## precompute
+    #     pp <- rownames(ngs$genes)[1]
+    #     pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
 
-        gx <- NULL
-        ylab <- NULL
-        if(input$data_type == "counts") {
-            gx <- ngs$counts[pp,samples]
-            ylab <- "expression (counts)"
-        } else if(input$data_type == "CPM") {
-            gx <- 2**ngs$X[pp,samples] ## TODO: is that correct with two asterisks??
-            ylab <- "expression (CPM)"
-        } else if(input$data_type == "logCPM") {
-            gx <- ngs$X[pp,samples]
-            ylab <- "expression (log2CPM)"
-        }
+    #     gx <- NULL
+    #     ylab <- NULL
+    #     if(input$data_type == "counts") {
+    #         gx <- ngs$counts[pp,samples]
+    #         ylab <- "expression (counts)"
+    #     } else if(input$data_type == "CPM") {
+    #         gx <- 2**ngs$X[pp,samples] ## TODO: is that correct with two asterisks??
+    #         ylab <- "expression (CPM)"
+    #     } else if(input$data_type == "logCPM") {
+    #         gx <- ngs$X[pp,samples]
+    #         ylab <- "expression (log2CPM)"
+    #     }
 
-        pos <- ngs$tsne2d[samples,]
+    #     pos <- ngs$tsne2d[samples,]
 
-        fc1 <- tanh(0.99 * scale(gx)[,1])
-        fc1 <- tanh(0.99 * scale(gx, center = FALSE)[,1])
-        ##fc1 <- tanh(0.99 * gx/sd(gx))
-        fc2 <- (fc1 - min(fc1))
+    #     fc1 <- tanh(0.99 * scale(gx)[,1])
+    #     fc1 <- tanh(0.99 * scale(gx, center = FALSE)[,1])
+    #     ##fc1 <- tanh(0.99 * gx/sd(gx))
+    #     fc2 <- (fc1 - min(fc1))
 
-        jj2 <- order(abs(fc1))
+    #     jj2 <- order(abs(fc1))
 
-        ## determine how to do grouping for group labels
-        groupby <- input$data_groupby
-        grp <- NULL
-        if(groupby != "<ungrouped>") {
-            grp <- factor(ngs$samples[samples, groupby])
-        } 
-        data <- data.frame(pos[jj2,])
-        data$grp <- grp
-        data$fc2 <- fc2
+    #     ## determine how to do grouping for group labels
+    #     groupby <- input$data_groupby
+    #     grp <- NULL
+    #     if(groupby != "<ungrouped>") {
+    #         grp <- factor(ngs$samples[samples, groupby])
+    #     } 
+    #     data <- data.frame(pos[jj2,])
+    #     data$grp <- grp
+    #     data$fc2 <- fc2
 
-        fig <-
-          ggplot(data, aes(tSNE.x, tSNE.y)) +
-            labs(x = "tSNE1", y = "tSNE2") +
-            scale_color_continuous(name = "Expression") +
-            guides(color = guide_colorbar(barwidth = unit(.4, "lines"))) +
-            theme_omics(axis_num = "xy", legendnum = TRUE)
+    #     fig <-
+    #       ggplot(data, aes(tSNE.x, tSNE.y)) +
+    #         labs(x = "tSNE1", y = "tSNE2") +
+    #         scale_color_continuous(name = "Expression") +
+    #         guides(color = guide_colorbar(barwidth = unit(.4, "lines"))) +
+    #         theme_omics(axis_num = "xy", legendnum = TRUE)
 
-        if (!is.null(grp)) {
-          fig <- fig +
-            ggforce::geom_mark_hull(
-              aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
-              color = "grey33", 
-              size = .4,
-              alpha = .33 / length(unique(data$grp)),
-              expand = unit(2.7, "mm"), 
-              con.cap = unit(.01, "mm"), 
-              con.colour = "grey33", 
-              label.buffer = unit(2, "mm"),
-              label.fontsize = 12.5, 
-              label.fontface = "plain"
-            ) +
-            geom_point(aes(color = fc2), size = 1.5) +
-            scale_x_continuous(expand = c(.4, .4)) +
-            scale_y_continuous(expand = c(.4, .4)) +
-            scale_fill_discrete(guide = "none")
-        } else {
-          fig <- fig +
-            geom_point(aes(color = fc2), size = 2) +
-            guides(color = guide_colorbar(barwidth = unit(.4, "lines")))
-       }
+    #     if (!is.null(grp)) {
+    #       fig <- fig +
+    #         ggforce::geom_mark_hull(
+    #           aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
+    #           color = "grey33", 
+    #           size = .4,
+    #           alpha = .33 / length(unique(data$grp)),
+    #           expand = unit(2.7, "mm"), 
+    #           con.cap = unit(.01, "mm"), 
+    #           con.colour = "grey33", 
+    #           label.buffer = unit(2, "mm"),
+    #           label.fontsize = 12.5, 
+    #           label.fontface = "plain"
+    #         ) +
+    #         geom_point(aes(color = fc2), size = 1.5) +
+    #         scale_x_continuous(expand = c(.4, .4)) +
+    #         scale_y_continuous(expand = c(.4, .4)) +
+    #         scale_fill_discrete(guide = "none")
+    #     } else {
+    #       fig <- fig +
+    #         geom_point(aes(color = fc2), size = 2) +
+    #         guides(color = guide_colorbar(barwidth = unit(.4, "lines")))
+    #    }
 
-       gridExtra::grid.arrange(fig)
+    #    gridExtra::grid.arrange(fig)
 
-        dbg("[genePlots_tsne.RENDER] done")
+    #     dbg("[genePlots_tsne.RENDER] done")
 
-    })
+    # })
 
-    genePlots_tsne_max.RENDER <- shiny::reactive({
+    # genePlots_tsne_max.RENDER <- shiny::reactive({
 
 
-      ngs <- inputData()
-      shiny::req(ngs)
+    #   ngs <- inputData()
+    #   shiny::req(ngs)
 
-      dbg("[genePlots_tsne.RENDER] reacted")
+    #   dbg("[genePlots_tsne.RENDER] reacted")
 
-      gene <- "KCNN4"
-      gene <- ngs$genes$gene_name[1]
-      if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
-      samples <- colnames(ngs$X)
-      if(!is.null(input$data_samplefilter)) {
-        samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
-      }
-      nsamples = length(samples)
+    #   gene <- "KCNN4"
+    #   gene <- ngs$genes$gene_name[1]
+    #   if(!is.null(input$search_gene) && input$search_gene!="") gene <- input$search_gene
+    #   samples <- colnames(ngs$X)
+    #   if(!is.null(input$data_samplefilter)) {
+    #     samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
+    #   }
+    #   nsamples = length(samples)
       
-      ## precompute
-      pp <- rownames(ngs$genes)[1]
-      pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
+    #   ## precompute
+    #   pp <- rownames(ngs$genes)[1]
+    #   pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
       
-      gx <- NULL
-      ylab <- NULL
-      if(input$data_type == "counts") {
-        gx <- ngs$counts[pp,samples]
-        ylab <- "expression (counts)"
-      } else if(input$data_type == "CPM") {
-        gx <- 2**ngs$X[pp,samples]
-        ylab <- "expression (CPM)"
-      } else if(input$data_type == "logCPM") {
-        gx <- ngs$X[pp,samples]
-        ylab <- "expression (log2CPM)"
-      }
+    #   gx <- NULL
+    #   ylab <- NULL
+    #   if(input$data_type == "counts") {
+    #     gx <- ngs$counts[pp,samples]
+    #     ylab <- "expression (counts)"
+    #   } else if(input$data_type == "CPM") {
+    #     gx <- 2**ngs$X[pp,samples]
+    #     ylab <- "expression (CPM)"
+    #   } else if(input$data_type == "logCPM") {
+    #     gx <- ngs$X[pp,samples]
+    #     ylab <- "expression (log2CPM)"
+    #   }
       
-      pos <- ngs$tsne2d[samples,]
+    #   pos <- ngs$tsne2d[samples,]
       
-      fc1 <- tanh(0.99 * scale(gx)[,1])
-      fc1 <- tanh(0.99 * scale(gx, center = FALSE)[,1])
-      ##fc1 <- tanh(0.99 * gx/sd(gx))
-      fc2 <- (fc1 - min(fc1))
+    #   fc1 <- tanh(0.99 * scale(gx)[,1])
+    #   fc1 <- tanh(0.99 * scale(gx, center = FALSE)[,1])
+    #   ##fc1 <- tanh(0.99 * gx/sd(gx))
+    #   fc2 <- (fc1 - min(fc1))
       
-      jj2 <- order(abs(fc1))
+    #   jj2 <- order(abs(fc1))
 
-      ## determine how to do grouping for group labels
-      groupby <- input$data_groupby
-      grp <- NULL
-      if(groupby != "<ungrouped>") {
-        grp <- factor(ngs$samples[samples, groupby])
-      }
+    #   ## determine how to do grouping for group labels
+    #   groupby <- input$data_groupby
+    #   grp <- NULL
+    #   if(groupby != "<ungrouped>") {
+    #     grp <- factor(ngs$samples[samples, groupby])
+    #   }
       
-      data <- data.frame(pos[jj2,])
-      data$grp <- grp
-      data$fc2 <- fc2
+    #   data <- data.frame(pos[jj2,])
+    #   data$grp <- grp
+    #   data$fc2 <- fc2
 
-      fig <-
-        ggplot(data, aes(tSNE.x, tSNE.y)) +
-        labs(x = "tSNE1", y = "tSNE2") +
-        scale_color_continuous(name = "Expression") +
-        guides(color = guide_colorbar(barwidth = unit(.7, "lines"))) +
-        theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
+    #   fig <-
+    #     ggplot(data, aes(tSNE.x, tSNE.y)) +
+    #     labs(x = "tSNE1", y = "tSNE2") +
+    #     scale_color_continuous(name = "Expression") +
+    #     guides(color = guide_colorbar(barwidth = unit(.7, "lines"))) +
+    #     theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
 
-      if (!is.null(grp)) {
-        fig <- fig +
-          ggforce::geom_mark_hull(
-            aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
-            color = "grey33", 
-            size = .8,
-            alpha = .33 / length(unique(data$grp)),
-            expand = unit(3.4, "mm"), 
-            con.cap = unit(.01, "mm"), 
-            con.colour = "grey33", 
-            label.buffer = unit(3, "mm"),
-            label.fontsize = 22, 
-            label.fontface = "plain"
-          ) +
-          geom_point(aes(color = fc2), size = 3.5) +
-          scale_x_continuous(expand = c(.15, .15)) +
-          scale_y_continuous(expand = c(.15, .15)) +
-          scale_fill_discrete(guide = "none")
+    #   if (!is.null(grp)) {
+    #     fig <- fig +
+    #       ggforce::geom_mark_hull(
+    #         aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
+    #         color = "grey33", 
+    #         size = .8,
+    #         alpha = .33 / length(unique(data$grp)),
+    #         expand = unit(3.4, "mm"), 
+    #         con.cap = unit(.01, "mm"), 
+    #         con.colour = "grey33", 
+    #         label.buffer = unit(3, "mm"),
+    #         label.fontsize = 22, 
+    #         label.fontface = "plain"
+    #       ) +
+    #       geom_point(aes(color = fc2), size = 3.5) +
+    #       scale_x_continuous(expand = c(.15, .15)) +
+    #       scale_y_continuous(expand = c(.15, .15)) +
+    #       scale_fill_discrete(guide = "none")
         
-      } else {
-        fig <- fig +
-          geom_point(aes(color = fc2), size = 4.5)
-      }
+    #   } else {
+    #     fig <- fig +
+    #       geom_point(aes(color = fc2), size = 4.5)
+    #   }
 
-      gridExtra::grid.arrange(fig)
+    #   gridExtra::grid.arrange(fig)
 
-      dbg("[genePlots_tsne.RENDER] done")
+    #   dbg("[genePlots_tsne.RENDER] done")
 
-    })
+    # })
 
     # shiny::callModule(
     #     plotModule, "genePlots_tsne",
