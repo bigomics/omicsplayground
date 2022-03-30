@@ -49,7 +49,7 @@ theme_omics <- function(style = "default", base_size = 15,
   if(!is.logical(panelborder)) stop('panelborder must be a logical variable')
   if(!is.numeric(margin)) stop('margin must be a numeric value')
   
-  fontfamily <- "Clear Sans" ## Clear Sans
+  fontfamily <- "" ## Clear Sans
   fontfamily_mono <- "" ## Fira Code
 
   if (style == "default") { base_col <- "black"; light_col <- "grey15" }
@@ -76,14 +76,20 @@ theme_omics <- function(style = "default", base_size = 15,
         margin = ggplot2::margin(t = 0, b = base_size * .67)
       ),
       plot.subtitle = ggtext::element_textbox_simple(
-        size = base_size, lineheight = 1.2, color = "grey40",
+        color = "grey40",
+        size = base_size, 
+        lineheight = 1.2,
         margin = ggplot2::margin(t = 0, b = base_size * 1.5)
       ),
       plot.caption = ggtext::element_textbox_simple(
-        size = base_size / 2, lineheight = 1.2, color = "grey40",
+        color = "grey40",
+        size = base_size / 2, 
+        lineheight = 1.2, 
         margin = ggplot2::margin(t = base_size * 1.5, b = 0)
       ),
       axis.title.x = ggplot2::element_text(
+        size = base_size * .8,
+        face = "bold",
         margin = ggplot2::margin(t = base_size / 3, r = 3, b = 3, l = 3)
       ),
       axis.title.y = ggplot2::element_text(
@@ -91,10 +97,12 @@ theme_omics <- function(style = "default", base_size = 15,
       ),
       axis.text.x = ggplot2::element_text(
         color = light_col,
+        size = base_size * .7,
         margin = ggplot2::margin(t = base_size / 4, r = 1, b = 1, l = 1)
       ),
       axis.text.y = ggplot2::element_text(
         color = light_col,
+        size = base_size * .7,
         margin = ggplot2::margin(t = 1, r = base_size / 4, b = 1, l = 1)
       ),
       axis.ticks.length = grid::unit(.35, "lines"),
@@ -119,12 +127,13 @@ theme_omics <- function(style = "default", base_size = 15,
       legend.position = "right",
       legend.title = ggplot2::element_text(
         color = light_col,
-        size = base_size * .75,
+        size = base_size * .8,
+        face = "bold",
         margin = margin(b = 10)
       ),
       legend.text = ggplot2::element_text(
         color = light_col,
-        size = base_size * .75
+        size = base_size * .7
       )
     )
 
@@ -162,6 +171,7 @@ theme_omics <- function(style = "default", base_size = 15,
         ggplot2::theme(axis.text.x = ggplot2::element_text(
           family = fontfamily_mono,
           color = light_col,
+          size = base_size * .7,
           margin = ggplot2::margin(t = base_size / 4, r = 1, b = 1, l = 1)
         ))
     }
@@ -170,6 +180,7 @@ theme_omics <- function(style = "default", base_size = 15,
         ggplot2::theme(axis.text.y = ggplot2::element_text(
           family = fontfamily_mono,
           color = light_col,
+          size = base_size * .7,
           margin = ggplot2::margin(t = base_size / 4, r = 1, b = 1, l = 1)
         ))
     }
