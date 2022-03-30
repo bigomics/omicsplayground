@@ -273,10 +273,7 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
         title.position = "top",
         keywidth = grid::unit(1.4, "lines"),
         keyheight = grid::unit(1.4, "lines")
-      )) +
-      ggplot2::theme(
-        legend.position = "top"
-      )
+      ))
   }
   if (aes == "fill") {
     out <- ggplot2::guides(
@@ -285,10 +282,7 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
         title.position = "top",
         keywidth = grid::unit(1.4, "lines"),
         keyheight = grid::unit(1.4, "lines")
-      )) +
-      ggplot2::theme(
-        legend.position = "top"
-      )
+      ))
   }
   if (aes == "shape") {
     out <- ggplot2::guides(
@@ -297,10 +291,7 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
         title.position = "top",
         keywidth = grid::unit(1.4, "lines"),
         keyheight = grid::unit(1.4, "lines")
-      )) +
-      ggplot2::theme(
-        legend.position = "top"
-      )
+      ))
   }
   if (aes == "size") {
     out <- ggplot2::guides(
@@ -309,10 +300,7 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
         title.position = "top",
         keywidth = grid::unit(1.4, "lines"),
         keyheight = grid::unit(1.4, "lines")
-      )) +
-      ggplot2::theme(
-        legend.position = "top"
-      )
+      ))
   }
   if (aes == "alpha") {
     out <- ggplot2::guides(
@@ -321,10 +309,7 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
         title.position = "top",
         keywidth = grid::unit(1.4, "lines"),
         keyheight = grid::unit(1.4, "lines")
-      )) +
-      ggplot2::theme(
-        legend.position = "top"
-      )
+      ))
   }
   
   return(out)
@@ -334,6 +319,9 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
 #' A nicely styled colorbar for continuous aesthetics (color, fill and alpha)
 #'
 #' @param aes (string) Aesthetic of the legend that should be modified.
+#' Options include "color", "fill", "shape" and "size".
+#' @param aes (type) Type of the guide. Options include "bar" and "steps".
+#' @param width (number) Width of the color bar.
 #' Options include "color", "fill", "shape" and "size".
 #' @param ... Other arguments passed to ggplot methods.
 #'
@@ -347,44 +335,72 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
 #' }
 #'
 #' @export
-guide_continuous <- function(aes = "color", ...) {
+guide_continuous <- function(aes = "color", type = "bar", width = .4, ...) {
   if(!aes %in% c("color", "fill", "alpha")) stop('aes must be one of "color", "fill" or "alpha"')
+  if(!type %in% c("bar", "steps")) stop('type must be either "bar" or "steps"')
   
   if (aes == "color") {
-    out <- ggplot2::guides(
-      color = ggplot2::guide_colorbar(
-        title.position = "top", title.hjust = .5,
-        label.position = "bottom", label.hjust = .5,
-        barwidth = grid::unit(25, "lines"),
-        barheight = grid::unit(.7, "lines")
-      )) +
-      ggplot2::theme(
-        legend.position = "top"
-      )
+    if (type == "bar") {
+      out <- ggplot2::guides(
+        color = ggplot2::guide_colorbar(
+          title.position = "top", 
+          label.hjust = 1,
+          barwidth = grid::unit(width, "lines")
+        ))
+    }
+    if (type == "steps") {
+      out <- ggplot2::guides(
+        color = ggplot2::guide_colorsteps(
+          title.position = "top", 
+          label.hjust = 1,
+          barwidth = grid::unit(width, "lines"),
+          ticks.colour = "transparent",
+          show.limits = TRUE
+        ))
+    }
   }
+  
+  
   if (aes == "fill") {
-    out <- ggplot2::guides(
-      fill = ggplot2::guide_colorbar(
-        title.position = "top", title.hjust = .5,
-        label.position = "bottom", label.hjust = .5,
-        barwidth = grid::unit(25, "lines"),
-        barheight = grid::unit(.7, "lines")
-      )) +
-      ggplot2::theme(
-        legend.position = "top"
-      )
+    if (type == "bar") {
+        out <- ggplot2::guides(
+          fill = ggplot2::guide_colorbar(
+            title.position = "top", 
+            label.hjust = 1,
+            barwidth = grid::unit(width, "lines")
+          ))
+    }
+    if (type == "steps") {
+      out <- ggplot2::guides(
+        fill = ggplot2::guide_colorbar(
+          title.position = "top", 
+          label.hjust = 1,
+          barwidth = grid::unit(width, "lines"),
+          ticks.colour = "transparent",
+          show.limits = TRUE
+        ))
+    }
   }
+  
   if (aes == "alpha") {
-    out <- ggplot2::guides(
-      alpha = ggplot2::guide_colorbar(
-        title.position = "top", title.hjust = .5,
-        label.position = "bottom", label.hjust = .5,
-        barwidth = grid::unit(25, "lines"),
-        barheight = grid::unit(.7, "lines")
-      )) +
-      ggplot2::theme(
-        legend.position = "top"
-      )
+    if (type == "bar") {
+      out <- ggplot2::guides(
+        alpha = ggplot2::guide_colorbar(
+          title.position = "top", 
+          label.hjust = 1,
+          barwidth = grid::unit(width, "lines")
+        )) 
+    }
+    if (type == "steps") {
+      out <- ggplot2::guides(
+        alpha = ggplot2::guide_colorsteps(
+          title.position = "top", 
+          label.hjust = 1,
+          barwidth = grid::unit(width, "lines"),
+          ticks.colour = "transparent",
+          show.limits = TRUE
+        )) 
+    }
   }
   
   return(out)
