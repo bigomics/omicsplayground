@@ -433,11 +433,12 @@ DataViewBoard <- function(input, output, session, inputData)
             grp <- factor(ngs$samples[samples, groupby])
         } 
         data <- data.frame(pos[jj2,])
+        colnames(data)[1:2] <- c("pos_x", "pos_y")
         data$grp <- grp
         data$fc2 <- fc2
-
+        
         fig <-
-          ggplot(data, aes(tSNE.x, tSNE.y)) +
+          ggplot(data, aes(pos_x, pos_y)) +
             labs(x = "tSNE1", y = "tSNE2") +
             scale_color_continuous(name = "Expression") +
             guides(color = guide_colorbar(barwidth = unit(.4, "lines"))) +
@@ -524,11 +525,12 @@ DataViewBoard <- function(input, output, session, inputData)
       }
       
       data <- data.frame(pos[jj2,])
+      colnames(data)[1:2] <- c("pos_x", "pos_y")
       data$grp <- grp
       data$fc2 <- fc2
 
       fig <-
-        ggplot(data, aes(tSNE.x, tSNE.y)) +
+        ggplot(data, aes(pos_x, pos_y)) +
         labs(x = "tSNE1", y = "tSNE2") +
         scale_color_continuous(name = "Expression") +
         guides(color = guide_colorbar(barwidth = unit(.7, "lines"))) +
