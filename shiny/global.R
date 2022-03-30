@@ -23,6 +23,7 @@ Sys.setlocale("LC_TIME","en_US.UTF-8")
 Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
 
 options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload
+options(shiny.fullstacktrace=TRUE)
 reticulate::use_miniconda('r-reticulate')
 
 message("[MAIN] reading global.R ...")
@@ -312,6 +313,9 @@ source("./boards/server/tcga_server.R", encoding = "UTF-8")
 source("./boards/server/user_server.R", encoding = "UTF-8")
 source("./boards/server/wgcna_server.R", encoding = "UTF-8")
 source("./boards/server/wordcloud_server.R", encoding = "UTF-8")
+
+# load plotModules
+source("./modules/plotModules/dataviewTSNEPlotModule.R", encoding = "UTF-8")
 
 
 ##ENABLED[c("wgcna","system","multi")] <- FALSE
