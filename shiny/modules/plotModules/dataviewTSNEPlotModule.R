@@ -25,7 +25,7 @@ dataviewtSNEModuleUI <- function(id) {
                             class="btn-circle-xs"),
         shiny::HTML(paste("<center>t-SNE clustering</center>")),
       ),
-      plotOutput(ns("plot")),
+      plotOutput(ns("plot"), height = "280px"),
       shiny::div(class="popup-plot",
                 shinyBS::bsModal(ns("plotPopup"), title, size="l",
                         ns("zoombutton"),
