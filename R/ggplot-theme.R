@@ -1,4 +1,3 @@
-
 library(systemfonts)
 
 #' The plot theme to be used for figures in the OmicsPlayground app.
@@ -51,10 +50,10 @@ theme_omics <- function(style = "default", base_size = 15,
   
   fontfamily <- "" ## Clear Sans
   fontfamily_mono <- "" ## Fira Code
-
+  
   if (style == "default") { base_col <- "black"; light_col <- "grey15" }
   if (style == "light") { base_col <- "grey30"; light_col <- "grey45" }
-
+  
   out <-
     ggplot2::theme_minimal(base_size = base_size, base_family = fontfamily) +
     ggplot2::theme(
@@ -136,7 +135,7 @@ theme_omics <- function(style = "default", base_size = 15,
         size = base_size * .7
       )
     )
-
+  
   if (grid != "none") {
     if (!stringr::str_detect(grid, "X|x")) {
       out <- out +
@@ -149,7 +148,7 @@ theme_omics <- function(style = "default", base_size = 15,
   } else {
     out <- out + ggplot2::theme(panel.grid.major = ggplot2::element_blank())
   }
-
+  
   if (axistitle != "none") {
     if (!stringr::str_detect(axistitle, "X|x")) {
       out <- out +
@@ -228,7 +227,7 @@ theme_omics <- function(style = "default", base_size = 15,
         size = base_size * .75
       ))
   }
-
+  
   return(out)
 }
 
@@ -254,7 +253,7 @@ theme_omics <- function(style = "default", base_size = 15,
 #' @export
 guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
   if(!aes %in% c("color", "fill", "shape", "size", "alpha")) stop('aes must be one of "color", "fill", "shape", "size" or "alpha"')
-
+  
   if (aes == "color") {
     out <- ggplot2::guides(
       color = ggplot2::guide_legend(
@@ -262,7 +261,7 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
         title.position = "top",
         keywidth = grid::unit(1.4, "lines"),
         keyheight = grid::unit(1.4, "lines")
-    )) +
+      )) +
       ggplot2::theme(
         legend.position = "top"
       )
@@ -274,7 +273,7 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
         title.position = "top",
         keywidth = grid::unit(1.4, "lines"),
         keyheight = grid::unit(1.4, "lines")
-    )) +
+      )) +
       ggplot2::theme(
         legend.position = "top"
       )
@@ -298,7 +297,7 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
         title.position = "top",
         keywidth = grid::unit(1.4, "lines"),
         keyheight = grid::unit(1.4, "lines")
-    )) +
+      )) +
       ggplot2::theme(
         legend.position = "top"
       )
@@ -310,12 +309,12 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
         title.position = "top",
         keywidth = grid::unit(1.4, "lines"),
         keyheight = grid::unit(1.4, "lines")
-    )) +
+      )) +
       ggplot2::theme(
         legend.position = "top"
       )
   }
-
+  
   return(out)
 }
 
@@ -338,7 +337,7 @@ guide_discrete <- function(aes = "color", reverse = FALSE, ...) {
 #' @export
 guide_continuous <- function(aes = "color", ...) {
   if(!aes %in% c("color", "fill", "alpha")) stop('aes must be one of "color", "fill" or "alpha"')
-
+  
   if (aes == "color") {
     out <- ggplot2::guides(
       color = ggplot2::guide_colorbar(
@@ -358,7 +357,7 @@ guide_continuous <- function(aes = "color", ...) {
         label.position = "bottom", label.hjust = .5,
         barwidth = grid::unit(25, "lines"),
         barheight = grid::unit(.7, "lines")
-    )) +
+      )) +
       ggplot2::theme(
         legend.position = "top"
       )
@@ -370,11 +369,11 @@ guide_continuous <- function(aes = "color", ...) {
         label.position = "bottom", label.hjust = .5,
         barwidth = grid::unit(25, "lines"),
         barheight = grid::unit(.7, "lines")
-    )) +
-    ggplot2::theme(
-      legend.position = "top"
-    )
+      )) +
+      ggplot2::theme(
+        legend.position = "top"
+      )
   }
-
+  
   return(out)
 }
