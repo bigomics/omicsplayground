@@ -113,6 +113,8 @@ dataviewtSNEModuleServer <- function(id, filterStates, data) {
           guide_continuous(aes = "color", type = "steps", width = .4) +
           theme_omics(base_size = 12, axis_num = "xy", legendnum = TRUE)
         
+        plot_dl$base <- fig_base
+        
         if (!is.null(plot_data()$grp)) {
           fig <- fig_base +
             ggforce::geom_mark_hull(
@@ -160,58 +162,7 @@ dataviewtSNEModuleServer <- function(id, filterStates, data) {
 
       output$modal_plot <- renderCachedPlot({
         
-        fig <-
-          ggplot(plot_data(), aes(pos_x, pos_y)) +
-          labs(x = "tSNE1", y = "tSNE2") +
-          scale_color_viridis_c(
-            option = "rocket", 
-            direction = -1, 
-            begin = .05, end = .97,
-            limits = c(0, 1),
-            labels = function(x) sprintf("%1.2f", x),
-            name = "Expression"
-          ) +
-          guide_continuous(aes = "color", type = "steps", width = .7) +
-          theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
-
-      if (!is.null(plot_data()$grp)) {
-        fig <- fig +
-          ggforce::geom_mark_hull(
-            aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
-            color = "grey33", 
-            size = .8,
-            alpha = .33 / length(unique(plot_data()$grp)),
-            expand = unit(3.4, "mm"), 
-            con.cap = unit(.01, "mm"), 
-            con.colour = "grey33", 
-            label.buffer = unit(3, "mm"),
-            label.fontsize = 22, 
-            label.fontface = "plain"
-          ) +
-          geom_point(
-            aes(color = stage(fc2, after_scale = colorspace::darken(color, .35)), 
-                fill = after_scale(color)), 
-            size = 3.9, 
-            shape = 21, 
-            stroke = 1
-          ) +
-          scale_x_continuous(expand = c(.15, .15)) +
-          scale_y_continuous(expand = c(.15, .15)) +
-          scale_fill_discrete(guide = "none")
-        
-      } else {
-        fig <- fig +
-          geom_point(
-            aes(color = stage(fc2, after_scale = colorspace::darken(color, .35)), 
-                fill = after_scale(color)), 
-            size = 4.7, 
-            shape = 21,
-            stroke = 1
-            #aes(color = fc2), size = 4.5
-          )
-      }
-
-      gridExtra::grid.arrange(fig)
+        plot_dl$plot
 
       }, res = 96, cacheKeyExpr = { list(plot_data()) },)
      
