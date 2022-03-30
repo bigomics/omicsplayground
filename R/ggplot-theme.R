@@ -92,6 +92,18 @@ theme_omics <- function(style = "default", base_size = 15,
         margin = ggplot2::margin(t = base_size / 3, r = 3, b = 3, l = 3)
       ),
       axis.title.y = ggplot2::element_text(
+        size = base_size * .8,
+        face = "bold",
+        margin = ggplot2::margin(t = 3, r = 3, b = base_size / 3, l = 3)
+      ),
+      axis.title.y.left = ggplot2::element_text(
+        size = base_size * .8,
+        face = "bold",
+        margin = ggplot2::margin(t = 3, r = 3, b = base_size / 3, l = 3)
+      ),
+      axis.title.y.right = ggplot2::element_text(
+        size = base_size * .8,
+        face = "bold",
         margin = ggplot2::margin(t = 3, r = 3, b = base_size / 3, l = 3)
       ),
       axis.text.x = ggplot2::element_text(
