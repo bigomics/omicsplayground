@@ -90,42 +90,43 @@ dataviewtSNEModuleServer <- function(id, filterStates, data) {
         
         if(!is.null(filterStates$data_groupby) && filterStates$data_groupby != "<ungrouped>") {
           grp <- factor(ngs$samples[samples, filterStates$data_groupby])
-          data$grp <- grp
         }
+        data$grp <- grp
         
         return(data)
       })
 
       output$plot <-  renderCachedPlot({
         
-        fig <- ggplot(plot_data(), aes(tSNE.x, tSNE.y)) +
-               labs(x = "tSNE1", y = "tSNE2") +
-               scale_color_continuous(name = "Expression") +
-               guides(color = guide_colorbar(barwidth = unit(.7, "lines"))) +
-               theme_omics(base_size = 10, axis_num = "xy", legendnum = TRUE)
+        fig <- 
+          ggplot(plot_data(), aes(tSNE.x, tSNE.y)) +
+          labs(x = "tSNE1", y = "tSNE2") +
+          scale_color_continuous(name = "Expression") +
+          guides(color = guide_colorbar(barwidth = unit(.4, "lines"))) +
+          theme_omics(base_size = 12, axis_num = "xy", legendnum = TRUE)
         
         if (!is.null(plot_data()$grp)) {
           fig <- fig +
             ggforce::geom_mark_hull(
               aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
               color = "grey33", 
-              size = .8,
-              alpha = .33 / length(unique(data$grp)),
-              expand = unit(3.4, "mm"), 
+              size = .4,
+              alpha = .33 / length(unique(plot_data()$grp)),
+              expand = unit(2.7, "mm"), 
               con.cap = unit(.01, "mm"), 
               con.colour = "grey33", 
-              label.buffer = unit(3, "mm"),
-              label.fontsize = 22, 
+              label.buffer = unit(2, "mm"),
+              label.fontsize = 12.5, 
               label.fontface = "plain"
             ) +
-            geom_point(aes(color = fc2), size = 3.5) +
-            scale_x_continuous(expand = c(.15, .15)) +
-            scale_y_continuous(expand = c(.15, .15)) +
+            geom_point(aes(color = fc2), size = 1.5) +
+            scale_x_continuous(expand = c(.4, .4)) +
+            scale_y_continuous(expand = c(.4, .4)) +
             scale_fill_discrete(guide = "none")
           
         } else {
           fig <- fig +
-            geom_point(aes(color = fc2), size = 4.5)
+            geom_point(aes(color = fc2), size = 2)
         }
         
         gridExtra::grid.arrange(fig)
@@ -138,11 +139,11 @@ dataviewtSNEModuleServer <- function(id, filterStates, data) {
       output$modal_plot <- renderCachedPlot({
         
         fig <-
-        ggplot(plot_data(), aes(tSNE.x, tSNE.y)) +
-        labs(x = "tSNE1", y = "tSNE2") +
-        scale_color_continuous(name = "Expression") +
-        guides(color = guide_colorbar(barwidth = unit(.7, "lines"))) +
-        theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
+          ggplot(plot_data(), aes(tSNE.x, tSNE.y)) +
+          labs(x = "tSNE1", y = "tSNE2") +
+          scale_color_continuous(name = "Expression") +
+          guides(color = guide_colorbar(barwidth = unit(.7, "lines"))) +
+          theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
 
       if (!is.null(plot_data()$grp)) {
         fig <- fig +
@@ -150,7 +151,7 @@ dataviewtSNEModuleServer <- function(id, filterStates, data) {
             aes(fill = stage(grp, after_scale = colorspace::desaturate(fill, 1)), label = grp),
             color = "grey33", 
             size = .8,
-            alpha = .33 / length(unique(data$grp)),
+            alpha = .33 / length(unique(plot_data()$grp)),
             expand = unit(3.4, "mm"), 
             con.cap = unit(.01, "mm"), 
             con.colour = "grey33", 
