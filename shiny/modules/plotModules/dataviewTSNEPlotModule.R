@@ -27,7 +27,7 @@ dataviewtSNEModuleUI <- function(id) {
       ),
       plotOutput(ns("plot"), height = "280px"),
       shiny::div(class="popup-plot",
-                shinyBS::bsModal(ns("plotPopup"), title, size="l",
+                shinyBS::bsModal(ns("plotPopup"), "t-SNE clustering", size="l",
                         ns("zoombutton"),
                         plotOutput(ns("modal_plot"))
                         )
