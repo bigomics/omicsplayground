@@ -447,12 +447,11 @@ DataViewBoard <- function(input, output, session, inputData, filterStates)
     #         grp <- factor(ngs$samples[samples, groupby])
     #     } 
     #     data <- data.frame(pos[jj2,])
-    #     colnames(data)[1:2] <- c("pos_x", "pos_y")
     #     data$grp <- grp
     #     data$fc2 <- fc2
 
     #     fig <-
-    #       ggplot(data, aes(pos_x, pos_y)) +
+    #       ggplot(data, aes(tSNE.x, tSNE.y)) +
     #         labs(x = "tSNE1", y = "tSNE2") +
     #         scale_color_continuous(name = "Expression") +
     #         guides(color = guide_colorbar(barwidth = unit(.4, "lines"))) +
@@ -504,13 +503,46 @@ DataViewBoard <- function(input, output, session, inputData, filterStates)
     #     samples <- selectSamplesFromSelectedLevels(ngs$Y, input$data_samplefilter)
     #   }
     #   nsamples = length(samples)
+      
+    #   ## precompute
+    #   pp <- rownames(ngs$genes)[1]
+    #   pp <- rownames(ngs$genes)[match(gene,ngs$genes$gene_name)]
+      
+    #   gx <- NULL
+    #   ylab <- NULL
+    #   if(input$data_type == "counts") {
+    #     gx <- ngs$counts[pp,samples]
+    #     ylab <- "expression (counts)"
+    #   } else if(input$data_type == "CPM") {
+    #     gx <- 2**ngs$X[pp,samples]
+    #     ylab <- "expression (CPM)"
+    #   } else if(input$data_type == "logCPM") {
+    #     gx <- ngs$X[pp,samples]
+    #     ylab <- "expression (log2CPM)"
+    #   }
+      
+    #   pos <- ngs$tsne2d[samples,]
+      
+    #   fc1 <- tanh(0.99 * scale(gx)[,1])
+    #   fc1 <- tanh(0.99 * scale(gx, center = FALSE)[,1])
+    #   ##fc1 <- tanh(0.99 * gx/sd(gx))
+    #   fc2 <- (fc1 - min(fc1))
+      
+    #   jj2 <- order(abs(fc1))
+
+    #   ## determine how to do grouping for group labels
+    #   groupby <- input$data_groupby
+    #   grp <- NULL
+    #   if(groupby != "<ungrouped>") {
+    #     grp <- factor(ngs$samples[samples, groupby])
+    #   }
+      
     #   data <- data.frame(pos[jj2,])
-    #   colnames(data)[1:2] <- c("pos_x", "pos_y")
     #   data$grp <- grp
     #   data$fc2 <- fc2
 
     #   fig <-
-    #     ggplot(data, aes(pos_x, pos_y)) +
+    #     ggplot(data, aes(tSNE.x, tSNE.y)) +
     #     labs(x = "tSNE1", y = "tSNE2") +
     #     scale_color_continuous(name = "Expression") +
     #     guides(color = guide_colorbar(barwidth = unit(.7, "lines"))) +
@@ -534,7 +566,7 @@ DataViewBoard <- function(input, output, session, inputData, filterStates)
     #       scale_x_continuous(expand = c(.15, .15)) +
     #       scale_y_continuous(expand = c(.15, .15)) +
     #       scale_fill_discrete(guide = "none")
-       
+        
     #   } else {
     #     fig <- fig +
     #       geom_point(aes(color = fc2), size = 4.5)

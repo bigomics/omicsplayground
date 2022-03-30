@@ -1,5 +1,5 @@
 
-library(systemfonts)
+#library(systemfonts)
 
 #' The plot theme to be used for figures in the OmicsPlayground app.
 #'
@@ -28,10 +28,10 @@ library(systemfonts)
 #' library(ggplot2)
 #' ggplot(mpg, aes(class)) + geom_bar() + theme_omics()
 #' ggplot(mpg, aes(class)) + geom_bar() +
-#'   theme_omics(style = "light", grid = "xy", margin = 20)
+#'   theme_omics(style = "light", grid = "xy", axisline = "xy")
 #' ggplot(mpg, aes(class)) + geom_bar() +
-#'   theme_omics(grid = "none", axistext = "x", 
-#'               axistitle = "none", panelborder = TRUE)
+#'   theme_omics(grid = "none", axisline = "none",
+#'              axistext = "x", axistitle = "none")
 #' }
 #'
 #' @export
@@ -76,20 +76,14 @@ theme_omics <- function(style = "default", base_size = 15,
         margin = ggplot2::margin(t = 0, b = base_size * .67)
       ),
       plot.subtitle = ggtext::element_textbox_simple(
-        color = "grey40",
-        size = base_size, 
-        lineheight = 1.2,
+        size = base_size, lineheight = 1.2, color = "grey40",
         margin = ggplot2::margin(t = 0, b = base_size * 1.5)
       ),
       plot.caption = ggtext::element_textbox_simple(
-        color = "grey40",
-        size = base_size / 2, 
-        lineheight = 1.2, 
+        size = base_size / 2, lineheight = 1.2, color = "grey40",
         margin = ggplot2::margin(t = base_size * 1.5, b = 0)
       ),
       axis.title.x = ggplot2::element_text(
-        size = base_size * .8,
-        face = "bold",
         margin = ggplot2::margin(t = base_size / 3, r = 3, b = 3, l = 3)
       ),
       axis.title.y = ggplot2::element_text(
@@ -97,12 +91,10 @@ theme_omics <- function(style = "default", base_size = 15,
       ),
       axis.text.x = ggplot2::element_text(
         color = light_col,
-        size = base_size * .7,
         margin = ggplot2::margin(t = base_size / 4, r = 1, b = 1, l = 1)
       ),
       axis.text.y = ggplot2::element_text(
         color = light_col,
-        size = base_size * .7,
         margin = ggplot2::margin(t = 1, r = base_size / 4, b = 1, l = 1)
       ),
       axis.ticks.length = grid::unit(.35, "lines"),
@@ -127,13 +119,12 @@ theme_omics <- function(style = "default", base_size = 15,
       legend.position = "right",
       legend.title = ggplot2::element_text(
         color = light_col,
-        size = base_size * .8,
-        face = "bold",
+        size = base_size * .75,
         margin = margin(b = 10)
       ),
       legend.text = ggplot2::element_text(
         color = light_col,
-        size = base_size * .7
+        size = base_size * .75
       )
     )
 
@@ -166,24 +157,37 @@ theme_omics <- function(style = "default", base_size = 15,
   }
   
   if (axis_num != "none") {
-    if (stringr::str_detect(axis_num, "X|x")) {
+    if (!stringr::str_detect(axis_num, "X|x")) {
       out <- out +
         ggplot2::theme(axis.text.x = ggplot2::element_text(
           family = fontfamily_mono,
           color = light_col,
-          size = base_size * .7,
           margin = ggplot2::margin(t = base_size / 4, r = 1, b = 1, l = 1)
         ))
     }
-    if (stringr::str_detect(axis_num, "Y|y")) {
+    if (!stringr::str_detect(axis_num, "Y|y")) {
       out <- out +
-        ggplot2::theme(axis.text.y = ggplot2::element_text(
+        ggplot2::theme(axis.text.x = ggplot2::element_text(
           family = fontfamily_mono,
           color = light_col,
-          size = base_size * .7,
           margin = ggplot2::margin(t = base_size / 4, r = 1, b = 1, l = 1)
         ))
     }
+  }
+  
+  if (axistext != "none") {
+    if (!stringr::str_detect(axistext, "X|x")) {
+      out <- out +
+        ggplot2::theme(axis.text.x = ggplot2::element_blank())
+    }
+    if (!stringr::str_detect(axistext, "Y|y")) {
+      out <- out +
+        ggplot2::theme(axis.text.y = ggplot2::element_blank())
+    }
+  } else {
+    out <- out +
+      ggplot2::theme(axis.text.x = ggplot2::element_blank(),
+                     axis.text.y = ggplot2::element_blank())
   }
   
   if (panelborder == TRUE) {
@@ -199,34 +203,6 @@ theme_omics <- function(style = "default", base_size = 15,
           color = "grey70"
         ) 
       )
-  }
-  
-  if (axistext != "none") {
-    if (!stringr::str_detect(axistext, "X|x")) {
-      out <- out +
-        ggplot2::theme(axis.text.x = ggplot2::element_blank(),
-                       axis.ticks.x = ggplot2::element_blank())
-    }
-    if (!stringr::str_detect(axistext, "Y|y")) {
-      out <- out +
-        ggplot2::theme(axis.text.y = ggplot2::element_blank(),
-                       axis.ticks.y = ggplot2::element_blank())
-    }
-  } else {
-    out <- out +
-      ggplot2::theme(axis.text.x = ggplot2::element_blank(),
-                     axis.ticks.x = ggplot2::element_blank(),
-                     axis.text.y = ggplot2::element_blank(),
-                     axis.ticks.y = ggplot2::element_blank())
-  }
-  
-  if (legend_num == TRUE) {
-    out <- out +
-      ggplot2::theme(legend.text = ggplot2::element_text(
-        family = fontfamily_mono,
-        color = light_col,
-        size = base_size * .75
-      ))
   }
 
   return(out)
