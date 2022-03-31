@@ -1,15 +1,11 @@
 ## https://docs.docker.com/ci-cd/github-actions
 
-name: build and push Docker (testing)
+name: build Docker (develop)
 
 on:
   schedule:
     - cron:  '0 4 * * *'
   workflow_dispatch:
-#  push:
-#    branches: [ master ]
-#  pull_request:
-#    branches: [ master ]
 
 jobs:
 
@@ -38,5 +34,5 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile.testing
-          push: false
+          push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:develop
