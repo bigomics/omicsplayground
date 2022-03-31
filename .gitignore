@@ -27,9 +27,12 @@ Thumbs.db
 
 data/*.pgx
 data/*.csv
+logs/*.rds
 
+# Sensitive files #
+####################
 firebase.rds
 test-firestore.R
 .httr-oauth
 bigomics-extra.js
-google-analytics.html
+Renviron.site
