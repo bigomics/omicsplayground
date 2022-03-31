@@ -31,6 +31,11 @@ message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
 message("***********************************************")
 
+if(file.exists("Renviron.site")) {
+    message("Loading local Renviron.site")    
+    readRenviron("Renviron.site")
+}
+
 envcat <- function(var) message(var," = ",Sys.getenv(var))
 envcat("SHINYPROXY_USERNAME")
 envcat("SHINYPROXY_USERGROUPS")
@@ -40,6 +45,7 @@ envcat("PLAYGROUND_EXPIRY")
 envcat("PLAYGROUND_QUOTA")
 envcat("PLAYGROUND_LEVEL")
 envcat("PLAYGROUND_HELLO")
+envcat("OMICS_GOOGLE_TAG")
 
 ## --------------------------------------------------------------------
 ## -------------------------- INIT ------------------------------------
@@ -887,9 +893,13 @@ createUI <- function(tabs)
     windowTitle = TITLE
     theme = shinythemes::shinytheme("cerulean")
     id = "maintabs"
+
+    ## Add Google Tag manager header code    
     gtag <- NULL
-    if(0 && file.exists("www/google-tags.html")) {
-        gtag <- shiny::tags$head(includeHTML("www/google-tags.html"))
+    if(Sys.getenv("OMICS_GOOGLE_TAG")!="") {
+        gtag.html <- htmltools::includeHTML("www/google-tags.html")
+        gtag.html <- sub("GTM-0000000",Sys.getenv("OMICS_GOOGLE_TAG"),gtag.html)
+        gtag <- shiny::tags$head(gtag.html)
     }
         
     header = shiny::tagList(
@@ -976,8 +986,19 @@ tabs = list(
     "DEV" = c("corsa","system","multi")
 )
 
-ui = createUI(tabs)
-##ui = navbarPage("Hello World!")
+
+## Add Google Tag manager body code
+gtag2 <- NULL
+if(Sys.getenv("OMICS_GOOGLE_TAG")!="") {
+    gtag2 <- htmltools::includeHTML("www/google-tags-noscript.html")
+    gtag2 <- sub("GTM-0000000",Sys.getenv("OMICS_GOOGLE_TAG"),gtag2)
+}
+
+ui = tagList(
+    gtag2,
+    createUI(tabs)
+)
+
 
 ## --------------------------------------------------------------------
 ## ------------------------------ RUN ---------------------------------
