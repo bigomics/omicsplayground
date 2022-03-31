@@ -643,4 +643,3 @@ pgx.updateInfoPGX <- function(pgxinfo, ngs, remove.old=TRUE)
 
     pgxinfo
 }
-

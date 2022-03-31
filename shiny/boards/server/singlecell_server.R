@@ -1143,19 +1143,13 @@ SingleCellBoard <- function(input, output, session, inputData)
         ## just at new data load
         genes <- NULL
         g1=g2=NULL
-        if(0) {
-            xgenes <- ngs$genes[rownames(ngs$X),]$gene_name
-            genes <- sort(as.character(xgenes))
-            g1 <- grep("^CD4|^CD8|^CD",genes,value=TRUE,ignore.case=TRUE)[1]
-            g2 <- grep("^CD79|^CD3[DEG]|^CD37|^CD", setdiff(genes,g1),
-                       value=TRUE,ignore.case=TRUE)[1]
-        } else {
-            F <- pgx.getMetaFoldChangeMatrix(ngs)$fc
-            F <- F[order(-apply(F,1,sd)),]
-            genes <- rownames(F)
-            g1 <- rownames(F)[1]
-            g2 <- rownames(F)[2]
-        }
+        
+        F <- pgx.getMetaFoldChangeMatrix(ngs)$fc
+        F <- F[order(-apply(F,1,sd)),]
+        genes <- rownames(F)
+        g1 <- rownames(F)[1]
+        g2 <- rownames(F)[2]
+        
         if(length(g1)==0) g1 <- genes[1]
         if(length(g2)==0) g2 <- genes[2]
 
