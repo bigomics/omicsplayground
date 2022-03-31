@@ -1,6 +1,6 @@
 ## https://docs.docker.com/ci-cd/github-actions
 
-name: build docker(testing)
+name: build and push Docker (testing)
 
 on:
   schedule:
