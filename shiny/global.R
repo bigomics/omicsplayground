@@ -115,8 +115,7 @@ source(file.path(RDIR,"pgx-init.R"))
 source(file.path(RDIR,"auth.R"))
 
 
-if(0) {    
-    ## pgx.initDatasetFolder(PGX.DIR, force=TRUE, verbose=1)    
+if(0) {
     load("../data/geiger2016-arginine.pgx")
     load("../data/GSE10846-dlbcl-nc.pgx")
     load("../data/bojkova2020-sarscov2-RC2.pgx")
