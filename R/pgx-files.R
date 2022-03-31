@@ -221,7 +221,7 @@ pgx.readOptions <- function(file = "./OPTIONS") {
     is.bool <- sapply(opt, function(x) all(tolower(x) %in% c("true","false")))
     is.bool
     opt[is.bool] <- sapply(opt[is.bool], function(x) tolower(x) %in% c("true"))
-    names(opt) <- gsub("^[ ]*|[ ]*$","",names(opt))
+    names(opt) <- trimws(names(opt))
     opt
 }
 
