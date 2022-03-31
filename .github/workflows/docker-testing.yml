@@ -38,5 +38,5 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile.testing
-          push: false
+          push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:testing
