@@ -93,23 +93,6 @@ dim(m)
 cat("writing to geneRIF-matrix.rds")
 saveRDS(m, file="../lib/geneRIF-matrix.rds")
 
-if(0) {
-
-    v <- sort(Matrix::colSums(m),decreasing=TRUE)
-    d <- data.frame(word=names(v),freq=v)
-    head(d, 10)
-    tail(d, 10)
-    
-    source("../R/pgx-pubmed.R")
-    GENERIF.MATRIX <- readRDS(file="../lib/geneRIF-matrix.rds")
-    rif1 <- pmid.getGeneContext(gene="Socs3", context="inflam")
-    rif1 <- pmid.getGeneContext(gene="Hmox1", context="inflam")
-    gene="Hmox1";context="inflam"
-    head(rif1)
-    
-}
-
-
 cat("************************************************************************\n")
 cat("************************ BUILD ANNOTATIONS DONE ************************\n")
 cat("************************************************************************\n")

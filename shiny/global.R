@@ -259,13 +259,6 @@ DISABLED <- array(BOARDS %in% opt$BOARDS_DISABLED, dimnames=list(BOARDS))
 ENABLED  <- ENABLED & !DISABLED
 ENABLED
 
-# boards <- dir("boards", pattern="Board.R$")
-# boards
-# for(m in boards) {
-#     message("[MAIN] loading board ",m)
-#     source(paste0("boards/",m))
-# }
-
 # load ui for each board
 source("./boards/ui/biomarker_ui.R", encoding = "UTF-8")
 source("./boards/ui/clustering_ui.R", encoding = "UTF-8")
@@ -309,8 +302,6 @@ source("./boards/server/user_server.R", encoding = "UTF-8")
 source("./boards/server/wgcna_server.R", encoding = "UTF-8")
 source("./boards/server/wordcloud_server.R", encoding = "UTF-8")
 
-
-##ENABLED[c("wgcna","system","multi")] <- FALSE
 ENABLED[c("system","multi","corsa")] <- FALSE 
 if(0 && DEV && dir.exists("modulesx")) {
     ## Very early development modules/boards (ALWAYS SHOW FOR DEV)

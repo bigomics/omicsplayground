@@ -341,8 +341,7 @@ LoadingBoard <- function(input, output, session, pgx_dir,
     )
     
     shiny::observeEvent( input$deletebutton, {
-                
-        ##pgxfile <- currentPGX()$name
+       
         pgxfile <- selectedPGX()
         if(is.null(pgxfile) || pgxfile=="" || length(pgxfile)==0) return(NULL)
 
@@ -356,17 +355,8 @@ LoadingBoard <- function(input, output, session, pgx_dir,
                 cat(">>> deleting",pgxfile,"\n")
                 pgxfile2 <- paste0(pgxfile1,"_")  ## mark as deleted
                 file.rename(pgxfile1, pgxfile2)
-                ##touchtable(touchtable()+1)
-                reload_pgxdir(reload_pgxdir()+1)                
-                if(0) {
-                    this.pgx <- sub("[.]pgx$","",pgxfile)
-                    all.pgx  <- sub("[.]pgx$","",PGXINFO()$dataset)
-                    table.pgx <- sub("[.]pgx$","",getFilteredPGXINFO()$dataset)
-                    sel <- which(table.pgx == this.pgx)
-                    newpgx <- PGXINFO()[all.pgx != this.pgx,]
-                    PGXINFO(newpgx)
-                    DT::selectRows(proxy = DT::dataTableProxy(ns("pgxtable")), selected=sel)
-                }
+                
+                reload_pgxdir(reload_pgxdir()+1)          
                     
             } else {
                 cat(">>> deletion cancelled\n")
@@ -396,8 +386,6 @@ LoadingBoard <- function(input, output, session, pgx_dir,
                 callbackR = deletePGX,
                 inputId = "confirmdelete")
         }
-
-        
     })
     
     ##=================================================================================
