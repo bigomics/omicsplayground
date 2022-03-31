@@ -1,0 +1,24 @@
+##
+## From GitHub action template
+##
+
+name: build Docker image
+
+on:
+  schedule:
+    - cron:  '0 3 * * *'
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: docker build -f docker/Dockerfile.testing -t bigomics/omicsplayground:testing .
