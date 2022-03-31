@@ -5,6 +5,7 @@ name: build docker(testing)
 on:
   schedule:
     - cron:  '0 3 * * *'
+  workflow_dispatch:
 #  push:
 #    branches: [ master ]
 #  pull_request:
