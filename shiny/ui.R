@@ -81,9 +81,14 @@ createUI <- function(tabs)
     windowTitle = TITLE
     theme = shinythemes::shinytheme("cerulean")
     id = "maintabs"
+
+
+    ## Add Google Tag manager header code    
     gtag <- NULL
-    if(0 && file.exists("www/google-tags.html")) {
-        gtag <- shiny::tags$head(includeHTML("www/google-tags.html"))
+    if(Sys.getenv("OMICS_GOOGLE_TAG")!="") {
+        gtag.html <- htmltools::includeHTML("www/google-tags.html")
+        gtag.html <- sub("GTM-0000000",Sys.getenv("OMICS_GOOGLE_TAG"),gtag.html)
+        gtag <- shiny::tags$head(gtag.html)
     }
         
     header = shiny::tagList(
@@ -170,4 +175,14 @@ tabs = list(
     "DEV" = c("corsa","system","multi")
 )
 
-ui = createUI(tabs)
+gtag2 <- NULL
+if(Sys.getenv("OMICS_GOOGLE_TAG")!="") {
+    ## Add Google Tag manager body code
+    gtag2 <- htmltools::includeHTML("www/google-tags-noscript.html")
+    gtag2 <- sub("GTM-0000000",Sys.getenv("OMICS_GOOGLE_TAG"),gtag2)
+}
+
+ui = tagList(
+    gtag2,
+    createUI(tabs)
+)

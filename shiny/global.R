@@ -75,6 +75,11 @@ message("***********************************************")
 message("***** RUNTIME ENVIRONMENT VARIABLES ***********")
 message("***********************************************")
 
+if(file.exists("Renviron.site")) {
+    message("Loading local Renviron.site")    
+    readRenviron("Renviron.site")
+}
+
 envcat("SHINYPROXY_USERNAME")
 envcat("SHINYPROXY_USERGROUPS")
 envcat("PLAYGROUND_AUTHENTICATION")
