@@ -88,7 +88,7 @@ PKG.MANUAL <- c(
     "fpc","grid","gridGraphics","Rgraphviz", ## "rWordCloud",
     "shinyparticles","FastGGM","monocle3","proteus",
     ## "infercnv","pathview",
-    "mygene","diptest")
+    "mygene","diptest","edgeR","DESeq2")
 
 ##---------------------------------------------------------------------
 ## Install base packages
@@ -135,6 +135,7 @@ file.copy("~/bin/phantomjs","/usr/local/bin") ## need sudo!!
 devtools::install_version("mnormt", version="1.5-7", repos="http://cran.us.r-project.org")
 install.pkgs(c('umap','corrplot','wordcloud','metap','brew'))
 install.pkgs(c('monocle','Seurat'))
+install.packages("https://cran.r-project.org/src/contrib/Archive/locfit/locfit_1.5-9.4.tar.gz")
 
 ##---------------------------------------------------------------------
 ## Install latest from GITHUB
