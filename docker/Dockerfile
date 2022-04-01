@@ -14,10 +14,23 @@ FROM bigomics/omicsplayground:base
 ##FROM bigomics/omicsplayground:v2.3.0
 
 #------------------------------------------------------------
-# Install any extra (forgotten...) packages since base
+# Install any extra (forgotten...) Ubuntu libs
 #------------------------------------------------------------
+ENV DEBIAN_FRONTEND noninteractive
 
 # RUN apt install -y xvfb
+RUN apt install -y locales
+
+# Set the locale
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
+ENV LANG en_US.UTF-8  
+ENV LANGUAGE en_US:en  
+ENV LC_ALL en_US.UTF-8 
+
+#------------------------------------------------------------
+# Install any extra (forgotten...) R packages since base
+#------------------------------------------------------------
+
 RUN R -e "remotes::install_github('JohnCoene/firebase@omics')" 
 RUN R -e "install.packages(c('shinylogs'))"
 RUN R -e "install.packages(c('https://cran.r-project.org/src/contrib/Archive/locfit/locfit_1.5-9.4.tar.gz','https://cran.r-project.org/src/contrib/Archive/randomForest/randomForest_4.6-14.tar.gz'))"
