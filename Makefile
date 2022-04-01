@@ -1,6 +1,6 @@
 
 default:
-	R -e "shiny::runApp(appDir='shiny',launch.browser=TRUE,port=3838)"
+	R -e "shiny::runApp('shiny',launch.browser=TRUE,port=3838)"
 
 build.testing:
 	docker build -f docker/Dockerfile --no-cache -t bigomics/omicsplayground:testing . 
