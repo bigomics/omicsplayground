@@ -782,7 +782,7 @@ DataViewBoard <- function(input, output, session, inputData)
         func = counts_tab_barplot.RENDER,
         func2 = counts_tab_barplot.RENDER,
         info.text = counts_tab_barplot_text,
-        height=imgH, pdf.width=7, pdf.height=6, ## res=45,
+        height=imgH, pdf.width=7, pdf.height=6, ## res=45,
         label="a",title='Total counts',
         add.watermark = WATERMARK
     )
@@ -803,9 +803,9 @@ DataViewBoard <- function(input, output, session, inputData)
         if( length(names.arg) > 20){ names.arg = rep("",length(names.arg)); xaxt="n"}
         cex.names <- ifelse(length(names.arg)>10,0.8,0.9)
         boxplot(res$log2counts[res$jj,], col=rgb(0.2,0.5,0.8,0.4),
-                ##col=rgb(0.2,0.5,0.8,0.3), #col="grey70",
-                ##main="counts distribution", cex.main=1.6,
-                ## cex.names=res$cx1+0.1,
+                ## col=rgb(0.2,0.5,0.8,0.3), #col="grey70",
+                ## main="counts distribution", cex.main=1.6,
+                ## cex.names=res$cx1+0.1,
                 names = names.arg, cex.axis=cex.names,#border=rgb(0.2,0.5,0.8,0.8),
                 border = 	rgb(0.824,0.824,0.824,0.9),xaxt=xaxt,
                 las=3, cex.lab=1, ylab="counts (log2)", outline=FALSE, varwidth = FALSE)
@@ -860,7 +860,7 @@ DataViewBoard <- function(input, output, session, inputData)
         func = counts_tab_histplot.RENDER,
         func2 = counts_tab_histplot.RENDER,
         info.text = counts_tab_histplot_text,
-        height=imgH, pdf.width=7, pdf.height=6, ## res=50,
+        height=imgH, pdf.width=7, pdf.height=6, ## res=50,
         label="c", title='Counts histogram',
         add.watermark = WATERMARK
     )
