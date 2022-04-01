@@ -3,7 +3,7 @@ default:
 	R -e "shiny::runApp(appDir='shiny',launch.browser=TRUE,port=3838)"
 
 build.testing:
-	docker build -f docker/Dockerfile.testing --no-cache -t bigomics/omicsplayground:testing . 
+	docker build -f docker/Dockerfile --no-cache -t bigomics/omicsplayground:testing . 
 
 clean:
 	rm `find -name '*~'`
