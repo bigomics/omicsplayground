@@ -4,3 +4,6 @@ default:
 
 testing:
 	docker build -f docker/Dockerfile.testing --no-cache -t bigomics/omicsplayground:testing . 
+
+clean:
+	rm `find -name '*~'`
