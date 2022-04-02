@@ -35,6 +35,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile
           push: true
+          no-cache: true
           build-args: |
             TAG=master
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:testing
