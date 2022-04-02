@@ -33,6 +33,8 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./docker/Dockerfile.testing
+          file: ./docker/Dockerfile
           push: true
+          build-args: |
+            TAG=develop
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:develop
