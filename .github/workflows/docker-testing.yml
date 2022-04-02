@@ -38,3 +38,4 @@ jobs:
           build-args: |
             TAG=master
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:testing
+  
