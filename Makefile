@@ -1,4 +1,8 @@
-TAG=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
+BRANCH=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
+TAG=latest
+ifeq ($(BRANCH),'develop')
+  TAG=develop
+endif
 
 run:
 	R -e "shiny::runApp('shiny',launch.browser=TRUE,port=3838)"
@@ -9,8 +13,8 @@ run.headless:
 clean:
 	rm `find -name '*~'`
 
-show.tag:
-	@echo $(TAG)
+show.branch:
+	@echo $(BRANCH)
 
 run.docker:
 	@echo running docker $(TAG) at port 4000
