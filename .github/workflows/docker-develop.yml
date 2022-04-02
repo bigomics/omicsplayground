@@ -1,6 +1,6 @@
 ## https://docs.docker.com/ci-cd/github-actions
 
-name: build Docker (testing)
+name: build Docker (develop)
 
 on:
   schedule:
