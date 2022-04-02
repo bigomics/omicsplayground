@@ -29,8 +29,10 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 #------------------------------------------------------------
 
 RUN R -e "remotes::install_github('JohnCoene/firebase@omics')" 
-RUN R -e "install.packages(c('shinylogs'))"
-RUN R -e "install.packages(c('https://cran.r-project.org/src/contrib/Archive/locfit/locfit_1.5-9.4.tar.gz','https://cran.r-project.org/src/contrib/Archive/randomForest/randomForest_4.6-14.tar.gz'))"
+RUN R -e "install.packages( \
+    c('shinylogs', \
+      'https://cran.r-project.org/src/contrib/Archive/locfit/locfit_1.5-9.4.tar.gz', \
+      'https://cran.r-project.org/src/contrib/Archive/randomForest/randomForest_4.6-14.tar.gz'))
 RUN R -e "BiocManager::install(c('edgeR','DESeq2'))"
 # RUN pip3 install umap-learn
 
