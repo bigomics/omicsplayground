@@ -34,7 +34,8 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile
-          push: true
+          push: true          
+          no-cache: true
           build-args: |
             TAG=develop
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/omicsplayground:develop
