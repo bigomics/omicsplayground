@@ -17,7 +17,7 @@ MAINTAINER Ivo Kwee "kwee@bigomics.ch"
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt update && apt install -y \
-    apt-utils software-properties-common \
+    locales apt-utils software-properties-common \
     libcurl4-gnutls-dev libnode-dev libv8-dev \
     libssl-dev libxml2-dev libjpeg-dev \
     libgl-dev libglu-dev tk-dev libhdf5-dev \
@@ -28,8 +28,11 @@ RUN apt update && apt install -y \
     pdftk vim-tiny less wget gdebi-core \
     pandoc pandoc-citeproc imagemagick \ 
     libcairo2-dev libxt-dev xvfb \
-    libfftw3-dev
+    libfftw3-dev 
 
+# Set the locale to UTF8
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
+ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8 
 
 # Install basic stuff and R
 RUN apt install -y r-base r-base-dev r-recommended
@@ -37,13 +40,6 @@ RUN apt install -y r-base r-base-dev r-recommended
 # Install shiny-server
 #RUN wget -nv https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.14.948-amd64.deb \
 #    && gdebi shiny-server-1.5.14.948-amd64.deb
-
-# Install Plotly/Orca server
-#RUN wget -nv https://github.com/plotly/orca/releases/download/v1.3.1/orca-1.3.1.AppImage \
-#    && mv orca-1.3.1.AppImage /usr/local/bin/ 
-#COPY ext/bin/orca /usr/local/bin/ 
-#RUN chmod ugo+x /usr/local/bin/orca-1.3.1.AppImage \
-#    && chmod ugo+x /usr/local/bin/orca   
 
 #------------------------------------------------------------
 # Install R packages that are required
@@ -87,14 +83,14 @@ RUN groupadd  shiny \
 # Clean up when done.
 #------------------------------------------------------------
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN chmod ugo+rwX /tmp && chmod o+t /tmp
 
 #------------------------------------------------------------
 # Copy further configuration files into the Docker image
 #------------------------------------------------------------
-RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
-COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
-COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
-RUN chmod ugo+rwX /tmp && chmod o+t /tmp
+#RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
+#COPY docker/shiny-server.conf /etc/shiny-server/shiny-server.conf
+#COPY docker/shiny-server.sh /usr/bin/shiny-server.sh
 
 ## EXPOSE 3838
 ## CMD ["/usr/bin/shiny-server.sh"]
