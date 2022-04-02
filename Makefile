@@ -27,4 +27,7 @@ bash.testing:
 bash.develop:
 	docker run -it bigomics/omicsplayground:develop /bin/bash
 
+bash.base:
+	docker run -it bigomics/omicsplayground:base /bin/bash
+
 
