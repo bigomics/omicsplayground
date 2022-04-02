@@ -1,33 +1,29 @@
+TAG=`git rev-parse --abbrev-ref HEAD`  ## get active GIT branch
 
-default:
+run:
 	R -e "shiny::runApp('shiny',launch.browser=TRUE,port=3838)"
 
-headless:
+run.headless:
 	R -e "shiny::runApp('shiny',launch.browser=FALSE,port=3838,host='0.0.0.0')"
 
 clean:
 	rm `find -name '*~'`
 
-run:
+show.tag:
+	@echo $(TAG)
+
+run.docker:
+	@echo running docker $(TAG) at port 4000
 	docker run --rm -p 4000:3838 bigomics/omicsplayground:$(TAG)
 
-build.testing:
-	docker build -f docker/Dockerfile --no-cache -t bigomics/omicsplayground:testing . 
+build.docker:
+	@echo building docker $(TAG)
+	docker build --no-cache --build-arg TAG=$(TAG) \
+		-f docker/Dockerfile \
+	  	-t bigomics/omicsplayground:$(TAG) .
 
-build.develop:
-	docker build -f docker/Dockerfile --no-cache --build-arg TAG=develop -t bigomics/omicsplayground:develop .
-
-
-bash.latest:
-	docker run -it bigomics/omicsplayground:latest /bin/bash
-
-bash.testing:
-	docker run -it bigomics/omicsplayground:testing /bin/bash
-
-bash.develop:
-	docker run -it bigomics/omicsplayground:develop /bin/bash
-
-bash.base:
-	docker run -it bigomics/omicsplayground:base /bin/bash
+bash.docker:
+	@echo bash into docker $(TAG)
+	docker run -it bigomics/omicsplayground:$(TAG) /bin/bash
 
 
