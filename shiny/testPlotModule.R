@@ -37,5 +37,5 @@ server = function(input, output, session) {
     )
 }
 
-shiny::shinyApp(ui, server=server)
+shinyApp(ui, server=server, options=list(launch.browser=TRUE))
 

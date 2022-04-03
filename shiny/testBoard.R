@@ -25,6 +25,5 @@ server = function(input, output, session) {
     shiny::callModule(DataViewBoard, "view", inputData, filterStates)
 }
 
-shiny::shinyApp(ui=ui, server=server)
-
+shinyApp(ui, server=server, options=list(launch.browser=TRUE))
 
