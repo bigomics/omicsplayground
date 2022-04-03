@@ -7,33 +7,36 @@
 ## NOTE: This file is supposed to run in the folder .../R/
 ##
 
-## Speed up installation
-options(repos = c(CRAN = "http://cran.rstudio.com"))
-options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/latest"))
-##options(pkgType="source")
+options(repos = c(REPO_NAME = "https://cloud.r-project.org/"))
+
+## Speed up installation using binary packages from RStudio
+options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))
+source("https://docs.rstudio.com/rspm/admin/check-user-agent.R")
+options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/focal/latest")) ## 20.04LTS
+
 options(Ncpus=8L)
 
 install.packages("devtools")
-install.packages("BiocManager", version="3.10")
+install.packages("BiocManager")
 
 LOCAL.PKGS <- sub("_.*","",dir("../ext/packages"))
 LOCAL.PKGS
 
 install.pkg <- function(pkg, force=FALSE) {
-    if(force || !pkg %in% installed.packages()) {
+    if(force || !pkg %in% rownames(installed.packages())) {
         if(pkg %in% LOCAL.PKGS) {
             ## if available locally, we install local version
             cat("installing",pkg,"from local folder...\n")
             pkg1 = dir("../ext/packages",pattern=paste0(pkg,"_"),full.names=TRUE)
-            try(install.packages(pkg1,repos=NULL,type="source"))
+            try(install.packages(pkg1,repos=NULL,type="source",force=force))
         } else {
             cat("installing",pkg,"from CRAN/BioConductor...\n")
-            try(BiocManager::install(pkg, dependencies=NA,
-                                     ask=FALSE, update=FALSE))
+            try(BiocManager::install(
+                 pkg, dependencies=NA,force=force,ask=FALSE,update=FALSE))
             if(!require(pkg, character.only=TRUE)){
                 cat("retrying to install",pkg,"from CRAN...\n")
-                try(install.packages(pkg, dependencies=NA,
-                                     ask=FALSE, update=FALSE))
+                try(install.packages(
+                    pkg, dependencies=NA, force=force, ask=FALSE, update=FALSE))
             }
         }
     } else {
@@ -41,12 +44,14 @@ install.pkg <- function(pkg, force=FALSE) {
     }
 }
 install.pkgs <- function(pkgs, force=FALSE) {
+    pkgs <- sort(unique(pkgs))
     for(pkg in pkgs) install.pkg(pkg, force=force)
 }
 remove.pkg <- function(pkg) {
-    if(pkg %in% installed.packages()) remove.packages(pkg)
+    if(pkg %in% rownames(installed.packages())) try(remove.packages(pkg))
 }
 remove.pkgs <- function(pkgs, force=FALSE) {
+    pkgs <- sort(unique(pkgs))
     for(pkg in pkgs) {
         cat("removing",pkg,"\n")        
         remove.pkg(pkg)
@@ -89,7 +94,7 @@ PKG.MANUAL <- c(
 
 base.pkg = c("shiny","flexdashboard","shinydashboard",
              "shinydashboardPlus",'R.utils','shinythemes')
-install.pkgs(base.pkg)
+install.pkgs(base.pkg, force=TRUE)
 
 ##---------------------------------------------------------------------
 ## Automatically scan all used packages and install
@@ -241,6 +246,23 @@ if(0) {
         
     lisc1[grep("AGPL|GPL-3",lisc1[,"License"]),]
 
+    ## Using binary packages from RStudio
+    options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))
+    source("https://docs.rstudio.com/rspm/admin/check-user-agent.R")
+    options(repos = c(REPO_NAME = "https://cloud.r-project.org/"))
+    options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/latest"))
+    options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/focal/latest"))
+    ##options(repos = c(REPO_NAME = "https://stat.ethz.ch/CRAN/"))
+    ##options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/latest"))
+    remove.packages("shiny")
+    install.packages("shiny")
+    packageVersion('shiny')
     
+    remove.packages("dplyr")
+    install.packages("dplyr")
+    packageVersion('dplyr')
+
+    BiocManager::install("dplyr", dependencies=NA, ask=FALSE, update=FALSE, force=TRUE)
+    install.pkg("dplyr")
     
 }
