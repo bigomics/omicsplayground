@@ -707,21 +707,21 @@ plotModule <- function(input, output, session,
         renderFunc = out1$renderFunc
     }
 
+    if(is.null(outputFunc2) && is.null(renderFunc2) && plotlib2 == plotlib ) {    
+        outputFunc2 = outputFunc
+        renderFunc2 = renderFunc
+    }
+
     if(is.null(outputFunc2) && is.null(renderFunc2) &&
        plotlib2 != plotlib ) {    
         out2 <- getOutputRenderFunc(plotlib2, outputFunc2, renderFunc2)
         outputFunc2 = out2$outputFunc
         renderFunc2 = out2$renderFunc
     }
-    if(is.null(outputFunc2) && is.null(renderFunc2) &&
-       plotlib2 == plotlib ) {    
-        outputFunc2 = outputFunc
-        renderFunc2 = renderFunc
-    }
     
     ##outputFunc <- sub(".*::","",outputFunc)
     render = render2 = NULL   
-    if(1 && plotlib=="base") {
+    if(1 && renderFunc=="renderPlot") {
         ## For base plots we need to export PDF/PNG here. For some
         ## reason does not work in the downloadHandler...
         ##
@@ -764,7 +764,7 @@ plotModule <- function(input, output, session,
         }, res=res.1)
     }
 
-    if(!is.null(func2) && plotlib2=="base") {
+    if(!is.null(func2) && renderFunc2=="renderPlot") {
         render2 <- shiny::renderPlot({
             func2()
         }, res=res.2)
@@ -775,6 +775,18 @@ plotModule <- function(input, output, session,
     if(!is.null(func2) && plotlib2=="image") {
         render2 <- shiny::renderImage(func2(), deleteFile=FALSE)
     }
+
+    if(grepl("renderCachedPlot",renderFunc)) {
+        render <- shiny::renderCachedPlot(
+            func(), cacheKeyExpr = {list(csvFunc())}, res=res.1
+        )
+    }
+    if(grepl("renderCachedPlot",renderFunc2)) {
+        render2 <- shiny::renderCachedPlot(
+            func2(), cacheKeyExpr = {list(csvFunc())}, res=res.2
+        )
+    }
+
     if(is.null(render)) {
         render <- eval(parse(text=renderFunc))(func())
     }

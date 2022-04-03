@@ -74,6 +74,8 @@ dataviewtSNEplotModule <- function(id, filterStates, data, label="", imgH=400, w
 ##      output$plot <-  renderCachedPlot({
       plot.RENDER <- shiny::reactive({        
 
+          message("[dataviewtSNEModuleServer] plot.RENDER called")
+
           fig_base <- 
           ggplot(plot_data(), aes(pos_x, pos_y)) +
           labs(x = "tSNE1", y = "tSNE2") +
@@ -125,9 +127,8 @@ dataviewtSNEplotModule <- function(id, filterStates, data, label="", imgH=400, w
               stroke = .5
             )
         }
-                
+        
         plot_dl$plot <- fig
-        ##fig
         gridExtra::grid.arrange(fig)
         ##}, res = 96, cacheKeyExpr = { list(plot_data()) },)
       })
@@ -181,14 +182,17 @@ dataviewtSNEplotModule <- function(id, filterStates, data, label="", imgH=400, w
 
       message("[dataviewtSNEModuleServer] id = ",id)  
       ##imgH = 315;WATERMARK = FALSE
-      
+
       shiny::callModule(
          plotModule, id,
          ##plotlib = "ggplot",
          func = plot.RENDER,
          func2 = modal_plot.RENDER,
          csvFunc = plot_data,             ##  *** downloadable data as CSV
+         renderFunc = "shiny::renderCachedPlot",
+         outputFunc =  "shiny::plotOutput",
          info.text = "t-SNE Figure",
+         res = c(120,150),                ## resolution of plot
          height = imgH, pdf.width = 6, pdf.height = 6,
          label = label, title = "t-SNE clustering",
          add.watermark = WATERMARK
