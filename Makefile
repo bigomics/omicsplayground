@@ -20,6 +20,12 @@ run.docker:
 	@echo running docker $(TAG) at port 4000
 	docker run --rm -p 4000:3838 bigomics/omicsplayground:$(TAG)
 
+build.base:
+	@echo building docker BASE
+	docker build --no-cache \
+		-f docker/Dockerfile.base \
+	  	-t bigomics/omicsplayground:base .
+
 build.docker:
 	@echo building docker $(TAG)
 	docker build --no-cache --build-arg TAG=$(TAG) \

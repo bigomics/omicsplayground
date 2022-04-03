@@ -47,7 +47,10 @@ remove.pkg <- function(pkg) {
     if(pkg %in% installed.packages()) remove.packages(pkg)
 }
 remove.pkgs <- function(pkgs, force=FALSE) {
-    for(pkg in pkgs) remove.pkg(pkg)
+    for(pkg in pkgs) {
+        cat("removing",pkg,"\n")        
+        remove.pkg(pkg)
+    }
 }
 
 autoscan.pkgs <- function() {
@@ -58,30 +61,20 @@ autoscan.pkgs <- function() {
 
     pkg <- c(pkg1,pkg2,pkg3)
     pkg <- grep("message|dbg|cat",pkg,value=TRUE,invert=TRUE)
+
+    pkg <- gsub(".*[rR]:","",pkg)  ## strip filename
+    pkg <- grep("^[#]",pkg,invert=TRUE,value=TRUE)  ## no comments
     
     pkg <- gsub("[:\"]","",gsub(".*[ ,\\(\\[]","",gsub("::.*","::",pkg)))
     pkg <- gsub("\\).*","",gsub(".*require\\(","",pkg))
     pkg <- gsub("\\).*","",gsub(".*library\\(","",pkg))    
-    pkg <- grep("[=#/*'\\]",pkg,value=TRUE,invert=TRUE)
-
-    pkg <- unique(pkg)
+    pkg <- grep("[=#/*'\\]",pkg,value=TRUE,invert=TRUE)  ## skip commented out
+    pkg <- grep("^[a-z]",pkg,value=TRUE,ignore.case=TRUE)  ## skip commented out
+    pkg <- grep("[a-z.]*",pkg,value=TRUE,ignore.case=TRUE)  ## skip commented out        
+    pkg <- setdiff(pkg,c(""))
+    pkg <- sort(unique(pkg))
     pkg
 }
-
-
-
-BIG.NOTUSED <- c(
-    "reactome.db", ## >2GB!!!
-    "BH","PCSF",
-    "DeMixT", ## purify
-    "RNAseqData.HNRNPC.bam.chr14",
-    ##"org.Mm.eg.db",
-    "tximportData"
-    ##"EnsDb.Hsapiens.v86",
-    ##"EnsDb.Mmusculus.v79",
-    ##"TxDb.Hsapiens.UCSC.hg19.knownGene",  ## need for import
-    ##"TxDb.Mmusculus.UCSC.mm10.knownGene"  ## need for import
-)
 
 PKG.MANUAL <- c(
     "gputools","Seurat","EPIC","PCSF","NNLM","iTALK",
@@ -116,7 +109,7 @@ pkg.needed <- c('umap', 'corrplot', 'wordcloud', 'wordcloud2', 'optparse', 'doco
 
 pkg.used <- c(pkg.used, pkg.needed)
 pkg.used <- sort(unique(pkg.used))
-install.pkgs( setdiff(pkg.used, c(PKG.MANUAL,BIG.NOTUSED)) )
+install.pkgs( setdiff(pkg.used,PKG.MANUAL) )
 
 r.pkg <- c('TxDb.Hsapiens.UCSC.hg19.knownGene',
            'TxDb.Mmusculus.UCSC.mm10.knownGene')
@@ -197,8 +190,20 @@ reticulate::use_miniconda('r-reticulate')
 ##---------------------------------------------------------------------
 ## remove unneccessary big packages??
 ##---------------------------------------------------------------------
-BIG.NOTUSED
-## remove.pkgs(BIG.NOTUSED)
+BIG.NOTUSED <- c(
+    "reactome.db", ## >2GB!!!
+    "BH","PCSF","terra",
+    "DeMixT", ## purify
+    "RNAseqData.HNRNPC.bam.chr14",
+    "RSpectra",
+    ##"org.Mm.eg.db",
+    "tximportData"
+    ##"EnsDb.Hsapiens.v86",
+    ##"EnsDb.Mmusculus.v79",
+    ##"TxDb.Hsapiens.UCSC.hg19.knownGene",  ## need for import
+    ##"TxDb.Mmusculus.UCSC.mm10.knownGene"  ## need for import
+)
+remove.pkgs(BIG.NOTUSED)
 
 
 if(0) {
