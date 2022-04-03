@@ -9,10 +9,12 @@
 
 options(repos = c(REPO_NAME = "https://cloud.r-project.org/"))
 
-## Speed up installation using binary packages from RStudio
-options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))
-source("https://docs.rstudio.com/rspm/admin/check-user-agent.R")
-options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/focal/latest")) ## 20.04LTS
+if(0) {
+    ## Speed up installation using binary packages from RStudio
+    options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))
+    source("https://docs.rstudio.com/rspm/admin/check-user-agent.R")
+    options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/focal/latest")) ## only for 20.04LTS !!!
+}
 
 options(Ncpus=8L)
 
@@ -261,6 +263,10 @@ if(0) {
     remove.packages("dplyr")
     install.packages("dplyr")
     packageVersion('dplyr')
+
+    remove.packages("stringi")
+    install.packages("stringi")
+    packageVersion('stringi')
 
     BiocManager::install("dplyr", dependencies=NA, ask=FALSE, update=FALSE, force=TRUE)
     install.pkg("dplyr")
