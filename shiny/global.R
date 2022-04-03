@@ -26,8 +26,8 @@ options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload
 reticulate::use_miniconda('r-reticulate')
 
 message("[MAIN] reading global.R ...")
-##OPG     = "~/Playground/omicsplayground"
 OPG       = ".."
+OPG       = sub("/omicsplayground/.*","/omicsplayground",getwd())
 RDIR      = file.path(OPG,"R")
 FILES     = file.path(OPG,"lib")
 FILESX    = file.path(OPG,"libx")
