@@ -700,28 +700,39 @@ plotModule <- function(input, output, session,
         }
         list( outputFunc=outputFunc, renderFunc=renderFunc )
     }
-
-    if(is.null(outputFunc) && is.null(renderFunc)) {
+    
+    if(is.null(outputFunc) || is.null(renderFunc)) {
         out1 <- getOutputRenderFunc(plotlib, outputFunc, renderFunc)
         outputFunc = out1$outputFunc
         renderFunc = out1$renderFunc
     }
 
-    if(is.null(outputFunc2) && is.null(renderFunc2) && plotlib2 == plotlib ) {    
-        outputFunc2 = outputFunc
-        renderFunc2 = renderFunc
-    }
-
-    if(is.null(outputFunc2) && is.null(renderFunc2) &&
-       plotlib2 != plotlib ) {    
+    if((is.null(outputFunc2) || is.null(renderFunc2)) && plotlib2 != plotlib ) {    
         out2 <- getOutputRenderFunc(plotlib2, outputFunc2, renderFunc2)
         outputFunc2 = out2$outputFunc
         renderFunc2 = out2$renderFunc
     }
+
+    if((is.null(outputFunc2) || is.null(renderFunc2)) && plotlib2 == plotlib ) {    
+        if(is.null(outputFunc2) && !is.null(outputFunc)) outputFunc2 = outputFunc
+        if(is.null(renderFunc2) && !is.null(renderFunc)) renderFunc2 = renderFunc
+    }
+    
+    if(0) {
+        dbg("[plotModule] title=",title)
+        dbg("[plotModule] plotlib=",plotlib)
+        dbg("[plotModule] plotlib2=",plotlib2)
+        dbg("[plotModule] outputFunc=",outputFunc)
+        dbg("[plotModule] outputFunc2=",outputFunc2)
+        dbg("[plotModule] renderFunc=",renderFunc)
+        dbg("[plotModule] renderFunc2=",renderFunc2)
+        dbg("[plotModule] is.null.renderFunc=",is.null(renderFunc))
+        dbg("[plotModule] is.null.renderFunc2=",is.null(renderFunc2))
+    }
     
     ##outputFunc <- sub(".*::","",outputFunc)
     render = render2 = NULL   
-    if(1 && renderFunc=="renderPlot") {
+    if(1 && plotlib=="base") {
         ## For base plots we need to export PDF/PNG here. For some
         ## reason does not work in the downloadHandler...
         ##
@@ -763,8 +774,8 @@ plotModule <- function(input, output, session,
             ##p1.base
         }, res=res.1)
     }
-
-    if(!is.null(func2) && renderFunc2=="renderPlot") {
+        
+    if(!is.null(func2) && plotlib2=="base") {
         render2 <- shiny::renderPlot({
             func2()
         }, res=res.2)
@@ -775,7 +786,6 @@ plotModule <- function(input, output, session,
     if(!is.null(func2) && plotlib2=="image") {
         render2 <- shiny::renderImage(func2(), deleteFile=FALSE)
     }
-
     if(grepl("renderCachedPlot",renderFunc)) {
         render <- shiny::renderCachedPlot(
             func(), cacheKeyExpr = {list(csvFunc())}, res=res.1
