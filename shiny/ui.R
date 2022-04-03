@@ -1,3 +1,9 @@
+##
+## This file is part of the Omics Playground project.
+## Copyright (c) 2018-2021 BigOmics Analytics Sagl. All rights reserved.
+##
+
+
 TABVIEWS <- list(
     "load"   = tabView("Home",LoadingInputs("load"),LoadingUI("load")),
     "view"   = tabView("DataView",DataViewInputs("view"),DataViewUI("view")),
