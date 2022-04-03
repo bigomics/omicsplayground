@@ -589,8 +589,20 @@ DataViewBoard <- function(input, output, session, inputData, filterStates)
     #     add.watermark = WATERMARK
     # )
 
-    dataviewtSNEModuleServer("t-SNEPlot", filterStates, ngs)
-
+    
+    # observe inputs
+    filterStatesList <- reactive({
+        list(
+            search_gene = input$search_gene,
+            sample_filter = input$sample_filter,
+            data_groupby = input$data_groupby,
+            data_type = input$data_type
+        )
+    })
+    
+    ##dataviewtSNEModuleServer("tSNEPlot", filterStates, ngs)
+    dataviewtSNEplotModule("tSNEPlot", filterStatesList, ngs, imgH=315, watermark=WATERMARK)    
+    
     ##----------------------------------------------------------------------
     ##  Tissue expression plot
     ##----------------------------------------------------------------------

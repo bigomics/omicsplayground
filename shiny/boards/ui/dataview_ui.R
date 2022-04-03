@@ -62,7 +62,8 @@ DataViewUI <- function(id) {
                             plotWidget(ns("genePlots_barplot")),
                             plotWidget(ns("genePlots_averageRankPlot")),
                             #plotWidget(ns("genePlots_tsne")),
-                            dataviewtSNEModuleUI(ns("t-SNEPlot")),
+                            ##dataviewtSNEModuleUI(ns("tSNEPlot")),
+                            plotWidget(ns("tSNEPlot"))                            
                         ),
                         shiny::br(),
                         shiny::fillRow(

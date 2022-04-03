@@ -315,8 +315,8 @@ source("./boards/server/wgcna_server.R", encoding = "UTF-8")
 source("./boards/server/wordcloud_server.R", encoding = "UTF-8")
 
 # load plotModules
-source("./modules/plotModules/dataviewTSNEPlotModule.R", encoding = "UTF-8")
-
+##source("./modules/plotModules/dataviewTSNEPlotModule.R", encoding = "UTF-8")
+source("./modules/plotModules/dataviewTSNEPlotModule2.R", encoding = "UTF-8")
 
 ##ENABLED[c("wgcna","system","multi")] <- FALSE
 ENABLED[c("system","multi","corsa")] <- FALSE 
