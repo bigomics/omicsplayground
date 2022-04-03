@@ -10,10 +10,10 @@
 options(repos = c(REPO_NAME = "https://cloud.r-project.org/"))
 
 if(0) {
-    ## Speed up installation using binary packages from RStudio
+    ## Speed up installation using binary packages from RStudio. Works only for 20.04 LTS !!!
     options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))
     source("https://docs.rstudio.com/rspm/admin/check-user-agent.R")
-    options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/focal/latest")) ## only for 20.04LTS !!!
+    options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/focal/latest")) 
 }
 
 options(Ncpus=8L)
