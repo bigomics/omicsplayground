@@ -35,9 +35,10 @@ DataViewBoard <- function(input, output, session, inputData, filterStates)
         allowfullscreen></iframe></center>
     ')
 
-    ngs <- inputData()
+    ##ngs <- inputData()
     
-    # observe inputs
+    ## observe inputs
+    ## !!! NEED RETHINK: Ugly (ivo 3.4.2022) !!!
     shiny::observeEvent(input$search_gene, {
         filterStates$search_gene <- input$search_gene
     })

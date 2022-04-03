@@ -7,13 +7,14 @@ server <- function(input, output, session) {
     dbg("[SERVER] 0: HONCHO_URL = ",opt$HONCHO_URL)
     dbg("[SERVER] 0: SESSION = ",session$token)
 
+
+    ## !!! NEED RETHINK: Ugly and not 'scalable' (ivo 3.4.2022)
     filterStates <- reactiveValues(
         search_gene = NULL,
         data_samplefilter = NULL,
         data_groupby = NULL,
         data_type = "logCPM",
     )
-
 
     ## Logging of input/output events
     
