@@ -254,6 +254,7 @@ if(0) {
     options(repos = c(REPO_NAME = "https://cloud.r-project.org/"))
     options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/latest"))
     options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/focal/latest"))
+    options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/__linux__/jammy/latest"))
     ##options(repos = c(REPO_NAME = "https://stat.ethz.ch/CRAN/"))
     ##options(repos = c(REPO_NAME = "https://packagemanager.rstudio.com/all/latest"))
     remove.packages("shiny")
