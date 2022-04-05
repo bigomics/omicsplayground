@@ -4,7 +4,11 @@
 ##
 
 source("./global.R")  ## global variable
-source("./modules/plotModules/dataviewTSNEPlotModule2.R", encoding = "UTF-8")
+##source("./modules/plotModules/dataviewTSNEPlotModule.R", encoding = "UTF-8")
+#source("./modules/plotModules/dataviewTSNEPlotModule2.R", encoding = "UTF-8")
+
+source("./modules/plotModules/plotModule.R", encoding = "UTF-8")
+source("./modules/plotModules/dataviewTSNEPlotModule3.R", encoding = "UTF-8")
 
 load("../data/example-data.pgx",verbose=1)
 ngs = pgx.initialize(ngs)
@@ -12,7 +16,7 @@ ngs = pgx.initialize(ngs)
 ui = fluidPage(
     fillCol(
         fillRow(
-            plotWidget("tSNEPlot"),
+            dataviewtSNEModuleUI("tSNEPlot"),
             br(),br(),br()
         ),
         fillRow(
