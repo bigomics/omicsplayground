@@ -37,7 +37,11 @@ names(TABVIEWS)
 #-------------------------------------------------------
 user.tab <-  tabView(title = "Settings", id="user", UserInputs("user"), UserUI("user"))    
 ##title = shiny::HTML("<span class='label label-info' id='authentication-user'></span>"),
-logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
+# logout.tab  <- shiny::tabPanel(shiny::HTML("<a onClick='logout()' id='authentication-logout'>Logout</a>"))
+logout.tab <- bigdash::navbarDropdownItem(
+    "Logout",
+    onClick = "logout"
+)
 
 ## conditionally add if firebase authentication is enabled
 stop.tab    <- shiny::tabPanel(shiny::HTML("<a onClick='logout();quit();'>Quit</a>"))
@@ -50,6 +54,10 @@ if(opt$AUTHENTICATION == "shinyproxy") {
 upgrade.tab <- NULL
 if(opt$AUTHENTICATION == "firebase") {
     upgrade.tab <- shiny::tabPanel(shiny::HTML("<a onClick='show_plans()' style='font-weight:bold;color:#2a9d8f;cursor:pointer;' id='authentication-upgrade'>Upgrade</a>"))
+    upgrade.tab <- bigdash::navbarDropdownItem(
+        "Upgrade",
+        onClick = "show_plans()"
+    )
 }
 
 user.menu <- shiny::navbarMenu(
@@ -74,12 +82,6 @@ createUI <- function(tabs)
     message("======================================================\n")
 
     version <- scan("../VERSION", character())[1]
-    TITLE = paste(opt$TITLE,version)
-    LOGO = shiny::div(shiny::img(src="bigomics-logo-white-48px.png", height="48px"),
-               TITLE, id="navbar-logo", style="margin-top:-13px;")    
-    title = shiny::tagList(LOGO)
-    windowTitle = TITLE
-    theme = shinythemes::shinytheme("cerulean")
     id = "maintabs"
     gtag <- NULL
     if(0 && file.exists("www/google-tags.html")) {
@@ -97,15 +99,12 @@ createUI <- function(tabs)
         shinylogs::use_tracking(),
         shinyalert::useShinyalert(),  # Set up shinyalert
         firebase::useFirebase(firestore = TRUE),
-        ##TAGS.JSSCRIPT,  ## window size
         shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
         shiny::div(shiny::textOutput("current_dataset"), class='current-data'),
         shiny::div(class='label label-info current-user',id='authentication-user')        
-        ##QuestionBoard_UI("qa")
     )
-    names(header) <- NULL
     
-    footer.gif = shiny::tagList(
+    footer <- shiny::tagList(
         shinybusy::busy_start_up(
             text = "\nPrepping your Omics Playground...", mode = "auto",
             background="#2780e3", color="#ffffff",
@@ -113,50 +112,232 @@ createUI <- function(tabs)
             loader = shiny::img(src=base64enc::dataURI(file="www/monster-hi.png"))            
         )
     )
-    footer = footer.gif
     
-    ##-------------------------------------
-    ## create TAB list
-    ##-------------------------------------
-    createNavbarMenu <- function(title, tabs, icon=NULL) {
-        tablist <- TABVIEWS[tabs]
-        names(tablist) <- NULL
-        do.call( navbarMenu, c(tablist, title=title, icon=icon) )
+    #return(ui)
+
+    logout.tab <- bigdash::navbarDropdownItem(
+        "Logout",
+        onClick = "logout()"
+    )
+
+    if(opt$AUTHENTICATION == "shinyproxy") {
+        ## For ShinyProxy we need to redirect to /logout for clean session
+        ## logout. Then we need a redirect to the /login page.
+        logout.tab <- bigdash::navbarDropdownItem(
+            "Logout",
+            onClick = "shinyproxy_logout();",
+            link = "/login"
+        )
     }
-    ##tablist <- TABVIEWS[tabs]
-    tablist <- list()
-    i=1
-    for(i in 1:length(tabs)) {
-        itab <- tabs[[i]]
-        itab <- itab[which(ENABLED[itab])] ## only enabled
-        if(length(itab)>1) {
-            message("[MAIN] creating menu items for: ",paste(itab,collapse=" "))
-            m <- createNavbarMenu( names(tabs)[i], itab )
-            tablist[[i]] <- m
-        } else if(length(itab)==1) {
-            message("[MAIN] creating menu item for: ",itab)
-            tablist[[i]] <- TABVIEWS[[itab]] 
-        } else {
-            
-        }
-    }
-    tablist <- tablist[!sapply(tablist,is.null)]
-   
-    ## add user menu (profile, help + logout)
-    tablist[["usermenu"]] <- user.menu
-    
-    ##-------------------------------------
-    ## create navbarPage
-    ##-------------------------------------
-    selected = "Home"    
-    names(tablist) <- NULL
-    do.call( navbarPage, c(tablist,
-                           title=title, id=id,
-                           selected=selected,
-                           windowTitle = windowTitle,
-                           header = shiny::tagList(header),
-                           footer = shiny::tagList(footer),
-                           theme = theme))
+    bigdash::bigPage(
+        header,
+        navbar = bigdash::navbar(
+            bigdash::navbarDropdown(
+                "User",
+                bigdash::navbarDropdownTab(
+                    "Settings",
+                    "userSettings"
+                ),
+                upgrade.tab,
+                bigdash::navbarDropdownItem(
+                    "Documentation",
+                    link = "https://omicsplayground.readthedocs.io"
+                ),
+                bigdash::navbarDropdownItem(
+                    "Video tutorials",
+                    link = "https://www.youtube.com/watch?v=_Q2LJmb2ihU&list=PLxQDY_RmvM2JYPjdJnyLUpOStnXkWTSQ-"
+                ),
+                bigdash::navbarDropdownItem(
+                    "Community Forum",
+                    link = "https://groups.google.com/d/forum/omicsplayground"
+                ),
+                bigdash::navbarDropdownItem(
+                    "Github",
+                    link = "https://github.com/bigomics/omicsplayground"
+                ),
+                logout.tab
+            )
+        ),
+        sidebar = bigdash::sidebar(
+            bigdash::sidebarItem(
+                "Home",
+                "home-tab"
+            ),
+            bigdash::sidebarItem(
+                "DataView",
+                "dataview-tab"
+            ),
+            bigdash::sidebarMenu(
+                "Clustering",
+                bigdash::sidebarMenuItem(
+                    "Cluster samples",
+                    "clustersamples-tab"
+                ),
+                bigdash::sidebarMenuItem(
+                    "Cluster features",
+                    "clusterfeaters-tab"
+                ),
+                bigdash::sidebarMenuItem(
+                    "WGCNA (beta)",
+                    "wgcna-tab"
+                )
+            ),
+            bigdash::sidebarMenu(
+                "Expression",
+                bigdash::sidebarMenuItem(
+                    "Differential expression",
+                    "diffexpr-tab"
+                ),
+                bigdash::sidebarMenuItem(
+                    "Correlation analysis",
+                    "corr-tab"
+                )
+            ),
+            bigdash::sidebarMenu(
+                "Enrichment",
+                bigdash::sidebarMenuItem(
+                    "Geneset enrichment",
+                    "enrich-tab"
+                ),
+                bigdash::sidebarMenuItem(
+                    "Pathway analysis",
+                    "pathway-tab"
+                ),
+                bigdash::sidebarMenuItem(
+                    "Word cloud",
+                    "cloud-tab"
+                ),
+                bigdash::sidebarMenuItem(
+                    "Drug connectivity",
+                    "drug-tab"
+                )
+            ),
+            bigdash::sidebarMenu(
+                "Signature",
+                bigdash::sidebarMenuItem(
+                    "Compare signatures",
+                    "isect-tab"
+                ),
+                bigdash::sidebarMenuItem(
+                    "Test signatures",
+                    "sig-tab"
+                ),
+                bigdash::sidebarMenuItem(
+                    "Find biomarkers",
+                    "bio-tab"
+                ),
+                bigdash::sidebarMenuItem(
+                    "Find similar experiments",
+                    "cmap-tab"
+                ),
+                bigdash::sidebarMenuItem(
+                    "Compare datasets (beta)",
+                    "comp-tab"
+                ),
+                bigdash::sidebarMenuItem(
+                    "TCGA survival (beta)",
+                    "tcga-tab"
+                )
+            ),
+            bigdash::sidebarItem(
+                "Cell profiling",
+                "cell-tab"
+            )
+        ),
+        bigdash::bigTabs(
+            bigdash::bigTabItem(
+                "home-tab",
+                LoadingInputs("load"),
+                LoadingUI("load")
+            ),
+            bigdash::bigTabItem(
+                "dataview-tab",
+                DataViewInputs("view"),
+                DataViewUI("view")
+            ),
+            bigdash::bigTabItem(
+                "clustersamples-tab",
+                ClusteringInputs("clust"),
+                ClusteringUI("clust")
+            ),
+            bigdash::bigTabItem(
+                "wgcna-tab",
+                WgcnaInputs("wgcna"),
+                WgcnaUI("wgcna")
+            ),
+            bigdash::bigTabItem(
+                "diffexpr-tab",
+                ExpressionInputs("expr"),
+                ExpressionUI("expr")
+            ),
+            bigdash::bigTabItem(
+                "corr-tab",
+                CorrelationInputs("cor"),
+                CorrelationUI("cor")
+            ),
+            bigdash::bigTabItem(
+                "enrich-tab",
+                EnrichmentInputs("enrich"),
+                EnrichmentUI("enrich")
+            ),
+            bigdash::bigTabItem(
+                "pathway-tab",
+                FunctionalInputs("func"),
+                FunctionalUI("func")
+            ),
+            bigdash::bigTabItem(
+                "cloud-tab",
+                WordCloudInputs("word"),
+                WordCloudUI("word")
+            ),
+            bigdash::bigTabItem(
+                "drug-tab",
+                DrugConnectivityInputs("drug"),
+                DrugConnectivityUI("drug")
+            ),
+            bigdash::bigTabItem(
+                "isect-tab",
+                IntersectionInputs("isect"),
+                IntersectionUI("isect")
+            ),
+            bigdash::bigTabItem(
+                "sig-tab",
+                SignatureInputs("sig"),
+                SignatureUI("sig")
+            ),
+            bigdash::bigTabItem(
+                "bio-tab",
+                BiomarkerInputs("bio"),
+                BiomarkerUI("bio")
+            ),
+            bigdash::bigTabItem(
+                "cmap-tab",
+                ConnectivityInputs("cmap"),
+                ConnectivityUI("cmap")
+            ),
+            bigdash::bigTabItem(
+                "comp-tab",
+                CompareInputs("comp"),
+                CompareUI("comp")
+            ),
+            bigdash::bigTabItem(
+                "tcga-tab",
+                TcgaInputs("tcga"),
+                TcgaUI("tcga")
+            ),
+            bigdash::bigTabItem(
+                "cell-tab",
+                SingleCellInputs("scell"),
+                SingleCellUI("scell")
+            ),
+            bigdash::bigTabItem(
+                "userSettings",
+                UserInputs("user"), 
+                UserUI("user")
+            )
+        ),
+        tagList(footer)
+    )
 }
 
 tabs = list(
