@@ -7,8 +7,6 @@ dataviewtSNEModuleUI <- function(id) {
 
     PlotModuleUI(
         id,
-        outputFUN = "shiny::plotOutput",
-        outputFUN2 = "shiny::plotOutput",        
         info.text = "T-SNE Figure",
         options = options,
         download.fmt=c("png","pdf","csv"),         
