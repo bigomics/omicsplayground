@@ -1,6 +1,22 @@
 
 dataviewtSNEModuleUI <- function(id) {
-    plotWidget(id)
+
+    options <- tagList(
+        checkboxInput("check1","some check")
+    )
+
+    PlotModuleUI(
+        id,
+        outputFUN = "shiny::plotOutput",
+        outputFUN2 = "shiny::plotOutput",        
+        info.text = "T-SNE Figure",
+        options = options,
+        download.fmt=c("png","pdf","csv"),         
+        height = 400,
+        label = "A",
+        title = "t-SNE clustering",
+     )
+
 }
 
 dataviewtSNEplotModule <- function(id, filterStates, data, label="", imgH=400, watermark=FALSE) {
@@ -180,21 +196,21 @@ dataviewtSNEplotModule <- function(id, filterStates, data, label="", imgH=400, w
       })
       ##}, res = 96, cacheKeyExpr = { list(plot_data()) },)
 
-      message("[dataviewtSNEModuleServer] id = ",id)  
-      ##imgH = 315;WATERMARK = FALSE
-
-      shiny::callModule(
-         plotModule, id,
+    message("[dataviewtSNEModuleServer] id = ",id)  
+    ##imgH = 315;WATERMARK = FALSE
+    
+    PlotModuleServer(id,
          ##plotlib = "ggplot",
          func = plot.RENDER,
          func2 = modal_plot.RENDER,
-         csvFunc = plot_data,             ##  *** downloadable data as CSV
-         renderFunc = "shiny::renderCachedPlot",
-         outputFunc =  "shiny::plotOutput",
-         info.text = "t-SNE Figure",
+         csvFUN = plot_data,             ##  *** downloadable data as CSV
+         renderFUN = "shiny::renderCachedPlot",
+         ##outputFUN =  "shiny::plotOutput",
+         ##info.text = "t-SNE Figure",
          res = c(120,150),                ## resolution of plot
-         height = imgH, pdf.width = 6, pdf.height = 6,
-         label = label, title = "t-SNE clustering",
+         ##height = imgH,
+         pdf.width = 6, pdf.height = 6,
+         ##label = label, title = "t-SNE clustering",
          add.watermark = WATERMARK
      )
         
