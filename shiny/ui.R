@@ -100,7 +100,7 @@ createUI <- function(tabs)
         shinyalert::useShinyalert(),  # Set up shinyalert
         firebase::useFirebase(firestore = TRUE),
         shiny::tags$script(async=NA, src="https://platform.twitter.com/widgets.js"),
-        shiny::div(shiny::textOutput("current_dataset"), class='current-data'),
+        # shiny::div(shiny::textOutput("current_dataset"), class='current-data'),
         shiny::div(class='label label-info current-user',id='authentication-user')        
     )
     
@@ -132,6 +132,10 @@ createUI <- function(tabs)
     bigdash::bigPage(
         header,
         navbar = bigdash::navbar(
+            tags$img(
+                src = "assets/img/bigomics.png",
+                width = "110",
+            ),
             bigdash::navbarDropdown(
                 "User",
                 bigdash::navbarDropdownTab(
