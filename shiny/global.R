@@ -17,12 +17,16 @@ message("\n")
 
 ## should we migrate all OPTIONS into this file??
 
-Sys.setlocale("LC_CTYPE","en_US.UTF-8") 
-Sys.setlocale("LC_TIME","en_US.UTF-8")
+ if(Sys.info()["sysname"] != "Windows") {
+        browser()
+        Sys.setlocale("LC_TIME","en_US.UTF-8")
+}
+
 ##Sys.setlocale("LC_ALL", "C")  ## really??
 Sys.setenv("_R_CHECK_LENGTH_1_CONDITION_" = "true")
 
 options(shiny.maxRequestSize = 999*1024^2)  ## max 999Mb upload
+options(shiny.fullstacktrace = TRUE)
 reticulate::use_miniconda('r-reticulate')
 
 message("[MAIN] reading global.R ...")
