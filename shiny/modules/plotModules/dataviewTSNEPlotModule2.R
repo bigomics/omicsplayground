@@ -1,15 +1,13 @@
 
-dataviewtSNEModuleUI <- function(id) {
-    plotWidget(id)
+dataviewtSNEplotModuleUI2 <- function(id,height=400) {
+    plotWidget(id, height=height)
 }
 
-dataviewtSNEplotModule <- function(id, filterStates, data, label="", imgH=400, watermark=FALSE) {
+dataviewtSNEplotModuleServer2 <- function(id, filterStates, data, label="", imgH=400, watermark=FALSE) {
 #  moduleServer(
 #    id,
 #    function(input, output, session) {
       
-      message("[dataviewtSNEModuleServer] ***called***")
-
       plot_dl <- reactiveValues()
     
       plot_data <- shiny::reactive({
@@ -74,7 +72,7 @@ dataviewtSNEplotModule <- function(id, filterStates, data, label="", imgH=400, w
 ##      output$plot <-  renderCachedPlot({
       plot.RENDER <- shiny::reactive({        
 
-          message("[dataviewtSNEModuleServer] plot.RENDER called")
+          message("[dataviewtSNEModuleServer2] plot.RENDER called")
 
           fig_base <- 
           ggplot(plot_data(), aes(pos_x, pos_y)) +
@@ -129,6 +127,13 @@ dataviewtSNEplotModule <- function(id, filterStates, data, label="", imgH=400, w
         }
         
         plot_dl$plot <- fig
+
+        message("[tsne2::modal_plot.RENDER] names(plot_dl) = ",names(plot_dl))
+        message("[tsne2::modal_plot.RENDER] class(plot_dl$base) = ",class(plot_dl$base))
+        message("[tsne2::modal_plot.RENDER] class(plot_dl$plot) = ",class(plot_dl$plot))
+
+        ##Sys.sleep(2)
+        
         gridExtra::grid.arrange(fig)
         ##}, res = 96, cacheKeyExpr = { list(plot_data()) },)
       })
@@ -136,10 +141,18 @@ dataviewtSNEplotModule <- function(id, filterStates, data, label="", imgH=400, w
       ##output$modal_plot <- renderCachedPlot({
       modal_plot.RENDER <- shiny::reactive({
         
-          ##  fig_base <- plot_dl$base +
-          fig_base <- plot_dl$plot +         
-          guide_continuous(aes = "color", type = "steps", width = .7) +
-          theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
+          message("[tsne2::modal_plot.RENDER] names(plot_dl) = ",names(plot_dl))
+          message("[tsne2::modal_plot.RENDER] length(plot_dl) = ",length(plot_dl))
+          message("[tsne2::modal_plot.RENDER] class(plot_dl$base) = ",class(plot_dl$base))
+          if(is.null(class(plot_dl$base))) {
+             ## message("[tsne2::modal_plot.RENDER] call plot.RENDER ")
+              ##tmp <- plot.RENDER()
+          }
+          
+          fig_base <- plot_dl$base +
+          ##fig_base <- plot_dl$plot +         
+              guide_continuous(aes = "color", type = "steps", width = .7) +
+              theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
         
         if (!is.null(plot_data()$grp)) {
           fig <- fig_base #+
@@ -180,22 +193,24 @@ dataviewtSNEplotModule <- function(id, filterStates, data, label="", imgH=400, w
       })
       ##}, res = 96, cacheKeyExpr = { list(plot_data()) },)
 
-      message("[dataviewtSNEModuleServer] id = ",id)  
-      ##imgH = 315;WATERMARK = FALSE
-
+    message("creating plotModule...")
+    
       shiny::callModule(
          plotModule, id,
          ##plotlib = "ggplot",
          func = plot.RENDER,
          func2 = modal_plot.RENDER,
+         ##options = options,
          csvFunc = plot_data,             ##  *** downloadable data as CSV
-         renderFunc = "shiny::renderCachedPlot",
-         outputFunc =  "shiny::plotOutput",
-         info.text = "t-SNE Figure",
-         res = c(120,150),                ## resolution of plot
+         ##renderFunc = "shiny::renderCachedPlot",
+         renderFunc = "shiny::renderPlot",         
+         outputFunc = "shiny::plotOutput",
+         info.text = "This is a T-SNE figure.",
+         caption = "T-SNE figure caption.",        
+         res = c(96,144)*0.9,                ## resolution of plot
          height = imgH, pdf.width = 6, pdf.height = 6,
          label = label, title = "t-SNE clustering",
-         add.watermark = WATERMARK
+         add.watermark = watermark
      )
         
      ## output$downloadPlotPNG <- downloadHandler(

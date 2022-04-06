@@ -25,7 +25,7 @@ dataviewtSNEModuleUI <- function(id) {
                             class="btn-circle-xs"),
         shiny::HTML(paste("<center>t-SNE clustering</center>")),
       ),
-      plotOutput(ns("plot"), height = "280px"),
+      plotOutput(ns("plot"), height = "600px"),
       shiny::div(class="popup-plot",
                 shinyBS::bsModal(ns("plotPopup"), "t-SNE clustering", size="l",
                         ns("zoombutton"),
@@ -151,18 +151,25 @@ dataviewtSNEModuleServer <- function(id, filterStates, data) {
             )
         }
         
-        gridExtra::grid.arrange(fig)
-        
         plot_dl$plot <- fig
+        gridExtra::grid.arrange(fig)        
 
       }, res = 96, cacheKeyExpr = { list(plot_data()) },)
 
 
       output$modal_plot <- renderCachedPlot({
-        
-        fig_base <- plot_dl()$base +
-          guide_continuous(aes = "color", type = "steps", width = .7) +
-          theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
+
+          message("[tsne1::modal_plot] names(plot_dl) = ",names(plot_dl))
+          message("[tsne1::modal_plot] length(plot_dl) = ",length(plot_dl))
+          message("[tsne1::modal_plot] class(plot_dl$base) = ",class(plot_dl$base))
+          if(is.null(class(plot_dl$base))) {
+              message("[tsne1::modal_plot.RENDER] call plot.RENDER ")
+              tmp <- plot.RENDER()
+          }
+          
+          fig_base <- plot_dl$base +
+              guide_continuous(aes = "color", type = "steps", width = .7) +
+              theme_omics(base_size = 20, axis_num = "xy", legendnum = TRUE)
         
         if (!is.null(plot_data()$grp)) {
           fig <- fig_base #+
@@ -200,6 +207,9 @@ dataviewtSNEModuleServer <- function(id, filterStates, data) {
             # )
         }
 
+        fig <- plot_dl$plot 
+        gridExtra::grid.arrange(fig)
+        
       }, res = 96, cacheKeyExpr = { list(plot_data()) },)
      
      output$downloadPlotPNG <- downloadHandler(

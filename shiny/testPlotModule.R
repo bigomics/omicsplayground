@@ -3,43 +3,29 @@
 ## Copyright (c) 2018-2021 BigOmics Analytics Sagl. All rights reserved.
 ##
 
+library(shiny)
 source("./global.R")  ## global variable
 ##source("./modules/plotModules/dataviewTSNEPlotModule.R", encoding = "UTF-8")
 #source("./modules/plotModules/dataviewTSNEPlotModule2.R", encoding = "UTF-8")
 
-source("./modules/plotModules/plotModule.R", encoding = "UTF-8")
-source("./modules/plotModules/dataviewTSNEPlotModule3.R", encoding = "UTF-8")
-
 load("../data/example-data.pgx",verbose=1)
 ngs = pgx.initialize(ngs)
 
+source("./modules/plotModules/PlotModule.R", encoding = "UTF-8")
+source("./modules/plotModules/examplePlotModule.R", encoding = "UTF-8")
+
 ui = fluidPage(
-    fillCol(
-        fillRow(
-            dataviewtSNEModuleUI("tSNEPlot"),
-            br(),br(),br()
-        ),
-        fillRow(
-            br(),br(),br(),br()
-        )
+    fillRow(
+        height = 800,
+        examplePlotModuleUI("example"),
+        br(), br()
     )
 )
 
 server = function(input, output, session) {
+    ##examplePlotModuleServer("example", input)
+    examplePlotModuleServer("example")
 
-    colnames(ngs$Y)  ## possible group vectors
-
-    filterStates <- list(
-        search_gene = "ETAA1",
-        data_samplefilter = NULL,
-        data_type = "logCPM",
-        data_groupby = "condition"
-    )
-    dataviewtSNEplotModule(
-        "tSNEPlot", filterStates, ngs,
-        label="A", imgH=400, watermark=FALSE
-    )
 }
 
 shinyApp(ui, server=server, options=list(launch.browser=TRUE))
-
