@@ -17,9 +17,8 @@ message("\n")
 
 ## should we migrate all OPTIONS into this file??
 
- if(Sys.info()["sysname"] != "Windows") {
-        browser()
-        Sys.setlocale("LC_TIME","en_US.UTF-8")
+if(Sys.info()["sysname"] != "Windows") {
+    Sys.setlocale("LC_TIME","en_US.UTF-8")
 }
 
 ##Sys.setlocale("LC_ALL", "C")  ## really??
